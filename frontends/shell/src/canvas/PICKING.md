@@ -19,8 +19,11 @@ through unprojection. The GPU ordinal is a **part** ordinal, not a row index: de
 `SolidPolygonLayer` draws one datum per polygon part and picks by datum index, so a feature with
 several parts (a MultiPolygon, ADR-034 Decision 6) has several ordinals, and `partToRow` maps each
 back to its one row. A point row is one part, so for a point open (`ScatterplotLayer`, one datum per
-point) the ordinal is the row and `partToRow` is the identity. Every part of one feature resolves to
-the identical result, and the pick ceiling (`limits.ts`) counts parts, or points for a point open.
+point) the ordinal is the row and `partToRow` is the identity. A line is one part holding one path:
+a LineString row is one part (the identity again) and a MultiLineString row is one part per
+linestring, drawn by one `PathLayer` datum each, so its ordinals differ from its rows. Every part of
+one feature resolves to the identical result, and the pick ceiling (`limits.ts`) counts parts, line
+parts or points.
 
 Nothing in this cut needs `info.coordinate` for a legitimate reason (navigation, hover, or
 candidate-geometry creation, per ADR-010 rule 2's permitted uses) — cut 1 has no digitizing path and

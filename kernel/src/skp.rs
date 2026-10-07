@@ -3244,6 +3244,105 @@ mod tests {
             "the geometry key set"
         );
     }
+
+    /// **K-L1 (`engine/GEOMETRY-LINES-PREREGISTRATION.md` §4; ADR-034 Decision 3).** The real
+    /// `describe` response of a real open of L-1 (`["LineString"]`, five LV95 line rows) and of
+    /// ML-1 (`["MultiLineString"]`, three rows) carries the engine's encoding, `geoarrow.linestring`
+    /// and `geoarrow.multilinestring`, beside the file's declaration, and the `geometry` key set
+    /// equals the shared fixture's: the fourth and fifth values add no member to the wire.
+    ///
+    /// RECORDED MUTATION: in `GeometryEncoding::as_str`, return `EXT_NAME_POLYGON` for
+    /// `LineString`. `describe_dataset` then reports `geoarrow.polygon` for the linestring open and
+    /// this test fails by name at `describe.encoding`.
+    ///
+    /// Observed over `719d2b04` (the engine commit) on the uncommitted tree of the kernel commit:
+    /// `the_real_describe_of_a_line_open_is_its_line_encoding_with_the_shared_key_set` FAILED with
+    /// the mutation applied, at `l1: describe.encoding` (left `geoarrow.polygon`, right
+    /// `geoarrow.linestring`), then reverted.
+    #[test]
+    fn the_real_describe_of_a_line_open_is_its_line_encoding_with_the_shared_key_set() {
+        use spatial_engine::fixture::{
+            line_l1_rows, multilinestring_ml1_rows, write_geoparquet, DeclaredTypes, FixtureSpec,
+            GeometryMode, E_LO, N_LO,
+        };
+
+        let fixture_path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .expect("workspace root")
+            .join("protocol/skp/tests/data/v0-describe-response.json");
+        let fixture_json: serde_json::Value =
+            serde_json::from_str(&std::fs::read_to_string(&fixture_path).expect("read fixture"))
+                .expect("shared fixture is valid JSON");
+        let keys = |v: &serde_json::Value| -> std::collections::BTreeSet<String> {
+            v.as_object().unwrap().keys().cloned().collect()
+        };
+
+        for (name, declared, rows, want_encoding) in [
+            (
+                "l1",
+                "LineString",
+                line_l1_rows([E_LO, N_LO], 10.0),
+                "geoarrow.linestring",
+            ),
+            (
+                "ml1",
+                "MultiLineString",
+                multilinestring_ml1_rows([E_LO, N_LO], 10.0),
+                "geoarrow.multilinestring",
+            ),
+        ] {
+            let dir = std::env::temp_dir().join(format!("spatial-kernel-skp-describe-line-{name}"));
+            let _ = std::fs::remove_dir_all(&dir);
+            std::fs::create_dir_all(&dir).expect("fixture dir");
+            let path = dir.join(format!("{name}.parquet"));
+            write_geoparquet(
+                &path,
+                &FixtureSpec {
+                    geometry: GeometryMode::Rows(rows),
+                    with_covering_bbox: false,
+                    declared_types: DeclaredTypes::Json(format!(r#"["{declared}"]"#)),
+                    ..Default::default()
+                },
+            )
+            .expect("write fixture");
+
+            let host = SkpHost::new(
+                Arc::new(Catalog::new()),
+                StreamRegistry::new(),
+                no_watch_arm(),
+                discard_session_end_events(),
+            );
+            let open = host
+                .open_dataset(OpenDatasetRequest {
+                    skp: SKP_VERSION.to_string(),
+                    path: path.display().to_string(),
+                    cancel_key: format!("describe-line-{name}"),
+                    crs_assertion: None,
+                    identity: None,
+                })
+                .expect("open");
+            let describe = host
+                .describe(DescribeRequest {
+                    skp: SKP_VERSION.to_string(),
+                    dataset: open.dataset,
+                })
+                .expect("describe");
+            assert_eq!(
+                describe.geometry.encoding, want_encoding,
+                "{name}: describe.encoding"
+            );
+            assert_eq!(
+                describe.geometry.declared_types,
+                Some(vec![declared.to_string()]),
+                "{name}: describe.declared_types"
+            );
+            assert_eq!(
+                keys(&serde_json::to_value(&describe.geometry).unwrap()),
+                keys(&fixture_json["geometry"]),
+                "{name}: the geometry key set"
+            );
+        }
+    }
 }
 
 /// **DECISIONS-PENDING.md entry 132 — a `Pending` ticket's `EngineSource` dropped under

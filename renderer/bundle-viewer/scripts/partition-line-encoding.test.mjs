@@ -1,0 +1,70 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
+// V-T-L of `engine/GEOMETRY-LINES-PREREGISTRATION.md` section 4 (ADR-034 Consequences: "The viewer
+// already refuses a foreign encoding"; the form's Viewer section: no product change). The viewer's
+// product code is unchanged by the lines cut; this test proves the refusal for both line encodings,
+// against the real shape: the engine's own `lv95-linestring-batch` (BF-L) and
+// `lv95-multilinestring-batch` (BF-ML), committed by `engine/tests/geoarrow_batch_fixtures.rs` from a
+// real `Dataset::open` and stream. Each is a `geoarrow.linestring` or `geoarrow.multilinestring` batch,
+// so fed to the viewer as a partition it must be refused at the encoding check
+// (`envelope-encoding-mismatch`), never walked as polygon rings and drawn.
+//
+// The batch's other envelope keys are read from the batch itself, so the frame, CRS and axis-order
+// checks that precede the encoding check pass for what they are, and the refusal reached is the
+// encoding one and no other. Same shape as `partition-point-encoding.test.mjs` (the points cut's V-T).
+//
+// RECORDED MUTATION: delete the `geometry_encoding` check in `decodePartition`
+// (`renderer/bundle-viewer/src/partition.ts`). Each line batch then passes that check, so the
+// `BundleFailure` this test expects is not thrown at the encoding check, and this test fails by name.
+//
+// Observed over `26d4ccc0` on the uncommitted tree of the shell commit: `the engine’s linestring batch, offered as a partition, is refused at the encoding check`
+// FAILED by name with the mutation applied (the batch is then no longer refused at the encoding check and fails later as `partition-decode-failed`, so the `e.state` assertion fails, expected `envelope-encoding-mismatch`), and `the engine’s multilinestring batch, offered as a partition, is refused at the encoding check` FAILED by name with the mutation applied (`Missing expected exception`: the batch is walked as polygon rings and decoded, the hazard the check exists for), then reverted.
+
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import test from 'node:test';
+import { fileURLToPath } from 'node:url';
+
+import { tableFromIPC } from 'apache-arrow';
+
+import { importModule } from './bundle-for-test.mjs';
+
+const { decodePartition, BundleFailure } = await importModule('scripts/partition-entry.mjs');
+
+const BF_DIR = join(dirname(fileURLToPath(import.meta.url)), '../../../engine/tests/data/geoarrow');
+
+function offeredAsPartition(file, encoding, rows) {
+  const bytes = new Uint8Array(readFileSync(join(BF_DIR, file)));
+  const meta = tableFromIPC(bytes).schema.metadata;
+  assert.equal(meta.get('geometry_encoding'), encoding, 'fixture self-check: the real batch');
+
+  const manifest = { crsSource: meta.get('crs'), attributeColumns: [] };
+  assert.throws(
+    () =>
+      decodePartition(
+        { path: 'data/part-00000.arrows', bytes: bytes.length, contentHash: 'sha256:stub', rows },
+        0,
+        bytes,
+        manifest,
+        () => 0,
+        null,
+      ),
+    (e) => {
+      assert.ok(e instanceof BundleFailure, `expected a BundleFailure, got ${e}`);
+      assert.equal(e.state, 'envelope-encoding-mismatch');
+      assert.equal(e.asset, 'data/part-00000.arrows');
+      assert.ok(e.detail.includes(encoding), `detail "${e.detail}"`);
+      return true;
+    },
+  );
+}
+
+test('the engine’s linestring batch, offered as a partition, is refused at the encoding check', () => {
+  offeredAsPartition('lv95-linestring-batch.arrows', 'geoarrow.linestring', 5);
+});
+
+test('the engine’s multilinestring batch, offered as a partition, is refused at the encoding check', () => {
+  offeredAsPartition('lv95-multilinestring-batch.arrows', 'geoarrow.multilinestring', 3);
+});

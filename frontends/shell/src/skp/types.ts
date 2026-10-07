@@ -12,7 +12,7 @@ import type { DecU64, HexF64 } from "./codec";
  * See `protocol/skp/SKP-V0.md` for the design note and the mandatory named-deferral list this
  * client must not silently exceed (no capability discovery, no idempotency, no subscriptions, …).
  */
-export const SKP_VERSION = "skp/0.10";
+export const SKP_VERSION = "skp/0.11";
 
 /** The single dialect `skp/0.1` admits for `Filter.predicate` (see `Filter` below). `skp/1` is
  * RESERVED (docs/07's 1.0 freeze); a second dialect, if one is ever added, gets its own version
@@ -115,9 +115,10 @@ export type CrsUnit = "degree" | "metre" | "other" | "unestablished";
 
 export interface GeometryInfo {
   column: string;
-  /** The engine's encoding for this open, `"geoarrow.polygon"`, `"geoarrow.multipolygon"` or
-   * `"geoarrow.point"` (ADR-034 Decision 2; the third value is `skp/0.10`): the engine's fact,
-   * never the file's own type. */
+  /** The engine's encoding for this open, `"geoarrow.polygon"`, `"geoarrow.multipolygon"`,
+   * `"geoarrow.point"`, `"geoarrow.linestring"` or `"geoarrow.multilinestring"` (ADR-034
+   * Decision 2; the third value is `skp/0.10`, the fourth and fifth `skp/0.11`): the engine's
+   * fact, never the file's own type. */
   encoding: string;
   /** `skp/0.9`. The file's `geometry_types` as declared, in declared order and case as written
    * (ADR-034 Decision 3). `null` means the key is absent from the file; `[]` means the file

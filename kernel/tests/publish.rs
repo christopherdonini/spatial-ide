@@ -2053,3 +2053,95 @@ fn a_point_encoded_dataset_refuses_at_preflight_by_name_before_any_pin_or_write(
         other => panic!("P-11 must refuse as the degrees dataset, got {other:?}"),
     }
 }
+
+/// **K-L2 (`engine/GEOMETRY-LINES-PREREGISTRATION.md` §4; ADR-034 Decision 10).** A line-encoded
+/// dataset, of either line encoding, is a valid open that a version-1 bundle cannot carry, so
+/// publish refuses it at preflight, by name, as the format's refusal and not as an engine failure,
+/// before the pin and before any destination exists. L-1 (`["LineString"]`) and ML-1
+/// (`["MultiLineString"]`) are the ways in; L-11 is L-1 in CRS84 degrees, which refuses as the
+/// degrees dataset because that check runs first. The source is opened and deliberately **not**
+/// pinned: a refusal that waited for the pin would answer `SourceNotPinned` instead.
+///
+/// RECORDED MUTATION: in `publish::preflight_pinless_parts`, compare the dataset's encoding against
+/// `geoarrow.multipolygon` only (refuse when it equals that, not when it differs from the format's
+/// declared one). L-1 then falls through to a different refusal and this test fails by name.
+///
+/// Observed over `719d2b04` (the engine commit) on the uncommitted tree of the kernel commit:
+/// `a_line_encoded_dataset_refuses_at_preflight_by_name_before_any_pin_or_write` FAILED with the
+/// mutation applied, at `l1: expected GeometryEncodingNotPublishable` (the request fell through to
+/// a different refusal, about a `zone` attribute), then reverted.
+#[test]
+fn a_line_encoded_dataset_refuses_at_preflight_by_name_before_any_pin_or_write() {
+    use spatial_engine::fixture::{
+        line_l1_rows, multilinestring_ml1_rows, E_LO, LAT_LO, LON_LO, N_LO,
+    };
+
+    for (name, declared, rows, encoding, want) in [
+        (
+            "l1",
+            r#"["LineString"]"#,
+            line_l1_rows([E_LO, N_LO], 10.0),
+            spatial_engine::GeometryEncoding::LineString,
+            "geoarrow.linestring",
+        ),
+        (
+            "ml1",
+            r#"["MultiLineString"]"#,
+            multilinestring_ml1_rows([E_LO, N_LO], 10.0),
+            spatial_engine::GeometryEncoding::MultiLineString,
+            "geoarrow.multilinestring",
+        ),
+    ] {
+        let d = workspace(&format!("lines-k-l2-{name}"));
+        let path = multipolygon_fixture(
+            &d,
+            declared,
+            rows,
+            CrsMode::DeclaredLv95,
+            CoordinateDomain::Lv95Metres,
+        );
+        let fixture_sha_before = sha256_file(&path);
+        let ds = Dataset::open(&path).unwrap();
+        assert_eq!(ds.geometry_encoding(), encoding, "{name}");
+        let v = viewer();
+        let dest = d.join("bundle");
+
+        let e = preflight_pinless(&request(&ds, &v, dest.clone())).unwrap_err();
+        match &e {
+            PublishError::GeometryEncodingNotPublishable { encoding, carried } => {
+                assert_eq!(encoding, want, "{name}");
+                assert_eq!(carried, "geoarrow.polygon", "{name}");
+            }
+            other => panic!("{name}: expected GeometryEncodingNotPublishable, got {other}"),
+        }
+        assert_eq!(e.code(), "publish.geometry_encoding_not_publishable");
+        assert!(!dest.exists(), "{name}: a destination exists");
+        assert!(ds.content_pin().is_none(), "{name}: the source was pinned");
+        match publish_unguarded(&request(&ds, &v, dest.clone()), &CancelToken::new(), None) {
+            Err(PublishError::GeometryEncodingNotPublishable { .. }) => {}
+            other => panic!("{name}: publish_unguarded gave {other:?}"),
+        }
+        assert!(!dest.exists(), "{name}: a destination exists after publish");
+        assert_eq!(
+            sha256_file(&path),
+            fixture_sha_before,
+            "{name}: the fixture changed"
+        );
+    }
+
+    // L-11: the same lines in CRS84 degrees refuse as the degrees dataset, not as the encoding.
+    let d = workspace("lines-k-l2-l11");
+    let path = multipolygon_fixture(
+        &d,
+        r#"["LineString"]"#,
+        line_l1_rows([LON_LO, LAT_LO], 0.001),
+        CrsMode::DeclaredCrs84Degrees,
+        CoordinateDomain::Wgs84Degrees,
+    );
+    let ds = Dataset::open(&path).unwrap();
+    let v = viewer();
+    match preflight_pinless(&request(&ds, &v, d.join("bundle"))) {
+        Err(PublishError::GeographicCrsNotPublishable { .. }) => {}
+        other => panic!("L-11 must refuse as the degrees dataset, got {other:?}"),
+    }
+}

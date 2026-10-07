@@ -164,12 +164,35 @@ export function averagePointSpacing(batches: readonly Pick<ResidentBatch, "parts
 
 /**
  * The one value `WorkingCanvas.tsx` compares with the threshold, chosen by the open's kind: the
- * average feature extent for a polygonal open (unchanged), the average point spacing for a point open.
- * The threshold (`SUB_PIXEL_PICK_REFUSAL_THRESHOLD_PX`), the refusal state and its text are the same
- * for both.
+ * average feature extent for a polygonal or a line open (unchanged -- ADR-028 item 4 as written, so a
+ * line's extent is its bounding box over all its parts, and where many long lines cross the average can
+ * stay above the threshold while a hover names the topmost line, KNOWN-LIMITATIONS item 38), the
+ * average point spacing for a point open. The threshold (`SUB_PIXEL_PICK_REFUSAL_THRESHOLD_PX`), the
+ * refusal state and its text are the same for all.
  */
 export function pickResolutionExtentFor(kind: GeometryKind, batches: readonly Pick<ResidentBatch, "parts">[]): number {
   return kind === "point" ? averagePointSpacing(batches) : averageFeatureExtent(batches);
+}
+
+/**
+ * **The line open's pick tolerance: 4 CSS pixels** (the lines cut, OPEN-4 ruled (A) in question round
+ * 63; `engine/GEOMETRY-LINES-PREREGISTRATION.md` SH-L4). A line is 2 CSS pixels wide
+ * (`buildLayers.ts`'s `LINE_WIDTH_PX`), so a hover that must land exactly on it is hard to make. The
+ * value is deck's `pickingRadius` for the hover and the radius of the settle re-pick's `pickObject`,
+ * which returns the drawn pixel closest to the pointer within it. It is declared, not fitted: a
+ * walkthrough verdict (Part T, row T2) may revise it.
+ */
+export const LINE_PICK_RADIUS_PX = 4;
+
+/**
+ * The pick radius `WorkingCanvas.tsx` passes for an open of this kind, or `undefined` when it passes
+ * none: the radius for a line open, `undefined` for a polygonal or a point one, whose `Deck`
+ * `pickingRadius` stays unset and whose `pickObject` is given no radius (round 62, item 4, for points;
+ * the polygonal hover path is unchanged). The caller sets the prop and the argument only when the
+ * value is defined.
+ */
+export function pickingRadiusFor(kind: GeometryKind): number | undefined {
+  return kind === "line" ? LINE_PICK_RADIUS_PX : undefined;
 }
 
 /**

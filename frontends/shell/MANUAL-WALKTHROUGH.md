@@ -1659,3 +1659,55 @@ Fill in after running the rows above (the points cut's Part P).
 - **P5:**
 - **P6:**
 - **P7:**
+
+**Dated note, 2026-10-07 (the lines cut, `engine/GEOMETRY-LINES-PREREGISTRATION.md`; appended under this result log, not edited into P7).** From that cut's merge, the LineString-declared file no longer reaches the engine's sighted refusal for a declared type outside the readable set: the geometry gate now admits `["LineString"]`. P7(a) therefore uses the GeometryCollection-declared file, `C:\dev\spatial-ide\target\fixtures\manual-walkthrough\declared-geometrycollection.parquet`, written by `generate_the_declared_geometrycollection_fixture` (run it as Part T's "Before T1" says), and the readable-set clause of that detail now names five types, not three. Part T's row T6 carries the rest: the LineString-declared file, the mixed-kind file for lines, the new `[P6 placeholder]` strings, and KNOWN-LIMITATIONS items 31 to 33, 37 and 38.
+
+---
+
+## Part T — lines: the L-1 and ML-1 fixtures, the pick tolerance, the casing, and the wording of the new strings (geometry-lines-cut)
+
+This Part is the Operator gate of `engine/GEOMETRY-LINES-PREREGISTRATION.md`, run in the same sitting as Part S and Part P (points), and only on a build after that cut's merge. It is discharged only once it has been run and its result log filled in. **No duration appears in any row or expected outcome** (`docs/08_Testing.md`; ADR-018). The form's amendments are read last amendment first. The line width, the casing and the pick tolerance are the human's declared choices (the form's Amendment 1, items 3 and 4), and a verdict recorded here may revise them.
+
+**Before T1:**
+- Read the form's §10, its last amendment first.
+- Generate the fixtures: from `C:\dev\spatial-ide`, run `cargo test -p spatial-kernel --test manual_walkthrough_fixtures -- --ignored --nocapture generate_the_line_l1_fixture generate_the_multilinestring_ml1_fixture generate_the_declared_geometrycollection_fixture generate_the_declared_polygon_and_linestring_fixture generate_the_declared_linestring_fixture`.
+
+| Fixture | Path | Used by |
+|---|---|---|
+| L-1, five LineString rows of 2, 3, 5, 2 and 4 positions (rows 1 and 3 cross), LV95, declared `["LineString"]`, with a covering | `C:\dev\spatial-ide\target\fixtures\manual-walkthrough\line-l1.parquet`, written by `generate_the_line_l1_fixture` | T1, T2, T4, T5 |
+| ML-1, three MultiLineString rows of 2, 1 and 3 parts, LV95, declared `["MultiLineString"]`, with a covering | `C:\dev\spatial-ide\target\fixtures\manual-walkthrough\multilinestring-ml1.parquet`, written by `generate_the_multilinestring_ml1_fixture` | T3 |
+| The GeometryCollection-declared file (P-1's rows, `geometry_types` declares `["GeometryCollection"]`) | `C:\dev\spatial-ide\target\fixtures\manual-walkthrough\declared-geometrycollection.parquet`, written by `generate_the_declared_geometrycollection_fixture` | T6 |
+| The Polygon-and-LineString file (L-1's rows, `geometry_types` declares `["Polygon","LineString"]`) | `C:\dev\spatial-ide\target\fixtures\manual-walkthrough\declared-polygon-and-linestring.parquet`, written by `generate_the_declared_polygon_and_linestring_fixture` | T6 |
+| The LineString-declared file (P-1's point rows, `geometry_types` declares `["LineString"]`, no covering) | `C:\dev\spatial-ide\target\fixtures\manual-walkthrough\declared-linestring.parquet`, written by `generate_the_declared_linestring_fixture` | T6 |
+
+| # | Step | Expected outcome |
+|---|---|---|
+| T1 | **L-1 opens and draws as lines.** Click **Open GeoParquet…** and select L-1. Let the first view settle (Part A's A4 shows what "settled" looks like), and click **Zoom to layer** if the lines are small. | The open is admitted and the canvas draws five lines, each 2 pixels wide at any zoom, with rounded joins and ends, in the style's fill colour; two of them cross. The describe summary shows the geometry row as `geometry (geoarrow.linestring)` and, as a separate labelled row, the file's own declaration, `LineString`. No refusal and no error banner appears after the stream settles. Record what the five lines look like (width, colour, whether any is clipped), and whether the two summary rows read as two separate facts. |
+| T2 | **Hover, the tolerance, the crossing and the refusal.** With L-1 open: **(a)** hover directly on a line. **(b)** Hover about 3 pixels beside a line. **(c)** Hover about 10 pixels away from every line. **(d)** Hover where L-1's two crossing lines meet (rows 1 and 3). **(e)** Zoom out with the wheel, a notch at a time, hovering over a line after each notch, until the hover shows the named refusal instead of an id. | (a) One readout, one `id` line. (b) The same `id` as (a) for that line. (c) No readout appears. (d) One readout, one `id` line; **record which of the two ids it names.** (e) At a coarse enough zoom the readout is the named refusal state (the same state and text that Part L's L7 shows for polygons), and it stays until you zoom back in. **Record, on the last line of this row's result: whether naming the topmost of two crossing lines is acceptable to you.** |
+| T3 | **ML-1: two parts of one feature.** Open ML-1 and let its first view settle. Click **Zoom to layer** if the lines are small. Row 0 is the two lines at the bottom left (a straight one, and a bent one above it). Hover the straight line, then the bent one, and read the hover readout each time. Then hover the single vertical line to their right (row 1) and read it. | The summary shows `geometry (geoarrow.multilinestring)` and the declaration `MultiLineString`. The two parts of row 0 give the **same readout**: the same `id` line, from one feature, and never two different ids. Row 1's readout is a different `id`. The canvas draws all six lines. Record the three readouts, in the order hovered. |
+| T4 | **Style edits apply to the lines.** With L-1 open, click the **▸ Style** disclosure and change **Fill colour**, **Fill opacity**, **Outline width** (to above 0) and **Outline colour**, as Part F's F2 and F4 do. | The fill colour and opacity change the lines at once. An outline width above 0 draws a casing beneath each line, in the chosen outline colour, 2 pixels plus twice the outline width wide, so that the outline shows on both sides; an outline width of 0 removes it. The width of the line itself does not change. With a fill opacity below 1 the casing shows through the line, and where lines cross they are drawn darker. The text block at the bottom of the panel still reads `"geometry":"polygon"`, because the style document has no line geometry yet (KNOWN-LIMITATIONS item 37). Nothing is saved. **Record whether 2 pixels is the width you want, and whether the casing looks right at the default opacity.** |
+| T5 | **Publishing L-1 is refused.** With L-1 open, click **Publish…** and start a publish to a fresh destination under `C:\dev\spatial-ide\target\`. | The publish is refused before any approval prompt: a refusal carrying the code `publish.geometry_encoding_not_publishable` and a message that starts with `[P6 placeholder]` and names `geoarrow.linestring`. No approval dialog opens and the destination folder is not created. Record the code and the message verbatim, and whether it was clear why a line file cannot be published. |
+| T6 | **The wording, for your decision.** **(a)** Open the GeometryCollection-declared file and read the refusal: the code is `engine.geo_metadata`, and the detail is the engine's sighted wording, whose readable-set clause now names five types. **(b)** Open the Polygon-and-LineString file and read the refusal: the code is `engine.geo_metadata`, and the detail is a `[P6 placeholder]` stating that this build reads one kind per geometry column and naming the kinds present. **(c)** Open the LineString-declared file. **(d)** Read every other new `[P6 placeholder]` string where it is written: `engine/src/wkb.rs` (the line and multiline row refusals: EWKB flags, a type other than 2, fewer than two positions, zero parts, trailing bytes), `engine/src/geoarrow.rs` (`MIXED_KINDS_DRAFT`), `frontends/shell/src/canvas/decodeBatch.ts` (`UnexpectedEncodingError`) and `frontends/shell/src/canvas/limits.ts` (`PickCeilingExceeded`). **(e)** Read `KNOWN-LIMITATIONS.md` items 31 to 33, 37 and 38, which are draft wording. | (a) The detail is not a placeholder; record whether it reads as honest and clear with five types in its clause. (b) The detail starts with `[P6 placeholder]`; record the kinds it names. (c) The open is admitted: the summary shows `geometry (geoarrow.linestring)` and the declaration `LineString`. The rows are points, so the engine stops the stream at row 0 with `engine.wkb`, naming the type met; this file declares no covering, so the canvas's viewport query may meet `engine.no_covering_bbox` first, as P5 shows for another file without one. **Record the code shown and the message verbatim.** For each string in (b) and (d) the log records either the wording you want in its place, or "keep". Until then every one stays a placeholder, and none ships as settled wording. For items 31 to 33, 37 and 38, record whether each reads as honest to you; items 37 and 38 are the drafts of the line width and the pick tolerance. |
+
+**If anything deviates:** stop, record the exact step, and report it, as in every earlier Part. In T1, the deviation this row exists to catch is a refusal, an error banner, or a line drawn at the wrong place (for instance, mirrored along a diagonal). In T3, it is a second id for one feature (a hover on one part and a hover on another part of row 0 giving different readouts). In T5, it is an approval dialog opening, or a destination created.
+
+**Sitting estimate (scheduling only, not a claim about the app):** a few minutes for T1 to T5 and a reading pass for T6.
+
+---
+
+## Result log
+
+Fill in after running the rows above (the lines cut's Part T).
+
+- **Date run:**
+- **Run by:**
+- **Build/commit:**
+- **Last amendment read (its number):**
+- **T1:**
+- **T2:**
+- **T2, the id named where the two crossing lines meet, and the verdict on naming the topmost of two crossing lines (acceptable or not):**
+- **T3:**
+- **T4:**
+- **T4, the verdict on the 2 pixel width (the width wanted, or not) and on the casing at the default opacity (looks right, or not):**
+- **T5:**
+- **T6:**

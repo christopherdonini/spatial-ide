@@ -17,11 +17,15 @@
 //! - Decodes WKB into **GeoArrow polygons** (`geoarrow.polygon`:
 //!   `List<rings: List<vertices: FixedSizeList<xy>[2]>>`), **GeoArrow multipolygons**
 //!   (`geoarrow.multipolygon`: `List<polygons: List<rings: List<vertices: FixedSizeList<xy>[2]>>>`)
-//!   or **GeoArrow points** (`geoarrow.point`: `FixedSizeList<xy>[2]`), variable-width where the
-//!   encoding is, holes included. Which encoding a dataset travels in is a fact of the open
-//!   (ADR-034): a declared set of exactly Polygon gives the first, a set that includes
-//!   MultiPolygon, or an empty or absent declaration, gives the second, and a set of exactly Point
-//!   gives the third. It never varies per batch.
+//!   **GeoArrow points** (`geoarrow.point`: `FixedSizeList<xy>[2]`), **GeoArrow linestrings**
+//!   (`geoarrow.linestring`: `List<vertices: FixedSizeList<xy>[2]>`) or **GeoArrow
+//!   multilinestrings** (`geoarrow.multilinestring`:
+//!   `List<linestrings: List<vertices: FixedSizeList<xy>[2]>>`), variable-width where the encoding
+//!   is, holes included. Which encoding a dataset travels in is a fact of the open (ADR-034): a
+//!   declared set of exactly Polygon gives the first, a set that includes MultiPolygon, or an empty
+//!   or absent declaration, gives the second, a set of exactly Point gives the third, a set of
+//!   exactly LineString gives the fourth, and a lineal set that includes MultiLineString gives the
+//!   fifth. It never varies per batch.
 //! - Emits Arrow IPC batches whose envelope names their frame, CRS, CRS source and axis order
 //!   (ADR-010 rule 1), by construction rather than by convention — see [`envelope`].
 //! - Streams and cancels: the DuckDB result is consumed lazily, and cancellation reaches DuckDB's

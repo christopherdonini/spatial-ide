@@ -15,6 +15,8 @@ import { describe, expect, it } from "vitest";
 
 import {
   decodeBatch,
+  ENCODING_LINESTRING,
+  ENCODING_MULTILINESTRING,
   ENCODING_MULTIPOLYGON,
   ENCODING_POINT,
   ENCODING_POLYGON,
@@ -23,7 +25,12 @@ import {
   UnexpectedEncodingError,
   UnexpectedFrameError,
 } from "./decodeBatch";
-import { loadBatchFixture, pointP1Positions } from "../testUtils/batchFixtures";
+import {
+  lineL1Positions,
+  loadBatchFixture,
+  multilinestringMl1Positions,
+  pointP1Positions,
+} from "../testUtils/batchFixtures";
 
 /** Builds an IPC byte buffer matching `engine::envelope::TaggedBatch`'s wire shape closely enough
  * to exercise this decoder: `id: UInt64 not null`, `geometry: List<List<FixedSizeList<2,f64>>>`,
@@ -166,10 +173,12 @@ describe("decodeBatch", () => {
 
   /**
    * SH-2. A batch whose `geometry_encoding` is not the open's expected encoding, or is none of the
-   * three values the shell reads, throws `UnexpectedEncodingError`; the check reads the batch's own
+   * five values the shell reads, throws `UnexpectedEncodingError`; the check reads the batch's own
    * metadata, never the data. A missing key is refused as well. The points cut changed this test: the
    * unknown-value case is `geoarrow.linestring` (`geoarrow.point` is now read), and a point batch under
-   * a polygon expectation, and the reverse, throw.
+   * a polygon expectation, and the reverse, throw. The lines cut changed it again: the unknown-value
+   * case is `geoarrow.geometrycollection` (both line encodings are now read, and the message names
+   * five), and a line batch under a polygon expectation, and the reverse, throw.
    *
    * RECORDED MUTATION: delete the encoding check in `decodeBatch`. This test then fails by name (the
    * multipolygon batch is walked as polygon rings, or the unknown value passes).
@@ -179,15 +188,30 @@ describe("decodeBatch", () => {
    *
    * Re-observed over `edbc0f3c` on the uncommitted tree of the shell commit, with the test as the points cut changed it: `a mismatched, unknown or missing geometry_encoding throws UnexpectedEncodingError (SH-2)`
    * FAILED by name with the mutation applied, at its first assertion (the multipolygon batch under a polygon expectation: `expected function to throw an error, but it didn't`), then reverted.
+   *
+   * Re-observed over `26d4ccc0` on the uncommitted tree of the shell commit, with the test as the lines cut changed it: `a mismatched, unknown or missing geometry_encoding throws UnexpectedEncodingError (SH-2)`
+   * FAILED by name with the mutation applied, at its first assertion (the multipolygon batch under a polygon expectation: `expected function to throw an error, but it didn't`), then reverted.
    */
   it("a mismatched, unknown or missing geometry_encoding throws UnexpectedEncodingError (SH-2)", () => {
     const polygon = loadBatchFixture("lv95-polygon-batch");
     const multipolygon = loadBatchFixture("lv95-multipolygon-batch");
     expect(() => decodeBatch("sh", 0, multipolygon, "geometry", ENCODING_POLYGON)).toThrow(UnexpectedEncodingError);
     expect(() => decodeBatch("sh", 0, polygon, "geometry", ENCODING_MULTIPOLYGON)).toThrow(UnexpectedEncodingError);
-    // None of the three values the shell reads, even when the open's expectation names the same string.
-    const linestring = buildBatch([1n], [[[[0, 0], [1, 0], [0, 1], [0, 0]]]], EXPECTED_FRAME, "geoarrow.linestring");
-    expect(() => decodeBatch("sh", 0, linestring, "geometry", "geoarrow.linestring")).toThrow(UnexpectedEncodingError);
+    // None of the five values the shell reads, even when the open's expectation names the same string.
+    const unknown = buildBatch([1n], [[[[0, 0], [1, 0], [0, 1], [0, 0]]]], EXPECTED_FRAME, "geoarrow.geometrycollection");
+    expect(() => decodeBatch("sh", 0, unknown, "geometry", "geoarrow.geometrycollection")).toThrow(
+      UnexpectedEncodingError
+    );
+    // A line batch under a polygon expectation is refused, and a polygon batch under a line one, and a
+    // linestring batch under a multilinestring one.
+    const linestring = loadBatchFixture("lv95-linestring-batch");
+    const multilinestring = loadBatchFixture("lv95-multilinestring-batch");
+    expect(() => decodeBatch("sh", 0, linestring, "geometry", ENCODING_POLYGON)).toThrow(UnexpectedEncodingError);
+    expect(() => decodeBatch("sh", 0, multilinestring, "geometry", ENCODING_POLYGON)).toThrow(UnexpectedEncodingError);
+    expect(() => decodeBatch("sh", 0, polygon, "geometry", ENCODING_LINESTRING)).toThrow(UnexpectedEncodingError);
+    expect(() => decodeBatch("sh", 0, linestring, "geometry", ENCODING_MULTILINESTRING)).toThrow(
+      UnexpectedEncodingError
+    );
     // A point batch under a polygon expectation is refused, and a polygon batch under a point one.
     const point = loadBatchFixture("lv95-point-batch");
     expect(() => decodeBatch("sh", 0, point, "geometry", ENCODING_POLYGON)).toThrow(UnexpectedEncodingError);
@@ -203,7 +227,15 @@ describe("decodeBatch", () => {
     }
     expect(thrown).toBeInstanceOf(UnexpectedEncodingError);
     expect((thrown as UnexpectedEncodingError).message).toMatch(/^\[P6 placeholder\]/);
-    expect((thrown as UnexpectedEncodingError).message).toContain(ENCODING_POINT); // names all three
+    for (const read of [
+      ENCODING_POLYGON,
+      ENCODING_MULTIPOLYGON,
+      ENCODING_POINT,
+      ENCODING_LINESTRING,
+      ENCODING_MULTILINESTRING,
+    ]) {
+      expect((thrown as UnexpectedEncodingError).message).toContain(read); // names all five
+    }
     expect((thrown as UnexpectedEncodingError).batchEncoding).toBe(ENCODING_MULTIPOLYGON);
     expect((thrown as UnexpectedEncodingError).expectedEncoding).toBe(ENCODING_POLYGON);
   });
@@ -275,5 +307,85 @@ describe("decodeBatch", () => {
     expect(geometryKindOf(ENCODING_POINT)).toBe("point");
     expect(geometryKindOf(ENCODING_POLYGON)).toBe("polygonal");
     expect(geometryKindOf(ENCODING_MULTIPOLYGON)).toBe("polygonal");
+  });
+
+  /**
+   * SH-L0. `geometryKindOf` maps both line encodings to `line`, the point encoding to `point`, and the
+   * polygon and multipolygon encodings, and any other string, to `polygonal` as before. It is a pure
+   * function of the encoding string.
+   *
+   * RECORDED MUTATION: map `geoarrow.multilinestring` to `polygonal` in `geometryKindOf` (return
+   * `line` for the linestring encoding only). This test then fails by name.
+   *
+   * Observed over `26d4ccc0` on the uncommitted tree of the shell commit: `geometryKindOf maps both line encodings to line and the others as before (SH-L0)`
+   * FAILED by name with the mutation applied, at `expect(geometryKindOf(ENCODING_MULTILINESTRING)).toBe("line")` (`expected 'polygonal' to be 'line'`), then reverted.
+   */
+  it("geometryKindOf maps both line encodings to line and the others as before (SH-L0)", () => {
+    expect(geometryKindOf(ENCODING_LINESTRING)).toBe("line");
+    expect(geometryKindOf(ENCODING_MULTILINESTRING)).toBe("line");
+    expect(geometryKindOf(ENCODING_POINT)).toBe("point");
+    expect(geometryKindOf(ENCODING_POLYGON)).toBe("polygonal");
+    expect(geometryKindOf(ENCODING_MULTIPOLYGON)).toBe("polygonal");
+    expect(geometryKindOf("geoarrow.geometrycollection")).toBe("polygonal");
+  });
+
+  /**
+   * SH-L1 (real shape: the engine's own `lv95-linestring-batch` and `lv95-multilinestring-batch`, BF-L
+   * and BF-ML, decoded by the product `decodeBatch`). L-1 is five LineString rows of 2, 3, 5, 2 and 4
+   * positions: one part per row, the part holding one path, `partToRow` the identity, `partCount` the
+   * row count, and `totalVertices` 16. ML-1 is three MultiLineString rows of 2, 1 and 3 parts, so the
+   * six part ordinals differ from the row indices from the second row on: `partToRow` is
+   * `[0, 0, 1, 2, 2, 2]`, `partCount` 6, `totalVertices` 15, and each part is its linestring's
+   * positions in order. Each coordinate carries the bits the engine wrote (compared with `Object.is`,
+   * and each is not representable in `f32`, so a narrowing shows).
+   *
+   * RECORDED MUTATION: walk a linestring row as a ring list in `decodeBatch` (disable the line branch,
+   * so the row falls into the polygon ring walk). This test then fails by name.
+   *
+   * Observed over `26d4ccc0` on the uncommitted tree of the shell commit: `the engine's line batches decode to one path per part, partToRow, partCount and totalVertices, bits unchanged (SH-L1)`
+   * FAILED by name with the mutation applied, at `expect(l1.parts[k][0]).toHaveLength(1)` (`expected [ …(2) ] to have a length of 1 but got 2`), then reverted.
+   */
+  it("the engine's line batches decode to one path per part, partToRow, partCount and totalVertices, bits unchanged (SH-L1)", () => {
+    const l1 = decodeBatch("sh_l1", 0, loadBatchFixture("lv95-linestring-batch"), "geometry", ENCODING_LINESTRING);
+    expect(Array.from(l1.ids)).toEqual([0n, 1n, 2n, 3n, 4n]);
+    expect(l1.parts).toHaveLength(5);
+    lineL1Positions().forEach((positions, k) => {
+      expect(l1.parts[k]).toHaveLength(1); // one part
+      expect(l1.parts[k][0]).toHaveLength(1); // holding one path
+      const path = l1.parts[k][0][0];
+      expect(path).toHaveLength(positions.length);
+      positions.forEach(([x, y], v) => {
+        expect(Math.fround(x)).not.toBe(x); // the fixture is bit-sensitive
+        expect(Object.is(path[v][0], x)).toBe(true);
+        expect(Object.is(path[v][1], y)).toBe(true);
+      });
+    });
+    expect(Array.from(l1.partToRow)).toEqual([0, 1, 2, 3, 4]);
+    expect(l1.partCount).toBe(5);
+    expect(l1.totalVertices).toBe(2 + 3 + 5 + 2 + 4);
+
+    const ml1 = decodeBatch(
+      "sh_ml1",
+      0,
+      loadBatchFixture("lv95-multilinestring-batch"),
+      "geometry",
+      ENCODING_MULTILINESTRING
+    );
+    expect(Array.from(ml1.ids)).toEqual([0n, 1n, 2n]);
+    expect(ml1.parts.map((f) => f.length)).toEqual([2, 1, 3]);
+    multilinestringMl1Positions().forEach((parts, row) => {
+      parts.forEach((positions, p) => {
+        expect(ml1.parts[row][p]).toHaveLength(1); // each part holds one path
+        const path = ml1.parts[row][p][0];
+        expect(path).toHaveLength(positions.length);
+        positions.forEach(([x, y], v) => {
+          expect(Object.is(path[v][0], x)).toBe(true);
+          expect(Object.is(path[v][1], y)).toBe(true);
+        });
+      });
+    });
+    expect(Array.from(ml1.partToRow)).toEqual([0, 0, 1, 2, 2, 2]);
+    expect(ml1.partCount).toBe(6);
+    expect(ml1.totalVertices).toBe(2 + 3 + 2 + 2 + 2 + 4);
   });
 });

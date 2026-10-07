@@ -1,22 +1,30 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
-//! GeoArrow polygon, multipolygon and point assembly, and the check that the claimed encoding
-//! matches the data.
+//! GeoArrow polygon, multipolygon, point, linestring and multilinestring assembly, and the check
+//! that the claimed encoding matches the data.
 //!
 //! Layouts (GeoArrow, interleaved coordinates). Which one a dataset travels in is fixed at open, from
 //! the file's declared `geometry_types` (ADR-034 Decision 2), and never varies per batch or stream:
 //!
 //! ```text
-//! geoarrow.polygon       List<rings: List<vertices: FixedSizeList<xy: double>[2]>>
-//! geoarrow.multipolygon  List<polygons: List<rings: List<vertices: FixedSizeList<xy: double>[2]>>>
-//! geoarrow.point         FixedSizeList<xy: double>[2]
+//! geoarrow.polygon          List<rings: List<vertices: FixedSizeList<xy: double>[2]>>
+//! geoarrow.multipolygon     List<polygons: List<rings: List<vertices: FixedSizeList<xy: double>[2]>>>
+//! geoarrow.point            FixedSizeList<xy: double>[2]
+//! geoarrow.linestring       List<vertices: FixedSizeList<xy: double>[2]>
+//! geoarrow.multilinestring  List<linestrings: List<vertices: FixedSizeList<xy: double>[2]>>
 //! ```
 //!
 //! Variable-width by construction — the offsets differ per feature and per ring, which is the
 //! shape the transport work had not yet met (the bake-off's payload was three fixed-width columns).
 //! The multipolygon encoding adds one offsets buffer and appends each coordinate once. The point
-//! encoding appends each coordinate once and carries no offsets buffer.
+//! encoding appends each coordinate once and carries no offsets buffer. The linestring encoding
+//! appends each coordinate once and adds one offsets buffer; the multilinestring encoding adds a
+//! second.
+//!
+//! **The multilinestring storage type is structurally identical to the polygon storage type** (two
+//! list levels over a coordinate pair). Which one an array is, is decided only by the open's
+//! encoding, never by its shape.
 
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -27,11 +35,15 @@ use arrow::datatypes::{DataType, Field, FieldRef};
 
 use crate::crs::DatasetCrs;
 use crate::error::{EngineError, Result};
-use crate::wkb::{MultiPolygonBuilder, PointBuilder, PolygonBuilder};
+use crate::wkb::{
+    LineStringBuilder, MultiLineStringBuilder, MultiPolygonBuilder, PointBuilder, PolygonBuilder,
+};
 
 pub const EXT_NAME_POLYGON: &str = "geoarrow.polygon";
 pub(crate) const EXT_NAME_MULTIPOLYGON: &str = "geoarrow.multipolygon";
 pub(crate) const EXT_NAME_POINT: &str = "geoarrow.point";
+pub(crate) const EXT_NAME_LINESTRING: &str = "geoarrow.linestring";
+pub(crate) const EXT_NAME_MULTILINESTRING: &str = "geoarrow.multilinestring";
 
 /// The GeoArrow encoding a dataset's geometry travels in: **a fact of the open** (ADR-034
 /// Decision 2), chosen from the file's declared `geometry_types` and the same for the envelope,
@@ -49,6 +61,11 @@ pub enum GeometryEncoding {
     MultiPolygon,
     /// `geoarrow.point`: a declared set of exactly Point. Nothing is promoted into it.
     Point,
+    /// `geoarrow.linestring`: a declared set of exactly LineString. Nothing is promoted into it.
+    LineString,
+    /// `geoarrow.multilinestring`: a declared set of LineString and MultiLineString members that
+    /// includes MultiLineString. A LineString row is then a one-part MultiLineString.
+    MultiLineString,
 }
 
 impl GeometryEncoding {
@@ -59,6 +76,8 @@ impl GeometryEncoding {
             Self::Polygon => EXT_NAME_POLYGON,
             Self::MultiPolygon => EXT_NAME_MULTIPOLYGON,
             Self::Point => EXT_NAME_POINT,
+            Self::LineString => EXT_NAME_LINESTRING,
+            Self::MultiLineString => EXT_NAME_MULTILINESTRING,
         }
     }
 }
@@ -66,15 +85,39 @@ impl GeometryEncoding {
 /// **The readable geometry types, declared once per engine release** (ADR-034 Decision 1), in the
 /// order the refusal text states them. The admission gate and that text both read this, so the text
 /// can never state a set the gate does not admit.
-pub(crate) const READABLE_GEOMETRY_TYPES: [&str; 3] = ["Polygon", "MultiPolygon", "Point"];
+pub(crate) const READABLE_GEOMETRY_TYPES: [&str; 5] = [
+    "Polygon",
+    "MultiPolygon",
+    "Point",
+    "LineString",
+    "MultiLineString",
+];
 
-/// The kind a readable type belongs to. One column holds one kind (ADR-034 Decision 7).
+/// The kind a readable type belongs to. One column holds one kind (ADR-034 Decision 7). The
+/// variants are declared in the order the mixed-kinds detail names the kinds present: polygonal,
+/// point, line.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum GeometryKind {
     /// Polygon and MultiPolygon.
     Polygonal,
     /// Point.
     Point,
+    /// LineString and MultiLineString.
+    Line,
+}
+
+impl GeometryKind {
+    /// Every kind, in the order the mixed-kinds detail names the kinds present.
+    const IN_ORDER: [Self; 3] = [Self::Polygonal, Self::Point, Self::Line];
+
+    /// The kind as the mixed-kinds detail names it. Fixed text, not derived from a type name.
+    fn label(self) -> &'static str {
+        match self {
+            Self::Polygonal => "polygonal",
+            Self::Point => "point",
+            Self::Line => "line",
+        }
+    }
 }
 
 /// The kind of a declared type name (case-insensitive), or `None` outside the readable set.
@@ -82,10 +125,10 @@ pub(crate) fn kind_of(name: &str) -> Option<GeometryKind> {
     let readable = READABLE_GEOMETRY_TYPES
         .iter()
         .find(|r| r.eq_ignore_ascii_case(name))?;
-    Some(if *readable == "Point" {
-        GeometryKind::Point
-    } else {
-        GeometryKind::Polygonal
+    Some(match *readable {
+        "Point" => GeometryKind::Point,
+        "LineString" | "MultiLineString" => GeometryKind::Line,
+        _ => GeometryKind::Polygonal,
     })
 }
 
@@ -94,13 +137,40 @@ pub(crate) fn kind_of(name: &str) -> Option<GeometryKind> {
 /// `<declared list>` is replaced by the declared list, rendered as `{:?}` renders it.
 const MIXED_KINDS_DRAFT: &str = "geometry_types [<declared list>] mix polygonal and point types; this engine reads one kind per geometry column";
 
-/// The readable set as prose: `A and B`, or `A, B and C`.
-fn readable_set_phrase() -> String {
-    match READABLE_GEOMETRY_TYPES.split_last() {
+/// The span of [`MIXED_KINDS_DRAFT`] that names the kinds. It is replaced, at run time, by the kinds
+/// present in the declared set (question round 63, OPEN-2); the draft's own bytes are not edited.
+const MIXED_KINDS_SPAN: &str = "polygonal and point";
+
+/// Items as prose: `A and B`, or `A, B and C`.
+fn join_phrase(items: &[&str]) -> String {
+    match items.split_last() {
         Some((last, [])) => (*last).to_string(),
         Some((last, rest)) => format!("{} and {last}", rest.join(", ")),
         None => String::new(),
     }
+}
+
+/// The readable set as prose: `A and B`, or `A, B and C`.
+fn readable_set_phrase() -> String {
+    join_phrase(&READABLE_GEOMETRY_TYPES)
+}
+
+/// **[P6 placeholder]** The refusal of a declared set that mixes readable kinds: the ruling's draft
+/// with its span naming the kinds replaced by the kinds present, in the order polygonal, point,
+/// line, joined as the readable set is joined. A polygonal-and-point set therefore reads exactly as
+/// the draft does. States engine facts only.
+fn mixed_kinds_detail(types: &[String]) -> String {
+    let present: Vec<&str> = GeometryKind::IN_ORDER
+        .iter()
+        .filter(|k| types.iter().any(|t| kind_of(t) == Some(**k)))
+        .map(|k| k.label())
+        .collect();
+    format!(
+        "[P6 placeholder] {}",
+        MIXED_KINDS_DRAFT
+            .replace(MIXED_KINDS_SPAN, &join_phrase(&present))
+            .replace("[<declared list>]", &format!("{types:?}"))
+    )
 }
 
 /// The encoding a file's declared `geometry_types` selects, or the refusal (ADR-034 Decisions 2
@@ -110,12 +180,15 @@ fn readable_set_phrase() -> String {
 /// - a non-empty set within the readable set that includes `MultiPolygon` gives
 ///   [`GeometryEncoding::MultiPolygon`];
 /// - a set whose members are all `Point` gives [`GeometryEncoding::Point`];
+/// - a set whose members are all `LineString` gives [`GeometryEncoding::LineString`];
+/// - a set whose members are all `LineString` or `MultiLineString`, with at least one of the
+///   latter, gives [`GeometryEncoding::MultiLineString`];
 /// - an explicit empty list, **or an absent key** (`None`), gives [`GeometryEncoding::MultiPolygon`];
 /// - any member outside the readable set, Z or M names included, is refused as
 ///   `EngineError::GeoMetadata` with Decision 4's sighted wording, the declared list rendered as
 ///   `{:?}` renders it and the readable set read from [`READABLE_GEOMETRY_TYPES`];
-/// - a set that mixes the polygonal kind with Point is refused as `EngineError::GeoMetadata` with
-///   the ruling's own detail ([`MIXED_KINDS_DRAFT`]).
+/// - a set that mixes kinds (polygonal, point, line) is refused as `EngineError::GeoMetadata` with
+///   the ruling's own detail ([`MIXED_KINDS_DRAFT`], its kinds span from [`mixed_kinds_detail`]).
 pub(crate) fn encoding_for_declared_types(declared: Option<&[String]>) -> Result<GeometryEncoding> {
     let types = match declared {
         None | Some([]) => return Ok(GeometryEncoding::MultiPolygon),
@@ -136,11 +209,12 @@ pub(crate) fn encoding_for_declared_types(declared: Option<&[String]>) -> Result
         .all(|t| kind_of(t) == Some(GeometryKind::Polygonal))
     {
         Ok(GeometryEncoding::MultiPolygon)
+    } else if types.iter().all(|t| t.eq_ignore_ascii_case("LineString")) {
+        Ok(GeometryEncoding::LineString)
+    } else if types.iter().all(|t| kind_of(t) == Some(GeometryKind::Line)) {
+        Ok(GeometryEncoding::MultiLineString)
     } else {
-        Err(EngineError::GeoMetadata(format!(
-            "[P6 placeholder] {}",
-            MIXED_KINDS_DRAFT.replace("[<declared list>]", &format!("{types:?}"))
-        )))
+        Err(EngineError::GeoMetadata(mixed_kinds_detail(types)))
     }
 }
 
@@ -170,6 +244,14 @@ fn polygons_field() -> FieldRef {
     Arc::new(Field::new("polygons", DataType::List(rings_field()), false))
 }
 
+fn linestrings_field() -> FieldRef {
+    Arc::new(Field::new(
+        "linestrings",
+        DataType::List(vertices_field()),
+        false,
+    ))
+}
+
 /// The storage type a `geoarrow.polygon` column must have.
 pub fn polygon_storage_type() -> DataType {
     DataType::List(rings_field())
@@ -185,13 +267,78 @@ pub(crate) fn point_storage_type() -> DataType {
     DataType::FixedSizeList(coord_field(), 2)
 }
 
+/// The storage type a `geoarrow.linestring` column must have: one list of coordinate pairs per row.
+pub(crate) fn linestring_storage_type() -> DataType {
+    DataType::List(vertices_field())
+}
+
+/// The storage type a `geoarrow.multilinestring` column must have. **Structurally identical to
+/// [`polygon_storage_type`]**: only the inner field's name differs, and a validator compares
+/// structure. The open's encoding, never the array's shape, says which one a column is.
+pub(crate) fn multilinestring_storage_type() -> DataType {
+    DataType::List(linestrings_field())
+}
+
 /// The storage type the open's encoding names.
 fn storage_type(encoding: GeometryEncoding) -> DataType {
     match encoding {
         GeometryEncoding::Polygon => polygon_storage_type(),
         GeometryEncoding::MultiPolygon => multipolygon_storage_type(),
         GeometryEncoding::Point => point_storage_type(),
+        GeometryEncoding::LineString => linestring_storage_type(),
+        GeometryEncoding::MultiLineString => multilinestring_storage_type(),
     }
+}
+
+/// Build the GeoArrow linestring array from decoded lines: one geometry offsets buffer over one
+/// interleaved coordinate run, checked rather than asserted.
+pub(crate) fn build_linestring_array(b: LineStringBuilder) -> Result<ArrayRef> {
+    let n_coords = b.coords.len();
+    if !n_coords.is_multiple_of(2) {
+        return Err(EngineError::Arrow(format!(
+            "coordinate buffer has odd length {n_coords}"
+        )));
+    }
+    let flat = Float64Array::from(b.coords);
+    let coords = FixedSizeListArray::try_new(coord_field(), 2, Arc::new(flat), None)
+        .map_err(|e| EngineError::Arrow(format!("coordinates: {e}")))?;
+    let lines = ListArray::try_new(
+        vertices_field(),
+        checked_offsets(b.geom_offsets, "geometry offsets")?,
+        Arc::new(coords),
+        None,
+    )
+    .map_err(|e| EngineError::Arrow(format!("linestrings: {e}")))?;
+    Ok(Arc::new(lines))
+}
+
+/// Build the GeoArrow multilinestring array from decoded geometries: two offset levels (geometry,
+/// part) over one interleaved coordinate run, each checked rather than asserted.
+pub(crate) fn build_multilinestring_array(b: MultiLineStringBuilder) -> Result<ArrayRef> {
+    let n_coords = b.coords.len();
+    if !n_coords.is_multiple_of(2) {
+        return Err(EngineError::Arrow(format!(
+            "coordinate buffer has odd length {n_coords}"
+        )));
+    }
+    let flat = Float64Array::from(b.coords);
+    let coords = FixedSizeListArray::try_new(coord_field(), 2, Arc::new(flat), None)
+        .map_err(|e| EngineError::Arrow(format!("coordinates: {e}")))?;
+    let parts = ListArray::try_new(
+        vertices_field(),
+        checked_offsets(b.part_offsets, "part offsets")?,
+        Arc::new(coords),
+        None,
+    )
+    .map_err(|e| EngineError::Arrow(format!("linestrings: {e}")))?;
+    let multilinestrings = ListArray::try_new(
+        linestrings_field(),
+        checked_offsets(b.geom_offsets, "geometry offsets")?,
+        Arc::new(parts),
+        None,
+    )
+    .map_err(|e| EngineError::Arrow(format!("multilinestrings: {e}")))?;
+    Ok(Arc::new(multilinestrings))
 }
 
 /// Build the GeoArrow point array from decoded points: one interleaved coordinate pair per row and
@@ -361,11 +508,15 @@ fn json_string(s: &str) -> String {
 /// rows that are not in this batch into any bound computed from it — a wrong-but-plausible extent,
 /// with nothing raised.
 ///
-/// Walks either nesting: polygon (geometry → rings → vertices) or multipolygon (geometry → parts →
-/// rings → vertices), by offsets at every level; a point array is read directly.
+/// Walks any nesting: polygon (geometry → rings → vertices) or multipolygon (geometry → parts →
+/// rings → vertices), by offsets at every level; a linestring array (geometry → vertices) reads the
+/// vertex run between the slice's first and last geometry offsets; a point array is read directly.
+/// A multilinestring (geometry → lines → vertices) is walked by the polygon path, which reads it by
+/// shape: the walk is the same for both, and which encoding an array is, is the open's to say and
+/// never this function's.
 ///
-/// Returns `None` when the array is neither or the nesting cannot be walked; the caller treats that
-/// as "no bound established", never as an empty one.
+/// Returns `None` when the array is none of these or the nesting cannot be walked; the caller
+/// treats that as "no bound established", never as an empty one.
 pub fn coordinate_values(array: &ArrayRef) -> Option<&[f64]> {
     // A point array is its own coordinate run, over its own slice window only: Arrow's `slice`
     // windows a fixed-size list's child, so `points.len()` rows are `points.len() * 2` values.
@@ -377,6 +528,12 @@ pub fn coordinate_values(array: &ArrayRef) -> Option<&[f64]> {
     let geom_offsets = geoms.value_offsets();
     let lo = *geom_offsets.first()? as usize;
     let hi = *geom_offsets.last()? as usize;
+
+    // A linestring array: the geometry's children are the vertices themselves.
+    if let Some(vertices) = geoms.values().as_any().downcast_ref::<FixedSizeListArray>() {
+        let flat = vertices.values().as_any().downcast_ref::<Float64Array>()?;
+        return flat.values().get(lo * 2..hi * 2);
+    }
 
     // The geometry's children are rings (polygon) or parts (multipolygon): which one is read off
     // the array's own shape, never off a flag.
@@ -502,12 +659,59 @@ pub(crate) fn validate_point_encoding(array: &ArrayRef) -> Result<()> {
     Ok(())
 }
 
+/// The same check for `geoarrow.linestring`: one list level over a 2-dimensional coordinate.
+pub(crate) fn validate_linestring_encoding(array: &ArrayRef) -> Result<()> {
+    let found = array.data_type();
+    let want = linestring_storage_type();
+    let structural_eq = match found {
+        DataType::List(vertices) => matches!(
+            vertices.data_type(),
+            DataType::FixedSizeList(c, 2) if c.data_type() == &DataType::Float64
+        ),
+        _ => false,
+    };
+    if !structural_eq {
+        return Err(EngineError::EncodingMismatch {
+            claimed: format!("{EXT_NAME_LINESTRING} as {}", describe_nesting(&want)),
+            found: describe_nesting(found),
+        });
+    }
+    Ok(())
+}
+
+/// The same check for `geoarrow.multilinestring`: two list levels over a 2-dimensional coordinate.
+/// **A polygon array passes it, and a multilinestring array passes [`validate_polygon_encoding`]**:
+/// the two storage types are one structure. The open's encoding says which a column is.
+pub(crate) fn validate_multilinestring_encoding(array: &ArrayRef) -> Result<()> {
+    let found = array.data_type();
+    let want = multilinestring_storage_type();
+    let structural_eq = match found {
+        DataType::List(lines) => match lines.data_type() {
+            DataType::List(vertices) => matches!(
+                vertices.data_type(),
+                DataType::FixedSizeList(c, 2) if c.data_type() == &DataType::Float64
+            ),
+            _ => false,
+        },
+        _ => false,
+    };
+    if !structural_eq {
+        return Err(EngineError::EncodingMismatch {
+            claimed: format!("{EXT_NAME_MULTILINESTRING} as {}", describe_nesting(&want)),
+            found: describe_nesting(found),
+        });
+    }
+    Ok(())
+}
+
 /// Validate against the open's encoding — the one the envelope claims.
 pub(crate) fn validate_encoding(array: &ArrayRef, encoding: GeometryEncoding) -> Result<()> {
     match encoding {
         GeometryEncoding::Polygon => validate_polygon_encoding(array),
         GeometryEncoding::MultiPolygon => validate_multipolygon_encoding(array),
         GeometryEncoding::Point => validate_point_encoding(array),
+        GeometryEncoding::LineString => validate_linestring_encoding(array),
+        GeometryEncoding::MultiLineString => validate_multilinestring_encoding(array),
     }
 }
 
@@ -814,5 +1018,144 @@ mod tests {
             "the window's rows, in order"
         );
         assert!(coordinate_values(&a.slice(2, 0)).unwrap().is_empty());
+    }
+
+    /// One LineString row per entry of `rows`, each a list of positions.
+    fn build_lines(rows: &[Vec<[f64; 2]>]) -> ArrayRef {
+        let mut b = LineStringBuilder::new();
+        for row in rows {
+            b.push_wkb(&crate::fixture::encode_linestring(row)).unwrap();
+        }
+        build_linestring_array(b).unwrap()
+    }
+
+    /// One MultiLineString row per entry of `rows`; each entry is that row's parts.
+    fn build_multilines(rows: &[Vec<Vec<[f64; 2]>>]) -> ArrayRef {
+        let mut b = MultiLineStringBuilder::new();
+        for parts in rows {
+            b.push_wkb(&crate::fixture::encode_multilinestring(parts))
+                .unwrap();
+        }
+        build_multilinestring_array(b).unwrap()
+    }
+
+    fn a_line(x: f64, n: usize) -> Vec<[f64; 2]> {
+        (0..n).map(|i| [x + i as f64, x - i as f64]).collect()
+    }
+
+    /// LE-7. RECORDED MUTATION: in `validate_linestring_encoding`, also accept a second list level
+    /// (a `List<List<FixedSizeList<Float64>[2]>>`, the shape of a multilinestring column). The
+    /// multilinestring array is then admitted as linestrings and this test fails by name at the
+    /// linestring validator's refusal of it.
+    ///
+    /// Observed over `6f4cc949` on the uncommitted tree of the engine commit:
+    /// `the_line_storage_types_are_one_and_two_lists_deep_and_each_validator_refuses_the_others_array`
+    /// FAILED with the mutation applied, at the `matches!(validate_linestring_encoding(not_lines),
+    /// Err(EngineError::EncodingMismatch { .. }))` assertion, because the multilinestring array was
+    /// admitted, then reverted.
+    #[test]
+    fn the_line_storage_types_are_one_and_two_lists_deep_and_each_validator_refuses_the_others_array(
+    ) {
+        assert_eq!(
+            describe_nesting(&linestring_storage_type()),
+            "List<FixedSizeList<Float64>[2]>"
+        );
+        assert_eq!(
+            describe_nesting(&multilinestring_storage_type()),
+            "List<List<FixedSizeList<Float64>[2]>>"
+        );
+        let lines = build_lines(&[a_line(0.0, 2), a_line(5.0, 3)]);
+        let multi = build_multilines(&[vec![a_line(0.0, 2), a_line(5.0, 3)]]);
+        let poly = build(&[square(0.0, 0.0)]);
+        let multipoly = build_multi(&[vec![square(0.0, 0.0)]]);
+        let points = build_points(&[[1.0, 2.0]]);
+        assert_eq!(lines.data_type(), &linestring_storage_type());
+        assert_eq!(multi.data_type(), &multilinestring_storage_type());
+
+        validate_linestring_encoding(&lines).unwrap();
+        validate_multilinestring_encoding(&multi).unwrap();
+        for not_lines in [&multi, &poly, &multipoly, &points] {
+            assert!(matches!(
+                validate_linestring_encoding(not_lines),
+                Err(EngineError::EncodingMismatch { .. })
+            ));
+        }
+        for not_multi in [&lines, &multipoly, &points] {
+            assert!(matches!(
+                validate_multilinestring_encoding(not_multi),
+                Err(EngineError::EncodingMismatch { .. })
+            ));
+        }
+        // No other validator reads a linestring array.
+        assert!(validate_polygon_encoding(&lines).is_err());
+        assert!(validate_multipolygon_encoding(&lines).is_err());
+        assert!(validate_point_encoding(&lines).is_err());
+        assert!(validate_point_encoding(&multi).is_err());
+        assert!(validate_multipolygon_encoding(&multi).is_err());
+
+        // **A multilinestring array and a polygon array are one structure**, so each passes the
+        // other's validator: the open's encoding decides what a column is, never its shape.
+        validate_multilinestring_encoding(&poly).unwrap();
+        validate_polygon_encoding(&multi).unwrap();
+
+        // Not a line array: a flat run.
+        let flat: ArrayRef = Arc::new(Float64Array::from(vec![1.0, 2.0]));
+        assert!(validate_linestring_encoding(&flat).is_err());
+        assert!(validate_multilinestring_encoding(&flat).is_err());
+
+        // The dispatch reads the open's encoding.
+        validate_encoding(&lines, GeometryEncoding::LineString).unwrap();
+        validate_encoding(&multi, GeometryEncoding::MultiLineString).unwrap();
+        assert!(validate_encoding(&lines, GeometryEncoding::MultiLineString).is_err());
+        assert!(validate_encoding(&multi, GeometryEncoding::LineString).is_err());
+        assert!(validate_encoding(&lines, GeometryEncoding::Polygon).is_err());
+        assert!(validate_encoding(&points, GeometryEncoding::LineString).is_err());
+    }
+
+    /// LE-8. RECORDED MUTATION: in the linestring arm of `coordinate_values`, read the run from
+    /// vertex 0 instead of from the slice's first geometry offset (`lo * 2..hi * 2` to `0..hi * 2`).
+    /// A sliced array then returns the vertices of the rows before the slice and this test fails by
+    /// name at the first sliced assertion. The multilinestring half walks the unedited two-level
+    /// path, so the mutation does not reach it.
+    ///
+    /// Observed over `6f4cc949` on the uncommitted tree of the engine commit:
+    /// `coordinate_values_over_a_sliced_line_array_returns_the_slices_run_only` FAILED with the
+    /// mutation applied, at its assertion `one line of three positions` (left 10, right 6), then
+    /// reverted.
+    #[test]
+    fn coordinate_values_over_a_sliced_line_array_returns_the_slices_run_only() {
+        let a = build_lines(&[a_line(0.0, 2), a_line(100.0, 3), a_line(200.0, 4)]);
+        assert_eq!(coordinate_values(&a).unwrap().len(), 9 * 2);
+
+        let middle = a.slice(1, 1);
+        let run = coordinate_values(&middle).unwrap();
+        assert_eq!(run.len(), 3 * 2, "one line of three positions");
+        assert_eq!(run[0], 100.0);
+
+        let tail = a.slice(1, 2);
+        let run = coordinate_values(&tail).unwrap();
+        assert_eq!(run.len(), 7 * 2, "two lines of three and four positions");
+        assert_eq!(run[0], 100.0);
+        assert_eq!(
+            run[run.len() - 2],
+            203.0,
+            "the last vertex of the last line"
+        );
+        assert!(coordinate_values(&a.slice(2, 0)).unwrap().is_empty());
+
+        let m = build_multilines(&[
+            vec![a_line(0.0, 2), a_line(10.0, 2)],
+            vec![a_line(100.0, 3)],
+            vec![a_line(200.0, 2), a_line(300.0, 4)],
+        ]);
+        assert_eq!(coordinate_values(&m).unwrap().len(), 13 * 2);
+        let middle = m.slice(1, 1);
+        let run = coordinate_values(&middle).unwrap();
+        assert_eq!(run.len(), 3 * 2, "one part of three positions");
+        assert_eq!(run[0], 100.0);
+        let tail = m.slice(1, 2);
+        let run = coordinate_values(&tail).unwrap();
+        assert_eq!(run.len(), 9 * 2, "three parts across two rows");
+        assert_eq!(run[0], 100.0);
     }
 }

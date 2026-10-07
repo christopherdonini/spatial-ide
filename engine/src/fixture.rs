@@ -1323,6 +1323,168 @@ pub fn point_p1_rows_with_bounds(origin: [f64; 2], unit: f64) -> Vec<(Vec<u8>, [
         .collect()
 }
 
+/// Little-endian ISO WKB for a LineString: type 2, a position count, then the positions (lines-cut
+/// preregistration §2, E-L9; test support, like [`crate::wkb::encode_polygon`]). A test that needs a
+/// hostile row builds its bytes by hand.
+pub fn encode_linestring(positions: &[[f64; 2]]) -> Vec<u8> {
+    let mut out = vec![1u8];
+    out.extend_from_slice(&2u32.to_le_bytes());
+    out.extend_from_slice(&(positions.len() as u32).to_le_bytes());
+    for p in positions {
+        out.extend_from_slice(&p[0].to_le_bytes());
+        out.extend_from_slice(&p[1].to_le_bytes());
+    }
+    out
+}
+
+/// Little-endian ISO WKB for a MultiLineString: type 5, then each part as a complete WKB linestring
+/// with its own byte-order byte and type 2 (lines-cut preregistration §2, E-L9; test support).
+pub fn encode_multilinestring(parts: &[Vec<[f64; 2]>]) -> Vec<u8> {
+    let mut out = vec![1u8];
+    out.extend_from_slice(&5u32.to_le_bytes());
+    out.extend_from_slice(&(parts.len() as u32).to_le_bytes());
+    for part in parts {
+        out.extend_from_slice(&encode_linestring(part));
+    }
+    out
+}
+
+/// Positions on a lattice, laid out from `origin` in steps of `unit`. Each carries a fraction in its
+/// low bits, from a counter running across the whole fixture, so that an `f32` narrowing or a
+/// swapped axis changes it and no two positions are alike.
+fn lattice_positions(
+    lattice: &[(i32, i32)],
+    first: u32,
+    origin: [f64; 2],
+    unit: f64,
+) -> Vec<[f64; 2]> {
+    let [ox, oy] = origin;
+    lattice
+        .iter()
+        .zip(first..)
+        .map(|(&(i, j), k)| {
+            let frac = f64::from(k + 1) * 0.123_456_789;
+            [
+                ox + f64::from(i) * unit + frac,
+                oy + f64::from(j) * unit + 1.0 - frac,
+            ]
+        })
+        .collect()
+}
+
+/// A covering box `[xmin, ymin, xmax, ymax]` over every position given.
+fn bounds_of<'a>(positions: impl Iterator<Item = &'a [f64; 2]>) -> [f64; 4] {
+    let mut b = [
+        f64::INFINITY,
+        f64::INFINITY,
+        f64::NEG_INFINITY,
+        f64::NEG_INFINITY,
+    ];
+    for p in positions {
+        b = [
+            b[0].min(p[0]),
+            b[1].min(p[1]),
+            b[2].max(p[0]),
+            b[3].max(p[1]),
+        ];
+    }
+    b
+}
+
+/// §3's fixture L-1 as positions, one `Vec` per row: five LineStrings of 2, 3, 5, 2 and 4
+/// positions, laid out from `origin` in steps of `unit`. Rows 1 and 3 cross, inside both. Each
+/// position carries a fraction in its low bits that an `f32` narrowing or a swapped axis changes.
+pub fn line_l1(origin: [f64; 2], unit: f64) -> Vec<Vec<[f64; 2]>> {
+    const LATTICE: [&[(i32, i32)]; 5] = [
+        &[(0, 0), (6, 0)],
+        &[(0, 3), (4, 5), (8, 3)],
+        &[(10, 0), (12, 3), (14, 0), (16, 3), (18, 0)],
+        &[(1, 7), (7, 1)],
+        &[(10, 6), (12, 8), (14, 6), (16, 8)],
+    ];
+    let mut first = 0u32;
+    LATTICE
+        .iter()
+        .map(|row| {
+            let positions = lattice_positions(row, first, origin, unit);
+            first += row.len() as u32;
+            positions
+        })
+        .collect()
+}
+
+/// [`line_l1`] as WKB rows, each a type-2 LineString.
+pub fn line_l1_rows(origin: [f64; 2], unit: f64) -> Vec<Vec<u8>> {
+    line_l1(origin, unit)
+        .iter()
+        .map(|row| encode_linestring(row))
+        .collect()
+}
+
+/// [`line_l1`] as WKB rows with the covering each declares, the bounds of its own positions, for
+/// [`GeometryMode::RowsWithBounds`].
+pub fn line_l1_rows_with_bounds(origin: [f64; 2], unit: f64) -> Vec<(Vec<u8>, [f64; 4])> {
+    line_l1(origin, unit)
+        .iter()
+        .map(|row| (encode_linestring(row), bounds_of(row.iter())))
+        .collect()
+}
+
+/// §3's fixture ML-1 as structured geometry (row, then part, then `[x, y]`), laid out from `origin`
+/// in steps of `unit`: three MultiLineString rows of 2, 1 and 3 parts, so that the part ordinals
+/// 0..=5 differ from the row indices 0..=2 from the second row on, which is what a pick or a
+/// one-row-per-part defect has to get wrong to be seen. The parts hold 2, 3, 2, 2, 2 and 4
+/// positions.
+pub fn multilinestring_ml1(origin: [f64; 2], unit: f64) -> Vec<Vec<Vec<[f64; 2]>>> {
+    const LATTICE: [&[&[(i32, i32)]]; 3] = [
+        &[&[(0, 0), (5, 0)], &[(0, 2), (3, 4), (6, 2)]],
+        &[&[(8, 0), (8, 6)]],
+        &[
+            &[(10, 0), (12, 2)],
+            &[(10, 3), (13, 3)],
+            &[(10, 6), (11, 8), (13, 8), (14, 6)],
+        ],
+    ];
+    let mut first = 0u32;
+    LATTICE
+        .iter()
+        .map(|row| {
+            row.iter()
+                .map(|part| {
+                    let positions = lattice_positions(part, first, origin, unit);
+                    first += part.len() as u32;
+                    positions
+                })
+                .collect()
+        })
+        .collect()
+}
+
+/// [`multilinestring_ml1`] as WKB rows, each a type-5 MultiLineString.
+pub fn multilinestring_ml1_rows(origin: [f64; 2], unit: f64) -> Vec<Vec<u8>> {
+    multilinestring_ml1(origin, unit)
+        .iter()
+        .map(|parts| encode_multilinestring(parts))
+        .collect()
+}
+
+/// [`multilinestring_ml1`] as WKB rows with the covering each declares, the bounds of all of its
+/// parts, for [`GeometryMode::RowsWithBounds`].
+pub fn multilinestring_ml1_rows_with_bounds(
+    origin: [f64; 2],
+    unit: f64,
+) -> Vec<(Vec<u8>, [f64; 4])> {
+    multilinestring_ml1(origin, unit)
+        .iter()
+        .map(|parts| {
+            (
+                encode_multilinestring(parts),
+                bounds_of(parts.iter().flatten()),
+            )
+        })
+        .collect()
+}
+
 /// A closed square ring of side `s` with its lower-left corner at `(x, y)`.
 fn square_ring(x: f64, y: f64, s: f64) -> Vec<[f64; 2]> {
     vec![[x, y], [x + s, y], [x + s, y + s], [x, y + s], [x, y]]

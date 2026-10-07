@@ -68,7 +68,8 @@ crs      { identifier, definition_json, source: "file"|"caller_asserted"|"format
            axis_order, axis_normalization: "none-performed",
            provenance, axis_provenance, display_convention: Option<String>,
            unit: "degree"|"metre"|"other"|"unestablished" }
-geometry { column, encoding: "geoarrow.polygon"|"geoarrow.multipolygon"|"geoarrow.point",
+geometry { column, encoding: "geoarrow.polygon"|"geoarrow.multipolygon"|"geoarrow.point"|
+                             "geoarrow.linestring"|"geoarrow.multilinestring",
            declared_types: Option<[String]>,
            coordinate_layout: "interleaved-xy", frame: "authoritative-project-crs" }
 identity { source: "file:id"|"mapped:<col>"|"session-ordinal:file_row_number",
@@ -1046,6 +1047,30 @@ comparison retained; `deny_unknown_fields` kept both directions. `skp/1` stays R
 > now states what `Catalog::remove`'s doc says of live streams and pool leases, and that
 > `TicketState`'s variants in `kernel/src/skp.rs` carry the dataset by name in their `dataset` field. (iii) No literal, key, value, code or command
 > changes, and `protocol/data-plane/` has an empty diff.
+
+### skp/0.11 — LineString and MultiLineString admission (`engine/GEOMETRY-LINES-PREREGISTRATION.md`, ADR-034)
+
+**The version's FULL field set, as §8's own discipline requires — no command, no request member,
+no response member, no error code.** One change to `describe`'s `geometry` member, on
+`GeometryInfo`:
+
+- **`geometry.encoding` gains a fourth and a fifth value, `"geoarrow.linestring"` and
+  `"geoarrow.multilinestring"`**, beside `"geoarrow.polygon"`, `"geoarrow.multipolygon"` and
+  `"geoarrow.point"`. Each is the engine's encoding for this open (ADR-034 Decision 2): fixed at
+  open from the file's declared `geometry_types` (a declared set of exactly LineString gives the
+  fourth; a set of LineString and MultiLineString members that includes MultiLineString gives the
+  fifth) and the value every batch's envelope carries. It is the engine's fact, never the file's own
+  type. `declared_types` is unchanged.
+
+§1's `describe` block is updated in place to name all five values (the in-place update this entry
+records). §5 is unchanged. `protocol/data-plane/` has an empty diff.
+
+Mechanics: one literal bumped once, `"skp/0.10"` → `"skp/0.11"`, in one commit, which carries both
+sides' fixtures for the literal (`protocol/skp/tests/data/*.json`,
+`protocol/skp/tests/conformance/fixtures/*.json`, `protocol/skp/tests/fixtures.rs` and the shell's
+TypeScript literal and its tests) together; the version-refusal conformance fixture that named
+`skp/0.11` as an unsupported future version is renumbered to name `skp/0.12` instead. Plain `==`
+comparison retained; `deny_unknown_fields` kept both directions. `skp/1` stays RESERVED.
 
 ## 9. Attribute projection on `viewport_query`
 
