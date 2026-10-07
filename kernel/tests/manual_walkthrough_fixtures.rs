@@ -336,7 +336,7 @@ fn generate_the_declared_polygon_and_point_fixture() {
     println!("wrote {} ({} features)", path.display(), facts.features);
 }
 
-/// The lines file for the shell E2E's LN' step and Part T's T1, T2 and T4
+/// The lines file for the shell E2E's LN' step and Part T's T1, T2, T4 and T5
 /// (`engine/GEOMETRY-LINES-PREREGISTRATION.md` section 3, fixture L-1 with its covering; ADR-034):
 /// LV95, declared `["LineString"]`, five LineString rows from `spatial_engine::fixture::line_l1_rows_with_bounds`,
 /// rows 1 and 3 crossing, **with a covering**, so a viewport query reaches the canvas (a file with
@@ -362,7 +362,7 @@ fn generate_the_line_l1_fixture() {
     println!("wrote {} ({} features)", path.display(), facts.features);
 }
 
-/// The multilinestring file for the shell E2E's LN' step and Part T's T3
+/// The multilinestring file for Part T's T3
 /// (`engine/GEOMETRY-LINES-PREREGISTRATION.md` section 3, fixture ML-1 with its covering): LV95,
 /// declared `["MultiLineString"]`, three rows of 2, 1 and 3 parts from
 /// `spatial_engine::fixture::multilinestring_ml1_rows_with_bounds`, **with a covering**. Admitted as

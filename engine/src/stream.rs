@@ -2282,9 +2282,9 @@ pub(crate) fn is_timing_dependent(ordering: RowOrdering, cut: BatchCutPolicy) ->
 /// unchanged inputs only. `engine/tests/multipolygon_stream.rs` asserts the bound on a real stream.
 /// For points, vertices equals rows and no offsets are written, so the estimate bounds a point
 /// batch; `engine/tests/point_stream.rs` asserts it. For a linestring, the offsets are rows plus
-/// one, within its `(rows + vertices) * 4` term; for a multilinestring, each part has at least 2
-/// vertices, so parts are at most vertices divided by 2. `engine/tests/line_stream.rs` asserts the
-/// bound on a real stream.
+/// one, within its `(rows + vertices) * 4` term; for a multilinestring batch of two or more rows,
+/// each part has at least 2 vertices, so parts are at most vertices divided by 2.
+/// `engine/tests/line_stream.rs` asserts the bound on a real stream.
 fn estimate_bytes(rows: usize, vertices: usize) -> usize {
     // 16 B per interleaved xy pair, 8 B per id, 4 B per offset entry, both offset levels.
     vertices * 16 + rows * 8 + (rows + vertices) * 4
