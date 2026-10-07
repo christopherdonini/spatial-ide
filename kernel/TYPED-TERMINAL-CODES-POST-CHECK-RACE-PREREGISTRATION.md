@@ -181,3 +181,17 @@ All assertions are structural: the batch count, the terminal's code, and the eve
 ## §10. Amendments
 
 (opens empty)
+
+### Amendment 1 — question round 65's ruling (OPEN-1 (1); OPEN-2 (1))
+
+*Written by the custodian after question round 65 was answered and before any code: no branch exists. It is appended at the file's end and belongs to §10. The ruling is `state/directives/2026-10-07-round-65-rulings.md`, line 6, sha256 83a8126f41aaca3f660c2e92f102d138c83bc88860d6704e3db98dadf5b79f73 at the commit that adds it. Its RULED block is in `DECISIONS-PENDING.md` under round 65, referenced and not restated. OPEN-1 and OPEN-2 are those of the architect's draft, part 3 (`state/consults/2026-10-07-typed-terminal-codes-post-check-race-architect-draft.md`). The human chose the recommended option for each. Nothing below is a quotation.*
+
+1. **OPEN-1, (1). The kernel index line is deferred.**
+   - This piece's PR does not edit `kernel/README.md`, and §8 item 2 stands unchanged.
+   - The custodian adds this form's line to `kernel/README.md`'s list of the module's preregistrations in this piece's closing record, after `geometry-lines-cut` has merged.
+   - This is a ruled deviation from the product-first direction's section 1, which puts owner's-index lines in the piece's own PR.
+2. **OPEN-2, (1). Part B is in scope:** E2 and E3 in `kernel/tests/session_end_event.rs`, as §2 drafts them, with their mutations M-B2 and M-B3 and prediction P-3. §8 item 9's condition is met. §7's Part B row applies.
+3. **The closing record** also carries item 1's index line, by reference to this amendment.
+4. **Generation 2.** Dispatch may start. Its heavy runs go one at a time with the lines cut's.
+
+**Superseded index.** §2's condition on Part B, and §8 item 9 → item 2. §8 item 2's mention of OPEN-1 → item 1 (not edited).
