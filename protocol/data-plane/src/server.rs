@@ -459,7 +459,10 @@ async fn handle(st: AppState, mut socket: WebSocket) {
                 "no operation started".to_string()
             } else {
                 format!(
-                    "no operation started, and the declared ceiling                      MAX_IDLE_CONNECTIONS={MAX_IDLE_CONNECTIONS} was already reached, so this                      connection was held for {CROWDED_START_TIMEOUT:?} rather than                      {START_TIMEOUT:?}"
+                    "no operation started, and the declared ceiling \
+                     MAX_IDLE_CONNECTIONS={MAX_IDLE_CONNECTIONS} was already reached, so this \
+                     connection was held for {CROWDED_START_TIMEOUT:?} rather than \
+                     {START_TIMEOUT:?}"
                 )
             };
             terminal_and_drain(
