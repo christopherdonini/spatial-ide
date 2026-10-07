@@ -10,6 +10,7 @@ import {
   LAYERS_WIDTH_PX,
   MAP_MIN_HEIGHT_PX,
   MAP_MIN_WIDTH_PX,
+  VIEWPORT_FLOOR,
 } from "./layoutConstants";
 import { effectiveSizes, initialLayoutState, layoutReducer, sizeRangeOf } from "./layoutState";
 import type { LayoutAction, LayoutState, SideRegion } from "./layoutState";
@@ -18,8 +19,8 @@ import type { LayoutAction, LayoutState, SideRegion } from "./layoutState";
  * SHELL-MIGRATION-MILESTONE-1-PREREGISTRATION.md §4, U1 to U3: the layout reducer and its fit.
  */
 
-const VIEWPORT_WIDTHS = [1024, 1280, 1366, 1600, 1920];
-const VIEWPORT_HEIGHTS = [640, 720, 768, 800, 1080];
+const VIEWPORT_WIDTHS = [VIEWPORT_FLOOR.width, 1280, 1366, 1600, 1920];
+const VIEWPORT_HEIGHTS = [VIEWPORT_FLOOR.height, 720, 768, 800, 1080];
 const REGIONS: SideRegion[] = ["layers", "inspector", "activity"];
 const INSPECTOR_TAB_IDS: InspectorTabId[] = ["layer", "style"];
 const ACTIVITY_TAB_IDS: ActivityTabId[] = ["console", "notices"];

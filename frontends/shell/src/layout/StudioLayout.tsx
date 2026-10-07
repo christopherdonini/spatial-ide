@@ -14,9 +14,10 @@ import {
   INSPECTOR_SLOT_IDS,
   INSPECTOR_TABS,
   LAYER_SECTIONS,
+  REGIONS,
   STATUS_ITEMS,
 } from "./contributions";
-import type { Slots } from "./contributions";
+import type { RegionId, Slots } from "./contributions";
 import {
   ATTENTION_MAX_HEIGHT_PX,
   RESIZE_STEP_PX,
@@ -53,6 +54,11 @@ const TOGGLE_REGION: Partial<Record<ActionId, SideRegion>> = {
   "layout.toggleInspector": "inspector",
   "layout.toggleActivity": "activity",
 };
+
+/** A region's heading, from the registered contributions (the sighted names). */
+function regionLabel(id: RegionId): string {
+  return REGIONS.find((region) => region.id === id)?.label ?? id;
+}
 
 /** The id of a region's splitter, which is not inside the region but is hidden with it. */
 function splitterId(region: SideRegion): string {
@@ -221,8 +227,8 @@ export default function StudioLayout({ overlays, slots, layersRow, onZoomToLayer
         </div>
       </header>
 
-      <aside id={REGION_ID.layers} ref={regionRefs.layers} className="region-layers" aria-label="Layers" hidden={!state.layers.open}>
-        <h2 className="region-heading">Layers</h2>
+      <aside id={REGION_ID.layers} ref={regionRefs.layers} className="region-layers" aria-label={regionLabel("layers")} hidden={!state.layers.open}>
+        <h2 className="region-heading">{regionLabel("layers")}</h2>
         {slots["region.layers"]}
         {layersRow !== null && <LayersRow pathDisplay={layersRow.pathDisplay} onZoomToLayer={() => runAction("layer.zoomToLayer")} />}
       </aside>
@@ -234,14 +240,14 @@ export default function StudioLayout({ overlays, slots, layersRow, onZoomToLayer
         ))}
       </section>
 
-      <main ref={mapRef} id="region-map" className="region-map" aria-label="Map" tabIndex={0}>
+      <main ref={mapRef} id="region-map" className="region-map" aria-label={regionLabel("map")} tabIndex={0}>
         {slots["region.map"]}
       </main>
 
       {splitter("inspector", "x", -1, sizes.inspectorWidth, "[P6 placeholder] Resize Inspector")}
-      <aside id={REGION_ID.inspector} ref={regionRefs.inspector} className="region-inspector" aria-label="Inspector" hidden={!state.inspector.open}>
+      <aside id={REGION_ID.inspector} ref={regionRefs.inspector} className="region-inspector" aria-label={regionLabel("inspector")} hidden={!state.inspector.open}>
         <TabList
-          label="Inspector"
+          label={regionLabel("inspector")}
           idPrefix="inspector"
           tabs={INSPECTOR_TABS}
           selected={state.inspector.tab}
@@ -276,9 +282,9 @@ export default function StudioLayout({ overlays, slots, layersRow, onZoomToLayer
       </aside>
 
       {splitter("activity", "y", -1, sizes.activityHeight, "[P6 placeholder] Resize Activity")}
-      <section id={REGION_ID.activity} ref={regionRefs.activity} className="region-activity" aria-label="Activity" hidden={!state.activity.open}>
+      <section id={REGION_ID.activity} ref={regionRefs.activity} className="region-activity" aria-label={regionLabel("activity")} hidden={!state.activity.open}>
         <TabList
-          label="Activity"
+          label={regionLabel("activity")}
           idPrefix="activity"
           tabs={ACTIVITY_TABS}
           selected={state.activity.tab}
