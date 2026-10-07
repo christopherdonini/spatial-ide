@@ -73,7 +73,11 @@ export type SlotId =
 
 export type Slots = Record<SlotId, ReactNode>;
 
+/** The slots the Inspector draws from: empty exactly when none has content (the empty-Inspector text). */
+export const INSPECTOR_SLOT_IDS: readonly SlotId[] = [
+  ...LAYER_SECTIONS.map((section) => `section.${section.id}` as const),
+  "inspector.style",
+];
+
 /** The attention items' slot ids, in order -- the strip is empty exactly when none has content. */
 export const ATTENTION_SLOT_IDS: readonly SlotId[] = ATTENTION_ITEMS.map((item) => `attention.${item.id}` as const);
-/** The status bar's slot ids, in order. */
-export const STATUS_SLOT_IDS: readonly SlotId[] = STATUS_ITEMS.map((item) => `status.${item.id}` as const);

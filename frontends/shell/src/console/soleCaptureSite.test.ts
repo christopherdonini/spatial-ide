@@ -57,6 +57,7 @@ const RECORD_NAMED_ALLOWLIST = new Set([
   "ErrorBanner.tsx",
   "publish/PublishPanel.tsx",
   "notices/NoticesPanel.tsx",
+  "layout/StudioLayout.tsx", // milestone 1: the only layout file that records (class-C layout rows)
 ]);
 
 function walk(dir: string): string[] {

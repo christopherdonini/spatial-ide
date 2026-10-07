@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import AdmissionPanel from "./admission/AdmissionPanel";
 import { Admitted } from "./admission/admitDataset";
+import DescribeSummary from "./admission/DescribeSummary";
 import { FormattedRefusal, formatRefusal } from "./admission/formatRefusal";
 import RefusalBlock from "./admission/RefusalBlock";
 import type { AuthoritativeBbox } from "./canvas/viewportBbox";
@@ -15,6 +16,8 @@ import ConsolePanel from "./console/ConsolePanel";
 import { recordNamed } from "./console/recorder";
 import { logSessionEvent } from "./diagnostics/log";
 import FilterPanel from "./filter/FilterPanel";
+import { ScanLivenessMirror, WatcherStatusItem } from "./layout/regionParts";
+import StudioLayout from "./layout/StudioLayout";
 import {
   beginResidencyStep,
   disableResidencyInstrument,
@@ -1647,25 +1650,28 @@ export default function App() {
   }, [admitted]);
 
   return (
-    <div className="app">
-      <ErrorBanner />
-      <header className="app-header">Spatial IDE</header>
-      <main className="app-main">
-        {/* action-console cut P5c fix 1 (styles.css's own `.app-rail-top`/`.app-rail-bottom`
-          * comment has the full account): admission + filter live in their OWN scrollable rail,
-          * separate from `.canvas-container`/`.console-panel` below -- so THIS rail's content can
-          * overflow and scroll WITHIN ITSELF, without `.app-main` ever growing a scrollbar of its
-          * own (the vertical-scrollbar-eats-canvas-width bug A9' traced to). Nothing about which
-          * panels are gated on `admitted`, keyed, or ordered changed -- only the wrapping div. */}
-        <div className="app-rail-top">
-          <AdmissionPanel onAdmitted={handleAdmitted} />
-        {/* NEXT-CUT.md (filter-panel cut) P3 item 5 / binding note 9: in `.app-main`'s flex column,
-          * below the admission panel, in normal document flow -- never an absolute overlay. Keyed on
-          * `admitted.dataset` for the same reason `WorkingCanvas` below is: a dataset change must
-          * discard this panel's own local input text/busy/refusal state rather than reconcile it
+    <StudioLayout
+      overlays={<ErrorBanner />}
+      layersRow={admitted ? { pathDisplay: admitted.describe.source.path_display } : null}
+      onZoomToLayer={() => void canvasRef.current?.fitToBounds()}
+      /* Milestone 1 (SHELL-MIGRATION-MILESTONE-1-PREREGISTRATION.md section 2.2): every panel below keeps
+       * its keys and its props and now lives in a slot of the Map Studio frame (`layout/`). A comment
+       * below that speaks of `.app-main`, `.app-rail-top`, `.app-rail-bottom`, a flex column, or a
+       * placement below `.canvas-container` records the pre-milestone-1 stacked layout: it is history,
+       * kept for its reasoning about keys and order, and does not say where anything sits now. */
+      slots={{
+        "region.layers": <AdmissionPanel onAdmitted={handleAdmitted} />,
+        /* Entry 120 (2) / OPEN-1 (A), question round 66, item 1: the summary binds to the dataset on the
+         * map (`admitted`), not to the open attempt `AdmissionPanel` is working on -- so a refused second
+         * open leaves the first dataset's summary standing while the Layers region shows the refusal. */
+        "section.source": admitted && <DescribeSummary describe={admitted.describe} />,
+        /* NEXT-CUT.md (filter-panel cut) P3 item 5 / binding note 9 (its pre-milestone-1 placement is
+          * history). Keyed on `admitted.dataset` for the same reason `WorkingCanvas` is: a dataset change
+          * must discard this panel's own local input text/busy/refusal state rather than reconcile it
           * across two different datasets' filter/column spaces (App-owned state -- `activeFilter`,
-          * `scanState` -- is reset independently via `admitAndResetStaleUiState`). */}
-        {admitted && (
+          * `scanState` -- is reset independently via `admitAndResetStaleUiState`). Its home is the
+          * Inspector's Filter section; its liveness line and Cancel stay inside it (ADR-021). */
+        "section.filter": admitted && (
           <FilterPanel
             // Reviewer gate, style-panel cut P7 fixes: prefixed, not the bare `admitted.dataset`
             // string -- `StylePanel` below is ALSO keyed per-dataset and is a DIRECT SIBLING of this
@@ -1752,9 +1758,8 @@ export default function App() {
               void managerRef.current?.cancelStream(handle);
             }}
           />
-        )}
-        </div>
-        {admitted && (
+        ),
+        "region.map": admitted && (
           <div className="canvas-container">
             {/* Keyed on the dataset handle -- not just re-rendered with new props -- so a reopen
               * (a *new* `open_dataset`, `Admitted` object, even for the same file: SKP-V0.md never
@@ -1837,13 +1842,6 @@ export default function App() {
                 viewportDebounceRef.current?.call(toWireBbox(bbox), null);
               }}
             />
-            <button
-              type="button"
-              className="zoom-to-layer"
-              onClick={() => canvasRef.current?.fitToBounds()}
-            >
-              Zoom to layer
-            </button>
             {/* Viewport-residency cut P6a, decision 24(c) + DECISIONS-PENDING entry 88 / 75 (3),
               * RULED 2026-09-14 (B1): all four hover-readout states are rendered by one component
               * (`canvas/HoverReadoutView.tsx`), moved out of this file unchanged in markup, classes
@@ -1852,115 +1850,89 @@ export default function App() {
               * component (`HoverReadoutView.test.tsx`), which this file, needing a WebGL context it
               * has no way to provide in jsdom, could not host. */}
             <HoverReadoutView readout={hover} />
-            {/* S1 (reviewer round, 2026-08-13): a single top-anchored flex column, not three
-              * independently absolute-positioned elements at fixed offsets. `.canvas-refusal` can
-              * wrap to 2+ lines (a long stream-failure or refusal message), and a fixed offset for
-              * whatever sat below it (the old `.residency-status` rule) assumed a height that a
-              * wrapped message violates -- occluding it. Stacking these in normal document flow
-              * inside `.canvas-status-stack` (styles.css) means each element's *actual* rendered
-              * height, whatever it is, is what the next one respects, not a number guessed in
-              * advance -- both stay simultaneously visible regardless of message length, and both
-              * stay clear of `.hover-readout` (bottom-left) and `.zoom-to-layer` (top-right) exactly
-              * as before. */}
-            {(canvasRefusal || viewportRefusal || sessionEnded || residencyStatus || scanState.kind === "cancelled") && (
-              <div className="canvas-status-stack">
-                {/* **P3b §2a(v): the typed session-ended status, first in the stack.** Rendered
-                  * through `RefusalBlock` -- the shared refusal block a dataset-open or filter
-                  * refusal already uses, and the ONLY product dispatcher of `refusalGuidance`
-                  * (`admission/RefusalBlock.tsx:25`), which is what makes the owner's
-                  * `engine.source_changed` sentence reach an operator at all on the canvas surface.
-                  * Its `code`/`message` come from `formatTerminalRefusal`, so no machine prefix is
-                  * rendered as prose (§8.6).
-                  *
-                  * **NOT dismissible** -- `RefusalBlock` renders no button by construction (its own
-                  * doc comment), which is exactly right here: the state does not end until the
-                  * dataset is reopened. **N8 correction (2026-09-22):** it is NOT a remount that
-                  * clears this -- `.canvas-status-stack` sits beside the keyed `<WorkingCanvas
-                  * key={admitted.dataset}>` (above), not inside it, and renders from this
-                  * App-owned `sessionEnded` state. The actual clear is `handleAdmitted`'s own
-                  * `admitAndResetStaleUiState` call (`sessionEnded`'s own doc comment above has the
-                  * full account). The `.residency-status` precedent below is the same reasoning for
-                  * a weaker fact. */}
-                {sessionEnded && (
-                  <div className="canvas-session-ended">
-                    <RefusalBlock refusal={sessionEnded} />
-                  </div>
-                )}
-                {canvasRefusal && (
-                  <div className="canvas-refusal" role="alert">
-                    {canvasRefusal}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        // NEXT-CUT.md P3 item B (class C, `surfaceRegistry.ts`'s own
-                        // "canvas.dismissCanvasRefusal" row): recorded at the point the action
-                        // actually applies -- this click clears local state only, never the kernel.
-                        recordNamed("gui-action", "canvas.dismissCanvasRefusal");
-                        setCanvasRefusal(null);
-                      }}
-                    >
-                      Dismiss
-                    </button>
-                  </div>
-                )}
-                {/* P3b: suppressed once the session-ended block is standing. The pre-check route
-                  * sets BOTH (§2b keeps `setViewportRefusal` exactly as it was), and the block above
-                  * renders the same code and the same message plus the guidance this surface has
-                  * never dispatched -- so showing both would put the identical refusal on the canvas
-                  * twice, once with its guidance and once without. The state is untouched; only
-                  * whether it renders while a strictly stronger statement is standing. */}
-                {viewportRefusal && !sessionEnded && (
-                  <div className="canvas-refusal" role="alert">
-                    <div className="admission-refusal-code">{viewportRefusal.code}</div>
-                    {viewportRefusal.message}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        recordNamed("gui-action", "canvas.dismissViewportRefusal");
-                        setViewportRefusal(null);
-                      }}
-                    >
-                      Dismiss
-                    </button>
-                  </div>
-                )}
-                {/* Rider 1 (DECISIONS-PENDING.md entry 0, option (a)): NOT dismissible -- no close
-                  * control, deliberately. Dismissing a `.canvas-refusal` above must never remove
-                  * this; it only ever clears via `nextResidencyStatus`'s own "delivery-complete" /
-                  * "dataset-changed" / "query-issued" transitions. Viewport-residency cut P4
-                  * (decisions 24(a)/(b)): content is now arm-dependent -- `residencyStatusText`
-                  * (`residency/residencyStatus.ts`) is the ONE place that renders any of the three
-                  * `ResidencyStatus` variants (baseline's own ceiling wording untouched by this
-                  * piece) to a string, so this JSX stays a one-line lookup. */}
-                {residencyStatus && (
-                  <div className="residency-status" role="status">
-                    {residencyStatusText(residencyStatus)}
-                  </div>
-                )}
-                {/* NEXT-CUT.md P4 item 3, verbatim copy: persistent, NOT dismissible -- no close
-                  * control (rider-1 pattern). Cleared only by the next issued query (any of the three
-                  * issue sites, via `issueViewportQuery`'s own unconditional `"issued"` supersede) or
-                  * a dataset change (`admitAndResetStaleUiState`'s `setScanState({kind:"idle"})`) --
-                  * derived directly from `scanState.kind === "cancelled"`, no separate boolean to
-                  * drift out of sync with the machine that actually governs it. No duration word or
-                  * figure beyond the row count itself (binding note 4). */}
-                {scanState.kind === "cancelled" && (
-                  <div className="scan-incomplete" role="status">
-                    {`Filtered view incomplete — scan cancelled at ${scanState.rows} rows`}
-                  </div>
-                )}
-              </div>
-            )}
           </div>
-        )}
-        {/* action-console cut P5c fix 1: style + publish + console live in their OWN scrollable
-          * rail too, mirroring `.app-rail-top` above and for the identical reason -- this rail
-          * comes AFTER `.canvas-container` in flex/visual order (S4's own reasoning, unchanged by
-          * this wrap), so the canvas still claims its space first; the wrap only stops THIS rail's
-          * own overflow from ever reaching `.app-main` and narrowing the canvas. See
-          * `styles.css`'s own `.app-rail-top`/`.app-rail-bottom` comment for the full account. */}
-        <div className="app-rail-bottom">
-        {/* NEXT-CUT.md (style-panel cut) P4 / binding note 6, MOVED below `.canvas-container`
+        ),
+        /* The attention strip, in section 2.5 order. **P3b section 2a(v): the session-ended status is first.**
+         * Rendered through `RefusalBlock`, the shared refusal block and the ONLY product dispatcher of
+         * `refusalGuidance` (`admission/RefusalBlock.tsx`), which is what makes the owner's
+         * `engine.source_changed` sentence reach an operator on this surface; its `code`/`message` come from
+         * `formatTerminalRefusal`, so no machine prefix is rendered as prose (section 8.6). NOT dismissible:
+         * `RefusalBlock` renders no button, and the state ends only when the dataset is reopened -- the actual
+         * clear is `handleAdmitted`'s own `admitAndResetStaleUiState` call (N8 correction, 2026-09-22), not a
+         * remount of the keyed canvas. Every attention and status item binds to `admitted`, the dataset on
+         * the map (section 2.4). */
+        "attention.sessionEnded": admitted && sessionEnded && (
+          <div className="canvas-session-ended">
+            <RefusalBlock refusal={sessionEnded} />
+          </div>
+        ),
+        "attention.canvasRefusal": admitted && canvasRefusal && (
+          <div className="canvas-refusal" role="alert">
+            {canvasRefusal}
+            <button
+              type="button"
+              onClick={() => {
+                // NEXT-CUT.md P3 item B (class C, `surfaceRegistry.ts`'s own
+                // "canvas.dismissCanvasRefusal" row): recorded at the point the action
+                // actually applies -- this click clears local state only, never the kernel.
+                recordNamed("gui-action", "canvas.dismissCanvasRefusal");
+                setCanvasRefusal(null);
+              }}
+            >
+              Dismiss
+            </button>
+          </div>
+        ),
+        /* P3b: suppressed once the session-ended block is standing. The pre-check route sets BOTH (section 2b
+         * keeps `setViewportRefusal` exactly as it was), and the block above renders the same code and the
+         * same message plus the guidance this surface has never dispatched -- so showing both would put the
+         * identical refusal in the strip twice. The state is untouched; only whether it renders. */
+        "attention.viewportRefusal": admitted && viewportRefusal && !sessionEnded && (
+          <div className="canvas-refusal" role="alert">
+            <div className="admission-refusal-code">{viewportRefusal.code}</div>
+            {viewportRefusal.message}
+            <button
+              type="button"
+              onClick={() => {
+                recordNamed("gui-action", "canvas.dismissViewportRefusal");
+                setViewportRefusal(null);
+              }}
+            >
+              Dismiss
+            </button>
+          </div>
+        ),
+        /* The status bar, in section 2.5 order. Rider 1 (DECISIONS-PENDING.md entry 0, option (a)): the residency
+         * status is NOT dismissible -- no close control, deliberately; dismissing a `.canvas-refusal` must never
+         * remove it. It only clears via `nextResidencyStatus`'s own "delivery-complete" / "dataset-changed" /
+         * "query-issued" transitions, and `residencyStatusText` (`residency/residencyStatus.ts`) is the ONE place
+         * that renders any of its variants. */
+        "status.residency": admitted && residencyStatus && (
+          <div className="residency-status" role="status">
+            {residencyStatusText(residencyStatus)}
+          </div>
+        ),
+        /* OPEN-6 (question round 67): a read-only mirror of the filter panel's liveness line, so a scan stays
+         * visible with the Inspector closed. It has no Cancel; Cancel stays in `FilterPanel` (ADR-021). */
+        "status.scanLiveness": admitted && <ScanLivenessMirror scanState={scanState} />,
+        /* NEXT-CUT.md P4 item 3, verbatim copy: persistent, NOT dismissible -- no close control (rider-1
+         * pattern). Cleared only by the next issued query (any of the three issue sites, via
+         * `issueViewportQuery`'s own unconditional `"issued"` supersede) or a dataset change
+         * (`admitAndResetStaleUiState`'s `setScanState({kind:"idle"})`) -- derived directly from
+         * `scanState.kind === "cancelled"`, no separate boolean to drift out of sync with the machine that
+         * actually governs it. No duration word or figure beyond the row count itself (binding note 4). */
+        "status.scanIncomplete": admitted && scanState.kind === "cancelled" && (
+          <div className="scan-incomplete" role="status">
+            {`Filtered view incomplete — scan cancelled at ${scanState.rows} rows`}
+          </div>
+        ),
+        /* The watcher's state (SOURCE-WATCHER-PREREGISTRATION.md section 2d; the display held since
+         * 2026-09-23): the at-open wire fact of the dataset on the map, hidden while the session-ended
+         * statement above stands. */
+        "status.sourceWatch": admitted && (
+          <WatcherStatusItem facts={admitted.describe} sessionEnded={sessionEnded !== null} />
+        ),
+        /* NEXT-CUT.md (style-panel cut) P4 / binding note 6, MOVED below `.canvas-container`
           * (reviewer gate, style-panel cut P7 fixes, S4 -- the reviewer's own cheap option). Still in
           * `.app-main`'s flex column, still normal document flow, never an absolute overlay (the S1
           * lesson, same as `.filter-panel` itself); still keyed on `admitted.dataset` for the same
@@ -1981,9 +1953,9 @@ export default function App() {
           *
           * **Key prefixed, not the bare `admitted.dataset` string (reviewer gate, style-panel cut
           * P7 fixes).** `FilterPanel` above uses the identical dataset value as its own key -- see
-          * its own comment for the duplicate-sibling-key finding this fixes on both ends. */}
-        {admitted && <StylePanel key={`style-${admitted.dataset}`} style={style} onChange={setStyle} />}
-        {/* NEXT-CUT.md (publish cut) P3: "in .app-main's flex column below StylePanel" -- same
+          * its own comment for the duplicate-sibling-key finding this fixes on both ends. */
+        "inspector.style": admitted && <StylePanel key={`style-${admitted.dataset}`} style={style} onChange={setStyle} />,
+        /* NEXT-CUT.md (publish cut) P3: "in .app-main's flex column below StylePanel" -- same
           * reasoning as `StylePanel`'s own placement below `.canvas-container` (S4): this panel
           * comes AFTER the canvas in both visual and flex order, so its own collapsed/expanded state
           * cannot push `.canvas-container` toward its 200px floor (`styles.css`'s own
@@ -1993,8 +1965,8 @@ export default function App() {
           * datasets. `style` is passed through unchanged (App-owned, not reset on a dataset change,
           * same as `StylePanel`'s own prop) -- the publish seam derives the wire-shape document from
           * it at Publish-click time (`PublishPanel.tsx`'s own `toStyleDocument` call), never a second
-          * copy held here. */}
-        {admitted && (
+          * copy held here. */
+        "section.export": admitted && (
           <PublishPanel
             key={`publish-${admitted.dataset}`}
             datasetHandle={admitted.dataset}
@@ -2003,23 +1975,22 @@ export default function App() {
             hasSettledView={hasSettledView}
             getLastViewportBbox={() => lastViewportBboxRef.current}
           />
-        )}
-        {/* NEXT-CUT.md P3: mounted UNCONDITIONALLY (not gated on `admitted`, unlike every panel
+        ),
+        /* NEXT-CUT.md P3: mounted UNCONDITIONALLY (not gated on `admitted`, unlike every panel
           * above) -- `open_dataset` itself, and several class-B commands
           * (`binding_pick_file`/`binding_crs_catalog`), can fire before any dataset is ever
           * admitted, and the console must account for those too. Same "in `.app-main`'s flex
           * column, below `.canvas-container`, never an absolute overlay" discipline every other
           * panel here already follows (S1/S4) -- `styles.css`'s own `.console-panel` comment has
-          * the measured layout-budget note this piece appended. */}
-        <ConsolePanel />
-        {/* RELEASE-0.1 Amendment 3, item 2: mounted UNCONDITIONALLY, same reasoning as
+          * the measured layout-budget note this piece appended. */
+        "activity.console": <ConsolePanel />,
+        /* RELEASE-0.1 Amendment 3, item 2: mounted UNCONDITIONALLY, same reasoning as
           * `ConsolePanel` immediately above -- reading the shipped notice text needs no dataset
           * admitted and no Tauri command (it is fed by a build-time file, `NoticesPanel.tsx`'s own
           * doc comment). Placed last so it reads as a standing, always-available surface, not a
-          * per-dataset panel. */}
-        <NoticesPanel />
-        </div>
-      </main>
-    </div>
+          * per-dataset panel. */
+        "activity.notices": <NoticesPanel />,
+      }}
+    />
   );
 }

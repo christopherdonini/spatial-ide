@@ -11,7 +11,6 @@ import { pickFile } from "../skp/dialog";
 import { admitDataset, AdmitOptions, Admitted, AdmissionOutcome } from "./admitDataset";
 import { splitCandidateColumns } from "./candidateColumns";
 import CrsAssertionForm from "./CrsAssertionForm";
-import DescribeSummary from "./DescribeSummary";
 import { fieldValue, FormattedRefusal } from "./formatRefusal";
 import IdentityDeclarationForm from "./IdentityDeclarationForm";
 import RefusalBlock from "./RefusalBlock";
@@ -262,7 +261,8 @@ interface Props {
 
 /**
  * The admission flow as product truth (NEXT-CUT.md): a file picker, then `open_dataset`'s verdict
- * rendered directly. Success renders `DescribeSummary`; every typed refusal is shown with its full
+ * rendered directly. Success is rendered by `App` (`DescribeSummary`, bound to the dataset on the map,
+ * milestone 1 / OPEN-1 (A)); every typed refusal is shown with its full
  * reason, verbatim -- the refusal UX *is* the feature. NEXT-CUT.md P3 adds the two remediation
  * forms (`CrsAssertionForm`/`IdentityDeclarationForm`), both re-entering `admitPath` below -- the
  * SAME function a plain retry uses, just with `AdmitOptions` set -- never a parallel admission
@@ -407,8 +407,6 @@ export default function AdmissionPanel({ onAdmitted }: Props) {
           )}
         </>
       )}
-
-      {state.kind === "admitted" && <DescribeSummary describe={state.admitted.describe} />}
     </div>
   );
 }
