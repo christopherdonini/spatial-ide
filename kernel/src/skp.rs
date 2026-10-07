@@ -536,12 +536,12 @@ pub enum NotLive {
 /// What the **dataset-session generation registry** knows about one ticket handle — three-valued,
 /// deliberately, because two values would make the kernel fabricate a diagnosis.
 ///
-/// The P3 attempt-2 defect this type exists to prevent, in the human's own words
-/// (`DECISIONS-PENDING.md:44`, quoted in `engine/ADMISSION-PREREGISTRATION.md:742-744`): a guard
-/// that "told a caller its source 'was observed to have changed' for any handle the map did not
-/// know — expired, already redeemed, never minted — which is a diagnosis the kernel had not made
-/// (`docs/01` principle 8)". [`TicketLiveness::Unknown`] is the third value that keeps that
-/// statement unmade.
+/// The P3 attempt-2 defect this type exists to prevent, as the ADMISSION form words it
+/// (`engine/ADMISSION-PREREGISTRATION.md:742-744`, recording question round 4, item 1): the guard's
+/// source-change refusal told a caller its source was observed to have changed for any handle the
+/// map did not know (expired, already redeemed, never minted), a diagnosis the kernel had not made
+/// (`docs/01` principle 8). [`TicketLiveness::Unknown`] is the third value that keeps that
+/// diagnosis unmade.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TicketLiveness {
     /// Attributed to this dataset's currently-live generation.
@@ -1086,9 +1086,10 @@ impl SkpHost {
     /// The dataset-session generation registry this host mints into (P3b §2c).
     /// `EngineSourceFactory::ticket_only` needs the identical `Arc` to answer
     /// [`GenerationRegistry::ticket_liveness`] about what this host ended — the host constructs the
-    /// registry privately (`SkpHost::new`, `:689`) and nothing else can hand out that `Arc`.
+    /// registry privately (in `SkpHost::new`) and nothing else can hand out that `Arc`.
     ///
-    /// **Its product caller is one line**: `frontends/shell/src-tauri/src/lib.rs:373-377` (`host.generations()` at `:376`),
+    /// **Its product caller is one call**: the `serve(DataPlaneConfig { .. })` call in
+    /// `frontends/shell/src-tauri/src/lib.rs`'s `run` setup,
     /// `EngineSourceFactory::ticket_only(catalog, tickets, host.generations())`. Same shape as
     /// [`Self::catalog`] and [`Self::tickets`] above, for the same reason.
     pub fn generations(&self) -> Arc<GenerationRegistry> {
@@ -1136,11 +1137,12 @@ impl SkpHost {
                         }
                     }
                     LatchState::Admitted => {
-                        // Admission's own critical section (below) always mints this dataset's
-                        // generation before it ever sets the latch to `Admitted`, so by the time
-                        // this arm is reached the generation this call ends is guaranteed to exist
-                        // (Amendment 1: it always carries a `SessionRef`, even one no client
-                        // holds). Dropped before reaching into `generations` — lock order.
+                        // This arm is reached only after this call's admission (below) minted the
+                        // dataset's generation, under the latch and before the latch was set to
+                        // `Admitted`; that generation carries the `SessionRef` this call returns on
+                        // `OpenDatasetResponse.session`. The close race is pinned by
+                        // `ticket_drop_under_lock_regression::the_close_race_mints_no_generation_so_no_unheld_reference_exists`.
+                        // Dropped before reaching into `generations` — lock order.
                         drop(guard);
                         let reason = reason_of_signal(&signal);
                         // Phase-2 delta 8, following `kernel/src/lib.rs`'s own post-check
@@ -1701,8 +1703,8 @@ fn viewport_query_build_error_of(e: ViewportQueryBuildError) -> SkpError {
 /// about the predicate's own text and keeps its `skp.filter_*` code via [`filter_error_of`].
 /// [`PredicateAdmitError::ConnectionsExhausted`] is a fact about the engine's admission-class
 /// connection pool, never about the text, so it routes through [`error_of`]'s existing
-/// `EngineError::ConnectionsExhausted` arm to `engine.connections_exhausted` (SKP-V0.md `:266`'s
-/// `engine.` + variant-name rule) — the ruling of 2026-09-13 (DECISIONS-PENDING entry 91 (a)):
+/// `EngineError::ConnectionsExhausted` arm to `engine.connections_exhausted` (SKP-V0.md §5's
+/// `code` rule: `engine.` + variant-name) — the ruling of 2026-09-13 (DECISIONS-PENDING entry 91 (a)):
 /// residual exhaustion surfaces as the typed `engine.connections_exhausted`, **never** as a false
 /// binder refusal. ADR-021 item 8's twelve-code `skp.filter_*` list is untouched: this function
 /// mints no code either side of the match does not already mint.
@@ -2014,13 +2016,18 @@ fn describe_dataset(ds: &Dataset) -> DescribeResponse {
 ///
 /// **Why the code is prefixed here and not left to the client to infer** (P3 gate attempt 1,
 /// architect-ruled). `BatchSource::next_into` is typed `Result<_, String>`, so the typed
-/// `EngineError` is stringified at `crate::EngineSource::next_into` and everything downstream —
-/// the data-plane terminal frame, the shell's `Terminal.detail` — sees prose only. A client that
+/// `EngineError` is stringified where the kernel hands it to the data plane and everything
+/// downstream — the data-plane terminal frame, the shell's `Terminal.detail` — sees prose only. A client that
 /// must **clear residency and refuse picks** on `engine.source_changed` **(P3b — no client does
 /// either in P3a)** could not decide that from prose without matching on wording, and the wording
 /// is the human's at P6. The code table is
 /// [`error_of`]'s own, so there is exactly one place a code is minted and this cannot drift from
 /// what the control plane reports for the same error.
+///
+/// The kernel hands an engine refusal to the data plane as a `String` at `EngineSource::next_into`
+/// (mid-stream), in `EngineSourceFactory::create_from_raw_params` and in the two dead-ticket arms of
+/// `EngineSourceFactory::liveness_refusal` (both at create time); each calls this function, which
+/// stays the one place the prefix is built.
 ///
 /// **No data-plane change.** The prefix rides the existing `String` the terminal already carries;
 /// `protocol/data-plane/` is untouched (block-on-sight A3).
@@ -2072,7 +2079,7 @@ pub fn error_of(e: &EngineError) -> SkpError {
             vec![("detail", detail.clone())],
         ),
         // **Brief A P3, boundary 9's remaining two typed refusals.** Both are `engine.` + the
-        // variant name, per SKP-V0.md `:266`'s rule, and both carry `detail` in the structured
+        // variant name, per SKP-V0.md §5's `code` rule, and both carry `detail` in the structured
         // field rather than only in the message — a client that must clear residency and refuse
         // picks needs the code, not the prose.
         //

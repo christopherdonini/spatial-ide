@@ -133,8 +133,8 @@ compile time only, as is every response type there.
 ```
 
 Invalidates every unredeemed ticket for the dataset, cancels every live stream, then removes the
-name from the catalog. Safe by refcount: each live stream's registry entry holds its own
-`Arc<Dataset>` clone, so the dataset outlives its last stream regardless of close ordering.
+name from the catalog. A ticket's registry entry holds the dataset by name, and a live stream holds
+no `Arc<Dataset>`; a pool lease in flight keeps the pool alive until it is released.
 
 ## 2. Three corrections to the cut brief, made by the architect review
 
@@ -1012,6 +1012,17 @@ sides' fixtures for the literal and the new member (`protocol/skp/tests/data/*.j
 fixture that named `skp/0.9` as an unsupported future version is renumbered to name `skp/0.10`
 instead. Plain `==` comparison retained; `deny_unknown_fields` kept both directions. `skp/1`
 stays RESERVED.
+
+> **Dated note, no literal change (2026-10-07; PLAN node `kernel-close-races-followups`).** (i) The
+> `skp/0.3` entry's refusal-surfaces bullet names `EngineSource::next_into` as where a terminal's
+> `detail` gets its `"<code>: <display>"` prefix. At commit 99f4c437e81ad3286a9f388ea466e3f76d322556
+> (a commit on main), `terminal_detail_of` is called from three product functions in
+> `kernel/src/lib.rs`: `EngineSource::next_into`, `EngineSourceFactory::create_from_raw_params` and
+> `EngineSourceFactory::liveness_refusal`. The shape is the same at each, and the bullet is not
+> edited. (ii) §1's `close_dataset` paragraph was corrected in place: its second sentence said each
+> live stream's registry entry holds its own `Arc<Dataset>` clone, which the code does not do, and
+> now states what the catalog's `remove` documents. (iii) No literal, key, value, code or command
+> changes, and `protocol/data-plane/` has an empty diff.
 
 ## 9. Attribute projection on `viewport_query`
 
