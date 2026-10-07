@@ -1022,7 +1022,7 @@ stays RESERVED.
 > edited. (ii) §1's `close_dataset` paragraph was corrected in place: its second sentence said each
 > live stream's registry entry holds its own `Arc<Dataset>` clone, which the code does not do, and
 > now states what `Catalog::remove`'s doc says of live streams and pool leases and what
-> `TicketState` in `kernel/src/skp.rs` says of the by-name hold. (iii) No literal, key, value, code or command
+> `TicketState`'s variants in `kernel/src/skp.rs` carry the dataset by name in their `dataset` field. (iii) No literal, key, value, code or command
 > changes, and `protocol/data-plane/` has an empty diff.
 
 ## 9. Attribute projection on `viewport_query`
