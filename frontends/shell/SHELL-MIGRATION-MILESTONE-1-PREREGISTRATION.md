@@ -445,3 +445,16 @@ The worker's and tester's briefs carry, as written, the paragraph at state/direc
 8. **Generation 2.** Dispatch waits only for the lines cut's merge (§0.2; the awaiting-merge direction, item 3).
 
 **Superseded index.** §11's OPEN list and every OPEN-conditional part → items 1 to 7, binding. §2.8's placeholder list → item 4. §2.11's conditional line → item 7.
+
+### Amendment 2 — §2.9 item 7's re-sweep at the lines cut's merge commit
+
+*Written by the custodian before any code: the code branch holds no commit of its own. It is appended at the file's end, belongs to §10, and is the amendment §2.9 item 7 calls for. The lines cut merged as PR #188, merge commit e888787eeec1e5ce63adf56a9aff1b087951e889, and every pin below is at that commit. Nothing below is a quotation.*
+
+1. **Part T's T4 and T5** (frontends/shell/MANUAL-WALKTHROUGH.md:1688 @ e888787e sha256:316c21a09360a52c0f66b51e4af32ded1e330ad85efef0f4f14af08bdafdc2d8 and frontends/shell/MANUAL-WALKTHROUGH.md:1689 @ e888787e sha256:b7735b8cc07c131964cb074e66399675b2c9307c10195f5c194ec7f951a66126). T4 names the Style disclosure, and T5 names the Publish button. Home: here, under §2.8. They join the rows known to need it, under the same rules: no row's meaning changes, no result-log text is edited, and the PR body lists both with their old and new words. T5's button label follows Amendment 1, item 4.
+2. **Part T's T1, T2, T3 and T6** name no location word and no changed label. They are not changed.
+3. **LN',** the lines cut's e2e step (frontends/shell/e2e/regression.mjs:452-475 @ e888787e sha256:63c2682594a7fa044a1a5f8aa11cadd476b096ea24b8efd26fad66de3f3bd9e3, run at frontends/shell/e2e/regression.mjs:2534 @ e888787e sha256:71bccf8ef0212b41bdf818a77ac8d3a41937a834baa94661a5dc2b805d5b22cf). It reads `.describe-summary` and calls the shared refusal-and-banner check, as the MP' and PT' steps do. Home: here, under §2.7 and H3. It runs with the suite at the base commit, and any change to it falls inside regression.mjs's existing allowance (§7, G6). No allowance is added.
+4. **KNOWN-LIMITATIONS items 37 and 38** (KNOWN-LIMITATIONS.md:359-365 @ e888787e sha256:fabc3c6e2dbb8da07ba9fae4bdffa63642b739f1c7d8d5687a88e982f761a171), and items 31 to 33 as the lines cut edited them, name no region or location. No home is needed, and none is changed.
+5. **The lines cut's two new placeholder strings** (the mixed-kind detail, and the publish refusal naming a line encoding) are refusal details that the existing refusal displays render as text. This piece changes no refusal text, so they need no home of their own, and they are not added to §2.8's list.
+6. **Generation 3.**
+
+**Superseded index.** §2.9 item 7 → items 1 to 5. Not edited.

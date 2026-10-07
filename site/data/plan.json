@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-07T20:47:27.037Z",
-  "plan_hash": "f058e507340247f09d73e5566cc9e9895dba07abe2ed459cb5c6bf6fc053e6c6",
+  "generated_at": "2026-10-07T22:30:45.297Z",
+  "plan_hash": "d86b883cf3d2ba23a48c25e1f7c4e796d63ed614b9d03c3fe99af1b4b974d74a",
   "priorities_approved": true,
   "lanes": [
     {
@@ -4376,7 +4376,7 @@
       "kind": "task",
       "lane": "kernel-protocol",
       "phase": "prototype",
-      "status": "ready",
+      "status": "in-progress",
       "order": 14,
       "depends_on": [
         "kernel-close-races-followups"
@@ -4387,12 +4387,14 @@
       },
       "gate": "protocol/data-plane/CROWDED-START-DETAIL-SPACES-PREREGISTRATION.md",
       "merge": "merge-commit",
-      "evidence": null,
+      "evidence": {
+        "branch": "cut/data-plane-crowded-start-detail-spaces"
+      },
       "budget_minutes": 20,
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "FORM COMMITTED 2026-10-07 (the architect draft, alone; full form from dispatch, for the data-plane wire category, the detail being TERMINAL payload bytes; no OPEN item; 18 pins at a21435ed; at most 68 lines over 2 files): code only after kernel-close-races-followups (#186) merges. Before: SLOT 2 AFTER kernel-close-races-followups 2026-10-05 (the product-first direction 8.e). Before: RULED 2026-09-26, question round 26, item 4 (b): main's data-plane crowded-start detail string, operator-visible, carries two runs of spaces from a lost line continuation in protocol/data-plane/src/server.rs. Found by data-plane-stream-registry-bound's architect gate (state/consults/2026-09-26-stream-registry-bound-gate1-architect.md, note N7). Placed by question round 31, item 1 (RULED 2026-09-30): position 16 of 16 in the human's order, order 14 in its lane. It depends on kernel-close-races-followups, position 15, so that the order holds across lanes.",
+      "summary": "IN CODE 2026-10-07: branch cut/data-plane-crowded-start-detail-spaces from e888787e (main after the lines cut merged), worktree C:/dev/wt/dpcs, target D:/wt-targets/dpcs; one worker. Before: FORM COMMITTED 2026-10-07 (the architect draft, alone; full form from dispatch, for the data-plane wire category, the detail being TERMINAL payload bytes; no OPEN item; 18 pins at a21435ed; at most 68 lines over 2 files): code only after kernel-close-races-followups (#186) merges. Before: SLOT 2 AFTER kernel-close-races-followups 2026-10-05 (the product-first direction 8.e). Before: RULED 2026-09-26, question round 26, item 4 (b): main's data-plane crowded-start detail string, operator-visible, carries two runs of spaces from a lost line continuation in protocol/data-plane/src/server.rs. Found by data-plane-stream-registry-bound's architect gate (state/consults/2026-09-26-stream-registry-bound-gate1-architect.md, note N7). Placed by question round 31, item 1 (RULED 2026-09-30): position 16 of 16 in the human's order, order 14 in its lane. It depends on kernel-close-races-followups, position 15, so that the order holds across lanes.",
       "dates": {
         "opened": "2026-09-26",
         "done": null
@@ -5063,7 +5065,7 @@
       "kind": "task",
       "lane": "shell",
       "phase": "prototype",
-      "status": "ready",
+      "status": "in-progress",
       "order": 11,
       "depends_on": [],
       "needs_human": {
@@ -5072,12 +5074,14 @@
       },
       "gate": "frontends/shell/SHELL-MIGRATION-MILESTONE-1-PREREGISTRATION.md",
       "merge": "merge-commit",
-      "evidence": null,
+      "evidence": {
+        "branch": "cut/shell-migration-milestone-1"
+      },
       "budget_minutes": 0,
-      "generation": 2,
+      "generation": 3,
       "felt_verdict": false,
       "entries": [],
-      "summary": "RULED 2026-10-07 (rounds 66 and 67, all recommended, with two clarifications; state/directives/2026-10-07-round-66-and-67-rulings.md): Amendment 1, generation 2; dispatch waits only for the lines cut merge. Before: FORM COMMITTED 2026-10-07 (the architect draft, alone; full form; 69 pins at 30e77c10; at most 3,250 lines over 25 files against the plan estimate of 1,500, OPEN-5): OPEN-1 to OPEN-7 go to the human in one question round, none a red line; code after the lines cut merges. Before: PLACED 2026-10-07 by the human's ruling of the migration plan's second version (state/directives/2026-10-07-migration-plan-v2-ruled.md; state/directives/SHELL-MIGRATION-PLAN-2026-10-07.md, section 5, scope and acceptance, and 5.7, placement): first in slot 1 order. Its full form, by the architect, and its question round now; its code starts when the lines cut has merged, since it shares frontends/shell/e2e/regression.mjs and frontends/shell/MANUAL-WALKTHROUGH.md with it (the 2026-10-07 awaiting-merge direction, item 3). No engine, kernel or protocol file; no new dependency (the plan, section 2). The governance freeze lifts when it merges. Before: PROPOSED 2026-10-05 by the product-first direction 8.b: proposed until the human rules Fable migration plan (written after the O-07 walkthrough); from that ruling it is first in slot 1 order. The freeze lifts when this milestone and MP-1 have both merged.",
+      "summary": "IN CODE 2026-10-07: branch cut/shell-migration-milestone-1 from e888787e (main after the lines cut merged), worktree C:/dev/wt/m1, target D:/wt-targets/m1; one worker, its heavy suites in a second stage. Amendment 2, generation 3: the section 2.9 item 7 re-sweep at the lines cut merge commit (Part T rows T4 and T5 join the section 2.8 location sweep; LN prime runs under section 2.7 and H3; no other home needed). Before: RULED 2026-10-07 (rounds 66 and 67, all recommended, with two clarifications; state/directives/2026-10-07-round-66-and-67-rulings.md): Amendment 1, generation 2; dispatch waits only for the lines cut merge. Before: FORM COMMITTED 2026-10-07 (the architect draft, alone; full form; 69 pins at 30e77c10; at most 3,250 lines over 25 files against the plan estimate of 1,500, OPEN-5): OPEN-1 to OPEN-7 go to the human in one question round, none a red line; code after the lines cut merges. Before: PLACED 2026-10-07 by the human's ruling of the migration plan's second version (state/directives/2026-10-07-migration-plan-v2-ruled.md; state/directives/SHELL-MIGRATION-PLAN-2026-10-07.md, section 5, scope and acceptance, and 5.7, placement): first in slot 1 order. Its full form, by the architect, and its question round now; its code starts when the lines cut has merged, since it shares frontends/shell/e2e/regression.mjs and frontends/shell/MANUAL-WALKTHROUGH.md with it (the 2026-10-07 awaiting-merge direction, item 3). No engine, kernel or protocol file; no new dependency (the plan, section 2). The governance freeze lifts when it merges. Before: PROPOSED 2026-10-05 by the product-first direction 8.b: proposed until the human rules Fable migration plan (written after the O-07 walkthrough); from that ruling it is first in slot 1 order. The freeze lifts when this milestone and MP-1 have both merged.",
       "dates": {
         "opened": "2026-10-05",
         "done": null

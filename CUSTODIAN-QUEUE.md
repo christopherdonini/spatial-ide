@@ -1,16 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `f058e507340247f09d73e5566cc9e9895dba07abe2ed459cb5c6bf6fc053e6c6`) at `2026-10-07T20:47:26.855Z`.
+Generated from `PLAN.yaml` (sha256 `d86b883cf3d2ba23a48c25e1f7c4e796d63ed614b9d03c3fe99af1b4b974d74a`) at `2026-10-07T22:30:45.172Z`.
 
 ## 1. Next
 
-- **data-plane-crowded-start-detail-spaces** — The data plane's crowded-start detail string loses its runs of spaces (round 26, item 4 (b)) (lane `kernel-protocol`)
+- **b2-piece-1a-step-record-and-dataset-reference** — B2 piece 1a -- the design (the full step record and the format ADR, as Proposed) and the code of the lasting dataset reference (lane `kernel-protocol`)
 
 ## 2. Ready
 
-- **data-plane-crowded-start-detail-spaces** — The data plane's crowded-start detail string loses its runs of spaces (round 26, item 4 (b)) (lane `kernel-protocol`, order 14, budget 20 min)
 - **b2-piece-1a-step-record-and-dataset-reference** — B2 piece 1a -- the design (the full step record and the format ADR, as Proposed) and the code of the lasting dataset reference (lane `kernel-protocol`, order 16, budget 0 min)
-- **shell-migration-milestone-1** — Shell migration, milestone 1 -- the frame: Map Studio regions, panel toggles, separated sections, an attention strip and a status bar (lane `shell`, order 11, budget 0 min)
 
 ## 3. Waiting on the human (total: 10 min)
 
@@ -30,6 +28,8 @@ Generated from `PLAN.yaml` (sha256 `f058e507340247f09d73e5566cc9e9895dba07abe2ed
 ## 5. In progress
 
 - **geometry-lines-cut** — Geometry -- lines, its own bounded vertical cut — evidence: branch `cut/geometry-lines-cut`
+- **data-plane-crowded-start-detail-spaces** — The data plane's crowded-start detail string loses its runs of spaces (round 26, item 4 (b)) — evidence: branch `cut/data-plane-crowded-start-detail-spaces`
+- **shell-migration-milestone-1** — Shell migration, milestone 1 -- the frame: Map Studio regions, panel toggles, separated sections, an attention strip and a status bar — evidence: branch `cut/shell-migration-milestone-1`
 
 ## 6. Proposed / unscheduled
 
