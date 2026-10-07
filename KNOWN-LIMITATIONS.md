@@ -209,11 +209,12 @@ header above describes. They move into the next release's list when that release
     value of its own for either bound.
     <!-- DRAFT wording for the human's sight, not the human's own wording (frontends/shell/CRS-UNIT-FACT-AND-BOUNDS-PREREGISTRATION.md §2 (i), §7, §8 item 8, Amendment 4). This text replaces the item 17 text main carries when it lands. Authority: RULED 2026-09-23 (later), item (1)(b) (the node: the per-unit anchor span and the degrees drift value) and item (1)(c) (this line states the P0 bound); RULED 2026-09-24, question round 17, item 1 and item 5 (Q1, Q2, Q4). Anchor span: frontends/shell/src/canvas/tileGrid.ts's MIN_ANCHOR_SPAN, pinned by tileGrid.test.ts's "declares metre 1, degree 1e-6, other 1, unestablished 1". Drift cap: frontends/shell/src/canvas/offsetFrame.ts's RECENTER_MAX_DRIFT and its doc (metre, other and unestablished: the unchanged sanity ceiling; degree: derived), pinned by offsetFrame.test.ts's "declares 131072 for every unit; degree hands over at zoom 6"; the metre value's basis and the degree derivation are state/consults/2026-09-24-crs-unit-fact-and-bounds.md, section DECLARED VALUE, steps 1 and 3-4. The render bound: the same consult, section P0, steps 6-7. ADR-013 Amendment 1 item 6 is true of the build for degree and metre for MIN_ANCHOR_SPAN and RECENTER_MAX_DRIFT only; MAX_ZOOM and extent.ts's fit and degenerate-zoom constants are the same item-6 class and stay declared for metres (the consult's STOP LIST Q2; PLAN.yaml node crs-zoom-constants-per-unit). -->
 
-18. **After a failed or cancelled open, a dataset in degrees can stay drawn without its display
-    statement.** A later open attempt, whether in flight, cancelled or refused, clears the describe
-    summary, but the dataset already on the canvas stays drawn. Its equirectangular statement is then
-    shown nowhere until the next successful open.
-    <!-- frontends/shell/src/admission/AdmissionPanel.tsx:206-209 (an attempt replaces the admitted state), :230 (a cancel ends idle), :240-249 (a refusal); :411 (the summary renders only for the admitted state); the earlier dataset stays drawn: the human's N8 retest session log session-1790201742.log, where the earlier dataset's tiles are still delivered after the 22:18:04Z refusal; DECISIONS-PENDING.md entry 120 (2) and the RULED 2026-09-23 (later) block, item (2) -->
+18. **Retired by shell-migration-milestone-1.** The summary now renders from the dataset on the map,
+    not from the open attempt, so a later open attempt that is in flight, cancelled or refused leaves
+    the earlier dataset's summary, with its display statement for a dataset in degrees, standing in the
+    Inspector's Source section beside the canvas that is still drawn. The number is kept so that
+    references to it still resolve.
+    <!-- Retired by frontends/shell/SHELL-MIGRATION-MILESTONE-1-PREREGISTRATION.md Amendment 1, item 1 (question round 66, item 1, OPEN-1 (A)); DRAFT wording for the human's sight, not the human's own wording. The former text and its sources: DECISIONS-PENDING.md entry 120 (2) and the RULED 2026-09-23 (later) block, item (2). frontends/shell/src/App.tsx renders DescribeSummary from the admitted dataset; frontends/shell/src/App.layout.test.tsx R8 pins the refused-second-open case -->
 
 19. **The change detector is heuristic, not a snapshot check.** The open dataset is checked by a
     structural descriptor only — byte size, modification time, footer length and footer hash when all

@@ -724,3 +724,15 @@ functions would not be comparable to an ON run that did).
 small, committed (NOT gitignored `out/`) JSON capturing each of the three attempts above verbatim (an
 array of dated attempts, oldest first, none ever deleted), each with its own `_honest_result` block.
 `_current_status` at the top of the file always names which attempt is authoritative and why.
+
+## Layout spec (shell-migration-milestone-1)
+
+```
+npm run e2e:layout
+```
+
+`e2e/layout.mjs` drives the Map Studio frame on real WebView2 with `filter-zoned.parquet`, and `100k-happy-path.parquet` for the reopen step, and records each fixture's sha256 before and after. Asserted: `E-KEYS` (each of Ctrl+B, Ctrl+I and Ctrl+J, pressed twice, flips only its own region's `hidden`; the stored `.working-canvas` node stays connected and identical; `.canvas-container` is at least 480 x 320), `E-FIELD` (the filter text survives Ctrl+I twice, and focus is on the map while the Inspector is hidden), `E-LANDMARKS` (the landmark roles and names, from the DOM and, where the connection allows, the accessibility tree), `E-FOCUS` (a Tab walk visits the top bar, Layers, map, Inspector and Activity in that order), `E-FIT` (with every region open: no page scrollbar and the map at least 480 x 320, natively and at 1366 x 768 by `page.setViewportSize`; the exact pixels are recorded) and `E-REOPEN` (a second fixture replaces the canvas node and the layout is unchanged). `RESIZEQ` is recorded and never asserted: the number of `viewport_query` lines within 3 s after Ctrl+I with the pointer still.
+
+**What CDP key injection proves.** `page.keyboard.press` reaches the page's own `keydown` listener. It does not cross WebView2's accelerator-key layer, so this suite cannot say that real keys do. That is row U3 of the walkthrough's Part U (the form's H2).
+
+**The layout is session state.** An attached app keeps its layout across suites. `e2e:style` selects the Inspector's Style tab and leaves it selected, so run the next suite on a fresh launch (`e2e:layout` itself clicks the Layer tab first). The sections above that speak of `.app-main`, `.app-rail-top`, `.app-rail-bottom` or `.canvas-status-stack`, or give measurements of the stacked layout, describe the layout before this piece and are history. The suites now select `.attention-strip`, and `.zoom-to-layer` lives in the Layers row.
