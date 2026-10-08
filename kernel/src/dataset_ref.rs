@@ -85,6 +85,14 @@ impl DatasetUri {
     pub fn as_str(&self) -> &str {
         &self.0
     }
+
+    /// A fresh URI: 128 bits from the operating system's CSPRNG (ADR-036 §4, OPEN-5 ruled (A)).
+    pub fn mint() -> Self {
+        let mut bytes = [0u8; URI_HEX_LEN / 2];
+        getrandom::fill(&mut bytes).expect("OS CSPRNG unavailable");
+        let hex: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
+        DatasetUri(format!("{DATASET_URI_PREFIX}{hex}"))
+    }
 }
 
 impl FromStr for DatasetUri {
@@ -501,7 +509,10 @@ fn parse_resource(v: &Value, path: &str) -> Result<(DatasetUri, Vec<Locator>), R
         let at = bounded(&o["at"], &at_path, MAX_REF_STRING_BYTES)?;
         locators.push(
             match bounded(&o["kind"], &kind_path, MAX_REF_STRING_BYTES)? {
-                KIND_PROJECT_RELATIVE => Locator::ProjectRelative(at.to_string()),
+                KIND_PROJECT_RELATIVE => {
+                    stays_inside_the_project_folder(at, &at_path)?;
+                    Locator::ProjectRelative(at.to_string())
+                }
                 KIND_MACHINE_RECORDED if at == uri.as_str() => Locator::MachineRecorded,
                 KIND_MACHINE_RECORDED => {
                     return Err(malformed(
@@ -514,6 +525,19 @@ fn parse_resource(v: &Value, path: &str) -> Result<(DatasetUri, Vec<Locator>), R
         );
     }
     Ok((uri, locators))
+}
+
+/// ADR-036 §5's grammar for a `project-relative` locator, read as a string: no empty, `.` or `..`
+/// segment (which also refuses an empty `at` and a leading `/`), and no backslash or `:`. No path
+/// type is used, nothing is joined and no file is touched.
+fn stays_inside_the_project_folder(at: &str, path: &str) -> Result<(), RefParseError> {
+    if at.contains(['\\', ':']) || at.split('/').any(|s| matches!(s, "" | "." | "..")) {
+        return Err(malformed(
+            path,
+            "a project-relative locator stays inside the project folder",
+        ));
+    }
+    Ok(())
 }
 
 fn parse_observed(v: &Value, path: &str) -> Result<SourceObservation, RefParseError> {
@@ -711,6 +735,9 @@ mod tests {
             URI.parse::<DatasetUri>().expect("well formed").as_str(),
             URI
         );
+        let minted = DatasetUri::mint();
+        assert_eq!(minted.as_str().parse::<DatasetUri>().unwrap(), minted);
+        assert_ne!(minted, DatasetUri::mint());
         for bad in [
             "spatial://dataset/parcels",
             "spatial://dataset/ref/0123456789ABCDEF0123456789ABCDEF",
@@ -724,6 +751,32 @@ mod tests {
                 bad.parse::<DatasetUri>().is_err(),
                 "{bad:?} must be refused"
             );
+        }
+    }
+
+    /// Mutation: the grammar check is removed, so a `..` segment parses. Expected failure:
+    /// `a_project_relative_locator_that_leaves_the_project_folder_is_refused` fails on its first case.
+    #[test]
+    fn a_project_relative_locator_that_leaves_the_project_folder_is_refused() {
+        let at_path = "$.resource.locators[1].at";
+        for at in [
+            "../x.parquet",
+            "data/../../x.parquet",
+            "/etc/x.parquet",
+            "data\\x.parquet",
+            "C:x.parquet",
+            "data/a:b",
+            "",
+            "data//x.parquet",
+            "./x.parquet",
+        ] {
+            let relative = Locator::ProjectRelative(at.to_string());
+            let read =
+                DatasetRef::parse(&value(&sample(Some(5), Some(HASH), false, vec![relative])));
+            match read.unwrap_err() {
+                RefParseError::Malformed { path, .. } => assert_eq!(path, at_path, "{at:?}"),
+                other => panic!("{at:?} must be refused as malformed, got {other:?}"),
+            }
         }
     }
 
