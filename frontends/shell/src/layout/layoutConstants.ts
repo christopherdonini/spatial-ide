@@ -11,8 +11,9 @@
 export const MAP_MIN_WIDTH_PX = 480;
 export const MAP_MIN_HEIGHT_PX = 320;
 
-/** Bounds the smallest viewport `effectiveSizes` proves the map minimum for. Below it the map takes
- * what remains and nothing is claimed. */
+/** Bounds the smallest viewport the map minimum is proved for: its reader is the unit test U1
+ * (`layoutState.test.ts`), which checks the minimum at and above it. Below it the map takes what
+ * remains and nothing is claimed. */
 export const VIEWPORT_FLOOR = { width: 1024, height: 640 } as const;
 
 /** A resizable extent: its first-layout default and the range `resize` clamps to. */

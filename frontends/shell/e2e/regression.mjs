@@ -768,9 +768,10 @@ async function stepA9(page, consoleHandle) {
     }
 
     const nonBackgroundCount = grid.nonBackgroundCount;
-    // Early-stop: two consecutive notch-over-notch DECREASES in frame-wide non-background pixels
-    // is P10's own rise-then-fall-to-zero signature (peak at notch 2, zero by notch 7 in both of
-    // its runs) -- content is leaving the viewport, so further zooming cannot help.
+    // Decline tracking, no longer a stop on its own (milestone 1 re-aim of A9'; see the comment above `stepA9`): two consecutive
+    // notch-over-notch DECREASES in frame-wide non-background pixels was P10's rise-then-fall-to-zero signature (peak at notch 2,
+    // zero by notch 7 in both of its runs) on the old map. `declineStreak` now only ends the search together with a zero count (the
+    // branch below) and is reported in the per-notch evidence.
     if (previousNonBackgroundCount !== null) {
       declineStreak = nonBackgroundCount < previousNonBackgroundCount ? declineStreak + 1 : 0;
     }
@@ -851,7 +852,7 @@ async function stepA9(page, consoleHandle) {
           await page.mouse.move(css.x, css.y);
           // A CONFIRMED id and nothing else: this step moves the pointer and never the camera, so the
           // labelled ("confirming") state cannot arise here -- and if it ever did it would not count,
-          // since it names an id no pick at this camera stands behind (ง3.3).
+          // since it names an id no pick at this camera stands behind (ยง3.3).
           const result = await waitForCondition(
             () => readHoverReadoutState(page),
             (readout) => hoverReadoutId(readout) !== null,
@@ -1008,8 +1009,12 @@ async function stepA9(page, consoleHandle) {
 //         never moved. deck.gl delivers no `onHover` while a button is held, so nothing has answered
 //         "where is the pointer" for the whole gesture; the standing refusal means the first
 //         post-release camera change ARMS, and the settle it starts must still emit nothing. The
-//         readout must NOT be an id (an ABSENCE and the named refusal both pass) and no confirming
-//         `readout_confirmed` line may name an id since this case's own mark. An id here could only
+//         readout must NOT be an id (an ABSENCE and the named refusal both pass), no confirming
+//         `readout_confirmed` line may name an id since this case's own mark, AND no camera-settle
+//         re-pick line of any kind (`readout_confirmed camera-settle-repick ...`, whatever the pick
+//         found) may appear since that mark (milestone 1 re-aim, Amendment 7: on the Studio frame's
+//         map the stale pick lands on background, so "no id" alone cannot tell a re-pick from none;
+//         see the comment above `afterReleaseAllowed` in `stepK6`). An id here could only
 //         have come from a pick at the PRE-DRAG pixel -- a feature the pointer left behind. This is
 //         the only level that runs the real window `pointerup` listener.
 //
@@ -2446,7 +2451,7 @@ async function stepAbsentCrs(page) {
   }));
   const summaryPresent = await page.evaluate(() => document.querySelector(".admission-panel .describe-summary") !== null);
   if (summaryPresent) throw new Error("ABSENTCRS': .describe-summary present in the Layers region after a refusal");
-  return `refused engine.format_default_contradicted; message verbatim; no dismiss button on the panel; no describe-summary; INFO: .crs-assertion-form present=${formInfo.crsForm}, .identity-declaration-form present=${formInfo.identityForm} (not asserted either way)`;
+  return `refused engine.format_default_contradicted; message verbatim; no dismiss button on the panel; no describe-summary in the Layers region; INFO: .crs-assertion-form present=${formInfo.crsForm}, .identity-declaration-form present=${formInfo.identityForm} (not asserted either way)`;
 }
 
 async function stepNet(page, badResponses) {

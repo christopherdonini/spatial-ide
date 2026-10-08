@@ -833,11 +833,12 @@ async function main() {
         // the tile cover S2's zoom-in search made resident, so a tile has to be minted. The cover is made of world tiles and the
         // pan was measured in box widths: at a 1280-wide box two drags are 2,048 px, at the Studio frame's 668-wide map they are
         // 1,069 px, and at S2's zoom (-0.90) that is 1.8 km of world, inside the cover -- 0 `viewport_query` and 0 `stream-issued`
-        // lines followed, and the status stayed "Showing all 20163 features in view". The pan is now as long as it needs to be and
-        // no longer: drags go on, one box-width-ish each, until the mutation below has been made (the poll below touches the file
-        // on the first new `stream-issued` line, and the pan stops at the next drag boundary), bounded by the fixture's own extent --
-        // a camera that has crossed the whole dataset (317 columns of 40 m cells, `engine/src/fixture.rs`) at the current zoom has
-        // been over every tile there is, so that many drags is the most that can be needed. Nothing else about S4 changes.
+        // lines followed, and the status stayed "Showing all 20163 features in view". The pan is now bounded by the fixture's own extent:
+        // drags go on, one box-width-ish each, up to the number that crosses the whole dataset (317 columns of 40 m cells,
+        // `engine/src/fixture.rs`) at the current zoom -- a camera that has crossed it has been over every tile there is. The poll
+        // below touches the file on the first new `stream-issued` line and `shouldStop` would end the pan at the next drag boundary, but
+        // that line only arrives after the pan has ended (tiles are planned on settle), so in practice the pan runs to its bound
+        // (13 drags at S2's zoom). Nothing else about S4 changes.
         const zoomNow = lastViewStateZoom(consoleHandle) ?? 0;
         const datasetPx = 317 * 40 * 2 ** zoomNow;
         const maxDrags = Math.max(2, Math.ceil(datasetPx / (rect.width * 0.8)));

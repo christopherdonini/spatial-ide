@@ -127,9 +127,8 @@ function instrumentA(box, s0, s1, dx, dy, steps) {
 }
 
 // Milestone 1 re-aim (the human's Decision A; PRE-REGISTRATION Amendment 6). The map is no longer a 1280-wide, ~200-high
-// strip (it is 668 x 730 at a 1280 x 800 window; 328 x 570 and 788 x 830 at this file's two window sizes, measured by
-// measured at this branch's head), so three assumptions this file made about the map are re-derived below from the measured box and the
-// fixture. The tolerance, the instruments and every other check are untouched.
+// strip (it is 668 x 730 at a 1280 x 800 window; 328 x 570 and 788 x 830 at this file's two window sizes, measured at this
+// branch's head), so three assumptions this file made about the map are re-derived below from the measured box and the fixture. The tolerance, the instruments and every other check are untouched.
 //
 // (1) The dataset's width in CSS px at the paint-vs-event zoom. The fixture is 317 columns of 40 m cells
 // (`E_C`/`N_C` above, from `engine/src/fixture.rs`), so it spans 317 x 40 m; at zoom z one CSS px is 2^-z m
@@ -146,7 +145,7 @@ const EDGE_MARGIN_PX = 2 * TOLERANCE_BUFFER_PX;
 // once the frame-wide non-background count has stopped changing; the bounds are bounds, not a claim about how long a fill takes.
 // RECORDED MUTATIONS (milestone 1 re-aim), OBSERVED AT 65391e79b048f51f3ca4d7b5eeac7533f5b64639, reverted, the worktree clean before and after:
 //  - paint-vs-event: `traceViewState` in src/canvas/WorkingCanvas.tsx given `vs.target[0] * 1.1`. The four paint-vs-event cases
-//    failed by name (small ±85: "painted 83.0 vs deck 91.3 -> -8.28 buffer px"; large ±250: "painted 243.9 vs deck 268.4 ->
+//    failed by name (small Â±85: "painted 83.0 vs deck 91.3 -> -8.28 buffer px"; large Â±250: "painted 243.9 vs deck 268.4 ->
 //    -24.48 buffer px"); the trace feeds every check, so normal-A and recenter-crossing-A failed too.
 //  - there-and-back-net has no honest product mutation (a trace scale cancels in a net). Its control is on the input: a copy of
 //    this file kept outside the repository, with the return drag 60 px shorter than the outward one, run against the unmodified
