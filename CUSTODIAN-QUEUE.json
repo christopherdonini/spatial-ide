@@ -1,9 +1,85 @@
 {
-  "generated_at": "2026-10-08T15:31:00.369Z",
-  "plan_hash": "b5ae729c59e5d2056dbd9673d68a184feae04347beaa07cdced77c3281f25160",
+  "generated_at": "2026-10-08T15:39:07.494Z",
+  "plan_hash": "2b88f3a0bd2828ad0b287dd86ec458d9af4e308bd24979046af07ac00b1e3c9b",
   "priorities_approved": true,
-  "next": null,
-  "ready": [],
+  "next": {
+    "id": "reuse-round-1-bundle",
+    "title": "Reuse archaeology round 1, the advisor bundle, filed as one docs-and-data piece (not under docs/)",
+    "lane": "governance",
+    "phase": "prototype",
+    "status": "ready",
+    "order": 2,
+    "budget_minutes": 90,
+    "needs_human": {
+      "kind": "none",
+      "minutes": 0
+    },
+    "evidence": null,
+    "dates": {
+      "opened": "2026-10-08",
+      "done": null
+    },
+    "summary": "PLACED 2026-10-08 by the human (state/directives/2026-10-08-reuse-round-1.md, item 1): slot 2, after #190 has merged and after verify-cites-pinned-citations; no mod, pilot, trial or record rule; not under docs/ (it holds code, and docs/ is CC-BY-4.0). Before the PR: no other project named, no user-profile path, its check-index.mjs and the repository checkers run on it; if verify-cites flags a citation inside it, stop and tell the human (no checker change, no exemption, no edit to the notes); fetch-cache.mjs is not run, and the clone cache is never inside the repo. WAITING: the archive did not reach the session; the human is asked for it and its sha256."
+  },
+  "ready": [
+    {
+      "id": "reuse-round-1-bundle",
+      "title": "Reuse archaeology round 1, the advisor bundle, filed as one docs-and-data piece (not under docs/)",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "ready",
+      "order": 2,
+      "budget_minutes": 90,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-08",
+        "done": null
+      },
+      "summary": "PLACED 2026-10-08 by the human (state/directives/2026-10-08-reuse-round-1.md, item 1): slot 2, after #190 has merged and after verify-cites-pinned-citations; no mod, pilot, trial or record rule; not under docs/ (it holds code, and docs/ is CC-BY-4.0). Before the PR: no other project named, no user-profile path, its check-index.mjs and the repository checkers run on it; if verify-cites flags a citation inside it, stop and tell the human (no checker change, no exemption, no edit to the notes); fetch-cache.mjs is not run, and the clone cache is never inside the repo. WAITING: the archive did not reach the session; the human is asked for it and its sha256."
+    },
+    {
+      "id": "adr-032-staleness-docs",
+      "title": "ADR-032 shown stale in two places: the PLAN node adr-032-decision and docs/README.md line 27 still read Proposed",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "ready",
+      "order": 3,
+      "budget_minutes": 30,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-08",
+        "done": null
+      },
+      "summary": "QUEUED 2026-10-08 by the human (state/directives/2026-10-08-reuse-round-1.md, item 3): ADR-032 was Accepted 2026-09-23; the node adr-032-decision is still proposed, and docs/README.md line 27 still calls it Proposed. A small docs piece brings both in line."
+    },
+    {
+      "id": "docs-08-public-data-sentence",
+      "title": "docs/08 calls Overture and OSM extracts redistributable, against the ruling that corpus #12 is local-only, fetch-only and never redistributed",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "ready",
+      "order": 4,
+      "budget_minutes": 20,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-08",
+        "done": null
+      },
+      "summary": "QUEUED 2026-10-08 by the human (state/directives/2026-10-08-reuse-round-1.md, item 3): docs/08_Testing.md line 40 calls the public data redistributable, which conflicts with the #12 ruling (DECISIONS-PENDING, item 3 of that round: local-only, fetch-only, never redistributed). The custodian brings a proposed sentence; the human types the sentence that lands."
+    }
+  ],
   "waiting_on_human": {
     "total_minutes": 10,
     "by_kind": {
@@ -1413,6 +1489,63 @@
         "done": null
       },
       "summary": "Found 2026-10-08 by shell-migration-milestone-1 stage 2, which ran each failing suite at its base e888787e with the same fixtures and launch (state/consults/2026-10-08-shell-migration-milestone-1-worker-report-2.md, section 4; the form Amendment 4, item 4): these steps fail at the base as at the head, so they are not that piece's. The worker's reading, not diagnosed: the identity refusal fixtures on disk admit instead of refusing (perhaps stale files), HEXLIM's key set now includes columns, and console REFUSAL failed once at the base only. A triage piece separates stale fixtures, stale expectations and real defects. Never queued until the human places it."
+    },
+    {
+      "id": "duckdb-parquet-geometry-probe",
+      "title": "A reported-only probe of how the bundled DuckDB decodes the Parquet-native GEOMETRY column in corpus #11",
+      "lane": "measurement",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-08",
+        "done": null
+      },
+      "summary": "PROPOSED 2026-10-08 by the human (state/directives/2026-10-08-reuse-round-1.md, item 4), for the human to place: reported only, nothing claimed; the reuse bundle's corpus section is its source, once the bundle is filed."
+    },
+    {
+      "id": "ported-code-notice-route",
+      "title": "A notice route for ported code, wherever it lands (shell or kernel), needed before any PORT",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-08",
+        "done": null
+      },
+      "summary": "PROPOSED 2026-10-08 by the human (state/directives/2026-10-08-reuse-round-1.md, item 4), for the human to place: needed before any port of outside code; covers attribution and licence notices for ported code in the shell or the kernel."
+    },
+    {
+      "id": "query-reuse-index-before-planning",
+      "title": "Query the reuse index before planning, as a standing step",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 30,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-08",
+        "done": null
+      },
+      "summary": "PROPOSED 2026-10-08 by the human (state/directives/2026-10-08-reuse-round-1.md, item 5): making it a standing step is the human ruling once the freeze lifts; held as a proposed node until then."
     },
     {
       "id": "wire-bytes-invariant-trace-flag-race",

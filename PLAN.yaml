@@ -4295,6 +4295,114 @@ nodes:
     summary: "PR #191 OPEN at 57e8d2b3: the single reviewer gate FAIL (441: C1 a pinned directory passes; C2 the reason); Amendment 1, generation 2 (P5, P6, the blob read, the kept tree reason); one fix worker, then the re-gate. IN CODE 2026-10-08: branch cut/verify-cites-pinned-citations from ed396e94, worktree C:/dev/wt/vcp; one worker; slot 2 since #190 awaits merge. Before: PLACED 2026-10-08 by the human Decision B (state/directives/2026-10-08-decisions-a-b-c.md, lines 17-24): a one-off, bounded exception to the 2026-10-05 freeze; its own small piece with its tests, merged before shell-migration-milestone-1 opens its PR; that piece's boundary does not change. Found by milestone 1 stage 2 (its form Amendment 4, item 8): citations pinned at 30e77c10 name lines past App.tsx's new end. Five-line form, single reviewer gate; scripts/plan/verify-cites.mjs and its tests only, at most 150 lines. Slot 2, after b2-piece-1a awaits merge."
     dates: {opened: 2026-10-08, done: null}
 
+  - id: reuse-round-1-bundle
+    title: "Reuse archaeology round 1, the advisor bundle, filed as one docs-and-data piece (not under docs/)"
+    kind: task
+    lane: governance
+    phase: prototype
+    status: ready
+    order: 2
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 90
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "PLACED 2026-10-08 by the human (state/directives/2026-10-08-reuse-round-1.md, item 1): slot 2, after #190 has merged and after verify-cites-pinned-citations; no mod, pilot, trial or record rule; not under docs/ (it holds code, and docs/ is CC-BY-4.0). Before the PR: no other project named, no user-profile path, its check-index.mjs and the repository checkers run on it; if verify-cites flags a citation inside it, stop and tell the human (no checker change, no exemption, no edit to the notes); fetch-cache.mjs is not run, and the clone cache is never inside the repo. WAITING: the archive did not reach the session; the human is asked for it and its sha256."
+    dates: {opened: 2026-10-08, done: null}
+
+  - id: adr-032-staleness-docs
+    title: "ADR-032 shown stale in two places: the PLAN node adr-032-decision and docs/README.md line 27 still read Proposed"
+    kind: task
+    lane: governance
+    phase: prototype
+    status: ready
+    order: 3
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 30
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "QUEUED 2026-10-08 by the human (state/directives/2026-10-08-reuse-round-1.md, item 3): ADR-032 was Accepted 2026-09-23; the node adr-032-decision is still proposed, and docs/README.md line 27 still calls it Proposed. A small docs piece brings both in line."
+    dates: {opened: 2026-10-08, done: null}
+
+  - id: docs-08-public-data-sentence
+    title: "docs/08 calls Overture and OSM extracts redistributable, against the ruling that corpus #12 is local-only, fetch-only and never redistributed"
+    kind: task
+    lane: governance
+    phase: prototype
+    status: ready
+    order: 4
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 20
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "QUEUED 2026-10-08 by the human (state/directives/2026-10-08-reuse-round-1.md, item 3): docs/08_Testing.md line 40 calls the public data redistributable, which conflicts with the #12 ruling (DECISIONS-PENDING, item 3 of that round: local-only, fetch-only, never redistributed). The custodian brings a proposed sentence; the human types the sentence that lands."
+    dates: {opened: 2026-10-08, done: null}
+
+  - id: duckdb-parquet-geometry-probe
+    title: "A reported-only probe of how the bundled DuckDB decodes the Parquet-native GEOMETRY column in corpus #11"
+    kind: task
+    lane: measurement
+    phase: prototype
+    status: proposed
+    order: null
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 60
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "PROPOSED 2026-10-08 by the human (state/directives/2026-10-08-reuse-round-1.md, item 4), for the human to place: reported only, nothing claimed; the reuse bundle's corpus section is its source, once the bundle is filed."
+    dates: {opened: 2026-10-08, done: null}
+
+  - id: ported-code-notice-route
+    title: "A notice route for ported code, wherever it lands (shell or kernel), needed before any PORT"
+    kind: task
+    lane: governance
+    phase: prototype
+    status: proposed
+    order: null
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 60
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "PROPOSED 2026-10-08 by the human (state/directives/2026-10-08-reuse-round-1.md, item 4), for the human to place: needed before any port of outside code; covers attribution and licence notices for ported code in the shell or the kernel."
+    dates: {opened: 2026-10-08, done: null}
+
+  - id: query-reuse-index-before-planning
+    title: "Query the reuse index before planning, as a standing step"
+    kind: task
+    lane: governance
+    phase: prototype
+    status: proposed
+    order: null
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 30
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "PROPOSED 2026-10-08 by the human (state/directives/2026-10-08-reuse-round-1.md, item 5): making it a standing step is the human ruling once the freeze lifts; held as a proposed node until then."
+    dates: {opened: 2026-10-08, done: null}
+
   - id: wire-bytes-invariant-trace-flag-race
     title: "kernel/tests/wire_bytes_invariant.rs: the projected-ticket test asserts tracing is off while its sibling starts a trace (a race on the engine's global trace flag)"
     kind: task

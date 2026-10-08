@@ -1,14 +1,16 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `b5ae729c59e5d2056dbd9673d68a184feae04347beaa07cdced77c3281f25160`) at `2026-10-08T15:31:00.369Z`.
+Generated from `PLAN.yaml` (sha256 `2b88f3a0bd2828ad0b287dd86ec458d9af4e308bd24979046af07ac00b1e3c9b`) at `2026-10-08T15:39:07.494Z`.
 
 ## 1. Next
 
-- (nothing ready)
+- **reuse-round-1-bundle** — Reuse archaeology round 1, the advisor bundle, filed as one docs-and-data piece (not under docs/) (lane `governance`)
 
 ## 2. Ready
 
-- (none)
+- **reuse-round-1-bundle** — Reuse archaeology round 1, the advisor bundle, filed as one docs-and-data piece (not under docs/) (lane `governance`, order 2, budget 90 min)
+- **adr-032-staleness-docs** — ADR-032 shown stale in two places: the PLAN node adr-032-decision and docs/README.md line 27 still read Proposed (lane `governance`, order 3, budget 30 min)
+- **docs-08-public-data-sentence** — docs/08 calls Overture and OSM extracts redistributable, against the ruling that corpus #12 is local-only, fetch-only and never redistributed (lane `governance`, order 4, budget 20 min)
 
 ## 3. Waiting on the human (total: 10 min)
 
@@ -97,6 +99,9 @@ Generated from `PLAN.yaml` (sha256 `b5ae729c59e5d2056dbd9673d68a184feae04347beaa
 - **lines-class-budget-measurement** — Measure docs/08's Lines class (1M features / 10M vertices) for the working canvas, once lines are drawn (phase `prototype`) — never queued until placed
 - **skp-drained-stream-helper-post-check-race** — kernel/src/skp.rs tests: drained_stream_with_a_recorded_change has the same post-check race as typed_terminal_codes' end-to-end test (phase `prototype`) — never queued until placed
 - **e2e-failures-present-at-the-base** — Shell e2e steps failing on main at e888787e: regression C2 and C3, admission MAP and BOTHNEEDED, console HEXLIM, GROUP and REGRESS, source-changed default-route S4 (phase `prototype`) — never queued until placed
+- **duckdb-parquet-geometry-probe** — A reported-only probe of how the bundled DuckDB decodes the Parquet-native GEOMETRY column in corpus #11 (phase `prototype`) — never queued until placed
+- **ported-code-notice-route** — A notice route for ported code, wherever it lands (shell or kernel), needed before any PORT (phase `prototype`) — never queued until placed
+- **query-reuse-index-before-planning** — Query the reuse index before planning, as a standing step (phase `prototype`) — never queued until placed
 - **wire-bytes-invariant-trace-flag-race** — kernel/tests/wire_bytes_invariant.rs: the projected-ticket test asserts tracing is off while its sibling starts a trace (a race on the engine's global trace flag) (phase `prototype`) — never queued until placed
 - **dataset-stream-doc-producer-runs-ahead** — engine/src/stream.rs: Dataset::stream's doc says it returns once the statement is prepared and produces the first batch on the first next_into; the producer thread prepares and runs ahead to the queue bound (phase `prototype`) — never queued until placed
 - **shell-migration-milestone-2** — Shell migration, milestone 2 -- selection and scope: the Select tool, a selection that survives filter and pan, the hidden count, a stated scope (phase `prototype`) — never queued until placed
