@@ -553,3 +553,27 @@ The worker's and tester's briefs carry, as written, the paragraph at state/direc
 8. **Generation 7.**
 
 **Superseded index.** §8 item 8 → item 5 (one exception). Amendment 4, item 5's held I3 → items 1 to 4. None is edited.
+
+### Amendment 7 — K6 case (v) strengthened (class 5, the human's ruling under Decision A), and the stages 5 and 6 record
+
+*Written by the custodian after the human's ruling and before any code of it, at the branch head 512aab08. The ruling is `state/directives/2026-10-08-k6-case-v-ruling.md` lines 6-20 at the commit that adds it (sha256 c7e76c209b8be036851ec8c304e35086347e911ce832d876c78cbc195d3a4298). Its RULED block is in `DECISIONS-PENDING.md`. The worker reports are `state/consults/2026-10-08-shell-migration-milestone-1-worker-report-5.md` (stage 5) and `-worker-report-6.md` (stage 6). Nothing below is a quotation.*
+
+1. **Stage 5, the mutations the human allowed.** Seven listed mutations failed their checks, and the there-and-back-net control failed as required: a return drag shorter than the outward one. K6 case (v)'s recorded mutation was not caught. The comments recording them are at 512aab08.
+2. **Stage 6, the diagnosis.**
+   - The miss is an assumption about the map and the pick threshold, not a product change. The mutated build's stale re-pick runs, but on this map it lands on background, so a readout of no id cannot tell a re-pick from none.
+   - The report reads, from the record and not from a run, that the 9 px threshold of 2026-09-14 contributes.
+3. **The change, an exception to item 2 of Amendment 6, which the human allows.**
+   - Case (v) of K6 in `e2e/regression.mjs` keeps what it asserts.
+   - It also fails when a camera-settle re-pick line appears in the render trace since the release mark, whatever that pick found.
+   - This strengthens the assertion. Option (a), a derived drag, is not built.
+4. **The observation.** Mutation 5, the recorded one for case (v), is observed once at the fix head:
+   - one application;
+   - one run of the real suite;
+   - a restore and a clean check.
+   - Its recorded-mutation comment names that commit.
+5. **The PR body** states, for case (v), the old assertion, the new one and the reason. It states the threshold reading as read from the record. It also states the there-and-back-net control (Amendment 6, item 3).
+6. **The stage 6 slip** stays recorded as it is in report 6's filing note: three applications served six mutated runs. No run meant to be clean ran mutated, and nothing was committed. Nothing else is redone, and no rule is added.
+7. **§7.** The change counts in G6, as class 8 at the gated head. §7 is not edited.
+8. **Generation 8.**
+
+**Superseded index.** Amendment 6, item 2 (assumptions only) → item 3 (one exception, case (v)). It is not edited.
