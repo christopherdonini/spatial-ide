@@ -347,7 +347,7 @@ was itself (bake-off README §21 Q1 / §22.1).
 
 *Pointers only: nothing here restates a schema, an ADR or a limitation. Updated in the PR of every piece that changes what a pointer points to. At most 60 lines.*
 
-- **Last verified at:** 1251fc3c (every pointer checked at that commit)
+- **Last verified at:** 14acee0b (every pointer checked at that commit)
 - **Interfaces this module owns:**
   - SKP v0 host, the five commands → `protocol/skp/SKP-V0.md` §1; `spatial_kernel::skp::SkpHost` · pinned by `kernel/tests/skp_admission.rs::viewport_query_refuses_synchronously_on_a_crs_mismatch_before_minting_a_handle`, `kernel/tests/source_watch_ordering.rs::describe_after_an_end_carries_session_end_and_describe_cancel_close_still_answer`, `kernel/src/skp.rs::tests::the_real_describe_geometry_carries_the_engines_encoding_for_each_open`, `kernel/src/skp.rs::tests::the_real_describe_of_a_point_open_is_geoarrow_point_with_the_shared_key_set`, `kernel/src/skp.rs::tests::the_real_describe_of_a_line_open_is_its_line_encoding_with_the_shared_key_set`
   - Stream tickets → SKP-V0 §1 (`viewport_query`, `cancel`), §3 (`StreamHandle`); `spatial_kernel::skp::StreamRegistry`, `spatial_kernel::EngineSourceFactory::ticket_only` · pinned by `kernel/src/skp.rs::tests::a_ticket_redeems_exactly_once`, `kernel/tests/skp_admission.rs::a_raw_stream_params_start_is_refused_in_ticket_only_mode`, `kernel/src/skp.rs::ticket_drop_under_lock_regression::an_unwind_through_cancel_drops_its_swept_source_after_releasing_the_guard`, `kernel/src/skp.rs::ticket_drop_under_lock_regression::an_unwind_through_cancel_all_for_dataset_drops_its_retired_source_after_releasing_the_guard`
