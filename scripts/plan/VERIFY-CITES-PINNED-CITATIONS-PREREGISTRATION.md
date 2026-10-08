@@ -13,3 +13,20 @@ Out-of-scope: ADR none; security none; wire none; guarantee none -- §21a's four
 ## Amendments
 
 Opens empty, append-only.
+
+### Amendment 1 — the gate-1 reviewer's C1 and C2: two tests added after a gate finding (class 4), and the failing pin's reason
+
+*Written by the custodian after the single reviewer gate failed (`state/consults/gates/2026-10-08-verify-cites-pinned-citations-gate1-reviewer.md`, gate-log 441), at the branch head 57e8d2b3, before any code of the fix. Correction round 1 of 2. Nothing below is a quotation.*
+
+1. **C1, the file at the pin.** A pin is read as a file, not as anything the commit can show. `checkPinned` reads the pinned path as a blob, so a path that is a directory at the pinned commit fails, with the pin's reason.
+   - **New test P5:** a pinned cite whose path is a directory at that commit fails by name.
+   - **Mutation:** the blob read replaced by the current `git show` read, so P5 fails.
+2. **The line at the pin.** The Change line's out-of-range clause gets its own test.
+   - **New test P6:** a pinned cite whose file exists at that commit, but whose line is past that file's end there, fails by name.
+   - **Mutation:** the range check at the pin removed, so P6 fails.
+3. **C2, the reason.** When the pin's file is not found at the pinned commit but the tree found a file for the cite, the tree's own reason is kept. The pin's reason replaces it only when it states something true: a missing commit, a directory, or a line out of range at the pin. No cite changes tier.
+4. **D1 and D2.** The checker's header states the pinned fallback and its limits: a pin after a closing backtick or two spaces is not read; a pin on a cite that resolves in the tree is not checked; and a hex word right after `@` is read as a pin. `extractCitations`'s JSDoc names the `pin` field.
+5. **D3, for the record.** The worker report places the new pattern at line 142 of `verify-cites.mjs`. It is at line 144 at 57e8d2b3. The report is not edited.
+6. **The Scope stands:** the same two files, still at most 150 changed lines, tests included. The other tests and the Out-of-scope line are unchanged.
+
+**Superseded index.** The Change line's file-exists clause → item 1. The Tests+mutation line → items 1 and 2 add P5 and P6. None is edited.
