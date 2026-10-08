@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `2df202b459a0e4e1674a44b050c49ae04fbe03939c3f100392c9b79821349621`) at `2026-10-08T16:22:23.206Z`.
+Generated from `PLAN.yaml` (sha256 `a082101b599cae2ee9377c1e093493ac82efddf5e9585fa9062f097035bebcb4`) at `2026-10-08T16:45:04.396Z`.
 
 ## 1. Next
 
@@ -10,12 +10,11 @@ Generated from `PLAN.yaml` (sha256 `2df202b459a0e4e1674a44b050c49ae04fbe03939c3f
 
 - **adr-032-staleness-docs** — ADR-032 shown stale in two places: the PLAN node adr-032-decision and docs/README.md line 27 still read Proposed (lane `governance`, order 3, budget 30 min)
 
-## 3. Waiting on the human (total: 14 min)
+## 3. Waiting on the human (total: 12 min)
 
 ### ruling
 
 - **decision-adr-029-scan-progress-route** — ADR-029's scan-progress route, given G1 (a minimal crate patch exposing the connection handle; raw ffi end to end on the scan path; upstream first) -- deferred to Brief B's B2 by the human, round 16 item 3 (10 min)
-- **reuse-round-1-bundle** — Reuse archaeology round 1, the advisor bundle, filed as one docs-and-data piece (not under docs/) (2 min)
 - **docs-08-public-data-sentence** — docs/08 calls Overture and OSM extracts redistributable, against the ruling that corpus #12 is local-only, fetch-only and never redistributed (2 min)
 
 ## 4. Blocked on dependencies
@@ -30,6 +29,7 @@ Generated from `PLAN.yaml` (sha256 `2df202b459a0e4e1674a44b050c49ae04fbe03939c3f
 ## 5. In progress
 
 - **shell-migration-milestone-1** — Shell migration, milestone 1 -- the frame: Map Studio regions, panel toggles, separated sections, an attention strip and a status bar — evidence: branch `cut/shell-migration-milestone-1`
+- **reuse-round-1-bundle** — Reuse archaeology round 1, the advisor bundle, filed as one docs-and-data piece (not under docs/) — evidence: PR #192
 
 ## 6. Proposed / unscheduled
 

@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-08T16:22:23.206Z",
-  "plan_hash": "2df202b459a0e4e1674a44b050c49ae04fbe03939c3f100392c9b79821349621",
+  "generated_at": "2026-10-08T16:45:04.396Z",
+  "plan_hash": "a082101b599cae2ee9377c1e093493ac82efddf5e9585fa9062f097035bebcb4",
   "priorities_approved": true,
   "next": {
     "id": "adr-032-staleness-docs",
@@ -43,7 +43,7 @@
     }
   ],
   "waiting_on_human": {
-    "total_minutes": 14,
+    "total_minutes": 12,
     "by_kind": {
       "click": [],
       "sight": [],
@@ -66,25 +66,6 @@
             "done": null
           },
           "summary": "Returns at B2's preregistration, not after B2 completes (the human, 2026-09-22); B2 depends on this ruling. RULED 2026-09-18 (round 16, item 3), the human verbatim: 'defer -- ADR-029 stays Proposed, G1's facts recorded, the route returns with Brief B's B2'. G1 established (entry 111): a u64 rows-processed reading exists on the read_parquet path; the engine cannot reach it through the vendored Connection; the count must be latched engine-side; DuckDB's denominator is an estimate, which ADR-029 1(c) forbids forwarding. No route is dispatched before B2's preregistration carries the question back for the ruling"
-        },
-        {
-          "id": "reuse-round-1-bundle",
-          "title": "Reuse archaeology round 1, the advisor bundle, filed as one docs-and-data piece (not under docs/)",
-          "lane": "governance",
-          "phase": "prototype",
-          "status": "blocked",
-          "order": 2,
-          "budget_minutes": 90,
-          "needs_human": {
-            "kind": "ruling",
-            "minutes": 2
-          },
-          "evidence": null,
-          "dates": {
-            "opened": "2026-10-08",
-            "done": null
-          },
-          "summary": "V2 ARCHIVE 2026-10-08 (state/directives/2026-10-08-reuse-round-1-v2.md): spatial-ide-reuse-round-1-v2.zip, sha256 50d87a03eb42148608209edbad2d905bcea0e1c369f1d3330f86fb54d2409526, replaces the first; placed after #190 merges (five citations pinned at 14acee0b resolve only once #190 is in main; the pinned fallback is #191); verify the sha256 first, then tools/check-index.mjs and verify-cites over the placed folder. WAITING ON THE HUMAN (needs_human ruling): this archive did not reach the session either; the human names the route (for example Google Drive through the connector, or a path on this PC). #190 and #191 merged 2026-10-08. Before: PLACED 2026-10-08 by the human (state/directives/2026-10-08-reuse-round-1.md, item 1): slot 2, after #190 has merged and after verify-cites-pinned-citations; no mod, pilot, trial or record rule; not under docs/ (it holds code, and docs/ is CC-BY-4.0). Before the PR: no other project named, no user-profile path, its check-index.mjs and the repository checkers run on it; if verify-cites flags a citation inside it, stop and tell the human (no checker change, no exemption, no edit to the notes); fetch-cache.mjs is not run, and the clone cache is never inside the repo. WAITING: the archive did not reach the session; the human is asked for it and its sha256."
         },
         {
           "id": "docs-08-public-data-sentence",
@@ -265,6 +246,28 @@
       },
       "summary": "RULED 2026-10-08 (the human Decision A, state/directives/2026-10-08-decisions-a-b-c.md): the seven re-aims inside this piece, Amendment 6, generation 7 (assumptions only, values derived and stated, A9 and K6 off one candidate pixel, each shown still able to fail, the PR body listing old and new assumptions, overrun as class 8); stage 4 by the same worker; its PR opens only after verify-cites-pinned-citations merges (Decision B). Before: DIAGNOSED 2026-10-08 (stage 3, no edits; worker report 3; Amendment 5, generation 6): every I3 failure is a suite assumption about the old map shape, failing identically at the base sized to the new map; no product change. WAITING ON THE HUMAN: the re-aims, the verify-cites freeze exception. Before: STAGE 2 DONE 2026-10-08 at f214f1f4 (worker report 2; Amendment 4, generation 5): e2e:layout 8 of 8; RESIZEQ zero, H1 holds, KNOWN-LIMITATIONS 39 written as a draft; invalidator I3 for regression A9 and K6, filter-panel FIND, console CLASSC, source-changed post-route S4 to S5d and four pan-anchor checks (the human is asked; a diagnosis with no edits runs them at the base with the new map size); E-FIT mutation absorbed (class 2); verify-cites fails on the form historical App.tsx pins (governance, under the freeze: the human is asked); port 5180 excluded on this machine (launch workaround, class 2). No PR yet. Before: STAGE 1 DONE 2026-10-07 at 02d70dde (eight commits by worker-high 22:42:21Z to 23:52:44Z; U1 to U6 and R1 to R8 observed; 3,015 lines over 25 files against 3,250, G5 tests 1,004 against 900 so far; worker report 1; Amendment 3, generation 4): main merged into the branch, then stage 2 (the heavy suites, the E rows and RESIZEQ). Before: IN CODE 2026-10-07: branch cut/shell-migration-milestone-1 from e888787e (main after the lines cut merged), worktree C:/dev/wt/m1, target D:/wt-targets/m1; one worker, its heavy suites in a second stage. Amendment 2, generation 3: the section 2.9 item 7 re-sweep at the lines cut merge commit (Part T rows T4 and T5 join the section 2.8 location sweep; LN prime runs under section 2.7 and H3; no other home needed). Before: RULED 2026-10-07 (rounds 66 and 67, all recommended, with two clarifications; state/directives/2026-10-07-round-66-and-67-rulings.md): Amendment 1, generation 2; dispatch waits only for the lines cut merge. Before: FORM COMMITTED 2026-10-07 (the architect draft, alone; full form; 69 pins at 30e77c10; at most 3,250 lines over 25 files against the plan estimate of 1,500, OPEN-5): OPEN-1 to OPEN-7 go to the human in one question round, none a red line; code after the lines cut merges. Before: PLACED 2026-10-07 by the human's ruling of the migration plan's second version (state/directives/2026-10-07-migration-plan-v2-ruled.md; state/directives/SHELL-MIGRATION-PLAN-2026-10-07.md, section 5, scope and acceptance, and 5.7, placement): first in slot 1 order. Its full form, by the architect, and its question round now; its code starts when the lines cut has merged, since it shares frontends/shell/e2e/regression.mjs and frontends/shell/MANUAL-WALKTHROUGH.md with it (the 2026-10-07 awaiting-merge direction, item 3). No engine, kernel or protocol file; no new dependency (the plan, section 2). The governance freeze lifts when it merges. Before: PROPOSED 2026-10-05 by the product-first direction 8.b: proposed until the human rules Fable migration plan (written after the O-07 walkthrough); from that ruling it is first in slot 1 order. The freeze lifts when this milestone and MP-1 have both merged.",
       "evidence_label": "branch `cut/shell-migration-milestone-1`"
+    },
+    {
+      "id": "reuse-round-1-bundle",
+      "title": "Reuse archaeology round 1, the advisor bundle, filed as one docs-and-data piece (not under docs/)",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": 2,
+      "budget_minutes": 90,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "pr": 192
+      },
+      "dates": {
+        "opened": "2026-10-08",
+        "done": null
+      },
+      "summary": "PR #192 OPEN 2026-10-08 at 2ae29e9d: the archive arrived as the human upload (16:36:01Z), sha256 50d87a03 matched; placed byte-identical under reuse/ (139 files) by the custodian; check-index, verify-cites over reuse/** and the default set, the staged profile scan and the governance checkers all exit 0; five-line form at ab44cd2c; the single reviewer gate next. Before: V2 ARCHIVE 2026-10-08 (state/directives/2026-10-08-reuse-round-1-v2.md): spatial-ide-reuse-round-1-v2.zip, sha256 50d87a03eb42148608209edbad2d905bcea0e1c369f1d3330f86fb54d2409526, replaces the first; placed after #190 merges (five citations pinned at 14acee0b resolve only once #190 is in main; the pinned fallback is #191); verify the sha256 first, then tools/check-index.mjs and verify-cites over the placed folder. WAITING ON THE HUMAN (needs_human ruling): this archive did not reach the session either; the human names the route (for example Google Drive through the connector, or a path on this PC). #190 and #191 merged 2026-10-08. Before: PLACED 2026-10-08 by the human (state/directives/2026-10-08-reuse-round-1.md, item 1): slot 2, after #190 has merged and after verify-cites-pinned-citations; no mod, pilot, trial or record rule; not under docs/ (it holds code, and docs/ is CC-BY-4.0). Before the PR: no other project named, no user-profile path, its check-index.mjs and the repository checkers run on it; if verify-cites flags a citation inside it, stop and tell the human (no checker change, no exemption, no edit to the notes); fetch-cache.mjs is not run, and the clone cache is never inside the repo. WAITING: the archive did not reach the session; the human is asked for it and its sha256.",
+      "evidence_label": "PR #192"
     }
   ],
   "proposed": [
