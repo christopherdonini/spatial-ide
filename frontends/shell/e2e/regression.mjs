@@ -1306,29 +1306,18 @@ async function stepK6(page, consoleHandle) {
   // first is what makes the zoom-OUT land back on a camera a real hover has ALREADY proven to be
   // above the declared threshold, so this case tests the re-pick rather than the threshold.
   const repickHover = await establishAboveThresholdHoverK6(page, consoleHandle, "K6/re-pick");
-  if (repickHover.id === null) {
+  const repickId = repickHover.id;
+  if (repickId === null) {
     throw new Error(`K6/re-pick: expected a real id readout to start from, got ${JSON.stringify(repickHover.text)}`);
   }
   await wheelWithoutMoving(page, consoleHandle, ZOOM_NOTCH_DELTA_Y); // "Once i zoom in to a feature and hover over one"
-  // Milestone 1 re-aim (the human's Decision A; PRE-REGISTRATION Amendment 6). The id the zoom-out step is compared with is the
-  // one STANDING when that step begins, not the one the hover was first established with. Old assumption: a stationary pointer
-  // keeps the same feature under it across a zoom-in notch, so the two ids are the same. They are not always: the pointer sits
-  // at a fractional CSS position over integer-pixel features, and on this map's 731-row buffer the zoom-in notch moved it onto the
-  // neighbour (50244 -> 53722, then 53722 again after the zoom-out), a result of which pixel the search picked and not of the
-  // re-pick contract this case is about. What this case asserts about the product is unchanged: after ONE zoom-out step with the
-  // pointer stationary, the readout still names the feature under the pointer (the id that stood going in), and a confirming
-  // re-pick line stands behind it. If the zoom-in left no id standing (the pointer fell between two features), the hover is
-  // established again from the camera the pointer is at, which is all the zoom-in existed to provide: a camera a real hover has
-  // already proven above the threshold.
-  let standingAtStepOut = await readHoverReadoutState(page);
-  if (hoverReadoutId(standingAtStepOut) === null) {
-    const again = await establishAboveThresholdHoverK6(page, consoleHandle, "K6/re-pick (hover re-established after the zoom-in)");
-    standingAtStepOut = { state: "confirmed", id: again.id, text: again.text };
-  }
-  const repickId = hoverReadoutId(standingAtStepOut);
-  if (repickId === null) {
-    throw new Error(`K6/re-pick: no id was standing when the zoom-out step began (${JSON.stringify(standingAtStepOut)})`);
-  }
+  // CASE (iii) IS UNCHANGED by milestone 1 (the human's ruling on K6 case (iii), PRE-REGISTRATION Amendment 10): it compares the
+  // readout after the zoom-in and zoom-out pair with the id a real hover named at that camera and pointer, with no retry and no
+  // re-established hover. Its dependence on the one candidate pixel is kept on purpose: when the stationary pointer is on the same
+  // feature the two ids agree, and when they do not it is the product's two pick paths disagreeing (the hover pick and the settle
+  // re-pick, same camera, same pointer), which this check must keep showing. The ruling records that at a window one row taller
+  // than the default (1280 x 801) the hover pick answered 50244 and the settle re-pick 53722; that disagreement is the proposed
+  // node `shell-pick-paths-disagree-at-1280x801`, a diagnosis first, and nothing here is bent to hide it.
   const beforeStepOut = consoleHandle.renderTrace().length;
   await wheelWithoutMoving(page, consoleHandle, K6_ZOOM_OUT_NOTCH_DELTA_Y); // "...if i zoom out by just one step"
   // AFTER the settle (`wheelWithoutMoving` waits for trace quiet): the id must be CONFIRMED, i.e.
