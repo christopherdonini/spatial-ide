@@ -532,3 +532,49 @@ Each mutation is observed by applying it, running the named test, recording its 
 ## §10. Amendments
 
 *(Opens empty; append-only.)*
+
+### Amendment 1 — question round 69's rulings (OPEN-1, OPEN-4, OPEN-6 and OPEN-8), with the human's typed additions (class 5)
+
+*Written by the custodian after the round was answered and before any code: no branch exists. It is appended at the file's end and belongs to §10. The rulings are `state/directives/2026-10-08-round-69-rulings.md` at the commit that adds it: lines 6-9, sha256 957d18886808dca6340d181cd79d8452e38a4376effa0ae5dbd76002a00bb978; lines 10-20, sha256 9157b8bdc5a5f4b4655033b3e51dbbc7381991065418a1ad07a28480a856f27f. Their RULED block is in `DECISIONS-PENDING.md`, referenced and not restated. Nothing below is a quotation of the human. The blocks marked as ADR text are the new bytes of §2.3, written by the custodian from the rulings.*
+
+1. **OPEN-1, (A), with the human's three additions.** ADR-036's §1 to §10 stand as drafted, with three changes. The worker applies each to the text between §2.3's markers, by script, before the copy, and the reviewer checks the filed ADR against §2.3 as changed here.
+   - **(a) ADR-036 §6, the `at` row of the step line's table,** is replaced whole by this ADR text:
+
+     ```
+     | `at` | UTC, RFC 3339, whole seconds; or, in a shared copy, the named state `withheld`, so that a sharing level can drop working times within version 1 |
+     ```
+
+   - **(b) ADR-036 §8, the bullet beginning "How it is written",** keeps its first sentence. Its second sentence, the one claiming the lineage file always matches the project file, is replaced by this ADR text:
+
+     ```
+     Piece 1c's amendment to this ADR states how a reader detects a project file and a lineage file from different saves, and what it shows then.
+     ```
+
+     ADR-036 §11's list "Work left to later pieces" gains, after its 1b items, this ADR text as its own line:
+
+     ```
+       - how a reader detects a project file and a lineage file from different saves, and what it shows then (1c, §8);
+     ```
+
+   - **(c) The project file's name and extension stay open until the human accepts the ADR.** In ADR-036 §1's tree, the line naming `project.spatial.json` is replaced by this ADR text:
+
+     ```
+       <project file>           the project file: one canonical JSON document
+     ```
+
+     The paragraph after the tree gains, before it, this ADR text, followed by one blank line:
+
+     ```
+     > **OPEN, until the human accepts this ADR: the project file's name and extension.** The draft named it `project.spatial.json`. A file ending in `.json` cannot open the application by double-click, so the name and the extension are settled at acceptance.
+     ```
+
+2. **OPEN-4, (B).** ADR-036 §5 stands as drafted: `source_revision` is the named state `none-pinned` for a linked file, and the observation is the `observed` member beside the six. K-1's code follows it.
+3. **OPEN-6, (A).** Round 8's pre-commitment is confirmed for this producer, with the consumers §2.6 names. All of 1a's code may be dispatched in its turn.
+4. **OPEN-8, (A).** ADR-036 §6 and §11 stand as drafted: the selection scope is reserved, and no step writes a feature id until an ADR-016 amendment is accepted.
+5. **Routed to piece 1c's form** (`b2-piece-1c-save-and-reopen`), by the human's additions, and recorded in its PLAN node in this amendment's commit:
+   - its ADR-036 amendment states how a reader detects a project file and a lineage file from different saves, and what it shows then (item 1 (b));
+   - its form states that a selection made by clicking is not saved, and how the human is told at Save project when one exists (OPEN-8's addition).
+6. **Still open:** OPEN-2, OPEN-3, OPEN-5 and OPEN-7, red lines, asked as holds in question round 70 and ruled only in typed words. An OPEN-n still unruled when ADR-036 is filed stays in it as an OPEN block of the shape item 1 (c) uses: the words **OPEN-n, until the human accepts this ADR:** in bold, then the subject, the options as §2.9 and the question round state them, and the recommendation. `DatasetUri::mint` waits for OPEN-5 (§5, I4).
+7. **Generation 2.**
+
+**Superseded index.** §2.9's OPEN-1, OPEN-4, OPEN-6 and OPEN-8 rows → items 1 to 4, binding. §2.3's `at` row, §8's second sentence of "How it is written", §11's later-pieces list and §1's tree line → item 1. None is edited.

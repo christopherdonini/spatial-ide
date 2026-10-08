@@ -458,3 +458,23 @@ The worker's and tester's briefs carry, as written, the paragraph at state/direc
 6. **Generation 3.**
 
 **Superseded index.** §2.9 item 7 → items 1 to 5. Not edited.
+
+### Amendment 3 — stage 1's outcomes: the build's deviations (class 2, class 3 and class 7), and the tests group over its ceiling so far
+
+*Written by the custodian after stage 1's results were seen, at the branch head 02d70ddedadb9d6fdd7484bf054c38032b988f10, before stage 2 and before either gate. The record is worker report 1, `state/consults/2026-10-07-shell-migration-milestone-1-worker-report-1.md` (sha256 5d6034a49c3eb7d6218837d7b54d9f83b45e871de8ad378e0721d6ffecf1fcd8, from its line 5 to the end, at the commit that adds it), cited by section. Nothing below is a quotation.*
+
+1. **Stage 1's commits:** d19c84a6, 420bc315, effd675f, 4b0fb077, 13df4cb5, 05fe2fe1, 64eb6e76 and 02d70dde (report 1, section 1).
+2. **Class 2, the commit split.** StudioLayout.tsx and regionParts.tsx land in the second commit, not the first, because StudioLayout records rows that exist only once the second commit's registry rows and allowlist line land. Four commits are added: a one-line fix to `e2e/layout.mjs`; the recorded-mutation comments, in two commits, since a comment cannot name the commit it is in; and callers for `REGIONS` and `VIEWPORT_FLOOR` under §8 item 11 (report 1, section 6, items 2 and 3).
+3. **Class 7, sight-list addition** (report 1, section 6, item 4). §2.8's placeholder list gains the three splitters' accessible names and the attention strip's landmark name. Each is a marked P6 placeholder, and the new Part's last row sights them. No claim elsewhere changes, and no wording is settled.
+4. **Class 3, the new Part's letter.** The next unused letter at the base is U, so the form's rows X1 to X9 are the walkthrough's U1 to U9, and U10 is item 3's sight row. These are walkthrough rows, distinct from §4's unit tests U1 to U6.
+5. **Class 2, the export label in the walkthrough.** The rows that name the Publish button or disclosure take the export label, not only the rows that quote the headline. This follows Amendment 1, item 4, as round 66's item 4 states the label's reach (report 1, section 6, item 6; the rows are listed in section 7).
+6. **Class 2, `e2e/layout.mjs`.** E-FIT has no config-overlay fallback: if the viewport cannot be set, it stops with a STOP message without trying the fallback §4 names. E-LANDMARKS asserts on the DOM and reads the accessibility tree only as a best-effort extra. R7's test also asserts one resize row per finished drag and per keyboard step. The status-bar liveness mirror has no live-region role, so the text is not announced twice (report 1, section 6, items 7, 8 and 10).
+7. **§7 so far,** by its command at 02d70dde: 3,015 lines over 25 files, against 3,250. G5, the unit and render tests, is over its ceiling so far: 1,004 against 900. Its 52 recorded-mutation comment lines are part of that figure. Every other group is within its ceiling (report 1, section 2). The class 8 record is made once, at the gated head, with the final figures. §7 is not edited.
+8. **The mutations of U1 to U6 and R1 to R8** were observed by hand, U2 to U6 at d19c84a6 and U1 and R1 to R8 at 64eb6e76 (report 1, section 3). §0.4's interfaces are unchanged at the base, so I4 does not fire (report 1, section 5).
+9. **Predicted for stage 2, before it runs** (report 1, section 8):
+   - E-FIT's mutation as §4 states it (an Inspector default width of 900) is predicted not to fail, because the fit function shrinks the Inspector. Stage 2 observes it as written. If it does not fail, stage 2 also observes the deletion of the fit's shrink step against E-FIT, and the outcome is recorded with its class.
+   - `e2e/console.mjs`'s step CLASSC' fills the style colour input after a script click on the Style disclosure. That input is now in the Inspector's Style tab, hidden by default. §2.7 does not name `console.mjs`, so a failure there is invalidator I3: recorded as class 2, and the human is asked. No threshold or suite outside §2.7 is edited.
+10. **Noticed, not done** (report 1, section 9): walkthrough row S1's wording, the `publish.mjs` coverage prose, F8's sentence on the publish button, Part K's colour wording, and old-layout measurement comments in files this piece moves whole. They go to the gates, to be fixed in this PR where they are in §2.8's scope.
+11. **Generation 4.**
+
+**Superseded index.** §2.8's placeholder list → item 3. §2.8's row letters X1 to X9 → item 4. None is edited.
