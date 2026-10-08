@@ -13,3 +13,16 @@ Out-of-scope: ADR none (ADR-032 is not edited); security none; wire none; guaran
 ## Amendments
 
 Opens empty, append-only.
+
+### Amendment 1 — the closing record (class 1)
+
+*Written by the custodian after the outcome was seen. PR #193 merged at 2026-10-08T18:22:48Z as merge commit f310e1cab713e951e929f92c9d0df0f98d24f444, with parents d001ba18435f2790ae5ad189c676979b70803895 and 2b8cf3e457f0a5ba5e25ea8d7ac8461b003f2b52. References and hashes only. Nothing below is a quotation.*
+
+1. **The PR and its heads:**
+   - the worker's change is 7b7438e7;
+   - the gated head is c75a057c, its first merge of main;
+   - the merged head is 2b8cf3e4, a second merge of main. Each merge took main's side for the four generated files and regenerated them from the merged PLAN. Over the gated head, the second merge brings in only records and one PLAN node's fields (`docs-08-public-data-sentence`). CI passed 6 of 6 at 2b8cf3e4.
+2. **The gate report:** `state/consults/gates/2026-10-08-adr-032-staleness-docs-gate1-reviewer.md`, PASS with no findings, gate-log 444, sha256 f0db2701ff4c6eee4d10ad98ea360e41d35568e35f8165f3b4a212742e739986, added at d8ef7f7be856db3d88338f3266e2a8704478fb48.
+3. **The worker report:** `state/consults/2026-10-08-adr-032-staleness-docs-worker-report-1.md`. Its sha256, from its line 5 to the end, is 11135f4c24351b968ab878feac092969f070f18cd311a5c9d3bfd6aa731f78ed. It was added at bc5df5e6ade0e0c5cd466b9bf0cf1e15ab78b3c9 and is unchanged since.
+4. **The Scope:** 12 changed lines over the two source files (`PLAN.yaml` 5 and 5, `docs/README.md` 1 and 1) against at most 12, counted against the merge commit's first parent.
+5. **Done:** PLAN marks the node done, with evidence `{pr: 193}`, at generation 1, in this amendment's commit.

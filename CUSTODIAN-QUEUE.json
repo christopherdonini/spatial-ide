@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-08T18:10:11.290Z",
-  "plan_hash": "0423bef5688df2aa41a2448e32e0fd8c3ea5646e1d881f0a2b2bf0ec86a95e20",
+  "generated_at": "2026-10-08T18:23:34.073Z",
+  "plan_hash": "b8a4529f78ea95a061b77cd9526fe5941356ae6bec1cd287131e99590c1b1533",
   "priorities_approved": true,
   "next": null,
   "ready": [],
@@ -191,28 +191,6 @@
       "evidence_label": "branch `cut/shell-migration-milestone-1`"
     },
     {
-      "id": "adr-032-staleness-docs",
-      "title": "ADR-032 shown stale in two places: the PLAN node adr-032-decision and docs/README.md line 27 still read Proposed",
-      "lane": "governance",
-      "phase": "prototype",
-      "status": "in-progress",
-      "order": 3,
-      "budget_minutes": 30,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": {
-        "branch": "cut/adr-032-staleness-docs"
-      },
-      "dates": {
-        "opened": "2026-10-08",
-        "done": null
-      },
-      "summary": "PR #193 OPEN 2026-10-08 at 7b7438e7 (worker report 1; 12 of 12 lines; every check 0); the single reviewer gate after CI. IN CODE 2026-10-08: slot 2; five-line form at be845ea3 (single reviewer gate); branch cut/adr-032-staleness-docs, worktree C:/dev/wt/a32; one worker. Before: QUEUED 2026-10-08 by the human (state/directives/2026-10-08-reuse-round-1.md, item 3): ADR-032 was Accepted 2026-09-23; the node adr-032-decision is still proposed, and docs/README.md line 27 still calls it Proposed. A small docs piece brings both in line. It waits for #190, which also changes docs/README.md (disjoint paths).",
-      "evidence_label": "branch `cut/adr-032-staleness-docs`"
-    },
-    {
       "id": "docs-08-public-data-sentence",
       "title": "docs/08 calls Overture and OSM extracts redistributable, against the ruling that corpus #12 is local-only, fetch-only and never redistributed",
       "lane": "governance",
@@ -231,7 +209,7 @@
         "opened": "2026-10-08",
         "done": null
       },
-      "summary": "IN CODE 2026-10-08: the human typed the sentence (state/directives/2026-10-08-m1-mutations-branch-docs08-adr036.md, item 3); five-line form at 4cb3cd2e (single reviewer gate); branch cut/docs-08-public-data-sentence, worktree C:/dev/wt/d08; one worker; slot 2 while #193 awaits merge. Before: QUEUED 2026-10-08 by the human (state/directives/2026-10-08-reuse-round-1.md, item 3): docs/08_Testing.md line 40 calls the public data redistributable, which conflicts with the #12 ruling (DECISIONS-PENDING, item 3 of that round: local-only, fetch-only, never redistributed). The custodian brings a proposed sentence; the human types the sentence that lands.",
+      "summary": "PR #194 OPEN 2026-10-08 at 388531fa (worker report 1; line 40 byte-identical to the human sentence joined; 1 line); the single reviewer gate running. IN CODE 2026-10-08: the human typed the sentence (state/directives/2026-10-08-m1-mutations-branch-docs08-adr036.md, item 3); five-line form at 4cb3cd2e (single reviewer gate); branch cut/docs-08-public-data-sentence, worktree C:/dev/wt/d08; one worker; slot 2 while #193 awaits merge. Before: QUEUED 2026-10-08 by the human (state/directives/2026-10-08-reuse-round-1.md, item 3): docs/08_Testing.md line 40 calls the public data redistributable, which conflicts with the #12 ruling (DECISIONS-PENDING, item 3 of that round: local-only, fetch-only, never redistributed). The custodian brings a proposed sentence; the human types the sentence that lands.",
       "evidence_label": "branch `cut/docs-08-public-data-sentence`"
     }
   ],
