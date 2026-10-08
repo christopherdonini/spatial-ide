@@ -1903,6 +1903,7 @@ version = "0.0.0"
 dependencies = [
  "arrow",
  "futures-util",
+ "getrandom 0.3.4",
  "serde_json",
  "spatial-data-plane",
  "spatial-engine",
