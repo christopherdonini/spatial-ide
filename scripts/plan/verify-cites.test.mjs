@@ -245,6 +245,9 @@ function pinnedRepo(doc) {
   return { dir, rev };
 }
 
+// RECORDED MUTATION (P1): the pinned fallback removed (the `if (pr.ok) continue;` after `checkPinned` in
+// runVerifyCites commented out) -> fails by name: `a_pinned_cite_past_the_trees_end_that_resolves_at_its_commit_passes`
+// (no other test). Observed at 0e092a40fb10, reverted.
 test('a_pinned_cite_past_the_trees_end_that_resolves_at_its_commit_passes', () => {
   const { dir } = pinnedRepo((rev) => `see engine/src/pool.rs:4-5 @ ${rev} sha256:00`);
   try {
@@ -255,6 +258,9 @@ test('a_pinned_cite_past_the_trees_end_that_resolves_at_its_commit_passes', () =
   }
 });
 
+// RECORDED MUTATION (P2): an unknown commit treated as resolved (`ok: true` returned from the failed
+// `cat-file` check) -> fails by name: `a_pinned_cite_whose_commit_does_not_exist_fails_by_name` (no other
+// test). Observed at 0e092a40fb10, reverted.
 test('a_pinned_cite_whose_commit_does_not_exist_fails_by_name', () => {
   const { dir } = pinnedRepo(() => 'see engine/src/pool.rs:4 @ deadbee0 sha256:00');
   try {
@@ -266,6 +272,9 @@ test('a_pinned_cite_whose_commit_does_not_exist_fails_by_name', () => {
   }
 });
 
+// RECORDED MUTATION (P3): the file check at the commit skipped (a failed `git show` leaves empty text
+// instead of returning a failure) -> fails by name: `a_pinned_cite_whose_file_is_missing_at_that_commit_fails_by_name`
+// (no other test). Observed at 0e092a40fb10, reverted.
 test('a_pinned_cite_whose_file_is_missing_at_that_commit_fails_by_name', () => {
   const { dir } = pinnedRepo((rev) => `see engine/src/other.rs:1 @ ${rev} sha256:00`);
   try {
@@ -277,6 +286,7 @@ test('a_pinned_cite_whose_file_is_missing_at_that_commit_fails_by_name', () => {
   }
 });
 
+// P4 guards the unpinned path against a fallback applied to every cite; it has no mutation of its own.
 test('an_unpinned_cite_past_the_trees_end_still_fails', () => {
   const { dir } = pinnedRepo(() => 'see engine/src/pool.rs:4');
   try {
