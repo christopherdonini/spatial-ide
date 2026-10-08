@@ -714,3 +714,19 @@ The worker's and tester's briefs carry, as written, the paragraph at state/direc
 5. **Generation 12.**
 
 **Superseded index.** Amendment 8, item 2's table → item 4. It is not edited.
+
+### Amendment 12 — both attempt-2 gates pass, and their record items (class 1), after results were seen
+
+*Written by the custodian after both attempt-2 gate results were seen, at the gated head ae704f0abc924bde7a6f912a853f039dfca66114. The reports are `state/consults/gates/2026-10-08-shell-migration-milestone-1-gate1-architect-attempt-2.md` (gate-log 448, pass with notes) and `state/consults/gates/2026-10-08-shell-migration-milestone-1-gate1-reviewer-attempt-2.md` (gate-log 449, pass). Below, "A2-" marks the architect's items and "R2-" the reviewer's. Nothing below is a quotation.*
+
+1. **Amendment 10's hash, with its rev** (A2-N-D2, R2-N-D2): the ruling's lines 6-15 are at aad1ba725b714fdd2a26703420e88fd0aa11f540, on main, sha256 aec86de380ae721fcf522c30a532d07132b79233cac7cadbb22e55546a93d2cd. The reviewer recomputed it.
+2. **Amendment 10, item 2's marked phrase** (A2-N-D3) is the custodian's paraphrase of Amendment 6, item 2 and Decision A. It is not a quotation of either.
+3. **The pick-paths disagreement** (A2-N-D5) was seen on the 731-row buffer that a window one row taller than the default gave while the bars were content-box. That was at the base e888787e sized to the new map, and at 65391e79, both before 2e17ee52. Amendment 10, item 4 and the node `shell-pick-paths-disagree-at-1280x801` are read with that buffer. The node's summary on main says so.
+4. **The other documentation items:**
+   - The PR body (A2-N-D1, A2-N-D6, R2-N-D3 to R2-N-D6) is fixed in the body.
+   - The `pan-anchor.mjs` comment at lines 129-131 (A2-N-D4, R2-N-D1) is fixed by one comment commit after the gated head, recorded in the closing record. It is test text, class 3.
+5. **The reviewer's suggestions** are not taken in this PR:
+   - S1, S2: E-FLOOR's bar-height assertion and margin;
+   - S3: the other 668 × 730 comments, which Amendment 11, item 1 covers.
+
+**Superseded index.** Amendment 10's hash reference → item 1. Amendment 10, item 4's window wording → item 3. Neither is edited.
