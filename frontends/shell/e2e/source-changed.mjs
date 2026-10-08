@@ -405,17 +405,28 @@ function readoutShowsAnId(readout) {
  * more than that, so this repeats the drag -- each one carrying the map about 80% of a viewport in
  * the same direction -- and reports the total displacement in CSS pixels for the record.
  */
-async function panByViewports(page, rect, drags) {
+async function panByViewports(page, rect, drags, shouldStop = () => false) {
   const y = rect.top + rect.height / 2;
   const fromX = rect.left + rect.width * 0.9;
   const toX = rect.left + rect.width * 0.1;
+  let performed = 0;
   for (let i = 0; i < drags; i++) {
+    if (i > 0 && shouldStop()) break; // POST route: stop panning once the mutation has been made (see S4)
     await page.mouse.move(fromX, y);
     await page.mouse.down();
     await page.mouse.move(toX, y, { steps: 10 });
     await page.mouse.up();
+    performed++;
   }
-  return { drags, cssPixelsPerDrag: Math.round(fromX - toX), totalCssPixels: Math.round((fromX - toX) * drags) };
+  return { drags: performed, cssPixelsPerDrag: Math.round(fromX - toX), totalCssPixels: Math.round((fromX - toX) * performed) };
+}
+
+/** The zoom of the newest `[render-trace] view-state` line, or null before there is one. At zoom z there are 2^z CSS px per
+ * metre (`world = target + (pixel - center) / 2^zoom`, as `pan-anchor.mjs` derives it). */
+function lastViewStateZoom(consoleHandle) {
+  const lines = consoleHandle.renderTrace().filter((e) => /view-state/.test(e.text));
+  const m = lines.length > 0 ? /zoom: (-?[\d.]+(?:e-?\d+)?)/.exec(lines[lines.length - 1].text) : null;
+  return m ? Number(m[1]) : null;
 }
 
 /** How many `viewport_query` lines the render trace carries right now -- S4's own assertion reads
@@ -810,8 +821,20 @@ async function main() {
         const ladder = [];
 
         let rect = await requireCanvasRect(page);
-        const panPromise = panByViewports(page, rect, 2);
+        // Milestone 1 re-aim (the human's Decision A; PRE-REGISTRATION Amendment 6). Old assumption: a pan of two box widths leaves
+        // the tile cover S2's zoom-in search made resident, so a tile has to be minted. The cover is made of world tiles and the
+        // pan was measured in box widths: at a 1280-wide box two drags are 2,048 px, at the Studio frame's 668-wide map they are
+        // 1,069 px, and at S2's zoom (-0.90) that is 1.8 km of world, inside the cover -- 0 `viewport_query` and 0 `stream-issued`
+        // lines followed, and the status stayed "Showing all 20163 features in view". The pan is now as long as it needs to be and
+        // no longer: drags go on, one box-width-ish each, until the mutation below has been made (the poll below touches the file
+        // on the first new `stream-issued` line, and the pan stops at the next drag boundary), bounded by the fixture's own extent --
+        // a camera that has crossed the whole dataset (317 columns of 40 m cells, `engine/src/fixture.rs`) at the current zoom has
+        // been over every tile there is, so that many drags is the most that can be needed. Nothing else about S4 changes.
+        const zoomNow = lastViewStateZoom(consoleHandle) ?? 0;
+        const datasetPx = 317 * 40 * 2 ** zoomNow;
+        const maxDrags = Math.max(2, Math.ceil(datasetPx / (rect.width * 0.8)));
         let raceResult = null;
+        const panPromise = panByViewports(page, rect, maxDrags, () => raceResult !== null);
         let raceError = null;
         try {
           raceResult = await touchOnFirstNewStreamIssued(consoleHandle, SCRATCH_COPY, before, "pan-beyond-viewport");
