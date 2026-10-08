@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-08T15:39:07.494Z",
-  "plan_hash": "2b88f3a0bd2828ad0b287dd86ec458d9af4e308bd24979046af07ac00b1e3c9b",
+  "generated_at": "2026-10-08T16:01:23.771Z",
+  "plan_hash": "b23c94260f4cefc41ec70470df325584f80fe60e8edc8dce03aaa68e7258397f",
   "priorities_approved": true,
   "next": {
     "id": "reuse-round-1-bundle",
@@ -307,7 +307,7 @@
         "opened": "2026-10-08",
         "done": null
       },
-      "summary": "PR #191 OPEN at 57e8d2b3: the single reviewer gate FAIL (441: C1 a pinned directory passes; C2 the reason); Amendment 1, generation 2 (P5, P6, the blob read, the kept tree reason); one fix worker, then the re-gate. IN CODE 2026-10-08: branch cut/verify-cites-pinned-citations from ed396e94, worktree C:/dev/wt/vcp; one worker; slot 2 since #190 awaits merge. Before: PLACED 2026-10-08 by the human Decision B (state/directives/2026-10-08-decisions-a-b-c.md, lines 17-24): a one-off, bounded exception to the 2026-10-05 freeze; its own small piece with its tests, merged before shell-migration-milestone-1 opens its PR; that piece's boundary does not change. Found by milestone 1 stage 2 (its form Amendment 4, item 8): citations pinned at 30e77c10 name lines past App.tsx's new end. Five-line form, single reviewer gate; scripts/plan/verify-cites.mjs and its tests only, at most 150 lines. Slot 2, after b2-piece-1a awaits merge.",
+      "summary": "GATE PASSES 2026-10-08 on attempt 2 (reviewer 442 at 2d684ad5; C3 low and D5, D3 to the closing record); D4 (the header: a pin is read at the path as written) fixed before the merge by one worker. Before: PR #191 OPEN at 57e8d2b3: the single reviewer gate FAIL (441: C1 a pinned directory passes; C2 the reason); Amendment 1, generation 2 (P5, P6, the blob read, the kept tree reason); one fix worker, then the re-gate. IN CODE 2026-10-08: branch cut/verify-cites-pinned-citations from ed396e94, worktree C:/dev/wt/vcp; one worker; slot 2 since #190 awaits merge. Before: PLACED 2026-10-08 by the human Decision B (state/directives/2026-10-08-decisions-a-b-c.md, lines 17-24): a one-off, bounded exception to the 2026-10-05 freeze; its own small piece with its tests, merged before shell-migration-milestone-1 opens its PR; that piece's boundary does not change. Found by milestone 1 stage 2 (its form Amendment 4, item 8): citations pinned at 30e77c10 name lines past App.tsx's new end. Five-line form, single reviewer gate; scripts/plan/verify-cites.mjs and its tests only, at most 150 lines. Slot 2, after b2-piece-1a awaits merge.",
       "evidence_label": "branch `cut/verify-cites-pinned-citations`"
     }
   ],
