@@ -478,3 +478,102 @@ The worker's and tester's briefs carry, as written, the paragraph at state/direc
 11. **Generation 4.**
 
 **Superseded index.** §2.8's placeholder list → item 3. §2.8's row letters X1 to X9 → item 4. None is edited.
+
+### Amendment 4 — stage 2's outcomes: the suites, invalidator I3, the E rows, RESIZEQ and the OPEN-7 line
+
+*Written by the custodian after stage 2's results were seen, at the branch head f214f1f4b0a3a1ee43c265c639521c35ca1ee55f, before either gate. The record is worker report 2, `state/consults/2026-10-08-shell-migration-milestone-1-worker-report-2.md` (sha256 0640da96da9065e01745c00c04e964264066093951e7a4af654491946c7e3f74, from its line 5 to the end, at the commit that adds it), cited by section. Nothing below is a quotation.*
+
+1. **Stage 2's commits:** 27e4816c, a fix to `e2e/layout.mjs`'s E-FOCUS step, inside §7; and f214f1f4, KNOWN-LIMITATIONS item 39 (report, sections 5, 7 and 10).
+2. **The suites** (report, sections 1 and 3):
+   - `npm run verify` passed after `npm ci` in `renderer/bundle-viewer`, which made no tracked change.
+   - `e2e:layout` passed 8 of 8 at 27e4816c.
+   - The scripts suite passed 450 of 450, and five of the six verifiers passed.
+3. **Class 2, the launch.** On this machine, port 5180 lies in Windows' excluded TCP port range, so the standard dev launch cannot start the page server. The suites ran a real debug build in a real WebView2, with the page served on another port and mapped back to `localhost:5180`, and no tracked file was edited (report, section 3). A rerun on the standard path needs the port free.
+4. **Failures present at the base as well,** each run at e888787e under the same launch and with the same fixtures (report, section 4). They are not this piece's:
+   - regression C2′/C3′;
+   - admission MAP′ and BOTHNEEDED′;
+   - console HEXLIM′, GROUP′ and REGRESS′;
+   - source-changed's default-route S4.
+5. **Invalidator I3, class 2: failures this piece caused,** passing at the base and failing at the head (report, section 4). No suite and no threshold is edited, and the human is asked:
+   - regression A9′ and K6;
+   - filter-panel FIND′;
+   - console CLASSC′, as Amendment 3 item 9 predicted;
+   - source-changed's post-route S4 and S5a to S5d;
+   - four of pan-anchor's sixteen checks.
+
+   The worker reads all but CLASSC′ as effects of the map's new size. A diagnosis, with no edits, runs each of them at the base with a map of the new size, to tell a suite's geometry assumption from a behaviour this piece changed.
+6. **The E rows' mutations,** observed at 27e4816c (report, section 6):
+   - E-KEYS, E-FIELD, E-FOCUS and E-LANDMARKS each fail their own step.
+   - **E-REOPEN:** its mutation is caught first by E-KEYS, as §4 says.
+   - **Class 2, E-FIT.** §4's mutation (an Inspector default width of 900) does not fail E-FIT, as Amendment 3 item 9 predicted. Neither does deleting the fit's shrink step alone. Only the two together fail it.
+7. **RESIZEQ:** zero new viewport queries after closing the Inspector, and zero after reopening it, in every run. H1 holds (report, section 7). Under Amendment 1 item 7, KNOWN-LIMITATIONS item 39 is written as DRAFT wording for the human's P6 sight, and the proposed node `shell-map-refill-after-resize` is to be placed directly after this milestone merges.
+8. **verify-cites fails on the branch** (report, section 8). This form's three cites into App.tsx's return block (in §0.3 and in §2.2's table), and one in its architect draft, name lines past the file's new end. App.tsx is now 1,997 lines. The cites are historical pins, which the checker reads against the current tree. That checker is governance code under the freeze, so the remedy goes to the human. No record is edited.
+9. **§7 at f214f1f4:** unchanged from Amendment 3 item 7. That is 3,015 lines over 25 files, with G5 at 1,004 against 900. Outside the count, KNOWN-LIMITATIONS is at 15 of 20. The class 8 record is made at the gated head.
+10. **The worker's process slips** (report, section 3): one held call that did not keep the machine paragraph's shape. They are recorded here, and the next brief names them.
+11. **Generation 5.**
+
+**Superseded index.** §4's E-FIT mutation outcome → item 6. §2.11's conditional line → item 7. None is edited.
+
+### Amendment 5 — the diagnosis of invalidator I3's failures (class 2)
+
+*Written by the custodian after the diagnosis's results were seen, at the branch head f214f1f4, which it did not change. The record is worker report 3, `state/consults/2026-10-08-shell-migration-milestone-1-worker-report-3.md` (sha256 89f6cd72a3ffb7b20c0052bb327619bcde3af0f6d7a6770a4ee15bc717eb4e47, from its line 5 to the end, at the commit that adds it; its filing note gives the hash as written and one disclosed rewrite), cited by section. Nothing below is a quotation.*
+
+1. **The method.** Each failing suite ran at the base e888787e, with the window sized so that the base's map matched the map at this head: 668 × 730 for most suites, and 328 × 570 and 788 × 830 for pan-anchor (report, the sizing section).
+2. **Every failure is a suite's assumption about the map's shape, not a behaviour this piece changed.** At the base, sized to the new map, each fails the same step (report, per-failure sections):
+   - A9′ and K6 depend on which pixel the search picks. On a 668 × 730 map, the search stops one zoom notch below the pick-resolution threshold, and a one-row difference in the buffer changes the failing sub-assertion.
+   - FIND′'s 0.5% floor holds only on a canvas about twice as wide as it is tall.
+   - pan-anchor's drag distances need a map about 640 px wide or more.
+   - source-changed's post-route pan is measured in canvas widths, and on the narrower map it no longer leaves the resident tile cover.
+   - CLASSC′ fills an input in the Style tab, which is now hidden by default (Amendment 3 item 9).
+3. **No product change is implied,** and no suite or threshold is edited. The re-aims are the human's to rule, under I3.
+4. **Generation 6.**
+
+**Superseded index.** Amendment 4, item 5's reading of the I3 failures → item 2. Not edited.
+
+### Amendment 6 — scope addition: the seven re-aims (the human's Decision A, under invalidator I3)
+
+*Written by the custodian after the human's ruling and before any code of it, at the branch head f214f1f4. The ruling is Decision A, `state/directives/2026-10-08-decisions-a-b-c.md` lines 6-15 at the commit that adds it (sha256 d5522f63c3439cad05bcb397065dd612a4ac4ba01e6a6a7aa34a73c5a8124d9a). Its conditions bind, and they are referenced, not restated. Its RULED block is in `DECISIONS-PENDING.md`. The diagnosis is Amendment 5. Nothing below is a quotation.*
+
+1. **The checks re-aimed, in place:**
+   - `e2e/regression.mjs`: A9′ and K6;
+   - `e2e/filter-panel.mjs`: FIND′;
+   - `e2e/console.mjs`: CLASSC′;
+   - `e2e/pan-anchor.mjs`: the four failing checks (small paint-vs-event at dx = ±250, small there-and-back-net, and large paint-vs-event at dx = 250);
+   - `e2e/source-changed.mjs`: the post route's S4, from which S5a to S5d follow.
+2. **What a re-aim may change: the check's assumption about the map** (a size, a distance, a threshold), and nothing it asserts about the product.
+   - Each new value is derived from the measured map and the fixture, and the test states how.
+   - No value is tuned until a run turns green.
+   - A9′ and K6 no longer depend on one candidate pixel.
+   - CLASSC′ gains one click on the Style tab before its real fill, as OPEN-3 (a) did for `style.mjs`.
+3. **Each re-aimed check is shown still able to fail.** Where the check has a recorded mutation, that mutation is observed again at the fix head. Otherwise one mutation is stated in the PR body and observed.
+4. **The PR body** lists each check with its old and its new assumption.
+5. **The boundary.** §8 item 8, an e2e edit outside §2.7, is read with this exception: these five files, and these checks only. Every other suite, step and threshold is unchanged. The diagnosis's other findings stay as they are.
+6. **§7.** G6's ceiling of 400 is not edited. The re-aims' lines are recorded as class 8 at the gated head, as the ruling says.
+7. **The pinned citations** that `verify-cites` reads against today's App.tsx are handled by the separate piece the human's Decision B places, `verify-cites-pinned-citations`. That piece merges before this one opens its PR. This piece's boundary does not change.
+8. **Generation 7.**
+
+**Superseded index.** §8 item 8 → item 5 (one exception). Amendment 4, item 5's held I3 → items 1 to 4. None is edited.
+
+### Amendment 7 — K6 case (v) strengthened (class 5, the human's ruling under Decision A), and the stages 5 and 6 record
+
+*Written by the custodian after the human's ruling and before any code of it, at the branch head 512aab08. The ruling is `state/directives/2026-10-08-k6-case-v-ruling.md` lines 6-20 at the commit that adds it (sha256 c7e76c209b8be036851ec8c304e35086347e911ce832d876c78cbc195d3a4298). Its RULED block is in `DECISIONS-PENDING.md`. The worker reports are `state/consults/2026-10-08-shell-migration-milestone-1-worker-report-5.md` (stage 5) and `-worker-report-6.md` (stage 6). Nothing below is a quotation.*
+
+1. **Stage 5, the mutations the human allowed.** Seven listed mutations failed their checks, and the there-and-back-net control failed as required: a return drag shorter than the outward one. K6 case (v)'s recorded mutation was not caught. The comments recording them are at 512aab08.
+2. **Stage 6, the diagnosis.**
+   - The miss is an assumption about the map and the pick threshold, not a product change. The mutated build's stale re-pick runs, but on this map it lands on background, so a readout of no id cannot tell a re-pick from none.
+   - The report reads, from the record and not from a run, that the 9 px threshold of 2026-09-14 contributes.
+3. **The change, an exception to item 2 of Amendment 6, which the human allows.**
+   - Case (v) of K6 in `e2e/regression.mjs` keeps what it asserts.
+   - It also fails when a camera-settle re-pick line appears in the render trace since the release mark, whatever that pick found.
+   - This strengthens the assertion. Option (a), a derived drag, is not built.
+4. **The observation.** Mutation 5, the recorded one for case (v), is observed once at the fix head:
+   - one application;
+   - one run of the real suite;
+   - a restore and a clean check.
+   - Its recorded-mutation comment names that commit.
+5. **The PR body** states, for case (v), the old assertion, the new one and the reason. It states the threshold reading as read from the record. It also states the there-and-back-net control (Amendment 6, item 3).
+6. **The stage 6 slip** stays recorded as it is in report 6's filing note: three applications served six mutated runs. No run meant to be clean ran mutated, and nothing was committed. Nothing else is redone, and no rule is added.
+7. **§7.** The change counts in G6, as class 8 at the gated head. §7 is not edited.
+8. **Generation 8.**
+
+**Superseded index.** Amendment 6, item 2 (assumptions only) → item 3 (one exception, case (v)). It is not edited.

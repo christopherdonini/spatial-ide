@@ -29,6 +29,74 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 **DIRECTIVE 2026-09-19 — generated files regenerate on merge (the human, mid-turn; recorded verbatim at `state/directives/2026-09-19-generated-files.md`, line 5 (its sha256 d268f9e53e4644885c55ff3fb6d44b6bbd7b88d3d96b93d8cc1c54903affc1df at the commit that adds it)):** resolve PR #90's conflicts on the generated files and `PLAN.yaml` by regeneration, not by hand — merge `origin/main`, take main's version of the generated set, resolve `PLAN.yaml` semantically with both sides' node changes kept, run the generators so the regenerated files match the merged plan, commit, push, CI; the same for any sibling PR that conflicts the same way; mechanic, permanent: generated files are never conflict-resolved by hand and a PR touching `PLAN.yaml` regenerates on merge with main; and consider a `.gitattributes` merge strategy or moving generated outputs out of PRs (CI regenerating on main after merge). Applied: PR #90 merged with main at 2c5bb0b and PR #91 at 245d4b0, each with the generated set taken from main and regenerated from the merged plan (`PLAN.yaml` on #90 resolved by keeping main's P3b hold and the branch's test-names node; on #91 it auto-merged), `verify.mjs` and the four gates green, both MERGEABLE with CI running; the mechanic entered `AUTONOMY.md` §2 and `AI_DEVELOPMENT.md`'s merges subsection by reference to the directive file; the consideration is entry 114 and PLAN node `decision-generated-outputs-merge-strategy`, the human's ruling. Correction, 2026-09-19: those two insertions shifted every line below them (AUTONOMY.md §21c's line 357 to 359; AI_DEVELOPMENT.md's line 223 to 230), which closed records cite by line and which the checker's own record pins by hash — PR #91's governance CI failed on `AUTONOMY.md:357`; the mechanic was moved to the end of each file (AUTONOMY.md §23; AI_DEVELOPMENT.md Amendment 3 to the Custodian role) so the cited lines are back where the records read them, and the open PRs were re-merged.
 
+**RULED 2026-10-08 — K6 case (v), option (b), and the stage 6 slip (the human, typed, received at 19:40:09Z by the transcript; recorded verbatim at `state/directives/2026-10-08-k6-case-v-ruling.md`, lines 6-20, sha256 c7e76c209b8be036851ec8c304e35086347e911ce832d876c78cbc195d3a4298 at the commit that adds it):**
+- **The ruling** is the text, referenced and not restated.
+- **Applied:**
+  - milestone 1's form gains Amendment 7 (class 5, generation 8);
+  - the same worker makes the case (v) change in `e2e/regression.mjs`;
+  - it observes mutation 5 once: one application, one run of the real suite, a restore and a clean check;
+  - the PR body carries the old and new assertion, the reason, and the threshold reading, marked as read from the record.
+- **The slip** stays recorded as it is, in report 6's filing note. Nothing else is redone, and no rule is added.
+
+**RULED 2026-10-08 — milestone 1's mutations, #192's branch, the docs/08 sentence, ADR-036 later (the human, typed, received at 18:02:48Z by the transcript; recorded verbatim at `state/directives/2026-10-08-m1-mutations-branch-docs08-adr036.md`, lines 6-30, sha256 536cebab9b5d03dbfb696e4dcb4570f23303c1bb25d5971c8e9752b0d6819b90 at the commit that adds it):**
+- **The rulings** are the text, referenced and not restated.
+- **Applied:**
+  - **Item 1:** milestone 1's worker resumes for the mutations listed in its report 4, section 4, under every condition of the item. If the permission system still refuses, it stops, and the human is told.
+  - **Item 2:** `cut/reuse-round-1-bundle` is deleted, local and remote. No other branch is touched.
+  - **Item 3:** `docs-08-public-data-sentence` lands the typed sentence as line 40. The sentence is the item's wrapped lines joined with single spaces, `docs/08_Testing.md` line 40. It needs a five-line form, one worker and the single reviewer gate.
+  - **Item 4:** ADR-036's acceptance waits. The architect's report holds nothing now.
+
+**DIRECTIVE 2026-10-08 — a low profile on GitHub (the human, typed, received at 18:03:05Z by the transcript; recorded verbatim at `state/directives/2026-10-08-low-profile-on-github.md`, lines 6-16, sha256 f564a9656cc416e8e8c80079bd8af8068ed17cd1079d41ee90d19e8f2c064860 at the commit that adds it):**
+- **The direction** is the text, referenced and not restated. It stands until the human says otherwise.
+- **How it applies:**
+  - It covers commit messages, PR titles and bodies, and comments, plus the Fork button and any outside issue, PR, discussion or comment.
+  - File contents are not affected.
+  - Every worker, tester and reviewer brief that may write a commit message or a PR text carries it by reference.
+
+**DIRECTIVE 2026-10-08 — reuse round 1 lives in a private repository (the human, typed, received at 17:10:40Z by the transcript; recorded verbatim at `state/directives/2026-10-08-reuse-round-1-private-repository.md`, lines 6-34, sha256 e461fb526bfc1b74696beb27da02f4efd4125c9178c0d1f9456b8aa6456a4eb6 at the commit that adds it):**
+- **The direction** is the text, referenced and not restated. It replaces item 1 of the reuse round 1 directive below, and the v2 placement. Items 2 to 5 stand as before.
+- **Item 1, done by 17:11:35Z (the transcript):**
+  - The repository is cloned beside this checkout, at `C:/dev/spatial-ide-reuse`, outside every repository, and checked out at 89bbac3738dbb46d47988e55a7c0f0d4f9fe4c5c.
+  - `sha256sum -c SHA256SUMS`: 140 of 140 OK, exit 0.
+  - `node tools/check-index.mjs`: ok, 55 capabilities and 188 candidates, exit 0.
+  - Neither fails. fetch-cache.mjs is not run, and nothing is committed there.
+- **What this withdraws:** PR #192, which copied the bundle into this repository, is closed unmerged. The node `reuse-round-1-bundle` is unscheduled, and its form's Amendment 2 closes it. The human is asked whether the published branch should be deleted.
+- **Item 2 stands as done:** the architect consult (`state/consults/2026-10-08-adr-036-reuse-round-1-findings-architect.md`) read section 1's ADR-036 subsection. That subsection is byte-identical at 89bbac37: REUSE-ROUND-1.md lines 16-47, sha256 58f886eca86001625ffc981e6dccb25619a3b48e3fd98f6daf3bd0a1da62c743, the same lines the consult cites. The notes it read are identical too; only the README and the brief differ.
+- **Items 3 to 5:** already queued and proposed.
+
+**DIRECTIVE 2026-10-08 — reuse round 1, the v2 archive (the human, typed, received at 16:03:30Z by the transcript; recorded verbatim at `state/directives/2026-10-08-reuse-round-1-v2.md`, lines 6-7, sha256 df5a49b9bded0cec2b2058c1319ee7edd4c7a33e4866c2bbb18be4462088b525 at the commit that adds it):**
+- **The direction** is the text, referenced and not restated. It replaces the archive of the reuse round 1 directive below. The rest of that directive stands.
+- **The archive did not arrive:** no file reached the session again. The human is asked for another route. The given sha256 is checked first, before anything else is done with the file.
+- **Applied now:** the node `reuse-round-1-bundle` carries the v2 hash, the order after #190 merges (#191 must also have merged, for the pinned citations), and the checks over the placed folder.
+
+**DIRECTIVE 2026-10-08 — reuse archaeology round 1 (the human, typed, received at 15:37:32Z by the transcript; recorded verbatim at `state/directives/2026-10-08-reuse-round-1.md`, lines 6-37, sha256 430c7c2154889d46b77e3ee271320e84ea44eccc409b9f41e4d7d1f966a8accc at the commit that adds it):**
+- **The direction** is the text, referenced and not restated.
+- **The archive did not arrive:** no attachment reached the session, and the hash is a placeholder. The human is asked for the file and its hash. Items 1 and 2 wait for it.
+- **Applied now:**
+  - item 1's piece is placed as `reuse-round-1-bundle`, ready, in slot 2 after #190 and #191 merge;
+  - item 3's docs pieces are queued: `adr-032-staleness-docs`, and `docs-08-public-data-sentence`, whose sentence the human types;
+  - items 4 and 5 are proposed nodes: `duckdb-parquet-geometry-probe`, `ported-code-notice-route` and `query-reuse-index-before-planning`.
+- **Standing:** adopting any dependency the bundle names stays the human's typed word.
+
+**RULED 2026-10-08 — Decisions A, B and C (put in the custodian's closing messages; the human typed the rulings as a new message, received at 14:23:55Z by the transcript; recorded verbatim at `state/directives/2026-10-08-decisions-a-b-c.md`: A, lines 6-15, sha256 d5522f63c3439cad05bcb397065dd612a4ac4ba01e6a6a7aa34a73c5a8124d9a; B, lines 17-24, sha256 55ac849dfa481cb43f579a9edaefa4fa7fd729ec98424fef46595c04a11b32d4; C, lines 26-28, sha256 799adebe4fd997e6c004484cb9339c11d24b4c48293bf7d5d31bf4bc799b5177; each at the commit that adds it):**
+- **The rulings** are the text, referenced and not restated.
+- **Applied:**
+  - **A:** `shell-migration-milestone-1`'s Amendment 6 (generation 7), the seven re-aims declared under the ruling's conditions before any code of them.
+  - **B:** a new PLAN node, `verify-cites-pinned-citations`, a one-off and bounded exception to the freeze, with its five-line form. It goes in slot 2 after B2 piece 1a awaits merge, and it merges before milestone 1 opens its PR.
+  - **C:** B2 piece 1a's Amendment 6 (generation 7), the one line in `frontends/shell/src-tauri/Cargo.lock`, with the human's stop condition on any other change in that lock's diff.
+
+**RULED 2026-10-08 — question round 70, b2-piece-1a's red lines OPEN-2, OPEN-3, OPEN-5 and OPEN-7, all (A), with conditions (put in the custodian's closing message; the human typed the rulings as pasted content, enqueued at 04:32:16Z by the transcript; recorded verbatim at `state/directives/2026-10-08-round-70-rulings.md`: OPEN-2, lines 8-14, sha256 f49504b51df29a57ca7e0f45326839acb107a0052ed4ec84daba2870fe2f5617; OPEN-3, lines 16-20, sha256 c473dc92a82159a1ed8c527be10ae96ceec49de3cc745a47ed9c7591fef7c1a4; OPEN-5, lines 22-26, sha256 6ca5806f64c8da9b8f0422e40157e78deb6b316037bbf6b3cf3aedc34fa75cee; OPEN-7, lines 28-33, sha256 dece94e09a0c837e5cb5f38b2075b977923a2521f3be276c6981e084659e0650; each at the commit that adds it):**
+- **The rulings** are the text, referenced and not restated.
+- **Applied:**
+  - the form's Amendment 2 (generation 3): the ruled ADR-036 text, `DatasetUri::mint` with the one `getrandom` edge, and the reader's refusal of a locator that leaves the project folder, with its test R7;
+  - the behaviour each ruling names, routed to `b2-piece-1b-recording` and `b2-piece-1c-save-and-reopen` and recorded in their PLAN summaries.
+- **The human's stop condition (OPEN-5):** if the lock diff shows anything beyond that one edge, the worker stops and the human is told. The PR body shows the lock diff.
+
+**DIRECTIVE 2026-10-08 — heavy runs while this is the only session on the machine (the human, typed, received at 04:25:07Z by the transcript; recorded verbatim at `state/directives/2026-10-08-sole-session-heavy-runs.md`, line 6, sha256 70de2a96b006dc98a47551c09f1ad50e204591a769e22c3c40da5593d3fcfe80 at the commit that adds it):**
+- **The direction** is the text, referenced and not restated.
+- **Applied, as the filing note reads it:** while it stands, this project's two slots may run heavy runs at the same time, each in a shared hold, with the same job and thread limits. A timing-sensitive failure is still re-run alone. Exclusive holds stay the custodian's.
+- **Ends:** when the human says another session runs again, or when the machine script's status shows another project's hold. The one-at-a-time rule then returns.
+
 **RULED 2026-10-08 — question round 69, b2-piece-1a's OPEN-1, OPEN-4, OPEN-6 and OPEN-8, all recommended, with typed additions to items 1 and 4 (AskUserQuestion, asked at 2026-10-07T22:59:00Z and answered by option label at 2026-10-08T03:39:27Z; the additions typed as pasted content, enqueued at 03:39:31Z; recorded verbatim at `state/directives/2026-10-08-round-69-rulings.md`: lines 6-9, sha256 957d18886808dca6340d181cd79d8452e38a4376effa0ae5dbd76002a00bb978; lines 10-20, sha256 9157b8bdc5a5f4b4655033b3e51dbbc7381991065418a1ad07a28480a856f27f; each at the commit that adds it):**
 - **The rulings** are the text, referenced and not restated.
 - **Applied:**

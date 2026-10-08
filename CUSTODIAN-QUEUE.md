@@ -1,14 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `262a7bfa4e5180c0ce03bf530694f0941ba08f40be13945d698356079b2ea7f4`) at `2026-10-08T03:45:21.605Z`.
+Generated from `PLAN.yaml` (sha256 `abe8409fd13727a3fc9a235e86798ffc50cf24d3c0d1f5f51aa802958512ee3a`) at `2026-10-08T19:40:55.860Z`.
 
 ## 1. Next
 
-- **b2-piece-1a-step-record-and-dataset-reference** — B2 piece 1a -- the design (the full step record and the format ADR, as Proposed) and the code of the lasting dataset reference (lane `kernel-protocol`)
+- (nothing ready)
 
 ## 2. Ready
 
-- **b2-piece-1a-step-record-and-dataset-reference** — B2 piece 1a -- the design (the full step record and the format ADR, as Proposed) and the code of the lasting dataset reference (lane `kernel-protocol`, order 16, budget 0 min)
+- (none)
 
 ## 3. Waiting on the human (total: 10 min)
 
@@ -27,8 +27,8 @@ Generated from `PLAN.yaml` (sha256 `262a7bfa4e5180c0ce03bf530694f0941ba08f40be13
 
 ## 5. In progress
 
-- **data-plane-crowded-start-detail-spaces** — The data plane's crowded-start detail string loses its runs of spaces (round 26, item 4 (b)) — evidence: branch `cut/data-plane-crowded-start-detail-spaces`
 - **shell-migration-milestone-1** — Shell migration, milestone 1 -- the frame: Map Studio regions, panel toggles, separated sections, an attention strip and a status bar — evidence: branch `cut/shell-migration-milestone-1`
+- **docs-08-public-data-sentence** — docs/08 calls Overture and OSM extracts redistributable, against the ruling that corpus #12 is local-only, fetch-only and never redistributed — evidence: branch `cut/docs-08-public-data-sentence`
 
 ## 6. Proposed / unscheduled
 
@@ -40,7 +40,6 @@ Generated from `PLAN.yaml` (sha256 `262a7bfa4e5180c0ce03bf530694f0941ba08f40be13
 - **interactive-zoom-ceiling** — A declared ceiling for interactive zoom (ADR-010 rule 6) -- crs-unit's STOP LIST Q3 (phase `prototype`) — never queued until placed
 - **shell-redesign-map-studio** — Shell redesign -- the Map studio direction (the human's choice of 2026-09-23; a design reference, not Authority; the migration plan is to be ruled) (phase `prototype`) — never queued until placed
 - **release-v0-1-1** — v0.1.1 release (patch) — the human schedules it; static-CRT declined (69a stands), evidence-archive and SignPath draft ride it (phase `prototype`) — never queued until placed
-- **adr-032-decision** — ADR-032 — the GeoParquet non-x-first axis order decision (phase `prototype`) — never queued until placed
 - **briefb-b3-publish-v2** — Brief B, stage B3 — bundle v2 and CLI replay through the same publish implementation (phase `prototype`) — never queued until placed
 - **briefb-part-o-walkthrough** — Part O — the nine-step recipe walkthrough, after B3 only (phase `prototype`) — never queued until placed
 - **governance-ci-built-site** — Governance -- the site built by CI after merge, the design also addressing tracked-queue conflicts between sibling PRs (phase `prototype`) — never queued until placed
@@ -95,6 +94,13 @@ Generated from `PLAN.yaml` (sha256 `262a7bfa4e5180c0ce03bf530694f0941ba08f40be13
 - **corpus-line-files** — A line file (LineString or MultiLineString) in the preregistered compatibility corpus, so that line admission is tried on a real-world file (phase `prototype`) — never queued until placed
 - **lines-class-budget-measurement** — Measure docs/08's Lines class (1M features / 10M vertices) for the working canvas, once lines are drawn (phase `prototype`) — never queued until placed
 - **skp-drained-stream-helper-post-check-race** — kernel/src/skp.rs tests: drained_stream_with_a_recorded_change has the same post-check race as typed_terminal_codes' end-to-end test (phase `prototype`) — never queued until placed
+- **e2e-failures-present-at-the-base** — Shell e2e steps failing on main at e888787e: regression C2 and C3, admission MAP and BOTHNEEDED, console HEXLIM, GROUP and REGRESS, source-changed default-route S4 (phase `prototype`) — never queued until placed
+- **duckdb-parquet-geometry-probe** — A reported-only probe of how the bundled DuckDB decodes the Parquet-native GEOMETRY column in corpus #11 (phase `prototype`) — never queued until placed
+- **ported-code-notice-route** — A notice route for ported code, wherever it lands (shell or kernel), needed before any PORT (phase `prototype`) — never queued until placed
+- **query-reuse-index-before-planning** — Query the reuse index before planning, as a standing step (phase `prototype`) — never queued until placed
+- **verify-cites-pin-resolution-and-line-zero** — verify-cites: a pinned cite starting at line 0 gets a false reason, and a pin is read only at the path as written (phase `prototype`) — never queued until placed
+- **docs-14-corpus-attribution-vs-docs-08** — docs/14 asks corpus attribution in demos and published bundles, which docs/08 line 40 now says are never redistributed (phase `prototype`) — never queued until placed
+- **wire-bytes-invariant-trace-flag-race** — kernel/tests/wire_bytes_invariant.rs: the projected-ticket test asserts tracing is off while its sibling starts a trace (a race on the engine's global trace flag) (phase `prototype`) — never queued until placed
 - **dataset-stream-doc-producer-runs-ahead** — engine/src/stream.rs: Dataset::stream's doc says it returns once the statement is prepared and produces the first batch on the first next_into; the producer thread prepares and runs ahead to the queue bound (phase `prototype`) — never queued until placed
 - **shell-migration-milestone-2** — Shell migration, milestone 2 -- selection and scope: the Select tool, a selection that survives filter and pan, the hidden count, a stated scope (phase `prototype`) — never queued until placed
 - **shell-migration-milestone-3** — Shell migration, milestone 3 -- command bar and filter clauses: Ctrl+K, slash commands, typed /filter with field completion, clause cards with on and off (phase `prototype`) — never queued until placed
@@ -127,3 +133,4 @@ Generated from `PLAN.yaml` (sha256 `262a7bfa4e5180c0ce03bf530694f0941ba08f40be13
 - **mod-worktree-resource-protection** — Worktree and resource protection -- a mod (deferred by the 2026-10-03 mods-roadmap ruling) (phase `prototype`) — ambition, never queued
 - **recorder-write-latency-measure** — Evidence Recorder: a declared write-latency measure with its own sample, so the brief overhead acceptance can be established before the Recorder evaluation ends (Amendment 2 C2-d keeps E5 a lower bound) (phase `prototype`) — ambition, never queued
 - **guardian-v1** — Guardian v1 -- G1's heredoc false alarm fixed, one local log line per refusal, and three new rules: G7 (agent merges and history rewrites), G8 (plugin, marketplace and MCP installs, and writes to the user's Claude folder), G9 (wholesale cleans of the main checkout's target) (Fable's MODS-V1 brief, 2026-10-05) (phase `prototype`) — ambition, never queued
+- **reuse-round-1-bundle** — Reuse archaeology round 1, the advisor bundle, filed as one docs-and-data piece (not under docs/) (phase `prototype`) — ambition, never queued

@@ -200,3 +200,33 @@ Proportional, under the product-first direction, section 2:
 ## §10. Amendments
 
 *(Opens empty; append-only.)*
+
+### Amendment 1 — the closing record (class 1, with class 2 for §0's summary sentence and P4)
+
+*Written by the custodian after the outcomes were seen. PR #189 merged at 2026-10-08T04:28:59Z as merge commit ccb685555a43874d651d80f323a801e4fff7306f, with parents a75cfd7401f02272cba3eba4378967b8a9921b4d and 425dece2a9a16a05696c2ce6e1ce8348733fed6a. It follows §9's closing-record list and routes the gates' record items. References and hashes only. Nothing below is a quotation.*
+
+1. **The PR and its heads:**
+   - PR #189, at the merge commit above;
+   - both gates' reviewed head, 9867fa9faa2feb9e61cb8b5d25f120be154f18f0;
+   - the merged head, 425dece2. Over the reviewed head it adds only the reviewer's D3 fix, a test comment. The custodian checked it against its finding by the diff (worker report 2). CI was green there, 10 of 10.
+2. **The gate reports,** under `state/consults/gates/`:
+   - `2026-10-08-data-plane-crowded-start-detail-spaces-gate1-architect.md`, pass with notes, gate-log 435, sha256 0ec94fd637dcf888068a200976c9773029c1772eab7dfbc8fcbe4eb5d13f189f, added in 45e7a0b052261adb97bd8541340f30834a6088bb;
+   - `2026-10-08-data-plane-crowded-start-detail-spaces-gate1-reviewer.md`, pass, gate-log 436, sha256 e1a468470178b7abbb8270a104bd3af445c29d65d9c6dae4024c616df9a5eec4, added in c01f2e093544bd2d1d1acfd17e35454d414bebc8.
+3. **The worker reports.** Each hash is of the file from its line 5 to the end, and each file is byte-identical at the merge commit:
+   - `state/consults/2026-10-07-data-plane-crowded-start-detail-spaces-worker-report-1.md`, the build, at 45e7a0b0, sha256 53eae644fc4e11dbc377b81d2c127564190675768f71e6cd3cd6b5e00aeccda6;
+   - `state/consults/2026-10-08-data-plane-crowded-start-detail-spaces-worker-report-2.md`, the D3 fix, at c01f2e09, sha256 bb246e38a7b472ffc4bb0b4a7128ad3187c6cf56fc0275d280070260330e276a.
+4. **M1:** observed over 9867fa9f, failing at assertion (b) (report 1), and re-made by the reviewer at 9867fa9f with the same failure. T1's recorded-mutation comment is `protocol/data-plane/tests/candidate_a.rs:841-842 @ ccb68555 sha256:9bf305aff04192d0dad83cde20dd0d9cfc1b8955dd459930f17f52ebf4a8665b`.
+5. **§7:** 47 changed lines over the two files, against at most 68: `server.rs` 5 against 8, and `candidate_a.rs` 42 against 60. The count is §7's command with the merge commit's first parent as the base.
+6. **The Documentation findings fixed:**
+   - the reviewer's D3, T1's comment, at 425dece2;
+   - the reviewer's D4, the PR body's wire sentence, in the body before the merge;
+   - the architect's D4, the worker report's base cite, in that report's filing note before it was filed.
+7. **Recorded, not fixable in the branch:**
+   - **Class 2, §0's summary sentence** (the architect's D1 and the reviewer's D1). §0 says the node's summary is corrected in this PR. It was corrected on main instead, in 45e7a0b0, so the branch need not take every record commit.
+   - **Class 2, P4** (the architect's D2 and the reviewer's D2). P4 is not met as worded: at the base, the grep also finds this form's own lines. No reader of the detail exists, so the invalidator does not fire.
+   - **§9's clippy line** (the architect's D3). No CI workflow runs clippy. It was not run, and is not reported green.
+   - **The head commit's message** (the reviewer's D5) says the consumer side was read. Report 1 says the worker cited the decoder from the form without re-reading it. Both gates read the decoder at the head (the gate reports' Seam sections).
+8. **CI:** the `pull_request` run 37723999952 at 9867fa9f failed on ubuntu in `kernel/tests/wire_bytes_invariant.rs`, outside this diff. Its failed steps are filed byte-identical at `state/consults/2026-10-08-pr189-ci-run-37723999952-attempt-1-failed-steps.txt`, and the proposed node `wire-bytes-invariant-trace-flag-race` holds it.
+9. **Done:** PLAN marks the node done, with evidence `{pr: 189}`, at generation 2, in this amendment's commit.
+
+**Superseded index.** §0's sentence on the node's summary → item 7. §5's P4 → item 7. Neither is edited.

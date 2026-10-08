@@ -578,3 +578,270 @@ Each mutation is observed by applying it, running the named test, recording its 
 7. **Generation 2.**
 
 **Superseded index.** §2.9's OPEN-1, OPEN-4, OPEN-6 and OPEN-8 rows → items 1 to 4, binding. §2.3's `at` row, §8's second sentence of "How it is written", §11's later-pieces list and §1's tree line → item 1. None is edited.
+
+### Amendment 2 — question round 70's rulings (OPEN-2, OPEN-3, OPEN-5 and OPEN-7, the red lines), typed by the human (class 5)
+
+*Written by the custodian after the rulings arrived and while stage 1 was running: the branch holds no build and no test run yet. It is appended at the file's end and belongs to §10. The rulings are `state/directives/2026-10-08-round-70-rulings.md` at the commit that adds it: OPEN-2, lines 8-14, sha256 f49504b51df29a57ca7e0f45326839acb107a0052ed4ec84daba2870fe2f5617; OPEN-3, lines 16-20, sha256 c473dc92a82159a1ed8c527be10ae96ceec49de3cc745a47ed9c7591fef7c1a4; OPEN-5, lines 22-26, sha256 6ca5806f64c8da9b8f0422e40157e78deb6b316037bbf6b3cf3aedc34fa75cee; OPEN-7, lines 28-33, sha256 dece94e09a0c837e5cb5f38b2075b977923a2521f3be276c6981e084659e0650. Their RULED block is in `DECISIONS-PENDING.md`, referenced and not restated. Nothing below is a quotation of the human. The blocks marked as ADR text are new bytes of §2.3, written by the custodian from the rulings. The project-relative grammar in item 4 is the custodian's drafting of the ruling's refusal, for the gates to check.*
+
+1. **OPEN-2, (A).** ADR-036 has no OPEN-2 block. Its §4 gains, after its last bullet (the one on 128 bits from the operating system's CSPRNG), this ADR text as one more bullet:
+
+   ```
+   - **A project opened from a second folder.** When a project's identity opens from a second folder while the first folder still exists, the user is asked once whether it is a copy or the same project. A copy gets a new identity and keeps its lineage, and its data links become its own: re-linking the data in one never changes where the other finds its data. The same project is remembered for that folder, and the question is not asked again there. If the first folder no longer exists, the project has moved, and nothing is asked. The question's wording is the human's at P6.
+   ```
+
+2. **OPEN-3, (A).** ADR-036 has no OPEN-3 block. Its §9 gains, after the bullet beginning "After a crash", this ADR text as one more bullet:
+
+   ```
+   - **A session that never saved:** its history is kept on the machine under a not-yet-saved record, and recovery is offered when the application next starts. The offer names the dataset and the time, and declining clears the record. If the data has changed or cannot be found, the application says so. A normal session end clears the record, as it clears any session history.
+   ```
+
+3. **OPEN-5, (A).** ADR-036 has no OPEN-5 block, and its §4 text stands.
+   - **The code.** `DatasetUri::mint` is built, from the operating system's CSPRNG through `getrandom`. R4 gains its clause that `mint()`'s output parses, and its mutation stands.
+   - **The dependency.** `kernel/Cargo.toml` gains `getrandom` as a direct dependency, with the same requirement that `protocol/skp/Cargo.toml` and `protocol/data-plane/Cargo.toml` already carry. `Cargo.lock` may gain only that one edge, from `spatial-kernel` to the `getrandom` 0.3 package already locked. That means one added entry in `spatial-kernel`'s dependency list, no new package and no version change.
+   - **If the lock diff shows anything else,** the worker stops and the human is told. The PR body shows the lock diff.
+   - §8 item 6's condition is met: OPEN-5 is ruled (A), and #188 has merged.
+4. **OPEN-7, (A).** ADR-036 has no OPEN-7 block.
+   - **§5's `project-relative` bullet** is replaced whole by this ADR text:
+
+     ```
+     - `project-relative`: `at` is a path relative to the project folder, `/`-separated, written only where the data is inside the project folder. It never points outside the project folder: a reader refuses an `at` that is empty, begins with `/`, has an empty, `.` or `..` segment, or holds a `\` or a `:`;
+     ```
+
+   - **The Consequences bullet beginning "No absolute path in a project file"** keeps its first sentence. Its second sentence is replaced by this ADR text:
+
+     ```
+     On another machine, a dataset outside the project folder is found by re-linking it, and the re-linked file is checked against `observed`: the check names each component that differs, and no difference passes silently.
+     ```
+
+   - **The scope addition, declared before its code.** `DatasetRef::parse` refuses a `project-relative` locator whose `at` breaks item 4's grammar, as `RefParseError::Malformed` naming the locator's path. The closed error set is unchanged, and no `pub` item is added.
+   - **Its new test, R7,** in `kernel/src/dataset_ref.rs`: `a_project_relative_locator_that_leaves_the_project_folder_is_refused`. It covers a `..` segment, a leading `/`, a `\`, a `:`, an empty `at` and an empty segment, each refused by its path. A plain `data/x.parquet` still parses, as R5 shows. Its mutation: the grammar check is removed, so a `..` segment parses.
+   - **§8 item 1 is read with one exception, which this ruling requires:** the parser examines a `project-relative` locator's `at` as a string, splitting it on `/` and refusing the segments and characters item 4 names. It uses no OS path type, joins nothing, builds no path and touches no file. §2.7's R4 still holds: refusing `\` and `:` keeps a travelling locator portable, and assumes no Windows rule.
+   - **Unchanged:** §5's declared-unchanged list and §7's ceilings. R7 counts in the kernel product group.
+5. **Routed** to the pieces that build the behaviour, and recorded in their PLAN nodes in this amendment's commit:
+   - OPEN-2's question, the per-folder memory, the data links of a copy and the move rule go to `b2-piece-1b-recording`'s store and `b2-piece-1c-save-and-reopen`'s open;
+   - OPEN-3's recovery offer and its clearing go to 1b (storage before an identity exists) and 1c;
+   - OPEN-7's re-link check, naming each difference, goes to 1c.
+6. **Every OPEN item of §2.9 is now ruled.** ADR-036 is filed with no OPEN block except item 1 (c)'s block on the project file's name and extension, which stays open until the human accepts the ADR.
+7. **Generation 3.**
+
+**Superseded index.** Amendment 1, item 6's open list and its OPEN-block rule for OPEN-2, OPEN-3, OPEN-5 and OPEN-7 → items 1 to 4. §2.9's OPEN-2, OPEN-3, OPEN-5 and OPEN-7 rows → items 1 to 4, binding. None is edited.
+
+### Amendment 3 — stage 1's outcomes: the build's deviations (class 2 and class 3), and the kernel product group over its ceiling so far
+
+*Written by the custodian after stage 1's results were seen, at the branch head 1e637d55, before stage 2 and before either gate. Nothing is compiled yet. The record is worker report 1, `state/consults/2026-10-08-b2-piece-1a-step-record-and-dataset-reference-worker-report-1.md` (sha256 dab0e1e4738b4716ed9d3da79cf4145894faafdb0f63b3891a54fca942c58331, from its line 5 to the end, at the commit that adds it; its filing note gives the hash as written and discloses one rewrite), cited by section. Nothing below is a quotation.*
+
+1. **Stage 1's commits:** 66f7bc26 (ADR-036), 85fc25f8 (E-1), f727dd6d (K-1 and K-2), 98adfe3c (the indexes), 2bd318b4 (ADR-036 under Amendment 2) and 1e637d55 (`mint` and the project-relative grammar). PLAN.yaml is not touched on the branch.
+2. **ADR-036 equals §2.3 as amended by Amendments 1 and 2, byte for byte,** by the worker's script at 2bd318b4. The one OPEN block left is Amendment 1 item 1 (c)'s (the report's equality section).
+3. **The lock diff** is one added line, the `getrandom` 0.3.4 entry in `spatial-kernel`'s dependency list, with no other change (the report's lock section). Amendment 2 item 3's condition holds so far, and stage 2 checks it again after the first build.
+4. **The consumed interfaces** hash to the form's pins at both aa00e565 and c01f2e09. I2 does not fire (the report's re-derivation section).
+5. **Class 2, F3.** The fixture writer has no mode for a native `id` plus a second unique int64 column, so K4's fixture declares a mapping onto the native `id` column. K4's assertion and mutation stand.
+6. **Class 2, R6** is a unit test of the private function that builds the claim. An engine open refuses an assertion with no definition, so the case cannot be reached through a real open.
+7. **Class 2, O4** cannot build the case where both sides lack a modification time from an integration test. The descriptor's existing unit tests cover that case through the shared function.
+8. **Class 3, test text.**
+   - K5 strips the quoted literal for the ResourceRef member `content_hash` before it scans, because the writer must spell that member. A planted unquoted token is the positive control.
+   - The module matches the mapped identity source and treats every other source alike, so no file token appears in its source.
+   - K1 checks member order by text position and the key sets by equality.
+9. **Noted for the gates** (report, deviations section): `parse` takes an already-parsed JSON value, so a duplicate key is collapsed before it sees it; the module header says 1c's file reader must refuse duplicates. Sizes above 2^53 − 1 are refused at parse. A named state's basis text is accepted only as the fixed constant.
+10. **§7 so far,** by its command at 1e637d55: 1,910 lines over 10 files, against 2,010. The kernel product group is over its ceiling so far: 814 against 760. Amendment 2's `mint`, R7 and the grammar check were not budgeted. Every other group is within its ceiling. The class 8 record is made once, at the gated head, with the final figures. §7 is not edited.
+11. **Generation 4.**
+
+**Superseded index.** §3's F3 → item 5. §4's R6 kind → item 6. None is edited.
+
+### Amendment 4 — stage 2's outcomes, and the class 8 record at the gated head (budget overrun, §7 not edited)
+
+*Written by the custodian after stage 2's results were seen, at the branch head 479ae81d, before either gate. The record is worker report 2, `state/consults/2026-10-08-b2-piece-1a-step-record-and-dataset-reference-worker-report-2.md` (sha256 8630f802d0ad65d4c9b26f4f6802750632cd16c2fc990ccfe2e70c3731e6ca9b, from its line 5 to the end, at the commit that adds it), cited by section. Nothing below is a quotation.*
+
+1. **Stage 2's commits:** 1251fc3c (the recorded-mutation comments, test text only) and 479ae81d (both indexes' last-verified line, at the last commit that changes code). The first build was green with no compile fix, and no existing test was edited, so I3 does not fire.
+2. **The suites at 479ae81d,** all exit 0 (the report's commands section):
+   - the workspace with the fixture feature, held: 920 passed, 0 failed and 54 ignored, over 101 test binaries;
+   - clippy, held: no warning on an added line;
+   - fmt, the ADR index check and the scripts suite (450 of 450), held;
+   - the six verifiers.
+3. **The lock diff,** read again after the first build, is still the one `getrandom` 0.3.4 line. Amendment 2 item 3's condition holds.
+4. **The mutations:** all seventeen (O1 to O4, R1 to R7, K1 to K5 and G1) were observed over 1e637d55, each failing its own test by name, and reverted (the report's mutations table).
+5. **Class 2, G1's mutation.** The machine-recorded locator carries no path, so the mutation makes `linked` record a project-relative locator holding the open's path. G1 fails by name.
+6. **Class 3, test text.** Three recorded-mutation notes are corrected to where each test actually fails: K1 at its key-set assertion, R4 at its uppercase-hex case, and K2 at the second open (report, deviations section).
+7. **§3's predictions all held,** F1′'s four differing components included (report, predictions section).
+8. **§7, budget overrun, §7 not edited (class 8).** By §7's command at 479ae81d against c01f2e09: 1,930 lines over 10 files, against at most 2,010.
+   - Kernel product: 822 against 760. The reason is Amendment 2's `mint`, the grammar check and R7, none of them budgeted, and their recorded-mutation comments.
+   - Kernel tests: 525 against 520. The reason is the recorded-mutation comments.
+   - Every other group is within its ceiling: engine product 154, engine tests 238, ADR 174 and indexes 17.
+   - This is the class 8 record Amendment 3 item 10 deferred. The branch's merge of main adds no line to these files.
+9. **Generation 5.**
+
+**Superseded index.** Amendment 3, item 10's deferred class 8 record → item 8. §4's G1 mutation → item 5. None is edited.
+
+### Amendment 5 — gate 1's C-1 and C-2 corrected: OPEN-7's carrying rule and containment, and the named state's free-text basis (class 5)
+
+*Written after gate 1's results were seen (the architect's report `state/consults/gates/2026-10-08-b2-piece-1a-step-record-and-dataset-reference-gate1-architect.md`, findings C-1 and C-2; gate-log 437), at the branch head a3f9f34f, before any code of the fix. Drafted by the architect and appended by the custodian. It touches ADR-036 §5, K-1's parser, R7's name, K1, and one new test, R8. It invalidates one observation: R7's mutation, observed at 1e637d55, is observed again at the fix head because the function it mutates is renamed. The ruling is round 70, OPEN-7. Nothing below is a quotation of the human. The fenced blocks are new ADR text. Anchors are given by section and by the opening of the line, not by line number.*
+
+**How the ADR text is applied.** The worker applies items 1 and 5 by script to the text between §2.3's markers, as amended by Amendments 1 and 2. It then copies that text to `docs/adr/ADR-036-project-folder-step-record-and-dataset-reference.md`. The reviewer checks that the file is byte-equal to §2.3 as amended by Amendments 1, 2 and 5 (§8, item 10).
+
+1. **C-1, ADR text.**
+   - (a) **§5: the bullet that begins `` - `project-relative`: ``** (the text from Amendment 2, item 4) is replaced whole by:
+
+     ```
+     - `project-relative`: `at` is a path relative to the project folder, `/`-separated and in canonical form. Canonical form is not empty, does not begin with `/`, has no empty, `.` or `..` segment, and holds no `\` and no `:`, so that each path inside the folder has one spelling on every operating system. A reader refuses an `at` outside canonical form. Canonical form is checked on the text alone and does not by itself keep a path inside the project folder: containment, below, does;
+     ```
+
+   - (b) **§5: after the line that begins `Locators are built and resolved in the kernel only.`**, insert one blank line and then:
+
+     ```
+     **Which locators a project file carries.** A dataset entry in a project file always carries a `machine-recorded` locator. It also carries a `project-relative` locator, in canonical form, when the data is inside the project folder by the containment rule below, judged when the project is saved. It never carries an absolute path (§2). This rule binds the writer; a reader reads the locators an entry holds.
+
+     **Containment.** A `project-relative` locator never points outside the project folder. Two rules hold this, and they are different things:
+     - **canonical form** (above), which a reader checks on the text, before anything is resolved;
+     - **containment,** which the resolver that opens the data checks on the resolved target, before it opens it. The resolver resolves the project folder and the target, following every symbolic link, junction and other reparse point, and opens the target only if its resolved path lies inside the resolved project folder. A target that resolves outside the folder is refused by name and never opened, however it gets there: through a link, through a name the operating system resolves to a device (such as `NUL` on Windows), or through a name the operating system rewrites (such as a segment ending in a dot or a space on Windows). A target that cannot be resolved is refused the same way.
+
+     Piece 1c builds the writer and the resolver. Its form states how the target that is checked is the target that is opened.
+     ```
+
+2. **C-1: the canonical-form list stays as it is.** It does not shrink, and it does not grow.
+   - **Why it stays.** Each refusal is one of two kinds:
+     - a lexical way out of the folder on some operating system: `..`; a leading `/`; `\`, which is a separator on Windows; and `:`, which is a drive prefix on Windows;
+     - a second spelling of a path that stays inside: `.`; an empty segment; `:`, which names an alternate data stream on NTFS; and `\`, which is a file-name character on POSIX.
+
+     With one spelling for each path, the text stays diffable, and 1c can compare two locators as strings. The only writer is 1c's own, which writes canonical form, so the refusals cost a correct writer nothing. Shrinking the list would not change containment, which the resolver holds in either case.
+   - **Why it does not grow.** Trailing dots and spaces and device names are facts of how one operating system resolves a path. Containment refuses them on the resolved target. Adding them to the lexical list would also enlarge the set of inside paths that have no canonical spelling (see the custodian's notes).
+
+3. **C-1, the code, in words** (`kernel/src/dataset_ref.rs`).
+   - `stays_inside_the_project_folder` is renamed `in_canonical_form`. Its body is unchanged: the same refusals.
+   - Its doc comment says that it checks ADR-036 §5's canonical form on the string alone, and that containment is checked by piece 1c's resolver, not here.
+   - The error detail it returns states canonical form, not containment. The variant is still `Malformed`, at the locator's `at` path.
+   - The doc of `Locator::ProjectRelative` gains: checked here for canonical form only.
+   - No `pub` item and no error variant is added. Amendment 2, item 4's exception to §8 item 1 stands: the check is a string check, now named canonical form.
+
+4. **C-1, the test.** R7, as it stands at a3f9f34f, is renamed `a_project_relative_locator_outside_canonical_form_is_refused`. Its nine cases and its assertions are unchanged.
+   - Its recorded-mutation note now names the renamed function.
+   - Mutation: the canonical-form check is removed, so `../x.parquet` parses. It is observed again at the fix head.
+   - R7 is this piece's own test, not a test that existed before the piece, so I3 does not fire.
+
+5. **C-2, ADR text.**
+   - (a) **§5: the paragraph that begins `` **`observed`** is the change-detection observation ``** is replaced whole by:
+
+     ```
+     **`observed`** is the change-detection observation of the open that the reference was bound to: `byte_size`; `modified_ns` (a decimal string in minimal form, or the state `not-reported`); `footer_length`; `footer_sha256` (64 lowercase hex characters, or the state `not-read-over-ceiling`). Minimal form is digits only, with no sign and no leading zero unless the value is 0. A reader refuses any other spelling of either value, so each value has one spelling.
+     ```
+
+   - (b) **§5: after the bullet that begins `- The claim is recorded rather than inferred again`**, insert one blank line and then:
+
+     ```
+     **Named states in an entry.** Each named state's word is one this section gives for its member, and a reader refuses any other word. Its basis is free text (§2): a reader accepts any basis that is not blank and is within its bound, and does not interpret it. A writer that writes the entry again writes its own basis for the same word, so an entry from another writer keeps its words and may change its basis texts.
+     ```
+
+   - §2's named-state sentence is unchanged.
+
+6. **C-2, the code, in words** (`kernel/src/dataset_ref.rs`).
+   - `expect_state` keeps the closed key set `{state, basis}` and the closed word. Its basis must be a string within `MAX_REF_STRING_BYTES` and not blank: text of whitespace alone is refused as `Malformed` at `<path>.basis`. Any other basis is accepted and not kept. The comparison against the fixed text is removed.
+   - The comment above the four basis constants, and `expect_state`'s doc, say that the word is closed and that the basis is the text this writer writes.
+   - The module header gains one sentence: the reader accepts any bounded, non-blank basis and keeps none, and `to_json` writes this writer's own basis texts.
+   - Unchanged: `to_json`, which still writes the fixed texts (§2.4), and `parse_observed`, which still refuses the minimal-form and lowercase-hex violations. Those two checks now match item 5 (a).
+
+7. **C-2, the tests.**
+   - **K1, extended** (`kernel/tests/dataset_ref.rs`, as it stands at a3f9f34f). This is the seam test, from the real shape.
+     - The test takes the reference's entry and replaces `resource.source_revision` with the bundle's own `source.source_revision` value from the same real `publish_unguarded` manifest.
+     - It asserts that the two basis texts differ, so the case is not vacuous.
+     - It asserts that the entry parses.
+     - It asserts that the parsed entry writes back to the reference's own text: the writer re-states its basis.
+     - K1's existing mutation stands. Its added mutation: the fixed-text comparison in `expect_state` is restored as it stands at a3f9f34f. K1 then fails at the parse of the bundle's state.
+   - **R8, new** (`kernel/src/dataset_ref.rs`): `a_named_states_basis_is_free_text_and_its_word_is_closed`. It runs over an entry that holds all four named states: `$.resource.content_hash`, `$.resource.source_revision`, `$.observed.modified_ns` and `$.observed.footer_sha256`. For each, it checks four things:
+     - another non-blank basis parses, and writes back to the writer's own text;
+     - a basis of spaces alone is refused as `Malformed` at `<path>.basis`;
+     - a basis over `MAX_REF_STRING_BYTES` is refused as `OverCeiling` at `<path>.basis`;
+     - another word is refused as `UnknownState` at `<path>.state`.
+
+     Mutation: the blank check is removed. R8 then fails at the blank case.
+   - Each mutation is applied by hand, its test is run, the failure is recorded by name with the commit it was observed at, and the mutation is reverted (§4). No `verify-mutation` run is called an observation.
+
+8. **Routed to `b2-piece-1c-save-and-reopen`.** The custodian adds both items to the PLAN summary in this amendment's commit.
+   - **The carrying rule, for 1c's writer.** Each dataset entry in a project file carries the `machine-recorded` locator always. It also carries a `project-relative` locator in canonical form when the data is inside the project folder by the containment rule, judged at save. It never carries an absolute path.
+   - **Containment, for 1c's resolver.**
+     - The resolver opens a `project-relative` target only when the target, resolved with every link, junction and reparse point followed, lies inside the resolved project folder.
+     - It refuses anything else by name, including a target it cannot resolve.
+     - 1c's form states how the target that is checked is the target that is opened.
+     - 1c's tests cover a symbolic link out of the folder, and on Windows a junction out, a device name, and a segment ending in a dot or a space. Each is refused, and a plain file inside is opened. A case that cannot be built on a platform is declared under 1c's R6.
+
+9. **The effect on §7. This is an estimate, not a count.**
+   - Kernel product, already class 8 at 822 against 760: it grows by about 60 lines (the rename, the doc lines, the `expect_state` change and R8).
+   - Kernel tests, already class 8 at 525 against 520: they grow by about 12 lines (K1's extension and its mutation note).
+   - ADR, at 174 against 280: it grows by about 20 lines and stays within its ceiling.
+   - The total, 1,930 at 479ae81d, may pass 2,010.
+   - At the fix head, §7's command is run from the merge base. Every group over its ceiling, and the total if it is over, is recorded as class 8 in the closing record. §7 is not edited.
+
+10. **Generation 6.**
+
+**Superseded index.**
+- Amendment 2, item 4: the ADR-text block for §5's `project-relative` bullet → item 1 (a).
+- Amendment 2, item 4: R7's name, and its description as a locator that leaves the project folder → item 4. Its cases and its mutation stand.
+- Amendment 2, item 4: the grammar of the scope-addition bullet, and the string check of the §8 item 1 exception → read as canonical form, by item 3. Both stand.
+- Amendment 2, item 5: the OPEN-7 routing → extended by item 8. It stands.
+- Amendment 3, item 9: the last sentence, on the fixed basis text → item 6.
+- §2.3: the first sentence of §5's `observed` paragraph → item 5 (a).
+- Amendment 4, item 8: stands as the count at 479ae81d. The fix head's class 8 record is the piece's final count (item 9).
+- None is edited.
+
+### Amendment 6 — scope addition: the shell lock's one `getrandom` line (the human's Decision C), and the indexes' last-verified line (gate 1 attempt 2's D-4)
+
+*Written by the custodian after the human's ruling and before any code of it, at the branch head 14acee0b. The ruling is Decision C, `state/directives/2026-10-08-decisions-a-b-c.md` lines 26-28 at the commit that adds it (sha256 799adebe4fd997e6c004484cb9339c11d24b4c48293bf7d5d31bf4bc799b5177); its RULED block is in `DECISIONS-PENDING.md`. It resolves the gate-1 reviewer's C1 (gate-log 438). Nothing below is a quotation.*
+
+1. **The change.** `frontends/shell/src-tauri/Cargo.lock` gains exactly one line: the `getrandom` 0.3.4 entry in `spatial-kernel`'s dependency list. That lock locks the kernel by path, so the kernel's new direct dependency needs the edge there too.
+   - The line is written by `cargo metadata --format-version 1 --offline --manifest-path frontends/shell/src-tauri/Cargo.toml`, with no build.
+   - No new package and no version change.
+   - **If that lock's diff shows anything else, the worker stops and the human is told.**
+   - The PR body shows both lock diffs.
+2. **The boundary.** §5's declared-unchanged `frontends/` and §8 item 9 are read with this one exception: that lock file and that line. No other frontend file changes.
+3. **The evidence.** There is no new test. The shell's CI jobs, which run with `--locked`, pass at the commit that adds the line. A local `cargo metadata --locked --offline` on that manifest exits 0.
+4. **D-4.** Both indexes' last-verified line names 14acee0b, after the pointers are re-verified.
+5. **§7.** The lock line counts by §7's command, which excludes only the root `Cargo.lock`. The indexes group grows by the last-verified lines. Any group or total over its ceiling is recorded as class 8 in the closing record, and §7 is not edited.
+6. **Generation 7.**
+
+**Superseded index.** §5's `frontends/` line and §8 item 9 → item 2 (one exception). None is edited.
+
+### Amendment 7 — the closing record (class 1, with class 8 for §7)
+
+*Written by the custodian after the outcomes were seen. PR #190 merged at 2026-10-08T16:11:23Z as merge commit 3e754dfc99b71aa04b63d4ff676eef605d8b77fb, with parents 5487b9c9ba32703cf83602abe95f2bb38ccaea1a and 91fe4c850d2dfffa0d057beaf0cafa9c057e1808. It follows §9 and routes the gates' record items, under the record cap. References and hashes only. Nothing below is a quotation.*
+
+1. **The PR and its heads:**
+   - PR #190, at the merge commit above;
+   - the merged head, 91fe4c85, is the reviewer's attempt-2 head;
+   - the architect's attempt-2 head, 14acee0b. Over it, 91fe4c85 adds only the shell lock's one line (Amendment 6, item 1) and the indexes' last-verified lines (the architect's D-4). The reviewer's attempt 2 read both. CI passed 13 of 13 at 91fe4c85.
+2. **The gate reports,** under `state/consults/gates/`, each with the commit on main that adds it:
+   - `2026-10-08-b2-piece-1a-step-record-and-dataset-reference-gate1-architect.md`: FAIL, gate-log 437, sha256 89013866032f041b21f5ab0affdfb1455682851420ddfd1296c5482641fc9b6f, at 20c479548b7056dd6da88663c4f2771d06b562c8;
+   - `2026-10-08-b2-piece-1a-step-record-and-dataset-reference-gate1-reviewer.md`: FAIL, gate-log 438, sha256 2062e483927f489cfb2f0c8436fc4e1b60e55497e17defd24cf4201f5c11ca74, at db7c88d03003fdea380497068eb4359cd0af1d41;
+   - `2026-10-08-b2-piece-1a-step-record-and-dataset-reference-gate1-architect-attempt-2.md`: PASS, gate-log 439, sha256 d97943a8ad5741bcae30f7f77ff4d821cda009f353a80fc8004656d4d5246201, at 4561f3b871ccac8d4165eb0ea0e3bed873c0178a;
+   - `2026-10-08-b2-piece-1a-step-record-and-dataset-reference-gate1-reviewer-attempt-2.md`: PASS, gate-log 440, sha256 52940d58aaf8548a28813d2463c1154b613df3292658673f99320921d065d09c, at ed396e94d0b61a17b127427af5d5e1c1ad20c58e.
+   - One correction round was used, of two.
+3. **The worker reports,** in `state/consults/`. Each hash is of the file from its line 5 to the end, and each file is unchanged since the commit on main that adds it:
+   - `2026-10-08-b2-piece-1a-step-record-and-dataset-reference-worker-report-1.md`: sha256 dab0e1e4738b4716ed9d3da79cf4145894faafdb0f63b3891a54fca942c58331, at 5576a426183960b8ff17f9536d773b2bb14210ad;
+   - `-worker-report-2.md`: sha256 8630f802d0ad65d4c9b26f4f6802750632cd16c2fc990ccfe2e70c3731e6ca9b, at 1ca0af4cc79b8cd33e731d6c2ed7af9990eff710;
+   - `-worker-report-3.md`: sha256 73adb8c085b131008b66e9e44fe684a0ac62a1b11c911a77979c9f5ee1763759, at 9168cdfb930cd0984e71172272dabac32fe3fb78;
+   - `-worker-report-4.md`: sha256 5daedf220020475973a2e142fbe046ec9022ca9c11d8beabd2f2ffd9c57d3122, at 8bd7fa07b6cd25b1ae64aca9187140c738ec25e6.
+4. **The rulings' pins, each at its commit on main** (the architect's attempt-1 D-2). The custodian recomputed every one at that commit, and each matches:
+   - Amendment 1's two spans of `state/directives/2026-10-08-round-69-rulings.md` (lines 6-9 and 10-20), at 45e7a0b052261adb97bd8541340f30834a6088bb;
+   - Amendment 2's four spans of `state/directives/2026-10-08-round-70-rulings.md` (lines 8-14, 16-20, 22-26 and 28-33), at ab0469f431bed8d4d47e940284177358cc666aad;
+   - Amendment 6's span of `state/directives/2026-10-08-decisions-a-b-c.md` (lines 26-28), at 994b9737315001a11c229aa76fd8986019571230;
+   - Amendments 3 and 4's report pins are item 3's first two rows.
+5. **The mutations.**
+   - Stage 1's mutations were observed at 1e637d55 and recorded at 1251fc3c.
+   - R7, K1's added mutation and R8 were observed at 507838e2 and recorded at 14acee0b. R7's earlier observation, at 1e637d55, is superseded.
+   - The reviewer's attempt 2 re-made R7, K1's added mutation and R8 at the head.
+   - **The test-text row** (the architect's attempt-2 D-5 (c)): R7's old recorded-mutation note was added on the branch at 1251fc3c and replaced at 14acee0b. Both commits are in the merge's history. The reviewer's attempt 2 confirms the adding commit.
+6. **§7, class 8 at the merged head** (Amendment 5, item 9; Amendment 6, item 5; the reviewer's attempt-2 D2). §7's command, three-dot from the merge base db7c88d0, at 91fe4c85:
+   - kernel product 876 against 760, over by 116;
+   - kernel tests 541 against 520, over by 21;
+   - the total 2,011 over 11 files against 2,010 over at most 10: over by one line and by one file. The shell lock's one line belongs to no §7 group and counts only toward the total.
+   - Every other group is within its ceiling, per that report's table. §7 is not edited.
+7. **The Documentation findings fixed:**
+   - the reviewer's attempt-1 D1 and D2 (the module header and the `Locator::ProjectRelative` doc), at 507838e2;
+   - the reviewer's attempt-1 D3 and attempt-2 D1, the PR body, in the body before the merge;
+   - the architect's attempt-2 D-4, the indexes' last-verified lines, at 91fe4c85;
+   - the architect's attempt-1 D-1, D-3 and attempt-2 D-5 (d): the test-text rows and the count's head are in the PR body, and the pins are in item 4.
+8. **Recorded here:**
+   - **The architect's attempt-2 D-6.** Amendment 5, item 2's reference to the custodian's notes is to `state/consults/2026-10-08-b2-piece-1a-amendment-5-architect-draft.md`, below its amendment text, added at 603143b8ee650bab7af6589a89f449a69934c18d. Amendment 5 is not edited.
+   - **The architect's attempt-2 N-8** (the blank basis refused with the claim helper's detail): reworded when the module is next touched.
+   - **The architect's attempt-2 N-9 and N-10** go to ADR-036's acceptance sight and to piece 1c's form. The 1b and 1c PLAN nodes carry their owed items.
+   - **R7's first name**, at `kernel/B2-1A-STEP-RECORD-AND-DATASET-REFERENCE-PREREGISTRATION.md:617` @ f816d46790437a21974e95850a4c18bff7fc9ff8 sha256:0b609887458bb1b1608ceea4b644c9d42081542856053110f32d2470c4dd5bf9, is superseded by Amendment 5, item 4. The test is `a_project_relative_locator_outside_canonical_form_is_refused` in `kernel/src/dataset_ref.rs`.
+9. **ADR-036 stays Proposed.** Its acceptance is the human's sight.
+10. **Done:** PLAN marks the node done, with evidence `{pr: 190}`, at generation 7, in this amendment's commit.
+
+**Superseded index.** Amendment 4's count at the build head → item 6. Amendment 5, item 2's unresolved reference → item 8. Neither is edited.
