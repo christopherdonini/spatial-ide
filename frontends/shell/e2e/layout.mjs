@@ -183,7 +183,7 @@ async function stepLandmarks(page) {
 async function stepFocus(page) {
   await press(page, "Control+KeyJ"); // every region open
   try {
-    await page.evaluate(() => document.activeElement?.blur());
+    await page.evaluate(() => { document.body.tabIndex = -1; document.body.focus(); document.body.removeAttribute("tabindex"); }); // sequential focus restarts at the top
     const order = [];
     for (let i = 0; i < 120; i += 1) {
       await page.keyboard.press("Tab");
