@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-08T17:25:58.867Z",
-  "plan_hash": "dc0d9bec3f6b65e0d956c9c0e25a12697f371fc174b4a16ed8ac19d583084b26",
+  "generated_at": "2026-10-08T17:35:22.301Z",
+  "plan_hash": "62a725a3496308810d75debc72d5e6406b0128d7925a740684e68f4b8f316782",
   "priorities_approved": true,
   "next": null,
   "ready": [],
@@ -228,7 +228,7 @@
         "opened": "2026-10-08",
         "done": null
       },
-      "summary": "IN CODE 2026-10-08: slot 2; five-line form at be845ea3 (single reviewer gate); branch cut/adr-032-staleness-docs, worktree C:/dev/wt/a32; one worker. Before: QUEUED 2026-10-08 by the human (state/directives/2026-10-08-reuse-round-1.md, item 3): ADR-032 was Accepted 2026-09-23; the node adr-032-decision is still proposed, and docs/README.md line 27 still calls it Proposed. A small docs piece brings both in line. It waits for #190, which also changes docs/README.md (disjoint paths).",
+      "summary": "PR #193 OPEN 2026-10-08 at 7b7438e7 (worker report 1; 12 of 12 lines; every check 0); the single reviewer gate after CI. IN CODE 2026-10-08: slot 2; five-line form at be845ea3 (single reviewer gate); branch cut/adr-032-staleness-docs, worktree C:/dev/wt/a32; one worker. Before: QUEUED 2026-10-08 by the human (state/directives/2026-10-08-reuse-round-1.md, item 3): ADR-032 was Accepted 2026-09-23; the node adr-032-decision is still proposed, and docs/README.md line 27 still calls it Proposed. A small docs piece brings both in line. It waits for #190, which also changes docs/README.md (disjoint paths).",
       "evidence_label": "branch `cut/adr-032-staleness-docs`"
     }
   ],
