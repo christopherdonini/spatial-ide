@@ -4346,7 +4346,7 @@ nodes:
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "PR #194 OPEN 2026-10-08 at 388531fa (worker report 1; line 40 byte-identical to the human sentence joined; 1 line); the single reviewer gate running. IN CODE 2026-10-08: the human typed the sentence (state/directives/2026-10-08-m1-mutations-branch-docs08-adr036.md, item 3); five-line form at 4cb3cd2e (single reviewer gate); branch cut/docs-08-public-data-sentence, worktree C:/dev/wt/d08; one worker; slot 2 while #193 awaits merge. Before: QUEUED 2026-10-08 by the human (state/directives/2026-10-08-reuse-round-1.md, item 3): docs/08_Testing.md line 40 calls the public data redistributable, which conflicts with the #12 ruling (DECISIONS-PENDING, item 3 of that round: local-only, fetch-only, never redistributed). The custodian brings a proposed sentence; the human types the sentence that lands."
+    summary: "GATE PASSES 2026-10-08 (reviewer 445, no findings; CI 2 of 2); AWAITS MERGE. PR #194 OPEN 2026-10-08 at 388531fa (worker report 1; line 40 byte-identical to the human sentence joined; 1 line); the single reviewer gate running. IN CODE 2026-10-08: the human typed the sentence (state/directives/2026-10-08-m1-mutations-branch-docs08-adr036.md, item 3); five-line form at 4cb3cd2e (single reviewer gate); branch cut/docs-08-public-data-sentence, worktree C:/dev/wt/d08; one worker; slot 2 while #193 awaits merge. Before: QUEUED 2026-10-08 by the human (state/directives/2026-10-08-reuse-round-1.md, item 3): docs/08_Testing.md line 40 calls the public data redistributable, which conflicts with the #12 ruling (DECISIONS-PENDING, item 3 of that round: local-only, fetch-only, never redistributed). The custodian brings a proposed sentence; the human types the sentence that lands."
     dates: {opened: 2026-10-08, done: null}
 
   - id: duckdb-parquet-geometry-probe
@@ -4419,6 +4419,24 @@ nodes:
     felt_verdict: false
     entries: []
     summary: "PROPOSED 2026-10-08 from PR #191's attempt-2 reviewer gate (gate-log 442): C3, a cite starting at line 0 is reported by its end line, in the tree path and the pin path alike (it still fails, no tier changes); and the D4 limit, a pin is read at the path as written from the repo root, so a relative, .md-fallback or basename cite keeps the tree verdict. Recorded in the verify-cites-pinned-citations closing record (Amendment 2, item 7). Under the freeze, a finding is recorded as a proposed node."
+    dates: {opened: 2026-10-08, done: null}
+
+  - id: docs-14-corpus-attribution-vs-docs-08
+    title: "docs/14 asks corpus attribution in demos and published bundles, which docs/08 line 40 now says are never redistributed"
+    kind: task
+    lane: governance
+    phase: prototype
+    status: proposed
+    order: null
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 30
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "PROPOSED 2026-10-08 from PR #194 reviewer gate (gate-log 445, an observation, not a finding): docs/14_Governance_and_Licensing.md line 27 says Overture and OSM attribution must be preserved in benchmarks, demos and published bundles; a demo or bundle built from a corpus file would be a redistribution, which docs/08 line 40 (the human sentence, PR #194) says never happens. By lower-number-wins docs/08 governs; reconciling docs/14 is the human placement. Under the freeze, recorded as a proposed node."
     dates: {opened: 2026-10-08, done: null}
 
   - id: wire-bytes-invariant-trace-flag-race
