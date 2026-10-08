@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-08T17:31:20.578Z",
-  "plan_hash": "47610a825926301746741bc860a59d830cba232effb3e833d773c1943459eeff",
+  "generated_at": "2026-10-08T18:07:55.303Z",
+  "plan_hash": "e6f3cc517ce939bd3f75724bd654b68bba76175b6854b0febd90b333f9b6748d",
   "priorities_approved": true,
   "lanes": [
     {
@@ -6969,20 +6969,22 @@
       "kind": "task",
       "lane": "governance",
       "phase": "prototype",
-      "status": "blocked",
+      "status": "in-progress",
       "order": 4,
       "depends_on": [],
       "needs_human": {
-        "kind": "ruling",
-        "minutes": 2
+        "kind": "none",
+        "minutes": 0
       },
-      "gate": "none",
-      "evidence": null,
+      "gate": "DOCS-08-PUBLIC-DATA-SENTENCE-PREREGISTRATION.md",
+      "evidence": {
+        "branch": "cut/docs-08-public-data-sentence"
+      },
       "budget_minutes": 20,
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "QUEUED 2026-10-08 by the human (state/directives/2026-10-08-reuse-round-1.md, item 3): docs/08_Testing.md line 40 calls the public data redistributable, which conflicts with the #12 ruling (DECISIONS-PENDING, item 3 of that round: local-only, fetch-only, never redistributed). The custodian brings a proposed sentence; the human types the sentence that lands.",
+      "summary": "IN CODE 2026-10-08: the human typed the sentence (state/directives/2026-10-08-m1-mutations-branch-docs08-adr036.md, item 3); five-line form at 4cb3cd2e (single reviewer gate); branch cut/docs-08-public-data-sentence, worktree C:/dev/wt/d08; one worker; slot 2 while #193 awaits merge. Before: QUEUED 2026-10-08 by the human (state/directives/2026-10-08-reuse-round-1.md, item 3): docs/08_Testing.md line 40 calls the public data redistributable, which conflicts with the #12 ruling (DECISIONS-PENDING, item 3 of that round: local-only, fetch-only, never redistributed). The custodian brings a proposed sentence; the human types the sentence that lands.",
       "dates": {
         "opened": "2026-10-08",
         "done": null

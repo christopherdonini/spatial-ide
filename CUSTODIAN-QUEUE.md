@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `47610a825926301746741bc860a59d830cba232effb3e833d773c1943459eeff`) at `2026-10-08T17:31:20.459Z`.
+Generated from `PLAN.yaml` (sha256 `e6f3cc517ce939bd3f75724bd654b68bba76175b6854b0febd90b333f9b6748d`) at `2026-10-08T18:07:55.184Z`.
 
 ## 1. Next
 
@@ -10,12 +10,11 @@ Generated from `PLAN.yaml` (sha256 `47610a825926301746741bc860a59d830cba232effb3
 
 - (none)
 
-## 3. Waiting on the human (total: 12 min)
+## 3. Waiting on the human (total: 10 min)
 
 ### ruling
 
 - **decision-adr-029-scan-progress-route** — ADR-029's scan-progress route, given G1 (a minimal crate patch exposing the connection handle; raw ffi end to end on the scan path; upstream first) -- deferred to Brief B's B2 by the human, round 16 item 3 (10 min)
-- **docs-08-public-data-sentence** — docs/08 calls Overture and OSM extracts redistributable, against the ruling that corpus #12 is local-only, fetch-only and never redistributed (2 min)
 
 ## 4. Blocked on dependencies
 
@@ -30,6 +29,7 @@ Generated from `PLAN.yaml` (sha256 `47610a825926301746741bc860a59d830cba232effb3
 
 - **shell-migration-milestone-1** — Shell migration, milestone 1 -- the frame: Map Studio regions, panel toggles, separated sections, an attention strip and a status bar — evidence: branch `cut/shell-migration-milestone-1`
 - **adr-032-staleness-docs** — ADR-032 shown stale in two places: the PLAN node adr-032-decision and docs/README.md line 27 still read Proposed — evidence: branch `cut/adr-032-staleness-docs`
+- **docs-08-public-data-sentence** — docs/08 calls Overture and OSM extracts redistributable, against the ruling that corpus #12 is local-only, fetch-only and never redistributed — evidence: branch `cut/docs-08-public-data-sentence`
 
 ## 6. Proposed / unscheduled
 
