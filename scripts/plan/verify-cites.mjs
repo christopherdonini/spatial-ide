@@ -141,7 +141,8 @@ export function extractCitations(text, { commentsOnly } = {}) {
     if (!isPathShaped(pathRaw)) continue;
     const startL = parseInt(m[2], 10);
     const endL = m[3] !== undefined ? parseInt(m[3], 10) : startL;
-    out.push({ pathRaw, startL, endL, citeLine: lineOf(text, idx), raw: m[0] });
+    const pinned = /^ ?@ ?([0-9a-fA-F]{7,40})(?![0-9A-Za-z])/.exec(text.slice(idx + m[0].length, idx + m[0].length + 48));
+    out.push({ pathRaw, startL, endL, citeLine: lineOf(text, idx), raw: m[0], pin: pinned ? pinned[1] : null });
   }
   return out;
 }
@@ -247,6 +248,26 @@ export function checkCitation(cite, index, repoRoot) {
   return { status: 'oob-suffix', reason: `line ${maxL} exceeds ${which} (${lc} lines)` };
 }
 
+/**
+ * A citation that carries a pin (`path:line[-line] @ <commit>`) is read at that commit: the commit
+ * must exist, the file must exist there, and the line (or range end) must be within it. Returns
+ * { ok: true } or { ok: false, reason }. Git only reads; a commit git cannot find is a failing pin.
+ */
+export function checkPinned(cite, repoRoot) {
+  const git = (args) =>
+    execFileSync('git', args, { cwd: repoRoot, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], maxBuffer: 1 << 28 });
+  try { git(['cat-file', '-e', `${cite.pin}^{commit}`]); } catch { return { ok: false, reason: `pinned commit ${cite.pin} not found` }; }
+  const p = cite.pathRaw.replace(/^\.\//, '');
+  let text;
+  try { text = git(['show', `${cite.pin}:${p}`]); } catch { return { ok: false, reason: `"${p}" not found at pinned commit ${cite.pin}` }; }
+  const maxL = Math.max(cite.startL, cite.endL);
+  const lc = text.split('\n').length;
+  if (cite.startL < 1 || cite.endL < 1 || maxL > lc) {
+    return { ok: false, reason: `line ${maxL} exceeds "${p}" at pinned commit ${cite.pin} (${lc} lines)` };
+  }
+  return { ok: true };
+}
+
 function globToRegExp(glob) {
   // minimal: ** -> any, * -> non-slash, . escaped, everything else literal.
   let re = '';
@@ -301,15 +322,21 @@ export function runVerifyCites({ repoRoot, filesGlob } = {}) {
       const at = { relPath, citeLine: cite.citeLine, target: cite.raw };
       const res = checkCitation(cite, index, root);
       if (res.status === 'ok') continue;
+      let pinReason = null;
+      if (cite.pin && (res.status !== 'no-match' || cls === 'rooted')) {
+        const pr = checkPinned(cite, root);
+        if (pr.ok) continue;
+        pinReason = pr.reason;
+      }
       if (res.status === 'no-match') {
         // A rooted path (first segment is a real top-level repo dir) that matches nothing is a
         // broken in-tree reference and is gated; a loose/external path that matches nothing is a
         // reference we cannot confirm is even meant to be in-tree, so it is skipped.
-        if (cls === 'rooted') sink.push({ ...at, reason: `no tracked file matches "${cite.pathRaw}"` });
+        if (cls === 'rooted') sink.push({ ...at, reason: pinReason ?? `no tracked file matches "${cite.pathRaw}"` });
       } else if (res.status === 'oob-exact') {
-        sink.push({ ...at, reason: res.reason });
+        sink.push({ ...at, reason: pinReason ?? res.reason });
       } else {
-        advisory.push({ ...at, reason: res.reason });
+        advisory.push({ ...at, reason: pinReason ?? res.reason });
       }
     }
   }

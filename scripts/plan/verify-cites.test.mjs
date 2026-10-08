@@ -231,3 +231,59 @@ test('a_broken_rooted_cite_in_a_filed_gate_report_is_advisory_and_its_siblings_s
     fs.rmSync(dir, { recursive: true, force: true });
   }
 });
+
+// --- pinned citations: `path:line @ <commit>` is read at its commit (Decision B, 2026-10-08) -------
+
+// A repo whose first commit holds a 5-line engine/src/pool.rs and whose tree then shrinks it to 2 lines.
+function pinnedRepo(doc) {
+  const dir = gitTree({ 'engine/src/pool.rs': 'a\nb\nc\nd\ne\n' });
+  const rev = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: dir, encoding: 'utf8' }).trim();
+  fs.writeFileSync(path.join(dir, 'engine/src/pool.rs'), 'a\nb\n');
+  fs.writeFileSync(path.join(dir, 'docs-notes.md'), doc(rev));
+  execFileSync('git', ['add', '-A'], { cwd: dir });
+  execFileSync('git', ['commit', '-q', '-m', 'shrink'], { cwd: dir });
+  return { dir, rev };
+}
+
+test('a_pinned_cite_past_the_trees_end_that_resolves_at_its_commit_passes', () => {
+  const { dir } = pinnedRepo((rev) => `see engine/src/pool.rs:4-5 @ ${rev} sha256:00`);
+  try {
+    const { gated } = runVerifyCites({ repoRoot: dir });
+    assert.equal(gated.length, 0, JSON.stringify(gated));
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('a_pinned_cite_whose_commit_does_not_exist_fails_by_name', () => {
+  const { dir } = pinnedRepo(() => 'see engine/src/pool.rs:4 @ deadbee0 sha256:00');
+  try {
+    const { gated } = runVerifyCites({ repoRoot: dir });
+    assert.equal(gated.length, 1, JSON.stringify(gated));
+    assert.match(gated[0].reason, /pinned commit deadbee0 not found/);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('a_pinned_cite_whose_file_is_missing_at_that_commit_fails_by_name', () => {
+  const { dir } = pinnedRepo((rev) => `see engine/src/other.rs:1 @ ${rev} sha256:00`);
+  try {
+    const { gated } = runVerifyCites({ repoRoot: dir });
+    assert.equal(gated.length, 1, JSON.stringify(gated));
+    assert.match(gated[0].reason, /"engine\/src\/other\.rs" not found at pinned commit/);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('an_unpinned_cite_past_the_trees_end_still_fails', () => {
+  const { dir } = pinnedRepo(() => 'see engine/src/pool.rs:4');
+  try {
+    const { gated } = runVerifyCites({ repoRoot: dir });
+    assert.equal(gated.length, 1, JSON.stringify(gated));
+    assert.match(gated[0].reason, /exceeds "engine\/src\/pool\.rs"/);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
