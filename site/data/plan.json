@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-08T17:23:27.456Z",
-  "plan_hash": "90096775f5e58cf7d53ae114c63d94d403d3e523ff7ca5f5639c52bba5b3570b",
+  "generated_at": "2026-10-08T17:25:58.987Z",
+  "plan_hash": "dc0d9bec3f6b65e0d956c9c0e25a12697f371fc174b4a16ed8ac19d583084b26",
   "priorities_approved": true,
   "lanes": [
     {
@@ -3166,23 +3166,25 @@
       "kind": "task",
       "lane": "engine",
       "phase": "prototype",
-      "status": "proposed",
+      "status": "done",
       "order": null,
       "depends_on": [],
       "needs_human": {
-        "kind": "ruling",
-        "minutes": 20
+        "kind": "none",
+        "minutes": 0
       },
       "gate": "none",
-      "evidence": null,
+      "evidence": {
+        "pr": 103
+      },
       "budget_minutes": 300,
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "the problem statement and candidates A/B/C are drafted for the human's sight; the admission decision is theirs",
+      "summary": "ACCEPTED 2026-09-23 on the human's word, as it stands: PR #103, the node accept-adr-032. Before: the problem statement and candidates A/B/C are drafted for the human's sight; the admission decision is theirs",
       "dates": {
         "opened": "2026-09-09",
-        "done": null
+        "done": "2026-09-24"
       }
     },
     {

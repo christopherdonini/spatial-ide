@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-08T17:23:27.335Z",
-  "plan_hash": "90096775f5e58cf7d53ae114c63d94d403d3e523ff7ca5f5639c52bba5b3570b",
+  "generated_at": "2026-10-08T17:25:58.867Z",
+  "plan_hash": "dc0d9bec3f6b65e0d956c9c0e25a12697f371fc174b4a16ed8ac19d583084b26",
   "priorities_approved": true,
   "next": null,
   "ready": [],
@@ -346,25 +346,6 @@
         "done": null
       },
       "summary": "Prerequisites before placing (the human, 2026-09-22): Brief A closed (P6, the N8 piece, the five acceptances), PR #97's dependency piece, the three clean-clone repairs; then the custodian brings a small v0.1.1 scope and its remaining gates -- not waiting for all of Brief B; tagging, publishing and the human's decisions separately gated. A patch release after v0.1.0. Not scheduled: 69a stands (dynamic CRT declared, no static build to land), so v0.1.1 has no forcing content yet. The human places it when there is a reason to cut it; M13's re-test, the SignPath application draft and the from-v0.1.1 release-artifacts trigger all ride it RULED 2026-09-26, question round 25, item 4: the next release's notes carry the KNOWN-LIMITATIONS line of bundle-viewer-partition-offset-bounds (bundles published before the fix keep a viewer that can stall on crafted offsets); no GitHub advisory."
-    },
-    {
-      "id": "adr-032-decision",
-      "title": "ADR-032 — the GeoParquet non-x-first axis order decision",
-      "lane": "engine",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 300,
-      "needs_human": {
-        "kind": "ruling",
-        "minutes": 20
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-09",
-        "done": null
-      },
-      "summary": "the problem statement and candidates A/B/C are drafted for the human's sight; the admission decision is theirs"
     },
     {
       "id": "briefb-b3-publish-v2",
