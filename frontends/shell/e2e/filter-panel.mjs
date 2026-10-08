@@ -371,11 +371,23 @@ async function stepFind(page, consoleHandle) {
   // 4036/285440 px): FLOOR set at 0.5%, comfortably below the observed value (~2.8x headroom for
   // run-to-run WebGL/AA variance) while still failing hard on an effectively blank canvas (the exact
   // defect this step exists to catch).
-  const FLOOR = 0.005;
+  //
+  // Milestone 1 re-aim (the human's Decision A; PRE-REGISTRATION Amendment 6). The 0.5% held for the canvas it was measured on
+  // -- 285,440 px, that is 1280 x 223 -- and for no other shape. The matches are the last 99 ids of a row-major grid of
+  // ceil(sqrt(4,000,000)) = 2,000 columns (`engine/src/fixture.rs`, `cols`), i.e. ONE strip 99 cells wide and one cell high. A
+  // strip that wide and that low is fitted to the canvas WIDTH, so each feature's drawn area grows with the width squared and the
+  // fraction with the width over the height: on the 668 x 730 map of the Studio frame the same 4036 px becomes about
+  // 4036 x (668/1280)^2 = 1,099 px, 0.23% of 487,640 -- under the old floor with nothing wrong. The floor is therefore the old
+  // floor's own ratio to its own measurement (0.005 / (4036/285440) = 0.354, the ~2.8x headroom above) applied to the count this
+  // canvas's width predicts. It equals 0.5% on the 1280 x 223 canvas and about 0.08% on 668 x 730; a blank canvas is 0%.
+  const CALIBRATION = { nonBackgroundPx: 4036, canvasPx: 285_440, canvasWidth: 1280, floorFraction: 0.005 };
+  const floorOverMeasured = CALIBRATION.floorFraction / (CALIBRATION.nonBackgroundPx / CALIBRATION.canvasPx);
+  const expectedPx = CALIBRATION.nonBackgroundPx * (pixels.width / CALIBRATION.canvasWidth) ** 2;
+  const FLOOR = (floorOverMeasured * expectedPx) / (pixels.width * pixels.height);
   if (fraction <= FLOOR) {
     throw new Error(
       `FIND': filtered-and-completed canvas is effectively blank (${(fraction * 100).toFixed(3)}% non-bg, floor ` +
-        `${(FLOOR * 100).toFixed(1)}%, settled=${settle.settled}) -- the human-approved design revision (Apply issues ` +
+        `${(FLOOR * 100).toFixed(3)}% for a ${pixels.width} x ${pixels.height} canvas, settled=${settle.settled}) -- the human-approved design revision (Apply issues ` +
         `bbox: null, WorkingCanvas.resetFitForNewGeneration) should have landed the camera on the ${SLOW_FIXTURE_TAIL} ` +
         `matching features, exactly the 2026-08-15 walkthrough Part E E5 finding this step encodes`
     );
@@ -384,7 +396,7 @@ async function stepFind(page, consoleHandle) {
   return (
     `fresh open; applied "${SLOW_FIXTURE_PREDICATE}" via the real DOM; scan completed on its own ` +
     `(liveness/Cancel both gone, no .scan-incomplete); camera landed on the matches ` +
-    `(${(fraction * 100).toFixed(2)}% non-bg, > ${(FLOOR * 100).toFixed(1)}% floor, settled=${settle.settled})`
+    `(${(fraction * 100).toFixed(2)}% non-bg, > ${(FLOOR * 100).toFixed(2)}% floor for ${pixels.width} x ${pixels.height}, settled=${settle.settled})`
   );
 }
 
