@@ -1,14 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `d02690a5f8dcca96518ea54a1d928f55e3101e1b8b497508ba33126914a61b3f`) at `2026-10-08T06:51:08.046Z`.
+Generated from `PLAN.yaml` (sha256 `88c5eec094e672ec24a55df8c7d70b72cb2101e010726407fe651faec8f37efd`) at `2026-10-08T14:26:05.277Z`.
 
 ## 1. Next
 
-- (nothing ready)
+- **verify-cites-pinned-citations** — verify-cites reads a pinned citation (path:line @ commit) at its pinned commit before calling it unresolved (lane `governance`)
 
 ## 2. Ready
 
-- (none)
+- **verify-cites-pinned-citations** — verify-cites reads a pinned citation (path:line @ commit) at its pinned commit before calling it unresolved (lane `governance`, order 1, budget 60 min)
 
 ## 3. Waiting on the human (total: 10 min)
 

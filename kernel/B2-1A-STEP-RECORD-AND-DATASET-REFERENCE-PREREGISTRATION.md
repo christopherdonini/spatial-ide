@@ -779,3 +779,20 @@ Each mutation is observed by applying it, running the named test, recording its 
 - §2.3: the first sentence of §5's `observed` paragraph → item 5 (a).
 - Amendment 4, item 8: stands as the count at 479ae81d. The fix head's class 8 record is the piece's final count (item 9).
 - None is edited.
+
+### Amendment 6 — scope addition: the shell lock's one `getrandom` line (the human's Decision C), and the indexes' last-verified line (gate 1 attempt 2's D-4)
+
+*Written by the custodian after the human's ruling and before any code of it, at the branch head 14acee0b. The ruling is Decision C, `state/directives/2026-10-08-decisions-a-b-c.md` lines 26-28 at the commit that adds it (sha256 799adebe4fd997e6c004484cb9339c11d24b4c48293bf7d5d31bf4bc799b5177); its RULED block is in `DECISIONS-PENDING.md`. It resolves the gate-1 reviewer's C1 (gate-log 438). Nothing below is a quotation.*
+
+1. **The change.** `frontends/shell/src-tauri/Cargo.lock` gains exactly one line: the `getrandom` 0.3.4 entry in `spatial-kernel`'s dependency list. That lock locks the kernel by path, so the kernel's new direct dependency needs the edge there too.
+   - The line is written by `cargo metadata --format-version 1 --offline --manifest-path frontends/shell/src-tauri/Cargo.toml`, with no build.
+   - No new package and no version change.
+   - **If that lock's diff shows anything else, the worker stops and the human is told.**
+   - The PR body shows both lock diffs.
+2. **The boundary.** §5's declared-unchanged `frontends/` and §8 item 9 are read with this one exception: that lock file and that line. No other frontend file changes.
+3. **The evidence.** There is no new test. The shell's CI jobs, which run with `--locked`, pass at the commit that adds the line. A local `cargo metadata --locked --offline` on that manifest exits 0.
+4. **D-4.** Both indexes' last-verified line names 14acee0b, after the pointers are re-verified.
+5. **§7.** The lock line counts by §7's command, which excludes only the root `Cargo.lock`. The indexes group grows by the last-verified lines. Any group or total over its ceiling is recorded as class 8 in the closing record, and §7 is not edited.
+6. **Generation 7.**
+
+**Superseded index.** §5's `frontends/` line and §8 item 9 → item 2 (one exception). None is edited.

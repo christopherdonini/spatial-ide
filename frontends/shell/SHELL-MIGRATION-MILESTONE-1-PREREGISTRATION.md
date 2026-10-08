@@ -529,3 +529,27 @@ The worker's and tester's briefs carry, as written, the paragraph at state/direc
 4. **Generation 6.**
 
 **Superseded index.** Amendment 4, item 5's reading of the I3 failures → item 2. Not edited.
+
+### Amendment 6 — scope addition: the seven re-aims (the human's Decision A, under invalidator I3)
+
+*Written by the custodian after the human's ruling and before any code of it, at the branch head f214f1f4. The ruling is Decision A, `state/directives/2026-10-08-decisions-a-b-c.md` lines 6-15 at the commit that adds it (sha256 d5522f63c3439cad05bcb397065dd612a4ac4ba01e6a6a7aa34a73c5a8124d9a). Its conditions bind, and they are referenced, not restated. Its RULED block is in `DECISIONS-PENDING.md`. The diagnosis is Amendment 5. Nothing below is a quotation.*
+
+1. **The checks re-aimed, in place:**
+   - `e2e/regression.mjs`: A9′ and K6;
+   - `e2e/filter-panel.mjs`: FIND′;
+   - `e2e/console.mjs`: CLASSC′;
+   - `e2e/pan-anchor.mjs`: the four failing checks (small paint-vs-event at dx = ±250, small there-and-back-net, and large paint-vs-event at dx = 250);
+   - `e2e/source-changed.mjs`: the post route's S4, from which S5a to S5d follow.
+2. **What a re-aim may change: the check's assumption about the map** (a size, a distance, a threshold), and nothing it asserts about the product.
+   - Each new value is derived from the measured map and the fixture, and the test states how.
+   - No value is tuned until a run turns green.
+   - A9′ and K6 no longer depend on one candidate pixel.
+   - CLASSC′ gains one click on the Style tab before its real fill, as OPEN-3 (a) did for `style.mjs`.
+3. **Each re-aimed check is shown still able to fail.** Where the check has a recorded mutation, that mutation is observed again at the fix head. Otherwise one mutation is stated in the PR body and observed.
+4. **The PR body** lists each check with its old and its new assumption.
+5. **The boundary.** §8 item 8, an e2e edit outside §2.7, is read with this exception: these five files, and these checks only. Every other suite, step and threshold is unchanged. The diagnosis's other findings stay as they are.
+6. **§7.** G6's ceiling of 400 is not edited. The re-aims' lines are recorded as class 8 at the gated head, as the ruling says.
+7. **The pinned citations** that `verify-cites` reads against today's App.tsx are handled by the separate piece the human's Decision B places, `verify-cites-pinned-citations`. That piece merges before this one opens its PR. This piece's boundary does not change.
+8. **Generation 7.**
+
+**Superseded index.** §8 item 8 → item 5 (one exception). Amendment 4, item 5's held I3 → items 1 to 4. None is edited.
