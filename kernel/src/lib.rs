@@ -60,6 +60,7 @@ use spatial_engine::{
 };
 
 pub mod bundle;
+pub mod dataset_ref;
 pub mod params;
 pub mod permission;
 pub mod publish;

@@ -15,7 +15,7 @@
 //!
 //! Grepped over `engine/src`, `kernel/src`, `protocol/skp/src` and `frontends/shell/src-tauri/src`
 //! for `std::fs::write`/`File::create`/`OpenOptions::new()` outside `#[cfg(test)]`, and reconciled
-//! against gate-log record 85, finding B-1. Four families:
+//! against gate-log record 85, finding B-1. Four families, and a fifth (5.) that has no writer yet:
 //!
 //! 1. **The published bundle** — `kernel/src/publish/mod.rs` (`Staging::write`, `kernel/src/publish/mod.rs:1355`)
 //!    and `kernel/src/bundle/mod.rs`'s path constants: `manifest.json`, `style.json`, the viewer
@@ -39,6 +39,9 @@
 //!    probe, `AuditLog::open_for`) and `:215-221` (`AuditLog::append`, the actual record line).
 //!    Scanned below, over one `IntentRecord`, the same `AuditLog::open_for`/`append_intent` shape
 //!    `kernel/tests/permission_boundary.rs` already uses.
+//! 5. **The dataset reference's canonical text** — `kernel/src/dataset_ref.rs` (ADR-036 §5, Proposed).
+//!    No writer exists in this tree yet: the project file and lineage file that will persist it are
+//!    piece 1c's. It is scanned as the text a later writer will write, by `G1` at the end of this file.
 //!
 //! **Excluded, with reason: `engine/src/fixture.rs:627`.** `File::create` inside
 //! `write_geoparquet`'s `generate` — this writes the GeoParquet **fixtures** every test and
@@ -670,4 +673,114 @@ fn the_published_bundle_carries_no_session_reference_key_or_value() {
             && contains_a_session_reference_shape(&planted_bytes),
         "the scan cannot detect what it claims to"
     );
+}
+
+use spatial_engine::fixture::LV95_PROJJSON;
+use spatial_engine::identity::IdSource;
+use spatial_kernel::dataset_ref::DatasetRef;
+use spatial_renderer::canonical::to_canonical_string;
+use spatial_skp::v0::{CrsAssertion, IdentityDeclaration};
+
+/// Whether JSON `text` names `needle`, raw or as JSON writes it (a Windows path's backslashes).
+fn names(text: &str, needle: &str) -> bool {
+    let text = text.to_ascii_lowercase();
+    let (raw, escaped) = (needle.to_ascii_lowercase(), needle.replace('\\', "\\\\"));
+    text.contains(&raw) || text.contains(&escaped.to_ascii_lowercase())
+}
+
+/// **The dataset reference half of G-A4** (`kernel/B2-1A-STEP-RECORD-AND-DATASET-REFERENCE-PREREGISTRATION.md`
+/// §4, G1; the fifth family). A reference built from a real `SkpHost::open_dataset` over a file
+/// admitted under a CRS assertion and an identity declaration: its canonical text carries no key
+/// and no byte naming a generation, and none of these values: the minted session reference, the
+/// dataset handle, the fixture's path and its directory, and the host-minted claimant and time of
+/// either claim. Each scan fires on a planted positive control, the exact mutation below among them.
+///
+/// RECORDED MUTATION: the machine-recorded locator's `at` carries `ds.path()` instead of the
+/// reference's own URI. Expected failure: the scan for the fixture's path.
+#[test]
+fn a_dataset_reference_carries_no_generation_session_reference_handle_path_or_assertion_attribution(
+) {
+    let d = workspace("dataset-reference");
+    let path = d.join("parcels-f2.parquet");
+    let spec = FixtureSpec {
+        features: 40,
+        avg_vertices: 6,
+        hole_every: 0,
+        crs_mode: CrsMode::AbsentKey,
+        identity: IdentityMode::ForeignKeyColumn,
+        ..Default::default()
+    };
+    write_geoparquet(&path, &spec).unwrap();
+    let host = SkpHost::new(
+        Arc::new(Catalog::new()),
+        StreamRegistry::new(),
+        watch_support::no_watch_arm(),
+        session_end_channel().0,
+    );
+    let open = host
+        .open_dataset(OpenDatasetRequest {
+            skp: SKP_VERSION.to_string(),
+            path: path.display().to_string(),
+            cancel_key: "g1".to_string(),
+            crs_assertion: Some(CrsAssertion {
+                identifier: "EPSG:2056".to_string(),
+                definition_json: LV95_PROJJSON.to_string(),
+            }),
+            identity: Some(IdentityDeclaration {
+                column: "parcel_key".to_string(),
+            }),
+        })
+        .expect("open");
+    let ds = host.catalog().get(open.dataset.as_str()).expect("catalog");
+    let uri = "spatial://dataset/ref/00112233445566778899aabbccddeeff";
+    let reference = DatasetRef::linked(uri.parse().unwrap(), &ds).expect("builds");
+    let text = to_canonical_string(&reference.to_json()).unwrap();
+    let IdSource::Mapped { by, at, .. } = ds.identity().source().clone() else {
+        panic!("the identity was declared");
+    };
+    let needles = [
+        ("the session reference", open.session.as_str().to_string()),
+        ("the dataset handle", open.dataset.as_str().to_string()),
+        (
+            "the CRS claimant",
+            ds.crs().asserted_by().unwrap().to_string(),
+        ),
+        (
+            "the CRS claim's time",
+            ds.crs().asserted_at().unwrap().to_string(),
+        ),
+        ("the identity claimant", by),
+        ("the identity claim's time", at),
+        ("the fixture's path", path.display().to_string()),
+        ("the fixture's directory", d.display().to_string()),
+    ];
+
+    // The scans, over the real text.
+    let value: serde_json::Value = serde_json::from_str(&text).unwrap();
+    let mut keys = Vec::new();
+    walk_keys(&value, "$", &mut keys);
+    assert!(
+        keys.is_empty(),
+        "the reference carries a key naming a generation: {keys:?}"
+    );
+    assert!(!contains_ascii_ci(text.as_bytes(), b"generation"));
+    assert!(!contains_a_session_reference_shape(text.as_bytes()));
+    for (label, needle) in &needles {
+        assert!(!names(&text, needle), "the reference's text names {label}");
+    }
+
+    // The positive controls: each scan fires on what it guards.
+    walk_keys(&serde_json::json!({"a": {"generation": 1}}), "$", &mut keys);
+    assert_eq!(keys, ["$.a.generation"]);
+    assert!(contains_ascii_ci(b"names a Generation", b"generation"));
+    assert!(contains_a_session_reference_shape(
+        open.session.as_str().as_bytes()
+    ));
+    for (label, needle) in &needles {
+        let planted = serde_json::json!({ "planted": needle }).to_string();
+        assert!(names(&planted, needle), "the scan cannot detect {label}");
+    }
+    let mut mutated = value.clone();
+    mutated["resource"]["locators"][0]["at"] = path.display().to_string().into();
+    assert!(names(&mutated.to_string(), &path.display().to_string()));
 }
