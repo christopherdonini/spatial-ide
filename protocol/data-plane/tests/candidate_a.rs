@@ -846,8 +846,10 @@ async fn a_connection_beyond_the_idle_ceiling_that_never_starts_is_told_why_in_s
     use spatial_data_plane::server::{CROWDED_START_TIMEOUT, MAX_IDLE_CONNECTIONS, START_TIMEOUT};
     let dp = start(factory(4, 4096, 0)).await;
 
-    // One more than the idle ceiling, none of which sends START or any credit. An idle permit is
-    // released only at START or at that connection's own timeout, so exactly one of them runs on
+    // One more than the idle ceiling, none of which sends START, any credit or a close. An idle
+    // permit is released at START, at that connection's own timeout, or when `handle` returns
+    // because the peer left or sent a START it cannot parse. None of these connections sends a
+    // frame or closes before the first terminal, so exactly one of them runs on
     // `CROWDED_START_TIMEOUT` whatever order the handlers run in, and its terminal arrives first.
     let mut conns = Vec::new();
     for _ in 0..=MAX_IDLE_CONNECTIONS {
