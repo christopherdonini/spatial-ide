@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `a369be119f1b72dac0d9fb3a48b8efca3eec9e3fd046b051633a9e3431873050`) at `2026-10-08T21:19:58.863Z`.
+Generated from `PLAN.yaml` (sha256 `b11e693e50c5e3ffb89d0a65967fe1ff168c87e40383b526f3abdd911b16351b`) at `2026-10-08T21:25:29.381Z`.
 
 ## 1. Next
 
@@ -19,6 +19,7 @@ Generated from `PLAN.yaml` (sha256 `a369be119f1b72dac0d9fb3a48b8efca3eec9e3fd046
 ## 4. Blocked on dependencies
 
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
+- **shell-pick-paths-disagree-at-1280x801** — The hover pick and the settle re-pick name different features at the same camera and pointer when the window is one row taller than the default (50244 against 53722) — blocked by: shell-migration-milestone-1
 - **briefb-b2-save-reopen** — B2 — Save project, Snapshot data, session history, lineage and preferences, in five stages, each with its own form — blocked by: decision-adr-029-scan-progress-route
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer — blocked by: signpath-application-draft
 - **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-1-1

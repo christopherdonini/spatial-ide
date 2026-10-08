@@ -660,3 +660,16 @@ The worker's and tester's briefs carry, as written, the paragraph at state/direc
 9. **Generation 10.**
 
 **Superseded index.** Amendment 8's first line and base → item 7. Amendment 7's class label → item 7. Amendment 3, item 2's "given a caller" → item 7. None is edited.
+
+### Amendment 10 — K6 case (iii) back to its old comparison (class 5, the human's ruling), after gate-1 results were seen
+
+*Written by the custodian after the human's ruling and before any code of it, at the branch head 773d42af. The ruling is `state/directives/2026-10-08-k6-case-iii-ruling.md` lines 6-15 at the commit that adds it (sha256 aec86de380ae721fcf522c30a532d07132b79233cac7cadbb22e55546a93d2cd). Its RULED block is in `DECISIONS-PENDING.md`. Nothing below is a quotation.*
+
+1. **Case (iii) of K6 in `e2e/regression.mjs` goes back to its old comparison, with no retry.** It compares the readout after the zoom-in and zoom-out pair with the id a real hover named at that camera and pointer. Its comment and its summary string say the same.
+2. **This replaces Amendment 6, item 2's "K6 no longer depends on one candidate pixel", for case (iii) only.** In (iii), that dependence is the product's two pick paths disagreeing, and the check keeps showing it. The other K6 cases and A9′ keep Amendment 6.
+3. **The gate-1 items on (iii)** (A-C1, R-C1, A-E1, R-E1, A-D12's (iii) summary, R-D11) are met by this: the case is unchanged from before the re-aim, so no new mutation is owed.
+4. **The disagreement** at 1280 × 801 is the node `shell-pick-paths-disagree-at-1280x801`, which the human placed. The hover pick and the settle re-pick named different ids at the same camera and pointer (reports 3 and 4). It is a diagnosis first, reported only, done before milestone 2's selection code starts.
+5. **The PR body** says that (iii) is unchanged and names the node.
+6. **Generation 11.**
+
+**Superseded index.** Amendment 6, item 2's one-pixel line, for (iii) → item 2. Amendment 9, item 2's wait → items 1 to 3. Neither is edited.
