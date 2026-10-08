@@ -303,12 +303,16 @@ function pinnedRun(doc, key) {
   try { return runVerifyCites({ repoRoot: dir })[key]; } finally { fs.rmSync(dir, { recursive: true, force: true }); }
 }
 
+// RECORDED MUTATION (P5): the blob read at the pin replaced by `git show` -> fails by name:
+// `a_pinned_cite_whose_path_is_a_directory_at_that_commit_fails_by_name` (no other test). Observed at 7f332caf669e, reverted.
 test('a_pinned_cite_whose_path_is_a_directory_at_that_commit_fails_by_name', () => {
   const gated = pinnedRun((rev) => `see engine/src:3 @ ${rev} sha256:00`, 'gated');
   assert.equal(gated.length, 1, JSON.stringify(gated));
   assert.match(gated[0].reason, /"engine\/src" is a directory at pinned commit/);
 });
 
+// RECORDED MUTATION (P6): the range check at the pin removed (`|| maxL > lc`) -> fails by name:
+// `a_pinned_cite_whose_line_is_past_the_file_end_at_that_commit_fails_by_name` (no other test). Observed at 7f332caf669e, reverted.
 test('a_pinned_cite_whose_line_is_past_the_file_end_at_that_commit_fails_by_name', () => {
   const gated = pinnedRun((rev) => `see engine/src/pool.rs:9 @ ${rev} sha256:00`, 'gated');
   assert.equal(gated.length, 1, JSON.stringify(gated));
