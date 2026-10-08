@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-08T16:57:59.949Z",
-  "plan_hash": "924ea1a1e65ac9913dc1187fec9b8a43f99dba4eb4ef91f40f9884609264995a",
+  "generated_at": "2026-10-08T17:04:23.756Z",
+  "plan_hash": "8b4e5a0233440a4f839951f1d931a63b37f840809234f8777f3a9f550ca51bd2",
   "priorities_approved": true,
   "lanes": [
     {
@@ -6924,13 +6924,13 @@
       },
       "gate": "REUSE-ROUND-1-BUNDLE-PREREGISTRATION.md",
       "evidence": {
-        "pr": 192
+        "branch": "cut/reuse-round-1-bundle"
       },
       "budget_minutes": 90,
-      "generation": 1,
+      "generation": 2,
       "felt_verdict": false,
       "entries": [],
-      "summary": "PR #192 OPEN 2026-10-08 at 2ae29e9d: the archive arrived as the human upload (16:36:01Z), sha256 50d87a03 matched; placed byte-identical under reuse/ (139 files) by the custodian; check-index, verify-cites over reuse/** and the default set, the staged profile scan and the governance checkers all exit 0; five-line form at ab44cd2c; the single reviewer gate next. Before: V2 ARCHIVE 2026-10-08 (state/directives/2026-10-08-reuse-round-1-v2.md): spatial-ide-reuse-round-1-v2.zip, sha256 50d87a03eb42148608209edbad2d905bcea0e1c369f1d3330f86fb54d2409526, replaces the first; placed after #190 merges (five citations pinned at 14acee0b resolve only once #190 is in main; the pinned fallback is #191); verify the sha256 first, then tools/check-index.mjs and verify-cites over the placed folder. WAITING ON THE HUMAN (needs_human ruling): this archive did not reach the session either; the human names the route (for example Google Drive through the connector, or a path on this PC). #190 and #191 merged 2026-10-08. Before: PLACED 2026-10-08 by the human (state/directives/2026-10-08-reuse-round-1.md, item 1): slot 2, after #190 has merged and after verify-cites-pinned-citations; no mod, pilot, trial or record rule; not under docs/ (it holds code, and docs/ is CC-BY-4.0). Before the PR: no other project named, no user-profile path, its check-index.mjs and the repository checkers run on it; if verify-cites flags a citation inside it, stop and tell the human (no checker change, no exemption, no edit to the notes); fetch-cache.mjs is not run, and the clone cache is never inside the repo. WAITING: the archive did not reach the session; the human is asked for it and its sha256.",
+      "summary": "GATE 1 REVIEWER FAIL (443, E1: 366 lines of placed code over the section 21c bound close the single-gate route; Correctness PASS); Amendment 1, class 6, generation 2: both gates apply; the architect gate and a reviewer re-gate on the amendment next; H1 (tilde and temporary folder paths in the notes) to the human. Before: PR #192 OPEN 2026-10-08 at 2ae29e9d: the archive arrived as the human upload (16:36:01Z), sha256 50d87a03 matched; placed byte-identical under reuse/ (139 files) by the custodian; check-index, verify-cites over reuse/** and the default set, the staged profile scan and the governance checkers all exit 0; five-line form at ab44cd2c; the single reviewer gate next. Before: V2 ARCHIVE 2026-10-08 (state/directives/2026-10-08-reuse-round-1-v2.md): spatial-ide-reuse-round-1-v2.zip, sha256 50d87a03eb42148608209edbad2d905bcea0e1c369f1d3330f86fb54d2409526, replaces the first; placed after #190 merges (five citations pinned at 14acee0b resolve only once #190 is in main; the pinned fallback is #191); verify the sha256 first, then tools/check-index.mjs and verify-cites over the placed folder. WAITING ON THE HUMAN (needs_human ruling): this archive did not reach the session either; the human names the route (for example Google Drive through the connector, or a path on this PC). #190 and #191 merged 2026-10-08. Before: PLACED 2026-10-08 by the human (state/directives/2026-10-08-reuse-round-1.md, item 1): slot 2, after #190 has merged and after verify-cites-pinned-citations; no mod, pilot, trial or record rule; not under docs/ (it holds code, and docs/ is CC-BY-4.0). Before the PR: no other project named, no user-profile path, its check-index.mjs and the repository checkers run on it; if verify-cites flags a citation inside it, stop and tell the human (no checker change, no exemption, no edit to the notes); fetch-cache.mjs is not run, and the clone cache is never inside the repo. WAITING: the archive did not reach the session; the human is asked for it and its sha256.",
       "dates": {
         "opened": "2026-10-08",
         "done": null

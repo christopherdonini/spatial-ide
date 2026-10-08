@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `924ea1a1e65ac9913dc1187fec9b8a43f99dba4eb4ef91f40f9884609264995a`) at `2026-10-08T16:57:59.825Z`.
+Generated from `PLAN.yaml` (sha256 `8b4e5a0233440a4f839951f1d931a63b37f840809234f8777f3a9f550ca51bd2`) at `2026-10-08T17:04:23.620Z`.
 
 ## 1. Next
 
@@ -29,7 +29,7 @@ Generated from `PLAN.yaml` (sha256 `924ea1a1e65ac9913dc1187fec9b8a43f99dba4eb4ef
 ## 5. In progress
 
 - **shell-migration-milestone-1** — Shell migration, milestone 1 -- the frame: Map Studio regions, panel toggles, separated sections, an attention strip and a status bar — evidence: branch `cut/shell-migration-milestone-1`
-- **reuse-round-1-bundle** — Reuse archaeology round 1, the advisor bundle, filed as one docs-and-data piece (not under docs/) — evidence: PR #192
+- **reuse-round-1-bundle** — Reuse archaeology round 1, the advisor bundle, filed as one docs-and-data piece (not under docs/) — evidence: branch `cut/reuse-round-1-bundle`
 
 ## 6. Proposed / unscheduled
 

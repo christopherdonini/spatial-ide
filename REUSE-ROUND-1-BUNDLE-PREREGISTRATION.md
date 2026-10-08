@@ -13,3 +13,23 @@ Out-of-scope: ADR none (REUSE-ROUND-1.md section 1's ADR-036 findings go to the 
 ## Amendments
 
 Opens empty, append-only.
+
+### Amendment 1 — the size overrun closes the single-gate route (class 6, budget deviation, Scope not edited), and the gate-1 reviewer's record items
+
+*Written by the custodian after the gate-1 reviewer failed the piece on E1 (`state/consults/gates/2026-10-08-reuse-round-1-bundle-gate1-reviewer.md`, gate-log 443), at the branch head 2ae29e9d, with nothing in `reuse/` changed. Correction round 1 of 2. It follows `AUTONOMY.md` §21b's clause on a size overrun found mid-piece: the piece keeps its five-line form and records the overrun here. Nothing below is a quotation.*
+
+1. **The overrun.** The placement holds 366 lines of non-generated code over 3 files, against §21c's bound of 150 lines over at most 8 files:
+   - `reuse/tools/check-index.mjs`: 59;
+   - `reuse/tools/fetch-cache.mjs`: 198;
+   - `reuse/tools/reuse.mjs`: 109.
+   - The whole placement is 12,216 lines over 139 files. Code placed as it came is not in the exempt set. The custodian's form was wrong to put a declared size in place of the bound.
+2. **The route.** §21a's size trigger applies, so the single-gate route is closed. Both gates apply: the architect gate, and the reviewer gate.
+   - The reviewer's gate-1 Correctness verdict stands. A reviewer re-gate reads only this amendment and the records.
+   - The Scope line is not edited.
+3. **What is unchanged:** nothing inside `reuse/` is edited, added or removed. The Change, Tests+mutation and Authority lines stand.
+4. **To the human, not edited in the bundle:**
+   - **H1:** the reviewer's local-folder lines. Seven notes give the advisor's clone folder as a tilde path under one research folder, and three lines in the verification notes give a temporary folder. None names an account or another project, and the repository's scanner passes them. The custodian's judgment is that the human's round-27 clarification (a path naming a user profile) does not reach them. The human decides.
+   - **Two robustness notes on the bundle's tools:** check-index's final count, and the query tool's loop over a capability's decisions. Each lacks a fallback for an absent array. Both hold on today's index.
+5. **The reviewer's D1** is this amendment.
+
+**Superseded index.** The preamble's sentence putting the bundle's declared size in place of a line budget → item 1. The Out-of-scope line's conclusion that the single reviewer gate applies → item 2. Neither is edited.
