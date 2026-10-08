@@ -51,31 +51,7 @@ Nothing else in the folder belongs to the format. The session history, the per-p
 
 - The dataset form cannot collide with a bundle's `spatial://dataset/<name>`, whose name refuses `/`.
 - Each identity is 128 bits from the operating system's CSPRNG. Each authorises nothing, and none is a handle.
-
-> **OPEN-2, until the human accepts this ADR: two folders that carry one identity after a copy made by hand.**
-> Options:
-> - (A) At open, the machine's store notes the last location of each identity. When the same identity opens from a second location while the first still exists, the user is asked whether this is a copy, which receives a new identity and keeps its lineage, or the same project, moved.
-> - (B) Both copies keep the one identity and share the session history and the preferences. They collide when both are open.
-> - (C) A new identity is minted whenever the location changes. This contradicts the rule above that a project is found by its identity and never by its path.
->
-> Recommendation: (A). The choice is new user-visible behaviour.
-
-> **OPEN-3, until the human accepts this ADR: a session that never saved.**
-> Options:
-> - (A) Its history is kept on the machine under a not-yet-saved session record, and the application offers recovery when it next starts.
-> - (B) Recovery is offered only when the same dataset is next opened, matched by the reference's observation.
-> - (C) The session is not recoverable, and a KNOWN-LIMITATIONS line says so.
->
-> Recommendation: (A). The choice is user-visible.
-
-> **OPEN-5, until the human accepts this ADR: where the kernel gets its random identities.**
-> The kernel has no source of cryptographic randomness today.
-> Options:
-> - (A) The kernel takes `getrandom` 0.3 as a direct dependency. The crate is already in the lock file through the SKP crate, so there is no new crate and no new licence, but the lock file gains an edge.
-> - (B) The identities are minted in the shell's binding, which already has the crate, and passed into the kernel, which then only validates them.
-> - (C) There are no random identities.
->
-> Recommendation: (A). The choice is a dependency change.
+- **A project opened from a second folder.** When a project's identity opens from a second folder while the first folder still exists, the user is asked once whether it is a copy or the same project. A copy gets a new identity and keeps its lineage, and its data links become its own: re-linking the data in one never changes where the other finds its data. The same project is remembered for that folder, and the question is not asked again there. If the first folder no longer exists, the project has moved, and nothing is asked. The question's wording is the human's at P6.
 
 ### 5. The lasting dataset reference
 
@@ -91,18 +67,10 @@ A dataset entry, in the project file and in a steps file's header, is `{"resourc
 | `portability_policy` | `linked-live-file` | `snapshot-sealed` |
 
 `locators` holds one or more `{"kind", "at"}` objects:
-- `project-relative`: `at` is a path relative to the project folder, `/`-separated;
+- `project-relative`: `at` is a path relative to the project folder, `/`-separated, written only where the data is inside the project folder. It never points outside the project folder: a reader refuses an `at` that is empty, begins with `/`, has an empty, `.` or `..` segment, or holds a `\` or a `:`;
 - `machine-recorded`: `at` is the reference's own logical URI, which the machine's location store resolves.
 
 Locators are built and resolved in the kernel only. No frontend builds or parses one.
-
-> **OPEN-7, until the human accepts this ADR: the locators of a project file that travels.**
-> Options:
-> - (A) The project file carries a `project-relative` locator where one can be written, plus the `machine-recorded` one, and never an absolute path. On another machine the user re-links the file, and the re-linked file is checked against `observed`. This section is drafted as (A).
-> - (B) Relative and absolute paths together. A shared copy then reveals local folder names and user names.
-> - (C) Relative only. A dataset on another drive could then not be linked.
->
-> Recommendation: (A). The choice concerns privacy in an artifact that travels, and adds a re-link step the user sees.
 
 **`observed`** is the change-detection observation of the open that the reference was bound to: `byte_size`; `modified_ns` (a decimal string, or the state `not-reported`); `footer_length`; `footer_sha256` (hex, or the state `not-read-over-ceiling`).
 - It is a change detector, not an identity. It is not a content hash, not a source revision and not a snapshot claim.
@@ -178,6 +146,7 @@ A selection alone is not a step.
 
 - **Format:** the same, with `purpose` `session-history`, appended as the user works.
 - **After a crash:** a final line without its LF is a torn write. Recovery keeps every complete line and names the torn one.
+- **A session that never saved:** its history is kept on the machine under a not-yet-saved record, and recovery is offered when the application next starts. The offer names the dataset and the time, and declining clears the record. If the data has changed or cannot be found, the application says so. A normal session end clears the record, as it clears any session history.
 - **Left to piece 1b:** where the history is stored, and how large it may grow.
 
 ### 10. An export's copy of its steps
@@ -200,6 +169,6 @@ The same format, with `purpose` `export-copy`. Where the copy is stored is piece
 ## Consequences
 
 - **One vocabulary for resources:** a bundle and a project file read the same six members.
-- **No absolute path in a project file.** On another machine, a dataset outside the project folder is found by re-linking it, and the re-linked file is checked against `observed`.
+- **No absolute path in a project file.** On another machine, a dataset outside the project folder is found by re-linking it, and the re-linked file is checked against `observed`: the check names each component that differs, and no difference passes silently.
 - **Different mtime resolution across filesystems:** a copy between them can report `mtime` changed. This fails closed, never as a silent pass.
 - **Open format (docs/14):** the format is fully specified here and readable without linking the kernel.
