@@ -673,3 +673,44 @@ The worker's and tester's briefs carry, as written, the paragraph at state/direc
 6. **Generation 11.**
 
 **Superseded index.** Amendment 6, item 2's one-pixel line, for (iii) → item 2. Amendment 9, item 2's wait → items 1 to 3. Neither is edited.
+
+### Amendment 11 — correction round 1's outcomes and the class 8 record at the new gated head (budget overrun, §7 not edited), after results were seen
+
+*Written by the custodian after correction round 1's results were seen, at the gated head ae704f0abc924bde7a6f912a853f039dfca66114, before both gates re-gate. The worker reports are `state/consults/2026-10-08-shell-migration-milestone-1-worker-report-8.md` and `-worker-report-9.md`. Nothing below is a quotation.*
+
+1. **Amendment 9's fixes,** at 757271d4, 2e17ee52, 03654b97 and 773d42af (report 8):
+   - E-FLOOR failed by name at the test commit 757271d4, with the map at 480 × 306.2. It passes after the border-box fix at 2e17ee52.
+   - KNOWN-LIMITATIONS 39 is reduced.
+   - The text fixes and the UTF-8 repair are in.
+   - Side effect: the default map is now 668 × 736. Earlier comments quoting 730.2 are true of their heads.
+2. **Amendment 10's restoration,** at ae704f0a (report 9).
+   - Case (iii)'s code is byte-identical to the code before stage 4's K6 change, with only a comment added. Its summary names the hovered id again.
+   - It passed at the default window: the hovered id and the re-picked id were the same.
+3. **Every e2e suite once at ae704f0a** (report 9). The only failures are the known base failures (Amendment 4, item 4): regression C2′/C3′, admission MAP′ and BOTHNEEDED′, console HEXLIM′, GROUP′ and REGRESS′, and source-changed's default-route S4. REFUSAL′ passed.
+   - Class 3: the layout run's held line carried a trailing pipe, so its exit code was masked. Every step printed PASS.
+4. **§7 at ae704f0a,** by its command from the merge base 176ab912 (the base, as Amendment 9 item 7 explains):
+
+   | Group | Lines | Ceiling | Result |
+   |---|---|---|---|
+   | G1 | 953 | 1,000 | within |
+   | G2 | 273 | 450 | within |
+   | G3 | 339 | 400 | within |
+   | G4 | 66 | 100 | within |
+   | G5 | 1,004 | 900 | over by 104, class 8 |
+   | G6 | 747 | 400 | over by 347, class 8 |
+   | Total | 3,382 over 28 files | 3,250 over 25 | over by 132 lines and 3 files, class 8 |
+
+   G6 by file:
+   - `layout.mjs` 417, against at most 360;
+   - `regression.mjs` 192, against at most 24;
+   - `pan-anchor.mjs` 62;
+   - `source-changed.mjs` 40, against at most 4;
+   - `filter-panel.mjs` 22;
+   - `console.mjs` 9;
+   - `style.mjs` 3, against at most 8;
+   - `source-watch-idle.mjs` 2, against at most 4.
+
+   The overrun comes from the re-aims (Decision A), case (v) (Amendment 7) and E-FLOOR (Amendment 9). §7 is not edited.
+5. **Generation 12.**
+
+**Superseded index.** Amendment 8, item 2's table → item 4. It is not edited.
