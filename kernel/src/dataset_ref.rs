@@ -654,9 +654,10 @@ mod tests {
         sample(Some(5), Some(HASH), true, vec![])
     }
 
-    /// Mutation: the parser drops `admission.identity` (builds `identity: None`). Expected failure:
-    /// `a_reference_round_trips_through_its_canonical_text_byte_for_byte` fails on the comparison
-    /// of the reference that holds an identity declaration.
+    /// RECORDED MUTATION (observed at 1e637d55: applied, this test run alone, reverted): the parser
+    /// drops `admission.identity` (builds `identity: None`). OBSERVED FAILURE: the byte comparison
+    /// of the first reference that holds an identity declaration: the reparsed text has
+    /// `"identity":null` where the original has the `parcel_key` declaration.
     #[test]
     fn a_reference_round_trips_through_its_canonical_text_byte_for_byte() {
         for mtime in [Some(1_700_000_000_123_456_789u128), None] {
@@ -671,8 +672,9 @@ mod tests {
         }
     }
 
-    /// Mutation: the parser ignores unknown keys. Expected failure:
-    /// `an_unknown_member_is_refused_by_its_path` fails on its first assertion.
+    /// RECORDED MUTATION (observed at 1e637d55: applied, this test run alone, reverted): the parser
+    /// ignores unknown keys. OBSERVED FAILURE: its first case: `parse` returned `Ok` for an entry
+    /// with an unknown top-level member (`unwrap_err()` on an `Ok` value).
     #[test]
     fn an_unknown_member_is_refused_by_its_path() {
         let refused = |edit: &dyn Fn(&mut Value)| {
@@ -701,8 +703,9 @@ mod tests {
         );
     }
 
-    /// Mutation: the locator-count check is removed. Expected failure:
-    /// `a_locator_count_or_string_over_its_ceiling_is_refused` fails on its first assertion.
+    /// RECORDED MUTATION (observed at 1e637d55: applied, this test run alone, reverted): the
+    /// locator-count check is removed. OBSERVED FAILURE: the count case: `parse` returned `Ok` for
+    /// a reference with nine locators (`unwrap_err()` on an `Ok` value).
     #[test]
     fn a_locator_count_or_string_over_its_ceiling_is_refused() {
         let at = |n: usize, s: usize| {
@@ -727,8 +730,10 @@ mod tests {
         );
     }
 
-    /// Mutation: the hex check is removed from `FromStr`. Expected failure:
-    /// `a_dataset_uri_outside_its_grammar_is_refused` fails on the non-hex case.
+    /// RECORDED MUTATION (observed at 1e637d55: applied, this test run alone, reverted): the hex
+    /// check is removed from `FromStr`. OBSERVED FAILURE: the first malformed URI the prefix and
+    /// length checks do not catch, the one with uppercase hex:
+    /// `"spatial://dataset/ref/0123456789ABCDEF0123456789ABCDEF" must be refused`.
     #[test]
     fn a_dataset_uri_outside_its_grammar_is_refused() {
         assert_eq!(
@@ -754,8 +759,9 @@ mod tests {
         }
     }
 
-    /// Mutation: the grammar check is removed, so a `..` segment parses. Expected failure:
-    /// `a_project_relative_locator_that_leaves_the_project_folder_is_refused` fails on its first case.
+    /// RECORDED MUTATION (observed at 1e637d55: applied, this test run alone, reverted): the
+    /// grammar check is removed, so a `..` segment parses. OBSERVED FAILURE: its first case,
+    /// `../x.parquet`: `parse` returned `Ok` (`unwrap_err()` on an `Ok` value).
     #[test]
     fn a_project_relative_locator_that_leaves_the_project_folder_is_refused() {
         let at_path = "$.resource.locators[1].at";
@@ -780,8 +786,10 @@ mod tests {
         }
     }
 
-    /// Mutation: the parser refuses `project-relative`. Expected failure:
-    /// `a_project_relative_locator_parses_and_writes_back_unchanged` fails on the parse.
+    /// RECORDED MUTATION (observed at 1e637d55: applied, this test run alone, reverted): the parser
+    /// refuses `project-relative` (the grammar call is replaced by an error return). OBSERVED
+    /// FAILURE: the parse: `a project-relative locator parses: Malformed { path:
+    /// "$.resource.locators[1].at", detail: "mutation" }`.
     #[test]
     fn a_project_relative_locator_parses_and_writes_back_unchanged() {
         let relative = Locator::ProjectRelative("data/parcels.parquet".to_string());
@@ -791,10 +799,10 @@ mod tests {
         assert_eq!(text(&original), text(&back));
     }
 
-    /// Mutation: `claim_of` maps a missing definition to an empty string. Expected failure:
-    /// `an_asserted_crs_without_a_definition_is_refused_rather_than_recorded_empty` fails on its
-    /// first assertion. A real open refuses an assertion with no definition for want of an axis
-    /// order, so the rule is exercised where it lives.
+    /// RECORDED MUTATION (observed at 1e637d55: applied, this test run alone, reverted): `claim_of`
+    /// maps a missing definition to an empty string. OBSERVED FAILURE: its first assertion:
+    /// `claim_of` returned `Ok(Some(CrsAssertion { identifier: "EPSG:2056", definition_json: ""
+    /// }))` (`unwrap_err()` on an `Ok` value).
     #[test]
     fn an_asserted_crs_without_a_definition_is_refused_rather_than_recorded_empty() {
         assert_eq!(

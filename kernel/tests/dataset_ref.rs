@@ -122,9 +122,10 @@ fn key_set(v: &Value) -> Vec<&str> {
 /// model: the same six members in the same order, the same named-state shape and the same locator
 /// shape, compared with what a real `publish_unguarded` wrote.
 ///
-/// Mutation: the writer renames `portability_policy`. Expected failure:
-/// `the_reference_uses_the_bundles_resource_ref_vocabulary` fails on the reference's member-order
-/// assertion.
+/// RECORDED MUTATION (observed at 1e637d55: applied, this test run alone, reverted): the writer
+/// renames `portability_policy` (to `portability`). OBSERVED FAILURE: the key-set assertion `the
+/// reference holds those members and no seventh`, which comes before the order assertion: `left`
+/// has `portability` where `right` has `portability_policy`.
 #[test]
 fn the_reference_uses_the_bundles_resource_ref_vocabulary() {
     let spec = FixtureSpec {
@@ -214,9 +215,11 @@ fn the_reference_uses_the_bundles_resource_ref_vocabulary() {
 /// unconverted into a second `OpenDatasetRequest`. The reopened dataset reports no change
 /// detected.
 ///
-/// Mutation: the writer omits `crs_assertion` (always `null`). Expected failure:
-/// `a_reference_survives_a_reopen_through_open_dataset_and_reports_no_change_detected` fails on
-/// the recorded assertion.
+/// RECORDED MUTATION (observed at 1e637d55: applied, this test run alone, reverted): the writer
+/// omits `crs_assertion` (always `null`). OBSERVED FAILURE: the second `open_dataset`: the text
+/// read back holds `crs_assertion: null`, so the reopen is refused with
+/// `engine.format_default_contradicted`. The recorded-assertion checks read the built reference and
+/// not the writer's text, so they pass.
 #[test]
 fn a_reference_survives_a_reopen_through_open_dataset_and_reports_no_change_detected() {
     let path = write("k2", &f2());
@@ -284,8 +287,10 @@ fn a_reference_survives_a_reopen_through_open_dataset_and_reports_no_change_dete
 /// vocabulary: none for a reopen of the same file, `mtime` alone for a later modification time,
 /// and all four for F1' (1,000 features, an mtime 60 s later).
 ///
-/// Mutation: `check` returns `NoChangeDetected` unconditionally. Expected failure:
-/// `a_reopen_after_the_file_changed_names_each_changed_component` fails on its second assertion.
+/// RECORDED MUTATION (observed at 1e637d55: applied, this test run alone, reverted): `check`
+/// returns `NoChangeDetected` unconditionally. OBSERVED FAILURE: its second assertion, the later
+/// modification time: `left: NoChangeDetected`, `right: Differs { observed: ["mtime"], admission:
+/// [] }`.
 #[test]
 fn a_reopen_after_the_file_changed_names_each_changed_component() {
     let path = write("k3", &f1());
@@ -324,9 +329,9 @@ fn a_reopen_after_the_file_changed_names_each_changed_component() {
 /// the same one is not. F3 declares a mapping onto the native `id` column: the fixture writer has
 /// no second unique key beside `id`.
 ///
-/// Mutation: `check` skips the identity comparison. Expected failure:
-/// `a_reopen_under_another_identity_declaration_names_the_admission_difference` fails on its
-/// first assertion.
+/// RECORDED MUTATION (observed at 1e637d55: applied, this test run alone, reverted): `check` skips
+/// the identity comparison. OBSERVED FAILURE: its first check: `left: NoChangeDetected`, `right:
+/// Differs { observed: [], admission: ["identity"] }`.
 #[test]
 fn a_reopen_under_another_identity_declaration_names_the_admission_difference() {
     let path = write("k4", &f1());
@@ -377,9 +382,9 @@ fn found_in(source: &str) -> Vec<&'static str> {
 /// the tokens that would. A source scan, meaningful because it fires on a planted positive control
 /// for every token and on the exact mutation below.
 ///
-/// Mutation: `linked` calls `std::fs::metadata(ds.path())`. Expected failure:
-/// `the_dataset_reference_module_reads_no_file_hashes_nothing_and_takes_no_lease` fails on the
-/// scan of the real source, naming `std::fs`.
+/// RECORDED MUTATION (observed at 1e637d55: applied, this test run alone, reverted): `linked` calls
+/// `std::fs::metadata(ds.path())`. OBSERVED FAILURE: the scan of the real source: `left:
+/// ["std::fs"]`, `right: []`.
 #[test]
 fn the_dataset_reference_module_reads_no_file_hashes_nothing_and_takes_no_lease() {
     for token in FORBIDDEN {

@@ -695,8 +695,10 @@ fn names(text: &str, needle: &str) -> bool {
 /// dataset handle, the fixture's path and its directory, and the host-minted claimant and time of
 /// either claim. Each scan fires on a planted positive control, the exact mutation below among them.
 ///
-/// RECORDED MUTATION: the machine-recorded locator's `at` carries `ds.path()` instead of the
-/// reference's own URI. Expected failure: the scan for the fixture's path.
+/// RECORDED MUTATION (observed at 1e637d55: applied, this test run alone, reverted): `linked`
+/// records a project-relative locator holding `ds.path()` in place of the machine-recorded one
+/// (that locator is a unit variant and holds no path). OBSERVED FAILURE: `the reference's text
+/// names the fixture's path`.
 #[test]
 fn a_dataset_reference_carries_no_generation_session_reference_handle_path_or_assertion_attribution(
 ) {

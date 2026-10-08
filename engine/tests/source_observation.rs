@@ -80,8 +80,9 @@ fn footer_of(path: &Path) -> (u64, String) {
 /// **O1.** The observation of an open holds the four components that open read: the file's size
 /// and modification time from its metadata, and the footer's length and hash from its tail.
 ///
-/// Mutation: `observation()` records `footer_hash: None`. Expected failure: this test fails on the
-/// footer-hash assertion.
+/// RECORDED MUTATION (observed at 1e637d55: applied, this test run alone, reverted):
+/// `observation()` records `footer_hash: None`. OBSERVED FAILURE: the footer-hash assertion, `left:
+/// None`, `right: Some(<the footer's sha-256>)`.
 #[test]
 fn an_observation_carries_the_four_components_the_open_read() {
     let path = write("o1", &f1());
@@ -113,8 +114,10 @@ fn an_observation_carries_the_four_components_the_open_read() {
 /// features, an mtime 60 s later), names exactly the components the descriptor's own comparison
 /// names, which is all four.
 ///
-/// Mutation: `SourceObservation::components_differing_from` bypasses the shared rule and omits
-/// `footer-hash`. Expected failure: this test fails on the first assertion.
+/// RECORDED MUTATION (observed at 1e637d55: applied, this test run alone, reverted):
+/// `SourceObservation::components_differing_from` bypasses the shared rule and omits `footer-hash`.
+/// OBSERVED FAILURE: the first assertion: `left` is `["size", "mtime", "footer-length"]` and
+/// `right` adds `"footer-hash"`.
 #[test]
 fn a_recorded_observation_differs_from_a_rewritten_file_by_the_descriptors_own_rule() {
     let path = write("o2", &f1());
@@ -147,8 +150,9 @@ fn a_recorded_observation_differs_from_a_rewritten_file_by_the_descriptors_own_r
 /// none. That is an outcome of a change detector, and it is not a statement that the file is the
 /// same one: the bytes are asserted to differ.
 ///
-/// Mutation: `observation()` records `modified_nanos: None`. Expected failure: this test fails on
-/// the empty-list assertion, because the missing time is then named.
+/// RECORDED MUTATION (observed at 1e637d55: applied, this test run alone, reverted):
+/// `observation()` records `modified_nanos: None`. OBSERVED FAILURE: the empty-list assertion, `the
+/// declared limit: no component is named for this edit`, because the missing time is then named.
 #[test]
 fn a_data_page_edit_under_preserved_size_mtime_and_footer_is_not_detected() {
     let path = write("o3", &f1());
@@ -198,8 +202,9 @@ fn a_data_page_edit_under_preserved_size_mtime_and_footer_is_not_detected() {
 /// that reports one, and is covered inside `engine/src/descriptor.rs`, which routes it through the
 /// same function.
 ///
-/// Mutation: the shared rule counts a footer hash present on one side only. Expected failure: this
-/// test fails on its footer-hash assertions.
+/// RECORDED MUTATION (observed at 1e637d55: applied, this test run alone, reverted): the shared
+/// rule counts a footer hash present on one side only. OBSERVED FAILURE: `a footer hash that was
+/// never taken is not a changed component`.
 #[test]
 fn an_unestablished_component_compares_by_the_degradation_rule() {
     let path = write("o4", &f1());
