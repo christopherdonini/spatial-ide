@@ -625,3 +625,24 @@ Each mutation is observed by applying it, running the named test, recording its 
 7. **Generation 3.**
 
 **Superseded index.** Amendment 1, item 6's open list and its OPEN-block rule for OPEN-2, OPEN-3, OPEN-5 and OPEN-7 → items 1 to 4. §2.9's OPEN-2, OPEN-3, OPEN-5 and OPEN-7 rows → items 1 to 4, binding. None is edited.
+
+### Amendment 3 — stage 1's outcomes: the build's deviations (class 2 and class 3), and the kernel product group over its ceiling so far
+
+*Written by the custodian after stage 1's results were seen, at the branch head 1e637d55, before stage 2 and before either gate. Nothing is compiled yet. The record is worker report 1, `state/consults/2026-10-08-b2-piece-1a-step-record-and-dataset-reference-worker-report-1.md` (sha256 dab0e1e4738b4716ed9d3da79cf4145894faafdb0f63b3891a54fca942c58331, from its line 5 to the end, at the commit that adds it; its filing note gives the hash as written and discloses one rewrite), cited by section. Nothing below is a quotation.*
+
+1. **Stage 1's commits:** 66f7bc26 (ADR-036), 85fc25f8 (E-1), f727dd6d (K-1 and K-2), 98adfe3c (the indexes), 2bd318b4 (ADR-036 under Amendment 2) and 1e637d55 (`mint` and the project-relative grammar). PLAN.yaml is not touched on the branch.
+2. **ADR-036 equals §2.3 as amended by Amendments 1 and 2, byte for byte,** by the worker's script at 2bd318b4. The one OPEN block left is Amendment 1 item 1 (c)'s (the report's equality section).
+3. **The lock diff** is one added line, the `getrandom` 0.3.4 entry in `spatial-kernel`'s dependency list, with no other change (the report's lock section). Amendment 2 item 3's condition holds so far, and stage 2 checks it again after the first build.
+4. **The consumed interfaces** hash to the form's pins at both aa00e565 and c01f2e09. I2 does not fire (the report's re-derivation section).
+5. **Class 2, F3.** The fixture writer has no mode for a native `id` plus a second unique int64 column, so K4's fixture declares a mapping onto the native `id` column. K4's assertion and mutation stand.
+6. **Class 2, R6** is a unit test of the private function that builds the claim. An engine open refuses an assertion with no definition, so the case cannot be reached through a real open.
+7. **Class 2, O4** cannot build the case where both sides lack a modification time from an integration test. The descriptor's existing unit tests cover that case through the shared function.
+8. **Class 3, test text.**
+   - K5 strips the quoted literal for the ResourceRef member `content_hash` before it scans, because the writer must spell that member. A planted unquoted token is the positive control.
+   - The module matches the mapped identity source and treats every other source alike, so no file token appears in its source.
+   - K1 checks member order by text position and the key sets by equality.
+9. **Noted for the gates** (report, deviations section): `parse` takes an already-parsed JSON value, so a duplicate key is collapsed before it sees it; the module header says 1c's file reader must refuse duplicates. Sizes above 2^53 − 1 are refused at parse. A named state's basis text is accepted only as the fixed constant.
+10. **§7 so far,** by its command at 1e637d55: 1,910 lines over 10 files, against 2,010. The kernel product group is over its ceiling so far: 814 against 760. Amendment 2's `mint`, R7 and the grammar check were not budgeted. Every other group is within its ceiling. The class 8 record is made once, at the gated head, with the final figures. §7 is not edited.
+11. **Generation 4.**
+
+**Superseded index.** §3's F3 → item 5. §4's R6 kind → item 6. None is edited.
