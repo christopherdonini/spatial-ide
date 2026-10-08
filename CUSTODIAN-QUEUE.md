@@ -1,14 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `2b770dd4b34dcc3fa8c14e46fe0638f290d01f9501839d821d0c6f70d43adb9b`) at `2026-10-08T22:23:15.937Z`.
+Generated from `PLAN.yaml` (sha256 `22087839d5dcfd62591420f95b393fed6da2b312271e9a136b995fa8c9270136`) at `2026-10-08T22:46:48.071Z`.
 
 ## 1. Next
 
-- (nothing ready)
+- **shell-pick-paths-disagree-at-1280x801** — The hover pick and the settle re-pick name different features at the same camera and pointer when the window is one row taller than the default (50244 against 53722) (lane `shell`)
 
 ## 2. Ready
 
-- (none)
+- **shell-pick-paths-disagree-at-1280x801** — The hover pick and the settle re-pick name different features at the same camera and pointer when the window is one row taller than the default (50244 against 53722) (lane `shell`, order 1, budget 120 min)
 
 ## 3. Waiting on the human (total: 10 min)
 
@@ -19,7 +19,6 @@ Generated from `PLAN.yaml` (sha256 `2b770dd4b34dcc3fa8c14e46fe0638f290d01f950183
 ## 4. Blocked on dependencies
 
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
-- **shell-pick-paths-disagree-at-1280x801** — The hover pick and the settle re-pick name different features at the same camera and pointer when the window is one row taller than the default (50244 against 53722) — blocked by: shell-migration-milestone-1
 - **briefb-b2-save-reopen** — B2 — Save project, Snapshot data, session history, lineage and preferences, in five stages, each with its own form — blocked by: decision-adr-029-scan-progress-route
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer — blocked by: signpath-application-draft
 - **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-1-1
@@ -28,7 +27,7 @@ Generated from `PLAN.yaml` (sha256 `2b770dd4b34dcc3fa8c14e46fe0638f290d01f950183
 
 ## 5. In progress
 
-- **shell-migration-milestone-1** — Shell migration, milestone 1 -- the frame: Map Studio regions, panel toggles, separated sections, an attention strip and a status bar — evidence: branch `cut/shell-migration-milestone-1`
+- (none)
 
 ## 6. Proposed / unscheduled
 

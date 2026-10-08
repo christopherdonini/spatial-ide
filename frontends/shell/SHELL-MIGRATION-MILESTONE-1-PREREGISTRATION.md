@@ -730,3 +730,39 @@ The worker's and tester's briefs carry, as written, the paragraph at state/direc
    - S3: the other 668 × 730 comments, which Amendment 11, item 1 covers.
 
 **Superseded index.** Amendment 10's hash reference → item 1. Amendment 10, item 4's window wording → item 3. Neither is edited.
+
+### Amendment 13 — the closing record (class 1)
+
+*Written by the custodian after the outcome was seen. PR #195 merged at 2026-10-08T22:43:51Z as merge commit e70862426746bd7e3b8dd8edd3e192db45d276fe, with parents 2bbc9fe4ff8d183363d993b9e47b2952918b4321 and f44dc2511f67821d28524756d64f964c6143453c. References and hashes only. Nothing below is a quotation.*
+
+1. **The PR and its heads:**
+   - The gated head is ae704f0abc924bde7a6f912a853f039dfca66114, where both attempt-2 gates passed.
+   - The merged head is f44dc251. Over the gated head it adds only the comment commit for A2-N-D4 and R2-N-D1 (`e2e/pan-anchor.mjs`, lines 130-131; 2 lines added and 2 removed). The custodian checked it against both findings by its diff. It is class 3 test text, as Amendment 12, item 4 says.
+2. **The gate reports,** under `state/consults/gates/`, each with the commit on main that adds it:
+   - `2026-10-08-shell-migration-milestone-1-gate1-architect.md`: architect, attempt 1, FAIL, gate-log 446, sha256 69c384d2cbd5f006150e24d15dec2ec01f6707e85ae5d8337b604bf9e6e587f8, added at 628e4a4b74634e82a58ea49b439744abfd87771a;
+   - `2026-10-08-shell-migration-milestone-1-gate1-reviewer.md`: reviewer, attempt 1, FAIL, gate-log 447, sha256 9f4d15c123faac9b6b97ac7c0117c5773a4e37475dc3a5d5baa6568e2e561f56, added at 3b5f3c95bfd99f902e9e04c1836f6e8bd12f8659;
+   - `2026-10-08-shell-migration-milestone-1-gate1-architect-attempt-2.md`: architect, attempt 2, PASS with notes, gate-log 448, sha256 fef534386cb618b45aa99d726cc688d6df50db54ab43ac2f93d39f45745ff357, added at d056a7af54f9955a23093b02f910f1d67a369a11;
+   - `2026-10-08-shell-migration-milestone-1-gate1-reviewer-attempt-2.md`: reviewer, attempt 2, PASS, gate-log 449, sha256 2a7876d487f0db1971d02a1411d13e6069f408bcd54e9417c300c6b91d4896ce, added at 2bbc9fe4ff8d183363d993b9e47b2952918b4321;
+   - One correction round of two was used.
+3. **The worker reports,** in `state/consults/`. Each hash is of the file from its line 5 to the end, and each file is unchanged since the commit that adds it:
+   - `2026-10-07-shell-migration-milestone-1-worker-report-1.md`: sha256 5d6034a49c3eb7d6218837d7b54d9f83b45e871de8ad378e0721d6ffecf1fcd8, added at 45e7a0b052261adb97bd8541340f30834a6088bb;
+   - `2026-10-08-shell-migration-milestone-1-worker-report-2.md`: sha256 0640da96da9065e01745c00c04e964264066093951e7a4af654491946c7e3f74, added at 20c479548b7056dd6da88663c4f2771d06b562c8;
+   - `2026-10-08-shell-migration-milestone-1-worker-report-3.md`: sha256 89f6cd72a3ffb7b20c0052bb327619bcde3af0f6d7a6770a4ee15bc717eb4e47, added at badac676ef28d36654a90259ca5e04127cb5ff1c;
+   - `2026-10-08-shell-migration-milestone-1-worker-report-4.md`: sha256 9a65ba714af7396bef349e45c83243e98d5fb85338f0b793dc51419a30c77999, added at e1e4a6bf6ad79d8893ae0c2d8ed4b65033dd2201;
+   - `2026-10-08-shell-migration-milestone-1-worker-report-5.md`: sha256 c9cf552f646301074a23518e610972d705bd48ff1e6e15ef2e2514a5eb5ab6ef, added at 77a24ec9cbde1fd6164e12857f534dd62aeee118;
+   - `2026-10-08-shell-migration-milestone-1-worker-report-6.md`: sha256 aaf9e176b6cc54875bddbcb65ee50f9d5d44a92da57fe3d2629bdda9570c453c, added at 674f2587306dee430c8246b3c28aafb785c166dc;
+   - `2026-10-08-shell-migration-milestone-1-worker-report-7.md`: sha256 322f42fd76a8fc679001007c34d4c913384225a9221344c3213921581915b02a, added at 732fa048cd551770c996eab900ae55da2637c820;
+   - `2026-10-08-shell-migration-milestone-1-worker-report-8.md`: sha256 be697ed4722c57171c521d358bba73d3a003e96e363b6cb83e49ad1a9e1750ce, added at 7032d7c261df4c76b2080cec9ea44693c5237438;
+   - `2026-10-08-shell-migration-milestone-1-worker-report-9.md`: sha256 2168eb6924a86ef4dae852cb507d2db633d87769677f5cf5167b496ea86a973b, added at d2baad29f69b21fbe1872c11da6e1ac50e0bacc6;
+4. **§7 at the gated head:** Amendment 11, item 4 (class 8). The comment commit changes no count. §7 is not edited.
+5. **The documentation items of attempt 2:**
+   - Amendment 12, items 1 to 3, are in the form.
+   - The PR body's items are fixed in the body.
+   - The comment commit is item 1 above.
+6. **Open, carried by nodes:**
+   - `shell-pick-paths-disagree-at-1280x801`, placed by the human, is a diagnosis to run before milestone 2's selection code.
+   - `e2e-failures-present-at-the-base`.
+   - `shell-stale-frame-comments`.
+   - `skp-drained-stream-helper-post-check-race`, the CI flake.
+   - The reviewer's suggestions S1 to S3 of attempt 2 are not taken.
+7. **Done:** PLAN marks the node done, with evidence `{pr: 195}`, at generation 13, in this amendment's commit.
