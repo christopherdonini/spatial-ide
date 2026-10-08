@@ -705,6 +705,22 @@ async function stepA8(page, consoleHandle) {
  */
 // (moved to e2e/lib.mjs, imported above -- P3b T10 shares this mechanism)
 
+// Milestone 1 re-aim of A9' (the human's Decision A; PRE-REGISTRATION Amendment 6) -- what changed and where its numbers come from.
+//
+// Old assumption: the FIRST notch with an interior-verified pixel is also a notch the product will answer a hover at, and a
+// search that sees the frame-wide non-background count fall on two notches in a row has overshot. Both held on the old map
+// (1280 x ~200, where the data was smaller than the frame at the fit). They do not on the Studio frame's 668 x 730 map, and the
+// outcome then rode on one pixel: at 730.2 CSS px (a 730-row buffer) the notch-3 patch is edge-adjacent and the search stops;
+// at 730.7 (731 rows) another patch is interior, is hovered, and is refused. Same scene (192,213 and 191,392 px), different pixel.
+//
+// New assumption: the search goes on until the product answers, and the product's own named refusal below its pick resolution
+// is the signal to go on, not a failure. The numbers: the declared threshold is 9 px (`SUB_PIXEL_PICK_REFUSAL_THRESHOLD_PX`,
+// src/canvas/pickResolution.ts), a hover being refused while average feature extent x 2^zoom < 9. The fixture's parcels are rings
+// of radius 0.42 x the 40 m cell (`parcel` in engine/src/fixture.rs), so the extent is at most 2 x 16.8 = 33.6 m and an answer
+// needs zoom >= log2(9 / 33.6) = -1.90. The fit on this map is zoom -4.57 and one wheel notch (ZOOM_NOTCH_DELTA_Y = -300) adds
+// 0.93, so the first notch that CAN answer is notch 3 (-1.78) at the earliest; measured on this map, the readouts are the named
+// refusal at -1.78 and an id at -0.85 (the render trace's `readout_confirmed` lines), so the extent is between 16.2 and 30.9 m
+// and the first answering notch is 4. The 15-notch budget (`MAX_ZOOM_NOTCHES`) is unchanged and is 11 notches past that.
 async function stepA9(page, consoleHandle) {
   const initialRect = await canvasRect(page);
   if (!initialRect) throw new Error("A9': .working-canvas not found");
@@ -718,6 +734,8 @@ async function stepA9(page, consoleHandle) {
   let previousNonBackgroundCount = null;
   let declineStreak = 0;
   let overshootStopped = false;
+  let found = null;
+  const attempts = [];
 
   // Notch 0 = the CURRENT camera, tried FIRST (P10 never tried pre-zoom at all); notches
   // 1..MAX_ZOOM_NOTCHES are real wheel-zoom-ins, exactly as P10 drove them.
@@ -817,13 +835,46 @@ async function stepA9(page, consoleHandle) {
     });
 
     if (interiorVerified.length > 0) {
-      successBisectionFraction = bisection.finalFraction;
-      break;
+      // Milestone 1 re-aim (the human's Decision A; PRE-REGISTRATION Amendment 6). The hover is tried AT THIS NOTCH, and a
+      // camera still below the declared pick resolution is not a miss: the product's own answer there is the named refusal
+      // (`K6_REFUSAL_TEXT`), so the search goes on to the next notch instead of ending on whichever pixel it happened to pick
+      // here. The numbers are in the comment above `stepA9`.
+      const notchAttempts = [];
+      for (const point of orderedCandidates) {
+        for (const flipY of [true, false]) {
+          const css = bufferPointToCss(point, rect, grid.width, grid.height, flipY);
+          const attemptStart = Date.now();
+          await page.mouse.move(css.x, css.y);
+          // A CONFIRMED id and nothing else: this step moves the pointer and never the camera, so the
+          // labelled ("confirming") state cannot arise here -- and if it ever did it would not count,
+          // since it names an id no pick at this camera stands behind (�3.3).
+          const result = await waitForCondition(
+            () => readHoverReadoutState(page),
+            (readout) => hoverReadoutId(readout) !== null,
+            5_000
+          );
+          const attempt = { point, flipY, css, ok: result.ok, last: result.last, attemptStart, notch };
+          attempts.push(attempt);
+          notchAttempts.push(attempt);
+          if (result.ok) {
+            found = { point, flipY, css, text: result.last.text };
+            break;
+          }
+        }
+        if (found) break;
+      }
+      if (found) {
+        successBisectionFraction = bisection.finalFraction;
+        break;
+      }
+      const namedRefusalSeen = notchAttempts.some((a) => a.last?.state === "refusal" && a.last?.text === K6_REFUSAL_TEXT);
+      notchEvidence[notchEvidence.length - 1].belowPickResolution = namedRefusalSeen;
+      if (!namedRefusalSeen) break; // a miss that is not the declared refusal is a genuine miss: reported below, as before
     }
-    if (declineStreak >= 2) {
-      overshootStopped = true;
-      break;
-    }
+    // The early stop on two declines is gone. It read "rise then fall to zero" off a map whose fit left the data smaller than the
+    // frame; on the Studio frame's 668 x 730 map the fit already fills 43% of the frame (210,282 of 487,640 px at notch 0), so the
+    // count only ever falls and two declines arrive at notch 3, one notch before the first answerable one. The stop that stays is
+    // the zero-count branch above: content that has left the frame cannot be hovered at any zoom.
   }
 
   if (!interiorVerified || interiorVerified.length === 0) {
@@ -846,32 +897,6 @@ async function stepA9(page, consoleHandle) {
           )
           .join("\n")
     );
-  }
-
-  let found = null;
-  const attempts = [];
-  // `candidates` is capped at 2 entries by `pushCandidate`'s own two call sites above (bisection
-  // patch centre, densest-region samplePoint fallback). `orderedCandidates` is the same set, just
-  // reordered (interior-verified first) by the block above.
-  outer: for (const point of orderedCandidates) {
-    for (const flipY of [true, false]) {
-      const css = bufferPointToCss(point, rect, grid.width, grid.height, flipY);
-      const attemptStart = Date.now();
-      await page.mouse.move(css.x, css.y);
-      // A CONFIRMED id and nothing else: this step moves the pointer and never the camera, so the
-      // labelled ("confirming") state cannot arise here -- and if it ever did it would not count,
-      // since it names an id no pick at this camera stands behind (§3.3).
-      const result = await waitForCondition(
-        () => readHoverReadoutState(page),
-        (readout) => hoverReadoutId(readout) !== null,
-        5_000
-      );
-      attempts.push({ point, flipY, css, ok: result.ok, last: result.last, attemptStart });
-      if (result.ok) {
-        found = { point, flipY, css, text: result.last.text };
-        break outer;
-      }
-    }
   }
 
   if (!found) {
@@ -1042,6 +1067,7 @@ const K6_ZOOM_OUT_NOTCHES_MIN = 8; // floor on zoom-OUT notches applied after fi
 // above-threshold candidate, independent of how many zoom-IN notches that search itself needed --
 // guards the case where a hoverable candidate is found at a low notch, which would otherwise leave
 // too few zoom-out notches to reliably cross back below the threshold (assertion (ii), discrete).
+const K6_STANDING_NOTCHES_MARGIN = 2; // zoom-in notches added before case (ii)'s zoom-out run; derived at its use in `stepK6`.
 const K6_ZOOM_OUT_NOTCH_DELTA_Y = -ZOOM_NOTCH_DELTA_Y; // reverses A9''s own zoom-in notch magnitude
 // (positive deltaY = wheel-down = zoom out, the opposite of `ZOOM_NOTCH_DELTA_Y`'s zoom-in).
 const K6_REFUSAL_TEXT = "Features here are below pick resolution — zoom in to inspect them."; // canvas/HoverReadoutView.tsx, verbatim (moved there from App.tsx by entry 88's labelled-state piece; the string itself is unchanged).
@@ -1260,11 +1286,29 @@ async function stepK6(page, consoleHandle) {
   // first is what makes the zoom-OUT land back on a camera a real hover has ALREADY proven to be
   // above the declared threshold, so this case tests the re-pick rather than the threshold.
   const repickHover = await establishAboveThresholdHoverK6(page, consoleHandle, "K6/re-pick");
-  const repickId = repickHover.id;
-  if (repickId === null) {
+  if (repickHover.id === null) {
     throw new Error(`K6/re-pick: expected a real id readout to start from, got ${JSON.stringify(repickHover.text)}`);
   }
   await wheelWithoutMoving(page, consoleHandle, ZOOM_NOTCH_DELTA_Y); // "Once i zoom in to a feature and hover over one"
+  // Milestone 1 re-aim (the human's Decision A; PRE-REGISTRATION Amendment 6). The id the zoom-out step is compared with is the
+  // one STANDING when that step begins, not the one the hover was first established with. Old assumption: a stationary pointer
+  // keeps the same feature under it across a zoom-in notch, so the two ids are the same. They are not always: the pointer sits
+  // at a fractional CSS position over integer-pixel features, and on this map's 731-row buffer the zoom-in notch moved it onto the
+  // neighbour (50244 -> 53722, then 53722 again after the zoom-out), a result of which pixel the search picked and not of the
+  // re-pick contract this case is about. What this case asserts about the product is unchanged: after ONE zoom-out step with the
+  // pointer stationary, the readout still names the feature under the pointer (the id that stood going in), and a confirming
+  // re-pick line stands behind it. If the zoom-in left no id standing (the pointer fell between two features), the hover is
+  // established again from the camera the pointer is at, which is all the zoom-in existed to provide: a camera a real hover has
+  // already proven above the threshold.
+  let standingAtStepOut = await readHoverReadoutState(page);
+  if (hoverReadoutId(standingAtStepOut) === null) {
+    const again = await establishAboveThresholdHoverK6(page, consoleHandle, "K6/re-pick (hover re-established after the zoom-in)");
+    standingAtStepOut = { state: "confirmed", id: again.id, text: again.text };
+  }
+  const repickId = hoverReadoutId(standingAtStepOut);
+  if (repickId === null) {
+    throw new Error(`K6/re-pick: no id was standing when the zoom-out step began (${JSON.stringify(standingAtStepOut)})`);
+  }
   const beforeStepOut = consoleHandle.renderTrace().length;
   await wheelWithoutMoving(page, consoleHandle, K6_ZOOM_OUT_NOTCH_DELTA_Y); // "...if i zoom out by just one step"
   // AFTER the settle (`wheelWithoutMoving` waits for trace quiet): the id must be CONFIRMED, i.e.
@@ -1404,7 +1448,22 @@ async function stepK6(page, consoleHandle) {
   // mark. The old falsifier ("the pre-zoom id after any notch = failure") stays deliberately gone --
   // under this mechanism a re-confirmed id is the correct answer, which is what case (iv) above
   // exists to keep honest.
-  const discreteHover = await establishAboveThresholdHoverK6(page, consoleHandle, "K6/discrete");
+  let discreteHover = await establishAboveThresholdHoverK6(page, consoleHandle, "K6/discrete");
+  // Milestone 1 re-aim (the human's Decision A; PRE-REGISTRATION Amendment 6). Old assumption: the hover is established far enough
+  // above the pick threshold that several zoom-out notches keep an id standing, so the labelled "confirming" marker has several
+  // mid-gesture reads to be sighted at. On the old map the search had to zoom in from a small fit and so ended well above the
+  // threshold. On the Studio frame's 668 x 730 map the first answerable notch is the first one the search tries (fit -4.57, refusal
+  // at -1.78, id at -0.85), so the first zoom-out notch crosses the threshold, where the product's answer is the refusal and not the
+  // marker: one notch had an id standing and the case read once (a 1 of 1 race, never sighted). The case now zooms in
+  // K6_STANDING_NOTCHES_MARGIN more notches first. A notch at the established camera is at most one notch above the threshold
+  // (the search stops at the first answer), so after M more zoom-in notches the first M zoom-out notches stay above it; M = 2 gives
+  // the aggregate the two independent reads that "never sighted once" needs to mean something, and the assertion on them is unchanged.
+  for (let i = 0; i < K6_STANDING_NOTCHES_MARGIN; i++) {
+    await wheelWithoutMoving(page, consoleHandle, ZOOM_NOTCH_DELTA_Y);
+  }
+  if (hoverReadoutId(await readHoverReadoutState(page)) === null) {
+    discreteHover = await establishAboveThresholdHoverK6(page, consoleHandle, "K6/discrete (hover re-established after the margin zoom-in)");
+  }
   const zoomOutNotches = Math.max(discreteHover.notchesUsed, K6_ZOOM_OUT_NOTCHES_MIN);
   let notchesShowingAnId = 0;
   let notchesWithStandingId = 0;
