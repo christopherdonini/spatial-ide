@@ -67,12 +67,20 @@ A dataset entry, in the project file and in a steps file's header, is `{"resourc
 | `portability_policy` | `linked-live-file` | `snapshot-sealed` |
 
 `locators` holds one or more `{"kind", "at"}` objects:
-- `project-relative`: `at` is a path relative to the project folder, `/`-separated, written only where the data is inside the project folder. It never points outside the project folder: a reader refuses an `at` that is empty, begins with `/`, has an empty, `.` or `..` segment, or holds a `\` or a `:`;
+- `project-relative`: `at` is a path relative to the project folder, `/`-separated and in canonical form. Canonical form is not empty, does not begin with `/`, has no empty, `.` or `..` segment, and holds no `\` and no `:`, so that each path inside the folder has one spelling on every operating system. A reader refuses an `at` outside canonical form. Canonical form is checked on the text alone and does not by itself keep a path inside the project folder: containment, below, does;
 - `machine-recorded`: `at` is the reference's own logical URI, which the machine's location store resolves.
 
 Locators are built and resolved in the kernel only. No frontend builds or parses one.
 
-**`observed`** is the change-detection observation of the open that the reference was bound to: `byte_size`; `modified_ns` (a decimal string, or the state `not-reported`); `footer_length`; `footer_sha256` (hex, or the state `not-read-over-ceiling`).
+**Which locators a project file carries.** A dataset entry in a project file always carries a `machine-recorded` locator. It also carries a `project-relative` locator, in canonical form, when the data is inside the project folder by the containment rule below, judged when the project is saved. It never carries an absolute path (§2). This rule binds the writer; a reader reads the locators an entry holds.
+
+**Containment.** A `project-relative` locator never points outside the project folder. Two rules hold this, and they are different things:
+- **canonical form** (above), which a reader checks on the text, before anything is resolved;
+- **containment,** which the resolver that opens the data checks on the resolved target, before it opens it. The resolver resolves the project folder and the target, following every symbolic link, junction and other reparse point, and opens the target only if its resolved path lies inside the resolved project folder. A target that resolves outside the folder is refused by name and never opened, however it gets there: through a link, through a name the operating system resolves to a device (such as `NUL` on Windows), or through a name the operating system rewrites (such as a segment ending in a dot or a space on Windows). A target that cannot be resolved is refused the same way.
+
+Piece 1c builds the writer and the resolver. Its form states how the target that is checked is the target that is opened.
+
+**`observed`** is the change-detection observation of the open that the reference was bound to: `byte_size`; `modified_ns` (a decimal string in minimal form, or the state `not-reported`); `footer_length`; `footer_sha256` (64 lowercase hex characters, or the state `not-read-over-ceiling`). Minimal form is digits only, with no sign and no leading zero unless the value is 0. A reader refuses any other spelling of either value, so each value has one spelling.
 - It is a change detector, not an identity. It is not a content hash, not a source revision and not a snapshot claim.
 - A change it does not see is not a check that passed: a same-size, same-mtime data-page edit is not detected (`engine/src/descriptor.rs`, module header).
 - It never raises the grade.
@@ -80,6 +88,8 @@ Locators are built and resolved in the kernel only. No frontend builds or parses
 **`admission`** records the claims the open was admitted under, in the wire's own shape and without attribution: `crs_assertion` (`identifier`, `definition_json`) or `null`, and `identity` (`column`) or `null`.
 - A reopen re-declares them, and the host mints attribution at that point.
 - The claim is recorded rather than inferred again, because two declarations over the same bytes are two identity spaces (ADR-016, Consequences).
+
+**Named states in an entry.** Each named state's word is one this section gives for its member, and a reader refuses any other word. Its basis is free text (§2): a reader accepts any basis that is not blank and is within its bound, and does not interpret it. A writer that writes the entry again writes its own basis for the same word, so an entry from another writer keeps its words and may change its basis texts.
 
 **Grade (ADR-005).** A project linked to a live file is at most Reference-only; with a snapshot it is Snapshot. The observation does not make a linked file Revision-pinned.
 
