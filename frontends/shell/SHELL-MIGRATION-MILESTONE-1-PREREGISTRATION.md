@@ -513,3 +513,19 @@ The worker's and tester's briefs carry, as written, the paragraph at state/direc
 11. **Generation 5.**
 
 **Superseded index.** §4's E-FIT mutation outcome → item 6. §2.11's conditional line → item 7. None is edited.
+
+### Amendment 5 — the diagnosis of invalidator I3's failures (class 2)
+
+*Written by the custodian after the diagnosis's results were seen, at the branch head f214f1f4, which it did not change. The record is worker report 3, `state/consults/2026-10-08-shell-migration-milestone-1-worker-report-3.md` (sha256 89f6cd72a3ffb7b20c0052bb327619bcde3af0f6d7a6770a4ee15bc717eb4e47, from its line 5 to the end, at the commit that adds it; its filing note gives the hash as written and one disclosed rewrite), cited by section. Nothing below is a quotation.*
+
+1. **The method.** Each failing suite ran at the base e888787e, with the window sized so that the base's map matched the map at this head: 668 × 730 for most suites, and 328 × 570 and 788 × 830 for pan-anchor (report, the sizing section).
+2. **Every failure is a suite's assumption about the map's shape, not a behaviour this piece changed.** At the base, sized to the new map, each fails the same step (report, per-failure sections):
+   - A9′ and K6 depend on which pixel the search picks. On a 668 × 730 map, the search stops one zoom notch below the pick-resolution threshold, and a one-row difference in the buffer changes the failing sub-assertion.
+   - FIND′'s 0.5% floor holds only on a canvas about twice as wide as it is tall.
+   - pan-anchor's drag distances need a map about 640 px wide or more.
+   - source-changed's post-route pan is measured in canvas widths, and on the narrower map it no longer leaves the resident tile cover.
+   - CLASSC′ fills an input in the Style tab, which is now hidden by default (Amendment 3 item 9).
+3. **No product change is implied,** and no suite or threshold is edited. The re-aims are the human's to rule, under I3.
+4. **Generation 6.**
+
+**Superseded index.** Amendment 4, item 5's reading of the I3 failures → item 2. Not edited.
