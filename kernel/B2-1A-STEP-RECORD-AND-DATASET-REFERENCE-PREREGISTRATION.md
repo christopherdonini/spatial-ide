@@ -796,3 +796,52 @@ Each mutation is observed by applying it, running the named test, recording its 
 6. **Generation 7.**
 
 **Superseded index.** §5's `frontends/` line and §8 item 9 → item 2 (one exception). None is edited.
+
+### Amendment 7 — the closing record (class 1, with class 8 for §7)
+
+*Written by the custodian after the outcomes were seen. PR #190 merged at 2026-10-08T16:11:23Z as merge commit 3e754dfc99b71aa04b63d4ff676eef605d8b77fb, with parents 5487b9c9ba32703cf83602abe95f2bb38ccaea1a and 91fe4c850d2dfffa0d057beaf0cafa9c057e1808. It follows §9 and routes the gates' record items, under the record cap. References and hashes only. Nothing below is a quotation.*
+
+1. **The PR and its heads:**
+   - PR #190, at the merge commit above;
+   - the merged head, 91fe4c85, is the reviewer's attempt-2 head;
+   - the architect's attempt-2 head, 14acee0b. Over it, 91fe4c85 adds only the shell lock's one line (Amendment 6, item 1) and the indexes' last-verified lines (the architect's D-4). The reviewer's attempt 2 read both. CI passed 13 of 13 at 91fe4c85.
+2. **The gate reports,** under `state/consults/gates/`, each with the commit on main that adds it:
+   - `2026-10-08-b2-piece-1a-step-record-and-dataset-reference-gate1-architect.md`: FAIL, gate-log 437, sha256 89013866032f041b21f5ab0affdfb1455682851420ddfd1296c5482641fc9b6f, at 20c479548b7056dd6da88663c4f2771d06b562c8;
+   - `2026-10-08-b2-piece-1a-step-record-and-dataset-reference-gate1-reviewer.md`: FAIL, gate-log 438, sha256 2062e483927f489cfb2f0c8436fc4e1b60e55497e17defd24cf4201f5c11ca74, at db7c88d03003fdea380497068eb4359cd0af1d41;
+   - `2026-10-08-b2-piece-1a-step-record-and-dataset-reference-gate1-architect-attempt-2.md`: PASS, gate-log 439, sha256 d97943a8ad5741bcae30f7f77ff4d821cda009f353a80fc8004656d4d5246201, at 4561f3b871ccac8d4165eb0ea0e3bed873c0178a;
+   - `2026-10-08-b2-piece-1a-step-record-and-dataset-reference-gate1-reviewer-attempt-2.md`: PASS, gate-log 440, sha256 52940d58aaf8548a28813d2463c1154b613df3292658673f99320921d065d09c, at ed396e94d0b61a17b127427af5d5e1c1ad20c58e.
+   - One correction round was used, of two.
+3. **The worker reports,** in `state/consults/`. Each hash is of the file from its line 5 to the end, and each file is unchanged since the commit on main that adds it:
+   - `2026-10-08-b2-piece-1a-step-record-and-dataset-reference-worker-report-1.md`: sha256 dab0e1e4738b4716ed9d3da79cf4145894faafdb0f63b3891a54fca942c58331, at 5576a426183960b8ff17f9536d773b2bb14210ad;
+   - `-worker-report-2.md`: sha256 8630f802d0ad65d4c9b26f4f6802750632cd16c2fc990ccfe2e70c3731e6ca9b, at 1ca0af4cc79b8cd33e731d6c2ed7af9990eff710;
+   - `-worker-report-3.md`: sha256 73adb8c085b131008b66e9e44fe684a0ac62a1b11c911a77979c9f5ee1763759, at 9168cdfb930cd0984e71172272dabac32fe3fb78;
+   - `-worker-report-4.md`: sha256 5daedf220020475973a2e142fbe046ec9022ca9c11d8beabd2f2ffd9c57d3122, at 8bd7fa07b6cd25b1ae64aca9187140c738ec25e6.
+4. **The rulings' pins, each at its commit on main** (the architect's attempt-1 D-2). The custodian recomputed every one at that commit, and each matches:
+   - Amendment 1's two spans of `state/directives/2026-10-08-round-69-rulings.md` (lines 6-9 and 10-20), at 45e7a0b052261adb97bd8541340f30834a6088bb;
+   - Amendment 2's four spans of `state/directives/2026-10-08-round-70-rulings.md` (lines 8-14, 16-20, 22-26 and 28-33), at ab0469f431bed8d4d47e940284177358cc666aad;
+   - Amendment 6's span of `state/directives/2026-10-08-decisions-a-b-c.md` (lines 26-28), at 994b9737315001a11c229aa76fd8986019571230;
+   - Amendments 3 and 4's report pins are item 3's first two rows.
+5. **The mutations.**
+   - Stage 1's mutations were observed at 1e637d55 and recorded at 1251fc3c.
+   - R7, K1's added mutation and R8 were observed at 507838e2 and recorded at 14acee0b. R7's earlier observation, at 1e637d55, is superseded.
+   - The reviewer's attempt 2 re-made R7, K1's added mutation and R8 at the head.
+   - **The test-text row** (the architect's attempt-2 D-5 (c)): R7's old recorded-mutation note was added on the branch at 1251fc3c and replaced at 14acee0b. Both commits are in the merge's history. The reviewer's attempt 2 confirms the adding commit.
+6. **§7, class 8 at the merged head** (Amendment 5, item 9; Amendment 6, item 5; the reviewer's attempt-2 D2). §7's command, three-dot from the merge base db7c88d0, at 91fe4c85:
+   - kernel product 876 against 760, over by 116;
+   - kernel tests 541 against 520, over by 21;
+   - the total 2,011 over 11 files against 2,010 over at most 10: over by one line and by one file. The shell lock's one line belongs to no §7 group and counts only toward the total.
+   - Every other group is within its ceiling, per that report's table. §7 is not edited.
+7. **The Documentation findings fixed:**
+   - the reviewer's attempt-1 D1 and D2 (the module header and the `Locator::ProjectRelative` doc), at 507838e2;
+   - the reviewer's attempt-1 D3 and attempt-2 D1, the PR body, in the body before the merge;
+   - the architect's attempt-2 D-4, the indexes' last-verified lines, at 91fe4c85;
+   - the architect's attempt-1 D-1, D-3 and attempt-2 D-5 (d): the test-text rows and the count's head are in the PR body, and the pins are in item 4.
+8. **Recorded here:**
+   - **The architect's attempt-2 D-6.** Amendment 5, item 2's reference to the custodian's notes is to `state/consults/2026-10-08-b2-piece-1a-amendment-5-architect-draft.md`, below its amendment text, added at 603143b8ee650bab7af6589a89f449a69934c18d. Amendment 5 is not edited.
+   - **The architect's attempt-2 N-8** (the blank basis refused with the claim helper's detail): reworded when the module is next touched.
+   - **The architect's attempt-2 N-9 and N-10** go to ADR-036's acceptance sight and to piece 1c's form. The 1b and 1c PLAN nodes carry their owed items.
+   - **R7's first name**, at `kernel/B2-1A-STEP-RECORD-AND-DATASET-REFERENCE-PREREGISTRATION.md:617` @ f816d46790437a21974e95850a4c18bff7fc9ff8 sha256:0b609887458bb1b1608ceea4b644c9d42081542856053110f32d2470c4dd5bf9, is superseded by Amendment 5, item 4. The test is `a_project_relative_locator_outside_canonical_form_is_refused` in `kernel/src/dataset_ref.rs`.
+9. **ADR-036 stays Proposed.** Its acceptance is the human's sight.
+10. **Done:** PLAN marks the node done, with evidence `{pr: 190}`, at generation 7, in this amendment's commit.
+
+**Superseded index.** Amendment 4's count at the build head → item 6. Amendment 5, item 2's unresolved reference → item 8. Neither is edited.

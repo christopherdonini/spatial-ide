@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-08T16:06:31.727Z",
-  "plan_hash": "de85a470f3cb852ba12279943d49ce0e5a55ed0881f1c05aba599ae06332c6fa",
+  "generated_at": "2026-10-08T16:22:23.324Z",
+  "plan_hash": "2df202b459a0e4e1674a44b050c49ae04fbe03939c3f100392c9b79821349621",
   "priorities_approved": true,
   "lanes": [
     {
@@ -6884,7 +6884,7 @@
       "kind": "task",
       "lane": "governance",
       "phase": "prototype",
-      "status": "in-progress",
+      "status": "done",
       "order": 1,
       "depends_on": [],
       "needs_human": {
@@ -6894,16 +6894,16 @@
       "gate": "scripts/plan/VERIFY-CITES-PINNED-CITATIONS-PREREGISTRATION.md",
       "merge": "merge-commit",
       "evidence": {
-        "branch": "cut/verify-cites-pinned-citations"
+        "pr": 191
       },
       "budget_minutes": 60,
       "generation": 2,
       "felt_verdict": false,
       "entries": [],
-      "summary": "GATE PASSES 2026-10-08 on attempt 2 (reviewer 442 at 2d684ad5; C3 low and D5, D3 to the closing record); D4 (the header: a pin is read at the path as written) fixed before the merge by one worker. Before: PR #191 OPEN at 57e8d2b3: the single reviewer gate FAIL (441: C1 a pinned directory passes; C2 the reason); Amendment 1, generation 2 (P5, P6, the blob read, the kept tree reason); one fix worker, then the re-gate. IN CODE 2026-10-08: branch cut/verify-cites-pinned-citations from ed396e94, worktree C:/dev/wt/vcp; one worker; slot 2 since #190 awaits merge. Before: PLACED 2026-10-08 by the human Decision B (state/directives/2026-10-08-decisions-a-b-c.md, lines 17-24): a one-off, bounded exception to the 2026-10-05 freeze; its own small piece with its tests, merged before shell-migration-milestone-1 opens its PR; that piece's boundary does not change. Found by milestone 1 stage 2 (its form Amendment 4, item 8): citations pinned at 30e77c10 name lines past App.tsx's new end. Five-line form, single reviewer gate; scripts/plan/verify-cites.mjs and its tests only, at most 150 lines. Slot 2, after b2-piece-1a awaits merge.",
+      "summary": "DONE 2026-10-08: PR #191 merged at f816d467 (closing record Amendment 2, generation 2; C3 and the pin-resolution limit to the proposed node verify-cites-pin-resolution-and-line-zero); closing record in its form. Before: GATE PASSES 2026-10-08 on attempt 2 (reviewer 442 at 2d684ad5; C3 low and D5, D3 to the closing record); D4 (the header: a pin is read at the path as written) fixed before the merge by one worker. Before: PR #191 OPEN at 57e8d2b3: the single reviewer gate FAIL (441: C1 a pinned directory passes; C2 the reason); Amendment 1, generation 2 (P5, P6, the blob read, the kept tree reason); one fix worker, then the re-gate. IN CODE 2026-10-08: branch cut/verify-cites-pinned-citations from ed396e94, worktree C:/dev/wt/vcp; one worker; slot 2 since #190 awaits merge. Before: PLACED 2026-10-08 by the human Decision B (state/directives/2026-10-08-decisions-a-b-c.md, lines 17-24): a one-off, bounded exception to the 2026-10-05 freeze; its own small piece with its tests, merged before shell-migration-milestone-1 opens its PR; that piece's boundary does not change. Found by milestone 1 stage 2 (its form Amendment 4, item 8): citations pinned at 30e77c10 name lines past App.tsx's new end. Five-line form, single reviewer gate; scripts/plan/verify-cites.mjs and its tests only, at most 150 lines. Slot 2, after b2-piece-1a awaits merge.",
       "dates": {
         "opened": "2026-10-08",
-        "done": null
+        "done": "2026-10-08"
       }
     },
     {
@@ -6912,12 +6912,15 @@
       "kind": "task",
       "lane": "governance",
       "phase": "prototype",
-      "status": "ready",
+      "status": "blocked",
       "order": 2,
-      "depends_on": [],
+      "depends_on": [
+        "b2-piece-1a-step-record-and-dataset-reference",
+        "verify-cites-pinned-citations"
+      ],
       "needs_human": {
-        "kind": "none",
-        "minutes": 0
+        "kind": "ruling",
+        "minutes": 2
       },
       "gate": "none",
       "evidence": null,
@@ -6925,7 +6928,7 @@
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "V2 ARCHIVE 2026-10-08 (state/directives/2026-10-08-reuse-round-1-v2.md): spatial-ide-reuse-round-1-v2.zip, sha256 50d87a03eb42148608209edbad2d905bcea0e1c369f1d3330f86fb54d2409526, replaces the first; placed after #190 merges (five citations pinned at 14acee0b resolve only once #190 is in main; the pinned fallback is #191); verify the sha256 first, then tools/check-index.mjs and verify-cites over the placed folder. WAITING: this archive did not reach the session either; the human is asked for another route. Before: PLACED 2026-10-08 by the human (state/directives/2026-10-08-reuse-round-1.md, item 1): slot 2, after #190 has merged and after verify-cites-pinned-citations; no mod, pilot, trial or record rule; not under docs/ (it holds code, and docs/ is CC-BY-4.0). Before the PR: no other project named, no user-profile path, its check-index.mjs and the repository checkers run on it; if verify-cites flags a citation inside it, stop and tell the human (no checker change, no exemption, no edit to the notes); fetch-cache.mjs is not run, and the clone cache is never inside the repo. WAITING: the archive did not reach the session; the human is asked for it and its sha256.",
+      "summary": "V2 ARCHIVE 2026-10-08 (state/directives/2026-10-08-reuse-round-1-v2.md): spatial-ide-reuse-round-1-v2.zip, sha256 50d87a03eb42148608209edbad2d905bcea0e1c369f1d3330f86fb54d2409526, replaces the first; placed after #190 merges (five citations pinned at 14acee0b resolve only once #190 is in main; the pinned fallback is #191); verify the sha256 first, then tools/check-index.mjs and verify-cites over the placed folder. WAITING ON THE HUMAN (needs_human ruling): this archive did not reach the session either; the human names the route (for example Google Drive through the connector, or a path on this PC). #190 and #191 merged 2026-10-08. Before: PLACED 2026-10-08 by the human (state/directives/2026-10-08-reuse-round-1.md, item 1): slot 2, after #190 has merged and after verify-cites-pinned-citations; no mod, pilot, trial or record rule; not under docs/ (it holds code, and docs/ is CC-BY-4.0). Before the PR: no other project named, no user-profile path, its check-index.mjs and the repository checkers run on it; if verify-cites flags a citation inside it, stop and tell the human (no checker change, no exemption, no edit to the notes); fetch-cache.mjs is not run, and the clone cache is never inside the repo. WAITING: the archive did not reach the session; the human is asked for it and its sha256.",
       "dates": {
         "opened": "2026-10-08",
         "done": null
@@ -6939,7 +6942,9 @@
       "phase": "prototype",
       "status": "ready",
       "order": 3,
-      "depends_on": [],
+      "depends_on": [
+        "b2-piece-1a-step-record-and-dataset-reference"
+      ],
       "needs_human": {
         "kind": "none",
         "minutes": 0
@@ -6950,7 +6955,7 @@
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "QUEUED 2026-10-08 by the human (state/directives/2026-10-08-reuse-round-1.md, item 3): ADR-032 was Accepted 2026-09-23; the node adr-032-decision is still proposed, and docs/README.md line 27 still calls it Proposed. A small docs piece brings both in line.",
+      "summary": "QUEUED 2026-10-08 by the human (state/directives/2026-10-08-reuse-round-1.md, item 3): ADR-032 was Accepted 2026-09-23; the node adr-032-decision is still proposed, and docs/README.md line 27 still calls it Proposed. A small docs piece brings both in line. It waits for #190, which also changes docs/README.md (disjoint paths).",
       "dates": {
         "opened": "2026-10-08",
         "done": null
@@ -6962,12 +6967,12 @@
       "kind": "task",
       "lane": "governance",
       "phase": "prototype",
-      "status": "ready",
+      "status": "blocked",
       "order": 4,
       "depends_on": [],
       "needs_human": {
-        "kind": "none",
-        "minutes": 0
+        "kind": "ruling",
+        "minutes": 2
       },
       "gate": "none",
       "evidence": null,
@@ -7051,6 +7056,31 @@
       "felt_verdict": false,
       "entries": [],
       "summary": "PROPOSED 2026-10-08 by the human (state/directives/2026-10-08-reuse-round-1.md, item 5): making it a standing step is the human ruling once the freeze lifts; held as a proposed node until then.",
+      "dates": {
+        "opened": "2026-10-08",
+        "done": null
+      }
+    },
+    {
+      "id": "verify-cites-pin-resolution-and-line-zero",
+      "title": "verify-cites: a pinned cite starting at line 0 gets a false reason, and a pin is read only at the path as written",
+      "kind": "task",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "depends_on": [],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "none",
+      "evidence": null,
+      "budget_minutes": 45,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [],
+      "summary": "PROPOSED 2026-10-08 from PR #191's attempt-2 reviewer gate (gate-log 442): C3, a cite starting at line 0 is reported by its end line, in the tree path and the pin path alike (it still fails, no tier changes); and the D4 limit, a pin is read at the path as written from the repo root, so a relative, .md-fallback or basename cite keeps the tree verdict. Recorded in the verify-cites-pinned-citations closing record (Amendment 2, item 7). Under the freeze, a finding is recorded as a proposed node.",
       "dates": {
         "opened": "2026-10-08",
         "done": null
@@ -7249,7 +7279,7 @@
       "kind": "task",
       "lane": "kernel-protocol",
       "phase": "prototype",
-      "status": "in-progress",
+      "status": "done",
       "order": 16,
       "depends_on": [],
       "needs_human": {
@@ -7259,16 +7289,16 @@
       "gate": "kernel/B2-1A-STEP-RECORD-AND-DATASET-REFERENCE-PREREGISTRATION.md",
       "merge": "merge-commit",
       "evidence": {
-        "branch": "cut/b2-piece-1a-step-record-and-dataset-reference"
+        "pr": 190
       },
       "budget_minutes": 0,
       "generation": 7,
       "felt_verdict": false,
       "entries": [],
-      "summary": "RULED 2026-10-08 (the human Decision C): the one getrandom line in frontends/shell/src-tauri/Cargo.lock, Amendment 6, generation 7, with the stop condition on any other change in that lock diff; the architect passes on attempt 2 (439); a worker adds the line and D-4, then the reviewer re-gates. Before: PR #190 OPEN 2026-10-08 at a3f9f34f: gate-1 architect FAIL (gate-log 437: C-1 the ADR-036 project-relative text, from the custodian drafting in Amendment 2 item 4, drops the carrying rule and overclaims containment; C-2 the reader refuses basis texts and forms the ADR allows); Amendment 5 (generation 6), drafted by the architect: the project-relative text split into canonical form (the reader) and containment (1c resolver), the carrying rule stated, the named state basis free text, R7 renamed, K1 extended, R8 new; the reviewer running; one fix worker after it, then the architect re-gates. Before: BUILD DONE 2026-10-08 at 479ae81d (stage 2 by the same worker-high to 05:49:54Z: green on the first build, 920 passed; all 17 mutations observed; the lock diff still one line; class 8 kernel product 822 against 760 and kernel tests 525 against 520; worker report 2; Amendment 4, generation 5): main merged into the branch, then the PR and gate 1 of both. Before: STAGE 1 DONE 2026-10-08 at 1e637d55 (six commits by worker-high 04:16:30Z to 04:41:19Z, no Rust build; ADR-036 equal to section 2.3 as amended; the lock diff one getrandom line; 1,910 lines over 10 files, kernel product 814 against 760 so far; worker report 1; Amendment 3, generation 4): stage 2 sent at once under the sole-session directive. Before: RULED 2026-10-08 (question round 70, typed: OPEN-2, OPEN-3, OPEN-5 and OPEN-7 all (A), with conditions; state/directives/2026-10-08-round-70-rulings.md): Amendment 2, generation 3; mint with the one getrandom edge in Cargo.lock (the PR body shows the lock diff; anything more stops the piece and goes to the human); the reader refuses a locator leaving the project folder (R7). Every OPEN item ruled. IN CODE 2026-10-08: branch cut/b2-piece-1a-step-record-and-dataset-reference from c01f2e09, worktree C:/dev/wt/1a, target D:/wt-targets/1a; stage 1 (edits and commits, no Rust build) by worker-high from 04:16:30Z, its stage 2 builds after milestone 1 heavy runs; slot 2 taken when #189 came to await merge; paths disjoint from milestone 1 and #189, no protocol or lockfile edit while OPEN-5 is unruled. Before: RULED 2026-10-08 (question round 69: OPEN-1 (A) with three typed additions folded into the ADR-036 text, OPEN-4 (B), OPEN-6 (A), OPEN-8 (A); state/directives/2026-10-08-round-69-rulings.md): Amendment 1, generation 2; OPEN-2, OPEN-3, OPEN-5 and OPEN-7, the red lines, go in question round 70. Before: FORM COMMITTED 2026-10-07 (the architect draft, alone, at aa00e565; full form, full gating from dispatch; 9 pins at aa00e565; ADR-036 proposed in its section 2.3, binding nothing until the human accepts it before 1c merges; at most 2,010 lines over 10 files; no wire change): ADR-029 is not needed by 1a (its section 2.5), so the plan line on the ADR-029 ruling narrows to piece 3a. OPEN-1 to OPEN-8 go to the human in one question round; OPEN-2, OPEN-3, OPEN-5 and OPEN-7 are red lines, ruled in typed words. Code waits for OPEN-4 and OPEN-6 (and OPEN-5 for the minting function) and for its turn in slot 2, after data-plane-crowded-start-detail-spaces. Named consumers (round 8): b2-piece-1b-recording and b2-piece-1c-save-and-reopen. Before: PLACED 2026-10-07 (evening) by the human in slot 2's order, after the pieces already there (state/directives/2026-10-07-b2-brief-and-evening-rulings.md; state/directives/B2-BRIEF-2026-10-07.md, section 9). Needs no shell milestone. Its form is stage 1's form: it fixes the full step record and proposes the format ADR, and its open items are the brief's section 10 rows for 1a (the step record's fields and file format; two folders with one identity after a hand copy; a session that never saved). Its form confirms whether it needs the ADR-029 scan-progress ruling. The architect drafts it alone.",
+      "summary": "DONE 2026-10-08: PR #190 merged at 3e754dfc (closing record Amendment 7, generation 7; class 8: kernel product 876/760, kernel tests 541/520, the total 2,011 over 11 files); closing record in its form. Before: RULED 2026-10-08 (the human Decision C): the one getrandom line in frontends/shell/src-tauri/Cargo.lock, Amendment 6, generation 7, with the stop condition on any other change in that lock diff; the architect passes on attempt 2 (439); a worker adds the line and D-4, then the reviewer re-gates. Before: PR #190 OPEN 2026-10-08 at a3f9f34f: gate-1 architect FAIL (gate-log 437: C-1 the ADR-036 project-relative text, from the custodian drafting in Amendment 2 item 4, drops the carrying rule and overclaims containment; C-2 the reader refuses basis texts and forms the ADR allows); Amendment 5 (generation 6), drafted by the architect: the project-relative text split into canonical form (the reader) and containment (1c resolver), the carrying rule stated, the named state basis free text, R7 renamed, K1 extended, R8 new; the reviewer running; one fix worker after it, then the architect re-gates. Before: BUILD DONE 2026-10-08 at 479ae81d (stage 2 by the same worker-high to 05:49:54Z: green on the first build, 920 passed; all 17 mutations observed; the lock diff still one line; class 8 kernel product 822 against 760 and kernel tests 525 against 520; worker report 2; Amendment 4, generation 5): main merged into the branch, then the PR and gate 1 of both. Before: STAGE 1 DONE 2026-10-08 at 1e637d55 (six commits by worker-high 04:16:30Z to 04:41:19Z, no Rust build; ADR-036 equal to section 2.3 as amended; the lock diff one getrandom line; 1,910 lines over 10 files, kernel product 814 against 760 so far; worker report 1; Amendment 3, generation 4): stage 2 sent at once under the sole-session directive. Before: RULED 2026-10-08 (question round 70, typed: OPEN-2, OPEN-3, OPEN-5 and OPEN-7 all (A), with conditions; state/directives/2026-10-08-round-70-rulings.md): Amendment 2, generation 3; mint with the one getrandom edge in Cargo.lock (the PR body shows the lock diff; anything more stops the piece and goes to the human); the reader refuses a locator leaving the project folder (R7). Every OPEN item ruled. IN CODE 2026-10-08: branch cut/b2-piece-1a-step-record-and-dataset-reference from c01f2e09, worktree C:/dev/wt/1a, target D:/wt-targets/1a; stage 1 (edits and commits, no Rust build) by worker-high from 04:16:30Z, its stage 2 builds after milestone 1 heavy runs; slot 2 taken when #189 came to await merge; paths disjoint from milestone 1 and #189, no protocol or lockfile edit while OPEN-5 is unruled. Before: RULED 2026-10-08 (question round 69: OPEN-1 (A) with three typed additions folded into the ADR-036 text, OPEN-4 (B), OPEN-6 (A), OPEN-8 (A); state/directives/2026-10-08-round-69-rulings.md): Amendment 1, generation 2; OPEN-2, OPEN-3, OPEN-5 and OPEN-7, the red lines, go in question round 70. Before: FORM COMMITTED 2026-10-07 (the architect draft, alone, at aa00e565; full form, full gating from dispatch; 9 pins at aa00e565; ADR-036 proposed in its section 2.3, binding nothing until the human accepts it before 1c merges; at most 2,010 lines over 10 files; no wire change): ADR-029 is not needed by 1a (its section 2.5), so the plan line on the ADR-029 ruling narrows to piece 3a. OPEN-1 to OPEN-8 go to the human in one question round; OPEN-2, OPEN-3, OPEN-5 and OPEN-7 are red lines, ruled in typed words. Code waits for OPEN-4 and OPEN-6 (and OPEN-5 for the minting function) and for its turn in slot 2, after data-plane-crowded-start-detail-spaces. Named consumers (round 8): b2-piece-1b-recording and b2-piece-1c-save-and-reopen. Before: PLACED 2026-10-07 (evening) by the human in slot 2's order, after the pieces already there (state/directives/2026-10-07-b2-brief-and-evening-rulings.md; state/directives/B2-BRIEF-2026-10-07.md, section 9). Needs no shell milestone. Its form is stage 1's form: it fixes the full step record and proposes the format ADR, and its open items are the brief's section 10 rows for 1a (the step record's fields and file format; two folders with one identity after a hand copy; a session that never saved). Its form confirms whether it needs the ADR-029 scan-progress ruling. The architect drafts it alone.",
       "dates": {
         "opened": "2026-10-07",
-        "done": null
+        "done": "2026-10-08"
       }
     },
     {

@@ -1,22 +1,22 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `de85a470f3cb852ba12279943d49ce0e5a55ed0881f1c05aba599ae06332c6fa`) at `2026-10-08T16:06:31.603Z`.
+Generated from `PLAN.yaml` (sha256 `2df202b459a0e4e1674a44b050c49ae04fbe03939c3f100392c9b79821349621`) at `2026-10-08T16:22:23.206Z`.
 
 ## 1. Next
 
-- **reuse-round-1-bundle** — Reuse archaeology round 1, the advisor bundle, filed as one docs-and-data piece (not under docs/) (lane `governance`)
+- **adr-032-staleness-docs** — ADR-032 shown stale in two places: the PLAN node adr-032-decision and docs/README.md line 27 still read Proposed (lane `governance`)
 
 ## 2. Ready
 
-- **reuse-round-1-bundle** — Reuse archaeology round 1, the advisor bundle, filed as one docs-and-data piece (not under docs/) (lane `governance`, order 2, budget 90 min)
 - **adr-032-staleness-docs** — ADR-032 shown stale in two places: the PLAN node adr-032-decision and docs/README.md line 27 still read Proposed (lane `governance`, order 3, budget 30 min)
-- **docs-08-public-data-sentence** — docs/08 calls Overture and OSM extracts redistributable, against the ruling that corpus #12 is local-only, fetch-only and never redistributed (lane `governance`, order 4, budget 20 min)
 
-## 3. Waiting on the human (total: 10 min)
+## 3. Waiting on the human (total: 14 min)
 
 ### ruling
 
 - **decision-adr-029-scan-progress-route** — ADR-029's scan-progress route, given G1 (a minimal crate patch exposing the connection handle; raw ffi end to end on the scan path; upstream first) -- deferred to Brief B's B2 by the human, round 16 item 3 (10 min)
+- **reuse-round-1-bundle** — Reuse archaeology round 1, the advisor bundle, filed as one docs-and-data piece (not under docs/) (2 min)
+- **docs-08-public-data-sentence** — docs/08 calls Overture and OSM extracts redistributable, against the ruling that corpus #12 is local-only, fetch-only and never redistributed (2 min)
 
 ## 4. Blocked on dependencies
 
@@ -29,9 +29,7 @@ Generated from `PLAN.yaml` (sha256 `de85a470f3cb852ba12279943d49ce0e5a55ed0881f1
 
 ## 5. In progress
 
-- **b2-piece-1a-step-record-and-dataset-reference** — B2 piece 1a -- the design (the full step record and the format ADR, as Proposed) and the code of the lasting dataset reference — evidence: branch `cut/b2-piece-1a-step-record-and-dataset-reference`
 - **shell-migration-milestone-1** — Shell migration, milestone 1 -- the frame: Map Studio regions, panel toggles, separated sections, an attention strip and a status bar — evidence: branch `cut/shell-migration-milestone-1`
-- **verify-cites-pinned-citations** — verify-cites reads a pinned citation (path:line @ commit) at its pinned commit before calling it unresolved — evidence: branch `cut/verify-cites-pinned-citations`
 
 ## 6. Proposed / unscheduled
 
@@ -102,6 +100,7 @@ Generated from `PLAN.yaml` (sha256 `de85a470f3cb852ba12279943d49ce0e5a55ed0881f1
 - **duckdb-parquet-geometry-probe** — A reported-only probe of how the bundled DuckDB decodes the Parquet-native GEOMETRY column in corpus #11 (phase `prototype`) — never queued until placed
 - **ported-code-notice-route** — A notice route for ported code, wherever it lands (shell or kernel), needed before any PORT (phase `prototype`) — never queued until placed
 - **query-reuse-index-before-planning** — Query the reuse index before planning, as a standing step (phase `prototype`) — never queued until placed
+- **verify-cites-pin-resolution-and-line-zero** — verify-cites: a pinned cite starting at line 0 gets a false reason, and a pin is read only at the path as written (phase `prototype`) — never queued until placed
 - **wire-bytes-invariant-trace-flag-race** — kernel/tests/wire_bytes_invariant.rs: the projected-ticket test asserts tracing is off while its sibling starts a trace (a race on the engine's global trace flag) (phase `prototype`) — never queued until placed
 - **dataset-stream-doc-producer-runs-ahead** — engine/src/stream.rs: Dataset::stream's doc says it returns once the statement is prepared and produces the first batch on the first next_into; the producer thread prepares and runs ahead to the queue bound (phase `prototype`) — never queued until placed
 - **shell-migration-milestone-2** — Shell migration, milestone 2 -- selection and scope: the Select tool, a selection that survives filter and pan, the hidden count, a stated scope (phase `prototype`) — never queued until placed
