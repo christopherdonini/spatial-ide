@@ -1263,8 +1263,12 @@ const K6_RELEASE_DRAG_FRACTION = 0.1;
 //  - case (ii): the marker <span> deleted from the confirming branch of src/canvas/HoverReadoutView.tsx. K6 failed with
 //    "K6/discrete: the labelled state rendered at notch 1/8 with NO marker element"; cases (i), (iii) and (iv) had passed.
 //  - case (v): the `lastPointerPxRef.current = null;` line deleted from `onPointerRelease` in src/canvas/WorkingCanvas.tsx
-//    (the mutation HOVER-REPICK-PREREGISTRATION.md Amendment 5 records). K6 did NOT fail: case (v) read {"state":"clear"} and
-//    passed. Case (v) does not bind to that line on this map; it was not edited by this re-aim and the finding stands open.
+//    (the mutation HOVER-REPICK-PREREGISTRATION.md Amendment 5 records). At 65391e79, with the case asserting "no id" only, K6 did
+//    NOT fail: case (v) read {"state":"clear"} and passed. After the case was strengthened (see the comment above
+//    `afterReleaseAllowed` in `stepK6`), OBSERVED AT 82d1f73a9df4c2138c7a2614491abe9c11940f03, applied once and reverted (the
+//    worktree was clean before and after): K6 failed with "K6/release-edge: a camera-settle re-pick line appeared in the render
+//    trace since this step's mark, whatever the pick found: "[render-trace] readout_confirmed camera-settle-repick cleared
+//    {zoom: -0.848138760145841}"". The clean run at the same commit passed K6.
 async function stepK6(page, consoleHandle) {
   // ASSERTION (i) -- CONTINUOUS: one coalesced camera change crossing the threshold (the
   // walkthrough's own L7 gesture, realised here via "Zoom to layer" -- this section's own top
