@@ -478,3 +478,38 @@ The worker's and tester's briefs carry, as written, the paragraph at state/direc
 11. **Generation 4.**
 
 **Superseded index.** §2.8's placeholder list → item 3. §2.8's row letters X1 to X9 → item 4. None is edited.
+
+### Amendment 4 — stage 2's outcomes: the suites, invalidator I3, the E rows, RESIZEQ and the OPEN-7 line
+
+*Written by the custodian after stage 2's results were seen, at the branch head f214f1f4b0a3a1ee43c265c639521c35ca1ee55f, before either gate. The record is worker report 2, `state/consults/2026-10-08-shell-migration-milestone-1-worker-report-2.md` (sha256 0640da96da9065e01745c00c04e964264066093951e7a4af654491946c7e3f74, from its line 5 to the end, at the commit that adds it), cited by section. Nothing below is a quotation.*
+
+1. **Stage 2's commits:** 27e4816c, a fix to `e2e/layout.mjs`'s E-FOCUS step, inside §7; and f214f1f4, KNOWN-LIMITATIONS item 39 (report, sections 5, 7 and 10).
+2. **The suites** (report, sections 1 and 3):
+   - `npm run verify` passed after `npm ci` in `renderer/bundle-viewer`, which made no tracked change.
+   - `e2e:layout` passed 8 of 8 at 27e4816c.
+   - The scripts suite passed 450 of 450, and five of the six verifiers passed.
+3. **Class 2, the launch.** On this machine, port 5180 lies in Windows' excluded TCP port range, so the standard dev launch cannot start the page server. The suites ran a real debug build in a real WebView2, with the page served on another port and mapped back to `localhost:5180`, and no tracked file was edited (report, section 3). A rerun on the standard path needs the port free.
+4. **Failures present at the base as well,** each run at e888787e under the same launch and with the same fixtures (report, section 4). They are not this piece's:
+   - regression C2′/C3′;
+   - admission MAP′ and BOTHNEEDED′;
+   - console HEXLIM′, GROUP′ and REGRESS′;
+   - source-changed's default-route S4.
+5. **Invalidator I3, class 2: failures this piece caused,** passing at the base and failing at the head (report, section 4). No suite and no threshold is edited, and the human is asked:
+   - regression A9′ and K6;
+   - filter-panel FIND′;
+   - console CLASSC′, as Amendment 3 item 9 predicted;
+   - source-changed's post-route S4 and S5a to S5d;
+   - four of pan-anchor's sixteen checks.
+
+   The worker reads all but CLASSC′ as effects of the map's new size. A diagnosis, with no edits, runs each of them at the base with a map of the new size, to tell a suite's geometry assumption from a behaviour this piece changed.
+6. **The E rows' mutations,** observed at 27e4816c (report, section 6):
+   - E-KEYS, E-FIELD, E-FOCUS and E-LANDMARKS each fail their own step.
+   - **E-REOPEN:** its mutation is caught first by E-KEYS, as §4 says.
+   - **Class 2, E-FIT.** §4's mutation (an Inspector default width of 900) does not fail E-FIT, as Amendment 3 item 9 predicted. Neither does deleting the fit's shrink step alone. Only the two together fail it.
+7. **RESIZEQ:** zero new viewport queries after closing the Inspector, and zero after reopening it, in every run. H1 holds (report, section 7). Under Amendment 1 item 7, KNOWN-LIMITATIONS item 39 is written as DRAFT wording for the human's P6 sight, and the proposed node `shell-map-refill-after-resize` is to be placed directly after this milestone merges.
+8. **verify-cites fails on the branch** (report, section 8). This form's three cites into App.tsx's return block (in §0.3 and in §2.2's table), and one in its architect draft, name lines past the file's new end. App.tsx is now 1,997 lines. The cites are historical pins, which the checker reads against the current tree. That checker is governance code under the freeze, so the remedy goes to the human. No record is edited.
+9. **§7 at f214f1f4:** unchanged from Amendment 3 item 7. That is 3,015 lines over 25 files, with G5 at 1,004 against 900. Outside the count, KNOWN-LIMITATIONS is at 15 of 20. The class 8 record is made at the gated head.
+10. **The worker's process slips** (report, section 3): one held call that did not keep the machine paragraph's shape. They are recorded here, and the next brief names them.
+11. **Generation 5.**
+
+**Superseded index.** §4's E-FIT mutation outcome → item 6. §2.11's conditional line → item 7. None is edited.
