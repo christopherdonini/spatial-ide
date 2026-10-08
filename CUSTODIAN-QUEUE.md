@@ -1,16 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `f058e507340247f09d73e5566cc9e9895dba07abe2ed459cb5c6bf6fc053e6c6`) at `2026-10-07T20:47:26.855Z`.
+Generated from `PLAN.yaml` (sha256 `262a7bfa4e5180c0ce03bf530694f0941ba08f40be13945d698356079b2ea7f4`) at `2026-10-08T03:45:21.605Z`.
 
 ## 1. Next
 
-- **data-plane-crowded-start-detail-spaces** — The data plane's crowded-start detail string loses its runs of spaces (round 26, item 4 (b)) (lane `kernel-protocol`)
+- **b2-piece-1a-step-record-and-dataset-reference** — B2 piece 1a -- the design (the full step record and the format ADR, as Proposed) and the code of the lasting dataset reference (lane `kernel-protocol`)
 
 ## 2. Ready
 
-- **data-plane-crowded-start-detail-spaces** — The data plane's crowded-start detail string loses its runs of spaces (round 26, item 4 (b)) (lane `kernel-protocol`, order 14, budget 20 min)
 - **b2-piece-1a-step-record-and-dataset-reference** — B2 piece 1a -- the design (the full step record and the format ADR, as Proposed) and the code of the lasting dataset reference (lane `kernel-protocol`, order 16, budget 0 min)
-- **shell-migration-milestone-1** — Shell migration, milestone 1 -- the frame: Map Studio regions, panel toggles, separated sections, an attention strip and a status bar (lane `shell`, order 11, budget 0 min)
 
 ## 3. Waiting on the human (total: 10 min)
 
@@ -21,7 +19,7 @@ Generated from `PLAN.yaml` (sha256 `f058e507340247f09d73e5566cc9e9895dba07abe2ed
 ## 4. Blocked on dependencies
 
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
-- **briefb-b2-save-reopen** — B2 — Save project, Snapshot data, session history, lineage and preferences, in five stages, each with its own form — blocked by: decision-adr-029-scan-progress-route, geometry-lines-cut
+- **briefb-b2-save-reopen** — B2 — Save project, Snapshot data, session history, lineage and preferences, in five stages, each with its own form — blocked by: decision-adr-029-scan-progress-route
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer — blocked by: signpath-application-draft
 - **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-1-1
 - **signpath-application-draft** — Entry 77 — the SignPath OSS application and disclosure text drafted for the human sight, once a release is CI-built — blocked by: release-v0-1-1
@@ -29,7 +27,8 @@ Generated from `PLAN.yaml` (sha256 `f058e507340247f09d73e5566cc9e9895dba07abe2ed
 
 ## 5. In progress
 
-- **geometry-lines-cut** — Geometry -- lines, its own bounded vertical cut — evidence: branch `cut/geometry-lines-cut`
+- **data-plane-crowded-start-detail-spaces** — The data plane's crowded-start detail string loses its runs of spaces (round 26, item 4 (b)) — evidence: branch `cut/data-plane-crowded-start-detail-spaces`
+- **shell-migration-milestone-1** — Shell migration, milestone 1 -- the frame: Map Studio regions, panel toggles, separated sections, an attention strip and a status bar — evidence: branch `cut/shell-migration-milestone-1`
 
 ## 6. Proposed / unscheduled
 

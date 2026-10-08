@@ -445,3 +445,36 @@ The worker's and tester's briefs carry, as written, the paragraph at state/direc
 8. **Generation 2.** Dispatch waits only for the lines cut's merge (§0.2; the awaiting-merge direction, item 3).
 
 **Superseded index.** §11's OPEN list and every OPEN-conditional part → items 1 to 7, binding. §2.8's placeholder list → item 4. §2.11's conditional line → item 7.
+
+### Amendment 2 — §2.9 item 7's re-sweep at the lines cut's merge commit
+
+*Written by the custodian before any code: the code branch holds no commit of its own. It is appended at the file's end, belongs to §10, and is the amendment §2.9 item 7 calls for. The lines cut merged as PR #188, merge commit e888787eeec1e5ce63adf56a9aff1b087951e889, and every pin below is at that commit. Nothing below is a quotation.*
+
+1. **Part T's T4 and T5** (frontends/shell/MANUAL-WALKTHROUGH.md:1688 @ e888787e sha256:316c21a09360a52c0f66b51e4af32ded1e330ad85efef0f4f14af08bdafdc2d8 and frontends/shell/MANUAL-WALKTHROUGH.md:1689 @ e888787e sha256:b7735b8cc07c131964cb074e66399675b2c9307c10195f5c194ec7f951a66126). T4 names the Style disclosure, and T5 names the Publish button. Home: here, under §2.8. They join the rows known to need it, under the same rules: no row's meaning changes, no result-log text is edited, and the PR body lists both with their old and new words. T5's button label follows Amendment 1, item 4.
+2. **Part T's T1, T2, T3 and T6** name no location word and no changed label. They are not changed.
+3. **LN',** the lines cut's e2e step (frontends/shell/e2e/regression.mjs:452-475 @ e888787e sha256:63c2682594a7fa044a1a5f8aa11cadd476b096ea24b8efd26fad66de3f3bd9e3, run at frontends/shell/e2e/regression.mjs:2534 @ e888787e sha256:71bccf8ef0212b41bdf818a77ac8d3a41937a834baa94661a5dc2b805d5b22cf). It reads `.describe-summary` and calls the shared refusal-and-banner check, as the MP' and PT' steps do. Home: here, under §2.7 and H3. It runs with the suite at the base commit, and any change to it falls inside regression.mjs's existing allowance (§7, G6). No allowance is added.
+4. **KNOWN-LIMITATIONS items 37 and 38** (KNOWN-LIMITATIONS.md:359-365 @ e888787e sha256:fabc3c6e2dbb8da07ba9fae4bdffa63642b739f1c7d8d5687a88e982f761a171), and items 31 to 33 as the lines cut edited them, name no region or location. No home is needed, and none is changed.
+5. **The lines cut's two new placeholder strings** (the mixed-kind detail, and the publish refusal naming a line encoding) are refusal details that the existing refusal displays render as text. This piece changes no refusal text, so they need no home of their own, and they are not added to §2.8's list.
+6. **Generation 3.**
+
+**Superseded index.** §2.9 item 7 → items 1 to 5. Not edited.
+
+### Amendment 3 — stage 1's outcomes: the build's deviations (class 2, class 3 and class 7), and the tests group over its ceiling so far
+
+*Written by the custodian after stage 1's results were seen, at the branch head 02d70ddedadb9d6fdd7484bf054c38032b988f10, before stage 2 and before either gate. The record is worker report 1, `state/consults/2026-10-07-shell-migration-milestone-1-worker-report-1.md` (sha256 5d6034a49c3eb7d6218837d7b54d9f83b45e871de8ad378e0721d6ffecf1fcd8, from its line 5 to the end, at the commit that adds it), cited by section. Nothing below is a quotation.*
+
+1. **Stage 1's commits:** d19c84a6, 420bc315, effd675f, 4b0fb077, 13df4cb5, 05fe2fe1, 64eb6e76 and 02d70dde (report 1, section 1).
+2. **Class 2, the commit split.** StudioLayout.tsx and regionParts.tsx land in the second commit, not the first, because StudioLayout records rows that exist only once the second commit's registry rows and allowlist line land. Four commits are added: a one-line fix to `e2e/layout.mjs`; the recorded-mutation comments, in two commits, since a comment cannot name the commit it is in; and callers for `REGIONS` and `VIEWPORT_FLOOR` under §8 item 11 (report 1, section 6, items 2 and 3).
+3. **Class 7, sight-list addition** (report 1, section 6, item 4). §2.8's placeholder list gains the three splitters' accessible names and the attention strip's landmark name. Each is a marked P6 placeholder, and the new Part's last row sights them. No claim elsewhere changes, and no wording is settled.
+4. **Class 3, the new Part's letter.** The next unused letter at the base is U, so the form's rows X1 to X9 are the walkthrough's U1 to U9, and U10 is item 3's sight row. These are walkthrough rows, distinct from §4's unit tests U1 to U6.
+5. **Class 2, the export label in the walkthrough.** The rows that name the Publish button or disclosure take the export label, not only the rows that quote the headline. This follows Amendment 1, item 4, as round 66's item 4 states the label's reach (report 1, section 6, item 6; the rows are listed in section 7).
+6. **Class 2, `e2e/layout.mjs`.** E-FIT has no config-overlay fallback: if the viewport cannot be set, it stops with a STOP message without trying the fallback §4 names. E-LANDMARKS asserts on the DOM and reads the accessibility tree only as a best-effort extra. R7's test also asserts one resize row per finished drag and per keyboard step. The status-bar liveness mirror has no live-region role, so the text is not announced twice (report 1, section 6, items 7, 8 and 10).
+7. **§7 so far,** by its command at 02d70dde: 3,015 lines over 25 files, against 3,250. G5, the unit and render tests, is over its ceiling so far: 1,004 against 900. Its 52 recorded-mutation comment lines are part of that figure. Every other group is within its ceiling (report 1, section 2). The class 8 record is made once, at the gated head, with the final figures. §7 is not edited.
+8. **The mutations of U1 to U6 and R1 to R8** were observed by hand, U2 to U6 at d19c84a6 and U1 and R1 to R8 at 64eb6e76 (report 1, section 3). §0.4's interfaces are unchanged at the base, so I4 does not fire (report 1, section 5).
+9. **Predicted for stage 2, before it runs** (report 1, section 8):
+   - E-FIT's mutation as §4 states it (an Inspector default width of 900) is predicted not to fail, because the fit function shrinks the Inspector. Stage 2 observes it as written. If it does not fail, stage 2 also observes the deletion of the fit's shrink step against E-FIT, and the outcome is recorded with its class.
+   - `e2e/console.mjs`'s step CLASSC' fills the style colour input after a script click on the Style disclosure. That input is now in the Inspector's Style tab, hidden by default. §2.7 does not name `console.mjs`, so a failure there is invalidator I3: recorded as class 2, and the human is asked. No threshold or suite outside §2.7 is edited.
+10. **Noticed, not done** (report 1, section 9): walkthrough row S1's wording, the `publish.mjs` coverage prose, F8's sentence on the publish button, Part K's colour wording, and old-layout measurement comments in files this piece moves whole. They go to the gates, to be fixed in this PR where they are in §2.8's scope.
+11. **Generation 4.**
+
+**Superseded index.** §2.8's placeholder list → item 3. §2.8's row letters X1 to X9 → item 4. None is edited.
