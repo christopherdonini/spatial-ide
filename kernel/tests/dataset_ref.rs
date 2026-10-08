@@ -200,6 +200,16 @@ fn the_reference_uses_the_bundles_resource_ref_vocabulary() {
     assert_eq!(key_set(bundle_rev), ["basis", "state"]);
     assert_eq!(key_set(rev), ["basis", "state"]);
     assert_eq!(bundle_rev["state"], rev["state"]);
+    // The seam: the bundle's own state for that word, with the bundle writer's own basis, is read
+    // by this reader, and this writer states its own basis again (ADR-036 §5).
+    assert_ne!(
+        bundle_rev["basis"], rev["basis"],
+        "the two basis texts differ"
+    );
+    let mut from_bundle = entry.clone();
+    from_bundle["resource"]["source_revision"] = bundle_rev.clone();
+    let read = DatasetRef::parse(&from_bundle).expect("the bundle's own state parses");
+    assert_eq!(text_of(&read), text, "the writer states its own basis");
     assert_eq!(key_set(&resource["content_hash"]), ["basis", "state"]);
     assert_eq!(resource["content_hash"]["state"], "not-taken");
 

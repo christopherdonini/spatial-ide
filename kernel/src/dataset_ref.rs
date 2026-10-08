@@ -15,9 +15,11 @@
 //!   snapshot claim: [`RefCheck::NoChangeDetected`] says no compared component differed, not that
 //!   the file is the same one.
 //! - **Nothing session-scoped is held**: no handle, session reference, generation, `by`/`at`
-//!   attribution or path of any kind, and no persisted feature id (ADR-016's OPEN).
+//!   attribution or absolute path, and no persisted feature id (ADR-016's OPEN).
 //! - **The reader bounds every member and refuses rather than truncates.** `parse` takes a parsed
 //!   [`Value`], which has collapsed a duplicate key: a file reader (piece 1c's) must refuse one.
+//! - **A named state's basis is free text:** the reader accepts any bounded, non-blank basis and
+//!   keeps none, and `to_json` writes this writer's own basis texts (ADR-036 §5).
 //!
 //! A producer ahead of its consumers, `b2-piece-1b-recording` and `b2-piece-1c-save-and-reopen`
 //! (the human's round 8 exemption, the form's §2.6).
@@ -57,7 +59,8 @@ const RESOURCE_KEYS: [&str; 6] = [
     "portability_policy",
 ];
 
-// A named state: a word and a basis, both fixed in version 1.
+// A named state: the word is closed in version 1, and the basis is the text this writer writes. A
+// reader accepts any other bounded, non-blank basis (`expect_state`).
 const NOT_TAKEN: (&str, &str) = (
     "not-taken",
     "a linked file is not read into a hash; the observation beside the six members is a change \
@@ -122,8 +125,9 @@ fn is_lower_hex(b: u8) -> bool {
 /// One locator of a reference.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Locator {
-    /// A path relative to the project folder, `/`-separated. Built by piece 1c; held as written,
-    /// neither built nor interpreted here.
+    /// A path relative to the project folder, `/`-separated, in canonical form. Built by piece 1c;
+    /// held as written. Checked here for canonical form only: containment is checked by piece 1c's
+    /// resolver, on the resolved target.
     ProjectRelative(String),
     /// The reference's own logical URI, which the machine's location store resolves.
     MachineRecorded,
@@ -430,18 +434,14 @@ fn expect_word(v: &Value, path: &str, word: &str) -> Result<(), RefParseError> {
     }
 }
 
-/// A named state whose word and basis are exactly the ones version 1 defines.
-fn expect_state(v: &Value, path: &str, (state, basis): (&str, &str)) -> Result<(), RefParseError> {
+/// A named state whose word is the one version 1 defines. The word is closed. The basis is free
+/// text (ADR-036 §5): any string within [`MAX_REF_STRING_BYTES`] that is not blank is accepted and
+/// none is kept, because the basis constants are the text this writer writes, not a text a reader
+/// requires.
+fn expect_state(v: &Value, path: &str, (state, _): (&str, &str)) -> Result<(), RefParseError> {
     let obj = closed(v, path, &["state", "basis"])?;
     expect_word(&obj["state"], &join(path, "state"), state)?;
-    let text = bounded(&obj["basis"], &join(path, "basis"), MAX_REF_STRING_BYTES)?;
-    if text != basis {
-        return Err(malformed(
-            &join(path, "basis"),
-            "the basis text is fixed in version 1",
-        ));
-    }
-    Ok(())
+    claim(&obj["basis"], &join(path, "basis"), MAX_REF_STRING_BYTES).map(drop)
 }
 
 /// A string member, or the one named state standing for `None`.
@@ -510,7 +510,7 @@ fn parse_resource(v: &Value, path: &str) -> Result<(DatasetUri, Vec<Locator>), R
         locators.push(
             match bounded(&o["kind"], &kind_path, MAX_REF_STRING_BYTES)? {
                 KIND_PROJECT_RELATIVE => {
-                    stays_inside_the_project_folder(at, &at_path)?;
+                    in_canonical_form(at, &at_path)?;
                     Locator::ProjectRelative(at.to_string())
                 }
                 KIND_MACHINE_RECORDED if at == uri.as_str() => Locator::MachineRecorded,
@@ -527,14 +527,16 @@ fn parse_resource(v: &Value, path: &str) -> Result<(DatasetUri, Vec<Locator>), R
     Ok((uri, locators))
 }
 
-/// ADR-036 §5's grammar for a `project-relative` locator, read as a string: no empty, `.` or `..`
-/// segment (which also refuses an empty `at` and a leading `/`), and no backslash or `:`. No path
-/// type is used, nothing is joined and no file is touched.
-fn stays_inside_the_project_folder(at: &str, path: &str) -> Result<(), RefParseError> {
+/// ADR-036 §5's canonical form for a `project-relative` locator, checked on the string alone: no
+/// empty, `.` or `..` segment (which also refuses an empty `at` and a leading `/`), and no backslash
+/// or `:`. Containment, that the resolved target lies inside the resolved project folder, is not
+/// checked here: piece 1c's resolver checks it. No path type is used, nothing is joined and no
+/// file is touched.
+fn in_canonical_form(at: &str, path: &str) -> Result<(), RefParseError> {
     if at.contains(['\\', ':']) || at.split('/').any(|s| matches!(s, "" | "." | "..")) {
         return Err(malformed(
             path,
-            "a project-relative locator stays inside the project folder",
+            "a project-relative locator is in canonical form",
         ));
     }
     Ok(())
@@ -763,7 +765,7 @@ mod tests {
     /// grammar check is removed, so a `..` segment parses. OBSERVED FAILURE: its first case,
     /// `../x.parquet`: `parse` returned `Ok` (`unwrap_err()` on an `Ok` value).
     #[test]
-    fn a_project_relative_locator_that_leaves_the_project_folder_is_refused() {
+    fn a_project_relative_locator_outside_canonical_form_is_refused() {
         let at_path = "$.resource.locators[1].at";
         for at in [
             "../x.parquet",
@@ -814,5 +816,53 @@ mod tests {
             .is_none());
         let recorded = claim_of(CrsSource::CallerAsserted, "EPSG:2056", Some("{}"));
         assert_eq!(recorded.unwrap().unwrap().definition_json, "{}");
+    }
+
+    #[test]
+    fn a_named_states_basis_is_free_text_and_its_word_is_closed() {
+        let named = sample(None, None, false, vec![]);
+        let original = text(&named);
+        let edited = |object: &str, member: &str, key: &str, to: String| {
+            let mut v = value(&named);
+            v[object][member][key] = Value::String(to);
+            DatasetRef::parse(&v)
+        };
+        for (object, member) in [
+            ("resource", "content_hash"),
+            ("resource", "source_revision"),
+            ("observed", "modified_ns"),
+            ("observed", "footer_sha256"),
+        ] {
+            let at = format!("$.{object}.{member}");
+            let other = edited(object, member, "basis", "another writer's wording".into());
+            let back = other.expect("another non-blank basis parses");
+            assert_eq!(
+                text(&back),
+                original,
+                "{at}: the writer states its own basis"
+            );
+            let blank = edited(object, member, "basis", "   ".into());
+            match blank.unwrap_err() {
+                RefParseError::Malformed { path, .. } => assert_eq!(path, format!("{at}.basis")),
+                other => panic!("{at}: a blank basis must be malformed, got {other:?}"),
+            }
+            let long = edited(
+                object,
+                member,
+                "basis",
+                "x".repeat(MAX_REF_STRING_BYTES + 1),
+            );
+            let over = RefParseError::OverCeiling {
+                path: format!("{at}.basis"),
+                ceiling: MAX_REF_STRING_BYTES as u64,
+            };
+            assert_eq!(long.unwrap_err(), over);
+            let word = edited(object, member, "state", "another-word".into());
+            let unknown = RefParseError::UnknownState {
+                path: format!("{at}.state"),
+                value: "another-word".to_string(),
+            };
+            assert_eq!(word.unwrap_err(), unknown);
+        }
     }
 }
