@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `e47c4a77becc86095b32f0dd03d48c67b830904b611c4ee7a3d0c2591abe20f7`) at `2026-10-08T05:50:42.316Z`.
+Generated from `PLAN.yaml` (sha256 `ea74234cce87ff491652afece10d203e073e6ab396a99848aeef56e7a3ad2377`) at `2026-10-08T06:10:28.264Z`.
 
 ## 1. Next
 
@@ -95,6 +95,7 @@ Generated from `PLAN.yaml` (sha256 `e47c4a77becc86095b32f0dd03d48c67b830904b611c
 - **corpus-line-files** — A line file (LineString or MultiLineString) in the preregistered compatibility corpus, so that line admission is tried on a real-world file (phase `prototype`) — never queued until placed
 - **lines-class-budget-measurement** — Measure docs/08's Lines class (1M features / 10M vertices) for the working canvas, once lines are drawn (phase `prototype`) — never queued until placed
 - **skp-drained-stream-helper-post-check-race** — kernel/src/skp.rs tests: drained_stream_with_a_recorded_change has the same post-check race as typed_terminal_codes' end-to-end test (phase `prototype`) — never queued until placed
+- **e2e-failures-present-at-the-base** — Shell e2e steps failing on main at e888787e: regression C2 and C3, admission MAP and BOTHNEEDED, console HEXLIM, GROUP and REGRESS, source-changed default-route S4 (phase `prototype`) — never queued until placed
 - **wire-bytes-invariant-trace-flag-race** — kernel/tests/wire_bytes_invariant.rs: the projected-ticket test asserts tracing is off while its sibling starts a trace (a race on the engine's global trace flag) (phase `prototype`) — never queued until placed
 - **dataset-stream-doc-producer-runs-ahead** — engine/src/stream.rs: Dataset::stream's doc says it returns once the statement is prepared and produces the first batch on the first next_into; the producer thread prepares and runs ahead to the queue bound (phase `prototype`) — never queued until placed
 - **shell-migration-milestone-2** — Shell migration, milestone 2 -- selection and scope: the Select tool, a selection that survives filter and pan, the hidden count, a stated scope (phase `prototype`) — never queued until placed
