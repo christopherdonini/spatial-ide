@@ -1,14 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `88c5eec094e672ec24a55df8c7d70b72cb2101e010726407fe651faec8f37efd`) at `2026-10-08T14:26:05.277Z`.
+Generated from `PLAN.yaml` (sha256 `eed84fd51f82828e42485afb458df3612433daf61f87f91271673666221b8a08`) at `2026-10-08T15:09:08.739Z`.
 
 ## 1. Next
 
-- **verify-cites-pinned-citations** — verify-cites reads a pinned citation (path:line @ commit) at its pinned commit before calling it unresolved (lane `governance`)
+- (nothing ready)
 
 ## 2. Ready
 
-- **verify-cites-pinned-citations** — verify-cites reads a pinned citation (path:line @ commit) at its pinned commit before calling it unresolved (lane `governance`, order 1, budget 60 min)
+- (none)
 
 ## 3. Waiting on the human (total: 10 min)
 
@@ -29,6 +29,7 @@ Generated from `PLAN.yaml` (sha256 `88c5eec094e672ec24a55df8c7d70b72cb2101e01072
 
 - **b2-piece-1a-step-record-and-dataset-reference** — B2 piece 1a -- the design (the full step record and the format ADR, as Proposed) and the code of the lasting dataset reference — evidence: branch `cut/b2-piece-1a-step-record-and-dataset-reference`
 - **shell-migration-milestone-1** — Shell migration, milestone 1 -- the frame: Map Studio regions, panel toggles, separated sections, an attention strip and a status bar — evidence: branch `cut/shell-migration-milestone-1`
+- **verify-cites-pinned-citations** — verify-cites reads a pinned citation (path:line @ commit) at its pinned commit before calling it unresolved — evidence: branch `cut/verify-cites-pinned-citations`
 
 ## 6. Proposed / unscheduled
 

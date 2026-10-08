@@ -4281,18 +4281,18 @@ nodes:
     kind: task
     lane: governance
     phase: prototype
-    status: ready
+    status: in-progress
     order: 1
     depends_on: []
     needs_human: {kind: none, minutes: 0}
     gate: scripts/plan/VERIFY-CITES-PINNED-CITATIONS-PREREGISTRATION.md
     merge: merge-commit
-    evidence: null
+    evidence: {branch: cut/verify-cites-pinned-citations}
     budget_minutes: 60
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "PLACED 2026-10-08 by the human Decision B (state/directives/2026-10-08-decisions-a-b-c.md, lines 17-24): a one-off, bounded exception to the 2026-10-05 freeze; its own small piece with its tests, merged before shell-migration-milestone-1 opens its PR; that piece's boundary does not change. Found by milestone 1 stage 2 (its form Amendment 4, item 8): citations pinned at 30e77c10 name lines past App.tsx's new end. Five-line form, single reviewer gate; scripts/plan/verify-cites.mjs and its tests only, at most 150 lines. Slot 2, after b2-piece-1a awaits merge."
+    summary: "IN CODE 2026-10-08: branch cut/verify-cites-pinned-citations from ed396e94, worktree C:/dev/wt/vcp; one worker; slot 2 since #190 awaits merge. Before: PLACED 2026-10-08 by the human Decision B (state/directives/2026-10-08-decisions-a-b-c.md, lines 17-24): a one-off, bounded exception to the 2026-10-05 freeze; its own small piece with its tests, merged before shell-migration-milestone-1 opens its PR; that piece's boundary does not change. Found by milestone 1 stage 2 (its form Amendment 4, item 8): citations pinned at 30e77c10 name lines past App.tsx's new end. Five-line form, single reviewer gate; scripts/plan/verify-cites.mjs and its tests only, at most 150 lines. Slot 2, after b2-piece-1a awaits merge."
     dates: {opened: 2026-10-08, done: null}
 
   - id: wire-bytes-invariant-trace-flag-race
