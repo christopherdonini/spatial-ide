@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `e6f3cc517ce939bd3f75724bd654b68bba76175b6854b0febd90b333f9b6748d`) at `2026-10-08T18:07:55.184Z`.
+Generated from `PLAN.yaml` (sha256 `0423bef5688df2aa41a2448e32e0fd8c3ea5646e1d881f0a2b2bf0ec86a95e20`) at `2026-10-08T18:10:11.290Z`.
 
 ## 1. Next
 
@@ -41,7 +41,6 @@ Generated from `PLAN.yaml` (sha256 `e6f3cc517ce939bd3f75724bd654b68bba76175b6854
 - **interactive-zoom-ceiling** — A declared ceiling for interactive zoom (ADR-010 rule 6) -- crs-unit's STOP LIST Q3 (phase `prototype`) — never queued until placed
 - **shell-redesign-map-studio** — Shell redesign -- the Map studio direction (the human's choice of 2026-09-23; a design reference, not Authority; the migration plan is to be ruled) (phase `prototype`) — never queued until placed
 - **release-v0-1-1** — v0.1.1 release (patch) — the human schedules it; static-CRT declined (69a stands), evidence-archive and SignPath draft ride it (phase `prototype`) — never queued until placed
-- **adr-032-decision** — ADR-032 — the GeoParquet non-x-first axis order decision (phase `prototype`) — never queued until placed
 - **briefb-b3-publish-v2** — Brief B, stage B3 — bundle v2 and CLI replay through the same publish implementation (phase `prototype`) — never queued until placed
 - **briefb-part-o-walkthrough** — Part O — the nine-step recipe walkthrough, after B3 only (phase `prototype`) — never queued until placed
 - **governance-ci-built-site** — Governance -- the site built by CI after merge, the design also addressing tracked-queue conflicts between sibling PRs (phase `prototype`) — never queued until placed
