@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `262a7bfa4e5180c0ce03bf530694f0941ba08f40be13945d698356079b2ea7f4`) at `2026-10-08T03:45:21.605Z`.
+Generated from `PLAN.yaml` (sha256 `78c629f84949912962593b43b86f14e79e4b8db819bbec6ca9f14b8f825ad4d5`) at `2026-10-08T04:08:00.258Z`.
 
 ## 1. Next
 
@@ -95,6 +95,7 @@ Generated from `PLAN.yaml` (sha256 `262a7bfa4e5180c0ce03bf530694f0941ba08f40be13
 - **corpus-line-files** — A line file (LineString or MultiLineString) in the preregistered compatibility corpus, so that line admission is tried on a real-world file (phase `prototype`) — never queued until placed
 - **lines-class-budget-measurement** — Measure docs/08's Lines class (1M features / 10M vertices) for the working canvas, once lines are drawn (phase `prototype`) — never queued until placed
 - **skp-drained-stream-helper-post-check-race** — kernel/src/skp.rs tests: drained_stream_with_a_recorded_change has the same post-check race as typed_terminal_codes' end-to-end test (phase `prototype`) — never queued until placed
+- **wire-bytes-invariant-trace-flag-race** — kernel/tests/wire_bytes_invariant.rs: the projected-ticket test asserts tracing is off while its sibling starts a trace (a race on the engine's global trace flag) (phase `prototype`) — never queued until placed
 - **dataset-stream-doc-producer-runs-ahead** — engine/src/stream.rs: Dataset::stream's doc says it returns once the statement is prepared and produces the first batch on the first next_into; the producer thread prepares and runs ahead to the queue bound (phase `prototype`) — never queued until placed
 - **shell-migration-milestone-2** — Shell migration, milestone 2 -- selection and scope: the Select tool, a selection that survives filter and pan, the hidden count, a stated scope (phase `prototype`) — never queued until placed
 - **shell-migration-milestone-3** — Shell migration, milestone 3 -- command bar and filter clauses: Ctrl+K, slash commands, typed /filter with field completion, clause cards with on and off (phase `prototype`) — never queued until placed

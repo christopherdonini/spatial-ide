@@ -2673,7 +2673,7 @@ nodes:
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "PR #189 OPEN 2026-10-08 at 9867fa9f (C1 and T1 in one commit by the worker 22:35:43Z to 23:25:16Z; 45 lines over 2 files against 68; M1 observed; worker report 1): gate 1 of both dispatched, the reviewer on light checks only. Before: IN CODE 2026-10-07: branch cut/data-plane-crowded-start-detail-spaces from e888787e (main after the lines cut merged), worktree C:/dev/wt/dpcs, target D:/wt-targets/dpcs; one worker. Before: FORM COMMITTED 2026-10-07 (the architect draft, alone; full form from dispatch, for the data-plane wire category, the detail being TERMINAL payload bytes; no OPEN item; 18 pins at a21435ed; at most 68 lines over 2 files): code only after kernel-close-races-followups (#186) merges. Before: SLOT 2 AFTER kernel-close-races-followups 2026-10-05 (the product-first direction 8.e). Before: RULED 2026-09-26, question round 26, item 4 (b): main's data-plane crowded-start detail string, operator-visible, carries three runs of 22 spaces from lost line continuations (two, by N7 and round 26 item 4 (b); three, by the form, section 0) in protocol/data-plane/src/server.rs. Found by data-plane-stream-registry-bound's architect gate (state/consults/2026-09-26-stream-registry-bound-gate1-architect.md, note N7). Placed by question round 31, item 1 (RULED 2026-09-30): position 16 of 16 in the human's order, order 14 in its lane. It depends on kernel-close-races-followups, position 15, so that the order holds across lanes."
+    summary: "GATES PASS 2026-10-08 (architect 435 with notes, reviewer 436; both at 9867fa9f): the reviewer D3 (T1 comment) fixed at 425dece2 and D4 (the PR body) fixed; the other Documentation items to the closing record; the pull_request CI run 37723999952 failed on ubuntu in kernel wire_bytes_invariant, outside the diff (failed steps filed; proposed node wire-bytes-invariant-trace-flag-race); CI at 425dece2 must be green, then it awaits merge. Before: PR #189 OPEN 2026-10-08 at 9867fa9f (C1 and T1 in one commit by the worker 22:35:43Z to 23:25:16Z; 45 lines over 2 files against 68; M1 observed; worker report 1): gate 1 of both dispatched, the reviewer on light checks only. Before: IN CODE 2026-10-07: branch cut/data-plane-crowded-start-detail-spaces from e888787e (main after the lines cut merged), worktree C:/dev/wt/dpcs, target D:/wt-targets/dpcs; one worker. Before: FORM COMMITTED 2026-10-07 (the architect draft, alone; full form from dispatch, for the data-plane wire category, the detail being TERMINAL payload bytes; no OPEN item; 18 pins at a21435ed; at most 68 lines over 2 files): code only after kernel-close-races-followups (#186) merges. Before: SLOT 2 AFTER kernel-close-races-followups 2026-10-05 (the product-first direction 8.e). Before: RULED 2026-09-26, question round 26, item 4 (b): main's data-plane crowded-start detail string, operator-visible, carries three runs of 22 spaces from lost line continuations (two, by N7 and round 26 item 4 (b); three, by the form, section 0) in protocol/data-plane/src/server.rs. Found by data-plane-stream-registry-bound's architect gate (state/consults/2026-09-26-stream-registry-bound-gate1-architect.md, note N7). Placed by question round 31, item 1 (RULED 2026-09-30): position 16 of 16 in the human's order, order 14 in its lane. It depends on kernel-close-races-followups, position 15, so that the order holds across lanes."
     dates: {opened: 2026-09-26, done: null}
 
   - id: engine-cancel-before-execute-siblings
@@ -4258,6 +4258,24 @@ nodes:
     entries: []
     summary: "Found 2026-10-07 by the typed-terminal-codes-post-check-race drafting (state/consults/2026-10-07-typed-terminal-codes-post-check-race-architect-draft.md, finding F-1; the form, section 0.4): the test helper in kernel/src/skp.rs touches the file after opening the engine stream and asserts the post-check found the change, with a 50-feature fixture, so the producer can finish before the touch. kernel/src/skp.rs is in the lines cut's file list, so this waits for the lines cut. Test-only. Waiting on the human's placement."
     dates: {opened: 2026-10-07, done: null}
+  - id: wire-bytes-invariant-trace-flag-race
+    title: "kernel/tests/wire_bytes_invariant.rs: the projected-ticket test asserts tracing is off while its sibling starts a trace (a race on the engine's global trace flag)"
+    kind: task
+    lane: kernel-protocol
+    phase: prototype
+    status: proposed
+    order: null
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 60
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "Seen 2026-10-08 in PR #189's pull_request CI run 37723999952 (ubuntu-24.04, attempt 1; failed steps filed byte-identical at state/consults/2026-10-08-pr189-ci-run-37723999952-attempt-1-failed-steps.txt): wire_bytes_invariant_holds_for_the_projected_ticket_path_case_too panicked at its opening assertion that tracing is off, while tracing_changes_no_byte_on_the_wire passed in the same binary. Cause read from code by PR #189's gate-1 reviewer, not observed: the engine's trace flag is one process-global AtomicBool (engine/src/trace.rs), the sibling test starts a trace, and nothing in the file serialises the two tests. The push run at the same head passed on both platforms. Test-only: no product change is implied. Never queued until the human places it."
+    dates: {opened: 2026-10-08, done: null}
+
   - id: dataset-stream-doc-producer-runs-ahead
     title: "engine/src/stream.rs: Dataset::stream's doc says it returns once the statement is prepared and produces the first batch on the first next_into; the producer thread prepares and runs ahead to the queue bound"
     kind: task
