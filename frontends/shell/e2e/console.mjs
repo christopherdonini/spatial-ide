@@ -501,6 +501,12 @@ async function stepClassB(page) {
  * of the style edit's own entry.
  */
 async function stepClassC(page) {
+  // RECORDED MUTATION (milestone 1 re-aim), OBSERVED AT 65391e79b048f51f3ca4d7b5eeac7533f5b64639: the owner of the `style.setFillColor` row in
+  // src/console/surfaceRegistry.ts changed from "ADR-022 / ADR-023" to "docs/03". CLASSC' failed with "no .console-entry-class-c
+  // entry with an ADR-022 owner found after the style edit". Reverted; the worktree was clean before and after.
+  // Milestone 1 re-aim (the human's Decision A; PRE-REGISTRATION Amendment 6, OPEN-3 (a) as `style.mjs` has it): Style is
+  // the Inspector's own tab, hidden until selected, so a real fill needs a real click on the tab first.
+  await page.click("#inspector-tab-style");
   await page.evaluate(() => {
     const btn = document.querySelector(".style-disclosure");
     if (btn && btn.getAttribute("aria-expanded") !== "true") btn.click();
@@ -508,6 +514,9 @@ async function stepClassC(page) {
   const fillColorPresent = await page.evaluate(() => document.querySelector(".style-fill-color") !== null);
   if (!fillColorPresent) throw new Error("CLASSC': .style-fill-color not present after expanding the style panel");
   await page.fill(".style-fill-color", "#112233");
+  // Back to the Layer tab the suite's later steps were written with (REGRESS' re-runs `regression.mjs` on this same page); the
+  // one click above must change nothing else.
+  await page.click("#inspector-tab-layer");
 
   await expandAllGroups(page);
   const entries = await page.evaluate(() =>

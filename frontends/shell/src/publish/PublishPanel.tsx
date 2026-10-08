@@ -306,7 +306,7 @@ export interface PublishPanelProps {
 
 /**
  * The publish affordance (`NEXT-CUT.md` P3): collapsed-by-default disclosure, a scope choice, one
- * "Publish…" button. Placed in `.app-main`'s flex column below `StylePanel` (`App.tsx`) -- see
+ * "Export interactive map…" button. Placed in the Inspector's Export section (`App.tsx`) -- see
  * `styles.css`'s own `.publish-panel` comment for the measured layout budget, the same discipline
  * `StylePanel.tsx`'s own doc comment establishes.
  *
@@ -507,7 +507,7 @@ export default function PublishPanel({
         }}
         aria-expanded={expanded}
       >
-        {expanded ? "▾" : "▸"} Publish
+        {expanded ? "▾" : "▸"} Export
       </button>
       {expanded && (
         <PublishControls
@@ -564,6 +564,8 @@ export function PublishControls({
 
   return (
     <div className="publish-controls">
+      {/* OPEN-4 (question round 66, item 4): the export label's one-line purpose, a P6 placeholder. */}
+      <p className="publish-purpose">[P6 placeholder] Writes a folder containing an interactive map of this layer.</p>
       <fieldset className="publish-scope">
         <legend>Row scope</legend>
         <label>
@@ -602,7 +604,7 @@ export function PublishControls({
         onClick={onPublishClick}
         disabled={busy || (scope === "current" && currentDisabled) || state.kind === "dialog"}
       >
-        {busy ? "Preparing…" : "Publish…"}
+        {busy ? "Preparing…" : "Export interactive map…"}
       </button>
 
       {/* RELEASE-0.1 item 10: the "Preparing…" wait's own phase label, bytes count, and a live
@@ -663,7 +665,7 @@ export function PublishControls({
               <p className="publish-summary-detail">{state.outcome.detail}</p>
             </>
           ) : (
-            <p className="publish-summary-headline">Published.</p>
+            <p className="publish-summary-headline">Exported.</p>
           )}
           <dl className="publish-summary-fields">
             <dt>Destination</dt>

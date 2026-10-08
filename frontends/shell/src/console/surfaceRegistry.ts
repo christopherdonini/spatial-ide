@@ -272,6 +272,55 @@ const CLASS_C_ROWS = [
       "Amendment 3, item 2 -- no Tauri command exists for this surface at all, ADR-027 decision 4).",
     owner: 'docs/03 §"The action console" (pure view state)',
   },
+  {
+    class: "C",
+    action: "layout.toggleLayers",
+    statement:
+      "[P6 placeholder] no API equivalent exists -- showing or hiding the Layers region is pure view state for this session, never sent to the kernel.",
+    owner: 'docs/03 §"The action console" (pure view state)',
+  },
+  {
+    class: "C",
+    action: "layout.toggleInspector",
+    statement:
+      "[P6 placeholder] no API equivalent exists -- showing or hiding the Inspector region is pure view state for this session, never sent to the kernel.",
+    owner: 'docs/03 §"The action console" (pure view state)',
+  },
+  {
+    class: "C",
+    action: "layout.toggleActivity",
+    statement:
+      "[P6 placeholder] no API equivalent exists -- showing or hiding the Activity region is pure view state for this session, never sent to the kernel.",
+    owner: 'docs/03 §"The action console" (pure view state)',
+  },
+  {
+    class: "C",
+    action: "layout.selectInspectorTab",
+    statement:
+      "[P6 placeholder] no API equivalent exists -- switching the Inspector between its Layer and Style tabs is pure view state for this session, never sent to the kernel.",
+    owner: 'docs/03 §"The action console" (pure view state)',
+  },
+  {
+    class: "C",
+    action: "layout.selectActivityTab",
+    statement:
+      "[P6 placeholder] no API equivalent exists -- switching the Activity region between its Console and Notices tabs is pure view state for this session, never sent to the kernel.",
+    owner: 'docs/03 §"The action console" (pure view state)',
+  },
+  {
+    class: "C",
+    action: "layout.toggleSection",
+    statement:
+      "[P6 placeholder] no API equivalent exists -- expanding or collapsing the Source or Filter section of the Inspector is pure view state for this session, never sent to the kernel.",
+    owner: 'docs/03 §"The action console" (pure view state)',
+  },
+  {
+    class: "C",
+    action: "layout.resizeRegion",
+    statement:
+      "[P6 placeholder] no API equivalent exists -- resizing a region with its splitter is pure view state for this session, never sent to the kernel; it is recorded once per finished drag and once per keyboard step.",
+    owner: 'docs/03 §"The action console" (pure view state)',
+  },
 ] as const satisfies readonly ClassCRow[];
 
 /** The literal union of every recordable name in the registry -- class-B command names union

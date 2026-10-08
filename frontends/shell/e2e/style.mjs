@@ -222,6 +222,9 @@ async function setExpanded(page, want) {
     () => document.querySelector(".style-disclosure")?.getAttribute("aria-expanded") === "true"
   );
   if (current === want) return;
+  // Milestone 1 (OPEN-3 (a), question round 66, item 3): Style is the Inspector's own tab now, so a real
+  // click on it comes first (it is also the only real-UI exercise of that tab in this suite).
+  await page.click("#inspector-tab-style");
   await page.click(".style-disclosure");
   const settled = await waitForCondition(
     () =>

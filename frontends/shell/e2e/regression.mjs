@@ -705,6 +705,26 @@ async function stepA8(page, consoleHandle) {
  */
 // (moved to e2e/lib.mjs, imported above -- P3b T10 shares this mechanism)
 
+// Milestone 1 re-aim of A9' (the human's Decision A; PRE-REGISTRATION Amendment 6) -- what changed and where its numbers come from.
+//
+// Old assumption: the FIRST notch with an interior-verified pixel is also a notch the product will answer a hover at, and a
+// search that sees the frame-wide non-background count fall on two notches in a row has overshot. Both held on the old map
+// (1280 x ~200, where the data was smaller than the frame at the fit). They do not on the Studio frame's 668 x 730 map, and the
+// outcome then rode on one pixel: at 730.2 CSS px (a 730-row buffer) the notch-3 patch is edge-adjacent and the search stops;
+// at 730.7 (731 rows) another patch is interior, is hovered, and is refused. Same scene (192,213 and 191,392 px), different pixel.
+//
+// New assumption: the search goes on until the product answers, and the product's own named refusal below its pick resolution
+// is the signal to go on, not a failure. The numbers: the declared threshold is 9 px (`SUB_PIXEL_PICK_REFUSAL_THRESHOLD_PX`,
+// src/canvas/pickResolution.ts), a hover being refused while average feature extent x 2^zoom < 9. The fixture's parcels are rings
+// of radius 0.42 x the 40 m cell (`parcel` in engine/src/fixture.rs), so the extent is at most 2 x 16.8 = 33.6 m and an answer
+// needs zoom >= log2(9 / 33.6) = -1.90. The fit on this map is zoom -4.57 and one wheel notch (ZOOM_NOTCH_DELTA_Y = -300) adds
+// 0.93, so the first notch that CAN answer is notch 3 (-1.78) at the earliest; measured on this map, the readouts are the named
+// refusal at -1.78 and an id at -0.85 (the render trace's `readout_confirmed` lines), so the extent is between 16.2 and 30.9 m
+// and the first answering notch is 4. The 15-notch budget (`MAX_ZOOM_NOTCHES`) is unchanged and is 11 notches past that.
+// RECORDED MUTATION (milestone 1 re-aim of A9'), OBSERVED AT 65391e79b048f51f3ca4d7b5eeac7533f5b64639: `isBelowPickResolution` in
+// src/canvas/pickResolution.ts made to return `true` (every camera below the pick resolution). The run
+// failed A9' with "A9': timed out after 120000ms" -- the walk never reached an id -- and K6/continuous with "no
+// above-threshold hoverable candidate found". Reverted; the worktree was clean before and after.
 async function stepA9(page, consoleHandle) {
   const initialRect = await canvasRect(page);
   if (!initialRect) throw new Error("A9': .working-canvas not found");
@@ -718,6 +738,8 @@ async function stepA9(page, consoleHandle) {
   let previousNonBackgroundCount = null;
   let declineStreak = 0;
   let overshootStopped = false;
+  let found = null;
+  const attempts = [];
 
   // Notch 0 = the CURRENT camera, tried FIRST (P10 never tried pre-zoom at all); notches
   // 1..MAX_ZOOM_NOTCHES are real wheel-zoom-ins, exactly as P10 drove them.
@@ -746,9 +768,10 @@ async function stepA9(page, consoleHandle) {
     }
 
     const nonBackgroundCount = grid.nonBackgroundCount;
-    // Early-stop: two consecutive notch-over-notch DECREASES in frame-wide non-background pixels
-    // is P10's own rise-then-fall-to-zero signature (peak at notch 2, zero by notch 7 in both of
-    // its runs) -- content is leaving the viewport, so further zooming cannot help.
+    // Decline tracking, no longer a stop on its own (milestone 1 re-aim of A9'; see the comment above `stepA9`): two consecutive
+    // notch-over-notch DECREASES in frame-wide non-background pixels was P10's rise-then-fall-to-zero signature (peak at notch 2,
+    // zero by notch 7 in both of its runs) on the old map. `declineStreak` now only ends the search together with a zero count (the
+    // branch below) and is reported in the per-notch evidence.
     if (previousNonBackgroundCount !== null) {
       declineStreak = nonBackgroundCount < previousNonBackgroundCount ? declineStreak + 1 : 0;
     }
@@ -817,13 +840,46 @@ async function stepA9(page, consoleHandle) {
     });
 
     if (interiorVerified.length > 0) {
-      successBisectionFraction = bisection.finalFraction;
-      break;
+      // Milestone 1 re-aim (the human's Decision A; PRE-REGISTRATION Amendment 6). The hover is tried AT THIS NOTCH, and a
+      // camera still below the declared pick resolution is not a miss: the product's own answer there is the named refusal
+      // (`K6_REFUSAL_TEXT`), so the search goes on to the next notch instead of ending on whichever pixel it happened to pick
+      // here. The numbers are in the comment above `stepA9`.
+      const notchAttempts = [];
+      for (const point of orderedCandidates) {
+        for (const flipY of [true, false]) {
+          const css = bufferPointToCss(point, rect, grid.width, grid.height, flipY);
+          const attemptStart = Date.now();
+          await page.mouse.move(css.x, css.y);
+          // A CONFIRMED id and nothing else: this step moves the pointer and never the camera, so the
+          // labelled ("confirming") state cannot arise here -- and if it ever did it would not count,
+          // since it names an id no pick at this camera stands behind (§3.3).
+          const result = await waitForCondition(
+            () => readHoverReadoutState(page),
+            (readout) => hoverReadoutId(readout) !== null,
+            5_000
+          );
+          const attempt = { point, flipY, css, ok: result.ok, last: result.last, attemptStart, notch };
+          attempts.push(attempt);
+          notchAttempts.push(attempt);
+          if (result.ok) {
+            found = { point, flipY, css, text: result.last.text };
+            break;
+          }
+        }
+        if (found) break;
+      }
+      if (found) {
+        successBisectionFraction = bisection.finalFraction;
+        break;
+      }
+      const namedRefusalSeen = notchAttempts.some((a) => a.last?.state === "refusal" && a.last?.text === K6_REFUSAL_TEXT);
+      notchEvidence[notchEvidence.length - 1].belowPickResolution = namedRefusalSeen;
+      if (!namedRefusalSeen) break; // a miss that is not the declared refusal is a genuine miss: reported below, as before
     }
-    if (declineStreak >= 2) {
-      overshootStopped = true;
-      break;
-    }
+    // The early stop on two declines is gone. It read "rise then fall to zero" off a map whose fit left the data smaller than the
+    // frame; on the Studio frame's 668 x 730 map the fit already fills 43% of the frame (210,282 of 487,640 px at notch 0), so the
+    // count only ever falls and two declines arrive at notch 3, one notch before the first answerable one. The stop that stays is
+    // the zero-count branch above: content that has left the frame cannot be hovered at any zoom.
   }
 
   if (!interiorVerified || interiorVerified.length === 0) {
@@ -846,32 +902,6 @@ async function stepA9(page, consoleHandle) {
           )
           .join("\n")
     );
-  }
-
-  let found = null;
-  const attempts = [];
-  // `candidates` is capped at 2 entries by `pushCandidate`'s own two call sites above (bisection
-  // patch centre, densest-region samplePoint fallback). `orderedCandidates` is the same set, just
-  // reordered (interior-verified first) by the block above.
-  outer: for (const point of orderedCandidates) {
-    for (const flipY of [true, false]) {
-      const css = bufferPointToCss(point, rect, grid.width, grid.height, flipY);
-      const attemptStart = Date.now();
-      await page.mouse.move(css.x, css.y);
-      // A CONFIRMED id and nothing else: this step moves the pointer and never the camera, so the
-      // labelled ("confirming") state cannot arise here -- and if it ever did it would not count,
-      // since it names an id no pick at this camera stands behind (§3.3).
-      const result = await waitForCondition(
-        () => readHoverReadoutState(page),
-        (readout) => hoverReadoutId(readout) !== null,
-        5_000
-      );
-      attempts.push({ point, flipY, css, ok: result.ok, last: result.last, attemptStart });
-      if (result.ok) {
-        found = { point, flipY, css, text: result.last.text };
-        break outer;
-      }
-    }
   }
 
   if (!found) {
@@ -979,8 +1009,12 @@ async function stepA9(page, consoleHandle) {
 //         never moved. deck.gl delivers no `onHover` while a button is held, so nothing has answered
 //         "where is the pointer" for the whole gesture; the standing refusal means the first
 //         post-release camera change ARMS, and the settle it starts must still emit nothing. The
-//         readout must NOT be an id (an ABSENCE and the named refusal both pass) and no confirming
-//         `readout_confirmed` line may name an id since this case's own mark. An id here could only
+//         readout must NOT be an id (an ABSENCE and the named refusal both pass), no confirming
+//         `readout_confirmed` line may name an id since this case's own mark, AND no camera-settle
+//         re-pick line of any kind (`readout_confirmed camera-settle-repick ...`, whatever the pick
+//         found) may appear since that mark (milestone 1 re-aim, Amendment 7: on the Studio frame's
+//         map the stale pick lands on background, so "no id" alone cannot tell a re-pick from none;
+//         see the comment above `afterReleaseAllowed` in `stepK6`). An id here could only
 //         have come from a pick at the PRE-DRAG pixel -- a feature the pointer left behind. This is
 //         the only level that runs the real window `pointerup` listener.
 //
@@ -1042,6 +1076,7 @@ const K6_ZOOM_OUT_NOTCHES_MIN = 8; // floor on zoom-OUT notches applied after fi
 // above-threshold candidate, independent of how many zoom-IN notches that search itself needed --
 // guards the case where a hoverable candidate is found at a low notch, which would otherwise leave
 // too few zoom-out notches to reliably cross back below the threshold (assertion (ii), discrete).
+const K6_STANDING_NOTCHES_MARGIN = 2; // zoom-in notches added before case (ii)'s zoom-out run; derived at its use in `stepK6`.
 const K6_ZOOM_OUT_NOTCH_DELTA_Y = -ZOOM_NOTCH_DELTA_Y; // reverses A9''s own zoom-in notch magnitude
 // (positive deltaY = wheel-down = zoom out, the opposite of `ZOOM_NOTCH_DELTA_Y`'s zoom-in).
 const K6_REFUSAL_TEXT = "Features here are below pick resolution — zoom in to inspect them."; // canvas/HoverReadoutView.tsx, verbatim (moved there from App.tsx by entry 88's labelled-state piece; the string itself is unchanged).
@@ -1228,6 +1263,17 @@ const K6_PAN_KEY_PRESSES_MAX = 8;
  * a settle answering there at all. */
 const K6_RELEASE_DRAG_FRACTION = 0.1;
 
+// RECORDED MUTATIONS (milestone 1 re-aim of K6), OBSERVED AT 65391e79b048f51f3ca4d7b5eeac7533f5b64639, each applied alone and reverted (the worktree was clean
+// before and after each):
+//  - case (ii): the marker <span> deleted from the confirming branch of src/canvas/HoverReadoutView.tsx. K6 failed with
+//    "K6/discrete: the labelled state rendered at notch 1/8 with NO marker element"; cases (i), (iii) and (iv) had passed.
+//  - case (v): the `lastPointerPxRef.current = null;` line deleted from `onPointerRelease` in src/canvas/WorkingCanvas.tsx
+//    (the mutation HOVER-REPICK-PREREGISTRATION.md Amendment 5 records). At 65391e79, with the case asserting "no id" only, K6 did
+//    NOT fail: case (v) read {"state":"clear"} and passed. After the case was strengthened (see the comment above
+//    `afterReleaseAllowed` in `stepK6`), OBSERVED AT 82d1f73a9df4c2138c7a2614491abe9c11940f03, applied once and reverted (the
+//    worktree was clean before and after): K6 failed with "K6/release-edge: a camera-settle re-pick line appeared in the render
+//    trace since this step's mark, whatever the pick found: "[render-trace] readout_confirmed camera-settle-repick cleared
+//    {zoom: -0.848138760145841}"". The clean run at the same commit passed K6.
 async function stepK6(page, consoleHandle) {
   // ASSERTION (i) -- CONTINUOUS: one coalesced camera change crossing the threshold (the
   // walkthrough's own L7 gesture, realised here via "Zoom to layer" -- this section's own top
@@ -1265,6 +1311,13 @@ async function stepK6(page, consoleHandle) {
     throw new Error(`K6/re-pick: expected a real id readout to start from, got ${JSON.stringify(repickHover.text)}`);
   }
   await wheelWithoutMoving(page, consoleHandle, ZOOM_NOTCH_DELTA_Y); // "Once i zoom in to a feature and hover over one"
+  // CASE (iii) IS UNCHANGED by milestone 1 (the human's ruling on K6 case (iii), PRE-REGISTRATION Amendment 10): it compares the
+  // readout after the zoom-in and zoom-out pair with the id a real hover named at that camera and pointer, with no retry and no
+  // re-established hover. Its dependence on the one candidate pixel is kept on purpose: when the stationary pointer is on the same
+  // feature the two ids agree, and when they do not it is the product's two pick paths disagreeing (the hover pick and the settle
+  // re-pick, same camera, same pointer), which this check must keep showing. The ruling records that at a window one row taller
+  // than the default (1280 x 801) the hover pick answered 50244 and the settle re-pick 53722; that disagreement is the proposed
+  // node `shell-pick-paths-disagree-at-1280x801`, a diagnosis first, and nothing here is bent to hide it.
   const beforeStepOut = consoleHandle.renderTrace().length;
   await wheelWithoutMoving(page, consoleHandle, K6_ZOOM_OUT_NOTCH_DELTA_Y); // "...if i zoom out by just one step"
   // AFTER the settle (`wheelWithoutMoving` waits for trace quiet): the id must be CONFIRMED, i.e.
@@ -1404,7 +1457,22 @@ async function stepK6(page, consoleHandle) {
   // mark. The old falsifier ("the pre-zoom id after any notch = failure") stays deliberately gone --
   // under this mechanism a re-confirmed id is the correct answer, which is what case (iv) above
   // exists to keep honest.
-  const discreteHover = await establishAboveThresholdHoverK6(page, consoleHandle, "K6/discrete");
+  let discreteHover = await establishAboveThresholdHoverK6(page, consoleHandle, "K6/discrete");
+  // Milestone 1 re-aim (the human's Decision A; PRE-REGISTRATION Amendment 6). Old assumption: the hover is established far enough
+  // above the pick threshold that several zoom-out notches keep an id standing, so the labelled "confirming" marker has several
+  // mid-gesture reads to be sighted at. On the old map the search had to zoom in from a small fit and so ended well above the
+  // threshold. On the Studio frame's 668 x 730 map the first answerable notch is the first one the search tries (fit -4.57, refusal
+  // at -1.78, id at -0.85), so the first zoom-out notch crosses the threshold, where the product's answer is the refusal and not the
+  // marker: one notch had an id standing and the case read once (a 1 of 1 race, never sighted). The case now zooms in
+  // K6_STANDING_NOTCHES_MARGIN more notches first. A notch at the established camera is at most one notch above the threshold
+  // (the search stops at the first answer), so after M more zoom-in notches the first M zoom-out notches stay above it; M = 2 gives
+  // the aggregate the two independent reads that "never sighted once" needs to mean something, and the assertion on them is unchanged.
+  for (let i = 0; i < K6_STANDING_NOTCHES_MARGIN; i++) {
+    await wheelWithoutMoving(page, consoleHandle, ZOOM_NOTCH_DELTA_Y);
+  }
+  if (hoverReadoutId(await readHoverReadoutState(page)) === null) {
+    discreteHover = await establishAboveThresholdHoverK6(page, consoleHandle, "K6/discrete (hover re-established after the margin zoom-in)");
+  }
   const zoomOutNotches = Math.max(discreteHover.notchesUsed, K6_ZOOM_OUT_NOTCHES_MIN);
   let notchesShowingAnId = 0;
   let notchesWithStandingId = 0;
@@ -1583,8 +1651,33 @@ async function stepK6(page, consoleHandle) {
   // Exactly two states pass, named: nothing shown, or the named refusal. A confirmed id fails (it
   // could only have come from a pick at the pre-drag pixel), and so does a labelled state -- this
   // read is after the settle, and a marker may not outlive one (B1).
+  //
+  // Milestone 1 re-aim of case (v) (the human's ruling on K6 case (v), option (b), under Decision A; PRE-REGISTRATION
+  // Amendment 7). OLD assertion: the readout is not an id and no confirming re-pick line names an id since the mark. NEW
+  // assertion: that, and also no camera-settle re-pick line of ANY kind in the render trace since the mark, whatever the pick
+  // found. REASON: on the Studio frame's 668 x 730 map the stale pick lands on background, so a mutated build (the
+  // `lastPointerPxRef.current = null;` line deleted from `onPointerRelease`) still runs its pick at the pre-drag pixel, finds
+  // nothing, and emits a `readout_confirmed camera-settle-repick cleared` line; "not an id" passes for it exactly as for a clean
+  // build. Measured, scratch copy of this file, 1280 x 800 window: the clean build's trace since the mark held no
+  // `readout_confirmed` line; the mutated build's held that one `cleared` line; both read {"state":"clear"}, and a real hover at the
+  // pre-drag pixel at the final camera answered nothing in both. READ FROM THE RECORD, NOT FROM A RUN: the pick threshold
+  // `SUB_PIXEL_PICK_REFUSAL_THRESHOLD_PX` was raised to 9 px on 2026-09-14 (src/canvas/pickResolution.ts), after this case first
+  // bound (commit 04866c19, 2026-09-11, threshold 2 px, where a stale pick found a feature at a cell pitch of about 2.7 px); at 9 px
+  // a hover only answers where the pitch is about 22 px with gaps, which contributes to the stale pixel missing.
   const afterReleaseAllowed =
     afterRelease.state === "clear" || (afterRelease.state === "refusal" && afterRelease.text === K6_REFUSAL_TEXT);
+  const repickLineSinceRelease = consoleHandle
+    .renderTrace()
+    .slice(beforeRelease)
+    .find((e) => /readout_confirmed camera-settle-repick/.test(e.text));
+  if (repickLineSinceRelease !== undefined) {
+    throw new Error(
+      `K6/release-edge: a camera-settle re-pick line appeared in the render trace since this step's mark, whatever the pick found: ` +
+        `${JSON.stringify(repickLineSinceRelease.text)}. With the named refusal STANDING, a real drag and then ONE wheel notch back in ` +
+        `with the pointer never moved, the release edge (section 12 Amendment 3) leaves the settle nothing to pick at, so no re-pick ` +
+        `line of any kind may arrive (.hover-readout showed ${JSON.stringify(afterRelease)})`
+    );
+  }
   if (!afterReleaseAllowed || confirmedIdSinceRelease !== null) {
     throw new Error(
       `K6/release-edge: with the named refusal STANDING, a real drag (button down, pointer moved, button up) and ` +
@@ -1614,7 +1707,7 @@ async function stepK6(page, consoleHandle) {
       `settle; ` +
     `(v) release edge: hovered id ${releaseId}, ${releaseOutNotches} zoom-out notch(es) to a STANDING refusal, then a ` +
       `real drag (button down, ${releaseDrag.dx}, ${releaseDrag.dy} px, button up) and ONE wheel notch back in with ` +
-      `the pointer never moved -> readout ${JSON.stringify(afterRelease)}, and no confirming re-pick line naming an id ` +
+      `the pointer never moved -> readout ${JSON.stringify(afterRelease)}, and no camera-settle re-pick line of any kind ` +
       `since that case's own mark.`
   );
 }
@@ -2285,16 +2378,15 @@ async function stepRefusal(page, stepId, fixturePath, expectedCode, expectedMess
       throw new Error(`${stepId}: candidate list missing "${candidate}". Actual: ${JSON.stringify(form.candidates)}`);
     }
   }
-  // The "No summary" half of the walkthrough's own claim (B2/C2): `AdmissionPanel`'s local `state`
-  // is replaced wholesale on a refusal (`state.kind === "admitted"` is what gates rendering
-  // `DescribeSummary`), so `.describe-summary` must be gone the instant a refusal lands -- assertable
-  // regardless of whether a *previous* admission had shown one. The "no canvas change" half is not
-  // asserted here; see `MANUAL-WALKTHROUGH.md`'s own coverage table for that named gap.
-  const summaryPresent = await page.evaluate(() => document.querySelector(".describe-summary") !== null);
-  if (summaryPresent) throw new Error(`${stepId}: .describe-summary still present after a refusal`);
+  // The "No summary" half of the walkthrough's own claim (B2/C2), re-aimed by milestone 1 (OPEN-1 (A)):
+  // `App` renders `DescribeSummary` from the dataset on the map, in the Inspector, so a previous
+  // admission's summary stands across a refusal. A refusal must still show no summary in the Layers
+  // region, where it is drawn. The "no canvas change" half is not asserted; see the coverage table.
+  const summaryPresent = await page.evaluate(() => document.querySelector(".admission-panel .describe-summary") !== null);
+  if (summaryPresent) throw new Error(`${stepId}: .describe-summary present in the Layers region after a refusal`);
   return `refused ${expectedCode}; message verbatim; ${formSelector} present${
     expectedCandidates?.length ? ` (candidates include ${expectedCandidates.join(", ")})` : ""
-  }; no dismiss button on the panel; no describe-summary`;
+  }; no dismiss button on the panel; no describe-summary in the Layers region`;
 }
 
 /**
@@ -2346,9 +2438,9 @@ async function stepAbsentCrs(page) {
     crsForm: document.querySelector(".crs-assertion-form") !== null,
     identityForm: document.querySelector(".identity-declaration-form") !== null,
   }));
-  const summaryPresent = await page.evaluate(() => document.querySelector(".describe-summary") !== null);
-  if (summaryPresent) throw new Error("ABSENTCRS': .describe-summary still present after a refusal");
-  return `refused engine.format_default_contradicted; message verbatim; no dismiss button on the panel; no describe-summary; INFO: .crs-assertion-form present=${formInfo.crsForm}, .identity-declaration-form present=${formInfo.identityForm} (not asserted either way)`;
+  const summaryPresent = await page.evaluate(() => document.querySelector(".admission-panel .describe-summary") !== null);
+  if (summaryPresent) throw new Error("ABSENTCRS': .describe-summary present in the Layers region after a refusal");
+  return `refused engine.format_default_contradicted; message verbatim; no dismiss button on the panel; no describe-summary in the Layers region; INFO: .crs-assertion-form present=${formInfo.crsForm}, .identity-declaration-form present=${formInfo.identityForm} (not asserted either way)`;
 }
 
 async function stepNet(page, badResponses) {

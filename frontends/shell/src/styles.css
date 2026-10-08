@@ -13,19 +13,261 @@ body,
   margin: 0;
 }
 
+/* Milestone 1 (SHELL-MIGRATION-MILESTONE-1-PREREGISTRATION.md section 2): the Map Studio frame. `.app` is a CSS
+   grid; DOM order is focus order (top bar, Layers, attention strip, Map, Inspector, Activity, status bar) and the
+   areas below put each region where it sits. The three extents arrive as custom properties set by
+   `layout/StudioLayout.tsx` from `layout/layoutState.ts`'s `effectiveSizes`, which keeps the map region at or
+   above its declared minimum (`layout/layoutConstants.ts`) at every viewport at or above the declared floor. A
+   closed region and an inactive tab or section keep their content mounted and carry `hidden`. Every comment
+   below that speaks of `.app-main`, `.app-rail-top`/`.app-rail-bottom`, `.canvas-status-stack`, a flex column,
+   the 200px canvas floor or a measured layout budget describes the stacked layout this replaced: history. Colours are P6 placeholders. */
 .app {
   height: 100%;
   margin: 0;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  overflow: hidden;
+  --attention-bg: #fbe3e0;
+  --attention-fg: #4a0f0f;
+  --status-item-bg: #f3d9d6;
+  --status-item-fg: #4a0f0f;
+  grid-template-columns: var(--layers-w) var(--layers-split) minmax(0, 1fr) var(--inspector-split) var(--inspector-w);
+  grid-template-rows: var(--top-bar-h) auto minmax(0, 1fr) var(--activity-split) var(--activity-h) auto;
+  grid-template-areas:
+    "top top top top top"
+    "layers split-layers attention split-inspector inspector"
+    "layers split-layers map split-inspector inspector"
+    "layers split-layers split-activity split-inspector inspector"
+    "layers split-layers activity split-inspector inspector"
+    "status status status status status";
 }
 
-.app-header {
-  padding: 0.5rem 1rem;
-  font-weight: 600;
+@media (prefers-color-scheme: dark) {
+  .app {
+    --attention-bg: #4a0f0f;
+    --attention-fg: #fff;
+    --status-item-bg: rgba(74, 15, 15, 0.85);
+    --status-item-fg: #fff;
+  }
+}
+
+.app [hidden] {
+  display: none !important;
+}
+
+.top-bar {
+  grid-area: top;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0 1rem;
+  overflow: hidden;
   border-bottom: 1px solid rgba(128, 128, 128, 0.3);
 }
 
+.app-header {
+  font-weight: 600;
+}
+
+.top-bar-toggles {
+  display: flex;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+.top-bar-toggle {
+  padding: 0.2rem 0.5rem;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.top-bar-toggle[aria-pressed="true"] {
+  font-weight: 600;
+}
+
+.region-layers,
+.region-inspector,
+.region-activity {
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+}
+
+.region-layers {
+  grid-area: layers;
+}
+
+.region-inspector {
+  grid-area: inspector;
+}
+
+.region-activity {
+  grid-area: activity;
+  border-top: 1px solid rgba(128, 128, 128, 0.3);
+}
+
+.region-map {
+  grid-area: map;
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.region-map:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: -2px;
+}
+
+.region-heading {
+  margin: 0;
+  padding: 0.5rem 1rem 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.layers-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-top: 1px solid rgba(128, 128, 128, 0.3);
+}
+
+/* Cut to the row's width with an ellipsis; the full text is in the element's `title`. */
+.layers-row-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.85rem;
+}
+
+.attention-strip {
+  grid-area: attention;
+  box-sizing: border-box; /* the cap includes the padding, so the fit's 128 px budget is the real cap */
+  max-height: var(--attention-max-h);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  background: var(--attention-bg);
+  color: var(--attention-fg);
+}
+
+.status-bar {
+  grid-area: status;
+  box-sizing: border-box; /* the cap includes the padding and the border, so the fit's 48 px budget is the real cap */
+  min-height: 1.5rem;
+  max-height: var(--status-max-h);
+  overflow-y: auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.15rem 0.75rem;
+  padding: 0.15rem 0.75rem;
+  font-size: 0.8rem;
+  border-top: 1px solid rgba(128, 128, 128, 0.3);
+}
+
+.status-scan-liveness {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.status-source-watch {
+  font-family: ui-monospace, monospace;
+}
+
+#splitter-layers {
+  grid-area: split-layers;
+}
+
+#splitter-inspector {
+  grid-area: split-inspector;
+}
+
+#splitter-activity {
+  grid-area: split-activity;
+}
+
+.splitter {
+  background: rgba(128, 128, 128, 0.25);
+  touch-action: none;
+}
+
+.splitter-x {
+  cursor: col-resize;
+}
+
+.splitter-y {
+  cursor: row-resize;
+}
+
+.splitter:hover,
+.splitter:focus-visible {
+  background: rgba(128, 128, 128, 0.6);
+}
+
+.tablist {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem 0;
+  border-bottom: 1px solid rgba(128, 128, 128, 0.3);
+}
+
+.tablist [role="tab"] {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 0.3rem 0.6rem;
+  font: inherit;
+  font-size: 0.85rem;
+  color: inherit;
+  cursor: pointer;
+}
+
+.tablist [role="tab"][aria-selected="true"] {
+  border-bottom-color: currentColor;
+  font-weight: 600;
+}
+
+.inspector-section {
+  border-top: 1px solid rgba(128, 128, 128, 0.3);
+}
+
+.section-heading {
+  margin: 0;
+  padding: 0.25rem 1rem;
+  font-size: 0.85rem;
+}
+
+.section-heading button {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  font-weight: 600;
+  color: inherit;
+  cursor: pointer;
+}
+
+.inspector-empty {
+  margin: 0;
+  padding: 1rem;
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+
+.publish-purpose {
+  margin: 0;
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
+/* HISTORY (milestone 1): measured or reasoned on the stacked layout that milestone 1 retired; it is not a description of the current layout. */
 /* action-console cut P5c fix 1 (`.app-rail-top`/`.app-rail-bottom` below have the full account):
    `overflow: auto` used to live here, directly -- with `.canvas-container`/`.console-panel` as
    ordinary siblings of every other panel in the SAME overflow box, whenever the panels' combined
@@ -46,14 +288,8 @@ body,
    of THIS element, never of either rail (`.console-panel` lives INSIDE `.app-rail-bottom`, below
    `.canvas-container` in App.tsx's own JSX -- see that rail's own comment) -- its width is
    therefore never subject to a scrollbar that lives on some other element's box. */
-.app-main {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  overflow: hidden;
-}
 
+/* HISTORY (milestone 1): measured or reasoned on the stacked layout that milestone 1 retired; it is not a description of the current layout. */
 /* action-console cut P5c fix 1: `.app-main`'s own comment above has the full mechanism -- an
    `overflow-y: auto` rail element gets an *automatic* `min-height: 0` per the flex/overflow spec
    ("the automatic minimum size ... is 0 if the item's overflow computes to something other than
@@ -65,13 +301,6 @@ body,
    overflow (cap-then-scroll, the same discipline `.style-controls`/`.publish-controls`/
    `.console-entries` already use one level down) -- narrowing only this rail's own width, never
    `.canvas-container`'s or `.console-panel`'s, which live outside both rails. */
-.app-rail-top,
-.app-rail-bottom {
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  overflow-y: auto;
-}
 
 .error-banner {
   position: fixed;
@@ -181,15 +410,8 @@ body,
 
 .canvas-container {
   position: relative;
-  flex: 1;
-  /* Not 0: with `flex: 1`'s implied `flex-basis: 0%`, a `min-height` of 0 would let
-     `.app-rail-top`'s own natural height (the admission panel, principally) push this to nothing
-     (a working canvas of 0px is indistinguishable from a missing one) if that rail ever grew tall
-     enough to fill `.app-main`. This floor keeps the canvas usable; `.app-rail-top`/
-     `.app-rail-bottom`'s own `overflow-y: auto` (action-console cut P5c fix 1, `.app-main`'s own
-     comment above) is what absorbs the rest now -- each independently, scoped to its own box,
-     never this element's or `.app-main`'s own. */
-  min-height: 200px;
+  width: 100%;
+  height: 100%;
 }
 
 .working-canvas {
@@ -199,14 +421,7 @@ body,
 }
 
 .zoom-to-layer {
-  position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
-  padding: 0.35rem 0.6rem;
-  background: rgba(0, 0, 0, 0.7);
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 4px;
+  padding: 0.25rem 0.6rem;
   font-size: 0.8rem;
   cursor: pointer;
 }
@@ -236,40 +451,10 @@ body,
   font-style: italic;
 }
 
-/* S1 fix (reviewer round, 2026-08-13): `.canvas-refusal` and `.residency-status` used to be two
-   independently absolute-positioned elements at fixed offsets -- `.residency-status`'s old fixed
-   `top: 3.25rem` assumed `.canvas-refusal` never grew past ~2.75rem tall, which a wrapped (2+
-   line) refusal message violated, occluding the status underneath it (`.residency-status` has no
-   `z-index` of its own and is the *earlier* sibling in paint order either way). Both are now
-   children of this single flex column (`App.tsx`'s `.canvas-status-stack`), top-anchored where
-   `.canvas-refusal` alone used to be, stacking in normal document flow -- each child's actual
-   rendered height, whatever it is, is what the next one below it respects, never a number guessed
-   in advance. Stays clear of `.hover-readout` (bottom-left) and `.zoom-to-layer` (top-right)
-   exactly as before. */
-.canvas-status-stack {
-  position: absolute;
-  top: 0.5rem;
-  left: 0.5rem;
-  right: 0.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  /* The comment above says the stack "stays clear of … `.zoom-to-layer`" — true of its visible
-     children, FALSE of this full-width box, which silently intercepted clicks on the button
-     whenever any child was present (found live by the residency harness's Polygons dry-run,
-     2026-08-30: dismissing the banner moved the interception from `.canvas-refusal` to this
-     wrapper). The wrapper is passive by design; children that take input re-enable below. */
-  pointer-events: none;
-}
-
-.canvas-status-stack > * {
-  pointer-events: auto;
-}
-
 .canvas-refusal {
   padding: 0.5rem 0.75rem;
-  background: #4a0f0f;
-  color: #fff;
+  background: var(--attention-bg);
+  color: var(--attention-fg);
   border-radius: 4px;
 }
 
@@ -283,17 +468,15 @@ body,
 }
 
 /* Rider 1 (DECISIONS-PENDING.md entry 0, option (a)): the persistent, non-dismissible
-   ceiling-refusal status -- distinct from `.canvas-refusal` above (the loud, dismissible event) so
-   dismissing the banner can never hide this. A `.canvas-status-stack` child now (see its own
-   comment above), not independently positioned. */
+   ceiling-refusal status -- distinct from `.canvas-refusal` (the loud, dismissible event) so
+   dismissing the banner can never hide this. A status-bar item now (milestone 1). */
 .residency-status {
-  padding: 0.35rem 0.6rem;
-  background: rgba(74, 15, 15, 0.85);
-  color: #fff;
+  padding: 0.1rem 0.5rem;
+  background: var(--status-item-bg);
+  color: var(--status-item-fg);
   font-family: ui-monospace, monospace;
   font-size: 0.8rem;
   border-radius: 4px;
-  pointer-events: none;
 }
 
 /* NEXT-CUT.md (filter-panel cut) P3 binding note 9: in `.app-main`'s flex column, normal document
@@ -365,17 +548,17 @@ body,
 }
 
 /* P4 item 3, rider-1 pattern: persistent, not dismissible -- same visual family as
-   `.residency-status`, a `.canvas-status-stack` child now like every other status there. */
+   `.residency-status`, a status-bar item now (milestone 1). */
 .scan-incomplete {
-  padding: 0.35rem 0.6rem;
-  background: rgba(74, 15, 15, 0.85);
-  color: #fff;
+  padding: 0.1rem 0.5rem;
+  background: var(--status-item-bg);
+  color: var(--status-item-fg);
   font-family: ui-monospace, monospace;
   font-size: 0.8rem;
   border-radius: 4px;
-  pointer-events: none;
 }
 
+/* HISTORY (milestone 1): measured or reasoned on the stacked layout that milestone 1 retired; it is not a description of the current layout. */
 /* NEXT-CUT.md (style-panel cut) P4, binding note 6: in `.app-main`'s flex column, in normal document
    flow -- never an absolute overlay (the S1 lesson, same as `.filter-panel` itself). Collapsed by
    default: only `.style-disclosure`'s own row height is paid until expanded.
@@ -463,6 +646,7 @@ body,
   overflow-wrap: anywhere;
 }
 
+/* HISTORY (milestone 1): measured or reasoned on the stacked layout that milestone 1 retired; it is not a description of the current layout. */
 /* NEXT-CUT.md (publish cut) P3: in `.app-main`'s flex column, BELOW `.canvas-container`
    (`App.tsx`'s own placement, same S4 reasoning `.style-panel`'s own comment states) -- collapsed
    by default, same `.style-disclosure` sizing discipline reused verbatim (`.publish-disclosure`
@@ -714,6 +898,7 @@ body,
   overflow-wrap: anywhere;
 }
 
+/* HISTORY (milestone 1): measured or reasoned on the stacked layout that milestone 1 retired; it is not a description of the current layout. */
 /* NEXT-CUT.md P3 (action-console cut): the bottom drawer, collapsed by default -- in `.app-main`'s
    flex column, in normal document flow, never an absolute/fixed overlay (the S1 lesson every panel
    in this tree already follows). `.console-disclosure` below is byte-identical to
