@@ -1,0 +1,27 @@
+repo: jupyter/nbformat
+commit: 4346f97
+track: n1-model
+priority: P0
+license:
+  spdx: BSD-3-Clause
+  verified_from: [LICENSE]
+  mixed: false
+  notes: ""
+interesting_paths:
+  - nbformat/validator.py
+  - nbformat/v4/nbbase.py
+  - nbformat/v4/nbformat.v4.schema.json
+  - nbformat/v4/nbjson.py
+  - nbformat/reader.py
+concepts:
+  - nbformat (major) / nbformat_minor (minor)
+  - future minor => relax additionalProperties and add unrecognized_cell / unrecognized_output arms
+  - one discriminated open slot (cell_type) for future kinds; unknown cells kept, not dropped
+  - duplicate cell id repair with warning
+  - writer indent=1, sort_keys=True (line-diffable)
+reuse:
+  mode: CONCEPTUAL DONOR
+  confidence: high
+spatial_ide_relevance:
+  plan_node: b2-piece-1c-save-and-reopen
+  immediate: true

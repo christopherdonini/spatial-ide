@@ -1,0 +1,20 @@
+repo: OpenLineage/OpenLineage
+commit: 9f9c4cb
+track: n1-model
+priority: P3
+license:
+  spdx: Apache-2.0
+  verified_from: [LICENSE, "spec/Versioning.md SPDX line"]
+  mixed: false
+  notes: "sparse checkout of spec only"
+interesting_paths: [spec/OpenLineage.json, spec/Versioning.md]
+concepts:
+  - spec version in $id URL, SchemaVer MODEL-REVISION-ADDITION
+  - every facet carries _producer and _schemaURL
+  - additionalProperties true on facets (opposite of ADR-036)
+reuse:
+  mode: CONCEPTUAL DONOR
+  confidence: medium
+spatial_ide_relevance:
+  plan_node: b2-piece-1a-step-record-and-dataset-reference
+  immediate: false

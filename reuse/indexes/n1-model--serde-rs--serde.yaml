@@ -1,0 +1,20 @@
+repo: serde-rs/serde
+commit: 6693a89
+track: n1-model
+priority: P1
+license:
+  spdx: MIT OR Apache-2.0
+  verified_from: [LICENSE-MIT, LICENSE-APACHE]
+  mixed: false
+  notes: "sparse checkout of serde_derive de only"
+interesting_paths:
+  - serde_derive/src/de/struct_.rs
+concepts:
+  - derived struct deserialisation refuses a repeated field with duplicate_field
+  - with deny_unknown_fields, derived structs give closed key sets with duplicate refusal (not for map-typed members)
+reuse:
+  mode: ADOPT
+  confidence: high
+spatial_ide_relevance:
+  plan_node: b2-piece-1c-save-and-reopen
+  immediate: true

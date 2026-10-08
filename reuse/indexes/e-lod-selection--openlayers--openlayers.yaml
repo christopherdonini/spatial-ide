@@ -1,0 +1,26 @@
+repo: openlayers/openlayers
+commit: 45d79b2
+track: e-lod-selection
+priority: P2
+license:
+  spdx: BSD-2-Clause
+  verified_from: [LICENSE.md]
+  mixed: false
+  notes: Only tile grid, array helpers, tile queue and canvas tile renderer were read.
+interesting_paths:
+  - src/ol/tilegrid/TileGrid.js
+  - src/ol/array.js
+  - src/ol/source/Tile.js
+  - src/ol/TileQueue.js
+  - src/ol/renderer/canvas/TileLayer.js
+concepts:
+  - level choice from an arbitrary non-power-of-two resolution ladder
+  - zDirection bias (nearest / lower / higher / custom function)
+  - queue priority by log resolution plus centre distance; DROP for unwanted tiles
+  - preload of coarser levels; alpha transition only at the current z
+reuse:
+  mode: CONCEPTUAL DONOR
+  confidence: medium
+spatial_ide_relevance:
+  plan_node: lod-tier-selection
+  immediate: false

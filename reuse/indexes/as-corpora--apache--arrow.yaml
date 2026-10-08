@@ -1,0 +1,17 @@
+repo: apache/arrow
+commit: beccec0
+track: as-corpora
+priority: P2
+license:
+  spdx: Apache-2.0
+  verified_from: [LICENSE.txt]
+  mixed: true
+  notes: Tag apache-arrow-25.0.1; sparse checkout of cpp/src/parquet/geospatial. LICENSE.txt bundles many third-party notices; only the geospatial files were read. schema.cc geoarrow.wkb mapping read at tags 20.0.0 (absent) and 21.0.0 (present) via raw fetch.
+interesting_paths: [cpp/src/parquet/geospatial/util_json_internal.cc, cpp/src/parquet/arrow/schema.cc]
+concepts: [geoarrow.wkb maps to Parquet GEOMETRY from Arrow 21, EPSG:4326 and CRS84 PROJJSON written as empty Parquet crs]
+reuse:
+  mode: CONCEPTUAL DONOR
+  confidence: high
+spatial_ide_relevance:
+  plan_node: corpus-line-files
+  immediate: false

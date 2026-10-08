@@ -1,0 +1,17 @@
+repo: elastic/kibana
+commit: 2a3a7079
+track: q-command-bar
+priority: P1
+license:
+  spdx: AGPL-3.0-only OR SSPL-1.0 OR Elastic-2.0
+  verified_from: [LICENSE.txt, licenses/, "file headers filter_editor.tsx, build_es_query.ts"]
+  mixed: true
+  notes: "Triple licence at licensee's election outside x-pack; x-pack is Elastic-2.0 only (red). The AGPL option is 'v3.0 only', narrower than Spatial IDE's AGPL-3.0-or-later - flag for counsel. Nothing is proposed for copying."
+interesting_paths: [src/platform/plugins/shared/unified_search/public/filter_bar/filter_editor/filter_editor.tsx, src/platform/plugins/shared/unified_search/public/filter_bar/filter_editor/lib/filter_editor_utils.ts, src/platform/packages/shared/kbn-es-query/src/es_query/from_filters.ts, src/platform/packages/shared/kbn-es-query/src/es_query/build_es_query.ts, src/platform/packages/shared/kbn-es-query/src/filters/build_filters/types.ts]
+concepts: [pills as structured filter objects not parsed text, disabled/negate/alias in filter meta, unknown filter type opens raw Query DSL editor, disabled pills dropped before composition, query bar and pills combined only as bool arrays]
+reuse:
+  mode: CONCEPTUAL DONOR
+  confidence: high
+spatial_ide_relevance:
+  plan_node: shell-migration-milestone-3
+  immediate: true

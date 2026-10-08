@@ -1,0 +1,17 @@
+repo: codemirror/autocomplete
+commit: 9a01794
+track: q-command-bar
+priority: P0
+license:
+  spdx: MIT
+  verified_from: [LICENSE, "npm @codemirror/autocomplete@6.20.3 package/LICENSE"]
+  mixed: false
+  notes: "GitHub mirror frozen 2026-04-15 (README: moved to code.haverbeke.berlin); matcher verified identical in the npm 6.20.3 tarball dist/index.js. Copyright (C) 2018-2021 Marijn Haverbeke and others."
+interesting_paths: [src/filter.ts, src/state.ts, src/completion.ts, src/index.ts, src/tooltip.ts]
+concepts: [FuzzyMatcher single-pass prefix/by-word/substring/scattered ranking, penalty scores with highlight ranges, CompletionResult from/to/validFor completion range, option boost and sections, aria-activedescendant only when an option is selected, Enter-accept default keymap without Tab]
+reuse:
+  mode: PORT
+  confidence: high
+spatial_ide_relevance:
+  plan_node: shell-migration-milestone-3
+  immediate: true

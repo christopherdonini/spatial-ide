@@ -1,0 +1,22 @@
+repo: qgis/QGIS
+commit: fa8f961
+track: e-lod-selection
+priority: P3
+license:
+  spdx: GPL-2.0-or-later
+  verified_from: [COPYING, src/core/qgsmaptopixelgeometrysimplifier.cpp header]
+  mixed: true
+  notes: COPYING is GPLv2 text; file headers say "either version 2 ... or (at your option) any later version" - core-combinable copyleft; concept only. The simplifier embeds PostGIS effectivearea code (referenced at qgsmaptopixelgeometrysimplifier.cpp:59-65), not inspected.
+interesting_paths:
+  - src/core/vector/qgsvectorlayerrenderer.cpp
+  - src/core/qgsmaptopixelgeometrysimplifier.cpp
+  - src/core/qgsvectorsimplifymethod.h
+concepts:
+  - render-time simplification tolerance = pixel threshold x map units per pixel
+  - Visvalingam area threshold uses the squared map-to-pixel tolerance
+reuse:
+  mode: CONCEPTUAL DONOR
+  confidence: medium
+spatial_ide_relevance:
+  plan_node: lod-tier-selection
+  immediate: false

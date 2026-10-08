@@ -1,0 +1,17 @@
+repo: OvertureMaps/docs
+commit: 4415e90
+track: as-corpora
+priority: P1
+license:
+  spdx: NOASSERTION
+  verified_from: [docs/_generated_attribution.mdx, docs/attribution.mdx]
+  mixed: true
+  notes: Data-licence source, not code. Transportation, Base, Buildings, Divisions themes ODbL; Places sources CDLA-Permissive-2.0 / Apache-2.0 (Foursquare, NOTICE) / CC0; Addresses mixed per source. TomTom listed in transportation without a licence. Docs repo's own licence file not read.
+interesting_paths: [docs/_generated_attribution.mdx, docs/attribution.mdx]
+concepts: [per-theme licence, OSM attribution line "© OpenStreetMap contributors, Overture Maps Foundation"]
+reuse:
+  mode: REJECT
+  confidence: high
+spatial_ide_relevance:
+  plan_node: corpus-line-files
+  immediate: false

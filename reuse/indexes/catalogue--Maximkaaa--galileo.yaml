@@ -1,0 +1,17 @@
+repo: Maximkaaa/galileo
+commit: 4255076
+track: catalogue
+priority: WATCH
+license:
+  spdx: MIT OR Apache-2.0
+  verified_from: [LICENSE-MIT, LICENSE-APACHE, Cargo.toml]
+  mixed: false
+  notes: "Last crates.io release 0.2.1 on 2025-07-11; CI ubuntu-only. Depends on rustybuzz 0.20 (superseded by HarfRust), lyon 1, wgpu 29, fontdb 0.23, and a git dependency font-query."
+interesting_paths: [galileo/src/render/text/rustybuzz.rs, galileo/src/render/text/text_service.rs, galileo-maplibre/src/style/layer/symbol.rs, Cargo.toml]
+concepts: [Rust wgpu geo renderer architecture, text shaping service, MapLibre style parsing without collision (no collision/declutter/overlap logic in galileo/src)]
+reuse:
+  mode: CONCEPTUAL DONOR
+  confidence: medium
+spatial_ide_relevance:
+  plan_node: none (native wgpu bake-off, unscheduled)
+  immediate: false

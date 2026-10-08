@@ -1,0 +1,25 @@
+repo: Stebalien/tempfile
+commit: 1c294cc
+track: n1-files
+priority: P2
+license:
+  spdx: MIT OR Apache-2.0
+  verified_from:
+    - LICENSE-MIT
+    - LICENSE-APACHE
+    - Cargo.toml
+  mixed: false
+  notes: "Already in the shell lockfile (3.27.0), not the workspace lockfile."
+interesting_paths:
+  - src/file/imp/windows.rs
+  - src/file/imp/unix.rs
+  - src/file/mod.rs
+concepts:
+  - persist = SetFileAttributesW(NORMAL) + MoveFileExW(REPLACE_EXISTING)
+  - documents that neither file nor directory is synchronized
+reuse:
+  mode: REJECT
+  confidence: high
+spatial_ide_relevance:
+  plan_node: b2-piece-1c-save-and-reopen
+  immediate: false

@@ -1,0 +1,17 @@
+repo: observablehq/inputs
+commit: 04a1a8b
+track: j-table
+priority: P3
+license:
+  spdx: "ISC"
+  verified_from: ["LICENSE"]
+  mixed: false
+  notes: ""
+interesting_paths: ["src/table.js"]
+concepts: ["lazy row append from iterator", "sort materialises all"]
+reuse:
+  mode: REJECT
+  confidence: high
+spatial_ide_relevance:
+  plan_node: b1-shell-half
+  immediate: false

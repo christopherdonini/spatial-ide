@@ -1,0 +1,17 @@
+repo: zed-industries/zed
+commit: 4240146
+track: catalogue
+priority: P2
+license:
+  spdx: GPL-3.0-or-later AND Apache-2.0
+  verified_from: [LICENSE-GPL, LICENSE-APACHE, crates/extension_host/Cargo.toml, crates/extension_api/Cargo.toml, crates/extension_api/LICENSE-APACHE]
+  mixed: true
+  notes: "Host crate GPL-3.0-or-later; extension_api crate Apache-2.0 with its own LICENSE-APACHE. Extensions run in-process under wasmtime, which differs from ADR-009 item 5's out-of-process-only rule for proprietary plugins."
+interesting_paths: [crates/extension_api/wit/, crates/extension_host/src/wasm_host/wit/, crates/extension_host/src/wasm_host.rs]
+concepts: [copyleft host with permissive API crate, WIT interfaces versioned by since_vX directories with per-version host shims]
+reuse:
+  mode: CONCEPTUAL DONOR
+  confidence: medium
+spatial_ide_relevance:
+  plan_node: first-external-plugin-skp-client
+  immediate: false

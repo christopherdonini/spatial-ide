@@ -1,0 +1,17 @@
+repo: apache/parquet-testing
+commit: 56653c4
+track: as-corpora
+priority: P1
+license:
+  spdx: Apache-2.0
+  verified_from: [LICENSE.txt, data/geospatial/README.md, data/geospatial/crs-gen.py]
+  mixed: false
+  notes: ASF headers on README and generators; no root NOTICE. bad_data/ARROW-GH-41317 and -41321 are corrupted GeoParquet 0.1.0 files (geo key, WKT CRS).
+interesting_paths: [data/geospatial/README.md, data/geospatial/geospatial.parquet, data/geospatial/crs-srid.parquet, data/geospatial/crs-projjson.parquet, data/geospatial/geography-lines.parquet, data/geospatial/crs-gen.py, bad_data/README.md]
+concepts: [Parquet GEOMETRY and GEOGRAPHY logical types, crs forms unset/srid/projjson-key/inline, GeospatialStatistics incl wraparound, NaN coordinates, no geo key so refused by Spatial IDE today]
+reuse:
+  mode: ADOPT
+  confidence: high
+spatial_ide_relevance:
+  plan_node: corpus-line-files
+  immediate: false

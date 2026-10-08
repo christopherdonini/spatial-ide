@@ -1,0 +1,17 @@
+repo: apache/parquet-format
+commit: bf09939
+track: as-corpora
+priority: P2
+license:
+  spdx: Apache-2.0
+  verified_from: [LICENSE, NOTICE, Geospatial.md header]
+  mixed: false
+  notes: GEOMETRY/GEOGRAPHY first present at tag apache-parquet-format-2.11.0 (2025-03-21), absent at 2.10.0.
+interesting_paths: [Geospatial.md, LogicalTypes.md, src/main/thrift/parquet.thrift]
+concepts: [GEOMETRY crs default OGC:CRS84, coordinate axis order override, GeospatialStatistics, edge interpolation algorithms]
+reuse:
+  mode: CONCEPTUAL DONOR
+  confidence: high
+spatial_ide_relevance:
+  plan_node: corpus-line-files
+  immediate: false

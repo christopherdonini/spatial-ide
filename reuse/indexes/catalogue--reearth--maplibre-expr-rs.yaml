@@ -1,0 +1,17 @@
+repo: reearth/maplibre-expr-rs
+commit: 3a6352f
+track: catalogue
+priority: P1
+license:
+  spdx: MIT OR Apache-2.0
+  verified_from: [LICENSE-MIT, LICENSE-APACHE, Cargo.toml]
+  mixed: true
+  notes: "Vendors BSD-3-Clause MapLibre material with attribution files: src/reference/v8.json (src/reference/ATTRIBUTION.md) and the expression conformance fixtures (tests/fixtures/ATTRIBUTION.md), both pinned to maplibre-style-spec ef522e45. src/convert.rs is a port of style-spec src/function/convert.ts (comments cite upstream line numbers)."
+interesting_paths: [src/parse.rs, src/typecheck.rs, src/eval.rs, src/convert.rs, src/reference/ATTRIBUTION.md, tests/fixtures/ATTRIBUTION.md, CHANGELOG.md, .github/workflows/ci.yml]
+concepts: [MapLibre expression parse/typecheck/evaluate in Rust, byte-exact upstream error messages, libm for cross-host bit-identical evaluation (0.5.4), conformance fixtures as an agreement vector]
+reuse:
+  mode: ADOPT
+  confidence: medium
+spatial_ide_relevance:
+  plan_node: style-dsl-editor
+  immediate: false

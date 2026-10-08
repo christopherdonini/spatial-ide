@@ -1,0 +1,27 @@
+repo: maplibre/maplibre-gl-js
+commit: dc4192c
+track: e-lod-selection
+priority: P1
+license:
+  spdx: BSD-3-Clause
+  verified_from: [LICENSE.txt, package.json]
+  mixed: false
+  notes: Contains mapbox-gl-js v1.13-and-earlier code, also BSD-3-Clause (LICENSE.txt:32-36). Do not confuse with mapbox-gl-js v2+, which is proprietary.
+interesting_paths:
+  - src/tile/tile_manager.ts
+  - src/tile/tile_manager_raster.ts
+  - src/geo/projection/covering_tiles.ts
+  - src/source/source_state.ts
+  - src/ui/map.ts
+concepts:
+  - ideal covering zoom by round/floor, no hysteresis
+  - retain loaded children (complete generation check) else loaded parents as placeholders
+  - cancelPendingTileRequestsWhileZooming - declared cancel-vs-keep-coarser trade-off
+  - raster-only cross-fade; vector swap with symbol fade hold
+  - feature state keyed by feature id, independent of tile and zoom
+reuse:
+  mode: CONCEPTUAL DONOR
+  confidence: medium
+spatial_ide_relevance:
+  plan_node: lod-tier-selection
+  immediate: false

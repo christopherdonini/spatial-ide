@@ -1,0 +1,28 @@
+repo: andreacorbellini/rust-atomic-write-file
+commit: e1ee3a5
+track: n1-files
+priority: P2
+license:
+  spdx: BSD-3-Clause
+  verified_from:
+    - LICENSE.md
+    - Cargo.toml
+  mixed: false
+  notes: "Deps rand 0.10, nix (unix)."
+interesting_paths:
+  - src/lib.rs
+  - src/imp/unix/mod.rs
+  - src/imp/unix/linux.rs
+  - src/imp/generic.rs
+  - crash-tests/linux/README.md
+concepts:
+  - sync_all then renameat then fsync(dir) on Unix
+  - O_TMPFILE + linkat on Linux
+  - QEMU kernel-panic crash tests on ext3/ext4/btrfs/xfs
+  - "Windows path is plain fs::rename, no flush of dir, TODO for WRITE_THROUGH"
+reuse:
+  mode: CONCEPTUAL DONOR
+  confidence: high
+spatial_ide_relevance:
+  plan_node: b2-piece-1c-save-and-reopen
+  immediate: false

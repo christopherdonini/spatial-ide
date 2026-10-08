@@ -1,0 +1,22 @@
+repo: excalidraw/excalidraw
+commit: 4c00f31
+track: n1-model
+priority: WATCH
+license:
+  spdx: MIT
+  verified_from: [LICENSE]
+  mixed: false
+  notes: "sparse checkout of data/restore.ts, data/json.ts, common constants"
+interesting_paths:
+  - packages/excalidraw/data/restore.ts
+  - packages/excalidraw/data/json.ts
+  - packages/common/src/constants.ts
+concepts:
+  - .excalidraw with MIME application/vnd.excalidraw+json, type + version in file
+  - restore keeps unknown properties but returns null for an unknown element type (drops it) - counter-example to ADR-036 section 3
+reuse:
+  mode: REJECT
+  confidence: high
+spatial_ide_relevance:
+  plan_node: b2-piece-1c-save-and-reopen
+  immediate: false

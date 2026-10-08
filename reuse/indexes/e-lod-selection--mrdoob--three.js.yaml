@@ -1,0 +1,19 @@
+repo: mrdoob/three.js
+commit: a2254fd
+track: e-lod-selection
+priority: P3
+license:
+  spdx: MIT
+  verified_from: [LICENSE]
+  mixed: false
+  notes: Only src/objects/LOD.js was read.
+interesting_paths:
+  - src/objects/LOD.js
+concepts:
+  - one-sided fractional hysteresis on level switch distance (additive in log scale)
+reuse:
+  mode: CONCEPTUAL DONOR
+  confidence: medium
+spatial_ide_relevance:
+  plan_node: lod-tier-selection
+  immediate: false

@@ -1,0 +1,23 @@
+repo: blender/blender
+commit: fbe76d9
+track: n1-files
+priority: P3
+license:
+  spdx: GPL-2.0-or-later
+  verified_from:
+    - COPYING
+    - SPDX header in source/blender/blenloader/intern/writefile.cc
+  mixed: false
+  notes: Core-combinable copyleft; concepts only.
+interesting_paths:
+  - source/blender/blenloader/intern/writefile.cc
+  - source/blender/blenlib/intern/fileops_c.cc
+concepts:
+  - "write file@ beside target, rotate .blend1/.blend2, then MoveFileExW replace"
+  - non-atomic fallback named for exFAT/NTFS/Samba in rename-noreplace
+reuse:
+  mode: CONCEPTUAL DONOR
+  confidence: low
+spatial_ide_relevance:
+  plan_node: b2-piece-1c-save-and-reopen
+  immediate: false

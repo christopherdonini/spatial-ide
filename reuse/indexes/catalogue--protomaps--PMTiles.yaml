@@ -1,0 +1,17 @@
+repo: protomaps/PMTiles
+commit: aec8fa1
+track: catalogue
+priority: WATCH
+license:
+  spdx: BSD-3-Clause AND CC0-1.0
+  verified_from: [LICENSE, REUSE.toml]
+  mixed: true
+  notes: "Spec (spec/**/*.md) CC0-1.0; implementations BSD-3-Clause; python/rio-pmtiles MIT; sample tilesets ODbL-1.0 / CC-BY-4.0 (do not vendor)."
+interesting_paths: [spec/v3/spec.md, REUSE.toml]
+concepts: [single-file tile archive, Hilbert TileID over z/x/y pyramid, lat/lon header bounds (web-ready sources only)]
+reuse:
+  mode: WATCH
+  confidence: high
+spatial_ide_relevance:
+  plan_node: publishing-bundles-hardened
+  immediate: false

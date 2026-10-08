@@ -1,0 +1,17 @@
+repo: adazzle/react-data-grid
+commit: f5f8abd
+track: j-table
+priority: P2
+license:
+  spdx: "MIT"
+  verified_from: ["LICENSE"]
+  mixed: false
+  notes: "React ^19.2 peer since beta.59; ^19 since beta.50"
+interesting_paths: ["src/DataGrid.tsx", "src/Cell.tsx", "src/hooks/useRovingTabIndex.ts", "src/hooks/useViewportRows.ts"]
+concepts: ["role=grid gridcell rowindex colindex", "roving tabindex", "APG keyboard map", "aria-selected conflated with active cell"]
+reuse:
+  mode: CONCEPTUAL DONOR
+  confidence: medium
+spatial_ide_relevance:
+  plan_node: b1-shell-half
+  immediate: true

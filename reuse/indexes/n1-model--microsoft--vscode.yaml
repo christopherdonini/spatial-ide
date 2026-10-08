@@ -1,0 +1,30 @@
+repo: microsoft/vscode
+commit: d3d31f6
+track: n1-model
+priority: P2
+license:
+  spdx: MIT
+  verified_from: ["file headers (src/vs/platform/workspaces/node/workspaces.ts:1-4)"]
+  mixed: false
+  notes: "sparse checkout of workspaces, storage, windows and packaging resources only"
+interesting_paths:
+  - src/vs/platform/workspaces/node/workspaces.ts
+  - src/vs/platform/storage/electron-main/storageMain.ts
+  - src/vs/workbench/services/workspaces/electron-browser/workspaceEditingService.ts
+  - src/vs/platform/windows/electron-main/windowsMainService.ts
+  - build/win32/code.iss
+  - resources/linux/code-workspace.xml
+  - resources/linux/code.desktop
+  - resources/linux/debian/postinst.template
+concepts:
+  - workspace id = md5(path) or md5(path+birthtime/inode) - path-derived identity (counter-example)
+  - copy or move silently loses or forks state
+  - workspace.json reverse pointer in each per-workspace storage folder
+  - Linux shared-mime-info glob + update-mime-database for a custom JSON extension
+  - focus the window already holding a workspace instead of opening it twice
+reuse:
+  mode: CONCEPTUAL DONOR
+  confidence: high
+spatial_ide_relevance:
+  plan_node: b2-piece-1c-save-and-reopen
+  immediate: true

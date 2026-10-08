@@ -1,0 +1,2241 @@
+{
+  "schema": "spatial-reuse-cache-lock",
+  "version": 1,
+  "generated": "2026-10-08",
+  "note": "Every repository read in Round 1, pinned at the commit read. Rebuild the cache with: node tools/fetch-cache.mjs",
+  "repos": [
+    {
+      "url": "https://github.com/3liz/proj4rs",
+      "commit": "4e5ee1bedbc177bdf0b30fc58c551443198ca3fa",
+      "tracks": [
+        "catalogue"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 2,
+      "filter": "blob:none",
+      "name": "3liz__proj4rs@4e5ee1bedb"
+    },
+    {
+      "url": "https://github.com/adazzle/react-data-grid",
+      "commit": "f5f8abda005003c5ec34d0543e63d3b85efccc16",
+      "tracks": [
+        "j-table"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 2,
+      "filter": "blob:none",
+      "name": "adazzle__react-data-grid@f5f8abda00"
+    },
+    {
+      "url": "https://github.com/ag-grid/ag-grid",
+      "commit": "89faa994aac41cbc17e10cfa53ba9daf88ce5b01",
+      "tracks": [
+        "j-table"
+      ],
+      "sparse": [
+        "/LICENSE*",
+        "/README.md",
+        "/packages/ag-grid-community/package.json",
+        "/packages/ag-grid-enterprise/package.json",
+        "/packages/ag-grid-enterprise/LICENSE*",
+        "/packages/ag-grid-community/LICENSE*",
+        "/packages/ag-grid-community/src/rendering/**",
+        "/packages/ag-grid-community/src/headerRendering/**",
+        "/packages/ag-grid-community/src/infiniteRowModel/**",
+        "/packages/ag-grid-community/src/focusService.ts",
+        "/packages/ag-grid-community/src/focus/**",
+        "/packages/ag-grid-community/src/navigation/**",
+        "/packages/ag-grid-enterprise/src/serverSideRowModel/**",
+        "/packages/ag-grid-enterprise/src/viewportRowModel/**",
+        "/packages/ag-grid-community/src/gridBodyComp/gridBodyCtrl.ts"
+      ],
+      "cone": false,
+      "size_mb": 5,
+      "filter": "blob:none",
+      "name": "ag-grid__ag-grid@89faa994aa"
+    },
+    {
+      "url": "https://github.com/andreacorbellini/rust-atomic-write-file",
+      "commit": "e1ee3a5f75717532e5275261af45de0f8d4980e6",
+      "tracks": [
+        "n1-files"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "andreacorbellini__rust-atomic-write-file@e1ee3a5f75"
+    },
+    {
+      "url": "https://github.com/antonycourtney/tad",
+      "commit": "272ffa0092024cd57b82fc813af1f8c6568bc3f0",
+      "tracks": [
+        "j-table"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 23,
+      "filter": "blob:none",
+      "name": "antonycourtney__tad@272ffa0092"
+    },
+    {
+      "url": "https://github.com/apache/arrow",
+      "commit": "beccec0d0c451b7aa3e4530416ac431b3c035c69",
+      "tracks": [
+        "as-corpora"
+      ],
+      "sparse": [
+        "cpp/src/parquet/geospatial"
+      ],
+      "cone": true,
+      "size_mb": 7,
+      "filter": "blob:none",
+      "name": "apache__arrow@beccec0d0c"
+    },
+    {
+      "url": "https://github.com/apache/arrow-js",
+      "commit": "8a7fda4c85f7493fee3ad3662732e41e452931ec",
+      "tracks": [
+        "j-table"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 4,
+      "filter": "blob:none",
+      "name": "apache__arrow-js@8a7fda4c85"
+    },
+    {
+      "url": "https://github.com/apache/arrow-rs",
+      "commit": "6c31f419a211531fa29e9920374cc02a20b9c2a0",
+      "tracks": [
+        "as-corpora"
+      ],
+      "sparse": [
+        "parquet-geospatial",
+        "parquet/src/geospatial"
+      ],
+      "cone": true,
+      "size_mb": 3,
+      "filter": "blob:none",
+      "name": "apache__arrow-rs@6c31f419a2"
+    },
+    {
+      "url": "https://github.com/apache/arrow-testing",
+      "commit": "9ff285c88565f0f6abc855918c6a342e70e4909c",
+      "tracks": [
+        "as-corpora"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 15,
+      "filter": "blob:none",
+      "name": "apache__arrow-testing@9ff285c885"
+    },
+    {
+      "url": "https://github.com/apache/kafka",
+      "commit": "c553733515e35e636a1a5b3e1d45f773a1d64f02",
+      "tracks": [
+        "n1-model"
+      ],
+      "sparse": [
+        "/LICENSE",
+        "/NOTICE",
+        "/storage/src/main/java/org/apache/kafka/storage/internals/log/Cleaner.java",
+        "/storage/src/main/java/org/apache/kafka/storage/internals/log/LogCleaner.java",
+        "/storage/src/main/java/org/apache/kafka/storage/internals/log/LogCleanerManager.java",
+        "/storage/src/main/java/org/apache/kafka/storage/internals/log/OffsetMap.java",
+        "/storage/src/main/java/org/apache/kafka/storage/internals/log/SkimpyOffsetMap.java",
+        "/core/src/main/scala/kafka/log/LogCleaner.scala",
+        "/core/src/main/scala/kafka/log/LogCleanerManager.scala"
+      ],
+      "cone": false,
+      "size_mb": 2,
+      "filter": "blob:none",
+      "name": "apache__kafka@c553733515"
+    },
+    {
+      "url": "https://github.com/apache/parquet-format",
+      "commit": "bf0993925ccf41b1fb4b1ae241af4a66e8adf1fe",
+      "tracks": [
+        "as-corpora"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 2,
+      "filter": "blob:none",
+      "name": "apache__parquet-format@bf0993925c"
+    },
+    {
+      "url": "https://github.com/apache/parquet-testing",
+      "commit": "56653c437c8092f704a092d0d1d4e600124cd49f",
+      "tracks": [
+        "as-corpora"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 8,
+      "filter": "blob:none",
+      "name": "apache__parquet-testing@56653c437c"
+    },
+    {
+      "url": "https://github.com/apache/superset",
+      "commit": "100f51240bda67dc4536ce101c38a3ff0fcbf309",
+      "tracks": [
+        "q-command-bar"
+      ],
+      "sparse": [
+        "/LICENSE.txt",
+        "/superset-frontend/src/explore/components/controls/FilterControl/AdhocFilter/",
+        "/superset-frontend/src/explore/components/controls/FilterControl/utils/translateToSQL.ts",
+        "/superset-frontend/src/explore/components/controls/FilterControl/AdhocFilterEditPopover/index.tsx",
+        "/superset/sql/parse.py",
+        "/superset/sql_parse.py",
+        "/superset/models/helpers.py"
+      ],
+      "cone": false,
+      "size_mb": 11,
+      "filter": "blob:none",
+      "name": "apache__superset@100f51240b"
+    },
+    {
+      "url": "https://github.com/bevyengine/bevy",
+      "commit": "fd98063564218bd210308675602a3e9643014c31",
+      "tracks": [
+        "e-lod-selection"
+      ],
+      "sparse": [
+        "/LICENSE-MIT",
+        "/LICENSE-APACHE",
+        "/Cargo.toml",
+        "/crates/bevy_camera/",
+        "/crates/bevy_render/src/view/visibility/",
+        "/crates/bevy_pbr/src/render/mesh.rs",
+        "/examples/3d/visibility_range.rs"
+      ],
+      "cone": false,
+      "size_mb": 2,
+      "filter": "blob:none",
+      "name": "bevyengine__bevy@fd98063564"
+    },
+    {
+      "url": "https://github.com/blender/blender",
+      "commit": "fbe76d95316fc27615f290123ff3a98ca63593f2",
+      "tracks": [
+        "n1-files"
+      ],
+      "sparse": [
+        "/source/blender/blenloader/intern/writefile.cc",
+        "/COPYING",
+        "/LICENSE",
+        "/source/blender/blenlib/intern/fileops_c.cc",
+        "/source/blender/blenlib/intern/fileops.cc"
+      ],
+      "cone": false,
+      "size_mb": 4,
+      "filter": "blob:none",
+      "name": "blender__blender@fbe76d9531"
+    },
+    {
+      "url": "https://github.com/busstoptaktik/geodesy",
+      "commit": "ccbee46c00e779e3d26a6aa4eae5d3ea0b477583",
+      "tracks": [
+        "catalogue"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "busstoptaktik__geodesy@ccbee46c00"
+    },
+    {
+      "url": "https://github.com/bytecodealliance/cap-std",
+      "commit": "b7acf8e8807fe3fab991884d2208b7e03d35a409",
+      "tracks": [
+        "n1-files"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 7,
+      "filter": "blob:none",
+      "name": "bytecodealliance__cap-std@b7acf8e880"
+    },
+    {
+      "url": "https://github.com/bytecodealliance/wasmtime",
+      "commit": "1bde3f9423234fe9e725ff55288d995e144b971b",
+      "tracks": [
+        "catalogue"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "bytecodealliance__wasmtime@1bde3f9423"
+    },
+    {
+      "url": "https://github.com/CesiumGS/cesium",
+      "commit": "a3aea90b28d913faa3dd41454c5ab40f7e912459",
+      "tracks": [
+        "e-lod-selection"
+      ],
+      "sparse": [
+        "/LICENSE.md",
+        "/package.json",
+        "/packages/engine/Source/Scene/Cesium3DTilesetTraversal.js",
+        "/packages/engine/Source/Scene/Cesium3DTilesetBaseTraversal.js",
+        "/packages/engine/Source/Scene/Cesium3DTilesetSkipTraversal.js",
+        "/packages/engine/Source/Scene/Cesium3DTilesetMostDetailedTraversal.js",
+        "/packages/engine/Source/Scene/Cesium3DTile.js",
+        "/packages/engine/Source/Scene/Cesium3DTileset.js",
+        "/packages/engine/Source/Core/RequestScheduler.js",
+        "/packages/engine/Source/Core/Request.js",
+        "/packages/engine/Source/Core/RequestState.js",
+        "/packages/engine/Source/Scene/QuadtreePrimitive.js",
+        "/packages/engine/Source/Scene/Cesium3DTilesetCache.js",
+        "/packages/engine/Source/Scene/Cesium3DTileRefine.js",
+        "/packages/engine/Source/Scene/Cesium3DTilesetStatistics.js",
+        "/packages/engine/Specs/Core/RequestSchedulerSpec.js",
+        "/packages/engine/Source/Scene/Cesium3DTileStyleEngine.js",
+        "/.github/workflows/",
+        "/packages/engine/Source/Scene/Cesium3DTilePass.js",
+        "/packages/engine/Source/Scene/Cesium3DTileOptimizations.js",
+        "/packages/engine/package.json"
+      ],
+      "cone": false,
+      "size_mb": 2,
+      "filter": "blob:none",
+      "name": "CesiumGS__cesium@a3aea90b28"
+    },
+    {
+      "url": "https://github.com/chromium/chromium",
+      "commit": "8fe23318205d4900e4f82a2cdd023fa8e00631ea",
+      "tracks": [
+        "n1-files"
+      ],
+      "sparse": [
+        "/base/files/file_util_win.cc",
+        "/base/files/important_file_writer.cc",
+        "/base/files/important_file_writer.h",
+        "/LICENSE",
+        "/base/files/file_win.cc",
+        "/base/files/file_posix.cc"
+      ],
+      "cone": false,
+      "size_mb": 91,
+      "filter": "blob:none",
+      "name": "chromium__chromium@8fe2331820"
+    },
+    {
+      "url": "https://github.com/codemirror/autocomplete",
+      "commit": "9a01794def6f9f12468805dce2d687b7548ff469",
+      "tracks": [
+        "q-command-bar"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "codemirror__autocomplete@9a01794def"
+    },
+    {
+      "url": "https://github.com/codemirror/commands",
+      "commit": "5b9bac974f2c4af3e20b045adef949667872ecad",
+      "tracks": [
+        "n1-model"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "codemirror__commands@5b9bac974f"
+    },
+    {
+      "url": "https://github.com/cyphar/filepath-securejoin",
+      "commit": "9e667cafd6b022fac5ae8711ace2204eeec95207",
+      "tracks": [
+        "n1-files"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "cyphar__filepath-securejoin@9e667cafd6"
+    },
+    {
+      "url": "https://github.com/cyphar/libpathrs",
+      "commit": "3abe8bbda057bcae1cd379a05685867684c43353",
+      "tracks": [
+        "n1-files"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 3,
+      "filter": "blob:none",
+      "name": "cyphar__libpathrs@3abe8bbda0"
+    },
+    {
+      "url": "https://github.com/d3fc/d3fc",
+      "commit": "55ee5942a0885ea073838afaaa89eba24cefab15",
+      "tracks": [
+        "catalogue"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "d3fc__d3fc@55ee5942a0"
+    },
+    {
+      "url": "https://github.com/developmentseed/async-tiff",
+      "commit": "2465c23f7cdf57a203dca1aac287c222b0fc6f46",
+      "tracks": [
+        "catalogue"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "developmentseed__async-tiff@2465c23f7c"
+    },
+    {
+      "url": "https://github.com/duckdb/duckdb",
+      "commit": "d8cdaa33fda8df955cc76ef58a280f68f4cd43fa",
+      "tracks": [
+        "as-corpora"
+      ],
+      "sparse": [
+        "extension/parquet",
+        "src/common/arrow",
+        "src/common/types",
+        "src/function/scalar",
+        "src/function/table/arrow",
+        "src/include/duckdb/common/types",
+        "src/include/duckdb/function/scalar",
+        "src/main"
+      ],
+      "cone": true,
+      "size_mb": 13,
+      "filter": "blob:none",
+      "name": "duckdb__duckdb@d8cdaa33fd"
+    },
+    {
+      "url": "https://github.com/duckdb/duckdb",
+      "commit": "f2f9329721f3d7228296c07f40c3cac72243a6df",
+      "tracks": [
+        "j-table",
+        "n1-files"
+      ],
+      "sparse": [
+        "/LICENSE",
+        "/extension/parquet/parquet_extension.cpp",
+        "/src/common/local_file_system.cpp",
+        "/src/include/duckdb/common/multi_file/multi_file_function.hpp",
+        "/src/include/duckdb/main/settings.hpp",
+        "/src/include/duckdb/optimizer/late_materialization.hpp",
+        "/src/optimizer/late_materialization.cpp",
+        "/src/optimizer/topn_optimizer.cpp",
+        "/src/optimizer/topn_window_elimination.cpp"
+      ],
+      "cone": false,
+      "size_mb": 6,
+      "filter": "blob:none",
+      "name": "duckdb__duckdb@f2f9329721"
+    },
+    {
+      "url": "https://github.com/duckdb/duckdb-rs",
+      "commit": "b907911c1f557ee37123628e3dc424951fa0ab60",
+      "tracks": [
+        "k1-scan-progress"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 42,
+      "filter": "blob:none",
+      "name": "duckdb__duckdb-rs@b907911c1f"
+    },
+    {
+      "url": "https://github.com/duckdb/duckdb-spatial",
+      "commit": "eb1e57c9d92c0f3f76eb03eaa52c315090f328cc",
+      "tracks": [
+        "as-corpora"
+      ],
+      "sparse": [
+        "src/spatial",
+        "test/data",
+        "test/sql/transform"
+      ],
+      "cone": true,
+      "size_mb": 273,
+      "filter": "blob:none",
+      "name": "duckdb__duckdb-spatial@eb1e57c9d9"
+    },
+    {
+      "url": "https://github.com/duckdb/duckdb-ui",
+      "commit": "0628932f74b1e2e9eaf68a05b22d737455541dca",
+      "tracks": [
+        "j-table"
+      ],
+      "sparse": [
+        "/LICENSE*",
+        "/package.json",
+        "/README.md",
+        "/ts/pkgs/duckdb-data-reader/src/**",
+        "/ts/README.md"
+      ],
+      "cone": false,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "duckdb__duckdb-ui@0628932f74"
+    },
+    {
+      "url": "https://github.com/elastic/kibana",
+      "commit": "2a3a7079036d87aa314a355982c2124122cd7eed",
+      "tracks": [
+        "q-command-bar"
+      ],
+      "sparse": [
+        "/LICENSE.txt",
+        "/NOTICE.txt",
+        "/licenses/",
+        "/package.json",
+        "/src/platform/plugins/shared/unified_search/public/filter_bar/filter_editor/",
+        "/src/platform/plugins/shared/unified_search/public/filter_bar/filter_item/",
+        "/src/platform/plugins/shared/unified_search/public/filter_badge/",
+        "/src/platform/packages/shared/kbn-es-query/src/filters/build_filters/",
+        "/src/platform/packages/shared/kbn-es-query/src/filters/helpers/",
+        "/src/platform/plugins/shared/unified_search/public/filters_builder/",
+        "/src/platform/packages/shared/kbn-es-query/src/es_query/",
+        "/src/platform/packages/shared/kbn-es-query/src/filters/build_filters/"
+      ],
+      "cone": false,
+      "size_mb": 30,
+      "filter": "blob:none",
+      "name": "elastic__kibana@2a3a707903"
+    },
+    {
+      "url": "https://github.com/epistates/osmic",
+      "commit": "c0cdc2f422153996c77a003990c95c1c789488c4",
+      "tracks": [
+        "catalogue"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "epistates__osmic@c0cdc2f422"
+    },
+    {
+      "url": "https://github.com/etcd-io/etcd",
+      "commit": "f061acd0902d489041448cdd19d71a345d27b9f5",
+      "tracks": [
+        "n1-files"
+      ],
+      "sparse": [
+        "/server/storage/wal/decoder.go",
+        "/server/storage/wal/wal.go",
+        "/server/storage/wal/repair.go",
+        "/client/pkg/fileutil/*",
+        "/LICENSE"
+      ],
+      "cone": false,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "etcd-io__etcd@f061acd090"
+    },
+    {
+      "url": "https://github.com/evik42/serde-json-canonicalizer",
+      "commit": "cf6a483e6b46485007429e1c9d0cdeb45fcb0186",
+      "tracks": [
+        "n1-model"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "evik42__serde-json-canonicalizer@cf6a483e6b"
+    },
+    {
+      "url": "https://github.com/excalidraw/excalidraw",
+      "commit": "4c00f31ddcc20086bac1020428819fe0b9a30bce",
+      "tracks": [
+        "n1-model"
+      ],
+      "sparse": [
+        "/LICENSE",
+        "/packages/excalidraw/data/restore.ts",
+        "/packages/excalidraw/data/json.ts",
+        "/packages/common/src/constants.ts"
+      ],
+      "cone": false,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "excalidraw__excalidraw@4c00f31ddc"
+    },
+    {
+      "url": "https://github.com/extism/extism",
+      "commit": "d5da29759bba88645f886d9e12d3f4e4376df7b3",
+      "tracks": [
+        "catalogue"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "extism__extism@d5da29759b"
+    },
+    {
+      "url": "https://github.com/facebook/rocksdb",
+      "commit": "dec67990f0352352f53cb28b0b53651e73039d95",
+      "tracks": [
+        "n1-files"
+      ],
+      "sparse": [
+        "/db/log_format.h",
+        "/db/log_reader.cc",
+        "/db/log_reader.h",
+        "/db/log_writer.cc",
+        "/LICENSE*",
+        "/COPYING",
+        "/include/rocksdb/options.h",
+        "/README.md"
+      ],
+      "cone": false,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "facebook__rocksdb@dec67990f0"
+    },
+    {
+      "url": "https://github.com/facebook/watchman",
+      "commit": "038eee6c0a81d7624b2dcaf6717dd610ecef675d",
+      "tracks": [
+        "n1-files"
+      ],
+      "sparse": [
+        "/watchman/InMemoryView.cpp",
+        "/LICENSE",
+        "/watchman/Clock.h",
+        "/watchman/watcher/*",
+        "/website/docs/clockspec.md"
+      ],
+      "cone": false,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "facebook__watchman@038eee6c0a"
+    },
+    {
+      "url": "https://github.com/farzher/fuzzysort",
+      "commit": "ac4d42ec894a2125d78802ec9b5e74e43518d0fc",
+      "tracks": [
+        "q-command-bar"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 10,
+      "filter": "blob:none",
+      "name": "farzher__fuzzysort@ac4d42ec89"
+    },
+    {
+      "url": "https://github.com/felt/tippecanoe",
+      "commit": "4f2621186acfec33b63ddf636f665623c0fef2dd",
+      "tracks": [
+        "catalogue"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "felt__tippecanoe@4f2621186a"
+    },
+    {
+      "url": "https://github.com/finos/perspective",
+      "commit": "6dbc6b8eee893fcb56a207f9910e3a8c532117a5",
+      "tracks": [
+        "j-table"
+      ],
+      "sparse": [
+        "/LICENSE*",
+        "/NOTICE*",
+        "/package.json",
+        "/rust/perspective-viewer/src/**",
+        "/packages/perspective-viewer-datagrid/**",
+        "/rust/perspective-client/src/rust/view.rs",
+        "/rust/perspective-client/src/rust/*.rs",
+        "/rust/perspective-js/src/**",
+        "/cpp/perspective/src/cpp/view.cpp",
+        "/cpp/perspective/src/include/perspective/view.h",
+        "/packages/viewer-datagrid/**",
+        "/rust/perspective-server/cpp/perspective/src/cpp/view.cpp",
+        "/rust/perspective-server/cpp/perspective/src/cpp/server.cpp",
+        "/rust/perspective-client/src/rust/virtual_server/**"
+      ],
+      "cone": false,
+      "size_mb": 8,
+      "filter": "blob:none",
+      "name": "finos__perspective@6dbc6b8eee"
+    },
+    {
+      "url": "https://github.com/finos/regular-table",
+      "commit": "47f99d33145bb9842d951da25fc72c4ed8785975",
+      "tracks": [
+        "j-table"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 7,
+      "filter": "blob:none",
+      "name": "finos__regular-table@47f99d3314"
+    },
+    {
+      "url": "https://github.com/flatgeobuf/flatgeobuf",
+      "commit": "543346d6002384e11484d57c3a56384f170a1c73",
+      "tracks": [
+        "catalogue"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "flatgeobuf__flatgeobuf@543346d600"
+    },
+    {
+      "url": "https://github.com/geoarrow/geoarrow",
+      "commit": "6ff51fb16a7d3db0f807e5fee85970532f94c3bd",
+      "tracks": [
+        "as-corpora"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "geoarrow__geoarrow@6ff51fb16a"
+    },
+    {
+      "url": "https://github.com/geoarrow/geoarrow-data",
+      "commit": "e8eaa04487d982398f07713cde527c5c5edeee1e",
+      "tracks": [
+        "as-corpora"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 8,
+      "filter": "blob:none",
+      "name": "geoarrow__geoarrow-data@e8eaa04487"
+    },
+    {
+      "url": "https://github.com/geopandas/geopandas",
+      "commit": "2c7a44284275ec32e83a7acef4e038e4c894191c",
+      "tracks": [
+        "as-corpora"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 19,
+      "filter": "blob:none",
+      "name": "geopandas__geopandas@2c7a442842"
+    },
+    {
+      "url": "https://github.com/georust/earcut",
+      "commit": "65f4d2ae1c7dde0f6f0a5286f0c19124e7694a42",
+      "tracks": [
+        "catalogue"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "georust__earcut@65f4d2ae1c"
+    },
+    {
+      "url": "https://github.com/georust/gdal",
+      "commit": "c0a6266b987a2c2d44aea9956c2cae1ed71445cf",
+      "tracks": [
+        "catalogue"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "georust__gdal@c0a6266b98"
+    },
+    {
+      "url": "https://github.com/georust/geo",
+      "commit": "c12769fdf7453df1dd590e6e3bca28913d3c0564",
+      "tracks": [
+        "catalogue"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "georust__geo@c12769fdf7"
+    },
+    {
+      "url": "https://github.com/georust/geographiclib-rs",
+      "commit": "c5e906d94a4664b5be160eb03f89e76b15cc5ece",
+      "tracks": [
+        "catalogue"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "georust__geographiclib-rs@c5e906d94a"
+    },
+    {
+      "url": "https://github.com/georust/geos",
+      "commit": "6994ef29e4931d7c72635202e06723a42cd417d4",
+      "tracks": [
+        "catalogue"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "georust__geos@6994ef29e4"
+    },
+    {
+      "url": "https://github.com/georust/geotiff",
+      "commit": "8c769462b048768db31c047f40cab3259efcb4eb",
+      "tracks": [
+        "catalogue"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "georust__geotiff@8c769462b0"
+    },
+    {
+      "url": "https://github.com/georust/proj",
+      "commit": "a67b941e8f6f6cd54c4b9295d1beeb174f8e1c6f",
+      "tracks": [
+        "catalogue"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "georust__proj@a67b941e8f"
+    },
+    {
+      "url": "https://github.com/georust/rstar",
+      "commit": "8a0f397dcf6ac408a6d06dbdbd7eafa4fd687c7a",
+      "tracks": [
+        "catalogue"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "georust__rstar@8a0f397dcf"
+    },
+    {
+      "url": "https://github.com/gfx-rs/wgpu",
+      "commit": "03017a1aba68edd36ceae25b64a32f79b1fc356d",
+      "tracks": [
+        "catalogue"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "gfx-rs__wgpu@03017a1aba"
+    },
+    {
+      "url": "https://github.com/git/git",
+      "commit": "6de20f6092dcf9bdb1c8efe03db4b70c82b423dd",
+      "tracks": [
+        "n1-files"
+      ],
+      "sparse": [
+        "/lockfile.c",
+        "/lockfile.h",
+        "/tempfile.c",
+        "/tempfile.h",
+        "/read-cache.c",
+        "/Documentation/technical/racy-git.txt",
+        "/compat/mingw.c",
+        "/compat/win32/*",
+        "/statinfo.c",
+        "/statinfo.h",
+        "/COPYING",
+        "/LGPL-2.1",
+        "/wrapper.c",
+        "/write-or-die.c",
+        "/config.mak.uname",
+        "/git-compat-util.h",
+        "/refs/files-backend.c",
+        "/reftable/*",
+        "/Documentation/config/core.adoc",
+        "/Documentation/config/core.txt",
+        "/environment.c",
+        "/object-file.c",
+        "/bulk-checkin.c",
+        "/path.c",
+        "/utf8.c",
+        "/fsmonitor*",
+        "/Documentation/technical/racy-git*",
+        "/compat/precompose_utf8.c",
+        "/compat/precompose_utf8.h"
+      ],
+      "cone": false,
+      "size_mb": 3,
+      "filter": "blob:none",
+      "name": "git__git@6de20f6092"
+    },
+    {
+      "url": "https://github.com/glideapps/glide-data-grid",
+      "commit": "0875d78cc41535a39f8b417ff88ce1ebe129c363",
+      "tracks": [
+        "j-table"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 8,
+      "filter": "blob:none",
+      "name": "glideapps__glide-data-grid@0875d78cc4"
+    },
+    {
+      "url": "https://github.com/godotengine/godot",
+      "commit": "4c311cbee68c0b66ff8ebb8b0defdd9979dd2a41",
+      "tracks": [
+        "verify"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "godotengine__godot@4c311cbee6"
+    },
+    {
+      "url": "https://github.com/godotengine/godot",
+      "commit": "e7b12e749220a75ef87e800e080bd2732ad46854",
+      "tracks": [
+        "e-lod-selection",
+        "n1-model"
+      ],
+      "sparse": [
+        "/COPYRIGHT.txt",
+        "/LICENSE.txt",
+        "/core/io/resource_importer.*",
+        "/core/io/resource_loader.*",
+        "/core/io/resource_saver.*",
+        "/core/io/resource_uid.*",
+        "/core/string/ustring.h",
+        "/doc/classes/GeometryInstance3D.xml",
+        "/doc/classes/ProjectSettings.xml",
+        "/editor/docks/filesystem_dock.*",
+        "/editor/editor_file_system.*",
+        "/editor/editor_node.*",
+        "/editor/file_system/*",
+        "/editor/filesystem_dock.*",
+        "/editor/import/*",
+        "/misc/dist/linux/*",
+        "/misc/dist/macos_tools.app/Contents/Info.plist",
+        "/scene/3d/mesh_instance_3d.cpp",
+        "/scene/3d/visual_instance_3d.cpp",
+        "/scene/3d/visual_instance_3d.h",
+        "/scene/resources/mesh.cpp",
+        "/servers/rendering/renderer_scene_cull.cpp",
+        "/servers/rendering/renderer_scene_cull.h",
+        "/tests/core/io/test_resource_uid.cpp"
+      ],
+      "cone": false,
+      "size_mb": 6,
+      "filter": "blob:none",
+      "name": "godotengine__godot@e7b12e7492"
+    },
+    {
+      "url": "https://github.com/golang/go",
+      "commit": "3b98eddbcd66230a78c4893f32099b5d3045a334",
+      "tracks": [
+        "n1-files"
+      ],
+      "sparse": [
+        "/src/os/root*",
+        "/src/os/file_windows.go",
+        "/src/internal/syscall/windows/*",
+        "/src/internal/syscall/unix/*",
+        "/src/os/rename*",
+        "/src/os/file_posix.go",
+        "/VERSION",
+        "/LICENSE",
+        "/src/os/path_windows.go",
+        "/src/path/filepath/path_windows.go",
+        "/src/internal/filepathlite/*",
+        "/src/os/*.go",
+        "/src/syscall/*windows*.go",
+        "/src/syscall/syscall_linux.go",
+        "/src/internal/poll/fd_windows.go",
+        "/doc/godebug.md"
+      ],
+      "cone": false,
+      "size_mb": 18,
+      "filter": "blob:none",
+      "name": "golang__go@3b98eddbcd"
+    },
+    {
+      "url": "https://github.com/google/leveldb",
+      "commit": "7ee830d02b623e8ffe0b95d59a74db1e58da04c5",
+      "tracks": [
+        "n1-files"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 2,
+      "filter": "blob:none",
+      "name": "google__leveldb@7ee830d02b"
+    },
+    {
+      "url": "https://github.com/googlefonts/fontations",
+      "commit": "8767519cb12b0d92a3299a563e3661f02e357fd3",
+      "tracks": [
+        "catalogue"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "googlefonts__fontations@8767519cb1"
+    },
+    {
+      "url": "https://github.com/grafana/grafana",
+      "commit": "782afc6c968280bfa71cc68fe40dbab2868501a9",
+      "tracks": [
+        "q-command-bar"
+      ],
+      "sparse": [
+        "/LICENSE",
+        "/LICENSING.md",
+        "/packages/grafana-sql/"
+      ],
+      "cone": false,
+      "size_mb": 6,
+      "filter": "blob:none",
+      "name": "grafana__grafana@782afc6c96"
+    },
+    {
+      "url": "https://github.com/grafana/scenes",
+      "commit": "737eb53ac501603d7f86e0dbaceb0e4ba9ea0396",
+      "tracks": [
+        "q-command-bar"
+      ],
+      "sparse": [
+        "/LICENSE",
+        "/packages/scenes/package.json",
+        "/packages/scenes/src/variables/adhoc/",
+        "/packages/scenes/src/variables/filter.ts"
+      ],
+      "cone": false,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "grafana__scenes@737eb53ac5"
+    },
+    {
+      "url": "https://github.com/grovesNL/glyphon",
+      "commit": "49dc8f7bafa8091f4d71521fd62ee6f647b556f5",
+      "tracks": [
+        "catalogue"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "grovesNL__glyphon@49dc8f7baf"
+    },
+    {
+      "url": "https://github.com/harfbuzz/harfrust",
+      "commit": "549c33e6e12389e1c08dc639b5ececddc1ec491e",
+      "tracks": [
+        "catalogue"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "harfbuzz__harfrust@549c33e6e1"
+    },
+    {
+      "url": "https://github.com/helix-editor/nucleo",
+      "commit": "8c16d47cdfa9607d3e44df5f81c635c6f43c65ee",
+      "tracks": [
+        "q-command-bar"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "helix-editor__nucleo@8c16d47cdf"
+    },
+    {
+      "url": "https://github.com/hyparam/hightable",
+      "commit": "0989abd6ac3f32f0b0cf8320f3e8ab40afac092b",
+      "tracks": [
+        "j-table"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 2,
+      "filter": "blob:none",
+      "name": "hyparam__hightable@0989abd6ac"
+    },
+    {
+      "url": "https://github.com/iShape-Rust/iOverlay",
+      "commit": "552e5476f12437813d7ed579e28668e3ca3c7fd9",
+      "tracks": [
+        "catalogue"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "iShape-Rust__iOverlay@552e5476f1"
+    },
+    {
+      "url": "https://github.com/iterative/dvc",
+      "commit": "56e59829512ff134aa269099a2099587b810b4dd",
+      "tracks": [
+        "n1-model"
+      ],
+      "sparse": [
+        "/dvc/dvcfile.py",
+        "/dvc/stage/serialize.py",
+        "/dvc/stage/loader.py",
+        "/dvc/schema.py",
+        "/dvc/lock.py",
+        "/LICENSE",
+        "/dvc/stage/cache.py"
+      ],
+      "cone": false,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "iterative__dvc@56e5982951"
+    },
+    {
+      "url": "https://github.com/jbuckmccready/cavalier_contours",
+      "commit": "22887a824d22cd8ab50968a551f34cdb4508127f",
+      "tracks": [
+        "catalogue"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "jbuckmccready__cavalier_contours@22887a824d"
+    },
+    {
+      "url": "https://github.com/jbuckmccready/static_aabb2d_index",
+      "commit": "a511a6327e14a0f0418cea01c401bf147e0e835c",
+      "tracks": [
+        "catalogue"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "jbuckmccready__static_aabb2d_index@a511a6327e"
+    },
+    {
+      "url": "https://github.com/jhawthorn/fzy.js",
+      "commit": "327b2ae5dbd99623469c061d82a25fdc5201a465",
+      "tracks": [
+        "q-command-bar"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "jhawthorn__fzy.js@327b2ae5db"
+    },
+    {
+      "url": "https://github.com/junegunn/fzf",
+      "commit": "b1be3a8be1b833ce5b92fbbac11637643d60a046",
+      "tracks": [
+        "q-command-bar"
+      ],
+      "sparse": [
+        "/LICENSE",
+        "/src/algo/"
+      ],
+      "cone": false,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "junegunn__fzf@b1be3a8be1"
+    },
+    {
+      "url": "https://github.com/jupyter/nbformat",
+      "commit": "4346f97c9d435f41ddfe76d28758b23796fdcf5a",
+      "tracks": [
+        "n1-model"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 2,
+      "filter": "blob:none",
+      "name": "jupyter__nbformat@4346f97c9d"
+    },
+    {
+      "url": "https://github.com/jupyterlab/lumino",
+      "commit": "c5e4facfa078e2eebbeb142e0785164df011f2b7",
+      "tracks": [
+        "q-command-bar"
+      ],
+      "sparse": [
+        "/LICENSE",
+        "/packages/widgets/src/commandpalette.ts",
+        "/packages/commands/src/index.ts",
+        "/packages/commands/package.json",
+        "/packages/widgets/src/menubar.ts"
+      ],
+      "cone": false,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "jupyterlab__lumino@c5e4facfa0"
+    },
+    {
+      "url": "https://github.com/keplergl/kepler.gl",
+      "commit": "e591395155c181768a71318896b88a7f21e6b0a3",
+      "tracks": [
+        "j-table"
+      ],
+      "sparse": [
+        "/LICENSE*",
+        "/src/components/src/common/data-table/**",
+        "/src/components/package.json"
+      ],
+      "cone": false,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "keplergl__kepler.gl@e591395155"
+    },
+    {
+      "url": "https://github.com/krisk/Fuse",
+      "commit": "edf2fb608eca0461508d1d71317e6e58309ffada",
+      "tracks": [
+        "q-command-bar"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 4,
+      "filter": "blob:none",
+      "name": "krisk__Fuse@edf2fb608e"
+    },
+    {
+      "url": "https://github.com/kylebarron/geo-index",
+      "commit": "e6efbb01d3c298e8963c8b7d1aab40c1bd540715",
+      "tracks": [
+        "catalogue"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "kylebarron__geo-index@e6efbb01d3"
+    },
+    {
+      "url": "https://github.com/larsbrubaker/clipper2-rust",
+      "commit": "517f5d38b0d6e44c61322d76dce602e527d9bb7b",
+      "tracks": [
+        "catalogue"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "larsbrubaker__clipper2-rust@517f5d38b0"
+    },
+    {
+      "url": "https://github.com/Leaflet/Leaflet",
+      "commit": "125bda1e24d74d6f06f4075b0dab7ac10f3b5c10",
+      "tracks": [
+        "e-lod-selection"
+      ],
+      "sparse": [
+        "/LICENSE",
+        "/src/layer/vector/Polyline.js"
+      ],
+      "cone": false,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "Leaflet__Leaflet@125bda1e24"
+    },
+    {
+      "url": "https://github.com/leeoniya/uFuzzy",
+      "commit": "9bcdc090f426cadaa2865b7f3dc548f2bb4a54f0",
+      "tracks": [
+        "q-command-bar"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 8,
+      "filter": "blob:none",
+      "name": "leeoniya__uFuzzy@9bcdc090f4"
+    },
+    {
+      "url": "https://github.com/libgeos/geos",
+      "commit": "0d790d12b25a8e1d7310a55ec701e6bf54f73fb2",
+      "tracks": [
+        "catalogue"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "libgeos__geos@0d790d12b2"
+    },
+    {
+      "url": "https://github.com/libuv/libuv",
+      "commit": "eb497c582f5c0887add4d4658c7801e4ef412e10",
+      "tracks": [
+        "n1-files"
+      ],
+      "sparse": [
+        "/src/win/fs.c",
+        "/LICENSE"
+      ],
+      "cone": false,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "libuv__libuv@eb497c582f"
+    },
+    {
+      "url": "https://github.com/linebender/vello",
+      "commit": "96d4643cca622259acad44e9e715e3e3fac3c09f",
+      "tracks": [
+        "catalogue"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "linebender__vello@96d4643cca"
+    },
+    {
+      "url": "https://github.com/locationtech/jts",
+      "commit": "5a0a73632216e3e9d277150336078ec423fd215f",
+      "tracks": [
+        "catalogue"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "locationtech__jts@5a0a736322"
+    },
+    {
+      "url": "https://github.com/louischatriot/nedb",
+      "commit": "35be491ca67dbd4c6f75335f5f486307b192f2dc",
+      "tracks": [
+        "n1-files"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 2,
+      "filter": "blob:none",
+      "name": "louischatriot__nedb@35be491ca6"
+    },
+    {
+      "url": "https://github.com/manzt/quak",
+      "commit": "41549f9253e9de9bd6d7d4fa6b8b7a76630c10b9",
+      "tracks": [
+        "j-table"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 3,
+      "filter": "blob:none",
+      "name": "manzt__quak@41549f9253"
+    },
+    {
+      "url": "https://github.com/mapbox/carto",
+      "commit": "305107201d4f8c4a2b9118c0077dde904f4224ed",
+      "tracks": [
+        "catalogue"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "mapbox__carto@305107201d"
+    },
+    {
+      "url": "https://github.com/maplibre/maplibre-gl-js",
+      "commit": "dc4192c715d5209a7a7777067cc04c72b825e64a",
+      "tracks": [
+        "catalogue",
+        "e-lod-selection"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "maplibre__maplibre-gl-js@dc4192c715"
+    },
+    {
+      "url": "https://github.com/maplibre/maplibre-native",
+      "commit": "5ae8ce43cde5a56195fd369065476de2c2a66a1b",
+      "tracks": [
+        "catalogue"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "maplibre__maplibre-native@5ae8ce43cd"
+    },
+    {
+      "url": "https://github.com/maplibre/maplibre-style-spec",
+      "commit": "a2f5f94944b77f42d9cd6a6b89859d91b517bf7c",
+      "tracks": [
+        "catalogue"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "maplibre__maplibre-style-spec@a2f5f94944"
+    },
+    {
+      "url": "https://github.com/mapnik/mapnik",
+      "commit": "84107b6f29bf785ea2d05faf1683d9990915c55b",
+      "tracks": [
+        "catalogue"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "mapnik__mapnik@84107b6f29"
+    },
+    {
+      "url": "https://github.com/Maximkaaa/galileo",
+      "commit": "42550766d38faca071805f57e7317c5addf1efc3",
+      "tracks": [
+        "catalogue"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 3,
+      "filter": "blob:none",
+      "name": "Maximkaaa__galileo@42550766d3"
+    },
+    {
+      "url": "https://github.com/metabase/metabase",
+      "commit": "8363349e12fb655d09f7a113e2a439a339f7ba9d",
+      "tracks": [
+        "q-command-bar"
+      ],
+      "sparse": [
+        "/LICENSE*",
+        "/LICENSE.txt",
+        "/enterprise/LICENSE*",
+        "/frontend/src/metabase/querying/filters/components/FilterPicker/FilterPicker.tsx",
+        "/frontend/src/metabase-lib/query/filter.ts",
+        "/src/metabase/lib/fe_util.cljc"
+      ],
+      "cone": false,
+      "size_mb": 5,
+      "filter": "blob:none",
+      "name": "metabase__metabase@8363349e12"
+    },
+    {
+      "url": "https://github.com/microsoft/vscode",
+      "commit": "d3d31f62268b169a2dfab62ffb2d7d38158a5b7c",
+      "tracks": [
+        "catalogue",
+        "j-table",
+        "n1-files",
+        "n1-model",
+        "q-command-bar"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 2,
+      "filter": "blob:none",
+      "name": "microsoft__vscode@d3d31f6226"
+    },
+    {
+      "url": "https://github.com/modelcontextprotocol/modelcontextprotocol",
+      "commit": "0a11bf68c7ec4473526ec15589f592afcd12d1e8",
+      "tracks": [
+        "catalogue"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "modelcontextprotocol__modelcontextprotocol@0a11bf68c7"
+    },
+    {
+      "url": "https://github.com/modelcontextprotocol/rust-sdk",
+      "commit": "08e021153ef0530aeb0bb406ebb360a38cfb8ee4",
+      "tracks": [
+        "catalogue"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "modelcontextprotocol__rust-sdk@08e021153e"
+    },
+    {
+      "url": "https://github.com/mrdoob/three.js",
+      "commit": "a2254fdde6ae14bb6eedd8c34fb52233ff09c728",
+      "tracks": [
+        "e-lod-selection"
+      ],
+      "sparse": [
+        "/LICENSE",
+        "/src/objects/LOD.js"
+      ],
+      "cone": false,
+      "size_mb": 2,
+      "filter": "blob:none",
+      "name": "mrdoob__three.js@a2254fdde6"
+    },
+    {
+      "url": "https://github.com/nical/etagere",
+      "commit": "2a178998597191e45631ea5f35d712352e15b0ef",
+      "tracks": [
+        "catalogue"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "nical__etagere@2a17899859"
+    },
+    {
+      "url": "https://github.com/nical/lyon",
+      "commit": "da19a62491dee4d6f228d0623994cb6c11d4a0d9",
+      "tracks": [
+        "catalogue"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "nical__lyon@da19a62491"
+    },
+    {
+      "url": "https://github.com/ninja-build/ninja",
+      "commit": "4e4df1e567eb3c1475a51af261cba2bfff60b4be",
+      "tracks": [
+        "n1-files"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 3,
+      "filter": "blob:none",
+      "name": "ninja-build__ninja@4e4df1e567"
+    },
+    {
+      "url": "https://github.com/nvkelso/natural-earth-vector",
+      "commit": "ca96624a56bd078437bca8184e78163e5039ad19",
+      "tracks": [
+        "as-corpora"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 47,
+      "filter": "blob:none",
+      "name": "nvkelso__natural-earth-vector@ca96624a56"
+    },
+    {
+      "url": "https://github.com/observablehq/inputs",
+      "commit": "04a1a8bc8bc935cf557aa512ffedccfc03262961",
+      "tracks": [
+        "j-table"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 4,
+      "filter": "blob:none",
+      "name": "observablehq__inputs@04a1a8bc8b"
+    },
+    {
+      "url": "https://github.com/opengeospatial/geoparquet",
+      "commit": "4c9f87e5226e36f2022d6bd7d3c1980debdf7431",
+      "tracks": [
+        "as-corpora"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 2,
+      "filter": "blob:none",
+      "name": "opengeospatial__geoparquet@4c9f87e522"
+    },
+    {
+      "url": "https://github.com/openlayers/openlayers",
+      "commit": "45d79b25551489b32ca8754ca136ac83d328651e",
+      "tracks": [
+        "catalogue",
+        "e-lod-selection"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "openlayers__openlayers@45d79b2555"
+    },
+    {
+      "url": "https://github.com/OpenLineage/OpenLineage",
+      "commit": "9f9c4cbd5017d51dfe36af8ce51729dd64709b99",
+      "tracks": [
+        "n1-model"
+      ],
+      "sparse": [
+        "/spec/OpenLineage.json",
+        "/spec/Versioning.md",
+        "/spec/facets/*",
+        "/LICENSE",
+        "/spec/OpenLineage.md"
+      ],
+      "cone": false,
+      "size_mb": 2,
+      "filter": "blob:none",
+      "name": "OpenLineage__OpenLineage@9f9c4cbd50"
+    },
+    {
+      "url": "https://github.com/OSGeo/gdal",
+      "commit": "4386ba2d09bb58e4760f5890d7a62689d798223b",
+      "tracks": [
+        "as-corpora",
+        "catalogue"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 39,
+      "filter": "blob:none",
+      "name": "OSGeo__gdal@4386ba2d09"
+    },
+    {
+      "url": "https://github.com/OSGeo/PROJ",
+      "commit": "beef4145b123c87c771f0ea1ead0da110b63cc14",
+      "tracks": [
+        "catalogue"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "OSGeo__PROJ@beef4145b1"
+    },
+    {
+      "url": "https://github.com/OvertureMaps/docs",
+      "commit": "4415e90e8791204520284933ef5d487171b20fed",
+      "tracks": [
+        "as-corpora"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 195,
+      "filter": "blob:none",
+      "name": "OvertureMaps__docs@4415e90e87"
+    },
+    {
+      "url": "https://github.com/pacocoursey/cmdk",
+      "commit": "dd2250ed608443e8f32bafc5fa2d1d07a3746aa3",
+      "tracks": [
+        "q-command-bar"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 3,
+      "filter": "blob:none",
+      "name": "pacocoursey__cmdk@dd2250ed60"
+    },
+    {
+      "url": "https://github.com/planetlabs/gpq",
+      "commit": "a5a6b208af6730539db96eb9a4083f0359836b28",
+      "tracks": [
+        "as-corpora"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 3,
+      "filter": "blob:none",
+      "name": "planetlabs__gpq@a5a6b208af"
+    },
+    {
+      "url": "https://github.com/pop-os/cosmic-text",
+      "commit": "f1a3461f3e8df67d2bbcfafb8bc61dc7aee5b2a6",
+      "tracks": [
+        "catalogue"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "pop-os__cosmic-text@f1a3461f3e"
+    },
+    {
+      "url": "https://github.com/ProseMirror/prosemirror-history",
+      "commit": "445409bc99c88550c2312f5610829ecb25105a5f",
+      "tracks": [
+        "n1-model"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "ProseMirror__prosemirror-history@445409bc99"
+    },
+    {
+      "url": "https://github.com/protomaps/PMTiles",
+      "commit": "aec8fa1341222fdddb3318e9ffa8e18e19b312f7",
+      "tracks": [
+        "catalogue"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "protomaps__PMTiles@aec8fa1341"
+    },
+    {
+      "url": "https://github.com/qgis/QGIS",
+      "commit": "fa8f96152e918b5d9dd2c8b4770e0b1849ba0668",
+      "tracks": [
+        "catalogue",
+        "e-lod-selection",
+        "j-table",
+        "n1-files",
+        "n1-model"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 3,
+      "filter": "blob:none",
+      "name": "qgis__QGIS@fa8f96152e"
+    },
+    {
+      "url": "https://github.com/qt/qtbase",
+      "commit": "bc887a1a39f7c1f34e1f208610e977bea11022ac",
+      "tracks": [
+        "n1-model"
+      ],
+      "sparse": [
+        "/src/gui/util/qundostack*",
+        "/src/gui/util/qundogroup*",
+        "/LICENSES/*",
+        "/tests/auto/gui/util/qundostack/*",
+        "/src/corelib/serialization/qjsondocument*",
+        "/src/corelib/serialization/qjsonparser*"
+      ],
+      "cone": false,
+      "size_mb": 5,
+      "filter": "blob:none",
+      "name": "qt__qtbase@bc887a1a39"
+    },
+    {
+      "url": "https://github.com/rbtcollins/fs_at",
+      "commit": "8443962e15cc9863902c2ae425c18adbd9ff693c",
+      "tracks": [
+        "n1-files"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "rbtcollins__fs_at@8443962e15"
+    },
+    {
+      "url": "https://github.com/react-querybuilder/react-querybuilder",
+      "commit": "ff8482bd1a05d0983c6831ea14ee5040a27abb31",
+      "tracks": [
+        "q-command-bar"
+      ],
+      "sparse": [
+        "/LICENSE",
+        "/packages/core/src/utils/parseSQL/parseSQL.ts",
+        "/packages/core/package.json"
+      ],
+      "cone": false,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "react-querybuilder__react-querybuilder@ff8482bd1a"
+    },
+    {
+      "url": "https://github.com/reearth/maplibre-expr-rs",
+      "commit": "3a6352f726eb12842c0ec395adcc682bf8653cfe",
+      "tracks": [
+        "catalogue"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 2,
+      "filter": "blob:none",
+      "name": "reearth__maplibre-expr-rs@3a6352f726"
+    },
+    {
+      "url": "https://github.com/revolist/revogrid",
+      "commit": "d838028da3fd6fac6c26ddf77346d4eedbafee05",
+      "tracks": [
+        "j-table"
+      ],
+      "sparse": [
+        "/LICENSE*",
+        "/package.json",
+        "/src/**"
+      ],
+      "cone": false,
+      "size_mb": 2,
+      "filter": "blob:none",
+      "name": "revolist__revogrid@d838028da3"
+    },
+    {
+      "url": "https://github.com/rilldata/rill",
+      "commit": "46764c358c7e5528ca5dab369ef11b5d23fdce6e",
+      "tracks": [
+        "j-table"
+      ],
+      "sparse": [
+        "/LICENSE*",
+        "/web-common/src/components/virtualized-table/**",
+        "/web-common/src/features/models/workspace/**"
+      ],
+      "cone": false,
+      "size_mb": 2,
+      "filter": "blob:none",
+      "name": "rilldata__rill@46764c358c"
+    },
+    {
+      "url": "https://github.com/rust-lang/cargo",
+      "commit": "33f504c39f7a041a263d563ae4e4f856baf42090",
+      "tracks": [
+        "n1-files"
+      ],
+      "sparse": [
+        "/src/cargo/core/compiler/fingerprint/*",
+        "/src/cargo/util/flock.rs",
+        "/LICENSE-*",
+        "/crates/cargo-util/src/paths.rs",
+        "/src/cargo/core/compiler/fingerprint*",
+        "/src/compiler/fingerprint/*"
+      ],
+      "cone": false,
+      "size_mb": 2,
+      "filter": "blob:none",
+      "name": "rust-lang__cargo@33f504c39f"
+    },
+    {
+      "url": "https://github.com/rust-lang/rust",
+      "commit": "42cfc04deaa723bc21611f3f9d7c8651be6300df",
+      "tracks": [
+        "n1-files"
+      ],
+      "sparse": [
+        "/library/std/src/sys/fs/*",
+        "/library/std/src/sys/pal/windows/*",
+        "/library/std/src/fs.rs",
+        "/library/std/src/fs/*",
+        "/LICENSE-*",
+        "/COPYRIGHT",
+        "/library/std/src/sys/path/*",
+        "/library/std/src/os/windows/fs.rs",
+        "/library/std/src/os/unix/fs.rs"
+      ],
+      "cone": false,
+      "size_mb": 12,
+      "filter": "blob:none",
+      "name": "rust-lang__rust@42cfc04dea"
+    },
+    {
+      "url": "https://github.com/rust-lang/rust",
+      "commit": "fc2324d0546aa6782c45b76247266a0c37db0b8a",
+      "tracks": [
+        "verify"
+      ],
+      "sparse": [
+        "/library/std/src/sys/fs/windows.rs",
+        "/library/std/src/fs.rs"
+      ],
+      "cone": false,
+      "size_mb": 11,
+      "filter": "blob:none",
+      "name": "rust-lang__rust@fc2324d054"
+    },
+    {
+      "url": "https://github.com/rust-mcp-stack/rust-mcp-sdk",
+      "commit": "d18de2c19ccfdaa249db56137ff5268e2b193f2f",
+      "tracks": [
+        "catalogue"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "rust-mcp-stack__rust-mcp-sdk@d18de2c19c"
+    },
+    {
+      "url": "https://github.com/serde-rs/json",
+      "commit": "afdf6fc67247dd7fa4fcde1381e6ecc6bcc7a30e",
+      "tracks": [
+        "n1-model"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 2,
+      "filter": "blob:none",
+      "name": "serde-rs__json@afdf6fc672"
+    },
+    {
+      "url": "https://github.com/serde-rs/serde",
+      "commit": "6693a89cca77e0151437da1c7f890090b9ebf04c",
+      "tracks": [
+        "n1-model"
+      ],
+      "sparse": [
+        "/serde_derive/src/de.rs",
+        "/serde_derive/src/de/*",
+        "/serde_core/src/de/mod.rs",
+        "/LICENSE-MIT",
+        "/LICENSE-APACHE"
+      ],
+      "cone": false,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "serde-rs__serde@6693a89cca"
+    },
+    {
+      "url": "https://github.com/sqlite/sqlite",
+      "commit": "74675a9e87c45888a4ba2ea009a91fbc769539f8",
+      "tracks": [
+        "n1-files"
+      ],
+      "sparse": [
+        "/src/wal.c",
+        "/src/os_unix.c",
+        "/src/os_win.c",
+        "/LICENSE.md",
+        "/src/pager.c",
+        "/src/sqlite.h.in"
+      ],
+      "cone": false,
+      "size_mb": 3,
+      "filter": "blob:none",
+      "name": "sqlite__sqlite@74675a9e87"
+    },
+    {
+      "url": "https://github.com/stadiamaps/pmtiles-rs",
+      "commit": "17e403c3e2e4269bcd20ee61dd84bc63706e5913",
+      "tracks": [
+        "catalogue"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "stadiamaps__pmtiles-rs@17e403c3e2"
+    },
+    {
+      "url": "https://github.com/Stebalien/tempfile",
+      "commit": "1c294cc29d2a48746637252a0e30b1bebc05b3e6",
+      "tracks": [
+        "n1-files"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "Stebalien__tempfile@1c294cc29d"
+    },
+    {
+      "url": "https://github.com/Stoeoef/spade",
+      "commit": "c8befc96bbbc1898a89cb19f9f3104a848936374",
+      "tracks": [
+        "catalogue"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "Stoeoef__spade@c8befc96bb"
+    },
+    {
+      "url": "https://github.com/superhuman/command-score",
+      "commit": "a192b81315c6c4836918e6af87b2d80bf0afa9c1",
+      "tracks": [
+        "q-command-bar"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "superhuman__command-score@a192b81315"
+    },
+    {
+      "url": "https://github.com/tangrams/tangram-es",
+      "commit": "ebe6e4df796a4e796a86c8abe9f397c65c397723",
+      "tracks": [
+        "catalogue"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "tangrams__tangram-es@ebe6e4df79"
+    },
+    {
+      "url": "https://github.com/TanStack/table",
+      "commit": "6aa0d74946b393f4f316085998bb6ec31c2ef593",
+      "tracks": [
+        "j-table"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 63,
+      "filter": "blob:none",
+      "name": "TanStack__table@6aa0d74946"
+    },
+    {
+      "url": "https://github.com/TanStack/virtual",
+      "commit": "78371e851e90fd74e984deeb0c3fd8098e2cd4f3",
+      "tracks": [
+        "j-table"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 9,
+      "filter": "blob:none",
+      "name": "TanStack__virtual@78371e851e"
+    },
+    {
+      "url": "https://github.com/tauri-apps/plugins-workspace",
+      "commit": "848957565bf8090e47976bc374576cfa7fae916a",
+      "tracks": [
+        "n1-files",
+        "n1-model"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "tauri-apps__plugins-workspace@848957565b"
+    },
+    {
+      "url": "https://github.com/tauri-apps/tauri",
+      "commit": "a225a18e601c1d8c3c24536a2137bff263ea74bf",
+      "tracks": [
+        "n1-model"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 40,
+      "filter": "blob:none",
+      "name": "tauri-apps__tauri@a225a18e60"
+    },
+    {
+      "url": "https://github.com/timc1/kbar",
+      "commit": "26ec0f49f92ab34fa6ab59392782d56020f28098",
+      "tracks": [
+        "q-command-bar"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 3,
+      "filter": "blob:none",
+      "name": "timc1__kbar@26ec0f49f9"
+    },
+    {
+      "url": "https://github.com/tldraw/tldraw",
+      "commit": "035b741dc331bf76a4cb9af27c346be10bba2a88",
+      "tracks": [
+        "n1-model"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 119,
+      "filter": "blob:none",
+      "name": "tldraw__tldraw@035b741dc3"
+    },
+    {
+      "url": "https://github.com/tomchadwin/qgis2web",
+      "commit": "19afac1299587bf4c1cade3e3c588a3dc54d0bf1",
+      "tracks": [
+        "catalogue"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "tomchadwin__qgis2web@19afac1299"
+    },
+    {
+      "url": "https://github.com/topojson/topojson-simplify",
+      "commit": "e37de14960edddcc7d175348942e93b1b366cdbf",
+      "tracks": [
+        "e-lod-selection"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "topojson__topojson-simplify@e37de14960"
+    },
+    {
+      "url": "https://github.com/ueberdosis/tiptap",
+      "commit": "5e4c112378218cafbb0bde8b0beeece5f8fcf602",
+      "tracks": [
+        "q-command-bar"
+      ],
+      "sparse": [
+        "/LICENSE.md",
+        "/packages/suggestion/"
+      ],
+      "cone": false,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "ueberdosis__tiptap@5e4c112378"
+    },
+    {
+      "url": "https://github.com/untitaker/rust-atomicwrites",
+      "commit": "a15afcb6b73b2543f0c12959fa874c1c4d2fd1d1",
+      "tracks": [
+        "n1-files"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "untitaker__rust-atomicwrites@a15afcb6b7"
+    },
+    {
+      "url": "https://github.com/uwdata/mosaic",
+      "commit": "3faf15322a39ac3e840ead48dab5a5b8e4de0331",
+      "tracks": [
+        "j-table"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 394,
+      "filter": "blob:none",
+      "name": "uwdata__mosaic@3faf15322a"
+    },
+    {
+      "url": "https://github.com/vega/vega",
+      "commit": "f83954e7624ba1926a7faf3d2c488bb44a37b529",
+      "tracks": [
+        "catalogue"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "vega__vega@f83954e762"
+    },
+    {
+      "url": "https://github.com/visgl/deck.gl",
+      "commit": "a1cca05adcf6f6e52eefcacd082e0a5ce8754556",
+      "tracks": [
+        "catalogue",
+        "e-lod-selection"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "visgl__deck.gl@a1cca05adc"
+    },
+    {
+      "url": "https://github.com/visgl/loaders.gl",
+      "commit": "2b8d77518d7dd8636625f7479654ea66a71239f5",
+      "tracks": [
+        "e-lod-selection",
+        "verify2"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 5,
+      "filter": "blob:none",
+      "name": "visgl__loaders.gl@2b8d77518d"
+    },
+    {
+      "url": "https://github.com/WebAssembly/component-model",
+      "commit": "6c48079bbc808bb3bdeb9554f338ab3a5b187388",
+      "tracks": [
+        "catalogue"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "WebAssembly__component-model@6c48079bbc"
+    },
+    {
+      "url": "https://github.com/XAMPPRocky/remove_dir_all",
+      "commit": "386e1f56e6b04a604cd3948fd2f7ef790477a9d9",
+      "tracks": [
+        "n1-files"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "XAMPPRocky__remove_dir_all@386e1f56e6"
+    },
+    {
+      "url": "https://github.com/zarrs/zarrs",
+      "commit": "8407fe67e106ce5750cdc15ab6e7d492815d8326",
+      "tracks": [
+        "catalogue"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "zarrs__zarrs@8407fe67e1"
+    },
+    {
+      "url": "https://github.com/zed-industries/zed",
+      "commit": "4240146813a2cbc29e4171fc77c8b5b20ea8951e",
+      "tracks": [
+        "catalogue",
+        "q-command-bar"
+      ],
+      "sparse": null,
+      "cone": null,
+      "size_mb": 1,
+      "filter": "blob:none",
+      "name": "zed-industries__zed@4240146813"
+    },
+    {
+      "url": "https://gitlab.com/kicad/code/kicad",
+      "commit": "05cc3edaccbe569d4dd2b8d09e6d12276b88f18a",
+      "tracks": [
+        "n1-model"
+      ],
+      "sparse": [
+        "/common/settings/*",
+        "/include/settings/*",
+        "/common/project/*",
+        "/include/project/*",
+        "/LICENSE*",
+        "/common/kiid.cpp",
+        "/include/kiid.h",
+        "/common/single_top.cpp",
+        "/common/pgm_base.cpp",
+        "/resources/linux/*",
+        "/resources/msw/*",
+        "/resources/macos/*",
+        "/pcbnew/CMakeLists.txt",
+        "/kicad/CMakeLists.txt",
+        "/kicad/kicad.cpp",
+        "/kicad/kicad_manager_frame.cpp",
+        "/kicad/Info.plist*",
+        "/kicad/*.plist*",
+        "/resources/schemas/*",
+        "/common/kicad_curl/*",
+        "/common/settings/settings_manager.cpp",
+        "/kicad/*.cpp",
+        "/common/eda_base_frame.cpp"
+      ],
+      "cone": false,
+      "size_mb": 8,
+      "filter": "blob:none",
+      "name": "kicad__kicad@05cc3edacc"
+    }
+  ]
+}

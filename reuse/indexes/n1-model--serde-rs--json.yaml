@@ -1,0 +1,24 @@
+repo: serde-rs/json
+commit: afdf6fc
+track: n1-model
+priority: P0
+license:
+  spdx: MIT OR Apache-2.0
+  verified_from: [Cargo.toml, LICENSE-MIT, LICENSE-APACHE]
+  mixed: false
+  notes: "1.0.151, the version Spatial IDE locks."
+interesting_paths:
+  - src/value/de.rs
+  - src/map.rs
+  - src/de.rs
+  - Cargo.toml
+concepts:
+  - into Value - duplicate key silently last-wins (visit_map + Map::insert)
+  - recursion limit 128 by default
+  - without float_roundtrip feature, float parsing is not exact (pow10 multiply)
+reuse:
+  mode: ADOPT
+  confidence: high
+spatial_ide_relevance:
+  plan_node: b2-piece-1c-save-and-reopen
+  immediate: true

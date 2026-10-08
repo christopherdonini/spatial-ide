@@ -1,0 +1,22 @@
+repo: apache/kafka
+commit: c553733
+track: n1-model
+priority: P3
+license:
+  spdx: Apache-2.0
+  verified_from: [LICENSE]
+  mixed: false
+  notes: "sparse checkout of the log cleaner only"
+interesting_paths:
+  - storage/src/main/java/org/apache/kafka/storage/internals/log/LogCleaner.java
+  - storage/src/main/java/org/apache/kafka/storage/internals/log/Cleaner.java
+concepts:
+  - keep last record per key
+  - active segment never cleaned; never clean beyond last stable offset
+  - tombstones retained for a delete horizon
+reuse:
+  mode: CONCEPTUAL DONOR
+  confidence: medium
+spatial_ide_relevance:
+  plan_node: b2-piece-1b-recording
+  immediate: false

@@ -1,0 +1,21 @@
+repo: libuv/libuv
+commit: eb497c5
+track: n1-files
+priority: P3
+license:
+  spdx: MIT
+  verified_from:
+    - LICENSE
+  mixed: true
+  notes: Only src/win/fs.c read; other files in repo carry other permissive licences (not checked).
+interesting_paths:
+  - src/win/fs.c
+concepts:
+  - Node fs.rename on Windows = MoveFileExW(REPLACE_EXISTING)
+  - fs.fsync = FlushFileBuffers
+reuse:
+  mode: CONCEPTUAL DONOR
+  confidence: low
+spatial_ide_relevance:
+  plan_node: b2-piece-1c-save-and-reopen
+  immediate: false

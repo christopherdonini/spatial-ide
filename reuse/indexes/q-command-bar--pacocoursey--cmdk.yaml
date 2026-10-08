@@ -1,0 +1,17 @@
+repo: pacocoursey/cmdk
+commit: dd2250e
+track: q-command-bar
+priority: P1
+license:
+  spdx: MIT
+  verified_from: [LICENSE.md, cmdk/package.json]
+  mixed: false
+  notes: "cmdk/src/command-score.ts is an in-tree copy of superhuman/command-score (MIT, 2016 Superhuman) with no attribution header; SCORE_CHARACTER_JUMP changed 0.3 -> 0.17. Runtime deps: 4 @radix-ui packages; transitive set ~26 packages, ~1.02 MB, MIT/0BSD."
+interesting_paths: [cmdk/src/index.tsx, cmdk/src/command-score.ts, ARCHITECTURE.md, test/keybind.test.ts]
+concepts: [compound-component palette with DOM-authoritative sort, command-score recursive memoised matcher, IME isComposing/keyCode 229 guard, combobox+listbox ARIA with aria-expanded hard-wired true, Radix modal Dialog focus trap, vim Ctrl+J/K bindings on by default, no recency]
+reuse:
+  mode: CONCEPTUAL DONOR
+  confidence: high
+spatial_ide_relevance:
+  plan_node: shell-migration-milestone-3
+  immediate: true

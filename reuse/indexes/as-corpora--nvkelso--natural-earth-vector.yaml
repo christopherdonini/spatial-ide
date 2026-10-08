@@ -1,0 +1,17 @@
+repo: nvkelso/natural-earth-vector
+commit: ca96624
+track: as-corpora
+priority: P2
+license:
+  spdx: NOASSERTION
+  verified_from: [LICENSE.md]
+  mixed: false
+  notes: LICENSE.md "Everything here is public domain." Public domain is not itself on the Open Definition list (CC0/PDDL are), so whether it counts as "open" under LICENCES.md's rule is the human's call. Line shapefiles read at tag v5.1.2 (f1890d9) via raw URLs; ne_50m_rivers_lake_centerlines 477 records, 182 multipart.
+interesting_paths: [LICENSE.md, 50m_physical/ne_50m_rivers_lake_centerlines.shp, 110m_physical/ne_110m_rivers_lake_centerlines.shp, 50m_physical/ne_50m_coastline.shp]
+concepts: [public-domain real-world LineString and MultiLineString source for a project-generated GeoParquet]
+reuse:
+  mode: ADOPT
+  confidence: medium
+spatial_ide_relevance:
+  plan_node: corpus-line-files
+  immediate: true

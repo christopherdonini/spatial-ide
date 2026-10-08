@@ -1,0 +1,17 @@
+repo: grafana/grafana
+commit: 782afc6
+track: q-command-bar
+priority: P2
+license:
+  spdx: AGPL-3.0-only
+  verified_from: [LICENSE, LICENSING.md, packages/grafana-sql/package.json]
+  mixed: true
+  notes: "Default AGPL-3.0-only; listed directories (grafana-data, grafana-ui, grafana-runtime, ...) Apache-2.0. grafana-sql is AGPL-3.0-only. Uses @react-awesome-query-builder for WHERE."
+interesting_paths: [packages/grafana-sql/src/components/QueryHeader.tsx, packages/grafana-sql/src/components/ConfirmModal.tsx, packages/grafana-sql/src/components/visual-query-builder/WhereRow.tsx, packages/grafana-sql/src/components/visual-query-builder/SQLWhereRow.tsx]
+concepts: [Builder vs Code editor modes, one-way Code-to-Builder switch with copy/discard confirm, builder keeps own JSON tree and generates SQL, replaceAll post-processing of generated text]
+reuse:
+  mode: REJECT
+  confidence: high
+spatial_ide_relevance:
+  plan_node: shell-migration-milestone-3
+  immediate: true

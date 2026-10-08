@@ -1,0 +1,26 @@
+repo: sqlite/sqlite
+commit: 74675a9
+track: n1-files
+priority: P2
+license:
+  spdx: blessing (public domain)
+  verified_from:
+    - LICENSE.md
+  mixed: false
+  notes: Public domain per LICENSE.md.
+interesting_paths:
+  - src/wal.c
+  - src/os_win.c
+  - src/pager.c
+  - src/sqlite.h.in
+concepts:
+  - WAL frame valid iff salts match header and cumulative checksum matches
+  - salts change each checkpoint so old and new frames never both validate
+  - "SQLITE_IOCAP_SAFE_APPEND: size may grow before data lands"
+  - Windows I/O retry 10 x linear 25 ms for AV/indexer error codes
+reuse:
+  mode: CONCEPTUAL DONOR
+  confidence: high
+spatial_ide_relevance:
+  plan_node: b2-piece-1b-recording
+  immediate: false

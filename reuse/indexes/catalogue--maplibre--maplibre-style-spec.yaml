@@ -1,0 +1,17 @@
+repo: maplibre/maplibre-style-spec
+commit: a2f5f94
+track: catalogue
+priority: P1
+license:
+  spdx: BSD-3-Clause
+  verified_from: [LICENSE.txt, package.json]
+  mixed: true
+  notes: "LICENSE.txt carries two BSD-3-Clause grants (MapLibre contributors 2020; Mapbox for mapbox-gl-js <= v1.13), each with a non-endorsement clause. package.json declares ISC, which disagrees with the files. npm 26.4.4 unpackedSize 9,753,063 bytes, 6 runtime deps."
+interesting_paths: [src/expression/, LICENSE.txt, package.json]
+concepts: [reference TS expression evaluator, v8 style spec JSON, expression conformance suite]
+reuse:
+  mode: ADOPT
+  confidence: medium
+spatial_ide_relevance:
+  plan_node: style-dsl-editor
+  immediate: false

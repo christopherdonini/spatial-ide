@@ -1,0 +1,39 @@
+repo: bytecodealliance/cap-std
+commit: b7acf8e
+track: n1-files
+priority: P0
+license:
+  spdx: Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT
+  verified_from:
+    - COPYRIGHT
+    - LICENSE-APACHE
+    - LICENSE-MIT
+    - LICENSE-Apache-2.0_WITH_LLVM-exception
+    - cap-primitives/Cargo.toml
+  mixed: false
+  notes: Dependency winx is Apache-2.0 WITH LLVM-exception only (crates.io). Windows code derived from Rust std (MIT/Apache) per comments in open_unchecked.rs.
+interesting_paths:
+  - cap-primitives/src/fs/manually/open.rs
+  - cap-primitives/src/windows/fs/open_impl.rs
+  - cap-primitives/src/windows/fs/create_file_at_w.rs
+  - cap-primitives/src/windows/fs/open_unchecked.rs
+  - cap-primitives/src/windows/fs/dir_utils.rs
+  - cap-primitives/src/windows/fs/oflags.rs
+  - cap-primitives/src/rustix/linux/fs/open_impl.rs
+  - tests/windows-open.rs
+  - tests/fs_additional.rs
+concepts:
+  - "open each segment relative to the held parent handle, never by full path"
+  - .. pops a stack of held parent handles
+  - "absolute path or absolute link target = escape, so every Windows junction is refused"
+  - NtCreateFile with OBJECT_ATTRIBUTES.RootDirectory on Windows
+  - "openat2 RESOLVE_BENEATH|NO_MAGICLINKS on Linux with EAGAIN retry"
+  - directory handles opened without FILE_SHARE_DELETE pin the chain against rename
+  - reserved device stems refused with trailing-space and multi-dot suffix tests
+  - GHSA-hp8f-xmx4-4qrg trailing slash disabled O_NOFOLLOW (fixed 2026-08-20)
+reuse:
+  mode: PORT
+  confidence: high
+spatial_ide_relevance:
+  plan_node: b2-piece-1c-save-and-reopen
+  immediate: true

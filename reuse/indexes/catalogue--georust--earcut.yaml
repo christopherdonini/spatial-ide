@@ -1,0 +1,17 @@
+repo: georust/earcut
+commit: 65f4d2a
+track: catalogue
+priority: P2
+license:
+  spdx: (MIT OR Apache-2.0) AND ISC
+  verified_from: [LICENSE-MIT, LICENSE-APACHE, LICENSE-ISC, Cargo.toml, README.md]
+  mixed: true
+  notes: "Declared ISC through 0.4.9; relicensed to MIT OR Apache-2.0 in c4e2cdc (2026-04-25, transfer to GeoRust), first published 0.4.10 (2026-05-07). Still ships LICENSE-ISC (Copyright 2016 Mapbox) for portions derived from mapbox/earcut. Spatial IDE locks 0.4.5 (ISC) via geo."
+interesting_paths: [LICENSE-ISC, Cargo.toml, README.md]
+concepts: [declared-identifier drift on a transitive dependency, ISC notice survives relicensing]
+reuse:
+  mode: ADOPT
+  confidence: high
+spatial_ide_relevance:
+  plan_node: data-doctor-legacy-imports
+  immediate: false

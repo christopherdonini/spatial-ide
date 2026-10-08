@@ -1,0 +1,17 @@
+repo: jupyterlab/lumino
+commit: c5e4fac
+track: q-command-bar
+priority: P2
+license:
+  spdx: BSD-3-Clause
+  verified_from: [LICENSE, packages/commands/package.json]
+  mixed: false
+  notes: "Palette results use role=menu/menuitem, not combobox/listbox."
+interesting_paths: [packages/commands/src/index.ts, packages/widgets/src/commandpalette.ts]
+concepts: [one CommandRegistry feeding palette and menus, isEnabled/isVisible/isToggled per command, label/category/split match classes, matchSumOfDeltas from word boundaries]
+reuse:
+  mode: CONCEPTUAL DONOR
+  confidence: medium
+spatial_ide_relevance:
+  plan_node: shell-migration-milestone-3
+  immediate: true

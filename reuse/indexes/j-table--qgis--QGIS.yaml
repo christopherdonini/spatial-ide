@@ -1,0 +1,17 @@
+repo: qgis/QGIS
+commit: fa8f961
+track: j-table
+priority: P1
+license:
+  spdx: "GPL-2.0-or-later"
+  verified_from: ["COPYING", "src/gui/attributetable/qgsattributetablemodel.cpp header", "src/core/vector/qgsvectorlayercache.cpp header"]
+  mixed: false
+  notes: "core-combinable copyleft; never in SDK or plugin-linked code"
+interesting_paths: ["src/gui/attributetable/qgsattributetablemodel.cpp", "src/gui/attributetable/qgsattributetablefiltermodel.cpp", "src/gui/attributetable/qgsdualview.cpp", "src/gui/attributetable/qgsfeatureselectionmodel.cpp", "src/core/vector/qgsvectorlayercache.cpp"]
+concepts: ["scope as filter mode over feature ids", "attributes fetched per id via LRU cache", "selection sync by feature id", "client-side sort cache (not to copy)"]
+reuse:
+  mode: CONCEPTUAL DONOR
+  confidence: high
+spatial_ide_relevance:
+  plan_node: b1-shell-half
+  immediate: true

@@ -1,0 +1,17 @@
+repo: kylebarron/geo-index
+commit: e6efbb0
+track: catalogue
+priority: WATCH
+license:
+  spdx: MIT OR Apache-2.0
+  verified_from: [LICENSE_MIT, LICENSE_APACHE, Cargo.toml]
+  mixed: false
+  notes: "Optional geo feature pulls geo 0.31 (Cargo.toml:23), a second geo major beside the engine's 0.33.1. CI on macOS, Linux, Windows."
+interesting_paths: [src/rtree/sort/hilbert.rs, src/rtree/sort/str.rs, src/rtree/index.rs, README.md]
+concepts: [packed immutable flatbush-compatible R-tree, Hilbert and STR bulk sorts, bounded memory]
+reuse:
+  mode: WATCH
+  confidence: medium
+spatial_ide_relevance:
+  plan_node: spatial-indexing-measurement-close
+  immediate: false

@@ -1,0 +1,28 @@
+repo: cyphar/libpathrs
+commit: 3abe8bb
+track: n1-files
+priority: WATCH
+license:
+  spdx: MPL-2.0 OR LGPL-3.0-or-later
+  verified_from:
+    - COPYING.md
+    - LICENSE.MPL-2.0
+    - LICENSE.LGPL-3.0
+    - Cargo.toml
+    - SPDX headers
+  mixed: false
+  notes: "Weak copyleft: MPL-2.0 file-level obligations. Linux-only (lib.rs cfg(target_os = linux))."
+interesting_paths:
+  - src/resolvers/openat2.rs
+  - src/resolvers/opath/imp.rs
+  - src/root.rs
+concepts:
+  - "openat2 RESOLVE_IN_ROOT|NO_MAGICLINKS"
+  - O_PATH emulation fallback
+  - reopen via /proc/self/fd
+reuse:
+  mode: WATCH
+  confidence: medium
+spatial_ide_relevance:
+  plan_node: b2-piece-1c-save-and-reopen
+  immediate: false

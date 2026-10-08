@@ -1,0 +1,17 @@
+repo: leeoniya/uFuzzy
+commit: 9bcdc09
+track: q-command-bar
+priority: WATCH
+license:
+  spdx: MIT
+  verified_from: [LICENSE, package.json]
+  mixed: false
+  notes: "Zero dependencies; 1,050-line source, 8,530-byte minified IIFE. No test script (package.json test is a placeholder) and no CI workflow in repo. Used by grafana/scenes behind substring fallbacks."
+interesting_paths: [src/uFuzzy.mjs, dist/uFuzzy.d.ts]
+concepts: [regex-built needle matching, intraMode typo tolerance, lexicographic quality sort chain, out-of-order term permutations]
+reuse:
+  mode: WATCH
+  confidence: medium
+spatial_ide_relevance:
+  plan_node: shell-migration-milestone-3
+  immediate: false

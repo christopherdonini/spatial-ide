@@ -1,0 +1,17 @@
+repo: TanStack/table
+commit: 6aa0d74
+track: j-table
+priority: P3
+license:
+  spdx: "MIT"
+  verified_from: ["LICENSE"]
+  mixed: false
+  notes: ""
+interesting_paths: ["packages/table-core/src/core/row-models/coreRowModelsFeature.utils.ts"]
+concepts: ["headless table state; manual pagination/sort"]
+reuse:
+  mode: REJECT
+  confidence: medium
+spatial_ide_relevance:
+  plan_node: b1-shell-half
+  immediate: false

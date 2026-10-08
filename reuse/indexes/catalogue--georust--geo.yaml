@@ -1,0 +1,17 @@
+repo: georust/geo
+commit: c12769f
+track: catalogue
+priority: P0
+license:
+  spdx: MIT OR Apache-2.0
+  verified_from: [LICENSE-MIT, LICENSE-APACHE, geo/Cargo.toml]
+  mixed: false
+  notes: "Already an engine dependency at 0.33.1. Transitive deps include earcut (see its record), i_overlay pinned '4.5.1, < 4.6.0' on main (geo/Cargo.toml:43) while i_overlay is at 9.0.0."
+interesting_paths: [geo/src/algorithm/repair_polygon/mod.rs, geo/src/algorithm/buffer.rs, geo/src/algorithm/bool_ops, geo/src/algorithm/validation, geo/CHANGES.md, geo/Cargo.toml]
+concepts: [MakeValid via prepair (Ledoux 2014) with odd-even fill rule only, buffer over i_overlay, OGC-compliant boolean extraction, Voronoi, index-returning simplification on main]
+reuse:
+  mode: ADOPT
+  confidence: high
+spatial_ide_relevance:
+  plan_node: data-doctor-legacy-imports
+  immediate: false

@@ -1,0 +1,17 @@
+repo: apache/superset
+commit: 100f512
+track: q-command-bar
+priority: P1
+license:
+  spdx: Apache-2.0
+  verified_from: [LICENSE.txt, "ASF file headers AdhocFilter/index.ts"]
+  mixed: false
+  notes: "sanitize_clause verbatim policy added 2aa43f6f 2026-07-06 (#36113 / #41125)."
+interesting_paths: [superset-frontend/src/explore/components/controls/FilterControl/AdhocFilter/index.ts, superset-frontend/src/explore/components/controls/FilterControl/AdhocFilterEditPopover/index.tsx, superset/sql/parse.py, superset/models/helpers.py]
+concepts: [SIMPLE vs SQL adhoc filter, one-way SIMPLE-to-SQL translation never parsed back, hide SQL tab where conversion would be invalid, validate then return original SQL text verbatim, re-render only to neutralise comments]
+reuse:
+  mode: CONCEPTUAL DONOR
+  confidence: high
+spatial_ide_relevance:
+  plan_node: shell-migration-milestone-3
+  immediate: true

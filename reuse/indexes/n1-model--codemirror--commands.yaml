@@ -1,0 +1,20 @@
+repo: codemirror/commands
+commit: 5b9bac9
+track: n1-model
+priority: P2
+license:
+  spdx: MIT
+  verified_from: [LICENSE, package.json]
+  mixed: false
+  notes: ""
+interesting_paths: [src/history.ts]
+concepts:
+  - isolateHistory before/after/full annotation
+  - join only when userEvent class matches /^(input\.type|delete)/, within newGroupDelay, and adjacent
+  - selection-only changes form separate selection events
+reuse:
+  mode: CONCEPTUAL DONOR
+  confidence: high
+spatial_ide_relevance:
+  plan_node: b2-piece-1b-recording
+  immediate: false

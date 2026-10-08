@@ -1,0 +1,17 @@
+repo: apache/arrow-js
+commit: 8a7fda4
+track: j-table
+priority: P1
+license:
+  spdx: "Apache-2.0"
+  verified_from: ["LICENSE.txt"]
+  mixed: false
+  notes: "already a shell dependency (apache-arrow ^21.2.0)"
+interesting_paths: ["src/vector.ts", "src/util/chunk.ts", "src/visitor/get.ts"]
+concepts: ["chunked Vector.get by binary search over offsets", "per-type getters; Utf8 decoded per call; Int64 as BigInt"]
+reuse:
+  mode: ADOPT
+  confidence: high
+spatial_ide_relevance:
+  plan_node: b1-shell-half
+  immediate: true

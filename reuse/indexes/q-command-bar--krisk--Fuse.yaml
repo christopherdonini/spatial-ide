@@ -1,0 +1,17 @@
+repo: krisk/Fuse
+commit: edf2fb6
+track: q-command-bar
+priority: P3
+license:
+  spdx: Apache-2.0
+  verified_from: [LICENSE]
+  mixed: false
+  notes: "~4,226 lines of TS; npm fuse.js 7.5.0 unpacked 417 KB. kbar's matcher."
+interesting_paths: [src/search/bitap/search.ts, src/core/computeScore.ts, src/core/config.ts]
+concepts: [Bitap approximate matching, threshold and distance, weighted multi-key score product, field-length norm]
+reuse:
+  mode: REJECT
+  confidence: high
+spatial_ide_relevance:
+  plan_node: shell-migration-milestone-3
+  immediate: false

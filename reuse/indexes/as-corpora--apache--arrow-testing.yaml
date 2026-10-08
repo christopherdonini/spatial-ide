@@ -1,0 +1,17 @@
+repo: apache/arrow-testing
+commit: 9ff285c
+track: as-corpora
+priority: P3
+license:
+  spdx: Apache-2.0
+  verified_from: [LICENSE.txt, data/parquet/README.md]
+  mixed: false
+  notes: 138 ClusterFuzz parquet cases; none carries a geo key.
+interesting_paths: [data/parquet/fuzzing, data/parquet/encoding-fuzzing]
+concepts: [parquet reader fuzz reproducers]
+reuse:
+  mode: REJECT
+  confidence: medium
+spatial_ide_relevance:
+  plan_node: corpus-line-files
+  immediate: false

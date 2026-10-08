@@ -1,0 +1,17 @@
+repo: hyparam/hightable
+commit: 0989abd
+track: j-table
+priority: P0
+license:
+  spdx: "MIT"
+  verified_from: ["LICENSE", "package.json"]
+  mixed: false
+  notes: "0.26.1+ dist imports React 19 useEffectEvent despite ^18.3.1 peer; 0.26.0 is last React-18-safe"
+interesting_paths: ["src/helpers/dataframe/types.ts", "src/hooks/useFetchCells.ts", "src/helpers/scroll.ts", "src/helpers/constants.ts", "src/components/Table.tsx", "src/components/Cell.tsx", "src/hooks/useCellFocus.ts"]
+concepts: ["async DataFrame fetch(rowStart,rowEnd,orderBy,signal)", "AbortController per visible range", "scroll scaling past browser max element height", "role=grid with roving tabindex"]
+reuse:
+  mode: PORT
+  confidence: high
+spatial_ide_relevance:
+  plan_node: b1-shell-half
+  immediate: true

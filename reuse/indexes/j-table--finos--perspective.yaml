@@ -1,0 +1,17 @@
+repo: finos/perspective
+commit: 6dbc6b8
+track: j-table
+priority: P1
+license:
+  spdx: "Apache-2.0"
+  verified_from: ["LICENSE.md", "per-file banner"]
+  mixed: false
+  notes: ""
+interesting_paths: ["rust/perspective-js/src/ts/virtual_servers/duckdb.ts", "rust/perspective-client/src/rust/virtual_server/generic_sql_model.rs", "rust/perspective-client/src/rust/virtual_server/generic_sql_model/table_make_view.rs", "packages/viewer-datagrid/src/ts/data_listener/index.ts"]
+concepts: ["range request LIMIT/OFFSET over materialised DuckDB view", "explicit natural order ORDER BY rowid", "Arrow IPC to data slice; grid reads JSON"]
+reuse:
+  mode: CONCEPTUAL DONOR
+  confidence: medium
+spatial_ide_relevance:
+  plan_node: b1-shell-half
+  immediate: false

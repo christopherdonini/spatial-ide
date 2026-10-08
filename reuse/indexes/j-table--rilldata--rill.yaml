@@ -1,0 +1,17 @@
+repo: rilldata/rill
+commit: 46764c3
+track: j-table
+priority: P3
+license:
+  spdx: "Apache-2.0"
+  verified_from: ["LICENSE.md"]
+  mixed: false
+  notes: ""
+interesting_paths: ["web-common/src/components/virtualized-table/VirtualTable.svelte"]
+concepts: ["Svelte virtual table, role=cell only"]
+reuse:
+  mode: REJECT
+  confidence: medium
+spatial_ide_relevance:
+  plan_node: b1-shell-half
+  immediate: false

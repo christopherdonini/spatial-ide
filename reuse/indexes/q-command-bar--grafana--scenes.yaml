@@ -1,0 +1,17 @@
+repo: grafana/scenes
+commit: 737eb53
+track: q-command-bar
+priority: P2
+license:
+  spdx: Apache-2.0
+  verified_from: [LICENSE, packages/scenes/package.json]
+  mixed: false
+  notes: "Depends on @leeoniya/ufuzzy for option search."
+interesting_paths: [packages/scenes/src/variables/adhoc/AdHocFiltersVariable.tsx, packages/scenes/src/variables/filter.ts, packages/scenes/src/variables/adhoc/getAdhocOptionSearcher.ts]
+concepts: [ad hoc key/operator/value filter pills, readOnly and origin flags, nonApplicable with stated reason, uFuzzy with substring fallbacks for non-ASCII, symbols, long or many-term needles]
+reuse:
+  mode: CONCEPTUAL DONOR
+  confidence: medium
+spatial_ide_relevance:
+  plan_node: shell-migration-milestone-3
+  immediate: false

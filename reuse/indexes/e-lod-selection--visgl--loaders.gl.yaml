@@ -1,0 +1,23 @@
+repo: visgl/loaders.gl
+commit: 2b8d775
+track: e-lod-selection
+priority: P2
+license:
+  spdx: MIT
+  verified_from: [LICENSE, modules/loader-utils/package.json, modules/loader-utils/src/lib/request-utils/request-scheduler.ts SPDX header]
+  mixed: true
+  notes: modules/tiles/src/tileset-3d/common/tile-3d.ts declares SPDX MIT and also "derived from the Cesium code base under Apache 2 license" - keep tiles/ out of any port. loader-utils 4.4.4 is already transitive in Spatial IDE's shell lockfile; it restarts the debounce on every completion, fixed on master d1d2cc0 (2026-09-29), not in 4.5.3.
+interesting_paths:
+  - modules/loader-utils/src/lib/request-utils/request-scheduler.ts
+  - modules/loader-utils/test/lib/request-utils/request-scheduler.spec.ts
+  - modules/tiles/src/tileset-3d/common/tileset-traverser.ts
+concepts:
+  - slot-limited request scheduler with lazy priority re-evaluation when a slot frees
+  - negative priority cancels a queued request before issue
+  - debounce quiet period (arrival-only after the 2026-09-29 fix)
+reuse:
+  mode: CONCEPTUAL DONOR
+  confidence: medium
+spatial_ide_relevance:
+  plan_node: lod-tier-selection
+  immediate: false

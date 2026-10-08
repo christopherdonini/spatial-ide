@@ -1,0 +1,21 @@
+repo: rbtcollins/fs_at
+commit: 8443962
+track: n1-files
+priority: WATCH
+license:
+  spdx: Apache-2.0
+  verified_from:
+    - Cargo.toml
+  mixed: false
+  notes: No LICENSE file found in the repository root; licence from Cargo.toml only.
+interesting_paths:
+  - src/lib.rs
+  - src/win.rs
+concepts:
+  - "portable *at operations on Windows via NtCreateFile RootDirectory; no containment"
+reuse:
+  mode: WATCH
+  confidence: low
+spatial_ide_relevance:
+  plan_node: b2-piece-1c-save-and-reopen
+  immediate: false

@@ -1,0 +1,22 @@
+repo: topojson/topojson-simplify
+commit: e37de14
+track: e-lod-selection
+priority: P3
+license:
+  spdx: ISC
+  verified_from: [LICENSE, package.json]
+  mixed: false
+  notes: Last commit 2019-09-05; inactive.
+interesting_paths:
+  - src/presimplify.js
+  - src/simplify.js
+  - README.md
+concepts:
+  - Visvalingam effective-area weights, documented typically in square pixels
+  - monotonic effective area (point cannot be removed before previously removed points)
+reuse:
+  mode: CONCEPTUAL DONOR
+  confidence: medium
+spatial_ide_relevance:
+  plan_node: lod-tier-selection
+  immediate: false

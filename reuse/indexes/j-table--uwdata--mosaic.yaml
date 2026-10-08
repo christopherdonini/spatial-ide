@@ -1,0 +1,17 @@
+repo: uwdata/mosaic
+commit: 3faf153
+track: j-table
+priority: P1
+license:
+  spdx: "BSD-3-Clause"
+  verified_from: ["LICENSE"]
+  mixed: false
+  notes: ""
+interesting_paths: ["packages/vgplot/inputs/src/Table.js", "packages/mosaic/core/src/QueryManager.ts", "packages/mosaic/core/src/Coordinator.ts", "packages/mosaic/core/src/clause/PointClause.ts", "packages/mosaic/core/src/util/to-data-columns.ts"]
+concepts: ["table as second DB client", "LIMIT/OFFSET paging with low-priority prefetch", "engine-side sort and filter", "selection by value tuple (not to copy)"]
+reuse:
+  mode: CONCEPTUAL DONOR
+  confidence: high
+spatial_ide_relevance:
+  plan_node: b1-shell-half
+  immediate: true

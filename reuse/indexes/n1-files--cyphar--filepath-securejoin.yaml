@@ -1,0 +1,23 @@
+repo: cyphar/filepath-securejoin
+commit: 9e667ca
+track: n1-files
+priority: P3
+license:
+  spdx: BSD-3-Clause AND MPL-2.0
+  verified_from:
+    - COPYING.md
+    - LICENSE.BSD
+    - LICENSE.MPL-2.0
+    - doc.go SPDX
+  mixed: true
+  notes: Legacy API BSD-3; pathrs-lite MPL-2.0.
+interesting_paths:
+  - doc.go
+concepts:
+  - "own docs: lexical SecureJoin is not safe against races; use fd-based pathrs-lite"
+reuse:
+  mode: REJECT
+  confidence: high
+spatial_ide_relevance:
+  plan_node: b2-piece-1c-save-and-reopen
+  immediate: false

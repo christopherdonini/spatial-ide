@@ -1,0 +1,22 @@
+repo: tauri-apps/plugins-workspace
+commit: 8489575
+track: n1-files
+priority: P3
+license:
+  spdx: Apache-2.0 OR MIT
+  verified_from:
+    - plugins/fs/LICENSE.spdx
+    - plugins/fs/LICENSE_APACHE-2.0
+    - plugins/fs/LICENSE_MIT
+  mixed: false
+  notes: 
+interesting_paths:
+  - plugins/fs/src/commands.rs
+concepts:
+  - fs scope = read_link/canonicalize then glob match then later path use (check-then-use)
+reuse:
+  mode: REJECT
+  confidence: high
+spatial_ide_relevance:
+  plan_node: b2-piece-1c-save-and-reopen
+  immediate: false

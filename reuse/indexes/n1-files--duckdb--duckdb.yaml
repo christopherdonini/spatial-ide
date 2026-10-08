@@ -1,0 +1,22 @@
+repo: duckdb/duckdb
+commit: f2f9329
+track: n1-files
+priority: P1
+license:
+  spdx: MIT
+  verified_from:
+    - LICENSE
+  mixed: false
+  notes: Already the engine dependency (bundled via libduckdb-sys).
+interesting_paths:
+  - src/common/local_file_system.cpp
+concepts:
+  - "Windows OpenFile: CreateFileW by path, share READ|WRITE|DELETE for no-lock reads"
+  - POSIX open by path
+  - "consequence: a handle-based resolver must pin the chain or re-check identity, since DuckDB re-resolves the path"
+reuse:
+  mode: BENCHMARK AGAINST
+  confidence: medium
+spatial_ide_relevance:
+  plan_node: b2-piece-1c-save-and-reopen
+  immediate: true

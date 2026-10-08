@@ -1,0 +1,35 @@
+repo: qgis/QGIS
+commit: fa8f961
+track: n1-model
+priority: P1
+license:
+  spdx: GPL-2.0-or-later
+  verified_from: [COPYING, "file headers (src/core/layout/qgslayoutundocommand.h)"]
+  mixed: false
+  notes: "Core-combinable copyleft as or-later. Concepts only."
+interesting_paths:
+  - src/core/layout/qgslayoutundocommand.h
+  - src/core/layout/qgslayoutundocommand.cpp
+  - src/core/layout/qgslayoutitemundocommand.cpp
+  - src/core/layout/qgslayoutundostack.cpp
+  - src/core/layout/qgslayoutitem.h
+  - src/core/vector/qgsvectorlayerundocommand.cpp
+  - src/gui/history/qgshistoryproviderregistry.cpp
+  - src/gui/processing/qgsprocessinghistoryprovider.cpp
+  - python/plugins/processing/gui/algorithm_widget.py
+  - src/core/processing/qgsprocessingalgorithm.cpp
+  - src/core/processing/qgsprocessingcontext.cpp
+  - src/core/project/qgsproject.cpp
+concepts:
+  - collapse key = (property enum, item uuid / feature id) checked in mergeWith
+  - containsChange compares serialised before/after state to drop empty commands
+  - processing history = per-profile SQLite user-history.db, entry map serialised as XML
+  - entry = algorithm_id, parameters {inputs, distance_units, area_units, ellipsoid, project_path}, python_command, results, log
+  - replay reopens the algorithm dialog prefilled (not a silent re-run)
+  - newer project version loads with a warning (lenient, unlike ADR-036)
+reuse:
+  mode: CONCEPTUAL DONOR
+  confidence: high
+spatial_ide_relevance:
+  plan_node: b2-piece-1b-recording
+  immediate: false

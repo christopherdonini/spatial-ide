@@ -1,0 +1,29 @@
+repo: google/leveldb
+commit: 7ee830d
+track: n1-files
+priority: P1
+license:
+  spdx: BSD-3-Clause
+  verified_from:
+    - LICENSE
+  mixed: false
+  notes: 
+interesting_paths:
+  - doc/log_format.md
+  - db/log_format.h
+  - db/log_reader.cc
+  - db/filename.cc
+  - util/env_posix.cc
+concepts:
+  - crc32c + length + type framing
+  - "truncated header or length past EOF at tail = writer died, report EOF not corruption"
+  - zero-type records from preallocation skipped
+  - CRC mismatch drops rest of buffer
+  - CURRENT pointer switch via temp+sync+rename
+  - directory fsync for manifest; F_FULLFSYNC on Apple
+reuse:
+  mode: CONCEPTUAL DONOR
+  confidence: high
+spatial_ide_relevance:
+  plan_node: b2-piece-1b-recording
+  immediate: true

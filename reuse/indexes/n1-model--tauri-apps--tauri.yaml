@@ -1,0 +1,33 @@
+repo: tauri-apps/tauri
+commit: a225a18
+track: n1-model
+priority: P0
+license:
+  spdx: Apache-2.0 OR MIT
+  verified_from: [LICENSE.spdx, "SPDX headers (examples/file-associations/src-tauri/src/main.rs:2-3)"]
+  mixed: true
+  notes: "crates/tauri-bundler/src/bundle/windows/nsis/FileAssociation.nsh is a third-party gist (Saivert, Nikku) with no licence statement in the file: do not copy it; using the bundler does not copy it."
+interesting_paths:
+  - crates/tauri-utils/src/config.rs
+  - crates/tauri-bundler/src/bundle/windows/nsis/installer.nsi
+  - crates/tauri-bundler/src/bundle/windows/nsis/FileAssociation.nsh
+  - crates/tauri-bundler/src/bundle/windows/msi/main.wxs
+  - crates/tauri-bundler/src/bundle/linux/freedesktop/mod.rs
+  - crates/tauri-bundler/src/bundle/linux/freedesktop/main.desktop
+  - crates/tauri/src/app.rs
+  - crates/tauri-runtime-wry/src/lib.rs
+  - examples/file-associations/src-tauri/src/main.rs
+  - examples/file-associations/src-tauri/tauri.conf.json
+concepts:
+  - bundle.fileAssociations (ext, name/ProgID, description, mimeType, role, rank, exportedType.conformsTo)
+  - Windows HKCU Software\Classes\.ext -> ProgID -> shell\open\command "%1"
+  - macOS CFBundleDocumentTypes + UTExportedTypeDeclarations conforming to public.json
+  - Linux .desktop MimeType only; no shared-mime-info glob shipped; Exec without %f (GLib appends %f)
+  - file path arrives as argv on Windows/Linux, RunEvent::Opened on macOS
+  - compound extension .spatial.json does not help: OS resolves the last extension (inferred)
+reuse:
+  mode: ADOPT
+  confidence: high
+spatial_ide_relevance:
+  plan_node: b2-piece-1c-save-and-reopen
+  immediate: true

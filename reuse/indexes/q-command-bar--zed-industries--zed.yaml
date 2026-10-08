@@ -1,0 +1,17 @@
+repo: zed-industries/zed
+commit: "4240146"
+track: q-command-bar
+priority: P2
+license:
+  spdx: GPL-3.0-or-later AND Apache-2.0
+  verified_from: [LICENSE-GPL, LICENSE-APACHE, crates/command_palette/Cargo.toml, crates/fuzzy/Cargo.toml, crates/fuzzy_nucleo/Cargo.toml, crates/picker/Cargo.toml, crates/gpui/Cargo.toml]
+  mixed: true
+  notes: "command_palette, fuzzy, fuzzy_nucleo, picker are GPL-3.0-or-later (core-combinable copyleft; never in the Apache-2.0 SDK or plugin-linked code); gpui is Apache-2.0. No AGPL licence file found in the sparse tree. Uses nucleo-matcher 0.3 (MPL-2.0)."
+interesting_paths: [crates/command_palette/src/command_palette.rs, crates/command_palette/src/persistence.rs, crates/fuzzy_nucleo/src/strings.rs, crates/fuzzy_nucleo/src/matcher.rs]
+concepts: [usage-ranked palette with last_invoked and invocations in SQLite, used commands pinned above unused, nucleo matching with case and length penalties, char-bag prefilter, humanized action names]
+reuse:
+  mode: CONCEPTUAL DONOR
+  confidence: high
+spatial_ide_relevance:
+  plan_node: shell-migration-milestone-3
+  immediate: false

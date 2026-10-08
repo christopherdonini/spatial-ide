@@ -1,0 +1,27 @@
+repo: facebook/rocksdb
+commit: dec6799
+track: n1-files
+priority: P2
+license:
+  spdx: GPL-2.0-only OR Apache-2.0
+  verified_from:
+    - COPYING
+    - LICENSE.Apache
+    - LICENSE.leveldb
+    - README.md
+  mixed: false
+  notes: Dual licence; Apache-2.0 side is permissive. Concepts only.
+interesting_paths:
+  - include/rocksdb/options.h
+  - db/log_reader.cc
+  - db/log_format.h
+concepts:
+  - "WALRecoveryMode: kTolerateCorruptedTailRecords, kAbsoluteConsistency, kPointInTimeRecovery (default), kSkipAnyCorruptedRecords"
+  - point-in-time recovery stops at first inconsistency for disks with volatile caches
+  - "predecessor WAL number, last seqno and size recorded and checked"
+reuse:
+  mode: CONCEPTUAL DONOR
+  confidence: high
+spatial_ide_relevance:
+  plan_node: b2-piece-1b-recording
+  immediate: true

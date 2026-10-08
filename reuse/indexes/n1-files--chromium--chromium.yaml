@@ -1,0 +1,27 @@
+repo: chromium/chromium
+commit: 8fe23318
+track: n1-files
+priority: P1
+license:
+  spdx: BSD-3-Clause
+  verified_from:
+    - LICENSE
+  mixed: false
+  notes: Only base/files read.
+interesting_paths:
+  - base/files/important_file_writer.cc
+  - base/files/file_util_win.cc
+  - base/files/file_win.cc
+  - base/files/file_posix.cc
+concepts:
+  - "temp file in same dir, Flush (FlushFileBuffers) before replace"
+  - close late and boost priority to beat AV scanners
+  - ReplaceFile retried 5 x 100 ms with UMA retry histograms
+  - ReplaceFileW ERROR_UNABLE_TO_MOVE_REPLACEMENT_2 can lose the destination name; needs backup recovery
+  - "F_BARRIERFSYNC on Apple, fdatasync on Linux"
+reuse:
+  mode: CONCEPTUAL DONOR
+  confidence: high
+spatial_ide_relevance:
+  plan_node: b2-piece-1c-save-and-reopen
+  immediate: true

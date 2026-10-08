@@ -1,0 +1,17 @@
+repo: finos/regular-table
+commit: 47f99d3
+track: j-table
+priority: P3
+license:
+  spdx: "Apache-2.0"
+  verified_from: ["LICENSE"]
+  mixed: false
+  notes: ""
+interesting_paths: ["src/ts/regular-table.ts"]
+concepts: ["data listener (x0,y0,x1,y1) range callback", "no ARIA"]
+reuse:
+  mode: REJECT
+  confidence: medium
+spatial_ide_relevance:
+  plan_node: b1-shell-half
+  immediate: false

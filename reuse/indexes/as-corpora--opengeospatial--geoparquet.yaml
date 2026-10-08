@@ -1,0 +1,17 @@
+repo: opengeospatial/geoparquet
+commit: 4c9f87e
+track: as-corpora
+priority: P0
+license:
+  spdx: Apache-2.0
+  verified_from: [LICENSE]
+  mixed: false
+  notes: No NOTICE file. Test data carry no headers. Tag v1.1.0 = 525b8f9 also inspected; no v2.0.0 tag exists (only v2.0.0-rc.1), but main's files declare 2.0.0.
+interesting_paths: [test_data/data-linestring-encoding_wkb.parquet, test_data/data-multilinestring-encoding_wkb.parquet, test_data/generate_test_data.py, examples/example.parquet, format-specs/geoparquet.md, scripts/test_json_schema.py]
+concepts: [one tiny file per geometry type incl. EMPTY and NULL rows, 2.0.0 files carry Parquet GEOMETRY logical type, v1.1.0 files have no logical type, 44 invalid geo-metadata cases, axis-order override text]
+reuse:
+  mode: ADOPT
+  confidence: high
+spatial_ide_relevance:
+  plan_node: corpus-line-files
+  immediate: true

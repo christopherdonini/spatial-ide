@@ -1,0 +1,17 @@
+repo: maplibre/maplibre-gl-js
+commit: dc4192c
+track: catalogue
+priority: P1
+license:
+  spdx: BSD-3-Clause
+  verified_from: [LICENSE.txt, package.json]
+  mixed: false
+  notes: "Only src/symbol/ file list and placement.ts structure read."
+interesting_paths: [src/symbol/placement.ts, src/symbol/collision_index.ts, src/symbol/grid_index.ts, src/symbol/cross_tile_symbol_index.ts, src/symbol/shaping.ts, src/symbol/bidi.ts]
+concepts: [interactive per-frame greedy label placement, screen-space grid collision index, cross-tile symbol identity, fade state]
+reuse:
+  mode: CONCEPTUAL DONOR
+  confidence: medium
+spatial_ide_relevance:
+  plan_node: none (docs/06_Rendering.md:17 @ 4561f3b8 label-pipeline spike, unscheduled)
+  immediate: false

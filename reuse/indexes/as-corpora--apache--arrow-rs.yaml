@@ -1,0 +1,17 @@
+repo: apache/arrow-rs
+commit: 6c31f41
+track: as-corpora
+priority: WATCH
+license:
+  spdx: Apache-2.0
+  verified_from: [LICENSE.txt, NOTICE.txt, parquet-geospatial/README.md]
+  mixed: false
+  notes: parquet 58.4.0 (the engine's) already has LogicalType::Geometry/Geography (parquet/src/basic.rs:297-303 at tag 58.4.0). parquet-geospatial crate (60.0.0) behind the geospatial feature, not enabled by the engine.
+interesting_paths: [parquet/src/basic.rs, parquet-geospatial/src, parquet/src/geospatial]
+concepts: [native Parquet GEOMETRY logical type in Rust parquet, geospatial statistics]
+reuse:
+  mode: WATCH
+  confidence: medium
+spatial_ide_relevance:
+  plan_node: corpus-line-files
+  immediate: false

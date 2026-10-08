@@ -1,0 +1,35 @@
+repo: git/git
+commit: 6de20f6
+track: n1-files
+priority: P1
+license:
+  spdx: GPL-2.0-only
+  verified_from:
+    - COPYING
+  mixed: true
+  notes: "GPL-2.0-only: flagged likely incompatible with AGPL-3.0-or-later. Concepts only, no code. Some files carry other licences (LGPL-2.1 file present)."
+interesting_paths:
+  - compat/mingw.c
+  - lockfile.c
+  - tempfile.c
+  - write-or-die.c
+  - wrapper.c
+  - read-cache.c
+  - statinfo.c
+  - path.c
+  - compat/precompose_utf8.c
+  - Documentation/technical/racy-git.adoc
+  - Documentation/config/core.adoc
+concepts:
+  - "mingw_rename: FileRenameInfoEx POSIX then MoveFileExW, retry {0,1,10,20,40} ms on sharing violation/access denied"
+  - core.fsync components; default risks recent work on unclean shutdown
+  - "racy-git: mtime >= index mtime means content compare; smudge size on write"
+  - "NTFS .git alias rule: trailing spaces and periods, 8.3 short names"
+  - index trailer SHA over its own bytes
+  - precompose UTF-8 on macOS
+reuse:
+  mode: CONCEPTUAL DONOR
+  confidence: high
+spatial_ide_relevance:
+  plan_node: b2-piece-1c-save-and-reopen
+  immediate: true

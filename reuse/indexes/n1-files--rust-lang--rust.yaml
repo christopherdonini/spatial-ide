@@ -1,0 +1,30 @@
+repo: rust-lang/rust
+commit: 42cfc04
+track: n1-files
+priority: P0
+license:
+  spdx: MIT OR Apache-2.0
+  verified_from:
+    - LICENSE-MIT
+    - LICENSE-APACHE
+    - COPYRIGHT
+  mixed: false
+  notes: The toolchain std; no new dependency.
+interesting_paths:
+  - library/std/src/sys/fs/windows.rs
+  - library/std/src/sys/fs/windows/remove_dir_all.rs
+  - library/std/src/sys/fs/windows/dir.rs
+  - library/std/src/sys/fs/unix.rs
+  - library/std/src/fs.rs
+concepts:
+  - "fs::rename on Windows = MoveFileExW(REPLACE_EXISTING), FileRenameInfoEx POSIX fallback on ACCESS_DENIED"
+  - sync_all = FlushFileBuffers / F_FULLFSYNC / fsync
+  - "CVE-2022-21658 fix: NtOpenFile relative to parent with FILE_OPEN_REPARSE_POINT; openat O_NOFOLLOW|O_DIRECTORY on Unix"
+  - junction targets are always absolute (readlink relative=false)
+  - "unstable fs::Dir is handle-relative but not a sandbox"
+reuse:
+  mode: ADOPT
+  confidence: high
+spatial_ide_relevance:
+  plan_node: b2-piece-1c-save-and-reopen
+  immediate: true

@@ -1,0 +1,17 @@
+repo: junegunn/fzf
+commit: b1be3a8
+track: q-command-bar
+priority: P3
+license:
+  spdx: MIT
+  verified_from: [LICENSE]
+  mixed: false
+  notes: "Sparse checkout of src/algo only. Algorithm rationale in algo.go header comment."
+interesting_paths: [src/algo/algo.go]
+concepts: [FuzzyMatchV1 forward-backward scan, FuzzyMatchV2 modified Smith-Waterman, bonus vs gap penalty balance at ~8 characters, consecutive-chunk bonus]
+reuse:
+  mode: CONCEPTUAL DONOR
+  confidence: medium
+spatial_ide_relevance:
+  plan_node: shell-migration-milestone-3
+  immediate: false

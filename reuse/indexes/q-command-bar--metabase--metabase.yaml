@@ -1,0 +1,17 @@
+repo: metabase/metabase
+commit: "8363349"
+track: q-command-bar
+priority: P1
+license:
+  spdx: AGPL-3.0 AND LicenseRef-Metabase-Commercial
+  verified_from: [LICENSE.txt, LICENSE-AGPL.txt, LICENSE-MCL.txt, package.json]
+  mixed: true
+  notes: "AGPL outside top-level enterprise/, Metabase Commercial License inside (red). Root notice does not state 'only' or 'or later'. package.json license 'private'. Nothing proposed for copying (ClojureScript MBQL)."
+interesting_paths: [frontend/src/metabase/querying/filters/components/FilterPicker/FilterPicker.tsx, frontend/src/metabase-lib/query/filter.ts, src/metabase/lib/fe_util.cljc]
+concepts: [filterParts tries typed recognisers in turn, isStandardFilter iff a recogniser returns parts, exact-shape match returns nil otherwise, non-standard filter opens in custom expression editor]
+reuse:
+  mode: CONCEPTUAL DONOR
+  confidence: high
+spatial_ide_relevance:
+  plan_node: shell-migration-milestone-3
+  immediate: true

@@ -1,0 +1,17 @@
+repo: duckdb/duckdb-ui
+commit: 0628932
+track: j-table
+priority: P0
+license:
+  spdx: "MIT"
+  verified_from: ["LICENSE"]
+  mixed: false
+  notes: "Most UI code closed per README; only ts/pkgs open"
+interesting_paths: ["ts/pkgs/duckdb-data-reader/src/DuckDBDataReader.ts"]
+concepts: ["forward-only stream read until target row count", "growing rowCount plus done flag", "batch lookup by size runs"]
+reuse:
+  mode: CONCEPTUAL DONOR
+  confidence: high
+spatial_ide_relevance:
+  plan_node: b1-shell-half
+  immediate: true

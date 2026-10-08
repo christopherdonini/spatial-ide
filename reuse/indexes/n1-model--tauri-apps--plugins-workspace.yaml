@@ -1,0 +1,27 @@
+repo: tauri-apps/plugins-workspace
+commit: "8489575"
+track: n1-model
+priority: P1
+license:
+  spdx: Apache-2.0 OR MIT
+  verified_from: [plugins/single-instance/LICENSE.spdx, plugins/single-instance/LICENSE_MIT, plugins/single-instance/LICENSE_APACHE-2.0, SPDX headers]
+  mixed: false
+  notes: "single-instance 2.5.2; deps zbus and windows-sys are already in Spatial IDE's shell Cargo.lock (zbus via tauri-plugin-opener). No test files in the plugin; 27 unsafe sites in windows.rs."
+interesting_paths:
+  - plugins/single-instance/src/lib.rs
+  - plugins/single-instance/src/platform_impl/windows.rs
+  - plugins/single-instance/src/platform_impl/linux.rs
+  - plugins/single-instance/src/platform_impl/macos.rs
+  - plugins/deep-link/src/lib.rs
+concepts:
+  - named mutex + hidden window + WM_COPYDATA (Windows)
+  - D-Bus well-known name {identifier}.SingleInstance (Linux)
+  - Unix socket /tmp/{identifier}_si.sock (macOS)
+  - second instance forwards argv+cwd then exits
+  - one project identity open in two processes is a new case for ADR-036 section 4
+reuse:
+  mode: WRAP
+  confidence: medium
+spatial_ide_relevance:
+  plan_node: b2-piece-1c-save-and-reopen
+  immediate: false

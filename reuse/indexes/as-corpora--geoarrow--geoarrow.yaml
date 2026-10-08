@@ -1,0 +1,17 @@
+repo: geoarrow/geoarrow
+commit: 6ff51fb
+track: as-corpora
+priority: P2
+license:
+  spdx: BSD-3-Clause
+  verified_from: [LICENSE]
+  mixed: false
+  notes: Specification text only. Tags v0.1.0, v0.2.0.
+interesting_paths: [extension-types.md]
+concepts: [axis order always lon/lat and easting/northing regardless of CRS, crs_type values projjson/wkt2:2019/authority_code/srid]
+reuse:
+  mode: CONCEPTUAL DONOR
+  confidence: high
+spatial_ide_relevance:
+  plan_node: corpus-line-files
+  immediate: false

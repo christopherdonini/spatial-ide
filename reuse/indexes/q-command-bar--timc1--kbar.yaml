@@ -1,0 +1,17 @@
+repo: timc1/kbar
+commit: 26ec0f4
+track: q-command-bar
+priority: P2
+license:
+  spdx: MIT
+  verified_from: [LICENSE, package.json]
+  mixed: false
+  notes: "Deps fuse.js (Apache-2.0), @tanstack/react-virtual, @radix-ui/react-portal, fast-equals, tiny-invariant; transitive ~11 packages ~1.76 MB. 1.0.0 released 2026-08-10."
+interesting_paths: [src/useMatches.tsx, src/KBarSearch.tsx, src/KBarResults.tsx, src/action/HistoryImpl.ts, src/InternalEvents.tsx]
+concepts: [Fuse.js weighted keys with token search, action priority plus match score, nested parent/children actions, global singleton undo stack bound to Meta+Z, aria-activedescendant set without an existing item]
+reuse:
+  mode: REJECT
+  confidence: high
+spatial_ide_relevance:
+  plan_node: shell-migration-milestone-3
+  immediate: false

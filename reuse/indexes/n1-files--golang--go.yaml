@@ -1,0 +1,37 @@
+repo: golang/go
+commit: 3b98edd
+track: n1-files
+priority: P0
+license:
+  spdx: BSD-3-Clause
+  verified_from:
+    - LICENSE
+    - file headers (src/os/root.go)
+  mixed: false
+  notes: Concepts and tests only; Go cannot be linked from the Rust kernel.
+interesting_paths:
+  - src/os/root.go
+  - src/os/root_openat.go
+  - src/os/root_windows.go
+  - src/os/root_unix.go
+  - src/internal/syscall/windows/at_windows.go
+  - src/internal/filepathlite/path_windows.go
+  - src/os/file_windows.go
+  - src/os/types_windows.go
+  - src/os/root_test.go
+  - src/os/root_windows_test.go
+concepts:
+  - OBJ_DONT_REPARSE refuses any reparse point in NtCreateFile name parsing
+  - single-component FILE_OPEN_REPARSE_POINT fallback for Windows 10 build 10240 (commit 59ea07ba)
+  - ".. restarts from the root fd instead of openat(dir, \"..\")"
+  - symlinks followed only if relative and staying beneath
+  - reserved names incl. CONIN$/CONOUT$ and RtlIsDosDeviceName_U for extensions
+  - reparse data read from the handle
+  - "escape-bug history 92e23b68, adcad7be (CVE-2025-0913), 657ed934, 82215dc6"
+  - "FileRenameInformationEx POSIX|REPLACE with RootDirectory for in-root rename"
+reuse:
+  mode: CONCEPTUAL DONOR
+  confidence: high
+spatial_ide_relevance:
+  plan_node: b2-piece-1c-save-and-reopen
+  immediate: true

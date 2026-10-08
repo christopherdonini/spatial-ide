@@ -1,0 +1,17 @@
+repo: farzher/fuzzysort
+commit: ac4d42e
+track: q-command-bar
+priority: P3
+license:
+  spdx: MIT
+  verified_from: [LICENSE]
+  mixed: false
+  notes: "Skimmed only (licence, size: fuzzysort.js 1,471 lines). Not read in depth."
+interesting_paths: [fuzzysort.js]
+concepts: [prepared-target fuzzy search]
+reuse:
+  mode: REJECT
+  confidence: low
+spatial_ide_relevance:
+  plan_node: shell-migration-milestone-3
+  immediate: false

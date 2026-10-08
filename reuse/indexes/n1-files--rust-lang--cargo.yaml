@@ -1,0 +1,23 @@
+repo: rust-lang/cargo
+commit: 33f504c
+track: n1-files
+priority: P3
+license:
+  spdx: MIT OR Apache-2.0
+  verified_from:
+    - LICENSE-MIT
+    - LICENSE-APACHE
+  mixed: false
+  notes: LICENSE-THIRD-PARTY present.
+interesting_paths:
+  - src/compiler/fingerprint/mod.rs
+concepts:
+  - HFS 1 s timestamps; Docker zeroed nanoseconds; kernel caches time between ticks
+  - "path_mtime <= reference_mtime treated fresh, TODO #5918 says equality should be stale"
+  - checksum-freshness as content-based alternative
+reuse:
+  mode: CONCEPTUAL DONOR
+  confidence: medium
+spatial_ide_relevance:
+  plan_node: b2-piece-1c-save-and-reopen
+  immediate: false

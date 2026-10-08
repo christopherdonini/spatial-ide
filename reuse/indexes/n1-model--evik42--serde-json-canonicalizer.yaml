@@ -1,0 +1,19 @@
+repo: evik42/serde-json-canonicalizer
+commit: cf6a483
+track: n1-model
+priority: P3
+license:
+  spdx: MIT
+  verified_from: [LICENSE]
+  mixed: false
+  notes: "RFC 8785 writer; reads via serde_json::Value (src/util.rs:68-71)"
+interesting_paths: [src/jcs.rs, src/util.rs]
+concepts:
+  - JCS writer with ryu-js (ECMAScript number grammar, exponents allowed)
+  - no strict reader; duplicates collapse on read
+reuse:
+  mode: REJECT
+  confidence: high
+spatial_ide_relevance:
+  plan_node: b2-piece-1c-save-and-reopen
+  immediate: false

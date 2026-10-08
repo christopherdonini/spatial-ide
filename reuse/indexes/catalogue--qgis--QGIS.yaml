@@ -1,0 +1,17 @@
+repo: qgis/QGIS
+commit: fa8f961
+track: catalogue
+priority: P2
+license:
+  spdx: GPL-3.0-or-later
+  verified_from: [COPYING, src/core/pal/pal.cpp, src/core/pal/labelposition.cpp, src/core/pal/problem.cpp]
+  mixed: true
+  notes: "QGIS COPYING is GPL-2; most QGIS files are GPL-2.0-or-later (e.g. src/core/labeling/qgslabelingengine.cpp, src/core/expression/qgsexpression.cpp). libpal files under src/core/pal/ are GPL-3.0-or-later (2008, HEIG-VD). Core-combinable copyleft; never SDK."
+interesting_paths: [src/core/pal/problem.cpp, src/core/pal/pal.cpp, src/core/pal/costcalculator.cpp, src/core/pal/labelposition.cpp]
+concepts: [print-quality label placement, candidate generation plus global optimisation, FALP initial solution (problem.cpp:148-150), chain search (problem.cpp:535), cost functions and priorities]
+reuse:
+  mode: CONCEPTUAL DONOR
+  confidence: medium
+spatial_ide_relevance:
+  plan_node: none (docs/06_Rendering.md:17 @ 4561f3b8 label-pipeline spike, unscheduled)
+  immediate: false

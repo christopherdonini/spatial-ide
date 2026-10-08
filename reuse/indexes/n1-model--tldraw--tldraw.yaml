@@ -1,0 +1,25 @@
+repo: tldraw/tldraw
+commit: 035b741
+track: n1-model
+priority: WATCH
+license:
+  spdx: LicenseRef-tldraw (editor) AND MIT (packages/store)
+  verified_from: [LICENSE.md, packages/editor/package.json, packages/store/LICENSE.md, packages/store/package.json]
+  mixed: true
+  notes: "@tldraw/editor (HistoryManager) is under a custom tldraw licence requiring a licence key for production: red. @tldraw/store is MIT."
+interesting_paths:
+  - packages/editor/src/lib/editor/managers/HistoryManager/HistoryManager.ts
+  - packages/store/src/lib/RecordsDiff.ts
+  - packages/store/src/lib/migrate.ts
+  - packages/tldraw/src/lib/utils/tldr/file.ts
+concepts:
+  - history marks, squashToMark, bailToMark
+  - squashRecordDiffs cancels add-then-remove but keeps A->B->A as an update (no toggle cancel)
+  - migration failure reasons TargetVersionTooNew / UnknownType refuse rather than drop
+  - .tldr extension
+reuse:
+  mode: REJECT
+  confidence: high
+spatial_ide_relevance:
+  plan_node: b2-piece-1b-recording
+  immediate: false

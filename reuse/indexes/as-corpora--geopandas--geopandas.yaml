@@ -1,0 +1,17 @@
+repo: geopandas/geopandas
+commit: 2c7a442
+track: as-corpora
+priority: P2
+license:
+  spdx: BSD-3-Clause
+  verified_from: [LICENSE.txt]
+  mixed: false
+  notes: io/tests/data/arrow/geoparquet/ is a byte-identical copy of opengeospatial/geoparquet test_data (README says so; sha256 equal for linestring 2.0.0).
+interesting_paths: [geopandas/io/arrow.py, geopandas/array.py, geopandas/io/tests/data/arrow/geoparquet/README.md, CHANGELOG.md]
+concepts: [absent crs read as OGC:CRS84, PROJJSON written verbatim (EPSG:4326 lat-first), GeoParquet 2.0.0 write needs pyarrow>=21, to_crs always_xy=True]
+reuse:
+  mode: CONCEPTUAL DONOR
+  confidence: high
+spatial_ide_relevance:
+  plan_node: corpus-line-files
+  immediate: false

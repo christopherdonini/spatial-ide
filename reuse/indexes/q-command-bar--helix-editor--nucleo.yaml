@@ -1,0 +1,17 @@
+repo: helix-editor/nucleo
+commit: 8c16d47
+track: q-command-bar
+priority: P3
+license:
+  spdx: MPL-2.0
+  verified_from: [LICENSE, Cargo.toml, matcher/Cargo.toml]
+  mixed: false
+  notes: "File-level weak copyleft: modified MPL files stay MPL with source available. No 'Incompatible With Secondary Licenses' notice found. unsafe in matcher/src/matrix.rs (6) and chars.rs (1). nucleo-matcher 0.3.1 on crates.io, last updated 2024-02-20."
+interesting_paths: [matcher/src/score.rs, matcher/src/fuzzy_optimal.rs, matcher/src/prefilter.rs, README.md]
+concepts: [fzf scoring constants, two-matrix Smith-Waterman, boundary and camelCase bonuses, first-char multiplier]
+reuse:
+  mode: REJECT
+  confidence: high
+spatial_ide_relevance:
+  plan_node: shell-migration-milestone-3
+  immediate: false

@@ -1,0 +1,21 @@
+repo: etcd-io/etcd
+commit: f061acd
+track: n1-files
+priority: P2
+license:
+  spdx: Apache-2.0
+  verified_from:
+    - LICENSE
+  mixed: false
+  notes: 
+interesting_paths:
+  - server/storage/wal/decoder.go
+concepts:
+  - "isTornEntry: record split on 512-byte sectors; any all-zero sector chunk = torn write"
+  - "torn tail reported as ErrUnexpectedEOF, not corruption"
+reuse:
+  mode: CONCEPTUAL DONOR
+  confidence: high
+spatial_ide_relevance:
+  plan_node: b2-piece-1b-recording
+  immediate: true

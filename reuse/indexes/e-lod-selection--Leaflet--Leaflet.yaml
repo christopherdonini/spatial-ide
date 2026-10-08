@@ -1,0 +1,19 @@
+repo: Leaflet/Leaflet
+commit: 125bda1
+track: e-lod-selection
+priority: P3
+license:
+  spdx: BSD-2-Clause
+  verified_from: [LICENSE]
+  mixed: false
+  notes: Only src/layer/vector/Polyline.js was read.
+interesting_paths:
+  - src/layer/vector/Polyline.js
+concepts:
+  - per-zoom Douglas-Peucker in pixel space (smoothFactor), no tiers, no hysteresis
+reuse:
+  mode: REJECT
+  confidence: high
+spatial_ide_relevance:
+  plan_node: lod-tier-selection
+  immediate: false

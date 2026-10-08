@@ -1,0 +1,17 @@
+repo: react-querybuilder/react-querybuilder
+commit: ff8482b
+track: q-command-bar
+priority: P3
+license:
+  spdx: MIT
+  verified_from: [LICENSE.md, packages/core/package.json]
+  mixed: false
+  notes: "react-querybuilder 8.24.4 depends on react-redux and @reduxjs/toolkit; 2.56 MB unpacked."
+interesting_paths: [packages/core/src/utils/parseSQL/parseSQL.ts, packages/core/src/utils/parseSQL/sql.jison]
+concepts: [full SQL grammar parsed into rule groups, bail out on invalid and/or sequence, unsupported expression operands dropped]
+reuse:
+  mode: REJECT
+  confidence: high
+spatial_ide_relevance:
+  plan_node: shell-migration-milestone-3
+  immediate: false

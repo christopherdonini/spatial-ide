@@ -1,0 +1,27 @@
+repo: kicad/code/kicad (gitlab.com)
+commit: 05cc3ed
+track: n1-model
+priority: P2
+license:
+  spdx: GPL-3.0-or-later
+  verified_from: [LICENSE.README, LICENSE.GPLv3, "common/settings/json_settings.cpp header"]
+  mixed: true
+  notes: "Repository bundles third-party code under MIT/BSD/Apache/Boost/ISC/CC licences (LICENSE.*). Concepts only."
+interesting_paths:
+  - common/settings/json_settings.cpp
+  - include/settings/json_settings.h
+  - common/project/project_file.cpp
+  - include/project/project_file.h
+  - resources/linux/mime/kicad-kicad.xml.in
+  - resources/linux/launchers/org.kicad.kicad.desktop.in
+concepts:
+  - meta.version in file; registered migrator chain old->new
+  - newer file => m_isFutureFormat, no auto-save
+  - save overlays known params on m_original so unknown keys survive
+  - .kicad_pro JSON with its own extension and a shared-mime-info glob
+reuse:
+  mode: CONCEPTUAL DONOR
+  confidence: high
+spatial_ide_relevance:
+  plan_node: b2-piece-1c-save-and-reopen
+  immediate: true

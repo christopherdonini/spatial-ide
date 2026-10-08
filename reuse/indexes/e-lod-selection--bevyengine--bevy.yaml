@@ -1,0 +1,21 @@
+repo: bevyengine/bevy
+commit: fd98063
+track: e-lod-selection
+priority: WATCH
+license:
+  spdx: MIT OR Apache-2.0
+  verified_from: [LICENSE-MIT, LICENSE-APACHE, Cargo.toml]
+  mixed: false
+  notes: Only the visibility-range modules were read.
+interesting_paths:
+  - crates/bevy_camera/src/visibility/range.rs
+  - crates/bevy_render/src/view/visibility/range.rs
+concepts:
+  - start/end margin ranges with dithered crossfade between LODs
+  - stateless range check (no hysteresis)
+reuse:
+  mode: WATCH
+  confidence: medium
+spatial_ide_relevance:
+  plan_node: lod-tier-selection
+  immediate: false

@@ -1,0 +1,17 @@
+repo: ag-grid/ag-grid
+commit: 89faa99
+track: j-table
+priority: P3
+license:
+  spdx: "MIT AND LicenseRef-AG-Grid-Commercial"
+  verified_from: ["LICENSE.txt", "packages/ag-grid-community/LICENSE.txt", "packages/ag-grid-enterprise/LICENSE.html"]
+  mixed: true
+  notes: "community MIT; enterprise (serverSideRowModel, viewportRowModel) commercial EULA - red"
+interesting_paths: ["packages/ag-grid-community/src/gridBodyComp/gridBodyCtrl.ts", "packages/ag-grid-community/src/infiniteRowModel/infiniteBlock.ts", "packages/ag-grid-community/src/infiniteRowModel/rowNodeBlockLoader.ts", "packages/ag-grid-community/src/rendering/rowContainerHeightService.ts"]
+concepts: ["aria-rowcount -1 when last row unknown", "version-stamped block loads", "capped concurrent datasource requests", "height stretching"]
+reuse:
+  mode: CONCEPTUAL DONOR
+  confidence: medium
+spatial_ide_relevance:
+  plan_node: b1-shell-half
+  immediate: false

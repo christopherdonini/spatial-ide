@@ -1,0 +1,24 @@
+repo: qt/qtbase
+commit: bc887a1
+track: n1-model
+priority: P0
+license:
+  spdx: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
+  verified_from: ["SPDX header src/gui/util/qundostack.cpp:2", LICENSES/]
+  mixed: true
+  notes: "Not permissive. Open options combinable with the AGPL core are LGPL-3.0-only (weak copyleft) or GPL-3.0-only (core-combinable copyleft). Concepts only; copy no code."
+interesting_paths:
+  - src/gui/util/qundostack.cpp
+  - src/gui/util/qundostack.h
+  - tests/auto/gui/util/qundostack/tst_qundostack.cpp
+concepts:
+  - QUndoCommand::id() as collapse key; mergeWith only with the adjacent top command
+  - merge never crosses the clean (saved) index
+  - setObsolete after merge removes a run whose net effect is nothing (toggle cancel, MoveMouseCommand test)
+  - pushing after undo truncates the redo tail
+reuse:
+  mode: CONCEPTUAL DONOR
+  confidence: high
+spatial_ide_relevance:
+  plan_node: b2-piece-1b-recording
+  immediate: true

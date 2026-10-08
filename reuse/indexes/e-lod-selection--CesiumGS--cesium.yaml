@@ -1,0 +1,32 @@
+repo: CesiumGS/cesium
+commit: a3aea90
+track: e-lod-selection
+priority: P0
+license:
+  spdx: Apache-2.0
+  verified_from: [LICENSE.md, package.json, packages/engine/package.json]
+  mixed: false
+  notes: LICENSE.md and ThirdParty.json list bundled third-party works (earcut, kdbush, rbush, protobuf, ...) none of which are in the files read. Source files read carry no per-file SPDX header. Apache-2.0 into AGPL-3.0-or-later core is one-way compatible; flag for counsel; a port owes NOTICE/attribution and change statements.
+interesting_paths:
+  - packages/engine/Source/Scene/Cesium3DTile.js
+  - packages/engine/Source/Scene/Cesium3DTilesetTraversal.js
+  - packages/engine/Source/Scene/Cesium3DTilesetBaseTraversal.js
+  - packages/engine/Source/Scene/Cesium3DTilesetSkipTraversal.js
+  - packages/engine/Source/Scene/Cesium3DTileset.js
+  - packages/engine/Source/Scene/QuadtreePrimitive.js
+  - packages/engine/Source/Scene/Cesium3DTilesetCache.js
+  - packages/engine/Source/Core/RequestScheduler.js
+concepts:
+  - orthographic screen-space error = geometricError / pixelSize (no distance term)
+  - refine only when all replacement children are loaded (base traversal)
+  - skip-LOD with base layer, skipScreenSpaceErrorFactor, skipLevels, immediatelyLoadDesiredLevelOfDetail
+  - memoryAdjustedScreenSpaceError - budget-coupled LOD coarsening at 2 percent per frame
+  - terrain last-frame memory - never lose detail visible last frame on zoom-out
+  - cancel in-flight requests not touched this frame; bounded priority heap bump-cancel
+  - composite digit-packed request priority
+reuse:
+  mode: CONCEPTUAL DONOR
+  confidence: high
+spatial_ide_relevance:
+  plan_node: lod-tier-selection
+  immediate: false

@@ -1,0 +1,17 @@
+repo: geoarrow/geoarrow-data
+commit: e8eaa04
+track: as-corpora
+priority: P1
+license:
+  spdx: NOASSERTION
+  verified_from: [natural-earth/README.md, example-crs/README.md, ns-water/README.md, quadrangles/README.md, microsoft-buildings/README.md, example/README.md]
+  mixed: true
+  notes: No repo-level LICENSE. Per dataset - natural-earth and example-crs public domain (Natural Earth); ns-water Nova Scotia "Unrestricted Data Use License Agreement" (not fetched); quadrangles conditional USGS/ESRI terms (red until counsel); microsoft-buildings ODbL; example files wk-derived, no data licence stated. manifest.json has no hashes, sizes or licences.
+interesting_paths: [manifest.json, ns-water/README.md, natural-earth/files/natural-earth_countries_geo.parquet, example-crs/files/example-crs_vermont-4326_geo.parquet, example-crs/files, example/files, collect_parquet_builtin.py]
+concepts: [real-world LineString Z / MultiLineString Z (ns-water water-line 483k rows, CompoundCRS), EPSG:4326 lat-first PROJJSON over lon/lat WKB, paired GeoParquet and native GEOMETRY files with same rows, explicit crs null files, geometry type x dimension grid]
+reuse:
+  mode: ADOPT
+  confidence: medium
+spatial_ide_relevance:
+  plan_node: corpus-line-files
+  immediate: true

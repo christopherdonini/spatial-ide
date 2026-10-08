@@ -1,0 +1,3851 @@
+{
+  "schema": "spatial-reuse-index",
+  "version": 1,
+  "generated": "2026-10-08",
+  "spatial_ide_commit": "4561f3b",
+  "how_to_use": "Before planning a new implementation, query this index (node tools/reuse.mjs <words>). A capability listed here was researched or catalogued at the commits shown; a missing capability means research first.",
+  "guardrails": [
+    "Spatial IDE's core is AGPL-3.0-or-later: every candidate states its licence and licence class.",
+    "Code with no licence, an unverified licence or an incompatible one (classes red, likely-incompatible) is reference only: never ADOPT, WRAP, VENDOR, FORK or PORT. The builder enforces this.",
+    "Adopting anything as a new dependency stays the human's typed word: such candidates carry dependency = 'new — the human's typed word'.",
+    "Ported code needs a route into the shipped NOTICE before it lands (licence_watch: shell-port-notice-route)."
+  ],
+  "license_classes": {
+    "permissive": "MIT, BSD, Apache-2.0, ISC, Zlib, BSL-1.0 (Boost), public-domain code — notices owed",
+    "core-combinable-copyleft": "GPL-3.0, GPL-2.0-or-later, AGPL-3.0 — usually combinable into the AGPL core; never in an Apache-2.0 SDK or anything a proprietary plugin links",
+    "weak-copyleft": "LGPL, MPL-2.0, EPL — obligations stated in the entry",
+    "likely-incompatible": "GPL-2.0-only",
+    "red": "SSPL, BSL (Business Source), Elastic, Commons Clause, PolyForm, non-commercial, source-available, no or unverified licence",
+    "data": "dataset licences (ODbL, CDLA, CC, public domain, unidentified) — see the entry's note",
+    "spec": "a specification or standard to follow; no code reused"
+  },
+  "modes": {
+    "ADOPT": "use largely as is",
+    "WRAP": "use behind an abstraction Spatial IDE owns",
+    "VENDOR": "copy a small stable subset with provenance",
+    "FORK": "maintain a divergent copy",
+    "PORT": "translate permissive code, keeping attribution",
+    "CONCEPTUAL": "study, then implement independently",
+    "BENCHMARK": "use as a performance or correctness reference",
+    "WATCH": "no action yet",
+    "REJECT": "not suitable"
+  },
+  "capabilities": [
+    {
+      "id": "path-containment",
+      "title": "Open a file only if it resolves inside the project folder, with no gap between the check and the open",
+      "aliases": [
+        "containment",
+        "sandboxed path resolution",
+        "toctou",
+        "symlink escape",
+        "junction",
+        "reparse point",
+        "resolve beneath",
+        "openat2",
+        "ADR-036"
+      ],
+      "track": "n1-files",
+      "priority": "P0",
+      "plan_nodes": [
+        "b2-piece-1c-save-and-reopen"
+      ],
+      "status": "researched",
+      "register": "worth-owning",
+      "summary": "ADR-036 §5 as drafted (resolve, then open if inside) is the racy pattern. Race-free designs open one segment at a time relative to held directory handles and never follow a link silently; on Windows that is NtCreateFile relative to the parent handle with no-follow. Own the one-operation resolver; borrow the algorithm and the escape-test tables rather than inventing them.",
+      "candidates": [
+        {
+          "name": "cap-std",
+          "repo": "bytecodealliance/cap-std",
+          "commit": "b7acf8e",
+          "license": "Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT",
+          "license_class": "permissive",
+          "mode": "PORT",
+          "paths": [
+            "cap-primitives/src/fs/manually/open.rs",
+            "cap-primitives/src/windows/fs/open_impl.rs",
+            "cap-primitives/src/windows/fs/create_file_at_w.rs"
+          ],
+          "note": "Per-segment resolution beneath a directory handle on Windows and Unix; refuses absolute link targets, so every Windows junction is refused; ~9 crates if taken as a dependency instead.",
+          "dependency": "none (ported code: notice route needed)"
+        },
+        {
+          "name": "Go",
+          "repo": "golang/go",
+          "commit": "3b98edd",
+          "license": "BSD-3-Clause",
+          "license_class": "permissive",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "src/os/root.go",
+            "src/os/root_openat.go",
+            "src/os/root_windows.go"
+          ],
+          "note": "os.Root (Go 1.24+): same model, public escape history (three Root escape fixes since 2025); its tests are a ready escape table."
+        },
+        {
+          "name": "Rust std",
+          "repo": "rust-lang/rust",
+          "commit": "42cfc04",
+          "license": "MIT OR Apache-2.0",
+          "license_class": "permissive",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "library/std/src/sys/fs/windows.rs"
+          ],
+          "note": "The CVE-2022-21658 remove_dir_all fix as symlink-race prior art."
+        },
+        {
+          "name": "fs_at",
+          "repo": "rbtcollins/fs_at",
+          "commit": "8443962",
+          "license": "Apache-2.0",
+          "license_class": "permissive",
+          "mode": "WATCH",
+          "paths": [
+            "src/lib.rs",
+            "src/win.rs"
+          ],
+          "note": "Openat-style API for Rust including Windows; young."
+        },
+        {
+          "name": "libpathrs",
+          "repo": "cyphar/libpathrs",
+          "commit": "3abe8bb",
+          "license": "MPL-2.0 OR LGPL-3.0-or-later",
+          "license_class": "weak-copyleft",
+          "mode": "WATCH",
+          "paths": [
+            "src/resolvers/openat2.rs",
+            "src/resolvers/opath/imp.rs",
+            "src/root.rs"
+          ],
+          "note": "Linux-only safe path resolution; weak copyleft."
+        },
+        {
+          "name": "filepath-securejoin",
+          "repo": "cyphar/filepath-securejoin",
+          "commit": "9e667ca",
+          "license": "BSD-3-Clause AND MPL-2.0",
+          "license_class": "weak-copyleft",
+          "mode": "REJECT",
+          "paths": [
+            "doc.go"
+          ],
+          "note": "Lexical join plus Linux-only re-checks; not race-free on Windows."
+        }
+      ],
+      "decisions_for_human": [
+        "Link rule: follow relative links that stay inside the folder, or refuse every link (every junction is absolute, so 'follow' still refuses junctions).",
+        "Whether OneDrive placeholders (reparse points) are refused — untested; test on the reference machine.",
+        "Ported code needs a route into the shipped NOTICE (see licence_watch: shell-port-notice-route)."
+      ],
+      "evidence": "notes/n1-files.md §3.1-3.3, §4.1, §5"
+    },
+    {
+      "id": "engine-open-identity",
+      "title": "Keep the file the engine opens the same file that the resolver checked",
+      "aliases": [
+        "file identity",
+        "volume serial",
+        "file id",
+        "handle pinning",
+        "duckdb path open",
+        "check then open"
+      ],
+      "track": "n1-files",
+      "priority": "P0",
+      "plan_nodes": [
+        "b2-piece-1c-save-and-reopen"
+      ],
+      "status": "researched",
+      "register": "open",
+      "summary": "DuckDB re-opens data by path (CreateFileW with full sharing), so a contained handle alone does not protect it. Two candidate bridges: hold every handle in the chain without delete-sharing while DuckDB reads (inference from Windows sharing rules, untested), or compare file identity (volume serial plus file ID) before and after, within the session.",
+      "candidates": [
+        {
+          "name": "DuckDB",
+          "repo": "duckdb/duckdb",
+          "commit": "f2f9329",
+          "license": "MIT",
+          "license_class": "permissive",
+          "mode": "BENCHMARK",
+          "paths": [
+            "src/common/local_file_system.cpp"
+          ],
+          "note": "How the engine actually opens the file (by path, full sharing)."
+        }
+      ],
+      "decisions_for_human": [
+        "Which bridge piece 1c's form states: pinned handles or an identity comparison."
+      ],
+      "evidence": "notes/n1-files.md §4.1"
+    },
+    {
+      "id": "reserved-filename-checks",
+      "title": "Refuse Windows device names and rewritten names in a locator's canonical text",
+      "aliases": [
+        "NUL",
+        "CON",
+        "reserved device names",
+        "trailing dot",
+        "trailing space",
+        "8.3 short names",
+        "case aliases",
+        "unicode normalisation",
+        "ADR-036"
+      ],
+      "track": "n1-files",
+      "priority": "P0",
+      "plan_nodes": [
+        "b2-piece-1c-save-and-reopen",
+        "b2-piece-1a-step-record-and-dataset-reference"
+      ],
+      "status": "researched",
+      "register": "do-not-reinvent",
+      "summary": "Refuse reserved device names and trailing-dot/space segments in the canonical text form, not only in the resolver. ADR-036's 'one spelling on every operating system' is overstated: case-insensitivity, 8.3 short names and macOS Unicode decomposition still alias.",
+      "candidates": [
+        {
+          "name": "Go",
+          "repo": "golang/go",
+          "commit": "3b98edd",
+          "license": "BSD-3-Clause",
+          "license_class": "permissive",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "src/internal/filepathlite/path_windows.go"
+          ],
+          "note": "isReservedName / isReservedBaseName, including the Windows 11 change."
+        },
+        {
+          "name": "cap-std",
+          "repo": "bytecodealliance/cap-std",
+          "commit": "b7acf8e",
+          "license": "Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT",
+          "license_class": "permissive",
+          "mode": "PORT",
+          "paths": [
+            "tests/windows-open.rs"
+          ],
+          "note": "Reserved-name list with tests.",
+          "dependency": "none (ported code: notice route needed)"
+        }
+      ],
+      "decisions_for_human": [
+        "Whether ADR-036's 'one spelling' sentence is narrowed at acceptance."
+      ],
+      "evidence": "notes/n1-files.md §5, §4.1"
+    },
+    {
+      "id": "atomic-file-replace",
+      "title": "Replace a file atomically at Save (write new, flush, rename over the old)",
+      "aliases": [
+        "atomic write",
+        "atomic rename",
+        "MoveFileExW",
+        "ReplaceFileW",
+        "fsync",
+        "sharing violation",
+        "safe save",
+        "ADR-036"
+      ],
+      "track": "n1-files",
+      "priority": "P0",
+      "plan_nodes": [
+        "b2-piece-1c-save-and-reopen"
+      ],
+      "status": "researched",
+      "register": "worth-owning",
+      "summary": "Use std::fs::rename (MoveFileExW REPLACE_EXISTING first, FileRenameInfoEx POSIX fallback on access denied) after sync_all, with a bounded retry on sharing violations. Not ReplaceFileW; not MOVEFILE_WRITE_THROUGH as a durability measure. tempfile's persist does no sync. No project read flushes a directory on Windows. Own a ~60-line helper (inference).",
+      "candidates": [
+        {
+          "name": "Rust std",
+          "repo": "rust-lang/rust",
+          "commit": "42cfc04",
+          "license": "MIT OR Apache-2.0",
+          "license_class": "permissive",
+          "mode": "ADOPT",
+          "paths": [
+            "library/std/src/sys/fs/windows.rs"
+          ],
+          "note": "rename + sync_all are the primitives; already in the toolchain.",
+          "dependency": "already-present"
+        },
+        {
+          "name": "Chromium",
+          "repo": "chromium/chromium",
+          "commit": "8fe23318",
+          "license": "BSD-3-Clause",
+          "license_class": "permissive",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "base/files/important_file_writer.cc",
+            "base/files/file_util_win.cc",
+            "base/files/file_win.cc"
+          ],
+          "note": "ImportantFileWriter: flush and measured retries."
+        },
+        {
+          "name": "rust-atomic-write-file",
+          "repo": "andreacorbellini/rust-atomic-write-file",
+          "commit": "e1ee3a5",
+          "license": "BSD-3-Clause",
+          "license_class": "permissive",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "src/lib.rs",
+            "src/imp/unix/mod.rs",
+            "src/imp/unix/linux.rs"
+          ],
+          "note": "Unix directory fsync; O_TMPFILE option."
+        },
+        {
+          "name": "git",
+          "repo": "git/git",
+          "commit": "6de20f6",
+          "license": "GPL-2.0-only",
+          "license_class": "likely-incompatible",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "compat/mingw.c",
+            "lockfile.c",
+            "tempfile.c"
+          ],
+          "note": "Lockfile + rename discipline and retry; GPL-2.0-only, ideas only."
+        },
+        {
+          "name": "tempfile",
+          "repo": "Stebalien/tempfile",
+          "commit": "1c294cc",
+          "license": "MIT OR Apache-2.0",
+          "license_class": "permissive",
+          "mode": "REJECT",
+          "paths": [
+            "src/file/imp/windows.rs",
+            "src/file/imp/unix.rs",
+            "src/file/mod.rs"
+          ],
+          "note": "NamedTempFile::persist does no sync."
+        },
+        {
+          "name": "rust-atomicwrites",
+          "repo": "untitaker/rust-atomicwrites",
+          "commit": "a15afcb",
+          "license": "MIT",
+          "license_class": "permissive",
+          "mode": "REJECT",
+          "paths": [
+            "src/lib.rs"
+          ],
+          "note": "Adds no Windows flush or retry."
+        }
+      ],
+      "decisions_for_human": [],
+      "evidence": "notes/n1-files.md §3.3-3.5, §4.2, §5"
+    },
+    {
+      "id": "append-log-torn-tail-recovery",
+      "title": "Recover an append-only JSON Lines log after a crash or power loss",
+      "aliases": [
+        "torn write",
+        "jsonl recovery",
+        "write-ahead log",
+        "crash recovery",
+        "session history recovery",
+        "zero-filled tail",
+        "point-in-time recovery",
+        "session history",
+        "lineage file",
+        "ADR-036"
+      ],
+      "track": "n1-files",
+      "priority": "P0",
+      "plan_nodes": [
+        "b2-piece-1b-recording"
+      ],
+      "status": "researched",
+      "register": "worth-owning",
+      "summary": "'A final line without LF' is not a sufficient torn-write detector: after power loss a line can end in LF and still hold NUL bytes. Keep the longest prefix of lines that end in LF, contain no NUL, parse, and chain through `parent`; stop at the first failure.",
+      "candidates": [
+        {
+          "name": "LevelDB",
+          "repo": "google/leveldb",
+          "commit": "7ee830d",
+          "license": "BSD-3-Clause",
+          "license_class": "permissive",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "doc/log_format.md",
+            "db/log_format.h",
+            "db/log_reader.cc"
+          ],
+          "note": "Length + CRC record framing; reporter on corruption."
+        },
+        {
+          "name": "RocksDB",
+          "repo": "facebook/rocksdb",
+          "commit": "dec6799",
+          "license": "GPL-2.0-only OR Apache-2.0",
+          "license_class": "permissive",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "include/rocksdb/options.h",
+            "db/log_reader.cc",
+            "db/log_format.h"
+          ],
+          "note": "kPointInTimeRecovery semantics (taken under the Apache-2.0 option)."
+        },
+        {
+          "name": "etcd",
+          "repo": "etcd-io/etcd",
+          "commit": "f061acd",
+          "license": "Apache-2.0",
+          "license_class": "permissive",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "server/storage/wal/decoder.go"
+          ],
+          "note": "Zero-sector / torn-tail handling in its WAL."
+        },
+        {
+          "name": "SQLite",
+          "repo": "sqlite/sqlite",
+          "commit": "74675a9",
+          "license": "blessing (public domain)",
+          "license_class": "permissive",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "src/wal.c",
+            "src/os_win.c",
+            "src/pager.c"
+          ],
+          "note": "WAL frame checksums and salt chaining."
+        },
+        {
+          "name": "nedb",
+          "repo": "louischatriot/nedb",
+          "commit": "35be491",
+          "license": "MIT",
+          "license_class": "permissive",
+          "mode": "REJECT",
+          "paths": [
+            "lib/storage.js",
+            "lib/persistence.js"
+          ],
+          "note": "Silently drops corrupt lines up to a ratio."
+        }
+      ],
+      "decisions_for_human": [
+        "Whether ADR-036 §9's torn-write sentence is widened before acceptance."
+      ],
+      "evidence": "notes/n1-files.md §3.6, §4.3, §5"
+    },
+    {
+      "id": "cross-file-save-consistency",
+      "title": "Detect a project file and a lineage file written by different saves",
+      "aliases": [
+        "save generation",
+        "mismatched files",
+        "lineage hash",
+        "commit tree link",
+        "two-file consistency",
+        "project file",
+        "lineage file",
+        "ADR-036"
+      ],
+      "track": "n1-files",
+      "priority": "P0",
+      "plan_nodes": [
+        "b2-piece-1c-save-and-reopen",
+        "b2-piece-1a-step-record-and-dataset-reference"
+      ],
+      "status": "researched",
+      "register": "open",
+      "summary": "Record the lineage file's sha256 and step count in the project file, and rename the lineage first. Because ADR-036's key sets are closed, that member must be in the version-1 shape accepted with the ADR.",
+      "candidates": [
+        {
+          "name": "git",
+          "repo": "git/git",
+          "commit": "6de20f6",
+          "license": "GPL-2.0-only",
+          "license_class": "likely-incompatible",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "compat/mingw.c",
+            "lockfile.c",
+            "tempfile.c"
+          ],
+          "note": "Commit-to-tree hash link as the consistency model."
+        },
+        {
+          "name": "blender",
+          "repo": "blender/blender",
+          "commit": "fbe76d9",
+          "license": "GPL-2.0-or-later",
+          "license_class": "core-combinable-copyleft",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "source/blender/blenloader/intern/writefile.cc",
+            "source/blender/blenlib/intern/fileops_c.cc"
+          ],
+          "note": "Single-file save with recovery as the contrast."
+        },
+        {
+          "name": "QGIS",
+          "repo": "qgis/QGIS",
+          "commit": "fa8f961",
+          "license": "GPL-2.0-or-later",
+          "license_class": "core-combinable-copyleft",
+          "mode": "REJECT",
+          "paths": [
+            "src/core/qgsarchive.cpp",
+            "src/core/project/qgsproject.cpp"
+          ],
+          "note": ".qgz zips both into one container — not ADR-036's folder model."
+        }
+      ],
+      "decisions_for_human": [
+        "Add the lineage-hash member to ADR-036 version 1 now, or accept a version bump later."
+      ],
+      "evidence": "notes/n1-files.md §4.4"
+    },
+    {
+      "id": "racy-mtime-change-detection",
+      "title": "Detect file changes when size and mtime are unchanged or mtime resolution is coarse",
+      "aliases": [
+        "racy git",
+        "mtime resolution",
+        "change detection",
+        "fingerprint",
+        "stat cache",
+        "FAT 2s",
+        "SMB"
+      ],
+      "track": "n1-files",
+      "priority": "P1",
+      "plan_nodes": [
+        "b2-piece-1c-save-and-reopen"
+      ],
+      "status": "researched",
+      "register": "open",
+      "summary": "git's racy-git rule (treat an entry as suspect when its mtime is not older than the index write) is the reference; cargo and ninja show the build-tool side. ADR-036's `observed` already fails closed on mtime differences; the racy case is the one it cannot see.",
+      "candidates": [
+        {
+          "name": "git",
+          "repo": "git/git",
+          "commit": "6de20f6",
+          "license": "GPL-2.0-only",
+          "license_class": "likely-incompatible",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "compat/mingw.c",
+            "lockfile.c",
+            "tempfile.c"
+          ],
+          "note": "read-cache.c racy-git handling; Documentation/technical/racy-git.txt."
+        },
+        {
+          "name": "cargo",
+          "repo": "rust-lang/cargo",
+          "commit": "33f504c",
+          "license": "MIT OR Apache-2.0",
+          "license_class": "permissive",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "src/compiler/fingerprint/mod.rs"
+          ],
+          "note": "Fingerprinting with mtime and hashes."
+        },
+        {
+          "name": "ninja",
+          "repo": "ninja-build/ninja",
+          "commit": "4e4df1e",
+          "license": "Apache-2.0",
+          "license_class": "permissive",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "src/graph.cc"
+          ],
+          "note": "Restat and log-based mtime comparison."
+        },
+        {
+          "name": "watchman",
+          "repo": "facebook/watchman",
+          "commit": "038eee6",
+          "license": "MIT",
+          "license_class": "permissive",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "website/docs/clockspec.md"
+          ],
+          "note": "Clock-based change tracking."
+        }
+      ],
+      "decisions_for_human": [],
+      "evidence": "notes/n1-files.md §4.5"
+    },
+    {
+      "id": "file-association-double-click",
+      "title": "Open a project by double-clicking its file, on Windows, macOS and Linux",
+      "aliases": [
+        "file association",
+        "file extension",
+        "double click",
+        "ProgID",
+        "CFBundleDocumentTypes",
+        "mime type",
+        "project file name",
+        "ADR-036"
+      ],
+      "track": "n1-model",
+      "priority": "P0",
+      "plan_nodes": [
+        "b2-piece-1c-save-and-reopen"
+      ],
+      "status": "researched",
+      "register": "do-not-reinvent",
+      "summary": "Tauri 2's bundle.fileAssociations already writes the Windows per-user ProgID (NSIS, installMode currentUser), the macOS document types (which can declare conformance to JSON) and the Linux .desktop MimeType. Windows and macOS type a file by its last extension, so `project.spatial.json` is still `.json` (inference from Wine's code and Apple's docs). Recommendation: a fixed single-segment name, Godot-style (`project.godot`), content still canonical JSON. Tauri ships no Linux MIME glob; add one.",
+      "candidates": [
+        {
+          "name": "Tauri 2",
+          "repo": "tauri-apps/tauri",
+          "commit": "a225a18",
+          "license": "Apache-2.0 OR MIT",
+          "license_class": "permissive",
+          "mode": "ADOPT",
+          "paths": [
+            "crates/tauri-utils/src/config.rs",
+            "crates/tauri-bundler/src/bundle/windows/nsis/installer.nsi",
+            "crates/tauri-bundler/src/bundle/windows/nsis/FileAssociation.nsh"
+          ],
+          "note": "Configuration of a dependency already present.",
+          "dependency": "already-present"
+        },
+        {
+          "name": "KiCad",
+          "repo": "kicad/code/kicad (gitlab.com)",
+          "commit": "05cc3ed",
+          "license": "GPL-3.0-or-later",
+          "license_class": "core-combinable-copyleft",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "common/settings/json_settings.cpp",
+            "include/settings/json_settings.h",
+            "common/project/project_file.cpp"
+          ],
+          "note": ".kicad_pro: JSON with its own extension and schema migrations."
+        },
+        {
+          "name": "VS Code",
+          "repo": "microsoft/vscode",
+          "commit": "d3d31f6",
+          "license": "MIT",
+          "license_class": "permissive",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "src/vs/platform/workspaces/node/workspaces.ts",
+            "src/vs/platform/storage/electron-main/storageMain.ts",
+            "src/vs/workbench/services/workspaces/electron-browser/workspaceEditingService.ts"
+          ],
+          "note": ".code-workspace as a JSON document with its own extension."
+        }
+      ],
+      "decisions_for_human": [
+        "ADR-036 §1 OPEN: the project file's name and extension."
+      ],
+      "evidence": "notes/n1-model.md §3.1, §4, §5 item 1"
+    },
+    {
+      "id": "single-instance-open",
+      "title": "Route a second double-click to the running app instead of a second process",
+      "aliases": [
+        "single instance",
+        "second instance",
+        "deep link",
+        "open file in running app",
+        "named mutex"
+      ],
+      "track": "n1-model",
+      "priority": "P1",
+      "plan_nodes": [
+        "b2-piece-1c-save-and-reopen"
+      ],
+      "status": "researched",
+      "register": "do-not-reinvent",
+      "summary": "Without tauri-plugin-single-instance, double-clicking a project while the app runs starts a second process holding the same project identity.",
+      "candidates": [
+        {
+          "name": "tauri-plugin-single-instance",
+          "repo": "tauri-apps/plugins-workspace",
+          "commit": "8489575",
+          "license": "Apache-2.0 OR MIT",
+          "license_class": "permissive",
+          "mode": "WRAP",
+          "paths": [
+            "plugins/single-instance/src/lib.rs",
+            "plugins/single-instance/src/platform_impl/windows.rs",
+            "plugins/single-instance/src/platform_impl/linux.rs"
+          ],
+          "note": "tauri-plugin-single-instance; a new dependency whose own dependencies are already in the shell's lock.",
+          "dependency": "new — the human's typed word"
+        }
+      ],
+      "decisions_for_human": [
+        "Allow a second process per double-click, or adopt single-instance (a dependency ruling)."
+      ],
+      "evidence": "notes/n1-model.md §3.2, §4"
+    },
+    {
+      "id": "stable-identity-copy-move",
+      "title": "Keep a project's identity across a move, and give a copy a new one",
+      "aliases": [
+        "project identity",
+        "uid",
+        "guid",
+        "duplicate id",
+        "copy or move",
+        "reverse pointer",
+        "project folder",
+        "ADR-036"
+      ],
+      "track": "n1-model",
+      "priority": "P0",
+      "plan_nodes": [
+        "b2-piece-1c-save-and-reopen",
+        "b2-piece-1a-step-record-and-dataset-reference"
+      ],
+      "status": "researched",
+      "register": "worth-owning",
+      "summary": "Godot 4.4+ uses ADR-036's rule: if the old path still exists the newcomer gets a new ID, if it is gone it is a move; when it cannot tell, it only warns. Always re-key the newly opened folder, and re-read the identity in the old folder rather than only checking it exists. VS Code is the counter-example: path-derived IDs lose state on copy or move.",
+      "candidates": [
+        {
+          "name": "Godot",
+          "repo": "godotengine/godot",
+          "commit": "e7b12e749",
+          "license": "MIT",
+          "license_class": "permissive",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "core/io/resource_uid.cpp",
+            "core/io/resource_uid.h",
+            "editor/file_system/editor_file_system.cpp"
+          ],
+          "note": "uid:// and .uid files; duplicate handling."
+        },
+        {
+          "name": "VS Code",
+          "repo": "microsoft/vscode",
+          "commit": "d3d31f6",
+          "license": "MIT",
+          "license_class": "permissive",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "src/vs/platform/workspaces/node/workspaces.ts",
+            "src/vs/platform/storage/electron-main/storageMain.ts",
+            "src/vs/workbench/services/workspaces/electron-browser/workspaceEditingService.ts"
+          ],
+          "note": "Counter-example; the reverse-pointer file idea only."
+        }
+      ],
+      "decisions_for_human": [
+        "The two-processes, one-identity case (ties to single-instance-open)."
+      ],
+      "evidence": "notes/n1-model.md §3.3-3.4, §5 item 2"
+    },
+    {
+      "id": "undo-merge-collapse-keys",
+      "title": "Collapse repeated edits and cancel toggles when compacting a step history",
+      "aliases": [
+        "collapse key",
+        "compaction",
+        "undo merge",
+        "mergeWith",
+        "toggle cancel",
+        "history grouping",
+        "log compaction",
+        "step record",
+        "lineage compaction",
+        "ADR-036"
+      ],
+      "track": "n1-model",
+      "priority": "P0",
+      "plan_nodes": [
+        "b2-piece-1b-recording",
+        "b2-piece-1a-step-record-and-dataset-reference"
+      ],
+      "status": "researched",
+      "register": "worth-owning",
+      "summary": "Qt merges only adjacent commands with the same id, never across the clean index, and drops a merge that ends where it started. QGIS adds a same-target check. So the key is (action, property, target); never merge across `saved-here`; an unknown action is opaque, never merged, and ends a run.",
+      "candidates": [
+        {
+          "name": "Qt QUndoStack",
+          "repo": "qt/qtbase",
+          "commit": "bc887a1",
+          "license": "LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only",
+          "license_class": "core-combinable-copyleft",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "src/gui/util/qundostack.cpp",
+            "src/gui/util/qundostack.h",
+            "tests/auto/gui/util/qundostack/tst_qundostack.cpp"
+          ],
+          "note": "QUndoCommand::id / mergeWith / setObsolete; ideas only."
+        },
+        {
+          "name": "QGIS",
+          "repo": "qgis/QGIS",
+          "commit": "fa8f961",
+          "license": "GPL-2.0-or-later",
+          "license_class": "core-combinable-copyleft",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "src/core/layout/qgslayoutundocommand.h",
+            "src/core/layout/qgslayoutundocommand.cpp",
+            "src/core/layout/qgslayoutitemundocommand.cpp"
+          ],
+          "note": "Same-target check on merge."
+        },
+        {
+          "name": "prosemirror-history",
+          "repo": "ProseMirror/prosemirror-history",
+          "commit": "445409b",
+          "license": "MIT",
+          "license_class": "permissive",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "src/history.ts"
+          ],
+          "note": "Time- and event-based grouping."
+        },
+        {
+          "name": "@codemirror/commands",
+          "repo": "codemirror/commands",
+          "commit": "5b9bac9",
+          "license": "MIT",
+          "license_class": "permissive",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "src/history.ts"
+          ],
+          "note": "History grouping by user event."
+        },
+        {
+          "name": "kafka",
+          "repo": "apache/kafka",
+          "commit": "c553733",
+          "license": "Apache-2.0",
+          "license_class": "permissive",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "storage/src/main/java/org/apache/kafka/storage/internals/log/LogCleaner.java",
+            "storage/src/main/java/org/apache/kafka/storage/internals/log/Cleaner.java"
+          ],
+          "note": "Compaction by key; the active segment is never compacted."
+        },
+        {
+          "name": "tldraw",
+          "repo": "tldraw/tldraw",
+          "commit": "035b741",
+          "license": "LicenseRef-tldraw (editor) AND MIT (packages/store)",
+          "license_class": "red",
+          "mode": "REJECT",
+          "paths": [
+            "packages/editor/src/lib/editor/managers/HistoryManager/HistoryManager.ts",
+            "packages/store/src/lib/RecordsDiff.ts",
+            "packages/store/src/lib/migrate.ts"
+          ],
+          "note": "Editor licence is red; the MIT store does not cancel toggles."
+        }
+      ],
+      "decisions_for_human": [],
+      "evidence": "notes/n1-model.md §3.5-3.6, §5 item 3"
+    },
+    {
+      "id": "format-forward-compatibility",
+      "title": "Read files from a later version without dropping what this version does not understand",
+      "aliases": [
+        "forward compatibility",
+        "schema version",
+        "unknown fields",
+        "unknown action",
+        "migration",
+        "nbformat",
+        "project file format",
+        "step record",
+        "lineage format",
+        "ADR-036"
+      ],
+      "track": "n1-model",
+      "priority": "P0",
+      "plan_nodes": [
+        "b2-piece-1a-step-record-and-dataset-reference"
+      ],
+      "status": "researched",
+      "register": "worth-owning",
+      "summary": "nbformat keeps cells from a newer version through one open slot. In ADR-036 terms only `intent.params` of an unregistered action under a newer `actions` header is opaque; that step is kept byte for byte on rewrite and never merged; everything else stays closed. Excalidraw, which drops unknown element types, is the counter-example.",
+      "candidates": [
+        {
+          "name": "nbformat",
+          "repo": "jupyter/nbformat",
+          "commit": "4346f97",
+          "license": "BSD-3-Clause",
+          "license_class": "permissive",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "nbformat/validator.py",
+            "nbformat/v4/nbbase.py",
+            "nbformat/v4/nbformat.v4.schema.json"
+          ],
+          "note": "Minor-version rules and the unrecognised-cell slot."
+        },
+        {
+          "name": "KiCad",
+          "repo": "kicad/code/kicad (gitlab.com)",
+          "commit": "05cc3ed",
+          "license": "GPL-3.0-or-later",
+          "license_class": "core-combinable-copyleft",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "common/settings/json_settings.cpp",
+            "include/settings/json_settings.h",
+            "common/project/project_file.cpp"
+          ],
+          "note": "Schema migrations keeping the original."
+        },
+        {
+          "name": "OpenLineage",
+          "repo": "OpenLineage/OpenLineage",
+          "commit": "9f9c4cb",
+          "license": "Apache-2.0",
+          "license_class": "permissive",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "spec/OpenLineage.json",
+            "spec/Versioning.md"
+          ],
+          "note": "Facets with producer and schema URL."
+        },
+        {
+          "name": "excalidraw",
+          "repo": "excalidraw/excalidraw",
+          "commit": "4c00f31",
+          "license": "MIT",
+          "license_class": "permissive",
+          "mode": "REJECT",
+          "paths": [
+            "packages/excalidraw/data/restore.ts",
+            "packages/excalidraw/data/json.ts",
+            "packages/common/src/constants.ts"
+          ],
+          "note": "Counter-example: drops unknown types."
+        }
+      ],
+      "decisions_for_human": [
+        "ADR-036 §3's exact forward-compatibility sentence."
+      ],
+      "evidence": "notes/n1-model.md §3.7-3.8, §5 item 4"
+    },
+    {
+      "id": "strict-json-reader",
+      "title": "Read canonical JSON strictly: refuse unknown and duplicate keys, bound every member",
+      "aliases": [
+        "duplicate keys",
+        "deny_unknown_fields",
+        "canonical json reader",
+        "strict parser",
+        "JCS",
+        "RFC 8785",
+        "project file reader",
+        "ADR-036"
+      ],
+      "track": "n1-model",
+      "priority": "P0",
+      "plan_nodes": [
+        "b2-piece-1c-save-and-reopen",
+        "b2-piece-1a-step-record-and-dataset-reference"
+      ],
+      "status": "researched",
+      "register": "worth-owning",
+      "summary": "spatial_renderer::canonical only writes. Every reader today parses through serde_json::Value, which silently keeps the last of duplicate keys (verified, 1.0.151). Derived structs with deny_unknown_fields cover struct members; map-shaped members and the byte round-trip need an owned reader half. Decide serde_json's float_roundtrip before relying on a byte round-trip (inferred from source).",
+      "candidates": [
+        {
+          "name": "serde_json",
+          "repo": "serde-rs/json",
+          "commit": "afdf6fc",
+          "license": "MIT OR Apache-2.0",
+          "license_class": "permissive",
+          "mode": "ADOPT",
+          "paths": [
+            "src/value/de.rs",
+            "src/map.rs",
+            "src/de.rs"
+          ],
+          "note": "Tokenising; never parse into Value for these files.",
+          "dependency": "already-present"
+        },
+        {
+          "name": "serde",
+          "repo": "serde-rs/serde",
+          "commit": "6693a89",
+          "license": "MIT OR Apache-2.0",
+          "license_class": "permissive",
+          "mode": "ADOPT",
+          "paths": [
+            "serde_derive/src/de/struct_.rs"
+          ],
+          "note": "deny_unknown_fields on derived structs.",
+          "dependency": "already-present"
+        },
+        {
+          "name": "serde-json-canonicalizer",
+          "repo": "evik42/serde-json-canonicalizer",
+          "commit": "cf6a483",
+          "license": "MIT",
+          "license_class": "permissive",
+          "mode": "REJECT",
+          "paths": [
+            "src/jcs.rs",
+            "src/util.rs"
+          ],
+          "note": "RFC 8785 crates are writers only."
+        }
+      ],
+      "decisions_for_human": [],
+      "evidence": "notes/n1-model.md §3.10, §4, §5 item 5"
+    },
+    {
+      "id": "processing-history-record",
+      "title": "Record each operation with its inputs, parameters and CRS so it can be shown and later replayed",
+      "aliases": [
+        "processing history",
+        "lineage record",
+        "provenance",
+        "replay",
+        "run log",
+        "dvc lock"
+      ],
+      "track": "n1-model",
+      "priority": "P1",
+      "plan_nodes": [
+        "b2-piece-1b-recording",
+        "notebooks-record-replay"
+      ],
+      "status": "researched",
+      "register": "open",
+      "summary": "QGIS's processing history is the closest GIS analogue; DVC records inputs by hash; OpenLineage and W3C PROV give vocabulary. Concept donors for ADR-036's step record and the later workflow export.",
+      "candidates": [
+        {
+          "name": "QGIS",
+          "repo": "qgis/QGIS",
+          "commit": "fa8f961",
+          "license": "GPL-2.0-or-later",
+          "license_class": "core-combinable-copyleft",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "src/core/layout/qgslayoutundocommand.h",
+            "src/core/layout/qgslayoutundocommand.cpp",
+            "src/core/layout/qgslayoutitemundocommand.cpp"
+          ],
+          "note": "src/core/history and the processing history provider."
+        },
+        {
+          "name": "dvc",
+          "repo": "iterative/dvc",
+          "commit": "56e5982",
+          "license": "Apache-2.0",
+          "license_class": "permissive",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "dvc/dvcfile.py",
+            "dvc/schema.py",
+            "dvc/stage/serialize.py"
+          ],
+          "note": "dvc.lock: inputs by hash."
+        },
+        {
+          "name": "OpenLineage",
+          "repo": "OpenLineage/OpenLineage",
+          "commit": "9f9c4cb",
+          "license": "Apache-2.0",
+          "license_class": "permissive",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "spec/OpenLineage.json",
+            "spec/Versioning.md"
+          ],
+          "note": "Run/job/dataset facets."
+        }
+      ],
+      "decisions_for_human": [],
+      "evidence": "notes/n1-model.md §3.9, shallow notes"
+    },
+    {
+      "id": "query-progress",
+      "title": "Report scan progress from DuckDB as a monotone count",
+      "aliases": [
+        "scan progress",
+        "query progress",
+        "progress bar",
+        "rows processed",
+        "duckdb progress",
+        "ADR-029"
+      ],
+      "track": "k1-scan-progress",
+      "priority": "P0",
+      "plan_nodes": [
+        "decision-adr-029-scan-progress-route",
+        "briefb-b2-save-reopen"
+      ],
+      "status": "researched",
+      "register": "open",
+      "summary": "The published duckdb crate (1.10506.0) still has no progress accessor. Upstream main has one in an unpublished experimental crate, duckdb-neo (v2 C API): a tracker holding the connection's inner handle, read from another thread. It does not latch, and its total is the same estimate ADR-029 1(c) refuses.",
+      "candidates": [
+        {
+          "name": "duckdb-neo QueryProgressTracker",
+          "repo": "duckdb/duckdb-rs",
+          "commit": "b907911",
+          "license": "MIT",
+          "license_class": "permissive",
+          "mode": "PORT",
+          "paths": [
+            "crates/duckdb-neo/src/query_progress.rs"
+          ],
+          "note": "Shape for route 2 (a patch adding an accessor to the classic crate); WATCH the crate's publication for route 3.",
+          "dependency": "none (ported code: notice route needed)"
+        }
+      ],
+      "decisions_for_human": [
+        "ADR-029's route: 1 raw ffi, 2 patch (now with an upstream-authored shape), 3 wait for duckdb-neo."
+      ],
+      "evidence": "notes/k1-scan-progress.md"
+    },
+    {
+      "id": "command-palette",
+      "title": "A Ctrl+K command bar over the action registry",
+      "aliases": [
+        "command palette",
+        "ctrl+k",
+        "cmd+k",
+        "quick open",
+        "command bar",
+        "launcher"
+      ],
+      "track": "q-command-bar",
+      "priority": "P0",
+      "plan_nodes": [
+        "shell-migration-milestone-3"
+      ],
+      "status": "researched",
+      "register": "worth-owning",
+      "summary": "Build it in the shell with no new dependency: one APG combobox component and plain CSS. cmdk's defaults (focus-trapping dialog, Ctrl+K as a vim key, aria-expanded always true) work against three acceptance items, and it brings about 26 packages.",
+      "candidates": [
+        {
+          "name": "VS Code",
+          "repo": "microsoft/vscode",
+          "commit": "d3d31f6",
+          "license": "MIT",
+          "license_class": "permissive",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "src/vs/platform/quickinput/browser/commandsQuickAccess.ts",
+            "src/vs/platform/quickinput/browser/quickInputController.ts",
+            "src/vs/platform/quickinput/browser/quickInputBox.ts"
+          ],
+          "note": "registerAction2 fan-out, MRU ranking, live result count."
+        },
+        {
+          "name": "Lumino",
+          "repo": "jupyterlab/lumino",
+          "commit": "c5e4fac",
+          "license": "BSD-3-Clause",
+          "license_class": "permissive",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "packages/commands/src/index.ts",
+            "packages/widgets/src/commandpalette.ts"
+          ],
+          "note": "One CommandRegistry for palette and menus."
+        },
+        {
+          "name": "cmdk",
+          "repo": "pacocoursey/cmdk",
+          "commit": "dd2250e",
+          "license": "MIT",
+          "license_class": "permissive",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "cmdk/src/index.tsx",
+            "cmdk/src/command-score.ts",
+            "ARCHITECTURE.md"
+          ],
+          "note": "IME guard; not as a dependency."
+        },
+        {
+          "name": "Zed",
+          "repo": "zed-industries/zed",
+          "commit": "4240146",
+          "license": "GPL-3.0-or-later AND Apache-2.0",
+          "license_class": "core-combinable-copyleft",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "crates/command_palette/src/command_palette.rs",
+            "crates/command_palette/src/persistence.rs",
+            "crates/fuzzy_nucleo/src/strings.rs"
+          ],
+          "note": "Usage-ranked palette; ideas only."
+        },
+        {
+          "name": "kbar",
+          "repo": "timc1/kbar",
+          "commit": "26ec0f4",
+          "license": "MIT",
+          "license_class": "permissive",
+          "mode": "REJECT",
+          "paths": [
+            "src/useMatches.tsx",
+            "src/KBarSearch.tsx",
+            "src/KBarResults.tsx"
+          ],
+          "note": "Less fit than cmdk for the same cost."
+        }
+      ],
+      "decisions_for_human": [
+        "Whether recency ranking waits for B2's preferences store."
+      ],
+      "evidence": "notes/q-command-bar.md §3.2-3.6, §4"
+    },
+    {
+      "id": "fuzzy-matching",
+      "title": "Rank commands and fields by fuzzy match with highlight ranges",
+      "aliases": [
+        "fuzzy search",
+        "fuzzy matcher",
+        "fuzzy score",
+        "fzf",
+        "command score",
+        "match highlighting"
+      ],
+      "track": "q-command-bar",
+      "priority": "P0",
+      "plan_nodes": [
+        "shell-migration-milestone-3"
+      ],
+      "status": "researched",
+      "register": "do-not-reinvent",
+      "summary": "CodeMirror's FuzzyMatcher (~130 lines, MIT) ranks prefix, then word initials, then substring, then scattered letters, with highlight ranges. VS Code's command palette does not use fuzzyScore. uFuzzy is the dependency to evaluate only if `#` feature search needs thousands of items.",
+      "candidates": [
+        {
+          "name": "@codemirror/autocomplete",
+          "repo": "codemirror/autocomplete",
+          "commit": "9a01794",
+          "license": "MIT",
+          "license_class": "permissive",
+          "mode": "PORT",
+          "paths": [
+            "src/filter.ts",
+            "src/state.ts",
+            "src/completion.ts"
+          ],
+          "note": "FuzzyMatcher, checked against the npm 6.20.3 release.",
+          "dependency": "none (ported code: notice route needed)"
+        },
+        {
+          "name": "uFuzzy",
+          "repo": "leeoniya/uFuzzy",
+          "commit": "9bcdc09",
+          "license": "MIT",
+          "license_class": "permissive",
+          "mode": "WATCH",
+          "paths": [
+            "src/uFuzzy.mjs",
+            "dist/uFuzzy.d.ts"
+          ],
+          "note": "Zero-dependency matcher for large lists."
+        },
+        {
+          "name": "fzf",
+          "repo": "junegunn/fzf",
+          "commit": "b1be3a8",
+          "license": "MIT",
+          "license_class": "permissive",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "src/algo/algo.go"
+          ],
+          "note": "Scoring algorithm reference."
+        },
+        {
+          "name": "fzy.js",
+          "repo": "jhawthorn/fzy.js",
+          "commit": "327b2ae",
+          "license": "MIT",
+          "license_class": "permissive",
+          "mode": "BENCHMARK",
+          "paths": [
+            "index.js"
+          ],
+          "note": "Scoring comparison."
+        },
+        {
+          "name": "command-score",
+          "repo": "superhuman/command-score",
+          "commit": "a192b81",
+          "license": "MIT",
+          "license_class": "permissive",
+          "mode": "REJECT",
+          "paths": [
+            "index.js",
+            "test.js"
+          ],
+          "note": "cmdk's scorer; weaker ranking."
+        },
+        {
+          "name": "Fuse",
+          "repo": "krisk/Fuse",
+          "commit": "edf2fb6",
+          "license": "Apache-2.0",
+          "license_class": "permissive",
+          "mode": "REJECT",
+          "paths": [
+            "src/search/bitap/search.ts",
+            "src/core/computeScore.ts",
+            "src/core/config.ts"
+          ],
+          "note": "Too heavy for command-list scale."
+        },
+        {
+          "name": "fuzzysort",
+          "repo": "farzher/fuzzysort",
+          "commit": "ac4d42e",
+          "license": "MIT",
+          "license_class": "permissive",
+          "mode": "REJECT",
+          "paths": [
+            "fuzzysort.js"
+          ],
+          "note": "Not needed at this scale."
+        },
+        {
+          "name": "nucleo",
+          "repo": "helix-editor/nucleo",
+          "commit": "8c16d47",
+          "license": "MPL-2.0",
+          "license_class": "weak-copyleft",
+          "mode": "REJECT",
+          "paths": [
+            "matcher/src/score.rs",
+            "matcher/src/fuzzy_optimal.rs",
+            "matcher/src/prefilter.rs"
+          ],
+          "note": "Rust, MPL-2.0; wrong layer."
+        }
+      ],
+      "decisions_for_human": [
+        "Port with a notice, or write fresh from the published algorithm (counsel's call)."
+      ],
+      "evidence": "notes/q-command-bar.md §3.1, §3.7, §4"
+    },
+    {
+      "id": "typed-slash-command-completion",
+      "title": "Slash commands with typed arguments and `@` field completion",
+      "aliases": [
+        "slash commands",
+        "autocomplete",
+        "field completion",
+        "mention trigger",
+        "completion range"
+      ],
+      "track": "q-command-bar",
+      "priority": "P0",
+      "plan_nodes": [
+        "shell-migration-milestone-3"
+      ],
+      "status": "researched",
+      "register": "worth-owning",
+      "summary": "Own the narrow `/filter` drafting form; borrow TipTap's trigger rule for `@` and CodeMirror's {from, to, options, validFor} completion range, with a generation check so a stale completion never applies.",
+      "candidates": [
+        {
+          "name": "tiptap",
+          "repo": "ueberdosis/tiptap",
+          "commit": "5e4c112",
+          "license": "MIT",
+          "license_class": "permissive",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "packages/suggestion/src/findSuggestionMatch.ts",
+            "packages/suggestion/src/types.ts",
+            "packages/suggestion/src/suggestion.ts"
+          ],
+          "note": "Suggestion trigger rule."
+        },
+        {
+          "name": "@codemirror/autocomplete",
+          "repo": "codemirror/autocomplete",
+          "commit": "9a01794",
+          "license": "MIT",
+          "license_class": "permissive",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "src/filter.ts",
+            "src/state.ts",
+            "src/completion.ts"
+          ],
+          "note": "Completion-range model."
+        }
+      ],
+      "decisions_for_human": [
+        "Tab-to-complete is outside the APG pattern: a declared, tested extension."
+      ],
+      "evidence": "notes/q-command-bar.md §3.1, §3.7, §4"
+    },
+    {
+      "id": "filter-cards-round-trip",
+      "title": "Filter clauses as cards that never rewrite the user's expression",
+      "aliases": [
+        "filter pills",
+        "filter chips",
+        "query builder",
+        "clause cards",
+        "kql",
+        "adhoc filters"
+      ],
+      "track": "q-command-bar",
+      "priority": "P0",
+      "plan_nodes": [
+        "shell-migration-milestone-3"
+      ],
+      "status": "researched",
+      "register": "worth-owning",
+      "summary": "No product turns arbitrary query text back into pills. Design: a card holds the user's text verbatim plus an on/off flag; enabled cards are each wrapped in parentheses and joined with AND; zero enabled cards sends no filter; an exact-shape recogniser decides only how a card is displayed.",
+      "candidates": [
+        {
+          "name": "Kibana",
+          "repo": "elastic/kibana",
+          "commit": "2a3a7079",
+          "license": "AGPL-3.0-only OR SSPL-1.0 OR Elastic-2.0",
+          "license_class": "core-combinable-copyleft",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "src/platform/plugins/shared/unified_search/public/filter_bar/filter_editor/filter_editor.tsx",
+            "src/platform/plugins/shared/unified_search/public/filter_bar/filter_editor/lib/filter_editor_utils.ts",
+            "src/platform/packages/shared/kbn-es-query/src/es_query/from_filters.ts"
+          ],
+          "note": "Structured pills; disabled pills dropped before composition."
+        },
+        {
+          "name": "Metabase",
+          "repo": "metabase/metabase",
+          "commit": "8363349",
+          "license": "AGPL-3.0 AND LicenseRef-Metabase-Commercial",
+          "license_class": "core-combinable-copyleft",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "frontend/src/metabase/querying/filters/components/FilterPicker/FilterPicker.tsx",
+            "frontend/src/metabase-lib/query/filter.ts",
+            "src/metabase/lib/fe_util.cljc"
+          ],
+          "note": "Pill only on an exact shape match, else a custom expression."
+        },
+        {
+          "name": "Superset",
+          "repo": "apache/superset",
+          "commit": "100f512",
+          "license": "Apache-2.0",
+          "license_class": "permissive",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "superset-frontend/src/explore/components/controls/FilterControl/AdhocFilter/index.ts",
+            "superset-frontend/src/explore/components/controls/FilterControl/AdhocFilterEditPopover/index.tsx",
+            "superset/sql/parse.py"
+          ],
+          "note": "User SQL kept verbatim since 2026-07, with stated exceptions."
+        },
+        {
+          "name": "Grafana Scenes",
+          "repo": "grafana/scenes",
+          "commit": "737eb53",
+          "license": "Apache-2.0",
+          "license_class": "permissive",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "packages/scenes/src/variables/adhoc/AdHocFiltersVariable.tsx",
+            "packages/scenes/src/variables/filter.ts",
+            "packages/scenes/src/variables/adhoc/getAdhocOptionSearcher.ts"
+          ],
+          "note": "Ad-hoc filter model."
+        },
+        {
+          "name": "Grafana",
+          "repo": "grafana/grafana",
+          "commit": "782afc6",
+          "license": "AGPL-3.0-only",
+          "license_class": "core-combinable-copyleft",
+          "mode": "REJECT",
+          "paths": [
+            "packages/grafana-sql/src/components/QueryHeader.tsx",
+            "packages/grafana-sql/src/components/ConfirmModal.tsx",
+            "packages/grafana-sql/src/components/visual-query-builder/WhereRow.tsx"
+          ],
+          "note": "SQL builder rewrites."
+        },
+        {
+          "name": "react-querybuilder",
+          "repo": "react-querybuilder/react-querybuilder",
+          "commit": "ff8482b",
+          "license": "MIT",
+          "license_class": "permissive",
+          "mode": "REJECT",
+          "paths": [
+            "packages/core/src/utils/parseSQL/parseSQL.ts",
+            "packages/core/src/utils/parseSQL/sql.jison"
+          ],
+          "note": "Full parser that drops what it cannot read."
+        }
+      ],
+      "decisions_for_human": [
+        "Whether a refusal's column/construct is mapped back to the card that caused it."
+      ],
+      "evidence": "notes/q-command-bar.md §3.4, §4"
+    },
+    {
+      "id": "command-registry-native-menus",
+      "title": "One registry entry feeding the palette, the shortcut and the macOS menu",
+      "aliases": [
+        "native menu",
+        "app menu",
+        "accelerator",
+        "keyboard shortcut",
+        "action registry",
+        "setAsAppMenu"
+      ],
+      "track": "q-command-bar",
+      "priority": "P0",
+      "plan_nodes": [
+        "shell-migration-milestone-3"
+      ],
+      "status": "researched",
+      "register": "do-not-reinvent",
+      "summary": "@tauri-apps/api (already locked at 2.11.1) has Menu, accelerators and setAsAppMenu; the default capability includes menus. VS Code's registerAction2 is the model for the entry shape (when vs precondition).",
+      "candidates": [
+        {
+          "name": "@tauri-apps/api",
+          "repo": "tauri-apps/tauri",
+          "commit": "a225a18",
+          "license": "Apache-2.0 OR MIT",
+          "license_class": "permissive",
+          "mode": "ADOPT",
+          "paths": [
+            "packages/api/src/menu"
+          ],
+          "note": "Already a shell dependency.",
+          "dependency": "already-present"
+        },
+        {
+          "name": "VS Code",
+          "repo": "microsoft/vscode",
+          "commit": "d3d31f6",
+          "license": "MIT",
+          "license_class": "permissive",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "src/vs/platform/quickinput/browser/commandsQuickAccess.ts",
+            "src/vs/platform/quickinput/browser/quickInputController.ts",
+            "src/vs/platform/quickinput/browser/quickInputBox.ts"
+          ],
+          "note": "registerAction2: one entry, many surfaces."
+        },
+        {
+          "name": "Lumino",
+          "repo": "jupyterlab/lumino",
+          "commit": "c5e4fac",
+          "license": "BSD-3-Clause",
+          "license_class": "permissive",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "packages/commands/src/index.ts",
+            "packages/widgets/src/commandpalette.ts"
+          ],
+          "note": "isEnabled / isVisible / isToggled."
+        }
+      ],
+      "decisions_for_human": [],
+      "evidence": "notes/q-command-bar.md §3.3, §3.6, §4"
+    },
+    {
+      "id": "combobox-accessibility",
+      "title": "Roles, states, focus and keys for an accessible command bar",
+      "aliases": [
+        "aria combobox",
+        "listbox",
+        "aria-activedescendant",
+        "accessibility",
+        "a11y",
+        "keyboard navigation"
+      ],
+      "track": "q-command-bar",
+      "priority": "P0",
+      "plan_nodes": [
+        "shell-migration-milestone-3"
+      ],
+      "status": "researched",
+      "register": "do-not-reinvent",
+      "summary": "The W3C APG combobox pattern is the baseline; VS Code and Lumino depart from it, so the pattern, not an IDE, is the reference. It defines nothing for Tab.",
+      "candidates": [
+        {
+          "name": "WAI-ARIA APG combobox pattern",
+          "repo": "w3.org/WAI/ARIA/apg/patterns/combobox",
+          "commit": "fetched 2026-10-08",
+          "license": "W3C specification",
+          "license_class": "spec",
+          "mode": "ADOPT",
+          "paths": [],
+          "note": "Follow the attribute set and key table.",
+          "dependency": "none (test data fetched by pinned URL, or a specification)"
+        }
+      ],
+      "decisions_for_human": [],
+      "evidence": "notes/q-command-bar.md §3.8, §4"
+    },
+    {
+      "id": "table-data-source",
+      "title": "Feed a million-row feature table from the engine without materialising it",
+      "aliases": [
+        "attribute table",
+        "table data source",
+        "windowed fetch",
+        "range request",
+        "second consumer",
+        "virtual server",
+        "read until"
+      ],
+      "track": "j-table",
+      "priority": "P0",
+      "plan_nodes": [
+        "b1-shell-half"
+      ],
+      "status": "researched",
+      "register": "worth-owning",
+      "summary": "DuckDB's own UI keeps one result stream and reads it only as far as the view needs. Spatial IDE can do the same with existing commands: one viewport_query with no bbox, the layer's filter and the shown columns, granting credit as visible rows need it — forward only. Random access or engine-side sort needs a range command (the human's ruling); Perspective is the reference shape. A started stream waiting for credit keeps its connection lease with no timeout.",
+      "candidates": [
+        {
+          "name": "duckdb-ui",
+          "repo": "duckdb/duckdb-ui",
+          "commit": "0628932",
+          "license": "MIT",
+          "license_class": "permissive",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "ts/pkgs/duckdb-data-reader/src/DuckDBDataReader.ts"
+          ],
+          "note": "DuckDBDataReader: read-until."
+        },
+        {
+          "name": "Perspective",
+          "repo": "finos/perspective",
+          "commit": "6dbc6b8",
+          "license": "Apache-2.0",
+          "license_class": "permissive",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "rust/perspective-js/src/ts/virtual_servers/duckdb.ts",
+            "rust/perspective-client/src/rust/virtual_server/generic_sql_model.rs",
+            "rust/perspective-client/src/rust/virtual_server/generic_sql_model/table_make_view.rs"
+          ],
+          "note": "Viewport/range model for a future ruled command."
+        },
+        {
+          "name": "Mosaic",
+          "repo": "uwdata/mosaic",
+          "commit": "3faf153",
+          "license": "BSD-3-Clause",
+          "license_class": "permissive",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "packages/vgplot/inputs/src/Table.js",
+            "packages/mosaic/core/src/QueryManager.ts",
+            "packages/mosaic/core/src/Coordinator.ts"
+          ],
+          "note": "Table querying DuckDB by range as you scroll."
+        },
+        {
+          "name": "quak",
+          "repo": "manzt/quak",
+          "commit": "41549f9",
+          "license": "MIT",
+          "license_class": "permissive",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "lib/clients/DataTable.ts",
+            "lib/utils/AsyncBatchReader.ts"
+          ],
+          "note": "Mosaic-based data table."
+        },
+        {
+          "name": "QGIS",
+          "repo": "qgis/QGIS",
+          "commit": "fa8f961",
+          "license": "GPL-2.0-or-later",
+          "license_class": "core-combinable-copyleft",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "src/gui/attributetable/qgsattributetablemodel.cpp",
+            "src/gui/attributetable/qgsattributetablefiltermodel.cpp",
+            "src/gui/attributetable/qgsdualview.cpp"
+          ],
+          "note": "Attribute table model and feature cache; scope model."
+        },
+        {
+          "name": "tad",
+          "repo": "antonycourtney/tad",
+          "commit": "272ffa0",
+          "license": "MIT",
+          "license_class": "permissive",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "packages/tadviewer/src/paging.ts",
+            "packages/tadviewer/src/PivotRequester.ts"
+          ],
+          "note": "Desktop DuckDB table viewer."
+        },
+        {
+          "name": "rill",
+          "repo": "rilldata/rill",
+          "commit": "46764c3",
+          "license": "Apache-2.0",
+          "license_class": "permissive",
+          "mode": "REJECT",
+          "paths": [
+            "web-common/src/components/virtualized-table/VirtualTable.svelte"
+          ],
+          "note": "Server architecture; no fit."
+        },
+        {
+          "name": "kepler.gl",
+          "repo": "keplergl/kepler.gl",
+          "commit": "e591395",
+          "license": "MIT",
+          "license_class": "permissive",
+          "mode": "REJECT",
+          "paths": [
+            "src/components/src/common/data-table/index.tsx"
+          ],
+          "note": "Materialises in the client."
+        }
+      ],
+      "decisions_for_human": [
+        "How the table holds a stream slot: yield it when hidden or the map is busy, drop tiles from 3 to 2 (a LOCKED constant), or queue streams (reserved by ADR-014).",
+        "Whether to add a range command for random access and engine-side sort."
+      ],
+      "evidence": "notes/j-table.md §3.1-3.4, §4 Q1, §5"
+    },
+    {
+      "id": "virtualized-grid",
+      "title": "A virtualised grid for millions of rows in React 18",
+      "aliases": [
+        "data grid",
+        "virtual scrolling",
+        "windowing",
+        "react table",
+        "spreadsheet grid",
+        "infinite scroll"
+      ],
+      "track": "j-table",
+      "priority": "P0",
+      "plan_nodes": [
+        "b1-shell-half"
+      ],
+      "status": "researched",
+      "register": "worth-owning",
+      "summary": "Build a small grid in the shell and port pieces: no candidate meets the accessibility acceptance item on React 18. hightable has the right model (fetch by row range with cancellation, scrolling past the browser's height limit, one tab stop) but deviates from ARIA and needs React 19.2 from 0.26.1.",
+      "candidates": [
+        {
+          "name": "hightable",
+          "repo": "hyparam/hightable",
+          "commit": "0989abd",
+          "license": "MIT",
+          "license_class": "permissive",
+          "mode": "PORT",
+          "paths": [
+            "src/helpers/dataframe/types.ts",
+            "src/hooks/useFetchCells.ts",
+            "src/helpers/scroll.ts"
+          ],
+          "note": "DataFrame fetch interface and createScale height scaling; 0.26.0 is the last React 18 release.",
+          "dependency": "none (ported code: notice route needed)"
+        },
+        {
+          "name": "react-data-grid",
+          "repo": "adazzle/react-data-grid",
+          "commit": "f5f8abd",
+          "license": "MIT",
+          "license_class": "permissive",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "src/DataGrid.tsx",
+            "src/Cell.tsx",
+            "src/hooks/useRovingTabIndex.ts"
+          ],
+          "note": "Keyboard-to-position map; React 19 from beta.49."
+        },
+        {
+          "name": "ag-grid",
+          "repo": "ag-grid/ag-grid",
+          "commit": "89faa99",
+          "license": "MIT AND LicenseRef-AG-Grid-Commercial",
+          "license_class": "permissive",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "packages/ag-grid-community/src/gridBodyComp/gridBodyCtrl.ts",
+            "packages/ag-grid-community/src/infiniteRowModel/infiniteBlock.ts",
+            "packages/ag-grid-community/src/infiniteRowModel/rowNodeBlockLoader.ts"
+          ],
+          "note": "aria-rowcount=-1 while the total is unknown; version-stamped ranges. Server-side and viewport row models are Enterprise (red)."
+        },
+        {
+          "name": "glide-data-grid",
+          "repo": "glideapps/glide-data-grid",
+          "commit": "0875d78",
+          "license": "MIT",
+          "license_class": "permissive",
+          "mode": "REJECT",
+          "paths": [
+            "packages/core/src/internal/data-grid/data-grid.tsx",
+            "packages/source/src/use-async-data-source.ts"
+          ],
+          "note": "Canvas behind a hidden copy for screen readers."
+        },
+        {
+          "name": "TanStack Table",
+          "repo": "TanStack/table",
+          "commit": "6aa0d74",
+          "license": "MIT",
+          "license_class": "permissive",
+          "mode": "REJECT",
+          "paths": [
+            "packages/table-core/src/core/row-models/coreRowModelsFeature.utils.ts"
+          ],
+          "note": "No accessibility attributes."
+        },
+        {
+          "name": "TanStack Virtual",
+          "repo": "TanStack/virtual",
+          "commit": "78371e8",
+          "license": "MIT",
+          "license_class": "permissive",
+          "mode": "REJECT",
+          "paths": [
+            "packages/virtual-core/src/index.ts"
+          ],
+          "note": "Virtualiser only; no grid semantics."
+        },
+        {
+          "name": "revogrid",
+          "repo": "revolist/revogrid",
+          "commit": "d838028",
+          "license": "MIT",
+          "license_class": "permissive",
+          "mode": "REJECT",
+          "paths": [
+            "src/plugins/wcag/index.ts"
+          ],
+          "note": "Web component; poor fit."
+        },
+        {
+          "name": "regular-table",
+          "repo": "finos/regular-table",
+          "commit": "47f99d3",
+          "license": "Apache-2.0",
+          "license_class": "permissive",
+          "mode": "REJECT",
+          "paths": [
+            "src/ts/regular-table.ts"
+          ],
+          "note": "Different model."
+        },
+        {
+          "name": "Observable Inputs",
+          "repo": "observablehq/inputs",
+          "commit": "04a1a8b",
+          "license": "ISC",
+          "license_class": "permissive",
+          "mode": "REJECT",
+          "paths": [
+            "src/table.js"
+          ],
+          "note": "Materialises rows."
+        }
+      ],
+      "decisions_for_human": [
+        "If a dependency is preferred anyway: hightable@0.26.0 pinned, with its ARIA deviations patched."
+      ],
+      "evidence": "notes/j-table.md §3.5-3.8, §4 Q2, §5"
+    },
+    {
+      "id": "aria-grid-accessibility",
+      "title": "Grid roles, roving focus and keyboard model that meet the APG grid pattern",
+      "aliases": [
+        "aria grid",
+        "gridcell",
+        "roving tabindex",
+        "aria-rowcount",
+        "screen reader table"
+      ],
+      "track": "j-table",
+      "priority": "P0",
+      "plan_nodes": [
+        "b1-shell-half"
+      ],
+      "status": "researched",
+      "register": "do-not-reinvent",
+      "summary": "Follow the W3C APG grid pattern; candidates were checked in code, not README, and all deviate somewhere.",
+      "candidates": [
+        {
+          "name": "WAI-ARIA APG grid pattern",
+          "repo": "w3.org/WAI/ARIA/apg/patterns/grid",
+          "commit": "fetched 2026-10-08",
+          "license": "W3C specification",
+          "license_class": "spec",
+          "mode": "ADOPT",
+          "paths": [],
+          "note": "The baseline.",
+          "dependency": "none (test data fetched by pinned URL, or a specification)"
+        },
+        {
+          "name": "react-data-grid",
+          "repo": "adazzle/react-data-grid",
+          "commit": "f5f8abd",
+          "license": "MIT",
+          "license_class": "permissive",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "src/DataGrid.tsx",
+            "src/Cell.tsx",
+            "src/hooks/useRovingTabIndex.ts"
+          ],
+          "note": "Closest keyboard model."
+        }
+      ],
+      "decisions_for_human": [],
+      "evidence": "notes/j-table.md §4 Q4"
+    },
+    {
+      "id": "arrow-cell-access",
+      "title": "Read visible cells straight from Arrow batches",
+      "aliases": [
+        "arrow js",
+        "record batch",
+        "columnar cells",
+        "Vector.get",
+        "bigint ids"
+      ],
+      "track": "j-table",
+      "priority": "P0",
+      "plan_nodes": [
+        "b1-shell-half"
+      ],
+      "status": "researched",
+      "register": "do-not-reinvent",
+      "summary": "apache-arrow (already a dependency) provides typed Vector.get. Read only visible cells, keep `id` as bigint, and decode the table's batches apart from the map's, whose decoder discards attributes.",
+      "candidates": [
+        {
+          "name": "apache-arrow (JS)",
+          "repo": "apache/arrow-js",
+          "commit": "8a7fda4",
+          "license": "Apache-2.0",
+          "license_class": "permissive",
+          "mode": "ADOPT",
+          "paths": [
+            "src/vector.ts",
+            "src/util/chunk.ts",
+            "src/visitor/get.ts"
+          ],
+          "note": "Already a dependency.",
+          "dependency": "already-present"
+        }
+      ],
+      "decisions_for_human": [],
+      "evidence": "notes/j-table.md §3.9, §4 Q3"
+    },
+    {
+      "id": "stale-range-cancellation",
+      "title": "Cancel a pending fetch only when no visible row still needs it",
+      "aliases": [
+        "request cancellation",
+        "paged model",
+        "stale requests",
+        "abort",
+        "reference counting"
+      ],
+      "track": "j-table",
+      "priority": "P0",
+      "plan_nodes": [
+        "b1-shell-half"
+      ],
+      "status": "researched",
+      "register": "do-not-reinvent",
+      "summary": "VS Code's PagedModel has a reference-counted cancellation rule in about 45 lines; the shell's own LiveTicketSet already rejects stale batches.",
+      "candidates": [
+        {
+          "name": "VS Code",
+          "repo": "microsoft/vscode",
+          "commit": "d3d31f6",
+          "license": "MIT",
+          "license_class": "permissive",
+          "mode": "PORT",
+          "paths": [
+            "src/vs/base/common/paging.ts",
+            "src/vs/base/browser/ui/list/listPaging.ts",
+            "src/vs/base/browser/ui/list/listWidget.ts"
+          ],
+          "note": "PagedModel reference-counted page cancellation.",
+          "dependency": "none (ported code: notice route needed)"
+        }
+      ],
+      "decisions_for_human": [],
+      "evidence": "notes/j-table.md §3.7, §5"
+    },
+    {
+      "id": "selection-scope-table",
+      "title": "Show only the selected features in the table without a whole-file scan",
+      "aliases": [
+        "selected features",
+        "table scope",
+        "id IN filter",
+        "selection table"
+      ],
+      "track": "j-table",
+      "priority": "P0",
+      "plan_nodes": [
+        "b1-shell-half"
+      ],
+      "status": "researched",
+      "register": "open",
+      "summary": "Build the Selected scopes from the selection's ids as `id IN (...)` filters split under the 4,096-byte filter limit; they load completely, so client-side sort is honest (QGIS as concept donor).",
+      "candidates": [
+        {
+          "name": "QGIS",
+          "repo": "qgis/QGIS",
+          "commit": "fa8f961",
+          "license": "GPL-2.0-or-later",
+          "license_class": "core-combinable-copyleft",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "src/gui/attributetable/qgsattributetablemodel.cpp",
+            "src/gui/attributetable/qgsattributetablefiltermodel.cpp",
+            "src/gui/attributetable/qgsdualview.cpp"
+          ],
+          "note": "Selected-features table mode."
+        }
+      ],
+      "decisions_for_human": [
+        "Datasets without a native or declared id may be unable to name their row-number id in a filter (untested)."
+      ],
+      "evidence": "notes/j-table.md §3.2, §4 Q1"
+    },
+    {
+      "id": "lod-selection-metric",
+      "title": "Choose which simplified tier a viewport draws",
+      "aliases": [
+        "level of detail",
+        "lod",
+        "tier selection",
+        "screen space error",
+        "sse",
+        "simplification tier"
+      ],
+      "track": "e-lod-selection",
+      "priority": "P1",
+      "plan_nodes": [
+        "lod-tier-selection"
+      ],
+      "status": "researched",
+      "register": "worth-owning",
+      "summary": "In an orthographic view scale is uniform, so one tier serves the viewport. With a tier key in source units², draw the coarsest tier whose area × 4^zoom ≤ τ px² (fixed zoom thresholds ~1.66 and ~1.16 levels apart — arithmetic, not a measurement; τ must be declared). geo's VW simplifier does not keep areas monotonic, so τ does not bound visual drift — measure it. The pick anchor is read from resident geometry, so it must route to tier 0 by stable id or be pinned by a test.",
+      "candidates": [
+        {
+          "name": "Cesium",
+          "repo": "CesiumGS/cesium",
+          "commit": "a3aea90",
+          "license": "Apache-2.0",
+          "license_class": "permissive",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "packages/engine/Source/Scene/Cesium3DTile.js",
+            "packages/engine/Source/Scene/Cesium3DTilesetTraversal.js",
+            "packages/engine/Source/Scene/Cesium3DTilesetBaseTraversal.js"
+          ],
+          "note": "Orthographic screen-space error form."
+        },
+        {
+          "name": "QGIS",
+          "repo": "qgis/QGIS",
+          "commit": "fa8f961",
+          "license": "GPL-2.0-or-later",
+          "license_class": "core-combinable-copyleft",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "src/core/vector/qgsvectorlayerrenderer.cpp",
+            "src/core/qgsmaptopixelgeometrysimplifier.cpp",
+            "src/core/qgsvectorsimplifymethod.h"
+          ],
+          "note": "Visvalingam area in px²."
+        },
+        {
+          "name": "topojson-simplify",
+          "repo": "topojson/topojson-simplify",
+          "commit": "e37de14",
+          "license": "ISC",
+          "license_class": "permissive",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "src/presimplify.js",
+            "src/simplify.js",
+            "README.md"
+          ],
+          "note": "Area threshold in screen units."
+        },
+        {
+          "name": "openlayers",
+          "repo": "openlayers/openlayers",
+          "commit": "45d79b2",
+          "license": "BSD-2-Clause",
+          "license_class": "permissive",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "src/ol/tilegrid/TileGrid.js",
+            "src/ol/array.js",
+            "src/ol/source/Tile.js"
+          ],
+          "note": "Nearest level in an arbitrary ladder with direction bias."
+        },
+        {
+          "name": "three.js",
+          "repo": "mrdoob/three.js",
+          "commit": "a2254fd",
+          "license": "MIT",
+          "license_class": "permissive",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "src/objects/LOD.js"
+          ],
+          "note": "Distance-based LOD."
+        },
+        {
+          "name": "Leaflet",
+          "repo": "Leaflet/Leaflet",
+          "commit": "125bda1",
+          "license": "BSD-2-Clause",
+          "license_class": "permissive",
+          "mode": "REJECT",
+          "paths": [
+            "src/layer/vector/Polyline.js"
+          ],
+          "note": "No comparable mechanism."
+        }
+      ],
+      "decisions_for_human": [
+        "Declare τ and measure tier drift before selection is preregistered.",
+        "Pick-anchor: route to tier 0 by stable id, or pin the current reliance with a test."
+      ],
+      "evidence": "notes/e-lod-selection.md §3.2, §4 Q1, §5"
+    },
+    {
+      "id": "lod-hysteresis",
+      "title": "Stop the drawn tier flapping on small zooms",
+      "aliases": [
+        "hysteresis",
+        "flapping",
+        "lod margin",
+        "visibility range",
+        "dwell"
+      ],
+      "track": "e-lod-selection",
+      "priority": "P1",
+      "plan_nodes": [
+        "lod-tier-selection"
+      ],
+      "status": "researched",
+      "register": "do-not-reinvent",
+      "summary": "Godot is the only system read with a true hysteresis band (the margin's sign depends on last frame's state). Use a declared margin in zoom units under about 0.58 (half the narrowest band), with instant swaps; cross-fades would charge MAX_RESIDENT_VERTICES twice.",
+      "candidates": [
+        {
+          "name": "Godot",
+          "repo": "godotengine/godot",
+          "commit": "e7b12e7",
+          "license": "MIT",
+          "license_class": "permissive",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "servers/rendering/renderer_scene_cull.cpp",
+            "doc/classes/GeometryInstance3D.xml",
+            "servers/rendering/renderer_rd/storage_rd/mesh_storage.h"
+          ],
+          "note": "renderer_scene_cull visibility-range margin."
+        },
+        {
+          "name": "bevy",
+          "repo": "bevyengine/bevy",
+          "commit": "fd98063",
+          "license": "MIT OR Apache-2.0",
+          "license_class": "permissive",
+          "mode": "WATCH",
+          "paths": [
+            "crates/bevy_camera/src/visibility/range.rs",
+            "crates/bevy_render/src/view/visibility/range.rs"
+          ],
+          "note": "Visibility ranges without a band."
+        }
+      ],
+      "decisions_for_human": [],
+      "evidence": "notes/e-lod-selection.md §3.3, §4 Q2, §5"
+    },
+    {
+      "id": "lod-refinement-while-loading",
+      "title": "What to draw while a finer tier is still loading",
+      "aliases": [
+        "refinement strategy",
+        "best-available",
+        "no-overlap",
+        "placeholder tiles",
+        "progressive loading"
+      ],
+      "track": "e-lod-selection",
+      "priority": "P1",
+      "plan_nodes": [
+        "lod-tier-selection"
+      ],
+      "status": "researched",
+      "register": "do-not-reinvent",
+      "summary": "Use deck.gl's vocabulary (best-available / no-overlap / never) per tile and tier, plus MapLibre's rule that the coarser tile stays until the finer tile's content is complete. Consequences: lod.tier_resident names several tiers; both count against the vertex budget during a swap; a new 'replaced by a different tier' supersede reason.",
+      "candidates": [
+        {
+          "name": "deck.gl",
+          "repo": "visgl/deck.gl",
+          "commit": "a1cca05",
+          "license": "MIT",
+          "license_class": "permissive",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "modules/geo-layers/src/tileset-2d/tileset-2d.ts",
+            "modules/geo-layers/src/tileset-2d/tile-2d-header.ts",
+            "modules/geo-layers/src/tileset-2d/utils.ts"
+          ],
+          "note": "Tileset2D refinement strategies and tests."
+        },
+        {
+          "name": "MapLibre GL JS",
+          "repo": "maplibre/maplibre-gl-js",
+          "commit": "dc4192c",
+          "license": "BSD-3-Clause",
+          "license_class": "permissive",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "src/tile/tile_manager.ts",
+            "src/tile/tile_manager_raster.ts",
+            "src/geo/projection/covering_tiles.ts"
+          ],
+          "note": "TileManager completeness rule."
+        }
+      ],
+      "decisions_for_human": [],
+      "evidence": "notes/e-lod-selection.md §3.1, §3.4, §4 Q2, §5"
+    },
+    {
+      "id": "request-scheduling",
+      "title": "Prioritise and cancel tile requests as the view changes",
+      "aliases": [
+        "request scheduler",
+        "request queue",
+        "throttling",
+        "debounce",
+        "priority"
+      ],
+      "track": "e-lod-selection",
+      "priority": "P2",
+      "plan_nodes": [
+        "lod-tier-selection"
+      ],
+      "status": "researched",
+      "register": "worth-owning",
+      "summary": "The shell already owns an equivalent stream manager; do not take loaders.gl or @deck.gl/geo-layers as dependencies for this. The loader-utils 4.4.4 in the shell's lock (transitive) restarts its debounce whenever a request finishes; fixed in 4.5.3 and on master.",
+      "candidates": [
+        {
+          "name": "loaders.gl",
+          "repo": "visgl/loaders.gl",
+          "commit": "2b8d775",
+          "license": "MIT",
+          "license_class": "permissive",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "modules/loader-utils/src/lib/request-utils/request-scheduler.ts",
+            "modules/loader-utils/test/lib/request-utils/request-scheduler.spec.ts",
+            "modules/tiles/src/tileset-3d/common/tileset-traverser.ts"
+          ],
+          "note": "RequestScheduler; mixed licence (tiles/ has Cesium-derived Apache-2.0)."
+        },
+        {
+          "name": "Cesium",
+          "repo": "CesiumGS/cesium",
+          "commit": "a3aea90",
+          "license": "Apache-2.0",
+          "license_class": "permissive",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "packages/engine/Source/Scene/Cesium3DTile.js",
+            "packages/engine/Source/Scene/Cesium3DTilesetTraversal.js",
+            "packages/engine/Source/Scene/Cesium3DTilesetBaseTraversal.js"
+          ],
+          "note": "RequestScheduler priorities."
+        }
+      ],
+      "decisions_for_human": [],
+      "evidence": "notes/e-lod-selection.md §3.1, §4 Q4, errata"
+    },
+    {
+      "id": "memory-pressure-coarsening",
+      "title": "Coarsen detail automatically when over the memory budget",
+      "aliases": [
+        "memory budget",
+        "adaptive lod",
+        "coarsening",
+        "graceful degradation"
+      ],
+      "track": "e-lod-selection",
+      "priority": "P2",
+      "plan_nodes": [
+        "lod-tier-selection"
+      ],
+      "status": "researched",
+      "register": "open",
+      "summary": "Cesium coarsens about 2% per frame over budget, signalled only by a debug-build console warning. It fits Spatial IDE's rules only if every coarsening is visibly labelled.",
+      "candidates": [
+        {
+          "name": "Cesium",
+          "repo": "CesiumGS/cesium",
+          "commit": "a3aea90",
+          "license": "Apache-2.0",
+          "license_class": "permissive",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "packages/engine/Source/Scene/Cesium3DTile.js",
+            "packages/engine/Source/Scene/Cesium3DTilesetTraversal.js",
+            "packages/engine/Source/Scene/Cesium3DTilesetBaseTraversal.js"
+          ],
+          "note": "memoryAdjustedScreenSpaceError."
+        }
+      ],
+      "decisions_for_human": [
+        "Whether a budget-coupled coarsening controller exists at all."
+      ],
+      "evidence": "notes/e-lod-selection.md §3.2, §5"
+    },
+    {
+      "id": "real-world-line-test-files",
+      "title": "Real-world LineString / MultiLineString GeoParquet files for the compatibility corpus",
+      "aliases": [
+        "line files",
+        "linestring",
+        "multilinestring",
+        "test corpus",
+        "real-world fixtures",
+        "corpus-line-files"
+      ],
+      "track": "as-corpora",
+      "priority": "P0",
+      "plan_nodes": [
+        "corpus-line-files"
+      ],
+      "status": "researched",
+      "register": "open",
+      "summary": "Two real-world entries: one Microsoft Road Detections partition (LineString, covering, no id; ODbL; Monaco 19,402 B) kept local-only with a pinned hash, and a project-generated GeoParquet from Natural Earth 50m river centerlines (public domain; 182 of 477 multipart) with a covering, an integer id and CRS84 or LV95. Overture segments refuse on their text id; OSM Layercake waterways have no covering and are 8 GB.",
+      "candidates": [
+        {
+          "name": "Microsoft Road Detections (Source Cooperative mirror)",
+          "repo": "microsoft/RoadDetections",
+          "commit": "unversioned upstream; ETag recorded",
+          "license": "ODbL (Microsoft LICENSE, no version; ODbL-1.0 per the mirror's catalogue)",
+          "license_class": "data",
+          "mode": "ADOPT",
+          "paths": [],
+          "note": "Local-only, sha256-pinned; attribution if a derivative is ever published.",
+          "dependency": "none (test data fetched by pinned URL, or a specification)"
+        },
+        {
+          "name": "natural-earth-vector",
+          "repo": "nvkelso/natural-earth-vector",
+          "commit": "ca96624",
+          "license": "NOASSERTION",
+          "license_class": "data",
+          "mode": "ADOPT",
+          "paths": [
+            "LICENSE.md",
+            "50m_physical/ne_50m_rivers_lake_centerlines.shp",
+            "110m_physical/ne_110m_rivers_lake_centerlines.shp"
+          ],
+          "note": "Public domain; regenerate by a project generator.",
+          "dependency": "none (test data fetched by pinned URL, or a specification)"
+        },
+        {
+          "name": "docs",
+          "repo": "OvertureMaps/docs",
+          "commit": "4415e90",
+          "license": "NOASSERTION",
+          "license_class": "data",
+          "mode": "REJECT",
+          "paths": [
+            "docs/_generated_attribution.mdx",
+            "docs/attribution.mdx"
+          ],
+          "note": "Reference only: text id refused; ODbL."
+        }
+      ],
+      "decisions_for_human": [
+        "Which routes to take; whether public domain counts as an open licence under the corpus rules.",
+        "The generator's shapefile reader: DuckDB spatial ST_Read (already used) or a stdlib reader (a dependency question)."
+      ],
+      "evidence": "notes/as-corpora.md D5, disposition table"
+    },
+    {
+      "id": "geoparquet-conformance-files",
+      "title": "Small GeoParquet files covering every geometry type, including EMPTY and NULL rows",
+      "aliases": [
+        "geoparquet test data",
+        "conformance fixtures",
+        "geometry types",
+        "empty geometry",
+        "null geometry"
+      ],
+      "track": "as-corpora",
+      "priority": "P0",
+      "plan_nodes": [
+        "corpus-line-files"
+      ],
+      "status": "researched",
+      "register": "do-not-reinvent",
+      "summary": "opengeospatial/geoparquet test_data (Apache-2.0) has every type at v1.1.0 and at 2.0.0 (native GEOMETRY); each holds an EMPTY and a NULL row, so they are refusal-by-name tests, not real-world files. Fetch by pinned URL plus sha256 (the repo tracks no data files).",
+      "candidates": [
+        {
+          "name": "GeoParquet spec repo",
+          "repo": "opengeospatial/geoparquet",
+          "commit": "4c9f87e",
+          "license": "Apache-2.0",
+          "license_class": "permissive",
+          "mode": "ADOPT",
+          "paths": [
+            "test_data/data-linestring-encoding_wkb.parquet",
+            "test_data/data-multilinestring-encoding_wkb.parquet",
+            "test_data/generate_test_data.py"
+          ],
+          "note": "test_data/ and examples/ at a pinned tag.",
+          "dependency": "none (test data fetched by pinned URL, or a specification)"
+        },
+        {
+          "name": "geoarrow-data",
+          "repo": "geoarrow/geoarrow-data",
+          "commit": "e8eaa04",
+          "license": "NOASSERTION",
+          "license_class": "data",
+          "mode": "ADOPT",
+          "paths": [
+            "manifest.json",
+            "ns-water/README.md",
+            "natural-earth/files/natural-earth_countries_geo.parquet"
+          ],
+          "note": "Examples and EPSG:4326 lat-first files; licence per dataset (some unidentified).",
+          "dependency": "none (test data fetched by pinned URL, or a specification)"
+        },
+        {
+          "name": "gpq",
+          "repo": "planetlabs/gpq",
+          "commit": "a5a6b20",
+          "license": "Apache-2.0",
+          "license_class": "permissive",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "internal/validator/testdata",
+            "internal/validator/validator_test.go"
+          ],
+          "note": "Validator test cases."
+        }
+      ],
+      "decisions_for_human": [],
+      "evidence": "notes/as-corpora.md D1-D2, §4"
+    },
+    {
+      "id": "native-parquet-geometry-files",
+      "title": "Files using Parquet's native GEOMETRY / GEOGRAPHY logical types",
+      "aliases": [
+        "parquet geometry type",
+        "geography",
+        "native geospatial types",
+        "parquet 2.11",
+        "geoparquet 2.0"
+      ],
+      "track": "as-corpora",
+      "priority": "P1",
+      "plan_nodes": [
+        "corpus-line-files"
+      ],
+      "status": "researched",
+      "register": "do-not-reinvent",
+      "summary": "apache/parquet-testing data/geospatial covers every CRS form and GEOGRAPHY lines across poles and the antimeridian. None has a `geo` key, so the engine refuses them by name today: refusal rows now, conformance rows if native types are ever admitted.",
+      "candidates": [
+        {
+          "name": "parquet-testing",
+          "repo": "apache/parquet-testing",
+          "commit": "56653c4",
+          "license": "Apache-2.0",
+          "license_class": "permissive",
+          "mode": "ADOPT",
+          "paths": [
+            "data/geospatial/README.md",
+            "data/geospatial/geospatial.parquet",
+            "data/geospatial/crs-srid.parquet"
+          ],
+          "note": "data/geospatial with generator scripts.",
+          "dependency": "none (test data fetched by pinned URL, or a specification)"
+        },
+        {
+          "name": "parquet-format",
+          "repo": "apache/parquet-format",
+          "commit": "bf09939",
+          "license": "Apache-2.0",
+          "license_class": "permissive",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "Geospatial.md",
+            "LogicalTypes.md",
+            "src/main/thrift/parquet.thrift"
+          ],
+          "note": "The logical-type spec."
+        },
+        {
+          "name": "arrow",
+          "repo": "apache/arrow",
+          "commit": "beccec0",
+          "license": "Apache-2.0",
+          "license_class": "permissive",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "cpp/src/parquet/geospatial/util_json_internal.cc",
+            "cpp/src/parquet/arrow/schema.cc"
+          ],
+          "note": "Writer behaviour."
+        },
+        {
+          "name": "arrow-rs",
+          "repo": "apache/arrow-rs",
+          "commit": "6c31f41",
+          "license": "Apache-2.0",
+          "license_class": "permissive",
+          "mode": "WATCH",
+          "paths": [
+            "parquet/src/basic.rs",
+            "parquet-geospatial/src",
+            "parquet/src/geospatial"
+          ],
+          "note": "Rust reader support."
+        }
+      ],
+      "decisions_for_human": [],
+      "evidence": "notes/as-corpora.md D3"
+    },
+    {
+      "id": "duckdb-native-geometry-decoding",
+      "title": "Know which reader decodes a geometry column before the engine's strict decoder sees it",
+      "aliases": [
+        "enable_geoparquet_conversion",
+        "duckdb geometry",
+        "wkb rewriting",
+        "ewkb",
+        "native geometry column"
+      ],
+      "track": "as-corpora",
+      "priority": "P0",
+      "plan_nodes": [
+        "corpus-line-files"
+      ],
+      "status": "researched",
+      "register": "open",
+      "summary": "DuckDB v1.5.5 decodes a Parquet-native GEOMETRY column through its own WKB reader whatever enable_geoparquet_conversion says (the setting only blocks the GeoParquet `geo`-metadata branch), rewriting big-endian and EWKB bytes and attaching its own CRS reading. Corpus #11 carries that type and the manifest records no logical types. A probe against the bundled DuckDB is owed (code reading, not run).",
+      "candidates": [
+        {
+          "name": "DuckDB",
+          "repo": "duckdb/duckdb",
+          "commit": "d8cdaa3",
+          "license": "MIT",
+          "license_class": "permissive",
+          "mode": "WATCH",
+          "paths": [
+            "extension/parquet/parquet_reader.cpp",
+            "extension/parquet/parquet_geometry.cpp",
+            "extension/parquet/parquet_writer.cpp"
+          ],
+          "note": "extension/parquet/parquet_reader.cpp IsGeometryType; parquet_geometry.cpp."
+        }
+      ],
+      "decisions_for_human": [
+        "Run the probe; record logical types in the corpus manifest."
+      ],
+      "evidence": "notes/as-corpora.md D4"
+    },
+    {
+      "id": "malformed-input-files",
+      "title": "Malformed Parquet and GeoParquet metadata inputs for refusal tests",
+      "aliases": [
+        "malformed files",
+        "bad data",
+        "fuzz corpus",
+        "invalid metadata",
+        "json schema cases"
+      ],
+      "track": "as-corpora",
+      "priority": "P1",
+      "plan_nodes": [
+        "corpus-line-files"
+      ],
+      "status": "researched",
+      "register": "do-not-reinvent",
+      "summary": "parquet-testing bad_data has two GeoParquet-tagged files malformed at the Parquet layer (their geo metadata is fine). The GeoParquet spec's schema test script (44 invalid, 67 valid cases) and gpq's validator testdata enumerate metadata mutations; port them as generator input with the notice.",
+      "candidates": [
+        {
+          "name": "parquet-testing",
+          "repo": "apache/parquet-testing",
+          "commit": "56653c4",
+          "license": "Apache-2.0",
+          "license_class": "permissive",
+          "mode": "ADOPT",
+          "paths": [
+            "data/geospatial/README.md",
+            "data/geospatial/geospatial.parquet",
+            "data/geospatial/crs-srid.parquet"
+          ],
+          "note": "bad_data/ARROW-GH-4131{7,21}.parquet.",
+          "dependency": "none (test data fetched by pinned URL, or a specification)"
+        },
+        {
+          "name": "GeoParquet spec repo",
+          "repo": "opengeospatial/geoparquet",
+          "commit": "4c9f87e",
+          "license": "Apache-2.0",
+          "license_class": "permissive",
+          "mode": "PORT",
+          "paths": [
+            "scripts/test_json_schema.py"
+          ],
+          "note": "scripts/test_json_schema.py cases.",
+          "dependency": "none (ported code: notice route needed)"
+        },
+        {
+          "name": "gpq",
+          "repo": "planetlabs/gpq",
+          "commit": "a5a6b20",
+          "license": "Apache-2.0",
+          "license_class": "permissive",
+          "mode": "PORT",
+          "paths": [
+            "internal/validator/testdata",
+            "internal/validator/validator_test.go"
+          ],
+          "note": "internal/validator/testdata.",
+          "dependency": "none (ported code: notice route needed)"
+        },
+        {
+          "name": "gdal",
+          "repo": "OSGeo/gdal",
+          "commit": "4386ba2",
+          "license": "MIT",
+          "license_class": "permissive",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "ogr/ogrsf_frmts/parquet/ogrparquetlayer.cpp",
+            "ogr/ogrsf_frmts/parquet/ogrparquetwriterlayer.cpp",
+            "ogr/ogrsf_frmts/arrow_common/ograrrowwriterlayer.hpp"
+          ],
+          "note": "autotest parquet data; test-data licence unidentified."
+        },
+        {
+          "name": "arrow-testing",
+          "repo": "apache/arrow-testing",
+          "commit": "9ff285c",
+          "license": "Apache-2.0",
+          "license_class": "permissive",
+          "mode": "REJECT",
+          "paths": [
+            "data/parquet/fuzzing",
+            "data/parquet/encoding-fuzzing"
+          ],
+          "note": "Nothing geospatial of use."
+        }
+      ],
+      "decisions_for_human": [],
+      "evidence": "notes/as-corpora.md D3, §4"
+    },
+    {
+      "id": "axis-order-handling",
+      "title": "Treat a CRS whose authority axis order is not x-first",
+      "aliases": [
+        "axis order",
+        "lat lon",
+        "epsg 4326",
+        "crs84",
+        "axis swap",
+        "ADR-032"
+      ],
+      "track": "as-corpora",
+      "priority": "P1",
+      "plan_nodes": [
+        "accept-adr-032"
+      ],
+      "status": "researched",
+      "register": "open",
+      "summary": "ADR-032 is already Accepted (2026-09-23). Every reader checked (GDAL, geopandas, DuckDB) treats WKB as x,y and keeps the declared CRS; GDAL is closest to ADR-032. Writers disagree on EPSG:4326: GDAL omits the CRS, geopandas writes it lat-first, Arrow C++ blanks it. duckdb-spatial's ST_Transform follows the declared lat-first order by default.",
+      "candidates": [
+        {
+          "name": "gdal",
+          "repo": "OSGeo/gdal",
+          "commit": "4386ba2",
+          "license": "MIT",
+          "license_class": "permissive",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "ogr/ogrsf_frmts/parquet/ogrparquetlayer.cpp",
+            "ogr/ogrsf_frmts/parquet/ogrparquetwriterlayer.cpp",
+            "ogr/ogrsf_frmts/arrow_common/ograrrowwriterlayer.hpp"
+          ],
+          "note": "OGR Parquet driver CRS handling."
+        },
+        {
+          "name": "geopandas",
+          "repo": "geopandas/geopandas",
+          "commit": "2c7a442",
+          "license": "BSD-3-Clause",
+          "license_class": "permissive",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "geopandas/io/arrow.py",
+            "geopandas/array.py",
+            "geopandas/io/tests/data/arrow/geoparquet/README.md"
+          ],
+          "note": "Writer behaviour."
+        },
+        {
+          "name": "duckdb-spatial",
+          "repo": "duckdb/duckdb-spatial",
+          "commit": "eb1e57c",
+          "license": "MIT",
+          "license_class": "permissive",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "src/spatial/spatial_settings.cpp",
+            "src/spatial/modules/proj/proj_module.cpp",
+            "test/data/segments.parquet"
+          ],
+          "note": "ST_Transform axis behaviour."
+        },
+        {
+          "name": "geoarrow",
+          "repo": "geoarrow/geoarrow",
+          "commit": "6ff51fb",
+          "license": "BSD-3-Clause",
+          "license_class": "permissive",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "extension-types.md"
+          ],
+          "note": "Spec text on CRS."
+        }
+      ],
+      "decisions_for_human": [
+        "PLAN node adr-032-decision is stale (still proposed): close or re-describe it."
+      ],
+      "evidence": "notes/as-corpora.md D6, errata"
+    },
+    {
+      "id": "polygon-repair",
+      "title": "Repair invalid polygons",
+      "aliases": [
+        "make valid",
+        "MakeValid",
+        "polygon repair",
+        "prepair",
+        "invalid geometry",
+        "data doctor"
+      ],
+      "track": "catalogue",
+      "priority": "P2",
+      "plan_nodes": [
+        "data-doctor-legacy-imports"
+      ],
+      "status": "catalogued",
+      "register": "do-not-reinvent",
+      "summary": "geo 0.33.1 (already a dependency, default `spade` feature) has MakeValid (prepair, Ledoux 2014) with an odd-even rule: holes nested in holes become islands — unlike PostGIS ST_MakeValid. Use GEOS as a test oracle only.",
+      "candidates": [
+        {
+          "name": "geo",
+          "repo": "georust/geo",
+          "commit": "c12769f",
+          "license": "MIT OR Apache-2.0",
+          "license_class": "permissive",
+          "mode": "ADOPT",
+          "paths": [
+            "geo/src/algorithm/repair_polygon/mod.rs"
+          ],
+          "note": "MakeValid in repair_polygon/.",
+          "dependency": "already-present"
+        },
+        {
+          "name": "GEOS",
+          "repo": "libgeos/geos",
+          "commit": "0d790d1",
+          "license": "LGPL-2.1",
+          "license_class": "weak-copyleft",
+          "mode": "BENCHMARK",
+          "paths": [],
+          "note": "Oracle in tests; not a product dependency."
+        }
+      ],
+      "decisions_for_human": [
+        "Whether the data doctor needs GEOS/PostGIS semantics (would bring GEOS, LGPL-2.1)."
+      ],
+      "evidence": "notes/catalogue.md §3 B, §4"
+    },
+    {
+      "id": "boolean-ops-and-buffer",
+      "title": "Polygon boolean operations, buffering and offsets",
+      "aliases": [
+        "boolean operations",
+        "union",
+        "intersection",
+        "difference",
+        "buffer",
+        "offset",
+        "clipping",
+        "overlay"
+      ],
+      "track": "catalogue",
+      "priority": "P2",
+      "plan_nodes": [
+        "data-doctor-legacy-imports",
+        "basic-editing-plugin"
+      ],
+      "status": "catalogued",
+      "register": "do-not-reinvent",
+      "summary": "geo provides booleans and buffer over i_overlay, but pins i_overlay below 4.6 while upstream is at 9.0.0.",
+      "candidates": [
+        {
+          "name": "geo",
+          "repo": "georust/geo",
+          "commit": "c12769f",
+          "license": "MIT OR Apache-2.0",
+          "license_class": "permissive",
+          "mode": "ADOPT",
+          "paths": [
+            "geo/src/algorithm/bool_ops",
+            "geo/Cargo.toml"
+          ],
+          "note": "bool_ops and buffer over i_overlay 4.5.x.",
+          "dependency": "already-present"
+        },
+        {
+          "name": "i_overlay",
+          "repo": "iShape-Rust/iOverlay",
+          "commit": "",
+          "license": "MIT",
+          "license_class": "permissive",
+          "mode": "WATCH",
+          "paths": [],
+          "note": "Park until geo lifts its pin."
+        },
+        {
+          "name": "clipper2-rust",
+          "repo": "clipper2-rust",
+          "commit": "517f5d3",
+          "license": "BSL-1.0",
+          "license_class": "permissive",
+          "mode": "WATCH",
+          "paths": [],
+          "note": "Boost licence (permissive), not Business Source."
+        },
+        {
+          "name": "cavalier_contours",
+          "repo": "jbuckmccready/cavalier_contours",
+          "commit": "22887a8",
+          "license": "MIT OR Apache-2.0",
+          "license_class": "permissive",
+          "mode": "WATCH",
+          "paths": [],
+          "note": "CAD-grade polyline offsets."
+        },
+        {
+          "name": "GEOS",
+          "repo": "libgeos/geos",
+          "commit": "0d790d1",
+          "license": "LGPL-2.1",
+          "license_class": "weak-copyleft",
+          "mode": "BENCHMARK",
+          "paths": [],
+          "note": "Oracle in tests."
+        }
+      ],
+      "decisions_for_human": [],
+      "evidence": "notes/catalogue.md §3 B, §3 M"
+    },
+    {
+      "id": "polygon-triangulation",
+      "title": "Triangulate polygons for filling",
+      "aliases": [
+        "triangulation",
+        "tessellation",
+        "earcut",
+        "polygon fill"
+      ],
+      "track": "catalogue",
+      "priority": "P2",
+      "plan_nodes": [],
+      "status": "catalogued",
+      "register": "do-not-reinvent",
+      "summary": "earcut is already transitive through geo. Its licence moved from ISC to MIT OR Apache-2.0, but the ISC notice is still owed (see licence_watch).",
+      "candidates": [
+        {
+          "name": "earcut",
+          "repo": "georust/earcut",
+          "commit": "65f4d2a",
+          "license": "(MIT OR Apache-2.0) AND ISC",
+          "license_class": "permissive",
+          "mode": "ADOPT",
+          "paths": [
+            "LICENSE-ISC",
+            "Cargo.toml",
+            "README.md"
+          ],
+          "note": "Already in the tree; notice action only.",
+          "dependency": "already-present (transitive via geo)"
+        }
+      ],
+      "decisions_for_human": [
+        "Carry the ISC notice when geo is next bumped."
+      ],
+      "evidence": "notes/catalogue.md §3 B, §4"
+    },
+    {
+      "id": "style-expressions",
+      "title": "Evaluate data-driven style expressions identically in Rust and TypeScript",
+      "aliases": [
+        "style expressions",
+        "data-driven styling",
+        "maplibre expressions",
+        "style dsl",
+        "expression evaluator"
+      ],
+      "track": "catalogue",
+      "priority": "P1",
+      "plan_nodes": [
+        "style-dsl-editor"
+      ],
+      "status": "catalogued",
+      "register": "do-not-reinvent",
+      "summary": "If the Beta DSL adopts MapLibre expression semantics, maplibre-expr-rs (Rust, bit-identical across hosts since 0.5.4; its own claim of 563/563 conformance) plus maplibre-style-spec's TS evaluator form ADR-022's one-Rust-one-TS pair with shared fixtures. Young: first release 2026-07-01.",
+      "candidates": [
+        {
+          "name": "maplibre-expr-rs",
+          "repo": "reearth/maplibre-expr-rs",
+          "commit": "3a6352f",
+          "license": "MIT OR Apache-2.0",
+          "license_class": "permissive",
+          "mode": "ADOPT",
+          "paths": [
+            "src/parse.rs",
+            "src/typecheck.rs",
+            "src/eval.rs"
+          ],
+          "note": "Candidate; the human decides on the dependency.",
+          "dependency": "new — the human's typed word"
+        },
+        {
+          "name": "maplibre-style-spec",
+          "repo": "maplibre/maplibre-style-spec",
+          "commit": "a2f5f94",
+          "license": "BSD-3-Clause",
+          "license_class": "permissive",
+          "mode": "ADOPT",
+          "paths": [
+            "src/expression/",
+            "LICENSE.txt",
+            "package.json"
+          ],
+          "note": "Candidate TS half; licence files BSD-3-Clause, package.json says ISC.",
+          "dependency": "new — the human's typed word"
+        },
+        {
+          "name": "vega-expression",
+          "repo": "vega/vega",
+          "commit": "",
+          "license": "BSD-3-Clause",
+          "license_class": "permissive",
+          "mode": "CONCEPTUAL",
+          "paths": [],
+          "note": "Sandboxed expression subset."
+        },
+        {
+          "name": "CartoCSS",
+          "repo": "mapbox/carto",
+          "commit": "",
+          "license": "Apache-2.0",
+          "license_class": "permissive",
+          "mode": "CONCEPTUAL",
+          "paths": [],
+          "note": "Dead since 2020; cascade ergonomics only."
+        }
+      ],
+      "decisions_for_human": [
+        "Whether the Beta DSL adopts MapLibre expression semantics."
+      ],
+      "evidence": "notes/catalogue.md §3 I, §4"
+    },
+    {
+      "id": "static-tile-archives",
+      "title": "Single-file tile archives and shareable static viewers",
+      "aliases": [
+        "pmtiles",
+        "static publishing",
+        "tile archive",
+        "offline map",
+        "qgis2web",
+        "tippecanoe"
+      ],
+      "track": "catalogue",
+      "priority": "P2",
+      "plan_nodes": [
+        "briefb-b3-publish-v2",
+        "publishing-bundles-hardened"
+      ],
+      "status": "catalogued",
+      "register": "open",
+      "summary": "PMTiles headers are lat/lon and its IDs walk a Hilbert curve over z/x/y: it fits a web publishing canvas, not B3's projected-source bundles.",
+      "candidates": [
+        {
+          "name": "PMTiles",
+          "repo": "protomaps/PMTiles",
+          "commit": "aec8fa1",
+          "license": "BSD-3-Clause AND CC0-1.0",
+          "license_class": "permissive",
+          "mode": "WATCH",
+          "paths": [
+            "spec/v3/spec.md",
+            "REUSE.toml"
+          ],
+          "note": "When a web/MapLibre branch exists."
+        },
+        {
+          "name": "tippecanoe",
+          "repo": "felt/tippecanoe",
+          "commit": "",
+          "license": "BSD-2-Clause",
+          "license_class": "permissive",
+          "mode": "CONCEPTUAL",
+          "paths": [],
+          "note": "Dropping and coalescing heuristics."
+        },
+        {
+          "name": "qgis2web",
+          "repo": "tomchadwin/qgis2web",
+          "commit": "",
+          "license": "GPL-2.0-or-later",
+          "license_class": "core-combinable-copyleft",
+          "mode": "CONCEPTUAL",
+          "paths": [],
+          "note": "What users expect to survive export."
+        }
+      ],
+      "decisions_for_human": [],
+      "evidence": "notes/catalogue.md §3 R"
+    },
+    {
+      "id": "interactive-label-placement",
+      "title": "Fast label placement and collision during pan and zoom",
+      "aliases": [
+        "labels",
+        "label placement",
+        "label collision",
+        "declutter",
+        "symbol placement",
+        "collision index"
+      ],
+      "track": "catalogue",
+      "priority": "P2",
+      "plan_nodes": [],
+      "status": "catalogued",
+      "register": "worth-owning",
+      "summary": "No permissive Rust crate does map-label placement. The interactive reference is MapLibre (BSD); deck.gl's CollisionFilterExtension is the zero-cost baseline. Starting list for the label-pipeline spike docs/06 owes.",
+      "candidates": [
+        {
+          "name": "MapLibre GL JS",
+          "repo": "maplibre/maplibre-gl-js",
+          "commit": "dc4192c",
+          "license": "BSD-3-Clause",
+          "license_class": "permissive",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "src/symbol/placement.ts",
+            "src/symbol/collision_index.ts",
+            "src/symbol/grid_index.ts"
+          ],
+          "note": "Placement, CollisionIndex, GridIndex, cross-tile index, fade."
+        },
+        {
+          "name": "MapLibre Native",
+          "repo": "maplibre/maplibre-native",
+          "commit": "5ae8ce4",
+          "license": "BSD-2-Clause",
+          "license_class": "permissive",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "src/mln/text/placement.cpp"
+          ],
+          "note": "Same algorithm in C++ with HarfBuzz shaping."
+        },
+        {
+          "name": "deck.gl",
+          "repo": "visgl/deck.gl",
+          "commit": "a1cca05",
+          "license": "MIT",
+          "license_class": "permissive",
+          "mode": "BENCHMARK",
+          "paths": [
+            "modules/extensions/src/collision-filter/collision-filter-extension.ts",
+            "modules/extensions/src/collision-filter/collision-filter-pass.ts",
+            "modules/layers/src/text-layer/font-atlas-manager.ts"
+          ],
+          "note": "CollisionFilterExtension + TextLayer font atlas; not a shell dependency today."
+        },
+        {
+          "name": "OpenLayers",
+          "repo": "openlayers/openlayers",
+          "commit": "45d79b2",
+          "license": "BSD-2-Clause",
+          "license_class": "permissive",
+          "mode": "CONCEPTUAL",
+          "paths": [],
+          "note": "Canvas 2D declutter; analogue for the bundle viewer."
+        },
+        {
+          "name": "Tangram ES",
+          "repo": "tangrams/tangram-es",
+          "commit": "ebe6e4d",
+          "license": "MIT",
+          "license_class": "permissive",
+          "mode": "REJECT",
+          "paths": [],
+          "note": "Dormant since 2024-01; read-only donor."
+        },
+        {
+          "name": "osmic-text",
+          "repo": "crates.io/osmic-text",
+          "commit": "0.1.1",
+          "license": "unverified",
+          "license_class": "red",
+          "mode": "WATCH",
+          "paths": [],
+          "note": "Claims label collision; no commit since 2026-05."
+        }
+      ],
+      "decisions_for_human": [],
+      "evidence": "notes/catalogue.md §3 F, §4"
+    },
+    {
+      "id": "print-quality-label-placement",
+      "title": "Globally optimised label placement for print and still views",
+      "aliases": [
+        "print labels",
+        "PAL",
+        "label optimisation",
+        "cartographic labeling",
+        "candidate scoring"
+      ],
+      "track": "catalogue",
+      "priority": "P3",
+      "plan_nodes": [],
+      "status": "catalogued",
+      "register": "worth-owning",
+      "summary": "QGIS PAL (19 of 22 files GPL-3.0-or-later) generates candidates then optimises globally (FALP, then chain search): a concept source, core-combinable if ever ported, never in an SDK.",
+      "candidates": [
+        {
+          "name": "QGIS",
+          "repo": "qgis/QGIS",
+          "commit": "fa8f961",
+          "license": "GPL-3.0-or-later",
+          "license_class": "core-combinable-copyleft",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "src/core/pal/problem.cpp",
+            "src/core/pal/labelposition.cpp"
+          ],
+          "note": "src/core/pal/: problem.cpp init_sol_falp, chainSearch."
+        },
+        {
+          "name": "Mapnik",
+          "repo": "mapnik/mapnik",
+          "commit": "84107b6",
+          "license": "LGPL-2.1-or-later",
+          "license_class": "weak-copyleft",
+          "mode": "CONCEPTUAL",
+          "paths": [],
+          "note": "Placement finder along lines."
+        },
+        {
+          "name": "d3fc label layout",
+          "repo": "d3fc/d3fc",
+          "commit": "55ee594",
+          "license": "MIT",
+          "license_class": "permissive",
+          "mode": "CONCEPTUAL",
+          "paths": [],
+          "note": "Greedy / annealing / remove-overlaps sketches."
+        }
+      ],
+      "decisions_for_human": [],
+      "evidence": "notes/catalogue.md §3 F, §4"
+    },
+    {
+      "id": "text-shaping",
+      "title": "Unicode text shaping, bidi and font fallback for a native renderer",
+      "aliases": [
+        "text shaping",
+        "harfbuzz",
+        "bidi",
+        "font fallback",
+        "complex scripts",
+        "rustybuzz"
+      ],
+      "track": "catalogue",
+      "priority": "P3",
+      "plan_nodes": [],
+      "status": "catalogued",
+      "register": "do-not-reinvent",
+      "summary": "Today the browser shapes text. If the native renderer is ever chosen: HarfRust (pure-Rust HarfBuzz port) and cosmic-text (now on harfrust + skrifa + fontdb) — never written in-house. rustybuzz is superseded.",
+      "candidates": [
+        {
+          "name": "HarfRust",
+          "repo": "harfbuzz/harfrust",
+          "commit": "549c33e",
+          "license": "MIT",
+          "license_class": "permissive",
+          "mode": "WATCH",
+          "paths": [],
+          "note": "Matches HarfBuzz; started as a rustybuzz fork."
+        },
+        {
+          "name": "cosmic-text",
+          "repo": "pop-os/cosmic-text",
+          "commit": "f1a3461",
+          "license": "MIT OR Apache-2.0",
+          "license_class": "permissive",
+          "mode": "WATCH",
+          "paths": [],
+          "note": "Shaping, layout, fallback, bidi."
+        },
+        {
+          "name": "rustybuzz",
+          "repo": "harfbuzz/rustybuzz",
+          "commit": "",
+          "license": "MIT",
+          "license_class": "permissive",
+          "mode": "REJECT",
+          "paths": [],
+          "note": "Superseded; last release 2024-11."
+        }
+      ],
+      "decisions_for_human": [],
+      "evidence": "notes/catalogue.md §3 G/H, §4"
+    },
+    {
+      "id": "font-parsing-rasterisation",
+      "title": "Font parsing, outlines and hinting",
+      "aliases": [
+        "font parsing",
+        "font rasterisation",
+        "glyph outlines",
+        "hinting",
+        "skrifa",
+        "fontations"
+      ],
+      "track": "catalogue",
+      "priority": "P3",
+      "plan_nodes": [],
+      "status": "catalogued",
+      "register": "do-not-reinvent",
+      "summary": "fontations (skrifa, read-fonts) from Google Fonts; never in-house.",
+      "candidates": [
+        {
+          "name": "fontations (skrifa, read-fonts)",
+          "repo": "googlefonts/fontations",
+          "commit": "8767519",
+          "license": "MIT OR Apache-2.0",
+          "license_class": "permissive",
+          "mode": "WATCH",
+          "paths": [],
+          "note": "Font parsing and outlines."
+        }
+      ],
+      "decisions_for_human": [],
+      "evidence": "notes/catalogue.md §3 G/H, §4"
+    },
+    {
+      "id": "glyph-atlas-gpu-text",
+      "title": "Glyph atlases and GPU text rendering",
+      "aliases": [
+        "glyph atlas",
+        "sdf text",
+        "msdf",
+        "atlas packing",
+        "etagere",
+        "glyphon"
+      ],
+      "track": "catalogue",
+      "priority": "P3",
+      "plan_nodes": [],
+      "status": "catalogued",
+      "register": "open",
+      "summary": "glyphon = cosmic-text + etagere atlas + wgpu. deck.gl's TextLayer uses a TinySDF atlas today.",
+      "candidates": [
+        {
+          "name": "glyphon",
+          "repo": "grovesNL/glyphon",
+          "commit": "49dc8f7",
+          "license": "MIT OR Apache-2.0 OR Zlib",
+          "license_class": "permissive",
+          "mode": "WATCH",
+          "paths": [],
+          "note": "wgpu text renderer."
+        },
+        {
+          "name": "deck.gl",
+          "repo": "visgl/deck.gl",
+          "commit": "a1cca05",
+          "license": "MIT",
+          "license_class": "permissive",
+          "mode": "BENCHMARK",
+          "paths": [
+            "modules/layers/src/text-layer/font-atlas-manager.ts"
+          ],
+          "note": "TextLayer TinySDF font atlas."
+        },
+        {
+          "name": "msdfgen (crate)",
+          "repo": "crates.io/msdfgen",
+          "commit": "",
+          "license": "MIT",
+          "license_class": "permissive",
+          "mode": "REJECT",
+          "paths": [],
+          "note": "Last release 2023-01."
+        }
+      ],
+      "decisions_for_human": [],
+      "evidence": "notes/catalogue.md §3 F, §3 G/H"
+    },
+    {
+      "id": "native-gpu-2d-renderer",
+      "title": "A native wgpu renderer for 2D vector maps",
+      "aliases": [
+        "wgpu",
+        "native renderer",
+        "gpu vector rendering",
+        "tessellation",
+        "vello",
+        "lyon",
+        "bake-off"
+      ],
+      "track": "catalogue",
+      "priority": "P3",
+      "plan_nodes": [],
+      "status": "catalogued",
+      "register": "open",
+      "summary": "The bake-off is filed and unscheduled; a label-pipeline spike must precede any renderer-replacement decision. Galileo is an architecture reference only (last release 2025-07, ubuntu-only CI).",
+      "candidates": [
+        {
+          "name": "wgpu",
+          "repo": "gfx-rs/wgpu",
+          "commit": "03017a1",
+          "license": "MIT OR Apache-2.0",
+          "license_class": "permissive",
+          "mode": "WATCH",
+          "paths": [],
+          "note": "GPU abstraction."
+        },
+        {
+          "name": "lyon",
+          "repo": "nical/lyon",
+          "commit": "da19a62",
+          "license": "MIT OR Apache-2.0",
+          "license_class": "permissive",
+          "mode": "WATCH",
+          "paths": [],
+          "note": "CPU path tessellation."
+        },
+        {
+          "name": "vello",
+          "repo": "linebender/vello",
+          "commit": "96d4643",
+          "license": "Apache-2.0 OR MIT",
+          "license_class": "permissive",
+          "mode": "WATCH",
+          "paths": [],
+          "note": "Compute 2D renderer."
+        },
+        {
+          "name": "galileo",
+          "repo": "Maximkaaa/galileo",
+          "commit": "4255076",
+          "license": "MIT OR Apache-2.0",
+          "license_class": "permissive",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "galileo/src/render/text/rustybuzz.rs",
+            "galileo/src/render/text/text_service.rs",
+            "galileo-maplibre/src/style/layer/symbol.rs"
+          ],
+          "note": "Whole Rust geo renderer; no label collision."
+        }
+      ],
+      "decisions_for_human": [],
+      "evidence": "notes/catalogue.md §3 G/H"
+    },
+    {
+      "id": "crs-transformation",
+      "title": "Coordinate transformations, grids and the EPSG database",
+      "aliases": [
+        "reprojection",
+        "proj",
+        "crs transform",
+        "coordinate transformation",
+        "grid shift",
+        "epsg"
+      ],
+      "track": "catalogue",
+      "priority": "P2",
+      "plan_nodes": [],
+      "status": "catalogued",
+      "register": "do-not-reinvent",
+      "summary": "Once reprojection is scheduled, PROJ via the `proj` crate matches docs/05's vocabulary (pipelines, grids, database versions, PROJJSON). proj4rs does not fit. PROJ's proj.db embeds EPSG v13.104, widening the EPSG-terms question to the whole dataset. Geodesics are already in the tree via geo.",
+      "candidates": [
+        {
+          "name": "PROJ via `proj` crate",
+          "repo": "georust/proj",
+          "commit": "a67b941",
+          "license": "MIT (PROJ); MIT OR Apache-2.0 (bindings)",
+          "license_class": "permissive",
+          "mode": "ADOPT",
+          "paths": [],
+          "note": "Candidate at the first reprojection; native dependency.",
+          "dependency": "new — the human's typed word"
+        },
+        {
+          "name": "geographiclib-rs",
+          "repo": "georust/geographiclib-rs",
+          "commit": "c5e906d",
+          "license": "MIT",
+          "license_class": "permissive",
+          "mode": "ADOPT",
+          "paths": [],
+          "note": "Already transitive via geo.",
+          "dependency": "already-present (transitive via geo)"
+        },
+        {
+          "name": "Rust Geodesy",
+          "repo": "busstoptaktik/geodesy",
+          "commit": "ccbee46",
+          "license": "MIT OR Apache-2.0",
+          "license_class": "permissive",
+          "mode": "CONCEPTUAL",
+          "paths": [],
+          "note": "Pipeline-as-composition model."
+        },
+        {
+          "name": "proj4rs",
+          "repo": "3liz/proj4rs",
+          "commit": "4e5ee1b",
+          "license": "MIT OR Apache-2.0",
+          "license_class": "permissive",
+          "mode": "REJECT",
+          "paths": [
+            "README.md",
+            "proj4rs/src/lib.rs",
+            "proj4rs/src/projections/somerc.rs"
+          ],
+          "note": "Proj strings only; no WKT/PROJJSON; no LICENSE file."
+        }
+      ],
+      "decisions_for_human": [
+        "The EPSG dataset terms if proj.db ships."
+      ],
+      "evidence": "notes/catalogue.md §3 D, §4"
+    },
+    {
+      "id": "raster-io",
+      "title": "Read rasters, COGs and chunked arrays",
+      "aliases": [
+        "raster",
+        "geotiff",
+        "cog",
+        "cloud optimized geotiff",
+        "zarr",
+        "gdal"
+      ],
+      "track": "catalogue",
+      "priority": "P3",
+      "plan_nodes": [],
+      "status": "catalogued",
+      "register": "open",
+      "summary": "No PLAN node schedules raster. async-tiff is the first pure-Rust candidate; GDAL is everything at a big native cost.",
+      "candidates": [
+        {
+          "name": "async-tiff",
+          "repo": "developmentseed/async-tiff",
+          "commit": "2465c23",
+          "license": "MIT OR Apache-2.0 (MIT file only)",
+          "license_class": "permissive",
+          "mode": "WATCH",
+          "paths": [],
+          "note": "Async COG reader."
+        },
+        {
+          "name": "zarrs",
+          "repo": "zarrs/zarrs",
+          "commit": "8407fe6",
+          "license": "MIT OR Apache-2.0",
+          "license_class": "permissive",
+          "mode": "WATCH",
+          "paths": [],
+          "note": "Zarr v2/v3."
+        },
+        {
+          "name": "geotiff",
+          "repo": "georust/geotiff",
+          "commit": "8c76946",
+          "license": "MIT",
+          "license_class": "permissive",
+          "mode": "WATCH",
+          "paths": [],
+          "note": "Small GeoTIFF reader."
+        },
+        {
+          "name": "GDAL + gdal crate",
+          "repo": "OSGeo/gdal",
+          "commit": "4386ba2",
+          "license": "MIT",
+          "license_class": "permissive",
+          "mode": "WATCH",
+          "paths": [],
+          "note": "Everything raster; per-driver licences; heavy native dependency."
+        }
+      ],
+      "decisions_for_human": [],
+      "evidence": "notes/catalogue.md §3 L"
+    },
+    {
+      "id": "topology-editing",
+      "title": "Snapping, topology validation and vertex editing",
+      "aliases": [
+        "editing",
+        "topology",
+        "snapping",
+        "vertex tool",
+        "coverage"
+      ],
+      "track": "catalogue",
+      "priority": "P3",
+      "plan_nodes": [
+        "basic-editing-plugin"
+      ],
+      "status": "catalogued",
+      "register": "open",
+      "summary": "1.0's minimal snapping needs nothing beyond geo; these matter at 2.x.",
+      "candidates": [
+        {
+          "name": "GEOS",
+          "repo": "libgeos/geos",
+          "commit": "0d790d1",
+          "license": "LGPL-2.1",
+          "license_class": "weak-copyleft",
+          "mode": "BENCHMARK",
+          "paths": [],
+          "note": "Oracle."
+        },
+        {
+          "name": "JTS",
+          "repo": "locationtech/jts",
+          "commit": "5a0a736",
+          "license": "EPL-2.0 OR EDL-1.0",
+          "license_class": "permissive",
+          "mode": "CONCEPTUAL",
+          "paths": [],
+          "note": "Design source; EDL-1.0 is BSD-style."
+        },
+        {
+          "name": "QGIS editing internals",
+          "repo": "qgis/QGIS",
+          "commit": "fa8f961",
+          "license": "GPL-2.0-or-later",
+          "license_class": "core-combinable-copyleft",
+          "mode": "CONCEPTUAL",
+          "paths": [],
+          "note": "Snapping, vertex tool."
+        }
+      ],
+      "decisions_for_human": [],
+      "evidence": "notes/catalogue.md §3 M"
+    },
+    {
+      "id": "mcp-sdk",
+      "title": "Model Context Protocol framing, transports and schemas",
+      "aliases": [
+        "mcp",
+        "model context protocol",
+        "tool calling",
+        "rmcp",
+        "ai tools"
+      ],
+      "track": "catalogue",
+      "priority": "P2",
+      "plan_nodes": [
+        "mcp-server-permission-model"
+      ],
+      "status": "catalogued",
+      "register": "do-not-reinvent",
+      "summary": "Speak the MCP spec; rmcp (official Rust SDK) is the candidate at mcp-server-permission-model. Weekly releases are the cost. Both repos carry a mid-transition licence text (Apache-2.0 for new work, residual MIT).",
+      "candidates": [
+        {
+          "name": "MCP specification",
+          "repo": "modelcontextprotocol/modelcontextprotocol",
+          "commit": "0a11bf6",
+          "license": "Apache-2.0 (transition text; residual MIT)",
+          "license_class": "permissive",
+          "mode": "ADOPT",
+          "paths": [],
+          "note": "The protocol the adapter speaks.",
+          "dependency": "none (protocol specification)"
+        },
+        {
+          "name": "rmcp",
+          "repo": "modelcontextprotocol/rust-sdk",
+          "commit": "08e0211",
+          "license": "Apache-2.0 (transition text; residual MIT)",
+          "license_class": "permissive",
+          "mode": "ADOPT",
+          "paths": [],
+          "note": "Candidate; the human decides on the dependency.",
+          "dependency": "new — the human's typed word"
+        },
+        {
+          "name": "rust-mcp-sdk",
+          "repo": "rust-mcp-stack/rust-mcp-sdk",
+          "commit": "d18de2c",
+          "license": "MIT",
+          "license_class": "permissive",
+          "mode": "WATCH",
+          "paths": [],
+          "note": "Alternative SDK."
+        }
+      ],
+      "decisions_for_human": [],
+      "evidence": "notes/catalogue.md §3 O, §4"
+    },
+    {
+      "id": "plugin-isolation-and-abi",
+      "title": "Isolated plugins with a versioned, stable ABI",
+      "aliases": [
+        "plugins",
+        "extensions",
+        "wasm plugins",
+        "component model",
+        "wit",
+        "extension host",
+        "sandbox"
+      ],
+      "track": "catalogue",
+      "priority": "P2",
+      "plan_nodes": [
+        "first-external-plugin-skp-client"
+      ],
+      "status": "catalogued",
+      "register": "worth-owning",
+      "summary": "Zed shows ADR-009's split in a shipping product (copyleft host, Apache-2.0 API crate, WIT versioned by directory) but runs extensions in-process, which ADR-009 forbids for proprietary plugins. Own the out-of-process boundary and the ABI versioning.",
+      "candidates": [
+        {
+          "name": "Zed",
+          "repo": "zed-industries/zed",
+          "commit": "4240146",
+          "license": "GPL-3.0-or-later AND Apache-2.0",
+          "license_class": "core-combinable-copyleft",
+          "mode": "CONCEPTUAL",
+          "paths": [
+            "crates/extension_api/wit",
+            "crates/extension_host/src/wasm_host/wit"
+          ],
+          "note": "since_vX WIT layout and host shims."
+        },
+        {
+          "name": "wasmtime",
+          "repo": "bytecodealliance/wasmtime",
+          "commit": "1bde3f9",
+          "license": "Apache-2.0 WITH LLVM-exception",
+          "license_class": "permissive",
+          "mode": "WATCH",
+          "paths": [],
+          "note": "Runtime."
+        },
+        {
+          "name": "Component model / WIT",
+          "repo": "WebAssembly/component-model",
+          "commit": "6c48079",
+          "license": "Apache-2.0",
+          "license_class": "permissive",
+          "mode": "CONCEPTUAL",
+          "paths": [],
+          "note": "Interface types as the ABI."
+        },
+        {
+          "name": "Extism",
+          "repo": "extism/extism",
+          "commit": "d5da297",
+          "license": "BSD-3-Clause",
+          "license_class": "permissive",
+          "mode": "WATCH",
+          "paths": [],
+          "note": "Framework over wasmtime."
+        },
+        {
+          "name": "VS Code extension host",
+          "repo": "microsoft/vscode",
+          "commit": "d3d31f6",
+          "license": "MIT",
+          "license_class": "permissive",
+          "mode": "CONCEPTUAL",
+          "paths": [],
+          "note": "Separate-process host, activation events."
+        }
+      ],
+      "decisions_for_human": [
+        "In-process WASM plugins versus ADR-009's out-of-process rule (human and counsel)."
+      ],
+      "evidence": "notes/catalogue.md §3 P, §4"
+    },
+    {
+      "id": "spatial-index",
+      "title": "Spatial indexes for pruning reads, picking or culling",
+      "aliases": [
+        "spatial index",
+        "r-tree",
+        "rtree",
+        "hilbert",
+        "packed r-tree",
+        "flatbush",
+        "bounding volume"
+      ],
+      "track": "catalogue",
+      "priority": "WATCH",
+      "plan_nodes": [
+        "spatial-indexing-measurement-close"
+      ],
+      "status": "closed-by-measurement",
+      "register": "open",
+      "summary": "Closed by measurement (docs/07, kernel/RESULTS.md): no index pruned IO; layout stays out of the import path. Reopen only by a fresh preregistered gate on (1) a small-viewport-dominant workload, (2) ADR-011's tiled batches removing whole-extent reads, or (3) a demonstrated writer confound.",
+      "candidates": [
+        {
+          "name": "geo-index",
+          "repo": "kylebarron/geo-index",
+          "commit": "e6efbb0",
+          "license": "MIT OR Apache-2.0",
+          "license_class": "permissive",
+          "mode": "WATCH",
+          "paths": [
+            "src/rtree/sort/hilbert.rs",
+            "src/rtree/sort/str.rs",
+            "src/rtree/index.rs"
+          ],
+          "note": "Hilbert/STR sorts and packed index; serves (2) and (3). Its geo feature is geo 0.31."
+        },
+        {
+          "name": "rstar",
+          "repo": "georust/rstar",
+          "commit": "8a0f397",
+          "license": "MIT OR Apache-2.0",
+          "license_class": "permissive",
+          "mode": "WATCH",
+          "paths": [],
+          "note": "Already in the lock via geo; serves (2)."
+        },
+        {
+          "name": "FlatGeobuf packed Hilbert R-tree",
+          "repo": "flatgeobuf/flatgeobuf",
+          "commit": "543346d",
+          "license": "BSD-2-Clause",
+          "license_class": "permissive",
+          "mode": "CONCEPTUAL",
+          "paths": [],
+          "note": "Serves (1)."
+        },
+        {
+          "name": "static_aabb2d_index",
+          "repo": "jbuckmccready/static_aabb2d_index",
+          "commit": "a511a63",
+          "license": "MIT OR Apache-2.0",
+          "license_class": "permissive",
+          "mode": "WATCH",
+          "paths": [],
+          "note": "Serves (2)."
+        }
+      ],
+      "decisions_for_human": [],
+      "evidence": "notes/catalogue.md §3 C; docs/07_Roadmap.md:22 @ 4561f3b8"
+    }
+  ],
+  "licence_watch": [
+    {
+      "id": "earcut-isc-notice",
+      "summary": "earcut moved from ISC to MIT OR Apache-2.0 (c4e2cdc, 2026-04-25; first release 0.4.10), but still ships LICENSE-ISC for Mapbox-derived code. The engine locks 0.4.5 (ISC). At the next geo bump the label changes; the ISC notice is still owed. DEPENDENCY-LICENSES.md reads labels, so it would miss this.",
+      "evidence": "notes/catalogue.md §4; VERIFICATION-A row 12"
+    },
+    {
+      "id": "shell-port-notice-route",
+      "summary": "generateNotice.mjs enumerates only build manifests and DuckDB's tree, so a ported MIT file under frontends/shell/src would be missing from the shipped NOTICE. Before any PORT: a notice route (hash-pinned texts plus an SPDX header), or a fresh write from the algorithm.",
+      "evidence": "notes/q-command-bar.md §4"
+    },
+    {
+      "id": "maplibre-style-spec-isc-vs-bsd",
+      "summary": "package.json says ISC; LICENSE.txt is BSD-3-Clause twice with non-endorsement clauses.",
+      "evidence": "notes/catalogue.md §4"
+    },
+    {
+      "id": "async-tiff-mit-only",
+      "summary": "Declares MIT OR Apache-2.0 but ships only an MIT LICENSE.",
+      "evidence": "notes/catalogue.md §4"
+    },
+    {
+      "id": "mcp-transition-licence",
+      "summary": "MCP spec and rmcp: Apache-2.0 for new work, residual MIT for un-consented contributions; mixed notice set.",
+      "evidence": "notes/catalogue.md §4"
+    },
+    {
+      "id": "proj4rs-no-licence-file",
+      "summary": "No LICENSE file; licence only in Cargo.toml files and a README badge that links to another project's LICENSE; vendors Karney's geodesic.c.",
+      "evidence": "notes/catalogue.md §4; VERIFICATION-A row 16"
+    },
+    {
+      "id": "proj-db-epsg",
+      "summary": "Shipping PROJ's proj.db embeds EPSG v13.104, extending the IOGP terms question from two definitions to the dataset.",
+      "evidence": "notes/catalogue.md §4"
+    },
+    {
+      "id": "bsl-1-0-is-boost",
+      "summary": "clipper2-rust's BSL-1.0 is the Boost licence (permissive); a keyword scan for BSL would misfile it as Business Source.",
+      "evidence": "notes/catalogue.md §4"
+    },
+    {
+      "id": "loader-utils-4-4-4",
+      "summary": "The shell's lockfile carries loader-utils 4.4.4 (transitive), whose RequestScheduler restarts its debounce on every completion; fixed in 4.5.3.",
+      "evidence": "notes/e-lod-selection.md errata; VERIFICATION-B row 20"
+    }
+  ]
+}

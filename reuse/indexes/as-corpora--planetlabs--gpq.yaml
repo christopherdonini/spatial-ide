@@ -1,0 +1,17 @@
+repo: planetlabs/gpq
+commit: a5a6b20
+track: as-corpora
+priority: P3
+license:
+  spdx: Apache-2.0
+  verified_from: [LICENSE]
+  mixed: false
+  notes: Validator test cases are JSON (geo metadata plus GeoJSON data), not Parquet.
+interesting_paths: [internal/validator/testdata, internal/validator/validator_test.go]
+concepts: [29 GeoParquet validator cases incl geometry-type-not-in-list, bad-crs, bad-edges, empty and null geometry]
+reuse:
+  mode: CONCEPTUAL DONOR
+  confidence: medium
+spatial_ide_relevance:
+  plan_node: corpus-line-files
+  immediate: false

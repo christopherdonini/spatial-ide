@@ -1,0 +1,24 @@
+repo: qgis/QGIS
+commit: fa8f961
+track: n1-files
+priority: P3
+license:
+  spdx: GPL-2.0-or-later
+  verified_from:
+    - COPYING
+    - file headers (src/core/qgsarchive.cpp)
+  mixed: false
+  notes: Core-combinable copyleft as or-later. Read here as a counter-example only.
+interesting_paths:
+  - src/core/qgsarchive.cpp
+  - src/core/project/qgsproject.cpp
+concepts:
+  - ".qgz save deletes target then renames zip from system temp dir (crash window, possible cross-volume)"
+  - .qgs save copies to file~ then truncates in place
+  - two-file gap acknowledged for auxiliary storage
+reuse:
+  mode: REJECT
+  confidence: high
+spatial_ide_relevance:
+  plan_node: b2-piece-1c-save-and-reopen
+  immediate: true

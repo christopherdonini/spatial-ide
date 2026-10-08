@@ -1,0 +1,17 @@
+repo: 3liz/proj4rs
+commit: 4e5ee1b
+track: catalogue
+priority: P3
+license:
+  spdx: MIT OR Apache-2.0
+  verified_from: [Cargo.toml]
+  mixed: true
+  notes: "No LICENSE file anywhere in the repository; licence is the Cargo field only. proj4rs-geodesic vendors Karney's geodesic.c (MIT/X11, header lines 21-23) compiled via cc. No .github/workflows."
+interesting_paths: [README.md, proj4rs/src/lib.rs, proj4rs/src/projections/somerc.rs, proj4rs-geodesic/src/C/geodesic.c]
+concepts: [pure-Rust proj4js-equivalent transforms, proj strings only, no WKT or PROJJSON input, experimental NTv2 grids]
+reuse:
+  mode: REJECT
+  confidence: medium
+spatial_ide_relevance:
+  plan_node: none (first reprojection, unscheduled)
+  immediate: false

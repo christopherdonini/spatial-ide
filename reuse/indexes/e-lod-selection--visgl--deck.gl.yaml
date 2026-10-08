@@ -1,0 +1,29 @@
+repo: visgl/deck.gl
+commit: a1cca05
+track: e-lod-selection
+priority: P0
+license:
+  spdx: MIT
+  verified_from: [LICENSE, modules/geo-layers/package.json, modules/geo-layers/src/tileset-2d/tileset-2d.ts SPDX header]
+  mixed: false
+  notes: tileset-2d/ has no Cesium-derived or Apache text (grep). Spatial IDE pins 9.3.9, whose Tileset2D priority is selected?1:-1; the viewport-centre distance priority landed in a75dc38 (2026-06-13), shipped in 9.4.0.
+interesting_paths:
+  - modules/geo-layers/src/tileset-2d/tileset-2d.ts
+  - modules/geo-layers/src/tileset-2d/tile-2d-header.ts
+  - modules/geo-layers/src/tileset-2d/utils.ts
+  - modules/geo-layers/src/tile-layer/tile-layer.ts
+  - test/modules/geo-layers/tileset-2d/tileset-2d.spec.ts
+  - docs/api-reference/geo-layers/tile-layer.md
+concepts:
+  - level from viewport zoom (ceil for orthographic), no hysteresis
+  - refinement strategies best-available / no-overlap / never / custom
+  - selected vs visible (placeholder) tile states
+  - request priority tiers (selected 0+d, placeholder 1e8+d, unwanted -1 = cancel)
+  - in-flight abort of unselected tiles under slot pressure; late-result discard by loader id
+  - swap transitions, finer tiles drawn on top
+reuse:
+  mode: CONCEPTUAL DONOR
+  confidence: high
+spatial_ide_relevance:
+  plan_node: lod-tier-selection
+  immediate: false

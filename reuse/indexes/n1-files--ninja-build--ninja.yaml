@@ -1,0 +1,21 @@
+repo: ninja-build/ninja
+commit: 4e4df1e
+track: n1-files
+priority: P3
+license:
+  spdx: Apache-2.0
+  verified_from:
+    - COPYING
+  mixed: false
+  notes: 
+interesting_paths:
+  - src/graph.cc
+concepts:
+  - dirty iff output mtime < most recent input mtime
+  - build log records mtime and command hash; restat
+reuse:
+  mode: CONCEPTUAL DONOR
+  confidence: low
+spatial_ide_relevance:
+  plan_node: b2-piece-1c-save-and-reopen
+  immediate: false

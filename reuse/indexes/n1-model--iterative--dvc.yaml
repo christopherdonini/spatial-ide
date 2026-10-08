@@ -1,0 +1,20 @@
+repo: iterative/dvc
+commit: 56e5982
+track: n1-model
+priority: P3
+license:
+  spdx: Apache-2.0
+  verified_from: [LICENSE]
+  mixed: false
+  notes: "sparse checkout of dvcfile, schema and stage serialisation"
+interesting_paths: [dvc/dvcfile.py, dvc/schema.py, dvc/stage/serialize.py]
+concepts:
+  - dvc.lock schema "2.0" checked by equality
+  - one entry per stage name, overwritten in place (last run per key)
+  - deps/outs sorted by path with md5 hash and size
+reuse:
+  mode: CONCEPTUAL DONOR
+  confidence: medium
+spatial_ide_relevance:
+  plan_node: none (Alpha workflows; park)
+  immediate: false
