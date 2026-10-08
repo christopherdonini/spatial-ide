@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `a421a03925737bc5ba88513122ab9cfa11266db1d09d933b1e234e0b6746da4e`) at `2026-10-08T20:06:50.972Z`.
+Generated from `PLAN.yaml` (sha256 `c92c68df6de92fda21e08023e6a68b75f680b4adf4391a58ecfc6dfdbb789e4a`) at `2026-10-08T20:56:53.365Z`.
 
 ## 1. Next
 
@@ -28,7 +28,6 @@ Generated from `PLAN.yaml` (sha256 `a421a03925737bc5ba88513122ab9cfa11266db1d09d
 ## 5. In progress
 
 - **shell-migration-milestone-1** — Shell migration, milestone 1 -- the frame: Map Studio regions, panel toggles, separated sections, an attention strip and a status bar — evidence: branch `cut/shell-migration-milestone-1`
-- **docs-08-public-data-sentence** — docs/08 calls Overture and OSM extracts redistributable, against the ruling that corpus #12 is local-only, fetch-only and never redistributed — evidence: branch `cut/docs-08-public-data-sentence`
 
 ## 6. Proposed / unscheduled
 
@@ -100,6 +99,7 @@ Generated from `PLAN.yaml` (sha256 `a421a03925737bc5ba88513122ab9cfa11266db1d09d
 - **query-reuse-index-before-planning** — Query the reuse index before planning, as a standing step (phase `prototype`) — never queued until placed
 - **verify-cites-pin-resolution-and-line-zero** — verify-cites: a pinned cite starting at line 0 gets a false reason, and a pin is read only at the path as written (phase `prototype`) — never queued until placed
 - **docs-14-corpus-attribution-vs-docs-08** — docs/14 asks corpus attribution in demos and published bundles, which docs/08 line 40 now says are never redistributed (phase `prototype`) — never queued until placed
+- **shell-stale-frame-comments** — Two shell comments still describe the old frame: ConsolePanel.tsx (a bottom drawer below every panel) and residencyStatus.ts (a child of the removed canvas status stack) (phase `prototype`) — never queued until placed
 - **wire-bytes-invariant-trace-flag-race** — kernel/tests/wire_bytes_invariant.rs: the projected-ticket test asserts tracing is off while its sibling starts a trace (a race on the engine's global trace flag) (phase `prototype`) — never queued until placed
 - **dataset-stream-doc-producer-runs-ahead** — engine/src/stream.rs: Dataset::stream's doc says it returns once the statement is prepared and produces the first batch on the first next_into; the producer thread prepares and runs ahead to the queue bound (phase `prototype`) — never queued until placed
 - **shell-migration-milestone-2** — Shell migration, milestone 2 -- selection and scope: the Select tool, a selection that survives filter and pan, the hidden count, a stated scope (phase `prototype`) — never queued until placed

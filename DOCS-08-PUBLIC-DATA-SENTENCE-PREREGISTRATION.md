@@ -13,3 +13,16 @@ Out-of-scope: ADR none (no ADR is edited); security none; wire none; guarantee n
 ## Amendments
 
 Opens empty, append-only.
+
+### Amendment 1 — the closing record (class 1)
+
+*Written by the custodian after the outcome was seen. PR #194 merged at 2026-10-08T20:52:45Z as merge commit 7ddba6b7375c132f5e22c9422c7db37b5c697aba, with parents 628e4a4b74634e82a58ea49b439744abfd87771a and 388531fa3df01e2d63854ff63992c6e30014982b. References and hashes only. Nothing below is a quotation.*
+
+1. **The PR and its head:** PR #194. Its gated head and merged head is 388531fa, one commit.
+   - CI passed 2 of 2 there. The governance workflow is path-filtered off docs/08, and the gate ran its checks locally.
+   - Before the merge, the PR body's "#12" was reworded to "corpus entry 12", as the reviewer noted.
+2. **The gate report:** `state/consults/gates/2026-10-08-docs-08-public-data-sentence-gate1-reviewer.md`. It is a PASS with no findings, gate-log 445, sha256 5f3439e421f400820368652927d72554ad251f5130e7a7edbd675acce8e46353, added at 9cc7f5f6cd64ffd80b80b4663584cfe2f3a8d497.
+3. **The worker report:** `state/consults/2026-10-08-docs-08-public-data-sentence-worker-report-1.md`. Its sha256 from line 5 to the end is e6fb72d8ca4d84be24cdbb34bfdae2ffd5ead74c20201b4d5b474e2098351914. It was added at d319de87344ef45df4d7fa94c544e401d8ae3921 and is unchanged since.
+4. **The Scope:** 1 line added and 1 removed in `docs/08_Testing.md`, counted against the merge commit's first parent.
+5. **Noticed by the gate:** `docs/14_Governance_and_Licensing.md` line 27, which the proposed node `docs-14-corpus-attribution-vs-docs-08` holds.
+6. **Done:** PLAN marks the node done, with evidence `{pr: 194}`, at generation 1, in this amendment's commit.

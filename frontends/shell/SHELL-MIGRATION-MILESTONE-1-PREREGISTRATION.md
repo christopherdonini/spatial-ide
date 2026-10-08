@@ -613,3 +613,50 @@ The worker's and tester's briefs carry, as written, the paragraph at state/direc
 3. **The merge.** `verify-cites`, `verify-quotes`, `verify-test-claims` and `verify` all exit 0 on the merged branch. Since #191's pinned fallback merged, the form's citations pinned at 30e77c10 resolve.
 
 **Superseded index.** Amendment 3, item 7's and Amendment 4, item 9's §7 counts → item 2. Neither is edited.
+
+### Amendment 9 — correction round 1 of 2: the gate-1 fixes declared before code (class 4), and the record items
+
+*Written by the custodian after both gate-1 results were seen, at the gated head 8127b0f5, before any code of the fixes. The gate reports are `state/consults/gates/2026-10-08-shell-migration-milestone-1-gate1-architect.md` (gate-log 446) and `state/consults/gates/2026-10-08-shell-migration-milestone-1-gate1-reviewer.md` (gate-log 447). Both FAIL. Below, "A-" marks the architect's items and "R-" the reviewer's. Nothing below is a quotation.*
+
+1. **The map minimum in the real DOM (R-C2).** `.attention-strip` and `.status-bar` take `box-sizing: border-box`, so that their real caps equal the 128 px and 48 px the fit budgets. If border-box cannot do it, their padding and border go into the fit instead.
+   - **New e2e step E-FLOOR in `e2e/layout.mjs`.** At 1024 × 640, with Activity open and both bars filled past their caps, the map measures at least 480 × 320. This is a test added after a gate finding.
+   - **Its observation needs no product mutation edit.** The step is committed first and run at that commit, where it fails by name. The CSS fix is committed after it, and the step passes.
+2. **K6 case (iii) (A-C1, R-C1, A-E1, R-E1)** waits for the human's ruling. The gates differ: the architect faults only the fallback, and the reviewer faults the comparison itself. A later amendment records the ruling before any code of it, and nothing touches (iii) until then.
+3. **KNOWN-LIMITATIONS 39 (A-E2, R-E2).** Its body sentence is reduced to what is shown: the strip may show no features until a query arrives. It is left to walkthrough row U6. The reviewer's probe found the edge strips filled at once.
+4. **The PR body (A-C2, A-D1 to A-D4, R-D1 to R-D4)** is the custodian's. Its first paragraph keeps only what the code supports: the hover readout and the error banner still draw over the map, and the minimum is held at or above the 1024 × 640 floor. It also gains:
+   - the walkthrough rows with their old and new words;
+   - every e2e suite at the base, with its result;
+   - the commits the results were taken at, and gate 1's own runs at 8127b0f5;
+   - the tools with their commits;
+   - S4's true stop;
+   - the 85 px small-box drag, with its proportional tolerance;
+   - byte-identical failure quotes;
+   - "first bound" for case (v).
+5. **Code and test text the worker fixes** (A-D3, A-D10, A-D11, A-D12, R-D8, R-D11, R-D12): code and test comments, and return strings only, plus the two walkthrough Publish phrases at the lines A-D11 names. No assertion, threshold or product behaviour changes. The UTF-8 repair restores § and ±. F8's and S1's sentences are left as they are and listed as noticed (A-D11).
+6. **CI (R-E3).** The ubuntu `cargo test` failure is outside the diff. It is a kernel ticket-drop test at its setup guard, filed at `state/consults/2026-10-08-pr195-ci-run-37836080416-attempt-1-failed-steps.txt` and added to the node `skp-drained-stream-helper-post-check-race`. The failed job is re-run, and a green run is needed before the merge.
+7. **Record items, recorded here:**
+   - **Edits beyond the named checks (A-D5, R-D7), each class 3 as report 4, section 7 classes them.** None changes an assertion or a threshold:
+     - the `setCam` wait in `pan-anchor.mjs`, a helper shared with normal-A and recenter-crossing-A;
+     - CLASSC′'s second click, back to the Layer tab;
+     - the `shouldStop` parameter of `panByViewports` in `source-changed.mjs`.
+   - **Amendment 8's class 8 record (A-D6, R-D6).**
+     - It is a budget overrun, and §7 is not edited.
+     - G5's reason: the U and R tests, with their 52 recorded-mutation comment lines (report 1, section 2).
+     - G6's per-file ceilings are exceeded: `regression.mjs` 190 against at most 24, `source-changed.mjs` 39 against at most 4, `pan-anchor.mjs`, `filter-panel.mjs` and `console.mjs` were not declared in G6 at all, and G6 has 8 files against 5.
+     - The base: §7 names the merge base at the cut, e888787e. From it the count is 3,318 lines over 29 files. The extra line and file are main's own `frontends/shell/src-tauri/Cargo.lock` line, from #190, merged in at 8127b0f5 and not this piece's. Amendment 8 therefore counts from the merge base after that merge, 176ab912.
+     - Amendments 7 and 8 were both written after results had been seen: stages 5 to 7.
+   - **Amendment 7's label (A-D7)** is a scope addition, as Amendment 6's is, not class 5.
+   - **The hashes "at the commit that adds it" (A-D8):**
+     - Amendment 3's report 1 is at 45e7a0b052261adb97bd8541340f30834a6088bb.
+     - Amendment 4's report 2 is at 20c479548b7056dd6da88663c4f2771d06b562c8.
+     - Amendment 5's report 3 is at badac676ef28d36654a90259ca5e04127cb5ff1c.
+     - Amendment 6's Decision A is at 994b9737315001a11c229aa76fd8986019571230.
+     - Amendment 7's ruling is at 176ab9127463a8d3fdec1a69b640a4c1754f7349.
+     - The reviewer recomputed every one (R, Checks).
+   - **The tools (A-D9, R-D5).** Amendment 8, item 3's checks ran at 8127b0f5 with `scripts/plan/verify-cites.mjs` at 04f6332b, `verify-quotes.mjs` at f9444a4d, `verify-test-claims.mjs` at e9735d47 and `verify.mjs` at 26072022. "verify" there means `scripts/plan/verify.mjs`. `npm run verify` and the scripts' `node --test` ran at 8127b0f5 in gate 1's reviewer run.
+   - **VIEWPORT_FLOOR (A-D10, R-D9)** is a value §7 declared, with U1 as its named consumer. Amendment 3, item 2's "given a caller" means U1. The code comment that names `effectiveSizes` as its reader is fixed under item 5.
+   - **Stale comments in files this piece may not edit (R-D10):** `src/console/ConsolePanel.tsx`, lines 20-24, and `src/residency/residencyStatus.ts`, line 6. Their home is the proposed node `shell-stale-frame-comments`.
+8. **Correction round 1 of 2.** After the fixes, both gates re-gate at the new head.
+9. **Generation 10.**
+
+**Superseded index.** Amendment 8's first line and base → item 7. Amendment 7's class label → item 7. Amendment 3, item 2's "given a caller" → item 7. None is edited.
