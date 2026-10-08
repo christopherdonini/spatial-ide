@@ -1,0 +1,7 @@
+# Directive — reuse archaeology round 1, the v2 archive: its hash, its placement after #190, and the checks over the placed folder (the human, verbatim)
+
+*Custodian's filing note (2026-10-08): typed by the human as a new message, received mid-turn at 16:03:30Z by the transcript (its queued-command record, origin human). Below the rule, byte-copied by script from that record with one final newline added, with nothing else, is the message (from line 6 to the end). It replaces the archive of `state/directives/2026-10-08-reuse-round-1.md`, which did not arrive. This archive did not arrive with it either: no file reached the session, the attachments folder holds no zip, and none of that name is in the user folders checked by exact name. The custodian asked the human for another route. It names no other project. It gets a DIRECTIVE block in `DECISIONS-PENDING.md`.*
+
+---
+Attached: spatial-ide-reuse-round-1-v2.zip (sha256 50d87a03eb42148608209edbad2d905bcea0e1c369f1d3330f86fb54d2409526). It replaces the Round 1 archive that did not arrive. The changes: every Spatial IDE citation is pinned (path:line @ <8-hex>); three third-party paths that look in-tree carry their repository; tools/fetch-cache.mjs validates every lock entry before any git call.
+Place it as the docs-and-data piece already queued, after PR #190 merges. Five citations are pinned at 14acee0b and resolve only once #190's commits are in main. Verify the sha256 first, then run tools/check-index.mjs and verify-cites over the placed folder.
