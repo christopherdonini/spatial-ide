@@ -646,3 +646,27 @@ Each mutation is observed by applying it, running the named test, recording its 
 11. **Generation 4.**
 
 **Superseded index.** §3's F3 → item 5. §4's R6 kind → item 6. None is edited.
+
+### Amendment 4 — stage 2's outcomes, and the class 8 record at the gated head (budget overrun, §7 not edited)
+
+*Written by the custodian after stage 2's results were seen, at the branch head 479ae81d, before either gate. The record is worker report 2, `state/consults/2026-10-08-b2-piece-1a-step-record-and-dataset-reference-worker-report-2.md` (sha256 8630f802d0ad65d4c9b26f4f6802750632cd16c2fc990ccfe2e70c3731e6ca9b, from its line 5 to the end, at the commit that adds it), cited by section. Nothing below is a quotation.*
+
+1. **Stage 2's commits:** 1251fc3c (the recorded-mutation comments, test text only) and 479ae81d (both indexes' last-verified line, at the last commit that changes code). The first build was green with no compile fix, and no existing test was edited, so I3 does not fire.
+2. **The suites at 479ae81d,** all exit 0 (the report's commands section):
+   - the workspace with the fixture feature, held: 920 passed, 0 failed and 54 ignored, over 101 test binaries;
+   - clippy, held: no warning on an added line;
+   - fmt, the ADR index check and the scripts suite (450 of 450), held;
+   - the six verifiers.
+3. **The lock diff,** read again after the first build, is still the one `getrandom` 0.3.4 line. Amendment 2 item 3's condition holds.
+4. **The mutations:** all seventeen (O1 to O4, R1 to R7, K1 to K5 and G1) were observed over 1e637d55, each failing its own test by name, and reverted (the report's mutations table).
+5. **Class 2, G1's mutation.** The machine-recorded locator carries no path, so the mutation makes `linked` record a project-relative locator holding the open's path. G1 fails by name.
+6. **Class 3, test text.** Three recorded-mutation notes are corrected to where each test actually fails: K1 at its key-set assertion, R4 at its uppercase-hex case, and K2 at the second open (report, deviations section).
+7. **§3's predictions all held,** F1′'s four differing components included (report, predictions section).
+8. **§7, budget overrun, §7 not edited (class 8).** By §7's command at 479ae81d against c01f2e09: 1,930 lines over 10 files, against at most 2,010.
+   - Kernel product: 822 against 760. The reason is Amendment 2's `mint`, the grammar check and R7, none of them budgeted, and their recorded-mutation comments.
+   - Kernel tests: 525 against 520. The reason is the recorded-mutation comments.
+   - Every other group is within its ceiling: engine product 154, engine tests 238, ADR 174 and indexes 17.
+   - This is the class 8 record Amendment 3 item 10 deferred. The branch's merge of main adds no line to these files.
+9. **Generation 5.**
+
+**Superseded index.** Amendment 3, item 10's deferred class 8 record → item 8. §4's G1 mutation → item 5. None is edited.
