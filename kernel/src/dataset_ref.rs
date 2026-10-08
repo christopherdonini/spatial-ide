@@ -761,9 +761,9 @@ mod tests {
         }
     }
 
-    /// RECORDED MUTATION (observed at 1e637d55: applied, this test run alone, reverted): the
-    /// grammar check is removed, so a `..` segment parses. OBSERVED FAILURE: its first case,
-    /// `../x.parquet`: `parse` returned `Ok` (`unwrap_err()` on an `Ok` value).
+    /// RECORDED MUTATION (observed at 507838e2: applied, this test run alone, reverted): the
+    /// `in_canonical_form` check is removed, so a `..` segment parses. OBSERVED FAILURE: its first
+    /// case, `../x.parquet`: `parse` returned `Ok` (`unwrap_err()` on an `Ok` value).
     #[test]
     fn a_project_relative_locator_outside_canonical_form_is_refused() {
         let at_path = "$.resource.locators[1].at";
@@ -818,6 +818,10 @@ mod tests {
         assert_eq!(recorded.unwrap().unwrap().definition_json, "{}");
     }
 
+    /// RECORDED MUTATION (observed at 507838e2: applied, this test run alone, reverted): the blank
+    /// check is removed from `expect_state` (`claim` becomes `bounded`). OBSERVED FAILURE: the
+    /// blank case of the first named state: `parse` returned `Ok` for a basis of spaces alone
+    /// (`unwrap_err()` on an `Ok` value).
     #[test]
     fn a_named_states_basis_is_free_text_and_its_word_is_closed() {
         let named = sample(None, None, false, vec![]);

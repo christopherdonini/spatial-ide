@@ -126,6 +126,12 @@ fn key_set(v: &Value) -> Vec<&str> {
 /// renames `portability_policy` (to `portability`). OBSERVED FAILURE: the key-set assertion `the
 /// reference holds those members and no seventh`, which comes before the order assertion: `left`
 /// has `portability` where `right` has `portability_policy`.
+///
+/// RECORDED MUTATION, added by the seam (observed at 507838e2: applied, this test run alone,
+/// reverted): `expect_state` compares the basis against the fixed text again, as at a3f9f34f.
+/// OBSERVED FAILURE: the parse of the bundle's own state: `the bundle's own state parses:
+/// Malformed { path: "$.resource.source_revision.basis", detail: "the basis text is fixed in
+/// version 1" }`.
 #[test]
 fn the_reference_uses_the_bundles_resource_ref_vocabulary() {
     let spec = FixtureSpec {
