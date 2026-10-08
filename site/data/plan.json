@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-08T22:51:49.033Z",
-  "plan_hash": "e5bcaf00320926e54316ab90b976acbd79cf788a47a10be2040dd6de5db89b31",
+  "generated_at": "2026-10-08T23:54:47.829Z",
+  "plan_hash": "4fd02e7dd3899943f6f453e01759af4bec74742df04888fabf62cd391086f263",
   "priorities_approved": true,
   "lanes": [
     {
@@ -7143,12 +7143,37 @@
       }
     },
     {
+      "id": "e2e-hover-establishing-read-stale",
+      "title": "K6 and A9-prime take their starting hover id from the readout's first poll, which can still name the feature under the previous pointer",
+      "kind": "task",
+      "lane": "shell",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "depends_on": [],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "none",
+      "evidence": null,
+      "budget_minutes": 60,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [],
+      "summary": "PROPOSED 2026-10-08 from the pick-paths diagnosis (state/consults/2026-10-08-shell-pick-paths-disagree-at-1280x801-diagnosis-report.md, section 4). establishAboveThresholdHoverK6 in frontends/shell/e2e/regression.mjs moves the pointer and accepts the first non-empty readout id, and waitForCondition reads once before any frame has run. The readout can then still name the feature under the canvas centre, where doWheel left the pointer. K6 case (iii) therefore fails at odd map heights for a reason that is not the product's; the default window passes. A9-prime's candidate loop reads the readout the same way (not examined). Sketch, not chosen: take the id only after the hover pick for the new pointer has run, by moving first to a known-empty pixel, by waiting two animation frames, or through a DEV-only accessor for the last hover pointer. Case (iii)'s comparison stays as the human ruled it (state/directives/2026-10-08-k6-case-iii-ruling.md). This changes only how its starting id is taken, so it waits for the human's word.",
+      "dates": {
+        "opened": "2026-10-08",
+        "done": null
+      }
+    },
+    {
       "id": "shell-pick-paths-disagree-at-1280x801",
       "title": "The hover pick and the settle re-pick name different features at the same camera and pointer when the window is one row taller than the default (50244 against 53722)",
       "kind": "task",
       "lane": "shell",
       "phase": "prototype",
-      "status": "in-progress",
+      "status": "done",
       "order": 1,
       "depends_on": [
         "shell-migration-milestone-1"
@@ -7159,16 +7184,16 @@
       },
       "gate": "none",
       "evidence": {
-        "branch": "detached-worktree-pick"
+        "path": "state/consults/2026-10-08-shell-pick-paths-disagree-at-1280x801-diagnosis-report.md"
       },
       "budget_minutes": 120,
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "IN PROGRESS 2026-10-08: slot 1; one worker-high, a reported-only diagnosis in the detached worktree C:/dev/wt/pick at main bac14f81, target D:/wt-targets/pick; no tracked edit, no commit. Before: PLACED 2026-10-08 by the human (state/directives/2026-10-08-k6-case-iii-ruling.md): a diagnosis first, reported only, done before milestone 2's selection code starts, because selection rests on the pick. Seen by milestone 1's stages 3 and 4 (state/consults/2026-10-08-shell-migration-milestone-1-worker-report-3.md and -4.md): at a window one row taller than the default, on the 731-row buffer it gave while the bars were content-box (at the base e888787e sized to the new map, and at 65391e79, both before the border-box fix at 2e17ee52; the architect attempt-2 N-D5: after that fix the same window no longer gives that buffer), the hover pick answered 50244 and the settle re-pick answered 53722 at an unchanged camera and pointer; K6 case (iii) shows it and is kept so (milestone 1 form Amendment 10). It runs after milestone 1 merges, since it needs that frame and its worktree.",
+      "summary": "DONE 2026-10-08, diagnosed and reported only (state/consults/2026-10-08-shell-pick-paths-disagree-at-1280x801-diagnosis-report.md). There is no disagreement between the two pick paths: at one camera and pointer they pick the same feature, with no mismatch in 918 points in each of four map geometries. What K6 case (iii) shows comes from its own establishing read. Right after the pointer moves, the first poll can read the readout before deck has run the hover pick for the new pointer, so it takes the id of the feature under the previous pointer, the canvas centre, where the zoom helper leaves it. On merged main this reproduced in 5 of 5 runs at odd map heights (and an injected fractional one) and in 0 of 3 at even ones. It is neither a product defect nor the fractional height. The default window passes because its map height is even. The 50244 is very probably such a stale centre read (an inference). The harness fix is the proposed node e2e-hover-establishing-read-stale, for the human. Noticed off scope: WorkingCanvas.tsx comments call deck 9.3.7 pinned, while package.json allows ^9.3.7 and the lockfile installs 9.3.9. The worktree and its build target are removed. Before: IN PROGRESS 2026-10-08: slot 1; one worker-high, a reported-only diagnosis in the detached worktree C:/dev/wt/pick at main bac14f81, target D:/wt-targets/pick; no tracked edit, no commit. Before: PLACED 2026-10-08 by the human (state/directives/2026-10-08-k6-case-iii-ruling.md): a diagnosis first, reported only, done before milestone 2's selection code starts, because selection rests on the pick. Seen by milestone 1's stages 3 and 4 (state/consults/2026-10-08-shell-migration-milestone-1-worker-report-3.md and -4.md): at a window one row taller than the default, on the 731-row buffer it gave while the bars were content-box (at the base e888787e sized to the new map, and at 65391e79, both before the border-box fix at 2e17ee52; the architect attempt-2 N-D5: after that fix the same window no longer gives that buffer), the hover pick answered 50244 and the settle re-pick answered 53722 at an unchanged camera and pointer; K6 case (iii) shows it and is kept so (milestone 1 form Amendment 10). It runs after milestone 1 merges, since it needs that frame and its worktree.",
       "dates": {
         "opened": "2026-10-08",
-        "done": null
+        "done": "2026-10-08"
       }
     },
     {

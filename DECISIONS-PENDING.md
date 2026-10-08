@@ -36,6 +36,7 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
   - the same worker puts case (iii) back to its old comparison, with no retry;
   - the PR body says (iii) is unchanged and names the node;
   - the node `shell-pick-paths-disagree-at-1280x801` is placed by the human: a diagnosis, reported only, done before milestone 2's selection code starts. `shell-migration-milestone-2` now depends on it.
+- **Diagnosed 2026-10-08** (`state/consults/2026-10-08-shell-pick-paths-disagree-at-1280x801-diagnosis-report.md`; the node is done): the two pick paths agree. The 50244 is very probably a stale establishing read in the harness, not the product. The ruling stands as given. The harness fix is the proposed node `e2e-hover-establishing-read-stale`, which waits for the human's word.
 
 **RULED 2026-10-08 — K6 case (v), option (b), and the stage 6 slip (the human, typed, received at 19:40:09Z by the transcript; recorded verbatim at `state/directives/2026-10-08-k6-case-v-ruling.md`, lines 6-20, sha256 c7e76c209b8be036851ec8c304e35086347e911ce832d876c78cbc195d3a4298 at the commit that adds it):**
 - **The ruling** is the text, referenced and not restated.

@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `e5bcaf00320926e54316ab90b976acbd79cf788a47a10be2040dd6de5db89b31`) at `2026-10-08T22:51:48.893Z`.
+Generated from `PLAN.yaml` (sha256 `4fd02e7dd3899943f6f453e01759af4bec74742df04888fabf62cd391086f263`) at `2026-10-08T23:54:47.702Z`.
 
 ## 1. Next
 
@@ -27,7 +27,7 @@ Generated from `PLAN.yaml` (sha256 `e5bcaf00320926e54316ab90b976acbd79cf788a47a1
 
 ## 5. In progress
 
-- **shell-pick-paths-disagree-at-1280x801** — The hover pick and the settle re-pick name different features at the same camera and pointer when the window is one row taller than the default (50244 against 53722) — evidence: branch `detached-worktree-pick`
+- (none)
 
 ## 6. Proposed / unscheduled
 
@@ -100,6 +100,7 @@ Generated from `PLAN.yaml` (sha256 `e5bcaf00320926e54316ab90b976acbd79cf788a47a1
 - **verify-cites-pin-resolution-and-line-zero** — verify-cites: a pinned cite starting at line 0 gets a false reason, and a pin is read only at the path as written (phase `prototype`) — never queued until placed
 - **docs-14-corpus-attribution-vs-docs-08** — docs/14 asks corpus attribution in demos and published bundles, which docs/08 line 40 now says are never redistributed (phase `prototype`) — never queued until placed
 - **shell-stale-frame-comments** — Two shell comments still describe the old frame: ConsolePanel.tsx (a bottom drawer below every panel) and residencyStatus.ts (a child of the removed canvas status stack) (phase `prototype`) — never queued until placed
+- **e2e-hover-establishing-read-stale** — K6 and A9-prime take their starting hover id from the readout's first poll, which can still name the feature under the previous pointer (phase `prototype`) — never queued until placed
 - **wire-bytes-invariant-trace-flag-race** — kernel/tests/wire_bytes_invariant.rs: the projected-ticket test asserts tracing is off while its sibling starts a trace (a race on the engine's global trace flag) (phase `prototype`) — never queued until placed
 - **dataset-stream-doc-producer-runs-ahead** — engine/src/stream.rs: Dataset::stream's doc says it returns once the statement is prepared and produces the first batch on the first next_into; the producer thread prepares and runs ahead to the queue bound (phase `prototype`) — never queued until placed
 - **shell-migration-milestone-2** — Shell migration, milestone 2 -- selection and scope: the Select tool, a selection that survives filter and pan, the hidden count, a stated scope (phase `prototype`) — never queued until placed

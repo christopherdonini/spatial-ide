@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-08T22:51:48.893Z",
-  "plan_hash": "e5bcaf00320926e54316ab90b976acbd79cf788a47a10be2040dd6de5db89b31",
+  "generated_at": "2026-10-08T23:54:47.702Z",
+  "plan_hash": "4fd02e7dd3899943f6f453e01759af4bec74742df04888fabf62cd391086f263",
   "priorities_approved": true,
   "next": null,
   "ready": [],
@@ -167,30 +167,7 @@
       ]
     }
   ],
-  "in_progress": [
-    {
-      "id": "shell-pick-paths-disagree-at-1280x801",
-      "title": "The hover pick and the settle re-pick name different features at the same camera and pointer when the window is one row taller than the default (50244 against 53722)",
-      "lane": "shell",
-      "phase": "prototype",
-      "status": "in-progress",
-      "order": 1,
-      "budget_minutes": 120,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": {
-        "branch": "detached-worktree-pick"
-      },
-      "dates": {
-        "opened": "2026-10-08",
-        "done": null
-      },
-      "summary": "IN PROGRESS 2026-10-08: slot 1; one worker-high, a reported-only diagnosis in the detached worktree C:/dev/wt/pick at main bac14f81, target D:/wt-targets/pick; no tracked edit, no commit. Before: PLACED 2026-10-08 by the human (state/directives/2026-10-08-k6-case-iii-ruling.md): a diagnosis first, reported only, done before milestone 2's selection code starts, because selection rests on the pick. Seen by milestone 1's stages 3 and 4 (state/consults/2026-10-08-shell-migration-milestone-1-worker-report-3.md and -4.md): at a window one row taller than the default, on the 731-row buffer it gave while the bars were content-box (at the base e888787e sized to the new map, and at 65391e79, both before the border-box fix at 2e17ee52; the architect attempt-2 N-D5: after that fix the same window no longer gives that buffer), the hover pick answered 50244 and the settle re-pick answered 53722 at an unchanged camera and pointer; K6 case (iii) shows it and is kept so (milestone 1 form Amendment 10). It runs after milestone 1 merges, since it needs that frame and its worktree.",
-      "evidence_label": "branch `detached-worktree-pick`"
-    }
-  ],
+  "in_progress": [],
   "proposed": [
     {
       "id": "governance-hash-grammar-shared",
@@ -1464,6 +1441,25 @@
         "done": null
       },
       "summary": "PROPOSED 2026-10-08 from PR #195 reviewer gate 1 (gate-log 447, R-D10; the milestone 1 form Amendment 9, item 7): frontends/shell/src/console/ConsolePanel.tsx lines 20-24 and frontends/shell/src/residency/residencyStatus.ts line 6 describe the pre-milestone-1 frame; milestone 1 may not edit those files. Comment-only."
+    },
+    {
+      "id": "e2e-hover-establishing-read-stale",
+      "title": "K6 and A9-prime take their starting hover id from the readout's first poll, which can still name the feature under the previous pointer",
+      "lane": "shell",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-08",
+        "done": null
+      },
+      "summary": "PROPOSED 2026-10-08 from the pick-paths diagnosis (state/consults/2026-10-08-shell-pick-paths-disagree-at-1280x801-diagnosis-report.md, section 4). establishAboveThresholdHoverK6 in frontends/shell/e2e/regression.mjs moves the pointer and accepts the first non-empty readout id, and waitForCondition reads once before any frame has run. The readout can then still name the feature under the canvas centre, where doWheel left the pointer. K6 case (iii) therefore fails at odd map heights for a reason that is not the product's; the default window passes. A9-prime's candidate loop reads the readout the same way (not examined). Sketch, not chosen: take the id only after the hover pick for the new pointer has run, by moving first to a known-empty pixel, by waiting two animation frames, or through a DEV-only accessor for the last hover pointer. Case (iii)'s comparison stays as the human ruled it (state/directives/2026-10-08-k6-case-iii-ruling.md). This changes only how its starting id is taken, so it waits for the human's word."
     },
     {
       "id": "wire-bytes-invariant-trace-flag-race",
