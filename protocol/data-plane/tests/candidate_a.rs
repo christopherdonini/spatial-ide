@@ -838,6 +838,48 @@ async fn an_idle_connection_holds_no_stream_slot_and_the_idle_ceiling_is_its_own
     dp.shutdown().await;
 }
 
+/// RECORDED MUTATION (M1): the literal restored to its three runs of 22 spaces. It fails at the
+/// assertion that the detail equals the template text rendered from the public constants.
+#[tokio::test]
+async fn a_connection_beyond_the_idle_ceiling_that_never_starts_is_told_why_in_single_spaced_words()
+{
+    use spatial_data_plane::server::{CROWDED_START_TIMEOUT, MAX_IDLE_CONNECTIONS, START_TIMEOUT};
+    let dp = start(factory(4, 4096, 0)).await;
+
+    // One more than the idle ceiling, none of which sends START, any credit or a close. An idle
+    // permit is released at START, at that connection's own timeout, or when `handle` returns
+    // because the peer left or sent a START it cannot parse. None of these connections sends a
+    // frame or closes before the first terminal, so exactly one of them runs on
+    // `CROWDED_START_TIMEOUT` whatever order the handlers run in, and its terminal arrives first.
+    let mut conns = Vec::new();
+    for _ in 0..=MAX_IDLE_CONNECTIONS {
+        conns.push(connect(&dp).await.expect("connect"));
+    }
+    let pending: Vec<_> = conns.iter_mut().map(|c| Box::pin(drain(c))).collect();
+    let (first, _, rest) = futures_util::future::select_all(pending).await;
+    drop(rest);
+
+    let (code, detail) = first
+        .terminal
+        .expect("the first to finish carries a terminal frame");
+    assert_eq!(code, wire::TERM_TRANSPORT_FAILED, "detail was: {detail}");
+    let expected = format!(
+        "no operation started, and the declared ceiling \
+         MAX_IDLE_CONNECTIONS={MAX_IDLE_CONNECTIONS} was already reached, so this \
+         connection was held for {CROWDED_START_TIMEOUT:?} rather than {START_TIMEOUT:?}"
+    );
+    assert_eq!(detail, expected, "the crowded-start detail, as received");
+    assert!(
+        !detail.contains("  "),
+        "no run of two spaces, got: {detail}"
+    );
+
+    for mut c in conns {
+        c.close(None).await.ok();
+    }
+    dp.shutdown().await;
+}
+
 /// RECORDED MUTATION (M2): the credit wait back above the pump receive. It fails at `recv_by`.
 #[tokio::test]
 async fn credit_equal_to_the_batch_count_delivers_every_batch_then_the_terminal() {

@@ -578,3 +578,95 @@ Each mutation is observed by applying it, running the named test, recording its 
 7. **Generation 2.**
 
 **Superseded index.** §2.9's OPEN-1, OPEN-4, OPEN-6 and OPEN-8 rows → items 1 to 4, binding. §2.3's `at` row, §8's second sentence of "How it is written", §11's later-pieces list and §1's tree line → item 1. None is edited.
+
+### Amendment 2 — question round 70's rulings (OPEN-2, OPEN-3, OPEN-5 and OPEN-7, the red lines), typed by the human (class 5)
+
+*Written by the custodian after the rulings arrived and while stage 1 was running: the branch holds no build and no test run yet. It is appended at the file's end and belongs to §10. The rulings are `state/directives/2026-10-08-round-70-rulings.md` at the commit that adds it: OPEN-2, lines 8-14, sha256 f49504b51df29a57ca7e0f45326839acb107a0052ed4ec84daba2870fe2f5617; OPEN-3, lines 16-20, sha256 c473dc92a82159a1ed8c527be10ae96ceec49de3cc745a47ed9c7591fef7c1a4; OPEN-5, lines 22-26, sha256 6ca5806f64c8da9b8f0422e40157e78deb6b316037bbf6b3cf3aedc34fa75cee; OPEN-7, lines 28-33, sha256 dece94e09a0c837e5cb5f38b2075b977923a2521f3be276c6981e084659e0650. Their RULED block is in `DECISIONS-PENDING.md`, referenced and not restated. Nothing below is a quotation of the human. The blocks marked as ADR text are new bytes of §2.3, written by the custodian from the rulings. The project-relative grammar in item 4 is the custodian's drafting of the ruling's refusal, for the gates to check.*
+
+1. **OPEN-2, (A).** ADR-036 has no OPEN-2 block. Its §4 gains, after its last bullet (the one on 128 bits from the operating system's CSPRNG), this ADR text as one more bullet:
+
+   ```
+   - **A project opened from a second folder.** When a project's identity opens from a second folder while the first folder still exists, the user is asked once whether it is a copy or the same project. A copy gets a new identity and keeps its lineage, and its data links become its own: re-linking the data in one never changes where the other finds its data. The same project is remembered for that folder, and the question is not asked again there. If the first folder no longer exists, the project has moved, and nothing is asked. The question's wording is the human's at P6.
+   ```
+
+2. **OPEN-3, (A).** ADR-036 has no OPEN-3 block. Its §9 gains, after the bullet beginning "After a crash", this ADR text as one more bullet:
+
+   ```
+   - **A session that never saved:** its history is kept on the machine under a not-yet-saved record, and recovery is offered when the application next starts. The offer names the dataset and the time, and declining clears the record. If the data has changed or cannot be found, the application says so. A normal session end clears the record, as it clears any session history.
+   ```
+
+3. **OPEN-5, (A).** ADR-036 has no OPEN-5 block, and its §4 text stands.
+   - **The code.** `DatasetUri::mint` is built, from the operating system's CSPRNG through `getrandom`. R4 gains its clause that `mint()`'s output parses, and its mutation stands.
+   - **The dependency.** `kernel/Cargo.toml` gains `getrandom` as a direct dependency, with the same requirement that `protocol/skp/Cargo.toml` and `protocol/data-plane/Cargo.toml` already carry. `Cargo.lock` may gain only that one edge, from `spatial-kernel` to the `getrandom` 0.3 package already locked. That means one added entry in `spatial-kernel`'s dependency list, no new package and no version change.
+   - **If the lock diff shows anything else,** the worker stops and the human is told. The PR body shows the lock diff.
+   - §8 item 6's condition is met: OPEN-5 is ruled (A), and #188 has merged.
+4. **OPEN-7, (A).** ADR-036 has no OPEN-7 block.
+   - **§5's `project-relative` bullet** is replaced whole by this ADR text:
+
+     ```
+     - `project-relative`: `at` is a path relative to the project folder, `/`-separated, written only where the data is inside the project folder. It never points outside the project folder: a reader refuses an `at` that is empty, begins with `/`, has an empty, `.` or `..` segment, or holds a `\` or a `:`;
+     ```
+
+   - **The Consequences bullet beginning "No absolute path in a project file"** keeps its first sentence. Its second sentence is replaced by this ADR text:
+
+     ```
+     On another machine, a dataset outside the project folder is found by re-linking it, and the re-linked file is checked against `observed`: the check names each component that differs, and no difference passes silently.
+     ```
+
+   - **The scope addition, declared before its code.** `DatasetRef::parse` refuses a `project-relative` locator whose `at` breaks item 4's grammar, as `RefParseError::Malformed` naming the locator's path. The closed error set is unchanged, and no `pub` item is added.
+   - **Its new test, R7,** in `kernel/src/dataset_ref.rs`: `a_project_relative_locator_that_leaves_the_project_folder_is_refused`. It covers a `..` segment, a leading `/`, a `\`, a `:`, an empty `at` and an empty segment, each refused by its path. A plain `data/x.parquet` still parses, as R5 shows. Its mutation: the grammar check is removed, so a `..` segment parses.
+   - **§8 item 1 is read with one exception, which this ruling requires:** the parser examines a `project-relative` locator's `at` as a string, splitting it on `/` and refusing the segments and characters item 4 names. It uses no OS path type, joins nothing, builds no path and touches no file. §2.7's R4 still holds: refusing `\` and `:` keeps a travelling locator portable, and assumes no Windows rule.
+   - **Unchanged:** §5's declared-unchanged list and §7's ceilings. R7 counts in the kernel product group.
+5. **Routed** to the pieces that build the behaviour, and recorded in their PLAN nodes in this amendment's commit:
+   - OPEN-2's question, the per-folder memory, the data links of a copy and the move rule go to `b2-piece-1b-recording`'s store and `b2-piece-1c-save-and-reopen`'s open;
+   - OPEN-3's recovery offer and its clearing go to 1b (storage before an identity exists) and 1c;
+   - OPEN-7's re-link check, naming each difference, goes to 1c.
+6. **Every OPEN item of §2.9 is now ruled.** ADR-036 is filed with no OPEN block except item 1 (c)'s block on the project file's name and extension, which stays open until the human accepts the ADR.
+7. **Generation 3.**
+
+**Superseded index.** Amendment 1, item 6's open list and its OPEN-block rule for OPEN-2, OPEN-3, OPEN-5 and OPEN-7 → items 1 to 4. §2.9's OPEN-2, OPEN-3, OPEN-5 and OPEN-7 rows → items 1 to 4, binding. None is edited.
+
+### Amendment 3 — stage 1's outcomes: the build's deviations (class 2 and class 3), and the kernel product group over its ceiling so far
+
+*Written by the custodian after stage 1's results were seen, at the branch head 1e637d55, before stage 2 and before either gate. Nothing is compiled yet. The record is worker report 1, `state/consults/2026-10-08-b2-piece-1a-step-record-and-dataset-reference-worker-report-1.md` (sha256 dab0e1e4738b4716ed9d3da79cf4145894faafdb0f63b3891a54fca942c58331, from its line 5 to the end, at the commit that adds it; its filing note gives the hash as written and discloses one rewrite), cited by section. Nothing below is a quotation.*
+
+1. **Stage 1's commits:** 66f7bc26 (ADR-036), 85fc25f8 (E-1), f727dd6d (K-1 and K-2), 98adfe3c (the indexes), 2bd318b4 (ADR-036 under Amendment 2) and 1e637d55 (`mint` and the project-relative grammar). PLAN.yaml is not touched on the branch.
+2. **ADR-036 equals §2.3 as amended by Amendments 1 and 2, byte for byte,** by the worker's script at 2bd318b4. The one OPEN block left is Amendment 1 item 1 (c)'s (the report's equality section).
+3. **The lock diff** is one added line, the `getrandom` 0.3.4 entry in `spatial-kernel`'s dependency list, with no other change (the report's lock section). Amendment 2 item 3's condition holds so far, and stage 2 checks it again after the first build.
+4. **The consumed interfaces** hash to the form's pins at both aa00e565 and c01f2e09. I2 does not fire (the report's re-derivation section).
+5. **Class 2, F3.** The fixture writer has no mode for a native `id` plus a second unique int64 column, so K4's fixture declares a mapping onto the native `id` column. K4's assertion and mutation stand.
+6. **Class 2, R6** is a unit test of the private function that builds the claim. An engine open refuses an assertion with no definition, so the case cannot be reached through a real open.
+7. **Class 2, O4** cannot build the case where both sides lack a modification time from an integration test. The descriptor's existing unit tests cover that case through the shared function.
+8. **Class 3, test text.**
+   - K5 strips the quoted literal for the ResourceRef member `content_hash` before it scans, because the writer must spell that member. A planted unquoted token is the positive control.
+   - The module matches the mapped identity source and treats every other source alike, so no file token appears in its source.
+   - K1 checks member order by text position and the key sets by equality.
+9. **Noted for the gates** (report, deviations section): `parse` takes an already-parsed JSON value, so a duplicate key is collapsed before it sees it; the module header says 1c's file reader must refuse duplicates. Sizes above 2^53 − 1 are refused at parse. A named state's basis text is accepted only as the fixed constant.
+10. **§7 so far,** by its command at 1e637d55: 1,910 lines over 10 files, against 2,010. The kernel product group is over its ceiling so far: 814 against 760. Amendment 2's `mint`, R7 and the grammar check were not budgeted. Every other group is within its ceiling. The class 8 record is made once, at the gated head, with the final figures. §7 is not edited.
+11. **Generation 4.**
+
+**Superseded index.** §3's F3 → item 5. §4's R6 kind → item 6. None is edited.
+
+### Amendment 4 — stage 2's outcomes, and the class 8 record at the gated head (budget overrun, §7 not edited)
+
+*Written by the custodian after stage 2's results were seen, at the branch head 479ae81d, before either gate. The record is worker report 2, `state/consults/2026-10-08-b2-piece-1a-step-record-and-dataset-reference-worker-report-2.md` (sha256 8630f802d0ad65d4c9b26f4f6802750632cd16c2fc990ccfe2e70c3731e6ca9b, from its line 5 to the end, at the commit that adds it), cited by section. Nothing below is a quotation.*
+
+1. **Stage 2's commits:** 1251fc3c (the recorded-mutation comments, test text only) and 479ae81d (both indexes' last-verified line, at the last commit that changes code). The first build was green with no compile fix, and no existing test was edited, so I3 does not fire.
+2. **The suites at 479ae81d,** all exit 0 (the report's commands section):
+   - the workspace with the fixture feature, held: 920 passed, 0 failed and 54 ignored, over 101 test binaries;
+   - clippy, held: no warning on an added line;
+   - fmt, the ADR index check and the scripts suite (450 of 450), held;
+   - the six verifiers.
+3. **The lock diff,** read again after the first build, is still the one `getrandom` 0.3.4 line. Amendment 2 item 3's condition holds.
+4. **The mutations:** all seventeen (O1 to O4, R1 to R7, K1 to K5 and G1) were observed over 1e637d55, each failing its own test by name, and reverted (the report's mutations table).
+5. **Class 2, G1's mutation.** The machine-recorded locator carries no path, so the mutation makes `linked` record a project-relative locator holding the open's path. G1 fails by name.
+6. **Class 3, test text.** Three recorded-mutation notes are corrected to where each test actually fails: K1 at its key-set assertion, R4 at its uppercase-hex case, and K2 at the second open (report, deviations section).
+7. **§3's predictions all held,** F1′'s four differing components included (report, predictions section).
+8. **§7, budget overrun, §7 not edited (class 8).** By §7's command at 479ae81d against c01f2e09: 1,930 lines over 10 files, against at most 2,010.
+   - Kernel product: 822 against 760. The reason is Amendment 2's `mint`, the grammar check and R7, none of them budgeted, and their recorded-mutation comments.
+   - Kernel tests: 525 against 520. The reason is the recorded-mutation comments.
+   - Every other group is within its ceiling: engine product 154, engine tests 238, ADR 174 and indexes 17.
+   - This is the class 8 record Amendment 3 item 10 deferred. The branch's merge of main adds no line to these files.
+9. **Generation 5.**
+
+**Superseded index.** Amendment 3, item 10's deferred class 8 record → item 8. §4's G1 mutation → item 5. None is edited.

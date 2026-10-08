@@ -1,14 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `78c629f84949912962593b43b86f14e79e4b8db819bbec6ca9f14b8f825ad4d5`) at `2026-10-08T04:08:00.258Z`.
+Generated from `PLAN.yaml` (sha256 `e47c4a77becc86095b32f0dd03d48c67b830904b611c4ee7a3d0c2591abe20f7`) at `2026-10-08T05:50:42.316Z`.
 
 ## 1. Next
 
-- **b2-piece-1a-step-record-and-dataset-reference** — B2 piece 1a -- the design (the full step record and the format ADR, as Proposed) and the code of the lasting dataset reference (lane `kernel-protocol`)
+- (nothing ready)
 
 ## 2. Ready
 
-- **b2-piece-1a-step-record-and-dataset-reference** — B2 piece 1a -- the design (the full step record and the format ADR, as Proposed) and the code of the lasting dataset reference (lane `kernel-protocol`, order 16, budget 0 min)
+- (none)
 
 ## 3. Waiting on the human (total: 10 min)
 
@@ -27,7 +27,7 @@ Generated from `PLAN.yaml` (sha256 `78c629f84949912962593b43b86f14e79e4b8db819bb
 
 ## 5. In progress
 
-- **data-plane-crowded-start-detail-spaces** — The data plane's crowded-start detail string loses its runs of spaces (round 26, item 4 (b)) — evidence: branch `cut/data-plane-crowded-start-detail-spaces`
+- **b2-piece-1a-step-record-and-dataset-reference** — B2 piece 1a -- the design (the full step record and the format ADR, as Proposed) and the code of the lasting dataset reference — evidence: branch `cut/b2-piece-1a-step-record-and-dataset-reference`
 - **shell-migration-milestone-1** — Shell migration, milestone 1 -- the frame: Map Studio regions, panel toggles, separated sections, an attention strip and a status bar — evidence: branch `cut/shell-migration-milestone-1`
 
 ## 6. Proposed / unscheduled

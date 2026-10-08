@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-08T04:08:00.392Z",
-  "plan_hash": "78c629f84949912962593b43b86f14e79e4b8db819bbec6ca9f14b8f825ad4d5",
+  "generated_at": "2026-10-08T05:50:42.484Z",
+  "plan_hash": "e47c4a77becc86095b32f0dd03d48c67b830904b611c4ee7a3d0c2591abe20f7",
   "priorities_approved": true,
   "lanes": [
     {
@@ -4376,7 +4376,7 @@
       "kind": "task",
       "lane": "kernel-protocol",
       "phase": "prototype",
-      "status": "in-progress",
+      "status": "done",
       "order": 14,
       "depends_on": [
         "kernel-close-races-followups"
@@ -4388,16 +4388,16 @@
       "gate": "protocol/data-plane/CROWDED-START-DETAIL-SPACES-PREREGISTRATION.md",
       "merge": "merge-commit",
       "evidence": {
-        "branch": "cut/data-plane-crowded-start-detail-spaces"
+        "pr": 189
       },
       "budget_minutes": 20,
-      "generation": 1,
+      "generation": 2,
       "felt_verdict": false,
       "entries": [],
-      "summary": "GATES PASS 2026-10-08 (architect 435 with notes, reviewer 436; both at 9867fa9f): the reviewer D3 (T1 comment) fixed at 425dece2 and D4 (the PR body) fixed; the other Documentation items to the closing record; the pull_request CI run 37723999952 failed on ubuntu in kernel wire_bytes_invariant, outside the diff (failed steps filed; proposed node wire-bytes-invariant-trace-flag-race); CI at 425dece2 must be green, then it awaits merge. Before: PR #189 OPEN 2026-10-08 at 9867fa9f (C1 and T1 in one commit by the worker 22:35:43Z to 23:25:16Z; 45 lines over 2 files against 68; M1 observed; worker report 1): gate 1 of both dispatched, the reviewer on light checks only. Before: IN CODE 2026-10-07: branch cut/data-plane-crowded-start-detail-spaces from e888787e (main after the lines cut merged), worktree C:/dev/wt/dpcs, target D:/wt-targets/dpcs; one worker. Before: FORM COMMITTED 2026-10-07 (the architect draft, alone; full form from dispatch, for the data-plane wire category, the detail being TERMINAL payload bytes; no OPEN item; 18 pins at a21435ed; at most 68 lines over 2 files): code only after kernel-close-races-followups (#186) merges. Before: SLOT 2 AFTER kernel-close-races-followups 2026-10-05 (the product-first direction 8.e). Before: RULED 2026-09-26, question round 26, item 4 (b): main's data-plane crowded-start detail string, operator-visible, carries three runs of 22 spaces from lost line continuations (two, by N7 and round 26 item 4 (b); three, by the form, section 0) in protocol/data-plane/src/server.rs. Found by data-plane-stream-registry-bound's architect gate (state/consults/2026-09-26-stream-registry-bound-gate1-architect.md, note N7). Placed by question round 31, item 1 (RULED 2026-09-30): position 16 of 16 in the human's order, order 14 in its lane. It depends on kernel-close-races-followups, position 15, so that the order holds across lanes.",
+      "summary": "DONE 2026-10-08: #189 merged at 04:28:59Z as ccb68555; closing record Amendment 1 (generation 2; class 2 for the section 0 summary sentence and P4). Before: AWAITS MERGE 2026-10-08 at 425dece2 (both gates pass; D3 fixed and checked; CI 10 of 10 green at 425dece2 by 04:15Z); the human click, a merge commit, is the approval. Before: GATES PASS 2026-10-08 (architect 435 with notes, reviewer 436; both at 9867fa9f): the reviewer D3 (T1 comment) fixed at 425dece2 and D4 (the PR body) fixed; the other Documentation items to the closing record; the pull_request CI run 37723999952 failed on ubuntu in kernel wire_bytes_invariant, outside the diff (failed steps filed; proposed node wire-bytes-invariant-trace-flag-race); CI at 425dece2 must be green, then it awaits merge. Before: PR #189 OPEN 2026-10-08 at 9867fa9f (C1 and T1 in one commit by the worker 22:35:43Z to 23:25:16Z; 45 lines over 2 files against 68; M1 observed; worker report 1): gate 1 of both dispatched, the reviewer on light checks only. Before: IN CODE 2026-10-07: branch cut/data-plane-crowded-start-detail-spaces from e888787e (main after the lines cut merged), worktree C:/dev/wt/dpcs, target D:/wt-targets/dpcs; one worker. Before: FORM COMMITTED 2026-10-07 (the architect draft, alone; full form from dispatch, for the data-plane wire category, the detail being TERMINAL payload bytes; no OPEN item; 18 pins at a21435ed; at most 68 lines over 2 files): code only after kernel-close-races-followups (#186) merges. Before: SLOT 2 AFTER kernel-close-races-followups 2026-10-05 (the product-first direction 8.e). Before: RULED 2026-09-26, question round 26, item 4 (b): main's data-plane crowded-start detail string, operator-visible, carries three runs of 22 spaces from lost line continuations (two, by N7 and round 26 item 4 (b); three, by the form, section 0) in protocol/data-plane/src/server.rs. Found by data-plane-stream-registry-bound's architect gate (state/consults/2026-09-26-stream-registry-bound-gate1-architect.md, note N7). Placed by question round 31, item 1 (RULED 2026-09-30): position 16 of 16 in the human's order, order 14 in its lane. It depends on kernel-close-races-followups, position 15, so that the order holds across lanes.",
       "dates": {
         "opened": "2026-09-26",
-        "done": null
+        "done": "2026-10-08"
       }
     },
     {
@@ -7046,7 +7046,7 @@
       "kind": "task",
       "lane": "kernel-protocol",
       "phase": "prototype",
-      "status": "ready",
+      "status": "in-progress",
       "order": 16,
       "depends_on": [],
       "needs_human": {
@@ -7055,12 +7055,14 @@
       },
       "gate": "kernel/B2-1A-STEP-RECORD-AND-DATASET-REFERENCE-PREREGISTRATION.md",
       "merge": "merge-commit",
-      "evidence": null,
+      "evidence": {
+        "branch": "cut/b2-piece-1a-step-record-and-dataset-reference"
+      },
       "budget_minutes": 0,
-      "generation": 2,
+      "generation": 5,
       "felt_verdict": false,
       "entries": [],
-      "summary": "RULED 2026-10-08 (question round 69: OPEN-1 (A) with three typed additions folded into the ADR-036 text, OPEN-4 (B), OPEN-6 (A), OPEN-8 (A); state/directives/2026-10-08-round-69-rulings.md): Amendment 1, generation 2; OPEN-2, OPEN-3, OPEN-5 and OPEN-7, the red lines, go in question round 70. Before: FORM COMMITTED 2026-10-07 (the architect draft, alone, at aa00e565; full form, full gating from dispatch; 9 pins at aa00e565; ADR-036 proposed in its section 2.3, binding nothing until the human accepts it before 1c merges; at most 2,010 lines over 10 files; no wire change): ADR-029 is not needed by 1a (its section 2.5), so the plan line on the ADR-029 ruling narrows to piece 3a. OPEN-1 to OPEN-8 go to the human in one question round; OPEN-2, OPEN-3, OPEN-5 and OPEN-7 are red lines, ruled in typed words. Code waits for OPEN-4 and OPEN-6 (and OPEN-5 for the minting function) and for its turn in slot 2, after data-plane-crowded-start-detail-spaces. Named consumers (round 8): b2-piece-1b-recording and b2-piece-1c-save-and-reopen. Before: PLACED 2026-10-07 (evening) by the human in slot 2's order, after the pieces already there (state/directives/2026-10-07-b2-brief-and-evening-rulings.md; state/directives/B2-BRIEF-2026-10-07.md, section 9). Needs no shell milestone. Its form is stage 1's form: it fixes the full step record and proposes the format ADR, and its open items are the brief's section 10 rows for 1a (the step record's fields and file format; two folders with one identity after a hand copy; a session that never saved). Its form confirms whether it needs the ADR-029 scan-progress ruling. The architect drafts it alone.",
+      "summary": "BUILD DONE 2026-10-08 at 479ae81d (stage 2 by the same worker-high to 05:49:54Z: green on the first build, 920 passed; all 17 mutations observed; the lock diff still one line; class 8 kernel product 822 against 760 and kernel tests 525 against 520; worker report 2; Amendment 4, generation 5): main merged into the branch, then the PR and gate 1 of both. Before: STAGE 1 DONE 2026-10-08 at 1e637d55 (six commits by worker-high 04:16:30Z to 04:41:19Z, no Rust build; ADR-036 equal to section 2.3 as amended; the lock diff one getrandom line; 1,910 lines over 10 files, kernel product 814 against 760 so far; worker report 1; Amendment 3, generation 4): stage 2 sent at once under the sole-session directive. Before: RULED 2026-10-08 (question round 70, typed: OPEN-2, OPEN-3, OPEN-5 and OPEN-7 all (A), with conditions; state/directives/2026-10-08-round-70-rulings.md): Amendment 2, generation 3; mint with the one getrandom edge in Cargo.lock (the PR body shows the lock diff; anything more stops the piece and goes to the human); the reader refuses a locator leaving the project folder (R7). Every OPEN item ruled. IN CODE 2026-10-08: branch cut/b2-piece-1a-step-record-and-dataset-reference from c01f2e09, worktree C:/dev/wt/1a, target D:/wt-targets/1a; stage 1 (edits and commits, no Rust build) by worker-high from 04:16:30Z, its stage 2 builds after milestone 1 heavy runs; slot 2 taken when #189 came to await merge; paths disjoint from milestone 1 and #189, no protocol or lockfile edit while OPEN-5 is unruled. Before: RULED 2026-10-08 (question round 69: OPEN-1 (A) with three typed additions folded into the ADR-036 text, OPEN-4 (B), OPEN-6 (A), OPEN-8 (A); state/directives/2026-10-08-round-69-rulings.md): Amendment 1, generation 2; OPEN-2, OPEN-3, OPEN-5 and OPEN-7, the red lines, go in question round 70. Before: FORM COMMITTED 2026-10-07 (the architect draft, alone, at aa00e565; full form, full gating from dispatch; 9 pins at aa00e565; ADR-036 proposed in its section 2.3, binding nothing until the human accepts it before 1c merges; at most 2,010 lines over 10 files; no wire change): ADR-029 is not needed by 1a (its section 2.5), so the plan line on the ADR-029 ruling narrows to piece 3a. OPEN-1 to OPEN-8 go to the human in one question round; OPEN-2, OPEN-3, OPEN-5 and OPEN-7 are red lines, ruled in typed words. Code waits for OPEN-4 and OPEN-6 (and OPEN-5 for the minting function) and for its turn in slot 2, after data-plane-crowded-start-detail-spaces. Named consumers (round 8): b2-piece-1b-recording and b2-piece-1c-save-and-reopen. Before: PLACED 2026-10-07 (evening) by the human in slot 2's order, after the pieces already there (state/directives/2026-10-07-b2-brief-and-evening-rulings.md; state/directives/B2-BRIEF-2026-10-07.md, section 9). Needs no shell milestone. Its form is stage 1's form: it fixes the full step record and proposes the format ADR, and its open items are the brief's section 10 rows for 1a (the step record's fields and file format; two folders with one identity after a hand copy; a session that never saved). Its form confirms whether it needs the ADR-029 scan-progress ruling. The architect drafts it alone.",
       "dates": {
         "opened": "2026-10-07",
         "done": null
@@ -7088,7 +7090,7 @@
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "Recorded 2026-10-07 (evening) by the human's rulings (state/directives/2026-10-07-b2-brief-and-evening-rulings.md; state/directives/B2-BRIEF-2026-10-07.md, section 9): needs 1a and migration milestone 2. The docs/07 note lands with it or in its own commit just before, typed by the human (the brief, section 11). Open items at its form: the ADR-022 grant, and how large the session history may grow. Proposed.",
+      "summary": "OWED BY ITS FORM (question round 70, 2026-10-08, state/directives/2026-10-08-round-70-rulings.md; b2-piece-1a Amendment 2, item 5): the store behind OPEN-2 (a project opened from a second folder: the question asked once, the per-folder memory, a copy with its own identity and data links, the move rule) and OPEN-3 (a never-saved session kept on the machine under a not-yet-saved record, with its recovery offer naming the dataset and the time, cleared on decline or a normal session end). Before: Recorded 2026-10-07 (evening) by the human's rulings (state/directives/2026-10-07-b2-brief-and-evening-rulings.md; state/directives/B2-BRIEF-2026-10-07.md, section 9): needs 1a and migration milestone 2. The docs/07 note lands with it or in its own commit just before, typed by the human (the brief, section 11). Open items at its form: the ADR-022 grant, and how large the session history may grow. Proposed.",
       "dates": {
         "opened": "2026-10-07",
         "done": null
@@ -7115,7 +7117,7 @@
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "OWED BY ITS FORM (question round 69, 2026-10-08, state/directives/2026-10-08-round-69-rulings.md; b2-piece-1a Amendment 1, item 5): its ADR-036 amendment states how a reader detects a project file and a lineage file from different saves, and what it shows then; its form states that a selection made by clicking is not saved, and how the human is told at Save project when one exists. Before: Recorded 2026-10-07 (evening) by the human's rulings (state/directives/2026-10-07-b2-brief-and-evening-rulings.md; state/directives/B2-BRIEF-2026-10-07.md, section 9): needs 1b, and the format ADR accepted by the human. Open item at its form: what Save does with the style of a point or line layer (rounds 62 and 63). Proposed.",
+      "summary": "OWED BY ITS FORM (question round 70, 2026-10-08, state/directives/2026-10-08-round-70-rulings.md; b2-piece-1a Amendment 2, item 5): OPEN-2 at open (the question once, the copy or the same project, the move rule; its wording the human at P6); OPEN-3 recovery when the data changed or cannot be found (the app says so); OPEN-7 re-link on another machine, checked against the observation, naming each difference, none passing silently. ALSO OWED (question round 69, 2026-10-08, state/directives/2026-10-08-round-69-rulings.md; b2-piece-1a Amendment 1, item 5): its ADR-036 amendment states how a reader detects a project file and a lineage file from different saves, and what it shows then; its form states that a selection made by clicking is not saved, and how the human is told at Save project when one exists. Before: Recorded 2026-10-07 (evening) by the human's rulings (state/directives/2026-10-07-b2-brief-and-evening-rulings.md; state/directives/B2-BRIEF-2026-10-07.md, section 9): needs 1b, and the format ADR accepted by the human. Open item at its form: what Save does with the style of a point or line layer (rounds 62 and 63). Proposed.",
       "dates": {
         "opened": "2026-10-07",
         "done": null
