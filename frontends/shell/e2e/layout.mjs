@@ -3,7 +3,7 @@
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
 // E2E TEST SURFACE (e2e/README.md) -- the Map Studio frame, on real WebView2: E-KEYS, E-FIELD,
-// E-LANDMARKS, E-FOCUS, E-FIT and E-REOPEN (asserted) and RESIZEQ (recorded, never asserted), from
+// E-LANDMARKS, E-FOCUS, E-FIT, E-FLOOR and E-REOPEN (asserted) and RESIZEQ (recorded, never asserted), from
 // SHELL-MIGRATION-MILESTONE-1-PREREGISTRATION.md section 4. Fixtures: `filter-zoned.parquet`, plus
 // `100k-happy-path.parquet` for the reopen step; the suite records each fixture's sha256 before and
 // after its run (section 3). Nothing here is a measurement or a performance claim.
@@ -258,6 +258,65 @@ async function stepFit(page) {
   return notes.join("; ");
 }
 
+// E-FLOOR (PRE-REGISTRATION Amendment 9, item 1; a test added after a gate finding). E-FIT never fills the attention strip or
+// the status bar, so it cannot see their real caps. This step holds the real DOM to the declared map minimum (480 x 320) at the
+// viewport floor (1024 x 640) with Activity open and BOTH bars filled past their caps. The bars are filled by DOM content added
+// here -- 40 marker rows in each, the strip un-hidden -- because the product has no path that fills either past its cap (the
+// strip has no items today and the status bar holds a handful). The probe nodes and the `hidden` flag are put back in `finally`.
+const FLOOR_VIEWPORT = { width: 1024, height: 640 }; // layout/layoutConstants.ts's VIEWPORT_FLOOR, restated (an e2e module imports no src)
+const FLOOR_PROBE_ROWS = 40; // far past either cap: 40 rows of ~1.2 rem is over 700 px against caps of 128 and 48
+async function stepFloor(page) {
+  await press(page, "Control+KeyJ"); // Activity open
+  const cdp = await page.context().newCDPSession(page);
+  try {
+    try {
+      await page.setViewportSize(FLOOR_VIEWPORT);
+    } catch (e) {
+      throw new Error(`E-FLOOR: page.setViewportSize(${FLOOR_VIEWPORT.width}x${FLOOR_VIEWPORT.height}) failed (${e.message}): STOP and report`);
+    }
+    await sleep(500);
+    await page.evaluate((rows) => {
+      const strip = document.querySelector(".attention-strip");
+      const bar = document.querySelector(".status-bar");
+      window.__floorProbe = { stripHidden: strip.hidden };
+      strip.hidden = false;
+      for (const host of [strip, bar]) {
+        for (let i = 0; i < rows; i++) {
+          const row = document.createElement("div");
+          row.setAttribute("data-floor-probe", "1");
+          row.style.flex = "0 0 100%";
+          row.textContent = `E-FLOOR probe row ${i}`;
+          host.appendChild(row);
+        }
+      }
+    }, FLOOR_PROBE_ROWS);
+    await sleep(500);
+    const inner = await page.evaluate(() => `${window.innerWidth}x${window.innerHeight}`);
+    if (inner !== `${FLOOR_VIEWPORT.width}x${FLOOR_VIEWPORT.height}`) throw new Error(`E-FLOOR: inner size is ${inner} after setViewportSize: STOP and report`);
+    const heights = await page.evaluate(() => ({
+      strip: document.querySelector(".attention-strip").getBoundingClientRect().height,
+      bar: document.querySelector(".status-bar").getBoundingClientRect().height,
+      activityHidden: document.querySelector('section[aria-label="Activity"]').hasAttribute("hidden"),
+    }));
+    if (heights.activityHidden) throw new Error("E-FLOOR: Activity is not open");
+    const layout = await readLayout(page);
+    assertMapUsable("E-FLOOR", layout);
+    return `at ${inner} with Activity open and both bars filled past their caps (attention strip ${heights.strip}px, status bar ${heights.bar}px): map ${layout.width}x${layout.height}`;
+  } finally {
+    await page
+      .evaluate(() => {
+        for (const node of document.querySelectorAll("[data-floor-probe]")) node.remove();
+        const strip = document.querySelector(".attention-strip");
+        if (strip && window.__floorProbe) strip.hidden = window.__floorProbe.stripHidden;
+        delete window.__floorProbe;
+      })
+      .catch(() => {});
+    await cdp.send("Emulation.clearDeviceMetricsOverride").catch(() => {});
+    await sleep(400);
+    await press(page, "Control+KeyJ");
+  }
+}
+
 async function stepResizeQ(page, consoleHandle) {
   const queries = () => consoleHandle.renderTrace().filter((e) => /viewport_query/.test(e.text)).length;
   await waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 3000, timeoutMs: 45_000 });
@@ -327,6 +386,7 @@ async function main() {
     await runStep("E-LANDMARKS", 60_000, () => stepLandmarks(page));
     await runStep("E-FOCUS", 60_000, () => stepFocus(page));
     await runStep("E-FIT", 60_000, () => stepFit(page));
+    await runStep("E-FLOOR", 60_000, () => stepFloor(page));
     await runStep("RESIZEQ", 120_000, () => stepResizeQ(page, consoleHandle));
     await runStep("E-REOPEN", 90_000, () => stepReopen(page));
     const hashesAfter = fixtures.map(sha256);
