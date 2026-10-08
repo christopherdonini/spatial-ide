@@ -127,8 +127,8 @@ function instrumentA(box, s0, s1, dx, dy, steps) {
 }
 
 // Milestone 1 re-aim (the human's Decision A; PRE-REGISTRATION Amendment 6). The map is no longer a 1280-wide, ~200-high
-// strip (it is 668 x 730 at a 1280 x 800 window; 328 x 570 and 788 x 830 at this file's two window sizes, measured at this
-// branch's head), so three assumptions this file made about the map are re-derived below from the measured box and the fixture. The tolerance, the instruments and every other check are untouched.
+// strip (it is 668 x 730 at a 1280 x 800 window; 328 x 570 and 788 x 830 at this file's two window sizes, measured at commit
+// 65391e79; at the branch head, with the border-box fix, they are 668 x 736, 328 x 576 and 788 x 836), so three assumptions this file made about the map are re-derived below from the measured box and the fixture. The tolerance, the instruments and every other check are untouched.
 //
 // (1) The dataset's width in CSS px at the paint-vs-event zoom. The fixture is 317 columns of 40 m cells
 // (`E_C`/`N_C` above, from `engine/src/fixture.rs`), so it spans 317 x 40 m; at zoom z one CSS px is 2^-z m
