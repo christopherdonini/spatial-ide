@@ -1653,8 +1653,33 @@ async function stepK6(page, consoleHandle) {
   // Exactly two states pass, named: nothing shown, or the named refusal. A confirmed id fails (it
   // could only have come from a pick at the pre-drag pixel), and so does a labelled state -- this
   // read is after the settle, and a marker may not outlive one (B1).
+  //
+  // Milestone 1 re-aim of case (v) (the human's ruling on K6 case (v), option (b), under Decision A; PRE-REGISTRATION
+  // Amendment 7). OLD assertion: the readout is not an id and no confirming re-pick line names an id since the mark. NEW
+  // assertion: that, and also no camera-settle re-pick line of ANY kind in the render trace since the mark, whatever the pick
+  // found. REASON: on the Studio frame's 668 x 730 map the stale pick lands on background, so a mutated build (the
+  // `lastPointerPxRef.current = null;` line deleted from `onPointerRelease`) still runs its pick at the pre-drag pixel, finds
+  // nothing, and emits a `readout_confirmed camera-settle-repick cleared` line; "not an id" passes for it exactly as for a clean
+  // build. Measured, scratch copy of this file, 1280 x 800 window: the clean build's trace since the mark held no
+  // `readout_confirmed` line; the mutated build's held that one `cleared` line; both read {"state":"clear"}, and a real hover at the
+  // pre-drag pixel at the final camera answered nothing in both. READ FROM THE RECORD, NOT FROM A RUN: the pick threshold
+  // `SUB_PIXEL_PICK_REFUSAL_THRESHOLD_PX` was raised to 9 px on 2026-09-14 (src/canvas/pickResolution.ts), after this case first
+  // bound (commit 04866c19, 2026-09-11, threshold 2 px, where a stale pick found a feature at a cell pitch of about 2.7 px); at 9 px
+  // a hover only answers where the pitch is about 22 px with gaps, which contributes to the stale pixel missing.
   const afterReleaseAllowed =
     afterRelease.state === "clear" || (afterRelease.state === "refusal" && afterRelease.text === K6_REFUSAL_TEXT);
+  const repickLineSinceRelease = consoleHandle
+    .renderTrace()
+    .slice(beforeRelease)
+    .find((e) => /readout_confirmed camera-settle-repick/.test(e.text));
+  if (repickLineSinceRelease !== undefined) {
+    throw new Error(
+      `K6/release-edge: a camera-settle re-pick line appeared in the render trace since this step's mark, whatever the pick found: ` +
+        `${JSON.stringify(repickLineSinceRelease.text)}. With the named refusal STANDING, a real drag and then ONE wheel notch back in ` +
+        `with the pointer never moved, the release edge (section 12 Amendment 3) leaves the settle nothing to pick at, so no re-pick ` +
+        `line of any kind may arrive (.hover-readout showed ${JSON.stringify(afterRelease)})`
+    );
+  }
   if (!afterReleaseAllowed || confirmedIdSinceRelease !== null) {
     throw new Error(
       `K6/release-edge: with the named refusal STANDING, a real drag (button down, pointer moved, button up) and ` +
@@ -1684,7 +1709,7 @@ async function stepK6(page, consoleHandle) {
       `settle; ` +
     `(v) release edge: hovered id ${releaseId}, ${releaseOutNotches} zoom-out notch(es) to a STANDING refusal, then a ` +
       `real drag (button down, ${releaseDrag.dx}, ${releaseDrag.dy} px, button up) and ONE wheel notch back in with ` +
-      `the pointer never moved -> readout ${JSON.stringify(afterRelease)}, and no confirming re-pick line naming an id ` +
+      `the pointer never moved -> readout ${JSON.stringify(afterRelease)}, and no camera-settle re-pick line of any kind ` +
       `since that case's own mark.`
   );
 }
