@@ -577,3 +577,39 @@ The worker's and tester's briefs carry, as written, the paragraph at state/direc
 8. **Generation 8.**
 
 **Superseded index.** Amendment 6, item 2 (assumptions only) → item 3 (one exception, case (v)). It is not edited.
+
+### Amendment 8 — the class 8 record at the gated head, and stage 7
+
+*Written by the custodian before the PR opens, at the gated head 8127b0f59e3dd7df97898ed7475b9380d9b54594. That head merges origin/main 176ab912 into the branch at 629a21fd, signed off, with no conflict. The stage 7 worker report is `state/consults/2026-10-08-shell-migration-milestone-1-worker-report-7.md`. Nothing below is a quotation.*
+
+1. **Stage 7,** under Amendment 7:
+   - K6 case (v)'s change is at 82d1f73a, `e2e/regression.mjs` only.
+   - The clean run passes K6, and only the pre-existing C2′/C3′ fail.
+   - Mutation 5 was observed once: one application, one run, then a restore and a clean check. The case failed on its new condition, a camera-settle re-pick line since the release mark.
+   - Its recorded-mutation comment is at 629a21fd.
+2. **§7 at the gated head,** by §7's own command, three-dot from the merge base 176ab9127463a8d3fdec1a69b640a4c1754f7349:
+
+   | Group | Lines | Ceiling | Result |
+   |---|---|---|---|
+   | G1 | 952 | 1,000 | within |
+   | G2 | 273 | 450 | within |
+   | G3 | 337 | 400 | within |
+   | G4 | 66 | 100 | within |
+   | G5 | 1,004 | 900 | over by 104, class 8 |
+   | G6 | 685 | 400 | over by 285, class 8 |
+   | Total | 3,317 over 28 files | 3,250 over 25 | over by 67 lines and 3 files, class 8 |
+
+   G6's overrun is the re-aims of Amendment 6 and the case (v) change of Amendment 7, as Decision A provides. Its files are:
+   - `layout.mjs` 357;
+   - `regression.mjs` 190;
+   - `pan-anchor.mjs` 63;
+   - `source-changed.mjs` 39;
+   - `filter-panel.mjs` 22;
+   - `console.mjs` 9;
+   - `style.mjs` 3;
+   - `source-watch-idle.mjs` 2.
+
+   §7 is not edited.
+3. **The merge.** `verify-cites`, `verify-quotes`, `verify-test-claims` and `verify` all exit 0 on the merged branch. Since #191's pinned fallback merged, the form's citations pinned at 30e77c10 resolve.
+
+**Superseded index.** Amendment 3, item 7's and Amendment 4, item 9's §7 counts → item 2. Neither is edited.
