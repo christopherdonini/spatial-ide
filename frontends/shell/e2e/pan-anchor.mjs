@@ -144,6 +144,13 @@ const EDGE_MARGIN_PX = 2 * TOLERANCE_BUFFER_PX;
 // the old fixed 500 ms was enough for a 1280 x 200 box and is not for 788 x 830 (measured here: a first centroid read
 // saw 2,484 non-background pixels where the filled dataset has 18,410). A centroid is only read
 // once the frame-wide non-background count has stopped changing; the bounds are bounds, not a claim about how long a fill takes.
+// RECORDED MUTATIONS (milestone 1 re-aim), OBSERVED AT 65391e79b048f51f3ca4d7b5eeac7533f5b64639, reverted, the worktree clean before and after:
+//  - paint-vs-event: `traceViewState` in src/canvas/WorkingCanvas.tsx given `vs.target[0] * 1.1`. The four paint-vs-event cases
+//    failed by name (small ±85: "painted 83.0 vs deck 91.3 -> -8.28 buffer px"; large ±250: "painted 243.9 vs deck 268.4 ->
+//    -24.48 buffer px"); the trace feeds every check, so normal-A and recenter-crossing-A failed too.
+//  - there-and-back-net has no honest product mutation (a trace scale cancels in a net). Its control is on the input: a copy of
+//    this file kept outside the repository, with the return drag 60 px shorter than the outward one, run against the unmodified
+//    product, failed both sizes with "net residual -58.00 buffer px (tol 4)" and passed every other check.
 const FILL_STABLE_READS = 3;
 const FILL_READ_GAP_MS = 300;
 const FILL_BOUND_MS = 20_000;

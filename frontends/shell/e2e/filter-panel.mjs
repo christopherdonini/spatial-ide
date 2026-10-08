@@ -380,6 +380,10 @@ async function stepFind(page, consoleHandle) {
   // 4036 x (668/1280)^2 = 1,099 px, 0.23% of 487,640 -- under the old floor with nothing wrong. The floor is therefore the old
   // floor's own ratio to its own measurement (0.005 / (4036/285440) = 0.354, the ~2.8x headroom above) applied to the count this
   // canvas's width predicts. It equals 0.5% on the 1280 x 223 canvas and about 0.08% on 668 x 730; a blank canvas is 0%.
+  // RECORDED MUTATION (milestone 1 re-aim), OBSERVED AT 65391e79b048f51f3ca4d7b5eeac7533f5b64639: `resetFitForNewGeneration()` in
+  // src/canvas/WorkingCanvas.tsx emptied (the camera is not refitted for a new generation). FIND' failed with "filtered-and-completed
+  // canvas is effectively blank (0.000% non-bg, floor 0.080% for a 668 x 730 canvas, settled=true)". Reverted; the worktree was
+  // clean before and after.
   const CALIBRATION = { nonBackgroundPx: 4036, canvasPx: 285_440, canvasWidth: 1280, floorFraction: 0.005 };
   const floorOverMeasured = CALIBRATION.floorFraction / (CALIBRATION.nonBackgroundPx / CALIBRATION.canvasPx);
   const expectedPx = CALIBRATION.nonBackgroundPx * (pixels.width / CALIBRATION.canvasWidth) ** 2;

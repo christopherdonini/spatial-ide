@@ -721,6 +721,10 @@ async function stepA8(page, consoleHandle) {
 // 0.93, so the first notch that CAN answer is notch 3 (-1.78) at the earliest; measured on this map, the readouts are the named
 // refusal at -1.78 and an id at -0.85 (the render trace's `readout_confirmed` lines), so the extent is between 16.2 and 30.9 m
 // and the first answering notch is 4. The 15-notch budget (`MAX_ZOOM_NOTCHES`) is unchanged and is 11 notches past that.
+// RECORDED MUTATION (milestone 1 re-aim of A9'), OBSERVED AT 65391e79b048f51f3ca4d7b5eeac7533f5b64639: `isBelowPickResolution` in
+// src/canvas/pickResolution.ts made to return `true` (every camera below the pick resolution). The run
+// failed A9' with "A9': timed out after 120000ms" -- the walk never reached an id -- and K6/continuous with "no
+// above-threshold hoverable candidate found". Reverted; the worktree was clean before and after.
 async function stepA9(page, consoleHandle) {
   const initialRect = await canvasRect(page);
   if (!initialRect) throw new Error("A9': .working-canvas not found");
@@ -1254,6 +1258,13 @@ const K6_PAN_KEY_PRESSES_MAX = 8;
  * a settle answering there at all. */
 const K6_RELEASE_DRAG_FRACTION = 0.1;
 
+// RECORDED MUTATIONS (milestone 1 re-aim of K6), OBSERVED AT 65391e79b048f51f3ca4d7b5eeac7533f5b64639, each applied alone and reverted (the worktree was clean
+// before and after each):
+//  - case (ii): the marker <span> deleted from the confirming branch of src/canvas/HoverReadoutView.tsx. K6 failed with
+//    "K6/discrete: the labelled state rendered at notch 1/8 with NO marker element"; cases (i), (iii) and (iv) had passed.
+//  - case (v): the `lastPointerPxRef.current = null;` line deleted from `onPointerRelease` in src/canvas/WorkingCanvas.tsx
+//    (the mutation HOVER-REPICK-PREREGISTRATION.md Amendment 5 records). K6 did NOT fail: case (v) read {"state":"clear"} and
+//    passed. Case (v) does not bind to that line on this map; it was not edited by this re-aim and the finding stands open.
 async function stepK6(page, consoleHandle) {
   // ASSERTION (i) -- CONTINUOUS: one coalesced camera change crossing the threshold (the
   // walkthrough's own L7 gesture, realised here via "Zoom to layer" -- this section's own top

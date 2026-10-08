@@ -421,6 +421,14 @@ async function panByViewports(page, rect, drags, shouldStop = () => false) {
   return { drags: performed, cssPixelsPerDrag: Math.round(fromX - toX), totalCssPixels: Math.round((fromX - toX) * performed) };
 }
 
+// RECORDED MUTATIONS (milestone 1 re-aim of the post route's S4), OBSERVED AT 65391e79b048f51f3ca4d7b5eeac7533f5b64639, each applied alone on the post route and
+// reverted (the worktree was clean before and after each):
+//  - the `traceStreamIssued(...)` call deleted from src/streaming/tileViewportStreamManager.ts: S4 failed with "timed out after
+//    60000ms" and S5a to S5d failed after it.
+//  - the file's own recorded mutation of the owner clear (header above), `canvas?.clearAllTiles();` deleted from
+//    `endCandidateSession` in src/residency/candidateArmSession.ts: S5b failed with "resident vertices are 381076 (features
+//    20163), expected 0 -- the owner did not clear what it was showing", and S4, S5a, S5c and S5d passed.
+
 /** The zoom of the newest `[render-trace] view-state` line, or null before there is one. At zoom z there are 2^z CSS px per
  * metre (`world = target + (pixel - center) / 2^zoom`, as `pan-anchor.mjs` derives it). */
 function lastViewStateZoom(consoleHandle) {
