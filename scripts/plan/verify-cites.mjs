@@ -55,7 +55,9 @@
 // right line count but the wrong file among same-basename siblings; and, by the tiering above, a
 // stale LOOSE reference (it is surfaced as advice, never gated). Of the pin: one after a closing
 // backtick or after two spaces is not read; one on a cite that resolves in the tree is not checked; a
-// hex word right after `@` is read as a pin. Node's standard library only.
+// hex word right after `@` is read as a pin; a pin is read at the path as written, from the repo
+// root, so a relative, `.md`-fallback or basename cite keeps the tree's verdict. Node's standard
+// library only.
 //
 // RELATIONSHIP to frontends/shell/e2e/citationIntegrity.test.mjs (the human's item 2, "extend the
 // citation-integrity scan to all files"): that e2e check is a DIFFERENT defect class — it proves a
