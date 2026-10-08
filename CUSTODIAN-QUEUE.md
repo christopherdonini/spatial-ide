@@ -1,14 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `35b9ee7b95a26e3316b5e26c3d34f5ccac23ae2b66983bca8b611174aa3ec63c`) at `2026-10-08T17:14:59.041Z`.
+Generated from `PLAN.yaml` (sha256 `90096775f5e58cf7d53ae114c63d94d403d3e523ff7ca5f5639c52bba5b3570b`) at `2026-10-08T17:23:27.335Z`.
 
 ## 1. Next
 
-- **adr-032-staleness-docs** — ADR-032 shown stale in two places: the PLAN node adr-032-decision and docs/README.md line 27 still read Proposed (lane `governance`)
+- (nothing ready)
 
 ## 2. Ready
 
-- **adr-032-staleness-docs** — ADR-032 shown stale in two places: the PLAN node adr-032-decision and docs/README.md line 27 still read Proposed (lane `governance`, order 3, budget 30 min)
+- (none)
 
 ## 3. Waiting on the human (total: 12 min)
 
@@ -29,6 +29,7 @@ Generated from `PLAN.yaml` (sha256 `35b9ee7b95a26e3316b5e26c3d34f5ccac23ae2b6698
 ## 5. In progress
 
 - **shell-migration-milestone-1** — Shell migration, milestone 1 -- the frame: Map Studio regions, panel toggles, separated sections, an attention strip and a status bar — evidence: branch `cut/shell-migration-milestone-1`
+- **adr-032-staleness-docs** — ADR-032 shown stale in two places: the PLAN node adr-032-decision and docs/README.md line 27 still read Proposed — evidence: branch `cut/adr-032-staleness-docs`
 
 ## 6. Proposed / unscheduled
 

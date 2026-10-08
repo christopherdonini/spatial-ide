@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-08T17:14:59.178Z",
-  "plan_hash": "35b9ee7b95a26e3316b5e26c3d34f5ccac23ae2b66983bca8b611174aa3ec63c",
+  "generated_at": "2026-10-08T17:23:27.456Z",
+  "plan_hash": "90096775f5e58cf7d53ae114c63d94d403d3e523ff7ca5f5639c52bba5b3570b",
   "priorities_approved": true,
   "lanes": [
     {
@@ -6940,7 +6940,7 @@
       "kind": "task",
       "lane": "governance",
       "phase": "prototype",
-      "status": "ready",
+      "status": "in-progress",
       "order": 3,
       "depends_on": [
         "b2-piece-1a-step-record-and-dataset-reference"
@@ -6949,13 +6949,15 @@
         "kind": "none",
         "minutes": 0
       },
-      "gate": "none",
-      "evidence": null,
+      "gate": "scripts/plan/ADR-032-STALENESS-DOCS-PREREGISTRATION.md",
+      "evidence": {
+        "branch": "cut/adr-032-staleness-docs"
+      },
       "budget_minutes": 30,
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "QUEUED 2026-10-08 by the human (state/directives/2026-10-08-reuse-round-1.md, item 3): ADR-032 was Accepted 2026-09-23; the node adr-032-decision is still proposed, and docs/README.md line 27 still calls it Proposed. A small docs piece brings both in line. It waits for #190, which also changes docs/README.md (disjoint paths).",
+      "summary": "IN CODE 2026-10-08: slot 2; five-line form at be845ea3 (single reviewer gate); branch cut/adr-032-staleness-docs, worktree C:/dev/wt/a32; one worker. Before: QUEUED 2026-10-08 by the human (state/directives/2026-10-08-reuse-round-1.md, item 3): ADR-032 was Accepted 2026-09-23; the node adr-032-decision is still proposed, and docs/README.md line 27 still calls it Proposed. A small docs piece brings both in line. It waits for #190, which also changes docs/README.md (disjoint paths).",
       "dates": {
         "opened": "2026-10-08",
         "done": null
