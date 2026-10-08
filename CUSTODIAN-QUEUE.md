@@ -1,14 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `22087839d5dcfd62591420f95b393fed6da2b312271e9a136b995fa8c9270136`) at `2026-10-08T22:46:48.071Z`.
+Generated from `PLAN.yaml` (sha256 `e5bcaf00320926e54316ab90b976acbd79cf788a47a10be2040dd6de5db89b31`) at `2026-10-08T22:51:48.893Z`.
 
 ## 1. Next
 
-- **shell-pick-paths-disagree-at-1280x801** — The hover pick and the settle re-pick name different features at the same camera and pointer when the window is one row taller than the default (50244 against 53722) (lane `shell`)
+- (nothing ready)
 
 ## 2. Ready
 
-- **shell-pick-paths-disagree-at-1280x801** — The hover pick and the settle re-pick name different features at the same camera and pointer when the window is one row taller than the default (50244 against 53722) (lane `shell`, order 1, budget 120 min)
+- (none)
 
 ## 3. Waiting on the human (total: 10 min)
 
@@ -27,7 +27,7 @@ Generated from `PLAN.yaml` (sha256 `22087839d5dcfd62591420f95b393fed6da2b312271e
 
 ## 5. In progress
 
-- (none)
+- **shell-pick-paths-disagree-at-1280x801** — The hover pick and the settle re-pick name different features at the same camera and pointer when the window is one row taller than the default (50244 against 53722) — evidence: branch `detached-worktree-pick`
 
 ## 6. Proposed / unscheduled
 
