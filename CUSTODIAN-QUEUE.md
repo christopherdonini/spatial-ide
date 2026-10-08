@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `0ef6ed19bd01882113106f5c7c2c4b56c21c2a3aee7aa1b2dcee581646b2baee`) at `2026-10-08T04:17:02.612Z`.
+Generated from `PLAN.yaml` (sha256 `b861577e40de41c4ff974d78ddc4de668745482e7e26d8cb0966ac4519b7064e`) at `2026-10-08T04:34:56.278Z`.
 
 ## 1. Next
 
@@ -27,7 +27,6 @@ Generated from `PLAN.yaml` (sha256 `0ef6ed19bd01882113106f5c7c2c4b56c21c2a3aee7a
 
 ## 5. In progress
 
-- **data-plane-crowded-start-detail-spaces** — The data plane's crowded-start detail string loses its runs of spaces (round 26, item 4 (b)) — evidence: branch `cut/data-plane-crowded-start-detail-spaces`
 - **b2-piece-1a-step-record-and-dataset-reference** — B2 piece 1a -- the design (the full step record and the format ADR, as Proposed) and the code of the lasting dataset reference — evidence: branch `cut/b2-piece-1a-step-record-and-dataset-reference`
 - **shell-migration-milestone-1** — Shell migration, milestone 1 -- the frame: Map Studio regions, panel toggles, separated sections, an attention strip and a status bar — evidence: branch `cut/shell-migration-milestone-1`
 
