@@ -37,7 +37,7 @@ Feature count alone is not a workload — 10M points and 10M polygon vertices ar
 
 ## Regression corpus
 
-- **Public data**: Overture Maps, OSM extracts, Sentinel/NAIP samples — real scale, redistributable.
+- **Public data**: Overture Maps, OSM extracts, Sentinel/NAIP samples — real scale. Each file is fetched from its source and kept local, never redistributed; its hash, licence and attribution are recorded.
 - **Dirty data zoo**: real-world broken shapefiles, wrong-encoding CSVs, mislabeled-CRS files, truncated columns. This is the data doctor's (05) test suite — every bug report that involves a weird file donates a specimen.
 - **Published control coordinates**: official reference points for CRS-transformation validation — for the Swiss fixture, swisstopo's LV95↔ETRS89 points — stored with their publication source and date. Used only as the PROJ oracle (see Correctness).
 
