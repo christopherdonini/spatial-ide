@@ -11,7 +11,9 @@
 // EACH against the working tree: the referenced file must exist AND the cited line (or, for a range,
 // both endpoints) must be within that file's line count. Every reference that does NOT resolve is
 // printed with the citing `file:line` and the bad target; the process exits 1 if any reference is
-// unresolved, 0 if all resolve.
+// unresolved, 0 if all resolve. PINNED FALLBACK: a cite that does not resolve in the tree but is directly
+// followed by `@ <commit>` (7-40 hex digits) is read at that commit instead: the commit must exist, the
+// path must be a file there, and the line must be within it.
 //
 // DEFAULT FILE SET (override with `--files <glob>`):
 //   - every tracked `*.md`               — the WHOLE file is scanned (prose citations count).
@@ -51,7 +53,9 @@
 // WHAT THIS DOES NOT CATCH (disclosed): a cited line that moved but stayed in range (this checks
 // existence and bounds, not that line N still says what the citation implies); a citation with the
 // right line count but the wrong file among same-basename siblings; and, by the tiering above, a
-// stale LOOSE reference (it is surfaced as advice, never gated). Node's standard library only.
+// stale LOOSE reference (it is surfaced as advice, never gated). Of the pin: one after a closing
+// backtick or after two spaces is not read; one on a cite that resolves in the tree is not checked; a
+// hex word right after `@` is read as a pin. Node's standard library only.
 //
 // RELATIONSHIP to frontends/shell/e2e/citationIntegrity.test.mjs (the human's item 2, "extend the
 // citation-integrity scan to all files"): that e2e check is a DIFFERENT defect class — it proves a
@@ -124,7 +128,8 @@ function lineOf(text, idx) {
 
 /**
  * Extract every citation-shaped token from `text`. When `commentsOnly` is true, only tokens whose
- * position falls inside a comment block are kept. Returns [{ pathRaw, startL, endL, citeLine, raw }].
+ * position falls inside a comment block are kept. Returns [{ pathRaw, startL, endL, citeLine, raw, pin }];
+ * `pin` is the commit hex of a directly following `@ <commit>` (7-40 hex digits), else null.
  */
 export function extractCitations(text, { commentsOnly } = {}) {
   const ranges = commentsOnly ? commentRanges(text) : null;
@@ -251,7 +256,7 @@ export function checkCitation(cite, index, repoRoot) {
 /**
  * A citation that carries a pin (`path:line[-line] @ <commit>`) is read at that commit: the commit
  * must exist, the file must exist there, and the line (or range end) must be within it. Returns
- * { ok: true } or { ok: false, reason }. Git only reads; a commit git cannot find is a failing pin.
+ * { ok: true } or { ok: false, reason, missingFile? } (missingFile: nothing at that path there). Git only reads; a commit git cannot find is a failing pin.
  */
 export function checkPinned(cite, repoRoot) {
   const git = (args) =>
@@ -259,7 +264,12 @@ export function checkPinned(cite, repoRoot) {
   try { git(['cat-file', '-e', `${cite.pin}^{commit}`]); } catch { return { ok: false, reason: `pinned commit ${cite.pin} not found` }; }
   const p = cite.pathRaw.replace(/^\.\//, '');
   let text;
-  try { text = git(['show', `${cite.pin}:${p}`]); } catch { return { ok: false, reason: `"${p}" not found at pinned commit ${cite.pin}` }; }
+  try { text = git(['cat-file', 'blob', `${cite.pin}:${p}`]); } catch {
+    let kind = '';
+    try { kind = git(['cat-file', '-t', `${cite.pin}:${p}`]).trim(); } catch { /* absent */ }
+    if (kind === 'tree') return { ok: false, reason: `"${p}" is a directory at pinned commit ${cite.pin}` };
+    return { ok: false, missingFile: true, reason: `"${p}" not found at pinned commit ${cite.pin}` };
+  }
   const maxL = Math.max(cite.startL, cite.endL);
   const lc = text.split('\n').length;
   if (cite.startL < 1 || cite.endL < 1 || maxL > lc) {
@@ -326,7 +336,8 @@ export function runVerifyCites({ repoRoot, filesGlob } = {}) {
       if (cite.pin && (res.status !== 'no-match' || cls === 'rooted')) {
         const pr = checkPinned(cite, root);
         if (pr.ok) continue;
-        pinReason = pr.reason;
+        // A pin that only says "not found" does not replace a reason the tree already found a file for.
+        if (!(pr.missingFile && res.status !== 'no-match')) pinReason = pr.reason;
       }
       if (res.status === 'no-match') {
         // A rooted path (first segment is a real top-level repo dir) that matches nothing is a

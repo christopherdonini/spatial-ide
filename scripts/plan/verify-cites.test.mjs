@@ -297,3 +297,27 @@ test('an_unpinned_cite_past_the_trees_end_still_fails', () => {
     fs.rmSync(dir, { recursive: true, force: true });
   }
 });
+
+function pinnedRun(doc, key) {
+  const { dir } = pinnedRepo(doc);
+  try { return runVerifyCites({ repoRoot: dir })[key]; } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+}
+
+test('a_pinned_cite_whose_path_is_a_directory_at_that_commit_fails_by_name', () => {
+  const gated = pinnedRun((rev) => `see engine/src:3 @ ${rev} sha256:00`, 'gated');
+  assert.equal(gated.length, 1, JSON.stringify(gated));
+  assert.match(gated[0].reason, /"engine\/src" is a directory at pinned commit/);
+});
+
+test('a_pinned_cite_whose_line_is_past_the_file_end_at_that_commit_fails_by_name', () => {
+  const gated = pinnedRun((rev) => `see engine/src/pool.rs:9 @ ${rev} sha256:00`, 'gated');
+  assert.equal(gated.length, 1, JSON.stringify(gated));
+  assert.match(gated[0].reason, /exceeds "engine\/src\/pool\.rs" at pinned commit/);
+});
+
+// A pin that only says "not found" does not replace the reason of a cite the tree found a file for.
+test('a_pinned_loose_cite_keeps_the_trees_reason_when_the_pin_path_is_not_found', () => {
+  const advisory = pinnedRun((rev) => `see pool.rs:9 @ ${rev} sha256:00`, 'advisory');
+  assert.equal(advisory.length, 1, JSON.stringify(advisory));
+  assert.match(advisory[0].reason, /^line 9 exceeds engine\/src\/pool\.rs \(/);
+});
