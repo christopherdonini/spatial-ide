@@ -33,3 +33,20 @@ Opens empty, append-only.
 5. **The reviewer's D1** is this amendment.
 
 **Superseded index.** The preamble's sentence putting the bundle's declared size in place of a line budget → item 1. The Out-of-scope line's conclusion that the single reviewer gate applies → item 2. Neither is edited.
+
+### Amendment 2 — the piece withdrawn by the human's direction (class 5, a ruling), and its closing record
+
+*Written by the custodian after the human's direction of 2026-10-08 (`state/directives/2026-10-08-reuse-round-1-private-repository.md`, received at 17:10:40Z by the transcript; its DIRECTIVE block in `DECISIONS-PENDING.md`). References only. Nothing below is a quotation.*
+
+1. **The ruling.** The reuse archaeology lives in the human's private repository and is read from a clone outside every repository. Nothing from it is copied into this repository. This piece copied it in, so the direction withdraws the piece.
+2. **PR #192** is closed unmerged. Its head was 2ae29e9d on `cut/reuse-round-1-bundle`, and nothing of it reached main. The human is asked whether the published branch is deleted.
+3. **The gates.**
+   - The reviewer's gate 1 is gate-log 443: FAIL on E1, Correctness PASS. Amendment 1 records it.
+   - The architect gate and the reviewer's scoped re-gate ran from 17:10:31Z and were stopped by the custodian at about 17:11:17Z (their transcripts), before they reported, when the direction arrived. They have no gate-log rows and no reports.
+4. **What stays on main:**
+   - this form, with Amendments 1 and 2;
+   - gate-log 443 and its report;
+   - the architect's ADR-036 consult, which the direction's item 2 asks for. Its source subsection is byte-identical in the private repository at 89bbac37 (the DIRECTIVE block names the lines and the hash).
+5. **The node** `reuse-round-1-bundle` is unscheduled, with no evidence and no gate. It is not done, since nothing merged.
+
+**Superseded index.** The Scope, Change and Tests+mutation lines, and Amendment 1, item 2's route → item 1 (withdrawn). None is edited.

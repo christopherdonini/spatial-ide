@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-08T17:04:23.620Z",
-  "plan_hash": "8b4e5a0233440a4f839951f1d931a63b37f840809234f8777f3a9f550ca51bd2",
+  "generated_at": "2026-10-08T17:14:59.041Z",
+  "plan_hash": "35b9ee7b95a26e3316b5e26c3d34f5ccac23ae2b66983bca8b611174aa3ec63c",
   "priorities_approved": true,
   "next": {
     "id": "adr-032-staleness-docs",
@@ -246,28 +246,6 @@
       },
       "summary": "RULED 2026-10-08 (the human Decision A, state/directives/2026-10-08-decisions-a-b-c.md): the seven re-aims inside this piece, Amendment 6, generation 7 (assumptions only, values derived and stated, A9 and K6 off one candidate pixel, each shown still able to fail, the PR body listing old and new assumptions, overrun as class 8); stage 4 by the same worker; its PR opens only after verify-cites-pinned-citations merges (Decision B). Before: DIAGNOSED 2026-10-08 (stage 3, no edits; worker report 3; Amendment 5, generation 6): every I3 failure is a suite assumption about the old map shape, failing identically at the base sized to the new map; no product change. WAITING ON THE HUMAN: the re-aims, the verify-cites freeze exception. Before: STAGE 2 DONE 2026-10-08 at f214f1f4 (worker report 2; Amendment 4, generation 5): e2e:layout 8 of 8; RESIZEQ zero, H1 holds, KNOWN-LIMITATIONS 39 written as a draft; invalidator I3 for regression A9 and K6, filter-panel FIND, console CLASSC, source-changed post-route S4 to S5d and four pan-anchor checks (the human is asked; a diagnosis with no edits runs them at the base with the new map size); E-FIT mutation absorbed (class 2); verify-cites fails on the form historical App.tsx pins (governance, under the freeze: the human is asked); port 5180 excluded on this machine (launch workaround, class 2). No PR yet. Before: STAGE 1 DONE 2026-10-07 at 02d70dde (eight commits by worker-high 22:42:21Z to 23:52:44Z; U1 to U6 and R1 to R8 observed; 3,015 lines over 25 files against 3,250, G5 tests 1,004 against 900 so far; worker report 1; Amendment 3, generation 4): main merged into the branch, then stage 2 (the heavy suites, the E rows and RESIZEQ). Before: IN CODE 2026-10-07: branch cut/shell-migration-milestone-1 from e888787e (main after the lines cut merged), worktree C:/dev/wt/m1, target D:/wt-targets/m1; one worker, its heavy suites in a second stage. Amendment 2, generation 3: the section 2.9 item 7 re-sweep at the lines cut merge commit (Part T rows T4 and T5 join the section 2.8 location sweep; LN prime runs under section 2.7 and H3; no other home needed). Before: RULED 2026-10-07 (rounds 66 and 67, all recommended, with two clarifications; state/directives/2026-10-07-round-66-and-67-rulings.md): Amendment 1, generation 2; dispatch waits only for the lines cut merge. Before: FORM COMMITTED 2026-10-07 (the architect draft, alone; full form; 69 pins at 30e77c10; at most 3,250 lines over 25 files against the plan estimate of 1,500, OPEN-5): OPEN-1 to OPEN-7 go to the human in one question round, none a red line; code after the lines cut merges. Before: PLACED 2026-10-07 by the human's ruling of the migration plan's second version (state/directives/2026-10-07-migration-plan-v2-ruled.md; state/directives/SHELL-MIGRATION-PLAN-2026-10-07.md, section 5, scope and acceptance, and 5.7, placement): first in slot 1 order. Its full form, by the architect, and its question round now; its code starts when the lines cut has merged, since it shares frontends/shell/e2e/regression.mjs and frontends/shell/MANUAL-WALKTHROUGH.md with it (the 2026-10-07 awaiting-merge direction, item 3). No engine, kernel or protocol file; no new dependency (the plan, section 2). The governance freeze lifts when it merges. Before: PROPOSED 2026-10-05 by the product-first direction 8.b: proposed until the human rules Fable migration plan (written after the O-07 walkthrough); from that ruling it is first in slot 1 order. The freeze lifts when this milestone and MP-1 have both merged.",
       "evidence_label": "branch `cut/shell-migration-milestone-1`"
-    },
-    {
-      "id": "reuse-round-1-bundle",
-      "title": "Reuse archaeology round 1, the advisor bundle, filed as one docs-and-data piece (not under docs/)",
-      "lane": "governance",
-      "phase": "prototype",
-      "status": "in-progress",
-      "order": 2,
-      "budget_minutes": 90,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": {
-        "branch": "cut/reuse-round-1-bundle"
-      },
-      "dates": {
-        "opened": "2026-10-08",
-        "done": null
-      },
-      "summary": "GATE 1 REVIEWER FAIL (443, E1: 366 lines of placed code over the section 21c bound close the single-gate route; Correctness PASS); Amendment 1, class 6, generation 2: both gates apply; the architect gate and a reviewer re-gate on the amendment next; H1 (tilde and temporary folder paths in the notes) to the human. Before: PR #192 OPEN 2026-10-08 at 2ae29e9d: the archive arrived as the human upload (16:36:01Z), sha256 50d87a03 matched; placed byte-identical under reuse/ (139 files) by the custodian; check-index, verify-cites over reuse/** and the default set, the staged profile scan and the governance checkers all exit 0; five-line form at ab44cd2c; the single reviewer gate next. Before: V2 ARCHIVE 2026-10-08 (state/directives/2026-10-08-reuse-round-1-v2.md): spatial-ide-reuse-round-1-v2.zip, sha256 50d87a03eb42148608209edbad2d905bcea0e1c369f1d3330f86fb54d2409526, replaces the first; placed after #190 merges (five citations pinned at 14acee0b resolve only once #190 is in main; the pinned fallback is #191); verify the sha256 first, then tools/check-index.mjs and verify-cites over the placed folder. WAITING ON THE HUMAN (needs_human ruling): this archive did not reach the session either; the human names the route (for example Google Drive through the connector, or a path on this PC). #190 and #191 merged 2026-10-08. Before: PLACED 2026-10-08 by the human (state/directives/2026-10-08-reuse-round-1.md, item 1): slot 2, after #190 has merged and after verify-cites-pinned-citations; no mod, pilot, trial or record rule; not under docs/ (it holds code, and docs/ is CC-BY-4.0). Before the PR: no other project named, no user-profile path, its check-index.mjs and the repository checkers run on it; if verify-cites flags a citation inside it, stop and tell the human (no checker change, no exemption, no edit to the notes); fetch-cache.mjs is not run, and the clone cache is never inside the repo. WAITING: the archive did not reach the session; the human is asked for it and its sha256.",
-      "evidence_label": "branch `cut/reuse-round-1-bundle`"
     }
   ],
   "proposed": [
@@ -1466,7 +1444,7 @@
         "opened": "2026-10-08",
         "done": null
       },
-      "summary": "PROPOSED 2026-10-08 by the human (state/directives/2026-10-08-reuse-round-1.md, item 4), for the human to place: reported only, nothing claimed; the reuse bundle's corpus section is its source, once the bundle is filed."
+      "summary": "PROPOSED 2026-10-08 by the human (state/directives/2026-10-08-reuse-round-1.md, item 4), for the human to place: reported only, nothing claimed; its source is the reuse report's corpus section, in the human's private repository christopherdonini/spatial-ide-reuse at 89bbac37 (REUSE-ROUND-1.md, the compatibility corpus section), cited by repository, commit and path, never copied."
     },
     {
       "id": "ported-code-notice-route",
@@ -2100,6 +2078,25 @@
         "done": null
       },
       "summary": "PARKED 2026-10-05 by the product-first direction until the freeze lifts (records kept: the form with Amendments 1 to 6; branch cut/guardian-v1 at 5a9eb051 on origin, no PR; worktree C:/dev/wt/gv1, clean; worker reports 1 and 2 under state/consults). On resume: merge main in, re-read the form pins into register.js (the N1 piece edits it first), then record the mutation observations. Before: AMENDMENT 6 APPENDED 2026-10-05 (generation 7; the architect draft): I9 resolved by option (b), a push whose own segment leaves a quote open stays refused, so v0 T7 is unchanged and no waiver is needed (F62, F63, T71, T72; P0d before code); the test kit arm answers the env read by default; the plugin-test hold, cleared by the human; size re-estimated, class 8 at the head if over. The build resumes. Before: STOPPED AT BUILD 2026-10-05 (Amendment 5, generation 6; nothing committed, worktree clean): I9 fired (v0 T7 asserts F7 refused; section 2.2 allows it), and claude plugin test will not run (a saved hooks-modules switch; the remedy, starting claude, is the human). The architect drafts the I9 amendment next. Before: IN PROGRESS 2026-10-05: the governance slot; branch cut/guardian-v1 from ccac14d2 (worktree C:/dev/wt/gv1, no cargo target); the worker-high dispatched under the form, claude --help first (Amendment 4, Part B). Before: AMENDMENT 4 APPENDED 2026-10-05 (generation 5; the architect draft): the OPEN-6 verbs (class 9, F61, T70), Fable round-58 item 3 (claude --help read-only, the README top-level list), P0c four readings declared, Fable item 4 recorded for section 9; no OPEN item; the build next. Before: P0c RECORDED 2026-10-05 as Amendment 3 (generation 4): A.6 holds by row, no stop; QUESTION ROUND 58 RULED (OPEN-6 (c), typed); next Amendment 4 (the OPEN-6 row, class 9, and Fable round-58 item 3) by the architect, then the build. Before: AMENDMENT 2 APPENDED 2026-10-05 (generation 3; the architect draft): I8 redesign of how G7 to G9 read a call that cannot be tokenised (restart points), round 57 rulings as classes 5 and 9, Fable round-57 items 2 to 4, the CLI aliases, N2; P0c (read-only replay) before any code; OPEN-6 (CLI verbs outside the brief) for the human as question round 58. Before: P0b RECORDED 2026-10-05 as the form Amendment 1 (generation 2): I8 FIRED (the replay shows G7, G8 and G9 refusing the custodian own flows through the odd-quote reading); the piece stops before code and returns to the architect for Amendment 2, with round 57 rulings and Fable round-57 advice. QUESTION ROUND 57 RULED (typed): OPEN-1 to OPEN-4 (b), OPEN-5 (a). FORM COMMITTED 2026-10-05 (tools/mods/GUARDIAN-V1-PREREGISTRATION.md, the architect draft from the P0; full form). OPEN-1 to OPEN-5 are red lines for the human (question round 57): where G7 and G9 reach; gh api merges; the user-level .claude.json; G9 protected set; the new-folder over-refusal. No code before the rulings. UNBLOCKED 2026-10-05: evidence-recorder-v0-1 is done (#177). Its P0 and form come first (MODS-V1); the fourth G1 over-refusal is noted for the P0. Before: Placed by the human's 2026-10-05 direction, line 2 (state/directives/2026-10-05-human-direction-data-plane-mods-v1-pilot-v2.md; RULED 2026-10-05). The brief is state/directives/MODS-V1-2026-10-05.md, section 2. After evidence-recorder-v0-1, which it depends on (section 4). It brings forward item G of the 2026-10-09 window, the G1 over-refusal (question round 50, item 3). No live G1 probe ever. P0 first (section 2.4), recorded in the form's section 0 before any code; full form; gates reviewer plus architect, with the claude plugin validate output in the PR body. Guardian is installed by reference from tools/mods/spatial-guardian in the main checkout, so the merge changes the live mod: it waits for the human's typed approval after both gates, naming the live checks allowed (E7 to E10), before the click. While Guardian is installed, AUTONOMY section 9's docs-only auto-merge is not used (line 2); section 9 is not edited, and the suspension goes to the 2026-10-09 window for an appended note. Drafting is the architect's."
+    },
+    {
+      "id": "reuse-round-1-bundle",
+      "title": "Reuse archaeology round 1, the advisor bundle, filed as one docs-and-data piece (not under docs/)",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "unscheduled",
+      "order": 2,
+      "budget_minutes": 90,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-08",
+        "done": null
+      },
+      "summary": "WITHDRAWN 2026-10-08 by the human (state/directives/2026-10-08-reuse-round-1-private-repository.md): the research lives in the human's private repository, read from a clone outside every repository; nothing is copied into this repository; PR #192 closed unmerged; the form's Amendment 2 closes it. Before: GATE 1 REVIEWER FAIL (443, E1: 366 lines of placed code over the section 21c bound close the single-gate route; Correctness PASS); Amendment 1, class 6, generation 2: both gates apply; the architect gate and a reviewer re-gate on the amendment next; H1 (tilde and temporary folder paths in the notes) to the human. Before: PR #192 OPEN 2026-10-08 at 2ae29e9d: the archive arrived as the human upload (16:36:01Z), sha256 50d87a03 matched; placed byte-identical under reuse/ (139 files) by the custodian; check-index, verify-cites over reuse/** and the default set, the staged profile scan and the governance checkers all exit 0; five-line form at ab44cd2c; the single reviewer gate next. Before: V2 ARCHIVE 2026-10-08 (state/directives/2026-10-08-reuse-round-1-v2.md): spatial-ide-reuse-round-1-v2.zip, sha256 50d87a03eb42148608209edbad2d905bcea0e1c369f1d3330f86fb54d2409526, replaces the first; placed after #190 merges (five citations pinned at 14acee0b resolve only once #190 is in main; the pinned fallback is #191); verify the sha256 first, then tools/check-index.mjs and verify-cites over the placed folder. WAITING ON THE HUMAN (needs_human ruling): this archive did not reach the session either; the human names the route (for example Google Drive through the connector, or a path on this PC). #190 and #191 merged 2026-10-08. Before: PLACED 2026-10-08 by the human (state/directives/2026-10-08-reuse-round-1.md, item 1): slot 2, after #190 has merged and after verify-cites-pinned-citations; no mod, pilot, trial or record rule; not under docs/ (it holds code, and docs/ is CC-BY-4.0). Before the PR: no other project named, no user-profile path, its check-index.mjs and the repository checkers run on it; if verify-cites flags a citation inside it, stop and tell the human (no checker change, no exemption, no edit to the notes); fetch-cache.mjs is not run, and the clone cache is never inside the repo. WAITING: the archive did not reach the session; the human is asked for it and its sha256."
     }
   ]
 }

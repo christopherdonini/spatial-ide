@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `8b4e5a0233440a4f839951f1d931a63b37f840809234f8777f3a9f550ca51bd2`) at `2026-10-08T17:04:23.620Z`.
+Generated from `PLAN.yaml` (sha256 `35b9ee7b95a26e3316b5e26c3d34f5ccac23ae2b66983bca8b611174aa3ec63c`) at `2026-10-08T17:14:59.041Z`.
 
 ## 1. Next
 
@@ -29,7 +29,6 @@ Generated from `PLAN.yaml` (sha256 `8b4e5a0233440a4f839951f1d931a63b37f840809234
 ## 5. In progress
 
 - **shell-migration-milestone-1** — Shell migration, milestone 1 -- the frame: Map Studio regions, panel toggles, separated sections, an attention strip and a status bar — evidence: branch `cut/shell-migration-milestone-1`
-- **reuse-round-1-bundle** — Reuse archaeology round 1, the advisor bundle, filed as one docs-and-data piece (not under docs/) — evidence: branch `cut/reuse-round-1-bundle`
 
 ## 6. Proposed / unscheduled
 
@@ -134,3 +133,4 @@ Generated from `PLAN.yaml` (sha256 `8b4e5a0233440a4f839951f1d931a63b37f840809234
 - **mod-worktree-resource-protection** — Worktree and resource protection -- a mod (deferred by the 2026-10-03 mods-roadmap ruling) (phase `prototype`) — ambition, never queued
 - **recorder-write-latency-measure** — Evidence Recorder: a declared write-latency measure with its own sample, so the brief overhead acceptance can be established before the Recorder evaluation ends (Amendment 2 C2-d keeps E5 a lower bound) (phase `prototype`) — ambition, never queued
 - **guardian-v1** — Guardian v1 -- G1's heredoc false alarm fixed, one local log line per refusal, and three new rules: G7 (agent merges and history rewrites), G8 (plugin, marketplace and MCP installs, and writes to the user's Claude folder), G9 (wholesale cleans of the main checkout's target) (Fable's MODS-V1 brief, 2026-10-05) (phase `prototype`) — ambition, never queued
+- **reuse-round-1-bundle** — Reuse archaeology round 1, the advisor bundle, filed as one docs-and-data piece (not under docs/) (phase `prototype`) — ambition, never queued
