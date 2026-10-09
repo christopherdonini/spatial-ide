@@ -338,3 +338,34 @@ Under B, C-1 and K-1 are replaced:
 *Written by the custodian after that gate's documentation finding D1 (`state/consults/gates/2026-10-09-covering-names-missing-column-gate1-architect.md`). References only.*
 
 Amendment 3, item 1's sha256 is of `state/consults/2026-10-09-covering-names-missing-column-worker-report-1.md` as added to main by d007a50bbc01e599229a48c70ca726eddec3a4d8. Amendment 3, item 4's ruling sentence is the fifth line of the span that Amendment 2, item 1 pins, read after that line's lead-in. Nothing above is edited.
+
+### Amendment 5 — the close (class 1; class 8 for one line), after both gates
+
+*Written by the custodian after both gates passed, before the human's merge click. References and hashes only.*
+
+1. **The gates.** Correction round 1 of 2 was used.
+   - Architect gate 1: FAIL, on E1 only. `state/consults/gates/2026-10-09-covering-names-missing-column-gate1-architect.md`, gate-log 452.
+   - Architect gate 1, attempt 2: PASS. `state/consults/gates/2026-10-09-covering-names-missing-column-gate1-architect-attempt-2.md`, gate-log 453.
+   - Reviewer gate 1: PASS. `state/consults/gates/2026-10-09-covering-names-missing-column-gate1-reviewer.md`, gate-log 455.
+2. **The head:** 4e77715c7531e35d8fb3ee82c836ead307e794bd. It is a06a746b plus two commits:
+   - 9340c5f8: the owner's-index update, README lines only (`state/consults/2026-10-09-covering-names-missing-column-worker-report-2.md`);
+   - 4e77715c: the E1 fix, doc-comment lines only.
+3. **The count, class 8, by §7's command at the head:** 637 changed lines in 3 files, against 520 lines in 4. The breakdown:
+   - `engine/src/dataset.rs`: 115 insertions, 51 deletions;
+   - `engine/tests/covering_names_missing_column.rs`: 366 insertions, 0 deletions;
+   - `kernel/tests/skp_projection.rs`: 105 insertions, 0 deletions.
+
+   The one line over Amendment 3's 636 is the E1 comment. §7 is not edited.
+4. **The suites:**
+   - tester report 1, `state/consults/2026-10-09-covering-names-missing-column-tester-report-1.md`, sha256 cbff60af5614df3890288dd6b5cf13727ab64d7edd285659cade8d2504a2ba5a from its line 5, as added to main by a58b255a610fb18c2a46de54cce4f78d23ef1a4e;
+   - the reviewer's re-runs at the head, in its report.
+5. **Corrections, by reference:**
+   - Amendment 1, item 1's three hashes are of the files as added to main by c7bc58979240d842eb02ccf41428e1b974e5053c.
+   - Tester report 1 gives the second test that its K-1 filter ran a name that no function has. The reviewer gate's DOC-3 gives the right name. The result, 2 passed, stands.
+6. **Superseded index:**
+   - Amendment 1, item 1's hash references → item 5;
+   - Amendment 3, item 1's hash reference and item 4's line cite → Amendment 4;
+   - Amendment 3, item 2's count → item 3;
+   - Amendment 3, item 5's owed update → item 2, as done at 9340c5f8.
+
+   Nothing above is edited.
