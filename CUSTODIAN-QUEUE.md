@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `310be87ba4d0ac940c9e69cc46037526cc12f8d10166b97ed1873bcef83dbf62`) at `2026-10-09T07:02:15.171Z`.
+Generated from `PLAN.yaml` (sha256 `a36cc2356fb7418f06fa6aa98302312e4aeff2d6896e90afaaa228e931c78efc`) at `2026-10-09T07:05:24.490Z`.
 
 ## 1. Next
 
@@ -36,7 +36,7 @@ Generated from `PLAN.yaml` (sha256 `310be87ba4d0ac940c9e69cc46037526cc12f8d10166
 
 ## 5. In progress
 
-- **duckdb-parquet-geometry-probe** — A reported-only probe of how the bundled DuckDB decodes the Parquet-native GEOMETRY column in corpus #11 — evidence: branch `detached-worktree-cov`
+- (none)
 
 ## 6. Proposed / unscheduled
 

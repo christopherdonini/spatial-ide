@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-09T07:02:15.288Z",
-  "plan_hash": "310be87ba4d0ac940c9e69cc46037526cc12f8d10166b97ed1873bcef83dbf62",
+  "generated_at": "2026-10-09T07:05:24.612Z",
+  "plan_hash": "a36cc2356fb7418f06fa6aa98302312e4aeff2d6896e90afaaa228e931c78efc",
   "priorities_approved": true,
   "lanes": [
     {
@@ -6998,7 +6998,7 @@
       "kind": "task",
       "lane": "measurement",
       "phase": "prototype",
-      "status": "in-progress",
+      "status": "done",
       "order": 1,
       "depends_on": [],
       "needs_human": {
@@ -7007,16 +7007,16 @@
       },
       "gate": "none",
       "evidence": {
-        "branch": "detached-worktree-cov"
+        "path": "state/consults/2026-10-09-duckdb-parquet-geometry-probe-report.md"
       },
       "budget_minutes": 60,
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "IN PROGRESS 2026-10-09, reported only: one worker in the detached worktree C:/dev/wt/cov (at e73a594c, warm target D:/wt-targets/cov, kept clean for covering-names-missing-column), one untracked scratch test, on corpus #11 (geoparquet-spec/example.parquet). It runs now because slot 2 items a to c wait on the human and it merges nothing. Before: PLACED 2026-10-09 by the human's direction of 2026-10-09 (state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md), item 3d: slot 2, item d, reported only. Before: PROPOSED 2026-10-08 by the human (state/directives/2026-10-08-reuse-round-1.md, item 4), for the human to place: reported only, nothing claimed; its source is the reuse report's corpus section, in the human's private repository christopherdonini/spatial-ide-reuse at 89bbac37 (REUSE-ROUND-1.md, the compatibility corpus section), cited by repository, commit and path, never copied.",
+      "summary": "DONE 2026-10-09, reported only (state/consults/2026-10-09-duckdb-parquet-geometry-probe-report.md; output and source under state/drafts/duckdb-parquet-geometry-probe/): on the bundled DuckDB (v1.5.5), corpus #11's column carries the Parquet-native GEOMETRY logical type, DESCRIBE reports GEOMETRY, and read_parquet hands it to Arrow as Binary holding standard little-endian WKB, byte-identical for all 5 rows whether enable_geoparquet_conversion is true or false. That supports the claim's behavioural part; the probe cannot show which reader decodes it, and did not check the manifest half. The engine opens the file today (MultiPolygon, no covering) and its no-bbox stream yields a first batch. Nothing claimed for the product. Before: IN PROGRESS 2026-10-09, reported only: one worker in the detached worktree C:/dev/wt/cov (at e73a594c, warm target D:/wt-targets/cov, kept clean for covering-names-missing-column), one untracked scratch test, on corpus #11 (geoparquet-spec/example.parquet). It runs now because slot 2 items a to c wait on the human and it merges nothing. Before: PLACED 2026-10-09 by the human's direction of 2026-10-09 (state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md), item 3d: slot 2, item d, reported only. Before: PROPOSED 2026-10-08 by the human (state/directives/2026-10-08-reuse-round-1.md, item 4), for the human to place: reported only, nothing claimed; its source is the reuse report's corpus section, in the human's private repository christopherdonini/spatial-ide-reuse at 89bbac37 (REUSE-ROUND-1.md, the compatibility corpus section), cited by repository, commit and path, never copied.",
       "dates": {
         "opened": "2026-10-08",
-        "done": null
+        "done": "2026-10-09"
       }
     },
     {

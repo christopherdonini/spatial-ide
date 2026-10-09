@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-09T07:02:15.171Z",
-  "plan_hash": "310be87ba4d0ac940c9e69cc46037526cc12f8d10166b97ed1873bcef83dbf62",
+  "generated_at": "2026-10-09T07:05:24.490Z",
+  "plan_hash": "a36cc2356fb7418f06fa6aa98302312e4aeff2d6896e90afaaa228e931c78efc",
   "priorities_approved": true,
   "next": {
     "id": "e2e-failures-present-at-the-base",
@@ -386,30 +386,7 @@
       ]
     }
   ],
-  "in_progress": [
-    {
-      "id": "duckdb-parquet-geometry-probe",
-      "title": "A reported-only probe of how the bundled DuckDB decodes the Parquet-native GEOMETRY column in corpus #11",
-      "lane": "measurement",
-      "phase": "prototype",
-      "status": "in-progress",
-      "order": 1,
-      "budget_minutes": 60,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": {
-        "branch": "detached-worktree-cov"
-      },
-      "dates": {
-        "opened": "2026-10-08",
-        "done": null
-      },
-      "summary": "IN PROGRESS 2026-10-09, reported only: one worker in the detached worktree C:/dev/wt/cov (at e73a594c, warm target D:/wt-targets/cov, kept clean for covering-names-missing-column), one untracked scratch test, on corpus #11 (geoparquet-spec/example.parquet). It runs now because slot 2 items a to c wait on the human and it merges nothing. Before: PLACED 2026-10-09 by the human's direction of 2026-10-09 (state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md), item 3d: slot 2, item d, reported only. Before: PROPOSED 2026-10-08 by the human (state/directives/2026-10-08-reuse-round-1.md, item 4), for the human to place: reported only, nothing claimed; its source is the reuse report's corpus section, in the human's private repository christopherdonini/spatial-ide-reuse at 89bbac37 (REUSE-ROUND-1.md, the compatibility corpus section), cited by repository, commit and path, never copied.",
-      "evidence_label": "branch `detached-worktree-cov`"
-    }
-  ],
+  "in_progress": [],
   "proposed": [
     {
       "id": "governance-hash-grammar-shared",

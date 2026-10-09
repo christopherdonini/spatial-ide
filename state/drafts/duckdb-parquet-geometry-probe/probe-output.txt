@@ -1,0 +1,40 @@
+running 1 test
+=== Q0 DuckDB library version ===
+library_version=d8cdaa33fd
+pragma col0=v1.5.5
+=== Q1 type as DuckDB reports ===
+DESCRIBE pop_est: DOUBLE
+DESCRIBE continent: VARCHAR
+DESCRIBE name: VARCHAR
+DESCRIBE iso_a3: VARCHAR
+DESCRIBE gdp_md_est: BIGINT
+DESCRIBE geometry: GEOMETRY
+parquet_schema: Some("schema") | None | None | None
+parquet_schema: Some("pop_est") | Some("DOUBLE") | None | None
+parquet_schema: Some("continent") | Some("BYTE_ARRAY") | Some("UTF8") | Some("StringType()")
+parquet_schema: Some("name") | Some("BYTE_ARRAY") | Some("UTF8") | Some("StringType()")
+parquet_schema: Some("iso_a3") | Some("BYTE_ARRAY") | Some("UTF8") | Some("StringType()")
+parquet_schema: Some("gdp_md_est") | Some("INT64") | None | None
+parquet_schema: Some("geometry") | Some("BYTE_ARRAY") | None | Some("GeometryType(crs=<null>)")
+=== Q2 read_parquet geometry column per setting ===
+flag=true DESCRIBE geometry: GEOMETRY
+flag=true arrow=Binary len=400 first32hex=01060000000300000001030000000100000008000000000000000080664072d6
+flag=false DESCRIBE geometry: GEOMETRY
+flag=false arrow=Binary len=400 first32hex=01060000000300000001030000000100000008000000000000000080664072d6
+=== Q3 WKB check and equality ===
+flag=true byte_order_flag=1 (little-endian) geometry_type_code=6
+flag=false byte_order_flag=1 (little-endian) geometry_type_code=6
+same_bytes_first_value=true
+all_rows_count=5 all_rows_identical_across_settings=true
+=== Q4 engine today ===
+open=Ok geometry_column=geometry
+geometry_encoding=MultiPolygon
+declared_geometry_types=Some(["Polygon", "MultiPolygon"])
+covering=None
+geoparquet_version=2.0.0
+file_schema=Schema { fields: [Field { name: "pop_est", data_type: Float64, nullable: true }, Field { name: "continent", data_type: Utf8, nullable: true }, Field { name: "name", data_type: Utf8, nullable: true }, Field { name: "iso_a3", data_type: Utf8, nullable: true }, Field { name: "gdp_md_est", data_type: Int64, nullable: true }, Field { name: "geometry", data_type: Binary, nullable: true, metadata: {"ARROW:extension:name": "geoarrow.wkb", "ARROW:extension:metadata": "{}"} }], metadata: {} }
+first_batch=Some(Ok) rows=5 vertices=1343 bytes=26376
+test probe ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+
