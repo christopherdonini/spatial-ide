@@ -1,16 +1,16 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `94b20655ef8ee5bf7027ae53cf001545eaf6dcd69ce50da69c9add604e5c1a8b`) at `2026-10-09T07:22:07.930Z`.
+Generated from `PLAN.yaml` (sha256 `a90284758b964ef710e1ace501017a5260b00ffda0877631d4e8c713e30fc8fd`) at `2026-10-09T07:39:45.516Z`.
 
 ## 1. Next
 
-- **guardian-v1** — Guardian v1 -- G1's heredoc false alarm fixed, one local log line per refusal, and three new rules: G7 (agent merges and history rewrites), G8 (plugin, marketplace and MCP installs, and writes to the user's Claude folder), G9 (wholesale cleans of the main checkout's target) (Fable's MODS-V1 brief, 2026-10-05) (lane `governance`)
+- (nothing ready)
 
 ## 2. Ready
 
-- **guardian-v1** — Guardian v1 -- G1's heredoc false alarm fixed, one local log line per refusal, and three new rules: G7 (agent merges and history rewrites), G8 (plugin, marketplace and MCP installs, and writes to the user's Claude folder), G9 (wholesale cleans of the main checkout's target) (Fable's MODS-V1 brief, 2026-10-05) (lane `governance`, order 21, budget 240 min)
+- (none)
 
-## 3. Waiting on the human (total: 37 min)
+## 3. Waiting on the human (total: 40 min)
 
 ### ruling
 
@@ -21,6 +21,7 @@ Generated from `PLAN.yaml` (sha256 `94b20655ef8ee5bf7027ae53cf001545eaf6dcd69ce5
 - **e2e-hover-establishing-read-stale** — K6 and A9-prime take their starting hover id from the readout's first poll, which can still name the feature under the previous pointer (5 min)
 - **shell-map-refill-after-resize** — The map refills after a resize: a layout change that uncovers map area issues a viewport query, so the area fills without a pan or zoom (3 min)
 - **ported-code-notice-route** — A notice route for ported code, wherever it lands (shell or kernel), needed before any PORT (10 min)
+- **guardian-v1** — Guardian v1 -- G1's heredoc false alarm fixed, one local log line per refusal, and three new rules: G7 (agent merges and history rewrites), G8 (plugin, marketplace and MCP installs, and writes to the user's Claude folder), G9 (wholesale cleans of the main checkout's target) (Fable's MODS-V1 brief, 2026-10-05) (3 min)
 
 ## 4. Blocked on dependencies
 
