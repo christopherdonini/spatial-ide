@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `33c64f017e630376c55ff4d1a7cc7f1cda5c1ff6b971b871122ef72c9cdbdfb1`) at `2026-10-09T19:39:39.585Z`.
+Generated from `PLAN.yaml` (sha256 `a5287b775ced32f470c61a2be8134448df7d261f5c4ae7c47a9580a41f89684a`) at `2026-10-09T20:40:20.424Z`.
 
 ## 1. Next
 
@@ -103,6 +103,7 @@ Generated from `PLAN.yaml` (sha256 `33c64f017e630376c55ff4d1a7cc7f1cda5c1ff6b971
 - **first-batch-factorial-ignored-trace-tests** — kernel/tests/first_batch_factorial.rs's two ignored measurement tests each start a trace in one binary with no shared lock (phase `prototype`) — never queued until placed
 - **slice-traced-test-cross-stamping** — engine/tests/slice.rs's traced test reads first cancellation stamps while its binary's other tests run unserialised, one of them cancelling (phase `prototype`) — never queued until placed
 - **source-changed-post-reopen-routes-watcher-visible** — source-changed.mjs's post and reopen routes, and walkthrough Part N's N6 and N8, still change the source by an mtime touch the advisory watcher can see (phase `prototype`) — never queued until placed
+- **shell-stale-layout-comments-and-s1-row** — Four stale statements on main from #195, found by the human's independent read: StylePanel.tsx's header, PublishPanel.tsx's pointer to the styles.css budget, MANUAL-WALKTHROUGH.md row S1, layoutBoundary.test.ts's header (phase `prototype`) — never queued until placed
 - **identity-declaration-route-for-session-tier** — The app offers no way to declare an identity column for a file that opened on the session tier (no id column): the declaration form appears only when identity is refused (phase `prototype`) — never queued until placed
 - **verify-cites-pin-resolution-and-line-zero** — verify-cites: a pinned cite starting at line 0 gets a false reason, and a pin is read only at the path as written (phase `prototype`) — never queued until placed
 - **docs-14-corpus-attribution-vs-docs-08** — docs/14 asks corpus attribution in demos and published bundles, which docs/08 line 40 now says are never redistributed (phase `prototype`) — never queued until placed

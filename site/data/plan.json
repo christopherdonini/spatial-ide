@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-09T19:39:39.712Z",
-  "plan_hash": "33c64f017e630376c55ff4d1a7cc7f1cda5c1ff6b971b871122ef72c9cdbdfb1",
+  "generated_at": "2026-10-09T20:40:20.548Z",
+  "plan_hash": "a5287b775ced32f470c61a2be8134448df7d261f5c4ae7c47a9580a41f89684a",
   "priorities_approved": true,
   "lanes": [
     {
@@ -7008,6 +7008,31 @@
       "felt_verdict": false,
       "entries": [],
       "summary": "PROPOSED 2026-10-09 by the custodian from the e2e re-aim form's OPEN-4 (state/consults/2026-10-09-e2e-stale-expectations-reaim-architect-draft.md): the re-aim moves only the default pre route of source-changed.mjs to a change the watcher cannot see; the post and reopen routes still touch the mtime, which the watcher sees while idle, and walkthrough Part N's N6 and N8 touch it by hand on the same premise. The triage ran the default route only, so their state is unobserved. The human grades and places it.",
+      "dates": {
+        "opened": "2026-10-09",
+        "done": null
+      }
+    },
+    {
+      "id": "shell-stale-layout-comments-and-s1-row",
+      "title": "Four stale statements on main from #195, found by the human's independent read: StylePanel.tsx's header, PublishPanel.tsx's pointer to the styles.css budget, MANUAL-WALKTHROUGH.md row S1, layoutBoundary.test.ts's header",
+      "kind": "task",
+      "lane": "shell",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "depends_on": [],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "none",
+      "evidence": null,
+      "budget_minutes": 30,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [],
+      "summary": "PROPOSED 2026-10-09 by the custodian from the human's independent read of #195's first-gated commit: four things the gates did not raise, each confirmed by the custodian on main at 034344c3. (1) frontends/shell/src/style/StylePanel.tsx, its header comment (about lines 35-41), gives the stacked layout's 200px canvas floor and ~21.8px headroom as current; .canvas-container now fills its region and has no floor, and styles.css's own head calls that floor history. (2) frontends/shell/src/publish/PublishPanel.tsx, about line 309, sends the reader to styles.css's .publish-panel comment for the measured layout budget as if current; that comment now opens with HISTORY (milestone 1) and says it is not a description of the current layout. (3) frontends/shell/MANUAL-WALKTHROUGH.md, Part S, row S1: its expected outcome says no describe summary and no canvas appear, which is false when a dataset is already on the map: the summary binds to the admitted dataset (App.tsx's section.source slot, entry 120 (2)), and a refused open leaves that dataset's summary, and its canvas, standing. Part S is the Operator gate of engine/MULTIPOLYGON-MP1-PREREGISTRATION.md section 9 (S1 as its Amendment 2, item 1 rewrites it) and its result log is unfilled, so the row is fixed before it runs; whether the change needs an amendment there is for the grading. (4) frontends/shell/src/layout/layoutBoundary.test.ts, its header, says the layout cannot reach the map's code, but regionParts.tsx and statusItems.ts import ../App, and the scan forbids direct imports from skp/, streaming/, residency/ and canvas/ only; the test proves direct imports only, so either the header is narrowed or the scan is extended. Its sibling is shell-stale-frame-comments, stale comments of the same kind from #195 reviewer gate 1, and the two can be graded together. Nothing waits on it. The human grades and places it.",
       "dates": {
         "opened": "2026-10-09",
         "done": null
