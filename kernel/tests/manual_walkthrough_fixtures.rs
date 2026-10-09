@@ -474,15 +474,14 @@ fn generate_the_multipolygon_f1_with_covering_fixture() {
     println!("wrote {} ({} features)", path.display(), facts.features);
 }
 
-/// The "missing identity" refusing file: the shape most real GeoParquet has per ADR-016's own
-/// Context — a unique key under a different name (`parcel_key`) and **no `id` column at all**
-/// (`IdentityMode::ForeignKeyColumn`), refused as `EngineError::IdentityUnusable` (SKP code
-/// `engine.identity_unusable`) until a mapping is declared — a cut-2 remediation this build does
-/// not offer.
+/// The "no id column" file: the shape most real GeoParquet has per ADR-016's own Context — a unique
+/// key under a different name (`parcel_key`) and **no `id` column at all**
+/// (`IdentityMode::ForeignKeyColumn`). A single file of this shape opens on the session tier
+/// (R-I3, ADR-016 Amendment 1). Renamed from `missing-identity-refused.parquet`; bytes unchanged.
 #[test]
 #[ignore = "generates a real file for the manual walkthrough; not part of the default suite"]
-fn generate_the_missing_identity_refusing_fixture() {
-    let path = dir().join("missing-identity-refused.parquet");
+fn generate_the_no_id_column_fixture() {
+    let path = dir().join("no-id-column.parquet");
     let facts = write_geoparquet(
         &path,
         &FixtureSpec {
@@ -492,7 +491,27 @@ fn generate_the_missing_identity_refusing_fixture() {
             ..Default::default()
         },
     )
-    .expect("write the missing-identity refusing fixture");
+    .expect("write the no-id-column fixture");
+    println!("wrote {} ({} features)", path.display(), facts.features);
+}
+
+/// The "string id" refusing file: a text `id` (`key-{n}`) beside a unique `parcel_key`
+/// (`IdentityMode::StringIdsBesideParcelKey`). A plain open still refuses as
+/// `engine.identity_unusable` (the `id` type cannot serve) and offers `parcel_key` to declare.
+#[test]
+#[ignore = "generates a real file for the manual walkthrough; not part of the default suite"]
+fn generate_the_string_id_refusing_fixture() {
+    let path = dir().join("string-id-refused.parquet");
+    let facts = write_geoparquet(
+        &path,
+        &FixtureSpec {
+            features: 100,
+            avg_vertices: 12,
+            identity: IdentityMode::StringIdsBesideParcelKey,
+            ..Default::default()
+        },
+    )
+    .expect("write the string-id refusing fixture");
     println!("wrote {} ({} features)", path.display(), facts.features);
 }
 
@@ -524,17 +543,13 @@ fn generate_the_dupkey_refusing_fixture() {
     println!("wrote {} ({} features)", path.display(), facts.features);
 }
 
-/// The "both remediations needed" file (`NEXT-CUT.md` admission-remediation cut, P5's `BOTHNEEDED'`
-/// E2E step and Part I's I5 — the reviewer's MUST-FIX-2 loop case, permanently encoded): **neither**
-/// a CRS nor a stable identity is admissible without an explicit operator act — an explicit
-/// `"crs": null` (`CrsMode::ExplicitNull`) **and** no `id` column, only
-/// `parcel_key` (`IdentityMode::ForeignKeyColumn`, the same mode `missing-identity-refused.parquet`
-/// uses) — combined in one file for the first time; both fields are independent `FixtureSpec`
-/// members, so no engine-side change was needed to write this combination.
-/// `engine::dataset::open_inner` admits CRS before identity (`NEXT-CUT.md`'s own I11: "footer read
-/// vs full scan"), so a plain open of this file refuses CRS first; asserting a CRS alone then
-/// refuses identity; only a request carrying BOTH admits — the combined-request path the P3b
-/// reviewer fix (options accumulation, MF2) exists to make reachable in the real UI.
+/// The "no CRS, no id" file (`NEXT-CUT.md` admission-remediation cut, P5's `BOTHNEEDED'` E2E step
+/// (a)): an explicit `"crs": null` (`CrsMode::ExplicitNull`) **and** no `id` column, only
+/// `parcel_key` (`IdentityMode::ForeignKeyColumn`, the mode `no-id-column.parquet` uses). A plain
+/// open refuses CRS first (`engine::dataset::open_inner` admits CRS before identity); with the CRS
+/// asserted it admits on the session tier (R-I3, ADR-016 Amendment 1). Renamed from
+/// `bothneeded-refused.parquet`, which stopped needing both; the both-needed loop (CRS, then
+/// identity, then the combined request) is `no-crs-string-id-refused.parquet`'s.
 ///
 /// **Re-aimed, same ruling and same class as `no-crs-refused.parquet`
 /// (`engine/ADMISSION-PREREGISTRATION.md` §4 F-2/F-3).** This generator used to write
@@ -548,8 +563,8 @@ fn generate_the_dupkey_refusing_fixture() {
 /// `stepBothNeeded` checks and the form it requires correct — no change needed there.
 #[test]
 #[ignore = "generates a real file for the manual walkthrough; not part of the default suite"]
-fn generate_the_bothneeded_refusing_fixture() {
-    let path = dir().join("bothneeded-refused.parquet");
+fn generate_the_no_crs_no_id_refusing_fixture() {
+    let path = dir().join("no-crs-no-id-refused.parquet");
     let facts = write_geoparquet(
         &path,
         &FixtureSpec {
@@ -560,7 +575,28 @@ fn generate_the_bothneeded_refusing_fixture() {
             ..Default::default()
         },
     )
-    .expect("write the both-remediations-needed refusing fixture");
+    .expect("write the no-crs-no-id refusing fixture");
+    println!("wrote {} ({} features)", path.display(), facts.features);
+}
+
+/// The "both remediations needed" file: an explicit `"crs": null` and a text `id` beside a unique
+/// `parcel_key` (`IdentityMode::StringIdsBesideParcelKey`). A plain open refuses CRS; the CRS alone
+/// then refuses identity (the type); only a request carrying BOTH admits (MF2's loop case).
+#[test]
+#[ignore = "generates a real file for the manual walkthrough; not part of the default suite"]
+fn generate_the_no_crs_string_id_refusing_fixture() {
+    let path = dir().join("no-crs-string-id-refused.parquet");
+    let facts = write_geoparquet(
+        &path,
+        &FixtureSpec {
+            features: 100,
+            avg_vertices: 12,
+            crs_mode: CrsMode::ExplicitNull,
+            identity: IdentityMode::StringIdsBesideParcelKey,
+            ..Default::default()
+        },
+    )
+    .expect("write the no-crs-string-id refusing fixture");
     println!("wrote {} ({} features)", path.display(), facts.features);
 }
 

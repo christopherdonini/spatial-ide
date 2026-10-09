@@ -531,7 +531,7 @@ pub enum IdentityMode {
     /// A unique `id` column. The ordinary case.
     NativeUnique,
     /// A unique key under a different name (`parcel_key`), and **no `id` column at all** — the
-    /// shape most real GeoParquet has, which the engine refuses unless a mapping is declared.
+    /// shape most real GeoParquet has; a single file of it opens on the session tier (R-I3).
     ForeignKeyColumn,
     /// An `id` column that repeats a value. Legal parquet, admitted by a
     /// column-exists-and-is-an-integer check, and fatal to ADR-010 rule 2's indirection.
@@ -543,6 +543,9 @@ pub enum IdentityMode {
     /// A unique `id` column whose values exceed 2^53, so a JS consumer narrowing to `Number`
     /// would collide (ADR-016 §7).
     HugeIds,
+    /// A string `id` column (`key-{n}`, as `StringIds`) **beside** a unique `parcel_key` `UInt64`
+    /// (`n`) — a file that still refuses on its `id` and offers a column to declare.
+    StringIdsBesideParcelKey,
 }
 
 impl Default for FixtureSpec {
@@ -621,11 +624,16 @@ impl SplitMix64 {
 fn schema(with_bbox: bool, identity: IdentityMode, attributes: AttributeMode) -> Arc<Schema> {
     let id_field = match identity {
         IdentityMode::ForeignKeyColumn => Field::new("parcel_key", DataType::UInt64, false),
-        IdentityMode::StringIds => Field::new("id", DataType::Utf8, false),
+        IdentityMode::StringIds | IdentityMode::StringIdsBesideParcelKey => {
+            Field::new("id", DataType::Utf8, false)
+        }
         IdentityMode::NegativeIds => Field::new("id", DataType::Int64, false),
         _ => Field::new("id", DataType::UInt64, false),
     };
     let mut fields = vec![Arc::new(id_field)];
+    if identity == IdentityMode::StringIdsBesideParcelKey {
+        fields.push(Arc::new(Field::new("parcel_key", DataType::UInt64, false)));
+    }
     if with_bbox {
         fields.push(Arc::new(Field::new(
             "bbox",
@@ -1090,6 +1098,10 @@ fn generate(
                 IdentityMode::HugeIds => ids.append_value((1u64 << 53) + id),
                 IdentityMode::NegativeIds => signed_ids.append_value(-(id as i64) - 1),
                 IdentityMode::StringIds => string_ids.append_value(format!("key-{id}")),
+                IdentityMode::StringIdsBesideParcelKey => {
+                    string_ids.append_value(format!("key-{id}"));
+                    ids.append_value(id);
+                }
                 _ => ids.append_value(id),
             }
             if spec.attributes == AttributeMode::CategoricalZone
@@ -1154,9 +1166,14 @@ fn generate(
 
         let mut cols: Vec<ArrayRef> = vec![match spec.identity {
             IdentityMode::NegativeIds => Arc::new(signed_ids.finish()) as ArrayRef,
-            IdentityMode::StringIds => Arc::new(string_ids.finish()) as ArrayRef,
+            IdentityMode::StringIds | IdentityMode::StringIdsBesideParcelKey => {
+                Arc::new(string_ids.finish()) as ArrayRef
+            }
             _ => Arc::new(ids.finish()) as ArrayRef,
         }];
+        if spec.identity == IdentityMode::StringIdsBesideParcelKey {
+            cols.push(Arc::new(ids.finish()) as ArrayRef);
+        }
         if spec.with_covering_bbox {
             let bbox = StructArray::new(
                 bbox_fields(),
