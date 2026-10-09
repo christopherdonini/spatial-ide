@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-09T08:38:26.745Z",
-  "plan_hash": "f23498542dc1519621469a040a16a965b47a24608423cf7aaf21bb37da1fee5c",
+  "generated_at": "2026-10-09T08:42:37.888Z",
+  "plan_hash": "c9f54fbdd2a3abce3f41518f0aa7fdd927284a23e0136b0d6545e44785f7ed57",
   "priorities_approved": true,
   "next": {
     "id": "covering-names-missing-column",
@@ -99,12 +99,31 @@
       "summary": "RULED 2026-10-09 by the human's rulings of 2026-10-09 (state/directives/2026-10-09-rulings-on-the-eight-forms.md), item 1: OPEN-1 (a), OPEN-2 (b), OPEN-3 (a); the barrier moves to e2e/lib.mjs, exported, two files under the same 140-line ceiling; mutations M2 to M5 allowed on the 2026-10-08 terms. Amendment 1 records them before dispatch. Before: WAITS 2026-10-09 on the human: OPEN-1 to OPEN-3 and the allowance for the temporary product mutations M2 to M5 (the question round of the same day). Before: FORM COMMITTED 2026-10-09 (the architect draft, alone; state/consults/2026-10-09-e2e-hover-establishing-read-stale-architect-draft.md): full form, because K6 is the evidence for a property under test (AUTONOMY.md section 21a), with full gating; 39 pins at dba12b8c; frontends/shell/e2e/regression.mjs only, at most 140 lines. A barrier before each K6 and A9-prime candidate move: the pointer leaves the canvas and the readout is seen clear first (route A), or a background pixel (route B); if both fail the piece stops before any product code. Case (iii)'s code is byte-identical. OPEN-1 to OPEN-3, and the temporary product-file mutations its tests need, go to the human; code after the answers. The custodian raised its budget for about 12 to 14 regression runs and the odd-window builds. Before: PLACED 2026-10-09 by the human's direction of 2026-10-09 (state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md), item 2a: slot 1, item a. Item 1 accepts the pick-paths verdict, and the K6 (iii) ruling stands as given: the old comparison, no retry. It may change how K6 takes its starting id, only after the hover pick for the new pointer has run; case (iii)'s comparison is not touched; it examines A9-prime too. The fix is on the test side, and no product code is added for it unless the form shows the test-side ways fail. The architect drafts its form. Before: PROPOSED 2026-10-08 from the pick-paths diagnosis (state/consults/2026-10-08-shell-pick-paths-disagree-at-1280x801-diagnosis-report.md, section 4). establishAboveThresholdHoverK6 in frontends/shell/e2e/regression.mjs moves the pointer and accepts the first non-empty readout id, and waitForCondition reads once before any frame has run. The readout can then still name the feature under the canvas centre, where doWheel left the pointer. K6 case (iii) therefore fails at odd map heights for a reason that is not the product's; the default window passes. A9-prime's candidate loop reads the readout the same way (not examined). Sketch, not chosen: take the id only after the hover pick for the new pointer has run, by moving first to a known-empty pixel, by waiting two animation frames, or through a DEV-only accessor for the last hover pointer. Case (iii)'s comparison stays as the human ruled it (state/directives/2026-10-08-k6-case-iii-ruling.md). This changes only how its starting id is taken, so it waits for the human's word."
     },
     {
+      "id": "e2e-stale-expectations-reaim",
+      "title": "Re-aim the shell e2e steps whose expectations predate ruled product changes: regression C2'/C3', admission MAP' and BOTHNEEDED', console HEXLIM', GROUP' and REFUSAL', source-changed default-route S4",
+      "lane": "shell",
+      "phase": "prototype",
+      "status": "ready",
+      "order": 2,
+      "budget_minutes": 180,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-09",
+        "done": null
+      },
+      "summary": "PLACED 2026-10-09 by the human's additions of 2026-10-09 (state/directives/2026-10-09-rulings-additions-reaim-identity-route-documents.md), item 1: slot 1, right after the K6 fix. The architect drafts its form alone, after the custodian's solo re-run of console GROUP' and REFUSAL', which the form cites. Its rules are item 1's, referenced and not restated. It also carries the KNOWN-LIMITATIONS item 3 paragraph of item 4. Before: PROPOSED 2026-10-09 from the e2e triage (state/consults/2026-10-09-e2e-failures-present-at-the-base-triage-report.md), for the human to place. Each step is a stale expectation, and each fix touches e2e files, their READMEs and the walkthrough rows only, with no product change: C2'/C3' and admission MAP' and BOTHNEEDED' re-aimed for the session identity tier (perhaps a new still-refusing identity fixture); HEXLIM' gains the columns key; GROUP' and REFUSAL' either poll with a bound and assert the group by its predicate, or pin the baseline arm (the second stops the suite exercising the shipped arm, so it is the human's or the architect's call); S4 re-aimed to a change the advisory watcher cannot see. Questions with it, for the human: whether a keyless file that now admits needs a route to the identity declaration form; and whether QUICKSTART.md and KNOWN-LIMITATIONS item 3 are updated here or apart."
+    },
+    {
       "id": "shell-map-refill-after-resize",
       "title": "The map refills after a resize: a layout change that uncovers map area issues a viewport query, so the area fills without a pan or zoom",
       "lane": "shell",
       "phase": "prototype",
       "status": "ready",
-      "order": 2,
+      "order": 3,
       "budget_minutes": 0,
       "needs_human": {
         "kind": "none",
@@ -249,10 +268,11 @@
         "opened": "2026-10-07",
         "done": null
       },
-      "summary": "RULED 2026-10-09 by the human's rulings of 2026-10-09 (state/directives/2026-10-09-rulings-on-the-eight-forms.md), item 4: OPEN-1 (A); OPEN-2 package (a) with fixes; OPEN-3 (a); OPEN-4 (A); OPEN-5 (a) if EXPORT-TODAY shows H4; OPEN-6 (b); OPEN-7 (A); OPEN-8 (A); OPEN-9 (a); OPEN-10 two PRs, phase A first. Amendment 1 records them before dispatch. Before: WAITS 2026-10-09 on the human as well as on its dependencies: OPEN-1 to OPEN-10, OPEN-2 to OPEN-8 red lines (typed). Before: FORM COMMITTED 2026-10-09 (the architect draft, alone; state/consults/2026-10-09-shell-migration-milestone-2-architect-draft.md): full form with full gating, by size (about 6,600 lines over about 30 files, tests included), new user-visible behaviour, properties under test and a new selection contract; 46 pins at dba12b8c, with a re-sweep at code start. Ten OPEN items go to the human in one question round: OPEN-1 the click's own pick (recommended (A), a pick of its own at the click, shared with the settle re-pick); OPEN-2 to OPEN-8 red lines (telling inspect from select; Pin; the export's scope against ADR-024; an export during a reopen; the hover readout and the Feature tab; the section 3 labels; the canvas boundary exceptions); OPEN-9 the P6 sight; OPEN-10 one PR or two (recommended two, phase A first). Each answer becomes Amendment 1 before dispatch; code after the three slot 1 pieces merge. Before: PLACED 2026-10-09 by the human's direction of 2026-10-09 (state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md), item 2d: slot 1, item d. Its form and question round now (the architect drafts the form); its code after e2e-hover-establishing-read-stale, shell-map-refill-after-resize and e2e-failures-present-at-the-base have merged. The form carries, as an OPEN item, whether selection takes its own pick at the click (the pick-paths diagnosis report, section 4). The human takes up ADR-036's acceptance while it is in code (item 7). Before: DEPENDS 2026-10-08 on shell-pick-paths-disagree-at-1280x801 (the human's ruling, state/directives/2026-10-08-k6-case-iii-ruling.md): the pick-paths disagreement is diagnosed before this milestone's selection code starts. Its form and question round are prepared while milestone 1 is under way; its code starts when shell-map-refill-after-resize has merged, if that piece is needed (the OPEN-7 clarification, state/directives/2026-10-07-round-66-and-67-rulings.md). Before: Recorded 2026-10-07 by the human's ruling of the migration plan (state/directives/2026-10-07-migration-plan-v2-ruled.md; state/directives/SHELL-MIGRATION-PLAN-2026-10-07.md, section 6): follows milestone 1 directly; seams 3, 4, 5 and 6; no backend change; its own full form. Proposed, for placement when milestone 1 is under way.",
+      "summary": "2026-10-09, the human's additions of 2026-10-09 (state/directives/2026-10-09-rulings-additions-reaim-identity-route-documents.md), item 2: its code starts after the K6 fix, the e2e re-aim and map-refill have merged; the re-aim replaces the triage in that list, because phase A's proof is every suite passing unedited. Before: RULED 2026-10-09 by the human's rulings of 2026-10-09 (state/directives/2026-10-09-rulings-on-the-eight-forms.md), item 4: OPEN-1 (A); OPEN-2 package (a) with fixes; OPEN-3 (a); OPEN-4 (A); OPEN-5 (a) if EXPORT-TODAY shows H4; OPEN-6 (b); OPEN-7 (A); OPEN-8 (A); OPEN-9 (a); OPEN-10 two PRs, phase A first. Amendment 1 records them before dispatch. Before: WAITS 2026-10-09 on the human as well as on its dependencies: OPEN-1 to OPEN-10, OPEN-2 to OPEN-8 red lines (typed). Before: FORM COMMITTED 2026-10-09 (the architect draft, alone; state/consults/2026-10-09-shell-migration-milestone-2-architect-draft.md): full form with full gating, by size (about 6,600 lines over about 30 files, tests included), new user-visible behaviour, properties under test and a new selection contract; 46 pins at dba12b8c, with a re-sweep at code start. Ten OPEN items go to the human in one question round: OPEN-1 the click's own pick (recommended (A), a pick of its own at the click, shared with the settle re-pick); OPEN-2 to OPEN-8 red lines (telling inspect from select; Pin; the export's scope against ADR-024; an export during a reopen; the hover readout and the Feature tab; the section 3 labels; the canvas boundary exceptions); OPEN-9 the P6 sight; OPEN-10 one PR or two (recommended two, phase A first). Each answer becomes Amendment 1 before dispatch; code after the three slot 1 pieces merge. Before: PLACED 2026-10-09 by the human's direction of 2026-10-09 (state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md), item 2d: slot 1, item d. Its form and question round now (the architect drafts the form); its code after e2e-hover-establishing-read-stale, shell-map-refill-after-resize and e2e-failures-present-at-the-base have merged. The form carries, as an OPEN item, whether selection takes its own pick at the click (the pick-paths diagnosis report, section 4). The human takes up ADR-036's acceptance while it is in code (item 7). Before: DEPENDS 2026-10-08 on shell-pick-paths-disagree-at-1280x801 (the human's ruling, state/directives/2026-10-08-k6-case-iii-ruling.md): the pick-paths disagreement is diagnosed before this milestone's selection code starts. Its form and question round are prepared while milestone 1 is under way; its code starts when shell-map-refill-after-resize has merged, if that piece is needed (the OPEN-7 clarification, state/directives/2026-10-07-round-66-and-67-rulings.md). Before: Recorded 2026-10-07 by the human's ruling of the migration plan (state/directives/2026-10-07-migration-plan-v2-ruled.md; state/directives/SHELL-MIGRATION-PLAN-2026-10-07.md, section 6): follows milestone 1 directly; seams 3, 4, 5 and 6; no backend change; its own full form. Proposed, for placement when milestone 1 is under way.",
       "blocked_by": [
         "e2e-hover-establishing-read-stale",
-        "shell-map-refill-after-resize"
+        "shell-map-refill-after-resize",
+        "e2e-stale-expectations-reaim"
       ]
     },
     {
@@ -480,7 +500,7 @@
         "opened": null,
         "done": null
       },
-      "summary": "Prerequisites before placing (the human, 2026-09-22): Brief A closed (P6, the N8 piece, the five acceptances), PR #97's dependency piece, the three clean-clone repairs; then the custodian brings a small v0.1.1 scope and its remaining gates -- not waiting for all of Brief B; tagging, publishing and the human's decisions separately gated. A patch release after v0.1.0. Not scheduled: 69a stands (dynamic CRT declared, no static build to land), so v0.1.1 has no forcing content yet. The human places it when there is a reason to cut it; M13's re-test, the SignPath application draft and the from-v0.1.1 release-artifacts trigger all ride it RULED 2026-09-26, question round 25, item 4: the next release's notes carry the KNOWN-LIMITATIONS line of bundle-viewer-partition-offset-bounds (bundles published before the fix keep a viewer that can stall on crafted offsets); no GitHub advisory."
+      "summary": "NOTE 2026-10-09 by the human's additions of 2026-10-09 (state/directives/2026-10-09-rulings-additions-reaim-identity-route-documents.md), item 4: QUICKSTART.md's identity bullet changes with this release; until then it describes the v0.1.0 download, and for that it is right. Before: Prerequisites before placing (the human, 2026-09-22): Brief A closed (P6, the N8 piece, the five acceptances), PR #97's dependency piece, the three clean-clone repairs; then the custodian brings a small v0.1.1 scope and its remaining gates -- not waiting for all of Brief B; tagging, publishing and the human's decisions separately gated. A patch release after v0.1.0. Not scheduled: 69a stands (dynamic CRT declared, no static build to land), so v0.1.1 has no forcing content yet. The human places it when there is a reason to cut it; M13's re-test, the SignPath application draft and the from-v0.1.1 release-artifacts trigger all ride it RULED 2026-09-26, question round 25, item 4: the next release's notes carry the KNOWN-LIMITATIONS line of bundle-viewer-partition-offset-bounds (bundles published before the fix keep a viewer that can stall on crafted offsets); no GitHub advisory."
     },
     {
       "id": "briefb-b3-publish-v2",
@@ -1528,13 +1548,13 @@
       "summary": "PROPOSED 2026-10-09 by the human's rulings of 2026-10-09 (state/directives/2026-10-09-rulings-on-the-eight-forms.md), item 6: a sibling site of wire-bytes-invariant-trace-flag-race (its form, section 0.7); cross-test stamping into a live trace, not observed failing; its own form, because it bears on a docs/08 budgeted assertion (engine/tests/slice.rs, the assertion near its line 815). The human places it later."
     },
     {
-      "id": "e2e-stale-expectations-reaim",
-      "title": "Re-aim the shell e2e steps whose expectations predate ruled product changes: regression C2'/C3', admission MAP' and BOTHNEEDED', console HEXLIM', GROUP' and REFUSAL', source-changed default-route S4",
+      "id": "identity-declaration-route-for-session-tier",
+      "title": "The app offers no way to declare an identity column for a file that opened on the session tier (no id column): the declaration form appears only when identity is refused",
       "lane": "shell",
       "phase": "prototype",
       "status": "proposed",
       "order": null,
-      "budget_minutes": 180,
+      "budget_minutes": 120,
       "needs_human": {
         "kind": "none",
         "minutes": 0
@@ -1544,7 +1564,7 @@
         "opened": "2026-10-09",
         "done": null
       },
-      "summary": "PROPOSED 2026-10-09 from the e2e triage (state/consults/2026-10-09-e2e-failures-present-at-the-base-triage-report.md), for the human to place. Each step is a stale expectation, and each fix touches e2e files, their READMEs and the walkthrough rows only, with no product change: C2'/C3' and admission MAP' and BOTHNEEDED' re-aimed for the session identity tier (perhaps a new still-refusing identity fixture); HEXLIM' gains the columns key; GROUP' and REFUSAL' either poll with a bound and assert the group by its predicate, or pin the baseline arm (the second stops the suite exercising the shipped arm, so it is the human's or the architect's call); S4 re-aimed to a change the advisory watcher cannot see. Questions with it, for the human: whether a keyless file that now admits needs a route to the identity declaration form; and whether QUICKSTART.md and KNOWN-LIMITATIONS item 3 are updated here or apart."
+      "summary": "PROPOSED 2026-10-09 by the human's additions of 2026-10-09 (state/directives/2026-10-09-rulings-additions-reaim-identity-route-documents.md), item 3, graded S2 by the human: the summary tells the user to declare an identity column, and the app offers no way to do it (the e2e triage, state/consults/2026-10-09-e2e-failures-present-at-the-base-triage-report.md, its adjacent observation). The human places it after milestone 2 merges. It is not part of the re-aim and it blocks nothing. Its form asks the human how the candidate columns reach the shell."
     },
     {
       "id": "verify-cites-pin-resolution-and-line-zero",

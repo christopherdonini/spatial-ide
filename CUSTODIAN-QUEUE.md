@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `f23498542dc1519621469a040a16a965b47a24608423cf7aaf21bb37da1fee5c`) at `2026-10-09T08:38:26.745Z`.
+Generated from `PLAN.yaml` (sha256 `c9f54fbdd2a3abce3f41518f0aa7fdd927284a23e0136b0d6545e44785f7ed57`) at `2026-10-09T08:42:37.888Z`.
 
 ## 1. Next
 
@@ -12,7 +12,8 @@ Generated from `PLAN.yaml` (sha256 `f23498542dc1519621469a040a16a965b47a24608423
 - **skp-drained-stream-helper-post-check-race** — kernel/src/skp.rs tests: drained_stream_with_a_recorded_change has the same post-check race as typed_terminal_codes' end-to-end test (lane `kernel-protocol`, order 1, budget 240 min)
 - **wire-bytes-invariant-trace-flag-race** — kernel/tests/wire_bytes_invariant.rs: the projected-ticket test asserts tracing is off while its sibling starts a trace (a race on the engine's global trace flag) (lane `kernel-protocol`, order 2, budget 240 min)
 - **e2e-hover-establishing-read-stale** — K6 and A9-prime take their starting hover id from the readout's first poll, which can still name the feature under the previous pointer (lane `shell`, order 1, budget 300 min)
-- **shell-map-refill-after-resize** — The map refills after a resize: a layout change that uncovers map area issues a viewport query, so the area fills without a pan or zoom (lane `shell`, order 2, budget 0 min)
+- **e2e-stale-expectations-reaim** — Re-aim the shell e2e steps whose expectations predate ruled product changes: regression C2'/C3', admission MAP' and BOTHNEEDED', console HEXLIM', GROUP' and REFUSAL', source-changed default-route S4 (lane `shell`, order 2, budget 180 min)
+- **shell-map-refill-after-resize** — The map refills after a resize: a layout change that uncovers map area issues a viewport query, so the area fills without a pan or zoom (lane `shell`, order 3, budget 0 min)
 - **ported-code-notice-route** — A notice route for ported code, wherever it lands (shell or kernel), needed before any PORT (lane `governance`, order 1, budget 480 min)
 - **guardian-v1** — Guardian v1 -- G1's heredoc false alarm fixed, one local log line per refusal, and three new rules: G7 (agent merges and history rewrites), G8 (plugin, marketplace and MCP installs, and writes to the user's Claude folder), G9 (wholesale cleans of the main checkout's target) (Fable's MODS-V1 brief, 2026-10-05) (lane `governance`, order 21, budget 240 min)
 
@@ -26,7 +27,7 @@ Generated from `PLAN.yaml` (sha256 `f23498542dc1519621469a040a16a965b47a24608423
 
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
 - **b2-piece-1b-recording** — B2 piece 1b -- recording: the kernel's step commands for filter, scope and style, the session history on the machine, safe against a crash, and the docs/07 note — blocked by: shell-migration-milestone-2
-- **shell-migration-milestone-2** — Shell migration, milestone 2 -- selection and scope: the Select tool, a selection that survives filter and pan, the hidden count, a stated scope — blocked by: e2e-hover-establishing-read-stale, shell-map-refill-after-resize
+- **shell-migration-milestone-2** — Shell migration, milestone 2 -- selection and scope: the Select tool, a selection that survives filter and pan, the hidden count, a stated scope — blocked by: e2e-hover-establishing-read-stale, shell-map-refill-after-resize, e2e-stale-expectations-reaim
 - **briefb-b2-save-reopen** — B2 — Save project, Snapshot data, session history, lineage and preferences, in five stages, each with its own form — blocked by: decision-adr-029-scan-progress-route
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer — blocked by: signpath-application-draft
 - **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-1-1
@@ -102,7 +103,7 @@ Generated from `PLAN.yaml` (sha256 `f23498542dc1519621469a040a16a965b47a24608423
 - **covering-case-collision-binds-other-column** — A declared covering whose path differs from two schema names only by case: DuckDB may bind it to the other column, a wrong-rows risk that predates the covering piece (phase `prototype`) — never queued until placed
 - **first-batch-factorial-ignored-trace-tests** — kernel/tests/first_batch_factorial.rs's two ignored measurement tests each start a trace in one binary with no shared lock (phase `prototype`) — never queued until placed
 - **slice-traced-test-cross-stamping** — engine/tests/slice.rs's traced test reads first cancellation stamps while its binary's other tests run unserialised, one of them cancelling (phase `prototype`) — never queued until placed
-- **e2e-stale-expectations-reaim** — Re-aim the shell e2e steps whose expectations predate ruled product changes: regression C2'/C3', admission MAP' and BOTHNEEDED', console HEXLIM', GROUP' and REFUSAL', source-changed default-route S4 (phase `prototype`) — never queued until placed
+- **identity-declaration-route-for-session-tier** — The app offers no way to declare an identity column for a file that opened on the session tier (no id column): the declaration form appears only when identity is refused (phase `prototype`) — never queued until placed
 - **verify-cites-pin-resolution-and-line-zero** — verify-cites: a pinned cite starting at line 0 gets a false reason, and a pin is read only at the path as written (phase `prototype`) — never queued until placed
 - **docs-14-corpus-attribution-vs-docs-08** — docs/14 asks corpus attribution in demos and published bundles, which docs/08 line 40 now says are never redistributed (phase `prototype`) — never queued until placed
 - **shell-stale-frame-comments** — Two shell comments still describe the old frame: ConsolePanel.tsx (a bottom drawer below every panel) and residencyStatus.ts (a child of the removed canvas status stack); and WorkingCanvas.tsx comments call deck.gl 9.3.7 pinned (phase `prototype`) — never queued until placed
