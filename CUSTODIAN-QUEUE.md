@@ -1,28 +1,28 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `90acfab095c7d5e9ac04a6f3f55d5cef1d65a690f60ab37426c183dcb7ba8dc9`) at `2026-10-09T06:05:13.163Z`.
+Generated from `PLAN.yaml` (sha256 `4b9076c6f92084f32fcf4a8b37ca5aab6040314b9a66ae26cc7af866b0dbb507`) at `2026-10-09T06:09:53.351Z`.
 
 ## 1. Next
 
-- **covering-names-missing-column** — A covering that names a column the file lacks is kept at open, and every bbox query then fails after the mint (A2-1 P0 k3) (lane `engine`)
+- **skp-drained-stream-helper-post-check-race** — kernel/src/skp.rs tests: drained_stream_with_a_recorded_change has the same post-check race as typed_terminal_codes' end-to-end test (lane `kernel-protocol`)
 
 ## 2. Ready
 
-- **covering-names-missing-column** — A covering that names a column the file lacks is kept at open, and every bbox query then fails after the mint (A2-1 P0 k3) (lane `engine`, order 1, budget 90 min)
 - **skp-drained-stream-helper-post-check-race** — kernel/src/skp.rs tests: drained_stream_with_a_recorded_change has the same post-check race as typed_terminal_codes' end-to-end test (lane `kernel-protocol`, order 1, budget 60 min)
 - **wire-bytes-invariant-trace-flag-race** — kernel/tests/wire_bytes_invariant.rs: the projected-ticket test asserts tracing is off while its sibling starts a trace (a race on the engine's global trace flag) (lane `kernel-protocol`, order 2, budget 60 min)
-- **e2e-hover-establishing-read-stale** — K6 and A9-prime take their starting hover id from the readout's first poll, which can still name the feature under the previous pointer (lane `shell`, order 1, budget 300 min)
-- **shell-map-refill-after-resize** — The map refills after a resize: a layout change that uncovers map area issues a viewport query, so the area fills without a pan or zoom (lane `shell`, order 2, budget 0 min)
 - **e2e-failures-present-at-the-base** — Shell e2e steps failing on main at e888787e: regression C2 and C3, admission MAP and BOTHNEEDED, console HEXLIM, GROUP and REGRESS, source-changed default-route S4 (lane `shell`, order 3, budget 120 min)
 - **duckdb-parquet-geometry-probe** — A reported-only probe of how the bundled DuckDB decodes the Parquet-native GEOMETRY column in corpus #11 (lane `measurement`, order 1, budget 60 min)
 - **ported-code-notice-route** — A notice route for ported code, wherever it lands (shell or kernel), needed before any PORT (lane `governance`, order 1, budget 60 min)
 - **guardian-v1** — Guardian v1 -- G1's heredoc false alarm fixed, one local log line per refusal, and three new rules: G7 (agent merges and history rewrites), G8 (plugin, marketplace and MCP installs, and writes to the user's Claude folder), G9 (wholesale cleans of the main checkout's target) (Fable's MODS-V1 brief, 2026-10-05) (lane `governance`, order 21, budget 240 min)
 
-## 3. Waiting on the human (total: 10 min)
+## 3. Waiting on the human (total: 23 min)
 
 ### ruling
 
+- **covering-names-missing-column** — A covering that names a column the file lacks is kept at open, and every bbox query then fails after the mint (A2-1 P0 k3) (5 min)
 - **decision-adr-029-scan-progress-route** — ADR-029's scan-progress route, given G1 (a minimal crate patch exposing the connection handle; raw ffi end to end on the scan path; upstream first) -- deferred to Brief B's B2 by the human, round 16 item 3 (10 min)
+- **e2e-hover-establishing-read-stale** — K6 and A9-prime take their starting hover id from the readout's first poll, which can still name the feature under the previous pointer (5 min)
+- **shell-map-refill-after-resize** — The map refills after a resize: a layout change that uncovers map area issues a viewport query, so the area fills without a pan or zoom (3 min)
 
 ## 4. Blocked on dependencies
 
