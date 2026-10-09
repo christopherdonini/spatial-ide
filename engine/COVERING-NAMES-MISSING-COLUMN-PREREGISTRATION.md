@@ -299,3 +299,17 @@ Under B, C-1 and K-1 are replaced:
 4. **The selected rule (§3a's selection rule):** d and e both bind, so the comparison is case-insensitive at both levels. g fails to bind, so the folding is ASCII-only. The walk in §2a compares each segment with ASCII case-insensitive equality.
 5. **Not covered by the P0:** a non-ASCII child name, and a schema holding two names that differ only by case.
 6. **Code waits only for** the human's typed ruling on OPEN-1.
+
+### Amendment 2 — the human's rulings on OPEN-1 and OPEN-2, and two cases added to may-not-claim (class 5)
+
+*Written by the custodian after the human's typed rulings were received (08:37:12Z by the transcript) and before any code. It records the human's rulings on this form's open items. It is this form's Amendment 2, because Amendment 1 is the P0's record. References only; nothing below is a quotation.*
+
+1. **The ruling:** state/directives/2026-10-09-rulings-on-the-eight-forms.md:15-20 @ b4dc05e08c1e24ef7d6904596bb2332b87dcf75b sha256:de4805206b7dee15864a1ded0f209bcc786b774d5721f08700f10b48faa9b65d.
+2. **OPEN-1 is (A): the file opens and the covering is dropped at open.** Branch A (§2b) applies. Branch B (§2c), its tests C-1B and K-1B, and the bracketed predictions in §3b and §3c are void.
+3. **OPEN-2 is (a): the human's wording, now, so no placeholder ships.**
+   - The `NoCoveringBbox` detail is the text at line 18 of the ruling file, with `<path>` rendered through `render_visible_escape` as §2b says.
+   - KNOWN-LIMITATIONS item 9 gains the sentence at line 19 of the ruling file, appended.
+   - §8 item 10 reads against these two texts.
+4. **§1's may-not-claim gains two items:** how a covering with a non-ASCII child name binds; and a schema holding two names that differ only by case. PLAN gained the proposed node `covering-case-collision-binds-other-column` for the second, which the human grades and places later. It does not block this piece.
+5. **Code waits on nothing further:** Amendment 1, item 6's condition is met by item 2.
+6. **Superseded index:** the OPEN items list → items 2 and 3; §2b's placeholder wording → item 3; §1's may-not-claim → item 4. Nothing above is edited.

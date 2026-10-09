@@ -254,3 +254,11 @@ All outcomes are structural assertions: a batch count, the recorded flag, a term
 ## §10. Amendments
 
 (opens empty)
+
+### Amendment 1 — the human's ruling on OPEN-1 (class 5)
+
+*Written by the custodian after the human's typed rulings were received (08:37:12Z by the transcript) and before any code. It records the human's ruling on this form's open item. References only; nothing below is a quotation.*
+
+1. **The ruling:** state/directives/2026-10-09-rulings-on-the-eight-forms.md:48-49 @ b4dc05e08c1e24ef7d6904596bb2332b87dcf75b sha256:05dfd632fb1093c5c2ce27c5604c8832fe313d18895ff7d8359b17d2783814bc.
+2. **OPEN-1 is (1): Part B is in scope.** §2's Part B (B1 and B2), M-B1, M-B2 and P-3 bind. §8 item 9's condition is met. The `engine/README.md` index line in §9 is owed.
+3. **Superseded index:** §3's OPEN-1 → item 2; §8 item 9 → satisfied by item 2. Nothing above is edited.

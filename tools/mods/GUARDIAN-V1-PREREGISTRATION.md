@@ -1577,3 +1577,14 @@ D.3 **Observations owed.**
 - §9's dispatch order → Part G.
 - §7's estimate, as Amendment 6, Part D amends it → Part F. The size line is not edited.
 - Amendment 6's reference to its own superseded index → Part G's class 3 row.
+
+### Amendment 8 — the human's rulings on Amendment 7 (class 5)
+
+*Written by the custodian after the human's typed rulings were received (08:37:12Z by the transcript) and before any code. It records the human's rulings on Amendment 7's open item and its two notes. References only; nothing below is a quotation.*
+
+1. **The ruling:** state/directives/2026-10-09-rulings-on-the-eight-forms.md:73-77 @ b4dc05e08c1e24ef7d6904596bb2332b87dcf75b sha256:16ae761cf559f0bd58203e14c76aca35344f9ec313bfdac17334667d0b1cb378.
+2. **OPEN-7 is (a).** G8 refuses tool writes only. A shell write to the main checkout's `.claude/settings.local.json` is not read, and the README states that limit. Amendment 7, Part A stands as drafted, and its A.12 hold is discharged.
+3. **Part B is accepted.** The version printed at P0e (a) is the build of record for the whole piece. If a later run prints a different version, I2 fires and the matter goes to the human.
+4. **E15 is named.** It runs with the other E-rows, after the human's merge click and reload. If a permission prompt appears, the human declines it. An inconclusive row is recorded as inconclusive, never as a pass.
+5. **Installing, enabling and reloading stay the human's.** The merge waits for the human's typed approval after both gates.
+6. **Superseded index:** Amendment 7's OPEN-7 → item 2; Part B's reading → item 3; Part E's E15 → item 4. Nothing above is edited.

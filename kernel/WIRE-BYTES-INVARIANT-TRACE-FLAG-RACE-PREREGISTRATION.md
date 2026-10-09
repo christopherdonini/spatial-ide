@@ -251,3 +251,11 @@ All outcomes are structural assertions. R-0 and R-1 are pass/fail counts, not me
 ## §10. Amendments
 
 (opens empty)
+
+### Amendment 1 — the human's ruling on OPEN-1 (class 5)
+
+*Written by the custodian after the human's typed rulings were received (08:37:12Z by the transcript) and before any code. It records the human's ruling on this form's open item. References only; nothing below is a quotation.*
+
+1. **The ruling:** state/directives/2026-10-09-rulings-on-the-eight-forms.md:51-52 @ b4dc05e08c1e24ef7d6904596bb2332b87dcf75b sha256:3401a8f16e0b370aa4ffaa329cf79e0491d9f4b12eae3c7f2e7a9de30ca3d162.
+2. **OPEN-1 is (1): neither sibling site enters this piece.** PLAN gained one proposed node for each on 2026-10-09: `first-batch-factorial-ignored-trace-tests` and `slice-traced-test-cross-stamping` (the latter with its own form). §8 item 10 stands.
+3. **Superseded index:** the OPEN-1 entry → item 2. Nothing above is edited.

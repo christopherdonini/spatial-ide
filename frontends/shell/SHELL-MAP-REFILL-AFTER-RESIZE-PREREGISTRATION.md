@@ -296,3 +296,14 @@ Neither is a red line. Each answer is recorded as Amendment 1 before dispatch.
 ## §12. Heavy runs
 
 The worker's and tester's briefs carry, as written, the paragraph at state/directives/2026-10-06-machine-script-adopted.md:12-22 @ d88ceddaeb88707941e0868a900eb2f7999da06b sha256:7350977156bed7c94b0da4e8db806ba34c25c6678e65c46447a62d791ba9e8e1. This form names no other rule for builds.
+
+### Amendment 1 — the human's rulings on OPEN-1 and OPEN-2, and on item 39's wording (class 5)
+
+*Written by the custodian after the human's typed rulings were received (08:37:12Z by the transcript) and before any code. It records the human's rulings on this form's open items. References only; nothing below is a quotation.*
+
+1. **The ruling:** state/directives/2026-10-09-rulings-on-the-eight-forms.md:22-25 @ b4dc05e08c1e24ef7d6904596bb2332b87dcf75b sha256:52a1f0e2b5fbb92a555700f00ef047b9cbe491a455bc2ca67df097bfd8bc4adf.
+2. **OPEN-1 is (A).** §2.3's query-free report (`onViewportWithinLastQuery`) stands, with RF8 and RF9.
+3. **OPEN-2 is (A).** §2.4's rule stands: before the open's first reported view, a change of size asks for nothing. §8 item 4 binds, and item 39's third sentence stays.
+4. **Item 39's wording in §2.5 is approved as drafted.** At implementation, the item's HTML comment says the wording was approved by the human on 2026-10-09 (this amendment), in place of its draft-for-sight note. No other word of the item changes.
+5. **Slot order:** this piece is slot 1's third item, after the K6 fix and the e2e re-aim (state/directives/2026-10-09-rulings-additions-reaim-identity-route-documents.md:6-8 @ b4dc05e08c1e24ef7d6904596bb2332b87dcf75b sha256:79541881379e64b126e1f694fefb41bda639d4c04bbd80543867d577307118d4). Its code starts when both have merged.
+6. **Superseded index:** §11 → items 2 and 3; §2.5's draft note → item 4; the code-start line in the header → item 5. Nothing above is edited.
