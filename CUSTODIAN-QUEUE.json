@@ -1,46 +1,27 @@
 {
-  "generated_at": "2026-10-09T08:47:53.664Z",
-  "plan_hash": "ae7a33b9402565b1ccbb11b737014965d1a2a4653583083917f18369e740f071",
+  "generated_at": "2026-10-09T08:52:27.183Z",
+  "plan_hash": "0d727448ec60b960d059d959e2398d63441e071f2afb933dfd8afea99a18ac2a",
   "priorities_approved": true,
   "next": {
-    "id": "covering-names-missing-column",
-    "title": "A covering that names a column the file lacks is kept at open, and every bbox query then fails after the mint (A2-1 P0 k3)",
-    "lane": "engine",
+    "id": "skp-drained-stream-helper-post-check-race",
+    "title": "kernel/src/skp.rs tests: drained_stream_with_a_recorded_change has the same post-check race as typed_terminal_codes' end-to-end test",
+    "lane": "kernel-protocol",
     "phase": "prototype",
     "status": "ready",
     "order": 1,
-    "budget_minutes": 90,
+    "budget_minutes": 240,
     "needs_human": {
       "kind": "none",
       "minutes": 0
     },
     "evidence": null,
     "dates": {
-      "opened": "2026-09-29",
+      "opened": "2026-10-07",
       "done": null
     },
-    "summary": "AMENDMENT 2 APPENDED 2026-10-09 (generation 3, class 5): the human's rulings recorded by reference, before any code. Before: RULED 2026-10-09 by the human's rulings of 2026-10-09 (state/directives/2026-10-09-rulings-on-the-eight-forms.md), item 2: OPEN-1 (A), drop the covering at open; OPEN-2 the human's wording; two cases added to may-not-claim; a proposed node for the case collision. Amendment 2 records them before dispatch. Before: WAITS 2026-10-09 on the human: OPEN-1 (a red line, typed) and OPEN-2 (the wording). Before: P0 DONE 2026-10-09 (Amendment 1, generation 2; state/consults/2026-10-09-covering-names-missing-column-p0-worker-report.md): rows a, b, c and f as predicted, the oracle and the stream agree on every row, no invalidator; the selected rule is ASCII case-insensitive equality at both levels (d and e bind, g does not). Code waits only for the human's typed ruling on OPEN-1. Before: FORM COMMITTED 2026-10-09 (the architect draft after lead-data's impact read; state/consults/2026-10-09-covering-names-missing-column-architect-draft.md): full form with full gating, because the wire's describe.covering_bbox and the viewport_query refusal route change for a class of files and R-S3's open-succeeds outcome is under test; no literal bump, a dated SKP-V0 note; at most 520 code and test lines over at most 4 files; 34 pins at bc357c28. One decision at open, before sanity_check, with a binder-agreement P0 first (DuckDB may bind identifiers without regard to case). OPEN-1 (red line, typed): drop the covering at open (A, recommended) or refuse the open (B); OPEN-2: the wording. No code before the OPEN-1 ruling and Amendment 1, the P0's record. Before: PLACED 2026-10-09 by the human's direction of 2026-10-09 (state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md), item 3a: slot 2, item a, graded S1 by the human. The lead-data second pilot resumes from it as written (item 4): lead-data's impact read first, then the architect's draft. Before: Filed on the 2026-09-29 sightings (state/directives/2026-09-29-a2-1-and-b-1-sightings.md, Fable's A2-1 (c): k3 stays out of A2-1, its own proposed node, graded by whether it breaks a stated clause). Evidence: state/drafts/a2-1-p0/covering-output.txt, k3 -- the file's geo metadata declares a covering whose struct is absent (no U+0000); the open succeeds with the covering kept, and a bbox viewport_query fails at its first stream item with an engine.query binder error, after the mint. Custodian's grading: S1 CANDIDATE on the viewport_query entry in SKP-V0's first section (a bbox request is validated against the dataset before any handle is minted, so NoCoveringBbox returns synchronously and never as a data-plane terminal frame). The case for S2, for Fable to weigh: the file's own metadata is malformed, and the failure is loud and typed. A2-1 drops a covering that is unusable because of U+0000 at open (its Amendment 12, OPEN (c)); this node would decide the same for a covering naming an absent column, where refusing the open instead is on engine/ADMISSION-PREREGISTRATION.md section 12d's human list."
+    "summary": "AMENDMENT 1 APPENDED 2026-10-09 (generation 2, class 5): the human's rulings recorded by reference, before any code. Before: RULED 2026-10-09 by the human's rulings of 2026-10-09 (state/directives/2026-10-09-rulings-on-the-eight-forms.md), item 5: OPEN-1 (1), Part B in scope. Amendment 1 records it before dispatch. Before: FORM COMMITTED 2026-10-09, drafted ahead of its slot (the architect draft after lead-data's impact read; state/consults/2026-10-09-skp-drained-stream-helper-post-check-race-architect-draft.md): full form with full gating, because the helper's guard is the vacuity check for nine tests of properties under test; 66 pins at a23e709b. Part A (kernel/src/skp.rs test module only): the helper's fixture grows to 5,000 features and the helper asserts more batches than the queue holds, so the post-check runs after the touch. Part B, conditional on OPEN-1 (not a red line; recommended in scope): the two same-shape tests in engine/tests/session_identity.rs. No code before covering-names-missing-column merges. The custodian raised the budget for the full form and its gates. WAITS on the human for OPEN-1. Before: PLACED 2026-10-09 by the human's direction of 2026-10-09 (state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md), item 3b: slot 2, item b. Before: SEEN AGAIN 2026-10-08 in PR #195 CI run 37836080416 (ubuntu-24.04, attempt 1; failed steps filed at state/consults/2026-10-08-pr195-ci-run-37836080416-attempt-1-failed-steps.txt): skp::ticket_drop_under_lock_regression::after_cancelling_a_ticket_whose_source_changed_the_next_viewport_query_refuses_by_name panicked at its setup guard, kernel/src/skp.rs:3462, outside that diff; the reviewer reads it as this node class. Found 2026-10-07 by the typed-terminal-codes-post-check-race drafting (state/consults/2026-10-07-typed-terminal-codes-post-check-race-architect-draft.md, finding F-1; the form, section 0.4): the test helper in kernel/src/skp.rs touches the file after opening the engine stream and asserts the post-check found the change, with a 50-feature fixture, so the producer can finish before the touch. kernel/src/skp.rs is in the lines cut's file list, so this waits for the lines cut. Test-only. Waiting on the human's placement."
   },
   "ready": [
-    {
-      "id": "covering-names-missing-column",
-      "title": "A covering that names a column the file lacks is kept at open, and every bbox query then fails after the mint (A2-1 P0 k3)",
-      "lane": "engine",
-      "phase": "prototype",
-      "status": "ready",
-      "order": 1,
-      "budget_minutes": 90,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-29",
-        "done": null
-      },
-      "summary": "AMENDMENT 2 APPENDED 2026-10-09 (generation 3, class 5): the human's rulings recorded by reference, before any code. Before: RULED 2026-10-09 by the human's rulings of 2026-10-09 (state/directives/2026-10-09-rulings-on-the-eight-forms.md), item 2: OPEN-1 (A), drop the covering at open; OPEN-2 the human's wording; two cases added to may-not-claim; a proposed node for the case collision. Amendment 2 records them before dispatch. Before: WAITS 2026-10-09 on the human: OPEN-1 (a red line, typed) and OPEN-2 (the wording). Before: P0 DONE 2026-10-09 (Amendment 1, generation 2; state/consults/2026-10-09-covering-names-missing-column-p0-worker-report.md): rows a, b, c and f as predicted, the oracle and the stream agree on every row, no invalidator; the selected rule is ASCII case-insensitive equality at both levels (d and e bind, g does not). Code waits only for the human's typed ruling on OPEN-1. Before: FORM COMMITTED 2026-10-09 (the architect draft after lead-data's impact read; state/consults/2026-10-09-covering-names-missing-column-architect-draft.md): full form with full gating, because the wire's describe.covering_bbox and the viewport_query refusal route change for a class of files and R-S3's open-succeeds outcome is under test; no literal bump, a dated SKP-V0 note; at most 520 code and test lines over at most 4 files; 34 pins at bc357c28. One decision at open, before sanity_check, with a binder-agreement P0 first (DuckDB may bind identifiers without regard to case). OPEN-1 (red line, typed): drop the covering at open (A, recommended) or refuse the open (B); OPEN-2: the wording. No code before the OPEN-1 ruling and Amendment 1, the P0's record. Before: PLACED 2026-10-09 by the human's direction of 2026-10-09 (state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md), item 3a: slot 2, item a, graded S1 by the human. The lead-data second pilot resumes from it as written (item 4): lead-data's impact read first, then the architect's draft. Before: Filed on the 2026-09-29 sightings (state/directives/2026-09-29-a2-1-and-b-1-sightings.md, Fable's A2-1 (c): k3 stays out of A2-1, its own proposed node, graded by whether it breaks a stated clause). Evidence: state/drafts/a2-1-p0/covering-output.txt, k3 -- the file's geo metadata declares a covering whose struct is absent (no U+0000); the open succeeds with the covering kept, and a bbox viewport_query fails at its first stream item with an engine.query binder error, after the mint. Custodian's grading: S1 CANDIDATE on the viewport_query entry in SKP-V0's first section (a bbox request is validated against the dataset before any handle is minted, so NoCoveringBbox returns synchronously and never as a data-plane terminal frame). The case for S2, for Fable to weigh: the file's own metadata is malformed, and the failure is loud and typed. A2-1 drops a covering that is unusable because of U+0000 at open (its Amendment 12, OPEN (c)); this node would decide the same for a covering naming an absent column, where refusing the open instead is on engine/ADMISSION-PREREGISTRATION.md section 12d's human list."
-    },
     {
       "id": "skp-drained-stream-helper-post-check-race",
       "title": "kernel/src/skp.rs tests: drained_stream_with_a_recorded_change has the same post-check race as typed_terminal_codes' end-to-end test",
@@ -386,7 +367,30 @@
       ]
     }
   ],
-  "in_progress": [],
+  "in_progress": [
+    {
+      "id": "covering-names-missing-column",
+      "title": "A covering that names a column the file lacks is kept at open, and every bbox query then fails after the mint (A2-1 P0 k3)",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": 1,
+      "budget_minutes": 90,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "branch": "cut/covering-names-missing-column"
+      },
+      "dates": {
+        "opened": "2026-09-29",
+        "done": null
+      },
+      "summary": "IN CODE 2026-10-09: slot 2; one worker-high on branch cut/covering-names-missing-column from main 76a09d5c, worktree C:/dev/wt/cov, warm target D:/wt-targets/cov; Branch A under Amendments 1 and 2. Before: AMENDMENT 2 APPENDED 2026-10-09 (generation 3, class 5): the human's rulings recorded by reference, before any code. Before: RULED 2026-10-09 by the human's rulings of 2026-10-09 (state/directives/2026-10-09-rulings-on-the-eight-forms.md), item 2: OPEN-1 (A), drop the covering at open; OPEN-2 the human's wording; two cases added to may-not-claim; a proposed node for the case collision. Amendment 2 records them before dispatch. Before: WAITS 2026-10-09 on the human: OPEN-1 (a red line, typed) and OPEN-2 (the wording). Before: P0 DONE 2026-10-09 (Amendment 1, generation 2; state/consults/2026-10-09-covering-names-missing-column-p0-worker-report.md): rows a, b, c and f as predicted, the oracle and the stream agree on every row, no invalidator; the selected rule is ASCII case-insensitive equality at both levels (d and e bind, g does not). Code waits only for the human's typed ruling on OPEN-1. Before: FORM COMMITTED 2026-10-09 (the architect draft after lead-data's impact read; state/consults/2026-10-09-covering-names-missing-column-architect-draft.md): full form with full gating, because the wire's describe.covering_bbox and the viewport_query refusal route change for a class of files and R-S3's open-succeeds outcome is under test; no literal bump, a dated SKP-V0 note; at most 520 code and test lines over at most 4 files; 34 pins at bc357c28. One decision at open, before sanity_check, with a binder-agreement P0 first (DuckDB may bind identifiers without regard to case). OPEN-1 (red line, typed): drop the covering at open (A, recommended) or refuse the open (B); OPEN-2: the wording. No code before the OPEN-1 ruling and Amendment 1, the P0's record. Before: PLACED 2026-10-09 by the human's direction of 2026-10-09 (state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md), item 3a: slot 2, item a, graded S1 by the human. The lead-data second pilot resumes from it as written (item 4): lead-data's impact read first, then the architect's draft. Before: Filed on the 2026-09-29 sightings (state/directives/2026-09-29-a2-1-and-b-1-sightings.md, Fable's A2-1 (c): k3 stays out of A2-1, its own proposed node, graded by whether it breaks a stated clause). Evidence: state/drafts/a2-1-p0/covering-output.txt, k3 -- the file's geo metadata declares a covering whose struct is absent (no U+0000); the open succeeds with the covering kept, and a bbox viewport_query fails at its first stream item with an engine.query binder error, after the mint. Custodian's grading: S1 CANDIDATE on the viewport_query entry in SKP-V0's first section (a bbox request is validated against the dataset before any handle is minted, so NoCoveringBbox returns synchronously and never as a data-plane terminal frame). The case for S2, for Fable to weigh: the file's own metadata is malformed, and the failure is loud and typed. A2-1 drops a covering that is unusable because of U+0000 at open (its Amendment 12, OPEN (c)); this node would decide the same for a covering naming an absent column, where refusing the open instead is on engine/ADMISSION-PREREGISTRATION.md section 12d's human list.",
+      "evidence_label": "branch `cut/covering-names-missing-column`"
+    }
+  ],
   "proposed": [
     {
       "id": "governance-hash-grammar-shared",

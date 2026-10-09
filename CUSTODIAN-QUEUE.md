@@ -1,14 +1,13 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `ae7a33b9402565b1ccbb11b737014965d1a2a4653583083917f18369e740f071`) at `2026-10-09T08:47:53.664Z`.
+Generated from `PLAN.yaml` (sha256 `0d727448ec60b960d059d959e2398d63441e071f2afb933dfd8afea99a18ac2a`) at `2026-10-09T08:52:27.183Z`.
 
 ## 1. Next
 
-- **covering-names-missing-column** — A covering that names a column the file lacks is kept at open, and every bbox query then fails after the mint (A2-1 P0 k3) (lane `engine`)
+- **skp-drained-stream-helper-post-check-race** — kernel/src/skp.rs tests: drained_stream_with_a_recorded_change has the same post-check race as typed_terminal_codes' end-to-end test (lane `kernel-protocol`)
 
 ## 2. Ready
 
-- **covering-names-missing-column** — A covering that names a column the file lacks is kept at open, and every bbox query then fails after the mint (A2-1 P0 k3) (lane `engine`, order 1, budget 90 min)
 - **skp-drained-stream-helper-post-check-race** — kernel/src/skp.rs tests: drained_stream_with_a_recorded_change has the same post-check race as typed_terminal_codes' end-to-end test (lane `kernel-protocol`, order 1, budget 240 min)
 - **wire-bytes-invariant-trace-flag-race** — kernel/tests/wire_bytes_invariant.rs: the projected-ticket test asserts tracing is off while its sibling starts a trace (a race on the engine's global trace flag) (lane `kernel-protocol`, order 2, budget 240 min)
 - **e2e-hover-establishing-read-stale** — K6 and A9-prime take their starting hover id from the readout's first poll, which can still name the feature under the previous pointer (lane `shell`, order 1, budget 300 min)
@@ -36,7 +35,7 @@ Generated from `PLAN.yaml` (sha256 `ae7a33b9402565b1ccbb11b737014965d1a2a4653583
 
 ## 5. In progress
 
-- (none)
+- **covering-names-missing-column** — A covering that names a column the file lacks is kept at open, and every bbox query then fails after the mint (A2-1 P0 k3) — evidence: branch `cut/covering-names-missing-column`
 
 ## 6. Proposed / unscheduled
 
