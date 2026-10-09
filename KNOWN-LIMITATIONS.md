@@ -112,6 +112,8 @@ no performance claim at all (`docs/08_Testing.md`).*
    types; this slice reads polygons only"*), as is any encoding other than WKB (*"geometry encoding is
    `…`; this slice reads WKB-encoded GeoParquet only"*). A file whose `geo` metadata declares no
    `covering.bbox` is refused when the view is queried, because there is nothing to index with.
+   A file whose `covering.bbox` names a column the file does not contain opens, and is refused the same way when the view is queried; the refusal names the missing column.
+   <!-- the sentence above is the human's wording (engine/COVERING-NAMES-MISSING-COLUMN-PREREGISTRATION.md Amendment 2, item 3); it describes the tree after that piece lands, not the v0.1.0 artifact the comment below pins -->
    <!-- engine/src/dataset.rs:275-281 @ b391e436 sha256:c8eab9d240ebfe9da88d5f11e1844f2a4d246fc3f4165ad71e2ed6c711a509bb (polygon gate), engine/src/dataset.rs:269-272 @ b391e436 sha256:877a593e725aeb2bc07a5327fb0d0d62a823718868b937526949dcbcb1724b68 (encoding gate), engine/src/stream.rs:1185-1187 @ b391e436 sha256:928ff26dc58ec92a4a6f1cbafa98acc60c370d037e2e123eb872049d01faef9e (NoCoveringBbox, raised on the bbox branch of the view query itself); b391e436 is the v0.1.0 tag commit, the artifact this item is true of, and the lines were read there -->
 
 10. **One file per session, and nothing is remembered.** The app holds a single admitted dataset;
