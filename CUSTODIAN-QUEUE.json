@@ -1,46 +1,29 @@
 {
-  "generated_at": "2026-10-09T07:10:46.904Z",
-  "plan_hash": "97c68f94b3c9ae485d0e27635d2dfd9bb0e87f354b7296f72fc5592ca287505a",
+  "generated_at": "2026-10-09T07:22:07.930Z",
+  "plan_hash": "94b20655ef8ee5bf7027ae53cf001545eaf6dcd69ce50da69c9add604e5c1a8b",
   "priorities_approved": true,
   "next": {
-    "id": "ported-code-notice-route",
-    "title": "A notice route for ported code, wherever it lands (shell or kernel), needed before any PORT",
+    "id": "guardian-v1",
+    "title": "Guardian v1 -- G1's heredoc false alarm fixed, one local log line per refusal, and three new rules: G7 (agent merges and history rewrites), G8 (plugin, marketplace and MCP installs, and writes to the user's Claude folder), G9 (wholesale cleans of the main checkout's target) (Fable's MODS-V1 brief, 2026-10-05)",
     "lane": "governance",
     "phase": "prototype",
     "status": "ready",
-    "order": 1,
-    "budget_minutes": 60,
+    "order": 21,
+    "budget_minutes": 240,
     "needs_human": {
       "kind": "none",
       "minutes": 0
     },
-    "evidence": null,
+    "evidence": {
+      "branch": "cut/guardian-v1"
+    },
     "dates": {
-      "opened": "2026-10-08",
+      "opened": "2026-10-05",
       "done": null
     },
-    "summary": "PLACED 2026-10-09 by the human's direction of 2026-10-09 (state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md), item 3e: slot 2, item e. Before: PROPOSED 2026-10-08 by the human (state/directives/2026-10-08-reuse-round-1.md, item 4), for the human to place: needed before any port of outside code; covers attribution and licence notices for ported code in the shell or the kernel."
+    "summary": "RESUMED 2026-10-09 by the human's direction of 2026-10-09 (state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md), item 3f: slot 2, item f. Its G8 covers .claude/settings.local.json (a scope addition to its form when it resumes). Installing it stays the human's. Before: PARKED 2026-10-05 by the product-first direction until the freeze lifts (records kept: the form with Amendments 1 to 6; branch cut/guardian-v1 at 5a9eb051 on origin, no PR; worktree C:/dev/wt/gv1, clean; worker reports 1 and 2 under state/consults). On resume: merge main in, re-read the form pins into register.js (the N1 piece edits it first), then record the mutation observations. Before: AMENDMENT 6 APPENDED 2026-10-05 (generation 7; the architect draft): I9 resolved by option (b), a push whose own segment leaves a quote open stays refused, so v0 T7 is unchanged and no waiver is needed (F62, F63, T71, T72; P0d before code); the test kit arm answers the env read by default; the plugin-test hold, cleared by the human; size re-estimated, class 8 at the head if over. The build resumes. Before: STOPPED AT BUILD 2026-10-05 (Amendment 5, generation 6; nothing committed, worktree clean): I9 fired (v0 T7 asserts F7 refused; section 2.2 allows it), and claude plugin test will not run (a saved hooks-modules switch; the remedy, starting claude, is the human). The architect drafts the I9 amendment next. Before: IN PROGRESS 2026-10-05: the governance slot; branch cut/guardian-v1 from ccac14d2 (worktree C:/dev/wt/gv1, no cargo target); the worker-high dispatched under the form, claude --help first (Amendment 4, Part B). Before: AMENDMENT 4 APPENDED 2026-10-05 (generation 5; the architect draft): the OPEN-6 verbs (class 9, F61, T70), Fable round-58 item 3 (claude --help read-only, the README top-level list), P0c four readings declared, Fable item 4 recorded for section 9; no OPEN item; the build next. Before: P0c RECORDED 2026-10-05 as Amendment 3 (generation 4): A.6 holds by row, no stop; QUESTION ROUND 58 RULED (OPEN-6 (c), typed); next Amendment 4 (the OPEN-6 row, class 9, and Fable round-58 item 3) by the architect, then the build. Before: AMENDMENT 2 APPENDED 2026-10-05 (generation 3; the architect draft): I8 redesign of how G7 to G9 read a call that cannot be tokenised (restart points), round 57 rulings as classes 5 and 9, Fable round-57 items 2 to 4, the CLI aliases, N2; P0c (read-only replay) before any code; OPEN-6 (CLI verbs outside the brief) for the human as question round 58. Before: P0b RECORDED 2026-10-05 as the form Amendment 1 (generation 2): I8 FIRED (the replay shows G7, G8 and G9 refusing the custodian own flows through the odd-quote reading); the piece stops before code and returns to the architect for Amendment 2, with round 57 rulings and Fable round-57 advice. QUESTION ROUND 57 RULED (typed): OPEN-1 to OPEN-4 (b), OPEN-5 (a). FORM COMMITTED 2026-10-05 (tools/mods/GUARDIAN-V1-PREREGISTRATION.md, the architect draft from the P0; full form). OPEN-1 to OPEN-5 are red lines for the human (question round 57): where G7 and G9 reach; gh api merges; the user-level .claude.json; G9 protected set; the new-folder over-refusal. No code before the rulings. UNBLOCKED 2026-10-05: evidence-recorder-v0-1 is done (#177). Its P0 and form come first (MODS-V1); the fourth G1 over-refusal is noted for the P0. Before: Placed by the human's 2026-10-05 direction, line 2 (state/directives/2026-10-05-human-direction-data-plane-mods-v1-pilot-v2.md; RULED 2026-10-05). The brief is state/directives/MODS-V1-2026-10-05.md, section 2. After evidence-recorder-v0-1, which it depends on (section 4). It brings forward item G of the 2026-10-09 window, the G1 over-refusal (question round 50, item 3). No live G1 probe ever. P0 first (section 2.4), recorded in the form's section 0 before any code; full form; gates reviewer plus architect, with the claude plugin validate output in the PR body. Guardian is installed by reference from tools/mods/spatial-guardian in the main checkout, so the merge changes the live mod: it waits for the human's typed approval after both gates, naming the live checks allowed (E7 to E10), before the click. While Guardian is installed, AUTONOMY section 9's docs-only auto-merge is not used (line 2); section 9 is not edited, and the suspension goes to the 2026-10-09 window for an appended note. Drafting is the architect's."
   },
   "ready": [
-    {
-      "id": "ported-code-notice-route",
-      "title": "A notice route for ported code, wherever it lands (shell or kernel), needed before any PORT",
-      "lane": "governance",
-      "phase": "prototype",
-      "status": "ready",
-      "order": 1,
-      "budget_minutes": 60,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-10-08",
-        "done": null
-      },
-      "summary": "PLACED 2026-10-09 by the human's direction of 2026-10-09 (state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md), item 3e: slot 2, item e. Before: PROPOSED 2026-10-08 by the human (state/directives/2026-10-08-reuse-round-1.md, item 4), for the human to place: needed before any port of outside code; covers attribution and licence notices for ported code in the shell or the kernel."
-    },
     {
       "id": "guardian-v1",
       "title": "Guardian v1 -- G1's heredoc false alarm fixed, one local log line per refusal, and three new rules: G7 (agent merges and history rewrites), G8 (plugin, marketplace and MCP installs, and writes to the user's Claude folder), G9 (wholesale cleans of the main checkout's target) (Fable's MODS-V1 brief, 2026-10-05)",
@@ -64,7 +47,7 @@
     }
   ],
   "waiting_on_human": {
-    "total_minutes": 27,
+    "total_minutes": 37,
     "by_kind": {
       "click": [],
       "sight": [],
@@ -182,6 +165,25 @@
             "done": null
           },
           "summary": "WAITS 2026-10-09 on the human: OPEN-1 and OPEN-2, neither a red line. Before: FORM COMMITTED 2026-10-09 (the architect draft, alone; state/consults/2026-10-09-shell-map-refill-after-resize-architect-draft.md): full form with full gating (new user-visible behaviour; a new trigger on the debounce's never-query-in-motion contract and the cancel path ADR-018 governs); at most 600 lines over 7 files; 35 pins at d88cedda. deck's onResize asks for data only when the map grows past the area last asked for, through the existing debounce, so the bars' own size changes cannot repeat queries; a shrink asks nothing. KNOWN-LIMITATIONS 39 retired (draft wording for the human's sight); walkthrough Part V for the felt verdict. OPEN-1 (Current view after a shrink: a query-free report, recommended) and OPEN-2 (nothing asked before the first pan or zoom, recommended), neither a red line, go to the human. Code after e2e-hover-establishing-read-stale merges. Before: PLACED 2026-10-09 by the human's direction of 2026-10-09 (state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md), item 2b: slot 1, item b, as already ruled. Milestone 1 found H1 holds (no viewport query on a layout resize; its stage 2, worker report 2). Before: Recorded 2026-10-07 by the human clarification of milestone 1 OPEN-7 (state/directives/2026-10-07-round-66-and-67-rulings.md, lines 24-29): if milestone 1 finds H1 holds (a layout resize issues no viewport query), this small piece of its own fixes it, placed directly after milestone 1 merges; milestone 2 code starts when it has merged. Until then a KNOWN-LIMITATIONS line says what the human will see and that a pan or zoom fills the area. Proposed."
+        },
+        {
+          "id": "ported-code-notice-route",
+          "title": "A notice route for ported code, wherever it lands (shell or kernel), needed before any PORT",
+          "lane": "governance",
+          "phase": "prototype",
+          "status": "blocked",
+          "order": 1,
+          "budget_minutes": 480,
+          "needs_human": {
+            "kind": "ruling",
+            "minutes": 10
+          },
+          "evidence": null,
+          "dates": {
+            "opened": "2026-10-08",
+            "done": null
+          },
+          "summary": "FORM COMMITTED 2026-10-09, drafted ahead of its slot (the architect draft, alone; state/consults/2026-10-09-ported-code-notice-route-architect-draft.md): full form with full gating (ADR-009's security posture, ADR-030's notice set under test and its reopen clause, and size: at most 1,400 lines over at most 20 files). A fifth notice set enumerated from an in-tree registry, LICENSES/third-party/ported/MANIFEST.json, with hash-pinned upstream texts; a ported file carries an SPDX header and a Ported-From line; the packaged build and a new repository check fail closed in both directions; empty at merge, so every NOTICE stays byte-identical. It ports nothing. For the human: OPEN-1 to OPEN-5, red lines (allowed upstream licences; the header and licence expression; the new NOTICE wording; the ADR-030 appended note; what counts as a port), and OPEN-6, whether the check is required. The custodian raised the budget for the full form and its gates. WAITS on the human. Before: PLACED 2026-10-09 by the human's direction of 2026-10-09 (state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md), item 3e: slot 2, item e. Before: PROPOSED 2026-10-08 by the human (state/directives/2026-10-08-reuse-round-1.md, item 4), for the human to place: needed before any port of outside code; covers attribution and licence notices for ported code in the shell or the kernel."
         }
       ],
       "sitting": []

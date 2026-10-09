@@ -4372,17 +4372,17 @@ nodes:
     kind: task
     lane: governance
     phase: prototype
-    status: ready
+    status: blocked
     order: 1
     depends_on: []
-    needs_human: {kind: none, minutes: 0}
-    gate: none
+    needs_human: {kind: ruling, minutes: 10}
+    gate: renderer/bundle-viewer/PORTED-CODE-NOTICE-ROUTE-PREREGISTRATION.md
     evidence: null
-    budget_minutes: 60
+    budget_minutes: 480
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "PLACED 2026-10-09 by the human's direction of 2026-10-09 (state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md), item 3e: slot 2, item e. Before: PROPOSED 2026-10-08 by the human (state/directives/2026-10-08-reuse-round-1.md, item 4), for the human to place: needed before any port of outside code; covers attribution and licence notices for ported code in the shell or the kernel."
+    summary: "FORM COMMITTED 2026-10-09, drafted ahead of its slot (the architect draft, alone; state/consults/2026-10-09-ported-code-notice-route-architect-draft.md): full form with full gating (ADR-009's security posture, ADR-030's notice set under test and its reopen clause, and size: at most 1,400 lines over at most 20 files). A fifth notice set enumerated from an in-tree registry, LICENSES/third-party/ported/MANIFEST.json, with hash-pinned upstream texts; a ported file carries an SPDX header and a Ported-From line; the packaged build and a new repository check fail closed in both directions; empty at merge, so every NOTICE stays byte-identical. It ports nothing. For the human: OPEN-1 to OPEN-5, red lines (allowed upstream licences; the header and licence expression; the new NOTICE wording; the ADR-030 appended note; what counts as a port), and OPEN-6, whether the check is required. The custodian raised the budget for the full form and its gates. WAITS on the human. Before: PLACED 2026-10-09 by the human's direction of 2026-10-09 (state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md), item 3e: slot 2, item e. Before: PROPOSED 2026-10-08 by the human (state/directives/2026-10-08-reuse-round-1.md, item 4), for the human to place: needed before any port of outside code; covers attribution and licence notices for ported code in the shell or the kernel."
     dates: {opened: 2026-10-08, done: null}
 
   - id: query-reuse-index-before-planning

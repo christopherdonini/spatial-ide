@@ -1,17 +1,16 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `97c68f94b3c9ae485d0e27635d2dfd9bb0e87f354b7296f72fc5592ca287505a`) at `2026-10-09T07:10:46.904Z`.
+Generated from `PLAN.yaml` (sha256 `94b20655ef8ee5bf7027ae53cf001545eaf6dcd69ce50da69c9add604e5c1a8b`) at `2026-10-09T07:22:07.930Z`.
 
 ## 1. Next
 
-- **ported-code-notice-route** — A notice route for ported code, wherever it lands (shell or kernel), needed before any PORT (lane `governance`)
+- **guardian-v1** — Guardian v1 -- G1's heredoc false alarm fixed, one local log line per refusal, and three new rules: G7 (agent merges and history rewrites), G8 (plugin, marketplace and MCP installs, and writes to the user's Claude folder), G9 (wholesale cleans of the main checkout's target) (Fable's MODS-V1 brief, 2026-10-05) (lane `governance`)
 
 ## 2. Ready
 
-- **ported-code-notice-route** — A notice route for ported code, wherever it lands (shell or kernel), needed before any PORT (lane `governance`, order 1, budget 60 min)
 - **guardian-v1** — Guardian v1 -- G1's heredoc false alarm fixed, one local log line per refusal, and three new rules: G7 (agent merges and history rewrites), G8 (plugin, marketplace and MCP installs, and writes to the user's Claude folder), G9 (wholesale cleans of the main checkout's target) (Fable's MODS-V1 brief, 2026-10-05) (lane `governance`, order 21, budget 240 min)
 
-## 3. Waiting on the human (total: 27 min)
+## 3. Waiting on the human (total: 37 min)
 
 ### ruling
 
@@ -21,6 +20,7 @@ Generated from `PLAN.yaml` (sha256 `97c68f94b3c9ae485d0e27635d2dfd9bb0e87f354b72
 - **decision-adr-029-scan-progress-route** — ADR-029's scan-progress route, given G1 (a minimal crate patch exposing the connection handle; raw ffi end to end on the scan path; upstream first) -- deferred to Brief B's B2 by the human, round 16 item 3 (10 min)
 - **e2e-hover-establishing-read-stale** — K6 and A9-prime take their starting hover id from the readout's first poll, which can still name the feature under the previous pointer (5 min)
 - **shell-map-refill-after-resize** — The map refills after a resize: a layout change that uncovers map area issues a viewport query, so the area fills without a pan or zoom (3 min)
+- **ported-code-notice-route** — A notice route for ported code, wherever it lands (shell or kernel), needed before any PORT (10 min)
 
 ## 4. Blocked on dependencies
 
