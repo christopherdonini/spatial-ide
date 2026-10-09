@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `52060e0afd36389622d823dd5b0f7cbc3149d0810ba1ef669a557e62a585b7ca`) at `2026-10-09T13:13:21.404Z`.
+Generated from `PLAN.yaml` (sha256 `4fa198566f429c5a532de81d5ba3eb78cac00fc0c711ab1de5419e3e56bc4641`) at `2026-10-09T14:10:39.543Z`.
 
 ## 1. Next
 
@@ -14,17 +14,17 @@ Generated from `PLAN.yaml` (sha256 `52060e0afd36389622d823dd5b0f7cbc3149d0810ba1
 - **ported-code-notice-route** — A notice route for ported code, wherever it lands (shell or kernel), needed before any PORT (lane `governance`, order 1, budget 480 min)
 - **guardian-v1** — Guardian v1 -- G1's heredoc false alarm fixed, one local log line per refusal, and three new rules: G7 (agent merges and history rewrites), G8 (plugin, marketplace and MCP installs, and writes to the user's Claude folder), G9 (wholesale cleans of the main checkout's target) (Fable's MODS-V1 brief, 2026-10-05) (lane `governance`, order 21, budget 240 min)
 
-## 3. Waiting on the human (total: 20 min)
+## 3. Waiting on the human (total: 10 min)
 
 ### ruling
 
 - **decision-adr-029-scan-progress-route** — ADR-029's scan-progress route, given G1 (a minimal crate patch exposing the connection handle; raw ffi end to end on the scan path; upstream first) -- deferred to Brief B's B2 by the human, round 16 item 3 (10 min)
-- **e2e-stale-expectations-reaim** — Re-aim the shell e2e steps whose expectations predate ruled product changes: regression C2'/C3', admission MAP' and BOTHNEEDED', console HEXLIM', GROUP' and REFUSAL', source-changed default-route S4 (10 min)
 
 ## 4. Blocked on dependencies
 
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
 - **b2-piece-1b-recording** — B2 piece 1b -- recording: the kernel's step commands for filter, scope and style, the session history on the machine, safe against a crash, and the docs/07 note — blocked by: shell-migration-milestone-2
+- **e2e-stale-expectations-reaim** — Re-aim the shell e2e steps whose expectations predate ruled product changes: regression C2'/C3', admission MAP' and BOTHNEEDED', console HEXLIM', GROUP' and REFUSAL', source-changed default-route S4 — blocked by: e2e-hover-establishing-read-stale
 - **shell-migration-milestone-2** — Shell migration, milestone 2 -- selection and scope: the Select tool, a selection that survives filter and pan, the hidden count, a stated scope — blocked by: e2e-hover-establishing-read-stale, shell-map-refill-after-resize, e2e-stale-expectations-reaim
 - **briefb-b2-save-reopen** — B2 — Save project, Snapshot data, session history, lineage and preferences, in five stages, each with its own form — blocked by: decision-adr-029-scan-progress-route
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer — blocked by: signpath-application-draft

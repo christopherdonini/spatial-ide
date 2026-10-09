@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-09T13:13:21.404Z",
-  "plan_hash": "52060e0afd36389622d823dd5b0f7cbc3149d0810ba1ef669a557e62a585b7ca",
+  "generated_at": "2026-10-09T14:10:39.543Z",
+  "plan_hash": "4fa198566f429c5a532de81d5ba3eb78cac00fc0c711ab1de5419e3e56bc4641",
   "priorities_approved": true,
   "next": {
     "id": "skp-drained-stream-helper-post-check-race",
@@ -121,7 +121,7 @@
     }
   ],
   "waiting_on_human": {
-    "total_minutes": 20,
+    "total_minutes": 10,
     "by_kind": {
       "click": [],
       "sight": [],
@@ -144,25 +144,6 @@
             "done": null
           },
           "summary": "2026-10-09, the human's direction of 2026-10-09 (state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md), item 7: no ruling now; it is needed only before the snapshot piece. Before: Returns at B2's preregistration, not after B2 completes (the human, 2026-09-22); B2 depends on this ruling. RULED 2026-09-18 (round 16, item 3), the human verbatim: 'defer -- ADR-029 stays Proposed, G1's facts recorded, the route returns with Brief B's B2'. G1 established (entry 111): a u64 rows-processed reading exists on the read_parquet path; the engine cannot reach it through the vendored Connection; the count must be latched engine-side; DuckDB's denominator is an estimate, which ADR-029 1(c) forbids forwarding. No route is dispatched before B2's preregistration carries the question back for the ruling"
-        },
-        {
-          "id": "e2e-stale-expectations-reaim",
-          "title": "Re-aim the shell e2e steps whose expectations predate ruled product changes: regression C2'/C3', admission MAP' and BOTHNEEDED', console HEXLIM', GROUP' and REFUSAL', source-changed default-route S4",
-          "lane": "shell",
-          "phase": "prototype",
-          "status": "blocked",
-          "order": 2,
-          "budget_minutes": 180,
-          "needs_human": {
-            "kind": "ruling",
-            "minutes": 10
-          },
-          "evidence": null,
-          "dates": {
-            "opened": "2026-10-09",
-            "done": null
-          },
-          "summary": "FORM COMMITTED 2026-10-09 (the architect, alone; state/consults/2026-10-09-e2e-stale-expectations-reaim-architect-draft.md): full form with full gating (size, about 860 code and test lines over 6 files; a property under test); 112 pins at a576ab37. Steps re-aimed as the human ruled: C2-prime/C3-prime, MAP-prime and BOTHNEEDED-prime each split into a session-tier half and a refuse-then-declare half on new fixtures; HEXLIM-prime with columns; REFUSAL-prime polls with a declared bound; GROUP-prime asserts its group by what the entries are, with a capacity check; an arm readback; source-changed S3 and S4 on the pre route re-aimed to a directory junction retargeted after admission. One observed mutation per step, all test-side. WAITS on the human: OPEN-1 (how the still-refusing fixture is written; (A) touches engine/src/fixture.rs, test support), OPEN-2 (mutations), OPEN-3 (walkthrough scope), the sight of rows C2, C3, I4 and I5 and the fixture names; and whether the resumed lead-data pilot wants an impact read, since the piece touches kernel/tests and engine/. Code after the K6 fix merges. Before: FORM DRAFTING 2026-10-09: the architect, alone, at main a576ab37, citing the custodian's solo re-run and carrying the reuse index output. Before: SOLO RE-RUN DONE 2026-10-09 (state/drafts/e2e-stale-expectations-reaim-console-alone): the console suite alone on the shipped default arm at window height 800, under the custodian's exclusive hold, at ac89e033 (frontends/shell/src and e2e/console.mjs identical to main's): REFUSAL', GROUP' and HEXLIM' fail as the triage found, and REGRESS' fails only on C2'/C3'. The architect drafts the form next, citing it. Before: PLACED 2026-10-09 by the human's additions of 2026-10-09 (state/directives/2026-10-09-rulings-additions-reaim-identity-route-documents.md), item 1: slot 1, right after the K6 fix. The architect drafts its form alone, after the custodian's solo re-run of console GROUP' and REFUSAL', which the form cites. Its rules are item 1's, referenced and not restated. It also carries the KNOWN-LIMITATIONS item 3 paragraph of item 4. Before: PROPOSED 2026-10-09 from the e2e triage (state/consults/2026-10-09-e2e-failures-present-at-the-base-triage-report.md), for the human to place. Each step is a stale expectation, and each fix touches e2e files, their READMEs and the walkthrough rows only, with no product change: C2'/C3' and admission MAP' and BOTHNEEDED' re-aimed for the session identity tier (perhaps a new still-refusing identity fixture); HEXLIM' gains the columns key; GROUP' and REFUSAL' either poll with a bound and assert the group by its predicate, or pin the baseline arm (the second stops the suite exercising the shipped arm, so it is the human's or the architect's call); S4 re-aimed to a change the advisory watcher cannot see. Questions with it, for the human: whether a keyless file that now admits needs a route to the identity declaration form; and whether QUICKSTART.md and KNOWN-LIMITATIONS item 3 are updated here or apart."
         }
       ],
       "sitting": []
@@ -211,6 +192,28 @@
       "summary": "RULED 2026-10-09, ADR-036's ten findings (state/directives/2026-10-09-adr-036-ten-findings-rulings.md): this piece's form carries the ADR amendment for findings 3 (session-history recovery keeps the longest valid prefix), 5 (the collapse key and the wider collapse) and 6 (the one opaque slot for forward compatibility). ADR-036 stays Proposed until 1c. Before: PLACED 2026-10-09 by the human's direction of 2026-10-09 (state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md), item 3: in slot 2 after guardian-v1; it follows when shell-migration-milestone-2 has merged. Before: OWED BY ITS FORM (question round 70, 2026-10-08, state/directives/2026-10-08-round-70-rulings.md; b2-piece-1a Amendment 2, item 5): the store behind OPEN-2 (a project opened from a second folder: the question asked once, the per-folder memory, a copy with its own identity and data links, the move rule) and OPEN-3 (a never-saved session kept on the machine under a not-yet-saved record, with its recovery offer naming the dataset and the time, cleared on decline or a normal session end). Before: Recorded 2026-10-07 (evening) by the human's rulings (state/directives/2026-10-07-b2-brief-and-evening-rulings.md; state/directives/B2-BRIEF-2026-10-07.md, section 9): needs 1a and migration milestone 2. The docs/07 note lands with it or in its own commit just before, typed by the human (the brief, section 11). Open items at its form: the ADR-022 grant, and how large the session history may grow. Proposed.",
       "blocked_by": [
         "shell-migration-milestone-2"
+      ]
+    },
+    {
+      "id": "e2e-stale-expectations-reaim",
+      "title": "Re-aim the shell e2e steps whose expectations predate ruled product changes: regression C2'/C3', admission MAP' and BOTHNEEDED', console HEXLIM', GROUP' and REFUSAL', source-changed default-route S4",
+      "lane": "shell",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": 2,
+      "budget_minutes": 180,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-09",
+        "done": null
+      },
+      "summary": "RULED 2026-10-09 (state/directives/2026-10-09-reaim-question-round-answers.md): OPEN-1 (A), the test-support fixture variant; OPEN-2 test-side mutations except REFUSAL-prime, which gets the product-line one; OPEN-3 (a); no impact read, the architect's draft stands alone. Amendment 1 records them before any code. Its code also waits for the K6 fix to merge. Before: FORM COMMITTED 2026-10-09 (the architect, alone; state/consults/2026-10-09-e2e-stale-expectations-reaim-architect-draft.md): full form with full gating (size, about 860 code and test lines over 6 files; a property under test); 112 pins at a576ab37. Steps re-aimed as the human ruled: C2-prime/C3-prime, MAP-prime and BOTHNEEDED-prime each split into a session-tier half and a refuse-then-declare half on new fixtures; HEXLIM-prime with columns; REFUSAL-prime polls with a declared bound; GROUP-prime asserts its group by what the entries are, with a capacity check; an arm readback; source-changed S3 and S4 on the pre route re-aimed to a directory junction retargeted after admission. One observed mutation per step, all test-side. WAITS on the human: OPEN-1 (how the still-refusing fixture is written; (A) touches engine/src/fixture.rs, test support), OPEN-2 (mutations), OPEN-3 (walkthrough scope), the sight of rows C2, C3, I4 and I5 and the fixture names; and whether the resumed lead-data pilot wants an impact read, since the piece touches kernel/tests and engine/. Code after the K6 fix merges. Before: FORM DRAFTING 2026-10-09: the architect, alone, at main a576ab37, citing the custodian's solo re-run and carrying the reuse index output. Before: SOLO RE-RUN DONE 2026-10-09 (state/drafts/e2e-stale-expectations-reaim-console-alone): the console suite alone on the shipped default arm at window height 800, under the custodian's exclusive hold, at ac89e033 (frontends/shell/src and e2e/console.mjs identical to main's): REFUSAL', GROUP' and HEXLIM' fail as the triage found, and REGRESS' fails only on C2'/C3'. The architect drafts the form next, citing it. Before: PLACED 2026-10-09 by the human's additions of 2026-10-09 (state/directives/2026-10-09-rulings-additions-reaim-identity-route-documents.md), item 1: slot 1, right after the K6 fix. The architect drafts its form alone, after the custodian's solo re-run of console GROUP' and REFUSAL', which the form cites. Its rules are item 1's, referenced and not restated. It also carries the KNOWN-LIMITATIONS item 3 paragraph of item 4. Before: PROPOSED 2026-10-09 from the e2e triage (state/consults/2026-10-09-e2e-failures-present-at-the-base-triage-report.md), for the human to place. Each step is a stale expectation, and each fix touches e2e files, their READMEs and the walkthrough rows only, with no product change: C2'/C3' and admission MAP' and BOTHNEEDED' re-aimed for the session identity tier (perhaps a new still-refusing identity fixture); HEXLIM' gains the columns key; GROUP' and REFUSAL' either poll with a bound and assert the group by its predicate, or pin the baseline arm (the second stops the suite exercising the shipped arm, so it is the human's or the architect's call); S4 re-aimed to a change the advisory watcher cannot see. Questions with it, for the human: whether a keyless file that now admits needs a route to the identity declaration form; and whether QUICKSTART.md and KNOWN-LIMITATIONS item 3 are updated here or apart.",
+      "blocked_by": [
+        "e2e-hover-establishing-read-stale"
       ]
     },
     {
