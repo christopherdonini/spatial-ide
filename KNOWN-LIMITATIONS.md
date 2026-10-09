@@ -65,6 +65,8 @@ no performance claim at all (`docs/08_Testing.md`).*
    not supported, and no hash, dictionary index or row ordinal is ever synthesized in their place.
    <!-- engine/src/identity.rs:196-217 (admit_column_type: the admitted integer types and the refusal detail); engine/src/error.rs:234-238 (IdentityUnusable Display); ADR-016; ADR-010 rule 2; MANUAL-WALKTHROUGH.md A3 (`file:id — verified-at-open-full-file`), M4 (the same summary on the packaged build) -->
 
+   **On `main` (not the v0.1.0 artifact above).** A single file that has no `id` column and no declared mapping opens instead of being refused. Its features are identified for that session only, by their position in the file, and the summary says so. That identity does not survive a reopen or a change to the source, and it is never saved or published. This is the one case in which a row position stands in for identity. The app does not yet offer a way to declare an identity column for a file that opened this way: the declaration form appears only when a file's identity is refused. A file whose `id` column cannot serve is still refused.
+
 4. **Styling is by literal only.** The shell's style document has no categorical form at all — its
    type carries no `match` variant, so there is no control and no code path that could produce one.
    "Colour by attribute" does not exist in this release's canvas; the hover panel shows `id` only. A

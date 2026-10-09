@@ -238,10 +238,18 @@ so each scenario needs its own fresh launch -- observed as a zoom ladder produci
 every notch on a second run against the same instance, silent otherwise.
 
 **`source-changed.mjs`'s post-check route (P5).** Setting `SPATIAL_E2E_SOURCE_CHANGED_ROUTE=post`
-switches the same driver from its default pre-check route (T10, unchanged) to a route that lets a
+switches the same driver from its default pre-check route (re-aimed, next paragraph) to a route that lets a
 tile's mint succeed against the file before the change and mutates only after, so the
 source-changed refusal is caught when that tile's own stream later drains rather than at mint time
 (`frontends/shell/e2e/source-changed.mjs:144-159`).
+
+**`source-changed.mjs`'s default (pre-check) route, re-aimed.** The advisory source watcher ends the session
+on an mtime touch it sees while the app is idle, before any query, so this route is aimed at a change the
+watcher cannot see (KNOWN-LIMITATIONS item 26). S1 opens a copy of the 100k fixture through a directory
+junction (`e2e/out/source-changed-link`, made in-process with Node's `symlinkSync(.., "junction")`, no
+elevation) that points at copy `a`; S3 retargets it to copy `b` (the same bytes, mtime 120 s later); S4's
+query is then refused by the pre-check, and the session log's `tile-stream-mint-refused` line carrying
+`engine.source_changed` is asserted. The `post` and `reopen` routes keep their mtime touch.
 
 ## Action console spec (action-console cut, P5)
 
@@ -261,19 +269,26 @@ the header (and `.console-entries`) is absent from the DOM entirely (I9). `ECHO'
 with the last two explicit `null`, and that the entry's OWN label version equals the entry's OWN
 parsed `skp` field (self-consistent, no hard-coded version anywhere in this suite). `TWOCMD'`
 re-reads that SAME open to assert `describe` also appears, parsing to exactly `{skp, dataset}`.
-`HEXLIM'` drives a real pan and asserts the resulting `viewport_query` entry's bbox members are
+`HEXLIM'` drives a real pan and asserts the resulting `viewport_query` entry's request carries exactly the
+`skp/0.6` key set (`skp, dataset, bbox, bbox_crs, filter, limit, columns`; the value of `columns` is not
+asserted), its bbox members are
 16-lowercase-hex strings surviving quoted verbatim in the raw text (I5), and `limit` is
-digits-or-null. `REFUSAL'` drives an invalid predicate through `queryWithFilter` and asserts
+digits-or-null. `REFUSAL'` drives an invalid predicate through `queryWithFilter`, polls (a declared
+5 s bound, every 100 ms) for the refused entry with its refusal block, which reaches the DOM after the
+hook returns on the shipped candidate arm, and asserts
 `.console-outcome` reads "refused" with `.console-refusal` showing the SAME typed code/message the
-call's own returned outcome carries. `CLASSB'` drives `publishPrepareWithDestination` (the dev-only
+call's own returned outcome carries. The suite pins no arm: it reads the arm back and stops unless it
+is the shipped `candidate`. `CLASSB'` drives `publishPrepareWithDestination` (the dev-only
 seam) and asserts the resulting class-B entry names `binding_publish_prepare_e2e_destination` with
 no copy button, no `{` anywhere in its row, a citation containing "not callable", and the
 destination path string absent from the WHOLE `.console-panel` DOM (ADR-024's fence, proven at the
 UI). `CLASSC'` sets the fill colour through the real `.style-fill-color` input and asserts the
 resulting class-C entry names "no API equivalent" with an owner containing "ADR-022". `GROUP'`
-issues 3 identical `queryWithFilter` calls and asserts exactly one NEW `.console-group-header`
-reading "×3" whose expansion shows 3 individually-parseable `.console-request-text` blocks, never a
-merged/synthetic one (I8) -- and reports what actually varies between them (nothing:
+issues 3 identical `queryWithFilter` calls and polls (the same declared bound) for exactly 3 residential
+untiled `viewport_query` rows (`bbox` null) inside one `.console-group` -- asserted by what the entries are,
+never by counting every new `.console-group-header` -- whose header reads `×N` for the rows it shows, each
+individually parseable, never a merged/synthetic one (I8); the label's total may grow by at most the
+recorder's 256 so none of its own rows can have been evicted. It reports what actually varies (nothing:
 `viewport_query` carries no per-call nonce, unlike `open_dataset`'s `cancel_key`). `COPYTRUNC'`
 drives a NEAR-CAP (exactly `MAX_CRS_DEFINITION_BYTES` = 65 536 bytes) `crsAssertion.definitionJson`
 -- built from the REAL pinned catalog definition padded with low-quote-density filler, so the
