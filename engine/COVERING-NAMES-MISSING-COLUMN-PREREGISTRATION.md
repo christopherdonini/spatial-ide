@@ -332,3 +332,9 @@ Under B, C-1 and K-1 are replaced:
 3. **Where it went,** by the report: the new engine test file (C-1 to C-5), with the seven-row C-3 table, two format-default fixtures, C-5's manifest reads and the helpers. Nothing was trimmed and no test was dropped.
 4. **One line outside the count, in a file §7 names:** an HTML comment under KNOWN-LIMITATIONS item 9's new sentence. It says that the sentence describes the tree after this piece lands, not the v0.1.0 artifact that the next comment pins. It is kept, because without it the next comment would read as covering the new sentence. It is not operator wording. The rendered item shows only the sentence, which is byte-identical to line 19 of `state/directives/2026-10-09-rulings-on-the-eight-forms.md` after that line's lead-in.
 5. **Still owed before the final gate:** lead-data's owner's-index update (§9), which a worker applies in this piece's pull request.
+
+### Amendment 4 — Amendment 3's two references made exact (class 3), after PR #197's architect gate 1
+
+*Written by the custodian after that gate's documentation finding D1 (`state/consults/gates/2026-10-09-covering-names-missing-column-gate1-architect.md`). References only.*
+
+Amendment 3, item 1's sha256 is of `state/consults/2026-10-09-covering-names-missing-column-worker-report-1.md` as added to main by d007a50bbc01e599229a48c70ca726eddec3a4d8. Amendment 3, item 4's ruling sentence is the fifth line of the span that Amendment 2, item 1 pins, read after that line's lead-in. Nothing above is edited.
