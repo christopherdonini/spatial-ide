@@ -4466,14 +4466,32 @@ nodes:
     order: 1
     depends_on: []
     needs_human: {kind: none, minutes: 0}
-    gate: none
+    gate: frontends/shell/E2E-HOVER-ESTABLISHING-READ-PREREGISTRATION.md
     evidence: null
-    budget_minutes: 60
+    budget_minutes: 300
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "PLACED 2026-10-09 by the human's direction of 2026-10-09 (state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md), item 2a: slot 1, item a. Item 1 accepts the pick-paths verdict, and the K6 (iii) ruling stands as given: the old comparison, no retry. It may change how K6 takes its starting id, only after the hover pick for the new pointer has run; case (iii)'s comparison is not touched; it examines A9-prime too. The fix is on the test side, and no product code is added for it unless the form shows the test-side ways fail. The architect drafts its form. Before: PROPOSED 2026-10-08 from the pick-paths diagnosis (state/consults/2026-10-08-shell-pick-paths-disagree-at-1280x801-diagnosis-report.md, section 4). establishAboveThresholdHoverK6 in frontends/shell/e2e/regression.mjs moves the pointer and accepts the first non-empty readout id, and waitForCondition reads once before any frame has run. The readout can then still name the feature under the canvas centre, where doWheel left the pointer. K6 case (iii) therefore fails at odd map heights for a reason that is not the product's; the default window passes. A9-prime's candidate loop reads the readout the same way (not examined). Sketch, not chosen: take the id only after the hover pick for the new pointer has run, by moving first to a known-empty pixel, by waiting two animation frames, or through a DEV-only accessor for the last hover pointer. Case (iii)'s comparison stays as the human ruled it (state/directives/2026-10-08-k6-case-iii-ruling.md). This changes only how its starting id is taken, so it waits for the human's word."
+    summary: "FORM COMMITTED 2026-10-09 (the architect draft, alone; state/consults/2026-10-09-e2e-hover-establishing-read-stale-architect-draft.md): full form, because K6 is the evidence for a property under test (AUTONOMY.md section 21a), with full gating; 39 pins at dba12b8c; frontends/shell/e2e/regression.mjs only, at most 140 lines. A barrier before each K6 and A9-prime candidate move: the pointer leaves the canvas and the readout is seen clear first (route A), or a background pixel (route B); if both fail the piece stops before any product code. Case (iii)'s code is byte-identical. OPEN-1 to OPEN-3, and the temporary product-file mutations its tests need, go to the human; code after the answers. The custodian raised its budget for about 12 to 14 regression runs and the odd-window builds. Before: PLACED 2026-10-09 by the human's direction of 2026-10-09 (state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md), item 2a: slot 1, item a. Item 1 accepts the pick-paths verdict, and the K6 (iii) ruling stands as given: the old comparison, no retry. It may change how K6 takes its starting id, only after the hover pick for the new pointer has run; case (iii)'s comparison is not touched; it examines A9-prime too. The fix is on the test side, and no product code is added for it unless the form shows the test-side ways fail. The architect drafts its form. Before: PROPOSED 2026-10-08 from the pick-paths diagnosis (state/consults/2026-10-08-shell-pick-paths-disagree-at-1280x801-diagnosis-report.md, section 4). establishAboveThresholdHoverK6 in frontends/shell/e2e/regression.mjs moves the pointer and accepts the first non-empty readout id, and waitForCondition reads once before any frame has run. The readout can then still name the feature under the canvas centre, where doWheel left the pointer. K6 case (iii) therefore fails at odd map heights for a reason that is not the product's; the default window passes. A9-prime's candidate loop reads the readout the same way (not examined). Sketch, not chosen: take the id only after the hover pick for the new pointer has run, by moving first to a known-empty pixel, by waiting two animation frames, or through a DEV-only accessor for the last hover pointer. Case (iii)'s comparison stays as the human ruled it (state/directives/2026-10-08-k6-case-iii-ruling.md). This changes only how its starting id is taken, so it waits for the human's word."
     dates: {opened: 2026-10-08, done: null}
+
+  - id: e2e-first-poll-readout-elsewhere
+    title: "Two more e2e suites take a hover id from the readout's first poll after a pointer move: source-changed.mjs hoverAt and residency-harness.mjs tryHoverCandidate"
+    kind: task
+    lane: shell
+    phase: prototype
+    status: proposed
+    order: null
+    depends_on: [e2e-hover-establishing-read-stale]
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 120
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "PROPOSED 2026-10-09 from the architect's draft of e2e-hover-establishing-read-stale (state/consults/2026-10-09-e2e-hover-establishing-read-stale-architect-draft.md, its findings for the custodian): frontends/shell/e2e/source-changed.mjs hoverAt and frontends/shell/e2e/residency-harness.mjs tryHoverCandidate move the pointer and accept the first non-empty readout, the pattern the pick-paths diagnosis found in K6; the custodian checked both sites at main. That piece's form keeps them out of scope. Whether either reads a stale id, and whether the same barrier applies, is this node's question, after that piece merges."
+    dates: {opened: 2026-10-09, done: null}
 
   - id: shell-pick-paths-disagree-at-1280x801
     title: "The hover pick and the settle re-pick name different features at the same camera and pointer when the window is one row taller than the default (50244 against 53722)"
