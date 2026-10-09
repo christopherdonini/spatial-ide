@@ -3474,6 +3474,17 @@ mod ticket_drop_under_lock_regression {
     /// after the touch. The `batches` assertion states that condition, and every caller's fixture
     /// is [`drained_stream_fixture`] so that it holds. The guard after it stays as the check that
     /// the finding was really recorded.
+    ///
+    /// Mutation: change [`drained_stream_fixture`]'s `5_000` to `50`. Expected failure: each of the
+    /// nine tests that reach this helper fails at the `batches` assertion, because 50 features give
+    /// one batch. Observed over `7469a801`, with the mutation applied to a clean tree of it: all
+    /// nine FAILED ("the ordering argument needs more batches than the queue holds (2); got 1"),
+    /// then reverted.
+    ///
+    /// Not a test of record: moving `touch_modification_time(path)` after the drain loop was
+    /// observed over `7469a801` in the same way to fail all nine at the guard below ("setup did
+    /// not force a real post-check finding"), then reverted. That is consistent with the CI failure
+    /// and does not show that this was its cause.
     fn drained_stream_with_a_recorded_change(
         path: &std::path::Path,
     ) -> (spatial_engine::BatchStream, spatial_engine::CancelToken) {

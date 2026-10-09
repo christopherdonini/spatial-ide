@@ -459,6 +459,9 @@ fn the_footer_ceiling_is_declared_in_code_and_degrades_rather_than_refusing() {
 /// at least 92 bytes each (`estimate_bytes`: 20 per vertex plus 12, at least 4 vertices) exceed
 /// the first two targets of `BatchSizePolicy::target_for`, 327,680 bytes: at least 3 batches. The
 /// batch-count assertion below states the condition.
+///
+/// Mutation: change `5_000` to `500`. Observed over `7469a801`, with the mutation applied to a
+/// clean tree of it: FAILED at the batch-count assertion (got 2), then reverted.
 #[test]
 fn a_clean_stream_whose_source_changed_terminates_as_source_changed() {
     let path = write(
@@ -561,7 +564,9 @@ fn a_cancelled_stream_keeps_its_cancelled_terminal_while_the_change_is_still_rec
     //    which is not the last, cannot complete before the first `next_into`, which follows the
     //    touch and the cancel. After that send, every path to `produce`'s `Ok` return passes a
     //    cancel check (the loop top, each row, `flush`), so the terminal is `Cancelled` and the
-    //    post-check runs after the touch.
+    //    post-check runs after the touch. Mutation: move `cancel.cancel()` after the drain loop.
+    //    Observed over `7469a801`, applied to a clean tree of it: FAILED at the first assertion,
+    //    with `SourceChanged`, then reverted.
     if let Some(e) = &terminal {
         assert!(
             matches!(e, EngineError::Cancelled),
