@@ -592,3 +592,13 @@ Drafting returned to the architect at the stop. The rows below are the piece's l
   - **found wrong:** none;
   - **missing:** six: a second early return before R-S3 (the geo `bbox` member branch); DuckDB binding identifiers without regard to case against `field_path_exists`'s byte comparison, which drives the form's P0; the versioning texts the wire question needs; `engine/src/addressability.rs`'s single-classifier rule; the shell's mocked refusals using an empty `fields` object; and the red-line list, which the architect calls arguably outside an impact read's remit.
 - **Combined cost of piece 5** (read plus draft): 440,059 subagent tokens, 198 tool uses, 982,237 ms.
+
+### B2, second pilot — measured piece 6: `skp-drained-stream-helper-post-check-race`
+
+- **The piece** is slot 2's second item (kernel-protocol, order 1), drafted ahead while slot 2's first piece waits for a ruling. The read precedes the architect's draft. No branch exists yet.
+- **The impact read** is `state/consults/2026-10-09-skp-drained-stream-helper-post-check-race-impact-read.md`: 137 lines, sha256 9ed71a48a8377c55b55a15b6b9b15af25cb771d78f352d8cdf6118d0584a8a6c, filed byte-identical as lead-data wrote it, read at main 0a8f6dcb.
+- **Cost** (the harness's task notification): 190,693 subagent tokens, 81 tool uses, 353,684 ms. The run lasted 06:13:00Z to 06:18:54Z.
+- **Write audit PASS:** one Write, at its REPORT PATH line's path (Read 40, Grep 37, Glob 2, the hand-back 1).
+- **C3:** before, the checkout held only its two pre-existing untracked items; after, those and the report. The custodian committed nothing during the run.
+- **Content:** the helper and its five call sites reaching nine tests, the engine sites the race depends on, the sibling fix's means, the governing records, two more tests of the same shape in `engine/tests/session_identity.rs`, and five gap questions. The custodian's read found no draft text, design, recommendation or answer, and checked the helper's lines against the code.
+- **The architect's draft** of piece 6 follows, with the read's path in its brief.
