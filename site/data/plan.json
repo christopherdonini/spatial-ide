@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-09T05:31:01.445Z",
-  "plan_hash": "f12e705d8b0e02456945b8520139e0fc811ba8c59f5b7d3f35d789845e1acbaa",
+  "generated_at": "2026-10-09T05:39:10.786Z",
+  "plan_hash": "d0d5bd3cbf1ce4be3984c89e0798d3a34b565e595db6f3f5a660b8797566d4a6",
   "priorities_approved": true,
   "lanes": [
     {
@@ -7296,13 +7296,13 @@
         "kind": "none",
         "minutes": 0
       },
-      "gate": "none",
+      "gate": "frontends/shell/SHELL-MIGRATION-MILESTONE-2-PREREGISTRATION.md",
       "evidence": null,
       "budget_minutes": 0,
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "PLACED 2026-10-09 by the human's direction of 2026-10-09 (state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md), item 2d: slot 1, item d. Its form and question round now (the architect drafts the form); its code after e2e-hover-establishing-read-stale, shell-map-refill-after-resize and e2e-failures-present-at-the-base have merged. The form carries, as an OPEN item, whether selection takes its own pick at the click (the pick-paths diagnosis report, section 4). The human takes up ADR-036's acceptance while it is in code (item 7). Before: DEPENDS 2026-10-08 on shell-pick-paths-disagree-at-1280x801 (the human's ruling, state/directives/2026-10-08-k6-case-iii-ruling.md): the pick-paths disagreement is diagnosed before this milestone's selection code starts. Its form and question round are prepared while milestone 1 is under way; its code starts when shell-map-refill-after-resize has merged, if that piece is needed (the OPEN-7 clarification, state/directives/2026-10-07-round-66-and-67-rulings.md). Before: Recorded 2026-10-07 by the human's ruling of the migration plan (state/directives/2026-10-07-migration-plan-v2-ruled.md; state/directives/SHELL-MIGRATION-PLAN-2026-10-07.md, section 6): follows milestone 1 directly; seams 3, 4, 5 and 6; no backend change; its own full form. Proposed, for placement when milestone 1 is under way.",
+      "summary": "FORM COMMITTED 2026-10-09 (the architect draft, alone; state/consults/2026-10-09-shell-migration-milestone-2-architect-draft.md): full form with full gating, by size (about 6,600 lines over about 30 files, tests included), new user-visible behaviour, properties under test and a new selection contract; 46 pins at dba12b8c, with a re-sweep at code start. Ten OPEN items go to the human in one question round: OPEN-1 the click's own pick (recommended (A), a pick of its own at the click, shared with the settle re-pick); OPEN-2 to OPEN-8 red lines (telling inspect from select; Pin; the export's scope against ADR-024; an export during a reopen; the hover readout and the Feature tab; the section 3 labels; the canvas boundary exceptions); OPEN-9 the P6 sight; OPEN-10 one PR or two (recommended two, phase A first). Each answer becomes Amendment 1 before dispatch; code after the three slot 1 pieces merge. Before: PLACED 2026-10-09 by the human's direction of 2026-10-09 (state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md), item 2d: slot 1, item d. Its form and question round now (the architect drafts the form); its code after e2e-hover-establishing-read-stale, shell-map-refill-after-resize and e2e-failures-present-at-the-base have merged. The form carries, as an OPEN item, whether selection takes its own pick at the click (the pick-paths diagnosis report, section 4). The human takes up ADR-036's acceptance while it is in code (item 7). Before: DEPENDS 2026-10-08 on shell-pick-paths-disagree-at-1280x801 (the human's ruling, state/directives/2026-10-08-k6-case-iii-ruling.md): the pick-paths disagreement is diagnosed before this milestone's selection code starts. Its form and question round are prepared while milestone 1 is under way; its code starts when shell-map-refill-after-resize has merged, if that piece is needed (the OPEN-7 clarification, state/directives/2026-10-07-round-66-and-67-rulings.md). Before: Recorded 2026-10-07 by the human's ruling of the migration plan (state/directives/2026-10-07-migration-plan-v2-ruled.md; state/directives/SHELL-MIGRATION-PLAN-2026-10-07.md, section 6): follows milestone 1 directly; seams 3, 4, 5 and 6; no backend change; its own full form. Proposed, for placement when milestone 1 is under way.",
       "dates": {
         "opened": "2026-10-07",
         "done": null
