@@ -18,7 +18,9 @@ use std::path::PathBuf;
 
 use spatial_engine::fixture::{configured_connection, write_geoparquet, FixtureSpec, IdentityMode};
 use spatial_engine::identity::IdSource;
-use spatial_engine::{Dataset, EngineError, SourceDescriptor, FOOTER_DESCRIPTOR_MAX_BYTES};
+use spatial_engine::{
+    Dataset, EngineError, SourceDescriptor, FOOTER_DESCRIPTOR_MAX_BYTES, MAX_QUEUED_BATCHES,
+};
 
 fn dir() -> PathBuf {
     let d = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../target/fixtures/session-identity");
@@ -448,9 +450,27 @@ fn the_footer_ceiling_is_declared_in_code_and_degrades_rather_than_refusing() {
 ///
 /// Mutation recorded in-source: moving the `tx.send` back above `post_check_source` in
 /// `stream.rs`'s producer closure makes the cancelled case below flaky and then failing.
+///
+/// **Why the post-check cannot beat the touch.** The producer starts inside `Dataset::stream`,
+/// before the touch. Its queue holds `MAX_QUEUED_BATCHES` batches and each batch is one blocking
+/// send, whose only receive is the one inside `BatchStream::next_into`; the first call of that
+/// follows `touch_modification_time`. With more than `MAX_QUEUED_BATCHES` `Ok` batches received,
+/// the post-check, which runs after the last send, reads the file after the touch. 5,000 rows of
+/// at least 92 bytes each (`estimate_bytes`: 20 per vertex plus 12, at least 4 vertices) exceed
+/// the first two targets of `BatchSizePolicy::target_for`, 327,680 bytes: at least 3 batches. The
+/// batch-count assertion below states the condition.
+///
+/// Mutation: change `5_000` to `500`. Observed over `7469a801`, with the mutation applied to a
+/// clean tree of it: FAILED at the batch-count assertion (got 2), then reverted.
 #[test]
 fn a_clean_stream_whose_source_changed_terminates_as_source_changed() {
-    let path = write("post-check-clean", &keyless());
+    let path = write(
+        "post-check-clean",
+        &FixtureSpec {
+            features: 5_000,
+            ..keyless()
+        },
+    );
     let ds = Dataset::open(&path).expect("opens");
     let mut stream = ds
         .stream(&spatial_engine::ViewportQuery::all())
@@ -467,12 +487,21 @@ fn a_clean_stream_whose_source_changed_terminates_as_source_changed() {
 
     let mut buf = Vec::new();
     let mut terminal = None;
+    let mut batches = 0usize;
     while let Some(item) = stream.next_into(&mut buf) {
-        if let Err(e) = item {
-            terminal = Some(e);
-            break;
+        match item {
+            Ok(_) => batches += 1,
+            Err(e) => {
+                terminal = Some(e);
+                break;
+            }
         }
     }
+    assert!(
+        batches > MAX_QUEUED_BATCHES,
+        "the ordering argument needs more batches than the queue holds ({MAX_QUEUED_BATCHES}); \
+         got {batches}"
+    );
     match terminal {
         Some(EngineError::SourceChanged { detail }) => {
             assert!(detail.contains("mtime"), "{detail}");
@@ -493,14 +522,20 @@ fn a_clean_stream_whose_source_changed_terminates_as_source_changed() {
 /// error instead of the outcome's turns this stream's terminal into `SourceChanged` and fails here.
 #[test]
 fn a_cancelled_stream_keeps_its_cancelled_terminal_while_the_change_is_still_recorded() {
-    let path = write("post-check-cancelled", &keyless());
+    let path = write(
+        "post-check-cancelled",
+        &FixtureSpec {
+            features: 20_000,
+            ..keyless()
+        },
+    );
     let ds = Dataset::open(&path).expect("opens");
     let cancel = spatial_engine::CancelToken::new();
     let mut stream = ds
         .stream_with_cancel(&spatial_engine::ViewportQuery::all(), cancel.clone())
         .expect("stream issues");
-    cancel.cancel();
     touch_modification_time(&path);
+    cancel.cancel();
 
     let mut buf = Vec::new();
     let mut terminal = None;
@@ -520,11 +555,18 @@ fn a_cancelled_stream_keeps_its_cancelled_terminal_while_the_change_is_still_rec
         !matches!(terminal, Some(EngineError::SourceChanged { .. })),
         "a cancel is never reported as a source change, got {terminal:?}"
     );
-    // 2. And when a terminal error did arrive, it is the cancel and nothing else. `None` stays
-    //    admissible and is stated rather than hidden: this fixture is small enough that the
-    //    producer can finish before the cancel reaches DuckDB's interrupt, in which case the stream
-    //    ends clean — a real outcome of a real race, not a defect, and the assertion above is the
-    //    one that holds in both cases.
+    // 2. And when a terminal error did arrive, it is the cancel and nothing else. `None` stays in
+    //    the code, but it is not expected, by this argument. The touch comes before
+    //    `cancel.cancel()`, so any cancel the producer observes was requested after it. 20,000 rows
+    //    of at least 92 bytes each exceed the first three targets of `BatchSizePolicy::target_for`
+    //    (65,536, 262,144 and `TARGET_BATCH_BYTES`, 1,376,256 in all), so the stream has at least
+    //    `MAX_QUEUED_BATCHES + 2` batches. The send of the batch at index `MAX_QUEUED_BATCHES`,
+    //    which is not the last, cannot complete before the first `next_into`, which follows the
+    //    touch and the cancel. After that send, every path to `produce`'s `Ok` return passes a
+    //    cancel check (the loop top, each row, `flush`), so the terminal is `Cancelled` and the
+    //    post-check runs after the touch. Mutation: move `cancel.cancel()` after the drain loop.
+    //    Observed over `7469a801`, applied to a clean tree of it: FAILED at the first assertion,
+    //    with `SourceChanged`, then reverted.
     if let Some(e) = &terminal {
         assert!(
             matches!(e, EngineError::Cancelled),
