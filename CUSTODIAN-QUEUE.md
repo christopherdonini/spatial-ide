@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `64808accef68eeedf33f0eebfe50658c812ff5bdcde77006edaa243f10817d8b`) at `2026-10-09T06:55:13.175Z`.
+Generated from `PLAN.yaml` (sha256 `310be87ba4d0ac940c9e69cc46037526cc12f8d10166b97ed1873bcef83dbf62`) at `2026-10-09T07:02:15.171Z`.
 
 ## 1. Next
 
@@ -9,7 +9,6 @@ Generated from `PLAN.yaml` (sha256 `64808accef68eeedf33f0eebfe50658c812ff5bdcde7
 ## 2. Ready
 
 - **e2e-failures-present-at-the-base** — Shell e2e steps failing on main at e888787e: regression C2 and C3, admission MAP and BOTHNEEDED, console HEXLIM, GROUP and REGRESS, source-changed default-route S4 (lane `shell`, order 3, budget 120 min)
-- **duckdb-parquet-geometry-probe** — A reported-only probe of how the bundled DuckDB decodes the Parquet-native GEOMETRY column in corpus #11 (lane `measurement`, order 1, budget 60 min)
 - **ported-code-notice-route** — A notice route for ported code, wherever it lands (shell or kernel), needed before any PORT (lane `governance`, order 1, budget 60 min)
 - **guardian-v1** — Guardian v1 -- G1's heredoc false alarm fixed, one local log line per refusal, and three new rules: G7 (agent merges and history rewrites), G8 (plugin, marketplace and MCP installs, and writes to the user's Claude folder), G9 (wholesale cleans of the main checkout's target) (Fable's MODS-V1 brief, 2026-10-05) (lane `governance`, order 21, budget 240 min)
 
@@ -37,7 +36,7 @@ Generated from `PLAN.yaml` (sha256 `64808accef68eeedf33f0eebfe50658c812ff5bdcde7
 
 ## 5. In progress
 
-- (none)
+- **duckdb-parquet-geometry-probe** — A reported-only probe of how the bundled DuckDB decodes the Parquet-native GEOMETRY column in corpus #11 — evidence: branch `detached-worktree-cov`
 
 ## 6. Proposed / unscheduled
 

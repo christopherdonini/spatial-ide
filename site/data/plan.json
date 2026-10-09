@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-09T06:55:13.292Z",
-  "plan_hash": "64808accef68eeedf33f0eebfe50658c812ff5bdcde77006edaa243f10817d8b",
+  "generated_at": "2026-10-09T07:02:15.288Z",
+  "plan_hash": "310be87ba4d0ac940c9e69cc46037526cc12f8d10166b97ed1873bcef83dbf62",
   "priorities_approved": true,
   "lanes": [
     {
@@ -6998,7 +6998,7 @@
       "kind": "task",
       "lane": "measurement",
       "phase": "prototype",
-      "status": "ready",
+      "status": "in-progress",
       "order": 1,
       "depends_on": [],
       "needs_human": {
@@ -7006,12 +7006,14 @@
         "minutes": 0
       },
       "gate": "none",
-      "evidence": null,
+      "evidence": {
+        "branch": "detached-worktree-cov"
+      },
       "budget_minutes": 60,
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "PLACED 2026-10-09 by the human's direction of 2026-10-09 (state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md), item 3d: slot 2, item d, reported only. Before: PROPOSED 2026-10-08 by the human (state/directives/2026-10-08-reuse-round-1.md, item 4), for the human to place: reported only, nothing claimed; its source is the reuse report's corpus section, in the human's private repository christopherdonini/spatial-ide-reuse at 89bbac37 (REUSE-ROUND-1.md, the compatibility corpus section), cited by repository, commit and path, never copied.",
+      "summary": "IN PROGRESS 2026-10-09, reported only: one worker in the detached worktree C:/dev/wt/cov (at e73a594c, warm target D:/wt-targets/cov, kept clean for covering-names-missing-column), one untracked scratch test, on corpus #11 (geoparquet-spec/example.parquet). It runs now because slot 2 items a to c wait on the human and it merges nothing. Before: PLACED 2026-10-09 by the human's direction of 2026-10-09 (state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md), item 3d: slot 2, item d, reported only. Before: PROPOSED 2026-10-08 by the human (state/directives/2026-10-08-reuse-round-1.md, item 4), for the human to place: reported only, nothing claimed; its source is the reuse report's corpus section, in the human's private repository christopherdonini/spatial-ide-reuse at 89bbac37 (REUSE-ROUND-1.md, the compatibility corpus section), cited by repository, commit and path, never copied.",
       "dates": {
         "opened": "2026-10-08",
         "done": null
