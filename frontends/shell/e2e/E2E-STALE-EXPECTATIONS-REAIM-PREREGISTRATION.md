@@ -490,3 +490,32 @@ The texts are proposals. Engine strings are placeholders, filled by a byte-copy,
 The text below is reproduced from [R5]'s line 27, with its three leading spaces, as the PR lands it. The custodian replaces this block with a script byte-copy and recomputes the hash before the commit.
 
    **On `main` (not the v0.1.0 artifact above).** A single file that has no `id` column and no declared mapping opens instead of being refused. Its features are identified for that session only, by their position in the file, and the summary says so. That identity does not survive a reopen or a change to the source, and it is never saved or published. This is the one case in which a row position stands in for identity. The app does not yet offer a way to declare an identity column for a file that opened this way: the declaration form appears only when a file's identity is refused. A file whose `id` column cannot serve is still refused.
+
+### Amendment 1 — the human's rulings on OPEN-1 to OPEN-3 and on the lead-data pilot (class 5)
+
+*Written by the custodian after the human's answers were received (14:09:02Z by the transcript, question round 70) and before any code. References only; nothing below is a quotation.*
+
+1. **The rulings:** state/directives/2026-10-09-reaim-question-round-answers.md:6-16 @ 8607406ba0e012cb9afcccaec561af66e50f20d9 sha256:6c633de7ee22b921df27b277fdf7a47ead6af91dfdc5d38df42bcca1f8c150b5.
+2. **OPEN-1 is (A)** (state/directives/2026-10-09-reaim-question-round-answers.md:7 @ 8607406ba0e012cb9afcccaec561af66e50f20d9 sha256:bd56a1687d051f34942f01512c5406a2d6ac9fb207b4d0d8ff2413cf612064fc).
+   - §2.6 (A) binds.
+   - `engine/src/fixture.rs` is in scope for that one feature-gated variant, within §7's 40-line ceiling.
+   - Options (B) and (C) are void.
+3. **OPEN-2** (state/directives/2026-10-09-reaim-question-round-answers.md:10 @ 8607406ba0e012cb9afcccaec561af66e50f20d9 sha256:3c669bbbc0352e4157145f272ed2e145f7cf14f66e0ef3c4b276cd057f5d7446). Every re-aimed step keeps its test-side or fixture-side mutation in §4, except REFUSAL′.
+   - **M8 is replaced by a product-line mutation:** the refusal block at frontends/shell/src/console/ConsolePanel.tsx:175-179 @ a576ab3725d77a6f63afc8935cb572eca2cf2dec sha256:3e6411db0203bd393dfb4bedceec8cc08e72305f5afe81a360cf9d0495a79cdb (§0.R's R59) is removed. The predicted failure is REFUSAL′ failing by name when its declared bound expires.
+   - **Its terms** are those the draft's OPEN-2 option (b) named: R100, restated at R101, applied to that one block.
+   - **What is void and what stays:** the read-side stand-in that M8 described is void. GROUP′'s M9 and M9c stay test-side.
+   - **How §4 and §8 read with this item:** §4's statement that no product line is touched, and §8 item 1. The mutation is temporary and is never committed.
+4. **OPEN-3 is (a)** (state/directives/2026-10-09-reaim-question-round-answers.md:13 @ 8607406ba0e012cb9afcccaec561af66e50f20d9 sha256:cb40309fb87280b8a2cd338686320796fc15ef3cead985ab883a2c1881409eb1).
+   - §2.8's rows I6 and I8, the Part C heading and the fixture tables are in scope, for the human's sight, within §7's ceiling for the walkthrough.
+   - No result log is edited.
+   - §9's Operator bullet includes I6 and I8.
+5. **The lead-data pilot** (state/directives/2026-10-09-reaim-question-round-answers.md:16 @ 8607406ba0e012cb9afcccaec561af66e50f20d9 sha256:4ee81a7c3e12d78b74ada699e41d85332d8f98ff79973d1ccd868f8fda173b67).
+   - No impact read is made. The draft stands as the architect's alone, and the piece is not one of the pilot's measured pieces.
+   - The answer refers to a paste, and the custodian has asked the human which text that is. Nothing above depends on it.
+6. **Code** waits for the K6 fix (PR #196) to merge. The branch is cut from main after it, as the header says.
+7. **Superseded index:**
+   - §2.6's (B) and (C) → item 2;
+   - §4's M8 row, and its statement that no product line is touched → item 3;
+   - §2.8's OPEN-3 bullet and §9's OPEN-3 parenthesis → item 4.
+
+   Nothing above is edited.
