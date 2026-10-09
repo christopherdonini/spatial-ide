@@ -1,15 +1,15 @@
 {
-  "generated_at": "2026-10-09T07:05:24.490Z",
-  "plan_hash": "a36cc2356fb7418f06fa6aa98302312e4aeff2d6896e90afaaa228e931c78efc",
+  "generated_at": "2026-10-09T07:10:46.904Z",
+  "plan_hash": "97c68f94b3c9ae485d0e27635d2dfd9bb0e87f354b7296f72fc5592ca287505a",
   "priorities_approved": true,
   "next": {
-    "id": "e2e-failures-present-at-the-base",
-    "title": "Shell e2e steps failing on main at e888787e: regression C2 and C3, admission MAP and BOTHNEEDED, console HEXLIM, GROUP and REGRESS, source-changed default-route S4",
-    "lane": "shell",
+    "id": "ported-code-notice-route",
+    "title": "A notice route for ported code, wherever it lands (shell or kernel), needed before any PORT",
+    "lane": "governance",
     "phase": "prototype",
     "status": "ready",
-    "order": 3,
-    "budget_minutes": 120,
+    "order": 1,
+    "budget_minutes": 60,
     "needs_human": {
       "kind": "none",
       "minutes": 0
@@ -19,28 +19,9 @@
       "opened": "2026-10-08",
       "done": null
     },
-    "summary": "PLACED 2026-10-09 by the human's direction of 2026-10-09 (state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md), item 2c: slot 1, item c, as a triage. Before: Found 2026-10-08 by shell-migration-milestone-1 stage 2, which ran each failing suite at its base e888787e with the same fixtures and launch (state/consults/2026-10-08-shell-migration-milestone-1-worker-report-2.md, section 4; the form Amendment 4, item 4): these steps fail at the base as at the head, so they are not that piece's. The worker's reading, not diagnosed: the identity refusal fixtures on disk admit instead of refusing (perhaps stale files), HEXLIM's key set now includes columns, and console REFUSAL failed once at the base only. A triage piece separates stale fixtures, stale expectations and real defects. Never queued until the human places it."
+    "summary": "PLACED 2026-10-09 by the human's direction of 2026-10-09 (state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md), item 3e: slot 2, item e. Before: PROPOSED 2026-10-08 by the human (state/directives/2026-10-08-reuse-round-1.md, item 4), for the human to place: needed before any port of outside code; covers attribution and licence notices for ported code in the shell or the kernel."
   },
   "ready": [
-    {
-      "id": "e2e-failures-present-at-the-base",
-      "title": "Shell e2e steps failing on main at e888787e: regression C2 and C3, admission MAP and BOTHNEEDED, console HEXLIM, GROUP and REGRESS, source-changed default-route S4",
-      "lane": "shell",
-      "phase": "prototype",
-      "status": "ready",
-      "order": 3,
-      "budget_minutes": 120,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-10-08",
-        "done": null
-      },
-      "summary": "PLACED 2026-10-09 by the human's direction of 2026-10-09 (state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md), item 2c: slot 1, item c, as a triage. Before: Found 2026-10-08 by shell-migration-milestone-1 stage 2, which ran each failing suite at its base e888787e with the same fixtures and launch (state/consults/2026-10-08-shell-migration-milestone-1-worker-report-2.md, section 4; the form Amendment 4, item 4): these steps fail at the base as at the head, so they are not that piece's. The worker's reading, not diagnosed: the identity refusal fixtures on disk admit instead of refusing (perhaps stale files), HEXLIM's key set now includes columns, and console REFUSAL failed once at the base only. A triage piece separates stale fixtures, stale expectations and real defects. Never queued until the human places it."
-    },
     {
       "id": "ported-code-notice-route",
       "title": "A notice route for ported code, wherever it lands (shell or kernel), needed before any PORT",
@@ -386,7 +367,30 @@
       ]
     }
   ],
-  "in_progress": [],
+  "in_progress": [
+    {
+      "id": "e2e-failures-present-at-the-base",
+      "title": "Shell e2e steps failing on main at e888787e: regression C2 and C3, admission MAP and BOTHNEEDED, console HEXLIM, GROUP and REGRESS, source-changed default-route S4",
+      "lane": "shell",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": 3,
+      "budget_minutes": 120,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "branch": "detached-worktree-e2etri"
+      },
+      "dates": {
+        "opened": "2026-10-08",
+        "done": null
+      },
+      "summary": "IN PROGRESS 2026-10-09, the triage, reported only: one worker-high in the detached worktree C:/dev/wt/e2etri at main 316a4476, target D:/wt-targets/e2etri; each step run at main and classed as a stale fixture, a stale expectation or a real defect, with no fix made. It runs ahead of slot 1 items a and b, which wait on the human. Before: PLACED 2026-10-09 by the human's direction of 2026-10-09 (state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md), item 2c: slot 1, item c, as a triage. Before: Found 2026-10-08 by shell-migration-milestone-1 stage 2, which ran each failing suite at its base e888787e with the same fixtures and launch (state/consults/2026-10-08-shell-migration-milestone-1-worker-report-2.md, section 4; the form Amendment 4, item 4): these steps fail at the base as at the head, so they are not that piece's. The worker's reading, not diagnosed: the identity refusal fixtures on disk admit instead of refusing (perhaps stale files), HEXLIM's key set now includes columns, and console REFUSAL failed once at the base only. A triage piece separates stale fixtures, stale expectations and real defects. Never queued until the human places it.",
+      "evidence_label": "branch `detached-worktree-e2etri`"
+    }
+  ],
   "proposed": [
     {
       "id": "governance-hash-grammar-shared",

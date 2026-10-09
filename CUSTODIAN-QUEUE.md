@@ -1,14 +1,13 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `a36cc2356fb7418f06fa6aa98302312e4aeff2d6896e90afaaa228e931c78efc`) at `2026-10-09T07:05:24.490Z`.
+Generated from `PLAN.yaml` (sha256 `97c68f94b3c9ae485d0e27635d2dfd9bb0e87f354b7296f72fc5592ca287505a`) at `2026-10-09T07:10:46.904Z`.
 
 ## 1. Next
 
-- **e2e-failures-present-at-the-base** — Shell e2e steps failing on main at e888787e: regression C2 and C3, admission MAP and BOTHNEEDED, console HEXLIM, GROUP and REGRESS, source-changed default-route S4 (lane `shell`)
+- **ported-code-notice-route** — A notice route for ported code, wherever it lands (shell or kernel), needed before any PORT (lane `governance`)
 
 ## 2. Ready
 
-- **e2e-failures-present-at-the-base** — Shell e2e steps failing on main at e888787e: regression C2 and C3, admission MAP and BOTHNEEDED, console HEXLIM, GROUP and REGRESS, source-changed default-route S4 (lane `shell`, order 3, budget 120 min)
 - **ported-code-notice-route** — A notice route for ported code, wherever it lands (shell or kernel), needed before any PORT (lane `governance`, order 1, budget 60 min)
 - **guardian-v1** — Guardian v1 -- G1's heredoc false alarm fixed, one local log line per refusal, and three new rules: G7 (agent merges and history rewrites), G8 (plugin, marketplace and MCP installs, and writes to the user's Claude folder), G9 (wholesale cleans of the main checkout's target) (Fable's MODS-V1 brief, 2026-10-05) (lane `governance`, order 21, budget 240 min)
 
@@ -36,7 +35,7 @@ Generated from `PLAN.yaml` (sha256 `a36cc2356fb7418f06fa6aa98302312e4aeff2d6896e
 
 ## 5. In progress
 
-- (none)
+- **e2e-failures-present-at-the-base** — Shell e2e steps failing on main at e888787e: regression C2 and C3, admission MAP and BOTHNEEDED, console HEXLIM, GROUP and REGRESS, source-changed default-route S4 — evidence: branch `detached-worktree-e2etri`
 
 ## 6. Proposed / unscheduled
 

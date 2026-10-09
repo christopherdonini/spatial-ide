@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-09T07:05:24.612Z",
-  "plan_hash": "a36cc2356fb7418f06fa6aa98302312e4aeff2d6896e90afaaa228e931c78efc",
+  "generated_at": "2026-10-09T07:10:47.027Z",
+  "plan_hash": "97c68f94b3c9ae485d0e27635d2dfd9bb0e87f354b7296f72fc5592ca287505a",
   "priorities_approved": true,
   "lanes": [
     {
@@ -6861,7 +6861,7 @@
       "kind": "task",
       "lane": "shell",
       "phase": "prototype",
-      "status": "ready",
+      "status": "in-progress",
       "order": 3,
       "depends_on": [],
       "needs_human": {
@@ -6869,12 +6869,14 @@
         "minutes": 0
       },
       "gate": "none",
-      "evidence": null,
+      "evidence": {
+        "branch": "detached-worktree-e2etri"
+      },
       "budget_minutes": 120,
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "PLACED 2026-10-09 by the human's direction of 2026-10-09 (state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md), item 2c: slot 1, item c, as a triage. Before: Found 2026-10-08 by shell-migration-milestone-1 stage 2, which ran each failing suite at its base e888787e with the same fixtures and launch (state/consults/2026-10-08-shell-migration-milestone-1-worker-report-2.md, section 4; the form Amendment 4, item 4): these steps fail at the base as at the head, so they are not that piece's. The worker's reading, not diagnosed: the identity refusal fixtures on disk admit instead of refusing (perhaps stale files), HEXLIM's key set now includes columns, and console REFUSAL failed once at the base only. A triage piece separates stale fixtures, stale expectations and real defects. Never queued until the human places it.",
+      "summary": "IN PROGRESS 2026-10-09, the triage, reported only: one worker-high in the detached worktree C:/dev/wt/e2etri at main 316a4476, target D:/wt-targets/e2etri; each step run at main and classed as a stale fixture, a stale expectation or a real defect, with no fix made. It runs ahead of slot 1 items a and b, which wait on the human. Before: PLACED 2026-10-09 by the human's direction of 2026-10-09 (state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md), item 2c: slot 1, item c, as a triage. Before: Found 2026-10-08 by shell-migration-milestone-1 stage 2, which ran each failing suite at its base e888787e with the same fixtures and launch (state/consults/2026-10-08-shell-migration-milestone-1-worker-report-2.md, section 4; the form Amendment 4, item 4): these steps fail at the base as at the head, so they are not that piece's. The worker's reading, not diagnosed: the identity refusal fixtures on disk admit instead of refusing (perhaps stale files), HEXLIM's key set now includes columns, and console REFUSAL failed once at the base only. A triage piece separates stale fixtures, stale expectations and real defects. Never queued until the human places it.",
       "dates": {
         "opened": "2026-10-08",
         "done": null
