@@ -1110,9 +1110,10 @@ async function establishAboveThresholdHoverK6(page, consoleHandle, label) {
 
     for (const flipY of [true, false]) {
       const css = bufferPointToCss(bisection.candidate, rect, bisection.bufferWidth, bisection.bufferHeight, flipY);
-      // A CONFIRMED id taken only after the hover pick for THIS pointer has run: every zoom notch leaves the readout on the
+      // A CONFIRMED id taken only after the hover pick for THIS pointer has run: every zoom notch can leave the readout on the
       // centre pointer's feature, so a poll right after the move could read that stale id. `hoverIdAfterBarrier` (lib.mjs)
       // leaves the canvas, waits for `clear`, then moves here. A labelled ("confirming") state is not a confirmed id (§3.3).
+      // Its recorded mutations (M1, M2) are with K6's recorded-mutation block above stepK6.
       const result = await hoverIdAfterBarrier(page, css, label);
       if (result.ok) {
         found = { css, text: result.last.text, id: hoverReadoutId(result.last) };
