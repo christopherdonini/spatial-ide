@@ -1,14 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `9a368d7a96de7c349316a55fa38306fe4b89b840be4df7829086993df7f34aec`) at `2026-10-09T19:21:21.791Z`.
+Generated from `PLAN.yaml` (sha256 `9b522c14ec4ccca9caea436740f49c324e58efbd0191855a45499475037437e5`) at `2026-10-09T19:26:23.191Z`.
 
 ## 1. Next
 
-- **wire-bytes-invariant-trace-flag-race** — kernel/tests/wire_bytes_invariant.rs: the projected-ticket test asserts tracing is off while its sibling starts a trace (a race on the engine's global trace flag) (lane `kernel-protocol`)
+- (nothing ready)
 
 ## 2. Ready
 
-- **wire-bytes-invariant-trace-flag-race** — kernel/tests/wire_bytes_invariant.rs: the projected-ticket test asserts tracing is off while its sibling starts a trace (a race on the engine's global trace flag) (lane `kernel-protocol`, order 2, budget 240 min)
+- (none)
 
 ## 3. Waiting on the human (total: 10 min)
 
@@ -32,6 +32,7 @@ Generated from `PLAN.yaml` (sha256 `9a368d7a96de7c349316a55fa38306fe4b89b840be4d
 
 ## 5. In progress
 
+- **wire-bytes-invariant-trace-flag-race** — kernel/tests/wire_bytes_invariant.rs: the projected-ticket test asserts tracing is off while its sibling starts a trace (a race on the engine's global trace flag) — evidence: branch `cut/wire-bytes-invariant-trace-flag-race`
 - **e2e-stale-expectations-reaim** — Re-aim the shell e2e steps whose expectations predate ruled product changes: regression C2'/C3', admission MAP' and BOTHNEEDED', console HEXLIM', GROUP' and REFUSAL', source-changed default-route S4 — evidence: branch `cut/e2e-stale-expectations-reaim`
 
 ## 6. Proposed / unscheduled
