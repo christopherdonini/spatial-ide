@@ -313,3 +313,22 @@ Under B, C-1 and K-1 are replaced:
 4. **§1's may-not-claim gains two items:** how a covering with a non-ASCII child name binds; and a schema holding two names that differ only by case. PLAN gained the proposed node `covering-case-collision-binds-other-column` for the second, which the human grades and places later. It does not block this piece.
 5. **Code waits on nothing further:** Amendment 1, item 6's condition is met by item 2.
 6. **Superseded index:** the OPEN items list → items 2 and 3; §2b's placeholder wording → item 3; §1's may-not-claim → item 4. Nothing above is edited.
+
+### Amendment 3 — the §7 budget overrun (class 8), written after the build was seen
+
+*Written by the custodian after the worker's build was seen, and before the gates. It records a budget overrun. §7 is not edited. References and hashes only.*
+
+1. **The record:**
+   - the worker's report: `state/consults/2026-10-09-covering-names-missing-column-worker-report-1.md`, sha256 1e62707a0cefdffe38c2c4fbc22fb11c271625ec2e62bc97fd3dafdbb93ec503 from its line 5;
+   - the branch `cut/covering-names-missing-column`, head a06a746b73586765bbeff8cab40ec25cf6cbfd64, merge base 76a09d5ce2ebe252034bccde5cb447163c6b8118.
+2. **The count, by §7's own command at that head, recomputed by the custodian:** 636 changed lines in 3 files, against at most 520 lines in at most 4 files. The overrun is 116 lines; the file count is within its cap.
+
+   | File | Insertions | Deletions |
+   |---|---|---|
+   | `engine/src/dataset.rs` | 114 | 51 |
+   | `engine/tests/covering_names_missing_column.rs` | 366 | 0 |
+   | `kernel/tests/skp_projection.rs` | 105 | 0 |
+
+3. **Where it went,** by the report: the new engine test file (C-1 to C-5), with the seven-row C-3 table, two format-default fixtures, C-5's manifest reads and the helpers. Nothing was trimmed and no test was dropped.
+4. **One line outside the count, in a file §7 names:** an HTML comment under KNOWN-LIMITATIONS item 9's new sentence. It says that the sentence describes the tree after this piece lands, not the v0.1.0 artifact that the next comment pins. It is kept, because without it the next comment would read as covering the new sentence. It is not operator wording. The rendered item shows only the sentence, which is byte-identical to line 19 of `state/directives/2026-10-09-rulings-on-the-eight-forms.md` after that line's lead-in.
+5. **Still owed before the final gate:** lead-data's owner's-index update (§9), which a worker applies in this piece's pull request.
