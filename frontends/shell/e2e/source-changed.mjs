@@ -503,6 +503,14 @@ function lastViewStateZoom(consoleHandle) {
   return m ? Number(m[1]) : null;
 }
 
+/** Full-width drags that carry the camera across the whole fixture (317 columns of 40 m cells, `engine/src/fixture.rs`) at the
+ * current zoom: the bound the POST route's S4 already uses (milestone 1 re-aim, Decision A). The PRE route needs it for the same
+ * reason: two drags stay inside the cover S2's zoom-in search made resident, so no tile is planned and no query follows. */
+function dragsToCrossDataset(consoleHandle, rect) {
+  const datasetPx = 317 * 40 * 2 ** (lastViewStateZoom(consoleHandle) ?? 0);
+  return Math.max(2, Math.ceil(datasetPx / (rect.width * 0.8)));
+}
+
 /** How many `viewport_query` lines the render trace carries right now -- S4's own assertion reads
  * this before and after each gesture, because the QUERY is what T10 requires and the gesture is
  * only how it is provoked. */
@@ -899,7 +907,7 @@ async function main() {
         const ladder = [];
 
         let rect = await requireCanvasRect(page);
-        const pan = await panByViewports(page, rect, 2);
+        const pan = await panByViewports(page, rect, ROUTE === "pre" ? dragsToCrossDataset(consoleHandle, rect) : 2);
         await waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 2000, timeoutMs: 30_000 });
         let after = viewportQueryCount(consoleHandle);
         ladder.push({ rung: "pan-beyond-viewport", ...pan, queriesBefore: before, queriesAfter: after });
