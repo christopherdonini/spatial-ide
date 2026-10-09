@@ -281,3 +281,21 @@ Under B, C-1 and K-1 are replaced:
 
 - **OPEN-1 (red line):** drop the covering at open (A, recommended), or refuse the open (B). Keeping today's behaviour is not offered: the human graded this S1.
 - **OPEN-2 (P6):** the wording of the new detail (A) or the refusal (B), and the sentence for KNOWN-LIMITATIONS item 9.
+
+### Amendment 1 — the P0's result (class 1), written after the P0 was seen and before any code
+
+*Written by the custodian after the outcome was seen of the P0, which ran at e73a594c7011707b03271f5921c4dc3b1e58e214, and before any code. References and hashes only.*
+
+1. **The record:**
+   - the run's output: `state/drafts/covering-names-missing-column-p0/p0-output.txt`, sha256 4b2a623b24a58e07d9f29ee637dbbfa86b925c512947c26c99087c446bd3465c;
+   - the scratch test, untracked and deleted after the run: `state/drafts/covering-names-missing-column-p0/p0-test.rs.txt`, sha256 c785ec17d52cae1545b38b795106d0f713431022aadc2697111c9b61da178bff;
+   - the worker's report: `state/consults/2026-10-09-covering-names-missing-column-p0-worker-report.md`, sha256 8955c419fd88de94844a63aec983450497859938124cd2be27794f975617715e from its line 5.
+2. **The rows against §3a:**
+   - a binds; b, c and f fail to bind. All four match their predictions.
+   - d and e both bind.
+   - g fails to bind.
+   - The oracle and the bbox stream agree on every row. The open succeeds on every row, with the covering kept, as the root cause in §0 says.
+3. **The invalidator** in §3a did not fire.
+4. **The selected rule (§3a's selection rule):** d and e both bind, so the comparison is case-insensitive at both levels. g fails to bind, so the folding is ASCII-only. The walk in §2a compares each segment with ASCII case-insensitive equality.
+5. **Not covered by the P0:** a non-ASCII child name, and a schema holding two names that differ only by case.
+6. **Code waits only for** the human's typed ruling on OPEN-1.

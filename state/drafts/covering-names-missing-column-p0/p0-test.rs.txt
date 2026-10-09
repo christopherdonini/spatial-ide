@@ -1,0 +1,65 @@
+use spatial_engine::geoparquet::FieldPath;
+use spatial_engine::{Bbox, CancelToken, Dataset, ViewportQuery};
+
+fn stream(ds: &Dataset, q: &ViewportQuery) -> String {
+    let mut s = match ds.stream_with_cancel(q, CancelToken::new()) {
+        Ok(s) => s,
+        Err(e) => return format!("STREAM OPEN ERR: {e:?}"),
+    };
+    let mut buf = Vec::new();
+    match s.next_into(&mut buf) {
+        None => "NO ITEMS".to_string(),
+        Some(Ok(_)) => "FIRST ITEM OK".to_string(),
+        Some(Err(e)) => format!("FIRST ITEM ERR: {e}"),
+    }
+}
+
+#[test]
+fn p0_covering_binder() {
+    let dir = std::env::temp_dir().join("cov-p0");
+    std::fs::create_dir_all(&dir).unwrap();
+    let std4 = ["xmin", "ymin", "xmax", "ymax"];
+    let cases: Vec<(&str, &str, [&str; 4], &str, [&str; 4])> = vec![
+        ("a", "bbox", std4, "bbox", std4),
+        ("b", "bbox", std4, "nobbox", std4),
+        ("c", "bbox", std4, "bbox", ["xmin", "ymin", "xmax", "nomax"]),
+        ("d", "bbox", std4, "BBOX", std4),
+        ("e", "bbox", std4, "bbox", ["XMIN", "ymin", "xmax", "ymax"]),
+        ("f", "bbox", std4, "id", std4),
+        ("g", "b\u{f6}x", std4, "B\u{d6}X", std4),
+    ];
+    let conn = duckdb::Connection::open_in_memory().unwrap();
+    for (tag, sname, child, dstruct, dchild) in cases {
+        let path = dir.join(format!("{tag}.parquet"));
+        spatial_engine::fixture::write_hostile_covering(&path, sname, child, (dstruct, dchild));
+        let p = path.to_string_lossy().to_string();
+        let sel: Vec<String> = dchild
+            .iter()
+            .map(|c| FieldPath(vec![dstruct.to_string(), c.to_string()]).to_sql())
+            .collect();
+        let sql = format!("SELECT {} FROM read_parquet(?) LIMIT 0", sel.join(", "));
+        let oracle = match conn.prepare(&sql) {
+            Ok(mut st) => match st.query_arrow([p.as_str()]) {
+                Ok(_) => "BINDS".to_string(),
+                Err(e) => format!("BINDER ERR (query): {e}"),
+            },
+            Err(e) => format!("BINDER ERR (prepare): {e}"),
+        };
+        println!("=== row {tag} | written {sname:?}/{child:?} | declared {dstruct:?}/{dchild:?}");
+        println!("  oracle sql: {sql}");
+        println!("  oracle: {oracle}");
+        let ds = match Dataset::open(&path) {
+            Ok(d) => d,
+            Err(e) => {
+                println!("  open: ERR {e:?}");
+                continue;
+            }
+        };
+        println!("  open: OK; covering().is_some()={}", ds.covering().is_some());
+        let mut q = ViewportQuery::all();
+        q.bbox = Some(Bbox { xmin: 2_599_000.0, ymin: 1_199_000.0, xmax: 2_601_000.0, ymax: 1_201_000.0 });
+        q.bbox_crs = Some("EPSG:2056".to_string());
+        println!("  bbox stream: {}", stream(&ds, &q));
+        println!("  no-bbox stream: {}", stream(&ds, &ViewportQuery::all()));
+    }
+}
