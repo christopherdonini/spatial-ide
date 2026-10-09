@@ -641,3 +641,13 @@ Drafting returned to the architect at the stop. The rows below are the piece's l
   - both sections within the 60-line cap.
 - **Its stated limit:** with no shell, it took the changed files from the worktree's reflog and the worker report, not from `git diff`. The reviewer's diff check is the backstop.
 - **Applied** on the branch by a worker, as the pilot's §1 item 2 says.
+
+### B2, second pilot — piece 6's owner's-index update (the pilot's §1, item 2)
+
+- **The update** is `state/consults/2026-10-09-skp-drained-stream-helper-post-check-race-owners-index-update.md`: 138 lines, sha256 9da772a846a82b08c19dfddf4aaf4fe4c1500e88c442f93c5eb31b9cc521e7a1, byte-identical as lead-data wrote it, read on the branch at be7eecb3. Its cites pass `verify-cites` on main, so it is filed where its REPORT PATH line put it.
+- **Cost** (the harness's task notification): 119,733 subagent tokens, 53 tool uses, 262,140 ms. The run lasted 15:33:37Z to 15:37:59Z.
+- **Write audit PASS:** one Write, at its REPORT PATH line's path (Grep 38, Read 8, Glob 5, the hand-back 1).
+- **C3:** before and after, the checkout held its two pre-existing untracked items; the report was added after. The custodian committed nothing during the run.
+- **Content:** the kernel index's preregistrations line gains this form, last. The engine index gains a Governed by sub-bullet for engine halves of pieces filed elsewhere, pointing to the form's Part B. Both Last verified at lines move to be7eecb3, every pointer checked there. No other line is stale. Both sections are within the 60-line cap.
+- **A miscount it disclosed itself:** its §3 gives 51 kernel and 39 engine test pointers checked. Its hand-back gives the right counts as 45 and 40. It did not rewrite the file, because the brief allowed one write.
+- **Applied** on the branch by a worker, as the pilot's §1 item 2 says.
