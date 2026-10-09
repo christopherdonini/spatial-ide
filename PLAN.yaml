@@ -4516,17 +4516,17 @@ nodes:
     kind: task
     lane: kernel-protocol
     phase: prototype
-    status: ready
+    status: blocked
     order: 2
     depends_on: []
-    needs_human: {kind: none, minutes: 0}
-    gate: none
+    needs_human: {kind: ruling, minutes: 2}
+    gate: kernel/WIRE-BYTES-INVARIANT-TRACE-FLAG-RACE-PREREGISTRATION.md
     evidence: null
-    budget_minutes: 60
+    budget_minutes: 240
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "PLACED 2026-10-09 by the human's direction of 2026-10-09 (state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md), item 3c: slot 2, item c. Before: Seen 2026-10-08 in PR #189's pull_request CI run 37723999952 (ubuntu-24.04, attempt 1; failed steps filed byte-identical at state/consults/2026-10-08-pr189-ci-run-37723999952-attempt-1-failed-steps.txt): wire_bytes_invariant_holds_for_the_projected_ticket_path_case_too panicked at its opening assertion that tracing is off, while tracing_changes_no_byte_on_the_wire passed in the same binary. Cause read from code by PR #189's gate-1 reviewer, not observed: the engine's trace flag is one process-global AtomicBool (engine/src/trace.rs), the sibling test starts a trace, and nothing in the file serialises the two tests. The push run at the same head passed on both platforms. Test-only: no product change is implied. Never queued until the human places it."
+    summary: "FORM COMMITTED 2026-10-09, drafted ahead of its slot (the architect draft after lead-data's impact read; state/consults/2026-10-09-wire-bytes-invariant-trace-flag-race-architect-draft.md): full form with full gating, because the file is ADR-004 Amendment 4's named proof of the wire-bytes invariant and serialising its two tests decides whether each untraced baseline really runs untraced; at most 40 lines in kernel/tests/wire_bytes_invariant.rs; 66 pins at 0c2be9cb. A file-local lock taken first in both test bodies, in the shape trace_spans.rs already uses. OPEN-1 (not a red line; recommended: two proposed nodes, one for engine/tests/slice.rs's traced test and one for first_batch_factorial.rs's two ignored trace tests). No code before slot 2's items a and b merge. The custodian raised the budget for the full form and its gates. WAITS on the human for OPEN-1. Before: PLACED 2026-10-09 by the human's direction of 2026-10-09 (state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md), item 3c: slot 2, item c. Before: Seen 2026-10-08 in PR #189's pull_request CI run 37723999952 (ubuntu-24.04, attempt 1; failed steps filed byte-identical at state/consults/2026-10-08-pr189-ci-run-37723999952-attempt-1-failed-steps.txt): wire_bytes_invariant_holds_for_the_projected_ticket_path_case_too panicked at its opening assertion that tracing is off, while tracing_changes_no_byte_on_the_wire passed in the same binary. Cause read from code by PR #189's gate-1 reviewer, not observed: the engine's trace flag is one process-global AtomicBool (engine/src/trace.rs), the sibling test starts a trace, and nothing in the file serialises the two tests. The push run at the same head passed on both platforms. Test-only: no product change is implied. Never queued until the human places it."
     dates: {opened: 2026-10-08, done: null}
 
   - id: dataset-stream-doc-producer-runs-ahead

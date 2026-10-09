@@ -1,15 +1,15 @@
 {
-  "generated_at": "2026-10-09T06:33:43.057Z",
-  "plan_hash": "ea3d232d130d503dce1147123ef72c745e765e66ea2eb91bf5ada8184eac5c30",
+  "generated_at": "2026-10-09T06:55:13.175Z",
+  "plan_hash": "64808accef68eeedf33f0eebfe50658c812ff5bdcde77006edaa243f10817d8b",
   "priorities_approved": true,
   "next": {
-    "id": "wire-bytes-invariant-trace-flag-race",
-    "title": "kernel/tests/wire_bytes_invariant.rs: the projected-ticket test asserts tracing is off while its sibling starts a trace (a race on the engine's global trace flag)",
-    "lane": "kernel-protocol",
+    "id": "e2e-failures-present-at-the-base",
+    "title": "Shell e2e steps failing on main at e888787e: regression C2 and C3, admission MAP and BOTHNEEDED, console HEXLIM, GROUP and REGRESS, source-changed default-route S4",
+    "lane": "shell",
     "phase": "prototype",
     "status": "ready",
-    "order": 2,
-    "budget_minutes": 60,
+    "order": 3,
+    "budget_minutes": 120,
     "needs_human": {
       "kind": "none",
       "minutes": 0
@@ -19,28 +19,9 @@
       "opened": "2026-10-08",
       "done": null
     },
-    "summary": "PLACED 2026-10-09 by the human's direction of 2026-10-09 (state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md), item 3c: slot 2, item c. Before: Seen 2026-10-08 in PR #189's pull_request CI run 37723999952 (ubuntu-24.04, attempt 1; failed steps filed byte-identical at state/consults/2026-10-08-pr189-ci-run-37723999952-attempt-1-failed-steps.txt): wire_bytes_invariant_holds_for_the_projected_ticket_path_case_too panicked at its opening assertion that tracing is off, while tracing_changes_no_byte_on_the_wire passed in the same binary. Cause read from code by PR #189's gate-1 reviewer, not observed: the engine's trace flag is one process-global AtomicBool (engine/src/trace.rs), the sibling test starts a trace, and nothing in the file serialises the two tests. The push run at the same head passed on both platforms. Test-only: no product change is implied. Never queued until the human places it."
+    "summary": "PLACED 2026-10-09 by the human's direction of 2026-10-09 (state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md), item 2c: slot 1, item c, as a triage. Before: Found 2026-10-08 by shell-migration-milestone-1 stage 2, which ran each failing suite at its base e888787e with the same fixtures and launch (state/consults/2026-10-08-shell-migration-milestone-1-worker-report-2.md, section 4; the form Amendment 4, item 4): these steps fail at the base as at the head, so they are not that piece's. The worker's reading, not diagnosed: the identity refusal fixtures on disk admit instead of refusing (perhaps stale files), HEXLIM's key set now includes columns, and console REFUSAL failed once at the base only. A triage piece separates stale fixtures, stale expectations and real defects. Never queued until the human places it."
   },
   "ready": [
-    {
-      "id": "wire-bytes-invariant-trace-flag-race",
-      "title": "kernel/tests/wire_bytes_invariant.rs: the projected-ticket test asserts tracing is off while its sibling starts a trace (a race on the engine's global trace flag)",
-      "lane": "kernel-protocol",
-      "phase": "prototype",
-      "status": "ready",
-      "order": 2,
-      "budget_minutes": 60,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-10-08",
-        "done": null
-      },
-      "summary": "PLACED 2026-10-09 by the human's direction of 2026-10-09 (state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md), item 3c: slot 2, item c. Before: Seen 2026-10-08 in PR #189's pull_request CI run 37723999952 (ubuntu-24.04, attempt 1; failed steps filed byte-identical at state/consults/2026-10-08-pr189-ci-run-37723999952-attempt-1-failed-steps.txt): wire_bytes_invariant_holds_for_the_projected_ticket_path_case_too panicked at its opening assertion that tracing is off, while tracing_changes_no_byte_on_the_wire passed in the same binary. Cause read from code by PR #189's gate-1 reviewer, not observed: the engine's trace flag is one process-global AtomicBool (engine/src/trace.rs), the sibling test starts a trace, and nothing in the file serialises the two tests. The push run at the same head passed on both platforms. Test-only: no product change is implied. Never queued until the human places it."
-    },
     {
       "id": "e2e-failures-present-at-the-base",
       "title": "Shell e2e steps failing on main at e888787e: regression C2 and C3, admission MAP and BOTHNEEDED, console HEXLIM, GROUP and REGRESS, source-changed default-route S4",
@@ -121,7 +102,7 @@
     }
   ],
   "waiting_on_human": {
-    "total_minutes": 25,
+    "total_minutes": 27,
     "by_kind": {
       "click": [],
       "sight": [],
@@ -163,6 +144,25 @@
             "done": null
           },
           "summary": "FORM COMMITTED 2026-10-09, drafted ahead of its slot (the architect draft after lead-data's impact read; state/consults/2026-10-09-skp-drained-stream-helper-post-check-race-architect-draft.md): full form with full gating, because the helper's guard is the vacuity check for nine tests of properties under test; 66 pins at a23e709b. Part A (kernel/src/skp.rs test module only): the helper's fixture grows to 5,000 features and the helper asserts more batches than the queue holds, so the post-check runs after the touch. Part B, conditional on OPEN-1 (not a red line; recommended in scope): the two same-shape tests in engine/tests/session_identity.rs. No code before covering-names-missing-column merges. The custodian raised the budget for the full form and its gates. WAITS on the human for OPEN-1. Before: PLACED 2026-10-09 by the human's direction of 2026-10-09 (state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md), item 3b: slot 2, item b. Before: SEEN AGAIN 2026-10-08 in PR #195 CI run 37836080416 (ubuntu-24.04, attempt 1; failed steps filed at state/consults/2026-10-08-pr195-ci-run-37836080416-attempt-1-failed-steps.txt): skp::ticket_drop_under_lock_regression::after_cancelling_a_ticket_whose_source_changed_the_next_viewport_query_refuses_by_name panicked at its setup guard, kernel/src/skp.rs:3462, outside that diff; the reviewer reads it as this node class. Found 2026-10-07 by the typed-terminal-codes-post-check-race drafting (state/consults/2026-10-07-typed-terminal-codes-post-check-race-architect-draft.md, finding F-1; the form, section 0.4): the test helper in kernel/src/skp.rs touches the file after opening the engine stream and asserts the post-check found the change, with a 50-feature fixture, so the producer can finish before the touch. kernel/src/skp.rs is in the lines cut's file list, so this waits for the lines cut. Test-only. Waiting on the human's placement."
+        },
+        {
+          "id": "wire-bytes-invariant-trace-flag-race",
+          "title": "kernel/tests/wire_bytes_invariant.rs: the projected-ticket test asserts tracing is off while its sibling starts a trace (a race on the engine's global trace flag)",
+          "lane": "kernel-protocol",
+          "phase": "prototype",
+          "status": "blocked",
+          "order": 2,
+          "budget_minutes": 240,
+          "needs_human": {
+            "kind": "ruling",
+            "minutes": 2
+          },
+          "evidence": null,
+          "dates": {
+            "opened": "2026-10-08",
+            "done": null
+          },
+          "summary": "FORM COMMITTED 2026-10-09, drafted ahead of its slot (the architect draft after lead-data's impact read; state/consults/2026-10-09-wire-bytes-invariant-trace-flag-race-architect-draft.md): full form with full gating, because the file is ADR-004 Amendment 4's named proof of the wire-bytes invariant and serialising its two tests decides whether each untraced baseline really runs untraced; at most 40 lines in kernel/tests/wire_bytes_invariant.rs; 66 pins at 0c2be9cb. A file-local lock taken first in both test bodies, in the shape trace_spans.rs already uses. OPEN-1 (not a red line; recommended: two proposed nodes, one for engine/tests/slice.rs's traced test and one for first_batch_factorial.rs's two ignored trace tests). No code before slot 2's items a and b merge. The custodian raised the budget for the full form and its gates. WAITS on the human for OPEN-1. Before: PLACED 2026-10-09 by the human's direction of 2026-10-09 (state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md), item 3c: slot 2, item c. Before: Seen 2026-10-08 in PR #189's pull_request CI run 37723999952 (ubuntu-24.04, attempt 1; failed steps filed byte-identical at state/consults/2026-10-08-pr189-ci-run-37723999952-attempt-1-failed-steps.txt): wire_bytes_invariant_holds_for_the_projected_ticket_path_case_too panicked at its opening assertion that tracing is off, while tracing_changes_no_byte_on_the_wire passed in the same binary. Cause read from code by PR #189's gate-1 reviewer, not observed: the engine's trace flag is one process-global AtomicBool (engine/src/trace.rs), the sibling test starts a trace, and nothing in the file serialises the two tests. The push run at the same head passed on both platforms. Test-only: no product change is implied. Never queued until the human places it."
         },
         {
           "id": "decision-adr-029-scan-progress-route",
