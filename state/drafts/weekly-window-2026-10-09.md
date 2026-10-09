@@ -608,3 +608,13 @@ Drafting returned to the architect at the stop. The rows below are the piece's l
   - **incomplete, not wrong:** two: the default fixture spec runs past the pointed span, and the cancelled engine test cancels before it touches, which the read classed as the same shape without saying so;
   - **missing:** the stream's batch-cut sites, its cancel checks and its Drop, the fixture's vertex minimum and hole ring, the streaming path's lack of attribute bytes, the sibling's architect-gate finding on timeouts, the node that already routes a stale stream doc, and the classification of four grep hits the read left open.
 - **Combined cost of piece 6** (read plus draft): 411,394 subagent tokens, 151 tool uses, 1,011,234 ms.
+
+### B2, second pilot — measured piece 7: `wire-bytes-invariant-trace-flag-race`
+
+- **The piece** is slot 2's third item (kernel-protocol, order 2), drafted ahead while slot 2's first two pieces wait for rulings. The read precedes the architect's draft. No branch exists yet.
+- **The impact read** is `state/consults/2026-10-09-wire-bytes-invariant-trace-flag-race-impact-read.md`: 130 lines, sha256 cd1d36ce52231d8294b0890c1e778239ea140f7d27056936812e13f55fb7b5de, filed byte-identical as lead-data wrote it, read at main 8604c819.
+- **Cost** (the harness's task notification): 118,249 subagent tokens, 62 tool uses, 206,682 ms. The run lasted 06:38:12Z to 06:41:38Z.
+- **Write audit PASS:** one Write, at its REPORT PATH line's path (Read 35, Grep 25, the hand-back 1).
+- **C3:** before, the checkout held only its two pre-existing untracked items; after, those and the report. The custodian committed nothing during the run.
+- **Content:** the two tests and their trace use, the flag and its single slot, every reader on the product path, every other trace-using test binary and how each is serialised, the governing texts, five gap questions, and three owner's-index gaps (no interface entry for the engine's trace module, nothing pinned to the wire-bytes test file, and the tracing design note missing from the kernel's governing list). The custodian's read found no draft text, design, recommendation or answer, and checked the race site and the flag against the code.
+- **The architect's draft** of piece 7 follows, with the read's path in its brief.
