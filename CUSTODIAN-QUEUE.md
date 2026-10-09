@@ -1,14 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `734d9cde61e2c4b8014373d21c16916fa0915ea5b4bf62971d7306c6449dc532`) at `2026-10-09T19:10:51.732Z`.
+Generated from `PLAN.yaml` (sha256 `9a368d7a96de7c349316a55fa38306fe4b89b840be4df7829086993df7f34aec`) at `2026-10-09T19:21:21.791Z`.
 
 ## 1. Next
 
-- (nothing ready)
+- **wire-bytes-invariant-trace-flag-race** — kernel/tests/wire_bytes_invariant.rs: the projected-ticket test asserts tracing is off while its sibling starts a trace (a race on the engine's global trace flag) (lane `kernel-protocol`)
 
 ## 2. Ready
 
-- (none)
+- **wire-bytes-invariant-trace-flag-race** — kernel/tests/wire_bytes_invariant.rs: the projected-ticket test asserts tracing is off while its sibling starts a trace (a race on the engine's global trace flag) (lane `kernel-protocol`, order 2, budget 240 min)
 
 ## 3. Waiting on the human (total: 10 min)
 
@@ -18,7 +18,6 @@ Generated from `PLAN.yaml` (sha256 `734d9cde61e2c4b8014373d21c16916fa0915ea5b4bf
 
 ## 4. Blocked on dependencies
 
-- **wire-bytes-invariant-trace-flag-race** — kernel/tests/wire_bytes_invariant.rs: the projected-ticket test asserts tracing is off while its sibling starts a trace (a race on the engine's global trace flag) — blocked by: skp-drained-stream-helper-post-check-race
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
 - **b2-piece-1b-recording** — B2 piece 1b -- recording: the kernel's step commands for filter, scope and style, the session history on the machine, safe against a crash, and the docs/07 note — blocked by: shell-migration-milestone-2
 - **shell-map-refill-after-resize** — The map refills after a resize: a layout change that uncovers map area issues a viewport query, so the area fills without a pan or zoom — blocked by: e2e-stale-expectations-reaim
@@ -33,7 +32,6 @@ Generated from `PLAN.yaml` (sha256 `734d9cde61e2c4b8014373d21c16916fa0915ea5b4bf
 
 ## 5. In progress
 
-- **skp-drained-stream-helper-post-check-race** — kernel/src/skp.rs tests: drained_stream_with_a_recorded_change has the same post-check race as typed_terminal_codes' end-to-end test — evidence: branch `cut/skp-drained-stream-helper-post-check-race`
 - **e2e-stale-expectations-reaim** — Re-aim the shell e2e steps whose expectations predate ruled product changes: regression C2'/C3', admission MAP' and BOTHNEEDED', console HEXLIM', GROUP' and REFUSAL', source-changed default-route S4 — evidence: branch `cut/e2e-stale-expectations-reaim`
 
 ## 6. Proposed / unscheduled
