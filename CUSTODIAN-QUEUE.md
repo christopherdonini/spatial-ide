@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `95ffc396f6c2e565527d4fe63433226b7ad135881f703582c444303a21c259e0`) at `2026-10-09T15:45:15.197Z`.
+Generated from `PLAN.yaml` (sha256 `24b7f000d24822cfe4c7e204360d33c2e62b292834e0b3b2997caa7cc0379af7`) at `2026-10-09T15:52:12.321Z`.
 
 ## 1. Next
 
@@ -100,6 +100,7 @@ Generated from `PLAN.yaml` (sha256 `95ffc396f6c2e565527d4fe63433226b7ad135881f70
 - **lines-class-budget-measurement** — Measure docs/08's Lines class (1M features / 10M vertices) for the working canvas, once lines are drawn (phase `prototype`) — never queued until placed
 - **covering-case-collision-binds-other-column** — A declared covering whose path differs from two schema names only by case: DuckDB may bind it to the other column, a wrong-rows risk that predates the covering piece (phase `prototype`) — never queued until placed
 - **publish-sort-window-cancel-not-exercised-on-ci** — kernel/tests/publish_cancellation.rs: a_cancel_inside_the_sort_is_observed_rather_than_waited_out reddened on the Windows CI runner because QueryRunning never fired (the sort ended inside one poll interval) (phase `prototype`) — never queued until placed
+- **stream-doc-first-batch-claim** — engine/src/stream.rs: Dataset::stream's doc says the first batch is produced on the first next_into call, but the producer is spawned inside the call and up to MAX_QUEUED_BATCHES sends complete before any next_into (phase `prototype`) — never queued until placed
 - **first-batch-factorial-ignored-trace-tests** — kernel/tests/first_batch_factorial.rs's two ignored measurement tests each start a trace in one binary with no shared lock (phase `prototype`) — never queued until placed
 - **slice-traced-test-cross-stamping** — engine/tests/slice.rs's traced test reads first cancellation stamps while its binary's other tests run unserialised, one of them cancelling (phase `prototype`) — never queued until placed
 - **source-changed-post-reopen-routes-watcher-visible** — source-changed.mjs's post and reopen routes, and walkthrough Part N's N6 and N8, still change the source by an mtime touch the advisory watcher can see (phase `prototype`) — never queued until placed

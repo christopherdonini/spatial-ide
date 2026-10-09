@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-09T15:45:15.326Z",
-  "plan_hash": "95ffc396f6c2e565527d4fe63433226b7ad135881f703582c444303a21c259e0",
+  "generated_at": "2026-10-09T15:52:12.675Z",
+  "plan_hash": "24b7f000d24822cfe4c7e204360d33c2e62b292834e0b3b2997caa7cc0379af7",
   "priorities_approved": true,
   "lanes": [
     {
@@ -6852,10 +6852,10 @@
         "branch": "cut/skp-drained-stream-helper-post-check-race"
       },
       "budget_minutes": 240,
-      "generation": 2,
+      "generation": 3,
       "felt_verdict": false,
       "entries": [],
-      "summary": "PR #198 OPENED 2026-10-09 (head 82a3c8cd, the owner's-index update applied there; worker report 2): both gates running; the custodian's P-1 solo runs, 20 under an exclusive hold, are owed before the merge, after the e2e re-aim worker's shared runs. Before: BUILT 2026-10-09 (worker report 1, state/consults/2026-10-09-skp-drained-stream-helper-post-check-race-worker-report-1.md): Part A 67 of 110 lines, Part B 66 of 70; all five mutations observed at 7469a801; P-3 20 of 20; P-1 19 of 20 in a shared hold, run 3 failing the 5 s hang bound on a loaded machine, which the custodian re-runs alone. Next: lead-data's owner's-index update, applied by a worker; the P-1 solo runs; the PR; both gates. Before: IN CODE 2026-10-09: one worker-high on branch cut/skp-drained-stream-helper-post-check-race from main b8ad22ff, worktree C:/dev/wt/skp, target D:/wt-targets/cov (the covering target, warm); Parts A and B under Amendment 1. Before: DEPENDENCY RECORDED 2026-10-09: covering-names-missing-column added to depends_on, as the form section 8 item 1 requires (no code before it merges; PR #197 awaits the merge click); the worker brief is written and goes out at that merge. Before: AMENDMENT 1 APPENDED 2026-10-09 (generation 2, class 5): the human's rulings recorded by reference, before any code. Before: RULED 2026-10-09 by the human's rulings of 2026-10-09 (state/directives/2026-10-09-rulings-on-the-eight-forms.md), item 5: OPEN-1 (1), Part B in scope. Amendment 1 records it before dispatch. Before: FORM COMMITTED 2026-10-09, drafted ahead of its slot (the architect draft after lead-data's impact read; state/consults/2026-10-09-skp-drained-stream-helper-post-check-race-architect-draft.md): full form with full gating, because the helper's guard is the vacuity check for nine tests of properties under test; 66 pins at a23e709b. Part A (kernel/src/skp.rs test module only): the helper's fixture grows to 5,000 features and the helper asserts more batches than the queue holds, so the post-check runs after the touch. Part B, conditional on OPEN-1 (not a red line; recommended in scope): the two same-shape tests in engine/tests/session_identity.rs. No code before covering-names-missing-column merges. The custodian raised the budget for the full form and its gates. WAITS on the human for OPEN-1. Before: PLACED 2026-10-09 by the human's direction of 2026-10-09 (state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md), item 3b: slot 2, item b. Before: SEEN AGAIN 2026-10-08 in PR #195 CI run 37836080416 (ubuntu-24.04, attempt 1; failed steps filed at state/consults/2026-10-08-pr195-ci-run-37836080416-attempt-1-failed-steps.txt): skp::ticket_drop_under_lock_regression::after_cancelling_a_ticket_whose_source_changed_the_next_viewport_query_refuses_by_name panicked at its setup guard, kernel/src/skp.rs:3462, outside that diff; the reviewer reads it as this node class. Found 2026-10-07 by the typed-terminal-codes-post-check-race drafting (state/consults/2026-10-07-typed-terminal-codes-post-check-race-architect-draft.md, finding F-1; the form, section 0.4): the test helper in kernel/src/skp.rs touches the file after opening the engine stream and asserts the post-check found the change, with a 50-feature fixture, so the producer can finish before the touch. kernel/src/skp.rs is in the lines cut's file list, so this waits for the lines cut. Test-only. Waiting on the human's placement.",
+      "summary": "GATE 1, ARCHITECT PASS WITH NOTES 2026-10-09 (gate-log 456; state/consults/gates/2026-10-09-skp-drained-stream-helper-post-check-race-gate1-architect.md): no Correctness or Evidence block; E-1, P-1 alone 20 of 20, is a merge condition; D-1 to D-5 documentation, D-5 by Amendment 2 (generation 3, class 3), the rest in the PR body. The reviewer gate is running. Before: PR #198 OPENED 2026-10-09 (head 82a3c8cd, the owner's-index update applied there; worker report 2): both gates running; the custodian's P-1 solo runs, 20 under an exclusive hold, are owed before the merge, after the e2e re-aim worker's shared runs. Before: BUILT 2026-10-09 (worker report 1, state/consults/2026-10-09-skp-drained-stream-helper-post-check-race-worker-report-1.md): Part A 67 of 110 lines, Part B 66 of 70; all five mutations observed at 7469a801; P-3 20 of 20; P-1 19 of 20 in a shared hold, run 3 failing the 5 s hang bound on a loaded machine, which the custodian re-runs alone. Next: lead-data's owner's-index update, applied by a worker; the P-1 solo runs; the PR; both gates. Before: IN CODE 2026-10-09: one worker-high on branch cut/skp-drained-stream-helper-post-check-race from main b8ad22ff, worktree C:/dev/wt/skp, target D:/wt-targets/cov (the covering target, warm); Parts A and B under Amendment 1. Before: DEPENDENCY RECORDED 2026-10-09: covering-names-missing-column added to depends_on, as the form section 8 item 1 requires (no code before it merges; PR #197 awaits the merge click); the worker brief is written and goes out at that merge. Before: AMENDMENT 1 APPENDED 2026-10-09 (generation 2, class 5): the human's rulings recorded by reference, before any code. Before: RULED 2026-10-09 by the human's rulings of 2026-10-09 (state/directives/2026-10-09-rulings-on-the-eight-forms.md), item 5: OPEN-1 (1), Part B in scope. Amendment 1 records it before dispatch. Before: FORM COMMITTED 2026-10-09, drafted ahead of its slot (the architect draft after lead-data's impact read; state/consults/2026-10-09-skp-drained-stream-helper-post-check-race-architect-draft.md): full form with full gating, because the helper's guard is the vacuity check for nine tests of properties under test; 66 pins at a23e709b. Part A (kernel/src/skp.rs test module only): the helper's fixture grows to 5,000 features and the helper asserts more batches than the queue holds, so the post-check runs after the touch. Part B, conditional on OPEN-1 (not a red line; recommended in scope): the two same-shape tests in engine/tests/session_identity.rs. No code before covering-names-missing-column merges. The custodian raised the budget for the full form and its gates. WAITS on the human for OPEN-1. Before: PLACED 2026-10-09 by the human's direction of 2026-10-09 (state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md), item 3b: slot 2, item b. Before: SEEN AGAIN 2026-10-08 in PR #195 CI run 37836080416 (ubuntu-24.04, attempt 1; failed steps filed at state/consults/2026-10-08-pr195-ci-run-37836080416-attempt-1-failed-steps.txt): skp::ticket_drop_under_lock_regression::after_cancelling_a_ticket_whose_source_changed_the_next_viewport_query_refuses_by_name panicked at its setup guard, kernel/src/skp.rs:3462, outside that diff; the reviewer reads it as this node class. Found 2026-10-07 by the typed-terminal-codes-post-check-race drafting (state/consults/2026-10-07-typed-terminal-codes-post-check-race-architect-draft.md, finding F-1; the form, section 0.4): the test helper in kernel/src/skp.rs touches the file after opening the engine stream and asserts the post-check found the change, with a 50-feature fixture, so the producer can finish before the touch. kernel/src/skp.rs is in the lines cut's file list, so this waits for the lines cut. Test-only. Waiting on the human's placement.",
       "dates": {
         "opened": "2026-10-07",
         "done": null
@@ -6906,6 +6906,31 @@
       "felt_verdict": false,
       "entries": [],
       "summary": "PROPOSED 2026-10-09 by the custodian from a CI sighting: on PR #197 at 9340c5f8, whose last commit touched only two READMEs, the windows-latest cargo test --workspace job of run 37926877086 failed one test, a_cancel_inside_the_sort_is_observed_rather_than_waited_out (kernel/tests/publish_cancellation.rs), with its own message that QueryRunning never fired and the sort-window cancel was not exercised; the same job passed on the previous push (run 37925888451). The test's own text says a machine where the trigger does not fire is a finding, and to raise FEATURES rather than delete the assertion. The failed job was re-run. Not part of the covering piece. The human grades and places it.",
+      "dates": {
+        "opened": "2026-10-09",
+        "done": null
+      }
+    },
+    {
+      "id": "stream-doc-first-batch-claim",
+      "title": "engine/src/stream.rs: Dataset::stream's doc says the first batch is produced on the first next_into call, but the producer is spawned inside the call and up to MAX_QUEUED_BATCHES sends complete before any next_into",
+      "kind": "task",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "depends_on": [],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "none",
+      "evidence": null,
+      "budget_minutes": 30,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [],
+      "summary": "PROPOSED 2026-10-09 by the custodian from PR #198's architect gate 1, its observation outside the diff (state/consults/gates/2026-10-09-skp-drained-stream-helper-post-check-race-gate1-architect.md): the doc on Dataset::stream states a premise the skp-drained form's section 0.3 shows false, and the premise is the one the post-check flake rested on. A doc-only engine/src fix, outside #198's scope (its section 8 item 2). The human grades and places it.",
       "dates": {
         "opened": "2026-10-09",
         "done": null
