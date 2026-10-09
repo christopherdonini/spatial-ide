@@ -602,3 +602,9 @@ Drafting returned to the architect at the stop. The rows below are the piece's l
 - **C3:** before, the checkout held only its two pre-existing untracked items; after, those and the report. The custodian committed nothing during the run.
 - **Content:** the helper and its five call sites reaching nine tests, the engine sites the race depends on, the sibling fix's means, the governing records, two more tests of the same shape in `engine/tests/session_identity.rs`, and five gap questions. The custodian's read found no draft text, design, recommendation or answer, and checked the helper's lines against the code.
 - **The architect's draft** of piece 6 follows, with the read's path in its brief.
+- **Piece 6, the architect's draft** (`state/consults/2026-10-09-skp-drained-stream-helper-post-check-race-architect-draft.md`): 220,701 subagent tokens, 70 tool uses, 657,550 ms, from 06:22:01Z to 06:32:58Z. Write audit PASS, with zero write calls. Its files-read section reports on the impact read's pointers (the architect's findings, not a gate's):
+  - **used:** §1.1 to §1.5 entire, §1.6, §2.1 to §2.4, the governing texts, and all five questions;
+  - **found wrong:** none;
+  - **incomplete, not wrong:** two: the default fixture spec runs past the pointed span, and the cancelled engine test cancels before it touches, which the read classed as the same shape without saying so;
+  - **missing:** the stream's batch-cut sites, its cancel checks and its Drop, the fixture's vertex minimum and hole ring, the streaming path's lack of attribute bytes, the sibling's architect-gate finding on timeouts, the node that already routes a stale stream doc, and the classification of four grep hits the read left open.
+- **Combined cost of piece 6** (read plus draft): 411,394 subagent tokens, 151 tool uses, 1,011,234 ms.

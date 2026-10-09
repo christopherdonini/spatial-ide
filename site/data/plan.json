@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-09T06:09:53.469Z",
-  "plan_hash": "4b9076c6f92084f32fcf4a8b37ca5aab6040314b9a66ae26cc7af866b0dbb507",
+  "generated_at": "2026-10-09T06:33:43.179Z",
+  "plan_hash": "ea3d232d130d503dce1147123ef72c745e765e66ea2eb91bf5ada8184eac5c30",
   "priorities_approved": true,
   "lanes": [
     {
@@ -6833,23 +6833,23 @@
       "kind": "task",
       "lane": "kernel-protocol",
       "phase": "prototype",
-      "status": "ready",
+      "status": "blocked",
       "order": 1,
       "depends_on": [
         "geometry-lines-cut",
         "typed-terminal-codes-post-check-race"
       ],
       "needs_human": {
-        "kind": "none",
-        "minutes": 0
+        "kind": "ruling",
+        "minutes": 2
       },
-      "gate": "none",
+      "gate": "kernel/SKP-DRAINED-STREAM-HELPER-POST-CHECK-RACE-PREREGISTRATION.md",
       "evidence": null,
-      "budget_minutes": 60,
+      "budget_minutes": 240,
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "PLACED 2026-10-09 by the human's direction of 2026-10-09 (state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md), item 3b: slot 2, item b. Before: SEEN AGAIN 2026-10-08 in PR #195 CI run 37836080416 (ubuntu-24.04, attempt 1; failed steps filed at state/consults/2026-10-08-pr195-ci-run-37836080416-attempt-1-failed-steps.txt): skp::ticket_drop_under_lock_regression::after_cancelling_a_ticket_whose_source_changed_the_next_viewport_query_refuses_by_name panicked at its setup guard, kernel/src/skp.rs:3462, outside that diff; the reviewer reads it as this node class. Found 2026-10-07 by the typed-terminal-codes-post-check-race drafting (state/consults/2026-10-07-typed-terminal-codes-post-check-race-architect-draft.md, finding F-1; the form, section 0.4): the test helper in kernel/src/skp.rs touches the file after opening the engine stream and asserts the post-check found the change, with a 50-feature fixture, so the producer can finish before the touch. kernel/src/skp.rs is in the lines cut's file list, so this waits for the lines cut. Test-only. Waiting on the human's placement.",
+      "summary": "FORM COMMITTED 2026-10-09, drafted ahead of its slot (the architect draft after lead-data's impact read; state/consults/2026-10-09-skp-drained-stream-helper-post-check-race-architect-draft.md): full form with full gating, because the helper's guard is the vacuity check for nine tests of properties under test; 66 pins at a23e709b. Part A (kernel/src/skp.rs test module only): the helper's fixture grows to 5,000 features and the helper asserts more batches than the queue holds, so the post-check runs after the touch. Part B, conditional on OPEN-1 (not a red line; recommended in scope): the two same-shape tests in engine/tests/session_identity.rs. No code before covering-names-missing-column merges. The custodian raised the budget for the full form and its gates. WAITS on the human for OPEN-1. Before: PLACED 2026-10-09 by the human's direction of 2026-10-09 (state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md), item 3b: slot 2, item b. Before: SEEN AGAIN 2026-10-08 in PR #195 CI run 37836080416 (ubuntu-24.04, attempt 1; failed steps filed at state/consults/2026-10-08-pr195-ci-run-37836080416-attempt-1-failed-steps.txt): skp::ticket_drop_under_lock_regression::after_cancelling_a_ticket_whose_source_changed_the_next_viewport_query_refuses_by_name panicked at its setup guard, kernel/src/skp.rs:3462, outside that diff; the reviewer reads it as this node class. Found 2026-10-07 by the typed-terminal-codes-post-check-race drafting (state/consults/2026-10-07-typed-terminal-codes-post-check-race-architect-draft.md, finding F-1; the form, section 0.4): the test helper in kernel/src/skp.rs touches the file after opening the engine stream and asserts the post-check found the change, with a 50-feature fixture, so the producer can finish before the touch. kernel/src/skp.rs is in the lines cut's file list, so this waits for the lines cut. Test-only. Waiting on the human's placement.",
       "dates": {
         "opened": "2026-10-07",
         "done": null
