@@ -356,3 +356,24 @@ This amendment records the human's rulings on this form. It is written before an
 - §8: item 1, A1.2; items 14 to 16 added, A1.2.
 - §9, the reviewer bullet: A1.2.
 - §11, OPEN-1 to OPEN-3: closed (A1.1).
+
+### Amendment 2 — the close (class 1), after both gates
+
+*Written by the custodian after both gates passed, before the human's merge click. References and hashes only.*
+
+1. **The gates.** Correction round 1 of 2 was used.
+   - Reviewer gate 1: PASS. `state/consults/gates/2026-10-09-e2e-hover-establishing-read-stale-gate1-reviewer.md`, gate-log 451.
+   - Architect gate 1: FAIL, on E1 only. `state/consults/gates/2026-10-09-e2e-hover-establishing-read-stale-gate1-architect.md`, gate-log 450.
+   - Architect gate 1, attempt 2: PASS. `state/consults/gates/2026-10-09-e2e-hover-establishing-read-stale-gate1-architect-attempt-2.md`, gate-log 454.
+2. **The head:** ac89e033a75a9ac241debfd9d249e2e84b26f414. It is the gated head 86c26f2b plus one commit that changes comments only, for the gates' documentation items. §7 is 99 lines against 140.
+3. **M1's admissible observation** is the custodian's run 2 alone:
+   - state/drafts/e2e-hover-establishing-read-stale-m1-alone/m1-alone-801-run2.log.txt:13 @ a576ab3725d77a6f63afc8935cb572eca2cf2dec sha256:606f94e2f7301aa3cbf7aa4721a3bb44662cbf8467d781d22cbc096d218e1856;
+   - its exclusive hold, state/drafts/e2e-hover-establishing-read-stale-m1-alone/window-2-hold-output.txt:1-5 @ a576ab3725d77a6f63afc8935cb572eca2cf2dec sha256:77faa8eb210a3f7e8b9e08cd544dca0859db929556468addab5d93db3bbb56d6.
+
+   Run 1 and the other files are in the same folder. Its README, as added to main by a576ab3725d77a6f63afc8935cb572eca2cf2dec, has sha256 075656e1101d85eb583ad025bab48d26e6414ba5c0f6d1b702d7365e79f1eab9. It lists each file's hash. The recorded-mutation comment for M1 in `frontends/shell/e2e/regression.mjs` names f9e1f8dc, the worker's run in a shared hold. This item is the observation that counts.
+4. **The human's line governed:** state/directives/2026-10-06-machine-script-adopted.md:20 @ a576ab3725d77a6f63afc8935cb572eca2cf2dec sha256:678460c8f7dfa9e08653c2371aa5c7ef6659eab4b081f4d05035a0cdee329e22. §5's paragraph on shared runs is read through it and is not edited.
+5. **Superseded index:**
+   - §5's paragraph on shared runs → item 4;
+   - M1's observation in §4 and in the report → item 3.
+
+   Nothing above is edited.
