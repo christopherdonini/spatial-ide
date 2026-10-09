@@ -1,9 +1,201 @@
 {
-  "generated_at": "2026-10-08T23:54:47.702Z",
-  "plan_hash": "4fd02e7dd3899943f6f453e01759af4bec74742df04888fabf62cd391086f263",
+  "generated_at": "2026-10-09T05:12:33.969Z",
+  "plan_hash": "ee64284242344b13971fde13f6da232545b6958e989222d897f2c6bd6e667a39",
   "priorities_approved": true,
-  "next": null,
-  "ready": [],
+  "next": {
+    "id": "covering-names-missing-column",
+    "title": "A covering that names a column the file lacks is kept at open, and every bbox query then fails after the mint (A2-1 P0 k3)",
+    "lane": "engine",
+    "phase": "prototype",
+    "status": "ready",
+    "order": 1,
+    "budget_minutes": 90,
+    "needs_human": {
+      "kind": "none",
+      "minutes": 0
+    },
+    "evidence": null,
+    "dates": {
+      "opened": "2026-09-29",
+      "done": null
+    },
+    "summary": "PLACED 2026-10-09 by the human's direction of 2026-10-09 (state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md), item 3a: slot 2, item a, graded S1 by the human. The lead-data second pilot resumes from it as written (item 4): lead-data's impact read first, then the architect's draft. Before: Filed on the 2026-09-29 sightings (state/directives/2026-09-29-a2-1-and-b-1-sightings.md, Fable's A2-1 (c): k3 stays out of A2-1, its own proposed node, graded by whether it breaks a stated clause). Evidence: state/drafts/a2-1-p0/covering-output.txt, k3 -- the file's geo metadata declares a covering whose struct is absent (no U+0000); the open succeeds with the covering kept, and a bbox viewport_query fails at its first stream item with an engine.query binder error, after the mint. Custodian's grading: S1 CANDIDATE on the viewport_query entry in SKP-V0's first section (a bbox request is validated against the dataset before any handle is minted, so NoCoveringBbox returns synchronously and never as a data-plane terminal frame). The case for S2, for Fable to weigh: the file's own metadata is malformed, and the failure is loud and typed. A2-1 drops a covering that is unusable because of U+0000 at open (its Amendment 12, OPEN (c)); this node would decide the same for a covering naming an absent column, where refusing the open instead is on engine/ADMISSION-PREREGISTRATION.md section 12d's human list."
+  },
+  "ready": [
+    {
+      "id": "covering-names-missing-column",
+      "title": "A covering that names a column the file lacks is kept at open, and every bbox query then fails after the mint (A2-1 P0 k3)",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "ready",
+      "order": 1,
+      "budget_minutes": 90,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-29",
+        "done": null
+      },
+      "summary": "PLACED 2026-10-09 by the human's direction of 2026-10-09 (state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md), item 3a: slot 2, item a, graded S1 by the human. The lead-data second pilot resumes from it as written (item 4): lead-data's impact read first, then the architect's draft. Before: Filed on the 2026-09-29 sightings (state/directives/2026-09-29-a2-1-and-b-1-sightings.md, Fable's A2-1 (c): k3 stays out of A2-1, its own proposed node, graded by whether it breaks a stated clause). Evidence: state/drafts/a2-1-p0/covering-output.txt, k3 -- the file's geo metadata declares a covering whose struct is absent (no U+0000); the open succeeds with the covering kept, and a bbox viewport_query fails at its first stream item with an engine.query binder error, after the mint. Custodian's grading: S1 CANDIDATE on the viewport_query entry in SKP-V0's first section (a bbox request is validated against the dataset before any handle is minted, so NoCoveringBbox returns synchronously and never as a data-plane terminal frame). The case for S2, for Fable to weigh: the file's own metadata is malformed, and the failure is loud and typed. A2-1 drops a covering that is unusable because of U+0000 at open (its Amendment 12, OPEN (c)); this node would decide the same for a covering naming an absent column, where refusing the open instead is on engine/ADMISSION-PREREGISTRATION.md section 12d's human list."
+    },
+    {
+      "id": "skp-drained-stream-helper-post-check-race",
+      "title": "kernel/src/skp.rs tests: drained_stream_with_a_recorded_change has the same post-check race as typed_terminal_codes' end-to-end test",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "ready",
+      "order": 1,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-07",
+        "done": null
+      },
+      "summary": "PLACED 2026-10-09 by the human's direction of 2026-10-09 (state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md), item 3b: slot 2, item b. Before: SEEN AGAIN 2026-10-08 in PR #195 CI run 37836080416 (ubuntu-24.04, attempt 1; failed steps filed at state/consults/2026-10-08-pr195-ci-run-37836080416-attempt-1-failed-steps.txt): skp::ticket_drop_under_lock_regression::after_cancelling_a_ticket_whose_source_changed_the_next_viewport_query_refuses_by_name panicked at its setup guard, kernel/src/skp.rs:3462, outside that diff; the reviewer reads it as this node class. Found 2026-10-07 by the typed-terminal-codes-post-check-race drafting (state/consults/2026-10-07-typed-terminal-codes-post-check-race-architect-draft.md, finding F-1; the form, section 0.4): the test helper in kernel/src/skp.rs touches the file after opening the engine stream and asserts the post-check found the change, with a 50-feature fixture, so the producer can finish before the touch. kernel/src/skp.rs is in the lines cut's file list, so this waits for the lines cut. Test-only. Waiting on the human's placement."
+    },
+    {
+      "id": "wire-bytes-invariant-trace-flag-race",
+      "title": "kernel/tests/wire_bytes_invariant.rs: the projected-ticket test asserts tracing is off while its sibling starts a trace (a race on the engine's global trace flag)",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "ready",
+      "order": 2,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-08",
+        "done": null
+      },
+      "summary": "PLACED 2026-10-09 by the human's direction of 2026-10-09 (state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md), item 3c: slot 2, item c. Before: Seen 2026-10-08 in PR #189's pull_request CI run 37723999952 (ubuntu-24.04, attempt 1; failed steps filed byte-identical at state/consults/2026-10-08-pr189-ci-run-37723999952-attempt-1-failed-steps.txt): wire_bytes_invariant_holds_for_the_projected_ticket_path_case_too panicked at its opening assertion that tracing is off, while tracing_changes_no_byte_on_the_wire passed in the same binary. Cause read from code by PR #189's gate-1 reviewer, not observed: the engine's trace flag is one process-global AtomicBool (engine/src/trace.rs), the sibling test starts a trace, and nothing in the file serialises the two tests. The push run at the same head passed on both platforms. Test-only: no product change is implied. Never queued until the human places it."
+    },
+    {
+      "id": "e2e-hover-establishing-read-stale",
+      "title": "K6 and A9-prime take their starting hover id from the readout's first poll, which can still name the feature under the previous pointer",
+      "lane": "shell",
+      "phase": "prototype",
+      "status": "ready",
+      "order": 1,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-08",
+        "done": null
+      },
+      "summary": "PLACED 2026-10-09 by the human's direction of 2026-10-09 (state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md), item 2a: slot 1, item a. Item 1 accepts the pick-paths verdict, and the K6 (iii) ruling stands as given: the old comparison, no retry. It may change how K6 takes its starting id, only after the hover pick for the new pointer has run; case (iii)'s comparison is not touched; it examines A9-prime too. The fix is on the test side, and no product code is added for it unless the form shows the test-side ways fail. The architect drafts its form. Before: PROPOSED 2026-10-08 from the pick-paths diagnosis (state/consults/2026-10-08-shell-pick-paths-disagree-at-1280x801-diagnosis-report.md, section 4). establishAboveThresholdHoverK6 in frontends/shell/e2e/regression.mjs moves the pointer and accepts the first non-empty readout id, and waitForCondition reads once before any frame has run. The readout can then still name the feature under the canvas centre, where doWheel left the pointer. K6 case (iii) therefore fails at odd map heights for a reason that is not the product's; the default window passes. A9-prime's candidate loop reads the readout the same way (not examined). Sketch, not chosen: take the id only after the hover pick for the new pointer has run, by moving first to a known-empty pixel, by waiting two animation frames, or through a DEV-only accessor for the last hover pointer. Case (iii)'s comparison stays as the human ruled it (state/directives/2026-10-08-k6-case-iii-ruling.md). This changes only how its starting id is taken, so it waits for the human's word."
+    },
+    {
+      "id": "shell-map-refill-after-resize",
+      "title": "The map refills after a resize: a layout change that uncovers map area issues a viewport query, so the area fills without a pan or zoom",
+      "lane": "shell",
+      "phase": "prototype",
+      "status": "ready",
+      "order": 2,
+      "budget_minutes": 0,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-07",
+        "done": null
+      },
+      "summary": "PLACED 2026-10-09 by the human's direction of 2026-10-09 (state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md), item 2b: slot 1, item b, as already ruled. Milestone 1 found H1 holds (no viewport query on a layout resize; its stage 2, worker report 2). Before: Recorded 2026-10-07 by the human clarification of milestone 1 OPEN-7 (state/directives/2026-10-07-round-66-and-67-rulings.md, lines 24-29): if milestone 1 finds H1 holds (a layout resize issues no viewport query), this small piece of its own fixes it, placed directly after milestone 1 merges; milestone 2 code starts when it has merged. Until then a KNOWN-LIMITATIONS line says what the human will see and that a pan or zoom fills the area. Proposed."
+    },
+    {
+      "id": "e2e-failures-present-at-the-base",
+      "title": "Shell e2e steps failing on main at e888787e: regression C2 and C3, admission MAP and BOTHNEEDED, console HEXLIM, GROUP and REGRESS, source-changed default-route S4",
+      "lane": "shell",
+      "phase": "prototype",
+      "status": "ready",
+      "order": 3,
+      "budget_minutes": 120,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-08",
+        "done": null
+      },
+      "summary": "PLACED 2026-10-09 by the human's direction of 2026-10-09 (state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md), item 2c: slot 1, item c, as a triage. Before: Found 2026-10-08 by shell-migration-milestone-1 stage 2, which ran each failing suite at its base e888787e with the same fixtures and launch (state/consults/2026-10-08-shell-migration-milestone-1-worker-report-2.md, section 4; the form Amendment 4, item 4): these steps fail at the base as at the head, so they are not that piece's. The worker's reading, not diagnosed: the identity refusal fixtures on disk admit instead of refusing (perhaps stale files), HEXLIM's key set now includes columns, and console REFUSAL failed once at the base only. A triage piece separates stale fixtures, stale expectations and real defects. Never queued until the human places it."
+    },
+    {
+      "id": "duckdb-parquet-geometry-probe",
+      "title": "A reported-only probe of how the bundled DuckDB decodes the Parquet-native GEOMETRY column in corpus #11",
+      "lane": "measurement",
+      "phase": "prototype",
+      "status": "ready",
+      "order": 1,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-08",
+        "done": null
+      },
+      "summary": "PLACED 2026-10-09 by the human's direction of 2026-10-09 (state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md), item 3d: slot 2, item d, reported only. Before: PROPOSED 2026-10-08 by the human (state/directives/2026-10-08-reuse-round-1.md, item 4), for the human to place: reported only, nothing claimed; its source is the reuse report's corpus section, in the human's private repository christopherdonini/spatial-ide-reuse at 89bbac37 (REUSE-ROUND-1.md, the compatibility corpus section), cited by repository, commit and path, never copied."
+    },
+    {
+      "id": "ported-code-notice-route",
+      "title": "A notice route for ported code, wherever it lands (shell or kernel), needed before any PORT",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "ready",
+      "order": 1,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-08",
+        "done": null
+      },
+      "summary": "PLACED 2026-10-09 by the human's direction of 2026-10-09 (state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md), item 3e: slot 2, item e. Before: PROPOSED 2026-10-08 by the human (state/directives/2026-10-08-reuse-round-1.md, item 4), for the human to place: needed before any port of outside code; covers attribution and licence notices for ported code in the shell or the kernel."
+    },
+    {
+      "id": "guardian-v1",
+      "title": "Guardian v1 -- G1's heredoc false alarm fixed, one local log line per refusal, and three new rules: G7 (agent merges and history rewrites), G8 (plugin, marketplace and MCP installs, and writes to the user's Claude folder), G9 (wholesale cleans of the main checkout's target) (Fable's MODS-V1 brief, 2026-10-05)",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "ready",
+      "order": 21,
+      "budget_minutes": 240,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "branch": "cut/guardian-v1"
+      },
+      "dates": {
+        "opened": "2026-10-05",
+        "done": null
+      },
+      "summary": "RESUMED 2026-10-09 by the human's direction of 2026-10-09 (state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md), item 3f: slot 2, item f. Its G8 covers .claude/settings.local.json (a scope addition to its form when it resumes). Installing it stays the human's. Before: PARKED 2026-10-05 by the product-first direction until the freeze lifts (records kept: the form with Amendments 1 to 6; branch cut/guardian-v1 at 5a9eb051 on origin, no PR; worktree C:/dev/wt/gv1, clean; worker reports 1 and 2 under state/consults). On resume: merge main in, re-read the form pins into register.js (the N1 piece edits it first), then record the mutation observations. Before: AMENDMENT 6 APPENDED 2026-10-05 (generation 7; the architect draft): I9 resolved by option (b), a push whose own segment leaves a quote open stays refused, so v0 T7 is unchanged and no waiver is needed (F62, F63, T71, T72; P0d before code); the test kit arm answers the env read by default; the plugin-test hold, cleared by the human; size re-estimated, class 8 at the head if over. The build resumes. Before: STOPPED AT BUILD 2026-10-05 (Amendment 5, generation 6; nothing committed, worktree clean): I9 fired (v0 T7 asserts F7 refused; section 2.2 allows it), and claude plugin test will not run (a saved hooks-modules switch; the remedy, starting claude, is the human). The architect drafts the I9 amendment next. Before: IN PROGRESS 2026-10-05: the governance slot; branch cut/guardian-v1 from ccac14d2 (worktree C:/dev/wt/gv1, no cargo target); the worker-high dispatched under the form, claude --help first (Amendment 4, Part B). Before: AMENDMENT 4 APPENDED 2026-10-05 (generation 5; the architect draft): the OPEN-6 verbs (class 9, F61, T70), Fable round-58 item 3 (claude --help read-only, the README top-level list), P0c four readings declared, Fable item 4 recorded for section 9; no OPEN item; the build next. Before: P0c RECORDED 2026-10-05 as Amendment 3 (generation 4): A.6 holds by row, no stop; QUESTION ROUND 58 RULED (OPEN-6 (c), typed); next Amendment 4 (the OPEN-6 row, class 9, and Fable round-58 item 3) by the architect, then the build. Before: AMENDMENT 2 APPENDED 2026-10-05 (generation 3; the architect draft): I8 redesign of how G7 to G9 read a call that cannot be tokenised (restart points), round 57 rulings as classes 5 and 9, Fable round-57 items 2 to 4, the CLI aliases, N2; P0c (read-only replay) before any code; OPEN-6 (CLI verbs outside the brief) for the human as question round 58. Before: P0b RECORDED 2026-10-05 as the form Amendment 1 (generation 2): I8 FIRED (the replay shows G7, G8 and G9 refusing the custodian own flows through the odd-quote reading); the piece stops before code and returns to the architect for Amendment 2, with round 57 rulings and Fable round-57 advice. QUESTION ROUND 57 RULED (typed): OPEN-1 to OPEN-4 (b), OPEN-5 (a). FORM COMMITTED 2026-10-05 (tools/mods/GUARDIAN-V1-PREREGISTRATION.md, the architect draft from the P0; full form). OPEN-1 to OPEN-5 are red lines for the human (question round 57): where G7 and G9 reach; gh api merges; the user-level .claude.json; G9 protected set; the new-folder over-refusal. No code before the rulings. UNBLOCKED 2026-10-05: evidence-recorder-v0-1 is done (#177). Its P0 and form come first (MODS-V1); the fourth G1 over-refusal is noted for the P0. Before: Placed by the human's 2026-10-05 direction, line 2 (state/directives/2026-10-05-human-direction-data-plane-mods-v1-pilot-v2.md; RULED 2026-10-05). The brief is state/directives/MODS-V1-2026-10-05.md, section 2. After evidence-recorder-v0-1, which it depends on (section 4). It brings forward item G of the 2026-10-09 window, the G1 over-refusal (question round 50, item 3). No live G1 probe ever. P0 first (section 2.4), recorded in the form's section 0 before any code; full form; gates reviewer plus architect, with the claude plugin validate output in the PR body. Guardian is installed by reference from tools/mods/spatial-guardian in the main checkout, so the merge changes the live mod: it waits for the human's typed approval after both gates, naming the live checks allowed (E7 to E10), before the click. While Guardian is installed, AUTONOMY section 9's docs-only auto-merge is not used (line 2); section 9 is not edited, and the suspension goes to the 2026-10-09 window for an appended note. Drafting is the architect's."
+    }
+  ],
   "waiting_on_human": {
     "total_minutes": 10,
     "by_kind": {
@@ -27,7 +219,7 @@
             "opened": "2026-09-18",
             "done": null
           },
-          "summary": "Returns at B2's preregistration, not after B2 completes (the human, 2026-09-22); B2 depends on this ruling. RULED 2026-09-18 (round 16, item 3), the human verbatim: 'defer -- ADR-029 stays Proposed, G1's facts recorded, the route returns with Brief B's B2'. G1 established (entry 111): a u64 rows-processed reading exists on the read_parquet path; the engine cannot reach it through the vendored Connection; the count must be latched engine-side; DuckDB's denominator is an estimate, which ADR-029 1(c) forbids forwarding. No route is dispatched before B2's preregistration carries the question back for the ruling"
+          "summary": "2026-10-09, the human's direction of 2026-10-09 (state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md), item 7: no ruling now; it is needed only before the snapshot piece. Before: Returns at B2's preregistration, not after B2 completes (the human, 2026-09-22); B2 depends on this ruling. RULED 2026-09-18 (round 16, item 3), the human verbatim: 'defer -- ADR-029 stays Proposed, G1's facts recorded, the route returns with Brief B's B2'. G1 established (entry 111): a u64 rows-processed reading exists on the read_parquet path; the engine cannot reach it through the vendored Connection; the count must be latched engine-side; DuckDB's denominator is an estimate, which ADR-029 1(c) forbids forwarding. No route is dispatched before B2's preregistration carries the question back for the ruling"
         }
       ],
       "sitting": []
@@ -54,6 +246,52 @@
       "summary": "Entry 79's three items were RULED on 2026-09-11 (the wider named set with projection_empty_list mandatory; hover shows every projected column with the bound at admission; describe carries per-column projectable) and apply at B1's close -- no ruling remains; this node follows the B1 half Items 1 and 3 were delivered by #134 (the named projection refusals with projection_empty_list; describe's per-column projectable). Item 2 (the hover showing every projected column) is B1's shell half, held by the 2026-09-27 session order until the human's shell migration plan, so this node waits on b1-shell-half (2026-09-27). It also depends on b1-close-nul-column-names: A2-1 belongs to B1's contract and lands before B1 closes (the 2026-09-29 A2-1 clarification, state/directives/2026-09-29-a2-1-clarification.md), and this node is the one that closes B1. At B1's close the human accepts ADR-023's Amendment 2026-09-29 and ADR-021's Note 2026-09-29 together, because the Note relies on the amendment's definition of not addressable (Fable, 2026-09-29, item 1, from #142's architect note 4; state/directives/2026-09-29-fable-amendment-12-sighted-and-ruled-backfill.md).",
       "blocked_by": [
         "b1-shell-half"
+      ]
+    },
+    {
+      "id": "b2-piece-1b-recording",
+      "title": "B2 piece 1b -- recording: the kernel's step commands for filter, scope and style, the session history on the machine, safe against a crash, and the docs/07 note",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": 4,
+      "budget_minutes": 0,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-07",
+        "done": null
+      },
+      "summary": "PLACED 2026-10-09 by the human's direction of 2026-10-09 (state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md), item 3: in slot 2 after guardian-v1; it follows when shell-migration-milestone-2 has merged. Before: OWED BY ITS FORM (question round 70, 2026-10-08, state/directives/2026-10-08-round-70-rulings.md; b2-piece-1a Amendment 2, item 5): the store behind OPEN-2 (a project opened from a second folder: the question asked once, the per-folder memory, a copy with its own identity and data links, the move rule) and OPEN-3 (a never-saved session kept on the machine under a not-yet-saved record, with its recovery offer naming the dataset and the time, cleared on decline or a normal session end). Before: Recorded 2026-10-07 (evening) by the human's rulings (state/directives/2026-10-07-b2-brief-and-evening-rulings.md; state/directives/B2-BRIEF-2026-10-07.md, section 9): needs 1a and migration milestone 2. The docs/07 note lands with it or in its own commit just before, typed by the human (the brief, section 11). Open items at its form: the ADR-022 grant, and how large the session history may grow. Proposed.",
+      "blocked_by": [
+        "shell-migration-milestone-2"
+      ]
+    },
+    {
+      "id": "shell-migration-milestone-2",
+      "title": "Shell migration, milestone 2 -- selection and scope: the Select tool, a selection that survives filter and pan, the hidden count, a stated scope",
+      "lane": "shell",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": 4,
+      "budget_minutes": 0,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-07",
+        "done": null
+      },
+      "summary": "PLACED 2026-10-09 by the human's direction of 2026-10-09 (state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md), item 2d: slot 1, item d. Its form and question round now (the architect drafts the form); its code after e2e-hover-establishing-read-stale, shell-map-refill-after-resize and e2e-failures-present-at-the-base have merged. The form carries, as an OPEN item, whether selection takes its own pick at the click (the pick-paths diagnosis report, section 4). The human takes up ADR-036's acceptance while it is in code (item 7). Before: DEPENDS 2026-10-08 on shell-pick-paths-disagree-at-1280x801 (the human's ruling, state/directives/2026-10-08-k6-case-iii-ruling.md): the pick-paths disagreement is diagnosed before this milestone's selection code starts. Its form and question round are prepared while milestone 1 is under way; its code starts when shell-map-refill-after-resize has merged, if that piece is needed (the OPEN-7 clarification, state/directives/2026-10-07-round-66-and-67-rulings.md). Before: Recorded 2026-10-07 by the human's ruling of the migration plan (state/directives/2026-10-07-migration-plan-v2-ruled.md; state/directives/SHELL-MIGRATION-PLAN-2026-10-07.md, section 6): follows milestone 1 directly; seams 3, 4, 5 and 6; no backend change; its own full form. Proposed, for placement when milestone 1 is under way.",
+      "blocked_by": [
+        "e2e-hover-establishing-read-stale",
+        "shell-map-refill-after-resize",
+        "e2e-failures-present-at-the-base"
       ]
     },
     {
@@ -759,25 +997,6 @@
       "summary": "Found by the architect while drafting kernel-close-dataset-unknown-keeps-openrecord's form (state/consults/2026-09-30-close-dataset-unknown-architect-draft.md, N1), unproven: in SkpHost::open_dataset, the catalog entry is inserted before admission mints the generation and inserts the OpenRecord; a close_dataset naming the new handle in that window forgets the name, admission then mints a generation after the forget, and open returns Ok for a dataset the catalog no longer holds. Unreachable in the product: the handle is a 128-bit CSPRNG value returned only by that open, and Catalog::names has no product caller; a test could reach it with a re-entrant resolves_unchanged. In the close-races territory (round 22, item 1). Not graded; proposed so that the next placement round can place or discard it."
     },
     {
-      "id": "covering-names-missing-column",
-      "title": "A covering that names a column the file lacks is kept at open, and every bbox query then fails after the mint (A2-1 P0 k3)",
-      "lane": "engine",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 90,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-29",
-        "done": null
-      },
-      "summary": "Filed on the 2026-09-29 sightings (state/directives/2026-09-29-a2-1-and-b-1-sightings.md, Fable's A2-1 (c): k3 stays out of A2-1, its own proposed node, graded by whether it breaks a stated clause). Evidence: state/drafts/a2-1-p0/covering-output.txt, k3 -- the file's geo metadata declares a covering whose struct is absent (no U+0000); the open succeeds with the covering kept, and a bbox viewport_query fails at its first stream item with an engine.query binder error, after the mint. Custodian's grading: S1 CANDIDATE on the viewport_query entry in SKP-V0's first section (a bbox request is validated against the dataset before any handle is minted, so NoCoveringBbox returns synchronously and never as a data-plane terminal frame). The case for S2, for Fable to weigh: the file's own metadata is malformed, and the failure is loud and typed. A2-1 drops a covering that is unusable because of U+0000 at open (its Amendment 12, OPEN (c)); this node would decide the same for a covering naming an absent column, where refusing the open instead is on engine/ADMISSION-PREREGISTRATION.md section 12d's human list."
-    },
-    {
       "id": "stream-evaluation-failure-fixed-detail",
       "title": "An admitted predicate's evaluation failure (same-type integer overflow) ends the stream with a fixed, engine-authored detail carrying no file values and no SQL (B-1's 5c, merged with W2-B observation 2)",
       "lane": "engine",
@@ -1291,101 +1510,6 @@
       "summary": "Recorded 2026-10-07 under geometry-lines-cut's OPEN-5 (A), ruled in question round 64 (state/directives/2026-10-07-round-63-and-64-rulings.md; engine/GEOMETRY-LINES-PREREGISTRATION.md, Amendment 1, item 5): the lines cut makes no performance claim, and docs/08 defines a Lines class it does not measure. A measurement needs a scale fixture and a harness row, preregistered on its own. Waiting on the human's placement."
     },
     {
-      "id": "skp-drained-stream-helper-post-check-race",
-      "title": "kernel/src/skp.rs tests: drained_stream_with_a_recorded_change has the same post-check race as typed_terminal_codes' end-to-end test",
-      "lane": "kernel-protocol",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 60,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-10-07",
-        "done": null
-      },
-      "summary": "SEEN AGAIN 2026-10-08 in PR #195 CI run 37836080416 (ubuntu-24.04, attempt 1; failed steps filed at state/consults/2026-10-08-pr195-ci-run-37836080416-attempt-1-failed-steps.txt): skp::ticket_drop_under_lock_regression::after_cancelling_a_ticket_whose_source_changed_the_next_viewport_query_refuses_by_name panicked at its setup guard, kernel/src/skp.rs:3462, outside that diff; the reviewer reads it as this node class. Found 2026-10-07 by the typed-terminal-codes-post-check-race drafting (state/consults/2026-10-07-typed-terminal-codes-post-check-race-architect-draft.md, finding F-1; the form, section 0.4): the test helper in kernel/src/skp.rs touches the file after opening the engine stream and asserts the post-check found the change, with a 50-feature fixture, so the producer can finish before the touch. kernel/src/skp.rs is in the lines cut's file list, so this waits for the lines cut. Test-only. Waiting on the human's placement."
-    },
-    {
-      "id": "e2e-failures-present-at-the-base",
-      "title": "Shell e2e steps failing on main at e888787e: regression C2 and C3, admission MAP and BOTHNEEDED, console HEXLIM, GROUP and REGRESS, source-changed default-route S4",
-      "lane": "shell",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 120,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-10-08",
-        "done": null
-      },
-      "summary": "Found 2026-10-08 by shell-migration-milestone-1 stage 2, which ran each failing suite at its base e888787e with the same fixtures and launch (state/consults/2026-10-08-shell-migration-milestone-1-worker-report-2.md, section 4; the form Amendment 4, item 4): these steps fail at the base as at the head, so they are not that piece's. The worker's reading, not diagnosed: the identity refusal fixtures on disk admit instead of refusing (perhaps stale files), HEXLIM's key set now includes columns, and console REFUSAL failed once at the base only. A triage piece separates stale fixtures, stale expectations and real defects. Never queued until the human places it."
-    },
-    {
-      "id": "duckdb-parquet-geometry-probe",
-      "title": "A reported-only probe of how the bundled DuckDB decodes the Parquet-native GEOMETRY column in corpus #11",
-      "lane": "measurement",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 60,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-10-08",
-        "done": null
-      },
-      "summary": "PROPOSED 2026-10-08 by the human (state/directives/2026-10-08-reuse-round-1.md, item 4), for the human to place: reported only, nothing claimed; its source is the reuse report's corpus section, in the human's private repository christopherdonini/spatial-ide-reuse at 89bbac37 (REUSE-ROUND-1.md, the compatibility corpus section), cited by repository, commit and path, never copied."
-    },
-    {
-      "id": "ported-code-notice-route",
-      "title": "A notice route for ported code, wherever it lands (shell or kernel), needed before any PORT",
-      "lane": "governance",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 60,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-10-08",
-        "done": null
-      },
-      "summary": "PROPOSED 2026-10-08 by the human (state/directives/2026-10-08-reuse-round-1.md, item 4), for the human to place: needed before any port of outside code; covers attribution and licence notices for ported code in the shell or the kernel."
-    },
-    {
-      "id": "query-reuse-index-before-planning",
-      "title": "Query the reuse index before planning, as a standing step",
-      "lane": "governance",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 30,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-10-08",
-        "done": null
-      },
-      "summary": "PROPOSED 2026-10-08 by the human (state/directives/2026-10-08-reuse-round-1.md, item 5): making it a standing step is the human ruling once the freeze lifts; held as a proposed node until then."
-    },
-    {
       "id": "verify-cites-pin-resolution-and-line-zero",
       "title": "verify-cites: a pinned cite starting at line 0 gets a false reason, and a pin is read only at the path as written",
       "lane": "governance",
@@ -1425,7 +1549,7 @@
     },
     {
       "id": "shell-stale-frame-comments",
-      "title": "Two shell comments still describe the old frame: ConsolePanel.tsx (a bottom drawer below every panel) and residencyStatus.ts (a child of the removed canvas status stack)",
+      "title": "Two shell comments still describe the old frame: ConsolePanel.tsx (a bottom drawer below every panel) and residencyStatus.ts (a child of the removed canvas status stack); and WorkingCanvas.tsx comments call deck.gl 9.3.7 pinned",
       "lane": "shell",
       "phase": "prototype",
       "status": "proposed",
@@ -1440,45 +1564,7 @@
         "opened": "2026-10-08",
         "done": null
       },
-      "summary": "PROPOSED 2026-10-08 from PR #195 reviewer gate 1 (gate-log 447, R-D10; the milestone 1 form Amendment 9, item 7): frontends/shell/src/console/ConsolePanel.tsx lines 20-24 and frontends/shell/src/residency/residencyStatus.ts line 6 describe the pre-milestone-1 frame; milestone 1 may not edit those files. Comment-only."
-    },
-    {
-      "id": "e2e-hover-establishing-read-stale",
-      "title": "K6 and A9-prime take their starting hover id from the readout's first poll, which can still name the feature under the previous pointer",
-      "lane": "shell",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 60,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-10-08",
-        "done": null
-      },
-      "summary": "PROPOSED 2026-10-08 from the pick-paths diagnosis (state/consults/2026-10-08-shell-pick-paths-disagree-at-1280x801-diagnosis-report.md, section 4). establishAboveThresholdHoverK6 in frontends/shell/e2e/regression.mjs moves the pointer and accepts the first non-empty readout id, and waitForCondition reads once before any frame has run. The readout can then still name the feature under the canvas centre, where doWheel left the pointer. K6 case (iii) therefore fails at odd map heights for a reason that is not the product's; the default window passes. A9-prime's candidate loop reads the readout the same way (not examined). Sketch, not chosen: take the id only after the hover pick for the new pointer has run, by moving first to a known-empty pixel, by waiting two animation frames, or through a DEV-only accessor for the last hover pointer. Case (iii)'s comparison stays as the human ruled it (state/directives/2026-10-08-k6-case-iii-ruling.md). This changes only how its starting id is taken, so it waits for the human's word."
-    },
-    {
-      "id": "wire-bytes-invariant-trace-flag-race",
-      "title": "kernel/tests/wire_bytes_invariant.rs: the projected-ticket test asserts tracing is off while its sibling starts a trace (a race on the engine's global trace flag)",
-      "lane": "kernel-protocol",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 60,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-10-08",
-        "done": null
-      },
-      "summary": "Seen 2026-10-08 in PR #189's pull_request CI run 37723999952 (ubuntu-24.04, attempt 1; failed steps filed byte-identical at state/consults/2026-10-08-pr189-ci-run-37723999952-attempt-1-failed-steps.txt): wire_bytes_invariant_holds_for_the_projected_ticket_path_case_too panicked at its opening assertion that tracing is off, while tracing_changes_no_byte_on_the_wire passed in the same binary. Cause read from code by PR #189's gate-1 reviewer, not observed: the engine's trace flag is one process-global AtomicBool (engine/src/trace.rs), the sibling test starts a trace, and nothing in the file serialises the two tests. The push run at the same head passed on both platforms. Test-only: no product change is implied. Never queued until the human places it."
+      "summary": "WIDENED 2026-10-09 by the human's direction of 2026-10-09 (state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md), item 8: the WorkingCanvas.tsx comments that call deck.gl 9.3.7 pinned join this node (package.json allows ^9.3.7 and the lockfile installs 9.3.9; the pick-paths diagnosis report, its off-scope list). No new node. Before: PROPOSED 2026-10-08 from PR #195 reviewer gate 1 (gate-log 447, R-D10; the milestone 1 form Amendment 9, item 7): frontends/shell/src/console/ConsolePanel.tsx lines 20-24 and frontends/shell/src/residency/residencyStatus.ts line 6 describe the pre-milestone-1 frame; milestone 1 may not edit those files. Comment-only."
     },
     {
       "id": "dataset-stream-doc-producer-runs-ahead",
@@ -1498,25 +1584,6 @@
         "done": null
       },
       "summary": "Found 2026-10-07 by the typed-terminal-codes-post-check-race drafting (state/consults/2026-10-07-typed-terminal-codes-post-check-race-architect-draft.md, finding F-2): a doc behaviour claim the code does not support (prepare runs on the producer thread, and the producer runs ahead up to MAX_QUEUED_BATCHES). engine/src/stream.rs is in the lines cut's file list, so this waits for the lines cut. Doc-only. Waiting on the human's placement."
-    },
-    {
-      "id": "shell-migration-milestone-2",
-      "title": "Shell migration, milestone 2 -- selection and scope: the Select tool, a selection that survives filter and pan, the hidden count, a stated scope",
-      "lane": "shell",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 0,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-10-07",
-        "done": null
-      },
-      "summary": "DEPENDS 2026-10-08 on shell-pick-paths-disagree-at-1280x801 (the human's ruling, state/directives/2026-10-08-k6-case-iii-ruling.md): the pick-paths disagreement is diagnosed before this milestone's selection code starts. Its form and question round are prepared while milestone 1 is under way; its code starts when shell-map-refill-after-resize has merged, if that piece is needed (the OPEN-7 clarification, state/directives/2026-10-07-round-66-and-67-rulings.md). Before: Recorded 2026-10-07 by the human's ruling of the migration plan (state/directives/2026-10-07-migration-plan-v2-ruled.md; state/directives/SHELL-MIGRATION-PLAN-2026-10-07.md, section 6): follows milestone 1 directly; seams 3, 4, 5 and 6; no backend change; its own full form. Proposed, for placement when milestone 1 is under way."
     },
     {
       "id": "shell-migration-milestone-3",
@@ -1574,44 +1641,6 @@
         "done": null
       },
       "summary": "Recorded 2026-10-07 by the human's ruling of the migration plan (state/directives/2026-10-07-migration-plan-v2-ruled.md; state/directives/SHELL-MIGRATION-PLAN-2026-10-07.md, section 5.7 and section 13, item 8; the portability directive of 2026-09-30, its section 5): a follow-on of milestone 1 that does not hold milestone 2. Proposed."
-    },
-    {
-      "id": "shell-map-refill-after-resize",
-      "title": "The map refills after a resize: a layout change that uncovers map area issues a viewport query, so the area fills without a pan or zoom",
-      "lane": "shell",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 0,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-10-07",
-        "done": null
-      },
-      "summary": "Recorded 2026-10-07 by the human clarification of milestone 1 OPEN-7 (state/directives/2026-10-07-round-66-and-67-rulings.md, lines 24-29): if milestone 1 finds H1 holds (a layout resize issues no viewport query), this small piece of its own fixes it, placed directly after milestone 1 merges; milestone 2 code starts when it has merged. Until then a KNOWN-LIMITATIONS line says what the human will see and that a pan or zoom fills the area. Proposed."
-    },
-    {
-      "id": "b2-piece-1b-recording",
-      "title": "B2 piece 1b -- recording: the kernel's step commands for filter, scope and style, the session history on the machine, safe against a crash, and the docs/07 note",
-      "lane": "kernel-protocol",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 0,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-10-07",
-        "done": null
-      },
-      "summary": "OWED BY ITS FORM (question round 70, 2026-10-08, state/directives/2026-10-08-round-70-rulings.md; b2-piece-1a Amendment 2, item 5): the store behind OPEN-2 (a project opened from a second folder: the question asked once, the per-folder memory, a copy with its own identity and data links, the move rule) and OPEN-3 (a never-saved session kept on the machine under a not-yet-saved record, with its recovery offer naming the dataset and the time, cleared on decline or a normal session end). Before: Recorded 2026-10-07 (evening) by the human's rulings (state/directives/2026-10-07-b2-brief-and-evening-rulings.md; state/directives/B2-BRIEF-2026-10-07.md, section 9): needs 1a and migration milestone 2. The docs/07 note lands with it or in its own commit just before, typed by the human (the brief, section 11). Open items at its form: the ADR-022 grant, and how large the session history may grow. Proposed."
     },
     {
       "id": "b2-piece-1c-save-and-reopen",
@@ -2015,27 +2044,6 @@
         "done": null
       },
       "summary": "SUPERSEDED 2026-10-05: folded into evidence-recorder-v0-1, the MODS-V1 brief section 3.3 (state/directives/MODS-V1-2026-10-05.md), by the human's 2026-10-05 direction, line 2, and Fable's step c (state/directives/2026-10-05-human-direction-data-plane-mods-v1-pilot-v2.md; RULED 2026-10-05). PLAN has no superseded status and deleting a node is the human's (AUTONOMY section 1), so the node is unscheduled and never queued. Before: Proposed on Fable 2026-10-04 advice, item 4 (state/directives/2026-10-04-fable-advice-nodes-trailers-latency.md). tools/mods/EVIDENCE-RECORDER-V0-PREREGISTRATION.md Amendment 2, C2-d: recorder_ms before + after + write is a lower bound, because the line serialisation, its digest, the file name and the write call fall outside it; a p95 at or under the bound does not establish section 1 claim 7 until an amendment names how the write latency is measured. The human install approval of 2026-10-04 (state/directives/2026-10-04-recorder-install-approval.md) reads E5 that way: it can fire the overhead stop, and it establishes neither claim 7 nor the brief overhead acceptance measure. The piece: a new E-row with its own sample, declared in a form amendment before that sample is taken (one candidate, from the gate-1 architect S1-1: the record file mtime minus ended_at, added to before), so that the acceptance evaluation (two weeks after install, or the next six gated pieces) can read the overhead. E5 stays a lower bound. Never queued until the human places it."
-    },
-    {
-      "id": "guardian-v1",
-      "title": "Guardian v1 -- G1's heredoc false alarm fixed, one local log line per refusal, and three new rules: G7 (agent merges and history rewrites), G8 (plugin, marketplace and MCP installs, and writes to the user's Claude folder), G9 (wholesale cleans of the main checkout's target) (Fable's MODS-V1 brief, 2026-10-05)",
-      "lane": "governance",
-      "phase": "prototype",
-      "status": "unscheduled",
-      "order": 21,
-      "budget_minutes": 240,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": {
-        "branch": "cut/guardian-v1"
-      },
-      "dates": {
-        "opened": "2026-10-05",
-        "done": null
-      },
-      "summary": "PARKED 2026-10-05 by the product-first direction until the freeze lifts (records kept: the form with Amendments 1 to 6; branch cut/guardian-v1 at 5a9eb051 on origin, no PR; worktree C:/dev/wt/gv1, clean; worker reports 1 and 2 under state/consults). On resume: merge main in, re-read the form pins into register.js (the N1 piece edits it first), then record the mutation observations. Before: AMENDMENT 6 APPENDED 2026-10-05 (generation 7; the architect draft): I9 resolved by option (b), a push whose own segment leaves a quote open stays refused, so v0 T7 is unchanged and no waiver is needed (F62, F63, T71, T72; P0d before code); the test kit arm answers the env read by default; the plugin-test hold, cleared by the human; size re-estimated, class 8 at the head if over. The build resumes. Before: STOPPED AT BUILD 2026-10-05 (Amendment 5, generation 6; nothing committed, worktree clean): I9 fired (v0 T7 asserts F7 refused; section 2.2 allows it), and claude plugin test will not run (a saved hooks-modules switch; the remedy, starting claude, is the human). The architect drafts the I9 amendment next. Before: IN PROGRESS 2026-10-05: the governance slot; branch cut/guardian-v1 from ccac14d2 (worktree C:/dev/wt/gv1, no cargo target); the worker-high dispatched under the form, claude --help first (Amendment 4, Part B). Before: AMENDMENT 4 APPENDED 2026-10-05 (generation 5; the architect draft): the OPEN-6 verbs (class 9, F61, T70), Fable round-58 item 3 (claude --help read-only, the README top-level list), P0c four readings declared, Fable item 4 recorded for section 9; no OPEN item; the build next. Before: P0c RECORDED 2026-10-05 as Amendment 3 (generation 4): A.6 holds by row, no stop; QUESTION ROUND 58 RULED (OPEN-6 (c), typed); next Amendment 4 (the OPEN-6 row, class 9, and Fable round-58 item 3) by the architect, then the build. Before: AMENDMENT 2 APPENDED 2026-10-05 (generation 3; the architect draft): I8 redesign of how G7 to G9 read a call that cannot be tokenised (restart points), round 57 rulings as classes 5 and 9, Fable round-57 items 2 to 4, the CLI aliases, N2; P0c (read-only replay) before any code; OPEN-6 (CLI verbs outside the brief) for the human as question round 58. Before: P0b RECORDED 2026-10-05 as the form Amendment 1 (generation 2): I8 FIRED (the replay shows G7, G8 and G9 refusing the custodian own flows through the odd-quote reading); the piece stops before code and returns to the architect for Amendment 2, with round 57 rulings and Fable round-57 advice. QUESTION ROUND 57 RULED (typed): OPEN-1 to OPEN-4 (b), OPEN-5 (a). FORM COMMITTED 2026-10-05 (tools/mods/GUARDIAN-V1-PREREGISTRATION.md, the architect draft from the P0; full form). OPEN-1 to OPEN-5 are red lines for the human (question round 57): where G7 and G9 reach; gh api merges; the user-level .claude.json; G9 protected set; the new-folder over-refusal. No code before the rulings. UNBLOCKED 2026-10-05: evidence-recorder-v0-1 is done (#177). Its P0 and form come first (MODS-V1); the fourth G1 over-refusal is noted for the P0. Before: Placed by the human's 2026-10-05 direction, line 2 (state/directives/2026-10-05-human-direction-data-plane-mods-v1-pilot-v2.md; RULED 2026-10-05). The brief is state/directives/MODS-V1-2026-10-05.md, section 2. After evidence-recorder-v0-1, which it depends on (section 4). It brings forward item G of the 2026-10-09 window, the G1 over-refusal (question round 50, item 3). No live G1 probe ever. P0 first (section 2.4), recorded in the form's section 0 before any code; full form; gates reviewer plus architect, with the claude plugin validate output in the PR body. Guardian is installed by reference from tools/mods/spatial-guardian in the main checkout, so the merge changes the live mod: it waits for the human's typed approval after both gates, naming the live checks allowed (E7 to E10), before the click. While Guardian is installed, AUTONOMY section 9's docs-only auto-merge is not used (line 2); section 9 is not edited, and the suspension goes to the 2026-10-09 window for an appended note. Drafting is the architect's."
     },
     {
       "id": "reuse-round-1-bundle",

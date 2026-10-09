@@ -572,3 +572,8 @@ Drafting returned to the architect at the stop. The rows below are the piece's l
   - `percentage` is measured against that window, so it read 96 to 97 at the four compactions since N1 went live.
   - v0's N1 stayed silent because the Stop hook's judgment read the block fresh at each call where the fill first reached 80 or 90, not because the fill was under 80 (the P0 report, §3). Path item 4 is settled that way.
 - **The old count:** E: 5 and N1: 3, as counted. One more compaction went through, at 18:49:59Z, and its block state is not on record.
+
+### B2, second pilot, resumed (2026-10-09)
+
+- **Resumed** by the human's direction of 2026-10-09 (`state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md`, item 4), as written, from `covering-names-missing-column`. That piece's impact read precedes the architect's draft, as for pieces 1 to 4, and it is recorded here as the next measured piece.
+- The four pieces measured before the freeze stand as recorded above. The result after the fourth piece (the pilot's §5 and §8) is still owed to the human.
