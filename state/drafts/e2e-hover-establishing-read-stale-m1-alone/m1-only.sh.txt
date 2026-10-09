@@ -1,0 +1,28 @@
+#!/bin/bash
+# The custodian's second M1 run alone (PR #196 E1), inside its own exclusive hold, with no other command of this session running.
+S="<the custodian's scratch folder>/cust"
+W=/c/dev/wt/k6
+R=frontends/shell/e2e/regression.mjs
+log() { echo "[m1-only] $(date -u +%Y-%m-%dT%H:%M:%SZ) $*"; }
+cd "$W" || exit 90
+[ "$(git rev-parse HEAD)" = "ac89e033a75a9ac241debfd9d249e2e84b26f414" ] || { log "HEAD is not ac89e033"; exit 90; }
+[ -z "$(git status --porcelain)" ] || { log "worktree not clean before"; exit 90; }
+log "clean before: porcelain empty, HEAD $(git rev-parse HEAD)"
+node "$S/m1-apply.mjs" "$W/$R" || { log "M1 apply failed"; git checkout -- "$R"; exit 91; }
+log "M1 applied; git diff follows"
+git diff
+export PATH="$S/shim:$PATH"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$S/app-down.ps1" > /dev/null 2>&1
+export K6_EXE="D:/wt-targets/k6/exes/spatial-ide-shell-801.exe"
+cd "$W/frontends/shell" || exit 92
+log "M1 run 2 start (regression, 801)"
+timeout 1500 node e2e/regression.mjs > "$S/out/m1-alone-801-run2.log" 2>&1
+rc1=$?
+log "M1 run 2 end, regression rc=$rc1"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$S/app-down.ps1" > "$S/out/m1-alone-801-run2.down.txt" 2>&1
+cat "$S/out/m1-alone-801-run2.down.txt"
+cd "$W" || exit 93
+git checkout -- "$R"
+log "M1 restored; porcelain: [$(git status --porcelain)]; diff lines: $(git diff | wc -l); HEAD $(git rev-parse HEAD)"
+[ -z "$(git status --porcelain)" ] || { log "worktree not clean after M1"; exit 94; }
+exit 0

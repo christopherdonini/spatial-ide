@@ -1,0 +1,35 @@
+MACHINE_QUEUED exclusive project=SpatialIDE: waiting to be first, for no other heavy run, 120 s since the last one, and 60 one-second samples averaging under 10% with at most 5 over 25%
+MACHINE_WAITING exclusive: quiet=False average=3.6% peaks-over-25=0 samples=5 others=none since-last-end=87s because: samples 5/60; last heavy run ended 87 s ago (at least 120 s)
+MACHINE_QUIET quiet=True average=4.0% peaks-over-25=0 samples=60 others=none since-last-end=146s
+MACHINE_HOLD exclusive project=SpatialIDE cores=all affinity=FFFF shell=bash.exe:5324 also=bash.exe:8416 (commands started from now on inherit it; release when done)
+[m1-only] 2026-10-09T12:30:32Z clean before: porcelain empty, HEAD ac89e033a75a9ac241debfd9d249e2e84b26f414
+M1 applied
+[m1-only] 2026-10-09T12:30:32Z M1 applied; git diff follows
+diff --git a/frontends/shell/e2e/regression.mjs b/frontends/shell/e2e/regression.mjs
+index 1117412a..c7735968 100644
+--- a/frontends/shell/e2e/regression.mjs
++++ b/frontends/shell/e2e/regression.mjs
+@@ -1114,7 +1114,12 @@ async function establishAboveThresholdHoverK6(page, consoleHandle, label) {
+       // centre pointer's feature, so a poll right after the move could read that stale id. `hoverIdAfterBarrier` (lib.mjs)
+       // leaves the canvas, waits for `clear`, then moves here. A labelled ("confirming") state is not a confirmed id (§3.3).
+       // Its recorded mutations (M1, M2) are with K6's recorded-mutation block above stepK6.
+-      const result = await hoverIdAfterBarrier(page, css, label);
++      await page.mouse.move(css.x, css.y);
++      const result = await waitForCondition(
++        () => readHoverReadoutState(page),
++        (readout) => hoverReadoutId(readout) !== null,
++        5_000
++      );
+       if (result.ok) {
+         found = { css, text: result.last.text, id: hoverReadoutId(result.last) };
+         break;
+[m1-only] 2026-10-09T12:30:35Z M1 run 2 start (regression, 801)
+[m1-only] 2026-10-09T12:34:40Z M1 run 2 end, regression rc=1
+killed tree 12688
+killed tree 40256
+port 9223 free
+port 5400 free
+[m1-only] 2026-10-09T12:34:47Z M1 restored; porcelain: []; diff lines: 0; HEAD ac89e033a75a9ac241debfd9d249e2e84b26f414
+MACHINE_RELEASED project=SpatialIDE shell=bash.exe:5324 affinity=FF (cores 0-7)
+
+[exited with code 0]

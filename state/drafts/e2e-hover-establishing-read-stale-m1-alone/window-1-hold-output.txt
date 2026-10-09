@@ -1,0 +1,52 @@
+MACHINE_QUEUED exclusive project=SpatialIDE: waiting to be first, for no other heavy run, 120 s since the last one, and 60 one-second samples averaging under 10% with at most 5 over 25%
+MACHINE_WAITING exclusive: quiet=False average=5.2% peaks-over-25=0 samples=5 others=none since-last-end=94s because: samples 5/60; last heavy run ended 94 s ago (at least 120 s)
+MACHINE_QUIET quiet=True average=4.9% peaks-over-25=0 samples=60 others=none since-last-end=153s
+MACHINE_HOLD exclusive project=SpatialIDE cores=all affinity=FFFF shell=bash.exe:27736 also=bash.exe:35420 (commands started from now on inherit it; release when done)
+[solo] 2026-10-09T12:18:54Z clean before: porcelain empty, HEAD ac89e033a75a9ac241debfd9d249e2e84b26f414
+[solo] 2026-10-09T12:18:54Z noticeDeterminism start (vitest, one file, unmodified)
+[solo] 2026-10-09T12:18:59Z noticeDeterminism end, vitest rc=0
+ RUN  v5.0.1 C:/dev/wt/k6/frontends/shell
+
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  14:18:54
+   Duration  4.26s (tests 84%, environment 13%, transform 2%, import 1%)
+
+M1 applied
+[solo] 2026-10-09T12:18:59Z M1 applied; git diff follows
+diff --git a/frontends/shell/e2e/regression.mjs b/frontends/shell/e2e/regression.mjs
+index 1117412a..c7735968 100644
+--- a/frontends/shell/e2e/regression.mjs
++++ b/frontends/shell/e2e/regression.mjs
+@@ -1114,7 +1114,12 @@ async function establishAboveThresholdHoverK6(page, consoleHandle, label) {
+       // centre pointer's feature, so a poll right after the move could read that stale id. `hoverIdAfterBarrier` (lib.mjs)
+       // leaves the canvas, waits for `clear`, then moves here. A labelled ("confirming") state is not a confirmed id (§3.3).
+       // Its recorded mutations (M1, M2) are with K6's recorded-mutation block above stepK6.
+-      const result = await hoverIdAfterBarrier(page, css, label);
++      await page.mouse.move(css.x, css.y);
++      const result = await waitForCondition(
++        () => readHoverReadoutState(page),
++        (readout) => hoverReadoutId(readout) !== null,
++        5_000
++      );
+       if (result.ok) {
+         found = { css, text: result.last.text, id: hoverReadoutId(result.last) };
+         break;
+[solo] 2026-10-09T12:19:02Z M1 run start (regression, 801)
+[solo] 2026-10-09T12:23:16Z M1 run end, regression rc=1
+killed tree 20244
+killed tree 38376
+port 9223 free
+port 5400 free
+[solo] 2026-10-09T12:23:23Z M1 restored; porcelain: []; diff lines: 0
+[solo] 2026-10-09T12:23:23Z console run start (e2e:console, 800, shipped default arm, unmodified)
+[solo] 2026-10-09T12:27:57Z console run end, console rc=1
+killed tree 46004
+killed tree 28036
+port 9223 free
+port 5400 free
+[solo] 2026-10-09T12:28:05Z after console: porcelain: [], HEAD ac89e033a75a9ac241debfd9d249e2e84b26f414
+MACHINE_RELEASED project=SpatialIDE shell=bash.exe:27736 affinity=FF (cores 0-7)
+
+[exited with code 0]

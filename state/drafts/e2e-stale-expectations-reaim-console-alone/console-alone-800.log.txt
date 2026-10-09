@@ -1,0 +1,62 @@
+(node:27332) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+console: waiting for the app to mount (up to 90000ms)...
+console: mount-readiness gate PASSED after 938ms
+[HEADER'] PASS (15ms): expanded: standing header present with all 3 required phrases; collapsed: header (and .console-entries) absent from the DOM entirely (I9)
+[ECHO'] PASS (266ms): open_dataset request parses as JSON with exactly {skp, path, cancel_key, crs_assertion, identity}; crs_assertion/identity explicit null; label version "skp/0.11" === the entry's own parsed skp field (self-consistent, no hard-coded version anywhere in this suite)
+[TWOCMD'] PASS (159ms): both open_dataset AND describe entries present from the ONE openPath call; describe's request parses with exactly {skp, dataset}
+[HEXLIM'] FAIL (4065ms): HEXLIM': key set mismatch. Expected ["bbox","bbox_crs","dataset","filter","limit","skp"], got ["bbox","bbox_crs","columns","dataset","filter","limit","skp"]
+[REFUSAL'] FAIL (132ms): REFUSAL': no refused viewport_query class-A entry found in the DOM
+[CLASSB'] PASS (74ms): publishPrepareWithDestination -> class-B entry names binding_publish_prepare_e2e_destination ("dev-only E2E test seam, compiled out of every release build (#[cfg(debug_assertions)] on both its definition and its handler registration): mirrors binding_publish_prepare but accepts a destination string directly, standing in for the native save dialog no CDP-driven E2E suite can reach; the grant is still minted host-side from that destination. (binding_publish_prepare_e2e_destination)"); no copy button; no "{" anywhere in the row; citation contains "not callable"; destination path absent from the whole .console-panel DOM (checked raw and JSON-escaped)
+[CLASSC'] PASS (248ms): style.setFillColor -> class-C entry: statement contains "no API equivalent" ("no API equivalent exists -- fill color is local StylePanel state, never sent to the kernel."); owner contains "ADR-022" ("ADR-022 / ADR-023"); no copy button
+[GROUP'] FAIL (175ms): GROUP': expected exactly one NEW .console-group-header after 3 identical queries (had 4 before), got 6 after (texts: ["×3","×2","×2","×2","×3","×3"])
+[COPYTRUNC'] PASS (189ms): NOT-REACHABLE (empirically confirmed, not just arithmetic): a near-cap crsAssertion.definitionJson (base catalog definition 1733 bytes, padded to exactly MAX_CRS_DEFINITION_BYTES=65536) driven through openPath rendered UNTRUNCATED at 66112 bytes < MAX_ENTRY_RENDER_BYTES=80000 (margin 13888 bytes; the whole rendered request is only 576 bytes larger than the 65536-byte definition string alone -- NOT purely the cost of JSON-escaping that string's own inner quotes: this difference also includes the request's other fields (skp version, dataset path, cancel_key, crs_assertion.identifier) and JSON.stringify's own 2-space pretty-print indentation, neither decomposed out here. Small regardless, since the quote-free padding diluted the base definition's own quote density across the full 65_536 bytes). No REAL, UI-reachable request can carry a larger definition_json at all: the real CrsAssertionForm disables Submit before 65536 bytes (admission-remediation.mjs's OVERBOUND'), so this near-cap value is already the largest ANY operator action could ever send. By construction, no other class-A field is bounded anywhere near the render ceiling either (open_dataset's path/cancel_key are short; viewport_query's filter.predicate has no declared max length in this slice, but was not driven here -- out of this step's named technique, "a large pasted definition via crsAssertion" -- so COPYTRUNC's truncated branch stays a real, unexercised code path today, not a fired one)
+[UNCLASS'] PASS (35ms): .console-entry-unclassified count is 0 across the whole run so far (every group expanded first)
+[REGRESS'] FAIL (265403ms): REGRESS': npm run e2e:regression exited 1 (265403ms). Tail:
+… areas were not loaded; pan or zoom to load them."); .hover-readout after a real pointer move: null; "Zoom to layer" restored 46.5% non-bg pixels
+CURSOR'     PASS    hover cursor "crosshair", mid-drag cursor "grabbing"
+FIND'       PASS    applied "id > 99900" via the real panel DOM, scan completed on its own; "Zoom to layer" fitted at zoom -2.884837648934929 (0.28% non-bg); 3 zoom-out notch(es) left 0.02% non-bg with 0 covering-truncated line(s) and 0 unminted tile(s) of 0 distinct tile(s) ever refused; .residency-status settled to "Showing all 99 features in view"; the second "Zoom to layer" logged the same fit (zoom -2.884837648934929) and left 0.28% non-bg
+MP'         PASS    admitted; DescribeSummary shows the engine's multipolygon encoding and the file's declaration; no refusal or banner after the stream (settled=true)
+PT'         PASS    admitted; DescribeSummary shows the engine's point encoding and the file's declaration; no refusal or banner after the stream (settled=true)
+LN'         PASS    admitted; DescribeSummary shows the engine's linestring encoding and the file's declaration; no refusal or banner after the stream (settled=true)
+B2'/B3'     PASS    refused engine.crs_undeclared; message verbatim; .crs-assertion-form present; no dismiss button on the panel; no describe-summary in the Layers region
+ABSENTCRS'  PASS    refused engine.format_default_contradicted; message verbatim; no dismiss button on the panel; no describe-summary in the Layers region; INFO: .crs-assertion-form present=false, .identity-declaration-form present=false (not asserted either way)
+C2'/C3'     FAIL    C2'/C3': expected {kind:"refused", code:"engine.identity_unusable"}, got {"kind":"admitted"}
+NET'        INFO    no >=400 response observed this run (index.html declares no <link rel>, nothing to probe)
+Full render-trace ledger: C:\dev\wt\k6\frontends\shell\e2e\out\regression-render-trace-1791548876772.json
+Attached to an already-running app on CDP port 9223; leaving it running.
+
+[C2'/C3'] FAIL (77ms): C2'/C3': expected {kind:"refused", code:"engine.identity_unusable"}, got {"kind":"admitted"}
+
+
+== Summary ==
+Step        Status  Note
+----------  ------  ----------------------------------------
+HEADER'     PASS    expanded: standing header present with all 3 required phrases; collapsed: header (and .console-entries) absent from the DOM entirely (I9)
+ECHO'       PASS    open_dataset request parses as JSON with exactly {skp, path, cancel_key, crs_assertion, identity}; crs_assertion/identity explicit null; label version "skp/0.11" === the entry's own parsed skp field (self-consistent, no hard-coded version anywhere in this suite)
+TWOCMD'     PASS    both open_dataset AND describe entries present from the ONE openPath call; describe's request parses with exactly {skp, dataset}
+HEXLIM'     FAIL    HEXLIM': key set mismatch. Expected ["bbox","bbox_crs","dataset","filter","limit","skp"], got ["bbox","bbox_crs","columns","dataset","filter","limit","skp"]
+REFUSAL'    FAIL    REFUSAL': no refused viewport_query class-A entry found in the DOM
+CLASSB'     PASS    publishPrepareWithDestination -> class-B entry names binding_publish_prepare_e2e_destination ("dev-only E2E test seam, compiled out of every release build (#[cfg(debug_assertions)] on both its definition and its handler registration): mirrors binding_publish_prepare but accepts a destination string directly, standing in for the native save dialog no CDP-driven E2E suite can reach; the grant is still minted host-side from that destination. (binding_publish_prepare_e2e_destination)"); no copy button; no "{" anywhere in the row; citation contains "not callable"; destination path absent from the whole .console-panel DOM (checked raw and JSON-escaped)
+CLASSC'     PASS    style.setFillColor -> class-C entry: statement contains "no API equivalent" ("no API equivalent exists -- fill color is local StylePanel state, never sent to the kernel."); owner contains "ADR-022" ("ADR-022 / ADR-023"); no copy button
+GROUP'      FAIL    GROUP': expected exactly one NEW .console-group-header after 3 identical queries (had 4 before), got 6 after (texts: ["×3","×2","×2","×2","×3","×3"])
+COPYTRUNC'  PASS    NOT-REACHABLE (empirically confirmed, not just arithmetic): a near-cap crsAssertion.definitionJson (base catalog definition 1733 bytes, padded to exactly MAX_CRS_DEFINITION_BYTES=65536) driven through openPath rendered UNTRUNCATED at 66112 bytes < MAX_ENTRY_RENDER_BYTES=80000 (margin 13888 bytes; the whole rendered request is only 576 bytes larger than the 65536-byte definition string alone -- NOT purely the cost of JSON-escaping that string's own inner quotes: this difference also includes the request's other fields (skp version, dataset path, cancel_key, crs_assertion.identifier) and JSON.stringify's own 2-space pretty-print indentation, neither decomposed out here. Small regardless, since the quote-free padding diluted the base definition's own quote density across the full 65_536 bytes). No REAL, UI-reachable request can carry a larger definition_json at all: the real CrsAssertionForm disables Submit before 65536 bytes (admission-remediation.mjs's OVERBOUND'), so this near-cap value is already the largest ANY operator action could ever send. By construction, no other class-A field is bounded anywhere near the render ceiling either (open_dataset's path/cancel_key are short; viewport_query's filter.predicate has no declared max length in this slice, but was not driven here -- out of this step's named technique, "a large pasted definition via crsAssertion" -- so COPYTRUNC's truncated branch stays a real, unexercised code path today, not a fired one)
+UNCLASS'    PASS    .console-entry-unclassified count is 0 across the whole run so far (every group expanded first)
+REGRESS'    FAIL    REGRESS': npm run e2e:regression exited 1 (265403ms). Tail:
+… areas were not loaded; pan or zoom to load them."); .hover-readout after a real pointer move: null; "Zoom to layer" restored 46.5% non-bg pixels
+CURSOR'     PASS    hover cursor "crosshair", mid-drag cursor "grabbing"
+FIND'       PASS    applied "id > 99900" via the real panel DOM, scan completed on its own; "Zoom to layer" fitted at zoom -2.884837648934929 (0.28% non-bg); 3 zoom-out notch(es) left 0.02% non-bg with 0 covering-truncated line(s) and 0 unminted tile(s) of 0 distinct tile(s) ever refused; .residency-status settled to "Showing all 99 features in view"; the second "Zoom to layer" logged the same fit (zoom -2.884837648934929) and left 0.28% non-bg
+MP'         PASS    admitted; DescribeSummary shows the engine's multipolygon encoding and the file's declaration; no refusal or banner after the stream (settled=true)
+PT'         PASS    admitted; DescribeSummary shows the engine's point encoding and the file's declaration; no refusal or banner after the stream (settled=true)
+LN'         PASS    admitted; DescribeSummary shows the engine's linestring encoding and the file's declaration; no refusal or banner after the stream (settled=true)
+B2'/B3'     PASS    refused engine.crs_undeclared; message verbatim; .crs-assertion-form present; no dismiss button on the panel; no describe-summary in the Layers region
+ABSENTCRS'  PASS    refused engine.format_default_contradicted; message verbatim; no dismiss button on the panel; no describe-summary in the Layers region; INFO: .crs-assertion-form present=false, .identity-declaration-form present=false (not asserted either way)
+C2'/C3'     FAIL    C2'/C3': expected {kind:"refused", code:"engine.identity_unusable"}, got {"kind":"admitted"}
+NET'        INFO    no >=400 response observed this run (index.html declares no <link rel>, nothing to probe)
+Full render-trace ledger: C:\dev\wt\k6\frontends\shell\e2e\out\regression-render-trace-1791548876772.json
+Attached to an already-running app on CDP port 9223; leaving it running.
+
+[C2'/C3'] FAIL (77ms): C2'/C3': expected {kind:"refused", code:"engine.identity_unusable"}, got {"kind":"admitted"}
+
+Full render-trace ledger: C:\dev\wt\k6\frontends\shell\e2e\out\console-render-trace-1791548877141.json
+This run launched the app; it stays RUNNING on CDP port 9223 for further interactive use.
