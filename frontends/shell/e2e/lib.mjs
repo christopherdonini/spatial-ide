@@ -631,6 +631,9 @@ async function readHoverReadoutState(page) {
 function hoverReadoutId(readout) {
   return readout !== null && readout.state === "confirmed" ? readout.id : null;
 }
+// RECORDED MUTATION M-B (e2e-hover-establishing-read-stale), OBSERVED AT f9e1f8dc793785f02a72346407261f825fac225b, applied once and reverted (clean before and after):
+// the `page.mouse.move(leave.x, leave.y)` line deleted, the clear-wait kept. At window 1280 x 801 K6 failed with "K6/re-pick: hover barrier: .hover-readout did not
+// reach the clear state within 5000ms of the pointer leaving .working-canvas".
 /** Before the candidate move: read the standing readout, leave the canvas, wait for `clear` (the leave pick has run and
  * no settle re-pick stands), then move to `target` (a CSS point) and poll for a CONFIRMED id. Returns { ok, last }. */
 export async function hoverIdAfterBarrier(page, target, label) {
