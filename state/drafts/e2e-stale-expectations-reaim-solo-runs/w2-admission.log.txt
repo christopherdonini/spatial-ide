@@ -1,0 +1,32 @@
+(node:37032) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+admission-remediation: waiting for the app to mount (up to 90000ms)...
+admission-remediation: mount-readiness gate PASSED after 1254ms
+[ASSERT'] PASS (3526ms): refused engine.crs_undeclared, form present; catalog: 2 entries (epsg-2056, epsg-3857, non-empty definitions); catalog assertion admitted; canvas 19.6% non-bg; summary "caller-asserted by os-user Christopher at 2026-10-09T17:24:32Z, catalog:epsg-2056@sha256:254016888ff4, axis order ..." (provenance PREFIX-checked, not the full hash)
+[PASTED'] PASS (3439ms): same definition with one trailing-whitespace byte appended -> admitted with provenance "pasted" (no normalization at the UI seam)
+[AXISTRAP'] PASS (143ms): axis directions swapped to a real, ESTABLISHED but non-x-first order -> engine.axis_order_unsupported (refused, not reinterpreted); .crs-assertion-form still present
+[NODEF'] PASS (70ms): a valid definition with no coordinate_system at all -> engine.axis_order_unestablished; .crs-assertion-form still present
+[MAP'] PASS (6756ms): (a) no-id-column.parquet admitted on the session tier, statement shown; (b) refused with exactly "parcel_key" in the candidate list; declared -> admitted; summary reads "mapped:parcel_key — verified-at-open-full-file" verbatim (never bare "unique")
+[DUPKEY'] PASS (171ms): plain open already refuses (native id, constant value, genuine uniqueness detail, not missing-column); declaring the SAME column re-refuses identically; form present both times
+[BOTHNEEDED'] PASS (6889ms): (a) no-crs-no-id-refused.parquet: crs refusal -> assert -> admitted on the session tier; (b) crs refusal -> assert (carried) -> identity refusal with the carried-option line visible -> declare (combined request) -> admitted with BOTH caller-asserted CRS and mapped:parcel_key in the summary (MF2 regression guard)
+[CONFLICT'] PASS (82ms): asserting over an already-declaring file -> engine.crs_assertion_conflict with NO remediation form/control rendered (I1), guidance copy present
+[CANCELOPEN'] PASS (429ms): Cancel clicked while liveness read the declared-column cost line ("...checking the declared column across the whole file..."); .admission-open-cancelled-note "Open cancelled" restored idle state, Cancel button gone; underlying openPath outcome: {"kind":"refused","code":"engine.cancelled","message":"cancelled"}. NO duration recorded anywhere (ADR-018)
+[NOPERSIST'] PASS (70ms): reopening the ASSERT'-admitted path plain refuses again, verbatim -- nothing about the earlier assertion(s) persisted
+[OVERBOUND'] PASS (1682ms): pasted 66536 bytes (over the 65536-byte limit) into the real form; .crs-assertion-definition-validation named the byte counts; Submit stayed disabled; DOM unchanged over a 1500ms settle window (no click was possible) -- no request issued
+
+== Summary ==
+Step         Status        Note
+-----------  ------------  ----------------------------------------
+ASSERT'      PASS          refused engine.crs_undeclared, form present; catalog: 2 entries (epsg-2056, epsg-3857, non-empty definitions); catalog assertion admitted; canvas 19.6% non-bg; summary "caller-asserted by os-user Christopher at 2026-10-09T17:24:32Z, catalog:epsg-2056@sha256:254016888ff4, axis order ..." (provenance PREFIX-checked, not the full hash)
+PASTED'      PASS          same definition with one trailing-whitespace byte appended -> admitted with provenance "pasted" (no normalization at the UI seam)
+AXISTRAP'    PASS          axis directions swapped to a real, ESTABLISHED but non-x-first order -> engine.axis_order_unsupported (refused, not reinterpreted); .crs-assertion-form still present
+NODEF'       PASS          a valid definition with no coordinate_system at all -> engine.axis_order_unestablished; .crs-assertion-form still present
+MAP'         PASS          (a) no-id-column.parquet admitted on the session tier, statement shown; (b) refused with exactly "parcel_key" in the candidate list; declared -> admitted; summary reads "mapped:parcel_key — verified-at-open-full-file" verbatim (never bare "unique")
+DUPKEY'      PASS          plain open already refuses (native id, constant value, genuine uniqueness detail, not missing-column); declaring the SAME column re-refuses identically; form present both times
+BOTHNEEDED'  PASS          (a) no-crs-no-id-refused.parquet: crs refusal -> assert -> admitted on the session tier; (b) crs refusal -> assert (carried) -> identity refusal with the carried-option line visible -> declare (combined request) -> admitted with BOTH caller-asserted CRS and mapped:parcel_key in the summary (MF2 regression guard)
+CONFLICT'    PASS          asserting over an already-declaring file -> engine.crs_assertion_conflict with NO remediation form/control rendered (I1), guidance copy present
+CANCELOPEN'  PASS          Cancel clicked while liveness read the declared-column cost line ("...checking the declared column across the whole file..."); .admission-open-cancelled-note "Open cancelled" restored idle state, Cancel button gone; underlying openPath outcome: {"kind":"refused","code":"engine.cancelled","message":"cancelled"}. NO duration recorded anywhere (ADR-018)
+NOPERSIST'   PASS          reopening the ASSERT'-admitted path plain refuses again, verbatim -- nothing about the earlier assertion(s) persisted
+OVERBOUND'   PASS          pasted 66536 bytes (over the 65536-byte limit) into the real form; .crs-assertion-definition-validation named the byte counts; Submit stayed disabled; DOM unchanged over a 1500ms settle window (no click was possible) -- no request issued
+Full render-trace ledger: C:\dev\wt\reaim\frontends\shell\e2e\out\admission-remediation-render-trace-1791566695630.json
+This run launched the app; it stays RUNNING on CDP port 9223 for further interactive use.

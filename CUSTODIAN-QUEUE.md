@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `6257352fa9a7aa7e1e559c551b8be75bcad433ccb9d35536ccb53c31d1e2b837`) at `2026-10-09T17:13:53.456Z`.
+Generated from `PLAN.yaml` (sha256 `b902a0359ccaa2a0dadc0cd10902d11db3f6e433f7ffac6309252e5c4eb0a924`) at `2026-10-09T17:44:26.891Z`.
 
 ## 1. Next
 
@@ -10,11 +10,12 @@ Generated from `PLAN.yaml` (sha256 `6257352fa9a7aa7e1e559c551b8be75bcad433ccb9d3
 
 - (none)
 
-## 3. Waiting on the human (total: 10 min)
+## 3. Waiting on the human (total: 20 min)
 
 ### ruling
 
 - **decision-adr-029-scan-progress-route** — ADR-029's scan-progress route, given G1 (a minimal crate patch exposing the connection handle; raw ffi end to end on the scan path; upstream first) -- deferred to Brief B's B2 by the human, round 16 item 3 (10 min)
+- **e2e-stale-expectations-reaim** — Re-aim the shell e2e steps whose expectations predate ruled product changes: regression C2'/C3', admission MAP' and BOTHNEEDED', console HEXLIM', GROUP' and REFUSAL', source-changed default-route S4 (10 min)
 
 ## 4. Blocked on dependencies
 
@@ -34,7 +35,6 @@ Generated from `PLAN.yaml` (sha256 `6257352fa9a7aa7e1e559c551b8be75bcad433ccb9d3
 ## 5. In progress
 
 - **skp-drained-stream-helper-post-check-race** — kernel/src/skp.rs tests: drained_stream_with_a_recorded_change has the same post-check race as typed_terminal_codes' end-to-end test — evidence: branch `cut/skp-drained-stream-helper-post-check-race`
-- **e2e-stale-expectations-reaim** — Re-aim the shell e2e steps whose expectations predate ruled product changes: regression C2'/C3', admission MAP' and BOTHNEEDED', console HEXLIM', GROUP' and REFUSAL', source-changed default-route S4 — evidence: branch `cut/e2e-stale-expectations-reaim`
 
 ## 6. Proposed / unscheduled
 
