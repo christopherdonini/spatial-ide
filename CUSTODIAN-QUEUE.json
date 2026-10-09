@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-09T07:39:45.516Z",
-  "plan_hash": "a90284758b964ef710e1ace501017a5260b00ffda0877631d4e8c713e30fc8fd",
+  "generated_at": "2026-10-09T08:24:56.496Z",
+  "plan_hash": "1393c7a5fe4ac694060f32c20ff1a020ee870efce0754afb3efe8711073bdf01",
   "priorities_approved": true,
   "next": null,
   "ready": [],
@@ -233,8 +233,7 @@
       "summary": "WAITS 2026-10-09 on the human as well as on its dependencies: OPEN-1 to OPEN-10, OPEN-2 to OPEN-8 red lines (typed). Before: FORM COMMITTED 2026-10-09 (the architect draft, alone; state/consults/2026-10-09-shell-migration-milestone-2-architect-draft.md): full form with full gating, by size (about 6,600 lines over about 30 files, tests included), new user-visible behaviour, properties under test and a new selection contract; 46 pins at dba12b8c, with a re-sweep at code start. Ten OPEN items go to the human in one question round: OPEN-1 the click's own pick (recommended (A), a pick of its own at the click, shared with the settle re-pick); OPEN-2 to OPEN-8 red lines (telling inspect from select; Pin; the export's scope against ADR-024; an export during a reopen; the hover readout and the Feature tab; the section 3 labels; the canvas boundary exceptions); OPEN-9 the P6 sight; OPEN-10 one PR or two (recommended two, phase A first). Each answer becomes Amendment 1 before dispatch; code after the three slot 1 pieces merge. Before: PLACED 2026-10-09 by the human's direction of 2026-10-09 (state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md), item 2d: slot 1, item d. Its form and question round now (the architect drafts the form); its code after e2e-hover-establishing-read-stale, shell-map-refill-after-resize and e2e-failures-present-at-the-base have merged. The form carries, as an OPEN item, whether selection takes its own pick at the click (the pick-paths diagnosis report, section 4). The human takes up ADR-036's acceptance while it is in code (item 7). Before: DEPENDS 2026-10-08 on shell-pick-paths-disagree-at-1280x801 (the human's ruling, state/directives/2026-10-08-k6-case-iii-ruling.md): the pick-paths disagreement is diagnosed before this milestone's selection code starts. Its form and question round are prepared while milestone 1 is under way; its code starts when shell-map-refill-after-resize has merged, if that piece is needed (the OPEN-7 clarification, state/directives/2026-10-07-round-66-and-67-rulings.md). Before: Recorded 2026-10-07 by the human's ruling of the migration plan (state/directives/2026-10-07-migration-plan-v2-ruled.md; state/directives/SHELL-MIGRATION-PLAN-2026-10-07.md, section 6): follows milestone 1 directly; seams 3, 4, 5 and 6; no backend change; its own full form. Proposed, for placement when milestone 1 is under way.",
       "blocked_by": [
         "e2e-hover-establishing-read-stale",
-        "shell-map-refill-after-resize",
-        "e2e-failures-present-at-the-base"
+        "shell-map-refill-after-resize"
       ]
     },
     {
@@ -348,30 +347,7 @@
       ]
     }
   ],
-  "in_progress": [
-    {
-      "id": "e2e-failures-present-at-the-base",
-      "title": "Shell e2e steps failing on main at e888787e: regression C2 and C3, admission MAP and BOTHNEEDED, console HEXLIM, GROUP and REGRESS, source-changed default-route S4",
-      "lane": "shell",
-      "phase": "prototype",
-      "status": "in-progress",
-      "order": 3,
-      "budget_minutes": 120,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": {
-        "branch": "detached-worktree-e2etri"
-      },
-      "dates": {
-        "opened": "2026-10-08",
-        "done": null
-      },
-      "summary": "IN PROGRESS 2026-10-09, the triage, reported only: one worker-high in the detached worktree C:/dev/wt/e2etri at main 316a4476, target D:/wt-targets/e2etri; each step run at main and classed as a stale fixture, a stale expectation or a real defect, with no fix made. It runs ahead of slot 1 items a and b, which wait on the human. Before: PLACED 2026-10-09 by the human's direction of 2026-10-09 (state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md), item 2c: slot 1, item c, as a triage. Before: Found 2026-10-08 by shell-migration-milestone-1 stage 2, which ran each failing suite at its base e888787e with the same fixtures and launch (state/consults/2026-10-08-shell-migration-milestone-1-worker-report-2.md, section 4; the form Amendment 4, item 4): these steps fail at the base as at the head, so they are not that piece's. The worker's reading, not diagnosed: the identity refusal fixtures on disk admit instead of refusing (perhaps stale files), HEXLIM's key set now includes columns, and console REFUSAL failed once at the base only. A triage piece separates stale fixtures, stale expectations and real defects. Never queued until the human places it.",
-      "evidence_label": "branch `detached-worktree-e2etri`"
-    }
-  ],
+  "in_progress": [],
   "proposed": [
     {
       "id": "governance-hash-grammar-shared",
@@ -1474,6 +1450,25 @@
         "done": null
       },
       "summary": "Recorded 2026-10-07 under geometry-lines-cut's OPEN-5 (A), ruled in question round 64 (state/directives/2026-10-07-round-63-and-64-rulings.md; engine/GEOMETRY-LINES-PREREGISTRATION.md, Amendment 1, item 5): the lines cut makes no performance claim, and docs/08 defines a Lines class it does not measure. A measurement needs a scale fixture and a harness row, preregistered on its own. Waiting on the human's placement."
+    },
+    {
+      "id": "e2e-stale-expectations-reaim",
+      "title": "Re-aim the shell e2e steps whose expectations predate ruled product changes: regression C2'/C3', admission MAP' and BOTHNEEDED', console HEXLIM', GROUP' and REFUSAL', source-changed default-route S4",
+      "lane": "shell",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 180,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-09",
+        "done": null
+      },
+      "summary": "PROPOSED 2026-10-09 from the e2e triage (state/consults/2026-10-09-e2e-failures-present-at-the-base-triage-report.md), for the human to place. Each step is a stale expectation, and each fix touches e2e files, their READMEs and the walkthrough rows only, with no product change: C2'/C3' and admission MAP' and BOTHNEEDED' re-aimed for the session identity tier (perhaps a new still-refusing identity fixture); HEXLIM' gains the columns key; GROUP' and REFUSAL' either poll with a bound and assert the group by its predicate, or pin the baseline arm (the second stops the suite exercising the shipped arm, so it is the human's or the architect's call); S4 re-aimed to a change the advisory watcher cannot see. Questions with it, for the human: whether a keyless file that now admits needs a route to the identity declaration form; and whether QUICKSTART.md and KNOWN-LIMITATIONS item 3 are updated here or apart."
     },
     {
       "id": "verify-cites-pin-resolution-and-line-zero",

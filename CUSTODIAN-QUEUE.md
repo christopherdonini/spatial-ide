@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `a90284758b964ef710e1ace501017a5260b00ffda0877631d4e8c713e30fc8fd`) at `2026-10-09T07:39:45.516Z`.
+Generated from `PLAN.yaml` (sha256 `1393c7a5fe4ac694060f32c20ff1a020ee870efce0754afb3efe8711073bdf01`) at `2026-10-09T08:24:56.496Z`.
 
 ## 1. Next
 
@@ -27,7 +27,7 @@ Generated from `PLAN.yaml` (sha256 `a90284758b964ef710e1ace501017a5260b00ffda087
 
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
 - **b2-piece-1b-recording** — B2 piece 1b -- recording: the kernel's step commands for filter, scope and style, the session history on the machine, safe against a crash, and the docs/07 note — blocked by: shell-migration-milestone-2
-- **shell-migration-milestone-2** — Shell migration, milestone 2 -- selection and scope: the Select tool, a selection that survives filter and pan, the hidden count, a stated scope — blocked by: e2e-hover-establishing-read-stale, shell-map-refill-after-resize, e2e-failures-present-at-the-base
+- **shell-migration-milestone-2** — Shell migration, milestone 2 -- selection and scope: the Select tool, a selection that survives filter and pan, the hidden count, a stated scope — blocked by: e2e-hover-establishing-read-stale, shell-map-refill-after-resize
 - **briefb-b2-save-reopen** — B2 — Save project, Snapshot data, session history, lineage and preferences, in five stages, each with its own form — blocked by: decision-adr-029-scan-progress-route
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer — blocked by: signpath-application-draft
 - **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-1-1
@@ -36,7 +36,7 @@ Generated from `PLAN.yaml` (sha256 `a90284758b964ef710e1ace501017a5260b00ffda087
 
 ## 5. In progress
 
-- **e2e-failures-present-at-the-base** — Shell e2e steps failing on main at e888787e: regression C2 and C3, admission MAP and BOTHNEEDED, console HEXLIM, GROUP and REGRESS, source-changed default-route S4 — evidence: branch `detached-worktree-e2etri`
+- (none)
 
 ## 6. Proposed / unscheduled
 
@@ -100,6 +100,7 @@ Generated from `PLAN.yaml` (sha256 `a90284758b964ef710e1ace501017a5260b00ffda087
 - **shell-owners-index** — An owner's index for the shell (frontends/shell), so that shell-owned KNOWN-LIMITATIONS items and pointers are indexed somewhere (phase `prototype`) — never queued until placed
 - **corpus-line-files** — A line file (LineString or MultiLineString) in the preregistered compatibility corpus, so that line admission is tried on a real-world file (phase `prototype`) — never queued until placed
 - **lines-class-budget-measurement** — Measure docs/08's Lines class (1M features / 10M vertices) for the working canvas, once lines are drawn (phase `prototype`) — never queued until placed
+- **e2e-stale-expectations-reaim** — Re-aim the shell e2e steps whose expectations predate ruled product changes: regression C2'/C3', admission MAP' and BOTHNEEDED', console HEXLIM', GROUP' and REFUSAL', source-changed default-route S4 (phase `prototype`) — never queued until placed
 - **verify-cites-pin-resolution-and-line-zero** — verify-cites: a pinned cite starting at line 0 gets a false reason, and a pin is read only at the path as written (phase `prototype`) — never queued until placed
 - **docs-14-corpus-attribution-vs-docs-08** — docs/14 asks corpus attribution in demos and published bundles, which docs/08 line 40 now says are never redistributed (phase `prototype`) — never queued until placed
 - **shell-stale-frame-comments** — Two shell comments still describe the old frame: ConsolePanel.tsx (a bottom drawer below every panel) and residencyStatus.ts (a child of the removed canvas status stack); and WorkingCanvas.tsx comments call deck.gl 9.3.7 pinned (phase `prototype`) — never queued until placed

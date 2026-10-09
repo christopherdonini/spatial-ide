@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-09T07:39:45.695Z",
-  "plan_hash": "a90284758b964ef710e1ace501017a5260b00ffda0877631d4e8c713e30fc8fd",
+  "generated_at": "2026-10-09T08:24:56.645Z",
+  "plan_hash": "1393c7a5fe4ac694060f32c20ff1a020ee870efce0754afb3efe8711073bdf01",
   "priorities_approved": true,
   "lanes": [
     {
@@ -6856,12 +6856,39 @@
       }
     },
     {
+      "id": "e2e-stale-expectations-reaim",
+      "title": "Re-aim the shell e2e steps whose expectations predate ruled product changes: regression C2'/C3', admission MAP' and BOTHNEEDED', console HEXLIM', GROUP' and REFUSAL', source-changed default-route S4",
+      "kind": "task",
+      "lane": "shell",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "depends_on": [
+        "e2e-failures-present-at-the-base"
+      ],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "none",
+      "evidence": null,
+      "budget_minutes": 180,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [],
+      "summary": "PROPOSED 2026-10-09 from the e2e triage (state/consults/2026-10-09-e2e-failures-present-at-the-base-triage-report.md), for the human to place. Each step is a stale expectation, and each fix touches e2e files, their READMEs and the walkthrough rows only, with no product change: C2'/C3' and admission MAP' and BOTHNEEDED' re-aimed for the session identity tier (perhaps a new still-refusing identity fixture); HEXLIM' gains the columns key; GROUP' and REFUSAL' either poll with a bound and assert the group by its predicate, or pin the baseline arm (the second stops the suite exercising the shipped arm, so it is the human's or the architect's call); S4 re-aimed to a change the advisory watcher cannot see. Questions with it, for the human: whether a keyless file that now admits needs a route to the identity declaration form; and whether QUICKSTART.md and KNOWN-LIMITATIONS item 3 are updated here or apart.",
+      "dates": {
+        "opened": "2026-10-09",
+        "done": null
+      }
+    },
+    {
       "id": "e2e-failures-present-at-the-base",
       "title": "Shell e2e steps failing on main at e888787e: regression C2 and C3, admission MAP and BOTHNEEDED, console HEXLIM, GROUP and REGRESS, source-changed default-route S4",
       "kind": "task",
       "lane": "shell",
       "phase": "prototype",
-      "status": "in-progress",
+      "status": "done",
       "order": 3,
       "depends_on": [],
       "needs_human": {
@@ -6870,16 +6897,16 @@
       },
       "gate": "none",
       "evidence": {
-        "branch": "detached-worktree-e2etri"
+        "path": "state/consults/2026-10-09-e2e-failures-present-at-the-base-triage-report.md"
       },
       "budget_minutes": 120,
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "IN PROGRESS 2026-10-09, the triage, reported only: one worker-high in the detached worktree C:/dev/wt/e2etri at main 316a4476, target D:/wt-targets/e2etri; each step run at main and classed as a stale fixture, a stale expectation or a real defect, with no fix made. It runs ahead of slot 1 items a and b, which wait on the human. Before: PLACED 2026-10-09 by the human's direction of 2026-10-09 (state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md), item 2c: slot 1, item c, as a triage. Before: Found 2026-10-08 by shell-migration-milestone-1 stage 2, which ran each failing suite at its base e888787e with the same fixtures and launch (state/consults/2026-10-08-shell-migration-milestone-1-worker-report-2.md, section 4; the form Amendment 4, item 4): these steps fail at the base as at the head, so they are not that piece's. The worker's reading, not diagnosed: the identity refusal fixtures on disk admit instead of refusing (perhaps stale files), HEXLIM's key set now includes columns, and console REFUSAL failed once at the base only. A triage piece separates stale fixtures, stale expectations and real defects. Never queued until the human places it.",
+      "summary": "DONE 2026-10-09, the triage, reported only (state/consults/2026-10-09-e2e-failures-present-at-the-base-triage-report.md): every named step still fails at main 316a4476; none is a stale fixture (fresh generator copies are byte-identical) and none a product defect. All are stale expectations: regression C2'/C3' and admission MAP' and BOTHNEEDED' predate the session identity tier (R-I3, ADR-016 Amendment 1); console HEXLIM' predates skp/0.6's columns key; console GROUP' and REFUSAL' predate the candidate arm becoming the default (they pass with the arm pinned to baseline; a solo re-run is owed); source-changed S4's premise is pre-empted by the advisory watcher. REGRESS' only carries regression. The fixes touch e2e files and their records only: proposed node e2e-stale-expectations-reaim. Found beside it: a keyless file now admits, so the app has no route to the identity declaration form for it, and QUICKSTART.md and KNOWN-LIMITATIONS item 3 still describe the old refusal. Before: IN PROGRESS 2026-10-09, the triage, reported only: one worker-high in the detached worktree C:/dev/wt/e2etri at main 316a4476, target D:/wt-targets/e2etri; each step run at main and classed as a stale fixture, a stale expectation or a real defect, with no fix made. It runs ahead of slot 1 items a and b, which wait on the human. Before: PLACED 2026-10-09 by the human's direction of 2026-10-09 (state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md), item 2c: slot 1, item c, as a triage. Before: Found 2026-10-08 by shell-migration-milestone-1 stage 2, which ran each failing suite at its base e888787e with the same fixtures and launch (state/consults/2026-10-08-shell-migration-milestone-1-worker-report-2.md, section 4; the form Amendment 4, item 4): these steps fail at the base as at the head, so they are not that piece's. The worker's reading, not diagnosed: the identity refusal fixtures on disk admit instead of refusing (perhaps stale files), HEXLIM's key set now includes columns, and console REFUSAL failed once at the base only. A triage piece separates stale fixtures, stale expectations and real defects. Never queued until the human places it.",
       "dates": {
         "opened": "2026-10-08",
-        "done": null
+        "done": "2026-10-09"
       }
     },
     {
