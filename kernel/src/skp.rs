@@ -3403,12 +3403,30 @@ mod ticket_drop_under_lock_regression {
     use std::time::Duration;
 
     use spatial_engine::fixture::{write_geoparquet, FixtureSpec, IdentityMode};
+    use spatial_engine::MAX_QUEUED_BATCHES;
 
     /// Generous relative to any real lock hold in this registry (a handful of map operations); the
     /// only thing this bounds is how long a pre-fix run of this suite waits before failing.
     const HANG_TIMEOUT: Duration = Duration::from_secs(5);
 
     fn fixture(name: &str) -> std::path::PathBuf {
+        fixture_with_features(name, 50)
+    }
+
+    /// The fixture of every test that reaches [`drained_stream_with_a_recorded_change`], and the
+    /// only site of the 5,000 literal. That helper's ordering argument needs more than
+    /// `MAX_QUEUED_BATCHES` batches. `BatchSizePolicy::default()` cuts by size only, so a batch is
+    /// at most `BatchSizePolicy::target_for` its index, and the first two targets
+    /// (`FIRST_TARGET_BATCH_BYTES`, then that times `BATCH_GROWTH_FACTOR`) sum to 327,680 bytes. A
+    /// row's `estimate_bytes` is 20 bytes per vertex plus 12, with no attribute bytes on this path,
+    /// and every row has at least 4 vertices, so a row is at least 92 bytes. 5,000 rows are at
+    /// least 460,000 bytes in any row order, which is more than those two targets: at least 3
+    /// batches.
+    fn drained_stream_fixture(name: &str) -> std::path::PathBuf {
+        fixture_with_features(name, 5_000)
+    }
+
+    fn fixture_with_features(name: &str, features: usize) -> std::path::PathBuf {
         let dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../target/fixtures/ticket-drop-under-lock");
         std::fs::create_dir_all(&dir).expect("fixture dir");
@@ -3416,7 +3434,7 @@ mod ticket_drop_under_lock_regression {
         write_geoparquet(
             &path,
             &FixtureSpec {
-                features: 50,
+                features,
                 avg_vertices: 8,
                 identity: IdentityMode::NativeUnique,
                 ..Default::default()
@@ -3445,6 +3463,17 @@ mod ticket_drop_under_lock_regression {
     /// replaces waiting on the real background-completion race. Asserts the post-check actually
     /// found the change, so a future engine change that breaks this setup fails here loudly rather
     /// than leaving every test below vacuously non-reproducing.
+    ///
+    /// **Why the post-check cannot beat the touch.** The producer is spawned inside
+    /// `open_engine_stream`, before the touch. Its queue holds `MAX_QUEUED_BATCHES` batches and
+    /// each batch is one blocking send, whose only receive is the one inside
+    /// `BatchStream::next_into`; the first call of that follows `touch_modification_time`. With
+    /// more than `MAX_QUEUED_BATCHES` `Ok` batches received, the send of the batch at index
+    /// `MAX_QUEUED_BATCHES` completed only after that first call, `produce` returned after that
+    /// send, and the post-check runs after `produce` returns. So the post-check reads the file
+    /// after the touch. The `batches` assertion states that condition, and every caller's fixture
+    /// is [`drained_stream_fixture`] so that it holds. The guard after it stays as the check that
+    /// the finding was really recorded.
     fn drained_stream_with_a_recorded_change(
         path: &std::path::Path,
     ) -> (spatial_engine::BatchStream, spatial_engine::CancelToken) {
@@ -3456,9 +3485,18 @@ mod ticket_drop_under_lock_regression {
         // mutating only now is what makes this the post-check's finding, not the pre-check's.
         touch_modification_time(path);
         let mut buf = Vec::new();
-        while stream.next_into(&mut buf).is_some() {
+        let mut batches = 0usize;
+        while let Some(item) = stream.next_into(&mut buf) {
+            if item.is_ok() {
+                batches += 1;
+            }
             buf.clear();
         }
+        assert!(
+            batches > MAX_QUEUED_BATCHES,
+            "the ordering argument needs more batches than the queue holds \
+             ({MAX_QUEUED_BATCHES}); got {batches}"
+        );
         assert!(
             stream.stats().source_changed_detail().is_some(),
             "setup did not force a real post-check finding — every test in this module would pass \
@@ -3539,7 +3577,7 @@ mod ticket_drop_under_lock_regression {
     /// (its `viewport_query` stopped refusing, because the generation was never ended).
     #[test]
     fn cancel_of_a_pending_ticket_whose_post_check_found_a_change_does_not_hang() {
-        let path = fixture("cancel-path");
+        let path = drained_stream_fixture("cancel-path");
         let (tickets, generations, handle) = seeded_pending_ticket("ds_cancel_path", &path);
 
         let outcome = run_with_timeout(HANG_TIMEOUT, {
@@ -3573,7 +3611,7 @@ mod ticket_drop_under_lock_regression {
     /// FAILED — panicked on the "did not return within" message below.
     #[test]
     fn sweep_of_an_expired_pending_ticket_whose_post_check_found_a_change_does_not_hang() {
-        let path = fixture("sweep-path");
+        let path = drained_stream_fixture("sweep-path");
         let (tickets, generations, handle) = seeded_pending_ticket("ds_sweep_path", &path);
 
         // Seeded directly past `TICKET_TTL` rather than waiting for real time to pass — ADR-018
@@ -3639,7 +3677,7 @@ mod ticket_drop_under_lock_regression {
     /// `EndedBySourceChange`).
     #[test]
     fn cancel_all_for_dataset_of_a_pending_ticket_whose_post_check_found_a_change_does_not_hang() {
-        let path = fixture("cancel-all-for-dataset-path");
+        let path = drained_stream_fixture("cancel-all-for-dataset-path");
         let (tickets, generations, handle) = seeded_pending_ticket("ds_cancel_all_path", &path);
 
         let n = run_with_timeout(HANG_TIMEOUT, {
@@ -3684,7 +3722,7 @@ mod ticket_drop_under_lock_regression {
     fn after_cancelling_a_ticket_whose_source_changed_the_next_viewport_query_refuses_by_name() {
         let dataset_handle = DatasetHandle::mint();
         let name = dataset_handle.as_str().to_string();
-        let path = fixture("viewport-query-refusal-path");
+        let path = drained_stream_fixture("viewport-query-refusal-path");
 
         let (stream, cancel) = drained_stream_with_a_recorded_change(&path);
         let reuses = spatial_engine::Dataset::open(&path)
@@ -3791,7 +3829,7 @@ mod ticket_drop_under_lock_regression {
                 )
                 .expect("mint Q");
             tickets.redeem(q.as_str()).expect("redeem Q");
-            let path = fixture(stem);
+            let path = drained_stream_fixture(stem);
             let (stream, cancel) = drained_stream_with_a_recorded_change(&path);
             let reuses = spatial_engine::Dataset::open(&path)
                 .expect("reopen for connection config")
@@ -4007,7 +4045,7 @@ mod ticket_drop_under_lock_regression {
     /// arrives.
     #[test]
     fn a_pending_ticket_retired_by_sweep_emits_once_and_does_not_hang() {
-        let path = fixture("sweep-emits-path");
+        let path = drained_stream_fixture("sweep-emits-path");
         let (stream, cancel) = drained_stream_with_a_recorded_change(&path);
         let reuses = spatial_engine::Dataset::open(&path)
             .expect("reopen for connection config")
@@ -4115,7 +4153,7 @@ mod ticket_drop_under_lock_regression {
     /// live generation, so nothing emitted.
     #[test]
     fn a_pending_drop_inside_close_emits_once_with_its_session_reference() {
-        let path = fixture("close-drop-path");
+        let path = drained_stream_fixture("close-drop-path");
         let (tx, rx) = super::session_end_channel();
         let host = SkpHost::new(
             Arc::new(Catalog::new()),
