@@ -623,3 +623,21 @@ Drafting returned to the architect at the stop. The rows below are the piece's l
   - **found wrong:** none;
   - **missing:** five: the stamp-then-send order and the end-on-disconnect in the stream, which question 2 needed; the mechanism of the slice test's exposure; that the two ignored factorial tests share one binary with no lock; that the shared watch-support module holds no tests; and the locked tokio versions with the absence of a clippy run, for a question the read could not foresee.
 - **Combined cost of piece 7** (read plus draft): 300,777 subagent tokens, 128 tool uses, 809,096 ms.
+
+### B2, second pilot — piece 5's owner's-index update (the pilot's §1, item 2)
+
+- **The update** is `state/drafts/covering-names-missing-column-owners-index-update.md`: 173 lines, sha256 414356e02e335a7db9eec16b524b23fe8998e28e4e0857b0b00724628dafe5ee, byte-identical as lead-data wrote it, read on the branch at a06a746b.
+- **Where it is filed, and why:** the brief's REPORT PATH line named `state/consults/`. One of its pointers names the new engine test file, which exists only on the branch, so `verify-cites` fails it on main. It was moved unchanged to `state/drafts/`, which that check exempts.
+- **Cost** (the harness's task notification): 148,175 subagent tokens, 59 tool uses, 313,143 ms. The run lasted 11:37:31Z to 11:42:45Z.
+- **Write audit PASS:** one Write, at its REPORT PATH line's path (Grep 30, Read 21, Glob 6, the hand-back 1).
+- **C3:**
+  - before: the checkout held only its two pre-existing untracked items;
+  - during the run: the custodian committed its own filing, a76071b5 (the covering form's Amendment 3, the PLAN summaries, the ledger, the queue and the site);
+  - after: the two items and the report.
+- **Content:**
+  - six whole-line replacements, three in each README's Owner's index section;
+  - every pointer in both sections checked at a06a746b, all resolving;
+  - no other stale line;
+  - both sections within the 60-line cap.
+- **Its stated limit:** with no shell, it took the changed files from the worktree's reflog and the worker report, not from `git diff`. The reviewer's diff check is the backstop.
+- **Applied** on the branch by a worker, as the pilot's §1 item 2 says.
