@@ -1072,6 +1072,15 @@ TypeScript literal and its tests) together; the version-refusal conformance fixt
 `skp/0.11` as an unsupported future version is renumbered to name `skp/0.12` instead. Plain `==`
 comparison retained; `deny_unknown_fields` kept both directions. `skp/1` stays RESERVED.
 
+### Note: a covering that names a column the file lacks (2026-10-09; no literal change)
+
+**`skp/0.11` stands; no literal is bumped and no fixture changes** (`engine/COVERING-NAMES-MISSING-COLUMN-PREREGISTRATION.md` §2d, Branch A as ruled by its Amendment 2). The basis is the entry-30 addendum's disposition above: no key is added, no code is added, and no value domain widens.
+
+- `describe.covering_bbox` is `true` only for a covering this engine can address and whose path the file's schema resolves. For a file whose declared covering names a column the schema does not contain, it reads `false`, as it already does for a covering carrying U+0000.
+- A `viewport_query` with a bbox on such a dataset refuses `engine.no_covering_bbox` synchronously, before the mint, with the existing `detail` field naming the missing path. A `viewport_query` without a bbox is unchanged.
+- `open_dataset` for such a file succeeds, as before.
+- `protocol/data-plane/` has an empty diff.
+
 ## 9. Attribute projection on `viewport_query`
 
 **Brief B stage B1** (`engine/B1-PROJECTION-PREREGISTRATION.md`), following ADR-023 Decision §§1–5
