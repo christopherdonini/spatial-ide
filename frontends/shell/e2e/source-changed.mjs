@@ -185,7 +185,20 @@
 // the wrong route. No timing bound is asserted anywhere in this addition (ADR-018; A6) -- the
 // polling interval below is a mechanism, not a claim.
 
-import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, statSync, utimesSync, writeFileSync } from "node:fs";
+import {
+  copyFileSync,
+  existsSync,
+  lstatSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  realpathSync,
+  statSync,
+  symlinkSync,
+  unlinkSync,
+  utimesSync,
+  writeFileSync,
+} from "node:fs";
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { dirname, join } from "node:path";
@@ -235,6 +248,59 @@ const ROUTE = ENV_ROUTE === "post" || ENV_ROUTE === "reopen" ? ENV_ROUTE : "pre"
 // mint succeeds, before that stream's own drain and post-check. A bound, not a result (ADR-018).
 const STREAM_ISSUED_POLL_MS = 5;
 const STREAM_ISSUED_WAIT_TIMEOUT_MS = 30_000;
+
+// ROUTE "pre" only (E2E-STALE-EXPECTATIONS-REAIM-PREREGISTRATION.md section 2.4). The advisory source watcher
+// (`engine/SOURCE-WATCHER-PREREGISTRATION.md`) ends the session on an mtime touch while the app is idle,
+// before any query, so the pre-check is re-aimed to a change the watcher cannot see: a directory junction
+// repointed after admission (KNOWN-LIMITATIONS item 26: caught at the next query's pre-check). Two copies of
+// the 100k fixture, `a` and `b`, differ in mtime only; S1 opens the file through a junction that starts on
+// `a`; S3 retargets it to `b`. The junction is made in-process with Node's own `symlinkSync(.., "junction")`:
+// no elevation, no spawned tool, no other link type, and never a recursive delete on it.
+const TARGETS_DIR = join(OUT_DIR, "source-changed-targets");
+const TARGET_A = join(TARGETS_DIR, "a");
+const TARGET_B = join(TARGETS_DIR, "b");
+const COPY_NAME = "source-changed-scratch.parquet";
+const JUNCTION = join(OUT_DIR, "source-changed-link");
+const B_MTIME_OFFSET_MS = 120_000; // the same offset S3 used for its touch
+const OPEN_PATH = ROUTE === "pre" ? join(JUNCTION, COPY_NAME) : SCRATCH_COPY;
+const LOG_LINE_POLL_BOUND_MS = 10_000; // a bound on waiting, not a result (ADR-018)
+
+/** Points `JUNCTION` at `target`. A stale junction (an earlier run's) is removed with `unlinkSync`, which
+ * removes the link and not its target; EPERM/EACCES is the caller's to report (invalidator I4). */
+function makeJunction(target) {
+  try {
+    lstatSync(JUNCTION);
+    unlinkSync(JUNCTION);
+  } catch (e) {
+    if (e.code !== "ENOENT") throw e;
+  }
+  symlinkSync(target, JUNCTION, "junction");
+}
+
+function layoutPreRoute() {
+  for (const dir of [TARGET_A, TARGET_B]) {
+    mkdirSync(dir, { recursive: true });
+    copyFileSync(FIXTURE_100K, join(dir, COPY_NAME));
+  }
+  const later = new Date(Date.now() + B_MTIME_OFFSET_MS);
+  utimesSync(join(TARGET_B, COPY_NAME), later, later);
+  makeJunction(TARGET_A);
+}
+
+/** The first session-log line, written since `baselineLines`, that matches `pattern`; null after the bound. */
+async function findSessionLogLine(pattern, baselineLines) {
+  const start = Date.now();
+  while (true) {
+    const log = newestSessionLog();
+    if (!log.error) {
+      const lines = readFileSync(log.path, "utf8").split(/\r?\n/).filter((l) => l.length > 0).slice(baselineLines);
+      const hit = lines.find((l) => pattern.test(l));
+      if (hit) return hit;
+    }
+    if (Date.now() - start >= LOG_LINE_POLL_BOUND_MS) return null;
+    await sleep(200);
+  }
+}
 
 function sha256(path) {
   return createHash("sha256").update(readFileSync(path)).digest("hex");
@@ -519,6 +585,21 @@ async function main() {
   mkdirSync(OUT_DIR, { recursive: true });
   copyFileSync(FIXTURE_100K, SCRATCH_COPY);
   const hashBefore = sha256(SCRATCH_COPY);
+  if (ROUTE === "pre") {
+    try {
+      layoutPreRoute();
+    } catch (e) {
+      console.error(`source-changed: could not lay out the junction route (${e.code ?? e.message}); no other link type is tried and nothing is elevated (invalidator I4)`);
+      process.exitCode = 1;
+      return;
+    }
+    const copyHashes = [TARGET_A, TARGET_B].map((d) => sha256(join(d, COPY_NAME)));
+    if (copyHashes.some((h) => h !== hashBefore)) {
+      console.error(`source-changed: the two copies do not hash to the fixture (${copyHashes.join(", ")} vs ${hashBefore})`);
+      process.exitCode = 1;
+      return;
+    }
+  }
 
   let session;
   try {
@@ -535,7 +616,7 @@ async function main() {
   /** @type {Array<{id: string, status: "PASS"|"FAIL"|"INFO", note: string}>} */
   const results = [];
   /** @type {Record<string, unknown>} */
-  const observation = { launched, cdpPort: CDP_PORT, fixture: SCRATCH_COPY, hashBefore };
+  const observation = { launched, cdpPort: CDP_PORT, fixture: OPEN_PATH, hashBefore };
   // Recorded on every run, whether this one launched or attached, so a gate can read which kind of
   // run it got rather than assume (AI_DEVELOPMENT.md, "Launching the app and E2E runs").
   observation.appProcesses = appProcesses();
@@ -570,11 +651,11 @@ async function main() {
     // S1: open the scratch copy through the real admission path.
     // ------------------------------------------------------------------------------------
     const s1 = await runStep("S1-open", async () => {
-      const outcome = await page.evaluate((p) => window.__SPATIAL_E2E__.openPath(p), SCRATCH_COPY);
+      const outcome = await page.evaluate((p) => window.__SPATIAL_E2E__.openPath(p), OPEN_PATH);
       if (outcome.kind !== "admitted") {
         throw new Error(`S1-open: openPath(scratch copy) returned ${JSON.stringify(outcome)}, expected {kind:"admitted"}`);
       }
-      return `scratch copy admitted: ${SCRATCH_COPY}`;
+      return `scratch copy admitted: ${OPEN_PATH}`;
     });
     if (!s1) throw new Error("S1-open failed; the rest of the run would be vacuous");
 
@@ -752,7 +833,31 @@ async function main() {
     // the POST route (see this file's header note) must NOT mutate before a mint, so it defers the
     // touch into S4 below, racing it against that gesture's own `stream-issued` line instead.
     // ------------------------------------------------------------------------------------
-    if (ROUTE !== "post") {
+    if (ROUTE === "pre") {
+      await runStep("S3-retarget-junction", async () => {
+        if (process.platform !== "win32") {
+          throw new Error("S3: the junction route is established on Windows only (the file-watching boundary, engine/src/watch.rs; KNOWN-LIMITATIONS items 1 and 24); it fails here rather than skipping");
+        }
+        try {
+          makeJunction(TARGET_B);
+        } catch (e) {
+          if (e.code === "EPERM" || e.code === "EACCES") {
+            throw new Error(`S3: the junction could not be retargeted without elevation (${e.code}); no other link type is tried and nothing is elevated (invalidator I4)`);
+          }
+          throw e;
+        }
+        const resolved = realpathSync(OPEN_PATH);
+        if (!resolved.toLowerCase().startsWith(realpathSync(TARGET_B).toLowerCase())) {
+          throw new Error(`S3: the opened path resolves to ${resolved}, not inside ${TARGET_B}`);
+        }
+        const hashes = [TARGET_A, TARGET_B].map((d) => sha256(join(d, COPY_NAME)));
+        if (hashes.some((h) => h !== hashBefore)) {
+          throw new Error(`S3: a copy's bytes changed (${hashes.join(", ")} vs ${hashBefore}); this mutation must change no byte (block-on-sight 8)`);
+        }
+        observation.hashAfterTouch = hashBefore;
+        return `the junction now resolves to ${resolved}; both copies still hash to the fixture's sha256, so they differ in mtime only`;
+      });
+    } else if (ROUTE !== "post") {
       await runStep("S3-touch-mtime", async () => {
         const later = new Date(Date.now() + 120_000);
         utimesSync(SCRATCH_COPY, later, later);
@@ -817,7 +922,17 @@ async function main() {
               `exercised and S5 below would be vacuous. Ladder: ${JSON.stringify(ladder)}`
           );
         }
-        return `a viewport_query followed the "${observation.queryProducedBy}" gesture (${before} -> ${after} in the render trace)`;
+        let preCheckNote = "";
+        if (ROUTE === "pre") {
+          // The pre-check's own line (`logMintRefused`), not the watcher's: the junction change is invisible to the watcher.
+          const hit = await findSessionLogLine(/tile-stream-mint-refused.*engine\.source_changed/, sessionLogBaselineLineCount);
+          if (hit === null) {
+            throw new Error(`S4: no tile-stream-mint-refused line with engine.source_changed in the session log since the baseline (line ${sessionLogBaselineLineCount}); the pre-check did not refuse the query`);
+          }
+          observation.preCheckLine = hit;
+          preCheckNote = `; pre-check line: ${hit}`;
+        }
+        return `a viewport_query followed the "${observation.queryProducedBy}" gesture (${before} -> ${after} in the render trace)${preCheckNote}`;
       });
     } else {
       await runStep("S4-issue-one-query-and-touch-on-mint", async () => {
@@ -1170,7 +1285,10 @@ async function main() {
     // The fixture hash, after use (section 8.8's "before and after").
     try {
       observation.hashAfter = existsSync(SCRATCH_COPY) ? sha256(SCRATCH_COPY) : null;
-      if (observation.hashAfter !== null && observation.hashAfter !== hashBefore) {
+      observation.copyHashesAfter = ROUTE === "pre" ? [TARGET_A, TARGET_B].map((d) => sha256(join(d, COPY_NAME))) : [];
+      if (observation.copyHashesAfter.some((h) => h !== hashBefore)) {
+        results.push({ id: "fixture-integrity", status: "FAIL", note: `a junction-route copy's bytes differ from the fixture (${observation.copyHashesAfter.join(", ")} vs ${hashBefore})` });
+      } else if (observation.hashAfter !== null && observation.hashAfter !== hashBefore) {
         results.push({
           id: "fixture-integrity",
           status: "FAIL",
