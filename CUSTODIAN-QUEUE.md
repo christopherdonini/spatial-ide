@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `4048722168939302a32ee69632e113f4538def5ea8dd666efc1c713736c03e22`) at `2026-10-09T09:03:24.449Z`.
+Generated from `PLAN.yaml` (sha256 `38c2163fee1eb9bc1ee5086d798e228e1eabb3d61914f67a96f75900d5b061c8`) at `2026-10-09T09:42:53.938Z`.
 
 ## 1. Next
 
@@ -10,7 +10,6 @@ Generated from `PLAN.yaml` (sha256 `4048722168939302a32ee69632e113f4538def5ea8dd
 
 - **skp-drained-stream-helper-post-check-race** — kernel/src/skp.rs tests: drained_stream_with_a_recorded_change has the same post-check race as typed_terminal_codes' end-to-end test (lane `kernel-protocol`, order 1, budget 240 min)
 - **wire-bytes-invariant-trace-flag-race** — kernel/tests/wire_bytes_invariant.rs: the projected-ticket test asserts tracing is off while its sibling starts a trace (a race on the engine's global trace flag) (lane `kernel-protocol`, order 2, budget 240 min)
-- **e2e-hover-establishing-read-stale** — K6 and A9-prime take their starting hover id from the readout's first poll, which can still name the feature under the previous pointer (lane `shell`, order 1, budget 300 min)
 - **e2e-stale-expectations-reaim** — Re-aim the shell e2e steps whose expectations predate ruled product changes: regression C2'/C3', admission MAP' and BOTHNEEDED', console HEXLIM', GROUP' and REFUSAL', source-changed default-route S4 (lane `shell`, order 2, budget 180 min)
 - **shell-map-refill-after-resize** — The map refills after a resize: a layout change that uncovers map area issues a viewport query, so the area fills without a pan or zoom (lane `shell`, order 3, budget 0 min)
 - **ported-code-notice-route** — A notice route for ported code, wherever it lands (shell or kernel), needed before any PORT (lane `governance`, order 1, budget 480 min)
@@ -36,6 +35,7 @@ Generated from `PLAN.yaml` (sha256 `4048722168939302a32ee69632e113f4538def5ea8dd
 ## 5. In progress
 
 - **covering-names-missing-column** — A covering that names a column the file lacks is kept at open, and every bbox query then fails after the mint (A2-1 P0 k3) — evidence: branch `cut/covering-names-missing-column`
+- **e2e-hover-establishing-read-stale** — K6 and A9-prime take their starting hover id from the readout's first poll, which can still name the feature under the previous pointer — evidence: branch `cut/e2e-hover-establishing-read-stale`
 
 ## 6. Proposed / unscheduled
 
