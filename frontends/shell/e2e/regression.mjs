@@ -44,6 +44,7 @@ import {
   fractionOf,
   gridRegions,
   hasFreshRenderTraceMotion,
+  hoverIdAfterBarrier,
   MAX_ZOOM_NOTCHES,
   samePoint,
   subdivideRegion,
@@ -849,15 +850,11 @@ async function stepA9(page, consoleHandle) {
         for (const flipY of [true, false]) {
           const css = bufferPointToCss(point, rect, grid.width, grid.height, flipY);
           const attemptStart = Date.now();
-          await page.mouse.move(css.x, css.y);
           // A CONFIRMED id and nothing else: this step moves the pointer and never the camera, so the
           // labelled ("confirming") state cannot arise here -- and if it ever did it would not count,
-          // since it names an id no pick at this camera stands behind (§3.3).
-          const result = await waitForCondition(
-            () => readHoverReadoutState(page),
-            (readout) => hoverReadoutId(readout) !== null,
-            5_000
-          );
+          // since it names an id no pick at this camera stands behind (§3.3). The barrier (lib.mjs) makes
+          // the id the hover pick for this pointer named, never one left by the previous pointer.
+          const result = await hoverIdAfterBarrier(page, css, `A9' (notch ${notch}, flipY ${flipY})`);
           const attempt = { point, flipY, css, ok: result.ok, last: result.last, attemptStart, notch };
           attempts.push(attempt);
           notchAttempts.push(attempt);
@@ -1112,15 +1109,10 @@ async function establishAboveThresholdHoverK6(page, consoleHandle, label) {
 
     for (const flipY of [true, false]) {
       const css = bufferPointToCss(bisection.candidate, rect, bisection.bufferWidth, bisection.bufferHeight, flipY);
-      await page.mouse.move(css.x, css.y);
-      // Explicitly a CONFIRMED id: the pointer just moved, so a fresh pick owns the readout, and a
-      // labelled ("confirming") state here would mean the camera moved under us -- not a start state
-      // any K6 case may begin from (§3.3: a marked stale readout is not a confirmed readout).
-      const result = await waitForCondition(
-        () => readHoverReadoutState(page),
-        (readout) => hoverReadoutId(readout) !== null,
-        5_000
-      );
+      // A CONFIRMED id taken only after the hover pick for THIS pointer has run: every zoom notch leaves the readout on the
+      // centre pointer's feature, so a poll right after the move could read that stale id. `hoverIdAfterBarrier` (lib.mjs)
+      // leaves the canvas, waits for `clear`, then moves here. A labelled ("confirming") state is not a confirmed id (§3.3).
+      const result = await hoverIdAfterBarrier(page, css, label);
       if (result.ok) {
         found = { css, text: result.last.text, id: hoverReadoutId(result.last) };
         break;
@@ -1316,8 +1308,8 @@ async function stepK6(page, consoleHandle) {
   // re-established hover. Its dependence on the one candidate pixel is kept on purpose: when the stationary pointer is on the same
   // feature the two ids agree, and when they do not it is the product's two pick paths disagreeing (the hover pick and the settle
   // re-pick, same camera, same pointer), which this check must keep showing. The ruling records that at a window one row taller
-  // than the default (1280 x 801) the hover pick answered 50244 and the settle re-pick 53722; that disagreement is the proposed
-  // node `shell-pick-paths-disagree-at-1280x801`, a diagnosis first, and nothing here is bent to hide it.
+  // than the default (1280 x 801) the hover pick answered 50244 and the settle re-pick 53722; that node
+  // (`shell-pick-paths-disagree-at-1280x801`) has since been diagnosed: the stale establishing read is closed by `e2e-hover-establishing-read-stale`.
   const beforeStepOut = consoleHandle.renderTrace().length;
   await wheelWithoutMoving(page, consoleHandle, K6_ZOOM_OUT_NOTCH_DELTA_Y); // "...if i zoom out by just one step"
   // AFTER the settle (`wheelWithoutMoving` waits for trace quiet): the id must be CONFIRMED, i.e.
