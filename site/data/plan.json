@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-09T12:55:33.922Z",
-  "plan_hash": "abe635cb34402c76a06ac26e1bd5bdb253d2701814a383f477a6202efac6aed6",
+  "generated_at": "2026-10-09T13:13:21.527Z",
+  "plan_hash": "52060e0afd36389622d823dd5b0f7cbc3149d0810ba1ef669a557e62a585b7ca",
   "priorities_approved": true,
   "lanes": [
     {
@@ -6958,6 +6958,33 @@
       }
     },
     {
+      "id": "source-changed-post-reopen-routes-watcher-visible",
+      "title": "source-changed.mjs's post and reopen routes, and walkthrough Part N's N6 and N8, still change the source by an mtime touch the advisory watcher can see",
+      "kind": "task",
+      "lane": "shell",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "depends_on": [
+        "e2e-stale-expectations-reaim"
+      ],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "none",
+      "evidence": null,
+      "budget_minutes": 90,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [],
+      "summary": "PROPOSED 2026-10-09 by the custodian from the e2e re-aim form's OPEN-4 (state/consults/2026-10-09-e2e-stale-expectations-reaim-architect-draft.md): the re-aim moves only the default pre route of source-changed.mjs to a change the watcher cannot see; the post and reopen routes still touch the mtime, which the watcher sees while idle, and walkthrough Part N's N6 and N8 touch it by hand on the same premise. The triage ran the default route only, so their state is unobserved. The human grades and places it.",
+      "dates": {
+        "opened": "2026-10-09",
+        "done": null
+      }
+    },
+    {
       "id": "identity-declaration-route-for-session-tier",
       "title": "The app offers no way to declare an identity column for a file that opened on the session tier (no id column): the declaration form appears only when identity is refused",
       "kind": "task",
@@ -6990,22 +7017,22 @@
       "kind": "task",
       "lane": "shell",
       "phase": "prototype",
-      "status": "ready",
+      "status": "blocked",
       "order": 2,
       "depends_on": [
         "e2e-failures-present-at-the-base"
       ],
       "needs_human": {
-        "kind": "none",
-        "minutes": 0
+        "kind": "ruling",
+        "minutes": 10
       },
-      "gate": "none",
+      "gate": "frontends/shell/e2e/E2E-STALE-EXPECTATIONS-REAIM-PREREGISTRATION.md",
       "evidence": null,
       "budget_minutes": 180,
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "FORM DRAFTING 2026-10-09: the architect, alone, at main a576ab37, citing the custodian's solo re-run and carrying the reuse index output. Before: SOLO RE-RUN DONE 2026-10-09 (state/drafts/e2e-stale-expectations-reaim-console-alone): the console suite alone on the shipped default arm at window height 800, under the custodian's exclusive hold, at ac89e033 (frontends/shell/src and e2e/console.mjs identical to main's): REFUSAL', GROUP' and HEXLIM' fail as the triage found, and REGRESS' fails only on C2'/C3'. The architect drafts the form next, citing it. Before: PLACED 2026-10-09 by the human's additions of 2026-10-09 (state/directives/2026-10-09-rulings-additions-reaim-identity-route-documents.md), item 1: slot 1, right after the K6 fix. The architect drafts its form alone, after the custodian's solo re-run of console GROUP' and REFUSAL', which the form cites. Its rules are item 1's, referenced and not restated. It also carries the KNOWN-LIMITATIONS item 3 paragraph of item 4. Before: PROPOSED 2026-10-09 from the e2e triage (state/consults/2026-10-09-e2e-failures-present-at-the-base-triage-report.md), for the human to place. Each step is a stale expectation, and each fix touches e2e files, their READMEs and the walkthrough rows only, with no product change: C2'/C3' and admission MAP' and BOTHNEEDED' re-aimed for the session identity tier (perhaps a new still-refusing identity fixture); HEXLIM' gains the columns key; GROUP' and REFUSAL' either poll with a bound and assert the group by its predicate, or pin the baseline arm (the second stops the suite exercising the shipped arm, so it is the human's or the architect's call); S4 re-aimed to a change the advisory watcher cannot see. Questions with it, for the human: whether a keyless file that now admits needs a route to the identity declaration form; and whether QUICKSTART.md and KNOWN-LIMITATIONS item 3 are updated here or apart.",
+      "summary": "FORM COMMITTED 2026-10-09 (the architect, alone; state/consults/2026-10-09-e2e-stale-expectations-reaim-architect-draft.md): full form with full gating (size, about 860 code and test lines over 6 files; a property under test); 112 pins at a576ab37. Steps re-aimed as the human ruled: C2-prime/C3-prime, MAP-prime and BOTHNEEDED-prime each split into a session-tier half and a refuse-then-declare half on new fixtures; HEXLIM-prime with columns; REFUSAL-prime polls with a declared bound; GROUP-prime asserts its group by what the entries are, with a capacity check; an arm readback; source-changed S3 and S4 on the pre route re-aimed to a directory junction retargeted after admission. One observed mutation per step, all test-side. WAITS on the human: OPEN-1 (how the still-refusing fixture is written; (A) touches engine/src/fixture.rs, test support), OPEN-2 (mutations), OPEN-3 (walkthrough scope), the sight of rows C2, C3, I4 and I5 and the fixture names; and whether the resumed lead-data pilot wants an impact read, since the piece touches kernel/tests and engine/. Code after the K6 fix merges. Before: FORM DRAFTING 2026-10-09: the architect, alone, at main a576ab37, citing the custodian's solo re-run and carrying the reuse index output. Before: SOLO RE-RUN DONE 2026-10-09 (state/drafts/e2e-stale-expectations-reaim-console-alone): the console suite alone on the shipped default arm at window height 800, under the custodian's exclusive hold, at ac89e033 (frontends/shell/src and e2e/console.mjs identical to main's): REFUSAL', GROUP' and HEXLIM' fail as the triage found, and REGRESS' fails only on C2'/C3'. The architect drafts the form next, citing it. Before: PLACED 2026-10-09 by the human's additions of 2026-10-09 (state/directives/2026-10-09-rulings-additions-reaim-identity-route-documents.md), item 1: slot 1, right after the K6 fix. The architect drafts its form alone, after the custodian's solo re-run of console GROUP' and REFUSAL', which the form cites. Its rules are item 1's, referenced and not restated. It also carries the KNOWN-LIMITATIONS item 3 paragraph of item 4. Before: PROPOSED 2026-10-09 from the e2e triage (state/consults/2026-10-09-e2e-failures-present-at-the-base-triage-report.md), for the human to place. Each step is a stale expectation, and each fix touches e2e files, their READMEs and the walkthrough rows only, with no product change: C2'/C3' and admission MAP' and BOTHNEEDED' re-aimed for the session identity tier (perhaps a new still-refusing identity fixture); HEXLIM' gains the columns key; GROUP' and REFUSAL' either poll with a bound and assert the group by its predicate, or pin the baseline arm (the second stops the suite exercising the shipped arm, so it is the human's or the architect's call); S4 re-aimed to a change the advisory watcher cannot see. Questions with it, for the human: whether a keyless file that now admits needs a route to the identity declaration form; and whether QUICKSTART.md and KNOWN-LIMITATIONS item 3 are updated here or apart.",
       "dates": {
         "opened": "2026-10-09",
         "done": null
