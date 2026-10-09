@@ -593,3 +593,66 @@ export async function zoomInOneNotch(page, consoleHandle, center) {
   const settle = await waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 1500, timeoutMs: 15_000 });
   return { motion: hasFreshRenderTraceMotion(consoleHandle.renderTrace(), before), settled: settle.settled };
 }
+
+// hoverIdAfterBarrier: a hover id is taken only after the hover pick for the new pointer has run (PLAN node
+// e2e-hover-establishing-read-stale). Private copies of the readout contract follow; not exported.
+const HOVER_BARRIER_CLEAR_TIMEOUT_MS = 5_000; // a harness bound (ADR-018), not a measurement
+const HOVER_BARRIER_OFFSET_PX = 4; // CSS px outside the canvas edge at which the pointer leaves it
+// waitForCondition, as in regression.mjs (code identical):
+async function waitForCondition(getValue, predicate, timeoutMs, pollMs = 200) {
+  const start = Date.now();
+  let last;
+  while (Date.now() - start < timeoutMs) {
+    last = await getValue();
+    if (predicate(last)) return { ok: true, last };
+    await sleep(pollMs);
+  }
+  return { ok: false, last };
+}
+// readHoverReadoutState, as in regression.mjs (code identical):
+async function readHoverReadoutState(page) {
+  return page.evaluate(() => {
+    const el = document.querySelector(".hover-readout");
+    if (!el) return { state: "clear", text: null, id: null, marker: null };
+    const text = el.textContent ?? null;
+    const m = /^id (\d+)/.exec(text ?? "");
+    const markerEl = el.querySelector(".hover-readout-confirming-marker");
+    const marker = markerEl ? markerEl.textContent : null;
+    if (el.classList.contains("hover-readout-below-resolution")) {
+      return { state: "refusal", text, id: null, marker };
+    }
+    if (el.classList.contains("hover-readout-confirming")) {
+      return { state: "confirming", text, id: m ? m[1] : null, marker };
+    }
+    return { state: "confirmed", text, id: m ? m[1] : null, marker };
+  });
+}
+// hoverReadoutId, as in regression.mjs (code identical):
+function hoverReadoutId(readout) {
+  return readout !== null && readout.state === "confirmed" ? readout.id : null;
+}
+// RECORDED MUTATION M-B (e2e-hover-establishing-read-stale), OBSERVED AT f9e1f8dc793785f02a72346407261f825fac225b, applied once and reverted (clean before and after):
+// the `page.mouse.move(leave.x, leave.y)` line deleted, the clear-wait kept. At window 1280 x 801 K6 failed with "K6/re-pick: hover barrier: .hover-readout did not
+// reach the clear state within 5000ms of the pointer leaving .working-canvas".
+/** Before the candidate move: read the standing readout, leave the canvas, wait for `clear` (the candidate move then replaces
+ * deck's pending leave request, and no settle re-pick stands), then move to `target` (a CSS point) and poll for a CONFIRMED id. Returns { ok, last }. */
+export async function hoverIdAfterBarrier(page, target, label) {
+  const standing = await readHoverReadoutState(page);
+  const leave = await page.evaluate((off) => {
+    const c = document.querySelector(".working-canvas");
+    if (!c) return null;
+    const r = c.getBoundingClientRect();
+    const outside = (p) => { const e = document.elementFromPoint(p.x, p.y); return !!e && e !== c && !c.contains(e); };
+    return [{ x: r.left + r.width / 2, y: r.top - off }, { x: r.left - off, y: r.top + r.height / 2 }].find(outside) ?? null;
+  }, HOVER_BARRIER_OFFSET_PX);
+  if (!leave) throw new Error(`${label}: hover barrier: no point ${HOVER_BARRIER_OFFSET_PX} CSS px above the top edge or left of the left edge of .working-canvas lies outside it`);
+  await page.mouse.move(leave.x, leave.y);
+  const cleared = await waitForCondition(() => readHoverReadoutState(page), (s) => s.state === "clear", HOVER_BARRIER_CLEAR_TIMEOUT_MS);
+  if (!cleared.ok) {
+    throw new Error(`${label}: hover barrier: .hover-readout did not reach the clear state within ${HOVER_BARRIER_CLEAR_TIMEOUT_MS}ms of the pointer leaving .working-canvas (standing readout ${JSON.stringify(standing)}, last state seen ${JSON.stringify(cleared.last)})`);
+  }
+  await page.mouse.move(target.x, target.y);
+  const result = await waitForCondition(() => readHoverReadoutState(page), (r) => hoverReadoutId(r) !== null, 5_000);
+  console.log(`[hover-barrier] ${label}: standing before ${JSON.stringify(standing)}; ${standing.state === "clear" ? "found clear already" : "saw the change to clear"}; ` + (result.ok ? `confirmed id ${hoverReadoutId(result.last)}` : `no id, last state ${JSON.stringify(result.last)}`));
+  return result;
+}

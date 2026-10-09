@@ -44,6 +44,7 @@ import {
   fractionOf,
   gridRegions,
   hasFreshRenderTraceMotion,
+  hoverIdAfterBarrier,
   MAX_ZOOM_NOTCHES,
   samePoint,
   subdivideRegion,
@@ -725,6 +726,7 @@ async function stepA8(page, consoleHandle) {
 // src/canvas/pickResolution.ts made to return `true` (every camera below the pick resolution). The run
 // failed A9' with "A9': timed out after 120000ms" -- the walk never reached an id -- and K6/continuous with "no
 // above-threshold hoverable candidate found". Reverted; the worktree was clean before and after.
+// Re-observed at f9e1f8dc793785f02a72346407261f825fac225b (e2e-hover-establishing-read-stale), 1280 x 800, applied once and reverted (clean before and after): the same two messages.
 async function stepA9(page, consoleHandle) {
   const initialRect = await canvasRect(page);
   if (!initialRect) throw new Error("A9': .working-canvas not found");
@@ -849,15 +851,11 @@ async function stepA9(page, consoleHandle) {
         for (const flipY of [true, false]) {
           const css = bufferPointToCss(point, rect, grid.width, grid.height, flipY);
           const attemptStart = Date.now();
-          await page.mouse.move(css.x, css.y);
           // A CONFIRMED id and nothing else: this step moves the pointer and never the camera, so the
           // labelled ("confirming") state cannot arise here -- and if it ever did it would not count,
-          // since it names an id no pick at this camera stands behind (§3.3).
-          const result = await waitForCondition(
-            () => readHoverReadoutState(page),
-            (readout) => hoverReadoutId(readout) !== null,
-            5_000
-          );
+          // since it names an id no pick at this camera stands behind (§3.3). The barrier (lib.mjs) makes
+          // the id the hover pick for this pointer named, never one left by the previous pointer.
+          const result = await hoverIdAfterBarrier(page, css, `A9' (notch ${notch}, flipY ${flipY})`);
           const attempt = { point, flipY, css, ok: result.ok, last: result.last, attemptStart, notch };
           attempts.push(attempt);
           notchAttempts.push(attempt);
@@ -1112,15 +1110,11 @@ async function establishAboveThresholdHoverK6(page, consoleHandle, label) {
 
     for (const flipY of [true, false]) {
       const css = bufferPointToCss(bisection.candidate, rect, bisection.bufferWidth, bisection.bufferHeight, flipY);
-      await page.mouse.move(css.x, css.y);
-      // Explicitly a CONFIRMED id: the pointer just moved, so a fresh pick owns the readout, and a
-      // labelled ("confirming") state here would mean the camera moved under us -- not a start state
-      // any K6 case may begin from (§3.3: a marked stale readout is not a confirmed readout).
-      const result = await waitForCondition(
-        () => readHoverReadoutState(page),
-        (readout) => hoverReadoutId(readout) !== null,
-        5_000
-      );
+      // A CONFIRMED id taken only after the hover pick for THIS pointer has run: every zoom notch can leave the readout on the
+      // centre pointer's feature, so a poll right after the move could read that stale id. `hoverIdAfterBarrier` (lib.mjs)
+      // leaves the canvas, waits for `clear`, then moves here. A labelled ("confirming") state is not a confirmed id (§3.3).
+      // Its recorded mutations (M1, M2) are with K6's recorded-mutation block above stepK6.
+      const result = await hoverIdAfterBarrier(page, css, label);
       if (result.ok) {
         found = { css, text: result.last.text, id: hoverReadoutId(result.last) };
         break;
@@ -1274,6 +1268,12 @@ const K6_RELEASE_DRAG_FRACTION = 0.1;
 //    worktree was clean before and after): K6 failed with "K6/release-edge: a camera-settle re-pick line appeared in the render
 //    trace since this step's mark, whatever the pick found: "[render-trace] readout_confirmed camera-settle-repick cleared
 //    {zoom: -0.848138760145841}"". The clean run at the same commit passed K6.
+//  - e2e-hover-establishing-read-stale, OBSERVED AT f9e1f8dc793785f02a72346407261f825fac225b, each applied once and reverted (clean before and after).
+//    M3 and M4 above re-observed at window 1280 x 800, with the messages "K6/discrete: the labelled state rendered at notch 1/8 with NO marker
+//    element" and "K6/release-edge: a camera-settle re-pick line appeared in the render trace since this step's mark".
+//    M1 (1280 x 801): the helper's call to `hoverIdAfterBarrier` replaced by the base's move-then-poll; K6 failed with "K6/re-pick: after ONE discrete
+//    zoom-out step with the pointer stationary, .hover-readout no longer names the feature the pointer is still over (expected id 50244, last seen".
+//    M2 (1280 x 800): `pickCandidateAt` in src/canvas/WorkingCanvas.tsx picking at x + 40; K6 failed with the same "K6/re-pick" message (expected id 52144).
 async function stepK6(page, consoleHandle) {
   // ASSERTION (i) -- CONTINUOUS: one coalesced camera change crossing the threshold (the
   // walkthrough's own L7 gesture, realised here via "Zoom to layer" -- this section's own top
@@ -1316,8 +1316,8 @@ async function stepK6(page, consoleHandle) {
   // re-established hover. Its dependence on the one candidate pixel is kept on purpose: when the stationary pointer is on the same
   // feature the two ids agree, and when they do not it is the product's two pick paths disagreeing (the hover pick and the settle
   // re-pick, same camera, same pointer), which this check must keep showing. The ruling records that at a window one row taller
-  // than the default (1280 x 801) the hover pick answered 50244 and the settle re-pick 53722; that disagreement is the proposed
-  // node `shell-pick-paths-disagree-at-1280x801`, a diagnosis first, and nothing here is bent to hide it.
+  // than the default (1280 x 801) the hover pick answered 50244 and the settle re-pick 53722; that node
+  // (`shell-pick-paths-disagree-at-1280x801`) has since been diagnosed: the stale establishing read is closed by `e2e-hover-establishing-read-stale`.
   const beforeStepOut = consoleHandle.renderTrace().length;
   await wheelWithoutMoving(page, consoleHandle, K6_ZOOM_OUT_NOTCH_DELTA_Y); // "...if i zoom out by just one step"
   // AFTER the settle (`wheelWithoutMoving` waits for trace quiet): the id must be CONFIRMED, i.e.
