@@ -577,3 +577,13 @@ Drafting returned to the architect at the stop. The rows below are the piece's l
 
 - **Resumed** by the human's direction of 2026-10-09 (`state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md`, item 4), as written, from `covering-names-missing-column`. That piece's impact read precedes the architect's draft, as for pieces 1 to 4, and it is recorded here as the next measured piece.
 - The four pieces measured before the freeze stand as recorded above. The result after the fourth piece (the pilot's §5 and §8) is still owed to the human.
+
+### B2, second pilot — measured piece 5 (the first since it resumed): `covering-names-missing-column`
+
+- **The piece** is slot 2's first item, graded S1 by the human (engine, order 1). The read precedes the architect's draft, as for pieces 1 to 4. No branch exists yet.
+- **The impact read** is `state/consults/2026-10-09-covering-names-missing-column-impact-read.md`: 108 lines, sha256 bc961da144c3b456fe38daa2c6bb8e6eea910679db252da7458bdb0615a8ecc3, filed byte-identical as lead-data wrote it, read at main dba12b8c.
+- **Cost** (the harness's task notification): 192,653 subagent tokens, 113 tool uses, 351,644 ms. The run lasted 05:18:44Z to 05:24:35Z.
+- **Write audit PASS:** one Write, at its REPORT PATH line's path (Read 55, Grep 51, Glob 5, the hand-back 1).
+- **C3:** before, the checkout held only its two pre-existing untracked items. During the run the custodian committed its own filing of the human's ADR-036 rulings (7a6c9c0c), touching `DECISIONS-PENDING.md`, `PLAN.yaml` (the 1b and 1c nodes), the queue, the site and the ledger. After, the checkout held the two items and the report.
+- **Content:** interfaces in eight rows, consumers, governing texts, five gap questions, and missing pointers: no test pins k3, no `engine.no_covering_bbox` error fixture, neither KNOWN-LIMITATIONS item 9 nor 22 covers the case, and the owner's index does not list `Dataset::covering()`. The custodian's read found no draft text, design, recommendation or answer. The custodian checked its main finding against the code: the R-S3 check in `engine/src/dataset.rs` sits behind the early return taken when no format rule applied (lines 1198 to 1209 against 1247 to 1266), and `engine/ADMISSION-RESULTS.md` line 46 records M-4's deviation for that reason.
+- **The architect's draft** of piece 5 follows, with the read's path in its brief.
