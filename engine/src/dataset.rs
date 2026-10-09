@@ -1440,8 +1440,9 @@ fn judge_covering(covering: Option<&CoveringBbox>, schema: &SchemaRef) -> Option
 ///
 /// Each segment is compared with **ASCII case-insensitive equality**, at the top level and at
 /// every child: that is the rule the P0 showed the pinned DuckDB binder applying (the
-/// covering-names-missing-column form, Amendment 1, item 4), and a name differing by a
-/// non-ASCII letter's case does not bind. It is DuckDB's rule, never a filesystem's or an OS's.
+/// covering-names-missing-column form, Amendment 1, item 4). The P0 showed a top-level name
+/// differing by a non-ASCII letter's case not binding; a non-ASCII child name is outside what
+/// this piece claims. It is DuckDB's rule, never a filesystem's or an OS's.
 fn field_path_exists(schema: &SchemaRef, path: &crate::geoparquet::FieldPath) -> bool {
     let mut segments = path.0.iter();
     let Some(first) = segments.next() else {
