@@ -551,6 +551,14 @@ pub const SPANS: &[(&str, &str, &str)] = &[
     (SPAN_LEASE_TO_FIRST_ROW, LEASE_ACQUIRED, FIRST_SOURCE_ROW),
 ];
 
+/// **`CURRENT` is process-global by design, and `cargo test` runs tests as threads in one
+/// process** — so two trace-using tests would otherwise race for the single slot and one would
+/// fail `start`. That is the declared "one traced stream per traced run" limit behaving exactly
+/// as documented, surfacing in the test harness rather than in a product path. Serializing here
+/// is the honest fix; loosening the refusal to make tests pass would delete the property.
+#[cfg(test)]
+pub(crate) static TEST_LOCK: Mutex<()> = Mutex::new(());
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -723,13 +731,6 @@ mod tests {
 
         drop(guard);
     }
-
-    /// **`CURRENT` is process-global by design, and `cargo test` runs tests as threads in one
-    /// process** — so two trace-using tests would otherwise race for the single slot and one would
-    /// fail `start`. That is the declared "one traced stream per traced run" limit behaving exactly
-    /// as documented, surfacing in the test harness rather than in a product path. Serializing here
-    /// is the honest fix; loosening the refusal to make tests pass would delete the property.
-    static TEST_LOCK: Mutex<()> = Mutex::new(());
 
     #[test]
     fn a_disabled_mark_records_nothing_and_a_started_trace_records_in_order() {
