@@ -686,7 +686,11 @@ async function clampedPanDrag(page, box, cx, cy, dxScreenTotal, dyScreenTotal) {
  * diagonal. Dividing each nonzero component by `Math.SQRT2` when BOTH an x and a y component are set
  * (a genuinely diagonal direction) restores the realized total to exactly `distance` -- see this
  * file's own report for the resulting formula, restated for Amendment 2. */
-/** F1 fix (viewport-residency cut P2-prep dry-run; the surfacing evidence file is named in this
+/** HISTORY (milestone 1): the overlap below was observed on the stacked layout, where
+ * `.canvas-status-stack` (a styles.css rule since removed) spanned the canvas's top strip. The banner
+ * now renders in the attention strip (`App.tsx`'s `"attention.canvasRefusal"` slot); the dismiss
+ * helper below is unchanged.
+ * F1 fix (viewport-residency cut P2-prep dry-run; the surfacing evidence file is named in this
  * piece's own report). A ceiling-refusal banner (App.tsx's `canvasRefusal` state, rendered as
  * `.canvas-refusal`, set by `handleCanvasCeilingRefusal` the moment a stream's batch crosses
  * MAX_RESIDENT_VERTICES) visually covers `.zoom-to-layer`: `.canvas-status-stack` (styles.css)
