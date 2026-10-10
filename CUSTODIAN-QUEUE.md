@@ -1,14 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `1838c8f1f16b46807a1d2052d90a1637b1d559603cf6d0f1bc76d049aad112d1`) at `2026-10-10T11:59:56.152Z`.
+Generated from `PLAN.yaml` (sha256 `26b77328269e3ce0e1ec5e85dc672da602174e63e426a2c96a9224338d8e4091`) at `2026-10-10T12:59:02.052Z`.
 
 ## 1. Next
 
-- (nothing ready)
+- **stream-flush-cancel-exit-marks-producer-cancelled** — engine/src/stream.rs flush's cancel exit marks producer_cancelled, as the five other cancel exits after the first batch do, with a test that forces that exit: the end instant of the docs/08 cancellation budget (flake hunt run 1, S2) (lane `engine`)
 
 ## 2. Ready
 
-- (none)
+- **stream-flush-cancel-exit-marks-producer-cancelled** — engine/src/stream.rs flush's cancel exit marks producer_cancelled, as the five other cancel exits after the first batch do, with a test that forces that exit: the end instant of the docs/08 cancellation budget (flake hunt run 1, S2) (lane `engine`, order 1, budget 240 min)
 
 ## 3. Waiting on the human (total: 10 min)
 
@@ -18,7 +18,6 @@ Generated from `PLAN.yaml` (sha256 `1838c8f1f16b46807a1d2052d90a1637b1d559603cf6
 
 ## 4. Blocked on dependencies
 
-- **stream-flush-cancel-exit-marks-producer-cancelled** — engine/src/stream.rs flush's cancel exit marks producer_cancelled, as the five other cancel exits after the first batch do, with a test that forces that exit: the end instant of the docs/08 cancellation budget (flake hunt run 1, S2) — blocked by: wire-bytes-invariant-trace-flag-race
 - **crs-undeclared-message-wording** — engine.crs_undeclared's message in the human's words: engine/src/error.rs and every test, e2e constant and walkthrough row that quotes it, nothing else (sweep area E, its last line) — blocked by: filter-identity-alias-ambiguous-reached-through-skp, e2e-stale-expectations-reaim
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
 - **filter-identity-alias-ambiguous-reached-through-skp** — skp.filter_identity_alias_ambiguous is reachable from the product since skp/0.2, and no test reaches it through SKP (sweep area C, finding 2, S2) — blocked by: stream-flush-cancel-exit-marks-producer-cancelled
@@ -35,13 +34,12 @@ Generated from `PLAN.yaml` (sha256 `1838c8f1f16b46807a1d2052d90a1637b1d559603cf6
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer — blocked by: signpath-application-draft
 - **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-1-1
 - **signpath-application-draft** — Entry 77 — the SignPath OSS application and disclosure text drafted for the human sight, once a release is CI-built — blocked by: release-v0-1-1
-- **ported-code-notice-route** — A notice route for ported code, wherever it lands (shell or kernel), needed before any PORT — blocked by: wire-bytes-invariant-trace-flag-race, stream-flush-cancel-exit-marks-producer-cancelled, filter-identity-alias-ambiguous-reached-through-skp, crs-undeclared-message-wording
+- **ported-code-notice-route** — A notice route for ported code, wherever it lands (shell or kernel), needed before any PORT — blocked by: stream-flush-cancel-exit-marks-producer-cancelled, filter-identity-alias-ambiguous-reached-through-skp, crs-undeclared-message-wording
 - **site-design-v1** — Landing page redesign — DRAFT-4 (status strip, milestone banner, waiting-on-you cards with unblocks counts, the swimlane board) — blocked by: governance-ci-built-site
 - **guardian-v1** — Guardian v1 -- G1's heredoc false alarm fixed, one local log line per refusal, and three new rules: G7 (agent merges and history rewrites), G8 (plugin, marketplace and MCP installs, and writes to the user's Claude folder), G9 (wholesale cleans of the main checkout's target) (Fable's MODS-V1 brief, 2026-10-05) — blocked by: ported-code-notice-route
 
 ## 5. In progress
 
-- **wire-bytes-invariant-trace-flag-race** — kernel/tests/wire_bytes_invariant.rs: the projected-ticket test asserts tracing is off while its sibling starts a trace (a race on the engine's global trace flag) — evidence: branch `cut/wire-bytes-invariant-trace-flag-race`
 - **e2e-stale-expectations-reaim** — Re-aim the shell e2e steps whose expectations predate ruled product changes: regression C2'/C3', admission MAP' and BOTHNEEDED', console HEXLIM', GROUP' and REFUSAL', source-changed default-route S4 — evidence: branch `cut/e2e-stale-expectations-reaim`
 - **known-limitations-item-8-filter-not-published** — KNOWN-LIMITATIONS item 8 corrected: a filter is never part of what is published (the app never sends it, at the v0.1.0 tag as on main); walkthrough row M8; the correction recorded against RELEASE-0.1.md Amendment 15 (sweep area E, finding 8, S1) — evidence: branch `cut/known-limitations-item-8-filter-not-published`
 
