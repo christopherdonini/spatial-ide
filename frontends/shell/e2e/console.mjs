@@ -23,8 +23,9 @@
 // CONSECUTIVE same-kind-same-name entries. Re-aimed (E2E-STALE-EXPECTATIONS-REAIM-PREREGISTRATION.md
 // section 2.3): the shipped arm is the candidate arm, where tile queries and session-log lines are also
 // recorded, so GROUP' no longer counts new group headers. It asserts the group by what the entries are:
-// exactly 3 residential UNTILED `viewport_query` rows (`bbox` null, the primary attempt of each Apply),
-// all in one `.console-group`, found by a bounded poll, and the group's `×N` header equal to its rows.
+// exactly 3 residential UNTILED `viewport_query` rows (`bbox` null, the primary attempt of each Apply), found by a
+// bounded poll, then the grouping rule inside their window (Amendment 2 item 2, round 71): each group reads `×N` for
+// its rows, no run of identical entries is split, and some group shows 2+ rows (else "grouping not exercised").
 // REFUSAL' polls with a declared bound for the same reason (the refused entry reaches the DOM after the
 // hook returns). Neither suite step pins an arm: `main` reads the arm back and stops unless it is the
 // shipped one.
@@ -244,43 +245,58 @@ async function readConsoleLabel(page) {
   return { text, count, dropped, total: count === null ? null : count + dropped };
 }
 
-/** Every rendered console row in DOM order after expanding every group: its kind (a/b/c), label, request
- * text (class A) and the index of its enclosing `.console-group` (null when it stands alone). */
-async function readRowsWithGroups(page) {
+/** The console's items in DOM order after expanding every group: a direct child of `.console-entries` that is a
+ * single `.console-entry` or a `.console-group` (its header text, `aria-expanded`, and its shown rows). A row's
+ * `key` maps one-to-one onto the grouping key (consoleViewModel.ts): class A `a:` + its header; class B and C the
+ * class letter + the whole prose; else `u:` + its text. `i` numbers the rows in DOM order. */
+async function readItems(page) {
   await expandAllGroups(page);
-  return page.evaluate(() => {
-    const groups = Array.from(document.querySelectorAll(".console-group"));
-    return Array.from(document.querySelectorAll(".console-entry")).map((el) => {
-      const g = el.closest(".console-group");
-      const kind = ["a", "b", "c"].find((k) => el.classList.contains(`console-entry-class-${k}`)) ?? "unclassified";
-      return {
-        kind,
-        label:
-          kind === "a"
-            ? (el.querySelector(".console-entry-header")?.textContent ?? null)
-            : (el.querySelector(".console-entry-prose")?.textContent ?? "").slice(0, 48),
-        requestText: el.querySelector(".console-request-text")?.textContent ?? null,
-        group: g ? groups.indexOf(g) : null,
-        groupHeader: g?.querySelector(".console-group-header")?.textContent ?? null,
-      };
-    });
+  const items = await page.evaluate(() => {
+    const rowOf = (el) => {
+      const k = ["a", "b", "c"].find((x) => el.classList.contains(`console-entry-class-${x}`));
+      const t = (sel) => el.querySelector(sel)?.textContent ?? "";
+      const key = k === "a" ? `a:${t(".console-entry-header")}` : k ? `${k}:${t(".console-entry-prose")}` : `u:${el.textContent}`;
+      return { key, req: k === "a" ? t(".console-request-text") : null };
+    };
+    return Array.from(document.querySelector(".console-entries")?.children ?? [])
+      .filter((c) => c.matches(".console-group, .console-entry"))
+      .map((c) => {
+        const h = c.querySelector(".console-group-header");
+        const rows = Array.from(h ? c.querySelectorAll(".console-entry") : [c]).map(rowOf);
+        return { header: h?.textContent ?? null, expanded: h ? h.getAttribute("aria-expanded") === "true" : null, rows };
+      });
   });
+  let i = 0;
+  for (const it of items) for (const r of it.rows) r.i = i++;
+  return items;
 }
 
 const RESIDENTIAL_PREDICATE = "zone = 'residential'";
+const GROUP_CALLS = 3; // the number of identical calls, and the expected residential-row count (Amendment 2 item 2)
+// Step 6 (c)'s failure name: byte-copied by script from round 71's ruling, never typed.
+const GROUP_NOT_EXERCISED = "GROUP': grouping not exercised";
 
-/** The class-A `viewport_query` rows whose parsed request has `bbox === null` and the residential predicate:
- * the primary attempt of an Apply (`App.tsx::applyFilter`); tile queries and the recovery re-issue carry a bbox. */
-function residentialUntiledRows(rows) {
-  return rows.filter((r) => {
-    if (r.kind !== "a" || r.label !== "viewport_query" || r.requestText === null) return false;
-    try {
-      const q = JSON.parse(r.requestText);
-      return q.bbox === null && q.filter?.predicate === RESIDENTIAL_PREDICATE;
-    } catch {
-      return false;
-    }
-  });
+const itemKey = (it) => it.rows[0]?.key ?? null;
+
+/** A residential untiled row: class A `viewport_query` whose request has `bbox` null and the residential predicate
+ * (the primary attempt of an Apply, `App.tsx::applyFilter`; tile queries and the recovery re-issue carry a bbox). */
+function isResidentialUntiled(r) {
+  if (r.key !== "a:viewport_query") return false;
+  try {
+    const q = JSON.parse(r.req);
+    return q.bbox === null && q.filter?.predicate === RESIDENTIAL_PREDICATE;
+  } catch {
+    return false;
+  }
+}
+
+/** The window: the rows from the first residential untiled row to the last, with every item that holds them or lies
+ * between (`wi`: each item and `n`, its rows inside the window). `first` is the first item's index. */
+function windowOf(items) {
+  const res = items.flatMap((it, ii) => it.rows.filter(isResidentialUntiled).map((r) => ({ r, ii })));
+  const [lo, hi, first] = [res[0]?.r.i, res.at(-1)?.r.i, res[0]?.ii ?? -1];
+  const wi = res.length === 0 ? [] : items.slice(first, res.at(-1).ii + 1).map((it) => ({ it, n: it.rows.filter((r) => r.i >= lo && r.i <= hi).length }));
+  return { res, wi, lo, hi, first };
 }
 
 function callOpenPath(page, path, opts) {
@@ -620,80 +636,77 @@ async function stepClassC(page) {
 }
 
 /**
- * `GROUP'`: 3 identical `queryWithFilter` calls, awaited in sequence -> ONE `.console-group` holds exactly
- * those 3 residential untiled `viewport_query` rows, its header reads `×N` for the N rows it shows, and
- * expanding it yields individually-parseable `.console-request-text` blocks, never a single merged/synthetic
- * text (I8). Re-aimed (E2E-STALE-EXPECTATIONS-REAIM-PREREGISTRATION.md section 2.3, option 1): the group is
- * asserted by what its entries ARE, never by counting every new `.console-group-header` (the candidate arm
- * records tile queries and session-log lines too). Steps: settle, so no earlier generation is in flight;
- * read the baseline (label total; the residential untiled count must be 0); make the 3 calls; poll (declared
- * bound) for exactly 3 such rows all inside one `.console-group`. Capacity: the label's total after the poll
- * minus the baseline, R, must not exceed `MAX_CONSOLE_ENTRIES`, or the ring may have evicted the step's own
- * rows. What varies is read, not assumed: `ViewportQueryRequest` carries no per-call nonce, so the 3 texts
- * are expected BYTE-IDENTICAL -- reported, not asserted. On expiry the message names where each found row is
- * and the kinds of the rows between them (so a row of another kind splitting the group shows by name).
+ * `GROUP'` (Amendment 2 item 2, round 71): GROUP_CALLS identical `queryWithFilter` calls; the rows they record are
+ * asserted by what they ARE inside their window (see `windowOf`), never by counting every `.console-group-header`.
+ * Settle, baseline (0 residential untiled rows, the label's total), the calls, then a bounded poll for exactly
+ * GROUP_CALLS such rows with no collapsed group in the window (`presence`). `capacity`: R, the label's total minus
+ * the baseline, must not exceed `MAX_CONSOLE_ENTRIES`, or the ring may have evicted the step's own rows. Then, in
+ * order: `group` (each group is `×N` for its N >= 2 rows of one key), `split run` (no two adjacent items in the window,
+ * nor the first and the item before it, share a key), the not-exercised name (some group shows 2+ rows inside the
+ * window, so it never passes on singles only), `parse` (each class-A row in the window parses on its own, I8).
+ * A session-log line between residential rows ends their run, so it passes.
  */
 async function stepGroup(page, consoleHandle) {
   await waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 1500, timeoutMs: 15_000 });
-  const baselineRows = await readRowsWithGroups(page);
   const baseline = await readConsoleLabel(page);
-  const baselineResidential = residentialUntiledRows(baselineRows).length;
-  if (baselineResidential !== 0) {
-    throw new Error(`GROUP': baseline already holds ${baselineResidential} residential untiled row(s), expected 0`);
-  }
+  const baseRes = windowOf(await readItems(page)).res.length;
+  if (baseRes !== 0) throw new Error(`GROUP': baseline already holds ${baseRes} residential untiled row(s), expected 0`);
 
-  for (let i = 0; i < 3; i++) {
+  for (let i = 0; i < GROUP_CALLS; i++) {
     const outcome = await page.evaluate((p) => window.__SPATIAL_E2E__.queryWithFilter(p), RESIDENTIAL_PREDICATE);
     if (outcome.kind !== "applied") {
-      throw new Error(`GROUP': queryWithFilter #${i + 1} of 3 returned ${JSON.stringify(outcome)}, expected {kind:"applied"}`);
+      throw new Error(`GROUP': queryWithFilter #${i + 1} of ${GROUP_CALLS} returned ${JSON.stringify(outcome)}, expected {kind:"applied"}`);
     }
   }
 
   const found = await pollConsole(
-    async () => ({ rows: await readRowsWithGroups(page), label: await readConsoleLabel(page) }),
-    ({ rows }) => {
-      const res = residentialUntiledRows(rows);
-      return res.length === 3 && res.every((r) => r.group !== null && r.group === res[0].group);
+    async () => ({ items: await readItems(page), label: await readConsoleLabel(page) }),
+    ({ items }) => {
+      const w = windowOf(items);
+      return w.res.length === GROUP_CALLS && !w.wi.some((x) => x.it.expanded === false);
     }
   );
-  const { rows, label } = found.last;
+  const { items, label } = found.last;
   const R = label.total - baseline.total;
   if (R > MAX_CONSOLE_ENTRIES) {
     throw new Error(`GROUP': capacity: ${R} entries were recorded since the baseline (label total ${label.total} - ${baseline.total}), more than the ring's ${MAX_CONSOLE_ENTRIES}`);
   }
-  const res = residentialUntiledRows(rows);
+  const w = windowOf(items);
+  const rowsIn = items.flatMap((it) => it.rows).filter((r) => r.i >= w.lo && r.i <= w.hi);
   if (!found.ok) {
-    const at = res.map((r) => rows.indexOf(r));
-    const between = at.length === 0 ? [] : rows.slice(Math.min(...at), Math.max(...at) + 1).map((r) => `${r.kind}:${r.label}${r.group === null ? "" : `@group${r.group}`}`);
     throw new Error(
-      `GROUP': expected 3 residential untiled rows in one .console-group within ${CONSOLE_POLL_BOUND_MS}ms (polled every ${CONSOLE_POLL_INTERVAL_MS}ms), ` +
-        `found ${res.length}, in groups ${JSON.stringify(res.map((r) => r.group))}; rows from the first found to the last, in DOM order: ${JSON.stringify(between)}; ` +
-        `console label total ${label.total} (baseline ${baseline.total}, R=${R})`
+      `GROUP': presence: expected ${GROUP_CALLS} residential untiled rows and no collapsed group in their window within ${CONSOLE_POLL_BOUND_MS}ms (polled every ${CONSOLE_POLL_INTERVAL_MS}ms), ` +
+        `found ${w.res.length}, held by items ${JSON.stringify(w.res.map((x) => `${x.ii}:${items[x.ii].header ?? "single"}`))}; ` +
+        `keys from the first found row to the last: ${JSON.stringify(rowsIn.map((r) => r.key.slice(0, 48)))}; console label total ${label.total} (baseline ${baseline.total}, R=${R})`
     );
   }
 
-  const inGroup = rows.filter((r) => r.group === res[0].group);
-  const header = res[0].groupHeader;
-  if (header !== `×${inGroup.length}`) {
-    throw new Error(`GROUP': the group's header reads ${JSON.stringify(header)} but it shows ${inGroup.length} row(s), expected "×${inGroup.length}"`);
+  for (const { it } of w.wi) {
+    const N = it.rows.length;
+    if (it.header !== null && (N < 2 || it.header !== `×${N}` || new Set(it.rows.map((r) => r.key)).size !== 1)) {
+      throw new Error(`GROUP': group: a group in the window reads ${JSON.stringify(it.header)} for ${N} row(s) of keys ${JSON.stringify([...new Set(it.rows.map((r) => r.key.slice(0, 48)))])}; expected "×${N}", N >= 2, one key`);
+    }
   }
-  if (!inGroup.every((r) => r.kind === "a" && r.label === "viewport_query")) {
-    throw new Error(`GROUP': not every row in the group was viewport_query. Actual: ${JSON.stringify(inGroup.map((r) => `${r.kind}:${r.label}`))}`);
-  }
-  inGroup.forEach((r, i) => {
-    try {
-      JSON.parse(r.requestText);
-    } catch (e) {
-      throw new Error(`GROUP': row #${i + 1} of the group did not individually parse as JSON: ${e.message}`);
+  const prev = items[w.first - 1];
+  const chain = (prev && itemKey(prev) !== null ? [prev] : []).concat(w.wi.map((x) => x.it));
+  chain.forEach((it, k) => {
+    if (k > 0 && itemKey(it) === itemKey(chain[k - 1])) {
+      throw new Error(`GROUP': split run: two adjacent items in the window share the key ${JSON.stringify(itemKey(it).slice(0, 60))}; a run of consecutive identical entries forms one item`);
     }
   });
-  const distinct = new Set(res.map((r) => r.requestText));
-  const varyNote =
-    distinct.size === 1
-      ? "all 3 texts BYTE-IDENTICAL (viewport_query carries no per-call nonce on the wire)"
-      : `${distinct.size} distinct texts among the 3 (something DID vary -- read, not assumed)`;
+  const exercised = w.wi.filter((x) => x.it.header !== null && x.n >= 2).length;
+  const summary = w.wi.map((x) => `${x.it.header ?? "single"} ${itemKey(x.it)?.slice(0, 40)} x${x.n}`);
+  if (exercised === 0) throw new Error(`${GROUP_NOT_EXERCISED}: no group in the window shows two or more rows inside it; window items: ${JSON.stringify(summary)}`);
+  for (const r of rowsIn.filter((x) => x.key.startsWith("a:"))) {
+    try {
+      JSON.parse(r.req);
+    } catch (e) {
+      throw new Error(`GROUP': parse: the request text of a ${r.key} row in the window did not parse on its own: ${e.message}`);
+    }
+  }
 
-  return `3 identical queryWithFilter calls -> 3 residential untiled viewport_query rows in ONE .console-group, header "${header}" for N=${inGroup.length} row(s), each individually parseable (never a merged text, I8); ${varyNote}; R=${R} <= ${MAX_CONSOLE_ENTRIES} (no eviction of the step's own rows)`;
+  const distinct = new Set(w.res.map((x) => x.r.req)).size;
+  return `${GROUP_CALLS} identical queryWithFilter calls -> window items (key, rows inside): ${JSON.stringify(summary)}; ${exercised} group(s) show 2+ rows inside the window; ${distinct} distinct text(s) among the ${w.res.length} residential rows; R=${R} <= ${MAX_CONSOLE_ENTRIES}`;
 }
 
 /**
