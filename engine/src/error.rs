@@ -24,9 +24,10 @@ pub enum EngineError {
     /// here — it is admitted with provenance `crs:format-default`
     /// (`engine/src/geoparquet.rs::format_semantics`).
     ///
-    /// The `Display` text below still carries the pre-P1 sentence about the default, verbatim,
-    /// because it is quoted verbatim in the shipped walkthrough and in an SKP fixture; the string
-    /// pass over the four new user-visible states is `ADMISSION-PREREGISTRATION.md` §12d's, at P6.
+    /// The `Display` text below is the human's wording, from item 5 of
+    /// `state/directives/2026-10-10-docs-lane-slot-2-order-reaim-answers-strike-crs-wording.md`;
+    /// rewording it is the human's decision. The string pass over the four new user-visible
+    /// states is `ADMISSION-PREREGISTRATION.md` §12d's, at P6.
     CrsUndeclared { detail: String },
 
     /// The file declares a CRS **and** the caller asserted one.
@@ -282,7 +283,9 @@ impl fmt::Display for EngineError {
             Self::CrsUndeclared { detail } => write!(
                 f,
                 "refused: the file declares no CRS and none was asserted by the caller ({detail}). \
-                 This engine does not apply GeoParquet's OGC:CRS84 default (docs/05, no silent conversion)"
+                 GeoParquet's OGC:CRS84 default is applied only when the crs key is absent in a file of \
+                 version 1.0.0 or 1.1.0; otherwise assert a CRS to open the file (docs/05, no silent \
+                 conversion)"
             ),
             Self::CrsAssertionConflict { declared, asserted } => write!(
                 f,
@@ -440,3 +443,21 @@ impl fmt::Display for EngineError {
 impl std::error::Error for EngineError {}
 
 pub type Result<T> = std::result::Result<T, EngineError>;
+
+#[cfg(test)]
+mod tests {
+    /// The `CrsUndeclared` text is the human's wording, from item 5 of
+    /// `state/directives/2026-10-10-docs-lane-slot-2-order-reaim-answers-strike-crs-wording.md`;
+    /// rewording it must break this test, and rewording it is the human's decision.
+    #[test]
+    fn the_crs_undeclared_message_is_the_human_wording_byte_for_byte() {
+        let e = crate::crs::admit(None, None, None).unwrap_err();
+        assert_eq!(
+            e.to_string(),
+            "refused: the file declares no CRS and none was asserted by the caller (no `geo` \
+            metadata CRS on the primary geometry column). GeoParquet's OGC:CRS84 default is \
+            applied only when the crs key is absent in a file of version 1.0.0 or 1.1.0; \
+            otherwise assert a CRS to open the file (docs/05, no silent conversion)"
+        );
+    }
+}
