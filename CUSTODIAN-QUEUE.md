@@ -1,16 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `eb0766952a6dbddd2fdefe877416886e2215427966646f0f992d16d87d2f5adb`) at `2026-10-10T23:11:35.103Z`.
+Generated from `PLAN.yaml` (sha256 `64a30cc2fc69ca70ad35d33d6390496fca568bd0f8665bc8c054ad43b6dc581e`) at `2026-10-10T23:18:57.845Z`.
 
 ## 1. Next
 
-- **crs-undeclared-message-wording** — engine.crs_undeclared's message in the human's words: engine/src/error.rs and every test, e2e constant and walkthrough row that quotes it, nothing else (sweep area E, its last line) (lane `engine`)
+- **shell-map-refill-after-resize** — The map refills after a resize: a layout change that uncovers map area issues a viewport query, so the area fills without a pan or zoom (lane `shell`)
 
 ## 2. Ready
 
-- **crs-undeclared-message-wording** — engine.crs_undeclared's message in the human's words: engine/src/error.rs and every test, e2e constant and walkthrough row that quotes it, nothing else (sweep area E, its last line) (lane `engine`, order 4, budget 45 min)
 - **shell-map-refill-after-resize** — The map refills after a resize: a layout change that uncovers map area issues a viewport query, so the area fills without a pan or zoom (lane `shell`, order 3, budget 0 min)
-- **known-limitations-item-2-on-main-paragraph** — KNOWN-LIMITATIONS item 2 gains the human's on-main paragraph (absent crs key and latitude-first CRS admitted under GeoParquet 1.0.0 and 1.1.0), and items 19, 20 and 22's unpinned cites are pinned (sweep area E, findings 1 and 6) (lane `release`, order 3, budget 45 min)
 
 ## 3. Waiting on the human (total: 10 min)
 
@@ -36,7 +34,8 @@ Generated from `PLAN.yaml` (sha256 `eb0766952a6dbddd2fdefe877416886e221542796664
 
 ## 5. In progress
 
-- (none)
+- **crs-undeclared-message-wording** — engine.crs_undeclared's message in the human's words: engine/src/error.rs and every test, e2e constant and walkthrough row that quotes it, nothing else (sweep area E, its last line) — evidence: branch `cut/crs-undeclared-message-wording`
+- **known-limitations-item-2-on-main-paragraph** — KNOWN-LIMITATIONS item 2 gains the human's on-main paragraph (absent crs key and latitude-first CRS admitted under GeoParquet 1.0.0 and 1.1.0), and items 19, 20 and 22's unpinned cites are pinned (sweep area E, findings 1 and 6) — evidence: branch `cut/known-limitations-item-2-on-main-paragraph`
 
 ## 6. Proposed / unscheduled
 
