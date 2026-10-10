@@ -266,9 +266,9 @@ fn declared_identity_naming_a_non_unique_column_is_refused() {
 ///
 /// Mutations, each observed by applying it, running this test, and reverting it:
 /// - M-1: `engine::predicate::identity_alias_ambiguity`'s body returns `None`. Observed at
-///   commit M1_COMMIT: this test fails at the `expect_err` of step (iii), the predicate being admitted.
+///   commit caf131fd: this test fails at the `expect_err` of step (iii), the predicate being admitted.
 /// - M-2: in `SkpHost::open_dataset`, `host_minted_identity_declaration`'s result is replaced by
-///   `None`. Observed at commit M2_COMMIT: this test fails at the `expect` of step (ii), the declared
+///   `None`. Observed at commit caf131fd: this test fails at the `expect` of step (ii), the declared
 ///   open refusing `engine.identity_unusable` on `id`.
 #[tokio::test(flavor = "multi_thread")]
 async fn a_declared_identity_beside_the_files_own_id_refuses_a_filter_naming_id_as_ambiguous() {
