@@ -309,8 +309,8 @@ export interface PublishPanelProps {
  * "Export interactive map…" button. Placed in the Export section of the Inspector's Layer tab
  * (`App.tsx`'s `"section.export"` slot; `layout/contributions.ts` and `layout/StudioLayout.tsx`
  * render the `section.*` slots there). `styles.css`'s `.publish-panel` comment opens with HISTORY
- * (milestone 1):
- * its layout budget was measured on the stacked layout and does not describe the current frame.
+ * (milestone 1): its layout budget was measured on the stacked layout and does not describe the
+ * current frame.
  * `StylePanel.tsx`'s own doc comment says the same of its figures.
  *
  * **Default scope is "Current view"** (a design choice the piece text explicitly permits: "A
