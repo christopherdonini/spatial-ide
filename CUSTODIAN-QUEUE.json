@@ -1,47 +1,9 @@
 {
-  "generated_at": "2026-10-10T12:59:02.052Z",
-  "plan_hash": "26b77328269e3ce0e1ec5e85dc672da602174e63e426a2c96a9224338d8e4091",
+  "generated_at": "2026-10-10T13:02:47.781Z",
+  "plan_hash": "02bd48538745bd4d13d429d8b09b409bd52a346622a06a2ae3b68995e4632554",
   "priorities_approved": true,
-  "next": {
-    "id": "stream-flush-cancel-exit-marks-producer-cancelled",
-    "title": "engine/src/stream.rs flush's cancel exit marks producer_cancelled, as the five other cancel exits after the first batch do, with a test that forces that exit: the end instant of the docs/08 cancellation budget (flake hunt run 1, S2)",
-    "lane": "engine",
-    "phase": "prototype",
-    "status": "ready",
-    "order": 1,
-    "budget_minutes": 240,
-    "needs_human": {
-      "kind": "none",
-      "minutes": 0
-    },
-    "evidence": null,
-    "dates": {
-      "opened": "2026-10-10",
-      "done": null
-    },
-    "summary": "RULED 2026-10-10 (state/directives/2026-10-10-pr199-merged-flush-open-1-pr200-sentence-stale-comment.md, item 2): OPEN-1 is (a), the E pair's scratch patch allowed on the form's terms. Amendment 1 records it before any code; then a worker on its own branch. Before: FORM COMMITTED 2026-10-10, drafted ahead of its slot (the architect draft after lead-data's impact read, state/consults/2026-10-10-stream-flush-cancel-exit-marks-producer-cancelled-architect-draft.md; measured piece 8 of the second pilot): full form with full gating (ADR-018's end instant and a property five tests assert); at most 150 changed lines in engine/src/stream.rs and engine/src/trace.rs; 84 pins at f0fccfaf. The flush exit marks the event (C1), and the pre-prepare exit too (C2), in scope as the same defect class under the sibling-search rule; two in-crate tests force them (T-1, T-2), with no product seam, by moving trace.rs's test lock to module level under cfg(test). The other unmarked returns go to the proposed node stream-cancel-returns-left-unmarked. The four kernel tests answered from code in its section 2.4: trace_spans cannot hit the gap; first_batch_factorial's ignored passes and skp_admission can; skp_filter_cancellation can through flush's exit or the pre-prepare one. OPEN-1 for the human, not a red line: the E pair, a scratch trace-gated sleep before flush's check, run at the base and at the head on the re-aim allowance's terms (recommended), or no E pair. Code after wire-bytes merges. Before: 2026-10-10 by the human (state/directives/2026-10-10-docs-lane-slot-2-order-reaim-answers-strike-crs-wording.md, items 6 and 7): slot 2 directly after wire-bytes-invariant-trace-flag-race (the item 8 correction moved to the docs lane). Forms ahead: lead-data's impact read and the architect's form draft run while wire-bytes-invariant-trace-flag-race is in its PR and gates, so this starts when it merges. Before: PLACED 2026-10-10 by the human (state/directives/2026-10-10-flake-hunt-run-1-flush-cancel-exit.md, items 1 and 2): slot 2, after known-limitations-item-8-filter-not-published and before ported-code-notice-route; graded S2. Seen in the human's flake hunt, run 1, at 116deb53 (state/consults/FLAKE-HUNT-RUN-1-2026-10-10.md, its evidence beside it): engine/tests/slice.rs's cancelling_mid_stream_stops_production_promptly failed twice on two cores at its expect that cancel_observed was stamped, and the sandbox experiment put the producer on flush's batches_after_cancel exit, which returns Cancelled without the mark. The piece: that exit marks producer_cancelled, with a test that forces that exit. Lead-data's impact read first, then its own full form, because the event ends the interval docs/08 budgets for cancellation (ADR-018). The form also says whether the four kernel tests that read the event (trace_spans, first_batch_factorial, skp_admission, skp_filter_cancellation) can hit the gap, and says for each other unmarked Cancelled return the custodian's check lists (state/consults/2026-10-10-flake-hunt-run-1-custodian-check.md) whether it is in scope. No code before the form. Waits for its turn in slot 2."
-  },
-  "ready": [
-    {
-      "id": "stream-flush-cancel-exit-marks-producer-cancelled",
-      "title": "engine/src/stream.rs flush's cancel exit marks producer_cancelled, as the five other cancel exits after the first batch do, with a test that forces that exit: the end instant of the docs/08 cancellation budget (flake hunt run 1, S2)",
-      "lane": "engine",
-      "phase": "prototype",
-      "status": "ready",
-      "order": 1,
-      "budget_minutes": 240,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-10-10",
-        "done": null
-      },
-      "summary": "RULED 2026-10-10 (state/directives/2026-10-10-pr199-merged-flush-open-1-pr200-sentence-stale-comment.md, item 2): OPEN-1 is (a), the E pair's scratch patch allowed on the form's terms. Amendment 1 records it before any code; then a worker on its own branch. Before: FORM COMMITTED 2026-10-10, drafted ahead of its slot (the architect draft after lead-data's impact read, state/consults/2026-10-10-stream-flush-cancel-exit-marks-producer-cancelled-architect-draft.md; measured piece 8 of the second pilot): full form with full gating (ADR-018's end instant and a property five tests assert); at most 150 changed lines in engine/src/stream.rs and engine/src/trace.rs; 84 pins at f0fccfaf. The flush exit marks the event (C1), and the pre-prepare exit too (C2), in scope as the same defect class under the sibling-search rule; two in-crate tests force them (T-1, T-2), with no product seam, by moving trace.rs's test lock to module level under cfg(test). The other unmarked returns go to the proposed node stream-cancel-returns-left-unmarked. The four kernel tests answered from code in its section 2.4: trace_spans cannot hit the gap; first_batch_factorial's ignored passes and skp_admission can; skp_filter_cancellation can through flush's exit or the pre-prepare one. OPEN-1 for the human, not a red line: the E pair, a scratch trace-gated sleep before flush's check, run at the base and at the head on the re-aim allowance's terms (recommended), or no E pair. Code after wire-bytes merges. Before: 2026-10-10 by the human (state/directives/2026-10-10-docs-lane-slot-2-order-reaim-answers-strike-crs-wording.md, items 6 and 7): slot 2 directly after wire-bytes-invariant-trace-flag-race (the item 8 correction moved to the docs lane). Forms ahead: lead-data's impact read and the architect's form draft run while wire-bytes-invariant-trace-flag-race is in its PR and gates, so this starts when it merges. Before: PLACED 2026-10-10 by the human (state/directives/2026-10-10-flake-hunt-run-1-flush-cancel-exit.md, items 1 and 2): slot 2, after known-limitations-item-8-filter-not-published and before ported-code-notice-route; graded S2. Seen in the human's flake hunt, run 1, at 116deb53 (state/consults/FLAKE-HUNT-RUN-1-2026-10-10.md, its evidence beside it): engine/tests/slice.rs's cancelling_mid_stream_stops_production_promptly failed twice on two cores at its expect that cancel_observed was stamped, and the sandbox experiment put the producer on flush's batches_after_cancel exit, which returns Cancelled without the mark. The piece: that exit marks producer_cancelled, with a test that forces that exit. Lead-data's impact read first, then its own full form, because the event ends the interval docs/08 budgets for cancellation (ADR-018). The form also says whether the four kernel tests that read the event (trace_spans, first_batch_factorial, skp_admission, skp_filter_cancellation) can hit the gap, and says for each other unmarked Cancelled return the custodian's check lists (state/consults/2026-10-10-flake-hunt-run-1-custodian-check.md) whether it is in scope. No code before the form. Waits for its turn in slot 2."
-    }
-  ],
+  "next": null,
+  "ready": [],
   "waiting_on_human": {
     "total_minutes": 10,
     "by_kind": {
@@ -503,6 +465,28 @@
     }
   ],
   "in_progress": [
+    {
+      "id": "stream-flush-cancel-exit-marks-producer-cancelled",
+      "title": "engine/src/stream.rs flush's cancel exit marks producer_cancelled, as the five other cancel exits after the first batch do, with a test that forces that exit: the end instant of the docs/08 cancellation budget (flake hunt run 1, S2)",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": 1,
+      "budget_minutes": 240,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "branch": "cut/stream-flush-cancel-exit-marks-producer-cancelled"
+      },
+      "dates": {
+        "opened": "2026-10-10",
+        "done": null
+      },
+      "summary": "AMENDMENT 1 APPENDED AND IN CODE 2026-10-10 (generation 2, class 5): OPEN-1 (a) recorded by reference before any code; a worker-high on branch cut/stream-flush-cancel-exit-marks-producer-cancelled from main, worktree C:/dev/wt/flush, target D:/wt-targets/cov (warm from wire-bytes); E-1 on a base worktree. Rule (00) checked: the open PR #200 and slot 1 touch none of engine/src/stream.rs, engine/src/trace.rs or engine/README.md. Before: RULED 2026-10-10 (state/directives/2026-10-10-pr199-merged-flush-open-1-pr200-sentence-stale-comment.md, item 2): OPEN-1 is (a), the E pair's scratch patch allowed on the form's terms. Amendment 1 records it before any code; then a worker on its own branch. Before: FORM COMMITTED 2026-10-10, drafted ahead of its slot (the architect draft after lead-data's impact read, state/consults/2026-10-10-stream-flush-cancel-exit-marks-producer-cancelled-architect-draft.md; measured piece 8 of the second pilot): full form with full gating (ADR-018's end instant and a property five tests assert); at most 150 changed lines in engine/src/stream.rs and engine/src/trace.rs; 84 pins at f0fccfaf. The flush exit marks the event (C1), and the pre-prepare exit too (C2), in scope as the same defect class under the sibling-search rule; two in-crate tests force them (T-1, T-2), with no product seam, by moving trace.rs's test lock to module level under cfg(test). The other unmarked returns go to the proposed node stream-cancel-returns-left-unmarked. The four kernel tests answered from code in its section 2.4: trace_spans cannot hit the gap; first_batch_factorial's ignored passes and skp_admission can; skp_filter_cancellation can through flush's exit or the pre-prepare one. OPEN-1 for the human, not a red line: the E pair, a scratch trace-gated sleep before flush's check, run at the base and at the head on the re-aim allowance's terms (recommended), or no E pair. Code after wire-bytes merges. Before: 2026-10-10 by the human (state/directives/2026-10-10-docs-lane-slot-2-order-reaim-answers-strike-crs-wording.md, items 6 and 7): slot 2 directly after wire-bytes-invariant-trace-flag-race (the item 8 correction moved to the docs lane). Forms ahead: lead-data's impact read and the architect's form draft run while wire-bytes-invariant-trace-flag-race is in its PR and gates, so this starts when it merges. Before: PLACED 2026-10-10 by the human (state/directives/2026-10-10-flake-hunt-run-1-flush-cancel-exit.md, items 1 and 2): slot 2, after known-limitations-item-8-filter-not-published and before ported-code-notice-route; graded S2. Seen in the human's flake hunt, run 1, at 116deb53 (state/consults/FLAKE-HUNT-RUN-1-2026-10-10.md, its evidence beside it): engine/tests/slice.rs's cancelling_mid_stream_stops_production_promptly failed twice on two cores at its expect that cancel_observed was stamped, and the sandbox experiment put the producer on flush's batches_after_cancel exit, which returns Cancelled without the mark. The piece: that exit marks producer_cancelled, with a test that forces that exit. Lead-data's impact read first, then its own full form, because the event ends the interval docs/08 budgets for cancellation (ADR-018). The form also says whether the four kernel tests that read the event (trace_spans, first_batch_factorial, skp_admission, skp_filter_cancellation) can hit the gap, and says for each other unmarked Cancelled return the custodian's check lists (state/consults/2026-10-10-flake-hunt-run-1-custodian-check.md) whether it is in scope. No code before the form. Waits for its turn in slot 2.",
+      "evidence_label": "branch `cut/stream-flush-cancel-exit-marks-producer-cancelled`"
+    },
     {
       "id": "e2e-stale-expectations-reaim",
       "title": "Re-aim the shell e2e steps whose expectations predate ruled product changes: regression C2'/C3', admission MAP' and BOTHNEEDED', console HEXLIM', GROUP' and REFUSAL', source-changed default-route S4",

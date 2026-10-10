@@ -297,3 +297,16 @@ Falsification: any E-2 run failing at :809. That would mean another unmarked exi
 ## §10. Amendments
 
 (opens empty)
+
+### Amendment 1 — the human's ruling on OPEN-1 (class 5)
+
+*Written by the custodian after the human's ruling was received (12:50:58Z by the transcript) and before any code. References only; nothing below is a quotation.*
+
+1. **The ruling:** OPEN-1 is (a) (state/directives/2026-10-10-pr199-merged-flush-open-1-pr200-sentence-stale-comment.md:8 @ a82ba6d3f417a812b8e059476d0289b65e7936f9 sha256:181fce54595226c87250dbf9fdd725ab2d17691bd1ca74952fe5c31800088256; its RULED block in DECISIONS-PENDING.md).
+2. **The terms it allows** are the form's own, §4's E-1 and E-2 bullets, with OPEN-1 (a)'s as drafted (state/consults/2026-10-10-stream-flush-cancel-exit-marks-producer-cancelled-architect-draft.md:325-326 @ a82ba6d3f417a812b8e059476d0289b65e7936f9 sha256:5e0d14c3ef210df247c153acf979ec5f13ee81c2c4bdb22dbab5cee647f59bf0):
+   - the scratch patch is applied with git apply in this piece's worktree and one base worktree only;
+   - it is reverted, and each worktree is shown clean;
+   - it is never committed and never pushed;
+   - if the permission system refuses it, the worker stops and the custodian tells the human.
+3. **Effect:** §1's E claims, §5's P-2 and P-3, and §9's E items stand as drafted. §8 item 7 binds the patch.
+4. Nothing above is edited.

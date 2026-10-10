@@ -1,14 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `26b77328269e3ce0e1ec5e85dc672da602174e63e426a2c96a9224338d8e4091`) at `2026-10-10T12:59:02.052Z`.
+Generated from `PLAN.yaml` (sha256 `02bd48538745bd4d13d429d8b09b409bd52a346622a06a2ae3b68995e4632554`) at `2026-10-10T13:02:47.781Z`.
 
 ## 1. Next
 
-- **stream-flush-cancel-exit-marks-producer-cancelled** — engine/src/stream.rs flush's cancel exit marks producer_cancelled, as the five other cancel exits after the first batch do, with a test that forces that exit: the end instant of the docs/08 cancellation budget (flake hunt run 1, S2) (lane `engine`)
+- (nothing ready)
 
 ## 2. Ready
 
-- **stream-flush-cancel-exit-marks-producer-cancelled** — engine/src/stream.rs flush's cancel exit marks producer_cancelled, as the five other cancel exits after the first batch do, with a test that forces that exit: the end instant of the docs/08 cancellation budget (flake hunt run 1, S2) (lane `engine`, order 1, budget 240 min)
+- (none)
 
 ## 3. Waiting on the human (total: 10 min)
 
@@ -40,6 +40,7 @@ Generated from `PLAN.yaml` (sha256 `26b77328269e3ce0e1ec5e85dc672da602174e63e426
 
 ## 5. In progress
 
+- **stream-flush-cancel-exit-marks-producer-cancelled** — engine/src/stream.rs flush's cancel exit marks producer_cancelled, as the five other cancel exits after the first batch do, with a test that forces that exit: the end instant of the docs/08 cancellation budget (flake hunt run 1, S2) — evidence: branch `cut/stream-flush-cancel-exit-marks-producer-cancelled`
 - **e2e-stale-expectations-reaim** — Re-aim the shell e2e steps whose expectations predate ruled product changes: regression C2'/C3', admission MAP' and BOTHNEEDED', console HEXLIM', GROUP' and REFUSAL', source-changed default-route S4 — evidence: branch `cut/e2e-stale-expectations-reaim`
 - **known-limitations-item-8-filter-not-published** — KNOWN-LIMITATIONS item 8 corrected: a filter is never part of what is published (the app never sends it, at the v0.1.0 tag as on main); walkthrough row M8; the correction recorded against RELEASE-0.1.md Amendment 15 (sweep area E, finding 8, S1) — evidence: branch `cut/known-limitations-item-8-filter-not-published`
 
