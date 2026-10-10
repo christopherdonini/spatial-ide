@@ -57,6 +57,8 @@ no performance claim at all (`docs/08_Testing.md`).*
      system — is refused too, as `engine.axis_order_unestablished`.
      <!-- engine/src/dataset.rs:303-306 (the gate); engine/src/error.rs:213-216 (the message); engine/src/geoparquet.rs:101 (the file-declared CRS's own axis order is read here) with :164, :169, :185 (the three axis_order_unestablished refusals: no `coordinate_system.axis`, fewer than two axes, directions that are not a planar east/north pair); MANUAL-WALKTHROUGH.md NODEF'; MANUAL-WALKTHROUGH.md I3 (the message verbatim, "refused, not reinterpreted"); ADR-015 §5 -->
 
+   **On `main` (not the v0.1.0 artifact above).** For a file that declares GeoParquet version 1.0.0 or 1.1.0, two of these refusals no longer happen. A file with no `crs` key opens as OGC:CRS84, which is the format's own rule, and the summary records it as `crs:format-default`. A file whose CRS declares latitude first, EPSG:4326 included, opens with the coordinate order the format lays down, recorded as `axis:format-override`; its declared order is kept as a recorded fact and no coordinate is transformed. Still refused: a `crs` key that is present and `null`, a latitude-first CRS that you assert yourself, and either case in a file of any other GeoParquet version.
+
 3. **Identity must already exist in the file, as a single integer column.** The app uses the file's
    own `id` column, or one column you declare a mapping from, and scans it for uniqueness at open.
    The column must be an integer type that widens into `u64` without transformation; anything else is
