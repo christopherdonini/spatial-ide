@@ -310,3 +310,12 @@ Falsification: any E-2 run failing at :809. That would mean another unmarked exi
    - if the permission system refuses it, the worker stops and the custodian tells the human.
 3. **Effect:** §1's E claims, §5's P-2 and P-3, and §9's E items stand as drafted. §8 item 7 binds the patch.
 4. Nothing above is edited.
+
+### Amendment 2 — E-1 gave 0 of 20 (class 2)
+
+*Written by the custodian after worker report 1's outcomes were seen (state/consults/2026-10-10-stream-flush-cancel-exit-marks-producer-cancelled-worker-report-1.md, its sha256 from line 5 to the end 4b6ae7e0d59b6ced9b8ebee5e67d06533422ba4f2f235a2d57f61a3853f385ba). References only.*
+
+1. **Class 2.** P-2 predicted at least 1 of 20 E-1 runs failing at the expect §4 names. E-1 gave 0 of 20 at B, 82ceae7f, and E-2 gave 0 of 20 at H, 0a3d6de4 (the report's E-1 and E-2 section). As §5 declares for this case, E-2 discriminates nothing and §1's E claim falls back to T-1 alone. No stop.
+2. **What differed from the experiment.** E-1 and E-2 ran on eight unpinned Windows cores. The flake hunt's experiment ran pinned to two Linux cores (state/consults/FLAKE-HUNT-RUN-1-2026-10-10-logs/README.md:6 @ 82ceae7fca2795212dbb7693ef47cd425b579188 sha256:1a342d7cefe36e1b019594c6735ba88f11132c2b9b49fcdeb65bd2f22a3be20f). The form names no affinity. A two-core E pair would be a scope addition (class 9), the human's to allow, recorded before any such run.
+3. **Other differences, accepted:** the patch was the sleep alone, without the experiment's test-side diagnostics, which §8 item 2 forbids; one shared hold piped its output through tail, taking the exit code from PIPESTATUS.
+4. Nothing above is edited.
