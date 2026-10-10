@@ -305,3 +305,11 @@ Falsification: step (iii) does not refuse with this code at H. The finding would
 5. **§8 item 1's ordering condition is met:** stream-flush-cancel-exit-marks-producer-cancelled merged as 7b3d8040aafd37c554f43b506663c884669e5dbb (PR #201, 2026-10-10T17:18:14Z).
 6. **Generation:** the node goes to 2.
 7. Nothing above is edited.
+
+### Amendment 2 — §2.4's LodRefused row, its reason corrected (class 3)
+
+*Written by the custodian after PR #202's gate 1, at the architect's D-1 (`state/consults/gates/2026-10-10-filter-identity-alias-ambiguous-reached-through-skp-gate1-architect.md`, gate-log 463). References only.*
+
+1. §2.4's third row says there is no `build_tiers` call in kernel/src. There is one, inside the unit-test module (kernel/src/skp.rs:2374 @ 5a66b1526ff37760a6051674e4f6e8faf24fbb9e sha256:1e0af3fd4a4c3a1d47c7f470ed0d86d90d9de210a5eb1455fbd94482a4765b72; the call, kernel/src/skp.rs:2671 @ 5a66b1526ff37760a6051674e4f6e8faf24fbb9e sha256:35cac06a58f8adefa79639bd9d2dd830b829d004961fd3309e25e3b11139af49). There is no non-test call, so the row's verdict, out because it holds, stands.
+2. **Generation:** the node goes to 3.
+3. Nothing above is edited.

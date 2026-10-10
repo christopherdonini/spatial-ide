@@ -9,3 +9,15 @@ Change: each comment the two nodes name is brought into line with the code and t
 Tests+mutation: none added or changed: no assertion, no test name, no string the app shows; every string constant and every code line stays byte-identical, which the reviewer checks with a diff of the non-comment lines; typecheck and vitest run once at H; the reviewer checks each changed comment against the code and the cited ruling at the PR's base, and that no line outside Scope changes.
 Out-of-scope: none of ADR / security / wire / guarantee is touched: no ADR file, nothing under protocol/ or scripts/plan, no code, no test assertion, no string the app shows; the comments and the row are brought into line with code that does not change.
 ```
+
+### Amendment 1 — the file count closes the single-gate route (class 6, budget deviation, Scope not edited)
+
+*Written by the custodian after PR #203's gate-1 reviewer failed the piece on E1 (`state/consults/gates/2026-10-10-shell-stale-frame-and-layout-comments-gate1-reviewer.md`, gate-log 465), at the branch head dc289564. Correction round 1 of 2. It follows §21b's clause on a size overrun found mid-piece, as `REUSE-ROUND-1-BUNDLE-PREREGISTRATION.md`'s Amendment 1 did: the piece keeps its five-line form and records the overrun here.*
+
+1. **The overrun.** The Scope line declares 12 files. The diff touches 11, nine of them code files. §21c's bound is at most 8 files (AUTONOMY.md:350 @ 5a66b1526ff37760a6051674e4f6e8faf24fbb9e sha256:98f827948981d936522d9c9273e457c2f4f7e5e622aa917afc6fb73e0edf01f9). A diff that crosses any one of the bounds takes full gating, whatever its category (AUTONOMY.md:353 @ 5a66b1526ff37760a6051674e4f6e8faf24fbb9e sha256:a4939bf59c3c8f7da9614a7574cc282433a0c8b06d0d8509c296e13b218b27d7). The custodian's form should have said so at dispatch.
+2. **The route.** The single-gate route is closed, so both gates apply: the architect gate and the reviewer gate. The reviewer's gate-1 Correctness verdict stands. The reviewer's re-gate reads this amendment, the records, and the fixes to its Documentation findings.
+3. **What is unchanged:** the Authority, Scope, Change, Tests+mutation and Out-of-scope lines, and the 140-line budget.
+4. **The reviewer's D1 to D5** are fixed on the branch before the re-gate. **D6:** the node `geometry-types-beyond-polygons` goes to generation 8 in the done commit. That is the bump §15 makes obligatory on any amendment, and it is not a Scope addition.
+5. **Generation:** both nodes go to 2.
+
+**Superseded index.** The PLAN summaries' words "the single combined gate" → item 2. They are not edited.
