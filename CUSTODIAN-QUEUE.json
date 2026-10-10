@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-10T09:10:27.269Z",
-  "plan_hash": "d215a689f28b95126920b86900cf947bc734d50eeca993a952189b50977a8bda",
+  "generated_at": "2026-10-10T10:32:51.190Z",
+  "plan_hash": "9ad165aa6f450b979439e951df08a0b254b9869b323f26f49bdb20e20bcc1933",
   "priorities_approved": true,
   "next": null,
   "ready": [],
@@ -34,6 +34,28 @@
     }
   },
   "blocked_on_dependencies": [
+    {
+      "id": "stream-flush-cancel-exit-marks-producer-cancelled",
+      "title": "engine/src/stream.rs flush's cancel exit marks producer_cancelled, as the five other cancel exits after the first batch do, with a test that forces that exit: the end instant of the docs/08 cancellation budget (flake hunt run 1, S2)",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": 1,
+      "budget_minutes": 240,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-10",
+        "done": null
+      },
+      "summary": "PLACED 2026-10-10 by the human (state/directives/2026-10-10-flake-hunt-run-1-flush-cancel-exit.md, items 1 and 2): slot 2, after known-limitations-item-8-filter-not-published and before ported-code-notice-route; graded S2. Seen in the human's flake hunt, run 1, at 116deb53 (state/consults/FLAKE-HUNT-RUN-1-2026-10-10.md, its evidence beside it): engine/tests/slice.rs's cancelling_mid_stream_stops_production_promptly failed twice on two cores at its expect that cancel_observed was stamped, and the sandbox experiment put the producer on flush's batches_after_cancel exit, which returns Cancelled without the mark. The piece: that exit marks producer_cancelled, with a test that forces that exit. Lead-data's impact read first, then its own full form, because the event ends the interval docs/08 budgets for cancellation (ADR-018). The form also says whether the four kernel tests that read the event (trace_spans, first_batch_factorial, skp_admission, skp_filter_cancellation) can hit the gap, and says for each other unmarked Cancelled return the custodian's check lists (state/consults/2026-10-10-flake-hunt-run-1-custodian-check.md) whether it is in scope. No code before the form. Waits for its turn in slot 2.",
+      "blocked_by": [
+        "known-limitations-item-8-filter-not-published"
+      ]
+    },
     {
       "id": "entry-79-b1-consult-items",
       "title": "Entry 79 — three items routed for Brief B stage B1's close",
@@ -250,10 +272,11 @@
         "opened": "2026-10-08",
         "done": null
       },
-      "summary": "2026-10-10: known-limitations-item-8-filter-not-published is placed before this node in slot 2 (state/directives/2026-10-10-drift-sweep-area-e-instructions.md, part 2 item 1). Before: DEPENDENCY RECORDED 2026-10-09: slot 2's order (state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md, item 3) puts it after wire-bytes-invariant-trace-flag-race; one piece at a time in the slot. Before: AMENDMENT 1 APPENDED 2026-10-09 (generation 2; the architect's draft of the human's rulings): the allowed licence ids set; the header ruled; the wording latent; the ADR-030 note appended byte for byte from the ruling's lines 65 to 71 with a byte check; OPEN-5's rule; outside a git checkout (no .git entry at the root) the registry side is checked with one named note line; the check named ported-notices, required by the human after its first green run; CI installs nothing; budget 1,550 lines over 20 files. Waits for its turn in slot 2. Before: RULED 2026-10-09 by the human's rulings of 2026-10-09 (state/directives/2026-10-09-rulings-on-the-eight-forms.md), item 7: OPEN-1 (a), OPEN-2 (a), OPEN-3 (b), OPEN-5 (a) with the read rule, OPEN-6 required (the human adds it after the first green run); the source-archive build; CI installs nothing; the label finding stays with the window; OPEN-4 (a), the ADR-030 note accepted as typed. Amendment 1 records them before dispatch. Before: FORM COMMITTED 2026-10-09, drafted ahead of its slot (the architect draft, alone; state/consults/2026-10-09-ported-code-notice-route-architect-draft.md): full form with full gating (ADR-009's security posture, ADR-030's notice set under test and its reopen clause, and size: at most 1,400 lines over at most 20 files). A fifth notice set enumerated from an in-tree registry, LICENSES/third-party/ported/MANIFEST.json, with hash-pinned upstream texts; a ported file carries an SPDX header and a Ported-From line; the packaged build and a new repository check fail closed in both directions; empty at merge, so every NOTICE stays byte-identical. It ports nothing. For the human: OPEN-1 to OPEN-5, red lines (allowed upstream licences; the header and licence expression; the new NOTICE wording; the ADR-030 appended note; what counts as a port), and OPEN-6, whether the check is required. The custodian raised the budget for the full form and its gates. WAITS on the human. Before: PLACED 2026-10-09 by the human's direction of 2026-10-09 (state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md), item 3e: slot 2, item e. Before: PROPOSED 2026-10-08 by the human (state/directives/2026-10-08-reuse-round-1.md, item 4), for the human to place: needed before any port of outside code; covers attribution and licence notices for ported code in the shell or the kernel.",
+      "summary": "2026-10-10: stream-flush-cancel-exit-marks-producer-cancelled is placed before this node in slot 2, after known-limitations-item-8-filter-not-published (state/directives/2026-10-10-flake-hunt-run-1-flush-cancel-exit.md, item 2). Before: 2026-10-10: known-limitations-item-8-filter-not-published is placed before this node in slot 2 (state/directives/2026-10-10-drift-sweep-area-e-instructions.md, part 2 item 1). Before: DEPENDENCY RECORDED 2026-10-09: slot 2's order (state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md, item 3) puts it after wire-bytes-invariant-trace-flag-race; one piece at a time in the slot. Before: AMENDMENT 1 APPENDED 2026-10-09 (generation 2; the architect's draft of the human's rulings): the allowed licence ids set; the header ruled; the wording latent; the ADR-030 note appended byte for byte from the ruling's lines 65 to 71 with a byte check; OPEN-5's rule; outside a git checkout (no .git entry at the root) the registry side is checked with one named note line; the check named ported-notices, required by the human after its first green run; CI installs nothing; budget 1,550 lines over 20 files. Waits for its turn in slot 2. Before: RULED 2026-10-09 by the human's rulings of 2026-10-09 (state/directives/2026-10-09-rulings-on-the-eight-forms.md), item 7: OPEN-1 (a), OPEN-2 (a), OPEN-3 (b), OPEN-5 (a) with the read rule, OPEN-6 required (the human adds it after the first green run); the source-archive build; CI installs nothing; the label finding stays with the window; OPEN-4 (a), the ADR-030 note accepted as typed. Amendment 1 records them before dispatch. Before: FORM COMMITTED 2026-10-09, drafted ahead of its slot (the architect draft, alone; state/consults/2026-10-09-ported-code-notice-route-architect-draft.md): full form with full gating (ADR-009's security posture, ADR-030's notice set under test and its reopen clause, and size: at most 1,400 lines over at most 20 files). A fifth notice set enumerated from an in-tree registry, LICENSES/third-party/ported/MANIFEST.json, with hash-pinned upstream texts; a ported file carries an SPDX header and a Ported-From line; the packaged build and a new repository check fail closed in both directions; empty at merge, so every NOTICE stays byte-identical. It ports nothing. For the human: OPEN-1 to OPEN-5, red lines (allowed upstream licences; the header and licence expression; the new NOTICE wording; the ADR-030 appended note; what counts as a port), and OPEN-6, whether the check is required. The custodian raised the budget for the full form and its gates. WAITS on the human. Before: PLACED 2026-10-09 by the human's direction of 2026-10-09 (state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md), item 3e: slot 2, item e. Before: PROPOSED 2026-10-08 by the human (state/directives/2026-10-08-reuse-round-1.md, item 4), for the human to place: needed before any port of outside code; covers attribution and licence notices for ported code in the shell or the kernel.",
       "blocked_by": [
         "wire-bytes-invariant-trace-flag-race",
-        "known-limitations-item-8-filter-not-published"
+        "known-limitations-item-8-filter-not-published",
+        "stream-flush-cancel-exit-marks-producer-cancelled"
       ]
     },
     {
@@ -1545,7 +1568,7 @@
         "opened": "2026-10-09",
         "done": null
       },
-      "summary": "PROPOSED 2026-10-09 by the human's rulings of 2026-10-09 (state/directives/2026-10-09-rulings-on-the-eight-forms.md), item 6: a sibling site of wire-bytes-invariant-trace-flag-race (its form, section 0.7); cross-test stamping into a live trace, not observed failing; its own form, because it bears on a docs/08 budgeted assertion (engine/tests/slice.rs, the assertion near its line 815). The human places it later."
+      "summary": "NOTED 2026-10-10 by the human (state/directives/2026-10-10-flake-hunt-run-1-flush-cancel-exit.md, item 3): stays proposed. The flake hunt's failures of this test (state/consults/FLAKE-HUNT-RUN-1-2026-10-10.md) were a missing event with nothing dropped from the trace, so this node's predicted mechanism was not what was observed; that cause is stream-flush-cancel-exit-marks-producer-cancelled. The custodian's check (state/consults/2026-10-10-flake-hunt-run-1-custodian-check.md) records the evidence's limits. Before: PROPOSED 2026-10-09 by the human's rulings of 2026-10-09 (state/directives/2026-10-09-rulings-on-the-eight-forms.md), item 6: a sibling site of wire-bytes-invariant-trace-flag-race (its form, section 0.7); cross-test stamping into a live trace, not observed failing; its own form, because it bears on a docs/08 budgeted assertion (engine/tests/slice.rs, the assertion near its line 815). The human places it later."
     },
     {
       "id": "source-changed-post-reopen-routes-watcher-visible",

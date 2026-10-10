@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `d215a689f28b95126920b86900cf947bc734d50eeca993a952189b50977a8bda`) at `2026-10-10T09:10:27.269Z`.
+Generated from `PLAN.yaml` (sha256 `9ad165aa6f450b979439e951df08a0b254b9869b323f26f49bdb20e20bcc1933`) at `2026-10-10T10:32:51.190Z`.
 
 ## 1. Next
 
@@ -18,6 +18,7 @@ Generated from `PLAN.yaml` (sha256 `d215a689f28b95126920b86900cf947bc734d50eeca9
 
 ## 4. Blocked on dependencies
 
+- **stream-flush-cancel-exit-marks-producer-cancelled** — engine/src/stream.rs flush's cancel exit marks producer_cancelled, as the five other cancel exits after the first batch do, with a test that forces that exit: the end instant of the docs/08 cancellation budget (flake hunt run 1, S2) — blocked by: known-limitations-item-8-filter-not-published
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
 - **b2-piece-1b-recording** — B2 piece 1b -- recording: the kernel's step commands for filter, scope and style, the session history on the machine, safe against a crash, and the docs/07 note — blocked by: shell-migration-milestone-2
 - **shell-map-refill-after-resize** — The map refills after a resize: a layout change that uncovers map area issues a viewport query, so the area fills without a pan or zoom — blocked by: e2e-stale-expectations-reaim
@@ -27,7 +28,7 @@ Generated from `PLAN.yaml` (sha256 `d215a689f28b95126920b86900cf947bc734d50eeca9
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer — blocked by: signpath-application-draft
 - **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-1-1
 - **signpath-application-draft** — Entry 77 — the SignPath OSS application and disclosure text drafted for the human sight, once a release is CI-built — blocked by: release-v0-1-1
-- **ported-code-notice-route** — A notice route for ported code, wherever it lands (shell or kernel), needed before any PORT — blocked by: wire-bytes-invariant-trace-flag-race, known-limitations-item-8-filter-not-published
+- **ported-code-notice-route** — A notice route for ported code, wherever it lands (shell or kernel), needed before any PORT — blocked by: wire-bytes-invariant-trace-flag-race, known-limitations-item-8-filter-not-published, stream-flush-cancel-exit-marks-producer-cancelled
 - **site-design-v1** — Landing page redesign — DRAFT-4 (status strip, milestone banner, waiting-on-you cards with unblocks counts, the swimlane board) — blocked by: governance-ci-built-site
 - **guardian-v1** — Guardian v1 -- G1's heredoc false alarm fixed, one local log line per refusal, and three new rules: G7 (agent merges and history rewrites), G8 (plugin, marketplace and MCP installs, and writes to the user's Claude folder), G9 (wholesale cleans of the main checkout's target) (Fable's MODS-V1 brief, 2026-10-05) — blocked by: ported-code-notice-route
 

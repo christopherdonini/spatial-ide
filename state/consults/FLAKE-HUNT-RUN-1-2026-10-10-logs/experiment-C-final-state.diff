@@ -1,0 +1,46 @@
+diff --git a/engine/src/stream.rs b/engine/src/stream.rs
+index ae733000..af0f451a 100644
+--- a/engine/src/stream.rs
++++ b/engine/src/stream.rs
+@@ -2543,6 +2543,10 @@ fn flush(
+         stats.batches_after_cancel.fetch_add(1, Ordering::SeqCst);
+         return Err(EngineError::Cancelled);
+     }
++    // EXPERIMENT-C (temporary, sandbox only, control): the same sleep as B, placed after the check.
++    if crate::trace::is_enabled() {
++        std::thread::sleep(std::time::Duration::from_millis(20));
++    }
+     stats.add_resident(p.est_bytes);
+ 
+     // Per batch, not per row — the rule this module's tracing keeps. `batch_index` 0 also gets its
+diff --git a/engine/tests/slice.rs b/engine/tests/slice.rs
+index 26357370..294fe9e1 100644
+--- a/engine/tests/slice.rs
++++ b/engine/tests/slice.rs
+@@ -796,6 +796,7 @@ fn cancelling_mid_stream_stops_production_promptly() {
+         }
+     }
+     let terminal_received = t0.elapsed();
++    let trace_arc = guard.trace(); // EXPERIMENT-DIAG
+     let events = guard.trace().events();
+     drop(guard);
+ 
+@@ -805,6 +806,18 @@ fn cancelling_mid_stream_stops_production_promptly() {
+             .find(|e| e.name == name)
+             .map(|e| e.offset_nanos)
+     };
++    // EXPERIMENT-DIAG (temporary, sandbox only)
++    if at(trace::PRODUCER_CANCELLED).is_none() {
++        let tr = s.stats();
++        eprintln!(
++            "EXPERIMENT-DIAG: no producer_cancelled; events={} dropped={} batches_generated={} batches_after_cancel={} names={:?}",
++            events.len(),
++            trace_arc.dropped(),
++            tr.batches_generated.load(std::sync::atomic::Ordering::SeqCst),
++            tr.batches_after_cancel.load(std::sync::atomic::Ordering::SeqCst),
++            events.iter().map(|e| e.name).collect::<Vec<_>>()
++        );
++    }
+     let requested = at(trace::CANCELLATION_REQUESTED).expect("cancel_requested was stamped");
+     let observed = at(trace::PRODUCER_CANCELLED).expect("cancel_observed was stamped");
+ 
