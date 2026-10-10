@@ -3,9 +3,10 @@
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
 // E2E TEST SURFACE (e2e/README.md) -- the Map Studio frame, on real WebView2: E-KEYS, E-FIELD,
-// E-LANDMARKS, E-FOCUS, E-FIT, E-FLOOR and E-REOPEN (asserted) and RESIZEQ (recorded, never asserted), from
-// SHELL-MIGRATION-MILESTONE-1-PREREGISTRATION.md section 4. Fixtures: `filter-zoned.parquet`, plus
-// `100k-happy-path.parquet` for the reopen step; the suite records each fixture's sha256 before and
+// E-LANDMARKS, E-FOCUS, E-FIT, E-FLOOR and E-REOPEN (asserted), from
+// SHELL-MIGRATION-MILESTONE-1-PREREGISTRATION.md section 4; RESIZEQ and FILL (asserted) and BURST (recorded, never
+// asserted), from SHELL-MAP-REFILL-AFTER-RESIZE-PREREGISTRATION.md section 4. Fixtures: `filter-zoned.parquet`, plus
+// `100k-happy-path.parquet` for the reopen and FILL steps; the suite records each fixture's sha256 before and
 // after its run (section 3). Nothing here is a measurement or a performance claim.
 //
 // What CDP key injection proves and does not (section 0.5, H2): `page.keyboard.press` reaches the
@@ -21,7 +22,8 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { attachOrLaunch, attachConsole, waitForSettle, CDP_PORT } from "./lib.mjs";
+import { attachOrLaunch, attachConsole, waitForSettle, canvasRect, doWheel, ZOOM_NOTCH_DELTA_Y, CDP_PORT } from "./lib.mjs";
+import { loadShellModule } from "./tsModuleLoader.mjs";
 
 const OUT_DIR = join(dirname(fileURLToPath(import.meta.url)), "out");
 const FIXTURE_DIR = "C:\\dev\\spatial-ide\\target\\fixtures\\manual-walkthrough\\";
@@ -35,6 +37,12 @@ const MAP_MIN_WIDTH_PX = 480;
 const MAP_MIN_HEIGHT_PX = 320;
 const MOUNT_READY_TIMEOUT_MS = 90_000;
 const SETTLE_MS = 250; // a React commit after a key press; not a timing claim
+// e2e-local windows (shell-map-refill-after-resize section 7), harness bounds and not timing claims.
+const RESIZEQ_WINDOW_MS = 3_000;
+const FILL_WINDOW_MS = 10_000;
+const MAX_FILL_NOTCHES = 15; // lib.mjs's MAX_ZOOM_NOTCHES, restated
+const BURST_MOVES = 24; // at least 20 pointer moves
+const BURST_STEP_PX = 4;
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const sha256 = (path) => createHash("sha256").update(readFileSync(path)).digest("hex");
@@ -317,17 +325,74 @@ async function stepFloor(page) {
   }
 }
 
+// RESIZEQ and FILL (shell-map-refill-after-resize section 4). The trace lines are read as the suite already reads them:
+// `console.debug(PREFIX, "<class>", {...})` arrives as `[render-trace] <class> {key: value, ...}` (view-state parsed as
+// regression.mjs's `parseViewStateLine` does).
+const traceLines = (consoleHandle, cls) => consoleHandle.renderTrace().filter((e) => e.text.includes(`[render-trace] ${cls} `));
+const queryLines = (consoleHandle) => traceLines(consoleHandle, "viewport_query");
+function lastViewState(consoleHandle) {
+  const m = /view-state \{targetX: (\S+), targetY: (\S+), zoom: (\S+), originX: (\S+), originY: (\S+)\}/.exec(traceLines(consoleHandle, "view-state").at(-1)?.text ?? "");
+  return m === null ? null : { targetX: Number(m[1]), targetY: Number(m[2]), zoom: Number(m[3]), originX: Number(m[4]), originY: Number(m[5]) };
+}
+const canvasSize = (page) => page.evaluate(() => ({ width: document.querySelector(".working-canvas").clientWidth, height: document.querySelector(".working-canvas").clientHeight }));
+/** How much wider the map becomes when the Inspector closes: the Inspector region plus its splitter, measured from the DOM. */
+const inspectorGrowthPx = (page) =>
+  page.evaluate(() => document.querySelector('aside[aria-label="Inspector"]').getBoundingClientRect().width + document.querySelector("#splitter-inspector").getBoundingClientRect().width);
+/** Quiet trace for 3 s AND no stream in flight or queued -- the same two signals residency-harness.mjs settles on. */
+async function settleFully(page, consoleHandle, label) {
+  const quiet = await waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 3000, timeoutMs: 45_000 });
+  const counts = () => page.evaluate(async () => (await window.__SPATIAL_E2E__.residencyInFlightStreamCount?.() ?? 0) + (await window.__SPATIAL_E2E__.residencyQueuedTileCount?.() ?? 0));
+  for (let i = 0; i < 75 && quiet.settled && (await counts()) !== 0; i += 1) await sleep(200);
+  const left = await counts();
+  if (!quiet.settled || left !== 0) throw new Error(`${label}: the trace did not settle (quiet=${quiet.settled}, in-flight+queued=${left}): invalidator I6, STOP and report`);
+}
+async function waitForGridFrame(page, label) {
+  for (let i = 0; i < 300; i += 1) {
+    const frame = await page.evaluate(() => window.__SPATIAL_E2E__.residencyGridFrame?.() ?? null);
+    if (frame !== null) return frame;
+    await sleep(200);
+  }
+  throw new Error(`${label}: no grid frame was established within 60000ms: invalidator I3, STOP and report`);
+}
+async function ensureInspectorOpen(page) {
+  if ((await readLayout(page)).inspector) await press(page, "Control+KeyI");
+}
+
 async function stepResizeQ(page, consoleHandle) {
-  const queries = () => consoleHandle.renderTrace().filter((e) => /viewport_query/.test(e.text)).length;
   await waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 3000, timeoutMs: 45_000 });
-  const before = queries();
-  await press(page, "Control+KeyI");
-  await sleep(3000);
-  const afterClose = queries();
-  await press(page, "Control+KeyI");
-  await sleep(3000);
-  const afterOpen = queries();
-  return `RECORDED, NOT ASSERTED (H1): viewport_query lines within 3 s of Ctrl+I with the pointer still: ${afterClose - before} after closing the Inspector, ${afterOpen - afterClose} after reopening it`;
+  await page.click(".zoom-to-layer"); // a real click: the fit reports its view, which is what a later growth is compared against
+  await settleFully(page, consoleHandle, "RESIZEQ: after Zoom to layer");
+  try {
+    // The precondition, computed before the toggle: the cells the grown view covers that the current view does not.
+    const frame = await waitForGridFrame(page, "RESIZEQ");
+    const view = lastViewState(consoleHandle);
+    if (view === null) throw new Error("RESIZEQ: no view-state line after Zoom to layer: invalidator I3, STOP and report");
+    const { computeAuthoritativeViewportBbox } = await loadShellModule("src/canvas/viewportBbox.ts");
+    const { tilesCoveringBbox, tileKeyToString } = await loadShellModule("src/canvas/tileGrid.ts");
+    const size = await canvasSize(page);
+    const growth = await inspectorGrowthPx(page);
+    const coverAt = (widthPx) => new Set(tilesCoveringBbox(frame, frame.level, computeAuthoritativeViewportBbox({ ...view, widthPx, heightPx: size.height })).map(tileKeyToString));
+    const before = coverAt(size.width);
+    const predictedNew = [...coverAt(size.width + growth)].filter((key) => !before.has(key)).length;
+    if (predictedNew < 1) throw new Error(`RESIZEQ: closing the Inspector (+${growth}px) is predicted to cover ${predictedNew} new cells at ${size.width}x${size.height}: invalidator I3, STOP and report`);
+
+    const mark = queryLines(consoleHandle).length;
+    await press(page, "Control+KeyI"); // close
+    await sleep(RESIZEQ_WINDOW_MS);
+    const afterClose = queryLines(consoleHandle).length - mark;
+    if (afterClose < 1) throw new Error(`RESIZEQ: closing the Inspector gave ${afterClose} new viewport_query lines within ${RESIZEQ_WINDOW_MS}ms, expected at least 1 (predicted new cells ${predictedNew})`);
+    await settleFully(page, consoleHandle, "RESIZEQ: after closing the Inspector");
+    const grown = await canvasSize(page);
+
+    const mark2 = queryLines(consoleHandle).length;
+    await press(page, "Control+KeyI"); // reopen
+    await sleep(RESIZEQ_WINDOW_MS);
+    const afterOpen = queryLines(consoleHandle).length - mark2;
+    if (afterOpen !== 0) throw new Error(`RESIZEQ: reopening the Inspector gave ${afterOpen} new viewport_query lines, expected 0`);
+    return `closing the Inspector gave ${afterClose} new viewport_query lines within ${RESIZEQ_WINDOW_MS}ms (base: 0), reopening gave ${afterOpen}; predicted new cells ${predictedNew} (recorded beside the observed count; ${size.width}x${size.height} -> ${grown.width}x${grown.height} CSS px), the trace settled after the close`;
+  } finally {
+    await ensureInspectorOpen(page);
+  }
 }
 
 async function stepReopen(page) {
@@ -342,6 +407,95 @@ async function stepReopen(page) {
   const same = ["layers", "inspector", "activity"].every((region) => before[region] === after[region]);
   if (!same) throw new Error(`E-REOPEN: the layout changed across the reopen (before ${JSON.stringify(before)}, after ${JSON.stringify(after)})`);
   return "the second fixture replaced the canvas node (a new handle remounts it); the layout was unchanged";
+}
+
+async function stepFill(page, consoleHandle) {
+  const frame = await waitForGridFrame(page, "FILL");
+  await settleFully(page, consoleHandle, "FILL: before the notches");
+  const { computeAuthoritativeViewportBbox } = await loadShellModule("src/canvas/viewportBbox.ts");
+  const { cellSizeForLevel } = await loadShellModule("src/canvas/tileGrid.ts");
+  const centre = await canvasRect(page).then((r) => ({ x: r.left + r.width / 2, y: r.top + r.height / 2 }));
+  const size = await canvasSize(page);
+  const growth = await inspectorGrowthPx(page);
+  // Anchor box: the frame is twice the anchor's span and centred on it (tileGrid.ts's deriveTileGridFrame).
+  const anchor = { xmin: frame.originX + frame.baseSpan / 4, ymin: frame.originY + frame.baseSpan / 4, xmax: frame.originX + (3 * frame.baseSpan) / 4, ymax: frame.originY + (3 * frame.baseSpan) / 4 };
+  const cellSize = cellSizeForLevel(frame, frame.level);
+  /** The precondition at `zoom`: a cell is smaller on screen than the growth per side, and the grown view lies inside the anchor box. */
+  const holds = (view, zoom) => {
+    const grown = computeAuthoritativeViewportBbox({ ...view, zoom, widthPx: size.width + growth, heightPx: size.height });
+    const cellPx = cellSize * 2 ** zoom;
+    const inside = grown.xmin >= anchor.xmin && grown.xmax <= anchor.xmax && grown.ymin >= anchor.ymin && grown.ymax <= anchor.ymax;
+    return { cellPx, inside, ok: cellPx < growth / 2 && inside };
+  };
+  const notch = async () => {
+    await doWheel(page, centre, ZOOM_NOTCH_DELTA_Y);
+    await settleFully(page, consoleHandle, "FILL: after a wheel notch");
+    return lastViewState(consoleHandle);
+  };
+  // The notch count is computed from measured values: one notch measures the zoom a notch gives, then notches are added
+  // until the precondition holds at the zoom they would reach. It is recorded and never tuned to pass.
+  const zoom0 = lastViewState(consoleHandle)?.zoom;
+  let view = await notch();
+  if (zoom0 === undefined || view === null || view.zoom === zoom0) throw new Error("FILL: a wheel notch at the canvas centre did not change the zoom: invalidator I3, STOP and report");
+  const perNotch = view.zoom - zoom0;
+  let extra = 0;
+  while (extra <= MAX_FILL_NOTCHES && !holds(view, view.zoom + extra * perNotch).ok) extra += 1;
+  if (extra > MAX_FILL_NOTCHES) throw new Error(`FILL: no zoom within ${MAX_FILL_NOTCHES} further notches satisfies the precondition (growth per side ${growth / 2}px, cell ${cellSize}): invalidator I3, STOP and report`);
+  for (let i = 0; i < extra; i += 1) view = await notch();
+  const final = holds(view, view.zoom);
+  if (!final.ok) throw new Error(`FILL: after ${1 + extra} notches the precondition does not hold (cell ${final.cellPx}px against ${growth / 2}px per side, grown view inside the anchor: ${final.inside}): invalidator I3, STOP and report`);
+
+  const mark = consoleHandle.renderTrace().length;
+  try {
+    await press(page, "Control+KeyI"); // close: the map grows
+    const issued = new Set();
+    let rows = 0;
+    for (let waited = 0; waited < FILL_WINDOW_MS && (issued.size === 0 || rows === 0); waited += 200) {
+      await sleep(200);
+      const since = consoleHandle.renderTrace().slice(mark);
+      for (const e of since) {
+        const issuedMatch = /stream-issued \{dataset: \S+, streamHandle: (\S+)\}/.exec(e.text);
+        if (issuedMatch) issued.add(issuedMatch[1]);
+      }
+      rows = since.reduce((sum, e) => {
+        const m = /\[render-trace\] batch \{streamHandle: (\S+), batchSeq: \d+, rows: (\d+)/.exec(e.text);
+        return m !== null && issued.has(m[1]) ? sum + Number(m[2]) : sum;
+      }, 0);
+    }
+    if (issued.size < 1 || rows < 1) throw new Error(`FILL: within ${FILL_WINDOW_MS}ms of closing the Inspector ${issued.size} streams were issued and ${rows} rows arrived on them, expected at least 1 stream and 1 row`);
+    await settleFully(page, consoleHandle, "FILL: after closing the Inspector");
+    return `${1 + extra} wheel notches at the canvas centre (${perNotch} zoom per notch measured; cell ${final.cellPx.toFixed(1)}px against ${growth / 2}px growth per side, grown view inside the anchor box); closing the Inspector issued ${issued.size} streams carrying ${rows} rows, and the trace settled`;
+  } finally {
+    await ensureInspectorOpen(page);
+  }
+}
+
+// BURST: RECORDED, NOT ASSERTED. A continuous drag of the map | Inspector splitter; the viewport_query lines' times are
+// relative to the first move, the last move and the release. Timing on a shared machine is not asserted.
+async function stepBurst(page, consoleHandle) {
+  await settleFully(page, consoleHandle, "BURST: before the drag");
+  const box = await page.evaluate(() => {
+    const r = document.querySelector("#splitter-inspector").getBoundingClientRect();
+    return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+  });
+  const mark = queryLines(consoleHandle).length;
+  await page.mouse.move(box.x, box.y);
+  await page.mouse.down();
+  const firstMove = Date.now();
+  for (let i = 1; i <= BURST_MOVES; i += 1) await page.mouse.move(box.x + i * BURST_STEP_PX, box.y);
+  const lastMove = Date.now();
+  await page.mouse.up();
+  const release = Date.now();
+  await sleep(RESIZEQ_WINDOW_MS);
+  const lines = queryLines(consoleHandle).slice(mark);
+  const relative = lines.map((e) => `${e.at - firstMove}`).join(", ");
+  // Put the splitter back with a second drag (unrecorded) so the later steps see the layout they expect.
+  await page.mouse.move(box.x + BURST_MOVES * BURST_STEP_PX, box.y);
+  await page.mouse.down();
+  for (let i = BURST_MOVES - 1; i >= 0; i -= 1) await page.mouse.move(box.x + i * BURST_STEP_PX, box.y);
+  await page.mouse.up();
+  await settleFully(page, consoleHandle, "BURST: after the drag back");
+  return `RECORDED, NOT ASSERTED: ${BURST_MOVES} moves of ${BURST_STEP_PX}px; ${lines.length} viewport_query lines at ms after the first move [${relative}] (last move at ${lastMove - firstMove} ms, release at ${release - firstMove} ms)`;
 }
 
 async function main() {
@@ -389,6 +543,8 @@ async function main() {
     await runStep("E-FLOOR", 60_000, () => stepFloor(page));
     await runStep("RESIZEQ", 120_000, () => stepResizeQ(page, consoleHandle));
     await runStep("E-REOPEN", 90_000, () => stepReopen(page));
+    await runStep("FILL", 180_000, () => stepFill(page, consoleHandle));
+    await runStep("BURST", 90_000, () => stepBurst(page, consoleHandle));
     const hashesAfter = fixtures.map(sha256);
     const unchanged = hashesBefore.every((hash, i) => hash === hashesAfter[i]);
     results.push({ id: "FIXTURES", status: unchanged ? "PASS" : "FAIL", note: fixtures.map((path, i) => `${path.split("\\").pop()} sha256 ${hashesBefore[i]} -> ${hashesAfter[i]}`).join("; ") });
