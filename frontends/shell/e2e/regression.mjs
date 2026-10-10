@@ -93,8 +93,10 @@ const REGEN_COMMAND = "cargo test -p spatial-kernel --test manual_walkthrough_fi
 // rows quote and that `formatRefusal.ts` carries through with no rewording.
 const CRS_UNDECLARED_MESSAGE =
   "refused: the file declares no CRS and none was asserted by the caller (no `geo` metadata CRS " +
-  "on the primary geometry column). This engine does not apply GeoParquet's OGC:CRS84 default " +
-  "(docs/05, no silent conversion)";
+  "on the primary geometry column). " +
+  "GeoParquet's OGC:CRS84 default is applied only when the crs key is absent in a file of " +
+  "version 1.0.0 or 1.1.0; otherwise assert a CRS to open the file (docs/05, no silent " +
+  "conversion)";
 // Verbatim from `engine/src/error.rs:244`'s `Self::FormatDefaultContradicted` `Display` arm, with
 // the `{detail}` minted at `engine/src/dataset.rs:1017`'s `format!("at level ...")`, inside
 // `convict_or_record` (`dataset.rs:1009`), fed by `dataset.rs`'s `sanity_check`, `geo.bbox` branch -- read back

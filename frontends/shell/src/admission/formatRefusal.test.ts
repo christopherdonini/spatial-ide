@@ -26,7 +26,9 @@ function crsUndeclared(): SkpError {
     code: "engine.crs_undeclared",
     message:
       "refused: the file declares no CRS and none was asserted by the caller (no `crs` key). " +
-      "This engine does not apply GeoParquet's OGC:CRS84 default (docs/05, no silent conversion)",
+      "GeoParquet's OGC:CRS84 default is applied only when the crs key is absent in a file of " +
+      "version 1.0.0 or 1.1.0; otherwise assert a CRS to open the file (docs/05, no silent " +
+      "conversion)",
     fields: { detail: "no `crs` key" },
   };
 }
