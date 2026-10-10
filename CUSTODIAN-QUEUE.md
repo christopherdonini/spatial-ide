@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `9ad165aa6f450b979439e951df08a0b254b9869b323f26f49bdb20e20bcc1933`) at `2026-10-10T10:32:51.190Z`.
+Generated from `PLAN.yaml` (sha256 `1b124f7f00199b650e879143f5d1bda2a652a6a564ab3681e374013d0a9cede3`) at `2026-10-10T10:47:34.507Z`.
 
 ## 1. Next
 
@@ -115,7 +115,7 @@ Generated from `PLAN.yaml` (sha256 `9ad165aa6f450b979439e951df08a0b254b9869b323f
 - **identity-declaration-route-for-session-tier** — The app offers no way to declare an identity column for a file that opened on the session tier (no id column): the declaration form appears only when identity is refused (phase `prototype`) — never queued until placed
 - **verify-cites-pin-resolution-and-line-zero** — verify-cites: a pinned cite starting at line 0 gets a false reason, and a pin is read only at the path as written (phase `prototype`) — never queued until placed
 - **docs-14-corpus-attribution-vs-docs-08** — docs/14 asks corpus attribution in demos and published bundles, which docs/08 line 40 now says are never redistributed (phase `prototype`) — never queued until placed
-- **shell-stale-frame-comments** — Two shell comments still describe the old frame: ConsolePanel.tsx (a bottom drawer below every panel) and residencyStatus.ts (a child of the removed canvas status stack); and WorkingCanvas.tsx comments call deck.gl 9.3.7 pinned (phase `prototype`) — never queued until placed
+- **shell-stale-frame-comments** — Two shell comments still describe the old frame: ConsolePanel.tsx (a bottom drawer below every panel) and residencyStatus.ts (a child of the removed canvas status stack); WorkingCanvas.tsx comments call deck.gl 9.3.7 pinned; and residencyStatus.ts still calls ruled status strings drafts, string 6 among them (phase `prototype`) — never queued until placed
 - **e2e-first-poll-readout-elsewhere** — Two more e2e suites take a hover id from the readout's first poll after a pointer move: source-changed.mjs hoverAt and residency-harness.mjs tryHoverCandidate (phase `prototype`) — never queued until placed
 - **dataset-stream-doc-producer-runs-ahead** — engine/src/stream.rs: Dataset::stream's doc says it returns once the statement is prepared and produces the first batch on the first next_into; the producer thread prepares and runs ahead to the queue bound (phase `prototype`) — never queued until placed
 - **shell-migration-milestone-3** — Shell migration, milestone 3 -- command bar and filter clauses: Ctrl+K, slash commands, typed /filter with field completion, clause cards with on and off (phase `prototype`) — never queued until placed
