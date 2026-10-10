@@ -17,12 +17,13 @@ use std::sync::Arc;
 mod watch_support;
 
 use spatial_engine::fixture::{
-    write_geoparquet, CrsMode, FixtureSpec, IdentityMode, LV95_PROJJSON,
+    write_geoparquet, AttributeMode, CrsMode, FixtureSpec, IdentityMode, LV95_PROJJSON,
 };
 use spatial_kernel::skp::{session_end_channel, SkpHost, StreamRegistry};
 use spatial_kernel::Catalog;
 use spatial_skp::v0::{
-    CrsAssertion, DescribeRequest, IdentityDeclaration, OpenDatasetRequest, SKP_VERSION,
+    CrsAssertion, DescribeRequest, Filter, IdentityDeclaration, OpenDatasetRequest,
+    ViewportQueryRequest, FILTER_DIALECT_DUCKDB_EXPR_0, SKP_VERSION,
 };
 
 fn dir() -> PathBuf {
@@ -251,4 +252,96 @@ fn declared_identity_naming_a_non_unique_column_is_refused() {
         .expect_err("a declaration naming a non-unique column must be refused");
     assert_eq!(err.code, "engine.identity_unusable");
     assert_eq!(err.fields.get("column").map(String::as_str), Some("id"));
+}
+
+/// (6) The file carries its own `id` (Utf8, so unusable as identity) beside a usable `u64` key. A
+/// plain open refuses `engine.identity_unusable`; declaring `u64` through the wire's
+/// `IdentityDeclaration` admits it as `mapped:u64`; and a `viewport_query` filter naming `id` is then
+/// refused synchronously as `skp.filter_identity_alias_ambiguous` with exactly `column` and
+/// `source_column`, before any ticket is minted. Every call is the one the shell's commands make
+/// (`SkpHost::open_dataset`, `SkpHost::viewport_query`); the catalog's uniqueness-skipping route is
+/// not used, and the wire cannot take it. The predicate (a Utf8 column against a text literal) would
+/// pass the namespace, bind and type stages without the alias rule, so the step (iii) refusal can
+/// only come from that rule.
+///
+/// Mutations, each observed by applying it, running this test, and reverting it:
+/// - M-1: `engine::predicate::identity_alias_ambiguity`'s body returns `None`. Observed at
+///   commit M1_COMMIT: this test fails at the `expect_err` of step (iii), the predicate being admitted.
+/// - M-2: in `SkpHost::open_dataset`, `host_minted_identity_declaration`'s result is replaced by
+///   `None`. Observed at commit M2_COMMIT: this test fails at the `expect` of step (ii), the declared
+///   open refusing `engine.identity_unusable` on `id`.
+#[tokio::test(flavor = "multi_thread")]
+async fn a_declared_identity_beside_the_files_own_id_refuses_a_filter_naming_id_as_ambiguous() {
+    let path = fixture(
+        "alias-ambiguous",
+        &FixtureSpec {
+            identity: IdentityMode::StringIds,
+            attributes: AttributeMode::FilterWitness,
+            features: 2,
+            avg_vertices: 6,
+            hole_every: 0,
+            ..Default::default()
+        },
+    );
+    let tickets = StreamRegistry::new();
+    let host = SkpHost::new(
+        Arc::new(Catalog::new()),
+        tickets.clone(),
+        watch_support::no_watch_arm(),
+        session_end_channel().0,
+    );
+
+    // (i) a plain open refuses: `id` is present but not a usable identity.
+    let err = host
+        .open_dataset(open_req(&path, "alias-plain", None, None))
+        .expect_err("a Utf8 `id` is not a usable identity");
+    assert_eq!(err.code, "engine.identity_unusable");
+    assert_eq!(err.fields.get("column").map(String::as_str), Some("id"));
+    let candidates = err.fields.get("candidate_columns").expect("candidates");
+    assert!(
+        candidates.split(',').any(|c| c == "u64"),
+        "u64 must be offered as a candidate: {candidates}"
+    );
+
+    // (ii) the wire's declaration of `u64` admits it as a mapped identity.
+    let decl = IdentityDeclaration {
+        column: "u64".to_string(),
+    };
+    let resp = host
+        .open_dataset(open_req(&path, "alias-declared", None, Some(decl)))
+        .expect("a declared 64-bit key beside the file's own id must be admitted");
+    let describe = host
+        .describe(DescribeRequest {
+            skp: SKP_VERSION.to_string(),
+            dataset: resp.dataset.clone(),
+        })
+        .expect("describe");
+    assert_eq!(describe.identity.source, "mapped:u64");
+
+    // (iii) a filter naming `id` is ambiguous between the wire identity and the file's column.
+    let err = host
+        .viewport_query(ViewportQueryRequest {
+            skp: SKP_VERSION.to_string(),
+            dataset: resp.dataset.clone(),
+            bbox: None,
+            bbox_crs: None,
+            limit: None,
+            filter: Some(
+                Filter::new("id = 'key-1'", FILTER_DIALECT_DUCKDB_EXPR_0).expect("dialect"),
+            ),
+            columns: None,
+        })
+        .expect_err("a predicate naming `id` must be refused as ambiguous");
+    assert_eq!(err.code, "skp.filter_identity_alias_ambiguous");
+    let mut keys: Vec<&String> = err.fields.keys().collect();
+    keys.sort();
+    assert_eq!(keys, vec!["column", "source_column"], "exact key set");
+    assert_eq!(err.fields.get("column").map(String::as_str), Some("id"));
+    assert_eq!(
+        err.fields.get("source_column").map(String::as_str),
+        Some("u64")
+    );
+
+    // (iv) the refusal came before any ticket was minted.
+    assert_eq!(tickets.cancel_all_for_dataset(resp.dataset.as_str()), 0);
 }
