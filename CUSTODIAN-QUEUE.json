@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-10T11:35:54.568Z",
-  "plan_hash": "d9ba703d9d5b4a46838bfd7ba1e71d8a3bd7b6197f33edbe6f46016d4b4fb9f4",
+  "generated_at": "2026-10-10T11:41:56.385Z",
+  "plan_hash": "046adaad5509eba3a1192a6b4a7f8e16cf2bc6492a392f35b2c36d9a2afe6d12",
   "priorities_approved": true,
   "next": null,
   "ready": [],
@@ -51,7 +51,7 @@
         "opened": "2026-10-10",
         "done": null
       },
-      "summary": "2026-10-10 by the human (state/directives/2026-10-10-docs-lane-slot-2-order-reaim-answers-strike-crs-wording.md, items 6 and 7): slot 2 directly after wire-bytes-invariant-trace-flag-race (the item 8 correction moved to the docs lane). Forms ahead: lead-data's impact read and the architect's form draft run while wire-bytes-invariant-trace-flag-race is in its PR and gates, so this starts when it merges. Before: PLACED 2026-10-10 by the human (state/directives/2026-10-10-flake-hunt-run-1-flush-cancel-exit.md, items 1 and 2): slot 2, after known-limitations-item-8-filter-not-published and before ported-code-notice-route; graded S2. Seen in the human's flake hunt, run 1, at 116deb53 (state/consults/FLAKE-HUNT-RUN-1-2026-10-10.md, its evidence beside it): engine/tests/slice.rs's cancelling_mid_stream_stops_production_promptly failed twice on two cores at its expect that cancel_observed was stamped, and the sandbox experiment put the producer on flush's batches_after_cancel exit, which returns Cancelled without the mark. The piece: that exit marks producer_cancelled, with a test that forces that exit. Lead-data's impact read first, then its own full form, because the event ends the interval docs/08 budgets for cancellation (ADR-018). The form also says whether the four kernel tests that read the event (trace_spans, first_batch_factorial, skp_admission, skp_filter_cancellation) can hit the gap, and says for each other unmarked Cancelled return the custodian's check lists (state/consults/2026-10-10-flake-hunt-run-1-custodian-check.md) whether it is in scope. No code before the form. Waits for its turn in slot 2.",
+      "summary": "FORM COMMITTED 2026-10-10, drafted ahead of its slot (the architect draft after lead-data's impact read, state/consults/2026-10-10-stream-flush-cancel-exit-marks-producer-cancelled-architect-draft.md; measured piece 8 of the second pilot): full form with full gating (ADR-018's end instant and a property five tests assert); at most 150 changed lines in engine/src/stream.rs and engine/src/trace.rs; 84 pins at f0fccfaf. The flush exit marks the event (C1), and the pre-prepare exit too (C2), in scope as the same defect class under the sibling-search rule; two in-crate tests force them (T-1, T-2), with no product seam, by moving trace.rs's test lock to module level under cfg(test). The other unmarked returns go to the proposed node stream-cancel-returns-left-unmarked. The four kernel tests answered from code in its section 2.4: trace_spans cannot hit the gap; first_batch_factorial's ignored passes and skp_admission can; skp_filter_cancellation can through flush's exit or the pre-prepare one. OPEN-1 for the human, not a red line: the E pair, a scratch trace-gated sleep before flush's check, run at the base and at the head on the re-aim allowance's terms (recommended), or no E pair. Code after wire-bytes merges. Before: 2026-10-10 by the human (state/directives/2026-10-10-docs-lane-slot-2-order-reaim-answers-strike-crs-wording.md, items 6 and 7): slot 2 directly after wire-bytes-invariant-trace-flag-race (the item 8 correction moved to the docs lane). Forms ahead: lead-data's impact read and the architect's form draft run while wire-bytes-invariant-trace-flag-race is in its PR and gates, so this starts when it merges. Before: PLACED 2026-10-10 by the human (state/directives/2026-10-10-flake-hunt-run-1-flush-cancel-exit.md, items 1 and 2): slot 2, after known-limitations-item-8-filter-not-published and before ported-code-notice-route; graded S2. Seen in the human's flake hunt, run 1, at 116deb53 (state/consults/FLAKE-HUNT-RUN-1-2026-10-10.md, its evidence beside it): engine/tests/slice.rs's cancelling_mid_stream_stops_production_promptly failed twice on two cores at its expect that cancel_observed was stamped, and the sandbox experiment put the producer on flush's batches_after_cancel exit, which returns Cancelled without the mark. The piece: that exit marks producer_cancelled, with a test that forces that exit. Lead-data's impact read first, then its own full form, because the event ends the interval docs/08 budgets for cancellation (ADR-018). The form also says whether the four kernel tests that read the event (trace_spans, first_batch_factorial, skp_admission, skp_filter_cancellation) can hit the gap, and says for each other unmarked Cancelled return the custodian's check lists (state/consults/2026-10-10-flake-hunt-run-1-custodian-check.md) whether it is in scope. No code before the form. Waits for its turn in slot 2.",
       "blocked_by": [
         "wire-bytes-invariant-trace-flag-race"
       ]
@@ -1733,6 +1733,25 @@
         "done": null
       },
       "summary": "PROPOSED 2026-10-09 by the custodian from the e2e re-aim form's OPEN-4 (state/consults/2026-10-09-e2e-stale-expectations-reaim-architect-draft.md): the re-aim moves only the default pre route of source-changed.mjs to a change the watcher cannot see; the post and reopen routes still touch the mtime, which the watcher sees while idle, and walkthrough Part N's N6 and N8 touch it by hand on the same premise. The triage ran the default route only, so their state is unobserved. The human grades and places it."
+    },
+    {
+      "id": "stream-cancel-returns-left-unmarked",
+      "title": "The producer's cancel returns the flush piece leaves unmarked: a prepare error through classify, the two-read window in classify's marking arms, and the send to a receiver that is gone (is a disconnect an observation)",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 120,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-10",
+        "done": null
+      },
+      "summary": "PROPOSED 2026-10-10 by stream-flush-cancel-exit-marks-producer-cancelled's form (engine/STREAM-FLUSH-CANCEL-EXIT-PREREGISTRATION.md, section 2.3; the custodian records it, as the form asks): the three rows that form leaves out of scope, from the custodian's check of the flake hunt (state/consults/2026-10-10-flake-hunt-run-1-custodian-check.md). A prepare error under a cancel returns Cancelled through classify unmarked; the two marking classify arms read the token twice, so a cancel between the reads returns Cancelled unmarked; the send to a receiver that is gone returns Cancelled with no flag read. Its form chooses between a classify that marks when it returns Cancelled and a seam, and says whether a disconnect is an ADR-018 observation. Read from code, not observed. The human grades and places it."
     },
     {
       "id": "identity-declaration-route-for-session-tier",

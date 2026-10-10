@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `d9ba703d9d5b4a46838bfd7ba1e71d8a3bd7b6197f33edbe6f46016d4b4fb9f4`) at `2026-10-10T11:35:54.568Z`.
+Generated from `PLAN.yaml` (sha256 `046adaad5509eba3a1192a6b4a7f8e16cf2bc6492a392f35b2c36d9a2afe6d12`) at `2026-10-10T11:41:56.385Z`.
 
 ## 1. Next
 
@@ -111,6 +111,7 @@ Generated from `PLAN.yaml` (sha256 `d9ba703d9d5b4a46838bfd7ba1e71d8a3bd7b6197f33
 - **first-batch-factorial-ignored-trace-tests** — kernel/tests/first_batch_factorial.rs's two ignored measurement tests each start a trace in one binary with no shared lock (phase `prototype`) — never queued until placed
 - **slice-traced-test-cross-stamping** — engine/tests/slice.rs's traced test reads first cancellation stamps while its binary's other tests run unserialised, one of them cancelling (phase `prototype`) — never queued until placed
 - **source-changed-post-reopen-routes-watcher-visible** — source-changed.mjs's post and reopen routes, and walkthrough Part N's N6 and N8, still change the source by an mtime touch the advisory watcher can see (phase `prototype`) — never queued until placed
+- **stream-cancel-returns-left-unmarked** — The producer's cancel returns the flush piece leaves unmarked: a prepare error through classify, the two-read window in classify's marking arms, and the send to a receiver that is gone (is a disconnect an observation) (phase `prototype`) — never queued until placed
 - **identity-declaration-route-for-session-tier** — The app offers no way to declare an identity column for a file that opened on the session tier (no id column): the declaration form appears only when identity is refused (phase `prototype`) — never queued until placed
 - **verify-cites-pin-resolution-and-line-zero** — verify-cites: a pinned cite starting at line 0 gets a false reason, and a pin is read only at the path as written (phase `prototype`) — never queued until placed
 - **docs-14-corpus-attribution-vs-docs-08** — docs/14 asks corpus attribution in demos and published bundles, which docs/08 line 40 now says are never redistributed (phase `prototype`) — never queued until placed
