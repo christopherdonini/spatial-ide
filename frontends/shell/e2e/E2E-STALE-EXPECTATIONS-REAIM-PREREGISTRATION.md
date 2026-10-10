@@ -759,3 +759,40 @@ Branch lines are cited in words at cf2434e6 (the branch commit cf2434e6f25033335
     - **12.5 The reading** [A2.R35]. As item 2's step 6 (c) is written: a group with two or more rows inside the step's own window.
     - **12.6 Order** [A2.R36]. No GROUP′ code before this amendment is committed. **§8 addition 18:** GROUP′ code at any commit before the main commit that adds this amendment.
     - Items 1 to 11 are not edited. Item 12 supersedes item 10's I7 (by 12.1), and adds §8 item 18 (by 12.6).
+
+### Amendment 3 — the first T2 result (class 2); T2's base becomes f0fccfaf (the human's ruling, class 5)
+
+*Written by the custodian after worker report 2's outcomes were seen and the human's ruling was received (18:58:06Z by the transcript), before the re-run. References only; nothing below is a quotation.*
+
+1. **The ruling:** state/directives/2026-10-10-reaim-t2-base-f0fccfaf-filter-identity-no-shell-run-guidance-node.md:6-12 @ 14475652d737d29612f01a8f2e0bf4c129021506 sha256:b385aa54ac9477e9effa8974eb546c8c233e50b09163c2f2e76f5c192c05775f, with its RULED block in DECISIONS-PENDING.md.
+2. **The first T2 result, as it stands (class 2):** worker report 2's T2 section, state/consults/2026-10-10-e2e-stale-expectations-reaim-worker-report-2.md:118-148 @ 14475652d737d29612f01a8f2e0bf4c129021506 sha256:fb07624eeec7f30d0ae3d58e9af7355bdef027501e6d39077324bf788c09f5ad.
+   - Workspace, b8ad22ff against H, ef1cc519c913a2bbc5d28a86530c579fae0f3ed6: equal key sets (359 keys); 348 keys with equal multisets; 11 keys differ. I6′ fired, and the worker stopped.
+   - The 11 keys, each failing as `fixture byte-identity: T2: <key>` (item 6):
+     - `session_identity | a_cancelled_stream_keeps_its_cancelled_terminal_while_the_change_is_still_recorded`
+     - `session_identity | a_clean_stream_whose_source_changed_terminates_as_source_changed`
+     - `spatial_kernel | skp::ticket_drop_under_lock_regression::a_pending_drop_inside_close_emits_once_with_its_session_reference`
+     - `spatial_kernel | skp::ticket_drop_under_lock_regression::a_pending_ticket_retired_by_sweep_emits_once_and_does_not_hang`
+     - `spatial_kernel | skp::ticket_drop_under_lock_regression::after_cancelling_a_ticket_whose_source_changed_the_next_viewport_query_refuses_by_name`
+     - `spatial_kernel | skp::ticket_drop_under_lock_regression::an_unwind_through_cancel_all_for_dataset_drops_its_retired_source_after_releasing_the_guard`
+     - `spatial_kernel | skp::ticket_drop_under_lock_regression::an_unwind_through_cancel_all_for_dataset_drops_its_swept_source_after_releasing_the_guard`
+     - `spatial_kernel | skp::ticket_drop_under_lock_regression::an_unwind_through_cancel_drops_its_swept_source_after_releasing_the_guard`
+     - `spatial_kernel | skp::ticket_drop_under_lock_regression::cancel_all_for_dataset_of_a_pending_ticket_whose_post_check_found_a_change_does_not_hang`
+     - `spatial_kernel | skp::ticket_drop_under_lock_regression::cancel_of_a_pending_ticket_whose_post_check_found_a_change_does_not_hang`
+     - `spatial_kernel | skp::ticket_drop_under_lock_regression::sweep_of_an_expired_pending_ticket_whose_post_check_found_a_change_does_not_hang`
+   - The main commits the report names as changing what those tests write, each between b8ad22ff and f0fccfaf, and brought into H by the merge 71702f90af88105f1117ef3b2aa0fde32eb9383d (parents cf2434e6 and f0fccfaf):
+     - ff7852fa08d4c9af5202366d2a783d909cbce5ce: kernel/src/skp.rs, the drained-stream helper the nine tests now use;
+     - 7469a80194f11f8a3d9c72e39e339dc5b602dd6e: engine/tests/session_identity.rs, the two tests' feature counts;
+     - be7eecb37327c3ae0d1b5a5c800fcc0a3b4f84c2: both files.
+   - **The cause:** the custodian's brief ordered the main merge before T2, and T2 compared against b8ad22ff. The difference comes from main's own test changes, not from this piece.
+   - **Not run then:** T2's `src-tauri` half at H, and M13.
+3. **T2's base becomes f0fccfaf**, f0fccfaf6814c6993462853211ba20f7c8cdab31, the main commit merged into the branch, for both halves: the workspace, and `frontends/shell/src-tauri` after its CI's frontend build. Item 6's patch, commands and pass rule are unchanged: equal key sets, and for each key an equal multiset of sha256s at both commits.
+   - **Where:** a fresh detached base worktree, `C:/dev/wt/reaim-base`, at f0fccfaf, with its own target, `D:/wt-targets/reaim-base`. H runs in `C:/dev/wt/reaim`. Item 12.1's allowance applies unchanged.
+   - **H** is ef1cc519c913a2bbc5d28a86530c579fae0f3ed6. Nothing is merged into the branch before items 6 and 7 are done.
+4. **engine/src/fixture.rs is identical at b8ad22ff and f0fccfaf.** `git diff --quiet b8ad22ff f0fccfaf -- engine/src/fixture.rs` exits 0. `git rev-parse b8ad22ff:engine/src/fixture.rs f0fccfaf:engine/src/fixture.rs` prints dd340dd4a12fb373fda5188d210739d37178df87 twice. Both were run by the custodian on 2026-10-10 at main 14475652. Item 6's own precondition, `git diff --quiet cf2434e6 H -- engine/src/fixture.rs kernel/tests/manual_walkthrough_fixtures.rs`, exits 0 at this H.
+5. **T1, T3 and T4 stand as run**, b8ad22ff against H. **M13 runs at H as item 6 writes it.**
+6. **Any difference in the re-run is I6′ again, and stops the piece.** No other change of base without the human.
+7. **Agreed:**
+   - **The console.mjs row, class 8:** `budget overrun, §7 not edited`; 220 declared, 235 at H, inside item 8's ceiling of 290 (state/consults/2026-10-10-e2e-stale-expectations-reaim-worker-report-2.md:25 @ 14475652d737d29612f01a8f2e0bf4c129021506 sha256:586b1145f439a2fc0a41f0a066cb6ab90d447c3151c5a0c123b28da119416a03).
+   - **Item 7's solo runs at H:** `git diff --name-only cf2434e6 H` lists 67 files, `kernel/src/skp.rs` and `engine/tests/session_identity.rs` among them (state/consults/2026-10-10-e2e-stale-expectations-reaim-worker-report-2.md:211 @ 14475652d737d29612f01a8f2e0bf4c129021506 sha256:18fcb89f622acc0dc9fb1fd20a4494a4a3d8404aa4f3d16eb714927b37ea1928), so window 2's passes do not stand. Regression, admission and source-changed each run alone once more at H, and must pass, beside the five console runs. The exe for these runs is the one built at H, `D:/wt-targets/k6/exes/spatial-ide-shell-reaim-h.exe`.
+8. **Generation:** the node goes to 4.
+9. Nothing above is edited.
