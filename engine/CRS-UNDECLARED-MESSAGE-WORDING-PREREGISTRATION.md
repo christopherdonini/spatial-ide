@@ -311,3 +311,24 @@ Falsification:
 ## §10. Amendments
 
 (opens empty)
+
+### Amendment 1 — the human's rulings on OPEN-1 and OPEN-2 (class 5), and the places at the post-merge base (class 3, pre-code)
+
+*Written by the custodian before any code, after both pieces this one waited on had merged. References and hashes only.*
+
+1. **The rulings:** OPEN-1 (A) and OPEN-2 (A). This amendment appends them, and the human started the piece (`state/directives/2026-10-10-crs-wording-open-1-a-open-2-a-start.md`, line 6, sha256 224f6eb6aecf475e290db6b5fdc7c364eb1f39f2fc105b0aeac9d599a43ff6fa at the commit that adds it; its RULED block in DECISIONS-PENDING.md).
+   - **OPEN-1 (A):** the variant's doc comment (engine/src/error.rs:27-29 @ e17758b70ef6541c8a0ed9ed2246bd60fbd53a89 sha256:1b51ba3a6cbd0487607496027f6418a5a817e8e161643fe1ed5cf98ab1125e98) has its false clause replaced by the current fact: the Display text is the human's wording, cited by the directive's path and item 5, with no path:line, and rewording it is the human's decision. Its §12d P6 clause is kept. At most 6 lines, as §7 declares.
+   - **OPEN-2 (A):** T-1 and M-1 as §4 drafts them, with §7's sub-ceiling for T-1 and the engine/README.md:510 index line (re-derived at the head by lead-data's owner's-index update).
+2. **The waits are met.** `filter-identity-alias-ambiguous-reached-through-skp` merged as c6627398 (PR #202), and `e2e-stale-expectations-reaim` merged as e17758b70ef6541c8a0ed9ed2246bd60fbd53a89 (PR #204). §8 item 1's last condition is this amendment.
+3. **The places, pinned at e17758b7.** That is the main commit of the later merge. Main's commits after it change none of these files. §7's B is `git merge-base origin/main H`, named in the PR body.
+   - the Display arm's second sentence: engine/src/error.rs:285 @ e17758b70ef6541c8a0ed9ed2246bd60fbd53a89 sha256:21c02814c1893b24804220c077d31f89e5611b485e3adacd708711deca399e3d; the first clause, unchanged: engine/src/error.rs:284 @ e17758b70ef6541c8a0ed9ed2246bd60fbd53a89 sha256:2fd898fa66b267a44f1776f61c5fc49f21a4518184fd98b03cbaf6cc8d4f2c21;
+   - `regression.mjs`'s constant: frontends/shell/e2e/regression.mjs:94-97 @ e17758b70ef6541c8a0ed9ed2246bd60fbd53a89 sha256:621953544dae9e40fe9559fd2463bc40844e17576bdc85c7f85d24e92521de6f. Its use, by grep at B: the B2′/B3′ step's `stepRefusal` call, frontends/shell/e2e/regression.mjs:2670 @ e17758b70ef6541c8a0ed9ed2246bd60fbd53a89 sha256:24dae4868ebbc68b13b11c44df7c3680c93132ffe1c9c4097d54465f1c594cdb;
+   - `admission-remediation.mjs`'s constant: frontends/shell/e2e/admission-remediation.mjs:74-77 @ e17758b70ef6541c8a0ed9ed2246bd60fbd53a89 sha256:621953544dae9e40fe9559fd2463bc40844e17576bdc85c7f85d24e92521de6f. Its uses: ASSERT′, frontends/shell/e2e/admission-remediation.mjs:220-221 @ e17758b70ef6541c8a0ed9ed2246bd60fbd53a89 sha256:71b001bfde115c053b489c793046f2e8ed0ab9bf3fbc0b71fb246071290f5c63; NOPERSIST′, frontends/shell/e2e/admission-remediation.mjs:708-709 @ e17758b70ef6541c8a0ed9ed2246bd60fbd53a89 sha256:9a936478c8af71c84e1d153a87655cb4e2eef8b8e4b615dc8871ce944998e586;
+   - `formatRefusal.test.ts`'s quote, the second sentence only: frontends/shell/src/admission/formatRefusal.test.ts:29 @ e17758b70ef6541c8a0ed9ed2246bd60fbd53a89 sha256:3555894dfcdc0ddfbeff725764db685a55e530115128824294730b830ebdd2bb;
+   - the SKP fixture's message value: protocol/skp/tests/data/v0-error-example.json:3 @ e17758b70ef6541c8a0ed9ed2246bd60fbd53a89 sha256:7ca5998456145ec42bbf14fcb029a62332b708d86da9ac899e403eb90885a37d;
+   - walkthrough row B2: frontends/shell/MANUAL-WALKTHROUGH.md:176 @ e17758b70ef6541c8a0ed9ed2246bd60fbd53a89 sha256:fd812b844daaebb822b543a9b85bbae590624230fe52ae4d53a938c46b439c1e.
+   - The grep found 7 lines naming the constant in the two e2e files (2 in regression.mjs and 5 in admission-remediation.mjs). Every use above carries the detail its constant already holds, so §5's detail invalidator does not fire.
+4. **0.2's facts hold at B unchanged:** `git diff --quiet 142af722 e17758b7 -- engine/src/geoparquet.rs engine/src/dataset.rs engine/src/crs.rs engine/src/error.rs kernel/src/skp.rs frontends/shell/src/admission/formatRefusal.test.ts protocol/skp/tests/data/v0-error-example.json` exits 0. So every pin of §0 and §2 at 142af722 in those files names the same bytes at B. The re-aim's two e2e files are pinned above at B.
+5. **Rule (00) at dispatch:** no PR is open. This piece is the only one in progress that touches `protocol/` (`v0-error-example.json`), `engine/src/error.rs`, either e2e file, `formatRefusal.test.ts`, the walkthrough's Part B or `engine/README.md`. The docs lane's next piece edits `KNOWN-LIMITATIONS.md` only. Slot 1's next piece has no code yet.
+6. **Generation:** the node goes to 2.
+7. Nothing above is edited.
