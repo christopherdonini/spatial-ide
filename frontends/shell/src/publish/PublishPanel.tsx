@@ -306,9 +306,10 @@ export interface PublishPanelProps {
 
 /**
  * The publish affordance (`NEXT-CUT.md` P3): collapsed-by-default disclosure, a scope choice, one
- * "Export interactive map…" button. Placed in the Inspector's Export section (`App.tsx`) -- see
- * `styles.css`'s own `.publish-panel` comment for the measured layout budget, the same discipline
- * `StylePanel.tsx`'s own doc comment establishes.
+ * "Export interactive map…" button. Placed in the Layers region's Export section (`App.tsx`'s
+ * `"section.export"` slot). `styles.css`'s `.publish-panel` comment opens with HISTORY (milestone 1):
+ * its layout budget was measured on the stacked layout and does not describe the current frame.
+ * `StylePanel.tsx`'s own doc comment says the same of its figures.
  *
  * **Default scope is "Current view"** (a design choice the piece text explicitly permits: "A
  * default IS acceptable here since scope is not the approval"). It is the honest SMALL scope --
