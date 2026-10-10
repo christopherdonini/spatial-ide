@@ -1776,8 +1776,9 @@ fn produce(
 
     // Checked before anything is prepared or executed: DuckDB does not latch an interrupt raised on
     // an idle connection (see `cancel.rs`), so a stream cancelled before it started is stopped
-    // here or not at all.
+    // here or not at all. A `cancel_observed` exit, so it stamps like the others.
     if cancel.is_cancelled() {
+        crate::trace::mark(crate::trace::PRODUCER_CANCELLED, 0, 0);
         return Err(EngineError::Cancelled);
     }
 
@@ -2538,6 +2539,9 @@ fn flush(
         .rows_generated
         .fetch_add(rows as u64, Ordering::SeqCst);
     if cancel.is_cancelled() {
+        // A `cancel_observed` exit, stamped like the loop-top and per-row exits: without it a
+        // cancel that lands while a batch is being assembled leaves the budgeted interval no end.
+        crate::trace::mark(crate::trace::PRODUCER_CANCELLED, 0, 0);
         // H2 allows at most one batch after the producer observes cancellation. Counted, and then
         // dropped rather than sent: the stream is over.
         stats.batches_after_cancel.fetch_add(1, Ordering::SeqCst);
@@ -2937,6 +2941,122 @@ mod tests {
         let mut out = Vec::new();
         batch.write_ipc_into(&mut out).expect("ipc");
         out
+    }
+
+    /// `flush`'s cancel exit stamps `PRODUCER_CANCELLED` before it returns `Cancelled`, and sends
+    /// nothing. Driven directly: the token is already cancelled when `flush` runs, so the check is
+    /// reached with no race. Mutation: remove the mark from that branch -- (iv) fails.
+    ///
+    /// Takes the trace lock first because the trace is one process-global slot. It asserts that the
+    /// event is present and no absence or exact list of names: other tests in this crate cancel
+    /// tokens and stamp other names into a live trace.
+    #[test]
+    fn flush_cancel_exit_stamps_producer_cancelled_and_sends_nothing() {
+        let _serial = crate::trace::TEST_LOCK
+            .lock()
+            .unwrap_or_else(|e| e.into_inner());
+        let envelope = one_attribute_envelope(DataType::Int64);
+        let stats = Arc::new(StreamStats::default());
+        let (tx, rx) = sync_channel::<std::result::Result<Item, EngineError>>(MAX_QUEUED_BATCHES);
+
+        let mut pending = Pending::new(1, GeometryEncoding::Polygon);
+        let wkb = crate::wkb::encode_polygon(&[vec![
+            [2_600_000.0, 1_200_000.0],
+            [2_600_010.0, 1_200_000.0],
+            [2_600_010.0, 1_200_010.0],
+            [2_600_000.0, 1_200_000.0],
+        ]]);
+        pending.builder.push_wkb(&wkb).expect("polygon");
+        pending.vertices = pending.builder.vertices();
+        pending.ids.push(1);
+        pending.first_id = Some(1);
+        pending.est_bytes = estimate_bytes(1, pending.vertices);
+        let column: ArrayRef = Arc::new(Int64Array::from(vec![7_i64]));
+        pending.push_attr_run(&[column], 0, 1);
+
+        let guard = crate::trace::start(crate::trace::TraceKey::default())
+            .expect("the lock makes this the only trace");
+        let cancel = CancelToken::new();
+        cancel.cancel();
+        let result = flush(
+            &mut pending,
+            &envelope,
+            &cancel,
+            &stats,
+            &tx,
+            1,
+            TARGET_BATCH_BYTES,
+            false,
+            false,
+            BatchCut::StreamEnd,
+        );
+
+        assert!(matches!(result, Err(EngineError::Cancelled)), "(i)");
+        assert_eq!(stats.batches_generated.load(Ordering::SeqCst), 1, "(ii)");
+        assert_eq!(stats.batches_after_cancel.load(Ordering::SeqCst), 1, "(ii)");
+        assert!(rx.try_recv().is_err(), "(iii) nothing is sent");
+        assert_eq!(stats.resident_bytes.load(Ordering::SeqCst), 0, "(iii)");
+        let trace = guard.trace();
+        assert!(
+            trace.first(crate::trace::PRODUCER_CANCELLED).is_some(),
+            "(iv) flush's cancel exit must stamp producer_cancelled"
+        );
+        assert!(
+            trace
+                .segment_ms(
+                    crate::trace::CANCELLATION_REQUESTED,
+                    crate::trace::PRODUCER_CANCELLED
+                )
+                .is_some(),
+            "(v) the requested-to-observed segment exists"
+        );
+        drop(guard);
+    }
+
+    /// The pre-prepare cancel exit in `produce` stamps `PRODUCER_CANCELLED`. The SQL is invalid on
+    /// purpose: without the check, `prepare` would fail and `classify` would return `Cancelled`
+    /// unmarked, so the mark in this test can only come from the pre-prepare check. A later piece
+    /// that marks `classify` must revisit this test. Mutation: remove the mark from that check.
+    #[test]
+    fn the_pre_prepare_cancel_exit_stamps_producer_cancelled() {
+        let _serial = crate::trace::TEST_LOCK
+            .lock()
+            .unwrap_or_else(|e| e.into_inner());
+        let conn = duckdb::Connection::open_in_memory().expect("in-memory connection");
+        let envelope = one_attribute_envelope(DataType::Int64);
+        let stats = Arc::new(StreamStats::default());
+        let (tx, _rx) = sync_channel::<std::result::Result<Item, EngineError>>(MAX_QUEUED_BATCHES);
+        let guard = crate::trace::start(crate::trace::TraceKey::default())
+            .expect("the lock makes this the only trace");
+        let cancel = CancelToken::new();
+        cancel.cancel();
+
+        let result = produce(
+            &conn,
+            "this is not sql",
+            "",
+            None,
+            None,
+            "geometry",
+            &envelope,
+            &cancel,
+            &stats,
+            &tx,
+            BatchSizePolicy::default(),
+            false,
+            false,
+        );
+
+        assert!(matches!(result, Err(EngineError::Cancelled)));
+        assert_eq!(stats.batches_generated.load(Ordering::SeqCst), 0);
+        assert!(
+            guard
+                .trace()
+                .first(crate::trace::PRODUCER_CANCELLED)
+                .is_some(),
+            "the pre-prepare cancel exit must stamp producer_cancelled"
+        );
+        drop(guard);
     }
 
     /// X6 (Amendment 5, row 5.6): `publish_emits_a_nullable_byte_aligned_single_run_with_the_uncompacted_slices_ipc_bytes`.
