@@ -1,14 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `466bd966ec26308ad0bb5da14be6feffe751f7df262b6b48e7742d6ee10d3d3e`) at `2026-10-10T11:29:55.023Z`.
+Generated from `PLAN.yaml` (sha256 `d9ba703d9d5b4a46838bfd7ba1e71d8a3bd7b6197f33edbe6f46016d4b4fb9f4`) at `2026-10-10T11:35:54.568Z`.
 
 ## 1. Next
 
-- **known-limitations-item-8-filter-not-published** — KNOWN-LIMITATIONS item 8 corrected: a filter is never part of what is published (the app never sends it, at the v0.1.0 tag as on main); walkthrough row M8; the correction recorded against RELEASE-0.1.md Amendment 15 (sweep area E, finding 8, S1) (lane `release`)
+- (nothing ready)
 
 ## 2. Ready
 
-- **known-limitations-item-8-filter-not-published** — KNOWN-LIMITATIONS item 8 corrected: a filter is never part of what is published (the app never sends it, at the v0.1.0 tag as on main); walkthrough row M8; the correction recorded against RELEASE-0.1.md Amendment 15 (sweep area E, finding 8, S1) (lane `release`, order 1, budget 60 min)
+- (none)
 
 ## 3. Waiting on the human (total: 10 min)
 
@@ -43,6 +43,7 @@ Generated from `PLAN.yaml` (sha256 `466bd966ec26308ad0bb5da14be6feffe751f7df262b
 
 - **wire-bytes-invariant-trace-flag-race** — kernel/tests/wire_bytes_invariant.rs: the projected-ticket test asserts tracing is off while its sibling starts a trace (a race on the engine's global trace flag) — evidence: branch `cut/wire-bytes-invariant-trace-flag-race`
 - **e2e-stale-expectations-reaim** — Re-aim the shell e2e steps whose expectations predate ruled product changes: regression C2'/C3', admission MAP' and BOTHNEEDED', console HEXLIM', GROUP' and REFUSAL', source-changed default-route S4 — evidence: branch `cut/e2e-stale-expectations-reaim`
+- **known-limitations-item-8-filter-not-published** — KNOWN-LIMITATIONS item 8 corrected: a filter is never part of what is published (the app never sends it, at the v0.1.0 tag as on main); walkthrough row M8; the correction recorded against RELEASE-0.1.md Amendment 15 (sweep area E, finding 8, S1) — evidence: branch `cut/known-limitations-item-8-filter-not-published`
 
 ## 6. Proposed / unscheduled
 
