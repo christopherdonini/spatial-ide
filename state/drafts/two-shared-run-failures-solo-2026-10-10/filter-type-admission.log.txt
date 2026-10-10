@@ -1,0 +1,12 @@
+   Compiling spatial-engine v0.0.0 (C:\dev\wt\reaim-base\engine)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 50.72s
+     Running tests\filter_type_admission.rs (D:/wt-targets/reaim-base\debug\deps\filter_type_admission-ee7e1db06661561c.exe)
+
+running 3 tests
+test a_float32_column_compared_with_16777217_matches_a_stored_16777216 ... ok
+test each_corpus_row_is_admitted_or_refused_with_its_code_reason_and_operand_types ... ok
+test the_type_walk_agrees_with_the_binder_over_the_p0_matrix has been running for over 60 seconds
+test the_type_walk_agrees_with_the_binder_over_the_p0_matrix ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 113.20s
+

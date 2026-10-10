@@ -1,0 +1,37 @@
+#!/bin/bash
+# The e2e re-aim's solo runs at H (the form's item 7 and Amendment 3 item 7), in an exclusive hold of the
+# custodian's, at C:/dev/wt/reaim, head ef1cc519, exe D:/wt-targets/k6/exes/spatial-ide-shell-reaim-h.exe
+# (built at H by worker report 2), each suite on a fresh app. Every run gets its own log name: <prefix>-<suite>-<n>.
+# usage: reaim-solo-h.sh <tag-prefix> <suite...>   suite is one of regression admission source-changed console
+S="<the custodian scratch folder>"
+log() { echo "[reaim-solo-h] $(date -u +%Y-%m-%dT%H:%M:%SZ) $*"; }
+P="$1"; shift
+cd /c/dev/wt/reaim || exit 90
+[ "$(git rev-parse HEAD)" = "ef1cc519c913a2bbc5d28a86530c579fae0f3ed6" ] || { log "HEAD is not ef1cc519"; exit 90; }
+[ -z "$(git status --porcelain)" ] || { log "worktree not clean before"; exit 90; }
+export K6_EXE="D:/wt-targets/k6/exes/spatial-ide-shell-reaim-h.exe"
+[ -f "$K6_EXE" ] || { log "exe missing"; exit 90; }
+export PATH="$S/shim:$PATH"
+unset SPATIAL_E2E_SOURCE_CHANGED_ROUTE
+n=0
+for suite in "$@"; do
+  n=$((n+1))
+  case "$suite" in
+    regression) f=e2e/regression.mjs ;; admission) f=e2e/admission-remediation.mjs ;;
+    source-changed) f=e2e/source-changed.mjs ;; console) f=e2e/console.mjs ;; *) log "unknown suite $suite"; exit 91 ;;
+  esac
+  tag="$P-$suite-$n"
+  [ -e "$S/out/$tag.log" ] && { log "log $tag exists, refusing to overwrite"; exit 94; }
+  powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$S/app-down.ps1" > /dev/null 2>&1
+  cd /c/dev/wt/reaim/frontends/shell || exit 92
+  log "$tag start ($f, launched fresh)"
+  timeout 1500 node "$f" > "$S/out/$tag.log" 2>&1
+  rc=$?
+  log "$tag end rc=$rc"
+  powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$S/app-down.ps1" > "$S/out/$tag.down.txt" 2>&1
+  cat "$S/out/$tag.down.txt"
+  grep -a "FAIL\|launched\|GROUP" "$S/out/$tag.log" | grep -av "^\s*$" | head -12 | cut -c1-300
+  cd /c/dev/wt/reaim || exit 93
+  log "$tag after: porcelain [$(git status --porcelain)]"
+done
+exit 0

@@ -1,0 +1,30 @@
+MACHINE_QUEUED exclusive project=SpatialIDE: waiting to be first, for no other heavy run, 120 s since the last one, and 60 one-second samples averaging under 10% with at most 5 over 25%
+MACHINE_WAITING exclusive: quiet=False average=11.2% peaks-over-25=0 samples=5 others=none since-last-end=560s because: samples 5/60; average 11.2% not under 10%
+MACHINE_QUIET quiet=True average=8.7% peaks-over-25=0 samples=60 others=none since-last-end=619s
+MACHINE_HOLD exclusive project=SpatialIDE cores=all affinity=FFFF shell=bash.exe:31720 also=bash.exe:26776 (commands started from now on inherit it; release when done)
+[reaim-solo-h] 2026-10-10T20:56:16Z wa-regression-1 start (e2e/regression.mjs, launched fresh)
+[reaim-solo-h] 2026-10-10T21:00:52Z wa-regression-1 end rc=0
+killed tree 34932
+killed tree 11724
+port 9223 free
+port 5400 free
+This run launched the app; it stays RUNNING on CDP port 9223 for further interactive use.
+[reaim-solo-h] 2026-10-10T21:01:01Z wa-regression-1 after: porcelain []
+[reaim-solo-h] 2026-10-10T21:01:08Z wa-admission-2 start (e2e/admission-remediation.mjs, launched fresh)
+[reaim-solo-h] 2026-10-10T21:01:35Z wa-admission-2 end rc=0
+killed tree 15028
+killed tree 24416
+port 9223 free
+port 5400 free
+This run launched the app; it stays RUNNING on CDP port 9223 for further interactive use.
+[reaim-solo-h] 2026-10-10T21:01:40Z wa-admission-2 after: porcelain []
+[reaim-solo-h] 2026-10-10T21:01:45Z wa-source-changed-3 start (e2e/source-changed.mjs, launched fresh)
+[reaim-solo-h] 2026-10-10T21:02:07Z wa-source-changed-3 end rc=0
+killed tree 47352
+killed tree 43812
+port 9223 free
+port 5400 free
+[reaim-solo-h] 2026-10-10T21:02:11Z wa-source-changed-3 after: porcelain []
+MACHINE_RELEASED project=SpatialIDE shell=bash.exe:31720 affinity=FF (cores 0-7)
+
+[exited with code 0]

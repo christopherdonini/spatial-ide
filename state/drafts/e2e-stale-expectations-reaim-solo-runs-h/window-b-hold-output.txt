@@ -1,0 +1,68 @@
+MACHINE_QUEUED exclusive project=SpatialIDE: waiting to be first, for no other heavy run, 120 s since the last one, and 60 one-second samples averaging under 10% with at most 5 over 25%
+MACHINE_WAITING exclusive: quiet=False average=5.0% peaks-over-25=0 samples=5 others=none since-last-end=25s because: samples 5/60; last heavy run ended 25 s ago (at least 120 s)
+MACHINE_WAITING exclusive: quiet=False average=2.7% peaks-over-25=0 samples=60 others=none since-last-end=89s because: last heavy run ended 89 s ago (at least 120 s)
+MACHINE_QUIET quiet=True average=2.4% peaks-over-25=0 samples=60 others=none since-last-end=122s
+MACHINE_HOLD exclusive project=SpatialIDE cores=all affinity=FFFF shell=bash.exe:23412 also=bash.exe:5816 (commands started from now on inherit it; release when done)
+[reaim-solo-h] 2026-10-10T21:04:16Z wb-console-1 start (e2e/console.mjs, launched fresh)
+[reaim-solo-h] 2026-10-10T21:09:20Z wb-console-1 end rc=0
+killed tree 21084
+killed tree 12980
+port 9223 free
+port 5400 free
+[GROUP'] PASS (1867ms): 3 identical queryWithFilter calls -> window items (key, rows inside): ["×3 a:viewport_query x3"]; 1 group(s) show 2+ rows inside the window; 1 distinct text(s) among the 3 residential rows; R=9 <= 256
+[REGRESS'] PASS (293191ms): npm run e2e:regression exited 0 (268761ms); npm run e2e:admission exited 0 (24429ms); both attached to THIS run's own already-launched app (same fresh session)
+GROUP'      PASS    3 identical queryWithFilter calls -> window items (key, rows inside): ["×3 a:viewport_query x3"]; 1 group(s) show 2+ rows inside the window; 1 distinct text(s) among the 3 residential rows; R=9 <= 256
+REGRESS'    PASS    npm run e2e:regression exited 0 (268761ms); npm run e2e:admission exited 0 (24429ms); both attached to THIS run's own already-launched app (same fresh session)
+This run launched the app; it stays RUNNING on CDP port 9223 for further interactive use.
+[reaim-solo-h] 2026-10-10T21:09:26Z wb-console-1 after: porcelain []
+[reaim-solo-h] 2026-10-10T21:09:32Z wb-console-2 start (e2e/console.mjs, launched fresh)
+[reaim-solo-h] 2026-10-10T21:14:37Z wb-console-2 end rc=0
+killed tree 30540
+killed tree 49256
+port 9223 free
+port 5400 free
+[GROUP'] PASS (1873ms): 3 identical queryWithFilter calls -> window items (key, rows inside): ["×3 a:viewport_query x3"]; 1 group(s) show 2+ rows inside the window; 1 distinct text(s) among the 3 residential rows; R=9 <= 256
+[REGRESS'] PASS (294146ms): npm run e2e:regression exited 0 (269887ms); npm run e2e:admission exited 0 (24258ms); both attached to THIS run's own already-launched app (same fresh session)
+GROUP'      PASS    3 identical queryWithFilter calls -> window items (key, rows inside): ["×3 a:viewport_query x3"]; 1 group(s) show 2+ rows inside the window; 1 distinct text(s) among the 3 residential rows; R=9 <= 256
+REGRESS'    PASS    npm run e2e:regression exited 0 (269887ms); npm run e2e:admission exited 0 (24258ms); both attached to THIS run's own already-launched app (same fresh session)
+This run launched the app; it stays RUNNING on CDP port 9223 for further interactive use.
+[reaim-solo-h] 2026-10-10T21:14:43Z wb-console-2 after: porcelain []
+[reaim-solo-h] 2026-10-10T21:14:49Z wb-console-3 start (e2e/console.mjs, launched fresh)
+[reaim-solo-h] 2026-10-10T21:19:52Z wb-console-3 end rc=0
+killed tree 1152
+killed tree 23804
+port 9223 free
+port 5400 free
+[GROUP'] PASS (1873ms): 3 identical queryWithFilter calls -> window items (key, rows inside): ["×3 a:viewport_query x3"]; 1 group(s) show 2+ rows inside the window; 1 distinct text(s) among the 3 residential rows; R=9 <= 256
+[REGRESS'] PASS (293027ms): npm run e2e:regression exited 0 (268804ms); npm run e2e:admission exited 0 (24223ms); both attached to THIS run's own already-launched app (same fresh session)
+GROUP'      PASS    3 identical queryWithFilter calls -> window items (key, rows inside): ["×3 a:viewport_query x3"]; 1 group(s) show 2+ rows inside the window; 1 distinct text(s) among the 3 residential rows; R=9 <= 256
+REGRESS'    PASS    npm run e2e:regression exited 0 (268804ms); npm run e2e:admission exited 0 (24223ms); both attached to THIS run's own already-launched app (same fresh session)
+This run launched the app; it stays RUNNING on CDP port 9223 for further interactive use.
+[reaim-solo-h] 2026-10-10T21:19:59Z wb-console-3 after: porcelain []
+[reaim-solo-h] 2026-10-10T21:20:04Z wb-console-4 start (e2e/console.mjs, launched fresh)
+[reaim-solo-h] 2026-10-10T21:25:10Z wb-console-4 end rc=0
+killed tree 16072
+killed tree 48948
+port 9223 free
+port 5400 free
+[GROUP'] PASS (1866ms): 3 identical queryWithFilter calls -> window items (key, rows inside): ["×3 a:viewport_query x3"]; 1 group(s) show 2+ rows inside the window; 1 distinct text(s) among the 3 residential rows; R=9 <= 256
+[REGRESS'] PASS (295016ms): npm run e2e:regression exited 0 (270686ms); npm run e2e:admission exited 0 (24330ms); both attached to THIS run's own already-launched app (same fresh session)
+GROUP'      PASS    3 identical queryWithFilter calls -> window items (key, rows inside): ["×3 a:viewport_query x3"]; 1 group(s) show 2+ rows inside the window; 1 distinct text(s) among the 3 residential rows; R=9 <= 256
+REGRESS'    PASS    npm run e2e:regression exited 0 (270686ms); npm run e2e:admission exited 0 (24330ms); both attached to THIS run's own already-launched app (same fresh session)
+This run launched the app; it stays RUNNING on CDP port 9223 for further interactive use.
+[reaim-solo-h] 2026-10-10T21:25:16Z wb-console-4 after: porcelain []
+[reaim-solo-h] 2026-10-10T21:25:22Z wb-console-5 start (e2e/console.mjs, launched fresh)
+[reaim-solo-h] 2026-10-10T21:30:25Z wb-console-5 end rc=0
+killed tree 5304
+killed tree 48264
+port 9223 free
+port 5400 free
+[GROUP'] PASS (1863ms): 3 identical queryWithFilter calls -> window items (key, rows inside): ["×3 a:viewport_query x3"]; 1 group(s) show 2+ rows inside the window; 1 distinct text(s) among the 3 residential rows; R=9 <= 256
+[REGRESS'] PASS (292261ms): npm run e2e:regression exited 0 (268069ms); npm run e2e:admission exited 0 (24191ms); both attached to THIS run's own already-launched app (same fresh session)
+GROUP'      PASS    3 identical queryWithFilter calls -> window items (key, rows inside): ["×3 a:viewport_query x3"]; 1 group(s) show 2+ rows inside the window; 1 distinct text(s) among the 3 residential rows; R=9 <= 256
+REGRESS'    PASS    npm run e2e:regression exited 0 (268069ms); npm run e2e:admission exited 0 (24191ms); both attached to THIS run's own already-launched app (same fresh session)
+This run launched the app; it stays RUNNING on CDP port 9223 for further interactive use.
+[reaim-solo-h] 2026-10-10T21:30:31Z wb-console-5 after: porcelain []
+MACHINE_RELEASED project=SpatialIDE shell=bash.exe:23412 affinity=FF (cores 0-7)
+
+[exited with code 0]
