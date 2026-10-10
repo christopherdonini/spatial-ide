@@ -32,13 +32,12 @@ interface StylePanelProps {
  * `document.ts`'s own top doc comment for how every refusal `spatial_renderer::style::parse`
  * enforces is closed structurally by this tree's one document producer, `toStyleDocument`.
  *
- * **Collapsed by default** (binding note 6): the real headroom above `.canvas-container`'s 200px
- * floor at 1280x800, with `.admission-panel` and `.filter-panel` both at their present, shipped
- * size, measures ~21.8px -- much tighter than the ~112px `FilterPanel.tsx`'s own header quotes (that
- * figure predates its own column-list extra being dropped). This panel's collapsed/expanded
- * measurements, taken fresh (a killed-and-relaunched instance, one admission, no leftover state),
- * are recorded in full in `styles.css`'s `.style-panel` comment -- collapsed fits inside that ~21.8px
- * budget with a few px to spare; expanded does not, and is accepted for the stated reason there.
+ * **Collapsed by default** (binding note 6). The stacked layout's figures -- a 200px canvas floor and
+ * ~21.8px of headroom above it at 1280x800, with the measurements `styles.css`'s `.style-panel`
+ * comment records -- are HISTORY (milestone 1), not the current frame. The panel is now the
+ * Inspector's Style tab (`App.tsx`'s `"inspector.style"` slot), and `.canvas-container` fills the map
+ * region (`styles.css`) with no floor of its own; the map region's minimum is
+ * `layout/layoutConstants.ts`'s.
  *
  * **Outline controls are live** (NEXT-CUT.md P5): `canvas/buildLayers.ts` draws a separate,
  * non-pickable `PathLayer` per batch whenever `outlineWidth > 0` -- see that module's own doc

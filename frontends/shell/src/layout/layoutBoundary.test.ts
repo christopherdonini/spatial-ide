@@ -8,11 +8,12 @@ import { describe, expect, it } from "vitest";
 
 /**
  * SHELL-MIGRATION-MILESTONE-1-PREREGISTRATION.md §4, U4: the layout reducer's boundary (§2.3 (a)).
- * Nothing under `src/layout/` imports from `skp/`, `streaming/`, `residency/` or `canvas/`: the layout
- * makes no SKP call, adds no history step and cannot reach the map's code. The scan reads each
- * non-test source file's import specifiers (static, dynamic and re-export forms) and resolves each
- * against `src/`; test files are excluded because this one names the directories to assert their
- * absence.
+ * Nothing under `src/layout/` imports DIRECTLY from `skp/`, `streaming/`, `residency/` or `canvas/`.
+ * The scan reads each non-test source file's import specifiers (static, dynamic and re-export forms)
+ * and resolves each against `src/`; it proves direct imports only. It does not follow transitive
+ * imports: `regionParts.tsx` and `statusItems.ts` import `../App`, which does reach the map's code,
+ * so it does not prove that the layout makes no SKP call or cannot reach that code. Test files are
+ * excluded because this one names the directories to assert their absence.
  */
 const LAYOUT_DIR = __dirname;
 const SRC_DIR = path.resolve(__dirname, "..");
