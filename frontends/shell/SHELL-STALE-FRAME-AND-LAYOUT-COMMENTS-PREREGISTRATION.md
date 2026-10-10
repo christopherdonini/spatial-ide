@@ -21,3 +21,12 @@ Out-of-scope: none of ADR / security / wire / guarantee is touched: no ADR file,
 5. **Generation:** both nodes go to 2.
 
 **Superseded index.** The PLAN summaries' words "the single combined gate" → item 2. They are not edited.
+
+### Amendment 2 — 144 changed lines against the declared 140 (class 6, budget deviation, Scope not edited)
+
+*Written by the custodian after the fix round (`state/consults/2026-10-10-shell-stale-frame-and-layout-comments-worker-report-2.md`), at the branch head dce20da2c21391e6b1aca57b6ffbb58f4465c545, before the architect gate and the reviewer's re-gate. References only.*
+
+1. **The figure.** By §21c's counting (`git diff --numstat 78fc2c7e dce20da2`, insertions plus deletions, this form excluded), the piece holds 144 changed lines: 134 at the gate-1 head dc289564, and 10 more from the fixes to D1 to D5. The Scope line declared at most 140.
+2. **Inside §21c's own bound** of 150 lines. The file count was already past that bound (Amendment 1), so the route stays full gating. Nothing about the route changes.
+3. **The Scope line is not edited,** and no file is added.
+4. **Generation:** both nodes go to 3.
