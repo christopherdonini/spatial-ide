@@ -796,3 +796,17 @@ Branch lines are cited in words at cf2434e6 (the branch commit cf2434e6f25033335
    - **Item 7's solo runs at H:** `git diff --name-only cf2434e6 H` lists 67 files, `kernel/src/skp.rs` and `engine/tests/session_identity.rs` among them (state/consults/2026-10-10-e2e-stale-expectations-reaim-worker-report-2.md:211 @ 14475652d737d29612f01a8f2e0bf4c129021506 sha256:18fcb89f622acc0dc9fb1fd20a4494a4a3d8404aa4f3d16eb714927b37ea1928), so window 2's passes do not stand. Regression, admission and source-changed each run alone once more at H, and must pass, beside the five console runs. The exe for these runs is the one built at H, `D:/wt-targets/k6/exes/spatial-ide-shell-reaim-h.exe`.
 8. **Generation:** the node goes to 4.
 9. Nothing above is edited.
+
+### Amendment 4 — the closing record (class 1, with class 2 for §9's Operator line)
+
+*Written by the custodian after the merge. References and hashes only.*
+
+1. **Merged** by the human as e17758b70ef6541c8a0ed9ed2246bd60fbd53a89 at 2026-10-10T22:50:50Z (PR #204, head 04e21fb90b97e097f37f7dad7577ec95714818da), a merge commit.
+2. **Gates:** the architect's gate 1 is gate-log 468, pass with notes. The reviewer's gate 1 is gate-log 469, FAIL on Evidence (E1 and E2); its gate 2 is gate-log 470, PASS. That was correction round 1 of 2. The Documentation findings were fixed in the PR body and in the walkthrough commit 04e21fb9.
+3. **D1:** besides the one variant that §2.6 (A) allows, `engine/src/fixture.rs` carries a two-line doc-comment correction on `ForeignKeyColumn` (engine/src/fixture.rs:533-534 @ e17758b70ef6541c8a0ed9ed2246bd60fbd53a89 sha256:2039ca5964b0944e144624eb378b1e74b31e65e9d015b5a6232616a29f2354e0). Amendment 2 item 5 lists it and worker report 1 discloses it. It is not code.
+4. **D2 (class 2):** §9's Operator line asked for rows C2, C3, I4, I5, I6 and I8 to be committed with blank result logs. That was not done.
+   - The rows are rewritten above result logs that record passes of the old texts: Part C on 2026-08-14, and Part I on 2026-08-30.
+   - Those logs are not evidence for the new texts. The rows await the next sitting.
+5. **Recorded before:** the first T2 result (Amendment 3 item 2) and the `console.mjs` class 8 row (Amendment 3 item 7). The evidence is in worker reports 1 to 4 and in the custodian's solo runs (`state/drafts/e2e-stale-expectations-reaim-solo-runs/` and `…-solo-runs-h/`).
+6. **Generation:** the node goes to 5.
+7. Nothing above is edited.

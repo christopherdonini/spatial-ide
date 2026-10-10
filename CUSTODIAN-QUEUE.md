@@ -1,14 +1,16 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `e60f22d9e24241b85ec49ee78decc61ca8e4deb2ca6481338e9f99d19e54f4ce`) at `2026-10-10T22:21:52.140Z`.
+Generated from `PLAN.yaml` (sha256 `d983f02fcecb1993519b35af2a15edc7dd0d4776fc81a9baed97d953d1729e97`) at `2026-10-10T23:06:03.406Z`.
 
 ## 1. Next
 
-- (nothing ready)
+- **crs-undeclared-message-wording** — engine.crs_undeclared's message in the human's words: engine/src/error.rs and every test, e2e constant and walkthrough row that quotes it, nothing else (sweep area E, its last line) (lane `engine`)
 
 ## 2. Ready
 
-- (none)
+- **crs-undeclared-message-wording** — engine.crs_undeclared's message in the human's words: engine/src/error.rs and every test, e2e constant and walkthrough row that quotes it, nothing else (sweep area E, its last line) (lane `engine`, order 4, budget 45 min)
+- **shell-map-refill-after-resize** — The map refills after a resize: a layout change that uncovers map area issues a viewport query, so the area fills without a pan or zoom (lane `shell`, order 3, budget 0 min)
+- **known-limitations-item-2-on-main-paragraph** — KNOWN-LIMITATIONS item 2 gains the human's on-main paragraph (absent crs key and latitude-first CRS admitted under GeoParquet 1.0.0 and 1.1.0), and items 19, 20 and 22's unpinned cites are pinned (sweep area E, findings 1 and 6) (lane `release`, order 3, budget 45 min)
 
 ## 3. Waiting on the human (total: 10 min)
 
@@ -18,29 +20,23 @@ Generated from `PLAN.yaml` (sha256 `e60f22d9e24241b85ec49ee78decc61ca8e4deb2ca64
 
 ## 4. Blocked on dependencies
 
-- **crs-undeclared-message-wording** — engine.crs_undeclared's message in the human's words: engine/src/error.rs and every test, e2e constant and walkthrough row that quotes it, nothing else (sweep area E, its last line) — blocked by: filter-identity-alias-ambiguous-reached-through-skp, e2e-stale-expectations-reaim
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
 - **b2-piece-1b-recording** — B2 piece 1b -- recording: the kernel's step commands for filter, scope and style, the session history on the machine, safe against a crash, and the docs/07 note — blocked by: shell-migration-milestone-2, guardian-v1
 - **module-docs-stale-statements** — Engine and kernel module docs brought current, one docs-only piece (README bodies and doc comments, no code logic): the kernel README's H2 row and the engine's persists-nothing sentence first, then drift sweep area D's other eight findings and the earlier items — blocked by: known-limitations-item-2-on-main-paragraph
 - **skp-v0-live-sections-current-area-c** — SKP-V0.md's live sections and three comments brought current to the wire the code sends (sweep area C, findings 1, 3, 4, 6, 7, 8 and 9; no literal change); and skp.malformed_hex_f64, skp.bbox_not_finite and skp.unknown_handle struck as refusals a client receives (sweep area C, finding 5, ruled) — blocked by: module-docs-stale-statements
-- **shell-map-refill-after-resize** — The map refills after a resize: a layout change that uncovers map area issues a viewport query, so the area fills without a pan or zoom — blocked by: e2e-stale-expectations-reaim, shell-stale-frame-comments, shell-stale-layout-comments-and-s1-row
-- **shell-migration-milestone-2** — Shell migration, milestone 2 -- selection and scope: the Select tool, a selection that survives filter and pan, the hidden count, a stated scope — blocked by: shell-map-refill-after-resize, e2e-stale-expectations-reaim
-- **stale-test-names-and-comments** — Stale test names and test comments, names and comments only, no assertion changes: a refusal-named test that asserts admission, the React-harness premise, the no-attributes reason, a Proposed ADR-018, two ruled decisions still marked pending (sweep area E, findings 2, 3, 4, 7 and 10) — blocked by: e2e-stale-expectations-reaim, skp-v0-live-sections-current-area-c
+- **shell-migration-milestone-2** — Shell migration, milestone 2 -- selection and scope: the Select tool, a selection that survives filter and pan, the hidden count, a stated scope — blocked by: shell-map-refill-after-resize
+- **stale-test-names-and-comments** — Stale test names and test comments, names and comments only, no assertion changes: a refusal-named test that asserts admission, the React-harness premise, the no-attributes reason, a Proposed ADR-018, two ruled decisions still marked pending (sweep area E, findings 2, 3, 4, 7 and 10) — blocked by: skp-v0-live-sections-current-area-c
 - **briefb-b2-save-reopen** — B2 — Save project, Snapshot data, session history, lineage and preferences, in five stages, each with its own form — blocked by: decision-adr-029-scan-progress-route
-- **known-limitations-item-2-on-main-paragraph** — KNOWN-LIMITATIONS item 2 gains the human's on-main paragraph (absent crs key and latitude-first CRS admitted under GeoParquet 1.0.0 and 1.1.0), and items 19, 20 and 22's unpinned cites are pinned (sweep area E, findings 1 and 6) — blocked by: shell-stale-frame-comments, shell-stale-layout-comments-and-s1-row
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer — blocked by: signpath-application-draft
 - **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-1-1
 - **signpath-application-draft** — Entry 77 — the SignPath OSS application and disclosure text drafted for the human sight, once a release is CI-built — blocked by: release-v0-1-1
-- **ported-code-notice-route** — A notice route for ported code, wherever it lands (shell or kernel), needed before any PORT — blocked by: filter-identity-alias-ambiguous-reached-through-skp, crs-undeclared-message-wording
+- **ported-code-notice-route** — A notice route for ported code, wherever it lands (shell or kernel), needed before any PORT — blocked by: crs-undeclared-message-wording
 - **site-design-v1** — Landing page redesign — DRAFT-4 (status strip, milestone banner, waiting-on-you cards with unblocks counts, the swimlane board) — blocked by: governance-ci-built-site
 - **guardian-v1** — Guardian v1 -- G1's heredoc false alarm fixed, one local log line per refusal, and three new rules: G7 (agent merges and history rewrites), G8 (plugin, marketplace and MCP installs, and writes to the user's Claude folder), G9 (wholesale cleans of the main checkout's target) (Fable's MODS-V1 brief, 2026-10-05) — blocked by: ported-code-notice-route
 
 ## 5. In progress
 
-- **filter-identity-alias-ambiguous-reached-through-skp** — skp.filter_identity_alias_ambiguous is reachable from the product since skp/0.2, and no test reaches it through SKP (sweep area C, finding 2, S2) — evidence: branch `cut/filter-identity-alias-ambiguous-reached-through-skp`
-- **shell-stale-layout-comments-and-s1-row** — Four stale statements on main from #195, found by the human's independent read: StylePanel.tsx's header, PublishPanel.tsx's pointer to the styles.css budget, MANUAL-WALKTHROUGH.md row S1, layoutBoundary.test.ts's header — evidence: branch `cut/shell-stale-frame-and-layout-comments`
-- **e2e-stale-expectations-reaim** — Re-aim the shell e2e steps whose expectations predate ruled product changes: regression C2'/C3', admission MAP' and BOTHNEEDED', console HEXLIM', GROUP' and REFUSAL', source-changed default-route S4 — evidence: branch `cut/e2e-stale-expectations-reaim`
-- **shell-stale-frame-comments** — Two shell comments still describe the old frame: ConsolePanel.tsx (a bottom drawer below every panel) and residencyStatus.ts (a child of the removed canvas status stack); WorkingCanvas.tsx comments call deck.gl 9.3.7 pinned; residencyStatus.ts still calls ruled status strings drafts, string 6 among them; and canvas/hoverRepickConstants.ts still marks HOVER_REPICK_ON_PAN pending — evidence: branch `cut/shell-stale-frame-and-layout-comments`
+- (none)
 
 ## 6. Proposed / unscheduled
 
