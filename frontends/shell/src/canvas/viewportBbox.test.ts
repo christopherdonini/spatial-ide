@@ -66,6 +66,13 @@ describe("computeAuthoritativeViewportBbox", () => {
 
 // The decision a change of the canvas's CSS size asks of the viewport query (RF1 to RF6). The camera is
 // the one the canvas last wrote; the box last asked for is the camera's view at 800 x 600 CSS px.
+// RECORDED MUTATIONS, each applied to `viewportAfterResize`, run by test name, then reverted (tree clean), OBSERVED AT 6554b96c926a7f884b2cde952660df42f4238110:
+// RF1 box taken at the size implied by the last query -> FAILED, expected { kind: 'within' } to deeply equal { kind: 'query' }.
+// RF2 every size change a query -> FAILED, expected { kind: 'query' } to deeply equal { kind: 'within' }.
+// RF3 containment on widths only -> FAILED, expected { kind: 'within' } to deeply equal { kind: 'query' }.
+// RF4 the lastQueried guard dropped -> FAILED, TypeError: Cannot read properties of null (reading 'xmin').
+// RF5 the size guard dropped -> FAILED, "0 x 600: expected { kind: 'within' } to deeply equal { kind: 'none' }".
+// RF6 strict containment -> FAILED, expected 'query' to be 'within'.
 describe("viewportAfterResize (shell-map-refill-after-resize)", () => {
   const camera: ViewportCamera = { targetX: 10, targetY: -5, zoom: 0, originX: 1_000, originY: 2_000 };
   const boxAt = (widthPx: number, heightPx: number) => computeAuthoritativeViewportBbox({ ...camera, widthPx, heightPx });

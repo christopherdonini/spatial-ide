@@ -501,6 +501,8 @@ describe("App: the Map Studio frame, through the real App (milestone 1)", () => 
 
   // RECORDED MUTATION for "RF8": empty App's `onViewportWithinLastQuery` handler (the JSX prop on
   // `<WorkingCanvas>` becomes `() => {}`). Expected failure: the Export prepare carries b1, not b2.
+  // OBSERVED AT 6554b96c926a7f884b2cde952660df42f4238110: FAILED -- toEqual on the prepare scope: expected xmin 100, ymin 100, xmax 600, ymax 500 (b2), received 0, 0, 1000, 800 (b1).
+  // Reverted after observing.
   it("RF8: after a within-report the Export panel's Current-view prepare carries the within box, not the last reported one", async () => {
     await open(PATH_A);
     const [b1, b2] = [box(0, 0, 1000, 800), box(100, 100, 600, 500)];
@@ -513,6 +515,7 @@ describe("App: the Map Studio frame, through the real App (milestone 1)", () => 
 
   // RECORDED MUTATION for "RF9": App's within handler also calls the debounced entry point
   // (`viewportDebounceRef.current?.call(toWireBbox(bbox), null)`). Expected failure: the count reaches 2.
+  // OBSERVED AT 6554b96c926a7f884b2cde952660df42f4238110: FAILED -- "after a within-report: expected 2 to be 1". Reverted after observing.
   it("RF9: a within-report issues no viewport request across two debounce windows; a reported view issues exactly one", async () => {
     await open(PATH_A);
     const before = mocks.viewportRequests;

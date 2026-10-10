@@ -834,6 +834,9 @@ describe("createFitCameraWriteSequence (entry 85: the fit's own camera write)", 
 // RF7 (shell-map-refill-after-resize), source text as `noCoordinateLeak.test.ts` reads files: a viewport
 // query is asked for through ONE reporting function, so the file calls the reported-view prop's ref in
 // exactly one place, and deck's resize callback is wired into the Deck constructor.
+// RECORDED MUTATIONS, applied, run by test name, reverted (tree clean), OBSERVED AT 6554b96c926a7f884b2cde952660df42f4238110:
+// the fit site's report restored as a direct call -> FAILED, "expected 2 to be 1"; onResize renamed away in the Deck props ->
+// FAILED, "expected 'new Deck({...' to match /\bonResize:/".
 describe("WorkingCanvas.tsx: the one reporting function and deck's onResize (shell-map-refill-after-resize)", () => {
   const source = fs.readFileSync(path.resolve(__dirname, "WorkingCanvas.tsx"), "utf-8");
 
