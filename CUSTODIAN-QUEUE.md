@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `d86c83a4798468e9396130a8b4832fc14047804fba08c131179f215d37d445b4`) at `2026-10-10T08:46:01.725Z`.
+Generated from `PLAN.yaml` (sha256 `d215a689f28b95126920b86900cf947bc734d50eeca993a952189b50977a8bda`) at `2026-10-10T09:10:27.269Z`.
 
 ## 1. Next
 
@@ -23,10 +23,11 @@ Generated from `PLAN.yaml` (sha256 `d86c83a4798468e9396130a8b4832fc14047804fba08
 - **shell-map-refill-after-resize** — The map refills after a resize: a layout change that uncovers map area issues a viewport query, so the area fills without a pan or zoom — blocked by: e2e-stale-expectations-reaim
 - **shell-migration-milestone-2** — Shell migration, milestone 2 -- selection and scope: the Select tool, a selection that survives filter and pan, the hidden count, a stated scope — blocked by: shell-map-refill-after-resize, e2e-stale-expectations-reaim
 - **briefb-b2-save-reopen** — B2 — Save project, Snapshot data, session history, lineage and preferences, in five stages, each with its own form — blocked by: decision-adr-029-scan-progress-route
+- **known-limitations-item-8-filter-not-published** — KNOWN-LIMITATIONS item 8 corrected: a filter is never part of what is published (the app never sends it, at the v0.1.0 tag as on main); walkthrough row M8; the correction recorded against RELEASE-0.1.md Amendment 15 (sweep area E, finding 8, S1) — blocked by: wire-bytes-invariant-trace-flag-race
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer — blocked by: signpath-application-draft
 - **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-1-1
 - **signpath-application-draft** — Entry 77 — the SignPath OSS application and disclosure text drafted for the human sight, once a release is CI-built — blocked by: release-v0-1-1
-- **ported-code-notice-route** — A notice route for ported code, wherever it lands (shell or kernel), needed before any PORT — blocked by: wire-bytes-invariant-trace-flag-race
+- **ported-code-notice-route** — A notice route for ported code, wherever it lands (shell or kernel), needed before any PORT — blocked by: wire-bytes-invariant-trace-flag-race, known-limitations-item-8-filter-not-published
 - **site-design-v1** — Landing page redesign — DRAFT-4 (status strip, milestone banner, waiting-on-you cards with unblocks counts, the swimlane board) — blocked by: governance-ci-built-site
 - **guardian-v1** — Guardian v1 -- G1's heredoc false alarm fixed, one local log line per refusal, and three new rules: G7 (agent merges and history rewrites), G8 (plugin, marketplace and MCP installs, and writes to the user's Claude folder), G9 (wholesale cleans of the main checkout's target) (Fable's MODS-V1 brief, 2026-10-05) — blocked by: ported-code-notice-route
 
@@ -107,6 +108,9 @@ Generated from `PLAN.yaml` (sha256 `d86c83a4798468e9396130a8b4832fc14047804fba08
 - **filter-identity-alias-ambiguous-reached-through-skp** — skp.filter_identity_alias_ambiguous is reachable from the product since skp/0.2, and no test reaches it through SKP (sweep area C, finding 2, S2) (phase `prototype`) — never queued until placed
 - **skp-unproduced-codes-ruling** — SKP-V0.md's live sections name skp.malformed_hex_f64, skp.bbox_not_finite and skp.unknown_handle, which no code produces: the human rules produce or strike (sweep area C, finding 5) (phase `prototype`) — never queued until placed
 - **skp-v0-live-sections-current-area-c** — SKP-V0.md's live sections and three comments brought current to the wire the code sends (sweep area C, findings 1, 3, 4, 6, 7, 8 and 9; no literal change) (phase `prototype`) — never queued until placed
+- **known-limitations-item-2-on-main-paragraph** — KNOWN-LIMITATIONS item 2 gains the human's on-main paragraph (absent crs key and latitude-first CRS admitted under GeoParquet 1.0.0 and 1.1.0), and items 19, 20 and 22's unpinned cites are pinned (sweep area E, findings 1 and 6) (phase `prototype`) — never queued until placed
+- **stale-test-names-and-comments** — Stale test names and test comments, names and comments only, no assertion changes: a refusal-named test that asserts admission, the React-harness premise, the no-attributes reason, a Proposed ADR-018, two ruled decisions still marked pending (sweep area E, findings 2, 3, 4, 7 and 10) (phase `prototype`) — never queued until placed
+- **crs-undeclared-message-wording** — engine.crs_undeclared's message still says the engine does not apply GeoParquet's OGC:CRS84 default: the human words it (sweep area E, its last line) (phase `prototype`) — never queued until placed
 - **identity-declaration-route-for-session-tier** — The app offers no way to declare an identity column for a file that opened on the session tier (no id column): the declaration form appears only when identity is refused (phase `prototype`) — never queued until placed
 - **verify-cites-pin-resolution-and-line-zero** — verify-cites: a pinned cite starting at line 0 gets a false reason, and a pin is read only at the path as written (phase `prototype`) — never queued until placed
 - **docs-14-corpus-attribution-vs-docs-08** — docs/14 asks corpus attribution in demos and published bundles, which docs/08 line 40 now says are never redistributed (phase `prototype`) — never queued until placed
