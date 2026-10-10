@@ -717,3 +717,14 @@ Budget overrun, §7 not edited. *Written by the custodian after the build's resu
 15. **Done:** PLAN marks the node done, with evidence `{pr: 182}`, at generation 7, in this amendment's commit.
 
 **Superseded index.** §9, the order of gate and merge → item 2. §7's counting command after the merge → item 10. Neither is edited.
+
+### Amendment 7 — row S1's expected outcome corrected by the human's text (class 3)
+
+*Written by the custodian on the docs lane's piece b branch, under its five-line form (`frontends/shell/SHELL-STALE-FRAME-AND-LAYOUT-COMMENTS-PREREGISTRATION.md`), as the human's ruling directs. References only; nothing below is a quotation.*
+
+1. **The ruling:** row S1's sentence is replaced by the human's text, and the change is recorded here as a class 3 row (state/directives/2026-10-10-docs-lane-slot-2-order-reaim-answers-strike-crs-wording.md:24 @ 78fc2c7e0503e38d969cf2a9191f72253546f15d sha256:1dfec7f8e19c9ae68b655f46aec26402ed031e73afa4a157eeac7c9f09421584).
+2. **The superseded span:** row S1 as it stood before the piece, frontends/shell/MANUAL-WALKTHROUGH.md:1579 @ 78fc2c7e0503e38d969cf2a9191f72253546f15d sha256:121c10ef95c2ae0a059c352c0f08d5c975fadfc41fdb97feb867003e7a32fd9e. Its expected-outcome sentence said no describe summary and no canvas appear. That is false when a dataset is already on the map: the summary and the canvas of that dataset stay (the human's finding 3, state/directives/2026-10-09-four-findings-on-pr-195-filed-late.md:9 @ 78fc2c7e0503e38d969cf2a9191f72253546f15d sha256:50bb3189057cbbb469d32b7a8ee07988f8541a1412848072ebcd441bdf8e54c4).
+3. **The replacement:** the human's text, byte-copied by script into row S1 at the branch commit 4190e428. Nothing else in the row or in Part S changes.
+4. **Effect:** Part S is §9's Operator gate. Its result log is unfilled, so no recorded run is affected. §9 is otherwise unchanged, and no claim of this form changes.
+5. **Generation:** the node `geometry-types-beyond-polygons` is done. Its generation goes from 7 to 8 in the piece's done commit on main.
+6. Nothing above is edited.
