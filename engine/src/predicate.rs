@@ -1108,12 +1108,12 @@ fn walk_expr(node: &Value, depth: usize, columns: &mut Vec<String>) -> Result<()
 /// `id` (unrelated to identity), that name is ambiguous: a predicate that writes `id` cannot say
 /// whether it means the wire identity or the file's own unrelated column.
 ///
-/// **Honesty note, exactly as the piece asks for.** No product entry point constructs a `Mapped`
-/// identity today (`kernel/` always opens through `Dataset::open_cancellable` /
-/// `open_with_connections`, neither of which is ever handed a declared identity) — grepped before
-/// writing this function; only this crate's own tests exercise
-/// `Dataset::open_with_declared_identity`. This check is implemented at the seam where the
-/// ambiguity **would** surface the day a caller does supply one, not because it fires today.
+/// **Reachable from the product** (corrected 2026-10-10). `open_dataset`'s `identity` reaches
+/// `Dataset::open_cancellable` as a declared identity, which `admit_identity` makes
+/// `IdSource::Mapped`; on a file that also carries its own `id` column, a predicate naming `id` is
+/// refused here. Proven through SKP by `kernel/tests/skp_admission_remediation.rs::a_declared_identity_beside_the_files_own_id_refuses_a_filter_naming_id_as_ambiguous`. The note
+/// this replaces said no product entry point constructed a `Mapped` identity; that stopped being
+/// true when the admission-remediation cut threaded `open_dataset`'s `identity` into the engine.
 fn identity_alias_ambiguity(dataset: &Dataset) -> Option<(String, String)> {
     match dataset.identity().source() {
         IdSource::Mapped { column, .. } if column != ID_COLUMN => {
