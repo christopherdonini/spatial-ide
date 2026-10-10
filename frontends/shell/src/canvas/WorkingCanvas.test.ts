@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
+import fs from "node:fs";
+import path from "node:path";
+
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { PixelRegion } from "../e2e-test-surface";
@@ -825,5 +828,18 @@ describe("createFitCameraWriteSequence (entry 85: the fit's own camera write)", 
     const secondCanvasFirstWrite = second(fit);
     expect(secondCanvasFirstWrite.fitCameraWriteId).toBe(firstWrite.fitCameraWriteId); // each begins at its own beginning
     expect(first(fit).fitCameraWriteId).not.toBe(firstWrite.fitCameraWriteId); // and each advances on its own
+  });
+});
+
+// RF7 (shell-map-refill-after-resize), source text as `noCoordinateLeak.test.ts` reads files: a viewport
+// query is asked for through ONE reporting function, so the file calls the reported-view prop's ref in
+// exactly one place, and deck's resize callback is wired into the Deck constructor.
+describe("WorkingCanvas.tsx: the one reporting function and deck's onResize (shell-map-refill-after-resize)", () => {
+  const source = fs.readFileSync(path.resolve(__dirname, "WorkingCanvas.tsx"), "utf-8");
+
+  it("RF7: onViewportChangedRef.current( is called exactly once, and the Deck constructor passes onResize", () => {
+    expect(source.match(/onViewportChangedRef\.current\(/g)?.length).toBe(1);
+    const deckConstructor = source.slice(source.indexOf("new Deck({"), source.indexOf("deckRef.current = deck;"));
+    expect(deckConstructor).toMatch(/\bonResize:/);
   });
 });
