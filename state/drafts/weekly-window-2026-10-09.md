@@ -663,3 +663,13 @@ Drafting returned to the architect at the stop. The rows below are the piece's l
 **What it would change:** the pilot's §1 item 2 owner's-index update gains one line in its brief. That line lists each README body sentence the piece made false, so the same PR corrects it. A piece that changes no README body records "none".
 
 **Not decided here.** This is for the window's round.
+
+## N. The amendment template says class 9 covers a ruling that adds work, standing or not
+
+**The human's direction** (typed, received at 11:00:52Z on 2026-10-10 by the transcript, item 2.3 of the message that answered the e2e re-aim's Amendment 2; byte-copied here):
+
+> 3. Class 9 stands for this amendment. I read class 9 as covering a ruling of mine that adds work to a preregistered piece, standing or not. The template sentence that says so goes on the weekly window list.
+
+**What it would change:** the amendment template gains one sentence: class 9 covers a ruling of the human's that adds work to a preregistered piece, whether the ruling is standing or not.
+
+**Not decided here.** This is for the window's round.
