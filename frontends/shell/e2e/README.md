@@ -285,11 +285,16 @@ destination path string absent from the WHOLE `.console-panel` DOM (ADR-024's fe
 UI). `CLASSC'` sets the fill colour through the real `.style-fill-color` input and asserts the
 resulting class-C entry names "no API equivalent" with an owner containing "ADR-022". `GROUP'`
 issues 3 identical `queryWithFilter` calls and polls (the same declared bound) for exactly 3 residential
-untiled `viewport_query` rows (`bbox` null) inside one `.console-group` -- asserted by what the entries are,
-never by counting every new `.console-group-header` -- whose header reads `×N` for the rows it shows, each
-individually parseable, never a merged/synthetic one (I8); the label's total may grow by at most the
-recorder's 256 so none of its own rows can have been evicted. It reports what actually varies (nothing:
-`viewport_query` carries no per-call nonce, unlike `open_dataset`'s `cancel_key`). `COPYTRUNC'`
+untiled `viewport_query` rows (`bbox` null), never by counting every new `.console-group-header`, then
+asserts the grouping rule inside their window (the rows from the first to the last, with every item that
+holds them or lies between): each group's header reads `×N` for its N >= 2 rows of one key; no two adjacent
+items share a key (a run of consecutive identical entries forms one item, and a session-log line between
+the rows ends the run and passes); some group shows 2+ rows inside the window, else it fails as
+`GROUP': grouping not exercised` (round 71); each class-A row there parses on its own, never a
+merged/synthetic one (I8); and the label's total may grow by at most the recorder's 256 so none of its own
+rows can have been evicted. It reports the window's items and what actually varies (the residential
+request texts are expected byte-identical: `viewport_query` carries no per-call nonce, unlike
+`open_dataset`'s `cancel_key`). `COPYTRUNC'`
 drives a NEAR-CAP (exactly `MAX_CRS_DEFINITION_BYTES` = 65 536 bytes) `crsAssertion.definitionJson`
 -- built from the REAL pinned catalog definition padded with low-quote-density filler, so the
 double-JSON-encoding a naive arithmetic check would miss (the field is a STRING holding already-
