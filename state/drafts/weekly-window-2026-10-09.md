@@ -651,3 +651,15 @@ Drafting returned to the architect at the stop. The rows below are the piece's l
 - **Content:** the kernel index's preregistrations line gains this form, last. The engine index gains a Governed by sub-bullet for engine halves of pieces filed elsewhere, pointing to the form's Part B. Both Last verified at lines move to be7eecb3, every pointer checked there. No other line is stale. Both sections are within the 60-line cap.
 - **A miscount it disclosed itself:** its §3 gives 51 kernel and 39 engine test pointers checked. Its hand-back gives the right counts as 45 and 40. It did not rewrite the file, because the brief allowed one write.
 - **Applied** on the branch by a worker, as the pilot's §1 item 2 says.
+
+## M. The owner's-index update also names the README body sentences the piece made false
+
+**The human's proposal** (typed, received at 08:00:57Z on 2026-10-10 by the transcript, item 3 of the message that filed drift sweep area D; byte-copied here):
+
+> 3. For the weekly window: the owner's-index update also names the README body sentences the piece made false. The geometry pieces updated the index and left the body.
+
+**The evidence:** drift sweep area D's finding 6 (`state/consults/DRIFT-SWEEP-AREA-D-2026-10-10.md`; the custodian's check `state/consults/2026-10-10-drift-sweep-area-d-custodian-check.md`). The geometry pieces (MP-1, points, lines) updated the engine's owner's index. They left `engine/README.md`'s scope line and summary table describing a polygons-only engine. Sweep area D's other body findings (1, 2, 5 and 7) are the same class from earlier pieces.
+
+**What it would change:** the pilot's §1 item 2 owner's-index update gains one line in its brief. That line lists each README body sentence the piece made false, so the same PR corrects it. A piece that changes no README body records "none".
+
+**Not decided here.** This is for the window's round.
