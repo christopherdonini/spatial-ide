@@ -1925,7 +1925,8 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
         //
         // DEPENDS ON deck 9.3.7's trailing settled tick: a drag fires a run of `isDragging: true`
         // ticks and then ONE `isDragging: false` tick at gesture end (`panend`), where the deferred
-        // recenter lands. This is deck's *observed* behaviour on `@deck.gl/core@9.3.7` (pinned), NOT
+        // recenter lands. This is deck's *observed* behaviour on `@deck.gl/core@9.3.7` (`package.json`
+        // allows `^9.3.7`; the lockfile installs 9.3.9; no re-check on 9.3.9 is claimed here), NOT
         // a documented invariant. A future deck upgrade that stops emitting that trailing settled
         // tick — or ends a gesture on `pointercancel` with no `panend` — would silently defer the
         // origin advance by one gesture; harmless within `RECENTER_MAX_DRIFT`'s own headroom
@@ -2067,8 +2068,8 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
       try {
         return await new Promise<PixelSummary>((resolve, reject) => {
           let settled = false;
-          // Never restores to `undefined`: `_drawLayers` in the installed @deck.gl/core@9.3.7
-          // calls `this.props.onAfterRender(...)` with no null-check, so an unset prop throws on
+          // Never restores to `undefined`: `_drawLayers` in @deck.gl/core, as read on 9.3.7 (the
+          // lockfile installs 9.3.9; not re-read there), calls `this.props.onAfterRender(...)` with no null-check, so an unset prop throws on
           // this canvas's very next render -- a fresh noop is the only safe "off" state.
           const restore = () => deck.setProps({ onAfterRender: () => {} });
 

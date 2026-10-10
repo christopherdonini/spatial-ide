@@ -34,7 +34,10 @@ import { VIEWPORT_QUERY_MIN_INTERVAL_MS } from "../streaming/viewportStreamManag
 export const HOVER_REPICK_SETTLE_MS = VIEWPORT_QUERY_MIN_INTERVAL_MS;
 
 /**
- * **D3 -- PROPOSED PENDING THE HUMAN'S SIGHT (DECISIONS-PENDING entry 75).**
+ * **D3 -- RULED 2026-09-14 (DECISIONS-PENDING entry 75 (1), question set B, item B3).** The default
+ * stays pan+zoom as built, behind this declared switch; if any pan artefact is felt at the sitting,
+ * the default flips to zoom-only as a one-line declared change with the felt verdict cited, no new
+ * gate. The text below is the original proposal, kept for what each value means.
  *
  * `true` (this value): pan and zoom settle alike -- every camera change arms the re-pick, which is
  * the reading the ruling's own words force ("re-pick on camera settle": a pan is a camera change,
@@ -44,9 +47,9 @@ export const HOVER_REPICK_SETTLE_MS = VIEWPORT_QUERY_MIN_INTERVAL_MS;
  * unchanged arms nothing, so a pure pan clears the standing readout exactly as it does today, and
  * the sharpened criterion the piece exists for is satisfied for zoom-out only.
  *
- * The block-on-sight condition attached to this piece names pan-settle as sitting outside entry
- * 47's ruled (b), so this is built as a declared, tested switch rather than as a settled choice:
- * the human's answer to entry 75 selects the value before any merge. Both values are unit-tested
+ * The block-on-sight condition attached to this piece named pan-settle as sitting outside entry
+ * 47's ruled (b), so this was built as a declared, tested switch rather than as a settled choice;
+ * the human's ruling above selected the value. Both values are unit-tested
  * (`pickResolution.test.ts`'s `shouldArmHoverRepick` cases) -- the switch is a real, exercised
  * branch, not a dormant one.
  */
