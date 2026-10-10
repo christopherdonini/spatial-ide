@@ -165,8 +165,30 @@ async fn collect_frames(path: &std::path::Path) -> Vec<Frame> {
     frames
 }
 
+/// **The trace flag and slot are process-global, and the tests in this file are threads of one
+/// process.**
+///
+/// `spatial_engine::trace` holds one flag (`ENABLED`) and one slot (`CURRENT`), and `trace::start`
+/// refuses a second trace rather than replacing the first — the declared one-traced-stream limit.
+/// Each test here asserts the flag is off, runs untraced, starts a trace and runs traced, so the
+/// two take turns for their whole bodies: an untraced baseline has to be untraced throughout, and
+/// neither `start` may be refused by the other test. The refusal is kept; weakening it so the tests
+/// could overlap would delete the property it exists to provide.
+///
+/// Each test takes this lock first, so it is released last. Locals drop in reverse order, on a
+/// panic too, so a live `TraceGuard` has cleared the flag and emptied the slot before the next
+/// test is granted the lock. Holding it across `.await` is deliberate: `#[tokio::test]` runs the
+/// body with `block_on` on the test's own thread, so a test waiting here blocks only its own
+/// thread, never a worker of the other test's runtime, and the guard is never moved into a task.
+static TRACE_SERIAL: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
+fn serial() -> std::sync::MutexGuard<'static, ()> {
+    TRACE_SERIAL.lock().unwrap_or_else(|e| e.into_inner())
+}
+
 #[tokio::test(flavor = "multi_thread")]
 async fn tracing_changes_no_byte_on_the_wire() {
+    let _serial = serial();
     let path = fixture();
 
     // Untraced first, so the traced run cannot be the one that establishes the baseline shape.
@@ -373,6 +395,7 @@ async fn collect_frames_via_ticket(path: &std::path::Path) -> Vec<Frame> {
 // alone by name, failure recorded, mutation reverted.
 #[tokio::test(flavor = "multi_thread")]
 async fn wire_bytes_invariant_holds_for_the_projected_ticket_path_case_too() {
+    let _serial = serial();
     let path = projected_fixture();
 
     assert!(
