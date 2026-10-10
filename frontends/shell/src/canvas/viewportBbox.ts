@@ -57,7 +57,7 @@ export type ViewportCamera = Omit<ViewportBboxInput, "widthPx" | "heightPx">;
  * lies inside the area last asked for, so no query is due -- the caller only learns the box the map
  * now shows. `query`: the new view reaches past the area last asked for.
  */
-export type ResizeViewport =
+type ResizeViewport =
   | { kind: "none" }
   | { kind: "within"; bbox: AuthoritativeBbox }
   | { kind: "query"; bbox: AuthoritativeBbox };
