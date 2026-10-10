@@ -482,10 +482,14 @@ applied to predicate admission.
 | `skp.filter_too_deep` | `limit`, `saw` |
 | `skp.filter_rejected_by_binder` | `detail` |
 
-`skp.filter_identity_alias_ambiguous` is currently unreachable from any product entry point — no
-constructor `kernel/` uses today produces a declared identity mapping whose source column differs
-from the wire's own `id` name while the file also carries its own, unrelated `id` column. Written
-now, fires the day a caller supplies one.
+`skp.filter_identity_alias_ambiguous` is refused when the dataset's identity is mapped from a
+column other than `id` (ADR-016 §3; `open_dataset`'s `identity`, §1) and the file also carries its
+own column named `id`, whatever that column's type: a predicate naming `id` cannot say whether it
+means the wire identity or the file's column. Any client that declares an identity on
+`open_dataset` for such a file reaches it; proven through the host by
+`kernel/tests/skp_admission_remediation.rs::a_declared_identity_beside_the_files_own_id_refuses_a_filter_naming_id_as_ambiguous`. *(Corrected 2026-10-10: this paragraph called the
+code unreachable from any product entry point. That stopped being true when the
+admission-remediation cut (`skp/0.2`) threaded `open_dataset`'s `identity` into the engine.)*
 
 > **Dated note, `skp/0.8` (2026-09-30; `engine/FILTER-BIND-COERCIONS-PREREGISTRATION.md`).** One
 > row, `skp.filter_type_not_admitted` | `construct`, `operand_types`, `reason`, followed by the
