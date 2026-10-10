@@ -1,0 +1,29 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.34s
+     Running tests\slice.rs (D:/wt-targets/cov\debug\deps\slice-64dc2a7c29b22651.exe)
+
+running 22 tests
+test a_definition_that_establishes_no_axis_order_is_refused ... ok
+test a_viewport_in_another_crs_is_refused_because_nothing_here_reprojects ... ok
+test a_viewport_cannot_name_a_definition_only_crs_because_that_identifier_names_nothing ... ok
+test a_viewport_filter_selects_a_subset_and_every_selected_feature_intersects_it ... ok
+test a_declared_crs_is_admitted_as_a_file_fact ... ok
+test a_latitude_first_source_is_admitted_under_the_formats_override_with_its_declared_order_kept ... ok
+test a_caller_may_assert_a_crs_for_a_file_that_declares_none_and_it_stays_marked ... ok
+test a_viewport_without_a_covering_bbox_column_is_refused_not_silently_scanned ... ok
+test an_assertion_with_an_oversized_definition_is_refused_before_it_is_parsed ... ok
+test an_assertion_over_a_file_that_declares_a_crs_is_refused ... ok
+test an_assertion_with_a_blank_identifier_is_refused_end_to_end ... ok
+test streaming_the_whole_file_returns_every_feature_with_bit_identical_coordinates ... ok
+test h6_the_engine_module_names_no_transport ... ok
+test the_payload_is_variable_width_geoarrow_with_holes ... ok
+test the_recorded_arrow_version_is_the_one_the_workspace_pins ... ok
+test an_absent_crs_key_and_an_explicit_null_are_two_different_outcomes ... ok
+test every_batch_carries_the_envelope_not_just_the_first ... ok
+test cancelling_before_the_first_batch_stops_the_stream_without_producing_anything ... ok
+test cancelling_mid_stream_stops_production_promptly ... ok
+test dropping_the_stream_cancels_the_query ... ok
+test a_paused_consumer_bounds_producer_resident_memory ... ok
+test the_first_batch_is_handed_over_before_the_result_is_materialized ... ok
+
+test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.38s
+
