@@ -1,15 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `d0fcbc65d9cf97a9e6d92a30aef5737d0a7d92c6f1606166ec904ea2d4251555`) at `2026-10-10T19:27:13.929Z`.
+Generated from `PLAN.yaml` (sha256 `239d61045baee6435614bbae250f7a49927390450c2f7cc5bf210c831c71df8a`) at `2026-10-10T19:32:15.751Z`.
 
 ## 1. Next
 
-- **shell-stale-frame-comments** — Two shell comments still describe the old frame: ConsolePanel.tsx (a bottom drawer below every panel) and residencyStatus.ts (a child of the removed canvas status stack); WorkingCanvas.tsx comments call deck.gl 9.3.7 pinned; residencyStatus.ts still calls ruled status strings drafts, string 6 among them; and canvas/hoverRepickConstants.ts still marks HOVER_REPICK_ON_PAN pending (lane `shell`)
+- (nothing ready)
 
 ## 2. Ready
 
-- **shell-stale-frame-comments** — Two shell comments still describe the old frame: ConsolePanel.tsx (a bottom drawer below every panel) and residencyStatus.ts (a child of the removed canvas status stack); WorkingCanvas.tsx comments call deck.gl 9.3.7 pinned; residencyStatus.ts still calls ruled status strings drafts, string 6 among them; and canvas/hoverRepickConstants.ts still marks HOVER_REPICK_ON_PAN pending (lane `shell`, order 2, budget 30 min)
-- **shell-stale-layout-comments-and-s1-row** — Four stale statements on main from #195, found by the human's independent read: StylePanel.tsx's header, PublishPanel.tsx's pointer to the styles.css budget, MANUAL-WALKTHROUGH.md row S1, layoutBoundary.test.ts's header (lane `shell`, order 2, budget 30 min)
+- (none)
 
 ## 3. Waiting on the human (total: 10 min)
 
@@ -39,7 +38,9 @@ Generated from `PLAN.yaml` (sha256 `d0fcbc65d9cf97a9e6d92a30aef5737d0a7d92c6f160
 ## 5. In progress
 
 - **filter-identity-alias-ambiguous-reached-through-skp** — skp.filter_identity_alias_ambiguous is reachable from the product since skp/0.2, and no test reaches it through SKP (sweep area C, finding 2, S2) — evidence: branch `cut/filter-identity-alias-ambiguous-reached-through-skp`
+- **shell-stale-layout-comments-and-s1-row** — Four stale statements on main from #195, found by the human's independent read: StylePanel.tsx's header, PublishPanel.tsx's pointer to the styles.css budget, MANUAL-WALKTHROUGH.md row S1, layoutBoundary.test.ts's header — evidence: branch `cut/shell-stale-frame-and-layout-comments`
 - **e2e-stale-expectations-reaim** — Re-aim the shell e2e steps whose expectations predate ruled product changes: regression C2'/C3', admission MAP' and BOTHNEEDED', console HEXLIM', GROUP' and REFUSAL', source-changed default-route S4 — evidence: branch `cut/e2e-stale-expectations-reaim`
+- **shell-stale-frame-comments** — Two shell comments still describe the old frame: ConsolePanel.tsx (a bottom drawer below every panel) and residencyStatus.ts (a child of the removed canvas status stack); WorkingCanvas.tsx comments call deck.gl 9.3.7 pinned; residencyStatus.ts still calls ruled status strings drafts, string 6 among them; and canvas/hoverRepickConstants.ts still marks HOVER_REPICK_ON_PAN pending — evidence: branch `cut/shell-stale-frame-and-layout-comments`
 
 ## 6. Proposed / unscheduled
 
