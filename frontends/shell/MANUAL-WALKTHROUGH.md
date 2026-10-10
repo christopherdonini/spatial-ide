@@ -1759,3 +1759,31 @@ Fill in after running the rows above (the milestone-1 Part U).
 - **U8:**
 - **U9:**
 - **U10:**
+
+## Part V — the map after a resize: whether the area a resize uncovers fills with no pan or zoom (shell-map-refill-after-resize)
+
+This Part is the Operator gate of `frontends/shell/SHELL-MAP-REFILL-AFTER-RESIZE-PREREGISTRATION.md` §9, run only on a build after that piece's merge. It is the human's felt verdict on what a resize does to the map, and is discharged only once it has been run and its result log filled in. **No duration appears in any row or expected outcome** (`docs/08_Testing.md`; ADR-018). **Before V1:** read the form's last amendment first. Fixture: `100k-happy-path.parquet` (Part A's), no new fixture. **If anything deviates:** stop, record the exact step, and report it, as in every earlier Part.
+
+| # | Step | Expected outcome |
+|---|---|---|
+| V1 | Launch the app, open `100k-happy-path.parquet`, zoom in two wheel notches at the map's centre, and wait until the map stops changing. | The map shows features and then holds still. |
+| V2 | Press **Ctrl+I**. | The Inspector hides and the map grows. **Record** whether the strip the map gains fills with features with no pan or zoom, or stays empty until one. |
+| V3 | Press **Ctrl+I** again. Then drag the map \| Inspector splitter back and forth several times without letting go, and let go. | The map stays usable during the drag. **Record** whether the area it uncovered fills with no pan or zoom. |
+| V4 | Restore the window down, then maximise it. | **Record** the same: whether the area the map gains fills with no pan or zoom. |
+| V5 | **Felt.** Does the map keep up when panels and the window change size? | Record your verdict in your own words. |
+| V6 | Open the file again. Before any pan or zoom, press **Ctrl+B**. | **Record** what the uncovered strip shows (`KNOWN-LIMITATIONS.md` item 39). |
+
+## Result log
+
+Fill in after running the rows above (the map-refill Part V).
+
+- **Date run:**
+- **Run by:**
+- **Build/commit:**
+- **Last amendment read (its number):**
+- **V1:**
+- **V2:**
+- **V3:**
+- **V4:**
+- **V5:**
+- **V6:**
