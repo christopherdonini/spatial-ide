@@ -1293,3 +1293,11 @@ The human ruled (question set A, A3) that the custodian prepares and verifies th
 - **Archive:** `evidence-v0-1-0-2026-09-14.zip`, 81,993,512 bytes, 409 files — every file under `frontends/shell/e2e/out/` dated at or before the tag (`v0.1.0`, 2026-09-13T20:28:44+02:00); the one later file (today's marker-branch harness log) excluded by date, so the archive carries only v0.1.0's own Part M and regression evidence. Built by `node scripts/evidence/archive.mjs` with a per-file SHA-256 manifest.
 - **Attached to the release** by the human with `gh release upload v0.1.0`; it sits beside `Spatial.IDE_0.1.0_x64-setup.exe`.
 - **Citation (AUTONOMY §12):** `Evidence: https://github.com/christopherdonini/spatial-ide/releases/download/v0.1.0/evidence-v0-1-0-2026-09-14.zip (SHA-256 56660e9570c82a0de56eaf43a59d9818670dca86d8a774ded77dd5462de6186a)`
+
+## Amendment 21 — a correction of Amendment 15's reading of M8 (2026-10-10)
+
+### Corrections to this record
+
+- Amendment 15's reading took the M8 dialog's sentence for the refusal ADR-017 declares. It is not a refusal: the app never sends the filter (frontends/shell/src-tauri/src/publish.rs:117-119, the publish scope's query built with filter: None; at the tag frontends/shell/src-tauri/src/publish.rs:108-110 @ b391e43622056324c56d35cc33065305140a8415 sha256:73d3f7ef00209f37995058f2442931ec4b6e2f01acd430e918c302168eb94527), so a filtered publish completes as an unfiltered export of the current view or the whole file, with the filter-scope sentence in the dialog (frontends/shell/src-tauri/src/publish.rs:72-74, :634; frontends/shell/src/publish/PublishDialog.tsx:254-257).
+- `KNOWN-LIMITATIONS.md` item 8 is corrected by the human's text, and row M8's sentence by the instruction's line 20, in this change (state/directives/2026-10-10-drift-sweep-area-e-instructions.md:16-20 @ a7935e18cd6faebe486debbbec9049cdbfade36c sha256:26e295fe07482acaf34d68c1cd73faa0b0e00df7bab5a4e5eeca8a8f6392bf67).
+- The human's own M8 report in Amendment 15 stands as recorded; nothing above it is edited.
