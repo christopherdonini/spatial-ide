@@ -1,47 +1,9 @@
 {
-  "generated_at": "2026-10-10T23:18:57.845Z",
-  "plan_hash": "64a30cc2fc69ca70ad35d33d6390496fca568bd0f8665bc8c054ad43b6dc581e",
+  "generated_at": "2026-10-10T23:24:07.508Z",
+  "plan_hash": "25c1e980a310c1339109b4632926d4df00de8b2cc21c4e1743c36163088a9f4c",
   "priorities_approved": true,
-  "next": {
-    "id": "shell-map-refill-after-resize",
-    "title": "The map refills after a resize: a layout change that uncovers map area issues a viewport query, so the area fills without a pan or zoom",
-    "lane": "shell",
-    "phase": "prototype",
-    "status": "ready",
-    "order": 3,
-    "budget_minutes": 0,
-    "needs_human": {
-      "kind": "none",
-      "minutes": 0
-    },
-    "evidence": null,
-    "dates": {
-      "opened": "2026-10-07",
-      "done": null
-    },
-    "summary": "DEPENDENCY RECORDED 2026-10-10 by the human (state/directives/2026-10-10-docs-lane-slot-2-order-reaim-answers-strike-crs-wording.md, item 3b): the docs lane's second piece lands before this enters code, so both its nodes are in depends_on. Before: DEPENDENCY RECORDED 2026-10-09: its Amendment 1, item 5 starts its code after the K6 fix and the e2e re-aim have merged, so both are in depends_on. Before: AMENDMENT 1 APPENDED 2026-10-09 (generation 2, class 5): the human's rulings recorded by reference, before any code. Before: RULED 2026-10-09 by the human's rulings of 2026-10-09 (state/directives/2026-10-09-rulings-on-the-eight-forms.md), item 3: OPEN-1 (A), OPEN-2 (A); item 39's wording approved. Amendment 1 records them before dispatch. Before: WAITS 2026-10-09 on the human: OPEN-1 and OPEN-2, neither a red line. Before: FORM COMMITTED 2026-10-09 (the architect draft, alone; state/consults/2026-10-09-shell-map-refill-after-resize-architect-draft.md): full form with full gating (new user-visible behaviour; a new trigger on the debounce's never-query-in-motion contract and the cancel path ADR-018 governs); at most 600 lines over 7 files; 35 pins at d88cedda. deck's onResize asks for data only when the map grows past the area last asked for, through the existing debounce, so the bars' own size changes cannot repeat queries; a shrink asks nothing. KNOWN-LIMITATIONS 39 retired (draft wording for the human's sight); walkthrough Part V for the felt verdict. OPEN-1 (Current view after a shrink: a query-free report, recommended) and OPEN-2 (nothing asked before the first pan or zoom, recommended), neither a red line, go to the human. Code after e2e-hover-establishing-read-stale merges. Before: PLACED 2026-10-09 by the human's direction of 2026-10-09 (state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md), item 2b: slot 1, item b, as already ruled. Milestone 1 found H1 holds (no viewport query on a layout resize; its stage 2, worker report 2). Before: Recorded 2026-10-07 by the human clarification of milestone 1 OPEN-7 (state/directives/2026-10-07-round-66-and-67-rulings.md, lines 24-29): if milestone 1 finds H1 holds (a layout resize issues no viewport query), this small piece of its own fixes it, placed directly after milestone 1 merges; milestone 2 code starts when it has merged. Until then a KNOWN-LIMITATIONS line says what the human will see and that a pan or zoom fills the area. Proposed."
-  },
-  "ready": [
-    {
-      "id": "shell-map-refill-after-resize",
-      "title": "The map refills after a resize: a layout change that uncovers map area issues a viewport query, so the area fills without a pan or zoom",
-      "lane": "shell",
-      "phase": "prototype",
-      "status": "ready",
-      "order": 3,
-      "budget_minutes": 0,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-10-07",
-        "done": null
-      },
-      "summary": "DEPENDENCY RECORDED 2026-10-10 by the human (state/directives/2026-10-10-docs-lane-slot-2-order-reaim-answers-strike-crs-wording.md, item 3b): the docs lane's second piece lands before this enters code, so both its nodes are in depends_on. Before: DEPENDENCY RECORDED 2026-10-09: its Amendment 1, item 5 starts its code after the K6 fix and the e2e re-aim have merged, so both are in depends_on. Before: AMENDMENT 1 APPENDED 2026-10-09 (generation 2, class 5): the human's rulings recorded by reference, before any code. Before: RULED 2026-10-09 by the human's rulings of 2026-10-09 (state/directives/2026-10-09-rulings-on-the-eight-forms.md), item 3: OPEN-1 (A), OPEN-2 (A); item 39's wording approved. Amendment 1 records them before dispatch. Before: WAITS 2026-10-09 on the human: OPEN-1 and OPEN-2, neither a red line. Before: FORM COMMITTED 2026-10-09 (the architect draft, alone; state/consults/2026-10-09-shell-map-refill-after-resize-architect-draft.md): full form with full gating (new user-visible behaviour; a new trigger on the debounce's never-query-in-motion contract and the cancel path ADR-018 governs); at most 600 lines over 7 files; 35 pins at d88cedda. deck's onResize asks for data only when the map grows past the area last asked for, through the existing debounce, so the bars' own size changes cannot repeat queries; a shrink asks nothing. KNOWN-LIMITATIONS 39 retired (draft wording for the human's sight); walkthrough Part V for the felt verdict. OPEN-1 (Current view after a shrink: a query-free report, recommended) and OPEN-2 (nothing asked before the first pan or zoom, recommended), neither a red line, go to the human. Code after e2e-hover-establishing-read-stale merges. Before: PLACED 2026-10-09 by the human's direction of 2026-10-09 (state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md), item 2b: slot 1, item b, as already ruled. Milestone 1 found H1 holds (no viewport query on a layout resize; its stage 2, worker report 2). Before: Recorded 2026-10-07 by the human clarification of milestone 1 OPEN-7 (state/directives/2026-10-07-round-66-and-67-rulings.md, lines 24-29): if milestone 1 finds H1 holds (a layout resize issues no viewport query), this small piece of its own fixes it, placed directly after milestone 1 merges; milestone 2 code starts when it has merged. Until then a KNOWN-LIMITATIONS line says what the human will see and that a pan or zoom fills the area. Proposed."
-    }
-  ],
+  "next": null,
+  "ready": [],
   "waiting_on_human": {
     "total_minutes": 10,
     "by_kind": {
@@ -384,6 +346,28 @@
       },
       "summary": "IN PROGRESS 2026-10-10: worktree C:/dev/wt/crs on cut/crs-undeclared-message-wording from 496fdd7f (published), target D:/wt-targets/cov; rule (00): no PR open; the only other piece in progress is the docs lane piece c (KNOWN-LIMITATIONS.md only); this is the only piece touching protocol/; a worker-high next. Before: RULED 2026-10-10 (state/directives/2026-10-10-crs-wording-open-1-a-open-2-a-start.md): OPEN-1 (A), OPEN-2 (A); Amendment 1 appended (generation 2: the places pinned at e17758b7, the 0.2 facts unchanged by command, rule (00)). NEXT: in progress on its own branch, a worker. Before: FORM COMMITTED 2026-10-10 (forms ahead; engine/CRS-UNDECLARED-MESSAGE-WORDING-PREREGISTRATION.md, the architect's draft with 74 pins at 142af722, after lead-data's impact read state/consults/2026-10-10-crs-undeclared-message-wording-impact-read.md): the full form with both gates (a user-visible string; a property under test; the SKP fixture under protocol/skp/tests is in scope). The architect found the human's wording true of the code in all three raise cases, with four precision notes for the human's sight at the PR. OPEN-1 (the variant's doc comment that the change makes false; recommended (A), replace the false clause) and OPEN-2 (a unit test pinning the text at its source; recommended (A)) are the human's. No code before the re-aim and filter-identity merge and Amendment 1 (the base commit and the e2e pins) is committed. Observed, not in scope: formatRefusal.test.ts's synthetic detail is produced by no raise site; walkthrough row N4 and KNOWN-LIMITATIONS item 2's source comment cite error.rs lines that now hold other code. Before: RULED AND PLACED 2026-10-10 by the human (state/directives/2026-10-10-docs-lane-slot-2-order-reaim-answers-strike-crs-wording.md, items 5 and 6): the wording is the human's (the directive, line 33, byte for byte). The piece changes that text in engine/src/error.rs and every test, e2e constant and walkthrough row that quotes it, and nothing else; the v0.1.0 notes are not touched, so KNOWN-LIMITATIONS item 2 keeps its quote, and engine/ADMISSION-RESULTS.md is a results record; the human sees the string at the PR. Slot 2, after filter-identity-alias-ambiguous-reached-through-skp, and not before the re-aim has merged. For its form: protocol/skp/tests/data/v0-error-example.json quotes the text and is under protocol/, so whether it counts as a test that quotes it is the form's to say, against rule (00)'s protocol/ count. Before: PROPOSED 2026-10-10 by the custodian on the human's instruction (state/directives/2026-10-10-drift-sweep-area-e-instructions.md, part 1 item 3), from the human's drift sweep, area E (state/consults/DRIFT-SWEEP-AREA-E-2026-10-10.md; state/consults/DRIFT-SWEEP-AREA-E-PART-2-2026-10-10.md), and the human's instructions (state/directives/2026-10-10-drift-sweep-area-e-instructions.md), confirmed by the custodian at the swept commit 9e7362db, each cite asserted there (state/consults/2026-10-10-drift-sweep-area-e-custodian-check.md). On main the refusal fires only with no caller assertion and (a) a crs key present and null, in any version; (b) a crs key present but neither an object nor null, parsed as (a); or (c) an absent crs key in a file whose geo.version is not exactly 1.0.0 or 1.1.0, whose detail names the version and says its text is not pinned. Under a pinned version an absent key never reaches it. The message's second sentence is no longer the reason in any of the three cases, and main applies the default under a pinned version. ASKS THE HUMAN FOR THE WORDING (a P6 string). No change before it. The text is also quoted in KNOWN-LIMITATIONS item 2, walkthrough row B2, the e2e suites regression.mjs and admission-remediation.mjs, formatRefusal.test.ts and the SKP fixture v0-error-example.json, which move with it; engine/ADMISSION-RESULTS.md is a results record and is not edited. Nothing waits on it. The human places it.",
       "evidence_label": "branch `cut/crs-undeclared-message-wording`"
+    },
+    {
+      "id": "shell-map-refill-after-resize",
+      "title": "The map refills after a resize: a layout change that uncovers map area issues a viewport query, so the area fills without a pan or zoom",
+      "lane": "shell",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": 3,
+      "budget_minutes": 0,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "branch": "cut/shell-map-refill-after-resize"
+      },
+      "dates": {
+        "opened": "2026-10-07",
+        "done": null
+      },
+      "summary": "IN PROGRESS 2026-10-10 (slot 1): worktree C:/dev/wt/refill on cut/shell-map-refill-after-resize from 4fd3259a (published), its own cargo target D:/wt-targets/reaim-base (crs builds in k6 and cov); rule (00): the open pieces are crs (Part B row B2, regression.mjs, admission-remediation.mjs, formatRefusal.test.ts, protocol fixture, error.rs) and docs lane piece c (KNOWN-LIMITATIONS items 2, 19, 20, 22); this piece edits Part V, layout.mjs, the e2e README, item 39 and its shell sources: disjoint; a worker-high next. Before: DEPENDENCY RECORDED 2026-10-10 by the human (state/directives/2026-10-10-docs-lane-slot-2-order-reaim-answers-strike-crs-wording.md, item 3b): the docs lane's second piece lands before this enters code, so both its nodes are in depends_on. Before: DEPENDENCY RECORDED 2026-10-09: its Amendment 1, item 5 starts its code after the K6 fix and the e2e re-aim have merged, so both are in depends_on. Before: AMENDMENT 1 APPENDED 2026-10-09 (generation 2, class 5): the human's rulings recorded by reference, before any code. Before: RULED 2026-10-09 by the human's rulings of 2026-10-09 (state/directives/2026-10-09-rulings-on-the-eight-forms.md), item 3: OPEN-1 (A), OPEN-2 (A); item 39's wording approved. Amendment 1 records them before dispatch. Before: WAITS 2026-10-09 on the human: OPEN-1 and OPEN-2, neither a red line. Before: FORM COMMITTED 2026-10-09 (the architect draft, alone; state/consults/2026-10-09-shell-map-refill-after-resize-architect-draft.md): full form with full gating (new user-visible behaviour; a new trigger on the debounce's never-query-in-motion contract and the cancel path ADR-018 governs); at most 600 lines over 7 files; 35 pins at d88cedda. deck's onResize asks for data only when the map grows past the area last asked for, through the existing debounce, so the bars' own size changes cannot repeat queries; a shrink asks nothing. KNOWN-LIMITATIONS 39 retired (draft wording for the human's sight); walkthrough Part V for the felt verdict. OPEN-1 (Current view after a shrink: a query-free report, recommended) and OPEN-2 (nothing asked before the first pan or zoom, recommended), neither a red line, go to the human. Code after e2e-hover-establishing-read-stale merges. Before: PLACED 2026-10-09 by the human's direction of 2026-10-09 (state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md), item 2b: slot 1, item b, as already ruled. Milestone 1 found H1 holds (no viewport query on a layout resize; its stage 2, worker report 2). Before: Recorded 2026-10-07 by the human clarification of milestone 1 OPEN-7 (state/directives/2026-10-07-round-66-and-67-rulings.md, lines 24-29): if milestone 1 finds H1 holds (a layout resize issues no viewport query), this small piece of its own fixes it, placed directly after milestone 1 merges; milestone 2 code starts when it has merged. Until then a KNOWN-LIMITATIONS line says what the human will see and that a pan or zoom fills the area. Proposed.",
+      "evidence_label": "branch `cut/shell-map-refill-after-resize`"
     },
     {
       "id": "known-limitations-item-2-on-main-paragraph",

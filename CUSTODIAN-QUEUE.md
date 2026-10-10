@@ -1,14 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `64a30cc2fc69ca70ad35d33d6390496fca568bd0f8665bc8c054ad43b6dc581e`) at `2026-10-10T23:18:57.845Z`.
+Generated from `PLAN.yaml` (sha256 `25c1e980a310c1339109b4632926d4df00de8b2cc21c4e1743c36163088a9f4c`) at `2026-10-10T23:24:07.508Z`.
 
 ## 1. Next
 
-- **shell-map-refill-after-resize** — The map refills after a resize: a layout change that uncovers map area issues a viewport query, so the area fills without a pan or zoom (lane `shell`)
+- (nothing ready)
 
 ## 2. Ready
 
-- **shell-map-refill-after-resize** — The map refills after a resize: a layout change that uncovers map area issues a viewport query, so the area fills without a pan or zoom (lane `shell`, order 3, budget 0 min)
+- (none)
 
 ## 3. Waiting on the human (total: 10 min)
 
@@ -35,6 +35,7 @@ Generated from `PLAN.yaml` (sha256 `64a30cc2fc69ca70ad35d33d6390496fca568bd0f866
 ## 5. In progress
 
 - **crs-undeclared-message-wording** — engine.crs_undeclared's message in the human's words: engine/src/error.rs and every test, e2e constant and walkthrough row that quotes it, nothing else (sweep area E, its last line) — evidence: branch `cut/crs-undeclared-message-wording`
+- **shell-map-refill-after-resize** — The map refills after a resize: a layout change that uncovers map area issues a viewport query, so the area fills without a pan or zoom — evidence: branch `cut/shell-map-refill-after-resize`
 - **known-limitations-item-2-on-main-paragraph** — KNOWN-LIMITATIONS item 2 gains the human's on-main paragraph (absent crs key and latitude-first CRS admitted under GeoParquet 1.0.0 and 1.1.0), and items 19, 20 and 22's unpinned cites are pinned (sweep area E, findings 1 and 6) — evidence: branch `cut/known-limitations-item-2-on-main-paragraph`
 
 ## 6. Proposed / unscheduled
