@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `a5287b775ced32f470c61a2be8134448df7d261f5c4ae7c47a9580a41f89684a`) at `2026-10-09T20:40:20.424Z`.
+Generated from `PLAN.yaml` (sha256 `55c035bdc0a898ed9f40d411a2230a519b8b874ca86688071dab3dd8966dcfaa`) at `2026-10-10T07:48:41.683Z`.
 
 ## 1. Next
 
@@ -104,6 +104,9 @@ Generated from `PLAN.yaml` (sha256 `a5287b775ced32f470c61a2be8134448df7d261f5c4a
 - **slice-traced-test-cross-stamping** — engine/tests/slice.rs's traced test reads first cancellation stamps while its binary's other tests run unserialised, one of them cancelling (phase `prototype`) — never queued until placed
 - **source-changed-post-reopen-routes-watcher-visible** — source-changed.mjs's post and reopen routes, and walkthrough Part N's N6 and N8, still change the source by an mtime touch the advisory watcher can see (phase `prototype`) — never queued until placed
 - **shell-stale-layout-comments-and-s1-row** — Four stale statements on main from #195, found by the human's independent read: StylePanel.tsx's header, PublishPanel.tsx's pointer to the styles.css budget, MANUAL-WALKTHROUGH.md row S1, layoutBoundary.test.ts's header (phase `prototype`) — never queued until placed
+- **filter-identity-alias-ambiguous-reached-through-skp** — skp.filter_identity_alias_ambiguous is reachable from the product since skp/0.2, and no test reaches it through SKP (sweep area C, finding 2, S2) (phase `prototype`) — never queued until placed
+- **skp-unproduced-codes-ruling** — SKP-V0.md's live sections name skp.malformed_hex_f64, skp.bbox_not_finite and skp.unknown_handle, which no code produces: the human rules produce or strike (sweep area C, finding 5) (phase `prototype`) — never queued until placed
+- **skp-v0-live-sections-current-area-c** — SKP-V0.md's live sections and three comments brought current to the wire the code sends (sweep area C, findings 1, 3, 4, 6, 7, 8 and 9; no literal change) (phase `prototype`) — never queued until placed
 - **identity-declaration-route-for-session-tier** — The app offers no way to declare an identity column for a file that opened on the session tier (no id column): the declaration form appears only when identity is refused (phase `prototype`) — never queued until placed
 - **verify-cites-pin-resolution-and-line-zero** — verify-cites: a pinned cite starting at line 0 gets a false reason, and a pin is read only at the path as written (phase `prototype`) — never queued until placed
 - **docs-14-corpus-attribution-vs-docs-08** — docs/14 asks corpus attribution in demos and published bundles, which docs/08 line 40 now says are never redistributed (phase `prototype`) — never queued until placed

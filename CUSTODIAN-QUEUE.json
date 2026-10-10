@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-09T20:40:20.424Z",
-  "plan_hash": "a5287b775ced32f470c61a2be8134448df7d261f5c4ae7c47a9580a41f89684a",
+  "generated_at": "2026-10-10T07:48:41.683Z",
+  "plan_hash": "55c035bdc0a898ed9f40d411a2230a519b8b874ca86688071dab3dd8966dcfaa",
   "priorities_approved": true,
   "next": null,
   "ready": [],
@@ -1561,6 +1561,63 @@
         "done": null
       },
       "summary": "PROPOSED 2026-10-09 by the custodian from the human's independent read of #195's first-gated commit: four things the gates did not raise, each confirmed by the custodian on main at 034344c3. (1) frontends/shell/src/style/StylePanel.tsx, its header comment (about lines 35-41), gives the stacked layout's 200px canvas floor and ~21.8px headroom as current; .canvas-container now fills its region and has no floor, and styles.css's own head calls that floor history. (2) frontends/shell/src/publish/PublishPanel.tsx, about line 309, sends the reader to styles.css's .publish-panel comment for the measured layout budget as if current; that comment now opens with HISTORY (milestone 1) and says it is not a description of the current layout. (3) frontends/shell/MANUAL-WALKTHROUGH.md, Part S, row S1: its expected outcome says no describe summary and no canvas appear, which is false when a dataset is already on the map: the summary binds to the admitted dataset (App.tsx's section.source slot, entry 120 (2)), and a refused open leaves that dataset's summary, and its canvas, standing. Part S is the Operator gate of engine/MULTIPOLYGON-MP1-PREREGISTRATION.md section 9 (S1 as its Amendment 2, item 1 rewrites it) and its result log is unfilled, so the row is fixed before it runs; whether the change needs an amendment there is for the grading. (4) frontends/shell/src/layout/layoutBoundary.test.ts, its header, says the layout cannot reach the map's code, but regionParts.tsx and statusItems.ts import ../App, and the scan forbids direct imports from skp/, streaming/, residency/ and canvas/ only; the test proves direct imports only, so either the header is narrowed or the scan is extended. Its sibling is shell-stale-frame-comments, stale comments of the same kind from #195 reviewer gate 1, and the two can be graded together. Nothing waits on it. The human grades and places it."
+    },
+    {
+      "id": "filter-identity-alias-ambiguous-reached-through-skp",
+      "title": "skp.filter_identity_alias_ambiguous is reachable from the product since skp/0.2, and no test reaches it through SKP (sweep area C, finding 2, S2)",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-10",
+        "done": null
+      },
+      "summary": "PROPOSED 2026-10-10 by the custodian from the human's independent sweep of main, area C, the wire contract against the code (state/consults/DRIFT-SWEEP-AREA-C-2026-10-10.md), finding 2, graded S2 by the human; confirmed by the custodian at 116deb53, every cite re-derived there (state/consults/2026-10-10-drift-sweep-area-c-custodian-check.md). A declared identity on open_dataset becomes a Mapped identity, and a filter naming id on a file that also carries its own id column refuses with this code. The shell would show it as a typed refusal: the filter path formats the SkpError and FilterPanel renders RefusalBlock with the code, the verbatim message and the fields column and source_column, with no code-specific guidance; this is by reading the code, not by a run. No test reaches it through SKP: the kernel's unit test maps the engine variant to its code directly, two engine test files name it only in their exhaustive code maps, and no engine, kernel, shell or e2e test makes it fire. The e2e re-aim's fixture variant (its form's Amendment 2: a bad id beside parcel_key) has the shape; a test that reuses it waits for that piece. The two texts that call the code unreachable (SKP-V0.md section 7.5's note, and engine/src/predicate.rs's honesty note, which the report places in area D) are outside the documentation node's findings; this node proposes to correct them with the test that proves them false. Nothing waits on it. The human places it."
+    },
+    {
+      "id": "skp-unproduced-codes-ruling",
+      "title": "SKP-V0.md's live sections name skp.malformed_hex_f64, skp.bbox_not_finite and skp.unknown_handle, which no code produces: the human rules produce or strike (sweep area C, finding 5)",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 30,
+      "needs_human": {
+        "kind": "ruling",
+        "minutes": 10
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-10",
+        "done": null
+      },
+      "summary": "PROPOSED 2026-10-10 by the custodian from the human's independent sweep of main, area C, the wire contract against the code (state/consults/DRIFT-SWEEP-AREA-C-2026-10-10.md), finding 5; confirmed by the custodian at 116deb53, every cite re-derived there (state/consults/2026-10-10-drift-sweep-area-c-custodian-check.md). Section 3 (the HexF64 codec) and section 5 (the error taxonomy's skp. examples) name the three codes as live refusals. protocol/skp/src/v0/error.rs has a constructor for each, and nothing in the tree calls any of them. A malformed or non-finite HexF64 fails at deserialization, and the shell's client rethrows that rejection untyped; a cancel on an unknown handle answers with a cancel state, not an error. The conformance AMBIGUITIES.md rows A3 and A8 record the refusal layer as unstated, not that the codes are never minted. ASKS THE HUMAN TO RULE: produce the three codes, or strike them from the live sections. No code before the ruling. Nothing waits on it. The human places it."
+    },
+    {
+      "id": "skp-v0-live-sections-current-area-c",
+      "title": "SKP-V0.md's live sections and three comments brought current to the wire the code sends (sweep area C, findings 1, 3, 4, 6, 7, 8 and 9; no literal change)",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-10",
+        "done": null
+      },
+      "summary": "PROPOSED 2026-10-10 by the custodian from the human's independent sweep of main, area C, the wire contract against the code (state/consults/DRIFT-SWEEP-AREA-C-2026-10-10.md), findings 1, 3, 4, 6, 7, 8 and 9; confirmed by the custodian at 116deb53, every cite re-derived there (state/consults/2026-10-10-drift-sweep-area-c-custodian-check.md). In SKP-V0.md's live sections: (1) section 1's open_dataset and describe shapes gain the five members the host always sends (open_dataset's session; describe's coverage, checks and session_end; schema's projectable); (3) section 4 item 1 states that publish is reachable from the shell's UI since ADR-017's 2026-08-17 discharge for that surface, while SKP and the other surfaces ADR-017 names stay gated; (4) section 1's non-file sentence names the directory refusal, engine.identity_ordinal_partitioned_unsupported, and its canonicalize claim, which the open path does not do and the report marks a suspected original inaccuracy, is corrected; (9) a live section states the current literal, skp/0.11 (section 4 item 3 and section 9.1 stop at skp/0.6 and skp/0.7). Three comments: (6) frontends/shell/src/skp/types.ts, the note that the event decoder is a later piece; (7) protocol/skp/src/v0/handles.rs, the module doc's two rules and three kinds (SessionRef is a fourth kind under a third rule); (8) kernel/src/skp.rs, projection_error_of's doc counting six codes against seven arms. Observed in the check, for the form to take or leave: section 9.5's heading says seven codes above an eight-row table. Not in this node: finding 2's two texts (its S2 node) and finding 5's codes (its ruling node). No literal change and no fixture change. Nothing waits on it. The human places it."
     },
     {
       "id": "identity-declaration-route-for-session-tier",
