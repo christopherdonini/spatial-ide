@@ -3,7 +3,7 @@
 
 /**
  * Viewport-residency cut P4 (decisions 24(a)/(b), resolved by the human): rider 1's persistent
- * `.residency-status` indicator (`App.tsx`'s own `.canvas-status-stack` child), extracted to its own
+ * `.residency-status` indicator (`App.tsx`'s `"status.residency"` status-bar item), extracted to its own
  * module so `residency/candidateArmSession.ts` can construct the SAME transition events `App.tsx`
  * reduces through `nextResidencyStatus` -- one state machine, arm-aware -- without a circular import
  * back into `App.tsx` itself. `App.tsx` re-exports everything here, so every existing
@@ -350,28 +350,28 @@ export function settledState(input: SettledStateInputs): SettledState {
  *    render budget. Zoom in to see more detail."
  * Baseline's own string is byte-identical to what it was before this piece.
  *
- * Item A (residency-debt cut 1b) adds two more, both DRAFTS for the human's 24(b) sight (see this
- * piece's own report for the full "DRAFT STRINGS FOR HUMAN SIGHT" list) -- kept as named constants
- * below (nit, reviewer gate: the report claiming these were already constants is only true once they
- * actually are), still draft-marked:
+ * Item A (residency-debt cut 1b) adds two more, strings 1 and 2, drafted for the human's 24(b) sight
+ * and RULED in DECISIONS-PENDING's 2026-09-05 block (1 approved; 2 with "not fetched" -> "not loaded")
+ * and confirmed as shipped in its 2026-09-06 block -- kept as named constants below:
  *  - over budget AND `stalled` (the held queue is provably frozen, `fillActivity` above): the ordinary
  *    over-budget sentence, plus one more naming the freeze and its own remedy -- never a duration.
  *  - relinquished (32a's own rider -- NEVER "complete"): "Filling stopped — showing {N} features
  *    already loaded; the rest of this view was not fetched."
  *
- * M1 (reviewer gate) adds a THIRD draft string, for the `untiledStreamStillRunning` case above: the
+ * M1 (reviewer gate) adds a THIRD string, for the `untiledStreamStillRunning` case above: the
  * ordinary "Filling stopped" wording would be false while the untiled first-look/reissue stream keeps
  * delivering, so this one states the truth instead -- the tile backlog was relinquished, the initial/
  * filter data load is still running, and Cancel does not stop it. **RULED 2026-09-05 (entry 35, the
  * 24(b) string sight):** the human held string 3 for the string-3 reachability re-check this piece
- * carries out -- see `candidateArmSession.ts`'s own `relinquishFill` doc comment for the trace. The
- * survivor is REWORDED here per the human's own note ("reworded per my note if it survives"): with
+ * carries out -- see `candidateArmSession.ts`'s own `relinquishFill` doc comment for the trace. With
  * `relinquishFill` now also cancelling this stream whenever `manager.gridFrame` already exists, the
  * ONLY window this variant can still fire from is the frameless one (bootstrap, or an Apply/Clear
- * reissue racing the first look's own frame-establishing terminal) -- never "the initial data load"
- * alone (a frameless reissue is not initial), so the string now names the frame itself, not "initial".
+ * reissue racing the first look's own frame-establishing terminal). **RULED 2026-09-06 (the 24(b)
+ * string sight complete):** the 2026-09-05 rewording, which named the frame, was replaced by the
+ * human's own trim -- the frame clause dropped, "first data load" naming the stream -- applied
+ * verbatim in `relinquishedUntiledStillRunningText` below.
  *
- * Item B (residency-debt cut 1b) adds a FOURTH draft string, for `settled: "partial"` above: the fill
+ * Item B (residency-debt cut 1b) adds a FOURTH string, for `settled: "partial"` above: the fill
  * has genuinely come to rest for this viewport (no further request is outstanding, and none will start
  * without a fresh pan/zoom) but did not complete -- distinct from `stalled` (a frozen, still-tracked
  * queue that COULD resume the moment headroom frees up) and from `candidate-relinquished` (the
@@ -379,12 +379,14 @@ export function settledState(input: SettledStateInputs): SettledState {
  * the partial set (BS6) -- `settled: "complete"` on the within-budget event, by contrast, needs no new
  * string at all: it renders the SAME pre-existing "Showing all N" text (see that function's own doc
  * comment on `emitResidencyStatus`, `candidateArmSession.ts`, for the new gate that guards it).
- * **RULED 2026-09-05 (24(b) string sight):** the human's own wording, applied verbatim below.
+ * **RULED 2026-09-05 (24(b) string sight):** the human's own wording, applied verbatim below;
+ * confirmed as shipped in the 2026-09-06 block.
  *
  * Piece 2(ii) (residency-debt cut 1b, entry 36) adds a FIFTH string, for `settled: "partial-failure"`
  * on the WITHIN-budget event -- distinct from string 4 above, whose "the render budget is full" claim
  * is budget-only and would be false here (nothing was evicted for space; a covering-tile stream
- * genuinely failed instead). Draft-marked, for the human's 24(b) sight at this piece's own PR.
+ * genuinely failed instead). **RULED 2026-09-06 (24(b) string sight complete):** approved with the
+ * human's own phrase "part of this view failed to load".
  *
  * The close-out fix piece (entry 43, 2026-09-06) adds a SIXTH string, for `settled: "partial"` on the
  * WITHIN-budget event -- the settled-but-not-complete, no-failure reading (a truncated covering set,
@@ -394,12 +396,12 @@ export function settledState(input: SettledStateInputs): SettledState {
  * (entry 43's own text): the state has two distinct causes -- truncation is farthest-first
  * (`tileViewportStreamManager.ts`'s own `onCameraChange`), but a covering tile that never completed
  * was simply requested in row-major order, so "farthest from centre" would be a false claim for that
- * case -- so the string names neither. **A DRAFT for the human's own 24(b) sight, not yet ruled** --
- * unlike strings 1-5 above, this one has not been through the wording sight this piece's own report
- * asks for.
+ * case -- so the string names neither. **RULED 2026-09-06, entry 45, (1) String 6 = A, direction-free as shipped** (byte-copied
+ * from `DECISIONS-PENDING.md` entry 45's RULED block).
  */
-/** Item A draft (24(b) sight): appended to the ordinary over-budget sentence only when `fillActivity`
- * reads `"stalled"` -- never a duration, only the freeze and its remedy. */
+/** Item A string 1, RULED 2026-09-05 (24(b) string sight, "1 approved"), confirmed as shipped
+ * 2026-09-06: appended to the ordinary over-budget sentence only when `fillActivity` reads
+ * `"stalled"` -- never a duration, only the freeze and its remedy. */
 const STALLED_SUFFIX = " Filling is paused until the next pan or zoom.";
 /** Item B string, RULED 2026-09-05 (24(b) string sight) -- the human's own wording, applied verbatim:
  * appended to the ordinary over-budget sentence only when `settledState` reads `"settled-partial"` --
@@ -416,12 +418,12 @@ const SETTLED_PARTIAL_SUFFIX = " Filling has finished for this view — the rend
  * WITHIN-budget event (never appended as a suffix -- nothing here is "the ordinary over-budget
  * sentence" to append to), since the render budget was never the issue. */
 const SETTLED_PARTIAL_FAILURE_TEXT = "Filling has finished for this view, but part of this view failed to load; pan or zoom to retry.";
-/** Close-out fix piece F2 (entry 43, ADR-010 rule 5): the sixth draft string -- settled, within
+/** Close-out fix piece F2 (entry 43, ADR-010 rule 5): the sixth string -- settled, within
  * budget, incomplete, no failure recorded (a truncated covering set, or a covering tile that never
- * completed). **DRAFT, for the human's own 24(b) sight** -- unlike `SETTLED_PARTIAL_SUFFIX`/
- * `SETTLED_PARTIAL_FAILURE_TEXT` above (both RULED 2026-09-05/06), this exact wording has not yet
- * been shown to the human; it is entry 43's own recommended text, carried here verbatim so this
- * piece ships no silent behavior while the wording itself awaits sight. Never the word "all" (BS6:
+ * completed). **RULED 2026-09-06, entry 45, (1) String 6 = A, direction-free as shipped** (byte-copied from
+ * `DECISIONS-PENDING.md` entry 45's RULED block); like `SETTLED_PARTIAL_SUFFIX`/
+ * `SETTLED_PARTIAL_FAILURE_TEXT` above (both RULED 2026-09-05/06), and it is entry 43's own
+ * recommended text. Never the word "all" (BS6:
  * no completeness/finality claim over a partial/truncated/mid-fill set). Rendered as its own complete
  * sentence on the WITHIN-budget event (never appended as a suffix -- there is no "ordinary sentence"
  * to append to on this branch, matching `SETTLED_PARTIAL_FAILURE_TEXT`'s own shape, not
