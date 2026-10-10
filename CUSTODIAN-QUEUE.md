@@ -1,14 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `476439b42166bbb34c48f03386d9ec318843893346ef2fdcf2539649cf279910`) at `2026-10-09T14:27:06.847Z`.
+Generated from `PLAN.yaml` (sha256 `2cab231e72eb09ff2e384d9e0ce3d74368128d90dfa4eac8650b446ca315587b`) at `2026-10-10T11:13:59.526Z`.
 
 ## 1. Next
 
-- (nothing ready)
+- **known-limitations-item-8-filter-not-published** — KNOWN-LIMITATIONS item 8 corrected: a filter is never part of what is published (the app never sends it, at the v0.1.0 tag as on main); walkthrough row M8; the correction recorded against RELEASE-0.1.md Amendment 15 (sweep area E, finding 8, S1) (lane `release`)
 
 ## 2. Ready
 
-- (none)
+- **known-limitations-item-8-filter-not-published** — KNOWN-LIMITATIONS item 8 corrected: a filter is never part of what is published (the app never sends it, at the v0.1.0 tag as on main); walkthrough row M8; the correction recorded against RELEASE-0.1.md Amendment 15 (sweep area E, finding 8, S1) (lane `release`, order 1, budget 60 min)
 
 ## 3. Waiting on the human (total: 10 min)
 
@@ -18,25 +18,31 @@ Generated from `PLAN.yaml` (sha256 `476439b42166bbb34c48f03386d9ec318843893346ef
 
 ## 4. Blocked on dependencies
 
-- **skp-drained-stream-helper-post-check-race** — kernel/src/skp.rs tests: drained_stream_with_a_recorded_change has the same post-check race as typed_terminal_codes' end-to-end test — blocked by: covering-names-missing-column
-- **wire-bytes-invariant-trace-flag-race** — kernel/tests/wire_bytes_invariant.rs: the projected-ticket test asserts tracing is off while its sibling starts a trace (a race on the engine's global trace flag) — blocked by: covering-names-missing-column, skp-drained-stream-helper-post-check-race
+- **stream-flush-cancel-exit-marks-producer-cancelled** — engine/src/stream.rs flush's cancel exit marks producer_cancelled, as the five other cancel exits after the first batch do, with a test that forces that exit: the end instant of the docs/08 cancellation budget (flake hunt run 1, S2) — blocked by: wire-bytes-invariant-trace-flag-race
+- **crs-undeclared-message-wording** — engine.crs_undeclared's message in the human's words: engine/src/error.rs and every test, e2e constant and walkthrough row that quotes it, nothing else (sweep area E, its last line) — blocked by: filter-identity-alias-ambiguous-reached-through-skp, e2e-stale-expectations-reaim
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
-- **b2-piece-1b-recording** — B2 piece 1b -- recording: the kernel's step commands for filter, scope and style, the session history on the machine, safe against a crash, and the docs/07 note — blocked by: shell-migration-milestone-2
-- **e2e-stale-expectations-reaim** — Re-aim the shell e2e steps whose expectations predate ruled product changes: regression C2'/C3', admission MAP' and BOTHNEEDED', console HEXLIM', GROUP' and REFUSAL', source-changed default-route S4 — blocked by: e2e-hover-establishing-read-stale
-- **shell-map-refill-after-resize** — The map refills after a resize: a layout change that uncovers map area issues a viewport query, so the area fills without a pan or zoom — blocked by: e2e-hover-establishing-read-stale, e2e-stale-expectations-reaim
-- **shell-migration-milestone-2** — Shell migration, milestone 2 -- selection and scope: the Select tool, a selection that survives filter and pan, the hidden count, a stated scope — blocked by: e2e-hover-establishing-read-stale, shell-map-refill-after-resize, e2e-stale-expectations-reaim
+- **filter-identity-alias-ambiguous-reached-through-skp** — skp.filter_identity_alias_ambiguous is reachable from the product since skp/0.2, and no test reaches it through SKP (sweep area C, finding 2, S2) — blocked by: stream-flush-cancel-exit-marks-producer-cancelled
+- **b2-piece-1b-recording** — B2 piece 1b -- recording: the kernel's step commands for filter, scope and style, the session history on the machine, safe against a crash, and the docs/07 note — blocked by: shell-migration-milestone-2, guardian-v1
+- **module-docs-stale-statements** — Engine and kernel module docs brought current, one docs-only piece (README bodies and doc comments, no code logic): the kernel README's H2 row and the engine's persists-nothing sentence first, then drift sweep area D's other eight findings and the earlier items — blocked by: known-limitations-item-2-on-main-paragraph
+- **skp-v0-live-sections-current-area-c** — SKP-V0.md's live sections and three comments brought current to the wire the code sends (sweep area C, findings 1, 3, 4, 6, 7, 8 and 9; no literal change); and skp.malformed_hex_f64, skp.bbox_not_finite and skp.unknown_handle struck as refusals a client receives (sweep area C, finding 5, ruled) — blocked by: module-docs-stale-statements
+- **shell-stale-frame-comments** — Two shell comments still describe the old frame: ConsolePanel.tsx (a bottom drawer below every panel) and residencyStatus.ts (a child of the removed canvas status stack); WorkingCanvas.tsx comments call deck.gl 9.3.7 pinned; residencyStatus.ts still calls ruled status strings drafts, string 6 among them; and canvas/hoverRepickConstants.ts still marks HOVER_REPICK_ON_PAN pending — blocked by: known-limitations-item-8-filter-not-published
+- **shell-stale-layout-comments-and-s1-row** — Four stale statements on main from #195, found by the human's independent read: StylePanel.tsx's header, PublishPanel.tsx's pointer to the styles.css budget, MANUAL-WALKTHROUGH.md row S1, layoutBoundary.test.ts's header — blocked by: known-limitations-item-8-filter-not-published
+- **shell-map-refill-after-resize** — The map refills after a resize: a layout change that uncovers map area issues a viewport query, so the area fills without a pan or zoom — blocked by: e2e-stale-expectations-reaim, shell-stale-frame-comments, shell-stale-layout-comments-and-s1-row
+- **shell-migration-milestone-2** — Shell migration, milestone 2 -- selection and scope: the Select tool, a selection that survives filter and pan, the hidden count, a stated scope — blocked by: shell-map-refill-after-resize, e2e-stale-expectations-reaim
+- **stale-test-names-and-comments** — Stale test names and test comments, names and comments only, no assertion changes: a refusal-named test that asserts admission, the React-harness premise, the no-attributes reason, a Proposed ADR-018, two ruled decisions still marked pending (sweep area E, findings 2, 3, 4, 7 and 10) — blocked by: e2e-stale-expectations-reaim, skp-v0-live-sections-current-area-c
 - **briefb-b2-save-reopen** — B2 — Save project, Snapshot data, session history, lineage and preferences, in five stages, each with its own form — blocked by: decision-adr-029-scan-progress-route
+- **known-limitations-item-2-on-main-paragraph** — KNOWN-LIMITATIONS item 2 gains the human's on-main paragraph (absent crs key and latitude-first CRS admitted under GeoParquet 1.0.0 and 1.1.0), and items 19, 20 and 22's unpinned cites are pinned (sweep area E, findings 1 and 6) — blocked by: shell-stale-frame-comments, shell-stale-layout-comments-and-s1-row
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer — blocked by: signpath-application-draft
 - **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-1-1
 - **signpath-application-draft** — Entry 77 — the SignPath OSS application and disclosure text drafted for the human sight, once a release is CI-built — blocked by: release-v0-1-1
-- **ported-code-notice-route** — A notice route for ported code, wherever it lands (shell or kernel), needed before any PORT — blocked by: wire-bytes-invariant-trace-flag-race
+- **ported-code-notice-route** — A notice route for ported code, wherever it lands (shell or kernel), needed before any PORT — blocked by: wire-bytes-invariant-trace-flag-race, stream-flush-cancel-exit-marks-producer-cancelled, filter-identity-alias-ambiguous-reached-through-skp, crs-undeclared-message-wording
 - **site-design-v1** — Landing page redesign — DRAFT-4 (status strip, milestone banner, waiting-on-you cards with unblocks counts, the swimlane board) — blocked by: governance-ci-built-site
 - **guardian-v1** — Guardian v1 -- G1's heredoc false alarm fixed, one local log line per refusal, and three new rules: G7 (agent merges and history rewrites), G8 (plugin, marketplace and MCP installs, and writes to the user's Claude folder), G9 (wholesale cleans of the main checkout's target) (Fable's MODS-V1 brief, 2026-10-05) — blocked by: ported-code-notice-route
 
 ## 5. In progress
 
-- **covering-names-missing-column** — A covering that names a column the file lacks is kept at open, and every bbox query then fails after the mint (A2-1 P0 k3) — evidence: branch `cut/covering-names-missing-column`
-- **e2e-hover-establishing-read-stale** — K6 and A9-prime take their starting hover id from the readout's first poll, which can still name the feature under the previous pointer — evidence: branch `cut/e2e-hover-establishing-read-stale`
+- **wire-bytes-invariant-trace-flag-race** — kernel/tests/wire_bytes_invariant.rs: the projected-ticket test asserts tracing is off while its sibling starts a trace (a race on the engine's global trace flag) — evidence: branch `cut/wire-bytes-invariant-trace-flag-race`
+- **e2e-stale-expectations-reaim** — Re-aim the shell e2e steps whose expectations predate ruled product changes: regression C2'/C3', admission MAP' and BOTHNEEDED', console HEXLIM', GROUP' and REFUSAL', source-changed default-route S4 — evidence: branch `cut/e2e-stale-expectations-reaim`
 
 ## 6. Proposed / unscheduled
 
@@ -89,7 +95,6 @@ Generated from `PLAN.yaml` (sha256 `476439b42166bbb34c48f03386d9ec318843893346ef
 - **cfg-boundary-read-errors** — cfg-boundary skips any tracked file it cannot read, not only a missing one, so an unreadable file passes unscanned (phase `prototype`) — never queued until placed
 - **publish-lifecycle-drain-followups** — Exit drain follow-ups -- an execute that registers after the drain began is not cancelled; Park/Settle can hang if the controlling test thread panics; run_exclusive removal is not RAII (phase `prototype`) — never queued until placed
 - **kernel-composed-ceiling-projected-stream** — The kernel's composed per-stream ceilings do not cover a live projected stream's attribute buffers -- recompose and declare that bound (ADR-010 rule 6) (phase `prototype`) — never queued until placed
-- **module-docs-stale-statements** — Module docs that lag the tree -- engine/README.md calls ADR-013, ADR-015 and ADR-016 Proposed though their Status lines read Accepted; kernel/src/lib.rs's module doc carries the scope, only-place and exposure statements the kernel README now corrects (phase `prototype`) — never queued until placed
 - **sitting-part-r-row-r1** — Walkthrough Part R, row R1 -- close the window during a publish, relaunch at once, and check the two processes do not conflict (node 8; the exit-drain ruling's condition (c)) (phase `prototype`) — never queued until placed
 - **profile-path-scan-stdin-mode** — The profile-path scanner gains a stdin mode, so a mod can run the scanner's own matcher on content not yet on disk (guardian-v0's G5, left out of v0 by round 43, item 3) (phase `prototype`) — never queued until placed
 - **type-walk-rule2-residual-reasons** — Type walk: a rule-2 result over a column or an integer literal, refused by rule 7's bit-width bound, keeps the residual reason although its value is a constant NULL (for example f32 > NULL + 100000) (phase `prototype`) — never queued until placed
@@ -108,7 +113,6 @@ Generated from `PLAN.yaml` (sha256 `476439b42166bbb34c48f03386d9ec318843893346ef
 - **identity-declaration-route-for-session-tier** — The app offers no way to declare an identity column for a file that opened on the session tier (no id column): the declaration form appears only when identity is refused (phase `prototype`) — never queued until placed
 - **verify-cites-pin-resolution-and-line-zero** — verify-cites: a pinned cite starting at line 0 gets a false reason, and a pin is read only at the path as written (phase `prototype`) — never queued until placed
 - **docs-14-corpus-attribution-vs-docs-08** — docs/14 asks corpus attribution in demos and published bundles, which docs/08 line 40 now says are never redistributed (phase `prototype`) — never queued until placed
-- **shell-stale-frame-comments** — Two shell comments still describe the old frame: ConsolePanel.tsx (a bottom drawer below every panel) and residencyStatus.ts (a child of the removed canvas status stack); and WorkingCanvas.tsx comments call deck.gl 9.3.7 pinned (phase `prototype`) — never queued until placed
 - **e2e-first-poll-readout-elsewhere** — Two more e2e suites take a hover id from the readout's first poll after a pointer move: source-changed.mjs hoverAt and residency-harness.mjs tryHoverCandidate (phase `prototype`) — never queued until placed
 - **dataset-stream-doc-producer-runs-ahead** — engine/src/stream.rs: Dataset::stream's doc says it returns once the statement is prepared and produces the first batch on the first next_into; the producer thread prepares and runs ahead to the queue bound (phase `prototype`) — never queued until placed
 - **shell-migration-milestone-3** — Shell migration, milestone 3 -- command bar and filter clauses: Ctrl+K, slash commands, typed /filter with field completion, clause cards with on and off (phase `prototype`) — never queued until placed

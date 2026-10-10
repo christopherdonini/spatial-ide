@@ -1,0 +1,15 @@
+2026-10-10T08:02:02Z	ordinary	01	rc=0	secs=438	failed_tests=0	/work/logs/ordinary-01.log
+2026-10-10T08:08:57Z	ordinary	02	rc=0(parsed)	secs=411(from file times)	failed_tests=0	/work/logs/ordinary-02.log
+2026-10-10T08:16:49Z	twocore	01	rc=0	secs=472	failed_tests=0	/work/logs/twocore-01.log
+2026-10-10T08:23:38Z	ordinary	03	rc=0	secs=409	failed_tests=0	/work/logs/ordinary-03.log
+2026-10-10T08:31:42Z	twocore	02	rc=0	secs=484	failed_tests=0	/work/logs/twocore-02.log
+2026-10-10T08:38:48Z	ordinary	04	rc=0	secs=426	failed_tests=0	/work/logs/ordinary-04.log
+2026-10-10T08:46:47Z	twocore	03	rc=0	secs=479	failed_tests=0	/work/logs/twocore-03.log
+2026-10-10T08:53:30Z	ordinary	05	rc=0	secs=403	failed_tests=0	/work/logs/ordinary-05.log
+2026-10-10T09:01:16Z	twocore	04	rc=0	secs=466	failed_tests=0	/work/logs/twocore-04.log
+2026-10-10T09:08:04Z	ordinary	06	rc=0	secs=408	failed_tests=0	/work/logs/ordinary-06.log
+2026-10-10T09:15:52Z	twocore	05	rc=0	secs=468	failed_tests=0	/work/logs/twocore-05.log
+2026-10-10T09:22:42Z	ordinary	07	rc=0	secs=410	failed_tests=0	/work/logs/ordinary-07.log
+2026-10-10T09:30:26Z	twocore	06	rc=0	secs=464	failed_tests=0	/work/logs/twocore-06.log
+2026-10-10T09:37:10Z	ordinary	08	rc=0	secs=404	failed_tests=0	/work/logs/ordinary-08.log
+2026-10-10T09:42:31Z	twocore	07	rc=101	secs=321	failed_tests=1	/work/logs/twocore-07.log

@@ -29,6 +29,56 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 **DIRECTIVE 2026-09-19 — generated files regenerate on merge (the human, mid-turn; recorded verbatim at `state/directives/2026-09-19-generated-files.md`, line 5 (its sha256 d268f9e53e4644885c55ff3fb6d44b6bbd7b88d3d96b93d8cc1c54903affc1df at the commit that adds it)):** resolve PR #90's conflicts on the generated files and `PLAN.yaml` by regeneration, not by hand — merge `origin/main`, take main's version of the generated set, resolve `PLAN.yaml` semantically with both sides' node changes kept, run the generators so the regenerated files match the merged plan, commit, push, CI; the same for any sibling PR that conflicts the same way; mechanic, permanent: generated files are never conflict-resolved by hand and a PR touching `PLAN.yaml` regenerates on merge with main; and consider a `.gitattributes` merge strategy or moving generated outputs out of PRs (CI regenerating on main after merge). Applied: PR #90 merged with main at 2c5bb0b and PR #91 at 245d4b0, each with the generated set taken from main and regenerated from the merged plan (`PLAN.yaml` on #90 resolved by keeping main's P3b hold and the branch's test-names node; on #91 it auto-merged), `verify.mjs` and the four gates green, both MERGEABLE with CI running; the mechanic entered `AUTONOMY.md` §2 and `AI_DEVELOPMENT.md`'s merges subsection by reference to the directive file; the consideration is entry 114 and PLAN node `decision-generated-outputs-merge-strategy`, the human's ruling. Correction, 2026-09-19: those two insertions shifted every line below them (AUTONOMY.md §21c's line 357 to 359; AI_DEVELOPMENT.md's line 223 to 230), which closed records cite by line and which the checker's own record pins by hash — PR #91's governance CI failed on `AUTONOMY.md:357`; the mechanic was moved to the end of each file (AUTONOMY.md §23; AI_DEVELOPMENT.md Amendment 3 to the Custodian role) so the cited lines are back where the records read them, and the open PRs were re-merged.
 
+**RULED 2026-10-10 — the docs lane opened (a third slot: documents, comments and test names only, one piece at a time); the item 8 correction moves there and starts now; slot 2's order through `b2-piece-1b-recording`; the re-aim's Amendment 2 answered; three unproduced SKP codes struck; the crs_undeclared wording; forms ahead; two stream-doc nodes made one (the human, typed, received at 11:00:52Z by the transcript; recorded verbatim at `state/directives/2026-10-10-docs-lane-slot-2-order-reaim-answers-strike-crs-wording.md`, lines 6-40, sha256 e5627eea9a90c0270e001e790bea10cd7ace0e1dd3300f35f0057a078aba92be at the commit that adds it):**
+- **The rulings** are the text, referenced and not restated.
+- **Applied in `PLAN.yaml`:**
+  - **The docs lane**, chained by dependency in the human's order: `known-limitations-item-8-filter-not-published` (ready; it starts now), then `shell-stale-frame-comments` with `shell-stale-layout-comments-and-s1-row` as one piece, then `known-limitations-item-2-on-main-paragraph`, `module-docs-stale-statements`, `skp-v0-live-sections-current-area-c` and `stale-test-names-and-comments`. The lane is a slot, like slots 1 and 2; each node keeps its subject lane in `PLAN.yaml`, whose lane list and priorities are unchanged.
+  - **Slot 2**, chained: `wire-bytes-invariant-trace-flag-race`, `stream-flush-cancel-exit-marks-producer-cancelled`, `filter-identity-alias-ambiguous-reached-through-skp`, `crs-undeclared-message-wording` (also after the re-aim), `ported-code-notice-route`, `guardian-v1`, `b2-piece-1b-recording` (also after milestone 2).
+  - **Moved:** the HOVER_REPICK_ON_PAN marker to `shell-stale-frame-comments`. `shell-map-refill-after-resize` now depends on the docs lane's second piece.
+  - **Closed:** `skp-unproduced-codes-ruling`, folded into `skp-v0-live-sections-current-area-c`; the named open item is on `first-external-plugin-skp-client`.
+  - **Ruled:** `crs-undeclared-message-wording` carries the human's wording by reference to the directive's line 33.
+  - **One node:** `stream-doc-first-batch-claim` folded into `dataset-stream-doc-producer-runs-ahead`, which stays proposed.
+  - **The weekly window** draft gains section N, the class 9 template sentence.
+- **To follow, each in its own commit:** the re-aim's Amendment 2 (the pins computed, the answers by reference), then its dispatch; the item 8 piece's form, then its dispatch; the wire-bytes PR and gates, with lead-data's impact read and the architect's form draft for `stream-flush-cancel-exit-marks-producer-cancelled`.
+- **Standing from this ruling:** forms ahead for each next piece in a slot while the current one is in gates (item 7); the docs lane's terms bind each of its pieces (item 3), and the human closes the lane if it costs more than it gives.
+
+**RULED 2026-10-10 — string 6's draft marker in `residencyStatus.ts` in scope, in `shell-stale-frame-comments` (comments only; the file's other draft markers checked against DECISIONS-PENDING); `stale-test-names-and-comments` points there; `shell-stale-frame-comments` at 30 minutes (the human, typed, received at 10:45:11Z by the transcript; recorded verbatim at `state/directives/2026-10-10-string-6-doc-comment-in-shell-stale-frame-comments.md`, lines 6-11, sha256 af7c279fc377e6d53ab6de872da5b486a7c6c0515771959811b9b9af3ffee1ea at the commit that adds it):**
+- **The rulings** are the text, referenced and not restated.
+- **Applied:**
+  - **Widened:** `shell-stale-frame-comments` carries the four items, its budget from 20 to 30 minutes.
+  - **Pointed:** `stale-test-names-and-comments`'s summary says the doc comment is handled in `shell-stale-frame-comments`.
+
+**RULED 2026-10-10 — the flake hunt's run 1: the flush cancel exit as an engine node (graded S2), placed in slot 2 after the KNOWN-LIMITATIONS item 8 correction and before the notice route; `slice-traced-test-cross-stamping` stays proposed, with a note (the human, typed, received at 10:25:26Z by the transcript; recorded verbatim at `state/directives/2026-10-10-flake-hunt-run-1-flush-cancel-exit.md`, lines 6-9, sha256 b40045a47c0d9bad350ca0193bd9e481d07507fc4b3c8d39b8c22d3c76dfad02 at the commit that adds it):**
+- **The rulings** are the text, referenced and not restated.
+- **The report** is `state/consults/FLAKE-HUNT-RUN-1-2026-10-10.md` (hash checked), with its evidence in `state/consults/FLAKE-HUNT-RUN-1-2026-10-10-logs/` (each file SHA256SUMS lists, checked).
+- **The custodian's check** is `state/consults/2026-10-10-flake-hunt-run-1-custodian-check.md`. The code reading holds at main's head; its notes are for the human.
+- **Applied:**
+  - **Placed:** `stream-flush-cancel-exit-marks-producer-cancelled`, after `known-limitations-item-8-filter-not-published` and before `ported-code-notice-route`.
+  - **Noted:** `slice-traced-test-cross-stamping`, in the human's words.
+
+**RULED 2026-10-10 — drift sweep area E: the KNOWN-LIMITATIONS item 8 correction placed in slot 2 next (graded S1); the item 2 paragraph, the stale tests and the crs_undeclared wording as proposed nodes; the filter-scope sentence on milestone 2's P6 sight list; walkthrough rows in different Parts disjoint (the human, typed, received at 08:59:21Z by the transcript; recorded verbatim at `state/directives/2026-10-10-drift-sweep-area-e-instructions.md`, lines 6-23, sha256 5d2c58cc0e0685f3ea810d25b3e0e360bc38266a20b1548b3b89dad903b04d8d at the commit that adds it):**
+- **The rulings** are the text, referenced and not restated.
+- **The custodian's check** is `state/consults/2026-10-10-drift-sweep-area-e-custodian-check.md`. Every clause of both texts holds; its notes are for the human.
+- **Applied:**
+  - **Placed:** `known-limitations-item-8-filter-not-published`, after `wire-bytes-invariant-trace-flag-race` and before `ported-code-notice-route`.
+  - **Proposed:** `known-limitations-item-2-on-main-paragraph`, `stale-test-names-and-comments` and `crs-undeclared-message-wording`.
+  - **Widened:** `module-docs-stale-statements`, `shell-stale-frame-comments` and `shell-migration-milestone-2`.
+- **Standing from this ruling (the slot-overlap check):** a walkthrough row in a different Part counts as disjoint, as different items of KNOWN-LIMITATIONS do.
+
+**RULED 2026-10-10 — the tier obligation, a named open item on `lod-tier-selection`, with a block-on-sight until the human rules; `module-docs-stale-statements` at 120 minutes; ADR-029 unchanged (the human, typed, received at 08:44:17Z by the transcript; recorded verbatim at `state/directives/2026-10-10-tier-obligation-open-item-and-adr-029.md`, lines 6-8, sha256 1fb9150d0e82a6f7fd73888fb431eeb35154da29acf7aa538c596ad9fe78f289 at the commit that adds it):**
+- **The rulings** are the text, referenced and not restated.
+- **Applied:**
+  - `lod-tier-selection` carries the named open item. Its form asks the human the item's questions before any product path calls `build_tiers`.
+  - `module-docs-stale-statements` records the agreed budget, and the restatement its item 2 names.
+  - `decision-adr-029-scan-progress-route` records item 3.
+- **Standing until the human rules the open item:** a product caller of `build_tiers` blocks on sight (item 2).
+- **How the custodian applies it:** gate briefs for any piece that adds a caller of `build_tiers` carry this line.
+
+**RULED 2026-10-09 — round 71 (GROUP′ re-aimed by the grouping rule, with the not-exercised condition) and round 70's "paste" (REFUSAL′'s product-line mutation terms; under OPEN-1 (A), the fixture variant's branch list and the byte-identity of every existing fixture) (the human, typed, received mid-turn at 18:52:15Z by the transcript; recorded verbatim at `state/directives/2026-10-09-round-71-and-round-70-paste.md`, lines 6-8, sha256 125b776d3a9a2e12e0cd2b533002f9d7abfb44621a4ba2ff2f0055a2af99e222 at the commit that adds it):**
+- **The rulings** are the text, referenced and not restated.
+- **To apply:** the architect drafts Amendment 2 of `frontends/shell/e2e/E2E-STALE-EXPECTATIONS-REAIM-PREREGISTRATION.md`. A worker then makes the change on the branch, and the custodian re-runs console alone, before the PR and both gates.
+- **Already met:** round 70's REFUSAL′ terms. The worker applied the mutation once, restored it and showed the worktree clean, with no refusal (worker report 1).
+
 **RULED 2026-10-09 — the e2e re-aim's question round: OPEN-1 to OPEN-3 and the lead-data pilot (the human, through the question round, received at 14:09:02Z by the transcript; recorded verbatim at `state/directives/2026-10-09-reaim-question-round-answers.md`, lines 6-16, sha256 6c633de7ee22b921df27b277fdf7a47ead6af91dfdc5d38df42bcca1f8c150b5 at the commit that adds it):**
 - **The answers** are the text, referenced and not restated.
 - **To apply:**

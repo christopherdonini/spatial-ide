@@ -1,0 +1,23 @@
+#!/bin/bash
+# PR #198's E-1: P-1 alone. One pre-declared set of 20 runs of the form's command, in one exclusive hold of the custodian's,
+# at C:/dev/wt/skp, head 82a3c8cd (its kernel/src/skp.rs equals be7eecb3's). The exclusive rule drops the two job settings,
+# so RUST_TEST_THREADS and CARGO_BUILD_JOBS are unset: cargo's default threads, all cores, under the hold's affinity.
+# Every run is recorded; a failure is a failure (no re-run toward a pass).
+S="<the custodian's scratch folder>/cust2"
+log() { echo "[p1-solo] $(date -u +%Y-%m-%dT%H:%M:%SZ) $*"; }
+cd /c/dev/wt/skp || exit 90
+[ "$(git rev-parse HEAD)" = "82a3c8cd0fb7fcc30f4aae49da82e6e981a10ade" ] || { log "HEAD is not 82a3c8cd"; exit 90; }
+[ -z "$(git status --porcelain)" ] || { log "worktree not clean"; exit 90; }
+export CARGO_TARGET_DIR=D:/wt-targets/cov
+unset RUST_TEST_THREADS CARGO_BUILD_JOBS
+log "clean, HEAD $(git rev-parse HEAD), CARGO_TARGET_DIR=$CARGO_TARGET_DIR, RUST_TEST_THREADS=${RUST_TEST_THREADS:-unset}, nproc=$(nproc)"
+pass=0; fail=0
+for i in $(seq 1 20); do
+  timeout 600 cargo test -q -p spatial-kernel --lib ticket_drop_under_lock_regression > "$S/out/p1-run$i.log" 2>&1
+  rc=$?
+  r=$(grep -a "^test result:" "$S/out/p1-run$i.log" | tail -1)
+  log "run $i rc=$rc $r"
+  if [ $rc -eq 0 ]; then pass=$((pass+1)); else fail=$((fail+1)); grep -a "panicked at\|FAILED" "$S/out/p1-run$i.log" | head -6; fi
+done
+log "P-1 solo: $pass of 20 passed, $fail failed; porcelain [$(git status --porcelain)]"
+exit 0

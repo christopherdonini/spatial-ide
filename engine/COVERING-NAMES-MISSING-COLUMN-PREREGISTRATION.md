@@ -369,3 +369,10 @@ Amendment 3, item 1's sha256 is of `state/consults/2026-10-09-covering-names-mis
    - Amendment 3, item 5's owed update → item 2, as done at 9340c5f8.
 
    Nothing above is edited.
+
+### Amendment 6 — Branch B's two test claims marked superseded (class 3), after the merge
+
+*Written by the custodian after PR #197 merged. Once the node is done, main's verify-test-claims reads this form's test names against the tree. References only.*
+
+1. **Branch B's test names, C-1B and K-1B, are superseded:** `engine/COVERING-NAMES-MISSING-COLUMN-PREREGISTRATION.md:181-182 @ 2d0998c421a09f5331b2f2f385483ea582eff88e sha256:32ef05b421703ed44d0566641c7927699f64832df519c3bb71031bcbd3bb3c75`. Amendment 2, item 2 voided Branch B and both tests, so no test of either name exists or is owed.
+2. **Superseded index:** §4's C-1B and K-1B lines → item 1. Nothing above is edited.
