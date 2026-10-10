@@ -1,46 +1,27 @@
 {
-  "generated_at": "2026-10-10T19:12:14.691Z",
-  "plan_hash": "776c6f30ddb4ebdecbb900187c2c6dfa0ae327d6f1ce005da792f7df58708880",
+  "generated_at": "2026-10-10T19:19:45.071Z",
+  "plan_hash": "21b4dbec0c1f8bf1698cfb2cecc030e47995a1a04bb0d171e9eb9ec71013e2eb",
   "priorities_approved": true,
   "next": {
-    "id": "filter-identity-alias-ambiguous-reached-through-skp",
-    "title": "skp.filter_identity_alias_ambiguous is reachable from the product since skp/0.2, and no test reaches it through SKP (sweep area C, finding 2, S2)",
-    "lane": "kernel-protocol",
+    "id": "shell-stale-frame-comments",
+    "title": "Two shell comments still describe the old frame: ConsolePanel.tsx (a bottom drawer below every panel) and residencyStatus.ts (a child of the removed canvas status stack); WorkingCanvas.tsx comments call deck.gl 9.3.7 pinned; residencyStatus.ts still calls ruled status strings drafts, string 6 among them; and canvas/hoverRepickConstants.ts still marks HOVER_REPICK_ON_PAN pending",
+    "lane": "shell",
     "phase": "prototype",
     "status": "ready",
-    "order": 3,
-    "budget_minutes": 60,
+    "order": 2,
+    "budget_minutes": 30,
     "needs_human": {
       "kind": "none",
       "minutes": 0
     },
     "evidence": null,
     "dates": {
-      "opened": "2026-10-10",
+      "opened": "2026-10-08",
       "done": null
     },
-    "summary": "FORM COMMITTED 2026-10-10 (kernel/FILTER-IDENTITY-ALIAS-AMBIGUOUS-THROUGH-SKP-PREREGISTRATION.md, the architect's draft with 70 pins at d9bdc3a0, and Amendment 1: OPEN-1 no shell run; the PR body quotes the message in full; the proposed guidance node; the area C direction added to Authority). Full form, both gates (the edit under protocol/skp/). NEXT: in progress on its own branch, then a worker. Before: RULED 2026-10-10 (state/directives/2026-10-10-reaim-t2-base-f0fccfaf-filter-identity-no-shell-run-guidance-node.md, lines 16-18): OPEN-1, no run of the shell's rendering; the PR body quotes the refusal's message in full; a guidance line and a KNOWN-LIMITATIONS note proposed as filter-identity-alias-ambiguous-guidance-line-and-note, not placed. The form is committed next with its Amendment 1. The flush piece merged (7b3d8040), so this node's code may start. Before: FORMS AHEAD 2026-10-10 (the human's item 7): lead-data's impact read done (state/consults/2026-10-10-filter-identity-alias-ambiguous-reached-through-skp-impact-read.md, sha256 4c5d3919, read at main 82ceae7f); the architect drafts its form at d9bdc3a0. Before: PLACED 2026-10-10 by the human (state/directives/2026-10-10-docs-lane-slot-2-order-reaim-answers-strike-crs-wording.md, item 6): slot 2, after stream-flush-cancel-exit-marks-producer-cancelled. Before: PROPOSED 2026-10-10 by the custodian from the human's independent sweep of main, area C, the wire contract against the code (state/consults/DRIFT-SWEEP-AREA-C-2026-10-10.md), finding 2, graded S2 by the human; confirmed by the custodian at 116deb53, every cite re-derived there (state/consults/2026-10-10-drift-sweep-area-c-custodian-check.md). A declared identity on open_dataset becomes a Mapped identity, and a filter naming id on a file that also carries its own id column refuses with this code. The shell would show it as a typed refusal: the filter path formats the SkpError and FilterPanel renders RefusalBlock with the code, the verbatim message and the fields column and source_column, with no code-specific guidance; this is by reading the code, not by a run. No test reaches it through SKP: the kernel's unit test maps the engine variant to its code directly, two engine test files name it only in their exhaustive code maps, and no engine, kernel, shell or e2e test makes it fire. The e2e re-aim's fixture variant (its form's Amendment 2: a bad id beside parcel_key) has the shape; a test that reuses it waits for that piece. The two texts that call the code unreachable (SKP-V0.md section 7.5's note, and engine/src/predicate.rs's honesty note, which the report places in area D) are outside the documentation node's findings; this node proposes to correct them with the test that proves them false. Nothing waits on it. The human places it."
+    "summary": "PLACED 2026-10-10 by the human (state/directives/2026-10-10-docs-lane-slot-2-order-reaim-answers-strike-crs-wording.md, items 1 and 3b): the second piece of the docs lane (state/directives/2026-10-10-docs-lane-slot-2-order-reaim-answers-strike-crs-wording.md, item 3: one piece at a time; documents, comments and test names only), one piece with shell-stale-layout-comments-and-s1-row, landing before shell-map-refill-after-resize enters code. Item 1: the pending marker on HOVER_REPICK_ON_PAN in frontends/shell/src/canvas/hoverRepickConstants.ts moves here from stale-test-names-and-comments (ruled 2026-09-14, DECISIONS-PENDING entry 75); comments only. Before: WIDENED 2026-10-10 by the human (state/directives/2026-10-10-string-6-doc-comment-in-shell-stale-frame-comments.md): string 6's draft marker in frontends/shell/src/residency/residencyStatus.ts is in scope here, by the human's word, not in stale-test-names-and-comments. (1) Both places that call string 6 an unruled draft, the file-header passage on the sixth string and SETTLED_PARTIAL_WITHIN_BUDGET_TEXT's doc comment, say it was ruled on 2026-09-06, entry 45, (1) String 6 = A, direction-free as shipped. (2) Comments only: the string constants and all logic stay byte-identical. (3) Every other draft marker in the file is checked against DECISIONS-PENDING (the header's passages on strings 1 to 5 and STALLED_SUFFIX's doc comment); the ruled ones are corrected citing the ruling; any never ruled is left and listed in the report. The custodian's read at 1c13810f, for the piece to confirm, not to copy: strings 1 to 5 were ruled in DECISIONS-PENDING's dated blocks of 2026-09-05 (the 24(b) string sight, ruled) and 2026-09-06 (the 24(b) string sight complete); none was found unruled; and the header's string 3 passage still describes the 2026-09-05 rewording that names the frame, which the 2026-09-06 trim replaced. The budget field raised by item 4. Before: ADDED 2026-10-10 (state/directives/2026-10-10-drift-sweep-area-e-instructions.md, part 2 item 3), from drift sweep area E, finding 9 (state/consults/2026-10-10-drift-sweep-area-e-custodian-check.md): frontends/shell/e2e/style.mjs's top comment and its poll's doc (StylePanel below .canvas-container; .app-main's scrollbar narrowing the canvas) and frontends/shell/e2e/residency-harness.mjs's F1 note (.canvas-status-stack covering .zoom-to-layer) describe the pre-milestone-1 frame; comments only. Before: WIDENED 2026-10-09 by the human's direction of 2026-10-09 (state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md), item 8: the WorkingCanvas.tsx comments that call deck.gl 9.3.7 pinned join this node (package.json allows ^9.3.7 and the lockfile installs 9.3.9; the pick-paths diagnosis report, its off-scope list). No new node. Before: PROPOSED 2026-10-08 from PR #195 reviewer gate 1 (gate-log 447, R-D10; the milestone 1 form Amendment 9, item 7): frontends/shell/src/console/ConsolePanel.tsx lines 20-24 and frontends/shell/src/residency/residencyStatus.ts line 6 describe the pre-milestone-1 frame; milestone 1 may not edit those files. Comment-only."
   },
   "ready": [
-    {
-      "id": "filter-identity-alias-ambiguous-reached-through-skp",
-      "title": "skp.filter_identity_alias_ambiguous is reachable from the product since skp/0.2, and no test reaches it through SKP (sweep area C, finding 2, S2)",
-      "lane": "kernel-protocol",
-      "phase": "prototype",
-      "status": "ready",
-      "order": 3,
-      "budget_minutes": 60,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-10-10",
-        "done": null
-      },
-      "summary": "FORM COMMITTED 2026-10-10 (kernel/FILTER-IDENTITY-ALIAS-AMBIGUOUS-THROUGH-SKP-PREREGISTRATION.md, the architect's draft with 70 pins at d9bdc3a0, and Amendment 1: OPEN-1 no shell run; the PR body quotes the message in full; the proposed guidance node; the area C direction added to Authority). Full form, both gates (the edit under protocol/skp/). NEXT: in progress on its own branch, then a worker. Before: RULED 2026-10-10 (state/directives/2026-10-10-reaim-t2-base-f0fccfaf-filter-identity-no-shell-run-guidance-node.md, lines 16-18): OPEN-1, no run of the shell's rendering; the PR body quotes the refusal's message in full; a guidance line and a KNOWN-LIMITATIONS note proposed as filter-identity-alias-ambiguous-guidance-line-and-note, not placed. The form is committed next with its Amendment 1. The flush piece merged (7b3d8040), so this node's code may start. Before: FORMS AHEAD 2026-10-10 (the human's item 7): lead-data's impact read done (state/consults/2026-10-10-filter-identity-alias-ambiguous-reached-through-skp-impact-read.md, sha256 4c5d3919, read at main 82ceae7f); the architect drafts its form at d9bdc3a0. Before: PLACED 2026-10-10 by the human (state/directives/2026-10-10-docs-lane-slot-2-order-reaim-answers-strike-crs-wording.md, item 6): slot 2, after stream-flush-cancel-exit-marks-producer-cancelled. Before: PROPOSED 2026-10-10 by the custodian from the human's independent sweep of main, area C, the wire contract against the code (state/consults/DRIFT-SWEEP-AREA-C-2026-10-10.md), finding 2, graded S2 by the human; confirmed by the custodian at 116deb53, every cite re-derived there (state/consults/2026-10-10-drift-sweep-area-c-custodian-check.md). A declared identity on open_dataset becomes a Mapped identity, and a filter naming id on a file that also carries its own id column refuses with this code. The shell would show it as a typed refusal: the filter path formats the SkpError and FilterPanel renders RefusalBlock with the code, the verbatim message and the fields column and source_column, with no code-specific guidance; this is by reading the code, not by a run. No test reaches it through SKP: the kernel's unit test maps the engine variant to its code directly, two engine test files name it only in their exhaustive code maps, and no engine, kernel, shell or e2e test makes it fire. The e2e re-aim's fixture variant (its form's Amendment 2: a bad id beside parcel_key) has the shape; a test that reuses it waits for that piece. The two texts that call the code unreachable (SKP-V0.md section 7.5's note, and engine/src/predicate.rs's honesty note, which the report places in area D) are outside the documentation node's findings; this node proposes to correct them with the test that proves them false. Nothing waits on it. The human places it."
-    },
     {
       "id": "shell-stale-frame-comments",
       "title": "Two shell comments still describe the old frame: ConsolePanel.tsx (a bottom drawer below every panel) and residencyStatus.ts (a child of the removed canvas status stack); WorkingCanvas.tsx comments call deck.gl 9.3.7 pinned; residencyStatus.ts still calls ruled status strings drafts, string 6 among them; and canvas/hoverRepickConstants.ts still marks HOVER_REPICK_ON_PAN pending",
@@ -474,6 +455,28 @@
     }
   ],
   "in_progress": [
+    {
+      "id": "filter-identity-alias-ambiguous-reached-through-skp",
+      "title": "skp.filter_identity_alias_ambiguous is reachable from the product since skp/0.2, and no test reaches it through SKP (sweep area C, finding 2, S2)",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": 3,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "branch": "cut/filter-identity-alias-ambiguous-reached-through-skp"
+      },
+      "dates": {
+        "opened": "2026-10-10",
+        "done": null
+      },
+      "summary": "IN PROGRESS 2026-10-10: worktree C:/dev/wt/fi on cut/filter-identity-alias-ambiguous-reached-through-skp at 34d14658 (published), target D:/wt-targets/cov; rule (00) at dispatch: the only other piece in progress is the re-aim (slot 1: KNOWN-LIMITATIONS item 3, engine/src/fixture.rs, the e2e suites, MANUAL-WALKTHROUGH.md, kernel/tests/manual_walkthrough_fixtures.rs), and no PR awaits merge, so the paths are disjoint and this is the only piece touching protocol/; a worker builds §2 and §4, then lead-data the owner's-index update. Before: FORM COMMITTED 2026-10-10 (kernel/FILTER-IDENTITY-ALIAS-AMBIGUOUS-THROUGH-SKP-PREREGISTRATION.md, the architect's draft with 70 pins at d9bdc3a0, and Amendment 1: OPEN-1 no shell run; the PR body quotes the message in full; the proposed guidance node; the area C direction added to Authority). Full form, both gates (the edit under protocol/skp/). NEXT: in progress on its own branch, then a worker. Before: RULED 2026-10-10 (state/directives/2026-10-10-reaim-t2-base-f0fccfaf-filter-identity-no-shell-run-guidance-node.md, lines 16-18): OPEN-1, no run of the shell's rendering; the PR body quotes the refusal's message in full; a guidance line and a KNOWN-LIMITATIONS note proposed as filter-identity-alias-ambiguous-guidance-line-and-note, not placed. The form is committed next with its Amendment 1. The flush piece merged (7b3d8040), so this node's code may start. Before: FORMS AHEAD 2026-10-10 (the human's item 7): lead-data's impact read done (state/consults/2026-10-10-filter-identity-alias-ambiguous-reached-through-skp-impact-read.md, sha256 4c5d3919, read at main 82ceae7f); the architect drafts its form at d9bdc3a0. Before: PLACED 2026-10-10 by the human (state/directives/2026-10-10-docs-lane-slot-2-order-reaim-answers-strike-crs-wording.md, item 6): slot 2, after stream-flush-cancel-exit-marks-producer-cancelled. Before: PROPOSED 2026-10-10 by the custodian from the human's independent sweep of main, area C, the wire contract against the code (state/consults/DRIFT-SWEEP-AREA-C-2026-10-10.md), finding 2, graded S2 by the human; confirmed by the custodian at 116deb53, every cite re-derived there (state/consults/2026-10-10-drift-sweep-area-c-custodian-check.md). A declared identity on open_dataset becomes a Mapped identity, and a filter naming id on a file that also carries its own id column refuses with this code. The shell would show it as a typed refusal: the filter path formats the SkpError and FilterPanel renders RefusalBlock with the code, the verbatim message and the fields column and source_column, with no code-specific guidance; this is by reading the code, not by a run. No test reaches it through SKP: the kernel's unit test maps the engine variant to its code directly, two engine test files name it only in their exhaustive code maps, and no engine, kernel, shell or e2e test makes it fire. The e2e re-aim's fixture variant (its form's Amendment 2: a bad id beside parcel_key) has the shape; a test that reuses it waits for that piece. The two texts that call the code unreachable (SKP-V0.md section 7.5's note, and engine/src/predicate.rs's honesty note, which the report places in area D) are outside the documentation node's findings; this node proposes to correct them with the test that proves them false. Nothing waits on it. The human places it.",
+      "evidence_label": "branch `cut/filter-identity-alias-ambiguous-reached-through-skp`"
+    },
     {
       "id": "e2e-stale-expectations-reaim",
       "title": "Re-aim the shell e2e steps whose expectations predate ruled product changes: regression C2'/C3', admission MAP' and BOTHNEEDED', console HEXLIM', GROUP' and REFUSAL', source-changed default-route S4",

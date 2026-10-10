@@ -1,14 +1,13 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `776c6f30ddb4ebdecbb900187c2c6dfa0ae327d6f1ce005da792f7df58708880`) at `2026-10-10T19:12:14.691Z`.
+Generated from `PLAN.yaml` (sha256 `21b4dbec0c1f8bf1698cfb2cecc030e47995a1a04bb0d171e9eb9ec71013e2eb`) at `2026-10-10T19:19:45.071Z`.
 
 ## 1. Next
 
-- **filter-identity-alias-ambiguous-reached-through-skp** — skp.filter_identity_alias_ambiguous is reachable from the product since skp/0.2, and no test reaches it through SKP (sweep area C, finding 2, S2) (lane `kernel-protocol`)
+- **shell-stale-frame-comments** — Two shell comments still describe the old frame: ConsolePanel.tsx (a bottom drawer below every panel) and residencyStatus.ts (a child of the removed canvas status stack); WorkingCanvas.tsx comments call deck.gl 9.3.7 pinned; residencyStatus.ts still calls ruled status strings drafts, string 6 among them; and canvas/hoverRepickConstants.ts still marks HOVER_REPICK_ON_PAN pending (lane `shell`)
 
 ## 2. Ready
 
-- **filter-identity-alias-ambiguous-reached-through-skp** — skp.filter_identity_alias_ambiguous is reachable from the product since skp/0.2, and no test reaches it through SKP (sweep area C, finding 2, S2) (lane `kernel-protocol`, order 3, budget 60 min)
 - **shell-stale-frame-comments** — Two shell comments still describe the old frame: ConsolePanel.tsx (a bottom drawer below every panel) and residencyStatus.ts (a child of the removed canvas status stack); WorkingCanvas.tsx comments call deck.gl 9.3.7 pinned; residencyStatus.ts still calls ruled status strings drafts, string 6 among them; and canvas/hoverRepickConstants.ts still marks HOVER_REPICK_ON_PAN pending (lane `shell`, order 2, budget 30 min)
 - **shell-stale-layout-comments-and-s1-row** — Four stale statements on main from #195, found by the human's independent read: StylePanel.tsx's header, PublishPanel.tsx's pointer to the styles.css budget, MANUAL-WALKTHROUGH.md row S1, layoutBoundary.test.ts's header (lane `shell`, order 2, budget 30 min)
 
@@ -39,6 +38,7 @@ Generated from `PLAN.yaml` (sha256 `776c6f30ddb4ebdecbb900187c2c6dfa0ae327d6f1ce
 
 ## 5. In progress
 
+- **filter-identity-alias-ambiguous-reached-through-skp** — skp.filter_identity_alias_ambiguous is reachable from the product since skp/0.2, and no test reaches it through SKP (sweep area C, finding 2, S2) — evidence: branch `cut/filter-identity-alias-ambiguous-reached-through-skp`
 - **e2e-stale-expectations-reaim** — Re-aim the shell e2e steps whose expectations predate ruled product changes: regression C2'/C3', admission MAP' and BOTHNEEDED', console HEXLIM', GROUP' and REFUSAL', source-changed default-route S4 — evidence: branch `cut/e2e-stale-expectations-reaim`
 
 ## 6. Proposed / unscheduled
