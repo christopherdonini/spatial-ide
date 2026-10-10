@@ -47,3 +47,34 @@ export function computeAuthoritativeViewportBbox(input: ViewportBboxInput): Auth
     ymax: worldY + halfHeightM,
   };
 }
+
+/** The view inputs the canvas last wrote -- everything `ViewportBboxInput` carries except the size. */
+export type ViewportCamera = Omit<ViewportBboxInput, "widthPx" | "heightPx">;
+
+/**
+ * What a change of the canvas's CSS size asks of the viewport query. `none`: nothing is known to
+ * compare against (no camera, no reported view) or the size is unusable. `within`: the new view
+ * lies inside the area last asked for, so no query is due -- the caller only learns the box the map
+ * now shows. `query`: the new view reaches past the area last asked for.
+ */
+export type ResizeViewport =
+  | { kind: "none" }
+  | { kind: "within"; bbox: AuthoritativeBbox }
+  | { kind: "query"; bbox: AuthoritativeBbox };
+
+/** Closed containment: equal edges count as inside. */
+function boxInside(inner: AuthoritativeBbox, outer: AuthoritativeBbox): boolean {
+  return inner.xmin >= outer.xmin && inner.ymin >= outer.ymin && inner.xmax <= outer.xmax && inner.ymax <= outer.ymax;
+}
+
+export function viewportAfterResize(
+  camera: ViewportCamera | null,
+  lastQueried: AuthoritativeBbox | null,
+  widthPx: number,
+  heightPx: number
+): ResizeViewport {
+  if (camera === null || lastQueried === null) return { kind: "none" };
+  if (!(Number.isFinite(widthPx) && widthPx > 0 && Number.isFinite(heightPx) && heightPx > 0)) return { kind: "none" };
+  const bbox = computeAuthoritativeViewportBbox({ ...camera, widthPx, heightPx });
+  return { kind: boxInside(bbox, lastQueried) ? "within" : "query", bbox };
+}

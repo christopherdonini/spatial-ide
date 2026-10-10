@@ -1841,6 +1841,12 @@ export default function App() {
                 // from this callback.
                 viewportDebounceRef.current?.call(toWireBbox(bbox), null);
               }}
+              /* The map changed size and now shows less than the area last asked for: keep the box it
+               * actually shows current (the Export panel's Current view reads it at click time). No
+               * query, and `hasSettledView` is untouched -- a within-report only follows a reported view. */
+              onViewportWithinLastQuery={(bbox) => {
+                lastViewportBboxRef.current = toWireBbox(bbox);
+              }}
             />
             {/* Viewport-residency cut P6a, decision 24(c) + DECISIONS-PENDING entry 88 / 75 (3),
               * RULED 2026-09-14 (B1): all four hover-readout states are rendered by one component
