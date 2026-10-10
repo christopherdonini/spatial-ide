@@ -2069,7 +2069,8 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
         return await new Promise<PixelSummary>((resolve, reject) => {
           let settled = false;
           // Never restores to `undefined`: `_drawLayers` in @deck.gl/core, as read on 9.3.7 (the
-          // lockfile installs 9.3.9; not re-read there), calls `this.props.onAfterRender(...)` with no null-check, so an unset prop throws on
+          // lockfile installs 9.3.9; not re-read there), calls
+          // `this.props.onAfterRender(...)` with no null-check, so an unset prop throws on
           // this canvas's very next render -- a fresh noop is the only safe "off" state.
           const restore = () => deck.setProps({ onAfterRender: () => {} });
 

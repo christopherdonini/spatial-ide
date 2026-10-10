@@ -245,8 +245,9 @@ async function setExpanded(page, want) {
 /** Bounded poll for `.canvas-container`'s own client box to stop changing across two 150ms-apart
  * reads -- a readiness gate for the ONE-TIME CSS reflow the very first expand triggers (written
  * for the stacked layout, where `.app-main`'s own vertical scrollbar appearing narrowed
- * `.canvas-container` by ~15px: history, per this file's own top comment), never a timing claim (ADR-018): this only says "layout is no longer visibly
- * moving," not "how fast." Called exactly once now (`stepStyle`, right after the suite's one and
+ * `.canvas-container` by ~15px: history, per this file's own top comment), never a timing claim
+ * (ADR-018): this only says "layout is no longer visibly moving," not "how fast." Called exactly
+ * once now (`stepStyle`, right after the suite's one and
  * only `setExpanded(page, true)`) -- collapsed/expanded no longer alternate within this suite (S4),
  * so there is no further reflow later steps would need to wait out. */
 async function waitForCanvasLayoutStable(page, timeoutMs = 8_000) {

@@ -18,10 +18,9 @@ import {
 import { consoleRecorder, recordNamed, type ConsoleEntry } from "./recorder";
 
 /**
- * NEXT-CUT.md P3: the collapsed-by-default console (`docs/07`'s "Current focus" text asked for a
- * bottom drawer, not a rail panel; `styles.css`'s `.console-panel` comment is that stacked layout's
- * history). It now sits in the Activity region's Console tab (`layout/contributions.ts`'s
- * `ACTIVITY_TABS`). Mounted unconditionally in `App.tsx`'s `"activity.console"` slot, whether or not a dataset
+ * NEXT-CUT.md P3: the collapsed-by-default console (`styles.css`'s `.console-panel` comment is that
+ * stacked layout's history). It now sits in the Activity region's Console tab
+ * (`layout/contributions.ts`'s `ACTIVITY_TABS`). Mounted unconditionally in `App.tsx`'s `"activity.console"` slot, whether or not a dataset
  * is admitted: class-A's own `open_dataset` and several class-B commands (`binding_pick_file`,
  * `binding_crs_catalog`) can fire before any admission ever succeeds, and the console must account
  * for those too, not only post-admission activity.

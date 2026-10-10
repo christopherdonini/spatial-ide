@@ -356,7 +356,8 @@ export function settledState(input: SettledStateInputs): SettledState {
  *  - over budget AND `stalled` (the held queue is provably frozen, `fillActivity` above): the ordinary
  *    over-budget sentence, plus one more naming the freeze and its own remedy -- never a duration.
  *  - relinquished (32a's own rider -- NEVER "complete"): "Filling stopped — showing {N} features
- *    already loaded; the rest of this view was not fetched."
+ *    already loaded; the rest of this view was not fetched." (the DRAFTED wording; the 2026-09-05
+ *    ruling changed it to "not loaded", as the shipped constant below reads.)
  *
  * M1 (reviewer gate) adds a THIRD string, for the `untiledStreamStillRunning` case above: the
  * ordinary "Filling stopped" wording would be false while the untiled first-look/reissue stream keeps
@@ -396,7 +397,8 @@ export function settledState(input: SettledStateInputs): SettledState {
  * (entry 43's own text): the state has two distinct causes -- truncation is farthest-first
  * (`tileViewportStreamManager.ts`'s own `onCameraChange`), but a covering tile that never completed
  * was simply requested in row-major order, so "farthest from centre" would be a false claim for that
- * case -- so the string names neither. **RULED 2026-09-06, entry 45, (1) String 6 = A, direction-free as shipped** (byte-copied
+ * case -- so the string names neither. **RULED 2026-09-06, entry 45, (1) String 6 = A,
+ * direction-free as shipped** (the RULED block's words, its line break collapsed to one space;
  * from `DECISIONS-PENDING.md` entry 45's RULED block).
  */
 /** Item A string 1, RULED 2026-09-05 (24(b) string sight, "1 approved"), confirmed as shipped
@@ -420,7 +422,8 @@ const SETTLED_PARTIAL_SUFFIX = " Filling has finished for this view — the rend
 const SETTLED_PARTIAL_FAILURE_TEXT = "Filling has finished for this view, but part of this view failed to load; pan or zoom to retry.";
 /** Close-out fix piece F2 (entry 43, ADR-010 rule 5): the sixth string -- settled, within
  * budget, incomplete, no failure recorded (a truncated covering set, or a covering tile that never
- * completed). **RULED 2026-09-06, entry 45, (1) String 6 = A, direction-free as shipped** (byte-copied from
+ * completed). **RULED 2026-09-06, entry 45, (1) String 6 = A, direction-free as shipped** (the RULED
+ * block's words, its line break collapsed to one space; from
  * `DECISIONS-PENDING.md` entry 45's RULED block); like `SETTLED_PARTIAL_SUFFIX`/
  * `SETTLED_PARTIAL_FAILURE_TEXT` above (both RULED 2026-09-05/06), and it is entry 43's own
  * recommended text. Never the word "all" (BS6:
