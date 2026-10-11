@@ -181,11 +181,10 @@ fn generate_the_no_crs_refusing_fixture() {
 /// `geo` key's own `bbox` member (no data read), the same construction
 /// `engine/tests/admission_format_semantics.rs`'s own F-2 test uses.
 ///
-/// Unlike `no-crs-refused.parquet` (F-3, explicit `"crs": null`), no CRS-assertion remediation
-/// form is asserted to render for this refusal here — `AdmissionPanel.tsx`'s `formFamilyForCode`
-/// starts a form family only for `engine.crs_undeclared`/`engine.identity_unusable`, not for this
-/// code, so whether this refusal offers a remediation form is a shell-surface question left to
-/// Brief A's later parts, not this fixture's own claim.
+/// Like `no-crs-refused.parquet` (F-3, explicit `"crs": null`), this refusal offers the CRS
+/// assertion form in the shell: `AdmissionPanel.tsx`'s `formFamilyForCode` starts the CRS family
+/// for `engine.format_default_contradicted` as well as `engine.crs_undeclared`. `ABSENTCRS'` in
+/// `frontends/shell/e2e/regression.mjs` submits an assertion through that form.
 #[test]
 #[ignore = "generates a real file for the manual walkthrough; not part of the default suite"]
 fn generate_the_absent_crs_contradicted_fixture() {
