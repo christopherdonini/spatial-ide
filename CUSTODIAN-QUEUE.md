@@ -1,14 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `fe6c47267e4f7f50f3a20a0fc97632e545facb2770e59428dde60f5f5d8d6579`) at `2026-10-11T19:12:04.253Z`.
+Generated from `PLAN.yaml` (sha256 `c1f007b23c8ccf4e6d7d3d9da785d8a73d3ebbbc1c8cfef23b3ab78d51e86bf5`) at `2026-10-11T20:30:57.801Z`.
 
 ## 1. Next
 
-- (nothing ready)
+- **stale-test-names-and-comments** — Stale test names and test comments, names and comments only, no assertion changes: a refusal-named test that asserts admission, the React-harness premise, the no-attributes reason, a Proposed ADR-018, two ruled decisions still marked pending (sweep area E, findings 2, 3, 4, 7 and 10) (lane `shell`)
 
 ## 2. Ready
 
-- (none)
+- **stale-test-names-and-comments** — Stale test names and test comments, names and comments only, no assertion changes: a refusal-named test that asserts admission, the React-harness premise, the no-attributes reason, a Proposed ADR-018, two ruled decisions still marked pending (sweep area E, findings 2, 3, 4, 7 and 10) (lane `shell`, order 6, budget 60 min)
 
 ## 3. Waiting on the human (total: 10 min)
 
@@ -20,7 +20,6 @@ Generated from `PLAN.yaml` (sha256 `fe6c47267e4f7f50f3a20a0fc97632e545facb2770e5
 
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
 - **b2-piece-1b-recording** — B2 piece 1b -- recording: the kernel's step commands for filter, scope and style, the session history on the machine, safe against a crash, and the docs/07 note — blocked by: shell-migration-milestone-2, guardian-v1
-- **stale-test-names-and-comments** — Stale test names and test comments, names and comments only, no assertion changes: a refusal-named test that asserts admission, the React-harness premise, the no-attributes reason, a Proposed ADR-018, two ruled decisions still marked pending (sweep area E, findings 2, 3, 4, 7 and 10) — blocked by: skp-v0-live-sections-current-area-c
 - **briefb-b2-save-reopen** — B2 — Save project, Snapshot data, session history, lineage and preferences, in five stages, each with its own form — blocked by: decision-adr-029-scan-progress-route
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer — blocked by: signpath-application-draft
 - **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-1-1
@@ -30,7 +29,6 @@ Generated from `PLAN.yaml` (sha256 `fe6c47267e4f7f50f3a20a0fc97632e545facb2770e5
 
 ## 5. In progress
 
-- **skp-v0-live-sections-current-area-c** — SKP-V0.md's live sections and three comments brought current to the wire the code sends (sweep area C, findings 1, 3, 4, 6, 7, 8 and 9; no literal change); and skp.malformed_hex_f64, skp.bbox_not_finite and skp.unknown_handle struck as refusals a client receives (sweep area C, finding 5, ruled) — evidence: branch `cut/skp-v0-live-sections-current-area-c`
 - **shell-crs-form-for-format-default-contradicted** — The shell opens the CRS assertion form after engine.format_default_contradicted, so the refusal's own message (assert the CRS this file is actually in) is true in the app; graded S1 on main — evidence: branch `cut/shell-crs-form-for-format-default-contradicted`
 - **shell-migration-milestone-2** — Shell migration, milestone 2 -- selection and scope: the Select tool, a selection that survives filter and pan, the hidden count, a stated scope — evidence: branch `cut/shell-migration-milestone-2-phase-a`
 
