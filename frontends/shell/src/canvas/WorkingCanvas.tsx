@@ -131,8 +131,9 @@ export interface WorkingCanvasHandle {
   fitToBounds(): boolean;
   /**
    * Clears BOTH the fit anchor (`fitAnchorRef`) and the one-shot auto-fit flag (`hasAutoFitRef`) --
-   * called whenever a new FILTER GENERATION begins (`App.tsx`'s `applyFilter`, on any Apply or Clear
-   * that actually issues).
+   * called at the start of every reissue of the filter query (`App.tsx`'s `applyFilter`): on the
+   * candidate residency arm whatever the outcome of the Apply or Clear, on the baseline arm on an
+   * issued outcome.
    *
    * **Human-approved design revision, 2026-08-15 walkthrough Part E, E5 finding.** The operator
    * applied a late-matching predicate on the slow fixture; the liveness/cancel affordance itself
@@ -1016,7 +1017,7 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
    * sites: the interactive handler, `fitToExtent` and the DEV-only view-state seam. Null before any. */
   const cameraRef = useRef<ViewportCamera | null>(null);
   /** The box last passed to `onViewportChanged`, or null. Non-null only while the camera's last write was
-   * reported: the auto-fit and `resetFitForNewGeneration` (a new filter generation) clear it. */
+   * reported: the auto-fit and `resetFitForNewGeneration` (run at the start of a filter reissue) clear it. */
   const lastQueriedRef = useRef<AuthoritativeBbox | null>(null);
   /** The one place `onViewportChangedRef.current` is called: records the box as the area last asked
    * for, then reports it. Every report site (and a size growth) goes through here. */
