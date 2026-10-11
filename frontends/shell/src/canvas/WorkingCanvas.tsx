@@ -70,7 +70,8 @@ import type { TileGridFrame, TileKey, TileKeyMembership } from "./tileGrid";
 import { INITIAL_TILE_KEY } from "./tileGridConstants";
 import type { TileGridLevel } from "./tileGridConstants";
 import { planTileEviction, TileResidentSet } from "./tileResidentSet";
-import { AuthoritativeBbox, computeAuthoritativeViewportBbox } from "./viewportBbox";
+import { AuthoritativeBbox, computeAuthoritativeViewportBbox, viewportAfterResize } from "./viewportBbox";
+import type { ViewportCamera } from "./viewportBbox";
 
 /**
  * The working canvas — deck.gl `OrthographicView` in the dataset's source CRS (ADR-010 rules 1, 2,
@@ -130,8 +131,10 @@ export interface WorkingCanvasHandle {
   fitToBounds(): boolean;
   /**
    * Clears BOTH the fit anchor (`fitAnchorRef`) and the one-shot auto-fit flag (`hasAutoFitRef`) --
-   * called whenever a new FILTER GENERATION begins (`App.tsx`'s `applyFilter`, on any Apply or Clear
-   * that actually issues).
+   * called, on both arms, after an issued outcome (`App.tsx`'s `applyFilter`); on the candidate
+   * residency arm, also at the start of a reissue begun while the session is live
+   * (`candidateArmSession.ts`'s `reissueUnrestricted`; an Apply after the session has ended runs none,
+   * because that function returns before the reset) and at the open's first look (`App.tsx`).
    *
    * **Human-approved design revision, 2026-08-15 walkthrough Part E, E5 finding.** The operator
    * applied a late-matching predicate on the slow fixture; the liveness/cancel affordance itself
@@ -152,7 +155,8 @@ export interface WorkingCanvasHandle {
    * camera lands on the matches. `fitToBounds` (`chooseFitTarget(fitAnchorRef.current)`) is then
    * deterministic again within the NEW generation, exactly as it already was within a dataset's whole
    * lifetime -- "the layer" the button fits is the layer the user is actually looking at right now:
-   * (dataset, filter generation), not (dataset) alone.
+   * (dataset, filter generation), not (dataset) alone. It also clears the area last reported, so a
+   * size change asks nothing until the next report (the auto-fit that follows does not report).
    */
   resetFitForNewGeneration(): void;
   /** N4 (viewport-residency cut P1b, G6 instrument): the CURRENT resident vertex/feature totals,
@@ -526,9 +530,14 @@ export interface WorkingCanvasProps {
    * `residentFeatureCount` is `ResidentSet.totalResidentFeatures` read at the moment of refusal --
    * i.e. *before* the refused batch's own features, since a refused batch adds nothing. */
   onResidentCeilingExceeded: (streamHandle: string, residentFeatureCount: number) => void;
-  /** Fired after every settled view-state change (pan, zoom, or an origin recenter) with the
-   * authoritative-CRS box the view now shows -- the caller drives `viewport_query` from this. */
+  /** Fired on a view change other than the automatic fit, which never fires it -- each pan or zoom tick, an origin recenter, Zoom to layer's fit -- not only a
+   * settled one (the caller debounces), and on a growth of the canvas past the area last reported:
+   * with the authoritative-CRS box the view now shows. The caller drives `viewport_query` from this. */
   onViewportChanged: (bbox: AuthoritativeBbox) => void;
+  /** The canvas changed size and the box it now shows lies inside the area `onViewportChanged` last
+   * reported. A report only: the caller issues no query for it. It keeps "the box the map shows"
+   * current after a shrink (the Export panel's Current view reads it). */
+  onViewportWithinLastQuery: (bbox: AuthoritativeBbox) => void;
   /** `App.tsx`-owned style v0 state (ADR-017 §5a; ADR-022; NEXT-CUT.md P3) -- ephemeral, in-memory
    * only (no persistence anywhere; binding note 4). Mirrored via a ref (the same `onHoverRef`
    * pattern every other callback prop in this file already uses) and re-resolved on its own
@@ -814,7 +823,7 @@ export function createHoverRepickScheduler(deps: HoverRepickDeps): HoverRepickSc
 }
 
 const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(function WorkingCanvas(
-  { dataset, geometryColumn, geometryEncoding, crsUnit, onHover, onCanvasRefusal, onResidentCeilingExceeded, onViewportChanged, style },
+  { dataset, geometryColumn, geometryEncoding, crsUnit, onHover, onCanvasRefusal, onResidentCeilingExceeded, onViewportChanged, onViewportWithinLastQuery, style },
   ref
 ) {
   const canvasElRef = useRef<HTMLCanvasElement | null>(null);
@@ -1002,6 +1011,21 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
   onResidentCeilingExceededRef.current = onResidentCeilingExceeded;
   const onViewportChangedRef = useRef(onViewportChanged);
   onViewportChangedRef.current = onViewportChanged;
+  const onViewportWithinLastQueryRef = useRef(onViewportWithinLastQuery);
+  onViewportWithinLastQueryRef.current = onViewportWithinLastQuery;
+
+  /** The inputs of the last camera write (size excluded), written at exactly the three camera-change
+   * sites: the interactive handler, `fitToExtent` and the DEV-only view-state seam. Null before any. */
+  const cameraRef = useRef<ViewportCamera | null>(null);
+  /** The box last passed to `onViewportChanged`, or null. Non-null only while the camera's last write was
+   * reported: the auto-fit and `resetFitForNewGeneration` (see that method's doc comment for when it runs) clear it. */
+  const lastQueriedRef = useRef<AuthoritativeBbox | null>(null);
+  /** The one place `onViewportChangedRef.current` is called: records the box as the area last asked
+   * for, then reports it. Every report site (and a size growth) goes through here. */
+  function reportViewport(bbox: AuthoritativeBbox): void {
+    lastQueriedRef.current = bbox;
+    onViewportChangedRef.current(bbox);
+  }
 
   /**
    * Viewport-residency cut P6a, Defect B (architect gate, blocking): the ONE arm-selected batch-list
@@ -1314,6 +1338,7 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
     frame.forceRecenter(fit.centerX, fit.centerY);
     frame.setThreshold(recenterThresholdForBudget(pixelsPerWorldUnitAtZoom(fit.zoom), RECENTER_BUDGET_PX, RECENTER_MAX_DRIFT[crsUnit]));
     traceViewState(fit.target[0], fit.target[1], fit.zoom, frame.originX, frame.originY);
+    cameraRef.current = { targetX: fit.target[0], targetY: fit.target[1], zoom: fit.zoom, originX: frame.originX, originY: frame.originY };
     // See this file's own doc comment: `initialViewState`, never `viewState`. Entry 85: the value
     // comes from THIS instance's own fit-camera write sequence, never an inline literal -- a fit
     // that repeats a previous fit exactly is still a camera write deck.gl's deep-equal cannot
@@ -1324,7 +1349,9 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
       // `frame.originX`/`frame.originY` read now, i.e. AFTER `forceRecenter` above moved them --
       // the post-recenter origin is what `bboxForFit`'s own doc comment requires to reconstruct the
       // fitted view's real bbox.
-      onViewportChangedRef.current(bboxForFit(fit, frame.originX, frame.originY, widthPx, heightPx));
+      reportViewport(bboxForFit(fit, frame.originX, frame.originY, widthPx, heightPx));
+    } else {
+      lastQueriedRef.current = null; // a write that does not report leaves no area "last asked for"
     }
   }
 
@@ -1505,6 +1532,7 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
       resetFitForNewGeneration() {
         fitAnchorRef.current = null;
         hasAutoFitRef.current = false;
+        lastQueriedRef.current = null;
       },
 
       getResidentCounts() {
@@ -1917,6 +1945,17 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
       // `pointerButtonDownRef`, which tracks a DOM pointer-down rather than an active drag gesture).
       getCursor: ({ isDragging }) => cursorForPointerState(isDragging),
       onLoad: () => end("deck-init"),
+      // A size change that uncovers map area asks for it once a view has been reported (`lastQueried` non-null);
+      // a shrink asks for nothing. deck's own
+      // `{width, height}` are only the trigger -- the size is this file's own basis (the canvas's CSS
+      // client size), and the box is the one pure `viewportAfterResize` computes from the camera last
+      // written. Constant-time arithmetic: no await, no timer, no read of deck's view state or
+      // viewports, and the hover state, the re-pick scheduler and the frame origin are not touched.
+      onResize: () => {
+        const decision = viewportAfterResize(cameraRef.current, lastQueriedRef.current, canvas.clientWidth, canvas.clientHeight);
+        if (decision.kind === "query") reportViewport(decision.bbox);
+        else if (decision.kind === "within") onViewportWithinLastQueryRef.current(decision.bbox);
+      },
       onViewStateChange: ({ viewState, interactionState }) => {
         const vs = viewState as { target: [number, number, number]; zoom: number };
         // Entry 95 (PAN-ANCHOR-PREREGISTRATION.md §3, candidate 3): whether this tick is inside a
@@ -1949,6 +1988,7 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
         // does not leave the module that produced it" -- an origin is that tag, here).
         const originXBeforeRecenter = frame.originX;
         const originYBeforeRecenter = frame.originY;
+        cameraRef.current = { targetX: vs.target[0], targetY: vs.target[1], zoom: vs.zoom, originX: originXBeforeRecenter, originY: originYBeforeRecenter };
         const worldX = vs.target[0] + originXBeforeRecenter;
         const worldY = vs.target[1] + originYBeforeRecenter;
 
@@ -1975,7 +2015,7 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
           render();
         }
 
-        onViewportChangedRef.current(
+        reportViewport(
           computeAuthoritativeViewportBbox({
             targetX: vs.target[0],
             targetY: vs.target[1],
@@ -2180,10 +2220,11 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
       frame.forceRecenter(targetX, targetY);
       frame.setThreshold(recenterThresholdForBudget(pixelsPerWorldUnitAtZoom(zoom), RECENTER_BUDGET_PX, RECENTER_MAX_DRIFT[crsUnit]));
       traceViewState(0, 0, zoom, frame.originX, frame.originY);
+      cameraRef.current = { targetX: 0, targetY: 0, zoom, originX: frame.originX, originY: frame.originY };
       // See this file's own doc comment: `initialViewState`, never `viewState`.
       deck.setProps({ initialViewState: { target: [0, 0, 0], zoom } });
       render();
-      onViewportChangedRef.current(
+      reportViewport(
         bboxForFit({ target: [0, 0], zoom, centerX: targetX, centerY: targetY }, frame.originX, frame.originY, widthPx, heightPx)
       );
       return true;

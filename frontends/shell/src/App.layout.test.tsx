@@ -24,7 +24,17 @@ const mocks = vi.hoisted(() => ({
   /** When set, the next `openDataset` is refused (R8). */
   refuseNextOpen: false,
   mintCounter: 0,
-  canvas: { mounted: [] as string[], unmounted: [] as string[], fitCalls: 0 },
+  canvas: {
+    mounted: [] as string[],
+    unmounted: [] as string[],
+    fitCalls: 0,
+    /** The stand-in's latest props, kept so a test can call the callbacks `App` passed (RF8, RF9). */
+    props: null as import("./canvas/WorkingCanvas").WorkingCanvasProps | null,
+  },
+  /** `requestViewport` calls on the mocked baseline manager (RF9). */
+  viewportRequests: 0,
+  /** The scope each mocked `publishPrepare` call carried (RF8). */
+  prepareScopes: [] as unknown[],
 }));
 
 function describeFixture(): import("./skp/types").DescribeResponse {
@@ -99,6 +109,7 @@ vi.mock("./skp/events", () => ({
 vi.mock("./streaming/viewportStreamManager", () => {
   class MockViewportStreamManager {
     requestViewport(): Promise<unknown> {
+      mocks.viewportRequests += 1;
       return new Promise(() => {});
     }
     async cancelStream(): Promise<void> {}
@@ -107,11 +118,21 @@ vi.mock("./streaming/viewportStreamManager", () => {
   return { VIEWPORT_QUERY_MIN_INTERVAL_MS: 120, ViewportStreamManager: MockViewportStreamManager };
 });
 
+vi.mock("./publish/client", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./publish/client")>()),
+  subscribePublishProgress: () => () => {},
+  publishPrepare: async (_handle: string, _styleDoc: string, scope: unknown) => {
+    mocks.prepareScopes.push(scope);
+    return { status: "picker-cancelled" };
+  },
+}));
+
 vi.mock("./canvas/WorkingCanvas", () => {
   const MockWorkingCanvas = forwardRef<
     import("./canvas/WorkingCanvas").WorkingCanvasHandle,
     import("./canvas/WorkingCanvas").WorkingCanvasProps
   >(function MockWorkingCanvas(props, ref) {
+    mocks.canvas.props = props;
     useEffect(() => {
       mocks.canvas.mounted.push(props.dataset);
       return () => {
@@ -168,6 +189,9 @@ describe("App: the Map Studio frame, through the real App (milestone 1)", () => 
     mocks.canvas.mounted = [];
     mocks.canvas.unmounted = [];
     mocks.canvas.fitCalls = 0;
+    mocks.canvas.props = null;
+    mocks.viewportRequests = 0;
+    mocks.prepareScopes = [];
     // The suite's shipped default is the candidate arm; this file mocks the baseline manager.
     setResidencyArm("baseline");
     container = document.createElement("div");
@@ -464,5 +488,42 @@ describe("App: the Map Studio frame, through the real App (milestone 1)", () => 
     expect(region("Layers").querySelector(".admission-refusal-code")?.textContent, "Layers shows the refusal").toBe("engine.no_covering_bbox");
     expect(region("Layers").querySelector(".describe-summary")).toBeNull();
     expect(mocks.canvas.unmounted, "a refused open unmounts nothing").toEqual([]);
+  });
+
+  // The canvas reports through the props `App` passed it (the stand-in keeps them), as a pan or a resize does.
+  const box = (xmin: number, ymin: number, xmax: number, ymax: number) => ({ xmin, ymin, xmax, ymax });
+  const canvasProps = () => mocks.canvas.props!;
+  async function inAct(fn: () => void): Promise<void> {
+    await act(async () => fn());
+  }
+  /** Two debounce windows (the mocked manager module exports 120 ms) plus slack, in real time. */
+  const twoWindows = () => act(async () => void (await new Promise((r) => setTimeout(r, 300))));
+
+  // RECORDED MUTATION for "RF8": empty App's `onViewportWithinLastQuery` handler (the JSX prop on
+  // `<WorkingCanvas>` becomes `() => {}`). Expected failure: the Export prepare carries b1, not b2.
+  // OBSERVED AT 6554b96c926a7f884b2cde952660df42f4238110: FAILED -- toEqual on the prepare scope: expected xmin 100, ymin 100, xmax 600, ymax 500 (b2), received 0, 0, 1000, 800 (b1).
+  // Reverted after observing.
+  it("RF8: after a within-report the Export panel's Current-view prepare carries the within box, not the last reported one", async () => {
+    await open(PATH_A);
+    const [b1, b2] = [box(0, 0, 1000, 800), box(100, 100, 600, 500)];
+    await inAct(() => canvasProps().onViewportChanged(b1));
+    await inAct(() => canvasProps().onViewportWithinLastQuery(b2));
+    click(q(".publish-disclosure"));
+    await inAct(() => q<HTMLButtonElement>(".publish-open")!.click());
+    expect(mocks.prepareScopes).toEqual([{ kind: "viewport-bbox", bbox: b2 }]);
+  });
+
+  // RECORDED MUTATION for "RF9": App's within handler also calls the debounced entry point
+  // (`viewportDebounceRef.current?.call(toWireBbox(bbox), null)`). Expected failure: the count reaches 2.
+  // OBSERVED AT 6554b96c926a7f884b2cde952660df42f4238110: FAILED -- "after a within-report: expected 2 to be 1". Reverted after observing.
+  it("RF9: a within-report issues no viewport request across two debounce windows; a reported view issues exactly one", async () => {
+    await open(PATH_A);
+    const before = mocks.viewportRequests;
+    await inAct(() => canvasProps().onViewportChanged(box(0, 0, 1000, 800)));
+    await twoWindows();
+    expect(mocks.viewportRequests - before, "a reported view").toBe(1);
+    await inAct(() => canvasProps().onViewportWithinLastQuery(box(100, 100, 600, 500)));
+    await twoWindows();
+    expect(mocks.viewportRequests - before, "after a within-report").toBe(1);
   });
 });

@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
+import fs from "node:fs";
+import path from "node:path";
+
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { PixelRegion } from "../e2e-test-surface";
@@ -825,5 +828,34 @@ describe("createFitCameraWriteSequence (entry 85: the fit's own camera write)", 
     const secondCanvasFirstWrite = second(fit);
     expect(secondCanvasFirstWrite.fitCameraWriteId).toBe(firstWrite.fitCameraWriteId); // each begins at its own beginning
     expect(first(fit).fitCameraWriteId).not.toBe(firstWrite.fitCameraWriteId); // and each advances on its own
+  });
+});
+
+// RF7 (shell-map-refill-after-resize), source text as `noCoordinateLeak.test.ts` reads files: a viewport
+// query is asked for through ONE reporting function, so the file calls the reported-view prop's ref in
+// exactly one place, and deck's resize callback is wired into the Deck constructor.
+// RECORDED MUTATIONS, applied, run by test name, reverted (tree clean), OBSERVED AT 6554b96c926a7f884b2cde952660df42f4238110:
+// the fit site's report restored as a direct call -> FAILED, "expected 2 to be 1"; onResize renamed away in the Deck props ->
+// FAILED, "expected 'new Deck({...' to match /\bonResize:/".
+describe("WorkingCanvas.tsx: the one reporting function and deck's onResize (shell-map-refill-after-resize)", () => {
+  const source = fs.readFileSync(path.resolve(__dirname, "WorkingCanvas.tsx"), "utf-8");
+
+  it("RF7: onViewportChangedRef.current( is called exactly once, and the Deck constructor passes onResize", () => {
+    expect(source.match(/onViewportChangedRef\.current\(/g)?.length).toBe(1);
+    const deckConstructor = source.slice(source.indexOf("new Deck({"), source.indexOf("deckRef.current = deck;"));
+    expect(deckConstructor).toMatch(/\bonResize:/);
+  });
+
+  // RF10 (Amendment 3, item 4): a camera write that does not report leaves no area "last asked for" (gate 1, C1).
+  // RECORDED MUTATIONS, applied, run by test name, reverted (tree clean), OBSERVED AT da0fc49ef4f75d0c9c1b46977323e7a4daef5f45:
+  // the clear in resetFitForNewGeneration deleted -> FAILED, "expected 'resetFitForNewGeneration() {\n ...' to contain
+  // 'lastQueriedRef.current = null;'"; the else branch in fitToExtent deleted -> FAILED, "expected 'function fitToExtent(...' to
+  // match /if \(notifyViewport\) .../"; the fit's cameraRef write duplicated -> FAILED, "expected 4 to be 3".
+  it("RF10: a new filter generation and the unreported fit clear lastQueriedRef, and the camera is written in exactly three places", () => {
+    const reset = source.indexOf("resetFitForNewGeneration() {");
+    expect(source.slice(reset, source.indexOf("},", reset))).toContain("lastQueriedRef.current = null;");
+    const fit = source.indexOf("function fitToExtent(");
+    expect(source.slice(fit, source.indexOf("\n  }\n", fit))).toMatch(/if \(notifyViewport\) \{[\s\S]*?\} else \{[^}]*lastQueriedRef\.current = null;/);
+    expect(source.match(/cameraRef\.current = /g)?.length).toBe(3);
   });
 });
