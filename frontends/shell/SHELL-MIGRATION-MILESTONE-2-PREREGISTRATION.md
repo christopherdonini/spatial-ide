@@ -984,3 +984,20 @@ Nothing above is edited.
 6. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 5 — gate 1's Documentation findings on PR #212: four class 2 rows, and a correction of record to Amendment 4 item 4(d)
+
+*Written by the custodian after both gate 1 reports on PR #212 passed (`state/consults/gates/2026-10-11-shell-migration-milestone-2-phase-a-gate1-architect.md`, `state/consults/gates/2026-10-11-shell-migration-milestone-2-phase-a-gate1-reviewer.md`). References only.*
+
+1. **Class 2 rows: the build as it stands.**
+   - (a) The admission reset writes `activeFilterRef` in an inline closure, not in `commitActiveFilter` as §2.1(b) says. The behaviour is the same (the architect's D2).
+   - (b) The `[admitted]` cleanup's release has no effect on any phase A path. On a reopen, `resource.admitted` has already moved the view; an unmount's dispatch is dropped. So §2.1(b)'s "is released and closed" describes a release that does nothing in phase A, and the close runs because of the admission (the architect's D1 and D2). The comment at 074cc4ad says so.
+   - (c) §3's fixture sha256s were not recorded for phase A's runs: the base and head suites, and EXPORT-TODAY's `100k-happy-path.parquet` and `filter-zoned.parquet`. H4's outcome rests on the audit times and the UI reads, not on fixture bytes (the architect's D5, the reviewer's D4).
+   - (d) RA1 covers only the new open coming before the old close. The order stop, close, start rests on the close effect sitting before the `[admitted]` effect in App.tsx, and no test pins it. The reviewer's gate 1 observed the order by probe, with and without StrictMode. Pinning it is left to phase B (the reviewer's D2 and S1).
+2. **Correction of record, Amendment 4 item 4(d).** That item names §2.5 as the section that names generationEnded's reader. The section is §2.3, whose generation-end trigger bullet is `resource.generationEnded`. The proof is §2.3's trigger bullet (the reviewer's D1).
+3. **The producer ahead of its consumer (the second exemption).** Phase A writes `resource.generationEnded` with no reader. Its consumer is phase B's selection end (§2.3), proven by UB4, RB4 and E-GEN. PLAN and the PR body name it (both gates' D3).
+4. **The node carries `merge: merge-commit`** (AUTONOMY.md §27), because every mutation record cites commit X, deab7dc9 (the architect's D4).
+5. **Generation:** the node's generation goes up by one.
+6. **Superseded index:** Amendment 4 item 4(d)'s §2.5 → item 2.
+
+Nothing above is edited.
