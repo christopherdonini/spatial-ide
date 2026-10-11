@@ -416,8 +416,9 @@ impl StreamRegistry {
 ///
 /// The rule exists because `engine/src/pool.rs` already owns a connection **lease** generation
 /// (`ConnectionFacts::lease_generation`, ADR-004 Amendment 4), and the two are unrelated facts —
-/// a diff that reused the bare name would make the A2 grep read the wrong symbol (the proposed
-/// ADR-016 Amendment 1's block-on-sight 3).
+/// a diff that reused the bare name would make the A2 grep read the wrong symbol (block-on-sight 3
+/// of the draft amendment to ADR-016, `PROPOSED-amendment-to-ADR-016-identity-tier-model.md` under
+/// `docs/adr/` at 433413a, deleted at acceptance; the rule's origin, not ADR-016 Amendment 1's text).
 ///
 /// **The kernel side is authoritative and the client side mirrors it.** This is where a refusal is
 /// decided; the shell mirrors by *live-ticket set* rather than by value, so **no generation value
@@ -1718,7 +1719,9 @@ fn predicate_admit_error_of(e: PredicateAdmitError) -> SkpError {
 }
 
 /// `projection_error_of(&ProjectionError) -> SkpError` — one exhaustive `match`, no wildcard arm,
-/// the [`filter_error_of`] precedent applied to the six declared `skp.projection_*` codes.
+/// the [`filter_error_of`] precedent applied to the seven `skp.projection_*` codes mapped from
+/// `ProjectionError`. The eighth, `skp.projection_empty_list`, is minted in
+/// [`viewport_query_build_error_of`], not here.
 fn projection_error_of(e: &ProjectionError) -> SkpError {
     let message = e.to_string();
     match e {

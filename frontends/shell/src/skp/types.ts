@@ -288,8 +288,9 @@ export interface CloseDatasetResponse {
 }
 
 /** `skp/0.5`, the advisory source-change watcher (ADR-035 D4). The one named exception to "no
- * server-to-client push" -- a Tauri event, never a websocket frame. The decoder/listener that
- * consumes this (`skp/events.ts`) is a later piece; this file mirrors only the wire shape. */
+ * server-to-client push" -- a Tauri event, never a websocket frame. `skp/events.ts`'s
+ * `decodeDatasetSessionEnded` and `listenDatasetSessionEnded` consume this event; this file
+ * mirrors only the wire shape. */
 export const DATASET_SESSION_ENDED_EVENT = "skp://dataset_session_ended";
 
 /** The event payload -- exactly two members (rider (b); ADR-035 D4). No generation value. */

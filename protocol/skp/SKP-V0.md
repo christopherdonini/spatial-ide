@@ -12,7 +12,7 @@ corrections are recorded here rather than smoothed over (§2).
 
 ## 1. The five commands
 
-Every request carries `skp: "skp/0"`. The host compares it with `==` and refuses anything else
+Every request carries the version literal stated in §4 item 3 (`skp/0` at v0). The host compares it with `==` and refuses anything else
 (`skp.version_unsupported`) — see §4 for why nothing richer exists yet. Every response is
 `Result<T, SkpError>`; every request and response struct is `#[serde(deny_unknown_fields)]` in both
 directions, so schema evolution is impossible without a new version string.
@@ -23,11 +23,13 @@ directions, so schema evolution is impossible without a new version string.
 { skp, path: String, cancel_key: String,
   crs_assertion: Option<{ identifier: String, definition_json: String }>,
   identity: Option<{ column: String }> }
-  →  { dataset: DatasetHandle }
+  →  { dataset: DatasetHandle, session: SessionRef }
 ```
 
-`path` is UTF-8, absolute, and comes from the OS file picker. The host canonicalizes it and refuses
-a non-file with `EngineError::Source`'s own text. **Cut 1 offered no `crs_assertion` and no
+`path` is UTF-8, absolute, and comes from the OS file picker. The host passes it to the engine's
+open as received, without canonicalizing it. A directory, or a path carrying a glob metacharacter, is refused first, as
+`engine.identity_ordinal_partitioned_unsupported`; any other path that is not a file is refused as
+`engine.source`, with `EngineError::Source`'s own text. **Cut 1 offered no `crs_assertion` and no
 `identity` field** — the remediation flows that use them were cut-2 UI work, and the fields arrived
 with the UI that exercises them, not before. **`skp/0.2` (§8) adds both fields to the wire**,
 following exactly `viewport_query.bbox_crs`/`filter`'s own discipline (§7.2) as written: `null`
@@ -54,12 +56,12 @@ docs/01 principle-7 shortfall, not a silent gap (§2, C3).
 ```
 
 Pure, in-memory, no IO beyond what `Dataset::open` already did, no lease taken, not cancellable
-(ADR-006 class 1 — a pure transformation over already-resident state). Every field maps to an
-existing `engine::Dataset` accessor; none of them runs a new query:
+(ADR-006 class 1 — a pure transformation over already-resident state). Fields read an existing
+`engine::Dataset` accessor where one exists; `extent` has none (§2, C1), and `coverage` and
+`session_end` come from the host's watch and generation state; none of them runs a new query:
 
-**Brought current (a disclosed currency fix, `skp/0.4` — this block had fallen behind the members
-`skp/0.3`'s own §8 entry already added): the block below carries every `skp/0.3` and `skp/0.4`
-member.**
+**Brought current again, with no literal change (§8's dated note on the live sections): the block
+below carries every member the host sends at the literal §4 item 3 states.**
 
 ```
 source   { path_display, geoparquet_version }
@@ -76,12 +78,15 @@ identity { source: "file:id"|"mapped:<col>"|"session-ordinal:file_row_number",
            uniqueness: "verified-at-open-full-file"|"declared-not-verified"|"by-construction-within-generation",
            verified_rows: Option<DecU64>, max_value: Option<DecU64>, js_exact: Option<bool>,
            class: "native"|"mapped"|"session-ordinal", session_statement: Option<String> }
-schema   [ { name, arrow_type, nullable } ]
+schema   [ { name, arrow_type, nullable, projectable } ]
 covering_bbox: bool
 row_count { basis, value: Option<DecU64> }
 extent    { basis: "not-established-at-open", value: null }
 license  { license, attribution, redistribution, declares_anything }
 sanity   { level: "metadata"|"sample"|"none", reason }
+coverage { state: "watching"|"checks-only", reason: Option<String> }
+checks   { state: "full"|"degraded", components: ["mtime"|"footer-hash"] }
+session_end: "observed-change"|"coverage-lost"|null
 ```
 
 `duckdb_version()` is deliberately **not** in `describe`: it runs a query and can fail on connection
@@ -116,7 +121,9 @@ ticket (ADR-019) and the batches flow on the existing WebSocket data plane.
 { skp, handle: String }  →  { state: "requested" | "unknown" | "already_terminal" }
 ```
 
-`handle` is either a `StreamHandle` or a `CancelKey`. No timestamp, counter or duration in this
+`handle` is either a `StreamHandle` or a `CancelKey`. The host tells the two apart by shape: a
+well-formed `sh_` handle is looked up among tickets, any other string among in-flight opens, and a
+handle found in neither answers `state: "unknown"`; a version mismatch is still refused first. No timestamp, counter or duration in this
 response (ADR-004 Amendment 4 — instrument surface is never an SKP field). For a redeemed stream
 this reaches the producer's own `CancelToken` (ADR-019's Consequences: the SKP `cancel` call and a
 data-plane `TAG_CANCEL` frame converge on the same token); for an unredeemed ticket it marks the
@@ -181,10 +188,13 @@ block are both unsatisfied, so no handle may address a feature or dataset across
 not SKP handles, and are never used to join anything but the harness's own logs off the wire
 (ADR-004 Amendment 4's "not forbidden" clause).
 
-**Scalar codecs, strict — a malformed value is a refusal, never a best-effort parse:**
+**Scalar codecs, strict — a malformed value is rejected, never a best-effort parse:**
 
 - `HexF64` — exactly 16 lowercase hex digits, no `0x`, big-endian `f64::to_bits`. A wrong length or
-  case, or a non-finite bit pattern, is `skp.malformed_hex_f64` / `skp.bbox_not_finite`. This is
+  case, or a non-finite bit pattern, is rejected by `HexF64`'s deserializer while the request is
+  decoded, before any command runs. The host returns no `SkpError` for it; on the Tauri binding the
+  shell's client receives an error that is not an `SkpError`, records it as thrown, and rethrows it
+  unchanged (`call` in `client.ts`). This is
   ADR-004 amendment 1's control-plane form, applied for the first time in product code — JSON floats
   crossing a webview boundary were measured 1-ULP-unstable in 3/9 runs (spike M4), and a viewport
   edge that drifts by 1 ULP silently changes which features are selected.
@@ -199,7 +209,11 @@ Every item on docs/10's "the specification must cover" checklist, stated as pres
 absent — a v0 that goes silent on an item is not a smaller spec, it is an unstated one.
 
 1. **Semantic command model** — the five commands above. Nothing else: no `list_datasets`, no `sql`,
-   no `style`, no `publish` (ADR-017's acceptance condition keeps publish unreachable regardless).
+   no `style`, no `publish`. The shell's UI reaches publish through its binding-local
+   `binding_publish_*` commands, outside SKP. ADR-017's exposure-review completion of 2026-08-17
+   discharged its acceptance condition for that UI surface only: SKP, CLI-as-product
+   (`publish-bundle` stays developer/test tooling), MCP, plugin, notebook and AI exposure each still
+   require their own review.
    **v0.1 (§7 below) does not add a sixth command** — `viewport_query` gains an optional row-filter
    parameter; `sql` stays absent, named absent by ADR-021's own "what this ADR does not decide."
    **`skp/0.6` (§9) adds no command either** — `viewport_query` gains an optional attribute
@@ -218,7 +232,8 @@ absent — a v0 that goes silent on an item is not a smaller spec, it is an unst
    unchanged** — still no ranges, min/max, capability set, or handshake. A `skp/0.1` client and a
    `skp/0.2` host fail on the first call. **`skp/0.3` and `skp/0.4` each bumped the compared
    literal again**, and `==` is unchanged. **`skp/0.5` and `skp/0.6` (§9) each bumped the literal
-   again in turn, `==` still unchanged**.
+   again in turn, `==` still unchanged**. `skp/0.7` to `skp/0.11` each bumped the literal again in turn
+   (§8), `==` unchanged, and the literal the host compares today is `skp/0.11`.
 4. **Capability discovery** — none. No `capabilities` command. The client hardcodes v0's five
    commands and cannot adapt to a future kernel.
 5. **Cancellation and progress** — cancellation: yes, for streams and for `open_dataset` (§2, C3).
@@ -253,7 +268,7 @@ absent — a v0 that goes silent on an item is not a smaller spec, it is an unst
    generation (ADR-035 D4). It is not a subscription — there is no way to ask for it and no way to
    turn it off, and no request or response on any of the five commands mentions it. No other
    server-to-client push exists on the control plane in any other form.
-8. **Error taxonomy** — §6. The existing `engine::EngineError` taxonomy, surfaced verbatim; no new
+8. **Error taxonomy** — §5. The existing `engine::EngineError` taxonomy, surfaced verbatim; no new
    error invented, none flattened to a string. **v0.1 (§7) adds eleven `skp.filter_*` codes** to this
    taxonomy — still no new error *invented outside a declared, exhaustive taxonomy*: every one of the
    eleven is named, matched exhaustively with no wildcard arm, exactly this item's own discipline
@@ -326,9 +341,10 @@ pub struct SkpError { pub code: String, pub message: String, pub fields: BTreeMa
   brief asks for.
 - `code` is `engine.` + the variant name in snake_case (`engine.crs_undeclared`,
   `engine.axis_order_unsupported`, `engine.identity_unusable`, …) for every `EngineError` variant, or
-  `skp.` for a protocol-level refusal (`skp.version_unsupported`, `skp.unknown_handle`,
-  `skp.malformed_hex_f64`, `skp.bbox_not_finite`, `skp.cancel_key_in_use`,
+  `skp.` for a protocol-level refusal (`skp.version_unsupported`, `skp.cancel_key_in_use`,
   `skp.too_many_pending_streams`, …).
+- `skp.unknown_handle`, `skp.malformed_hex_f64` and `skp.bbox_not_finite` are reserved and not
+  produced at `skp/0.x` (§3 for `HexF64`, §1 `cancel` for an unknown handle).
 - `fields` carries that variant's own named fields as strings (`declared`, `asserted`, `column`,
   `detail`, `limit`, `saw`, …), so a client can build UI without parsing `message`.
 - **The mapping is one exhaustive `match` with no wildcard arm** (`kernel/src/skp.rs::error_of`). A
@@ -362,6 +378,9 @@ standing is now historical.
 richer negotiation was added, `deny_unknown_fields` stays on every derived struct in both directions,
 and every fixture on both the Rust and TypeScript sides of the wire was updated in the same commit
 that bumped the literal (`CUT-STATE.md` P1). `skp/1` stays RESERVED, for docs/07's 1.0 freeze.
+
+> **Dated note (2026-10-11; no literal change).** The literal has been bumped since; §4 item 3
+> states the current one.
 
 ### 7.2 The wire shape
 
@@ -465,7 +484,7 @@ unrecognized construct is always the final, unconditional-refusal arm, never a s
 ### 7.5 Refusal taxonomy — eleven `skp.filter_*` codes
 
 Exhaustive, no wildcard arm, mapped field-for-field from `engine::predicate::FilterError`
-(`kernel/src/skp.rs::filter_error_of`) — exactly §6/§4 item 8's own "no wildcard arm" discipline,
+(`kernel/src/skp.rs::filter_error_of`) — exactly §5/§4 item 8's own "no wildcard arm" discipline,
 applied to predicate admission.
 
 | Code | Fields |
@@ -1085,6 +1104,16 @@ comparison retained; `deny_unknown_fields` kept both directions. `skp/1` stays R
 - `open_dataset` for such a file succeeds, as before.
 - `protocol/data-plane/` has an empty diff.
 
+### Note: the live sections brought current (2026-10-11; no literal change)
+
+**`skp/0.11` stands; no literal is bumped and no fixture changes.** PLAN node `skp-v0-live-sections-current-area-c`, base 1457fbd0a09464c03082a2aea3df65dd1171bc95 on main. This note is the only §8 change.
+
+- **In place, by section.** §1: `open_dataset`'s response gains `session`; the path sentence states what the host and engine do with the path; the `describe` lead's currency sentence is replaced by one that points to this note, and its accessor sentence reads accessors where one exists and names `extent` (no accessor, §2 C1), `coverage` and `session_end` (host state) as the ones that do not; the `describe` block gains `coverage`, `checks`, `session_end` and `schema[].projectable`, in the shapes the `skp/0.5` and `skp/0.6` entries give; the `cancel` paragraph states how the host reads the handle and the `unknown` answer; the lead names the literal by pointing to §4 item 3. §3: the lead changes from refusal to rejected, and the `HexF64` bullet states where a malformed value is rejected. §4: item 1's publish parenthetical states ADR-017's exposure-review completion of 2026-08-17 as that ADR records it, and item 3 states the current literal. §5: the `skp.` example list, one reserved line, and, outside §5, a section cite corrected from §6 to §5 in §4 item 8 and §7.5. §7.1 and §9.1 each gain a dated note. §9.5's heading names eight codes.
+- **Three codes never produced.** `skp.unknown_handle`, `skp.malformed_hex_f64` and `skp.bbox_not_finite` were never produced by the host. They are struck from §5's examples by the human's ruling (`state/directives/2026-10-10-docs-lane-slot-2-order-reaim-answers-strike-crs-wording.md`, item 4) and listed in §5 as reserved.
+- **Fixtures and the conformance record.** The conformance fixtures' `expected_refusal_code` values for the nine `HexF64` fixtures that carry one still name two of those codes, unchanged under the ruling; nothing reads that field. AMBIGUITIES A3 and A8 stay as recorded.
+- **The reading this piece applies.** §§1–7 and §9 are the live current-shape description. §8's preamble names §§1–7. §9 is laid out as §7 and updated in place by its own dated notes. §7's lead of 2026-08-13 describes §§1–6 as they stood then.
+- **No wire change.** No key, value or command is added or removed; no code the host produces is added or removed; the kernel's serialized responses are unchanged; `protocol/data-plane/` has an empty diff.
+
 ## 9. Attribute projection on `viewport_query`
 
 **Brief B stage B1** (`engine/B1-PROJECTION-PREREGISTRATION.md`), following ADR-023 Decision §§1–5
@@ -1101,6 +1130,9 @@ together in `6cd1764`; the version's fixtures also changed in `2963021`, `9348a4
 > **Dated note, `skp/0.7` (2026-09-29; §10 Amendment 12, wave-2 A2-1).** `skp` is now compared
 > against `"skp/0.7"`, still `==`. `deny_unknown_fields` is unchanged; both sides' fixtures and the
 > new error fixture landed with the literal bump, in the same commit (§8's `skp/0.7` entry).
+
+> **Dated note (2026-10-11; no literal change).** The literal has been bumped since; §4 item 3
+> states the current one.
 
 ### 9.2 The wire shape
 
@@ -1149,7 +1181,7 @@ runs (ADR-023 §3; ADR-019):
 > round-trips through this engine's admission is checked first, ahead of every other per-column
 > rule — a name nothing can address cannot be trusted to mean what any later rule says about it.
 
-### 9.5 Refusal taxonomy — seven codes
+### 9.5 Refusal taxonomy — eight codes
 
 | Code | Fields |
 |---|---|

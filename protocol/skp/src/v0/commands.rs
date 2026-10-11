@@ -19,7 +19,7 @@ use crate::v0::{DatasetHandle, DecU64, HexF64, SessionRef, StreamHandle};
 #[serde(deny_unknown_fields)]
 pub struct OpenDatasetRequest {
     pub skp: String,
-    /// UTF-8, absolute; canonicalized and checked by the host. Never a data-plane value — the path
+    /// UTF-8, absolute; passed to the engine's open as received. Never a data-plane value — the path
     /// stays on the control plane for its whole life.
     pub path: String,
     /// Client-minted (SKP-V0.md §3): names this specific open so `cancel` can stop it before it
@@ -196,8 +196,8 @@ pub struct IdentityInfo {
     /// `"verified-at-open-full-file"` or `"declared-not-verified"` are ADR-016 §6's own two values.
     /// `skp/0.3` adds a third, `"by-construction-within-generation"`, for the session tier: no scan
     /// ran, and the value names the basis rather than claiming a scan's result. That third value
-    /// comes from the **PROPOSED** ADR-016 Amendment 1, which binds nothing until the human accepts
-    /// it — it is emitted here because this cut implements the tier, not because the ADR lists it.
+    /// comes from ADR-016 Amendment 1, which the ADR records as Accepted (2026-09-23); this cut
+    /// implements that tier.
     pub uniqueness: String,
     pub verified_rows: Option<DecU64>,
     pub max_value: Option<DecU64>,
