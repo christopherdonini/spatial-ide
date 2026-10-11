@@ -1,14 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `ee636b10b413da4824b2f99a3892590f6988381410cad46407ca8034a4211ad9`) at `2026-10-11T21:06:53.944Z`.
+Generated from `PLAN.yaml` (sha256 `f1d7e7c883f1242491473bd6d331b51a6a03b617dbf1c6f63469a5baeae27390`) at `2026-10-11T21:17:14.710Z`.
 
 ## 1. Next
 
-- **stale-test-names-and-comments** — Stale test names and test comments, names and comments only, no assertion changes: a refusal-named test that asserts admission, the React-harness premise, the no-attributes reason, a Proposed ADR-018, two ruled decisions still marked pending (sweep area E, findings 2, 3, 4, 7 and 10) (lane `shell`)
+- (nothing ready)
 
 ## 2. Ready
 
-- **stale-test-names-and-comments** — Stale test names and test comments, names and comments only, no assertion changes: a refusal-named test that asserts admission, the React-harness premise, the no-attributes reason, a Proposed ADR-018, two ruled decisions still marked pending (sweep area E, findings 2, 3, 4, 7 and 10) (lane `shell`, order 6, budget 60 min)
+- (none)
 
 ## 3. Waiting on the human (total: 10 min)
 
@@ -20,6 +20,7 @@ Generated from `PLAN.yaml` (sha256 `ee636b10b413da4824b2f99a3892590f6988381410ca
 
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
 - **b2-piece-1b-recording** — B2 piece 1b -- recording: the kernel's step commands for filter, scope and style, the session history on the machine, safe against a crash, and the docs/07 note — blocked by: shell-migration-milestone-2, guardian-v1
+- **stale-test-names-and-comments** — Stale test names and test comments, names and comments only, no assertion changes: a refusal-named test that asserts admission, the React-harness premise, the no-attributes reason, a Proposed ADR-018, two ruled decisions still marked pending (sweep area E, findings 2, 3, 4, 7 and 10) — blocked by: shell-crs-form-for-format-default-contradicted
 - **briefb-b2-save-reopen** — B2 — Save project, Snapshot data, session history, lineage and preferences, in five stages, each with its own form — blocked by: decision-adr-029-scan-progress-route
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer — blocked by: signpath-application-draft
 - **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-1-1
