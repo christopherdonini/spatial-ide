@@ -32,7 +32,7 @@ const FIXTURE_100K = `${FIXTURE_DIR}100k-happy-path.parquet`;
 const REGEN_COMMAND =
   "cargo test -p spatial-kernel --test manual_walkthrough_fixtures generate_the_filter_fixture -- --ignored --nocapture";
 
-// layout/layoutConstants.ts's MAP_MIN_*: declared there, restated here (an e2e module imports no src).
+// layout/layoutConstants.ts's MAP_MIN_*: declared there, restated here (this file loads shell modules through `loadShellModule`; these constants are restated, not loaded).
 const MAP_MIN_WIDTH_PX = 480;
 const MAP_MIN_HEIGHT_PX = 320;
 const MOUNT_READY_TIMEOUT_MS = 90_000;
@@ -270,7 +270,7 @@ async function stepFit(page) {
 // viewport floor (1024 x 640) with Activity open and BOTH bars filled past their caps. The bars are filled by DOM content added
 // here -- 40 marker rows in each, the strip un-hidden -- because the product has no path that fills either past its cap (the
 // strip has no items today and the status bar holds a handful). The probe nodes and the `hidden` flag are put back in `finally`.
-const FLOOR_VIEWPORT = { width: 1024, height: 640 }; // layout/layoutConstants.ts's VIEWPORT_FLOOR, restated (an e2e module imports no src)
+const FLOOR_VIEWPORT = { width: 1024, height: 640 }; // layout/layoutConstants.ts's VIEWPORT_FLOOR, restated, not loaded (this file loads shell modules through `loadShellModule`)
 const FLOOR_PROBE_ROWS = 40; // far past either cap: 40 rows of ~1.2 rem is over 700 px against caps of 128 and 48
 async function stepFloor(page) {
   await press(page, "Control+KeyJ"); // Activity open
