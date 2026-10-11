@@ -4,7 +4,7 @@ name: Ported notices
 # section 2.6 and Amendment 1 (g) and (h); ADR-030's note of 2026-10-09): every tracked file that
 # carries a port marker must be in `LICENSES/third-party/ported/MANIFEST.json`, and every registered
 # file and pinned text must check out. No path or branch filter, because a port can land in any
-# file. It installs nothing: checkout, Node, and one script that uses Node's standard library only.
+# file. Its steps are checkout, Node, and one script that uses Node's standard library only.
 # Modelled on governance-ci's cfg-boundary job. The check run is named `ported-notices` (one job, no
 # matrix); the human adds it to the required checks after its first green run on main.
 
