@@ -1,14 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `383197346d9e2c432cf792f73492b8ee65a1af3102802aa93b19ec63b5abace3`) at `2026-10-11T08:59:28.860Z`.
+Generated from `PLAN.yaml` (sha256 `a8feed304b373cfd2948e42e74d25639caaa00f5b8346783b7e76eb6b23647c8`) at `2026-10-11T09:04:51.006Z`.
 
 ## 1. Next
 
-- **ported-code-notice-route** — A notice route for ported code, wherever it lands (shell or kernel), needed before any PORT (lane `governance`)
+- (nothing ready)
 
 ## 2. Ready
 
-- **ported-code-notice-route** — A notice route for ported code, wherever it lands (shell or kernel), needed before any PORT (lane `governance`, order 1, budget 480 min)
+- (none)
 
 ## 3. Waiting on the human (total: 10 min)
 
@@ -35,6 +35,7 @@ Generated from `PLAN.yaml` (sha256 `383197346d9e2c432cf792f73492b8ee65a1af310280
 
 - **shell-map-refill-after-resize** — The map refills after a resize: a layout change that uncovers map area issues a viewport query, so the area fills without a pan or zoom — evidence: branch `cut/shell-map-refill-after-resize`
 - **known-limitations-item-2-on-main-paragraph** — KNOWN-LIMITATIONS item 2 gains the human's on-main paragraph (absent crs key and latitude-first CRS admitted under GeoParquet 1.0.0 and 1.1.0), and items 19, 20 and 22's unpinned cites are pinned (sweep area E, findings 1 and 6) — evidence: branch `cut/known-limitations-item-2-on-main-paragraph`
+- **ported-code-notice-route** — A notice route for ported code, wherever it lands (shell or kernel), needed before any PORT — evidence: branch `cut/ported-code-notice-route`
 
 ## 6. Proposed / unscheduled
 
