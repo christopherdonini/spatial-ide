@@ -2521,8 +2521,8 @@ async function stepAbsentCrs(page, consoleHandle) {
   if (!admitted.ok) {
     throw new Error(`ABSENTCRS': not admitted as EPSG:2056 caller-asserted (crs:asserted, axis:declared) within 20000ms of the submit. Last seen: ${JSON.stringify(admitted.last)}`);
   }
-  await waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 3000, timeoutMs: 45_000 });
-  return `refused engine.format_default_contradicted; message verbatim; no button inside the refusal block; no describe-summary in the Layers region; .crs-assertion-form present, .identity-declaration-form absent; EPSG:2056 catalog entry picked and submitted by DOM clicks on the real form; admitted: CRS row "${admitted.last.rows["CRS"].split(" at ")[0]} ...", CRS provenance "${admitted.last.rows["CRS provenance"]}"; settled`;
+  const settle = await waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 3000, timeoutMs: 45_000 });
+  return `refused engine.format_default_contradicted; message verbatim; no button inside the refusal block; no describe-summary in the Layers region; .crs-assertion-form present, .identity-declaration-form absent; EPSG:2056 catalog entry picked and submitted by DOM clicks on the real form; admitted: CRS row "${admitted.last.rows["CRS"].split(" at ")[0]} ...", CRS provenance "${admitted.last.rows["CRS provenance"]}"; settled=${settle.settled}`;
 }
 
 async function stepNet(page, badResponses) {
@@ -2711,7 +2711,8 @@ async function main() {
       stepRefusal(page, "B2'/B3'", FIXTURE_NO_CRS, "engine.crs_undeclared", CRS_UNDECLARED_MESSAGE, ".crs-assertion-form")
     );
     // F-2 (`engine/ADMISSION-PREREGISTRATION.md` §4) -- see `stepAbsentCrs`'s own top comment. 90s is an
-    // outer bound (one admission plus one 45s settle), as for C2'/C3' below; not a timing claim.
+    // outer bound for a wedged page, not a timing claim; the step's own waits (three of 20s, one 45s
+    // settle) can sum past it, and then this bound is the one that fails the step.
     await runStep("ABSENTCRS'", 90_000, () => stepAbsentCrs(page, consoleHandle));
     // Re-aimed (E2E-STALE-EXPECTATIONS-REAIM-PREREGISTRATION.md section 2.1): two halves, each failing by
     // its own name. 90s as an outer bound for a wedged page (each half's settle is 45s at most).
