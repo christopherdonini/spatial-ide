@@ -391,8 +391,8 @@ size. Admissible types are utf8 (`Utf8`, `LargeUtf8`, `Utf8View`), boolean, the 
 8/16/32/64-bit integers, float32 and float64; everything else is a typed refusal, and **nothing is
 cast, widened or stringified to make a column fit**. A dictionary-encoded column is admitted when
 its value type is, and is emitted as that value type — never as its index, an ordinal, which ADR-016
-§4 names explicitly. Of a projection's columns, only publish preflight refuses `Float32` and dictionaries, as ADR-017 §4's
-restriction of the bundle format, not of what a live query may stream.
+§4 names explicitly. Of a projection's columns, only publish preflight refuses `Float32` and
+dictionaries, as ADR-017 §4's restriction of the bundle format, not of what a live query may stream.
 
 **Every published attribute is nullable**, whatever the source said. A source NULL is a value; a
 schema that could not carry one would force a substitution. NULL travels: Arrow validity bit →

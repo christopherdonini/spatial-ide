@@ -54,8 +54,9 @@
 //!   for writing, and DuckDB's default spill of intermediates is not configured off by the engine
 //!   (`kernel/CANCELLATION-AND-TRACING.md` §7; `kernel/RESULTS.md`, the subsection on §5d being
 //!   partially measurable). The stream is a pure transformation (ADR-006); it claims no
-//!   reproducibility grade (ADR-005). The tier builder (`lod::build_tiers`) writes a derived, non-authoritative tier cache: a directory per source
-//!   content hash under `LOD_TIER_ROOT`, one GeoParquet file per derived tier, and `tiers.json`.
+//!   reproducibility grade (ADR-005). The tier builder (`lod::build_tiers`) writes a derived,
+//!   non-authoritative tier cache: a directory per source content hash under `LOD_TIER_ROOT`, one
+//!   GeoParquet file per derived tier, and `tiers.json`.
 //!   Caching to disk was this module's own trigger for owing `docs/11`'s ResourceRef model and
 //!   `kernel/`, and that trigger has come due for the cache. What is owed — whether a tier set
 //!   carries a ResourceRef and an ADR-005 statement, and what the kernel side owes — is a named
