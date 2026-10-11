@@ -1,6 +1,6 @@
 # spatial-evidence-recorder (Evidence Recorder v0.1)
 
-**Retired (2026-10-11).** The human uninstalled this mod on 2026-10-11, after its overhead check E10 failed (`tools/mods/EVIDENCE-RECORDER-V0-1-PREREGISTRATION.md`, Amendments 9 and 10). Its code stays here unchanged, for reference. The rest of this README describes the mod as it was built.
+**Retired (2026-10-11).** The human uninstalled this mod on 2026-10-11, after its overhead check E10 failed (`tools/mods/EVIDENCE-RECORDER-V0-1-PREREGISTRATION.md`, Amendments 9 and 10). Its code stays here unchanged, for reference. The rest of this README describes the mod, and the briefs' practice around it, as they were before the uninstall.
 
 The second Spatial IDE mod: an observe-only plugin for sessions in this repository. It writes one line for each approved test command and, by design, one for each subagent turn; that subagent behaviour is unclaimed as live behaviour before its E-row E3. It never refuses, rewrites or answers a call, makes no model call and no network request, and writes nothing inside the repository. Every hook calls the next link once, with the event it received, and returns that call's own value. The forms are `tools/mods/EVIDENCE-RECORDER-V0-PREREGISTRATION.md` and `tools/mods/EVIDENCE-RECORDER-V0-1-PREREGISTRATION.md` (v0.1), and they govern this folder.
 
