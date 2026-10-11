@@ -1,8 +1,12 @@
 # `engine/` — the data-engine module
 
-`docs/02`'s **data-engine** module. First cut, scoped to one operation:
+`docs/02`'s **data-engine** module. Its first cut was scoped to one operation:
 
 > **open a GeoParquet → filter in SQL → stream GeoArrow record batches → cancel**
+
+That operation now carries one of five GeoArrow encodings, selected at open (ADR-034, Accepted), and
+a declared attribute projection on both the publish stream and the live projected stream (ADR-023
+stays Proposed and binds nothing).
 
 Scaffolded for the `docs/07` Prototype hero slice, per that document's method rule: vertical slices,
 never every module built in parallel to 20 %.
@@ -13,25 +17,30 @@ never every module built in parallel to 20 %.
 |---|---|
 | **Reads** | GeoParquet (WKB geometry, GeoParquet 1.1 metadata) through **DuckDB** |
 | **Filters** | SQL over the covering `bbox` columns — a linear scan. The fixed-grid index is built and tested but **deliberately not in the product planner**; see below |
-| **Emits** | GeoArrow polygons, `List<rings: List<vertices: FixedSizeList<xy: double>[2]>>`, as Arrow IPC — `[id, geometry]`, plus a **declared attribute projection** on the publish path |
+| **Emits** | GeoArrow — one of five encodings fixed at open (polygon, multipolygon, point, linestring, multilinestring; ADR-034) — as Arrow IPC: `[id, geometry]`, plus a **declared attribute projection** on the publish stream and on the live projected stream |
 | **Tags** | every batch envelope with frame, CRS, CRS source and axis order (ADR-010 rule 1) |
 | **Cancels** | through DuckDB's own interrupt, not just a flag between batches |
 | **Connects** | through a bounded per-dataset lease pool: configured once per connection, not once per query |
 
 ## The five things worth knowing before reading the code
 
-**1. CRS is a type, and a file without one is refused.** `docs/05` makes CRS part of the dataset's
-type. GeoParquet's specification says an absent `crs` key means OGC:CRS84 — **this engine does not
-apply that default**, because supplying a CRS the file never stated is the silent conversion
+**1. CRS is a type, and where it came from is recorded.** `docs/05` makes CRS part of the dataset's
+type. An absent `crs` key is admitted as OGC:CRS84 only under GeoParquet's own published rule, in a
+version whose text is pinned in this tree (1.0.0 and 1.1.0), and the admission is recorded as
+`crs:format-default` (ADR-015 Amendment 1, items 3 and 4); the engine invents no default, because
+supplying a CRS that neither the file nor its format ever stated is the silent conversion
 `docs/01` principle 8 forbids. A caller may assert a CRS for a file that declares none; an assertion
 over a file that *does* declare one is refused without comparing them, because deciding two
 definitions agree is a definitional-equivalence judgement this slice cannot make (it performs no
-transform and has no PROJ). The policy is **ADR-015 (Proposed)** and lives in `src/crs.rs`.
+transform and has no PROJ). The policy is **ADR-015** (Accepted, with its Amendment 1) and lives in
+`src/crs.rs`.
 
 **2. The envelope tag is unforgeable by construction.** `TaggedBatch` has one constructor, it takes a
 `BatchEnvelope`, which takes a `DatasetCrs`, which has no public constructor at all. There is no path
-from raw arrays to a serialized batch that skips the tag. Axis order is **read from the file's
-PROJJSON**, never hardcoded — a hardcoded `easting,northing` satisfies the letter of rule 1 and
+from raw arrays to a serialized batch that skips the tag. Axis order is **read, never hardcoded** —
+the declared order from the file's PROJJSON, the data's order from the format's own rule where it
+states one and from the definition otherwise (ADR-015 Amendment 1, item 1). A hardcoded
+`easting,northing` satisfies the letter of rule 1 and
 records nothing (`docs/05` requires that the normalization performed is recorded; this slice performs
 none and says so).
 
@@ -73,10 +82,14 @@ diff is the data doctor's job (`docs/05`), which is Alpha work.
 - **No reprojection**, no PROJ, no definitional-equivalence check. A viewport in another CRS is
   refused, not transformed — and per ADR-015 §7 the identifier check that does this is a **caller
   assertion about the query**, never a finding that two CRS definitions agree.
-- **No spatial index.** `docs/07`'s other open gate, untouched.
-- **No provenance column.** ADR-013 is Proposed and binds nothing; its own OPEN block says the
-  per-feature-versus-per-vertex choice must be made "explicitly at acceptance, not inherited".
-  Nothing here creates derived coordinates, so there is nothing to record.
+- **No spatial index in the product planner.** The fixed-grid index is built and tested, and
+  `docs/07`'s gate on it is closed for this slice's shape only; see
+  [why it is not in the default planner](#why-the-fixed-grid-index-is-not-in-the-default-planner)
+  and [its own section](#spatial-index--keying-ceilings-and-what-it-is-not).
+- **No provenance column.** ADR-013 is Accepted: its granularity was ruled per-feature at
+  acceptance, and the column's shape is deferred (its Acceptance appendix, items 1 and 3). This
+  module writes no provenance column. The tiers it builds are derived and never authoritative; no
+  ADR-013 applicability to them is asserted here.
 - **No registry, no lineage, no undo, no reproducibility grade.** The stream path writes nothing.
   The tier builder (`lod::build_tiers`; no SKP command calls it today) writes a derived,
   non-authoritative tier cache: a directory per source content hash under `LOD_TIER_ROOT`, one
@@ -371,10 +384,12 @@ a column to match on and a hover panel needs something to show, so the batch sch
 **explicit, caller-declared, ordered projection** — never "all attributes", for three separate
 reasons: `docs/09` (an unbounded projection publishes unreviewed columns into a redistributable
 artifact), determinism (the emitted schema would become a function of the file's column order), and
-size. Admissible types are utf8, boolean, the 8/16/32/64-bit integers and float64; everything else is
-a typed refusal, and **nothing is cast, widened or stringified to make a column fit**. A
-dictionary-encoded column is refused rather than decoded — a dictionary index is an ordinal, which
-ADR-016 §4 names explicitly.
+size. Admissible types are utf8 (`Utf8`, `LargeUtf8`, `Utf8View`), boolean, the signed and unsigned
+8/16/32/64-bit integers, float32 and float64; everything else is a typed refusal, and **nothing is
+cast, widened or stringified to make a column fit**. A dictionary-encoded column is admitted when
+its value type is, and is emitted as that value type — never as its index, an ordinal, which ADR-016
+§4 names explicitly. Only publish preflight refuses `Float32` and dictionaries, as ADR-017 §4's
+restriction of the bundle format, not of what a live query may stream.
 
 **Every published attribute is nullable**, whatever the source said. A source NULL is a value; a
 schema that could not carry one would force a substitution. NULL travels: Arrow validity bit →
@@ -443,32 +458,37 @@ ADR-005 **Snapshot** rather than Exact.
 
 ## Admission: what this module refuses to open
 
-Both refusals are **ADR-015 (Proposed)** policy, and both happen at open, in front of an operator:
+Admission happens at open, in front of an operator, under **ADR-015** and **ADR-016**, both
+Accepted with their Amendments 1:
 
-- **A source with no CRS**, and a caller assertion over a source that has one — the four-row table in
-  ADR-015 §1–§6.
-- **A source with no stable per-feature identity** — concretely, no 64-bit column named `id`
-  (**ADR-016**, Proposed — split out of ADR-015 §8). ADR-010 rule 2 resolves picking through a
-  stable feature ID and `docs/11` requires
-  one for editing and lineage; synthesizing a row ordinal is the M3 hazard rule 2 exists to prevent.
-  **This bounds which real GeoParquet the hero slice can open more tightly than anything in
-  `docs/07`** — most files in the wild carry no such column — and the source-key-to-identity mapping
-  that would fix it is an OPEN item on ADR-016, not something implemented here. **ADR-016's own
-  Context states what this check does not establish** — dataset-wide uniqueness, and stability
-  across reopen — so the words "stable feature identity" are not read as stronger than the code.
+- **CRS** — the four-row table in ADR-015 §1–§6, as Amendment 1 narrows it. Opens: an absent `crs`
+  key under a pinned version, as OGC:CRS84 with `crs:format-default`; a declared non-x-first CRS
+  under a pinned version, with the WKB data order (`axis:format-override`) and its declared order
+  retained. Refused: an explicit `null` (and a non-object value, read as null) or an absent key
+  under an unpinned version, as `engine.crs_undeclared`, unless the caller asserts; a format default
+  that the file's own bbox, covering statistics or sample contradicts, as
+  `engine.format_default_contradicted`, which a caller assertion still opens; an assertion over a
+  file that declares a CRS; and a caller-asserted non-x-first CRS, or a declared one under an
+  unpinned version, as `engine.axis_order_unsupported`.
+- **Identity** — a native `id` column or a declared mapping gives the identity ADR-016 §1–§7
+  governs. A single-file source with neither opens on the session tier: the pair of
+  dataset-session generation and `file_row_number`, generation-namespaced, never persisted, and
+  claiming no stability (ADR-016 Amendment 1, item 1). A declared mapping to a column the file
+  lacks still refuses, and a directory source is refused by name before anything is read.
 
 ## Axis order: a conflict with `docs/05`, resolved rather than buried
 
 `docs/05` requires ingestion to **normalize** axis order to the internal (E, N) convention and to
-record the normalization performed. This engine performs no normalization: a non-x-first source is
-**refused**.
+record the normalization performed. This engine performs no normalization: where a format rule
+establishes the data's order it is recorded beside the declared one, and where none applies a
+non-x-first source is **refused** (ADR-015 Amendment 1, items 1 and 2).
 
 That is a real conflict between two constitution documents, and it resolves: `docs/README.md` is
 **lower-number-wins**, so `docs/01` principle 8 (no silent conversion) governs and `docs/05`'s
 normalization clause yields. Refusing is the **resolved** behaviour, not an unmet requirement — an
 unimplemented normalization could silently mislabel coordinates, and refusing cannot. Recorded in
-ADR-015 (Proposed) §5, whose OPEN block is only about whether normalizing *later* should replace
-refusing.
+ADR-015 §5 (Accepted), whose OPEN block is only about whether normalizing *later* should replace
+refusing and is unanswered (Amendment 1, item 7).
 
 ## Declared recovery policy (ADR-010 rule 7)
 

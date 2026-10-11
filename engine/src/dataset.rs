@@ -1014,7 +1014,7 @@ impl Dataset {
         self.envelope.admission()
     }
 
-    /// Whether this dataset is a **geographic-degrees instance** — the proposed ADR-013 Amendment 1.
+    /// Whether this dataset is a **geographic-degrees instance** — ADR-013 Amendment 1 (Accepted).
     ///
     /// **Answered from the recorded unit and from nothing else.** True exactly when admission
     /// established `degree` on both coordinate axes, from either of the two sources §14 (items I
@@ -1029,7 +1029,7 @@ impl Dataset {
     /// ([`crate::geoparquet::CoordinateUnitSource`]), so this answer never hides a rule-defaulted
     /// file among declared-degrees ones.
     ///
-    /// It is **not** answered from the CRS identifier. That draft's block-on-sight 8 forbids
+    /// It is **not** answered from the CRS identifier. ADR-013 Amendment 1, item 2 forbids
     /// inferring a unit from an identifier string, and `docs/05` forbids deciding CRS identity by
     /// name comparison at all — so changing a definition's `id` and nothing else cannot change this
     /// answer, and a test asserts exactly that.
@@ -1728,7 +1728,7 @@ fn admit_identity(
     };
 
     let Some(field) = schema.fields().iter().find(|f| f.name() == &column) else {
-        // **R-I3 — the session tier** (§2d; the proposed ADR-016 Amendment 1, point 1). This is
+        // **R-I3 — the session tier** (§2d; ADR-016 Amendment 1, item 1). This is
         // where `identity_unusable` used to be raised for a single-file keyless source. It is not
         // raised here any more: the dataset opens with identity = (dataset-session generation,
         // `file_row_number`).

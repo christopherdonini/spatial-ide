@@ -143,7 +143,7 @@ impl BatchEnvelope {
             "none-performed".to_string(),
         );
         // … and, since Brief A P1, **how** each of those two facts was established, as recorded
-        // facts and never as judgements (the proposed ADR-015 Amendment 1, item 5).
+        // facts and never as judgements (ADR-015 Amendment 1, item 5).
         //
         // `axis_order` above is the **data's** order. `declared_axis_order` is the definition's
         // own, retained whenever a definition existed and never discarded — it is what a later
@@ -176,8 +176,8 @@ impl BatchEnvelope {
             // established), `unit:format-rule` where the pinned absent-key rule supplied the CRS and
             // therefore the unit — and is absent where there was neither, so a consumer can tell
             // "no unit in the definition" from "no definition" and both from a rule-defaulted
-            // admission (`ADMISSION-PREREGISTRATION.md` §14 items I and V; the proposed ADR-013
-            // Amendment 1 §2 with its clarification of 2026-09-11).
+            // admission (`ADMISSION-PREREGISTRATION.md` §14 items I and V; ADR-013 Amendment 1,
+            // item 2 with its clarification of 2026-09-11).
             md.insert(
                 "coordinate_unit".to_string(),
                 a.coordinate_unit.as_str().to_string(),
