@@ -1103,6 +1103,16 @@ comparison retained; `deny_unknown_fields` kept both directions. `skp/1` stays R
 - `open_dataset` for such a file succeeds, as before.
 - `protocol/data-plane/` has an empty diff.
 
+### Note: the live sections brought current (2026-10-11; no literal change)
+
+**`skp/0.11` stands; no literal is bumped and no fixture changes.** PLAN node `skp-v0-live-sections-current-area-c`, base 1457fbd0a09464c03082a2aea3df65dd1171bc95 on main. This note is the only §8 change.
+
+- **In place, by section.** §1: `open_dataset`'s response gains `session`; the path sentence states what the host and engine do with the path; the `describe` block gains `coverage`, `checks`, `session_end` and `schema[].projectable`, in the shapes the `skp/0.5` and `skp/0.6` entries give; the `cancel` paragraph states how the host reads the handle and the `unknown` answer; the lead names the literal by pointing to §4 item 3. §3: the `HexF64` bullet states where a malformed value is rejected. §4: item 1's publish parenthetical states ADR-017's exposure-review completion of 2026-08-17 as that ADR records it, and item 3 states the current literal. §5: the `skp.` example list, one reserved line, and a section cite corrected from §6 to §5 here and in §4 item 8. §7.1 and §9.1 each gain a dated note. §9.5's heading names eight codes.
+- **Three codes never produced.** `skp.unknown_handle`, `skp.malformed_hex_f64` and `skp.bbox_not_finite` were never produced by the host. They are struck from §5's examples by the human's ruling (the directive, item 4) and listed in §5 as reserved.
+- **Fixtures and the conformance record.** The conformance fixtures' `expected_refusal_code` values for the nine `HexF64` fixtures still name two of those codes, unchanged under the ruling; nothing reads that field. AMBIGUITIES A3 and A8 stay as recorded.
+- **The reading this piece applies.** §§1–7 and §9 are the live current-shape description. §8's preamble names §§1–7. §9 is laid out as §7 and updated in place by its own dated notes. §7's lead of 2026-08-13 describes §§1–6 as they stood then.
+- **No wire change.** No key, value or command is added or removed; no code the host produces is added or removed; the kernel's serialized responses are unchanged; `protocol/data-plane/` has an empty diff.
+
 ## 9. Attribute projection on `viewport_query`
 
 **Brief B stage B1** (`engine/B1-PROJECTION-PREREGISTRATION.md`), following ADR-023 Decision §§1–5
