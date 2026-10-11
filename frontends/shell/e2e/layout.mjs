@@ -40,7 +40,6 @@ const SETTLE_MS = 250; // a React commit after a key press; not a timing claim
 // e2e-local windows (shell-map-refill-after-resize section 7), harness bounds and not timing claims.
 const RESIZEQ_WINDOW_MS = 3_000;
 const FILL_WINDOW_MS = 10_000;
-const MAX_FILL_NOTCHES = 15; // lib.mjs's MAX_ZOOM_NOTCHES, restated
 const BURST_MOVES = 24; // at least 20 pointer moves
 const BURST_STEP_PX = 4;
 
@@ -330,10 +329,11 @@ async function stepFloor(page) {
 // regression.mjs's `parseViewStateLine` does).
 const traceLines = (consoleHandle, cls) => consoleHandle.renderTrace().filter((e) => e.text.includes(`[render-trace] ${cls} `));
 const queryLines = (consoleHandle) => traceLines(consoleHandle, "viewport_query");
-function lastViewState(consoleHandle) {
-  const m = /view-state \{targetX: (\S+), targetY: (\S+), zoom: (\S+), originX: (\S+), originY: (\S+)\}/.exec(traceLines(consoleHandle, "view-state").at(-1)?.text ?? "");
+function parseViewState(text) {
+  const m = /view-state \{targetX: (\S+), targetY: (\S+), zoom: (\S+), originX: (\S+), originY: (\S+)\}/.exec(text);
   return m === null ? null : { targetX: Number(m[1]), targetY: Number(m[2]), zoom: Number(m[3]), originX: Number(m[4]), originY: Number(m[5]) };
 }
+const lastViewState = (consoleHandle) => parseViewState(traceLines(consoleHandle, "view-state").at(-1)?.text ?? "");
 const canvasSize = (page) => page.evaluate(() => ({ width: document.querySelector(".working-canvas").clientWidth, height: document.querySelector(".working-canvas").clientHeight }));
 /** How much wider the map becomes when the Inspector closes: the Inspector region plus its splitter, measured from the DOM. */
 const inspectorGrowthPx = (page) =>
@@ -409,41 +409,47 @@ async function stepReopen(page) {
   return "the second fixture replaced the canvas node (a new handle remounts it); the layout was unchanged";
 }
 
+// FILL' (shell-map-refill-after-resize Amendment 2, item 4). The parcel area of `100k-happy-path.parquet` in LV95 metres is an
+// e2e-local declared value (item 5), not a product constant, read from the generator: kernel/tests/manual_walkthrough_fixtures.rs:43-54
+// builds FixtureSpec { features: 100_000 }; its default domain is Lv95Metres (engine/src/fixture.rs:566), whose grid starts at E_LO = 2_600_000.0,
+// N_LO = 1_200_000.0 (engine/src/fixture.rs:67-68) in 40.0 m cells (engine/src/fixture.rs:93); `parcel` (engine/src/fixture.rs:1258-1266) puts feature `id`
+// in column id % cols and row id / cols with cols = ceil(sqrt(features)) = 317, so 100_000 / 317 gives 315 full rows (315 * 317 = 99_855). The
+// area spans all 317 columns (2_600_000 + 317 * 40 = 2_612_680) and the 315 full rows (1_200_000 + 315 * 40 = 1_212_600). Each ring is drawn
+// around its parcel's centre (engine/src/fixture.rs:1273), so a grid cell lying wholly inside the area holds parcel centres.
+const PARCEL_AREA = { xmin: 2_600_000, ymin: 1_200_000, xmax: 2_612_680, ymax: 1_212_600 };
+// regression.mjs's FIND_WITHIN_BUDGET_PATTERN, restated (an e2e module imports no sibling suite): the status shown only when every cell of the last plan is complete.
+const WITHIN_BUDGET_PATTERN = /^Showing all \d+ features in view$/;
+
 async function stepFill(page, consoleHandle) {
   const frame = await waitForGridFrame(page, "FILL");
-  await settleFully(page, consoleHandle, "FILL: before the notches");
+  await settleFully(page, consoleHandle, "FILL: before the notch");
   const { computeAuthoritativeViewportBbox } = await loadShellModule("src/canvas/viewportBbox.ts");
-  const { cellSizeForLevel } = await loadShellModule("src/canvas/tileGrid.ts");
+  const { tilesCoveringBbox, tileBbox, tileKeyToString } = await loadShellModule("src/canvas/tileGrid.ts");
   const centre = await canvasRect(page).then((r) => ({ x: r.left + r.width / 2, y: r.top + r.height / 2 }));
+  const zoom0 = lastViewState(consoleHandle)?.zoom;
+  const markView = consoleHandle.renderTrace().length;
+  // One declared wheel notch (the session's first reported view), not a search; the precondition below is computed and recorded.
+  await doWheel(page, centre, ZOOM_NOTCH_DELTA_Y);
+  await settleFully(page, consoleHandle, "FILL: after the wheel notch");
+  const view = lastViewState(consoleHandle);
+  if (zoom0 === undefined || view === null || view.zoom === zoom0) throw new Error("FILL: a wheel notch at the canvas centre did not change the zoom: invalidator I3, STOP and report");
   const size = await canvasSize(page);
   const growth = await inspectorGrowthPx(page);
-  // Anchor box: the frame is twice the anchor's span and centred on it (tileGrid.ts's deriveTileGridFrame).
-  const anchor = { xmin: frame.originX + frame.baseSpan / 4, ymin: frame.originY + frame.baseSpan / 4, xmax: frame.originX + (3 * frame.baseSpan) / 4, ymax: frame.originY + (3 * frame.baseSpan) / 4 };
-  const cellSize = cellSizeForLevel(frame, frame.level);
-  /** The precondition at `zoom`: a cell is smaller on screen than the growth per side, and the grown view lies inside the anchor box. */
-  const holds = (view, zoom) => {
-    const grown = computeAuthoritativeViewportBbox({ ...view, zoom, widthPx: size.width + growth, heightPx: size.height });
-    const cellPx = cellSize * 2 ** zoom;
-    const inside = grown.xmin >= anchor.xmin && grown.xmax <= anchor.xmax && grown.ymin >= anchor.ymin && grown.ymax <= anchor.ymax;
-    return { cellPx, inside, ok: cellPx < growth / 2 && inside };
+  const status = await page.evaluate(() => document.querySelector(".residency-status")?.textContent ?? null);
+  if (!WITHIN_BUDGET_PATTERN.test(status ?? "")) throw new Error(`FILL: .residency-status is ${JSON.stringify(status)} after the notch, not the complete within-budget sentence: invalidator I3, STOP and report`);
+  const cover = (v, width, height) => tilesCoveringBbox(frame, frame.level, computeAuthoritativeViewportBbox({ ...v, widthPx: width, heightPx: height }));
+  const wholly = (key) => { const b = tileBbox(frame, frame.level, key); return b.xmin >= PARCEL_AREA.xmin && b.xmax <= PARCEL_AREA.xmax && b.ymin >= PARCEL_AREA.ymin && b.ymax <= PARCEL_AREA.ymax; };
+  /** Cells the grown view covers that no view-state line since the mark covers at the size before the toggle, lying wholly inside the parcel area. */
+  const qualifying = (width, height) => {
+    const asked = new Set();
+    for (const e of consoleHandle.renderTrace().slice(markView)) {
+      const v = e.text.includes("[render-trace] view-state ") ? parseViewState(e.text) : null;
+      if (v !== null) for (const key of cover(v, size.width, size.height)) asked.add(tileKeyToString(key));
+    }
+    return cover(lastViewState(consoleHandle), width, height).filter((key) => !asked.has(tileKeyToString(key)) && wholly(key)).length;
   };
-  const notch = async () => {
-    await doWheel(page, centre, ZOOM_NOTCH_DELTA_Y);
-    await settleFully(page, consoleHandle, "FILL: after a wheel notch");
-    return lastViewState(consoleHandle);
-  };
-  // The notch count is computed from measured values: one notch measures the zoom a notch gives, then notches are added
-  // until the precondition holds at the zoom they would reach. It is recorded and never tuned to pass.
-  const zoom0 = lastViewState(consoleHandle)?.zoom;
-  let view = await notch();
-  if (zoom0 === undefined || view === null || view.zoom === zoom0) throw new Error("FILL: a wheel notch at the canvas centre did not change the zoom: invalidator I3, STOP and report");
-  const perNotch = view.zoom - zoom0;
-  let extra = 0;
-  while (extra <= MAX_FILL_NOTCHES && !holds(view, view.zoom + extra * perNotch).ok) extra += 1;
-  if (extra > MAX_FILL_NOTCHES) throw new Error(`FILL: no zoom within ${MAX_FILL_NOTCHES} further notches satisfies the precondition (growth per side ${growth / 2}px, cell ${cellSize}): invalidator I3, STOP and report`);
-  for (let i = 0; i < extra; i += 1) view = await notch();
-  const final = holds(view, view.zoom);
-  if (!final.ok) throw new Error(`FILL: after ${1 + extra} notches the precondition does not hold (cell ${final.cellPx}px against ${growth / 2}px per side, grown view inside the anchor: ${final.inside}): invalidator I3, STOP and report`);
+  const qualifyingBefore = qualifying(size.width + growth, size.height);
+  if (qualifyingBefore < 1) throw new Error(`FILL: ${qualifyingBefore} qualifying cells before the toggle (zoom ${view.zoom}, ${size.width}x${size.height} + ${growth}px): invalidator I3, STOP and report`);
 
   const mark = consoleHandle.renderTrace().length;
   try {
@@ -462,9 +468,12 @@ async function stepFill(page, consoleHandle) {
         return m !== null && issued.has(m[1]) ? sum + Number(m[2]) : sum;
       }, 0);
     }
-    if (issued.size < 1 || rows < 1) throw new Error(`FILL: within ${FILL_WINDOW_MS}ms of closing the Inspector ${issued.size} streams were issued and ${rows} rows arrived on them, expected at least 1 stream and 1 row`);
+    const grown = await canvasSize(page);
+    const qualifyingAfter = qualifying(grown.width, grown.height); // confirmed at the size measured after the toggle; below one voids the outcome
+    if (qualifyingAfter < 1) throw new Error(`FILL: ${qualifyingAfter} qualifying cells at the measured ${grown.width}x${grown.height} after the toggle (${qualifyingBefore} before; ${issued.size} streams, ${rows} rows): outcome void, invalidator I3, STOP and report`);
+    if (issued.size < 1 || rows < 1) throw new Error(`FILL: within ${FILL_WINDOW_MS}ms of closing the Inspector ${issued.size} streams were issued and ${rows} rows arrived on them, expected at least 1 stream and 1 row (qualifying cells ${qualifyingBefore} before, ${qualifyingAfter} after; zoom ${view.zoom})`);
     await settleFully(page, consoleHandle, "FILL: after closing the Inspector");
-    return `${1 + extra} wheel notches at the canvas centre (${perNotch} zoom per notch measured; cell ${final.cellPx.toFixed(1)}px against ${growth / 2}px growth per side, grown view inside the anchor box); closing the Inspector issued ${issued.size} streams carrying ${rows} rows, and the trace settled`;
+    return `one wheel notch at the canvas centre (zoom ${zoom0} -> ${view.zoom}); qualifying cells ${qualifyingBefore} before the toggle (${size.width}+${growth}px wide) and ${qualifyingAfter} after (${grown.width}x${grown.height} measured); closing the Inspector issued ${issued.size} streams carrying ${rows} rows, and the trace settled`;
   } finally {
     await ensureInspectorOpen(page);
   }
