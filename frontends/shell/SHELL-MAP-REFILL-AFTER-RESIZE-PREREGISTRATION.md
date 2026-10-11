@@ -514,3 +514,18 @@ Nothing above is edited.
 - Amendment 2 item 13, its last bullet, for this change → item 6.
 
 Nothing above is edited.
+
+### Amendment 4 — the human's ruling on item 39's third sentence (class 5)
+
+*Written by the custodian on the human's ruling, after both gate 2 reports passed and before the change. References only.*
+
+1. **The ruling** is the human's item 2 (state/directives/2026-10-11-rulings-205-c1-item-39-pieces-d-e-merge-206.md:10-12 @ e9beffe99d2c055845f3d4c230e0fd18c5ea5acc sha256:53e6a3c96ec3fa42671886aca41e9e83f2c25be7b03df2fdcc479e1de6c5cc43).
+   - Item 39's third sentence, from "Before the first pan" to "asks for nothing new.", is replaced by the sentence at the directive's line 11, byte for byte by script, with that line's three leading spaces removed.
+   - The other sentences stay as they are.
+2. **The item's source comment** keeps its words. One clause is appended after "(this form's Amendment 1, item 4)": "; its third sentence is the human's own wording of 2026-10-11 (this form's Amendment 4)". This keeps the comment true.
+3. **The gate.** Before the merge, a scoped gate checks the new sentence against Amendment 3 item 3, in every case Amendment 3 names. If the sentence is wrong in any case, the human is told, and the sentence is not reworded.
+4. **§7:** KNOWN-LIMITATIONS.md stays within its 8 lines outside the count. The item's line and its comment line change in place.
+5. **Generation:** the node goes to 5.
+6. **Superseded index:** Amendment 1 item 4, for item 39's third sentence only → item 1.
+
+Nothing above is edited.

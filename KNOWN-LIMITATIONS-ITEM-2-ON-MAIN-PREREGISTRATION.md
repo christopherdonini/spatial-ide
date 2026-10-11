@@ -9,3 +9,19 @@ Change: the paragraph is line 9 of the instruction, byte for byte, its leading t
 Tests+mutation: none added or changed (documents only); the reviewer checks the paragraph's byte-copy by script, every clause against the code at the base, that each new pin recomputes and names the line its sentence means, and that no line outside Scope changes.
 Out-of-scope: none of ADR / security / wire / guarantee is touched: no ADR file, nothing under protocol/ or scripts/plan, no code, no test, no string the app shows; a document is brought into line with code that does not change.
 ```
+
+### Amendment 1 — the human's ruling on gate 1's C-1 (class 5)
+
+*Written by the custodian after the reviewer's gate 1 (`state/consults/gates/2026-10-10-known-limitations-item-2-on-main-paragraph-gate1-reviewer.md`: C-1, E-1, D-1 and D-2) and the human's ruling, before the change. References only.*
+
+1. **The ruling** is the human's item 1 (state/directives/2026-10-11-rulings-205-c1-item-39-pieces-d-e-merge-206.md:6-8 @ e9beffe99d2c055845f3d4c230e0fd18c5ea5acc sha256:57f051f3c19df15d125ba23c73d15551f237dd487e0f38339bc2c4ac8894eb78): C-1 (A).
+   - The paragraph stays as it is.
+   - The two sentences of the directive's line 7 are appended at the paragraph's end, byte for byte by script, after one space, with that line's three leading spaces removed.
+   - The Change line's "a clause found untrue there goes to the human before the merge and is not reworded" was followed: the clause went to the human, and these are their words.
+2. **Scope** is unchanged: KNOWN-LIMITATIONS.md, 2 files, at most 30 changed lines. The paragraph's line changes in place.
+3. **The records:**
+   - The PR body's E-1 (every clause held), D-1 (the file count) and D-2 (`HEAD`) are corrected.
+   - Worker report 1's claim that every clause held is corrected by a note appended to it. Nothing above that note is edited.
+4. **The route** stays the single combined gate. The reviewer re-gates the change and the records.
+5. **Generation:** the node goes to 2.
+6. Nothing above is edited.
