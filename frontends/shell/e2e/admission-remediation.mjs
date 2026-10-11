@@ -73,8 +73,10 @@ const REGEN_SLOW =
 // convention, not imported.
 const CRS_UNDECLARED_MESSAGE =
   "refused: the file declares no CRS and none was asserted by the caller (no `geo` metadata CRS " +
-  "on the primary geometry column). This engine does not apply GeoParquet's OGC:CRS84 default " +
-  "(docs/05, no silent conversion)";
+  "on the primary geometry column). " +
+  "GeoParquet's OGC:CRS84 default is applied only when the crs key is absent in a file of " +
+  "version 1.0.0 or 1.1.0; otherwise assert a CRS to open the file (docs/05, no silent " +
+  "conversion)";
 // Read back from a real run of openPath(string-id-refused.parquet), inserted by script (the same
 // text `regression.mjs`'s C2'/C3' (b) asserts -- duplicated here per the sibling-file convention).
 const STRING_ID_MESSAGE = "refused: `id` cannot serve as stable feature identity — type is Utf8; identity must be an integer that widens into u64 without transformation. A hash, a dictionary index or a row ordinal is not a mapping — it is a synthesized identity, which ADR-016 refuses. Synthesizing a row ordinal instead is the hazard ADR-010 rule 2 exists to prevent";
