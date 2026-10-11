@@ -500,3 +500,5 @@ Nothing above is edited.
 6. **Superseded index:** §2.1 to §2.4's row lists, for item 1's three lines → item 1.
 
 Nothing above is edited.
+
+**Correction of record, appended 2026-10-11 (the reviewer's gate 2, D1).** Amendment 3's superseded index also covers Amendment 1 item 6: `commands.rs`'s diff is its lines 199-200 and the open request's path doc that Amendment 3 item 1 names (`state/consults/gates/2026-10-11-skp-v0-live-sections-current-area-c-gate2-reviewer.md`, D1).
