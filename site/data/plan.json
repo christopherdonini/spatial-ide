@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-11T10:33:18.571Z",
-  "plan_hash": "4129588b016b6ddcb9042ba95ab5a925cf7649cb82324dfd669dbd653c37b1aa",
+  "generated_at": "2026-10-11T10:38:53.972Z",
+  "plan_hash": "db8166420263951dc4965325f26f885cd23973989588f2d75b6d878d1b4b3394",
   "priorities_approved": true,
   "lanes": [
     {
@@ -7574,13 +7574,13 @@
         "kind": "none",
         "minutes": 0
       },
-      "gate": "none",
+      "gate": "frontends/shell/SHELL-CRS-FORM-FOR-FORMAT-DEFAULT-CONTRADICTED-PREREGISTRATION.md",
       "evidence": null,
-      "budget_minutes": 120,
+      "budget_minutes": 150,
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "FORM IN DRAFTING 2026-10-11 (forms ahead): the architect drafts frontends/shell/SHELL-CRS-FORM-FOR-FORMAT-DEFAULT-CONTRADICTED-PREREGISTRATION.md; the reuse step printed a miss (exit 1), noted in the form. Before: PLACED 2026-10-11 by the human (state/directives/2026-10-11-rulings-205-clause-crs-form-node-207-sentence.md, item 2): proposed by the custodian from PR #205's reviewer gate 2 (state/consults/gates/2026-10-11-known-limitations-item-2-on-main-paragraph-gate2-reviewer.md, C-1 and its observation): the shell opens the CRS form for engine.format_default_contradicted, so the refusal's own message becomes true in the app. Graded S1 on main by the human: a file that v0.1.0 opens by assertion cannot be opened on main. Slot 2, after ported-code-notice-route and before guardian-v1. Nothing is released from main before it lands (release-v0-1-1 waits on it). When it lands, it replaces the sentence of KNOWN-LIMITATIONS item 2's on-main paragraph that the human's item 1 placed (the app does not yet offer a CRS assertion after this refusal), in the human's words. Its form names as an open item that an asserted northing-first CRS is still refused (engine.axis_order_unsupported). The 120-minute budget is the custodian's estimate. The form is drafted ahead (forms ahead).",
+      "summary": "FORM COMMITTED 2026-10-11 (forms ahead; frontends/shell/SHELL-CRS-FORM-FOR-FORMAT-DEFAULT-CONTRADICTED-PREREGISTRATION.md, drafted by the architect, state/consults/2026-10-11-shell-crs-form-for-format-default-contradicted-architect-draft.md): full form; 5 counted files, at most 225 lines, a 150-minute budget (§7, replacing the custodian's 120-minute estimate); code starts after #208 merges; MANUAL-WALKTHROUGH.md waits for #207, KNOWN-LIMITATIONS item 2 for #205 and the human's words. Its OPEN-1 (the replacement words), OPEN-2 (which sentence) and OPEN-3 (northing-first in the still-refused list) to the human. Before: FORM IN DRAFTING 2026-10-11 (forms ahead): the architect drafts frontends/shell/SHELL-CRS-FORM-FOR-FORMAT-DEFAULT-CONTRADICTED-PREREGISTRATION.md; the reuse step printed a miss (exit 1), noted in the form. Before: PLACED 2026-10-11 by the human (state/directives/2026-10-11-rulings-205-clause-crs-form-node-207-sentence.md, item 2): proposed by the custodian from PR #205's reviewer gate 2 (state/consults/gates/2026-10-11-known-limitations-item-2-on-main-paragraph-gate2-reviewer.md, C-1 and its observation): the shell opens the CRS form for engine.format_default_contradicted, so the refusal's own message becomes true in the app. Graded S1 on main by the human: a file that v0.1.0 opens by assertion cannot be opened on main. Slot 2, after ported-code-notice-route and before guardian-v1. Nothing is released from main before it lands (release-v0-1-1 waits on it). When it lands, it replaces the sentence of KNOWN-LIMITATIONS item 2's on-main paragraph that the human's item 1 placed (the app does not yet offer a CRS assertion after this refusal), in the human's words. Its form names as an open item that an asserted northing-first CRS is still refused (engine.axis_order_unsupported). The 120-minute budget is the custodian's estimate. The form is drafted ahead (forms ahead).",
       "dates": {
         "opened": "2026-10-11",
         "done": null
