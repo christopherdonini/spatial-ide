@@ -457,3 +457,18 @@ Assertions only (E1 to E9). No measurement.
 ## §10. Amendments
 
 Opens empty, append-only, classes 1 to 9.
+
+### Amendment 1 — the human's rulings on OPEN-1 and OPEN-2 (class 5)
+
+*Written by the custodian on the human's ruling, before any code. References only.*
+
+1. **The ruling** is the human's item 3 (state/directives/2026-10-11-rulings-205-c1-item-39-pieces-d-e-merge-206.md:14 @ d8f2b800049be521177c394ffa4c272ab4dae82d sha256:0ab595d8b2062e00e7bfc676edbdc76f8f30d12aab7df16e0b117afd4a3eab2f).
+2. **OPEN-1 (a).** The `engine/src/identity.rs` reference (§2.3) moves into `stale-test-names-and-comments`'s rename commit, as a one-file exception to that node's test-files-only rule. This piece does not edit those lines (§5's declared-unchanged list and §8 item 3 stand).
+3. **OPEN-2 (b).**
+   - Every conditional row of §2.5 is in scope, the two `engine/src/predicate.rs` sites included.
+   - `kernel/src/skp.rs:417-420` stays out of this piece: it goes to `skp-v0-live-sections-current-area-c`.
+   - §7's OPEN-2 additions apply. The totals are at most 450 lines and 18 files. §7 is not edited.
+4. **Generation:** the node goes to 2.
+5. **Superseded index:** §2.5's "applied only on the answer" → item 3; §2.3's "where the reference goes is OPEN-1" → item 2.
+
+Nothing above is edited.

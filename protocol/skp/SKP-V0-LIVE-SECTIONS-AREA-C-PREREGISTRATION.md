@@ -437,3 +437,30 @@ Assertions only (E1 to E10). No measurement.
 ## §10. Amendments
 
 Opens empty, append-only, classes 1 to 9.
+
+### Amendment 1 — the human's rulings on OPEN-1 and OPEN-2, and one row added by the ruling (class 5)
+
+*Written by the custodian on the human's ruling, before any code. References only.*
+
+1. **The ruling** is the human's item 4 (state/directives/2026-10-11-rulings-205-c1-item-39-pieces-d-e-merge-206.md:16 @ d8f2b800049be521177c394ffa4c272ab4dae82d sha256:aecb51d1a4f06b1bfdd25e7531312750bd0df38816e71be71b512cb506b4b875).
+2. **OPEN-1 (a).**
+   - The nine `expected_refusal_code` values stay unchanged. S12 (iii) discloses them.
+   - The ruling also adds them to the named open item on `first-external-plugin-skp-client` (its PLAN record), so they are settled with the produce-or-not decision. That is a PLAN record, not a file of this piece.
+3. **OPEN-2 (a).** Rows S5e (`codec.rs`) and SX2 (`kernel/src/skp.rs`) are in scope.
+4. **Row SX3, added by the ruling.**
+   - **Stale:** protocol/skp/src/v0/commands.rs:199-200 @ d8f2b800049be521177c394ffa4c272ab4dae82d sha256:7e2236a1ef68ec62f373e5c041338f4720fb5f2b9fbed0d0474c5cc06cbb159d. It calls ADR-016 Amendment 1 PROPOSED.
+   - **Fact:** docs/adr/ADR-016-stable-feature-identity-admission.md:180 @ d8f2b800049be521177c394ffa4c272ab4dae82d sha256:8f94f2d6ca945be6f3d213b793e153c6724eb9a61a7a273271a4767684bac1e8.
+   - **The rule for every corrected label in this piece** (SX2 and SX3): it states the amendment's status as the ADR records it.
+   - The rewrite changes only those two comment lines.
+5. **§7, by the ruling.** `protocol/skp/src/v0/commands.rs` gets a ceiling of 6, comment lines only. With OPEN-2 (a) and SX3, the totals are at most 206 lines and 10 files. §7's text is not edited; this item adds to it.
+6. **E7, by the ruling.**
+   - `protocol/skp/src/v0/commands.rs` leaves E7's `git diff --quiet` list.
+   - In its place: `commands.rs`'s diff is lines 199-200 only, and every changed line is a comment line (E1).
+7. **§8** stands as written. Items 1 and 4 read with SX3 and `commands.rs` in §7.
+8. **Generation:** the node goes to 2.
+9. **Superseded index:**
+   - §2.3's "applied only on the answer" → item 3;
+   - §2.4's "observed, not in scope" for `commands.rs:199-200` → item 4;
+   - §5's E7 for `commands.rs` → item 6.
+
+Nothing above is edited.
