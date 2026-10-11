@@ -131,10 +131,10 @@ export interface WorkingCanvasHandle {
   fitToBounds(): boolean;
   /**
    * Clears BOTH the fit anchor (`fitAnchorRef`) and the one-shot auto-fit flag (`hasAutoFitRef`) --
-   * called, on the candidate residency arm, at the start of a reissue begun while the session is live
+   * called, on both arms, after an issued outcome (`App.tsx`'s `applyFilter`); on the candidate
+   * residency arm, also at the start of a reissue begun while the session is live
    * (`candidateArmSession.ts`'s `reissueUnrestricted`; an Apply after the session has ended runs none,
-   * because that function returns before the reset) and at the open's first look (`App.tsx`); on the
-   * baseline arm, after an issued outcome (`App.tsx`'s `applyFilter`).
+   * because that function returns before the reset) and at the open's first look (`App.tsx`).
    *
    * **Human-approved design revision, 2026-08-15 walkthrough Part E, E5 finding.** The operator
    * applied a late-matching predicate on the slow fixture; the liveness/cancel affordance itself
