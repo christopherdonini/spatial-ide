@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `c1f007b23c8ccf4e6d7d3d9da785d8a73d3ebbbc1c8cfef23b3ab78d51e86bf5`) at `2026-10-11T20:30:57.801Z`.
+Generated from `PLAN.yaml` (sha256 `a0fbb11a8dbcdc67bc8a5f71ae12de26e444888228b32271e68f443f00e9521e`) at `2026-10-11T20:36:53.938Z`.
 
 ## 1. Next
 
@@ -109,6 +109,8 @@ Generated from `PLAN.yaml` (sha256 `c1f007b23c8ccf4e6d7d3d9da785d8a73d3ebbbc1c8c
 - **e2e-first-poll-readout-elsewhere** — Two more e2e suites take a hover id from the readout's first poll after a pointer move: source-changed.mjs hoverAt and residency-harness.mjs tryHoverCandidate (phase `prototype`) — never queued until placed
 - **dataset-stream-doc-producer-runs-ahead** — engine/src/stream.rs: Dataset::stream's doc says it returns once the statement is prepared and produces the first batch on the first next_into; the producer thread prepares and runs ahead to the queue bound (phase `prototype`) — never queued until placed
 - **shell-migration-milestone-3** — Shell migration, milestone 3 -- command bar and filter clauses: Ctrl+K, slash commands, typed /filter with field completion, clause cards with on and off (phase `prototype`) — never queued until placed
+- **shell-native-menus-macos** — Native application menus on macOS, built from the action registry (milestone 3's OPEN-6, deferred) (phase `prototype`) — never queued until placed
+- **shell-scale-display** — The scale display in the status bar: a bar of a round length in the CRS's unit, shown only for a metre dataset (milestone 3's OPEN-7, deferred) (phase `prototype`) — never queued until placed
 - **shell-migration-milestone-5** — Shell migration, milestone 5 -- conditions, Problems and Jobs: one home for failures and running work (phase `prototype`) — never queued until placed
 - **shell-real-app-run-macos-linux** — Run the real app once on macOS and once on Linux after migration milestone 1 merges, and record what it finds (phase `prototype`) — never queued until placed
 - **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark (phase `prototype`) — never queued until placed

@@ -572,3 +572,40 @@ Red lines are ruled in typed words only. Each answer is recorded as Amendment 1 
 ## §12. Heavy runs
 
 The worker's and tester's briefs carry, as written, the paragraph at state/directives/2026-10-06-machine-script-adopted.md:12-22 @ ceff6d82bdd3223fefed46e209913db6d1552d40 sha256:7350977156bed7c94b0da4e8db806ba34c25c6678e65c46447a62d791ba9e8e1. This form names no other rule for builds.
+
+### Amendment 1 — the human's rulings on OPEN-1 to OPEN-11 (class 5; class 9 for items 3 and 9)
+
+*Written by the custodian on the human's typed rulings, before any code. References only. The rulings are item 5 of `state/directives/2026-10-11-merges-210-211-pilot-recorder-2f-milestone-3-rulings.md` (the rulings), cited by OPEN number.*
+
+1. **OPEN-1:** package (A), all eight points. UC2, RC10 and E-BARFOCUS stand.
+2. **OPEN-2:** package (A). §2.5 and §2.6 stand as drafted for (A). (C) stays a possible later node, on the felt verdict of item 3's row.
+3. **OPEN-2's felt row (class 9):** §2.10's new Part gains one felt row after Y4: turn a card off and on, and say whether the map re-fitting each time helps or disorients. The row carries Y4's question on the re-fit. Y4 keeps its question whether it is clear what is on. MANUAL-WALKTHROUGH.md stays outside §7's count.
+4. **OPEN-3:** (A), with the rulings' words on what the recognizer decides, referenced. §2.5's recognizer, UC4, UC5, RC7, E-ADV and Y6 stand.
+5. **OPEN-4:** (a). fieldCompletion.ts, UC6 and E-FIELD stand as drafted for (a).
+6. **OPEN-5:** (A). RC8, RC9 and E-REVEAL stand.
+7. **OPEN-6:** (a). §2.8's OPEN-6 (b) part and §7's NM row are not built. They become the proposed node `shell-native-menus-macos`, after `shell-real-app-run-macos-linux`.
+8. **OPEN-7:** (c). §2.8's OPEN-7 (a) part, §7's SC row, the SCALE_BAR_MIN_PX and SCALE_BAR_MAX_PX constants, and Y12 are not built. They become the proposed node `shell-scale-display`, which carries (a)'s shape as drafted. The human places it later.
+9. **OPEN-8:** (b), with the bare `/` opener on the rulings' terms, referenced (class 9: the form named the option but did not build it out).
+   - **Where:** in PR A, beside Ctrl+K: the keydown listener and actionRegistry.ts's match. U5's edit (finding F7) covers both keys.
+   - **RC-SLASH** is a render test in App.command.test.tsx. It has three cases:
+     - `/` with no field focused focuses the bar and leaves `/` in it;
+     - the same key sent with shiftKey true does the same;
+     - `/` with a text field focused changes nothing outside that field.
+     Its one recorded mutation requires shiftKey to be false, so the second case fails.
+   - **The e2e step:** command-bar.mjs gains one step with real keys. `/` pressed from the map focuses the bar with `/` in it, and `/` typed in the Filter section's input stays in the input. H2 covers whether `/` reaches the page.
+   - **§7:** its lines count in A-P, A-T and A-E's margin. An overrun is class 8.
+10. **OPEN-9:**
+    - The strings are sighted at row Y11.
+    - (ii), and item 39's third sentence, are approved as drafted.
+    - (i) is the human's own words, under the author's one check (`state/directives/2026-10-11-direction-after-status-review.md`, item 2b). The check FAILED on its first clause, `state/consults/2026-10-11-shell-migration-milestone-3-open-9-i-check.md`: the list leaves out forms the recognizer treats as simple, and those combine with other cards. The author's drafted words fail the same clause.
+    - Which words land is back with the human. The KNOWN-LIMITATIONS lines land in PR B, so no code waits.
+11. **OPEN-10:** (a), the order is kept. **OPEN-11:** (b), two PRs.
+12. **§7:** the total stays 5,577. The NM and SC rows were conditional and outside the total, and they leave with items 7 and 8.
+13. **Generation:** the node's generation goes up by one.
+14. **Superseded index:**
+    - §11's table → items 1 to 11;
+    - §2.8 → items 7 and 8;
+    - Y4's question on the re-fit → item 3;
+    - Y12, the SC and NM rows and the SCALE_BAR constants → items 7, 8 and 12.
+
+Nothing above is edited. The re-sweep amendment (§0.3) follows before any code, after milestone 2 has merged.

@@ -669,3 +669,18 @@ T24 asserts the property (unavailable fields, the flag, `next` reached once), no
 4. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 10 — the human's ruling after E10, and the uninstall (class 1)
+
+*A post-result row, written by the custodian on main on 2026-10-11. References only.*
+
+1. **The ruling** is item 3 of `state/directives/2026-10-11-merges-210-211-pilot-recorder-2f-milestone-3-rulings.md`:
+   - the human uninstalls the Recorder;
+   - the verdict is recorded (Amendment 9), and the node is closed;
+   - the code stays in the repository, marked retired in its README.
+2. **The uninstall** was reported by the human at 20:26:44Z (`state/directives/2026-10-11-recorder-uninstalled.md`).
+3. **From then on,** worker and tester briefs no longer carry the wording of question round 50, item 1. Guardian does not need it: Guardian's forms cite only round 50's items 2 and 3, and Guardian v1's form restates the Recorder's derivations rather than importing them.
+4. **The README's retired mark** lands in a small docs pull request.
+5. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.

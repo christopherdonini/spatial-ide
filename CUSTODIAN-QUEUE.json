@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-11T20:30:57.801Z",
-  "plan_hash": "c1f007b23c8ccf4e6d7d3d9da785d8a73d3ebbbc1c8cfef23b3ab78d51e86bf5",
+  "generated_at": "2026-10-11T20:36:53.938Z",
+  "plan_hash": "a0fbb11a8dbcdc67bc8a5f71ae12de26e444888228b32271e68f443f00e9521e",
   "priorities_approved": true,
   "next": {
     "id": "stale-test-names-and-comments",
@@ -1684,7 +1684,45 @@
         "opened": "2026-10-07",
         "done": null
       },
-      "summary": "FORM COMMITTED 2026-10-11 (frontends/shell/SHELL-MIGRATION-MILESTONE-3-PREREGISTRATION.md, the architect's draft state/consults/2026-10-11-shell-migration-milestone-3-architect-draft.md; full form; about 5,600 lines over about 26 files; no engine, kernel or protocol path, so no impact read; pins hashed at ceff6d82; re-sweep at code start after milestone 2 merges). OPEN-1 to OPEN-11 to the human (OPEN-1 to OPEN-7 red lines, typed words only; OPEN-8 to OPEN-11 not), each with a recommendation; no code before the rulings and milestone 2's merge. Before: DIRECTION 2026-10-11 (state/directives/2026-10-11-direction-after-status-review.md, item 1): slot 1's next after milestone 2; the architect drafts its form and its question round while milestone 2 is in code (forms ahead). Before: Recorded 2026-10-07 by the human's ruling of the migration plan (state/directives/2026-10-07-migration-plan-v2-ruled.md; state/directives/SHELL-MIGRATION-PLAN-2026-10-07.md, section 7, bounded): seams 1 (full) and 2; the kernel stays the only authority on filter admission; no new SKP schema; the human may swap milestones 3 and 4. Proposed."
+      "summary": "RULED 2026-10-11 (state/directives/2026-10-11-merges-210-211-pilot-recorder-2f-milestone-3-rulings.md, item 5): OPEN-1 (A); OPEN-2 (A) with one felt row on the re-fit; OPEN-3 (A); OPEN-4 (a); OPEN-5 (A); OPEN-6 (a) and OPEN-7 (c), each leaving for a proposed node; OPEN-8 (b), Ctrl+K and a bare slash; OPEN-9: strings sighted at Y11, (ii) and item 39's sentence approved, (i) in the human's words FAILED the author's one check on its list of forms (state/consults/2026-10-11-shell-migration-milestone-3-open-9-i-check.md), and the author's words fail the same way, so it is back with the human (no code waits); OPEN-10 (a); OPEN-11 (b). The form's Amendment 1 (generation 2). Code waits for milestone 2's merge and the re-sweep amendment. Before: FORM COMMITTED 2026-10-11 (frontends/shell/SHELL-MIGRATION-MILESTONE-3-PREREGISTRATION.md, the architect's draft state/consults/2026-10-11-shell-migration-milestone-3-architect-draft.md; full form; about 5,600 lines over about 26 files; no engine, kernel or protocol path, so no impact read; pins hashed at ceff6d82; re-sweep at code start after milestone 2 merges). OPEN-1 to OPEN-11 to the human (OPEN-1 to OPEN-7 red lines, typed words only; OPEN-8 to OPEN-11 not), each with a recommendation; no code before the rulings and milestone 2's merge. Before: DIRECTION 2026-10-11 (state/directives/2026-10-11-direction-after-status-review.md, item 1): slot 1's next after milestone 2; the architect drafts its form and its question round while milestone 2 is in code (forms ahead). Before: Recorded 2026-10-07 by the human's ruling of the migration plan (state/directives/2026-10-07-migration-plan-v2-ruled.md; state/directives/SHELL-MIGRATION-PLAN-2026-10-07.md, section 7, bounded): seams 1 (full) and 2; the kernel stays the only authority on filter admission; no new SKP schema; the human may swap milestones 3 and 4. Proposed."
+    },
+    {
+      "id": "shell-native-menus-macos",
+      "title": "Native application menus on macOS, built from the action registry (milestone 3's OPEN-6, deferred)",
+      "lane": "shell",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 0,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-11",
+        "done": null
+      },
+      "summary": "PROPOSED 2026-10-11 by the human (state/directives/2026-10-11-merges-210-211-pilot-recorder-2f-milestone-3-rulings.md, item 5, OPEN-6 (a)): out of milestone 3 and into a node of its own, after shell-real-app-run-macos-linux gives L2 evidence. Its starting shape is milestone 3's form (frontends/shell/SHELL-MIGRATION-MILESTONE-3-PREREGISTRATION.md), 2.8's OPEN-6 (b) part and 7's NM row: nativeMenu.ts builds the menu from the registry through the Tauri menu API, only on macOS; H6 applies, and a capability edit would be I13. The human places it."
+    },
+    {
+      "id": "shell-scale-display",
+      "title": "The scale display in the status bar: a bar of a round length in the CRS's unit, shown only for a metre dataset (milestone 3's OPEN-7, deferred)",
+      "lane": "shell",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 0,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-11",
+        "done": null
+      },
+      "summary": "PROPOSED 2026-10-11 by the human (state/directives/2026-10-11-merges-210-211-pilot-recorder-2f-milestone-3-rulings.md, item 5, OPEN-7 (c)): out of milestone 3 and into a node of its own, with (a)'s shape as drafted in milestone 3's form (frontends/shell/SHELL-MIGRATION-MILESTONE-3-PREREGISTRATION.md, 2.8's OPEN-7 (a) part, 7's SC row and constants, row Y12): one read-only WorkingCanvasHandle method (a fourth exception under canvas/), a pure scaleBar.ts, a length in {1, 2, 5} times a power of ten in CRS units, shown only for a metre dataset, never as a ratio and never as distance on the ground. The human places it later."
     },
     {
       "id": "shell-migration-milestone-5",
