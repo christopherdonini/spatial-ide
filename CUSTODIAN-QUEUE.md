@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `f1d7e7c883f1242491473bd6d331b51a6a03b617dbf1c6f63469a5baeae27390`) at `2026-10-11T21:17:14.710Z`.
+Generated from `PLAN.yaml` (sha256 `c10b43099174f46160752c59d862fb3392f9ea853caf8b21bb5e0a1a2f15a64e`) at `2026-10-11T21:31:38.348Z`.
 
 ## 1. Next
 
@@ -10,11 +10,9 @@ Generated from `PLAN.yaml` (sha256 `f1d7e7c883f1242491473bd6d331b51a6a03b617dbf1
 
 - (none)
 
-## 3. Waiting on the human (total: 10 min)
+## 3. Waiting on the human (total: 0 min)
 
-### ruling
-
-- **decision-adr-029-scan-progress-route** — ADR-029's scan-progress route, given G1 (a minimal crate patch exposing the connection handle; raw ffi end to end on the scan path; upstream first) -- deferred to Brief B's B2 by the human, round 16 item 3 (10 min)
+- (none)
 
 ## 4. Blocked on dependencies
 
@@ -120,6 +118,7 @@ Generated from `PLAN.yaml` (sha256 `f1d7e7c883f1242491473bd6d331b51a6a03b617dbf1
 ### Unscheduled
 
 - **governance-verify-mutation-header-token** — verify-mutation.mjs -- the RECORDED MUTATION token is accepted anywhere inside the check's fixed window around a test, so a token in a file header or in a neighbouring test's comment greens a test that carries no mutation of its own (phase `prototype`) — ambition, never queued
+- **decision-adr-029-scan-progress-route** — ADR-029's scan-progress route, given G1 (a minimal crate patch exposing the connection handle; raw ffi end to end on the scan path; upstream first) -- deferred to Brief B's B2 by the human, round 16 item 3 (phase `prototype`) — ambition, never queued
 - **notebooks-record-replay** — Notebooks: record and replay (03) (phase `alpha`) — ambition, never queued
 - **mcp-server-permission-model** — MCP server with the permission model (04) (phase `alpha`) — ambition, never queued
 - **first-external-plugin-skp-client** — First external plugin as an out-of-process SKP client (02) (phase `alpha`) — ambition, never queued

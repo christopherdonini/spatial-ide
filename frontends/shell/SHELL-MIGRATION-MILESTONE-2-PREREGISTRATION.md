@@ -1001,3 +1001,23 @@ Nothing above is edited.
 6. **Superseded index:** Amendment 4 item 4(d)'s §2.5 → item 2.
 
 Nothing above is edited.
+
+### Amendment 6 — scope addition: the late-cancel statement, part of B3 (class 9); A10's reach ruled (class 5)
+
+*Written by the custodian on the human's typed rulings, before any code of B3. References only: `state/directives/2026-10-11-harness-approval-open-9-i-withdrawn-a10-late-cancel-adr-029.md`, items 3 and 4.*
+
+1. **A10's reach (class 5).** The sentence "nothing else beyond section 2.7's list" covers `canvas/` only (the ruling's item 3). B3 may edit AdmissionPanel.tsx and its test, as Amendment 1's B3 states. It is built in phase B. §5's no-code line on A10's reach is discharged by this item.
+2. **The late cancel, a scope addition on the human's ruling (class 9; the ruling's item 4).** When "Cancel the export and go on" loses to the export's own finish, the app states that the export had finished, and where the bundle is. This is part of B3.
+3. **Its declaration comes before any code of B3,** as class 9 requires. The architect drafts it in phase B's form amendment, with:
+   - the shape;
+   - the words, under item 2e of `state/directives/2026-10-11-direction-after-status-review.md`, with their clause check, for the human's P6 sight;
+   - its test, with one mutation;
+   - what §5 declares unchanged and what would invalidate it;
+   - its §8 and §9 items;
+   - its lines in §7, where an overrun is class 8.
+4. **Generation:** the node's generation goes up by one.
+5. **Superseded index:**
+   - A10's hold → item 1;
+   - Amendment 1's draft section 2 items 1 and 2, as held for the human → items 1 and 2.
+
+Nothing above is edited.

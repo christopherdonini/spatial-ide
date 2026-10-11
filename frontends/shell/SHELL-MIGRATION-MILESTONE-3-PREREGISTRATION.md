@@ -609,3 +609,17 @@ The worker's and tester's briefs carry, as written, the paragraph at state/direc
     - Y12, the SC and NM rows and the SCALE_BAR constants → items 7, 8 and 12.
 
 Nothing above is edited. The re-sweep amendment (§0.3) follows before any code, after milestone 2 has merged.
+
+### Amendment 2 — OPEN-9 (i) withdrawn by the human (class 5)
+
+*Written by the custodian on the human's typed ruling, before any code. References only: `state/directives/2026-10-11-harness-approval-open-9-i-withdrawn-a10-late-cancel-adr-029.md`, item 2.*
+
+1. **The human withdraws their words for (i)** and takes neither the author's words nor their own. No sentence for (i) lands now.
+2. **With PR B,** the architect drafts (i) under item 2e of `state/directives/2026-10-11-direction-after-status-review.md`, from the recognizer as built.
+   - The sentence defines the limit by the mark the app shows on the card, not by a list of forms.
+   - It carries its clause check.
+   - The human approves or replaces it then.
+3. **Generation:** the node's generation goes up by one.
+4. **Superseded index:** Amendment 1 item 10's bullet on (i), and its "which words land is back with the human" → items 1 and 2.
+
+Nothing above is edited.
