@@ -547,3 +547,5 @@ Nothing above is edited.
 7. **Superseded index:** Amendment 4 item 1 → item 1; Amendment 4 item 2's clause → item 2.
 
 Nothing above is edited.
+
+**Correction of record, appended 2026-10-11 (the defect of PR #205's gate 3 D-1, found here by the custodian).** Amendment 5 item 1's directive reference was written in the commit that created the directive; it is state/directives/2026-10-11-rulings-205-clause-crs-form-node-207-sentence.md:12-14 @ df6d39a065a3e1e7b8049801cdd00a7d98de0201 sha256:d7c23a993e1cd07ab9db908c0cd246d4d13808faa0f17a82bd5895db7e6c2d96.

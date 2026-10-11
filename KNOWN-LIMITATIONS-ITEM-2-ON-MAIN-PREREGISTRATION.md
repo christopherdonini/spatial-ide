@@ -39,3 +39,5 @@ Out-of-scope: none of ADR / security / wire / guarantee is touched: no ADR file,
 5. **Superseded index:** Amendment 1 item 1's second appended sentence → item 1.
 
 Nothing above is edited.
+
+**Correction of record, appended 2026-10-11 (gate 3, D-1).** Amendment 2 item 1's directive reference was written in the commit that created the directive; it is state/directives/2026-10-11-rulings-205-clause-crs-form-node-207-sentence.md:6-8 @ df6d39a065a3e1e7b8049801cdd00a7d98de0201 sha256:92dfbcf4dced28377ca39bed9fc4198ba4819190e916b008f6b99908c8b438f2.
