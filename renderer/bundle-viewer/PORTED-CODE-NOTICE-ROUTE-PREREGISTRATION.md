@@ -393,3 +393,5 @@ Class 5, and class 9 (scope addition) for items (d) and (f): this amendment reco
 8. **Superseded index:** §2.4 bullet 1's "Both existing callers are unchanged" → item 1.
 
 Nothing above is edited.
+
+**Closing record, appended 2026-10-11 (PR #208 merged, merge commit c95d27b825a35b07d1bcf3a1bb7e6c12cb202f56).** §2.4's declaration file is `renderer/bundle-viewer/notice.d.mts` (the architect's gate 1, ruling 1 and D-3). The first green run on main (Amendment 1 (g)): check run `ported-notices`, id 114508339734, of workflow run 38152392941 (`Ported notices`), at c95d27b8.

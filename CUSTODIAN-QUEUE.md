@@ -1,14 +1,16 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `6447c9e4affe8435d264fae864388e7201c14896aa12ce247c3cb3cccd631eb9`) at `2026-10-11T15:35:24.080Z`.
+Generated from `PLAN.yaml` (sha256 `bf4db5af488cb2a4d821e0127a7791012b782a2f90e625813d2de874eb19a106`) at `2026-10-11T15:45:07.420Z`.
 
 ## 1. Next
 
-- (nothing ready)
+- **skp-v0-live-sections-current-area-c** — SKP-V0.md's live sections and three comments brought current to the wire the code sends (sweep area C, findings 1, 3, 4, 6, 7, 8 and 9; no literal change); and skp.malformed_hex_f64, skp.bbox_not_finite and skp.unknown_handle struck as refusals a client receives (sweep area C, finding 5, ruled) (lane `kernel-protocol`)
 
 ## 2. Ready
 
-- (none)
+- **skp-v0-live-sections-current-area-c** — SKP-V0.md's live sections and three comments brought current to the wire the code sends (sweep area C, findings 1, 3, 4, 6, 7, 8 and 9; no literal change); and skp.malformed_hex_f64, skp.bbox_not_finite and skp.unknown_handle struck as refusals a client receives (sweep area C, finding 5, ruled) (lane `kernel-protocol`, order 5, budget 90 min)
+- **shell-migration-milestone-2** — Shell migration, milestone 2 -- selection and scope: the Select tool, a selection that survives filter and pan, the hidden count, a stated scope (lane `shell`, order 4, budget 0 min)
+- **shell-crs-form-for-format-default-contradicted** — The shell opens the CRS assertion form after engine.format_default_contradicted, so the refusal's own message (assert the CRS this file is actually in) is true in the app; graded S1 on main (lane `shell`, order 12, budget 150 min)
 
 ## 3. Waiting on the human (total: 10 min)
 
@@ -20,22 +22,17 @@ Generated from `PLAN.yaml` (sha256 `6447c9e4affe8435d264fae864388e7201c14896aa12
 
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
 - **b2-piece-1b-recording** — B2 piece 1b -- recording: the kernel's step commands for filter, scope and style, the session history on the machine, safe against a crash, and the docs/07 note — blocked by: shell-migration-milestone-2, guardian-v1
-- **skp-v0-live-sections-current-area-c** — SKP-V0.md's live sections and three comments brought current to the wire the code sends (sweep area C, findings 1, 3, 4, 6, 7, 8 and 9; no literal change); and skp.malformed_hex_f64, skp.bbox_not_finite and skp.unknown_handle struck as refusals a client receives (sweep area C, finding 5, ruled) — blocked by: module-docs-stale-statements
-- **shell-migration-milestone-2** — Shell migration, milestone 2 -- selection and scope: the Select tool, a selection that survives filter and pan, the hidden count, a stated scope — blocked by: shell-map-refill-after-resize
 - **stale-test-names-and-comments** — Stale test names and test comments, names and comments only, no assertion changes: a refusal-named test that asserts admission, the React-harness premise, the no-attributes reason, a Proposed ADR-018, two ruled decisions still marked pending (sweep area E, findings 2, 3, 4, 7 and 10) — blocked by: skp-v0-live-sections-current-area-c
 - **briefb-b2-save-reopen** — B2 — Save project, Snapshot data, session history, lineage and preferences, in five stages, each with its own form — blocked by: decision-adr-029-scan-progress-route
-- **shell-crs-form-for-format-default-contradicted** — The shell opens the CRS assertion form after engine.format_default_contradicted, so the refusal's own message (assert the CRS this file is actually in) is true in the app; graded S1 on main — blocked by: ported-code-notice-route
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer — blocked by: signpath-application-draft
 - **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-1-1
 - **signpath-application-draft** — Entry 77 — the SignPath OSS application and disclosure text drafted for the human sight, once a release is CI-built — blocked by: release-v0-1-1
 - **site-design-v1** — Landing page redesign — DRAFT-4 (status strip, milestone banner, waiting-on-you cards with unblocks counts, the swimlane board) — blocked by: governance-ci-built-site
-- **guardian-v1** — Guardian v1 -- G1's heredoc false alarm fixed, one local log line per refusal, and three new rules: G7 (agent merges and history rewrites), G8 (plugin, marketplace and MCP installs, and writes to the user's Claude folder), G9 (wholesale cleans of the main checkout's target) (Fable's MODS-V1 brief, 2026-10-05) — blocked by: ported-code-notice-route, shell-crs-form-for-format-default-contradicted
+- **guardian-v1** — Guardian v1 -- G1's heredoc false alarm fixed, one local log line per refusal, and three new rules: G7 (agent merges and history rewrites), G8 (plugin, marketplace and MCP installs, and writes to the user's Claude folder), G9 (wholesale cleans of the main checkout's target) (Fable's MODS-V1 brief, 2026-10-05) — blocked by: shell-crs-form-for-format-default-contradicted
 
 ## 5. In progress
 
-- **module-docs-stale-statements** — Engine and kernel module docs brought current, one docs-only piece (README bodies and doc comments, no code logic): the kernel README's H2 row and the engine's persists-nothing sentence first, then drift sweep area D's other eight findings and the earlier items — evidence: branch `cut/module-docs-stale-statements`
-- **shell-map-refill-after-resize** — The map refills after a resize: a layout change that uncovers map area issues a viewport query, so the area fills without a pan or zoom — evidence: branch `cut/shell-map-refill-after-resize`
-- **ported-code-notice-route** — A notice route for ported code, wherever it lands (shell or kernel), needed before any PORT — evidence: branch `cut/ported-code-notice-route`
+- (none)
 
 ## 6. Proposed / unscheduled
 
