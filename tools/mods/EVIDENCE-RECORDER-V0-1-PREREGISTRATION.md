@@ -658,3 +658,14 @@ T24 asserts the property (unavailable fields, the flag, `next` reached once), no
 
 **Superseded index.**
 - §4 E9's prediction, and §7's `RECORDER_P95_BOUND_MS` as the overhead stop's bound → this amendment's E10 bound, for the Recorder's keep-or-uninstall decision. E5's and E9's recorded outcomes are unchanged.
+
+### Amendment 9 — E10, read: FAIL (class 1)
+
+*Class 1, a post-result row, written by the custodian on main on 2026-10-11, on the human's direction of that date (`state/directives/2026-10-11-direction-after-status-review.md`, item 3b). References and hashes only.*
+
+1. **The read** is `state/consults/2026-10-11-recorder-e10-verdict.md`. Its sha256 from line 5 to the end is 88d9eb4e20efcf59e828ab60c783d1f07bd7980f208dd954e1e85c0cab354d92. It holds the sample, the method and every figure.
+2. **E10: FAIL** under Amendment 8 and the per-run reading of question round 59, item 5. 2 of 20 records are over their own bound, and the nearest-rank p95 of s / b is 1.133.
+3. **What follows** is the human's call (the same item): uninstall, or reduce to sampling. The read recommends uninstalling. Amendment 8's "the human uninstalls, with no further amendment" is now that call.
+4. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
