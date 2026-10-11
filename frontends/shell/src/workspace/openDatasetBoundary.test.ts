@@ -42,6 +42,8 @@ const importers = (module: string, name: string, files: string[]): string[] =>
 
 // RECORDED MUTATION for "UA5": add `import { openDataset } from "./skp/client";` to App.tsx.
 // Expected failure: the importers list names App.tsx beside admission/admitDataset.ts.
+// OBSERVED AT deab7dc96d06bf3e329527d3ae95415dcd65152b: FAILED -- "openDataset has one importer": AssertionError: expected [ 'App.tsx', …(1) ] to deeply equal
+//   [ 'admission/admitDataset.ts' ] (the received list names App.tsx). Reverted after observing.
 describe("UA5: openDataset is imported only by admission/admitDataset.ts, and admitDataset only by AdmissionPanel", () => {
   const files = sourceFiles(SRC_DIR);
 

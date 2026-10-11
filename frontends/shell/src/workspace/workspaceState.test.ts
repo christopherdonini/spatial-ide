@@ -26,6 +26,8 @@ const filterOf = (predicate: string) => ({ predicate, dialect: FILTER_DIALECT_DU
 
 // RECORDED MUTATION for "UA1": in `admit` (workspaceState.ts) take the mint branch on every admission, not only the first.
 // Expected failure: after the second admission there are two views.
+// OBSERVED AT deab7dc96d06bf3e329527d3ae95415dcd65152b: FAILED -- "one view across three admissions, rebound each time, with the filter reset and the style kept":
+//   AssertionError: the view count after the reopen: expected [ 'view-1', 'view-2' ] to deeply equal [ 'view-1' ]. Reverted after observing.
 describe("UA1: the view is minted once and rebound on a reopen; the filter resets and the style is kept", () => {
   it("one view across three admissions, rebound each time, with the filter reset and the style kept", () => {
     const a = admit("a");
@@ -59,6 +61,8 @@ describe("UA1: the view is minted once and rebound on a reopen; the filter reset
 
 // RECORDED MUTATION for "UA2": in `selectClosable` (workspaceState.ts) drop the `!entry.closed` guard.
 // Expected failure: a resource already closed is closable again, so the second drain closes it a second time.
+// OBSERVED AT deab7dc96d06bf3e329527d3ae95415dcd65152b: FAILED -- "a live resource is never closable; a replaced one closes once however often the effect runs":
+//   AssertionError: closes after two drains: expected [ 'ds_a', 'ds_a' ] to deeply equal [ 'ds_a' ]. Reverted after observing.
 describe("UA2: a resource is closable only when its consumer set is empty, and is closed once", () => {
   /** What App's close effect does: close each closable resource, then write `resource.closed`. */
   function drain(state: WorkspaceState, closes: string[]): WorkspaceState {
@@ -96,6 +100,8 @@ describe("UA2: a resource is closable only when its consumer set is empty, and i
 // RECORDED MUTATION for "UA3": in `selectAdmitted` (workspaceState.ts) read the view at `drawOrder[0]` instead of the view id given.
 // Expected failure: after the permutation the first view reads the second view's resource. (The form's mutation names
 // `resolveScope`, which is phase B's; in phase A the selector that resolves a view's resource is `selectAdmitted`.)
+// OBSERVED AT deab7dc96d06bf3e329527d3ae95415dcd65152b: FAILED -- "each view resolves to its own resource and keeps its own filter, in either order":
+//   AssertionError: expected { dataset: 'ds_b', …(2) } to be { dataset: 'ds_a', …(2) } // Object.is equality. Reverted after observing.
 describe("UA3: permuting drawOrder leaves every view's filter and resource binding alone", () => {
   const view = (id: ViewId, n: string, predicate: string | null) => ({
     id,

@@ -18,6 +18,8 @@ const edited: StyleState = { fillColor: "#112233", fillOpacity: 0.5, outlineColo
 
 // RECORDED MUTATION for "UA4": make `styleTransitions` (viewTransitions.ts) return one transition for the whole edit
 // (`return out.length > 1 ? out.slice(0, 1) : out;`). Expected failure: the count assertion, 4 transitions expected and 1 received.
+// OBSERVED AT deab7dc96d06bf3e329527d3ae95415dcd65152b: FAILED -- "emits one style.set per changed property, none when nothing changed, and the width as {value, unit}":
+//   AssertionError: expected [ 'fillColor' ] to deeply equal [ 'fillColor', 'fillOpacity', …(2) ]. Reverted after observing.
 describe("UA4: transitions are pure and typed, and a style edit is one transition per changed property", () => {
   it("applies filter.apply and style.set without writing to a frozen view, returning a new one", () => {
     const frozen = deepFreeze(structuredClone(view));

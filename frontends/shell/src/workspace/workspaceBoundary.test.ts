@@ -48,6 +48,8 @@ const offendingImports = (file: string): string[] =>
 
 // RECORDED MUTATION for "UA6": add `import { unionBbox } from "../canvas/extent";` to workspaceState.ts.
 // Expected failure: the scan names the file and the specifier.
+// OBSERVED AT deab7dc96d06bf3e329527d3ae95415dcd65152b: FAILED -- "no workspace source file has a forbidden import": the received list was
+//   [ "workspace/workspaceState.ts imports ../canvas/extent" ] where [] was expected. Reverted after observing.
 describe("UA6: nothing under src/workspace/ imports React, skp/client, streaming/, residency/ or canvas/ but four types", () => {
   it("found the workspace's source files -- otherwise this scan proves nothing", () => {
     expect(workspaceSourceFiles()).toEqual(expect.arrayContaining(["workspaceState.ts", "viewTransitions.ts"]));

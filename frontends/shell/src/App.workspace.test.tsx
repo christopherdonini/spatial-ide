@@ -210,6 +210,9 @@ describe("App: the workspace state keyed by view (milestone 2, phase A), through
 
   // RECORDED MUTATION for "RA1": in `selectClosable` (workspaceState.ts) drop the `entry.consumers.length === 0` check, so a
   // resource is closed whether or not it still has a consumer. Expected failure: the live handle is closed at once.
+  // OBSERVED AT deab7dc96d06bf3e329527d3ae95415dcd65152b: FAILED -- "RA1: openDataset runs once per admission, closeDataset once per
+  // replaced handle and after the new admission, and the map mounts once per handle": AssertionError: after the first admission:
+  // expected [ …(2) ] to deeply equal [ Array(1) ] (the second entry is the close of the live handle). Reverted after observing.
   it("RA1: openDataset runs once per admission, closeDataset once per replaced handle and after the new admission, and the map mounts once per handle", async () => {
     const [a, b, c] = ["ds_" + "1".padStart(32, "0"), "ds_" + "2".padStart(32, "0"), "ds_" + "3".padStart(32, "0")];
 
@@ -230,6 +233,8 @@ describe("App: the workspace state keyed by view (milestone 2, phase A), through
 
   // RECORDED MUTATION for "RA2": in `admit` (workspaceState.ts) keep the filter on a rebind (`filter: view.filter`).
   // Expected failure: the reopened dataset still shows the Applied line of the filter.
+  // OBSERVED AT deab7dc96d06bf3e329527d3ae95415dcd65152b: FAILED -- "RA2: a reopen resets the filter and keeps the style": AssertionError: the filter is reset:
+  // expected <p class="filter-active"></p> to be null. Reverted after observing.
   it("RA2: a reopen resets the filter and keeps the style", async () => {
     await open("C:/data/a.parquet");
     await applyStyleAndLayout("zone = 'residential'", "5");
