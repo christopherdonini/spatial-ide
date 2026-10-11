@@ -953,3 +953,34 @@ Nothing above is edited.
 7. **Superseded index:** Amendment 2 item 2 (d) and §11's OPEN-11 → items 1 to 3.
 
 Nothing above is edited.
+
+### Amendment 4 — budget overrun, §7 not edited (class 8): App.tsx in phase A; with EXPORT-TODAY's outcome (class 1) and the build's deviations (class 2)
+
+*Written by the custodian after phase A's build and its results were seen, before any gate. References only. The report is `state/consults/2026-10-11-shell-migration-milestone-2-phase-a-worker-report-1.md` (the head c08cb809).*
+
+1. **§7 (class 8).** App.tsx is declared at 220 lines. By §7's own command against B at c08cb809, it is 281.
+   - **The reason:** wrapping the canvas in the drawn views' map re-indented about 136 lines. Ignoring whitespace, it is 145.
+   - The A-P group is 512 against 600, and the phase's total is 1,170.
+   - §7 is not edited.
+2. **EXPORT-TODAY (class 1): H4 holds.** At B, and in two runs at the head, the host's export ran on to its outcome while the old panel, its progress and Cancel left the screen, and nothing said so (the report's EXPORT-TODAY section).
+   - By §2.1(c) and A7's first branch, B3 is built in phase B, and only after the human's word on A10's reach.
+   - The two items held for this case now go to the human: A10's reach (a red line), and whether a late cancel is stated (`state/consults/2026-10-09-shell-migration-milestone-2-amendment-1-architect-draft.md`, section 2, items 1 and 2).
+3. **The pin recheck and A1:** no invalidator. Eight pins moved and three changed, exactly Amendment 2's. Every base suite passes at B, so I14 does not fire.
+4. **The build's deviations (class 2),** for the gates:
+   - (a) UA4 asserts the phase A union only, filter.apply and style.set. §2.4's other names land in phase B with their callers.
+   - (b) UA3's mutation is on selectAdmitted. Its resolveScope clause is phase B's.
+   - (c) The state carries one field beyond the three listed, `nextViewNumber`, so that minting stays pure under StrictMode.
+   - (d) App writes generationEnded with no phase A reader. Its reader is phase B's, which §2.5 names.
+   - (e) App's unmount no longer calls closeDataset. The cleanup releases the consumer, and the close effect does not run after unmount. The product never unmounts App before exit, and no test depended on it. A reopen's order is unchanged (RA1).
+   - (f) package.json's `e2e:selection` line landed in phase A, while §7 lists it under B-X.
+   - (g) The e2e runs avoided TCP 5180, which Windows' dynamic port exclusion (5120 to 5219) now reserves. The method changed no tracked file:
+     - vite ran on 5400;
+     - a WebView2 host-resolver rule mapped `localhost:5180` there;
+     - the debug exe was built with an overlay of browser arguments;
+     - an npx shim stood in for `tauri dev`.
+
+     The permission classifier later refused the same method to the CRS-form piece's worker. The method is disclosed here for the gates.
+5. **The residency harness.** One of its six runs differed, a first run at the head. It claims no verdict, and the difference is not recorded as a failure. The custodian may re-run it alone on the machine.
+6. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
