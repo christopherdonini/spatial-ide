@@ -74,6 +74,7 @@ import {
   findLibduckdbSys,
   readAmalgamationManifest,
 } from "./duckdbAmalgamationNotices.mjs";
+import { portedSectionFindings, readPortedRegistry } from "../../../renderer/bundle-viewer/portedNotices.mjs";
 
 const SHELL_DIR = dirname(dirname(fileURLToPath(import.meta.url)));
 const DIST_DIR = join(SHELL_DIR, "dist");
@@ -83,6 +84,9 @@ const GENERATED_NOTICE_PATH = join(SHELL_DIR, "src", "generated", "NOTICE.txt");
 // discipline already use -- read here too so the viewer section's own cardinality (3 packages
 // today) is a manifest fact, never a hardcoded number this script could drift out of sync with.
 const VIEWER_METAFILE_PATH = join(SHELL_DIR, "..", "..", "renderer", "bundle-viewer", "dist-metafile.json");
+// The fifth set's in-tree registry (ADR-030's note of 2026-10-09). `readPortedRegistry` re-hashes
+// every pinned text on the way in, so a corrupted pinned text throws here like the DuckDB guards do.
+const PORTED_ROOT = join(SHELL_DIR, "..", "..", "LICENSES", "third-party", "ported");
 
 // Verbatim from `notice.mjs`'s own text (which is itself verbatim from `DEPENDENCY-LICENSES.md`'s
 // "Third-party data terms" section for the EPSG acknowledgement/terms-URL pair) and from the
@@ -450,6 +454,15 @@ function main() {
         `manifest's own work list), found ${actual.amalgamation}`
     );
 
+  // The fifth set has two parts. The application section sits AFTER the DuckDB sentinel, outside
+  // `noticeBody` and so outside every slice above. The viewer subsection sits INSIDE the viewer
+  // slice, which the viewer's own cardinality check above already reads. The predicate below reads
+  // the whole embedded text. An empty registry must leave both headings absent, and a non-empty one
+  // must leave one file line per registered file in the application section.
+  const ported = readPortedRegistry({ root: PORTED_ROOT });
+  const portedFileCount = ported.works.reduce((n, w) => n + w.files.length, 0);
+  cardinalityFailures.push(...portedSectionFindings(normalized, ported).map((f) => `ported-file section: ${f}`));
+
   if (cardinalityFailures.length > 0) {
     console.error(
       "check:dist-notice: FAIL -- anchored entry-line count mismatch (a deleted, duplicated, or " +
@@ -465,7 +478,8 @@ function main() {
       `${npmNames.size} Vite package name(s), and all ${crateNames.size} linked crate name(s) found ` +
       `across ${files.length} dist file(s); no forbidden or degraded strings; anchored entry-line ` +
       `counts match each section's own source (viewer ${actual.viewer}, frontend ` +
-      `${actual.frontend}, Rust crates ${actual.rust}, DuckDB amalgamation ${actual.amalgamation}); ` +
+      `${actual.frontend}, Rust crates ${actual.rust}, DuckDB amalgamation ${actual.amalgamation}, ` +
+      `ported source files ${portedFileCount}); ` +
       `every pinned amalgamation licence file's sha256 re-verified, the linked ${pinnedCrate.name} ` +
       `${pinnedCrate.version} is the version the manifest pins, and the crate tarball's own sha256 ` +
       `and third_party/ listing (${tarball.count} dirs) match the pinned manifest.`

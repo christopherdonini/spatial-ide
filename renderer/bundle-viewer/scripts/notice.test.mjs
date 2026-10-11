@@ -10,7 +10,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { notice } from '../notice.mjs';
+import { createHash } from 'node:crypto';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+import { notice, AMALGAMATION_END_SENTINEL } from '../notice.mjs';
 
 // A minimal but real esbuild-metafile shape: one `node_modules/<pkg>` input is enough to pass
 // `notice()`'s own "found no third-party packages" guard. `apache-arrow` is a real dependency
@@ -146,4 +152,151 @@ test('the two-argument header states both of the file\'s two distribution scopes
     /the third-party works inside DuckDB's own amalgamated C\/C\+\+ source tree --\nis the separate NOTICE\.txt/,
   );
   assert.doesNotMatch(text, /complete notice set/);
+});
+
+// The fifth set (PORTED-CODE-NOTICE-ROUTE-PREREGISTRATION.md section 4, T10 to T14; ADR-030's note of
+// 2026-10-09): source files ported from outside projects, enumerated from an in-tree registry. Every
+// registry here is a fixture the tests write under `os.tmpdir()`; the real registry is empty.
+
+const PORTED_VIEWER_HEADING = 'SOURCE FILES PORTED FROM OTHER PROJECTS COMPILED INTO THIS VIEWER';
+const PORTED_APPLICATION_HEADING = 'SOURCE FILES PORTED FROM OTHER PROJECTS INTO THIS APPLICATION';
+const VIEWER_PORT = 'renderer/bundle-viewer/src/ported-view.ts';
+const STYLE_PORT = 'renderer/style-ts/src/ported-style.ts';
+const KERNEL_PORT = 'kernel/src/ported_kernel.rs';
+const SHELL_PORT = 'frontends/shell/src/ported-shell.ts';
+const PINNED_TEXT = 'MIT License\n\nCopyright (c) 2020 The Upstream Authors\n\nPermission is hereby granted.\n';
+const UPSTREAM_COMMIT = 'b'.repeat(40);
+
+function portedFixture(workFiles) {
+  const root = mkdtempSync(join(tmpdir(), 'notice-ported-'));
+  const bytes = Buffer.from(PINNED_TEXT, 'utf8');
+  const works = Object.entries(workFiles).map(([work, paths]) => {
+    mkdirSync(join(root, work), { recursive: true });
+    writeFileSync(join(root, work, 'LICENSE'), PINNED_TEXT, 'utf8');
+    return {
+      work,
+      upstream_repository: `https://example.org/${work}`,
+      upstream_commit: UPSTREAM_COMMIT,
+      license_id: 'MIT',
+      license_id_basis: 'self-declared',
+      texts: [
+        { file: 'LICENSE', upstream_path: 'LICENSE', bytes: bytes.length, sha256: createHash('sha256').update(bytes).digest('hex') },
+      ],
+      retrieved: '2026-10-11',
+      adopted_by: 'round 1, item 1',
+      files: paths.map((path) => ({ path, upstream_path: `up/${path}`, copyright: ['Copyright (c) 2020 The Upstream Authors'] })),
+    };
+  });
+  writeFileSync(join(root, 'MANIFEST.json'), JSON.stringify({ schema: 1, works }), 'utf8');
+  return root;
+}
+
+// The smallest DuckDB set `notice()` renders, so its end sentinel exists to be ordered against.
+const fakeAmalgamation = {
+  heading: 'DUCKDB\'S BUNDLED THIRD-PARTY SOURCES',
+  works: [{ lib: 'x', licenseId: 'MIT', note: null, files: [{ file: 'LICENSE', upstreamPath: 'x/LICENSE', text: 'text' }] }],
+  crateName: 'libduckdb-sys',
+  crateVersion: '0.0.0',
+  duckdbTag: 'v0',
+  duckdbCommit: 'c'.repeat(40),
+  upstreamRepository: 'https://example.org/duckdb',
+  pinnedDirName: 'LICENSES/third-party/duckdb-0',
+  retrieved: '2026-10-11',
+};
+const viewerDir = join(dirname(fileURLToPath(import.meta.url)), '..');
+const withViewerPort = { inputs: { 'node_modules/apache-arrow/index.js': {}, 'src/ported-view.ts': {}, '../style-ts/src/ported-style.ts': {} } };
+const portedExtra = {
+  npmSets: [{ heading: 'THIRD-PARTY WORKS COMPILED INTO THE PACKAGED FRONTEND (x)', metafile: fakeMetafile, baseDir: viewerDir }],
+  duckdbAmalgamation: fakeAmalgamation,
+};
+
+test('a registered viewer port present in the metafile reaches the viewer notice with its full pinned text', () => {
+  const portedRoot = portedFixture({ vw: [VIEWER_PORT, STYLE_PORT], kw: [KERNEL_PORT] });
+  try {
+    const text = notice(withViewerPort, undefined, null, { portedRoot });
+    const at = text.indexOf(PORTED_VIEWER_HEADING);
+    assert.ok(at !== -1, 'the viewer subsection is present');
+    assert.ok(text.indexOf('THIRD-PARTY WORKS COMPILED INTO THIS VIEWER') < at, 'it follows the package section');
+    const section = text.slice(at);
+    assert.match(section, new RegExp(`^vw: https://example\\.org/vw @ ${UPSTREAM_COMMIT} — MIT$`, 'm'));
+    assert.match(section, new RegExp(`^ {2}ported file ${VIEWER_PORT} \\(from up/${VIEWER_PORT}\\)$`, 'm'));
+    // A port under renderer/style-ts that the viewer imports is an input too (key `../style-ts/...`).
+    assert.match(section, new RegExp(`^ {2}ported file ${STYLE_PORT} `, 'm'));
+    assert.ok(section.includes(`--- vw/LICENSE (upstream LICENSE) ---\n\n${PINNED_TEXT}\n`), 'the pinned text, in full');
+    assert.ok(!section.includes(KERNEL_PORT), 'a kernel port is not an input of the viewer');
+    assert.ok(!section.includes('kw:'), 'a work with no viewer input is not listed');
+  } finally {
+    rmSync(portedRoot, { recursive: true, force: true });
+  }
+});
+
+test('a registered viewer port absent from the metafile is not in the viewer notice', () => {
+  const portedRoot = portedFixture({ vw: [VIEWER_PORT, STYLE_PORT] });
+  try {
+    const text = notice(fakeMetafile, undefined, null, { portedRoot });
+    assert.ok(!text.includes(PORTED_VIEWER_HEADING));
+    assert.ok(!text.includes(VIEWER_PORT));
+    assert.ok(!text.includes(PINNED_TEXT));
+  } finally {
+    rmSync(portedRoot, { recursive: true, force: true });
+  }
+});
+
+test('every registered port, kernel and shell paths included, reaches the application section after the DuckDB sentinel', () => {
+  const portedRoot = portedFixture({ vw: [VIEWER_PORT], kw: [KERNEL_PORT], sw: [SHELL_PORT] });
+  try {
+    const text = notice(withViewerPort, undefined, portedExtra, { portedRoot });
+    const duckdbEnd = text.indexOf(AMALGAMATION_END_SENTINEL);
+    const appAt = text.indexOf(PORTED_APPLICATION_HEADING);
+    assert.ok(duckdbEnd !== -1 && appAt > duckdbEnd, 'the application section follows the DuckDB sentinel');
+    const section = text.slice(appAt);
+    for (const path of [VIEWER_PORT, KERNEL_PORT, SHELL_PORT]) {
+      assert.match(section, new RegExp(`^ {2}ported file ${path} \\(from up/${path}\\)$`, 'm'), path);
+    }
+    for (const work of ['kw', 'sw', 'vw']) assert.ok(section.includes(`--- ${work}/LICENSE (upstream LICENSE) ---`), work);
+    assert.match(section, /not\nfrom a build manifest/, 'the intro says it is a registry, not a build manifest');
+    assert.ok(section.trimEnd().endsWith('END OF THE PORTED SOURCE FILES SECTION'));
+    // Without `extra` there is no application section.
+    assert.ok(!notice(withViewerPort, undefined, null, { portedRoot }).includes(PORTED_APPLICATION_HEADING));
+  } finally {
+    rmSync(portedRoot, { recursive: true, force: true });
+  }
+});
+
+test('an empty registry emits neither ported heading', () => {
+  const emptyRoot = portedFixture({});
+  try {
+    for (const options of [{ portedRoot: emptyRoot }, {}]) {
+      for (const extra of [null, portedExtra]) {
+        const text = notice(withViewerPort, undefined, extra, options);
+        assert.ok(!text.includes('SOURCE FILES PORTED FROM OTHER PROJECTS'), JSON.stringify(options));
+        assert.ok(!text.includes('END OF THE PORTED SOURCE FILES SECTION'));
+      }
+    }
+    // And the real registry is empty today, so the default root leaves the output as it was.
+    assert.equal(notice(withViewerPort), notice(withViewerPort, undefined, null, { portedRoot: emptyRoot }));
+  } finally {
+    rmSync(emptyRoot, { recursive: true, force: true });
+  }
+});
+
+// The range `frontends/shell/src/notices/noticeByteIdentity.test.ts` holds identical between a
+// published bundle's notice and the packaged application's: "THE VIEWER" through whatever precedes
+// the packaged-frontend section, trailing blank lines trimmed.
+function viewerRange(text) {
+  const start = text.indexOf('THE VIEWER\n----------');
+  const next = text.indexOf('\nTHIRD-PARTY WORKS COMPILED INTO THE PACKAGED FRONTEND', start);
+  return (next === -1 ? text.slice(start) : text.slice(start, next)).trimEnd();
+}
+
+test('the viewer range is identical between notice(m) and notice(m, undefined, extra) with a viewer port present', () => {
+  const portedRoot = portedFixture({ vw: [VIEWER_PORT, STYLE_PORT], kw: [KERNEL_PORT] });
+  try {
+    const viewerOnly = notice(withViewerPort, undefined, null, { portedRoot });
+    const packaged = notice(withViewerPort, undefined, portedExtra, { portedRoot });
+    assert.ok(viewerRange(viewerOnly).includes(PORTED_VIEWER_HEADING), 'the range carries the subsection');
+    assert.equal(viewerRange(packaged), viewerRange(viewerOnly));
+  } finally {
+    rmSync(portedRoot, { recursive: true, force: true });
+  }
 });

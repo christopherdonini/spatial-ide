@@ -53,12 +53,16 @@ on:
       - "renderer/bundle-viewer/**"
       - "renderer/style-ts/**"
       - "renderer/tests/data/**"
+      - "renderer/bundle-viewer/portedNotices.mjs"
+      - "LICENSES/third-party/ported/**"
       - ".github/workflows/product-ci-viewer.yml"
   pull_request:
     paths:
       - "renderer/bundle-viewer/**"
       - "renderer/style-ts/**"
       - "renderer/tests/data/**"
+      - "renderer/bundle-viewer/portedNotices.mjs"
+      - "LICENSES/third-party/ported/**"
       - ".github/workflows/product-ci-viewer.yml"
   workflow_dispatch:
 

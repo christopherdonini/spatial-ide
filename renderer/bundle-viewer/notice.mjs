@@ -8,8 +8,10 @@
 // bundle build. This module has no side effects on import: it only defines `notice`.
 
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { dirname, join, posix } from 'node:path';
 import { fileURLToPath } from 'node:url';
+
+import { readPortedRegistry } from './portedNotices.mjs';
 
 /**
  * The notice set every published bundle must carry (ADR-009 item 7; ADR-017 Corrigendum 3).
@@ -91,9 +93,26 @@ import { fileURLToPath } from 'node:url';
  *
  * Passing `extra` also swaps the header's scope paragraph for one that states what the file
  * enumerates rather than naming a gap — see `extraHeaderLines` below.
+ *
+ * ## `options.portedRoot`, the fifth set (PORTED-CODE-NOTICE-ROUTE-PREREGISTRATION.md; ADR-030's
+ * note of 2026-10-09)
+ *
+ * Source files ported from outside projects are enumerated from the in-tree registry
+ * `LICENSES/third-party/ported/MANIFEST.json`, read (and every pinned text re-hashed) by
+ * `portedNotices.mjs`. `portedRoot` defaults to that directory, resolved from this file's own
+ * location like the AGPL text below, never from the caller's cwd. With an empty registry nothing
+ * below the read changes: every output is byte-identical to what it was before the fifth set.
+ * Otherwise a viewer subsection follows the viewer's package section (the registered files that are
+ * inputs of THIS metafile, which is exact), and — only when `extra` is passed — an application
+ * section follows the DuckDB section (every registered file, over-inclusive by design).
  */
-export function notice(metafile, baseDir = dirname(fileURLToPath(import.meta.url)), extra = null) {
+export function notice(metafile, baseDir = dirname(fileURLToPath(import.meta.url)), extra = null, options = {}) {
   const packages = extractPackages(metafile);
+  const registry = readPortedRegistry({
+    root:
+      options.portedRoot ??
+      join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'LICENSES', 'third-party', 'ported'),
+  });
 
   // **A notice with no third-party section is a legally incomplete notice, and it must not build
   // quietly.** The viewer bundles `apache-arrow`, `flatbuffers` and `tslib` today; if the metafile
@@ -223,6 +242,7 @@ export function notice(metafile, baseDir = dirname(fileURLToPath(import.meta.url
       packages,
       baseDir,
     ),
+    ...portedViewerSectionLines(registry, metafile),
   );
 
   if (extra) {
@@ -265,6 +285,9 @@ export function notice(metafile, baseDir = dirname(fileURLToPath(import.meta.url
     if (extra.duckdbAmalgamation) {
       out.push(...duckdbAmalgamationSectionLines(extra.duckdbAmalgamation));
     }
+    // The FIFTH set (ADR-030's note of 2026-10-09), after the DuckDB end sentinel so every existing
+    // slice `checkDistNotice.mjs` takes is untouched. Emitted only for a non-empty registry.
+    out.push(...portedApplicationSectionLines(registry));
   }
 
   return out.join('\n');
@@ -738,6 +761,97 @@ function duckdbAmalgamationSectionLines(set) {
   }
 
   out.push('', AMALGAMATION_END_SENTINEL, '');
+  return out;
+}
+
+// The fifth set's wording (ADR-030's note of 2026-10-09, reopen 4). **Every constant in this block
+// is LATENT under PORTED-CODE-NOTICE-ROUTE-PREREGISTRATION.md Amendment 1 (c)**: the human rules the
+// wording as the worker's draft, nothing renders while the registry is empty, and the human sights
+// the wording in the first port piece, which does not merge before they have. The entry shapes
+// (the work line, the file line, the end sentinel) are mirrored in `portedNotices.mjs`'s
+// `portedSectionFindings`; `frontends/shell/src/notices/portedNotices.test.ts` keeps the two agreeing.
+// Written with `--` rather than an em dash in prose, so `checkDistNotice.mjs`'s em-dash entry
+// counts cannot mistake an intro line for an entry.
+
+// LATENT (Amendment 1 (c)): the viewer subsection's heading.
+const PORTED_VIEWER_HEADING = 'SOURCE FILES PORTED FROM OTHER PROJECTS COMPILED INTO THIS VIEWER';
+
+// LATENT (Amendment 1 (c)): the application section's heading.
+const PORTED_APPLICATION_HEADING = 'SOURCE FILES PORTED FROM OTHER PROJECTS INTO THIS APPLICATION';
+
+// LATENT (Amendment 1 (c)): the viewer subsection's intro.
+const PORTED_VIEWER_INTRO = [
+  'The source files below were ported from the outside projects named here into this repository',
+  'and are compiled into this viewer. Each is conveyed under its upstream licence as well as this',
+  'program\'s own: the SPDX line in its header names both. Each work\'s pinned licence text follows',
+  'in full. The set is enumerated from the in-tree registry',
+  'LICENSES/third-party/ported/MANIFEST.json and intersected with the inputs of this viewer\'s',
+  'esbuild metafile, so it is exact for this viewer.',
+];
+
+// LATENT (Amendment 1 (c)): the application section's intro.
+const PORTED_APPLICATION_INTRO = [
+  'The source files below were ported from the outside projects named here into this repository,',
+  'whether into the shell, the viewer, the kernel, the data engine, the renderer or the protocol',
+  'implementation. Each is conveyed under its upstream licence as well as this program\'s own: the',
+  'SPDX line in its header names both. Each work\'s pinned licence text follows in full.',
+  '',
+  'This set is enumerated from the in-tree registry LICENSES/third-party/ported/MANIFEST.json, not',
+  'from a build manifest, because no build tool reports a ported file as third-party code. The',
+  'registry names every ported file in the repository, so this section deliberately OVER-includes',
+  'files that are not compiled into this application. Listing a work that is not carried is',
+  'harmless for a notice; omitting one that is carried is the failure this section exists to',
+  'prevent.',
+];
+
+// LATENT (Amendment 1 (c)): the section's fixed closing line.
+const PORTED_END_SENTINEL = 'END OF THE PORTED SOURCE FILES SECTION';
+
+const byCodeUnit = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
+
+// One work: its work line, one file line per file with the file's upstream copyright lines under
+// it, then each pinned text in full. Sorted by path and file name; no timestamp.
+function portedWorkLines(work, files) {
+  const out = ['', `${work.work}: ${work.upstream_repository} @ ${work.upstream_commit} — ${work.license_id}`, ''];
+  for (const file of [...files].sort((a, b) => byCodeUnit(a.path, b.path))) {
+    out.push(`  ported file ${file.path} (from ${file.upstream_path})`);
+    for (const line of file.copyright) out.push(`    ${line}`);
+  }
+  out.push('');
+  for (const text of [...work.texts].sort((a, b) => byCodeUnit(a.file, b.file))) {
+    out.push(`--- ${work.work}/${text.file} (upstream ${text.upstream_path}) ---`, '', text.text, '');
+  }
+  return out;
+}
+
+function sortedWorks(registry) {
+  return [...registry.works].sort((a, b) => byCodeUnit(a.work, b.work));
+}
+
+// The viewer subsection: the registered files whose path, made relative to `renderer/bundle-viewer`,
+// is a key of this build's esbuild metafile `inputs` — which also catches a port under
+// `renderer/style-ts/` that the viewer imports. Empty (no lines at all) when there are none.
+function portedViewerSectionLines(registry, metafile) {
+  const inputs = new Set(Object.keys(metafile.inputs));
+  const works = sortedWorks(registry)
+    .map((work) => ({
+      work,
+      files: work.files.filter((f) => inputs.has(posix.relative('/renderer/bundle-viewer', `/${f.path}`))),
+    }))
+    .filter(({ files }) => files.length > 0);
+  if (works.length === 0) return [];
+  const out = ['', PORTED_VIEWER_HEADING, '-'.repeat(PORTED_VIEWER_HEADING.length), '', ...PORTED_VIEWER_INTRO];
+  for (const { work, files } of works) out.push(...portedWorkLines(work, files));
+  return out;
+}
+
+// The application section: every registered file. Empty (no lines at all) for an empty registry.
+function portedApplicationSectionLines(registry) {
+  const works = sortedWorks(registry).filter((work) => work.files.length > 0);
+  if (works.length === 0) return [];
+  const out = ['', PORTED_APPLICATION_HEADING, '-'.repeat(PORTED_APPLICATION_HEADING.length), '', ...PORTED_APPLICATION_INTRO];
+  for (const work of works) out.push(...portedWorkLines(work, work.files));
+  out.push('', PORTED_END_SENTINEL, '');
   return out;
 }
 

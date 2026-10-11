@@ -283,3 +283,7 @@ Use, per the terms' own "Ownership… must be acknowledged in any publication or
 - `engine/compat-corpus/of-record/scripts/observe.py`
 - `engine/compat-corpus/of-record/scripts/probe_producers.py`
 - `engine/compat-corpus/of-record/scripts/qgis_env.py`
+
+## Ported source files
+
+*Appended by `ported-code-notice-route` (`renderer/bundle-viewer/PORTED-CODE-NOTICE-ROUTE-PREREGISTRATION.md`, Amendment 1 (a) and (b)).* `LICENSES/third-party/ported/` is the registry of source files ported from outside projects, with the upstream licence and notice texts each one must carry, pinned by hash. **It is notice-generation input, not a layer of this repository:** the layers table above (ADR-009) is unchanged. A ported file carries `SPDX-License-Identifier: AGPL-3.0-or-later AND <upstream id>` in its header, and the containing package's `license` field does not change. That holds under the human's ruling OPEN-2 (a), and no check reads or enforces the field. The registry is empty today: no source file here carries an MIT, BSD-3-Clause or MPL-2.0 header, and the first port will make that sentence false, so the port piece updates it. The method and the allowed upstream licences are in `LICENSES/third-party/ported/README.md`.

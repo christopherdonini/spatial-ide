@@ -70,3 +70,4 @@ LICENSES/third-party/*/*/NOTICES* -text
 LICENSES/third-party/*/*/COPYING* -text
 # Hash-pinned corpus, same -text remedy: engine/compat-corpus/of-record/ holds byte-identical copies of the local compatibility corpus of record (engine/CORPUS-REPRODUCIBILITY-PREREGISTRATION.md section 2).
 engine/compat-corpus/of-record/** -text
+LICENSES/third-party/ported/*/* -text
