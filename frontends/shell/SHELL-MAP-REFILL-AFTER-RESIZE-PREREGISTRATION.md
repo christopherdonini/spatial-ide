@@ -564,3 +564,5 @@ Nothing above is edited.
 8. **Superseded index:** Amendment 5 item 3's statement of the candidate arm → item 4.
 
 Nothing above is edited.
+
+**Correction of record, appended 2026-10-11 (the reviewer's gate 5, D1).** Amendment 6 item 4's statement of the candidate arm leaves out the reset after an issued outcome, which `applyFilter` makes on both arms. The doc comment is corrected to name it (`state/consults/gates/2026-10-11-shell-map-refill-after-resize-gate5-reviewer.md`, D1).
