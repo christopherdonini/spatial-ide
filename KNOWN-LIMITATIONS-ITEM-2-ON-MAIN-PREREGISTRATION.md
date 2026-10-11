@@ -25,3 +25,17 @@ Out-of-scope: none of ADR / security / wire / guarantee is touched: no ADR file,
 4. **The route** stays the single combined gate. The reviewer re-gates the change and the records.
 5. **Generation:** the node goes to 2.
 6. Nothing above is edited.
+
+### Amendment 2 — the human's ruling on gate 2's C-1 (class 5)
+
+*Written by the custodian after the reviewer's gate 2 (`state/consults/gates/2026-10-11-known-limitations-item-2-on-main-paragraph-gate2-reviewer.md`, C-1) and the human's ruling, before the change. References only.*
+
+1. **The ruling** is the human's item 1 (`state/directives/2026-10-11-rulings-205-clause-crs-form-node-207-sentence.md`, lines 6 to 8).
+   - The second appended sentence, from "The code is" to "opens it.", is replaced by the two sentences of the directive's line 7, byte for byte by script, with that line's three leading spaces removed.
+   - The first appended sentence and the rest of the paragraph stay as they are.
+2. **Scope** is unchanged.
+3. **The gate:** the reviewer re-gates. If a clause is wrong, the human is told, and it is not reworded.
+4. **Generation:** the node goes to 3.
+5. **Superseded index:** Amendment 1 item 1's second appended sentence → item 1.
+
+Nothing above is edited.

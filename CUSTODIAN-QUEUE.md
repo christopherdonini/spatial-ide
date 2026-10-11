@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `db740b9a249600a8f16e34ba91426b86ce6432327df6e33c221d48de535da4ff`) at `2026-10-11T09:15:15.192Z`.
+Generated from `PLAN.yaml` (sha256 `e6de6e0b0af264dad54d44bad695a8470670aca206fd039fd01393c2287d9c3f`) at `2026-10-11T09:42:11.761Z`.
 
 ## 1. Next
 
@@ -25,11 +25,12 @@ Generated from `PLAN.yaml` (sha256 `db740b9a249600a8f16e34ba91426b86ce6432327df6
 - **shell-migration-milestone-2** — Shell migration, milestone 2 -- selection and scope: the Select tool, a selection that survives filter and pan, the hidden count, a stated scope — blocked by: shell-map-refill-after-resize
 - **stale-test-names-and-comments** — Stale test names and test comments, names and comments only, no assertion changes: a refusal-named test that asserts admission, the React-harness premise, the no-attributes reason, a Proposed ADR-018, two ruled decisions still marked pending (sweep area E, findings 2, 3, 4, 7 and 10) — blocked by: skp-v0-live-sections-current-area-c
 - **briefb-b2-save-reopen** — B2 — Save project, Snapshot data, session history, lineage and preferences, in five stages, each with its own form — blocked by: decision-adr-029-scan-progress-route
+- **shell-crs-form-for-format-default-contradicted** — The shell opens the CRS assertion form after engine.format_default_contradicted, so the refusal's own message (assert the CRS this file is actually in) is true in the app; graded S1 on main — blocked by: ported-code-notice-route
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer — blocked by: signpath-application-draft
 - **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-1-1
 - **signpath-application-draft** — Entry 77 — the SignPath OSS application and disclosure text drafted for the human sight, once a release is CI-built — blocked by: release-v0-1-1
 - **site-design-v1** — Landing page redesign — DRAFT-4 (status strip, milestone banner, waiting-on-you cards with unblocks counts, the swimlane board) — blocked by: governance-ci-built-site
-- **guardian-v1** — Guardian v1 -- G1's heredoc false alarm fixed, one local log line per refusal, and three new rules: G7 (agent merges and history rewrites), G8 (plugin, marketplace and MCP installs, and writes to the user's Claude folder), G9 (wholesale cleans of the main checkout's target) (Fable's MODS-V1 brief, 2026-10-05) — blocked by: ported-code-notice-route
+- **guardian-v1** — Guardian v1 -- G1's heredoc false alarm fixed, one local log line per refusal, and three new rules: G7 (agent merges and history rewrites), G8 (plugin, marketplace and MCP installs, and writes to the user's Claude folder), G9 (wholesale cleans of the main checkout's target) (Fable's MODS-V1 brief, 2026-10-05) — blocked by: ported-code-notice-route, shell-crs-form-for-format-default-contradicted
 
 ## 5. In progress
 

@@ -529,3 +529,21 @@ Nothing above is edited.
 6. **Superseded index:** Amendment 1 item 4, for item 39's third sentence only → item 1.
 
 Nothing above is edited.
+
+### Amendment 5 — the human's ruling on gate 3's C1 (class 5)
+
+*Written by the custodian after gate 3 (`state/consults/gates/2026-10-11-shell-map-refill-after-resize-gate3-architect.md`, C1 and D1) and the human's ruling, before the change. References only.*
+
+1. **The ruling** is the human's item 3 (`state/directives/2026-10-11-rulings-205-clause-crs-form-node-207-sentence.md`, lines 12 to 14).
+   - Item 39's third sentence, from "One exception:" to "Zoom to layer.", is replaced by the two sentences of the directive's line 13, byte for byte by script, with that line's three leading spaces removed.
+   - The other sentences stay as they are.
+2. **The item's source comment** says the sentences describe the shipped default arm.
+   - Amendment 4's clause is replaced by: "; its third and fourth sentences are the human's own wording of 2026-10-11 (this form's Amendments 4 and 5) and describe the shipped default arm, the candidate residency arm".
+   - Nothing else in the comment changes.
+3. **D1's two doc comments** in `frontends/shell/src/canvas/WorkingCanvas.tsx` (gate 3, D1) are fixed with the sentence. On the candidate arm, `resetFitForNewGeneration` runs at the start of every reissue, whatever its outcome. On the baseline arm, it runs on an issued outcome. The comments claim no more than that. Comment lines only.
+4. **The gate:** a scoped architect gate checks the two sentences, the comment and the two doc comments. If a clause is wrong, the human is told, and it is not reworded.
+5. **§7:** KNOWN-LIMITATIONS.md stays within its 8 lines. `WorkingCanvas.tsx` changes comment lines only, within G1's ceiling.
+6. **Generation:** the node goes to 6.
+7. **Superseded index:** Amendment 4 item 1 → item 1; Amendment 4 item 2's clause → item 2.
+
+Nothing above is edited.
