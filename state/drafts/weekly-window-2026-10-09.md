@@ -673,3 +673,8 @@ Drafting returned to the architect at the stop. The rows below are the piece's l
 **What it would change:** the amendment template gains one sentence: class 9 covers a ruling of the human's that adds work to a preregistered piece, whether the ruling is standing or not.
 
 **Not decided here.** This is for the window's round.
+
+### B2, second pilot — the four-piece result, delivered (2026-10-11)
+
+- **Cleared.** The result after the fourth piece (the pilot's §5 and §8), recorded above as still owed, is delivered on the human's 2026-10-11 direction, item 3a, at `state/consults/2026-10-11-pilot-v2-result-and-recommendation.md`. The table it reads is at `state/consults/2026-10-11-pilot-v2-table-and-section-6-measures.md`.
+- **The human rules** on its one recommendation.
