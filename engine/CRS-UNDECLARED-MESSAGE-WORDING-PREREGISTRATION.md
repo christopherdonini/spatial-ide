@@ -332,3 +332,12 @@ Falsification:
 5. **Rule (00) at dispatch:** no PR is open. This piece is the only one in progress that touches `protocol/` (`v0-error-example.json`), `engine/src/error.rs`, either e2e file, `formatRefusal.test.ts`, the walkthrough's Part B or `engine/README.md`. The docs lane's next piece edits `KNOWN-LIMITATIONS.md` only. Slot 1's next piece has no code yet.
 6. **Generation:** the node goes to 2.
 7. Nothing above is edited.
+
+### Amendment 2 — the OPEN-1 comment's count, budget overrun, §7 not edited (class 8)
+
+*Written by the custodian after worker report 1 (`state/consults/2026-10-10-crs-undeclared-message-wording-worker-report-1.md`), before the gates. References only.*
+
+1. **The row:** §7 sets the OPEN-1 comment at most 6 changed lines. By §21c's counting, insertions plus deletions, it is 7 at fb95bec0: 4 added and 3 deleted. The minimal comment keeps the §12d P6 clause, and the directive's path alone fills a line.
+2. **Inside the file's ceiling:** `engine/src/error.rs` is 29 against its 40. The code and tests total is 49 against 65. §7 is not edited.
+3. **Generation:** the node goes to 3.
+4. Nothing above is edited.
