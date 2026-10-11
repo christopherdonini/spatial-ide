@@ -1,14 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `e421d8c26fdde833854e34c4ca98d56fbbdcd1b76b3de721ff88ae59a0dc44a8`) at `2026-10-11T11:30:28.379Z`.
+Generated from `PLAN.yaml` (sha256 `5cff885aecdf8f62e306e919ec1a110563166abe0e62ffc56558796427a145ec`) at `2026-10-11T12:59:24.102Z`.
 
 ## 1. Next
 
-- **module-docs-stale-statements** — Engine and kernel module docs brought current, one docs-only piece (README bodies and doc comments, no code logic): the kernel README's H2 row and the engine's persists-nothing sentence first, then drift sweep area D's other eight findings and the earlier items (lane `kernel-protocol`)
+- (nothing ready)
 
 ## 2. Ready
 
-- **module-docs-stale-statements** — Engine and kernel module docs brought current, one docs-only piece (README bodies and doc comments, no code logic): the kernel README's H2 row and the engine's persists-nothing sentence first, then drift sweep area D's other eight findings and the earlier items (lane `kernel-protocol`, order 4, budget 120 min)
+- (none)
 
 ## 3. Waiting on the human (total: 10 min)
 
@@ -33,6 +33,7 @@ Generated from `PLAN.yaml` (sha256 `e421d8c26fdde833854e34c4ca98d56fbbdcd1b76b3d
 
 ## 5. In progress
 
+- **module-docs-stale-statements** — Engine and kernel module docs brought current, one docs-only piece (README bodies and doc comments, no code logic): the kernel README's H2 row and the engine's persists-nothing sentence first, then drift sweep area D's other eight findings and the earlier items — evidence: branch `cut/module-docs-stale-statements`
 - **shell-map-refill-after-resize** — The map refills after a resize: a layout change that uncovers map area issues a viewport query, so the area fills without a pan or zoom — evidence: branch `cut/shell-map-refill-after-resize`
 - **ported-code-notice-route** — A notice route for ported code, wherever it lands (shell or kernel), needed before any PORT — evidence: branch `cut/ported-code-notice-route`
 
