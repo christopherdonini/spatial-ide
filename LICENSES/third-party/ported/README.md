@@ -54,12 +54,12 @@ Three checks do the verifying, and they run in different places:
 | `texts[].sha256`, `bytes` | `readPortedRegistry` | recomputed from the pinned file; the UTF-8 round trip must lose nothing |
 | `work`, `upstream_commit`, `license_id_basis`, `retrieved`, the shape of every entry | `readPortedRegistry` | schema checks; a fault throws. `upstream_repository` and `license_id` are checked there only as non-empty strings |
 | `license_id` | `checkPortedFiles` | on the allowlist above; the repository check and the prebuild check |
-| `files[].path` | `checkPortedFiles` | the file carries the header above in its header window; the repository check and the prebuild check. In a git checkout the path must also be a tracked file. Outside a checkout (no `.git` entry at the root) the tracked test cannot run, and the check reads the file from the disk instead, so it must exist there |
-| `adopted_by` | `checkPortedFiles` | well-formed, in the repository check and the prebuild check. In a git checkout a directive path must also be a tracked file; outside a checkout only its form is checked |
+| `files[].path` | `checkPortedFiles` | the file carries the header above in its header window; the repository check and the prebuild check. In a git checkout the path must also be a tracked file. Outside a checkout (no `.git` entry at the root) the repository check fails by name; the prebuild check cannot run the tracked test there and reads the file from the disk instead, so it must exist there |
+| `adopted_by` | `checkPortedFiles` | well-formed, in the repository check and the prebuild check. In a git checkout a directive path must also be a tracked file; outside a checkout the repository check fails by name, and the prebuild check checks only its form |
 
 **Recorded, not re-verified:** `upstream_repository`, `upstream_commit` and `retrieved` name where the texts came from. Re-deriving them needs the network the build never touches.
 
-In a git checkout, `node scripts/check-ported-notices.mjs` (CI: `ported-notices.yml`) and the packaged build's `prebuild` also fail on a marked file with no entry. A build from a source archive that is not a git checkout (no `.git` entry at the root) checks the registry side only and prints one NOTE line saying that unregistered markers were not searched.
+In a git checkout, `node scripts/check-ported-notices.mjs` (CI: `ported-notices.yml`) and the packaged build's `prebuild` also fail on a marked file with no entry. A packaged build from a source archive that is not a git checkout (no `.git` entry at the root) checks the registry side only and prints one NOTE line saying that unregistered markers were not searched.
 
 ## What this route does not do
 
