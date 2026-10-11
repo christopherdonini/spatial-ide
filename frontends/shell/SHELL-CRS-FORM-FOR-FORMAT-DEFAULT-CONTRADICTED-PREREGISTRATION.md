@@ -305,3 +305,13 @@ The worker's and tester's briefs carry, as written, the paragraph at state/direc
 9. **Superseded index:** §2.7's input-owed bullets and §11's OPEN-1 → item 2; §11's OPEN-2 → item 3; §11's OPEN-3 → item 4; §8 item 8's "any other sentence of item 2 edited" → items 4 and 5.
 
 Nothing above is edited.
+
+### Amendment 2 — the walkthrough Part's letter and the base's pins (class 3)
+
+*Written by the custodian before any code. References only.*
+
+1. **§2.5's Part takes the letter X.** At the base, the walkthrough's last Part is V, map-refill's (frontends/shell/MANUAL-WALKTHROUGH.md:1763 @ 1457fbd0a09464c03082a2aea3df65dd1171bc95 sha256:69af406c7d03ea71df2f3401dea7b28764651b60da36dad87385b8e74af30ed7). W is reserved by `frontends/shell/SHELL-MIGRATION-MILESTONE-2-PREREGISTRATION.md`, Amendment 1, A13.
+2. **The base** is main at 1457fbd0a09464c03082a2aea3df65dd1171bc95, after #207, #208 and #209 merged. At that base, every code pin of this form hashes as written except one moved line: `engine/src/error.rs:330-336` at 4fd3259a is now engine/src/error.rs:333-339 @ 1457fbd0a09464c03082a2aea3df65dd1171bc95 sha256:62fb744a0e95b3df10edd479e2dec8fc715942154c73c2390decd8b4ac33d5c7, which §0.3 already names. §2.4's and §2.6's paths wait on no open PR.
+3. **Generation:** the node goes to 3.
+
+Nothing above is edited.

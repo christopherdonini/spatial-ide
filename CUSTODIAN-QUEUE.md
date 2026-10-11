@@ -1,16 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `bf4db5af488cb2a4d821e0127a7791012b782a2f90e625813d2de874eb19a106`) at `2026-10-11T15:45:07.420Z`.
+Generated from `PLAN.yaml` (sha256 `4d3ca3058045d1bf522ce2a6800c2fcd01fc092b9661e38890970bbdfdae6fde`) at `2026-10-11T15:53:51.105Z`.
 
 ## 1. Next
 
-- **skp-v0-live-sections-current-area-c** — SKP-V0.md's live sections and three comments brought current to the wire the code sends (sweep area C, findings 1, 3, 4, 6, 7, 8 and 9; no literal change); and skp.malformed_hex_f64, skp.bbox_not_finite and skp.unknown_handle struck as refusals a client receives (sweep area C, finding 5, ruled) (lane `kernel-protocol`)
+- **shell-migration-milestone-2** — Shell migration, milestone 2 -- selection and scope: the Select tool, a selection that survives filter and pan, the hidden count, a stated scope (lane `shell`)
 
 ## 2. Ready
 
-- **skp-v0-live-sections-current-area-c** — SKP-V0.md's live sections and three comments brought current to the wire the code sends (sweep area C, findings 1, 3, 4, 6, 7, 8 and 9; no literal change); and skp.malformed_hex_f64, skp.bbox_not_finite and skp.unknown_handle struck as refusals a client receives (sweep area C, finding 5, ruled) (lane `kernel-protocol`, order 5, budget 90 min)
 - **shell-migration-milestone-2** — Shell migration, milestone 2 -- selection and scope: the Select tool, a selection that survives filter and pan, the hidden count, a stated scope (lane `shell`, order 4, budget 0 min)
-- **shell-crs-form-for-format-default-contradicted** — The shell opens the CRS assertion form after engine.format_default_contradicted, so the refusal's own message (assert the CRS this file is actually in) is true in the app; graded S1 on main (lane `shell`, order 12, budget 150 min)
 
 ## 3. Waiting on the human (total: 10 min)
 
@@ -32,7 +30,8 @@ Generated from `PLAN.yaml` (sha256 `bf4db5af488cb2a4d821e0127a7791012b782a2f90e6
 
 ## 5. In progress
 
-- (none)
+- **skp-v0-live-sections-current-area-c** — SKP-V0.md's live sections and three comments brought current to the wire the code sends (sweep area C, findings 1, 3, 4, 6, 7, 8 and 9; no literal change); and skp.malformed_hex_f64, skp.bbox_not_finite and skp.unknown_handle struck as refusals a client receives (sweep area C, finding 5, ruled) — evidence: branch `cut/skp-v0-live-sections-current-area-c`
+- **shell-crs-form-for-format-default-contradicted** — The shell opens the CRS assertion form after engine.format_default_contradicted, so the refusal's own message (assert the CRS this file is actually in) is true in the app; graded S1 on main — evidence: branch `cut/shell-crs-form-for-format-default-contradicted`
 
 ## 6. Proposed / unscheduled
 

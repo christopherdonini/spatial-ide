@@ -464,3 +464,17 @@ Opens empty, append-only, classes 1 to 9.
    - §5's E7 for `commands.rs` → item 6.
 
 Nothing above is edited.
+
+### Amendment 2 — the base's moved index lines (class 3)
+
+*Written by the custodian before any code. References only.*
+
+1. **The base** is main at 1457fbd0a09464c03082a2aea3df65dd1171bc95, after piece d (#209) merged. 101 of the form's code and document pins hash as written there.
+2. **Moved or changed by piece d, in `kernel/README.md`** (B's tree is authoritative for each row):
+   - SKP v0 host, §2.6: kernel/README.md:356 @ 1457fbd0a09464c03082a2aea3df65dd1171bc95 sha256:0b8dfdc4cdb5eed74f9399e54e4ab8b6cc098c88dfaf83e832c1daa8cd9d3100;
+   - stream tickets, §2.6: kernel/README.md:357 @ 1457fbd0a09464c03082a2aea3df65dd1171bc95 sha256:cacca0107dd19214aeec4176e7ddaf21f3fc7d33d50a363e3654e6d74d82ec53. Piece d's row DK moved one test pointer into this line; it is still the stream tickets line;
+   - wire error codes, §2.6: kernel/README.md:363 @ 1457fbd0a09464c03082a2aea3df65dd1171bc95 sha256:11ef820f7ca22420707389b165a0eb59bb1ce11555b3094d557f85c94b623542;
+   - the kernel halves list, §2.6: kernel/README.md:382 @ 1457fbd0a09464c03082a2aea3df65dd1171bc95 sha256:10e65310f1116a8295a351ca27459f69acbb25728a83e02e5858060e02958484.
+3. **Generation:** the node goes to 3.
+
+Nothing above is edited.
