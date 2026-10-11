@@ -56,9 +56,9 @@ docs/01 principle-7 shortfall, not a silent gap (§2, C3).
 ```
 
 Pure, in-memory, no IO beyond what `Dataset::open` already did, no lease taken, not cancellable
-(ADR-006 class 1 — a pure transformation over already-resident state). Every field maps to an
-existing `engine::Dataset` accessor, except `coverage` and `session_end`, which come from the
-host's watch and generation state; none of them runs a new query:
+(ADR-006 class 1 — a pure transformation over already-resident state). Fields read an existing
+`engine::Dataset` accessor where one exists; `extent` has none (§2, C1), and `coverage` and
+`session_end` come from the host's watch and generation state; none of them runs a new query:
 
 **Brought current again, with no literal change (§8's dated note on the live sections): the block
 below carries every member the host sends at the literal §4 item 3 states.**
@@ -1108,7 +1108,7 @@ comparison retained; `deny_unknown_fields` kept both directions. `skp/1` stays R
 
 **`skp/0.11` stands; no literal is bumped and no fixture changes.** PLAN node `skp-v0-live-sections-current-area-c`, base 1457fbd0a09464c03082a2aea3df65dd1171bc95 on main. This note is the only §8 change.
 
-- **In place, by section.** §1: `open_dataset`'s response gains `session`; the path sentence states what the host and engine do with the path; the `describe` lead's currency sentence is replaced by one that points to this note, and its accessor sentence excepts `coverage` and `session_end`; the `describe` block gains `coverage`, `checks`, `session_end` and `schema[].projectable`, in the shapes the `skp/0.5` and `skp/0.6` entries give; the `cancel` paragraph states how the host reads the handle and the `unknown` answer; the lead names the literal by pointing to §4 item 3. §3: the lead changes from refusal to rejected, and the `HexF64` bullet states where a malformed value is rejected. §4: item 1's publish parenthetical states ADR-017's exposure-review completion of 2026-08-17 as that ADR records it, and item 3 states the current literal. §5: the `skp.` example list, one reserved line, and, outside §5, a section cite corrected from §6 to §5 in §4 item 8 and §7.5. §7.1 and §9.1 each gain a dated note. §9.5's heading names eight codes.
+- **In place, by section.** §1: `open_dataset`'s response gains `session`; the path sentence states what the host and engine do with the path; the `describe` lead's currency sentence is replaced by one that points to this note, and its accessor sentence reads accessors where one exists and names `extent` (no accessor, §2 C1), `coverage` and `session_end` (host state) as the ones that do not; the `describe` block gains `coverage`, `checks`, `session_end` and `schema[].projectable`, in the shapes the `skp/0.5` and `skp/0.6` entries give; the `cancel` paragraph states how the host reads the handle and the `unknown` answer; the lead names the literal by pointing to §4 item 3. §3: the lead changes from refusal to rejected, and the `HexF64` bullet states where a malformed value is rejected. §4: item 1's publish parenthetical states ADR-017's exposure-review completion of 2026-08-17 as that ADR records it, and item 3 states the current literal. §5: the `skp.` example list, one reserved line, and, outside §5, a section cite corrected from §6 to §5 in §4 item 8 and §7.5. §7.1 and §9.1 each gain a dated note. §9.5's heading names eight codes.
 - **Three codes never produced.** `skp.unknown_handle`, `skp.malformed_hex_f64` and `skp.bbox_not_finite` were never produced by the host. They are struck from §5's examples by the human's ruling (`state/directives/2026-10-10-docs-lane-slot-2-order-reaim-answers-strike-crs-wording.md`, item 4) and listed in §5 as reserved.
 - **Fixtures and the conformance record.** The conformance fixtures' `expected_refusal_code` values for the nine `HexF64` fixtures that carry one still name two of those codes, unchanged under the ruling; nothing reads that field. AMBIGUITIES A3 and A8 stay as recorded.
 - **The reading this piece applies.** §§1–7 and §9 are the live current-shape description. §8's preamble names §§1–7. §9 is laid out as §7 and updated in place by its own dated notes. §7's lead of 2026-08-13 describes §§1–6 as they stood then.
