@@ -846,6 +846,11 @@ describe("WorkingCanvas.tsx: the one reporting function and deck's onResize (she
     expect(deckConstructor).toMatch(/\bonResize:/);
   });
 
+  // RF10 (Amendment 3, item 4): a camera write that does not report leaves no area "last asked for" (gate 1, C1).
+  // RECORDED MUTATIONS, applied, run by test name, reverted (tree clean), OBSERVED AT da0fc49ef4f75d0c9c1b46977323e7a4daef5f45:
+  // the clear in resetFitForNewGeneration deleted -> FAILED, "expected 'resetFitForNewGeneration() {\n ...' to contain
+  // 'lastQueriedRef.current = null;'"; the else branch in fitToExtent deleted -> FAILED, "expected 'function fitToExtent(...' to
+  // match /if \(notifyViewport\) .../"; the fit's cameraRef write duplicated -> FAILED, "expected 4 to be 3".
   it("RF10: a new filter generation and the unreported fit clear lastQueriedRef, and the camera is written in exactly three places", () => {
     const reset = source.indexOf("resetFitForNewGeneration() {");
     expect(source.slice(reset, source.indexOf("},", reset))).toContain("lastQueriedRef.current = null;");
