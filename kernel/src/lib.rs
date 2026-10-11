@@ -44,8 +44,7 @@
 //!   run. **No SKP message reaches it.** Two callers reach publish, both through
 //!   [`permission::boundary`]: the shell's binding-local `binding_publish_*` commands, the UI
 //!   surface for which ADR-017's acceptance condition was discharged on 2026-08-17, and this
-//!   crate's `publish-bundle` binary, which ADR-017 keeps as developer/test tooling. SKP, MCP, a
-//!   plugin, a notebook and an AI surface each still need their own review.
+//!   crate's `publish-bundle` binary, which ADR-017 keeps as developer/test tooling.
 //! - **It is still not `docs/09`'s permission model.** One operation kind, one principal kind, no
 //!   authentication, no client, no extension surface, and grants that die with the process. What is
 //!   built is a subset with the same shape; what is missing is named in

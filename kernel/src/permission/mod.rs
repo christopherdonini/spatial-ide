@@ -22,8 +22,7 @@
 //! and no SKP message. Two callers reach the publish operation, both through [`boundary`]: the
 //! shell's binding-local `binding_publish_*` commands, the UI surface for which ADR-017's
 //! acceptance condition was discharged on 2026-08-17, and this crate's `publish-bundle` binary,
-//! which ADR-017 keeps as developer/test tooling. SKP, MCP, a plugin, a notebook and an AI surface
-//! each still need their own review.
+//! which ADR-017 keeps as developer/test tooling.
 //! `kernel/PERMISSION-BOUNDARY.md` lists what exposure would still require — seven things, none of
 //! them in this cut — and flags for the custodian the question of what that condition's "until
 //! then" now means.
