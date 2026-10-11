@@ -24,8 +24,8 @@
 //! demand "typed refusal, **audited**" — would be unsatisfiable if the record came after the check.
 //!
 //! The second-order consequence is named rather than discovered: because intent precedes
-//! authorization, an unauthorized caller can grow the log. Nothing is exposed today, so there is no
-//! such caller; at exposure the rotation ceiling bounds it to the declared ~40 MiB. That is an
+//! authorization, an unauthorized caller can grow the log. The rotation ceiling bounds it to the
+//! declared ~40 MiB (`MAX_AUDIT_LOG_BYTES`, `MAX_AUDIT_LOG_GENERATIONS`). That is an
 //! independent reason ADR-010 rule 6's "a ceiling with no number is not declared" earns its keep.
 //!
 //! ## Two gates before any side effect, and what each one establishes

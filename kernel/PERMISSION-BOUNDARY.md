@@ -489,3 +489,15 @@ The binding rule for that future surface: **the requester must never mint the gr
 that lets the caller manufacture its own authorization makes the boundary theater; grant issuance
 stays on the human side of whatever line the exposure surface draws. This rule is part of the
 review F-10 requires.
+
+## Note — 2026-10-11 — the exposure position, as `kernel/README.md` now carries it
+
+Appended; nothing above is edited (this file is not rewritten, and its body is dated 2026-08-07).
+The body's statement that nothing is exposed is superseded by the position in `kernel/README.md`'s
+permission-boundary section, first bullet. No SKP message reaches the boundary. Two callers reach
+the operation, both through `permission/boundary.rs`: the shell's binding-local
+`binding_publish_*` commands, the UI surface for which ADR-017's acceptance condition was
+discharged on 2026-08-17, and this crate's `publish-bundle` binary, which ADR-017 keeps as
+developer/test tooling. SKP, MCP, plugin, notebook and AI exposure each still require their own
+review (ADR-017, the exposure review completion). This note records that position and nothing
+beyond it.

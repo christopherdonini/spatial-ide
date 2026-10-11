@@ -4,11 +4,13 @@
 //! # `kernel` — the composition root, and nothing more
 //!
 //! `docs/02` scopes the kernel to "orchestration, dataset registry, lineage DAG, permissions,
-//! undo". This slice implements **orchestration for exactly one operation** and deliberately
-//! implements none of the rest. It is the only place that knows both `engine/` and
-//! `protocol/data-plane` — keeping that knowledge here is what lets each of those two crates stay
-//! ignorant of the other (ADR-004's control/data-plane split is structural, per `docs/02`'s warning
-//! about collapsing `protocol/` into `kernel/`).
+//! undo". This slice implements **orchestration** — of a streamed query, of the SKP v0 control
+//! plane in front of it, and of publishing a bundle — and of the rest only a name → dataset map and
+//! a subset of `docs/09`'s permission model, both described below. It is the only crate that turns
+//! an engine stream into a data-plane source: `EngineSourceFactory` is the one `SourceFactory` over
+//! engine streams. Keeping that knowledge here is what lets each of those two crates stay ignorant
+//! of the other (ADR-004's control/data-plane split is structural, per `docs/02`'s warning about
+//! collapsing `protocol/` into `kernel/`).
 //!
 //! ## What is deliberately absent
 //!
@@ -33,20 +35,24 @@
 //!   source, style) with every member named, datasets are addressed by a validated
 //!   `spatial://dataset/<name>` logical URI, and each bundle claims an ADR-005 grade —
 //!   **Snapshot**, with its basis stated and the reason Exact is not claimed written down beside it.
-//!   Nothing else in this crate persists anything; a stream still writes nothing.
+//!   Besides the bundle, the permission boundary's audit log (`permission::audit`) writes: it
+//!   creates its directory and appends to its file. A stream still writes nothing.
 //! - **The approval gate exists now, and it is [`permission::boundary`].** ADR-006's class-3 row
 //!   asks for three things and two were owed; [`permission`] supplies both — a scoped, expiring
 //!   grant checked against execution-time facts, an explicit approval that names the destination,
 //!   and a two-phase append-only redacted audit record. An unauditable class-3 operation does not
-//!   run. **Nothing is exposed**: ADR-017's acceptance condition still forbids reaching publish
-//!   through SKP, MCP, a plugin, a notebook or an AI surface until an exposure surface passes
-//!   review, and this cut does not flip it.
+//!   run. **No SKP message reaches it.** Two callers reach publish, both through
+//!   [`permission::boundary`]: the shell's binding-local `binding_publish_*` commands, the UI
+//!   surface for which ADR-017's acceptance condition was discharged on 2026-08-17, and this
+//!   crate's `publish-bundle` binary, which ADR-017 keeps as developer/test tooling. SKP, MCP, a
+//!   plugin, a notebook and an AI surface each still need their own review.
 //! - **It is still not `docs/09`'s permission model.** One operation kind, one principal kind, no
 //!   authentication, no client, no extension surface, and grants that die with the process. What is
 //!   built is a subset with the same shape; what is missing is named in
 //!   `kernel/PERMISSION-BOUNDARY.md` rather than left for a reader to discover.
-//! - **No dataset registry beyond a name → open dataset map** fixed at startup. Names, never paths:
-//!   a client-supplied path on a listening socket is an arbitrary-file-read primitive.
+//! - **No dataset registry beyond a name → open dataset map**, whose names are opened at startup or
+//!   at runtime through `open_dataset`. Once open, a dataset is addressed by name, never by path: a
+//!   client-supplied path on a listening socket is an arbitrary-file-read primitive.
 
 use std::collections::HashMap;
 use std::path::Path;

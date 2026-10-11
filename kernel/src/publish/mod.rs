@@ -43,17 +43,19 @@
 //!
 //! ## The order of operations, and why it is that order
 //!
-//! 1. **Validate the name and the destination, and create the staging directory** — before the
+//! 1. **Preflight, which creates nothing.** These refusals all come before the staging directory
+//!    exists: the row-filter gate, the degrees and geometry-encoding refusals, the dataset name,
+//!    the licenses, the projection with the bundle-format restriction, the style compiled against
+//!    it, and the reader ceilings. Then the source pin is read.
+//! 2. **Check the destination, then create the staging directory** — before the
 //!    query, before the hash. An unwritable destination is then refused in milliseconds rather than
 //!    after a whole-file read.
-//! 2. **Verify the source pin.** The pin was taken by an explicit earlier call; this re-hashes and
+//! 3. **Verify the source pin.** The pin was taken by an explicit earlier call; this re-hashes and
 //!    compares. The brief says "between open and publish"; what is actually checked is **between
 //!    pin and publish**, which is a faithful substitution and is recorded as what it is.
-//! 3. **Resolve the projection and compile the style against it.** Both are refusals that must
-//!    happen before a single partition is written.
 //! 4. **Stream, ordered, writing one partition per batch**, hashing and bounding as it goes.
-//! 5. **Write the style, the viewer, the manifest, the sidecar.**
-//! 6. **Re-check the source with the fail-closed heuristic**, then rename.
+//! 5. **Write the style, the viewer and the manifest.**
+//! 6. **Re-check the source with the fail-closed heuristic**, write the sidecar, then rename.
 //!
 //! ## Declared recovery policy (ADR-010 rule 7)
 //!
