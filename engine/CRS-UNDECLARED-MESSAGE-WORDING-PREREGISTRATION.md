@@ -341,3 +341,15 @@ Falsification:
 2. **Inside the file's ceiling:** `engine/src/error.rs` is 29 against its 40. The code and tests total is 49 against 65. §7 is not edited.
 3. **Generation:** the node goes to 3.
 4. Nothing above is edited.
+
+### Amendment 3 — written after PR #206's gate 1; a record correction to Amendment 2 item 2 (class 1)
+
+*Written by the custodian after both gate reports (`state/consults/gates/2026-10-11-crs-undeclared-message-wording-gate1-architect.md`, D-1, and `state/consults/gates/2026-10-11-crs-undeclared-message-wording-gate1-reviewer.md`, D-1). References only.*
+
+1. **Correction (round 12 (d)).**
+   - The defect: Amendment 2 item 2 gives the code-and-tests total as 49 against 65. That total counts `frontends/shell/MANUAL-WALKTHROUGH.md`, which §7 lists under Documents.
+   - The corrected figures: code and tests are 47 (37 insertions, 10 deletions) against 65, and Documents are 2 against 2.
+   - The proof: `git diff --numstat 496fdd7f...fb95bec0` over §7's lists.
+2. **Superseded index (round 12 (e)):** only Amendment 2 item 2's total. Everything else in Amendments 1 and 2 stands, and so do §7's ceilings.
+3. **Generation:** the node goes to 4.
+4. Nothing above is edited.
