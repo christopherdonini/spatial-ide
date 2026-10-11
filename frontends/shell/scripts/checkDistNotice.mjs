@@ -454,9 +454,11 @@ function main() {
         `manifest's own work list), found ${actual.amalgamation}`
     );
 
-  // The fifth set sits AFTER the DuckDB sentinel, outside `noticeBody` and so outside every slice
-  // above; its own predicate reads the whole embedded text. An empty registry must leave both
-  // headings absent, and a non-empty one must leave one file line per registered file.
+  // The fifth set has two parts. The application section sits AFTER the DuckDB sentinel, outside
+  // `noticeBody` and so outside every slice above. The viewer subsection sits INSIDE the viewer
+  // slice, which the viewer's own cardinality check above already reads. The predicate below reads
+  // the whole embedded text. An empty registry must leave both headings absent, and a non-empty one
+  // must leave one file line per registered file in the application section.
   const ported = readPortedRegistry({ root: PORTED_ROOT });
   const portedFileCount = ported.works.reduce((n, w) => n + w.files.length, 0);
   cardinalityFailures.push(...portedSectionFindings(normalized, ported).map((f) => `ported-file section: ${f}`));

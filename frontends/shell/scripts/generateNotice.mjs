@@ -93,6 +93,7 @@ import {
 const here = dirname(fileURLToPath(import.meta.url));
 const shellDir = join(here, '..');
 const repoRoot = join(shellDir, '..', '..');
+const portedRoot = join(repoRoot, 'LICENSES', 'third-party', 'ported');
 const viewerDir = join(shellDir, '..', '..', 'renderer', 'bundle-viewer');
 const viewerMetafilePath = join(viewerDir, 'dist-metafile.json');
 const shellMetafilePath = join(shellDir, 'dist-metafile.json');
@@ -111,7 +112,7 @@ const viewerMetafile = JSON.parse(readFileSync(viewerMetafilePath, 'utf8'));
 // (a registry fault, a git that cannot list) and any finding take the same named FAIL line the
 // DuckDB guards below take.
 try {
-  const ported = portedPrebuildCheck({ repoRoot, allowlist: ALLOWED_UPSTREAM_LICENSE_IDS });
+  const ported = portedPrebuildCheck({ repoRoot, root: portedRoot, allowlist: ALLOWED_UPSTREAM_LICENSE_IDS });
   for (const note of ported.notes) console.log(note);
   if (ported.findings.length > 0) {
     console.error(
@@ -182,7 +183,7 @@ if (existsSync(shellMetafilePath)) {
   extra = { bootstrap: true, rustCrates, duckdbAmalgamation };
 }
 
-const text = notice(viewerMetafile, undefined, extra);
+const text = notice(viewerMetafile, undefined, extra, { portedRoot });
 
 const outDir = join(shellDir, 'src', 'generated');
 mkdirSync(outDir, { recursive: true });
