@@ -11,8 +11,8 @@
 //!   session; no command's request accepts it.
 //!
 //! All four kinds are session-scoped and non-persistable: none may be written to disk, logged, or
-//! reused across a process restart (docs/11's ResourceRef model and ADR-016's "stability across
-//! reopen" OPEN block are both unsatisfied).
+//! reused across a process restart (docs/11's ResourceRef model and ADR-016's
+//! "stability across reopen" OPEN block are both unsatisfied).
 
 use std::fmt;
 
