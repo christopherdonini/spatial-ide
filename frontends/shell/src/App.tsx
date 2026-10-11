@@ -1316,7 +1316,9 @@ export default function App() {
       issueQueryRef.current = null;
       return;
     }
-    // This effect run's consumer of the dataset: released in its cleanup, which is what lets the close above run.
+    // This effect run's consumer of the dataset, released in its cleanup. On a reopen `resource.admitted` has already
+    // moved the view to the new resource, so this release changes nothing and the close above runs because of the
+    // admission; the release covers a cleanup with no rebind, which phase A does not have (an unmount's dispatch is dropped).
     const consumer = viewIdRef.current;
     const releaseConsumer = () => {
       if (consumer !== null) dispatch({ type: "consumer.released", resource: admitted.dataset, consumer });
