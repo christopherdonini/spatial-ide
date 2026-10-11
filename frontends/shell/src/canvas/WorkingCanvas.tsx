@@ -528,7 +528,7 @@ export interface WorkingCanvasProps {
    * `residentFeatureCount` is `ResidentSet.totalResidentFeatures` read at the moment of refusal --
    * i.e. *before* the refused batch's own features, since a refused batch adds nothing. */
   onResidentCeilingExceeded: (streamHandle: string, residentFeatureCount: number) => void;
-  /** Fired on every view change -- each pan or zoom tick, an origin recenter, Zoom to layer's fit -- not only a
+  /** Fired on a view change other than the automatic fit, which never fires it -- each pan or zoom tick, an origin recenter, Zoom to layer's fit -- not only a
    * settled one (the caller debounces), and on a growth of the canvas past the area last reported:
    * with the authoritative-CRS box the view now shows. The caller drives `viewport_query` from this. */
   onViewportChanged: (bbox: AuthoritativeBbox) => void;
@@ -1943,7 +1943,8 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
       // `pointerButtonDownRef`, which tracks a DOM pointer-down rather than an active drag gesture).
       getCursor: ({ isDragging }) => cursorForPointerState(isDragging),
       onLoad: () => end("deck-init"),
-      // A size change that uncovers map area asks for it; a shrink asks for nothing. deck's own
+      // A size change that uncovers map area asks for it once a view has been reported (`lastQueried` non-null);
+      // a shrink asks for nothing. deck's own
       // `{width, height}` are only the trigger -- the size is this file's own basis (the canvas's CSS
       // client size), and the box is the one pure `viewportAfterResize` computes from the camera last
       // written. Constant-time arithmetic: no await, no timer, no read of deck's view state or
