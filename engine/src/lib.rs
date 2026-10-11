@@ -44,10 +44,15 @@
 //!   and implementing one now *is* inheriting it. Nothing in this slice creates derived
 //!   coordinates — there is no digitizing and no cursor unprojection — so there is nothing to
 //!   record.
-//! - **No persistence, no dataset registry, no lineage, no undo.** The operation is a pure
-//!   transformation (ADR-006), it writes nothing, and it claims no reproducibility grade
-//!   (ADR-005). The moment anything here caches to disk or names datasets by URI, `docs/11`'s
-//!   ResourceRef model and `kernel/` are owed.
+//! - **No dataset registry, no lineage, no undo.** The stream path writes nothing and is a pure
+//!   transformation (ADR-006); it claims no reproducibility grade (ADR-005). The tier builder
+//!   (`lod::build_tiers`) writes a derived, non-authoritative tier cache: a directory per source
+//!   content hash under `LOD_TIER_ROOT`, one GeoParquet file per derived tier, and `tiers.json`.
+//!   Caching to disk was this module's own trigger for owing `docs/11`'s ResourceRef model and
+//!   `kernel/`, and that trigger has come due for the cache. What is owed — whether a tier set
+//!   carries a ResourceRef and an ADR-005 statement, and what the kernel side owes — is a named
+//!   open item on the PLAN node `lod-tier-selection`, which the human rules before any product path
+//!   calls `build_tiers`. It is not discharged here, and no SKP command calls `build_tiers` today.
 //! - **No geometry repair.** An unclosed ring is a typed refusal. Consent-based repair with a
 //!   before/after diff belongs to the data doctor (`docs/05`), which is Alpha work.
 //!

@@ -77,7 +77,15 @@ diff is the data doctor's job (`docs/05`), which is Alpha work.
 - **No provenance column.** ADR-013 is Proposed and binds nothing; its own OPEN block says the
   per-feature-versus-per-vertex choice must be made "explicitly at acceptance, not inherited".
   Nothing here creates derived coordinates, so there is nothing to record.
-- **No persistence, no registry, no lineage, no undo, no reproducibility grade.**
+- **No registry, no lineage, no undo, no reproducibility grade.** The stream path writes nothing.
+  The tier builder (`lod::build_tiers`; no SKP command calls it today) writes a derived,
+  non-authoritative tier cache: a directory per source content hash under `LOD_TIER_ROOT`, one
+  GeoParquet file per derived tier, and `tiers.json`. Caching to disk was this module's own trigger
+  for owing `docs/11`'s ResourceRef model and `kernel/`, and that trigger has come due for the cache.
+  What is owed — whether a tier set carries a ResourceRef and an ADR-005 statement, and what the
+  kernel side owes — is a named open item on the PLAN node `lod-tier-selection`, which the human
+  rules before any product path calls `build_tiers`. It is not discharged here: this README assigns
+  the cache no ResourceRef, grade or ADR-006 class.
 
 ## Declared ceilings (ADR-010 rule 6)
 
