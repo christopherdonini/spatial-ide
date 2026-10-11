@@ -71,6 +71,7 @@ impl SkpError {
         )
     }
 
+    /// Reserved: not produced at `skp/0.x`, and nothing calls it (SKP-V0.md §5).
     pub fn unknown_handle(handle: &str) -> Self {
         Self::protocol_with_fields(
             "unknown_handle",
@@ -79,6 +80,7 @@ impl SkpError {
         )
     }
 
+    /// Reserved: not produced at `skp/0.x`, and nothing calls it (SKP-V0.md §5).
     pub fn malformed_hex_f64(field: &str, got: &str) -> Self {
         Self::protocol_with_fields(
             "malformed_hex_f64",
@@ -87,6 +89,7 @@ impl SkpError {
         )
     }
 
+    /// Reserved: not produced at `skp/0.x`, and nothing calls it (SKP-V0.md §5).
     pub fn bbox_not_finite(field: &str) -> Self {
         Self::protocol_with_fields(
             "bbox_not_finite",

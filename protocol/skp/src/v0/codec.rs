@@ -12,8 +12,10 @@
 //!
 //! Both are **strict**: a malformed value is a refusal, never a best-effort parse.
 
-/// Why a [`HexF64`] failed to decode — kept distinct so a caller can map the two cases to different
-/// SKP error codes (`skp.malformed_hex_f64` vs `skp.bbox_not_finite`).
+/// Why a [`HexF64`] failed to decode, in two cases. `HexF64`'s `Deserialize` turns either into a
+/// serde error carrying this `Display` text; no caller maps either to an SKP code. The codes
+/// `skp.malformed_hex_f64` and `skp.bbox_not_finite` are reserved and not produced at `skp/0.x`
+/// (SKP-V0.md §5).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum HexF64ParseError {
     /// Not 16 lowercase hex digits, or not parseable as one.

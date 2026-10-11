@@ -1,16 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
-//! Two minting rules, one type per kind (SKP-V0.md §3):
+//! Three minting rules, one type per kind (SKP-V0.md §3):
 //!
 //! - **Kernel-minted** ([`DatasetHandle`], [`StreamHandle`]) — held wherever possession authorizes
 //!   *data to flow*. OS CSPRNG, unguessable, opaque to the client that receives one.
 //! - **Client-minted** ([`CancelKey`]) — held wherever its only power is to stop the caller's *own*
 //!   already-authorized work. Format-checked on arrival, never minted here.
+//! - **Kernel-minted, authorizing nothing** ([`SessionRef`], `skp/0.5`) — names a kernel-side
+//!   session; no command's request accepts it.
 //!
-//! All three are session-scoped and non-persistable: none may be written to disk, logged, or reused
-//! across a process restart (docs/11's ResourceRef model and ADR-016's "stability across reopen"
-//! OPEN block are both unsatisfied).
+//! All four kinds are session-scoped and non-persistable: none may be written to disk, logged, or
+//! reused across a process restart (docs/11's ResourceRef model and ADR-016's "stability across
+//! reopen" OPEN block are both unsatisfied).
 
 use std::fmt;
 
