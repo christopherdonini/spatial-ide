@@ -315,3 +315,26 @@ Nothing above is edited.
 3. **Generation:** the node goes to 3.
 
 Nothing above is edited.
+
+### Amendment 3 — post-result: the build and its e2e evidence (class 1), with the run's deviations (class 2)
+
+*Written by the custodian after the build's and the e2e runs' outcomes were seen, before any gate. References only.*
+
+1. **The build** is at bc0b0d7a, by the worker: `state/consults/2026-10-11-shell-crs-form-for-format-default-contradicted-worker-report-1.md`.
+   - CF1 to CF4 each have an observed mutation.
+   - KNOWN-LIMITATIONS item 2 is applied by script proof.
+   - Part X is written.
+   - §7 is 164 of 225.
+2. **The e2e evidence (class 1)** was run by the custodian, under the human's approval of the port-5400 harness (`state/directives/2026-10-11-harness-approval-open-9-i-withdrawn-a10-late-cancel-adr-029.md`, item 1), after the worker was refused twice (`state/consults/2026-10-11-shell-crs-form-for-format-default-contradicted-worker-report-2.md` and the record below). The record is `state/consults/2026-10-12-shell-crs-form-for-format-default-contradicted-e2e-custodian-run.md` (sha256 590040be, its line 5 to the end).
+   - regression.mjs and admission-remediation.mjs exit 0 at the base and at the head.
+   - ABSENTCRS' has §3's outcome at both. At the head, the EPSG:2056 assertion admits F-2 through the real form, so H2 holds.
+   - The e2e mutation fails ABSENTCRS' at the `.crs-assertion-form` check, and every other step keeps its outcome.
+   - I2, I3 and I5 do not fire.
+   - The fixtures' sha256 are identical before and after.
+3. **The run's deviations (class 2):**
+   - (a) The harness itself: vite on 5400, a WebView2 host-resolver rule, a build-time overlay of browser arguments, and an npx shim. It is disclosed in full in the record.
+   - (b) The base checkout's generated inputs were prepared first: the bundle viewer was built and `src/generated/NOTICE.txt` generated.
+   - (c) A first base run failed to mount, exiting 1, because that file was missing. It was then run again.
+4. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
