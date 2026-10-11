@@ -391,7 +391,7 @@ size. Admissible types are utf8 (`Utf8`, `LargeUtf8`, `Utf8View`), boolean, the 
 8/16/32/64-bit integers, float32 and float64; everything else is a typed refusal, and **nothing is
 cast, widened or stringified to make a column fit**. A dictionary-encoded column is admitted when
 its value type is, and is emitted as that value type — never as its index, an ordinal, which ADR-016
-§4 names explicitly. Only publish preflight refuses `Float32` and dictionaries, as ADR-017 §4's
+§4 names explicitly. Of a projection's columns, only publish preflight refuses `Float32` and dictionaries, as ADR-017 §4's
 restriction of the bundle format, not of what a live query may stream.
 
 **Every published attribute is nullable**, whatever the source said. A source NULL is a value; a
@@ -549,7 +549,7 @@ the same limit `docs/07` places on ADR-003.
   - accepted ADRs: ADR-004, ADR-005, ADR-006, ADR-007, ADR-010, ADR-013, ADR-015, ADR-016, ADR-017, ADR-018, ADR-021, ADR-026, ADR-032, ADR-033, ADR-034, ADR-035
   - preregistrations in this module: `engine/ADMISSION-PREREGISTRATION.md`, `engine/B1-FOLLOWUPS-PREREGISTRATION.md`, `engine/B1-PROJECTION-PREREGISTRATION.md`, `engine/CANCEL-BEFORE-EXECUTE-PREREGISTRATION.md`, `engine/CORPUS-REPRODUCIBILITY-PREREGISTRATION.md`, `engine/COVERING-NAMES-MISSING-COLUMN-PREREGISTRATION.md`, `engine/CRS-UNDECLARED-MESSAGE-WORDING-PREREGISTRATION.md`, `engine/EXTENSION-AUTOLOAD-PREREGISTRATION.md`, `engine/FILTER-BIND-COERCIONS-PREREGISTRATION.md`, `engine/GEOMETRY-LINES-PREREGISTRATION.md`, `engine/GEOMETRY-POINTS-PREREGISTRATION.md`, `engine/LOD-PREREGISTRATION.md`, `engine/LOD-RELEASE-GUARD-PREREGISTRATION.md`, `engine/MULTIPOLYGON-MP1-PREREGISTRATION.md`, `engine/SOURCE-WATCHER-PREREGISTRATION.md` (§2a), `engine/STREAM-FLUSH-CANCEL-EXIT-PREREGISTRATION.md`, `engine/SUITES-BEYOND-WINDOWS-PREREGISTRATION.md`, `engine/TESTS-CONFIGURED-CONNECTIONS-PREREGISTRATION.md`, `engine/TYPE-WALK-NULL-LITERAL-ARITHMETIC-PREREGISTRATION.md`, `engine/WATCHER-FIRST-READ-PREREGISTRATION.md`
   - measurement passes over this module's code: `kernel/PROBE-PREREGISTRATION.md`, `kernel/IMPORT-LAYOUT-PREREGISTRATION.md`, `kernel/SCALE-PASS-PREREGISTRATION.md`
-  - engine halves of pieces filed elsewhere: `kernel/SKP-DRAINED-STREAM-HELPER-POST-CHECK-RACE-PREREGISTRATION.md` (§2, Part B), `kernel/FILTER-IDENTITY-ALIAS-AMBIGUOUS-THROUGH-SKP-PREREGISTRATION.md`
+  - engine halves of pieces filed elsewhere: `kernel/SKP-DRAINED-STREAM-HELPER-POST-CHECK-RACE-PREREGISTRATION.md` (§2, Part B), `kernel/FILTER-IDENTITY-ALIAS-AMBIGUOUS-THROUGH-SKP-PREREGISTRATION.md`, `kernel/MODULE-DOCS-STALE-STATEMENTS-PREREGISTRATION.md`
 - **Proposed ADRs, binding nothing:** ADR-023, ADR-036
 - **Declared limits:** KNOWN-LIMITATIONS 2, 3, 9, 11, 19, 20, 22, 23, 24, 25, 26, 27, 31, 33
 - **Ceilings:**

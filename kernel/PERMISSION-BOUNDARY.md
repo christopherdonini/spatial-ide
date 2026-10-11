@@ -494,7 +494,7 @@ review F-10 requires.
 
 Appended; nothing above is edited (this file is not rewritten, and its body is dated 2026-08-07).
 The body's statement that nothing is exposed is superseded by the position in `kernel/README.md`'s
-permission-boundary section, first bullet. No SKP message reaches the boundary. Two callers reach
+section headed "Publishing, and the trigger this file named in advance", first bullet. No SKP message reaches the boundary. Two callers reach
 the operation, both through `permission/boundary.rs`: the shell's binding-local
 `binding_publish_*` commands, the UI surface for which ADR-017's acceptance condition was
 discharged on 2026-08-17, and this crate's `publish-bundle` binary, which ADR-017 keeps as
