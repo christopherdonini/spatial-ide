@@ -1,0 +1,11 @@
+MACHINE_QUEUED exclusive project=SpatialIDE: waiting to be first, for no other heavy run, 120 s since the last one, and 60 one-second samples averaging under 10% with at most 5 over 25%
+MACHINE_WAITING exclusive: quiet=False average=2.8% peaks-over-25=0 samples=5 others=none since-last-end=69s because: samples 5/60; last heavy run ended 69 s ago (at least 120 s)
+MACHINE_QUIET quiet=True average=4.5% peaks-over-25=0 samples=60 others=none since-last-end=128s
+MACHINE_HOLD exclusive project=SpatialIDE cores=all affinity=FFFF shell=bash.exe:40056 also=bash.exe:6412 (commands started from now on inherit it; release when done)
+killed tree 36596
+killed tree 48604
+port 9223 free
+port 5400 free
+MACHINE_RELEASED project=SpatialIDE shell=bash.exe:40056 affinity=FF (cores 0-7)
+
+[exited with code 0]
