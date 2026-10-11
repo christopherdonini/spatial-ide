@@ -845,4 +845,12 @@ describe("WorkingCanvas.tsx: the one reporting function and deck's onResize (she
     const deckConstructor = source.slice(source.indexOf("new Deck({"), source.indexOf("deckRef.current = deck;"));
     expect(deckConstructor).toMatch(/\bonResize:/);
   });
+
+  it("RF10: a new filter generation and the unreported fit clear lastQueriedRef, and the camera is written in exactly three places", () => {
+    const reset = source.indexOf("resetFitForNewGeneration() {");
+    expect(source.slice(reset, source.indexOf("},", reset))).toContain("lastQueriedRef.current = null;");
+    const fit = source.indexOf("function fitToExtent(");
+    expect(source.slice(fit, source.indexOf("\n  }\n", fit))).toMatch(/if \(notifyViewport\) \{[\s\S]*?\} else \{[^}]*lastQueriedRef\.current = null;/);
+    expect(source.match(/cameraRef\.current = /g)?.length).toBe(3);
+  });
 });
