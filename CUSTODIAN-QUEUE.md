@@ -1,14 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `18ebb20d09b2f8beb79cfbf814292cde5ef0c901d7e38bce5ce30d0687672055`) at `2026-10-11T11:15:00.470Z`.
+Generated from `PLAN.yaml` (sha256 `38761b71e842a0590af712a4cd1a038bf1ff86ea07ff6434b8d07eab7baafebf`) at `2026-10-11T11:25:45.055Z`.
 
 ## 1. Next
 
-- (nothing ready)
+- **module-docs-stale-statements** — Engine and kernel module docs brought current, one docs-only piece (README bodies and doc comments, no code logic): the kernel README's H2 row and the engine's persists-nothing sentence first, then drift sweep area D's other eight findings and the earlier items (lane `kernel-protocol`)
 
 ## 2. Ready
 
-- (none)
+- **module-docs-stale-statements** — Engine and kernel module docs brought current, one docs-only piece (README bodies and doc comments, no code logic): the kernel README's H2 row and the engine's persists-nothing sentence first, then drift sweep area D's other eight findings and the earlier items (lane `kernel-protocol`, order 4, budget 120 min)
 
 ## 3. Waiting on the human (total: 10 min)
 
@@ -20,7 +20,6 @@ Generated from `PLAN.yaml` (sha256 `18ebb20d09b2f8beb79cfbf814292cde5ef0c901d7e3
 
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
 - **b2-piece-1b-recording** — B2 piece 1b -- recording: the kernel's step commands for filter, scope and style, the session history on the machine, safe against a crash, and the docs/07 note — blocked by: shell-migration-milestone-2, guardian-v1
-- **module-docs-stale-statements** — Engine and kernel module docs brought current, one docs-only piece (README bodies and doc comments, no code logic): the kernel README's H2 row and the engine's persists-nothing sentence first, then drift sweep area D's other eight findings and the earlier items — blocked by: known-limitations-item-2-on-main-paragraph
 - **skp-v0-live-sections-current-area-c** — SKP-V0.md's live sections and three comments brought current to the wire the code sends (sweep area C, findings 1, 3, 4, 6, 7, 8 and 9; no literal change); and skp.malformed_hex_f64, skp.bbox_not_finite and skp.unknown_handle struck as refusals a client receives (sweep area C, finding 5, ruled) — blocked by: module-docs-stale-statements
 - **shell-migration-milestone-2** — Shell migration, milestone 2 -- selection and scope: the Select tool, a selection that survives filter and pan, the hidden count, a stated scope — blocked by: shell-map-refill-after-resize
 - **stale-test-names-and-comments** — Stale test names and test comments, names and comments only, no assertion changes: a refusal-named test that asserts admission, the React-harness premise, the no-attributes reason, a Proposed ADR-018, two ruled decisions still marked pending (sweep area E, findings 2, 3, 4, 7 and 10) — blocked by: skp-v0-live-sections-current-area-c
@@ -35,7 +34,6 @@ Generated from `PLAN.yaml` (sha256 `18ebb20d09b2f8beb79cfbf814292cde5ef0c901d7e3
 ## 5. In progress
 
 - **shell-map-refill-after-resize** — The map refills after a resize: a layout change that uncovers map area issues a viewport query, so the area fills without a pan or zoom — evidence: branch `cut/shell-map-refill-after-resize`
-- **known-limitations-item-2-on-main-paragraph** — KNOWN-LIMITATIONS item 2 gains the human's on-main paragraph (absent crs key and latitude-first CRS admitted under GeoParquet 1.0.0 and 1.1.0), and items 19, 20 and 22's unpinned cites are pinned (sweep area E, findings 1 and 6) — evidence: branch `cut/known-limitations-item-2-on-main-paragraph`
 - **ported-code-notice-route** — A notice route for ported code, wherever it lands (shell or kernel), needed before any PORT — evidence: branch `cut/ported-code-notice-route`
 
 ## 6. Proposed / unscheduled
