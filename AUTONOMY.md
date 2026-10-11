@@ -546,6 +546,6 @@ The rule is the human's item 2, reproduced below because this section is where t
    h. Where it lives: this directive; a new section appended at the end of AUTONOMY.md; one paragraph in each gate agent's definition; every gate brief by reference. One docs pull request for my click. The rule applies from now, before that pull request merges.
 ```
 
-- **From when:** the rule applies from 2026-10-11, before this section merged (the item's h).
-- **Where it is carried:** every gate brief cites this section by reference. The architect's and the reviewer's definitions (`.claude/agents/architect.md`, `.claude/agents/reviewer.md`) carry it in one appended paragraph each.
+- **From when:** the rule applies from the human's direction of 2026-10-11, queued at 18:23:36Z (the directive's filing note), before this section merged (the item's h).
+- **Where it is carried:** every gate brief carries it by reference. The architect's and the reviewer's definitions (`.claude/agents/architect.md`, `.claude/agents/reviewer.md`) carry it in one appended paragraph each.
 - **What stays:** the proportional-gates text of §22 (the 2026-10-05 product-first direction, section 2) is otherwise unchanged, and an untrue claim of a limit is still a Correctness finding (the item's g).
