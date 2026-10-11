@@ -57,7 +57,8 @@ docs/01 principle-7 shortfall, not a silent gap (§2, C3).
 
 Pure, in-memory, no IO beyond what `Dataset::open` already did, no lease taken, not cancellable
 (ADR-006 class 1 — a pure transformation over already-resident state). Every field maps to an
-existing `engine::Dataset` accessor; none of them runs a new query:
+existing `engine::Dataset` accessor, except `coverage` and `session_end`, which come from the
+host's watch and generation state; none of them runs a new query:
 
 **Brought current again, with no literal change (§8's dated note on the live sections): the block
 below carries every member the host sends at the literal §4 item 3 states.**

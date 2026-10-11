@@ -10,7 +10,7 @@
 //! the same reason `docs/16`'s width contract exists: `Number` is lossy above 2^53 and an unhandled
 //! `BigInt` serialization is the M4 root cause behind ADR-010 rule 7.
 //!
-//! Both are **strict**: a malformed value is a refusal, never a best-effort parse.
+//! Both are **strict**: a malformed value is rejected, never a best-effort parse.
 
 /// Why a [`HexF64`] failed to decode, in two cases. `HexF64`'s `Deserialize` turns either into a
 /// serde error carrying this `Display` text; no caller maps either to an SKP code. The codes

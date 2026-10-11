@@ -19,7 +19,7 @@ use crate::v0::{DatasetHandle, DecU64, HexF64, SessionRef, StreamHandle};
 #[serde(deny_unknown_fields)]
 pub struct OpenDatasetRequest {
     pub skp: String,
-    /// UTF-8, absolute; canonicalized and checked by the host. Never a data-plane value — the path
+    /// UTF-8, absolute; passed to the engine's open as received. Never a data-plane value — the path
     /// stays on the control plane for its whole life.
     pub path: String,
     /// Client-minted (SKP-V0.md §3): names this specific open so `cancel` can stop it before it
