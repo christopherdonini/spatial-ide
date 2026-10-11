@@ -43,15 +43,19 @@ Under `docs/` the first id is `CC-BY-4.0`. The containing package's `license` fi
 
 ## What the build verifies, and what is only recorded
 
-Verified on every NOTICE generation (`readPortedRegistry`) and every `npm run check:dist-notice`, against bytes on this disk:
+Three checks do the verifying, and they run in different places:
 
-| Field | How it is verified |
-|---|---|
-| `texts[].sha256`, `bytes` | recomputed from the pinned file; the UTF-8 round trip must lose nothing |
-| `work`, `upstream_commit`, `license_id_basis`, `retrieved`, the shape of every entry | schema checks; a fault throws |
-| `license_id` | on the allowlist above (the repository check and the prebuild check) |
-| `files[].path` | a tracked file whose header window carries the header above (the repository check and the prebuild check) |
-| `adopted_by` | well-formed; a directive path must be tracked |
+- `readPortedRegistry` reads the registry and re-hashes the pinned texts. It runs in every NOTICE generation (`notice()`, so the viewer's build and the shell's prebuild), in `npm run check:dist-notice`, in the repository check and in the shell's prebuild check.
+- `checkPortedFiles` checks the tree against the registry. It runs only in the repository check (`node scripts/check-ported-notices.mjs`) and in the shell's prebuild check (`frontends/shell/scripts/generateNotice.mjs`, through `portedPrebuildCheck`). The viewer's build and `check:dist-notice` do not run it.
+- `portedSectionFindings` checks the built text against the registry. It runs in `npm run check:dist-notice` only.
+
+| Field | Checked by | How |
+|---|---|---|
+| `texts[].sha256`, `bytes` | `readPortedRegistry` | recomputed from the pinned file; the UTF-8 round trip must lose nothing |
+| `work`, `upstream_commit`, `license_id_basis`, `retrieved`, the shape of every entry | `readPortedRegistry` | schema checks; a fault throws. `upstream_repository` and `license_id` are checked there only as non-empty strings |
+| `license_id` | `checkPortedFiles` | on the allowlist above; the repository check and the prebuild check |
+| `files[].path` | `checkPortedFiles` | the file carries the header above in its header window; the repository check and the prebuild check. In a git checkout the path must also be a tracked file. Outside a checkout (no `.git` entry at the root) the tracked test cannot run, and the check reads the file from the disk instead, so it must exist there |
+| `adopted_by` | `checkPortedFiles` | well-formed, in the repository check and the prebuild check. In a git checkout a directive path must also be a tracked file; outside a checkout only its form is checked |
 
 **Recorded, not re-verified:** `upstream_repository`, `upstream_commit` and `retrieved` name where the texts came from. Re-deriving them needs the network the build never touches.
 
