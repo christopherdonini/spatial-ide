@@ -940,3 +940,16 @@ Read the last amendment first.
 
 Nothing above is edited.
 
+### Amendment 3 — the human's ruling on OPEN-11 (class 5)
+
+*Written by the custodian on the human's ruling, before any code. References only.*
+
+1. **The ruling** is the human's item 1 of `state/directives/2026-10-11-open-11-a-piece-f-opens-ported-notices-required.md`: OPEN-11 (A), on the terms that item sets, which are referenced and not restated.
+2. **§2.3's split after an unreported camera write** is shown from the box that `onViewShown` reports. Amendment 2 item 2 (d)'s hold is lifted. RB3, E-SEL-FILTER and W4 stand as drafted, with RB3's stand-in calling the prop after an Apply.
+3. **The test the ruling requires** is a new row, RB18 (render, App.selection.test.tsx). A call of `onViewShown` issues no query and writes neither `lastViewportBboxRef` nor the canvas's last-asked area. Its mutation routes the call into `onViewportChanged`'s handler, and the test fails on the query that the mutation issues.
+4. **The tool prop:** the same item confirms Amendment 2 item 6's reading.
+5. **§7:** the prop's lines count in B-C and B-A. An overrun is class 8.
+6. **Generation:** the node's generation goes up by one.
+7. **Superseded index:** Amendment 2 item 2 (d) and §11's OPEN-11 → items 1 to 3.
+
+Nothing above is edited.

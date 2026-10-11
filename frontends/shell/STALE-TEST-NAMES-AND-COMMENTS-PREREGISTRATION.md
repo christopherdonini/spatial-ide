@@ -428,3 +428,17 @@ Assertions only (E1 to E8). No measurement.
 
 Opens empty, append-only, classes 1 to 9. A yes to any OPEN item is recorded as class 9, on the human's reading at `state/directives/2026-10-10-docs-lane-slot-2-order-reaim-answers-strike-crs-wording.md:11` (at C). A no is recorded as class 5.
 
+### Amendment 1 — the human's rulings on OPEN-1 to OPEN-3 (class 9, as §10 records a yes)
+
+*Written by the custodian on the human's ruling, before any code. References only.*
+
+1. **The ruling** is the human's item 2 of `state/directives/2026-10-11-open-11-a-piece-f-opens-ported-notices-required.md`.
+2. **OPEN-1, yes:** §2.3's OPEN-1 row applies. Both places take piece d's qualified sentence as their model, with no change of ADR-006 class. It is a second exception to the test-files rule, and the row waits for piece e's merge.
+3. **OPEN-2, yes:** the caller list names all three callers.
+4. **OPEN-3, yes to (a), (b) and (c):** comments only.
+5. **§7:** the conditional additions apply, at most 186 lines and 20 files. §7 is not edited.
+6. **The two routing items** become the proposed nodes `stale-assertion-messages-and-product-comments` and `app-key-remount-unit-test`. Neither is in this piece.
+7. **Generation:** the node goes to 2.
+8. **Superseded index:** §2.3's "applied only on the human's answer" and §11's OPEN-1 to OPEN-3 → items 2 to 4.
+
+Nothing above is edited.
