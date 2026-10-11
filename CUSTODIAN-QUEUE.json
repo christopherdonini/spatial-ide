@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-11T19:02:52.176Z",
-  "plan_hash": "49d3f9235cec0290843fdb408fe88fbceae18c02144511c8525e595f77a72a65",
+  "generated_at": "2026-10-11T19:12:04.253Z",
+  "plan_hash": "fe6c47267e4f7f50f3a20a0fc97632e545facb2770e59428dde60f5f5d8d6579",
   "priorities_approved": true,
   "next": null,
   "ready": [],
@@ -1690,7 +1690,7 @@
         "opened": "2026-10-07",
         "done": null
       },
-      "summary": "DIRECTION 2026-10-11 (state/directives/2026-10-11-direction-after-status-review.md, item 1): slot 1's next after milestone 2; the architect drafts its form and its question round while milestone 2 is in code (forms ahead). Before: Recorded 2026-10-07 by the human's ruling of the migration plan (state/directives/2026-10-07-migration-plan-v2-ruled.md; state/directives/SHELL-MIGRATION-PLAN-2026-10-07.md, section 7, bounded): seams 1 (full) and 2; the kernel stays the only authority on filter admission; no new SKP schema; the human may swap milestones 3 and 4. Proposed."
+      "summary": "FORM COMMITTED 2026-10-11 (frontends/shell/SHELL-MIGRATION-MILESTONE-3-PREREGISTRATION.md, the architect's draft state/consults/2026-10-11-shell-migration-milestone-3-architect-draft.md; full form; about 5,600 lines over about 26 files; no engine, kernel or protocol path, so no impact read; pins hashed at ceff6d82; re-sweep at code start after milestone 2 merges). OPEN-1 to OPEN-11 to the human (OPEN-1 to OPEN-7 red lines, typed words only; OPEN-8 to OPEN-11 not), each with a recommendation; no code before the rulings and milestone 2's merge. Before: DIRECTION 2026-10-11 (state/directives/2026-10-11-direction-after-status-review.md, item 1): slot 1's next after milestone 2; the architect drafts its form and its question round while milestone 2 is in code (forms ahead). Before: Recorded 2026-10-07 by the human's ruling of the migration plan (state/directives/2026-10-07-migration-plan-v2-ruled.md; state/directives/SHELL-MIGRATION-PLAN-2026-10-07.md, section 7, bounded): seams 1 (full) and 2; the kernel stays the only authority on filter admission; no new SKP schema; the human may swap milestones 3 and 4. Proposed."
     },
     {
       "id": "shell-migration-milestone-5",
