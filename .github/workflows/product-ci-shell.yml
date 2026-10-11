@@ -123,6 +123,9 @@ on:
       - "renderer/style-ts/**"
       - "renderer/bundle-viewer/notice.mjs"
       - "renderer/bundle-viewer/notice.d.mts"
+      - "renderer/bundle-viewer/portedNotices.mjs"
+      - "renderer/bundle-viewer/portedNotices.d.mts"
+      - "LICENSES/third-party/ported/**"
       # RELEASE-0.1 item 3e (release-cut fix batch, MUST-FIX 4): the first cross-module
       # compile-time file dependency in this repository — `kernel/src/publish/ceilings.rs`
       # `include_str!`s this exact file, so it changes compiled kernel behaviour this crate's own
@@ -143,6 +146,9 @@ on:
       - "renderer/style-ts/**"
       - "renderer/bundle-viewer/notice.mjs"
       - "renderer/bundle-viewer/notice.d.mts"
+      - "renderer/bundle-viewer/portedNotices.mjs"
+      - "renderer/bundle-viewer/portedNotices.d.mts"
+      - "LICENSES/third-party/ported/**"
       # RELEASE-0.1 item 3e (release-cut fix batch, MUST-FIX 4): the first cross-module
       # compile-time file dependency in this repository — `kernel/src/publish/ceilings.rs`
       # `include_str!`s this exact file, so it changes compiled kernel behaviour this crate's own
