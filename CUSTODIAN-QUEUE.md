@@ -1,14 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `1ee89c7efbd5f01a47f983216c39c4f203e8f7ead0562146374c2d6b9945743f`) at `2026-10-11T18:25:53.331Z`.
+Generated from `PLAN.yaml` (sha256 `c2887e5a8a00d3f818abf30115f099eef93eb36117ff85f79a7ea99c15cc1bb1`) at `2026-10-11T18:34:03.379Z`.
 
 ## 1. Next
 
-- **shell-migration-milestone-2** — Shell migration, milestone 2 -- selection and scope: the Select tool, a selection that survives filter and pan, the hidden count, a stated scope (lane `shell`)
+- (nothing ready)
 
 ## 2. Ready
 
-- **shell-migration-milestone-2** — Shell migration, milestone 2 -- selection and scope: the Select tool, a selection that survives filter and pan, the hidden count, a stated scope (lane `shell`, order 4, budget 0 min)
+- (none)
 
 ## 3. Waiting on the human (total: 10 min)
 
@@ -32,6 +32,7 @@ Generated from `PLAN.yaml` (sha256 `1ee89c7efbd5f01a47f983216c39c4f203e8f7ead056
 
 - **skp-v0-live-sections-current-area-c** — SKP-V0.md's live sections and three comments brought current to the wire the code sends (sweep area C, findings 1, 3, 4, 6, 7, 8 and 9; no literal change); and skp.malformed_hex_f64, skp.bbox_not_finite and skp.unknown_handle struck as refusals a client receives (sweep area C, finding 5, ruled) — evidence: branch `cut/skp-v0-live-sections-current-area-c`
 - **shell-crs-form-for-format-default-contradicted** — The shell opens the CRS assertion form after engine.format_default_contradicted, so the refusal's own message (assert the CRS this file is actually in) is true in the app; graded S1 on main — evidence: branch `cut/shell-crs-form-for-format-default-contradicted`
+- **shell-migration-milestone-2** — Shell migration, milestone 2 -- selection and scope: the Select tool, a selection that survives filter and pan, the hidden count, a stated scope — evidence: branch `cut/shell-migration-milestone-2-phase-a`
 
 ## 6. Proposed / unscheduled
 
