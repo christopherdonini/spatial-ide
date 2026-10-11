@@ -472,3 +472,23 @@ Opens empty, append-only, classes 1 to 9.
 5. **Superseded index:** §2.5's "applied only on the answer" → item 3; §2.3's "where the reference goes is OPEN-1" → item 2.
 
 Nothing above is edited.
+
+### Amendment 2 — post-result: written after gate 1's outcomes on PR #209 were seen, before the correction's code (class 1)
+
+*Written by the custodian after the architect's gate 1 (`state/consults/gates/2026-10-11-module-docs-stale-statements-gate1-architect.md`) and the reviewer's gate 1 (`state/consults/gates/2026-10-11-module-docs-stale-statements-gate1-reviewer.md`), both FAIL. References only.*
+
+1. **Row D4's sentence that the stream path writes nothing** is superseded at its three sites (both gates' C-1). It claims only what the code shows: the engine's and the kernel's own stream code opens no file for writing. It also names DuckDB's default spill of intermediates, which the engine does not configure off, by section of `kernel/CANCELLATION-AND-TRACING.md` and `kernel/RESULTS.md` (§2.0 (a)). No code changes.
+2. **Row DX's Says bullet** on the other exposure reviews is not applied (the architect's gate 1, ruling 1).
+3. **Fixed before the merge, with no re-gate:**
+   - §2.4's two owner's-index lines, applied by whole-line replacement from lead-data's update (`state/consults/2026-10-11-module-docs-stale-statements-owners-index-update.md`);
+   - the H2 row's ADR-018 wording (the architect's D-2);
+   - the audit log's rotation (the architect's D-3);
+   - the scope of "Only" in the attribute paragraph (the architect's D-4, the reviewer's D-1);
+   - the appended PERMISSION-BOUNDARY note's section name (the reviewer's D-2);
+   - the PR body's E1 count (the reviewer's D-3).
+4. **The gates:** the architect re-gates item 1's sentences only. The reviewer checks the round's commits, the two index lines among them (the reviewer's D-4).
+5. **§7 and §8** are unchanged.
+6. **Generation:** the node goes to 3.
+7. **Superseded index:** row D4's Says, "the stream path writes nothing" → item 1; row DX's Says, the bullet on the other exposure reviews → item 2.
+
+Nothing above is edited.
