@@ -89,7 +89,12 @@ const emptyRegistry = { schema: 1, works: [] };
 test('an unregistered Ported-From marker fails, naming the path', () => {
   const root = tmp();
   try {
-    put(root, 'src/a.ts', header());
+    // The layer SPDX id alone, so that only the Ported-From line marks the file.
+    put(
+      root,
+      'src/a.ts',
+      `// SPDX-License-Identifier: AGPL-3.0-or-later\n// Copyright (C) 2026 X\n// Ported-From: ${REPO} @ ${COMMIT} upstream/a.ts\n`,
+    );
     put(root, 'src/clean.ts', '// SPDX-License-Identifier: AGPL-3.0-or-later\n// Copyright (C) 2026 X\n');
     const findings = checkPortedFiles({ repoRoot: root, files: ['src/a.ts', 'src/clean.ts'], registry: emptyRegistry });
     assert.equal(findings.length, 1, findings.join('\n'));
