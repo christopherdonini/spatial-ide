@@ -378,3 +378,18 @@ Class 5, and class 9 (scope addition) for items (d) and (f): this amendment reco
 | §7, `ALLOWED_UPSTREAM_LICENSE_IDS`; Entry shapes' "(wording per OPEN-3)"; Budget | items (a), (c), (j); additions in (f), (g) |
 | §8, items 6, 7, 8 | items (a), (b), (d); items 14 and 15 added in (f), (h) |
 | §9, Architect; PR body | item (k) |
+
+### Amendment 2 — post-result: written after gate 1's outcomes on PR #208 were seen, before the correction's code (class 1)
+
+*Written by the custodian after the architect's gate 1 (`state/consults/gates/2026-10-11-ported-code-notice-route-gate1-architect.md`) and the reviewer's gate 1 (`state/consults/gates/2026-10-11-ported-code-notice-route-gate1-reviewer.md`), both FAIL. References only.*
+
+1. **§2.4 bullet 1** ("Both existing callers are unchanged") is superseded for the shell's caller (architect C-2; the caller rule, round 4 and round 5, item 4). `frontends/shell/scripts/generateNotice.mjs` binds one `portedRoot`, `LICENSES/third-party/ported` under its `repoRoot`, and passes it to `portedPrebuildCheck` as `root` and to `notice()` as `options.portedRoot`. The viewer's caller is unchanged. P2 is unaffected (the same directory).
+2. **The docs** (architect C-1; reviewer C-1 and C-2): the verification table in `LICENSES/third-party/ported/README.md` names, for each row, the checks that verify it; `CONTRIBUTING.md`'s claim for the packaged build carries Amendment 1 (f)'s limit to a build from a git checkout.
+3. **The comment** on the fifth set's placement in `frontends/shell/scripts/checkDistNotice.mjs` is corrected (architect C-3). Comment lines only.
+4. **Carried to the first viewer-port piece's form, not done here:** the viewer slice's `ENTRY_LINE` count with a viewer port's real text (architect C-3, reviewer N-3), and the `//!`, `///` and `/**` header forms (reviewer N-1).
+5. **The PR body** names Amendment 1 (k)'s items and corrects its three-docs sentence (gates' D-1 to D-3). The closing record names `renderer/bundle-viewer/notice.d.mts` as §2.4's declaration file (architect ruling 1).
+6. **§7 and §8** are unchanged; the correction stays within Amendment 1 (j).
+7. **Generation:** the node goes to 3.
+8. **Superseded index:** §2.4 bullet 1's "Both existing callers are unchanged" → item 1.
+
+Nothing above is edited.
