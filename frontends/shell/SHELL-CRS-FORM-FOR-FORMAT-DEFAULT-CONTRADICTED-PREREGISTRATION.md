@@ -356,3 +356,15 @@ Nothing above is edited.
 6. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 5 — the superseded index of correction round 1 (class 1)
+
+*Written by the custodian on gate 2's D-1 (`state/consults/gates/2026-10-12-shell-crs-form-for-format-default-contradicted-gate2-reviewer.md`, PASS). References only.*
+
+1. **Superseded index (correction round 1):**
+   - Amendment 3 item 2's "(sha256 590040be, its line 5 to the end)" → Amendment 4 item 3.
+   - Amendment 3 item 2's "ABSENTCRS' has §3's outcome at both", as to §3's settled bullet at bc0b0d7a → Amendment 4 item 1.
+   - The e2e record's "The step settled." → that record's correction of 2026-10-12.
+2. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.

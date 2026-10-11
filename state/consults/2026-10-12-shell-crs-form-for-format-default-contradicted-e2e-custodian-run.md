@@ -107,3 +107,4 @@ All of it ran in the custodian's scratchpad, in a folder `crsform-e2e/` adapted 
   - It exits 0. All 17 steps PASS, and NET' is INFO.
   - ABSENTCRS' reports `settled=true`.
   - The fixtures' sha256 are unchanged before and after.
+- **The filing note's hash** (line 1) is a historical pin at 86c401499462aecbaf2270e84ddf2281a58b55ad. The pin is authoritative, not the tree, which this section changes (gate 2's D-2).
