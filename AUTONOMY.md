@@ -526,3 +526,26 @@ Round 33, items 4 and 5 are cited by round and item and not reproduced. The reco
 - **Continuity.** The block is stale when the newest commit on `HEAD` that touches `state/CUT-STATE.md` leaves the block's `flushed_at` as its first parent had it. A stale block blocks the stop inside §3's continuation caps, with `HEAD` as its progress signal. Its reason names that commit, its time and the block's `flushed_at`, and the step: rewrite the block with `scripts/hooks/flush.mjs` from git and the ledger, commit it ledger-only, push, then stop. When git cannot be read, the step is skipped.
 - **§7.** The milestone refresh of the 2026-09-29 flush directive, item 5 (`state/directives/2026-09-29-flush-mirror-and-milestone-refresh.md`), is a ledger-only commit with no `chore(site): health refresh` before it. §7's health-refresh-first bullet holds for handoffs and the pre-compaction flush. The PreCompact hook is unchanged and remains the backstop.
 - **§26's tooling half is done:** `READING_ORDER` carries the step. Proof: the test `session-resume: the reading order names state/directives/ after DECISIONS-PENDING.md and before PRECEDENTS.md (AUTONOMY.md §26)`.
+
+## §31. A wording block ends in one answer (the human, 2026-10-11; `state/directives/2026-10-11-direction-after-status-review.md`, item 2; appended after §30 so that no line a record cites above it moves)
+
+The rule is the human's item 2, reproduced below because this section is where the item says it lives. It is byte-copied by script from `state/directives/2026-10-11-direction-after-status-review.md:14-25 @ 9a7da36ace6ee64cc41fb4a8fc69d4e26a5de632 sha256:d26d781228f0ac58aa937aa3793ff96560f334f3401dcb70ee663f48480882ec` (sha256 over those whole lines as committed, LF bytes), and nothing in it is changed:
+
+```text
+2. A wording block ends in one answer. I authorise this as an exemption to the governance freeze, if the freeze still stands.
+   a. When a gate's only blocking findings are the words of a document sentence, and the code's Correctness and Evidence are closed, the gate's author writes exact replacement words in the same report. The report shows each clause of those words checked against the code.
+   b. I answer yes, or give my own words, or accept the sentence as it stands.
+      - Yes: the worker applies the proposed words. No re-gate. The PR body records it.
+      - My own words: the same author checks those words only, once. If that check fails, the author's words land unless I accept mine as they stand. There is no third round.
+      - Accepted as it stands: the gap is recorded in the sentence's source comment and on the form.
+   c. A sentence is judged at what an operator can observe in the shipped app. A case that needs timing inside one request round trip, a dev-only switch or an instrumented build does not block. The author names it, and it is recorded in the source comment. Anything ordinary use can reach still blocks.
+   d. Where the sentence is not my wording (a worker's README line, a doc comment, a row I have not worded), no answer from me is needed. The worker applies the author's words, with no re-gate, and the PR body lists them.
+   e. Where a piece needs a new sentence of mine that states what the code does, the architect drafts it in the form with the same clause check, and I approve or replace it there. I no longer write such a sentence first.
+   f. Not covered: red-line texts (ADR statuses and amendments, gate rulings, licensing, security posture) keep my typed words; strings the app shows stay under P6; and nothing here applies to a finding that changes what the code does.
+   g. This replaces "tell me and do not reword" (my instruction of 2026-10-10 and my rulings since) for the cases it covers. The proportional-gates section of 2026-10-05 is otherwise unchanged: an untrue claim of a limit is still a Correctness finding.
+   h. Where it lives: this directive; a new section appended at the end of AUTONOMY.md; one paragraph in each gate agent's definition; every gate brief by reference. One docs pull request for my click. The rule applies from now, before that pull request merges.
+```
+
+- **From when:** the rule applies from the human's direction of 2026-10-11, queued at 18:23:36Z (the directive's filing note), before this section merged (the item's h).
+- **Where it is carried:** every gate brief carries it by reference. The architect's and the reviewer's definitions (`.claude/agents/architect.md`, `.claude/agents/reviewer.md`) carry it in one appended paragraph each.
+- **What stays:** the proportional-gates text of §22 (the 2026-10-05 product-first direction, section 2) is otherwise unchanged, and an untrue claim of a limit is still a Correctness finding (the item's g).
