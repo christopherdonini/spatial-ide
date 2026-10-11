@@ -478,3 +478,25 @@ Nothing above is edited.
 3. **Generation:** the node goes to 3.
 
 Nothing above is edited.
+
+### Amendment 3 — post-result: written after gate 1's outcomes on PR #210 were seen, before the correction's code (class 1)
+
+*Written by the custodian after the architect's gate 1 (`state/consults/gates/2026-10-11-skp-v0-live-sections-current-area-c-gate1-architect.md`) and the reviewer's gate 1 (`state/consults/gates/2026-10-11-skp-v0-live-sections-current-area-c-gate1-reviewer.md`), both PASS with Documentation findings. References only.*
+
+1. **Three sibling statements the rewrite now contradicts are in scope** (the reviewer's D3). Comment and document text only:
+   - `protocol/skp/src/v0/commands.rs`, the open request's doc, which calls the path canonicalized by the host. At most one changed line, so the file stays within Amendment 1 item 5's ceiling of 6.
+   - `protocol/skp/SKP-V0.md`, the `describe` lead's sentence that every field maps to a `Dataset` accessor.
+   - `protocol/skp/src/v0/codec.rs`, the module doc's sentence that a malformed value is a refusal. This is the architect's observation and the reviewer's D3 (c).
+2. **Fixed before the merge, with no re-gate:**
+   - the S12 note's section names and its directive cite (the architect's D-1 and D-2);
+   - its record of §1's and §3's lead changes, and the fixture-count wording (the reviewer's D4);
+   - §9.1's note order (the architect's D-3, the reviewer's D2);
+   - `handles.rs`'s quoted ADR-016 span kept whole (the reviewer's D1);
+   - §2.6's index line, applied from lead-data's update (`state/consults/2026-10-11-skp-v0-live-sections-current-area-c-owners-index-update.md`; the architect's D-4, the reviewer's D6);
+   - the PR body's pin count (the reviewer's D5).
+3. **The gate:** a scoped reviewer check of the round's commits, item 1's lines among them.
+4. **§7 and §8** are unchanged.
+5. **Generation:** the node goes to 4.
+6. **Superseded index:** §2.1 to §2.4's row lists, for item 1's three lines → item 1.
+
+Nothing above is edited.
