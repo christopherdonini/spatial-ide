@@ -289,3 +289,19 @@ None is a red line.
 
 The worker's and tester's briefs carry, as written, the paragraph at state/directives/2026-10-06-machine-script-adopted.md:12-22 @ d88ceddaeb88707941e0868a900eb2f7999da06b sha256:7350977156bed7c94b0da4e8db806ba34c25c6678e65c46447a62d791ba9e8e1. This form names no other rule for builds.
 
+
+### Amendment 1 — the human's rulings on OPEN-1 to OPEN-3 (class 5)
+
+*Written by the custodian after the human's ruling, before any code. References only.*
+
+1. **The ruling** is the human's item 3 (state/directives/2026-10-11-merge-205-ruling-207-c-crs-form-open-items.md:12-17 @ c48601ab18d6d4bc3763c53e0c820e7f37a9b851 sha256:e4bcd58730a680a80528696193c61827d9c16cacaa6b68b964377c3e2d4e4ab7).
+2. **OPEN-1:** §2.7's sentence is replaced by the sentence at the directive's line 14, byte for byte by script, with that line's three leading spaces removed (state/directives/2026-10-11-merge-205-ruling-207-c-crs-form-open-items.md:14 @ c48601ab18d6d4bc3763c53e0c820e7f37a9b851 sha256:1e7e9e754e88695ca124baa86f76f29c9250acb18eb1fadd0f931f6c402482d8).
+3. **OPEN-2: confirmed.** Only that sentence is replaced. The first sentence (the code) and the rest of the paragraph stay, except for item 4.
+4. **OPEN-3:** in the same paragraph, the phrase the directive's line 16 names is replaced by the phrase it gives, both byte for byte by script (state/directives/2026-10-11-merge-205-ruling-207-c-crs-form-open-items.md:16 @ c48601ab18d6d4bc3763c53e0c820e7f37a9b851 sha256:922aa3ef2e1ee2c47a2f621ef6278f5621a76cdd516ab4189834494bbd4de922). Nothing else in the paragraph changes.
+5. **§8 item 8** reads with items 2 and 4: the edit of item 2 is that sentence and that phrase, byte-copied by script from the filed directive, and nothing else.
+6. **§2.6 and §7:** KNOWN-LIMITATIONS.md stays one line in place, within its 2 lines outside the count.
+7. **The gates** check the replaced sentence and the phrase against the code at the head, as every other claim. If a clause is wrong, the human is told and nothing is reworded.
+8. **Generation:** the node goes to 2.
+9. **Superseded index:** §2.7's input-owed bullets and §11's OPEN-1 → item 2; §11's OPEN-2 → item 3; §11's OPEN-3 → item 4; §8 item 8's "any other sentence of item 2 edited" → items 4 and 5.
+
+Nothing above is edited.

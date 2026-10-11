@@ -549,3 +549,18 @@ Nothing above is edited.
 Nothing above is edited.
 
 **Correction of record, appended 2026-10-11 (the defect of PR #205's gate 3 D-1, found here by the custodian).** Amendment 5 item 1's directive reference was written in the commit that created the directive; it is state/directives/2026-10-11-rulings-205-clause-crs-form-node-207-sentence.md:12-14 @ df6d39a065a3e1e7b8049801cdd00a7d98de0201 sha256:d7c23a993e1cd07ab9db908c0cd246d4d13808faa0f17a82bd5895db7e6c2d96.
+
+### Amendment 6 — the human's ruling on gate 4's C1: (C), the gap accepted (class 5)
+
+*Written by the custodian after gate 4 (`state/consults/gates/2026-10-11-shell-map-refill-after-resize-gate4-architect.md`, C1, D1 and D2) and the human's ruling, before the change. References only.*
+
+1. **The ruling** is the human's item 2 (state/directives/2026-10-11-merge-205-ruling-207-c-crs-form-open-items.md:8-10 @ c48601ab18d6d4bc3763c53e0c820e7f37a9b851 sha256:9bd2a7e70584abd84d2a96c61ff08861e7a942c8e6af5b43ad852c23422f5c07).
+2. **The sentences stay as they are.** The human accepts that they do not cover a pan made inside the mint round trip around an Apply or Clear: gate 4's C1, by reference.
+3. **The item's source comment** records it in the human's words: the directive's line 9, byte for byte by script, with that line's three leading spaces removed (state/directives/2026-10-11-merge-205-ruling-207-c-crs-form-open-items.md:9 @ c48601ab18d6d4bc3763c53e0c820e7f37a9b851 sha256:76cf51df5e91f0cadb72cc294201b1b86a8cd4f1e03c9d1abefd2d928bfb391b). It is inserted as its own sentence after the clause that Amendment 5 item 2 set, before " Authority:". Nothing else in the comment changes.
+4. **D1 and D2** (gate 4) are fixed in the same commit. The doc comments in `frontends/shell/src/canvas/WorkingCanvas.tsx` claim no more than the code does: on the candidate arm, `resetFitForNewGeneration` runs at the start of a reissue begun while the session is live, and at the open's first look; an Apply after the session has ended runs none. On the baseline arm, it runs after an issued outcome. Comment lines only.
+5. **The gate:** no further gate round on the sentences. The reviewer checks that the commit changes only the source comment and doc comments, and recomputes the `58967ff4..66cc80de` comment-only diff that gate 4's Evidence note asks for. Then the human is told it is ready.
+6. **§7:** KNOWN-LIMITATIONS.md's comment line changes in place, within its 8 lines. `WorkingCanvas.tsx` changes comment lines only, within G1's ceiling.
+7. **Generation:** the node goes to 7.
+8. **Superseded index:** Amendment 5 item 3's statement of the candidate arm → item 4.
+
+Nothing above is edited.
