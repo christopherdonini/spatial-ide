@@ -36,7 +36,10 @@
 //!   `spatial://dataset/<name>` logical URI, and each bundle claims an ADR-005 grade —
 //!   **Snapshot**, with its basis stated and the reason Exact is not claimed written down beside it.
 //!   Besides the bundle, the permission boundary's audit log (`permission::audit`) writes: it
-//!   creates its directory and appends to its file. A stream still writes nothing.
+//!   creates its directory, appends to its file, and rotates it (`rotate_if_needed`). The kernel's
+//!   own stream code opens no file for writing; DuckDB's default spill of intermediates is not
+//!   configured off by the engine (`kernel/CANCELLATION-AND-TRACING.md` §7; `kernel/RESULTS.md`,
+//!   the subsection on §5d being partially measurable).
 //! - **The approval gate exists now, and it is [`permission::boundary`].** ADR-006's class-3 row
 //!   asks for three things and two were owed; [`permission`] supplies both — a scoped, expiring
 //!   grant checked against execution-time facts, an explicit approval that names the destination,

@@ -90,7 +90,10 @@ diff is the data doctor's job (`docs/05`), which is Alpha work.
   acceptance, and the column's shape is deferred (its Acceptance appendix, items 1 and 3). This
   module writes no provenance column. The tiers it builds are derived and never authoritative; no
   ADR-013 applicability to them is asserted here.
-- **No registry, no lineage, no undo, no reproducibility grade.** The stream path writes nothing.
+- **No registry, no lineage, no undo, no reproducibility grade.** The stream code in this module
+  opens no file for writing; DuckDB's default spill of intermediates, such as a large sort's, is not
+  configured off by the engine (`kernel/CANCELLATION-AND-TRACING.md` §7; `kernel/RESULTS.md`, the
+  subsection on §5d being partially measurable).
   The tier builder (`lod::build_tiers`; no SKP command calls it today) writes a derived,
   non-authoritative tier cache: a directory per source content hash under `LOD_TIER_ROOT`, one
   GeoParquet file per derived tier, and `tiers.json`. Caching to disk was this module's own trigger
