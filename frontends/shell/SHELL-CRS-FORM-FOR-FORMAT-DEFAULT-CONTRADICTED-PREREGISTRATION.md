@@ -338,3 +338,21 @@ Nothing above is edited.
 4. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 4 — post-result: gate 1's findings on PR #214, correction round 1 of 2 (class 1), with a correction of record to Amendment 3 item 2
+
+*Written by the custodian after both gate 1 reports were seen (`state/consults/gates/2026-10-12-shell-crs-form-for-format-default-contradicted-gate1-architect.md`, PASS; `state/consults/gates/2026-10-12-shell-crs-form-for-format-default-contradicted-gate1-reviewer.md`, FAIL on E-1). References only.*
+
+1. **E-1 (the reviewer's Evidence finding).** ABSENTCRS' discarded `waitForSettle`'s result and reported "settled" unconditionally. So §3's "settled" bullet was not observed at bc0b0d7a. H2 is unaffected.
+   - The fix is the reviewer's option A at e4df5e83: two lines, after which the step reports `settled=`.
+   - At 48868625 regression.mjs exits 0, with ABSENTCRS' `settled=true`. The record's appended correction (`state/consults/2026-10-12-shell-crs-form-for-format-default-contradicted-e2e-custodian-run.md`) holds the run.
+2. **Applied with no re-gate** (item 2d of `state/directives/2026-10-11-direction-after-status-review.md`):
+   - the coverage row's words at 48868625, per the reviewer's E-1 and its row words: the settle is reported, not asserted;
+   - Part X's fixture path at 48868625 (the architect's D1, the reviewer's D-1);
+   - the call-site comment at e4df5e83 (the reviewer's D-2).
+3. **Correction of record, Amendment 3 item 2.** Its hash reference is `state/consults/2026-10-12-shell-crs-form-for-format-default-contradicted-e2e-custodian-run.md @ 86c401499462aecbaf2270e84ddf2281a58b55ad`, line 5 to the end, `sha256:590040beb68025e494f2f16ee64113d6e903d5082cb06f0c7f673e3382e1b619` (the architect's D2, the reviewer's D-4).
+4. **D-3, recorded and not timing claims.** In `stepAbsentCrs` at bc0b0d7a, `clickWhenReady` waits up to 20 s twice: for the catalog entry and for an enabled submit. §7, which names the admission wait, the settle and the outer bound, is not edited.
+5. **The re-gate:** the reviewer's scoped check of e4df5e83's two lines and of the re-run.
+6. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.

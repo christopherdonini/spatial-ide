@@ -99,3 +99,11 @@ All of it ran in the custodian's scratchpad, in a folder `crsform-e2e/` adapted 
 - **§3's predictions hold**, both at the head and at the base: the base step passes with its INFO, and the re-aimed step fails against the base behaviour (the mutation).
 - **I3 does not fire.** Every other step has the same outcome at the base and at the head.
 - **I5 does not fire for ABSENTCRS'.** Its mutation fails its step.
+
+## Correction of record (2026-10-12), and the re-run at the round 1 head
+
+- **The defect.** At bc0b0d7a, ABSENTCRS' did not read `waitForSettle`'s result and reported "settled" unconditionally. So this record's "The step settled." was not established by those runs (the reviewer's gate 1, E-1).
+- **The re-run, at 48868625.** That commit carries the fix at e4df5e83, so the step reports `settled=`. regression.mjs ran there in a shared hold, by the same method, from 2026-10-11T22:41:36Z to 22:46:02Z.
+  - It exits 0. All 17 steps PASS, and NET' is INFO.
+  - ABSENTCRS' reports `settled=true`.
+  - The fixtures' sha256 are unchanged before and after.
