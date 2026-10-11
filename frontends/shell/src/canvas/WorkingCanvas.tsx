@@ -153,7 +153,8 @@ export interface WorkingCanvasHandle {
    * camera lands on the matches. `fitToBounds` (`chooseFitTarget(fitAnchorRef.current)`) is then
    * deterministic again within the NEW generation, exactly as it already was within a dataset's whole
    * lifetime -- "the layer" the button fits is the layer the user is actually looking at right now:
-   * (dataset, filter generation), not (dataset) alone.
+   * (dataset, filter generation), not (dataset) alone. It also clears the area last reported, so a
+   * size change asks nothing until the next report (the auto-fit that follows does not report).
    */
   resetFitForNewGeneration(): void;
   /** N4 (viewport-residency cut P1b, G6 instrument): the CURRENT resident vertex/feature totals,
@@ -527,7 +528,7 @@ export interface WorkingCanvasProps {
    * `residentFeatureCount` is `ResidentSet.totalResidentFeatures` read at the moment of refusal --
    * i.e. *before* the refused batch's own features, since a refused batch adds nothing. */
   onResidentCeilingExceeded: (streamHandle: string, residentFeatureCount: number) => void;
-  /** Fired on every view change -- each pan or zoom tick, an origin recenter, a fit -- not only a
+  /** Fired on every view change -- each pan or zoom tick, an origin recenter, Zoom to layer's fit -- not only a
    * settled one (the caller debounces), and on a growth of the canvas past the area last reported:
    * with the authoritative-CRS box the view now shows. The caller drives `viewport_query` from this. */
   onViewportChanged: (bbox: AuthoritativeBbox) => void;
@@ -1014,7 +1015,8 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
   /** The inputs of the last camera write (size excluded), written at exactly the three camera-change
    * sites: the interactive handler, `fitToExtent` and the DEV-only view-state seam. Null before any. */
   const cameraRef = useRef<ViewportCamera | null>(null);
-  /** The box last passed to `onViewportChanged`; null until the open's first reported view. */
+  /** The box last passed to `onViewportChanged`, or null. Non-null only while the camera's last write was
+   * reported: the auto-fit and `resetFitForNewGeneration` (a new filter generation) clear it. */
   const lastQueriedRef = useRef<AuthoritativeBbox | null>(null);
   /** The one place `onViewportChangedRef.current` is called: records the box as the area last asked
    * for, then reports it. Every report site (and a size growth) goes through here. */
@@ -1346,6 +1348,8 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
       // the post-recenter origin is what `bboxForFit`'s own doc comment requires to reconstruct the
       // fitted view's real bbox.
       reportViewport(bboxForFit(fit, frame.originX, frame.originY, widthPx, heightPx));
+    } else {
+      lastQueriedRef.current = null; // a write that does not report leaves no area "last asked for"
     }
   }
 
@@ -1526,6 +1530,7 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
       resetFitForNewGeneration() {
         fitAnchorRef.current = null;
         hasAutoFitRef.current = false;
+        lastQueriedRef.current = null;
       },
 
       getResidentCounts() {
