@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-11T18:07:34.224Z",
-  "plan_hash": "99ffb6adac8875c078eb9aface7004ac03920a4de2749e1db51937874f47b59c",
+  "generated_at": "2026-10-11T18:21:15.379Z",
+  "plan_hash": "2ca605ff8bed2d0cc39dff7f64a91bcf7c61cdae682744a8ef8dbb4ea80aaa7f",
   "priorities_approved": true,
   "next": {
     "id": "shell-migration-milestone-2",
@@ -1536,6 +1536,25 @@
         "done": null
       },
       "summary": "PROPOSED 2026-10-11 by the human (state/directives/2026-10-11-open-11-a-piece-f-opens-ported-notices-required.md, item 2): piece f's architect found (its form's open question 5 and finding A) that no unit test pins App's per-dataset key remount of WorkingCanvas; the stand-in keys its record on the dataset prop, so R1 holds with or without the key, contrary to the sweep. A stand-in that records instance identity would close it; a new test, outside the docs lane. Stays proposed; the human grades and places it."
+    },
+    {
+      "id": "export-current-view-after-unreported-fit",
+      "title": "The Export panel's Current view after an unreported fit: after an issued Apply or Clear, the default Current view export sends the box from before the map fitted itself, until the next pan, zoom or Zoom to layer; the approval dialog shows that box's four numbers",
+      "lane": "shell",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 0,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-11",
+        "done": null
+      },
+      "summary": "PROPOSED 2026-10-11 by the human (state/directives/2026-10-11-open-11-a-piece-f-opens-ported-notices-required.md, item 1), from milestone 2's Amendment 2 information item; ungraded and unplaced: the human grades and places it. The read (state/consults/2026-10-11-export-current-view-after-unreported-fit-read.md) answers the human's three questions. (1) At main: yes. After an issued Apply or Clear that follows any earlier view report, Current view stays enabled and is the panel's default (the panel is keyed on the dataset, so an Apply does not reset it); the export sends lastViewportBboxRef, the box from before the auto-fit, which moves the camera without a report, until the next pan, zoom or Zoom to layer; a resize in that window reports nothing either (item 39). After an open there is no stale box: the ref is null and Current view is disabled with its reason. (2) At the v0.1.0 tag: the same for Apply, Clear and open; the tag differs for a resize, where no resize ever reports, so the box can be stale after any resize. (3) The approval dialog shows the sent box's four numbers in its Row scope line, at main and the tag (PublishDialog.tsx is identical), as plain numbers with no CRS name and nothing marking whether they match the map; the Export panel shows only the label. With a filter active, both say the export publishes the viewport extent, not the filter. Milestone 2's onViewShown (OPEN-11 (A)) does not change this: its handler writes only the counts' box, by the human's terms."
     },
     {
       "id": "stream-cancel-returns-left-unmarked",
