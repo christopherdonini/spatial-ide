@@ -18,10 +18,11 @@
 //!
 //! ## What this is not
 //!
-//! **It is not a permission system, and nothing here is exposed.** There is no authentication, no
-//! client, no extension surface, and no SKP message. ADR-017's acceptance condition requires this
-//! machinery before publish is exposed through SKP, a shipped CLI, MCP, a plugin, a notebook or an
-//! AI surface; this cut builds the machinery and exposes nothing.
+//! **It is not a permission system.** There is no authentication, no client, no extension surface,
+//! and no SKP message. Two callers reach the publish operation, both through [`boundary`]: the
+//! shell's binding-local `binding_publish_*` commands, the UI surface for which ADR-017's
+//! acceptance condition was discharged on 2026-08-17, and this crate's `publish-bundle` binary,
+//! which ADR-017 keeps as developer/test tooling.
 //! `kernel/PERMISSION-BOUNDARY.md` lists what exposure would still require — seven things, none of
 //! them in this cut — and flags for the custodian the question of what that condition's "until
 //! then" now means.

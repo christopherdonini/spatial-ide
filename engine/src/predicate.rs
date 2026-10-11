@@ -125,8 +125,8 @@ impl AdmittedPredicate {
             .into());
         }
 
-        // `LeaseClass::Admission`, not `Maintenance` (DECISIONS-PENDING entry 91 (a); PROPOSED
-        // ADR-033; `pool::MAX_ADMISSION_CONNECTIONS`'s own doc). Before this class existed,
+        // `LeaseClass::Admission`, not `Maintenance` (DECISIONS-PENDING entry 91 (a); ADR-033,
+        // Accepted; `pool::MAX_ADMISSION_CONNECTIONS`'s own doc). Before this class existed,
         // admission shared `Maintenance`'s capacity-1 budget with whole-file passes, so concurrent
         // `viewport_query` admissions collided there and the losers were refused as
         // `FilterError::RejectedByBinder` — a typed refusal naming the wrong cause (the lease, not
@@ -284,8 +284,8 @@ pub enum FilterError {
     /// predicate against the surrogate relation ([`bind_admit`]) — or a *new* physical connection
     /// to run that check on could not be configured ([`AdmittedPredicate::admit`]'s own doc:
     /// `EngineError::ConnectionSetup`, a genuine connection problem, still folds in here). **Never**
-    /// an admission-lease capacity failure: since DECISIONS-PENDING entry 91 (a) / PROPOSED
-    /// ADR-033, that residual case is [`PredicateAdmitError::ConnectionsExhausted`], a sibling of
+    /// an admission-lease capacity failure: since DECISIONS-PENDING entry 91 (a) / ADR-033
+    /// (Accepted), that residual case is [`PredicateAdmitError::ConnectionsExhausted`], a sibling of
     /// this enum, not a variant of it — a lease being unavailable says nothing about this
     /// predicate's own text, and this variant's own wire mapping (`skp.filter_rejected_by_binder`)
     /// must not be minted for it.

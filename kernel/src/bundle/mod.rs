@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
 //! The **static bundle format**: layout, manifest, and the guarantees the manifest is allowed to
-//! make. Proposed as **ADR-017**.
+//! make. Specified by **ADR-017** (Accepted).
 //!
 //! This is the project's first persisted artifact, and the moment it exists `docs/11`'s resource
 //! model and ADR-005's reproducibility grades stop being future work — `kernel/README.md` said so

@@ -252,3 +252,17 @@ statement_prepare` and is reported alongside it for continuity with earlier figu
 decision rule is scored against the wider span — see `kernel/RESULTS.md`'s eighth section for why
 scoring on `query` would structurally exclude the one segment a prepared-statement-reuse lever could
 ever remove.
+
+---
+
+## 9. Amendment — §6 items 1 and 2, as of 2026-10-11
+
+Appended, as §8 appends: nothing above is edited. It covers §6 items 1 and 2 only.
+
+1. **§6 item 1 is applied, and is no longer proposed.** ADR-017 carries Corrigendum 4, dated
+   2026-08-07, which records that §15's uninterruptible window is narrower than the accepted text.
+   It is appended to the ADR, and the ADR's Status block stands as accepted.
+2. **§6 item 2 is no longer drafted as Proposed.** ADR-018 is Accepted (its Status line), and
+   `docs/08`'s cancellation row takes its definition of *acknowledged* from ADR-018.
+
+Items 3 and 4 of §6 are not addressed here.
