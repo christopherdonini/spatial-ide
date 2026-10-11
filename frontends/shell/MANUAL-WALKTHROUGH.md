@@ -1766,7 +1766,7 @@ This Part is the Operator gate of `frontends/shell/SHELL-MAP-REFILL-AFTER-RESIZE
 
 | # | Step | Expected outcome |
 |---|---|---|
-| V1 | Launch the app, open `100k-happy-path.parquet`, zoom in two wheel notches at the map's centre, and wait until the map stops changing. | The map shows features and then holds still. |
+| V1 | Launch the app, open `100k-happy-path.parquet`, zoom in one wheel notch at the map's centre, and wait until the map stops changing. | The map shows features and then holds still. |
 | V2 | Press **Ctrl+I**. | The Inspector hides and the map grows. **Record** whether the strip the map gains fills with features with no pan or zoom, or stays empty until one. |
 | V3 | Press **Ctrl+I** again. Then drag the map \| Inspector splitter back and forth several times without letting go, and let go. | The map stays usable during the drag. **Record** whether the area it uncovered fills with no pan or zoom. |
 | V4 | Restore the window down, then maximise it. | **Record** the same: whether the area the map gains fills with no pan or zoom. |
