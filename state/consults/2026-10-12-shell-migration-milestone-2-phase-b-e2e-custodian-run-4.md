@@ -47,3 +47,7 @@
 - **All fourteen suites and the post route pass at f64418bc.** Selection passes 15 of 15. S5d confirms the post-check route.
 - **Publish's one SKIP is EXPIRED'.** It is skipped for its standing reason: there is no TTL knob, and the property is unit-tested in publish.rs.
 - **The round's product change is one line in `handleExportRunning` and its doc comment.** RB12g pass 3 pins it at unit level; the probe above observes it on real WebView2, and its mutation is observed there too.
+
+## Correction after gate 3 (appended; PR #217 gate 3 reviewer, D4, its words)
+
+Correction (gate 3 reviewer, D4): before the choice the probe requires only that the ask stands and the open is pending, else INCONCLUSIVE; it records the headline and the statement without requiring them. All four runs recorded the headline Exported. and no statement (c1r-summary.txt).
