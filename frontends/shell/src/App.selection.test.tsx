@@ -10,7 +10,7 @@
  * one does (`ViewportStreamManager.endSession`), so that a `dataset_session_ended` event takes the real route (Amendment 5,
  * the reviewer's S4): the listener `App` registers, `routeDatasetSessionEndedEvent`, the owner dispatch and the manager. The
  * workspace, the selection and the scope are never mocked (invalidator I6). Rows beyond the table are named as such.
- * RB12a to RB12e (the ask and the late-cancel statement, Amendment 1 B3 and Amendment 7 item 6) drive the real panel and dialog with `publish/client` mocked to client.ts's real signatures.
+ * RB12a to RB12g (the ask and the late-cancel statement, Amendment 1 B3 and Amendment 7 item 6; RB12f and RB12g from gate 1) drive the real panel and dialog with `publish/client` mocked to client.ts's real signatures.
  */
 
 import { act, forwardRef, useEffect, useImperativeHandle } from "react";
@@ -630,6 +630,10 @@ describe("App: tools, the click, the selection and the inspection (milestone 2, 
   // RECORDED MUTATION for "RB16": in `feature/ToolSwitch.tsx` render the mode picker for both tools (`{tool === "select" && (` becomes `{true && (`). Expected failure: the picker in Navigate.
   // OBSERVED AT f51b96a9cafbaf57b5f562edb8a0d64b51d9a604: FAILED -- "RB16: the mode picker is absent in Navigate and present in Select, with Add / remove the default": AssertionError: expected <div …(3)>…(4)</div> to be
   // null. Reverted after observing.
+  // RECORDED MUTATIONS for the mode.set clause of "RB16" (gate 1 of PR 217, the architect's C-1), each applied alone. (i) In `handleSelectMode` (App.tsx) remove `recordNamed("gui-action", "mode.set")`. Expected failure: the first row assertion.
+  // OBSERVED AT b258dff0620ea5e46a6a53856b8c70d4c0ce8781: FAILED -- "RB16: the mode picker is absent in Navigate and present in Select, with Add / remove the default": AssertionError: a change of mode records one mode.set row: expected [] to deeply equal [ 'mode.set' ].
+  // Reverted after observing. (ii) In `handleSelectMode` remove the same-mode guard (`|| viewSelectionMode(view) === next`). Expected failure: the second row assertion.
+  // OBSERVED AT b258dff0620ea5e46a6a53856b8c70d4c0ce8781: FAILED -- same test: AssertionError: the mode already chosen records none: expected [ 'mode.set', 'mode.set' ] to deeply equal [ 'mode.set' ]. Reverted after observing.
   it("RB16: the mode picker is absent in Navigate and present in Select, with Add / remove the default", async () => {
     await open("C:/data/a.parquet");
     expect(q(".tool-switch-modes")).toBeNull();
@@ -969,6 +973,8 @@ describe("App: tools, the click, the selection and the inspection (milestone 2, 
 
   // RECORDED MUTATION for "RB12f" (a row beyond the table; the architect's S2, gate 1 of PR 217; it pins the behaviour of stage 7, Amendment 10 item 3(j)): in `confirmOpen` (App.tsx) remove the answer to the first ask
   // (`askRef.current?.answer(false);`). Expected failure: the first open is still pending.
+  // OBSERVED AT b258dff0620ea5e46a6a53856b8c70d4c0ce8781: FAILED -- "RB12f: a second open while the ask stands drops the first as Keep, records one row for the choice, and asks again": AssertionError: the first open was answered Keep by the second: expected 'pending' to match
+  // object { kind: 'refused', …(1) }. Reverted after observing.
   it("RB12f: a second open while the ask stands drops the first as Keep, records one row for the choice, and asks again", async () => {
     await open("C:/data/a.parquet");
     const run = await startExecute();
@@ -1001,6 +1007,8 @@ describe("App: tools, the click, the selection and the inspection (milestone 2, 
 
   // RECORDED MUTATION for "RB12g" (a row beyond the table; the reviewer's C1, gate 1 of PR 217): in `answerOpenAsk` (App.tsx) iterate the ask's runs only (`for (const run of ask.runs)`).
   // Expected failure: the cancels list, which lacks the execute's key.
+  // OBSERVED AT b258dff0620ea5e46a6a53856b8c70d4c0ce8781: FAILED -- "RB12g: Cancel the export and go on cancels an execute that started after the ask appeared, once, and the statement follows its outcome": AssertionError: the prepare's key and the execute's key,
+  // once each: expected [ Array(1) ] to deeply equal [ …(2) ]. Reverted after observing.
   it("RB12g: Cancel the export and go on cancels an execute that started after the ask appeared, once, and the statement follows its outcome", async () => {
     const statement = () => text(".late-cancel-path");
     /** The ask appears over a prepare run; the prepare ends into the approval prompt; the phrase is submitted, so that an execute starts; then the choice is made. */
