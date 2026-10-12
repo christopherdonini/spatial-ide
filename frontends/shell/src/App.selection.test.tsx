@@ -833,8 +833,9 @@ describe("App: tools, the click, the selection and the inspection (milestone 2, 
     expect(opens(), "nothing is opened before a choice").toBe(1);
 
     click(q(".open-during-export-keep"));
-    expect(await finishOpen(), "the open was dropped").toMatchObject({ kind: "refused", code: "open.dropped" });
+    const dropped = await finishOpen();
     expect(opens(), "no openDataset").toBe(1);
+    expect(dropped, "the open was dropped").toMatchObject({ kind: "refused", code: "open.dropped" });
     expect(props().dataset, "the handle is unchanged").toBe(handleOf(1));
     expect(closes(handleOf(1)), "no closeDataset").toBe(0);
     expect(mocks.publish.cancels, "no cancel").toEqual([]);
