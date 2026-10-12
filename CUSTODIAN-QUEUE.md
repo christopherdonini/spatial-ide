@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `8e9ef9c3a3f29e81e89a1cf66bde8018be1490aa642e460b9d3fa744a39221f9`) at `2026-10-12T05:24:56.685Z`.
+Generated from `PLAN.yaml` (sha256 `1a780f538748f5fc77255052854e0c6cb0d09cfe6c729346cd2c251887142ae5`) at `2026-10-12T05:33:43.922Z`.
 
 ## 1. Next
 
@@ -19,7 +19,7 @@ Generated from `PLAN.yaml` (sha256 `8e9ef9c3a3f29e81e89a1cf66bde8018be1490aa642e
 
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
 - **b2-piece-1b-recording** — B2 piece 1b -- recording: the kernel's step commands for filter, scope and style, the session history on the machine, safe against a crash, and the docs/07 note — blocked by: shell-migration-milestone-2, guardian-v1
-- **export-current-view-after-unreported-fit** — The Export panel's Current view after an unreported fit: after an issued Apply or Clear, the default Current view export sends the box from before the map fitted itself, until the next pan, zoom or Zoom to layer; the approval dialog shows that box's four numbers — blocked by: shell-migration-milestone-2
+- **export-current-view-after-unreported-fit** — The Export panel's Current view after an unreported fit: after an issued Apply or Clear, the default Current view export sends the box from before the map fitted itself, until the next pan, zoom or Zoom to layer; the approval dialog shows that box's four numbers — blocked by: shell-migration-milestone-2, known-limitations-current-view-stale-box
 - **stale-test-names-and-comments** — Stale test names and test comments, names and comments only, no assertion changes: a refusal-named test that asserts admission, the React-harness premise, the no-attributes reason, a Proposed ADR-018, two ruled decisions still marked pending (sweep area E, findings 2, 3, 4, 7 and 10) — blocked by: known-limitations-current-view-stale-box
 - **briefb-b2-save-reopen** — B2 — Save project, Snapshot data, session history, lineage and preferences, in five stages, each with its own form — blocked by: decision-adr-029-scan-progress-route
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer — blocked by: signpath-application-draft
