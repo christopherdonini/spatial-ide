@@ -246,7 +246,7 @@ function viewportQueryCount(consoleHandle) {
  * helper, byte-identical. */
 async function statusStack(page) {
   return page.evaluate(() => {
-    const stack = document.querySelector(".canvas-status-stack");
+    const stack = document.querySelector(".attention-strip");
     const ended = document.querySelector(".canvas-session-ended");
     return {
       stackText: stack?.textContent ?? null,

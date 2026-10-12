@@ -1,0 +1,9 @@
+
+ RUN  v5.0.1 C:/dev/wt/k6/frontends/shell
+
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  14:18:54
+   Duration  4.26s (tests 84%, environment 13%, transform 2%, import 1%)
+

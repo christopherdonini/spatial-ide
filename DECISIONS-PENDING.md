@@ -29,6 +29,516 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 **DIRECTIVE 2026-09-19 — generated files regenerate on merge (the human, mid-turn; recorded verbatim at `state/directives/2026-09-19-generated-files.md`, line 5 (its sha256 d268f9e53e4644885c55ff3fb6d44b6bbd7b88d3d96b93d8cc1c54903affc1df at the commit that adds it)):** resolve PR #90's conflicts on the generated files and `PLAN.yaml` by regeneration, not by hand — merge `origin/main`, take main's version of the generated set, resolve `PLAN.yaml` semantically with both sides' node changes kept, run the generators so the regenerated files match the merged plan, commit, push, CI; the same for any sibling PR that conflicts the same way; mechanic, permanent: generated files are never conflict-resolved by hand and a PR touching `PLAN.yaml` regenerates on merge with main; and consider a `.gitattributes` merge strategy or moving generated outputs out of PRs (CI regenerating on main after merge). Applied: PR #90 merged with main at 2c5bb0b and PR #91 at 245d4b0, each with the generated set taken from main and regenerated from the merged plan (`PLAN.yaml` on #90 resolved by keeping main's P3b hold and the branch's test-names node; on #91 it auto-merged), `verify.mjs` and the four gates green, both MERGEABLE with CI running; the mechanic entered `AUTONOMY.md` §2 and `AI_DEVELOPMENT.md`'s merges subsection by reference to the directive file; the consideration is entry 114 and PLAN node `decision-generated-outputs-merge-strategy`, the human's ruling. Correction, 2026-09-19: those two insertions shifted every line below them (AUTONOMY.md §21c's line 357 to 359; AI_DEVELOPMENT.md's line 223 to 230), which closed records cite by line and which the checker's own record pins by hash — PR #91's governance CI failed on `AUTONOMY.md:357`; the mechanic was moved to the end of each file (AUTONOMY.md §23; AI_DEVELOPMENT.md Amendment 3 to the Custodian role) so the cited lines are back where the records read them, and the open PRs were re-merged.
 
+**RULED 2026-10-12 — the Export panel's Current view after an unreported fit graded S1 (at main and at the v0.1.0 tag) and placed in slot 1 directly after milestone 2 phase B and before milestone 3 (item 1a's order changed by one piece under the S1 rule), its form drafted while phase B is in code, its shape and two open items as the human gives them; its limitation stated now in the docs lane ahead of piece f (one new KNOWN-LIMITATIONS item, true of the v0.1.0 artifact, with its on-main note, drafted by the architect under item 2e, a number clear of phase B's 40 and 41); nothing released from main before the fix lands; the read's item 39 side observation is not a finding; #214 merged (the human, typed, received at 05:02:10Z by the transcript; recorded verbatim at `state/directives/2026-10-12-current-view-graded-s1-placed-limitation-release-hold-214-merged.md`, from line 6, sha256 f1117faaaea4a2fd824948f83cc623164c28b1e7e89e43af96809dee9e7ed0a3 over lines 6 to the end at the commit that adds it):**
+- **The rulings** are the text, referenced and not restated.
+- **Applied:** `export-current-view-after-unreported-fit` placed (depends on milestone 2; milestone 3 and release-v0-1-1 depend on it); `known-limitations-current-view-stale-box` proposed and placed in the docs lane ahead of `stale-test-names-and-comments`; `shell-crs-form-for-format-default-contradicted` done (#214); #212 and #213 merged at 21:24Z on 2026-10-11 (phase A in; phase B's branch next).
+
+**RULED 2026-10-11 — the port-5400 harness approved for this project's e2e runs until port 5180 is free (on the human's terms; the custodian runs the evidence if a worker is refused again, and says what was refused); milestone 3's OPEN-9 (i): the human's words withdrawn, no sentence lands now, the architect drafts it with PR B under item 2e from the recognizer as built, by the mark the card shows; milestone 2: A10's reach is canvas/ only (B3 may edit AdmissionPanel.tsx and its test, in phase B), and the late cancel is stated by the app as part of B3 (the architect drafts the words under item 2e, P6 sight); decision-adr-029-scan-progress-route unchanged, shown as waiting on the snapshot piece (the human, typed, received at 21:30:18Z by the transcript; recorded verbatim at `state/directives/2026-10-11-harness-approval-open-9-i-withdrawn-a10-late-cancel-adr-029.md`, from line 6, sha256 fd059d90658d76a5fd984ee9e04a3f8c8578bf681ff3245a406edf29fd29538e over lines 6 to the end at the commit that adds it):**
+- **The rulings** are the text, referenced and not restated.
+- **Applied:** the CRS-form worker resumed under item 1; milestone 3's form Amendment 2; milestone 2's form Amendment 6; PLAN notes; the ADR-029 decision node moved out of the waiting-on-human list (unscheduled: the PLAN has no snapshot node yet to depend on).
+
+**RULED 2026-10-11 — the Evidence Recorder is uninstalled (the human, typed mid-turn, queued at 20:26:44Z by the transcript; recorded verbatim at `state/directives/2026-10-11-recorder-uninstalled.md`, from line 6, sha256 d3c197c604bed10620926a8257e758b686c171cf2d09ce73b7d9dd8c457fe714 over lines 6 to the end at the commit that adds it):**
+- **The report** is the text, referenced and not restated.
+- **Applied, under the 2026-10-11 rulings' item 3:** from this report on, worker and tester briefs drop the round 50, item 1 wording (Guardian does not need it); the mod's README is marked retired in a small docs pull request; the Recorder form's Amendment 10 records the ruling and the uninstall.
+
+**RULED 2026-10-11 — #210 and #211 merged; the data lead's pilot: the mandatory impact read ends (the owner's-index update stays on every engine or kernel PR, checked by the final review; impact questions on demand, and one for b2-piece-1b-recording before its code; the lead never drafts; gates unchanged); the Evidence Recorder: the human uninstalls it, the verdict is recorded and the node closed, the code stays marked retired, and the round 50, item 1 wording leaves the briefs once the human reports the uninstall; item 2f's red-line list is examples, read against AI_DEVELOPMENT.md's red lines; milestone 3's OPEN-1 to OPEN-11 (OPEN-8 (b), the bare slash opener; OPEN-9 (i) in the human's words, for the author's one check) (the human, typed, received at 20:22:50Z by the transcript; recorded verbatim at `state/directives/2026-10-11-merges-210-211-pilot-recorder-2f-milestone-3-rulings.md`, from line 6, sha256 95d736ce8e5421ec84d390abc19f373602dd7d2c0486c85683114ed75e523d9f over lines 6 to the end at the commit that adds it):**
+- **The rulings** are the text, referenced and not restated.
+- **Applied:** `skp-v0-live-sections-current-area-c` done (#210); #211 needs no node; PLAN notes on `b2-piece-1b-recording`, `evidence-recorder-v0-1` and `stale-test-names-and-comments`; every gate brief from now cites item 4 beside the wording-block rule; milestone 3's form Amendment 1, the Recorder form's Amendment 10 and two proposed nodes (native menus on macOS, the scale display) follow by reference; the author's one check of OPEN-9 (i) is running.
+
+**RULED 2026-10-11 — direction after the status review: slot 1 is the product slot (milestone 2 phase A now, then phase B, then milestone 3, then B2's next recording stage), milestone 3's form drafted ahead, nothing outside slot 1 holds it except phase B's cut after the CRS-form piece, Guardian v1 in slot 2 after the CRS-form piece; the wording-block rule (one answer; an exemption to any governance freeze; a new AUTONOMY.md section, a paragraph in each gate agent's definition, one docs PR; applies now); two verdicts before anything new (the data lead's second pilot table and recommendation; the Evidence Recorder's E10), with the 2026-10-05 direction's section 6 measures; no packaged release before the CRS-form piece lands and the human grades the Current view node; a v0.2 plan proposed when milestone 2 merges; no new sweep report until the docs lane is empty (the human, typed mid-turn, queued at 18:23:36Z by the transcript; recorded verbatim at `state/directives/2026-10-11-direction-after-status-review.md`, from line 6, sha256 d50fb7fac526799ea844123cc4c2388ccbc22aa5ac49526f897c9944aeee1333 over lines 6 to the end at the commit that adds it):**
+- **The direction** is the text, referenced and not restated.
+- **Applied:** PLAN records slot 1's order, milestone 3's form ahead, Guardian v1's turn, the release hold and the owed verdicts; the wording-block rule is applied from now in every gate brief by reference; its AUTONOMY.md section and agent paragraphs go in one docs PR for the human's click.
+
+**RULED 2026-10-11 — milestone 2's OPEN-11 (A), a third exception under canvas/ on the human's terms, and the tool prop read as part of the ruled cursor change; a node proposed for the Export panel's Current view after an unreported fit; piece f's OPEN-1, OPEN-2 and OPEN-3 (a), (b), (c) yes; two nodes proposed (the four lines outside the docs lane; the missing remount test); the human adds ported-notices to main's required checks, and an open PR showing it expected but never reported gets main merged into its branch (the human, typed, received at 18:02:04Z by the transcript; recorded verbatim at `state/directives/2026-10-11-open-11-a-piece-f-opens-ported-notices-required.md`, from line 6, sha256 918e342c584f9b3d1605a15c34a4cee7f61af3dd4fb3bcfe853521beb42b4b81 over lines 6 to the end at the commit that adds it):**
+- **The rulings** are the text, referenced and not restated.
+- **Applied:** milestone 2's form Amendment 3; piece f's form Amendment 1; nodes `stale-assertion-messages-and-product-comments` and `app-key-remount-unit-test` proposed; the Current view node is proposed once a read-only read answers the human's three questions.
+
+**RULED 2026-10-11 — PRs #207, #208 and #209 merged (the human, typed, received at 15:42:53Z by the transcript; recorded verbatim at `state/directives/2026-10-11-prs-207-208-209-merged.md`, line 6, sha256 a93dd9c91dac6603e911d5d3c9d8f2b235f844c407c697ef2a3039cab047001c at the commit that adds it):**
+- **Applied:**
+  - `shell-map-refill-after-resize` done (#207, merge commit 3802aab7 at 2026-10-11T15:41:55Z); `ported-code-notice-route` done (#208, c95d27b8 at 2026-10-11T15:42:17Z); `module-docs-stale-statements` done (#209, 0bc12abd at 2026-10-11T15:42:42Z).
+  - Ready: `shell-migration-milestone-2` (slot 1), `shell-crs-form-for-format-default-contradicted` (slot 2), `skp-v0-live-sections-current-area-c` (the docs lane's piece e).
+  - #208's after-merge step (its form's Amendment 1 (g)): the first green run on main is reported to the human with the check run's name and ids.
+  - The three worktrees and their targets are removed after the merge.
+
+**RULED 2026-10-11 — #205 merged; #207's gate 4 C1 (C): the sentences stay, the gap is accepted, recorded on the form and in the item's source comment in the human's words, D1 and D2 fixed in the same commit, the reviewer checks only that the commit changes the source comment and doc comments; the CRS-form piece's OPEN-1 (the replacement sentence), OPEN-2 (confirmed) and OPEN-3 (northing-first named in item 2's paragraph), gated as usual (the human, typed mid-turn, queued at 11:21:19Z by the transcript; recorded verbatim at `state/directives/2026-10-11-merge-205-ruling-207-c-crs-form-open-items.md`, from line 6, sha256 5904bdeeade2ec4b32759dff1bc939b0d49db039dc736875d737d4f517b33881 over lines 6 to the end at the commit that adds it):**
+- **The rulings** are the text, referenced and not restated.
+- **Applied:**
+  - **#205:** `known-limitations-item-2-on-main-paragraph` done (merge commit 3a3876a3 at 2026-10-11T11:20:01Z); `module-docs-stale-statements` (docs lane, piece d) ready; the worktree C:/dev/wt/kl2 removed with its local branch.
+  - **#207:** the form's Amendment 6, then a worker's one commit, then the reviewer's scoped check; then the human is told it is ready.
+  - **The CRS-form piece:** its form's Amendment 1. The words land in its own PR, after #208 merges; if a clause is wrong at its gates, the human is told and nothing is reworded.
+
+**RULED 2026-10-11 — #205's C-1 (A): the second appended sentence replaced by the human's two; a node for the shell's CRS form after `engine.format_default_contradicted`, graded S1 on main, placed in slot 2 after ported-code-notice-route and before guardian-v1, with no release from main before it lands; #207's C1 (A): item 39's third sentence replaced by the human's two, the source comment naming the shipped default arm, D1's two doc comments fixed with it (the human, typed, received at 09:40:30Z by the transcript; recorded verbatim at `state/directives/2026-10-11-rulings-205-clause-crs-form-node-207-sentence.md`, from line 6, sha256 aa57ef289b292dc2e821cb7b13e93ea758683c75e8e5c57e3b6505a12a3aa219 over lines 6 to the end at the commit that adds it):**
+- **The rulings** are the text, referenced and not restated.
+- **Applied:**
+  - **#205:** its five-line form's Amendment 2; a worker replaces the sentence on the branch, byte-copied by script; the reviewer re-gates. If a clause is wrong, the human is told and nothing is reworded.
+  - **The node:** placed in PLAN, with its grade, its slot, the release hold and its form's open item; `guardian-v1` waits on it.
+  - **#207:** the form's Amendment 5; a worker replaces the sentence, adds the source comment's clause, and fixes D1's two doc comments; the scoped architect gate again. If a clause is wrong, the human is told and nothing is reworded.
+
+**RULED 2026-10-11 — PR #206 merged (the human, typed mid-turn, queued at 08:30:39Z by the transcript; recorded verbatim at `state/directives/2026-10-11-pr-206-merged.md`, line 6, sha256 19b930b4d339566bb40be4ddd6c36e3e66f9516545c402ec41cfa9dc2a876e45 at the commit that adds it):**
+- **Applied:** `crs-undeclared-message-wording` done (#206, merge commit 4c6680e7 at 2026-10-11T08:30:08Z); `ported-code-notice-route` ready (every dependency done); the worktree C:/dev/wt/crs removed with its local branch.
+
+**RULED 2026-10-11 — #205's C-1 (A), with the human's two sentences appended to their paragraph; KNOWN-LIMITATIONS item 39's third sentence replaced, recorded on the map-refill form and gated against its Amendment 3 item 3 before #207 merges; piece d's OPEN-1 (a) and OPEN-2 (b); piece e's OPEN-1 (a), with the nine values added to first-external-plugin-skp-client's named open item, and OPEN-2 (a) with commands.rs:199-200; #206 merged by the human now, #205 and #207 after the wording commits on the custodian's word (the human, typed, received at 08:28:47Z by the transcript; recorded verbatim at `state/directives/2026-10-11-rulings-205-c1-item-39-pieces-d-e-merge-206.md`, from line 6, sha256 8ca6765d3b659f93331cdaffe9cc91cad5c58f9541c919f3dc61abcdcae14586 over lines 6 to the end at the commit that adds it):**
+- **The rulings** are the text, referenced and not restated.
+- **Applied:**
+  - **#205:** the two sentences appended at the end of the human's paragraph, byte-copied by script from the directive, by a worker on its branch; the five-line form's amendment records the ruling; the PR body's E-1, D-1 and D-2 corrected; a correction note appended to worker report 1 on main; then the reviewer's re-gate.
+  - **Item 39:** its third sentence replaced by the human's sentence, byte-copied by script, by a worker on the map-refill branch; the form's Amendment 4 records the ruling; then a gate checks the new sentence against Amendment 3 item 3. If it is wrong in any case, the human is told and the sentence is not reworded.
+  - **Piece d:** the form's Amendment 1 records OPEN-1 (a) and OPEN-2 (b); `stale-test-names-and-comments` gains the identity.rs reference as a one-file exception.
+  - **Piece e:** the form's Amendment 1 records OPEN-1 (a) and OPEN-2 (a), with commands.rs:199-200 added and its ceiling; `first-external-plugin-skp-client`'s named open item gains the nine fixture values.
+  - **#206:** done after the human's merge, with this ruling as its word.
+
+**RULED 2026-10-10 — crs-undeclared-message-wording: OPEN-1 (A) and OPEN-2 (A), appended as Amendment 1; the piece started (the human, typed mid-turn, queued at 23:03:40Z by the transcript; recorded verbatim at `state/directives/2026-10-10-crs-wording-open-1-a-open-2-a-start.md`, line 6, sha256 224f6eb6aecf475e290db6b5fdc7c364eb1f39f2fc105b0aeac9d599a43ff6fa at the commit that adds it):**
+- **Applied:** the form's Amendment 1 (the rulings, the places pinned at e17758b7, the 0.2 facts unchanged by command, rule (00)); then the piece in progress on its own branch and a worker.
+
+**RULED 2026-10-10 — PRs #202, #203 and #204 merged (the human, typed, received at 23:02:34Z by the transcript; recorded verbatim at `state/directives/2026-10-10-prs-202-203-204-merged.md`, line 6, sha256 a93dd9c91dac6603e911d5d3c9d8f2b235f844c407c697ef2a3039cab047001c at the commit that adds it):**
+- **Applied:** `filter-identity-alias-ambiguous-reached-through-skp` done (#202, c6627398); `shell-stale-frame-comments` and `shell-stale-layout-comments-and-s1-row` done (#203, d381e474); `e2e-stale-expectations-reaim` done (#204, e17758b7), with its closing record (the form's Amendment 4); `geometry-types-beyond-polygons` to generation 8 (MP-1's Amendment 7 merged with #203); the worktrees swept.
+
+**RULED 2026-10-10 — the re-aim's T2 re-runs with f0fccfaf as its base, on six terms; the three late filings noted; the filter-identity form's open item: no run of the shell's rendering, the PR body quotes the refusal's message in full, and a proposed node for a guidance line and a KNOWN-LIMITATIONS note (the human, typed, received at 18:58:06Z by the transcript; recorded verbatim at `state/directives/2026-10-10-reaim-t2-base-f0fccfaf-filter-identity-no-shell-run-guidance-node.md`, lines 6-18, sha256 a5214c0d8ab39af69cf79f98715e3db6b540ecb2098108e264fe83131d20ae08 at the commit that adds it):**
+- **The rulings** are the text, referenced and not restated.
+- **Applied:**
+  - **The re-aim:** its form's Amendment 3 records the first T2 result (class 2), the 11 keys, the three main commits worker report 2 names, the fixture.rs identity with its command, and the terms by reference, before the re-run; then a worker on the branch for T2 at f0fccfaf against H (both halves) and M13; then the custodian's solo runs (five console, and regression, admission and source-changed once each) at H.
+  - **The filter-identity form:** committed with the custodian's pins, its Amendment 1 recording the ruling and the PR body's quotation; then a worker on its own branch.
+  - **Proposed:** `filter-identity-alias-ambiguous-guidance-line-and-note`, not placed, with the v0.1.0 answer in its summary.
+  - **The late filings:** nothing to apply.
+- **Also recorded in this commit:** PRs #200 and #201 merged by the human (17:18:00Z and 17:18:14Z); both nodes done.
+
+**RULED 2026-10-10 (filed late) — drift sweep area D, received 2026-10-10T08:00:57Z: the report copied and checked; `module-docs-stale-statements` widened, findings 3 and 4 first; a weekly-window item (the human, typed; recorded verbatim at `state/directives/2026-10-10-drift-sweep-area-d-instructions-filed-late.md`, lines 6-10, sha256 3a6b6c7b5147a38db8ec276f005dc6505fcf7bba8c60a5c1d62487944ca41fc7 at the commit that adds it):**
+- **The rulings** are the text, referenced and not restated.
+- **Filed late:** acted on when received; this block and the file were added on 2026-10-10.
+- **Applied:** the report filed with its hash checked and the custodian's check (`state/consults/DRIFT-SWEEP-AREA-D-2026-10-10.md`, `state/consults/2026-10-10-drift-sweep-area-d-custodian-check.md`); `module-docs-stale-statements` widened, findings 3 and 4 first; finding 4's obligation answered and then ruled by the human the same day (`state/directives/2026-10-10-tier-obligation-open-item-and-adr-029.md`); item 3 in the weekly window draft, section M.
+
+**RULED 2026-10-10 (filed late) — drift sweep area C, received 2026-10-10T07:34:18Z and 07:41:04Z: the report copied and checked; three proposed nodes (the human, typed; recorded verbatim at `state/directives/2026-10-10-drift-sweep-area-c-instructions-filed-late.md`, lines 6-12, sha256 d79350d2ac2e0d610b555b0a9b1e71aca74a5fcb6355e4376459dfdc3716274e at the commit that adds it):**
+- **The rulings** are the text, referenced and not restated.
+- **Filed late:** acted on when received; this block and the file were added on 2026-10-10.
+- **Applied:** the report filed with its hash checked and the custodian's check (`state/consults/DRIFT-SWEEP-AREA-C-2026-10-10.md`, `state/consults/2026-10-10-drift-sweep-area-c-custodian-check.md`, every cite re-derived at 116deb53); proposed `filter-identity-alias-ambiguous-reached-through-skp` (S2), `skp-unproduced-codes-ruling` (since ruled and closed) and `skp-v0-live-sections-current-area-c`.
+
+**RULED 2026-10-10 (filed late) — the four findings on #195's first-gated commit, received 2026-10-09T20:33:21Z: confirmed on main; one proposed node (the human, typed; recorded verbatim at `state/directives/2026-10-09-four-findings-on-pr-195-filed-late.md`, lines 6-10, sha256 22584d6906643c09b1f5087f35fb2c3b9b6f89691ff60dcee3a33836c5ef7cba at the commit that adds it):**
+- **The rulings** are the text, referenced and not restated.
+- **Filed late:** acted on when received; this block and the file were added on 2026-10-10.
+- **Applied:** each finding confirmed on main at 034344c3; one proposed node, `shell-stale-layout-comments-and-s1-row` (since placed in the docs lane).
+
+**RULED 2026-10-10 — the flush form's OPEN-1 is (a), the E pair's scratch patch allowed on the form's terms; PR #200 gains one visible correction sentence, the human's, and nothing else; `kernel/tests/skp_filter_cancellation.rs`'s stale count comment joins `stale-test-names-and-comments`, written without the number; PR #199 merged (the human, typed, received at 12:50:58Z by the transcript; recorded verbatim at `state/directives/2026-10-10-pr199-merged-flush-open-1-pr200-sentence-stale-comment.md`, lines 6-14, sha256 8aab90bccb44b7b5c13e1addba13c833f55e9f14e31508c73d98f3c9a2643563 at the commit that adds it):**
+- **The rulings** are the text, referenced and not restated.
+- **Applied:**
+  - **Done:** `wire-bytes-invariant-trace-flag-race`, PR #199 merged as 1280e7e0; the gate log's records 458 and 459.
+  - **To follow:** the flush form's Amendment 1 records OPEN-1 (a), before any code; then its worker.
+  - **PR #200:** the sentence is added byte for byte from line 11, as its own line between item 8's text and its comment; the gate log's record 460.
+  - **Widened:** `stale-test-names-and-comments` gains the comment.
+
+**RULED 2026-10-10 — the docs lane opened (a third slot: documents, comments and test names only, one piece at a time); the item 8 correction moves there and starts now; slot 2's order through `b2-piece-1b-recording`; the re-aim's Amendment 2 answered; three unproduced SKP codes struck; the crs_undeclared wording; forms ahead; two stream-doc nodes made one (the human, typed, received at 11:00:52Z by the transcript; recorded verbatim at `state/directives/2026-10-10-docs-lane-slot-2-order-reaim-answers-strike-crs-wording.md`, lines 6-40, sha256 e5627eea9a90c0270e001e790bea10cd7ace0e1dd3300f35f0057a078aba92be at the commit that adds it):**
+- **The rulings** are the text, referenced and not restated.
+- **Applied in `PLAN.yaml`:**
+  - **The docs lane**, chained by dependency in the human's order: `known-limitations-item-8-filter-not-published` (ready; it starts now), then `shell-stale-frame-comments` with `shell-stale-layout-comments-and-s1-row` as one piece, then `known-limitations-item-2-on-main-paragraph`, `module-docs-stale-statements`, `skp-v0-live-sections-current-area-c` and `stale-test-names-and-comments`. The lane is a slot, like slots 1 and 2; each node keeps its subject lane in `PLAN.yaml`, whose lane list and priorities are unchanged.
+  - **Slot 2**, chained: `wire-bytes-invariant-trace-flag-race`, `stream-flush-cancel-exit-marks-producer-cancelled`, `filter-identity-alias-ambiguous-reached-through-skp`, `crs-undeclared-message-wording` (also after the re-aim), `ported-code-notice-route`, `guardian-v1`, `b2-piece-1b-recording` (also after milestone 2).
+  - **Moved:** the HOVER_REPICK_ON_PAN marker to `shell-stale-frame-comments`. `shell-map-refill-after-resize` now depends on the docs lane's second piece.
+  - **Closed:** `skp-unproduced-codes-ruling`, folded into `skp-v0-live-sections-current-area-c`; the named open item is on `first-external-plugin-skp-client`.
+  - **Ruled:** `crs-undeclared-message-wording` carries the human's wording by reference to the directive's line 33.
+  - **One node:** `stream-doc-first-batch-claim` folded into `dataset-stream-doc-producer-runs-ahead`, which stays proposed.
+  - **The weekly window** draft gains section N, the class 9 template sentence.
+- **To follow, each in its own commit:** the re-aim's Amendment 2 (the pins computed, the answers by reference), then its dispatch; the item 8 piece's form, then its dispatch; the wire-bytes PR and gates, with lead-data's impact read and the architect's form draft for `stream-flush-cancel-exit-marks-producer-cancelled`.
+- **Standing from this ruling:** forms ahead for each next piece in a slot while the current one is in gates (item 7); the docs lane's terms bind each of its pieces (item 3), and the human closes the lane if it costs more than it gives.
+
+**RULED 2026-10-10 — string 6's draft marker in `residencyStatus.ts` in scope, in `shell-stale-frame-comments` (comments only; the file's other draft markers checked against DECISIONS-PENDING); `stale-test-names-and-comments` points there; `shell-stale-frame-comments` at 30 minutes (the human, typed, received at 10:45:11Z by the transcript; recorded verbatim at `state/directives/2026-10-10-string-6-doc-comment-in-shell-stale-frame-comments.md`, lines 6-11, sha256 af7c279fc377e6d53ab6de872da5b486a7c6c0515771959811b9b9af3ffee1ea at the commit that adds it):**
+- **The rulings** are the text, referenced and not restated.
+- **Applied:**
+  - **Widened:** `shell-stale-frame-comments` carries the four items, its budget from 20 to 30 minutes.
+  - **Pointed:** `stale-test-names-and-comments`'s summary says the doc comment is handled in `shell-stale-frame-comments`.
+
+**RULED 2026-10-10 — the flake hunt's run 1: the flush cancel exit as an engine node (graded S2), placed in slot 2 after the KNOWN-LIMITATIONS item 8 correction and before the notice route; `slice-traced-test-cross-stamping` stays proposed, with a note (the human, typed, received at 10:25:26Z by the transcript; recorded verbatim at `state/directives/2026-10-10-flake-hunt-run-1-flush-cancel-exit.md`, lines 6-9, sha256 b40045a47c0d9bad350ca0193bd9e481d07507fc4b3c8d39b8c22d3c76dfad02 at the commit that adds it):**
+- **The rulings** are the text, referenced and not restated.
+- **The report** is `state/consults/FLAKE-HUNT-RUN-1-2026-10-10.md` (hash checked), with its evidence in `state/consults/FLAKE-HUNT-RUN-1-2026-10-10-logs/` (each file SHA256SUMS lists, checked).
+- **The custodian's check** is `state/consults/2026-10-10-flake-hunt-run-1-custodian-check.md`. The code reading holds at main's head; its notes are for the human.
+- **Applied:**
+  - **Placed:** `stream-flush-cancel-exit-marks-producer-cancelled`, after `known-limitations-item-8-filter-not-published` and before `ported-code-notice-route`.
+  - **Noted:** `slice-traced-test-cross-stamping`, in the human's words.
+
+**RULED 2026-10-10 — drift sweep area E: the KNOWN-LIMITATIONS item 8 correction placed in slot 2 next (graded S1); the item 2 paragraph, the stale tests and the crs_undeclared wording as proposed nodes; the filter-scope sentence on milestone 2's P6 sight list; walkthrough rows in different Parts disjoint (the human, typed, received at 08:59:21Z by the transcript; recorded verbatim at `state/directives/2026-10-10-drift-sweep-area-e-instructions.md`, lines 6-23, sha256 5d2c58cc0e0685f3ea810d25b3e0e360bc38266a20b1548b3b89dad903b04d8d at the commit that adds it):**
+- **The rulings** are the text, referenced and not restated.
+- **The custodian's check** is `state/consults/2026-10-10-drift-sweep-area-e-custodian-check.md`. Every clause of both texts holds; its notes are for the human.
+- **Applied:**
+  - **Placed:** `known-limitations-item-8-filter-not-published`, after `wire-bytes-invariant-trace-flag-race` and before `ported-code-notice-route`.
+  - **Proposed:** `known-limitations-item-2-on-main-paragraph`, `stale-test-names-and-comments` and `crs-undeclared-message-wording`.
+  - **Widened:** `module-docs-stale-statements`, `shell-stale-frame-comments` and `shell-migration-milestone-2`.
+- **Standing from this ruling (the slot-overlap check):** a walkthrough row in a different Part counts as disjoint, as different items of KNOWN-LIMITATIONS do.
+
+**RULED 2026-10-10 — the tier obligation, a named open item on `lod-tier-selection`, with a block-on-sight until the human rules; `module-docs-stale-statements` at 120 minutes; ADR-029 unchanged (the human, typed, received at 08:44:17Z by the transcript; recorded verbatim at `state/directives/2026-10-10-tier-obligation-open-item-and-adr-029.md`, lines 6-8, sha256 1fb9150d0e82a6f7fd73888fb431eeb35154da29acf7aa538c596ad9fe78f289 at the commit that adds it):**
+- **The rulings** are the text, referenced and not restated.
+- **Applied:**
+  - `lod-tier-selection` carries the named open item. Its form asks the human the item's questions before any product path calls `build_tiers`.
+  - `module-docs-stale-statements` records the agreed budget, and the restatement its item 2 names.
+  - `decision-adr-029-scan-progress-route` records item 3.
+- **Standing until the human rules the open item:** a product caller of `build_tiers` blocks on sight (item 2).
+- **How the custodian applies it:** gate briefs for any piece that adds a caller of `build_tiers` carry this line.
+
+**RULED 2026-10-09 — round 71 (GROUP′ re-aimed by the grouping rule, with the not-exercised condition) and round 70's "paste" (REFUSAL′'s product-line mutation terms; under OPEN-1 (A), the fixture variant's branch list and the byte-identity of every existing fixture) (the human, typed, received mid-turn at 18:52:15Z by the transcript; recorded verbatim at `state/directives/2026-10-09-round-71-and-round-70-paste.md`, lines 6-8, sha256 125b776d3a9a2e12e0cd2b533002f9d7abfb44621a4ba2ff2f0055a2af99e222 at the commit that adds it):**
+- **The rulings** are the text, referenced and not restated.
+- **To apply:** the architect drafts Amendment 2 of `frontends/shell/e2e/E2E-STALE-EXPECTATIONS-REAIM-PREREGISTRATION.md`. A worker then makes the change on the branch, and the custodian re-runs console alone, before the PR and both gates.
+- **Already met:** round 70's REFUSAL′ terms. The worker applied the mutation once, restored it and showed the worktree clean, with no refusal (worker report 1).
+
+**RULED 2026-10-09 — the e2e re-aim's question round: OPEN-1 to OPEN-3 and the lead-data pilot (the human, through the question round, received at 14:09:02Z by the transcript; recorded verbatim at `state/directives/2026-10-09-reaim-question-round-answers.md`, lines 6-16, sha256 6c633de7ee22b921df27b277fdf7a47ead6af91dfdc5d38df42bcca1f8c150b5 at the commit that adds it):**
+- **The answers** are the text, referenced and not restated.
+- **To apply:**
+  - Amendment 1 of `frontends/shell/e2e/E2E-STALE-EXPECTATIONS-REAIM-PREREGISTRATION.md` records them before any code. That includes REFUSAL′'s one product-line mutation, on the terms of the form's OPEN-2 option (b).
+  - PLAN: the node's code also waits for the K6 fix, PR #196.
+- **Open:** the custodian has asked which text the fourth answer's "paste" names.
+
+**RULED 2026-10-09 — additions: the e2e re-aim placed, milestone 2's start, the identity declaration route, the documents, KNOWN-LIMITATIONS items as disjoint paths (the human, typed, received mid-turn at 08:41:34Z by the transcript; recorded verbatim at `state/directives/2026-10-09-rulings-additions-reaim-identity-route-documents.md`, lines 6-29, sha256 427b39ac676ccf7ab48b509e0ca234b3e61e787acad3ec46688ddabcacb3cdcd at the commit that adds it):**
+- **The rulings** are the text, referenced and not restated.
+- **Applied in PLAN:**
+  - `e2e-stale-expectations-reaim` is placed in slot 1, right after the K6 fix. Slot 1 is now the K6 fix, the e2e re-aim, map-refill, then milestone 2.
+  - Milestone 2's code waits for the K6 fix, the e2e re-aim and map-refill. The re-aim replaces the triage in its dependencies.
+  - The proposed node `identity-declaration-route-for-session-tier` is graded S2, and the human places it after milestone 2 merges.
+  - `release-v0-1-1` notes that QUICKSTART.md's identity bullet changes with the next release.
+- **Next:**
+  - the custodian's solo re-run of console GROUP' and REFUSAL';
+  - then the architect drafts the re-aim's form alone, citing that re-run. It carries the KNOWN-LIMITATIONS item 3 paragraph as typed.
+- **Item 5, a standing rule for the disjoint-paths check:** two pieces that edit different numbered items of KNOWN-LIMITATIONS.md count as disjoint. The later one merges main in before its last gate run.
+
+**RULED 2026-10-09 — every open item of the eight forms committed at 6f45e31a (the human, typed, red lines included, received at 08:37:12Z by the transcript; recorded verbatim at `state/directives/2026-10-09-rulings-on-the-eight-forms.md`, lines 6-77, sha256 c53e50135bd2dbeb66835ed5690249b891c2619c8d2724436cb579a5f1c5107c at the commit that adds it):**
+- **The rulings** are the text, referenced and not restated. Slot orders are unchanged. Nothing adopts a dependency or a port.
+- **To be applied before any dispatch,** each form's answers recorded as an amendment:
+  - Amendment 1 for `e2e-hover-establishing-read-stale`, `shell-map-refill-after-resize`, `shell-migration-milestone-2`, `skp-drained-stream-helper-post-check-race`, `wire-bytes-invariant-trace-flag-race` and `ported-code-notice-route`;
+  - Amendment 2 for `covering-names-missing-column`, whose Amendment 1 is the P0's record;
+  - Amendment 8 for `guardian-v1`, by its own class 9 route.
+- **Applied in PLAN now:** the forms no longer wait on the human. Three proposed nodes are added, for the human to grade and place later:
+  - the covering whose name differs from a column only by case;
+  - first_batch_factorial's two ignored trace tests;
+  - slice.rs's traced test.
+- **Item 7 (OPEN-4):** the ADR-030 appended note's text, as typed, is appended to ADR-030 before `ported-code-notice-route` merges. **Item 7 (OPEN-6):** the custodian tells the human the new check's exact name after its first green run on main.
+
+**RULED 2026-10-09 — ADR-036's ten findings (the human, typed, received mid-turn at 05:18:25Z by the transcript; recorded verbatim at `state/directives/2026-10-09-adr-036-ten-findings-rulings.md`, lines 6-49, sha256 a4d57a2807f55f1ec8cef552147ec643e2e6210a776b2f0771457b89571f3325 at the commit that adds it):**
+- **The rulings** are the text, referenced and not restated. They answer `state/consults/2026-10-08-adr-036-reuse-round-1-findings-architect.md`. The message's last three paragraphs restate ruling 8's second sentence, ruling 5's barrier sentence and the first note for 1c's form; each restatement governs.
+- **ADR-036 stays Proposed.** The human accepts it together with piece 1c's amendments, before 1c merges. This replaces the timing in item 7 of the same day's direction (acceptance while milestone 2 is in code).
+- **The route, applied in PLAN:**
+  - `b2-piece-1b-recording`'s form carries the ADR amendment for findings 3, 5 and 6;
+  - `b2-piece-1c-save-and-reopen`'s amendment carries the rest, the line-oriented canonical form of `project.spatial` among it, with the architect's open acceptance items and the notes for 1c's form.
+- **Owed before acceptance:** a check that no common application claims the `.spatial` extension. File association and single instance are a later piece, and that dependency stays the human's typed word.
+
+**RULED 2026-10-09 — the pick-paths verdict accepted, the slot orders, the lead-data pilot resumed, the reuse index as a standing step (the human, typed, received at 05:07:05Z by the transcript; recorded verbatim at `state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md`, lines 6-44, sha256 d0275f85bbc32f17143683b6d70b7092d89ebae68ed4ca41ec2f46fbe3dd95c4 at the commit that adds it):**
+- **The ruling** is the text, referenced and not restated.
+- **Applied in PLAN:**
+  - item 1: the K6 (iii) ruling stands; the verdict is recorded on `e2e-hover-establishing-read-stale`;
+  - item 2, slot 1 in order: `e2e-hover-establishing-read-stale` (1), `shell-map-refill-after-resize` (2), `e2e-failures-present-at-the-base` (3), then `shell-migration-milestone-2` (4), blocked on those three for its code, with its form and question round now;
+  - item 3, slot 2 in order: `covering-names-missing-column` (graded S1), `skp-drained-stream-helper-post-check-race`, `wire-bytes-invariant-trace-flag-race`, `duckdb-parquet-geometry-probe` (reported only), `ported-code-notice-route`, `guardian-v1` (resumed; G8 covers `.claude/settings.local.json`; installing stays the human's), then `b2-piece-1b-recording` after milestone 2 merges;
+  - item 5: `query-reuse-index-before-planning` is done; the step is standing;
+  - items 7 and 8: on `decision-adr-029-scan-progress-route` and `shell-stale-frame-comments`.
+- **Item 4:** the lead-data second pilot resumes from `covering-names-missing-column` (the trial log, `state/drafts/weekly-window-2026-10-09.md`).
+- **Item 6:** the other proposed governance nodes wait for the next weekly window; the other proposed nodes stay proposed.
+
+**RULED 2026-10-08 — K6 case (iii), option (a) (the human, typed, received at 21:23:02Z by the transcript; recorded verbatim at `state/directives/2026-10-08-k6-case-iii-ruling.md`, lines 6-15, sha256 aec86de380ae721fcf522c30a532d07132b79233cac7cadbb22e55546a93d2cd at the commit that adds it):**
+- **The ruling** is the text, referenced and not restated.
+- **Applied:**
+  - milestone 1's form gains Amendment 10 (class 5, generation 11);
+  - the same worker puts case (iii) back to its old comparison, with no retry;
+  - the PR body says (iii) is unchanged and names the node;
+  - the node `shell-pick-paths-disagree-at-1280x801` is placed by the human: a diagnosis, reported only, done before milestone 2's selection code starts. `shell-migration-milestone-2` now depends on it.
+- **Diagnosed 2026-10-08** (`state/consults/2026-10-08-shell-pick-paths-disagree-at-1280x801-diagnosis-report.md`; the node is done): the two pick paths agree. The 50244 is very probably a stale establishing read in the harness, not the product. The ruling stands as given. The harness fix is the proposed node `e2e-hover-establishing-read-stale`, which waits for the human's word.
+
+**RULED 2026-10-08 — K6 case (v), option (b), and the stage 6 slip (the human, typed, received at 19:40:09Z by the transcript; recorded verbatim at `state/directives/2026-10-08-k6-case-v-ruling.md`, lines 6-20, sha256 c7e76c209b8be036851ec8c304e35086347e911ce832d876c78cbc195d3a4298 at the commit that adds it):**
+- **The ruling** is the text, referenced and not restated.
+- **Applied:**
+  - milestone 1's form gains Amendment 7 (class 5, generation 8);
+  - the same worker makes the case (v) change in `e2e/regression.mjs`;
+  - it observes mutation 5 once: one application, one run of the real suite, a restore and a clean check;
+  - the PR body carries the old and new assertion, the reason, and the threshold reading, marked as read from the record.
+- **The slip** stays recorded as it is, in report 6's filing note. Nothing else is redone, and no rule is added.
+
+**RULED 2026-10-08 — milestone 1's mutations, #192's branch, the docs/08 sentence, ADR-036 later (the human, typed, received at 18:02:48Z by the transcript; recorded verbatim at `state/directives/2026-10-08-m1-mutations-branch-docs08-adr036.md`, lines 6-30, sha256 536cebab9b5d03dbfb696e4dcb4570f23303c1bb25d5971c8e9752b0d6819b90 at the commit that adds it):**
+- **The rulings** are the text, referenced and not restated.
+- **Applied:**
+  - **Item 1:** milestone 1's worker resumes for the mutations listed in its report 4, section 4, under every condition of the item. If the permission system still refuses, it stops, and the human is told.
+  - **Item 2:** `cut/reuse-round-1-bundle` is deleted, local and remote. No other branch is touched.
+  - **Item 3:** `docs-08-public-data-sentence` lands the typed sentence as line 40. The sentence is the item's wrapped lines joined with single spaces, `docs/08_Testing.md` line 40. It needs a five-line form, one worker and the single reviewer gate.
+  - **Item 4:** ADR-036's acceptance waits. The architect's report holds nothing now.
+
+**DIRECTIVE 2026-10-08 — a low profile on GitHub (the human, typed, received at 18:03:05Z by the transcript; recorded verbatim at `state/directives/2026-10-08-low-profile-on-github.md`, lines 6-16, sha256 f564a9656cc416e8e8c80079bd8af8068ed17cd1079d41ee90d19e8f2c064860 at the commit that adds it):**
+- **The direction** is the text, referenced and not restated. It stands until the human says otherwise.
+- **How it applies:**
+  - It covers commit messages, PR titles and bodies, and comments, plus the Fork button and any outside issue, PR, discussion or comment.
+  - File contents are not affected.
+  - Every worker, tester and reviewer brief that may write a commit message or a PR text carries it by reference.
+
+**DIRECTIVE 2026-10-08 — reuse round 1 lives in a private repository (the human, typed, received at 17:10:40Z by the transcript; recorded verbatim at `state/directives/2026-10-08-reuse-round-1-private-repository.md`, lines 6-34, sha256 e461fb526bfc1b74696beb27da02f4efd4125c9178c0d1f9456b8aa6456a4eb6 at the commit that adds it):**
+- **The direction** is the text, referenced and not restated. It replaces item 1 of the reuse round 1 directive below, and the v2 placement. Items 2 to 5 stand as before.
+- **Item 1, done by 17:11:35Z (the transcript):**
+  - The repository is cloned beside this checkout, at `C:/dev/spatial-ide-reuse`, outside every repository, and checked out at 89bbac3738dbb46d47988e55a7c0f0d4f9fe4c5c.
+  - `sha256sum -c SHA256SUMS`: 140 of 140 OK, exit 0.
+  - `node tools/check-index.mjs`: ok, 55 capabilities and 188 candidates, exit 0.
+  - Neither fails. fetch-cache.mjs is not run, and nothing is committed there.
+- **What this withdraws:** PR #192, which copied the bundle into this repository, is closed unmerged. The node `reuse-round-1-bundle` is unscheduled, and its form's Amendment 2 closes it. The human is asked whether the published branch should be deleted.
+- **Item 2 stands as done:** the architect consult (`state/consults/2026-10-08-adr-036-reuse-round-1-findings-architect.md`) read section 1's ADR-036 subsection. That subsection is byte-identical at 89bbac37: REUSE-ROUND-1.md lines 16-47, sha256 58f886eca86001625ffc981e6dccb25619a3b48e3fd98f6daf3bd0a1da62c743, the same lines the consult cites. The notes it read are identical too; only the README and the brief differ.
+- **Items 3 to 5:** already queued and proposed.
+
+**DIRECTIVE 2026-10-08 — reuse round 1, the v2 archive (the human, typed, received at 16:03:30Z by the transcript; recorded verbatim at `state/directives/2026-10-08-reuse-round-1-v2.md`, lines 6-7, sha256 df5a49b9bded0cec2b2058c1319ee7edd4c7a33e4866c2bbb18be4462088b525 at the commit that adds it):**
+- **The direction** is the text, referenced and not restated. It replaces the archive of the reuse round 1 directive below. The rest of that directive stands.
+- **The archive did not arrive:** no file reached the session again. The human is asked for another route. The given sha256 is checked first, before anything else is done with the file.
+- **Applied now:** the node `reuse-round-1-bundle` carries the v2 hash, the order after #190 merges (#191 must also have merged, for the pinned citations), and the checks over the placed folder.
+
+**DIRECTIVE 2026-10-08 — reuse archaeology round 1 (the human, typed, received at 15:37:32Z by the transcript; recorded verbatim at `state/directives/2026-10-08-reuse-round-1.md`, lines 6-37, sha256 430c7c2154889d46b77e3ee271320e84ea44eccc409b9f41e4d7d1f966a8accc at the commit that adds it):**
+- **The direction** is the text, referenced and not restated.
+- **The archive did not arrive:** no attachment reached the session, and the hash is a placeholder. The human is asked for the file and its hash. Items 1 and 2 wait for it.
+- **Applied now:**
+  - item 1's piece is placed as `reuse-round-1-bundle`, ready, in slot 2 after #190 and #191 merge;
+  - item 3's docs pieces are queued: `adr-032-staleness-docs`, and `docs-08-public-data-sentence`, whose sentence the human types;
+  - items 4 and 5 are proposed nodes: `duckdb-parquet-geometry-probe`, `ported-code-notice-route` and `query-reuse-index-before-planning`.
+- **Standing:** adopting any dependency the bundle names stays the human's typed word.
+
+**RULED 2026-10-08 — Decisions A, B and C (put in the custodian's closing messages; the human typed the rulings as a new message, received at 14:23:55Z by the transcript; recorded verbatim at `state/directives/2026-10-08-decisions-a-b-c.md`: A, lines 6-15, sha256 d5522f63c3439cad05bcb397065dd612a4ac4ba01e6a6a7aa34a73c5a8124d9a; B, lines 17-24, sha256 55ac849dfa481cb43f579a9edaefa4fa7fd729ec98424fef46595c04a11b32d4; C, lines 26-28, sha256 799adebe4fd997e6c004484cb9339c11d24b4c48293bf7d5d31bf4bc799b5177; each at the commit that adds it):**
+- **The rulings** are the text, referenced and not restated.
+- **Applied:**
+  - **A:** `shell-migration-milestone-1`'s Amendment 6 (generation 7), the seven re-aims declared under the ruling's conditions before any code of them.
+  - **B:** a new PLAN node, `verify-cites-pinned-citations`, a one-off and bounded exception to the freeze, with its five-line form. It goes in slot 2 after B2 piece 1a awaits merge, and it merges before milestone 1 opens its PR.
+  - **C:** B2 piece 1a's Amendment 6 (generation 7), the one line in `frontends/shell/src-tauri/Cargo.lock`, with the human's stop condition on any other change in that lock's diff.
+
+**RULED 2026-10-08 — question round 70, b2-piece-1a's red lines OPEN-2, OPEN-3, OPEN-5 and OPEN-7, all (A), with conditions (put in the custodian's closing message; the human typed the rulings as pasted content, enqueued at 04:32:16Z by the transcript; recorded verbatim at `state/directives/2026-10-08-round-70-rulings.md`: OPEN-2, lines 8-14, sha256 f49504b51df29a57ca7e0f45326839acb107a0052ed4ec84daba2870fe2f5617; OPEN-3, lines 16-20, sha256 c473dc92a82159a1ed8c527be10ae96ceec49de3cc745a47ed9c7591fef7c1a4; OPEN-5, lines 22-26, sha256 6ca5806f64c8da9b8f0422e40157e78deb6b316037bbf6b3cf3aedc34fa75cee; OPEN-7, lines 28-33, sha256 dece94e09a0c837e5cb5f38b2075b977923a2521f3be276c6981e084659e0650; each at the commit that adds it):**
+- **The rulings** are the text, referenced and not restated.
+- **Applied:**
+  - the form's Amendment 2 (generation 3): the ruled ADR-036 text, `DatasetUri::mint` with the one `getrandom` edge, and the reader's refusal of a locator that leaves the project folder, with its test R7;
+  - the behaviour each ruling names, routed to `b2-piece-1b-recording` and `b2-piece-1c-save-and-reopen` and recorded in their PLAN summaries.
+- **The human's stop condition (OPEN-5):** if the lock diff shows anything beyond that one edge, the worker stops and the human is told. The PR body shows the lock diff.
+
+**DIRECTIVE 2026-10-08 — heavy runs while this is the only session on the machine (the human, typed, received at 04:25:07Z by the transcript; recorded verbatim at `state/directives/2026-10-08-sole-session-heavy-runs.md`, line 6, sha256 70de2a96b006dc98a47551c09f1ad50e204591a769e22c3c40da5593d3fcfe80 at the commit that adds it):**
+- **The direction** is the text, referenced and not restated.
+- **Applied, as the filing note reads it:** while it stands, this project's two slots may run heavy runs at the same time, each in a shared hold, with the same job and thread limits. A timing-sensitive failure is still re-run alone. Exclusive holds stay the custodian's.
+- **Ends:** when the human says another session runs again, or when the machine script's status shows another project's hold. The one-at-a-time rule then returns.
+
+**RULED 2026-10-08 — question round 69, b2-piece-1a's OPEN-1, OPEN-4, OPEN-6 and OPEN-8, all recommended, with typed additions to items 1 and 4 (AskUserQuestion, asked at 2026-10-07T22:59:00Z and answered by option label at 2026-10-08T03:39:27Z; the additions typed as pasted content, enqueued at 03:39:31Z; recorded verbatim at `state/directives/2026-10-08-round-69-rulings.md`: lines 6-9, sha256 957d18886808dca6340d181cd79d8452e38a4376effa0ae5dbd76002a00bb978; lines 10-20, sha256 9157b8bdc5a5f4b4655033b3e51dbbc7381991065418a1ad07a28480a856f27f; each at the commit that adds it):**
+- **The rulings** are the text, referenced and not restated.
+- **Applied:**
+  - the form's Amendment 1 (generation 2), which folds item 1's three additions into ADR-036's text as filed;
+  - the two items routed to piece 1c, recorded in `b2-piece-1c-save-and-reopen`'s PLAN summary.
+- **Still open:** OPEN-2, OPEN-3, OPEN-5 and OPEN-7, the red lines, in question round 70.
+
+**RULED 2026-10-07 — question round 68: when a waiting PR needs main merged into it (AskUserQuestion, answered in typed words at 20:27:41Z by the transcript; recorded verbatim at `state/directives/2026-10-07-round-68-ruling.md`, line 6, sha256 cd4b73c1a9bc959dc21470ff82d722fccfff0902d2137893e0fe7e214dec8466 at the commit that adds it):**
+- **The ruling** is the text, referenced and not restated. It refines item 4 of the 2026-10-07 awaiting-merge direction.
+- **When main is merged into a waiting PR:**
+  - another PR merges;
+  - main changes a file the waiting PR touches;
+  - main changes anything CI runs or builds: workflows, governance scripts, tools, or dependency files.
+- **Record commits outside those cases need no re-merge.**
+- **After the human's click,** the custodian checks main's CI on the merge commit, and tells the human only if it is red.
+- **Applied:** since #187's last re-merge (1f5eef49, over main 7dd0315d), main's commit bdf85948 changed records only. So #187 is ready, and awaits the human's merge-commit click.
+
+**RULED 2026-10-07 — question rounds 66 and 67, shell-migration-milestone-1's OPEN-1 to OPEN-7, all recommended, with two clarifications (AskUserQuestion, answered by option label at 20:17:33Z and 20:19:49Z; the clarifications typed as pasted content, enqueued at 20:17:41Z and 20:19:56Z; recorded verbatim at `state/directives/2026-10-07-round-66-and-67-rulings.md`: lines 6-12, sha256 93303ab09414917295841ccf30b289f391d8f02fadd92689dc73b425794ad2a6; lines 13-23, sha256 1ab500f879476da9e4669a9502298b1029babf89e0154b28e2f16fa0b172d903; lines 24-29, sha256 479cf1dcc5e450af01e47b4ecdeec9219d65105380471aa4a79402f03adfe077; each at the commit that adds it):**
+- **The rulings** are the text, referenced and not restated.
+- **Applied:**
+  - the form's Amendment 1 (generation 2);
+  - the proposed node `shell-map-refill-after-resize`, the OPEN-7 clarification's own small piece, placed directly after milestone 1 merges if H1 holds;
+  - milestone 2's summary: its form and question round are prepared meanwhile, and its code waits for that piece.
+
+**RULED 2026-10-07 (evening) — B2's brief, and the human's rulings on it (the human, typed, received at 19:52:44Z by the transcript; recorded verbatim at `state/directives/2026-10-07-b2-brief-and-evening-rulings.md`, lines 6-42, sha256 a34fc97c09af8ab7fa3dd2d2ac8d13221a187365e23d3b3014e81462e296fa28 at the commit that adds it):**
+- **The rulings** are the text, referenced and not restated. They refine those of 19:23Z, and where they differ these hold.
+- **Filed byte-identical, each matching the human's sha256 and size:**
+  - `state/directives/B2-BRIEF-2026-10-07.md`;
+  - `state/directives/O-07-WALKTHROUGH-2026-10-05.md`, which replaces the copy filed at 30e77c10. The change is its decisions' §4.2.
+- **The brief replaces the plan's §10** as the brief for B2's forms. The rest of the plan stands. Stage 1 runs as pieces 1a, 1b and 1c, and stage 3 as 3a and 3b, per the brief's §9. Piece 1a's form is stage 1's form.
+- **Applied:**
+  - `briefb-b2-save-reopen` is re-described to cite the brief. Stages 2 to 5 stay in it for now.
+  - The proposed nodes `b2-piece-1b-recording` and `b2-piece-1c-save-and-reopen` carry the brief's §9 needs in their summaries and dependencies.
+  - `b2-piece-1a-step-record-and-dataset-reference` is placed in slot 2's order after the pieces already there (kernel-protocol lane, order 16, ready). Its form confirms whether it needs the ADR-029 ruling.
+  - No ADR status, no docs/ text, and no existing node's `depends_on` is changed.
+
+**RULED 2026-10-07 — the shell-migration plan, second version (the human, typed as pasted content, received at 19:23:41Z by the transcript; recorded verbatim at `state/directives/2026-10-07-migration-plan-v2-ruled.md`, lines 6-30, sha256 b91857b1b06b6aff584ce8b3b50a42fb5d3ad44047fc39b90b7d70792f245eaa at the commit that adds it; the plan and the O-07 walkthrough filed byte-identical, each matching the human's stated sha256 and size):**
+- **The ruling** is the text, referenced and not restated.
+- **The plan:** `state/directives/SHELL-MIGRATION-PLAN-2026-10-07.md` is the migration's order. Its §13 items 1 to 8 are ruled as written.
+- **The answers to §10.9:**
+  - question 1: the session history is kept on the machine, keyed to the project, not in the project folder. This replaces that row of the human's decisions' §1 in `state/directives/O-07-WALKTHROUGH-2026-10-05.md`, which is filed unedited;
+  - question 2: one dated note in docs/07, in B2's pull request, typed by the human then;
+  - question 3: keeping a branch stays out of B2;
+  - question 4: B2 goes in §10.8's five stages, each with its own form;
+  - questions 5 to 11 come to the human as open items in B2's forms.
+- **Applied:**
+  - `shell-migration-milestone-1` is placed (ready, first in slot 1's order). Its full form by the architect and its question round come now. Its code starts when the lines cut has merged, under the 2026-10-07 awaiting-merge direction, item 3.
+  - `b1-shell-half` is re-described as milestone 4.
+  - `briefb-b2-save-reopen` is re-described per §10.
+  - Proposed nodes: `shell-migration-milestone-2`, `-3`, `-5`, and `shell-real-app-run-macos-linux` (§13 item 8).
+  - The holds of 2026-09-23 item (b), and the 2026-09-27 session order's hold on these nodes, lift by milestone, as §13 item 7 says.
+- **Not changed in this step:** no ADR status, no docs/ text and no dependency. The custodian reads "dependency" as a software dependency, and also changes no existing node's `depends_on`.
+
+**RULED 2026-10-07 — question round 65 (AskUserQuestion, mirrored by the round-mirror hook as `state/questions/round-65.md`; the human rejected the call and typed the ruling in the next message at 18:07:11Z by the transcript; recorded verbatim at `state/directives/2026-10-07-round-65-rulings.md`, line 6, sha256 83a8126f41aaca3f660c2e92f102d138c83bc88860d6704e3db98dadf5b79f73 at the commit that adds it):**
+- **The ruling** is the text, referenced and not restated. It selects the recommended option of each item in the mirror.
+- **OPEN-1, (1):** the custodian adds the kernel index line for `kernel/TYPED-TERMINAL-CODES-POST-CHECK-RACE-PREREGISTRATION.md` in that piece's closing record, after the lines cut merges. The PR never edits `kernel/README.md`.
+- **OPEN-2, (1):** Part B, the E2 and E3 siblings in `kernel/tests/session_end_event.rs`, is included.
+- **Applied:** the form's Amendment 1 (generation 2); then dispatch, with heavy runs one at a time with the lines cut's.
+
+**RULED 2026-10-07 — `typed-terminal-codes-post-check-race` placed in slot 2 (the human, typed, received at 17:45:53Z by the transcript; recorded verbatim at `state/directives/2026-10-07-typed-terminal-codes-race-placed.md`, line 6, sha256 f73f58d56b4ab68a84ab11d2bae4738e1491769563801b9f7678f868fba6e149 at the commit that adds it):**
+- **The ruling** is the text, referenced and not restated.
+- **Applied:**
+  - the node is placed, and is ready for slot 2, under item 3 of the 2026-10-07 awaiting-merge direction;
+  - the architect drafts its form alone, because the lead-data pilot is paused;
+  - the form is committed before any code.
+- **The stop condition:** the piece is test-only. The work stops, and the human is told, if it needs:
+  - a `protocol/` edit;
+  - or any file in the lines cut's §7 list (`engine/GEOMETRY-LINES-PREREGISTRATION.md`), `kernel/README.md` and `engine/src/fixture.rs` among them.
+
+**DIRECTIVE 2026-10-07 — a piece that only waits for the human's click leaves its slot (the human, typed, received mid-turn and enqueued at 16:34:47Z by the transcript; recorded verbatim at `state/directives/2026-10-07-awaiting-merge-leaves-the-slot.md`, lines 6-13, sha256 00353cd347f51be7d5840b269525cca1295a00067739f31cc8207381d02682bf at the commit that adds it):**
+- **The direction** is the text, referenced and not restated. It amends part 2 of the 2026-10-03 trial directive from its receipt.
+- **As applied at receipt:**
+  - no PR awaits merge: #185 merged at 04:12:28Z, and #186 at 16:24:08Z;
+  - in progress: `geometry-lines-cut`, slot 1, phase A, which edits `protocol/skp`;
+  - `data-plane-crowded-start-detail-spaces` is the only ready piece, and it edits `protocol/data-plane`. By item 3, the trial's rule of at most one piece touching `protocol/` holds, so its code waits until the lines cut has merged. Its form is committed and needs no question round. Slot 2 stays empty until a ready piece passes item 3.
+  - From the next merge, every PR awaiting merge is brought up to date by merging main into it, CI is waited on, and the human is told it is ready again (item 4). The closing record takes no slot (item 5).
+  - Item 7 goes to the next window's report.
+- **Disclosed by the custodian:** before this direction, the trial's rules of disjoint paths and at most one piece touching `protocol/` were not applied when `kernel-close-races-followups` started its code while the points cut's PR #185 awaited merge. Both edited `protocol/skp/SKP-V0.md` and `kernel/README.md`, which is what gave #186 its conflict after #185 merged.
+
+**RULED 2026-10-07 — question rounds 63 and 64 (AskUserQuestion, mirrored by the round-mirror hook as `state/questions/round-63.md` and `state/questions/round-64.md`; round 63's red-line items offered as holds only and answered in typed text at 10:11:00Z by the transcript; round 64 answered by option label at 10:11:16Z; recorded verbatim at `state/directives/2026-10-07-round-63-and-64-rulings.md`: line 6, sha256 8590d29a4b2a7dffa9581fbf6f9eec4032f9771cfa6e4fb123bd6a80071c0d92; line 7, sha256 445ec63c10bf05fb0024bbc9a0792cbae603153e8164e1e7c7c77b84fb1d44bd; lines 8 to 10, sha256 a40a9a6ebbe696945bd923e704043160f1349ac7f9db192734ccbaddf69f6471; line 11, sha256 1c6a27b603988da223219d3b640d9f2a4f7cdf9f4ba7a2e4d139d19ecc9b9a82; line 12, sha256 39a173334d96baf873a473e061b194183bc6a44c99066a0b760c5bb966702e0a; each at the commit that adds it):**
+- **The rulings** are the text, referenced and not restated. They resolve OPEN-1 to OPEN-5 of `engine/GEOMETRY-LINES-PREREGISTRATION.md`. Each is read by its own OPEN label, not by its slot (the directive's filing note).
+- **OPEN-1:** (A), LineString and MultiLineString, with the budget of the form's §7 as declared for (A).
+- **OPEN-2:** (A). The mixed-kind detail names the kinds present, in the order polygonal, point, line. It stays a P6 placeholder for the human's sight.
+- **OPEN-3:** (A), `LINE_WIDTH_PX` = 2 CSS px, with the casing. Round 62 item 3's reading of ADR-022 Decision 4 applies unchanged. KNOWN-LIMITATIONS item 37 is as drafted, for P6. Row T4 also records whether the casing looks right at the default opacity. A line geometry and a width in the style document stay with style v2 (B3).
+- **OPEN-4:** (A), `LINE_PICK_RADIUS_PX` = 4 CSS px, for line opens only. KNOWN-LIMITATIONS item 38 is as drafted, for P6.
+- **OPEN-5:** (A), no measurement. The proposed node `lines-class-budget-measurement` is recorded.
+- **Applied:** the form's Amendment 1 (generation 2); then dispatch.
+
+**RULED 2026-10-06 — check 4 inside a 20-minute booking (the human, typed, received at 21:09:39Z by the transcript; recorded verbatim at `state/directives/2026-10-06-check-4-in-a-booking.md`, line 6 (its sha256 a35f831437dd40fbd2c3283b140995c8e7bbd10da037706aad855132a465b127 at the commit that adds it)):**
+- **The direction** is the text, referenced and not restated.
+- **Applied:** when the points cut's phase B hands back, and before its gates are dispatched, the custodian:
+  1. books 20 minutes under SpatialIDE, starting two minutes later;
+  2. runs check 4 inside the booking (Fable's b of the third direction);
+  3. cancels the booking as soon as the test has ended.
+- **If the test gives up with 96** because a run already in progress keeps the machine busy: cancel, and book again after that run's declared end.
+- **The result** goes to the human.
+
+**RULED 2026-10-06 — question round 62 (AskUserQuestion, mirrored by the round-mirror hook as `state/questions/round-62.md`; item 1 by option label, not a red line under its (A); items 2 to 4 red lines, offered as holds only and answered in typed text; all at 18:57:07Z by the transcript; recorded verbatim at `state/directives/2026-10-06-round-62-rulings.md`, lines 6 to 9, one answer per line in item order (line 6, sha256 ab74437d85a8720bd274cf7f26f372d96f4032e3dcf5bae5f2964606f38e7577; line 7, sha256 a9f46581a22ba3635c46637674f2eb7eb6f94c1823777e2fac2b1fcfd07ec9fd; line 8, sha256 31b0a7ad439283bff4e2e5189e1ba0fcf2809b77fcabd35249186138aca44982; line 9, sha256 d5c6424f95c7eb5b4531251fc7cb0819c256f85b4b3499483e47e1ab798356f3, each at the commit that adds it)):**
+- **The rulings** are the text, referenced and not restated. They resolve OPEN-1 to OPEN-4 of `engine/GEOMETRY-POINTS-PREREGISTRATION.md`.
+- **Item 1, OPEN-1:** (A), Point only.
+- **Item 2, OPEN-2:** (A). The mixed-kind detail is a P6 placeholder that the human sights at P6, and its draft text is in the ruling. The ruling is the later decision that ADR-034 Decision 7 refers to, for a set that mixes readable kinds.
+- **Item 3, OPEN-3:** (A), radius 4 CSS px, with the human's reading of ADR-022 Decision 4:
+  - the mapping is rendering plumbing in the working canvas only;
+  - the document still says polygon;
+  - a point layer's style document is not saved as a polygon document without a ruling, and B2's form says what Save does;
+  - a walkthrough verdict may revise the radius.
+- **Item 4, OPEN-4:** (A). Operator row P2 also hovers a visible pile of points, and the human records whether naming the topmost symbol is acceptable. Option (B) is the follow-up only if that verdict says it is not.
+- **Applied:** the form's Amendment 1 (generation 2); then dispatch.
+
+**RULED 2026-10-06 — the machine script's version three stays, shared holds from now, one exclusive hold and release test (the human, typed as pasted content, received mid-turn at 17:25:23Z by the transcript's enqueue record; recorded verbatim at `state/directives/2026-10-06-machine-script-version-three-ruling.md`, lines 6-15 (their sha256 3c916f56dcc708472a8c85babb7eeff8bb2a9096e8b2a277a2ab949679255c3f at the commit that adds it)):**
+- **The ruling** is the text, referenced and not restated.
+- **The script:** version three (16:33:15Z, sha256 6826d814…) is the adopted version, unchanged. This project uses shared holds now, and the rule is in the workers' briefs (the fourth direction).
+- **The exclusive test** is check 4, run once on a quiet machine. If it passes on both sides, the script is closed.
+- **The README sentence** is for the script's own README in the script's folder, which this project never changes. The custodian takes no action on it and tells the human. The ruling's opening also names a point 3 that no message of this session raised.
+
+**RULED 2026-10-06 — the fourth direction of the day: the machine script adopted for this project's shared runs, exclusive holds from check 4, and THE MACHINE paragraph in every heavy-run brief (the human, typed as pasted content in the human's own message, received at 17:11:45Z by the transcript; recorded verbatim at `state/directives/2026-10-06-machine-script-adopted.md`: the direction, lines 6-23 (their sha256 aa48e3ee4b0890df27d4460d5aef6b5daa8cb5fc65c3aba43f55e6d69fd868ec), of which the paragraph is lines 12-22 (their sha256 7350977156bed7c94b0da4e8db806ba34c25c6678e65c46447a62d791ba9e8e1), and Fable's advice, lines 24-29 (their sha256 c292429b766b48a20c10cb1274062239c93942d642629937ee2076c4f4a10745); the whole span's sha256 3e1dd98f60d36118a1e39204287327419c52b7f0f07fed3de221c72b11a61811; each at the commit that adds it):**
+- **The direction** is the text, referenced and not restated.
+- **Item 1:** the script is adopted for this project's shared runs from 17:11:45Z. This changes item 4 of the third direction. #182's reviewer, dispatched at 16:46:41Z under section B, finishes as dispatched.
+- **Item 2:** this project's exclusive holds start when check 4 passes. Until then a timed measurement follows section B's item 5 of the first 2026-10-06 direction. The rest of section B is replaced by the script, except item 6: the two slots still run their heavy runs one at a time.
+- **Item 3:** the paragraph, lines 12-22, goes as written into every brief of a worker, worker-high, tester, tester-high or reviewer, with the script's path given as `~/Development/Claude/machine/machine.ps1`. The custodian follows it too.
+- **Fable's advice is followed:**
+  - a: exclusive holds are the custodian's alone;
+  - b: a 96 that names another heavy run is retried when status shows none, and a 96 for CPU or cool-down goes to the human;
+  - c: the session's pin stays, set again after each restart;
+  - d: no separate MACHINE-BUSY.json check is made before a shared hold;
+  - e: the script read at 17:12Z is 684 lines, last changed at 16:33:15Z, with sha256 6826d814d961e3e15fadd9f9a79c6e0d5f7c695fad5a09e878376e9e9f33ea2b, which is Fable's reading. A later reading that differs goes to the human before the next heavy run.
+
+**RULED 2026-10-06 — the third direction of the day: Guardian's E1 to E3 after #182's reviewer and at the next session start, the earlier files left as filed, `mods-readme-local-scope` placed in slot 2, and the machine script adopted on check 4 (the human, typed as pasted content, received mid-turn at 17:01:34Z by the transcript's enqueue record; recorded verbatim at `state/directives/2026-10-06-probes-readme-node-and-script-adoption.md`: the direction, lines 6-12 (their sha256 9a555189888d571812b3fb9ea0928659497b354a5f390f79b70c95a6ea9ac6d7), and Fable's advice, lines 13-19 (their sha256 2f0ad22728178a0bafa8f69be63f82faf6f56cf2c6304a1f41875423772e262f); the whole span's sha256 609a24d664cfb4c78dd17dc2ee00bff8c88ba4d58bae2e6a8ea5cc81874a3afa; each at the commit that adds it):**
+- **The direction** is the text, referenced and not restated.
+- **Item 1:** E1 to E3 of `tools/mods/GUARDIAN-V0-PREREGISTRATION.md` §4 run twice, each recorded as class 1 rows on main:
+  - once after #182's reviewer has finished, with no agent running;
+  - once at the next session start, with the plugin list read for both mods at scope local and the Recorder's record for the first approved command.
+- **Item 2:** the earlier files that name the other project stay as filed, and no history is rewritten.
+- **Item 3:** `mods-readme-local-scope` is placed in slot 2 now, ahead of `kernel-close-races-followups`, and is exempt from the freeze. It is docs only, so it takes the five-line form and the single gate. It has no E-rows, and the human's click is the approval.
+- **Item 4:** the machine script is adopted when check 4 passes as Fable's b describes. It then replaces section B of the first 2026-10-06 direction, and the rule goes into the workers' briefs. If check 4 fails, the custodian holds and tells the human.
+- **Fable's advice is followed:**
+  - a: check 3 passes;
+  - b: check 4's pass conditions, with the give-up limits set below the Bash call's own timeout;
+  - c, d and e: these go into the briefs;
+  - f: from adoption, a timed measurement uses an exclusive hold.
+
+**RULED 2026-10-06 — the second direction of the day: the boot, both mods at local scope (C.8 withdrawn), other projects off limits both ways, the public repository's naming rule, the P0 scratch deletion and the machine script (the human, typed as pasted content in the human's own message, received at 16:20:13Z by the transcript; recorded verbatim at `state/directives/2026-10-06-boot-mods-local-and-machine-script.md`: the direction, lines 6-19 (their sha256 af1f7344bc8d00b457d2ae83dcebabb511c537cc55cab65ff3075ec9a9586b7d), and Fable's advice, lines 20-31 (their sha256 974b5da621e624620574d1e81e001997ee95d90ff8b202f2ea239f2742379be2); the whole span's sha256 165aea6cb9aa81d54eab955ae6175db3b248b2aef73baaef637755915f676d6e; each at the commit that adds it):**
+- **The direction** is the text, referenced and not restated.
+- **Item 0, the boot, done:**
+  - origin/main is 39ccad91, the flush commit, and the working tree holds only the two untracked items the block describes;
+  - the lease is this session's (da685a21) from 16:20:44Z; the previous lease (128d8fa3) was stale, and the human closed that session;
+  - the commit-msg fence is armed and refuses an unsigned message (exit 1);
+  - `verify:plan` passes, and CI on main is green (39ccad91, 0f86b680 and c4c251d4).
+- **Item 1:** C.8 of the 10:30Z direction is withdrawn. R6 places no C.8 node, and slot 2 goes to `kernel-close-races-followups`. C.9 stands.
+  - `claude plugin list` at 16:20:54Z shows both mods at scope local, each read from the main checkout's `tools/mods/` folder (Fable's a). The install row is recorded in each mod's form as an appended amendment. The READMEs' user-scope lines are corrected the usual way.
+- **Item 2** stands in both directions.
+- **Item 3:** from this filing on, nothing filed here names the other project or states facts about it. A message of the human's that names it is filed with `[the other project]`, and the filing note says so. Records filed before this direction are not edited (§22's record classes; C.9's "Reports already filed stay as filed"). The custodian tells the human which tracked files name it.
+- **Item 4, done at 16:27:24Z:** one scratch file of the guardian-v1 P0 run held lines from other projects' transcripts, `guardian-v1-p0/hits-other.jsonl` in the previous session's scratch folder (170 records, 136,374 bytes). It is deleted. The P0b and P0c data files were checked by session id against this project's transcript folder: every record is this project's. The checks printed counts only, never record text.
+- **Item 5:** the machine script names this project SpatialIDE. Hold and release replace the wrapper once the changed version is there. The trial run is the custodian's, and Fable reads the result. From the script's log, only this project's lines are quoted (Fable's g).
+- **Fable's advice is followed:** R2 to R5 as the block writes them, with the pin before any heavy run (b); d is added to guardian-v1's resume notes; e and f shape the trial.
+
+**RULED 2026-10-06 — the two merges at 10:11Z, the machine until the shared script, and both mods scoped to this repository (the human, typed, received at 10:30:25Z by the transcript; recorded verbatim at `state/directives/2026-10-06-merges-machine-and-mod-scope.md`: the direction, lines 6-22 (their sha256 c168f5cdfac3edb5fac2c6f06b8ce6cda71f82a32161d3db31d3ab287d82c061), and Fable's advice, lines 23-31; the whole span's sha256 32a75ff0d617a8144f0d9b822c31c4770df640ebf4d05d809b8dcf22b3032eb6; each at the commit that adds it):**
+- **The direction** is the text, referenced and not restated.
+- **A.1:** #183's merge is approved after the fact. E12, E13 and E14 are allowed. The session is restarted, not reloaded.
+- **A.2:** #182's gate-1 reviewer runs now on the merge commit c4c251d4, as a heavy run under section B. Its closing record states the order as it happened. A Correctness or Evidence finding becomes a fix piece, first in the product slot. No piece that builds on MP-1 starts before the verdict.
+- **B** replaces the interim machine rule where they differ, until the shared script is adopted:
+  - sharing is the default, and a heavy run takes no lock: this project's heavy runs use logical cores 0 to 7;
+  - an existing `MACHINE-BUSY.json` is an exclusive hold;
+  - a timed measurement, and a re-run of a timing-sensitive failure, takes the file by exclusive create, may use all sixteen cores, and starts only when no heavy run of either project is visible;
+  - this project's slots run heavy runs one at a time.
+- **C.8:** one slot-2 piece, exempt from the freeze, scopes every Guardian rule and every Recorder hook to this repository by the check named there. Its merge waits for the human's typed approval.
+- **C.9:** another project's transcripts and memory under the human's Claude folder count as that project's folders. No agent of this project reads them.
+- **Applied, in Fable's order (its note a):**
+  - this filing and the block's flush, then the clean stop for the human's restart;
+  - after the restart, the session's processor affinity is set to 0xFF and read back, and `CARGO_BUILD_JOBS=8` and `RUST_TEST_THREADS=8` are set for shared runs;
+  - then E12, then #182's reviewer at c4c251d4;
+  - the slot-2 piece for C.8 is placed as a new node, its form drafted by the architect.
+
+**RULED 2026-10-06 — PR #183's merge approval, naming E12 to E14, and the end of the morning request (the human, typed, received at 10:18:41Z by the transcript, after the click at 10:11:28Z; a red line, a mod merge; recorded verbatim at `state/directives/2026-10-06-pr183-merge-approval.md`, lines 6-11 (their sha256 722289fd871d2f8263469564956b08114162981dab972c6fbb0b771b703cfd54 at the commit that adds it)):**
+- **The approval** is the text, referenced and not restated. It names the head 9065c1e0, the head #183 merged at (merge commit 0f86b680). It allows E12, E13 and E14, and the human restarts the session rather than reloading.
+- **The morning request is over:** heavy runs go ahead under the interim machine rule.
+- **Fable's note,** relayed in the same message, is advice and is followed: fast-forward and flush; tell the human at a clean stop; E12 carries the transcript's version field; E13 and E14 as they fall, with I11's figures and the block's age at each band; and PR #182's reviewer under the lock.
+- **Applied:**
+  - The ledger's 10:16Z entry, which said that no approval named the E-rows, is corrected by a new entry.
+  - The main checkout is at 0f86b680, and the mod's folder was not edited.
+  - The block is flushed for the restart.
+  - E12 is recorded in the session after the restart.
+
+**DIRECTIVE 2026-10-06 — the interim machine rule (the human, typed, received at 10:12:46Z by the transcript; recorded verbatim at `state/directives/2026-10-06-interim-machine-rule.md`, lines 6-14 (their sha256 7dfdc00306c6db71b608ce190af0bd8b6d9f9709086c5499c7c524169fa68528 at the commit that adds it)):**
+- **The direction** is the text, referenced and not restated. It is in force now, for both of the human's projects on this laptop, until the agreed rule replaces it. Where it differs from the marker directive below (the heavy-run threshold, the exclusive create, the fields, the pid, the process-list check, the turn-taking and the timing re-run), it governs.
+- **The custodian's reading,** which the human may overturn: the direction supersedes the morning's request for no heavy runs, because it sets the machine rule in force now with no project having priority. Heavy runs resume under it, one at a time, after the lock and the process-list check.
+- **Applied:**
+  - The lock is created by exclusive create (`wx`), with the fields the direction names, and `mode` set to `heavy` or `timed`. It is never overwritten, and it is deleted when the run ends, also on failure, after checking it is this project's.
+  - The pid is the Windows pid of the process doing the work. For a subagent's run, that is this session's `claude.exe`, which runs the subagent and every command it spawns; never the Git Bash pid or a launcher that exits.
+  - Before a heavy run, the custodian also reads the process list. If the other project is visibly running something heavy without a lock, nothing starts, and the human is told.
+  - The two slots take the lock in turn, one heavy run at a time. Briefs for heavy runs say that a timing-sensitive failure seen while the machine was busy is re-run before it is recorded.
+
+**DIRECTIVE 2026-10-06 — the shared machine's heavy-run marker (the human, typed, received at 06:24:03Z by the transcript; recorded verbatim at `state/directives/2026-10-06-machine-busy-marker.md`, lines 6-20 (their sha256 7147d682ecf22b4df08811fcecda8f88672a775af3e45b23832236522282d4c9 at the commit that adds it)):**
+- **The directive** is the text, referenced and not restated. It is standing: it applies to every heavy run from its receive time.
+- **Applied:**
+  - The custodian holds the marker for each heavy run it dispatches: a worker, tester or reviewer whose run builds or tests the whole workspace or uses several cores for more than a couple of minutes. The marker is read before dispatch, written when it is absent, expired or its pid is gone, and deleted when the run hands back, also on failure. Its pid is the session's own `claude.exe`, the process that runs the subagent and spawns its commands; a launcher that exits is never named.
+  - When the marker is held by another live run, the dispatch waits and the marker is read again every few minutes. A run that cannot wait goes to the human instead of starting.
+  - Briefs for heavy runs say that the custodian holds the marker, and that the agent starts no heavy run after its hand-back.
+  - Nothing in the other project's folders is read, changed or deleted.
+  - **This morning, no heavy runs** (the human, typed, received at 06:25:43Z; recorded verbatim at `state/directives/2026-10-06-no-heavy-runs-this-morning.md`, line 6 (its sha256 1465e60c91ae37ccfadb95558ac30ba56ca43a5b4ce84ffb65fc598d6639f38f at the commit that adds it)). PR #182's gate-1 reviewer was stopped at once (06:28Z), with its worktree clean and no cargo or rustc process left, and the custodian deleted its marker at 06:28:48Z. Until the human says the machine is free, no heavy run is dispatched; light work (records, architect reads, filings) goes on.
+  - **The run in flight at receipt:** PR #182's gate-1 reviewer, dispatched at 05:34:58Z. The marker was absent at 06:24:29Z, so the custodian wrote it for that run (pid 5100, expected until 08:00Z).
+
+**RULED 2026-10-06 — question round 61 (AskUserQuestion, mirrored by the round-mirror hook as `state/questions/round-61.md`; item 1 a red line, offered as holds only and answered in typed text; items 2 and 3 by option label; all at 04:39:05Z by the transcript; recorded verbatim at `state/directives/2026-10-06-round-61-rulings.md`, lines 6 to 8, one answer per line in item order (line 6, sha256 5c3e30903211fbe1dfa90408c5c04af34db685f3f417e424923e6b993a2a8fc5; line 7, sha256 9540fcae69b823dafa61d7811047f09e08411faafc68be0d93d41d091eedd194; line 8, sha256 68c4b9f8350bff7909ba7630b150860544b771e8dc85514d8a1aec3f9a3e06bc, each at the commit that adds it)):**
+- **Item 1** (MP-1 OPEN-2): option (A), typed; line 6, referenced and not restated.
+- **Item 2** (`compaction-record-and-resume-line` OPEN-1): the option labelled At the 2026-10-09 window (Recommended); line 7.
+- **Item 3** (that form's two readings): the option labelled Keep both (Recommended); line 8.
+- **Applied:** `engine/MULTIPOLYGON-MP1-PREREGISTRATION.md` gains Amendment 3 recording item 1, so OPEN-2 no longer holds MP-1's ready state. Items 2 and 3 are recorded in `scripts/hooks/COMPACTION-RECORD-AND-RESUME-LINE-PREREGISTRATION.md`'s closing record (Amendment 3; #181 merged at 04:39:52Z, after the answers). The window draft takes the compaction measure's rows.
+
+**RULED 2026-10-05 — product first, and a governance freeze (the human: the direction, pasted, received at 20:17:41Z; two typed fragments at 20:16:33Z and 20:16:39Z; the clarification, pasted, at 20:23:27Z, which says the fragments govern where they differ; recorded verbatim at `state/directives/2026-10-05-product-first-direction.md`, lines 6-33 (sha256 3a73a6a8b0bfffdec22d4ee801dffd02288500df7e42f84da5a24c621393d74f), `state/directives/2026-10-05-product-first-fragments.md`, lines 6-9 (sha256 8aad34c68bc37dc10d4b2d163c4edcd5b9c5ea1ce93c999e4673f88dfc7c2467), and `state/directives/2026-10-05-product-first-clarification.md`, lines 6-12 (sha256 55de11fff7a745ce3be5709795f26cf2d674baa5a2d9059b8c781eae78943e1c), each at the commit that adds it):**
+- **The ruling** is the three texts, referenced and not restated. Where the fragments differ from the direction, the fragments govern: the lead-data pilot has run its four reads, and the lead finishes the index updates pieces 3 and 4 owe and is then not dispatched; `kernel-close-races-followups` yields slot 1 to MP-1 and, in slot 2, comes after the two context-flush pieces and starts only when its paths are disjoint from slot 1's piece.
+- **Applied in this commit:**
+  - the direction, its fragments and clarification, and Fable's two notes (advice, no RULED block) are filed;
+  - PLAN: MP-1 takes slot 1 (its branch follows in its own commit); `compaction-record-and-resume-line` no longer depends on `guardian-v1` and takes slot 2 next; `guardian-v1` is parked (unscheduled, its records kept); `geometry-points-cut` then `geometry-lines-cut` are placed after MP-1 in the engine lane; `briefb-b2-save-reopen` is placed after them, its dependencies standing; `shell-migration-milestone-1` is added as a proposed shell node, first in slot 1's order from the human's ruling on the migration plan; `kernel-close-races-followups` and `data-plane-crowded-start-detail-spaces` are queued for slot 2 after the context-flush pieces;
+  - guardian-v1's commit 5a9eb051 is pushed to its branch on origin and confirmed, with no pull request, and its worker report 2 is filed;
+  - the ledger gains one entry listing each parked item, where its work lives and its first step on resume;
+  - the 2026-10-09 window draft is reduced to section 6's measures and anything that blocks product work.
+- **To follow, each in its own commit or pull request:** MP-1's branch and build; the architect's draft of `compaction-record-and-resume-line`'s form; the ADR-034 docs pull request appending the human's acceptance words verbatim, for the human's click; and section 2's docs pull request bringing AUTONOMY §22 and the two gate agents' definitions in line, for the human's click. From now, every gate brief carries section 2 by reference.
+
+**RULED 2026-10-05 — question round 59 (AskUserQuestion in two sets, mirrored by the round-mirror hook as `state/questions/round-59.md` and `state/questions/round-60.md`; items 1, 2 and 4 red lines, offered as holds only and answered in typed text at 20:15:13Z; items 3 and 5 by option label; recorded verbatim at `state/directives/2026-10-05-round-59-rulings.md`, lines 6 to 10, one answer per line in item order (line 6, sha256 7e0d9047b48daeca52842ece54dc45073747a980fd39bc8cce68f596be1ec263; line 7, sha256 f3fab5a6f11323ce7c42e8cbb573c9fbe1731f3251d829a9f317d071d9ae0740; line 8, sha256 df1d060380d870652992e177b987ac9486e2aee2e0cfa97b5541cc59d7fdec58; line 9, sha256 45dd049f7e11c3aa89ae88b6682364faf49e4e509335f82eab3fbd007945bfe4; line 10, sha256 81f20461666465f4701f6fa96cd85d6415623f06ac832029f9a8a57386793454, each at the commit that adds it)):**
+- **Item 1** (`kernel-close-races-followups` OPEN-1): option (B), typed; line 6, referenced and not restated.
+- **Item 2** (OPEN-2): option (A), typed; line 7, referenced and not restated.
+- **Item 3** (OPEN-3): the option labelled Unchanged, routed (Recommended); line 8.
+- **Item 4** (MP-1 OPEN-1): options (b1) and (c1), typed; line 9, referenced and not restated.
+- **Item 5** (the E10 reading): the option labelled Per run (Recommended); line 10. Amendment 8's reading stands.
+- **Applied:** each form gains Amendment 1 recording its rows (`kernel/GENERATION-CLOSE-RACES-FOLLOWUPS-PREREGISTRATION.md`, with item 1's class 9 addition; `engine/MULTIPOLYGON-MP1-PREREGISTRATION.md`); PLAN gains the two proposed nodes items 1 and 3 route to. The recorder form needs no amendment for item 5.
+
+**RULED 2026-10-05 — the Recorder's overhead stop (the human, typed as pasted content in the human's own message, received at 19:18:32Z by the transcript; recorded verbatim at `state/directives/2026-10-05-recorder-stop-ruling.md`, lines 6-11 (their sha256 0d4fffd09ca8fef10dc894d5d7845a1a334e3854934949ef80436258dc73d7a1 at the commit that adds it)):**
+- **The ruling** is the text, referenced and not restated. The stop is recorded as fired, the Recorder stays installed, and a new bound over the next 20 approved runs is set before any new data. If that bound fails, the human uninstalls with no further amendment. No code change.
+- **Applied:**
+  - `tools/mods/EVIDENCE-RECORDER-V0-1-PREREGISTRATION.md` gains Amendment 8. It declares E10 before its data: its sample from the ruling's receive time, the per-record bound, and the custodian's reading of the p95, which the human may correct before the twentieth record.
+  - E10 is read by script when its 20 records have accrued, and recorded as a class 1 row. Nothing is run for it.
+
+**RULED 2026-10-05 — ADR-034 accepted (the human, typed as pasted content in the human's own message, received at 19:09:31Z by the transcript; a red line, an ADR acceptance; recorded verbatim at `state/directives/2026-10-05-adr-034-acceptance.md`, lines 6-13 (their sha256 f3a8c75f9833edef2853331bd70118b460774b26ceb849d44b7f7587984c9485 at the commit that adds it)):**
+- **The ruling** is the text, referenced and not restated. ADR-034 is accepted as merged and is architect-blockable as of acceptance. Items 1 to 6 answer the ADR's section for the human at acceptance, and the closing line says MP-1's preregistration may be written now.
+- **Applied:**
+  - ADR-034's Status line reads Accepted 2026-10-05, and an Acceptance section at its end records items 1 to 6 by reference. Its Decision is unchanged. `docs/README.md`'s index row carries the new Status line.
+  - PLAN's `geometry-types-beyond-polygons` no longer waits on the human's ruling. MP-1's preregistration is drafted under the lead-data second pilot: an impact read first, then the architect's draft. Item 5 rules O1 and O2 for MP-1, item 6 leaves O3 to O8 to its form, and item 1's KNOWN-LIMITATIONS row is the form's to land.
+
 **RULED 2026-10-05 — the context-flush direction (the human, typed as pasted content in the human's own message, received at 18:15:58Z by the transcript; recorded verbatim at `state/directives/2026-10-05-human-direction-context-flush.md`, lines 6-16 (their sha256 0b372d88a7104f22b5c8a78fcd10e675180306af21a36cdc13dc7f489d8deb32 at the commit that adds it)):**
 - **The ruling** is the text, referenced and not restated. It approves Fable's brief `CONTEXT-FLUSH-2026-10-05.md`, by sha256 9cf5d9826bbd847f07fce456c155847342c3c0f3df7fefcbfe875856f75c7a93 and 9270 bytes. It places two pieces, changes AUTONOMY §7's 2026-09-15 word through piece A and round 44, item 1 for N1 through piece B, replaces item J's count by the brief's measure after piece A merges, and adds nothing else.
 - **Applied:**

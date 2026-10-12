@@ -11,7 +11,6 @@ import { pickFile } from "../skp/dialog";
 import { admitDataset, AdmitOptions, Admitted, AdmissionOutcome } from "./admitDataset";
 import { splitCandidateColumns } from "./candidateColumns";
 import CrsAssertionForm from "./CrsAssertionForm";
-import DescribeSummary from "./DescribeSummary";
 import { fieldValue, FormattedRefusal } from "./formatRefusal";
 import IdentityDeclarationForm from "./IdentityDeclarationForm";
 import RefusalBlock from "./RefusalBlock";
@@ -22,9 +21,13 @@ export type FormFamily = "crs" | "identity" | null;
 
 /** The family a refusal CODE alone establishes -- `null` for any code that does not, on its own,
  * open a remediation flow (`nextFormFamily` below is what decides whether a family carries
- * forward from a PRIOR refusal in the same remediation attempt). */
+ * forward from a PRIOR refusal in the same remediation attempt). Three codes start one:
+ * `engine.crs_undeclared` and `engine.format_default_contradicted` the CRS form (the second
+ * refusal's own remedy is to assert the file's actual CRS), `engine.identity_unusable` the identity
+ * form. */
 export function formFamilyForCode(code: string): FormFamily {
   if (code === "engine.crs_undeclared") return "crs";
+  if (code === "engine.format_default_contradicted") return "crs";
   if (code === "engine.identity_unusable") return "identity";
   return null;
 }
@@ -34,9 +37,9 @@ export function formFamilyForCode(code: string): FormFamily {
  *
  * - `engine.crs_assertion_conflict` is refused to `null` unconditionally (I1: this code NEVER
  *   gets a remediation control, no matter what came before).
- * - A code that starts its own family (`engine.crs_undeclared`, `engine.identity_unusable`) always
- *   wins, even over a different prior family -- a fresh refusal of that shape means the operator's
- *   remediation attempt has to start (or restart) there.
+ * - A code that starts its own family (`engine.crs_undeclared`, `engine.format_default_contradicted`,
+ *   `engine.identity_unusable`) always wins, even over a different prior family -- a fresh refusal
+ *   of that shape means the operator's remediation attempt has to start (or restart) there.
  * - Anything else (the axis-order codes, most concretely) carries the PRIOR family forward rather
  *   than clearing it: an axis-order refusal can only be the direct result of the CRS definition
  *   just asserted, so the CRS form staying reachable (item D) is what lets the operator try a
@@ -262,7 +265,8 @@ interface Props {
 
 /**
  * The admission flow as product truth (NEXT-CUT.md): a file picker, then `open_dataset`'s verdict
- * rendered directly. Success renders `DescribeSummary`; every typed refusal is shown with its full
+ * rendered directly. Success is rendered by `App` (`DescribeSummary`, bound to the dataset on the map,
+ * milestone 1 / OPEN-1 (A)); every typed refusal is shown with its full
  * reason, verbatim -- the refusal UX *is* the feature. NEXT-CUT.md P3 adds the two remediation
  * forms (`CrsAssertionForm`/`IdentityDeclarationForm`), both re-entering `admitPath` below -- the
  * SAME function a plain retry uses, just with `AdmitOptions` set -- never a parallel admission
@@ -407,8 +411,6 @@ export default function AdmissionPanel({ onAdmitted }: Props) {
           )}
         </>
       )}
-
-      {state.kind === "admitted" && <DescribeSummary describe={state.admitted.describe} />}
     </div>
   );
 }

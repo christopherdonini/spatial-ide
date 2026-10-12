@@ -1,8 +1,12 @@
 # `engine/` — the data-engine module
 
-`docs/02`'s **data-engine** module. First cut, scoped to one operation:
+`docs/02`'s **data-engine** module. Its first cut was scoped to one operation:
 
 > **open a GeoParquet → filter in SQL → stream GeoArrow record batches → cancel**
+
+That operation now carries one of five GeoArrow encodings, selected at open (ADR-034, Accepted), and
+a declared attribute projection on both the publish stream and the live projected stream (ADR-023
+stays Proposed and binds nothing).
 
 Scaffolded for the `docs/07` Prototype hero slice, per that document's method rule: vertical slices,
 never every module built in parallel to 20 %.
@@ -13,25 +17,30 @@ never every module built in parallel to 20 %.
 |---|---|
 | **Reads** | GeoParquet (WKB geometry, GeoParquet 1.1 metadata) through **DuckDB** |
 | **Filters** | SQL over the covering `bbox` columns — a linear scan. The fixed-grid index is built and tested but **deliberately not in the product planner**; see below |
-| **Emits** | GeoArrow polygons, `List<rings: List<vertices: FixedSizeList<xy: double>[2]>>`, as Arrow IPC — `[id, geometry]`, plus a **declared attribute projection** on the publish path |
+| **Emits** | GeoArrow — one of five encodings fixed at open (polygon, multipolygon, point, linestring, multilinestring; ADR-034) — as Arrow IPC: `[id, geometry]`, plus a **declared attribute projection** on the publish stream and on the live projected stream |
 | **Tags** | every batch envelope with frame, CRS, CRS source and axis order (ADR-010 rule 1) |
 | **Cancels** | through DuckDB's own interrupt, not just a flag between batches |
 | **Connects** | through a bounded per-dataset lease pool: configured once per connection, not once per query |
 
 ## The five things worth knowing before reading the code
 
-**1. CRS is a type, and a file without one is refused.** `docs/05` makes CRS part of the dataset's
-type. GeoParquet's specification says an absent `crs` key means OGC:CRS84 — **this engine does not
-apply that default**, because supplying a CRS the file never stated is the silent conversion
+**1. CRS is a type, and where it came from is recorded.** `docs/05` makes CRS part of the dataset's
+type. An absent `crs` key is admitted as OGC:CRS84 only under GeoParquet's own published rule, in a
+version whose text is pinned in this tree (1.0.0 and 1.1.0), and the admission is recorded as
+`crs:format-default` (ADR-015 Amendment 1, items 3 and 4); the engine invents no default, because
+supplying a CRS that neither the file nor its format ever stated is the silent conversion
 `docs/01` principle 8 forbids. A caller may assert a CRS for a file that declares none; an assertion
 over a file that *does* declare one is refused without comparing them, because deciding two
 definitions agree is a definitional-equivalence judgement this slice cannot make (it performs no
-transform and has no PROJ). The policy is **ADR-015 (Proposed)** and lives in `src/crs.rs`.
+transform and has no PROJ). The policy is **ADR-015** (Accepted, with its Amendment 1) and lives in
+`src/crs.rs`.
 
 **2. The envelope tag is unforgeable by construction.** `TaggedBatch` has one constructor, it takes a
 `BatchEnvelope`, which takes a `DatasetCrs`, which has no public constructor at all. There is no path
-from raw arrays to a serialized batch that skips the tag. Axis order is **read from the file's
-PROJJSON**, never hardcoded — a hardcoded `easting,northing` satisfies the letter of rule 1 and
+from raw arrays to a serialized batch that skips the tag. Axis order is **read, never hardcoded** —
+the declared order from the file's PROJJSON, the data's order from the format's own rule where it
+states one and from the definition otherwise (ADR-015 Amendment 1, item 1). A hardcoded
+`easting,northing` satisfies the letter of rule 1 and
 records nothing (`docs/05` requires that the normalization performed is recorded; this slice performs
 none and says so).
 
@@ -73,11 +82,26 @@ diff is the data doctor's job (`docs/05`), which is Alpha work.
 - **No reprojection**, no PROJ, no definitional-equivalence check. A viewport in another CRS is
   refused, not transformed — and per ADR-015 §7 the identifier check that does this is a **caller
   assertion about the query**, never a finding that two CRS definitions agree.
-- **No spatial index.** `docs/07`'s other open gate, untouched.
-- **No provenance column.** ADR-013 is Proposed and binds nothing; its own OPEN block says the
-  per-feature-versus-per-vertex choice must be made "explicitly at acceptance, not inherited".
-  Nothing here creates derived coordinates, so there is nothing to record.
-- **No persistence, no registry, no lineage, no undo, no reproducibility grade.**
+- **No spatial index in the product planner.** The fixed-grid index is built and tested, and
+  `docs/07`'s gate on it is closed for this slice's shape only; see
+  [why it is not in the default planner](#why-the-fixed-grid-index-is-not-in-the-default-planner)
+  and [its own section](#spatial-index--keying-ceilings-and-what-it-is-not).
+- **No provenance column.** ADR-013 is Accepted: its granularity was ruled per-feature at
+  acceptance, and the column's shape is deferred (its Acceptance appendix, items 1 and 3). This
+  module writes no provenance column. The tiers it builds are derived and never authoritative; no
+  ADR-013 applicability to them is asserted here.
+- **No registry, no lineage, no undo, no reproducibility grade.** The stream code in this module
+  opens no file for writing; DuckDB's default spill of intermediates, such as a large sort's, is not
+  configured off by the engine (`kernel/CANCELLATION-AND-TRACING.md` §7; `kernel/RESULTS.md`, the
+  subsection on §5d being partially measurable).
+  The tier builder (`lod::build_tiers`; no SKP command calls it today) writes a derived,
+  non-authoritative tier cache: a directory per source content hash under `LOD_TIER_ROOT`, one
+  GeoParquet file per derived tier, and `tiers.json`. Caching to disk was this module's own trigger
+  for owing `docs/11`'s ResourceRef model and `kernel/`, and that trigger has come due for the cache.
+  What is owed — whether a tier set carries a ResourceRef and an ADR-005 statement, and what the
+  kernel side owes — is a named open item on the PLAN node `lod-tier-selection`, which the human
+  rules before any product path calls `build_tiers`. It is not discharged here: this README assigns
+  the cache no ResourceRef, grade or ADR-006 class.
 
 ## Declared ceilings (ADR-010 rule 6)
 
@@ -363,10 +387,12 @@ a column to match on and a hover panel needs something to show, so the batch sch
 **explicit, caller-declared, ordered projection** — never "all attributes", for three separate
 reasons: `docs/09` (an unbounded projection publishes unreviewed columns into a redistributable
 artifact), determinism (the emitted schema would become a function of the file's column order), and
-size. Admissible types are utf8, boolean, the 8/16/32/64-bit integers and float64; everything else is
-a typed refusal, and **nothing is cast, widened or stringified to make a column fit**. A
-dictionary-encoded column is refused rather than decoded — a dictionary index is an ordinal, which
-ADR-016 §4 names explicitly.
+size. Admissible types are utf8 (`Utf8`, `LargeUtf8`, `Utf8View`), boolean, the signed and unsigned
+8/16/32/64-bit integers, float32 and float64; everything else is a typed refusal, and **nothing is
+cast, widened or stringified to make a column fit**. A dictionary-encoded column is admitted when
+its value type is, and is emitted as that value type — never as its index, an ordinal, which ADR-016
+§4 names explicitly. Of a projection's columns, only publish preflight refuses `Float32` and
+dictionaries, as ADR-017 §4's restriction of the bundle format, not of what a live query may stream.
 
 **Every published attribute is nullable**, whatever the source said. A source NULL is a value; a
 schema that could not carry one would force a substitution. NULL travels: Arrow validity bit →
@@ -435,32 +461,37 @@ ADR-005 **Snapshot** rather than Exact.
 
 ## Admission: what this module refuses to open
 
-Both refusals are **ADR-015 (Proposed)** policy, and both happen at open, in front of an operator:
+Admission happens at open, in front of an operator, under **ADR-015** and **ADR-016**, both
+Accepted with their Amendments 1:
 
-- **A source with no CRS**, and a caller assertion over a source that has one — the four-row table in
-  ADR-015 §1–§6.
-- **A source with no stable per-feature identity** — concretely, no 64-bit column named `id`
-  (**ADR-016**, Proposed — split out of ADR-015 §8). ADR-010 rule 2 resolves picking through a
-  stable feature ID and `docs/11` requires
-  one for editing and lineage; synthesizing a row ordinal is the M3 hazard rule 2 exists to prevent.
-  **This bounds which real GeoParquet the hero slice can open more tightly than anything in
-  `docs/07`** — most files in the wild carry no such column — and the source-key-to-identity mapping
-  that would fix it is an OPEN item on ADR-016, not something implemented here. **ADR-016's own
-  Context states what this check does not establish** — dataset-wide uniqueness, and stability
-  across reopen — so the words "stable feature identity" are not read as stronger than the code.
+- **CRS** — the four-row table in ADR-015 §1–§6, as Amendment 1 narrows it. Opens: an absent `crs`
+  key under a pinned version, as OGC:CRS84 with `crs:format-default`; a declared non-x-first CRS
+  under a pinned version, with the WKB data order (`axis:format-override`) and its declared order
+  retained. Refused: an explicit `null` (and a non-object value, read as null) or an absent key
+  under an unpinned version, as `engine.crs_undeclared`, unless the caller asserts; a format default
+  that the file's own bbox, covering statistics or sample contradicts, as
+  `engine.format_default_contradicted`, which a caller assertion still opens; an assertion over a
+  file that declares a CRS; and a caller-asserted non-x-first CRS, or a declared one under an
+  unpinned version, as `engine.axis_order_unsupported`.
+- **Identity** — a native `id` column or a declared mapping gives the identity ADR-016 §1–§7
+  governs. A single-file source with neither opens on the session tier: the pair of
+  dataset-session generation and `file_row_number`, generation-namespaced, never persisted, and
+  claiming no stability (ADR-016 Amendment 1, item 1). A declared mapping to a column the file
+  lacks still refuses, and a directory source is refused by name before anything is read.
 
 ## Axis order: a conflict with `docs/05`, resolved rather than buried
 
 `docs/05` requires ingestion to **normalize** axis order to the internal (E, N) convention and to
-record the normalization performed. This engine performs no normalization: a non-x-first source is
-**refused**.
+record the normalization performed. This engine performs no normalization: where a format rule
+establishes the data's order it is recorded beside the declared one, and where none applies a
+non-x-first source is **refused** (ADR-015 Amendment 1, items 1 and 2).
 
 That is a real conflict between two constitution documents, and it resolves: `docs/README.md` is
 **lower-number-wins**, so `docs/01` principle 8 (no silent conversion) governs and `docs/05`'s
 normalization clause yields. Refusing is the **resolved** behaviour, not an unmet requirement — an
 unimplemented normalization could silently mislabel coordinates, and refusing cannot. Recorded in
-ADR-015 (Proposed) §5, whose OPEN block is only about whether normalizing *later* should replace
-refusing.
+ADR-015 §5 (Accepted), whose OPEN block is only about whether normalizing *later* should replace
+refusing and is unanswered (Amendment 1, item 7).
 
 ## Declared recovery policy (ADR-010 rule 7)
 
@@ -496,29 +527,31 @@ the same limit `docs/07` places on ADR-003.
 
 *Pointers only: nothing here restates a schema, an ADR or a limitation. Updated in the PR of every piece that changes what a pointer points to. At most 60 lines.*
 
-- **Last verified at:** 9c8e7930 (every pointer checked at that commit)
+- **Last verified at:** fb95bec0 (every pointer checked at that commit)
 - **Interfaces this module owns:**
-  - Open and admission → `spatial_engine::Dataset::open_cancellable`, `spatial_engine::crs`, `spatial_engine::crs_catalog` (`engine/src/crs-catalog.json`), `spatial_engine::identity`, `spatial_engine::AdmissionRecord`; on the wire through `protocol/skp/SKP-V0.md` §1 (`open_dataset`, `describe`) · pinned by `engine/tests/slice.rs::an_assertion_over_a_file_that_declares_a_crs_is_refused`, `engine/tests/identity.rs::a_duplicate_id_column_is_refused_rather_than_admitted_as_identity`, `engine/tests/admission_format_semantics.rs::f1_an_absent_crs_key_admits_under_the_formats_own_rule_with_that_provenance`
-  - Viewport stream, envelope, batch sizing → `spatial_engine::Dataset::stream_with_cancel`, `spatial_engine::BatchStream`, `spatial_engine::TaggedBatch`, `spatial_engine::BatchEnvelope`, `spatial_engine::BatchSizePolicy` · pinned by `engine/tests/slice.rs::every_batch_carries_the_envelope_not_just_the_first`, `engine/tests/slice.rs::a_viewport_in_another_crs_is_refused_because_nothing_here_reprojects`, `engine/tests/batch_sizing.rs::the_policy_stays_inside_its_ceiling_in_every_state_it_can_reach`
+  - Open and admission → `spatial_engine::Dataset::open_cancellable`, `spatial_engine::crs`, `spatial_engine::crs_catalog` (`engine/src/crs-catalog.json`), `spatial_engine::identity`, `spatial_engine::AdmissionRecord`, `spatial_engine::GeometryEncoding`, `spatial_engine::Dataset::geometry_encoding`, `spatial_engine::Dataset::declared_geometry_types`, `spatial_engine::Dataset::covering`; on the wire through `protocol/skp/SKP-V0.md` §1 (`open_dataset`, `describe`) · pinned by `engine/tests/slice.rs::an_assertion_over_a_file_that_declares_a_crs_is_refused`, `engine/tests/identity.rs::a_duplicate_id_column_is_refused_rather_than_admitted_as_identity`, `engine/tests/admission_format_semantics.rs::f1_an_absent_crs_key_admits_under_the_formats_own_rule_with_that_provenance`, `engine/tests/geometry_admission.rs::a_declared_set_selects_the_encoding_or_is_refused_at_open`, `engine/tests/geometry_admission.rs::a_declared_point_set_selects_the_point_encoding_and_other_sets_are_refused`, `engine/tests/geometry_admission.rs::a_declared_line_set_selects_the_line_encoding_and_other_sets_are_refused`, `engine/tests/covering_names_missing_column.rs::a_covering_naming_a_column_the_file_lacks_is_unusable_and_a_bbox_query_refuses_before_any_lease`
+  - Viewport stream, envelope, batch sizing → `spatial_engine::Dataset::stream_with_cancel`, `spatial_engine::BatchStream`, `spatial_engine::TaggedBatch`, `spatial_engine::BatchEnvelope`, `spatial_engine::BatchSizePolicy` · pinned by `engine/tests/slice.rs::every_batch_carries_the_envelope_not_just_the_first`, `engine/tests/slice.rs::a_viewport_in_another_crs_is_refused_because_nothing_here_reprojects`, `engine/tests/batch_sizing.rs::the_policy_stays_inside_its_ceiling_in_every_state_it_can_reach`, `engine/tests/multipolygon_stream.rs::f1_and_f2_stream_one_row_per_feature_with_bit_identical_parts`, `engine/tests/polygon_wire_golden.rs::the_polygon_only_wire_matches_the_golden_file`, `engine/tests/point_stream.rs::p1_streams_one_row_per_feature_with_bit_identical_coordinates`, `engine/tests/line_stream.rs::l1_and_ml1_stream_one_row_per_feature_with_bit_identical_positions_and_parts`
   - Live projected stream → `spatial_engine::Dataset::admit_projection`, `spatial_engine::Dataset::stream_projected_with_cancel`, `spatial_engine::AdmittedProjection`, `spatial_engine::ProjectionError`; on the wire through SKP-V0 §9 · pinned by `engine/tests/live_projection.rs::a_live_projected_stream_emits_id_geometry_then_the_declared_columns`
-  - Filter admission → `spatial_engine::AdmittedPredicate::admit`, `spatial_engine::FilterError`, `spatial_engine::PredicateAdmitError`, `spatial_engine::TypeRefusalReason`; on the wire through SKP-V0 §7 · pinned by `engine/tests/predicate_admission.rs::the_adversarial_corpus_each_row_refused_with_its_specific_code`, `engine/tests/filter_type_admission.rs::each_corpus_row_is_admitted_or_refused_with_its_code_reason_and_operand_types`
+  - Filter admission → `spatial_engine::AdmittedPredicate::admit`, `spatial_engine::FilterError`, `spatial_engine::PredicateAdmitError`, `spatial_engine::TypeRefusalReason`; on the wire through SKP-V0 §7 · pinned by `engine/tests/predicate_admission.rs::the_adversarial_corpus_each_row_refused_with_its_specific_code`, `engine/tests/filter_type_admission.rs::each_corpus_row_is_admitted_or_refused_with_its_code_reason_and_operand_types`, `kernel/tests/skp_admission_remediation.rs::a_declared_identity_beside_the_files_own_id_refuses_a_filter_naming_id_as_ambiguous`
   - Publish stream and content pin → `spatial_engine::Dataset::stream_for_publish`, `spatial_engine::Dataset::pin_content`, `spatial_engine::ContentPin` · pinned by `engine/tests/publish_stream.rs::a_publish_partition_is_one_batch_and_its_boundaries_are_reproducible`, `engine/src/stream.rs::tests::a_publish_stream_keeps_its_attribute_runs_uncompacted_through_flush`, `engine/src/pin.rs::tests::a_pin_verifies_against_unchanged_bytes_and_refuses_changed_ones`
   - Cancellation → `spatial_engine::CancelToken` · pinned by `engine/src/cancel.rs::tests::an_interrupt_on_an_idle_connection_is_not_latched`, `engine/tests/cancel_execute_window.rs::a_cancel_inside_the_producers_execute_window_ends_the_stream_cancelled`
   - Connection pool and lease classes → `spatial_engine::ConnectionPool`, `spatial_engine::PoolConfig`, `spatial_engine::LeaseClass` · pinned by `engine/tests/connection_reuse.rs::capacity_exhaustion_is_a_typed_refusal_rather_than_a_queue`, `engine/tests/predicate_admission.rs::a_residual_admission_lease_exhaustion_surfaces_as_connections_exhausted_never_rejected_by_binder`
-  - Source descriptor, pre-check and post-check → `spatial_engine::SourceDescriptor`, `spatial_engine::Dataset::check_source_unchanged`, `spatial_engine::StreamStats` · pinned by `engine/tests/session_identity.rs::the_pre_check_refuses_by_name_when_the_source_is_replaced_under_an_open_dataset`, `engine/tests/session_identity.rs::a_clean_stream_whose_source_changed_terminates_as_source_changed`
+  - Source descriptor, pre-check and post-check → `spatial_engine::SourceDescriptor`, `spatial_engine::descriptor::SourceObservation`, `spatial_engine::Dataset::check_source_unchanged`, `spatial_engine::StreamStats` · pinned by `engine/tests/source_observation.rs::a_recorded_observation_differs_from_a_rewritten_file_by_the_descriptors_own_rule`, `engine/tests/session_identity.rs::the_pre_check_refuses_by_name_when_the_source_is_replaced_under_an_open_dataset`, `engine/tests/session_identity.rs::a_clean_stream_whose_source_changed_terminates_as_source_changed`
   - Source-change watcher adapter → `spatial_engine::watch` (`SourceWatchArm`, `ArmedWatch`, `ArmOutcome`, `PlatformWatch`, `WatchSignal`, `WatchSink`) · pinned by `engine/tests/source_watch_adapter.rs::a_temp_write_renamed_over_the_source_signals_change`, `engine/tests/source_watch_adapter.rs::a_forced_overflow_signals_coverage_lost`
-  - Typed refusals → `spatial_engine::EngineError`, given wire codes by `spatial_kernel::skp::error_of` (SKP-V0 §5) · pinned by `kernel/tests/typed_terminal_codes.rs::the_prefix_is_the_convention_for_every_engine_refusal_not_a_special_case`
+  - Typed refusals → `spatial_engine::EngineError`, given wire codes by `spatial_kernel::skp::error_of` (SKP-V0 §5) · pinned by `kernel/tests/typed_terminal_codes.rs::the_prefix_is_the_convention_for_every_engine_refusal_not_a_special_case`, `engine/src/error.rs::tests::the_crs_undeclared_message_is_the_human_wording_byte_for_byte`
   - Experimental seams → `spatial_engine::Dataset::build_index`, `spatial_engine::Dataset::stream_indexed_experimental`, `spatial_engine::rowgroup` · pinned by `engine/tests/planner_seam.rs::the_product_planner_never_reaches_the_index_seam`, `engine/tests/row_group_seam.rs::the_product_planner_never_reaches_the_row_group_seam`, `engine/tests/spatial_index.rs::an_indexed_query_returns_exactly_what_the_scan_returns`
-  - LOD tier builder → `spatial_engine::lod::build_tiers` · pinned by `engine/tests/lod_tier_preflight.rs::the_preflight_refuses_before_the_first_tier_is_written`, `engine/tests/lod_tier_cancellation.rs::cancel_observed_within_the_declared_ceiling`
+  - LOD tier builder → `spatial_engine::lod::build_tiers` · pinned by `engine/tests/lod_tier_preflight.rs::the_preflight_refuses_before_the_first_tier_is_written`, `engine/tests/lod_tier_cancellation.rs::cancel_observed_within_the_declared_ceiling`, `engine/tests/lod_tier_builder.rs::build_tiers_refuses_a_multipolygon_feature_by_name_and_writes_no_tier`, `engine/tests/lod_tier_builder.rs::build_tiers_refuses_a_point_feature_by_name_and_writes_no_tier`, `engine/tests/lod_tier_builder.rs::build_tiers_refuses_a_linestring_feature_by_name_and_writes_no_tier`
+  - Producer trace, instrument surface never on the wire → ADR-004 Amendment 4; `spatial_engine::trace` (`start`, `TraceGuard`, `TraceKey`, `mark`, `is_enabled`); its one-traced-stream limit at `CURRENT` (`engine/src/trace.rs`) and `kernel/CANCELLATION-AND-TRACING.md` §7; `spatial_engine::trace::PRODUCER_CANCELLED`, ADR-018's producer-side `cancel_observed` · pinned by `engine/src/trace.rs::tests::a_disabled_mark_records_nothing_and_a_started_trace_records_in_order`, `engine/src/trace.rs::tests::a_second_trace_is_refused_rather_than_replacing_the_first`, `engine/src/stream.rs::tests::flush_cancel_exit_stamps_producer_cancelled_and_sends_nothing`, `engine/src/stream.rs::tests::the_pre_prepare_cancel_exit_stamps_producer_cancelled`
   - No transport in this module → pinned by `engine/tests/slice.rs::h6_the_engine_module_names_no_transport`, `kernel/tests/end_to_end.rs::the_engine_does_not_depend_on_the_data_plane_or_the_other_way_round`
   - Test support behind the `fixture` feature → `spatial_engine::fixture`, `spatial_engine::layout`, `engine/examples/make-fixture.rs`
 - **Consumed from other modules:** none (`engine/Cargo.toml` declares no path dependency on another module)
 - **Governed by:**
-  - accepted ADRs: ADR-004, ADR-005, ADR-006, ADR-007, ADR-010, ADR-013, ADR-015, ADR-016, ADR-017, ADR-018, ADR-021, ADR-026, ADR-032, ADR-033, ADR-035
-  - preregistrations in this module: `engine/ADMISSION-PREREGISTRATION.md`, `engine/B1-FOLLOWUPS-PREREGISTRATION.md`, `engine/B1-PROJECTION-PREREGISTRATION.md`, `engine/CANCEL-BEFORE-EXECUTE-PREREGISTRATION.md`, `engine/CORPUS-REPRODUCIBILITY-PREREGISTRATION.md`, `engine/EXTENSION-AUTOLOAD-PREREGISTRATION.md`, `engine/FILTER-BIND-COERCIONS-PREREGISTRATION.md`, `engine/LOD-PREREGISTRATION.md`, `engine/LOD-RELEASE-GUARD-PREREGISTRATION.md`, `engine/SOURCE-WATCHER-PREREGISTRATION.md` (§2a), `engine/SUITES-BEYOND-WINDOWS-PREREGISTRATION.md`, `engine/TESTS-CONFIGURED-CONNECTIONS-PREREGISTRATION.md`, `engine/TYPE-WALK-NULL-LITERAL-ARITHMETIC-PREREGISTRATION.md`, `engine/WATCHER-FIRST-READ-PREREGISTRATION.md`
+  - accepted ADRs: ADR-004, ADR-005, ADR-006, ADR-007, ADR-010, ADR-013, ADR-015, ADR-016, ADR-017, ADR-018, ADR-021, ADR-026, ADR-032, ADR-033, ADR-034, ADR-035
+  - preregistrations in this module: `engine/ADMISSION-PREREGISTRATION.md`, `engine/B1-FOLLOWUPS-PREREGISTRATION.md`, `engine/B1-PROJECTION-PREREGISTRATION.md`, `engine/CANCEL-BEFORE-EXECUTE-PREREGISTRATION.md`, `engine/CORPUS-REPRODUCIBILITY-PREREGISTRATION.md`, `engine/COVERING-NAMES-MISSING-COLUMN-PREREGISTRATION.md`, `engine/CRS-UNDECLARED-MESSAGE-WORDING-PREREGISTRATION.md`, `engine/EXTENSION-AUTOLOAD-PREREGISTRATION.md`, `engine/FILTER-BIND-COERCIONS-PREREGISTRATION.md`, `engine/GEOMETRY-LINES-PREREGISTRATION.md`, `engine/GEOMETRY-POINTS-PREREGISTRATION.md`, `engine/LOD-PREREGISTRATION.md`, `engine/LOD-RELEASE-GUARD-PREREGISTRATION.md`, `engine/MULTIPOLYGON-MP1-PREREGISTRATION.md`, `engine/SOURCE-WATCHER-PREREGISTRATION.md` (§2a), `engine/STREAM-FLUSH-CANCEL-EXIT-PREREGISTRATION.md`, `engine/SUITES-BEYOND-WINDOWS-PREREGISTRATION.md`, `engine/TESTS-CONFIGURED-CONNECTIONS-PREREGISTRATION.md`, `engine/TYPE-WALK-NULL-LITERAL-ARITHMETIC-PREREGISTRATION.md`, `engine/WATCHER-FIRST-READ-PREREGISTRATION.md`
   - measurement passes over this module's code: `kernel/PROBE-PREREGISTRATION.md`, `kernel/IMPORT-LAYOUT-PREREGISTRATION.md`, `kernel/SCALE-PASS-PREREGISTRATION.md`
-- **Proposed ADRs, binding nothing:** ADR-023
-- **Declared limits:** KNOWN-LIMITATIONS 2, 3, 9, 11, 19, 20, 22, 23, 24, 25, 26, 27
+  - engine halves of pieces filed elsewhere: `kernel/SKP-DRAINED-STREAM-HELPER-POST-CHECK-RACE-PREREGISTRATION.md` (§2, Part B), `kernel/FILTER-IDENTITY-ALIAS-AMBIGUOUS-THROUGH-SKP-PREREGISTRATION.md`, `kernel/MODULE-DOCS-STALE-STATEMENTS-PREREGISTRATION.md`
+- **Proposed ADRs, binding nothing:** ADR-023, ADR-036
+- **Declared limits:** KNOWN-LIMITATIONS 2, 3, 9, 11, 19, 20, 22, 23, 24, 25, 26, 27, 31, 33
 - **Ceilings:**
   - `MAX_BATCH_BYTES`, `TARGET_BATCH_BYTES`, `FIRST_TARGET_BATCH_BYTES`, `MIN_BATCH_BYTES`, `BATCH_GROWTH_FACTOR`, `MAX_ROWS_PER_BATCH`, `MAX_QUEUED_BATCHES`, `MAX_ATTRIBUTE_RETENTION_FACTOR`, `PUBLISH_PARTITION_TARGET_BYTES`, `PUBLISH_PARTITION_ROWS`, `MAX_PUBLISH_PARTITIONS` (`engine/src/stream.rs`)
   - `MAX_STREAM_CONNECTIONS`, `MAX_MAINTENANCE_CONNECTIONS`, `MAX_ADMISSION_CONNECTIONS`, `MAX_PHYSICAL_CONNECTIONS` (`engine/src/pool.rs`)

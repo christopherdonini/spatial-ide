@@ -32,7 +32,7 @@ import { resolveDrawParameters } from "../style/document";
 import { batchForLayerId, buildLayers, toResolvedDrawParams } from "./buildLayers";
 import type { ResolvedDrawParams } from "./buildLayers";
 import { coalesceOncePerFrame } from "./coalesceOncePerFrame";
-import { decodeBatch } from "./decodeBatch";
+import { decodeBatch, geometryKindOf } from "./decodeBatch";
 import type { ResidentBatch } from "./decodeBatch";
 import { bboxForFit, chooseFitTarget, extentOfBatch, fitViewStateForBbox, unionBbox } from "./extent";
 import type { FitViewState } from "./extent";
@@ -47,7 +47,6 @@ import type { HoverReadout, PickResult } from "./pick";
 import { isPickBelowResolution, isPickConfirming, isPickSessionEnded, resolvePick } from "./pick";
 import { HOVER_REPICK_ON_PAN, HOVER_REPICK_SETTLE_MS } from "./hoverRepickConstants";
 import {
-  averageFeatureExtent,
   clearLabelledStateWithoutRepick,
   cursorForPointerState,
   decideHoverReadoutAtSettle,
@@ -56,6 +55,8 @@ import {
   isPointerOnCanvas,
   hoverRepickActionForCameraChange,
   mayRepickAtSettle,
+  pickingRadiusFor,
+  pickResolutionExtentFor,
   reevaluateStandingHoverOnCameraChange,
 } from "./pickResolution";
 import type { FramebufferIdentity, HoverPointerCapture } from "./pickResolution";
@@ -69,7 +70,8 @@ import type { TileGridFrame, TileKey, TileKeyMembership } from "./tileGrid";
 import { INITIAL_TILE_KEY } from "./tileGridConstants";
 import type { TileGridLevel } from "./tileGridConstants";
 import { planTileEviction, TileResidentSet } from "./tileResidentSet";
-import { AuthoritativeBbox, computeAuthoritativeViewportBbox } from "./viewportBbox";
+import { AuthoritativeBbox, computeAuthoritativeViewportBbox, viewportAfterResize } from "./viewportBbox";
+import type { ViewportCamera } from "./viewportBbox";
 
 /**
  * The working canvas — deck.gl `OrthographicView` in the dataset's source CRS (ADR-010 rules 1, 2,
@@ -129,8 +131,10 @@ export interface WorkingCanvasHandle {
   fitToBounds(): boolean;
   /**
    * Clears BOTH the fit anchor (`fitAnchorRef`) and the one-shot auto-fit flag (`hasAutoFitRef`) --
-   * called whenever a new FILTER GENERATION begins (`App.tsx`'s `applyFilter`, on any Apply or Clear
-   * that actually issues).
+   * called, on both arms, after an issued outcome (`App.tsx`'s `applyFilter`); on the candidate
+   * residency arm, also at the start of a reissue begun while the session is live
+   * (`candidateArmSession.ts`'s `reissueUnrestricted`; an Apply after the session has ended runs none,
+   * because that function returns before the reset) and at the open's first look (`App.tsx`).
    *
    * **Human-approved design revision, 2026-08-15 walkthrough Part E, E5 finding.** The operator
    * applied a late-matching predicate on the slow fixture; the liveness/cancel affordance itself
@@ -151,7 +155,8 @@ export interface WorkingCanvasHandle {
    * camera lands on the matches. `fitToBounds` (`chooseFitTarget(fitAnchorRef.current)`) is then
    * deterministic again within the NEW generation, exactly as it already was within a dataset's whole
    * lifetime -- "the layer" the button fits is the layer the user is actually looking at right now:
-   * (dataset, filter generation), not (dataset) alone.
+   * (dataset, filter generation), not (dataset) alone. It also clears the area last reported, so a
+   * size change asks nothing until the next report (the auto-fit that follows does not report).
    */
   resetFitForNewGeneration(): void;
   /** N4 (viewport-residency cut P1b, G6 instrument): the CURRENT resident vertex/feature totals,
@@ -500,6 +505,11 @@ export interface WorkingCanvasProps {
    * in `[render-trace] canvas-lifecycle` lines. Not read for any rendering decision. */
   dataset: string;
   geometryColumn: string;
+  /** ADR-034 Decision 2, SH-B: this open's own `describe.geometry.encoding` -- the encoding every
+   * batch of this dataset must carry. `decodeBatch` refuses a batch whose `geometry_encoding` is
+   * anything else rather than walking it at a guessed nesting depth. REQUIRED, with no default: a
+   * defaulted expectation would be exactly the silent assumption the check exists to remove. */
+  geometryEncoding: string;
   /** `skp/0.4`, crs-unit-fact-and-bounds: this dataset's own `describe.crs.unit` fact -- REQUIRED,
    * with no default (this piece's preregistration §8 item 2 names a defaulted unit block-on-sight).
    * Selects `RECENTER_MAX_DRIFT[crsUnit]` at this component's four `recenterThresholdForBudget`
@@ -520,9 +530,14 @@ export interface WorkingCanvasProps {
    * `residentFeatureCount` is `ResidentSet.totalResidentFeatures` read at the moment of refusal --
    * i.e. *before* the refused batch's own features, since a refused batch adds nothing. */
   onResidentCeilingExceeded: (streamHandle: string, residentFeatureCount: number) => void;
-  /** Fired after every settled view-state change (pan, zoom, or an origin recenter) with the
-   * authoritative-CRS box the view now shows -- the caller drives `viewport_query` from this. */
+  /** Fired on a view change other than the automatic fit, which never fires it -- each pan or zoom tick, an origin recenter, Zoom to layer's fit -- not only a
+   * settled one (the caller debounces), and on a growth of the canvas past the area last reported:
+   * with the authoritative-CRS box the view now shows. The caller drives `viewport_query` from this. */
   onViewportChanged: (bbox: AuthoritativeBbox) => void;
+  /** The canvas changed size and the box it now shows lies inside the area `onViewportChanged` last
+   * reported. A report only: the caller issues no query for it. It keeps "the box the map shows"
+   * current after a shrink (the Export panel's Current view reads it). */
+  onViewportWithinLastQuery: (bbox: AuthoritativeBbox) => void;
   /** `App.tsx`-owned style v0 state (ADR-017 §5a; ADR-022; NEXT-CUT.md P3) -- ephemeral, in-memory
    * only (no persistence anywhere; binding note 4). Mirrored via a ref (the same `onHoverRef`
    * pattern every other callback prop in this file already uses) and re-resolved on its own
@@ -808,7 +823,7 @@ export function createHoverRepickScheduler(deps: HoverRepickDeps): HoverRepickSc
 }
 
 const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(function WorkingCanvas(
-  { dataset, geometryColumn, crsUnit, onHover, onCanvasRefusal, onResidentCeilingExceeded, onViewportChanged, style },
+  { dataset, geometryColumn, geometryEncoding, crsUnit, onHover, onCanvasRefusal, onResidentCeilingExceeded, onViewportChanged, onViewportWithinLastQuery, style },
   ref
 ) {
   const canvasElRef = useRef<HTMLCanvasElement | null>(null);
@@ -996,6 +1011,21 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
   onResidentCeilingExceededRef.current = onResidentCeilingExceeded;
   const onViewportChangedRef = useRef(onViewportChanged);
   onViewportChangedRef.current = onViewportChanged;
+  const onViewportWithinLastQueryRef = useRef(onViewportWithinLastQuery);
+  onViewportWithinLastQueryRef.current = onViewportWithinLastQuery;
+
+  /** The inputs of the last camera write (size excluded), written at exactly the three camera-change
+   * sites: the interactive handler, `fitToExtent` and the DEV-only view-state seam. Null before any. */
+  const cameraRef = useRef<ViewportCamera | null>(null);
+  /** The box last passed to `onViewportChanged`, or null. Non-null only while the camera's last write was
+   * reported: the auto-fit and `resetFitForNewGeneration` (see that method's doc comment for when it runs) clear it. */
+  const lastQueriedRef = useRef<AuthoritativeBbox | null>(null);
+  /** The one place `onViewportChangedRef.current` is called: records the box as the area last asked
+   * for, then reports it. Every report site (and a size growth) goes through here. */
+  function reportViewport(bbox: AuthoritativeBbox): void {
+    lastQueriedRef.current = bbox;
+    onViewportChangedRef.current(bbox);
+  }
 
   /**
    * Viewport-residency cut P6a, Defect B (architect gate, blocking): the ONE arm-selected batch-list
@@ -1022,6 +1052,14 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
    * regardless of what it would compute, since a GPU pick ordinal can only be valid once something is
    * actually resident and drawn (`onHover`'s own `info.index` guard runs first). */
   const averageFeatureExtentRef = useRef(0);
+
+  /** The points cut (SH-P2, SH-P4): what this open draws, derived ONCE from `geometryEncoding`
+   * (`decodeBatch.ts`'s `geometryKindOf`) and read by `render()` for both the layer kind
+   * (`buildLayers`) and the value `averageFeatureExtentRef` holds (`pickResolutionExtentFor`: the
+   * average feature extent for a polygonal open, the average point spacing for a point open -- the 9 px
+   * threshold, the refusal state and its text are the same for both). `App`'s `key={admitted.dataset}`
+   * remounts this component per open, so the encoding is fixed for a mount's whole life. */
+  const geometryKindRef = useRef(geometryKindOf(geometryEncoding));
 
   /** Viewport-residency cut P6a, decision 24(c): the current camera zoom, mirrored into a ref so the
    * hover site (a `Deck` callback closed over at construction, `onHover` below) can read it without a
@@ -1165,12 +1203,15 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
         isBelowPickResolution(averageFeatureExtentRef.current, pixelsPerWorldUnitAtZoom(currentZoomRef.current)),
       // The SAME two steps `onHover` takes, in the same order, against the SAME arm-selected batch
       // list (`activeBatches()`, Defect B's one accessor): `deck.pickObject` at the stored pixel,
-      // then the batch the picked layer was actually built from. Default radius -- this piece
-      // changes no pick radius.
+      // then the batch the picked layer was actually built from. The radius is the line open's
+      // tolerance (`pickingRadiusFor`, the lines cut, SH-L4) -- the same value deck's own hover
+      // `pickingRadius` carries -- and is passed only when defined, so a polygonal or point open
+      // calls `pickObject` with no radius, as before.
       pickCandidateAt: (x, y) => {
         const deck = deckRef.current;
         if (!deck) return null;
-        const info = deck.pickObject({ x, y });
+        const radius = pickingRadiusFor(geometryKindRef.current);
+        const info = deck.pickObject(radius === undefined ? { x, y } : { x, y, radius });
         if (!info || info.index === undefined || info.index < 0 || !info.layer) return null;
         const batch = batchForLayerId(activeBatches(), info.layer.id);
         return batch === undefined ? null : { batch, gpuOrdinal: info.index };
@@ -1236,7 +1277,7 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
       // branch it already did, byte-identical. Defect B: now the SAME `activeBatches()` accessor the
       // hover site also calls.
       const batches = activeBatches();
-      const layers = buildLayers(batches, frameRef.current, drawParamsRef.current);
+      const layers = buildLayers(batches, frameRef.current, drawParamsRef.current, geometryKindRef.current);
       deck.setProps({ layers });
       // Vertex count actually handed to `getPolygon` this render, not a re-derivation from deck.gl's
       // own internal layer state -- the same total `buildLayers` fed the GPU from, computed once by
@@ -1245,7 +1286,7 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
       traceLayerUpdate(layers.length, totalPositions);
       // Decision 24(c): recomputed here, once per render, never per hover event -- see
       // `averageFeatureExtentRef`'s own doc comment.
-      averageFeatureExtentRef.current = averageFeatureExtent(batches);
+      averageFeatureExtentRef.current = pickResolutionExtentFor(geometryKindRef.current, batches);
     } finally {
       end("layer-construct");
     }
@@ -1297,6 +1338,7 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
     frame.forceRecenter(fit.centerX, fit.centerY);
     frame.setThreshold(recenterThresholdForBudget(pixelsPerWorldUnitAtZoom(fit.zoom), RECENTER_BUDGET_PX, RECENTER_MAX_DRIFT[crsUnit]));
     traceViewState(fit.target[0], fit.target[1], fit.zoom, frame.originX, frame.originY);
+    cameraRef.current = { targetX: fit.target[0], targetY: fit.target[1], zoom: fit.zoom, originX: frame.originX, originY: frame.originY };
     // See this file's own doc comment: `initialViewState`, never `viewState`. Entry 85: the value
     // comes from THIS instance's own fit-camera write sequence, never an inline literal -- a fit
     // that repeats a previous fit exactly is still a camera write deck.gl's deep-equal cannot
@@ -1307,7 +1349,9 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
       // `frame.originX`/`frame.originY` read now, i.e. AFTER `forceRecenter` above moved them --
       // the post-recenter origin is what `bboxForFit`'s own doc comment requires to reconstruct the
       // fitted view's real bbox.
-      onViewportChangedRef.current(bboxForFit(fit, frame.originX, frame.originY, widthPx, heightPx));
+      reportViewport(bboxForFit(fit, frame.originX, frame.originY, widthPx, heightPx));
+    } else {
+      lastQueriedRef.current = null; // a write that does not report leaves no area "last asked for"
     }
   }
 
@@ -1343,7 +1387,7 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
         begin("frame-decode");
         let batch: ReturnType<typeof decodeBatch>;
         try {
-          batch = decodeBatch(streamHandle, batchSeq, ipcBytes, geometryColumn);
+          batch = decodeBatch(streamHandle, batchSeq, ipcBytes, geometryColumn, geometryEncoding);
         } finally {
           end("frame-decode");
         }
@@ -1416,7 +1460,7 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
         stats.vertices += batch.totalVertices;
         streamStatsRef.current.set(streamHandle, stats);
         traceStreamBatch(streamHandle, batchSeq, batch.ids.length, batch.totalVertices, stats.rows, stats.vertices);
-        const preOffsetSample = batch.rings.find((r) => r.length > 0 && r[0].length > 0)?.[0]?.slice(0, 3);
+        const preOffsetSample = batch.parts.find((p) => p.length > 0 && p[0].length > 0 && p[0][0].length > 0)?.[0]?.[0]?.slice(0, 3);
         if (preOffsetSample) {
           tracePositionsSample("pre-offset", streamHandle, batchSeq, preOffsetSample);
         }
@@ -1488,6 +1532,7 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
       resetFitForNewGeneration() {
         fitAnchorRef.current = null;
         hasAutoFitRef.current = false;
+        lastQueriedRef.current = null;
       },
 
       getResidentCounts() {
@@ -1560,7 +1605,7 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
         begin("frame-decode");
         let batch: ReturnType<typeof decodeBatch>;
         try {
-          batch = decodeBatch(streamHandle, batchSeq, ipcBytes, geometryColumn);
+          batch = decodeBatch(streamHandle, batchSeq, ipcBytes, geometryColumn, geometryEncoding);
         } finally {
           end("frame-decode");
         }
@@ -1772,7 +1817,7 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
       },
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [geometryColumn]
+    [geometryColumn, geometryEncoding]
   );
 
   // NEXT-CUT.md P3 / binding note 7: the ONLY effect this file runs on a style change. Fires on
@@ -1884,8 +1929,12 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
     if (!canvas) return;
 
     begin("deck-init");
+    // The lines cut (SH-L4): deck's hover tolerance for a line open, set only when defined so a
+    // polygonal or point open leaves `pickingRadius` at deck's own default (round 62, item 4).
+    const pickingRadius = pickingRadiusFor(geometryKindRef.current);
     const deck = new Deck({
       canvas,
+      ...(pickingRadius === undefined ? {} : { pickingRadius }),
       views: new OrthographicView({ id: "working", flipY: false }),
       initialViewState: { target: [0, 0, 0], zoom: INITIAL_ZOOM },
       controller: true,
@@ -1896,6 +1945,17 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
       // `pointerButtonDownRef`, which tracks a DOM pointer-down rather than an active drag gesture).
       getCursor: ({ isDragging }) => cursorForPointerState(isDragging),
       onLoad: () => end("deck-init"),
+      // A size change that uncovers map area asks for it once a view has been reported (`lastQueried` non-null);
+      // a shrink asks for nothing. deck's own
+      // `{width, height}` are only the trigger -- the size is this file's own basis (the canvas's CSS
+      // client size), and the box is the one pure `viewportAfterResize` computes from the camera last
+      // written. Constant-time arithmetic: no await, no timer, no read of deck's view state or
+      // viewports, and the hover state, the re-pick scheduler and the frame origin are not touched.
+      onResize: () => {
+        const decision = viewportAfterResize(cameraRef.current, lastQueriedRef.current, canvas.clientWidth, canvas.clientHeight);
+        if (decision.kind === "query") reportViewport(decision.bbox);
+        else if (decision.kind === "within") onViewportWithinLastQueryRef.current(decision.bbox);
+      },
       onViewStateChange: ({ viewState, interactionState }) => {
         const vs = viewState as { target: [number, number, number]; zoom: number };
         // Entry 95 (PAN-ANCHOR-PREREGISTRATION.md §3, candidate 3): whether this tick is inside a
@@ -1904,7 +1964,8 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
         //
         // DEPENDS ON deck 9.3.7's trailing settled tick: a drag fires a run of `isDragging: true`
         // ticks and then ONE `isDragging: false` tick at gesture end (`panend`), where the deferred
-        // recenter lands. This is deck's *observed* behaviour on `@deck.gl/core@9.3.7` (pinned), NOT
+        // recenter lands. This is deck's *observed* behaviour on `@deck.gl/core@9.3.7` (`package.json`
+        // allows `^9.3.7`; the lockfile installs 9.3.9; no re-check on 9.3.9 is claimed here), NOT
         // a documented invariant. A future deck upgrade that stops emitting that trailing settled
         // tick — or ends a gesture on `pointercancel` with no `panend` — would silently defer the
         // origin advance by one gesture; harmless within `RECENTER_MAX_DRIFT`'s own headroom
@@ -1927,6 +1988,7 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
         // does not leave the module that produced it" -- an origin is that tag, here).
         const originXBeforeRecenter = frame.originX;
         const originYBeforeRecenter = frame.originY;
+        cameraRef.current = { targetX: vs.target[0], targetY: vs.target[1], zoom: vs.zoom, originX: originXBeforeRecenter, originY: originYBeforeRecenter };
         const worldX = vs.target[0] + originXBeforeRecenter;
         const worldY = vs.target[1] + originYBeforeRecenter;
 
@@ -1953,7 +2015,7 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
           render();
         }
 
-        onViewportChangedRef.current(
+        reportViewport(
           computeAuthoritativeViewportBbox({
             targetX: vs.target[0],
             targetY: vs.target[1],
@@ -2046,8 +2108,9 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
       try {
         return await new Promise<PixelSummary>((resolve, reject) => {
           let settled = false;
-          // Never restores to `undefined`: `_drawLayers` in the installed @deck.gl/core@9.3.7
-          // calls `this.props.onAfterRender(...)` with no null-check, so an unset prop throws on
+          // Never restores to `undefined`: `_drawLayers` in @deck.gl/core, as read on 9.3.7 (the
+          // lockfile installs 9.3.9; not re-read there), calls
+          // `this.props.onAfterRender(...)` with no null-check, so an unset prop throws on
           // this canvas's very next render -- a fresh noop is the only safe "off" state.
           const restore = () => deck.setProps({ onAfterRender: () => {} });
 
@@ -2157,10 +2220,11 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
       frame.forceRecenter(targetX, targetY);
       frame.setThreshold(recenterThresholdForBudget(pixelsPerWorldUnitAtZoom(zoom), RECENTER_BUDGET_PX, RECENTER_MAX_DRIFT[crsUnit]));
       traceViewState(0, 0, zoom, frame.originX, frame.originY);
+      cameraRef.current = { targetX: 0, targetY: 0, zoom, originX: frame.originX, originY: frame.originY };
       // See this file's own doc comment: `initialViewState`, never `viewState`.
       deck.setProps({ initialViewState: { target: [0, 0, 0], zoom } });
       render();
-      onViewportChangedRef.current(
+      reportViewport(
         bboxForFit({ target: [0, 0], zoom, centerX: targetX, centerY: targetY }, frame.originX, frame.originY, widthPx, heightPx)
       );
       return true;

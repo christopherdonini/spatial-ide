@@ -231,3 +231,97 @@ test('a_broken_rooted_cite_in_a_filed_gate_report_is_advisory_and_its_siblings_s
     fs.rmSync(dir, { recursive: true, force: true });
   }
 });
+
+// --- pinned citations: `path:line @ <commit>` is read at its commit (Decision B, 2026-10-08) -------
+
+// A repo whose first commit holds a 5-line engine/src/pool.rs and whose tree then shrinks it to 2 lines.
+function pinnedRepo(doc) {
+  const dir = gitTree({ 'engine/src/pool.rs': 'a\nb\nc\nd\ne\n' });
+  const rev = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: dir, encoding: 'utf8' }).trim();
+  fs.writeFileSync(path.join(dir, 'engine/src/pool.rs'), 'a\nb\n');
+  fs.writeFileSync(path.join(dir, 'docs-notes.md'), doc(rev));
+  execFileSync('git', ['add', '-A'], { cwd: dir });
+  execFileSync('git', ['commit', '-q', '-m', 'shrink'], { cwd: dir });
+  return { dir, rev };
+}
+
+// RECORDED MUTATION (P1): the pinned fallback removed (the `if (pr.ok) continue;` after `checkPinned` in
+// runVerifyCites commented out) -> fails by name: `a_pinned_cite_past_the_trees_end_that_resolves_at_its_commit_passes`
+// (no other test). Observed at 0e092a40fb10, reverted.
+test('a_pinned_cite_past_the_trees_end_that_resolves_at_its_commit_passes', () => {
+  const { dir } = pinnedRepo((rev) => `see engine/src/pool.rs:4-5 @ ${rev} sha256:00`);
+  try {
+    const { gated } = runVerifyCites({ repoRoot: dir });
+    assert.equal(gated.length, 0, JSON.stringify(gated));
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+// RECORDED MUTATION (P2): an unknown commit treated as resolved (`ok: true` returned from the failed
+// `cat-file` check) -> fails by name: `a_pinned_cite_whose_commit_does_not_exist_fails_by_name` (no other
+// test). Observed at 0e092a40fb10, reverted.
+test('a_pinned_cite_whose_commit_does_not_exist_fails_by_name', () => {
+  const { dir } = pinnedRepo(() => 'see engine/src/pool.rs:4 @ deadbee0 sha256:00');
+  try {
+    const { gated } = runVerifyCites({ repoRoot: dir });
+    assert.equal(gated.length, 1, JSON.stringify(gated));
+    assert.match(gated[0].reason, /pinned commit deadbee0 not found/);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+// RECORDED MUTATION (P3): the file check at the commit skipped (a failed `git show` leaves empty text
+// instead of returning a failure) -> fails by name: `a_pinned_cite_whose_file_is_missing_at_that_commit_fails_by_name`
+// (no other test). Observed at 0e092a40fb10, reverted.
+test('a_pinned_cite_whose_file_is_missing_at_that_commit_fails_by_name', () => {
+  const { dir } = pinnedRepo((rev) => `see engine/src/other.rs:1 @ ${rev} sha256:00`);
+  try {
+    const { gated } = runVerifyCites({ repoRoot: dir });
+    assert.equal(gated.length, 1, JSON.stringify(gated));
+    assert.match(gated[0].reason, /"engine\/src\/other\.rs" not found at pinned commit/);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+// P4 guards the unpinned path against a fallback applied to every cite; it has no mutation of its own.
+test('an_unpinned_cite_past_the_trees_end_still_fails', () => {
+  const { dir } = pinnedRepo(() => 'see engine/src/pool.rs:4');
+  try {
+    const { gated } = runVerifyCites({ repoRoot: dir });
+    assert.equal(gated.length, 1, JSON.stringify(gated));
+    assert.match(gated[0].reason, /exceeds "engine\/src\/pool\.rs"/);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+function pinnedRun(doc, key) {
+  const { dir } = pinnedRepo(doc);
+  try { return runVerifyCites({ repoRoot: dir })[key]; } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+}
+
+// RECORDED MUTATION (P5): the blob read at the pin replaced by `git show` -> fails by name:
+// `a_pinned_cite_whose_path_is_a_directory_at_that_commit_fails_by_name` (no other test). Observed at 7f332caf669e, reverted.
+test('a_pinned_cite_whose_path_is_a_directory_at_that_commit_fails_by_name', () => {
+  const gated = pinnedRun((rev) => `see engine/src:3 @ ${rev} sha256:00`, 'gated');
+  assert.equal(gated.length, 1, JSON.stringify(gated));
+  assert.match(gated[0].reason, /"engine\/src" is a directory at pinned commit/);
+});
+
+// RECORDED MUTATION (P6): the range check at the pin removed (`|| maxL > lc`) -> fails by name:
+// `a_pinned_cite_whose_line_is_past_the_file_end_at_that_commit_fails_by_name` (no other test). Observed at 7f332caf669e, reverted.
+test('a_pinned_cite_whose_line_is_past_the_file_end_at_that_commit_fails_by_name', () => {
+  const gated = pinnedRun((rev) => `see engine/src/pool.rs:9 @ ${rev} sha256:00`, 'gated');
+  assert.equal(gated.length, 1, JSON.stringify(gated));
+  assert.match(gated[0].reason, /exceeds "engine\/src\/pool\.rs" at pinned commit/);
+});
+
+// A pin that only says "not found" does not replace the reason of a cite the tree found a file for.
+test('a_pinned_loose_cite_keeps_the_trees_reason_when_the_pin_path_is_not_found', () => {
+  const advisory = pinnedRun((rev) => `see pool.rs:9 @ ${rev} sha256:00`, 'advisory');
+  assert.equal(advisory.length, 1, JSON.stringify(advisory));
+  assert.match(advisory[0].reason, /^line 9 exceeds engine\/src\/pool\.rs \(/);
+});

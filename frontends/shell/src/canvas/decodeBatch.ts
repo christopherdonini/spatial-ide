@@ -18,41 +18,130 @@ export class UnexpectedFrameError extends Error {
   }
 }
 
+/** The five geometry encodings the engine writes (ADR-034 Decision 2; the third is the points cut's,
+ * `skp/0.10`, the fourth and fifth the lines cut's, `skp/0.11`), as the batch schema's
+ * `geometry_encoding` key and `describe.geometry.encoding` both carry them. */
+export const ENCODING_POLYGON = "geoarrow.polygon";
+export const ENCODING_MULTIPOLYGON = "geoarrow.multipolygon";
+export const ENCODING_POINT = "geoarrow.point";
+export const ENCODING_LINESTRING = "geoarrow.linestring";
+export const ENCODING_MULTILINESTRING = "geoarrow.multilinestring";
+
+/** What an open draws: polygons (the polygon and multipolygon encodings), points, or lines (the
+ * linestring and multilinestring encodings). */
+export type GeometryKind = "polygonal" | "point" | "line";
+
+/**
+ * The kind an open's encoding draws as -- pure, and derived from the encoding string alone. The point
+ * encoding is `point` and the two line encodings are `line`; every other value is `polygonal`, the
+ * path that existed before the points cut, so that path is unchanged. A value the shell does not read
+ * at all is still refused by `decodeBatch` (`UnexpectedEncodingError`) before any layer is built from
+ * it.
+ */
+export function geometryKindOf(encoding: string): GeometryKind {
+  if (encoding === ENCODING_POINT) return "point";
+  if (encoding === ENCODING_LINESTRING || encoding === ENCODING_MULTILINESTRING) return "line";
+  return "polygonal";
+}
+
+/**
+ * A batch whose `geometry_encoding` is not the encoding this open fixed (`describe.geometry
+ * .encoding`), or is none of the five encodings this shell reads. Refused rather than walked: a
+ * multipolygon batch read as polygon rings is walked one nesting level short, misread, with no error
+ * raised (ADR-034 Consequences). The text is a P6 placeholder (the human's wording at P6, ADR-034
+ * Acceptance item 6) and states the shell's own fact only.
+ */
+export class UnexpectedEncodingError extends Error {
+  constructor(
+    public readonly batchEncoding: string | undefined,
+    public readonly expectedEncoding: string
+  ) {
+    super(
+      `[P6 placeholder] batch schema names geometry encoding ${JSON.stringify(batchEncoding)}; this open's ` +
+        `encoding is ${JSON.stringify(expectedEncoding)}, and the shell reads ${ENCODING_POLYGON}, ` +
+        `${ENCODING_MULTIPOLYGON}, ${ENCODING_POINT}, ${ENCODING_LINESTRING} and ` +
+        `${ENCODING_MULTILINESTRING} -- refusing rather than walking the batch at a guessed nesting depth`
+    );
+    this.name = "UnexpectedEncodingError";
+  }
+}
+
+/** One ring: its `[x, y]` vertices in the dataset's own CRS, f64. */
+export type Ring = Array<[number, number]>;
+/** One part: a polygon's rings. Ring 0 is the exterior; any further rings are holes. */
+export type Part = Ring[];
+
 /**
  * One decoded batch, resident until its stream is superseded or closed.
  *
- * `ids` and `rings` are built together, in one pass, over the same row index -- never reordered,
- * culled, sorted or produced independently. That is rule 2's actual hazard ("any cull, chunk, sort
- * or LOD" desyncing an ordinal from its identity), and building both from one decode pass is what
- * makes desyncing them structurally hard rather than a discipline to remember.
+ * `ids`, `parts` and `partToRow` are built together, in one pass, over the same row index -- never
+ * reordered, culled, sorted or produced independently. That is rule 2's actual hazard ("any cull,
+ * chunk, sort or LOD" desyncing an ordinal from its identity), and building them from one decode pass
+ * is what makes desyncing them structurally hard rather than a discipline to remember.
+ *
+ * **A feature is one row and may have several parts** (ADR-034 Decision 5: parts never become rows).
+ * deck.gl draws one datum per part and picks by datum index, so a pick ordinal names a part
+ * (`partToRow` turns it back into a row); see `PICKING.md`.
+ *
+ * **A Point row is one part holding one single-position ring**: `parts[row] = [[[[x, y]]]]` in the
+ * `parts[feature][part][ring]` order above, so `partToRow` is the identity, and `partCount` and
+ * `totalVertices` both equal the row count. The type is unchanged.
+ *
+ * **A line is one part holding one path** (the lines cut, ADR-034 Decision 6): the part's only ring
+ * is the path, its positions in order, and it is not closed. A LineString row is one part, so for a
+ * linestring open `partToRow` is the identity. A MultiLineString row is one such part per linestring,
+ * in the engine's order, so its pick ordinals differ from its row indices. `totalVertices` counts every
+ * position of every path. The type is unchanged.
  */
 export interface ResidentBatch {
   streamHandle: string;
   batchSeq: number;
-  /** Authoritative stable identity (ADR-016 §7) -- never narrowed to `Number`. */
+  /** Authoritative stable identity (ADR-016 §7) -- never narrowed to `Number`. One per row. */
   ids: BigUint64Array;
-  /** Authoritative f64 polygon rings per feature: `rings[feature][ring]` is an array of `[x, y]`
-   * pairs in the dataset's own CRS. Ring 0 is the exterior; any further rings are holes. Never
-   * mutated, never sent to the GPU directly -- `offsetFrame.ts` derives a GPU-ready view from this. */
-  rings: Array<Array<[number, number]>>[];
+  /** Authoritative f64 geometry per feature: `parts[feature][part][ring]` is an array of `[x, y]`
+   * pairs in the dataset's own CRS. A Polygon row decodes as one part; a null geometry as none.
+   * Never mutated, never sent to the GPU directly -- `offsetFrame.ts` derives a GPU-ready view from
+   * this. */
+  parts: Part[][];
+  /** For each part, in feature-then-part order, the row (index into `ids` and `parts`) it belongs
+   * to: the pick ordinal's map back to a feature. Non-decreasing, and `partToRow.length ===
+   * partCount`. */
+  partToRow: Int32Array;
+  /** The number of parts in the batch: the number of deck.gl datums, so the pick-ordinal count that
+   * `checkPickCeiling` bounds (ADR-010 rule 6). */
+  partCount: number;
   totalVertices: number;
 }
 
 /**
  * Decode one self-contained Arrow IPC batch (`engine::envelope::TaggedBatch`'s wire form) into a
  * `ResidentBatch`. Throws `UnexpectedFrameError` if the schema's `frame` metadata is not what rule
- * 1 requires, and propagates a decode error rather than returning a partial batch.
+ * 1 requires, `UnexpectedEncodingError` if its `geometry_encoding` is not `expectedEncoding` (the
+ * open's own, from `describe`) or is none of the five encodings the shell reads, and propagates a decode error
+ * rather than returning a partial batch.
  */
 export function decodeBatch(
   streamHandle: string,
   batchSeq: number,
   ipcBytes: Uint8Array,
-  geometryColumn: string
+  geometryColumn: string,
+  expectedEncoding: string
 ): ResidentBatch {
   const table = tableFromIPC(ipcBytes);
   const frame = table.schema.metadata.get("frame");
   if (frame !== EXPECTED_FRAME) {
     throw new UnexpectedFrameError(frame);
+  }
+  const encoding = table.schema.metadata.get("geometry_encoding");
+  if (
+    (encoding !== ENCODING_POLYGON &&
+      encoding !== ENCODING_MULTIPOLYGON &&
+      encoding !== ENCODING_POINT &&
+      encoding !== ENCODING_LINESTRING &&
+      encoding !== ENCODING_MULTILINESTRING) ||
+    encoding !== expectedEncoding
+  ) {
+    throw new UnexpectedEncodingError(encoding, expectedEncoding);
   }
 
   const idVector = table.getChild("id");
@@ -66,7 +155,8 @@ export function decodeBatch(
 
   const n = table.numRows;
   const ids = new BigUint64Array(n);
-  const rings: Array<Array<[number, number]>>[] = new Array(n);
+  const parts: Part[][] = new Array(n);
+  const partRows: number[] = [];
   let totalVertices = 0;
 
   for (let i = 0; i < n; i++) {
@@ -79,25 +169,70 @@ export function decodeBatch(
     }
     ids[i] = typeof rawId === "bigint" ? rawId : BigInt(rawId as number);
 
-    const featureRings: Array<Array<[number, number]>> = [];
-    const polygon = geomVector.get(i);
-    if (polygon !== null) {
-      for (const ring of polygon as Iterable<Iterable<Iterable<number>>>) {
-        // `ring` is a List<FixedSizeList<2>> slice; iterating it yields one length-2 leaf Vector
-        // per vertex. `.toJSON()` on the ring only shallow-converts the outer container -- each
-        // vertex stays a Vector unless flattened here explicitly, which is why this reads each
-        // leaf Float64 pair via `Array.from` rather than trusting a single `.toJSON()` call.
-        const points: Array<[number, number]> = [];
-        for (const vertex of ring) {
+    const featureParts: Part[] = [];
+    const geometry = geomVector.get(i);
+    if (geometry !== null && encoding === ENCODING_POINT) {
+      // `geoarrow.point` rows are one `FixedSizeList<2, f64>` slot: `Array.from` reads its x and y
+      // with their bits as stored, no arithmetic. One part holding one single-position ring.
+      const [x, y] = Array.from(geometry as Iterable<number>);
+      featureParts.push([[[x, y]]]);
+      partRows.push(i);
+      totalVertices += 1;
+    } else if (geometry !== null && (encoding === ENCODING_LINESTRING || encoding === ENCODING_MULTILINESTRING)) {
+      // A line is one part holding one path (the lines cut): a `geoarrow.linestring` row is a list of
+      // vertices, so one part; a `geoarrow.multilinestring` row is a list of linestrings, one part
+      // each. The branch is the batch's own encoding, checked above, never the data's shape.
+      const sourceLines: Iterable<Iterable<Iterable<number>>> =
+        encoding === ENCODING_MULTILINESTRING
+          ? (geometry as Iterable<Iterable<Iterable<number>>>)
+          : [geometry as Iterable<Iterable<number>>];
+      for (const sourceLine of sourceLines) {
+        const path: Ring = [];
+        for (const vertex of sourceLine) {
           const [x, y] = Array.from(vertex);
-          points.push([x, y]);
+          path.push([x, y]);
         }
-        featureRings.push(points);
-        totalVertices += points.length;
+        featureParts.push([path]);
+        partRows.push(i);
+        totalVertices += path.length;
+      }
+    } else if (geometry !== null) {
+      // `geoarrow.polygon` rows are a list of rings (one part); `geoarrow.multipolygon` rows are a
+      // list of parts, each a list of rings. The level count is the batch's own encoding, checked
+      // above, never guessed from the data.
+      const sourceParts: Iterable<Iterable<Iterable<Iterable<number>>>> =
+        encoding === ENCODING_MULTIPOLYGON
+          ? (geometry as Iterable<Iterable<Iterable<Iterable<number>>>>)
+          : [geometry as Iterable<Iterable<Iterable<number>>>];
+      for (const sourcePart of sourceParts) {
+        const rings: Part = [];
+        for (const ring of sourcePart) {
+          // `ring` is a List<FixedSizeList<2>> slice; iterating it yields one length-2 leaf Vector
+          // per vertex. `.toJSON()` on the ring only shallow-converts the outer container -- each
+          // vertex stays a Vector unless flattened here explicitly, which is why this reads each
+          // leaf Float64 pair via `Array.from` rather than trusting a single `.toJSON()` call.
+          const points: Ring = [];
+          for (const vertex of ring) {
+            const [x, y] = Array.from(vertex);
+            points.push([x, y]);
+          }
+          rings.push(points);
+          totalVertices += points.length;
+        }
+        featureParts.push(rings);
+        partRows.push(i);
       }
     }
-    rings[i] = featureRings;
+    parts[i] = featureParts;
   }
 
-  return { streamHandle, batchSeq, ids, rings, totalVertices };
+  return {
+    streamHandle,
+    batchSeq,
+    ids,
+    parts,
+    partToRow: Int32Array.from(partRows),
+    partCount: partRows.length,
+    totalVertices,
+  };
 }

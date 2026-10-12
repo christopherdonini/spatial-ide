@@ -2,7 +2,7 @@
 
 The first Spatial IDE mod: a plugin of function hooks for sessions in this repository that refuses calls. It never approves a call, rewrites a call's arguments, submits a prompt, calls a model or makes a network request. It writes one local log file per refusal, outside the repository, and nothing else (see "The refusal log"). Every refusing hook fails closed: it decides inside one try that denies, and every registration also carries a catch that denies, so a hook that throws or overruns refuses the call instead of being skipped. The forms are `tools/mods/GUARDIAN-V0-PREREGISTRATION.md` and `tools/mods/GUARDIAN-V1-PREREGISTRATION.md`, and both govern this folder: v1 governs what it changes and adds, and v0 stays the form of every v0 rule.
 
-Built and tested against Claude Code 2.1.289 on Windows. The reads of the build's type declarations behind the hooks were made at 2.1.288 and are claims about that build only. Nothing here is claimed for another build, for macOS, or for Linux.
+Built and tested against Claude Code 2.1.296 on Windows. The reads of the build's type declarations behind the hooks were made at 2.1.288, except N1's three breakdown fields (below), read at 2.1.291, and are claims about those builds only. Nothing here is claimed for another build, for macOS, or for Linux.
 
 ## What it refuses
 
@@ -18,13 +18,13 @@ Each reason Guardian returns starts with `spatial-guardian`, states Guardian's o
 | G7 | From any agent, the main loop included: a pull-request merge (`gh pr merge`, every form, `--help` included, and a `gh api` call on a pull request's `pulls/<number>/merge` path, whatever the method); `git rebase` (every form, `--abort`, `--continue` and `--help` included); `git merge` with `--squash` or a prefix of it; `git pull` with `--rebase`, a prefix of it, `-r`, or a short-option cluster holding `r`. Bash and PowerShell. Keyed on the session's repository (see "Reach"). | line 2 of the human's 2026-10-05 direction (every agent pull-request merge, the custodian's included); AUTONOMY section 27 and the history-rewrite entry of the precedents; question round 57, items OPEN-1 and OPEN-2 |
 | G8 | From any agent: on the command line, `claude plugin` or `claude plugins` with `install`, `i`, `uninstall`, `remove`, `rm`, `enable`, `disable`, `update`, `add`, `prune`, `autoremove`, `init`, `new` or `configure` (so also `marketplace add`, `marketplace remove` and `marketplace update`), and `claude mcp` with a word that begins `add`, or with `remove`, `login`, `logout` or `reset-project-choices`; `--help` forms included. As a Write, Edit or NotebookEdit: a path at the user's Claude folder's `settings*.json`, directly under it, or at or under its `plugins`, `skills`, `agents`, `commands` or `hooks` folders, and the user-level `.claude.json` in the profile folder. Allowed: `plugin list`, `validate`, `test`, `details`, `tag`, `eval`, group-level `--help`; `mcp list`, `get`, `serve`; `claude --version`; everything under the user folder's `projects` folder; the repository's own `.claude` folders. | the brief's section 2.3 (`state/directives/MODS-V1-2026-10-05.md`); question round 57, item OPEN-3; question round 58, item OPEN-6 |
 | G9 | From any agent: `cargo clean` with no package that does not name its target folder (or names the main checkout's); `git clean` with a force flag in the main checkout; a recursive delete (`rm`, `rmdir`, `rd`, `remove-item`, `ri`, `del`, `erase`) of the main checkout's `target`, of its `target/slice-evidence` or `target/fixtures`, of a folder above any of them, or of anything under the two data folders; and a delete, recursive or not, whose operand holds a glob and whose folder is a data folder or under one. Allowed: `target/debug`, `target/release`, `frontends/shell/src-tauri/target`, a worktree's own target, anything under `.claude/worktrees/`, a delete of a named file, and an operand that does not exist. Bash and PowerShell. Keyed on the session's repository (see "Reach"). | the shared-target rule of `AI_DEVELOPMENT.md`; question round 57, items OPEN-1 and OPEN-4 |
-| N1 | Nothing. When the main conversation's context passes 80 percent and the continuity block is stale, a tool result gets one appended line for the model, at most once per 10-point band. | AUTONOMY section 7 (the flush) |
+| N1 | Nothing. When the main conversation's context passes 80 percent of the auto-compaction threshold (or of the compaction window, when auto-compaction is off or the breakdown gives no threshold) and the continuity block is stale, or was flushed more than 10 minutes ago, a tool result gets one appended line for the model, at most once per 5-point band (80, 85, 90 and 95). The bands re-arm once the fill falls below 80. | AUTONOMY section 7 (the flush) |
 
 G2, G3, G4 and G6 guard Write and Edit, and NotebookEdit on its `notebook_path` as an Edit that is never an append. G8's path side guards the same three tools. MultiEdit is not a tool in build 2.1.288, so nothing is registered for it. A path that cannot be placed (drive-relative, `\\` or `//`, an empty, `.` or `..` name, a name holding a drive, or one the file system cannot resolve) is refused. Paths are matched on the resolved path with both separators and ASCII case ignored, on every platform alike, so a case-sensitive volume can see a refusal a stricter match would not.
 
 G5, the profile-path refusal, is not in v0 or v1 (question round 43, item 3). The commit-msg and pre-commit hooks and the CI range check remain that refusal.
 
-N1's percentage is the compaction-window percentage from the local summary breakdown of the session's usage. When the engine returns no breakdown, N1 does nothing. N1's staleness check restates the Stop hook's predicate in `hooks/continuity.mjs`, and `scripts/hooks/guardian-continuity-parity.test.mjs` holds the two together on one fixture set. A change to either predicate is made with the other, in the same piece.
+N1's fill comes from the local summary breakdown of the session's usage, by one of two routes. When the breakdown says auto-compaction is on (`isAutoCompactEnabled`) and carries a positive `autoCompactThreshold` and a `totalTokens`, the fill is `totalTokens` as a percentage of that threshold, the line says "of the auto-compaction threshold", and `percentage` is not read. That threshold is the breakdown's own figure: it equals the point at which the engine compacts only while no percentage override (`CLAUDE_AUTOCOMPACT_PCT_OVERRIDE`) is set. Otherwise the fill is the breakdown's `percentage`, the percentage of the compaction window, with the line v0 gave. On that second route, if auto-compaction runs below 80 percent of the compaction window, N1 never fires. A fill above 95 stays in the 95 band, and when the engine returns no breakdown, N1 does nothing. N1's staleness check restates the Stop hook's predicate in `hooks/continuity.mjs`, and `scripts/hooks/guardian-continuity-parity.test.mjs` holds the two together on one fixture set. A change to either predicate is made with the other, in the same piece. The age clause is N1's alone: it reads the `flushed_at` the newest ledger commit holds, as `judgeContinuity` returns it, and nudges when that is more than 10 minutes before the call; a missing, unparseable or future `flushed_at` does not trigger it. It shares the 10-minute figure and the parse with the PreCompact hook, not that hook's other conditions, and the Stop hook has no such clause. The three breakdown fields were read in the 2.1.291 build's declarations.
 
 ### G1's narrowing
 
@@ -63,14 +63,14 @@ Each refusal writes one new file, and an allowed call writes none:
 - For every rule, what the shell rules do not read: aliases and scripts; configured `+` refspecs; variables and the output of a substitution; `eval`; brace expansion; a backslash inside a command word other than before a quote; PowerShell's escapes and line continuation (every command, PowerShell's included, is read by bash-shaped rules); arguments supplied by `xargs`; work done from code (Node, Python). ANSI-C quoting is not read: `$'...'` is read as plain single quoting, so an escaped quote inside it can desync the reader, as in v0.
 - For G7: `pull.rebase` configuration and `-c pull.rebase=...`; GraphQL merges; MCP merge tools; a merge path whose number is a variable; a rebase run from code.
 - For G8: writes into the user's Claude folder by Bash or PowerShell, which stay allowed (memory appends are legitimate); shell writes to the user-level `.claude.json`; project-scope configuration inside the repository (`.mcp.json`, the repository's own Claude settings), which is tracked and reaches review; the engine's LSP recommendation dialog and account sync, `/plugin`, and the human's own terminal; a user folder the engine places elsewhere than `USERPROFILE` plus `/.claude` (no override name is typed at 2.1.288; `CLAUDE_CONFIG_DIR` is not read); `claude plugin eval`, which is not refused (question round 58, item OPEN-6); the top-level `claude` verbs below.
-- Top-level `claude` verbs, taken from `claude --help` at 2.1.289 and not read: `agents`, `attach`, `auth`, `auto-mode`, `gateway`, `import`, `install`, `purge`, `respawn`, `rm`, `setup-token`, `stop` (`kill`), `ultrareview` and `update` (`upgrade`). Their help lines do not show them to be read-only, and when in doubt a verb is listed. `doctor` and `logs` read only, by their help lines. A verb of that list is refused by no rule here; adding one is a later ruling.
+- Top-level `claude` verbs, taken from `claude --help` at 2.1.296 and not read: `agents`, `attach`, `auth`, `auto-mode`, `gateway`, `import`, `install`, `purge`, `respawn`, `rm`, `setup-token`, `stop` (`kill`), `ultrareview` and `update` (`upgrade`). Their help lines do not show them to be read-only, and when in doubt a verb is listed. `doctor` and `logs` read only, by their help lines. A verb of that list is refused by no rule here; adding one is a later ruling.
 - For G9: a call's working directory, which it reads only as the call states it (a leading `cd <absolute dir> &&`, `git -C`, or a named target folder); `find -delete`, rimraf, and deletes run from code.
 - A case alias of a filed preregistration or of an accepted ADR on a case-insensitive volume may keep its own spelling, so git's lookup of it can miss.
 - Parity for a history shape outside the parity fixtures, or for a ledger blob of 4194304 bytes or more (above that size the engine cuts the stream and the mod reads not judged).
 - Parity for a session whose working directory differs from the Stop hook's project root.
 - Cloud sessions and edits made on GitHub. CI and the gates stay.
 - That the installed copy is isolated from later changes to this folder (E0 records the `Read from` line as the repository folder, and does not settle which bytes the engine runs).
-- Any build other than 2.1.289 for the tested behaviour (the type reads are 2.1.288's), macOS, Linux, any latency figure.
+- Any build other than 2.1.296 for the tested behaviour (the type reads are 2.1.288's, and N1's three breakdown fields' are 2.1.291's), macOS, Linux, any latency figure.
 
 ## Over-refusals
 
@@ -96,19 +96,19 @@ R11. G6's refusal of a report-only subagent's shell call is a backstop, not the 
 Installing a mod is a security-posture change. It needs the human's typed approval after both gates, and he installs it himself. Nothing in this repository installs, enables or loads it. G8 refuses these commands to every agent.
 
 1. `claude plugin marketplace add <repository>/tools/mods --scope user`
-2. `claude plugin install spatial-guardian@spatial-ide-mods --scope user`
+2. `claude plugin install spatial-guardian@spatial-ide-mods --scope local`
 3. `/reload-plugins`
 4. Confirm the `/plugin` line the brief names (`state/directives/MODS-GUARDIAN-V0-2026-10-03.md:44` @ 1bb94e19 sha256:b446fb1dad9f228df029d8ffea2628f3a99f15239b9b44ce3e76aac99fdd7013).
 
-Install from a checkout on main, at user scope. Never use the `project` or `local` scope: a plugin enabled there would be declared by a repository file.
+Install from the main checkout, at local scope. Never use the `project` scope: a committed repository file would then declare the plugin. Local scope's enable record is `.claude/settings.local.json`, which git ignores.
 
 ## Turning it off
 
-- Guardian alone: disable it in `/plugin`, or run `claude plugin disable spatial-guardian --scope user` in your own terminal.
+- Guardian alone: disable it in `/plugin`, or run `claude plugin disable spatial-guardian --scope local`.
 - One session: start with `--safe-mode`. It also disables the user's other customizations.
 - Not `disableAllHooks`: it also stops the repository's settings hooks (the Stop hook and the round mirror).
 
-To remove it: `claude plugin uninstall spatial-guardian` in your own terminal.
+To remove it: `claude plugin uninstall spatial-guardian --scope local`.
 
 ## Acceptance, stop conditions, false refusals
 

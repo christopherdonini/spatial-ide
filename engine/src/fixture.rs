@@ -488,6 +488,41 @@ pub struct FixtureSpec {
     /// The `geo.version` string written into the footer. Defaults to `1.1.0`, which every earlier
     /// fixture wrote; a spec exercising R-C1's unpinned-version branch sets its own.
     pub geo_version: String,
+    /// What the geometry column holds. Defaults to the irregular Polygon every earlier fixture
+    /// wrote, byte for byte (`engine/tests/polygon_wire_golden.rs` pins the default fixture's hash).
+    pub geometry: GeometryMode,
+    /// What the `geo` metadata declares for `geometry_types`. Defaults to `["Polygon"]`.
+    pub declared_types: DeclaredTypes,
+}
+
+/// What a fixture's geometry column holds (MP-1 preregistration §2, E9).
+#[derive(Clone, Debug, PartialEq)]
+pub enum GeometryMode {
+    /// One irregular Polygon per feature, from the seeded generator. The default.
+    Polygon,
+    /// These WKB rows, verbatim and in order, one per feature; [`FixtureSpec::features`] is
+    /// ignored. A row need not be valid WKB, which is how a test writes a hostile one. Rows carry
+    /// no covering `bbox`, so `with_covering_bbox` must be `false`, and the facts that describe the
+    /// generated geometry (`vertices`, `rings`, `extent` and the rest) are not computed.
+    Rows(Vec<Vec<u8>>),
+    /// These WKB rows with the covering bounds each declares, `[xmin, ymin, xmax, ymax]`, so a
+    /// fixture can carry a covering (points-cut preregistration §2, E-P9). Otherwise as
+    /// [`GeometryMode::Rows`]: the rows are written verbatim, [`FixtureSpec::features`] is ignored,
+    /// and the facts that describe generated geometry are not computed. The bounds are written as
+    /// given; they are not checked against the rows.
+    RowsWithBounds(Vec<(Vec<u8>, [f64; 4])>),
+}
+
+/// What a fixture's `geo` metadata declares for the column's `geometry_types`.
+#[derive(Clone, Debug, PartialEq)]
+pub enum DeclaredTypes {
+    /// `["Polygon"]`. The default.
+    Polygon,
+    /// The value as JSON text, written verbatim: `[]`, `["Polygon","MultiPolygon"]`, or a value
+    /// that is not a list of names.
+    Json(String),
+    /// No `geometry_types` key at all.
+    Absent,
 }
 
 /// How the fixture carries feature identity.
@@ -496,7 +531,7 @@ pub enum IdentityMode {
     /// A unique `id` column. The ordinary case.
     NativeUnique,
     /// A unique key under a different name (`parcel_key`), and **no `id` column at all** — the
-    /// shape most real GeoParquet has, which the engine refuses unless a mapping is declared.
+    /// shape most real GeoParquet has; a single file of it opens on the session tier (R-I3).
     ForeignKeyColumn,
     /// An `id` column that repeats a value. Legal parquet, admitted by a
     /// column-exists-and-is-an-integer check, and fatal to ADR-010 rule 2's indirection.
@@ -508,6 +543,9 @@ pub enum IdentityMode {
     /// A unique `id` column whose values exceed 2^53, so a JS consumer narrowing to `Number`
     /// would collide (ADR-016 §7).
     HugeIds,
+    /// A string `id` column (`key-{n}`, as `StringIds`) **beside** a unique `parcel_key` `UInt64`
+    /// (`n`) — a file that still refuses on its `id` and offers a column to declare.
+    StringIdsBesideParcelKey,
 }
 
 impl Default for FixtureSpec {
@@ -530,6 +568,8 @@ impl Default for FixtureSpec {
             statistics: StatisticsMode::WriterDefault,
             covering_names_absent_column: false,
             geo_version: "1.1.0".to_string(),
+            geometry: GeometryMode::Polygon,
+            declared_types: DeclaredTypes::Polygon,
         }
     }
 }
@@ -584,11 +624,16 @@ impl SplitMix64 {
 fn schema(with_bbox: bool, identity: IdentityMode, attributes: AttributeMode) -> Arc<Schema> {
     let id_field = match identity {
         IdentityMode::ForeignKeyColumn => Field::new("parcel_key", DataType::UInt64, false),
-        IdentityMode::StringIds => Field::new("id", DataType::Utf8, false),
+        IdentityMode::StringIds | IdentityMode::StringIdsBesideParcelKey => {
+            Field::new("id", DataType::Utf8, false)
+        }
         IdentityMode::NegativeIds => Field::new("id", DataType::Int64, false),
         _ => Field::new("id", DataType::UInt64, false),
     };
     let mut fields = vec![Arc::new(id_field)];
+    if identity == IdentityMode::StringIdsBesideParcelKey {
+        fields.push(Arc::new(Field::new("parcel_key", DataType::UInt64, false)));
+    }
     if with_bbox {
         fields.push(Arc::new(Field::new(
             "bbox",
@@ -756,10 +801,16 @@ fn geo_metadata(spec: &FixtureSpec) -> String {
         String::new()
     };
 
+    let types = match &spec.declared_types {
+        DeclaredTypes::Polygon => ",\"geometry_types\":[\"Polygon\"]".to_string(),
+        DeclaredTypes::Json(json) => format!(",\"geometry_types\":{json}"),
+        DeclaredTypes::Absent => String::new(),
+    };
+
     let version = &spec.geo_version;
     format!(
         "{{\"version\":\"{version}\",\"primary_column\":\"geometry\",\"columns\":{{\"geometry\":{{\
-          \"encoding\":\"WKB\",\"geometry_types\":[\"Polygon\"]{crs_fragment}{covering}{bbox}}}}}}}"
+          \"encoding\":\"WKB\"{types}{crs_fragment}{covering}{bbox}}}}}}}"
     )
 }
 
@@ -873,6 +924,11 @@ fn generate(
     cancel: &CancelToken,
     progress: &dyn FixtureProgress,
 ) -> Result<FixtureFacts> {
+    if matches!(spec.geometry, GeometryMode::Rows(_)) && spec.with_covering_bbox {
+        return Err(EngineError::Source(
+            "explicit WKB rows carry no covering bbox; set `with_covering_bbox` to false".into(),
+        ));
+    }
     if let Some(dir) = path.parent() {
         std::fs::create_dir_all(dir).map_err(|e| EngineError::Source(format!("mkdir: {e}")))?;
     }
@@ -948,14 +1004,20 @@ fn generate(
         ..Default::default()
     };
 
+    // The feature count: the spec's own, or the number of explicit rows.
+    let total = match &spec.geometry {
+        GeometryMode::Polygon => spec.features,
+        GeometryMode::Rows(rows) => rows.len(),
+        GeometryMode::RowsWithBounds(rows) => rows.len(),
+    };
     let mut written = 0usize;
     let mut chunk_index = 0usize;
-    while written < spec.features {
+    while written < total {
         // Before any building: a cancel observed here costs nothing at all.
         if cancel.is_cancelled() {
             return Err(EngineError::Cancelled);
         }
-        let n = spec.chunk.min(spec.features - written);
+        let n = spec.chunk.min(total - written);
 
         let mut ids = UInt64Builder::with_capacity(n);
         let mut signed_ids = arrow::array::Int64Builder::with_capacity(n);
@@ -991,34 +1053,43 @@ fn generate(
                 return Err(EngineError::Cancelled);
             }
             let id = (written + i) as u64;
-            let rings = parcel(&mut rng, spec, id);
+            // The row's WKB and its bounds. An explicit row is written as given and describes
+            // nothing about itself: its bounds are never read (no covering is written for it).
+            let (wkb, [xmin, ymin, xmax, ymax]) = match &spec.geometry {
+                GeometryMode::Rows(rows) => (rows[written + i].clone(), [0.0; 4]),
+                GeometryMode::RowsWithBounds(rows) => rows[written + i].clone(),
+                GeometryMode::Polygon => {
+                    let rings = parcel(&mut rng, spec, id);
 
-            let (mut xmin, mut ymin, mut xmax, mut ymax) = (
-                f64::INFINITY,
-                f64::INFINITY,
-                f64::NEG_INFINITY,
-                f64::NEG_INFINITY,
-            );
-            for ring in &rings {
-                facts.rings += 1;
-                for p in ring {
-                    xmin = xmin.min(p[0]);
-                    ymin = ymin.min(p[1]);
-                    xmax = xmax.max(p[0]);
-                    ymax = ymax.max(p[1]);
-                    facts.coord_bits_xor ^= p[0].to_bits().rotate_left(1) ^ p[1].to_bits();
+                    let (mut xmin, mut ymin, mut xmax, mut ymax) = (
+                        f64::INFINITY,
+                        f64::INFINITY,
+                        f64::NEG_INFINITY,
+                        f64::NEG_INFINITY,
+                    );
+                    for ring in &rings {
+                        facts.rings += 1;
+                        for p in ring {
+                            xmin = xmin.min(p[0]);
+                            ymin = ymin.min(p[1]);
+                            xmax = xmax.max(p[0]);
+                            ymax = ymax.max(p[1]);
+                            facts.coord_bits_xor ^= p[0].to_bits().rotate_left(1) ^ p[1].to_bits();
+                        }
+                    }
+
+                    let verts: usize = rings.iter().map(Vec::len).sum();
+                    facts.vertices += verts;
+                    facts.min_vertices_per_feature = facts.min_vertices_per_feature.min(verts);
+                    facts.max_vertices_per_feature = facts.max_vertices_per_feature.max(verts);
+
+                    facts.extent[0] = facts.extent[0].min(xmin);
+                    facts.extent[1] = facts.extent[1].min(ymin);
+                    facts.extent[2] = facts.extent[2].max(xmax);
+                    facts.extent[3] = facts.extent[3].max(ymax);
+                    (encode_polygon(&rings), [xmin, ymin, xmax, ymax])
                 }
-            }
-
-            let verts: usize = rings.iter().map(Vec::len).sum();
-            facts.vertices += verts;
-            facts.min_vertices_per_feature = facts.min_vertices_per_feature.min(verts);
-            facts.max_vertices_per_feature = facts.max_vertices_per_feature.max(verts);
-
-            facts.extent[0] = facts.extent[0].min(xmin);
-            facts.extent[1] = facts.extent[1].min(ymin);
-            facts.extent[2] = facts.extent[2].max(xmax);
-            facts.extent[3] = facts.extent[3].max(ymax);
+            };
 
             match spec.identity {
                 // The value written is what makes each mode's refusal real: a duplicate is a
@@ -1027,6 +1098,10 @@ fn generate(
                 IdentityMode::HugeIds => ids.append_value((1u64 << 53) + id),
                 IdentityMode::NegativeIds => signed_ids.append_value(-(id as i64) - 1),
                 IdentityMode::StringIds => string_ids.append_value(format!("key-{id}")),
+                IdentityMode::StringIdsBesideParcelKey => {
+                    string_ids.append_value(format!("key-{id}"));
+                    ids.append_value(id);
+                }
                 _ => ids.append_value(id),
             }
             if spec.attributes == AttributeMode::CategoricalZone
@@ -1082,7 +1157,7 @@ fn generate(
                 f32s.append_value(filter_witness_f32(id));
                 fw_f64s.append_value(filter_witness_f64(id));
             }
-            geoms.append_value(encode_polygon(&rings));
+            geoms.append_value(wkb);
             xmin_b.append_value(xmin);
             ymin_b.append_value(ymin);
             xmax_b.append_value(xmax);
@@ -1091,9 +1166,14 @@ fn generate(
 
         let mut cols: Vec<ArrayRef> = vec![match spec.identity {
             IdentityMode::NegativeIds => Arc::new(signed_ids.finish()) as ArrayRef,
-            IdentityMode::StringIds => Arc::new(string_ids.finish()) as ArrayRef,
+            IdentityMode::StringIds | IdentityMode::StringIdsBesideParcelKey => {
+                Arc::new(string_ids.finish()) as ArrayRef
+            }
             _ => Arc::new(ids.finish()) as ArrayRef,
         }];
+        if spec.identity == IdentityMode::StringIdsBesideParcelKey {
+            cols.push(Arc::new(ids.finish()) as ArrayRef);
+        }
         if spec.with_covering_bbox {
             let bbox = StructArray::new(
                 bbox_fields(),
@@ -1146,12 +1226,7 @@ fn generate(
         facts.features += n;
         // The writer's own count, not a `metadata()` syscall — an instrument that stat'ed the file
         // once per chunk would be touching the filesystem it is measuring.
-        progress.chunk_written(
-            chunk_index,
-            written,
-            spec.features,
-            writer.bytes_written() as u64,
-        );
+        progress.chunk_written(chunk_index, written, total, writer.bytes_written() as u64);
         chunk_index += 1;
 
         // Observed on both sides of the write, which is what makes the uninterruptible window "one
@@ -1209,6 +1284,254 @@ fn parcel(rng: &mut SplitMix64, spec: &FixtureSpec, id: u64) -> Vec<Vec<[f64; 2]
     } else {
         vec![outer]
     }
+}
+
+/// Little-endian ISO WKB for a MultiPolygon: type 6, then each part as a complete WKB polygon with
+/// its own byte-order byte and type 3 (MP-1 preregistration §2, E9; test support, like
+/// [`crate::wkb::encode_polygon`]). A test that needs a hostile row builds its bytes by hand.
+pub fn encode_multipolygon(parts: &[Vec<Vec<[f64; 2]>>]) -> Vec<u8> {
+    let mut out = vec![1u8];
+    out.extend_from_slice(&6u32.to_le_bytes());
+    out.extend_from_slice(&(parts.len() as u32).to_le_bytes());
+    for part in parts {
+        out.extend_from_slice(&encode_polygon(part));
+    }
+    out
+}
+
+/// Little-endian ISO WKB for a Point: type 1, then x and y (points-cut preregistration §2, E-P9;
+/// test support, like [`crate::wkb::encode_polygon`]). A test that needs a hostile row builds its
+/// bytes by hand.
+pub fn encode_point(x: f64, y: f64) -> Vec<u8> {
+    let mut out = vec![1u8];
+    out.extend_from_slice(&1u32.to_le_bytes());
+    out.extend_from_slice(&x.to_le_bytes());
+    out.extend_from_slice(&y.to_le_bytes());
+    out
+}
+
+/// §3's fixture P-1 as positions: six points laid out from `origin` in steps of `unit`, each with a
+/// fraction in its low bits that an `f32` narrowing or a swapped axis changes, and no two alike.
+pub fn point_p1(origin: [f64; 2], unit: f64) -> Vec<[f64; 2]> {
+    let [ox, oy] = origin;
+    (0..6u32)
+        .map(|k| {
+            let (i, j) = (f64::from(k % 3), f64::from(k / 3));
+            let frac = f64::from(k + 1) * 0.123_456_789;
+            [ox + i * unit + frac, oy + j * unit + 1.0 - frac]
+        })
+        .collect()
+}
+
+/// [`point_p1`] as WKB rows, each a type-1 Point.
+pub fn point_p1_rows(origin: [f64; 2], unit: f64) -> Vec<Vec<u8>> {
+    point_p1(origin, unit)
+        .iter()
+        .map(|p| encode_point(p[0], p[1]))
+        .collect()
+}
+
+/// [`point_p1`] as WKB rows with the covering each declares, a point's own bounds, for
+/// [`GeometryMode::RowsWithBounds`].
+pub fn point_p1_rows_with_bounds(origin: [f64; 2], unit: f64) -> Vec<(Vec<u8>, [f64; 4])> {
+    point_p1(origin, unit)
+        .iter()
+        .map(|p| (encode_point(p[0], p[1]), [p[0], p[1], p[0], p[1]]))
+        .collect()
+}
+
+/// Little-endian ISO WKB for a LineString: type 2, a position count, then the positions (lines-cut
+/// preregistration §2, E-L9; test support, like [`crate::wkb::encode_polygon`]). A test that needs a
+/// hostile row builds its bytes by hand.
+pub fn encode_linestring(positions: &[[f64; 2]]) -> Vec<u8> {
+    let mut out = vec![1u8];
+    out.extend_from_slice(&2u32.to_le_bytes());
+    out.extend_from_slice(&(positions.len() as u32).to_le_bytes());
+    for p in positions {
+        out.extend_from_slice(&p[0].to_le_bytes());
+        out.extend_from_slice(&p[1].to_le_bytes());
+    }
+    out
+}
+
+/// Little-endian ISO WKB for a MultiLineString: type 5, then each part as a complete WKB linestring
+/// with its own byte-order byte and type 2 (lines-cut preregistration §2, E-L9; test support).
+pub fn encode_multilinestring(parts: &[Vec<[f64; 2]>]) -> Vec<u8> {
+    let mut out = vec![1u8];
+    out.extend_from_slice(&5u32.to_le_bytes());
+    out.extend_from_slice(&(parts.len() as u32).to_le_bytes());
+    for part in parts {
+        out.extend_from_slice(&encode_linestring(part));
+    }
+    out
+}
+
+/// Positions on a lattice, laid out from `origin` in steps of `unit`. Each carries a fraction in its
+/// low bits, from a counter running across the whole fixture, so that an `f32` narrowing or a
+/// swapped axis changes it and no two positions are alike.
+fn lattice_positions(
+    lattice: &[(i32, i32)],
+    first: u32,
+    origin: [f64; 2],
+    unit: f64,
+) -> Vec<[f64; 2]> {
+    let [ox, oy] = origin;
+    lattice
+        .iter()
+        .zip(first..)
+        .map(|(&(i, j), k)| {
+            let frac = f64::from(k + 1) * 0.123_456_789;
+            [
+                ox + f64::from(i) * unit + frac,
+                oy + f64::from(j) * unit + 1.0 - frac,
+            ]
+        })
+        .collect()
+}
+
+/// A covering box `[xmin, ymin, xmax, ymax]` over every position given.
+fn bounds_of<'a>(positions: impl Iterator<Item = &'a [f64; 2]>) -> [f64; 4] {
+    let mut b = [
+        f64::INFINITY,
+        f64::INFINITY,
+        f64::NEG_INFINITY,
+        f64::NEG_INFINITY,
+    ];
+    for p in positions {
+        b = [
+            b[0].min(p[0]),
+            b[1].min(p[1]),
+            b[2].max(p[0]),
+            b[3].max(p[1]),
+        ];
+    }
+    b
+}
+
+/// §3's fixture L-1 as positions, one `Vec` per row: five LineStrings of 2, 3, 5, 2 and 4
+/// positions, laid out from `origin` in steps of `unit`. Rows 1 and 3 cross, inside both. Each
+/// position carries a fraction in its low bits that an `f32` narrowing or a swapped axis changes.
+pub fn line_l1(origin: [f64; 2], unit: f64) -> Vec<Vec<[f64; 2]>> {
+    const LATTICE: [&[(i32, i32)]; 5] = [
+        &[(0, 0), (6, 0)],
+        &[(0, 3), (4, 5), (8, 3)],
+        &[(10, 0), (12, 3), (14, 0), (16, 3), (18, 0)],
+        &[(1, 7), (7, 1)],
+        &[(10, 6), (12, 8), (14, 6), (16, 8)],
+    ];
+    let mut first = 0u32;
+    LATTICE
+        .iter()
+        .map(|row| {
+            let positions = lattice_positions(row, first, origin, unit);
+            first += row.len() as u32;
+            positions
+        })
+        .collect()
+}
+
+/// [`line_l1`] as WKB rows, each a type-2 LineString.
+pub fn line_l1_rows(origin: [f64; 2], unit: f64) -> Vec<Vec<u8>> {
+    line_l1(origin, unit)
+        .iter()
+        .map(|row| encode_linestring(row))
+        .collect()
+}
+
+/// [`line_l1`] as WKB rows with the covering each declares, the bounds of its own positions, for
+/// [`GeometryMode::RowsWithBounds`].
+pub fn line_l1_rows_with_bounds(origin: [f64; 2], unit: f64) -> Vec<(Vec<u8>, [f64; 4])> {
+    line_l1(origin, unit)
+        .iter()
+        .map(|row| (encode_linestring(row), bounds_of(row.iter())))
+        .collect()
+}
+
+/// §3's fixture ML-1 as structured geometry (row, then part, then `[x, y]`), laid out from `origin`
+/// in steps of `unit`: three MultiLineString rows of 2, 1 and 3 parts, so that the part ordinals
+/// 0..=5 differ from the row indices 0..=2 from the second row on, which is what a pick or a
+/// one-row-per-part defect has to get wrong to be seen. The parts hold 2, 3, 2, 2, 2 and 4
+/// positions.
+pub fn multilinestring_ml1(origin: [f64; 2], unit: f64) -> Vec<Vec<Vec<[f64; 2]>>> {
+    const LATTICE: [&[&[(i32, i32)]]; 3] = [
+        &[&[(0, 0), (5, 0)], &[(0, 2), (3, 4), (6, 2)]],
+        &[&[(8, 0), (8, 6)]],
+        &[
+            &[(10, 0), (12, 2)],
+            &[(10, 3), (13, 3)],
+            &[(10, 6), (11, 8), (13, 8), (14, 6)],
+        ],
+    ];
+    let mut first = 0u32;
+    LATTICE
+        .iter()
+        .map(|row| {
+            row.iter()
+                .map(|part| {
+                    let positions = lattice_positions(part, first, origin, unit);
+                    first += part.len() as u32;
+                    positions
+                })
+                .collect()
+        })
+        .collect()
+}
+
+/// [`multilinestring_ml1`] as WKB rows, each a type-5 MultiLineString.
+pub fn multilinestring_ml1_rows(origin: [f64; 2], unit: f64) -> Vec<Vec<u8>> {
+    multilinestring_ml1(origin, unit)
+        .iter()
+        .map(|parts| encode_multilinestring(parts))
+        .collect()
+}
+
+/// [`multilinestring_ml1`] as WKB rows with the covering each declares, the bounds of all of its
+/// parts, for [`GeometryMode::RowsWithBounds`].
+pub fn multilinestring_ml1_rows_with_bounds(
+    origin: [f64; 2],
+    unit: f64,
+) -> Vec<(Vec<u8>, [f64; 4])> {
+    multilinestring_ml1(origin, unit)
+        .iter()
+        .map(|parts| {
+            (
+                encode_multilinestring(parts),
+                bounds_of(parts.iter().flatten()),
+            )
+        })
+        .collect()
+}
+
+/// A closed square ring of side `s` with its lower-left corner at `(x, y)`.
+fn square_ring(x: f64, y: f64, s: f64) -> Vec<[f64; 2]> {
+    vec![[x, y], [x + s, y], [x + s, y + s], [x, y + s], [x, y]]
+}
+
+/// §3's fixture F-1 as structured geometry (row, then part, then ring, then `[x, y]`), laid out from
+/// `origin` in steps of `unit`: three MultiPolygon rows, the first of three parts whose second has a
+/// hole, the second of one part, the third of two. The part ordinals 0..=5 therefore differ from the
+/// row indices 0..=2 from the second row on, which is what a pick or a one-row-per-part defect has
+/// to get wrong to be seen. Row 0 holds 20 vertices.
+pub fn multipolygon_f1(origin: [f64; 2], unit: f64) -> Vec<Vec<Vec<Vec<[f64; 2]>>>> {
+    let [ox, oy] = origin;
+    let sq = |x: f64, y: f64, s: f64| square_ring(ox + x * unit, oy + y * unit, s * unit);
+    vec![
+        vec![
+            vec![sq(0.0, 0.0, 2.0)],
+            vec![sq(4.0, 0.0, 4.0), sq(5.0, 1.0, 2.0)],
+            vec![sq(10.0, 0.0, 2.0)],
+        ],
+        vec![vec![sq(0.0, 10.0, 3.0)]],
+        vec![vec![sq(6.0, 10.0, 2.0)], vec![sq(10.0, 10.0, 2.0)]],
+    ]
+}
+
+/// [`multipolygon_f1`] as WKB rows, each a type-6 MultiPolygon.
+pub fn multipolygon_f1_rows(origin: [f64; 2], unit: f64) -> Vec<Vec<u8>> {
+    multipolygon_f1(origin, unit)
+        .iter()
+        .map(|parts| encode_multipolygon(parts))
+        .collect()
 }
 
 fn ring(rng: &mut SplitMix64, cx: f64, cy: f64, r: f64, n: usize) -> Vec<[f64; 2]> {

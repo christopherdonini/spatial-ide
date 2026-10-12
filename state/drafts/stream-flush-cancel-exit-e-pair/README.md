@@ -1,0 +1,48 @@
+# E-1 and E-2 of stream-flush-cancel-exit-marks-producer-cancelled — the run logs
+
+Filed by the custodian (2026-10-10) from the worker's scratch folder, byte for byte, as the form's §6 asks, after PR #201's reviewer gate 1 (D-1). E-1 ran at B 82ceae7f in a base worktree, E-2 at H 0a3d6de4, each with the scratch patch byte-copied in state/consults/2026-10-10-stream-flush-cancel-exit-marks-producer-cancelled-worker-report-1.md (patch sha256 48cad7a6d22ff4010be18bdf238be296de8f976f46b09d8c0c2c9a21583b2cf0), 20 runs of cargo test -p spatial-engine --test slice each, in shared holds. Each summary.tsv gives one line per run. 0 of 20 failed at either commit (the form's Amendment 2). Each file's sha256:
+
+```
+b719e700e2c9ac208f3f648313e29889da319100aef723fc603ff58baaec4a32  e1/run-01.log
+9e7a672bcc16c0dc89582e52baf8e5958ead5d0b28e818babe64865992c937d4  e1/run-02.log
+5c96be0a85e18a6830c4c45384322b5bfccc2e975155df01bd5ef9e49bf4122d  e1/run-03.log
+60b111e3b1f29b6c0ca193bcab58661998eff67c58fcbfa0af51823ce9c32dab  e1/run-04.log
+49400649f31deb8c138489ff37b3f17b91ce31964209f35ef3dd7bb032babc2c  e1/run-05.log
+b8404561339fcf9e20a1b99cf24288c7c9ccad40199527d4011dcf9878b3cd1b  e1/run-06.log
+a95cc896f05215ed5387dd814dcfdfdf189ea90a0b49412917ce61c730b584ea  e1/run-07.log
+fedeff9cd9ad42ee05b132dd824ac66e8c40098c2530c911966c6104bcc839de  e1/run-08.log
+2f24a6d0672b534b27255015940d16acaeca34a36d97aa478b03f5276f44c1ff  e1/run-09.log
+cd462ae4d5794a355e758f1bf65ac9b9bcf8ddc8deaa27bc0c4d565da30367ed  e1/run-10.log
+74ae2f5fcf9a804c53236fe574be74071eecf54e7201e4d9cc23edb15f88d33d  e1/run-11.log
+b03b4474e1a4b71914a1d91727a363110236d416991578b545f3ef7139725e83  e1/run-12.log
+ab8ac8bd3e4b0314d554352042705fee1d4cde0ce9d175c669c2f23b0ab3a664  e1/run-13.log
+77dd26e732459aed6cda725126716a393e9d0231ede9592237ba7b754f514376  e1/run-14.log
+5ec1153b155dbf59ff913aaeda5a946e90c3b073e9741b62f87b8f3aac1d0a4a  e1/run-15.log
+7a808799211903b6d93c56eb7e427985985ff34688938f9c000a8ceeed17b0bc  e1/run-16.log
+c6c617edb7be31219783719afb709d9d49bc4a9153464ac8ac340a14036e1d2a  e1/run-17.log
+641e4004739f9387ce3202612ece76274f5c03eb6c38b15e49135f3f5f037a78  e1/run-18.log
+14ce4f93bb148bad27d20f43d34216eaabbd2c548fad9c291faac6ac5afae3fd  e1/run-19.log
+04311c8c3343407c9b78b6c075ba90a0e4d59c75839bfa8938cbbc7f480a06c2  e1/run-20.log
+46dd0f883bfdb0558e8705b45d20b252531fd3d24e369466576a8cd0acab13cb  e1/summary.tsv
+e63b03d99ad5a5aa6d75d45346561504aaf69f7b317826482a472360d67878e6  e2/run-01.log
+0bec26b376abe4124d9697f68695b2d8928e2562513ee06be719c7b73c4a07e7  e2/run-02.log
+c45d0d322551388a7d708b878c7ef043a5410e101e0bc4ca6cb332d92e3247b5  e2/run-03.log
+a330a5dc07b1f8cdff886d8a878ed5afe04b0fb8912c9857f8444eae327e251f  e2/run-04.log
+2aa11b0737d2263a346e547b71f3a423eb60dec42c447da3994eb4cee152f1c3  e2/run-05.log
+9ad2a82737241e0d828cb0dd5943bff1b0e195d97c2418497c3f7a70318d219a  e2/run-06.log
+00f71420d1851d8b44ff774c0e371a1b8f22707af906fd1a6a88e50e806a169b  e2/run-07.log
+5262b61bdd479631fb20b9879d47a5d8d9d4093d5aaa9f789ea786ee558f4c09  e2/run-08.log
+9d60eae174ae914d762605d493c6e79abe99943c9fc53d3092faca50d4e999d9  e2/run-09.log
+713949a4a0595e8ebb2f61ccd4b1f8e6a4c992fc4bce68b2bdafca8096200ab6  e2/run-10.log
+a5c6eca6a4c6dfb40d1a4e9175006c472ddd699613f134e137378ea231d40f40  e2/run-11.log
+ae30e2322c7d9202f43e96e253d4e44d7aa3e3e21604856e3385b93ec2579031  e2/run-12.log
+fa32b0794c32ace98965a8ab525c4fd0ed047ead7d1ed3989b6af0c2c7a687f1  e2/run-13.log
+a45b936c6e053b64bca4f163e1216f965c4b4e6baacb33a7e75b9ec0a13ffdda  e2/run-14.log
+e0521f8179dc135c774346ce4adc9dec9d2fcb6e0ea4de44a7cc3432359cfbc0  e2/run-15.log
+e1cc4a080cd9ef1b4c62eab2cdbf12b1f99bae97b2adde9dc33fa255ac828e63  e2/run-16.log
+d45f0c3247d1736751c2cf8cf24cea203d20ecf1ea04c21caf9b83519b475f1d  e2/run-17.log
+abda74328d6a6b98acbe0eb55d3adfd0f8fa2308e4841f2ff60c5b13d14b4bc7  e2/run-18.log
+2bc2581cd2c4e23fa81550e42221d3bdc2a517bbbc88df310a866da1fbff1451  e2/run-19.log
+a923925841de980d95e9bd8d9a3e5487acd8d73a46971688b40a4eeefe37789f  e2/run-20.log
+e2c19244e985b5d642db06ffd134b442d6b8d35facfb7fd61ac23511c3c18bbf  e2/summary.tsv
+```

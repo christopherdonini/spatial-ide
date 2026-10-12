@@ -1018,10 +1018,12 @@ test('precompact-flush: fresh tip/HEAD but no upstream is still stale (not pushe
   assert.match(fresh.reason, /no upstream/);
 });
 
+// RECORDED MUTATION: the lastBlockedAt write removed from decidePrecompact -> this test fails, first
+// failing assertion: second.decision, 'block' !== 'allow'. Observed at commit 562b7d84 (this branch).
 test('precompact-flush: a second PreCompact within 15 minutes is allowed whatever the freshness', () => {
   const dir = makeGitRepo();
   writeCutState(dir, '# CUT-STATE\n\nNo continuity block here.\n');
-  const input = { session_id: 's3', trigger: 'auto', custom_instructions: null };
+  const input = { session_id: 's3', trigger: 'manual', custom_instructions: null };
   const first = decidePrecompact(input, { projectRoot: dir });
   assert.equal(first.decision, 'block');
 
@@ -1041,6 +1043,159 @@ test('precompact-flush CLI: exits 2 and prints the reason on stderr when stale',
   });
   assert.equal(result.status, 2);
   assert.match(result.stderr, /PRE-COMPACTION FLUSH REQUIRED/);
+});
+
+// ---------------------------------------------------------------------------
+// The PreCompact record (.claude/state/precompact-<session_id>.jsonl) and the automatic path
+// (COMPACTION-RECORD-AND-RESUME-LINE-PREREGISTRATION.md, section 3, P1 to P6)
+// ---------------------------------------------------------------------------
+
+const NO_BLOCK_REASON = 'no SESSION-CONTINUITY block with both flushed_at and tip';
+const RECORD_FIELDS = ['at', 'trigger', 'decision', 'reason', 'flushed_at'];
+
+// A README-only repository removed with t.after, and a ledger with no continuity block.
+function noBlockRepo(t) {
+  const dir = makeLedgerRepo(t, { ledger: false });
+  writeCutState(dir, '# CUT-STATE\n\nNo continuity block here.\n');
+  return dir;
+}
+
+function recordLines(dir, sessionId) {
+  const raw = fs.readFileSync(path.join(dir, '.claude', 'state', `precompact-${sessionId}.jsonl`), 'utf8');
+  assert.ok(raw.endsWith('\n'), 'every record line ends with a newline');
+  return raw.split('\n').slice(0, -1).map((l) => JSON.parse(l));
+}
+
+function blockFile(dir, sessionId) {
+  return path.join(dir, '.claude', 'state', `precompact-${sessionId}.json`);
+}
+
+// RECORDED MUTATION: the append replaced by an overwrite (M1; appendFileSync -> writeFileSync) -> this
+// test fails, first failing assertion: 'the second call appends, it does not overwrite', 1 !== 2.
+// Observed at commit 562b7d84 (this branch).
+test('precompact-flush: each call appends one record line with its trigger, decision, reason and flushed_at', (t) => {
+  const dir = noBlockRepo(t);
+  const input = { session_id: 'rec-1', trigger: 'manual', custom_instructions: 'never recorded' };
+  const t0 = new Date('2026-10-05T12:00:00.000Z');
+
+  const first = decidePrecompact(input, { projectRoot: dir, now: t0 });
+  assert.equal(first.decision, 'block');
+  assert.ok(JSON.parse(fs.readFileSync(blockFile(dir, 'rec-1'), 'utf8')).lastBlockedAt, 'lastBlockedAt written');
+  let lines = recordLines(dir, 'rec-1');
+  assert.equal(lines.length, 1);
+  assert.deepEqual(Object.keys(lines[0]), RECORD_FIELDS);
+  assert.deepEqual(lines[0], {
+    at: '2026-10-05T12:00:00.000Z',
+    trigger: 'manual',
+    decision: 'blocked',
+    reason: NO_BLOCK_REASON,
+    flushed_at: null,
+  });
+
+  const second = decidePrecompact(input, { projectRoot: dir, now: new Date(t0.getTime() + 5 * 60 * 1000) });
+  assert.equal(second.decision, 'allow');
+  lines = recordLines(dir, 'rec-1');
+  assert.equal(lines.length, 2, 'the second call appends, it does not overwrite');
+  assert.deepEqual(lines[1], {
+    at: '2026-10-05T12:05:00.000Z',
+    trigger: 'manual',
+    decision: 'allowed-second-chance',
+    reason: null,
+    flushed_at: null,
+  });
+  assert.equal(lines[0].decision, 'blocked', 'the first line is untouched');
+  assert.ok(!JSON.stringify(lines).includes('never recorded'), 'custom_instructions is never recorded');
+});
+
+// RECORDED MUTATION: the non-manual branch removed (M2; every call takes the manual path) -> this test
+// fails, first failing assertion: result.status, 2 !== 0. Observed at commit 562b7d84 (this branch).
+test('precompact-flush CLI: an automatic compaction with a stale block exits 0 and records it', (t) => {
+  const dir = noBlockRepo(t);
+  const result = spawnSync(process.execPath, [path.join(here, 'precompact-flush.mjs')], {
+    input: JSON.stringify({ session_id: 'cli-auto', hook_event_name: 'PreCompact', trigger: 'auto', custom_instructions: null, cwd: dir }),
+    encoding: 'utf8',
+    env: { ...process.env, CLAUDE_PROJECT_DIR: dir },
+  });
+  assert.equal(result.status, 0);
+  assert.ok(
+    result.stderr.includes(`allow: automatic compaction recorded, never blocked (${NO_BLOCK_REASON}).`),
+    `stderr was: ${result.stderr}`,
+  );
+  assert.ok(!result.stderr.includes('PRE-COMPACTION FLUSH REQUIRED'));
+  const lines = recordLines(dir, 'cli-auto');
+  assert.equal(lines.length, 1);
+  assert.equal(lines[0].trigger, 'auto');
+  assert.equal(lines[0].decision, 'recorded-only');
+  assert.equal(lines[0].reason, NO_BLOCK_REASON);
+  assert.equal(fs.existsSync(blockFile(dir, 'cli-auto')), false, 'no block record is written for an automatic call');
+});
+
+// RECORDED MUTATION: the non-manual branch condition changed to trigger !== 'auto' (M4) -> this test
+// fails, first failing assertion: 'p5-auto', 'block' !== 'allow'. Observed at commit 562b7d84 (this branch).
+test('precompact-flush: a call whose trigger is absent or not manual is judged, recorded and allowed', (t) => {
+  // P4: a fresh block (injected git, as the fresh test above), automatic.
+  const fresh = makeLedgerRepo(t, { ledger: false });
+  const fakeHead = 'deadbeefdeadbeefdeadbeefdeadbeefdeadbeef';
+  const flushedAt = new Date().toISOString();
+  writeCutState(fresh, `# CUT-STATE\n\n## SESSION-CONTINUITY\nflushed_at: ${flushedAt}\ntip: ${fakeHead}\n`);
+  const fakeGit = (args) => {
+    if (args[0] === 'rev-parse' && args[1] === 'HEAD') return fakeHead;
+    if (args[0] === 'status') return '';
+    if (args[0] === 'rev-parse' && args[1] === '@{u}') return fakeHead;
+    if (args[0] === 'merge-base' && args[1] === '--is-ancestor') return '';
+    return null;
+  };
+  const p4 = decidePrecompact({ session_id: 'p4', trigger: 'auto' }, { projectRoot: fresh, git: fakeGit });
+  assert.equal(p4.decision, 'allow');
+  const p4Lines = recordLines(fresh, 'p4');
+  assert.equal(p4Lines.length, 1);
+  assert.equal(p4Lines[0].trigger, 'auto');
+  assert.equal(p4Lines[0].decision, 'allowed-fresh');
+  assert.equal(p4Lines[0].reason, null);
+  assert.equal(p4Lines[0].flushed_at, flushedAt);
+
+  // P5: a stale ledger; an automatic call, a call with no trigger, a call with another trigger.
+  const stale = noBlockRepo(t);
+  const cases = [
+    ['p5-auto', 'auto', 'auto'],
+    ['p5-absent', undefined, null],
+    ['p5-other', 'other', 'other'],
+  ];
+  for (const [sessionId, trigger, recorded] of cases) {
+    const input = { session_id: sessionId, custom_instructions: null, ...(trigger === undefined ? {} : { trigger }) };
+    const result = decidePrecompact(input, { projectRoot: stale });
+    assert.equal(result.decision, 'allow', sessionId);
+    const lines = recordLines(stale, sessionId);
+    assert.equal(lines.length, 1, sessionId);
+    assert.equal(lines[0].trigger, recorded, sessionId);
+    assert.equal(lines[0].decision, 'recorded-only', sessionId);
+    assert.equal(lines[0].reason, NO_BLOCK_REASON, sessionId);
+    assert.equal(fs.existsSync(blockFile(stale, sessionId)), false, `${sessionId}: no block record written`);
+  }
+
+  // A manual block in the same session does not give an automatic call a second chance: the
+  // automatic call neither reads nor writes lastBlockedAt.
+  const t0 = new Date('2026-10-05T12:00:00.000Z');
+  assert.equal(decidePrecompact({ session_id: 'mix', trigger: 'manual' }, { projectRoot: stale, now: t0 }).decision, 'block');
+  const before = fs.readFileSync(blockFile(stale, 'mix'), 'utf8');
+  const auto = decidePrecompact({ session_id: 'mix', trigger: 'auto' }, { projectRoot: stale, now: new Date(t0.getTime() + 60 * 1000) });
+  assert.equal(auto.decision, 'allow');
+  assert.equal(fs.readFileSync(blockFile(stale, 'mix'), 'utf8'), before, 'lastBlockedAt is untouched');
+  assert.deepEqual(recordLines(stale, 'mix').map((l) => l.decision), ['blocked', 'recorded-only']);
+});
+
+// RECORDED MUTATION: appendRecord's catch rethrows instead of returning the stderr line (M5; the
+// try/catch made inert) -> this test fails by throwing, EISDIR: illegal operation on a directory,
+// write, from decidePrecompact's call. Observed at commit 562b7d84 (this branch).
+test('precompact-flush: a record line that cannot be written leaves the decision unchanged', (t) => {
+  const dir = noBlockRepo(t);
+  // A directory sits where the record file belongs, so the append fails.
+  fs.mkdirSync(path.join(dir, '.claude', 'state', 'precompact-rec-fail.jsonl'), { recursive: true });
+  const result = decidePrecompact({ session_id: 'rec-fail', trigger: 'manual' }, { projectRoot: dir });
+  assert.equal(result.decision, 'block');
+  assert.equal(result.reason, BLOCK_REASON);
+  assert.ok(JSON.parse(fs.readFileSync(blockFile(dir, 'rec-fail'), 'utf8')).lastBlockedAt, 'lastBlockedAt written');
+  assert.match(result.stderr, /precompact-flush: could not append the record line \(.+\); the decision stands\./);
 });
 
 // ---------------------------------------------------------------------------
@@ -1082,6 +1237,73 @@ test('session-resume: never throws when state/CUT-STATE.md is missing', () => {
   const output = buildOutput(dir);
   assert.ok(output.includes(READING_ORDER));
   assert.match(output, /could not be read|no SESSION-CONTINUITY block/);
+});
+
+// RECORDED MUTATION: the ?? filter dropped from the modified-tracked-files count (M6) -> this test
+// fails, first failing assertion: the modified count, '2' !== '1'. Observed at commit 562b7d84 (this branch).
+test('session-resume: prints the resume facts line after the block', (t) => {
+  // R1: c0 README; c1 the ledger (flushed_at F, tip c0); c2 a README edit; the README modified
+  // again, uncommitted; one untracked file.
+  const dir = makeLedgerRepo(t, { ledger: false });
+  const c0 = headOf(dir);
+  const flushedAt = new Date(Date.now() - (7 * 60 * 1000 + 30 * 1000)).toISOString();
+  writeCutState(dir, `# CUT-STATE\n\n## SESSION-CONTINUITY\nflushed_at: ${flushedAt}\ntip: ${c0}\n`);
+  commitPaths(dir, [LEDGER_PATHSPEC], 'c1 ledger');
+  fs.writeFileSync(path.join(dir, 'README.md'), '# test\nc2\n');
+  commitPaths(dir, ['README.md'], 'c2 readme');
+  fs.writeFileSync(path.join(dir, 'README.md'), '# test\nc2\nuncommitted\n');
+  fs.writeFileSync(path.join(dir, 'scratch.txt'), 'untracked\n');
+
+  const before = Date.now();
+  const output = buildOutput(dir);
+  const after = Date.now();
+
+  const lines = output.trimEnd().split('\n');
+  const last = lines[lines.length - 1];
+  const m = last.match(/^Resume facts: block_age_min=(\d+) commits_past_tip=(\d+) modified_tracked_files=(\d+)$/);
+  assert.ok(m, `the last line is the resume line, got: ${last}`);
+  const flushedMs = new Date(flushedAt).getTime();
+  const age = Number(m[1]);
+  assert.ok(
+    age >= Math.floor((before - flushedMs) / 60000) && age <= Math.floor((after - flushedMs) / 60000),
+    `age ${age} within the clock bracket`,
+  );
+  assert.equal(m[2], '2');
+  assert.equal(m[3], '1');
+  assert.ok(output.indexOf('## SESSION-CONTINUITY') < output.indexOf('Resume facts:'), 'the resume line follows the block');
+  assert.ok(output.includes(READING_ORDER));
+});
+
+// RECORDED MUTATION: a failed git answer returned as '0' (M7; resumeGit's catch returns 0 not null) ->
+// this test fails, first failing assertion: the last line matched against commits_past_tip=unknown,
+// got 'Resume facts: block_age_min=3 commits_past_tip=0 modified_tracked_files=1'. Observed at
+// commit 562b7d84 (this branch).
+test('session-resume CLI: an unreadable git answer prints unknown and exits 0', (t) => {
+  // R2: a directory that is not a repository (git may not climb out of it), a valid flushed_at and a
+  // hex tip; then a directory with no ledger at all.
+  const runResume = (dir) =>
+    spawnSync(process.execPath, [path.join(here, 'session-resume.mjs')], {
+      input: JSON.stringify({ hook_event_name: 'SessionStart', source: 'compact', cwd: dir }),
+      encoding: 'utf8',
+      env: { ...process.env, CLAUDE_PROJECT_DIR: dir, GIT_CEILING_DIRECTORIES: path.dirname(dir) },
+    });
+  const lastLine = (stdout) => stdout.trimEnd().split('\n').pop();
+
+  const withBlock = makeTempDir('resume-nogit-');
+  t.after(() => fs.rmSync(withBlock, { recursive: true, force: true, maxRetries: 3 }));
+  const flushedAt = new Date(Date.now() - 3 * 60 * 1000).toISOString();
+  writeCutState(withBlock, `# CUT-STATE\n\n## SESSION-CONTINUITY\nflushed_at: ${flushedAt}\ntip: abc1234\n`);
+  const one = runResume(withBlock);
+  assert.equal(one.status, 0);
+  assert.ok(one.stdout.includes(READING_ORDER));
+  assert.match(lastLine(one.stdout), /^Resume facts: block_age_min=\d+ commits_past_tip=unknown modified_tracked_files=unknown$/);
+
+  const noLedger = makeTempDir('resume-noledger-');
+  t.after(() => fs.rmSync(noLedger, { recursive: true, force: true, maxRetries: 3 }));
+  const two = runResume(noLedger);
+  assert.equal(two.status, 0);
+  assert.ok(two.stdout.includes(READING_ORDER));
+  assert.equal(lastLine(two.stdout), 'Resume facts: block_age_min=unknown commits_past_tip=unknown modified_tracked_files=unknown');
 });
 
 // RECORDED MUTATION: the state/directives/ line placed after the PRECEDENTS.md line in READING_ORDER

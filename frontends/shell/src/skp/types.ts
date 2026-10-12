@@ -12,7 +12,7 @@ import type { DecU64, HexF64 } from "./codec";
  * See `protocol/skp/SKP-V0.md` for the design note and the mandatory named-deferral list this
  * client must not silently exceed (no capability discovery, no idempotency, no subscriptions, …).
  */
-export const SKP_VERSION = "skp/0.8";
+export const SKP_VERSION = "skp/0.11";
 
 /** The single dialect `skp/0.1` admits for `Filter.predicate` (see `Filter` below). `skp/1` is
  * RESERVED (docs/07's 1.0 freeze); a second dialect, if one is ever added, gets its own version
@@ -115,7 +115,15 @@ export type CrsUnit = "degree" | "metre" | "other" | "unestablished";
 
 export interface GeometryInfo {
   column: string;
+  /** The engine's encoding for this open, `"geoarrow.polygon"`, `"geoarrow.multipolygon"`,
+   * `"geoarrow.point"`, `"geoarrow.linestring"` or `"geoarrow.multilinestring"` (ADR-034
+   * Decision 2; the third value is `skp/0.10`, the fourth and fifth `skp/0.11`): the engine's
+   * fact, never the file's own type. */
   encoding: string;
+  /** `skp/0.9`. The file's `geometry_types` as declared, in declared order and case as written
+   * (ADR-034 Decision 3). `null` means the key is absent from the file; `[]` means the file
+   * declares an empty list. The two are different facts. */
+  declared_types: string[] | null;
   coordinate_layout: string;
   frame: string;
 }
@@ -280,8 +288,9 @@ export interface CloseDatasetResponse {
 }
 
 /** `skp/0.5`, the advisory source-change watcher (ADR-035 D4). The one named exception to "no
- * server-to-client push" -- a Tauri event, never a websocket frame. The decoder/listener that
- * consumes this (`skp/events.ts`) is a later piece; this file mirrors only the wire shape. */
+ * server-to-client push" -- a Tauri event, never a websocket frame. `skp/events.ts`'s
+ * `decodeDatasetSessionEnded` and `listenDatasetSessionEnded` consume this event; this file
+ * mirrors only the wire shape. */
 export const DATASET_SESSION_ENDED_EVENT = "skp://dataset_session_ended";
 
 /** The event payload -- exactly two members (rider (b); ADR-035 D4). No generation value. */

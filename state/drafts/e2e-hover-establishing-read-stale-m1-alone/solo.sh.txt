@@ -1,0 +1,48 @@
+#!/bin/bash
+# The custodian's runs alone (inside one exclusive hold):
+#  1. PR #196's E1: mutation M1 at ac89e033, window height 801, the whole e2e:regression suite, then restored and shown clean.
+#  2. The e2e re-aim's solo re-run: the whole e2e:console suite on the shipped default arm, window height 800, unmodified.
+S="<the custodian's scratch folder>/cust"
+W=/c/dev/wt/k6
+R=frontends/shell/e2e/regression.mjs
+log() { echo "[solo] $(date -u +%Y-%m-%dT%H:%M:%SZ) $*"; }
+cd "$W" || exit 90
+[ "$(git rev-parse HEAD)" = "ac89e033a75a9ac241debfd9d249e2e84b26f414" ] || { log "HEAD is not ac89e033"; exit 90; }
+[ -z "$(git status --porcelain)" ] || { log "worktree not clean before"; exit 90; }
+log "clean before: porcelain empty, HEAD $(git rev-parse HEAD)"
+cd "$W/frontends/shell" || exit 97
+log "noticeDeterminism start (vitest, one file, unmodified)"
+timeout 900 node node_modules/vitest/vitest.mjs run src/notices/noticeDeterminism.test.ts > "$S/out/notice-determinism-alone.log" 2>&1
+rc0=$?
+log "noticeDeterminism end, vitest rc=$rc0"
+tail -8 "$S/out/notice-determinism-alone.log"
+cd "$W" || exit 90
+[ -z "$(git status --porcelain)" ] || { log "worktree not clean after noticeDeterminism"; exit 90; }
+node "$S/m1-apply.mjs" "$W/$R" || { log "M1 apply failed"; git checkout -- "$R"; exit 91; }
+log "M1 applied; git diff follows"
+git diff
+export PATH="$S/shim:$PATH"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$S/app-down.ps1" > /dev/null 2>&1
+export K6_EXE="D:/wt-targets/k6/exes/spatial-ide-shell-801.exe"
+cd "$W/frontends/shell" || exit 92
+log "M1 run start (regression, 801)"
+timeout 1500 node e2e/regression.mjs > "$S/out/m1-alone-801.log" 2>&1
+rc1=$?
+log "M1 run end, regression rc=$rc1"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$S/app-down.ps1" > "$S/out/m1-alone-801.down.txt" 2>&1
+cat "$S/out/m1-alone-801.down.txt"
+cd "$W" || exit 93
+git checkout -- "$R"
+log "M1 restored; porcelain: [$(git status --porcelain)]; diff lines: $(git diff | wc -l)"
+[ -z "$(git status --porcelain)" ] || { log "worktree not clean after M1"; exit 94; }
+export K6_EXE="D:/wt-targets/k6/exes/spatial-ide-shell-800.exe"
+cd "$W/frontends/shell" || exit 95
+log "console run start (e2e:console, 800, shipped default arm, unmodified)"
+timeout 1500 node e2e/console.mjs > "$S/out/console-alone-800.log" 2>&1
+rc2=$?
+log "console run end, console rc=$rc2"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$S/app-down.ps1" > "$S/out/console-alone-800.down.txt" 2>&1
+cat "$S/out/console-alone-800.down.txt"
+cd "$W" || exit 96
+log "after console: porcelain: [$(git status --porcelain)], HEAD $(git rev-parse HEAD)"
+exit 0

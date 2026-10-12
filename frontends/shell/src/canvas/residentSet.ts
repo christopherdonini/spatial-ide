@@ -70,7 +70,7 @@ export class ResidentSet {
     if (this.keys.has(key)) {
       throw new DuplicateBatchError(batch.streamHandle, batch.batchSeq);
     }
-    checkPickCeiling(batch.ids.length);
+    checkPickCeiling(batch.partCount);
     const attemptedTotal = this.totalVertices + batch.totalVertices;
     if (attemptedTotal > MAX_RESIDENT_VERTICES) {
       throw new ResidentVertexCeilingExceeded(attemptedTotal);

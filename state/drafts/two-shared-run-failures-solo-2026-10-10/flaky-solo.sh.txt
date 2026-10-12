@@ -1,0 +1,28 @@
+#!/bin/bash
+# Two tests that failed once in shared runs, re-run alone in the custodian's exclusive hold (the machine rule):
+# (1) frontends/shell's noticeDeterminism vitest at PR #203's head 44e6220d (D:/wt/docb), a 30 s timeout under load;
+# (2) spatial-engine's filter_type_admission at f0fccfaf (C:/dev/wt/reaim-base), a source-changed refusal under load.
+S="<the custodian scratch folder>"
+log() { echo "[flaky-solo] $(date -u +%Y-%m-%dT%H:%M:%SZ) $*"; }
+[ -e "$S/out/fs-notice.log" ] && { log "fs-notice.log exists"; exit 94; }
+[ -e "$S/out/fs-fta.log" ] && { log "fs-fta.log exists"; exit 94; }
+cd /d/wt/docb || exit 90
+[ "$(git rev-parse HEAD)" = "44e6220d00f9b20d8581a9c704081fcfbb511b39" ] || { log "docb HEAD"; exit 90; }
+[ -z "$(git status --porcelain)" ] || { log "docb not clean"; exit 90; }
+cd frontends/shell || exit 90
+log "noticeDeterminism start"
+timeout 900 npx vitest run src/notices/noticeDeterminism.test.ts > "$S/out/fs-notice.log" 2>&1
+rc1=$?
+log "noticeDeterminism end rc=$rc1"
+grep -a "Test Files\|Tests \|✓\|×\|FAIL\|Duration" "$S/out/fs-notice.log" | head -12 | cut -c1-200
+cd /d/wt/docb && log "docb after: porcelain [$(git status --porcelain)]"
+cd /c/dev/wt/reaim-base || exit 91
+[ "$(git rev-parse HEAD)" = "f0fccfaf6814c6993462853211ba20f7c8cdab31" ] || { log "base HEAD"; exit 91; }
+[ -z "$(git status --porcelain)" ] || { log "base not clean"; exit 91; }
+log "filter_type_admission start"
+CARGO_TARGET_DIR=D:/wt-targets/reaim-base timeout 2400 cargo test -p spatial-engine --test filter_type_admission --locked > "$S/out/fs-fta.log" 2>&1
+rc2=$?
+log "filter_type_admission end rc=$rc2"
+grep -a "^test \|test result\|panicked\|counterexample" "$S/out/fs-fta.log" | head -12 | cut -c1-200
+log "base after: porcelain [$(git status --porcelain)]"
+[ $rc1 -eq 0 ] && [ $rc2 -eq 0 ]

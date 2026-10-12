@@ -1,0 +1,6 @@
+# Directive — check 4 inside a 20-minute booking, after the points cut's phase B (the human, verbatim)
+
+*Custodian's filing note (2026-10-06): the human's typed direction, received at 21:09:39Z (2026-10-06T21:09:39.079Z) by the session transcript, as the human's own message (origin human). The text below the rule is that message, extracted from the transcript by script, with nothing changed except one final newline. It names no other project. It changes when check 4 runs (the third direction's item 4 and the fourth direction's item 2): no longer by chance on a quiet machine, but in a booking the custodian makes after phase B hands back and before its gates are dispatched. The booking and its cancel are the custodian's alone (the fourth direction's Fable note a). It gets a RULED block in `DECISIONS-PENDING.md`.*
+
+---
+HUMAN DIRECTION (Chris): do not wait for a quiet machine by chance for check 4. When phase B of the points cut hands back, and before you dispatch its gates, book 20 minutes under SpatialIDE starting two minutes later, run check 4 inside that booking, and cancel the booking as soon as the test has ended. If a run already in progress keeps the machine busy and the test gives up with 96, cancel, and book again after that run's declared end. Tell me the result.

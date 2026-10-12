@@ -905,6 +905,111 @@ fn a_hostile_covering_refuses_a_bbox_query_before_the_mint_and_describe_reports_
     );
 }
 
+/// K-1 (`engine/COVERING-NAMES-MISSING-COLUMN-PREREGISTRATION.md` §4; k3 -- the covering names a
+/// struct the file does not contain): `describe`'s `covering_bbox` is `false`; a bbox
+/// `viewport_query` refuses `engine.no_covering_bbox` before the mint, with exactly the `detail`
+/// field and the engine's own Display text as its message; no ticket exists and no lease was taken;
+/// a `viewport_query` without a bbox still mints.
+/// Mutation: `judge_covering`'s `Absent` result is replaced by `None` (the engine tests' C-1).
+#[test]
+fn a_covering_naming_a_column_the_file_lacks_refuses_a_bbox_viewport_query_before_the_mint_and_describe_reports_no_covering(
+) {
+    let path = fixture_dir().join("skp-projection-k1-covering-absent-column.parquet");
+    spatial_engine::fixture::write_hostile_covering(
+        &path,
+        "bbox",
+        ["xmin", "ymin", "xmax", "ymax"],
+        ("nobbox", ["xmin", "ymin", "xmax", "ymax"]),
+    );
+    let fixture_sha_before = sha256_file(&path);
+    let handle: DatasetHandle = "ds_00000000000000000000000000000035".parse().unwrap();
+    let catalog = Arc::new(Catalog::new());
+    catalog
+        .open(handle.as_str(), &path, None)
+        .expect("open the fixture");
+    let tickets = StreamRegistry::new();
+    let host = SkpHost::new(
+        catalog.clone(),
+        tickets.clone(),
+        watch_support::no_watch_arm(),
+        session_end_channel().0,
+    );
+    host.generations()
+        .mint_for_open(handle.as_str(), spatial_skp::v0::SessionRef::mint());
+    let ds = catalog.get(handle.as_str()).expect("dataset in catalog");
+
+    let describe = host
+        .describe(spatial_skp::v0::DescribeRequest {
+            skp: SKP_VERSION.to_string(),
+            dataset: handle.clone(),
+        })
+        .expect("describe");
+    assert!(
+        !describe.covering_bbox,
+        "a covering naming an absent column is not usable"
+    );
+
+    let leases_before = ds.connections().leases_issued();
+    assert_eq!(
+        tickets.cancel_all_for_dataset(handle.as_str()),
+        0,
+        "no ticket should exist before this case runs"
+    );
+
+    let mut req = base_request(handle.clone(), None);
+    req.bbox = Some(spatial_skp::v0::Bbox {
+        xmin: spatial_skp::v0::HexF64(2_599_000.0),
+        ymin: spatial_skp::v0::HexF64(1_199_000.0),
+        xmax: spatial_skp::v0::HexF64(2_601_000.0),
+        ymax: spatial_skp::v0::HexF64(1_201_000.0),
+    });
+    req.bbox_crs = Some("EPSG:2056".to_string());
+    let err = host
+        .viewport_query(req)
+        .expect_err("a covering naming an absent column must refuse a bbox query");
+    assert_eq!(err.code, "engine.no_covering_bbox", "wrong code");
+    let live_keys: BTreeSet<String> = err.fields.keys().cloned().collect();
+    assert_eq!(
+        live_keys,
+        BTreeSet::from(["detail".to_string()]),
+        "the field key set is exactly {{detail}}"
+    );
+    let detail = err.fields["detail"].clone();
+    assert!(detail.contains("nobbox.xmin"), "{detail}");
+    assert_eq!(
+        err.message,
+        spatial_engine::EngineError::NoCoveringBbox { detail }.to_string(),
+        "the message is the engine's own Display text"
+    );
+
+    assert_eq!(
+        tickets.cancel_all_for_dataset(handle.as_str()),
+        0,
+        "refused before the mint -- no ticket to have minted"
+    );
+    assert_eq!(
+        ds.connections().leases_issued(),
+        leases_before,
+        "a covering refusal must not touch the stream connection pool at all"
+    );
+
+    // A request without a bbox still mints.
+    let minted = host
+        .viewport_query(base_request(handle.clone(), None))
+        .expect("a viewport_query without a bbox must still mint");
+    assert_eq!(
+        tickets.cancel_all_for_dataset(handle.as_str()),
+        1,
+        "the no-bbox request minted exactly one ticket ({})",
+        minted.stream.as_str()
+    );
+    assert_eq!(
+        sha256_file(&path),
+        fixture_sha_before,
+        "the fixture file must be unchanged by this run"
+    );
+}
+
 // ---- X1: the filter refusal text for a still-refused type ------------------------------------
 
 /// X1 (Amendment 5, row 5.6; O2): `a_filter_refusal_for_a_still_refused_type_keeps_todays_reason_byte_for_byte`

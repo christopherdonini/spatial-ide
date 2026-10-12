@@ -4,21 +4,63 @@
 import { describe, expect, it } from "vitest";
 
 import type { ResidentBatch } from "./decodeBatch";
+import { partsOfFeatures, partsOfPolygons } from "../testUtils/partsOfPolygons";
 import { cellSizeForLevel, coverMembershipFor, deriveTileGridFrame, tileCoverForBbox, tileKeyToString } from "./tileGrid";
 import { INITIAL_TILE_KEY } from "./tileGridConstants";
 import { planTileEviction, TileResidentSet } from "./tileResidentSet";
 
 function batch(streamHandle: string, batchSeq: number, ids: number[], verticesPerFeature = 1): ResidentBatch {
   const idArray = new BigUint64Array(ids.map(BigInt));
-  const rings = ids.map(() => [Array.from({ length: verticesPerFeature }, () => [0, 0] as [number, number])]);
+  const polygons = ids.map(() => [Array.from({ length: verticesPerFeature }, () => [0, 0] as [number, number])]);
   return {
     streamHandle,
     batchSeq,
     ids: idArray,
-    rings,
+    ...partsOfPolygons(polygons),
     totalVertices: ids.length * verticesPerFeature,
   };
 }
+
+/**
+ * SH-7 (`engine/MULTIPOLYGON-MP1-PREREGISTRATION.md` section 4), the dedupe half: a cross-tile
+ * duplicate is dropped whole, and the kept features carry every one of their parts with `partToRow`
+ * re-indexed to their new rows. Tile "0:0" owns id 2; tile "0:1" then delivers ids 2 (a duplicate,
+ * two parts), 5 (three parts) and 7 (one part): the accepted batch is ids 5 and 7, with partToRow
+ * [0, 0, 0, 1].
+ *
+ * RECORDED MUTATION: keep the source row in `partToRow` in `TileResidentSet.addBatch`'s rebuild
+ * (push `srcIdx` where it pushes `dstIdx`). This test then fails by name.
+ *
+ * Observed over `ac538440` on the uncommitted tree of the shell commit: `drops a duplicate whole and carries every part of the kept features`
+ * FAILED by name with the mutation applied, then reverted.
+ */
+describe("TileResidentSet.addBatch: dedupe keeps features whole and re-indexes partToRow (SH-7)", () => {
+  const ring = (): Array<[number, number]> => [[0, 0], [1, 0], [1, 1], [0, 0]];
+
+  it("drops a duplicate whole and carries every part of the kept features", () => {
+    const set = new TileResidentSet();
+    set.addBatch("0:0", batch("sh_a", 0, [2]));
+    const incoming: ResidentBatch = {
+      streamHandle: "sh_b",
+      batchSeq: 0,
+      ids: new BigUint64Array([2n, 5n, 7n]),
+      ...partsOfFeatures([
+        [[ring()], [ring()]], // id 2: the duplicate, two parts
+        [[ring()], [ring()], [ring()]], // id 5
+        [[ring()]], // id 7
+      ]),
+      totalVertices: 24,
+    };
+    const result = set.addBatch("0:1", incoming);
+    expect(result.duplicatesDropped).toBe(1);
+    const accepted = result.accepted!;
+    expect(Array.from(accepted.ids)).toEqual([5n, 7n]);
+    expect(accepted.parts.map((f) => f.length)).toEqual([3, 1]);
+    expect(Array.from(accepted.partToRow)).toEqual([0, 0, 0, 1]);
+    expect(accepted.partCount).toBe(4);
+    expect(accepted.totalVertices).toBe(16);
+  });
+});
 
 describe("TileResidentSet: per-tile bookkeeping", () => {
   it("accumulates vertex/feature totals across tiles", () => {

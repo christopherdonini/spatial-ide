@@ -526,5 +526,8 @@ pub fn spec_5gb() -> spatial_engine::fixture::FixtureSpec {
         statistics: spatial_engine::fixture::StatisticsMode::WriterDefault,
         covering_names_absent_column: false,
         geo_version: "1.1.0".to_string(),
+        // MP-1's two fields, at their defaults, so the 5 GB fixture's bytes are unchanged.
+        geometry: spatial_engine::fixture::GeometryMode::Polygon,
+        declared_types: spatial_engine::fixture::DeclaredTypes::Polygon,
     }
 }

@@ -1,0 +1,19 @@
+// M1 (e2e-hover-establishing-read-stale): the K6 helper's call to hoverIdAfterBarrier replaced by the base's move-then-poll.
+import fs from 'node:fs';
+const f = process.argv[2];
+const src = fs.readFileSync(f, 'utf8');
+const from = '      const result = await hoverIdAfterBarrier(page, css, label);\n';
+const to = [
+  '      await page.mouse.move(css.x, css.y);',
+  '      const result = await waitForCondition(',
+  '        () => readHoverReadoutState(page),',
+  '        (readout) => hoverReadoutId(readout) !== null,',
+  '        5_000',
+  '      );',
+  '',
+].join('\n');
+if (src.split(from).length !== 2) throw new Error('the M1 line is not unique');
+const i = src.indexOf(from);
+if (src.lastIndexOf('async function establishAboveThresholdHoverK6', i) < 0 || src.lastIndexOf('async function establishAboveThresholdHoverK6', i) < src.lastIndexOf('\nasync function ', i - 1)) throw new Error('not inside establishAboveThresholdHoverK6');
+fs.writeFileSync(f, src.replace(from, to));
+console.log('M1 applied');

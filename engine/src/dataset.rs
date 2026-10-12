@@ -146,8 +146,9 @@ pub struct Dataset {
     path: PathBuf,
     envelope: BatchEnvelope,
     covering: Option<CoveringBbox>,
-    /// Why the file's own declared covering, if any, is not addressable — `None` when the file
-    /// declares no covering, or its declared covering round-trips (§10 Amendment 12, 12.1(d)).
+    /// Why the file's own declared covering, if any, is not usable — it is not addressable
+    /// (§10 Amendment 12, 12.1(d)) or it names a column the file's schema does not resolve. `None`
+    /// when the file declares no covering, or its declared covering is usable.
     /// `covering` above is already `None` whenever this is `Some`: [`Self::covering`] "returns a
     /// usable covering only", so this field exists only to give [`Self::no_covering_bbox_detail`]
     /// the fact to name, never as a second place either is decided.
@@ -361,17 +362,11 @@ impl Dataset {
                 geo.encoding
             )));
         }
-        if !geo.geometry_types.is_empty()
-            && !geo
-                .geometry_types
-                .iter()
-                .all(|t| t.eq_ignore_ascii_case("Polygon"))
-        {
-            return Err(EngineError::GeoMetadata(format!(
-                "geometry_types {:?} include non-polygon types; this slice reads polygons only",
-                geo.geometry_types
-            )));
-        }
+        // **The encoding is a fact of this open** (ADR-034 Decisions 1, 2 and 7), chosen from the
+        // declared `geometry_types` here and nowhere else; the envelope below, `describe` and every
+        // batch of every stream carry the one value. A member outside the readable set is refused
+        // at open, by name.
+        let encoding = crate::geoarrow::encoding_for_declared_types(geo.geometry_types.as_deref())?;
 
         // SF3/SF4 (reviewer gate, admission-remediation cut): the assertion's own shape — a
         // non-blank identifier, a definition within `MAX_CRS_DEFINITION_BYTES` — is checked before
@@ -432,6 +427,13 @@ impl Dataset {
 
         let file_schema = probe_schema(conn, &path_str)?;
         check_geometry_column(&file_schema, &geo.primary_column)?;
+
+        // **The one place a declared covering is judged usable** (the covering-names-missing-column
+        // form, §2a). It runs once, here, ahead of both of `sanity_check`'s early returns, so a
+        // file that declares its own CRS is judged too; `sanity_check` takes the result as a
+        // parameter and decides nothing of its own. No SQL: the declared paths and the resident
+        // schema are all it reads.
+        let covering_finding = judge_covering(geo.covering.as_ref(), &file_schema);
 
         // The provenance of what was just admitted. A caller's assertion is its own class and is
         // decided here, because `format_semantics` is not told about assertions: the format governs
@@ -523,7 +525,7 @@ impl Dataset {
             conn,
             &path_str,
             &geo,
-            &file_schema,
+            covering_finding.as_ref(),
             crs_provenance,
             &semantics,
             cancel,
@@ -570,17 +572,15 @@ impl Dataset {
         // connection that fails it is discarded and open still succeeds — with an empty pool.
         lease.release_healthy();
 
-        // **12.1(d)'s covering row.** A declared covering whose path is not addressable (a struct
-        // name or a child segment carrying U+0000 — no comparison covers this, so the check runs
-        // directly against the declared path text) is recorded but never handed out by
-        // [`Self::covering`], which "returns a usable covering only". The open itself still
-        // succeeds; only a bbox query is refused, by [`Self::no_covering_bbox_detail`], synchronously
-        // and before any lease.
-        let covering_unusable_reason = geo
-            .covering
-            .as_ref()
-            .and_then(covering_not_addressable_reason);
-        let covering = if covering_unusable_reason.is_some() {
+        // **12.1(d)'s covering row, and the covering-names-a-missing-column rule.** A declared
+        // covering whose path is not addressable (a struct name or a child segment carrying U+0000)
+        // or that names a column the file's schema does not resolve is recorded but never handed
+        // out by [`Self::covering`], which "returns a usable covering only". The open itself still
+        // succeeds; only a bbox query is refused, by [`Self::no_covering_bbox_detail`],
+        // synchronously and before any lease. The finding was made once, above, by
+        // [`judge_covering`].
+        let covering_unusable_reason = covering_finding.as_ref().map(CoveringFinding::detail);
+        let covering = if covering_finding.is_some() {
             None
         } else {
             geo.covering.clone()
@@ -588,7 +588,13 @@ impl Dataset {
 
         Ok(Self {
             path: path.to_path_buf(),
-            envelope: BatchEnvelope::admitted(crs, geo.primary_column.clone(), identity, admission),
+            envelope: BatchEnvelope::admitted(
+                crs,
+                geo.primary_column.clone(),
+                identity,
+                admission,
+                encoding,
+            ),
             covering,
             covering_unusable_reason,
             geo,
@@ -955,19 +961,40 @@ impl Dataset {
         &self.geo.primary_column
     }
 
+    /// The GeoArrow encoding this open fixed from the file's declared `geometry_types` (ADR-034
+    /// Decision 2): the value the envelope, every batch and `describe` carry. **The engine's fact,
+    /// never the file's** — see [`Self::declared_geometry_types`].
+    ///
+    /// Its product callers are `kernel::skp::describe_dataset` and the publish preflight
+    /// (`kernel::publish::preflight_pinless_parts`).
+    pub fn geometry_encoding(&self) -> crate::geoarrow::GeometryEncoding {
+        self.envelope.geometry_encoding()
+    }
+
+    /// The file's `geometry_types` as declared, in declared order and case as written: the source
+    /// fact beside [`Self::geometry_encoding`]. An empty list is kept empty, and `None` means the
+    /// key is absent (ADR-034 Decision 3). Never presented as the engine's encoding.
+    ///
+    /// Its product caller is `kernel::skp::describe_dataset`.
+    pub fn declared_geometry_types(&self) -> Option<&[String]> {
+        self.geo.geometry_types.as_deref()
+    }
+
     /// The file's declared covering — **a usable one only** (§10 Amendment 12, 12.1(d)): `None`
-    /// both where the file declares no covering and where it declares one this engine cannot
-    /// address (a struct or child segment carrying U+0000). [`Self::no_covering_bbox_detail`] is
-    /// what a `NoCoveringBbox` refusal names either way.
+    /// both where the file declares no covering and where it declares one this engine cannot use:
+    /// one it cannot address (a struct or child segment carrying U+0000), or one naming a column
+    /// the file's schema does not resolve. [`Self::no_covering_bbox_detail`] is what a
+    /// `NoCoveringBbox` refusal names in each case.
     pub fn covering(&self) -> Option<&CoveringBbox> {
         self.covering.as_ref()
     }
 
     /// The detail text for a `NoCoveringBbox` refusal — **one function**, so `build_sql`,
     /// [`Self::build_index_observed`] and [`Self::build_row_group_index_observed`] state the same
-    /// fact whether the file declares no covering at all or declares one this engine cannot
-    /// address (12.1(d)). `why` is call-site prose appended to the shared fact, e.g. `", so there
-    /// is nothing to index in this slice"` — empty where a call site adds nothing of its own.
+    /// fact whether the file declares no covering at all or declares one this engine cannot use
+    /// (12.1(d); a path the schema does not resolve). `why` is call-site prose appended to the
+    /// shared fact, e.g. `", so there is nothing to index in this slice"` — empty where a call
+    /// site adds nothing of its own.
     /// Byte-identical to today's text in the ordinary (no covering declared) case, so this changes
     /// nothing declared unchanged (§10 Amendment 12, 12.3).
     pub(crate) fn no_covering_bbox_detail(&self, why: &str) -> String {
@@ -987,7 +1014,7 @@ impl Dataset {
         self.envelope.admission()
     }
 
-    /// Whether this dataset is a **geographic-degrees instance** — the proposed ADR-013 Amendment 1.
+    /// Whether this dataset is a **geographic-degrees instance** — ADR-013 Amendment 1 (Accepted).
     ///
     /// **Answered from the recorded unit and from nothing else.** True exactly when admission
     /// established `degree` on both coordinate axes, from either of the two sources §14 (items I
@@ -1002,7 +1029,7 @@ impl Dataset {
     /// ([`crate::geoparquet::CoordinateUnitSource`]), so this answer never hides a rule-defaulted
     /// file among declared-degrees ones.
     ///
-    /// It is **not** answered from the CRS identifier. That draft's block-on-sight 8 forbids
+    /// It is **not** answered from the CRS identifier. ADR-013 Amendment 1, item 2 forbids
     /// inferring a unit from an identifier string, and `docs/05` forbids deciding CRS identity by
     /// name comparison at all — so changing a definition's `id` and nothing else cannot change this
     /// answer, and a test asserts exactly that.
@@ -1167,7 +1194,7 @@ fn sanity_check(
     conn: &Connection,
     path: &str,
     geo: &GeoMeta,
-    schema: &SchemaRef,
+    covering_finding: Option<&CoveringFinding>,
     crs_provenance: crate::geoparquet::CrsProvenance,
     semantics: &crate::geoparquet::FormatSemantics,
     cancel: &CancelToken,
@@ -1217,33 +1244,28 @@ fn sanity_check(
         ));
     };
 
-    // **12.1(d)'s covering row, checked before R-S3.** A path segment that contains U+0000 is a
-    // distinct fact from "the schema does not contain it" (R-S3 below, unchanged for k3): no
-    // schema comparison covers a struct-child segment, so this runs directly against the declared
-    // path text (12.1(c)'s second bullet). Test N-14.
-    if let Some(reason) = covering_not_addressable_reason(covering) {
-        return Ok((SanityLevel::NotChecked, format!("{reason}. Not checked")));
-    }
-
-    // R-S3: a covering may name a column that is not in the file. Today such a file opens and
-    // fails later at query; this cut leaves that behaviour alone and records the level as `none`
-    // with the reason, rather than making open refuse — that would be a user-visible behaviour
-    // change, and it is on the preregistration's human list (§12d), not taken here.
-    let paths = [
-        &covering.xmin,
-        &covering.ymin,
-        &covering.xmax,
-        &covering.ymax,
-    ];
-    if let Some(missing) = paths.iter().find(|p| !field_path_exists(schema, p)) {
-        return Ok((
-            SanityLevel::NotChecked,
-            format!(
-                "the covering names `{}`, which the file's schema does not contain, so no level \
-                 could be decided from it. Not checked",
-                missing.0.join(".")
-            ),
-        ));
+    // **The covering's usability was decided once, at open, by [`judge_covering`]**, and arrives
+    // here as `covering_finding`; this function decides nothing about it. The two reasons below are
+    // the ones it recorded before that decision moved, at the position in this order they held.
+    // 12.1(d)'s covering row first: a path segment that contains U+0000 is a distinct fact from
+    // "the schema does not contain it" (test N-14).
+    match covering_finding {
+        Some(CoveringFinding::NotAddressable { reason }) => {
+            return Ok((SanityLevel::NotChecked, format!("{reason}. Not checked")));
+        }
+        // R-S3: a covering may name a column that is not in the file. The open still succeeds and
+        // the level is recorded as `none` with the reason; the covering is dropped from use at
+        // open, so a bbox query refuses `NoCoveringBbox` before any lease.
+        Some(CoveringFinding::Absent { path: missing }) => {
+            return Ok((
+                SanityLevel::NotChecked,
+                format!(
+                    "the covering names `{missing}`, which the file's schema does not contain, so \
+                     no level could be decided from it. Not checked"
+                ),
+            ));
+        }
+        None => {}
     }
 
     // 2. Parquet statistics on those columns — footer-resident as well.
@@ -1346,7 +1368,7 @@ fn convict_or_record(
 /// directly (`exported: None`), because a struct child has no independent DESCRIBE name to
 /// reconcile it against the way a top-level column does (`probe_schema`). `None` when every
 /// segment is free of U+0000 — including where a segment simply does not exist in the file (R-S3,
-/// k3's own case, decided separately by `field_path_exists`).
+/// k3's own case, decided separately by `judge_covering`).
 fn covering_not_addressable_reason(covering: &CoveringBbox) -> Option<String> {
     let paths = [
         &covering.xmin,
@@ -1366,13 +1388,71 @@ fn covering_not_addressable_reason(covering: &CoveringBbox) -> Option<String> {
     ))
 }
 
+/// What [`judge_covering`] found wrong with a declared covering. Not a `pub` type: it exists to
+/// carry one decision from `open_inner` to the two places that record it.
+enum CoveringFinding {
+    /// A segment of a declared path contains U+0000 (12.1(d)). `reason` is the text recorded.
+    NotAddressable { reason: String },
+    /// The first of xmin, ymin, xmax, ymax, in that order, whose path the file's schema does not
+    /// resolve. `path` is the declared segments joined by `.`, as declared.
+    Absent { path: String },
+}
+
+impl CoveringFinding {
+    /// The fact a `NoCoveringBbox` refusal names — stored in `covering_unusable_reason`. States
+    /// what the engine knows about the covering and nothing about what a caller should do.
+    fn detail(&self) -> String {
+        match self {
+            Self::NotAddressable { reason } => reason.clone(),
+            Self::Absent { path } => format!(
+                "the covering names `{}`, which the file's schema does not contain",
+                render_visible_escape(path)
+            ),
+        }
+    }
+}
+
+/// The one decision on whether a declared covering is usable (the covering-names-missing-column
+/// form, §2a), taken once at open, from the declared paths and the resident schema alone.
+/// **It takes no `Connection` and issues no statement.**
+///
+/// A U+0000 path is checked first, unchanged; otherwise the first of the four paths that the
+/// schema walk does not resolve; otherwise `None` (no declared covering, or a usable one).
+fn judge_covering(covering: Option<&CoveringBbox>, schema: &SchemaRef) -> Option<CoveringFinding> {
+    let covering = covering?;
+    if let Some(reason) = covering_not_addressable_reason(covering) {
+        return Some(CoveringFinding::NotAddressable { reason });
+    }
+    [
+        &covering.xmin,
+        &covering.ymin,
+        &covering.xmax,
+        &covering.ymax,
+    ]
+    .into_iter()
+    .find(|p| !field_path_exists(schema, p))
+    .map(|p| CoveringFinding::Absent {
+        path: p.0.join("."),
+    })
+}
+
 /// Whether a covering path resolves to a real field, walking struct children.
+///
+/// Each segment is compared with **ASCII case-insensitive equality**, at the top level and at
+/// every child: that is the rule the P0 showed the pinned DuckDB binder applying (the
+/// covering-names-missing-column form, Amendment 1, item 4). The P0 showed a top-level name
+/// differing by a non-ASCII letter's case not binding; a non-ASCII child name is outside what
+/// this piece claims. It is DuckDB's rule, never a filesystem's or an OS's.
 fn field_path_exists(schema: &SchemaRef, path: &crate::geoparquet::FieldPath) -> bool {
     let mut segments = path.0.iter();
     let Some(first) = segments.next() else {
         return false;
     };
-    let Some(field) = schema.fields().iter().find(|f| f.name() == first) else {
+    let Some(field) = schema
+        .fields()
+        .iter()
+        .find(|f| f.name().eq_ignore_ascii_case(first))
+    else {
         return false;
     };
     let mut current = field.clone();
@@ -1380,7 +1460,10 @@ fn field_path_exists(schema: &SchemaRef, path: &crate::geoparquet::FieldPath) ->
         let DataType::Struct(children) = current.data_type() else {
             return false;
         };
-        match children.iter().find(|f| f.name() == segment) {
+        match children
+            .iter()
+            .find(|f| f.name().eq_ignore_ascii_case(segment))
+        {
             Some(child) => current = child.clone(),
             None => return false,
         }
@@ -1645,7 +1728,7 @@ fn admit_identity(
     };
 
     let Some(field) = schema.fields().iter().find(|f| f.name() == &column) else {
-        // **R-I3 — the session tier** (§2d; the proposed ADR-016 Amendment 1, point 1). This is
+        // **R-I3 — the session tier** (§2d; ADR-016 Amendment 1, item 1). This is
         // where `identity_unusable` used to be raised for a single-file keyless source. It is not
         // raised here any more: the dataset opens with identity = (dataset-session generation,
         // `file_row_number`).

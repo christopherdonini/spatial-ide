@@ -134,7 +134,8 @@ describe("SKP v0 shared fixtures", () => {
     expect(res.crs.definition_provenance).toBeNull(); // this fixture's source is "file"
     assertExactKeys(
       res.geometry,
-      ["column", "encoding", "coordinate_layout", "frame"],
+      // skp/0.9, ADR-034: `declared_types` beside the engine's `encoding`
+      ["column", "encoding", "declared_types", "coordinate_layout", "frame"],
       "describe response .geometry"
     );
     assertExactKeys(
@@ -185,6 +186,42 @@ describe("SKP v0 shared fixtures", () => {
     expect(res.coverage).toEqual({ state: "watching", reason: null });
     expect(res.checks).toEqual({ state: "full", components: [] });
     expect(res.session_end).toBeNull();
+  });
+
+  // MP-1, skp/0.9, ADR-034 Decision 3 (`engine/MULTIPOLYGON-MP1-PREREGISTRATION.md` section 4, row
+  // P-2, TypeScript side). `declared_types` is the file's declaration, on every describe fixture:
+  // a populated list keeps its order and case, and the empty list and the absent key stay two
+  // distinct states through a JSON round trip (the Rust side's `declared_types_keeps_a_populated_
+  // list_and_round_trips_empty_as_empty_and_absent_as_null` is the same row).
+  // RECORDED MUTATION: remove the `declared_types` line from `v0-describe-response-caller-
+  // asserted.json`. This test fails by name at the key-set check, and so does the Rust
+  // `describe_response_with_a_caller_asserted_crs_round_trips`.
+  // Observed over `5c3a9e09` on the uncommitted tree of the wire commit: this test FAILED by name
+  // with the mutation applied, as did `describe_response_with_a_caller_asserted_crs_round_trips`,
+  // then reverted.
+  it("describe fixtures carry declared_types, and an empty list and an absent key stay distinct (skp/0.9)", () => {
+    const plain = loadFixture<DescribeResponse>("v0-describe-response");
+    const asserted = loadFixture<DescribeResponse>("v0-describe-response-caller-asserted");
+    const ordinal = loadFixture<DescribeResponse>("v0-describe-response-session-ordinal");
+    for (const [name, res] of [
+      ["v0-describe-response", plain],
+      ["v0-describe-response-caller-asserted", asserted],
+      ["v0-describe-response-session-ordinal", ordinal],
+    ] as const) {
+      assertExactKeys(
+        res.geometry,
+        ["column", "encoding", "declared_types", "coordinate_layout", "frame"],
+        `${name} .geometry`
+      );
+    }
+    expect(plain.geometry.declared_types).toEqual(["Polygon"]);
+    expect(asserted.geometry.declared_types).toEqual(["polygon"]); // case as written
+    for (const wire of [[], null] as const) {
+      const geometry = { ...plain.geometry, declared_types: wire };
+      const back = JSON.parse(JSON.stringify(geometry)) as typeof geometry;
+      expect(Object.keys(back)).toContain("declared_types");
+      expect(back.declared_types).toEqual(wire);
+    }
   });
 
   // Mutation: merge `coverage` and `checks` into one field. Expected failure: this test fails to

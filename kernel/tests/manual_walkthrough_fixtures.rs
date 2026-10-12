@@ -181,11 +181,10 @@ fn generate_the_no_crs_refusing_fixture() {
 /// `geo` key's own `bbox` member (no data read), the same construction
 /// `engine/tests/admission_format_semantics.rs`'s own F-2 test uses.
 ///
-/// Unlike `no-crs-refused.parquet` (F-3, explicit `"crs": null`), no CRS-assertion remediation
-/// form is asserted to render for this refusal here — `AdmissionPanel.tsx`'s `formFamilyForCode`
-/// starts a form family only for `engine.crs_undeclared`/`engine.identity_unusable`, not for this
-/// code, so whether this refusal offers a remediation form is a shell-surface question left to
-/// Brief A's later parts, not this fixture's own claim.
+/// Like `no-crs-refused.parquet` (F-3, explicit `"crs": null`), this refusal offers the CRS
+/// assertion form in the shell: `AdmissionPanel.tsx`'s `formFamilyForCode` starts the CRS family
+/// for `engine.format_default_contradicted` as well as `engine.crs_undeclared`. `ABSENTCRS'` in
+/// `frontends/shell/e2e/regression.mjs` submits an assertion through that form.
 #[test]
 #[ignore = "generates a real file for the manual walkthrough; not part of the default suite"]
 fn generate_the_absent_crs_contradicted_fixture() {
@@ -204,15 +203,284 @@ fn generate_the_absent_crs_contradicted_fixture() {
     println!("wrote {} ({} features)", path.display(), facts.features);
 }
 
-/// The "missing identity" refusing file: the shape most real GeoParquet has per ADR-016's own
-/// Context — a unique key under a different name (`parcel_key`) and **no `id` column at all**
-/// (`IdentityMode::ForeignKeyColumn`), refused as `EngineError::IdentityUnusable` (SKP code
-/// `engine.identity_unusable`) until a mapping is declared — a cut-2 remediation this build does
-/// not offer.
+/// The multipolygon file for the shell E2E's MP' step (`engine/MULTIPOLYGON-MP1-PREREGISTRATION.md`
+/// section 3, fixture F-1; ADR-034): LV95, declared `["MultiPolygon"]`, three MultiPolygon rows of
+/// three, one and two parts (the second part of row 0 with a hole), no covering. It is what
+/// `spatial_engine::fixture::multipolygon_f1_rows` writes, so the shell E2E opens the same shape the
+/// engine's own tests and the committed batches (BF-1) carry. Admitted as `geoarrow.multipolygon`;
+/// publishing it is refused by name (ADR-034 Decision 10).
 #[test]
 #[ignore = "generates a real file for the manual walkthrough; not part of the default suite"]
-fn generate_the_missing_identity_refusing_fixture() {
-    let path = dir().join("missing-identity-refused.parquet");
+fn generate_the_multipolygon_f1_fixture() {
+    use spatial_engine::fixture::{multipolygon_f1_rows, DeclaredTypes, GeometryMode, E_LO, N_LO};
+    let path = dir().join("multipolygon-f1.parquet");
+    let facts = write_geoparquet(
+        &path,
+        &FixtureSpec {
+            geometry: GeometryMode::Rows(multipolygon_f1_rows([E_LO, N_LO], 10.0)),
+            with_covering_bbox: false,
+            declared_types: DeclaredTypes::Json(r#"["MultiPolygon"]"#.to_string()),
+            ..Default::default()
+        },
+    )
+    .expect("write the multipolygon F-1 fixture");
+    println!("wrote {} ({} features)", path.display(), facts.features);
+}
+
+/// The points file for the shell E2E's PT' step and Part P (`engine/GEOMETRY-POINTS-PREREGISTRATION.md`
+/// section 3, fixture P-1 with its covering; ADR-034): LV95, declared `["Point"]`, six Point rows
+/// from `spatial_engine::fixture::point_p1_rows`, **with a covering**, so a viewport query reaches
+/// the canvas (a file with no covering meets `engine.no_covering_bbox` there). Admitted as
+/// `geoarrow.point`; publishing it is refused by name (ADR-034 Decision 10).
+#[test]
+#[ignore = "generates a real file for the manual walkthrough; not part of the default suite"]
+fn generate_the_point_p1_fixture() {
+    use spatial_engine::fixture::{
+        point_p1_rows_with_bounds, DeclaredTypes, GeometryMode, E_LO, N_LO,
+    };
+    let path = dir().join("point-p1.parquet");
+    let facts = write_geoparquet(
+        &path,
+        &FixtureSpec {
+            geometry: GeometryMode::RowsWithBounds(point_p1_rows_with_bounds([E_LO, N_LO], 10.0)),
+            with_covering_bbox: true,
+            declared_types: DeclaredTypes::Json(r#"["Point"]"#.to_string()),
+            ..Default::default()
+        },
+    )
+    .expect("write the point P-1 fixture");
+    println!("wrote {} ({} features)", path.display(), facts.features);
+}
+
+/// The pile-of-points file for Part P's row P2 (`engine/GEOMETRY-POINTS-PREREGISTRATION.md`
+/// Amendment 3, item 7): LV95, declared `["Point"]`, with a covering. It holds P-1's six points and a
+/// pile of five more, each `d` x 1 cm east and north of P-1's second point (`d` = 1 to 5), so the
+/// pile's own spread is at most about 7 cm and the extent is P-1's own. With eleven points over that
+/// extent (about 20.6 m x 9.9 m), `averagePointSpacing` is about 4.30 m, so the 9 px refusal starts
+/// below about 2.09 px per metre (zoom 1.06), and above it the pile's five 4 px symbols overlap (a
+/// spread of about 0.07 m x 2^zoom px, under 8 px up to zoom 6.8) while the average spacing stays at or
+/// above 9 px. No far-apart point is needed.
+#[test]
+#[ignore = "generates a real file for the manual walkthrough; not part of the default suite"]
+fn generate_the_point_pile_fixture() {
+    use spatial_engine::fixture::{
+        encode_point, point_p1, DeclaredTypes, GeometryMode, E_LO, N_LO,
+    };
+    let mut points = point_p1([E_LO, N_LO], 10.0);
+    let base = points[1];
+    for d in 1..=5u32 {
+        let step = f64::from(d) * 0.01;
+        points.push([base[0] + step, base[1] + step]);
+    }
+    let rows = points
+        .iter()
+        .map(|p| (encode_point(p[0], p[1]), [p[0], p[1], p[0], p[1]]))
+        .collect();
+    let path = dir().join("point-pile.parquet");
+    let facts = write_geoparquet(
+        &path,
+        &FixtureSpec {
+            geometry: GeometryMode::RowsWithBounds(rows),
+            with_covering_bbox: true,
+            declared_types: DeclaredTypes::Json(r#"["Point"]"#.to_string()),
+            ..Default::default()
+        },
+    )
+    .expect("write the point pile fixture");
+    println!("wrote {} ({} features)", path.display(), facts.features);
+}
+
+/// The LineString-declared file of L-9, for Part T's T6 (`engine/GEOMETRY-LINES-PREREGISTRATION.md`
+/// section 3): LV95, `geometry_types` declares `["LineString"]`. Since the lines cut the open is
+/// admitted, as `geoarrow.linestring`, and the stream stops at row 0 with `engine.wkb`, because the
+/// rows are P-1's points (WKB type 1) and a linestring open reads WKB type 2 only. (Before the lines
+/// cut the open was refused with the sighted `engine.geo_metadata` template.)
+#[test]
+#[ignore = "generates a real file for the manual walkthrough; not part of the default suite"]
+fn generate_the_declared_linestring_fixture() {
+    use spatial_engine::fixture::{point_p1_rows, DeclaredTypes, GeometryMode, E_LO, N_LO};
+    let path = dir().join("declared-linestring.parquet");
+    let facts = write_geoparquet(
+        &path,
+        &FixtureSpec {
+            geometry: GeometryMode::Rows(point_p1_rows([E_LO, N_LO], 10.0)),
+            with_covering_bbox: false,
+            declared_types: DeclaredTypes::Json(r#"["LineString"]"#.to_string()),
+            ..Default::default()
+        },
+    )
+    .expect("write the declared-LineString fixture");
+    println!("wrote {} ({} features)", path.display(), facts.features);
+}
+
+/// The Polygon-and-Point file for Part P's wording step (P7): LV95, `geometry_types` declares
+/// `["Polygon", "Point"]`, and the open is refused as `engine.geo_metadata` with the mixed-kinds
+/// `[P6 placeholder]` detail (ruled in question round 62, item 2). The rows are P-1's points: the
+/// refusal is at the declaration and never reaches a row.
+#[test]
+#[ignore = "generates a real file for the manual walkthrough; not part of the default suite"]
+fn generate_the_declared_polygon_and_point_fixture() {
+    use spatial_engine::fixture::{point_p1_rows, DeclaredTypes, GeometryMode, E_LO, N_LO};
+    let path = dir().join("declared-polygon-and-point.parquet");
+    let facts = write_geoparquet(
+        &path,
+        &FixtureSpec {
+            geometry: GeometryMode::Rows(point_p1_rows([E_LO, N_LO], 10.0)),
+            with_covering_bbox: false,
+            declared_types: DeclaredTypes::Json(r#"["Polygon","Point"]"#.to_string()),
+            ..Default::default()
+        },
+    )
+    .expect("write the declared-Polygon-and-Point fixture");
+    println!("wrote {} ({} features)", path.display(), facts.features);
+}
+
+/// The lines file for the shell E2E's LN' step and Part T's T1, T2, T4 and T5
+/// (`engine/GEOMETRY-LINES-PREREGISTRATION.md` section 3, fixture L-1 with its covering; ADR-034):
+/// LV95, declared `["LineString"]`, five LineString rows from `spatial_engine::fixture::line_l1_rows_with_bounds`,
+/// rows 1 and 3 crossing, **with a covering**, so a viewport query reaches the canvas (a file with
+/// no covering meets `engine.no_covering_bbox` there). Admitted as `geoarrow.linestring`;
+/// publishing it is refused by name (ADR-034 Decision 10).
+#[test]
+#[ignore = "generates a real file for the manual walkthrough; not part of the default suite"]
+fn generate_the_line_l1_fixture() {
+    use spatial_engine::fixture::{
+        line_l1_rows_with_bounds, DeclaredTypes, GeometryMode, E_LO, N_LO,
+    };
+    let path = dir().join("line-l1.parquet");
+    let facts = write_geoparquet(
+        &path,
+        &FixtureSpec {
+            geometry: GeometryMode::RowsWithBounds(line_l1_rows_with_bounds([E_LO, N_LO], 10.0)),
+            with_covering_bbox: true,
+            declared_types: DeclaredTypes::Json(r#"["LineString"]"#.to_string()),
+            ..Default::default()
+        },
+    )
+    .expect("write the line L-1 fixture");
+    println!("wrote {} ({} features)", path.display(), facts.features);
+}
+
+/// The multilinestring file for Part T's T3
+/// (`engine/GEOMETRY-LINES-PREREGISTRATION.md` section 3, fixture ML-1 with its covering): LV95,
+/// declared `["MultiLineString"]`, three rows of 2, 1 and 3 parts from
+/// `spatial_engine::fixture::multilinestring_ml1_rows_with_bounds`, **with a covering**. Admitted as
+/// `geoarrow.multilinestring`; publishing it is refused by name.
+#[test]
+#[ignore = "generates a real file for the manual walkthrough; not part of the default suite"]
+fn generate_the_multilinestring_ml1_fixture() {
+    use spatial_engine::fixture::{
+        multilinestring_ml1_rows_with_bounds, DeclaredTypes, GeometryMode, E_LO, N_LO,
+    };
+    let path = dir().join("multilinestring-ml1.parquet");
+    let facts = write_geoparquet(
+        &path,
+        &FixtureSpec {
+            geometry: GeometryMode::RowsWithBounds(multilinestring_ml1_rows_with_bounds(
+                [E_LO, N_LO],
+                10.0,
+            )),
+            with_covering_bbox: true,
+            declared_types: DeclaredTypes::Json(r#"["MultiLineString"]"#.to_string()),
+            ..Default::default()
+        },
+    )
+    .expect("write the multilinestring ML-1 fixture");
+    println!("wrote {} ({} features)", path.display(), facts.features);
+}
+
+/// The GeometryCollection-declared file for Part T's T6 (`engine/GEOMETRY-LINES-PREREGISTRATION.md`
+/// section 3, L-6): LV95, `geometry_types` declares `["GeometryCollection"]`, and the open is
+/// refused as `engine.geo_metadata` with the sighted template, whose readable-set clause renders
+/// five types. The rows are P-1's points: the refusal is at the declaration and never reaches a row.
+#[test]
+#[ignore = "generates a real file for the manual walkthrough; not part of the default suite"]
+fn generate_the_declared_geometrycollection_fixture() {
+    use spatial_engine::fixture::{point_p1_rows, DeclaredTypes, GeometryMode, E_LO, N_LO};
+    let path = dir().join("declared-geometrycollection.parquet");
+    let facts = write_geoparquet(
+        &path,
+        &FixtureSpec {
+            geometry: GeometryMode::Rows(point_p1_rows([E_LO, N_LO], 10.0)),
+            with_covering_bbox: false,
+            declared_types: DeclaredTypes::Json(r#"["GeometryCollection"]"#.to_string()),
+            ..Default::default()
+        },
+    )
+    .expect("write the declared-GeometryCollection fixture");
+    println!("wrote {} ({} features)", path.display(), facts.features);
+}
+
+/// The Polygon-and-LineString file for Part T's T6 (`engine/GEOMETRY-LINES-PREREGISTRATION.md`
+/// section 3, L-3): LV95, `geometry_types` declares `["Polygon", "LineString"]`, and the open is
+/// refused as `engine.geo_metadata` with the mixed-kinds `[P6 placeholder]` detail, its span naming
+/// the kinds present (polygonal and line; question round 63, OPEN-2). The rows are L-1's lines: the
+/// refusal is at the declaration and never reaches a row.
+#[test]
+#[ignore = "generates a real file for the manual walkthrough; not part of the default suite"]
+fn generate_the_declared_polygon_and_linestring_fixture() {
+    use spatial_engine::fixture::{line_l1_rows, DeclaredTypes, GeometryMode, E_LO, N_LO};
+    let path = dir().join("declared-polygon-and-linestring.parquet");
+    let facts = write_geoparquet(
+        &path,
+        &FixtureSpec {
+            geometry: GeometryMode::Rows(line_l1_rows([E_LO, N_LO], 10.0)),
+            with_covering_bbox: false,
+            declared_types: DeclaredTypes::Json(r#"["Polygon","LineString"]"#.to_string()),
+            ..Default::default()
+        },
+    )
+    .expect("write the declared-Polygon-and-LineString fixture");
+    println!("wrote {} ({} features)", path.display(), facts.features);
+}
+
+/// **[C-1]** F-1 with a covering, for Part S's S2 note: the same three
+/// MultiPolygon rows as `generate_the_multipolygon_f1_fixture` (LV95, declared `["MultiPolygon"]`),
+/// each with the covering bounds of its own parts, so a viewport query reaches the canvas. F-1's own
+/// generator writes no covering and meets `engine.no_covering_bbox` there (Amendment 1, item 6 of
+/// the points form). Admitted as `geoarrow.multipolygon`; publishing it is refused by name.
+#[test]
+#[ignore = "generates a real file for the manual walkthrough; not part of the default suite"]
+fn generate_the_multipolygon_f1_with_covering_fixture() {
+    use spatial_engine::fixture::{
+        encode_multipolygon, multipolygon_f1, DeclaredTypes, GeometryMode, E_LO, N_LO,
+    };
+    let rows = multipolygon_f1([E_LO, N_LO], 10.0)
+        .iter()
+        .map(|parts| {
+            let (mut xmin, mut ymin) = (f64::INFINITY, f64::INFINITY);
+            let (mut xmax, mut ymax) = (f64::NEG_INFINITY, f64::NEG_INFINITY);
+            for p in parts.iter().flatten().flatten() {
+                xmin = xmin.min(p[0]);
+                ymin = ymin.min(p[1]);
+                xmax = xmax.max(p[0]);
+                ymax = ymax.max(p[1]);
+            }
+            (encode_multipolygon(parts), [xmin, ymin, xmax, ymax])
+        })
+        .collect();
+    let path = dir().join("multipolygon-f1-with-covering.parquet");
+    let facts = write_geoparquet(
+        &path,
+        &FixtureSpec {
+            geometry: GeometryMode::RowsWithBounds(rows),
+            with_covering_bbox: true,
+            declared_types: DeclaredTypes::Json(r#"["MultiPolygon"]"#.to_string()),
+            ..Default::default()
+        },
+    )
+    .expect("write the multipolygon F-1 with-covering fixture");
+    println!("wrote {} ({} features)", path.display(), facts.features);
+}
+
+/// The "no id column" file: the shape most real GeoParquet has per ADR-016's own Context — a unique
+/// key under a different name (`parcel_key`) and **no `id` column at all**
+/// (`IdentityMode::ForeignKeyColumn`). A single file of this shape opens on the session tier
+/// (R-I3, ADR-016 Amendment 1). Renamed from `missing-identity-refused.parquet`; bytes unchanged.
+#[test]
+#[ignore = "generates a real file for the manual walkthrough; not part of the default suite"]
+fn generate_the_no_id_column_fixture() {
+    let path = dir().join("no-id-column.parquet");
     let facts = write_geoparquet(
         &path,
         &FixtureSpec {
@@ -222,7 +490,27 @@ fn generate_the_missing_identity_refusing_fixture() {
             ..Default::default()
         },
     )
-    .expect("write the missing-identity refusing fixture");
+    .expect("write the no-id-column fixture");
+    println!("wrote {} ({} features)", path.display(), facts.features);
+}
+
+/// The "string id" refusing file: a text `id` (`key-{n}`) beside a unique `parcel_key`
+/// (`IdentityMode::StringIdsBesideParcelKey`). A plain open still refuses as
+/// `engine.identity_unusable` (the `id` type cannot serve) and offers `parcel_key` to declare.
+#[test]
+#[ignore = "generates a real file for the manual walkthrough; not part of the default suite"]
+fn generate_the_string_id_refusing_fixture() {
+    let path = dir().join("string-id-refused.parquet");
+    let facts = write_geoparquet(
+        &path,
+        &FixtureSpec {
+            features: 100,
+            avg_vertices: 12,
+            identity: IdentityMode::StringIdsBesideParcelKey,
+            ..Default::default()
+        },
+    )
+    .expect("write the string-id refusing fixture");
     println!("wrote {} ({} features)", path.display(), facts.features);
 }
 
@@ -254,17 +542,13 @@ fn generate_the_dupkey_refusing_fixture() {
     println!("wrote {} ({} features)", path.display(), facts.features);
 }
 
-/// The "both remediations needed" file (`NEXT-CUT.md` admission-remediation cut, P5's `BOTHNEEDED'`
-/// E2E step and Part I's I5 — the reviewer's MUST-FIX-2 loop case, permanently encoded): **neither**
-/// a CRS nor a stable identity is admissible without an explicit operator act — an explicit
-/// `"crs": null` (`CrsMode::ExplicitNull`) **and** no `id` column, only
-/// `parcel_key` (`IdentityMode::ForeignKeyColumn`, the same mode `missing-identity-refused.parquet`
-/// uses) — combined in one file for the first time; both fields are independent `FixtureSpec`
-/// members, so no engine-side change was needed to write this combination.
-/// `engine::dataset::open_inner` admits CRS before identity (`NEXT-CUT.md`'s own I11: "footer read
-/// vs full scan"), so a plain open of this file refuses CRS first; asserting a CRS alone then
-/// refuses identity; only a request carrying BOTH admits — the combined-request path the P3b
-/// reviewer fix (options accumulation, MF2) exists to make reachable in the real UI.
+/// The "no CRS, no id" file (`NEXT-CUT.md` admission-remediation cut, P5's `BOTHNEEDED'` E2E step
+/// (a)): an explicit `"crs": null` (`CrsMode::ExplicitNull`) **and** no `id` column, only
+/// `parcel_key` (`IdentityMode::ForeignKeyColumn`, the mode `no-id-column.parquet` uses). A plain
+/// open refuses CRS first (`engine::dataset::open_inner` admits CRS before identity); with the CRS
+/// asserted it admits on the session tier (R-I3, ADR-016 Amendment 1). Renamed from
+/// `bothneeded-refused.parquet`, which stopped needing both; the both-needed loop (CRS, then
+/// identity, then the combined request) is `no-crs-string-id-refused.parquet`'s.
 ///
 /// **Re-aimed, same ruling and same class as `no-crs-refused.parquet`
 /// (`engine/ADMISSION-PREREGISTRATION.md` §4 F-2/F-3).** This generator used to write
@@ -278,8 +562,8 @@ fn generate_the_dupkey_refusing_fixture() {
 /// `stepBothNeeded` checks and the form it requires correct — no change needed there.
 #[test]
 #[ignore = "generates a real file for the manual walkthrough; not part of the default suite"]
-fn generate_the_bothneeded_refusing_fixture() {
-    let path = dir().join("bothneeded-refused.parquet");
+fn generate_the_no_crs_no_id_refusing_fixture() {
+    let path = dir().join("no-crs-no-id-refused.parquet");
     let facts = write_geoparquet(
         &path,
         &FixtureSpec {
@@ -290,7 +574,28 @@ fn generate_the_bothneeded_refusing_fixture() {
             ..Default::default()
         },
     )
-    .expect("write the both-remediations-needed refusing fixture");
+    .expect("write the no-crs-no-id refusing fixture");
+    println!("wrote {} ({} features)", path.display(), facts.features);
+}
+
+/// The "both remediations needed" file: an explicit `"crs": null` and a text `id` beside a unique
+/// `parcel_key` (`IdentityMode::StringIdsBesideParcelKey`). A plain open refuses CRS; the CRS alone
+/// then refuses identity (the type); only a request carrying BOTH admits (MF2's loop case).
+#[test]
+#[ignore = "generates a real file for the manual walkthrough; not part of the default suite"]
+fn generate_the_no_crs_string_id_refusing_fixture() {
+    let path = dir().join("no-crs-string-id-refused.parquet");
+    let facts = write_geoparquet(
+        &path,
+        &FixtureSpec {
+            features: 100,
+            avg_vertices: 12,
+            crs_mode: CrsMode::ExplicitNull,
+            identity: IdentityMode::StringIdsBesideParcelKey,
+            ..Default::default()
+        },
+    )
+    .expect("write the no-crs-string-id refusing fixture");
     println!("wrote {} ({} features)", path.display(), facts.features);
 }
 

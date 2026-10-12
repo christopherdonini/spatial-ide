@@ -20,12 +20,15 @@
 // doing so would prove something *about the module*, not about what an operator actually sees.
 //
 // **Grouping technique (GROUP')**: `consoleViewModel.ts`'s `groupConsecutiveEntries` coalesces only
-// CONSECUTIVE same-kind-same-name entries -- so a fresh group forms cleanly only when nothing else
-// gets recorded between the 3 identical `queryWithFilter` calls this suite issues. The step order
-// below is deliberate: REFUSAL' (which also fires an internal one-shot recovery re-issue,
-// `App.tsx::applyFilter`'s own doc comment) and CLASSB'/CLASSC' (a different `ConsoleEntry` kind
-// each) all run BEFORE GROUP', so the 3 queries GROUP' issues are the only viewport_query entries
-// with nothing else between them by the time it runs.
+// CONSECUTIVE same-kind-same-name entries. Re-aimed (E2E-STALE-EXPECTATIONS-REAIM-PREREGISTRATION.md
+// section 2.3): the shipped arm is the candidate arm, where tile queries and session-log lines are also
+// recorded, so GROUP' no longer counts new group headers. It asserts the group by what the entries are:
+// exactly 3 residential UNTILED `viewport_query` rows (`bbox` null, the primary attempt of each Apply), found by a
+// bounded poll, then the grouping rule inside their window (Amendment 2 item 2, round 71): each group reads `×N` for
+// its rows, no run of identical entries is split, and some group shows 2+ rows (else "grouping not exercised").
+// REFUSAL' polls with a declared bound for the same reason (the refused entry reaches the DOM after the
+// hook returns). Neither suite step pins an arm: `main` reads the arm back and stops unless it is the
+// shipped one.
 //
 // Fixture: `filter-zoned.parquet` (2,000 features, declares CRS + native identity -- admits
 // cleanly, already used by filter.mjs/filter-panel.mjs/publish.mjs) -- regenerate: `cargo test -p
@@ -58,6 +61,14 @@ const REGEN_FIXTURE =
 // convention (see admission-remediation.mjs's own top comment for the same pattern with
 // `MAX_CRS_DEFINITION_BYTES`). Both are load-bearing for COPYTRUNC's own arithmetic below.
 const MAX_ENTRY_RENDER_BYTES = 80_000;
+// REFUSAL'/GROUP' polls (section 7 of the re-aim form): a CEILING on waiting and the poll's mechanism,
+// not latency claims (ADR-018). MAX_CONSOLE_ENTRIES mirrors `console/recorder.ts`'s ring size (the
+// sibling-file convention; this file imports nothing from `src/console/`), for GROUP''s capacity check.
+const CONSOLE_POLL_BOUND_MS = 5000;
+const CONSOLE_POLL_INTERVAL_MS = 100;
+const MAX_CONSOLE_ENTRIES = 256;
+// The arm this suite runs on is the one that ships (`residency/residencyArm.ts`); nothing here sets one.
+const SHIPPED_ARM = "candidate";
 // Mirrors `crsAssertionState.ts`'s/`engine::crs::MAX_CRS_DEFINITION_BYTES` -- the REAL
 // `CrsAssertionForm` refuses to even enable Submit past this (admission-remediation.mjs's
 // OVERBOUND' step proves that client-side gate); the kernel refuses the wire request past it too.
@@ -214,6 +225,80 @@ async function readClassAEntries(page) {
   );
 }
 
+/** Polls `read()` until `done(value)` holds or `CONSOLE_POLL_BOUND_MS` elapses. Returns the last value. */
+async function pollConsole(read, done) {
+  const start = Date.now();
+  while (true) {
+    const last = await read();
+    if (done(last)) return { ok: true, last };
+    if (Date.now() - start >= CONSOLE_POLL_BOUND_MS) return { ok: false, last };
+    await sleep(CONSOLE_POLL_INTERVAL_MS);
+  }
+}
+
+/** The console disclosure's label, parsed: `Console — N actions (D dropped)`; `total` = count + dropped. */
+async function readConsoleLabel(page) {
+  const text = await page.evaluate(() => document.querySelector(".console-disclosure")?.textContent ?? "");
+  const m = /Console — (\d+) actions?(?: \((\d+) dropped\))?/.exec(text);
+  const count = m ? Number(m[1]) : null;
+  const dropped = m && m[2] ? Number(m[2]) : 0;
+  return { text, count, dropped, total: count === null ? null : count + dropped };
+}
+
+/** The console's items in DOM order after expanding every group: a direct child of `.console-entries` that is a
+ * single `.console-entry` or a `.console-group` (its header text, `aria-expanded`, and its shown rows). A row's
+ * `key` maps one-to-one onto the grouping key (consoleViewModel.ts): class A `a:` + its header; class B and C the
+ * class letter + the whole prose; else `u:` + its text. `i` numbers the rows in DOM order. */
+async function readItems(page) {
+  await expandAllGroups(page);
+  const items = await page.evaluate(() => {
+    const rowOf = (el) => {
+      const k = ["a", "b", "c"].find((x) => el.classList.contains(`console-entry-class-${x}`));
+      const t = (sel) => el.querySelector(sel)?.textContent ?? "";
+      const key = k === "a" ? `a:${t(".console-entry-header")}` : k ? `${k}:${t(".console-entry-prose")}` : `u:${el.textContent}`;
+      return { key, req: k === "a" ? t(".console-request-text") : null };
+    };
+    return Array.from(document.querySelector(".console-entries")?.children ?? [])
+      .filter((c) => c.matches(".console-group, .console-entry"))
+      .map((c) => {
+        const h = c.querySelector(".console-group-header");
+        const rows = Array.from(h ? c.querySelectorAll(".console-entry") : [c]).map(rowOf);
+        return { header: h?.textContent ?? null, expanded: h ? h.getAttribute("aria-expanded") === "true" : null, rows };
+      });
+  });
+  let i = 0;
+  for (const it of items) for (const r of it.rows) r.i = i++;
+  return items;
+}
+
+const RESIDENTIAL_PREDICATE = "zone = 'residential'";
+const GROUP_CALLS = 3; // the number of identical calls, and the expected residential-row count (Amendment 2 item 2)
+// Step 6 (c)'s failure name: byte-copied by script from round 71's ruling, never typed.
+const GROUP_NOT_EXERCISED = "GROUP': grouping not exercised";
+
+const itemKey = (it) => it.rows[0]?.key ?? null;
+
+/** A residential untiled row: class A `viewport_query` whose request has `bbox` null and the residential predicate
+ * (the primary attempt of an Apply, `App.tsx::applyFilter`; tile queries and the recovery re-issue carry a bbox). */
+function isResidentialUntiled(r) {
+  if (r.key !== "a:viewport_query") return false;
+  try {
+    const q = JSON.parse(r.req);
+    return q.bbox === null && q.filter?.predicate === RESIDENTIAL_PREDICATE;
+  } catch {
+    return false;
+  }
+}
+
+/** The window: the rows from the first residential untiled row to the last, with every item that holds them or lies
+ * between (`wi`: each item and `n`, its rows inside the window). `first` is the first item's index. */
+function windowOf(items) {
+  const res = items.flatMap((it, ii) => it.rows.filter(isResidentialUntiled).map((r) => ({ r, ii })));
+  const [lo, hi, first] = [res[0]?.r.i, res.at(-1)?.r.i, res[0]?.ii ?? -1];
+  const wi = res.length === 0 ? [] : items.slice(first, res.at(-1).ii + 1).map((it) => ({ it, n: it.rows.filter((r) => r.i >= lo && r.i <= hi).length }));
+  return { res, wi, lo, hi, first };
+}
+
 function callOpenPath(page, path, opts) {
   return page.evaluate(({ p, o }) => window.__SPATIAL_E2E__.openPath(p, o), { p: path, o: opts });
 }
@@ -361,7 +446,9 @@ async function stepHexlim(page, consoleHandle) {
 
   const parsed = JSON.parse(last.requestText);
   const actualKeys = Object.keys(parsed).sort();
-  const expectedKeys = ["bbox", "bbox_crs", "dataset", "filter", "limit", "skp"].sort();
+  // skp/0.6 added `columns`, always present (`protocol/skp/SKP-V0.md`); the shell's client sends `null`.
+  // Its value is not asserted here, only the key list.
+  const expectedKeys = ["bbox", "bbox_crs", "columns", "dataset", "filter", "limit", "skp"].sort();
   if (JSON.stringify(actualKeys) !== JSON.stringify(expectedKeys)) {
     throw new Error(`HEXLIM': key set mismatch. Expected ${JSON.stringify(expectedKeys)}, got ${JSON.stringify(actualKeys)}`);
   }
@@ -404,10 +491,19 @@ async function stepRefusal(page) {
     throw new Error(`REFUSAL': queryWithFilter("${predicate}") returned ${JSON.stringify(outcome)}, expected {kind:"refused"}`);
   }
 
-  const entries = await readClassAEntries(page);
-  const refusedVq = entries.filter((e) => e.header === "viewport_query" && e.outcome === "refused");
+  // The refused entry reaches the DOM after the hook returns (the candidate arm), so poll for it with a
+  // declared bound: a refused `viewport_query` row whose refusal block is rendered. Not a fixed sleep.
+  const refusedRows = (entries) => entries.filter((e) => e.header === "viewport_query" && e.outcome === "refused" && e.refusalCode !== null);
+  const polled = await pollConsole(() => readClassAEntries(page), (entries) => refusedRows(entries).length > 0);
+  if (!polled.ok) {
+    const label = await readConsoleLabel(page);
+    throw new Error(
+      `REFUSAL': no refused viewport_query class-A entry with its refusal block within the declared bound ` +
+        `(${CONSOLE_POLL_BOUND_MS}ms, polled every ${CONSOLE_POLL_INTERVAL_MS}ms); console label count=${label.count} dropped=${label.dropped}`
+    );
+  }
+  const refusedVq = refusedRows(polled.last);
   const last = refusedVq[refusedVq.length - 1];
-  if (!last) throw new Error("REFUSAL': no refused viewport_query class-A entry found in the DOM");
   if (last.refusalCode !== outcome.refusal.code) {
     throw new Error(`REFUSAL': DOM refusal code "${last.refusalCode}" !== queryWithFilter's own outcome.refusal.code "${outcome.refusal.code}"`);
   }
@@ -501,6 +597,12 @@ async function stepClassB(page) {
  * of the style edit's own entry.
  */
 async function stepClassC(page) {
+  // RECORDED MUTATION (milestone 1 re-aim), OBSERVED AT 65391e79b048f51f3ca4d7b5eeac7533f5b64639: the owner of the `style.setFillColor` row in
+  // src/console/surfaceRegistry.ts changed from "ADR-022 / ADR-023" to "docs/03". CLASSC' failed with "no .console-entry-class-c
+  // entry with an ADR-022 owner found after the style edit". Reverted; the worktree was clean before and after.
+  // Milestone 1 re-aim (the human's Decision A; PRE-REGISTRATION Amendment 6, OPEN-3 (a) as `style.mjs` has it): Style is
+  // the Inspector's own tab, hidden until selected, so a real fill needs a real click on the tab first.
+  await page.click("#inspector-tab-style");
   await page.evaluate(() => {
     const btn = document.querySelector(".style-disclosure");
     if (btn && btn.getAttribute("aria-expanded") !== "true") btn.click();
@@ -508,6 +610,9 @@ async function stepClassC(page) {
   const fillColorPresent = await page.evaluate(() => document.querySelector(".style-fill-color") !== null);
   if (!fillColorPresent) throw new Error("CLASSC': .style-fill-color not present after expanding the style panel");
   await page.fill(".style-fill-color", "#112233");
+  // Back to the Layer tab the suite's later steps were written with (REGRESS' re-runs `regression.mjs` on this same page); the
+  // one click above must change nothing else.
+  await page.click("#inspector-tab-layer");
 
   await expandAllGroups(page);
   const entries = await page.evaluate(() =>
@@ -531,72 +636,77 @@ async function stepClassC(page) {
 }
 
 /**
- * `GROUP'`: 3 identical `queryWithFilter` calls, awaited in sequence (each is a fresh mint, never
- * throttled by `VIEWPORT_QUERY_MIN_INTERVAL_MS`'s 120ms window since the previous call's own await
- * -- including its `dataPlaneAttach`/transport round trip -- already spans well past it) -> a
- * `.console-group-header` shows ×3; expanding yields 3 individual `.console-request-text` blocks,
- * each individually parseable; the group NEVER shows a single merged/synthetic text (I8). What
- * varies is read, not assumed: `ViewportQueryRequest` (`skp/types.ts`) carries no per-call nonce
- * (unlike `open_dataset`'s `cancel_key`), so 3 consecutive identical calls produce 3 BYTE-IDENTICAL
- * request texts here -- reported as the finding, not papered over.
+ * `GROUP'` (Amendment 2 item 2, round 71): GROUP_CALLS identical `queryWithFilter` calls; the rows they record are
+ * asserted by what they ARE inside their window (see `windowOf`), never by counting every `.console-group-header`.
+ * Settle, baseline (0 residential untiled rows, the label's total), the calls, then a bounded poll for exactly
+ * GROUP_CALLS such rows with no collapsed group in the window (`presence`). `capacity`: R, the label's total minus
+ * the baseline, must not exceed `MAX_CONSOLE_ENTRIES`, or the ring may have evicted the step's own rows. Then, in
+ * order: `group` (each group is `×N` for its N >= 2 rows of one key), `split run` (no two adjacent items in the window,
+ * nor the first and the item before it, share a key), the not-exercised name (some group shows 2+ rows inside the
+ * window, so it never passes on singles only), `parse` (each class-A row in the window parses on its own, I8).
+ * A session-log line between residential rows ends their run, so it passes.
  */
-async function stepGroup(page) {
-  await expandAllGroups(page);
-  const groupHeaderCountBefore = await page.evaluate(() => document.querySelectorAll(".console-group-header").length);
+async function stepGroup(page, consoleHandle) {
+  await waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 1500, timeoutMs: 15_000 });
+  const baseline = await readConsoleLabel(page);
+  const baseRes = windowOf(await readItems(page)).res.length;
+  if (baseRes !== 0) throw new Error(`GROUP': baseline already holds ${baseRes} residential untiled row(s), expected 0`);
 
-  const predicate = "zone = 'residential'";
-  for (let i = 0; i < 3; i++) {
-    const outcome = await page.evaluate((p) => window.__SPATIAL_E2E__.queryWithFilter(p), predicate);
+  for (let i = 0; i < GROUP_CALLS; i++) {
+    const outcome = await page.evaluate((p) => window.__SPATIAL_E2E__.queryWithFilter(p), RESIDENTIAL_PREDICATE);
     if (outcome.kind !== "applied") {
-      throw new Error(`GROUP': queryWithFilter #${i + 1} of 3 returned ${JSON.stringify(outcome)}, expected {kind:"applied"}`);
+      throw new Error(`GROUP': queryWithFilter #${i + 1} of ${GROUP_CALLS} returned ${JSON.stringify(outcome)}, expected {kind:"applied"}`);
     }
   }
 
-  // S1 (reviewer gate, action-console P7 fixes) made the expanded console's own sync coalesced to
-  // at most once per animation frame -- the 3rd query's own entry can otherwise still be one
-  // pending coalesced frame away from the DOM at the instant this reads it.
-  await waitForNextConsoleFrame(page);
-  const headerTextsAfter = await page.evaluate(() =>
-    Array.from(document.querySelectorAll(".console-group-header")).map((el) => el.textContent)
+  const found = await pollConsole(
+    async () => ({ items: await readItems(page), label: await readConsoleLabel(page) }),
+    ({ items }) => {
+      const w = windowOf(items);
+      return w.res.length === GROUP_CALLS && !w.wi.some((x) => x.it.expanded === false);
+    }
   );
-  if (headerTextsAfter.length !== groupHeaderCountBefore + 1) {
+  const { items, label } = found.last;
+  const R = label.total - baseline.total;
+  if (R > MAX_CONSOLE_ENTRIES) {
+    throw new Error(`GROUP': capacity: ${R} entries were recorded since the baseline (label total ${label.total} - ${baseline.total}), more than the ring's ${MAX_CONSOLE_ENTRIES}`);
+  }
+  const w = windowOf(items);
+  const rowsIn = items.flatMap((it) => it.rows).filter((r) => r.i >= w.lo && r.i <= w.hi);
+  if (!found.ok) {
     throw new Error(
-      `GROUP': expected exactly one NEW .console-group-header after 3 identical queries (had ${groupHeaderCountBefore} before), got ${headerTextsAfter.length} after (texts: ${JSON.stringify(headerTextsAfter)})`
+      `GROUP': presence: expected ${GROUP_CALLS} residential untiled rows and no collapsed group in their window within ${CONSOLE_POLL_BOUND_MS}ms (polled every ${CONSOLE_POLL_INTERVAL_MS}ms), ` +
+        `found ${w.res.length}, held by items ${JSON.stringify(w.res.map((x) => `${x.ii}:${items[x.ii].header ?? "single"}`))}; ` +
+        `keys from the first found row to the last: ${JSON.stringify(rowsIn.map((r) => r.key.slice(0, 48)))}; console label total ${label.total} (baseline ${baseline.total}, R=${R})`
     );
   }
-  const newHeaderText = headerTextsAfter[headerTextsAfter.length - 1];
-  if (newHeaderText !== "×3") throw new Error(`GROUP': new group header text was ${JSON.stringify(newHeaderText)}, expected "×3"`);
 
-  await expandAllGroups(page);
-  const group = await page.evaluate(() => {
-    const headers = Array.from(document.querySelectorAll(".console-group-header"));
-    const lastHeader = headers[headers.length - 1];
-    const groupEl = lastHeader.closest(".console-group");
-    return {
-      headerLabels: Array.from(groupEl.querySelectorAll(".console-entry-header")).map((el) => el.textContent),
-      requestTexts: Array.from(groupEl.querySelectorAll(".console-request-text")).map((el) => el.textContent),
-    };
-  });
-  if (group.requestTexts.length !== 3) {
-    throw new Error(`GROUP': expanded group did not show exactly 3 .console-request-text blocks, got ${group.requestTexts.length}`);
+  for (const { it } of w.wi) {
+    const N = it.rows.length;
+    if (it.header !== null && (N < 2 || it.header !== `×${N}` || new Set(it.rows.map((r) => r.key)).size !== 1)) {
+      throw new Error(`GROUP': group: a group in the window reads ${JSON.stringify(it.header)} for ${N} row(s) of keys ${JSON.stringify([...new Set(it.rows.map((r) => r.key.slice(0, 48)))])}; expected "×${N}", N >= 2, one key`);
+    }
   }
-  if (!group.headerLabels.every((h) => h === "viewport_query")) {
-    throw new Error(`GROUP': not every expanded row was viewport_query. Actual: ${JSON.stringify(group.headerLabels)}`);
-  }
-  group.requestTexts.forEach((text, i) => {
-    try {
-      JSON.parse(text);
-    } catch (e) {
-      throw new Error(`GROUP': entry #${i + 1} of the expanded group did not individually parse as JSON: ${e.message}`);
+  const prev = items[w.first - 1];
+  const chain = (prev && itemKey(prev) !== null ? [prev] : []).concat(w.wi.map((x) => x.it));
+  chain.forEach((it, k) => {
+    if (k > 0 && itemKey(it) === itemKey(chain[k - 1])) {
+      throw new Error(`GROUP': split run: two adjacent items in the window share the key ${JSON.stringify(itemKey(it).slice(0, 60))}; a run of consecutive identical entries forms one item`);
     }
   });
-  const distinct = new Set(group.requestTexts);
-  const varyNote =
-    distinct.size === 1
-      ? "all 3 texts BYTE-IDENTICAL (viewport_query carries no per-call nonce on the wire -- nothing varies for 3 consecutive identical calls)"
-      : `${distinct.size} distinct texts among the 3 (something DID vary -- read, not assumed)`;
+  const exercised = w.wi.filter((x) => x.it.header !== null && x.n >= 2).length;
+  const summary = w.wi.map((x) => `${x.it.header ?? "single"} ${itemKey(x.it)?.slice(0, 40)} x${x.n}`);
+  if (exercised === 0) throw new Error(`${GROUP_NOT_EXERCISED}: no group in the window shows two or more rows inside it; window items: ${JSON.stringify(summary)}`);
+  for (const r of rowsIn.filter((x) => x.key.startsWith("a:"))) {
+    try {
+      JSON.parse(r.req);
+    } catch (e) {
+      throw new Error(`GROUP': parse: the request text of a ${r.key} row in the window did not parse on its own: ${e.message}`);
+    }
+  }
 
-  return `3 identical queryWithFilter calls -> ONE new .console-group-header reading "×3"; expanded to 3 individual, each-individually-parseable .console-request-text blocks (never a merged/synthetic single text, I8); ${varyNote}`;
+  const distinct = new Set(w.res.map((x) => x.r.req)).size;
+  return `${GROUP_CALLS} identical queryWithFilter calls -> window items (key, rows inside): ${JSON.stringify(summary)}; ${exercised} group(s) show 2+ rows inside the window; ${distinct} distinct text(s) among the ${w.res.length} residential rows; R=${R} <= ${MAX_CONSOLE_ENTRIES}`;
 }
 
 /**
@@ -793,6 +903,17 @@ async function main() {
     const mountReady = await waitForMountReady(page);
     console.log(`console: mount-readiness gate PASSED after ${mountReady.readyAfterMs}ms`);
 
+    // The assumption made explicit (regression.mjs's precedent): the suite runs on the arm that ships and
+    // pins none, so a readback that is not the shipped arm is a harness failure (e.g. an attach to an app a
+    // prior script left pinned), by name, not a step failure.
+    const armReadback = await page.evaluate(() => window.__SPATIAL_E2E__.getResidencyArm?.());
+    if (armReadback !== SHIPPED_ARM) {
+      throw new Error(
+        `console: expected the shipped default residency arm (${JSON.stringify(SHIPPED_ARM)}) but readback was ${JSON.stringify(armReadback)} -- ` +
+          `no arm is set or pinned by this suite`
+      );
+    }
+
     // Harness hygiene, matching every sibling suite's own convention: clear any dismissable banner
     // a previous run (or prior interactive use) may have left up.
     await page
@@ -808,7 +929,8 @@ async function main() {
     await runStep("REFUSAL'", 30_000, () => stepRefusal(page));
     await runStep("CLASSB'", 30_000, () => stepClassB(page));
     await runStep("CLASSC'", 20_000, () => stepClassC(page));
-    await runStep("GROUP'", 30_000, () => stepGroup(page));
+    // GROUP' outer bound 45s: the settle, the three calls and the poll. A bound, not a duration.
+    await runStep("GROUP'", 45_000, () => stepGroup(page, consoleHandle));
     await runStep("COPYTRUNC'", 30_000, () => stepCopytrunc(page));
     await runStep("UNCLASS'", 20_000, () => stepUnclass(page));
     await runStep("REGRESS'", 30 * 60_000, () => stepRegress());

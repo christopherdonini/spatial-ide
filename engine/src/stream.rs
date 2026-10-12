@@ -34,9 +34,14 @@ use crate::cancel::CancelToken;
 use crate::dataset::{lease_for_stream, Dataset};
 use crate::envelope::{BatchEnvelope, TaggedBatch, ID_COLUMN};
 use crate::error::{EngineError, Result};
-use crate::geoarrow::build_polygon_array;
+use crate::geoarrow::{
+    build_linestring_array, build_multilinestring_array, build_multipolygon_array,
+    build_point_array, build_polygon_array, GeometryEncoding,
+};
 use crate::predicate::AdmittedPredicate;
-use crate::wkb::PolygonBuilder;
+use crate::wkb::{
+    LineStringBuilder, MultiLineStringBuilder, MultiPolygonBuilder, PointBuilder, PolygonBuilder,
+};
 
 /// Declared ceilings — ADR-010 rule 6: "A layer design states its ceiling … before approaching it."
 /// Declared here, asserted in `stream.rs`'s own tests, and reported by the binding that carries
@@ -940,6 +945,7 @@ impl Dataset {
             self.geometry_column().to_string(),
             self.identity().clone(),
             attributes.fields().to_vec(),
+            self.geometry_encoding(),
         );
         self.stream_inner(q, cancel, StreamPlan::for_publish(envelope))
     }
@@ -1001,6 +1007,7 @@ impl Dataset {
             self.geometry_column().to_string(),
             self.identity().clone(),
             projection.fields().to_vec(),
+            self.geometry_encoding(),
         );
         self.stream_inner(
             q,
@@ -1769,8 +1776,9 @@ fn produce(
 
     // Checked before anything is prepared or executed: DuckDB does not latch an interrupt raised on
     // an idle connection (see `cancel.rs`), so a stream cancelled before it started is stopped
-    // here or not at all.
+    // here or not at all. A `cancel_observed` exit, so it stamps like the others.
     if cancel.is_cancelled() {
+        crate::trace::mark(crate::trace::PRODUCER_CANCELLED, 0, 0);
         return Err(EngineError::Cancelled);
     }
 
@@ -1852,7 +1860,7 @@ fn produce(
     crate::trace::mark(crate::trace::EXECUTE_RETURNED, 0, 0);
 
     let attribute_fields = envelope.attributes().to_vec();
-    let mut pending = Pending::new(attribute_fields.len());
+    let mut pending = Pending::new(attribute_fields.len(), envelope.geometry_encoding());
     // Batches handed over so far — the policy's input, and the `batch_index` a consumer sees.
     let mut emitted: u64 = 0;
     let mut saw_first_chunk = false;
@@ -2130,7 +2138,7 @@ fn produce(
 /// Everything accumulated toward the next batch.
 struct Pending {
     ids: Vec<u64>,
-    builder: PolygonBuilder,
+    builder: GeometryBuilder,
     vertices: usize,
     est_bytes: usize,
     /// The first id in this batch — carried so an over-ceiling single feature can be *named*. An
@@ -2144,11 +2152,65 @@ struct Pending {
     attr_bytes: usize,
 }
 
+/// The geometry accumulator for the open's encoding — one arm, chosen once from the envelope and
+/// never varying per batch (ADR-034 Decision 2).
+enum GeometryBuilder {
+    Polygon(PolygonBuilder),
+    MultiPolygon(MultiPolygonBuilder),
+    Point(PointBuilder),
+    LineString(LineStringBuilder),
+    MultiLineString(MultiLineStringBuilder),
+}
+
+impl GeometryBuilder {
+    fn new(encoding: GeometryEncoding) -> Self {
+        match encoding {
+            GeometryEncoding::Polygon => Self::Polygon(PolygonBuilder::new()),
+            GeometryEncoding::MultiPolygon => Self::MultiPolygon(MultiPolygonBuilder::new()),
+            GeometryEncoding::Point => Self::Point(PointBuilder::new()),
+            GeometryEncoding::LineString => Self::LineString(LineStringBuilder::new()),
+            GeometryEncoding::MultiLineString => {
+                Self::MultiLineString(MultiLineStringBuilder::new())
+            }
+        }
+    }
+
+    fn vertices(&self) -> usize {
+        match self {
+            Self::Polygon(b) => b.vertices(),
+            Self::MultiPolygon(b) => b.vertices(),
+            Self::Point(b) => b.vertices(),
+            Self::LineString(b) => b.vertices(),
+            Self::MultiLineString(b) => b.vertices(),
+        }
+    }
+
+    fn push_wkb(&mut self, wkb: &[u8]) -> Result<()> {
+        match self {
+            Self::Polygon(b) => b.push_wkb(wkb),
+            Self::MultiPolygon(b) => b.push_wkb(wkb),
+            Self::Point(b) => b.push_wkb(wkb),
+            Self::LineString(b) => b.push_wkb(wkb),
+            Self::MultiLineString(b) => b.push_wkb(wkb),
+        }
+    }
+
+    fn finish(self) -> Result<ArrayRef> {
+        match self {
+            Self::Polygon(b) => build_polygon_array(b),
+            Self::MultiPolygon(b) => build_multipolygon_array(b),
+            Self::Point(b) => build_point_array(b),
+            Self::LineString(b) => build_linestring_array(b),
+            Self::MultiLineString(b) => build_multilinestring_array(b),
+        }
+    }
+}
+
 impl Pending {
-    fn new(attribute_columns: usize) -> Self {
+    fn new(attribute_columns: usize, encoding: GeometryEncoding) -> Self {
         Self {
             ids: Vec::new(),
-            builder: PolygonBuilder::new(),
+            builder: GeometryBuilder::new(encoding),
             vertices: 0,
             est_bytes: 0,
             first_id: None,
@@ -2211,6 +2273,19 @@ pub(crate) fn is_timing_dependent(ordering: RowOrdering, cut: BatchCutPolicy) ->
     ordering == RowOrdering::ByIdentityAscending && cut == BatchCutPolicy::TimeBudgetedFirstBatch
 }
 
+/// The bytes a batch of `rows` features and `vertices` vertices is estimated to occupy, and the
+/// quantity every batch cut and every declared ceiling is decided on.
+///
+/// **One estimate for both encodings, unedited by ADR-034** (MP-1 preregistration §2, E7). Its
+/// `vertices * 4` term is declared to bound the multipolygon encoding's extra part and ring
+/// offsets: each part has at least one ring and each ring at least 4 vertices, so parts plus rings
+/// is at most vertices divided by 2. A Polygon-only dataset's cut points therefore depend on
+/// unchanged inputs only. `engine/tests/multipolygon_stream.rs` asserts the bound on a real stream.
+/// For points, vertices equals rows and no offsets are written, so the estimate bounds a point
+/// batch; `engine/tests/point_stream.rs` asserts it. For a linestring, the offsets are rows plus
+/// one, within its `(rows + vertices) * 4` term; for a multilinestring batch of two or more rows,
+/// each part has at least 2 vertices, so parts are at most vertices divided by 2.
+/// `engine/tests/line_stream.rs` asserts the bound on a real stream.
 fn estimate_bytes(rows: usize, vertices: usize) -> usize {
     // 16 B per interleaved xy pair, 8 B per id, 4 B per offset entry, both offset levels.
     vertices * 16 + rows * 8 + (rows + vertices) * 4
@@ -2391,7 +2466,10 @@ fn flush(
     compact_attribute_retention: bool,
     cut_by: BatchCut,
 ) -> Result<()> {
-    let mut p = std::mem::replace(pending, Pending::new(pending.attrs.len()));
+    let mut p = std::mem::replace(
+        pending,
+        Pending::new(pending.attrs.len(), envelope.geometry_encoding()),
+    );
 
     if p.est_bytes > MAX_BATCH_BYTES {
         // Because the loop cuts *before* appending, a batch holding more than one feature can
@@ -2414,7 +2492,7 @@ fn flush(
 
     let rows = p.ids.len();
     let ids: ArrayRef = Arc::new(UInt64Array::from(std::mem::take(&mut p.ids)));
-    let geometry = build_polygon_array(std::mem::take(&mut p.builder))?;
+    let geometry = p.builder.finish()?;
 
     // One run needs no concatenation — the common case when a batch is cut inside a single DuckDB
     // chunk, and the copy ADR-004 asks to be avoided rather than assumed away.
@@ -2461,6 +2539,9 @@ fn flush(
         .rows_generated
         .fetch_add(rows as u64, Ordering::SeqCst);
     if cancel.is_cancelled() {
+        // A `cancel_observed` exit, stamped like the loop-top and per-row exits: without it a
+        // cancel that lands while a batch is being assembled leaves the budgeted interval no end.
+        crate::trace::mark(crate::trace::PRODUCER_CANCELLED, 0, 0);
         // H2 allows at most one batch after the producer observes cancellation. Counted, and then
         // dropped rather than sent: the stream is over.
         stats.batches_after_cancel.fetch_add(1, Ordering::SeqCst);
@@ -2836,6 +2917,7 @@ mod tests {
                 Some(0),
             ),
             vec![arrow::datatypes::Field::new("v", ty, true)],
+            GeometryEncoding::Polygon,
         )
     }
 
@@ -2859,6 +2941,122 @@ mod tests {
         let mut out = Vec::new();
         batch.write_ipc_into(&mut out).expect("ipc");
         out
+    }
+
+    /// `flush`'s cancel exit stamps `PRODUCER_CANCELLED` before it returns `Cancelled`, and sends
+    /// nothing. Driven directly: the token is already cancelled when `flush` runs, so the check is
+    /// reached with no race. Mutation: remove the mark from that branch -- (iv) fails.
+    ///
+    /// Takes the trace lock first because the trace is one process-global slot. It asserts that the
+    /// event is present and no absence or exact list of names: other tests in this crate cancel
+    /// tokens and stamp other names into a live trace.
+    #[test]
+    fn flush_cancel_exit_stamps_producer_cancelled_and_sends_nothing() {
+        let _serial = crate::trace::TEST_LOCK
+            .lock()
+            .unwrap_or_else(|e| e.into_inner());
+        let envelope = one_attribute_envelope(DataType::Int64);
+        let stats = Arc::new(StreamStats::default());
+        let (tx, rx) = sync_channel::<std::result::Result<Item, EngineError>>(MAX_QUEUED_BATCHES);
+
+        let mut pending = Pending::new(1, GeometryEncoding::Polygon);
+        let wkb = crate::wkb::encode_polygon(&[vec![
+            [2_600_000.0, 1_200_000.0],
+            [2_600_010.0, 1_200_000.0],
+            [2_600_010.0, 1_200_010.0],
+            [2_600_000.0, 1_200_000.0],
+        ]]);
+        pending.builder.push_wkb(&wkb).expect("polygon");
+        pending.vertices = pending.builder.vertices();
+        pending.ids.push(1);
+        pending.first_id = Some(1);
+        pending.est_bytes = estimate_bytes(1, pending.vertices);
+        let column: ArrayRef = Arc::new(Int64Array::from(vec![7_i64]));
+        pending.push_attr_run(&[column], 0, 1);
+
+        let guard = crate::trace::start(crate::trace::TraceKey::default())
+            .expect("the lock makes this the only trace");
+        let cancel = CancelToken::new();
+        cancel.cancel();
+        let result = flush(
+            &mut pending,
+            &envelope,
+            &cancel,
+            &stats,
+            &tx,
+            1,
+            TARGET_BATCH_BYTES,
+            false,
+            false,
+            BatchCut::StreamEnd,
+        );
+
+        assert!(matches!(result, Err(EngineError::Cancelled)), "(i)");
+        assert_eq!(stats.batches_generated.load(Ordering::SeqCst), 1, "(ii)");
+        assert_eq!(stats.batches_after_cancel.load(Ordering::SeqCst), 1, "(ii)");
+        assert!(rx.try_recv().is_err(), "(iii) nothing is sent");
+        assert_eq!(stats.resident_bytes.load(Ordering::SeqCst), 0, "(iii)");
+        let trace = guard.trace();
+        assert!(
+            trace.first(crate::trace::PRODUCER_CANCELLED).is_some(),
+            "(iv) flush's cancel exit must stamp producer_cancelled"
+        );
+        assert!(
+            trace
+                .segment_ms(
+                    crate::trace::CANCELLATION_REQUESTED,
+                    crate::trace::PRODUCER_CANCELLED
+                )
+                .is_some(),
+            "(v) the requested-to-observed segment exists"
+        );
+        drop(guard);
+    }
+
+    /// The pre-prepare cancel exit in `produce` stamps `PRODUCER_CANCELLED`. The SQL is invalid on
+    /// purpose: without the check, `prepare` would fail and `classify` would return `Cancelled`
+    /// unmarked, so the mark in this test can only come from the pre-prepare check. A later piece
+    /// that marks `classify` must revisit this test. Mutation: remove the mark from that check.
+    #[test]
+    fn the_pre_prepare_cancel_exit_stamps_producer_cancelled() {
+        let _serial = crate::trace::TEST_LOCK
+            .lock()
+            .unwrap_or_else(|e| e.into_inner());
+        let conn = duckdb::Connection::open_in_memory().expect("in-memory connection");
+        let envelope = one_attribute_envelope(DataType::Int64);
+        let stats = Arc::new(StreamStats::default());
+        let (tx, _rx) = sync_channel::<std::result::Result<Item, EngineError>>(MAX_QUEUED_BATCHES);
+        let guard = crate::trace::start(crate::trace::TraceKey::default())
+            .expect("the lock makes this the only trace");
+        let cancel = CancelToken::new();
+        cancel.cancel();
+
+        let result = produce(
+            &conn,
+            "this is not sql",
+            "",
+            None,
+            None,
+            "geometry",
+            &envelope,
+            &cancel,
+            &stats,
+            &tx,
+            BatchSizePolicy::default(),
+            false,
+            false,
+        );
+
+        assert!(matches!(result, Err(EngineError::Cancelled)));
+        assert_eq!(stats.batches_generated.load(Ordering::SeqCst), 0);
+        assert!(
+            guard
+                .trace()
+                .first(crate::trace::PRODUCER_CANCELLED)
+                .is_some(),
+            "the pre-prepare cancel exit must stamp producer_cancelled"
+        );
+        drop(guard);
     }
 
     /// X6 (Amendment 5, row 5.6): `publish_emits_a_nullable_byte_aligned_single_run_with_the_uncompacted_slices_ipc_bytes`.

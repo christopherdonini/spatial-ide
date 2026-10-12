@@ -1,5 +1,7 @@
 # spatial-evidence-recorder (Evidence Recorder v0.1)
 
+**Retired (2026-10-11).** The human uninstalled this mod on 2026-10-11, after its overhead check E10 failed (`tools/mods/EVIDENCE-RECORDER-V0-1-PREREGISTRATION.md`, Amendments 9 and 10). Its code stays here unchanged, for reference. The rest of this README describes the mod, and the briefs' practice around it, as they were before the uninstall.
+
 The second Spatial IDE mod: an observe-only plugin for sessions in this repository. It writes one line for each approved test command and, by design, one for each subagent turn; that subagent behaviour is unclaimed as live behaviour before its E-row E3. It never refuses, rewrites or answers a call, makes no model call and no network request, and writes nothing inside the repository. Every hook calls the next link once, with the event it received, and returns that call's own value. The forms are `tools/mods/EVIDENCE-RECORDER-V0-PREREGISTRATION.md` and `tools/mods/EVIDENCE-RECORDER-V0-1-PREREGISTRATION.md` (v0.1), and they govern this folder.
 
 Built and tested against Claude Code 2.1.289 on Windows. The reads of the build's type declarations behind the hooks were made at 2.1.288 and are claims about that build only. Nothing here is claimed for another build, for macOS or for Linux.
@@ -70,14 +72,14 @@ The mod never deletes. At the weekly window, the custodian prunes by hand the da
 
 Installing a mod is a security-posture change. It needs the human's typed approval after both gates, and he installs it himself. Nothing in this repository installs, enables or loads it.
 
-1. From a checkout on main, at user scope: `claude plugin install spatial-evidence-recorder@spatial-ide-mods --scope user`. The marketplace is the directory source at `tools/mods`; whether it needs a refresh first is the live row E0's to record.
+1. From the main checkout, at local scope: `claude plugin install spatial-evidence-recorder@spatial-ide-mods --scope local`. The marketplace is the directory source at `tools/mods`; whether it needs a refresh first is the live row E0's to record.
 2. `/reload-plugins`
 3. Confirm the entry in `/plugin`.
 4. Start the session after the binary of record is in place.
 
 ## Turning it off
 
-`claude plugin disable spatial-evidence-recorder --scope user`, or disable it in `/plugin`.
+`claude plugin disable spatial-evidence-recorder --scope local`, or disable it in `/plugin`.
 
 `disableAllHooks` is not the way to turn it off. It also stops the repository's settings hooks, which are not this mod's.
 
@@ -89,4 +91,4 @@ The bounds the evaluation uses are declared in the form, in its §9 (Operator) a
 
 ## Uninstall
 
-`claude plugin uninstall spatial-evidence-recorder`
+`claude plugin uninstall spatial-evidence-recorder --scope local`

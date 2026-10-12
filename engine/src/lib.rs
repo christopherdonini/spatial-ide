@@ -3,19 +3,36 @@
 
 //! # `engine` — the data-engine module (docs/02, docs/05)
 //!
-//! First cut, scoped to one operation: **open a GeoParquet → filter in SQL → stream GeoArrow
-//! record batches → cancel.** Scaffolded for the `docs/07` Prototype hero slice, per that
-//! document's method rule (vertical slices, never every module built in parallel to 20 %).
+//! Its first cut was scoped to one operation: **open a GeoParquet → filter in SQL → stream
+//! GeoArrow record batches → cancel.** That operation now carries one of five GeoArrow encodings,
+//! selected at open (ADR-034, Accepted), and a declared attribute projection on both the publish
+//! stream and the live projected stream (ADR-023 stays Proposed and binds nothing). Scaffolded for
+//! the `docs/07` Prototype hero slice, per that document's method rule (vertical slices, never
+//! every module built in parallel to 20 %).
 //!
 //! ## What this module does
 //!
 //! - Opens a GeoParquet file through DuckDB and reads the file's own `geo` metadata.
-//! - Holds the CRS as **part of the dataset's type** (`docs/05`), and refuses a file that does not
-//!   carry one. See [`crs`] for the admission policy, recorded as **ADR-015 (Proposed)**.
-//! - Filters with SQL over the GeoParquet 1.1 covering-bbox columns — a **linear scan**, not an
-//!   index. Server-side spatial indexing is `docs/07`'s other open gate and is not touched here.
-//! - Decodes WKB into **GeoArrow polygons**: `List<rings: List<vertices: FixedSizeList<xy>[2]>>`,
-//!   variable-width, holes included.
+//! - Holds the CRS as **part of the dataset's type** (`docs/05`) and records where it came from: the
+//!   file's own `crs`, a caller's assertion, or — for an absent key under a pinned GeoParquet
+//!   version — the format's own published rule. A file whose CRS none of these supplies is refused.
+//!   See [`crs`] for the admission policy, recorded as **ADR-015** (Accepted, with its Amendment 1).
+//! - Filters with SQL over the GeoParquet 1.1 covering-bbox columns — a **linear scan** in the
+//!   product planner. The fixed-grid index is built and tested ([`index`]) but is not in that
+//!   planner; `docs/07`'s gate on it is closed for this slice's shape only (see the README's
+//!   index sections).
+//! - Decodes WKB into **GeoArrow polygons** (`geoarrow.polygon`:
+//!   `List<rings: List<vertices: FixedSizeList<xy>[2]>>`), **GeoArrow multipolygons**
+//!   (`geoarrow.multipolygon`: `List<polygons: List<rings: List<vertices: FixedSizeList<xy>[2]>>>`)
+//!   **GeoArrow points** (`geoarrow.point`: `FixedSizeList<xy>[2]`), **GeoArrow linestrings**
+//!   (`geoarrow.linestring`: `List<vertices: FixedSizeList<xy>[2]>`) or **GeoArrow
+//!   multilinestrings** (`geoarrow.multilinestring`:
+//!   `List<linestrings: List<vertices: FixedSizeList<xy>[2]>>`), variable-width where the encoding
+//!   is, holes included. Which encoding a dataset travels in is a fact of the open (ADR-034): a
+//!   declared set of exactly Polygon gives the first, a set that includes MultiPolygon, or an empty
+//!   or absent declaration, gives the second, a set of exactly Point gives the third, a set of
+//!   exactly LineString gives the fourth, and a lineal set that includes MultiLineString gives the
+//!   fifth. It never varies per batch.
 //! - Emits Arrow IPC batches whose envelope names their frame, CRS, CRS source and axis order
 //!   (ADR-010 rule 1), by construction rather than by convention — see [`envelope`].
 //! - Streams and cancels: the DuckDB result is consumed lazily, and cancellation reaches DuckDB's
@@ -29,15 +46,22 @@
 //!   multiple optimized *bindings*").
 //! - **No reprojection**, so no PROJ dependency and no definitional-equivalence check (`docs/05`).
 //!   A viewport in a different CRS is refused, not transformed.
-//! - **No provenance column.** ADR-013 is Proposed and binds nothing; its own OPEN block says the
-//!   per-feature-versus-per-vertex choice "should be made explicitly at acceptance, not inherited",
-//!   and implementing one now *is* inheriting it. Nothing in this slice creates derived
-//!   coordinates — there is no digitizing and no cursor unprojection — so there is nothing to
-//!   record.
-//! - **No persistence, no dataset registry, no lineage, no undo.** The operation is a pure
-//!   transformation (ADR-006), it writes nothing, and it claims no reproducibility grade
-//!   (ADR-005). The moment anything here caches to disk or names datasets by URI, `docs/11`'s
-//!   ResourceRef model and `kernel/` are owed.
+//! - **No provenance column.** ADR-013 is Accepted: its granularity was ruled per-feature at
+//!   acceptance, and the column's shape is deferred (its Acceptance appendix, items 1 and 3). This
+//!   module writes no provenance column. The tiers it builds are derived and never authoritative;
+//!   no ADR-013 applicability to them is asserted here.
+//! - **No dataset registry, no lineage, no undo.** The stream code in this module opens no file
+//!   for writing, and DuckDB's default spill of intermediates is not configured off by the engine
+//!   (`kernel/CANCELLATION-AND-TRACING.md` §7; `kernel/RESULTS.md`, the subsection on §5d being
+//!   partially measurable). The stream is a pure transformation (ADR-006); it claims no
+//!   reproducibility grade (ADR-005). The tier builder (`lod::build_tiers`) writes a derived,
+//!   non-authoritative tier cache: a directory per source content hash under `LOD_TIER_ROOT`, one
+//!   GeoParquet file per derived tier, and `tiers.json`.
+//!   Caching to disk was this module's own trigger for owing `docs/11`'s ResourceRef model and
+//!   `kernel/`, and that trigger has come due for the cache. What is owed — whether a tier set
+//!   carries a ResourceRef and an ADR-005 statement, and what the kernel side owes — is a named
+//!   open item on the PLAN node `lod-tier-selection`, which the human rules before any product path
+//!   calls `build_tiers`. It is not discharged here, and no SKP command calls `build_tiers` today.
 //! - **No geometry repair.** An unclosed ring is a typed refusal. Consent-based repair with a
 //!   before/after diff belongs to the data doctor (`docs/05`), which is Alpha work.
 //!
@@ -118,6 +142,7 @@ pub use dataset::Dataset;
 pub use descriptor::{SourceDescriptor, FOOTER_DESCRIPTOR_MAX_BYTES};
 pub use envelope::{BatchEnvelope, TaggedBatch, FRAME_AUTHORITATIVE, ID_COLUMN};
 pub use error::{EngineError, Result};
+pub use geoarrow::GeometryEncoding;
 pub use geoparquet::{
     AdmissionRecord, AxisProvenance, CoordinateUnit, CoordinateUnitSource, CrsProvenance,
     SanityLevel, MAX_UNIT_NAME_BYTES, PINNED_SPEC_VERSIONS, SANITY_SAMPLE_MAX_ROWS,

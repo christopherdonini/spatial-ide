@@ -1147,3 +1147,444 @@ A.8 **§9.**
 - §8 item 20's third bullet → Part C, item 1 (its reading).
 - §1's G8 limit on Part H's unruled verbs → Part E.
 - §7's estimate (as amended by Amendment 2, Part K) → Part E. The size line is not edited.
+
+### Amendment 5 — the build, worker report 1: I9 fired, and `claude plugin test` will not run (class 1)
+
+*Written after the build worker's outcomes were seen, by the custodian. The record is the worker's report, `state/consults/2026-10-05-guardian-v1-worker-report-1.md` (sha256 from its line 5 e54826e8493505d27b8833634a1635da1b9cf1eb7745bb8959e7bfe843547ded), cited by section. Nothing is committed on `cut/guardian-v1`, and its worktree is clean at ccac14d2. Nothing below is a quotation.*
+
+1. **Step 1** (Amendment 4, Part B): `claude --version` read 2.1.289, and `claude --help` ran once, read-only. Its output is kept in the worker's scratch folder with its sha256 (the report's section 1). The README's list of top-level verbs is not yet written.
+2. **F36** (Amendment 1, item 4): the six commands, extracted and redacted by script, match P0b's sha256s (the report's section 2).
+3. **I9 fired** (§5). v0's T7 asserts that F7 is refused by G1. v0 refuses F7 only through the unbalanced-quote rule, and F7's words hold no forcing word, so §2.2's condition allows it. §1's may-claim 1 and §4's T7 row cannot both hold with §2.2 (the report's section 3). The piece stops before code and returns to the architect for an amendment. A change to T7's assertion is the human's (I9).
+4. **A blocker outside the form.** `claude plugin test` exits 1 on this machine, stating that hooks modules are turned off in its process by a saved rollout switch (the report's section 4). The remedy it names, starting `claude`, is the human's. No mutation can be observed until it clears.
+   - The custodian's observation, not the report's: this session's Recorder wrote records after the switch changed (the log folder, 19:15Z to 19:22Z), so the mods this session loaded still run. Whether a new session loads them is not known.
+5. **Rehearsal evidence,** a Node run of a scratch copy and not the engine (the report's section 5):
+   - a draft `register.js`, not committed, is kept in the worker's scratch folder with its sha256, and passes 212 smoke rows;
+   - the unchanged v0 test file, through a stand-in for the test kit, passes 38 of 39 when the kit's `arm` helper answers the env read, T7 alone failing. Without that answer, 11 more fail. That is a helper change, not an assertion change;
+   - the draft's `validate` calls line differs from §5's only in `(via …)` annotations (class 2, on a draft).
+6. **Size:** the draft `register.js` has 1048 lines, over Amendment 4, Part E's estimate for that file. An overrun at the gated head is class 8.
+
+**Superseded index.** None.
+
+### Amendment 6 — I9: a push whose own segment leaves a quote open stays refused; the test kit's env answer; the plugin-test hold; size (Parts A to F: class 1)
+
+*Written after the build worker's outcomes were seen (Amendment 5) and before any committed code. Nothing is committed on `cut/guardian-v1`. The architect agent drafted this at main 2d4fa886. Nothing below is a quotation. Code is cited `path:line @ 2d4fa886 sha256:<hex>`. The worker's report, `state/consults/2026-10-05-guardian-v1-worker-report-1.md`, and the P0 report, `state/consults/2026-10-05-guardian-v1-p0-report.md`, are cited by section. Read Part F's superseded index first, then Amendment 4's (Part E), then Amendment 2's (Part K).*
+
+**Part A — post-result (class 1): I9, F7 and T7 against §2.2.**
+
+A.1 **§2.2's change, amended.** v0's condition must still hold for the unbalanced-quote refusal (`tools/mods/spatial-guardian/hooks/register.js:215-218 @ 2d4fa886 sha256:26e41728fa0827ce234e4abf4fe75e4ae27c927e34abf36ff20c7b2485505d7d`). The refusal now stands when, in addition, either of these holds:
+- **(i)** the call's words hold the G1 sequence. This is §2.2 as drafted, with Amendment 2, Part I's reading;
+- **(ii)** the segment's own push comes before its open quote. The segment's text before its open quote, tokenised, holds a token that `isGit` accepts (`tools/mods/spatial-guardian/hooks/register.js:157-160 @ 2d4fa886 sha256:ba23805c9e7fb515bb175205f46c4e988b1d398eae32018b336a2464186f82ab`), then git's global options skipped as `segmentPushRefused` skips them (`tools/mods/spatial-guardian/hooks/register.js:196-208 @ 2d4fa886 sha256:9edca7da1794ca28d70f9f239a10938bc27d2ce2118120527d28e815c7696ea7`), then the token `push`.
+- **The open quote** is the quote character at which the tokeniser's final unclosed quote state began, in that segment. `tokenise` (`tools/mods/spatial-guardian/hooks/register.js:104-155 @ 2d4fa886 sha256:a6e230a2b6198f6cba0718144a3b1036cba727043c81ea4c1349aa261d68471b`) also returns that index. Its tokens and its `unbalanced` flag do not change.
+- **What (ii) reads:** only the segment it is applied to, in each reading. It applies at top level and inside a rescanned quoted token alike.
+- **No argument test in (ii):** a push whose own arguments run into text the tokeniser cannot read is refused, whatever they hold. That keeps the purpose of v0 §2.2's unbalanced bullet, but only for the shape where the unreadable text is the push's own arguments.
+- **Only G1 reads (ii).** G7 to G9 keep Amendment 2, A.2.
+
+A.2 **Newly allowed, amended.** A call is newly allowed only when v0 refuses it through the unbalanced-quote rule alone, its words hold no G1 sequence, and (ii) does not hold.
+- N1 and N3 are unchanged.
+- N2 becomes: a git … `push` with no forcing word after it, where the push is not before the open quote in its own segment. Either the open quote begins before the push (#1; F37's N2 row), or the push lies in an earlier segment (F63).
+- **Still refused, added to §2.2's list:** a push whose segment leaves a quote open after the push (F7, F62).
+- **The refusal set stays a subset of v0's.** (ii) adds a disjunct only inside v0's condition, and a `push` token means the text holds `push`.
+- **§2.2's argument that no force or delete spelling can run through a newly allowed shape is unchanged.** This Part only takes shapes out of the draft's newly allowed set.
+
+A.3 **Against the recorded shapes,** by reading. The replay (A.6) checks it.
+- **#1:** P0 §6 copies it whole. Its open quote is on line 2, inside the heredoc, and that line's text before it holds no git token. Passes.
+- **#3:** P0 §6's table puts its final open quote on line 8 and the command's first `push` on line 9. Nothing before the open quote holds `push`. Passes.
+- **#2, #4, #5 and #6:** the final open quote comes after the first `push`. That `push` sits inside a longer word (P0 §6's byte-copied lines), and P0 §6 classes each call as holding no git command. For (ii) to hold, `push` would have to stand as its own token after a git token, with only options between. Predicted to pass.
+- **F37:** in N1, the text before the open quote tokenises to `//` and one quoted-joined token, with no git token. In N2 and N3, the open quote comes before any git or `push`. All three pass.
+- **F7, `git push "origin`:** the text before the open quote is `git push `, so (ii) holds and F7 is refused. T7 (`tools/mods/spatial-guardian/test/guardian.test.ts:176-182 @ 2d4fa886 sha256:79022e1dc0098f6b8432055a5e3f025971bae764d70308e9024c32554fc9cc83`) passes unchanged, so I9 is resolved with no waiver.
+- The worker's structural note (report section 3) is exactly the line (ii) draws: where the open quote sits relative to the push.
+
+A.4 **Within the brief, not the human's.**
+- Brief §2.1 (pinned in §2.2) requires that the two named shapes pass (#1 and #3). It forbids allowing anything v0 refuses for a force or delete spelling, and it asks the form to name the newly allowed shapes exactly. It does not require F7 to pass.
+- Part A narrows only the draft's newly allowed set, and touches no ruling: rounds 57 and 58 cover G7 to G9 only.
+- No v0 assertion changes. Class 1, as Amendment 2, Part I's narrowing was.
+- **Over-refusal kept (README R-b):** a push whose own segment later holds an odd quote that the shell does not read as a quote, such as a trailing `# don't` comment or `$'…'` text. Workaround: run the push as its own call.
+
+A.5 **Options weighed.**
+- **(a) Keep §2.2; F7 joins N2.**
+  - T7's assertion changes, which needs the human's I9 waiver, a red line.
+  - It also changes §1, may-claim 1, and §4's T44 fixture list (F1–F7).
+  - It drops v0's fail-closed rule for a push whose arguments cannot be read.
+  - My reading, not tested: bash rejects an unterminated quote before running anything, so F7 itself is harmless.
+  - Not recommended.
+- **(b) Part A.** Recommended.
+- **(c) A positional test across segments:** refuse when a git … `push` anywhere before the open quote. That refuses a push followed by a heredoc commit message in the same call (F63), which is the over-refusal the brief removes. Rejected; it is T72's mutation.
+- **(d) (b) plus an exception after a `#` token:** more code for a rarer over-refusal. Not taken.
+
+A.6 **P0d: the resumed build's second step, read-only, before any code.**
+- **What runs it:** Node, over the scratch rules with (ii) added, outside the repository. It runs no command.
+- **(a)** F36's six commands, raw and redacted. Predicted: all pass.
+- **(b)** G1's part of P0b (iv)(b), over the same extracted calls. Predicted: 48 refused in all and 40 since 2026-09-27 (Amendment 3, item 2), with no row newly refused.
+- **(c)** F62 and F63, as §3 predicts.
+- **Record:** the worker's report, cited by section in the closing record.
+- **Stops:**
+  - #1 or #3 refused is I7;
+  - #2, #4, #5 or #6 refused is I14;
+  - a main-loop row newly refused is I8;
+  - any other newly refused row is class 2, and its shape joins R-b.
+- Nothing from P0d is an observation.
+
+A.7 **Fixtures and tests.**
+- **F62** (no engine answers), refused, G1:
+  - `git -C x push origin "main`;
+  - `bash -c "git push 'origin"`;
+  - `(git push "origin`;
+  - PowerShell `git push "origin`.
+- **F63** (no engine answers), `next(e)`:
+  - `git push -q origin main && git commit -F - <<'EOF'` / `it's the push note` / `EOF`;
+  - `git push -q origin main; cat >> l.md <<'EOF'` / `the custodian's push ran` / `EOF`.
+- **T71** `G1 still refuses a push whose own segment leaves a quote open after it, in either reading and inside a quoted command string`. Fixture F62. Mutation: (ii)'s push head read without git's global options skipped.
+- **T72** `G1 allows a push in an earlier segment than an odd quote`. Fixture F63. Mutation: (ii) reads the call's text before the open quote across segments (option (c)).
+- **T7** is unchanged. Its v0 comment stays, and a v1 observation line is appended beneath it (§4).
+
+A.8 **§8 item 28:**
+- (ii) reading anything but its own segment's text before the open quote;
+- (ii) with an argument test;
+- (ii) read by G7, G8 or G9;
+- a change to `tokenise`'s tokens or `unbalanced` flag;
+- T7's name, command or assertion edited.
+
+**Part B — the test kit's `arm` helper, declared before code (report section 5).**
+- **Permitted under I9.** I9 covers v0 assertions (T1–T41). `arm` (`tools/mods/spatial-guardian/test/guardian.test.ts:49-96 @ 2d4fa886 sha256:f6dd1dedd53353a10956654a87c6695cf05a2c2c19a4ab379ab0df3a68d26f18`) holds no assertion. The v0 module makes no env read (§0.2 item 5; P0 §5's baseline), so a default answer changes no v0 test's outcome against v0 code.
+- **The change:**
+  - `World` (`tools/mods/spatial-guardian/test/guardian.test.ts:29-40 @ 2d4fa886 sha256:bde263d48c2a2c01b7ba1a82acd69c5346d7d3798529bc46da8fff7bbbd35915`) gains an optional `env`: either a map from name to value, or a rejection.
+  - `arm` registers `env.get` exactly once, in the shape P0b (i) records (Amendment 1, item 1). It answers from `world.env` when one is given. Otherwise `USERPROFILE` answers `C:\u` (§3's preamble) and every other name is unset.
+  - F46 (b) sets `env` to a rejection.
+- The header comment (`tools/mods/spatial-guardian/test/guardian.test.ts:3-5 @ 2d4fa886 sha256:613450dffc1334dfcba8bab1042b28bfb2656007e92152eab4644d1f73a01637`) gains one sentence saying that `env.get` is answered by default.
+- **No other change:** no v0 `expect`, fixture string or test name.
+- **§8 item 29:**
+  - `arm` answering by default any event other than `env.get`;
+  - `world.env` not replacing the default;
+  - any v0 test body changed other than appended RECORDED MUTATION lines.
+
+**Part C — the plugin-test hold (Amendment 5, item 4).**
+- **What the form requires of `claude plugin test`:**
+  - §1's may-claims are made under it, at 2.1.289;
+  - §4: every new and v0 mutation is observed by running it, and recorded with its commit and `claude --version`;
+  - §9: the reviewer runs it at the gated head, and observes every mutation there;
+  - the PR body carries its output with the version.
+- **Nothing substitutes for it.** A Node stand-in run is rehearsal, not an observation (Amendment 5, item 5). So no test has evidence of record, and no gate can be held, until it runs.
+- **The build resumes only once the human has cleared the hold.** No agent takes any step to clear it (Red line; §8 item 9).
+- **The resumed build's first step:** `claude --version`, then `claude plugin test tools/mods/spatial-guardian` on the unchanged base.
+  - Predicted: v0's 39 tests pass (P0 §1).
+  - A build other than 2.1.289 fires I2.
+  - The same refusal message again is **I15**: STOP, nothing written.
+
+**Part D — size.**
+- **Correction:** Amendment 5, item 6 sets the draft file's length against an estimate of changed lines. The corrected reference is §7's counting command, which the report's section 5 measures on the draft by `git diff --numstat` against ccac14d2. Proof: that bullet of the report's section 5.
+- **Measure:** the draft's register.js changed lines, read from that bullet, are over Amendment 4, Part E's figure for the file.
+- **New estimate:** register.js about 780, tests about 1060 (Parts A and B add F62, F63, T71, T72 and the default), README about 160. That is about 2000 lines in all, over the 1300 ceiling.
+- §7's size line stands, unedited. An overrun at the gated head is class 8 (round 25, item 2 (a)).
+
+**Part E — record lines amended by reference.**
+- **§1, may claim, item 1:** adds that G1 refuses F62 and passes F63.
+- **§1, may not claim:** unchanged.
+- **§2.2:** "The change" → A.1. "Newly allowed, exactly" and N2 → A.2. "What stays refused" adds A.2's bullet. "Checked before code" → A.6.
+- **§3:** the preamble's env answer is Part B. F62 and F63 are new.
+- **§4:** T71 and T72 are new. T42's mutation reads as (i) and (ii) both dropped, which restores v0's rule.
+- **§5:**
+  - T1–T34 and T37–T72 pass.
+  - A.6's predictions are added.
+  - The `validate` prediction stands, since no call or env name is added.
+  - New invalidators:
+    - **I14:** P0d refuses #2, #4, #5 or #6.
+    - **I15:** `claude plugin test` refuses to run at the build of record.
+- **§8:** items 28 and 29 are new. Item 3 reads §2.2 as A.1 amends it.
+- **§9:**
+  - Dispatch: after this amendment's commit and the human's clearing of Part C's hold. The worker runs Part C's step, then A.6, then the build.
+  - The architect adds: A.1 to A.4, read against the code.
+  - The reviewer adds: F62 and F63, and Part B's diff, which must leave every v0 test body untouched.
+
+**Superseded index (read this amendment first).**
+- §2.2's change bullet, its N2 and its newly-allowed set → A.1 and A.2.
+- §2.2's checked-before-code list → A.6.
+- §3's preamble (the env answer) → Part B.
+- §1's may-claim 1 → Part E.
+- §9's dispatch order → Parts C and E.
+- Amendment 5, item 6's measure → Part D.
+- §7's estimate (as amended by Amendment 4, Part E) → Part D. The size line is not edited.
+
+### Amendment 7 — the resume: G8 covers the main checkout's `.claude/settings.local.json` (scope addition); the build of record; merging main in; worker report 2 read; installing stays the human's; size (Parts A to G: classes 1, 3 and 9)
+
+*Written before any resumed code, and after worker report 2's outcomes were seen. Nothing is committed on `cut/guardian-v1` beyond commit 5a9eb051, which is named in words (round 25, item 2 (d)). The architect agent drafted this at main e7bc3718. Nothing below is a quotation. Code on main is cited `path:line @ e7bc3718 sha256:<hex>`. Branch code is named by its lines, in words, at 5a9eb051, with no hash. Worker reports 1 and 2 (`state/consults/2026-10-05-guardian-v1-worker-report-1.md`, `state/consults/2026-10-05-guardian-v1-worker-report-2.md`) are cited by section. Read Part G's superseded index first, then the superseded indexes of Amendments 6, 4 and 2.*
+
+**Part A — scope addition (class 9): the human's direction of 2026-10-09, item 3f** (`state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md:27-28 @ e7bc3718 sha256:bb02687c356a9f52ef905b6f8a993d972215b1cd27f62c607d75fc64b227c19c`; its RULED block in `DECISIONS-PENDING.md` is RULED 2026-10-09, the slot orders, cited by heading). Fable's advice d of 2026-10-06 (`state/directives/2026-10-06-boot-mods-local-and-machine-script.md:24 @ e7bc3718 sha256:060deb1c3c469e71f9d812ef5c95fe7488ec72fe905051060aa8a71ff74433de`) names the file as the repository's, where the install record lives. It is advice, and item 3f is the ruling.
+
+A.1 **The file.**
+- L is `<M>/.claude/settings.local.json`, with M from §2.6's lookup: the main working tree's root, also for a worktree (P0 §5).
+- L holds the local-scope enable record of both mods (v0's form, Amendment 11, item 3) and the project's local permission settings.
+- Line 32 of `.gitignore` at e7bc3718 ignores L, so no gate ever reads a change to it.
+- The user folder's own `settings.local.json` is already refused by §2.5 (`settings*.json` directly under H; F42's Edit row). The addition is therefore the repository's file.
+
+A.2 **§2 shape: G8's path side** (§2.5, with Amendment 2, Part E).
+- **Tools:** Write, Edit and NotebookEdit, from any agent, the main loop included. The check runs in G8's existing place in the order (§2.1(c)), after the user-folder checks.
+- **Candidate:** a call is a candidate when its placed, normalised path ends in `/.claude/settings.local.json`. It is also a candidate when its path as received ends that way, normalised the same way (every `\` read as `/`, ASCII lower-cased) and read with a `/` put in front. Only a candidate makes a lookup.
+- **For a candidate:** M is found by `mainTree` (cached on success), and L is placed by `place` (`tools/mods/spatial-guardian/hooks/register.js:251-281 @ e7bc3718 sha256:bdfb96e8fb70e6b72863c620f5140efcc8f4671718499e1eb8cfc9cd2c1bf8ca`). The call is refused, with `G8_REASON` and rule `G8`, when the candidate's placed path equals L's placed path, both normalised (`tools/mods/spatial-guardian/hooks/register.js:284-286 @ e7bc3718 sha256:ef61bc96612db7e71a9e2cebf48bd190e10c39730f996124de8c3095ffcf1aa6`).
+- **Fail closed:**
+  - a rejected repository lookup, or a stat that fails other than with ENOENT, throws to the hook's catch (§2.1(b); rule `catch`);
+  - when L cannot be placed, the candidate is refused (`G8`);
+  - when there is no repository, a candidate passes, as for G9 (§2.6).
+- **A link at L, or in its folders,** stays in reach. The call is a candidate by its spelling, and both sides resolve to the link's target.
+- **No new hook, `$` call, env name or reason.** The lookups go through `mainTree` and `place`, so `validate`'s calls line keeps the annotations recorded in worker report 2, §5. The repository check (Amendment 2, Part C) is not run for this check (§8 item 21).
+- **The shell side.**
+  - G8's command side is unchanged. Its action words already refuse the CLI's route to L: `claude plugin enable` and `disable` at local scope (F42).
+  - A Bash or PowerShell write to L is not read. That is OPEN-7's default (a).
+
+A.3 **Still allowed:**
+- a read of L (Guardian has no read hook);
+- `<M>/.claude/settings.json`, and every other path under `<M>/.claude/` (F43 is unchanged);
+- a `settings.local.json` in any other checkout: a worktree under `C:\dev\wt\` or under `<M>/.claude/worktrees/`, or another clone;
+- a `settings.local.json` that is not in a `.claude` folder;
+- shell writes, pending OPEN-7;
+- the engine's own writes (a permission prompt's always-allow answer, `/permissions`, `/plugin`). They are not tool calls, and they are the human's acts.
+
+A.4 **Fixtures.**
+- **Engine answers:** `env.get` by `arm`'s default (Amendment 6, Part B); session.repo `C:/r`; stat by v1's file-system helper (every path resolves to itself unless a row says otherwise).
+- **F64, refused, G8 (T73):**
+  - Write `C:\r\.claude\settings.local.json`;
+  - Edit `c:/R/.Claude/Settings.Local.JSON`;
+  - NotebookEdit `C:\r\.claude\settings.local.json`;
+  - Edit `C:\r\x\..\.claude\settings.local.json`;
+  - a `worker` row's Write to `C:/r/.claude/settings.local.json`;
+  - Write `C:\r\.claude\settings.local.json`, with the file answering ENOENT and its folder existing;
+  - Edit `C:\link\.claude\settings.local.json`, with `C:/link` resolving to `C:/r`;
+  - Write `C:\r\.claude\settings.local.json`, with that file resolving to `D:/t/s.json` (a link at L).
+- **F65, `next(e)` (T74):**
+  - Edit `C:\r\.claude\settings.json`;
+  - Write `C:\r\.claude\settings.local.json.bak`;
+  - Write `C:\r\settings.local.json`;
+  - Write `C:\r\.claude\worktrees\w\.claude\settings.local.json`;
+  - Write `C:\dev\wt\x\.claude\settings.local.json`;
+  - Write `C:\r\docs\.claude\settings.local.json`;
+  - Bash `cat > C:/r/.claude/settings.local.json`;
+  - Bash `git check-ignore -v .claude/settings.local.json`;
+  - Write `C:\r\.claude\settings.local.json`, with session.repo answering no repository.
+- **F66 (T75):**
+  - (a) Write `C:\r\.claude\settings.local.json`, with session.repo rejecting: refused, `CATCH_REASON`;
+  - (b) Write `C:\r\docs\x.md`, with session.repo rejecting: `next(e)`, because a non-candidate makes no lookup;
+  - (c) Write `C:\dev\wt\x\.claude\settings.local.json`, with `C:/r/.claude` answering ENOENT: refused, G8, because L cannot be placed.
+
+A.5 **Tests.** Each test's comment carries its observation (§4; Part D).
+- **T73** `G8 refuses a tool write to the main checkout's .claude/settings.local.json in every spelling, a link included`. Fixture F64. Mutation: the candidate test reads the placed path only, not the path as received.
+- **T74** `G8 allows the repository's other .claude files, another checkout's settings.local.json and shell calls that name it`. Fixture F65. Mutation: the suffix test alone decides (L's comparison dropped).
+- **T75** `G8's settings.local.json check fails closed and makes no lookup for any other path`. Fixture F66. Mutation: a rejected repository lookup is read as no repository.
+
+A.6 **Existing rows: none changes.**
+- F42's user-folder `settings.local.json` row is refused by the user-folder side, as before.
+- F43's three `C:\r\.claude` rows pass.
+- F46 (b), F47 to F49 and every v0 fixture hold no candidate. They make no new lookup, and `arm` gains no answer (§8 item 29 holds).
+- T49, T50, T54, T56 and T57 are unchanged.
+
+A.7 **§21a.**
+- The addition falls under the form's first two Gating heads: security posture, and refuse-only with fail-closed. It adds one refusal, adds no write and moves no catch.
+- It brings no other §21a category: no wire change, no ADR, no configuration.
+
+A.8 **README (R-b, R-f).**
+- G8's row gains L, as the local scope's enable record and the local permission settings. Its allowed list now reads as the repository's other `.claude` files.
+- G8's limits gain four entries:
+  - shell writes to L;
+  - another checkout's `settings.local.json`;
+  - a session started in a worktree, which reads that worktree's file;
+  - a link at L whose target is written by its own spelling.
+- The limit on the repository's own settings keeps the tracked files unguarded, and names L as guarded against tool writes.
+- The Install section gains one sentence: G8 refuses an agent's tool write to the enable record.
+- G8's kept over-refusal (a settings change the human asks the custodian to make by a tool write) now also covers a permission change in L.
+
+A.9 **§1.**
+- May claim, item 2, adds F64's refusals and F65's passes. Item 3 adds F66 (a) and (c).
+- May not claim:
+  - A.3's not-read shapes;
+  - which local settings file the engine reads for a session the human starts somewhere other than the main checkout.
+
+A.10 **§5.**
+- **Predicted:** F64 to F66 as A.4 states. `validate`'s lines are unchanged from the line worker report 2, §5 observed.
+- **Declared unchanged:**
+  - every reason, `G8_REASON` included;
+  - §7's env names;
+  - the hooks line and the calls line;
+  - G8's user-folder side and its `.claude.json` rule;
+  - F42, F43 and F46 to F49.
+- **Invalidated by:**
+  - the enable record being found somewhere other than L (v0's form, Amendment 11, item 3);
+  - a P0e (c) row showing an agent's tool write to L that was not a settings change the human asked for (Amendment 2, A.8's reading of I8).
+
+A.11 **§8 item 30, block-on-sight:**
+- a refusal of a `settings.local.json` path on the suffix alone;
+- a lookup made for a non-candidate;
+- a rejected lookup read as no repository, or an L that cannot be placed read as allow;
+- a shell-side refusal of L before OPEN-7's ruling and its class 9 amendment;
+- any write to L by any agent in the piece, or any of L's content in a record.
+
+§8 item 9 and I6 gain any write to L.
+
+A.12 **§9.**
+- The architect reads item 3f against A.2, F64 to F66 and T73 to T75.
+- The reviewer adds F64 to F66.
+- Part A's code waits for OPEN-7's ruling, or for the human's note that its default stands.
+
+**Part B — post-result (class 1): the build of record.**
+- **Observed:** #183's mutations were observed at 2.1.291 (`tools/mods/spatial-guardian/test/guardian.test.ts:769-773 @ e7bc3718 sha256:20477aacf794c83ac676f998b946925409357228cda28e05cf6d61f1f688ff79`), and main's README names 2.1.291 (`tools/mods/spatial-guardian/README.md:5 @ e7bc3718 sha256:27491e021c9350d8e3b28b3f43fad9a9cb5039f887bd30bcb1c439ca05ea259e`). This form names 2.1.289, so every run of record on resume would fire I2 as it is worded.
+- **Reading:**
+  - The build of record is the version `claude --version` prints at P0e (a), as the N1 form takes its build (its §0.3, item 1). I2 reads against that build.
+  - §1's 2.1.289, §4's E-row build precondition and R-j's build line all read as that build.
+  - The 2.1.288 type reads keep their labels (§0.1). A `plugin test` result is a claim about the build of record.
+- **P0e: read-only, in the worktree, before the merge.** Nothing from P0e is an observation.
+  - **(a) The CLI.** The worker runs `claude --version`, `timeout 60 claude --help`, `claude plugin --help`, `claude plugin marketplace --help` and `claude mcp --help`, all inside §0.5's list as Amendment 4, Part B amends it. It records each output's sha256 and sets the outputs against P0b (ii) and worker report 2, §2.
+    - **STOP (I16), to the human as a red line, as round 58 was:** a plugin, marketplace or MCP verb or alias that installs, uninstalls, enables, disables, updates, adds, removes or configures, and that is not in §7 as Amendment 4, A.2 lists it.
+    - A ruled verb that is now absent is Amendment 4, A.6's invalidator.
+    - A changed top-level list is taken into R-f's list (§8 item 27). It is not a stop.
+  - **(b) The plugin-test switch.** `claude plugin test tools/mods/spatial-guardian` at 5a9eb051. Predicted: 70 pass. Worker report 1, §4's refusal message appearing again is I15.
+  - **(c) A replay of tool writes.** It covers every Write, Edit and NotebookEdit call in this project's transcripts from 2026-09-20 to the run whose path, normalised, ends in `/.claude/settings.local.json`. Each row gives the time, the agent, the tool, and whether the path is the main checkout's L. No content and no command text are recorded. Nothing is predicted; the rows are reported. A row that writes L joins A.8's kept over-refusal when it was a settings change the human asked for. Any other such row is reported to the human under A.10.
+
+**Part C — post-result (class 1): merging main in, and the pins.**
+
+C.1 **The merge.**
+- In the worktree, the worker merges main at a commit that holds this amendment, as a merge commit: no squash, no rebase, no force (§8 item 17). The merge commit is signed off.
+- Under `tools/mods/`, the merge brings in:
+  - #183: `register.js`, `continuity.mjs`, `guardian.test.ts` and the README's N1 lines;
+  - #184: the README's Install and Turning-it-off lines.
+- The N1 form's §0.4 (`tools/mods/GUARDIAN-N1-BEFORE-AUTO-COMPACTION-PREREGISTRATION.md:86-99 @ e7bc3718 sha256:348ce96a9486ec68efbf66d391c08fcde04cb77d2d0af24819b10f83d62758af`) names the expected conflicts and the rule: N1's text comes from main, and every G-rule's text from v1.
+
+C.2 **Expected conflicts.**
+- **`register.js`:**
+  - **The header's N1 entry: certain.** v1 rewrote the header (lines 1-25 of `tools/mods/spatial-guardian/hooks/register.js` at 5a9eb051; its N1 entry is line 24). Main edited its line 15 in place (`tools/mods/spatial-guardian/hooks/register.js:15 @ e7bc3718 sha256:534c501407a003f8b5956ee42929c2eff5a00cdaa10cfbe7c5513ec5fd1cbc60`).
+  - **The declared values: possible.** v1's block is lines 29-38 at 5a9eb051, with `N1_BAND` on line 32. Main changed its line 23 (`tools/mods/spatial-guardian/hooks/register.js:23 @ e7bc3718 sha256:c56a9811b42c19700f029b0b53c26f4fc5f6ecdc3bf52d7428d3d3f632e715c2`).
+  - **The N1 section: predicted to merge cleanly** (`tools/mods/spatial-guardian/hooks/register.js:420-486 @ e7bc3718 sha256:729c3ae48db128a10697e8c4c15998ea678e70a9e120cb1d31e19f3f6188b81d`). v1 kept v0's section unchanged (lines 1018-1053 at 5a9eb051) and changed only `register` after it.
+- **`guardian.test.ts`:**
+  - `World` and `arm`: main's lines 38, 39 and 62 (`tools/mods/spatial-guardian/test/guardian.test.ts:29-40 @ e7bc3718 sha256:833893874e83e44e2344dbfe1f2a65c1d5c75bd44926dbfedeebdefbe8263706`; `tools/mods/spatial-guardian/test/guardian.test.ts:49-96 @ e7bc3718 sha256:348788afd62e7999b6e68ba0120ac72630efd29bb8cb284c50653ca0efb9f2c1`) against Part B's `env` (lines 29-43, and `arm` from line 52, at 5a9eb051);
+  - the end of the file: main's B section and its re-observation block (`tools/mods/spatial-guardian/test/guardian.test.ts:739-831 @ e7bc3718 sha256:7b1f143fa41ad0f88fba35e4931b621d2845c314412d52e98a44b748a8365894`) against v1's section (lines 727-1511 at 5a9eb051).
+- **README:** main's lines 5, 18, 24 and 38, and its Install and Turning-it-off sections (`tools/mods/spatial-guardian/README.md:46-63 @ e7bc3718 sha256:b78d44f5d723e481a2566d9760273969a002acb9554ff5fff12ce9c4c42e011b`), against v1's lines 5, 21, 27 and 73 and its lines 94-111 at 5a9eb051.
+
+C.3 **How the conflicts are resolved.**
+- **From main:** N1, `continuity.mjs` and main's B tests, byte for byte. `N1_BAND` takes main's value. The B section and its re-observation block stay where main put them, before v1's section.
+- **`World` and `arm`:** main's lines, with Amendment 6, Part B's `env` field and default added, and nothing else.
+- **README:**
+  - line 5 names the build of record (Part B) and keeps main's clause on N1's three fields;
+  - the N1 row and the N1 paragraph are main's;
+  - Install and Turning it off are main's local-scope text, plus v1's sentence that G8 refuses these commands to every agent, and A.8's sentence;
+  - v1's user-scope sentence (never `project` or `local` scope) is dropped, because it contradicts v0's form, Amendment 11.
+- **From v1:** every G-rule line, the log, and v1's tests.
+- **Check at the merge commit, by script.** The diff from the merged main commit to the merge commit holds:
+  - no line of `continuity.mjs`;
+  - no line of main's N1 section or of main's B tests;
+  - no line of Install or Turning it off other than C.3's two sentences.
+
+C.4 **Readings after the merge** (the N1 form's §0.4).
+- I9 reads against main's T1 to T41: T28 is now B-T3, and T29's fixture is recent.
+- The N1 that §5 and §7 declare unchanged is N1 as main holds it.
+- §7's `<base>` is the merged main commit, so #183's and #184's lines are not counted.
+
+C.5 **Check at the merged head, before any Part A code.**
+- `claude plugin test`. Predicted: every test passes, namely v1's 70 plus main's B-T1, B-T2 and B-T4, each named.
+- `validate` on `tools/mods/spatial-guardian`, as text. Predicted: the hooks and env lines are unchanged, and the calls line is as worker report 2, §5 records it.
+- **STOP (I17), to the architect:** any failing test, or a hooks or env line that differs.
+
+C.6 **The pins.**
+- **Standing.** Every pin in this form is at a commit on main (5c06b0c2, 3c802bcc, cd539e79, 2d4fa886, e7bc3718), and each is a historical pin. The pin is authoritative for the text it cites at its commit. The merged head's tree is authoritative for the code (round 14). No pin is edited or re-pinned.
+- **How the worker re-derives them.** By script, as evidence in its report and not as a record. For each pin into the three files:
+  - the span at the pin's own commit, with its sha256 recomputed;
+  - the lines where the same bytes sit at the merged main commit and at the merge commit, or the word changed.
+- **Predicted at the merged main commit:**
+  - every `register.js` pin keeps its lines and bytes, except the registrations (457-464 at 5c06b0c2), which are found at `tools/mods/spatial-guardian/hooks/register.js:488-495 @ e7bc3718 sha256:308bc9cfdb35f4d33b199f2aed9c6eba8c2a1dc8c08fd770bd1cec072fc5e9a6`;
+  - the test pins 29-40 and 49-96 (at 2d4fa886) keep their lines, with changed bytes;
+  - every other test pin and every README pin keeps its lines and bytes.
+- **Predicted at the merge commit:** the v0 spans that v1 changes by design read as changed.
+- A different finding is reported. It changes no claim.
+
+**Part D — post-result (class 1): worker report 2, read for the resume.**
+
+D.1 **What exists** (report §5): commit 5a9eb051 changes the three files, and 70 of 70 plugin tests passed at 2.1.289. No observation is of record. Each new test's comment carries an `OBSERVATION-Tnn` placeholder.
+
+D.2 **Readings settled** (report §9):
+- **Item 1.** F62's second row is `bash -c "git push 'origin"` with its double quote closed. It is refused through the rescan by (ii) (Amendment 6, A.7). T71's rows hold that form (lines 1493-1499 of `tools/mods/spatial-guardian/test/guardian.test.ts` at 5a9eb051).
+- **Item 2.** An answer of no repository is not cached and is asked again. That adds lookups only and changes no outcome.
+- **Item 5.** T58's line names T58's own test and gives a count for the others. That meets §4.
+- **Item 6.** The v1 helpers beside `arm` answer only for the tests that call them, so §8 item 29 holds.
+- **Item 3, with worker report 1, §5.** `validate`'s calls line differs from §5's lines only in `(via …)` annotations. This is class 2 under §5. The line observed is the prediction from now on (A.10, C.5).
+- **Item 7.** Evidence about the test kit only.
+
+D.3 **Observations owed.**
+- **How:** all at one observation commit, the one whose code is the gated head's code. Each mutation is applied, run under `claude plugin test`, recorded by failing test name with the commit and `claude --version`, then reverted (round 25, item 2 (c)).
+- **What:**
+  - **The new tests:** T42 to T72 and T73 to T75. None of T42 to T72 is of record: report §6's runs of T42 to T52 are scratch runs at 5a9eb051 on 2.1.289, and its runs from T53 on are void.
+  - **v0, re-declared:** T16, T24 and T25 share one mutation (§4).
+  - **v0, re-observed:** T1 to T15, T17 to T23, T26 to T34 and T37 to T41, as main holds them. T28 is B-T3 and T29 is B-T5, each with its recorded lines.
+  - **Main's B-T1, B-T2 and B-T4:** each recorded mutation line is re-observed, because v1 changes the `register` they run under (§4's reason).
+  - **T35 and T36:** run by `node --test`, unchanged, with no mutation.
+- **Recording:**
+  - In each new test, the `OBSERVATION-Tnn` placeholder is replaced by the observation. These are the piece's own unmerged lines, so §8 item 12's last bullet (an existing line edited) reads as applying to lines on main, not to these.
+  - Beneath each line on main (v0's and #183's), a v1 line is appended.
+  - No placeholder remains at the gated head (§8 item 12).
+  - No record calls a `verify-mutation` run an observation.
+
+**Part E — installing stays the human's (no new class; one hold added).**
+- **What the form already says:** the Red line's second and third bullets, I6, §8 item 9, and §9's Operator steps (the human's typed approval naming the E-rows, their click, their reload).
+- **No resumed step installs, enables, reloads or loads a mod.**
+  - P0e only reads.
+  - The merge happens in the worktree under `C:\dev\wt\`.
+  - `claude plugin test` and `validate` load nothing into a session (Amendment 6, Part C).
+  - v1 changes no `plugin.json`, `hooks.json` or marketplace file, so no reinstall is needed.
+- **What changes the live mod is the human's:** the merge (their click, after their typed approval) and the reload.
+- **The custodian's fast-forward of the main checkout** puts v1 where the live mod is read from (v0's form, Amendment 11, item 5). It is therefore made only after that approval and click, as §9 already orders.
+- **Added hold:** any write to L, the enable record (A.11).
+- **E15** (beyond the brief's list; it runs only if the human names it):
+  - **The call:** a main-loop Edit of the main checkout's `.claude/settings.local.json`, whose `old_string` is fresh text absent from the file, made with no prior Read.
+  - **Predicted:** G8's reason, and the file's sha256 unchanged, computed before and after by script. No content is recorded.
+  - **Harmless if not refused:** the Edit tool rejects an `old_string` it cannot find.
+  - **If the engine stops the call before Guardian's hook runs,** or asks the human for permission, the row records that and is inconclusive, and the human declines any prompt.
+  - When E15 is named, E10's file count extends to it.
+
+**Part F — size (§7). No class until the gated head.**
+- §7's size line stands, unedited.
+- At 5a9eb051, §7's command against ccac14d2 counts 1645 lines over 3 files (report §5). After the merge, `<base>` is the merged main commit.
+- **Estimate at the gated head:** about 1850 lines over 3 files, within Amendment 6, Part D's estimate and over the 1300 ceiling:
+  - register.js about 790;
+  - tests about 980 (Part A about 70, observation lines about 110);
+  - README about 85.
+- An overrun at the gated head is class 8, by §7's own command (round 25, item 2 (a)). The file count stays 3 (I5).
+
+**Part G — record lines amended by reference, and the superseded index.**
+- **§1:** may-claim items 2 and 3, and the may-not-claim list → A.9. The build → Part B.
+- **§3:** F64 to F66 are new.
+- **§4:**
+  - T73 to T75 and E15 are new;
+  - the observation set → D.3;
+  - the E-rows' build precondition → Part B.
+- **§5:**
+  - T1 to T34, T37 to T75, and main's B-T1, B-T2 and B-T4 pass;
+  - A.10's predictions and declarations are added;
+  - **I16** is P0e (a)'s stop, and **I17** is C.5's stop;
+  - I2 reads against Part B's build;
+  - I6 gains L.
+- **§7:** G8's locations add L (A.1). The estimate → Part F. The size line is not edited.
+- **§8:** item 30 is new (A.11). Item 9 gains L. Item 12 reads as D.3 states.
+- **§9:**
+  - **Dispatch** comes after this amendment's commit, in this order:
+    1. P0e (a) to (c);
+    2. C.1 to C.6;
+    3. Part A's code, once OPEN-7 is ruled or its default confirmed;
+    4. D.3;
+    5. the suites, `validate` on both targets as text and `--json`, and §7's count.
+  - **The architect adds** A.12, C.3's check and D.2.
+  - **The reviewer adds** F64 to F66, P0e's outputs, C.5, and C.6's table.
+  - **Verdicts** follow `state/directives/2026-10-05-product-first-direction.md`, section 2.
+- **Class 3 correction.** Amendment 6's first line names its superseded index as Part F. The index follows its Part E, under its own heading, and that heading is the reference.
+
+**Superseded index (read this amendment first).**
+- §2.5's path side → A.2 adds L.
+- §1's build, I2's build, §4's E-row build precondition, and R-j's build line → Part B.
+- §4's observation set → D.3.
+- §9's dispatch order → Part G.
+- §7's estimate, as Amendment 6, Part D amends it → Part F. The size line is not edited.
+- Amendment 6's reference to its own superseded index → Part G's class 3 row.
+
+### Amendment 8 — the human's rulings on Amendment 7 (class 5)
+
+*Written by the custodian after the human's typed rulings were received (08:37:12Z by the transcript) and before any code. It records the human's rulings on Amendment 7's open item and its two notes. References only; nothing below is a quotation.*
+
+1. **The ruling:** state/directives/2026-10-09-rulings-on-the-eight-forms.md:73-77 @ b4dc05e08c1e24ef7d6904596bb2332b87dcf75b sha256:16ae761cf559f0bd58203e14c76aca35344f9ec313bfdac17334667d0b1cb378.
+2. **OPEN-7 is (a).** G8 refuses tool writes only. A shell write to the main checkout's `.claude/settings.local.json` is not read, and the README states that limit. Amendment 7, Part A stands as drafted, and its A.12 hold is discharged.
+3. **Part B is accepted.** The version printed at P0e (a) is the build of record for the whole piece. If a later run prints a different version, I2 fires and the matter goes to the human.
+4. **E15 is named.** It runs with the other E-rows, after the human's merge click and reload. If a permission prompt appears, the human declines it. An inconclusive row is recorded as inconclusive, never as a pass.
+5. **Installing, enabling and reloading stay the human's.** The merge waits for the human's typed approval after both gates.
+6. **Superseded index:** Amendment 7's OPEN-7 → item 2; Part B's reading → item 3; Part E's E15 → item 4. Nothing above is edited.

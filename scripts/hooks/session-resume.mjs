@@ -11,13 +11,19 @@
 //
 // PATHS (human's second directive, item 17): reads state/CUT-STATE.md, not the old root path.
 //
+// After the block it prints one line of machine facts: the age of the block in minutes, the commits
+// HEAD is past the tip the block names, and the modified tracked files; `unknown` for any fact it
+// cannot read.
+//
 // Never throws to the shell: prints what it can and exits 0 even if state/CUT-STATE.md is
 // missing or unparseable.
 
 import fs from 'node:fs';
 import path from 'node:path';
+import { execFileSync } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
 import { isCloudSession } from './cloud.mjs';
+import { parseSessionContinuity } from './precompact-flush.mjs';
 
 export const READING_ORDER = `Reading order after a compaction or a new session (AUTONOMY.md §0):
 1. state/CUT-STATE.md — its SESSION-CONTINUITY block first (position, tip hash, half-made judgments, intended sequencing), then the ledger's last entries.
@@ -50,19 +56,62 @@ export function extractSessionContinuityBlock(text) {
   return lines.slice(idx, end).join('\n').trim();
 }
 
+const RESUME_GIT_TIMEOUT_MS = 2000; // per git call; two calls plus the stdin wait stay under the entry timeout
+const TIP_GUARD = /^[0-9a-f]{7,40}$/;
+
+// Real git, argument array, no shell; null on any failure. The output is not trimmed.
+function resumeGit(args, projectRoot) {
+  try {
+    return execFileSync('git', args, {
+      cwd: projectRoot,
+      encoding: 'utf8',
+      timeout: RESUME_GIT_TIMEOUT_MS,
+      stdio: ['ignore', 'pipe', 'ignore'],
+    });
+  } catch {
+    return null;
+  }
+}
+
+function resumeLine(projectRoot, parsed) {
+  let age = 'unknown';
+  let past = 'unknown';
+  let modified = 'unknown';
+  try {
+    if (parsed?.flushedAt) {
+      const flushed = new Date(parsed.flushedAt).getTime();
+      if (!Number.isNaN(flushed)) age = String(Math.floor((Date.now() - flushed) / 60000));
+    }
+    if (parsed?.tip && TIP_GUARD.test(parsed.tip)) {
+      const out = resumeGit(['rev-list', '--count', `${parsed.tip}..HEAD`], projectRoot);
+      if (out !== null && /^\d+$/.test(out.trim())) past = out.trim();
+    }
+    const status = resumeGit(['status', '--porcelain'], projectRoot);
+    if (status !== null) {
+      modified = String(status.split(/\r\n|\r|\n/).filter((l) => l.trim() !== '' && !l.startsWith('??')).length);
+    }
+  } catch {
+    // a fact not yet read stays unknown
+  }
+  return `Resume facts: block_age_min=${age} commits_past_tip=${past} modified_tracked_files=${modified}`;
+}
+
 export function buildOutput(projectRoot) {
   const p = cutStatePath(projectRoot);
   let block = null;
   let note = null;
+  let parsed = null;
   try {
     const text = fs.readFileSync(p, 'utf8');
     block = extractSessionContinuityBlock(text);
+    parsed = parseSessionContinuity(text);
     if (block === null) note = `(${p} has no SESSION-CONTINUITY block)`;
   } catch (e) {
     note = `(${p} could not be read: ${e.message})`;
   }
   const parts = [READING_ORDER];
   parts.push(block ?? note ?? '(no SESSION-CONTINUITY block found)');
+  parts.push(resumeLine(projectRoot, parsed));
   return `${parts.join('\n\n')}\n`;
 }
 

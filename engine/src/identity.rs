@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
 //! Stable feature identity, and the admission policy for a source that carries it under another
-//! name — **ADR-016 (Proposed)**.
+//! name — **ADR-016** (Accepted, with its Amendment 1).
 //!
 //! ADR-010 rule 2 resolves picking through `GPU ordinal → stable feature ID → authoritative f64`.
 //! A native `id` column satisfies that with no transform between file bytes and wire. A *mapping*
@@ -40,7 +40,7 @@ pub enum IdSource {
         at: String,
     },
     /// **The session tier** — the third identity class (R-I3,
-    /// `engine/ADMISSION-PREREGISTRATION.md` §2d; the proposed ADR-016 Amendment 1, point 1).
+    /// `engine/ADMISSION-PREREGISTRATION.md` §2d; ADR-016 Amendment 1, item 1).
     ///
     /// Reached when neither a native `id` column nor a caller declaration yields an admissible
     /// identity on a **single-file** source. Identity is the pair (dataset-session generation,
@@ -63,7 +63,7 @@ pub enum IdSource {
 /// which is the standing form of that probe rather than a note about one.
 ///
 /// **That this ordinal is physical rather than scan-ordered is the assumption the session tier
-/// rests on** (the proposed ADR-016 Amendment 1, point 1; its block-on-sight 5). **The engine
+/// rests on** (ADR-016 Amendment 1, item 1: verified against the corpus, never assumed). **The engine
 /// performs no such check at open**, and this const claims nothing about one: the evidence is a
 /// test's own local helper — the `pairs` closure at `engine/tests/session_identity.rs:136-142`,
 /// inside `the_ordinal_stays_attached_to_its_row_under_a_reordered_scan_on_this_fixture`
@@ -116,9 +116,9 @@ pub enum IdUniqueness {
     VerifiedAtOpenFullFile,
     /// Declared by the caller and **not** checked. Reachable only by explicit opt-out.
     DeclaredNotVerified,
-    /// **A third what-was-checked value, from the PROPOSED ADR-016 Amendment 1, point 1** — the
-    /// accepted ADR's §6 lists two, and that amendment binds nothing until the human accepts it at
-    /// P6. It is emitted because this cut implements the tier: the ordinals are
+    /// **A third what-was-checked value, from ADR-016 Amendment 1, item 1** — the ADR's §6 lists
+    /// two, and that amendment (Accepted) adds this one. It is emitted because this cut implements
+    /// the tier: the ordinals are
     /// distinct within one dataset-session generation **because of where they come from**, not
     /// because anything counted them.
     ///

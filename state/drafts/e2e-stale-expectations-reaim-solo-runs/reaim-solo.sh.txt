@@ -1,0 +1,32 @@
+#!/bin/bash
+# The e2e re-aim's final solo runs (§5 P1 is a solo claim), in an exclusive hold of the custodian's, at C:/dev/wt/reaim,
+# head cf2434e6, exe D:/wt-targets/k6/exes/spatial-ide-shell-reaim.exe (window height 800), each suite on a fresh app.
+# usage: reaim-solo.sh <tag-prefix> <suite...>   suite is one of regression admission source-changed console
+S="<the custodian's scratch folder>/cust2"
+log() { echo "[reaim-solo] $(date -u +%Y-%m-%dT%H:%M:%SZ) $*"; }
+P="$1"; shift
+cd /c/dev/wt/reaim || exit 90
+[ "$(git rev-parse HEAD)" = "cf2434e6f25033335d69ee4b667caefd109832f1" ] || { log "HEAD is not cf2434e6"; exit 90; }
+[ -z "$(git status --porcelain)" ] || { log "worktree not clean before"; exit 90; }
+export K6_EXE="D:/wt-targets/k6/exes/spatial-ide-shell-reaim.exe"
+export PATH="$S/shim:$PATH"
+unset SPATIAL_E2E_SOURCE_CHANGED_ROUTE
+for suite in "$@"; do
+  case "$suite" in
+    regression) f=e2e/regression.mjs ;; admission) f=e2e/admission-remediation.mjs ;;
+    source-changed) f=e2e/source-changed.mjs ;; console) f=e2e/console.mjs ;; *) log "unknown suite $suite"; exit 91 ;;
+  esac
+  tag="$P-$suite"
+  powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$S/app-down.ps1" > /dev/null 2>&1
+  cd /c/dev/wt/reaim/frontends/shell || exit 92
+  log "$tag start ($f, launched fresh)"
+  timeout 1500 node "$f" > "$S/out/$tag.log" 2>&1
+  rc=$?
+  log "$tag end rc=$rc"
+  powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$S/app-down.ps1" > "$S/out/$tag.down.txt" 2>&1
+  cat "$S/out/$tag.down.txt"
+  grep -a "FAIL\|launched\|INFO" "$S/out/$tag.log" | grep -av "^\s*$" | head -12 | cut -c1-300
+  cd /c/dev/wt/reaim || exit 93
+  log "$tag after: porcelain [$(git status --porcelain)]"
+done
+exit 0

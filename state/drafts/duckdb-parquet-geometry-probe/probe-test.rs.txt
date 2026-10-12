@@ -1,0 +1,120 @@
+//! Scratch probe, untracked, not committed.
+use duckdb::arrow::array::{Array, BinaryArray, LargeBinaryArray, RecordBatch};
+use duckdb::arrow::util::display::array_value_to_string;
+use duckdb::Connection;
+use spatial_engine::{Dataset, ViewportQuery};
+
+const P: &str = "C:/dev/spatial-ide/target/fixtures/compat-corpus/geoparquet-spec/example.parquet";
+
+fn hex(b: &[u8]) -> String {
+    b.iter().map(|x| format!("{x:02x}")).collect()
+}
+
+fn first_bytes(batches: &[RecordBatch], col: &str) -> (String, Option<Vec<u8>>) {
+    let b = &batches[0];
+    let idx = b.schema().index_of(col).unwrap();
+    let a = b.column(idx);
+    let dt = format!("{:?}", a.data_type());
+    if let Some(x) = a.as_any().downcast_ref::<BinaryArray>() {
+        return (dt, Some(x.value(0).to_vec()));
+    }
+    if let Some(x) = a.as_any().downcast_ref::<LargeBinaryArray>() {
+        return (dt, Some(x.value(0).to_vec()));
+    }
+    (format!("{dt} [not a binary array; display: {}]", array_value_to_string(a, 0).unwrap_or_default()), None)
+}
+
+#[test]
+fn probe() {
+    let con = Connection::open_in_memory().unwrap();
+    let v: String = con.query_row("PRAGMA version", [], |r| r.get(1)).unwrap();
+    println!("=== Q0 DuckDB library version ===\nlibrary_version={v}");
+    let src: String = con.query_row("PRAGMA version", [], |r| r.get(0)).unwrap();
+    println!("pragma col0={src}");
+
+    println!("=== Q1 type as DuckDB reports ===");
+    let mut st = con.prepare(&format!("DESCRIBE SELECT * FROM read_parquet('{P}')")).unwrap();
+    let rows = st.query_map([], |r| Ok((r.get::<_, String>(0)?, r.get::<_, String>(1)?))).unwrap();
+    for r in rows { let (n, t) = r.unwrap(); println!("DESCRIBE {n}: {t}"); }
+    let mut st = con.prepare(&format!("SELECT name, type, converted_type, logical_type FROM parquet_schema('{P}')")).unwrap();
+    let rows = st.query_map([], |r| Ok(format!("{:?} | {:?} | {:?} | {:?}",
+        r.get::<_, Option<String>>(0)?, r.get::<_, Option<String>>(1)?, r.get::<_, Option<String>>(2)?, r.get::<_, Option<String>>(3)?))).unwrap();
+    for r in rows { println!("parquet_schema: {}", r.unwrap()); }
+
+    println!("=== Q2 read_parquet geometry column per setting ===");
+    let mut got: Vec<(bool, Option<Vec<u8>>)> = vec![];
+    for flag in [true, false] {
+        con.execute_batch(&format!("SET enable_geoparquet_conversion = {flag}")).unwrap();
+        let mut st = con.prepare(&format!("DESCRIBE SELECT geometry FROM read_parquet('{P}')")).unwrap();
+        let rows = st.query_map([], |r| Ok(r.get::<_, String>(1)?)).unwrap();
+        for r in rows { println!("flag={flag} DESCRIBE geometry: {}", r.unwrap()); }
+        let mut st = con.prepare(&format!("SELECT geometry FROM read_parquet('{P}') LIMIT 1")).unwrap();
+        let batches: Vec<RecordBatch> = st.query_arrow([]).unwrap().collect();
+        let (dt, bytes) = first_bytes(&batches, "geometry");
+        match &bytes {
+            Some(b) => println!("flag={flag} arrow={dt} len={} first32hex={}", b.len(), hex(&b[..b.len().min(32)])),
+            None => println!("flag={flag} arrow={dt}"),
+        }
+        got.push((flag, bytes));
+    }
+
+    println!("=== Q3 WKB check and equality ===");
+    for (flag, b) in &got {
+        match b {
+            Some(b) if b.len() >= 5 => {
+                let le = b[0] == 1;
+                let t = if le { u32::from_le_bytes([b[1], b[2], b[3], b[4]]) } else { u32::from_be_bytes([b[1], b[2], b[3], b[4]]) };
+                println!("flag={flag} byte_order_flag={} ({}) geometry_type_code={t}", b[0], if le { "little-endian" } else if b[0]==0 {"big-endian"} else {"invalid"});
+            }
+            _ => println!("flag={flag} not a byte array"),
+        }
+    }
+    println!("same_bytes_first_value={}", got[0].1 == got[1].1);
+    let n_all: i64 = {
+        let mut eq = true;
+        let mut cnt = 0i64;
+        let mut vals: Vec<Vec<Option<Vec<u8>>>> = vec![];
+        for flag in [true, false] {
+            con.execute_batch(&format!("SET enable_geoparquet_conversion = {flag}")).unwrap();
+            let mut st = con.prepare(&format!("SELECT geometry FROM read_parquet('{P}')")).unwrap();
+            let batches: Vec<RecordBatch> = st.query_arrow([]).unwrap().collect();
+            let mut v = vec![];
+            for b in &batches {
+                let a = b.column(0);
+                if let Some(x) = a.as_any().downcast_ref::<BinaryArray>() { for i in 0..x.len() { v.push(Some(x.value(i).to_vec())); } }
+                else if let Some(x) = a.as_any().downcast_ref::<LargeBinaryArray>() { for i in 0..x.len() { v.push(Some(x.value(i).to_vec())); } }
+                else { v.push(None); }
+            }
+            cnt = v.len() as i64;
+            vals.push(v);
+        }
+        if vals[0] != vals[1] { eq = false; }
+        println!("all_rows_count={cnt} all_rows_identical_across_settings={eq}");
+        cnt
+    };
+    let _ = n_all;
+
+    println!("=== Q4 engine today ===");
+    match Dataset::open(P) {
+        Ok(ds) => {
+            println!("open=Ok geometry_column={}", ds.geometry_column());
+            println!("geometry_encoding={:?}", ds.geometry_encoding());
+            println!("declared_geometry_types={:?}", ds.declared_geometry_types());
+            println!("covering={:?}", ds.covering());
+            println!("geoparquet_version={}", ds.geoparquet_version());
+            println!("file_schema={:?}", ds.file_schema());
+            match ds.stream(&ViewportQuery::all()) {
+                Ok(mut s) => {
+                    let mut buf = Vec::new();
+                    match s.next_into(&mut buf) {
+                        Some(Ok(info)) => println!("first_batch=Some(Ok) rows={} vertices={} bytes={}", info.rows, info.vertices, buf.len()),
+                        Some(Err(e)) => println!("first_batch=Some(Err) {e:?} / {e}"),
+                        None => println!("first_batch=None"),
+                    }
+                }
+                Err(e) => println!("stream=Err {e:?} / {e}"),
+            }
+        }
+        Err(e) => println!("open=Err {e:?} / {e}"),
+    }
+}

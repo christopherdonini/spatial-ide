@@ -127,7 +127,7 @@ export function ingestTileBatch(params: {
   viewCentre: { x: number; y: number };
   maxResidentVertices: number;
   priorExtent: AuthoritativeBbox | null;
-  extentOfBatch: (batch: Pick<ResidentBatch, "rings">) => AuthoritativeBbox | null;
+  extentOfBatch: (batch: Pick<ResidentBatch, "parts">) => AuthoritativeBbox | null;
   unionBbox: (a: AuthoritativeBbox | null, b: AuthoritativeBbox | null) => AuthoritativeBbox | null;
 }): TileBatchIngestResult {
   const { tileSet, tileKey, batch, grid, viewportTileKeys, viewCentre, maxResidentVertices } = params;
@@ -193,32 +193,39 @@ export function ingestTileBatch(params: {
 }
 
 /**
- * The largest PREFIX of `batch` (by feature index -- the same "ids and rings built together, one
+ * The largest PREFIX of `batch` (by feature index -- the same "ids and parts built together, one
  * pass" discipline `decodeBatch.ts`'s own `ResidentBatch` doc comment names) whose cumulative vertex
- * count does not exceed `remainingVertices`. A feature is included only whole -- there is no
- * per-vertex truncation of an individual polygon's own rings, since a ring/feature is `decodeBatch`'s
- * own atomic unit (rule 2: "any cull, chunk, sort or LOD [that] desyncs an ordinal from its identity"
- * is the hazard building `ids`/`rings` together in one pass exists to avoid; slicing a `ResidentBatch`
- * by feature index preserves that pairing exactly). `remainingVertices <= 0` yields an empty batch,
- * never a negative-length slice.
+ * count does not exceed `remainingVertices`. A feature is included only whole, with ALL of its
+ * parts -- there is no per-vertex truncation of an individual polygon's own rings and no
+ * per-part truncation of a feature, since a feature is `decodeBatch`'s own atomic unit (rule 2: "any
+ * cull, chunk, sort or LOD [that] desyncs an ordinal from its identity" is the hazard building
+ * `ids`/`parts`/`partToRow` together in one pass exists to avoid; slicing a `ResidentBatch` by
+ * feature index preserves that pairing exactly, and `partToRow` stays a prefix because it is
+ * non-decreasing). `remainingVertices <= 0` yields an empty batch, never a negative-length slice.
  */
 export function trimBatchToVertexBudget(batch: ResidentBatch, remainingVertices: number): ResidentBatch {
   let vertices = 0;
   let count = 0;
+  let partsKept = 0;
   while (count < batch.ids.length) {
     let featureVertices = 0;
-    for (const ring of batch.rings[count]) {
-      featureVertices += ring.length;
+    for (const rings of batch.parts[count]) {
+      for (const ring of rings) {
+        featureVertices += ring.length;
+      }
     }
     if (vertices + featureVertices > remainingVertices) break;
     vertices += featureVertices;
+    partsKept += batch.parts[count].length;
     count++;
   }
   return {
     streamHandle: batch.streamHandle,
     batchSeq: batch.batchSeq,
     ids: batch.ids.slice(0, count),
-    rings: batch.rings.slice(0, count),
+    parts: batch.parts.slice(0, count),
+    partToRow: batch.partToRow.slice(0, partsKept),
+    partCount: partsKept,
     totalVertices: vertices,
   };
 }

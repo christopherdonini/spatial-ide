@@ -35,6 +35,10 @@ describe("formFamilyForCode", () => {
     expect(formFamilyForCode("engine.identity_unusable")).toBe("identity");
   });
 
+  it("CF1: engine.format_default_contradicted starts the CRS family, so its own remedy has a form", () => {
+    expect(formFamilyForCode("engine.format_default_contradicted")).toBe("crs");
+  });
+
   it("every other code starts no family on its own", () => {
     expect(formFamilyForCode("engine.axis_order_unestablished")).toBeNull();
     expect(formFamilyForCode("engine.axis_order_unsupported")).toBeNull();
@@ -52,6 +56,12 @@ describe("nextFormFamily (NEXT-CUT.md P3 item D: 're-refusal ... form still reac
   it("a fresh identity_unusable refusal opens the identity form regardless of what came before", () => {
     expect(nextFormFamily(null, "engine.identity_unusable")).toBe("identity");
     expect(nextFormFamily("crs", "engine.identity_unusable")).toBe("identity");
+  });
+
+  it("CF2: a fresh format_default_contradicted refusal opens the CRS form whatever came before", () => {
+    expect(nextFormFamily(null, "engine.format_default_contradicted")).toBe("crs");
+    expect(nextFormFamily("crs", "engine.format_default_contradicted")).toBe("crs");
+    expect(nextFormFamily("identity", "engine.format_default_contradicted")).toBe("crs");
   });
 
   it("a re-refusal with the SAME code keeps that code's own form reachable", () => {
@@ -120,6 +130,7 @@ function describeFixture(): DescribeResponse {
     geometry: {
       column: "geometry",
       encoding: "geoarrow.polygon",
+      declared_types: ["Polygon"],
       coordinate_layout: "interleaved-xy",
       frame: "authoritative-project-crs",
     },
@@ -302,6 +313,48 @@ describe("runAdmitPath (SF11: the actual refused -> submit -> re-refusal transit
     resolveSecond({ kind: "admitted", admitted: admittedFixture() });
     await pending;
     expect(harness.state.kind).toBe("admitted");
+  });
+  it("CF3: a fresh path refused engine.format_default_contradicted gets the CRS form, and the " +
+    "assertion resubmit keeps it mounted (refused, in flight) until the file is admitted", async () => {
+    let resolveSecond: (outcome: AdmissionOutcome) => void = () => {};
+    const admit = vi
+      .fn()
+      .mockResolvedValueOnce({ kind: "refused", refusal: refusal("engine.format_default_contradicted") })
+      .mockImplementationOnce(
+        () =>
+          new Promise<AdmissionOutcome>((resolve) => {
+            resolveSecond = resolve;
+          })
+      );
+    const { harness, onAdmitted, deps } = depsFor(admit);
+
+    await runAdmitPath("C:/f.parquet", {}, deps);
+    expect(harness.state.kind === "refused" && harness.state.formFamily).toBe("crs");
+
+    const crsAssertion = { identifier: "EPSG:2056", definition_json: "{}" };
+    const pending = runAdmitPath("C:/f.parquet", { crsAssertion }, deps);
+    expect(harness.state.kind).toBe("refused");
+    expect(harness.state.kind === "refused" && harness.state.inFlight).toBe(true);
+
+    resolveSecond({ kind: "admitted", admitted: admittedFixture() });
+    await pending;
+    expect(harness.state.kind).toBe("admitted");
+    expect(onAdmitted).toHaveBeenCalledTimes(1);
+    expect(admit).toHaveBeenNthCalledWith(2, "C:/f.parquet", "k2", { crsAssertion });
+  });
+
+  it("CF4: format_default_contradicted -> assert a northing-first CRS -> axis_order_unsupported keeps " +
+    "the CRS form reachable (the open item, as the app shows it)", async () => {
+    const admit = vi
+      .fn()
+      .mockResolvedValueOnce({ kind: "refused", refusal: refusal("engine.format_default_contradicted") })
+      .mockResolvedValueOnce({ kind: "refused", refusal: refusal("engine.axis_order_unsupported") });
+    const { harness, deps } = depsFor(admit);
+
+    await runAdmitPath("C:/f.parquet", {}, deps);
+    await runAdmitPath("C:/f.parquet", { crsAssertion: { identifier: "EPSG:3035", definition_json: "{}" } }, deps);
+    expect(harness.state.kind === "refused" && harness.state.refusal.code).toBe("engine.axis_order_unsupported");
+    expect(harness.state.kind === "refused" && harness.state.formFamily).toBe("crs");
   });
 });
 

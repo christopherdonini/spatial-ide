@@ -4,7 +4,8 @@
 import { describe, expect, it } from "vitest";
 
 import type { ResidentBatch } from "./decodeBatch";
-import { MAX_RESIDENT_VERTICES, ResidentVertexCeilingExceeded } from "./limits";
+import { partsOfFeatures } from "../testUtils/partsOfPolygons";
+import { MAX_RESIDENT_VERTICES, PickCeilingExceeded, ResidentVertexCeilingExceeded } from "./limits";
 import { DuplicateBatchError, ResidentSet } from "./residentSet";
 
 function batch(streamHandle: string, batchSeq: number, totalVertices: number, featureCount = 1): ResidentBatch {
@@ -16,12 +17,38 @@ function batch(streamHandle: string, batchSeq: number, totalVertices: number, fe
     streamHandle,
     batchSeq,
     ids,
-    rings: [[[[0, 0]]]],
+    ...partsOfFeatures(Array.from({ length: featureCount }, () => [[[[0, 0]]]])),
     totalVertices,
   };
 }
 
 describe("ResidentSet", () => {
+  /**
+   * SH-5, the `ResidentSet.addBatch` site (`engine/MULTIPOLYGON-MP1-PREREGISTRATION.md` section 4):
+   * the pick ceiling is counted in parts. A batch of one feature whose PART count is over the ceiling
+   * is refused and adds nothing, and a batch whose FEATURE count is over the ceiling but whose part
+   * count is not is accepted.
+   *
+   * RECORDED MUTATION: pass `batch.ids.length` to `checkPickCeiling` in `ResidentSet.addBatch`. The
+   * first assertion then fails by name.
+   *
+   * Observed over `ac538440` on the uncommitted tree of the shell commit: `counts the pick ceiling in parts, not features, at this site (SH-5)`
+   * FAILED by name with the mutation applied, then reverted.
+   */
+  it("counts the pick ceiling in parts, not features, at this site (SH-5)", () => {
+    const set = new ResidentSet();
+    const manyParts: ResidentBatch = { ...batch("sh_a", 0, 10), partCount: 16_777_216 };
+    expect(manyParts.ids.length).toBe(1);
+    expect(() => set.addBatch(manyParts)).toThrow(PickCeilingExceeded);
+    expect(set.getBatches()).toHaveLength(0); // refused, not partially resident
+
+    const manyFeatures: ResidentBatch = {
+      ...batch("sh_a", 1, 10),
+      ids: { length: 16_777_216 } as unknown as BigUint64Array,
+    };
+    expect(() => set.addBatch(manyFeatures)).not.toThrow();
+  });
+
   it("accumulates vertex totals across batches and streams", () => {
     const set = new ResidentSet();
     set.addBatch(batch("sh_a", 0, 100));

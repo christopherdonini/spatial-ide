@@ -1,0 +1,47 @@
+(node:30976) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+regression: waiting for the app to mount (up to 90000ms)...
+regression: mount-readiness gate PASSED after 987ms (.app-header and window.__SPATIAL_E2E__.openPath both present)
+[A1'] PASS (2ms): title/header "Spatial IDE" present; "Open GeoParquet…" button present
+[A3'] PASS (151ms): admitted; DescribeSummary contains the five expected substrings; no refusal panel appears
+[A4'] PASS (3776ms): overall 7.2% non-bg; 3/9 grid cells > 5%; "Zoom to layer" present (settled=true)
+[A5'/A6'] PASS (6687ms): pan settled=true, zoom settled=true; no refusal/banner either time; pixels 25.3% non-bg after
+[A7'] PASS (15492ms): panned off-data (2 drag(s) of 1002px, 0.00% non-bg <= 0.5% threshold), clicked "Zoom to layer", pixels 45.0% non-bg after (settled=true)
+[A8'] PASS (6952ms): 16 alternating pan/zoom gestures, no settle waits between; settled after=true; no refusal/banner; no too_many_pending_streams
+[hover-barrier] A9' (notch 4, flipY true): standing before {"state":"clear","text":null,"id":null,"marker":null}; found clear already; confirmed id 24517
+[A9'] PASS (11122ms): interior-verified candidate found at zoom notch 4/15 (densest-patch bisection final fraction 100.0%); hovered a verified non-background pixel (buffer 425,143, flipY=true, css 691.5,633.5) after 1 attempt(s) -> "id 24517 @ (2604355.539, 1203100.000)"; moved to emptiest cell (#0, 35.7%) -> hover-readout gone
+[K6] FAIL (26654ms): K6/re-pick: after ONE discrete zoom-out step with the pointer stationary, .hover-readout no longer names the feature the pointer is still over (expected id 50244, last seen {"state":"confirmed","text":"id 47080 @ (2606594.502, 1205940.000)","id":"47080","marker":null}) -- the sharpened criterion (entry 47, 2026-09-07) is that the id stays for as long as the operator can tell which feature is under the pointer
+[K7] PASS (138052ms): 15/15 discrete zoom-OUT notches from a "Zoom to layer" fit on the candidate arm (readback asserted); the page answered a fresh DOM read after every notch (no hang), no refusal/banner; render trace went quiet within its wait bound on 15/15 notches (last trace count 15405); .residency-status re-read under its own bound after the last notch and asserted verbatim = "Filling has finished for this view — some areas were not loaded; pan or zoom to load them." (per-notch snapshot at that point: "Filling has finished for this view — some areas were not loaded; pan or zoom to load them."); .hover-readout after a real pointer move: null; "Zoom to layer" restored 46.4% non-bg pixels
+[CURSOR'] PASS (290ms): hover cursor "crosshair", mid-drag cursor "grabbing"
+[FIND'] PASS (21951ms): applied "id > 99900" via the real panel DOM, scan completed on its own; "Zoom to layer" fitted at zoom -2.884837648934929 (0.28% non-bg); 3 zoom-out notch(es) left 0.02% non-bg with 0 covering-truncated line(s) and 0 unminted tile(s) of 0 distinct tile(s) ever refused; .residency-status settled to "Showing all 99 features in view"; the second "Zoom to layer" logged the same fit (zoom -2.884837648934929) and left 0.28% non-bg
+[MP'] PASS (3391ms): admitted; DescribeSummary shows the engine's multipolygon encoding and the file's declaration; no refusal or banner after the stream (settled=true)
+[PT'] PASS (3316ms): admitted; DescribeSummary shows the engine's point encoding and the file's declaration; no refusal or banner after the stream (settled=true)
+[LN'] PASS (3334ms): admitted; DescribeSummary shows the engine's linestring encoding and the file's declaration; no refusal or banner after the stream (settled=true)
+[B2'/B3'] PASS (82ms): refused engine.crs_undeclared; message verbatim; .crs-assertion-form present; no dismiss button on the panel; no describe-summary in the Layers region
+[ABSENTCRS'] PASS (79ms): refused engine.format_default_contradicted; message verbatim; no dismiss button on the panel; no describe-summary in the Layers region; INFO: .crs-assertion-form present=false, .identity-declaration-form present=false (not asserted either way)
+[C2'/C3'] FAIL (75ms): C2'/C3': expected {kind:"refused", code:"engine.identity_unusable"}, got {"kind":"admitted"}
+[NET'] INFO (18ms): no >=400 response observed this run (index.html declares no <link rel>, nothing to probe)
+
+== Summary ==
+Step        Status  Note
+----------  ------  ----------------------------------------
+A1'         PASS    title/header "Spatial IDE" present; "Open GeoParquet…" button present
+A3'         PASS    admitted; DescribeSummary contains the five expected substrings; no refusal panel appears
+A4'         PASS    overall 7.2% non-bg; 3/9 grid cells > 5%; "Zoom to layer" present (settled=true)
+A5'/A6'     PASS    pan settled=true, zoom settled=true; no refusal/banner either time; pixels 25.3% non-bg after
+A7'         PASS    panned off-data (2 drag(s) of 1002px, 0.00% non-bg <= 0.5% threshold), clicked "Zoom to layer", pixels 45.0% non-bg after (settled=true)
+A8'         PASS    16 alternating pan/zoom gestures, no settle waits between; settled after=true; no refusal/banner; no too_many_pending_streams
+A9'         PASS    interior-verified candidate found at zoom notch 4/15 (densest-patch bisection final fraction 100.0%); hovered a verified non-background pixel (buffer 425,143, flipY=true, css 691.5,633.5) after 1 attempt(s) -> "id 24517 @ (2604355.539, 1203100.000)"; moved to emptiest cell (#0, 35.7%) -> hover-readout gone
+K6          FAIL    K6/re-pick: after ONE discrete zoom-out step with the pointer stationary, .hover-readout no longer names the feature the pointer is still over (expected id 50244, last seen {"state":"confirmed","text":"id 47080 @ (2606594.502, 1205940.000)","id":"47080","marker":null}) -- the sharpened criterion (entry 47, 2026-09-07) is that the id stays for as long as the operator can tell which feature is under the pointer
+K7          PASS    15/15 discrete zoom-OUT notches from a "Zoom to layer" fit on the candidate arm (readback asserted); the page answered a fresh DOM read after every notch (no hang), no refusal/banner; render trace went quiet within its wait bound on 15/15 notches (last trace count 15405); .residency-status re-read under its own bound after the last notch and asserted verbatim = "Filling has finished for this view — some areas were not loaded; pan or zoom to load them." (per-notch snapshot at that point: "Filling has finished for this view — some areas were not loaded; pan or zoom to load them."); .hover-readout after a real pointer move: null; "Zoom to layer" restored 46.4% non-bg pixels
+CURSOR'     PASS    hover cursor "crosshair", mid-drag cursor "grabbing"
+FIND'       PASS    applied "id > 99900" via the real panel DOM, scan completed on its own; "Zoom to layer" fitted at zoom -2.884837648934929 (0.28% non-bg); 3 zoom-out notch(es) left 0.02% non-bg with 0 covering-truncated line(s) and 0 unminted tile(s) of 0 distinct tile(s) ever refused; .residency-status settled to "Showing all 99 features in view"; the second "Zoom to layer" logged the same fit (zoom -2.884837648934929) and left 0.28% non-bg
+MP'         PASS    admitted; DescribeSummary shows the engine's multipolygon encoding and the file's declaration; no refusal or banner after the stream (settled=true)
+PT'         PASS    admitted; DescribeSummary shows the engine's point encoding and the file's declaration; no refusal or banner after the stream (settled=true)
+LN'         PASS    admitted; DescribeSummary shows the engine's linestring encoding and the file's declaration; no refusal or banner after the stream (settled=true)
+B2'/B3'     PASS    refused engine.crs_undeclared; message verbatim; .crs-assertion-form present; no dismiss button on the panel; no describe-summary in the Layers region
+ABSENTCRS'  PASS    refused engine.format_default_contradicted; message verbatim; no dismiss button on the panel; no describe-summary in the Layers region; INFO: .crs-assertion-form present=false, .identity-declaration-form present=false (not asserted either way)
+C2'/C3'     FAIL    C2'/C3': expected {kind:"refused", code:"engine.identity_unusable"}, got {"kind":"admitted"}
+NET'        INFO    no >=400 response observed this run (index.html declares no <link rel>, nothing to probe)
+Full render-trace ledger: C:\dev\wt\k6\frontends\shell\e2e\out\regression-render-trace-1791549280053.json
+This run launched the app; it stays RUNNING on CDP port 9223 for further interactive use.

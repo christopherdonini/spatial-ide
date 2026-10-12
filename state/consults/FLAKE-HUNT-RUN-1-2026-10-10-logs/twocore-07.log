@@ -1,0 +1,830 @@
+warning: constant `WATCH_BUFFER_BYTES` is never used
+  --> engine/src/watch.rs:73:18
+   |
+73 | pub(crate) const WATCH_BUFFER_BYTES: usize = 65536;
+   |                  ^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `spatial-engine` (lib) generated 1 warning
+warning: field `peak_working_set` is never read
+   --> kernel/tests/slice_budgets.rs:186:13
+    |
+185 |     pub struct Counters {
+    |                -------- field in this struct
+186 |         pub peak_working_set: usize,
+    |             ^^^^^^^^^^^^^^^^
+    |
+    = note: `Counters` has a derived impl for the trait `Clone`, but this is intentionally ignored during dead code analysis
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `spatial-kernel` (test "slice_budgets") generated 1 warning
+warning: field `peak_working_set` is never read
+   --> kernel/tests/indexed_budgets.rs:209:13
+    |
+208 |     pub struct Counters {
+    |                -------- field in this struct
+209 |         pub peak_working_set: usize,
+    |             ^^^^^^^^^^^^^^^^
+    |
+    = note: `Counters` has a derived impl for the trait `Clone`, but this is intentionally ignored during dead code analysis
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `spatial-kernel` (test "indexed_budgets") generated 1 warning
+warning: `spatial-engine` (lib test) generated 1 warning (1 duplicate)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.39s
+     Running unittests src/lib.rs (target/debug/deps/spatial_data_plane-3fe3e6625a2fe6c7)
+
+running 24 tests
+test adapter_ws::tests::an_unknown_total_is_a_sentinel_not_a_zero ... ok
+test adapter_ws::tests::parses_credit_and_cancel_control_frames ... ok
+test server::tests::a_terminal_record_older_than_its_declared_age_is_pruned_on_the_next_record ... ok
+test server::tests::a_terminal_record_survives_its_terminal_and_is_kept_within_its_declared_age ... ok
+test session::tests::absent_origin_needs_a_positive_same_origin_signal ... ok
+test session::tests::new_and_with_origin_produce_the_same_shape_for_the_port_derived_case ... ok
+test session::tests::origin_null_and_foreign_are_explicitly_rejected ... ok
+test session::tests::redaction_removes_the_token ... ok
+test session::tests::rejects_wrong_and_absent_credentials ... ok
+test session::tests::the_credential_is_read_out_of_the_offered_subprotocols ... ok
+test session::tests::tokens_are_full_entropy_and_differ_between_sessions ... ok
+test session::tests::with_origin_admits_a_declared_non_same_origin_consumer_and_nothing_else ... ok
+test transport::tests::batches_generated_after_cancellation_are_counted_separately ... ok
+test adapter_ws::tests::cancel_observation_records_the_first_instant_only ... ok
+test transport::tests::checkpoints_name_the_phase_that_never_finished ... ok
+test transport::tests::identifiers_are_opaque_and_binding_independent ... ok
+test transport::tests::resident_bytes_track_a_peak_and_return_to_zero ... ok
+test wire::tests::a_payload_serialized_in_place_is_framed_without_a_second_pass ... ok
+test wire::tests::frame_layout_roundtrips ... ok
+test wire::tests::payload_starts_eight_byte_aligned ... ok
+test wire::tests::progress_and_terminal_payloads_are_fixed_layout_binary ... ok
+test wire::tests::start_payloads_roundtrip_with_opaque_parameters ... ok
+test wire::tests::the_json_detector_actually_catches_json ... ok
+test transport::tests::cancel_observation_is_idempotent_and_keeps_the_first_instant ... ok
+
+test result: ok. 24 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/candidate_a.rs (target/debug/deps/candidate_a-ec6bf8512d3ff49b)
+
+running 17 tests
+test a_cancel_control_frame_reaches_the_source_and_is_observed_producer_side ... ok
+test a_completed_stream_is_recorded_with_its_terminal_outcome ... ok
+test a_batch_over_the_declared_frame_ceiling_terminates_with_the_ceiling_named ... ok
+test a_connection_beyond_the_idle_ceiling_that_never_starts_is_told_why_in_single_spaced_words ... ok
+test a_grant_of_n_moves_exactly_n_batches ... ok
+test a_peer_that_closes_without_cancelling_still_stops_the_producer ... ok
+test a_producer_failure_behind_queued_batches_is_a_terminal_with_no_credit_granted ... ok
+test a_producer_failure_with_no_batch_ahead_is_a_terminal_with_no_credit_granted ... ok
+test a_source_refusal_reaches_the_consumer_as_a_typed_terminal ... ok
+test an_idle_connection_holds_no_stream_slot_and_the_idle_ceiling_is_its_own ... ok
+test a_data_plane_cancel_still_ends_cancelled_when_the_owner_notice_fires_first ... ok
+test credentials_and_origins_are_enforced_on_the_data_channel ... ok
+test credit_equal_to_the_batch_count_delivers_every_batch_then_the_terminal ... ok
+test every_batch_and_a_terminal_frame_are_delivered ... ok
+test the_declared_concurrency_ceiling_refuses_rather_than_queues ... ok
+test an_owner_cancel_on_a_source_that_then_ends_without_failure_is_a_producer_failed_terminal_with_no_credit_granted ... ok
+test withholding_credit_bounds_producer_memory ... ok
+
+test result: ok. 17 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.83s
+
+     Running tests/no_transport_leakage.rs (target/debug/deps/no_transport_leakage-c849db850677f217)
+
+running 4 tests
+test the_neutral_interface_names_no_transport ... ok
+test the_neutral_interface_still_covers_its_declared_vocabulary ... ok
+test only_one_construction_site_names_the_adapter ... ok
+test the_scan_is_not_vacuous ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/origin_header_encoding.rs (target/debug/deps/origin_header_encoding-7627b601df9e136e)
+
+running 5 tests
+test a_stated_foreign_ascii_origin_with_a_same_origin_claim_is_refused_as_an_origin ... ok
+test a_stated_non_ascii_origin_is_refused_under_a_host_declared_expected_origin ... ok
+test a_stated_origin_with_a_non_utf8_byte_is_refused_as_a_foreign_origin ... ok
+test a_stated_origin_with_a_utf8_non_ascii_character_is_refused_as_a_foreign_origin ... ok
+test an_absent_origin_with_a_same_origin_claim_is_still_admitted ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/stream_registry_bound.rs (target/debug/deps/stream_registry_bound-db9b4ed32885f800)
+
+running 3 tests
+test a_cancel_after_the_terminal_frame_is_still_observed_by_the_producer ... ok
+test a_live_stream_is_never_pruned_at_the_count_ceiling ... ok
+test the_registry_retains_at_most_the_declared_count_of_finished_streams ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 10.37s
+
+     Running unittests src/lib.rs (target/debug/deps/spatial_engine-9a247fdb4246063f)
+
+running 198 tests
+test attributes::tests::a_refused_dictionary_takes_the_final_arms_text_and_no_text_of_its_own ... ok
+test attributes::tests::admit_projection_column_refuses_the_reserved_id_name_even_under_a_mapped_identity ... ok
+test attributes::tests::dictionary_is_admitted_under_its_value_types_rule_and_emitted_as_the_value_type ... ok
+test attributes::tests::an_admitted_projection_carries_each_columns_source_type_beside_its_emitted_field ... ok
+test attributes::tests::each_projection_refusal_is_its_own_variant ... ok
+test attributes::tests::every_admitted_projection_column_comes_back_nullable_whatever_the_source_said ... ok
+test attributes::tests::every_type_still_refused_is_refused_by_the_gate ... ok
+test attributes::tests::float32_is_admitted_as_its_own_type_and_never_widened ... ok
+test attributes::tests::from_projection_error_renders_a_dictionary_sources_own_text_and_the_final_arm_otherwise ... ok
+test attributes::tests::names_resolve_before_per_column_rules_in_declared_order ... ok
+test attributes::tests::projectable_is_the_per_column_admission ... ok
+test attributes::tests::the_count_ceiling_is_checked_before_any_name_is_resolved ... ok
+test attributes::tests::the_live_admissible_set_admits_float32_and_a_dictionary_over_an_admitted_value_type ... ok
+test attributes::tests::the_reserved_id_name_refuses_as_identity_even_when_the_file_has_no_such_column ... ok
+test attributes::tests::the_multi_failure_order_is_count_then_names_then_per_column_rules ... ok
+test attributes::tests::the_reserved_id_refusal_states_the_reserved_name_on_the_wire_and_keeps_publishs_text ... ok
+test cancel::tests::a_cancel_after_execution_returns_is_seen_by_the_post_return_check ... ok
+test cancel::tests::a_cancel_landing_before_execution_begins_is_re_raised_once_it_has ... ok
+test cancel::tests::a_token_refuses_a_second_stream_rather_than_disarming_the_first ... ok
+test cancel::tests::an_interrupt_on_an_idle_connection_is_not_latched ... ok
+test cancel::tests::an_interrupt_raised_after_prepare_is_cleared_when_execution_begins ... ok
+test cancel::tests::cancellation_is_visible_and_sticky ... ok
+test cancel::tests::the_re_interrupter_exits_when_the_execute_window_closes ... ok
+test crs::tests::a_blank_identifier_is_refused ... ok
+test crs::tests::a_blank_identifier_is_refused_even_alongside_an_oversized_definition ... ok
+test crs::tests::a_definition_at_exactly_the_ceiling_is_admitted ... ok
+test crs::tests::a_definition_one_byte_over_the_ceiling_is_refused ... ok
+test crs::tests::a_non_blank_identifier_with_no_definition_passes_shape_validation ... ok
+test crs::tests::a_whitespace_only_identifier_is_refused ... ok
+test crs::tests::an_assertion_over_a_declared_crs_is_refused_without_comparing_them ... ok
+test crs::tests::an_assertion_over_an_undeclared_crs_is_admitted_and_stays_marked ... ok
+test crs::tests::an_assertion_that_establishes_no_axis_order_is_refused ... ok
+test crs::tests::an_undeclared_crs_with_no_assertion_is_refused ... ok
+test crs::tests::definition_provenance_is_carried_through_for_an_assertion_and_absent_for_a_file_crs ... ok
+test crs::tests::file_declared_crs_is_admitted_as_a_file_fact ... ok
+test cancel::tests::an_in_flight_query_is_interrupted_not_merely_flagged ... ok
+test crs_catalog::tests::a_catalog_supplied_definition_gets_catalog_provenance ... ok
+test crs_catalog::tests::an_arbitrary_valid_definition_is_pasted_never_matched ... ok
+test crs_catalog::tests::catalog_parses_and_is_not_empty ... ok
+test crs_catalog::tests::entries_are_in_file_order_not_sorted ... ok
+test crs_catalog::tests::epsg_2056_catalog_entry_is_byte_identical_to_the_fixture_generators_own_definition ... ok
+test crs_catalog::tests::catalog_entries_establish_easting_northing_not_longitude_latitude ... ok
+test crs_catalog::tests::epsg_2056_entry_hash_is_pinned ... ok
+test crs_catalog::tests::epsg_3857_catalog_entry_is_byte_identical_to_the_engine_test_fixture ... ok
+test crs_catalog::tests::epsg_3857_entry_hash_is_pinned ... ok
+test crs_catalog::tests::every_epsg_authority_entry_carries_attribution_with_the_terms_url ... ok
+test crs_catalog::tests::no_definition_text_is_none_supplied_not_pasted_nor_a_panic_nor_a_false_match ... ok
+test crs_catalog::tests::every_entry_definition_carries_coordinate_system_axis ... ok
+test crs_catalog::tests::one_whitespace_change_loses_catalog_provenance_no_normalization ... ok
+test crs_catalog::tests::schema_field_matches_the_definitions_own_schema_url_version ... ok
+test descriptor::tests::a_footer_hash_not_taken_is_an_unestablished_component ... ok
+test descriptor::tests::a_footer_hash_that_was_never_taken_is_not_reported_as_a_changed_component ... ok
+test descriptor::tests::an_absent_modification_time_is_an_unestablished_component ... ok
+test descriptor::tests::an_identical_descriptor_names_no_component ... ok
+test descriptor::tests::an_unobservable_modification_time_degrades_while_an_observable_change_in_it_still_differs ... ok
+test descriptor::tests::one_component_alone_is_enough_and_is_the_only_one_named ... ok
+test descriptor::tests::the_declared_footer_ceiling_is_the_preregistered_value ... ok
+test descriptor::tests::the_refusal_names_every_component_that_differed_not_the_first ... ok
+test envelope::tests::a_geometry_array_of_the_wrong_shape_cannot_be_assembled_into_a_batch ... ok
+test envelope::tests::a_line_envelopes_geometry_encoding_equals_the_fields_extension_name ... ok
+test envelope::tests::a_point_envelopes_geometry_encoding_equals_the_fields_extension_name ... ok
+test envelope::tests::an_asserted_crs_stays_marked_as_asserted_on_the_wire ... ok
+test envelope::tests::every_batch_carries_frame_crs_and_axis_order ... ok
+test envelope::tests::ipc_bytes_are_appended_so_a_caller_may_reserve_a_prefix ... ok
+test envelope::tests::the_envelopes_geometry_encoding_equals_the_fields_extension_name_for_both_values ... ok
+test envelope::tests::the_tag_survives_ipc_serialization ... ok
+test envelope::tests::two_envelopes_built_separately_serialize_to_identical_bytes ... ok
+test geoarrow::tests::a_file_declared_crs_travels_as_its_own_definition_not_as_a_name ... ok
+test geoarrow::tests::a_non_polygon_array_fails_the_encoding_check ... ok
+test geoarrow::tests::built_array_has_the_geoarrow_polygon_storage_type_and_row_count ... ok
+test geoarrow::tests::coordinate_values_over_a_sliced_line_array_returns_the_slices_run_only ... ok
+test geoarrow::tests::coordinate_values_over_a_sliced_multipolygon_array_returns_the_slices_run_only ... ok
+test geoarrow::tests::coordinate_values_over_a_sliced_point_array_returns_the_slices_run_only ... ok
+test geoarrow::tests::coordinates_are_reachable_and_bit_exact_through_the_nesting ... ok
+test geoarrow::tests::the_line_storage_types_are_one_and_two_lists_deep_and_each_validator_refuses_the_others_array ... ok
+test geoarrow::tests::the_multipolygon_storage_type_is_three_lists_deep_and_each_validator_refuses_the_others_array ... ok
+test geoarrow::tests::the_point_storage_type_is_a_flat_pair_and_each_validator_refuses_the_others_array ... ok
+test descriptor::tests::a_filesystem_with_no_modification_time_degrades_rather_than_refusing_forever ... ok
+test geoparquet::tests::a_declared_crs_yields_identifier_definition_and_axis_order ... ok
+test geoparquet::tests::a_definition_without_a_coordinate_system_is_refused_not_guessed ... ok
+test geoparquet::tests::a_name_that_is_neither_degree_nor_metre_is_recorded_exactly_as_read ... ok
+test geoparquet::tests::a_definition_without_an_id_is_not_identified_by_its_name ... ok
+test geoparquet::tests::an_absent_crs_key_is_not_silently_ogc_crs84 ... ok
+test geoparquet::tests::an_explicit_null_crs_is_not_a_declaration_either ... ok
+test geoparquet::tests::disagreeing_a_missing_member_and_an_unreadable_form_all_record_unestablished ... ok
+test geoparquet::tests::epsg2056s_conversion_parameters_and_base_crs_are_not_a_unit_source ... ok
+test geoparquet::tests::covering_paths_render_as_quoted_sql_identifiers ... ok
+test geoparquet::tests::latitude_first_geographic_axes_are_established_as_such ... ok
+test geoparquet::tests::no_definition_records_unestablished_with_no_source_at_all ... ok
+test geoparquet::tests::the_unit_comes_from_the_coordinate_system_axes_in_either_form ... ok
+test geoparquet::tests::the_provenance_class_decides_which_source_supplies_the_unit ... ok
+test identity::tests::a_comma_bearing_column_is_omitted_from_candidates_but_still_declarable_by_free_text ... ok
+test identity::tests::candidate_columns_are_the_64_bit_integer_columns_in_schema_order_unranked ... ok
+test identity::tests::js_exactness_is_unknown_rather_than_assumed_when_nothing_was_verified ... ok
+test identity::tests::only_value_preserving_integer_types_are_admitted ... ok
+test identity::tests::the_envelope_value_names_the_column_a_mapped_identity_came_from ... ok
+test identity::tests::uniqueness_is_reported_as_what_was_checked ... ok
+test index::tests::a_key_that_differs_in_any_component_is_a_different_derived_object ... ok
+test index::tests::a_cancelled_progress_observed_hash_reports_no_progress_at_all ... ok
+test index::tests::ranges_compress_contiguous_ids_and_refuse_to_explode ... ok
+test index::tests::the_validity_heuristic_fails_closed_on_anything_it_cannot_confirm ... ok
+test layout::tests::a_degenerate_declared_extent_is_refused_rather_than_divided_by ... ok
+test layout::tests::quantization_clamps_and_says_so ... ok
+test layout::tests::the_curve_is_a_bijection_over_the_grid ... ok
+test layout::tests::the_curve_is_continuous_which_is_the_property_morton_lacks ... ok
+test lod::tests::a_non_metre_crs_squares_the_conversion_factor_for_an_area ... ok
+test lod::tests::the_preflight_fails_closed_when_free_space_is_unknown ... ok
+test pin::tests::a_cancelled_pin_is_a_typed_cancellation_and_not_a_partial_hash ... ok
+test pin::tests::a_cancelled_progress_pin_is_a_typed_cancellation_and_not_a_partial_hash ... ok
+test pin::tests::a_pin_verifies_against_unchanged_bytes_and_refuses_changed_ones ... ok
+test index::tests::a_progress_observed_hash_reports_monotone_bytes_ending_at_the_total ... ok
+test pin::tests::the_finalize_heuristic_fails_closed_when_it_cannot_confirm ... ok
+test pin::tests::take_with_progress_produces_the_same_pin_as_take_and_reports_progress_ending_at_the_total ... ok
+test pool::tests::a_configuration_failure_is_a_typed_error_and_leaks_no_capacity ... ok
+test pool::tests::a_connection_from_the_fixture_helper_opens_with_extension_autoload_and_autoinstall_off ... ok
+test pool::tests::a_dropped_lease_is_discarded_rather_than_returned ... ok
+test pool::tests::a_returned_connection_is_the_same_physical_connection_next_time ... ok
+test pool::tests::a_known_extension_reference_fails_closed_on_every_lease_class ... ok
+test pool::tests::every_lease_class_opens_with_extension_autoload_and_autoinstall_off ... ok
+test pool::tests::the_measurement_control_keeps_nothing_and_creates_every_time ... ok
+test pool::tests::the_shared_configuration_sets_all_three_settings_on_a_fresh_connection ... ok
+test pool::tests::two_concurrent_leases_are_two_different_physical_connections ... ok
+test pool::tests::each_class_is_bounded_on_its_own_and_neither_starves_the_other ... ok
+test predicate::tests::a_dictionary_encoded_column_is_refused_as_not_filterable_with_a_reason_naming_the_encoding ... ok
+test predicate::tests::a_float32_column_is_filterable ... ok
+test predicate::tests::a_chained_not_deeper_than_the_ceiling_is_refused_as_too_deep ... ok
+test predicate::tests::a_function_call_is_refused_by_construct_name ... ok
+test predicate::tests::a_forged_trailing_sentinel_eaten_by_a_comment_is_refused_by_the_differential_probe ... ok
+test predicate::tests::a_nul_named_column_is_refused_as_not_filterable_by_name ... ok
+test predicate::tests::a_predicate_over_the_byte_ceiling_is_refused_before_parsing ... ok
+test predicate::tests::a_group_by_having_breakout_is_refused_even_though_where_clause_alone_looks_innocuous ... ok
+test predicate::tests::a_predicate_that_closes_the_wrapper_paren_early_and_reassociates_as_or_is_refused ... ok
+test predicate::tests::a_predicate_that_is_itself_a_top_level_and_chain_still_admits_with_every_column_collected ... ok
+test predicate::tests::a_predicate_that_legitimately_ends_in_its_own_one_equals_one_still_admits ... ok
+test predicate::tests::a_subquery_is_refused_by_construct_name ... ok
+test predicate::tests::a_trailing_comment_that_would_eat_compositions_and_bbox_also_eats_the_sentinel_and_is_refused ... ok
+test predicate::tests::a_trailing_line_comment_breaks_the_wrapper_itself_and_is_refused_as_unparsable ... ok
+test predicate::tests::an_unrecognized_select_node_key_is_refused_rather_than_silently_passed ... ok
+test predicate::tests::an_untyped_node_or_literal_type_is_refused_by_the_type_walk ... ok
+test predicate::tests::a_union_breakout_is_refused_because_the_top_level_statement_is_no_longer_a_select ... ok
+test predicate::tests::every_type_the_filter_namespace_admits_carries_a_surrogate ... ok
+test predicate::tests::redundant_grouping_parens_add_no_depth_at_all ... ok
+test predicate::tests::the_text_comes_back_exactly_as_given_never_rewritten ... ok
+test predicate::tests::dollar_quoting_is_structurally_indistinguishable_from_a_normal_string_literal ... ok
+test rowgroup::tests::a_group_with_no_envelope_is_always_retained ... ok
+test rowgroup::tests::a_missing_identity_statistic_refuses_rather_than_guessing ... ok
+test rowgroup::tests::a_null_bearing_identity_column_refuses ... ok
+test rowgroup::tests::a_viewport_this_index_will_not_reason_about_narrows_nothing ... ok
+test rowgroup::tests::an_unparseable_bbox_statistic_retains_the_group_and_does_not_refuse_the_file ... ok
+test rowgroup::tests::keeping_every_group_is_admissible_and_excludes_nothing ... ok
+test rowgroup::tests::overlapping_id_intervals_refuse_the_whole_file ... ok
+test rowgroup::tests::surviving_groups_merge_only_when_contiguous ... ok
+test rowgroup::tests::the_answered_predicate_is_not_the_feature_indexs ... ok
+test stream::tests::a_budget_cut_is_free_to_land_below_the_minimum_batch_size ... ok
+test stream::tests::a_compacted_and_a_sliced_single_run_serialize_to_identical_ipc_bytes ... ok
+test stream::tests::a_compacted_single_run_decodes_equal_to_the_slice_it_replaces_nulls_included ... ok
+test stream::tests::a_declared_row_order_and_a_time_budget_are_never_combinable ... ok
+test stream::tests::a_dictionary_chunk_is_decoded_before_the_declared_type_check_and_no_index_reaches_the_envelope ... ok
+test stream::tests::a_full_row_batch_fits_inside_the_declared_frame_ceiling ... ok
+test stream::tests::a_live_projected_text_stream_emits_every_attribute_column_within_the_declared_retention_bound ... ok
+test stream::tests::a_non_dictionary_chunk_column_passes_through_the_decode_step_unchanged ... ok
+test stream::tests::a_publish_stream_keeps_its_attribute_runs_uncompacted_through_flush ... ok
+test stream::tests::every_emitted_attribute_column_retains_at_most_the_declared_factor ... ok
+test stream::tests::filter_composition::the_predicate_text_rides_verbatim_never_rewritten_or_case_folded ... ok
+test stream::tests::filter_composition::the_projected_select_prefix_places_declared_columns_after_geometry_and_leaves_where_verbatim ... ok
+test stream::tests::filter_composition::the_where_composition_matrix_matches_the_declared_rule_exactly ... ok
+test stream::tests::float32_costs_four_bytes_in_the_estimate ... ok
+test stream::tests::identifiers_are_quoted_not_interpolated ... ok
+test stream::tests::publish_emits_a_nullable_byte_aligned_single_run_with_the_uncompacted_slices_ipc_bytes ... ok
+test stream::tests::the_cut_precedence_makes_a_time_budget_count_mean_what_it_says ... ok
+test stream::tests::the_publish_policy_is_size_only_and_cannot_acquire_a_clock_by_default ... ok
+test trace::tests::a_disabled_mark_records_nothing_and_a_started_trace_records_in_order ... ok
+test trace::tests::a_second_trace_is_refused_rather_than_replacing_the_first ... ok
+test trace::tests::jsonl_is_one_object_per_line_and_escapes_its_strings ... ok
+test trace::tests::spans_table_has_unique_names_and_unique_event_pairs ... ok
+test trace::tests::the_query_windows_events_telescope_exactly ... ok
+test trace::tests::the_spans_table_telescopes_by_construction ... ok
+test wkb::tests::a_big_endian_linestring_decodes_to_the_same_values ... ok
+test wkb::tests::a_big_endian_point_decodes_to_the_same_values ... ok
+test wkb::tests::a_linestring_of_fewer_than_two_positions_is_refused_and_two_is_admitted ... ok
+test wkb::tests::a_linestring_row_is_its_positions_in_order_with_bits_unchanged ... ok
+test wkb::tests::a_multilinestring_row_keeps_its_parts_and_a_linestring_row_is_one_part ... ok
+test wkb::tests::a_multipolygon_row_keeps_its_three_offset_levels_exactly ... ok
+test wkb::tests::a_point_row_is_one_coordinate_pair_with_its_bits_unchanged ... ok
+test wkb::tests::a_point_with_a_nan_in_either_coordinate_is_refused ... ok
+test wkb::tests::a_polygon_row_under_multipolygon_is_one_part_with_its_coordinate_bits_unchanged ... ok
+test wkb::tests::big_endian_wkb_decodes_to_the_same_values ... ok
+test wkb::tests::coordinate_bit_patterns_survive_the_decode_exactly ... ok
+test wkb::tests::decodes_a_polygon_with_a_hole_and_keeps_the_ring_structure ... ok
+test wkb::tests::each_unreadable_linestring_row_is_a_typed_refusal_naming_what_was_met ... ok
+test wkb::tests::each_unreadable_multilinestring_row_is_a_typed_refusal_and_mixed_byte_orders_decode ... ok
+test wkb::tests::each_unreadable_multipolygon_row_is_a_typed_refusal_naming_what_was_met ... ok
+test wkb::tests::each_unreadable_point_row_is_a_typed_refusal_naming_what_was_met ... ok
+test wkb::tests::parts_with_mixed_byte_orders_decode_to_the_same_values ... ok
+test wkb::tests::refusals_are_typed_and_specific ... ok
+test wkb::tests::the_polygon_builder_still_refuses_a_multipolygon_row ... ok
+test wkb::tests::variable_width_is_the_point_offsets_differ_per_feature ... ok
+test predicate::tests::the_walk_types_every_arithmetic_node_as_the_binder_does ... ok
+
+test result: ok. 198 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.18s
+
+     Running tests/admission_format_semantics.rs (target/debug/deps/admission_format_semantics-43dc07e99990e0d5)
+
+running 23 tests
+test a_contradicted_file_still_opens_under_a_caller_assertion ... ok
+test a_covering_naming_an_absent_column_records_none_and_the_open_still_succeeds ... ok
+test a_declared_crs84_definition_in_degrees_records_the_degree_unit_and_is_the_instance ... ok
+test a_declared_x_first_crs_records_crs_declared_and_axis_declared ... ok
+test a_declared_definition_records_the_definition_source_and_never_the_rule ... ok
+test a_missing_unit_member_records_unestablished_and_is_never_defaulted ... ok
+test an_unpinned_spec_version_takes_no_format_rule_and_the_refusal_names_the_version ... ok
+test an_unpinned_version_with_a_lat_first_declaration_still_refuses_by_name ... ok
+test axes_declaring_different_units_record_unestablished_and_the_open_still_succeeds ... ok
+test an_identifier_only_change_does_not_flip_the_instance_predicate ... ok
+test f1_an_absent_crs_key_admits_under_the_formats_own_rule_with_that_provenance ... ok
+test f2_coordinates_outside_the_domain_convict_the_format_default ... ok
+test f3_an_explicit_null_crs_is_unchanged_and_still_needs_an_assertion ... ok
+test f4_a_declared_lat_first_crs_admits_under_the_wkb_override_with_its_declared_order_retained ... ok
+test f5_with_neither_bbox_nor_covering_the_level_is_none_and_says_not_checked ... ok
+test the_degrees_on_epsg2056s_conversion_parameters_do_not_leak_into_the_recorded_unit ... ok
+test f6_without_statistics_the_level_is_the_bounded_sample_of_the_covering_columns ... ok
+test the_display_convention_sentence_is_carried_verbatim_and_no_surface_here_consumes_it ... ok
+test the_format_default_admission_records_degrees_sourced_from_the_pinned_rule ... ok
+test the_metadata_level_is_also_reached_from_covering_column_statistics ... ok
+test the_sample_level_reads_the_first_row_group_and_not_a_fixed_row_count ... ok
+test the_object_form_of_a_unit_records_what_the_string_form_records ... ok
+test the_two_format_rule_routes_are_distinguishable_on_the_envelope ... ok
+
+test result: ok. 23 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.55s
+
+     Running tests/admission_instruments.rs (target/debug/deps/admission_instruments-ef0710dcdf7622c6)
+
+running 1 test
+test session_ordinal_reads_nothing_native_and_mapped_run_exactly_the_verification_scan ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.11s
+
+     Running tests/admission_p4_corpus.rs (target/debug/deps/admission_p4_corpus-04e13fd0a6381dce)
+
+running 1 test
+test the_p4_admission_table_runs_against_the_preregistered_corpus_and_writes_admission_results ... ignored, opens real on-disk fixtures under target/fixtures/compat-corpus; run explicitly, on a quiet machine (no spatial-ide-shell.exe running) — Brief A P4
+
+test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/admission_property_campaign.rs (target/debug/deps/admission_property_campaign-ae29613944d0b4ee)
+
+running 2 tests
+test b1_an_implicit_coercion_is_admitted_and_fails_in_the_scan_carrying_file_data ... ok
+test filter_admission_property_campaign ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 32.49s
+
+     Running tests/b1_nul_declared_identity_no_scan.rs (target/debug/deps/b1_nul_declared_identity_no_scan-a2176aaefb73a540)
+
+running 1 test
+test a_declared_identity_naming_a_nul_named_column_is_refused_before_any_scan ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests/b1_nul_native_id_scan_once.rs (target/debug/deps/b1_nul_native_id_scan_once-fc6a77a1afc106cf)
+
+running 1 test
+test the_native_id_is_the_column_duckdb_binds_when_a_nul_named_id_precedes_it ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+     Running tests/b1_projection_hostile_covering.rs (target/debug/deps/b1_projection_hostile_covering-1624ae25392140bb)
+
+running 2 tests
+test a_nul_covering_under_the_format_default_records_not_checked_with_the_true_reason ... ok
+test a_covering_whose_path_contains_u0000_is_unusable_and_a_bbox_query_refuses_before_any_lease ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+
+     Running tests/b1_projection_hostile_names.rs (target/debug/deps/b1_projection_hostile_names-c2fbbffe4199b5b9)
+
+running 12 tests
+test a_declared_identity_naming_the_truncated_prefix_is_an_absent_column ... ok
+test a_filter_on_a_file_with_a_nul_named_column_binds_and_streams_its_other_columns ... ok
+test a_geometry_column_whose_name_contains_u0000_refuses_open_naming_that_fact ... ok
+test a_filter_types_the_column_duckdb_binds_when_a_nul_named_column_shares_its_name ... ok
+test a_native_id_with_u0000_opens_on_the_session_tier_with_no_nul_candidate ... ok
+test a_nul_in_a_column_name_is_refused_by_admission_before_any_stream_opens ... ok
+test a_nul_named_column_never_makes_admission_type_a_column_duckdb_does_not_bind ... ok
+test hostile_names_an_uppercase_id_under_a_mapped_identity_is_admitted_beside_id ... ok
+test a_nul_in_a_name_renders_as_a_visible_escape_in_every_engine_message_and_detail ... ok
+test hostile_names_colliding_after_case_folding_bind_one_column_each ... ok
+test hostile_names_round_trip_to_their_own_columns ... ok
+test the_schema_probe_classifies_by_position_and_keeps_duckdbs_own_renames ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.47s
+
+     Running tests/batch_sizing.rs (target/debug/deps/batch_sizing-13bde33a96550493)
+
+running 5 tests
+test shrinking_the_first_batch_does_not_cost_the_eight_byte_alignment ... ok
+test the_first_target_is_the_declared_first_target_and_growth_is_the_declared_factor ... ok
+test the_first_batch_is_smaller_than_the_steady_state_and_the_stream_grows_into_it ... ok
+test the_policy_stays_inside_its_ceiling_in_every_state_it_can_reach ... ok
+test the_floor_is_above_the_per_batch_envelope_so_a_small_batch_is_not_mostly_metadata ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.31s
+
+     Running tests/cancel_execute_window.rs (target/debug/deps/cancel_execute_window-8b2ce3935fb35a2d)
+
+running 1 test
+test a_cancel_inside_the_producers_execute_window_ends_the_stream_cancelled ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 46.25s
+
+     Running tests/connection_reuse.rs (target/debug/deps/connection_reuse-08ab19a765822c2c)
+
+running 12 tests
+test a_bbox_query_on_a_reused_connection_returns_what_it_always_did ... ok
+test a_connection_that_skipped_the_identity_scan_is_still_safe_to_reuse ... ok
+test a_lease_in_flight_keeps_the_pool_alive_after_the_dataset_is_dropped ... ok
+test a_query_after_a_cancellation_completes_on_a_replaced_connection ... ok
+test cancellation_before_the_first_batch_binds_a_recycled_connection_and_delivers_nothing ... ok
+test capacity_exhaustion_is_a_typed_refusal_rather_than_a_queue ... ok
+test dropping_the_dataset_closes_its_idle_connections ... ok
+test dropping_a_stream_releases_its_lease_and_detaches_the_interrupt_handle ... ok
+test the_measurement_control_creates_a_connection_for_every_query ... ok
+test midstream_cancellation_still_stops_the_producer_on_a_recycled_connection ... ok
+test two_sequential_streams_run_on_one_physical_connection ... ok
+test two_concurrent_streams_hold_separate_leases_and_cancelling_one_leaves_the_other_alone ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 19.78s
+
+     Running tests/covering_names_missing_column.rs (target/debug/deps/covering_names_missing_column-7bfb163ceeef0e6f)
+
+running 5 tests
+test a_covering_naming_a_column_the_file_lacks_is_unusable_and_a_bbox_query_refuses_before_any_lease ... ok
+test a_covering_naming_an_absent_child_under_an_existing_struct_is_unusable ... ok
+test m4_the_corpus_mutation_opens_with_its_covering_unusable_and_refuses_a_bbox_query_pre_lease ... ignored, reads the on-disk compatibility corpus under target/fixtures/compat-corpus; run explicitly
+test a_format_rule_file_whose_covering_names_an_absent_column_keeps_its_sanity_record_and_refuses_a_bbox_query_pre_lease ... ok
+test the_covering_decision_agrees_with_the_binder_on_every_p0_row ... ok
+
+test result: ok. 4 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.31s
+
+     Running tests/filter_composition.rs (target/debug/deps/filter_composition-702948af5decd645)
+
+running 1 test
+test a_filtered_stream_is_an_id_keyed_subset_with_byte_identical_rows_and_envelope ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.43s
+
+     Running tests/filter_type_admission.rs (target/debug/deps/filter_type_admission-6f3774ef3764462c)
+
+running 3 tests
+test a_float32_column_compared_with_16777217_matches_a_stored_16777216 ... ok
+test each_corpus_row_is_admitted_or_refused_with_its_code_reason_and_operand_types ... ok
+test the_type_walk_agrees_with_the_binder_over_the_p0_matrix has been running for over 60 seconds
+test the_type_walk_agrees_with_the_binder_over_the_p0_matrix ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 140.20s
+
+     Running tests/first_batch_and_pruning.rs (target/debug/deps/first_batch_and_pruning-12f4c7e1b44b9201)
+
+running 17 tests
+test a_file_whose_identity_is_not_row_group_ordered_is_refused_and_says_which_way ... ok
+test a_clustered_variant_carries_the_same_features_and_the_same_geo_metadata ... ok
+test a_shuffled_variant_carries_the_same_features_and_the_same_geo_metadata ... ok
+test a_size_only_stream_never_reports_a_time_budget_cut ... ok
+test a_viewport_outside_the_extent_excludes_every_group_and_still_injects_nothing ... ok
+test a_whole_file_query_does_no_metadata_work_at_all ... ok
+test an_inadmissible_file_still_returns_the_scan_s_rows_through_the_pruned_planner ... ok
+test clustering_reorders_the_file_and_that_costs_it_lever_b2 ... ok
+test both_levers_at_once_still_return_the_scan_s_rows ... ok
+test metadata_paths_match_what_duckdb_reports_for_a_struct_child ... ok
+test the_budgeted_stream_returns_exactly_what_the_size_only_stream_returns ... ok
+test the_curve_orders_the_plane_and_not_the_row_number ... ok
+test the_publish_path_refuses_a_time_budget_rather_than_ignoring_it ... ok
+test the_row_group_index_returns_exactly_what_the_scan_returns ... ok
+test the_control_layout_differs_from_a_clustered_one_only_in_the_row_order ... ok
+test the_shuffled_order_is_deterministic_across_two_independent_rewrites ... ok
+test the_shuffled_order_is_exactly_hash_id_then_id_in_file_order ... ok
+
+test result: ok. 17 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.63s
+
+     Running tests/fixture_generation.rs (target/debug/deps/fixture_generation-52eb1e0dbe912661)
+
+running 6 tests
+test a_cancelled_generation_returns_cancelled_and_removes_the_partial_file ... ok
+test a_generation_cancelled_before_it_starts_writes_nothing_and_leaves_nothing ... ok
+test a_cancel_during_the_final_chunk_still_refuses_rather_than_closing_a_valid_file ... ok
+test generation_reports_progress_once_per_chunk_with_monotonic_counts ... ok
+test the_default_spec_produces_byte_identical_files_through_both_entry_points ... ok
+test changing_the_row_group_size_changes_the_file_and_is_therefore_part_of_the_spec ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.74s
+
+     Running tests/geoarrow_batch_fixtures.rs (target/debug/deps/geoarrow_batch_fixtures-137b2381b52a7622)
+
+running 4 tests
+test regenerate_the_committed_batches ... ignored, rewrites the committed fixtures under engine/tests/data/geoarrow/
+test the_committed_line_batches_equal_the_engines_output_from_a_real_open_and_stream ... ok
+test the_committed_batches_equal_the_engines_output_from_a_real_open_and_stream ... ok
+test the_committed_point_batch_equals_the_engines_output_from_a_real_open_and_stream ... ok
+
+test result: ok. 3 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.11s
+
+     Running tests/geometry_admission.rs (target/debug/deps/geometry_admission-82a880f1a02d59fa)
+
+running 8 tests
+test a_declared_point_set_selects_the_point_encoding_and_other_sets_are_refused ... ok
+test a_declared_line_set_selects_the_line_encoding_and_other_sets_are_refused ... ok
+test a_set_that_mixes_kinds_is_refused_with_the_rulings_placeholder_detail ... ok
+test a_declared_set_selects_the_encoding_or_is_refused_at_open ... ok
+test a_set_that_mixes_kinds_names_the_kinds_present_in_the_ruled_order ... ok
+test an_absent_key_is_multipolygon_with_no_declaration_and_a_non_string_member_is_refused ... ok
+test the_refusal_detail_is_the_sighted_wording_with_the_declared_list_rendered ... ok
+test the_refusal_names_exactly_the_types_the_gate_admits_in_order ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.62s
+
+     Running tests/identity.rs (target/debug/deps/identity-0c2576dd949971d4)
+
+running 8 tests
+test a_declared_mapping_to_a_non_integer_column_is_refused_not_hashed ... ok
+test a_duplicate_id_column_is_refused_rather_than_admitted_as_identity ... ok
+test a_native_id_column_is_verified_unique_rather_than_trusted ... ok
+test a_file_whose_key_is_not_called_id_is_refused_until_a_mapping_is_declared ... ok
+test a_negative_identity_value_is_refused_because_it_cannot_widen_into_u64 ... ok
+test identities_above_the_js_exact_limit_are_admitted_but_flagged_on_the_envelope ... ok
+test skipping_the_uniqueness_check_is_recorded_rather_than_hidden ... ok
+test the_uniqueness_scan_is_cancellable_because_it_reads_a_whole_column ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.34s
+
+     Running tests/import_layout_5gb_digest.rs (target/debug/deps/import_layout_5gb_digest-c3a1e38db33d6ce7)
+
+running 1 test
+test the_5gb_cross_file_digest_correctness_pass ... ignored, correctness pass; run explicitly with --release, --features fixture; kernel/IMPORT-LAYOUT-PREREGISTRATION.md phase 7
+
+test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/import_layout_5gb_fixtures.rs (target/debug/deps/import_layout_5gb_fixtures-1a0b69267ae228dc)
+
+running 1 test
+test generate_the_5gb_fixture_set ... ignored, writes up to one ~5 GB file and re-hashes up to three; run explicitly with --release, --features fixture; kernel/IMPORT-LAYOUT-PREREGISTRATION.md phase 5
+
+test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/import_layout_digest.rs (target/debug/deps/import_layout_digest-30ad3bd5287fddb5)
+
+running 1 test
+test the_cross_file_digest_correctness_pass ... ignored, correctness pass; run explicitly with --release, --features fixture; kernel/IMPORT-LAYOUT-PREREGISTRATION.md phase 3
+
+test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/import_layout_fixtures.rs (target/debug/deps/import_layout_fixtures-4915d97fced05a1a)
+
+running 1 test
+test generate_the_145mb_fixture_matrix ... ignored, writes ~1.5 GB of 145 MB-class fixtures; run explicitly with --release, --features fixture
+
+test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/index_build_cancellation.rs (target/debug/deps/index_build_cancellation-56551bd20b5ab29b)
+
+running 9 tests
+test a_build_cancelled_during_the_content_hash_refuses ... ok
+test a_build_cancelled_entering_bbox_validation_refuses ... ok
+test a_build_cancelled_entering_extent_reduction_refuses ... ok
+test a_build_cancelled_entering_grid_population_refuses ... ok
+test a_cancel_after_the_last_poll_still_refuses_and_caches_nothing ... ok
+test a_build_cancelled_entering_the_duckdb_scan_refuses ... ok
+test a_cancelled_build_frees_the_maintenance_lease_it_held ... ok
+test an_uncancelled_build_passes_every_phase_in_order_and_still_produces_the_same_index ... ok
+test the_inner_cell_insertion_loop_polls_too ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 19.56s
+
+     Running tests/line_stream.rs (target/debug/deps/line_stream-ac01a5ea528739fb)
+
+running 3 tests
+test a_row_of_an_unread_type_stops_a_line_stream_at_that_row_by_name ... ok
+test l1_and_ml1_stream_one_row_per_feature_with_bit_identical_positions_and_parts ... ok
+test every_line_batch_fits_its_target_under_the_unedited_estimate ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.92s
+
+     Running tests/live_projection.rs (target/debug/deps/live_projection-b334f2259bbc64c0)
+
+running 4 tests
+test a_file_with_a_float32_column_binds_every_predicate_without_panicking ... ok
+test how_a_float32_column_compares_with_a_numeric_literal_is_pinned ... ok
+test projection_leaves_frame_crs_axis_and_identity_metadata_byte_identical ... ok
+test a_live_projected_stream_emits_id_geometry_then_the_declared_columns ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.34s
+
+     Running tests/lod_tier_builder.rs (target/debug/deps/lod_tier_builder-566da51b9ae853c9)
+
+running 19 tests
+test a_build_measures_the_largest_single_feature_simplify ... ignored, boundary: application directories (engine/src/lod.rs); deferred by engine/LOD-PREREGISTRATION.md Amendment 8(a)
+test a_stale_tier_batch_cannot_exist_without_the_stale_label ... ignored, boundary: application directories (engine/src/lod.rs); deferred by engine/LOD-PREREGISTRATION.md Amendment 8(a)
+test a_tier_altered_on_disk_is_not_reused_and_the_disclosure_is_the_on_disk_size ... ignored, boundary: application directories (engine/src/lod.rs); deferred by engine/LOD-PREREGISTRATION.md Amendment 8(a)
+test build_tiers_refuses_a_linestring_feature_by_name_and_writes_no_tier ... ignored, boundary: application directories (engine/src/lod.rs); deferred by engine/LOD-PREREGISTRATION.md Amendment 8(a)
+test build_tiers_refuses_a_multipolygon_feature_by_name_and_writes_no_tier ... ignored, boundary: application directories (engine/src/lod.rs); deferred by engine/LOD-PREREGISTRATION.md Amendment 8(a)
+test build_tiers_refuses_a_point_feature_by_name_and_writes_no_tier ... ignored, boundary: application directories (engine/src/lod.rs); deferred by engine/LOD-PREREGISTRATION.md Amendment 8(a)
+test engine_opens_its_own_tier ... ignored, boundary: application directories (engine/src/lod.rs); deferred by engine/LOD-PREREGISTRATION.md Amendment 8(a)
+test crs_without_a_declared_linear_unit_is_refused ... ok
+test the_5gb_ladder_under_disk_discipline ... ignored, reads the 5 GB fixture and writes GB-scale tiers; run explicitly with --release: cargo test --release -p spatial-engine --test lod_tier_builder -- --ignored --exact the_5gb_ladder_under_disk_discipline --nocapture
+test the_built_sets_size_is_disclosed_with_the_tiers ... ignored, boundary: application directories (engine/src/lod.rs); deferred by engine/LOD-PREREGISTRATION.md Amendment 8(a)
+test geographic_crs_source_is_refused_for_tier_building ... ok
+test tier_build_emits_zero_invalid_polygons ... ignored, boundary: application directories (engine/src/lod.rs); deferred by engine/LOD-PREREGISTRATION.md Amendment 8(a)
+test tier_is_not_served_when_source_content_hash_changes ... ignored, boundary: application directories (engine/src/lod.rs); deferred by engine/LOD-PREREGISTRATION.md Amendment 8(a)
+test tier_larger_than_its_source_is_refused ... ignored, boundary: application directories (engine/src/lod.rs); deferred by engine/LOD-PREREGISTRATION.md Amendment 8(a)
+test tier_preserves_identity_for_every_row ... ignored, boundary: application directories (engine/src/lod.rs); deferred by engine/LOD-PREREGISTRATION.md Amendment 8(a)
+test tier_writer_does_not_reorder_rows ... ignored, boundary: application directories (engine/src/lod.rs); deferred by engine/LOD-PREREGISTRATION.md Amendment 8(a)
+test two_concurrent_callers_of_an_absent_fixture_both_get_the_complete_file ... ignored, moves the one polygons-100k.parquet every test in this binary (and the other two LOD suites) shares aside and restores it on exit paths the process unwinds through; no other cargo test anywhere on this machine may read C:\dev\spatial-ide\target\fixtures\slice-budgets\polygons-100k.parquet, whatever its CARGO_TARGET_DIR (the path is absolute and shared by the three LOD binaries and kernel/tests/slice_budgets.rs): cargo test -p spatial-engine --test lod_tier_builder -- --ignored --exact two_concurrent_callers_of_an_absent_fixture_both_get_the_complete_file --nocapture
+test wkb_writer_round_trips_the_first_tier_written ... ignored, boundary: application directories (engine/src/lod.rs); deferred by engine/LOD-PREREGISTRATION.md Amendment 8(a)
+test the_rejected_simplifier_is_the_one_that_emits_invalid_polygons ... ok
+
+test result: ok. 3 passed; 0 failed; 16 ignored; 0 measured; 0 filtered out; finished in 10.44s
+
+     Running tests/lod_tier_cancellation.rs (target/debug/deps/lod_tier_cancellation-83d4634273ecc323)
+
+running 2 tests
+test cancel_observed_within_the_declared_ceiling ... ignored, boundary: application directories (engine/src/lod.rs); deferred by engine/LOD-PREREGISTRATION.md Amendment 8(a)
+test cancel_observed_within_the_declared_ceiling_at_5gb ... ignored, reads the 5 GB fixture; run explicitly with --release: cargo test --release -p spatial-engine --test lod_tier_cancellation -- --ignored --exact cancel_observed_within_the_declared_ceiling_at_5gb --nocapture
+
+test result: ok. 0 passed; 0 failed; 2 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/lod_tier_measurements.rs (target/debug/deps/lod_tier_measurements-338e220e44b727d5)
+
+running 5 tests
+test the_5gb_ladder_outcomes_o1_to_o4 ... ignored, reads the 5 GB fixture and writes GB-scale tiers; the tester's: cargo test --release -p spatial-engine --test lod_tier_measurements -- --ignored --exact the_5gb_ladder_outcomes_o1_to_o4 --nocapture
+test wall_time_arm_p_over_parcels_5gb ... ignored, reads the 5 GB fixture and writes GB-scale tiers; the tester's: cargo test --release -p spatial-engine --test lod_tier_measurements -- --ignored --exact wall_time_arm_p_over_parcels_5gb --nocapture
+test wall_time_arm_s_and_arm_p_over_polygons_100k ... ignored, measurement harness, the tester's: cargo test --release -p spatial-engine --test lod_tier_measurements -- --ignored --exact wall_time_arm_s_and_arm_p_over_polygons_100k --nocapture
+test wall_time_arm_s_over_parcels_5gb ... ignored, reads the 5 GB fixture and writes GB-scale tiers; the tester's: cargo test --release -p spatial-engine --test lod_tier_measurements -- --ignored --exact wall_time_arm_s_over_parcels_5gb --nocapture
+test the_row_order_check_fires_on_a_permutation ... ok
+
+test result: ok. 1 passed; 0 failed; 4 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/lod_tier_preflight.rs (target/debug/deps/lod_tier_preflight-06d3c3b7b8c33f1c)
+
+running 1 test
+test the_preflight_refuses_before_the_first_tier_is_written ... ignored, boundary: application directories (engine/src/lod.rs); deferred by engine/LOD-PREREGISTRATION.md Amendment 8(a)
+
+test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/multipolygon_corpus.rs (target/debug/deps/multipolygon_corpus-c994178addd14f80)
+
+running 1 test
+test streaming_corpus_row_12_whole_file_yields_one_row_per_feature_with_unique_ids ... ignored, reads the on-disk compatibility corpus (C:\dev\spatial-ide\target\fixtures\compat-corpus)
+
+test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/multipolygon_stream.rs (target/debug/deps/multipolygon_stream-f3902c42a145a4fd)
+
+running 3 tests
+test every_multipolygon_batch_fits_its_target_under_the_unedited_estimate ... ok
+test f1_and_f2_stream_one_row_per_feature_with_bit_identical_parts ... ok
+test a_row_of_an_unread_type_stops_the_stream_at_that_row_by_name ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.20s
+
+     Running tests/planner_seam.rs (target/debug/deps/planner_seam-a37cd43b1b1c6873)
+
+running 1 test
+test the_product_planner_never_reaches_the_index_seam ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.25s
+
+     Running tests/point_corpus.rs (target/debug/deps/point_corpus-c5ca1474d99aafe3)
+
+running 2 tests
+test streaming_corpus_row_4_with_the_catalog_assertion_yields_300_points_inside_its_bbox ... ignored, reads the on-disk compatibility corpus (C:\dev\spatial-ide\target\fixtures\compat-corpus)
+test streaming_corpus_row_5_whole_file_yields_one_point_per_feature_inside_its_bbox ... ignored, reads the on-disk compatibility corpus (C:\dev\spatial-ide\target\fixtures\compat-corpus)
+
+test result: ok. 0 passed; 0 failed; 2 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/point_stream.rs (target/debug/deps/point_stream-cf92df3d3688ee37)
+
+running 3 tests
+test a_row_of_an_unread_type_stops_a_point_stream_at_that_row_by_name ... ok
+test p1_streams_one_row_per_feature_with_bit_identical_coordinates ... ok
+test every_point_batch_fits_its_target_under_the_unedited_estimate ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.33s
+
+     Running tests/polygon_wire_golden.rs (target/debug/deps/polygon_wire_golden-8596be434cc886ac)
+
+running 1 test
+test the_polygon_only_wire_matches_the_golden_file ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.44s
+
+     Running tests/predicate_admission.rs (target/debug/deps/predicate_admission-526a38e9fa272452)
+
+running 6 tests
+test a_stage_one_or_two_refusal_releases_its_connection_healthy_but_a_stage_three_refusal_still_discards ... ok
+test dollar_quoting_and_a_positive_control_both_admit ... ok
+test a_residual_admission_lease_exhaustion_surfaces_as_connections_exhausted_never_rejected_by_binder ... ok
+test n_concurrent_admit_calls_at_the_declared_ceiling_all_succeed ... ok
+test the_adversarial_corpus_each_row_refused_with_its_specific_code ... ok
+test the_positive_controls_from_the_design_note_all_admit ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.20s
+
+     Running tests/publish_stream.rs (target/debug/deps/publish_stream-838b290b70de5685)
+
+running 12 tests
+test a_mapped_identity_orders_by_the_identity_the_stream_actually_emits ... ok
+test a_batch_reports_the_bounds_of_the_rows_it_actually_carries ... ok
+test a_publish_partition_is_one_batch_and_its_boundaries_are_reproducible ... ok
+test adding_the_categorical_column_leaves_the_fixtures_geometry_bit_identical ... ok
+test a_publish_stream_is_cancellable_like_any_other ... ok
+test an_inadmissible_or_reserved_column_is_refused_before_anything_is_written ... ok
+test duckdb_resolves_order_by_and_where_in_opposite_directions ... ok
+test an_attribute_run_that_is_shifted_by_one_row_would_be_caught ... ok
+test the_categorical_column_produces_every_branch_a_style_must_declare ... ok
+test the_publish_stream_orders_by_identity_and_the_query_path_still_does_not ... ok
+test the_zone_of_a_feature_is_a_function_of_the_feature_and_not_of_its_position ... ok
+test the_publish_stream_emits_the_declared_projection_in_declared_order ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.80s
+
+     Running tests/row_group_seam.rs (target/debug/deps/row_group_seam-b17f0de9aa10492d)
+
+running 1 test
+test the_product_planner_never_reaches_the_row_group_seam ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.54s
+
+     Running tests/session_identity.rs (target/debug/deps/session_identity-3fa8bba2e9cafbbd)
+
+running 18 tests
+test a_change_the_descriptor_cannot_see_is_not_reported_and_is_not_a_check_that_passed ... ok
+test a_clean_stream_whose_source_changed_terminates_as_source_changed ... ok
+test a_declared_mapping_to_a_missing_column_still_refuses_rather_than_falling_to_the_session_tier ... ok
+test a_directory_source_is_refused_by_name_rather_than_as_an_unreadable_file ... ok
+test a_glob_source_is_refused_by_name_and_a_plain_missing_path_is_not ... ok
+test a_single_file_keyless_source_admits_on_the_session_tier_and_records_its_basis ... ok
+test a_source_deleted_mid_session_refuses_as_source_changed_not_as_an_unreadable_file ... ok
+test an_unchanged_source_records_no_post_check_finding ... ok
+test every_glob_metacharacter_read_parquet_expands_is_refused_by_name ... ok
+test the_descriptor_is_read_at_open_and_reports_the_footer_bytes_it_read ... ok
+test the_footer_ceiling_is_declared_in_code_and_degrades_rather_than_refusing ... ok
+test the_ordinal_stays_attached_to_its_row_under_a_reordered_scan_on_this_fixture ... ok
+test the_post_check_reports_the_footer_bytes_it_read ... ok
+test a_cancelled_stream_keeps_its_cancelled_terminal_while_the_change_is_still_recorded ... ok
+test the_pre_check_refuses_by_name_when_the_source_is_replaced_under_an_open_dataset ... ok
+test the_source_changed_message_states_its_limit_and_makes_no_snapshot_claim ... ok
+test the_vendored_duckdb_exposes_file_row_number_on_read_parquet ... ok
+test the_session_tier_record_says_neither_unique_nor_snapshot ... ok
+
+test result: ok. 18 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.68s
+
+     Running tests/slice.rs (target/debug/deps/slice-f2f9711d36270b38)
+
+running 22 tests
+test a_caller_may_assert_a_crs_for_a_file_that_declares_none_and_it_stays_marked ... ok
+test a_declared_crs_is_admitted_as_a_file_fact ... ok
+test a_definition_that_establishes_no_axis_order_is_refused ... ok
+test a_latitude_first_source_is_admitted_under_the_formats_override_with_its_declared_order_kept ... ok
+test a_viewport_cannot_name_a_definition_only_crs_because_that_identifier_names_nothing ... ok
+test a_viewport_filter_selects_a_subset_and_every_selected_feature_intersects_it ... ok
+test a_viewport_in_another_crs_is_refused_because_nothing_here_reprojects ... ok
+test a_viewport_without_a_covering_bbox_column_is_refused_not_silently_scanned ... ok
+test an_absent_crs_key_and_an_explicit_null_are_two_different_outcomes ... ok
+test an_assertion_over_a_file_that_declares_a_crs_is_refused ... ok
+test an_assertion_with_a_blank_identifier_is_refused_end_to_end ... ok
+test an_assertion_with_an_oversized_definition_is_refused_before_it_is_parsed ... ok
+test a_paused_consumer_bounds_producer_resident_memory ... ok
+test cancelling_before_the_first_batch_stops_the_stream_without_producing_anything ... ok
+test cancelling_mid_stream_stops_production_promptly ... FAILED
+test every_batch_carries_the_envelope_not_just_the_first ... ok
+test h6_the_engine_module_names_no_transport ... ok
+test streaming_the_whole_file_returns_every_feature_with_bit_identical_coordinates ... ok
+test dropping_the_stream_cancels_the_query ... ok
+test the_payload_is_variable_width_geoarrow_with_holes ... ok
+test the_recorded_arrow_version_is_the_one_the_workspace_pins ... ok
+test the_first_batch_is_handed_over_before_the_result_is_materialized ... ok
+
+failures:
+
+---- cancelling_mid_stream_stops_production_promptly stdout ----
+
+thread 'cancelling_mid_stream_stops_production_promptly' (3043) panicked at engine/tests/slice.rs:809:50:
+cancel_observed was stamped
+stack backtrace:
+   0: __rustc::rust_begin_unwind
+             at /rustc/2d8144b7880597b6e6d3dfd63a9a9efae3f533d3/library/std/src/panicking.rs:689:5
+   1: core::panicking::panic_fmt
+             at /rustc/2d8144b7880597b6e6d3dfd63a9a9efae3f533d3/library/core/src/panicking.rs:80:14
+   2: core::panicking::panic_display::<&str>
+             at /rustc/2d8144b7880597b6e6d3dfd63a9a9efae3f533d3/library/core/src/panicking.rs:259:5
+   3: core::option::expect_failed
+             at /rustc/2d8144b7880597b6e6d3dfd63a9a9efae3f533d3/library/core/src/option.rs:2257:5
+   4: <core::option::Option<u64>>::expect
+   5: slice::cancelling_mid_stream_stops_production_promptly
+             at ./tests/slice.rs:809:50
+   6: slice::cancelling_mid_stream_stops_production_promptly::{closure#0}
+             at ./tests/slice.rs:756:53
+   7: <slice::cancelling_mid_stream_stops_production_promptly::{closure#0} as core::ops::function::FnOnce<()>>::call_once
+             at /rustc/2d8144b7880597b6e6d3dfd63a9a9efae3f533d3/library/core/src/ops/function.rs:250:5
+   8: <fn() -> core::result::Result<(), alloc::string::String> as core::ops::function::FnOnce<()>>::call_once
+             at /rustc/2d8144b7880597b6e6d3dfd63a9a9efae3f533d3/library/core/src/ops/function.rs:250:5
+note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.
+
+
+failures:
+    cancelling_mid_stream_stops_production_promptly
+
+test result: FAILED. 21 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 8.03s
+
+error: test failed, to rerun pass `-p spatial-engine --test slice`

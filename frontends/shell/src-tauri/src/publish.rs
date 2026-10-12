@@ -2699,6 +2699,89 @@ mod tests {
         );
     }
 
+    /// **K-5 (`engine/MULTIPOLYGON-MP1-PREREGISTRATION.md` section 4; ADR-034 Decision 10).** F-1,
+    /// the engine's own multipolygon fixture, through the shell's real prepare path: a dataset whose
+    /// encoding is `geoarrow.multipolygon` is a pin-free refusal that carries its typed code
+    /// (`publish.geometry_encoding_not_publishable`, the same `refusal_detail` form the shell parses
+    /// for every other publish refusal), never takes a pin as a side effect, stashes no pending
+    /// attempt and leaves no destination. The refusal is the kernel's own preflight, reached through
+    /// this crate's `prepare_with_progress`, so the shell proves the code arrives at the shell
+    /// boundary and not only inside the kernel (`kernel/tests/publish.rs`, K-2).
+    ///
+    /// RECORDED MUTATION: in `kernel/src/publish/mod.rs`, move the encoding check out of
+    /// `preflight_pinless_parts` and into the pinned `preflight`, after the content pin is required.
+    /// `prepare_with_progress` then takes the pin before refusing, and this test fails by name at
+    /// the no-pin assertion.
+    ///
+    /// Observed over `ac538440` on the uncommitted tree of the shell commit:
+    /// `a_multipolygon_encoded_dataset_reaches_prepare_refused_with_its_typed_code_before_any_pin_is_taken`
+    /// FAILED by name at the no-pin assertion with the mutation applied, then reverted.
+    #[test]
+    fn a_multipolygon_encoded_dataset_reaches_prepare_refused_with_its_typed_code_before_any_pin_is_taken(
+    ) {
+        use spatial_engine::fixture::{
+            multipolygon_f1_rows, DeclaredTypes, GeometryMode, E_LO, N_LO,
+        };
+
+        let d = workspace("multipolygon-refusal-before-pin");
+        let path = d.join("f1.parquet");
+        write_geoparquet(
+            &path,
+            &FixtureSpec {
+                geometry: GeometryMode::Rows(multipolygon_f1_rows([E_LO, N_LO], 10.0)),
+                with_covering_bbox: false,
+                declared_types: DeclaredTypes::Json(r#"["MultiPolygon"]"#.to_string()),
+                attributes: AttributeMode::CategoricalZone,
+                crs_mode: CrsMode::DeclaredLv95,
+                identity: IdentityMode::NativeUnique,
+                ..Default::default()
+            },
+        )
+        .unwrap();
+        let ds = Arc::new(Dataset::open(&path).unwrap()); // deliberately NOT pinned
+        assert!(ds.content_pin().is_none());
+
+        let grants = Mutex::new(GrantSet::new());
+        let store = PendingAttempts::new();
+        let outcome = prepare_with_progress(
+            &grants,
+            &store,
+            ds.clone(),
+            "buildings".into(),
+            STYLE.into(),
+            PublishScope::WholeFile,
+            false,
+            viewer(),
+            viewer_license(),
+            d.join("out"),
+            "2026-10-06T10:00:00Z".into(),
+            &CancelToken::new(),
+            None,
+        );
+        match outcome {
+            PrepareOutcome::Refused { message } => {
+                assert!(
+                    message.starts_with("publish.geometry_encoding_not_publishable: "),
+                    "{message}"
+                );
+            }
+            other => panic!("expected the geometry-encoding refusal, got {other:?}"),
+        }
+        assert!(
+            ds.content_pin().is_none(),
+            "a pin-free refusal must never take a pin as a side effect"
+        );
+        assert_eq!(
+            store.len(),
+            0,
+            "no pending attempt may be stashed for a refused prepare"
+        );
+        assert!(
+            !d.join("out").exists(),
+            "a refused prepare leaves no destination"
+        );
+    }
+
     #[test]
     fn an_execute_time_publish_refusal_carries_its_typed_code_and_a_permission_refusal_does_not() {
         let _guard = env_lock();

@@ -1,0 +1,7 @@
+# map-refill: console at the base, re-run alone (2026-10-11)
+
+- **Why:** in the shared base run of worker report 3 (`state/consults/2026-10-11-shell-map-refill-after-resize-worker-report-3.md`, Stop), console's REGRESS' failed on K7 inside the nested regression. The standalone regression passed K7 at both arms. The machine rule sends a timing-sensitive failure in a shared run to the custodian, who re-runs it alone.
+- **The run:** the custodian, in an exclusive hold (hold-output.txt: queued, quiet, granted with all cores, released), with the scratchpad's `refill/run-suite.sh base console-solo e2e/console.mjs`: base worktree D:/wt/refill-base at 4fd3259a, the exe of reports 2 to 4, a fresh launch, app-down before and after. The log's last write: 2026-10-11T01:58:13Z.
+- **Result:** rc 0. Every console step passes, REGRESS' included: the nested regression and admission both exited 0 (console-solo-base.log.txt).
+- **Reading:** the shared-run K7 failure is not recorded as a failure (the machine rule). The console pair is the same at the base and the head (report 4: the head passes REGRESS'). No re-run of the head was made.
+- **Files:** console-solo-base.log.txt (sha256 8b43707923158ba351b9d7db65ae73ef307fa303e0c415a90b38e0e33ff1eb4c), hold-output.txt (sha256 9f322f35a86513e197e277ff4153470c61851d8c467ef7117c4425bb1f26aa61, its LF form as committed: the background task output had CRLF line endings, which git normalized), copied from the scratchpad and the background task output.

@@ -29,6 +29,9 @@ tokio = { workspace = true }
 # (non-test) code -- previously a dev-dependency only, which sufficed while every `serde_json` use
 # in this crate lived inside `#[cfg(test)]`.
 serde_json = "1"
+# OS CSPRNG for `DatasetUri::mint` (ADR-036 §4): the requirement `protocol/skp` and
+# `protocol/data-plane` already carry, so no new package enters the lock.
+getrandom = "0.3"
 
 [dev-dependencies]
 arrow = { workspace = true }

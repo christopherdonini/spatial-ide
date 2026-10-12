@@ -1,0 +1,40 @@
+MACHINE_QUEUED exclusive project=SpatialIDE: waiting to be first, for no other heavy run, 120 s since the last one, and 60 one-second samples averaging under 10% with at most 5 over 25%
+MACHINE_WAITING exclusive: quiet=False average=3.8% peaks-over-25=0 samples=5 others=none since-last-end=22s because: samples 5/60; last heavy run ended 22 s ago (at least 120 s)
+MACHINE_WAITING exclusive: quiet=False average=2.6% peaks-over-25=0 samples=60 others=none since-last-end=83s because: last heavy run ended 83 s ago (at least 120 s)
+MACHINE_QUIET quiet=True average=2.3% peaks-over-25=0 samples=60 others=none since-last-end=120s
+MACHINE_HOLD exclusive project=SpatialIDE cores=all affinity=FFFF shell=bash.exe:20612 also=bash.exe:25584 (commands started from now on inherit it; release when done)
+[reaim-solo] 2026-10-09T17:27:35Z w3-console start (e2e/console.mjs, launched fresh)
+[reaim-solo] 2026-10-09T17:32:33Z w3-console end rc=0
+killed tree 18268
+killed tree 50716
+port 9223 free
+port 5400 free
+[REGRESS'] PASS (287479ms): npm run e2e:regression exited 0 (263329ms); npm run e2e:admission exited 0 (24150ms); both attached to THIS run's own already-launched app (same fresh session)
+REGRESS'    PASS    npm run e2e:regression exited 0 (263329ms); npm run e2e:admission exited 0 (24150ms); both attached to THIS run's own already-launched app (same fresh session)
+This run launched the app; it stays RUNNING on CDP port 9223 for further interactive use.
+[reaim-solo] 2026-10-09T17:32:39Z w3-console after: porcelain []
+[reaim-solo] 2026-10-09T17:32:45Z w3-console start (e2e/console.mjs, launched fresh)
+[reaim-solo] 2026-10-09T17:37:45Z w3-console end rc=0
+killed tree 31468
+killed tree 31512
+port 9223 free
+port 5400 free
+[REGRESS'] PASS (289525ms): npm run e2e:regression exited 0 (265401ms); npm run e2e:admission exited 0 (24123ms); both attached to THIS run's own already-launched app (same fresh session)
+REGRESS'    PASS    npm run e2e:regression exited 0 (265401ms); npm run e2e:admission exited 0 (24123ms); both attached to THIS run's own already-launched app (same fresh session)
+This run launched the app; it stays RUNNING on CDP port 9223 for further interactive use.
+[reaim-solo] 2026-10-09T17:37:52Z w3-console after: porcelain []
+[reaim-solo] 2026-10-09T17:37:58Z w3-console start (e2e/console.mjs, launched fresh)
+[reaim-solo] 2026-10-09T17:43:05Z w3-console end rc=1
+killed tree 20900
+killed tree 31804
+port 9223 free
+port 5400 free
+[GROUP'] FAIL (6803ms): GROUP': expected 3 residential untiled rows in one .console-group within 5000ms (polled every 100ms), found 3, in groups [4,4,null]; rows from the first found to the last, in DOM order: ["a:viewport_query@group4","a:viewport_query@group4","b:writes one diagnostic log line to 
+[REGRESS'] PASS (291246ms): npm run e2e:regression exited 0 (267049ms); npm run e2e:admission exited 0 (24197ms); both attached to THIS run's own already-launched app (same fresh session)
+GROUP'      FAIL    GROUP': expected 3 residential untiled rows in one .console-group within 5000ms (polled every 100ms), found 3, in groups [4,4,null]; rows from the first found to the last, in DOM order: ["a:viewport_query@group4","a:viewport_query@group4","b:writes one diagnostic log line to a ho
+REGRESS'    PASS    npm run e2e:regression exited 0 (267049ms); npm run e2e:admission exited 0 (24197ms); both attached to THIS run's own already-launched app (same fresh session)
+This run launched the app; it stays RUNNING on CDP port 9223 for further interactive use.
+[reaim-solo] 2026-10-09T17:43:11Z w3-console after: porcelain []
+MACHINE_RELEASED project=SpatialIDE shell=bash.exe:20612 affinity=FF (cores 0-7)
+
+[exited with code 0]

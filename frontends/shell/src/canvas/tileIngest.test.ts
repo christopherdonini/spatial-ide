@@ -4,6 +4,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { ResidentBatch } from "./decodeBatch";
+import { partsOfFeatures, partsOfPolygons } from "../testUtils/partsOfPolygons";
 import { extentOfBatch, unionBbox } from "./extent";
 import { cellSizeForLevel, coverMembershipFor, deriveTileGridFrame, tileCoverForBbox, tileKeyToString } from "./tileGrid";
 import type { AuthoritativeBbox } from "./viewportBbox";
@@ -13,12 +14,12 @@ import { ingestTileBatch, trimBatchToVertexBudget } from "./tileIngest";
 
 function batch(streamHandle: string, batchSeq: number, ids: number[], verticesPerFeature = 1): ResidentBatch {
   const idArray = new BigUint64Array(ids.map(BigInt));
-  const rings = ids.map(() => [Array.from({ length: verticesPerFeature }, (_, i) => [i, 0] as [number, number])]);
+  const polygons = ids.map(() => [Array.from({ length: verticesPerFeature }, (_, i) => [i, 0] as [number, number])]);
   return {
     streamHandle,
     batchSeq,
     ids: idArray,
-    rings,
+    ...partsOfPolygons(polygons),
     totalVertices: ids.length * verticesPerFeature,
   };
 }
@@ -387,6 +388,53 @@ describe("ingestTileBatch: Defect A durable partiality", () => {
   });
 });
 
+/**
+ * SH-7 (`engine/MULTIPOLYGON-MP1-PREREGISTRATION.md` section 4), the trim half: `trimBatchToVertexBudget`
+ * keeps a feature whole, with every one of its parts, and `partToRow` stays a consistent prefix.
+ * Features A (two parts of four vertices), B (one part) and C (three parts) have 8, 4 and 12
+ * vertices: a budget of 13 keeps A and B and cuts C entire.
+ *
+ * RECORDED MUTATION: slice the parts by feature count in `trimBatchToVertexBudget` (keep `count`
+ * entries of `partToRow` and report `partCount: count`). This test then fails by name.
+ *
+ * Observed over `ac538440` on the uncommitted tree of the shell commit: `keeps features whole with
+ * all their parts, and partToRow, partCount and totalVertices agree` FAILED by name with the
+ * mutation applied, then reverted.
+ */
+describe("trimBatchToVertexBudget: whole features, every part, partToRow a prefix (SH-7)", () => {
+  const ring = (): Array<[number, number]> => [[0, 0], [1, 0], [1, 1], [0, 0]];
+  function multiPart(): ResidentBatch {
+    return {
+      streamHandle: "sh_m",
+      batchSeq: 0,
+      ids: new BigUint64Array([11n, 22n, 33n]),
+      ...partsOfFeatures([
+        [[ring()], [ring()]], // A: two parts
+        [[ring()]], // B: one part
+        [[ring()], [ring()], [ring()]], // C: three parts
+      ]),
+      totalVertices: 24,
+    };
+  }
+
+  it("keeps features whole with all their parts, and partToRow, partCount and totalVertices agree", () => {
+    const trimmed = trimBatchToVertexBudget(multiPart(), 13);
+    expect(Array.from(trimmed.ids)).toEqual([11n, 22n]);
+    expect(trimmed.parts).toHaveLength(2);
+    expect(trimmed.parts[0]).toHaveLength(2); // A keeps both parts
+    expect(Array.from(trimmed.partToRow)).toEqual([0, 0, 1]);
+    expect(trimmed.partCount).toBe(3);
+    expect(trimmed.totalVertices).toBe(12);
+  });
+
+  it("a budget that fits no whole feature yields an empty batch with no parts", () => {
+    const empty = trimBatchToVertexBudget(multiPart(), 7);
+    expect(empty.ids).toHaveLength(0);
+    expect(empty.partCount).toBe(0);
+    expect(empty.partToRow).toHaveLength(0);
+  });
+});
+
 describe("ingestTileBatch: unionedExtent mirrors fitAnchorRef's own accumulation", () => {
   it("unions across calls and never shrinks", () => {
     const tileSet = new TileResidentSet();
@@ -394,7 +442,7 @@ describe("ingestTileBatch: unionedExtent mirrors fitAnchorRef's own accumulation
       streamHandle: "sh",
       batchSeq: 0,
       ids: new BigUint64Array([BigInt(1)]),
-      rings: [[[[x, y]]]],
+      ...partsOfPolygons([[[[x, y]]]]),
       totalVertices: 1,
     });
     const r1 = ingestTileBatch(baseParams({ tileSet, tileKey: "0:0", batch: rings(0, 0) }));
@@ -424,7 +472,7 @@ describe("ingestTileBatch: T-D, batchExtent's own admitted-rows-only contract", 
       streamHandle,
       batchSeq,
       ids: new BigUint64Array(features.map((f) => BigInt(f.id))),
-      rings: features.map((f) => [Array.from({ length: f.vertices }, () => [f.x, f.y] as [number, number])]),
+      ...partsOfPolygons(features.map((f) => [Array.from({ length: f.vertices }, () => [f.x, f.y] as [number, number])])),
       totalVertices: features.reduce((sum, f) => sum + f.vertices, 0),
     };
   }

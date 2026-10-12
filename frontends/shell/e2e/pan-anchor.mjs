@@ -97,6 +97,10 @@ async function setCam(page, vs, tx, ty, z) {
   vs.length = 0;
   await page.evaluate((a) => window.__SPATIAL_E2E__.e2eSetViewState(a[0], a[1], a[2]), [tx, ty, z + jit * 1e-5]);
   await sleep(500);
+  // Two of the first three runs of the re-aimed file died here with `undefined.targetX`: on a loaded machine the view-state
+  // line for the reset had not been logged 500 ms after the call. Wait for the line itself (a bound, not a claim about how
+  // long one takes); the 500 ms above stays as the minimum it always was.
+  for (let i = 0; i < 20 && vs.length === 0; i++) await sleep(250);
   return vs[vs.length - 1];
 }
 const last = (vs) => vs[vs.length - 1];
@@ -120,6 +124,47 @@ function instrumentA(box, s0, s1, dx, dy, steps) {
   const residCssY = ((s1.targetY + s1.originY) - (s0.targetY + s0.originY)) * 2 ** z + Y_SIGN * (dy - dy / steps);
   const ratio = box.bw / box.cw; // element-measured buffer/CSS ratio -- never an assumed DPR
   return { bx: residCssX * ratio, by: residCssY * (box.bh / box.ch) };
+}
+
+// Milestone 1 re-aim (the human's Decision A; PRE-REGISTRATION Amendment 6). The map is no longer a 1280-wide, ~200-high
+// strip (it is 668 x 730 at a 1280 x 800 window; 328 x 570 and 788 x 830 at this file's two window sizes, measured at commit
+// 65391e79; at the branch head, with the border-box fix, they are 668 x 736, 328 x 576 and 788 x 836), so three assumptions this file made about the map are re-derived below from the measured box and the fixture. The tolerance, the instruments and every other check are untouched.
+//
+// (1) The dataset's width in CSS px at the paint-vs-event zoom. The fixture is 317 columns of 40 m cells
+// (`E_C`/`N_C` above, from `engine/src/fixture.rs`), so it spans 317 x 40 m; at zoom z one CSS px is 2^-z m
+// (`world = target + (pixel - center) / 2^zoom`, instrument A above).
+const PAINT_ZOOM = -6.5;
+const DATASET_SPAN_M = 317 * 40;
+const DATASET_PX_AT_PAINT_ZOOM = DATASET_SPAN_M * 2 ** PAINT_ZOOM; // 140.2 px
+// (2) Room kept between the dragged dataset and the box edge, and between a pointer and the box edge: twice the
+// tolerance, so a drag cannot be what moves a measurement across the frozen tolerance.
+const EDGE_MARGIN_PX = 2 * TOLERANCE_BUFFER_PX;
+// (3) The fill. After a camera jump the dataset is still streaming in for a while, and a taller box covers more tiles, so
+// the old fixed 500 ms was enough for a 1280 x 200 box and is not for 788 x 830 (measured here: a first centroid read
+// saw 2,484 non-background pixels where the filled dataset has 18,410). A centroid is only read
+// once the frame-wide non-background count has stopped changing; the bounds are bounds, not a claim about how long a fill takes.
+// RECORDED MUTATIONS (milestone 1 re-aim), OBSERVED AT 65391e79b048f51f3ca4d7b5eeac7533f5b64639, reverted, the worktree clean before and after:
+//  - paint-vs-event: `traceViewState` in src/canvas/WorkingCanvas.tsx given `vs.target[0] * 1.1`. The four paint-vs-event cases
+//    failed by name (small ±85: "painted 83.0 vs deck 91.3 -> -8.28 buffer px"; large ±250: "painted 243.9 vs deck 268.4 ->
+//    -24.48 buffer px"); the trace feeds every check, so normal-A and recenter-crossing-A failed too.
+//  - there-and-back-net has no honest product mutation (a trace scale cancels in a net). Its control is on the input: a copy of
+//    this file kept outside the repository, with the return drag 60 px shorter than the outward one, run against the unmodified
+//    product, failed both sizes with "net residual -58.00 buffer px (tol 4)" and passed every other check.
+const FILL_STABLE_READS = 3;
+const FILL_READ_GAP_MS = 300;
+const FILL_BOUND_MS = 20_000;
+async function waitForFill(page) {
+  const start = Date.now();
+  let prev = -1;
+  let equalRuns = 0;
+  while (Date.now() - start < FILL_BOUND_MS) {
+    const total = (await page.evaluate(() => window.__SPATIAL_E2E__.capturePixels())).nonBackgroundCount;
+    equalRuns = total === prev && total > 0 ? equalRuns + 1 : 0;
+    if (equalRuns >= FILL_STABLE_READS - 1) return total;
+    prev = total;
+    await sleep(FILL_READ_GAP_MS);
+  }
+  return prev;
 }
 
 const NSTRIP = 128;
@@ -186,11 +231,16 @@ async function runCasesForSize(page, vs, sizeLabel) {
       `grab-point residual ${a.bx.toFixed(2)} buffer px (tol ${TOLERANCE_BUFFER_PX})`);
   }
   // Instrument B (paint == event): whole dataset in frame at z=-6.5; small drag keeps it in frame.
-  for (const dx of [250, -250]) {
-    const s0 = await setCam(page, vs, E_C, N_C, -6.5);
+  // The drag was a fixed 250 px, which only keeps the 140 px dataset in a box at least 2 x (250 + 70) = 640 px wide. It is now
+  // the largest drag that keeps the whole dataset, plus EDGE_MARGIN_PX, inside the measured box (250 where the box allows it).
+  const paintDrag = Math.min(250, Math.floor((box.cw - DATASET_PX_AT_PAINT_ZOOM) / 2 - EDGE_MARGIN_PX));
+  for (const dx of [paintDrag, -paintDrag]) {
+    const s0 = await setCam(page, vs, E_C, N_C, PAINT_ZOOM);
+    await waitForFill(page);
     const c0 = await columnCentroid(page);
     await drag(page, vs, box, gpx, gpy, dx, 0, 40);
     const s1 = last(vs);
+    await waitForFill(page);
     const c1 = await columnCentroid(page);
     const deckShiftPx = -((s1.targetX + s1.originX) - (s0.targetX + s0.originX)) * 2 ** s1.zoom * (box.bw / box.cw);
     const paintedShift = (c0.cx != null && c1.cx != null) ? (c1.cx - c0.cx) : null;
@@ -200,10 +250,14 @@ async function runCasesForSize(page, vs, sizeLabel) {
         : `painted ${paintedShift.toFixed(1)} vs deck ${deckShiftPx.toFixed(1)} -> ${(paintedShift - deckShiftPx).toFixed(2)} buffer px (tol ${TOLERANCE_BUFFER_PX})`);
   }
   // There-and-back: net ~0.
+  // The second drag starts where the first ended, so that point has to be inside the box (a mousedown outside it pans nothing,
+  // which is what -292 px was at a 328 px box). The drag is 300 px where the box allows it and otherwise the largest that keeps
+  // its end EDGE_MARGIN_PX inside the box edge.
   {
+    const back = Math.min(300, Math.floor(box.cw / 2) - EDGE_MARGIN_PX);
     const s0 = await setCam(page, vs, E_C, N_C, -1);
-    await drag(page, vs, box, gpx, gpy, 300, 0, 40);
-    await drag(page, vs, box, gpx + 300, gpy, -300, 0, 40);
+    await drag(page, vs, box, gpx, gpy, back, 0, 40);
+    await drag(page, vs, box, gpx + back, gpy, -back, 0, 40);
     const s1 = last(vs);
     const net = ((s1.targetX + s1.originX) - (s0.targetX + s0.originX)) * 2 ** s1.zoom * (box.bw / box.cw);
     record(`${sizeLabel}: there-and-back-net`, Math.abs(net) <= TOLERANCE_BUFFER_PX,

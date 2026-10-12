@@ -1,0 +1,36 @@
+MACHINE_QUEUED exclusive project=SpatialIDE: waiting to be first, for no other heavy run, 120 s since the last one, and 60 one-second samples averaging under 10% with at most 5 over 25%
+MACHINE_WAITING exclusive: quiet=False average=5.6% peaks-over-25=0 samples=5 others=none since-last-end=348s because: samples 5/60
+MACHINE_QUIET quiet=True average=3.4% peaks-over-25=0 samples=60 others=none since-last-end=408s
+MACHINE_HOLD exclusive project=SpatialIDE cores=all affinity=FFFF shell=bash.exe:460 also=bash.exe:11384 (commands started from now on inherit it; release when done)
+[reaim-solo] 2026-10-09T17:19:55Z w2-regression start (e2e/regression.mjs, launched fresh)
+[reaim-solo] 2026-10-09T17:24:13Z w2-regression end rc=0
+killed tree 49404
+killed tree 8052
+port 9223 free
+port 5400 free
+[ABSENTCRS'] PASS (88ms): refused engine.format_default_contradicted; message verbatim; no dismiss button on the panel; no describe-summary in the Layers region; INFO: .crs-assertion-form present=false, .identity-declaration-form present=false (not asserted either way)
+[C2'/C3'] PASS (3412ms): (a) admitted; Identity "session-ordinal:file_row_number — by-construction-within-generation"; Session identity row equals the engine's statement; no refusal panel; INFO: .identity-declaration-form present=false (not asserted) || (b) refused engine.identity_unusable; messag
+[NET'] INFO (2ms): no >=400 response observed this run (index.html declares no <link rel>, nothing to probe)
+ABSENTCRS'  PASS    refused engine.format_default_contradicted; message verbatim; no dismiss button on the panel; no describe-summary in the Layers region; INFO: .crs-assertion-form present=false, .identity-declaration-form present=false (not asserted either way)
+C2'/C3'     PASS    (a) admitted; Identity "session-ordinal:file_row_number — by-construction-within-generation"; Session identity row equals the engine's statement; no refusal panel; INFO: .identity-declaration-form present=false (not asserted) || (b) refused engine.identity_unusable; message ver
+NET'        INFO    no >=400 response observed this run (index.html declares no <link rel>, nothing to probe)
+This run launched the app; it stays RUNNING on CDP port 9223 for further interactive use.
+[reaim-solo] 2026-10-09T17:24:21Z w2-regression after: porcelain []
+[reaim-solo] 2026-10-09T17:24:29Z w2-admission start (e2e/admission-remediation.mjs, launched fresh)
+[reaim-solo] 2026-10-09T17:24:55Z w2-admission end rc=0
+killed tree 21632
+killed tree 39900
+port 9223 free
+port 5400 free
+This run launched the app; it stays RUNNING on CDP port 9223 for further interactive use.
+[reaim-solo] 2026-10-09T17:25:01Z w2-admission after: porcelain []
+[reaim-solo] 2026-10-09T17:25:06Z w2-source-changed start (e2e/source-changed.mjs, launched fresh)
+[reaim-solo] 2026-10-09T17:25:27Z w2-source-changed end rc=0
+killed tree 2780
+killed tree 47048
+port 9223 free
+port 5400 free
+[reaim-solo] 2026-10-09T17:25:31Z w2-source-changed after: porcelain []
+MACHINE_RELEASED project=SpatialIDE shell=bash.exe:460 affinity=FF (cores 0-7)
+
+[exited with code 0]

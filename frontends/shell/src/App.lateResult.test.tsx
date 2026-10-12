@@ -158,7 +158,7 @@ function describeFixture(): import("./skp/types").DescribeResponse {
       provenance: "crs:declared", axis_provenance: "axis:declared", display_convention: null,
       unit: crsUnitMockState.current,
     },
-    geometry: { column: "geometry", encoding: "geoarrow.polygon", coordinate_layout: "interleaved-xy", frame: "authoritative-project-crs" },
+    geometry: { column: "geometry", encoding: "geoarrow.polygon", declared_types: ["Polygon"], coordinate_layout: "interleaved-xy", frame: "authoritative-project-crs" },
     identity: {
       source: "file:id", uniqueness: "verified-at-open-full-file", verified_rows: "100000",
       max_value: "99999", js_exact: true, class: "native", session_statement: null,

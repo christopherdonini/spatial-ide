@@ -43,17 +43,19 @@
 //!
 //! ## The order of operations, and why it is that order
 //!
-//! 1. **Validate the name and the destination, and create the staging directory** — before the
+//! 1. **Preflight, which creates nothing.** These refusals all come before the staging directory
+//!    exists: the row-filter gate, the degrees and geometry-encoding refusals, the dataset name,
+//!    the licenses, the projection with the bundle-format restriction, the style compiled against
+//!    it, and the reader ceilings. Then the source pin is read.
+//! 2. **Check the destination, then create the staging directory** — before the
 //!    query, before the hash. An unwritable destination is then refused in milliseconds rather than
 //!    after a whole-file read.
-//! 2. **Verify the source pin.** The pin was taken by an explicit earlier call; this re-hashes and
+//! 3. **Verify the source pin.** The pin was taken by an explicit earlier call; this re-hashes and
 //!    compares. The brief says "between open and publish"; what is actually checked is **between
 //!    pin and publish**, which is a faithful substitution and is recorded as what it is.
-//! 3. **Resolve the projection and compile the style against it.** Both are refusals that must
-//!    happen before a single partition is written.
 //! 4. **Stream, ordered, writing one partition per batch**, hashing and bounding as it goes.
-//! 5. **Write the style, the viewer, the manifest, the sidecar.**
-//! 6. **Re-check the source with the fail-closed heuristic**, then rename.
+//! 5. **Write the style, the viewer and the manifest.**
+//! 6. **Re-check the source with the fail-closed heuristic**, write the sidecar, then rename.
 //!
 //! ## Declared recovery policy (ADR-010 rule 7)
 //!
@@ -479,6 +481,21 @@ fn preflight_pinless_parts(req: &PublishRequest<'_>) -> Result<PreflightPinless,
                     || "unit source not recorded".to_string(),
                     |s| s.as_str().to_string(),
                 ),
+        });
+    }
+    // **The format's own geometry encoding** (ADR-034 Decision 10; MP-1 preregistration §2, K2).
+    // Third in this function, directly after the degrees check and before anything is resolved: a
+    // field read off the dataset, no IO, and — like the check above — one whose refusal no change
+    // to the rest of the request can fix. The dataset's encoding is compared with what
+    // `format_declaration` declares a version-1 bundle carries, so the refusal is owned by the
+    // format and moves with it; the declaration's value stays `geoarrow.polygon`. It is a format
+    // fact and never an engine failure, so it is its own variant and never `PublishError::Engine`.
+    let format = format_declaration();
+    let encoding = ds.geometry_encoding().as_str();
+    if encoding != format.geometry_encoding {
+        return Err(PublishError::GeometryEncodingNotPublishable {
+            encoding: encoding.to_string(),
+            carried: format.geometry_encoding,
         });
     }
     let logical_uri = dataset_logical_uri(req.dataset_name)?;

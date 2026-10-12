@@ -165,6 +165,24 @@ pub enum PublishError {
         unit_source: String,
     },
 
+    /// The dataset's GeoArrow encoding is not the one a `bundle_version` 1 bundle carries
+    /// (ADR-034 Decision 10; MP-1 preregistration §2, K2).
+    ///
+    /// **Owned by the format, not by the engine.** The engine's encoding is its own fact, and a
+    /// MultiPolygon-encoded dataset is a valid open; what is refused is *publishing* it, because
+    /// the format declares `carried` and has no partition schema for anything else. So this is
+    /// never [`Self::Engine`], which classes as `failed`: it is the gate working, a refusal, and
+    /// it moves with `format_declaration`, whose value it is compared against.
+    ///
+    /// Raised in `preflight_pinless_parts` right after the degrees check and before the pin or any
+    /// write, so it takes the same no-audit-record shape (`permission::boundary`'s module doc).
+    GeometryEncodingNotPublishable {
+        /// The dataset's own encoding, as the engine names it.
+        encoding: String,
+        /// The one encoding a version-1 bundle carries.
+        carried: String,
+    },
+
     /// A declared ceiling was reached (ADR-010 rule 6).
     CeilingExceeded {
         ceiling: &'static str,
@@ -246,6 +264,9 @@ impl PublishError {
             Self::RowFilterNotRecordable => "publish.row_filter_not_recordable",
             // Brief A settled boundary 8, held at P2 and closed at P3.
             Self::GeographicCrsNotPublishable { .. } => GEOGRAPHIC_CRS_NOT_PUBLISHABLE_CODE,
+            Self::GeometryEncodingNotPublishable { .. } => {
+                "publish.geometry_encoding_not_publishable"
+            }
             Self::CeilingExceeded { .. } => "publish.ceiling_exceeded",
             Self::ReaderCeilingExceeded { .. } => "publish.reader_ceiling_exceeded",
             Self::Cancelled => "publish.cancelled",
@@ -375,6 +396,13 @@ impl std::fmt::Display for PublishError {
                  bundle does not carry. Publishing it would hand a recipient a bundle nothing can \
                  render correctly. Reproject the source to a projected CRS and open that, or wait \
                  for the reader change that adds the degrees path"
+            ),
+            // A P6 placeholder: the wording is the human's. It states the format fact only — what a
+            // version-1 bundle carries and what this dataset's encoding is — and no consequence.
+            Self::GeometryEncodingNotPublishable { encoding, carried } => write!(
+                f,
+                "[P6 placeholder] refused: a version-1 bundle carries the {carried} encoding only, \
+                 and this dataset's encoding is {encoding}"
             ),
             Self::CeilingExceeded { ceiling, limit, saw } => write!(
                 f,

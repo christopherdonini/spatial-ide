@@ -62,6 +62,16 @@
 // script after a build, which is the common way to end up with a `dist/` whose embedded notice is
 // not the one on disk, is refused rather than silently believed.
 //
+// ## The fifth set, and the check that runs before it (ADR-030's note of 2026-10-09)
+//
+// Files ported from outside projects are enumerated by `notice()` itself from the in-tree registry
+// `LICENSES/third-party/ported/MANIFEST.json`. This script first runs `portedPrebuildCheck`
+// (`renderer/bundle-viewer/portedNotices.mjs`): in a git checkout, any marked file without a
+// registry entry, and any entry without its marked file or its pinned text, becomes a named FAIL
+// line and exit 1 -- and this runs in `prebuild`, so no packaged build from a checkout can carry a
+// marked port without its notice. A tree with no `.git` entry (a source archive) checks the
+// registry side only and prints one NOTE line saying so.
+//
 // **This process's own cwd is `frontends/shell`, not `renderer/bundle-viewer`** -- `notice()`
 // resolves each package set's own third-party directories against THAT SET's own `baseDir`
 // (`notice.mjs`'s `baseDir` parameter and `extra.npmSets[].baseDir`, release-cut fix batch MUST-FIX
@@ -75,10 +85,15 @@ import { fileURLToPath } from 'node:url';
 import { notice } from '../../../renderer/bundle-viewer/notice.mjs';
 import { collectLinkedCrates, buildCanonicalLicenseTexts, TARGET_TRIPLE } from './rustCrateNotices.mjs';
 import { buildAmalgamationSet } from './duckdbAmalgamationNotices.mjs';
+import {
+  ALLOWED_UPSTREAM_LICENSE_IDS,
+  portedPrebuildCheck,
+} from '../../../renderer/bundle-viewer/portedNotices.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const shellDir = join(here, '..');
 const repoRoot = join(shellDir, '..', '..');
+const portedRoot = join(repoRoot, 'LICENSES', 'third-party', 'ported');
 const viewerDir = join(shellDir, '..', '..', 'renderer', 'bundle-viewer');
 const viewerMetafilePath = join(viewerDir, 'dist-metafile.json');
 const shellMetafilePath = join(shellDir, 'dist-metafile.json');
@@ -92,6 +107,23 @@ if (!existsSync(viewerMetafilePath)) {
 }
 
 const viewerMetafile = JSON.parse(readFileSync(viewerMetafilePath, 'utf8'));
+
+// The ported-file registry and the tree, both directions, before any text is generated. A throw
+// (a registry fault, a git that cannot list) and any finding take the same named FAIL line the
+// DuckDB guards below take.
+try {
+  const ported = portedPrebuildCheck({ repoRoot, root: portedRoot, allowlist: ALLOWED_UPSTREAM_LICENSE_IDS });
+  for (const note of ported.notes) console.log(note);
+  if (ported.findings.length > 0) {
+    console.error(
+      `generateNotice: FAIL -- ${ported.findings.length} ported-file finding(s):\n  ${ported.findings.join('\n  ')}`,
+    );
+    process.exit(1);
+  }
+} catch (err) {
+  console.error(`generateNotice: FAIL -- ${err?.message ?? err}`);
+  process.exit(1);
+}
 
 const crates = collectLinkedCrates();
 const canonicalTexts = buildCanonicalLicenseTexts(crates, { repoRoot });
@@ -151,7 +183,7 @@ if (existsSync(shellMetafilePath)) {
   extra = { bootstrap: true, rustCrates, duckdbAmalgamation };
 }
 
-const text = notice(viewerMetafile, undefined, extra);
+const text = notice(viewerMetafile, undefined, extra, { portedRoot });
 
 const outDir = join(shellDir, 'src', 'generated');
 mkdirSync(outDir, { recursive: true });

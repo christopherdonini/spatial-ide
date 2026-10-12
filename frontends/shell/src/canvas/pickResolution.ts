@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
-import type { ResidentBatch } from "./decodeBatch";
+import type { GeometryKind, ResidentBatch } from "./decodeBatch";
 import {
   confirmingReadout,
   isPickBelowResolution,
@@ -82,28 +82,30 @@ export const SUB_PIXEL_PICK_REFUSAL_THRESHOLD_PX = 9;
 
 /**
  * The average resident feature's own bounding-box extent (the larger of its width/height, across
- * every ring/hole a feature carries), in the dataset's own CRS units -- `0` when `batches` carries no
+ * every ring/hole of every part a feature carries -- the union over its parts), in the dataset's own CRS units -- `0` when `batches` carries no
  * feature with any real geometry at all (nothing to average). Pure and O(total vertices), the same
  * order of work `buildLayers` already does over the same batches each render -- computed once per
  * render (`WorkingCanvas.tsx`'s own `averageFeatureExtentRef`), never per hover event.
  */
-export function averageFeatureExtent(batches: readonly Pick<ResidentBatch, "rings">[]): number {
+export function averageFeatureExtent(batches: readonly Pick<ResidentBatch, "parts">[]): number {
   let sumExtent = 0;
   let count = 0;
   for (const batch of batches) {
-    for (const featureRings of batch.rings) {
+    for (const featureParts of batch.parts) {
       let minX = Infinity;
       let minY = Infinity;
       let maxX = -Infinity;
       let maxY = -Infinity;
       let sawVertex = false;
-      for (const ring of featureRings) {
-        for (const [x, y] of ring) {
-          sawVertex = true;
-          if (x < minX) minX = x;
-          if (y < minY) minY = y;
-          if (x > maxX) maxX = x;
-          if (y > maxY) maxY = y;
+      for (const rings of featureParts) {
+        for (const ring of rings) {
+          for (const [x, y] of ring) {
+            sawVertex = true;
+            if (x < minX) minX = x;
+            if (y < minY) minY = y;
+            if (x > maxX) maxX = x;
+            if (y > maxY) maxY = y;
+          }
         }
       }
       if (!sawVertex) continue;
@@ -112,6 +114,85 @@ export function averageFeatureExtent(batches: readonly Pick<ResidentBatch, "ring
     }
   }
   return count > 0 ? sumExtent / count : 0;
+}
+
+/**
+ * **The point open's counterpart of `averageFeatureExtent` (the points cut, OPEN-4 ruled (A) in
+ * question round 62; `engine/GEOMETRY-POINTS-PREREGISTRATION.md` SH-P4):** the average spacing of the
+ * resident points, in the dataset's own CRS units. A point has no extent of its own, so what a pick
+ * can confuse is how closely the points sit. Over n resident points with a bounding box of width w
+ * and height h:
+ *
+ * - n <= 1: `+Infinity` -- there is nothing to confuse, so a hover is never refused for spacing;
+ * - w x h > 0: the square root of (w x h) / n -- the side of the cell each point holds on average;
+ * - otherwise (all points on one line, or all coincident): the larger of w and h over (n - 1). Fully
+ *   coincident points give `0`, which the unchanged 9 px threshold refuses by name.
+ *
+ * It is the **average**, never a per-pair nearest neighbour: clustered or coincident points among
+ * widely spread ones can leave the average above the threshold, and a hover there names the topmost
+ * symbol (KNOWN-LIMITATIONS item 36, for the human's P6 sight). Pure, O(resident points), computed
+ * once per render by the same site as `averageFeatureExtent`, never per hover event. Every vertex of
+ * every resident part counts as a point (`decodeBatch.ts`: one point is one single-position ring).
+ */
+export function averagePointSpacing(batches: readonly Pick<ResidentBatch, "parts">[]): number {
+  let n = 0;
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+  for (const batch of batches) {
+    for (const featureParts of batch.parts) {
+      for (const rings of featureParts) {
+        for (const ring of rings) {
+          for (const [x, y] of ring) {
+            n++;
+            if (x < minX) minX = x;
+            if (y < minY) minY = y;
+            if (x > maxX) maxX = x;
+            if (y > maxY) maxY = y;
+          }
+        }
+      }
+    }
+  }
+  if (n <= 1) return Infinity;
+  const w = maxX - minX;
+  const h = maxY - minY;
+  if (w * h > 0) return Math.sqrt((w * h) / n);
+  return Math.max(w, h) / (n - 1);
+}
+
+/**
+ * The one value `WorkingCanvas.tsx` compares with the threshold, chosen by the open's kind: the
+ * average feature extent for a polygonal or a line open (unchanged -- ADR-028 item 4 as written, so a
+ * line's extent is its bounding box over all its parts, and where many long lines cross the average can
+ * stay above the threshold while a hover names the topmost line, KNOWN-LIMITATIONS item 38), the
+ * average point spacing for a point open. The threshold (`SUB_PIXEL_PICK_REFUSAL_THRESHOLD_PX`), the
+ * refusal state and its text are the same for all.
+ */
+export function pickResolutionExtentFor(kind: GeometryKind, batches: readonly Pick<ResidentBatch, "parts">[]): number {
+  return kind === "point" ? averagePointSpacing(batches) : averageFeatureExtent(batches);
+}
+
+/**
+ * **The line open's pick tolerance: 4 CSS pixels** (the lines cut, OPEN-4 ruled (A) in question round
+ * 63; `engine/GEOMETRY-LINES-PREREGISTRATION.md` SH-L4). A line is 2 CSS pixels wide
+ * (`buildLayers.ts`'s `LINE_WIDTH_PX`), so a hover that must land exactly on it is hard to make. The
+ * value is deck's `pickingRadius` for the hover and the radius of the settle re-pick's `pickObject`,
+ * which returns the drawn pixel closest to the pointer within it. It is declared, not fitted: a
+ * walkthrough verdict (Part T, row T2) may revise it.
+ */
+export const LINE_PICK_RADIUS_PX = 4;
+
+/**
+ * The pick radius `WorkingCanvas.tsx` passes for an open of this kind, or `undefined` when it passes
+ * none: the radius for a line open, `undefined` for a polygonal or a point one, whose `Deck`
+ * `pickingRadius` stays unset and whose `pickObject` is given no radius (round 62, item 4, for points;
+ * the polygonal hover path is unchanged). The caller sets the prop and the argument only when the
+ * value is defined.
+ */
+export function pickingRadiusFor(kind: GeometryKind): number | undefined {
+  return kind === "line" ? LINE_PICK_RADIUS_PX : undefined;
 }
 
 /**

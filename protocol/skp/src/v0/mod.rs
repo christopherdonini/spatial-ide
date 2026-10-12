@@ -84,4 +84,26 @@ pub use handles::{CancelKey, DatasetHandle, SessionRef, StreamHandle};
 /// command; `protocol/data-plane/` has an empty diff. Same discipline again: `deny_unknown_fields`
 /// both directions, `==` unchanged, both sides' fixtures and the new error fixture updated in the
 /// same commit as the literal bump (`SKP-V0.md` §8's `skp/0.8` entry; §7.5).
-pub const SKP_VERSION: &str = "skp/0.8";
+///
+/// `skp/0.9` (MultiPolygon admission, ADR-034, `engine/MULTIPOLYGON-MP1-PREREGISTRATION.md`, node
+/// `geometry-types-beyond-polygons`): `describe`'s `geometry.encoding` gains a second value,
+/// `geoarrow.multipolygon`, and `geometry` gains one member, `declared_types` (the file's
+/// `geometry_types` as declared; `null` when the key is absent, `[]` when declared empty). No new
+/// command, request member or error code; `protocol/data-plane/` has an empty diff. Same discipline
+/// again: `deny_unknown_fields` both directions, `==` unchanged, both sides' fixtures updated in
+/// the same commit as the literal bump (`SKP-V0.md` §8's `skp/0.9` entry).
+///
+/// `skp/0.10` (Point admission, ADR-034, `engine/GEOMETRY-POINTS-PREREGISTRATION.md`, node
+/// `geometry-points-cut`): `describe`'s `geometry.encoding` gains a third value, `geoarrow.point`.
+/// No new member, command, request member or error code; `protocol/data-plane/` has an empty diff.
+/// Same discipline again: `deny_unknown_fields` both directions, `==` unchanged, both sides'
+/// fixtures updated in the same commit as the literal bump (`SKP-V0.md` §8's `skp/0.10` entry).
+///
+/// `skp/0.11` (LineString and MultiLineString admission, ADR-034,
+/// `engine/GEOMETRY-LINES-PREREGISTRATION.md`, node `geometry-lines-cut`): `describe`'s
+/// `geometry.encoding` gains a fourth and a fifth value, `geoarrow.linestring` and
+/// `geoarrow.multilinestring`. No new member, command, request member or error code;
+/// `protocol/data-plane/` has an empty diff. Same discipline again: `deny_unknown_fields` both
+/// directions, `==` unchanged, both sides' fixtures updated in the same commit as the literal bump
+/// (`SKP-V0.md` §8's `skp/0.11` entry).
+pub const SKP_VERSION: &str = "skp/0.11";

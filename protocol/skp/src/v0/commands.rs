@@ -19,7 +19,7 @@ use crate::v0::{DatasetHandle, DecU64, HexF64, SessionRef, StreamHandle};
 #[serde(deny_unknown_fields)]
 pub struct OpenDatasetRequest {
     pub skp: String,
-    /// UTF-8, absolute; canonicalized and checked by the host. Never a data-plane value — the path
+    /// UTF-8, absolute; passed to the engine's open as received. Never a data-plane value — the path
     /// stays on the control plane for its whole life.
     pub path: String,
     /// Client-minted (SKP-V0.md §3): names this specific open so `cancel` can stop it before it
@@ -166,8 +166,18 @@ pub enum CrsUnit {
 #[serde(deny_unknown_fields)]
 pub struct GeometryInfo {
     pub column: String,
-    /// Always `"geoarrow.polygon"` in this slice.
+    /// The engine's encoding for this open, `"geoarrow.polygon"`, `"geoarrow.multipolygon"`,
+    /// `"geoarrow.point"`, `"geoarrow.linestring"` or `"geoarrow.multilinestring"` (ADR-034
+    /// Decision 2; the third value is `skp/0.10`, the fourth and fifth `skp/0.11`): the value every
+    /// batch's envelope carries, fixed at open and never varying per batch. It is the engine's
+    /// fact, never the file's own type; see [`Self::declared_types`] for the file's declaration.
     pub encoding: String,
+    /// **`skp/0.9`, ADR-034 Decision 3.** The file's `geometry_types` as declared, in declared
+    /// order and with its case as written: the source fact beside [`Self::encoding`]. `None`
+    /// (serialized as `null`, never omitted) means the key is absent; `Some` of an empty list
+    /// (`[]`) means the file declares an empty list. The two are different facts and stay distinct
+    /// on the wire (round 59, item 4's ruling (b1)).
+    pub declared_types: Option<Vec<String>>,
     /// Always `"interleaved-xy"` in this slice.
     pub coordinate_layout: String,
     /// ADR-010 rule 1's envelope tag, surfaced. Always `"authoritative-project-crs"` here — this is
@@ -186,8 +196,8 @@ pub struct IdentityInfo {
     /// `"verified-at-open-full-file"` or `"declared-not-verified"` are ADR-016 §6's own two values.
     /// `skp/0.3` adds a third, `"by-construction-within-generation"`, for the session tier: no scan
     /// ran, and the value names the basis rather than claiming a scan's result. That third value
-    /// comes from the **PROPOSED** ADR-016 Amendment 1, which binds nothing until the human accepts
-    /// it — it is emitted here because this cut implements the tier, not because the ADR lists it.
+    /// comes from ADR-016 Amendment 1, which the ADR records as Accepted (2026-09-23); this cut
+    /// implements that tier.
     pub uniqueness: String,
     pub verified_rows: Option<DecU64>,
     pub max_value: Option<DecU64>,

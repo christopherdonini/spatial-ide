@@ -1,0 +1,60 @@
+2026-10-10T09:58:00Z	A	01	rc=0		
+2026-10-10T09:58:08Z	A	02	rc=0		
+2026-10-10T09:58:16Z	A	03	rc=0		
+2026-10-10T09:58:24Z	A	04	rc=0		
+2026-10-10T09:58:32Z	A	05	rc=0		
+2026-10-10T09:58:40Z	A	06	rc=0		
+2026-10-10T09:58:48Z	A	07	rc=0		
+2026-10-10T09:58:56Z	A	08	rc=0		
+2026-10-10T09:59:03Z	A	09	rc=0		
+2026-10-10T09:59:11Z	A	10	rc=0		
+2026-10-10T09:59:19Z	A	11	rc=0		
+2026-10-10T09:59:27Z	A	12	rc=0		
+2026-10-10T09:59:35Z	A	13	rc=0		
+2026-10-10T09:59:42Z	A	14	rc=0		
+2026-10-10T09:59:50Z	A	15	rc=0		
+2026-10-10T09:59:58Z	A	16	rc=0		
+2026-10-10T10:00:06Z	A	17	rc=0		
+2026-10-10T10:00:13Z	A	18	rc=0		
+2026-10-10T10:00:21Z	A	19	rc=0		
+2026-10-10T10:00:29Z	A	20	rc=0		
+2026-10-10T10:02:49Z	B	01	rc=101	test cancelling_mid_stream_stops_production_promptly ... FAILED 	EXPERIMENT-DIAG: no producer_cancelled; events=10 dropped=0 batches_generated=2 batches_after_cancel=1
+2026-10-10T10:02:57Z	B	02	rc=101	test cancelling_mid_stream_stops_production_promptly ... FAILED 	EXPERIMENT-DIAG: no producer_cancelled; events=10 dropped=0 batches_generated=2 batches_after_cancel=1
+2026-10-10T10:03:05Z	B	03	rc=101	test cancelling_mid_stream_stops_production_promptly ... FAILED 	EXPERIMENT-DIAG: no producer_cancelled; events=11 dropped=0 batches_generated=2 batches_after_cancel=1
+2026-10-10T10:03:13Z	B	04	rc=101	test cancelling_mid_stream_stops_production_promptly ... FAILED 	EXPERIMENT-DIAG: no producer_cancelled; events=10 dropped=0 batches_generated=2 batches_after_cancel=1
+2026-10-10T10:03:21Z	B	05	rc=101	test cancelling_mid_stream_stops_production_promptly ... FAILED 	EXPERIMENT-DIAG: no producer_cancelled; events=10 dropped=0 batches_generated=2 batches_after_cancel=1
+2026-10-10T10:03:29Z	B	06	rc=101	test cancelling_mid_stream_stops_production_promptly ... FAILED 	EXPERIMENT-DIAG: no producer_cancelled; events=10 dropped=0 batches_generated=2 batches_after_cancel=1
+2026-10-10T10:03:37Z	B	07	rc=0		
+2026-10-10T10:03:45Z	B	08	rc=101	test cancelling_mid_stream_stops_production_promptly ... FAILED 	EXPERIMENT-DIAG: no producer_cancelled; events=10 dropped=0 batches_generated=2 batches_after_cancel=1
+2026-10-10T10:03:53Z	B	09	rc=101	test cancelling_mid_stream_stops_production_promptly ... FAILED 	EXPERIMENT-DIAG: no producer_cancelled; events=11 dropped=0 batches_generated=2 batches_after_cancel=1
+2026-10-10T10:04:01Z	B	10	rc=101	test cancelling_mid_stream_stops_production_promptly ... FAILED 	EXPERIMENT-DIAG: no producer_cancelled; events=11 dropped=0 batches_generated=2 batches_after_cancel=1
+2026-10-10T10:04:09Z	B	11	rc=0		
+2026-10-10T10:04:17Z	B	12	rc=0		
+2026-10-10T10:04:25Z	B	13	rc=101	test cancelling_mid_stream_stops_production_promptly ... FAILED 	EXPERIMENT-DIAG: no producer_cancelled; events=11 dropped=0 batches_generated=2 batches_after_cancel=1
+2026-10-10T10:04:33Z	B	14	rc=101	test cancelling_mid_stream_stops_production_promptly ... FAILED 	EXPERIMENT-DIAG: no producer_cancelled; events=10 dropped=0 batches_generated=2 batches_after_cancel=1
+2026-10-10T10:04:40Z	B	15	rc=0		
+2026-10-10T10:04:49Z	B	16	rc=101	test cancelling_mid_stream_stops_production_promptly ... FAILED 	EXPERIMENT-DIAG: no producer_cancelled; events=10 dropped=0 batches_generated=2 batches_after_cancel=1
+2026-10-10T10:04:58Z	B	17	rc=0		
+2026-10-10T10:05:06Z	B	18	rc=101	test cancelling_mid_stream_stops_production_promptly ... FAILED 	EXPERIMENT-DIAG: no producer_cancelled; events=10 dropped=0 batches_generated=2 batches_after_cancel=1
+2026-10-10T10:05:14Z	B	19	rc=101	test cancelling_mid_stream_stops_production_promptly ... FAILED 	EXPERIMENT-DIAG: no producer_cancelled; events=10 dropped=0 batches_generated=2 batches_after_cancel=1
+2026-10-10T10:05:22Z	B	20	rc=101	test cancelling_mid_stream_stops_production_promptly ... FAILED 	EXPERIMENT-DIAG: no producer_cancelled; events=10 dropped=0 batches_generated=2 batches_after_cancel=1
+2026-10-10T10:06:58Z	C	01	rc=0		
+2026-10-10T10:07:06Z	C	02	rc=0		
+2026-10-10T10:07:13Z	C	03	rc=0		
+2026-10-10T10:07:21Z	C	04	rc=0		
+2026-10-10T10:07:30Z	C	05	rc=0		
+2026-10-10T10:07:38Z	C	06	rc=0		
+2026-10-10T10:07:47Z	C	07	rc=0		
+2026-10-10T10:07:55Z	C	08	rc=0		
+2026-10-10T10:08:03Z	C	09	rc=0		
+2026-10-10T10:08:12Z	C	10	rc=0		
+2026-10-10T10:08:20Z	C	11	rc=0		
+2026-10-10T10:08:29Z	C	12	rc=0		
+2026-10-10T10:08:38Z	C	13	rc=0		
+2026-10-10T10:08:47Z	C	14	rc=0		
+2026-10-10T10:08:57Z	C	15	rc=0		
+2026-10-10T10:09:07Z	C	16	rc=0		
+2026-10-10T10:09:16Z	C	17	rc=0		
+2026-10-10T10:09:24Z	C	18	rc=0		
+2026-10-10T10:09:32Z	C	19	rc=0		
+2026-10-10T10:09:41Z	C	20	rc=0		

@@ -7,8 +7,9 @@ import type { FormattedRefusal } from "../admission/formatRefusal";
  * Splits a data-plane terminal's `detail` into its typed code and the text an operator reads.
  *
  * **Why this exists.** P3a made every engine terminal's `detail` `"<code>: <display>"`
- * (`kernel/src/skp.rs::terminal_detail_of`, applied at `kernel/src/lib.rs`'s
- * `EngineSource::next_into`), so that the shell can act on a code rather than on prose whose
+ * (`kernel/src/skp.rs::terminal_detail_of` builds the prefix, applied wherever the kernel turns an
+ * engine refusal into a terminal's detail, mid-stream and at create time), so that the shell can
+ * act on a code rather than on prose whose
  * wording is the human's at P6. The baseline owner interpolates the detail whole onto the streaming
  * banner (`App.tsx`'s `onFailureTerminal`), so without this the operator would read
  * `stream ProducerFailed: engine.source_changed: refused: …` — a machine code in front of a

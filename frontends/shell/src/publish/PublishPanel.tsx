@@ -306,9 +306,12 @@ export interface PublishPanelProps {
 
 /**
  * The publish affordance (`NEXT-CUT.md` P3): collapsed-by-default disclosure, a scope choice, one
- * "Publish…" button. Placed in `.app-main`'s flex column below `StylePanel` (`App.tsx`) -- see
- * `styles.css`'s own `.publish-panel` comment for the measured layout budget, the same discipline
- * `StylePanel.tsx`'s own doc comment establishes.
+ * "Export interactive map…" button. Placed in the Export section of the Inspector's Layer tab
+ * (`App.tsx`'s `"section.export"` slot; `layout/contributions.ts` and `layout/StudioLayout.tsx`
+ * render the `section.*` slots there). `styles.css`'s `.publish-panel` comment opens with HISTORY
+ * (milestone 1): its layout budget was measured on the stacked layout and does not describe the
+ * current frame.
+ * `StylePanel.tsx`'s own doc comment says the same of its figures.
  *
  * **Default scope is "Current view"** (a design choice the piece text explicitly permits: "A
  * default IS acceptable here since scope is not the approval"). It is the honest SMALL scope --
@@ -507,7 +510,7 @@ export default function PublishPanel({
         }}
         aria-expanded={expanded}
       >
-        {expanded ? "▾" : "▸"} Publish
+        {expanded ? "▾" : "▸"} Export
       </button>
       {expanded && (
         <PublishControls
@@ -564,6 +567,8 @@ export function PublishControls({
 
   return (
     <div className="publish-controls">
+      {/* OPEN-4 (question round 66, item 4): the export label's one-line purpose, a P6 placeholder. */}
+      <p className="publish-purpose">[P6 placeholder] Writes a folder containing an interactive map of this layer.</p>
       <fieldset className="publish-scope">
         <legend>Row scope</legend>
         <label>
@@ -602,7 +607,7 @@ export function PublishControls({
         onClick={onPublishClick}
         disabled={busy || (scope === "current" && currentDisabled) || state.kind === "dialog"}
       >
-        {busy ? "Preparing…" : "Publish…"}
+        {busy ? "Preparing…" : "Export interactive map…"}
       </button>
 
       {/* RELEASE-0.1 item 10: the "Preparing…" wait's own phase label, bytes count, and a live
@@ -663,7 +668,7 @@ export function PublishControls({
               <p className="publish-summary-detail">{state.outcome.detail}</p>
             </>
           ) : (
-            <p className="publish-summary-headline">Published.</p>
+            <p className="publish-summary-headline">Exported.</p>
           )}
           <dl className="publish-summary-fields">
             <dt>Destination</dt>

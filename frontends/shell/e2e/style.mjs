@@ -29,6 +29,11 @@
 // predicate` precedent) is what this suite actually uses; the native-setter-bypass path was
 // confirmed as a working FALLBACK, not needed here, and is not carried into this file.
 //
+// HISTORY (milestone 1): the Layout paragraph below describes the stacked layout (`StylePanel` below
+// `.canvas-container` in `.app-main`, whose scrollbar narrowed the canvas) that milestone 1 retired.
+// `StylePanel` is now in the Inspector's Style tab, a different grid region from the map; this suite
+// still expands the panel once before its first capture and never collapses it.
+//
 // **Layout: every `capturePixels` call in this suite happens with the panel EXPANDED, kept expanded
 // for the whole run (reviewer gate, style-panel cut P7 fixes, S4 -- simplified from this file's
 // original collapse-before-every-capture design).** S4 moved `StylePanel` BELOW `.canvas-container`
@@ -222,6 +227,9 @@ async function setExpanded(page, want) {
     () => document.querySelector(".style-disclosure")?.getAttribute("aria-expanded") === "true"
   );
   if (current === want) return;
+  // Milestone 1 (OPEN-3 (a), question round 66, item 3): Style is the Inspector's own tab now, so a real
+  // click on it comes first (it is also the only real-UI exercise of that tab in this suite).
+  await page.click("#inspector-tab-style");
   await page.click(".style-disclosure");
   const settled = await waitForCondition(
     () =>
@@ -235,10 +243,11 @@ async function setExpanded(page, want) {
 }
 
 /** Bounded poll for `.canvas-container`'s own client box to stop changing across two 150ms-apart
- * reads -- a readiness gate for the ONE-TIME CSS reflow the very first expand triggers (post-S4,
- * `.app-main`'s own vertical scrollbar appearing narrows `.canvas-container` by ~15px, this file's
- * own top comment), never a timing claim (ADR-018): this only says "layout is no longer visibly
- * moving," not "how fast." Called exactly once now (`stepStyle`, right after the suite's one and
+ * reads -- a readiness gate for the ONE-TIME CSS reflow the very first expand triggers (written
+ * for the stacked layout, where `.app-main`'s own vertical scrollbar appearing narrowed
+ * `.canvas-container` by ~15px: history, per this file's own top comment), never a timing claim
+ * (ADR-018): this only says "layout is no longer visibly moving," not "how fast." Called exactly
+ * once now (`stepStyle`, right after the suite's one and
  * only `setExpanded(page, true)`) -- collapsed/expanded no longer alternate within this suite (S4),
  * so there is no further reflow later steps would need to wait out. */
 async function waitForCanvasLayoutStable(page, timeoutMs = 8_000) {

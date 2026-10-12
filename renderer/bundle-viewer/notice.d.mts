@@ -88,10 +88,18 @@ export interface NoticeExtra {
   bootstrap?: boolean;
 }
 
+// `portedRoot`: the directory holding the ported-source registry's `MANIFEST.json` (the fifth set,
+// ADR-030's note of 2026-10-09). Defaults to `LICENSES/third-party/ported`, resolved from
+// `notice.mjs`'s own location.
+export interface NoticeOptions {
+  portedRoot?: string;
+}
+
 export function notice(
   metafile: EsbuildLikeMetafile,
   baseDir?: string,
   extra?: NoticeExtra | null,
+  options?: NoticeOptions,
 ): string;
 
 // Exported by `notice.mjs` for `frontends/shell/src/notices/spdxTokenisation.test.ts` only (closing

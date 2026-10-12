@@ -1,0 +1,29 @@
+MACHINE_QUEUED exclusive project=SpatialIDE: waiting to be first, for no other heavy run, 120 s since the last one, and 60 one-second samples averaging under 10% with at most 5 over 25%
+MACHINE_WAITING exclusive: quiet=False average=6.8% peaks-over-25=0 samples=5 others=none since-last-end=332s because: samples 5/60
+MACHINE_QUIET quiet=True average=3.7% peaks-over-25=0 samples=60 others=none since-last-end=391s
+MACHINE_HOLD exclusive project=SpatialIDE cores=all affinity=FFFF shell=bash.exe:14436 also=bash.exe:27528 (commands started from now on inherit it; release when done)
+[p1-solo] 2026-10-09T17:12:26Z clean, HEAD 82a3c8cd0fb7fcc30f4aae49da82e6e981a10ade, CARGO_TARGET_DIR=D:/wt-targets/cov, RUST_TEST_THREADS=unset, nproc=16
+[p1-solo] 2026-10-09T17:12:42Z run 1 rc=0 test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 131 filtered out; finished in 0.66s
+[p1-solo] 2026-10-09T17:12:43Z run 2 rc=0 test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 131 filtered out; finished in 0.62s
+[p1-solo] 2026-10-09T17:12:44Z run 3 rc=0 test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 131 filtered out; finished in 0.64s
+[p1-solo] 2026-10-09T17:12:45Z run 4 rc=0 test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 131 filtered out; finished in 0.63s
+[p1-solo] 2026-10-09T17:12:46Z run 5 rc=0 test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 131 filtered out; finished in 0.62s
+[p1-solo] 2026-10-09T17:12:47Z run 6 rc=0 test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 131 filtered out; finished in 0.62s
+[p1-solo] 2026-10-09T17:12:49Z run 7 rc=0 test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 131 filtered out; finished in 0.59s
+[p1-solo] 2026-10-09T17:12:50Z run 8 rc=0 test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 131 filtered out; finished in 0.64s
+[p1-solo] 2026-10-09T17:12:51Z run 9 rc=0 test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 131 filtered out; finished in 0.62s
+[p1-solo] 2026-10-09T17:12:52Z run 10 rc=0 test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 131 filtered out; finished in 0.63s
+[p1-solo] 2026-10-09T17:12:53Z run 11 rc=0 test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 131 filtered out; finished in 0.66s
+[p1-solo] 2026-10-09T17:12:54Z run 12 rc=0 test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 131 filtered out; finished in 0.62s
+[p1-solo] 2026-10-09T17:12:55Z run 13 rc=0 test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 131 filtered out; finished in 0.61s
+[p1-solo] 2026-10-09T17:12:56Z run 14 rc=0 test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 131 filtered out; finished in 0.67s
+[p1-solo] 2026-10-09T17:12:57Z run 15 rc=0 test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 131 filtered out; finished in 0.67s
+[p1-solo] 2026-10-09T17:12:59Z run 16 rc=0 test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 131 filtered out; finished in 0.62s
+[p1-solo] 2026-10-09T17:13:00Z run 17 rc=0 test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 131 filtered out; finished in 0.64s
+[p1-solo] 2026-10-09T17:13:01Z run 18 rc=0 test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 131 filtered out; finished in 0.58s
+[p1-solo] 2026-10-09T17:13:02Z run 19 rc=0 test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 131 filtered out; finished in 0.64s
+[p1-solo] 2026-10-09T17:13:03Z run 20 rc=0 test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 131 filtered out; finished in 0.65s
+[p1-solo] 2026-10-09T17:13:03Z P-1 solo: 20 of 20 passed, 0 failed; porcelain []
+MACHINE_RELEASED project=SpatialIDE shell=bash.exe:14436 affinity=FF (cores 0-7)
+
+[exited with code 0]

@@ -499,3 +499,182 @@ Drafting returned to the architect at the stop. The rows below are the piece's l
   - **No gate found an index-update pointer wrong.**
   - **One correction round,** not caused by a pointer (C4): the worker kept a stale count in K-3's rewritten comment (an implementation defect). It does not count against the lead.
   - **The index was updated in the PR:** yes.
+
+### B2, second pilot — measured piece 3: `kernel-close-races-followups`
+
+- **The piece** took the product slot that #178 freed (kernel-protocol, order 13). Its read precedes the architect's draft, as for pieces 1 and 2. No branch exists yet.
+- **The impact read** is `state/consults/2026-10-05-kernel-close-races-followups-impact-read.md`: 137 lines, sha256 80a69e996b41cb0cc333f57db63daf8fda1b68019837110ba96997d47f661424, filed byte-identical as lead-data wrote it, read at main e32798ae.
+- **Cost** (the harness's task notification): 156,351 subagent tokens, 108 tool uses, 484,638 ms. The run lasted 19:07:23Z to 19:15:28Z.
+- **Write audit PASS:** one Write, at its REPORT PATH line's path (Read 53, Grep 51, Glob 2, the hand-back 1). One Grep timed out at 19:11:32Z; that is not a write.
+- **C3:** before, the checkout held only its two pre-existing untracked items; after, those and the report. There was no worktree.
+- **Content:** 19 site rows, the consumers, the governing texts, five gap questions and one missing pointer. The custodian's read found no draft text, design, recommendation or answer. verify-cites and verify-quotes pass over it.
+- **Found by the lead itself** (not by the architect or a gate): its question 1 quotes a one-word span from the close-races worker report in lower case where the source line has a capital. The lead disclosed this in its hand-back and left it, because its brief allowed one write. It is a quoting defect, not a pointer, and not design text.
+- **Measured piece 4 is next in line:** `geometry-types-beyond-polygons` (MP-1). ADR-034 was accepted on 2026-10-05, and MP-1's preregistration may be written now. Its impact read comes before its architect's draft, before a slot frees.
+- **The architect's draft** of piece 3 follows, with the read's path in its brief.
+- **Piece 3, the architect's draft** (`state/consults/2026-10-05-kernel-close-races-followups-architect-draft.md`): 201,152 subagent tokens, 72 tool uses, 548,131 ms, from 19:25:32Z to 19:34:40Z. Write audit PASS, with zero write calls. Its files-read section reports the impact read's pointers as follows (the architect's findings, not a gate's):
+  - **used:** every §0 pointer, rows S1 to S9 and S11 to S19, the consumer list (which became OPEN-1), the governing texts, and Q1 to Q5;
+  - **found wrong:** Q1's case (the lead's own disclosure); S9's message span (it opens at 427, but the message runs from 429 to 431); S8's `touch_modification_time` line (the doc comment's start, not the `fn`; called imprecise);
+  - **missing:** nine, among them skp.rs's `TicketLiveness` doc misattributing a quotation (C4), `liveTicketSet.ts`'s same single-site claim, T1's assertion message naming a renamed function, T1 to T3's commit-less recorded mutations (OPEN-3), two precedents, AI_DEVELOPMENT §B's escalation rule (OPEN-2), that `gate:` names a form file, and two more index lines.
+- **Combined cost of piece 3** (read plus draft): 357,503 subagent tokens, 180 tool uses, 1,032,769 ms.
+
+### B2, second pilot — measured piece 4: `geometry-types-beyond-polygons` (MP-1)
+
+- **The piece** is ready (engine, order 6) since ADR-034's acceptance, and holds no slot: `guardian-v1` and `kernel-close-races-followups` hold both. As for pieces 1 and 2, the read precedes the architect's draft, and no code starts before a slot frees.
+- **The impact read** is `state/consults/2026-10-05-geometry-types-beyond-polygons-impact-read.md`: 151 lines, sha256 6e4faa93fdfbe2541d0d9ae6bca20c82845848d5005d327fc4536a610d56a9df, filed byte-identical as lead-data wrote it, read at main 2d4fa886.
+- **Cost** (the harness's task notification): 244,737 subagent tokens, 140 tool uses, 500,623 ms. The run lasted 19:30:09Z to 19:38:30Z.
+- **Write audit PASS:** one Write, at its REPORT PATH line's path (Read 70, Grep 66, Glob 2, the hand-back 1).
+- **C3:** before, the checkout held only its two pre-existing untracked items. After, it held those, the report, and the custodian's own filings in progress: the `kernel-close-races-followups` form and its draft consult, `guardian-v1`'s Amendment 6 draft consult, PLAN and this file. Each of those paths is the custodian's, written by the custodian's scripts in this window.
+- **Content:** interfaces in nine groups, consumers, governing texts, five gap questions, and a list of stale pointers in existing records, recorded and not fixed. The custodian's read found no draft text, design, recommendation or answer.
+- **The architect's draft** of MP-1's form follows, with the read's path in its brief.
+- **Piece 4, the architect's draft** (`state/consults/2026-10-05-geometry-types-beyond-polygons-architect-draft.md`): 373,539 subagent tokens, 122 tool uses, 1,036,307 ms, from 19:45:56Z to 20:03:12Z. Write audit PASS, with zero write calls. Its files-read section reports on the impact read's pointers (the architect's findings, not a gate's):
+  - **found wrong:** two readings, not pointers. One: the read says KNOWN-LIMITATIONS item 9 and a README line become untrue under MP-1, but both describe the v0.1.0 artifact and stay true. Two: the read gives a deck.gl version from a line that records an older version than the lock resolves; the architect calls the pointer accurate and the fact historical.
+  - **missing:** the envelope's constructors and their call sites; the stream's `Pending` builder; the unordered streams' lack of reproducible cuts; the view query's covering-bbox refusal; the installed deck.gl version; more `.rings` sites, eight test files among them; the Tauri prepare-refusal precedent; that KNOWN-LIMITATIONS has no item 29; and the red-line list that makes question 1 the human's.
+- **Combined cost of piece 4** (read plus draft): 618,276 subagent tokens, 262 tool uses, 1,536,930 ms.
+- **Piece 4, the index update** (`state/consults/2026-10-06-geometry-types-beyond-polygons-index-update.md`): 220 lines, sha256 8f723ca0adc75076d463770e1ca9d3c3f828f99330c90496bbc5366c402093a3, filed byte-identical as lead-data wrote it, read at the branch's 3c29bc67.
+  - **Cost** (the harness's task notification): 126,759 subagent tokens, 43 tool uses, 294,503 ms. The run lasted 04:58:25Z to 05:03:20Z on 2026-10-06.
+  - **Write audit PASS:** one Write, at its REPORT PATH line's path (Grep 25, Read 11, Glob 5, the hand-back 1).
+  - **C3:** before, the checkout held only its two pre-existing untracked items. After, it held those and the report.
+  - **Content:** 13 lines replaced in place across both READMEs, 26 changed lines; the docs group stands at 88 of 130 once applied. It found no pointer made wrong. It adds three items to the engine's Open and admission row beyond the form's list, within that row, and leaves them to the final review.
+  - **This is the lead's last dispatch** under the 2026-10-05 clarification. The pilot's result is judged when the freeze lifts.
+
+## Reduced by the 2026-10-05 product-first direction
+
+- **The window is reduced** to section 6's measures and anything that blocks product work (`state/directives/2026-10-05-product-first-direction.md`, section 1, its last bullet). Every other item above waits for the first window after the freeze lifts. The freeze lifts when shell-migration milestone 1 and MP-1 have both merged.
+- **Section 6's measures, to be reported:**
+  - product pull requests merged against governance pull requests merged;
+  - question rounds per day;
+  - correction rounds caused by documentation against those caused by code;
+  - the days the critical path waited on a person.
+- **Section 3's won't-fix bar:** each use at triage is listed here.
+- **The lead-data second pilot** (B2 above) has run its four reads. Its result is judged when the freeze lifts, not at this window.
+- **The compaction measure** (round 61, item 2; `scripts/hooks/COMPACTION-RECORD-AND-RESUME-LINE-PREREGISTRATION.md`, §2, item 6): its rows are reported at this window. They start at the first automatic compaction with #181's merge in the main checkout. #181 merged at 2026-10-06T04:39:52Z, and the main checkout reached it at 04:42:09Z. No row yet.
+- **Item J's old count, its last row,** by the same records and rule as the count above:
+
+  | Compaction (boundary) | Session | The block | The flush state |
+  |---|---|---|---|
+  | 2026-10-06T04:41:54.040Z (trigger auto; 775,563 tokens before; 128,121 ms, so it started about 40 seconds after the block) | 128d8fa3 | 04:39:05.712Z | the last flush 3969abc6 (committed 2026-10-05T23:36:51Z, `flushed_at` 23:32:29Z, about 5 hours before the block) |
+
+  - It went through on the second chance, under the pre-merge hook.
+  - No N1 nudge text appears in the transcript. The fill was about 78% of a 1M window, below N1's 80.
+  - **The old count ends at E: 5, N1: 3.**
+### J, corrected by piece B's P0 (2026-10-06)
+
+- **Source:** `state/consults/2026-10-06-guardian-n1-before-auto-compaction-p0-report.md`, its §2 and §3, recorded as that form's Amendment 1.
+- **A compaction the count missed.** By the same records and rule as the count above:
+
+  | Compaction (boundary) | Session | The block | The flush state |
+  |---|---|---|---|
+  | 2026-10-05T18:49:59.984Z (trigger auto; 769,990 tokens before; 76,134 ms, so it started at about 18:48:44Z) | 128d8fa3 | not on record: the session's block record was overwritten by the block at 2026-10-06T04:39:05Z | the last flush dd7d8ea0 (committed 18:40:58Z, `flushed_at` 18:39:21Z, about 9 minutes before the compaction started). Whether the hook judged it stale is not on record |
+
+- **The fill readings above do not hold.**
+  - The rows above read N1's fill as about 77% or 78% of a 1M window, below N1's 80. They are wrong.
+  - A user-settings key, `autoCompactWindow`, sets the compaction window to 800,000. The settings file was last written at 2026-10-04T18:24:19Z, and the 2026-10-04T11:19:22Z compaction's 767,403 tokens also fit that window.
+  - `percentage` is measured against that window, so it read 96 to 97 at the four compactions since N1 went live.
+  - v0's N1 stayed silent because the Stop hook's judgment read the block fresh at each call where the fill first reached 80 or 90, not because the fill was under 80 (the P0 report, §3). Path item 4 is settled that way.
+- **The old count:** E: 5 and N1: 3, as counted. One more compaction went through, at 18:49:59Z, and its block state is not on record.
+
+### B2, second pilot, resumed (2026-10-09)
+
+- **Resumed** by the human's direction of 2026-10-09 (`state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md`, item 4), as written, from `covering-names-missing-column`. That piece's impact read precedes the architect's draft, as for pieces 1 to 4, and it is recorded here as the next measured piece.
+- The four pieces measured before the freeze stand as recorded above. The result after the fourth piece (the pilot's §5 and §8) is still owed to the human.
+
+### B2, second pilot — measured piece 5 (the first since it resumed): `covering-names-missing-column`
+
+- **The piece** is slot 2's first item, graded S1 by the human (engine, order 1). The read precedes the architect's draft, as for pieces 1 to 4. No branch exists yet.
+- **The impact read** is `state/consults/2026-10-09-covering-names-missing-column-impact-read.md`: 108 lines, sha256 bc961da144c3b456fe38daa2c6bb8e6eea910679db252da7458bdb0615a8ecc3, filed byte-identical as lead-data wrote it, read at main dba12b8c.
+- **Cost** (the harness's task notification): 192,653 subagent tokens, 113 tool uses, 351,644 ms. The run lasted 05:18:44Z to 05:24:35Z.
+- **Write audit PASS:** one Write, at its REPORT PATH line's path (Read 55, Grep 51, Glob 5, the hand-back 1).
+- **C3:** before, the checkout held only its two pre-existing untracked items. During the run the custodian committed its own filing of the human's ADR-036 rulings (7a6c9c0c), touching `DECISIONS-PENDING.md`, `PLAN.yaml` (the 1b and 1c nodes), the queue, the site and the ledger. After, the checkout held the two items and the report.
+- **Content:** interfaces in eight rows, consumers, governing texts, five gap questions, and missing pointers: no test pins k3, no `engine.no_covering_bbox` error fixture, neither KNOWN-LIMITATIONS item 9 nor 22 covers the case, and the owner's index does not list `Dataset::covering()`. The custodian's read found no draft text, design, recommendation or answer. The custodian checked its main finding against the code: the R-S3 check in `engine/src/dataset.rs` sits behind the early return taken when no format rule applied (lines 1198 to 1209 against 1247 to 1266), and `engine/ADMISSION-RESULTS.md` line 46 records M-4's deviation for that reason.
+- **The architect's draft** of piece 5 follows, with the read's path in its brief.
+- **Piece 5, the architect's draft** (`state/consults/2026-10-09-covering-names-missing-column-architect-draft.md`): 247,406 subagent tokens, 85 tool uses, 630,593 ms, from 05:29:15Z to 05:39:46Z. Write audit PASS, with zero write calls. Its files-read section reports on the impact read's pointers (the architect's findings, not a gate's):
+  - **used:** nearly all of the read's §0 to §3, and its five questions, which shaped the form's §2h;
+  - **found wrong:** none;
+  - **missing:** six: a second early return before R-S3 (the geo `bbox` member branch); DuckDB binding identifiers without regard to case against `field_path_exists`'s byte comparison, which drives the form's P0; the versioning texts the wire question needs; `engine/src/addressability.rs`'s single-classifier rule; the shell's mocked refusals using an empty `fields` object; and the red-line list, which the architect calls arguably outside an impact read's remit.
+- **Combined cost of piece 5** (read plus draft): 440,059 subagent tokens, 198 tool uses, 982,237 ms.
+
+### B2, second pilot — measured piece 6: `skp-drained-stream-helper-post-check-race`
+
+- **The piece** is slot 2's second item (kernel-protocol, order 1), drafted ahead while slot 2's first piece waits for a ruling. The read precedes the architect's draft. No branch exists yet.
+- **The impact read** is `state/consults/2026-10-09-skp-drained-stream-helper-post-check-race-impact-read.md`: 137 lines, sha256 9ed71a48a8377c55b55a15b6b9b15af25cb771d78f352d8cdf6118d0584a8a6c, filed byte-identical as lead-data wrote it, read at main 0a8f6dcb.
+- **Cost** (the harness's task notification): 190,693 subagent tokens, 81 tool uses, 353,684 ms. The run lasted 06:13:00Z to 06:18:54Z.
+- **Write audit PASS:** one Write, at its REPORT PATH line's path (Read 40, Grep 37, Glob 2, the hand-back 1).
+- **C3:** before, the checkout held only its two pre-existing untracked items; after, those and the report. The custodian committed nothing during the run.
+- **Content:** the helper and its five call sites reaching nine tests, the engine sites the race depends on, the sibling fix's means, the governing records, two more tests of the same shape in `engine/tests/session_identity.rs`, and five gap questions. The custodian's read found no draft text, design, recommendation or answer, and checked the helper's lines against the code.
+- **The architect's draft** of piece 6 follows, with the read's path in its brief.
+- **Piece 6, the architect's draft** (`state/consults/2026-10-09-skp-drained-stream-helper-post-check-race-architect-draft.md`): 220,701 subagent tokens, 70 tool uses, 657,550 ms, from 06:22:01Z to 06:32:58Z. Write audit PASS, with zero write calls. Its files-read section reports on the impact read's pointers (the architect's findings, not a gate's):
+  - **used:** §1.1 to §1.5 entire, §1.6, §2.1 to §2.4, the governing texts, and all five questions;
+  - **found wrong:** none;
+  - **incomplete, not wrong:** two: the default fixture spec runs past the pointed span, and the cancelled engine test cancels before it touches, which the read classed as the same shape without saying so;
+  - **missing:** the stream's batch-cut sites, its cancel checks and its Drop, the fixture's vertex minimum and hole ring, the streaming path's lack of attribute bytes, the sibling's architect-gate finding on timeouts, the node that already routes a stale stream doc, and the classification of four grep hits the read left open.
+- **Combined cost of piece 6** (read plus draft): 411,394 subagent tokens, 151 tool uses, 1,011,234 ms.
+
+### B2, second pilot — measured piece 7: `wire-bytes-invariant-trace-flag-race`
+
+- **The piece** is slot 2's third item (kernel-protocol, order 2), drafted ahead while slot 2's first two pieces wait for rulings. The read precedes the architect's draft. No branch exists yet.
+- **The impact read** is `state/consults/2026-10-09-wire-bytes-invariant-trace-flag-race-impact-read.md`: 130 lines, sha256 cd1d36ce52231d8294b0890c1e778239ea140f7d27056936812e13f55fb7b5de, filed byte-identical as lead-data wrote it, read at main 8604c819.
+- **Cost** (the harness's task notification): 118,249 subagent tokens, 62 tool uses, 206,682 ms. The run lasted 06:38:12Z to 06:41:38Z.
+- **Write audit PASS:** one Write, at its REPORT PATH line's path (Read 35, Grep 25, the hand-back 1).
+- **C3:** before, the checkout held only its two pre-existing untracked items; after, those and the report. The custodian committed nothing during the run.
+- **Content:** the two tests and their trace use, the flag and its single slot, every reader on the product path, every other trace-using test binary and how each is serialised, the governing texts, five gap questions, and three owner's-index gaps (no interface entry for the engine's trace module, nothing pinned to the wire-bytes test file, and the tracing design note missing from the kernel's governing list). The custodian's read found no draft text, design, recommendation or answer, and checked the race site and the flag against the code.
+- **The architect's draft** of piece 7 follows, with the read's path in its brief.
+- **Piece 7, the architect's draft** (`state/consults/2026-10-09-wire-bytes-invariant-trace-flag-race-architect-draft.md`): 182,528 subagent tokens, 66 tool uses, 602,414 ms, from 06:44:22Z to 06:54:24Z. Write audit PASS, with zero write calls. Its files-read section reports on the impact read's pointers (the architect's findings, not a gate's):
+  - **used:** all of §0, §1's test table and flag pins, §2's sibling table and precedents, §3's governing texts, the three owner's-index gaps, and all five questions;
+  - **found wrong:** none;
+  - **missing:** five: the stamp-then-send order and the end-on-disconnect in the stream, which question 2 needed; the mechanism of the slice test's exposure; that the two ignored factorial tests share one binary with no lock; that the shared watch-support module holds no tests; and the locked tokio versions with the absence of a clippy run, for a question the read could not foresee.
+- **Combined cost of piece 7** (read plus draft): 300,777 subagent tokens, 128 tool uses, 809,096 ms.
+
+### B2, second pilot — piece 5's owner's-index update (the pilot's §1, item 2)
+
+- **The update** is `state/drafts/covering-names-missing-column-owners-index-update.md`: 173 lines, sha256 414356e02e335a7db9eec16b524b23fe8998e28e4e0857b0b00724628dafe5ee, byte-identical as lead-data wrote it, read on the branch at a06a746b.
+- **Where it is filed, and why:** the brief's REPORT PATH line named `state/consults/`. One of its pointers names the new engine test file, which exists only on the branch, so `verify-cites` fails it on main. It was moved unchanged to `state/drafts/`, which that check exempts.
+- **Cost** (the harness's task notification): 148,175 subagent tokens, 59 tool uses, 313,143 ms. The run lasted 11:37:31Z to 11:42:45Z.
+- **Write audit PASS:** one Write, at its REPORT PATH line's path (Grep 30, Read 21, Glob 6, the hand-back 1).
+- **C3:**
+  - before: the checkout held only its two pre-existing untracked items;
+  - during the run: the custodian committed its own filing, a76071b5 (the covering form's Amendment 3, the PLAN summaries, the ledger, the queue and the site);
+  - after: the two items and the report.
+- **Content:**
+  - six whole-line replacements, three in each README's Owner's index section;
+  - every pointer in both sections checked at a06a746b, all resolving;
+  - no other stale line;
+  - both sections within the 60-line cap.
+- **Its stated limit:** with no shell, it took the changed files from the worktree's reflog and the worker report, not from `git diff`. The reviewer's diff check is the backstop.
+- **Applied** on the branch by a worker, as the pilot's §1 item 2 says.
+
+### B2, second pilot — piece 6's owner's-index update (the pilot's §1, item 2)
+
+- **The update** is `state/consults/2026-10-09-skp-drained-stream-helper-post-check-race-owners-index-update.md`: 138 lines, sha256 9da772a846a82b08c19dfddf4aaf4fe4c1500e88c442f93c5eb31b9cc521e7a1, byte-identical as lead-data wrote it, read on the branch at be7eecb3. Its cites pass `verify-cites` on main, so it is filed where its REPORT PATH line put it.
+- **Cost** (the harness's task notification): 119,733 subagent tokens, 53 tool uses, 262,140 ms. The run lasted 15:33:37Z to 15:37:59Z.
+- **Write audit PASS:** one Write, at its REPORT PATH line's path (Grep 38, Read 8, Glob 5, the hand-back 1).
+- **C3:** before and after, the checkout held its two pre-existing untracked items; the report was added after. The custodian committed nothing during the run.
+- **Content:** the kernel index's preregistrations line gains this form, last. The engine index gains a Governed by sub-bullet for engine halves of pieces filed elsewhere, pointing to the form's Part B. Both Last verified at lines move to be7eecb3, every pointer checked there. No other line is stale. Both sections are within the 60-line cap.
+- **A miscount it disclosed itself:** its §3 gives 51 kernel and 39 engine test pointers checked. Its hand-back gives the right counts as 45 and 40. It did not rewrite the file, because the brief allowed one write.
+- **Applied** on the branch by a worker, as the pilot's §1 item 2 says.
+
+## M. The owner's-index update also names the README body sentences the piece made false
+
+**The human's proposal** (typed, received at 08:00:57Z on 2026-10-10 by the transcript, item 3 of the message that filed drift sweep area D; byte-copied here):
+
+> 3. For the weekly window: the owner's-index update also names the README body sentences the piece made false. The geometry pieces updated the index and left the body.
+
+**The evidence:** drift sweep area D's finding 6 (`state/consults/DRIFT-SWEEP-AREA-D-2026-10-10.md`; the custodian's check `state/consults/2026-10-10-drift-sweep-area-d-custodian-check.md`). The geometry pieces (MP-1, points, lines) updated the engine's owner's index. They left `engine/README.md`'s scope line and summary table describing a polygons-only engine. Sweep area D's other body findings (1, 2, 5 and 7) are the same class from earlier pieces.
+
+**What it would change:** the pilot's §1 item 2 owner's-index update gains one line in its brief. That line lists each README body sentence the piece made false, so the same PR corrects it. A piece that changes no README body records "none".
+
+**Not decided here.** This is for the window's round.
+
+## N. The amendment template says class 9 covers a ruling that adds work, standing or not
+
+**The human's direction** (typed, received at 11:00:52Z on 2026-10-10 by the transcript, item 2.3 of the message that answered the e2e re-aim's Amendment 2; byte-copied here):
+
+> 3. Class 9 stands for this amendment. I read class 9 as covering a ruling of mine that adds work to a preregistered piece, standing or not. The template sentence that says so goes on the weekly window list.
+
+**What it would change:** the amendment template gains one sentence: class 9 covers a ruling of the human's that adds work to a preregistered piece, whether the ruling is standing or not.
+
+**Not decided here.** This is for the window's round.
+
+### B2, second pilot — the four-piece result, delivered (2026-10-11)
+
+- **Cleared.** The result after the fourth piece (the pilot's §5 and §8), recorded above as still owed, is delivered on the human's 2026-10-11 direction, item 3a, at `state/consults/2026-10-11-pilot-v2-result-and-recommendation.md`. The table it reads is at `state/consults/2026-10-11-pilot-v2-table-and-section-6-measures.md`.
+- **The human rules** on its one recommendation.

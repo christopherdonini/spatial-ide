@@ -1,0 +1,33 @@
+name: Ported notices
+
+# The repository check of the ported-source notice route (PORTED-CODE-NOTICE-ROUTE-PREREGISTRATION.md
+# section 2.6 and Amendment 1 (g) and (h); ADR-030's note of 2026-10-09): every tracked file that
+# carries a port marker must be in `LICENSES/third-party/ported/MANIFEST.json`, and every registered
+# file and pinned text must check out. No path or branch filter, because a port can land in any
+# file. Its steps are checkout, Node, and one script that uses Node's standard library only.
+# Modelled on governance-ci's cfg-boundary job. The check run is named `ported-notices` (one job, no
+# matrix); the human adds it to the required checks after its first green run on main.
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  ported-notices:
+    name: ported-notices
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: node scripts/check-ported-notices.mjs
+        run: node scripts/check-ported-notices.mjs

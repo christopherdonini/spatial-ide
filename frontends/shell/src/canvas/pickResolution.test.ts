@@ -6,6 +6,7 @@ import { describe, expect, it } from "vitest";
 import type { ResidentBatch } from "./decodeBatch";
 import {
   averageFeatureExtent,
+  averagePointSpacing,
   clearLabelledStateWithoutRepick,
   cursorForPointerState,
   decideHoverReadoutAtSettle,
@@ -13,7 +14,10 @@ import {
   isBelowPickResolution,
   isFramebufferIdentical,
   isPointerOnCanvas,
+  LINE_PICK_RADIUS_PX,
   mayRepickAtSettle,
+  pickingRadiusFor,
+  pickResolutionExtentFor,
   reevaluateStandingHoverOnCameraChange,
   shouldArmHoverRepick,
   SUB_PIXEL_PICK_REFUSAL_THRESHOLD_PX,
@@ -21,9 +25,10 @@ import {
 import type { HoverPointerCapture } from "./pickResolution";
 import { confirmingReadout, isPickConfirming } from "./pick";
 
-function batchOf(features: Array<Array<[number, number]>>): Pick<ResidentBatch, "rings"> {
-  // One exterior ring per feature, no holes -- `features[i]` is that feature's own ring vertex list.
-  return { rings: features.map((ring) => [ring]) };
+function batchOf(features: Array<Array<[number, number]>>): Pick<ResidentBatch, "parts"> {
+  // One part per feature, one exterior ring, no holes -- `features[i]` is that feature's own ring
+  // vertex list.
+  return { parts: features.map((ring) => [[ring]]) };
 }
 
 describe("averageFeatureExtent", () => {
@@ -51,6 +56,28 @@ describe("averageFeatureExtent", () => {
   it("a feature with no vertex at all (e.g. a null geometry) is excluded from the average, not counted as 0", () => {
     const withNull = batchOf([[[0, 0], [10, 0]], []]); // one real (extent 10), one empty
     expect(averageFeatureExtent([withNull])).toBe(10); // not (10 + 0) / 2
+  });
+
+  /**
+   * SH-6 (`engine/MULTIPOLYGON-MP1-PREREGISTRATION.md` section 4): a feature's extent is the union
+   * over its parts, one feature counted once. Two distant parts are one feature of extent 100, never
+   * two features of extent 1, and never part 0 alone.
+   *
+   * RECORDED MUTATION: read part 0 only in `averageFeatureExtent`. This test then fails by name.
+   *
+   * Observed over `ac538440` on the uncommitted tree of the shell commit: `a feature with two distant parts has one extent spanning both parts, counted once (SH-6)`
+   * FAILED by name with the mutation applied, then reverted.
+   */
+  it("a feature with two distant parts has one extent spanning both parts, counted once (SH-6)", () => {
+    const multi: Pick<ResidentBatch, "parts"> = {
+      parts: [
+        [
+          [[[0, 0], [1, 0], [1, 1], [0, 0]]], // part 0: extent 1
+          [[[99, 0], [100, 0], [100, 1], [99, 0]]], // part 1: far to the east
+        ],
+      ],
+    };
+    expect(averageFeatureExtent([multi])).toBe(100);
   });
 });
 
@@ -399,5 +426,93 @@ describe("cursorForPointerState (entry 89 §4.3)", () => {
 
   it("dragging: grabbing", () => {
     expect(cursorForPointerState(true)).toBe("grabbing");
+  });
+});
+
+/**
+ * SH-P4 (`engine/GEOMETRY-POINTS-PREREGISTRATION.md` section 4; OPEN-4 ruled (A), question round 62): the
+ * resident points' average spacing, branch by branch. A 10 x 10 grid at spacing 10 spans 90 x 90 over
+ * 100 points, so the spacing is the square root of 8100 / 100, which is 9; coincident points give 0
+ * (refused by the unchanged 9 px threshold at any zoom); collinear points give the span over (n - 1);
+ * one point, and no point, give +Infinity (nothing to confuse, never refused for spacing). The points
+ * are counted across batches, features and parts the way `decodeBatch` shapes them.
+ *
+ * RECORDED MUTATION: drop the division by n in the area branch (`Math.sqrt(w * h)`). The grid
+ * assertion then fails by name.
+ *
+ * Observed over `edbc0f3c` on the uncommitted tree of the shell commit: `the spacing branches: grid, coincident, collinear, one point and none`
+ * FAILED by name with the mutation applied, at the grid assertion (`expected 90 to be 9 // Object.is equality`), then reverted.
+ */
+describe("averagePointSpacing (SH-P4)", () => {
+  /** `positions` as one batch, each point one part holding one single-position ring. */
+  const pointsOf = (positions: Array<[number, number]>): Pick<ResidentBatch, "parts"> => ({
+    parts: positions.map((p) => [[[p]]]),
+  });
+
+  it("the spacing branches: grid, coincident, collinear, one point and none", () => {
+    const grid: Array<[number, number]> = [];
+    for (let i = 0; i < 10; i++) for (let j = 0; j < 10; j++) grid.push([i * 10, j * 10]);
+    expect(averagePointSpacing([pointsOf(grid)])).toBe(9);
+
+    expect(averagePointSpacing([pointsOf([[5, 5], [5, 5], [5, 5]])])).toBe(0);
+    expect(isBelowPickResolution(0, 1e9)).toBe(true); // 0 is below the threshold at any zoom
+
+    expect(averagePointSpacing([pointsOf([[0, 0], [10, 0], [20, 0], [30, 0], [40, 0]])])).toBe(10); // 40 / 4
+    expect(averagePointSpacing([pointsOf([[3, 0], [3, 8]])])).toBe(8); // vertical, 8 / 1
+
+    expect(averagePointSpacing([pointsOf([[1, 2]])])).toBe(Infinity);
+    expect(averagePointSpacing([])).toBe(Infinity);
+    expect(averagePointSpacing([pointsOf([])])).toBe(Infinity);
+    expect(isBelowPickResolution(Infinity, 0.001)).toBe(false);
+
+    // Counted across two batches: the same four points as one batch of four.
+    const split = averagePointSpacing([pointsOf([[0, 0], [10, 0]]), pointsOf([[0, 10], [10, 10]])]);
+    expect(split).toBe(averagePointSpacing([pointsOf([[0, 0], [10, 0], [0, 10], [10, 10]])]));
+    expect(split).toBe(5); // sqrt(100 / 4)
+  });
+});
+
+/**
+ * SH-P4's selector: a polygonal open compares the average feature extent (unchanged), a point open
+ * the average point spacing. The same batches give different values under the two kinds.
+ *
+ * RECORDED MUTATION: return `averageFeatureExtent` for points in `pickResolutionExtentFor`. The point
+ * assertion then fails by name.
+ *
+ * Observed over `edbc0f3c` on the uncommitted tree of the shell commit: `selects the average feature extent for a polygonal open and the average point spacing for a point open`
+ * FAILED by name with the mutation applied, at the point assertion (`expected 10 to be close to 36.666666666666664`), then reverted.
+ */
+describe("pickResolutionExtentFor (SH-P4)", () => {
+  it("selects the average feature extent for a polygonal open and the average point spacing for a point open", () => {
+    // Two features, each one ring of two vertices: extents 10 and 10; four points spanning 110 x 0.
+    const batches = [batchOf([[[0, 0], [10, 0]], [[100, 0], [110, 0]]])];
+    expect(pickResolutionExtentFor("polygonal", batches)).toBe(10);
+    expect(pickResolutionExtentFor("point", batches)).toBeCloseTo(110 / 3, 12);
+  });
+});
+
+/**
+ * SH-L4 (`engine/GEOMETRY-LINES-PREREGISTRATION.md` section 4, OPEN-4 ruled (A)). A line open's selector
+ * gives the average feature extent, as a polygonal open's does (ADR-028 item 4 as written, not the point
+ * spacing), and `pickingRadiusFor` gives `LINE_PICK_RADIUS_PX` (4) for `line` and `undefined` for
+ * `polygonal` and `point`, so a polygonal or point open sets no radius at either wiring site.
+ *
+ * RECORDED MUTATION: return the radius for `polygonal` in `pickingRadiusFor` (the line check becomes
+ * "not a point"). The polygonal assertion then fails by name.
+ *
+ * Observed over `26d4ccc0` on the uncommitted tree of the shell commit: `selects the average feature extent for a line open and gives the radius for a line open only`
+ * FAILED by name with the mutation applied, at `expect(pickingRadiusFor("polygonal")).toBeUndefined()` (`expected 4 to be undefined`), then reverted.
+ */
+describe("the line open's pick tolerance and selector (SH-L4)", () => {
+  it("selects the average feature extent for a line open and gives the radius for a line open only", () => {
+    // The same batches as above: the average feature extent is 10, the average point spacing 110 / 3.
+    const batches = [batchOf([[[0, 0], [10, 0]], [[100, 0], [110, 0]]])];
+    expect(pickResolutionExtentFor("line", batches)).toBe(10);
+    expect(pickResolutionExtentFor("line", batches)).toBe(pickResolutionExtentFor("polygonal", batches));
+
+    expect(LINE_PICK_RADIUS_PX).toBe(4);
+    expect(pickingRadiusFor("line")).toBe(4);
+    expect(pickingRadiusFor("polygonal")).toBeUndefined();
+    expect(pickingRadiusFor("point")).toBeUndefined();
   });
 });

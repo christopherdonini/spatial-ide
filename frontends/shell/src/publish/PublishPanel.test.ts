@@ -455,7 +455,7 @@ describe("the rendered publish controls (MF3)", () => {
     const publishButton = html.match(/<button[^>]*class="publish-open"[^>]*>/)?.[0] ?? "";
     expect(publishButton).not.toBe("");
     expect(publishButton).not.toContain("disabled");
-    expect(html).toContain("Publish…");
+    expect(html).toContain("Export interactive map…");
   });
 
   it("preparing disables Publish (one prepare at a time) -- the contrast that makes the cancelled case's re-enable real", () => {

@@ -4,12 +4,16 @@
 //! CRS as a **type**, and the admission policy for a source that does not carry one.
 //!
 //! `docs/05`: "CRS is part of the dataset's type and flows through every operation." A dataset that
-//! reaches this module without a CRS does not become a dataset with a default CRS; it is refused.
+//! reaches this module without a CRS does not become a dataset with a default CRS chosen here; it
+//! is refused. An absent `crs` key under a pinned GeoParquet version is resolved before this module
+//! by the format's own rule, in `geoparquet.rs`, and recorded as `crs:format-default` (ADR-015
+//! Amendment 1, items 3 and 4); an explicit `null` is not.
 //!
 //! This answers the question ADR-013 explicitly hands to the engine's first cut ("the admission
 //! policy for undeclared or mismatched source CRS belongs with the engine's first cut and is not
-//! decided here"). The decision is recorded as **ADR-015 (Proposed)**. ADR-013 is Proposed, binds
-//! nothing, and is deliberately **not** implemented here: nothing in this file is per-row
+//! decided here"). The decision is recorded as **ADR-015** (Accepted, with its Amendment 1).
+//! ADR-013 is Accepted, and its provenance column, whose shape is deferred, is deliberately **not**
+//! implemented here: nothing in this file is per-row
 //! provenance, and the word `provenance` is avoided so the two are not conflated (ADR-013 §3 makes
 //! provenance a per-row *column*; what is below is a dataset-level *envelope* fact).
 
@@ -38,12 +42,15 @@ pub const MAX_CRS_DEFINITION_BYTES: usize = 65_536;
 /// What this project states about a dataset in a geographic CRS — **the human's own sentence, held
 /// once, verbatim**.
 ///
-/// Ruled by the human on 2026-09-08 (DECISIONS-PENDING entry 59, item 8; carried in the proposed
-/// ADR-013 Amendment 1 §4). It is a **display statement only**: no coordinate value is transformed
+/// Ruled by the human on 2026-09-08 (DECISIONS-PENDING entry 59, item 8; carried in ADR-013
+/// Amendment 1, item 4). It is a **display statement only**: no coordinate value is transformed
 /// by anything in this engine, `axis_normalization` on every envelope stays `none-performed`, and
 /// nothing here licenses a reprojection — `docs/05`'s transform service is still unbuilt.
 ///
-/// **It is never paraphrased, shortened or reworded** (that draft's block-on-sight 2, which names
+/// **It is never paraphrased, shortened or reworded** (ADR-013 Amendment 1, item 4 gives it as the
+/// human's words, verbatim; block-on-sight 2 of the draft
+/// `docs/adr/PROPOSED-amendment-to-ADR-013-geographic-degrees-instance.md` at 433413a, which is
+/// history and not ADR text, names
 /// "no reprojection" and "plate carrée" phrasings as *not* it). It lives here as one constant so
 /// that the surfaces which must carry it read the same bytes rather than retyping them.
 ///

@@ -1,0 +1,23 @@
+(node:13396) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+source-changed: waiting for the app to mount (up to 120000ms)...
+source-changed: mount-readiness gate PASSED (after 822ms of waiting, a bound not a result)
+[S1-open] PASS: scratch copy admitted: C:\dev\wt\reaim\frontends\shell\e2e\out\source-changed-link\source-changed-scratch.parquet
+[S2-settle-and-precondition] PASS: resident before the change: 188665 vertices / 10000 features; interior-verified pixel buffer(592,584) at notch 3 -- 25-pixel neighbourhood entirely non-background; alpha 180 >= 150 (47,94,172,180); the hover there answers with an id; precondition: formerly occupied AND formerly hovered
+[S3-retarget-junction] PASS: the junction now resolves to C:\dev\wt\reaim\frontends\shell\e2e\out\source-changed-targets\b\source-changed-scratch.parquet; both copies still hash to the fixture's sha256, so they differ in mtime only
+[S4-issue-one-query] PASS: a viewport_query followed the "pan-beyond-viewport" gesture (17 -> 19 in the render trace); pre-check line: 1791566724802 tile-stream-mint-refused 7:13: engine.source_changed {"detail":"{mtime}"}
+[S5a-status] PASS: status shown, not dismissible; code chip "engine.source_changed"; sentence carries no engine. prefix
+[S5b-residency-cleared] PASS: resident vertices 0, resident features 0
+[S5c-picks-refused] PASS: hover over the formerly-occupied pixel shows the session-ended refusal, no id
+Step                        Status  Note
+--------------------------  ------  ----------------------------------------
+S1-open                     PASS    scratch copy admitted: C:\dev\wt\reaim\frontends\shell\e2e\out\source-changed-link\source-changed-scratch.parquet
+S2-settle-and-precondition  PASS    resident before the change: 188665 vertices / 10000 features; interior-verified pixel buffer(592,584) at notch 3 -- 25-pixel neighbourhood entirely non-background; alpha 180 >= 150 (47,94,172,180); the hover there answers with an id; precondition: formerly occupied AND formerly hovered
+S3-retarget-junction        PASS    the junction now resolves to C:\dev\wt\reaim\frontends\shell\e2e\out\source-changed-targets\b\source-changed-scratch.parquet; both copies still hash to the fixture's sha256, so they differ in mtime only
+S4-issue-one-query          PASS    a viewport_query followed the "pan-beyond-viewport" gesture (17 -> 19 in the render trace); pre-check line: 1791566724802 tile-stream-mint-refused 7:13: engine.source_changed {"detail":"{mtime}"}
+S5a-status                  PASS    status shown, not dismissible; code chip "engine.source_changed"; sentence carries no engine. prefix
+S5b-residency-cleared       PASS    resident vertices 0, resident features 0
+S5c-picks-refused           PASS    hover over the formerly-occupied pixel shows the session-ended refusal, no id
+fixture-integrity           PASS    sha256 unchanged across the run: fd0c74ab2d5df1e1df084802134d2a6678278e764ba180ea2ea5812f53ddfb49
+Report: C:\dev\wt\reaim\frontends\shell\e2e\out\source-changed-1791566727294.json
+This run LAUNCHED the app; it stays running on CDP port 9223.

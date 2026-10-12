@@ -416,8 +416,9 @@ impl StreamRegistry {
 ///
 /// The rule exists because `engine/src/pool.rs` already owns a connection **lease** generation
 /// (`ConnectionFacts::lease_generation`, ADR-004 Amendment 4), and the two are unrelated facts —
-/// a diff that reused the bare name would make the A2 grep read the wrong symbol (the proposed
-/// ADR-016 Amendment 1's block-on-sight 3).
+/// a diff that reused the bare name would make the A2 grep read the wrong symbol (block-on-sight 3
+/// of the draft amendment to ADR-016, `PROPOSED-amendment-to-ADR-016-identity-tier-model.md` under
+/// `docs/adr/` at 433413a, deleted at acceptance; the rule's origin, not ADR-016 Amendment 1's text).
 ///
 /// **The kernel side is authoritative and the client side mirrors it.** This is where a refusal is
 /// decided; the shell mirrors by *live-ticket set* rather than by value, so **no generation value
@@ -536,12 +537,12 @@ pub enum NotLive {
 /// What the **dataset-session generation registry** knows about one ticket handle — three-valued,
 /// deliberately, because two values would make the kernel fabricate a diagnosis.
 ///
-/// The P3 attempt-2 defect this type exists to prevent, in the human's own words
-/// (`DECISIONS-PENDING.md:44`, quoted in `engine/ADMISSION-PREREGISTRATION.md:742-744`): a guard
-/// that "told a caller its source 'was observed to have changed' for any handle the map did not
-/// know — expired, already redeemed, never minted — which is a diagnosis the kernel had not made
-/// (`docs/01` principle 8)". [`TicketLiveness::Unknown`] is the third value that keeps that
-/// statement unmade.
+/// The P3 attempt-2 defect this type exists to prevent, as the ADMISSION form records it
+/// (`engine/ADMISSION-PREREGISTRATION.md:742-744`, recording question round 4, item 1): the guard's
+/// source-change refusal told a caller its source was observed to have changed for any handle the
+/// map did not know (expired, already redeemed, never minted), a diagnosis the kernel had not made
+/// (`docs/01` principle 8). [`TicketLiveness::Unknown`] is the third value that keeps that
+/// diagnosis unmade.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TicketLiveness {
     /// Attributed to this dataset's currently-live generation.
@@ -1086,9 +1087,10 @@ impl SkpHost {
     /// The dataset-session generation registry this host mints into (P3b §2c).
     /// `EngineSourceFactory::ticket_only` needs the identical `Arc` to answer
     /// [`GenerationRegistry::ticket_liveness`] about what this host ended — the host constructs the
-    /// registry privately (`SkpHost::new`, `:689`) and nothing else can hand out that `Arc`.
+    /// registry privately (in `SkpHost::new`) and nothing else can hand out that `Arc`.
     ///
-    /// **Its product caller is one line**: `frontends/shell/src-tauri/src/lib.rs:373-377` (`host.generations()` at `:376`),
+    /// **Its product caller is one call**: the `serve(DataPlaneConfig { .. })` call in
+    /// `frontends/shell/src-tauri/src/lib.rs`'s `run` setup,
     /// `EngineSourceFactory::ticket_only(catalog, tickets, host.generations())`. Same shape as
     /// [`Self::catalog`] and [`Self::tickets`] above, for the same reason.
     pub fn generations(&self) -> Arc<GenerationRegistry> {
@@ -1136,11 +1138,12 @@ impl SkpHost {
                         }
                     }
                     LatchState::Admitted => {
-                        // Admission's own critical section (below) always mints this dataset's
-                        // generation before it ever sets the latch to `Admitted`, so by the time
-                        // this arm is reached the generation this call ends is guaranteed to exist
-                        // (Amendment 1: it always carries a `SessionRef`, even one no client
-                        // holds). Dropped before reaching into `generations` — lock order.
+                        // This arm is reached only after this call's admission (below) minted the
+                        // dataset's generation, under the latch and before the latch was set to
+                        // `Admitted`; that generation carries the `SessionRef` this call returns on
+                        // `OpenDatasetResponse.session`. The close race is pinned by
+                        // `ticket_drop_under_lock_regression::the_close_race_mints_no_generation_so_no_unheld_reference_exists`.
+                        // Dropped before reaching into `generations` — lock order.
                         drop(guard);
                         let reason = reason_of_signal(&signal);
                         // Phase-2 delta 8, following `kernel/src/lib.rs`'s own post-check
@@ -1701,8 +1704,8 @@ fn viewport_query_build_error_of(e: ViewportQueryBuildError) -> SkpError {
 /// about the predicate's own text and keeps its `skp.filter_*` code via [`filter_error_of`].
 /// [`PredicateAdmitError::ConnectionsExhausted`] is a fact about the engine's admission-class
 /// connection pool, never about the text, so it routes through [`error_of`]'s existing
-/// `EngineError::ConnectionsExhausted` arm to `engine.connections_exhausted` (SKP-V0.md `:266`'s
-/// `engine.` + variant-name rule) — the ruling of 2026-09-13 (DECISIONS-PENDING entry 91 (a)):
+/// `EngineError::ConnectionsExhausted` arm to `engine.connections_exhausted` (SKP-V0.md §5's
+/// `code` rule: `engine.` + variant-name) — the ruling of 2026-09-13 (DECISIONS-PENDING entry 91 (a)):
 /// residual exhaustion surfaces as the typed `engine.connections_exhausted`, **never** as a false
 /// binder refusal. ADR-021 item 8's twelve-code `skp.filter_*` list is untouched: this function
 /// mints no code either side of the match does not already mint.
@@ -1716,7 +1719,9 @@ fn predicate_admit_error_of(e: PredicateAdmitError) -> SkpError {
 }
 
 /// `projection_error_of(&ProjectionError) -> SkpError` — one exhaustive `match`, no wildcard arm,
-/// the [`filter_error_of`] precedent applied to the six declared `skp.projection_*` codes.
+/// the [`filter_error_of`] precedent applied to the seven `skp.projection_*` codes mapped from
+/// `ProjectionError`. The eighth, `skp.projection_empty_list`, is minted in
+/// [`viewport_query_build_error_of`], not here.
 fn projection_error_of(e: &ProjectionError) -> SkpError {
     let message = e.to_string();
     match e {
@@ -1923,7 +1928,12 @@ fn describe_dataset(ds: &Dataset) -> DescribeResponse {
         },
         geometry: GeometryInfo {
             column: ds.geometry_column().to_string(),
-            encoding: "geoarrow.polygon".to_string(),
+            // The engine's fact for this open (ADR-034 Decision 2), read from the dataset and never
+            // restated here: the same value the envelope and every batch carry.
+            encoding: ds.geometry_encoding().as_str().to_string(),
+            // The file's declaration as written (ADR-034 Decision 3), the source fact beside the
+            // engine's `encoding`: `None` is an absent key and an empty list is kept empty.
+            declared_types: ds.declared_geometry_types().map(<[String]>::to_vec),
             coordinate_layout: "interleaved-xy".to_string(),
             frame: "authoritative-project-crs".to_string(),
         },
@@ -2009,13 +2019,18 @@ fn describe_dataset(ds: &Dataset) -> DescribeResponse {
 ///
 /// **Why the code is prefixed here and not left to the client to infer** (P3 gate attempt 1,
 /// architect-ruled). `BatchSource::next_into` is typed `Result<_, String>`, so the typed
-/// `EngineError` is stringified at `crate::EngineSource::next_into` and everything downstream —
-/// the data-plane terminal frame, the shell's `Terminal.detail` — sees prose only. A client that
+/// `EngineError` is stringified where the kernel hands it to the data plane and everything
+/// downstream — the data-plane terminal frame, the shell's `Terminal.detail` — sees prose only. A client that
 /// must **clear residency and refuse picks** on `engine.source_changed` **(P3b — no client does
 /// either in P3a)** could not decide that from prose without matching on wording, and the wording
 /// is the human's at P6. The code table is
 /// [`error_of`]'s own, so there is exactly one place a code is minted and this cannot drift from
 /// what the control plane reports for the same error.
+///
+/// The kernel hands an engine refusal to the data plane as a `String` at `EngineSource::next_into`
+/// (mid-stream), in `EngineSourceFactory::create_from_raw_params` and in the two dead-ticket arms of
+/// `EngineSourceFactory::liveness_refusal` (both at create time); each calls this function, which
+/// stays the one place the prefix is built.
 ///
 /// **No data-plane change.** The prefix rides the existing `String` the terminal already carries;
 /// `protocol/data-plane/` is untouched (block-on-sight A3).
@@ -2067,7 +2082,7 @@ pub fn error_of(e: &EngineError) -> SkpError {
             vec![("detail", detail.clone())],
         ),
         // **Brief A P3, boundary 9's remaining two typed refusals.** Both are `engine.` + the
-        // variant name, per SKP-V0.md `:266`'s rule, and both carry `detail` in the structured
+        // variant name, per SKP-V0.md §5's `code` rule, and both carry `detail` in the structured
         // field rather than only in the message — a client that must clear residency and refuse
         // picks needs the code, not the prose.
         //
@@ -3001,6 +3016,336 @@ mod tests {
             "the real describe unit value must match the shared fixture's"
         );
     }
+
+    /// **MP-1 (`engine/MULTIPOLYGON-MP1-PREREGISTRATION.md` §4, row K-1; ADR-034 Decisions 2 and
+    /// 3).** The real `describe` response of a real open carries the engine's encoding for that
+    /// open and the file's declaration beside it: F-1 (`["MultiPolygon"]`) and F-3 (an explicit `[]`
+    /// over Polygon rows, kept empty) are `geoarrow.multipolygon`, F-4 (the key absent) is
+    /// `geoarrow.multipolygon` with `declared_types` `None`, and an ordinary Polygon fixture is
+    /// `geoarrow.polygon` declaring `["Polygon"]`. The `geometry` key set equals the shared
+    /// fixture's, so the response has no member the wire fixtures do not.
+    ///
+    /// The `encoding` half was committed with the kernel commit; the `declared_types` half lands
+    /// with the wire field it reads, in the wire commit (Amendment 2, item 5.1 of the form).
+    ///
+    /// RECORDED MUTATION, `encoding` half: hard-code `geoarrow.polygon` in `describe_dataset`.
+    /// Expected failure: this test fails by name at F-1's `encoding`.
+    ///
+    /// Observed over `1b978ee5` on the uncommitted tree of the kernel commit:
+    /// `the_real_describe_geometry_carries_the_engines_encoding_for_each_open` FAILED with the
+    /// mutation applied, then reverted.
+    ///
+    /// RECORDED MUTATION, `declared_types` half: write `None` in `describe_dataset` in place of the
+    /// dataset's list. Expected failure: this test fails by name at F-1's `declared_types`.
+    ///
+    /// Observed over `5c3a9e09` on the uncommitted tree of the wire commit:
+    /// `the_real_describe_geometry_carries_the_engines_encoding_for_each_open` FAILED with the
+    /// mutation applied, then reverted.
+    #[test]
+    fn the_real_describe_geometry_carries_the_engines_encoding_for_each_open() {
+        use spatial_engine::fixture::{
+            multipolygon_f1_rows, write_geoparquet, DeclaredTypes, FixtureSpec, GeometryMode, E_LO,
+            N_LO,
+        };
+
+        let dir = std::env::temp_dir().join("spatial-kernel-skp-describe-encoding");
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).expect("fixture dir");
+
+        let rows_spec = |declared: &str, rows: Vec<Vec<u8>>| FixtureSpec {
+            geometry: GeometryMode::Rows(rows),
+            with_covering_bbox: false,
+            declared_types: DeclaredTypes::Json(declared.to_string()),
+            ..Default::default()
+        };
+        // Three LV95 polygon rows as type-3 WKB, for F-3.
+        let polygon_rows: Vec<Vec<u8>> = (0..3)
+            .map(|i| {
+                let x = E_LO + f64::from(i) * 100.0;
+                spatial_engine::wkb::encode_polygon(&[vec![
+                    [x, N_LO],
+                    [x + 50.0, N_LO],
+                    [x + 50.0, N_LO + 50.0],
+                    [x, N_LO],
+                ]])
+            })
+            .collect();
+        let cases: [(&str, FixtureSpec, &str, Option<Vec<&str>>); 4] = [
+            (
+                "f1",
+                rows_spec(
+                    r#"["MultiPolygon"]"#,
+                    multipolygon_f1_rows([E_LO, N_LO], 10.0),
+                ),
+                "geoarrow.multipolygon",
+                Some(vec!["MultiPolygon"]),
+            ),
+            (
+                "f3",
+                rows_spec("[]", polygon_rows.clone()),
+                "geoarrow.multipolygon",
+                Some(vec![]),
+            ),
+            (
+                "f4",
+                FixtureSpec {
+                    geometry: GeometryMode::Rows(polygon_rows),
+                    with_covering_bbox: false,
+                    declared_types: DeclaredTypes::Absent,
+                    ..Default::default()
+                },
+                "geoarrow.multipolygon",
+                None,
+            ),
+            (
+                "polygon",
+                FixtureSpec {
+                    features: 20,
+                    avg_vertices: 6,
+                    hole_every: 0,
+                    ..Default::default()
+                },
+                "geoarrow.polygon",
+                Some(vec!["Polygon"]),
+            ),
+        ];
+
+        let fixture_path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .expect("workspace root")
+            .join("protocol/skp/tests/data/v0-describe-response.json");
+        let fixture_json: serde_json::Value =
+            serde_json::from_str(&std::fs::read_to_string(&fixture_path).expect("read fixture"))
+                .expect("shared fixture is valid JSON");
+        let fixture_keys: std::collections::BTreeSet<String> = fixture_json["geometry"]
+            .as_object()
+            .expect("shared fixture has a geometry object")
+            .keys()
+            .cloned()
+            .collect();
+
+        for (name, spec, want, want_declared) in cases {
+            let path = dir.join(format!("{name}.parquet"));
+            write_geoparquet(&path, &spec).expect("write fixture");
+            let host = SkpHost::new(
+                Arc::new(Catalog::new()),
+                StreamRegistry::new(),
+                no_watch_arm(),
+                discard_session_end_events(),
+            );
+            let open = host
+                .open_dataset(OpenDatasetRequest {
+                    skp: SKP_VERSION.to_string(),
+                    path: path.display().to_string(),
+                    cancel_key: format!("describe-encoding-{name}"),
+                    crs_assertion: None,
+                    identity: None,
+                })
+                .expect("open");
+            let describe = host
+                .describe(DescribeRequest {
+                    skp: SKP_VERSION.to_string(),
+                    dataset: open.dataset,
+                })
+                .expect("describe");
+
+            assert_eq!(
+                describe.geometry.encoding, want,
+                "{name}: describe.encoding"
+            );
+            assert_eq!(
+                describe.geometry.declared_types,
+                want_declared.map(|l| l.into_iter().map(str::to_string).collect::<Vec<_>>()),
+                "{name}: describe.declared_types, as declared (an empty list kept empty, an absent key None)"
+            );
+            let real_keys: std::collections::BTreeSet<String> =
+                serde_json::to_value(&describe.geometry)
+                    .unwrap()
+                    .as_object()
+                    .unwrap()
+                    .keys()
+                    .cloned()
+                    .collect();
+            assert_eq!(real_keys, fixture_keys, "{name}: the geometry key set");
+        }
+    }
+
+    /// **K-P1 (`engine/GEOMETRY-POINTS-PREREGISTRATION.md` §4; ADR-034 Decision 3).** The real
+    /// `describe` response of a real open of P-1 (`["Point"]`, six LV95 point rows) carries the
+    /// engine's encoding `geoarrow.point` beside the file's declaration `["Point"]`, and the
+    /// `geometry` key set equals the shared fixture's: the third value adds no member to the wire.
+    ///
+    /// RECORDED MUTATION: in `GeometryEncoding::as_str`, return `EXT_NAME_POLYGON` for `Point`.
+    /// `describe_dataset` then reports `geoarrow.polygon` for the point open and this test fails by
+    /// name at `describe.encoding`.
+    ///
+    /// Observed over `b4a6fd9d` (the engine commit) on the uncommitted tree of the kernel commit:
+    /// `the_real_describe_of_a_point_open_is_geoarrow_point_with_the_shared_key_set` FAILED with the
+    /// mutation applied, at `describe.encoding` (left `geoarrow.polygon`, right `geoarrow.point`),
+    /// then reverted.
+    #[test]
+    fn the_real_describe_of_a_point_open_is_geoarrow_point_with_the_shared_key_set() {
+        use spatial_engine::fixture::{
+            point_p1_rows, write_geoparquet, DeclaredTypes, FixtureSpec, GeometryMode, E_LO, N_LO,
+        };
+
+        let dir = std::env::temp_dir().join("spatial-kernel-skp-describe-point");
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).expect("fixture dir");
+        let path = dir.join("p1.parquet");
+        write_geoparquet(
+            &path,
+            &FixtureSpec {
+                geometry: GeometryMode::Rows(point_p1_rows([E_LO, N_LO], 10.0)),
+                with_covering_bbox: false,
+                declared_types: DeclaredTypes::Json(r#"["Point"]"#.to_string()),
+                ..Default::default()
+            },
+        )
+        .expect("write fixture");
+
+        let host = SkpHost::new(
+            Arc::new(Catalog::new()),
+            StreamRegistry::new(),
+            no_watch_arm(),
+            discard_session_end_events(),
+        );
+        let open = host
+            .open_dataset(OpenDatasetRequest {
+                skp: SKP_VERSION.to_string(),
+                path: path.display().to_string(),
+                cancel_key: "describe-point".to_string(),
+                crs_assertion: None,
+                identity: None,
+            })
+            .expect("open");
+        let describe = host
+            .describe(DescribeRequest {
+                skp: SKP_VERSION.to_string(),
+                dataset: open.dataset,
+            })
+            .expect("describe");
+        assert_eq!(describe.geometry.encoding, "geoarrow.point");
+        assert_eq!(
+            describe.geometry.declared_types,
+            Some(vec!["Point".to_string()])
+        );
+
+        let fixture_path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .expect("workspace root")
+            .join("protocol/skp/tests/data/v0-describe-response.json");
+        let fixture_json: serde_json::Value =
+            serde_json::from_str(&std::fs::read_to_string(&fixture_path).expect("read fixture"))
+                .expect("shared fixture is valid JSON");
+        let keys = |v: &serde_json::Value| -> std::collections::BTreeSet<String> {
+            v.as_object().unwrap().keys().cloned().collect()
+        };
+        assert_eq!(
+            keys(&serde_json::to_value(&describe.geometry).unwrap()),
+            keys(&fixture_json["geometry"]),
+            "the geometry key set"
+        );
+    }
+
+    /// **K-L1 (`engine/GEOMETRY-LINES-PREREGISTRATION.md` §4; ADR-034 Decision 3).** The real
+    /// `describe` response of a real open of L-1 (`["LineString"]`, five LV95 line rows) and of
+    /// ML-1 (`["MultiLineString"]`, three rows) carries the engine's encoding, `geoarrow.linestring`
+    /// and `geoarrow.multilinestring`, beside the file's declaration, and the `geometry` key set
+    /// equals the shared fixture's: the fourth and fifth values add no member to the wire.
+    ///
+    /// RECORDED MUTATION: in `GeometryEncoding::as_str`, return `EXT_NAME_POLYGON` for
+    /// `LineString`. `describe_dataset` then reports `geoarrow.polygon` for the linestring open and
+    /// this test fails by name at `describe.encoding`.
+    ///
+    /// Observed over `719d2b04` (the engine commit) on the uncommitted tree of the kernel commit:
+    /// `the_real_describe_of_a_line_open_is_its_line_encoding_with_the_shared_key_set` FAILED with
+    /// the mutation applied, at `l1: describe.encoding` (left `geoarrow.polygon`, right
+    /// `geoarrow.linestring`), then reverted.
+    #[test]
+    fn the_real_describe_of_a_line_open_is_its_line_encoding_with_the_shared_key_set() {
+        use spatial_engine::fixture::{
+            line_l1_rows, multilinestring_ml1_rows, write_geoparquet, DeclaredTypes, FixtureSpec,
+            GeometryMode, E_LO, N_LO,
+        };
+
+        let fixture_path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .expect("workspace root")
+            .join("protocol/skp/tests/data/v0-describe-response.json");
+        let fixture_json: serde_json::Value =
+            serde_json::from_str(&std::fs::read_to_string(&fixture_path).expect("read fixture"))
+                .expect("shared fixture is valid JSON");
+        let keys = |v: &serde_json::Value| -> std::collections::BTreeSet<String> {
+            v.as_object().unwrap().keys().cloned().collect()
+        };
+
+        for (name, declared, rows, want_encoding) in [
+            (
+                "l1",
+                "LineString",
+                line_l1_rows([E_LO, N_LO], 10.0),
+                "geoarrow.linestring",
+            ),
+            (
+                "ml1",
+                "MultiLineString",
+                multilinestring_ml1_rows([E_LO, N_LO], 10.0),
+                "geoarrow.multilinestring",
+            ),
+        ] {
+            let dir = std::env::temp_dir().join(format!("spatial-kernel-skp-describe-line-{name}"));
+            let _ = std::fs::remove_dir_all(&dir);
+            std::fs::create_dir_all(&dir).expect("fixture dir");
+            let path = dir.join(format!("{name}.parquet"));
+            write_geoparquet(
+                &path,
+                &FixtureSpec {
+                    geometry: GeometryMode::Rows(rows),
+                    with_covering_bbox: false,
+                    declared_types: DeclaredTypes::Json(format!(r#"["{declared}"]"#)),
+                    ..Default::default()
+                },
+            )
+            .expect("write fixture");
+
+            let host = SkpHost::new(
+                Arc::new(Catalog::new()),
+                StreamRegistry::new(),
+                no_watch_arm(),
+                discard_session_end_events(),
+            );
+            let open = host
+                .open_dataset(OpenDatasetRequest {
+                    skp: SKP_VERSION.to_string(),
+                    path: path.display().to_string(),
+                    cancel_key: format!("describe-line-{name}"),
+                    crs_assertion: None,
+                    identity: None,
+                })
+                .expect("open");
+            let describe = host
+                .describe(DescribeRequest {
+                    skp: SKP_VERSION.to_string(),
+                    dataset: open.dataset,
+                })
+                .expect("describe");
+            assert_eq!(
+                describe.geometry.encoding, want_encoding,
+                "{name}: describe.encoding"
+            );
+            assert_eq!(
+                describe.geometry.declared_types,
+                Some(vec![declared.to_string()]),
+                "{name}: describe.declared_types"
+            );
+            assert_eq!(
+                keys(&serde_json::to_value(&describe.geometry).unwrap()),
+                keys(&fixture_json["geometry"]),
+                "{name}: the geometry key set"
+            );
+        }
+    }
 }
 
 /// **DECISIONS-PENDING.md entry 132 — a `Pending` ticket's `EngineSource` dropped under
@@ -3061,12 +3406,30 @@ mod ticket_drop_under_lock_regression {
     use std::time::Duration;
 
     use spatial_engine::fixture::{write_geoparquet, FixtureSpec, IdentityMode};
+    use spatial_engine::MAX_QUEUED_BATCHES;
 
     /// Generous relative to any real lock hold in this registry (a handful of map operations); the
     /// only thing this bounds is how long a pre-fix run of this suite waits before failing.
     const HANG_TIMEOUT: Duration = Duration::from_secs(5);
 
     fn fixture(name: &str) -> std::path::PathBuf {
+        fixture_with_features(name, 50)
+    }
+
+    /// The fixture of every test that reaches [`drained_stream_with_a_recorded_change`], and the
+    /// only site of the 5,000 literal. That helper's ordering argument needs more than
+    /// `MAX_QUEUED_BATCHES` batches. `BatchSizePolicy::default()` cuts by size only, so a batch is
+    /// at most `BatchSizePolicy::target_for` its index, and the first two targets
+    /// (`FIRST_TARGET_BATCH_BYTES`, then that times `BATCH_GROWTH_FACTOR`) sum to 327,680 bytes. A
+    /// row's `estimate_bytes` is 20 bytes per vertex plus 12, with no attribute bytes on this path,
+    /// and every row has at least 4 vertices, so a row is at least 92 bytes. 5,000 rows are at
+    /// least 460,000 bytes in any row order, which is more than those two targets: at least 3
+    /// batches.
+    fn drained_stream_fixture(name: &str) -> std::path::PathBuf {
+        fixture_with_features(name, 5_000)
+    }
+
+    fn fixture_with_features(name: &str, features: usize) -> std::path::PathBuf {
         let dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../target/fixtures/ticket-drop-under-lock");
         std::fs::create_dir_all(&dir).expect("fixture dir");
@@ -3074,7 +3437,7 @@ mod ticket_drop_under_lock_regression {
         write_geoparquet(
             &path,
             &FixtureSpec {
-                features: 50,
+                features,
                 avg_vertices: 8,
                 identity: IdentityMode::NativeUnique,
                 ..Default::default()
@@ -3103,6 +3466,28 @@ mod ticket_drop_under_lock_regression {
     /// replaces waiting on the real background-completion race. Asserts the post-check actually
     /// found the change, so a future engine change that breaks this setup fails here loudly rather
     /// than leaving every test below vacuously non-reproducing.
+    ///
+    /// **Why the post-check cannot beat the touch.** The producer is spawned inside
+    /// `open_engine_stream`, before the touch. Its queue holds `MAX_QUEUED_BATCHES` batches and
+    /// each batch is one blocking send, whose only receive is the one inside
+    /// `BatchStream::next_into`; the first call of that follows `touch_modification_time`. With
+    /// more than `MAX_QUEUED_BATCHES` `Ok` batches received, the send of the batch at index
+    /// `MAX_QUEUED_BATCHES` completed only after that first call, `produce` returned after that
+    /// send, and the post-check runs after `produce` returns. So the post-check reads the file
+    /// after the touch. The `batches` assertion states that condition, and every caller's fixture
+    /// is [`drained_stream_fixture`] so that it holds. The guard after it stays as the check that
+    /// the finding was really recorded.
+    ///
+    /// Mutation: change [`drained_stream_fixture`]'s `5_000` to `50`. Expected failure: each of the
+    /// nine tests that reach this helper fails at the `batches` assertion, because 50 features give
+    /// one batch. Observed over `7469a801`, with the mutation applied to a clean tree of it: all
+    /// nine FAILED ("the ordering argument needs more batches than the queue holds (2); got 1"),
+    /// then reverted.
+    ///
+    /// Not a test of record: moving `touch_modification_time(path)` after the drain loop was
+    /// observed over `7469a801` in the same way to fail all nine at the guard below ("setup did
+    /// not force a real post-check finding"), then reverted. That is consistent with the CI failure
+    /// and does not show that this was its cause.
     fn drained_stream_with_a_recorded_change(
         path: &std::path::Path,
     ) -> (spatial_engine::BatchStream, spatial_engine::CancelToken) {
@@ -3114,9 +3499,18 @@ mod ticket_drop_under_lock_regression {
         // mutating only now is what makes this the post-check's finding, not the pre-check's.
         touch_modification_time(path);
         let mut buf = Vec::new();
-        while stream.next_into(&mut buf).is_some() {
+        let mut batches = 0usize;
+        while let Some(item) = stream.next_into(&mut buf) {
+            if item.is_ok() {
+                batches += 1;
+            }
             buf.clear();
         }
+        assert!(
+            batches > MAX_QUEUED_BATCHES,
+            "the ordering argument needs more batches than the queue holds \
+             ({MAX_QUEUED_BATCHES}); got {batches}"
+        );
         assert!(
             stream.stats().source_changed_detail().is_some(),
             "setup did not force a real post-check finding — every test in this module would pass \
@@ -3197,7 +3591,7 @@ mod ticket_drop_under_lock_regression {
     /// (its `viewport_query` stopped refusing, because the generation was never ended).
     #[test]
     fn cancel_of_a_pending_ticket_whose_post_check_found_a_change_does_not_hang() {
-        let path = fixture("cancel-path");
+        let path = drained_stream_fixture("cancel-path");
         let (tickets, generations, handle) = seeded_pending_ticket("ds_cancel_path", &path);
 
         let outcome = run_with_timeout(HANG_TIMEOUT, {
@@ -3231,7 +3625,7 @@ mod ticket_drop_under_lock_regression {
     /// FAILED — panicked on the "did not return within" message below.
     #[test]
     fn sweep_of_an_expired_pending_ticket_whose_post_check_found_a_change_does_not_hang() {
-        let path = fixture("sweep-path");
+        let path = drained_stream_fixture("sweep-path");
         let (tickets, generations, handle) = seeded_pending_ticket("ds_sweep_path", &path);
 
         // Seeded directly past `TICKET_TTL` rather than waiting for real time to pass — ADR-018
@@ -3297,7 +3691,7 @@ mod ticket_drop_under_lock_regression {
     /// `EndedBySourceChange`).
     #[test]
     fn cancel_all_for_dataset_of_a_pending_ticket_whose_post_check_found_a_change_does_not_hang() {
-        let path = fixture("cancel-all-for-dataset-path");
+        let path = drained_stream_fixture("cancel-all-for-dataset-path");
         let (tickets, generations, handle) = seeded_pending_ticket("ds_cancel_all_path", &path);
 
         let n = run_with_timeout(HANG_TIMEOUT, {
@@ -3342,7 +3736,7 @@ mod ticket_drop_under_lock_regression {
     fn after_cancelling_a_ticket_whose_source_changed_the_next_viewport_query_refuses_by_name() {
         let dataset_handle = DatasetHandle::mint();
         let name = dataset_handle.as_str().to_string();
-        let path = fixture("viewport-query-refusal-path");
+        let path = drained_stream_fixture("viewport-query-refusal-path");
 
         let (stream, cancel) = drained_stream_with_a_recorded_change(&path);
         let reuses = spatial_engine::Dataset::open(&path)
@@ -3449,7 +3843,7 @@ mod ticket_drop_under_lock_regression {
                 )
                 .expect("mint Q");
             tickets.redeem(q.as_str()).expect("redeem Q");
-            let path = fixture(stem);
+            let path = drained_stream_fixture(stem);
             let (stream, cancel) = drained_stream_with_a_recorded_change(&path);
             let reuses = spatial_engine::Dataset::open(&path)
                 .expect("reopen for connection config")
@@ -3665,7 +4059,7 @@ mod ticket_drop_under_lock_regression {
     /// arrives.
     #[test]
     fn a_pending_ticket_retired_by_sweep_emits_once_and_does_not_hang() {
-        let path = fixture("sweep-emits-path");
+        let path = drained_stream_fixture("sweep-emits-path");
         let (stream, cancel) = drained_stream_with_a_recorded_change(&path);
         let reuses = spatial_engine::Dataset::open(&path)
             .expect("reopen for connection config")
@@ -3773,7 +4167,7 @@ mod ticket_drop_under_lock_regression {
     /// live generation, so nothing emitted.
     #[test]
     fn a_pending_drop_inside_close_emits_once_with_its_session_reference() {
-        let path = fixture("close-drop-path");
+        let path = drained_stream_fixture("close-drop-path");
         let (tx, rx) = super::session_end_channel();
         let host = SkpHost::new(
             Arc::new(Catalog::new()),

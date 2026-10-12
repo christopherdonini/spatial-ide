@@ -155,3 +155,18 @@ on the reference profile without a shared runner's drift.
 
 Please do not open a public issue for a security problem. `docs/09_Security_and_Privacy.md` states
 the model; contact the maintainer directly.
+
+## Ported files
+
+**Paraphrase, not a quotation:** the sentences in this section are this file's own wording. What counts as a port and what counts as a fresh write is the human's ruling at `state/directives/2026-10-09-rulings-on-the-eight-forms.md:58 @ b4dc05e08c1e24ef7d6904596bb2332b87dcf75b sha256:90a08ffc78a712b58b284283eaabd47256203df4d16d9ecc26f3af85c2aa7c98`.
+
+A port is the human's typed word: nothing is ported into this repository without it. A ported file carries this header in its first twelve lines, in its comment syntax, and has an entry in `LICENSES/third-party/ported/MANIFEST.json` that pins the upstream licence text by hash:
+
+```
+SPDX-License-Identifier: AGPL-3.0-or-later AND <upstream licence id>
+Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+<each upstream copyright line, exactly>
+Ported-From: <upstream repository> @ <upstream commit> <upstream path>
+```
+
+`node scripts/check-ported-notices.mjs` (CI: `ported-notices.yml`) and a packaged build from a git checkout fail when a marked file has no entry or an entry has no marked file. A packaged build outside a git checkout (a tree with no `.git` entry at its root) does not search for marked files: it checks the registry and the registered files only, and prints one NOTE line saying that unregistered markers were not searched. They cannot detect an unmarked copy: review and the DCO's clause (b) cover that. The method and the allowed upstream licences are in `LICENSES/third-party/ported/README.md`.

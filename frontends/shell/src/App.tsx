@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 
 import AdmissionPanel from "./admission/AdmissionPanel";
 import { Admitted } from "./admission/admitDataset";
+import DescribeSummary from "./admission/DescribeSummary";
 import { FormattedRefusal, formatRefusal } from "./admission/formatRefusal";
 import RefusalBlock from "./admission/RefusalBlock";
 import type { AuthoritativeBbox } from "./canvas/viewportBbox";
@@ -15,6 +16,8 @@ import ConsolePanel from "./console/ConsolePanel";
 import { recordNamed } from "./console/recorder";
 import { logSessionEvent } from "./diagnostics/log";
 import FilterPanel from "./filter/FilterPanel";
+import { ScanLivenessMirror, WatcherStatusItem } from "./layout/regionParts";
+import StudioLayout from "./layout/StudioLayout";
 import {
   beginResidencyStep,
   disableResidencyInstrument,
@@ -70,6 +73,15 @@ import { decodeHexF64, encodeHexF64 } from "./skp/codec";
 import { closeDataset, SkpCallError } from "./skp/client";
 import { listenDatasetSessionEnded } from "./skp/events";
 import type { Bbox, DatasetSessionEnded, EndReason, Filter } from "./skp/types";
+import { styleTransitions } from "./workspace/viewTransitions";
+import {
+  initialWorkspaceState,
+  selectAdmitted,
+  selectClosable,
+  selectDrawnViews,
+  workspaceReducer,
+  type ViewId,
+} from "./workspace/workspaceState";
 import {
   RequestOutcome,
   VIEWPORT_QUERY_MIN_INTERVAL_MS,
@@ -167,9 +179,9 @@ export function admitAndResetStaleUiState(
     /** NEXT-CUT.md (filter-panel cut) design section: "Dataset change clears the filter via
      * `admitAndResetStaleUiState`." A predicate scoped to one dataset's columns must never ride
      * into the next dataset's first query -- the same D4 class of staleness this function already
-     * closes for a refusal/hover/status. Expected to write BOTH `activeFilter` render state and
-     * `activeFilterRef.current` (see `App`'s own `commitActiveFilter`), since the ref is what every
-     * issue site actually reads. */
+     * closes for a refusal/hover/status. Expected to write `activeFilterRef.current`, since the ref is what
+     * every issue site actually reads; the render-side filter is the view's, which the workspace's
+     * `resource.admitted` (`setAdmitted` below) resets (milestone 2, phase A). */
     setActiveFilter: (value: Filter | null) => void;
     /** `lastViewportBboxRef.current` -- a bbox scoped to the previous dataset's own CRS/extent
      * space is exactly the kind of untagged carryover ADR-010 rule 1 forbids (the same reasoning
@@ -764,7 +776,22 @@ export function routeDatasetSessionEndedEvent(
  * restated as current.
  */
 export default function App() {
-  const [admitted, setAdmitted] = useState<Admitted | null>(null);
+  // The workspace (SHELL-MIGRATION-MILESTONE-2-PREREGISTRATION.md section 2.1, phase A): the state keyed by view. The
+  // dataset, its filter and its style live there. Phase A has one view; the panels below bind to it, and
+  // the map slot renders `drawOrder`.
+  const [workspace, dispatch] = useReducer(workspaceReducer, initialWorkspaceState);
+  const drawnViews = selectDrawnViews(workspace);
+  const view = drawnViews[0] ?? null;
+  const admitted = view === null ? null : selectAdmitted(workspace, view.id);
+  // NEXT-CUT.md (style-panel cut) P3: App-owned, ephemeral (ADR-022's consequences -- no persistence, no undo;
+  // binding note 4), starting at exactly today's fixed rendering (`DEFAULT_STYLE_STATE`'s own doc comment has
+  // the hex/opacity math against `buildLayers.ts`'s pre-P2 constant). It is the view's `style`, and
+  // `StylePanel`'s `onChange` (`handleStyleChange` below) dispatches one `style.set` per changed property.
+  const style = view === null ? DEFAULT_STYLE_STATE : view.style;
+  const activeFilter = view === null ? null : view.filter;
+  /** The view's id, readable from the stable callbacks below (`commitActiveFilter`, the effect cleanups). */
+  const viewIdRef = useRef<ViewId | null>(null);
+  viewIdRef.current = view === null ? null : view.id;
   const [hover, setHover] = useState<HoverReadout>(null);
   const [canvasRefusal, setCanvasRefusal] = useState<string | null>(null);
   const [viewportRefusal, setViewportRefusal] = useState<FormattedRefusal | null>(null);
@@ -793,24 +820,16 @@ export default function App() {
    * `dataset_session_ended` listener compares an event's `session` against this ref and drops a
    * mismatch -- never logging the reference either way (round 21 item 1, rider (b)). */
   const admittedSessionRef = useRef<string | null>(null);
-  // NEXT-CUT.md (style-panel cut) P3: App-owned, ephemeral (ADR-022's consequences -- no
-  // persistence, no undo; binding note 4), starting at exactly today's fixed rendering
-  // (`DEFAULT_STYLE_STATE`'s own doc comment has the hex/opacity math against `buildLayers.ts`'s
-  // pre-P2 constant). P4 gives `setStyle` its caller: `StylePanel`'s `onChange` prop, below --
-  // every control write goes straight through this one setter, exactly the `activeFilter`/
-  // `setActiveFilter` shape this file already uses for the filter panel's own state.
-  const [style, setStyle] = useState<StyleState>(DEFAULT_STYLE_STATE);
   // Rider 1 (DECISIONS-PENDING.md entry 0, option (a)): the persistent status indicator, tracked
   // independently of `canvasRefusal` -- see `nextResidencyStatus`'s own doc comment for why
   // dismissing the banner must never touch this.
   const [residencyStatus, setResidencyStatus] = useState<ResidencyStatus | null>(null);
   // NEXT-CUT.md (filter-panel cut) design section: "App owns `activeFilter` (state for render + ref
-  // for issue sites)." `activeFilter` is the render-facing value (consumed by P3's panel, not by
-  // anything in this piece); `activeFilterRef` is what every issue site actually reads, kept in sync
-  // by `commitActiveFilter` below -- the same split `canvasRef`/nothing-else already has no analogue
-  // for, but `onHoverRef` et al. in `WorkingCanvas.tsx` establish the identical "ref mirrors state,
-  // read inside a callback body" pattern this file borrows.
-  const [activeFilter, setActiveFilter] = useState<Filter | null>(null);
+  // for issue sites)." `activeFilter` is the render-facing value (the view's `filter`, read above);
+  // `activeFilterRef` is what every issue site actually reads, kept in sync by `commitActiveFilter` below --
+  // the same split `canvasRef`/nothing-else already has no analogue for, but `onHoverRef` et al. in
+  // `WorkingCanvas.tsx` establish the identical "ref mirrors state, read inside a callback body" pattern
+  // this file borrows.
   const activeFilterRef = useRef<Filter | null>(null);
   // "a new `lastViewportBboxRef` written by onViewportChanged (null until first settled view)" --
   // Apply's own re-issue target (design section (b)): the current viewport, not just the last one a
@@ -890,14 +909,16 @@ export default function App() {
     ((bbox: Bbox | null, bboxCrs: string | null, filter: Filter | null) => Promise<RequestOutcome>) | null
   >(null);
 
-  /** Writes BOTH `activeFilterRef.current` (synchronously) and the `activeFilter` render state --
-   * the one function every `activeFilter` write in this component goes through, whether that write
-   * is a successful Apply's commit or a dataset-change reset (`admitAndResetStaleUiState` below).
-   * `useCallback([])`: `setActiveFilter` is React's own identity-stable setter, so this never needs
-   * to change either -- see `handleAdmitted`'s own doc comment for why that stability matters. */
+  /** Writes `activeFilterRef.current` (synchronously) and dispatches `filter.apply` on the view -- the one
+   * function every successful Apply's commit goes through. A dataset-change reset writes the ref in
+   * `handleAdmitted` and the view's filter in the workspace's `resource.admitted`.
+   * `useCallback([])`: `dispatch` is React's own identity-stable function and the view's id is read from
+   * `viewIdRef`, so this never needs to change either -- see `handleAdmitted`'s own doc comment for why that
+   * stability matters. */
   const commitActiveFilter = useCallback((filter: Filter | null) => {
     activeFilterRef.current = filter;
-    setActiveFilter(filter);
+    const viewId = viewIdRef.current;
+    if (viewId !== null) dispatch({ type: "view.transition", view: viewId, transition: { action: "filter.apply", params: { filter } } });
   }, []);
   // `activeFilter` (the render value) is read below, in the JSX, passed to `FilterPanel` -- P3
   // (this piece) is what finally consumes the value P2 only ever wrote (see that piece's own
@@ -973,12 +994,11 @@ export default function App() {
    * construction needs a WebGL context jsdom does not provide, so this indirection is what keeps
    * the reset sequencing itself testable without a DOM/WebGL harness this repo does not carry.
    *
-   * `useCallback([commitActiveFilter, commitScanState])`: every other setter closed over here is
-   * React's own identity-stable `useState` setter, and both `commitActiveFilter` and `commitScanState`
-   * are themselves `useCallback([])`-stable (their own doc comments above) -- so in practice this
-   * callback still never actually changes across renders, for the same reason it never needed to
-   * before this piece added its own dependency: without stability here, a plain function literal gets
-   * a new identity every `App` render, which flows into `AdmissionPanel`'s `onAdmitted` prop, its
+   * `useCallback([commitScanState])`: every other setter closed over here is React's own identity-stable
+   * `useState` setter or `dispatch`, and `commitScanState` is itself `useCallback([])`-stable (its own doc
+   * comment above) -- so in practice this callback still never actually changes across renders, for the
+   * same reason it never needed to before this piece added its own dependency: without stability here, a
+   * plain function literal gets a new identity every `App` render, which flows into `AdmissionPanel`'s `onAdmitted` prop, its
    * `admitPath` (`useCallback([onAdmitted])`), and the `useEffect([admitPath])` that (un)registers the
    * `openPath` E2E hook -- unregistering and re-registering that hook on every render, for no reason.
    */
@@ -993,7 +1013,9 @@ export default function App() {
         setViewportRefusal,
         setHover,
         setResidencyStatus,
-        setActiveFilter: commitActiveFilter,
+        setActiveFilter: (value) => {
+          activeFilterRef.current = value;
+        },
         setLastViewportBbox: (value) => {
           lastViewportBboxRef.current = value;
           // A fresh dataset starts with no "current viewport" of its own yet -- `value` is always
@@ -1006,14 +1028,14 @@ export default function App() {
           sessionEndedRef.current = value !== null;
           setSessionEnded(value);
         },
-        setAdmitted,
+        setAdmitted: (value) => dispatch({ type: "resource.admitted", admitted: value }),
       });
     },
-    // `commitActiveFilter`/`commitScanState` are each `useCallback([])`-stable (see their own doc
-    // comments above), so this dependency never actually changes across renders -- `handleAdmitted`
-    // stays as identity-stable as it was before this piece, for the same reason its own doc comment
-    // already states (`AdmissionPanel`'s `admitPath`/E2E-hook `useEffect` chain).
-    [commitActiveFilter, commitScanState]
+    // `commitScanState` is `useCallback([])`-stable (see its own doc comment above), so this dependency never
+    // actually changes across renders -- `handleAdmitted` stays as identity-stable as it was before this piece,
+    // for the same reason its own doc comment already states (`AdmissionPanel`'s `admitPath`/E2E-hook
+    // `useEffect` chain).
+    [commitScanState]
   );
 
   // E2E TEST SURFACE (dev builds only, viewport-residency cut P1/P1b, RESIDENCY-PREREGISTRATION.md).
@@ -1159,6 +1181,8 @@ export default function App() {
       setSessionEnded: (refusal) => {
         sessionEndedRef.current = true;
         setSessionEnded(refusal);
+        // The workspace records that this resource's generation ended (the first call wins, as above).
+        dispatch({ type: "resource.generationEnded", resource: forDataset });
       },
       setHover,
     });
@@ -1270,6 +1294,21 @@ export default function App() {
     );
   }
 
+  /**
+   * **The close** (section 2.1(b)): each resource whose consumer set is empty and that is not yet closed is closed,
+   * exactly once, and then `resource.closed` is written. Every admitted dataset stays open (and its DuckDB pool
+   * resident) until explicitly closed; opening a second one must not leak the first (S1, architect review of the
+   * filter-panel cut). Declared before the `[admitted]` effect so that, in a commit that replaces the dataset, the
+   * old session is stopped (that effect's cleanup), then the old handle is closed, then the new one starts --
+   * the order the closes had when they sat in that cleanup.
+   */
+  useEffect(() => {
+    for (const resource of selectClosable(workspace)) {
+      void closeDataset(resource).catch(() => {});
+      dispatch({ type: "resource.closed", resource });
+    }
+  }, [workspace.resources]);
+
   useEffect(() => {
     if (!admitted) {
       managerRef.current = null;
@@ -1277,6 +1316,13 @@ export default function App() {
       issueQueryRef.current = null;
       return;
     }
+    // This effect run's consumer of the dataset, released in its cleanup. On a reopen `resource.admitted` has already
+    // moved the view to the new resource, so this release changes nothing and the close above runs because of the
+    // admission; the release covers a cleanup with no rebind, which phase A does not have (an unmount's dispatch is dropped).
+    const consumer = viewIdRef.current;
+    const releaseConsumer = () => {
+      if (consumer !== null) dispatch({ type: "consumer.released", resource: admitted.dataset, consumer });
+    };
 
     // Viewport-residency cut P3: bookkeeping only, for `setResidencyArm`'s own "refused while a
     // dataset is open" contract -- DEV-gated (the arm switch is a dev/E2E-only concern) and purely
@@ -1441,7 +1487,7 @@ export default function App() {
         candidateSessionRef.current = null;
         void session.stop();
         if (isInstrumentedBuild()) unregisterE2eHook("queryWithFilter");
-        void closeDataset(admitted.dataset).catch(() => {});
+        releaseConsumer();
         managerRef.current = null;
         if (isInstrumentedBuild()) notifyResidencyArmDatasetClosed();
         if (isInstrumentedBuild()) notifyResidencyTileSizeLevelDatasetClosed(); // P7: symmetric close
@@ -1632,9 +1678,8 @@ export default function App() {
       issueQueryRef.current = null;
       void manager.stop();
       if (isInstrumentedBuild()) unregisterE2eHook("queryWithFilter");
-      // Every admitted dataset stays open (and its DuckDB pool resident) until explicitly closed;
-      // opening a second one must not leak the first (S1, architect review of this cut).
-      void closeDataset(admitted.dataset).catch(() => {});
+      // The close itself is the effect above (every admitted dataset stays open until its last consumer lets go).
+      releaseConsumer();
       managerRef.current = null;
       // Viewport-residency cut P3: symmetric with `notifyResidencyArmDatasetOpened` above.
       if (isInstrumentedBuild()) notifyResidencyArmDatasetClosed();
@@ -1646,26 +1691,37 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [admitted]);
 
+  /** `StylePanel`'s `onChange` reports the whole next style; the workspace takes one `style.set` per property that changed. */
+  function handleStyleChange(next: StyleState): void {
+    if (view === null) return;
+    for (const transition of styleTransitions(view.style, next)) {
+      dispatch({ type: "view.transition", view: view.id, transition });
+    }
+  }
+
   return (
-    <div className="app">
-      <ErrorBanner />
-      <header className="app-header">Spatial IDE</header>
-      <main className="app-main">
-        {/* action-console cut P5c fix 1 (styles.css's own `.app-rail-top`/`.app-rail-bottom`
-          * comment has the full account): admission + filter live in their OWN scrollable rail,
-          * separate from `.canvas-container`/`.console-panel` below -- so THIS rail's content can
-          * overflow and scroll WITHIN ITSELF, without `.app-main` ever growing a scrollbar of its
-          * own (the vertical-scrollbar-eats-canvas-width bug A9' traced to). Nothing about which
-          * panels are gated on `admitted`, keyed, or ordered changed -- only the wrapping div. */}
-        <div className="app-rail-top">
-          <AdmissionPanel onAdmitted={handleAdmitted} />
-        {/* NEXT-CUT.md (filter-panel cut) P3 item 5 / binding note 9: in `.app-main`'s flex column,
-          * below the admission panel, in normal document flow -- never an absolute overlay. Keyed on
-          * `admitted.dataset` for the same reason `WorkingCanvas` below is: a dataset change must
-          * discard this panel's own local input text/busy/refusal state rather than reconcile it
+    <StudioLayout
+      overlays={<ErrorBanner />}
+      layersRow={admitted ? { pathDisplay: admitted.describe.source.path_display } : null}
+      onZoomToLayer={() => void canvasRef.current?.fitToBounds()}
+      /* Milestone 1 (SHELL-MIGRATION-MILESTONE-1-PREREGISTRATION.md section 2.2): every panel below keeps
+       * its keys and its props and now lives in a slot of the Map Studio frame (`layout/`). A comment
+       * below that speaks of `.app-main`, `.app-rail-top`, `.app-rail-bottom`, a flex column, or a
+       * placement below `.canvas-container` records the pre-milestone-1 stacked layout: it is history,
+       * kept for its reasoning about keys and order, and does not say where anything sits now. */
+      slots={{
+        "region.layers": <AdmissionPanel onAdmitted={handleAdmitted} />,
+        /* Entry 120 (2) / OPEN-1 (A), question round 66, item 1: the summary binds to the dataset on the
+         * map (`admitted`), not to the open attempt `AdmissionPanel` is working on -- so a refused second
+         * open leaves the first dataset's summary standing while the Layers region shows the refusal. */
+        "section.source": admitted && <DescribeSummary describe={admitted.describe} />,
+        /* NEXT-CUT.md (filter-panel cut) P3 item 5 / binding note 9 (its pre-milestone-1 placement is
+          * history). Keyed on `admitted.dataset` for the same reason `WorkingCanvas` is: a dataset change
+          * must discard this panel's own local input text/busy/refusal state rather than reconcile it
           * across two different datasets' filter/column spaces (App-owned state -- `activeFilter`,
-          * `scanState` -- is reset independently via `admitAndResetStaleUiState`). */}
-        {admitted && (
+          * `scanState` -- is reset independently via `admitAndResetStaleUiState`). Its home is the
+          * Inspector's Filter section; its liveness line and Cancel stay inside it (ADR-021). */
+        "section.filter": admitted && (
           <FilterPanel
             // Reviewer gate, style-panel cut P7 fixes: prefixed, not the bare `admitted.dataset`
             // string -- `StylePanel` below is ALSO keyed per-dataset and is a DIRECT SIBLING of this
@@ -1752,9 +1808,8 @@ export default function App() {
               void managerRef.current?.cancelStream(handle);
             }}
           />
-        )}
-        </div>
-        {admitted && (
+        ),
+        "region.map": admitted && (
           <div className="canvas-container">
             {/* Keyed on the dataset handle -- not just re-rendered with new props -- so a reopen
               * (a *new* `open_dataset`, `Admitted` object, even for the same file: SKP-V0.md never
@@ -1773,76 +1828,85 @@ export default function App() {
               * stream's own partial sum at its own refusal moment (1,961,249 resident + 51,187
               * attempted, on a stream that was then cancelled), never two different datasets'
               * residency. This remount was never actually resting on that arithmetic -- it is
-              * correct on the ADR-010 rule 1 grounds stated above regardless. */}
-            <WorkingCanvas
-              key={admitted.dataset}
-              dataset={admitted.dataset}
-              ref={canvasRef}
-              geometryColumn={admitted.describe.geometry.column}
-              crsUnit={admitted.describe.crs.unit}
-              style={style}
-              /* P3b §2a(iv): the ONE pick-latch site, covering both arms, because hover is
-               * arm-independent. Once the session has ended, every readout the canvas resolves --
-               * including `null` and a standing `PickConfirming` id -- becomes the named refusal;
-               * `latchedHoverReadout` (`canvas/pick.ts`) has the full account of why silence is the
-               * wrong answer (ADR-010 rule 5). The ref, not the state, because this fires from
-               * deck.gl's own render path. */
-              onHover={(readout) => setHover(latchedHoverReadout(readout, sessionEndedRef.current))}
-              onCanvasRefusal={(streamHandle, message) => {
-                // N8 residual correction round 1: bound to the `admitted` this render built it for --
-                // a call arriving from a superseded instance must not run `handleCanvasCeilingRefusal`
-                // below. Unguarded, it would set the LIVE generation's `canvasRefusal` banner to A's
-                // own message and dispatch `{kind:"failed"}` onto the live scan-liveness state -- real
-                // contamination. Its `cancelStream(streamHandle)` call, by contrast, targets B's own
-                // manager with A's `streamHandle`, naming none of B's streams -- a no-op, not a
-                // correctness guarantee this guard relies on.
-                if (admitted.dataset !== admittedDatasetRef.current) return;
-                // NEXT-CUT.md P6 review, B1 (blocking): `handleCanvasCeilingRefusal`'s own doc
-                // comment above has the full account -- a declared-ceiling refusal must dispatch a
-                // scan event AT the cancel call site, or the liveness indicator lies forever after.
-                handleCanvasCeilingRefusal(streamHandle, message, {
-                  setCanvasRefusal,
-                  applyScanEvent,
-                  // limits.ts's own declared remedy is "cancel the offending stream", not just "show
-                  // a message" -- a batch that already crossed a ceiling must not keep the stream
-                  // running to consume more credit and more connection capacity for nothing.
-                  cancelStream: (h) => void managerRef.current?.cancelStream(h),
-                });
-              }}
-              onResidentCeilingExceeded={(_streamHandle, residentFeatureCount) => {
-                // N8 residual correction: same guard as `onCanvasRefusal` immediately above.
-                if (admitted.dataset !== admittedDatasetRef.current) return;
-                setResidencyStatus(
-                  nextResidencyStatus({
-                    kind: "ceiling-refusal",
-                    residentFeatureCount,
-                    datasetRowCount: admitted.describe.row_count.value ?? "unknown",
-                  })
-                );
-              }}
-              onViewportChanged={(bbox) => {
-                // `lastViewportBboxRef` (design section (b)): written on EVERY viewport change, not
-                // only a debounced/settled one -- Apply's own re-issue needs "the current viewport"
-                // at click time, which may be mid-drag, not only the last one a debounced query
-                // happened to fire for.
-                lastViewportBboxRef.current = toWireBbox(bbox);
-                // NEXT-CUT.md (publish cut) P3 item 3: flips exactly once per dataset (guarded, so
-                // an in-progress drag's many calls per frame do not re-render on every one) -- the
-                // FIRST arrival here is what lets `PublishPanel` enable "Current view".
-                if (!hasSettledView) setHasSettledView(true);
-                // Debounced to settle -- see the effect above's own comment and
-                // `streaming/debounce.ts` for why a pan/zoom-driven query is never issued directly
-                // from this callback.
-                viewportDebounceRef.current?.call(toWireBbox(bbox), null);
-              }}
-            />
-            <button
-              type="button"
-              className="zoom-to-layer"
-              onClick={() => canvasRef.current?.fitToBounds()}
-            >
-              Zoom to layer
-            </button>
+              * correct on the ADR-010 rule 1 grounds stated above regardless.
+              *
+              * Milestone 2, phase A: the canvases are the views in `drawOrder` (one, today), each keyed on its
+              * own resource's handle exactly as above; `admitted` inside the callback is that view's resource. */}
+            {drawnViews.map((drawn) => {
+              const admitted = selectAdmitted(workspace, drawn.id);
+              if (admitted === null) return null;
+              return (
+                <WorkingCanvas
+                  key={admitted.dataset}
+                  dataset={admitted.dataset}
+                  ref={canvasRef}
+                  geometryColumn={admitted.describe.geometry.column}
+                  geometryEncoding={admitted.describe.geometry.encoding}
+                  crsUnit={admitted.describe.crs.unit}
+                  style={drawn.style}
+                  /* P3b §2a(iv): the ONE pick-latch site, covering both arms, because hover is
+                   * arm-independent. Once the session has ended, every readout the canvas resolves --
+                   * including `null` and a standing `PickConfirming` id -- becomes the named refusal;
+                   * `latchedHoverReadout` (`canvas/pick.ts`) has the full account of why silence is the
+                   * wrong answer (ADR-010 rule 5). The ref, not the state, because this fires from
+                   * deck.gl's own render path. */
+                  onHover={(readout) => setHover(latchedHoverReadout(readout, sessionEndedRef.current))}
+                  onCanvasRefusal={(streamHandle, message) => {
+                    // N8 residual correction round 1: bound to the `admitted` this render built it for --
+                    // a call arriving from a superseded instance must not run `handleCanvasCeilingRefusal`
+                    // below. Unguarded, it would set the LIVE generation's `canvasRefusal` banner to A's
+                    // own message and dispatch `{kind:"failed"}` onto the live scan-liveness state -- real
+                    // contamination. Its `cancelStream(streamHandle)` call, by contrast, targets B's own
+                    // manager with A's `streamHandle`, naming none of B's streams -- a no-op, not a
+                    // correctness guarantee this guard relies on.
+                    if (admitted.dataset !== admittedDatasetRef.current) return;
+                    // NEXT-CUT.md P6 review, B1 (blocking): `handleCanvasCeilingRefusal`'s own doc
+                    // comment above has the full account -- a declared-ceiling refusal must dispatch a
+                    // scan event AT the cancel call site, or the liveness indicator lies forever after.
+                    handleCanvasCeilingRefusal(streamHandle, message, {
+                      setCanvasRefusal,
+                      applyScanEvent,
+                      // limits.ts's own declared remedy is "cancel the offending stream", not just "show
+                      // a message" -- a batch that already crossed a ceiling must not keep the stream
+                      // running to consume more credit and more connection capacity for nothing.
+                      cancelStream: (h) => void managerRef.current?.cancelStream(h),
+                    });
+                  }}
+                  onResidentCeilingExceeded={(_streamHandle, residentFeatureCount) => {
+                    // N8 residual correction: same guard as `onCanvasRefusal` immediately above.
+                    if (admitted.dataset !== admittedDatasetRef.current) return;
+                    setResidencyStatus(
+                      nextResidencyStatus({
+                        kind: "ceiling-refusal",
+                        residentFeatureCount,
+                        datasetRowCount: admitted.describe.row_count.value ?? "unknown",
+                      })
+                    );
+                  }}
+                  onViewportChanged={(bbox) => {
+                    // `lastViewportBboxRef` (design section (b)): written on EVERY viewport change, not
+                    // only a debounced/settled one -- Apply's own re-issue needs "the current viewport"
+                    // at click time, which may be mid-drag, not only the last one a debounced query
+                    // happened to fire for.
+                    lastViewportBboxRef.current = toWireBbox(bbox);
+                    // NEXT-CUT.md (publish cut) P3 item 3: flips exactly once per dataset (guarded, so
+                    // an in-progress drag's many calls per frame do not re-render on every one) -- the
+                    // FIRST arrival here is what lets `PublishPanel` enable "Current view".
+                    if (!hasSettledView) setHasSettledView(true);
+                    // Debounced to settle -- see the effect above's own comment and
+                    // `streaming/debounce.ts` for why a pan/zoom-driven query is never issued directly
+                    // from this callback.
+                    viewportDebounceRef.current?.call(toWireBbox(bbox), null);
+                  }}
+                  /* The map changed size and now shows less than the area last asked for: keep the box it
+                   * actually shows current (the Export panel's Current view reads it at click time). No
+                   * query, and `hasSettledView` is untouched -- a within-report only follows a reported view. */
+                  onViewportWithinLastQuery={(bbox) => {
+                    lastViewportBboxRef.current = toWireBbox(bbox);
+                  }}
+                />
+              );
+            })}
             {/* Viewport-residency cut P6a, decision 24(c) + DECISIONS-PENDING entry 88 / 75 (3),
               * RULED 2026-09-14 (B1): all four hover-readout states are rendered by one component
               * (`canvas/HoverReadoutView.tsx`), moved out of this file unchanged in markup, classes
@@ -1851,115 +1915,89 @@ export default function App() {
               * component (`HoverReadoutView.test.tsx`), which this file, needing a WebGL context it
               * has no way to provide in jsdom, could not host. */}
             <HoverReadoutView readout={hover} />
-            {/* S1 (reviewer round, 2026-08-13): a single top-anchored flex column, not three
-              * independently absolute-positioned elements at fixed offsets. `.canvas-refusal` can
-              * wrap to 2+ lines (a long stream-failure or refusal message), and a fixed offset for
-              * whatever sat below it (the old `.residency-status` rule) assumed a height that a
-              * wrapped message violates -- occluding it. Stacking these in normal document flow
-              * inside `.canvas-status-stack` (styles.css) means each element's *actual* rendered
-              * height, whatever it is, is what the next one respects, not a number guessed in
-              * advance -- both stay simultaneously visible regardless of message length, and both
-              * stay clear of `.hover-readout` (bottom-left) and `.zoom-to-layer` (top-right) exactly
-              * as before. */}
-            {(canvasRefusal || viewportRefusal || sessionEnded || residencyStatus || scanState.kind === "cancelled") && (
-              <div className="canvas-status-stack">
-                {/* **P3b §2a(v): the typed session-ended status, first in the stack.** Rendered
-                  * through `RefusalBlock` -- the shared refusal block a dataset-open or filter
-                  * refusal already uses, and the ONLY product dispatcher of `refusalGuidance`
-                  * (`admission/RefusalBlock.tsx:25`), which is what makes the owner's
-                  * `engine.source_changed` sentence reach an operator at all on the canvas surface.
-                  * Its `code`/`message` come from `formatTerminalRefusal`, so no machine prefix is
-                  * rendered as prose (§8.6).
-                  *
-                  * **NOT dismissible** -- `RefusalBlock` renders no button by construction (its own
-                  * doc comment), which is exactly right here: the state does not end until the
-                  * dataset is reopened. **N8 correction (2026-09-22):** it is NOT a remount that
-                  * clears this -- `.canvas-status-stack` sits beside the keyed `<WorkingCanvas
-                  * key={admitted.dataset}>` (above), not inside it, and renders from this
-                  * App-owned `sessionEnded` state. The actual clear is `handleAdmitted`'s own
-                  * `admitAndResetStaleUiState` call (`sessionEnded`'s own doc comment above has the
-                  * full account). The `.residency-status` precedent below is the same reasoning for
-                  * a weaker fact. */}
-                {sessionEnded && (
-                  <div className="canvas-session-ended">
-                    <RefusalBlock refusal={sessionEnded} />
-                  </div>
-                )}
-                {canvasRefusal && (
-                  <div className="canvas-refusal" role="alert">
-                    {canvasRefusal}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        // NEXT-CUT.md P3 item B (class C, `surfaceRegistry.ts`'s own
-                        // "canvas.dismissCanvasRefusal" row): recorded at the point the action
-                        // actually applies -- this click clears local state only, never the kernel.
-                        recordNamed("gui-action", "canvas.dismissCanvasRefusal");
-                        setCanvasRefusal(null);
-                      }}
-                    >
-                      Dismiss
-                    </button>
-                  </div>
-                )}
-                {/* P3b: suppressed once the session-ended block is standing. The pre-check route
-                  * sets BOTH (§2b keeps `setViewportRefusal` exactly as it was), and the block above
-                  * renders the same code and the same message plus the guidance this surface has
-                  * never dispatched -- so showing both would put the identical refusal on the canvas
-                  * twice, once with its guidance and once without. The state is untouched; only
-                  * whether it renders while a strictly stronger statement is standing. */}
-                {viewportRefusal && !sessionEnded && (
-                  <div className="canvas-refusal" role="alert">
-                    <div className="admission-refusal-code">{viewportRefusal.code}</div>
-                    {viewportRefusal.message}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        recordNamed("gui-action", "canvas.dismissViewportRefusal");
-                        setViewportRefusal(null);
-                      }}
-                    >
-                      Dismiss
-                    </button>
-                  </div>
-                )}
-                {/* Rider 1 (DECISIONS-PENDING.md entry 0, option (a)): NOT dismissible -- no close
-                  * control, deliberately. Dismissing a `.canvas-refusal` above must never remove
-                  * this; it only ever clears via `nextResidencyStatus`'s own "delivery-complete" /
-                  * "dataset-changed" / "query-issued" transitions. Viewport-residency cut P4
-                  * (decisions 24(a)/(b)): content is now arm-dependent -- `residencyStatusText`
-                  * (`residency/residencyStatus.ts`) is the ONE place that renders any of the three
-                  * `ResidencyStatus` variants (baseline's own ceiling wording untouched by this
-                  * piece) to a string, so this JSX stays a one-line lookup. */}
-                {residencyStatus && (
-                  <div className="residency-status" role="status">
-                    {residencyStatusText(residencyStatus)}
-                  </div>
-                )}
-                {/* NEXT-CUT.md P4 item 3, verbatim copy: persistent, NOT dismissible -- no close
-                  * control (rider-1 pattern). Cleared only by the next issued query (any of the three
-                  * issue sites, via `issueViewportQuery`'s own unconditional `"issued"` supersede) or
-                  * a dataset change (`admitAndResetStaleUiState`'s `setScanState({kind:"idle"})`) --
-                  * derived directly from `scanState.kind === "cancelled"`, no separate boolean to
-                  * drift out of sync with the machine that actually governs it. No duration word or
-                  * figure beyond the row count itself (binding note 4). */}
-                {scanState.kind === "cancelled" && (
-                  <div className="scan-incomplete" role="status">
-                    {`Filtered view incomplete — scan cancelled at ${scanState.rows} rows`}
-                  </div>
-                )}
-              </div>
-            )}
           </div>
-        )}
-        {/* action-console cut P5c fix 1: style + publish + console live in their OWN scrollable
-          * rail too, mirroring `.app-rail-top` above and for the identical reason -- this rail
-          * comes AFTER `.canvas-container` in flex/visual order (S4's own reasoning, unchanged by
-          * this wrap), so the canvas still claims its space first; the wrap only stops THIS rail's
-          * own overflow from ever reaching `.app-main` and narrowing the canvas. See
-          * `styles.css`'s own `.app-rail-top`/`.app-rail-bottom` comment for the full account. */}
-        <div className="app-rail-bottom">
-        {/* NEXT-CUT.md (style-panel cut) P4 / binding note 6, MOVED below `.canvas-container`
+        ),
+        /* The attention strip, in section 2.5 order. **P3b section 2a(v): the session-ended status is first.**
+         * Rendered through `RefusalBlock`, the shared refusal block and the ONLY product dispatcher of
+         * `refusalGuidance` (`admission/RefusalBlock.tsx`), which is what makes the owner's
+         * `engine.source_changed` sentence reach an operator on this surface; its `code`/`message` come from
+         * `formatTerminalRefusal`, so no machine prefix is rendered as prose (section 8.6). NOT dismissible:
+         * `RefusalBlock` renders no button, and the state ends only when the dataset is reopened -- the actual
+         * clear is `handleAdmitted`'s own `admitAndResetStaleUiState` call (N8 correction, 2026-09-22), not a
+         * remount of the keyed canvas. Every attention and status item binds to `admitted`, the dataset on
+         * the map (section 2.4). */
+        "attention.sessionEnded": admitted && sessionEnded && (
+          <div className="canvas-session-ended">
+            <RefusalBlock refusal={sessionEnded} />
+          </div>
+        ),
+        "attention.canvasRefusal": admitted && canvasRefusal && (
+          <div className="canvas-refusal" role="alert">
+            {canvasRefusal}
+            <button
+              type="button"
+              onClick={() => {
+                // NEXT-CUT.md P3 item B (class C, `surfaceRegistry.ts`'s own
+                // "canvas.dismissCanvasRefusal" row): recorded at the point the action
+                // actually applies -- this click clears local state only, never the kernel.
+                recordNamed("gui-action", "canvas.dismissCanvasRefusal");
+                setCanvasRefusal(null);
+              }}
+            >
+              Dismiss
+            </button>
+          </div>
+        ),
+        /* P3b: suppressed once the session-ended block is standing. The pre-check route sets BOTH (section 2b
+         * keeps `setViewportRefusal` exactly as it was), and the block above renders the same code and the
+         * same message plus the guidance this surface has never dispatched -- so showing both would put the
+         * identical refusal in the strip twice. The state is untouched; only whether it renders. */
+        "attention.viewportRefusal": admitted && viewportRefusal && !sessionEnded && (
+          <div className="canvas-refusal" role="alert">
+            <div className="admission-refusal-code">{viewportRefusal.code}</div>
+            {viewportRefusal.message}
+            <button
+              type="button"
+              onClick={() => {
+                recordNamed("gui-action", "canvas.dismissViewportRefusal");
+                setViewportRefusal(null);
+              }}
+            >
+              Dismiss
+            </button>
+          </div>
+        ),
+        /* The status bar, in section 2.5 order. Rider 1 (DECISIONS-PENDING.md entry 0, option (a)): the residency
+         * status is NOT dismissible -- no close control, deliberately; dismissing a `.canvas-refusal` must never
+         * remove it. It only clears via `nextResidencyStatus`'s own "delivery-complete" / "dataset-changed" /
+         * "query-issued" transitions, and `residencyStatusText` (`residency/residencyStatus.ts`) is the ONE place
+         * that renders any of its variants. */
+        "status.residency": admitted && residencyStatus && (
+          <div className="residency-status" role="status">
+            {residencyStatusText(residencyStatus)}
+          </div>
+        ),
+        /* OPEN-6 (question round 67): a read-only mirror of the filter panel's liveness line, so a scan stays
+         * visible with the Inspector closed. It has no Cancel; Cancel stays in `FilterPanel` (ADR-021). */
+        "status.scanLiveness": admitted && <ScanLivenessMirror scanState={scanState} />,
+        /* NEXT-CUT.md P4 item 3, verbatim copy: persistent, NOT dismissible -- no close control (rider-1
+         * pattern). Cleared only by the next issued query (any of the three issue sites, via
+         * `issueViewportQuery`'s own unconditional `"issued"` supersede) or a dataset change
+         * (`admitAndResetStaleUiState`'s `setScanState({kind:"idle"})`) -- derived directly from
+         * `scanState.kind === "cancelled"`, no separate boolean to drift out of sync with the machine that
+         * actually governs it. No duration word or figure beyond the row count itself (binding note 4). */
+        "status.scanIncomplete": admitted && scanState.kind === "cancelled" && (
+          <div className="scan-incomplete" role="status">
+            {`Filtered view incomplete — scan cancelled at ${scanState.rows} rows`}
+          </div>
+        ),
+        /* The watcher's state (SOURCE-WATCHER-PREREGISTRATION.md section 2d; the display held since
+         * 2026-09-23): the at-open wire fact of the dataset on the map, hidden while the session-ended
+         * statement above stands. */
+        "status.sourceWatch": admitted && (
+          <WatcherStatusItem facts={admitted.describe} sessionEnded={sessionEnded !== null} />
+        ),
+        /* NEXT-CUT.md (style-panel cut) P4 / binding note 6, MOVED below `.canvas-container`
           * (reviewer gate, style-panel cut P7 fixes, S4 -- the reviewer's own cheap option). Still in
           * `.app-main`'s flex column, still normal document flow, never an absolute overlay (the S1
           * lesson, same as `.filter-panel` itself); still keyed on `admitted.dataset` for the same
@@ -1980,9 +2018,9 @@ export default function App() {
           *
           * **Key prefixed, not the bare `admitted.dataset` string (reviewer gate, style-panel cut
           * P7 fixes).** `FilterPanel` above uses the identical dataset value as its own key -- see
-          * its own comment for the duplicate-sibling-key finding this fixes on both ends. */}
-        {admitted && <StylePanel key={`style-${admitted.dataset}`} style={style} onChange={setStyle} />}
-        {/* NEXT-CUT.md (publish cut) P3: "in .app-main's flex column below StylePanel" -- same
+          * its own comment for the duplicate-sibling-key finding this fixes on both ends. */
+        "inspector.style": admitted && <StylePanel key={`style-${admitted.dataset}`} style={style} onChange={handleStyleChange} />,
+        /* NEXT-CUT.md (publish cut) P3: "in .app-main's flex column below StylePanel" -- same
           * reasoning as `StylePanel`'s own placement below `.canvas-container` (S4): this panel
           * comes AFTER the canvas in both visual and flex order, so its own collapsed/expanded state
           * cannot push `.canvas-container` toward its 200px floor (`styles.css`'s own
@@ -1992,8 +2030,8 @@ export default function App() {
           * datasets. `style` is passed through unchanged (App-owned, not reset on a dataset change,
           * same as `StylePanel`'s own prop) -- the publish seam derives the wire-shape document from
           * it at Publish-click time (`PublishPanel.tsx`'s own `toStyleDocument` call), never a second
-          * copy held here. */}
-        {admitted && (
+          * copy held here. */
+        "section.export": admitted && (
           <PublishPanel
             key={`publish-${admitted.dataset}`}
             datasetHandle={admitted.dataset}
@@ -2002,23 +2040,22 @@ export default function App() {
             hasSettledView={hasSettledView}
             getLastViewportBbox={() => lastViewportBboxRef.current}
           />
-        )}
-        {/* NEXT-CUT.md P3: mounted UNCONDITIONALLY (not gated on `admitted`, unlike every panel
+        ),
+        /* NEXT-CUT.md P3: mounted UNCONDITIONALLY (not gated on `admitted`, unlike every panel
           * above) -- `open_dataset` itself, and several class-B commands
           * (`binding_pick_file`/`binding_crs_catalog`), can fire before any dataset is ever
           * admitted, and the console must account for those too. Same "in `.app-main`'s flex
           * column, below `.canvas-container`, never an absolute overlay" discipline every other
           * panel here already follows (S1/S4) -- `styles.css`'s own `.console-panel` comment has
-          * the measured layout-budget note this piece appended. */}
-        <ConsolePanel />
-        {/* RELEASE-0.1 Amendment 3, item 2: mounted UNCONDITIONALLY, same reasoning as
+          * the measured layout-budget note this piece appended. */
+        "activity.console": <ConsolePanel />,
+        /* RELEASE-0.1 Amendment 3, item 2: mounted UNCONDITIONALLY, same reasoning as
           * `ConsolePanel` immediately above -- reading the shipped notice text needs no dataset
           * admitted and no Tauri command (it is fed by a build-time file, `NoticesPanel.tsx`'s own
           * doc comment). Placed last so it reads as a standing, always-available surface, not a
-          * per-dataset panel. */}
-        <NoticesPanel />
-        </div>
-      </main>
-    </div>
+          * per-dataset panel. */
+        "activity.notices": <NoticesPanel />,
+      }}
+    />
   );
 }

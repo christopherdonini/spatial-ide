@@ -238,10 +238,18 @@ so each scenario needs its own fresh launch -- observed as a zoom ladder produci
 every notch on a second run against the same instance, silent otherwise.
 
 **`source-changed.mjs`'s post-check route (P5).** Setting `SPATIAL_E2E_SOURCE_CHANGED_ROUTE=post`
-switches the same driver from its default pre-check route (T10, unchanged) to a route that lets a
+switches the same driver from its default pre-check route (re-aimed, next paragraph) to a route that lets a
 tile's mint succeed against the file before the change and mutates only after, so the
 source-changed refusal is caught when that tile's own stream later drains rather than at mint time
 (`frontends/shell/e2e/source-changed.mjs:144-159`).
+
+**`source-changed.mjs`'s default (pre-check) route, re-aimed.** The advisory source watcher ends the session
+on an mtime touch it sees while the app is idle, before any query, so this route is aimed at a change the
+watcher cannot see (KNOWN-LIMITATIONS item 26). S1 opens a copy of the 100k fixture through a directory
+junction (`e2e/out/source-changed-link`, made in-process with Node's `symlinkSync(.., "junction")`, no
+elevation) that points at copy `a`; S3 retargets it to copy `b` (the same bytes, mtime 120 s later); S4's
+query is then refused by the pre-check, and the session log's `tile-stream-mint-refused` line carrying
+`engine.source_changed` is asserted. The `post` and `reopen` routes keep their mtime touch.
 
 ## Action console spec (action-console cut, P5)
 
@@ -261,20 +269,32 @@ the header (and `.console-entries`) is absent from the DOM entirely (I9). `ECHO'
 with the last two explicit `null`, and that the entry's OWN label version equals the entry's OWN
 parsed `skp` field (self-consistent, no hard-coded version anywhere in this suite). `TWOCMD'`
 re-reads that SAME open to assert `describe` also appears, parsing to exactly `{skp, dataset}`.
-`HEXLIM'` drives a real pan and asserts the resulting `viewport_query` entry's bbox members are
+`HEXLIM'` drives a real pan and asserts the resulting `viewport_query` entry's request carries exactly the
+`skp/0.6` key set (`skp, dataset, bbox, bbox_crs, filter, limit, columns`; the value of `columns` is not
+asserted), its bbox members are
 16-lowercase-hex strings surviving quoted verbatim in the raw text (I5), and `limit` is
-digits-or-null. `REFUSAL'` drives an invalid predicate through `queryWithFilter` and asserts
+digits-or-null. `REFUSAL'` drives an invalid predicate through `queryWithFilter`, polls (a declared
+5 s bound, every 100 ms) for the refused entry with its refusal block, which reaches the DOM after the
+hook returns on the shipped candidate arm, and asserts
 `.console-outcome` reads "refused" with `.console-refusal` showing the SAME typed code/message the
-call's own returned outcome carries. `CLASSB'` drives `publishPrepareWithDestination` (the dev-only
+call's own returned outcome carries. The suite pins no arm: it reads the arm back and stops unless it
+is the shipped `candidate`. `CLASSB'` drives `publishPrepareWithDestination` (the dev-only
 seam) and asserts the resulting class-B entry names `binding_publish_prepare_e2e_destination` with
 no copy button, no `{` anywhere in its row, a citation containing "not callable", and the
 destination path string absent from the WHOLE `.console-panel` DOM (ADR-024's fence, proven at the
 UI). `CLASSC'` sets the fill colour through the real `.style-fill-color` input and asserts the
 resulting class-C entry names "no API equivalent" with an owner containing "ADR-022". `GROUP'`
-issues 3 identical `queryWithFilter` calls and asserts exactly one NEW `.console-group-header`
-reading "×3" whose expansion shows 3 individually-parseable `.console-request-text` blocks, never a
-merged/synthetic one (I8) -- and reports what actually varies between them (nothing:
-`viewport_query` carries no per-call nonce, unlike `open_dataset`'s `cancel_key`). `COPYTRUNC'`
+issues 3 identical `queryWithFilter` calls and polls (the same declared bound) for exactly 3 residential
+untiled `viewport_query` rows (`bbox` null), never by counting every new `.console-group-header`, then
+asserts the grouping rule inside their window (the rows from the first to the last, with every item that
+holds them or lies between): each group's header reads `×N` for its N >= 2 rows of one key; no two adjacent
+items share a key (a run of consecutive identical entries forms one item, and a session-log line between
+the rows ends the run and passes); some group shows 2+ rows inside the window, else it fails as
+`GROUP': grouping not exercised` (round 71); each class-A row there parses on its own, never a
+merged/synthetic one (I8); and the label's total may grow by at most the recorder's 256 so none of its own
+rows can have been evicted. It reports the window's items and what actually varies (the residential
+request texts are expected byte-identical: `viewport_query` carries no per-call nonce, unlike
+`open_dataset`'s `cancel_key`). `COPYTRUNC'`
 drives a NEAR-CAP (exactly `MAX_CRS_DEFINITION_BYTES` = 65 536 bytes) `crsAssertion.definitionJson`
 -- built from the REAL pinned catalog definition padded with low-quote-density filler, so the
 double-JSON-encoding a naive arithmetic check would miss (the field is a STRING holding already-
@@ -724,3 +744,15 @@ functions would not be comparable to an ON run that did).
 small, committed (NOT gitignored `out/`) JSON capturing each of the three attempts above verbatim (an
 array of dated attempts, oldest first, none ever deleted), each with its own `_honest_result` block.
 `_current_status` at the top of the file always names which attempt is authoritative and why.
+
+## Layout spec (shell-migration-milestone-1)
+
+```
+npm run e2e:layout
+```
+
+`e2e/layout.mjs` drives the Map Studio frame on real WebView2 with `filter-zoned.parquet`, and `100k-happy-path.parquet` for the reopen and `FILL` steps, and records each fixture's sha256 before and after. Asserted: `E-KEYS` (each of Ctrl+B, Ctrl+I and Ctrl+J, pressed twice, flips only its own region's `hidden`; the stored `.working-canvas` node stays connected and identical; `.canvas-container` is at least 480 x 320), `E-FIELD` (the filter text survives Ctrl+I twice, and focus is on the map while the Inspector is hidden), `E-LANDMARKS` (the landmark roles and names, from the DOM and, where the connection allows, the accessibility tree), `E-FOCUS` (a Tab walk visits the top bar, Layers, map, Inspector and Activity in that order), `E-FIT` (with every region open: no page scrollbar and the map at least 480 x 320, natively and at 1366 x 768 by `page.setViewportSize`; the exact pixels are recorded) and `E-REOPEN` (a second fixture replaces the canvas node and the layout is unchanged). `RESIZEQ` and `FILL` are asserted too. `RESIZEQ`, on `filter-zoned.parquet`: after a real Zoom to layer click and a settled trace, closing the Inspector gives at least one new `viewport_query` line within 3 s, the trace settles, and reopening it gives none; the number of newly covered cells it predicts from the grid frame, the last view-state line and the DOM sizes is recorded beside the observed count, and a prediction below one stops the step. `FILL`, on the 100k fixture, after one declared wheel notch at the canvas centre (the session's first reported view): once the status is the complete within-budget sentence and at least one grid cell inside the fixture's declared parcel area is covered by the grown map and by no view-state line since the mark (counted before the toggle and confirmed at the size measured after it, both recorded; below one stops the step), closing the Inspector issues at least one stream and at least one `batch` line with rows on those streams within 10 s, and the trace settles. `BURST` is recorded and never asserted: the times of the `viewport_query` lines during a continuous drag of the map | Inspector splitter, relative to the first move, the last move and the release.
+
+**What CDP key injection proves.** `page.keyboard.press` reaches the page's own `keydown` listener. It does not cross WebView2's accelerator-key layer, so this suite cannot say that real keys do. That is row U3 of the walkthrough's Part U (the form's H2).
+
+**The layout is session state.** An attached app keeps its layout across suites. `e2e:style` selects the Inspector's Style tab and leaves it selected, so run the next suite on a fresh launch (`e2e:layout` itself clicks the Layer tab first). The sections above that speak of `.app-main`, `.app-rail-top`, `.app-rail-bottom` or `.canvas-status-stack`, or give measurements of the stacked layout, describe the layout before this piece and are history. The suites now select `.attention-strip`, and `.zoom-to-layer` lives in the Layers row.

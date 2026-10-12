@@ -267,24 +267,34 @@ impl SourceDescriptor {
     /// A footer hash that was not taken on either side is **not** counted — it was not dropped by a
     /// change, it was never read, and the degradation text already says so.
     pub fn components_differing_from(&self, now: &Self) -> Vec<&'static str> {
-        let mut out = Vec::new();
-        if self.byte_size != now.byte_size {
-            out.push("size");
+        differing_components(self.components(), now.components())
+    }
+
+    /// This descriptor's four components as a held record, with nothing else of the open.
+    ///
+    /// **A change detector's record, not an identity** — see [`SourceObservation`]. No read and no
+    /// I/O: it copies what [`Self::of`] already read. Its caller is
+    /// `spatial_kernel::dataset_ref::DatasetRef::linked`, a producer ahead of its consumers, the
+    /// PLAN nodes `b2-piece-1b-recording` and `b2-piece-1c-save-and-reopen` (the human's round 8
+    /// exemption, named in `kernel/B2-1A-STEP-RECORD-AND-DATASET-REFERENCE-PREREGISTRATION.md`
+    /// §2.6).
+    pub fn observation(&self) -> SourceObservation {
+        SourceObservation {
+            byte_size: self.byte_size,
+            modified_nanos: self.modified_nanos,
+            footer_length: self.footer_length,
+            footer_hash: self.footer_hash.clone(),
         }
-        match (self.modified_nanos, now.modified_nanos) {
-            (Some(a), Some(b)) if a != b => out.push("mtime"),
-            (Some(_), None) | (None, Some(_)) => out.push("mtime"),
-            _ => {}
+    }
+
+    /// The four components, borrowed, in the one shape the single comparison reads.
+    fn components(&self) -> Components<'_> {
+        Components {
+            byte_size: self.byte_size,
+            modified_nanos: self.modified_nanos,
+            footer_length: self.footer_length,
+            footer_hash: self.footer_hash.as_deref(),
         }
-        if self.footer_length != now.footer_length {
-            out.push("footer-length");
-        }
-        if let (Some(a), Some(b)) = (&self.footer_hash, &now.footer_hash) {
-            if a != b {
-                out.push("footer-hash");
-            }
-        }
-        out
     }
 
     /// The typed refusal for a source that differs from this descriptor, or `Ok(())`.
@@ -326,6 +336,118 @@ impl SourceDescriptor {
             }),
         }
     }
+}
+
+/// Four components of one open's source file, held after the open (`ADR-036` §5's `observed`).
+///
+/// **A change detector, exactly as [`SourceDescriptor`] is, and nothing more.** It is not a content
+/// hash, not a source revision and not a snapshot claim, and a comparison that names no component
+/// has not shown the file to be the same one: a data-page edit under a preserved size, mtime and
+/// footer is invisible to it (see this module's header). It never raises a grade (ADR-005).
+///
+/// Compared with a live descriptor by the descriptor's **own** rule — `differing_components` is
+/// the one function both comparisons call. Built from a descriptor by
+/// [`SourceDescriptor::observation`], or from recorded values by [`Self::recorded`]. It holds no
+/// path, no handle and no generation, and nothing here reads a file.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct SourceObservation {
+    byte_size: u64,
+    modified_nanos: Option<u128>,
+    footer_length: u64,
+    footer_hash: Option<String>,
+}
+
+impl SourceObservation {
+    /// An observation from four recorded values, in the order of [`Self::byte_size`],
+    /// [`Self::modified_nanos`], [`Self::footer_length`] and [`Self::footer_hash`]. A value that
+    /// was not established is `None`, never a stand-in.
+    pub fn recorded(
+        byte_size: u64,
+        modified_nanos: Option<u128>,
+        footer_length: u64,
+        footer_hash: Option<String>,
+    ) -> Self {
+        Self {
+            byte_size,
+            modified_nanos,
+            footer_length,
+            footer_hash,
+        }
+    }
+
+    /// The source file's size in bytes.
+    pub fn byte_size(&self) -> u64 {
+        self.byte_size
+    }
+
+    /// The modification time in nanoseconds since the Unix epoch, or `None` when the filesystem
+    /// reported none.
+    pub fn modified_nanos(&self) -> Option<u128> {
+        self.modified_nanos
+    }
+
+    /// The parquet footer's length in bytes.
+    pub fn footer_length(&self) -> u64 {
+        self.footer_length
+    }
+
+    /// Hex sha-256 over the footer's bytes, or `None` when the footer was over
+    /// [`FOOTER_DESCRIPTOR_MAX_BYTES`] and was not read.
+    pub fn footer_hash(&self) -> Option<&str> {
+        self.footer_hash.as_deref()
+    }
+
+    /// Every component in which this observation and `now` differ, named — or an empty list.
+    ///
+    /// **The descriptor's own rule, not a second one**: the same function
+    /// [`SourceDescriptor::components_differing_from`] calls, with the same vocabulary, the same
+    /// three-case modification time and the same treatment of a footer hash that was not taken.
+    /// An empty list says no component differed, which is not a statement that the file is the
+    /// same one (see [`SourceObservation`]).
+    pub fn components_differing_from(&self, now: &SourceDescriptor) -> Vec<&'static str> {
+        differing_components(
+            Components {
+                byte_size: self.byte_size,
+                modified_nanos: self.modified_nanos,
+                footer_length: self.footer_length,
+                footer_hash: self.footer_hash.as_deref(),
+            },
+            now.components(),
+        )
+    }
+}
+
+/// The four components, borrowed from a descriptor or an observation.
+#[derive(Clone, Copy)]
+struct Components<'a> {
+    byte_size: u64,
+    modified_nanos: Option<u128>,
+    footer_length: u64,
+    footer_hash: Option<&'a str>,
+}
+
+/// **The one comparison rule.** Every component in which `opened` and `now` differ, named; the
+/// rules for an absent modification time and a footer hash that was not taken are
+/// [`SourceDescriptor::components_differing_from`]'s, whose body this is.
+fn differing_components(opened: Components<'_>, now: Components<'_>) -> Vec<&'static str> {
+    let mut out = Vec::new();
+    if opened.byte_size != now.byte_size {
+        out.push("size");
+    }
+    match (opened.modified_nanos, now.modified_nanos) {
+        (Some(a), Some(b)) if a != b => out.push("mtime"),
+        (Some(_), None) | (None, Some(_)) => out.push("mtime"),
+        _ => {}
+    }
+    if opened.footer_length != now.footer_length {
+        out.push("footer-length");
+    }
+    if let (Some(a), Some(b)) = (opened.footer_hash, now.footer_hash) {
+        if a != b {
+            out.push("footer-hash");
+        }
+    }
+    out
 }
 
 #[cfg(test)]

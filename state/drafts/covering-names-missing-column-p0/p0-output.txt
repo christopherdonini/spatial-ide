@@ -1,0 +1,67 @@
+running 1 test
+=== row a | written "bbox"/["xmin", "ymin", "xmax", "ymax"] | declared "bbox"/["xmin", "ymin", "xmax", "ymax"]
+  oracle sql: SELECT "bbox"."xmin", "bbox"."ymin", "bbox"."xmax", "bbox"."ymax" FROM read_parquet(?) LIMIT 0
+  oracle: BINDS
+  open: OK; covering().is_some()=true
+  bbox stream: FIRST ITEM OK
+  no-bbox stream: FIRST ITEM OK
+=== row b | written "bbox"/["xmin", "ymin", "xmax", "ymax"] | declared "nobbox"/["xmin", "ymin", "xmax", "ymax"]
+  oracle sql: SELECT "nobbox"."xmin", "nobbox"."ymin", "nobbox"."xmax", "nobbox"."ymax" FROM read_parquet(?) LIMIT 0
+  oracle: BINDER ERR (query): Binder Error: Referenced table "nobbox" not found!
+Candidate tables: "read_parquet"
+
+LINE 1: SELECT "nobbox"."xmin", "nobbox"."ymin", "nobbox"."xmax", "nobbox...
+               ^
+  open: OK; covering().is_some()=true
+  bbox stream: FIRST ITEM ERR: query: execute: Binder Error: Referenced table "nobbox" not found!
+Candidate tables: "read_parquet"
+
+LINE 1: SELECT "id" AS "id", "geometry" FROM read_parquet(?) WHERE "nobbox"."xmin" <= ? AND "nobbox"."xmax" >= ? AND "nobbox...
+                                                                   ^
+  no-bbox stream: FIRST ITEM OK
+=== row c | written "bbox"/["xmin", "ymin", "xmax", "ymax"] | declared "bbox"/["xmin", "ymin", "xmax", "nomax"]
+  oracle sql: SELECT "bbox"."xmin", "bbox"."ymin", "bbox"."xmax", "bbox"."nomax" FROM read_parquet(?) LIMIT 0
+  oracle: BINDER ERR (query): Binder Error: Could not find key "nomax" in struct
+
+Candidate Entries: "xmax", "ymax"
+  open: OK; covering().is_some()=true
+  bbox stream: FIRST ITEM ERR: query: execute: Binder Error: Could not find key "nomax" in struct
+
+Candidate Entries: "xmax", "ymax"
+  no-bbox stream: FIRST ITEM OK
+=== row d | written "bbox"/["xmin", "ymin", "xmax", "ymax"] | declared "BBOX"/["xmin", "ymin", "xmax", "ymax"]
+  oracle sql: SELECT "BBOX"."xmin", "BBOX"."ymin", "BBOX"."xmax", "BBOX"."ymax" FROM read_parquet(?) LIMIT 0
+  oracle: BINDS
+  open: OK; covering().is_some()=true
+  bbox stream: FIRST ITEM OK
+  no-bbox stream: FIRST ITEM OK
+=== row e | written "bbox"/["xmin", "ymin", "xmax", "ymax"] | declared "bbox"/["XMIN", "ymin", "xmax", "ymax"]
+  oracle sql: SELECT "bbox"."XMIN", "bbox"."ymin", "bbox"."xmax", "bbox"."ymax" FROM read_parquet(?) LIMIT 0
+  oracle: BINDS
+  open: OK; covering().is_some()=true
+  bbox stream: FIRST ITEM OK
+  no-bbox stream: FIRST ITEM OK
+=== row f | written "bbox"/["xmin", "ymin", "xmax", "ymax"] | declared "id"/["xmin", "ymin", "xmax", "ymax"]
+  oracle sql: SELECT "id"."xmin", "id"."ymin", "id"."xmax", "id"."ymax" FROM read_parquet(?) LIMIT 0
+  oracle: BINDER ERR (query): Binder Error: Cannot extract field 'xmin' from expression "id" because it is not a struct, union, map, or json
+  open: OK; covering().is_some()=true
+  bbox stream: FIRST ITEM ERR: query: execute: Binder Error: Cannot extract field 'xmin' from expression "id" because it is not a struct, union, map, or json
+  no-bbox stream: FIRST ITEM OK
+=== row g | written "böx"/["xmin", "ymin", "xmax", "ymax"] | declared "BÖX"/["xmin", "ymin", "xmax", "ymax"]
+  oracle sql: SELECT "BÖX"."xmin", "BÖX"."ymin", "BÖX"."xmax", "BÖX"."ymax" FROM read_parquet(?) LIMIT 0
+  oracle: BINDER ERR (query): Binder Error: Referenced table "BÖX" not found!
+Candidate tables: "read_parquet"
+
+LINE 1: SELECT "BÖX"."xmin", "BÖX"."ymin", "BÖX"."xmax", "BÖX"."ymax" FROM...
+               ^
+  open: OK; covering().is_some()=true
+  bbox stream: FIRST ITEM ERR: query: execute: Binder Error: Referenced table "BÖX" not found!
+Candidate tables: "read_parquet"
+
+LINE 1: SELECT "id" AS "id", "geometry" FROM read_parquet(?) WHERE "BÖX"."xmin" <= ? AND "BÖX"."xmax" >= ? AND "BÖX"."ymin...
+                                                                   ^
+  no-bbox stream: FIRST ITEM OK
+test p0_covering_binder ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.67s
+

@@ -3,7 +3,10 @@
 
 import { describe, expect, it } from "vitest";
 
+import { decodeBatch, ENCODING_MULTILINESTRING, ENCODING_MULTIPOLYGON, ENCODING_POINT } from "./decodeBatch";
 import type { ResidentBatch } from "./decodeBatch";
+import { loadBatchFixture, multilinestringMl1Positions, pointP1Positions } from "../testUtils/batchFixtures";
+import { partsOfPolygons } from "../testUtils/partsOfPolygons";
 import type { HoverReadout } from "./pick";
 import {
   confirmingReadout,
@@ -18,14 +21,14 @@ function batch(): ResidentBatch {
     streamHandle: "sh_test",
     batchSeq: 3,
     ids: BigUint64Array.from([100n, 200n, 18_446_744_073_709_551_615n]),
-    rings: [
+    ...partsOfPolygons([
       [[[0, 0], [1, 0], [1, 1], [0, 0]]],
       [
         [[10, 10], [11, 10], [11, 11], [10, 10]],
         [[10.4, 10.4], [10.6, 10.4], [10.4, 10.4]],
       ],
       [], // a feature with no rings at all -- degenerate but must not crash the lookup
-    ],
+    ]),
     totalVertices: 4 + 7,
   };
 }
@@ -57,6 +60,115 @@ describe("resolvePick (ADR-010 rule 2's indirection)", () => {
     expect(resolvePick(batch(), -1)).toBeNull();
     expect(resolvePick(batch(), 3)).toBeNull();
     expect(resolvePick(batch(), 1.5)).toBeNull();
+  });
+
+  /**
+   * SH-4 (`engine/MULTIPOLYGON-MP1-PREREGISTRATION.md` section 4, real shape: the engine's own F-1
+   * batch, decoded by the product `decodeBatch`). The ordinal is a PART ordinal: F-1 has three rows
+   * and six parts, so ordinal 3 is row 1's only part (its id is 1n, and 3 is not a row index), and
+   * the three parts of row 0 resolve to one identical result (one feature, one hover). The bound is
+   * `partCount` (6), not the row count (3).
+   *
+   * RECORDED MUTATION: index `ids` by the ordinal in `resolvePick` (take the row as the ordinal
+   * itself). This test then fails by name.
+   *
+   * Observed over `ac538440` on the uncommitted tree of the shell commit: `an ordinal on row 1's part resolves row 1's id, and two parts of row 0 resolve identically (SH-4)`
+   * FAILED by name with the mutation applied, then reverted.
+   */
+  it("an ordinal on row 1's part resolves row 1's id, and two parts of row 0 resolve identically (SH-4)", () => {
+    const f1 = decodeBatch("sh_f1", 5, loadBatchFixture("lv95-multipolygon-batch"), "geometry", ENCODING_MULTIPOLYGON);
+    expect(f1.partCount).toBe(6);
+
+    const onRow1 = resolvePick(f1, 3);
+    expect(onRow1).not.toBeNull();
+    expect(onRow1!.id).toBe(1n);
+    expect(onRow1!.anchor).toEqual([2_600_000, 1_200_100]); // row 1's first part, exterior, first vertex
+    expect(onRow1!.streamHandle).toBe("sh_f1");
+    expect(onRow1!.batchSeq).toBe(5);
+
+    const parts0 = [resolvePick(f1, 0), resolvePick(f1, 1), resolvePick(f1, 2)];
+    for (const r of parts0) {
+      expect(r).toEqual(parts0[0]);
+    }
+    expect(parts0[0]!.id).toBe(0n);
+    // The anchor is the row's FIRST part's exterior first vertex, even when the pick landed on its
+    // third part.
+    expect(parts0[0]!.anchor).toEqual([2_600_000, 1_200_000]);
+
+    expect(resolvePick(f1, 4)!.id).toBe(2n);
+    expect(resolvePick(f1, 5)).toEqual(resolvePick(f1, 4));
+    expect(resolvePick(f1, 6)).toBeNull(); // past partCount, though ids.length is 3
+  });
+
+  /**
+   * SH-P3 (`engine/GEOMETRY-POINTS-PREREGISTRATION.md` section 4, real shape: the engine's own
+   * `lv95-point-batch`, decoded by the product `decodeBatch`). For a point open a pick ordinal is the
+   * row: ordinal k resolves row k's id, anchored at the point itself, and an ordinal past `partCount`
+   * resolves to nothing. `resolvePick` is unchanged.
+   *
+   * RECORDED MUTATION: decode a point row into no part in `decodeBatch` (push no part for the row).
+   * This test then fails by name.
+   *
+   * Observed over `edbc0f3c` on the uncommitted tree of the shell commit: `an ordinal on a point resolves that row's id, anchored at the point (SH-P3)`
+   * FAILED by name with the mutation applied, at `expect(picked).not.toBeNull()` (`expected null not to be null`), then reverted.
+   */
+  it("an ordinal on a point resolves that row's id, anchored at the point (SH-P3)", () => {
+    const p1 = decodeBatch("sh_p1", 4, loadBatchFixture("lv95-point-batch"), "geometry", ENCODING_POINT);
+    pointP1Positions().forEach((position, k) => {
+      const picked = resolvePick(p1, k);
+      expect(picked).not.toBeNull();
+      expect(picked!.id).toBe(BigInt(k));
+      expect(picked!.anchor).toEqual(position);
+      expect(picked!.streamHandle).toBe("sh_p1");
+      expect(picked!.batchSeq).toBe(4);
+    });
+    expect(resolvePick(p1, 6)).toBeNull();
+  });
+
+  /**
+   * SH-L3 (`engine/GEOMETRY-LINES-PREREGISTRATION.md` section 4, real shape: the engine's own
+   * `lv95-multilinestring-batch`, BF-ML, decoded by the product `decodeBatch`). The ordinal is a line
+   * PART ordinal: ML-1 has three rows and six parts (2, 1 and 3 per row), so ordinal 2 is row 1's only
+   * part (its id is 1n, and 2 is not a row index), and the parts of one row resolve to one identical
+   * result, anchored at the row's first part's first vertex. The bound is `partCount` (6), not the row
+   * count (3). `resolvePick` is unchanged.
+   *
+   * RECORDED MUTATION: index `ids` by the ordinal in `resolvePick` (take the row as the ordinal itself).
+   * This test then fails by name.
+   *
+   * Observed over `26d4ccc0` on the uncommitted tree of the shell commit: `an ordinal on a line part resolves that part's row, and two parts of one feature resolve identically (SH-L3)`
+   * FAILED by name with the mutation applied, at `expect(onRow1!.id).toBe(1n)` (`expected 2n to be 1n`), then reverted.
+   */
+  it("an ordinal on a line part resolves that part's row, and two parts of one feature resolve identically (SH-L3)", () => {
+    const ml1 = decodeBatch(
+      "sh_ml1",
+      6,
+      loadBatchFixture("lv95-multilinestring-batch"),
+      "geometry",
+      ENCODING_MULTILINESTRING
+    );
+    expect(ml1.partCount).toBe(6);
+    const rows = multilinestringMl1Positions();
+
+    const onRow1 = resolvePick(ml1, 2);
+    expect(onRow1).not.toBeNull();
+    expect(onRow1!.id).toBe(1n);
+    expect(onRow1!.anchor).toEqual(rows[1][0][0]); // row 1's first part's first vertex
+    expect(onRow1!.streamHandle).toBe("sh_ml1");
+    expect(onRow1!.batchSeq).toBe(6);
+
+    const parts0 = [resolvePick(ml1, 0), resolvePick(ml1, 1)];
+    expect(parts0[1]).toEqual(parts0[0]);
+    expect(parts0[0]!.id).toBe(0n);
+    // The anchor is the row's FIRST part's first vertex, even when the pick landed on its second part.
+    expect(parts0[0]!.anchor).toEqual(rows[0][0][0]);
+
+    const parts2 = [resolvePick(ml1, 3), resolvePick(ml1, 4), resolvePick(ml1, 5)];
+    expect(parts2[1]).toEqual(parts2[0]);
+    expect(parts2[2]).toEqual(parts2[0]);
+    expect(parts2[0]!.id).toBe(2n);
+    expect(parts2[0]!.anchor).toEqual(rows[2][0][0]);
+    expect(resolvePick(ml1, 6)).toBeNull(); // past partCount, though ids.length is 3
   });
 });
 
