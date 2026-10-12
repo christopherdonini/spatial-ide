@@ -33,7 +33,7 @@ export type ClickInput =
   | { readonly kind: "below-pick-resolution" }
   | { readonly kind: "nothing" };
 
-export interface ClickEffect {
+interface ClickEffect {
   readonly lastClick: LastClick;
   readonly transitions: readonly ViewTransition[];
   /** The class-C row to record, when the click applied something. */

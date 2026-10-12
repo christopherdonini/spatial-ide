@@ -17,7 +17,7 @@ import type { FeatureTabProps, InspectedStatus } from "./FeatureTab";
  * section 2.4). `App` writes it from the canvas's three reports (`onViewportChanged`, `onViewportWithinLastQuery` and
  * `onViewShown`) and sets it back to `null` when the dataset is replaced; `FeaturePanel` subscribes.
  */
-export interface ViewBoxStore {
+interface ViewBoxStore {
   get(): AuthoritativeBbox | null;
   set(box: AuthoritativeBbox | null): void;
   subscribe(listener: () => void): () => void;
@@ -70,7 +70,7 @@ const sameSummary = (a: Summary, b: Summary): boolean =>
   a.counts.outsideView === b.counts.outsideView &&
   a.counts.inViewNotDrawn === b.counts.inViewNotDrawn;
 
-export interface FeaturePanelProps
+interface FeaturePanelProps
   extends Omit<FeatureTabProps, "counts" | "inspectedStatus"> {
   box: ViewBoxStore;
   members: SelectionMembers;
