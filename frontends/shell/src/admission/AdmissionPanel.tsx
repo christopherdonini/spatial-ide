@@ -325,7 +325,7 @@ export default function AdmissionPanel({ onAdmitted, confirmOpen }: Props) {
           }
         : undefined;
       const outcome = await admitPath(path, options);
-      // A dropped open (Keep exporting) has no kind of its own in `OpenPathOutcome`, which is outside this piece's files; it reads as a refusal with its own code.
+      // A dropped open (Keep exporting, or replaced by a later open while the ask stood) has no kind of its own in `OpenPathOutcome`, which is outside this piece's files; it reads as a refusal with its own code.
       if (outcome === null) return { kind: "refused", code: "open.dropped", message: "The open was dropped while an export ran: Keep exporting was chosen, or a later open replaced this one." };
       return outcome.kind === "refused"
         ? { kind: "refused", code: outcome.refusal.code, message: outcome.refusal.message }
