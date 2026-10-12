@@ -80,6 +80,8 @@ const HIGHLIGHT_MIN_OPAQUE_PX = 8; // an outline is far more than this; the data
 const SCRATCH_TOUCH_OFFSET_MS = 120_000; // the same offset source-changed.mjs uses for its touch
 const KINDS_ROWS_IN_F1 = 3; // multipolygon-f1.parquet holds three MultiPolygon rows (regression.mjs, MP')
 const REFUSAL_ZOOM_OUT_NOTCHES_MAX = 8; // K6's re-aim zooms out at least this far to cross the pick threshold
+const HOVER_ATTEMPTS_MAX = 40; // hovers one search makes, whatever they give
+const HOVER_MISSES_MAX = 4; // candidates in a row that answer nothing before a search gives up at its camera
 
 /** The export UI as an operator sees it: the panel's text, the executing line and its Cancel, and every line of the page that names an export. */
 const readExportUi = (page) =>
@@ -185,48 +187,69 @@ async function zoomToLayer(page, consoleHandle, label) {
   await waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 1500, timeoutMs: 45_000 });
 }
 
-/** Interior-verified drawing-buffer points of the current frame: the densest-patch candidate, then a lattice. */
-async function interiorCandidates(page) {
-  const bisection = await findInteriorCandidate(page);
-  const { bufferWidth: bw, bufferHeight: bh } = bisection;
-  const lattice = [];
+/**
+ * Candidate drawing-buffer points of the current frame, each verified only when the caller asks for the next: the densest-patch candidate, a coarse lattice and a finer one, each
+ * yielded only when its 5 x 5 neighbourhood is non-background (`verifyInteriorCandidate`); then, for features too thin to have an interior (a line), the first
+ * non-background pixel of each cell of an 8 x 6 grid (an edge pixel: the last resort). Yields `{ point, bw, bh }`.
+ */
+async function* candidatePoints(page) {
+  const { candidate, bufferWidth: bw, bufferHeight: bh } = await findInteriorCandidate(page);
+  const lattice = [candidate];
   for (const fy of [0.25, 0.5, 0.75]) for (const fx of [0.2, 0.35, 0.5, 0.65, 0.8]) lattice.push({ x: Math.round(fx * bw), y: Math.round(fy * bh) });
-  const points = [];
-  for (const p of [bisection.candidate, ...lattice]) if ((await verifyInteriorCandidate(page, p, bw, bh)).ok) points.push(p);
-  return { points, bw, bh };
+  for (let gy = 0; gy < 7; gy += 1) for (let gx = 0; gx < 7; gx += 1) lattice.push({ x: Math.round(((gx + 0.5) / 7) * bw), y: Math.round(((gy + 0.5) / 7) * bh) });
+  for (const point of lattice) if ((await verifyInteriorCandidate(page, point, bw, bh)).ok) yield { point, bw, bh };
+  const frame = await page.evaluate((r) => window.__SPATIAL_E2E__.capturePixels(r), subdivideRegion({ x: 0, y: 0, w: 1, h: 1 }, 8, 6));
+  for (const region of frame.regions) if (region.samplePoint !== null) yield { point: region.samplePoint, bw, bh };
 }
 
 /**
- * The scene the click steps run in: the least-zoomed camera (zoom-in notches from the current one, as A9' does) at which a hover answers with a confirmed id,
- * and up to `want` features at it with distinct ids, each as `{css, id}` (a CSS page point and the oracle id `hoverIdAfterBarrier` took there). The pointer is
- * never moved by this function afterwards. Throws when fewer than `min` are found.
+ * Hovers `candidatePoints` for confirmed ids, through `hoverIdAfterBarrier` only: until `want` hits (with distinct ids when `distinct`), HOVER_ATTEMPTS_MAX hovers, or
+ * HOVER_MISSES_MAX candidates in a row that answered nothing. The buffer's row order is learned from the first answer (both are tried until then). A hover that ends in the
+ * below-resolution refusal ends the search at once: the camera refuses, and that point (a candidate the hover found) is `refusedAt`.
+ * Returns `{ hits: [{ css, id }], rect, tried, refusedAt }`; the pointer is left where the last hover put it.
+ */
+async function hoverHits(page, label, want, distinct) {
+  const rect = await canvasRect(page);
+  const hits = [];
+  let flipY = null;
+  let tried = 0;
+  let misses = 0;
+  search: for await (const { point, bw, bh } of candidatePoints(page)) {
+    if (misses >= HOVER_MISSES_MAX) break;
+    let answered = false;
+    for (const fy of flipY === null ? [true, false] : [flipY]) {
+      if (tried >= HOVER_ATTEMPTS_MAX) break search;
+      tried += 1;
+      const css = bufferPointToCss(point, rect, bw, bh, fy);
+      const result = await hoverIdAfterBarrier(page, css, label);
+      if (result.last.state === "refusal") return { hits, rect, tried, refusedAt: css };
+      if (!result.ok) continue;
+      flipY = fy;
+      answered = true;
+      if (!distinct || !hits.some((h) => h.id === result.last.id)) hits.push({ css, id: result.last.id });
+      break;
+    }
+    misses = answered ? 0 : misses + 1;
+    if (hits.length >= want) break;
+  }
+  return { hits, rect, tried, refusedAt: null };
+}
+
+/**
+ * The scene the click steps run in: the least-zoomed camera (zoom-in notches from the current one, as A9' does) at which hovers answer with confirmed ids for at least `min`
+ * features with distinct ids, and up to `want` of them as `{css, id}` (a CSS page point and the oracle id `hoverIdAfterBarrier` took there). A camera that gives fewer is
+ * zoomed in from, not accepted: features small at one notch are large at the next. The pointer is never moved by this function afterwards. Throws, naming what each notch gave.
  */
 async function buildScene(page, consoleHandle, label, { want, min }) {
   const c = center(await canvasRect(page));
+  const gave = [];
   for (let notch = 0; notch <= MAX_ZOOM_NOTCHES; notch += 1) {
     if (notch > 0) await zoomInOneNotch(page, consoleHandle, c);
-    const rect = await canvasRect(page);
-    const { points, bw, bh } = await interiorCandidates(page);
-    if (points.length === 0) continue;
-    const hits = [];
-    let flipY = null;
-    for (const [i, p] of points.slice(0, 14).entries()) {
-      if (i > 0 && flipY === null) break; // the first candidate did not answer at this camera: zoom in one more notch
-      for (const fy of flipY === null ? [true, false] : [flipY]) {
-        const css = bufferPointToCss(p, rect, bw, bh, fy);
-        const result = await hoverIdAfterBarrier(page, css, `${label} (notch ${notch})`);
-        if (!result.ok) continue;
-        flipY = fy;
-        if (!hits.some((h) => h.id === result.last.id)) hits.push({ css, id: result.last.id });
-        break;
-      }
-      if (hits.length >= want) break;
-    }
-    if (hits.length === 0) continue;
-    expect(hits.length >= min, `${label}: only ${hits.length} feature(s) with distinct ids at the first camera that answers (notch ${notch}); ${min} needed`);
-    return { hits, rect, flipY, notch };
+    const { hits, rect, tried, refusedAt } = await hoverHits(page, `${label} (notch ${notch})`, want, true);
+    if (hits.length >= min) return { hits, rect, notch };
+    gave.push(`notch ${notch}: ${hits.length} distinct id(s) in ${tried} hover(s)${refusedAt === null ? "" : ", refused as below the pick resolution"}`);
   }
-  throw new Error(`${label}: no camera within ${MAX_ZOOM_NOTCHES} zoom-in notches answered a hover with a confirmed id`);
+  throw new Error(`${label}: no camera within ${MAX_ZOOM_NOTCHES} zoom-in notches gave ${min} features with distinct confirmed ids (${gave.join("; ")})`);
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -355,37 +378,27 @@ async function stepSelFilter(page, consoleHandle, scene) {
   return `Selected ${n}; hidden ${hiddenOf(hidden)} under the filter and 0 after Clear`;
 }
 
-/** E-REFUSED: below the pick resolution, a Select click changes nothing and the named state is shown. */
+/** E-REFUSED: below the pick resolution, a Select click changes nothing and the named state is shown. The pixel is one at which the hover barrier confirmed the refusal. */
 async function stepRefused(page, consoleHandle) {
   await zoomToLayer(page, consoleHandle, "E-REFUSED");
   await useTool(page, "Select");
   const before = (await readTab(page)).selected;
-  const rect = await canvasRect(page);
-  const c = center(rect);
+  const c = center(await canvasRect(page));
   let refused = null;
   for (let notch = 0; notch <= REFUSAL_ZOOM_OUT_NOTCHES_MAX && refused === null; notch += 1) {
     if (notch > 0) {
       await doWheel(page, c, -ZOOM_NOTCH_DELTA_Y); // one zoom-out notch
       await waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 1500, timeoutMs: 15_000 });
     }
-    const frame = await page.evaluate(() => window.__SPATIAL_E2E__.capturePixels([]));
-    if (frame.samplePoint === null) continue;
-    for (const flipY of [true, false]) {
-      const css = bufferPointToCss(frame.samplePoint, rect, frame.width, frame.height, flipY);
-      await page.mouse.move(css.x, css.y);
-      const shown = await pollUntil(() => page.evaluate(() => document.querySelector(".hover-readout-below-resolution") !== null), (v) => v === true, 3000);
-      if (shown.ok) {
-        refused = css;
-        break;
-      }
-    }
+    refused = (await hoverHits(page, `E-REFUSED (notch ${notch})`, 1, true)).refusedAt;
   }
-  expect(refused !== null, "E-REFUSED: no pointer within the zoom-out notches showed the below-resolution hover readout, so no refused click could be made");
+  expect(refused !== null, "E-REFUSED: no hover within the zoom-out notches ended in the below-resolution refusal after the hover barrier, so no refused click could be made");
   await clickAt(page, refused);
   const tab = await readTab(page);
-  expect(tab.lastClickClass?.includes("feature-last-click-below-resolution") === true, `E-REFUSED: the last-click line is "${tab.lastClick}" (${tab.lastClickClass}), not the named below-resolution state`);
-  expect(tab.selected === before, `E-REFUSED: a click below the pick resolution changed Selected from ${before} to ${tab.selected}`);
-  return `refused click: the named state shown, Selected ${before} -> ${tab.selected}`;
+  const where = `at CSS (${refused.x}, ${refused.y}), where the hover barrier had confirmed the below-resolution readout (so the hover found a candidate)`;
+  expect(tab.lastClickClass?.includes("feature-last-click-below-resolution") === true, `E-REFUSED: the last-click line is "${tab.lastClick}" (${tab.lastClickClass}), not the named below-resolution state, ${where}`);
+  expect(tab.selected === before, `E-REFUSED: a click below the pick resolution changed Selected from ${before} to ${tab.selected}, ${where}`);
+  return `refused click at CSS (${refused.x}, ${refused.y}): the named state shown, Selected ${before} -> ${tab.selected}`;
 }
 
 /** E-GEN: a reopen, then a source change through the real dataset_session_ended route: each ends the selection with a notice naming the count. */
@@ -416,38 +429,16 @@ async function stepGen(page, consoleHandle) {
   return `reopen: ${standing.selected} dropped, a dataset was opened; source change: 1 dropped, the source file changed`;
 }
 
-/** The hits E-KINDS clicks: the first non-background pixel of each cell of an 8 x 6 grid over the frame, hovered for a confirmed id. */
-async function sampleHits(page, label, max) {
-  const rect = await canvasRect(page);
-  const frame = await page.evaluate((r) => window.__SPATIAL_E2E__.capturePixels(r), subdivideRegion({ x: 0, y: 0, w: 1, h: 1 }, 8, 6));
-  const hits = [];
-  let flipY = null;
-  let tried = 0;
-  for (const region of frame.regions) {
-    if (region.samplePoint === null || hits.length >= max) continue;
-    if (flipY === null && tried >= 5) break;
-    tried += 1;
-    for (const fy of flipY === null ? [true, false] : [flipY]) {
-      const css = bufferPointToCss(region.samplePoint, rect, frame.width, frame.height, fy);
-      const result = await hoverIdAfterBarrier(page, css, label);
-      if (!result.ok) continue;
-      flipY = fy;
-      hits.push({ css, id: result.last.id });
-      break;
-    }
-  }
-  return hits;
-}
-
 /** E-KINDS: point, line and multipolygon: one id per click, and a second part of the same feature gives the same id. */
 async function stepKinds(page, consoleHandle) {
   const notes = [];
   for (const [kind, path] of [["multipolygon", FIXTURE_MULTIPOLYGON], ["point", FIXTURE_POINT], ["line", FIXTURE_LINE]]) {
     const label = `E-KINDS (${kind})`;
     await openFixture(page, consoleHandle, path, label);
-    const hits = await sampleHits(page, label, 16);
+    const found = await hoverHits(page, label, 16, false);
+    const hits = found.hits;
     const ids = [...new Set(hits.map((h) => h.id))];
-    expect(hits.length >= 2, `${label}: only ${hits.length} hovered feature pixel(s) found`);
+    expect(hits.length >= 2, `${label}: only ${hits.length} hovered feature pixel(s) found in ${found.tried} hover(s)${found.refusedAt === null ? "" : "; the hover was refused as below the pick resolution"}`);
     // Navigate: the click's id is the hover's.
     await useTool(page, "Navigate");
     await showFeatureTab(page);
@@ -589,7 +580,7 @@ async function runSelectionSteps(page, consoleHandle) {
     const filterScene = await buildScene(page, consoleHandle, "E-SEL-FILTER", { want: 6, min: 4 });
     return stepSelFilter(page, consoleHandle, filterScene);
   });
-  await runStep("E-REFUSED", 300_000, () => stepRefused(page, consoleHandle));
+  await runStep("E-REFUSED", 600_000, () => stepRefused(page, consoleHandle));
   await runStep("E-GEN", 900_000, () => stepGen(page, consoleHandle));
   await runStep("E-KINDS", 1_200_000, () => stepKinds(page, consoleHandle));
   await runStep("E-EXPORT", 900_000, () => stepExport(page, consoleHandle));
