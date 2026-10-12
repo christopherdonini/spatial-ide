@@ -160,6 +160,7 @@ const featureAction = (page, label) =>
     return true;
   }, label);
 const showFeatureTab = (page) => page.evaluate(() => document.getElementById("inspector-tab-feature")?.click());
+const showLayerTab = (page) => page.evaluate(() => document.getElementById("inspector-tab-layer")?.click());
 /** Frame-wide count of alpha-255 pixels: the highlight outlines, never the data fill (alpha 180). */
 const opaquePixels = async (page) => (await page.evaluate(() => window.__SPATIAL_E2E__.capturePixels([]))).opaqueCount;
 const center = (rect) => ({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
@@ -450,7 +451,12 @@ async function stepKinds(page, consoleHandle) {
     await showFeatureTab(page);
     await clickAt(page, hits[0].css);
     const inspected = (await pollUntil(() => readTab(page), (t) => t.id !== null, 5000)).last;
-    expect(inspected.id === hits[0].id, `${label}: a Navigate click inspected id ${inspected.id}; the oracle id there is ${hits[0].id}`);
+    if (inspected.id !== hits[0].id) { // log-only: the facts that decide a missed point click, and two retries; the step still fails
+      const p = hits[0].css;
+      const facts = { oracle: hits[0].id, point: p, tab: inspected, ...(await page.evaluate(() => ({ pressed: [...document.querySelectorAll(".tool-switch-button")].filter((b) => b.getAttribute("aria-pressed") === "true").map((b) => b.textContent), hover: document.querySelector(".hover-readout")?.textContent ?? null, dpr: window.devicePixelRatio, rect: document.querySelector(".working-canvas")?.getBoundingClientRect().toJSON() }))), retries: {} };
+      for (const [name, q] of [["rounded", { x: Math.round(p.x), y: Math.round(p.y) }], ["bufferCentre", { x: (Math.floor(p.x * facts.dpr) + 0.5) / facts.dpr, y: (Math.floor(p.y * facts.dpr) + 0.5) / facts.dpr }]]) { await clickAt(page, q); facts.retries[name] = { at: q, id: (await readTab(page)).id }; }
+      expect(false, `${label}: a Navigate click inspected id ${inspected.id}; the oracle id there is ${hits[0].id}; ${JSON.stringify(facts)}`);
+    }
     // Select, Add only: one id per click, and a repeated click on the same feature adds nothing.
     await useTool(page, "Select");
     await useMode(page, "Add only");
@@ -635,6 +641,7 @@ async function runSelectionSteps(page, consoleHandle) {
       process.exitCode = 1;
     } finally {
       clearTimeout(timer);
+      await showLayerTab(page).catch(() => {});
     }
   }
   for (const [label, path] of [["filter-zoned", FIXTURE_FILTER], ["100k", FIXTURE_100K], ["multipolygon F-1", FIXTURE_MULTIPOLYGON], ["point P-1", FIXTURE_POINT], ["line L-1", FIXTURE_LINE]]) {
