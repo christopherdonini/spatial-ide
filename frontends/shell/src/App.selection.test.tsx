@@ -699,6 +699,8 @@ describe("App: tools, the click, the selection and the inspection (milestone 2, 
   });
 
   // RECORDED MUTATION for "RB7": in `PublishPanel.tsx`'s `executeInStagedScope` skip the check (`const check: ScopeCheck = { ok: true }`). Expected failure: the host call after the filter changed.
+  // OBSERVED AT 3dc687a11445a931a4fee46ca4ef8cb0e8ee8888: FAILED -- "RB7: an export whose filter changed since its prepare is refused and never sent; with its scope unchanged it is sent": AssertionError: the host was not called:
+  // expected [ [ 'at_1', 'bundle' ] ] to deeply equal [] (the same mutation also failed RB7-hook, below). Reverted after observing.
   it("RB7: an export whose filter changed since its prepare is refused and never sent; with its scope unchanged it is sent", async () => {
     await open("C:/data/a.parquet");
     click(q(".publish-disclosure"));
@@ -727,6 +729,8 @@ describe("App: tools, the click, the selection and the inspection (milestone 2, 
   });
 
   // RECORDED MUTATION for "RB7-hook" (a row beyond the table; section 2.5: the publishExecute dev hook goes through the same wrapper): in `runExecute` (PublishPanel.tsx) call `publishExecute` directly. Expected failure: the host call.
+  // OBSERVED AT 3dc687a11445a931a4fee46ca4ef8cb0e8ee8888: FAILED -- "RB7-hook: the publishExecute dev hook is refused by the same staged-scope path": AssertionError: the host was not called: expected [ [ 'at_1', 'bundle' ] ] to deeply equal [].
+  // RB7 alone passed with this mutation. Reverted after observing.
   it("RB7-hook: the publishExecute dev hook is refused by the same staged-scope path", async () => {
     await open("C:/data/a.parquet");
     click(q(".publish-disclosure"));
@@ -742,6 +746,8 @@ describe("App: tools, the click, the selection and the inspection (milestone 2, 
   });
 
   // RECORDED MUTATION for "RB8": in App.tsx pass the selection to the panel (`filterActive={activeFilter !== null || selection.size > 0}`). Expected failure: the second prepare's arguments.
+  // OBSERVED AT 3dc687a11445a931a4fee46ca4ef8cb0e8ee8888: FAILED -- "RB8: an export is prepared with the same arguments with and without a selection, and says the selection is not used": AssertionError: the prepare with a selection equals the
+  // prepare without: the fourth argument was true where false was expected. Reverted after observing.
   it("RB8: an export is prepared with the same arguments with and without a selection, and says the selection is not used", async () => {
     const sentence = "[P6 placeholder] The selection is not used. The export covers the row scope chosen above.";
     await open("C:/data/a.parquet");
