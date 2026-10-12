@@ -207,6 +207,8 @@ describe("App: tools, the click, the selection and the inspection (milestone 2, 
 
   const q = <T extends Element = HTMLElement>(selector: string): T | null => container.querySelector<T>(selector);
   const text = (selector: string): string | null => q(selector)?.textContent ?? null;
+  /** The text of `selector`, or a sentence saying there is no such element, so that a missing element fails with its name. */
+  const shown = (selector: string): string => text(selector) ?? `(no element matches ${selector})`;
   const props = () => mocks.canvas.props!;
   const inAct = (fn: () => void) => act(async () => fn());
   const click = (element: Element | null) => act(() => (element as HTMLElement).click());
@@ -307,7 +309,7 @@ describe("App: tools, the click, the selection and the inspection (milestone 2, 
     await inAct(() => props().onViewShown!(box(0, 0, 100, 100)));
     await inAct(() => props().onSelectionDrawnChange!(new Set([1n, 2n])));
     expect(selectedCount()).toBe("Selected, ignoring filter: 2");
-    expect(text(".feature-in-view-not-drawn")).toContain(": 0");
+    expect(shown(".feature-in-view-not-drawn")).toContain(": 0");
 
     setValue(q<HTMLInputElement>(".filter-predicate")!, "zone = 'residential'");
     await inAct(() => q<HTMLButtonElement>(".filter-apply")!.click());
@@ -319,8 +321,8 @@ describe("App: tools, the click, the selection and the inspection (milestone 2, 
 
     expect(selectedCount(), "the count is unchanged").toBe("Selected, ignoring filter: 2");
     expect(selected()).toEqual([1n, 2n]);
-    expect(text(".feature-in-view-not-drawn"), "the hidden count is shown").toContain(": 1");
-    expect(text(".feature-outside-view")).toContain(": 0");
+    expect(shown(".feature-in-view-not-drawn"), "the hidden count is shown").toContain(": 1");
+    expect(shown(".feature-outside-view")).toContain(": 0");
   });
 
   // RECORDED MUTATION for "RB4": PLACEHOLDER
@@ -335,8 +337,8 @@ describe("App: tools, the click, the selection and the inspection (milestone 2, 
     await open("C:/data/b.parquet");
     expect(selectedCount(), "the selection is empty").toBe("Selected, ignoring filter: 0");
     expect(selected()).toEqual([]);
-    expect(text(".feature-notice")).toContain("2 selected features were dropped");
-    expect(text(".feature-notice")).toContain("a dataset was opened");
+    expect(shown(".feature-notice")).toContain("2 selected features were dropped");
+    expect(shown(".feature-notice")).toContain("a dataset was opened");
     expect(text(".selection-ended"), "the status bar item says the same").toBe(text(".feature-notice"));
 
     await clickFeature(5n);
@@ -348,13 +350,13 @@ describe("App: tools, the click, the selection and the inspection (milestone 2, 
     expect(mocks.sessionEnded).not.toBeNull();
     await inAct(() => mocks.sessionEnded!({ session: sessionOf(2), reason: "observed-change" }));
     expect(selectedCount(), "the selection is empty").toBe("Selected, ignoring filter: 0");
-    expect(text(".feature-notice")).toContain("1 selected feature was dropped");
-    expect(text(".feature-notice")).toContain("the source file changed");
+    expect(shown(".feature-notice")).toContain("1 selected feature was dropped");
+    expect(shown(".feature-notice")).toContain("the source file changed");
     expect(text(".selection-ended")).toBe(text(".feature-notice"));
 
     // Once the session has ended the click is the named session-ended state and changes nothing (the latch the hover has).
     await clickFeature(6n);
-    expect(text(".feature-last-click-session-ended")).toContain("The source file changed while it was open");
+    expect(shown(".feature-last-click-session-ended")).toContain("The source file changed while it was open");
     expect(selected()).toEqual([]);
   });
 
@@ -561,14 +563,14 @@ describe("App: tools, the click, the selection and the inspection (milestone 2, 
     expect(q(".feature-in-view-not-drawn")).toBeNull();
 
     await inAct(() => props().onViewportChanged(box(0, 0, 100, 100)));
-    expect(text(".feature-outside-view")).toContain(": 0");
-    expect(text(".feature-in-view-not-drawn"), "in the view, and nothing is drawn yet").toContain(": 1");
+    expect(shown(".feature-outside-view")).toContain(": 0");
+    expect(shown(".feature-in-view-not-drawn"), "in the view, and nothing is drawn yet").toContain(": 1");
     await inAct(() => props().onSelectionDrawnChange!(new Set([1n])));
-    expect(text(".feature-in-view-not-drawn")).toContain(": 0");
+    expect(shown(".feature-in-view-not-drawn")).toContain(": 0");
 
     await inAct(() => props().onViewportWithinLastQuery!(box(50, 50, 100, 100)));
-    expect(text(".feature-outside-view"), "the within-report shrank the box: outside the view").toContain(": 1");
-    expect(text(".feature-in-view-not-drawn")).toContain(": 0");
+    expect(shown(".feature-outside-view"), "the within-report shrank the box: outside the view").toContain(": 1");
+    expect(shown(".feature-in-view-not-drawn")).toContain(": 0");
   });
 
   // RECORDED MUTATION for "RB18": PLACEHOLDER
@@ -583,7 +585,7 @@ describe("App: tools, the click, the selection and the inspection (milestone 2, 
 
     await inAct(() => props().onViewShown!(box(0, 0, 100, 100)));
     await twoWindows();
-    expect(text(".feature-in-view-not-drawn"), "the box was written").toContain(": 1");
+    expect(shown(".feature-in-view-not-drawn"), "the box was written").toContain(": 1");
     expect(mocks.viewportRequests - before, "no query").toBe(0);
     expect(current().disabled, "no last-asked box and no settled view").toBe(true);
   });
@@ -604,12 +606,12 @@ describe("App: tools, the click, the selection and the inspection (milestone 2, 
     await clickFeature(7n, box(0, 0, 10, 10));
     await inAct(() => props().onViewShown!(box(0, 0, 100, 100)));
     await inAct(() => props().onSelectionDrawnChange!(new Set([7n])));
-    expect(text(".feature-in-view-not-drawn")).toContain(": 0");
+    expect(shown(".feature-in-view-not-drawn")).toContain(": 0");
 
     await open("C:/data/b.parquet");
     await clickFeature(7n, box(0, 0, 10, 10));
     expect(q(".feature-outside-view"), "the new canvas has reported no box yet").toBeNull();
     await inAct(() => props().onViewShown!(box(0, 0, 100, 100)));
-    expect(text(".feature-in-view-not-drawn"), "the old canvas's drawn set is not the new one's").toContain(": 1");
+    expect(shown(".feature-in-view-not-drawn"), "the old canvas's drawn set is not the new one's").toContain(": 1");
   });
 });
