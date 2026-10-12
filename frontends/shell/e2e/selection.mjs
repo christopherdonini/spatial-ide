@@ -4,8 +4,8 @@
 
 // E2E (SHELL-MIGRATION-MILESTONE-2-PREREGISTRATION.md section 4).
 //
-// Phase B stage 5: the click, the selection and the inspection on real WebView2, asserted: E-CLICK, E-CLICK-FAST, E-SELECT, E-NODRAG,
-// E-ZOOMSEL, E-SEL-PAN, E-SEL-FILTER, E-REFUSED, E-GEN and E-KINDS. Fixtures: `filter-zoned.parquet` (and a scratch copy of it, touched by
+// Phase B stages 5 and 6: the click, the selection, the inspection and the export's scope on real WebView2, asserted: E-CLICK, E-CLICK-FAST, E-SELECT,
+// E-NODRAG, E-ZOOMSEL, E-SEL-PAN, E-SEL-FILTER, E-REFUSED, E-GEN, E-KINDS, E-EXPORT and E-SCOPE. Fixtures: `filter-zoned.parquet` (and a scratch copy of it, touched by
 // mtime only for E-GEN's source change, as source-watch-idle.mjs does), `100k-happy-path.parquet` for the reopen, and `multipolygon-f1.parquet`,
 // `point-p1.parquet` and `line-l1.parquet` for E-KINDS. Every oracle id is taken through `hoverIdAfterBarrier` from lib.mjs (Amendment 1 A2): this file
 // has no barrier of its own and never takes a first poll (section 8 item 32). The Feature tab, the tool switch and the status bar item are read from the
@@ -15,7 +15,7 @@
 // (Amendment 1, A7). It starts a whole-file export of the 100k fixture through the real dialog (the prepare through the dev destination seam, as
 // publish.mjs does; the phrase typed and Submit clicked as an operator would), reopens another fixture at once, and prints the panel, the host outcome
 // and any export text before, after the open and after the export settles. If the export had already settled when the open returned, the record says so
-// and the observation is inconclusive. The later phase B steps (E-EXPORT, E-SCOPE, E-ASK) follow in their own stages.
+// and the observation is inconclusive. E-ASK follows in its own stage.
 //
 // What none of this proves: a timing, a rate or a performance figure (there are none here; the millisecond numbers are bounds on waiting). A tap from a
 // real WebView2 pointer is first exercised here: no earlier suite presses and releases without moving.
@@ -40,7 +40,11 @@
 //   E-GEN          src/workspace/workspaceState.ts: in `admit` keep the selection on a rebind (`const bound = view`), and in `endGeneration` leave the views
 //                  as they are. Expected: E-GEN fails on the reopen's notice, and on the source change's notice.
 //   E-KINDS        src/canvas/pick.ts, `resolvePick`: use the part ordinal as the row. Expected: E-KINDS fails on the multipolygon (more than three ids).
-import { copyFileSync, existsSync, mkdirSync, readFileSync, utimesSync } from "node:fs";
+//   E-EXPORT       src/App.tsx, the PublishPanel element: `filterActive={activeFilter !== null || selection.size > 0}` (the selection reaches the prepare). Expected: E-EXPORT fails
+//                  on the run with a selection (its prompt carries a filter scope sentence, none being expected).
+//   E-SCOPE        src/publish/PublishPanel.tsx, `executeInStagedScope`: `const check: ScopeCheck = { ok: true };`. Expected: E-SCOPE fails because the execute is sent
+//                  and returns a success, where the shell's refusal is expected. Clean it up: the bundle that mutation writes is under target/e2e-selection-out.
+import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, utimesSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
@@ -482,6 +486,70 @@ async function stepKinds(page, consoleHandle) {
   return notes.join("; ");
 }
 
+/** A fresh bundle destination under target/ (ignored by git), as publish.mjs makes one; its parent holds nothing else. */
+function freshDestination(tag) {
+  const parent = join(REPO_ROOT, "target", "e2e-selection-out", `${tag}-${Date.now()}`);
+  mkdirSync(parent, { recursive: true });
+  return join(parent, "bundle");
+}
+
+/** Opens the Export section, and prepares a whole-file export through the dev destination seam; the host's outcome. */
+async function prepareExport(page, destination) {
+  const hook = await pollUntil(() => page.evaluate(() => typeof window.__SPATIAL_E2E__?.publishPrepareWithDestination === "function"), (ok) => ok === true, 20_000);
+  expect(hook.ok, "the publishPrepareWithDestination hook never appeared");
+  await page.evaluate(() => { const b = document.querySelector(".publish-disclosure"); if (b?.getAttribute("aria-expanded") !== "true") b.click(); });
+  return page.evaluate((d) => window.__SPATIAL_E2E__.publishPrepareWithDestination(d, "whole"), destination);
+}
+
+/** Executes the prepared attempt with the phrase an operator types (the destination's final path component), through the dev hook that shares the dialog's path. */
+const executeExport = (page, prompt) => page.evaluate((p) => window.__SPATIAL_E2E__.publishExecute(p), basename(prompt.destination_display));
+
+/** E-EXPORT: with a selection standing and without one, the prompt's row scope and the bundle's row count are equal, and the section says the selection is not used. */
+async function stepExport(page, consoleHandle) {
+  await openFixture(page, consoleHandle, FIXTURE_FILTER, "E-EXPORT");
+  const scene = await buildScene(page, consoleHandle, "E-EXPORT", { want: 1, min: 1 });
+  await useTool(page, "Select");
+  await useMode(page, "Add only");
+  await clickAt(page, scene.hits[0].css);
+  expect((await pollUntil(() => readTab(page), (t) => t.selected === 1, 5000)).last.selected === 1, "E-EXPORT: a Select click did not give Selected 1");
+  const runs = [];
+  for (const selected of [1, 0]) {
+    if (selected === 0) {
+      await featureAction(page, "Clear selection");
+      expect((await pollUntil(() => readTab(page), (t) => t.selected === 0, 5000)).last.selected === 0, "E-EXPORT: Clear selection did not give Selected 0");
+    }
+    const prepared = await prepareExport(page, freshDestination(`export-selected-${selected}`));
+    expect(prepared.status === "prompt", `E-EXPORT: prepare (Selected ${selected}) returned ${JSON.stringify(prepared)}`);
+    const executed = await executeExport(page, prepared.prompt);
+    expect(executed.status === "success", `E-EXPORT: execute (Selected ${selected}) returned ${JSON.stringify(executed)}`);
+    const sentence = await page.evaluate(() => document.querySelector(".publish-selection-sentence")?.textContent ?? null);
+    expect(/selection is not used/.test(sentence ?? ""), `E-EXPORT: the Export section's sentence is ${JSON.stringify(sentence)} (Selected ${selected})`);
+    expect(prepared.prompt.filter_scope === null, `E-EXPORT: with Selected ${selected} and no filter, the prompt carries the filter scope ${JSON.stringify(prepared.prompt.filter_scope)}`);
+    runs.push({ rowScope: prepared.prompt.row_scope, rows: executed.rows });
+  }
+  expect(runs[0].rowScope === runs[1].rowScope && runs[0].rows === runs[1].rows, `E-EXPORT: with a selection ${JSON.stringify(runs[0])}, without ${JSON.stringify(runs[1])}`);
+  return `row scope "${runs[0].rowScope}" and ${runs[0].rows} rows with a selection and without`;
+}
+
+/** E-SCOPE: prepare, change the filter, execute: refused in the shell's words, and no bundle written. */
+async function stepScope(page, consoleHandle) {
+  await openFixture(page, consoleHandle, FIXTURE_FILTER, "E-SCOPE");
+  const destination = freshDestination("scope");
+  const prepared = await prepareExport(page, destination);
+  expect(prepared.status === "prompt", `E-SCOPE: prepare returned ${JSON.stringify(prepared)}`);
+  await page.fill(".filter-predicate", "zone = 'residential'");
+  await page.click(".filter-apply");
+  expect((await pollUntil(() => page.evaluate(() => document.querySelector(".filter-active") !== null), (v) => v === true, 20_000)).ok, "E-SCOPE: the Applied line never appeared");
+  const executed = await executeExport(page, prepared.prompt);
+  expect(executed.status === "refused" && /changed after it was prepared/.test(executed.message), `E-SCOPE: execute after the filter changed returned ${JSON.stringify(executed)}`);
+  const shown = await page.evaluate(() => document.querySelector(".publish-panel .admission-refusal-message")?.textContent ?? null);
+  expect(shown === executed.message, `E-SCOPE: the panel shows ${JSON.stringify(shown)}, not the refusal`);
+  const staging = readdirSync(dirname(destination)).filter((n) => n.includes(".staging-"));
+  expect(!existsSync(destination) && staging.length === 0, `E-SCOPE: a bundle or staging debris exists under ${dirname(destination)} (${staging.join(", ")})`);
+  await page.click(".filter-clear");
+  return "execute refused after the filter changed; no bundle directory, no staging debris";
+}
+
 async function runSelectionSteps(page, consoleHandle) {
   const results = [];
   async function runStep(id, timeoutMs, fn) {
@@ -524,6 +592,8 @@ async function runSelectionSteps(page, consoleHandle) {
   await runStep("E-REFUSED", 300_000, () => stepRefused(page, consoleHandle));
   await runStep("E-GEN", 900_000, () => stepGen(page, consoleHandle));
   await runStep("E-KINDS", 1_200_000, () => stepKinds(page, consoleHandle));
+  await runStep("E-EXPORT", 900_000, () => stepExport(page, consoleHandle));
+  await runStep("E-SCOPE", 300_000, () => stepScope(page, consoleHandle));
   console.log(`[selection] ${results.filter((r) => r.status === "PASS").length} PASS, ${results.filter((r) => r.status === "FAIL").length} FAIL: ${results.map((r) => `${r.id}=${r.status}`).join(" ")}`);
 }
 
