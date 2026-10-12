@@ -5127,13 +5127,13 @@ nodes:
     order: null
     depends_on: [shell-migration-milestone-2]
     needs_human: {kind: none, minutes: 0}
-    gate: none
+    gate: frontends/shell/SHELL-STATUS-BAR-ONE-HEIGHT-PREREGISTRATION.md
     evidence: null
     budget_minutes: 0
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "PROPOSED 2026-10-12 by the human (state/directives/2026-10-12-open-15-wording-webview2-scale-runs-status-bar-piece.md, item 3), graded S2, not in milestone 2's round 3: found by the custodian's e2e diagnosis at f18dbefb (the selection-ended notice wraps the status bar to a second line, the canvas 715.453125 CSS px tall; when the notice clears the map grows to 736 and moves by one status line). The status bar keeps one height; a notice that does not fit is cut and its full text stays reachable (the form proposes how). This changes the existing wrapping design, by the human's word. Its e2e has a step showing that a notice appearing and clearing leaves the map's size unchanged. PLACEMENT: slot 2 before b2-piece-1b-recording, starting when #217 has merged, if its paths are disjoint from export-current-view-after-unreported-fit's; otherwise slot 1 after that fix. Its form is drafted ahead (forms ahead)."
+    summary: "FORM DRAFTED 2026-10-13 by the architect (frontends/shell/SHELL-STATUS-BAR-ONE-HEIGHT-PREREGISTRATION.md, committed before any code; main pins hashed, branch pins de-rooted): OPEN-1 how a cut line's full text stays reachable ((a) a disclosure button at the bar's end, recommended; (b) the bar focusable; (c) a title per item, which needs App.tsx and so slot 1), OPEN-2 e2e/README.md here (slot 1) or a docs-lane follow-up ((b), recommended, slot 2), OPEN-3 KNOWN-LIMITATIONS item 40's status-bar sentence ((a) drafted words, recommended); TO THE HUMAN. Under (a), (b), (b): disjoint from the Current view fix, so slot 2 before b2-piece-1b-recording. Information: the attention strip's row still changes the map's size; no node proposed. Before: PROPOSED 2026-10-12 by the human (state/directives/2026-10-12-open-15-wording-webview2-scale-runs-status-bar-piece.md, item 3), graded S2, not in milestone 2's round 3: found by the custodian's e2e diagnosis at f18dbefb (the selection-ended notice wraps the status bar to a second line, the canvas 715.453125 CSS px tall; when the notice clears the map grows to 736 and moves by one status line). The status bar keeps one height; a notice that does not fit is cut and its full text stays reachable (the form proposes how). This changes the existing wrapping design, by the human's word. Its e2e has a step showing that a notice appearing and clearing leaves the map's size unchanged. PLACEMENT: slot 2 before b2-piece-1b-recording, starting when #217 has merged, if its paths are disjoint from export-current-view-after-unreported-fit's; otherwise slot 1 after that fix. Its form is drafted ahead (forms ahead)."
     dates: {opened: 2026-10-12, done: null}
   - id: b2-piece-1b-recording
     title: "B2 piece 1b -- recording: the kernel's step commands for filter, scope and style, the session history on the machine, safe against a crash, and the docs/07 note"
