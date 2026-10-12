@@ -184,6 +184,8 @@ describe("UB9 (drawn set): onSelectionDrawnChange fires only when the drawn set 
 
   // RECORDED MUTATION for "UB9 (drawn set)" (a pass that changed nothing): in `createDrawnEmitter` (highlightLayers.ts) emit on every pass
   // (delete the `if (sameIds(last, drawn)) return;` line). Expected failure: an empty first pass and an equal set are emitted too.
+  // OBSERVED AT 6488360ffa1f58bf392e731f605e5a7255d24260: FAILED -- "an empty first pass and a pass with the same ids emit nothing; a new set, and a clear to empty, emit":
+  //   AssertionError: the empty first pass: expected [ Set{} ] to have a length of +0 but got 1. Reverted after observing.
   it("an empty first pass and a pass with the same ids emit nothing; a new set, and a clear to empty, emit", () => {
     const { log, pass } = emitterWithLog();
     pass(set());
@@ -202,6 +204,8 @@ describe("UB9 (drawn set): onSelectionDrawnChange fires only when the drawn set 
 
   // RECORDED MUTATION for "UB9 (drawn set)" (same size, other ids): in `sameIds` (highlightLayers.ts) compare the sizes only (return
   // `a.size === b.size`). Expected failure: {1, 2} followed by {3, 4} is not emitted.
+  // OBSERVED AT 6488360ffa1f58bf392e731f605e5a7255d24260: FAILED -- "a set of the same size with other ids is a change":
+  //   AssertionError: expected [ [ 1n, 2n ] ] to deeply equal [ [ 1n, 2n ], [ 3n, 4n ] ]. Reverted after observing.
   it("a set of the same size with other ids is a change", () => {
     const { log, pass } = emitterWithLog();
     pass(set(1n, 2n));

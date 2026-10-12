@@ -125,6 +125,8 @@ describe("UB8: a click never reads the hover readout", () => {
 describe("UB7 (tap): Deck's onClick resolves the tap's own pixel and emits what it resolves to", () => {
   // RECORDED MUTATION for "UB7 (tap)" (the pixel): in `createTapHandler` (clickPick.ts) resolve at the swapped pixel
   // (`resolveClickPick(deps, pos.y, pos.x)`). Expected failure: the candidate lookup received (6, 5) where (5, 6) was expected.
+  // OBSERVED AT 6488360ffa1f58bf392e731f605e5a7255d24260: FAILED -- "a tap at (5, 6) looks the candidate up at (5, 6) and emits the one result":
+  //   AssertionError: expected [ [ 6, 5 ] ] to deeply equal [ [ 5, 6 ] ]. Reverted after observing.
   it("a tap at (5, 6) looks the candidate up at (5, 6) and emits the one result", () => {
     const calls: Calls = { picks: [], resolves: 0 };
     const emitted: ClickPick[] = [];
@@ -136,6 +138,8 @@ describe("UB7 (tap): Deck's onClick resolves the tap's own pixel and emits what 
 
   // RECORDED MUTATION for "UB7 (tap)" (a tap without a pixel): in `createTapHandler` (clickPick.ts) invent one
   // (`const pos = tap.offsetCenter ?? { x: 0, y: 0 };`). Expected failure: a pick ran at (0, 0) and a result was emitted.
+  // OBSERVED AT 6488360ffa1f58bf392e731f605e5a7255d24260: FAILED -- "a tap that carries no pixel runs no pick and emits nothing":
+  //   AssertionError: expected [ [ +0, +0 ] ] to deeply equal []. Reverted after observing.
   it("a tap that carries no pixel runs no pick and emits nothing", () => {
     const calls: Calls = { picks: [], resolves: 0 };
     const emitted: ClickPick[] = [];
