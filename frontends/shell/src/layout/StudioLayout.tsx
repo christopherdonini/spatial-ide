@@ -5,13 +5,15 @@ import { Fragment, useEffect, useReducer, useRef, useState } from "react";
 import type { CSSProperties, ReactNode, RefObject } from "react";
 
 import { recordNamed } from "../console/recorder";
-import { ACTIONS, ariaKeyShortcuts, currentPlatform, matchChord, shortcutLabel } from "./actionRegistry";
-import type { ActionId } from "./actionRegistry";
+import type { Tool } from "../workspace/workspaceState";
+import { ACTIONS, ariaKeyShortcuts, currentPlatform, matchChord, matchToolKey, shortcutLabel } from "./actionRegistry";
+import type { ActionId, ToolActionId } from "./actionRegistry";
 import {
   ACTIVITY_TABS,
   ATTENTION_ITEMS,
   ATTENTION_SLOT_IDS,
   INSPECTOR_SLOT_IDS,
+  INSPECTOR_SLOT_TABS,
   INSPECTOR_TABS,
   LAYER_SECTIONS,
   REGIONS,
@@ -54,6 +56,9 @@ const TOGGLE_REGION: Partial<Record<ActionId, SideRegion>> = {
   "layout.toggleInspector": "inspector",
   "layout.toggleActivity": "activity",
 };
+
+/** Which tool a tool key selects. */
+const TOOL_OF_ACTION: Record<ToolActionId, Tool> = { "tool.navigate": "navigate", "tool.select": "select" };
 
 /** A region's heading, from the registered contributions (the sighted names). */
 function regionLabel(id: RegionId): string {
@@ -114,9 +119,12 @@ export interface StudioLayoutProps {
   layersRow: { readonly pathDisplay: string } | null;
   /** The registry's `layer.zoomToLayer`: `App`'s existing `canvasRef.current?.fitToBounds()`. */
   onZoomToLayer: () => void;
+  /** The registry's `tool.navigate` and `tool.select`, reached by their bare keys (milestone 2 §2.2). Consumer: App's
+   * tool handler (§7 B-A, phase B). When absent a bare tool key is left alone, not consumed. */
+  onSelectTool?: (tool: Tool) => void;
 }
 
-export default function StudioLayout({ overlays, slots, layersRow, onZoomToLayer }: StudioLayoutProps) {
+export default function StudioLayout({ overlays, slots, layersRow, onZoomToLayer, onSelectTool }: StudioLayoutProps) {
   const [state, dispatch] = useReducer(layoutReducer, undefined, initialLayoutState);
   const viewport = useViewport();
   const platform = currentPlatform();
@@ -152,12 +160,24 @@ export default function StudioLayout({ overlays, slots, layersRow, onZoomToLayer
   // One `keydown` listener for the whole window; the closure is refreshed each render through a ref.
   const runActionRef = useRef(runAction);
   runActionRef.current = runAction;
+  const onSelectToolRef = useRef(onSelectTool);
+  onSelectToolRef.current = onSelectTool;
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       const id = matchChord(event, platform);
-      if (id === null) return;
+      if (id !== null) {
+        event.preventDefault();
+        runActionRef.current(id);
+        return;
+      }
+      // A bare tool key: the element that holds the key is the event's target, or the focused element when the
+      // event was dispatched on the window.
+      const selectTool = onSelectToolRef.current;
+      if (selectTool === undefined) return;
+      const tool = matchToolKey(event, event.target instanceof Element ? event.target : document.activeElement);
+      if (tool === null) return;
       event.preventDefault();
-      runActionRef.current(id);
+      selectTool(TOOL_OF_ACTION[tool]);
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
@@ -206,6 +226,7 @@ export default function StudioLayout({ overlays, slots, layersRow, onZoomToLayer
       {overlays}
       <header className="top-bar">
         <span className="app-header">Spatial IDE</span>
+        {hasContent(slots["topBar.tools"]) && <div className="top-bar-tools">{slots["topBar.tools"]}</div>}
         <div className="top-bar-toggles">
           {ACTIONS.map((entry) => {
             const region = TOGGLE_REGION[entry.id];
@@ -275,10 +296,18 @@ export default function StudioLayout({ overlays, slots, layersRow, onZoomToLayer
             );
           })}
         </div>
-        <div role="tabpanel" id="inspector-panel-style" aria-labelledby="inspector-tab-style" hidden={state.inspector.tab !== "style"}>
-          {emptyInspectorText}
-          {slots["inspector.style"]}
-        </div>
+        {INSPECTOR_SLOT_TABS.map((tab) => (
+          <div
+            key={tab.id}
+            role="tabpanel"
+            id={`inspector-panel-${tab.id}`}
+            aria-labelledby={`inspector-tab-${tab.id}`}
+            hidden={state.inspector.tab !== tab.id}
+          >
+            {emptyInspectorText}
+            {slots[`inspector.${tab.id}`]}
+          </div>
+        ))}
       </aside>
 
       {splitter("activity", "y", -1, sizes.activityHeight, "[P6 placeholder] Resize Activity")}

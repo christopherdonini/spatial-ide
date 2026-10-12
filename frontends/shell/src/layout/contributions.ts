@@ -22,9 +22,11 @@ export const REGIONS = [
   { id: "activity", label: "Activity" },
 ] as const;
 
+/** The Feature tab is the third (SHELL-MIGRATION-MILESTONE-2-PREREGISTRATION.md §2.6; its label is approved, Amendment 1 A11). */
 export const INSPECTOR_TABS = [
   { id: "layer", label: "Layer" },
   { id: "style", label: "Style" },
+  { id: "feature", label: "Feature" },
 ] as const;
 
 /** `headingOwner: "layout"` sections get a layout-owned heading button with `aria-expanded`;
@@ -61,9 +63,11 @@ export type AttentionItemId = (typeof ATTENTION_ITEMS)[number]["id"];
 export type StatusItemId = (typeof STATUS_ITEMS)[number]["id"];
 
 /** Every place the layout accepts content from `App.tsx`. The Layers and Map regions take one node
- * each; the Inspector's Layer tab takes one per section and its Style tab one; the Activity region
- * one per tab; the attention strip and the status bar one per item. */
+ * each; the Inspector's Layer tab takes one per section and each of its other tabs one; the Activity
+ * region one per tab; the attention strip and the status bar one per item; the top bar's tools slot
+ * one (the tool switch, milestone 2 §2.2). */
 export type SlotId =
+  | "topBar.tools"
   | `region.${Exclude<RegionId, "inspector" | "activity">}`
   | `section.${LayerSectionId}`
   | `inspector.${Exclude<InspectorTabId, "layer">}`
@@ -73,10 +77,15 @@ export type SlotId =
 
 export type Slots = Record<SlotId, ReactNode>;
 
+/** The Inspector tabs whose panel is one slot: every tab but Layer, whose panel holds the sections. */
+export const INSPECTOR_SLOT_TABS = INSPECTOR_TABS.filter(
+  (tab): tab is Exclude<(typeof INSPECTOR_TABS)[number], { readonly id: "layer" }> => tab.id !== "layer"
+);
+
 /** The slots the Inspector draws from: empty exactly when none has content (the empty-Inspector text). */
 export const INSPECTOR_SLOT_IDS: readonly SlotId[] = [
   ...LAYER_SECTIONS.map((section) => `section.${section.id}` as const),
-  "inspector.style",
+  ...INSPECTOR_SLOT_TABS.map((tab) => `inspector.${tab.id}` as const),
 ];
 
 /** The attention items' slot ids, in order -- the strip is empty exactly when none has content. */

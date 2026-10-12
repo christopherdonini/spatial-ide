@@ -2020,6 +2020,11 @@ export default function App() {
           * P7 fixes).** `FilterPanel` above uses the identical dataset value as its own key -- see
           * its own comment for the duplicate-sibling-key finding this fixes on both ends. */
         "inspector.style": admitted && <StylePanel key={`style-${admitted.dataset}`} style={style} onChange={handleStyleChange} />,
+        /* Milestone 2's two new slots (SHELL-MIGRATION-MILESTONE-2-PREREGISTRATION.md §2.2, §2.6). Their views --
+         * `feature/ToolSwitch.tsx` and `feature/FeatureTab.tsx` -- are filled here by the stage that wires App's
+         * tool, selection and inspection handlers; until then they hold nothing, as the empty-Inspector text allows. */
+        "topBar.tools": null,
+        "inspector.feature": null,
         /* NEXT-CUT.md (publish cut) P3: "in .app-main's flex column below StylePanel" -- same
           * reasoning as `StylePanel`'s own placement below `.canvas-container` (S4): this panel
           * comes AFTER the canvas in both visual and flex order, so its own collapsed/expanded state
