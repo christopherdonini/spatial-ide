@@ -1016,6 +1016,8 @@ describe("App: tools, the click, the selection and the inspection (milestone 2, 
   // the finished execute gave: expected null to be 'C:/out/g3'. The file's other 27 tests passed. Reverted after observing.
   // RECORDED MUTATION for "RB12g" pass 4 (the reviewer's C1, gate 3 of PR 217): in `answerOpenAsk` (App.tsx) replace the append at the choice with a single slot (`setLateCancel((shown) => [...shown, finished]);` becomes `setLateCancel([finished]);`).
   // Expected failure: pass 4's statement paths, which hold the second bundle only.
+  // OBSERVED AT 41f270b4896642e3c6a05dd61397cb0b48409481: FAILED -- "RB12g: Cancel the export and go on cancels an execute that started after the ask appeared, once, and the statement follows its outcome": AssertionError: pass 4: one statement for each bundle,
+  // in the order decided: expected [ 'C:/out/second' ] to deeply equal [ 'C:/out/first', 'C:/out/second' ]. The file's other 27 tests passed, RB12d among them. Reverted after observing.
   it("RB12g: Cancel the export and go on cancels an execute that started after the ask appeared, once, and the statement follows its outcome", async () => {
     const statement = () => text(".late-cancel-path");
     /** The ask appears over a prepare run; the prepare ends into the approval prompt; the phrase is submitted, so that an execute starts; then the choice is made. */

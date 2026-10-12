@@ -254,6 +254,8 @@ describe("the tap (UB7's wiring, OPEN-1 (A))", () => {
 
   // RECORDED MUTATION for "the tap" (a double-click, OPEN-14): in the Deck's `onClick` (WorkingCanvas.tsx) remove the early return on `event.type === "dblclick"`.
   // Expected failure: the double-click picks and emits a result, where nothing was expected.
+  // OBSERVED AT 41f270b4896642e3c6a05dd61397cb0b48409481: FAILED -- "a double-click event neither picks nor emits, and a click event at the same pixel still does":
+  //   AssertionError: no inspection and no selection change: nothing is emitted: expected "vi.fn()" to not be called at all, but actually been called 1 times. The file's other 13 tests passed. Reverted after observing.
   it("a double-click event neither picks nor emits, and a click event at the same pixel still does", () => {
     const onClickPick = vi.fn();
     const { push } = mount({ onClickPick });
