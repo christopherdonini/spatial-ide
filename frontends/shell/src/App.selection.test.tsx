@@ -1009,6 +1009,10 @@ describe("App: tools, the click, the selection and the inspection (milestone 2, 
   // Expected failure: the cancels list, which lacks the execute's key.
   // OBSERVED AT b258dff0620ea5e46a6a53856b8c70d4c0ce8781: FAILED -- "RB12g: Cancel the export and go on cancels an execute that started after the ask appeared, once, and the statement follows its outcome": AssertionError: the prepare's key and the execute's key,
   // once each: expected [ Array(1) ] to deeply equal [ …(2) ]. Reverted after observing.
+  // RECORDED MUTATION for "RB12g" pass 3 (the reviewer's C1-R, gate 2 of PR 217): in `handleExportRunning` (App.tsx) remove the line that adds the run to the standing ask (`if (askRef.current !== null) askRef.current = { ...askRef.current, runs: [...askRef.current.runs, run] };`).
+  // Expected failure: pass 3's statement is null, because the execute ended before the choice and is in neither the ask's runs nor the runs standing.
+  // OBSERVED AT d245975c9511a6336bea4867c3b15c4d4e833a04: FAILED -- "RB12g: Cancel the export and go on cancels an execute that started after the ask appeared, once, and the statement follows its outcome": AssertionError: pass 3: decided at the choice, the statement names the bundle
+  // the finished execute gave: expected null to be 'C:/out/g3'. The file's other 27 tests passed. Reverted after observing.
   it("RB12g: Cancel the export and go on cancels an execute that started after the ask appeared, once, and the statement follows its outcome", async () => {
     const statement = () => text(".late-cancel-path");
     /** The ask appears over a prepare run; the prepare ends into the approval prompt; the phrase is submitted, so that an execute starts; then the choice is made. */
