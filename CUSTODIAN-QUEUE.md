@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `06e08d298bf9067a03e10499bbd644f561902ce30377bcc109d12a7b9981704f`) at `2026-10-12T05:13:15.735Z`.
+Generated from `PLAN.yaml` (sha256 `5f90a1f24954b7acd18fff54ff671bdd316f0b7fa31feb6eaa24757fdbac81e2`) at `2026-10-12T06:31:21.247Z`.
 
 ## 1. Next
 
@@ -19,9 +19,10 @@ Generated from `PLAN.yaml` (sha256 `06e08d298bf9067a03e10499bbd644f561902ce30377
 
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
 - **b2-piece-1b-recording** — B2 piece 1b -- recording: the kernel's step commands for filter, scope and style, the session history on the machine, safe against a crash, and the docs/07 note — blocked by: shell-migration-milestone-2, guardian-v1
-- **export-current-view-after-unreported-fit** — The Export panel's Current view after an unreported fit: after an issued Apply or Clear, the default Current view export sends the box from before the map fitted itself, until the next pan, zoom or Zoom to layer; the approval dialog shows that box's four numbers — blocked by: shell-migration-milestone-2
+- **export-current-view-after-unreported-fit** — The Export panel's Current view after an unreported fit: after an issued Apply or Clear, the default Current view export sends the box from before the map fitted itself, until the next pan, zoom or Zoom to layer; the approval dialog shows that box's four numbers — blocked by: shell-migration-milestone-2, known-limitations-current-view-stale-box
 - **stale-test-names-and-comments** — Stale test names and test comments, names and comments only, no assertion changes: a refusal-named test that asserts admission, the React-harness premise, the no-attributes reason, a Proposed ADR-018, two ruled decisions still marked pending (sweep area E, findings 2, 3, 4, 7 and 10) — blocked by: known-limitations-current-view-stale-box
 - **briefb-b2-save-reopen** — B2 — Save project, Snapshot data, session history, lineage and preferences, in five stages, each with its own form — blocked by: decision-adr-029-scan-progress-route
+- **known-limitations-crs-epoch-edges-third-axis** — KNOWN-LIMITATIONS: a file's declared coordinate epoch, its edges value and a third CRS axis are not used, shown or carried into a bundle — blocked by: stale-test-names-and-comments
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer — blocked by: signpath-application-draft
 - **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-1-1
 - **signpath-application-draft** — Entry 77 — the SignPath OSS application and disclosure text drafted for the human sight, once a release is CI-built — blocked by: release-v0-1-1
