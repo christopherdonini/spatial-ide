@@ -8,8 +8,8 @@
  * `fitToBbox` that `clickPick.test.ts`, `highlightLayers.test.ts` and `pickResolution.test.ts` prove as pure functions.
  *
  * **The seam to deck is written against the interface deck has** (`@deck.gl/core` 9.3.9, `dist/lib/deck.js`, read from node_modules, which is
- * untracked: evidence, not Authority): `onClick(info, event)` is the root handler `_dispatchPickingEvent` calls, and `event.offsetCenter` is the tap's
- * pixel (`_onEvent`); `getCursor(cursorState)` is re-run by `_updateCursor` from `_onRenderFrame`; `onResize` is a prop the
+ * untracked: evidence, not Authority): `onClick(info, event)` is the root handler `_dispatchPickingEvent` calls, and `event.srcEvent` is the tap's native
+ * `pointerup`, whose client coordinates give its pixel (`_onEvent`); `getCursor(cursorState)` is re-run by `_updateCursor` from `_onRenderFrame`; `onResize` is a prop the
  * canvas reads no argument from; `setProps` merges; `pickObject({x, y, radius?})` answers a picking info or null. Real deck is proven
  * by the e2e suites; here only the WebGL boundary is replaced (`Deck`), and the engine's own committed batch is decoded for real.
  */
@@ -244,7 +244,7 @@ describe("the tap (UB7's wiring, OPEN-1 (A))", () => {
     const { push } = mount({ onClickPick });
     push();
     theDeck().pickReturn = { index: 0, layer: { id: layerIdsOfLastRender()[0] } };
-    theDeck().props.onClick({ index: -1, layer: null }, { type: "click", offsetCenter: { x: 12, y: 34 } });
+    theDeck().props.onClick({ index: -1, layer: null }, { type: "click", srcEvent: { clientX: 12, clientY: 34 } });
     expect(theDeck().pickCalls.at(-1)).toMatchObject({ x: 12, y: 34 });
     expect(onClickPick).toHaveBeenCalledTimes(1);
     const result = onClickPick.mock.calls[0][0];
@@ -262,10 +262,10 @@ describe("the tap (UB7's wiring, OPEN-1 (A))", () => {
     push();
     theDeck().pickReturn = { index: 0, layer: { id: layerIdsOfLastRender()[0] } };
     const picksBefore = theDeck().pickCalls.length;
-    theDeck().props.onClick({ index: -1, layer: null }, { type: "dblclick", offsetCenter: { x: 12, y: 34 } });
+    theDeck().props.onClick({ index: -1, layer: null }, { type: "dblclick", srcEvent: { clientX: 12, clientY: 34 } });
     expect(onClickPick, "no inspection and no selection change: nothing is emitted").not.toHaveBeenCalled();
     expect(theDeck().pickCalls.length, "no pick").toBe(picksBefore);
-    theDeck().props.onClick({ index: -1, layer: null }, { type: "click", offsetCenter: { x: 12, y: 34 } });
+    theDeck().props.onClick({ index: -1, layer: null }, { type: "click", srcEvent: { clientX: 12, clientY: 34 } });
     expect(onClickPick, "a click still emits").toHaveBeenCalledTimes(1);
     expect(onClickPick.mock.calls[0][0].kind).toBe("feature");
   });
@@ -279,7 +279,7 @@ describe("the tap (UB7's wiring, OPEN-1 (A))", () => {
     const { push } = mount({ onClickPick });
     push();
     theDeck().pickReturn = null;
-    theDeck().props.onClick({}, { type: "click", offsetCenter: { x: 1, y: 2 } });
+    theDeck().props.onClick({}, { type: "click", srcEvent: { clientX: 1, clientY: 2 } });
     expect(onClickPick.mock.calls).toEqual([[{ kind: "nothing" }]]);
     theDeck().props.onClick({}, { type: "click" });
     expect(onClickPick).toHaveBeenCalledTimes(1);
@@ -295,7 +295,7 @@ describe("the tap (UB7's wiring, OPEN-1 (A))", () => {
     act(() => {
       ref.current!.pushBatch("sh_l", 0, loadBatchFixture("lv95-linestring-batch"));
     });
-    theDeck().props.onClick({}, { type: "click", offsetCenter: { x: 3, y: 4 } });
+    theDeck().props.onClick({}, { type: "click", srcEvent: { clientX: 3, clientY: 4 } });
     expect(theDeck().pickCalls.at(-1)).toMatchObject({ x: 3, y: 4 });
     expect(theDeck().pickCalls.at(-1)?.radius).toBeGreaterThan(0);
   });

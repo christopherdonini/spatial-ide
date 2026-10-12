@@ -3,7 +3,7 @@
 
 import { describe, expect, it } from "vitest";
 
-import { createTapHandler, resolveClickPick, type ClickPick, type ClickPickDeps } from "./clickPick";
+import { createTapHandler, resolveClickPick, tapPixel, type ClickPick, type ClickPickDeps } from "./clickPick";
 import type { ResidentBatch } from "./decodeBatch";
 import { resolvePick, type PickResult } from "./pick";
 import { partsOfFeatures } from "../testUtils/partsOfPolygons";
@@ -122,7 +122,29 @@ describe("UB8: a click never reads the hover readout", () => {
   });
 });
 
+/** A canvas for `tapPixel`: its rect, its whole layout size (`offsetWidth` x `offsetHeight`, the rect's by default) and no border. */
+const box = (left: number, top: number, width: number, height: number, offsetWidth = width, offsetHeight = height) => ({
+  getBoundingClientRect: () => ({ left, top, width, height }), offsetWidth, offsetHeight, clientLeft: 0, clientTop: 0,
+});
+
+describe("UB7 (tap pixel): the tap's pixel is the hover's (OPEN-15)", () => {
+  it("the recorded case: client (331.5, 533.5) on a canvas at (266, 40) is pixel (65, 493), where rounding gives (66, 494)", () => {
+    expect(tapPixel({ clientX: 331.5, clientY: 533.5 }, box(266, 40, 1000, 700))).toEqual({ x: 65, y: 493 });
+  });
+
+  it("a fractional canvas left and top: the client coordinates are truncated before the rect is subtracted", () => {
+    const p = tapPixel({ clientX: 331.9, clientY: 533.9 }, box(266.6, 40.6, 1000, 700));
+    expect([p.x, p.y]).toEqual([expect.closeTo(64.4, 9), expect.closeTo(492.4, 9)]);
+  });
+
+  it("a fractional drawn size against a whole layout size: the offset is divided by drawn over layout, as the hover's is", () => {
+    const p = tapPixel({ clientX: 331.5, clientY: 533.5 }, box(266, 40, 1000.5, 715.453125, 1000, 715));
+    expect([p.x, p.y]).toEqual([expect.closeTo(64.967516, 6), expect.closeTo(492.687763, 6)]);
+  });
+});
+
 describe("UB7 (tap): Deck's onClick resolves the tap's own pixel and emits what it resolves to", () => {
+  const canvas = box(0, 0, 100, 100);
   // RECORDED MUTATION for "UB7 (tap)" (the pixel): in `createTapHandler` (clickPick.ts) resolve at the swapped pixel
   // (`resolveClickPick(deps, pos.y, pos.x)`). Expected failure: the candidate lookup received (6, 5) where (5, 6) was expected.
   // OBSERVED AT 6488360ffa1f58bf392e731f605e5a7255d24260: FAILED -- "a tap at (5, 6) looks the candidate up at (5, 6) and emits the one result":
@@ -130,20 +152,20 @@ describe("UB7 (tap): Deck's onClick resolves the tap's own pixel and emits what 
   it("a tap at (5, 6) looks the candidate up at (5, 6) and emits the one result", () => {
     const calls: Calls = { picks: [], resolves: 0 };
     const emitted: ClickPick[] = [];
-    createTapHandler(depsFor({ batch, gpuOrdinal: 2 }, false, calls), (r) => emitted.push(r))({ offsetCenter: { x: 5, y: 6 } });
+    createTapHandler(depsFor({ batch, gpuOrdinal: 2 }, false, calls), (r) => emitted.push(r), canvas)({ srcEvent: { clientX: 5.9, clientY: 6.9 } });
     expect(calls.picks).toEqual([[5, 6]]);
     expect(emitted).toHaveLength(1);
     expect(emitted[0].kind === "feature" && emitted[0].pick.id).toBe(20n);
   });
 
   // RECORDED MUTATION for "UB7 (tap)" (a tap without a pixel): in `createTapHandler` (clickPick.ts) invent one
-  // (`const pos = tap.offsetCenter ?? { x: 0, y: 0 };`). Expected failure: a pick ran at (0, 0) and a result was emitted.
+  // (`const pos = tap.srcEvent ? tapPixel(tap.srcEvent, canvas) : { x: 0, y: 0 };`). Expected failure: a pick ran at (0, 0) and a result was emitted.
   // OBSERVED AT 6488360ffa1f58bf392e731f605e5a7255d24260: FAILED -- "a tap that carries no pixel runs no pick and emits nothing":
   //   AssertionError: expected [ [ +0, +0 ] ] to deeply equal []. Reverted after observing.
   it("a tap that carries no pixel runs no pick and emits nothing", () => {
     const calls: Calls = { picks: [], resolves: 0 };
     const emitted: ClickPick[] = [];
-    createTapHandler(depsFor({ batch, gpuOrdinal: 2 }, false, calls), (r) => emitted.push(r))({});
+    createTapHandler(depsFor({ batch, gpuOrdinal: 2 }, false, calls), (r) => emitted.push(r), canvas)({});
     expect(calls.picks).toEqual([]);
     expect(emitted).toEqual([]);
   });

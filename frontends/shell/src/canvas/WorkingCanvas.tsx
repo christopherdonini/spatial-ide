@@ -2001,7 +2001,8 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
         belowPickResolutionNow: () => isBelowPickResolution(averageFeatureExtentRef.current, pixelsPerWorldUnitAtZoom(currentZoomRef.current)),
         resolveCandidate: (candidate) => resolvePick(candidate.batch, candidate.gpuOrdinal),
       },
-      (result) => onClickPickRef.current?.(result)
+      (result) => onClickPickRef.current?.(result),
+      canvas
     );
     const deck = new Deck({
       canvas,
@@ -2018,8 +2019,8 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
       // frame (`Deck._onRenderFrame` -> `_updateCursor`, @deck.gl/core 9.3.9 `deck.js`; read, not run), so a tool change
       // needs no pointer event and no re-set of this prop.
       getCursor: ({ isDragging }) => cursorForPointerState(isDragging, toolRef.current),
-      // Milestone 2, section 2.2 (OPEN-1 (A)): a tap picks afresh at its own pixel (`event.offsetCenter`) through the settle
-      // re-pick's `pickCandidateAt`, in this handler. deck's picking info (the pointer-down pick) is not read; `clickPick.ts`.
+      // Milestone 2, section 2.2 (OPEN-1 (A)): a tap picks afresh at its own pixel (`tapPixel`: the `pointerup`'s client coordinates, truncated and made relative to the
+      // canvas as deck does the hover's) through the settle re-pick's `pickCandidateAt`, in this handler. deck's picking info (the pointer-down pick) is not read; `clickPick.ts`.
       // OPEN-14 (PR 217 round 3): a double-click only zooms, through the map's own controller on the same event. deck delivers `click` and `dblclick` here as separate events
       // (`event.type`; `tapCount` is not the tell, since the click recogniser counts taps close together), so a `dblclick` neither picks nor emits, and a single click arrives as before.
       onClick: (_info, event) => {

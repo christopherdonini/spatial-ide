@@ -55,6 +55,7 @@
 //   Both steps are INCONCLUSIVE (class 2, never a pass) when the export had ended before the ask was read: the step then fails with that word in its message.
 //   E-DBLCLICK     src/canvas/WorkingCanvas.tsx, the Deck props' `onClick`: remove the `if (event.type === "dblclick") return;` line. Expected: E-DBLCLICK fails on its first assertion (the Navigate double-click inspected an id); the Select count would fail next.
 //   E-ASK-TWO      src/App.tsx, `answerOpenAsk`: `setLateCancel([finished])` in place of the append. Expected: E-ASK-TWO fails on the statements' paths (only the second bundle_path is shown). INCONCLUSIVE, as above, when the ask or the open is not standing before the choice.
+//   E-KINDS (point) src/canvas/clickPick.ts, `tapPixel`'s return line: `Math.round` in place of both `Math.trunc` calls. Expected: E-KINDS fails on the point's Navigate click (the inspected id is not the hover's), as the rounded tap did before OPEN-15; a pass means the position was not at the dot's edge in that run, and shows nothing about rounding.
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, utimesSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -232,7 +233,7 @@ async function* candidatePoints(page) {
  * below-resolution refusal ends the search at once: the camera refuses, and that point (a candidate the hover found) is `refusedAt`.
  * Returns `{ hits: [{ css, id }], rect, tried, refusedAt }`; the pointer is left where the last hover put it.
  */
-async function hoverHits(page, label, want, distinct) {
+async function hoverHits(page, label, want, distinct, unrounded = false) {
   const rect = await canvasRect(page);
   const hits = [];
   let flipY = null;
@@ -244,9 +245,9 @@ async function hoverHits(page, label, want, distinct) {
     for (const fy of flipY === null ? [true, false] : [flipY]) {
       if (tried >= HOVER_ATTEMPTS_MAX) break search;
       tried += 1;
-      // A real mouse at 100% scaling gives whole CSS pixels, and Hammer rounds the tap, so hover and tap read one pixel only at whole coordinates.
+      // Whole CSS pixels, as a real mouse at 100% scaling gives; `unrounded` (E-KINDS' point step only) keeps the fractional position, where the tap must read the hover's pixel (OPEN-15).
       const exact = bufferPointToCss(point, rect, bw, bh, fy);
-      const css = { x: Math.round(exact.x), y: Math.round(exact.y) };
+      const css = unrounded ? exact : { x: Math.round(exact.x), y: Math.round(exact.y) };
       const result = await hoverIdAfterBarrier(page, css, label);
       if (result.last.state === "refusal") return { hits, rect, tried, refusedAt: css };
       if (!result.ok) continue;
@@ -490,10 +491,15 @@ async function stepKinds(page, consoleHandle) {
   for (const [kind, path] of [["multipolygon", FIXTURE_MULTIPOLYGON], ["point", FIXTURE_POINT], ["line", FIXTURE_LINE]]) {
     const label = `E-KINDS (${kind})`;
     await openFixture(page, consoleHandle, path, label);
-    const found = await hoverHits(page, label, 16, false);
+    const found = await hoverHits(page, label, 16, false, kind === "point");
     const hits = found.hits;
     const ids = [...new Set(hits.map((h) => h.id))];
     expect(hits.length >= 2, `${label}: only ${hits.length} hovered feature pixel(s) found in ${found.tried} hover(s)${found.refusedAt === null ? "" : "; the hover was refused as below the pick resolution"}`);
+    if (kind === "point") { // OPEN-15: the click is at the hover's unrounded position, which must be fractional on both axes, or a pass would show nothing
+      const at = hits[0].css;
+      console.log(`[E-KINDS] point step: hover and click at (${at.x}, ${at.y}) CSS px`);
+      expect(!Number.isInteger(at.x) && !Number.isInteger(at.y), `${label}: the position (${at.x}, ${at.y}) is not fractional on both axes`);
+    }
     // Navigate: the click's id is the hover's.
     await useTool(page, "Navigate");
     await showFeatureTab(page);
@@ -765,7 +771,6 @@ async function runSelectionSteps(page, consoleHandle) {
     await runStep("E-ZOOMSEL", 120_000, () => stepZoomSel(page, consoleHandle));
     await runStep("E-SEL-PAN", 60_000, () => stepSelPan(page));
   }
-  await runStep("E-DBLCLICK", 600_000, () => stepDblClick(page, consoleHandle));
   await runStep("E-SEL-FILTER", 900_000, async () => {
     await zoomToLayer(page, consoleHandle, "E-SEL-FILTER");
     const filterScene = await buildScene(page, consoleHandle, "E-SEL-FILTER", { want: 6, min: 4 });
@@ -779,6 +784,7 @@ async function runSelectionSteps(page, consoleHandle) {
   await runStep("E-ASK", 600_000, () => stepAsk(page, consoleHandle));
   await runStep("E-ASK-STATEMENT", 300_000, () => stepAskStatement(page, consoleHandle));
   await runStep("E-ASK-TWO", 600_000, () => stepAskTwo(page, consoleHandle));
+  await runStep("E-DBLCLICK", 600_000, () => stepDblClick(page, consoleHandle));
   console.log(`[selection] ${results.filter((r) => r.status === "PASS").length} PASS, ${results.filter((r) => r.status === "FAIL").length} FAIL: ${results.map((r) => `${r.id}=${r.status}`).join(" ")}`);
 }
 
