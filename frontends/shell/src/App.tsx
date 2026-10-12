@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
-import { useCallback, useEffect, useReducer, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 
 import AdmissionPanel from "./admission/AdmissionPanel";
 import { Admitted } from "./admission/admitDataset";
@@ -15,6 +15,12 @@ import { HoverReadoutView } from "./canvas/HoverReadoutView";
 import ConsolePanel from "./console/ConsolePanel";
 import { recordNamed } from "./console/recorder";
 import { logSessionEvent } from "./diagnostics/log";
+import { clickEffect } from "./feature/clickEffect";
+import type { ClickInput } from "./feature/clickEffect";
+import { createViewBoxStore, FeaturePanel } from "./feature/FeaturePanel";
+import { noticeText } from "./feature/FeatureTab";
+import type { LastClick } from "./feature/FeatureTab";
+import { ToolSwitch } from "./feature/ToolSwitch";
 import FilterPanel from "./filter/FilterPanel";
 import { ScanLivenessMirror, WatcherStatusItem } from "./layout/regionParts";
 import StudioLayout from "./layout/StudioLayout";
@@ -73,13 +79,26 @@ import { decodeHexF64, encodeHexF64 } from "./skp/codec";
 import { closeDataset, SkpCallError } from "./skp/client";
 import { listenDatasetSessionEnded } from "./skp/events";
 import type { Bbox, DatasetSessionEnded, EndReason, Filter } from "./skp/types";
-import { styleTransitions } from "./workspace/viewTransitions";
+import { NO_MEMBERS, unionOfBounds } from "./workspace/selection";
+import type { SelectionMode } from "./workspace/selection";
+import { DEFAULT_SELECTION_MODE, DEFAULT_TOOL } from "./workspace/selectionConstants";
+import {
+  styleTransitions,
+  viewInspected,
+  viewPinned,
+  viewSelection,
+  viewSelectionMode,
+  viewSelectionNotice,
+  viewTool,
+} from "./workspace/viewTransitions";
+import type { ViewTransition } from "./workspace/viewTransitions";
 import {
   initialWorkspaceState,
   selectAdmitted,
   selectClosable,
   selectDrawnViews,
   workspaceReducer,
+  type Tool,
   type ViewId,
 } from "./workspace/workspaceState";
 import {
@@ -88,6 +107,9 @@ import {
   ViewportStreamManager,
   ViewportStreamManagerOptions,
 } from "./streaming/viewportStreamManager";
+
+/** The ids the canvas reports as drawn before it has reported any: none. One object, so an unchanged summary stays equal. */
+const NO_IDS: ReadonlySet<bigint> = new Set();
 
 function toWireBbox(bbox: AuthoritativeBbox): Bbox {
   return {
@@ -789,10 +811,31 @@ export default function App() {
   // `StylePanel`'s `onChange` (`handleStyleChange` below) dispatches one `style.set` per changed property.
   const style = view === null ? DEFAULT_STYLE_STATE : view.style;
   const activeFilter = view === null ? null : view.filter;
+  // Milestone 2, phase B (SHELL-MIGRATION-MILESTONE-2-PREREGISTRATION.md sections 2.2 and 2.3): the view's tool, mode, selection and
+  // inspection, read through the readers that give the defaults.
+  const tool = view === null ? DEFAULT_TOOL : viewTool(view);
+  const mode = view === null ? DEFAULT_SELECTION_MODE : viewSelectionMode(view);
+  const selection = view === null ? NO_MEMBERS : viewSelection(view);
+  const inspected = view === null ? null : viewInspected(view);
+  const pinned = view !== null && viewPinned(view);
+  const notice = view === null ? null : viewSelectionNotice(view);
+  // `highlightLayers` caches on the Set's identity, and the reducer keeps the same Map while the selection is unchanged, so the Set
+  // is rebuilt only when the selection is. The canvas's effect is keyed on `selected` and `inspected`, not on this wrapper.
+  const selectedIds = useMemo(() => new Set(selection.keys()), [selection]);
+  const inspectedId = inspected === null ? null : inspected.pick.id;
+  const highlight = useMemo(() => ({ selected: selectedIds, inspected: inspectedId }), [selectedIds, inspectedId]);
   /** The view's id, readable from the stable callbacks below (`commitActiveFilter`, the effect cleanups). */
   const viewIdRef = useRef<ViewId | null>(null);
   viewIdRef.current = view === null ? null : view.id;
   const [hover, setHover] = useState<HoverReadout>(null);
+  /** What the last click was, for the Feature tab's last-click line; reset by a new open. */
+  const [lastClick, setLastClick] = useState<LastClick | null>(null);
+  /** The selected and inspected ids the canvas drew, tagged with the resource whose canvas reported them: the canvas is keyed on
+   * the handle, so a set from another resource's canvas is read as empty (a rebind clears it). */
+  const [drawnState, setDrawnState] = useState<{ resource: string; ids: ReadonlySet<bigint> } | null>(null);
+  const drawnIds = drawnState !== null && admitted !== null && drawnState.resource === admitted.dataset ? drawnState.ids : NO_IDS;
+  /** The view box the Feature tab's counts are made against (a ref with a listener set: a pan renders nothing here). */
+  const [viewBox] = useState(createViewBoxStore);
   const [canvasRefusal, setCanvasRefusal] = useState<string | null>(null);
   const [viewportRefusal, setViewportRefusal] = useState<FormattedRefusal | null>(null);
   /**
@@ -1008,6 +1051,9 @@ export default function App() {
       admittedDatasetRef.current = next.dataset;
       // §2d (D5): the session reference for this same open, written beside it.
       admittedSessionRef.current = next.session;
+      // The new canvas has reported no view box yet, and the last click named the old dataset.
+      viewBox.set(null);
+      setLastClick(null);
       admitAndResetStaleUiState(next, {
         setCanvasRefusal,
         setViewportRefusal,
@@ -1034,8 +1080,8 @@ export default function App() {
     // `commitScanState` is `useCallback([])`-stable (see its own doc comment above), so this dependency never
     // actually changes across renders -- `handleAdmitted` stays as identity-stable as it was before this piece,
     // for the same reason its own doc comment already states (`AdmissionPanel`'s `admitPath`/E2E-hook
-    // `useEffect` chain).
-    [commitScanState]
+    // `useEffect` chain). `viewBox` is a `useState` initialiser's value, so it is as stable.
+    [commitScanState, viewBox]
   );
 
   // E2E TEST SURFACE (dev builds only, viewport-residency cut P1/P1b, RESIDENCY-PREREGISTRATION.md).
@@ -1319,7 +1365,10 @@ export default function App() {
     // This effect run's consumer of the dataset, released in its cleanup. On a reopen `resource.admitted` has already
     // moved the view to the new resource, so this release changes nothing and the close above runs because of the
     // admission; the release covers a cleanup with no rebind, which phase A does not have (an unmount's dispatch is dropped).
+    // The setup acquires the same consumer (Amendment 7 item 4): idempotent, so a view already present changes nothing,
+    // and a run that follows such a release holds the resource again.
     const consumer = viewIdRef.current;
+    if (consumer !== null) dispatch({ type: "consumer.acquired", resource: admitted.dataset, consumer });
     const releaseConsumer = () => {
       if (consumer !== null) dispatch({ type: "consumer.released", resource: admitted.dataset, consumer });
     };
@@ -1691,6 +1740,50 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [admitted]);
 
+  /** One typed transition on the view (section 2.4); the class-C row of the action is recorded by the handler that applies it. */
+  function transit(transition: ViewTransition): void {
+    if (view !== null) dispatch({ type: "view.transition", view: view.id, transition });
+  }
+
+  function handleSelectTool(next: Tool): void {
+    if (view === null || viewTool(view) === next) return;
+    transit({ action: "tool.set", params: { tool: next } });
+    recordNamed("gui-action", "tool.set");
+  }
+
+  /** The mode picker (section 2.2) has no class-C row among section 2.6's six, so a mode change records none. */
+  function handleSelectMode(next: SelectionMode): void {
+    transit({ action: "mode.set", params: { mode: next } });
+  }
+
+  /** One click the canvas resolved at its own pixel (OPEN-1 (A)); `clickEffect` decides what it does, once the latch has been read. */
+  function handleClickPick(click: ClickInput): void {
+    if (view === null) return;
+    const effect = clickEffect(view, click, sessionEndedRef.current);
+    setLastClick(effect.lastClick);
+    for (const transition of effect.transitions) transit(transition);
+    if (effect.row !== null) recordNamed("gui-action", effect.row);
+  }
+
+  function handlePin(next: boolean): void {
+    transit({ action: "inspect.pin", params: { pinned: next } });
+    recordNamed("gui-action", "feature.pin");
+  }
+
+  function handleClearSelection(): void {
+    if (selection.size === 0) return;
+    transit({ action: "selection.clear", params: {} });
+    recordNamed("gui-action", "selection.clear");
+  }
+
+  /** Zoom to selection (section 2.5): staged and run in this one handler, over the kept bounds of Selected, ignoring filter. */
+  function handleZoomToSelection(): void {
+    const union = unionOfBounds(selection);
+    if (union === null) return;
+    canvasRef.current?.fitToBbox?.(union);
+    recordNamed("gui-action", "selection.zoomTo");
+  }
+
   /** `StylePanel`'s `onChange` reports the whole next style; the workspace takes one `style.set` per property that changed. */
   function handleStyleChange(next: StyleState): void {
     if (view === null) return;
@@ -1704,6 +1797,7 @@ export default function App() {
       overlays={<ErrorBanner />}
       layersRow={admitted ? { pathDisplay: admitted.describe.source.path_display } : null}
       onZoomToLayer={() => void canvasRef.current?.fitToBounds()}
+      onSelectTool={handleSelectTool}
       /* Milestone 1 (SHELL-MIGRATION-MILESTONE-1-PREREGISTRATION.md section 2.2): every panel below keeps
        * its keys and its props and now lives in a slot of the Map Studio frame (`layout/`). A comment
        * below that speaks of `.app-main`, `.app-rail-top`, `.app-rail-bottom`, a flex column, or a
@@ -1835,6 +1929,10 @@ export default function App() {
             {drawnViews.map((drawn) => {
               const admitted = selectAdmitted(workspace, drawn.id);
               if (admitted === null) return null;
+              // The view box is this canvas's own report: a call from a canvas that has since been replaced writes nothing.
+              const showBox = (bbox: AuthoritativeBbox) => {
+                if (admitted.dataset === admittedDatasetRef.current) viewBox.set(bbox);
+              };
               return (
                 <WorkingCanvas
                   key={admitted.dataset}
@@ -1844,6 +1942,17 @@ export default function App() {
                   geometryEncoding={admitted.describe.geometry.encoding}
                   crsUnit={admitted.describe.crs.unit}
                   style={drawn.style}
+                  /* Milestone 2: the tool fixes the cursor; a click is picked at its own pixel (OPEN-1 (A)) and handled by the tool; the highlight
+                   * is drawn last; the drawn set and the shown view box come back (sections 2.2 and 2.3; Amendments 2 item 2 and 3). */
+                  tool={tool}
+                  onClickPick={handleClickPick}
+                  highlight={highlight}
+                  onSelectionDrawnChange={(ids) => {
+                    if (admitted.dataset === admittedDatasetRef.current) setDrawnState({ resource: admitted.dataset, ids });
+                  }}
+                  /* A view shown without a report (the auto-fit, a resize before any area was asked): it writes the box and nothing else --
+                   * no query, no `lastViewportBboxRef`, no `hasSettledView` (Amendment 3 item 2; RB18). */
+                  onViewShown={showBox}
                   /* P3b §2a(iv): the ONE pick-latch site, covering both arms, because hover is
                    * arm-independent. Once the session has ended, every readout the canvas resolves --
                    * including `null` and a standing `PickConfirming` id -- becomes the named refusal;
@@ -1889,6 +1998,7 @@ export default function App() {
                     // at click time, which may be mid-drag, not only the last one a debounced query
                     // happened to fire for.
                     lastViewportBboxRef.current = toWireBbox(bbox);
+                    showBox(bbox);
                     // NEXT-CUT.md (publish cut) P3 item 3: flips exactly once per dataset (guarded, so
                     // an in-progress drag's many calls per frame do not re-render on every one) -- the
                     // FIRST arrival here is what lets `PublishPanel` enable "Current view".
@@ -1903,6 +2013,7 @@ export default function App() {
                    * query, and `hasSettledView` is untouched -- a within-report only follows a reported view. */
                   onViewportWithinLastQuery={(bbox) => {
                     lastViewportBboxRef.current = toWireBbox(bbox);
+                    showBox(bbox);
                   }}
                 />
               );
@@ -2020,11 +2131,34 @@ export default function App() {
           * P7 fixes).** `FilterPanel` above uses the identical dataset value as its own key -- see
           * its own comment for the duplicate-sibling-key finding this fixes on both ends. */
         "inspector.style": admitted && <StylePanel key={`style-${admitted.dataset}`} style={style} onChange={handleStyleChange} />,
-        /* Milestone 2's two new slots (SHELL-MIGRATION-MILESTONE-2-PREREGISTRATION.md §2.2, §2.6). Their views --
-         * `feature/ToolSwitch.tsx` and `feature/FeatureTab.tsx` -- are filled here by the stage that wires App's
-         * tool, selection and inspection handlers; until then they hold nothing, as the empty-Inspector text allows. */
-        "topBar.tools": null,
-        "inspector.feature": null,
+        /* Milestone 2's slots (SHELL-MIGRATION-MILESTONE-2-PREREGISTRATION.md §2.2, §2.6): the tool switch in the top bar (never over the
+         * map) and the Feature tab, whose summary subscribes to the view box. The ended-selection notice is also a status bar item
+         * (§2.3); the ceiling's refusal shows in the Feature tab only. */
+        "topBar.tools": admitted && (
+          <ToolSwitch tool={tool} mode={mode} onSelectTool={handleSelectTool} onSelectMode={handleSelectMode} />
+        ),
+        "inspector.feature": admitted && (
+          <FeaturePanel
+            box={viewBox}
+            members={selection}
+            drawn={drawnIds}
+            // The facts App holds: whether a filter is applied, and whether the scan machine has completed. No reason is produced from
+            // them in this milestone (Amendment 2 item 9).
+            facts={{ filterApplied: activeFilter !== null, viewComplete: scanState.kind === "complete" }}
+            inspected={inspected}
+            pinned={pinned}
+            lastClick={lastClick}
+            notice={notice}
+            onPin={handlePin}
+            onZoomToSelection={handleZoomToSelection}
+            onClearSelection={handleClearSelection}
+          />
+        ),
+        "status.selectionEnded": admitted && notice?.kind === "ended" && (
+          <div className="selection-ended" role="status">
+            {noticeText(notice)}
+          </div>
+        ),
         /* NEXT-CUT.md (publish cut) P3: "in .app-main's flex column below StylePanel" -- same
           * reasoning as `StylePanel`'s own placement below `.canvas-container` (S4): this panel
           * comes AFTER the canvas in both visual and flex order, so its own collapsed/expanded state

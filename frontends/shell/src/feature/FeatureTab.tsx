@@ -65,7 +65,8 @@ function lastClickLine(click: LastClick): JSX.Element {
   }
 }
 
-function noticeText(notice: SelectionNotice): string {
+/** The notice's words: the Feature tab shows them, and so does the status bar item for an ended selection (App). */
+export function noticeText(notice: SelectionNotice): string {
   if (notice.kind === "refused") {
     return `[P6 placeholder] The selection holds at most ${notice.refusal.max} features: this one was not added.`;
   }

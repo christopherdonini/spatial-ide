@@ -51,6 +51,7 @@ export const STATUS_ITEMS = [
   { id: "scanLiveness" },
   { id: "scanIncomplete" },
   { id: "sourceWatch" },
+  { id: "selectionEnded" },
 ] as const;
 
 export type RegionId = (typeof REGIONS)[number]["id"];
@@ -75,7 +76,11 @@ export type SlotId =
   | `attention.${AttentionItemId}`
   | `status.${StatusItemId}`;
 
-export type Slots = Record<SlotId, ReactNode>;
+/** The one slot a caller may leave out: a layout with no selection has no end-of-selection notice to show
+ * (`status.selectionEnded`, milestone 2 section 2.3). Every other slot is required, so a missing one is still a tsc error. */
+type OptionalSlotId = "status.selectionEnded";
+
+export type Slots = Record<Exclude<SlotId, OptionalSlotId>, ReactNode> & Partial<Record<OptionalSlotId, ReactNode>>;
 
 /** The Inspector tabs whose panel is one slot: every tab but Layer, whose panel holds the sections. */
 export const INSPECTOR_SLOT_TABS = INSPECTOR_TABS.filter(

@@ -99,6 +99,23 @@ export function bboxesMeet(a: AuthoritativeBbox, b: AuthoritativeBbox): boolean 
   return a.xmin <= b.xmax && a.xmax >= b.xmin && a.ymin <= b.ymax && a.ymax >= b.ymin;
 }
 
+/** The smallest box over every member's kept bounds (Zoom to selection's fit, section 2.5), or null for no members. */
+export function unionOfBounds(members: SelectionMembers): AuthoritativeBbox | null {
+  let union: AuthoritativeBbox | null = null;
+  for (const b of members.values()) {
+    union =
+      union === null
+        ? { ...b }
+        : {
+            xmin: Math.min(union.xmin, b.xmin),
+            ymin: Math.min(union.ymin, b.ymin),
+            xmax: Math.max(union.xmax, b.xmax),
+            ymax: Math.max(union.ymax, b.ymax),
+          };
+  }
+  return union;
+}
+
 /** The facts the filter reason would need (section 2.3: only when H5 holds, the view is reported complete and a
  * filter is applied). H5 is not established (Amendment 2 item 9), so no reason is ever produced in this milestone,
  * whatever these say; the caller states the facts it holds and the count stays honest if H5 is later established. */

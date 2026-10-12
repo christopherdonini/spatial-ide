@@ -641,7 +641,8 @@ body,
 
 /* P4 item 3, rider-1 pattern: persistent, not dismissible -- same visual family as
    `.residency-status`, a status-bar item now (milestone 1). */
-.scan-incomplete {
+.scan-incomplete,
+.selection-ended {
   padding: 0.1rem 0.5rem;
   background: var(--status-item-bg);
   color: var(--status-item-fg);
