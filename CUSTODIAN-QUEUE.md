@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `21192a8281f09a2e1665b44cf8f6e081ee717f67bc2f7ca9f34cfbbac9522d1a`) at `2026-10-12T05:08:30.426Z`.
+Generated from `PLAN.yaml` (sha256 `06e08d298bf9067a03e10499bbd644f561902ce30377bcc109d12a7b9981704f`) at `2026-10-12T05:13:15.735Z`.
 
 ## 1. Next
 
@@ -29,7 +29,7 @@ Generated from `PLAN.yaml` (sha256 `21192a8281f09a2e1665b44cf8f6e081ee717f67bc2f
 
 ## 5. In progress
 
-- **shell-migration-milestone-2** — Shell migration, milestone 2 -- selection and scope: the Select tool, a selection that survives filter and pan, the hidden count, a stated scope — evidence: branch `cut/shell-migration-milestone-2-phase-a`
+- **shell-migration-milestone-2** — Shell migration, milestone 2 -- selection and scope: the Select tool, a selection that survives filter and pan, the hidden count, a stated scope — evidence: branch `cut/shell-migration-milestone-2-phase-b`
 
 ## 6. Proposed / unscheduled
 
