@@ -525,7 +525,8 @@ describe("the line open's pick tolerance and selector (SH-L4)", () => {
 describe("UB11: cursorForPointerState per tool", () => {
   // RECORDED MUTATION for "UB11": swap the two tools' cursors in `cursorForPointerState` (pickResolution.ts)
   // (`return tool === "select" ? "crosshair" : "default";`). Expected failure: Navigate reads default.
-  // OBSERVED AT <X>: <pending>
+  // OBSERVED AT b7bb54dd7df1333b1ce192e397644d150bf304f2: FAILED -- "Navigate stays crosshair and Select is the CSS keyword default, while nothing is held":
+  //   AssertionError: expected 'default' to be 'crosshair' // Object.is equality. Reverted after observing.
   it("Navigate stays crosshair and Select is the CSS keyword default, while nothing is held", () => {
     expect(cursorForPointerState(false, "navigate")).toBe("crosshair");
     expect(cursorForPointerState(false, "select")).toBe("default");
@@ -534,7 +535,8 @@ describe("UB11: cursorForPointerState per tool", () => {
 
   // RECORDED MUTATION for "UB11" (second): return the tool's cursor while dragging in Select (pickResolution.ts:
   // `if (isDragging && tool !== "select") return "grabbing";`). Expected failure: a drag in Select reads default.
-  // OBSERVED AT <X>: <pending>
+  // OBSERVED AT b7bb54dd7df1333b1ce192e397644d150bf304f2: FAILED -- "a drag is grabbing in both tools, and no state is ever pointer":
+  //   AssertionError: expected 'default' to be 'grabbing' // Object.is equality. Reverted after observing.
   it("a drag is grabbing in both tools, and no state is ever pointer", () => {
     expect(cursorForPointerState(true, "navigate")).toBe("grabbing");
     expect(cursorForPointerState(true, "select")).toBe("grabbing");

@@ -46,7 +46,8 @@ describe("UB7: resolveClickPick", () => {
   // RECORDED MUTATION for "UB7" (below threshold): in `resolveClickPick` (clickPick.ts) resolve before the threshold is checked
   // (move `const pick = deps.resolveCandidate(candidate);` above `if (deps.belowPickResolutionNow())`).
   // Expected failure: the resolution ran, so the call count is 1 where 0 was expected.
-  // OBSERVED AT <X>: <pending>
+  // OBSERVED AT b7bb54dd7df1333b1ce192e397644d150bf304f2: FAILED -- "below the threshold it is the refusal, and no resolution ran":
+  //   AssertionError: resolutions run: expected 1 to be +0 // Object.is equality. Reverted after observing.
   it("below the threshold it is the refusal, and no resolution ran", () => {
     const calls: Calls = { picks: [], resolves: 0 };
     expect(resolveClickPick(depsFor({ batch, gpuOrdinal: 0 }, true, calls), 5, 6)).toEqual({ kind: "below-pick-resolution" });
@@ -55,7 +56,8 @@ describe("UB7: resolveClickPick", () => {
 
   // RECORDED MUTATION for "UB7" (the tap's pixel): in `resolveClickPick` (clickPick.ts) swap the pixel
   // (`deps.pickCandidateAt(y, x)`). Expected failure: the lookup received (6, 5) where (5, 6) was expected.
-  // OBSERVED AT <X>: <pending>
+  // OBSERVED AT b7bb54dd7df1333b1ce192e397644d150bf304f2: FAILED -- "the tap's own pixel reaches the candidate lookup, and no candidate is nothing":
+  //   AssertionError: expected [ [ 6, 5 ] ] to deeply equal [ [ 5, 6 ] ]. Reverted after observing.
   it("the tap's own pixel reaches the candidate lookup, and no candidate is nothing", () => {
     const calls: Calls = { picks: [], resolves: 0 };
     expect(resolveClickPick(depsFor(null, false, calls), 5, 6)).toEqual({ kind: "nothing" });
@@ -65,7 +67,8 @@ describe("UB7: resolveClickPick", () => {
 
   // RECORDED MUTATION for "UB7" (all parts): in `boundsOfRow` (clickPick.ts) compute the bounds from the first part only
   // (`extentOfBatch({ parts: [[batch.parts[row][0]]] })`). Expected failure: the box of the two-part row is part 0's.
-  // OBSERVED AT <X>: <pending>
+  // OBSERVED AT b7bb54dd7df1333b1ce192e397644d150bf304f2: FAILED -- "a candidate gives the pick and the authoritative bounds over every part of its row, whichever part was hit":
+  //   AssertionError: expected { kind: 'feature', …(2) } to deeply equal { kind: 'feature', …(2) }. Reverted after observing.
   it("a candidate gives the pick and the authoritative bounds over every part of its row, whichever part was hit", () => {
     for (const gpuOrdinal of [0, 1]) {
       const result = resolveClickPick(depsFor({ batch, gpuOrdinal }, false), 1, 1);
@@ -80,16 +83,19 @@ describe("UB7: resolveClickPick", () => {
     expect(single.kind === "feature" && single.bounds).toEqual({ xmin: 100, ymin: 100, xmax: 101, ymax: 101 });
   });
 
-  // RECORDED MUTATION for "UB7" (an ordinal that resolves to no row): in `resolveClickPick` (clickPick.ts) drop the null-pick
-  // guard (delete `if (pick === null) return { kind: "nothing" };`). Expected failure: a feature with a null pick is returned.
-  // OBSERVED AT <X>: <pending>
+  // RECORDED MUTATION for "UB7" (an ordinal that resolves to no row): in `resolveClickPick` (clickPick.ts) answer a feature for a null
+  // pick (`if (pick === null) return { kind: "feature", pick: null as never, bounds: { xmin: 0, ymin: 0, xmax: 0, ymax: 0 } };`).
+  // Expected failure: a feature with a null pick is returned.
+  // OBSERVED AT b7bb54dd7df1333b1ce192e397644d150bf304f2: FAILED -- "a candidate whose ordinal resolves to no feature is nothing":
+  //   AssertionError: expected { kind: 'feature', pick: null, …(1) } to deeply equal { kind: 'nothing' }. Reverted after observing.
   it("a candidate whose ordinal resolves to no feature is nothing", () => {
     expect(resolveClickPick(depsFor({ batch, gpuOrdinal: 99 }, false), 1, 1)).toEqual({ kind: "nothing" });
   });
 
   // RECORDED MUTATION for "UB7" (a row with no vertex): in `resolveClickPick` (clickPick.ts) answer a feature whatever the bounds
-  // (`return { kind: "feature", pick, bounds: bounds as AuthoritativeBbox };`). Expected failure: a feature with null bounds.
-  // OBSERVED AT <X>: <pending>
+  // (`return { kind: "feature", pick, bounds: bounds as never };`). Expected failure: a feature with null bounds.
+  // OBSERVED AT b7bb54dd7df1333b1ce192e397644d150bf304f2: FAILED -- "a row with no vertex has no bounds, so it is nothing and never a feature without them":
+  //   AssertionError: expected { kind: 'feature', …(2) } to deeply equal { kind: 'nothing' }. Reverted after observing.
   it("a row with no vertex has no bounds, so it is nothing and never a feature without them", () => {
     const empty: ResidentBatch = { ...batch, ...partsOfFeatures([[[[]]]]), ids: BigUint64Array.from([30n]), totalVertices: 0 };
     expect(resolveClickPick(depsFor({ batch: empty, gpuOrdinal: 0 }, false), 1, 1)).toEqual({ kind: "nothing" });
@@ -99,9 +105,11 @@ describe("UB7: resolveClickPick", () => {
 describe("UB8: a click never reads the hover readout", () => {
   const standingOnA: PickResult = { streamHandle: "sh_click", batchSeq: 0, id: 10n, anchor: [0, 0] };
 
-  // RECORDED MUTATION for "UB8": give `ClickPickDeps` a `standingReadout` member and have `resolveClickPick` return it when it is
-  // set (a readout dep that is preferred). Expected failure: the result is A where B was expected.
-  // OBSERVED AT <X>: <pending>
+  // RECORDED MUTATION for "UB8": give `resolveClickPick`'s deps a `standingReadout?: () => PickResult | null` member and return a feature
+  // with that pick when it answers one (`const standing = deps.standingReadout?.(); if (standing) return { kind: "feature", pick: standing, ... };`).
+  // Expected failure: the result is A (id 10) where B (id 20) was expected.
+  // OBSERVED AT b7bb54dd7df1333b1ce192e397644d150bf304f2: FAILED -- "with a readout standing on A and the candidate on B, the result is B, and the deps have no readout member":
+  //   AssertionError: expected 10n to be 20n // Object.is equality. Reverted after observing.
   it("with a readout standing on A and the candidate on B, the result is B, and the deps have no readout member", () => {
     const deps: ClickPickDeps = {
       ...depsFor({ batch, gpuOrdinal: 2 }, false),
