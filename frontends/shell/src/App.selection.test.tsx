@@ -394,7 +394,7 @@ describe("App: tools, the click, the selection and the inspection (milestone 2, 
     expect(zoom().disabled).toBe(false);
     const before = mark();
     click(zoom());
-    expect(mocks.canvas.fits).toEqual([box(0, 0, 30, 40)]);
+    expect(JSON.stringify(mocks.canvas.fits)).toBe(JSON.stringify([box(0, 0, 30, 40)]));
     expect(rowsSince(before)).toEqual(["selection.zoomTo"]);
 
     click(clear());
@@ -438,11 +438,11 @@ describe("App: tools, the click, the selection and the inspection (milestone 2, 
     click(q(".feature-pin"));
     useTool("Select");
     click(q<HTMLButtonElement>(".feature-actions button:nth-child(2)"));
-    expect(mocks.canvas.mounted).toEqual([handleOf(1)]);
+    expect(mocks.canvas.mounted.join(" ")).toBe(handleOf(1));
     expect(mocks.canvas.unmounted).toEqual([]);
 
     await open("C:/data/b.parquet");
-    expect(mocks.canvas.mounted, "a reopen mounts the new handle once").toEqual([handleOf(1), handleOf(2)]);
+    expect(mocks.canvas.mounted.join(" "), "a reopen mounts the new handle once").toBe(`${handleOf(1)} ${handleOf(2)}`);
     expect(mocks.canvas.unmounted).toEqual([handleOf(1)]);
   });
 
@@ -594,9 +594,9 @@ describe("App: tools, the click, the selection and the inspection (milestone 2, 
   it("RB-S1: a reopen stops the old session, then closes the old handle, then starts the new one", async () => {
     await open("C:/data/a.parquet");
     const [a, b] = [handleOf(1), handleOf(2)];
-    expect(mocks.order).toEqual([`open:${a}`, `request:${a}`]);
+    expect(mocks.order.join(" ")).toBe(`open:${a} request:${a}`);
     await open("C:/data/b.parquet");
-    expect(mocks.order.slice(2)).toEqual([`open:${b}`, `stop:${a}`, `close:${a}`, `request:${b}`]);
+    expect(mocks.order.slice(2).join(" ")).toBe([`open:${b}`, `stop:${a}`, `close:${a}`, `request:${b}`].join(" "));
   });
 
   // RECORDED MUTATION for "RB-DRAWN" (a row beyond the table): PLACEHOLDER
