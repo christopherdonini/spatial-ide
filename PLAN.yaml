@@ -4538,13 +4538,13 @@ nodes:
     order: null
     depends_on: [skp-v0-live-sections-current-area-c]
     needs_human: {kind: none, minutes: 0}
-    gate: none
+    gate: KNOWN-LIMITATIONS-ITEM-42-CURRENT-VIEW-PREREGISTRATION.md
     evidence: null
     budget_minutes: 45
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "PLACED 2026-10-12 by the human (state/directives/2026-10-12-current-view-graded-s1-placed-limitation-release-hold-214-merged.md, item 3): the docs lane's next piece, ahead of stale-test-names-and-comments. One new KNOWN-LIMITATIONS item, true of the v0.1.0 artifact, with its on-main note; it says what to do meanwhile; drafted by the architect under item 2e of state/directives/2026-10-11-direction-after-status-review.md with its clause check, and the human approves or replaces it; its number is clear of 40 and 41, which milestone 2 phase B reserves (its form, A14). The facts are the read state/consults/2026-10-11-export-current-view-after-unreported-fit-read.md and export-current-view-after-unreported-fit. The fix itself is export-current-view-after-unreported-fit, in slot 1. The 45-minute budget is the custodian's estimate."
+    summary: "FORM COMMITTED 2026-10-12 (KNOWN-LIMITATIONS-ITEM-42-CURRENT-VIEW-PREREGISTRATION.md; the architect's draft and final, state/consults/2026-10-12-known-limitations-current-view-stale-box-architect-draft.md, state/consults/2026-10-12-known-limitations-current-view-stale-box-architect-draft-2.md; 29 pins hashed): five-line short form, a single reviewer gate; item 42, its on-main note and source comment; the custodian's section D checks folded in (C5 rests on App's applyFilter at the tag). TO THE HUMAN: OPEN-1 (approve or replace the item's words, item 2e) and OPEN-2 (whether the v0.1.0 release page's notes carry item 42; outward text). Before: PLACED 2026-10-12 by the human (state/directives/2026-10-12-current-view-graded-s1-placed-limitation-release-hold-214-merged.md, item 3): the docs lane's next piece, ahead of stale-test-names-and-comments. One new KNOWN-LIMITATIONS item, true of the v0.1.0 artifact, with its on-main note; it says what to do meanwhile; drafted by the architect under item 2e of state/directives/2026-10-11-direction-after-status-review.md with its clause check, and the human approves or replaces it; its number is clear of 40 and 41, which milestone 2 phase B reserves (its form, A14). The facts are the read state/consults/2026-10-11-export-current-view-after-unreported-fit-read.md and export-current-view-after-unreported-fit. The fix itself is export-current-view-after-unreported-fit, in slot 1. The 45-minute budget is the custodian's estimate."
     dates: {opened: 2026-10-12, done: null}
   - id: crs-undeclared-message-wording
     title: "engine.crs_undeclared's message in the human's words: engine/src/error.rs and every test, e2e constant and walkthrough row that quotes it, nothing else (sweep area E, its last line)"
