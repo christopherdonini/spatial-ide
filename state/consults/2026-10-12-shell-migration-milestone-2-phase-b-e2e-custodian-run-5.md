@@ -54,3 +54,12 @@
 - **All fourteen suites and the post route pass at d59f1a6a.** Selection passes 17 of 17, with E-DBLCLICK last.
 - **Items (a) and (b) are observed on real WebView2 and each fails under its mutation.**
 - **OPEN-15 (B): the tap's pixel agrees with the hover's on WebView2 Edg/154.0.4258.62 at device pixel ratios 1, 1.25 and 1.5,** the factors that ran; the rounding mutation is caught at 1. macOS and Linux are `shell-real-app-run-macos-linux`'s, and a real mouse at the human's own scaling is Part W row W10a's.
+
+## After gate 4 (appended; the gate 4 reviewer's N1: the rounding mutation at the forced factors)
+
+| Scale | Start, end (Z) | Device pixel ratio | Mutation | Point position (CSS px) | E-KINDS | Fixtures |
+|---|---|---|---|---|---|---|
+| forced 1.25 | 23:06:17Z, 23:10:23Z | 1.25 | R3-ROUND (the tap rounds) | (279.6, 417.2) | FAIL: E-KINDS (point): 2 clicks on distinct features gave Selected 1 | 17 unchanged |
+| forced 1.5 | 23:10:40Z, 23:15:30Z | 1.5 | R3-ROUND (the tap rounds) | (241.66666666666666, 342.33333333333337) | FAIL: E-KINDS (point): 3 clicks on distinct features gave Selected 2 | 17 unchanged |
+
+- With the tap rounding, the point step fails at 1.25 and at 1.5 as well (WebView2 Edg/154.0.4258.62), on its Add only clicks, so the truncating rule is discriminated at all three factors that ran. Each patch was applied, run and reverted, and the porcelain was then empty.

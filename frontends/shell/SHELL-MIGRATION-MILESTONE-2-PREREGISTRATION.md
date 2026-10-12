@@ -1393,3 +1393,15 @@ Nothing above is edited.
 5. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 17 — PR #217 gate 4 (the one gate for round 3): both PASS; its documentation (class 3); the reviewer's N1 runs (class 1)
+
+*Written by the custodian after both gate 4 reports (`state/consults/gates/2026-10-13-shell-migration-milestone-2-phase-b-gate4-architect.md`, `state/consults/gates/2026-10-13-shell-migration-milestone-2-phase-b-gate4-reviewer.md`). References only.*
+
+1. **Gate 4:** the architect PASS (gate log 513) and the reviewer PASS (514), at d59f1a6a.
+2. **The documentation, in the gates' words (class 3), no re-gate:** the architect's D-1, D-3 and D-4 and the reviewer's D2 at 3d9e42e1 (comments and the e2e README only); the architect's D-2 on main (fc4560d6); the reviewer's D1 in the PR body.
+3. **The reviewer's N1 (class 1):** with the tap rounding, E-KINDS' point step also fails at forced 1.25 and 1.5 (`state/consults/2026-10-12-shell-migration-milestone-2-phase-b-e2e-custodian-run-5.md`, its appended section). Amendment 16 item 3's claim stands, now discriminated at the three factors that ran.
+4. **Notes carried, not findings:** the reviewer's N2 (no unit case pins the border term; the canvas has no border today) and the architect's N-4 (the ended-handler append is pinned only through the timing window D5 names).
+5. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
