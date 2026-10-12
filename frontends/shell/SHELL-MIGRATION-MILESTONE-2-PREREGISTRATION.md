@@ -1278,3 +1278,35 @@ Nothing above is edited.
 6. **Superseded index:** Amendment 9 item 3(a), OPEN-13 → item 4(a).
 
 Nothing above is edited.
+
+### Amendment 11 — PR #217 gate 1: correction round 1 of 2, built (class 2); its e2e (class 1); the record corrections in the gates' words (class 3)
+
+*Written by the custodian after both gate 1 reports (`state/consults/gates/2026-10-12-shell-migration-milestone-2-phase-b-gate1-architect.md`, `state/consults/gates/2026-10-12-shell-migration-milestone-2-phase-b-gate1-reviewer.md`), the round's build (`state/consults/2026-10-12-shell-migration-milestone-2-phase-b-correction-round-1-report.md`, head 7ffdb6a7) and its e2e (`state/consults/2026-10-12-shell-migration-milestone-2-phase-b-e2e-custodian-run-3.md`) were seen. References only. The record corrections are the gates' replacement words, applied with no re-gate (item 2d of state/directives/2026-10-11-direction-after-status-review.md). None is the human's wording.*
+
+1. **The round (class 2), for gate 2:**
+   - the reviewer's C1, by RB12g, with its mutation observed;
+   - the architect's C-1: `mode.set`, a class-C row, recorded only on a change of mode, by RB16;
+   - the architect's S2, by RB12f;
+   - the document items: the reviewer's D1, D3, D4 and D5, and the architect's D-4 to D-7.
+   - Amendment 10 item 3(f) is withdrawn by C-1's fix.
+2. **The e2e (class 1).**
+   - The ten suites of the architect's E-1 and the reviewer's E1 pass at 719568f8, whose product code equals 575cd4b3's.
+   - All fourteen suites pass at 7ffdb6a7 (run 3).
+3. **Corrections of record (class 3), in the gates' words:**
+   - (a) **Amendment 10 item 4(a), OPEN-13, reads as the architect's D-1 replacement words.** It offers options (A), (B) and (C), and (C) is a red line.
+   - (b) **Amendment 10 item 4(b), OPEN-15:**
+     - its first two sentences read as the architect's D-2 replacement;
+     - (B) and (C) carry D-2's appended costs;
+     - the sentence after the options is D-2's: a class 9 change, whose proof is an e2e step at a fractional coordinate.
+   - (c) **Amendment 10 item 2's point-click sentence reads as the architect's D-3 words.**
+   - (d) **Amendment 10 item 4(c) reads as the architect's D-8 words.** It adds the e2e README's Selection entry. Amendment 10's heading names two items for the human but holds three, and OPEN-14 (Amendment 9 item 3(b)) is still open.
+   - (e) **Amendment 9 item 2(d) and Amendment 10 item 3(d):** App's `viewComplete` is the scan's state, not H5's within-budget fact. The facts parameter has no reader (the architect's D-9).
+   - (f) **Amendment 10 item 3(j)'s second sentence is a change to Amendment 1 B3's promise,** that the ask stands until a choice. It is not a build note. RB12f now pins the behaviour (the architect's D-9).
+   - (g) **viewTransitions.test.ts counts among B-T's UB files.** The group is 1,027 against 1,125 (the reviewer's D7).
+4. **For the human (item 2e):** the architect's D-5 wording for KNOWN-LIMITATIONS item 40 drops the old draft's clause on the advisory source watcher ending the selection. The draft is the human's to word.
+5. **Generation:** the node's generation goes up by one.
+6. **Superseded index:**
+   - Amendment 10 items 2 (the point-click sentence), 3(d), 3(f), 3(j) and 4(a) to 4(c) → items 1 and 3;
+   - Amendment 9 item 2(d) → item 3(e).
+
+Nothing above is edited.
