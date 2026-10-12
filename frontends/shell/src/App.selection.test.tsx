@@ -824,6 +824,7 @@ describe("App: tools, the click, the selection and the inspection (milestone 2, 
   const ASK = ".open-during-export-ask";
 
   // RECORDED MUTATION for "RB12a": in `App.tsx`'s `answerOpenAsk` answer true on Keep exporting (`ask.answer(true)` for both choices). Expected failure: the open count after Keep exporting.
+  // OBSERVED AT aa25137f91bf4b35f71de5f1e42e9b646c86989a: FAILED -- "RB12a: Keep exporting opens nothing, leaves the handle unchanged, closes nothing and queues nothing, and the export reaches its outcome": AssertionError: no openDataset: expected 2 to be 1. Reverted after observing.
   it("RB12a: Keep exporting opens nothing, leaves the handle unchanged, closes nothing and queues nothing, and the export reaches its outcome", async () => {
     await open("C:/data/a.parquet");
     const run = await startExecute();
@@ -850,6 +851,8 @@ describe("App: tools, the click, the selection and the inspection (milestone 2, 
 
   // RECORDED MUTATION for "RB12b": in `handleAdmitted` (App.tsx) release every standing export consumer (`dispatch({ type: "consumer.released", resource, consumer })` for each run), as releasing it when the old panel goes would.
   // Expected failure: the old handle is closed before the run's outcome.
+  // OBSERVED AT aa25137f91bf4b35f71de5f1e42e9b646c86989a: FAILED -- "RB12b: Cancel the export and go on cancels once, opens once, and closes the old handle once, only after the run's outcome": AssertionError: the old handle stays open while the export runs: expected 1 to be +0.
+  // The same mutation also failed RB12d, at "(i) the old handle is not closed before the outcome". Reverted after observing.
   it("RB12b: Cancel the export and go on cancels once, opens once, and closes the old handle once, only after the run's outcome", async () => {
     await open("C:/data/a.parquet");
     const run = await startExecute();
@@ -868,7 +871,9 @@ describe("App: tools, the click, the selection and the inspection (milestone 2, 
     expect(mocks.order.indexOf(`close:${handleOf(1)}`)).toBeGreaterThan(mocks.order.indexOf(`open:${handleOf(2)}`));
   });
 
-  // RECORDED MUTATION for "RB12c": in `confirmOpen` (App.tsx) drop the empty-set test (`if (exportRunsRef.current.size === 0)` becomes `if (false)`). Expected failure: the ask shows with no run.
+  // RECORDED MUTATION for "RB12c": in the render of `region.layers` (App.tsx) always render the ask (`{asking && <OpenDuringExportAsk` becomes `{true && <OpenDuringExportAsk`). Expected failure: the ask shows with no run.
+  // OBSERVED AT aa25137f91bf4b35f71de5f1e42e9b646c86989a: FAILED -- "RB12c: with no run standing no ask is rendered, and a run that has ended is not standing": AssertionError: no run, no ask: expected <div ...> to be null.
+  // The same mutation also failed RB12a, at "the ask is gone". Reverted after observing.
   it("RB12c: with no run standing no ask is rendered, and a run that has ended is not standing", async () => {
     await open("C:/data/a.parquet");
     await startOpen("C:/data/b.parquet");
@@ -885,6 +890,8 @@ describe("App: tools, the click, the selection and the inspection (milestone 2, 
 
   // RECORDED MUTATION for "RB12d": in `answerOpenAsk` (App.tsx) show the statement only when `cancel()` answers false (the loop body becomes `run.cancelChosen = false; void run.cancel().then((answer) => { run.cancelChosen = !answer; });`).
   // Expected failure: case (i), where the answer is true and the statement is absent.
+  // OBSERVED AT aa25137f91bf4b35f71de5f1e42e9b646c86989a: FAILED -- "RB12d: the statement is decided by the run's own outcome, never by cancel()'s answer": AssertionError: (i) the answer is true and the outcome is success: expected { Object (text, path, ...) } to deeply equal { ...(3) }.
+  // The same mutation also failed RB12e, at "decided at the choice". Reverted after observing.
   it("RB12d: the statement is decided by the run's own outcome, never by cancel()'s answer", async () => {
     const statement = () => ({ text: text(".late-cancel-text"), path: text(".late-cancel-path"), detail: text(".late-cancel-detail") });
     const cancelAndGo = async (path: string) => {
@@ -934,6 +941,7 @@ describe("App: tools, the click, the selection and the inspection (milestone 2, 
 
   // RECORDED MUTATION for "RB12e" (a row beyond the table; Amendment 7 item 2(c): if `ended` has already resolved when the choice is made, the statement is decided at the choice): in `answerOpenAsk` (App.tsx) remove the decision at the choice (the `lateCancelOutcome(true, run.end)` lines).
   // Expected failure: no statement after the choice.
+  // OBSERVED AT aa25137f91bf4b35f71de5f1e42e9b646c86989a: FAILED -- "RB12e: a run that ended while the ask stood is decided at the choice, and the choice still calls cancel once": AssertionError: decided at the choice: expected null to be 'C:/out/early'. Reverted after observing.
   it("RB12e: a run that ended while the ask stood is decided at the choice, and the choice still calls cancel once", async () => {
     await open("C:/data/a.parquet");
     const run = await startExecute();

@@ -575,6 +575,7 @@ describe("runAdmitPath cancellation (P4, I8): a refusal carrying CANCELLED_REFUS
 
 // RECORDED MUTATION for "UB13": in `runAdmitPath` (AdmissionPanel.tsx) move the `confirmOpen` check below the `deps.admit` call (`admit` is then called before the answer is read).
 // Expected failure: the `admit` count after a `false` answer.
+// OBSERVED AT aa25137f91bf4b35f71de5f1e42e9b646c86989a: FAILED -- "false means no admit, no setState and null; true means today's flow": AssertionError: no admit: expected "vi.fn()" to be called +0 times, but got 1 times. Reverted after observing.
 describe("UB13 (Amendment 1 B3): runAdmitPath asks confirmOpen before it admits or sets any state", () => {
   it("false means no admit, no setState and null; true means today's flow", async () => {
     const admitted: AdmissionOutcome = { kind: "admitted", admitted: admittedFixture() };
