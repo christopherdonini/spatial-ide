@@ -1381,3 +1381,15 @@ Nothing above is edited.
 8. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 16 — PR #217 correction round 3, built (class 2); its e2e and the OPEN-15 (B) claim (class 1)
+
+*Written by the custodian after the round's three reports (`state/consults/2026-10-12-shell-migration-milestone-2-phase-b-correction-round-3-report-items-a-b-d.md`, `state/consults/2026-10-12-shell-migration-milestone-2-phase-b-correction-round-3-report-e2e-steps.md`, `state/consults/2026-10-12-shell-migration-milestone-2-phase-b-correction-round-3-report-item-c.md`) and its e2e (`state/consults/2026-10-12-shell-migration-milestone-2-phase-b-e2e-custodian-run-5.md`). References only.*
+
+1. **The round (class 2), for the one gate scoped to its three items:** (a) the late-cancel statement as a list, with RB12g pass 4 and E-ASK-TWO; (b) the double-click filter, with its wiring test and E-DBLCLICK; (c) the tap's pixel by `tapPixel`, with its three unit cases and E-KINDS' point step at the unrounded position; (d) the gate 3 reviewer's D2, D3 and D5 (D5 written for a list). Each test's mutation is observed (the reports and the run-5 record). E-DBLCLICK runs last (Amendment 15 item 5). Part W gains W10a.
+2. **Its e2e (class 1):** all fourteen suites and source-changed's post route pass at d59f1a6a; selection passes 17 of 17.
+3. **The OPEN-15 (B) claim (class 1), as the human bounded it:** on WebView2 Edg/154.0.4258.62, the tap's pixel agrees with the hover's at device pixel ratios 1, 1.25 and 1.5, the factors that ran; with the tap rounding, E-KINDS' point step fails at 1 (the run-5 record).
+4. **§7 at d59f1a6a:** phase B is 5,843 + 110 = 5,953, over 39 files; the round adds 250 of Amendment 14's 410; the piece is 1,170 + 5,953 = 7,123 of 8,352. OPEN-13's two files stand as Amendment 14 item 2 records them.
+5. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
