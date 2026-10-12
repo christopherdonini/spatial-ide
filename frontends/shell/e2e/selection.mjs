@@ -24,16 +24,19 @@
 // machine that wrote them). Apply one alone, run `npm run e2e:selection`, record the failing step by name with the commit, and revert it.
 //   E-CLICK        src/canvas/WorkingCanvas.tsx, the tap's `resolveCandidate` dep: `resolvePick(candidate.batch, candidate.gpuOrdinal + 1)`.
 //                  Expected: E-CLICK fails on the id (or a TypeError from the resolver).
-//   E-CLICK-FAST   src/canvas/WorkingCanvas.tsx: the tap emits the hover readout's pick instead of the one `pickCandidateAt` resolves at the tap's pixel.
-//                  Run at an odd map height (set by `setViewportSize`, as K6's re-aim does). Expected: E-CLICK-FAST fails where the stale read reproduces.
-//                  It is race-dependent: if three runs do not fail, that is recorded as class 2, and UB8 is the deterministic proof.
+//   E-CLICK-FAST   src/canvas/WorkingCanvas.tsx: the tap emits the hover readout's pick instead of the one `pickCandidateAt` resolves at the tap's pixel (the tap's
+//                  `resolveCandidate` returns `lastHoverReadoutRef.current` when it holds an id). The step presses and releases at B over CDP with no pointer move to B
+//                  first, so the hover readout still stands on A. Expected: E-CLICK-FAST fails on the id (A's, not B's). If the readout had moved to B by the click, the
+//                  PASS note says so and the mutation is not discriminated in that run: that is recorded as class 2, and UB8 is the deterministic proof.
 //   E-SELECT       src/canvas/highlightLayers.ts: SELECTED_OUTLINE_RGBA alpha 0. Expected: E-SELECT fails on the pixel assertion.
 //   E-NODRAG (1)   src/canvas/WorkingCanvas.tsx: add `onDragEnd: (_info, event) => onTap(event)` to the Deck props (select on the pointer's release).
-//                  Expected: E-NODRAG fails on the selection count after the out-and-back drag, which releases over the pressed feature.
+//                  Expected: E-NODRAG fails on the selection count after the out-and-back drag. The step sets Add / remove for it (a stray tap at the release over the selected
+//                  feature then deselects it), makes the pan's first move one jump onto the feature's pixel so the pan is anchored there, and restores the mode after.
 //   E-NODRAG (2)   src/canvas/WorkingCanvas.tsx: `controller: tool === "select" ? { dragPan: false } : true`. Expected: E-NODRAG fails on the view box
 //                  (the selected feature never leaves the view).
 //   E-ZOOMSEL      src/App.tsx, `handleZoomToSelection`: fit a point box at the union's corner (`{xmin: u.xmin, ymin: u.ymin, xmax: u.xmin, ymax: u.ymin}`).
-//                  Expected: E-ZOOMSEL fails on the outside-the-view count or on the highlight pixels.
+//                  Expected: E-ZOOMSEL fails on the highlight pixels: a zero-span box falls back to zoom 0 (`fitViewStateForBbox`), so the outline is smaller than the floor,
+//                  FIT_OUTLINE_MIN_PER_SIDE times the drawing buffer's shorter side (the outside-the-view count alone is not enough: a point box still touches the view).
 //   E-SEL-PAN      src/App.tsx, `onViewportChanged`: dispatch `selection.clear` on the view. Expected: E-SEL-PAN fails on the count.
 //   E-SEL-FILTER   src/App.tsx, `commitActiveFilter`: also dispatch `selection.clear`. Expected: E-SEL-FILTER fails on the count after the Apply.
 //   E-REFUSED      src/feature/clickEffect.ts: a click below the pick resolution returns a `selection.apply`. Expected: E-REFUSED fails on the count.
@@ -45,8 +48,7 @@
 //   E-SCOPE        src/publish/PublishPanel.tsx, `executeInStagedScope`: `const check: ScopeCheck = { ok: true };`. Expected: E-SCOPE fails because the execute is sent
 //                  and returns a success, where the shell's refusal is expected. Clean it up: the bundle that mutation writes is under target/e2e-selection-out.
 //   E-ASK (1)      src/App.tsx, `confirmOpen`: `return Promise.resolve(true);` as its first statement. Expected: E-ASK fails on the absent ask (no run is then asked about).
-//   E-ASK (2)      src/App.tsx, `handleAdmitted`: also release every standing export consumer (`dispatch({type: "consumer.released", ...})` for each of `exportRunsRef.current`'s runs).
-//                  Expected: E-ASK fails on the old handle being closed before the export's outcome.
+//   E-ASK (2)      is proven by RB12b at unit level (App.selection.test.tsx) and is not observable in e2e: Cancel and go on stops the export almost at once.
 //   E-ASK-STATEMENT src/App.tsx, `answerOpenAsk`: show the statement only when `cancel()` answers true (the loop body becomes `run.cancelChosen = false;
 //                  void run.cancel().then((answer) => { run.cancelChosen = answer; });`). The run has ended, so the host answers false. Expected: E-ASK-STATEMENT fails on the absent statement.
 //   Both steps are INCONCLUSIVE (class 2, never a pass) when the export had ended before the ask was read: the step then fails with that word in its message.
@@ -83,6 +85,11 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 // Harness bounds and counts, not measurements and not claims (ADR-018).
 const CLICK_SETTLE_MS = 400; // a React commit and a coalesced render after a click
 const HIGHLIGHT_MIN_OPAQUE_PX = 8; // an outline is far more than this; the data fill is never alpha 255
+// Zoom to selection leaves a 10% margin on each side (`fitViewStateForBbox`), so the outline spans 80% of the limiting side of the drawing buffer and crosses every pixel
+// column (or row) of that span twice, with at least one alpha-255 pixel per crossing: at least 1.6 times the shorter side. 1.5 is below that bound, whatever the margin
+// up to 10%; a zero-span box falls back to zoom 0 and its outline is a small fraction of a side.
+const FIT_OUTLINE_MIN_PER_SIDE = 1.5;
+const PAN_JUMP_PX = 12; // a drag pan's first move: past the recogniser's threshold in one jump, so the pan is anchored at that move's end
 const SCRATCH_TOUCH_OFFSET_MS = 120_000; // the same offset source-changed.mjs uses for its touch
 const KINDS_ROWS_IN_F1 = 3; // multipolygon-f1.parquet holds three MultiPolygon rows (regression.mjs, MP')
 const REFUSAL_ZOOM_OUT_NOTCHES_MAX = 8; // K6's re-aim zooms out at least this far to cross the pick threshold
@@ -163,6 +170,13 @@ const showFeatureTab = (page) => page.evaluate(() => document.getElementById("in
 const showLayerTab = (page) => page.evaluate(() => document.getElementById("inspector-tab-layer")?.click());
 /** Frame-wide count of alpha-255 pixels: the highlight outlines, never the data fill (alpha 180). */
 const opaquePixels = async (page) => (await page.evaluate(() => window.__SPATIAL_E2E__.capturePixels([]))).opaqueCount;
+/** The same count with the shorter side of the drawing buffer it was taken from. */
+const framePixels = async (page) => {
+  const frame = await page.evaluate(() => window.__SPATIAL_E2E__.capturePixels([]));
+  return { opaque: frame.opaqueCount, minSide: Math.min(frame.width, frame.height) };
+};
+/** The label of the selection mode in force (Select only), or null. */
+const pressedMode = (page) => page.evaluate(() => [...document.querySelectorAll(".tool-switch-mode")].find((b) => b.getAttribute("aria-pressed") === "true")?.textContent ?? null);
 const center = (rect) => ({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
 
 async function clickAt(page, point) {
@@ -277,20 +291,35 @@ async function stepClick(page, scene) {
   return `Navigate click inspected id ${tab.id}, equal to the oracle; selection 0`;
 }
 
-/** E-CLICK-FAST: stand on feature A, then move to B and click at once: the inspected id is B's. Race-dependent (see the header). */
+/** E-CLICK-FAST: stand on feature A (the hover readout reads A), then press and release at B over CDP with no pointer move to B first: the inspected id is B's, which a tap that read the hover readout would not give. */
 async function stepClickFast(page, scene) {
   const [a, b] = scene.hits;
   expect(b !== undefined, "E-CLICK-FAST: the scene has one feature only");
   await useTool(page, "Navigate");
   await page.mouse.move(a.css.x, a.css.y);
   await sleep(CLICK_SETTLE_MS); // the hover readout now stands on A
-  await page.mouse.move(b.css.x, b.css.y);
-  await page.mouse.down();
-  await page.mouse.up(); // nothing between the move and the click
+  const readoutId = () => page.evaluate(() => /^id (\d+)/.exec(document.querySelector(".hover-readout")?.textContent ?? "")?.[1] ?? null);
+  const standing = await readoutId();
+  let cdp = null;
+  let how = "pressed at B with no move to B first";
+  try {
+    cdp = await page.context().newCDPSession(page);
+    const at = { x: b.css.x, y: b.css.y, button: "left", clickCount: 1 };
+    await cdp.send("Input.dispatchMouseEvent", { ...at, type: "mousePressed", buttons: 1 }); // a move would be a hover and update the readout
+    await cdp.send("Input.dispatchMouseEvent", { ...at, type: "mouseReleased", buttons: 0 });
+  } catch (e) {
+    how = `CDP press unavailable (${e?.message}); moved to B first, so race-dependent`;
+    await page.mouse.move(b.css.x, b.css.y);
+    await page.mouse.down();
+    await page.mouse.up();
+  } finally {
+    await cdp?.detach().catch(() => {});
+  }
   await sleep(CLICK_SETTLE_MS);
-  const tab = (await pollUntil(() => readTab(page), (t) => t.id !== null, 5000)).last;
-  expect(tab.id === b.id, `E-CLICK-FAST: the click at B inspected id ${tab.id}; B's oracle id is ${b.id} (A's is ${a.id})`);
-  return `a move from ${a.id} to ${b.id} clicked at once inspected ${tab.id}`;
+  const tab = (await pollUntil(() => readTab(page), (t) => t.id === b.id, 5000)).last;
+  expect(tab.id === b.id, `E-CLICK-FAST: the click at B inspected id ${tab.id}; B's oracle id is ${b.id} (A's is ${a.id}; the readout stood on ${standing}); ${how}`);
+  const stale = standing === a.id && (await readoutId()) === a.id;
+  return `a click at ${b.id} (${how}) inspected ${tab.id}; ${stale ? "the hover readout stood on " + a.id + " through the click" : "the hover readout had moved off " + a.id + ", so the stale read was not reproduced"}`;
 }
 
 /** E-SELECT: a Select click: count 1, and the highlight's alpha-255 pixels appear. */
@@ -306,19 +335,32 @@ async function stepSelect(page, scene) {
   return `Selected 1; alpha-255 pixels ${before} -> ${after}`;
 }
 
-/** E-NODRAG (H1): a drag pan in Select changes no selection, and the view box does change. */
+/** E-NODRAG (H1): a drag pan in Select changes no selection, and the view box does change. Run in Add / remove, where a tap at a drag's release over the selected feature deselects it. */
 async function stepNoDrag(page, scene) {
   const p = scene.hits[0].css;
   const c = center(scene.rect);
   const sign = p.x < c.x ? 1 : -1;
-  await page.mouse.move(p.x, p.y); // out and back, released over the pressed feature
+  await useTool(page, "Select");
+  const priorMode = await pressedMode(page);
+  await useMode(page, "Add / remove");
+  try {
+    return await noDragIn(page, scene, p, c, sign);
+  } finally {
+    if (priorMode !== null && priorMode !== "Add / remove") await useMode(page, priorMode);
+  }
+}
+
+async function noDragIn(page, scene, p, c, sign) {
+  // The pan is anchored where its first move ends, so the first move is one jump onto p: out and back, the content under p at the release is the selected feature.
+  await page.mouse.move(p.x + sign * PAN_JUMP_PX, p.y);
   await page.mouse.down();
+  await page.mouse.move(p.x, p.y);
   await page.mouse.move(p.x + sign * 60, p.y, { steps: 8 });
   await page.mouse.move(p.x, p.y, { steps: 8 });
   await page.mouse.up();
   await sleep(CLICK_SETTLE_MS);
   const held = await readTab(page);
-  expect(held.selected === 1, `E-NODRAG: a drag that began and ended on the selected feature left Selected ${held.selected}, expected 1`);
+  expect(held.selected === 1, `E-NODRAG: a drag pan released over the selected feature left Selected ${held.selected}, expected 1`);
   // Pan the selected feature out of the view, away from the edge nearest to it, and read that the view box moved.
   const away = p.x >= c.x ? 1 : -1;
   const w = scene.rect.width;
@@ -344,9 +386,10 @@ async function stepZoomSel(page, consoleHandle) {
   await waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 1500, timeoutMs: 30_000 });
   const back = (await pollUntil(() => readTab(page), (t) => t.outside === 0, 10_000)).last;
   expect(back.outside === 0, `E-ZOOMSEL: after Zoom to selection the feature is still reported outside the view (outside ${back.outside})`);
-  const after = (await pollUntil(() => opaquePixels(page), (n) => n - before >= HIGHLIGHT_MIN_OPAQUE_PX, 10_000)).last;
-  expect(after - before >= HIGHLIGHT_MIN_OPAQUE_PX, `E-ZOOMSEL: alpha-255 pixels ${before} -> ${after}; the selected feature's outline is not on the screen`);
-  return `outside ${away.outside} -> 0; alpha-255 pixels ${before} -> ${after}`;
+  const floorOf = (f) => Math.max(HIGHLIGHT_MIN_OPAQUE_PX, Math.ceil(FIT_OUTLINE_MIN_PER_SIDE * f.minSide));
+  const framed = (await pollUntil(() => framePixels(page), (f) => f.opaque - before >= floorOf(f), 10_000)).last;
+  expect(framed.opaque - before >= floorOf(framed), `E-ZOOMSEL: alpha-255 pixels ${before} -> ${framed.opaque}; a fit that frames the selected feature draws at least ${floorOf(framed)} (${FIT_OUTLINE_MIN_PER_SIDE} times the buffer's shorter side, ${framed.minSide})`);
+  return `outside ${away.outside} -> 0; alpha-255 pixels ${before} -> ${framed.opaque} (floor ${floorOf(framed)})`;
 }
 
 /** E-SEL-PAN: a pan away and back: the count is unchanged. */
