@@ -726,6 +726,21 @@ describe("App: tools, the click, the selection and the inspection (milestone 2, 
     expect(shown(".publish-summary-headline")).toBe("Exported.");
   });
 
+  // RECORDED MUTATION for "RB7-hook" (a row beyond the table; section 2.5: the publishExecute dev hook goes through the same wrapper): in `runExecute` (PublishPanel.tsx) call `publishExecute` directly. Expected failure: the host call.
+  it("RB7-hook: the publishExecute dev hook is refused by the same staged-scope path", async () => {
+    await open("C:/data/a.parquet");
+    click(q(".publish-disclosure"));
+    await prepareExport();
+    setValue(q<HTMLInputElement>(".filter-predicate")!, "zone = 'residential'");
+    await inAct(() => q<HTMLButtonElement>(".filter-apply")!.click());
+
+    const refusal = "[P6 placeholder] The export was not run, because the filter changed after it was prepared. Nothing was written. Prepare it again.";
+    const outcome = await act(async () => window.__SPATIAL_E2E__!.publishExecute!("bundle"));
+    expect(mocks.publish.executes, "the host was not called").toEqual([]);
+    expect(outcome).toEqual({ status: "refused", message: refusal });
+    expect(shown(".publish-panel .admission-refusal-message"), "the panel renders it as it renders the dialog's").toBe(refusal);
+  });
+
   // RECORDED MUTATION for "RB8": in App.tsx pass the selection to the panel (`filterActive={activeFilter !== null || selection.size > 0}`). Expected failure: the second prepare's arguments.
   it("RB8: an export is prepared with the same arguments with and without a selection, and says the selection is not used", async () => {
     const sentence = "[P6 placeholder] The selection is not used. The export covers the row scope chosen above.";
