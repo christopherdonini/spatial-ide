@@ -15,7 +15,7 @@
 // (Amendment 1, A7). It starts a whole-file export of the 100k fixture through the real dialog (the prepare through the dev destination seam, as
 // publish.mjs does; the phrase typed and Submit clicked as an operator would), reopens another fixture at once, and prints the panel, the host outcome
 // and any export text before, after the open and after the export settles. If the export had already settled when the open returned, the record says so
-// and the observation is inconclusive. E-ASK follows in its own stage.
+// and the observation is inconclusive. E-ASK and E-ASK-STATEMENT (stage 7) run before it, in their own functions.
 //
 // What none of this proves: a timing, a rate or a performance figure (there are none here; the millisecond numbers are bounds on waiting). A tap from a
 // real WebView2 pointer is first exercised here: no earlier suite presses and releases without moving.
@@ -44,6 +44,12 @@
 //                  on the run with a selection (its prompt carries a filter scope sentence, none being expected).
 //   E-SCOPE        src/publish/PublishPanel.tsx, `executeInStagedScope`: `const check: ScopeCheck = { ok: true };`. Expected: E-SCOPE fails because the execute is sent
 //                  and returns a success, where the shell's refusal is expected. Clean it up: the bundle that mutation writes is under target/e2e-selection-out.
+//   E-ASK (1)      src/App.tsx, `confirmOpen`: `return Promise.resolve(true);` as its first statement. Expected: E-ASK fails on the absent ask (no run is then asked about).
+//   E-ASK (2)      src/App.tsx, `handleAdmitted`: also release every standing export consumer (`dispatch({type: "consumer.released", ...})` for each of `exportRunsRef.current`'s runs).
+//                  Expected: E-ASK fails on the old handle being closed before the export's outcome.
+//   E-ASK-STATEMENT src/App.tsx, `answerOpenAsk`: show the statement only when `cancel()` answers true (the loop body becomes `run.cancelChosen = false;
+//                  void run.cancel().then((answer) => { run.cancelChosen = answer; });`). The run has ended, so the host answers false. Expected: E-ASK-STATEMENT fails on the absent statement.
+//   Both steps are INCONCLUSIVE (class 2, never a pass) when the export had ended before the ask was read: the step then fails with that word in its message.
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, utimesSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -541,6 +547,79 @@ async function stepScope(page, consoleHandle) {
   return "execute refused after the filter changed; no bundle directory, no staging debris";
 }
 
+/**
+ * E-ASK's driver: opens the 100k fixture, starts a whole-file execute of it through the dev hook and, with it running, an open of filter-zoned; neither is awaited (the open waits on
+ * the ask). `window.__askRun` and `window.__askOpen` hold the two promises. Throws INCONCLUSIVE (class 2, never a pass) when the export has ended by the time the ask is read.
+ */
+async function startExportThenOpen(page, consoleHandle, label) {
+  await openFixture(page, consoleHandle, FIXTURE_100K, label);
+  const prepared = await prepareExport(page, freshDestination("ask"));
+  expect(prepared.status === "prompt", `${label}: prepare returned ${JSON.stringify(prepared)}`);
+  await page.evaluate(([phrase, path]) => {
+    const run = (window.__askRun = { done: false });
+    run.promise = window.__SPATIAL_E2E__.publishExecute(phrase).then((o) => ((run.done = true), o));
+    const opened = (window.__askOpen = {});
+    opened.promise = window.__SPATIAL_E2E__.openPath(path);
+  }, [basename(prepared.prompt.destination_display), FIXTURE_FILTER]);
+  const shown = await pollUntil(() => page.evaluate(() => document.querySelector(".open-during-export-ask") !== null), (v) => v === true, 10_000, 100);
+  if (await page.evaluate(() => window.__askRun.done)) throw new Error(`${label}: INCONCLUSIVE (class 2, never a pass): the export had ended when the ask was read (ask shown: ${shown.ok})`);
+  expect(shown.ok, `${label}: no ask was shown while the export ran`);
+}
+
+const askLayer = (page) => page.evaluate(() => document.querySelector(".layers-row-label")?.textContent ?? "");
+/** The newest of the console's open_dataset and close_dataset rows (the console is expanded here, with its groups): the old handle's close follows the new open's row. */
+async function lastLifecycleRow(page) {
+  await page.evaluate(() => {
+    const b = document.querySelector(".console-disclosure");
+    if (b?.getAttribute("aria-expanded") !== "true") b.click();
+    document.querySelectorAll('.console-group-header[aria-expanded="false"]').forEach((el) => el.click());
+  });
+  await sleep(300);
+  return page.evaluate(() => [...document.querySelectorAll(".console-entry-class-a .console-entry-header")].map((h) => h.textContent).filter((t) => t === "open_dataset" || t === "close_dataset").at(-1) ?? null);
+}
+
+/** E-ASK: with a whole-file export of the 100k fixture running, opening filter-zoned shows the ask. Keep exporting leaves the handle and the export reaches its outcome; Cancel the export and go on admits the new dataset, and the old close_dataset row follows the run's outcome. */
+async function stepAsk(page, consoleHandle) {
+  await startExportThenOpen(page, consoleHandle, "E-ASK (keep)");
+  await page.click(".open-during-export-keep");
+  const dropped = await page.evaluate(() => window.__askOpen.promise);
+  expect(dropped.kind === "refused" && dropped.code === "open.dropped", `E-ASK: Keep exporting gave the open ${JSON.stringify(dropped)}`);
+  expect((await askLayer(page)).includes("100k-happy-path"), `E-ASK: after Keep exporting the layer is ${JSON.stringify(await askLayer(page))}, not the 100k fixture`);
+  const kept = await page.evaluate(() => window.__askRun.promise);
+  expect(kept.status === "success", `E-ASK: after Keep exporting the export's outcome is ${JSON.stringify(kept)}`);
+  expect(await page.evaluate(() => document.querySelector(".late-cancel-statement") === null), "E-ASK: a late-cancel statement after Keep exporting");
+
+  await startExportThenOpen(page, consoleHandle, "E-ASK (cancel)");
+  await page.click(".open-during-export-cancel");
+  const admitted = await page.evaluate(() => window.__askOpen.promise);
+  expect(admitted.kind === "admitted", `E-ASK: Cancel the export and go on gave the open ${JSON.stringify(admitted)}`);
+  expect((await askLayer(page)).includes("filter-zoned"), `E-ASK: after Cancel and go on the layer is ${JSON.stringify(await askLayer(page))}`);
+  const newest = await lastLifecycleRow(page); // read first, then whether the run had ended: done never goes back, so a close seen with done false preceded the outcome
+  expect(!(newest === "close_dataset" && !(await page.evaluate(() => window.__askRun.done))), "E-ASK: the old handle was closed before the export's outcome");
+  const outcome = await page.evaluate(() => window.__askRun.promise);
+  expect((await pollUntil(() => lastLifecycleRow(page), (row) => row === "close_dataset", 20_000)).ok, "E-ASK: no close_dataset row followed the export's outcome");
+  const finished = outcome.status === "success" || outcome.status === "succeeded-unaudited";
+  expect((await page.evaluate(() => document.querySelector(".late-cancel-statement") !== null)) === finished, `E-ASK: the export's outcome is ${outcome.status}; the statement must show exactly when a bundle was written`);
+  await page.evaluate(() => document.querySelector(".console-disclosure")?.click());
+  return `the ask showed; Keep exporting left the 100k layer and the export ended ${kept.status}; Cancel and go on admitted filter-zoned, the old close_dataset row followed the outcome (${outcome.status})`;
+}
+
+/** E-ASK, third step (Amendment 7 item 6): the ask stands while the export finishes; after its outcome, Cancel the export and go on shows the statement with the outcome's bundle_path, the manifest is on disk there, and the new dataset is admitted. */
+async function stepAskStatement(page, consoleHandle) {
+  await startExportThenOpen(page, consoleHandle, "E-ASK-STATEMENT");
+  const outcome = await page.evaluate(() => window.__askRun.promise);
+  expect(outcome.status === "success", `E-ASK-STATEMENT: the export's outcome is ${JSON.stringify(outcome)}; a finished bundle was needed`);
+  await page.click(".open-during-export-cancel");
+  const admitted = await page.evaluate(() => window.__askOpen.promise);
+  expect(admitted.kind === "admitted", `E-ASK-STATEMENT: Cancel the export and go on gave the open ${JSON.stringify(admitted)}`);
+  const statement = (await pollUntil(() => page.evaluate(() => ({ text: document.querySelector(".late-cancel-text")?.textContent ?? null, path: document.querySelector(".late-cancel-path")?.textContent ?? null })), (s) => s.path !== null, 10_000)).last;
+  expect(statement.path === outcome.bundle_path, `E-ASK-STATEMENT: the statement names ${JSON.stringify(statement.path)}; the outcome's bundle_path is ${JSON.stringify(outcome.bundle_path)}`);
+  expect(/^The export was not cancelled: it finished before the cancel could stop it/.test(statement.text ?? ""), `E-ASK-STATEMENT: the statement reads ${JSON.stringify(statement.text)}`);
+  expect(existsSync(join(outcome.bundle_path, "manifest.json")), `E-ASK-STATEMENT: no manifest.json under ${outcome.bundle_path}`);
+  expect((await askLayer(page)).includes("filter-zoned"), `E-ASK-STATEMENT: the layer is ${JSON.stringify(await askLayer(page))}, not filter-zoned`);
+  return `the statement named ${outcome.bundle_path}, whose manifest.json exists; filter-zoned was admitted`;
+}
+
 async function runSelectionSteps(page, consoleHandle) {
   const results = [];
   async function runStep(id, timeoutMs, fn) {
@@ -585,6 +664,8 @@ async function runSelectionSteps(page, consoleHandle) {
   await runStep("E-KINDS", 1_200_000, () => stepKinds(page, consoleHandle));
   await runStep("E-EXPORT", 900_000, () => stepExport(page, consoleHandle));
   await runStep("E-SCOPE", 300_000, () => stepScope(page, consoleHandle));
+  await runStep("E-ASK", 600_000, () => stepAsk(page, consoleHandle));
+  await runStep("E-ASK-STATEMENT", 300_000, () => stepAskStatement(page, consoleHandle));
   console.log(`[selection] ${results.filter((r) => r.status === "PASS").length} PASS, ${results.filter((r) => r.status === "FAIL").length} FAIL: ${results.map((r) => `${r.id}=${r.status}`).join(" ")}`);
 }
 
