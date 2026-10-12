@@ -47,7 +47,7 @@ G7, G8 and G9 read a call that cannot be tokenised from each place where a comma
 
 Each refusal writes one new file, and an allowed call writes none:
 
-- the folder is `<parent of the main checkout>/<name of the main checkout>-local/guardian/<YYYY-MM-DD>/`, beside the Recorder's `-local/evidence` folder, found from the session's repository; with no repository, or a root that cannot be derived, no line is written;
+- the folder is `<parent of the main checkout>/<name of the main checkout>-local/guardian/<YYYY-MM-DD>/`, found from the session's repository; with no repository, or a root that cannot be derived, no line is written;
 - the file is `<HHMMSSmmm>-<16 hex of the line's sha256>.json`, one JSON line and an LF, written by one `$.fs.write`;
 - the fields are `schema` (`spatial-guardian/v1`), `time` (UTC, ISO), `rule` (`G1`, `G2`, `G3`, `G4`, `G6`, `G7`, `G8`, `G9`, `unplaceable` or `catch`), `tool`, `agent` (the subagent's type, `main`, or `unavailable`), `target_sha256` (of the command, or of the file or notebook path as received; `unavailable` when it is not a string) and `reason`. Nothing else: no command, path, content or argument;
 - not logged: a refusal by overrun (the engine's catch runs no hook code), N1, and any allowed call;
