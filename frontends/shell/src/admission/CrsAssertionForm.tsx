@@ -19,7 +19,8 @@ interface Props {
 }
 
 /**
- * The `engine.crs_undeclared` remediation form (NEXT-CUT.md P3 item B). Re-enters `admitDataset`
+ * The remediation form for `engine.crs_undeclared` and `engine.format_default_contradicted`
+ * (NEXT-CUT.md P3 item B). Re-enters `admitDataset`
  * via `AdmissionPanel`'s own `admitPath` -- this component never calls `admitDataset`/`openDataset`
  * itself, only `onSubmit`.
  *

@@ -21,9 +21,13 @@ export type FormFamily = "crs" | "identity" | null;
 
 /** The family a refusal CODE alone establishes -- `null` for any code that does not, on its own,
  * open a remediation flow (`nextFormFamily` below is what decides whether a family carries
- * forward from a PRIOR refusal in the same remediation attempt). */
+ * forward from a PRIOR refusal in the same remediation attempt). Three codes start one:
+ * `engine.crs_undeclared` and `engine.format_default_contradicted` the CRS form (the second
+ * refusal's own remedy is to assert the file's actual CRS), `engine.identity_unusable` the identity
+ * form. */
 export function formFamilyForCode(code: string): FormFamily {
   if (code === "engine.crs_undeclared") return "crs";
+  if (code === "engine.format_default_contradicted") return "crs";
   if (code === "engine.identity_unusable") return "identity";
   return null;
 }
@@ -33,9 +37,9 @@ export function formFamilyForCode(code: string): FormFamily {
  *
  * - `engine.crs_assertion_conflict` is refused to `null` unconditionally (I1: this code NEVER
  *   gets a remediation control, no matter what came before).
- * - A code that starts its own family (`engine.crs_undeclared`, `engine.identity_unusable`) always
- *   wins, even over a different prior family -- a fresh refusal of that shape means the operator's
- *   remediation attempt has to start (or restart) there.
+ * - A code that starts its own family (`engine.crs_undeclared`, `engine.format_default_contradicted`,
+ *   `engine.identity_unusable`) always wins, even over a different prior family -- a fresh refusal
+ *   of that shape means the operator's remediation attempt has to start (or restart) there.
  * - Anything else (the axis-order codes, most concretely) carries the PRIOR family forward rather
  *   than clearing it: an axis-order refusal can only be the direct result of the CRS definition
  *   just asserted, so the CRS form staying reachable (item D) is what lets the operator try a

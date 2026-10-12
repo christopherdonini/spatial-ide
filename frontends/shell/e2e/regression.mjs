@@ -2433,24 +2433,21 @@ async function stepSessionTier(page, consoleHandle, stepId, fixturePath) {
 }
 
 /**
- * `ABSENTCRS'` (§4 row F-2, `engine/ADMISSION-PREREGISTRATION.md`): opens the absent-key,
- * metre-domain fixture that GeoParquet's OGC:CRS84 absent-key default admits and this file's own
- * out-of-domain bbox then contradicts -- `engine.format_default_contradicted`, a DIFFERENT
- * provenance class than `B2'/B3'`'s `engine.crs_undeclared` (the ruling this step names: DECISIONS-
- * PENDING entry 80, "(a), each re-aim naming the ruling AND asserting the new provenance class" --
- * applied here to a new step rather than an edited one, since asserting the code and the verbatim
- * message below IS asserting that class: the message itself names the format rule that was applied
- * and contradicted, `geoparquet:1.1.0#crs-absent-default`).
- *
- * Deliberately NOT `stepRefusal`: that helper asserts a remediation form is present, which is a
- * claim about `AdmissionPanel.tsx`'s `formFamilyForCode` this code does not make (it starts a
- * family only for `engine.crs_undeclared`/`engine.identity_unusable`) -- whether this refusal ought
- * to offer one is a shell-surface question left to Brief A's later parts, not asserted either way
- * here. What DOES carry over from `stepRefusal`: the code/message-verbatim checks, no dismiss
- * button, and `.describe-summary` absent. Whatever remediation form (if any) the panel shows is
- * recorded as an INFO line in this step's own return value instead of an assertion.
+ * `ABSENTCRS'` (§4 row F-2, `engine/ADMISSION-PREREGISTRATION.md`; re-aimed by
+ * `SHELL-CRS-FORM-FOR-FORMAT-DEFAULT-CONTRADICTED-PREREGISTRATION.md` §2.3, PLAN node
+ * `shell-crs-form-for-format-default-contradicted`): opens the absent-key, metre-domain fixture that
+ * GeoParquet's OGC:CRS84 absent-key default admits and this file's own out-of-domain bbox then
+ * contradicts -- `engine.format_default_contradicted`, a DIFFERENT provenance class than `B2'/B3'`'s
+ * `engine.crs_undeclared` (the rule this step cites: DECISIONS-PENDING entry 80, "(a), each re-aim
+ * naming the ruling AND asserting the new provenance class"). The refusal's own remedy is to assert
+ * the file's actual CRS, so the CRS form must be present and the identity form absent. The step then
+ * asserts through that real form, by DOM clicks -- the EPSG:2056 catalog entry found by its label,
+ * then submit, never `openPath` options, which would skip the form -- and the NEW provenance class:
+ * the file opens, its `CRS` row reads `EPSG:2056 — caller-asserted by ...`, and `CRS provenance`
+ * reads `crs:asserted, axis:declared`. Kept from `stepRefusal`: the code/message-verbatim checks, no
+ * button inside the refusal block, and `.describe-summary` absent from the Layers region while refused.
  */
-async function stepAbsentCrs(page) {
+async function stepAbsentCrs(page, consoleHandle) {
   const outcome = await page.evaluate((p) => window.__SPATIAL_E2E__.openPath(p), FIXTURE_ABSENT_CRS);
   if (outcome.kind !== "refused" || outcome.code !== "engine.format_default_contradicted") {
     throw new Error(`ABSENTCRS': expected {kind:"refused", code:"engine.format_default_contradicted"}, got ${JSON.stringify(outcome)}`);
@@ -2475,15 +2472,57 @@ async function stepAbsentCrs(page) {
     throw new Error(`ABSENTCRS': panel message text mismatch.\nExpected: ${FORMAT_DEFAULT_CONTRADICTED_MESSAGE}\nActual:   ${panel.messageText}`);
   }
   if (panel.hasButton) throw new Error("ABSENTCRS': a <button> exists inside .admission-refusal (expected no dismiss control)");
-  // Recorded, not asserted (this step's own top comment): which remediation form, if any, the
-  // panel shows for this code.
-  const formInfo = await page.evaluate(() => ({
+  const forms = await page.evaluate(() => ({
     crsForm: document.querySelector(".crs-assertion-form") !== null,
     identityForm: document.querySelector(".identity-declaration-form") !== null,
   }));
+  if (!forms.crsForm) throw new Error("ABSENTCRS': .crs-assertion-form not present after the refusal");
+  if (forms.identityForm) throw new Error("ABSENTCRS': .identity-declaration-form present after the refusal (expected absent)");
   const summaryPresent = await page.evaluate(() => document.querySelector(".admission-panel .describe-summary") !== null);
   if (summaryPresent) throw new Error("ABSENTCRS': .describe-summary present in the Layers region after a refusal");
-  return `refused engine.format_default_contradicted; message verbatim; no dismiss button on the panel; no describe-summary in the Layers region; INFO: .crs-assertion-form present=${formInfo.crsForm}, .identity-declaration-form present=${formInfo.identityForm} (not asserted either way)`;
+  // Through the real form, by DOM clicks. The catalog loads after the form mounts, so the entry is
+  // waited for; the submit button is waited for too (it stays disabled until a route is complete).
+  const clickWhenReady = (what, fn) =>
+    waitForCondition(() => page.evaluate(fn), (clicked) => clicked === true, 20_000).then((r) => {
+      if (!r.ok) throw new Error(`ABSENTCRS': ${what} not available within 20000ms`);
+    });
+  await clickWhenReady("a catalog entry labelled EPSG:2056", () => {
+    const label = Array.from(document.querySelectorAll(".crs-assertion-form .crs-assertion-entry label")).find((l) =>
+      (l.textContent ?? "").includes("EPSG:2056")
+    );
+    const radio = label?.querySelector("input[type=radio]");
+    radio?.click();
+    return radio != null;
+  });
+  await clickWhenReady("an enabled submit button", () => {
+    const button = document.querySelector(".crs-assertion-form button[type=submit]");
+    if (!button || button.disabled) return false;
+    button.click();
+    return true;
+  });
+  const admitted = await waitForCondition(
+    () =>
+      page.evaluate(() => {
+        const rows = {};
+        for (const dt of document.querySelectorAll(".describe-summary dt")) rows[dt.textContent] = dt.nextElementSibling?.textContent ?? null;
+        return {
+          rows,
+          refusal: document.querySelector(".admission-panel .admission-refusal") !== null,
+          form: document.querySelector(".crs-assertion-form") !== null,
+        };
+      }),
+    (d) =>
+      !d.refusal &&
+      !d.form &&
+      (d.rows["CRS"] ?? "").startsWith("EPSG:2056 — caller-asserted by ") &&
+      d.rows["CRS provenance"] === "crs:asserted, axis:declared",
+    20_000
+  );
+  if (!admitted.ok) {
+    throw new Error(`ABSENTCRS': not admitted as EPSG:2056 caller-asserted (crs:asserted, axis:declared) within 20000ms of the submit. Last seen: ${JSON.stringify(admitted.last)}`);
+  }
+  const settle = await waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 3000, timeoutMs: 45_000 });
+  return `refused engine.format_default_contradicted; message verbatim; no button inside the refusal block; no describe-summary in the Layers region; .crs-assertion-form present, .identity-declaration-form absent; EPSG:2056 catalog entry picked and submitted by DOM clicks on the real form; admitted: CRS row "${admitted.last.rows["CRS"].split(" at ")[0]} ...", CRS provenance "${admitted.last.rows["CRS provenance"]}"; settled=${settle.settled}`;
 }
 
 async function stepNet(page, badResponses) {
@@ -2671,10 +2710,10 @@ async function main() {
     await runStep("B2'/B3'", 30_000, () =>
       stepRefusal(page, "B2'/B3'", FIXTURE_NO_CRS, "engine.crs_undeclared", CRS_UNDECLARED_MESSAGE, ".crs-assertion-form")
     );
-    // F-2 (`engine/ADMISSION-PREREGISTRATION.md` §4) -- see `stepAbsentCrs`'s own top comment for
-    // the full account of why this is not `stepRefusal` and what DECISIONS-PENDING entry 80's rule
-    // means for a new step rather than an edited one.
-    await runStep("ABSENTCRS'", 30_000, () => stepAbsentCrs(page));
+    // F-2 (`engine/ADMISSION-PREREGISTRATION.md` §4) -- see `stepAbsentCrs`'s own top comment. 90s is an
+    // outer bound for a wedged page, not a timing claim; the step's own waits (three of 20s, one 45s
+    // settle) can sum past it, and then this bound is the one that fails the step.
+    await runStep("ABSENTCRS'", 90_000, () => stepAbsentCrs(page, consoleHandle));
     // Re-aimed (E2E-STALE-EXPECTATIONS-REAIM-PREREGISTRATION.md section 2.1): two halves, each failing by
     // its own name. 90s as an outer bound for a wedged page (each half's settle is 45s at most).
     await runStep("C2'/C3'", 90_000, async () => {
