@@ -20,6 +20,8 @@ import type { ClickInput } from "./feature/clickEffect";
 import { createViewBoxStore, FeaturePanel } from "./feature/FeaturePanel";
 import { noticeText } from "./feature/FeatureTab";
 import type { LastClick } from "./feature/FeatureTab";
+import { lateCancelOutcome, LateCancelStatement, OpenDuringExportAsk } from "./feature/OpenDuringExportAsk";
+import type { FinishedOutcome } from "./feature/OpenDuringExportAsk";
 import { ToolSwitch } from "./feature/ToolSwitch";
 import FilterPanel from "./filter/FilterPanel";
 import { ScanLivenessMirror, WatcherStatusItem } from "./layout/regionParts";
@@ -39,6 +41,7 @@ import { registerE2eHook, unregisterE2eHook } from "./e2e-test-surface";
 import { isInstrumentedBuild } from "./isInstrumentedBuild";
 import NoticesPanel from "./notices/NoticesPanel";
 import PublishPanel from "./publish/PublishPanel";
+import type { ExportRunEnd, ExportRunReport } from "./publish/PublishPanel";
 import {
   getResidencyArm,
   notifyResidencyArmDatasetClosed,
@@ -100,6 +103,7 @@ import {
   selectClosable,
   selectDrawnViews,
   workspaceReducer,
+  type ExportConsumerId,
   type Tool,
   type ViewId,
 } from "./workspace/workspaceState";
@@ -112,6 +116,13 @@ import {
 
 /** The ids the canvas reports as drawn before it has reported any: none. One object, so an unchanged summary stays equal. */
 const NO_IDS: ReadonlySet<bigint> = new Set();
+
+/** One export run App holds an operation consumer for (Amendment 7 item 2(b)): marked when "Cancel the export and go on" is chosen for it, and given its end. */
+interface ExportRun {
+  readonly cancel: () => Promise<boolean>;
+  cancelChosen: boolean;
+  end: ExportRunEnd | null;
+}
 
 function toWireBbox(bbox: AuthoritativeBbox): Bbox {
   return {
@@ -1089,6 +1100,69 @@ export default function App() {
     [commitScanState, viewBox]
   );
 
+  /**
+   * **An export run** (Amendment 7 item 2): App acquires an operation consumer (`export-<n>`) on the resource when the panel reports the run, and releases it when
+   * `ended` resolves, in the handler that decides the late-cancel statement. There is no other release, and none on unmount. `runs` holds the runs that stand.
+   */
+  const exportRunsRef = useRef(new Map<ExportConsumerId, ExportRun>());
+  const exportSeqRef = useRef(0);
+  /** The open waiting on the ask: its answer, and the runs that stood when it was asked. */
+  const askRef = useRef<{ answer: (go: boolean) => void; runs: readonly ExportRun[] } | null>(null);
+  const [asking, setAsking] = useState(false);
+  /** The late-cancel statement's outcome. It stands until the next `confirmOpen` call or the next export report, and has no timer. */
+  const [lateCancel, setLateCancel] = useState<FinishedOutcome | null>(null);
+
+  const handleExportRunning = useCallback((report: ExportRunReport): void => {
+    const resource = admittedDatasetRef.current;
+    if (resource === null) return;
+    const id: ExportConsumerId = `export-${++exportSeqRef.current}`;
+    const run: ExportRun = { cancel: report.cancel, cancelChosen: false, end: null };
+    exportRunsRef.current.set(id, run);
+    setLateCancel(null);
+    dispatch({ type: "consumer.acquired", resource, consumer: id });
+    void report.ended.then((end) => {
+      run.end = end;
+      const finished = lateCancelOutcome(run.cancelChosen, end);
+      if (finished !== null) setLateCancel(finished);
+      exportRunsRef.current.delete(id);
+      dispatch({ type: "consumer.released", resource, consumer: id });
+    });
+  }, []);
+
+  /** AdmissionPanel's `confirmOpen`: true at once with no run standing; otherwise the ask, whose answer is the choice. A second call drops the first ask (Keep). */
+  const confirmOpen = useCallback((): Promise<boolean> => {
+    setLateCancel(null);
+    askRef.current?.answer(false);
+    askRef.current = null;
+    if (exportRunsRef.current.size === 0) {
+      setAsking(false);
+      return Promise.resolve(true);
+    }
+    return new Promise<boolean>((answer) => {
+      askRef.current = { answer, runs: [...exportRunsRef.current.values()] };
+      setAsking(true);
+    });
+  }, []);
+
+  /** A choice: one `dataset.openDuringExport` row. "Cancel the export and go on" marks the runs before it calls their `cancel()` once, and never reads the answer. */
+  function answerOpenAsk(cancelAndGo: boolean): void {
+    const ask = askRef.current;
+    if (ask === null) return;
+    askRef.current = null;
+    setAsking(false);
+    recordNamed("gui-action", "dataset.openDuringExport");
+    if (cancelAndGo) {
+      for (const run of ask.runs) {
+        run.cancelChosen = true;
+        // A run that ended while the ask stood is decided at the choice; one that has not is decided when it ends.
+        const finished = lateCancelOutcome(true, run.end);
+        if (finished !== null) setLateCancel(finished);
+        void run.cancel().catch(() => {});
+      }
+    }
+    ask.answer(cancelAndGo);
+  }
+
   // E2E TEST SURFACE (dev builds only, viewport-residency cut P1/P1b, RESIDENCY-PREREGISTRATION.md).
   // Registered ONCE, at the top level -- unlike `capturePixels`/`queryWithFilter` (dataset-scoped,
   // registered inside `WorkingCanvas`/the `[admitted]` effect), a driver legitimately wants the
@@ -1823,7 +1897,13 @@ export default function App() {
        * placement below `.canvas-container` records the pre-milestone-1 stacked layout: it is history,
        * kept for its reasoning about keys and order, and does not say where anything sits now. */
       slots={{
-        "region.layers": <AdmissionPanel onAdmitted={handleAdmitted} />,
+        "region.layers": (
+          <>
+            <AdmissionPanel onAdmitted={handleAdmitted} confirmOpen={confirmOpen} />
+            {asking && <OpenDuringExportAsk onKeep={() => answerOpenAsk(false)} onCancelAndGo={() => answerOpenAsk(true)} />}
+            {lateCancel !== null && <LateCancelStatement outcome={lateCancel} />}
+          </>
+        ),
         /* Entry 120 (2) / OPEN-1 (A), question round 66, item 1: the summary binds to the dataset on the
          * map (`admitted`), not to the open attempt `AdmissionPanel` is working on -- so a refused second
          * open leaves the first dataset's summary standing while the Layers region shows the refusal. */
@@ -2199,6 +2279,7 @@ export default function App() {
             getLastViewportBbox={() => lastViewportBboxRef.current}
             stageScope={stageExportScope}
             checkStagedScope={checkStagedExportScope}
+            onExportRunning={handleExportRunning}
           />
         ),
         /* NEXT-CUT.md P3: mounted UNCONDITIONALLY (not gated on `admitted`, unlike every panel

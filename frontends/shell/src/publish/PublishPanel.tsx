@@ -13,7 +13,7 @@ import type { StyleState } from "../style/document";
 import { toStyleDocument } from "../style/document";
 import type { ResolvedScope, ScopeChange, ScopeCheck } from "../workspace/scope";
 import { formatPublishRefusal } from "./formatPublishRefusal";
-import PublishDialog from "./PublishDialog";
+import PublishDialog, { settleExecuteOutcome } from "./PublishDialog";
 import type { DialogSettleResult } from "./PublishDialog";
 import {
   prepareCancelKey,
@@ -27,6 +27,19 @@ import { FILTER_SCOPE_SENTENCE } from "./types";
 import type { ExecuteOutcome, PrepareOutcome, PublishPromptData, PublishScopeInput } from "./types";
 
 export type PublishScopeChoice = "whole" | "current";
+
+/** How an export run ended (Amendment 7 item 2(a)): the prepare call's outcome, or the execute call's. */
+export type ExportRunEnd = { phase: "prepare"; outcome: PrepareOutcome } | { phase: "execute"; outcome: ExecuteOutcome };
+
+/**
+ * What the panel reports to App when a run starts, once per run (Amendment 7 item 2(a)). A run is a prepare call to its outcome, or an execute call to its outcome;
+ * the approval prompt between them is not a run. `ended` never rejects. `cancel` is the existing `publishCancel` with the running phase's key, and its answer means
+ * only that a token was found and set, never that the run stopped.
+ */
+export interface ExportRunReport {
+  cancel: () => Promise<boolean>;
+  ended: Promise<ExportRunEnd>;
+}
 
 /** The Export section's sentence that the selection is not used (milestone 2, Amendment 1 A6; ADR-024's scope is the whole file or the current view). A P6 placeholder. */
 const EXPORT_SELECTION_SENTENCE = "[P6 placeholder] The selection is not used. The export covers the row scope chosen above.";
@@ -324,6 +337,8 @@ export interface PublishPanelProps {
   stageScope: () => ResolvedScope | null;
   /** The staged scope against the current one (`checkScope`): ok, or what changed. A `null` staged scope never passes. */
   checkStagedScope: (staged: ResolvedScope | null) => ScopeCheck;
+  /** Called once when a prepare or execute run starts (`App.tsx` holds an operation consumer on the resource until `ended` resolves). */
+  onExportRunning: (run: ExportRunReport) => void;
 }
 
 /**
@@ -348,6 +363,7 @@ export default function PublishPanel({
   getLastViewportBbox,
   stageScope,
   checkStagedScope,
+  onExportRunning,
 }: PublishPanelProps) {
   const [expanded, setExpanded] = useState(false);
   const [scope, setScope] = useState<PublishScopeChoice>("current");
@@ -370,6 +386,14 @@ export default function PublishPanel({
     });
   }
 
+  /** A prepare run starts (Amendment 7 item 2(a)). Its cancel is the pin phase's key, which the host registers only after the native picker closes. */
+  function reportPrepareRun(settled: Promise<PrepareOutcome>): void {
+    onExportRunning({
+      cancel: () => publishCancel(prepareCancelKey(datasetHandle)),
+      ended: settled.then((outcome): ExportRunEnd => ({ phase: "prepare", outcome })),
+    });
+  }
+
   async function runPrepare(scopeChoice: PublishScopeChoice): Promise<PrepareOutcome> {
     const scopeInput = resolvePublishScope(scopeChoice, getLastViewportBbox());
     if (scopeInput === null) {
@@ -389,7 +413,9 @@ export default function PublishPanel({
     // `settlePrepareOutcome` (module scope, above) is what turns an unexpected rejection into a
     // refusal instead of leaving this `await` throw straight out of `runPrepare`, unresolved and
     // with `setState` never called -- see its own doc comment (S2).
-    const outcome = await settlePrepareOutcome(publishPrepare(datasetHandle, styleDoc, scopeInput, filterActive));
+    const settled = settlePrepareOutcome(publishPrepare(datasetHandle, styleDoc, scopeInput, filterActive));
+    reportPrepareRun(settled);
+    const outcome = await settled;
     unsubscribe();
     setState(nextStateFromPrepareOutcome(outcome));
     return outcome;
@@ -430,9 +456,11 @@ export default function PublishPanel({
     setState(PREPARING_START);
     const unsubscribe = subscribeToPinProgress();
     const styleDoc = JSON.stringify(toStyleDocument(style));
-    const outcome = await settlePrepareOutcome(
+    const settled = settlePrepareOutcome(
       publishPrepareWithDestination(datasetHandle, styleDoc, scopeInput, filterActive, destination)
     );
+    reportPrepareRun(settled);
+    const outcome = await settled;
     unsubscribe();
     setState(nextStateFromPrepareOutcome(outcome));
     return outcome;
@@ -471,7 +499,13 @@ export default function PublishPanel({
   async function executeInStagedScope(attemptId: string, typedPhrase: string): Promise<ExecuteOutcome> {
     const check = checkStagedScope(stagedScopeRef.current);
     if (!check.ok) return scopeChangedOutcome(check.changed);
-    return publishExecute(attemptId, typedPhrase);
+    const run = publishExecute(attemptId, typedPhrase);
+    // An execute run starts (Amendment 7 item 2(a)): `ended` is built on `settleExecuteOutcome`, and the dialog still gets the host's own promise.
+    onExportRunning({
+      cancel: () => publishCancel(attemptId),
+      ended: settleExecuteOutcome(run).then((outcome): ExportRunEnd => ({ phase: "execute", outcome })),
+    });
+    return run;
   }
 
   /**

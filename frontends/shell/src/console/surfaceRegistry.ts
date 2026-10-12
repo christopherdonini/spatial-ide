@@ -363,6 +363,13 @@ const CLASS_C_ROWS = [
       "[P6 placeholder] no API equivalent exists -- pinning or unpinning the inspected feature is pure view state for this session, never sent to the kernel.",
     owner: 'docs/03 §"The action console" (pure view state)',
   },
+  {
+    class: "C",
+    action: "dataset.openDuringExport",
+    statement:
+      "[P6 placeholder] no API equivalent exists -- answering the question asked when a dataset is opened while an export runs is a choice made in the window; the cancel request it may send and the open that follows are recorded by their own rows.",
+    owner: 'docs/03 §"The action console" (pure view state)',
+  },
 ] as const satisfies readonly ClassCRow[];
 
 /** The literal union of every recordable name in the registry -- class-B command names union

@@ -971,6 +971,24 @@ body,
   font-size: 0.85rem;
 }
 
+/* Opening while an export runs (milestone 2, B3): the ask and the late-cancel statement sit in the Layers region beneath AdmissionPanel, never over the map. */
+.open-during-export-ask,
+.late-cancel-statement {
+  margin: 0 1rem 1rem;
+  padding: 0.5rem 0.75rem;
+  max-width: 40rem;
+  background: rgba(128, 128, 128, 0.08);
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+.open-during-export-text,
+.late-cancel-text,
+.late-cancel-path {
+  margin: 0 0 0.5rem;
+}
+.open-during-export-choices { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.late-cancel-path { font-family: ui-monospace, monospace; overflow-wrap: anywhere; }
+
 .publish-summary {
   padding: 0.5rem 0.75rem;
   background: rgba(128, 128, 128, 0.08);

@@ -572,3 +572,28 @@ describe("runAdmitPath cancellation (P4, I8): a refusal carrying CANCELLED_REFUS
     }
   });
 });
+
+// RECORDED MUTATION for "UB13": in `runAdmitPath` (AdmissionPanel.tsx) move the `confirmOpen` check below the `deps.admit` call (`admit` is then called before the answer is read).
+// Expected failure: the `admit` count after a `false` answer.
+describe("UB13 (Amendment 1 B3): runAdmitPath asks confirmOpen before it admits or sets any state", () => {
+  it("false means no admit, no setState and null; true means today's flow", async () => {
+    const admitted: AdmissionOutcome = { kind: "admitted", admitted: admittedFixture() };
+    const admit = vi.fn().mockResolvedValue(admitted);
+    const { harness, onAdmitted, deps } = depsFor(admit);
+    const setState = vi.fn(harness.setState);
+
+    const dropped = await runAdmitPath("C:/f.parquet", {}, { ...deps, setState, confirmOpen: async () => false });
+    expect(dropped, "a dropped open is null").toBeNull();
+    expect(admit, "no admit").toHaveBeenCalledTimes(0);
+    expect(setState, "no setState").toHaveBeenCalledTimes(0);
+    expect(onAdmitted).toHaveBeenCalledTimes(0);
+
+    const confirmOpen = vi.fn().mockResolvedValue(true);
+    const outcome = await runAdmitPath("C:/f.parquet", {}, { ...deps, confirmOpen });
+    expect(confirmOpen).toHaveBeenCalledTimes(1);
+    expect(outcome).toBe(admitted);
+    expect(admit).toHaveBeenCalledTimes(1);
+    expect(harness.state.kind).toBe("admitted");
+    expect(onAdmitted).toHaveBeenCalledTimes(1);
+  });
+});

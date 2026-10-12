@@ -10,6 +10,7 @@
  * one does (`ViewportStreamManager.endSession`), so that a `dataset_session_ended` event takes the real route (Amendment 5,
  * the reviewer's S4): the listener `App` registers, `routeDatasetSessionEndedEvent`, the owner dispatch and the manager. The
  * workspace, the selection and the scope are never mocked (invalidator I6). Rows beyond the table are named as such.
+ * RB12a to RB12e (the ask and the late-cancel statement, Amendment 1 B3 and Amendment 7 item 6) drive the real panel and dialog with `publish/client` mocked to client.ts's real signatures.
  */
 
 import { act, forwardRef, useEffect, useImperativeHandle } from "react";
@@ -23,8 +24,16 @@ const mocks = vi.hoisted(() => ({
   viewportRequests: 0,
   /** The listener `App` registered with `listenDatasetSessionEnded`. */
   sessionEnded: null as ((event: import("./skp/types").DatasetSessionEnded) => void) | null,
-  /** The arguments of every `publishPrepare` and `publishExecute` the real panel made (`publish/client` is mocked to client.ts's real signatures). */
-  publish: { prepares: [] as unknown[][], executes: [] as unknown[][] },
+  /** The arguments of every `publishPrepare` and `publishExecute` the real panel made (`publish/client` is mocked to client.ts's real signatures), the keys of every
+   * `publishCancel` with the answer it gives, and the outcomes a test holds back (`pendingPrepare`, `pendingExecute`) to end a run when it chooses. */
+  publish: {
+    prepares: [] as unknown[][],
+    executes: [] as unknown[][],
+    cancels: [] as string[],
+    cancelAnswer: true,
+    pendingPrepare: null as Promise<import("./publish/types").PrepareOutcome> | null,
+    pendingExecute: null as Promise<import("./publish/types").ExecuteOutcome> | null,
+  },
   canvas: {
     mounted: [] as string[],
     unmounted: [] as string[],
@@ -86,6 +95,11 @@ vi.mock("./skp/client", () => {
   };
 });
 
+/** A `success` outcome whose bundle is at `path`: client.ts's real `ExecuteOutcome`. */
+function success(path: string): import("./publish/types").ExecuteOutcome {
+  return { status: "success", bundle_path: path, rows: 2000, partitions: 1, total_bytes: 1, manifest_bytes: 1, style_hash: "sha256:def", operation_digest: "sha256:ghi", build_millis: 0 };
+}
+
 function promptFixture(): import("./publish/types").PublishPromptData {
   return {
     operation: "publish", class: 3, reversibility: "irreversible", source_name: "parcels.parquet", source_content_hash: "sha256:abc", style_hash: "sha256:def",
@@ -98,11 +112,15 @@ vi.mock("./publish/client", async (importOriginal) => ({
   subscribePublishProgress: () => () => {},
   publishPrepare: async (...args: Parameters<typeof import("./publish/client").publishPrepare>): Promise<import("./publish/types").PrepareOutcome> => {
     mocks.publish.prepares.push(args);
-    return { status: "prompt", attempt_id: `at_${mocks.publish.prepares.length}`, prompt: promptFixture() };
+    return mocks.publish.pendingPrepare ?? { status: "prompt", attempt_id: `at_${mocks.publish.prepares.length}`, prompt: promptFixture() };
   },
   publishExecute: async (...args: Parameters<typeof import("./publish/client").publishExecute>): Promise<import("./publish/types").ExecuteOutcome> => {
     mocks.publish.executes.push(args);
-    return { status: "success", bundle_path: "C:/out/bundle", rows: 2000, partitions: 1, total_bytes: 1, manifest_bytes: 1, style_hash: "sha256:def", operation_digest: "sha256:ghi", build_millis: 0 };
+    return mocks.publish.pendingExecute ?? success("C:/out/bundle");
+  },
+  publishCancel: async (key: string): Promise<boolean> => {
+    mocks.publish.cancels.push(key);
+    return mocks.publish.cancelAnswer;
   },
 }));
 
@@ -185,6 +203,7 @@ vi.mock("./canvas/WorkingCanvas", () => {
 import App from "./App";
 import { HOVER_BELOW_RESOLUTION_TEXT } from "./canvas/HoverReadoutView";
 import { consoleRecorder, isGuiActionEntry } from "./console/recorder";
+import { LATE_CANCEL_FINISHED, LATE_CANCEL_FINISHED_UNAUDITED } from "./feature/OpenDuringExportAsk";
 import { __resetResidencyArmForTests, setResidencyArm } from "./residency/residencyArm";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -194,7 +213,7 @@ const sessionOf = (n: number) => `sr_${n.toString(16).padStart(32, "0")}`;
 const box = (xmin: number, ymin: number, xmax: number, ymax: number) => ({ xmin, ymin, xmax, ymax });
 const pick = (id: bigint) => ({ streamHandle: "st_1", batchSeq: 0, id, anchor: null });
 /** The class-C rows milestone 2 records (section 2.6). */
-const MILESTONE_ROWS = new Set(["tool.set", "selection.change", "selection.clear", "selection.zoomTo", "feature.inspect", "feature.pin"]);
+const MILESTONE_ROWS = new Set(["tool.set", "selection.change", "selection.clear", "selection.zoomTo", "feature.inspect", "feature.pin", "dataset.openDuringExport"]);
 
 describe("App: tools, the click, the selection and the inspection (milestone 2, phase B), through the real App", () => {
   let container: HTMLDivElement;
@@ -207,6 +226,10 @@ describe("App: tools, the click, the selection and the inspection (milestone 2, 
     mocks.sessionEnded = null;
     mocks.publish.prepares = [];
     mocks.publish.executes = [];
+    mocks.publish.cancels = [];
+    mocks.publish.cancelAnswer = true;
+    mocks.publish.pendingPrepare = null;
+    mocks.publish.pendingExecute = null;
     mocks.canvas.mounted = [];
     mocks.canvas.unmounted = [];
     mocks.canvas.fits = [];
@@ -765,5 +788,163 @@ describe("App: tools, the click, the selection and the inspection (milestone 2, 
     expect(mocks.publish.prepares).toHaveLength(2);
     expect(mocks.publish.prepares[1], "the prepare with a selection equals the prepare without").toEqual(mocks.publish.prepares[0]);
     expect(mocks.publish.prepares[0]).toEqual([handleOf(1), expect.any(String), { kind: "whole-file" }, false]);
+  });
+
+  // The ask and the statement (Amendment 1 B3, Amendment 7). A run is held open by a deferred outcome, which a test resolves to end it.
+  function deferred<T>() {
+    let resolve!: (value: T) => void;
+    const promise = new Promise<T>((r) => (resolve = r));
+    return { promise, resolve };
+  }
+  /** Expands the Export section of the current panel, prepares (the mocked host answers with a prompt) and submits: an execute run that stands until its outcome is resolved. */
+  async function startExecute() {
+    const outcome = deferred<import("./publish/types").ExecuteOutcome>();
+    mocks.publish.pendingExecute = outcome.promise;
+    click(q(".publish-disclosure"));
+    await prepareExport();
+    await submitExport();
+    return outcome;
+  }
+  /** Ends a run with its outcome, as the host's answer arriving would. */
+  const endRun = <T,>(held: { resolve: (value: T) => void }, value: T) =>
+    act(async () => {
+      held.resolve(value);
+      await new Promise((r) => setTimeout(r, 0));
+    });
+  let pendingOpen: Promise<unknown> | null = null;
+  /** The open hook is started and not awaited: with a run standing it waits for the ask's answer. */
+  const startOpen = (path: string) => act(async () => void (pendingOpen = window.__SPATIAL_E2E__!.openPath!(path)));
+  const finishOpen = async () => {
+    let result: unknown;
+    await act(async () => void (result = await pendingOpen));
+    return result;
+  };
+  const closes = (handle: string) => mocks.order.filter((entry) => entry === `close:${handle}`).length;
+  const opens = () => mocks.order.filter((entry) => entry.startsWith("open:")).length;
+  const ASK = ".open-during-export-ask";
+
+  // RECORDED MUTATION for "RB12a": in `App.tsx`'s `answerOpenAsk` answer true on Keep exporting (`ask.answer(true)` for both choices). Expected failure: the open count after Keep exporting.
+  it("RB12a: Keep exporting opens nothing, leaves the handle unchanged, closes nothing and queues nothing, and the export reaches its outcome", async () => {
+    await open("C:/data/a.parquet");
+    const run = await startExecute();
+    const before = mark();
+    await startOpen("C:/data/b.parquet");
+    expect(q(ASK), "the ask shows while the export runs").not.toBeNull();
+    expect(opens(), "nothing is opened before a choice").toBe(1);
+
+    click(q(".open-during-export-keep"));
+    expect(await finishOpen(), "the open was dropped").toMatchObject({ kind: "refused", code: "open.dropped" });
+    expect(opens(), "no openDataset").toBe(1);
+    expect(props().dataset, "the handle is unchanged").toBe(handleOf(1));
+    expect(closes(handleOf(1)), "no closeDataset").toBe(0);
+    expect(mocks.publish.cancels, "no cancel").toEqual([]);
+    expect(q(ASK), "the ask is gone").toBeNull();
+    expect(rowsSince(before)).toEqual(["dataset.openDuringExport"]);
+
+    await endRun(run, success("C:/out/kept"));
+    expect(shown(".publish-summary-headline"), "the export reached its outcome in its own panel").toBe("Exported.");
+    expect(opens(), "nothing was queued").toBe(1);
+    expect(q(".late-cancel-statement"), "no statement after Keep exporting").toBeNull();
+  });
+
+  // RECORDED MUTATION for "RB12b": in `handleAdmitted` (App.tsx) release every standing export consumer (`dispatch({ type: "consumer.released", resource, consumer })` for each run), as releasing it when the old panel goes would.
+  // Expected failure: the old handle is closed before the run's outcome.
+  it("RB12b: Cancel the export and go on cancels once, opens once, and closes the old handle once, only after the run's outcome", async () => {
+    await open("C:/data/a.parquet");
+    const run = await startExecute();
+    await startOpen("C:/data/b.parquet");
+    const before = mark();
+    click(q(".open-during-export-cancel"));
+    expect(await finishOpen()).toEqual({ kind: "admitted" });
+    expect(mocks.publish.cancels, "one cancel, with the executing attempt").toEqual(["at_1"]);
+    expect(opens(), "one more openDataset").toBe(2);
+    expect(props().dataset).toBe(handleOf(2));
+    expect(closes(handleOf(1)), "the old handle stays open while the export runs").toBe(0);
+    expect(rowsSince(before)).toEqual(["dataset.openDuringExport"]);
+
+    await endRun(run, { status: "refused", message: "cancelled" });
+    expect(closes(handleOf(1)), "closed once, after the outcome").toBe(1);
+    expect(mocks.order.indexOf(`close:${handleOf(1)}`)).toBeGreaterThan(mocks.order.indexOf(`open:${handleOf(2)}`));
+  });
+
+  // RECORDED MUTATION for "RB12c": in `confirmOpen` (App.tsx) drop the empty-set test (`if (exportRunsRef.current.size === 0)` becomes `if (false)`). Expected failure: the ask shows with no run.
+  it("RB12c: with no run standing no ask is rendered, and a run that has ended is not standing", async () => {
+    await open("C:/data/a.parquet");
+    await startOpen("C:/data/b.parquet");
+    expect(q(ASK), "no run, no ask").toBeNull();
+    expect(await finishOpen()).toEqual({ kind: "admitted" });
+
+    const run = await startExecute();
+    await endRun(run, success("C:/out/done"));
+    await startOpen("C:/data/c.parquet");
+    expect(q(ASK), "an ended run, no ask").toBeNull();
+    expect(await finishOpen()).toEqual({ kind: "admitted" });
+    expect(mocks.publish.cancels).toEqual([]);
+  });
+
+  // RECORDED MUTATION for "RB12d": in `answerOpenAsk` (App.tsx) show the statement only when `cancel()` answers false (the loop body becomes `run.cancelChosen = false; void run.cancel().then((answer) => { run.cancelChosen = !answer; });`).
+  // Expected failure: case (i), where the answer is true and the statement is absent.
+  it("RB12d: the statement is decided by the run's own outcome, never by cancel()'s answer", async () => {
+    const statement = () => ({ text: text(".late-cancel-text"), path: text(".late-cancel-path"), detail: text(".late-cancel-detail") });
+    const cancelAndGo = async (path: string) => {
+      await startOpen(path);
+      click(q(".open-during-export-cancel"));
+      await finishOpen();
+    };
+    await open("C:/data/a.parquet");
+
+    const first = await startExecute();
+    mocks.publish.cancelAnswer = true;
+    await cancelAndGo("C:/data/b.parquet");
+    expect(q(".late-cancel-statement"), "(i) none before the outcome").toBeNull();
+    expect(closes(handleOf(1)), "(i) the old handle is not closed before the outcome").toBe(0);
+    await endRun(first, success("C:/out/p1"));
+    expect(statement(), "(i) the answer is true and the outcome is success").toEqual({ text: LATE_CANCEL_FINISHED, path: "C:/out/p1", detail: null });
+    expect(closes(handleOf(1)), "(i) closed once, after the outcome").toBe(1);
+
+    const second = await startExecute();
+    expect(q(".late-cancel-statement"), "the next export report ends the statement").toBeNull();
+    mocks.publish.cancelAnswer = false;
+    await cancelAndGo("C:/data/c.parquet");
+    await endRun(second, success("C:/out/p2"));
+    expect(statement(), "(ii) the answer is false and the outcome is success: the same").toEqual({ text: LATE_CANCEL_FINISHED, path: "C:/out/p2", detail: null });
+
+    const third = await startExecute();
+    mocks.publish.cancelAnswer = true;
+    await cancelAndGo("C:/data/d.parquet");
+    await endRun(third, { status: "refused", message: "cancelled" });
+    expect(q(".late-cancel-statement"), "(iii) the answer is true and the outcome is refused").toBeNull();
+
+    const prepare = deferred<import("./publish/types").PrepareOutcome>();
+    mocks.publish.pendingPrepare = prepare.promise;
+    click(q(".publish-disclosure"));
+    await prepareExport();
+    await cancelAndGo("C:/data/e.parquet");
+    await endRun(prepare, { status: "prompt", attempt_id: "at_late", prompt: promptFixture() });
+    expect(q(".late-cancel-statement"), "(iv) a prepare run ends as a prompt after the choice").toBeNull();
+    expect(closes(handleOf(4)), "(iv) the old handle closes after the prepare run").toBe(1);
+
+    mocks.publish.pendingPrepare = null;
+    const fifth = await startExecute();
+    await cancelAndGo("C:/data/f.parquet");
+    await endRun(fifth, { status: "succeeded-unaudited", bundle_path: "C:/out/p5", detail: "the outcome record could not be written" });
+    expect(statement(), "(v) succeeded-unaudited").toEqual({ text: LATE_CANCEL_FINISHED_UNAUDITED, path: "C:/out/p5", detail: "the outcome record could not be written" });
+  });
+
+  // RECORDED MUTATION for "RB12e" (a row beyond the table; Amendment 7 item 2(c): if `ended` has already resolved when the choice is made, the statement is decided at the choice): in `answerOpenAsk` (App.tsx) remove the decision at the choice (the `lateCancelOutcome(true, run.end)` lines).
+  // Expected failure: no statement after the choice.
+  it("RB12e: a run that ended while the ask stood is decided at the choice, and the choice still calls cancel once", async () => {
+    await open("C:/data/a.parquet");
+    const run = await startExecute();
+    await startOpen("C:/data/b.parquet");
+    await endRun(run, success("C:/out/early"));
+    expect(q(ASK), "the ask stands until a choice").not.toBeNull();
+    expect(q(".late-cancel-statement"), "no choice, no statement").toBeNull();
+
+    click(q(".open-during-export-cancel"));
+    await finishOpen();
+    expect(mocks.publish.cancels).toEqual(["at_1"]);
+    expect(text(".late-cancel-path"), "decided at the choice").toBe("C:/out/early");
+    expect(closes(handleOf(1))).toBe(1);
   });
 });
