@@ -1310,3 +1310,13 @@ Nothing above is edited.
    - Amendment 9 item 2(d) → item 3(e).
 
 Nothing above is edited.
+
+### Amendment 12 — PR #217 gate 2, the architect: corrections of record (class 3), and its Evidence finding discharged (class 1)
+
+*Written by the custodian after gate 2's architect report (`state/consults/gates/2026-10-12-shell-migration-milestone-2-phase-b-gate2-architect.md`). References only. The corrections are the gate's words, applied with no re-gate. None is the human's.*
+
+1. **Item 2 of Amendment 11 corrected:** run 3 ran source-changed on its default route only. Its post route passes at 7ffdb6a7 (`state/consults/2026-10-12-shell-migration-milestone-2-phase-b-e2e-custodian-run-3.md`, its appended correction). Phase A's fourteen base rows and selection all pass at 7ffdb6a7.
+2. **Item 1 of Amendment 11 corrected:** KNOWN-LIMITATIONS items 36 and 38 carry the reviewer's D4 words. The architect's D-5 words were applied to item 40 only. Item 40's draft now also carries the architect's gate 2 D-2 words for the human, at 31e7a4ad, and Amendment 11 item 4 is answered by them for the human's sight.
+3. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.

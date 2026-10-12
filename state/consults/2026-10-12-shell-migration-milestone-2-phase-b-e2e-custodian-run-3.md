@@ -41,3 +41,15 @@
 - **All fourteen suites pass at 7ffdb6a7.** Selection passes 15 of 15.
 - **Publish's one SKIP is EXPIRED'.** It is skipped for its standing reason: there is no TTL knob, and the property is unit-tested in publish.rs.
 - **The round's product change is App.tsx's two handlers and the `mode.set` row.** The e2e step mutations observed in run 2 sit in code that this round did not change.
+
+## Correction after gate 2 (appended; PR #217 gate 2 architect, E-1 and D-1)
+
+- **source-changed's post route.**
+  - The rows above ran source-changed on its default route only.
+  - Its post route (`SPATIAL_E2E_SOURCE_CHANGED_ROUTE=post`) ran at 7ffdb6a7, from 12:44:12Z to 12:44:35Z, under a shared hold, with the same harness. It exited 0: 8 PASS (S1-open, S2-settle-and-precondition, S4-issue-one-query-and-touch-on-mint, S5a-status, S5b-residency-cleared, S5c-picks-refused, S5d-post-check-route-confirmed, fixture-integrity), 0 FAIL.
+  - S5d confirms the terminal (post-check) route ended the session.
+  - Fixtures: 17 unchanged.
+  - Phase A's fourteen base rows and selection therefore all pass at 7ffdb6a7.
+- **The result cells.**
+  - pan-anchor printed `==== 16/16 PASS ====` at 719568f8 and `==== 16/16 PASS ====` at 7ffdb6a7, without `--measure`. The cells' 0 PASS was the record script's miscount of that format.
+  - residency-harness gives no verdicts. Its cells read: no verdicts; exit 0.
