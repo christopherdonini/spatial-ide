@@ -32,8 +32,9 @@
 //   E-NODRAG (1)   src/canvas/WorkingCanvas.tsx: add `onDragEnd: (_info, event) => onTap(event)` to the Deck props (select on the pointer's release).
 //                  Expected: E-NODRAG fails on the selection count after the out-and-back drag. The step sets Add / remove for it (a stray tap at the release over the selected
 //                  feature then deselects it), makes the pan's first move one jump onto the feature's pixel so the pan is anchored there, and restores the mode after.
-//   E-NODRAG (2)   src/canvas/WorkingCanvas.tsx: `controller: tool === "select" ? { dragPan: false } : true`. Expected: E-NODRAG fails on the view box
-//                  (the selected feature never leaves the view).
+//   E-NODRAG (2)   src/canvas/WorkingCanvas.tsx: in the Deck props, controller: toolRef.current === "select" ? { dragPan: false } : true; and, because the Deck is built once, after
+//                  toolRef.current = tool, useEffect(() => { deckRef.current?.setProps({ controller: tool === "select" ? { dragPan: false } : true }); }, [tool]). Expected: E-NODRAG
+//                  fails on the view box (the selected feature never leaves the view).
 //   E-ZOOMSEL      src/App.tsx, `handleZoomToSelection`: fit a point box at the union's corner (`{xmin: u.xmin, ymin: u.ymin, xmax: u.xmin, ymax: u.ymin}`).
 //                  Expected: E-ZOOMSEL fails on the highlight pixels: a zero-span box falls back to zoom 0 (`fitViewStateForBbox`), so the outline is smaller than the floor,
 //                  FIT_OUTLINE_MIN_PER_SIDE times the drawing buffer's shorter side (the outside-the-view count alone is not enough: a point box still touches the view).
