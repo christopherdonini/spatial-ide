@@ -253,7 +253,10 @@ describe("App: tools, the click, the selection and the inspection (milestone 2, 
     consoleRecorder.entries().slice(mark).filter(isGuiActionEntry).map((e) => e.action).filter((a) => MILESTONE_ROWS.has(a));
   const mark = () => consoleRecorder.count();
 
-  // RECORDED MUTATION for "RB1": PLACEHOLDER
+  // RECORDED MUTATION for "RB1": in `feature/clickEffect.ts` invert the Select branch's condition (`if (!navigate)` becomes `if (navigate)`), so a Navigate click is routed to the selection and a Select click to the inspection.
+  // Expected failure: the selection assertion before or after the Navigate click.
+  // OBSERVED AT f51b96a9cafbaf57b5f562edb8a0d64b51d9a604: FAILED -- "RB1: a Navigate click inspects the feature and leaves the selection unchanged, with one feature.inspect row": AssertionError: expected [] to deeply equal [ 1n ]
+  // (the Select click had inspected instead of selecting). Reverted after observing.
   it("RB1: a Navigate click inspects the feature and leaves the selection unchanged, with one feature.inspect row", async () => {
     await open("C:/data/a.parquet");
     useTool("Select");
@@ -270,7 +273,9 @@ describe("App: tools, the click, the selection and the inspection (milestone 2, 
     expect(rowsSince(before)).toEqual(["feature.inspect"]);
   });
 
-  // RECORDED MUTATION for "RB2": PLACEHOLDER
+  // RECORDED MUTATION for "RB2": in `feature/clickEffect.ts` ignore the mode (`const mode = "toggle"` in the Select branch). Expected failure: Replace adds.
+  // OBSERVED AT f51b96a9cafbaf57b5f562edb8a0d64b51d9a604: FAILED -- "RB2: a Select click changes the selection by each of the four modes, with one selection.change row per change": AssertionError: Replace: the set
+  // becomes this id alone: expected [ 1n, 2n ] to deeply equal [ 2n ]. Reverted after observing.
   it("RB2: a Select click changes the selection by each of the four modes, with one selection.change row per change", async () => {
     await open("C:/data/a.parquet");
     useTool("Select");
@@ -300,7 +305,9 @@ describe("App: tools, the click, the selection and the inspection (milestone 2, 
     expect(rowsSince(before)).toEqual(Array(6).fill("selection.change"));
   });
 
-  // RECORDED MUTATION for "RB3": PLACEHOLDER
+  // RECORDED MUTATION for "RB3": in `commitActiveFilter` (App.tsx) also dispatch `selection.clear` after `filter.apply` (a clear on Apply). Expected failure: the count after the Apply.
+  // OBSERVED AT f51b96a9cafbaf57b5f562edb8a0d64b51d9a604: FAILED -- "RB3: after an Apply through FilterPanel the Selected count is unchanged and the hidden count is shown": AssertionError: the count is unchanged:
+  // expected 'Selected, ignoring filter: 0' to be 'Selected, ignoring filter: 2'. Reverted after observing.
   it("RB3: after an Apply through FilterPanel the Selected count is unchanged and the hidden count is shown", async () => {
     await open("C:/data/a.parquet");
     useTool("Select");
@@ -325,7 +332,11 @@ describe("App: tools, the click, the selection and the inspection (milestone 2, 
     expect(shown(".feature-outside-view")).toContain(": 0");
   });
 
-  // RECORDED MUTATION for "RB4": PLACEHOLDER
+  // RECORDED MUTATIONS for "RB4", each applied alone. (a) No notice: in App.tsx `const notice` is `null`. Expected failure: the notice after the reopen.
+  // OBSERVED AT f51b96a9cafbaf57b5f562edb8a0d64b51d9a604: FAILED -- "RB4: a reopen, and a session ended by the real dataset_session_ended route, each end the selection with a notice naming the count and the cause":
+  // AssertionError: expected '(no element matches .feature-notice)' to contain '2 selected features were dropped'. Reverted after observing.
+  // (b) No latch: in `feature/clickEffect.ts` `if (sessionEnded) return` becomes `if (false as boolean) return`. Expected failure: the click after the session ended.
+  // OBSERVED AT f51b96a9cafbaf57b5f562edb8a0d64b51d9a604: FAILED -- same test: AssertionError: expected '(no element matches .feature-last-cli…' to contain 'The source file changed while it was …'. Reverted after observing.
   it("RB4: a reopen, and a session ended by the real dataset_session_ended route, each end the selection with a notice naming the count and the cause", async () => {
     await open("C:/data/a.parquet");
     useTool("Select");
@@ -360,7 +371,9 @@ describe("App: tools, the click, the selection and the inspection (milestone 2, 
     expect(selected()).toEqual([]);
   });
 
-  // RECORDED MUTATION for "RB5": PLACEHOLDER
+  // RECORDED MUTATION for "RB5": in `feature/clickEffect.ts` a click below the pick resolution returns a `selection.apply` of id 99n (select on refusal). Expected failure: the selection after the refusal.
+  // OBSERVED AT f51b96a9cafbaf57b5f562edb8a0d64b51d9a604: FAILED -- "RB5: a click below the pick resolution changes no selection and no inspection, and the named state is shown": AssertionError: the selection is the
+  // same set: expected Set{ 1n, 99n } to be Set{ 1n }. Reverted after observing.
   it("RB5: a click below the pick resolution changes no selection and no inspection, and the named state is shown", async () => {
     await open("C:/data/a.parquet");
     useTool("Select");
@@ -380,7 +393,9 @@ describe("App: tools, the click, the selection and the inspection (milestone 2, 
     expect(rowsSince(before), "nothing was applied, so nothing is recorded, apart from the tool").toEqual(["tool.set"]);
   });
 
-  // RECORDED MUTATION for "RB6": PLACEHOLDER
+  // RECORDED MUTATION for "RB6": in `unionOfBounds` (workspace/selection.ts) return the first member's bounds only. Expected failure: the box `fitToBbox` is given.
+  // OBSERVED AT f51b96a9cafbaf57b5f562edb8a0d64b51d9a604: FAILED -- "RB6: Zoom to selection calls fitToBbox once with the union of the kept bounds, and is disabled while the selection is empty": AssertionError:
+  // expected '[{"xmin":0,"ymin":0,"xmax":10,"ymax":…' to be '[{"xmin":0,"ymin":0,"xmax":30,"ymax":…'. Reverted after observing.
   it("RB6: Zoom to selection calls fitToBbox once with the union of the kept bounds, and is disabled while the selection is empty", async () => {
     await open("C:/data/a.parquet");
     const zoom = () => q<HTMLButtonElement>(".feature-actions button:nth-child(1)")!;
@@ -403,7 +418,10 @@ describe("App: tools, the click, the selection and the inspection (milestone 2, 
     expect(rowsSince(before)).toEqual(["selection.zoomTo", "selection.clear"]);
   });
 
-  // RECORDED MUTATION for "RB9": PLACEHOLDER
+  // RECORDED MUTATION for "RB9": mount `<ToolSwitch>` inside the map region (the `topBar.tools` slot is `null` and the switch is rendered in the canvas container, beside the hover readout).
+  // Expected failure: the switch is inside `.region-map`.
+  // OBSERVED AT f51b96a9cafbaf57b5f562edb8a0d64b51d9a604: FAILED -- "RB9: the tool switch is in the top bar and outside the map region, shows aria-pressed, and a tool key typed in the filter input does nothing":
+  // AssertionError: outside the map region: expected true to be false. Reverted after observing.
   it("RB9: the tool switch is in the top bar and outside the map region, shows aria-pressed, and a tool key typed in the filter input does nothing", async () => {
     await open("C:/data/a.parquet");
     const toolSwitch = q(".tool-switch")!;
@@ -424,7 +442,9 @@ describe("App: tools, the click, the selection and the inspection (milestone 2, 
     expect(rowsSince(before)).toEqual([]);
   });
 
-  // RECORDED MUTATION for "RB10": PLACEHOLDER
+  // RECORDED MUTATION for "RB10": key the canvas on `admitted.dataset + tool` (App.tsx). Expected failure: the map is mounted again at the first tool change.
+  // OBSERVED AT f51b96a9cafbaf57b5f562edb8a0d64b51d9a604: FAILED -- "RB10: the map is mounted once per handle across tool, mode, selection, inspection, pin, zoom and clear": AssertionError: expected
+  // 'ds_00000000000000000000000000000001 d…' to be 'ds_00000000000000000000000000000001' (the same handle mounted again). Reverted after observing.
   it("RB10: the map is mounted once per handle across tool, mode, selection, inspection, pin, zoom and clear", async () => {
     await open("C:/data/a.parquet");
     useTool("Select");
@@ -446,7 +466,9 @@ describe("App: tools, the click, the selection and the inspection (milestone 2, 
     expect(mocks.canvas.unmounted).toEqual([handleOf(1)]);
   });
 
-  // RECORDED MUTATION for "RB-SET" (a row beyond the table): PLACEHOLDER
+  // RECORDED MUTATION for "RB-SET" (a row beyond the table): in App.tsx `selectedIds` is `new Set(selection.keys())` on every render, with no memo. Expected failure: the identity assertion.
+  // OBSERVED AT f51b96a9cafbaf57b5f562edb8a0d64b51d9a604: FAILED -- "RB-SET: the canvas is given the same selected Set while the selection is unchanged (highlightLayers caches on its identity)": AssertionError: a tool change,
+  // a mode change and an inspection leave the set alone: expected Set{ 1n } to be Set{ 1n } (Object.is). Reverted after observing.
   it("RB-SET: the canvas is given the same selected Set while the selection is unchanged (highlightLayers caches on its identity)", async () => {
     await open("C:/data/a.parquet");
     useTool("Select");
@@ -464,7 +486,9 @@ describe("App: tools, the click, the selection and the inspection (milestone 2, 
     expect(props().highlight!.selected, "a changed selection is a new set").not.toBe(set);
   });
 
-  // RECORDED MUTATION for "RB11": PLACEHOLDER
+  // RECORDED MUTATION for "RB11": in `feature/clickEffect.ts` the Navigate click ignores the pin (`const kept = null`). Expected failure: the inspected id under the pin.
+  // OBSERVED AT f51b96a9cafbaf57b5f562edb8a0d64b51d9a604: FAILED -- "RB11: a pinned feature stays inspected under a Navigate click, which names the clicked one; unpinning changes nothing; no dialog": AssertionError:
+  // A stays inspected: expected 'id 2' to be 'id 1'. Reverted after observing.
   it("RB11: a pinned feature stays inspected under a Navigate click, which names the clicked one; unpinning changes nothing; no dialog", async () => {
     await open("C:/data/a.parquet");
     await clickFeature(1n);
@@ -486,7 +510,9 @@ describe("App: tools, the click, the selection and the inspection (milestone 2, 
     expect(rowsSince(before)).toEqual(["feature.pin", "feature.pin", "feature.inspect"]);
   });
 
-  // RECORDED MUTATION for "RB13": PLACEHOLDER
+  // RECORDED MUTATION for "RB13": in `feature/clickEffect.ts` a click on nothing in Select, in Replace, returns a `selection.clear` (the form's mutation). Expected failure: the count in Replace.
+  // OBSERVED AT f51b96a9cafbaf57b5f562edb8a0d64b51d9a604: FAILED -- "RB13: a click on nothing leaves the selection unchanged in every Select mode, and in Navigate clears an unpinned inspection and keeps a pinned one":
+  // AssertionError: Replace: the selection is unchanged: expected [] to deeply equal [ 1n ]. Reverted after observing.
   it("RB13: a click on nothing leaves the selection unchanged in every Select mode, and in Navigate clears an unpinned inspection and keeps a pinned one", async () => {
     await open("C:/data/a.parquet");
     useTool("Select");
@@ -513,7 +539,9 @@ describe("App: tools, the click, the selection and the inspection (milestone 2, 
     expect(text(".feature-last-click")).toBe("[P6 placeholder] Last click: no feature there.");
   });
 
-  // RECORDED MUTATION for "RB14": PLACEHOLDER
+  // RECORDED MUTATION for "RB14": in `handleClickPick` (App.tsx) click the Feature tab after an inspection (`document.getElementById("inspector-tab-feature")?.click()`). Expected failure: the Layer tab is no longer active.
+  // OBSERVED AT f51b96a9cafbaf57b5f562edb8a0d64b51d9a604: FAILED -- "RB14: a Navigate click leaves the Layer tab active and a closed Inspector closed": AssertionError: the Layer tab stays active: expected 'false' to be
+  // 'true'. Reverted after observing.
   it("RB14: a Navigate click leaves the Layer tab active and a closed Inspector closed", async () => {
     await open("C:/data/a.parquet");
     await clickFeature(1n);
@@ -528,7 +556,8 @@ describe("App: tools, the click, the selection and the inspection (milestone 2, 
     expect(q("#inspector-tab-layer")!.getAttribute("aria-selected")).toBe("true");
   });
 
-  // RECORDED MUTATION for "RB15": PLACEHOLDER
+  // RECORDED MUTATION for "RB15": in `feature/clickEffect.ts` the Select branch also returns an `inspect.set`. Expected failure: the inspected id.
+  // OBSERVED AT f51b96a9cafbaf57b5f562edb8a0d64b51d9a604: FAILED -- "RB15: a Select click leaves the inspected feature unchanged": AssertionError: A is still inspected: expected 'id 2' to be 'id 1'. Reverted after observing.
   it("RB15: a Select click leaves the inspected feature unchanged", async () => {
     await open("C:/data/a.parquet");
     await clickFeature(1n);
@@ -539,7 +568,9 @@ describe("App: tools, the click, the selection and the inspection (milestone 2, 
     expect(props().highlight!.inspected).toBe(1n);
   });
 
-  // RECORDED MUTATION for "RB16": PLACEHOLDER
+  // RECORDED MUTATION for "RB16": in `feature/ToolSwitch.tsx` render the mode picker for both tools (`{tool === "select" && (` becomes `{true && (`). Expected failure: the picker in Navigate.
+  // OBSERVED AT f51b96a9cafbaf57b5f562edb8a0d64b51d9a604: FAILED -- "RB16: the mode picker is absent in Navigate and present in Select, with Add / remove the default": AssertionError: expected <div …(3)>…(4)</div> to be
+  // null. Reverted after observing.
   it("RB16: the mode picker is absent in Navigate and present in Select, with Add / remove the default", async () => {
     await open("C:/data/a.parquet");
     expect(q(".tool-switch-modes")).toBeNull();
@@ -554,7 +585,13 @@ describe("App: tools, the click, the selection and the inspection (milestone 2, 
     expect(q(".tool-switch-modes")).toBeNull();
   });
 
-  // RECORDED MUTATION for "RB17": PLACEHOLDER
+  // RECORDED MUTATIONS for "RB17", each applied alone (Amendment 2 item 2 (e)). (i) Feed the box from `onViewportChanged` only: remove the `showBox` call from `onViewportWithinLastQuery` (App.tsx).
+  // Expected failure: at the shrink step.
+  // OBSERVED AT f51b96a9cafbaf57b5f562edb8a0d64b51d9a604: FAILED -- "RB17: the split is shown only from a reported box, and the within-report counts as a report": AssertionError: the within-report shrank the box: outside the
+  // view: expected '[P6 placeholder] Outside the view: 0' to contain ': 1'. Reverted after observing.
+  // (ii) Read a null box as containing every member: in `countSelection` (workspace/selection.ts) a null box returns an outside count of 0 and the undrawn members as in the view. Expected
+  // failure: at the first step.
+  // OBSERVED AT f51b96a9cafbaf57b5f562edb8a0d64b51d9a604: FAILED -- same test: AssertionError: no box, no split: expected <p class="feature-outside-view"></p> to be null. Reverted after observing.
   it("RB17: the split is shown only from a reported box, and the within-report counts as a report", async () => {
     await open("C:/data/a.parquet");
     useTool("Select");
@@ -573,7 +610,10 @@ describe("App: tools, the click, the selection and the inspection (milestone 2, 
     expect(shown(".feature-in-view-not-drawn")).toContain(": 0");
   });
 
-  // RECORDED MUTATION for "RB18": PLACEHOLDER
+  // RECORDED MUTATION for "RB18" (the App side; Amendment 3 item 3): the `onViewShown` prop is routed into `onViewportChanged`'s handler (it writes `lastViewportBboxRef`, sets
+  // `hasSettledView` and calls the debounced entry point). Expected failure: the query it issues.
+  // OBSERVED AT f51b96a9cafbaf57b5f562edb8a0d64b51d9a604: FAILED -- "RB18: onViewShown writes the box and nothing else: no query, no last-asked box, no settled view": AssertionError: no query: expected 1 to be +0.
+  // Reverted after observing.
   it("RB18: onViewShown writes the box and nothing else: no query, no last-asked box, no settled view", async () => {
     await open("C:/data/a.parquet");
     useTool("Select");
@@ -590,7 +630,10 @@ describe("App: tools, the click, the selection and the inspection (milestone 2, 
     expect(current().disabled, "no last-asked box and no settled view").toBe(true);
   });
 
-  // RECORDED MUTATION for "RB-S1" (a row beyond the table; the reviewer's S1 of PR #212's gate 1): PLACEHOLDER
+  // RECORDED MUTATION for "RB-S1" (a row beyond the table; the reviewer's S1 of PR #212's gate 1, Amendment 5 item 1(d)): move the close effect (App.tsx) after the `[admitted]` effect.
+  // Expected failure: the new session starts before the old handle is closed.
+  // OBSERVED AT f51b96a9cafbaf57b5f562edb8a0d64b51d9a604: FAILED -- "RB-S1: a reopen stops the old session, then closes the old handle, then starts the new one": AssertionError: expected 'open:ds_00000000000000000000000000000…' to be
+  // 'open:ds_00000000000000000000000000000…' (the order differs: request:<new> before close:<old>). Reverted after observing.
   it("RB-S1: a reopen stops the old session, then closes the old handle, then starts the new one", async () => {
     await open("C:/data/a.parquet");
     const [a, b] = [handleOf(1), handleOf(2)];
@@ -599,7 +642,12 @@ describe("App: tools, the click, the selection and the inspection (milestone 2, 
     expect(mocks.order.slice(2).join(" ")).toBe([`open:${b}`, `stop:${a}`, `close:${a}`, `request:${b}`].join(" "));
   });
 
-  // RECORDED MUTATION for "RB-DRAWN" (a row beyond the table): PLACEHOLDER
+  // RECORDED MUTATIONS for "RB-DRAWN" (a row beyond the table), each applied alone. (a) Read the drawn set whatever resource reported it (App.tsx: `drawnState !== null ? drawnState.ids : NO_IDS`).
+  // Expected failure: the old canvas's set is read for the new one.
+  // OBSERVED AT f51b96a9cafbaf57b5f562edb8a0d64b51d9a604: FAILED -- "RB-DRAWN: a rebind clears the drawn set and the view box, because the canvas is keyed on the handle": AssertionError: the old canvas's drawn set is not the new
+  // one's: expected '[P6 placeholder] In the view, not dra…' to contain ': 1'. Reverted after observing.
+  // (b) Do not reset the view box on a new open (remove `viewBox.set(null)` from `handleAdmitted`). Expected failure: a split from the old canvas's box.
+  // OBSERVED AT f51b96a9cafbaf57b5f562edb8a0d64b51d9a604: FAILED -- same test: AssertionError: the new canvas has reported no box yet: expected <p class="feature-outside-view"></p> to be null. Reverted after observing.
   it("RB-DRAWN: a rebind clears the drawn set and the view box, because the canvas is keyed on the handle", async () => {
     await open("C:/data/a.parquet");
     useTool("Select");
