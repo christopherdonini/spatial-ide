@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `5715b5da0f21627257b655085886b6841e4977daf41e6a5c42e657837d0986df`) at `2026-10-12T05:40:13.931Z`.
+Generated from `PLAN.yaml` (sha256 `3324d2d5e417a2db1efc5c86d63fff4b9462f72b3e34b32b8c2df4d4db0b2c4b`) at `2026-10-12T06:18:13.870Z`.
 
 ## 1. Next
 
@@ -22,6 +22,7 @@ Generated from `PLAN.yaml` (sha256 `5715b5da0f21627257b655085886b6841e4977daf41e
 - **export-current-view-after-unreported-fit** — The Export panel's Current view after an unreported fit: after an issued Apply or Clear, the default Current view export sends the box from before the map fitted itself, until the next pan, zoom or Zoom to layer; the approval dialog shows that box's four numbers — blocked by: shell-migration-milestone-2, known-limitations-current-view-stale-box
 - **stale-test-names-and-comments** — Stale test names and test comments, names and comments only, no assertion changes: a refusal-named test that asserts admission, the React-harness premise, the no-attributes reason, a Proposed ADR-018, two ruled decisions still marked pending (sweep area E, findings 2, 3, 4, 7 and 10) — blocked by: known-limitations-current-view-stale-box
 - **briefb-b2-save-reopen** — B2 — Save project, Snapshot data, session history, lineage and preferences, in five stages, each with its own form — blocked by: decision-adr-029-scan-progress-route
+- **known-limitations-crs-epoch-edges-third-axis** — KNOWN-LIMITATIONS: a file's declared coordinate epoch, its edges value and a third CRS axis are not used, shown or carried into a bundle — blocked by: stale-test-names-and-comments
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer — blocked by: signpath-application-draft
 - **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-1-1
 - **signpath-application-draft** — Entry 77 — the SignPath OSS application and disclosure text drafted for the human sight, once a release is CI-built — blocked by: release-v0-1-1
