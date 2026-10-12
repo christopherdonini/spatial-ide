@@ -29,7 +29,7 @@ import type { ExecuteOutcome, PrepareOutcome, PublishPromptData, PublishScopeInp
 export type PublishScopeChoice = "whole" | "current";
 
 /** The Export section's sentence that the selection is not used (milestone 2, Amendment 1 A6; ADR-024's scope is the whole file or the current view). A P6 placeholder. */
-export const EXPORT_SELECTION_SENTENCE = "[P6 placeholder] The selection is not used. The export covers the row scope chosen above.";
+const EXPORT_SELECTION_SENTENCE = "[P6 placeholder] The selection is not used. The export covers the row scope chosen above.";
 
 const SCOPE_CHANGE_WORDS: Record<ScopeChange, string> = {
   view: "the view",
