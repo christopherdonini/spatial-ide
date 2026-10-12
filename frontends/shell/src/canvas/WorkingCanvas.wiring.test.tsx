@@ -119,6 +119,8 @@ function mount(extra: Partial<WorkingCanvasProps> = {}) {
 describe("RB18 (canvas side): onViewShown is called in exactly two places, and neither asks for anything", () => {
   // RECORDED MUTATION for "RB18 (canvas)" (the auto-fit): in `fitToExtent` (WorkingCanvas.tsx) route the unreported write's box into
   // `reportViewport` instead of `onViewShown` (Amendment 3 item 3's mutation). Expected failure: `onViewShown` is not called and a query is.
+  // OBSERVED AT 6488360ffa1f58bf392e731f605e5a7255d24260: FAILED -- "the auto-fit's unreported camera write calls onViewShown once with the box it shows, and issues no query":
+  //   AssertionError: expected "vi.fn()" to be called 1 times, but got 0 times. Reverted after observing.
   it("the auto-fit's unreported camera write calls onViewShown once with the box it shows, and issues no query", () => {
     const onViewShown = vi.fn();
     const { base, push } = mount({ onViewShown });
@@ -132,6 +134,8 @@ describe("RB18 (canvas side): onViewShown is called in exactly two places, and n
 
   // RECORDED MUTATION for "RB18 (canvas)" (a size change): in `onResize` (WorkingCanvas.tsx) route the box into `reportViewport` instead of
   // `onViewShown`. Expected failure: `onViewShown` is not called for the size change, and `onViewportChanged` is.
+  // OBSERVED AT 6488360ffa1f58bf392e731f605e5a7255d24260: FAILED -- "a change of size while no area is last asked for calls onViewShown with the box now shown, and asks nothing":
+  //   AssertionError: expected "vi.fn()" to be called 2 times, but got 1 times. Reverted after observing.
   it("a change of size while no area is last asked for calls onViewShown with the box now shown, and asks nothing", () => {
     const onViewShown = vi.fn();
     const { base, push } = mount({ onViewShown });
@@ -154,6 +158,8 @@ describe("RB18 (canvas side): onViewShown is called in exactly two places, and n
   // in the `within` branch. Expected failure: a shrink inside the area last asked for also calls `onViewShown`.
   // (Dropping the `lastQueriedRef.current === null` condition of the new branch is an equivalent mutation, not a failing one: `viewportAfterResize`
   // answers none with a camera and a usable size only when no area was asked for, so that condition is a guard, and no test can tell it apart.)
+  // OBSERVED AT 6488360ffa1f58bf392e731f605e5a7255d24260: FAILED -- "once an area is asked for, a size change reports as it did and shows nothing; Reset un-asks it":
+  //   AssertionError: expected "vi.fn()" to be called 1 times, but got 2 times. Reverted after observing.
   it("once an area is asked for, a size change reports as it did and shows nothing; Reset un-asks it", () => {
     const onViewShown = vi.fn();
     const { ref, base, push } = mount({ onViewShown });
@@ -176,6 +182,8 @@ describe("RB18 (canvas side): onViewShown is called in exactly two places, and n
 
   // RECORDED MUTATION for "RB18 (canvas)" (no camera yet): in `onResize` (WorkingCanvas.tsx) drop the `cameraRef.current !== null` condition.
   // Expected failure: a size change before any camera write calls `onViewShown` (with a box computed from nothing).
+  // OBSERVED AT 6488360ffa1f58bf392e731f605e5a7255d24260: FAILED -- "a change of size before any camera write shows nothing":
+  //   AssertionError: expected "vi.fn()" to not be called at all, but actually been called 1 times. Reverted after observing.
   it("a change of size before any camera write shows nothing", () => {
     const onViewShown = vi.fn();
     mount({ onViewShown });
@@ -187,6 +195,8 @@ describe("RB18 (canvas side): onViewShown is called in exactly two places, and n
 
 describe("fitToBbox (Amendment 2 item 3)", () => {
   // RECORDED MUTATION for "fitToBbox": in `fitToBbox` (WorkingCanvas.tsx) call `fitToExtent(bbox, false)`. Expected failure: no view is reported.
+  // OBSERVED AT 6488360ffa1f58bf392e731f605e5a7255d24260: FAILED -- "reuses the fit with notification: the fitted view is reported as a query, and it is not onViewShown's":
+  //   AssertionError: expected "vi.fn()" to be called 1 times, but got 0 times. Reverted after observing.
   it("reuses the fit with notification: the fitted view is reported as a query, and it is not onViewShown's", () => {
     const onViewShown = vi.fn();
     const { ref, base } = mount({ onViewShown });
@@ -202,6 +212,8 @@ describe("fitToBbox (Amendment 2 item 3)", () => {
 describe("the cursor per tool (Amendment 2 item 6)", () => {
   // RECORDED MUTATION for "the cursor": in the Deck's `getCursor` (WorkingCanvas.tsx) call `cursorForPointerState(isDragging)` without the tool.
   // Expected failure: the cursor in Select is crosshair where default was expected.
+  // OBSERVED AT 6488360ffa1f58bf392e731f605e5a7255d24260: FAILED -- "deck's getCursor answers the tool the prop has now, and grabbing while dragging in both":
+  //   AssertionError: expected 'crosshair' to be 'default' // Object.is equality. Reverted after observing.
   it("deck's getCursor answers the tool the prop has now, and grabbing while dragging in both", () => {
     const { render } = mount({ tool: "navigate" });
     expect(theDeck().props.getCursor({ isDragging: false })).toBe("crosshair");
@@ -214,6 +226,8 @@ describe("the cursor per tool (Amendment 2 item 6)", () => {
 
   // RECORDED MUTATION for "the cursor" (no prop): in the component's parameters (WorkingCanvas.tsx) default `tool` to `"select"`.
   // Expected failure: a canvas given no tool answers default where crosshair was expected.
+  // OBSERVED AT 6488360ffa1f58bf392e731f605e5a7255d24260: FAILED -- "a canvas given no tool is in Navigate, as it was before the prop existed":
+  //   AssertionError: expected 'default' to be 'crosshair' // Object.is equality. Reverted after observing.
   it("a canvas given no tool is in Navigate, as it was before the prop existed", () => {
     mount();
     expect(theDeck().props.getCursor({ isDragging: false })).toBe("crosshair");
@@ -223,6 +237,8 @@ describe("the cursor per tool (Amendment 2 item 6)", () => {
 describe("the tap (UB7's wiring, OPEN-1 (A))", () => {
   // RECORDED MUTATION for "the tap" (deck's info): in the Deck's `onClick` (WorkingCanvas.tsx) return early when deck's picking info has no
   // feature (`if (info.index < 0) return;`). Expected failure: no pick runs at the tap's pixel, because the info given is the pointer-down one.
+  // OBSERVED AT 6488360ffa1f58bf392e731f605e5a7255d24260: FAILED -- "picks afresh at the tap's own pixel and emits the feature with its bounds, whatever deck's own info says":
+  //   AssertionError: expected undefined to match object { x: 12, y: 34 }. Reverted after observing.
   it("picks afresh at the tap's own pixel and emits the feature with its bounds, whatever deck's own info says", () => {
     const onClickPick = vi.fn();
     const { push } = mount({ onClickPick });
@@ -238,6 +254,8 @@ describe("the tap (UB7's wiring, OPEN-1 (A))", () => {
 
   // RECORDED MUTATION for "the tap" (nothing under it): in the Deck's `onClick` (WorkingCanvas.tsx) never call `onTap` (delete the call).
   // Expected failure: no result is emitted for a tap on nothing.
+  // OBSERVED AT 6488360ffa1f58bf392e731f605e5a7255d24260: FAILED -- "a tap on nothing emits nothing-kind, and a tap without a pixel emits no result":
+  //   AssertionError: expected [] to deeply equal [ [ { kind: 'nothing' } ] ]. Reverted after observing.
   it("a tap on nothing emits nothing-kind, and a tap without a pixel emits no result", () => {
     const onClickPick = vi.fn();
     const { push } = mount({ onClickPick });
@@ -251,6 +269,8 @@ describe("the tap (UB7's wiring, OPEN-1 (A))", () => {
 
   // RECORDED MUTATION for "the tap" (the shared pick): in `pickCandidateAt` (WorkingCanvas.tsx) call `deck.pickObject({ x, y })` without the line
   // open's radius. Expected failure: the pick at the tap's pixel carries no radius.
+  // OBSERVED AT 6488360ffa1f58bf392e731f605e5a7255d24260: FAILED -- "on a line open the tap's pick carries the line open's radius, as the settle re-pick's does":
+  //   TypeError: actual value must be number or bigint, received "undefined". Reverted after observing.
   it("on a line open the tap's pick carries the line open's radius, as the settle re-pick's does", () => {
     const onClickPick = vi.fn();
     const { ref } = mount({ onClickPick, geometryEncoding: "geoarrow.linestring" });
@@ -269,6 +289,8 @@ describe("the highlight prop (section 2.2)", () => {
 
   // RECORDED MUTATION for "the highlight" (order): in `render()` (WorkingCanvas.tsx) put the highlight layers before the data layers
   // (`[...highlightResult.layers, ...layers]`). Expected failure: the last layer is the data layer.
+  // OBSERVED AT 6488360ffa1f58bf392e731f605e5a7255d24260: FAILED -- "the highlight layers come after the data layers, and nothing highlighted adds none":
+  //   AssertionError: expected 'highlight:selected:sh_a:0' to be 'sh_a:0' // Object.is equality. Reverted after observing.
   it("the highlight layers come after the data layers, and nothing highlighted adds none", async () => {
     const { render, push } = mount();
     push();
@@ -282,6 +304,8 @@ describe("the highlight prop (section 2.2)", () => {
 
   // RECORDED MUTATION for "the highlight" (a prop change): in the highlight effect (WorkingCanvas.tsx) schedule nothing (empty effect body).
   // Expected failure: a new highlight draws nothing.
+  // OBSERVED AT 6488360ffa1f58bf392e731f605e5a7255d24260: FAILED -- "a highlight change schedules the coalesced render, and a clear removes the layers":
+  //   AssertionError: expected 3 to be greater than 3. Reverted after observing.
   it("a highlight change schedules the coalesced render, and a clear removes the layers", async () => {
     const { render, push } = mount();
     push();
@@ -298,6 +322,8 @@ describe("the highlight prop (section 2.2)", () => {
 
   // RECORDED MUTATION for "the highlight" (emission): in `render()` (WorkingCanvas.tsx) call `onSelectionDrawnChangeRef.current?.(drawn)` on every pass
   // instead of the change-only emitter. Expected failure: the pass that drew the data (nothing highlighted) already emitted.
+  // OBSERVED AT 6488360ffa1f58bf392e731f605e5a7255d24260: FAILED -- "onSelectionDrawnChange gets the drawn set once when it changes, and the empty set when it clears":
+  //   AssertionError: nothing highlighted, nothing drawn: expected "vi.fn()" to not be called at all, but actually been called 2 times. Reverted after observing.
   it("onSelectionDrawnChange gets the drawn set once when it changes, and the empty set when it clears", async () => {
     const onSelectionDrawnChange = vi.fn();
     const { render, push } = mount({ onSelectionDrawnChange });
