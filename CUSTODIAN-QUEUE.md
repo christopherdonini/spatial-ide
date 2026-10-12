@@ -1,14 +1,13 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `21192a8281f09a2e1665b44cf8f6e081ee717f67bc2f7ca9f34cfbbac9522d1a`) at `2026-10-12T05:08:30.426Z`.
+Generated from `PLAN.yaml` (sha256 `acd18dd9abcd7d33db5cd770ebea427b5014a51cd5dc9d868b48b141f3a01b4d`) at `2026-10-12T11:26:44.345Z`.
 
 ## 1. Next
 
-- **known-limitations-current-view-stale-box** — KNOWN-LIMITATIONS: the Export panel's Current view can send an area the map no longer shows (after an Apply, a Clear or an unreported resize, until the next pan, zoom or Zoom to layer); true of the v0.1.0 artifact, with its on-main note and what to do meanwhile (lane `release`)
+- **guardian-v1** — Guardian v1 -- G1's heredoc false alarm fixed, one local log line per refusal, and three new rules: G7 (agent merges and history rewrites), G8 (plugin, marketplace and MCP installs, and writes to the user's Claude folder), G9 (wholesale cleans of the main checkout's target) (Fable's MODS-V1 brief, 2026-10-05) (lane `governance`)
 
 ## 2. Ready
 
-- **known-limitations-current-view-stale-box** — KNOWN-LIMITATIONS: the Export panel's Current view can send an area the map no longer shows (after an Apply, a Clear or an unreported resize, until the next pan, zoom or Zoom to layer); true of the v0.1.0 artifact, with its on-main note and what to do meanwhile (lane `release`, order null, budget 45 min)
 - **guardian-v1** — Guardian v1 -- G1's heredoc false alarm fixed, one local log line per refusal, and three new rules: G7 (agent merges and history rewrites), G8 (plugin, marketplace and MCP installs, and writes to the user's Claude folder), G9 (wholesale cleans of the main checkout's target) (Fable's MODS-V1 brief, 2026-10-05) (lane `governance`, order 21, budget 240 min)
 
 ## 3. Waiting on the human (total: 0 min)
@@ -19,9 +18,10 @@ Generated from `PLAN.yaml` (sha256 `21192a8281f09a2e1665b44cf8f6e081ee717f67bc2f
 
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
 - **b2-piece-1b-recording** — B2 piece 1b -- recording: the kernel's step commands for filter, scope and style, the session history on the machine, safe against a crash, and the docs/07 note — blocked by: shell-migration-milestone-2, guardian-v1
-- **export-current-view-after-unreported-fit** — The Export panel's Current view after an unreported fit: after an issued Apply or Clear, the default Current view export sends the box from before the map fitted itself, until the next pan, zoom or Zoom to layer; the approval dialog shows that box's four numbers — blocked by: shell-migration-milestone-2
+- **export-current-view-after-unreported-fit** — The Export panel's Current view after an unreported fit: after an issued Apply or Clear, the default Current view export sends the box from before the map fitted itself, until the next pan, zoom or Zoom to layer; the approval dialog shows that box's four numbers — blocked by: shell-migration-milestone-2, known-limitations-current-view-stale-box
 - **stale-test-names-and-comments** — Stale test names and test comments, names and comments only, no assertion changes: a refusal-named test that asserts admission, the React-harness premise, the no-attributes reason, a Proposed ADR-018, two ruled decisions still marked pending (sweep area E, findings 2, 3, 4, 7 and 10) — blocked by: known-limitations-current-view-stale-box
 - **briefb-b2-save-reopen** — B2 — Save project, Snapshot data, session history, lineage and preferences, in five stages, each with its own form — blocked by: decision-adr-029-scan-progress-route
+- **known-limitations-crs-epoch-edges-third-axis** — KNOWN-LIMITATIONS: a file's declared coordinate epoch, its edges value and a third CRS axis are not used, shown or carried into a bundle — blocked by: stale-test-names-and-comments
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer — blocked by: signpath-application-draft
 - **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-1-1
 - **signpath-application-draft** — Entry 77 — the SignPath OSS application and disclosure text drafted for the human sight, once a release is CI-built — blocked by: release-v0-1-1
@@ -29,7 +29,8 @@ Generated from `PLAN.yaml` (sha256 `21192a8281f09a2e1665b44cf8f6e081ee717f67bc2f
 
 ## 5. In progress
 
-- **shell-migration-milestone-2** — Shell migration, milestone 2 -- selection and scope: the Select tool, a selection that survives filter and pan, the hidden count, a stated scope — evidence: branch `cut/shell-migration-milestone-2-phase-a`
+- **shell-migration-milestone-2** — Shell migration, milestone 2 -- selection and scope: the Select tool, a selection that survives filter and pan, the hidden count, a stated scope — evidence: branch `cut/shell-migration-milestone-2-phase-b`
+- **known-limitations-current-view-stale-box** — KNOWN-LIMITATIONS: the Export panel's Current view can send an area the map no longer shows (after an Apply, a Clear or an unreported resize, until the next pan, zoom or Zoom to layer); true of the v0.1.0 artifact, with its on-main note and what to do meanwhile — evidence: branch `cut/known-limitations-current-view-stale-box`
 
 ## 6. Proposed / unscheduled
 

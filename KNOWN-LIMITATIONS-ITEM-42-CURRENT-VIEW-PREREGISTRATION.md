@@ -1,0 +1,96 @@
+# KNOWN-LIMITATIONS item 42: Current view can publish an area the map no longer shows — five-line short form (`AUTONOMY.md` §21d)
+
+Committed before any change, per the short-form discipline. The docs lane's piece ahead of piece f (the human's item 3 of state/directives/2026-10-12-current-view-graded-s1-placed-limitation-release-hold-214-merged.md). §A's words are the architect's draft under item 2e of state/directives/2026-10-11-direction-after-status-review.md; the human approves or replaces them here, recorded as Amendment 1 (class 5), before the worker applies them.
+
+```
+Authority: PLAN node known-limitations-current-view-stale-box; state/directives/2026-10-12-current-view-graded-s1-placed-limitation-release-hold-214-merged.md, items 1 and 3; state/directives/2026-10-11-direction-after-status-review.md, items 2c and 2e; the number: frontends/shell/SHELL-MIGRATION-MILESTONE-2-PREREGISTRATION.md Amendment 1 A14 and Amendment 2 item 10 (40 and 41 are phase B's), so this item is 42; KNOWN-LIMITATIONS items as disjoint paths: state/directives/2026-10-09-rulings-additions-reaim-identity-route-documents.md:29 @ b4dc05e08c1e24ef7d6904596bb2332b87dcf75b sha256:dc6bf46fc21f8f6cd3e6cb64b1fdec690aad6fd5b32be78300b9629a629efe78. Evidence (a read, cited for what it reported): state/consults/2026-10-11-export-current-view-after-unreported-fit-read.md. Reuse index: node tools/reuse.mjs in the private clone at 89bbac3738dbb46d47988e55a7c0f0d4f9fe4c5c printed, for known limitations, `No prior art recorded for "known limitations". Research it before planning an implementation.` and, for current view, `No prior art recorded for "current view". Research it before planning an implementation.`; two misses, noted, not blocking.
+Scope: KNOWN-LIMITATIONS.md (one new item 42, placed after item 29 and before the "On main since v0.1.0" heading, with its on-main paragraph and one HTML source comment; no other item edited); PLAN.yaml (this node's record); 2 files; declared line budget <= 20 changed lines by §21c's counting, this form excluded.
+Change: KNOWN-LIMITATIONS gains item 42 in the words Amendment 1 records (§A's draft until then), byte for byte by script, with §A's on-main paragraph and source comment, every HASH-TBD in that comment computed at its named commit before the commit.
+Tests+mutation: none added or changed (documents only); the reviewer checks the words byte for byte against Amendment 1, every clause of §B at the v0.1.0 tag and at the PR's base, every pin by recomputation, and that no other item and no line outside Scope changes.
+Out-of-scope: none of ADR / security / wire / guarantee is touched: no ADR file, nothing under protocol/, no code, no test, no string the app shows; a document states what unchanged code does, at the v0.1.0 tag and on main.
+```
+
+### §A. The item (draft words for the human, item 2e)
+
+Item text (one line):
+
+42. **Current view can publish an area the map no longer shows.** Current view is the scope selected by default for **Publish…**, and it publishes the area the map showed at your last pan or zoom. Zoom to layer counts as a zoom when it moves the map. The map can change what it shows without that area following: after a filter Apply or Clear, the map can move by itself to fit the data, and when the map changes size, it shows more or less of it. Until your next pan or zoom, Current view then publishes the earlier area, not the one on the map. The approval dialog's Row scope line calls that area "the current viewport extent" and gives it only as four numbers, with nothing to say whether they match the map. Meanwhile: with Current view chosen, pan or zoom the map a little as the last thing before you click **Publish…**, and do it again if the map then moves by itself. Current view then publishes what the map shows. To publish the whole file instead, choose Whole dataset.
+
+On-main paragraph (after the comment and one blank line, indented 3 spaces as item 2's is):
+
+**On `main` (not the v0.1.0 artifact above).** The button reads **Export interactive map…**, in the panel labelled Export. While the map has a width and a height, a change of its size now updates Current view, except in the one exception item 39 states. After an Apply or Clear that moves the map, Current view still publishes the earlier area until your next pan or zoom, and what to do meanwhile is the same, with **Export interactive map…** in place of **Publish…**.
+
+Source comment (one line, directly under the item text; every pin written in full, on one line):
+
+<!-- [The human's wording, approved | The human's own words, given] in KNOWN-LIMITATIONS-ITEM-42-CURRENT-VIEW-PREREGISTRATION.md Amendment 1; drafted by the architect under item 2e of state/directives/2026-10-11-direction-after-status-review.md. Authority: state/directives/2026-10-12-current-view-graded-s1-placed-limitation-release-hold-214-merged.md, items 1 and 3. Evidence: state/consults/2026-10-11-export-current-view-after-unreported-fit-read.md. At the v0.1.0 tag: frontends/shell/src/publish/PublishPanel.tsx:326 @ b391e43622056324c56d35cc33065305140a8415 sha256:d6cb8b2ec7e6c0b7d1cd6c60f2bc2811414c1d7be0a5a0752b8b441f9ebac81b (Current view is the default); frontends/shell/src/publish/PublishPanel.tsx:588 @ b391e43622056324c56d35cc33065305140a8415 sha256:8b39d99fa4a2531523042d1034ff5a0ee5718ab1e771c059da9c3b7471f90c33 (the Current view radio); frontends/shell/src/publish/PublishPanel.tsx:577 @ b391e43622056324c56d35cc33065305140a8415 sha256:0fcabe6f323ac90fd4b034c1cd1276a0a32f10489f3b9c4e9317d19da5ce4cb3 (Whole dataset); frontends/shell/src/publish/PublishPanel.tsx:605 @ b391e43622056324c56d35cc33065305140a8415 sha256:e22d83a2b91e97e50cdfdc8b98414a7341ff8700e1221022b49d0a4b52abb52a (Publish…); frontends/shell/src/publish/PublishPanel.tsx:345 @ b391e43622056324c56d35cc33065305140a8415 sha256:4ec6b8a27bb61e0d3c89af4229342c6b51f2cb7be19c7f3e57fdf3fbdf81a54f (the box is read at click time); frontends/shell/src/App.tsx:1388-1402 @ b391e43622056324c56d35cc33065305140a8415 sha256:4233f9d9468b9ad42eff2e8ce8514ff3d415d2aaa83999fc9723c35767c0fae3 (the box's only writer apart from the reset at open); frontends/shell/src/App.tsx:1541-1548 @ b391e43622056324c56d35cc33065305140a8415 sha256:65adaeb11d5d8155fc3f1bd1140f84df46842048e3dde7926c24fd65a1fe3320 (the panel is keyed on the dataset, so an Apply does not reset it); frontends/shell/src/filter/FilterPanel.tsx:66-69 @ b391e43622056324c56d35cc33065305140a8415 sha256:0f2b24de6cbe5c2637d1a2da350f1e936d6f0c5b7342b3ba02182e3e6951f7da (Clear is Apply with an empty predicate); frontends/shell/src/App.tsx:327 @ b391e43622056324c56d35cc33065305140a8415 sha256:f34a9c9fca70e4e2b708ddee2e1f05aaf8875dc1451cb520d53bc92b265d34bd (an issued Apply or Clear re-arms the fit); frontends/shell/src/App.tsx:755 @ b391e43622056324c56d35cc33065305140a8415 sha256:a78116fd74b4d50a64cf71585b1a575d1517007532b0dd5397ccb74ad8a15153, frontends/shell/src/App.tsx:1061 @ b391e43622056324c56d35cc33065305140a8415 sha256:fa2db2c3c93bd18fdf893fe04b017fbc7f0891272d729216aef2968ccb18e894 and frontends/shell/src/App.tsx:1170 @ b391e43622056324c56d35cc33065305140a8415 sha256:fa2db2c3c93bd18fdf893fe04b017fbc7f0891272d729216aef2968ccb18e894 (every deps object passes the canvas's reset, whichever arm); frontends/shell/src/canvas/WorkingCanvas.tsx:1339-1342 @ b391e43622056324c56d35cc33065305140a8415 sha256:2d82fe58e0c302796eb8ae41bc7fdde8c2e1bf096aa478c069a9780f8a8ef91b (the reset); frontends/shell/src/canvas/WorkingCanvas.tsx:1285-1295 @ b391e43622056324c56d35cc33065305140a8415 sha256:c27ca0ad6214c9518162452c50c83da344fabdf2b9999483e97d2a47f4a85405 and frontends/shell/src/canvas/WorkingCanvas.tsx:1486-1491 @ b391e43622056324c56d35cc33065305140a8415 sha256:e7ddf94ea821dadfad70c32803ecfe84a4368e97a2023814a6da1c915e442016 (the automatic fits); frontends/shell/src/canvas/WorkingCanvas.tsx:1157-1162 @ b391e43622056324c56d35cc33065305140a8415 sha256:6ed8cdad666a0e7e2c7c27d8f5da95cefadb3ab0137412b718ecd95fe75438b1 (a fit that does not notify reports nothing); frontends/shell/src/canvas/WorkingCanvas.tsx:1760-1769 @ b391e43622056324c56d35cc33065305140a8415 sha256:747506ffb494aa750e5a5e7fc0b4a14eca4d962b66827397e36e9d8a60db2fb0 (a pan or zoom reports); frontends/shell/src/canvas/WorkingCanvas.tsx:1335 @ b391e43622056324c56d35cc33065305140a8415 sha256:8cc3bc160e9c7bc4d514869a0b245bb33a01f68e7a19a730489ce98ba2ffbe8d and frontends/shell/src/App.tsx:1409 @ b391e43622056324c56d35cc33065305140a8415 sha256:1de6884ff2ae7170ce25b8501cd8936684ca0fb50264ea1762772bf1304ae683 (Zoom to layer reports; its button); frontends/shell/src/canvas/WorkingCanvas.tsx:439-441 @ b391e43622056324c56d35cc33065305140a8415 sha256:c4103377895ccc2f72c23e4f6b5c30f9efe3f105ff022f364b6d0e7ffb78287d (no resize report); frontends/shell/src/publish/PublishDialog.tsx:251-252 @ b391e43622056324c56d35cc33065305140a8415 sha256:45e66e2c707fa32d8a2fbe87b3aeabca80d334059227980c3b18a85102d31381 and frontends/shell/src-tauri/src/publish.rs:115-123 @ b391e43622056324c56d35cc33065305140a8415 sha256:7a5fd0c71d14938e647caaef24c5336eacdb4961b74655bea279c2faad3078b8 (the Row scope line). On main: frontends/shell/src/App.tsx:1886-1895 @ 2ca3a53ca812684a7b2579980db2f980c5d2a286 sha256:56e124ad0f97270f7e66baa3bceb75f7164b7013c9168138b66ab906811dcc7f and frontends/shell/src/App.tsx:1904-1906 @ 2ca3a53ca812684a7b2579980db2f980c5d2a286 sha256:9752c9ed5831d73b96ef76014e434882e84d3e69646bd6f26d5c504adeb85eef (the writers, a resize included); frontends/shell/src/canvas/WorkingCanvas.tsx:1954-1958 @ 2ca3a53ca812684a7b2579980db2f980c5d2a286 sha256:00298acdd3ba2d68d4fecb804c6c5b9cc65e61b0d88df335ac348f1b024bb8bb and frontends/shell/src/canvas/viewportBbox.ts:76-79 @ 2ca3a53ca812684a7b2579980db2f980c5d2a286 sha256:969316ad0cab5dc9142a98a2d48348653c0cbe4008685fedce4fb16bccb07898 (a resize reports unless nothing was last asked for, item 39's exception, or the size is zero); frontends/shell/src/residency/candidateArmSession.ts:1658 @ 2ca3a53ca812684a7b2579980db2f980c5d2a286 sha256:afd8c4c71c8ab144d9f80d65acda489a7a63c5108d49a7b60bd664742eda80eb (every reissue re-arms the fit); frontends/shell/src/publish/PublishPanel.tsx:513 @ 2ca3a53ca812684a7b2579980db2f980c5d2a286 sha256:e7b41e92c149880dcdd13951e6cdfb276ff9e8b5e270d753f1fc9ef68e1e094c and frontends/shell/src/publish/PublishPanel.tsx:610 @ 2ca3a53ca812684a7b2579980db2f980c5d2a286 sha256:c7c40d75422b08851d77a2a0dec838293432137a1c2c2d2c152715d81985aac6 (the labels). Not covered, by item 2c of the same direction: a pan made after an Apply or Clear but before the map has fitted itself, inside the request round trip, is followed by the fit (the item's "do it again" covers what the operator sees); the baseline residency arm, reachable only through the instrumented build's setResidencyArm switch; the dev-only view-state and publish hooks. The fix is PLAN.yaml node export-current-view-after-unreported-fit; its form decides this item's on-main paragraph when it lands. -->
+
+### §B. Clause check
+
+T = b391e43622056324c56d35cc33065305140a8415; M = 2ca3a53ca812684a7b2579980db2f980c5d2a286. The pins are the source comment's, hashed by the custodian at filing. The T spans 326, 345, 1388-1402, 1541-1548 and the WorkingCanvas spans are the read's. 588 follows from the read's identical hashes for PublishPanel.tsx:579-594 @ T and :584-599 @ M. 327, 577, 605, 755, 1061, 1170 and 1409 come from the custodian's script at T.
+
+| # | Clause | Evidence | Holds |
+|---|---|---|---|
+| C1 | Current view can publish an area the map no longer shows | C3 to C7 | yes |
+| C2 | Current view is the scope selected by default for Publish… | PublishPanel.tsx:326, :588, :605 @ T | yes |
+| C3 | It publishes the area the map showed at your last pan or zoom | App.tsx:1388-1402 @ T, the only writer apart from the reset at open; reports at WorkingCanvas.tsx:1760-1769 and :1335 @ T, plus the dev seam (§C); the box is read at click, PublishPanel.tsx:345 @ T | yes |
+| C4 | Zoom to layer counts as a zoom when it moves the map | Its only camera write is fitToExtent with notify true (WorkingCanvas.tsx:1335 @ T), and that call reports | yes |
+| C5 | After a filter Apply or Clear, the map can move by itself to fit the data | FilterPanel.tsx:66-69 @ T. On an issued outcome, applyFilter calls the deps reset (App.tsx:327 @ T). Every deps object App builds passes the canvas reset (App.tsx:755, :1061, :1170 @ T), so the shipped arm reaches it through applyFilter. candidateArmSession.ts at T has no call. The reset re-arms the auto-fits (WorkingCanvas.tsx:1339-1342, :1285-1295, :1486-1491 @ T), whose notify is false (:1157-1162) | yes |
+| C6 | When the map changes size, it shows more or less of it, without that area following | No onResize at T (prop doc WorkingCanvas.tsx:439-441 @ T; the read's script count is 0). The view box depends on the canvas size (:1760-1769). No cause of a size change is claimed | yes |
+| C7 | Until your next pan or zoom, it publishes the earlier area | App.tsx:1541-1548 @ T (keyed on the dataset); disabled only by !hasSettledView (PublishPanel.tsx:36-37 @ T), which resets only at admit (App.tsx:790-796 @ T) | yes |
+| C8 | Row scope says "the current viewport extent" and gives four numbers, with nothing to say whether they match | PublishDialog.tsx:251-252 @ T (identical at M); publish.rs:115-123 @ T and :129-131 @ M; the quoted span is copied byte for byte | yes |
+| C9 | Pan or zoom a little as the last thing before Publish… | WorkingCanvas.tsx:1760-1769 @ T (every view-state tick reports); PublishPanel.tsx:605 @ T | yes |
+| C10 | Do it again if the map then moves by itself | The only camera move the operator does not make is the auto-fit (C5) | yes |
+| C11 | Current view then publishes what the map shows | After a pan, the box is the camera's view at the canvas's size (:1760-1769 @ T; WorkingCanvas.tsx:2018-2028 @ M) | yes |
+| C12 | Whole dataset publishes the whole file | PublishPanel.tsx:577 @ T; the whole-file arm uses ViewportQuery::all() (engine/src/stream.rs:216 @ T, item 8's pin; publish.rs:104 @ M); items 5 and 8 still apply | yes |
+| O1 | The button reads Export interactive map…, in the panel labelled Export | PublishPanel.tsx:610 and :513 @ M | yes |
+| O2 | While the map has a width and a height, a resize now updates Current view, except in item 39's exception | WorkingCanvas.tsx:1954-1958 @ M; viewportBbox.ts:76-79 @ M (77: no write at size zero; StudioLayout.tsx on main declares no minimum); App.tsx:1886-1895, :1904-1906 @ M; the exception is the window in which nothing was last asked for (WorkingCanvas.tsx:1354, :1535; candidateArmSession.ts:1658 @ M) | yes |
+| O3 | After an Apply or Clear that moves the map, it still publishes the earlier area | App.tsx:345-348, :2034-2042 @ M; candidateArmSession.ts:1631-1658 @ M; WorkingCanvas.tsx:1348-1355, :1478-1488, :1681-1685 @ M; PublishPanel.tsx:329, :36-38, :348 @ M | yes |
+| O4 | What to do meanwhile is the same, with the new label | WorkingCanvas.tsx:2018-2028 and PublishPanel.tsx:610 @ M | yes |
+
+### §C. Not covered (item 2c)
+
+As named in the source comment. A resize to zero size on main is not in this list: O2's words state it.
+
+### §D. Tag checks (run by the custodian's script, before this form was committed)
+
+1. At T, the reset is called only from App: App.tsx:327, inside applyFilter, and deps lines 755, 1061 and 1170. C5 rests on App's path.
+2. C6 makes no claim about what changes the map's size at T.
+3. StudioLayout.tsx on main declares no minimum, so O2 carries the condition that the map has a width and a height.
+4. The labels are resolved as pinned. The disclosure word "Publish" was not confirmed and is not used.
+
+### §E. Gates
+
+- **Route.** A single combined reviewer gate (§21b), under proportional gates (state/directives/2026-10-05-product-first-direction.md, section 2).
+- **What blocks.** It blocks only on Correctness or Evidence. A clause untrue at T or at the base claims a limit the code does not support, so it is Correctness.
+- **Wording blocks.** The words are the human's (item 2e). So a block on the wording alone carries the reviewer's replacement words, each clause checked, and the human answers under item 2b.
+- **Documentation findings.** They are fixed before the merge and do not cause a re-gate.
+- **Order with phase B.** Phase B edits items 36, 38, 40 and 41, and the items are disjoint by number. Whichever piece merges later merges main in before its last gate run.
+
+### §F. Open for the human
+
+- OPEN-1: approve or replace §A's words (item 2e).
+- OPEN-2: should the v0.1.0 release page's notes also carry item 42? Changing published text is the human's. This piece does not touch them.
+
+## Amendments
+
+### Amendment 1 — the human's rulings on OPEN-1 and OPEN-2 (class 5)
+
+*Written by the custodian on the human's ruling, before any change. References only: `state/directives/2026-10-12-item-42-current-view-amendment-7-guardian-readme-guardrails-brief.md`, item 1.*
+
+1. **OPEN-1: yes.** §A's item text, its on-main paragraph and its source comment stand as drafted. The worker applies them byte for byte from §A, with the source comment's opening bracket resolved to `The human's wording, approved`.
+2. **OPEN-2: yes.** The human's correction paragraph goes at the top of the v0.1.0 release notes after item 42 has merged, as the ruling's item 1 sets out. The release page is not a file of this repository, so that edit is outside this form's Scope and is the custodian's, made after the merge and shown to the human.
+3. **Generation:** the node's generation goes up by one.
+4. **Superseded index:** §F's OPEN-1 and OPEN-2 → items 1 and 2.
+
+Nothing above is edited.
+
+### Amendment 2 — gate 1 on PR #215: a correction of record (class 3), a layout line (class 2), and one of the human's sentences put to the human
+
+*Written by the custodian after the single reviewer gate (`state/consults/gates/2026-10-12-known-limitations-current-view-stale-box-gate1-reviewer.md`). References only.*
+
+1. **Correction of record (class 3; the gate's D-1).** §B row C5's sentence that candidateArmSession.ts has no call at T, and §D item 1, are untrue. The reset is also called inside `reissueUnrestricted` (frontends/shell/src/residency/candidateArmSession.ts:1513 @ b391e43622056324c56d35cc33065305140a8415 sha256:afd8c4c71c8ab144d9f80d65acda489a7a63c5108d49a7b60bd664742eda80eb), which the shipped candidate arm reaches through frontends/shell/src/App.tsx:1051 @ b391e43622056324c56d35cc33065305140a8415 sha256:180ff8f6909930675388d34df840c7a0d518c41d5715829d64a885661c0d4f3a. C5 holds by both routes, and the item's words are unaffected.
+2. **Layout (class 2; the gate's D-2).** One HTML comment line at column 0 stands before item 42, so that GitHub numbers it 42 and not 18 (f4d85944). The diff is 6 lines of Scope's 20.
+3. **The human's wording (the gate's C-1; item 2b).** The gate holds §A's sentence on what Current view then publishes untrue after a filter Apply, because Current view's query never carries the filter (item 8). Its replacement words and their clause check are in its report. The human answers yes, gives their own words, or accepts the sentence as it stands. The worker applies the answer, with no re-gate.
+4. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.

@@ -1021,3 +1021,260 @@ Nothing above is edited.
    - Amendment 1's draft section 2 items 1 and 2, as held for the human → items 1 and 2.
 
 Nothing above is edited.
+
+### Amendment 7 — scope addition: the late-cancel statement, part of B3 (class 9; `state/directives/2026-10-11-harness-approval-open-9-i-withdrawn-a10-late-cancel-adr-029.md`, item 4), declared as Amendment 6 item 3 lists; S1 of PR #212's gate 1 absorbed into the operation consumer's shape
+
+*Drafted by the architect at main 2ca3a53ca812684a7b2579980db2f980c5d2a286. Phase A's results have been seen (Amendments 4 and 5). This is written before any code of B3. References only; nothing below is a quotation. The proposed words in item 3 are new text for the human's P6 sight. Every pin is historical (§0.3), and the tree at phase B's base is authoritative for the work.*
+
+1. **The interfaces this addition is drawn against** (the consuming side, read first).
+   - The execute seam: PublishDialog's `execute` prop, frontends/shell/src/publish/PublishDialog.tsx:119-136 @ 2ca3a53ca812684a7b2579980db2f980c5d2a286 sha256:6d9672d2cf712ef38d8f495880efacb319dfc8d72d3839f968a306e05ed4f6a4. Its one call is in `handleSubmit`, frontends/shell/src/publish/PublishDialog.tsx:187-202 @ 2ca3a53ca812684a7b2579980db2f980c5d2a286 sha256:d54ad061c83fa6b9c439a9d8aca094b40227e2af41827b5fe79ef60c85b9e43f.
+     - PublishControls passes `publishExecute` straight through: frontends/shell/src/publish/PublishPanel.tsx:646-655 @ 2ca3a53ca812684a7b2579980db2f980c5d2a286 sha256:3503f76807de04fa61235c5b520664162bda75bab89402fd51abf0dfe8870b7b.
+     - The dev hook's path is frontends/shell/src/publish/PublishPanel.tsx:459-467 @ 2ca3a53ca812684a7b2579980db2f980c5d2a286 sha256:f982d7ce2ef9bb19d46da8a21eae91e15c0729e71923cf15cbff2e6d0189f7ff.
+   - The outcome types: frontends/shell/src/publish/types.ts:52-87 @ 2ca3a53ca812684a7b2579980db2f980c5d2a286 sha256:eba3fafb31915a5755d0850102c573d96421b1df35cae5de6a2c3542cac622eb. `bundle_path` is carried only by `success` and `succeeded-unaudited`.
+   - The cancel's answer:
+     - frontends/shell/src/publish/client.ts:92-109 @ 2ca3a53ca812684a7b2579980db2f980c5d2a286 sha256:7435354743cae0777edc8b9d9eee10977373981b9266a49393b7e63af8e9487e;
+     - frontends/shell/src-tauri/src/commands.rs:445-456 @ 2ca3a53ca812684a7b2579980db2f980c5d2a286 sha256:c6753f69bc8f9a107bda6107b9a766c9c46d3a7166e031b183476706df8f0af5;
+     - frontends/shell/src-tauri/src/publish.rs:1106-1118 @ 2ca3a53ca812684a7b2579980db2f980c5d2a286 sha256:638fb9fc3d792f522590210dd18258e2875dfff2dcaadb394db0701accc3ed67;
+     - the key's removal after the body returns: frontends/shell/src-tauri/src/publish.rs:1171-1186 @ 2ca3a53ca812684a7b2579980db2f980c5d2a286 sha256:149054915383abe6ef98bda4972f904ccabebd17f15e09b85c7947e516b6f8d7.
+     - True means a token was found and set, never that the run stopped.
+   - The kernel's last cancel check: kernel/src/publish/mod.rs:904-906 @ 2ca3a53ca812684a7b2579980db2f980c5d2a286 sha256:a790e07f1f7b5c1181e6937e95a95ab159bae7d3461f837f9f3ca4b1af7d85d4. The finalize and the outcome's path: kernel/src/publish/mod.rs:934-937 @ 2ca3a53ca812684a7b2579980db2f980c5d2a286 sha256:97877f91066645ccd0e147b72ee916a8d95401c62805116f69ab0730b5ce9f4c.
+   - The host's outcome mapping: frontends/shell/src-tauri/src/publish.rs:838-866 @ 2ca3a53ca812684a7b2579980db2f980c5d2a286 sha256:362bc113c2c15bce97421a3671427c826d23b8c15e9697a9ee2ff7dadbd8843d. A cancel the kernel observed ends as `refused`.
+   - The prepare phase writes nothing: frontends/shell/src-tauri/src/publish.rs:1301-1305 @ 2ca3a53ca812684a7b2579980db2f980c5d2a286 sha256:1a5d0c80be5a6a7f18766743be333cc744a3d14efd54d7cc0f66d416c15d5658. Its token is not registered during the picker window: frontends/shell/src-tauri/src/commands.rs:351-357 @ 2ca3a53ca812684a7b2579980db2f980c5d2a286 sha256:706fbd409cc9c728a75f83f94385c6343db070e27bf8f0099cace536dcf2ee4c.
+   - The panel is keyed on the handle: frontends/shell/src/App.tsx:2034-2043 @ 2ca3a53ca812684a7b2579980db2f980c5d2a286 sha256:a8d9b976d89d4f7ec2cac70e5ea711c6771e40729d00e2120bf96aaa4db25c85. So after an admission the old panel shows no outcome.
+   - The workspace: frontends/shell/src/workspace/workspaceState.ts:43-66 @ 2ca3a53ca812684a7b2579980db2f980c5d2a286 sha256:b2008de1714f295ea13d0018feb7f9a82f44914feadf2be8530bfb623957e720, frontends/shell/src/workspace/workspaceState.ts:117-155 @ 2ca3a53ca812684a7b2579980db2f980c5d2a286 sha256:0f8a215f4c82ad1d7add3d3a65ae7da8e7a09e87fef3fd122f238f5c9413990a, and App's close and release at frontends/shell/src/App.tsx:1305-1325 @ 2ca3a53ca812684a7b2579980db2f980c5d2a286 sha256:40be9fbe65dca2dba63f6bba5bcdf47299645e8fbd137cb660ca79605c9639c1.
+
+2. **Shape (§2).**
+   - (a) **The report.** B3's report is replaced. `onExportRunning(run: ExportRunReport)` is called once, when a run starts.
+     - The types: `ExportRunReport = {cancel: () => Promise<boolean>; ended: Promise<ExportRunEnd>}` and `ExportRunEnd = {phase:"prepare"; outcome: PrepareOutcome} | {phase:"execute"; outcome: ExecuteOutcome}`.
+     - `ended` never rejects. In prepare it is built on `settlePrepareOutcome`. In execute it is built on `settleExecuteOutcome`, inside the wrapper §2.5 already places around PublishDialog's `execute` prop. PublishControls gains that prop, and the dev hook goes through the same wrapper.
+     - `cancel` is B3's, unchanged. There is no new host call, and nothing under src-tauri changes.
+   - (b) **The consumer.**
+     - App acquires the operation consumer when the report arrives and releases it when `ended` resolves, in the same handler that decides item 2(c). There is no other release, and never one on unmount.
+     - `consumers` widens to `ViewId | ExportConsumerId`, where `ExportConsumerId` is `export-<n>`, minted by App once per run.
+   - (c) **The late-cancel statement.** It is shown when, and only when, all of these hold:
+     - "Cancel the export and go on" was chosen for this run;
+     - the run is an execute run;
+     - its `ended` resolved to `success` or `succeeded-unaudited`.
+     - App marks the choice on the run before it calls `cancel()`.
+     - `cancel()`'s answer, or its rejection (caught), is never read for the statement.
+     - If `ended` has already resolved when the choice is made, the statement is decided at the choice.
+     - A prepare run, a `refused` or `unknown-attempt` outcome, and every run after "Keep exporting" show no statement.
+   - (d) **Where it shows, and for how long.**
+     - It renders in the ask's place (OPEN-12), App-owned, never over the map (rule 11).
+     - It renders the path whole, never truncated.
+     - It stands until the next `confirmOpen` call or the next export report, whichever comes first. It has no timer.
+     - It is rendered by `src/feature/OpenDuringExportAsk.tsx`, which exports its two text constants.
+     - No new console row. The choice keeps B3's `dataset.openDuringExport` row, and the execute keeps its existing binding row.
+   - (e) **A prepare run's lost cancel, declared and not stated.** If a prepare run reaches its prompt after the choice, nothing is written:
+     - if the new open is admitted, the old panel and its prompt are gone, and the pending attempt expires host-side;
+     - if the new open is refused, the old panel stays and shows the approval prompt, which still needs the typed phrase.
+
+3. **The words (P6; the 2026-10-11 direction, item 2e; the human's wording, to approve or replace here).** These are the architect's proposed strings, not a quotation.
+   - `LATE_CANCEL_FINISHED`: `The export was not cancelled: it finished before the cancel could stop it. The bundle was written to:`, then `bundle_path` on its own line.
+   - `LATE_CANCEL_FINISHED_UNAUDITED`: `The export was not cancelled: it finished before the cancel could stop it, but its outcome record could not be audited. The bundle was written to:`, then `bundle_path`, then the outcome's `detail` line, as the panel renders it today.
+   - **Clause check against the code:**
+     - "was not cancelled": shown only for `success` and `succeeded-unaudited` (item 2(c)). The host maps a cancel the kernel observed to `refused` (publish.rs:838-866 above).
+     - "it finished": `success` comes only from the kernel's Ok after the rename (kernel/src/publish/mod.rs:934-937 above). `succeeded-unaudited` carries the same `bundle_path` (publish.rs:849-856, within the span above).
+     - "before the cancel could stop it": the token is not read after kernel/src/publish/mod.rs:906. A false answer means the key was already removed after the body returned (publish.rs:1171-1186). Both answers lead to this outcome.
+     - "but its outcome record could not be audited": the `succeeded-unaudited` arm only.
+     - "The bundle was written to": `bundle_path` is the destination the staging was renamed to.
+   - **What an operator can observe (item 2c).**
+     - After "Cancel the export and go on", the new dataset opens.
+     - When the old export's outcome is a finished bundle, the statement appears in the ask's place with the path, and that folder exists.
+     - Ordinary use reaches this case: the ask stands while the export finishes.
+   - **Named, not blocking (recorded in the constants' source comment).**
+     - `cancel()` answers true while the run is between kernel/src/publish/mod.rs:906 and its return. This window is shorter than one request round trip, and the words hold there too.
+     - E-ASK's third step drives the export through the dev-only hooks.
+   - **ADR-006 and ADR-024.** No word says or implies undone, cancelled or removed for a finished export, and nothing offers to remove the bundle.
+
+4. **S1 and S4 of PR #212's gate 1** (`state/consults/gates/2026-10-11-shell-migration-milestone-2-phase-a-gate1-reviewer.md`, Suggestions S1 and S4).
+   - **S1.** §2.1(c)'s acquire action is `consumer.acquired {resource, consumer}`. It is idempotent: a consumer already present leaves the state unchanged. It has two product callers: item 2(b), and the `[admitted]` effect's setup, which re-acquires the view's consumer on the admitted resource.
+   - **S4:** no text here. It concerns RB4 and E-GEN (§2.3, §4), not B3's seam.
+
+5. **B3's slot (see OPEN-12).**
+   - At main, AdmissionPanel renders into `region.layers` (frontends/shell/src/App.tsx:1713 @ 2ca3a53ca812684a7b2579980db2f980c5d2a286 sha256:810b8e410c2d83138181116a52881a6c0ba921c6852e75f68c8b4f6fe2f52696).
+   - `section.source` holds DescribeSummary (frontends/shell/src/App.tsx:1717 @ 2ca3a53ca812684a7b2579980db2f980c5d2a286 sha256:5d7f99fbf9f096edeac3e644ada9b6370ea3c737374fe5b128bcf39c40c3645b).
+   - B3's slot name and B3's "beneath AdmissionPanel" therefore disagree. No code of the ask's or the statement's render site lands before the ruling (I9). Everything else in B3 does not wait.
+
+6. **§4 rows, one observed mutation each.**
+   - **RB12d** (render, App.selection.test.tsx; the real App, with `publish/client` mocked to client.ts's real signatures and types.ts's real outcome types; the run driven through the dialog's Publish button).
+     - (i) `publishCancel` answers true and execute resolves `success` with path P: the statement shows `LATE_CANCEL_FINISHED` and P, and `closeDataset(old)` is called once, after the outcome.
+     - (ii) `publishCancel` answers false and the outcome is `success`: the same.
+     - (iii) The answer is true and the outcome is `refused`: no statement.
+     - (iv) A prepare run ends as `prompt` after the choice: no statement.
+     - (v) `succeeded-unaudited`: the unaudited words, P and the detail.
+     - Mutation: show the statement only when `cancel()` answers false. It fails at (i).
+   - **E-ASK, third step** (e2e, selection.mjs).
+     - Start a whole-file execute of `100k-happy-path.parquet` and open `filter-zoned.parquet` while it runs. The ask shows.
+     - Wait for the execute hook's outcome, then choose "Cancel the export and go on".
+     - The statement shows the outcome's `bundle_path`. That folder holds the bundle's manifest on disk. The new dataset is admitted, and the old `close_dataset` row follows the outcome.
+     - Mutation: show the statement only when `cancel()` answers true. It fails on the absent statement.
+     - If the export ended before the open, the step is inconclusive (class 2), never a pass.
+   - **UB14** (unit, workspaceState.test.ts).
+     - `consumer.acquired` twice and then one `consumer.released` leaves the resource closable exactly once.
+     - An export consumer keeps a resource the view has left out of `selectClosable` until it is released.
+     - Re-acquiring the view after its release keeps a live resource out of `selectClosable`.
+     - Mutation: `consumer.acquired` appends without its presence check. It fails on the first assertion.
+   - **Walkthrough row W8a** gains a third step.
+     - The steps: start the export, open `filter-zoned.parquet`, let the export finish while the ask stands, choose "Cancel the export and go on", read the statement and open the folder it names.
+     - Felt: did it tell you the export had happened, and where it is?
+
+7. **§5.**
+   - **Declared unchanged:**
+     - src-tauri and the kernel;
+     - `binding_publish_cancel`'s answer;
+     - PublishDialog;
+     - every existing PublishPanel string;
+     - the `[admitted]` effect's order (stop, close, start).
+   - **I13** is read against B3's shape as this amendment declares it.
+   - **I16:** the run's outcome cannot reach App after the panel unmounts without editing a declared-unchanged area.
+   - **I17:** the statement needs a host fact other than the outcome's `bundle_path` and `detail`.
+
+8. **§8 additions.**
+   34. After "Cancel the export and go on", a statement that says or implies the export was cancelled, undone or removed when the execute outcome is `success` or `succeeded-unaudited`; or an offer to remove a bundle.
+   35. A late-cancel statement decided by `cancel()`'s answer; or one shown for a prepare run, or for an outcome that wrote no bundle.
+   36. A bundle location taken from anything but the outcome's `bundle_path`, or truncated.
+   37. The statement on a timer, or over the map.
+
+   Item 18 also admits item 3's two strings, each sighted at P6.
+
+9. **§9 additions.**
+   - Item 3's words are approved or replaced by the human before the sitting.
+   - OPEN-12 is ruled before the ask's render site is coded.
+   - RB12d, E-ASK's third step and UB14 are each observed with the commit their mutation was observed at.
+
+10. **§7 addition** (budget overrun, if any, is class 8; §7, B10 and this table are never edited to match). Counted by §7's command, in phase B's PR.
+
+| Group | Files (ceiling each) | Lines, at most |
+|---|---|---|
+| AM7-P | PublishPanel.tsx +30, App.tsx +45, OpenDuringExportAsk.tsx +35, workspaceState.ts +20, styles.css +5 | 135 |
+| AM7-T | App.selection.test.tsx +220, workspaceState.test.ts +45 | 265 |
+| AM7-E | selection.mjs +70 | 70 |
+| **Amendment 7** | | **470** |
+
+   - The piece's ceiling is 7,882 + 470 = 8,352.
+   - MANUAL-WALKTHROUGH.md: ≤ 15 more, outside the count.
+
+11. **The reuse index** (the standing step).
+   - The custodian ran `node tools/reuse.mjs` for `cancel` and for `export` in christopherdonini/spatial-ide-reuse at 89bbac3738dbb46d47988e55a7c0f0d4f9fe4c5c, the tool at that commit. The custodian appends the printed lines beneath this item, byte-copied by script and marked.
+   - `cancel` printed three capabilities: `undo-merge-collapse-keys`, `stale-range-cancellation` and `request-scheduling`. None is used. The statement reconciles an outcome after the fact. It does not cancel, schedule or merge requests, and no code is taken.
+   - `export` printed a miss. It is noted and does not block.
+   - No dependency is proposed.
+   - The printed lines, byte-copied by the custodian's script from that run (for `cancel`, then for `export`):
+
+     ```text
+     capability: undo-merge-collapse-keys → Qt QUndoStack [CONCEPTUAL], QGIS [CONCEPTUAL], prosemirror-history [CONCEPTUAL], @codemirror/commands [CONCEPTUAL], kafka [CONCEPTUAL], tldraw [REJECT]   (worth-owning, P0)
+     capability: stale-range-cancellation → VS Code [PORT]   (do-not-reinvent, P0)
+     capability: request-scheduling → loaders.gl [CONCEPTUAL], Cesium [CONCEPTUAL]   (worth-owning, P2)
+     No prior art recorded for "export". Research it before planning an implementation.
+     ```
+
+12. **§11 addition.**
+
+| Item | Subject | Recommended | Red line |
+|---|---|---|---|
+| OPEN-12 | The ask's and the statement's slot | (A) `region.layers`, beneath AdmissionPanel | no |
+
+13. **Generation:** the node's generation goes up by one.
+
+14. **Superseded index.**
+
+| Form passage | Superseded by |
+|---|---|
+| Amendment 1 B3, the report's shape | item 2(a) |
+| Amendment 1 B3, the consumer's release trigger | item 2(b) |
+| §2.1(c), the acquire action | item 4 |
+| Amendment 1 B3, the ask's slot | item 5, OPEN-12 |
+| Amendment 1 B3 rows, E-ASK; W8a | item 6 |
+| §5, I13's reading; new I16, I17 | item 7 |
+| §8, new items 34 to 37 | item 8 |
+| §7 | item 10 |
+| Amendment 6 item 3 | items 2 to 10 |
+
+Read the last amendment first.
+
+Nothing above is edited.
+
+### Amendment 8 — the human's rulings on Amendment 7's words and on OPEN-12 (class 5)
+
+*Written by the custodian on the human's typed ruling, before any code of B3's render site. References only: `state/directives/2026-10-12-item-42-current-view-amendment-7-guardian-readme-guardrails-brief.md`, item 3.*
+
+1. **Amendment 7 item 3's two strings: approved as drafted.** `LATE_CANCEL_FINISHED` and `LATE_CANCEL_FINISHED_UNAUDITED` are the human's approved wording. Amendment 7 item 9's first bullet is discharged. The P6 sight at the sitting still reads them on screen.
+2. **OPEN-12: (A).** The ask and the late-cancel statement render in `region.layers`, beneath AdmissionPanel. Amendment 7 item 5's hold (no code of the render site before the ruling) is lifted, and Amendment 7 item 9's second bullet is discharged.
+3. **Generation:** the node's generation goes up by one.
+4. **Superseded index:** Amendment 7 items 3 and 12 (OPEN-12) → items 1 and 2.
+
+Nothing above is edited.
+
+### Amendment 9 — budget overrun, §7 not edited (class 8): HoverReadoutView.tsx and the B-W row's two phase A files; with the build's deviations in stages 1 to 3 (class 2) and two items for the human
+
+*Written by the custodian after stages 1 to 3 of phase B were built and their results seen, before any gate. References only. The reports are `state/consults/2026-10-12-shell-migration-milestone-2-phase-b-worker-report-stage-1.md` (the head 0da5277b), `state/consults/2026-10-12-shell-migration-milestone-2-phase-b-worker-report-stage-2.md` (147643c5) and `state/consults/2026-10-12-shell-migration-milestone-2-phase-b-worker-report-stage-3.md` (1de68a61).*
+
+1. **§7 (class 8), by §7's own command from B at 1de68a61:**
+   - HoverReadoutView.tsx is 17 against its 12 (B-C). The deletions alone are 8: the two inline refusal blocks and the signature line, replaced by Amendment 2 item 7's constants and export.
+   - The B-W row's two phase A files, viewTransitions.ts and workspaceState.ts, are 187 against 160 more, or 180 with Amendment 7's AM7-P allowance of +20 for workspaceState.ts.
+   - Both groups stay inside their totals: B-W 433 of 630, B-C 413 of 572 with WorkingCanvas.tsx at 112. The cumulative count is 2,158.
+   - §7 is not edited.
+2. **The build's deviations (class 2),** for the gates:
+   - (a) ViewState's phase B members are optional and read through readers that give the defaults. A minted view stays the four-member object, so the base suites' ViewState literals and UA1's exact shape stand unedited (stage 1, decision 1).
+   - (b) UA4's union `it` is edited into the nine-name table. Phase A's `it` named two actions, and §2.4's other seven names fail its typecheck. It is a base test edit beyond Amendment 2 item 5's two, and H3's one exception (stage 1, decision 2).
+   - (c) The stored selection is the members map only. Resource and generation are composed where read, from the view's binding, and the reducer ends the selection on the two events that change either (stage 1, decision 3).
+   - (d) `countSelection` takes a facts argument that no product code reads yet, for UB3's mutation. In stage 5, App passes what it holds and invents nothing for the view's completeness (stage 1, decision 4).
+   - (e) UA3's resolveScope clause is in scope.test.ts, not workspaceState.test.ts (stage 1).
+   - (f) Rows beyond §4's table, each with its own observed mutation: UB-TI1, UB-TI2, and more than one `it` in UB1, UB2, UB7 and UB9 (stages 1 and 2).
+   - (g) `buildHighlightLayers`'s drawn set holds the resident inspected id as well as the selected ones; §2.3 names the selected ids only. `countSelection` reads only the selected members (stage 2, note 1).
+   - (h) WorkingCanvas's five new props and the handle's `fitToBbox` are optional in their types, so that the base suites' stand-ins compile unedited. App calls `fitToBbox` through optional chaining (stage 3, the caller rule).
+3. **For the human (not ruled here):**
+   - (a) **OPEN-13, the canvas wiring test.** Stage 3 added `src/canvas/WorkingCanvas.wiring.test.tsx`, 345 lines and 13 tests, among them the canvas side of RB18 with the mutations Amendment 3 item 3 names. It is not in §2.7's list, and OPEN-11's terms say nothing else under `canvas/` (`state/directives/2026-10-11-open-11-a-piece-f-opens-ported-notices-required.md`, item 1). Keep it (a scope addition, class 9, with its lines an overrun, class 8), or drop it: its three commits (d708d479, 6488360f, 1de68a61) drop cleanly, and RB18's canvas side is then proven by e2e only.
+   - (b) **OPEN-14, a double-click.** deck maps both click and dblclick to onClick, and the build does not filter by type. A double-click, which is also deck's zoom gesture, reaches the click once: it inspects or toggles once, and the map zooms. The form does not say. Accept it as built, sighted at the sitting, or filter the double-click out so that it only zooms (a code change in WorkingCanvas.tsx, within B-C).
+4. **The recommended e2e:** stage 3's report recommends one e2e:regression run at 1de68a61, the only suite that exercises the changed shared canvas paths. The custodian runs it under the port-5400 harness approval.
+5. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
+
+### Amendment 10 — phase B built: stages 4 to 8, the e2e results and the mutation observations (class 1), the build's deviations (class 2), and two items for the human
+
+*Written by the custodian after stages 4 to 8, the e2e runs and the mutation runs were seen, before any gate. References only.*
+- *The reports: `state/consults/2026-10-12-shell-migration-milestone-2-phase-b-worker-report-stage-4.md` to `state/consults/2026-10-12-shell-migration-milestone-2-phase-b-worker-report-stage-8.md`; the step fixes, `-stepfix-1.md` to `-stepfix-4.md` in the same folder; the diagnosis, `state/consults/2026-10-12-shell-migration-milestone-2-phase-b-e2e-diagnosis-1.md`; the point-click investigation, `state/consults/2026-10-12-shell-migration-milestone-2-phase-b-point-click-investigation.md`; the patch report, `state/consults/2026-10-12-shell-migration-milestone-2-phase-b-mutation-patches-report.md`.*
+- *The e2e records: `state/consults/2026-10-12-shell-migration-milestone-2-phase-b-e2e-custodian-run-1.md` and `state/consults/2026-10-12-shell-migration-milestone-2-phase-b-e2e-custodian-run-2.md`.*
+- *The head is 719568f8.*
+
+1. **§7, by its own command from B at 719568f8.**
+   - Phase B counts 5,644 lines. With phase A's 1,170, the piece is at 6,814 of 8,352.
+   - Every file is within its ceiling as §7 and Amendments 1, 2 and 7 add them, except Amendment 9 item 1's two.
+   - `selection.mjs` is 706 against about 750 for phase B: G-E's 650, less phase A's 100, plus AM1-E 40, AM1-X 90 and AM7-E 70. The figure of about 660 named in the stage reports left out AM1-X.
+   - FeaturePanel.tsx and clickEffect.ts, new files under `src/feature/` (§2.7), count in B-L. FeatureTab.test.tsx and ToolSwitch.test.tsx count in B-T.
+   - The two OPEN-13 files (523 lines) are outside every group until ruled.
+   - §7 is not edited.
+2. **The results (class 1).**
+   - The base suites pass at stages 3 to 7: regression, layout, console, style, publish and admission (run 1, run 2).
+   - At 719568f8, selection passes 15 of 15.
+   - Every e2e step's mutation is observed by its own step, at the commits run 2 names. E-ASK (2) is proven by RB12b, and is not observable in e2e.
+   - The point click (the investigation): the hover reads truncated pointer coordinates and the tap rounded ones. So at a fractional coordinate the tap can land one pixel off, and lose a point dot's edge. The click code is not at fault, and the e2e hover point is rounded to whole CSS pixels.
+3. **The build's deviations (class 2),** for the gates:
+   - (a) A [P6 placeholder] statement, `layout.selectInspectorTab`'s, was edited: with a third tab, the old one was untrue (§5; stage 4).
+   - (b) `matchToolKey` has the code fallback that `matchChord` has, and the count line is labelled Selected, ignoring filter (stage 4).
+   - (c) `status.selectionEnded` landed in stage 5. `Slots` keeps it optional while StudioLayout.test.tsx is pending (stage 5).
+   - (d) `countSelection`'s facts are App's own. The view's completeness is the scan's completed state (stage 5).
+   - (e) The `[admitted]` re-acquire has no App-level test that discriminates it. The reducer side is UB14's (stage 5, note 2).
+   - (f) The mode picker records no console row. §2.6's six rows name none (stage 5).
+   - (g) Commit 968ff05c's body says 21 tests. There are 18 tests with 21 observations (stage 5).
+   - (h) Beyond §4's table, each with its own observed mutation: RB7-hook; RB-SET, RB-S1 and RB-DRAWN; RB12 split into RB12a to RB12e.
+   - (i) PublishControls' `execute` is optional with a default, and RB8's mutation goes through `filterActive` (stage 6).
+   - (j) RB12b's mutation sits in `handleAdmitted`. A second `confirmOpen` answers the first as Keep. The dev hook reports a dropped open as a refusal coded `open.dropped`, because `e2e-test-surface.ts` is outside §2.7. The two late-cancel constants are exported, as Amendment 7 item 2(d) says (stage 7).
+   - (k) layout.mjs is unedited (stage 8).
+   - (l) EXPORT-TODAY, phase A's recorded observation (Amendment 4 item 2), is skipped with a printed reason: after B3, its reopen meets the ask, which E-ASK and E-ASK-STATEMENT cover.
+   - (m) The e2e steps were fixed and strengthened in four test-only commits: 9773d5c0, 2f18ad39, a6607738 and 719568f8.
+4. **For the human (not ruled here):**
+   - (a) **OPEN-13 is widened.** Amendment 9 item 3(a) put `src/canvas/WorkingCanvas.wiring.test.tsx` to the human. `src/layout/StudioLayout.test.tsx` (178 lines, 6 tests, stage 4), also outside §2.7's list, now joins it: keep (class 9, with its lines an overrun, class 8), or drop.
+   - (b) **OPEN-15, the point click's pixel rule.** §2.2 picks the tap's own rounded pixel (OPEN-1 (A)), and the hover reads the truncated one. On a display scaled to 125% or 150%, a click at a point dot's edge can then miss the feature the hover readout names. The options:
+     - (A) accept it, and state it as a KNOWN-LIMITATIONS item;
+     - (B) the tap picks the hover's truncated pixel;
+     - (C) a click on a point picks with a 1 px radius.
+
+     Recommended: (C). It is independent of how a platform rounds the pointer, and on a polygon it changes nothing. Not a red line.
+   - (c) **Item 2e:** KNOWN-LIMITATIONS items 36, 38, 40 and 41, and Part W's expected-outcome cells, are drafts for the human's words (stage 8).
+5. **Generation:** the node's generation goes up by one.
+6. **Superseded index:** Amendment 9 item 3(a), OPEN-13 → item 4(a).
+
+Nothing above is edited.
