@@ -1804,3 +1804,44 @@ This Part is the Operator gate of `frontends/shell/SHELL-CRS-FORM-FOR-FORMAT-DEF
 - **X1:**
 - **X2:**
 - **X3:**
+
+## Part W — selection and scope: the Select tool, a selection that survives a filter and a pan, the hidden count, a stated export scope (shell-migration-milestone-2)
+
+This Part is the Operator gate of `frontends/shell/SHELL-MIGRATION-MILESTONE-2-PREREGISTRATION.md` §9, run only on a build after that piece's merge, at 1366 x 768, with a blank result log. It is the human's felt verdict on O-07 steps 4, 5 and 6, and is discharged only once it has been run and its result log filled in. **No duration appears in any row or expected outcome** (`docs/08_Testing.md`; ADR-018). **If anything deviates:** stop, record the exact step, and report it, as in every earlier Part. *Draft for the human's sight (the form's §9 and item 2e of `state/directives/2026-10-11-direction-after-status-review.md`): the step lines follow the form's §2.8 rows and Amendments 1, 2 and 7; the Expected outcome cells and the sentences around the table are drafts.*
+
+| # | Step | Expected outcome |
+|---|---|---|
+| W0 | Read the form's §10, the last amendment first. | Record the number of the last amendment you read. |
+| W1 | Open `filter-zoned.parquet`. Read the tool switch and its statements. | The switch shows Navigate and Select, with one line each saying what a click does. The mode picker is absent while Navigate is active. |
+| W2 | Step 4. Choose Select, then Replace. Click five features, then choose Add only and click one more. Look at the cursor over the map in Select. | The selection grows as the modes say. The cursor in Select is the arrow, and a drag is the grabbing hand. **Felt:** are the four modes clear without trying them, and can you say how the selection differs from the filter? **This row also observes H7:** real mouse clicks reach the map's tap in WebView2. |
+| W3 | Step 5. Choose Navigate. Click a selected feature, then an unselected one. Open the Feature tab and try Pin. | A Navigate click inspects and leaves the selection as it was. **Felt:** did you think the selection had changed, and are the two encodings enough to tell selected from inspected? **Felt:** did you expect the Feature tab to come forward on a Navigate click, and does a feature that is both selected and inspected visibly show both? |
+| W4 | Step 6. Apply the filter `zone = 'residential'`, and read the summary. | The selected count is unchanged, and the hidden count is shown. **Felt:** is the hidden count explained where you looked? |
+| W5 | Choose Zoom to selection. | The map moves over the selected features. |
+| W6 | Pan away and back, then clear the filter. | The selection is intact. |
+| W7 | Zoom out until the readout shows the below-resolution state, then click in Select. | Nothing changes, and the state is shown. |
+| W8 | Read the Export section's scope statement with a selection standing. | The statement says what the export covers and that the selection is not used. **Felt:** did you expect export to use the selection? |
+| W8a | Start a whole-file export of `100k-happy-path.parquet` and, while it runs, open `filter-zoned.parquet`. (1) Choose Keep exporting. (2) Repeat the start and the open, and choose Cancel the export and go on. (3) Start and open again, let the export finish while the ask stands, then choose Cancel the export and go on, read the statement, and open the folder it names. | (1) The ask shows, the open does not happen and the export carries on. (2) The new dataset opens, and nothing is shown that you did not choose. (3) The statement says the export was not cancelled, that it finished, and gives the bundle's folder, and that folder holds the bundle. **Felt:** are the two choices clear, and did anything happen that you did not choose? **Felt:** did it tell you the export had happened, and where it is? |
+| W9 | Reopen the file. | The notice names the count dropped. |
+| W10 | Open `point-p1.parquet`, `line-l1.parquet` and `multipolygon-f1.parquet`, one at a time, and click in Select. | One click selects one feature, and every part of it highlights. |
+| W11 | The P6 sight of the new strings: the tool switch, the Feature tab, the Export section's sentence, the ask, and the two late-cancel statements. | Record the wording you approve or replace. The two late-cancel statements are the human's approved wording (Amendment 8, item 1) and are read again here. |
+
+## Result log
+
+Fill in after running the rows above (the milestone-2 Part W).
+
+- **Date run:**
+- **Run by:**
+- **Build/commit:**
+- **Last amendment read (its number):**
+- **W1:**
+- **W2 (also H7, and the cursor):**
+- **W3 (selected or inspected; the Feature tab coming forward; both encodings):**
+- **W4 (the hidden count):**
+- **W5:**
+- **W6:**
+- **W7:**
+- **W8:**
+- **W8a (steps 1, 2 and 3):**
+- **W9:**
+- **W10:**
+- **W11:**

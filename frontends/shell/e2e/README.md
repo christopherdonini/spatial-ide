@@ -756,3 +756,19 @@ npm run e2e:layout
 **What CDP key injection proves.** `page.keyboard.press` reaches the page's own `keydown` listener. It does not cross WebView2's accelerator-key layer, so this suite cannot say that real keys do. That is row U3 of the walkthrough's Part U (the form's H2).
 
 **The layout is session state.** An attached app keeps its layout across suites. `e2e:style` selects the Inspector's Style tab and leaves it selected, so run the next suite on a fresh launch (`e2e:layout` itself clicks the Layer tab first). The sections above that speak of `.app-main`, `.app-rail-top`, `.app-rail-bottom` or `.canvas-status-stack`, or give measurements of the stacked layout, describe the layout before this piece and are history. The suites now select `.attention-strip`, and `.zoom-to-layer` lives in the Layers row.
+
+## Selection spec (shell-migration-milestone-2)
+
+```
+npm run e2e:selection
+```
+
+*Draft for the human's sight (the form's §9 and item 2e): the entry follows `SHELL-MIGRATION-MILESTONE-2-PREREGISTRATION.md` §2.8 and §4, and its sentences are not the human's wording.*
+
+`e2e/selection.mjs` drives the Select tool, the selection, the inspection and the export's scope on real WebView2. Fixtures: `filter-zoned.parquet` (and a scratch copy of it, touched by mtime only for `E-GEN`'s source change), `100k-happy-path.parquet` for the reopen and the export, and `multipolygon-f1.parquet`, `point-p1.parquet` and `line-l1.parquet` for `E-KINDS`. Every oracle id is taken through `hoverIdAfterBarrier` from `lib.mjs`; the file has no barrier of its own and never takes a first poll. The Feature tab, the tool switch and the status bar are read from the real DOM; the highlight is read from the drawing buffer with `capturePixels`.
+
+Asserted, each as a named step: `E-CLICK` (Navigate: the Feature tab's id equals the oracle id at that pointer, and the selection is unchanged), `E-CLICK-FAST` (a click at once after a move selects the candidate's id; race-dependent, and `UB8` is the deterministic proof), `E-SELECT` (a Select click gives Selected 1 and the highlight's pixels appear), `E-NODRAG` (a drag pan in Select changes no selection and does change the view box), `E-ZOOMSEL`, `E-SEL-PAN`, `E-SEL-FILTER` (Apply `zone = 'residential'`: the count is unchanged and the hidden count is at least 1; Clear: 0), `E-REFUSED` (below the pick resolution a click changes nothing and the state is shown), `E-GEN` (a reopen and a source change each end the selection with a notice naming the count), `E-KINDS`, `E-EXPORT` (the prompt's row scope and the bundle's row count equal the run without a selection), `E-SCOPE` (prepare, change the filter, execute: refused, nothing written), `E-ASK` (opening a dataset during an export shows the ask; both choices) and `E-ASK-STATEMENT` (the late-cancel statement after the export finishes, with the outcome's `bundle_path` and the manifest on disk). If the export had ended before the open, `E-ASK` is inconclusive, never a pass.
+
+Recorded, not asserted: `EXPORT-TODAY`, which starts a whole-file export, reopens another fixture at once, and prints the panel, the host outcome and any export text.
+
+**What it proves not.** A real pointer's tap reaches the map's click only here, and the walkthrough's `W2` is the felt half of that (the form's H7). The millisecond figures in the file bound waiting; they are not measurements. Each step's recorded mutation is in the file's header, and each is to be applied alone and observed in a run.
