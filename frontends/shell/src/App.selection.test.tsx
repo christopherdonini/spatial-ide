@@ -1042,5 +1042,30 @@ describe("App: tools, the click, the selection and the inspection (milestone 2, 
 
     await lateExecute("C:/data/c.parquet", "at_g2", handleOf(2), { status: "refused", message: "cancelled" });
     expect(q(".late-cancel-statement"), "the execute was stopped: no statement").toBeNull();
+
+    // Pass 3 (the reviewer's C1-R, gate 2 of PR 217): the execute is reported after the ask appeared and has ended before the choice, so it is in neither the ask's runs at the time of asking
+    // nor the runs standing at the choice. The statement is decided at the choice, from the run it was added to.
+    const handle = handleOf(3);
+    const prepare = deferred<import("./publish/types").PrepareOutcome>();
+    mocks.publish.pendingPrepare = prepare.promise;
+    click(q(".publish-disclosure"));
+    await prepareExport();
+    await startOpen("C:/data/d.parquet");
+    expect(q(ASK), "pass 3: the ask shows over the prepare run").not.toBeNull();
+    await endRun(prepare, { status: "prompt", attempt_id: "at_g3", prompt: promptFixture() });
+    mocks.publish.pendingPrepare = null;
+    mocks.publish.pendingExecute = Promise.resolve(success("C:/out/g3"));
+    await submitExport();
+    expect(mocks.publish.executes.at(-1)?.[0], "pass 3: the execute started while the ask stood").toBe("at_g3");
+    expect(q(ASK), "pass 3: the ask still stands").not.toBeNull();
+    expect(shown(".publish-summary-headline"), "pass 3: the execute finished while the ask stands").toBe("Exported.");
+    expect(q(".late-cancel-statement"), "pass 3: no choice, no statement").toBeNull();
+
+    const cancelsBefore = mocks.publish.cancels.length;
+    click(q(".open-during-export-cancel"));
+    expect(await finishOpen()).toEqual({ kind: "admitted" });
+    expect(statement(), "pass 3: decided at the choice, the statement names the bundle the finished execute gave").toBe("C:/out/g3");
+    expect(mocks.publish.cancels.slice(cancelsBefore), "pass 3: the prepare's key and the execute's key, once each").toEqual([prepareCancelKey(handle), "at_g3"]);
+    expect(closes(handle), "pass 3: the old handle is closed once").toBe(1);
   });
 });

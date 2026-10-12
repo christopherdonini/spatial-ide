@@ -1106,7 +1106,7 @@ export default function App() {
    */
   const exportRunsRef = useRef(new Map<ExportConsumerId, ExportRun>());
   const exportSeqRef = useRef(0);
-  /** The open waiting on the ask: its answer, and the runs that stood when it was asked. */
+  /** The open waiting on the ask: its answer, and the runs that stood when it was asked or were reported while it stands. */
   const askRef = useRef<{ answer: (go: boolean) => void; runs: readonly ExportRun[] } | null>(null);
   const [asking, setAsking] = useState(false);
   /** The late-cancel statement's outcome. It stands until the next `confirmOpen` call or the next export report, and has no timer. */
@@ -1118,6 +1118,8 @@ export default function App() {
     const id: ExportConsumerId = `export-${++exportSeqRef.current}`;
     const run: ExportRun = { cancel: report.cancel, cancelChosen: false, end: null };
     exportRunsRef.current.set(id, run);
+    // A run reported while the ask stands belongs to the ask: if it ends before the choice it leaves `exportRunsRef`, and the choice would otherwise never see it.
+    if (askRef.current !== null) askRef.current = { ...askRef.current, runs: [...askRef.current.runs, run] };
     setLateCancel(null);
     dispatch({ type: "consumer.acquired", resource, consumer: id });
     void report.ended.then((end) => {
