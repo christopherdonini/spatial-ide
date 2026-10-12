@@ -150,8 +150,10 @@ describe("RB18 (canvas side): onViewShown is called in exactly two places, and n
     expect(base.onViewportChanged, "and still no query").not.toHaveBeenCalled();
   });
 
-  // RECORDED MUTATION for "RB18 (canvas)" (with an area last asked for): in `onResize` (WorkingCanvas.tsx) drop the `lastQueriedRef.current === null`
-  // condition. Expected failure: a size change after a reported view also calls `onViewShown`.
+  // RECORDED MUTATION for "RB18 (canvas)" (with an area last asked for): in `onResize` (WorkingCanvas.tsx) also call `onViewShownRef.current?.(decision.bbox)`
+  // in the `within` branch. Expected failure: a shrink inside the area last asked for also calls `onViewShown`.
+  // (Dropping the `lastQueriedRef.current === null` condition of the new branch is an equivalent mutation, not a failing one: `viewportAfterResize`
+  // answers none with a camera and a usable size only when no area was asked for, so that condition is a guard, and no test can tell it apart.)
   it("once an area is asked for, a size change reports as it did and shows nothing; Reset un-asks it", () => {
     const onViewShown = vi.fn();
     const { ref, base, push } = mount({ onViewShown });
@@ -283,6 +285,7 @@ describe("the highlight prop (section 2.2)", () => {
   it("a highlight change schedules the coalesced render, and a clear removes the layers", async () => {
     const { render, push } = mount();
     push();
+    await frames(2); // the render the mount scheduled is flushed first, so that it cannot stand in for the highlight's own
     const calls = (): number => theDeck().setPropsCalls.filter((c) => c.layers).length;
     const before = calls();
     render({ highlight: { selected: new Set([firstId()]), inspected: null } });
