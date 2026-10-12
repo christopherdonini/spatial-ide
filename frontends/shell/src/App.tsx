@@ -1110,8 +1110,8 @@ export default function App() {
   const askRef = useRef<{ answer: (go: boolean) => void; runs: readonly ExportRun[] } | null>(null);
   const [asking, setAsking] = useState(false);
   /**
-   * The late-cancel statements' outcomes, one for each run decided, in the order they were decided. They stand until the next `confirmOpen` call or the next export report, and have no timer.
-   * A run marked at an earlier choice that ends in a bundle while a later ask stands shows its statements, and an export report during that ask ends them before the next choice; that bundle needs the earlier cancel to land after the kernel's last cancel check, a window OpenDuringExportAsk.tsx's constants comment names as shorter than one request round trip.
+   * The late-cancel statements' outcomes, one for each run decided to have one (an execute the choice was made for that ended in a bundle), in the order they were decided. They stand until the next `confirmOpen` call or the next export report, and have no timer.
+   * A run marked at an earlier choice that ends in a bundle while a later ask stands shows its statement, and an export report during that ask ends the statements shown before the next choice; that bundle needs the earlier cancel to land after the kernel's last cancel check, a window OpenDuringExportAsk.tsx's constants comment names as shorter than one request round trip.
    */
   const [lateCancel, setLateCancel] = useState<readonly FinishedOutcome[]>([]);
 

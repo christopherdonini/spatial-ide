@@ -9,7 +9,7 @@
  *
  * **The seam to deck is written against the interface deck has** (`@deck.gl/core` 9.3.9, `dist/lib/deck.js`, read from node_modules, which is
  * untracked: evidence, not Authority): `onClick(info, event)` is the root handler `_dispatchPickingEvent` calls, and `event.srcEvent` is the tap's native
- * `pointerup`, whose client coordinates give its pixel (`_onEvent`); `getCursor(cursorState)` is re-run by `_updateCursor` from `_onRenderFrame`; `onResize` is a prop the
+ * `pointerup` (mjolnir.js 3.0.1 `dist/hammerjs/inputs/pointerevent.js`, passed on by deck's `_onEvent`), whose client coordinates give its pixel (`tapPixel`); `getCursor(cursorState)` is re-run by `_updateCursor` from `_onRenderFrame`; `onResize` is a prop the
  * canvas reads no argument from; `setProps` merges; `pickObject({x, y, radius?})` answers a picking info or null. Real deck is proven
  * by the e2e suites; here only the WebGL boundary is replaced (`Deck`), and the engine's own committed batch is decoded for real.
  */
