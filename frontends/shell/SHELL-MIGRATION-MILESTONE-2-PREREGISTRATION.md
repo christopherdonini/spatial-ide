@@ -1320,3 +1320,15 @@ Nothing above is edited.
 3. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 13 — PR #217 gate 2: correction round 2 of 2, built (class 2); its e2e (class 1); the reviewer's D3 reference row (class 3)
+
+*Written by the custodian after gate 2's reviewer report (`state/consults/gates/2026-10-12-shell-migration-milestone-2-phase-b-gate2-reviewer.md`), the round's build (`state/consults/2026-10-12-shell-migration-milestone-2-phase-b-correction-round-2-report.md`, head f64418bc) and its e2e (`state/consults/2026-10-12-shell-migration-milestone-2-phase-b-e2e-custodian-run-4.md`) were seen. References only. The reference row is the reviewer's words, applied with no re-gate. None is the human's wording.*
+
+1. **The round (class 2), for gate 3:** the reviewer's C1-R. A run reported while the ask stands is added to the ask, so one that ends before the choice is decided at the choice (Amendment 7 item 2(c)). RB12g pass 3 pins it; its mutation was observed at d245975c (the round's report).
+2. **Its e2e (class 1):** all fourteen suites and source-changed's post route pass at f64418bc. The C1-R sequence passes on real WebView2 in a scratch probe, twice, and fails twice with the round's line removed (the run-4 record).
+3. **The reviewer's D3 (class 3), its row as written:** Reviewer D2 → architect D-4's README line; D6 → the PR body; D7 → Amendment 11 item 3(g).
+4. **§7 at f64418bc:** phase B is 5,663 + 110 = 5,773, over 39 files; the piece is 1,170 + 5,773 = 6,943 of 8,352. App.selection.test.tsx is 1,075 of 1,290; App.tsx is 256 of 565. Nothing is over.
+5. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
