@@ -516,3 +516,30 @@ describe("the line open's pick tolerance and selector (SH-L4)", () => {
     expect(pickingRadiusFor("point")).toBeUndefined();
   });
 });
+
+/**
+ * SHELL-MIGRATION-MILESTONE-2-PREREGISTRATION.md section 4, UB11 (Amendment 1 A4 and B6): the cursor per tool. The two
+ * pre-existing `cursorForPointerState` tests above call it with the drag state alone and pass unedited: with no tool given
+ * it is Navigate's.
+ */
+describe("UB11: cursorForPointerState per tool", () => {
+  // RECORDED MUTATION for "UB11": swap the two tools' cursors in `cursorForPointerState` (pickResolution.ts)
+  // (`return tool === "select" ? "crosshair" : "default";`). Expected failure: Navigate reads default.
+  // OBSERVED AT <X>: <pending>
+  it("Navigate stays crosshair and Select is the CSS keyword default, while nothing is held", () => {
+    expect(cursorForPointerState(false, "navigate")).toBe("crosshair");
+    expect(cursorForPointerState(false, "select")).toBe("default");
+    expect(cursorForPointerState(false)).toBe("crosshair");
+  });
+
+  // RECORDED MUTATION for "UB11" (second): return the tool's cursor while dragging in Select (pickResolution.ts:
+  // `if (isDragging && tool !== "select") return "grabbing";`). Expected failure: a drag in Select reads default.
+  // OBSERVED AT <X>: <pending>
+  it("a drag is grabbing in both tools, and no state is ever pointer", () => {
+    expect(cursorForPointerState(true, "navigate")).toBe("grabbing");
+    expect(cursorForPointerState(true, "select")).toBe("grabbing");
+    for (const dragging of [false, true]) {
+      for (const tool of ["navigate", "select"] as const) expect(cursorForPointerState(dragging, tool)).not.toBe("pointer");
+    }
+  });
+});
