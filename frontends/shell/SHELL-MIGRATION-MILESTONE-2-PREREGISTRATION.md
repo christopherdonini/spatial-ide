@@ -1366,3 +1366,18 @@ Nothing above is edited.
 8. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 15 — the human's rulings on OPEN-15's wording, its proof and the WebView2 claim, and on the status notice's map shift (class 5); round 3's item (c) and its additions (class 9)
+
+*Written by the custodian after the human's rulings (`state/directives/2026-10-12-open-15-wording-webview2-scale-runs-status-bar-piece.md`) and the architect's check before building (`state/consults/2026-10-12-shell-migration-milestone-2-phase-b-round-3-pre-build-architect.md`). References only; the rulings and the replacement words are referenced, not restated.*
+
+1. **§2.2's tap rule (class 5):** Amendment 14 item 3 is superseded. §2.2's rule that the tap takes `event.offsetCenter` is amended to the architect's replacement words, as the check gives them in its Q1 (a) and the human adopted them. §8 item 3 stands.
+2. **Item (c)'s proof (class 5 and class 9):** the three unit cases of the check's Q1 (d), each with its mutation (rounding; subtract before truncate; the scale dropped); E-KINDS' point step at the unrounded position, failing unless it is fractional on both axes, and printing it; the e2e record names the WebView2 runtime version and the device pixel ratio.
+3. **The WebView2 claim (class 5):** option (ii), bounded. The E-KINDS point step runs at forced scale factors 1.25 and 1.5 under the harness approval, with only a launch argument added; the claim names the factors that ran. If the harness cannot do that, option (i) and the human is told.
+4. **Part W (class 9):** one row for a real mouse at the human's display scaling: hover the edge of a point, click, and record whether the click selects what the readout names. MANUAL-WALKTHROUGH.md, outside the count, at most +8.
+5. **E-DBLCLICK** moves to the end of the selection suite (the custodian's diagnosis: run before E-SEL-FILTER, its reopen leaves the selection-ended notice in the status bar, whose clearing grows the map by one status line; the diagnostic logs are in the next e2e record). Within Amendment 14 item 6's selection.mjs budget.
+6. **The status notice's map shift** is not in round 3. It is its own piece, `shell-status-bar-one-height`, graded S2, as the directive places it.
+7. **The round's budget** is Amendment 14 item 6, unchanged, with item 4's walkthrough lines outside the count.
+8. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.

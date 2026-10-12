@@ -1,0 +1,10 @@
+# Milestone 2 OPEN-15: the architect's replacement words and proof additions; the WebView2 claim (ii), bounded to forced scale factors 1.25 and 1.5; a Part W row; the status notice's map shift as its own piece, graded S2 — the human, verbatim
+
+*Custodian's filing note (2026-10-12): typed by the human, received at 21:49:21Z by the transcript. Below the rule is the message, byte-copied by script from that record, from line 6. One final newline is added and nothing else is changed. It names no other project. It gets a RULED block in `DECISIONS-PENDING.md`.*
+
+---
+1. OPEN-15 wording: yes, the architect's replacement words. Its additions to the proof as well: the three unit cases with their mutations, the point step failing unless its position is fractional on both axes, and the record naming the WebView2 runtime version and the device pixel ratio.
+
+2. The WebView2 claim: (ii), bounded. Run the E-KINDS point step at a forced scale factor of 1.25 and again at 1.5, under the harness approval, with only a launch argument added. The claim then names the factors that ran. If the harness cannot run at a forced factor without more than that, stop, take (i), and tell me. Either way, Part W gains one row for a real mouse at my display's own scaling: hover the edge of a point, click, and record whether the click selects what the readout names.
+
+3. The map moving when a status notice comes or goes: its own piece, graded S2, not in round 3. Propose it as: the status bar keeps one height, so a notice never changes the map's size; a notice that does not fit is cut, and its full text stays reachable (the form proposes how). This changes the existing wrapping design, by my word. Place it in slot 2 before b2-piece-1b-recording, starting when #217 has merged, if its paths are disjoint from the Current view fix; otherwise in slot 1 after that fix. Its e2e has a step showing that a notice appearing and clearing leaves the map's size unchanged. Moving E-DBLCLICK to the end of the suite is fine for now.
