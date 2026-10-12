@@ -128,15 +128,24 @@ const box = (left: number, top: number, width: number, height: number, offsetWid
 });
 
 describe("UB7 (tap pixel): the tap's pixel is the hover's (OPEN-15)", () => {
+  // RECORDED MUTATION for "UB7 (tap pixel)" (the recorded case): in `tapPixel` (clickPick.ts) `Math.round` in place of both `Math.trunc` calls. Expected failure: (66, 494) where (65, 493) was expected.
+  // OBSERVED AT 635646e294a38dd4815ad8a68c36d448547f06f3: FAILED -- "the recorded case: client (331.5, 533.5) on a canvas at (266, 40) is pixel (65, 493), where rounding gives (66, 494)":
+  //   AssertionError: expected { x: 66, y: 494 } to deeply equal { x: 65, y: 493 }. Four of the file's 11 tests failed; the three pixel cases and the tap at (5, 6). Reverted after observing.
   it("the recorded case: client (331.5, 533.5) on a canvas at (266, 40) is pixel (65, 493), where rounding gives (66, 494)", () => {
     expect(tapPixel({ clientX: 331.5, clientY: 533.5 }, box(266, 40, 1000, 700))).toEqual({ x: 65, y: 493 });
   });
 
+  // RECORDED MUTATION for "UB7 (tap pixel)" (the order): in `tapPixel` (clickPick.ts) subtract before truncating (`Math.trunc(src.clientX - r.left - canvas.clientLeft) / scaleX`, and the same for y). Expected failure: (65, 493) where (64.4, 492.4) was expected.
+  // OBSERVED AT 635646e294a38dd4815ad8a68c36d448547f06f3: FAILED -- "a fractional canvas left and top: the client coordinates are truncated before the rect is subtracted":
+  //   AssertionError: expected [ 65, 493 ] to deeply equal [ NumberCloseTo 64.4 (9 digits), …(1) ]. Only this test failed. Reverted after observing.
   it("a fractional canvas left and top: the client coordinates are truncated before the rect is subtracted", () => {
     const p = tapPixel({ clientX: 331.9, clientY: 533.9 }, box(266.6, 40.6, 1000, 700));
     expect([p.x, p.y]).toEqual([expect.closeTo(64.4, 9), expect.closeTo(492.4, 9)]);
   });
 
+  // RECORDED MUTATION for "UB7 (tap pixel)" (the scale): in `tapPixel` (clickPick.ts) drop the division by `scaleX` and `scaleY` in the return line. Expected failure: (65, 493) where (64.967516, 492.687763) was expected.
+  // OBSERVED AT 635646e294a38dd4815ad8a68c36d448547f06f3: FAILED -- "a fractional drawn size against a whole layout size: the offset is divided by drawn over layout, as the hover's is":
+  //   AssertionError: expected [ 65, 493 ] to deeply equal [ …(2) ]. Only this test failed. Reverted after observing.
   it("a fractional drawn size against a whole layout size: the offset is divided by drawn over layout, as the hover's is", () => {
     const p = tapPixel({ clientX: 331.5, clientY: 533.5 }, box(266, 40, 1000.5, 715.453125, 1000, 715));
     expect([p.x, p.y]).toEqual([expect.closeTo(64.967516, 6), expect.closeTo(492.687763, 6)]);
@@ -147,7 +156,7 @@ describe("UB7 (tap): Deck's onClick resolves the tap's own pixel and emits what 
   const canvas = box(0, 0, 100, 100);
   // RECORDED MUTATION for "UB7 (tap)" (the pixel): in `createTapHandler` (clickPick.ts) resolve at the swapped pixel
   // (`resolveClickPick(deps, pos.y, pos.x)`). Expected failure: the candidate lookup received (6, 5) where (5, 6) was expected.
-  // OBSERVED AT 6488360ffa1f58bf392e731f605e5a7255d24260: FAILED -- "a tap at (5, 6) looks the candidate up at (5, 6) and emits the one result":
+  // OBSERVED AT 635646e294a38dd4815ad8a68c36d448547f06f3: FAILED -- "a tap at (5, 6) looks the candidate up at (5, 6) and emits the one result":
   //   AssertionError: expected [ [ 6, 5 ] ] to deeply equal [ [ 5, 6 ] ]. Reverted after observing.
   it("a tap at (5, 6) looks the candidate up at (5, 6) and emits the one result", () => {
     const calls: Calls = { picks: [], resolves: 0 };
@@ -158,9 +167,9 @@ describe("UB7 (tap): Deck's onClick resolves the tap's own pixel and emits what 
     expect(emitted[0].kind === "feature" && emitted[0].pick.id).toBe(20n);
   });
 
-  // RECORDED MUTATION for "UB7 (tap)" (a tap without a pixel): in `createTapHandler` (clickPick.ts) invent one
+  // RECORDED MUTATION for "UB7 (tap)" (a tap without a pixel): in `createTapHandler` (clickPick.ts) invent one in place of the guard and the line below it
   // (`const pos = tap.srcEvent ? tapPixel(tap.srcEvent, canvas) : { x: 0, y: 0 };`). Expected failure: a pick ran at (0, 0) and a result was emitted.
-  // OBSERVED AT 6488360ffa1f58bf392e731f605e5a7255d24260: FAILED -- "a tap that carries no pixel runs no pick and emits nothing":
+  // OBSERVED AT 635646e294a38dd4815ad8a68c36d448547f06f3: FAILED -- "a tap that carries no pixel runs no pick and emits nothing":
   //   AssertionError: expected [ [ +0, +0 ] ] to deeply equal []. Reverted after observing.
   it("a tap that carries no pixel runs no pick and emits nothing", () => {
     const calls: Calls = { picks: [], resolves: 0 };
