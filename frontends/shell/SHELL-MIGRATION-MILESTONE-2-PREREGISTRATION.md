@@ -1332,3 +1332,37 @@ Nothing above is edited.
 5. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 14 — the human's rulings on gate 3's C-1, OPEN-13, OPEN-14 and OPEN-15 (class 5); correction round 3, its scope and budget, declared before its code (class 9); OPEN-13's lines (class 8); the architect's gate 3 D-1 row (class 3)
+
+*Written by the custodian after both gate 3 reports (`state/consults/gates/2026-10-12-shell-migration-milestone-2-phase-b-gate3-architect.md`, `state/consults/gates/2026-10-12-shell-migration-milestone-2-phase-b-gate3-reviewer.md`) and the human's rulings (`state/directives/2026-10-12-round-72-217-third-round-open-13-to-open-15.md`). References only. The rulings are the human's and are referenced, not restated; nothing below is the human's wording.*
+
+1. **The rulings (class 5):** gate 3's C-1, (B): a third correction round carries three items, one gate is scoped to them, and there is no fourth round without the human. OPEN-13, OPEN-14 and OPEN-15 (B) as the directive gives them.
+2. **OPEN-13 (class 9 and class 8):** `src/canvas/WorkingCanvas.wiring.test.tsx` and `src/layout/StudioLayout.test.tsx` stay. Their lines at f64418bc, WorkingCanvas.wiring.test.tsx 345 and StudioLayout.test.tsx 178 (523), are an overrun of B-T, class 8, §7 not edited.
+3. **§2.2's tap rule, as OPEN-15 (B) amends it:** the sentence that the tap takes its own `event.offsetCenter` now reads, in effect, that the tap's pixel is computed from the tap event's own client coordinates, truncated as the hover's are, less the canvas rect (the directive's words govern). §8 item 3 stands: no hover state and no pointer-down info is read. The agreement is claimed for WebView2; on macOS and Linux it is checked at `shell-real-app-run-macos-linux`.
+4. **The round's items:**
+   - (a) **the late-cancel statement as a list**, as the gate 3 reviewer's C1 fix gives it, with RB12g pass 4 and its mutation (only the last kept). The strings are unchanged.
+   - (b) **OPEN-14:** a double-click only zooms; it never selects and never inspects; no delay is added to a single click. If the two cannot be told apart at the click, nothing is built and the human is told.
+   - (c) **OPEN-15 (B):** the pixel function and the tap's use of it. Its proof: a unit test of the pixel function with a mutation that rounds; and E-KINDS' point step back at the fractional pointer position that failed, passing.
+   - (d) **the gate 3 documentation in the gates' words:** the reviewer's D2, D3 and D5 (D5 written for a list).
+5. **Before the round's code:** the architect checks the human's OPEN-15 reading and OPEN-14's tell-apart at the click. A finding against either goes to the human before building.
+6. **The round's budget (class 9, declared here before its code; insertions plus deletions by §7's command):**
+
+| File | At most |
+|---|---|
+| App.tsx | +30 |
+| feature/OpenDuringExportAsk.tsx | +10 |
+| canvas/WorkingCanvas.tsx | +30 |
+| canvas/clickPick.ts | +25 |
+| styles.css | +5 |
+| App.selection.test.tsx | +90 |
+| canvas/clickPick.test.ts | +60 |
+| canvas/WorkingCanvas.wiring.test.tsx | +60 |
+| e2e/selection.mjs | +100, drawn from G-E's disclosed margin for steps after a gate finding |
+| **Total** | **410** |
+
+   Outside the count: e2e/README.md at most +10. An overrun is class 8.
+7. **The architect's gate 3 D-1 (class 3), its row as written:** Superseded index: Amendment 11 item 1, the document items' attribution → Amendment 12 item 2 and Amendment 13 item 3; Amendment 11 item 2 → Amendment 12 item 1.
+8. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
