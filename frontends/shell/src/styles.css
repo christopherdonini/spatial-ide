@@ -823,7 +823,8 @@ body,
   padding: 0;
 }
 
-.publish-scope-disabled-reason {
+.publish-scope-disabled-reason,
+.publish-selection-sentence {
   margin: 0;
   font-size: 0.8rem;
   font-style: italic;

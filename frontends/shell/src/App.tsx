@@ -79,6 +79,8 @@ import { decodeHexF64, encodeHexF64 } from "./skp/codec";
 import { closeDataset, SkpCallError } from "./skp/client";
 import { listenDatasetSessionEnded } from "./skp/events";
 import type { Bbox, DatasetSessionEnded, EndReason, Filter } from "./skp/types";
+import { checkScope, resolveScope } from "./workspace/scope";
+import type { ResolvedScope, ScopeCheck } from "./workspace/scope";
 import { NO_MEMBERS, unionOfBounds } from "./workspace/selection";
 import type { SelectionMode } from "./workspace/selection";
 import { DEFAULT_SELECTION_MODE, DEFAULT_TOOL } from "./workspace/selectionConstants";
@@ -827,6 +829,9 @@ export default function App() {
   /** The view's id, readable from the stable callbacks below (`commitActiveFilter`, the effect cleanups). */
   const viewIdRef = useRef<ViewId | null>(null);
   viewIdRef.current = view === null ? null : view.id;
+  /** The workspace as of the latest render, for the export's scope check, which runs from the dialog or a dev hook and not from a render. */
+  const workspaceRef = useRef(workspace);
+  workspaceRef.current = workspace;
   const [hover, setHover] = useState<HoverReadout>(null);
   /** What the last click was, for the Feature tab's last-click line; reset by a new open. */
   const [lastClick, setLastClick] = useState<LastClick | null>(null);
@@ -1784,6 +1789,20 @@ export default function App() {
     recordNamed("gui-action", "selection.zoomTo");
   }
 
+  /**
+   * The export's scope (section 2.5): resolved when a prepare starts, compared when the execute is sent. Both read the workspace as it is then, through the ref. The
+   * selection is not part of it (`selection: false`; ADR-024's scope is the whole file or the current view, and section 8 item 9 keeps the selection out of an export).
+   */
+  function stageExportScope(): ResolvedScope | null {
+    return viewIdRef.current === null ? null : resolveScope(workspaceRef.current, viewIdRef.current, { selection: false });
+  }
+
+  function checkStagedExportScope(staged: ResolvedScope | null): ScopeCheck {
+    if (staged === null) return { ok: false, changed: ["view"] };
+    const now = viewIdRef.current === null ? null : resolveScope(workspaceRef.current, viewIdRef.current, { selection: false });
+    return checkScope(staged, now);
+  }
+
   /** `StylePanel`'s `onChange` reports the whole next style; the workspace takes one `style.set` per property that changed. */
   function handleStyleChange(next: StyleState): void {
     if (view === null) return;
@@ -2178,6 +2197,8 @@ export default function App() {
             filterActive={activeFilter !== null}
             hasSettledView={hasSettledView}
             getLastViewportBbox={() => lastViewportBboxRef.current}
+            stageScope={stageExportScope}
+            checkStagedScope={checkStagedExportScope}
           />
         ),
         /* NEXT-CUT.md P3: mounted UNCONDITIONALLY (not gated on `admitted`, unlike every panel

@@ -11,6 +11,7 @@ import { decodeHexF64 } from "../skp/codec";
 import type { Bbox } from "../skp/types";
 import type { StyleState } from "../style/document";
 import { toStyleDocument } from "../style/document";
+import type { ResolvedScope, ScopeChange, ScopeCheck } from "../workspace/scope";
 import { formatPublishRefusal } from "./formatPublishRefusal";
 import PublishDialog from "./PublishDialog";
 import type { DialogSettleResult } from "./PublishDialog";
@@ -26,6 +27,23 @@ import { FILTER_SCOPE_SENTENCE } from "./types";
 import type { ExecuteOutcome, PrepareOutcome, PublishPromptData, PublishScopeInput } from "./types";
 
 export type PublishScopeChoice = "whole" | "current";
+
+/** The Export section's sentence that the selection is not used (milestone 2, Amendment 1 A6; ADR-024's scope is the whole file or the current view). A P6 placeholder. */
+export const EXPORT_SELECTION_SENTENCE = "[P6 placeholder] The selection is not used. The export covers the row scope chosen above.";
+
+const SCOPE_CHANGE_WORDS: Record<ScopeChange, string> = {
+  view: "the view",
+  resource: "the dataset",
+  generation: "the dataset's session",
+  filter: "the filter",
+  selection: "the selection",
+};
+
+/** The refusal an execute gets when the scope changed since it was staged (section 2.5): the shell's own words, a P6 placeholder, in the host's `refused` shape. */
+function scopeChangedOutcome(changed: readonly ScopeChange[]): ExecuteOutcome {
+  const what = changed.map((c) => SCOPE_CHANGE_WORDS[c]).join(" and ");
+  return { status: "refused", message: `[P6 placeholder] The export was not run, because ${what} changed after it was prepared. Nothing was written. Prepare it again.` };
+}
 
 /**
  * Whether "Current view" may be chosen (`NEXT-CUT.md` P3 item 3: "if null -- no settled view yet
@@ -302,6 +320,10 @@ export interface PublishPanelProps {
    * choice of "current" always publishes the freshest viewport, not whatever it was when this
    * panel last rendered. */
   getLastViewportBbox: () => Bbox | null;
+  /** The export's scope as it is now, resolved when a prepare starts (`App.tsx`, over `workspace/scope.ts`'s `resolveScope`; the selection is not part of it). `null` when the view is gone. */
+  stageScope: () => ResolvedScope | null;
+  /** The staged scope against the current one (`checkScope`): ok, or what changed. A `null` staged scope never passes. */
+  checkStagedScope: (staged: ResolvedScope | null) => ScopeCheck;
 }
 
 /**
@@ -324,10 +346,14 @@ export default function PublishPanel({
   filterActive,
   hasSettledView,
   getLastViewportBbox,
+  stageScope,
+  checkStagedScope,
 }: PublishPanelProps) {
   const [expanded, setExpanded] = useState(false);
   const [scope, setScope] = useState<PublishScopeChoice>("current");
   const [state, setState] = useState<PublishPanelState>({ kind: "idle" });
+  /** The scope staged by the latest prepare (section 2.5), read by the one execute path below. */
+  const stagedScopeRef = useRef<ResolvedScope | null>(null);
 
   /**
    * Subscribes to the "Preparing…" pin phase's own progress (RELEASE-0.1 item 10) -- the phase
@@ -356,6 +382,7 @@ export default function PublishPanel({
       setState(nextStateFromPrepareOutcome(outcome));
       return outcome;
     }
+    stagedScopeRef.current = stageScope();
     setState(PREPARING_START);
     const unsubscribe = subscribeToPinProgress();
     const styleDoc = JSON.stringify(toStyleDocument(style));
@@ -399,6 +426,7 @@ export default function PublishPanel({
       setState(nextStateFromPrepareOutcome(outcome));
       return outcome;
     }
+    stagedScopeRef.current = stageScope();
     setState(PREPARING_START);
     const unsubscribe = subscribeToPinProgress();
     const styleDoc = JSON.stringify(toStyleDocument(style));
@@ -436,6 +464,17 @@ export default function PublishPanel({
   }
 
   /**
+   * The one execute path (section 2.5; section 8 item 11): `PublishDialog`'s Submit and the `publishExecute` dev hook both go through it. An execute whose
+   * scope changed since the prepare staged it is not sent: it returns a refused outcome, which the panel renders through its existing refusal path. The
+   * host's pending attempt is left to expire, as an abandoned dialog's is.
+   */
+  async function executeInStagedScope(attemptId: string, typedPhrase: string): Promise<ExecuteOutcome> {
+    const check = checkStagedScope(stagedScopeRef.current);
+    if (!check.ok) return scopeChangedOutcome(check.changed);
+    return publishExecute(attemptId, typedPhrase);
+  }
+
+  /**
    * **The current attempt's id, readable outside a render** (`state.kind === "dialog" ?
    * state.attemptId : null`) -- kept in sync by the effect just below. Exists so the
    * `publishExecute` E2E hook (registered ONCE, dataset-scoped, alongside `publishPrepare`/
@@ -461,7 +500,7 @@ export default function PublishPanel({
     if (attemptId === null) {
       return { status: "unknown-attempt" };
     }
-    const outcome = await publishExecute(attemptId, typedPhrase);
+    const outcome = await executeInStagedScope(attemptId, typedPhrase);
     handleDialogSettled({ kind: "executed", outcome });
     return outcome;
   }
@@ -522,6 +561,7 @@ export default function PublishPanel({
           onPublishClick={handlePublishClick}
           onCancelPreparing={handleCancelPreparing}
           onDialogSettled={handleDialogSettled}
+          execute={executeInStagedScope}
         />
       )}
     </div>
@@ -537,6 +577,8 @@ export interface PublishControlsProps {
   onPublishClick: () => void;
   onCancelPreparing: () => void;
   onDialogSettled: (result: DialogSettleResult) => void;
+  /** What `PublishDialog`'s Submit calls: `PublishPanel`'s staged-scope path. Defaults to `publishExecute` for a caller with no scope to stage (the render tests). */
+  execute?: (attemptId: string, typedPhrase: string) => Promise<ExecuteOutcome>;
 }
 
 /**
@@ -561,6 +603,7 @@ export function PublishControls({
   onPublishClick,
   onCancelPreparing,
   onDialogSettled,
+  execute = publishExecute,
 }: PublishControlsProps) {
   const currentDisabled = currentViewOptionDisabled(hasSettledView);
   const busy = state.kind === "preparing";
@@ -600,6 +643,8 @@ export function PublishControls({
       </fieldset>
 
       {filterActive && <p className="publish-filter-scope-sentence">{FILTER_SCOPE_SENTENCE}</p>}
+
+      <p className="publish-selection-sentence">{EXPORT_SELECTION_SENTENCE}</p>
 
       <button
         type="button"
@@ -647,7 +692,7 @@ export function PublishControls({
         <PublishDialog
           attemptId={state.attemptId}
           prompt={state.prompt}
-          execute={publishExecute}
+          execute={execute}
           cancelExecution={publishCancel}
           subscribeProgress={subscribePublishProgress}
           onSettled={onDialogSettled}

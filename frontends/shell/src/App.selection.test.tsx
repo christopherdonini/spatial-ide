@@ -2,8 +2,8 @@
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
 /**
- * SHELL-MIGRATION-MILESTONE-2-PREREGISTRATION.md section 4, RB1 to RB6, RB9 to RB11 and RB13 to RB18 (the App side): tools,
- * the click, the selection and the inspection, through the REAL `App`. The harness is `App.workspace.test.tsx`'s (the same
+ * SHELL-MIGRATION-MILESTONE-2-PREREGISTRATION.md section 4, RB1 to RB11 and RB13 to RB18 (the App side): tools,
+ * the click, the selection, the inspection and the export's scope, through the REAL `App`. The harness is `App.workspace.test.tsx`'s (the same
  * mocked boundaries: the SKP transport, the baseline stream manager, the WebGL canvas), with these changes: the canvas
  * stand-in keeps its latest props (so a test calls the callbacks `App` passed, as the canvas would), records the boxes
  * `fitToBbox` is given, and the manager stand-in latches `notifySessionEnded` into the options' `onSessionEnded` as the real
@@ -23,6 +23,8 @@ const mocks = vi.hoisted(() => ({
   viewportRequests: 0,
   /** The listener `App` registered with `listenDatasetSessionEnded`. */
   sessionEnded: null as ((event: import("./skp/types").DatasetSessionEnded) => void) | null,
+  /** The arguments of every `publishPrepare` and `publishExecute` the real panel made (`publish/client` is mocked to client.ts's real signatures). */
+  publish: { prepares: [] as unknown[][], executes: [] as unknown[][] },
   canvas: {
     mounted: [] as string[],
     unmounted: [] as string[],
@@ -83,6 +85,26 @@ vi.mock("./skp/client", () => {
     },
   };
 });
+
+function promptFixture(): import("./publish/types").PublishPromptData {
+  return {
+    operation: "publish", class: 3, reversibility: "irreversible", source_name: "parcels.parquet", source_content_hash: "sha256:abc", style_hash: "sha256:def",
+    destination_display: "C:/out/bundle", grantor: "operator", grant_remaining_s: 300, row_scope: "the whole file", filter_scope: null, outcome_summary: "a folder",
+  };
+}
+
+vi.mock("./publish/client", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./publish/client")>()),
+  subscribePublishProgress: () => () => {},
+  publishPrepare: async (...args: Parameters<typeof import("./publish/client").publishPrepare>): Promise<import("./publish/types").PrepareOutcome> => {
+    mocks.publish.prepares.push(args);
+    return { status: "prompt", attempt_id: `at_${mocks.publish.prepares.length}`, prompt: promptFixture() };
+  },
+  publishExecute: async (...args: Parameters<typeof import("./publish/client").publishExecute>): Promise<import("./publish/types").ExecuteOutcome> => {
+    mocks.publish.executes.push(args);
+    return { status: "success", bundle_path: "C:/out/bundle", rows: 2000, partitions: 1, total_bytes: 1, manifest_bytes: 1, style_hash: "sha256:def", operation_digest: "sha256:ghi", build_millis: 0 };
+  },
+}));
 
 vi.mock("./skp/events", () => ({
   listenDatasetSessionEnded: async (listener: (event: import("./skp/types").DatasetSessionEnded) => void) => {
@@ -183,6 +205,8 @@ describe("App: tools, the click, the selection and the inspection (milestone 2, 
     mocks.mintCounter = 0;
     mocks.viewportRequests = 0;
     mocks.sessionEnded = null;
+    mocks.publish.prepares = [];
+    mocks.publish.executes = [];
     mocks.canvas.mounted = [];
     mocks.canvas.unmounted = [];
     mocks.canvas.fits = [];
@@ -252,6 +276,17 @@ describe("App: tools, the click, the selection and the inspection (milestone 2, 
   const rowsSince = (mark: number) =>
     consoleRecorder.entries().slice(mark).filter(isGuiActionEntry).map((e) => e.action).filter((a) => MILESTONE_ROWS.has(a));
   const mark = () => consoleRecorder.count();
+
+  /** The Export section's Whole dataset scope, then its Publish button: the real panel's prepare, which the mocked host answers with a prompt. */
+  async function prepareExport(): Promise<void> {
+    click(q('input[name="publish-scope"][value="whole"]'));
+    await inAct(() => q<HTMLButtonElement>(".publish-open")!.click());
+  }
+  /** The dialog's typed phrase and Submit, as an operator would. */
+  async function submitExport(): Promise<void> {
+    setValue(q<HTMLInputElement>(".publish-dialog-phrase")!, "bundle");
+    await inAct(() => q<HTMLButtonElement>(".publish-dialog-submit")!.click());
+  }
 
   // RECORDED MUTATION for "RB1": in `feature/clickEffect.ts` invert the Select branch's condition (`if (!navigate)` becomes `if (navigate)`), so a Navigate click is routed to the selection and a Select click to the inspection.
   // Expected failure: the selection assertion before or after the Navigate click.
@@ -661,5 +696,53 @@ describe("App: tools, the click, the selection and the inspection (milestone 2, 
     expect(q(".feature-outside-view"), "the new canvas has reported no box yet").toBeNull();
     await inAct(() => props().onViewShown!(box(0, 0, 100, 100)));
     expect(shown(".feature-in-view-not-drawn"), "the old canvas's drawn set is not the new one's").toContain(": 1");
+  });
+
+  // RECORDED MUTATION for "RB7": in `PublishPanel.tsx`'s `executeInStagedScope` skip the check (`const check: ScopeCheck = { ok: true }`). Expected failure: the host call after the filter changed.
+  it("RB7: an export whose filter changed since its prepare is refused and never sent; with its scope unchanged it is sent", async () => {
+    await open("C:/data/a.parquet");
+    click(q(".publish-disclosure"));
+    await prepareExport();
+    expect(mocks.publish.prepares, "one prepare, which staged the scope").toHaveLength(1);
+
+    // The filter changes while the approval prompt stands.
+    setValue(q<HTMLInputElement>(".filter-predicate")!, "zone = 'residential'");
+    await inAct(() => q<HTMLButtonElement>(".filter-apply")!.click());
+    expect(text(".filter-active")).toBe("Applied: zone = 'residential'");
+    await submitExport();
+    expect(mocks.publish.executes, "the host was not called").toEqual([]);
+    expect(shown(".publish-panel .admission-refusal-message")).toBe(
+      "[P6 placeholder] The export was not run, because the filter changed after it was prepared. Nothing was written. Prepare it again."
+    );
+    expect(q(".publish-dialog"), "the dialog is closed").toBeNull();
+
+    // Prepared again under the filter, the scope is the same at execute. The selection changes meanwhile, and an export's scope has no selection.
+    await prepareExport();
+    expect(mocks.publish.prepares).toHaveLength(2);
+    useTool("Select");
+    await clickFeature(1n);
+    await submitExport();
+    expect(mocks.publish.executes, "the host was called once, for the second attempt").toEqual([["at_2", "bundle"]]);
+    expect(shown(".publish-summary-headline")).toBe("Exported.");
+  });
+
+  // RECORDED MUTATION for "RB8": in App.tsx pass the selection to the panel (`filterActive={activeFilter !== null || selection.size > 0}`). Expected failure: the second prepare's arguments.
+  it("RB8: an export is prepared with the same arguments with and without a selection, and says the selection is not used", async () => {
+    const sentence = "[P6 placeholder] The selection is not used. The export covers the row scope chosen above.";
+    await open("C:/data/a.parquet");
+    click(q(".publish-disclosure"));
+    expect(text(".publish-selection-sentence"), "shown with no selection").toBe(sentence);
+    await prepareExport();
+    click(q(".publish-dialog-cancel"));
+
+    useTool("Select");
+    await clickFeature(1n);
+    await clickFeature(2n);
+    expect(selected()).toEqual([1n, 2n]);
+    expect(text(".publish-selection-sentence"), "shown with a selection").toBe(sentence);
+    await prepareExport();
+    expect(mocks.publish.prepares).toHaveLength(2);
+    expect(mocks.publish.prepares[1], "the prepare with a selection equals the prepare without").toEqual(mocks.publish.prepares[0]);
+    expect(mocks.publish.prepares[0]).toEqual([handleOf(1), expect.any(String), { kind: "whole-file" }, false]);
   });
 });
