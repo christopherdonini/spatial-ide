@@ -12,38 +12,77 @@
  *   session).
  * - The generation: the open's `session` plus the entry's `generationEnded` flag.
  *
- * **A view is a consumer of a resource.** A resource may be closed once its consumer set is empty, and only
- * once (`selectClosable`, then `resource.closed`). Phase A has one view and one kind of consumer. No action adds a
- * second view or reorders `drawOrder`: no product needs either yet (plan section 2 rule 9).
+ * **A view or an export run is a consumer of a resource.** A resource may be closed once its consumer set is empty,
+ * and only once (`selectClosable`, then `resource.closed`). No action adds a second view or reorders `drawOrder`: no
+ * product needs either yet (plan section 2 rule 9).
  *
- * `generationEnded` is written where `endSession` already runs; its reader is phase B's selection, which ends
- * with the generation (section 2.3), so the flag lands ahead of that consumer by the form's own naming of it.
+ * `generationEnded` is written where `endSession` already runs. Its reader is the selection's end (section 2.3):
+ * the reducer ends the selection and the inspection of every view bound to the resource, once. A rebind ends them
+ * the same way, with the other reason.
  *
  * Hover, refusals, residency, scan state and the session latch stay in `App`. They are not transitions.
  */
 
 import type { Admitted } from "../admission/admitDataset";
+import type { AuthoritativeBbox } from "../canvas/viewportBbox";
 import type { Filter } from "../skp/types";
 import { DEFAULT_STYLE_STATE } from "../style/document";
 import type { StyleState } from "../style/document";
-import { applyViewTransition } from "./viewTransitions";
+import type { SelectionMembers, SelectionMode, SelectionNotice } from "./selection";
+import { applyViewTransition, endViewGeneration } from "./viewTransitions";
 import type { ViewTransition } from "./viewTransitions";
 
 export type ViewId = `view-${number}`;
 /** The dataset handle. */
 export type ResourceKey = string;
 
+export type Tool = "navigate" | "select";
+
+/** An export run's consumer of a resource (Amendment 7 item 2(b)): `export-<n>`, minted by App once per run. */
+export type ExportConsumerId = `export-${number}`;
+/** What holds a resource open: a view, or an export run. */
+export type ConsumerId = ViewId | ExportConsumerId;
+
+/** The pick a click resolved, as the workspace holds it. The members mirror `canvas/pick.ts`'s `PickResult`, which is
+ * assignable to this (the import rule of section 2.1(a) lets no canvas value or type but `AuthoritativeBbox` in). */
+export interface InspectedPick {
+  readonly streamHandle: string;
+  readonly batchSeq: number;
+  readonly id: bigint;
+  readonly anchor: [number, number] | null;
+}
+
+export interface InspectedFeature {
+  readonly pick: InspectedPick;
+  readonly bounds: AuthoritativeBbox;
+}
+
+/**
+ * `id`, `resource`, `filter` and `style` are phase A's. The rest is phase B's (section 2.2) and is optional: a member
+ * that is absent has its section 7 default, and is read through `viewTool`, `viewSelectionMode`, `viewSelection`,
+ * `viewInspected` and `viewPinned` (`viewTransitions.ts`). So a view minted by phase A's reducer is still exactly the
+ * four-member object phase A's tests pin, and "a minted view starts in Navigate, in toggle, with nothing pinned" is
+ * the defaults those readers return.
+ */
 export interface ViewState {
   readonly id: ViewId;
   readonly resource: ResourceKey;
   readonly filter: Filter | null;
   readonly style: StyleState;
+  readonly tool?: Tool;
+  readonly selectionMode?: SelectionMode;
+  /** The members of the view's selection (section 2.3). Bound to the resource and generation the view is bound to. */
+  readonly selection?: SelectionMembers;
+  /** What the last selection end or ceiling refusal left, until the next selection transition. */
+  readonly selectionNotice?: SelectionNotice;
+  readonly inspected?: InspectedFeature | null;
+  readonly pinned?: boolean;
 }
 
 export interface ResourceEntry {
   readonly admitted: Admitted;
   readonly generationEnded: boolean;
-  readonly consumers: readonly ViewId[];
+  readonly consumers: readonly ConsumerId[];
   readonly closed: boolean;
 }
 
@@ -60,7 +99,9 @@ export type WorkspaceAction =
    * reset and its style kept, the view joins the new resource's consumers and leaves the old one's. */
   | { type: "resource.admitted"; admitted: Admitted }
   | { type: "resource.generationEnded"; resource: ResourceKey }
-  | { type: "consumer.released"; resource: ResourceKey; consumer: ViewId }
+  /** Idempotent (Amendment 7 item 4): a consumer already present leaves the state unchanged. */
+  | { type: "consumer.acquired"; resource: ResourceKey; consumer: ConsumerId }
+  | { type: "consumer.released"; resource: ResourceKey; consumer: ConsumerId }
   /** Written once, when the close has been issued. */
   | { type: "resource.closed"; resource: ResourceKey }
   | { type: "view.transition"; view: ViewId; transition: ViewTransition };
@@ -96,11 +137,24 @@ function admit(state: WorkspaceState, admitted: Admitted): WorkspaceState {
   resources[key] = target.consumers.includes(viewId)
     ? target
     : { ...target, consumers: [...target.consumers, viewId] };
+  // A rebind ends the old generation: the selection and the inspected feature name nothing in the new one (section 2.3).
+  const bound = view.resource === key ? view : endViewGeneration(view, "reopened");
   return {
     ...state,
-    views: { ...state.views, [viewId]: { ...view, resource: key, filter: null } },
+    views: { ...state.views, [viewId]: { ...bound, resource: key, filter: null } },
     resources,
   };
+}
+
+/** The source changed under `key`: the generation ends once, and with it every selection and inspection bound to it. */
+function endGeneration(state: WorkspaceState, key: ResourceKey): WorkspaceState {
+  const entry = state.resources[key];
+  if (entry === undefined || entry.generationEnded) return state;
+  const views: Record<ViewId, ViewState> = { ...state.views };
+  for (const id of Object.keys(views) as ViewId[]) {
+    if (views[id].resource === key) views[id] = endViewGeneration(views[id], "source-changed");
+  }
+  return { ...state, views, resources: { ...state.resources, [key]: { ...entry, generationEnded: true } } };
 }
 
 function withResource(
@@ -119,7 +173,11 @@ export function workspaceReducer(state: WorkspaceState, action: WorkspaceAction)
     case "resource.admitted":
       return admit(state, action.admitted);
     case "resource.generationEnded":
-      return withResource(state, action.resource, (e) => (e.generationEnded ? e : { ...e, generationEnded: true }));
+      return endGeneration(state, action.resource);
+    case "consumer.acquired":
+      return withResource(state, action.resource, (e) =>
+        e.consumers.includes(action.consumer) ? e : { ...e, consumers: [...e.consumers, action.consumer] }
+      );
     case "consumer.released":
       return withResource(state, action.resource, (e) =>
         e.consumers.includes(action.consumer) ? { ...e, consumers: e.consumers.filter((c) => c !== action.consumer) } : e

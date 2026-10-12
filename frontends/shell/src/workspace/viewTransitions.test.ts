@@ -5,7 +5,15 @@ import { describe, expect, it } from "vitest";
 
 import { FILTER_DIALECT_DUCKDB_EXPR_0 } from "../skp/types";
 import { DEFAULT_STYLE_STATE, type StyleState } from "../style/document";
-import { applyViewTransition, styleTransitions, type ViewTransition } from "./viewTransitions";
+import {
+  applyViewTransition,
+  styleTransitions,
+  viewInspected,
+  viewPinned,
+  viewSelectionMode,
+  viewTool,
+  type ViewTransition,
+} from "./viewTransitions";
 import type { ViewState } from "./workspaceState";
 
 /** SHELL-MIGRATION-MILESTONE-2-PREREGISTRATION.md section 4, UA4: the typed transitions of a view, phase A. */
@@ -15,6 +23,8 @@ const deepFreeze = <T extends object>(value: T): T => {
   return Object.freeze(value);
 };
 const edited: StyleState = { fillColor: "#112233", fillOpacity: 0.5, outlineColor: "#ffffff", outlineWidth: 4 };
+const box = (xmin: number, ymin: number, xmax: number, ymax: number) => ({ xmin, ymin, xmax, ymax });
+const pickOf = (id: bigint) => ({ streamHandle: "stream-1", batchSeq: 0, id, anchor: [0, 0] as [number, number] });
 
 // RECORDED MUTATION for "UA4": make `styleTransitions` (viewTransitions.ts) return one transition for the whole edit
 // (`return out.length > 1 ? out.slice(0, 1) : out;`). Expected failure: the count assertion, 4 transitions expected and 1 received.
@@ -36,9 +46,28 @@ describe("UA4: transitions are pure and typed, and a style edit is one transitio
     expect(frozen.style).toEqual(DEFAULT_STYLE_STATE);
   });
 
-  it("the union is exactly the two phase A names (phase B adds the rest of the section's names with their state)", () => {
-    const names: Record<ViewTransition["action"], true> = { "filter.apply": true, "style.set": true };
-    expect(Object.keys(names).sort()).toEqual(["filter.apply", "style.set"]);
+  it("the union is exactly section 2.4's nine names, and every one of them is applied", () => {
+    // `satisfies` over the union's own names is what makes this table complete: tsc fails on a missing or an extra name.
+    const samples = {
+      "filter.apply": { action: "filter.apply", params: { filter: null } },
+      "style.set": { action: "style.set", params: { property: "fillOpacity", value: 0.25 } },
+      "tool.set": { action: "tool.set", params: { tool: "select" } },
+      "mode.set": { action: "mode.set", params: { mode: "replace" } },
+      "selection.apply": { action: "selection.apply", params: { mode: "add", id: 1n, bounds: box(0, 0, 1, 1) } },
+      "selection.clear": { action: "selection.clear", params: {} },
+      "selection.end": { action: "selection.end", params: { reason: "reopened", dropped: 1 } },
+      "inspect.set": { action: "inspect.set", params: { pick: pickOf(1n), bounds: box(0, 0, 1, 1) } },
+      "inspect.pin": { action: "inspect.pin", params: { pinned: true } },
+    } satisfies { [A in ViewTransition["action"]]: Extract<ViewTransition, { action: A }> };
+    expect(Object.keys(samples).sort()).toEqual([
+      "filter.apply", "inspect.pin", "inspect.set", "mode.set", "selection.apply",
+      "selection.clear", "selection.end", "style.set", "tool.set",
+    ]);
+    for (const transition of Object.values(samples)) {
+      const next = applyViewTransition(view, transition);
+      expect(next, `${transition.action} is applied`).toBeDefined();
+      expect(next.id).toBe("view-1");
+    }
   });
 
   it("emits one style.set per changed property, none when nothing changed, and the width as {value, unit}", () => {
@@ -53,5 +82,38 @@ describe("UA4: transitions are pure and typed, and a style edit is one transitio
   it("applying a style edit's transitions in order yields the next style", () => {
     const result = styleTransitions(DEFAULT_STYLE_STATE, edited).reduce(applyViewTransition, view);
     expect(result.style).toEqual(edited);
+  });
+});
+
+/** Tool, mode and inspection transitions (section 2.2, 2.4; Amendment 1 A5). Rows UB-TI1 and UB-TI2 are not in the form's
+ * table: they cover the state the form's ViewState gains, each with its own mutation. */
+describe("UB-TI1: tool.set and mode.set set their own member, and an equal setting returns the same view", () => {
+  it("sets the tool and the mode, each leaving the other alone", () => {
+    const selecting = applyViewTransition(view, { action: "tool.set", params: { tool: "select" } });
+    expect(viewTool(selecting)).toBe("select");
+    expect(viewSelectionMode(selecting)).toBe("toggle");
+    const replacing = applyViewTransition(selecting, { action: "mode.set", params: { mode: "replace" } });
+    expect(viewSelectionMode(replacing)).toBe("replace");
+    expect(viewTool(replacing)).toBe("select");
+    expect(applyViewTransition(replacing, { action: "mode.set", params: { mode: "replace" } })).toBe(replacing);
+    expect(applyViewTransition(view, { action: "tool.set", params: { tool: "navigate" } }), "the default again").toBe(view);
+  });
+});
+
+describe("UB-TI2: inspection and its pin", () => {
+  it("stores the pick and its bounds, pins only a standing feature, and null clears and unpins", () => {
+    const a = pickOf(7n);
+    const inspected = applyViewTransition(view, { action: "inspect.set", params: { pick: a, bounds: box(0, 0, 2, 2) } });
+    expect(viewInspected(inspected)).toEqual({ pick: a, bounds: box(0, 0, 2, 2) });
+    expect(viewPinned(applyViewTransition(view, { action: "inspect.pin", params: { pinned: true } })), "nothing to pin").toBe(false);
+    const pinned = applyViewTransition(inspected, { action: "inspect.pin", params: { pinned: true } });
+    expect(viewPinned(pinned)).toBe(true);
+    const unpinned = applyViewTransition(pinned, { action: "inspect.pin", params: { pinned: false } });
+    expect(viewPinned(unpinned)).toBe(false);
+    expect(viewInspected(unpinned), "unpinning leaves the inspected feature").toEqual(viewInspected(pinned));
+    const cleared = applyViewTransition(pinned, { action: "inspect.set", params: null });
+    expect(viewInspected(cleared)).toBeNull();
+    expect(viewPinned(cleared)).toBe(false);
+    expect(applyViewTransition(cleared, { action: "inspect.set", params: null }), "clearing nothing").toBe(cleared);
   });
 });

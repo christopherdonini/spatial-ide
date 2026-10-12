@@ -7,11 +7,20 @@ import type { Admitted } from "../admission/admitDataset";
 import { FILTER_DIALECT_DUCKDB_EXPR_0 } from "../skp/types";
 import { DEFAULT_STYLE_STATE } from "../style/document";
 import {
+  viewInspected,
+  viewPinned,
+  viewSelection,
+  viewSelectionMode,
+  viewSelectionNotice,
+  viewTool,
+} from "./viewTransitions";
+import {
   initialWorkspaceState,
   selectAdmitted,
   selectClosable,
   selectDrawnViews,
   workspaceReducer,
+  type ConsumerId,
   type ViewId,
   type WorkspaceAction,
   type WorkspaceState,
@@ -135,5 +144,53 @@ describe("UA3: permuting drawOrder leaves every view's filter and resource bindi
     });
     expect(next.views["view-1"].filter).toBeNull();
     expect(next.views["view-2"]).toBe(swapped.views["view-2"]);
+  });
+});
+
+// RECORDED MUTATION for "UB12": make the default mode replace (selectionConstants.ts: `DEFAULT_SELECTION_MODE: SelectionMode = "replace"`).
+// Expected failure: a minted view reads replace.
+// OBSERVED AT <X>: <pending>
+describe("UB12 (Amendment 1 B6): a minted view starts in Navigate, in toggle, with nothing selected, inspected or pinned", () => {
+  it("reads its section 7 defaults, and the view minted is still the four-member object phase A's UA1 pins", () => {
+    const view = run(initialWorkspaceState, admit("a")).views["view-1"];
+    expect(viewTool(view)).toBe("navigate");
+    expect(viewSelectionMode(view)).toBe("toggle");
+    expect(viewSelection(view).size).toBe(0);
+    expect(viewSelectionNotice(view)).toBeNull();
+    expect(viewInspected(view)).toBeNull();
+    expect(viewPinned(view)).toBe(false);
+    expect(Object.keys(view).sort()).toEqual(["filter", "id", "resource", "style"]);
+  });
+});
+
+// RECORDED MUTATION for "UB14": in the reducer's `consumer.acquired` case (workspaceState.ts) append without the presence check
+// (`withResource(state, action.resource, (e) => ({ ...e, consumers: [...e.consumers, action.consumer] }))`).
+// Expected failure: acquired twice, one release leaves a consumer behind, so the resource is not closable.
+// OBSERVED AT <X>: <pending>
+describe("UB14 (Amendment 7 item 6): consumer.acquired is idempotent, and an export consumer holds a resource open", () => {
+  const acquire = (consumer: ConsumerId): WorkspaceAction => ({ type: "consumer.acquired", resource: "ds_a", consumer });
+  const release = (consumer: ConsumerId): WorkspaceAction => ({ type: "consumer.released", resource: "ds_a", consumer });
+
+  it("acquired twice and released once leaves the resource closable exactly once", () => {
+    let state = run(initialWorkspaceState, admit("a"), acquire("export-1"), acquire("export-1"));
+    expect(state.resources.ds_a.consumers).toEqual(["view-1", "export-1"]);
+    expect(workspaceReducer(state, acquire("export-1")), "an acquire of a present consumer changes nothing").toBe(state);
+    state = run(state, release("export-1"), release("view-1"));
+    expect(selectClosable(state)).toEqual(["ds_a"]);
+    state = workspaceReducer(state, { type: "resource.closed", resource: "ds_a" });
+    expect(selectClosable(state)).toEqual([]);
+  });
+
+  it("an export consumer keeps a resource the view has left out of selectClosable until it is released", () => {
+    const state = run(initialWorkspaceState, admit("a"), acquire("export-1"), admit("b"));
+    expect(state.resources.ds_a.consumers, "the view left; the export stayed").toEqual(["export-1"]);
+    expect(selectClosable(state)).toEqual([]);
+    expect(selectClosable(workspaceReducer(state, release("export-1")))).toEqual(["ds_a"]);
+  });
+
+  it("re-acquiring the view after its release keeps a live resource out of selectClosable", () => {
+    const released = run(initialWorkspaceState, admit("a"), release("view-1"));
+    expect(selectClosable(released)).toEqual(["ds_a"]);
+    expect(selectClosable(workspaceReducer(released, acquire("view-1")))).toEqual([]);
   });
 });
