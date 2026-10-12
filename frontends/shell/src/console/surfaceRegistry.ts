@@ -330,6 +330,13 @@ const CLASS_C_ROWS = [
   },
   {
     class: "C",
+    action: "mode.set",
+    statement:
+      "[P6 placeholder] no API equivalent exists -- choosing how a click changes the selection (Add / remove, Replace, Add only or Remove only) is pure view state for this session, never sent to the kernel.",
+    owner: 'docs/03 §"The action console" (pure view state)',
+  },
+  {
+    class: "C",
     action: "selection.change",
     statement:
       "[P6 placeholder] no API equivalent exists -- changing which features are selected with a click is pure view state for this session, never sent to the kernel and not saved.",

@@ -203,6 +203,7 @@ vi.mock("./canvas/WorkingCanvas", () => {
 import App from "./App";
 import { HOVER_BELOW_RESOLUTION_TEXT } from "./canvas/HoverReadoutView";
 import { consoleRecorder, isGuiActionEntry } from "./console/recorder";
+import { prepareCancelKey } from "./publish/client";
 import { LATE_CANCEL_FINISHED, LATE_CANCEL_FINISHED_UNAUDITED } from "./feature/OpenDuringExportAsk";
 import { __resetResidencyArmForTests, setResidencyArm } from "./residency/residencyArm";
 
@@ -641,6 +642,15 @@ describe("App: tools, the click, the selection and the inspection (milestone 2, 
     ]);
     useTool("Navigate");
     expect(q(".tool-switch-modes")).toBeNull();
+
+    // The mode picker records its class-C row (docs/01 principle 4; section 1): once per change of mode, none for the mode already chosen.
+    useTool("Select");
+    const modeRowsFrom = mark();
+    const modeRows = () => consoleRecorder.entries().slice(modeRowsFrom).filter(isGuiActionEntry).map((e) => e.action).filter((a) => a === "mode.set");
+    useMode("Replace");
+    expect(modeRows(), "a change of mode records one mode.set row").toEqual(["mode.set"]);
+    useMode("Replace");
+    expect(modeRows(), "the mode already chosen records none").toEqual(["mode.set"]);
   });
 
   // RECORDED MUTATIONS for "RB17", each applied alone (Amendment 2 item 2 (e)). (i) Feed the box from `onViewportChanged` only: remove the `showBox` call from `onViewportWithinLastQuery` (App.tsx).
@@ -955,5 +965,74 @@ describe("App: tools, the click, the selection and the inspection (milestone 2, 
     expect(mocks.publish.cancels).toEqual(["at_1"]);
     expect(text(".late-cancel-path"), "decided at the choice").toBe("C:/out/early");
     expect(closes(handleOf(1))).toBe(1);
+  });
+
+  // RECORDED MUTATION for "RB12f" (a row beyond the table; the architect's S2, gate 1 of PR 217; it pins the behaviour of stage 7, Amendment 10 item 3(j)): in `confirmOpen` (App.tsx) remove the answer to the first ask
+  // (`askRef.current?.answer(false);`). Expected failure: the first open is still pending.
+  it("RB12f: a second open while the ask stands drops the first as Keep, records one row for the choice, and asks again", async () => {
+    await open("C:/data/a.parquet");
+    const run = await startExecute();
+    await startOpen("C:/data/b.parquet");
+    const first = pendingOpen!;
+    const before = mark();
+    await startOpen("C:/data/c.parquet");
+    const second = pendingOpen!;
+
+    let firstResult: unknown = "pending";
+    await act(async () => {
+      firstResult = await Promise.race([first, new Promise((r) => setTimeout(() => r("pending"), 100))]);
+    });
+    expect(firstResult, "the first open was answered Keep by the second").toMatchObject({ kind: "refused", code: "open.dropped" });
+    expect(rowsSince(before), "the drop is not a choice and records no row").toEqual([]);
+    expect(container.querySelectorAll(ASK).length, "the ask is asked again, once").toBe(1);
+    expect(opens(), "nothing is opened before a choice").toBe(1);
+
+    click(q(".open-during-export-keep"));
+    let secondResult: unknown = "pending";
+    await act(async () => void (secondResult = await second));
+    expect(secondResult, "the second open is answered by the choice").toMatchObject({ kind: "refused", code: "open.dropped" });
+    expect(rowsSince(before), "one row, for the one choice").toEqual(["dataset.openDuringExport"]);
+    expect(opens(), "no openDataset").toBe(1);
+    expect(mocks.publish.cancels, "no cancel").toEqual([]);
+    expect(q(ASK), "the ask is gone").toBeNull();
+    await endRun(run, success("C:/out/kept"));
+    expect(shown(".publish-summary-headline"), "the export reached its outcome in its own panel").toBe("Exported.");
+  });
+
+  // RECORDED MUTATION for "RB12g" (a row beyond the table; the reviewer's C1, gate 1 of PR 217): in `answerOpenAsk` (App.tsx) iterate the ask's runs only (`for (const run of ask.runs)`).
+  // Expected failure: the cancels list, which lacks the execute's key.
+  it("RB12g: Cancel the export and go on cancels an execute that started after the ask appeared, once, and the statement follows its outcome", async () => {
+    const statement = () => text(".late-cancel-path");
+    /** The ask appears over a prepare run; the prepare ends into the approval prompt; the phrase is submitted, so that an execute starts; then the choice is made. */
+    async function lateExecute(openPath: string, attemptId: string, handle: string, outcome: import("./publish/types").ExecuteOutcome) {
+      const prepare = deferred<import("./publish/types").PrepareOutcome>();
+      mocks.publish.pendingPrepare = prepare.promise;
+      click(q(".publish-disclosure"));
+      await prepareExport();
+      await startOpen(openPath);
+      expect(q(ASK), "the ask shows over the prepare run").not.toBeNull();
+      await endRun(prepare, { status: "prompt", attempt_id: attemptId, prompt: promptFixture() });
+      const execute = deferred<import("./publish/types").ExecuteOutcome>();
+      mocks.publish.pendingExecute = execute.promise;
+      mocks.publish.pendingPrepare = null;
+      await submitExport();
+      expect(mocks.publish.executes.at(-1)?.[0], "the execute started while the ask stood").toBe(attemptId);
+      expect(q(ASK), "the ask still stands").not.toBeNull();
+
+      const cancelsBefore = mocks.publish.cancels.length;
+      click(q(".open-during-export-cancel"));
+      await finishOpen();
+      expect(mocks.publish.cancels.slice(cancelsBefore), "the prepare's key and the execute's key, once each").toEqual([prepareCancelKey(handle), attemptId]);
+      expect(closes(handle), "the old handle stays open while the execute runs").toBe(0);
+      await endRun(execute, outcome);
+      expect(closes(handle), "closed once, after the execute's outcome").toBe(1);
+    }
+
+    await open("C:/data/a.parquet");
+    await lateExecute("C:/data/b.parquet", "at_g1", handleOf(1), success("C:/out/g1"));
+    expect(statement(), "the execute finished: the statement names its bundle").toBe("C:/out/g1");
+
+    await lateExecute("C:/data/c.parquet", "at_g2", handleOf(2), { status: "refused", message: "cancelled" });
+    expect(q(".late-cancel-statement"), "the execute was stopped: no statement").toBeNull();
   });
 });

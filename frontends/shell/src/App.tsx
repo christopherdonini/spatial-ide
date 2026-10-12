@@ -1152,7 +1152,8 @@ export default function App() {
     setAsking(false);
     recordNamed("gui-action", "dataset.openDuringExport");
     if (cancelAndGo) {
-      for (const run of ask.runs) {
+      // The ask's runs and the runs standing now: an execute that started after the ask appeared (the dialog stays usable) is a run too.
+      for (const run of new Set([...ask.runs, ...exportRunsRef.current.values()])) {
         run.cancelChosen = true;
         // A run that ended while the ask stood is decided at the choice; one that has not is decided when it ends.
         const finished = lateCancelOutcome(true, run.end);
@@ -1830,9 +1831,11 @@ export default function App() {
     recordNamed("gui-action", "tool.set");
   }
 
-  /** The mode picker (section 2.2) has no class-C row among section 2.6's six, so a mode change records none. */
+  /** The mode picker (section 2.2): a change of mode records the class-C row `mode.set`, as a change of tool records `tool.set`. */
   function handleSelectMode(next: SelectionMode): void {
+    if (view === null || viewSelectionMode(view) === next) return;
     transit({ action: "mode.set", params: { mode: next } });
+    recordNamed("gui-action", "mode.set");
   }
 
   /** One click the canvas resolved at its own pixel (OPEN-1 (A)); `clickEffect` decides what it does, once the latch has been read. */
