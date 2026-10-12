@@ -53,6 +53,8 @@
 //   E-ASK-STATEMENT src/App.tsx, `answerOpenAsk`: show the statement only when `cancel()` answers true (the loop body becomes `run.cancelChosen = false;
 //                  void run.cancel().then((answer) => { run.cancelChosen = answer; });`). The run has ended, so the host answers false. Expected: E-ASK-STATEMENT fails on the absent statement.
 //   Both steps are INCONCLUSIVE (class 2, never a pass) when the export had ended before the ask was read: the step then fails with that word in its message.
+//   E-DBLCLICK     src/canvas/WorkingCanvas.tsx, the Deck props' `onClick`: remove the `if (event.type === "dblclick") return;` line. Expected: E-DBLCLICK fails on its first assertion (the Navigate double-click inspected an id); the Select count would fail next.
+//   E-ASK-TWO      src/App.tsx, `answerOpenAsk`: `setLateCancel([finished])` in place of the append. Expected: E-ASK-TWO fails on the statements' paths (only the second bundle_path is shown). INCONCLUSIVE, as above, when the ask or the open is not standing before the choice.
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, utimesSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -672,6 +674,62 @@ async function stepAskStatement(page, consoleHandle) {
   return `the statement named ${outcome.bundle_path}, whose manifest.json exists; filter-zoned was admitted`;
 }
 
+/** E-DBLCLICK (OPEN-14): on a fresh open (nothing inspected, nothing selected) a real double-click only zooms, in Navigate and in Select; a single click still inspects, after the tap delay. */
+async function stepDblClick(page, consoleHandle) {
+  await openFixture(page, consoleHandle, FIXTURE_FILTER, "E-DBLCLICK");
+  const p = (await buildScene(page, consoleHandle, "E-DBLCLICK", { want: 1, min: 1 })).hits[0];
+  const zoomNow = () => consoleHandle.renderTrace().map((e) => Number(/view-state \{[^}]*zoom: ([^,}\s]+)/.exec(e.text)?.[1])).filter(Number.isFinite).at(-1);
+  const doubleClick = async () => {
+    await page.mouse.dblclick(p.css.x, p.css.y);
+    await waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 1500, timeoutMs: 15_000 }); // past the tap delay and the zoom's transition
+  };
+  await useTool(page, "Navigate");
+  await showFeatureTab(page);
+  const before = await readTab(page);
+  expect(before.id === null && before.selected === 0, `E-DBLCLICK: precondition (a fresh open): the Feature tab shows id ${before.id}, Selected ${before.selected}`);
+  const zoom0 = zoomNow();
+  await doubleClick();
+  const nav = await readTab(page);
+  expect(nav.id === null, `E-DBLCLICK: a Navigate double-click on id ${p.id} left the Feature tab showing id ${nav.id}; none was expected`);
+  expect(nav.selected === before.selected, `E-DBLCLICK: a Navigate double-click changed Selected from ${before.selected} to ${nav.selected}`);
+  expect(zoom0 !== undefined && zoomNow() > zoom0, `E-DBLCLICK: the view did not zoom (view-state zoom ${zoom0} -> ${zoomNow()})`);
+  await useTool(page, "Select");
+  await useMode(page, "Add only");
+  await doubleClick();
+  const sel = await readTab(page);
+  expect(sel.selected === before.selected, `E-DBLCLICK: a Select double-click on id ${p.id} changed Selected from ${before.selected} to ${sel.selected}`);
+  await useTool(page, "Navigate");
+  const oracle = await hoverIdAfterBarrier(page, p.css, "E-DBLCLICK (after the zooms)");
+  expect(oracle.ok, `E-DBLCLICK: no confirmed id at the click point after the zooms (${JSON.stringify(oracle.last)}), so the single click cannot be judged`);
+  await clickAt(page, p.css);
+  const tab = (await pollUntil(() => readTab(page), (t) => t.id !== null, 5000)).last;
+  expect(tab.id === oracle.last.id, `E-DBLCLICK: a single click inspected id ${tab.id}; the oracle id there is ${oracle.last.id}`);
+  return `a double-click zoomed (${zoom0} -> ${zoomNow()}), inspected nothing in Navigate and selected nothing in Select; a single click inspected id ${tab.id}`;
+}
+
+/** E-ASK-TWO (item (a)): two bundles finish under one ask (the second export is started while it stands); Cancel the export and go on shows a statement for each, in the order the runs ended. */
+async function stepAskTwo(page, consoleHandle) {
+  await startExportThenOpen(page, consoleHandle, "E-ASK-TWO");
+  const first = await page.evaluate(() => window.__askRun.promise);
+  expect(first.status === "success", `E-ASK-TWO: the first export's outcome is ${JSON.stringify(first)}; a finished bundle was needed`);
+  const prepared = await prepareExport(page, freshDestination("ask-two"));
+  expect(prepared.status === "prompt", `E-ASK-TWO: the second prepare returned ${JSON.stringify(prepared)}`);
+  const second = await executeExport(page, prepared.prompt);
+  expect(second.status === "success", `E-ASK-TWO: the second export's outcome is ${JSON.stringify(second)}; a finished bundle was needed`);
+  const standing = await page.evaluate(async () => ({ ask: document.querySelector(".open-during-export-ask") !== null, open: await Promise.race([window.__askOpen.promise.then(() => "settled"), new Promise((r) => setTimeout(() => r("pending"), 100))]) }));
+  if (!standing.ask || standing.open !== "pending") throw new Error(`E-ASK-TWO: INCONCLUSIVE (class 2, never a pass): before the choice the ask shown is ${standing.ask} and the open is ${standing.open}`);
+  await page.click(".open-during-export-cancel");
+  const admitted = await page.evaluate(() => window.__askOpen.promise);
+  expect(admitted.kind === "admitted", `E-ASK-TWO: Cancel the export and go on gave the open ${JSON.stringify(admitted)}`);
+  const read = () => page.evaluate(() => ({ paths: [...document.querySelectorAll(".late-cancel-path")].map((e) => e.textContent), texts: [...document.querySelectorAll(".late-cancel-text")].map((e) => e.textContent) }));
+  const shown = (await pollUntil(read, (s) => s.paths.length >= 2, 10_000)).last;
+  const bundles = [first.bundle_path, second.bundle_path];
+  expect(JSON.stringify(shown.paths) === JSON.stringify(bundles), `E-ASK-TWO: the statements name ${JSON.stringify(shown.paths)}; the outcomes' bundle_paths, in the order the runs ended, are ${JSON.stringify(bundles)}`);
+  expect(shown.texts.length === 2 && shown.texts.every((t) => /^The export was not cancelled: it finished before the cancel could stop it/.test(t ?? "")), `E-ASK-TWO: the statements read ${JSON.stringify(shown.texts)}`);
+  for (const b of bundles) expect(existsSync(join(b, "manifest.json")), `E-ASK-TWO: no manifest.json under ${b}`);
+  return `two statements, ${bundles.join(" then ")}, both manifests on disk; filter-zoned was admitted`;
+}
+
 async function runSelectionSteps(page, consoleHandle) {
   const results = [];
   async function runStep(id, timeoutMs, fn) {
@@ -707,6 +765,7 @@ async function runSelectionSteps(page, consoleHandle) {
     await runStep("E-ZOOMSEL", 120_000, () => stepZoomSel(page, consoleHandle));
     await runStep("E-SEL-PAN", 60_000, () => stepSelPan(page));
   }
+  await runStep("E-DBLCLICK", 600_000, () => stepDblClick(page, consoleHandle));
   await runStep("E-SEL-FILTER", 900_000, async () => {
     await zoomToLayer(page, consoleHandle, "E-SEL-FILTER");
     const filterScene = await buildScene(page, consoleHandle, "E-SEL-FILTER", { want: 6, min: 4 });
@@ -719,6 +778,7 @@ async function runSelectionSteps(page, consoleHandle) {
   await runStep("E-SCOPE", 300_000, () => stepScope(page, consoleHandle));
   await runStep("E-ASK", 600_000, () => stepAsk(page, consoleHandle));
   await runStep("E-ASK-STATEMENT", 300_000, () => stepAskStatement(page, consoleHandle));
+  await runStep("E-ASK-TWO", 600_000, () => stepAskTwo(page, consoleHandle));
   console.log(`[selection] ${results.filter((r) => r.status === "PASS").length} PASS, ${results.filter((r) => r.status === "FAIL").length} FAIL: ${results.map((r) => `${r.id}=${r.status}`).join(" ")}`);
 }
 
