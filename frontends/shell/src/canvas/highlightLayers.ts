@@ -178,3 +178,24 @@ export function buildHighlightLayers(
   }
   return { layers, drawn };
 }
+
+/** Whether two id sets hold the same ids, whatever their identity or order. */
+function sameIds(a: ReadonlySet<bigint>, b: ReadonlySet<bigint>): boolean {
+  if (a.size !== b.size) return false;
+  for (const id of a) if (!b.has(id)) return false;
+  return true;
+}
+
+/**
+ * The canvas's `onSelectionDrawnChange` (section 2.2): `render()` hands over each pass's drawn set, and only a set that differs
+ * from the one last emitted goes out. The first set is compared with the empty one, so an empty first pass emits nothing, and a
+ * clear to empty after a non-empty set does. An emitted set is never changed afterwards.
+ */
+export function createDrawnEmitter(emit: (drawn: ReadonlySet<bigint>) => void): (drawn: ReadonlySet<bigint>) => void {
+  let last: ReadonlySet<bigint> = NOTHING_DRAWN;
+  return (drawn) => {
+    if (sameIds(last, drawn)) return;
+    last = drawn;
+    emit(drawn);
+  };
+}

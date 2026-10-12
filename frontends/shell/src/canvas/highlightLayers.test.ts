@@ -7,6 +7,7 @@ import { batchForLayerId, layerId } from "./buildLayers";
 import type { Part, ResidentBatch } from "./decodeBatch";
 import {
   buildHighlightLayers,
+  createDrawnEmitter,
   HIGHLIGHT_BOTH_OUTER_RING_RADIUS_PX,
   HIGHLIGHT_BOTH_UNDERLAY_WIDTH_PX,
   HIGHLIGHT_OUTLINE_WIDTH_PX,
@@ -172,5 +173,39 @@ describe("UB9 with Amendment 1 B2: a feature that is both selected and inspected
     expect(byId.get("highlight:inspected:sh_pt:0")?.getRadius).toBe(HIGHLIGHT_POINT_RING_RADIUS_PX);
     expect([HIGHLIGHT_BOTH_OUTER_RING_RADIUS_PX, HIGHLIGHT_POINT_RING_RADIUS_PX]).toEqual([11, 7]);
     expect(byId.get("highlight:selected-both:sh_pt:0")?.data).toEqual([[1002 - O_X, 2002 - O_Y]]);
+  });
+});
+
+describe("UB9 (drawn set): onSelectionDrawnChange fires only when the drawn set changes (section 2.2)", () => {
+  const emitterWithLog = (): { log: ReadonlySet<bigint>[]; pass: (drawn: ReadonlySet<bigint>) => void } => {
+    const log: ReadonlySet<bigint>[] = [];
+    return { log, pass: createDrawnEmitter((drawn) => log.push(drawn)) };
+  };
+
+  // RECORDED MUTATION for "UB9 (drawn set)" (a pass that changed nothing): in `createDrawnEmitter` (highlightLayers.ts) emit on every pass
+  // (delete the `if (sameIds(last, drawn)) return;` line). Expected failure: an empty first pass and an equal set are emitted too.
+  it("an empty first pass and a pass with the same ids emit nothing; a new set, and a clear to empty, emit", () => {
+    const { log, pass } = emitterWithLog();
+    pass(set());
+    expect(log, "the empty first pass").toHaveLength(0);
+    pass(set(1n, 2n));
+    expect(log).toHaveLength(1);
+    pass(set(2n, 1n));
+    expect(log, "the same ids, another identity and order").toHaveLength(1);
+    pass(set(1n));
+    expect(log).toHaveLength(2);
+    pass(set());
+    expect(log, "a clear to empty").toHaveLength(3);
+    pass(set());
+    expect(log.map((s) => [...s])).toEqual([[1n, 2n], [1n], []]);
+  });
+
+  // RECORDED MUTATION for "UB9 (drawn set)" (same size, other ids): in `sameIds` (highlightLayers.ts) compare the sizes only (return
+  // `a.size === b.size`). Expected failure: {1, 2} followed by {3, 4} is not emitted.
+  it("a set of the same size with other ids is a change", () => {
+    const { log, pass } = emitterWithLog();
+    pass(set(1n, 2n));
+    pass(set(3n, 4n));
+    expect(log.map((s) => [...s])).toEqual([[1n, 2n], [3n, 4n]]);
   });
 });

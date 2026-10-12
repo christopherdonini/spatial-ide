@@ -46,3 +46,19 @@ export function resolveClickPick(deps: ClickPickDeps, x: number, y: number): Cli
   const bounds = boundsOfRow(candidate.batch, candidate.batch.partToRow[candidate.gpuOrdinal]);
   return bounds === null ? { kind: "nothing" } : { kind: "feature", pick, bounds };
 }
+
+/** What `Deck`'s `onClick` hands over as its second argument that this module reads: the tap's own pixel, relative to the
+ * canvas. Deck's first argument (its picking info, the pointer-down pick) is never read. */
+export interface Tap {
+  readonly offsetCenter?: { readonly x: number; readonly y: number };
+}
+
+/** `Deck`'s `onClick` as one function: pick afresh at the tap's own pixel and emit what it resolves to. A tap that carries no
+ * pixel emits nothing, since a pixel invented for it would be a pick nobody made (ADR-010 rule 1). */
+export function createTapHandler(deps: ClickPickDeps, emit: (result: ClickPick) => void): (tap: Tap) => void {
+  return (tap) => {
+    const pos = tap.offsetCenter;
+    if (pos === undefined) return;
+    emit(resolveClickPick(deps, pos.x, pos.y));
+  };
+}

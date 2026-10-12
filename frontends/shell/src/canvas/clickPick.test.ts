@@ -3,7 +3,7 @@
 
 import { describe, expect, it } from "vitest";
 
-import { resolveClickPick, type ClickPickDeps } from "./clickPick";
+import { createTapHandler, resolveClickPick, type ClickPick, type ClickPickDeps } from "./clickPick";
 import type { ResidentBatch } from "./decodeBatch";
 import { resolvePick, type PickResult } from "./pick";
 import { partsOfFeatures } from "../testUtils/partsOfPolygons";
@@ -119,5 +119,28 @@ describe("UB8: a click never reads the hover readout", () => {
     const result = resolveClickPick(deps, 1, 1);
     expect(result.kind === "feature" && result.pick.id).toBe(20n);
     expect(Object.keys(depsFor(null, false)).sort()).toEqual(["belowPickResolutionNow", "pickCandidateAt", "resolveCandidate"]);
+  });
+});
+
+describe("UB7 (tap): Deck's onClick resolves the tap's own pixel and emits what it resolves to", () => {
+  // RECORDED MUTATION for "UB7 (tap)" (the pixel): in `createTapHandler` (clickPick.ts) resolve at the swapped pixel
+  // (`resolveClickPick(deps, pos.y, pos.x)`). Expected failure: the candidate lookup received (6, 5) where (5, 6) was expected.
+  it("a tap at (5, 6) looks the candidate up at (5, 6) and emits the one result", () => {
+    const calls: Calls = { picks: [], resolves: 0 };
+    const emitted: ClickPick[] = [];
+    createTapHandler(depsFor({ batch, gpuOrdinal: 2 }, false, calls), (r) => emitted.push(r))({ offsetCenter: { x: 5, y: 6 } });
+    expect(calls.picks).toEqual([[5, 6]]);
+    expect(emitted).toHaveLength(1);
+    expect(emitted[0].kind === "feature" && emitted[0].pick.id).toBe(20n);
+  });
+
+  // RECORDED MUTATION for "UB7 (tap)" (a tap without a pixel): in `createTapHandler` (clickPick.ts) invent one
+  // (`const pos = tap.offsetCenter ?? { x: 0, y: 0 };`). Expected failure: a pick ran at (0, 0) and a result was emitted.
+  it("a tap that carries no pixel runs no pick and emits nothing", () => {
+    const calls: Calls = { picks: [], resolves: 0 };
+    const emitted: ClickPick[] = [];
+    createTapHandler(depsFor({ batch, gpuOrdinal: 2 }, false, calls), (r) => emitted.push(r))({});
+    expect(calls.picks).toEqual([]);
+    expect(emitted).toEqual([]);
   });
 });
