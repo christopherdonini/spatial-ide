@@ -2020,7 +2020,12 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
       getCursor: ({ isDragging }) => cursorForPointerState(isDragging, toolRef.current),
       // Milestone 2, section 2.2 (OPEN-1 (A)): a tap picks afresh at its own pixel (`event.offsetCenter`) through the settle
       // re-pick's `pickCandidateAt`, in this handler. deck's picking info (the pointer-down pick) is not read; `clickPick.ts`.
-      onClick: (_info, event) => onTap(event),
+      // OPEN-14 (PR 217 round 3): a double-click only zooms, through the map's own controller on the same event. deck delivers `click` and `dblclick` here as separate events
+      // (`event.type`; `tapCount` is not the tell, since the click recogniser counts taps close together), so a `dblclick` neither picks nor emits, and a single click arrives as before.
+      onClick: (_info, event) => {
+        if (event.type === "dblclick") return;
+        onTap(event);
+      },
       onLoad: () => end("deck-init"),
       // A size change that uncovers map area asks for it once a view has been reported (`lastQueried` non-null);
       // a shrink asks for nothing. deck's own

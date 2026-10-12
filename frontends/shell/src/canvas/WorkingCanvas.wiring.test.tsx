@@ -252,6 +252,22 @@ describe("the tap (UB7's wiring, OPEN-1 (A))", () => {
     expect(result.bounds.xmax).toBeGreaterThan(result.bounds.xmin);
   });
 
+  // RECORDED MUTATION for "the tap" (a double-click, OPEN-14): in the Deck's `onClick` (WorkingCanvas.tsx) remove the early return on `event.type === "dblclick"`.
+  // Expected failure: the double-click picks and emits a result, where nothing was expected.
+  it("a double-click event neither picks nor emits, and a click event at the same pixel still does", () => {
+    const onClickPick = vi.fn();
+    const { push } = mount({ onClickPick });
+    push();
+    theDeck().pickReturn = { index: 0, layer: { id: layerIdsOfLastRender()[0] } };
+    const picksBefore = theDeck().pickCalls.length;
+    theDeck().props.onClick({ index: -1, layer: null }, { type: "dblclick", offsetCenter: { x: 12, y: 34 } });
+    expect(onClickPick, "no inspection and no selection change: nothing is emitted").not.toHaveBeenCalled();
+    expect(theDeck().pickCalls.length, "no pick").toBe(picksBefore);
+    theDeck().props.onClick({ index: -1, layer: null }, { type: "click", offsetCenter: { x: 12, y: 34 } });
+    expect(onClickPick, "a click still emits").toHaveBeenCalledTimes(1);
+    expect(onClickPick.mock.calls[0][0].kind).toBe("feature");
+  });
+
   // RECORDED MUTATION for "the tap" (nothing under it): in the Deck's `onClick` (WorkingCanvas.tsx) never call `onTap` (delete the call).
   // Expected failure: no result is emitted for a tap on nothing.
   // OBSERVED AT 6488360ffa1f58bf392e731f605e5a7255d24260: FAILED -- "a tap on nothing emits nothing-kind, and a tap without a pixel emits no result":
