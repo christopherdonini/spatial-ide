@@ -346,3 +346,30 @@ Opens empty, append-only.
 
 ## §12. Heavy runs
 The worker's and tester's briefs carry, as written, the paragraph at state/directives/2026-10-06-machine-script-adopted.md:12-22 @ 2ca3a53ca812684a7b2579980db2f980c5d2a286 sha256:7350977156bed7c94b0da4e8db806ba34c25c6678e65c46447a62d791ba9e8e1. This form names no other rule for running builds.
+
+### Amendment 1 — the human's rulings on OPEN-1 to OPEN-3 (class 5)
+
+*Written by the custodian on the human's typed ruling, before any code. References only, except item 2's sentence and item 3's words, byte-copied by script. The ruling is `state/directives/2026-10-12-item-42-current-view-amendment-7-guardian-readme-guardrails-brief.md`, item 2.*
+
+1. **OPEN-1: (a).** Every passage marked [OPEN-1 (a)] binds: §2.1(d), §2.2(c), §2.3's PublishPanel.test.ts cases, RCV3, UPP1, E-CV-OPEN and X1. The passages marked [OPEN-1 (b)] fall away.
+   - §2.4's disabled-reason sentence is not ruled by this answer. It stays the architect's draft until the human answers it under item 2b, at the latest at X4 (§9).
+2. **OPEN-2: (b), a red line, confirmed by the human.** The host's Row scope sentence is the human's typed words, line 14 of the directive less its three leading spaces (state/directives/2026-10-12-item-42-current-view-amendment-7-guardian-readme-guardrails-brief.md:14 @ 88067f2c6f23d434cfaf086c5f0ca3899b564e23 sha256:2fa4cefe536f82c266bbd4e15ddab24d34fe3be42f756e2d06d0a8dc28c7c0f5):
+
+   ```text
+   row scope: the map's extent when Export interactive map… was clicked (xmin {}, ymin {}, xmax {}, ymax {}) — not the whole file
+   ```
+
+   - Each `{}` is one of the four numbers, in the order the line names them. PRS asserts the sentence byte for byte with the four numbers filled.
+   - The passages marked [OPEN-2 (b)] bind, and OPEN-2 (a)'s and (c)'s fall away. The sentence is outside the wording-block rule, as §9 says (item 2f).
+3. **OPEN-3: the drafted words, with the OPEN-1 (a) sentence and without the OPEN-2 (a) one** (the draft's OPEN-3, `state/consults/2026-10-12-export-current-view-after-unreported-fit-architect-draft.md`, section 3). Item 42's on-main note becomes:
+
+   ```text
+   On main, fixed by export-current-view-after-unreported-fit: Current view sends the area the map shows when Export interactive map… is clicked, including after the map fits itself to the data and after a change of size. It can be chosen as soon as the map has drawn the file's data. The v0.1.0 build still behaves as described above.
+   ```
+
+   - **Placement, the custodian's:** the added sentence stands second, after the sentence about Current view, so that its "It" names Current view. Placed last, it would follow the sentence about the v0.1.0 build and read as being about that build. This is told to the human with this amendment; a different placement is the human's word.
+   - §2.5 applies: the note replaces item 42's on-main paragraph when this piece lands. If item 42 has not merged when code starts (RS9), the edit moves to a docs-lane follow-up, as the draft says.
+4. **Generation:** the node's generation goes up by one.
+5. **Superseded index:** §11's OPEN-1 to OPEN-3 → items 1 to 3; §2.4's [OPEN-2 (b)] bullet → item 2.
+
+Nothing above is edited.

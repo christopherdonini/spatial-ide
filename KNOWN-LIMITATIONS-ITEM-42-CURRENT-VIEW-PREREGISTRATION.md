@@ -70,3 +70,16 @@ As named in the source comment. A resize to zero size on main is not in this lis
 
 - OPEN-1: approve or replace §A's words (item 2e).
 - OPEN-2: should the v0.1.0 release page's notes also carry item 42? Changing published text is the human's. This piece does not touch them.
+
+## Amendments
+
+### Amendment 1 — the human's rulings on OPEN-1 and OPEN-2 (class 5)
+
+*Written by the custodian on the human's ruling, before any change. References only: `state/directives/2026-10-12-item-42-current-view-amendment-7-guardian-readme-guardrails-brief.md`, item 1.*
+
+1. **OPEN-1: yes.** §A's item text, its on-main paragraph and its source comment stand as drafted. The worker applies them byte for byte from §A, with the source comment's opening bracket resolved to `The human's wording, approved`.
+2. **OPEN-2: yes.** The human's correction paragraph goes at the top of the v0.1.0 release notes after item 42 has merged, as the ruling's item 1 sets out. The release page is not a file of this repository, so that edit is outside this form's Scope and is the custodian's, made after the merge and shown to the human.
+3. **Generation:** the node's generation goes up by one.
+4. **Superseded index:** §F's OPEN-1 and OPEN-2 → items 1 and 2.
+
+Nothing above is edited.

@@ -1194,3 +1194,40 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+### Amendment 8 — the human's rulings on Amendment 7's words and on OPEN-12 (class 5)
+
+*Written by the custodian on the human's typed ruling, before any code of B3's render site. References only: `state/directives/2026-10-12-item-42-current-view-amendment-7-guardian-readme-guardrails-brief.md`, item 3.*
+
+1. **Amendment 7 item 3's two strings: approved as drafted.** `LATE_CANCEL_FINISHED` and `LATE_CANCEL_FINISHED_UNAUDITED` are the human's approved wording. Amendment 7 item 9's first bullet is discharged. The P6 sight at the sitting still reads them on screen.
+2. **OPEN-12: (A).** The ask and the late-cancel statement render in `region.layers`, beneath AdmissionPanel. Amendment 7 item 5's hold (no code of the render site before the ruling) is lifted, and Amendment 7 item 9's second bullet is discharged.
+3. **Generation:** the node's generation goes up by one.
+4. **Superseded index:** Amendment 7 items 3 and 12 (OPEN-12) → items 1 and 2.
+
+Nothing above is edited.
+
+### Amendment 9 — budget overrun, §7 not edited (class 8): HoverReadoutView.tsx and the B-W row's two phase A files; with the build's deviations in stages 1 to 3 (class 2) and two items for the human
+
+*Written by the custodian after stages 1 to 3 of phase B were built and their results seen, before any gate. References only. The reports are `state/consults/2026-10-12-shell-migration-milestone-2-phase-b-worker-report-stage-1.md` (the head 0da5277b), `state/consults/2026-10-12-shell-migration-milestone-2-phase-b-worker-report-stage-2.md` (147643c5) and `state/consults/2026-10-12-shell-migration-milestone-2-phase-b-worker-report-stage-3.md` (1de68a61).*
+
+1. **§7 (class 8), by §7's own command from B at 1de68a61:**
+   - HoverReadoutView.tsx is 17 against its 12 (B-C). The deletions alone are 8: the two inline refusal blocks and the signature line, replaced by Amendment 2 item 7's constants and export.
+   - The B-W row's two phase A files, viewTransitions.ts and workspaceState.ts, are 187 against 160 more, or 180 with Amendment 7's AM7-P allowance of +20 for workspaceState.ts.
+   - Both groups stay inside their totals: B-W 433 of 630, B-C 413 of 572 with WorkingCanvas.tsx at 112. The cumulative count is 2,158.
+   - §7 is not edited.
+2. **The build's deviations (class 2),** for the gates:
+   - (a) ViewState's phase B members are optional and read through readers that give the defaults. A minted view stays the four-member object, so the base suites' ViewState literals and UA1's exact shape stand unedited (stage 1, decision 1).
+   - (b) UA4's union `it` is edited into the nine-name table. Phase A's `it` named two actions, and §2.4's other seven names fail its typecheck. It is a base test edit beyond Amendment 2 item 5's two, and H3's one exception (stage 1, decision 2).
+   - (c) The stored selection is the members map only. Resource and generation are composed where read, from the view's binding, and the reducer ends the selection on the two events that change either (stage 1, decision 3).
+   - (d) `countSelection` takes a facts argument that no product code reads yet, for UB3's mutation. In stage 5, App passes what it holds and invents nothing for the view's completeness (stage 1, decision 4).
+   - (e) UA3's resolveScope clause is in scope.test.ts, not workspaceState.test.ts (stage 1).
+   - (f) Rows beyond §4's table, each with its own observed mutation: UB-TI1, UB-TI2, and more than one `it` in UB1, UB2, UB7 and UB9 (stages 1 and 2).
+   - (g) `buildHighlightLayers`'s drawn set holds the resident inspected id as well as the selected ones; §2.3 names the selected ids only. `countSelection` reads only the selected members (stage 2, note 1).
+   - (h) WorkingCanvas's five new props and the handle's `fitToBbox` are optional in their types, so that the base suites' stand-ins compile unedited. App calls `fitToBbox` through optional chaining (stage 3, the caller rule).
+3. **For the human (not ruled here):**
+   - (a) **OPEN-13, the canvas wiring test.** Stage 3 added `src/canvas/WorkingCanvas.wiring.test.tsx`, 345 lines and 13 tests, among them the canvas side of RB18 with the mutations Amendment 3 item 3 names. It is not in §2.7's list, and OPEN-11's terms say nothing else under `canvas/` (`state/directives/2026-10-11-open-11-a-piece-f-opens-ported-notices-required.md`, item 1). Keep it (a scope addition, class 9, with its lines an overrun, class 8), or drop it: its three commits (d708d479, 6488360f, 1de68a61) drop cleanly, and RB18's canvas side is then proven by e2e only.
+   - (b) **OPEN-14, a double-click.** deck maps both click and dblclick to onClick, and the build does not filter by type. A double-click, which is also deck's zoom gesture, reaches the click once: it inspects or toggles once, and the map zooms. The form does not say. Accept it as built, sighted at the sitting, or filter the double-click out so that it only zooms (a code change in WorkingCanvas.tsx, within B-C).
+4. **The recommended e2e:** stage 3's report recommends one e2e:regression run at 1de68a61, the only suite that exercises the changed shared canvas paths. The custodian runs it under the port-5400 harness approval.
+5. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
