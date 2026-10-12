@@ -1231,3 +1231,50 @@ Nothing above is edited.
 5. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 10 — phase B built: stages 4 to 8, the e2e results and the mutation observations (class 1), the build's deviations (class 2), and two items for the human
+
+*Written by the custodian after stages 4 to 8, the e2e runs and the mutation runs were seen, before any gate. References only.*
+- *The reports: `state/consults/2026-10-12-shell-migration-milestone-2-phase-b-worker-report-stage-4.md` to `state/consults/2026-10-12-shell-migration-milestone-2-phase-b-worker-report-stage-8.md`; the step fixes, `-stepfix-1.md` to `-stepfix-4.md` in the same folder; the diagnosis, `state/consults/2026-10-12-shell-migration-milestone-2-phase-b-e2e-diagnosis-1.md`; the point-click investigation, `state/consults/2026-10-12-shell-migration-milestone-2-phase-b-point-click-investigation.md`; the patch report, `state/consults/2026-10-12-shell-migration-milestone-2-phase-b-mutation-patches-report.md`.*
+- *The e2e records: `state/consults/2026-10-12-shell-migration-milestone-2-phase-b-e2e-custodian-run-1.md` and `state/consults/2026-10-12-shell-migration-milestone-2-phase-b-e2e-custodian-run-2.md`.*
+- *The head is 719568f8.*
+
+1. **§7, by its own command from B at 719568f8.**
+   - Phase B counts 5,644 lines. With phase A's 1,170, the piece is at 6,814 of 8,352.
+   - Every file is within its ceiling as §7 and Amendments 1, 2 and 7 add them, except Amendment 9 item 1's two.
+   - `selection.mjs` is 706 against about 750 for phase B: G-E's 650, less phase A's 100, plus AM1-E 40, AM1-X 90 and AM7-E 70. The figure of about 660 named in the stage reports left out AM1-X.
+   - FeaturePanel.tsx and clickEffect.ts, new files under `src/feature/` (§2.7), count in B-L. FeatureTab.test.tsx and ToolSwitch.test.tsx count in B-T.
+   - The two OPEN-13 files (523 lines) are outside every group until ruled.
+   - §7 is not edited.
+2. **The results (class 1).**
+   - The base suites pass at stages 3 to 7: regression, layout, console, style, publish and admission (run 1, run 2).
+   - At 719568f8, selection passes 15 of 15.
+   - Every e2e step's mutation is observed by its own step, at the commits run 2 names. E-ASK (2) is proven by RB12b, and is not observable in e2e.
+   - The point click (the investigation): the hover reads truncated pointer coordinates and the tap rounded ones. So at a fractional coordinate the tap can land one pixel off, and lose a point dot's edge. The click code is not at fault, and the e2e hover point is rounded to whole CSS pixels.
+3. **The build's deviations (class 2),** for the gates:
+   - (a) A [P6 placeholder] statement, `layout.selectInspectorTab`'s, was edited: with a third tab, the old one was untrue (§5; stage 4).
+   - (b) `matchToolKey` has the code fallback that `matchChord` has, and the count line is labelled Selected, ignoring filter (stage 4).
+   - (c) `status.selectionEnded` landed in stage 5. `Slots` keeps it optional while StudioLayout.test.tsx is pending (stage 5).
+   - (d) `countSelection`'s facts are App's own. The view's completeness is the scan's completed state (stage 5).
+   - (e) The `[admitted]` re-acquire has no App-level test that discriminates it. The reducer side is UB14's (stage 5, note 2).
+   - (f) The mode picker records no console row. §2.6's six rows name none (stage 5).
+   - (g) Commit 968ff05c's body says 21 tests. There are 18 tests with 21 observations (stage 5).
+   - (h) Beyond §4's table, each with its own observed mutation: RB7-hook; RB-SET, RB-S1 and RB-DRAWN; RB12 split into RB12a to RB12e.
+   - (i) PublishControls' `execute` is optional with a default, and RB8's mutation goes through `filterActive` (stage 6).
+   - (j) RB12b's mutation sits in `handleAdmitted`. A second `confirmOpen` answers the first as Keep. The dev hook reports a dropped open as a refusal coded `open.dropped`, because `e2e-test-surface.ts` is outside §2.7. The two late-cancel constants are exported, as Amendment 7 item 2(d) says (stage 7).
+   - (k) layout.mjs is unedited (stage 8).
+   - (l) EXPORT-TODAY, phase A's recorded observation (Amendment 4 item 2), is skipped with a printed reason: after B3, its reopen meets the ask, which E-ASK and E-ASK-STATEMENT cover.
+   - (m) The e2e steps were fixed and strengthened in four test-only commits: 9773d5c0, 2f18ad39, a6607738 and 719568f8.
+4. **For the human (not ruled here):**
+   - (a) **OPEN-13 is widened.** Amendment 9 item 3(a) put `src/canvas/WorkingCanvas.wiring.test.tsx` to the human. `src/layout/StudioLayout.test.tsx` (178 lines, 6 tests, stage 4), also outside §2.7's list, now joins it: keep (class 9, with its lines an overrun, class 8), or drop.
+   - (b) **OPEN-15, the point click's pixel rule.** §2.2 picks the tap's own rounded pixel (OPEN-1 (A)), and the hover reads the truncated one. On a display scaled to 125% or 150%, a click at a point dot's edge can then miss the feature the hover readout names. The options:
+     - (A) accept it, and state it as a KNOWN-LIMITATIONS item;
+     - (B) the tap picks the hover's truncated pixel;
+     - (C) a click on a point picks with a 1 px radius.
+
+     Recommended: (C). It is independent of how a platform rounds the pointer, and on a polygon it changes nothing. Not a red line.
+   - (c) **Item 2e:** KNOWN-LIMITATIONS items 36, 38, 40 and 41, and Part W's expected-outcome cells, are drafts for the human's words (stage 8).
+5. **Generation:** the node's generation goes up by one.
+6. **Superseded index:** Amendment 9 item 3(a), OPEN-13 → item 4(a).
+
+Nothing above is edited.
