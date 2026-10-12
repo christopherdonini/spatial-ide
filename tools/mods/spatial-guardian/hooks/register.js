@@ -18,7 +18,8 @@
 //   G7  a pull-request merge by an agent, and a history rewrite (AUTONOMY section 27; line 2 of the
 //       2026-10-05 direction; question round 57, items OPEN-1 and OPEN-2)
 //   G8  installing, enabling or configuring plugins, marketplaces and MCP servers, and a tool write to
-//       the user's Claude settings (the brief's section 2.3; question rounds 57 and 58)
+//       the user's Claude settings or to the main checkout's .claude/settings.local.json (the brief's
+//       section 2.3; question rounds 57 and 58; item 3f of the 2026-10-09 slot orders)
 //   G9  a wholesale clean of the main checkout's target, and a delete of its data folders
 //       (AI_DEVELOPMENT.md; question round 57, item OPEN-4)
 //   N1  one appended line per 5-point band from 80% of the auto-compaction threshold (or of the compaction window, when the breakdown gives no threshold), on a stale or old block
@@ -679,6 +680,21 @@ async function g8PathRefuses($, cache, norm) {
   return /^settings[^/]*\.json$/.test(rel) || G8_FOLDERS.some((folder) => rel === folder || rel.startsWith(`${folder}/`));
 }
 
+// The main checkout's local settings file, L (Amendment 7, Part A): the local scope's enable record and
+// the project's local permission settings. A call is a candidate when its placed path, or its path as
+// received (read with a slash in front), ends in the suffix; only a candidate makes a lookup. A candidate
+// is refused when its placed path is L's placed path. With no repository it passes; L that cannot be placed
+// is refused; a rejected lookup throws to the hook's catch.
+const LOCAL_SETTINGS_SUFFIX = '/.claude/settings.local.json';
+
+async function g8LocalSettingsRefuses($, cache, path, norm) {
+  if (!norm.endsWith(LOCAL_SETTINGS_SUFFIX) && !`/${normalise(path)}`.endsWith(LOCAL_SETTINGS_SUFFIX)) return false;
+  const main = await mainTree($, cache);
+  if (main === null) return false;
+  const local = await place($, `${main.replace(/[\\/]+$/, '')}${LOCAL_SETTINGS_SUFFIX}`);
+  return local === undefined || normalise(local.real) === norm;
+}
+
 // ---------------------------------------------------------------------------------------------
 // G9: the main checkout's target. The base of a segment, the operands, and the lookups they need.
 // ---------------------------------------------------------------------------------------------
@@ -1001,6 +1017,7 @@ async function decideWrite($, e, cache, kind, path) {
   if (norm.endsWith(DOCS_01_SUFFIX)) return { rule: 'G2', reason: G2_REASON };
   if (norm.includes(DIRECTIVES_SEGMENT) && (kind !== 'write' || placed.exists)) return { rule: 'G4', reason: G4_REASON };
   if (await g8PathRefuses($, cache, norm)) return { rule: 'G8', reason: G8_REASON };
+  if (await g8LocalSettingsRefuses($, cache, path, norm)) return { rule: 'G8', reason: G8_REASON };
   if (await g3Refuses($, e, kind, placed, norm)) return { rule: 'G3', reason: G3_REASON };
   return undefined;
 }

@@ -1622,3 +1622,86 @@ test('G1 allows a push in an earlier segment than an odd quote', async ($, on) =
   const probe = v1(on)
   await allPassed($, probe, F63)
 })
+
+// ---- The main checkout's local settings file (Amendment 7, Part A) ----------------------------
+
+const L = 'C:\\r\\.claude\\settings.local.json'
+
+// F64: a tool write to L, in every spelling that lands on it, a link included. The engine answers: this
+// repository at C:/r, and a file system that changes row by row.
+// RECORDED MUTATION: the candidate test reads the placed path only, not the path as received
+// (g8LocalSettingsRefuses drops its `normalise(path)` disjunct) -> OBSERVATION-T73
+test("G8 refuses a tool write to the main checkout's .claude/settings.local.json in every spelling, a link included", async ($, on) => {
+  let files: Vfs = {}
+  const probe = arm(on, { agents: [agentRow('a1', 'worker')] })
+  answerRepo(on)
+  answerStat(on, (path) => vfs(files)(path))
+  await allRefused($, probe, [L], G8_REASON, write)
+  await allRefused($, probe, ['c:/R/.Claude/Settings.Local.JSON', 'C:\\r\\x\\..\\.claude\\settings.local.json'], G8_REASON, edit)
+  await allRefused($, probe, [L], G8_REASON, notebook)
+  expect((await call($, asSubagent(write('C:/r/.claude/settings.local.json'), 'a1'))).deny).toBe(G8_REASON)
+  // The file answers ENOENT and its folder exists.
+  files = { missing: ['C:/r/.claude/settings.local.json'] }
+  await allRefused($, probe, [L], G8_REASON, write)
+  // The call's folder is a link to the repository.
+  files = { links: { 'C:/link': 'C:/r' } }
+  await allRefused($, probe, ['C:\\link\\.claude\\settings.local.json'], G8_REASON, edit)
+  // A link at L: both sides resolve to its target, and the call is a candidate by its spelling.
+  files = { links: { 'C:/r/.claude/settings.local.json': 'D:/t/s.json' } }
+  await allRefused($, probe, [L], G8_REASON, write)
+})
+
+// F65: the repository's other .claude files, another checkout's settings.local.json, and shell calls that
+// name L pass.
+// RECORDED MUTATION: the suffix test alone decides (g8LocalSettingsRefuses returns true for a candidate,
+// with L's comparison dropped) -> OBSERVATION-T74
+test("G8 allows the repository's other .claude files, another checkout's settings.local.json and shell calls that name it", async ($, on) => {
+  let repo: Repo = null
+  const probe = arm(on, {})
+  answerRepo(on, () => repo)
+  answerStat(on, vfs())
+  // The session is in no repository: a candidate passes. A found repository is remembered, so this row is first.
+  await allPassed($, probe, [L], write)
+  repo = REPO
+  await allPassed($, probe, ['C:\\r\\.claude\\settings.json'], edit)
+  await allPassed(
+    $,
+    probe,
+    [
+      'C:\\r\\.claude\\settings.local.json.bak',
+      'C:\\r\\settings.local.json',
+      'C:\\r\\.claude\\worktrees\\w\\.claude\\settings.local.json',
+      'C:\\dev\\wt\\x\\.claude\\settings.local.json',
+      'C:\\r\\docs\\.claude\\settings.local.json',
+    ],
+    write,
+  )
+  await allPassed($, probe, ['cat > C:/r/.claude/settings.local.json', 'git check-ignore -v .claude/settings.local.json'])
+})
+
+// F66: the check fails closed, and a path that is no candidate makes no lookup.
+// RECORDED MUTATION: a rejected repository lookup is read as no repository (g8LocalSettingsRefuses catches
+// the rejection of mainTree and takes null) -> OBSERVATION-T75
+test("G8's settings.local.json check fails closed and makes no lookup for any other path", async ($, on) => {
+  let files: Vfs = {}
+  let repo: Repo = 'reject'
+  let asked = 0
+  const probe = arm(on, {})
+  answerRepo(on, () => {
+    asked += 1
+    return repo
+  })
+  answerStat(on, (path) => vfs(files)(path))
+  // (b) a path that is no candidate makes no lookup, so a rejecting lookup does not matter. This row is
+  // first: a found repository is remembered, and a remembered one would hide a lookup.
+  const input = write('C:\\r\\docs\\x.md')
+  expectPassed(await call($, input), probe, input)
+  expect(asked).toBe(0)
+  // (a) the lookup rejects: the hook's catch refuses
+  expect((await call($, write(L))).deny).toBe(CATCH_REASON)
+  // (c) L cannot be placed: the candidate is refused with G8's reason
+  repo = REPO
+  files = { missing: ['C:/r/.claude'] }
+  expect((await call($, write('C:\\dev\\wt\\x\\.claude\\settings.local.json'))).deny).toBe(G8_REASON)
+  expect(probe.reached.length).toBe(1)
+})
