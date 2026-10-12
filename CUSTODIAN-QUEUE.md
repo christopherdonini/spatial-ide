@@ -1,14 +1,13 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `5f90a1f24954b7acd18fff54ff671bdd316f0b7fa31feb6eaa24757fdbac81e2`) at `2026-10-12T06:31:21.247Z`.
+Generated from `PLAN.yaml` (sha256 `ee33f6fadd2fa50dc28f00a992897443dd920227c4b52f468ba2dfd5e12627d3`) at `2026-10-12T06:40:18.288Z`.
 
 ## 1. Next
 
-- **known-limitations-current-view-stale-box** — KNOWN-LIMITATIONS: the Export panel's Current view can send an area the map no longer shows (after an Apply, a Clear or an unreported resize, until the next pan, zoom or Zoom to layer); true of the v0.1.0 artifact, with its on-main note and what to do meanwhile (lane `release`)
+- **guardian-v1** — Guardian v1 -- G1's heredoc false alarm fixed, one local log line per refusal, and three new rules: G7 (agent merges and history rewrites), G8 (plugin, marketplace and MCP installs, and writes to the user's Claude folder), G9 (wholesale cleans of the main checkout's target) (Fable's MODS-V1 brief, 2026-10-05) (lane `governance`)
 
 ## 2. Ready
 
-- **known-limitations-current-view-stale-box** — KNOWN-LIMITATIONS: the Export panel's Current view can send an area the map no longer shows (after an Apply, a Clear or an unreported resize, until the next pan, zoom or Zoom to layer); true of the v0.1.0 artifact, with its on-main note and what to do meanwhile (lane `release`, order null, budget 45 min)
 - **guardian-v1** — Guardian v1 -- G1's heredoc false alarm fixed, one local log line per refusal, and three new rules: G7 (agent merges and history rewrites), G8 (plugin, marketplace and MCP installs, and writes to the user's Claude folder), G9 (wholesale cleans of the main checkout's target) (Fable's MODS-V1 brief, 2026-10-05) (lane `governance`, order 21, budget 240 min)
 
 ## 3. Waiting on the human (total: 0 min)
@@ -31,6 +30,7 @@ Generated from `PLAN.yaml` (sha256 `5f90a1f24954b7acd18fff54ff671bdd316f0b7fa31f
 ## 5. In progress
 
 - **shell-migration-milestone-2** — Shell migration, milestone 2 -- selection and scope: the Select tool, a selection that survives filter and pan, the hidden count, a stated scope — evidence: branch `cut/shell-migration-milestone-2-phase-b`
+- **known-limitations-current-view-stale-box** — KNOWN-LIMITATIONS: the Export panel's Current view can send an area the map no longer shows (after an Apply, a Clear or an unreported resize, until the next pan, zoom or Zoom to layer); true of the v0.1.0 artifact, with its on-main note and what to do meanwhile — evidence: branch `cut/known-limitations-current-view-stale-box`
 
 ## 6. Proposed / unscheduled
 
