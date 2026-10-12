@@ -71,6 +71,8 @@ describe("FeatureTab", () => {
 
   // RECORDED MUTATION for "the pin": in FeatureTab.tsx hand over the current state (`onPin(pinned)`). Expected failure: a click on an unpinned feature's Pin hands over
   // false.
+  // OBSERVED AT f49599353db52445c07e941e326c73f0c44a8925: FAILED -- "shows the inspected feature's id line as HoverReadoutView renders it, and Pin toggles through onPin":
+  //   AssertionError: expected [ 'pin false', 'pin true' ] to deeply equal [ 'pin true', 'pin false' ]. Reverted after observing.
   it("shows the inspected feature's id line as HoverReadoutView renders it, and Pin toggles through onPin", () => {
     mount({ inspected: INSPECTED_A });
     expect(text(".feature-id")).toBe(idLine(PICK_A));
@@ -85,6 +87,8 @@ describe("FeatureTab", () => {
 
   // RECORDED MUTATION for "nothing inspected": in FeatureTab.tsx render the Pin button in the empty branch as well. Expected failure: a Pin button is present with
   // nothing to pin.
+  // OBSERVED AT f49599353db52445c07e941e326c73f0c44a8925: FAILED -- "with nothing inspected there is no id line and no Pin":
+  //   AssertionError: expected <button type="button" …(2)></button> to be null. Reverted after observing.
   it("with nothing inspected there is no id line and no Pin", () => {
     mount();
     expect(q(".feature-id")).toBeNull();
@@ -94,6 +98,8 @@ describe("FeatureTab", () => {
 
   // RECORDED MUTATION for "the drawn status": in FeatureTab.tsx show the drawn text when no status is given (`STATUS_TEXT[inspectedStatus ?? "drawn"]`, shown
   // always). Expected failure: a status shows with no current view box.
+  // OBSERVED AT f49599353db52445c07e941e326c73f0c44a8925: FAILED -- "states whether the inspected feature is drawn from the status App gives, and says nothing without one":
+  //   AssertionError: expected <p class="feature-status"></p> to be null. Reverted after observing.
   it("states whether the inspected feature is drawn from the status App gives, and says nothing without one", () => {
     mount({ inspected: INSPECTED_A, inspectedStatus: "drawn" });
     expect(text(".feature-status")).toContain("Drawn in the view");
@@ -107,6 +113,8 @@ describe("FeatureTab", () => {
 
   // RECORDED MUTATION for "the last-click line": in FeatureTab.tsx render the session-ended text for the below-resolution state. Expected failure: the
   // below-resolution line carries the session-ended text.
+  // OBSERVED AT f49599353db52445c07e941e326c73f0c44a8925: FAILED -- "the last-click line names the clicked feature, the pinned one it kept, and the two refusals in HoverReadoutView's own texts":
+  //   AssertionError: expected 'The source file changed while it was …' to be 'Features here are below pick resoluti…' // Object.is equality. Reverted after observing.
   it("the last-click line names the clicked feature, the pinned one it kept, and the two refusals in HoverReadoutView's own texts", () => {
     const line = (lastClick: LastClick | null) => {
       mount({ lastClick });
@@ -124,6 +132,8 @@ describe("FeatureTab", () => {
 
   // RECORDED MUTATION for "no hover-readout": in FeatureTab.tsx give the id line the class `hover-readout`. Expected failure: an element with that class is
   // rendered.
+  // OBSERVED AT f49599353db52445c07e941e326c73f0c44a8925: FAILED -- "never renders an element with the class hover-readout, in any state":
+  //   AssertionError: state 1: expected <div …(1)></div> to have a length of +0 but got 1. Reverted after observing.
   it("never renders an element with the class hover-readout, in any state", () => {
     const states: Partial<FeatureTabProps>[] = [
       {},
@@ -140,6 +150,8 @@ describe("FeatureTab", () => {
 
   // RECORDED MUTATION for "the counts": in FeatureTab.tsx test `counts.outsideView !== undefined` instead of `!== null`. Expected failure: a line for a split that is not
   // known is rendered.
+  // OBSERVED AT f49599353db52445c07e941e326c73f0c44a8925: FAILED -- "shows Selected, ignoring filter always, and each split only when it is known, with no reason":
+  //   AssertionError: expected <p class="feature-outside-view"></p> to be null. Reverted after observing.
   it("shows Selected, ignoring filter always, and each split only when it is known, with no reason", () => {
     mount({ counts: { selected: 3, outsideView: null, inViewNotDrawn: null, reason: null } });
     expect(text(".feature-selected")).toBe("Selected, ignoring filter: 3");
@@ -154,6 +166,8 @@ describe("FeatureTab", () => {
 
   // RECORDED MUTATION for "the buttons": in FeatureTab.tsx drop `disabled={nothingSelected}` from Zoom to selection. Expected failure: the button is enabled with an
   // empty selection.
+  // OBSERVED AT f49599353db52445c07e941e326c73f0c44a8925: FAILED -- "Zoom to selection and Clear selection are disabled while nothing is selected, and call their handler otherwise":
+  //   AssertionError: expected [ false, true ] to deeply equal [ true, true ]. Reverted after observing.
   it("Zoom to selection and Clear selection are disabled while nothing is selected, and call their handler otherwise", () => {
     mount({ counts: COUNTS_NONE });
     expect([button("Zoom to selection").disabled, button("Clear selection").disabled]).toEqual([true, true]);
@@ -166,12 +180,16 @@ describe("FeatureTab", () => {
 
   // RECORDED MUTATION for "the scope words": in FeatureTab.tsx read the words from the Clear selection entry (`clear.scopeWords`). Expected failure: the scope line
   // reads null where the plan's words were expected.
+  // OBSERVED AT f49599353db52445c07e941e326c73f0c44a8925: FAILED -- "states Zoom to selection's scope in the plan's words":
+  //   AssertionError: expected '[P6 placeholder] Zoom to selection ac…' to be '[P6 placeholder] Zoom to selection ac…' // Object.is equality. Reverted after observing.
   it("states Zoom to selection's scope in the plan's words", () => {
     mount({ counts: COUNTS_FIVE });
     expect(text(".feature-scope")).toBe("[P6 placeholder] Zoom to selection acts on: Selected, ignoring filter");
   });
 
   // RECORDED MUTATION for "the notice": in FeatureTab.tsx swap the two reasons' words in `noticeText`. Expected failure: a source change reads as an open.
+  // OBSERVED AT f49599353db52445c07e941e326c73f0c44a8925: FAILED -- "the notice names the count dropped and which of the two ended the selection, or the ceiling, and none when there is none":
+  //   AssertionError: expected '[P6 placeholder] The selection ended:…' to be '[P6 placeholder] The selection ended:…' // Object.is equality. Reverted after observing.
   it("the notice names the count dropped and which of the two ended the selection, or the ceiling, and none when there is none", () => {
     const notice = (value: SelectionNotice | null) => {
       mount({ notice: value });

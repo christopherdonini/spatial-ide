@@ -48,6 +48,8 @@ describe("ToolSwitch", () => {
 
   // RECORDED MUTATION for "the active tool": in ToolSwitch.tsx invert the pressed state (`aria-pressed={tool !== candidate}`). Expected failure:
   // Select reads pressed while Navigate is the active tool.
+  // OBSERVED AT f49599353db52445c07e941e326c73f0c44a8925: FAILED -- "shows the active tool as pressed, labelled from the registry, with the key it is chosen by":
+  //   AssertionError: expected [ 'false', 'true' ] to deeply equal [ 'true', 'false' ]. Reverted after observing.
   it("shows the active tool as pressed, labelled from the registry, with the key it is chosen by", () => {
     mount("navigate");
     const tool = buttons(".tool-switch-button");
@@ -60,6 +62,8 @@ describe("ToolSwitch", () => {
 
   // RECORDED MUTATION for "the one line per tool": in ToolSwitch.tsx's TOOLS give Navigate Select's statement (`click: "a click changes the selection, by the
   // mode."`). Expected failure: the Navigate line says a click changes the selection.
+  // OBSERVED AT f49599353db52445c07e941e326c73f0c44a8925: FAILED -- "states in one line what a click does in each tool, and each button points at its own line":
+  //   AssertionError: expected '[P6 placeholder] Navigate (N): a clic…' to contain 'Navigate (N): a click inspects the fe…'. Reverted after observing.
   it("states in one line what a click does in each tool, and each button points at its own line", () => {
     mount("navigate");
     const hints = buttons(".tool-switch-button").map((button) => container.querySelector(`#${button.getAttribute("aria-describedby")}`)?.textContent);
@@ -69,6 +73,8 @@ describe("ToolSwitch", () => {
   });
 
   // RECORDED MUTATION for "choosing a tool": in ToolSwitch.tsx call `onSelectTool` with the other tool. Expected failure: a click on Select hands over navigate.
+  // OBSERVED AT f49599353db52445c07e941e326c73f0c44a8925: FAILED -- "a click on a tool button hands that tool to onSelectTool":
+  //   AssertionError: expected [ 'navigate', 'select' ] to deeply equal [ 'select', 'navigate' ]. Reverted after observing.
   it("a click on a tool button hands that tool to onSelectTool", () => {
     mount("navigate");
     const [navigate, select] = buttons(".tool-switch-button");
@@ -79,6 +85,8 @@ describe("ToolSwitch", () => {
 
   // RECORDED MUTATION for "the mode picker": in ToolSwitch.tsx render the picker in both tools (drop the `tool === "select" &&` test). Expected failure: the
   // picker is present in Navigate.
+  // OBSERVED AT f49599353db52445c07e941e326c73f0c44a8925: FAILED -- "shows the mode picker only while Select is active, with the four approved labels":
+  //   AssertionError: expected <div …(3)>…(4)</div> to be null. Reverted after observing.
   it("shows the mode picker only while Select is active, with the four approved labels", () => {
     mount("navigate");
     expect(container.querySelector(".tool-switch-modes")).toBeNull();
@@ -88,6 +96,8 @@ describe("ToolSwitch", () => {
 
   // RECORDED MUTATION for "choosing a mode": in ToolSwitch.tsx hand over the pressed mode instead of the clicked one (`onSelectMode(mode)`). Expected failure: a click on
   // Replace hands over toggle.
+  // OBSERVED AT f49599353db52445c07e941e326c73f0c44a8925: FAILED -- "the pressed mode follows the mode, and a click on a mode hands that mode to onSelectMode":
+  //   AssertionError: expected [ 'add', 'add' ] to deeply equal [ 'replace', 'remove' ]. Reverted after observing.
   it("the pressed mode follows the mode, and a click on a mode hands that mode to onSelectMode", () => {
     mount("select", "add");
     expect(buttons(".tool-switch-mode").map((button) => button.getAttribute("aria-pressed"))).toEqual(["false", "false", "true", "false"]);

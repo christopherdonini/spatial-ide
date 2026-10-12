@@ -87,6 +87,8 @@ describe("StudioLayout: what milestone 2 adds to the frame", () => {
 
   // RECORDED MUTATION for "the top bar's tools slot": in StudioLayout.tsx move the `topBar.tools` line out of the `<header>` and into the
   // map region (`<main>`). Expected failure: the content is not inside the top bar.
+  // OBSERVED AT f49599353db52445c07e941e326c73f0c44a8925: FAILED -- "the topBar.tools slot renders inside the top bar, before the toggles, and nothing is rendered for an empty slot":
+  //   AssertionError: expected false to be true // Object.is equality. Reverted after observing.
   it("the topBar.tools slot renders inside the top bar, before the toggles, and nothing is rendered for an empty slot", () => {
     mount({});
     expect(q(".top-bar-tools")).toBeNull();
@@ -101,6 +103,8 @@ describe("StudioLayout: what milestone 2 adds to the frame", () => {
 
   // RECORDED MUTATION for "the Feature tab": in StudioLayout.tsx render `slots["inspector.style"]` in every slot tab's panel (replace
   // `slots[`inspector.${tab.id}`]` by `slots["inspector.style"]`). Expected failure: the Feature panel does not hold the Feature slot.
+  // OBSERVED AT f49599353db52445c07e941e326c73f0c44a8925: FAILED -- "the Feature tab is the Inspector's third tab; its panel holds the inspector.feature slot and is hidden until the tab is selected":
+  //   AssertionError: expected 'the style panel' to contain 'the feature panel'. Reverted after observing.
   it("the Feature tab is the Inspector's third tab; its panel holds the inspector.feature slot and is hidden until the tab is selected", () => {
     mount({ "inspector.style": <span>the style panel</span>, "inspector.feature": <span>the feature panel</span> });
     const tabs = [...container.querySelectorAll('#region-inspector [role="tab"]')];
@@ -122,6 +126,8 @@ describe("StudioLayout: what milestone 2 adds to the frame", () => {
 
   // RECORDED MUTATION for "the empty-Inspector text": in contributions.ts leave `inspector.feature` out of `INSPECTOR_SLOT_IDS` (filter
   // `INSPECTOR_SLOT_TABS` to the Style tab there). Expected failure: the text still shows with the Feature slot filled.
+  // OBSERVED AT f49599353db52445c07e941e326c73f0c44a8925: FAILED -- "the empty-Inspector text shows in every Inspector panel until any Inspector slot, the Feature slot included, has content":
+  //   AssertionError: expected <p class="inspector-empty"></p> …(2) to have a length of +0 but got 3. Reverted after observing.
   it("the empty-Inspector text shows in every Inspector panel until any Inspector slot, the Feature slot included, has content", () => {
     mount({});
     expect([...container.querySelectorAll(".inspector-empty")]).toHaveLength(3);
@@ -131,6 +137,8 @@ describe("StudioLayout: what milestone 2 adds to the frame", () => {
 
   // RECORDED MUTATION for "the tool keys": in StudioLayout.tsx swap `TOOL_OF_ACTION`'s values (`"tool.navigate": "select"`, `"tool.select": "navigate"`).
   // Expected failure: a bare N hands over select where navigate was expected.
+  // OBSERVED AT f49599353db52445c07e941e326c73f0c44a8925: FAILED -- "a bare N or S hands the tool to onSelectTool and the key is consumed":
+  //   AssertionError: expected [ 'select', 'navigate' ] to deeply equal [ 'navigate', 'select' ]. Reverted after observing.
   it("a bare N or S hands the tool to onSelectTool and the key is consumed", () => {
     mount({});
     expect(pressBare("n")).toBe(true);
@@ -140,6 +148,8 @@ describe("StudioLayout: what milestone 2 adds to the frame", () => {
 
   // RECORDED MUTATION for "the text-field guard": in StudioLayout.tsx's listener pass no element to the matcher (`matchToolKey(event, null)`). Expected
   // failure: a key typed in the input hands over a tool.
+  // OBSERVED AT f49599353db52445c07e941e326c73f0c44a8925: FAILED -- "a bare key typed in an input does nothing, whether the event lands on it or the window while it has the focus":
+  //   AssertionError: expected true to be false // Object.is equality. Reverted after observing.
   it("a bare key typed in an input does nothing, whether the event lands on it or the window while it has the focus", () => {
     mount({ "section.filter": <input data-testid="field" /> });
     const field = q<HTMLInputElement>('[data-testid="field"]')!;
@@ -158,6 +168,8 @@ describe("StudioLayout: what milestone 2 adds to the frame", () => {
 
   // RECORDED MUTATION for "a bare key with no handler": in StudioLayout.tsx's listener call `event.preventDefault()` before the `selectTool === undefined`
   // check. Expected failure: the key is consumed although nothing handles it.
+  // OBSERVED AT f49599353db52445c07e941e326c73f0c44a8925: FAILED -- "with no onSelectTool, a bare tool key is left alone":
+  //   AssertionError: expected true to be false // Object.is equality. Reverted after observing.
   it("with no onSelectTool, a bare tool key is left alone", () => {
     mount({}, false);
     expect(pressBare("n")).toBe(false);
