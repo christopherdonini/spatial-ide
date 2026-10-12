@@ -28,7 +28,8 @@ const scopeOf = (state: WorkspaceState, uses: ScopeUses = USES): ResolvedScope =
 
 // RECORDED MUTATION for "UB6": in `checkScope` (scope.ts) omit the filter comparison (delete its `if (!sameFilter(...)) changed.push("filter");`).
 // Expected failure: a changed filter is reported ok.
-// OBSERVED AT <X>: <pending>
+// OBSERVED AT feaa43d329e6d900b6ae672547569f1b591e3052: FAILED -- "names the view, the resource, the generation (session and end), the filter and the selection, each by itself":
+//   AssertionError: expected { ok: true } to deeply equal { ok: false, changed: [ 'filter' ] }. Reverted after observing.
 describe("UB6: checkScope names each of the five changes", () => {
   it("names the view, the resource, the generation (session and end), the filter and the selection, each by itself", () => {
     const staged = scopeOf(opened);
@@ -54,7 +55,8 @@ describe("UB6: checkScope names each of the five changes", () => {
 
   // RECORDED MUTATION for "UB6" (the camera): in `resolveScope` (scope.ts) add the camera to the scope
   // (`camera: null,` among the returned members). Expected failure: the scope's members are no longer exactly the five.
-  // OBSERVED AT <X>: <pending>
+  // OBSERVED AT feaa43d329e6d900b6ae672547569f1b591e3052: FAILED -- "a scope is five things and nothing else; a change of style, tool, mode or inspection is not a scope change":
+  //   AssertionError: expected [ 'camera', 'filterAsApplied', …(4) ] to deeply equal [ 'filterAsApplied', …(4) ]. Reverted after observing.
   it("a scope is five things and nothing else; a change of style, tool, mode or inspection is not a scope change", () => {
     const staged = scopeOf(opened);
     expect(Object.keys(staged).sort()).toEqual(["filterAsApplied", "generation", "resource", "selection", "view"]);
@@ -70,7 +72,8 @@ describe("UB6: checkScope names each of the five changes", () => {
 
   // RECORDED MUTATION for "UB6" (by value): in `sameFilter` (scope.ts) compare by identity only (`a === b`).
   // Expected failure: the same predicate applied again is reported as a change.
-  // OBSERVED AT <X>: <pending>
+  // OBSERVED AT feaa43d329e6d900b6ae672547569f1b591e3052: FAILED -- "applying the same filter again is not a change; clearing one is":
+  //   AssertionError: expected { ok: false, changed: [ 'filter' ] } to deeply equal { ok: true }. Reverted after observing.
   it("applying the same filter again is not a change; clearing one is", () => {
     const withFilter = run(opened, act({ action: "filter.apply", params: { filter: filterOf("a > 1") } }));
     const again = run(withFilter, act({ action: "filter.apply", params: { filter: filterOf("a > 1") } }));
@@ -81,7 +84,8 @@ describe("UB6: checkScope names each of the five changes", () => {
 
   // RECORDED MUTATION for "UB6" (no current scope): in `checkScope` (scope.ts) answer ok for a null current scope
   // (`if (current === null) return { ok: true };`). Expected failure: a view that is gone is reported ok.
-  // OBSERVED AT <X>: <pending>
+  // OBSERVED AT feaa43d329e6d900b6ae672547569f1b591e3052: FAILED -- "a view that is gone is a changed view":
+  //   AssertionError: expected { ok: true } to deeply equal { ok: false, changed: [ 'view' ] }. Reverted after observing.
   it("a view that is gone is a changed view", () => {
     expect(resolveScope(opened, "view-9", USES)).toBeNull();
     expect(checkScope(scopeOf(opened), resolveScope(opened, "view-9", USES))).toEqual({ ok: false, changed: ["view"] });
@@ -89,7 +93,8 @@ describe("UB6: checkScope names each of the five changes", () => {
 
   // RECORDED MUTATION for "UB6" (an action that does not use the selection): in `resolveScope` (scope.ts) always take the
   // selection (`selection: new Set(viewSelection(bound).keys()),`). Expected failure: the scope is not "none".
-  // OBSERVED AT <X>: <pending>
+  // OBSERVED AT feaa43d329e6d900b6ae672547569f1b591e3052: FAILED -- "an action that does not use the selection stages none, and a selection change does not refuse it":
+  //   AssertionError: expected Set{} to be 'none' // Object.is equality. Reverted after observing.
   it("an action that does not use the selection stages none, and a selection change does not refuse it", () => {
     const staged = scopeOf(opened, { selection: false });
     expect(staged.selection).toBe("none");
@@ -100,7 +105,8 @@ describe("UB6: checkScope names each of the five changes", () => {
 // RECORDED MUTATION for "UA3" (resolveScope clause): in `resolveScope` (scope.ts) read the view at `drawOrder[0]` instead of the
 // id given (`const bound = state.views[state.drawOrder[0]];`). Expected failure: after the permutation the first view resolves
 // to the second view's scope.
-// OBSERVED AT <X>: <pending>
+// OBSERVED AT feaa43d329e6d900b6ae672547569f1b591e3052: FAILED -- "each view's scope is deep-equal in either order, and is its own":
+//   AssertionError: expected { view: 'view-1', …(4) } to deeply equal { view: 'view-1', …(4) }. Reverted after observing.
 describe("UA3 (phase B clause): permuting drawOrder leaves every view's resolveScope alone", () => {
   const view = (id: ViewId, n: string, predicate: string | null) => ({
     id,

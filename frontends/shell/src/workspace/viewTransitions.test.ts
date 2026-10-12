@@ -46,6 +46,10 @@ describe("UA4: transitions are pure and typed, and a style edit is one transitio
     expect(frozen.style).toEqual(DEFAULT_STYLE_STATE);
   });
 
+  // RECORDED MUTATION for "UA4 (phase B: the union)": delete the `inspect.pin` case of `applyViewTransition` (viewTransitions.ts).
+  // Expected failure: the sample for `inspect.pin` is not applied. (The table's completeness is tsc's.)
+  // OBSERVED AT feaa43d329e6d900b6ae672547569f1b591e3052: FAILED -- "the union is exactly section 2.4's nine names, and every one of them is applied":
+  //   AssertionError: inspect.pin is applied: expected undefined to be defined. Reverted after observing.
   it("the union is exactly section 2.4's nine names, and every one of them is applied", () => {
     // `satisfies` over the union's own names is what makes this table complete: tsc fails on a missing or an extra name.
     const samples = {
@@ -88,6 +92,10 @@ describe("UA4: transitions are pure and typed, and a style edit is one transitio
 /** Tool, mode and inspection transitions (section 2.2, 2.4; Amendment 1 A5). Rows UB-TI1 and UB-TI2 are not in the form's
  * table: they cover the state the form's ViewState gains, each with its own mutation. */
 describe("UB-TI1: tool.set and mode.set set their own member, and an equal setting returns the same view", () => {
+  // RECORDED MUTATION for "UB-TI1": in `applyViewTransition`'s `tool.set` case (viewTransitions.ts) ignore the param (`return { ...view, tool: "navigate" };`).
+  // Expected failure: the tool stays navigate.
+  // OBSERVED AT feaa43d329e6d900b6ae672547569f1b591e3052: FAILED -- "sets the tool and the mode, each leaving the other alone":
+  //   AssertionError: expected 'navigate' to be 'select' // Object.is equality. Reverted after observing.
   it("sets the tool and the mode, each leaving the other alone", () => {
     const selecting = applyViewTransition(view, { action: "tool.set", params: { tool: "select" } });
     expect(viewTool(selecting)).toBe("select");
@@ -101,6 +109,10 @@ describe("UB-TI1: tool.set and mode.set set their own member, and an equal setti
 });
 
 describe("UB-TI2: inspection and its pin", () => {
+  // RECORDED MUTATION for "UB-TI2": in `applyViewTransition`'s `inspect.pin` case (viewTransitions.ts) pin without a standing feature (`const pinned = transition.params.pinned;`).
+  // Expected failure: a view with nothing inspected is pinned.
+  // OBSERVED AT feaa43d329e6d900b6ae672547569f1b591e3052: FAILED -- "stores the pick and its bounds, pins only a standing feature, and null clears and unpins":
+  //   AssertionError: nothing to pin: expected true to be false // Object.is equality. Reverted after observing.
   it("stores the pick and its bounds, pins only a standing feature, and null clears and unpins", () => {
     const a = pickOf(7n);
     const inspected = applyViewTransition(view, { action: "inspect.set", params: { pick: a, bounds: box(0, 0, 2, 2) } });

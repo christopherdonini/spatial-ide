@@ -29,7 +29,8 @@ const FACTS = { filterApplied: false, viewComplete: false };
 // RECORDED MUTATION for "UB1" (the four modes): in `applySelectionMode` (selection.ts) make toggle add only
 // (`case "toggle": return present ? { kind: "unchanged", members } : withMember(members, id, bounds);`).
 // Expected failure: toggling a present id leaves it selected.
-// OBSERVED AT <X>: <pending>
+// OBSERVED AT feaa43d329e6d900b6ae672547569f1b591e3052: FAILED -- "toggle adds an absent id and removes a present one; replace sets it alone; add only adds; remove only removes":
+//   AssertionError: toggle removes a present id: expected [ 1n, 2n ] to deeply equal [ 2n ]. Reverted after observing.
 describe("UB1: the four modes", () => {
   it("toggle adds an absent id and removes a present one; replace sets it alone; add only adds; remove only removes", () => {
     const one = members([1n, unit]);
@@ -52,7 +53,8 @@ describe("UB1: the four modes", () => {
   // RECORDED MUTATION for "UB1" (one id per feature): in `applySelectionMode` the `add` case drops its present-id shortcut
   // (`case "add": return withMember(members, id, bounds);`). Expected failure: the second click on another part of the same
   // feature replaces the bounds the first click kept.
-  // OBSERVED AT <X>: <pending>
+  // OBSERVED AT feaa43d329e6d900b6ae672547569f1b591e3052: FAILED -- "a feature clicked on two of its parts is one member and keeps the bounds it was first selected with":
+  //   AssertionError: expected { Object (xmin, ymin, ...) } to deeply equal { Object (xmin, ymin, ...) }. Reverted after observing.
   it("a feature clicked on two of its parts is one member and keeps the bounds it was first selected with", () => {
     const first = applySelectionMode(NO_MEMBERS, "add", 5n, box(0, 0, 4, 4)).members;
     const second = applySelectionMode(first, "add", 5n, box(0, 0, 2, 2));
@@ -63,7 +65,8 @@ describe("UB1: the four modes", () => {
   // RECORDED MUTATION for "UB1" (no write to the input): in `withMember` (selection.ts) add to the given map instead of a copy
   // (`(members as Map<bigint, AuthoritativeBbox>).set(id, bounds); return { kind: "changed", members };`).
   // Expected failure: the map handed in has grown.
-  // OBSERVED AT <X>: <pending>
+  // OBSERVED AT feaa43d329e6d900b6ae672547569f1b591e3052: FAILED -- "never writes to the members it is given":
+  //   AssertionError: expected [ 1n, 2n, 4n ] to deeply equal [ 1n ]. Reverted after observing.
   it("never writes to the members it is given", () => {
     const given = members([1n, unit]);
     applySelectionMode(given, "toggle", 2n, unit);
@@ -76,7 +79,8 @@ describe("UB1: the four modes", () => {
 
 // RECORDED MUTATION for "UB2": in `withMember` (selection.ts) drop the ceiling check (`if (false) {`).
 // Expected failure: the add at the ceiling is not refused.
-// OBSERVED AT <X>: <pending>
+// OBSERVED AT feaa43d329e6d900b6ae672547569f1b591e3052: FAILED -- "an add past SELECTION_MAX_FEATURES is refused with its name and the set is returned as it was":
+//   AssertionError: expected { kind: 'changed', …(1) } to deeply equal { kind: 'refused', …(2) }. Reverted after observing.
 describe("UB2: the ceiling refuses by name and leaves the set unchanged", () => {
   const full = (): SelectionMembers => {
     const m = new Map<bigint, AuthoritativeBbox>();
@@ -97,6 +101,10 @@ describe("UB2: the ceiling refuses by name and leaves the set unchanged", () => 
     expect(atCeiling.size).toBe(SELECTION_MAX_FEATURES);
   });
 
+  // RECORDED MUTATION for "UB2" (the last free place): in `withMember` (selection.ts) refuse one place early
+  // (`if (members.size + 1 >= SELECTION_MAX_FEATURES) {`). Expected failure: the add at size ceiling - 1 is refused.
+  // OBSERVED AT feaa43d329e6d900b6ae672547569f1b591e3052: FAILED -- "at the ceiling a present id, a removal and a replacement still work, and the last free place can be taken":
+  //   AssertionError: expected 9999 to be 10000 // Object.is equality. Reverted after observing.
   it("at the ceiling a present id, a removal and a replacement still work, and the last free place can be taken", () => {
     const atCeiling = full();
     expect(applySelectionMode(atCeiling, "add", 0n, unit).kind).toBe("unchanged");
@@ -108,7 +116,8 @@ describe("UB2: the ceiling refuses by name and leaves the set unchanged", () => 
 
   // RECORDED MUTATION for "UB2" (the view keeps the refusal): in `applySelection` (viewTransitions.ts) return the view
   // unchanged on a refusal (`if (outcome.kind === "refused") return view;`). Expected failure: no refused notice stands.
-  // OBSERVED AT <X>: <pending>
+  // OBSERVED AT feaa43d329e6d900b6ae672547569f1b591e3052: FAILED -- "through the transition, the members stay, a refused notice stands, and the next selection transition clears it":
+  //   AssertionError: expected null to deeply equal { kind: 'refused', refusal: { …(3) } }. Reverted after observing.
   it("through the transition, the members stay, a refused notice stands, and the next selection transition clears it", () => {
     const base: ViewState = { id: "view-1", resource: "ds_a", filter: null, style: DEFAULT_STYLE_STATE, selection: full() };
     const refused = applyViewTransition(base, {
@@ -139,7 +148,8 @@ describe("UB3: counts by reason", () => {
   // RECORDED MUTATION for "UB3": in `countSelection` (selection.ts) produce the filter reason when a filter is applied and
   // the view is reported complete (`reason: _facts.filterApplied && _facts.viewComplete ? "excluded by the filter" : null`).
   // Expected failure: the reason is not null where the facts are the ones that would show it.
-  // OBSERVED AT <X>: <pending>
+  // OBSERVED AT feaa43d329e6d900b6ae672547569f1b591e3052: FAILED -- "outside the view from the kept bounds, in the view and not drawn, Selected ignoring the filter, and never a reason":
+  //   AssertionError: expected { selected: 5, outsideView: 2, …(2) } to deeply equal { selected: 5, outsideView: 2, …(2) }. Reverted after observing.
   it("outside the view from the kept bounds, in the view and not drawn, Selected ignoring the filter, and never a reason", () => {
     for (const facts of [FACTS, { filterApplied: true, viewComplete: false }, { filterApplied: true, viewComplete: true }]) {
       expect(countSelection(held, view, drawn, facts)).toEqual({ selected: 5, outsideView: 2, inViewNotDrawn: 2, reason: null });
@@ -150,7 +160,8 @@ describe("UB3: counts by reason", () => {
   // RECORDED MUTATION for "UB3-b": in `countSelection` (selection.ts) read a null view box as containing every member
   // (`if (viewBox === null) return { selected: members.size, outsideView: 0, inViewNotDrawn: [...members.keys()].filter((i) => !drawn.has(i)).length, reason: null };`).
   // Expected failure: the null box gives a split.
-  // OBSERVED AT <X>: <pending>
+  // OBSERVED AT feaa43d329e6d900b6ae672547569f1b591e3052: FAILED -- "with no current view box there is no split and no reason: Selected only":
+  //   AssertionError: expected { selected: 5, outsideView: +0, …(2) } to deeply equal { Object (selected, outsideView, ...) }. Reverted after observing.
   it("with no current view box there is no split and no reason: Selected only", () => {
     expect(countSelection(held, null, drawn, { filterApplied: true, viewComplete: true })).toEqual({
       selected: 5,
@@ -179,7 +190,8 @@ describe("UB4: the end of a generation ends the selection", () => {
 
   // RECORDED MUTATION for "UB4" (source change): in `endGeneration` (workspaceState.ts) leave the views as they are
   // (`if (views[id].resource === key) views[id] = views[id];`). Expected failure: the selection is still two members.
-  // OBSERVED AT <X>: <pending>
+  // OBSERVED AT feaa43d329e6d900b6ae672547569f1b591e3052: FAILED -- "a source change ends the selection with the count dropped and the reason, clears and unpins the inspected feature, once":
+  //   AssertionError: expected 2 to be +0 // Object.is equality. Reverted after observing.
   it("a source change ends the selection with the count dropped and the reason, clears and unpins the inspected feature, once", () => {
     const ended = run(standing(), { type: "resource.generationEnded", resource: "ds_a" });
     const view = ended.views["view-1"];
@@ -193,7 +205,8 @@ describe("UB4: the end of a generation ends the selection", () => {
 
   // RECORDED MUTATION for "UB4" (rebind): in `admit` (workspaceState.ts) carry the members across the rebind
   // (`const bound = view;`). Expected failure: the reopened view still holds its two members.
-  // OBSERVED AT <X>: <pending>
+  // OBSERVED AT feaa43d329e6d900b6ae672547569f1b591e3052: FAILED -- "a reopen ends the selection with the count dropped and the reason reopened, whatever was open before":
+  //   AssertionError: expected 2 to be +0 // Object.is equality. Reverted after observing.
   it("a reopen ends the selection with the count dropped and the reason reopened, whatever was open before", () => {
     const reopened = run(standing(), { type: "resource.admitted", admitted: admittedOf("b") });
     const view = reopened.views["view-1"];
@@ -207,7 +220,8 @@ describe("UB4: the end of a generation ends the selection", () => {
   // RECORDED MUTATION for "UB4" (none when empty): in `applyViewTransition`'s `selection.end` case (viewTransitions.ts)
   // always build the notice (`const notice = { kind: "ended", reason, dropped };`). Expected failure: an empty selection
   // leaves a notice of 0 dropped.
-  // OBSERVED AT <X>: <pending>
+  // OBSERVED AT feaa43d329e6d900b6ae672547569f1b591e3052: FAILED -- "with nothing selected there is no notice, and a reopen clears the notice a source change left":
+  //   AssertionError: expected { kind: 'ended', …(2) } to be null. Reverted after observing.
   it("with nothing selected there is no notice, and a reopen clears the notice a source change left", () => {
     const empty = run(initialWorkspaceState, { type: "resource.admitted", admitted: admittedOf("a") });
     const sourceChanged = run(empty, { type: "resource.generationEnded", resource: "ds_a" });
@@ -234,7 +248,8 @@ describe("UB5: nothing but a selection transition or a generation end touches th
   // RECORDED MUTATION for "UB5": in `applyViewTransition`'s `filter.apply` case (viewTransitions.ts) clear the selection
   // (`return { ...view, filter: transition.params.filter, selection: NO_MEMBERS };`). Expected failure: the members are gone
   // after the filter is applied.
-  // OBSERVED AT <X>: <pending>
+  // OBSERVED AT feaa43d329e6d900b6ae672547569f1b591e3052: FAILED -- "filter.apply, style.set, tool.set, mode.set and the inspection leave the members as they were":
+  //   AssertionError: filter.apply: expected Map{} to be Map{ 1n => { xmin: +0, …(3) }, …(1) } // Object.is equality. Reverted after observing.
   it("filter.apply, style.set, tool.set, mode.set and the inspection leave the members as they were", () => {
     const transitions: ViewTransition[] = [
       { action: "filter.apply", params: { filter } },
@@ -254,9 +269,10 @@ describe("UB5: nothing but a selection transition or a generation end touches th
   });
 
   // RECORDED MUTATION for "UB5" (a view-box change): in `countSelection` (selection.ts) delete the outside members from the
-  // map it was given (`for (const id of [...members.keys()]) if (!bboxesMeet(members.get(id)!, viewBox)) (members as Map<bigint, AuthoritativeBbox>).delete(id);`
-  // before counting). Expected failure: a panned-away box leaves the selection smaller.
-  // OBSERVED AT <X>: <pending>
+  // map it was given (`for (const [id, b] of [...members]) if (!bboxesMeet(b, viewBox)) (members as Map<bigint, AuthoritativeBbox>).delete(id);`
+  // as the first statement after the null-box return). Expected failure: a panned-away box leaves the selection smaller.
+  // OBSERVED AT feaa43d329e6d900b6ae672547569f1b591e3052: FAILED -- "counting against another view box, and back, leaves the members and their count unchanged":
+  //   AssertionError: expected { selected: +0, outsideView: +0, …(2) } to deeply equal { selected: 2, outsideView: 2, …(2) }. Reverted after observing.
   it("counting against another view box, and back, leaves the members and their count unchanged", () => {
     const held = view.selection as SelectionMembers;
     const near = countSelection(held, box(0, 0, 2, 2), new Set(), FACTS);
