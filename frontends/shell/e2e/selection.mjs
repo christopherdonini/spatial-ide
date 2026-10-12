@@ -11,7 +11,7 @@
 // has no barrier of its own and never takes a first poll (section 8 item 32). The Feature tab, the tool switch and the status bar item are read from the
 // real DOM; the highlight is read from the drawing buffer (`capturePixels`: the highlight outlines are alpha 255, the data fill is not).
 //
-// EXPORT-TODAY (phase A) follows, unchanged: it RECORDS what happens when a dataset is replaced while an export runs, and asserts nothing
+// EXPORT-TODAY (phase A) is SKIPPED since B3 (the body below is unused; see the SKIP line in main): it RECORDS what happens when a dataset is replaced while an export runs, and asserts nothing
 // (Amendment 1, A7). It starts a whole-file export of the 100k fixture through the real dialog (the prepare through the dev destination seam, as
 // publish.mjs does; the phrase typed and Submit clicked as an operator would), reopens another fixture at once, and prints the panel, the host outcome
 // and any export text before, after the open and after the export settles. If the export had already settled when the open returned, the record says so
@@ -227,7 +227,9 @@ async function hoverHits(page, label, want, distinct) {
     for (const fy of flipY === null ? [true, false] : [flipY]) {
       if (tried >= HOVER_ATTEMPTS_MAX) break search;
       tried += 1;
-      const css = bufferPointToCss(point, rect, bw, bh, fy);
+      // A real mouse at 100% scaling gives whole CSS pixels, and Hammer rounds the tap, so hover and tap read one pixel only at whole coordinates.
+      const exact = bufferPointToCss(point, rect, bw, bh, fy);
+      const css = { x: Math.round(exact.x), y: Math.round(exact.y) };
       const result = await hoverIdAfterBarrier(page, css, label);
       if (result.last.state === "refusal") return { hits, rect, tried, refusedAt: css };
       if (!result.ok) continue;
@@ -685,6 +687,8 @@ async function main() {
       console.error(`[selection] harness failure: ${e.stack ?? e.message}`);
       process.exitCode = 1;
     });
+    console.log("[EXPORT-TODAY] SKIP: phase A's recorded observation (the form's Amendment 4 item 2); after B3 the reopen meets the open-during-export ask, which E-ASK and E-ASK-STATEMENT cover.");
+    if (process.env.SELECTION_EXPORT_TODAY === "1") {
     const opened = await page.evaluate((p) => window.__SPATIAL_E2E__.openPath(p), FIXTURE_100K);
     if (opened.kind !== "admitted") throw new Error(`EXPORT-TODAY: openPath(100k) returned ${JSON.stringify(opened)}`);
     for (let i = 0; i < 100 && !(await page.evaluate(() => typeof window.__SPATIAL_E2E__?.publishPrepareWithDestination === "function")); i += 1) await sleep(200);
@@ -706,6 +710,7 @@ async function main() {
     const host = { bundleDirExists: existsSync(destination), audit: auditRecords(basename(parent)) };
     const verdict = duringExport.executing === null ? "inconclusive: the export was not executing when the open began" : "the export was executing when the open began; compare openReturnedAt with the outcome time in host.audit (whole seconds), and read afterOpen, afterWait and host";
     console.log(`[EXPORT-TODAY] OBSERVED (recorded, not asserted; fresh launch: ${launched}): ${JSON.stringify({ reopened: reopened.kind, openCalledAt, openReturnedAt, duringExport, afterOpen, afterWait, host, verdict }, null, 2)}`);
+    }
   } catch (e) {
     console.error(`[EXPORT-TODAY] harness failure: ${e.stack ?? e.message}`);
     process.exitCode = 1;
