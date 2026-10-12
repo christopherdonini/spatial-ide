@@ -1109,8 +1109,11 @@ export default function App() {
   /** The open waiting on the ask: its answer, and the runs that stood when it was asked or were reported while it stands. */
   const askRef = useRef<{ answer: (go: boolean) => void; runs: readonly ExportRun[] } | null>(null);
   const [asking, setAsking] = useState(false);
-  /** The late-cancel statement's outcome. It stands until the next `confirmOpen` call or the next export report, and has no timer. */
-  const [lateCancel, setLateCancel] = useState<FinishedOutcome | null>(null);
+  /**
+   * The late-cancel statements' outcomes, one for each run decided, in the order they were decided. They stand until the next `confirmOpen` call or the next export report, and have no timer.
+   * A run marked at an earlier choice that ends in a bundle while a later ask stands shows its statements, and an export report during that ask ends them before the next choice; that bundle needs the earlier cancel to land after the kernel's last cancel check, a window OpenDuringExportAsk.tsx's constants comment names as shorter than one request round trip.
+   */
+  const [lateCancel, setLateCancel] = useState<readonly FinishedOutcome[]>([]);
 
   const handleExportRunning = useCallback((report: ExportRunReport): void => {
     const resource = admittedDatasetRef.current;
@@ -1120,12 +1123,12 @@ export default function App() {
     exportRunsRef.current.set(id, run);
     // A run reported while the ask stands belongs to the ask: if it ends before the choice it leaves `exportRunsRef`, and the choice would otherwise never see it.
     if (askRef.current !== null) askRef.current = { ...askRef.current, runs: [...askRef.current.runs, run] };
-    setLateCancel(null);
+    setLateCancel([]);
     dispatch({ type: "consumer.acquired", resource, consumer: id });
     void report.ended.then((end) => {
       run.end = end;
       const finished = lateCancelOutcome(run.cancelChosen, end);
-      if (finished !== null) setLateCancel(finished);
+      if (finished !== null) setLateCancel((shown) => [...shown, finished]);
       exportRunsRef.current.delete(id);
       dispatch({ type: "consumer.released", resource, consumer: id });
     });
@@ -1133,7 +1136,7 @@ export default function App() {
 
   /** AdmissionPanel's `confirmOpen`: true at once with no run standing; otherwise the ask, whose answer is the choice. A second call drops the first ask (Keep). */
   const confirmOpen = useCallback((): Promise<boolean> => {
-    setLateCancel(null);
+    setLateCancel([]);
     askRef.current?.answer(false);
     askRef.current = null;
     if (exportRunsRef.current.size === 0) {
@@ -1154,12 +1157,12 @@ export default function App() {
     setAsking(false);
     recordNamed("gui-action", "dataset.openDuringExport");
     if (cancelAndGo) {
-      // The ask's runs and the runs standing now: an execute that started after the ask appeared (the dialog stays usable) is a run too.
+      // The ask's runs and the runs standing now. A run reported while the ask stands is added to the ask (handleExportRunning), so the runs standing add none; the union is kept and changes nothing.
       for (const run of new Set([...ask.runs, ...exportRunsRef.current.values()])) {
         run.cancelChosen = true;
         // A run that ended while the ask stood is decided at the choice; one that has not is decided when it ends.
         const finished = lateCancelOutcome(true, run.end);
-        if (finished !== null) setLateCancel(finished);
+        if (finished !== null) setLateCancel((shown) => [...shown, finished]);
         void run.cancel().catch(() => {});
       }
     }
@@ -1906,7 +1909,9 @@ export default function App() {
           <>
             <AdmissionPanel onAdmitted={handleAdmitted} confirmOpen={confirmOpen} />
             {asking && <OpenDuringExportAsk onKeep={() => answerOpenAsk(false)} onCancelAndGo={() => answerOpenAsk(true)} />}
-            {lateCancel !== null && <LateCancelStatement outcome={lateCancel} />}
+            {lateCancel.map((outcome, index) => (
+              <LateCancelStatement key={index} outcome={outcome} />
+            ))}
           </>
         ),
         /* Entry 120 (2) / OPEN-1 (A), question round 66, item 1: the summary binds to the dataset on the

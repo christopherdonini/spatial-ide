@@ -1009,10 +1009,13 @@ describe("App: tools, the click, the selection and the inspection (milestone 2, 
   // Expected failure: the cancels list, which lacks the execute's key.
   // OBSERVED AT b258dff0620ea5e46a6a53856b8c70d4c0ce8781: FAILED -- "RB12g: Cancel the export and go on cancels an execute that started after the ask appeared, once, and the statement follows its outcome": AssertionError: the prepare's key and the execute's key,
   // once each: expected [ Array(1) ] to deeply equal [ …(2) ]. Reverted after observing.
+  // AT f64418bcc7eee2d0f418bd59f8c00c9554f2c04b (PR 217 gate 3) this mutation survives (28 of 28 pass): since d245975c a run reported while the ask stands is added to the ask's runs, so they hold every run the choice acts on. With that line also removed, RB12g fails as observed above.
   // RECORDED MUTATION for "RB12g" pass 3 (the reviewer's C1-R, gate 2 of PR 217): in `handleExportRunning` (App.tsx) remove the line that adds the run to the standing ask (`if (askRef.current !== null) askRef.current = { ...askRef.current, runs: [...askRef.current.runs, run] };`).
   // Expected failure: pass 3's statement is null, because the execute ended before the choice and is in neither the ask's runs nor the runs standing.
   // OBSERVED AT d245975c9511a6336bea4867c3b15c4d4e833a04: FAILED -- "RB12g: Cancel the export and go on cancels an execute that started after the ask appeared, once, and the statement follows its outcome": AssertionError: pass 3: decided at the choice, the statement names the bundle
   // the finished execute gave: expected null to be 'C:/out/g3'. The file's other 27 tests passed. Reverted after observing.
+  // RECORDED MUTATION for "RB12g" pass 4 (the reviewer's C1, gate 3 of PR 217): in `answerOpenAsk` (App.tsx) replace the append at the choice with a single slot (`setLateCancel((shown) => [...shown, finished]);` becomes `setLateCancel([finished]);`).
+  // Expected failure: pass 4's statement paths, which hold the second bundle only.
   it("RB12g: Cancel the export and go on cancels an execute that started after the ask appeared, once, and the statement follows its outcome", async () => {
     const statement = () => text(".late-cancel-path");
     /** The ask appears over a prepare run; the prepare ends into the approval prompt; the phrase is submitted, so that an execute starts; then the choice is made. */
@@ -1071,5 +1074,43 @@ describe("App: tools, the click, the selection and the inspection (milestone 2, 
     expect(statement(), "pass 3: decided at the choice, the statement names the bundle the finished execute gave").toBe("C:/out/g3");
     expect(mocks.publish.cancels.slice(cancelsBefore), "pass 3: the prepare's key and the execute's key, once each").toEqual([prepareCancelKey(handle), "at_g3"]);
     expect(closes(handle), "pass 3: the old handle is closed once").toBe(1);
+
+    // Pass 4 (the reviewer's C1, gate 3 of PR 217): two executes finish while one ask stands, and the choice is made after both. Each is decided at the choice, and each gets its statement.
+    const handle4 = handleOf(4);
+    const executesBefore = mocks.publish.executes.length;
+    const prepare4 = deferred<import("./publish/types").PrepareOutcome>();
+    mocks.publish.pendingPrepare = prepare4.promise;
+    click(q(".publish-disclosure"));
+    await prepareExport();
+    await startOpen("C:/data/e.parquet");
+    expect(q(ASK), "pass 4: the ask shows over the prepare run").not.toBeNull();
+    await endRun(prepare4, { status: "prompt", attempt_id: "at_g4a", prompt: promptFixture() });
+    mocks.publish.pendingPrepare = null;
+    mocks.publish.pendingExecute = Promise.resolve(success("C:/out/first"));
+    await submitExport();
+    expect(shown(".publish-summary-headline"), "pass 4: the first execute finished while the ask stands").toBe("Exported.");
+    expect(q(ASK), "pass 4: the ask still stands").not.toBeNull();
+    mocks.publish.pendingExecute = Promise.resolve(success("C:/out/second"));
+    await prepareExport();
+    await submitExport();
+    expect(q(ASK), "pass 4: the ask still stands after the second execute").not.toBeNull();
+    expect(q(".late-cancel-statement"), "pass 4: no choice, no statement").toBeNull();
+    const executeKeys = mocks.publish.executes.slice(executesBefore).map((args) => args[0]);
+    expect(executeKeys, "pass 4: two executes started while the ask stood").toEqual(["at_g4a", `at_${mocks.publish.prepares.length}`]);
+
+    const cancelsBefore4 = mocks.publish.cancels.length;
+    click(q(".open-during-export-cancel"));
+    expect(await finishOpen()).toEqual({ kind: "admitted" });
+    expect([...container.querySelectorAll(".late-cancel-path")].map((element) => element.textContent), "pass 4: one statement for each bundle, in the order decided").toEqual([
+      "C:/out/first",
+      "C:/out/second",
+    ]);
+    expect(mocks.publish.cancels.slice(cancelsBefore4), "pass 4: each run's key, once each (the two prepare runs share the handle's key)").toEqual([
+      prepareCancelKey(handle4),
+      "at_g4a",
+      prepareCancelKey(handle4),
+      executeKeys[1],
+    ]);
+    expect(closes(handle4), "pass 4: the old handle is closed once").toBe(1);
   });
 });
