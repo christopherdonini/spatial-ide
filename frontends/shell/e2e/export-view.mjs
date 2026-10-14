@@ -90,7 +90,8 @@ async function applyAndRefit(page, consoleHandle, predicate, label) {
 async function stepOpen(page, consoleHandle) {
   const opened = await page.evaluate((p) => window.__SPATIAL_E2E__.openPath(p), FIXTURE);
   expect(opened.kind === "admitted", `E-CV-OPEN: openPath returned ${JSON.stringify(opened)}`);
-  const drawn = await pollUntil(() => page.evaluate(async () => (await window.__SPATIAL_E2E__.capturePixels([])).nonBackgroundCount), (n) => n > 0, RESIDENT_TIMEOUT_MS);
+  // capturePixels is registered when the canvas mounts, after the open is admitted: until the hook exists, nothing is drawn yet.
+  const drawn = await pollUntil(() => page.evaluate(async () => (typeof window.__SPATIAL_E2E__?.capturePixels === "function" ? (await window.__SPATIAL_E2E__.capturePixels([])).nonBackgroundCount : 0)), (n) => n > 0, RESIDENT_TIMEOUT_MS);
   expect(drawn.ok, "E-CV-OPEN: no pixel was drawn after the open");
   await waitForSettle(() => consoleHandle.renderTrace(), SETTLE);
   await openExportSection(page);

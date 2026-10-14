@@ -66,7 +66,7 @@ export function currentViewOptionDisabled(viewAvailable: boolean): boolean {
   return !viewAvailable;
 }
 
-/** Why "Current view" is disabled (the form's section 2.4, OPEN-1 (a)). A P6 placeholder: the architect's draft, awaiting the human's word, at Y4 at the latest. */
+/** Why "Current view" is disabled (the form's section 2.4, OPEN-1 (a)). These words are the human's, approved on 2026-10-14 (the form's Amendment 4, item 3). */
 export const CURRENT_VIEW_DISABLED_REASON =
   "Not available yet — the map has not drawn this file's data. Pan or zoom the map, or choose Whole dataset.";
 
