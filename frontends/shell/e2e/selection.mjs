@@ -738,7 +738,7 @@ async function stepAskTwo(page, consoleHandle) {
   return `two statements, ${bundles.join(" then ")}, both manifests on disk; filter-zoned was admitted`;
 }
 
-/** E-STATUS-HEIGHT (SHELL-STATUS-BAR-ONE-HEIGHT-PREREGISTRATION.md Amendment 1): the status bar keeps one height, so the ended-selection notice coming (a second line) and going never changes the canvas's size. */
+/** E-STATUS-HEIGHT (SHELL-STATUS-BAR-ONE-HEIGHT-PREREGISTRATION.md Amendment 1; its window, Amendment 3): the status bar keeps one height, so the ended-selection notice coming (a second line) and going never changes the canvas's size. `stepStatusHeight` below runs this body at a window of 880 x 800 set over CDP and restores the window after. */
 async function stepStatusHeightAt880(page, consoleHandle) {
   const read = async () => {
     const canvas = await canvasRect(page);

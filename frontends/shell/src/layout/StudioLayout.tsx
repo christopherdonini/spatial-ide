@@ -44,7 +44,7 @@ import { LayersRow, SectionHeading, Splitter, TabList } from "./regionParts";
  * recorded are the class-C rows of §2.6, and this is the one layout file that imports `recordNamed`.
  *
  * The status bar's grid row and its height are one value, `STATUS_BAR_HEIGHT_PX`
- * (SHELL-STATUS-BAR-ONE-HEIGHT-PREREGISTRATION.md §2.4), so a status item coming or going never changes the map's size.
+ * (SHELL-STATUS-BAR-ONE-HEIGHT-PREREGISTRATION.md Amendment 1, §2.4 (d)), so a status item coming or going never changes the map's size.
  */
 
 const REGION_ID: Record<SideRegion, string> = {
