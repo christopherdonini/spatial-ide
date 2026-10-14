@@ -501,7 +501,7 @@ fn the_two_format_rule_routes_are_distinguishable_on_the_envelope() {
 // ---- Brief A P2: the coordinate unit, and the geographic-degrees instance ------------------
 //
 // `ADMISSION-PREREGISTRATION.md` §14 item I fixes what is read and what the unreadable cases
-// record; the proposed ADR-013 Amendment 1 (§2, and its block-on-sight 2 and 8) is the rule these
+// record; ADR-013 Amendment 1 (Accepted; its items 2 and 4) is the rule these
 // assertions serve. Nothing below transforms a coordinate, and every envelope assertion checks
 // that `axis_normalization` is still `none-performed`.
 
@@ -696,8 +696,8 @@ fn the_format_default_admission_records_degrees_sourced_from_the_pinned_rule() {
 
 /// **(g)** The identifier is not a unit source. Two files whose definitions differ **only** in
 /// their `id` member — one OGC:CRS84, one EPSG:2056, the identifier of a metre CRS — record the
-/// same unit and give the same answer to the predicate (the proposed ADR-013 Amendment 1's
-/// block-on-sight 8; `docs/05`: never a name-string comparison).
+/// same unit and give the same answer to the predicate (ADR-013 Amendment 1's
+/// item 2, Accepted; `docs/05`: never a name-string comparison).
 #[test]
 fn an_identifier_only_change_does_not_flip_the_instance_predicate() {
     let as_crs84 = write(
@@ -759,7 +759,7 @@ fn an_identifier_only_change_does_not_flip_the_instance_predicate() {
 /// The human's ruling of 2026-09-11 (DECISIONS-PENDING entry 81 = "(b), unit:format-rule beside
 /// unit:definition") added a second source; it did not merge the two, and it did not make the
 /// identifier one. A reader of a record must still be able to tell a declared-degrees file from a
-/// rule-defaulted one — the "Consequences" of the proposed ADR-013 Amendment 1's clarification of
+/// rule-defaulted one — the "Consequences" of ADR-013 Amendment 1's clarification of
 /// the same date.
 #[test]
 fn a_declared_definition_records_the_definition_source_and_never_the_rule() {
@@ -837,8 +837,9 @@ fn a_declared_definition_records_the_definition_source_and_never_the_rule() {
 }
 
 /// The human's display-convention sentence, held once and **verbatim**. The literal is written out
-/// here so the two texts are compared mechanically rather than by eye (the proposed ADR-013
-/// Amendment 1's block-on-sight 2: never paraphrased, shortened or reworded).
+/// here so the two texts are compared mechanically rather than by eye (ADR-013
+/// Amendment 1 item 4, Accepted, states it in the human's words: never paraphrased, shortened or
+/// reworded).
 ///
 /// The two surfaces that must carry it — the shell's own status at open, and `describe` — are P3's
 /// and the cut's. This engine-side piece holds the sentence and consumes it nowhere, which is what
