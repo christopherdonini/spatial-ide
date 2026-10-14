@@ -89,9 +89,8 @@ export type ExecuteOutcome =
 /** `PublishScope` (`publish.rs`, `#[serde(tag = "kind", rename_all = "kebab-case")]`) -- exactly
  * the two ADR-017 §8 shapes `binding_publish_prepare` admits, and nothing else (the conditional
  * block's point 2). `bbox` carries plain `f64`s (see this file's own top comment), never SKP's
- * `HexF64` wire encoding -- `resolvePublishScope` (`PublishPanel.tsx`) is what decodes the SKP-wire
- * viewport bbox this shell already tracks (`App.tsx`'s `lastViewportBboxRef`, `HexF64`-encoded)
- * back to plain numbers before it ever reaches this type. */
+ * `HexF64` wire encoding -- `resolvePublishScope` (`PublishPanel.tsx`) builds it from the view box the map
+ * shows (`App.tsx`'s `viewBox`), whose numbers are plain `f64`s already. */
 export type PublishScopeInput =
   | { kind: "whole-file" }
   | { kind: "viewport-bbox"; bbox: { xmin: number; ymin: number; xmax: number; ymax: number } };

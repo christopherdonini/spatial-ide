@@ -127,8 +127,8 @@ impl PublishScope {
                 "row scope: the whole file — every row the dataset contains".to_string()
             }
             Self::ViewportBbox { bbox } => format!(
-                "row scope: the current viewport extent only (xmin {}, ymin {}, xmax {}, ymax {}) \
-                 — not the whole file",
+                "row scope: the map's extent when Export interactive map… was clicked \
+                 (xmin {}, ymin {}, xmax {}, ymax {}) — not the whole file",
                 bbox.xmin, bbox.ymin, bbox.xmax, bbox.ymax
             ),
         }
@@ -1616,6 +1616,28 @@ mod tests {
         "outline_width": {"literal": 1.0}
       }
     }"##;
+
+    /// PRS (`frontends/shell/EXPORT-CURRENT-VIEW-AFTER-UNREPORTED-FIT-PREREGISTRATION.md`, Amendment 1 item 2): the
+    /// Row scope sentence of a `ViewportBbox` scope is the human's typed words, byte for byte, with the four numbers
+    /// in the order the sentence names them (xmin, ymin, xmax, ymax).
+    ///
+    /// RECORDED MUTATION: restore the old words in `row_scope_sentence`'s `ViewportBbox` arm. Observed at
+    /// 304ba2495dc7d4792ee9e104e146dfbc84b0a4b4: this test FAILED by name at its `assert_eq!` (left: "row scope: the current viewport extent only (xmin 2683000.5, ...", right: the human's sentence). Reverted.
+    #[test]
+    fn the_viewport_bbox_row_scope_sentence_is_the_humans_words_with_the_four_numbers() {
+        let scope = PublishScope::ViewportBbox {
+            bbox: JsBbox {
+                xmin: 2683000.5,
+                ymin: 1248000.25,
+                xmax: 2684000.5,
+                ymax: 1249000.25,
+            },
+        };
+        assert_eq!(
+            scope.row_scope_sentence(),
+            "row scope: the map's extent when Export interactive map… was clicked (xmin 2683000.5, ymin 1248000.25, xmax 2684000.5, ymax 1249000.25) — not the whole file"
+        );
+    }
 
     /// Serializes the `SPATIAL_IDE_AUDIT_LOG` set-var/run/read window, the same discipline
     /// `kernel/tests/permission_boundary.rs` documents for the identical hazard.

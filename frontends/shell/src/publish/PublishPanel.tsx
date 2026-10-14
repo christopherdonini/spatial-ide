@@ -1,14 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 import RefusalBlock from "../admission/RefusalBlock";
 import type { FormattedRefusal } from "../admission/formatRefusal";
+import type { AuthoritativeBbox } from "../canvas/viewportBbox";
 import { recordNamed } from "../console/recorder";
 import { registerE2eHook, unregisterE2eHook } from "../e2e-test-surface";
-import { decodeHexF64 } from "../skp/codec";
-import type { Bbox } from "../skp/types";
 import type { StyleState } from "../style/document";
 import { toStyleDocument } from "../style/document";
 import type { ResolvedScope, ScopeChange, ScopeCheck } from "../workspace/scope";
@@ -60,35 +59,37 @@ function scopeChangedOutcome(changed: readonly ScopeChange[]): ExecuteOutcome {
 
 /**
  * Whether "Current view" may be chosen (`NEXT-CUT.md` P3 item 3: "if null -- no settled view yet
- * -- disable the option with a visible reason"). Pure over the boolean `App.tsx` already tracks
- * (`hasSettledView`), not the ref itself -- a `useRef` has no meaningful value to a pure test, and
- * the render-time decision only ever needs "has one ever arrived", never the bbox's own contents.
+ * -- disable the option with a visible reason"). Pure over the boolean the panel derives from the
+ * view box (`getViewBox() !== null`): the option needs a box the map shows, and its contents are not read.
  */
-export function currentViewOptionDisabled(hasSettledView: boolean): boolean {
-  return !hasSettledView;
+export function currentViewOptionDisabled(viewAvailable: boolean): boolean {
+  return !viewAvailable;
 }
 
+/** Why "Current view" is disabled (the form's section 2.4, OPEN-1 (a)). These words are the human's, approved on 2026-10-14 (the form's Amendment 4, item 3). */
+export const CURRENT_VIEW_DISABLED_REASON =
+  "Not available yet — the map has not drawn this file's data. Pan or zoom the map, or choose Whole dataset.";
+
 /**
- * Builds the wire-shape `PublishScope` `binding_publish_prepare` expects, decoding the SKP-wire
- * (`HexF64`-encoded) viewport bbox this shell already tracks (`App.tsx`'s `lastViewportBboxRef`)
- * back to plain `f64` -- `publish.rs`'s own module docs: this is a binding-local command, not SKP,
+ * Builds the wire-shape `PublishScope` `binding_publish_prepare` expects from the view box (`App.tsx`'s `viewBox`):
+ * its numbers are plain `f64`s already, nothing is decoded -- `publish.rs`'s own module docs: this is a binding-local command, not SKP,
  * so its `JsBbox` carries plain numbers, never SKP's wire encoding.
  *
- * Returns `null` when `"current"` is chosen but no settled view exists yet -- the disabled
+ * Returns `null` when `"current"` is chosen but there is no view box -- the disabled
  * option's own boundary case, defended here too even though the real Publish button is already
  * disabled by `currentViewOptionDisabled` (never trust a UI-level guard as the only guard, this
  * codebase's own recurring discipline).
  */
-export function resolvePublishScope(choice: PublishScopeChoice, bbox: Bbox | null): PublishScopeInput | null {
+export function resolvePublishScope(choice: PublishScopeChoice, bbox: AuthoritativeBbox | null): PublishScopeInput | null {
   if (choice === "whole") return { kind: "whole-file" };
   if (bbox === null) return null;
   return {
     kind: "viewport-bbox",
     bbox: {
-      xmin: decodeHexF64(bbox.xmin),
-      ymin: decodeHexF64(bbox.ymin),
-      xmax: decodeHexF64(bbox.xmax),
-      ymax: decodeHexF64(bbox.ymax),
+      xmin: bbox.xmin,
+      ymin: bbox.ymin,
+      xmax: bbox.xmax,
+      ymax: bbox.ymax,
     },
   };
 }
@@ -324,15 +325,12 @@ export interface PublishPanelProps {
    * `filter_active` parameter (P1's disclosed deviation) so the host can embed the filter-scope
    * sentence in the real prompt. */
   filterActive: boolean;
-  /** Whether a settled view has ever arrived for the current dataset (`App.tsx`'s own
-   * `hasSettledView`, paired with `lastViewportBboxRef`'s own reset -- see that file's comments).
-   * Render-time signal only; the actual bbox at click time is read fresh via
-   * `getLastViewportBbox`. */
-  hasSettledView: boolean;
-  /** `lastViewportBboxRef.current` at CALL TIME -- a getter, never a snapshotted value, so a scope
-   * choice of "current" always publishes the freshest viewport, not whatever it was when this
-   * panel last rendered. */
-  getLastViewportBbox: () => Bbox | null;
+  /** The box the map shows, at CALL TIME (`App.tsx`'s `viewBox.get`), never a snapshotted value. `null` after each open until the canvas first reports the view it shows (`onViewShown`, `onViewportChanged` or `onViewportWithinLastQuery`, through `App.tsx`'s `showBox`). No data of this file is drawn while it is `null`: the automatic fit reports at the first batch with geometry. A box does not by itself mean that data is drawn: a pan before that batch reports one.
+   * **When the map has a width or a height of 0 this is not an area the map shows:** after a resize to 0 it is the box from before (the canvas reports nothing),
+   * and after a fit at size 0 it is a box computed for 1 px. Current view sends it as it is, at both reads at the click. */
+  getViewBox: () => AuthoritativeBbox | null;
+  /** Subscribes to changes of that box (`App.tsx`'s `viewBox.subscribe`), so the option's availability follows it. */
+  subscribeViewBox: (listener: () => void) => () => void;
   /** The export's scope as it is now, resolved when a prepare starts (`App.tsx`, over `workspace/scope.ts`'s `resolveScope`; the selection is not part of it). `null` when the view is gone. */
   stageScope: () => ResolvedScope | null;
   /** The staged scope against the current one (`checkScope`): ok, or what changed. A `null` staged scope never passes. */
@@ -359,14 +357,15 @@ export default function PublishPanel({
   datasetHandle,
   style,
   filterActive,
-  hasSettledView,
-  getLastViewportBbox,
+  getViewBox,
+  subscribeViewBox,
   stageScope,
   checkStagedScope,
   onExportRunning,
 }: PublishPanelProps) {
   const [expanded, setExpanded] = useState(false);
   const [scope, setScope] = useState<PublishScopeChoice>("current");
+  const currentViewAvailable = useSyncExternalStore(subscribeViewBox, () => getViewBox() !== null);
   const [state, setState] = useState<PublishPanelState>({ kind: "idle" });
   /** The scope staged by the latest prepare (section 2.5), read by the one execute path below. */
   const stagedScopeRef = useRef<ResolvedScope | null>(null);
@@ -395,10 +394,11 @@ export default function PublishPanel({
   }
 
   async function runPrepare(scopeChoice: PublishScopeChoice): Promise<PrepareOutcome> {
-    const scopeInput = resolvePublishScope(scopeChoice, getLastViewportBbox());
+    const scopeInput = resolvePublishScope(scopeChoice, getViewBox());
     if (scopeInput === null) {
       // Defensive fallback only (see `resolvePublishScope`'s own doc comment) -- the real button
       // is already disabled for this case, so this path is not reachable from the rendered UI.
+      // The text is unchanged and unruled (the form's section 2.2(d)); the dev hooks reach it while the view box is null.
       const outcome: PrepareOutcome = {
         status: "refused",
         message: "no settled view yet -- pan or zoom the canvas once first",
@@ -442,7 +442,7 @@ export default function PublishPanel({
     scopeChoice: PublishScopeChoice,
     destination: string
   ): Promise<PrepareOutcome> {
-    const scopeInput = resolvePublishScope(scopeChoice, getLastViewportBbox());
+    const scopeInput = resolvePublishScope(scopeChoice, getViewBox());
     if (scopeInput === null) {
       // Same defensive fallback as `runPrepare` -- see its own comment.
       const outcome: PrepareOutcome = {
@@ -589,7 +589,7 @@ export default function PublishPanel({
         <PublishControls
           state={state}
           scope={scope}
-          hasSettledView={hasSettledView}
+          currentViewAvailable={currentViewAvailable}
           filterActive={filterActive}
           onScopeChange={setScope}
           onPublishClick={handlePublishClick}
@@ -605,7 +605,7 @@ export default function PublishPanel({
 export interface PublishControlsProps {
   state: PublishPanelState;
   scope: PublishScopeChoice;
-  hasSettledView: boolean;
+  currentViewAvailable: boolean;
   filterActive: boolean;
   onScopeChange: (scope: PublishScopeChoice) => void;
   onPublishClick: () => void;
@@ -631,7 +631,7 @@ export interface PublishControlsProps {
 export function PublishControls({
   state,
   scope,
-  hasSettledView,
+  currentViewAvailable,
   filterActive,
   onScopeChange,
   onPublishClick,
@@ -639,7 +639,7 @@ export function PublishControls({
   onDialogSettled,
   execute = publishExecute,
 }: PublishControlsProps) {
-  const currentDisabled = currentViewOptionDisabled(hasSettledView);
+  const currentDisabled = currentViewOptionDisabled(currentViewAvailable);
   const busy = state.kind === "preparing";
 
   return (
@@ -670,9 +670,7 @@ export function PublishControls({
           Current view
         </label>
         {currentDisabled && (
-          <p className="publish-scope-disabled-reason">
-            No settled view yet — pan or zoom the canvas once before publishing the current view.
-          </p>
+          <p className="publish-scope-disabled-reason">{CURRENT_VIEW_DISABLED_REASON}</p>
         )}
       </fieldset>
 
