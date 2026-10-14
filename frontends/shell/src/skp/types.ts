@@ -287,6 +287,30 @@ export interface CloseDatasetResponse {
   cancelled_streams: number;
 }
 
+/** `skp/0.12`, `record_step`: the value one `style.set` step sets, one member per property, as
+ * `protocol/skp/src/v0/commands.rs`'s `StyleSetParams` has them. A colour is `#rrggbb` in lowercase;
+ * the kernel checks the spelling and the range, this client does not. */
+export type StyleSetParams =
+  | { property: "fillColor"; value: string }
+  | { property: "fillOpacity"; value: number }
+  | { property: "outlineColor"; value: string }
+  | { property: "outlineWidth"; value: { value: number; unit: "px" } };
+
+/** `skp/0.12`: the two actions the kernel registers, `{action, params}` as ADR-036 section 6's `intent`
+ * member. `filter` is always present, `null` for no filter. */
+export type StepIntent =
+  | { action: "filter.apply"; params: { filter: Filter | null } }
+  | { action: "style.set"; params: StyleSetParams };
+
+/** `skp/0.12`. No id, time, actor or effect crosses the wire: the host mints them (ADR-004 Amendment 4). */
+export interface RecordStepRequest {
+  skp: string;
+  dataset: string;
+  intent: StepIntent;
+}
+/** An empty closed object: nothing reads a step id at this version. */
+export type RecordStepResponse = Record<string, never>;
+
 /** `skp/0.5`, the advisory source-change watcher (ADR-035 D4). The one named exception to "no
  * server-to-client push" -- a Tauri event, never a websocket frame. `skp/events.ts`'s
  * `decodeDatasetSessionEnded` and `listenDatasetSessionEnded` consume this event; this file

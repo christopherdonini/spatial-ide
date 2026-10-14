@@ -53,6 +53,7 @@ const REQUEST_KEY_SETS: Readonly<Record<string, readonly string[]>> = {
   viewport_query: ["skp", "dataset", "bbox", "bbox_crs", "limit", "filter", "columns"],
   cancel: ["skp", "handle"],
   close_dataset: ["skp", "dataset"],
+  record_step: ["skp", "dataset", "intent"],
 };
 
 /** Extracts the command name from a `v0-<command>-request[...].json` filename -- the same

@@ -14,8 +14,10 @@ import {
   Filter,
   IdentityDeclaration,
   OpenDatasetResponse,
+  RecordStepResponse,
   SkpError,
   SKP_VERSION,
+  StepIntent,
   ViewportQueryResponse,
 } from "./types";
 
@@ -49,7 +51,7 @@ async function call<Res>(command: string, request: Record<string, unknown>): Pro
   // never changes what is returned or thrown, only observes it.
   // `command` is captured on the entry too (NEXT-CUT.md P3): `DescribeRequest` and
   // `CloseDatasetRequest` are both exactly `{skp, dataset}` on the wire, so the request object
-  // alone cannot tell the console's panel which of the five commands this was.
+  // alone cannot tell the console's panel which of the six commands this was.
   const entry = consoleRecorder.record(request, command);
   try {
     const result = await invoke<Res>(command, { request });
@@ -129,4 +131,13 @@ export function cancel(handle: string): Promise<CancelResponse> {
 
 export function closeDataset(dataset: string): Promise<CloseDatasetResponse> {
   return call("close_dataset", { skp: SKP_VERSION, dataset });
+}
+
+/**
+ * `skp/0.12`: records, in the kernel's session history, one change the shell has already committed
+ * and applied. Client only: this function does not check `intent`; the kernel does, and may refuse it.
+ * `intent` is sent as given (a filter's `filter` is `null` for no filter, never omitted).
+ */
+export function recordStep(dataset: string, intent: StepIntent): Promise<RecordStepResponse> {
+  return call("record_step", { skp: SKP_VERSION, dataset, intent });
 }

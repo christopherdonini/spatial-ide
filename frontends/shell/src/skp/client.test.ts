@@ -7,7 +7,7 @@ const invokeMock = vi.hoisted(() => vi.fn());
 vi.mock("@tauri-apps/api/core", () => ({ invoke: invokeMock }));
 
 import { consoleRecorder, isSkpRequestEntry } from "../console/recorder";
-import { SkpCallError, viewportQuery } from "./client";
+import { recordStep, SkpCallError, viewportQuery } from "./client";
 import { FILTER_DIALECT_DUCKDB_EXPR_0, type SkpError } from "./types";
 
 /**
@@ -65,6 +65,36 @@ describe("viewportQuery request shape", () => {
         columns: null,
       },
     });
+  });
+});
+
+/**
+ * `recordStep`'s request shape (B2-1B-RECORDING-PREREGISTRATION.md section 4, C1). The kernel validates the intent; this asserts
+ * only that the client sends the version and the typed intent as given, with `filter` present as `null` for no filter, and
+ * nothing else (no id, time, actor or effect: ADR-004 Amendment 4).
+ */
+describe("recordStep request shape", () => {
+  // RECORDED MUTATION for "C1": omit `skp: SKP_VERSION` from `recordStep` (client.ts). Expected failure: the object equality
+  // below no longer matches.
+  it("C1: recordStep sends record_step with the version and the typed intent", async () => {
+    invokeMock.mockReset().mockResolvedValue({});
+
+    await recordStep("ds_x", { action: "filter.apply", params: { filter: null } });
+    await recordStep("ds_x", { action: "style.set", params: { property: "outlineWidth", value: { value: 2, unit: "px" } } });
+
+    expect(invokeMock.mock.calls).toEqual([
+      ["record_step", { request: { skp: "skp/0.12", dataset: "ds_x", intent: { action: "filter.apply", params: { filter: null } } } }],
+      [
+        "record_step",
+        {
+          request: {
+            skp: "skp/0.12",
+            dataset: "ds_x",
+            intent: { action: "style.set", params: { property: "outlineWidth", value: { value: 2, unit: "px" } } },
+          },
+        },
+      ],
+    ]);
   });
 });
 
