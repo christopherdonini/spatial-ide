@@ -325,7 +325,7 @@ export interface PublishPanelProps {
    * `filter_active` parameter (P1's disclosed deviation) so the host can embed the filter-scope
    * sentence in the real prompt. */
   filterActive: boolean;
-  /** The box the map shows, at CALL TIME (`App.tsx`'s `viewBox.get`), never a snapshotted value. `null` until the map has drawn this file's data, and after each open.
+  /** The box the map shows, at CALL TIME (`App.tsx`'s `viewBox.get`), never a snapshotted value. `null` after each open until the canvas first reports the view it shows (`onViewShown`, `onViewportChanged` or `onViewportWithinLastQuery`, through `App.tsx`'s `showBox`). No data of this file is drawn while it is `null`: the automatic fit reports at the first batch with geometry. A box does not by itself mean that data is drawn: a pan before that batch reports one.
    * **When the map has a width or a height of 0 this is not an area the map shows:** after a resize to 0 it is the box from before (the canvas reports nothing),
    * and after a fit at size 0 it is a box computed for 1 px. Current view sends it as it is, at both reads at the click. */
   getViewBox: () => AuthoritativeBbox | null;

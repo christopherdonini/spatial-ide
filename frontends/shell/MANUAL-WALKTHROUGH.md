@@ -1857,7 +1857,7 @@ This Part is the Operator gate of `frontends/shell/EXPORT-CURRENT-VIEW-AFTER-UNR
 | Y0 | Read the form's §10, the last amendment first. | Record the number of the last amendment you read. |
 | Y1 | Open `filter-zoned.parquet` and, before any pan or zoom, open the Export section. | Current view can be chosen, and no reason is shown beside it. |
 | Y2 | Pan the map to a corner of the data, then Apply `zone = 'residential'`; the map fits itself to the matches. Click **Export interactive map…** with Current view chosen, read the four numbers in the dialog's Row scope, and abandon the dialog. Then click Zoom to layer, export again, read the numbers, and abandon. | The Row scope line reads: the map's extent when Export interactive map… was clicked, with xmin, ymin, xmax and ymax. Record both sets of numbers. **Felt:** do the numbers tell you the area is the one on the map? |
-| Y3 | Clear the filter; the map fits itself to the whole file. Drag a splitter to shrink the map, click **Export interactive map…** with Current view chosen, read the numbers, and abandon. | The numbers differ from Y2's. Record them. |
+| Y3 | Clear the filter; the map fits itself to the whole file. Click **Export interactive map…** with Current view chosen, read the four numbers, and abandon. Then drag a splitter to shrink the map, export Current view again, read the numbers, and abandon. | The numbers after the shrink differ from those before it. Record both sets. |
 | Y4 | The P6 sight of the new strings: the reason Current view cannot be chosen yet (it shows only while the map has not drawn the file's data), and the Row scope sentence in the approval dialog. | Record the wording you approve or replace. If you did not see the reason in this run, say so. |
 
 ## Result log
@@ -1870,5 +1870,5 @@ Fill in after running the rows above (the Current view Part Y).
 - **Last amendment read (its number):**
 - **Y1:**
 - **Y2 (both sets of numbers; felt):**
-- **Y3 (the numbers):**
+- **Y3 (both sets of numbers):**
 - **Y4 (the wording):**
