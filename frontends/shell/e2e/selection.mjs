@@ -739,7 +739,7 @@ async function stepAskTwo(page, consoleHandle) {
 }
 
 /** E-STATUS-HEIGHT (SHELL-STATUS-BAR-ONE-HEIGHT-PREREGISTRATION.md Amendment 1): the status bar keeps one height, so the ended-selection notice coming (a second line) and going never changes the canvas's size. */
-async function stepStatusHeight(page, consoleHandle) {
+async function stepStatusHeightAt880(page, consoleHandle) {
   const read = async () => {
     const canvas = await canvasRect(page);
     const boxes = await page.evaluate(() => {
@@ -747,7 +747,7 @@ async function stepStatusHeight(page, consoleHandle) {
       const bar = document.querySelector(".status-bar");
       const notice = box(".selection-ended");
       const first = bar?.firstElementChild?.getBoundingClientRect() ?? null;
-      return { barHeight: bar?.getBoundingClientRect().height ?? null, stripHeight: box(".attention-strip")?.height ?? 0, scrollHeight: bar?.scrollHeight ?? null, clientHeight: bar?.clientHeight ?? null, noticeTop: notice?.top ?? null, firstBottom: first?.bottom ?? null };
+      return { barHeight: bar?.getBoundingClientRect().height ?? null, stripHeight: box(".attention-strip")?.height ?? 0, scrollHeight: bar?.scrollHeight ?? null, clientHeight: bar?.clientHeight ?? null, residency: document.querySelector(".residency-status") !== null, noticeTop: notice?.top ?? null, firstBottom: first?.bottom ?? null };
     });
     return { width: canvas?.width ?? null, height: canvas?.height ?? null, ...boxes };
   };
@@ -782,7 +782,37 @@ async function stepStatusHeight(page, consoleHandle) {
   const size = (r) => `${r.width} x ${r.height}`;
   expect(a.width !== null && a.width === b.width && b.width === c.width && a.height === b.height && b.height === c.height, `E-STATUS-HEIGHT: the canvas is ${size(a)} before the notice, ${size(b)} while it stands and ${size(c)} after it clears`);
   expect(a.barHeight === 48 && b.barHeight === 48 && c.barHeight === 48, `E-STATUS-HEIGHT: the status bar is ${a.barHeight}, ${b.barHeight} and ${c.barHeight} px tall, not 48 in all three`);
-  return `the canvas stayed ${size(a)} (A, B, C) and the bar 48 px; recorded, not asserted: A's canvas height ${a.height}; in B the bar's scrollHeight ${b.scrollHeight} against its clientHeight ${b.clientHeight}`;
+  return `the canvas stayed ${size(a)} (A, B, C) and the bar 48 px; recorded, not asserted: A's canvas height ${a.height}; in B the bar's scrollHeight ${b.scrollHeight} against its clientHeight ${b.clientHeight}; the residency item present in B: ${b.residency}`;
+}
+
+async function stepStatusHeight(page, consoleHandle) {
+  const inner = () => page.evaluate(() => ({ w: window.innerWidth, h: window.innerHeight }));
+  const sized = (w, h) => pollUntil(inner, (s) => s.w === w && s.h === h, 5000);
+  const was = await inner(), cdp = await page.context().newCDPSession(page);
+  let windowId = null, bounds = null, ran = false, failure = null, restoreError = null, note = "", result;
+  try {
+    windowId = (await cdp.send("Browser.getWindowForTarget")).windowId;
+    bounds = (await cdp.send("Browser.getWindowBounds", { windowId })).bounds;
+    await cdp.send("Browser.setWindowBounds", { windowId, bounds: { width: 880, height: 800, windowState: "normal" } });
+    const set = await sized(880, 800);
+    if (!set.ok) throw new Error(`the inner size is ${set.last.w} x ${set.last.h} after the resize`);
+    note = `; inner size after the resize ${set.last.w} x ${set.last.h}`; ran = true;
+    result = await stepStatusHeightAt880(page, consoleHandle);
+  } catch (e) {
+    failure = ran ? e : new Error(`E-STATUS-HEIGHT: INCONCLUSIVE (class 2, never a pass): the window could not be set to 880 x 800 over CDP (${e?.message})`);
+    throw failure;
+  } finally {
+    if (bounds !== null) try {
+      await cdp.send("Browser.setWindowBounds", { windowId, bounds });
+      const back = await sized(was.w, was.h);
+      note += `; inner size after the restore ${back.last.w} x ${back.last.h}`;
+      if (!back.ok) throw new Error(`E-STATUS-HEIGHT: the restore did not take: the inner size is ${back.last.w} x ${back.last.h}, it was ${was.w} x ${was.h} before the resize`);
+    } catch (e) { restoreError = e; }
+    await cdp.detach().catch(() => {});
+    if (restoreError !== null && failure !== null) failure.message += ` (and the restore failed: ${restoreError.message})`;
+    else if (restoreError !== null) throw restoreError;
+  }
+  return result + note;
 }
 
 async function runSelectionSteps(page, consoleHandle) {
