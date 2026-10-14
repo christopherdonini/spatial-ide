@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-14T17:22:43.452Z",
-  "plan_hash": "c7ee8511bcaabb8eb26b3805db9707f58e01585430a3fe7bcebf491fd4de3a14",
+  "generated_at": "2026-10-14T17:29:02.350Z",
+  "plan_hash": "46754e1fff38afa283629e2cc0cd93224104e0d5e2c78ff78195d2bede3bd304",
   "priorities_approved": true,
   "lanes": [
     {
@@ -8458,13 +8458,13 @@
         "kind": "none",
         "minutes": 0
       },
-      "gate": "none",
+      "gate": "scripts/plan/SEARCH-IGNORE-HISTORICAL-PREREGISTRATION.md",
       "evidence": null,
       "budget_minutes": 0,
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "PLACED 2026-10-14 by the human (state/directives/2026-10-14-governance-smaller-reads-ignore-cut-state-rotation-decisions-pending.md); never slot 1; each merge the human's click: piece A. The measurement script is written before the first measurement and run unchanged after C. NEXT: the architect drafts the form.",
+      "summary": "FORM COMMITTED 2026-10-14 (scripts/plan/SEARCH-IGNORE-HISTORICAL-PREREGISTRATION.md, a full form by section 21c's size, 380 lines over 6 files, drafted by the architect: state/consults/2026-10-14-governance-search-ignore-historical-architect-draft.md, sha256 b7815de0; pins hashed by the custodian at b9b902bf). OPEN-1 (the ledger part's definition, before dispatch), OPEN-2 (the rule's hidden-folder clause, if the Grep tool searches hidden folders) and OPEN-3 (the words on how to search an excluded location) with the human. Before: PLACED 2026-10-14 by the human (state/directives/2026-10-14-governance-smaller-reads-ignore-cut-state-rotation-decisions-pending.md); never slot 1; each merge the human's click: piece A. The measurement script is written before the first measurement and run unchanged after C. NEXT: the architect drafts the form.",
       "dates": {
         "opened": "2026-10-14",
         "done": null
