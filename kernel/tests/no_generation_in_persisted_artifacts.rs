@@ -786,3 +786,116 @@ fn a_dataset_reference_carries_no_generation_session_reference_handle_path_or_as
     mutated["resource"]["locators"][0]["at"] = path.display().to_string().into();
     assert!(names(&mutated.to_string(), &path.display().to_string()));
 }
+
+use spatial_kernel::session_history::{recover, StepRecorder};
+use spatial_skp::v0::{Filter, FilterApplyParams, RecordStepRequest, StepIntent, StyleSetParams};
+
+/// **The session history's half of G-A4** (`kernel/B2-1B-RECORDING-PREREGISTRATION.md` §4, G2; a
+/// sixth family): a history written by `record_step` over a real open carries no key and no byte
+/// naming a generation, and none of: the minted session reference, the dataset handle, the
+/// fixture's path and its directory, the OS user name. `locations.json` beside it is the one file
+/// that holds the path, and the scan says so. Each scan fires on a planted positive control.
+///
+/// RECORDED MUTATION: `DatasetRef::linked` records a project-relative locator holding `ds.path()` in
+/// place of the machine-recorded one, so the header's locator `at` carries the path. Expected
+/// failure: `the history names the fixture's path`.
+#[test]
+fn a_session_history_carries_no_generation_session_reference_handle_path_or_user_name() {
+    let d = workspace("session-history");
+    let path = d.join("parcels.parquet");
+    let spec = FixtureSpec {
+        features: 40,
+        avg_vertices: 6,
+        hole_every: 0,
+        attributes: AttributeMode::CategoricalZone,
+        ..Default::default()
+    };
+    write_geoparquet(&path, &spec).unwrap();
+    let host = Arc::new(SkpHost::new(
+        Arc::new(Catalog::new()),
+        StreamRegistry::new(),
+        watch_support::no_watch_arm(),
+        session_end_channel().0,
+    ));
+    let open = host
+        .open_dataset(OpenDatasetRequest {
+            skp: SKP_VERSION.to_string(),
+            path: path.display().to_string(),
+            cancel_key: "g2".to_string(),
+            crs_assertion: None,
+            identity: None,
+        })
+        .expect("open");
+    let recorder = StepRecorder::new(d.join("store"), host.clone());
+    let filter = Filter::new("zone = 'civic'", "duckdb-expr/0").unwrap();
+    for intent in [
+        StepIntent::FilterApply(FilterApplyParams {
+            filter: Some(filter),
+        }),
+        StepIntent::StyleSet(StyleSetParams::FillOpacity { value: 0.35 }),
+    ] {
+        let dataset = open.dataset.clone();
+        let req = RecordStepRequest {
+            skp: SKP_VERSION.to_string(),
+            dataset,
+            intent,
+        };
+        recorder.record_step(req).expect("recorded");
+    }
+    drop(recorder);
+    let record = std::fs::read_dir(d.join("store"))
+        .unwrap()
+        .next()
+        .unwrap()
+        .unwrap()
+        .path();
+    let got = recover(&record);
+    assert!(
+        got.failure.is_none() && got.lines.len() == 3,
+        "{:?}",
+        got.failure
+    );
+    let history = std::fs::read_to_string(record.join("history.jsonl")).unwrap();
+    let locations = std::fs::read_to_string(record.join("locations.json")).unwrap();
+
+    let user = std::env::var("USERNAME")
+        .or_else(|_| std::env::var("USER"))
+        .unwrap_or_default();
+    let needles = [
+        ("the session reference", open.session.as_str().to_string()),
+        ("the dataset handle", open.dataset.as_str().to_string()),
+        ("the fixture's path", path.display().to_string()),
+        ("the fixture's directory", d.display().to_string()),
+        ("the OS user name", user),
+    ];
+    let mut keys = Vec::new();
+    for line in history.lines() {
+        walk_keys(&serde_json::from_str(line).unwrap(), "$", &mut keys);
+    }
+    assert!(
+        keys.is_empty(),
+        "the history carries a key naming a generation: {keys:?}"
+    );
+    assert!(!contains_ascii_ci(history.as_bytes(), b"generation"));
+    assert!(!contains_a_session_reference_shape(history.as_bytes()));
+    for (label, needle) in needles.iter().filter(|(_, n)| n.len() >= 4) {
+        assert!(!names(&history, needle), "the history names {label}");
+    }
+    assert!(
+        names(&locations, &path.display().to_string()),
+        "locations.json holds the path"
+    );
+    assert!(!names(&locations, open.session.as_str()) && !names(&locations, open.dataset.as_str()));
+
+    // The positive controls: each scan fires on what it guards.
+    walk_keys(&serde_json::json!({"a": {"generation": 1}}), "$", &mut keys);
+    assert_eq!(keys, ["$.a.generation"]);
+    assert!(contains_ascii_ci(b"names a Generation", b"generation"));
+    assert!(contains_a_session_reference_shape(
+        open.session.as_str().as_bytes()
+    ));
+    for (label, needle) in &needles {
+        let planted = serde_json::json!({ "planted": needle }).to_string();
+        assert!(names(&planted, needle), "the scan cannot detect {label}");
+    }
+}

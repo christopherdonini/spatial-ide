@@ -1253,7 +1253,7 @@ intent = { action: "filter.apply", params: { filter: Filter | null } }
        | { action: "style.set", params: { property: "outlineWidth", value: { value: <number>, unit: "px" } } }
 ```
 
-`Filter` is §7.2's. `filter` is always present, `null` for no filter, and a `params` without it is refused at deserialize, never read as "clear the filter". Any other action, property, unit or value type, and any unknown key, is refused at deserialize. `intent` has the shape of ADR-036 §6's `intent` member. No `actor`, `at`, id or effect crosses the wire: the kernel mints the first three and takes the effect from its action registry. No space, handle or coordinate crosses it either. The response is an empty closed object; no step id is returned, because nothing reads one at this version.
+`Filter` is §7.2's. `filter` is always present, `null` for no filter, and a `params` without it is refused at deserialize, never read as "clear the filter". Any other action, property, unit or value type, and any unknown key, is refused at deserialize. `intent` has the shape of ADR-036 §6's `intent` member. No `actor`, `at`, id or effect crosses the wire: the kernel mints the first three and takes the effect from its action registry. No space or coordinate crosses it either, and `dataset` is the only handle. The response is an empty closed object; no step id is returned, because nothing reads one at this version.
 
 ### 10.3 The contract
 

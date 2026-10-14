@@ -513,7 +513,7 @@ pub struct CloseDatasetResponse {
 /// **`skp/0.12`.** Records, in the kernel's session history (ADR-036 §12, Proposed), one change a
 /// client has already committed. The kernel mints the step's id and `at` and takes `actor` and
 /// `effect` itself, so none of the four crosses the wire (ADR-004 Amendment 4), and neither does a
-/// handle or a coordinate. It applies nothing.
+/// space or a coordinate. It applies nothing.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct RecordStepRequest {

@@ -186,7 +186,7 @@ macro_rules! error_shown_as_its_debug_form {
 }
 error_shown_as_its_debug_form!(RefBuildError, RefParseError);
 
-fn malformed(path: &str, detail: impl Into<String>) -> RefParseError {
+pub(crate) fn malformed(path: &str, detail: impl Into<String>) -> RefParseError {
     RefParseError::Malformed {
         path: path.to_string(),
         detail: detail.into(),
@@ -252,21 +252,7 @@ impl DatasetRef {
             ("cache_status", Json::str(CACHE_LINKED)),
             ("portability_policy", Json::str(LINKED_LIVE_FILE)),
         ]);
-        let o = &self.observed;
-        let observed = Json::obj([
-            ("byte_size", Json::UInt(o.byte_size())),
-            (
-                "modified_ns",
-                o.modified_nanos()
-                    .map_or_else(|| state_json(NOT_REPORTED), |n| Json::str(n.to_string())),
-            ),
-            ("footer_length", Json::UInt(o.footer_length())),
-            (
-                "footer_sha256",
-                o.footer_hash()
-                    .map_or_else(|| state_json(NOT_READ_OVER_CEILING), Json::str),
-            ),
-        ]);
+        let observed = observed_json(&self.observed);
         let a = &self.admission;
         let admission = Json::obj([
             (
@@ -363,16 +349,35 @@ fn mapped_column(ds: &Dataset) -> Option<&str> {
     }
 }
 
-fn state_json((state, basis): (&str, &str)) -> Json {
+pub(crate) fn state_json((state, basis): (&str, &str)) -> Json {
     Json::obj([("state", Json::str(state)), ("basis", Json::str(basis))])
 }
 
-fn join(path: &str, key: &str) -> String {
+/// ADR-036 §5's spelling of an observation, in one place: a reference's `observed` member and a
+/// step's `data.identity.observed` (`session_history`) are both written by this function.
+pub(crate) fn observed_json(o: &SourceObservation) -> Json {
+    Json::obj([
+        ("byte_size", Json::UInt(o.byte_size())),
+        (
+            "modified_ns",
+            o.modified_nanos()
+                .map_or_else(|| state_json(NOT_REPORTED), |n| Json::str(n.to_string())),
+        ),
+        ("footer_length", Json::UInt(o.footer_length())),
+        (
+            "footer_sha256",
+            o.footer_hash()
+                .map_or_else(|| state_json(NOT_READ_OVER_CEILING), Json::str),
+        ),
+    ])
+}
+
+pub(crate) fn join(path: &str, key: &str) -> String {
     format!("{path}.{key}")
 }
 
 /// An object with exactly `keys`: an unknown and a missing key are each refused by path.
-fn closed<'a>(
+pub(crate) fn closed<'a>(
     v: &'a Value,
     path: &str,
     keys: &[&str],
@@ -393,7 +398,11 @@ fn closed<'a>(
     Ok(obj)
 }
 
-fn bounded<'a>(v: &'a Value, path: &str, ceiling: usize) -> Result<&'a str, RefParseError> {
+pub(crate) fn bounded<'a>(
+    v: &'a Value,
+    path: &str,
+    ceiling: usize,
+) -> Result<&'a str, RefParseError> {
     let s = v
         .as_str()
         .ok_or_else(|| malformed(path, "expected a string"))?;
@@ -542,7 +551,7 @@ fn in_canonical_form(at: &str, path: &str) -> Result<(), RefParseError> {
     Ok(())
 }
 
-fn parse_observed(v: &Value, path: &str) -> Result<SourceObservation, RefParseError> {
+pub(crate) fn parse_observed(v: &Value, path: &str) -> Result<SourceObservation, RefParseError> {
     let keys = ["byte_size", "modified_ns", "footer_length", "footer_sha256"];
     let obj = closed(v, path, &keys)?;
     let mtime_path = join(path, "modified_ns");
