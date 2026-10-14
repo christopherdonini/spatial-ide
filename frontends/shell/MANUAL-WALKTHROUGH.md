@@ -1893,3 +1893,28 @@ This Part is the Operator gate of `frontends/shell/SHELL-STATUS-BAR-ONE-HEIGHT-P
 - **Z2:**
 - **Z3:**
 - **Z4:**
+
+## Part AA — a crash leaves the session's filter and style changes on this machine, and a normal close removes them (b2-piece-1b-recording)
+
+This Part is the Operator gate of `kernel/B2-1B-RECORDING-PREREGISTRATION.md` §9 (its rows X0 to X4 are this Part's AA0 to AA4: every letter A to Z is in use, so this Part takes the next name), run only on a build after that piece's merge, with a blank result log. It is the human's felt verdict on the console's `record_step` entries, and it carries the form's E2 (a normal close removes that run's record), because the e2e harness cannot close the app normally (the form's H5). It is discharged only once it has been run and its result log filled in. **No duration appears in any row.** **If anything deviates:** stop, record the exact step, and report it, as in every earlier Part. *Draft for the human's sight (the form's §9 and item 2e of `state/directives/2026-10-11-direction-after-status-review.md`): the step lines are the form's, and the Expected outcome cells are drafts, not the human's wording.*
+
+| # | Step | Expected outcome |
+|---|---|---|
+| AA0 | Read the form's §10, the last amendment first. | Record the number of the last amendment you read. |
+| AA1 | Open `filter-zoned.parquet` and apply `zone = 'residential'`. | The console shows `viewport_query`, then `record_step`. |
+| AA2 | Drag the fill opacity and release; pick a colour and close the picker. | One `record_step` per release or close. **Felt:** does the console's `record_step` entry read as noise? |
+| AA3 | End the app from Task Manager. | One record folder, under `%LOCALAPPDATA%\spatial-ide\sessions`, holds the header and AA1's and AA2's steps, in order. |
+| AA4 | Start the app, apply a filter, close it normally. | That run's folder is gone; AA3's stays. This row carries E2. |
+
+## Result log
+
+Fill in after running the rows above (the B2 piece 1b Part AA).
+
+- **Date run:**
+- **Run by:**
+- **Build/commit:**
+- **Last amendment read (its number):**
+- **AA1:**
+- **AA2 (one record_step per release or close; felt):**
+- **AA3 (the folder, the header, the steps in order):**
+- **AA4 (the run's folder gone; AA3's folder still there):**
