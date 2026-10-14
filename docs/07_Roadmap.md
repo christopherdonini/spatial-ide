@@ -37,7 +37,7 @@ Both are engine/kernel/protocol-module work, not renderer work, and belong to th
   principle 4's "and shows it" clause is unphased and has been unmet across every shell surface
   since cut 1.
 - Problems panel / spatial linting (03)
-- Notebooks: record and replay (03)
+- Notebooks: record and replay (03) — *(Appended 2026-10-14.)* **Split.** The Prototype's B2 records; it does not replay. From B2 piece 1b, the kernel records each filter and style change a user commits as a typed step (ADR-006, workspace mutations), in a session history kept on this machine that a crash of the app does not lose and a normal close clears. Later B2 pieces keep the contributing steps in the project's lineage at Save project, and restore a project to a recorded step. This is not the Alpha item: replaying recorded steps, notebooks and workflows (13's Workflow IR) **stay Alpha**. It is not the Beta item either: B2 keeps no branch, and **lineage time travel and scenario branches stay Beta**.
 - MCP server with the permission model (04)
 - First external plugin as an out-of-process SKP client (02)
 
