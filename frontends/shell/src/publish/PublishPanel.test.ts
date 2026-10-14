@@ -9,12 +9,12 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
-import { encodeHexF64 } from "../skp/codec";
-import type { Bbox } from "../skp/types";
+import type { AuthoritativeBbox } from "../canvas/viewportBbox";
 import { PREPARE_CANCEL_KEY_PREFIX, prepareCancelKey } from "./client";
 import type { DialogSettleResult } from "./PublishDialog";
 import {
   cancelControlVisible,
+  CURRENT_VIEW_DISABLED_REASON,
   currentViewOptionDisabled,
   formatBytesHashed,
   nextStateFromDialogSettled,
@@ -34,8 +34,8 @@ import type { ExecuteOutcome, PrepareOutcome, PublishPromptData } from "./types"
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 
-function wireBbox(xmin: number, ymin: number, xmax: number, ymax: number): Bbox {
-  return { xmin: encodeHexF64(xmin), ymin: encodeHexF64(ymin), xmax: encodeHexF64(xmax), ymax: encodeHexF64(ymax) };
+function viewBox(xmin: number, ymin: number, xmax: number, ymax: number): AuthoritativeBbox {
+  return { xmin, ymin, xmax, ymax };
 }
 
 const PROMPT: PublishPromptData = {
@@ -55,11 +55,13 @@ const PROMPT: PublishPromptData = {
     "more data partitions, the interactive viewer page, and a manifest.",
 };
 
-describe("currentViewOptionDisabled (NEXT-CUT.md P3 item 3)", () => {
-  it("disabled while no settled view has arrived", () => {
+// RECORDED MUTATION for "UPP1" (export-current-view-after-unreported-fit): `currentViewOptionDisabled` returns false whatever it is given. Expected failure: the first case, "disabled while the map has no view box".
+// NOT YET OBSERVED.
+describe("currentViewOptionDisabled (NEXT-CUT.md P3 item 3; UPP1)", () => {
+  it("disabled while the map has no view box", () => {
     expect(currentViewOptionDisabled(false)).toBe(true);
   });
-  it("enabled once one has", () => {
+  it("enabled once it has one", () => {
     expect(currentViewOptionDisabled(true)).toBe(false);
   });
 });
@@ -67,15 +69,15 @@ describe("currentViewOptionDisabled (NEXT-CUT.md P3 item 3)", () => {
 describe("resolvePublishScope", () => {
   it("'whole' always yields whole-file, regardless of bbox", () => {
     expect(resolvePublishScope("whole", null)).toEqual({ kind: "whole-file" });
-    expect(resolvePublishScope("whole", wireBbox(1, 2, 3, 4))).toEqual({ kind: "whole-file" });
+    expect(resolvePublishScope("whole", viewBox(1, 2, 3, 4))).toEqual({ kind: "whole-file" });
   });
 
-  it("'current' with no settled view (bbox null) yields null -- the disabled option's own boundary case", () => {
+  it("'current' with no view box (null) yields null -- the disabled option's own boundary case", () => {
     expect(resolvePublishScope("current", null)).toBeNull();
   });
 
-  it("'current' decodes the SKP-wire (HexF64) bbox back to plain f64 -- binding-local, not SKP", () => {
-    const result = resolvePublishScope("current", wireBbox(2683000.5, 1248000.25, 2684000.5, 1249000.25));
+  it("'current' sends the view box's four numbers as they are -- binding-local, not SKP, and nothing to decode", () => {
+    const result = resolvePublishScope("current", viewBox(2683000.5, 1248000.25, 2684000.5, 1249000.25));
     expect(result).toEqual({
       kind: "viewport-bbox",
       bbox: { xmin: 2683000.5, ymin: 1248000.25, xmax: 2684000.5, ymax: 1249000.25 },
@@ -409,7 +411,7 @@ describe("the rendered publish controls (MF3)", () => {
       createElement(PublishControls, {
         state,
         scope: "whole",
-        hasSettledView: true,
+        currentViewAvailable: true,
         filterActive: false,
         onScopeChange: vi.fn(),
         onPublishClick: vi.fn(),
@@ -420,6 +422,12 @@ describe("the rendered publish controls (MF3)", () => {
     );
     return raw.replaceAll("&quot;", '"').replaceAll("&#x27;", "'").replaceAll("&amp;", "&").replaceAll("&#x2F;", "/");
   }
+
+  it("a disabled Current view shows the reason, and an available one shows none (UPP1)", () => {
+    expect(CURRENT_VIEW_DISABLED_REASON).toBe("Not available yet — the map has not drawn this file's data. Pan or zoom the map, or choose Whole dataset.");
+    expect(render({ kind: "idle" }, { currentViewAvailable: false })).toContain(CURRENT_VIEW_DISABLED_REASON);
+    expect(render({ kind: "idle" })).not.toContain("publish-scope-disabled-reason");
+  });
 
   it("preparing, before any phase event: the placeholder label, no byte readout, and NO Cancel button (MF1)", () => {
     const html = render(PREPARING_BEFORE_ANY_EVENT);

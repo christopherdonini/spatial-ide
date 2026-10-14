@@ -1847,3 +1847,28 @@ Fill in after running the rows above (the milestone-2 Part W).
 - **W10:**
 - **W10a (the point edge, a real mouse; the scale factor):**
 - **W11:**
+
+## Part Y — Export's Current view after the map moves by itself: the numbers in the dialog's Row scope, and the wording of the new strings (export-current-view-after-unreported-fit)
+
+This Part is the Operator gate of `frontends/shell/EXPORT-CURRENT-VIEW-AFTER-UNREPORTED-FIT-PREREGISTRATION.md` §9 (its rows X0 to X4 are this Part's Y0 to Y4, per its Amendment 3 item 7), run only on a build after that piece's merge, with a blank result log. It is the human's felt verdict on whether Current view sends the area the map shows, and is discharged only once it has been run and its result log filled in. **No duration appears in any row or expected outcome** (`docs/08_Testing.md`; ADR-018). **If anything deviates:** stop, record the exact step, and report it, as in every earlier Part. *Draft for the human's sight (the form's §9 and item 2e): the rows are the form's, and their sentences are not the human's wording.*
+
+| # | Step | Expected outcome |
+|---|---|---|
+| Y0 | Read the form's §10, the last amendment first. | Record the number of the last amendment you read. |
+| Y1 | Open `filter-zoned.parquet` and, before any pan or zoom, open the Export section. | Current view can be chosen, and no reason is shown beside it. |
+| Y2 | Pan the map to a corner of the data, then Apply `zone = 'residential'`; the map fits itself to the matches. Click **Export interactive map…** with Current view chosen, read the four numbers in the dialog's Row scope, and abandon the dialog. Then click Zoom to layer, export again, read the numbers, and abandon. | The Row scope line reads: the map's extent when Export interactive map… was clicked, with xmin, ymin, xmax and ymax. Record both sets of numbers. **Felt:** do the numbers tell you the area is the one on the map? |
+| Y3 | Clear the filter; the map fits itself to the whole file. Drag a splitter to shrink the map, click **Export interactive map…** with Current view chosen, read the numbers, and abandon. | The numbers differ from Y2's. Record them. |
+| Y4 | The P6 sight of the new strings: the reason Current view cannot be chosen yet (it shows only while the map has not drawn the file's data), and the Row scope sentence in the approval dialog. | Record the wording you approve or replace. If you did not see the reason in this run, say so. |
+
+## Result log
+
+Fill in after running the rows above (the Current view Part Y).
+
+- **Date run:**
+- **Run by:**
+- **Build/commit:**
+- **Last amendment read (its number):**
+- **Y1:**
+- **Y2 (both sets of numbers; felt):**
+- **Y3 (the numbers):**
+- **Y4 (the wording):**

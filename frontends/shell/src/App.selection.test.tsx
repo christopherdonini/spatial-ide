@@ -38,8 +38,12 @@ const mocks = vi.hoisted(() => ({
     mounted: [] as string[],
     unmounted: [] as string[],
     fits: [] as unknown[],
+    /** The calls of the stand-in's `resetFitForNewGeneration`: an issued Apply re-arms the fit. */
+    resets: 0,
     props: null as import("./canvas/WorkingCanvas").WorkingCanvasProps | null,
   },
+  /** Every `requestViewport` the manager stand-in got (its bbox and filter), and a refusal it gives the next one (the refusal-recovery observer). */
+  manager: { requests: [] as { bbox: unknown; filter: unknown }[], refuseNext: null as unknown },
 }));
 
 function describeFixture(): import("./skp/types").DescribeResponse {
@@ -138,10 +142,13 @@ vi.mock("./streaming/viewportStreamManager", () => {
     constructor(opts: { dataset: string; onSessionEnded?: (detail: string) => void }) {
       this.opts = opts;
     }
-    requestViewport(): Promise<unknown> {
+    requestViewport(bbox?: unknown, _bboxCrs?: unknown, _nowMs?: unknown, filter?: unknown): Promise<unknown> {
       mocks.viewportRequests += 1;
       mocks.order.push(`request:${this.opts.dataset}`);
-      return Promise.resolve({ kind: "issued", streamHandle: "st_1" });
+      mocks.manager.requests.push({ bbox, filter: filter ?? null });
+      const refusal = mocks.manager.refuseNext;
+      mocks.manager.refuseNext = null;
+      return refusal === null ? Promise.resolve({ kind: "issued", streamHandle: "st_1" }) : Promise.reject(refusal);
     }
     /** As the real manager's `endSession`: latched, then the owner's `onSessionEnded`. */
     notifySessionEnded(detail: string): void {
@@ -178,7 +185,9 @@ vi.mock("./canvas/WorkingCanvas", () => {
         fitToBbox: (bbox) => {
           mocks.canvas.fits.push(bbox);
         },
-        resetFitForNewGeneration: () => {},
+        resetFitForNewGeneration: () => {
+          mocks.canvas.resets += 1;
+        },
         getResidentCounts: () => ({ totalResidentVertices: 0, totalResidentFeatures: 0 }),
         armFirstPixelRenderHook: () => false,
         disarmFirstPixelRenderHook: () => true,
@@ -203,6 +212,8 @@ vi.mock("./canvas/WorkingCanvas", () => {
 import App from "./App";
 import { HOVER_BELOW_RESOLUTION_TEXT } from "./canvas/HoverReadoutView";
 import { consoleRecorder, isGuiActionEntry } from "./console/recorder";
+import { SkpCallError } from "./skp/client";
+import { encodeHexF64 } from "./skp/codec";
 import { prepareCancelKey } from "./publish/client";
 import { LATE_CANCEL_FINISHED, LATE_CANCEL_FINISHED_UNAUDITED } from "./feature/OpenDuringExportAsk";
 import { __resetResidencyArmForTests, setResidencyArm } from "./residency/residencyArm";
@@ -235,6 +246,9 @@ describe("App: tools, the click, the selection and the inspection (milestone 2, 
     mocks.canvas.unmounted = [];
     mocks.canvas.fits = [];
     mocks.canvas.props = null;
+    mocks.canvas.resets = 0;
+    mocks.manager.requests = [];
+    mocks.manager.refuseNext = null;
     setResidencyArm("baseline");
     container = document.createElement("div");
     document.body.appendChild(container);
@@ -306,6 +320,15 @@ describe("App: tools, the click, the selection and the inspection (milestone 2, 
     click(q('input[name="publish-scope"][value="whole"]'));
     await inAct(() => q<HTMLButtonElement>(".publish-open")!.click());
   }
+  const currentView = () => q<HTMLInputElement>('input[name="publish-scope"][value="current"]')!;
+  /** An Apply of `predicate` through the real FilterPanel. With `refuse`, the manager stand-in refuses it, so the refusal recovery re-issues the last query. */
+  async function applyFilter(predicate: string, refuse = false): Promise<void> {
+    if (refuse) mocks.manager.refuseNext = new SkpCallError({ code: "skp.filter_rejected_by_binder", message: "the filter was rejected", fields: {} });
+    setValue(q<HTMLInputElement>(".filter-predicate")!, predicate);
+    await inAct(() => q<HTMLButtonElement>(".filter-apply")!.click());
+  }
+  const lastRequest = () => mocks.manager.requests[mocks.manager.requests.length - 1];
+  const wire = (b: ReturnType<typeof box>) => ({ xmin: encodeHexF64(b.xmin), ymin: encodeHexF64(b.ymin), xmax: encodeHexF64(b.xmax), ymax: encodeHexF64(b.ymax) });
   /** The dialog's typed phrase and Submit, as an operator would. */
   async function submitExport(): Promise<void> {
     setValue(q<HTMLInputElement>(".publish-dialog-phrase")!, "bundle");
@@ -682,24 +705,83 @@ describe("App: tools, the click, the selection and the inspection (milestone 2, 
     expect(shown(".feature-in-view-not-drawn")).toContain(": 0");
   });
 
-  // RECORDED MUTATION for "RB18" (the App side; Amendment 3 item 3): the `onViewShown` prop is routed into `onViewportChanged`'s handler (it writes `lastViewportBboxRef`, sets
-  // `hasSettledView` and calls the debounced entry point). Expected failure: the query it issues.
+  // RECORDED MUTATION for "RB18" (the App side; Amendment 3 item 3): the `onViewShown` prop is routed into `onViewportChanged`'s handler (it writes `lastViewportBboxRef` and calls the
+  // debounced entry point). Expected failure: the query it issues.
   // OBSERVED AT f51b96a9cafbaf57b5f562edb8a0d64b51d9a604: FAILED -- "RB18: onViewShown writes the box and nothing else: no query, no last-asked box, no settled view": AssertionError: no query: expected 1 to be +0.
-  // Reverted after observing.
-  it("RB18: onViewShown writes the box and nothing else: no query, no last-asked box, no settled view", async () => {
+  // Reverted after observing. Re-aimed by export-current-view-after-unreported-fit (its Amendment 3 item 4 (b)): the title lost ", no settled view", and the radio's `disabled` reads
+  // gave way to the refusal-recovery observer at the end. NOT YET RE-OBSERVED at the new head.
+  it("RB18: onViewShown writes the box and nothing else: no query, no last-asked box", async () => {
     await open("C:/data/a.parquet");
     useTool("Select");
     await clickFeature(1n, box(0, 0, 10, 10));
-    click(q(".publish-disclosure"));
-    const current = () => q<HTMLInputElement>('input[name="publish-scope"][value="current"]')!;
-    expect(current().disabled, "no settled view yet").toBe(true);
     const before = mocks.viewportRequests;
 
     await inAct(() => props().onViewShown!(box(0, 0, 100, 100)));
     await twoWindows();
     expect(shown(".feature-in-view-not-drawn"), "the box was written").toContain(": 1");
     expect(mocks.viewportRequests - before, "no query").toBe(0);
-    expect(current().disabled, "no last-asked box and no settled view").toBe(true);
+    await applyFilter("zone = 'residential'", true);
+    expect(lastRequest().bbox, "no last-asked box: the recovery asks the whole dataset").toBeNull();
+  });
+
+  // RECORDED MUTATION for "RCV1" (export-current-view-after-unreported-fit): App's Current-view getter reads `lastViewportBboxRef` (`getViewBox` decodes it). Expected failure: the toEqual, receiving b1.
+  // NOT YET OBSERVED.
+  it("RCV1: after an issued Apply and the fit it triggers, Current view sends the box the fit showed", async () => {
+    await open("C:/data/a.parquet");
+    click(q(".publish-disclosure"));
+    const [b1, b2] = [box(0, 0, 100, 100), box(40, 40, 60, 60)];
+    await inAct(() => props().onViewportChanged(b1));
+    await applyFilter("zone = 'residential'");
+    expect(text(".filter-active")).toBe("Applied: zone = 'residential'");
+    expect(mocks.canvas.resets, "an issued Apply re-arms the fit once").toBe(1);
+    await inAct(() => props().onViewShown!(b2));
+    await inAct(() => q<HTMLButtonElement>(".publish-open")!.click());
+    expect(mocks.publish.prepares, "one prepare").toHaveLength(1);
+    expect(mocks.publish.prepares[0][2], "the box of the fit, not of the last pan").toEqual({ kind: "viewport-bbox", bbox: b2 });
+  });
+
+  // RECORDED MUTATION for "RCV2": drop the reset of the view box at an admission (`viewBox.set(null)` in `handleAdmitted`, App.tsx). Expected failure: Current view is enabled for B.
+  // NOT YET OBSERVED.
+  it("RCV2: a reopen empties the view box: Current view is disabled again, and a prepare is refused with no call", async () => {
+    await open("C:/data/a.parquet");
+    await inAct(() => props().onViewportChanged(box(0, 0, 100, 100)));
+    click(q(".publish-disclosure"));
+    expect(currentView().disabled, "A has reported a box").toBe(false);
+    await open("C:/data/b.parquet");
+    click(q(".publish-disclosure"));
+    expect(currentView().disabled, "B's canvas has reported nothing").toBe(true);
+    const outcome = await act(async () => window.__SPATIAL_E2E__!.publishPrepare!("current"));
+    expect(outcome.status, "the dev hook is refused").toBe("refused");
+    expect(mocks.publish.prepares, "A's box is not sent for B").toEqual([]);
+  });
+
+  // RECORDED MUTATION for "RCV3": availability from the old signal (a `hasSettledView` state set by `onViewportChanged` only; App passes `getViewBox={() => (hasSettledView ? viewBox.get() : null)}`).
+  // Expected failure: the radio is disabled after `onViewShown` alone.
+  // NOT YET OBSERVED.
+  it("RCV3: Current view is available once the map has drawn the data, with no pan or zoom reported, and Export carries that box", async () => {
+    await open("C:/data/a.parquet");
+    click(q(".publish-disclosure"));
+    expect(currentView().disabled, "nothing drawn yet").toBe(true);
+    expect(text(".publish-scope-disabled-reason")).toBe("Not available yet — the map has not drawn this file's data. Pan or zoom the map, or choose Whole dataset.");
+    const b0 = box(10, 20, 30, 40);
+    await inAct(() => props().onViewShown!(b0));
+    expect(currentView().disabled, "a view was shown").toBe(false);
+    expect(q(".publish-scope-disabled-reason"), "no reason").toBeNull();
+    await inAct(() => q<HTMLButtonElement>(".publish-open")!.click());
+    expect(mocks.publish.prepares[0][2]).toEqual({ kind: "viewport-bbox", bbox: b0 });
+  });
+
+  // RECORDED MUTATION for "RCV4": `handleApplyFilter`'s `getLastViewportBbox` reads the view box (encoded) in place of `lastViewportBboxRef`. Expected failure: the recovery's bbox, receiving b2's.
+  // NOT YET OBSERVED.
+  it("RCV4: a refused Apply's recovery re-issues the box of the last pan or zoom, not the box a fit showed since", async () => {
+    await open("C:/data/a.parquet");
+    const [b1, b2] = [box(0, 0, 100, 100), box(40, 40, 60, 60)];
+    await inAct(() => props().onViewportChanged(b1));
+    await applyFilter("zone = 'residential'");
+    await inAct(() => props().onViewShown!(b2));
+    await applyFilter("zone = 'industrial'", true);
+    expect(lastRequest().bbox, "the recovery asks the last pan or zoom's box").toEqual(wire(b1));
+    expect(lastRequest().filter, "over the last issued filter").not.toBeNull();
   });
 
   // RECORDED MUTATION for "RB-S1" (a row beyond the table; the reviewer's S1 of PR #212's gate 1, Amendment 5 item 1(d)): move the close effect (App.tsx) after the `[admitted]` effect.

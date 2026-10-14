@@ -850,7 +850,7 @@ export default function App() {
    * the handle, so a set from another resource's canvas is read as empty (a rebind clears it). */
   const [drawnState, setDrawnState] = useState<{ resource: string; ids: ReadonlySet<bigint> } | null>(null);
   const drawnIds = drawnState !== null && admitted !== null && drawnState.resource === admitted.dataset ? drawnState.ids : NO_IDS;
-  /** The view box the Feature tab's counts are made against (a ref with a listener set: a pan renders nothing here). */
+  /** The view box the Feature tab's counts and the Export panel's Current view are made against (a ref with a listener set: a pan renders nothing here). */
   const [viewBox] = useState(createViewBoxStore);
   const [canvasRefusal, setCanvasRefusal] = useState<string | null>(null);
   const [viewportRefusal, setViewportRefusal] = useState<FormattedRefusal | null>(null);
@@ -894,15 +894,6 @@ export default function App() {
   // Apply's own re-issue target (design section (b)): the current viewport, not just the last one a
   // debounced query happened to fire for.
   const lastViewportBboxRef = useRef<Bbox | null>(null);
-  // NEXT-CUT.md (publish cut) P3 item 3: "Current view" must be disabled with a visible reason
-  // while `lastViewportBboxRef` is still null -- a ref alone cannot drive that render-time decision
-  // (writing it never triggers a re-render), so this is the same ref/state split this file already
-  // uses for `activeFilter`/`scanState`: the ref stays the freshest-possible value any issue site
-  // reads, this boolean is only the render-time "has one ever arrived" signal `PublishPanel` needs.
-  // Set true on the FIRST `onViewportChanged` call below (guarded so an ordinary drag's many calls
-  // per frame do not re-render on every one) and reset to `false` only where the ref itself resets
-  // (`admitAndResetStaleUiState`'s own `setLastViewportBbox` closure below), never elsewhere.
-  const [hasSettledView, setHasSettledView] = useState(false);
   const canvasRef = useRef<WorkingCanvasHandle>(null);
   const managerRef = useRef<ViewportStreamManager | null>(null);
   /** P5f complex-gate should-fix 3: set ONLY inside the `[admitted]` effect's candidate-arm branch
@@ -1080,10 +1071,6 @@ export default function App() {
         },
         setLastViewportBbox: (value) => {
           lastViewportBboxRef.current = value;
-          // A fresh dataset starts with no "current viewport" of its own yet -- `value` is always
-          // `null` at this call site (a dataset-change reset), restated as `value !== null` rather
-          // than a hardcoded `false` so this closure stays correct even if that ever changed.
-          setHasSettledView(value !== null);
         },
         setScanState: commitScanState,
         setSessionEnded: (value) => {
@@ -2060,7 +2047,7 @@ export default function App() {
                     if (admitted.dataset === admittedDatasetRef.current) setDrawnState({ resource: admitted.dataset, ids });
                   }}
                   /* A view shown without a report (the auto-fit, a resize before any area was asked): it writes the box and nothing else --
-                   * no query, no `lastViewportBboxRef`, no `hasSettledView` (Amendment 3 item 2; RB18). */
+                   * no query, no `lastViewportBboxRef` (Amendment 3 item 2; RB18). */
                   onViewShown={showBox}
                   /* P3b §2a(iv): the ONE pick-latch site, covering both arms, because hover is
                    * arm-independent. Once the session has ended, every readout the canvas resolves --
@@ -2108,18 +2095,14 @@ export default function App() {
                     // happened to fire for.
                     lastViewportBboxRef.current = toWireBbox(bbox);
                     showBox(bbox);
-                    // NEXT-CUT.md (publish cut) P3 item 3: flips exactly once per dataset (guarded, so
-                    // an in-progress drag's many calls per frame do not re-render on every one) -- the
-                    // FIRST arrival here is what lets `PublishPanel` enable "Current view".
-                    if (!hasSettledView) setHasSettledView(true);
                     // Debounced to settle -- see the effect above's own comment and
                     // `streaming/debounce.ts` for why a pan/zoom-driven query is never issued directly
                     // from this callback.
                     viewportDebounceRef.current?.call(toWireBbox(bbox), null);
                   }}
-                  /* The map changed size and now shows less than the area last asked for: keep the box it
-                   * actually shows current (the Export panel's Current view reads it at click time). No
-                   * query, and `hasSettledView` is untouched -- a within-report only follows a reported view. */
+                  /* The map changed size and now shows less than the area last asked for: keep the boxes it actually shows current (the ref,
+                   * which the refusal recovery reads, and the view box, which the Export panel's Current view reads at click time). No
+                   * query -- a within-report only follows a reported view. */
                   onViewportWithinLastQuery={(bbox) => {
                     lastViewportBboxRef.current = toWireBbox(bbox);
                     showBox(bbox);
@@ -2285,8 +2268,8 @@ export default function App() {
             datasetHandle={admitted.dataset}
             style={style}
             filterActive={activeFilter !== null}
-            hasSettledView={hasSettledView}
-            getLastViewportBbox={() => lastViewportBboxRef.current}
+            getViewBox={viewBox.get}
+            subscribeViewBox={viewBox.subscribe}
             stageScope={stageExportScope}
             checkStagedScope={checkStagedExportScope}
             onExportRunning={handleExportRunning}
