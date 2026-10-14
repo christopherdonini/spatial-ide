@@ -136,8 +136,10 @@ fn a_duplicate_id_column_is_refused_rather_than_admitted_as_identity() {
 }
 
 #[test]
-fn a_file_whose_key_is_not_called_id_is_refused_until_a_mapping_is_declared() {
-    let _wd = Watchdog::new("a_foreign_key_column_needs_a_declaration");
+fn a_file_whose_key_is_not_called_id_admits_on_the_session_tier_until_a_mapping_is_declared() {
+    let _wd = Watchdog::new(
+        "a_file_whose_key_is_not_called_id_admits_on_the_session_tier_until_a_mapping_is_declared",
+    );
     // The shape most real GeoParquet has, and the reason ADR-016 exists.
     let (path, facts) = write(
         "foreign-key",
