@@ -838,3 +838,17 @@ Nothing above is edited.
 2. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 4 — stage 1 built (commits 1 to 4 and the engine accessor): three ceilings overrun, §7 not edited (class 8); the worker's deviations (class 2); three for the gates' judgment; one string for the human's sight
+
+*Written by the custodian after stage 1's results were seen, at the head aa1d0d06, before any gate. References only. The report is `state/consults/2026-10-14-b2-piece-1b-recording-stage-1-worker-report.md` (sha256 18ee2e48; the worker's run 2026-10-14T17:07:19Z to 2026-10-14T19:16:53Z by its transcript).*
+
+1. **Stage 1:** commits b1883ce1, 696b0a6b, 10168433, d95f964a and aa1d0d06 over the base 31e25f15. Every stage 1 suite and check exits 0, the lock diffs are empty, and every new test's mutation was observed (the report, items 4 and 5).
+2. **§7 (class 8),** by the report's item 6: the kernel product group at 1,445 against 950, the kernel tests at 764 against 700, and Amendment 2's own ceiling at 222 against 220; the total 3,156 against 3,950. The wire data files are 8 against at most 6, and `protocol/skp/tests/conformance/main.rs` is edited though §2.13 does not name it (the report's deviations 2 and 3). §7 is not edited.
+3. **The worker's deviations (class 2),** as the report's item 8 gives them, by number; each is for the gates.
+4. **For the gates' judgment** (the worker called them class 9 candidates; none was declared before code, so they stand as class 2): deviation 1, a fifth error code, `skp.style_value_not_admitted`; deviation 4, the history file opened read and write, because Windows refuses the lock on an append-only handle; deviation 5, the `filter` key required present in a recorded `filter.apply` step. All three sit inside the new `record_step` command and change no existing command.
+5. **For the human's sight:** deviation 1's refusal message is a new string; it joins the P6 list in the PR body.
+6. **Stage 2** (commits 5 to 7) goes to a fresh worker with the report's item 9 and the open items of its item 10 (H6, the float parse) as input.
+7. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
