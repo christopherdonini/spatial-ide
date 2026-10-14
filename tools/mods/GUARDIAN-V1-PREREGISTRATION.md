@@ -1612,3 +1612,13 @@ D.3 **Observations owed.**
 7. **Superseded index:** Part F's estimate → item 1; §2.7's log-folder clause → item 4.
 
 Nothing above is edited.
+
+### Amendment 10 — the human's merge approval and the live checks allowed (class 5)
+
+*Written by the custodian on the human's typed ruling (`state/directives/2026-10-14-215-c1-216-merge-current-view-open-3-b2-1b-open-1-to-10.md`, item 2). References only.*
+
+1. **The merge of PR #216 is approved** by the human, who clicks it and runs the reload, and says when both are done.
+2. **The live checks allowed after the reload:** E7, E8, E9, E10 and E11. They run only after the human's word that both are done.
+3. **Then** the closing record, with the node done and `{pr: 216}`.
+
+Nothing above is edited.

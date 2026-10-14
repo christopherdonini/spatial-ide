@@ -94,3 +94,12 @@ Nothing above is edited.
 4. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 3 — the human's ruling on gate 1's C-1 (class 5)
+
+*Written by the custodian on the human's typed ruling (`state/directives/2026-10-14-215-c1-216-merge-current-view-open-3-b2-1b-open-1-to-10.md`, item 1). References only.*
+
+1. **C-1:** the reviewer's replacement words. On PR #215's branch, main was merged in at 821cd7b9 (no conflict) and item 42's sentence was replaced at 5a5b2f84. The drafted item text in §2 and clause row C11 above carry the earlier sentence and are superseded by this item.
+2. **What remains:** the merge is the human's click. After it, the v0.1.0 release notes take the human's correction paragraph (Amendment 1), and the custodian shows the human the page.
+
+Nothing above is edited.

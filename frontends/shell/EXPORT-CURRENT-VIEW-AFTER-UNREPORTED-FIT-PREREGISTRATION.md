@@ -373,3 +373,12 @@ The worker's and tester's briefs carry, as written, the paragraph at state/direc
 5. **Superseded index:** §11's OPEN-1 to OPEN-3 → items 1 to 3; §2.4's [OPEN-2 (b)] bullet → item 2.
 
 Nothing above is edited.
+
+### Amendment 2 — the human's ruling on OPEN-3's placement (class 5)
+
+*Written by the custodian on the human's typed ruling (`state/directives/2026-10-14-215-c1-216-merge-current-view-open-3-b2-1b-open-1-to-10.md`, item 3), before any code. References only.*
+
+1. **OPEN-3:** the added sentence (Amendment 1 item 3) stands second, as the custodian placed it.
+2. **The start:** milestone 2 has merged (PR #217, 2026-10-14). This piece is next in slot 1; §0.3's re-sweep comes first, in its own amendment, before any code.
+
+Nothing above is edited.
