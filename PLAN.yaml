@@ -4492,7 +4492,7 @@ nodes:
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "IN PROGRESS 2026-10-14 in the docs lane (C:/dev/wt/kl40, base main 31e25f15): section A's line applied by script, to a worker. Before: PLACED 2026-10-14 by the human (state/directives/2026-10-14-e15-named-i2-live-row-build-24px-provenance-cv-2-4-item-40-comment.md, item 6): the docs lane, as its own line, after its head. The five-line form is committed with this node; its section A line is built by script."
+    summary: "BUILT 2026-10-14 at cb9a9fd4 (state/consults/2026-10-14-known-limitations-item-40-source-comment-worker-report.md): line 384 replaced by section A's line by script, 1 line in and 1 out; the four pins match at 71fd2c4f and at the head; verify-cites and verify-quotes exit 0. NEXT: the PR and the single reviewer gate. Before: IN PROGRESS 2026-10-14 in the docs lane (C:/dev/wt/kl40, base main 31e25f15): section A's line applied by script, to a worker. Before: PLACED 2026-10-14 by the human (state/directives/2026-10-14-e15-named-i2-live-row-build-24px-provenance-cv-2-4-item-40-comment.md, item 6): the docs lane, as its own line, after its head. The five-line form is committed with this node; its section A line is built by script."
     dates: {opened: 2026-10-14, done: null}
   - id: stale-assertion-messages-and-product-comments
     title: "Stale text outside the docs lane: an assertion message calling ADR-016 Amendment 1 proposed, a thrown e2e message with a stale line cite, and two product-code comments (crsAssertionState.ts and buildLayers.ts) carrying the same stale premises piece f corrects in tests"

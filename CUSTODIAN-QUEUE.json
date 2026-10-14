@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-14T17:00:10.190Z",
-  "plan_hash": "eb94bc5c228173178381b93bdf7d45e56357eff474ef910bf246ef10908955fc",
+  "generated_at": "2026-10-14T17:15:25.102Z",
+  "plan_hash": "7f1e867e2f09f225d33f28e964433bd1a2cdb62b2dbf722545286f769969f97d",
   "priorities_approved": true,
   "next": {
     "id": "known-limitations-crs-epoch-edges-third-axis",
@@ -293,7 +293,7 @@
         "opened": "2026-10-14",
         "done": null
       },
-      "summary": "IN PROGRESS 2026-10-14 in the docs lane (C:/dev/wt/kl40, base main 31e25f15): section A's line applied by script, to a worker. Before: PLACED 2026-10-14 by the human (state/directives/2026-10-14-e15-named-i2-live-row-build-24px-provenance-cv-2-4-item-40-comment.md, item 6): the docs lane, as its own line, after its head. The five-line form is committed with this node; its section A line is built by script.",
+      "summary": "BUILT 2026-10-14 at cb9a9fd4 (state/consults/2026-10-14-known-limitations-item-40-source-comment-worker-report.md): line 384 replaced by section A's line by script, 1 line in and 1 out; the four pins match at 71fd2c4f and at the head; verify-cites and verify-quotes exit 0. NEXT: the PR and the single reviewer gate. Before: IN PROGRESS 2026-10-14 in the docs lane (C:/dev/wt/kl40, base main 31e25f15): section A's line applied by script, to a worker. Before: PLACED 2026-10-14 by the human (state/directives/2026-10-14-e15-named-i2-live-row-build-24px-provenance-cv-2-4-item-40-comment.md, item 6): the docs lane, as its own line, after its head. The five-line form is committed with this node; its section A line is built by script.",
       "evidence_label": "branch `cut/known-limitations-item-40-source-comment`"
     }
   ],
