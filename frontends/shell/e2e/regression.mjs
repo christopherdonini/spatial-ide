@@ -1073,10 +1073,10 @@ async function stepA9(page, consoleHandle) {
 // contract failure.
 //
 // **Case (iv) is written against `HOVER_REPICK_ON_PAN`'s built value** (`src/canvas/hoverRepickConstants.ts`,
-// `true`: pan and zoom settle alike, the reading the ruling's words force). That value is PROPOSED
-// PENDING THE HUMAN'S SIGHT (DECISIONS-PENDING entry 75). If the human selects the zoom-only value
-// instead, this case must be RE-AIMED onto a camera change that both translates and zooms -- it must
-// not be quietly deleted, since it is the only case here whose correct answer is a different id.
+// `true`: pan and zoom settle alike, the reading the ruling's words force). That value is ruled
+// (DECISIONS-PENDING entry 75 (1)). If the switch's value is ever changed, this case must be
+// RE-AIMED onto a camera change that both translates and zooms -- it must not be quietly
+// deleted, since it is the only case here whose correct answer is a different id.
 // ---------------------------------------------------------------------------------------
 const K6_ZOOM_OUT_NOTCHES_MIN = 8; // floor on zoom-OUT notches applied after finding an
 // above-threshold candidate, independent of how many zoom-IN notches that search itself needed --
@@ -1757,10 +1757,10 @@ const K7_MIN_RESTORED_NON_BG_FRACTION = 0.02; // the SAME "something is actually
 // already uses after its own "Zoom to layer" click -- restated, not re-derived.
 // The preregistration's own "the declared partial-view status shows" half, now ASSERTED rather than
 // merely recorded (reviewer gate should-fix 4). Duplicated verbatim from
-// `src/residency/residencyStatus.ts:429-430` (`SETTLED_PARTIAL_WITHIN_BUDGET_TEXT`) rather than
+// `SETTLED_PARTIAL_WITHIN_BUDGET_TEXT` in `src/residency/residencyStatus.ts` rather than
 // imported: this harness is Node-side and imports nothing from `src/` -- the same convention
 // `K6_REFUSAL_TEXT` above follows ("canvas/HoverReadoutView.tsx, verbatim"). If that string is ever re-worded (it is
-// a DRAFT awaiting the human's own 24(b) sight, per its doc comment), this copy must move with it,
+// ruled, entry 45 (1), per its doc comment), this copy must move with it,
 // and this step failing loudly is how that gets noticed.
 const K7_SETTLED_PARTIAL_TEXT = "Filling has finished for this view — some areas were not loaded; pan or zoom to load them.";
 // Re-review should-fix 3: the bound the status assertion re-reads `.residency-status` under, once the

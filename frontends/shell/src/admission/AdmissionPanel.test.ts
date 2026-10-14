@@ -21,8 +21,8 @@ import {
 } from "./AdmissionPanel";
 import { FormattedRefusal } from "./formatRefusal";
 
-// `AdmissionPanel.tsx` renders `<WorkingCanvas>`-adjacent JSX no harness in this package can
-// mount (App.test.ts's own top comment); `formFamilyForCode`/`nextFormFamily` are exported
+// `AdmissionPanel.tsx` runs unmocked inside the mounted `App` (`App.layout.test.tsx`); here
+// `formFamilyForCode`/`nextFormFamily` are tested as pure functions. They are exported
 // specifically so the actual decision -- which remediation form (if any) stays reachable for a
 // given refusal -- is testable on its own terms, the same pattern as `App.tsx`'s `nextScanState`.
 

@@ -554,12 +554,10 @@ fn generate_the_dupkey_refusing_fixture() {
 /// (`engine/ADMISSION-PREREGISTRATION.md` §4 F-2/F-3).** This generator used to write
 /// `CrsMode::AbsentKey` in the metre domain — since Brief A's P1/P2 an absent key admits under
 /// GeoParquet's own OGC:CRS84 format default and this file's metre-domain coordinates would
-/// contradict it (`engine.format_default_contradicted`, F-2), not the `engine.crs_undeclared`
-/// refusal `frontends/shell/e2e/admission-remediation.mjs`'s `stepBothNeeded` expects first and
-/// this fixture's own "both remediations needed" intent depends on (a CRS-assertion form has to
-/// render so the carried-claim flow has something to assert through). Moving to
-/// `CrsMode::ExplicitNull` (F-3, unchanged refusal, same filename) keeps both the code
-/// `stepBothNeeded` checks and the form it requires correct — no change needed there.
+/// contradict it (`engine.format_default_contradicted`, F-2). `CrsMode::ExplicitNull` (F-3,
+/// unchanged refusal) keeps the reason this file exists: a plain open of it meets
+/// `engine.crs_undeclared`, the code half (a) of `frontends/shell/e2e/admission-remediation.mjs`'s
+/// `stepBothNeeded` expects.
 #[test]
 #[ignore = "generates a real file for the manual walkthrough; not part of the default suite"]
 fn generate_the_no_crs_no_id_refusing_fixture() {

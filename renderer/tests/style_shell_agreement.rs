@@ -34,8 +34,9 @@
 //! structurally: there is no serialization step between the fixture and `parse` for this test to
 //! introduce a difference in.
 //!
-//! Both documents are literal-only (style v0's own live-editing ceiling, ADR-023: `viewport_query`
-//! carries no attributes, so a shell-produced document can never declare a `match`) -- `compile`
+//! Both documents are literal-only (the shell's style document type has no `match` variant;
+//! `viewport_query` has carried a declared attribute projection since `skp/0.6`, and the shell
+//! requests none) -- `compile`
 //! below is therefore called against a **minimal stub schema**: an empty column list and an empty
 //! published-column list. Read, not assumed: `compiled.rs::compile` only ever consults `schema`/
 //! `published` when `document.match_column()` is `Some` (to validate a match column exists, is

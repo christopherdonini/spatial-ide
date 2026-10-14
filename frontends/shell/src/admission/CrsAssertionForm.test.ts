@@ -10,9 +10,9 @@ import type { CrsCatalogEntry } from "../skp/crsCatalog";
 import { buildCrsAssertion, definitionValidationMessage, MAX_CRS_DEFINITION_BYTES } from "./crsAssertionState";
 
 /**
- * `CrsAssertionForm.tsx` renders `<form>`/`<textarea>` JSX no harness in this package can mount
- * (`AdmissionPanel.test.ts`'s own top comment) -- P4 item D's actual behavioral contract (an
- * over-bound paste blocks Submit AND says why) is therefore proven two ways, together:
+ * This file does not mount `CrsAssertionForm.tsx` (`<form>`/`<textarea>` JSX) -- P4 item D's
+ * actual behavioral contract (an over-bound paste blocks Submit AND says why) is therefore proven
+ * two ways, together:
  *
  * 1. The state-function pairing below: for the SAME over-bound `CrsAssertionFormState`,
  *    `buildCrsAssertion` (what gates the Submit button's `disabled` prop) is `null` AND

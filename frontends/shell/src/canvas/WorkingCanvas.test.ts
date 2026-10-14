@@ -120,9 +120,9 @@ describe("summarizePixels samplePoint logic (S6)", () => {
 });
 
 // NEXT-CUT.md P3 / binding note 7: "a style change issues NO viewport query ... and triggers exactly
-// one re-render path." `applyStyleChange` is the pure seam this drives (see its own doc comment for
-// why a real `<WorkingCanvas>` mount is not how this package tests this component at all -- no
-// WebGL context, no @testing-library/react-equivalent harness).
+// one re-render path." `applyStyleChange` is the pure seam this drives, with no mount. The real
+// `WorkingCanvas` is mounted only in `WorkingCanvas.wiring.test.tsx`, with deck's `Deck` class
+// stood in because jsdom provides no WebGL context, and that file drives no style change.
 describe("applyStyleChange (NEXT-CUT.md P3, binding note 7)", () => {
   it("recomputes draw params and calls render exactly once", () => {
     const render = vi.fn();
