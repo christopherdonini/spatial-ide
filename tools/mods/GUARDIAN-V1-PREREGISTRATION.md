@@ -1622,3 +1622,64 @@ Nothing above is edited.
 3. **Then** the closing record, with the node done and `{pr: 216}`.
 
 Nothing above is edited.
+
+### Amendment 11 — the live checks E7 to E11, after the human's merge and reload (class 1)
+
+*Class 1, post-result rows, recorded by the custodian on main as §4's E-rows, under Amendment 10. Texts are byte-copied by script from this session's transcript, from the log files and from `claude plugin list`; folders outside the repository are named in words. Run by the custodian in the main loop, after the human's word.*
+
+1. **The human's word.** The merge of PR #216 at 2026-10-14T09:20:33Z (merge commit 9132af6447005eac270ea77f3efda4cc368e622e), then the human's reload, then their message saying both were done, received at 09:36:35Z by the transcript.
+2. **Preconditions.**
+   - **The reload's output,** at 09:36:20Z by the transcript (byte-copied):
+
+     ```text
+     Reloaded: 4 plugins · 9 skills · 15 agents · 0 hooks · 9 plugin MCP servers · 1 plugin LSP server
+     `spatial-guardian@spatial-ide-mods` re-read from its folder: `tools\mods\spatial-guardian`
+     ```
+
+   - **`claude plugin list`,** read again at 09:41:04Z, prints for the mod the line `Read from: C:\dev\spatial-ide\tools\mods\spatial-guardian`, unchanged from v0 Amendment 8's E0. Its scope line reads local since the mods-readme-local-scope piece; it is not a precondition.
+   - **The main checkout** was at 2cf707a37be51100865999a5bd2991a8d9d1762f for the reload and every row, a descendant of the merge commit. `tools/mods/spatial-guardian` and `tools/mods/.claude-plugin` are identical to the merge commit's, with no uncommitted change there.
+   - **The build.** `claude --version`, read at 09:36:58Z by the transcript, before the rows, printed `2.1.296 (Claude Code)`, the build of record (Amendment 8 item 3; Amendment 9 item 2). By v0 §4's method, I2 does not fire for the rows below. Two facts are recorded beside it and told to the human:
+     - This session's transcript records version 2.1.292 on its records since 2026-10-11T12:52Z, each call below included. The engine that dispatched these hooks is the running session's, started before the installed command moved on.
+     - The installed command's file was replaced at 09:38:26Z, after E11, and the command now prints `2.1.299 (Claude Code)` (read at 09:41:04Z). Any later run of record reads against 2.1.299, so under Amendment 8 item 3 I2 fires for it, and the matter is the human's.
+3. **The rows.**
+- **E7.** A main-loop Bash, `gh pr merge --help`, at 09:37:43Z by the transcript: refused. The tool result's text, byte-copied less the engine's error wrapper:
+
+  ```text
+  spatial-guardian G7: refused, because a merge is the human's click and an agent never rewrites history.
+  ```
+
+  As §4 predicts (G7's reason). Its log file is `093744122-907d1677f5c2c2d9.json`.
+- **E8.** A main-loop Bash, `claude plugin install --help`, at 09:37:46Z by the transcript: refused. The tool result's text, byte-copied less the engine's error wrapper:
+
+  ```text
+  spatial-guardian G8: refused, because installing, enabling or configuring plugins, marketplaces, MCP servers or the user's Claude settings is the human's own act.
+  ```
+
+  As §4 predicts (G8's reason). Its log file is `093746429-b378bbee601c69b8.json`.
+- **E9.** A main-loop Bash, `cd C:/dev/spatial-ide && cargo clean --dry-run`, at 09:37:49Z by the transcript: refused. The tool result's text, byte-copied less the engine's error wrapper:
+
+  ```text
+  spatial-guardian G9: refused, because the main checkout's target holds fixtures and evidence and is never cleaned wholesale.
+  ```
+
+  As §4 predicts (G9's reason). Its log file is `093749484-07458f814f9a2813.json`.
+- **E10.** The refusal-log folder for this checkout (the README's, beside the main checkout), dated 2026-10-14:
+  - **Before E7:** its guardian folder did not exist, read in the same turn as E7 (no refusal had been logged since the reload).
+  - **After E9:** three files, one for each of E7 to E9. For each, the script checked: one JSON line and an LF; the schema `spatial-guardian/v1`; rule G7, G8 or G9; tool Bash; agent `main`; `target_sha256` equal to the sha256 of the command, recomputed from the transcript's tool input; `reason` equal to the tool result's text less the engine's error wrapper; and the name's 16 hex equal to the line's sha256. All hold.
+  - **The allowed call beside them,** a main-loop Bash `git --no-optional-locks status --porcelain` at 09:37:52Z, ran, and the folder still held three files after it, and again after E11.
+- **E11.** A main-loop Write creating a new file in the session scratchpad, at 09:38:01Z by the transcript: it passed, and the tool result reports the file created. The path is not recorded, because it lies under the user's profile. No log file was added.
+4. **Outcome:** E7 to E11 come out as §4 predicts. No live G1 probe was made.
+5. **E15 did not run.** Amendment 8 item 4 names it to run with the other E-rows, but the human's approval of 2026-10-14 (Amendment 10 item 2) lists E7 to E11 as the live checks allowed. The question goes to the human; if they name it, it runs and is recorded in its own amendment.
+6. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
+
+### Amendment 12 — closing record: PR #216 merged
+
+*Written by the custodian after the merge and the live checks. References only.*
+
+1. **Merged** by the human at 2026-10-14T09:20:33Z, merge commit 9132af6447005eac270ea77f3efda4cc368e622e (the branch head e4955589).
+2. **Live checks:** Amendment 11. E15 waits on the human (Amendment 11 item 5).
+3. **PLAN:** the node is done, with `{pr: 216}`.
+
+Nothing above is edited.

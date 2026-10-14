@@ -1,16 +1,16 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `8db53dc1e2ef8494acfac27b3b679d35d06d3b6c916217bc79eeb9aa32daae27`) at `2026-10-14T09:21:02.326Z`.
+Generated from `PLAN.yaml` (sha256 `59c18272b45d764a3a3c3d31ff8ebe6df14580ce32d2aedf4eec0f069b1fb614`) at `2026-10-14T09:43:58.958Z`.
 
 ## 1. Next
 
-- **export-current-view-after-unreported-fit** — The Export panel's Current view after an unreported fit: after an issued Apply or Clear, the default Current view export sends the box from before the map fitted itself, until the next pan, zoom or Zoom to layer; the approval dialog shows that box's four numbers (lane `shell`)
+- **b2-piece-1b-recording** — B2 piece 1b -- recording: the kernel's step commands for filter, scope and style, the session history on the machine, safe against a crash, and the docs/07 note (lane `kernel-protocol`)
 
 ## 2. Ready
 
+- **b2-piece-1b-recording** — B2 piece 1b -- recording: the kernel's step commands for filter, scope and style, the session history on the machine, safe against a crash, and the docs/07 note (lane `kernel-protocol`, order 4, budget 0 min)
 - **export-current-view-after-unreported-fit** — The Export panel's Current view after an unreported fit: after an issued Apply or Clear, the default Current view export sends the box from before the map fitted itself, until the next pan, zoom or Zoom to layer; the approval dialog shows that box's four numbers (lane `shell`, order null, budget 0 min)
 - **stale-test-names-and-comments** — Stale test names and test comments, names and comments only, no assertion changes: a refusal-named test that asserts admission, the React-harness premise, the no-attributes reason, a Proposed ADR-018, two ruled decisions still marked pending (sweep area E, findings 2, 3, 4, 7 and 10) (lane `shell`, order 6, budget 60 min)
-- **guardian-v1** — Guardian v1 -- G1's heredoc false alarm fixed, one local log line per refusal, and three new rules: G7 (agent merges and history rewrites), G8 (plugin, marketplace and MCP installs, and writes to the user's Claude folder), G9 (wholesale cleans of the main checkout's target) (Fable's MODS-V1 brief, 2026-10-05) (lane `governance`, order 21, budget 240 min)
 
 ## 3. Waiting on the human (total: 0 min)
 
@@ -19,7 +19,6 @@ Generated from `PLAN.yaml` (sha256 `8db53dc1e2ef8494acfac27b3b679d35d06d3b6c9162
 ## 4. Blocked on dependencies
 
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
-- **b2-piece-1b-recording** — B2 piece 1b -- recording: the kernel's step commands for filter, scope and style, the session history on the machine, safe against a crash, and the docs/07 note — blocked by: guardian-v1
 - **briefb-b2-save-reopen** — B2 — Save project, Snapshot data, session history, lineage and preferences, in five stages, each with its own form — blocked by: decision-adr-029-scan-progress-route
 - **known-limitations-crs-epoch-edges-third-axis** — KNOWN-LIMITATIONS: a file's declared coordinate epoch, its edges value and a third CRS axis are not used, shown or carried into a bundle — blocked by: stale-test-names-and-comments
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer — blocked by: signpath-application-draft
