@@ -103,3 +103,13 @@ Nothing above is edited.
 2. **What remains:** the merge is the human's click. After it, the v0.1.0 release notes take the human's correction paragraph (Amendment 1), and the custodian shows the human the page.
 
 Nothing above is edited.
+
+### Amendment 4 — closing record: PR #215 merged; the v0.1.0 release notes corrected
+
+*Written by the custodian after the merge. References only.*
+
+1. **Merged** by the human at 2026-10-14T08:07:12Z, merge commit 4095407cc36a815c71709bc067d4c5d242395602 (the branch head 5a5b2f84).
+2. **The v0.1.0 release notes** carry the human's correction paragraph (Amendment 1) at their top, byte-copied, with item 8 and item 42 linked to KNOWN-LIMITATIONS.md on main; the rest of the notes is unchanged. The page is shown to the human.
+3. **PLAN:** the node is done, with `{pr: 215}`.
+
+Nothing above is edited.

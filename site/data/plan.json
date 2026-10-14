@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-14T07:53:41.352Z",
-  "plan_hash": "4b9a53c9e7b5bed6b2f06a667cd9f529028ff636d7c18d253a96bcb61669ec6f",
+  "generated_at": "2026-10-14T08:13:09.355Z",
+  "plan_hash": "76ae9de89e564106d33c6a37f7da834f705ec560bbc552af3af5de429001c081",
   "priorities_approved": true,
   "lanes": [
     {
@@ -7174,7 +7174,7 @@
       "kind": "task",
       "lane": "shell",
       "phase": "prototype",
-      "status": "blocked",
+      "status": "ready",
       "order": 6,
       "depends_on": [
         "e2e-stale-expectations-reaim",
@@ -7258,7 +7258,7 @@
       "kind": "task",
       "lane": "shell",
       "phase": "prototype",
-      "status": "blocked",
+      "status": "ready",
       "order": null,
       "depends_on": [
         "shell-migration-milestone-2",
@@ -7286,7 +7286,7 @@
       "kind": "task",
       "lane": "release",
       "phase": "prototype",
-      "status": "in-progress",
+      "status": "done",
       "order": null,
       "depends_on": [
         "skp-v0-live-sections-current-area-c"
@@ -7297,16 +7297,16 @@
       },
       "gate": "KNOWN-LIMITATIONS-ITEM-42-CURRENT-VIEW-PREREGISTRATION.md",
       "evidence": {
-        "branch": "cut/known-limitations-current-view-stale-box"
+        "pr": 215
       },
       "budget_minutes": 45,
-      "generation": 3,
+      "generation": 4,
       "felt_verdict": false,
       "entries": [],
-      "summary": "C-1 RULED 2026-10-14 (state/directives/2026-10-14-215-c1-216-merge-current-view-open-3-b2-1b-open-1-to-10.md, item 1): the reviewer's words, applied at 5a5b2f84 after main merged in at 821cd7b9; Amendment 3. The merge is the human's; then the release-notes paragraph and the page shown to the human. Before: GATE 1 FAIL 2026-10-12 (505; state/consults/gates/2026-10-12-known-limitations-current-view-stale-box-gate1-reviewer.md) on the human's wording only, C-1: TO THE HUMAN (item 2b: yes to the gate's words, own words, or as it stands); D-1 is the form's Amendment 2 (generation 3); D-2 applied at f4d85944. Before: BUILT 2026-10-12 at 7f80f18e (state/consults/2026-10-12-known-limitations-current-view-stale-box-worker-report.md): 5 lines, 29 pins recomputed, the indentation 4 spaces against section A's 3 (a list item's continuation; the PR body states it). PR #215 opened; its single reviewer gate running. Before: AMENDMENT 1 2026-10-12 (KNOWN-LIMITATIONS-ITEM-42-CURRENT-VIEW-PREREGISTRATION.md; class 5; generation 2): OPEN-1 yes, OPEN-2 yes, as RULED. NEXT: the worker applies section A; a single reviewer gate; after the merge, the release notes' correction (the custodian). Before: RULED 2026-10-12 (state/directives/2026-10-12-item-42-current-view-amendment-7-guardian-readme-guardrails-brief.md, item 1): OPEN-1 yes, section A as drafted; OPEN-2 yes: after item 42 merges, the v0.1.0 release notes gain the human's correction paragraph at the top (item 8 and item 42, names linked to KNOWN-LIMITATIONS.md on main), and the page is shown to the human. The form's Amendment 1 records it. Before: FORM COMMITTED 2026-10-12 (KNOWN-LIMITATIONS-ITEM-42-CURRENT-VIEW-PREREGISTRATION.md; the architect's draft and final, state/consults/2026-10-12-known-limitations-current-view-stale-box-architect-draft.md, state/consults/2026-10-12-known-limitations-current-view-stale-box-architect-draft-2.md; 29 pins hashed): five-line short form, a single reviewer gate; item 42, its on-main note and source comment; the custodian's section D checks folded in (C5 rests on App's applyFilter at the tag). TO THE HUMAN: OPEN-1 (approve or replace the item's words, item 2e) and OPEN-2 (whether the v0.1.0 release page's notes carry item 42; outward text). Before: PLACED 2026-10-12 by the human (state/directives/2026-10-12-current-view-graded-s1-placed-limitation-release-hold-214-merged.md, item 3): the docs lane's next piece, ahead of stale-test-names-and-comments. One new KNOWN-LIMITATIONS item, true of the v0.1.0 artifact, with its on-main note; it says what to do meanwhile; drafted by the architect under item 2e of state/directives/2026-10-11-direction-after-status-review.md with its clause check, and the human approves or replaces it; its number is clear of 40 and 41, which milestone 2 phase B reserves (its form, A14). The facts are the read state/consults/2026-10-11-export-current-view-after-unreported-fit-read.md and export-current-view-after-unreported-fit. The fix itself is export-current-view-after-unreported-fit, in slot 1. The 45-minute budget is the custodian's estimate.",
+      "summary": "DONE 2026-10-14: PR #215 merged by the human at 2026-10-14T08:07:12Z (merge commit 4095407c); Amendment 4 the closing record; the v0.1.0 release notes carry the human's correction paragraph. Before: C-1 RULED 2026-10-14 (state/directives/2026-10-14-215-c1-216-merge-current-view-open-3-b2-1b-open-1-to-10.md, item 1): the reviewer's words, applied at 5a5b2f84 after main merged in at 821cd7b9; Amendment 3. The merge is the human's; then the release-notes paragraph and the page shown to the human. Before: GATE 1 FAIL 2026-10-12 (505; state/consults/gates/2026-10-12-known-limitations-current-view-stale-box-gate1-reviewer.md) on the human's wording only, C-1: TO THE HUMAN (item 2b: yes to the gate's words, own words, or as it stands); D-1 is the form's Amendment 2 (generation 3); D-2 applied at f4d85944. Before: BUILT 2026-10-12 at 7f80f18e (state/consults/2026-10-12-known-limitations-current-view-stale-box-worker-report.md): 5 lines, 29 pins recomputed, the indentation 4 spaces against section A's 3 (a list item's continuation; the PR body states it). PR #215 opened; its single reviewer gate running. Before: AMENDMENT 1 2026-10-12 (KNOWN-LIMITATIONS-ITEM-42-CURRENT-VIEW-PREREGISTRATION.md; class 5; generation 2): OPEN-1 yes, OPEN-2 yes, as RULED. NEXT: the worker applies section A; a single reviewer gate; after the merge, the release notes' correction (the custodian). Before: RULED 2026-10-12 (state/directives/2026-10-12-item-42-current-view-amendment-7-guardian-readme-guardrails-brief.md, item 1): OPEN-1 yes, section A as drafted; OPEN-2 yes: after item 42 merges, the v0.1.0 release notes gain the human's correction paragraph at the top (item 8 and item 42, names linked to KNOWN-LIMITATIONS.md on main), and the page is shown to the human. The form's Amendment 1 records it. Before: FORM COMMITTED 2026-10-12 (KNOWN-LIMITATIONS-ITEM-42-CURRENT-VIEW-PREREGISTRATION.md; the architect's draft and final, state/consults/2026-10-12-known-limitations-current-view-stale-box-architect-draft.md, state/consults/2026-10-12-known-limitations-current-view-stale-box-architect-draft-2.md; 29 pins hashed): five-line short form, a single reviewer gate; item 42, its on-main note and source comment; the custodian's section D checks folded in (C5 rests on App's applyFilter at the tag). TO THE HUMAN: OPEN-1 (approve or replace the item's words, item 2e) and OPEN-2 (whether the v0.1.0 release page's notes carry item 42; outward text). Before: PLACED 2026-10-12 by the human (state/directives/2026-10-12-current-view-graded-s1-placed-limitation-release-hold-214-merged.md, item 3): the docs lane's next piece, ahead of stale-test-names-and-comments. One new KNOWN-LIMITATIONS item, true of the v0.1.0 artifact, with its on-main note; it says what to do meanwhile; drafted by the architect under item 2e of state/directives/2026-10-11-direction-after-status-review.md with its clause check, and the human approves or replaces it; its number is clear of 40 and 41, which milestone 2 phase B reserves (its form, A14). The facts are the read state/consults/2026-10-11-export-current-view-after-unreported-fit-read.md and export-current-view-after-unreported-fit. The fix itself is export-current-view-after-unreported-fit, in slot 1. The 45-minute budget is the custodian's estimate.",
       "dates": {
         "opened": "2026-10-12",
-        "done": null
+        "done": "2026-10-14"
       }
     },
     {

@@ -1,13 +1,15 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `4b9a53c9e7b5bed6b2f06a667cd9f529028ff636d7c18d253a96bcb61669ec6f`) at `2026-10-14T07:53:41.228Z`.
+Generated from `PLAN.yaml` (sha256 `76ae9de89e564106d33c6a37f7da834f705ec560bbc552af3af5de429001c081`) at `2026-10-14T08:13:09.229Z`.
 
 ## 1. Next
 
-- **guardian-v1** — Guardian v1 -- G1's heredoc false alarm fixed, one local log line per refusal, and three new rules: G7 (agent merges and history rewrites), G8 (plugin, marketplace and MCP installs, and writes to the user's Claude folder), G9 (wholesale cleans of the main checkout's target) (Fable's MODS-V1 brief, 2026-10-05) (lane `governance`)
+- **export-current-view-after-unreported-fit** — The Export panel's Current view after an unreported fit: after an issued Apply or Clear, the default Current view export sends the box from before the map fitted itself, until the next pan, zoom or Zoom to layer; the approval dialog shows that box's four numbers (lane `shell`)
 
 ## 2. Ready
 
+- **export-current-view-after-unreported-fit** — The Export panel's Current view after an unreported fit: after an issued Apply or Clear, the default Current view export sends the box from before the map fitted itself, until the next pan, zoom or Zoom to layer; the approval dialog shows that box's four numbers (lane `shell`, order null, budget 0 min)
+- **stale-test-names-and-comments** — Stale test names and test comments, names and comments only, no assertion changes: a refusal-named test that asserts admission, the React-harness premise, the no-attributes reason, a Proposed ADR-018, two ruled decisions still marked pending (sweep area E, findings 2, 3, 4, 7 and 10) (lane `shell`, order 6, budget 60 min)
 - **guardian-v1** — Guardian v1 -- G1's heredoc false alarm fixed, one local log line per refusal, and three new rules: G7 (agent merges and history rewrites), G8 (plugin, marketplace and MCP installs, and writes to the user's Claude folder), G9 (wholesale cleans of the main checkout's target) (Fable's MODS-V1 brief, 2026-10-05) (lane `governance`, order 21, budget 240 min)
 
 ## 3. Waiting on the human (total: 0 min)
@@ -18,8 +20,6 @@ Generated from `PLAN.yaml` (sha256 `4b9a53c9e7b5bed6b2f06a667cd9f529028ff636d7c1
 
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
 - **b2-piece-1b-recording** — B2 piece 1b -- recording: the kernel's step commands for filter, scope and style, the session history on the machine, safe against a crash, and the docs/07 note — blocked by: guardian-v1
-- **export-current-view-after-unreported-fit** — The Export panel's Current view after an unreported fit: after an issued Apply or Clear, the default Current view export sends the box from before the map fitted itself, until the next pan, zoom or Zoom to layer; the approval dialog shows that box's four numbers — blocked by: known-limitations-current-view-stale-box
-- **stale-test-names-and-comments** — Stale test names and test comments, names and comments only, no assertion changes: a refusal-named test that asserts admission, the React-harness premise, the no-attributes reason, a Proposed ADR-018, two ruled decisions still marked pending (sweep area E, findings 2, 3, 4, 7 and 10) — blocked by: known-limitations-current-view-stale-box
 - **briefb-b2-save-reopen** — B2 — Save project, Snapshot data, session history, lineage and preferences, in five stages, each with its own form — blocked by: decision-adr-029-scan-progress-route
 - **known-limitations-crs-epoch-edges-third-axis** — KNOWN-LIMITATIONS: a file's declared coordinate epoch, its edges value and a third CRS axis are not used, shown or carried into a bundle — blocked by: stale-test-names-and-comments
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer — blocked by: signpath-application-draft
@@ -29,7 +29,7 @@ Generated from `PLAN.yaml` (sha256 `4b9a53c9e7b5bed6b2f06a667cd9f529028ff636d7c1
 
 ## 5. In progress
 
-- **known-limitations-current-view-stale-box** — KNOWN-LIMITATIONS: the Export panel's Current view can send an area the map no longer shows (after an Apply, a Clear or an unreported resize, until the next pan, zoom or Zoom to layer); true of the v0.1.0 artifact, with its on-main note and what to do meanwhile — evidence: branch `cut/known-limitations-current-view-stale-box`
+- (none)
 
 ## 6. Proposed / unscheduled
 
