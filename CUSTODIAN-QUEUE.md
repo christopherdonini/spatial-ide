@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `a11a599c70c56a19c634386cb2f9422525c7c23df6996f7bd8fd55585273282b`) at `2026-10-14T12:54:39.379Z`.
+Generated from `PLAN.yaml` (sha256 `b396e9f2729096f3a145fef7c51459b94634251ae1c8f0b79dd865080d721c26`) at `2026-10-14T13:04:34.470Z`.
 
 ## 1. Next
 
@@ -9,7 +9,6 @@ Generated from `PLAN.yaml` (sha256 `a11a599c70c56a19c634386cb2f9422525c7c23df699
 ## 2. Ready
 
 - **b2-piece-1b-recording** — B2 piece 1b -- recording: the kernel's step commands for filter, scope and style, the session history on the machine, safe against a crash, and the docs/07 note (lane `kernel-protocol`, order 4, budget 0 min)
-- **stale-test-names-and-comments** — Stale test names and test comments, names and comments only, no assertion changes: a refusal-named test that asserts admission, the React-harness premise, the no-attributes reason, a Proposed ADR-018, two ruled decisions still marked pending (sweep area E, findings 2, 3, 4, 7 and 10) (lane `shell`, order 6, budget 60 min)
 
 ## 3. Waiting on the human (total: 0 min)
 
@@ -28,6 +27,7 @@ Generated from `PLAN.yaml` (sha256 `a11a599c70c56a19c634386cb2f9422525c7c23df699
 
 ## 5. In progress
 
+- **stale-test-names-and-comments** — Stale test names and test comments, names and comments only, no assertion changes: a refusal-named test that asserts admission, the React-harness premise, the no-attributes reason, a Proposed ADR-018, two ruled decisions still marked pending (sweep area E, findings 2, 3, 4, 7 and 10) — evidence: branch `cut/stale-test-names-and-comments`
 - **export-current-view-after-unreported-fit** — The Export panel's Current view after an unreported fit: after an issued Apply or Clear, the default Current view export sends the box from before the map fitted itself, until the next pan, zoom or Zoom to layer; the approval dialog shows that box's four numbers — evidence: branch `cut/export-current-view-after-unreported-fit`
 - **shell-status-bar-one-height** — The status bar keeps one height, so a notice coming or going never changes the map's size; a notice that does not fit is cut, and its full text stays reachable — evidence: branch `cut/shell-status-bar-one-height`
 

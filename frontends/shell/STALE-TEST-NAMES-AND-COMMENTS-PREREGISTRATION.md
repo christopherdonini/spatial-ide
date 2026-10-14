@@ -546,3 +546,18 @@ Nothing above is edited.
 14. **The start:** F3d's code may start under item 12; every row may start at B.
 
 Nothing above is edited.
+
+### Amendment 3 — the build's results: one file over its ceiling, §7 not edited (class 8); the worker's deviations (class 2)
+
+*Written by the custodian after the build's results were seen, at the head f73eb803, before any gate. References only. The report is `state/consults/2026-10-14-stale-test-names-and-comments-worker-report.md`.*
+
+1. **§7 (class 8).** Against the base a5666a49 the branch counts 122 lines over 18 files, against at most 186 and 20. `engine/tests/identity.rs` is 6 against its 4, as Amendment 2 item 13 predicted: rustfmt puts the new label's call over three lines. §7 is not edited.
+2. **The worker's deviations (class 2),** as its report gives them, for the gates:
+   - (a) E1: the label line is one removed and three added, not one and one (item 1's cause).
+   - (b) OPEN-3 (c): the figure the retired word named is called `cancel_quiescent`-class, from ADR-018 item 1's instants; the architect's gate confirms or replaces the choice.
+   - (c) OPEN-1: `kernel/README.md` names DuckDB's spill by its section in `kernel/CANCELLATION-AND-TRACING.md` rather than as named below, because the README names no spill later.
+   - (d) OPEN-3 (b): the draft is named by its commit in a comment, not by a hashed pin.
+3. **E6:** the worker's extra `verify-quotes --show-cites` run over the changed files exits 1 on 17 code string literals; the same set fails at the base, so it predates the piece. verify-quotes itself exits 0.
+4. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
