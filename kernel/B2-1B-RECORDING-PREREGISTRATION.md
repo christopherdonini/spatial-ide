@@ -829,3 +829,12 @@ A parameter that holds coordinates names the space they are in, in `dependencies
 15. **Superseded index:** §2.7's Block 0 line → item 3; §2.7's Not folded list → item 11; Amendment 1 item 5 → items 1 to 10; the ruling's `dependencies.crs.source` → item 1.
 
 Nothing above is edited.
+
+### Amendment 3 — the human's word on `provenance` in Block 0 and the test names (class 5)
+
+*Written by the custodian on the human's typed ruling (`state/directives/2026-10-14-e15-named-i2-live-row-build-24px-provenance-cv-2-4-item-40-comment.md`, item 4), before any code. References only.*
+
+1. **`provenance` stays wherever the member is named,** Block 0's line and the names of K12 and U8 included. Amendment 2 items 3 and 10 stand as written.
+2. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.

@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `595b7edf72ff8406d3de76e5c07be56252294973cc7880544fb1ea606d03e1a0`) at `2026-10-14T10:22:17.271Z`.
+Generated from `PLAN.yaml` (sha256 `b10e51791d57502b4d9fad1c0e862d726164762b96cc9b0e7fd159b0ee50d24d`) at `2026-10-14T10:59:25.535Z`.
 
 ## 1. Next
 
@@ -20,6 +20,7 @@ Generated from `PLAN.yaml` (sha256 `595b7edf72ff8406d3de76e5c07be56252294973cc78
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
 - **briefb-b2-save-reopen** — B2 — Save project, Snapshot data, session history, lineage and preferences, in five stages, each with its own form — blocked by: decision-adr-029-scan-progress-route
 - **known-limitations-crs-epoch-edges-third-axis** — KNOWN-LIMITATIONS: a file's declared coordinate epoch, its edges value and a third CRS axis are not used, shown or carried into a bundle — blocked by: stale-test-names-and-comments
+- **known-limitations-item-40-source-comment** — KNOWN-LIMITATIONS item 40's source comment: its three code locations pinned on main with their hashes, saying the work has merged (the comment only; item 40's words wait for the sitting) — blocked by: stale-test-names-and-comments
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer — blocked by: signpath-application-draft
 - **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-1-1
 - **signpath-application-draft** — Entry 77 — the SignPath OSS application and disclosure text drafted for the human sight, once a release is CI-built — blocked by: release-v0-1-1

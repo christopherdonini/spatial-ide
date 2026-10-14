@@ -537,3 +537,15 @@ Nothing above is edited.
     - §9's Part letter and rows, and Amendment 1 item 1's X4 → item 7.
 
 Nothing above is edited.
+
+### Amendment 4 — the human's word on §2.4's disabled-reason sentence (class 5)
+
+*Written by the custodian on the human's typed ruling (`state/directives/2026-10-14-e15-named-i2-live-row-build-24px-provenance-cv-2-4-item-40-comment.md`, item 5), while the code is being built, before any gate. References only.*
+
+1. **§2.4's disabled reason** [OPEN-1 (a)] is approved by the human as drafted. The P6 sight at Y4 shows it with the other strings.
+2. **Amendment 1 item 1's open part is closed,** and so is Amendment 3 item 8.
+3. **The source comment** that marks the constant as a placeholder awaiting the human's word is Documentation: it says, in the PR, that the words are the human's, approved on 2026-10-14.
+4. **Generation:** the node's generation goes up by one.
+5. **Superseded index:** Amendment 1 item 1's second bullet and Amendment 3 item 8 → items 1 and 2.
+
+Nothing above is edited.
