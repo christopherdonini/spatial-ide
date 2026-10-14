@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `025e830040d91fe0ae05f3decc759ee279573ee50376af23b545b20b3dfb7ab4`) at `2026-10-14T09:58:56.772Z`.
+Generated from `PLAN.yaml` (sha256 `c9279bd288bd65137f16f19c547073b81cf88014d2b969055236b7a311a1d569`) at `2026-10-14T10:06:41.902Z`.
 
 ## 1. Next
 
@@ -9,7 +9,6 @@ Generated from `PLAN.yaml` (sha256 `025e830040d91fe0ae05f3decc759ee279573ee50376
 ## 2. Ready
 
 - **b2-piece-1b-recording** — B2 piece 1b -- recording: the kernel's step commands for filter, scope and style, the session history on the machine, safe against a crash, and the docs/07 note (lane `kernel-protocol`, order 4, budget 0 min)
-- **export-current-view-after-unreported-fit** — The Export panel's Current view after an unreported fit: after an issued Apply or Clear, the default Current view export sends the box from before the map fitted itself, until the next pan, zoom or Zoom to layer; the approval dialog shows that box's four numbers (lane `shell`, order null, budget 0 min)
 - **stale-test-names-and-comments** — Stale test names and test comments, names and comments only, no assertion changes: a refusal-named test that asserts admission, the React-harness premise, the no-attributes reason, a Proposed ADR-018, two ruled decisions still marked pending (sweep area E, findings 2, 3, 4, 7 and 10) (lane `shell`, order 6, budget 60 min)
 
 ## 3. Waiting on the human (total: 0 min)
@@ -28,7 +27,8 @@ Generated from `PLAN.yaml` (sha256 `025e830040d91fe0ae05f3decc759ee279573ee50376
 
 ## 5. In progress
 
-- (none)
+- **export-current-view-after-unreported-fit** — The Export panel's Current view after an unreported fit: after an issued Apply or Clear, the default Current view export sends the box from before the map fitted itself, until the next pan, zoom or Zoom to layer; the approval dialog shows that box's four numbers — evidence: branch `cut/export-current-view-after-unreported-fit`
+- **shell-status-bar-one-height** — The status bar keeps one height, so a notice coming or going never changes the map's size; a notice that does not fit is cut, and its full text stays reachable — evidence: branch `cut/shell-status-bar-one-height`
 
 ## 6. Proposed / unscheduled
 
@@ -110,7 +110,6 @@ Generated from `PLAN.yaml` (sha256 `025e830040d91fe0ae05f3decc759ee279573ee50376
 - **shell-scale-display** — The scale display in the status bar: a bar of a round length in the CRS's unit, shown only for a metre dataset (milestone 3's OPEN-7, deferred) (phase `prototype`) — never queued until placed
 - **shell-migration-milestone-5** — Shell migration, milestone 5 -- conditions, Problems and Jobs: one home for failures and running work (phase `prototype`) — never queued until placed
 - **shell-real-app-run-macos-linux** — Run the real app once on macOS and once on Linux after migration milestone 1 merges, and record what it finds (phase `prototype`) — never queued until placed
-- **shell-status-bar-one-height** — The status bar keeps one height, so a notice coming or going never changes the map's size; a notice that does not fit is cut, and its full text stays reachable (phase `prototype`) — never queued until placed
 - **e2e-readme-status-bar-steps** — e2e/README.md: the status bar's two new steps and E-FOCUS's new stop in the layout and selection entries (the docs-lane follow-up of shell-status-bar-one-height, OPEN-2 (b)) (phase `prototype`) — never queued until placed
 - **engine-clause-composition-properties** — Engine test piece: clause composition, P5 and P6 over the admission property campaign (tests only; no product code, fixture or dependency) (phase `prototype`) — never queued until placed
 - **boundary-inventory** — Boundary inventory: one page, one table, read-only and descriptive (the architect): what each boundary's enforcement is, by code or the OS, by tests, by instruction only, or not built (phase `prototype`) — never queued until placed
