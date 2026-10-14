@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-14T13:20:09.750Z",
-  "plan_hash": "e59eb166f4facbfc3c17d7944f0865141a957c20a22e2ea37a5092ae6a3c4610",
+  "generated_at": "2026-10-14T13:37:48.257Z",
+  "plan_hash": "beb34a187cf7452a27c3a3295eb87bd5425160d2084ba4fc1d709d8ec2a9f638",
   "priorities_approved": true,
   "next": {
     "id": "b2-piece-1b-recording",
@@ -1797,7 +1797,7 @@
         "opened": "2026-10-14",
         "done": null
       },
-      "summary": "PROPOSED 2026-10-14 by the human (state/directives/2026-10-14-two-slot-2-pieces-clause-composition-boundary-inventory.md, item 1): slot 2, after what is already queued there, not taking slot 1 nor delaying milestones 2 and 3. A five-line form; tests only. Reuses engine/tests/admission_property_campaign.rs (its SplitMix64 generator, its MultiType fixture, its G1 grammar). The join is the shell's convention. P5 (admission and the result's ids against the intersection), P6 (every order-preserving subset of an admitted join is admitted). The mutation (the test helper joins without the brackets) observed on a kept, minimized witness. Every failure is a candidate until reproduced and minimized; the report names seeds, case counts, excluded counts, time spent, the candidates and how many were real. The invariants are approved as written; the form may sharpen them, not widen them. A product defect goes through normal triage."
+      "summary": "IMPACT READ 2026-10-14 (state/consults/2026-10-14-engine-clause-composition-properties-impact-read-lead-data.md): one test file, about 135 to 155 lines; the join convention exists only in the proposed milestone 3 form; a question on the UC3 and E-AND wording goes to the human. NEXT: the architect drafts the five-line form. Before: PROPOSED 2026-10-14 by the human (state/directives/2026-10-14-two-slot-2-pieces-clause-composition-boundary-inventory.md, item 1): slot 2, after what is already queued there, not taking slot 1 nor delaying milestones 2 and 3. A five-line form; tests only. Reuses engine/tests/admission_property_campaign.rs (its SplitMix64 generator, its MultiType fixture, its G1 grammar). The join is the shell's convention. P5 (admission and the result's ids against the intersection), P6 (every order-preserving subset of an admitted join is admitted). The mutation (the test helper joins without the brackets) observed on a kept, minimized witness. Every failure is a candidate until reproduced and minimized; the report names seeds, case counts, excluded counts, time spent, the candidates and how many were real. The invariants are approved as written; the form may sharpen them, not widen them. A product defect goes through normal triage."
     },
     {
       "id": "boundary-inventory",
