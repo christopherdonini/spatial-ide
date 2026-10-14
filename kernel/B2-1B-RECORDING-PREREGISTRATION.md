@@ -716,3 +716,36 @@ Every quantity is an assertion: a typed outcome, a line count, a byte bound, or 
 ## §10. Amendments
 
 *(Opens empty; append-only. Amendment 1 records the human's OPEN rulings (class 5) and the impact answer, with any work it adds (class 9), before any code.)*
+
+### Amendment 1 — the human's rulings on OPEN-1 to OPEN-10 (class 5); the impact answer and the work it adds (class 9)
+
+*Written by the custodian on the human's typed ruling (`state/directives/2026-10-14-215-c1-216-merge-current-view-open-3-b2-1b-open-1-to-10.md`, item 4), before any code. References only, except the two texts below, which are the human's words byte-copied by script from lines 14 to 19 and line 33 of that file, less their six leading spaces, with <date> set to 2026-10-14, the day the ruling was received.*
+
+1. **The rulings:** OPEN-1 (A); OPEN-2 (A); OPEN-3 (a), blocks 0 and A to G as drafted with the word recovered, and the three values the impact answer found unspelled spelled as the ruling says; OPEN-4 to OPEN-7 (A), OPEN-6 confirmed; OPEN-8 (A), block F as drafted; OPEN-9 (B), before this piece's code; OPEN-10 the human's words; §2.10 L's KNOWN-LIMITATIONS item approved as drafted.
+2. **ADR-022's Amendment 1 (OPEN-1 (A)), the human's words, appended to ADR-022 in this piece's PR (the ADRs group):**
+
+```text
+## Amendment 1 — style persistence granted for the session history (2026-10-14, the human)
+From piece `b2-piece-1b-recording`, a committed style edit is persisted as a `style.set` step in the session history ADR-036 defines (Proposed). This is the grant Consequences (b) left open, for that store only.
+- ADR-006's class-2 machinery is the kernel's step record: each edit is one step, recorded by the kernel's `record_step` command (ADR-036 §12), as one line flushed before the reply; a line that is not whole is never recovered (ADR-036 §9).
+- docs/11's obligations: the record's and the step's identities (URI), ADR-036 §6 (schema), ADR-036 §9 (lifecycle), and the step's `actor` and `at` (provenance).
+- Consequence (a) stands: nothing is undone, and no UI implies undo.
+- Persisting a style in a project file or a lineage is not granted here.
+```
+
+3. **The docs/07 note (OPEN-10), the human's words, the PR's first commit (§2.9):**
+
+```text
+*(Appended 2026-10-14.)* **Split.** The Prototype's B2 records; it does not replay. From B2 piece 1b, the kernel records each filter and style change a user commits as a typed step (ADR-006, workspace mutations), in a session history kept on this machine that a crash of the app does not lose and a normal close clears. Later B2 pieces keep the contributing steps in the project's lineage at Save project, and restore a project to a recorded step. This is not the Alpha item: replaying recorded steps, notebooks and workflows (13's Workflow IR) **stay Alpha**. It is not the Beta item either: B2 keeps no branch, and **lineage time travel and scenario branches stay Beta**.
+```
+
+4. **The impact answer** (`state/consults/2026-10-12-b2-1b-recording-impact-answer-lead-data.md`): H1 holds as worded. The work it adds, class 9, as the human answered its questions:
+   - (a) **Q1:** `AdmittedPredicate` keeps its referenced column names behind a `pub` accessor, with its test and one observed mutation, inside the engine group's ceiling (§7, 160). The engine's README names the accessor.
+   - (b) **Q2:** the fields' types are the Arrow types as `describe` spells them; the engine keeps no surrogate types.
+   - (c) **Q3:** the live check is the one ordering point. A close or a generation end that lands after it does not stop the write; the line is true of the open it names. `record_step` takes no lock a close waits on, and no test waits on a race.
+   - (d) **The style check:** the kernel checks each value by wrapping it in a whole style document and calling the renderer's `parse`; the renderer is not changed. The lower-case rule is the kernel's own check, refused by name. One test each.
+   - (e) **The kernel changes the answer names** (`predicate_admit_error_of` crate-visible; the observation's spelling factored out of `DatasetRef::to_json` into one crate-private function; `RefBuildError` mapped, by a code or a stated unreachable arm), inside the kernel groups' ceilings.
+5. **Owed before any code (OPEN-9 (B)):** the architect drafts the further §2.7 blocks the ruling names, for the human's sight: `dependencies.crs`'s definition member, its source as `describe` reports it, the coordinate epoch reserved by name in §11 with the selection scope's pointer corrected, and the registry paragraph on a parameter holding coordinates. Their sight is recorded in the next amendment.
+6. **The start:** milestone 2 has merged (PR #217). This piece waits for item 5 and for its slot: `shell-status-bar-one-height` goes before it in slot 2 if that piece's paths are disjoint from the Current view fix's (its form's OPEN items are with the human).
+
+Nothing above is edited.
