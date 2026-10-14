@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-14T16:17:32.568Z",
-  "plan_hash": "dabd4f6b4585ee8f90c1548cf89a52f77a99136c25470d53344997e5c58bd77d",
+  "generated_at": "2026-10-14T16:53:46.368Z",
+  "plan_hash": "ff428c8b72ec8d2e6e601d3df895b071300b50b5c6fa471d5d725c51344e04d2",
   "priorities_approved": true,
   "next": {
     "id": "b2-piece-1b-recording",
@@ -40,6 +40,44 @@
         "done": null
       },
       "summary": "AMENDMENT 3 2026-10-14 (state/directives/2026-10-14-e15-named-i2-live-row-build-24px-provenance-cv-2-4-item-40-comment.md, item 4): provenance wherever the member is named, Block 0 and the K12 and U8 names included. Before: AMENDMENT 2 2026-10-14: the OPEN-9 blocks H to K as the human approved them, the member named provenance (Block 0's line and the K12 and U8 names follow the same word, told to the human); the section 6 cell; B before K; K10 to K12 (new kernel/tests/record_step_crs.rs) and U8, U9 as class 9, at most 220 lines of their own. Code waits for slot 2 after the status bar. Before: READY 2026-10-14 by derivation (guardian-v1 done, #216): slot 2 takes shell-status-bar-one-height first (the human, state/directives/2026-10-14-status-bar-two-lines-current-view-zero-size-1b-open-9-blocks-provenance.md, item 1, OPEN-2), and this form's Amendment 2 (the OPEN-9 blocks as approved) comes before any code. Before: SIGHT 2026-10-14 (state/directives/2026-10-14-status-bar-two-lines-current-view-zero-size-1b-open-9-blocks-provenance.md, item 3): blocks H to K approved as drafted with the member named provenance, not source; Block I's reading confirmed; Block 0 takes the replacement line; the section 6 dependencies cell takes the offered wording with provenance, replacing Block H's substring edit; Block B before Block K; K10 to K12, U8 and U9 in the next amendment as class 9 with their own ceiling. NEXT: Amendment 2 records it, before any code. Before: OPEN-9 BLOCKS DRAFTED 2026-10-14 (state/consults/2026-10-14-b2-1b-open-9-blocks-architect-draft.md): H (dependencies.crs.definition: the sha256 of the definition text as the engine holds it, not canonical JSON, which cannot carry one; none-admitted for the format default), I (source = describe's crs.provenance: crs:declared, crs:asserted, crs:format-default), J (the epoch reserved in section 11; the scope pointer corrected), K (the registry rule); a Block 0 replacement line; the OPEN-3 values' cell offered; the tests K10 to K12, U8, U9 recommended as class 9 with their own ceiling. TO THE HUMAN FOR SIGHT before code. Before: RULED 2026-10-14 (state/directives/2026-10-14-215-c1-216-merge-current-view-open-3-b2-1b-open-1-to-10.md, item 4): OPEN-1 to OPEN-10 and the impact questions; AMENDMENT 1 (the ADR-022 amendment and the docs/07 note byte-copied, date 2026-10-14; class 9 the engine accessor and the kernel changes). Owed before code: the OPEN-9 (B) blocks, the architect drafting them for the human's sight. Before: NOTE 2026-10-12 (state/directives/2026-10-12-open-15-wording-webview2-scale-runs-status-bar-piece.md): shell-status-bar-one-height goes in slot 2 before this piece if its paths are disjoint from export-current-view-after-unreported-fit; its form decides. Before: IMPACT ANSWER 2026-10-12 (state/consults/2026-10-12-b2-1b-recording-impact-answer-lead-data.md): H1 holds as worded, but the predicate's fields need one engine change (AdmittedPredicate keeps its column names behind a pub accessor) and the kernel four small ones; to the human beside OPEN-1 to OPEN-10: Q1 (the pub engine accessor, class 9), Q2 (the type spelling: Arrow as describe spells it, or the DuckDB surrogate), Q3 (where record_step linearizes against close and a generation end), and the style seam (no single-value check in Rust; upper-case hex accepted). Amendment 1 records them before code. Before: FORM COMMITTED 2026-10-12 (kernel/B2-1B-RECORDING-PREREGISTRATION.md; the architect's draft state/consults/2026-10-12-b2-piece-1b-recording-architect-draft.md; 49 pins at b2c71d73): full form, full gating (ADR text, the wire, a stated guarantee); about 3,950 lines over 60 files; touches protocol/ and the wire fixtures, no lockfile; code after milestone 2 merges, the impact question (its 0.4) answered, and the OPEN items named against the code ruled. TO THE HUMAN: OPEN-1 to OPEN-10 (red lines: 1, 2's ADR text, 3, 4, 8's block F, 9, 10). Before: RULED 2026-10-11 (state/directives/2026-10-11-merges-210-211-pilot-recorder-2f-milestone-3-rulings.md, item 2): the mandatory impact read has ended, but the human asks for one impact question to the lead for this piece, before its code. Before: 2026-10-10 by the human (state/directives/2026-10-10-docs-lane-slot-2-order-reaim-answers-strike-crs-wording.md, item 6): slot 2 after guardian-v1 and after milestone 2; guardian-v1 is added to depends_on for the slot order. Before: RULED 2026-10-09, ADR-036's ten findings (state/directives/2026-10-09-adr-036-ten-findings-rulings.md): this piece's form carries the ADR amendment for findings 3 (session-history recovery keeps the longest valid prefix), 5 (the collapse key and the wider collapse) and 6 (the one opaque slot for forward compatibility). ADR-036 stays Proposed until 1c. Before: PLACED 2026-10-09 by the human's direction of 2026-10-09 (state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md), item 3: in slot 2 after guardian-v1; it follows when shell-migration-milestone-2 has merged. Before: OWED BY ITS FORM (question round 70, 2026-10-08, state/directives/2026-10-08-round-70-rulings.md; b2-piece-1a Amendment 2, item 5): the store behind OPEN-2 (a project opened from a second folder: the question asked once, the per-folder memory, a copy with its own identity and data links, the move rule) and OPEN-3 (a never-saved session kept on the machine under a not-yet-saved record, with its recovery offer naming the dataset and the time, cleared on decline or a normal session end). Before: Recorded 2026-10-07 (evening) by the human's rulings (state/directives/2026-10-07-b2-brief-and-evening-rulings.md; state/directives/B2-BRIEF-2026-10-07.md, section 9): needs 1a and migration milestone 2. The docs/07 note lands with it or in its own commit just before, typed by the human (the brief, section 11). Open items at its form: the ADR-022 grant, and how large the session history may grow. Proposed."
+    },
+    {
+      "id": "known-limitations-crs-epoch-edges-third-axis",
+      "title": "KNOWN-LIMITATIONS: a file's declared coordinate epoch, its edges value and a third CRS axis are not used, shown or carried into a bundle",
+      "lane": "release",
+      "phase": "prototype",
+      "status": "ready",
+      "order": null,
+      "budget_minutes": 45,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-12",
+        "done": null
+      },
+      "summary": "PLACED 2026-10-12 by the human (state/directives/2026-10-12-item-42-current-view-amendment-7-guardian-readme-guardrails-brief.md, item 5; Fable's brief state/consults/GUARDRAILS-EPOCHS-HEIGHTS-DGGS-2026-10-12.md, section 4 item 1): the docs lane's piece after stale-test-names-and-comments. One KNOWN-LIMITATIONS item: a file's declared coordinate epoch, its edges value and a third CRS axis are not used, shown or carried into a bundle. The architect drafts it with its clause check under item 2e; the human approves or replaces it. Its number is the next free one at its base, clear of reserved numbers. The 45-minute budget is the custodian's estimate."
+    },
+    {
+      "id": "known-limitations-item-40-source-comment",
+      "title": "KNOWN-LIMITATIONS item 40's source comment: its three code locations pinned on main with their hashes, saying the work has merged (the comment only; item 40's words wait for the sitting)",
+      "lane": "release",
+      "phase": "prototype",
+      "status": "ready",
+      "order": null,
+      "budget_minutes": 20,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-14",
+        "done": null
+      },
+      "summary": "PLACED 2026-10-14 by the human (state/directives/2026-10-14-e15-named-i2-live-row-build-24px-provenance-cv-2-4-item-40-comment.md, item 6): the docs lane, as its own line, after its head. The five-line form is committed with this node; its section A line is built by script."
     }
   ],
   "waiting_on_human": {
@@ -94,50 +132,6 @@
       "summary": "RE-DESCRIBED 2026-10-07 (evening) to cite state/directives/B2-BRIEF-2026-10-07.md, which replaces the migration plan's section 10 as the brief for B2's forms (state/directives/2026-10-07-b2-brief-and-evening-rulings.md); the rest of the plan stands. Stage 1 runs as pieces 1a, 1b and 1c (the nodes b2-piece-1a-step-record-and-dataset-reference, b2-piece-1b-recording and b2-piece-1c-save-and-reopen), and stage 3 as 3a and 3b, per the brief's section 9; piece 1a's form is stage 1's form. Stages 2 to 5 stay in this node for now. The evening rulings: the session history is on the machine, found by the project's identity, with crash recovery offered at the next open; the docs/07 note lands with stage 1 or just before it, typed by the human; no kept branches, the parent field stays; steps left behind after a save leave the lineage at the next Save project, an export keeps its own copy of its steps, and the session history has a saved-here mark; an incomplete lineage keeps the data's grade with a recipe-incomplete marker, no ADR-005 amendment, the format ADR defining the marker. Its dependencies stand. Before: RE-DESCRIBED 2026-10-07 per the migration plan's section 10 (state/directives/2026-10-07-migration-plan-v2-ruled.md; state/directives/SHELL-MIGRATION-PLAN-2026-10-07.md, section 10), which is the brief for B2's preregistration. Five stages, each with its own form (section 10.8; the human's answer to question 4): 1 Save project (linked) and reopen, with the lasting dataset reference, the kernel step commands and the session history with its crash safety; 2 the lineage file, compaction at Save project and the step record; 3 Snapshot data and the freeze-a-snapshot choice; 4 the views and restore (Data lineage, Map recipe, Sources); 5 sharing levels, tracking settings and the two-layer preferences. The human's answers: question 1, the session history is kept on the machine, keyed to the project, not in the project folder; question 2, one dated note in docs/07 in B2's pull request, typed by the human then; question 3, keeping a branch stays out of B2; questions 5 to 11 come to the human as open items in B2's forms. Its dependencies stand, the ADR-029 scan-progress ruling among them. Before: PLACED 2026-10-05 (the product-first direction 8.d): after the points and lines cuts; its dependencies stand, the ADR-029 scan-progress ruling among them. Before: Shell direction item (b), RULED 2026-09-23 (late): B2's screens wait for the new shell structure (shell-redesign-map-studio). They are also held by the 2026-09-27 session order until the human says otherwise (state/directives/2026-09-27-session-order.md, its last paragraph): they wait for the shell migration plan. The human, 2026-09-22: reference Save/reopen, then verified Prepare, as separately reviewable pieces; Save performs no whole-file scan; Prepare explicitly acquires or selects an eligible immutable revision (explicit operator intent; reuse without recopying; never silently rebind a mutable preview); verified operations read that artifact; rebinding creates a fresh generation; saved-work inputs have retention distinct from the rendering cache; missing/cancelled/failed/mismatched never display success; a single-dataset recipe, not a multi-layer project; one focused Save/Prepare design exercise resolves interaction choices before coding: a clickable prototype on synthetic data with a state/transition table, keyboard and accessibility behaviour, the failure states, and explicit selection of an eligible immutable revision; no whole-app redesign. the typed spatial-recipe schema, its atomic save and its preview/verified/mismatch state machine, once B1 closes PORTABILITY section 4 (Prepare's coherent-acquisition guarantee, defined without the OS) binds B2's preregistration when B2 starts (state/directives/2026-09-30-portability-and-handoff.md, item 1). Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33), item 10: the coherent-acquisition guarantee lives in a short Proposed ADR, drafted with B2's preregistration; its acceptance stays the human's.",
       "blocked_by": [
         "decision-adr-029-scan-progress-route"
-      ]
-    },
-    {
-      "id": "known-limitations-crs-epoch-edges-third-axis",
-      "title": "KNOWN-LIMITATIONS: a file's declared coordinate epoch, its edges value and a third CRS axis are not used, shown or carried into a bundle",
-      "lane": "release",
-      "phase": "prototype",
-      "status": "blocked",
-      "order": null,
-      "budget_minutes": 45,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-10-12",
-        "done": null
-      },
-      "summary": "PLACED 2026-10-12 by the human (state/directives/2026-10-12-item-42-current-view-amendment-7-guardian-readme-guardrails-brief.md, item 5; Fable's brief state/consults/GUARDRAILS-EPOCHS-HEIGHTS-DGGS-2026-10-12.md, section 4 item 1): the docs lane's piece after stale-test-names-and-comments. One KNOWN-LIMITATIONS item: a file's declared coordinate epoch, its edges value and a third CRS axis are not used, shown or carried into a bundle. The architect drafts it with its clause check under item 2e; the human approves or replaces it. Its number is the next free one at its base, clear of reserved numbers. The 45-minute budget is the custodian's estimate.",
-      "blocked_by": [
-        "stale-test-names-and-comments"
-      ]
-    },
-    {
-      "id": "known-limitations-item-40-source-comment",
-      "title": "KNOWN-LIMITATIONS item 40's source comment: its three code locations pinned on main with their hashes, saying the work has merged (the comment only; item 40's words wait for the sitting)",
-      "lane": "release",
-      "phase": "prototype",
-      "status": "blocked",
-      "order": null,
-      "budget_minutes": 20,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-10-14",
-        "done": null
-      },
-      "summary": "PLACED 2026-10-14 by the human (state/directives/2026-10-14-e15-named-i2-live-row-build-24px-provenance-cv-2-4-item-40-comment.md, item 6): the docs lane, as its own line, after its head. The five-line form is committed with this node; its section A line is built by script.",
-      "blocked_by": [
-        "stale-test-names-and-comments"
       ]
     },
     {
@@ -207,6 +201,72 @@
       ]
     },
     {
+      "id": "governance-cut-state-cap-and-rotation",
+      "title": "state/CUT-STATE.md: the six STANDING items moved out verbatim, a 6,144-byte cap on the continuity block in flush.mjs, and the ledger rotated into state/cut-archive/ by a named script, with the reading order's item 1 restated",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": null,
+      "budget_minutes": 0,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-14",
+        "done": null
+      },
+      "summary": "PLACED 2026-10-14 by the human (state/directives/2026-10-14-governance-smaller-reads-ignore-cut-state-rotation-decisions-pending.md); never slot 1; each merge the human's click: piece B, after A. Two gated citations into today's file name the archive path or their commit. Its form is drafted after A's.",
+      "blocked_by": [
+        "governance-search-ignore-historical"
+      ]
+    },
+    {
+      "id": "governance-decisions-pending-open-and-archive",
+      "title": "DECISIONS-PENDING.md: open entries and recent rulings, the rest archived to state/cut-archive/, one shared helper for the ruling set in verify, verify-test-claims and verify-quotes, monthly rotation, and the reading order's item 3 restated; the second measurements after it",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": null,
+      "budget_minutes": 0,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-14",
+        "done": null
+      },
+      "summary": "PLACED 2026-10-14 by the human (state/directives/2026-10-14-governance-smaller-reads-ignore-cut-state-rotation-decisions-pending.md); never slot 1; each merge the human's click: piece C, after B. Every obligation an archived entry carries is represented in PLAN or the continuity block first; the kept entries are listed in the PR body for the human. Its form is drafted after B's.",
+      "blocked_by": [
+        "governance-cut-state-cap-and-rotation"
+      ]
+    },
+    {
+      "id": "governance-search-ignore-historical",
+      "title": "A root .ignore over historical material (site, the generated queue JSON, the cut archive, drafts, gate reports), tested both ways with the agents' own search tool, and its search rule appended to AUTONOMY; the routine-read and search-corpus measurements taken before it",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": null,
+      "budget_minutes": 0,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-14",
+        "done": null
+      },
+      "summary": "PLACED 2026-10-14 by the human (state/directives/2026-10-14-governance-smaller-reads-ignore-cut-state-rotation-decisions-pending.md); never slot 1; each merge the human's click: piece A. The measurement script is written before the first measurement and run unchanged after C. NEXT: the architect drafts the form.",
+      "blocked_by": [
+        "boundary-inventory"
+      ]
+    },
+    {
       "id": "site-design-v1",
       "title": "Landing page redesign — DRAFT-4 (status strip, milestone banner, waiting-on-you cards with unblocks counts, the swimlane board)",
       "lane": "governance",
@@ -229,52 +289,7 @@
       ]
     }
   ],
-  "in_progress": [
-    {
-      "id": "stale-test-names-and-comments",
-      "title": "Stale test names and test comments, names and comments only, no assertion changes: a refusal-named test that asserts admission, the React-harness premise, the no-attributes reason, a Proposed ADR-018, two ruled decisions still marked pending (sweep area E, findings 2, 3, 4, 7 and 10)",
-      "lane": "shell",
-      "phase": "prototype",
-      "status": "in-progress",
-      "order": 6,
-      "budget_minutes": 60,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": {
-        "branch": "cut/stale-test-names-and-comments"
-      },
-      "dates": {
-        "opened": "2026-10-10",
-        "done": null
-      },
-      "summary": "AMENDMENT 4 (gate 1 both; the gates' words; D-4 (a) and (b); the count at the head). Reviewer D-1 built at e415877c; the PR body current (D-2); CI green at e415877c. READY for the human's merge click (a merge commit). Before: GATE 1 REVIEWER PASS WITH NOTES (518, state/consults/gates/2026-10-14-stale-test-names-and-comments-gate1-reviewer.md): D-1 (App.test.ts:52-56 rewrapped, words given) to a worker with no re-gate; D-2 the PR body; D-3 the closing amendment. NEXT: D-1 built, the PR body, the closing-ready amendment, then the human's merge click. Before: PR #220 OPENED; GATE 1 ARCHITECT FAIL (515, state/consults/gates/2026-10-14-stale-test-names-and-comments-gate1-architect.md) on C-1's words only, applied by the worker with no re-gate (section 31 (d)), with D-1 to D-3; D-4 to the closing amendment. NEXT: the reviewer at the corrected head. Before: BUILT 2026-10-14 at f73eb803 (state/consults/2026-10-14-stale-test-names-and-comments-worker-report.md): 122 lines over 18 files; identity.rs 6 of 4 (class 8, Amendment 3); the rename's evidence holds. NEXT: the PR, both gates (the reviewer after the e2e runs free the machine). Before: AMENDMENT 2 2026-10-14 (the re-sweep at main 76fa319a, state/consults/2026-10-14-stale-test-names-and-comments-resweep-architect.md): every row stands at the base; D2 and F3a moved (class 3); F3d's Says replaced before code (the real WorkingCanvas is now mounted in the wiring test); section 4 items 3 and 4's sets corrected; identity.rs predicted 6 against its 4 (class 8 at H). Disjoint from #218 and #219. NEXT: code (the docs lane). Before: 2026-10-12 (state/directives/2026-10-12-current-view-graded-s1-placed-limitation-release-hold-214-merged.md, item 3): the Current view limitation (known-limitations-current-view-stale-box) goes ahead of this piece in the docs lane; the CRS-form piece has merged. Before: BLOCKED 2026-10-11: depends_on now records the wait on shell-crs-form-for-format-default-contradicted that rule 00 already imposed (stated here since the impact read): no placement change, only the record, so that the queue does not offer a piece whose shared files are in progress elsewhere. Before: READY 2026-10-11 by derivation: piece e (skp-v0-live-sections-current-area-c) is done (#210). Its code still waits for the CRS-form piece to merge, by rule 00: the two share AdmissionPanel.test.ts, e2e/regression.mjs and kernel/tests/manual_walkthrough_fixtures.rs. Before: RULED 2026-10-11 (state/directives/2026-10-11-open-11-a-piece-f-opens-ported-notices-required.md, item 2): OPEN-1, OPEN-2 and OPEN-3 (a), (b), (c) yes; the form's Amendment 1 (class 9; generation 2); at most 186 lines and 20 files; the two routing items proposed as their own nodes. Before: FORM COMMITTED 2026-10-11 (forms ahead; frontends/shell/STALE-TEST-NAMES-AND-COMMENTS-PREREGISTRATION.md, drafted by the architect, state/consults/2026-10-11-stale-test-names-and-comments-architect-draft.md): full form; 14 files, at most 140 lines (186 and 20 with every OPEN); the rename to a_file_whose_key_is_not_called_id_admits_on_the_session_tier_until_a_mapping_is_declared; code waits for the CRS piece and piece e to merge. OPEN-1 (O-1, the kernel stream sentence), OPEN-2 (the third caller in the candidate_columns doc), OPEN-3 (a, b, c: same-class lines) asked of the human. Before: IMPACT READ 2026-10-11 (forms ahead): lead-data's read is filed (state/consults/2026-10-11-stale-test-names-and-comments-impact-read.md); its section 6 holds five questions for the form; the shared files with the CRS piece (AdmissionPanel.test.ts, e2e/regression.mjs, kernel/tests/manual_walkthrough_fixtures.rs) mean its code waits for that piece's merge. Before: CANDIDATE 2026-10-11, asked of the human: PR #209's architect gate 2, O-1 (state/consults/gates/2026-10-11-module-docs-stale-statements-gate2-architect.md): the kernel module doc's and kernel README's second stream sentence (the stream writes nothing, so no transaction boundary is owed) qualified as piece d qualified its first; comment and doc text only. Not in scope until the human rules. Before: WIDENED 2026-10-11 by the human's ruling (state/directives/2026-10-11-rulings-205-c1-item-39-pieces-d-e-merge-206.md, item 3; piece d's form Amendment 1 item 2): the engine/src/identity.rs reference to the test this node renames (piece d's form, 2.3) moves into the rename's own commit, a one-file exception to this node's test-files-only rule. Before: WIDENED 2026-10-10 by PR #204's architect gate 1 (D2, state/consults/gates/2026-10-10-e2e-stale-expectations-reaim-gate1-architect.md): kernel/tests/manual_walkthrough_fixtures.rs, the renamed no-CRS generator keeps a paragraph from the old one (the same filename, the both-remediations intent, no change needed in stepBothNeeded), which contradicts its new doc; comment only; the re-aim could not edit the file (its item 6 precondition). Before: WIDENED 2026-10-10 by the human (state/directives/2026-10-10-pr199-merged-flush-open-1-pr200-sentence-stale-comment.md, item 4): kernel/tests/skp_filter_cancellation.rs, the comment above the late-matching predicate, which counts 200,000 ids while the test's FEATURES constant is 2,000,000 (found by the flush form's architect draft); comment only, written without the number, as the last 100 of FEATURES ids, so it cannot go stale again. Before: PLACED 2026-10-10 by the human (state/directives/2026-10-10-docs-lane-slot-2-order-reaim-answers-strike-crs-wording.md, items 1 and 3f): the sixth piece of the docs lane (state/directives/2026-10-10-docs-lane-slot-2-order-reaim-answers-strike-crs-wording.md, item 3: one piece at a time; documents, comments and test names only), after the re-aim has merged. It keeps test files and e2e files only: the pending marker in canvas/hoverRepickConstants.ts moves to shell-stale-frame-comments. Before: 2026-10-10 (state/directives/2026-10-10-string-6-doc-comment-in-shell-stale-frame-comments.md, item 4): the draft marker on string 6's own doc comment in residency/residencyStatus.ts is handled in shell-stale-frame-comments, not here. Before: PROPOSED 2026-10-10 by the custodian on the human's instruction (state/directives/2026-10-10-drift-sweep-area-e-instructions.md, part 1 item 2 and part 2 item 3), from the human's drift sweep, area E (state/consults/DRIFT-SWEEP-AREA-E-2026-10-10.md; state/consults/DRIFT-SWEEP-AREA-E-PART-2-2026-10-10.md), and the human's instructions (state/directives/2026-10-10-drift-sweep-area-e-instructions.md), confirmed by the custodian at the swept commit 9e7362db, each cite asserted there (state/consults/2026-10-10-drift-sweep-area-e-custodian-check.md). Names and comments only, no assertion changes. (2) engine/tests/identity.rs's test named as refusing while it asserts the session-tier admission, with its watchdog label, and the reference in engine/tests/admission_instruments.rs (the reference in engine/src/identity.rs is in module-docs-stale-statements and follows the rename; no form names the old name). (3) frontends/shell/src/App.test.ts's header says the per-dataset remount is untested and that no harness here can mount React, while App.layout.test.tsx mounts App and counts mounts per handle; the same premise in admission/AdmissionPanel.test.ts, admission/CrsAssertionForm.test.ts and canvas/WorkingCanvas.test.ts. (4) renderer/tests/style_shell_agreement.rs grounds its stub schema on viewport_query carrying no attributes, lifted at skp/0.6 (the conclusion stands; the reason is corrected; the same sentence in buildLayers.ts is product code, area A, not here). (7) kernel/tests/first_batch_factorial.rs calls ADR-018 Proposed. (10) residency/residencyStatus.test.ts and e2e/regression.mjs mark string 6 as a draft awaiting sight, ruled 2026-09-06 (entry 45); canvas/pickResolution.test.ts and e2e/regression.mjs mark HOVER_REPICK_ON_PAN as pending sight, ruled 2026-09-14 (entry 75), and regression.mjs instructs a re-aim on a closed branch; the same marker in canvas/hoverRepickConstants.ts is in scope by the human's word. Observed, not in scope without the human's word: the same draft marker on string 6's own doc comment in residency/residencyStatus.ts. Depends on the e2e re-aim because both touch e2e/regression.mjs. Nothing waits on it. The human places it.",
-      "evidence_label": "branch `cut/stale-test-names-and-comments`"
-    },
-    {
-      "id": "export-current-view-after-unreported-fit",
-      "title": "The Export panel's Current view after an unreported fit: after an issued Apply or Clear, the default Current view export sends the box from before the map fitted itself, until the next pan, zoom or Zoom to layer; the approval dialog shows that box's four numbers",
-      "lane": "shell",
-      "phase": "prototype",
-      "status": "in-progress",
-      "order": null,
-      "budget_minutes": 0,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": {
-        "branch": "cut/export-current-view-after-unreported-fit"
-      },
-      "dates": {
-        "opened": "2026-10-11",
-        "done": null
-      },
-      "summary": "AMENDMENT 7 (gate 1 both; the gates' words; D-2 (a) to (d); D-4's class 2; the follow-up walkthrough-current-view-rows-g1-n5 for rows G1 and N5). DOC-3 built at db44c7ff; the PR body current (DOC-1, D-5); CI green at db44c7ff. READY for the human's merge click (a merge commit); whichever of #218 and #219 merges second takes main in first. Before: GATE 1 REVIEWER PASS WITH NOTES (520, state/consults/gates/2026-10-14-export-current-view-after-unreported-fit-gate1-reviewer.md): DOC-3 (Y1's step cell, words given) to a worker with no re-gate; DOC-1 the PR body; DOC-2 the closing amendment; DOC-4 a docs-lane follow-up for rows G1 and N5. Before: GATE 1 ARCHITECT PASS WITH NOTES (517, state/consults/gates/2026-10-14-export-current-view-after-unreported-fit-gate1-architect.md): D-1, D-3 and D-4 words to a worker, no re-gate; D-2 to the next amendment; D-5 the PR body. NEXT: the reviewer gate. Before: E2E RUN 2 AT e3a14042 (state/consults/2026-10-14-export-current-view-after-unreported-fit-e2e-custodian-run-2.md): every suite passes, e2e:export-view passes, and its three mutations each fail where the form says. NEXT: the observations into export-view.mjs's comment, then both gates. Before: CORRECTION ROUND 1 BUILT 2026-10-14 at e3a14042: export-view.mjs waits for the canvas hook; the section 2.4 comment says the human approved the words; 468 of 690 lines (state/consults/2026-10-14-export-current-view-after-unreported-fit-correction-round-1-report.md). NEXT: the custodian e2e at the new head, then both gates. Before: E2E RUN 1 AT eebf7298 (state/consults/2026-10-14-export-current-view-after-unreported-fit-e2e-custodian-run-1.md), stopped under load: e2e:export-view's open step polls capturePixels before the hook exists (E-CV-OPEN; E-CV met a null box as a result); E-CV-RESIZE passes; selection, layout and style pass. AMENDMENT 6: correction round 1 (the open step's wait; the section 2.4 comment). Before: BUILT 2026-10-14 at eebf7298 (state/consults/2026-10-14-export-current-view-after-unreported-fit-worker-report.md): 467 of 690 lines; PublishPanel.tsx and publish.rs over their ceilings (class 8, Amendment 5); every unit mutation observed; the three e2e mutations the custodian's. NEXT: the e2e on a rebuilt exe, both gates. Before: AMENDMENT 4 2026-10-14 (state/directives/2026-10-14-e15-named-i2-live-row-build-24px-provenance-cv-2-4-item-40-comment.md, item 5): the section 2.4 disabled-reason sentence approved as drafted; the placeholder comment is corrected in the PR. Before: IN PROGRESS 2026-10-14 (from main f8bc2951): slot 1; a worker-high builds it in C:/dev/wt/cvfix to the form as amended (Amendment 3), with its own cargo target on D:; then both gates and the custodian e2e on a rebuilt exe (publish.rs changes). Before: AMENDMENT 3 2026-10-14: the re-sweep at the code base 2cf707a3 (every pin hashed by script; the five changed rows re-pinned; class 1 rows a to e: getViewBox and subscribeViewBox, RB18 re-aimed, PublishPanel.test.ts cases with section 7 to 690, the harness additions, the comment list); item 42 merged, so section 2.5 runs (root KNOWN-LIMITATIONS.md line 194); OPEN-3's note with the human's width-and-height clause; the zero-size case in getViewBox's doc comment; Part Y. NEXT: code. Before: RULED 2026-10-14 (state/directives/2026-10-14-status-bar-two-lines-current-view-zero-size-1b-open-9-blocks-provenance.md, item 2): OPEN-3's note takes the architect's words (the first sentence gains the clause on the map's width and height); the zero-size case is recorded in the getViewBox source comment as well. Both go into Amendment 3 with the re-sweep's rows, before any code. Before: RE-SWEEP 2026-10-14 at 73a638e5 (state/consults/2026-10-14-export-current-view-resweep-architect.md): pass with notes, no invalidator; class 3 re-pins and class 1 rows (getViewBox/subscribeViewBox; RB18's re-aim redefined; PublishPanel.test.ts's added lines, a section 7 addition to 690; harness additions; comments); Part Y. WAITING: #215's merge (option (A)), then Amendment 3, then code. TO THE HUMAN: the zero-size map case and OPEN-3's note (proposed words appended). Before: OPEN-3 RULED 2026-10-14 (state/directives/2026-10-14-215-c1-216-merge-current-view-open-3-b2-1b-open-1-to-10.md, item 3): the added sentence stands second; Amendment 2. Milestone 2 merged: next in slot 1, the re-sweep first. Before: NOTE 2026-10-12 (state/directives/2026-10-12-open-15-wording-webview2-scale-runs-status-bar-piece.md): if shell-status-bar-one-height's paths are not disjoint from this piece's, it follows this piece in slot 1. Before: AMENDMENT 1 2026-10-12 (frontends/shell/EXPORT-CURRENT-VIEW-AFTER-UNREPORTED-FIT-PREREGISTRATION.md; class 5; generation 2): OPEN-1 (a), OPEN-2 (b) with the human's typed sentence, OPEN-3's note composed (the added sentence placed second, told to the human). Before: RULED 2026-10-12 (state/directives/2026-10-12-item-42-current-view-amendment-7-guardian-readme-guardrails-brief.md, item 2): OPEN-1 (a); OPEN-2 (b), a red line confirmed, the host's Row scope sentence in the human's typed words; OPEN-3 the drafted words with the OPEN-1 (a) sentence, without the OPEN-2 (a) sentence. The form's Amendment 1 records them. Before: FORM COMMITTED 2026-10-12 (frontends/shell/EXPORT-CURRENT-VIEW-AFTER-UNREPORTED-FIT-PREREGISTRATION.md; the architect's draft state/consults/2026-10-12-export-current-view-after-unreported-fit-architect-draft.md; 37 pins at 2ca3a53c): full form, full gating (new user-visible behaviour, a property under test, about 670 lines over 9 files); code after milestone 2 merges, re-sweep RS1 to RS9 first; adds the counts' box reset at an admission if phase B lacks it, and RB18's re-aim if needed. TO THE HUMAN: OPEN-1 (Current view available once the map has fitted itself after an open; (a) recommended), OPEN-2 (the dialog's Row scope line; a red line by the architect's reading, typed; (b) with candidate words), OPEN-3 (item 42's narrowed on-main note, item 2e words). Before: GRADED AND PLACED 2026-10-12 by the human (state/directives/2026-10-12-current-view-graded-s1-placed-limitation-release-hold-214-merged.md): S1 at main and at the v0.1.0 tag; slot 1, directly after milestone 2 phase B and before milestone 3 (item 1a's order changed by one piece under the S1 rule). Forms ahead: the architect drafts its form while phase B is in code. Its shape, for the form to confirm or bring back: Current view sends the box the map shows now, from the counts' box OPEN-11 (A) adds, not lastViewportBboxRef; lastViewportBboxRef and the refusal recovery stay as they are; open for the human: whether Current view becomes available as soon as the map has fitted itself after an open, and whether the dialog's Row scope line changes; a test that after an Apply and its fit the box sent is the fitted one, with a mutation that reads the old ref. Nothing is released from main before this fix lands. The read's item 39 side observation is not a finding (the shipped arm resets at every reissue start). Before: PROPOSED 2026-10-11 by the human (state/directives/2026-10-11-open-11-a-piece-f-opens-ported-notices-required.md, item 1), from milestone 2's Amendment 2 information item; ungraded and unplaced: the human grades and places it. The read (state/consults/2026-10-11-export-current-view-after-unreported-fit-read.md) answers the human's three questions. (1) At main: yes. After an issued Apply or Clear that follows any earlier view report, Current view stays enabled and is the panel's default (the panel is keyed on the dataset, so an Apply does not reset it); the export sends lastViewportBboxRef, the box from before the auto-fit, which moves the camera without a report, until the next pan, zoom or Zoom to layer; a resize in that window reports nothing either (item 39). After an open there is no stale box: the ref is null and Current view is disabled with its reason. (2) At the v0.1.0 tag: the same for Apply, Clear and open; the tag differs for a resize, where no resize ever reports, so the box can be stale after any resize. (3) The approval dialog shows the sent box's four numbers in its Row scope line, at main and the tag (PublishDialog.tsx is identical), as plain numbers with no CRS name and nothing marking whether they match the map; the Export panel shows only the label. With a filter active, both say the export publishes the viewport extent, not the filter. Milestone 2's onViewShown (OPEN-11 (A)) does not change this: its handler writes only the counts' box, by the human's terms.",
-      "evidence_label": "branch `cut/export-current-view-after-unreported-fit`"
-    }
-  ],
+  "in_progress": [],
   "proposed": [
     {
       "id": "governance-hash-grammar-shared",

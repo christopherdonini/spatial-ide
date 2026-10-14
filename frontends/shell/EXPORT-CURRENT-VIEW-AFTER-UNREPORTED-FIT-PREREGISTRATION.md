@@ -594,3 +594,16 @@ Nothing above is edited.
 6. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 8 — closing record: PR #219 merged
+
+*Written by the custodian after the merge. References only.*
+
+1. **Merged** by the human at 2026-10-14T16:49:13Z, merge commit e57e6436ab3e7452f3f1a7b61837cba6b93a6211 (two parents: main fa9bc7bd and the branch head 8a8f7c24).
+2. **Main merged in before the merge,** after #218 merged: 8a8f7c24, whose one conflict, at the walkthrough's tail, kept both Parts, Y then Z, each byte-identical to its side; CI passed at 8a8f7c24.
+3. **Gates:** gate 1, both PASS WITH NOTES (gate log 517 and 520; Amendment 7). The e2e evidence is run 2 (Amendment 7 item 3 (b)).
+4. **Part Y** merged as it stood, with the gates' words in Y1 and Y3; its rows and the P6 sight stay queued for the sitting.
+5. **Follow-ons:** `walkthrough-current-view-rows-g1-n5` (Amendment 7 item 5) and `e2e-readme-status-bar-steps`, in the docs lane.
+6. **PLAN:** the node is done, with `{pr: 219}`.
+
+Nothing above is edited.

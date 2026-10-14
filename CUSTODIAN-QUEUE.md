@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `dabd4f6b4585ee8f90c1548cf89a52f77a99136c25470d53344997e5c58bd77d`) at `2026-10-14T16:17:32.568Z`.
+Generated from `PLAN.yaml` (sha256 `ff428c8b72ec8d2e6e601d3df895b071300b50b5c6fa471d5d725c51344e04d2`) at `2026-10-14T16:53:46.368Z`.
 
 ## 1. Next
 
@@ -9,6 +9,8 @@ Generated from `PLAN.yaml` (sha256 `dabd4f6b4585ee8f90c1548cf89a52f77a99136c2547
 ## 2. Ready
 
 - **b2-piece-1b-recording** — B2 piece 1b -- recording: the kernel's step commands for filter, scope and style, the session history on the machine, safe against a crash, and the docs/07 note (lane `kernel-protocol`, order 4, budget 0 min)
+- **known-limitations-crs-epoch-edges-third-axis** — KNOWN-LIMITATIONS: a file's declared coordinate epoch, its edges value and a third CRS axis are not used, shown or carried into a bundle (lane `release`, order null, budget 45 min)
+- **known-limitations-item-40-source-comment** — KNOWN-LIMITATIONS item 40's source comment: its three code locations pinned on main with their hashes, saying the work has merged (the comment only; item 40's words wait for the sitting) (lane `release`, order null, budget 20 min)
 
 ## 3. Waiting on the human (total: 0 min)
 
@@ -18,17 +20,17 @@ Generated from `PLAN.yaml` (sha256 `dabd4f6b4585ee8f90c1548cf89a52f77a99136c2547
 
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
 - **briefb-b2-save-reopen** — B2 — Save project, Snapshot data, session history, lineage and preferences, in five stages, each with its own form — blocked by: decision-adr-029-scan-progress-route
-- **known-limitations-crs-epoch-edges-third-axis** — KNOWN-LIMITATIONS: a file's declared coordinate epoch, its edges value and a third CRS axis are not used, shown or carried into a bundle — blocked by: stale-test-names-and-comments
-- **known-limitations-item-40-source-comment** — KNOWN-LIMITATIONS item 40's source comment: its three code locations pinned on main with their hashes, saying the work has merged (the comment only; item 40's words wait for the sitting) — blocked by: stale-test-names-and-comments
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer — blocked by: signpath-application-draft
 - **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-1-1
 - **signpath-application-draft** — Entry 77 — the SignPath OSS application and disclosure text drafted for the human sight, once a release is CI-built — blocked by: release-v0-1-1
+- **governance-cut-state-cap-and-rotation** — state/CUT-STATE.md: the six STANDING items moved out verbatim, a 6,144-byte cap on the continuity block in flush.mjs, and the ledger rotated into state/cut-archive/ by a named script, with the reading order's item 1 restated — blocked by: governance-search-ignore-historical
+- **governance-decisions-pending-open-and-archive** — DECISIONS-PENDING.md: open entries and recent rulings, the rest archived to state/cut-archive/, one shared helper for the ruling set in verify, verify-test-claims and verify-quotes, monthly rotation, and the reading order's item 3 restated; the second measurements after it — blocked by: governance-cut-state-cap-and-rotation
+- **governance-search-ignore-historical** — A root .ignore over historical material (site, the generated queue JSON, the cut archive, drafts, gate reports), tested both ways with the agents' own search tool, and its search rule appended to AUTONOMY; the routine-read and search-corpus measurements taken before it — blocked by: boundary-inventory
 - **site-design-v1** — Landing page redesign — DRAFT-4 (status strip, milestone banner, waiting-on-you cards with unblocks counts, the swimlane board) — blocked by: governance-ci-built-site
 
 ## 5. In progress
 
-- **stale-test-names-and-comments** — Stale test names and test comments, names and comments only, no assertion changes: a refusal-named test that asserts admission, the React-harness premise, the no-attributes reason, a Proposed ADR-018, two ruled decisions still marked pending (sweep area E, findings 2, 3, 4, 7 and 10) — evidence: branch `cut/stale-test-names-and-comments`
-- **export-current-view-after-unreported-fit** — The Export panel's Current view after an unreported fit: after an issued Apply or Clear, the default Current view export sends the box from before the map fitted itself, until the next pan, zoom or Zoom to layer; the approval dialog shows that box's four numbers — evidence: branch `cut/export-current-view-after-unreported-fit`
+- (none)
 
 ## 6. Proposed / unscheduled
 

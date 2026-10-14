@@ -574,3 +574,14 @@ Nothing above is edited.
 6. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 5 — closing record: PR #220 merged
+
+*Written by the custodian after the merge. References only.*
+
+1. **Merged** by the human at 2026-10-14T16:49:39Z, merge commit d6ef74b0f5945ff9510e987a7580c6047bc09829 (two parents: main e57e6436 and the branch head e415877c).
+2. **Gates:** gate 1, the architect FAIL on words only and the reviewer PASS WITH NOTES (gate log 515 and 518; Amendment 4).
+3. **Follow-ons:** the docs lane's `known-limitations-item-40-source-comment` and `known-limitations-crs-epoch-edges-third-axis` depended on this node.
+4. **PLAN:** the node is done, with `{pr: 220}`.
+
+Nothing above is edited.
