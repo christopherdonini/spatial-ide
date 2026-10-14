@@ -5,7 +5,7 @@
 // E2E (SHELL-MIGRATION-MILESTONE-2-PREREGISTRATION.md section 4).
 //
 // Phase B stages 5 and 6: the click, the selection, the inspection and the export's scope on real WebView2, asserted: E-CLICK, E-CLICK-FAST, E-SELECT,
-// E-NODRAG, E-ZOOMSEL, E-SEL-PAN, E-SEL-FILTER, E-REFUSED, E-GEN, E-KINDS, E-EXPORT and E-SCOPE. Fixtures: `filter-zoned.parquet` (and a scratch copy of it, touched by
+// E-NODRAG, E-ZOOMSEL, E-SEL-PAN, E-SEL-FILTER, E-REFUSED, E-GEN, E-KINDS, E-EXPORT, E-SCOPE and, run after E-ASK-TWO and before E-DBLCLICK, E-STATUS-HEIGHT. Fixtures: `filter-zoned.parquet` (and a scratch copy of it, touched by
 // mtime only for E-GEN's source change, as source-watch-idle.mjs does), `100k-happy-path.parquet` for the reopen, and `multipolygon-f1.parquet`,
 // `point-p1.parquet` and `line-l1.parquet` for E-KINDS. Every oracle id is taken through `hoverIdAfterBarrier` from lib.mjs (Amendment 1 A2): this file
 // has no barrier of its own and never takes a first poll (section 8 item 32). The Feature tab, the tool switch and the status bar item are read from the
@@ -56,6 +56,8 @@
 //   E-DBLCLICK     src/canvas/WorkingCanvas.tsx, the Deck props' `onClick`: remove the `if (event.type === "dblclick") return;` line. Expected: E-DBLCLICK fails on its first assertion (the Navigate double-click inspected an id); the Select count would fail next.
 //   E-ASK-TWO      src/App.tsx, `answerOpenAsk`: `setLateCancel([finished])` in place of the append. Expected: E-ASK-TWO fails on the statements' paths (only the second bundle_path is shown). INCONCLUSIVE, as above, when the ask or the open is not standing before the choice.
 //   E-KINDS (point) src/canvas/clickPick.ts, `tapPixel`'s return line: `Math.round` in place of both `Math.trunc` calls. Expected: E-KINDS fails on the point's Navigate click (the inspected id is not the hover's), as the rounded tap did before OPEN-15; a pass means the position was not at the dot's edge in that run, and shows nothing about rounding.
+//   E-STATUS-HEIGHT styles.css, the status row back to `auto` and `.status-bar` back to `min-height: 1.5rem; max-height: 48px` in place of `height: var(--status-h)`. Expected: E-STATUS-HEIGHT fails
+//                  at S3 on the canvas height while the notice stands (B shorter than A). NOT YET OBSERVED: the custodian observes it in a run, records the failing step by name with the commit, and reverts it.
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, utimesSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -736,6 +738,53 @@ async function stepAskTwo(page, consoleHandle) {
   return `two statements, ${bundles.join(" then ")}, both manifests on disk; filter-zoned was admitted`;
 }
 
+/** E-STATUS-HEIGHT (SHELL-STATUS-BAR-ONE-HEIGHT-PREREGISTRATION.md Amendment 1): the status bar keeps one height, so the ended-selection notice coming (a second line) and going never changes the canvas's size. */
+async function stepStatusHeight(page, consoleHandle) {
+  const read = async () => {
+    const canvas = await canvasRect(page);
+    const boxes = await page.evaluate(() => {
+      const box = (selector) => document.querySelector(selector)?.getBoundingClientRect() ?? null;
+      const bar = document.querySelector(".status-bar");
+      const notice = box(".selection-ended");
+      const first = bar?.firstElementChild?.getBoundingClientRect() ?? null;
+      return { barHeight: bar?.getBoundingClientRect().height ?? null, stripHeight: box(".attention-strip")?.height ?? 0, scrollHeight: bar?.scrollHeight ?? null, clientHeight: bar?.clientHeight ?? null, noticeTop: notice?.top ?? null, firstBottom: first?.bottom ?? null };
+    });
+    return { width: canvas?.width ?? null, height: canvas?.height ?? null, ...boxes };
+  };
+  // S0: a selection stands and no notice: read A.
+  await openFixture(page, consoleHandle, FIXTURE_FILTER, "E-STATUS-HEIGHT (S0)");
+  await buildScene(page, consoleHandle, "E-STATUS-HEIGHT (S0)", { want: 1, min: 1 }).then(async (scene) => {
+    await useTool(page, "Select");
+    await useMode(page, "Add only");
+    await clickAt(page, scene.hits[0].css);
+  });
+  const standing = (await pollUntil(() => readTab(page), (t) => t.selected >= 1 && t.statusItem === null, 10_000)).last;
+  expect(standing.selected >= 1 && standing.statusItem === null, `E-STATUS-HEIGHT: S0 needs a selection and no notice (Selected ${standing.selected}, notice ${JSON.stringify(standing.statusItem)})`);
+  const a = await read();
+  // S1: a reopen ends the selection with a notice: read B.
+  await openFixture(page, consoleHandle, FIXTURE_FILTER, "E-STATUS-HEIGHT (S1)");
+  const noticed = (await pollUntil(() => readTab(page), (t) => t.statusItem !== null, 15_000)).last;
+  expect(noticed.statusItem !== null, "E-STATUS-HEIGHT: S1 the reopen showed no ended-selection notice");
+  await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+  const b = await read();
+  // G1: the notice is on a second line (its top is at or below the bottom of the footer's first element child, less 1 px). G2: the strip's height is the same in A and B.
+  if (b.noticeTop === null || b.firstBottom === null || b.noticeTop < b.firstBottom - 1) throw new Error(`E-STATUS-HEIGHT: INCONCLUSIVE (class 2, never a pass): G1, the notice is not on a second line (its top ${b.noticeTop}, the first item's bottom ${b.firstBottom})`);
+  if (b.stripHeight !== a.stripHeight) throw new Error(`E-STATUS-HEIGHT: INCONCLUSIVE (class 2, never a pass): G2, the attention strip's height changed (A ${a.stripHeight}, B ${b.stripHeight})`);
+  // S2: a Select click ends the notice: read C.
+  const scene = await buildScene(page, consoleHandle, "E-STATUS-HEIGHT (S2)", { want: 1, min: 1 });
+  await useTool(page, "Select");
+  await clickAt(page, scene.hits[0].css);
+  const cleared = (await pollUntil(() => readTab(page), (t) => t.statusItem === null && t.selected >= 1, 10_000)).last;
+  expect(cleared.statusItem === null && cleared.selected >= 1, `E-STATUS-HEIGHT: S2 the Select click left the notice ${JSON.stringify(cleared.statusItem)} with Selected ${cleared.selected}`);
+  const c = await read();
+  if (c.stripHeight !== a.stripHeight) throw new Error(`E-STATUS-HEIGHT: INCONCLUSIVE (class 2, never a pass): G2, the attention strip's height changed (A ${a.stripHeight}, C ${c.stripHeight})`);
+  // S3: the canvas is the same size in A, B and C, and the bar is 48 px in all three.
+  const size = (r) => `${r.width} x ${r.height}`;
+  expect(a.width !== null && a.width === b.width && b.width === c.width && a.height === b.height && b.height === c.height, `E-STATUS-HEIGHT: the canvas is ${size(a)} before the notice, ${size(b)} while it stands and ${size(c)} after it clears`);
+  expect(a.barHeight === 48 && b.barHeight === 48 && c.barHeight === 48, `E-STATUS-HEIGHT: the status bar is ${a.barHeight}, ${b.barHeight} and ${c.barHeight} px tall, not 48 in all three`);
+  return `the canvas stayed ${size(a)} (A, B, C) and the bar 48 px; recorded, not asserted: A's canvas height ${a.height}; in B the bar's scrollHeight ${b.scrollHeight} against its clientHeight ${b.clientHeight}`;
+}
+
 async function runSelectionSteps(page, consoleHandle) {
   const results = [];
   async function runStep(id, timeoutMs, fn) {
@@ -784,6 +833,7 @@ async function runSelectionSteps(page, consoleHandle) {
   await runStep("E-ASK", 600_000, () => stepAsk(page, consoleHandle));
   await runStep("E-ASK-STATEMENT", 300_000, () => stepAskStatement(page, consoleHandle));
   await runStep("E-ASK-TWO", 600_000, () => stepAskTwo(page, consoleHandle));
+  await runStep("E-STATUS-HEIGHT", 600_000, () => stepStatusHeight(page, consoleHandle));
   await runStep("E-DBLCLICK", 600_000, () => stepDblClick(page, consoleHandle));
   console.log(`[selection] ${results.filter((r) => r.status === "PASS").length} PASS, ${results.filter((r) => r.status === "FAIL").length} FAIL: ${results.map((r) => `${r.id}=${r.status}`).join(" ")}`);
 }

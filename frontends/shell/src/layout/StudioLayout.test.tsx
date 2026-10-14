@@ -15,6 +15,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { consoleRecorder, isGuiActionEntry } from "../console/recorder";
 import type { Tool } from "../workspace/workspaceState";
 import type { Slots } from "./contributions";
+import { STATUS_BAR_HEIGHT_PX } from "./layoutConstants";
 import StudioLayout from "./StudioLayout";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -174,5 +175,58 @@ describe("StudioLayout: what milestone 2 adds to the frame", () => {
     mount({}, false);
     expect(pressBare("n")).toBe(false);
     expect(tools).toEqual([]);
+  });
+});
+
+describe("StudioLayout: the status bar keeps one height (SHELL-STATUS-BAR-ONE-HEIGHT-PREREGISTRATION.md Amendment 1, SB1 and SB2)", () => {
+  let container: HTMLDivElement;
+  let root: Root;
+
+  beforeEach(() => {
+    container = document.createElement("div");
+    document.body.appendChild(container);
+    root = createRoot(container);
+  });
+
+  afterEach(() => {
+    act(() => {
+      root.unmount();
+    });
+    container.remove();
+  });
+
+  function mount(slots: Partial<Slots>): void {
+    act(() => {
+      root.render(<StudioLayout overlays={null} slots={{ ...NO_SLOTS, ...slots }} layersRow={null} onZoomToLayer={() => {}} />);
+    });
+  }
+
+  const app = () => container.querySelector<HTMLElement>(".app")!;
+  const statusH = () => app().style.getPropertyValue("--status-h");
+
+  // RECORDED MUTATION for SB1: in StudioLayout.tsx set `--status-h` from `TOP_BAR_HEIGHT_PX` instead of `STATUS_BAR_HEIGHT_PX`. Expected failure: the value is 40px, not 48px.
+  // OBSERVED AT <commit>: <pending>
+  it("SB1: .app carries --status-h at the status bar's fixed height and no --status-max-h", () => {
+    mount({});
+    expect(statusH()).toBe(`${STATUS_BAR_HEIGHT_PX}px`);
+    expect(statusH()).toBe("48px");
+    expect(app().style.getPropertyValue("--status-max-h")).toBe("");
+  });
+
+  // RECORDED MUTATION for SB2: in StudioLayout.tsx set `--status-h` to 48 px when `hasContent(slots["status.selectionEnded"])` and to 24 px otherwise. Expected failure: the value
+  // differs between the three renders.
+  // OBSERVED AT <commit>: <pending>
+  it("SB2: --status-h is the same with the ended-selection notice absent, present and absent again", () => {
+    mount({});
+    const absent = statusH();
+    expect(container.querySelector(".selection-ended")).toBeNull();
+
+    mount({ "status.selectionEnded": <div className="selection-ended">the selection ended</div> });
+    expect(container.querySelector("footer .selection-ended")).not.toBeNull();
+    expect(statusH()).toBe(absent);
+
+    mount({});
+    expect(container.querySelector(".selection-ended")).toBeNull();
+    expect(statusH()).toBe(absent);
   });
 });

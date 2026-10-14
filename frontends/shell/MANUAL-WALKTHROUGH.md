@@ -1847,3 +1847,24 @@ Fill in after running the rows above (the milestone-2 Part W).
 - **W10:**
 - **W10a (the point edge, a real mouse; the scale factor):**
 - **W11:**
+
+## Part Z — the status bar keeps one height: a notice coming or going does not move the map (shell-status-bar-one-height)
+
+This Part is the Operator gate of `frontends/shell/SHELL-STATUS-BAR-ONE-HEIGHT-PREREGISTRATION.md` §9 as Amendment 1 restates it, run only on a build after that piece's merge, with a blank result log. It is the human's felt verdict; it is discharged only once it has been run and its result log filled in. **No duration appears in any row.**
+
+| # | Step | Expected outcome |
+|---|---|---|
+| Z0 | Read the form's section 10, the last amendment first. | Done before Z1. |
+| Z1 | Open `filter-zoned.parquet`, choose Select, and click one feature. Open the file again: the ended-selection notice is in the status bar. Click a feature with Select: the notice clears. | **Felt:** did the map move or change size when the notice came? Did it move when the notice cleared? |
+| Z2 | With a file open and no notice, read the bar. | It is two lines tall while it holds one line. **Record** anything that reads as wrong. |
+| Z3 | With Narrator on, open the file again over a selection. | **Record** whether the whole notice is read. |
+| Z4 | At 1024 × 640 (DevTools device toolbar), open the file again over a selection and read the bar. | It stays two lines tall, and if its items need more it scrolls inside. **Record** whether the notice needed scrolling to be seen. |
+
+## Result log
+
+- **Date run, run by, build/commit, last amendment read (its number):**
+- **Z0:**
+- **Z1:**
+- **Z2:**
+- **Z3:**
+- **Z4:**

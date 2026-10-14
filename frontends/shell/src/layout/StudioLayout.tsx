@@ -24,7 +24,7 @@ import {
   ATTENTION_MAX_HEIGHT_PX,
   RESIZE_STEP_PX,
   SPLITTER_PX,
-  STATUS_BAR_MAX_HEIGHT_PX,
+  STATUS_BAR_HEIGHT_PX,
   TOP_BAR_HEIGHT_PX,
 } from "./layoutConstants";
 import { effectiveSizes, initialLayoutState, layoutReducer, sizeRangeOf } from "./layoutState";
@@ -42,6 +42,9 @@ import { LayersRow, SectionHeading, Splitter, TabList } from "./regionParts";
  * The layout is pure view state for this session (plan §2 rule 10): the reducer is not keyed on the
  * dataset, so it survives a reopen; no action here calls SKP or marks the workspace. The only things
  * recorded are the class-C rows of §2.6, and this is the one layout file that imports `recordNamed`.
+ *
+ * The status bar's grid row and its height are one value, `STATUS_BAR_HEIGHT_PX`
+ * (SHELL-STATUS-BAR-ONE-HEIGHT-PREREGISTRATION.md §2.4), so a status item coming or going never changes the map's size.
  */
 
 const REGION_ID: Record<SideRegion, string> = {
@@ -197,7 +200,7 @@ export default function StudioLayout({ overlays, slots, layersRow, onZoomToLayer
     "--activity-split": `${state.activity.open ? SPLITTER_PX : 0}px`,
     "--top-bar-h": `${TOP_BAR_HEIGHT_PX}px`,
     "--attention-max-h": `${ATTENTION_MAX_HEIGHT_PX}px`,
-    "--status-max-h": `${STATUS_BAR_MAX_HEIGHT_PX}px`,
+    "--status-h": `${STATUS_BAR_HEIGHT_PX}px`,
   };
 
   /** A splitter for `region`: a live resize on every move, one console row per finished drag or step. */
