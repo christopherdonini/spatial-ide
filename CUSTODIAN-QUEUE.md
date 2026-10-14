@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `76ae9de89e564106d33c6a37f7da834f705ec560bbc552af3af5de429001c081`) at `2026-10-14T08:13:09.229Z`.
+Generated from `PLAN.yaml` (sha256 `8db53dc1e2ef8494acfac27b3b679d35d06d3b6c916217bc79eeb9aa32daae27`) at `2026-10-14T09:21:02.326Z`.
 
 ## 1. Next
 
@@ -112,6 +112,7 @@ Generated from `PLAN.yaml` (sha256 `76ae9de89e564106d33c6a37f7da834f705ec560bbc5
 - **shell-migration-milestone-5** — Shell migration, milestone 5 -- conditions, Problems and Jobs: one home for failures and running work (phase `prototype`) — never queued until placed
 - **shell-real-app-run-macos-linux** — Run the real app once on macOS and once on Linux after migration milestone 1 merges, and record what it finds (phase `prototype`) — never queued until placed
 - **shell-status-bar-one-height** — The status bar keeps one height, so a notice coming or going never changes the map's size; a notice that does not fit is cut, and its full text stays reachable (phase `prototype`) — never queued until placed
+- **e2e-readme-status-bar-steps** — e2e/README.md: the status bar's two new steps and E-FOCUS's new stop in the layout and selection entries (the docs-lane follow-up of shell-status-bar-one-height, OPEN-2 (b)) (phase `prototype`) — never queued until placed
 - **engine-clause-composition-properties** — Engine test piece: clause composition, P5 and P6 over the admission property campaign (tests only; no product code, fixture or dependency) (phase `prototype`) — never queued until placed
 - **boundary-inventory** — Boundary inventory: one page, one table, read-only and descriptive (the architect): what each boundary's enforcement is, by code or the OS, by tests, by instruction only, or not built (phase `prototype`) — never queued until placed
 - **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark (phase `prototype`) — never queued until placed
