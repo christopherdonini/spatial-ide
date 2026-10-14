@@ -233,9 +233,9 @@ describe("isFramebufferIdentical (D4)", () => {
   });
 });
 
-// D3 -- the declared switch, both values exercised. `HOVER_REPICK_ON_PAN`'s shipped value is
-// PROPOSED PENDING THE HUMAN'S SIGHT (DECISIONS-PENDING entry 75); the pure rule takes it as a
-// parameter so neither value is a dormant branch.
+// D3 -- the declared switch, both values exercised. `HOVER_REPICK_ON_PAN`'s value is ruled
+// (DECISIONS-PENDING entry 75 (1)); the pure rule takes it as a parameter, so neither value is a
+// dormant branch.
 describe("shouldArmHoverRepick (D3/D6(a))", () => {
   it("pan-and-zoom-alike (the ruling's words): a pure pan with a readout standing DOES arm", () => {
     expect(shouldArmHoverRepick(true, false, true)).toBe(true);

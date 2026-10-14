@@ -113,8 +113,11 @@ fn the_vendored_duckdb_exposes_file_row_number_on_read_parquet() {
     assert_eq!(got, vec![0, 1, 2]);
 }
 
-/// **The narrow in-code form of the physical-vs-scan-ordered check** (the proposed ADR-016
-/// Amendment 1's block-on-sight 5: `file_row_number` must not be used "without the corpus check
+/// **The narrow in-code form of the physical-vs-scan-ordered check** (ADR-016 Amendment 1
+/// item 1, Accepted: that `file_row_number` is physical rather than scan-ordered is verified
+/// against the corpus, never assumed. The draft at 433413a, in
+/// `PROPOSED-amendment-to-ADR-016-identity-tier-model.md`, put its block-on-sight 5 as:
+/// `file_row_number` must not be used "without the corpus check
 /// that it is physical, not scan-ordered").
 ///
 /// **This is evidence, not the check.** The corpus-wide verification is P4's, against real files
@@ -203,8 +206,8 @@ fn a_single_file_keyless_source_admits_on_the_session_tier_and_records_its_basis
         .contains(&"parcel_key".to_string()));
 }
 
-/// The bare word "unique" appears nowhere in the session tier's record (the proposed ADR-016
-/// Amendment 1's block-on-sight 6), and neither does any snapshot claim (A1).
+/// The bare word "unique" appears nowhere in the session tier's record (ADR-016 Amendment 1
+/// item 1, Accepted), and neither does any snapshot claim (A1).
 /// Mutation: spell `IdUniqueness::ByConstructionWithinGeneration` as `"unique-within-session"`.
 /// Expected failure: `the_session_tier_record_says_neither_unique_nor_snapshot` fails on the
 /// bare-word check.

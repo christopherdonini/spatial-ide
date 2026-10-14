@@ -63,9 +63,10 @@ fn small() -> FixtureSpec {
 #[test]
 fn session_ordinal_reads_nothing_native_and_mapped_run_exactly_the_verification_scan() {
     // F-7-class: polygons, a candidate column (`parcel_key`) that is not named `id`, no native
-    // identity and no declaration -- the same fixture shape `identity.rs`'s
-    // `a_file_whose_key_is_not_called_id_is_refused_until_a_mapping_is_declared` already opens both
-    // ways, reused here for the read-accounting claim that test does not make.
+    // identity and no declaration -- the same fixture shape as
+    // `engine/tests/identity.rs::a_file_whose_key_is_not_called_id_admits_on_the_session_tier_until_a_mapping_is_declared`,
+    // which already opens both ways, reused here for the read-accounting claim that test does not
+    // make.
     let foreign_key_path = write(
         "foreign-key",
         &FixtureSpec {

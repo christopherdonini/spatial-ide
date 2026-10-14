@@ -1288,9 +1288,9 @@ fn the_5gb_clustered_cell() {
 ///
 /// **The interval is `cancel_requested → cancel_observed`**, which is what `docs/08`'s "cancellation
 /// acknowledged < 100 ms" is scored on per `kernel/CANCELLATION-AND-TRACING.md` §2 — cited
-/// descriptively, as the proposed ADR-018 vocabulary requires while it remains Proposed.
+/// descriptively, in ADR-018's vocabulary (Accepted), whose item 2 scores the budget on that pair.
 /// `cancel_requested → the consumer's terminal return` is reported **beside** it as a
-/// `cancel_acknowledged`-class figure with **no budget attached**, because the two are different
+/// `cancel_quiescent`-class figure with **no budget attached**, because the two are different
 /// intervals and the fifth section's numbers were the second kind.
 ///
 /// Run in-process rather than one-process-per-trial, deliberately: the one-process rule exists so a

@@ -49,16 +49,19 @@ import type { Terminal } from "./streaming/transport";
 // D4 (custodian forensic run, evidence: 2,012,436 = 1,961,249 + 51,187): a refusal from one
 // dataset survived, verbatim, into every later step's UI because nothing ever reset `canvasRefusal`
 // / `viewportRefusal` / `hover` on a fresh admission. This file asserts the fix's actual sequencing
-// directly, without rendering `<App />` -- `WorkingCanvas`'s real `Deck` construction needs a WebGL
-// context jsdom does not provide, and no `@testing-library/react`-equivalent harness exists in this
-// package (every other `.test.ts` here tests non-React logic, per this package's own `description`
-// field in `package.json`). `admitAndResetStaleUiState` is exported from `App.tsx` specifically so
-// this reset sequencing -- the actual bug fix -- is testable on its own terms.
+// directly, without rendering `<App />`. `admitAndResetStaleUiState` is exported from `App.tsx`
+// specifically so this reset sequencing -- the actual bug fix -- is testable on its own terms.
+// `App` is mounted elsewhere in this package (`App.layout.test.tsx`, `App.lateResult.test.tsx`),
+// with `react-dom/client` and `act`, and `WorkingCanvas` stood in because deck.gl's `Deck` needs a
+// WebGL context jsdom does not provide.
 //
 // The *other* half of the D4 fix, `<WorkingCanvas key={admitted.dataset} .../>` forcing a remount
-// per dataset, is **not tested here or anywhere in this suite**: it is a React-reconciliation idiom
-// with no meaningful assertion available short of that same DOM/WebGL harness this package does not
-// carry. `e2e/regression.mjs`'s `REOPEN'` step asserts banner/refusal absence immediately after a
+// per dataset, is **not pinned by a unit test**: every mounted-`App` suite replaces
+// `WorkingCanvas` with a stand-in that keys what it records on the `dataset` prop
+// (`App.layout.test.tsx`, `App.selection.test.tsx` and `App.workspace.test.tsx` record mounts and
+// unmounts in an effect on it; `App.lateResult.test.tsx` records props by it), so what they
+// record holds with or without the `key`.
+// `e2e/regression.mjs`'s `REOPEN'` step asserts banner/refusal absence immediately after a
 // reopen (before its own "Zoom to layer" click) specifically to give this half of the fix *some*
 // live evidence class, but that is a claim about what `REOPEN'` checks, not a claim that it has
 // passed -- read `e2e/regression.mjs`'s own run output for the current state of that step, not this

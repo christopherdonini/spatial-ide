@@ -173,7 +173,7 @@ async fn cancel_reaches_the_producer_during_a_late_matching_filtered_scan_once(
     })
     .expect("no other trace is running in this process");
 
-    // True only for the last 100 of 200,000 ids -- "matches late" per the fixture writer's own
+    // True only for the last 100 of FEATURES ids -- "matches late" per the fixture writer's own
     // ascending physical id order, admitted structurally as a plain COMPARISON over a real column.
     let ticket = host
         .viewport_query(ViewportQueryRequest {
