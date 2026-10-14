@@ -1588,3 +1588,27 @@ D.3 **Observations owed.**
 4. **E15 is named.** It runs with the other E-rows, after the human's merge click and reload. If a permission prompt appears, the human declines it. An inconclusive row is recorded as inconclusive, never as a pass.
 5. **Installing, enabling and reloading stay the human's.** The merge waits for the human's typed approval after both gates.
 6. **Superseded index:** Amendment 7's OPEN-7 → item 2; Part B's reading → item 3; Part E's E15 → item 4. Nothing above is edited.
+
+### Amendment 9 — budget overrun, §7 not edited (class 8): 1,957 lines against 1,300; with the build's results (class 1), its deviations (class 2), the README's log-folder line (class 5) and main merged in
+
+*Written by the custodian after the resumed build and its results were seen, before any gate. References only. The report is `state/consults/2026-10-12-guardian-v1-worker-report-3.md` (the head 2548968a). The gated head is 49b6a012.*
+
+1. **§7 (class 8).** By §7's own command against the merged main commit, the branch counts 1,957 changed lines over 3 files: README 84, register.js 783, guardian.test.ts 1,090. The ceiling is 1,300, and Part F's estimate was about 1,850; almost all of the difference is in the test file. I5 holds. The count is the same at 49b6a012. §7 is not edited.
+2. **The results (class 1),** as the report gives them:
+   - P0e (a): the build of record is 2.1.296 (Amendment 8 item 3). The verb and alias sets equal P0b (ii)'s, so I16 does not fire.
+   - P0e (b): `claude plugin test` at 5a9eb051 gives 70 pass, 0 fail, so I15 does not fire.
+   - P0e (c): the replay finds no tool write to L among 5,853 tool writes, so A.10's second invalidator does not fire.
+   - C.5: 73 pass on the merged tree, and `validate` exits 0, so I17 does not fire. C.6: 49 of 49 pins verify at their own commits.
+   - Part A and D.3: 76 pass at 2548968a, and every mutation, observed at e5afe5e6, fails its own test.
+   - **The custodian, at 49b6a012:** `claude --version` prints 2.1.296; `claude plugin test tools/mods/spatial-guardian` gives 76 pass, 0 fail, exit 0; `claude plugin validate` exits 0 on `tools/mods/spatial-guardian` and on `tools/mods`, with the version warnings only.
+3. **The build's deviations (class 2),** for the gates:
+   - (a) T74 runs F65's no-repository row first, because a repository once found is cached for the load.
+   - (b) T75 runs its rows in the order (b), (a), (c), for the same reason. Its assertions are F66's.
+   - (c) A.8's Install sentence lands in the Part A commit, not in the merge commit, where it would have been untrue. C.3's check allows it.
+   - (d) The 80 mutated runs held no shared hold: each was one serial process of about 5 to 8 seconds, which the worker judged under the heavy threshold. The scripts suite ran inside a granted shared hold.
+4. **The README's log-folder line (class 5).** On the human's ruling (`state/directives/2026-10-12-item-42-current-view-amendment-7-guardian-readme-guardrails-brief.md`, item 4), the line drops its clause about the Recorder's evidence folder, and nothing else in it changes. The custodian committed it at 49b6a012. §2.7's sentence that says the same is not edited here; the README is what ships.
+5. **Main merged in.** The custodian merged main at 241ba9e1 into the branch (c4a50c3c, two parents), with no conflict: no file under the mod, and not this form, changed on main since 2ca3a53c.
+6. **Generation:** the node's generation goes up by one.
+7. **Superseded index:** Part F's estimate → item 1; §2.7's log-folder clause → item 4.
+
+Nothing above is edited.

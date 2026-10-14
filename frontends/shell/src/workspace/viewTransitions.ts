@@ -2,19 +2,23 @@
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
 /**
- * SHELL-MIGRATION-MILESTONE-2-PREREGISTRATION.md section 2.4 (seam 3), phase A: the typed, pure
- * transitions of a view. A transition is an `{action, params}` object, the shape of ADR-036 section 6's
- * `intent` member (Proposed, so it binds nothing), applied by the pure `applyViewTransition`.
+ * SHELL-MIGRATION-MILESTONE-2-PREREGISTRATION.md section 2.4 (seam 3): the typed, pure transitions of a view. A
+ * transition is an `{action, params}` object, the shape of ADR-036 section 6's `intent` member (Proposed, so it
+ * binds nothing), applied by the pure `applyViewTransition`. The union is closed and is exactly the section's names:
+ * `filter.apply` and `style.set` (phase A), then `tool.set`, `mode.set`, `selection.apply`, `selection.clear`,
+ * `selection.end`, `inspect.set` and `inspect.pin`. Keystrokes, hover, navigation and layout are not transitions.
+ * There is no log and no undo (ADR-006; plan section 6.5): nothing here records a transition.
  *
- * Phase A carries the two transitions a view has state for, `filter.apply` and `style.set`. Phase B adds
- * the rest of the section's names (`tool.set`, `mode.set`, the `selection.*` and `inspect.*` ones) with the
- * state they act on. Keystrokes, hover, navigation and layout are not transitions. There is no log and no
- * undo (ADR-006; plan section 6.5): nothing here records a transition.
+ * A view's phase B members are optional (see `ViewState`); the readers below give their section 7 defaults.
  */
 
+import type { AuthoritativeBbox } from "../canvas/viewportBbox";
 import type { Filter } from "../skp/types";
 import type { StyleState } from "../style/document";
-import type { ViewState } from "./workspaceState";
+import { applySelectionMode, NO_MEMBERS } from "./selection";
+import type { SelectionEndReason, SelectionMembers, SelectionMode, SelectionNotice } from "./selection";
+import { DEFAULT_SELECTION_MODE, DEFAULT_TOOL } from "./selectionConstants";
+import type { InspectedFeature, InspectedPick, Tool, ViewState } from "./workspaceState";
 
 export type FilterApplyTransition = { action: "filter.apply"; params: { filter: Filter | null } };
 
@@ -27,7 +31,42 @@ export type StyleSetTransition =
   | { action: "style.set"; params: { property: "outlineColor"; value: string } }
   | { action: "style.set"; params: { property: "outlineWidth"; value: { value: number; unit: "px" } } };
 
-export type ViewTransition = FilterApplyTransition | StyleSetTransition;
+export type ToolSetTransition = { action: "tool.set"; params: { tool: Tool } };
+export type ModeSetTransition = { action: "mode.set"; params: { mode: SelectionMode } };
+export type SelectionApplyTransition = {
+  action: "selection.apply";
+  params: { mode: SelectionMode; id: bigint; bounds: AuthoritativeBbox };
+};
+export type SelectionClearTransition = { action: "selection.clear"; params: Record<string, never> };
+export type SelectionEndTransition = {
+  action: "selection.end";
+  params: { reason: SelectionEndReason; dropped: number };
+};
+export type InspectSetTransition = {
+  action: "inspect.set";
+  params: { pick: InspectedPick; bounds: AuthoritativeBbox } | null;
+};
+/** Pinning needs something inspected: with nothing inspected, `pinned: true` leaves the view unpinned. */
+export type InspectPinTransition = { action: "inspect.pin"; params: { pinned: boolean } };
+
+export type ViewTransition =
+  | FilterApplyTransition
+  | StyleSetTransition
+  | ToolSetTransition
+  | ModeSetTransition
+  | SelectionApplyTransition
+  | SelectionClearTransition
+  | SelectionEndTransition
+  | InspectSetTransition
+  | InspectPinTransition;
+
+/** The readers of a view's phase B members: an absent member has its section 7 default. */
+export const viewTool = (view: ViewState): Tool => view.tool ?? DEFAULT_TOOL;
+export const viewSelectionMode = (view: ViewState): SelectionMode => view.selectionMode ?? DEFAULT_SELECTION_MODE;
+export const viewSelection = (view: ViewState): SelectionMembers => view.selection ?? NO_MEMBERS;
+export const viewSelectionNotice = (view: ViewState): SelectionNotice | null => view.selectionNotice ?? null;
+export const viewInspected = (view: ViewState): InspectedFeature | null => view.inspected ?? null;
+export const viewPinned = (view: ViewState): boolean => view.pinned ?? false;
 
 function applyStyleSet(style: StyleState, transition: StyleSetTransition): StyleState {
   const params = transition.params;
@@ -43,13 +82,52 @@ function applyStyleSet(style: StyleState, transition: StyleSetTransition): Style
   }
 }
 
-/** Pure: returns a new view and never writes to its input (a frozen view is fine). */
+function applySelection(view: ViewState, params: SelectionApplyTransition["params"]): ViewState {
+  const members = viewSelection(view);
+  const outcome = applySelectionMode(members, params.mode, params.id, params.bounds);
+  if (outcome.kind === "refused") return { ...view, selectionNotice: { kind: "refused", refusal: outcome.refusal } };
+  if (outcome.members === members && view.selectionNotice === undefined) return view;
+  return { ...view, selection: outcome.members, selectionNotice: undefined };
+}
+
+/** Pure: returns a new view and never writes to its input (a frozen view is fine). A transition that changes nothing
+ * returns the view it was given. */
 export function applyViewTransition(view: ViewState, transition: ViewTransition): ViewState {
   switch (transition.action) {
     case "filter.apply":
       return { ...view, filter: transition.params.filter };
     case "style.set":
       return { ...view, style: applyStyleSet(view.style, transition) };
+    case "tool.set":
+      return viewTool(view) === transition.params.tool ? view : { ...view, tool: transition.params.tool };
+    case "mode.set":
+      return viewSelectionMode(view) === transition.params.mode
+        ? view
+        : { ...view, selectionMode: transition.params.mode };
+    case "selection.apply":
+      return applySelection(view, transition.params);
+    case "selection.clear":
+      return viewSelection(view).size === 0 && view.selectionNotice === undefined
+        ? view
+        : { ...view, selection: NO_MEMBERS, selectionNotice: undefined };
+    case "selection.end": {
+      const { reason, dropped } = transition.params;
+      const notice: SelectionNotice | undefined = dropped > 0 ? { kind: "ended", reason, dropped } : undefined;
+      return viewSelection(view).size === 0 && view.selectionNotice === undefined && notice === undefined
+        ? view
+        : { ...view, selection: NO_MEMBERS, selectionNotice: notice };
+    }
+    case "inspect.set": {
+      const params = transition.params;
+      if (params === null) {
+        return viewInspected(view) === null && !viewPinned(view) ? view : { ...view, inspected: null, pinned: false };
+      }
+      return { ...view, inspected: { pick: params.pick, bounds: params.bounds } };
+    }
+    case "inspect.pin": {
+      const pinned = transition.params.pinned && viewInspected(view) !== null;
+      return viewPinned(view) === pinned ? view : { ...view, pinned };
+    }
   }
 }
 
@@ -73,4 +151,15 @@ export function styleTransitions(prev: StyleState, next: StyleState): StyleSetTr
     });
   }
   return out;
+}
+
+/** The end of a view's generation (section 2.3): its selection ends, with the count dropped and the reason, and its
+ * inspected feature is cleared and unpinned. The workspace reducer calls this on the two events that end a
+ * generation for the view, a rebind and the source changing. */
+export function endViewGeneration(view: ViewState, reason: SelectionEndReason): ViewState {
+  const ended = applyViewTransition(view, {
+    action: "selection.end",
+    params: { reason, dropped: viewSelection(view).size },
+  });
+  return applyViewTransition(ended, { action: "inspect.set", params: null });
 }

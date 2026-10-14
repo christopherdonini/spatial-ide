@@ -83,3 +83,14 @@ As named in the source comment. A resize to zero size on main is not in this lis
 4. **Superseded index:** §F's OPEN-1 and OPEN-2 → items 1 and 2.
 
 Nothing above is edited.
+
+### Amendment 2 — gate 1 on PR #215: a correction of record (class 3), a layout line (class 2), and one of the human's sentences put to the human
+
+*Written by the custodian after the single reviewer gate (`state/consults/gates/2026-10-12-known-limitations-current-view-stale-box-gate1-reviewer.md`). References only.*
+
+1. **Correction of record (class 3; the gate's D-1).** §B row C5's sentence that candidateArmSession.ts has no call at T, and §D item 1, are untrue. The reset is also called inside `reissueUnrestricted` (frontends/shell/src/residency/candidateArmSession.ts:1513 @ b391e43622056324c56d35cc33065305140a8415 sha256:afd8c4c71c8ab144d9f80d65acda489a7a63c5108d49a7b60bd664742eda80eb), which the shipped candidate arm reaches through frontends/shell/src/App.tsx:1051 @ b391e43622056324c56d35cc33065305140a8415 sha256:180ff8f6909930675388d34df840c7a0d518c41d5715829d64a885661c0d4f3a. C5 holds by both routes, and the item's words are unaffected.
+2. **Layout (class 2; the gate's D-2).** One HTML comment line at column 0 stands before item 42, so that GitHub numbers it 42 and not 18 (f4d85944). The diff is 6 lines of Scope's 20.
+3. **The human's wording (the gate's C-1; item 2b).** The gate holds §A's sentence on what Current view then publishes untrue after a filter Apply, because Current view's query never carries the filter (item 8). Its replacement words and their clause check are in its report. The human answers yes, gives their own words, or accepts the sentence as it stands. The worker applies the answer, with no re-gate.
+4. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.

@@ -180,6 +180,8 @@ export interface AdmitPathDeps {
   setState: (updater: (prev: State) => State) => void;
   onAdmitted: (admitted: Admitted) => void;
   makeCancelKey: () => string;
+  /** Asked before anything else when present (Amendment 1 B3): `false` drops the open. Absent, as in the tests that predate it, the open goes on. */
+  confirmOpen?: () => Promise<boolean>;
 }
 
 /**
@@ -190,12 +192,15 @@ export interface AdmitPathDeps {
  * rather than a single form's. `AdmissionPanel`'s `admitPath` below is a thin wrapper supplying the
  * real `admitDataset`, the real `setState`, and a real cancel key; a test supplies its own `deps`
  * and inspects the `State` values `setState` was called with directly.
+ *
+ * **`confirmOpen` is awaited before the first `setState`** (B3): when it answers `false` nothing is admitted, no state is set and the result is `null`.
  */
 export async function runAdmitPath(
   path: string,
   options: AdmitOptions,
   deps: AdmitPathDeps
-): Promise<AdmissionOutcome> {
+): Promise<AdmissionOutcome | null> {
+  if (deps.confirmOpen !== undefined && !(await deps.confirmOpen())) return null;
   // Minted BEFORE the first `setState` (P4, unlike this function's pre-P4 shape, which minted it
   // only after) so it is already sitting in `State` -- reachable by `openCancelKey` from render --
   // the instant `kind` becomes `"opening"` (or `inFlight` becomes `true`), not only once `admit()`
@@ -261,6 +266,8 @@ export async function runAdmitPath(
 
 interface Props {
   onAdmitted: (admitted: Admitted) => void;
+  /** Resolves `true` at once when no export runs; otherwise `App` asks, and `false` (Keep exporting) drops the open. */
+  confirmOpen: () => Promise<boolean>;
 }
 
 /**
@@ -272,7 +279,7 @@ interface Props {
  * SAME function a plain retry uses, just with `AdmitOptions` set -- never a parallel admission
  * path.
  */
-export default function AdmissionPanel({ onAdmitted }: Props) {
+export default function AdmissionPanel({ onAdmitted, confirmOpen }: Props) {
   const [state, setState] = useState<State>({ kind: "idle", note: null });
 
   // The one piece of the manual flow a path string can't replay itself -- everything from here
@@ -280,15 +287,16 @@ export default function AdmissionPanel({ onAdmitted }: Props) {
   // `runAdmitPath` above holds the actual transition logic; this wrapper only supplies the real
   // dependencies (see `runAdmitPath`'s own doc comment for why the split exists).
   const admitPath = useCallback(
-    (path: string, options: AdmitOptions = {}): Promise<AdmissionOutcome> =>
+    (path: string, options: AdmitOptions = {}): Promise<AdmissionOutcome | null> =>
       runAdmitPath(path, options, {
         admit: admitDataset,
         setState,
         onAdmitted,
+        confirmOpen,
         makeCancelKey: () =>
           typeof crypto.randomUUID === "function" ? crypto.randomUUID() : `open-${Date.now()}-${Math.random()}`,
       }),
-    [onAdmitted]
+    [onAdmitted, confirmOpen]
   );
 
   const handlePick = useCallback(async () => {
@@ -317,6 +325,8 @@ export default function AdmissionPanel({ onAdmitted }: Props) {
           }
         : undefined;
       const outcome = await admitPath(path, options);
+      // A dropped open (Keep exporting, or replaced by a later open while the ask stood) has no kind of its own in `OpenPathOutcome`, which is outside this piece's files; it reads as a refusal with its own code.
+      if (outcome === null) return { kind: "refused", code: "open.dropped", message: "The open was dropped while an export ran: Keep exporting was chosen, or a later open replaced this one." };
       return outcome.kind === "refused"
         ? { kind: "refused", code: outcome.refusal.code, message: outcome.refusal.message }
         : { kind: "admitted" };

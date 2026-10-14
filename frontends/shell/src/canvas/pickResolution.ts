@@ -446,17 +446,14 @@ export function hoverRepickActionForCameraChange(
   return shouldArmHoverRepick(readoutWasStanding, zoomChanged, repickOnPan) ? "arm" : "schedule";
 }
 
+export type CanvasTool = "navigate" | "select";
+
 /**
- * DECISIONS-PENDING entry 89 §4.3: the canvas's own pointer cursor, wired into `Deck`'s `getCursor`
- * prop (`WorkingCanvas.tsx`'s Deck construction) -- deck.gl's own default is a grab/grabbing hand
- * (`@deck.gl/core`'s `getCursor` default: `isDragging ? "grabbing" : "grab"`), which reads as a
- * pannable-surface affordance. Declared instead (ADR-010 rule 6: a declared choice, not a
- * discovered one): a crosshair while nothing is held -- this canvas' primary interaction is aiming
- * a pick, not grabbing an object -- and `"grabbing"` only while deck's own controller reports an
- * active drag. Exactly two values, never `"pointer"`: the `Deck` construction wires no `onClick`
- * handler (`WorkingCanvas.tsx`'s Deck construction, hover-only picking via `onHover`), so there is
- * no click affordance on this canvas for a pointer hand to signal.
+ * The canvas's cursor, `Deck`'s `getCursor` (declared, not deck's default grab hand; ADR-010 rule 6): one cursor per
+ * tool, `"grabbing"` while dragging in both. Navigate is `crosshair` (entry 89 §4.3); Select is the CSS keyword
+ * `default` (milestone 2 Amendment 1 A4). Never `"pointer"`: what a click does depends on the tool.
  */
-export function cursorForPointerState(isDragging: boolean): "crosshair" | "grabbing" {
-  return isDragging ? "grabbing" : "crosshair";
+export function cursorForPointerState(isDragging: boolean, tool: CanvasTool = "navigate"): "crosshair" | "default" | "grabbing" {
+  if (isDragging) return "grabbing";
+  return tool === "select" ? "default" : "crosshair";
 }

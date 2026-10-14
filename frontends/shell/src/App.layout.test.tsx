@@ -398,9 +398,9 @@ describe("App: the Map Studio frame, through the real App (milestone 1)", () => 
     // The tabs follow the ARIA tabs pattern.
     const tablist = inspector.querySelector('[role="tablist"]')!;
     const tabs = [...tablist.querySelectorAll('[role="tab"]')];
-    expect(tabs.map((tab) => tab.textContent)).toEqual(["Layer", "Style"]);
-    expect(tabs.map((tab) => tab.getAttribute("aria-selected"))).toEqual(["true", "false"]);
-    expect(tabs.map((tab) => tab.getAttribute("tabindex"))).toEqual(["0", "-1"]);
+    expect(tabs.map((tab) => tab.textContent)).toEqual(["Layer", "Style", "Feature"]);
+    expect(tabs.map((tab) => tab.getAttribute("aria-selected"))).toEqual(["true", "false", "false"]);
+    expect(tabs.map((tab) => tab.getAttribute("tabindex"))).toEqual(["0", "-1", "-1"]);
     for (const tab of tabs) {
       expect(inspector.querySelector(`#${tab.getAttribute("aria-controls")}`)?.getAttribute("role")).toBe("tabpanel");
     }

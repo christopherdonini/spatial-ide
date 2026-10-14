@@ -30,9 +30,15 @@ export const HOVER_CONFIRMING_MARKER_TEXT = " · confirming…";
  * authoritative f64 anchor when the pick carried one (`pick.ts`'s `PickResult.anchor`). Shared by
  * the confirmed and the labelled states so the id the operator sees under a marker is character-for
  * -character the id they saw before the camera moved (B1: *"the standing id stays visible"*). */
-function idLine(pick: PickResult): string {
+export function idLine(pick: PickResult): string {
   return `id ${pick.id.toString()}${pick.anchor ? ` @ (${pick.anchor[0].toFixed(3)}, ${pick.anchor[1].toFixed(3)})` : ""}`;
 }
+
+/** The two refusals' texts, exported for the Feature tab (milestone 2, Amendment 2 item 7). Each equals the text this
+ * component has always rendered: its JSX lines trimmed and joined by one space. The wording is the human's at P6. */
+export const HOVER_SESSION_ENDED_TEXT =
+  "The source file changed while it was open, so what was on the canvas was cleared and features here can no longer be identified — reopen the dataset to continue.";
+export const HOVER_BELOW_RESOLUTION_TEXT = "Features here are below pick resolution — zoom in to inspect them.";
 
 /**
  * The hover readout, all four of its states, in one place -- extracted verbatim from `App.tsx`'s
@@ -66,18 +72,13 @@ export function HoverReadoutView({ readout }: { readout: HoverReadout }): JSX.El
   // the refusal renders and no id does.
   if (isPickSessionEnded(readout)) {
     return (
-      <div className="hover-readout hover-readout-session-ended">
-        The source file changed while it was open, so what was on the canvas was cleared and
-        features here can no longer be identified — reopen the dataset to continue.
-      </div>
+      <div className="hover-readout hover-readout-session-ended">{HOVER_SESSION_ENDED_TEXT}</div>
     );
   }
 
   if (isPickBelowResolution(readout)) {
     return (
-      <div className="hover-readout hover-readout-below-resolution">
-        Features here are below pick resolution — zoom in to inspect them.
-      </div>
+      <div className="hover-readout hover-readout-below-resolution">{HOVER_BELOW_RESOLUTION_TEXT}</div>
     );
   }
 

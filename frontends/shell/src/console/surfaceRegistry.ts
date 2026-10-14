@@ -297,7 +297,7 @@ const CLASS_C_ROWS = [
     class: "C",
     action: "layout.selectInspectorTab",
     statement:
-      "[P6 placeholder] no API equivalent exists -- switching the Inspector between its Layer and Style tabs is pure view state for this session, never sent to the kernel.",
+      "[P6 placeholder] no API equivalent exists -- switching the Inspector between its Layer, Style and Feature tabs is pure view state for this session, never sent to the kernel.",
     owner: 'docs/03 §"The action console" (pure view state)',
   },
   {
@@ -319,6 +319,62 @@ const CLASS_C_ROWS = [
     action: "layout.resizeRegion",
     statement:
       "[P6 placeholder] no API equivalent exists -- resizing a region with its splitter is pure view state for this session, never sent to the kernel; it is recorded once per finished drag and once per keyboard step.",
+    owner: 'docs/03 §"The action console" (pure view state)',
+  },
+  {
+    class: "C",
+    action: "tool.set",
+    statement:
+      "[P6 placeholder] no API equivalent exists -- choosing the Navigate or Select tool is pure view state for this session, never sent to the kernel.",
+    owner: 'docs/03 §"The action console" (pure view state)',
+  },
+  {
+    class: "C",
+    action: "mode.set",
+    statement:
+      "[P6 placeholder] no API equivalent exists -- choosing how a click changes the selection (Add / remove, Replace, Add only or Remove only) is pure view state for this session, never sent to the kernel.",
+    owner: 'docs/03 §"The action console" (pure view state)',
+  },
+  {
+    class: "C",
+    action: "selection.change",
+    statement:
+      "[P6 placeholder] no API equivalent exists -- changing which features are selected with a click is pure view state for this session, never sent to the kernel and not saved.",
+    owner: 'docs/03 §"The action console" (pure view state)',
+  },
+  {
+    class: "C",
+    action: "selection.clear",
+    statement:
+      "[P6 placeholder] no API equivalent exists -- clearing the selection is pure view state for this session, never sent to the kernel.",
+    owner: 'docs/03 §"The action console" (pure view state)',
+  },
+  {
+    class: "C",
+    action: "selection.zoomTo",
+    statement:
+      "[P6 placeholder] no API equivalent exists -- Zoom to selection moves the camera over the selected features, which is pure view state for this session; it sends nothing but the viewport query any camera move causes.",
+    owner: 'docs/03 §"The action console" (pure view state)',
+  },
+  {
+    class: "C",
+    action: "feature.inspect",
+    statement:
+      "[P6 placeholder] no API equivalent exists -- inspecting the feature under a click is pure view state for this session, never sent to the kernel.",
+    owner: 'docs/03 §"The action console" (pure view state)',
+  },
+  {
+    class: "C",
+    action: "feature.pin",
+    statement:
+      "[P6 placeholder] no API equivalent exists -- pinning or unpinning the inspected feature is pure view state for this session, never sent to the kernel.",
+    owner: 'docs/03 §"The action console" (pure view state)',
+  },
+  {
+    class: "C",
+    action: "dataset.openDuringExport",
+    statement:
+      "[P6 placeholder] no API equivalent exists -- answering the question asked when a dataset is opened while an export runs is a choice made in the window; the cancel request it may send and the open that follows are recorded by their own rows.",
     owner: 'docs/03 §"The action console" (pure view state)',
   },
 ] as const satisfies readonly ClassCRow[];

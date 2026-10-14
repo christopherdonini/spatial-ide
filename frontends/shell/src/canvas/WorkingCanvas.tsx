@@ -31,6 +31,8 @@ import type { StyleState } from "../style/document";
 import { resolveDrawParameters } from "../style/document";
 import { batchForLayerId, buildLayers, toResolvedDrawParams } from "./buildLayers";
 import type { ResolvedDrawParams } from "./buildLayers";
+import { createTapHandler } from "./clickPick";
+import type { ClickPick } from "./clickPick";
 import { coalesceOncePerFrame } from "./coalesceOncePerFrame";
 import { decodeBatch, geometryKindOf } from "./decodeBatch";
 import type { ResidentBatch } from "./decodeBatch";
@@ -42,6 +44,8 @@ import {
   PickCeilingExceeded,
   ResidentVertexCeilingExceeded,
 } from "./limits";
+import { buildHighlightLayers, createDrawnEmitter } from "./highlightLayers";
+import type { Highlight } from "./highlightLayers";
 import { OffsetFrame, RECENTER_BUDGET_PX, RECENTER_MAX_DRIFT, recenterThresholdForBudget } from "./offsetFrame";
 import type { HoverReadout, PickResult } from "./pick";
 import { isPickBelowResolution, isPickConfirming, isPickSessionEnded, resolvePick } from "./pick";
@@ -59,7 +63,7 @@ import {
   pickResolutionExtentFor,
   reevaluateStandingHoverOnCameraChange,
 } from "./pickResolution";
-import type { FramebufferIdentity, HoverPointerCapture } from "./pickResolution";
+import type { CanvasTool, FramebufferIdentity, HoverPointerCapture } from "./pickResolution";
 import { debounce } from "../streaming/debounce";
 import { ResidentSet } from "./residentSet";
 import { getResidencyArm } from "../residency/residencyArm";
@@ -129,6 +133,11 @@ export interface WorkingCanvasHandle {
    * layer has ever loaded anything (`extent.ts`'s `chooseFitTarget` has the full account). A no-op
    * (returns `false`) only when nothing was ever rendered by this instance. */
   fitToBounds(): boolean;
+  /** Milestone 2, section 2.5 (Zoom to selection): fit the camera to `bbox`, an authoritative-CRS box the caller holds. It
+   * reuses `fitToExtent` with `notifyViewport: true`, as `fitToBounds` does, so it reports the fitted view and issues the one
+   * query any fit issues. Optional in the type only, so that the stand-in handles of suites that predate it still satisfy
+   * this interface; the component always provides it. */
+  fitToBbox?(bbox: AuthoritativeBbox): void;
   /**
    * Clears BOTH the fit anchor (`fitAnchorRef`) and the one-shot auto-fit flag (`hasAutoFitRef`) --
    * called, on both arms, after an issued outcome (`App.tsx`'s `applyFilter`); on the candidate
@@ -545,9 +554,24 @@ export interface WorkingCanvasProps {
    * batch or a viewport change renders through, so a style edit cannot accidentally piggyback a
    * query or a residency mutation it has no business touching. */
   style: StyleState;
+  // Milestone 2, phase B (SHELL-MIGRATION-MILESTONE-2-PREREGISTRATION.md section 2.2 and Amendments 2, 3). The five props below
+  // are optional until `App.tsx` passes them; an absent one is inert (Navigate, nothing highlighted, nobody told). Each is
+  // mirrored via a ref, as every prop here is.
+  /** Which tool is active. It fixes only the cursor (`cursorForPointerState`); a tap resolves the same pick in both tools. */
+  tool?: CanvasTool;
+  /** A tap's result: the feature under it with its authoritative bounds, the refusal below pick resolution, or nothing. */
+  onClickPick?: (result: ClickPick) => void;
+  /** The selected ids and the inspected id, drawn as non-pickable outlines after the data layers (`buildHighlightLayers`). */
+  highlight?: Highlight;
+  /** The highlighted ids that are resident, emitted only when that set changes (`createDrawnEmitter`). */
+  onSelectionDrawnChange?: (drawn: ReadonlySet<bigint>) => void;
+  /** The box the map shows, reported where the camera moved or the canvas changed size and nothing was asked for: the auto-fit,
+   * and a change of size while no area is last asked for (Amendment 3). It issues no query and is not the area last asked for. */
+  onViewShown?: (bbox: AuthoritativeBbox) => void;
 }
 
 const INITIAL_ZOOM = 0;
+const NO_HIGHLIGHT: Highlight = { selected: new Set(), inspected: null };
 
 function pixelsPerWorldUnitAtZoom(zoom: number): number {
   // deck.gl's OrthographicView: one world unit is 2^zoom CSS pixels -- the same units as
@@ -823,7 +847,7 @@ export function createHoverRepickScheduler(deps: HoverRepickDeps): HoverRepickSc
 }
 
 const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(function WorkingCanvas(
-  { dataset, geometryColumn, geometryEncoding, crsUnit, onHover, onCanvasRefusal, onResidentCeilingExceeded, onViewportChanged, onViewportWithinLastQuery, style },
+  { dataset, geometryColumn, geometryEncoding, crsUnit, onHover, onCanvasRefusal, onResidentCeilingExceeded, onViewportChanged, onViewportWithinLastQuery, style, tool = "navigate", onClickPick, highlight = NO_HIGHLIGHT, onSelectionDrawnChange, onViewShown },
   ref
 ) {
   const canvasElRef = useRef<HTMLCanvasElement | null>(null);
@@ -1013,6 +1037,19 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
   onViewportChangedRef.current = onViewportChanged;
   const onViewportWithinLastQueryRef = useRef(onViewportWithinLastQuery);
   onViewportWithinLastQueryRef.current = onViewportWithinLastQuery;
+  const toolRef = useRef(tool);
+  toolRef.current = tool;
+  const onClickPickRef = useRef(onClickPick);
+  onClickPickRef.current = onClickPick;
+  const highlightRef = useRef(highlight);
+  highlightRef.current = highlight;
+  const onSelectionDrawnChangeRef = useRef(onSelectionDrawnChange);
+  onSelectionDrawnChangeRef.current = onSelectionDrawnChange;
+  const onViewShownRef = useRef(onViewShown);
+  onViewShownRef.current = onViewShown;
+  /** The one place the drawn set leaves this component: `render()` passes every pass's set, only a changed one is emitted. */
+  const emitDrawnRef = useRef<((drawn: ReadonlySet<bigint>) => void) | null>(null);
+  if (emitDrawnRef.current === null) emitDrawnRef.current = createDrawnEmitter((drawn) => onSelectionDrawnChangeRef.current?.(drawn));
 
   /** The inputs of the last camera write (size excluded), written at exactly the three camera-change
    * sites: the interactive handler, `fitToExtent` and the DEV-only view-state seam. Null before any. */
@@ -1191,6 +1228,21 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
    * a second outstanding settle D7 says cannot exist. Every dependency below reads a ref at CALL
    * time, so there is nothing here for a stale closure to go stale on. */
   const hoverRepickRef = useRef<HoverRepickScheduler | null>(null);
+
+  /** The settle re-pick's pick, moved here unchanged so that a tap (`onClick`, below) takes the SAME two steps (milestone 2, section
+   * 2.2, OPEN-1 (A)): `deck.pickObject` at a pixel, then the batch the picked layer was built from, against `activeBatches()`.
+   * The line open's radius (`pickingRadiusFor`) is passed only when defined. `null` when nothing was picked or the picked
+   * layer has no resident batch. */
+  function pickCandidateAt(x: number, y: number): HoverPickCandidate | null {
+    const deck = deckRef.current;
+    if (!deck) return null;
+    const radius = pickingRadiusFor(geometryKindRef.current);
+    const info = deck.pickObject(radius === undefined ? { x, y } : { x, y, radius });
+    if (!info || info.index === undefined || info.index < 0 || !info.layer) return null;
+    const batch = batchForLayerId(activeBatches(), info.layer.id);
+    return batch === undefined ? null : { batch, gpuOrdinal: info.index };
+  }
+
   if (hoverRepickRef.current === null) {
     hoverRepickRef.current = createHoverRepickScheduler({
       capturedPointer: () => lastPointerPxRef.current,
@@ -1206,16 +1258,8 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
       // then the batch the picked layer was actually built from. The radius is the line open's
       // tolerance (`pickingRadiusFor`, the lines cut, SH-L4) -- the same value deck's own hover
       // `pickingRadius` carries -- and is passed only when defined, so a polygonal or point open
-      // calls `pickObject` with no radius, as before.
-      pickCandidateAt: (x, y) => {
-        const deck = deckRef.current;
-        if (!deck) return null;
-        const radius = pickingRadiusFor(geometryKindRef.current);
-        const info = deck.pickObject(radius === undefined ? { x, y } : { x, y, radius });
-        if (!info || info.index === undefined || info.index < 0 || !info.layer) return null;
-        const batch = batchForLayerId(activeBatches(), info.layer.id);
-        return batch === undefined ? null : { batch, gpuOrdinal: info.index };
-      },
+      // calls `pickObject` with no radius, as before. Since milestone 2 the body is `pickCandidateAt`, above, which a tap shares.
+      pickCandidateAt,
       resolveCandidate: (candidate) => resolvePick(candidate.batch, candidate.gpuOrdinal),
       standingReadout: () => lastHoverReadoutRef.current,
       emit: (readout) => emitHoverReadout(readout),
@@ -1267,6 +1311,7 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
     const deck = deckRef.current;
     if (!deck) return;
     begin("layer-construct");
+    let drawn: ReadonlySet<bigint>;
     try {
       // Viewport-residency cut P3w item B: the candidate arm's `TileResidentSet` feeds the SAME
       // `buildLayers` path, unioning its own tile-keyed batches into the render layer set exactly as
@@ -1278,7 +1323,11 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
       // hover site also calls.
       const batches = activeBatches();
       const layers = buildLayers(batches, frameRef.current, drawParamsRef.current, geometryKindRef.current);
-      deck.setProps({ layers });
+      // Milestone 2, section 2.2: the highlight layers go after the data layers (ADR-010 rule 4), non-pickable, in the same pass
+      // that finds which highlighted ids are resident. Nothing highlighted costs one emptiness check; no data layer is rebuilt.
+      const highlightResult = buildHighlightLayers(batches, frameRef.current, highlightRef.current, geometryKindRef.current);
+      drawn = highlightResult.drawn;
+      deck.setProps({ layers: [...layers, ...highlightResult.layers] });
       // Vertex count actually handed to `getPolygon` this render, not a re-derivation from deck.gl's
       // own internal layer state -- the same total `buildLayers` fed the GPU from, computed once by
       // `decodeBatch` and carried on each `ResidentBatch` rather than re-walked here.
@@ -1290,6 +1339,7 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
     } finally {
       end("layer-construct");
     }
+    emitDrawnRef.current?.(drawn); // after the watchdog span, since the parent's handler is not layer construction
   }
 
   /** Reviewer gate, style-panel cut P7 fixes, S5: coalesces the style effect's own `render()` calls
@@ -1352,6 +1402,9 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
       reportViewport(bboxForFit(fit, frame.originX, frame.originY, widthPx, heightPx));
     } else {
       lastQueriedRef.current = null; // a write that does not report leaves no area "last asked for"
+      // Amendment 3 (OPEN-11 (A)), place 1 of 2: the auto-fit's unreported camera write. The box the camera now shows goes to
+      // `onViewShown`, never to `reportViewport`: no query, and `lastQueriedRef` stays null.
+      onViewShownRef.current?.(bboxForFit(fit, frame.originX, frame.originY, widthPx, heightPx));
     }
   }
 
@@ -1527,6 +1580,10 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
         // on screen for `render()` alone to redraw at the new camera position.
         fitToExtent(bbox, true);
         return true;
+      },
+
+      fitToBbox(bbox) {
+        fitToExtent(bbox, true); // Amendment 2 item 3: it notifies, as `fitToBounds` does
       },
 
       resetFitForNewGeneration() {
@@ -1846,6 +1903,12 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [style]);
 
+  // Milestone 2, section 2.2: a highlight change schedules the coalesced render, as a style change does -- no data layer is rebuilt
+  // and nothing viewport-shaped is reached. Keyed on the two members, so a caller passing a fresh wrapper object does not render.
+  useEffect(() => {
+    coalescedRenderRef.current.schedule();
+  }, [highlight.selected, highlight.inspected]);
+
   // D11 (preregistration section 12 Amendment 2): the button-down guard's own listeners. `pointerdown`
   // on the canvas -- the only element a drag pan can start on -- and `pointerup`/`pointercancel` on
   // the WINDOW, so a button released anywhere (off the canvas, off the window's own chrome, after a
@@ -1932,6 +1995,15 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
     // The lines cut (SH-L4): deck's hover tolerance for a line open, set only when defined so a
     // polygonal or point open leaves `pickingRadius` at deck's own default (round 62, item 4).
     const pickingRadius = pickingRadiusFor(geometryKindRef.current);
+    const onTap = createTapHandler(
+      {
+        pickCandidateAt,
+        belowPickResolutionNow: () => isBelowPickResolution(averageFeatureExtentRef.current, pixelsPerWorldUnitAtZoom(currentZoomRef.current)),
+        resolveCandidate: (candidate) => resolvePick(candidate.batch, candidate.gpuOrdinal),
+      },
+      (result) => onClickPickRef.current?.(result),
+      canvas
+    );
     const deck = new Deck({
       canvas,
       ...(pickingRadius === undefined ? {} : { pickingRadius }),
@@ -1943,7 +2015,18 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
       // (`pickResolution.ts`) is the pure decision; this is only its wiring into the seam deck itself
       // owns (`getCursor`'s own `isDragging` comes from deck's controller, not from this file's own
       // `pointerButtonDownRef`, which tracks a DOM pointer-down rather than an active drag gesture).
-      getCursor: ({ isDragging }) => cursorForPointerState(isDragging),
+      // Milestone 2 (Amendment 2 item 6): the tool is read from its ref at each call. deck re-runs `getCursor` every animation
+      // frame (`Deck._onRenderFrame` -> `_updateCursor`, @deck.gl/core 9.3.9 `deck.js`; read, not run), so a tool change
+      // needs no pointer event and no re-set of this prop.
+      getCursor: ({ isDragging }) => cursorForPointerState(isDragging, toolRef.current),
+      // Milestone 2, section 2.2 (OPEN-1 (A)): a tap picks afresh at its own pixel (`tapPixel`: the `pointerup`'s client coordinates, truncated and made relative to the
+      // canvas as deck does the hover's) through the settle re-pick's `pickCandidateAt`, in this handler. deck's picking info (the pointer-down pick) is not read; `clickPick.ts`.
+      // OPEN-14 (PR 217 round 3): a double-click only zooms, through the map's own controller on the same event. deck delivers `click` and `dblclick` here as separate events
+      // (`event.type`; `tapCount` is not the tell, since the click recogniser counts taps close together), so a `dblclick` neither picks nor emits, and a single click arrives as before.
+      onClick: (_info, event) => {
+        if (event.type === "dblclick") return;
+        onTap(event);
+      },
       onLoad: () => end("deck-init"),
       // A size change that uncovers map area asks for it once a view has been reported (`lastQueried` non-null);
       // a shrink asks for nothing. deck's own
@@ -1955,6 +2038,13 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
         const decision = viewportAfterResize(cameraRef.current, lastQueriedRef.current, canvas.clientWidth, canvas.clientHeight);
         if (decision.kind === "query") reportViewport(decision.bbox);
         else if (decision.kind === "within") onViewportWithinLastQueryRef.current(decision.bbox);
+        else if (cameraRef.current !== null && lastQueriedRef.current === null && canvas.clientWidth > 0 && canvas.clientHeight > 0) {
+          // Amendment 3 (OPEN-11 (A)), place 2 of 2: a change of size that asks for nothing because no area was last asked for.
+          // The box now shown goes to `onViewShown`, never to `reportViewport`: no query, and `lastQueriedRef` stays null.
+          onViewShownRef.current?.(
+            computeAuthoritativeViewportBbox({ ...cameraRef.current, widthPx: canvas.clientWidth, heightPx: canvas.clientHeight })
+          );
+        }
       },
       onViewStateChange: ({ viewState, interactionState }) => {
         const vs = viewState as { target: [number, number, number]; zoom: number };

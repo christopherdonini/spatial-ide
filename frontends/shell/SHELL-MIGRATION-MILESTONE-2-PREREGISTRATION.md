@@ -1231,3 +1231,189 @@ Nothing above is edited.
 5. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 10 — phase B built: stages 4 to 8, the e2e results and the mutation observations (class 1), the build's deviations (class 2), and two items for the human
+
+*Written by the custodian after stages 4 to 8, the e2e runs and the mutation runs were seen, before any gate. References only.*
+- *The reports: `state/consults/2026-10-12-shell-migration-milestone-2-phase-b-worker-report-stage-4.md` to `state/consults/2026-10-12-shell-migration-milestone-2-phase-b-worker-report-stage-8.md`; the step fixes, `-stepfix-1.md` to `-stepfix-4.md` in the same folder; the diagnosis, `state/consults/2026-10-12-shell-migration-milestone-2-phase-b-e2e-diagnosis-1.md`; the point-click investigation, `state/consults/2026-10-12-shell-migration-milestone-2-phase-b-point-click-investigation.md`; the patch report, `state/consults/2026-10-12-shell-migration-milestone-2-phase-b-mutation-patches-report.md`.*
+- *The e2e records: `state/consults/2026-10-12-shell-migration-milestone-2-phase-b-e2e-custodian-run-1.md` and `state/consults/2026-10-12-shell-migration-milestone-2-phase-b-e2e-custodian-run-2.md`.*
+- *The head is 719568f8.*
+
+1. **§7, by its own command from B at 719568f8.**
+   - Phase B counts 5,644 lines. With phase A's 1,170, the piece is at 6,814 of 8,352.
+   - Every file is within its ceiling as §7 and Amendments 1, 2 and 7 add them, except Amendment 9 item 1's two.
+   - `selection.mjs` is 706 against about 750 for phase B: G-E's 650, less phase A's 100, plus AM1-E 40, AM1-X 90 and AM7-E 70. The figure of about 660 named in the stage reports left out AM1-X.
+   - FeaturePanel.tsx and clickEffect.ts, new files under `src/feature/` (§2.7), count in B-L. FeatureTab.test.tsx and ToolSwitch.test.tsx count in B-T.
+   - The two OPEN-13 files (523 lines) are outside every group until ruled.
+   - §7 is not edited.
+2. **The results (class 1).**
+   - The base suites pass at stages 3 to 7: regression, layout, console, style, publish and admission (run 1, run 2).
+   - At 719568f8, selection passes 15 of 15.
+   - Every e2e step's mutation is observed by its own step, at the commits run 2 names. E-ASK (2) is proven by RB12b, and is not observable in e2e.
+   - The point click (the investigation): the hover reads truncated pointer coordinates and the tap rounded ones. So at a fractional coordinate the tap can land one pixel off, and lose a point dot's edge. The click code is not at fault, and the e2e hover point is rounded to whole CSS pixels.
+3. **The build's deviations (class 2),** for the gates:
+   - (a) A [P6 placeholder] statement, `layout.selectInspectorTab`'s, was edited: with a third tab, the old one was untrue (§5; stage 4).
+   - (b) `matchToolKey` has the code fallback that `matchChord` has, and the count line is labelled Selected, ignoring filter (stage 4).
+   - (c) `status.selectionEnded` landed in stage 5. `Slots` keeps it optional while StudioLayout.test.tsx is pending (stage 5).
+   - (d) `countSelection`'s facts are App's own. The view's completeness is the scan's completed state (stage 5).
+   - (e) The `[admitted]` re-acquire has no App-level test that discriminates it. The reducer side is UB14's (stage 5, note 2).
+   - (f) The mode picker records no console row. §2.6's six rows name none (stage 5).
+   - (g) Commit 968ff05c's body says 21 tests. There are 18 tests with 21 observations (stage 5).
+   - (h) Beyond §4's table, each with its own observed mutation: RB7-hook; RB-SET, RB-S1 and RB-DRAWN; RB12 split into RB12a to RB12e.
+   - (i) PublishControls' `execute` is optional with a default, and RB8's mutation goes through `filterActive` (stage 6).
+   - (j) RB12b's mutation sits in `handleAdmitted`. A second `confirmOpen` answers the first as Keep. The dev hook reports a dropped open as a refusal coded `open.dropped`, because `e2e-test-surface.ts` is outside §2.7. The two late-cancel constants are exported, as Amendment 7 item 2(d) says (stage 7).
+   - (k) layout.mjs is unedited (stage 8).
+   - (l) EXPORT-TODAY, phase A's recorded observation (Amendment 4 item 2), is skipped with a printed reason: after B3, its reopen meets the ask, which E-ASK and E-ASK-STATEMENT cover.
+   - (m) The e2e steps were fixed and strengthened in four test-only commits: 9773d5c0, 2f18ad39, a6607738 and 719568f8.
+4. **For the human (not ruled here):**
+   - (a) **OPEN-13 is widened.** Amendment 9 item 3(a) put `src/canvas/WorkingCanvas.wiring.test.tsx` to the human. `src/layout/StudioLayout.test.tsx` (178 lines, 6 tests, stage 4), also outside §2.7's list, now joins it: keep (class 9, with its lines an overrun, class 8), or drop.
+   - (b) **OPEN-15, the point click's pixel rule.** §2.2 picks the tap's own rounded pixel (OPEN-1 (A)), and the hover reads the truncated one. On a display scaled to 125% or 150%, a click at a point dot's edge can then miss the feature the hover readout names. The options:
+     - (A) accept it, and state it as a KNOWN-LIMITATIONS item;
+     - (B) the tap picks the hover's truncated pixel;
+     - (C) a click on a point picks with a 1 px radius.
+
+     Recommended: (C). It is independent of how a platform rounds the pointer, and on a polygon it changes nothing. Not a red line.
+   - (c) **Item 2e:** KNOWN-LIMITATIONS items 36, 38, 40 and 41, and Part W's expected-outcome cells, are drafts for the human's words (stage 8).
+5. **Generation:** the node's generation goes up by one.
+6. **Superseded index:** Amendment 9 item 3(a), OPEN-13 → item 4(a).
+
+Nothing above is edited.
+
+### Amendment 11 — PR #217 gate 1: correction round 1 of 2, built (class 2); its e2e (class 1); the record corrections in the gates' words (class 3)
+
+*Written by the custodian after both gate 1 reports (`state/consults/gates/2026-10-12-shell-migration-milestone-2-phase-b-gate1-architect.md`, `state/consults/gates/2026-10-12-shell-migration-milestone-2-phase-b-gate1-reviewer.md`), the round's build (`state/consults/2026-10-12-shell-migration-milestone-2-phase-b-correction-round-1-report.md`, head 7ffdb6a7) and its e2e (`state/consults/2026-10-12-shell-migration-milestone-2-phase-b-e2e-custodian-run-3.md`) were seen. References only. The record corrections are the gates' replacement words, applied with no re-gate (item 2d of state/directives/2026-10-11-direction-after-status-review.md). None is the human's wording.*
+
+1. **The round (class 2), for gate 2:**
+   - the reviewer's C1, by RB12g, with its mutation observed;
+   - the architect's C-1: `mode.set`, a class-C row, recorded only on a change of mode, by RB16;
+   - the architect's S2, by RB12f;
+   - the document items: the reviewer's D1, D3, D4 and D5, and the architect's D-4 to D-7.
+   - Amendment 10 item 3(f) is withdrawn by C-1's fix.
+2. **The e2e (class 1).**
+   - The ten suites of the architect's E-1 and the reviewer's E1 pass at 719568f8, whose product code equals 575cd4b3's.
+   - All fourteen suites pass at 7ffdb6a7 (run 3).
+3. **Corrections of record (class 3), in the gates' words:**
+   - (a) **Amendment 10 item 4(a), OPEN-13, reads as the architect's D-1 replacement words.** It offers options (A), (B) and (C), and (C) is a red line.
+   - (b) **Amendment 10 item 4(b), OPEN-15:**
+     - its first two sentences read as the architect's D-2 replacement;
+     - (B) and (C) carry D-2's appended costs;
+     - the sentence after the options is D-2's: a class 9 change, whose proof is an e2e step at a fractional coordinate.
+   - (c) **Amendment 10 item 2's point-click sentence reads as the architect's D-3 words.**
+   - (d) **Amendment 10 item 4(c) reads as the architect's D-8 words.** It adds the e2e README's Selection entry. Amendment 10's heading names two items for the human but holds three, and OPEN-14 (Amendment 9 item 3(b)) is still open.
+   - (e) **Amendment 9 item 2(d) and Amendment 10 item 3(d):** App's `viewComplete` is the scan's state, not H5's within-budget fact. The facts parameter has no reader (the architect's D-9).
+   - (f) **Amendment 10 item 3(j)'s second sentence is a change to Amendment 1 B3's promise,** that the ask stands until a choice. It is not a build note. RB12f now pins the behaviour (the architect's D-9).
+   - (g) **viewTransitions.test.ts counts among B-T's UB files.** The group is 1,027 against 1,125 (the reviewer's D7).
+4. **For the human (item 2e):** the architect's D-5 wording for KNOWN-LIMITATIONS item 40 drops the old draft's clause on the advisory source watcher ending the selection. The draft is the human's to word.
+5. **Generation:** the node's generation goes up by one.
+6. **Superseded index:**
+   - Amendment 10 items 2 (the point-click sentence), 3(d), 3(f), 3(j) and 4(a) to 4(c) → items 1 and 3;
+   - Amendment 9 item 2(d) → item 3(e).
+
+Nothing above is edited.
+
+### Amendment 12 — PR #217 gate 2, the architect: corrections of record (class 3), and its Evidence finding discharged (class 1)
+
+*Written by the custodian after gate 2's architect report (`state/consults/gates/2026-10-12-shell-migration-milestone-2-phase-b-gate2-architect.md`). References only. The corrections are the gate's words, applied with no re-gate. None is the human's.*
+
+1. **Item 2 of Amendment 11 corrected:** run 3 ran source-changed on its default route only. Its post route passes at 7ffdb6a7 (`state/consults/2026-10-12-shell-migration-milestone-2-phase-b-e2e-custodian-run-3.md`, its appended correction). Phase A's fourteen base rows and selection all pass at 7ffdb6a7.
+2. **Item 1 of Amendment 11 corrected:** KNOWN-LIMITATIONS items 36 and 38 carry the reviewer's D4 words. The architect's D-5 words were applied to item 40 only. Item 40's draft now also carries the architect's gate 2 D-2 words for the human, at 31e7a4ad, and Amendment 11 item 4 is answered by them for the human's sight.
+3. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
+
+### Amendment 13 — PR #217 gate 2: correction round 2 of 2, built (class 2); its e2e (class 1); the reviewer's D3 reference row (class 3)
+
+*Written by the custodian after gate 2's reviewer report (`state/consults/gates/2026-10-12-shell-migration-milestone-2-phase-b-gate2-reviewer.md`), the round's build (`state/consults/2026-10-12-shell-migration-milestone-2-phase-b-correction-round-2-report.md`, head f64418bc) and its e2e (`state/consults/2026-10-12-shell-migration-milestone-2-phase-b-e2e-custodian-run-4.md`) were seen. References only. The reference row is the reviewer's words, applied with no re-gate. None is the human's wording.*
+
+1. **The round (class 2), for gate 3:** the reviewer's C1-R. A run reported while the ask stands is added to the ask, so one that ends before the choice is decided at the choice (Amendment 7 item 2(c)). RB12g pass 3 pins it; its mutation was observed at d245975c (the round's report).
+2. **Its e2e (class 1):** all fourteen suites and source-changed's post route pass at f64418bc. The C1-R sequence passes on real WebView2 in a scratch probe, twice, and fails twice with the round's line removed (the run-4 record).
+3. **The reviewer's D3 (class 3), its row as written:** Reviewer D2 → architect D-4's README line; D6 → the PR body; D7 → Amendment 11 item 3(g).
+4. **§7 at f64418bc:** phase B is 5,663 + 110 = 5,773, over 39 files; the piece is 1,170 + 5,773 = 6,943 of 8,352. App.selection.test.tsx is 1,075 of 1,290; App.tsx is 256 of 565. Nothing is over.
+5. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
+
+### Amendment 14 — the human's rulings on gate 3's C-1, OPEN-13, OPEN-14 and OPEN-15 (class 5); correction round 3, its scope and budget, declared before its code (class 9); OPEN-13's lines (class 8); the architect's gate 3 D-1 row (class 3)
+
+*Written by the custodian after both gate 3 reports (`state/consults/gates/2026-10-12-shell-migration-milestone-2-phase-b-gate3-architect.md`, `state/consults/gates/2026-10-12-shell-migration-milestone-2-phase-b-gate3-reviewer.md`) and the human's rulings (`state/directives/2026-10-12-round-72-217-third-round-open-13-to-open-15.md`). References only. The rulings are the human's and are referenced, not restated; nothing below is the human's wording.*
+
+1. **The rulings (class 5):** gate 3's C-1, (B): a third correction round carries three items, one gate is scoped to them, and there is no fourth round without the human. OPEN-13, OPEN-14 and OPEN-15 (B) as the directive gives them.
+2. **OPEN-13 (class 9 and class 8):** `src/canvas/WorkingCanvas.wiring.test.tsx` and `src/layout/StudioLayout.test.tsx` stay. Their lines at f64418bc, WorkingCanvas.wiring.test.tsx 345 and StudioLayout.test.tsx 178 (523), are an overrun of B-T, class 8, §7 not edited.
+3. **§2.2's tap rule, as OPEN-15 (B) amends it:** the sentence that the tap takes its own `event.offsetCenter` now reads, in effect, that the tap's pixel is computed from the tap event's own client coordinates, truncated as the hover's are, less the canvas rect (the directive's words govern). §8 item 3 stands: no hover state and no pointer-down info is read. The agreement is claimed for WebView2; on macOS and Linux it is checked at `shell-real-app-run-macos-linux`.
+4. **The round's items:**
+   - (a) **the late-cancel statement as a list**, as the gate 3 reviewer's C1 fix gives it, with RB12g pass 4 and its mutation (only the last kept). The strings are unchanged.
+   - (b) **OPEN-14:** a double-click only zooms; it never selects and never inspects; no delay is added to a single click. If the two cannot be told apart at the click, nothing is built and the human is told.
+   - (c) **OPEN-15 (B):** the pixel function and the tap's use of it. Its proof: a unit test of the pixel function with a mutation that rounds; and E-KINDS' point step back at the fractional pointer position that failed, passing.
+   - (d) **the gate 3 documentation in the gates' words:** the reviewer's D2, D3 and D5 (D5 written for a list).
+5. **Before the round's code:** the architect checks the human's OPEN-15 reading and OPEN-14's tell-apart at the click. A finding against either goes to the human before building.
+6. **The round's budget (class 9, declared here before its code; insertions plus deletions by §7's command):**
+
+| File | At most |
+|---|---|
+| App.tsx | +30 |
+| feature/OpenDuringExportAsk.tsx | +10 |
+| canvas/WorkingCanvas.tsx | +30 |
+| canvas/clickPick.ts | +25 |
+| styles.css | +5 |
+| App.selection.test.tsx | +90 |
+| canvas/clickPick.test.ts | +60 |
+| canvas/WorkingCanvas.wiring.test.tsx | +60 |
+| e2e/selection.mjs | +100, drawn from G-E's disclosed margin for steps after a gate finding |
+| **Total** | **410** |
+
+   Outside the count: e2e/README.md at most +10. An overrun is class 8.
+7. **The architect's gate 3 D-1 (class 3), its row as written:** Superseded index: Amendment 11 item 1, the document items' attribution → Amendment 12 item 2 and Amendment 13 item 3; Amendment 11 item 2 → Amendment 12 item 1.
+8. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
+
+### Amendment 15 — the human's rulings on OPEN-15's wording, its proof and the WebView2 claim, and on the status notice's map shift (class 5); round 3's item (c) and its additions (class 9)
+
+*Written by the custodian after the human's rulings (`state/directives/2026-10-12-open-15-wording-webview2-scale-runs-status-bar-piece.md`) and the architect's check before building (`state/consults/2026-10-12-shell-migration-milestone-2-phase-b-round-3-pre-build-architect.md`). References only; the rulings and the replacement words are referenced, not restated.*
+
+1. **§2.2's tap rule (class 5):** Amendment 14 item 3 is superseded. §2.2's rule that the tap takes `event.offsetCenter` is amended to the architect's replacement words, as the check gives them in its Q1 (a) and the human adopted them. §8 item 3 stands.
+2. **Item (c)'s proof (class 5 and class 9):** the three unit cases of the check's Q1 (d), each with its mutation (rounding; subtract before truncate; the scale dropped); E-KINDS' point step at the unrounded position, failing unless it is fractional on both axes, and printing it; the e2e record names the WebView2 runtime version and the device pixel ratio.
+3. **The WebView2 claim (class 5):** option (ii), bounded. The E-KINDS point step runs at forced scale factors 1.25 and 1.5 under the harness approval, with only a launch argument added; the claim names the factors that ran. If the harness cannot do that, option (i) and the human is told.
+4. **Part W (class 9):** one row for a real mouse at the human's display scaling: hover the edge of a point, click, and record whether the click selects what the readout names. MANUAL-WALKTHROUGH.md, outside the count, at most +8.
+5. **E-DBLCLICK** moves to the end of the selection suite (the custodian's diagnosis: run before E-SEL-FILTER, its reopen leaves the selection-ended notice in the status bar, whose clearing grows the map by one status line; the diagnostic logs are in the next e2e record). Within Amendment 14 item 6's selection.mjs budget.
+6. **The status notice's map shift** is not in round 3. It is its own piece, `shell-status-bar-one-height`, graded S2, as the directive places it.
+7. **The round's budget** is Amendment 14 item 6, unchanged, with item 4's walkthrough lines outside the count.
+8. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
+
+### Amendment 16 — PR #217 correction round 3, built (class 2); its e2e and the OPEN-15 (B) claim (class 1)
+
+*Written by the custodian after the round's three reports (`state/consults/2026-10-12-shell-migration-milestone-2-phase-b-correction-round-3-report-items-a-b-d.md`, `state/consults/2026-10-12-shell-migration-milestone-2-phase-b-correction-round-3-report-e2e-steps.md`, `state/consults/2026-10-12-shell-migration-milestone-2-phase-b-correction-round-3-report-item-c.md`) and its e2e (`state/consults/2026-10-12-shell-migration-milestone-2-phase-b-e2e-custodian-run-5.md`). References only.*
+
+1. **The round (class 2), for the one gate scoped to its three items:** (a) the late-cancel statement as a list, with RB12g pass 4 and E-ASK-TWO; (b) the double-click filter, with its wiring test and E-DBLCLICK; (c) the tap's pixel by `tapPixel`, with its three unit cases and E-KINDS' point step at the unrounded position; (d) the gate 3 reviewer's D2, D3 and D5 (D5 written for a list). Each test's mutation is observed (the reports and the run-5 record). E-DBLCLICK runs last (Amendment 15 item 5). Part W gains W10a.
+2. **Its e2e (class 1):** all fourteen suites and source-changed's post route pass at d59f1a6a; selection passes 17 of 17.
+3. **The OPEN-15 (B) claim (class 1), as the human bounded it:** on WebView2 Edg/154.0.4258.62, the tap's pixel agrees with the hover's at device pixel ratios 1, 1.25 and 1.5, the factors that ran; with the tap rounding, E-KINDS' point step fails at 1 (the run-5 record).
+4. **§7 at d59f1a6a:** phase B is 5,843 + 110 = 5,953, over 39 files; the round adds 250 of Amendment 14's 410; the piece is 1,170 + 5,953 = 7,123 of 8,352. OPEN-13's two files stand as Amendment 14 item 2 records them.
+5. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
+
+### Amendment 17 — PR #217 gate 4 (the one gate for round 3): both PASS; its documentation (class 3); the reviewer's N1 runs (class 1)
+
+*Written by the custodian after both gate 4 reports (`state/consults/gates/2026-10-13-shell-migration-milestone-2-phase-b-gate4-architect.md`, `state/consults/gates/2026-10-13-shell-migration-milestone-2-phase-b-gate4-reviewer.md`). References only.*
+
+1. **Gate 4:** the architect PASS (gate log 513) and the reviewer PASS (514), at d59f1a6a.
+2. **The documentation, in the gates' words (class 3), no re-gate:** the architect's D-1, D-3 and D-4 and the reviewer's D2 at 3d9e42e1 (comments and the e2e README only); the architect's D-2 on main (fc4560d6); the reviewer's D1 in the PR body.
+3. **The reviewer's N1 (class 1):** with the tap rounding, E-KINDS' point step also fails at forced 1.25 and 1.5 (`state/consults/2026-10-12-shell-migration-milestone-2-phase-b-e2e-custodian-run-5.md`, its appended section). Amendment 16 item 3's claim stands, now discriminated at the three factors that ran.
+4. **Notes carried, not findings:** the reviewer's N2 (no unit case pins the border term; the canvas has no border today) and the architect's N-4 (the ended-handler append is pinned only through the timing window D5 names).
+5. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
+
+### Amendment 18 — closing record: PR #217 merged (phase B; the milestone done)
+
+*Written by the custodian after the merge. References only.*
+
+1. **Merged** by the human at 2026-10-14T07:06:46Z, merge commit 71fd2c4fb2903e8e0a383221a18895da50971204 (two parents: main 8b045446 and the branch head 3d9e42e1). Phase A merged earlier as #212.
+2. **Gates:** phase B's last gate is gate 4, both PASS (gate log 513 and 514; Amendment 17). The e2e evidence is the run-5 record and its appended section.
+3. **The item 2e drafts** (KNOWN-LIMITATIONS items 36, 38, 40 and 41; Part W's expected-outcome cells with W10a; the e2e README's Selection entry) merged as they stood; the human gave no separate words for them. Part W's rows, W10a among them, and the P6 sight stay queued for the sitting.
+4. **Follow-ons placed by the human:** `shell-status-bar-one-height` (S2; its form's OPEN-1 to OPEN-3 with the human), and `export-current-view-after-unreported-fit` next in slot 1 (its re-sweep first).
+5. **PLAN:** the node is done, with `{pr: 217}`.
+
+Nothing above is edited.

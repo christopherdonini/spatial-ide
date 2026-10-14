@@ -3,8 +3,8 @@
 
 import { describe, expect, it } from "vitest";
 
-import { ACTIONS, ariaKeyShortcuts, matchChord, platformOf, shortcutLabel } from "./actionRegistry";
-import type { KeyEventLike, Platform } from "./actionRegistry";
+import { ACTIONS, actionEntry, ariaKeyShortcuts, matchChord, matchToolKey, platformOf, shortcutLabel } from "./actionRegistry";
+import type { FocusLike, KeyEventLike, Platform } from "./actionRegistry";
 
 /**
  * SHELL-MIGRATION-MILESTONE-1-PREREGISTRATION.md §4, U5: the chord matcher (§2.3 (c)). The test names
@@ -118,12 +118,20 @@ describe("U5: the registry's ids and shortcuts are unique", () => {
     expect(new Set(letters).size).toBe(letters.length);
     expect(ACTIONS.find((entry) => entry.id === "layer.zoomToLayer")?.chord).toBeNull();
   });
-  it("holds exactly the three toggles and Zoom to layer (question round 66, item 2)", () => {
+  // RECORDED MUTATION for "U5 (the eight ids)": delete the `selection.clear` entry from `ACTIONS` (actionRegistry.ts). Expected
+  // failure: the sorted ids lack "selection.clear".
+  // OBSERVED AT f49599353db52445c07e941e326c73f0c44a8925: FAILED -- "holds exactly the eight ids: the three toggles and Zoom to layer (question round 66, item 2), and milestone 2's four (RULED 2026-10-09, eight forms, item 4)":
+  //   AssertionError: expected [ 'layer.zoomToLayer', …(6) ] to deeply equal [ 'layer.zoomToLayer', …(7) ]. Reverted after observing.
+  it("holds exactly the eight ids: the three toggles and Zoom to layer (question round 66, item 2), and milestone 2's four (RULED 2026-10-09, eight forms, item 4)", () => {
     expect(ACTIONS.map((entry) => entry.id).sort()).toEqual([
       "layer.zoomToLayer",
       "layout.toggleActivity",
       "layout.toggleInspector",
       "layout.toggleLayers",
+      "selection.clear",
+      "selection.zoomTo",
+      "tool.navigate",
+      "tool.select",
     ]);
   });
 });
@@ -142,5 +150,118 @@ describe("the platform read and the labels it drives", () => {
     expect(shortcutLabel(chord, "mac")).toBe("⌘I");
     expect(ariaKeyShortcuts(chord, "other")).toBe("Control+I");
     expect(ariaKeyShortcuts(chord, "mac")).toBe("Meta+I");
+  });
+});
+
+// UB10 (SHELL-MIGRATION-MILESTONE-2-PREREGISTRATION.md section 4): the tool keys (section 2.2; Amendment 1 A4: bare N and
+// bare S) and the four ids milestone 2 adds.
+const noFocus: FocusLike | null = null;
+
+describe("UB10: bare N is tool.navigate and bare S is tool.select", () => {
+  // RECORDED MUTATION for "UB10 (the keys)": give `tool.navigate` the S key in `ACTIONS` (`bareKey: { letter: "s", code: "KeyS" }`), so no entry matches N. Expected
+  // failure: the bare N answers null where tool.navigate was expected.
+  // OBSERVED AT f49599353db52445c07e941e326c73f0c44a8925: FAILED -- "matches either letter case, with nothing or a button holding the key, and no other letter":
+  //   AssertionError: expected null to be 'tool.navigate' // Object.is equality. Reverted after observing.
+  it("matches either letter case, with nothing or a button holding the key, and no other letter", () => {
+    expect(matchToolKey(key("n"), noFocus)).toBe("tool.navigate");
+    expect(matchToolKey(key("N"), noFocus)).toBe("tool.navigate");
+    expect(matchToolKey(key("s"), noFocus)).toBe("tool.select");
+    expect(matchToolKey(key("S"), noFocus)).toBe("tool.select");
+    expect(matchToolKey(key("s"), { tagName: "BUTTON" })).toBe("tool.select");
+    expect(matchToolKey(key("x"), noFocus)).toBeNull();
+    expect(matchToolKey(key("b"), noFocus)).toBeNull();
+  });
+});
+
+describe("UB10: a key that is not a Latin letter falls back to the physical key, and a Latin letter never does", () => {
+  // RECORDED MUTATION for "UB10 (the code fallback)": in `matchToolKey` match on the key alone (replace the ternary with
+  // `event.key.toLowerCase() === key.letter`). Expected failure: a Cyrillic layout's physical N no longer selects Navigate.
+  // OBSERVED AT f49599353db52445c07e941e326c73f0c44a8925: FAILED -- "a Cyrillic layout's physical N and S (key 'т' and 'ы') select the tools":
+  //   AssertionError: expected null to be 'tool.navigate' // Object.is equality. Reverted after observing.
+  it("a Cyrillic layout's physical N and S (key 'т' and 'ы') select the tools", () => {
+    expect(matchToolKey(key("т", { code: "KeyN" }), noFocus)).toBe("tool.navigate");
+    expect(matchToolKey(key("ы", { code: "KeyS" }), noFocus)).toBe("tool.select");
+  });
+  // RECORDED MUTATION for "UB10 (a Latin letter never falls back)": in `matchToolKey` match on either (replace the ternary with
+  // `event.key.toLowerCase() === key.letter || event.code === key.code`). Expected failure: a Latin x on N's physical key selects Navigate.
+  // OBSERVED AT f49599353db52445c07e941e326c73f0c44a8925: FAILED -- "a Latin letter on N's physical key (a layout that moves it) matches nothing, and a non-Latin key on another code matches nothing":
+  //   AssertionError: expected 'tool.navigate' to be null. Reverted after observing.
+  it("a Latin letter on N's physical key (a layout that moves it) matches nothing, and a non-Latin key on another code matches nothing", () => {
+    expect(matchToolKey(key("x", { code: "KeyN" }), noFocus)).toBeNull();
+    expect(matchToolKey(key("т", { code: "KeyQ" }), noFocus)).toBeNull();
+  });
+});
+
+describe("UB10: any modifier, a repeat or a composition ignores the key", () => {
+  // RECORDED MUTATION for "UB10 (modifier, repeat, composition)": in `matchToolKey` drop `event.altKey` from the modifier test. Expected
+  // failure: the Alt case answers a tool where null was expected.
+  // OBSERVED AT f49599353db52445c07e941e326c73f0c44a8925: FAILED -- "Ctrl, Meta, Alt, Shift, repeat and isComposing each ignore both keys":
+  //   AssertionError: alt + n: expected 'tool.navigate' to be null. Reverted after observing.
+  it("Ctrl, Meta, Alt, Shift, repeat and isComposing each ignore both keys", () => {
+    const cases: [string, Partial<KeyEventLike>][] = [
+      ["ctrl", { ctrlKey: true }],
+      ["meta", { metaKey: true }],
+      ["alt", { altKey: true }],
+      ["shift", { shiftKey: true }],
+      ["repeat", { repeat: true }],
+      ["isComposing", { isComposing: true }],
+    ];
+    for (const [name, over] of cases) {
+      for (const letter of ["n", "s"]) expect(matchToolKey(key(letter, over), noFocus), `${name} + ${letter}`).toBeNull();
+    }
+  });
+  // RECORDED MUTATION for "UB10 (a chord is not a tool key)": give `tool.select` the chord Mod+S in `ACTIONS` (`chord: { letter: "s", code: "KeyS" }`). Expected
+  // failure: Ctrl+S answers tool.select to `matchChord` where null was expected.
+  // OBSERVED AT f49599353db52445c07e941e326c73f0c44a8925: FAILED -- "a Mod chord is not a tool key, and a bare tool key is not a chord":
+  //   AssertionError: expected 'tool.select' to be null. Reverted after observing.
+  it("a Mod chord is not a tool key, and a bare tool key is not a chord", () => {
+    expect(matchToolKey(ctrl("n"), noFocus)).toBeNull();
+    expect(matchChord(key("n"), "other")).toBeNull();
+    expect(matchChord(ctrl("s"), "other")).toBeNull();
+  });
+});
+
+describe("UB10: a key is ignored while an input, textarea, select or contenteditable element holds it", () => {
+  // RECORDED MUTATION for "UB10 (the text-field guard)": drop the guard in `matchToolKey` (delete `if (isEditable(focus)) return null;`). Expected
+  // failure: a key typed in an input answers a tool.
+  // OBSERVED AT f49599353db52445c07e941e326c73f0c44a8925: FAILED -- "ignores each of the four, and still matches on an element that is none of them":
+  //   AssertionError: {"tagName":"INPUT"}: expected 'tool.navigate' to be null. Reverted after observing.
+  it("ignores each of the four, and still matches on an element that is none of them", () => {
+    const editable: FocusLike[] = [
+      { tagName: "INPUT" },
+      { tagName: "textarea" },
+      { tagName: "SELECT" },
+      { tagName: "DIV", isContentEditable: true },
+    ];
+    for (const focus of editable) {
+      expect(matchToolKey(key("n"), focus), JSON.stringify(focus)).toBeNull();
+      expect(matchToolKey(key("s"), focus), JSON.stringify(focus)).toBeNull();
+    }
+    expect(matchToolKey(key("n"), { tagName: "DIV", isContentEditable: false })).toBe("tool.navigate");
+  });
+});
+
+describe("UB10: the four ids milestone 2 adds", () => {
+  // RECORDED MUTATION for "UB10 (the four entries)": relabel Zoom to selection as "Zoom to Selection" in `ACTIONS`. Expected failure: the label
+  // differs from the approved one.
+  // OBSERVED AT f49599353db52445c07e941e326c73f0c44a8925: FAILED -- "have unique ids, the human's labels and no Mod chord, and only the tools have a key":
+  //   AssertionError: expected [ 'Navigate', 'Select', …(2) ] to deeply equal [ 'Navigate', 'Select', …(2) ]. Reverted after observing.
+  it("have unique ids, the human's labels and no Mod chord, and only the tools have a key", () => {
+    const four = ["tool.navigate", "tool.select", "selection.zoomTo", "selection.clear"] as const;
+    const ids = ACTIONS.map((entry) => entry.id);
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(four.map((id) => actionEntry(id).label)).toEqual(["Navigate", "Select", "Zoom to selection", "Clear selection"]);
+    for (const id of four) expect(actionEntry(id).chord, id).toBeNull();
+    const keys = ACTIONS.flatMap((entry) => (entry.bareKey === null ? [] : [`${entry.id}:${entry.bareKey.letter}`]));
+    expect(keys).toEqual(["tool.navigate:n", "tool.select:s"]);
+  });
+  // RECORDED MUTATION for "UB10 (the scope words)": give `layer.zoomToLayer` the scope words "the layer" in `ACTIONS`. Expected failure: a second
+  // entry declares a scope.
+  // OBSERVED AT f49599353db52445c07e941e326c73f0c44a8925: FAILED -- "Zoom to selection declares its scope in the plan's words, and no other entry declares one":
+  //   AssertionError: expected [ [ 'layer.zoomToLayer', …(1) ], …(1) ] to deeply equal [ [ 'selection.zoomTo', …(1) ] ]. Reverted after observing.
+  it("Zoom to selection declares its scope in the plan's words, and no other entry declares one", () => {
+    expect(ACTIONS.flatMap((entry) => (entry.scopeWords === null ? [] : [[entry.id, entry.scopeWords]]))).toEqual([
+      ["selection.zoomTo", "Selected, ignoring filter"],
+    ]);
   });
 });
