@@ -113,6 +113,54 @@ impl SkpError {
             [("limit", limit.to_string())],
         )
     }
+
+    /// `record_step` (`skp/0.12`): the write or the flush failed (after a flush failure the bytes
+    /// may be in the file, so the message does not say they are not).
+    pub fn session_history_unwritable(detail: &str) -> Self {
+        Self::protocol_with_fields(
+            "session_history_unwritable",
+            format!("this step could not be written and flushed to the session history: {detail}"),
+            [("detail", detail.to_string())],
+        )
+    }
+
+    /// `record_step`: the whole history would pass its ceiling. Nothing was written.
+    pub fn session_history_full(limit: u64) -> Self {
+        Self::protocol_with_fields(
+            "session_history_full",
+            format!("the session history is at its ceiling of {limit} bytes (MAX_SESSION_HISTORY_BYTES); this step was not written"),
+            [("limit", limit.to_string())],
+        )
+    }
+
+    /// `record_step`: an earlier write to this history failed.
+    pub fn session_history_stopped() -> Self {
+        Self::protocol(
+            "session_history_stopped",
+            "this session history takes no more steps: an earlier write to it failed",
+        )
+    }
+
+    /// `record_step`: the step's line would pass its ceiling. Nothing was written.
+    pub fn step_line_over_ceiling(saw: u64, limit: u64) -> Self {
+        Self::protocol_with_fields(
+            "step_line_over_ceiling",
+            format!("this step's line would be {saw} bytes, over its ceiling of {limit} (MAX_STEP_LINE_BYTES); it was not written"),
+            [("saw", saw.to_string()), ("limit", limit.to_string())],
+        )
+    }
+
+    /// `record_step`: a `style.set` value the style model does not admit. Nothing was written.
+    pub fn style_value_not_admitted(property: &str, detail: &str) -> Self {
+        Self::protocol_with_fields(
+            "style_value_not_admitted",
+            format!("the value for `{property}` is not one the style model admits: {detail}"),
+            [
+                ("property", property.to_string()),
+                ("detail", detail.to_string()),
+            ],
+        )
+    }
 }
 
 impl std::fmt::Display for SkpError {

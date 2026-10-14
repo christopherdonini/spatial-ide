@@ -1,0 +1,7 @@
+{
+  "code": "skp.session_history_unwritable",
+  "message": "this step could not be written and flushed to the session history: the disk is full",
+  "fields": {
+    "detail": "the disk is full"
+  }
+}

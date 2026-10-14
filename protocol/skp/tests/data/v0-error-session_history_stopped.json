@@ -1,0 +1,5 @@
+{
+  "code": "skp.session_history_stopped",
+  "message": "this session history takes no more steps: an earlier write to it failed",
+  "fields": {}
+}

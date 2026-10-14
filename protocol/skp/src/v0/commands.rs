@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
-//! The five SKP v0 commands: `open_dataset`, `describe`, `viewport_query`, `cancel`,
-//! `close_dataset`. Nothing else — see `../../SKP-V0.md` §4's named-deferral list.
+//! The six SKP v0 commands: `open_dataset`, `describe`, `viewport_query`, `cancel`,
+//! `close_dataset` and, from `skp/0.12`, `record_step`. Nothing else — see `../../SKP-V0.md` §4's
+//! named-deferral list.
 //!
 //! Every struct here is `#[serde(deny_unknown_fields)]` in both directions: adding, removing or
 //! retyping a field is a new `skp` version string, never a tolerant reader (SKP-V0.md §4 item 13).
@@ -505,6 +506,81 @@ pub struct CloseDatasetResponse {
     pub cancelled_streams: u32,
 }
 
+// ---------------------------------------------------------------------------------------------
+// record_step
+// ---------------------------------------------------------------------------------------------
+
+/// **`skp/0.12`.** Records, in the kernel's session history (ADR-036 §12, Proposed), one change a
+/// client has already committed. The kernel mints the step's id and `at` and takes `actor` and
+/// `effect` itself, so none of the four crosses the wire (ADR-004 Amendment 4), and neither does a
+/// handle or a coordinate. It applies nothing.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct RecordStepRequest {
+    pub skp: String,
+    pub dataset: DatasetHandle,
+    pub intent: StepIntent,
+}
+
+/// `{action, params}`, ADR-036 §6's `intent` member and the shell's `ViewTransition` for the same
+/// two actions. Closed: any other action, an unknown key or a mistyped parameter is refused at
+/// deserialize.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(tag = "action", content = "params", deny_unknown_fields)]
+pub enum StepIntent {
+    #[serde(rename = "filter.apply")]
+    FilterApply(FilterApplyParams),
+    #[serde(rename = "style.set")]
+    StyleSet(StyleSetParams),
+}
+
+/// `filter` is always present, `null` for no filter. An absent key is refused too, so `{}` is never
+/// read as "clear the filter".
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct FilterApplyParams {
+    #[serde(deserialize_with = "key_present")]
+    pub filter: Option<Filter>,
+}
+
+fn key_present<'de, D: serde::Deserializer<'de>>(d: D) -> Result<Option<Filter>, D::Error> {
+    Option::<Filter>::deserialize(d)
+}
+
+/// One of the four properties the style panel commits, with the value type it has. A colour is
+/// text here; the kernel checks its spelling.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(tag = "property", deny_unknown_fields)]
+pub enum StyleSetParams {
+    #[serde(rename = "fillColor")]
+    FillColor { value: String },
+    #[serde(rename = "fillOpacity")]
+    FillOpacity { value: f64 },
+    #[serde(rename = "outlineColor")]
+    OutlineColor { value: String },
+    #[serde(rename = "outlineWidth")]
+    OutlineWidth { value: OutlineWidthValue },
+}
+
+/// A quantity with a unit (ADR-036 §6); the only unit is pixels.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct OutlineWidthValue {
+    pub value: f64,
+    pub unit: PxUnit,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub enum PxUnit {
+    #[serde(rename = "px")]
+    Px,
+}
+
+/// An empty closed object: no step id is returned, because nothing reads one at this version.
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct RecordStepResponse {}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -736,5 +812,77 @@ mod tests {
         let json = serde_json::to_string(&req).unwrap();
         let back: ViewportQueryRequest = serde_json::from_str(&json).unwrap();
         assert_eq!(back.filter.unwrap().predicate, "zone = 3 AND area > 100");
+    }
+
+    fn record_step_doc(intent: serde_json::Value) -> serde_json::Value {
+        serde_json::json!({ "skp": SKP_VERSION, "dataset": "ds_00112233445566778899aabbccddeeff", "intent": intent })
+    }
+
+    fn refused(doc: serde_json::Value) -> bool {
+        serde_json::from_value::<RecordStepRequest>(doc).is_err()
+    }
+
+    /// P1 (`kernel/B2-1B-RECORDING-PREREGISTRATION.md` §4): a request and the response round trip,
+    /// and an unknown key is refused at every level.
+    ///
+    /// Mutation: `deny_unknown_fields` removed from `RecordStepRequest`. Expected failure: this
+    /// test fails at the request-level extra key.
+    #[test]
+    fn a_record_step_request_and_response_round_trip_and_refuse_unknown_fields() {
+        let intent = serde_json::json!({"action": "style.set", "params": {"property": "outlineWidth", "value": {"value": 2.5, "unit": "px"}}});
+        let doc = record_step_doc(intent);
+        let req: RecordStepRequest = serde_json::from_value(doc.clone()).unwrap();
+        assert_eq!(serde_json::to_value(&req).unwrap(), doc);
+        for at in ["", "/intent", "/intent/params", "/intent/params/value"] {
+            let mut bad = doc.clone();
+            bad.pointer_mut(at)
+                .unwrap()
+                .as_object_mut()
+                .unwrap()
+                .insert("extra".into(), 1.into());
+            assert!(refused(bad), "an unknown key at `{at}` must be refused");
+        }
+        assert!(serde_json::from_str::<RecordStepResponse>("{}").is_ok());
+        assert!(serde_json::from_str::<RecordStepResponse>(r#"{"extra":1}"#).is_err());
+    }
+
+    /// P2: the four properties are the whole set, each with its own value type, and the actions are
+    /// the two. Mutation: a `#[serde(other)]` fallback variant on `StyleSetParams`. Expected
+    /// failure: this test fails at the first property outside the four.
+    #[test]
+    fn a_style_set_intent_refuses_a_property_outside_the_four() {
+        let style = |p: serde_json::Value| {
+            record_step_doc(serde_json::json!({"action": "style.set", "params": p}))
+        };
+        let ok = serde_json::json!({"property": "fillOpacity", "value": 0.25});
+        assert!(!refused(style(ok)));
+        for bad in [
+            serde_json::json!({"property": "outlineStyle", "value": "dashed"}),
+            serde_json::json!({"property": "FillColor", "value": "#4285f4"}),
+            serde_json::json!({"property": "fillColor", "value": 1}),
+            serde_json::json!({"property": "fillOpacity", "value": "0.5"}),
+            serde_json::json!({"property": "outlineWidth", "value": 2}),
+            serde_json::json!({"property": "outlineWidth", "value": {"value": 2, "unit": "em"}}),
+            serde_json::json!({"property": "fillColor"}),
+        ] {
+            assert!(refused(style(bad.clone())), "{bad} must be refused");
+        }
+        assert!(refused(record_step_doc(
+            serde_json::json!({"action": "tool.set", "params": {}})
+        )));
+    }
+
+    /// P3: `filter` is always on the wire, `null` for no filter, and a `params` without it is
+    /// refused. Mutation: `skip_serializing_if` on `FilterApplyParams::filter`. Expected failure:
+    /// this test fails at the key's presence.
+    #[test]
+    fn a_filter_apply_intent_carries_a_null_filter_as_a_present_key() {
+        let intent = StepIntent::FilterApply(FilterApplyParams { filter: None });
+        let v = serde_json::to_value(&intent).unwrap();
+        assert_eq!(v["params"].get("filter"), Some(&serde_json::Value::Null));
+        assert!(refused(record_step_doc(
+            serde_json::json!({"action": "filter.apply", "params": {}})
+        )));
+        assert!(!refused(record_step_doc(v)));
     }
 }

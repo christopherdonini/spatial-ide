@@ -1,0 +1,8 @@
+{
+  "code": "skp.style_value_not_admitted",
+  "message": "the value for `fillColor` is not one the style model admits: a colour is `#rrggbb` in lowercase",
+  "fields": {
+    "detail": "a colour is `#rrggbb` in lowercase",
+    "property": "fillColor"
+  }
+}

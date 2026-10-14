@@ -1,0 +1,8 @@
+{
+  "code": "skp.step_line_over_ceiling",
+  "message": "this step's line would be 262145 bytes, over its ceiling of 262144 (MAX_STEP_LINE_BYTES); it was not written",
+  "fields": {
+    "limit": "262144",
+    "saw": "262145"
+  }
+}
