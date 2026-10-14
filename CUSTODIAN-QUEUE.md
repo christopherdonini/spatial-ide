@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `6347982cf85510a50eeb846cdbfe6e48f7843c1f807dac49bd70eb8350ed7ace`) at `2026-10-12T23:28:55.782Z`.
+Generated from `PLAN.yaml` (sha256 `afb133848c703ccd9ce110be42cc1aa936abff448f5b83fe93097486ed387ac7`) at `2026-10-14T07:18:58.504Z`.
 
 ## 1. Next
 
@@ -17,8 +17,8 @@ Generated from `PLAN.yaml` (sha256 `6347982cf85510a50eeb846cdbfe6e48f7843c1f807d
 ## 4. Blocked on dependencies
 
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
-- **b2-piece-1b-recording** — B2 piece 1b -- recording: the kernel's step commands for filter, scope and style, the session history on the machine, safe against a crash, and the docs/07 note — blocked by: shell-migration-milestone-2, guardian-v1
-- **export-current-view-after-unreported-fit** — The Export panel's Current view after an unreported fit: after an issued Apply or Clear, the default Current view export sends the box from before the map fitted itself, until the next pan, zoom or Zoom to layer; the approval dialog shows that box's four numbers — blocked by: shell-migration-milestone-2, known-limitations-current-view-stale-box
+- **b2-piece-1b-recording** — B2 piece 1b -- recording: the kernel's step commands for filter, scope and style, the session history on the machine, safe against a crash, and the docs/07 note — blocked by: guardian-v1
+- **export-current-view-after-unreported-fit** — The Export panel's Current view after an unreported fit: after an issued Apply or Clear, the default Current view export sends the box from before the map fitted itself, until the next pan, zoom or Zoom to layer; the approval dialog shows that box's four numbers — blocked by: known-limitations-current-view-stale-box
 - **stale-test-names-and-comments** — Stale test names and test comments, names and comments only, no assertion changes: a refusal-named test that asserts admission, the React-harness premise, the no-attributes reason, a Proposed ADR-018, two ruled decisions still marked pending (sweep area E, findings 2, 3, 4, 7 and 10) — blocked by: known-limitations-current-view-stale-box
 - **briefb-b2-save-reopen** — B2 — Save project, Snapshot data, session history, lineage and preferences, in five stages, each with its own form — blocked by: decision-adr-029-scan-progress-route
 - **known-limitations-crs-epoch-edges-third-axis** — KNOWN-LIMITATIONS: a file's declared coordinate epoch, its edges value and a third CRS axis are not used, shown or carried into a bundle — blocked by: stale-test-names-and-comments
@@ -29,7 +29,6 @@ Generated from `PLAN.yaml` (sha256 `6347982cf85510a50eeb846cdbfe6e48f7843c1f807d
 
 ## 5. In progress
 
-- **shell-migration-milestone-2** — Shell migration, milestone 2 -- selection and scope: the Select tool, a selection that survives filter and pan, the hidden count, a stated scope — evidence: branch `cut/shell-migration-milestone-2-phase-b`
 - **known-limitations-current-view-stale-box** — KNOWN-LIMITATIONS: the Export panel's Current view can send an area the map no longer shows (after an Apply, a Clear or an unreported resize, until the next pan, zoom or Zoom to layer); true of the v0.1.0 artifact, with its on-main note and what to do meanwhile — evidence: branch `cut/known-limitations-current-view-stale-box`
 
 ## 6. Proposed / unscheduled

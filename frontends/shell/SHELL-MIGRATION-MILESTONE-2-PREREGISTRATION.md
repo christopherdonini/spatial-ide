@@ -1405,3 +1405,15 @@ Nothing above is edited.
 5. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 18 — closing record: PR #217 merged (phase B; the milestone done)
+
+*Written by the custodian after the merge. References only.*
+
+1. **Merged** by the human at 2026-10-14T07:06:46Z, merge commit 71fd2c4fb2903e8e0a383221a18895da50971204 (two parents: main 8b045446 and the branch head 3d9e42e1). Phase A merged earlier as #212.
+2. **Gates:** phase B's last gate is gate 4, both PASS (gate log 513 and 514; Amendment 17). The e2e evidence is the run-5 record and its appended section.
+3. **The item 2e drafts** (KNOWN-LIMITATIONS items 36, 38, 40 and 41; Part W's expected-outcome cells with W10a; the e2e README's Selection entry) merged as they stood; the human gave no separate words for them. Part W's rows, W10a among them, and the P6 sight stay queued for the sitting.
+4. **Follow-ons placed by the human:** `shell-status-bar-one-height` (S2; its form's OPEN-1 to OPEN-3 with the human), and `export-current-view-after-unreported-fit` next in slot 1 (its re-sweep first).
+5. **PLAN:** the node is done, with `{pr: 217}`.
+
+Nothing above is edited.
