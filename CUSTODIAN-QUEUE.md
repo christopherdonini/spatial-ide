@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `0271149ec97dd705aa962d226fc2ed666546b7023ef7beece77a190af0e833a9`) at `2026-10-14T11:25:05.233Z`.
+Generated from `PLAN.yaml` (sha256 `bccafb80cdc4956bb495da44e06bd8bfd6c303e1fe6b691ad6e02b11f3566554`) at `2026-10-14T12:23:37.626Z`.
 
 ## 1. Next
 
@@ -111,6 +111,7 @@ Generated from `PLAN.yaml` (sha256 `0271149ec97dd705aa962d226fc2ed666546b7023ef7
 - **shell-scale-display** — The scale display in the status bar: a bar of a round length in the CRS's unit, shown only for a metre dataset (milestone 3's OPEN-7, deferred) (phase `prototype`) — never queued until placed
 - **shell-migration-milestone-5** — Shell migration, milestone 5 -- conditions, Problems and Jobs: one home for failures and running work (phase `prototype`) — never queued until placed
 - **shell-real-app-run-macos-linux** — Run the real app once on macOS and once on Linux after migration milestone 1 merges, and record what it finds (phase `prototype`) — never queued until placed
+- **pan-anchor-setcam-waits-for-its-own-reset** — e2e/pan-anchor.mjs: setCam waits for the view-state line its own reset produces, never a late line from the previous gesture (test only) (phase `prototype`) — never queued until placed
 - **e2e-readme-status-bar-steps** — e2e/README.md: the status bar's two new steps and E-FOCUS's new stop in the layout and selection entries (the docs-lane follow-up of shell-status-bar-one-height, OPEN-2 (b)) (phase `prototype`) — never queued until placed
 - **engine-clause-composition-properties** — Engine test piece: clause composition, P5 and P6 over the admission property campaign (tests only; no product code, fixture or dependency) (phase `prototype`) — never queued until placed
 - **boundary-inventory** — Boundary inventory: one page, one table, read-only and descriptive (the architect): what each boundary's enforcement is, by code or the OS, by tests, by instruction only, or not built (phase `prototype`) — never queued until placed
