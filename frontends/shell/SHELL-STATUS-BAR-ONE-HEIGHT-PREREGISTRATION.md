@@ -946,3 +946,15 @@ Nothing above is edited.
 7. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 5 — closing record: PR #218 merged
+
+*Written by the custodian after the merge. References only.*
+
+1. **Merged** by the human at 2026-10-14T16:07:33Z, merge commit 2ef82ba533d854874fbec346ded8ba2969b75eba (two parents: main c4abb5d7 and the branch head c7ca9bee).
+2. **Gates:** gate 1, both PASS WITH NOTES (gate log 516 and 519; Amendment 4). The e2e evidence is runs 1 and 2 and the H3 record (Amendment 4 items 1, 4 and 5).
+3. **Part Z** merged as it stood, with the reviewer's D-3 words in Z4; its rows stay queued for the sitting.
+4. **Follow-on:** `e2e-readme-status-bar-steps` (OPEN-2 (b)) waits for the Current view fix's merge; slot 2 moves to `b2-piece-1b-recording`.
+5. **PLAN:** the node is done, with `{pr: 218}`.
+
+Nothing above is edited.

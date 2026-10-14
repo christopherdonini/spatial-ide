@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `0afd9fdcf53f69ad7b0a2ee9106cb6040a22b0a5fed4fbefabc402aa306218cd`) at `2026-10-14T15:44:43.600Z`.
+Generated from `PLAN.yaml` (sha256 `dabd4f6b4585ee8f90c1548cf89a52f77a99136c25470d53344997e5c58bd77d`) at `2026-10-14T16:17:32.568Z`.
 
 ## 1. Next
 
@@ -29,7 +29,6 @@ Generated from `PLAN.yaml` (sha256 `0afd9fdcf53f69ad7b0a2ee9106cb6040a22b0a5fed4
 
 - **stale-test-names-and-comments** — Stale test names and test comments, names and comments only, no assertion changes: a refusal-named test that asserts admission, the React-harness premise, the no-attributes reason, a Proposed ADR-018, two ruled decisions still marked pending (sweep area E, findings 2, 3, 4, 7 and 10) — evidence: branch `cut/stale-test-names-and-comments`
 - **export-current-view-after-unreported-fit** — The Export panel's Current view after an unreported fit: after an issued Apply or Clear, the default Current view export sends the box from before the map fitted itself, until the next pan, zoom or Zoom to layer; the approval dialog shows that box's four numbers — evidence: branch `cut/export-current-view-after-unreported-fit`
-- **shell-status-bar-one-height** — The status bar keeps one height, so a notice coming or going never changes the map's size; a notice that does not fit is cut, and its full text stays reachable — evidence: branch `cut/shell-status-bar-one-height`
 
 ## 6. Proposed / unscheduled
 
