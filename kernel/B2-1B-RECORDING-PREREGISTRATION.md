@@ -852,3 +852,19 @@ Nothing above is edited.
 7. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 5 — stage 2 built; I3 fired, the piece stopped for the human's ruling; the ceilings at the head (class 8); Amendment 4's count corrected (class 1); the deviations (class 2); the strings for the sight
+
+*Written by the custodian after stage 2's results were seen, at the head 936b7982, before any e2e run or gate. References only. The report is `state/consults/2026-10-14-b2-piece-1b-recording-stage-2-worker-report.md` (sha256 13dc19dd; the worker's run 2026-10-14T19:25:09Z to 2026-10-14T20:09:02Z by its transcript).*
+
+1. **Stage 2:** commits 075346bd, 518da400 and 936b7982. `npm run verify` and the shell crate's `cargo test` exit 0, and each new test's mutation was observed at 518da400 (the report, items 4 and 5). No e2e suite has run.
+2. **I3 fired** (§5: an existing test needs an edit outside §4's exception). The piece stops here for the human's ruling:
+   - three existing unit tests were edited by one line each, `consoleLanguage.test.ts`, `consoleViewModel.test.ts` and `renderTruth.test.ts` (the report's deviation 4); `surfaceCompleteness.test.ts` is the test §4 extends;
+   - `e2e/console.mjs` is not edited, and its CLASSC' step fails by design, because the five style rows leave class C; GROUP', and perhaps ECHO' and TWOCMD', may fail because each issued Apply now also writes a `record_step` row (the report, item 0).
+3. **§7 at the head (class 8):** 4,331 lines over 65 files, against 3,950 over 60, by the report's item 7. Over their ceilings: the kernel product, the kernel tests, the shell product (348 against 320), the e2e group (399 against 300) and Amendment 2's own (222 against 220). §7 is not edited.
+4. **Record correction (class 1) to Amendment 4 item 2:** stage 1's total is 3,129 over 47 files, with the version literal at 91; the two `record_step` request fixtures were counted in two groups (the report, item 7).
+5. **The deviations (class 2),** by the report's item 8, for the gates; among them: the walkthrough Part is `Part AA`, every letter A to Z being in use at the base (class 3, a name); H5 fails, so E2 is carried by row AA4; the owner's notice sits in the attention strip, because the existing Notices surface is the third-party notice text; `e2e/README.md` gains a Recording entry, a path §2.13 does not name.
+6. **For the human's sight (P6):** the notices O1 to O3 and a fourth, the filter's counterpart of O3, and the binding's refusal detail, byte for byte in the report's item 3.
+7. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
