@@ -205,7 +205,8 @@ describe("StudioLayout: the status bar keeps one height (SHELL-STATUS-BAR-ONE-HE
   const statusH = () => app().style.getPropertyValue("--status-h");
 
   // RECORDED MUTATION for SB1: in StudioLayout.tsx set `--status-h` from `TOP_BAR_HEIGHT_PX` instead of `STATUS_BAR_HEIGHT_PX`. Expected failure: the value is 40px, not 48px.
-  // OBSERVED AT <commit>: <pending>
+  // OBSERVED AT 5bea403c26f4af3ddbaa58f26d12a74f61b7ab0b: FAILED -- "SB1: .app carries --status-h at the status bar's fixed height and no --status-max-h":
+  //   AssertionError: expected '40px' to be '48px' // Object.is equality. Reverted after observing.
   it("SB1: .app carries --status-h at the status bar's fixed height and no --status-max-h", () => {
     mount({});
     expect(statusH()).toBe(`${STATUS_BAR_HEIGHT_PX}px`);
@@ -215,7 +216,8 @@ describe("StudioLayout: the status bar keeps one height (SHELL-STATUS-BAR-ONE-HE
 
   // RECORDED MUTATION for SB2: in StudioLayout.tsx set `--status-h` to 48 px when `hasContent(slots["status.selectionEnded"])` and to 24 px otherwise. Expected failure: the value
   // differs between the three renders.
-  // OBSERVED AT <commit>: <pending>
+  // OBSERVED AT 5bea403c26f4af3ddbaa58f26d12a74f61b7ab0b: FAILED -- "SB2: --status-h is the same with the ended-selection notice absent, present and absent again":
+  //   AssertionError: expected '48px' to be '24px' // Object.is equality (the same mutation also fails SB1 on '24px'). Reverted after observing.
   it("SB2: --status-h is the same with the ended-selection notice absent, present and absent again", () => {
     mount({});
     const absent = statusH();
