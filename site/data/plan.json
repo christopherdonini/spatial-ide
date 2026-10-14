@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-14T07:32:51.004Z",
-  "plan_hash": "cb8d32fa52187455d2ed0a9b7717db419fe85f290b951486c60b13c1cf6f1bbd",
+  "generated_at": "2026-10-14T07:42:35.858Z",
+  "plan_hash": "18081af0955e0bccda3bb728691e0123fb272b50464b03e2fff38057efad9642",
   "priorities_approved": true,
   "lanes": [
     {
@@ -8273,6 +8273,60 @@
       }
     },
     {
+      "id": "engine-clause-composition-properties",
+      "title": "Engine test piece: clause composition, P5 and P6 over the admission property campaign (tests only; no product code, fixture or dependency)",
+      "kind": "task",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "depends_on": [
+        "b2-piece-1b-recording"
+      ],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "none",
+      "evidence": null,
+      "budget_minutes": 0,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [],
+      "summary": "PROPOSED 2026-10-14 by the human (state/directives/2026-10-14-two-slot-2-pieces-clause-composition-boundary-inventory.md, item 1): slot 2, after what is already queued there, not taking slot 1 nor delaying milestones 2 and 3. A five-line form; tests only. Reuses engine/tests/admission_property_campaign.rs (its SplitMix64 generator, its MultiType fixture, its G1 grammar). The join is the shell's convention. P5 (admission and the result's ids against the intersection), P6 (every order-preserving subset of an admitted join is admitted). The mutation (the test helper joins without the brackets) observed on a kept, minimized witness. Every failure is a candidate until reproduced and minimized; the report names seeds, case counts, excluded counts, time spent, the candidates and how many were real. The invariants are approved as written; the form may sharpen them, not widen them. A product defect goes through normal triage.",
+      "dates": {
+        "opened": "2026-10-14",
+        "done": null
+      }
+    },
+    {
+      "id": "boundary-inventory",
+      "title": "Boundary inventory: one page, one table, read-only and descriptive (the architect): what each boundary's enforcement is, by code or the OS, by tests, by instruction only, or not built",
+      "kind": "task",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "depends_on": [
+        "b2-piece-1b-recording"
+      ],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "none",
+      "evidence": null,
+      "budget_minutes": 0,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [],
+      "summary": "PROPOSED 2026-10-14 by the human (state/directives/2026-10-14-two-slot-2-pieces-clause-composition-boundary-inventory.md, item 2): slot 2, after what is already queued there. The architect, read-only, one page, descriptive only. One table (boundary, enforced by code or the OS at path:line @ commit, supporting tests, instructed only, not built; a documented requirement is not enforcement), seven rows: file admission; publishing (exposure scan and audit); the data plane and its origin admission (ADR-020); control-plane tickets (ADR-019); credentials and tokens; the agents' filesystem limits; piece 1c's project-relative resolver (whether the authorisation stays attached to the object read, followed through to the engine's reopen by path; starting from the reuse index rows path-containment, engine-open-identity and reserved-filename-checks). An input to b2-piece-1c-save-and-reopen's form (ADR-036 line 81's owed answer); it changes nothing by itself.",
+      "dates": {
+        "opened": "2026-10-14",
+        "done": null
+      }
+    },
+    {
       "id": "b2-piece-1c-save-and-reopen",
       "title": "B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark",
       "kind": "task",
@@ -8293,7 +8347,7 @@
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "ADR-036'S TWO CHECKS ANSWERED 2026-10-12 (state/consults/2026-10-12-adr-036-guardrails-two-checks-architect.md; the guardrails brief, section 4 item 2): R1 no (dependencies.crs holds an identifier and a source; every definition-only CRS shares one identifier), R2 no (no epoch reserved); the smallest changes named, each version 1 if made before acceptance; R9's step parameters partly; one Documentation item (the selection-scope reservation points to a section that does not hold it). For the human when taking up acceptance; nothing drafted. Before: RULED 2026-10-09, ADR-036's ten findings (state/directives/2026-10-09-adr-036-ten-findings-rulings.md): ADR-036 stays Proposed, and the human accepts it together with this piece's amendments, before this piece merges. This piece's amendment carries findings 1, 2, 4 and 7 to 10 and the project file's line-oriented canonical form, with the architect's open acceptance items. Its form also takes the message's notes: the OneDrive test, including an online-only file whose open must never look frozen; a refusal of a second open that never outlives a crash; what happens on a lineage mismatch under ruling 4; and a strict reader that refuses duplicate keys and checks key order. Owed before acceptance: a check that no common application claims .spatial. File association and single instance are a later piece, and that dependency stays the human's typed word. Before: ADR-036 ACCEPTANCE INPUT 2026-10-08: the architect consult on the reuse round 1 findings (state/consults/2026-10-08-adr-036-reuse-round-1-findings-architect.md; ten findings, two touching red lines: round 70 OPEN-2 and the OPEN-7 carrying rule), for the human acceptance sight; not rulings. OWED BY ITS FORM (b2-piece-1a Amendment 5, item 8, 2026-10-08): the writer carrying rule (machine-recorded always; project-relative in canonical form when the data is inside the folder by containment, judged at save; never an absolute path); the resolver containment (open a project-relative target only when, with every link, junction and reparse point followed, it lies inside the resolved project folder; refuse anything else by name, a target it cannot resolve included; state how the target checked is the target opened; tests for a link out, and on Windows a junction out, a device name and a trailing dot or space). OPEN FOR THE HUMAN in its form (the architect note to Amendment 5): data inside the folder with no canonical spelling (a segment holding a backslash or a colon, legal on POSIX) cannot meet the ruled carrying rule; refuse the save, or carry machine-recorded alone and tell the user. Also its form states which locators the lineage file header carries. ALSO OWED (question round 70, 2026-10-08, state/directives/2026-10-08-round-70-rulings.md; b2-piece-1a Amendment 2, item 5): OPEN-2 at open (the question once, the copy or the same project, the move rule; its wording the human at P6); OPEN-3 recovery when the data changed or cannot be found (the app says so); OPEN-7 re-link on another machine, checked against the observation, naming each difference, none passing silently. ALSO OWED (question round 69, 2026-10-08, state/directives/2026-10-08-round-69-rulings.md; b2-piece-1a Amendment 1, item 5): its ADR-036 amendment states how a reader detects a project file and a lineage file from different saves, and what it shows then; its form states that a selection made by clicking is not saved, and how the human is told at Save project when one exists. Before: Recorded 2026-10-07 (evening) by the human's rulings (state/directives/2026-10-07-b2-brief-and-evening-rulings.md; state/directives/B2-BRIEF-2026-10-07.md, section 9): needs 1b, and the format ADR accepted by the human. Open item at its form: what Save does with the style of a point or line layer (rounds 62 and 63). Proposed.",
+      "summary": "NOTE 2026-10-14 (state/directives/2026-10-14-two-slot-2-pieces-clause-composition-boundary-inventory.md, item 2): boundary-inventory's table is an input to this piece's form (ADR-036 line 81: how the target checked is the target opened). Before: ADR-036'S TWO CHECKS ANSWERED 2026-10-12 (state/consults/2026-10-12-adr-036-guardrails-two-checks-architect.md; the guardrails brief, section 4 item 2): R1 no (dependencies.crs holds an identifier and a source; every definition-only CRS shares one identifier), R2 no (no epoch reserved); the smallest changes named, each version 1 if made before acceptance; R9's step parameters partly; one Documentation item (the selection-scope reservation points to a section that does not hold it). For the human when taking up acceptance; nothing drafted. Before: RULED 2026-10-09, ADR-036's ten findings (state/directives/2026-10-09-adr-036-ten-findings-rulings.md): ADR-036 stays Proposed, and the human accepts it together with this piece's amendments, before this piece merges. This piece's amendment carries findings 1, 2, 4 and 7 to 10 and the project file's line-oriented canonical form, with the architect's open acceptance items. Its form also takes the message's notes: the OneDrive test, including an online-only file whose open must never look frozen; a refusal of a second open that never outlives a crash; what happens on a lineage mismatch under ruling 4; and a strict reader that refuses duplicate keys and checks key order. Owed before acceptance: a check that no common application claims .spatial. File association and single instance are a later piece, and that dependency stays the human's typed word. Before: ADR-036 ACCEPTANCE INPUT 2026-10-08: the architect consult on the reuse round 1 findings (state/consults/2026-10-08-adr-036-reuse-round-1-findings-architect.md; ten findings, two touching red lines: round 70 OPEN-2 and the OPEN-7 carrying rule), for the human acceptance sight; not rulings. OWED BY ITS FORM (b2-piece-1a Amendment 5, item 8, 2026-10-08): the writer carrying rule (machine-recorded always; project-relative in canonical form when the data is inside the folder by containment, judged at save; never an absolute path); the resolver containment (open a project-relative target only when, with every link, junction and reparse point followed, it lies inside the resolved project folder; refuse anything else by name, a target it cannot resolve included; state how the target checked is the target opened; tests for a link out, and on Windows a junction out, a device name and a trailing dot or space). OPEN FOR THE HUMAN in its form (the architect note to Amendment 5): data inside the folder with no canonical spelling (a segment holding a backslash or a colon, legal on POSIX) cannot meet the ruled carrying rule; refuse the save, or carry machine-recorded alone and tell the user. Also its form states which locators the lineage file header carries. ALSO OWED (question round 70, 2026-10-08, state/directives/2026-10-08-round-70-rulings.md; b2-piece-1a Amendment 2, item 5): OPEN-2 at open (the question once, the copy or the same project, the move rule; its wording the human at P6); OPEN-3 recovery when the data changed or cannot be found (the app says so); OPEN-7 re-link on another machine, checked against the observation, naming each difference, none passing silently. ALSO OWED (question round 69, 2026-10-08, state/directives/2026-10-08-round-69-rulings.md; b2-piece-1a Amendment 1, item 5): its ADR-036 amendment states how a reader detects a project file and a lineage file from different saves, and what it shows then; its form states that a selection made by clicking is not saved, and how the human is told at Save project when one exists. Before: Recorded 2026-10-07 (evening) by the human's rulings (state/directives/2026-10-07-b2-brief-and-evening-rulings.md; state/directives/B2-BRIEF-2026-10-07.md, section 9): needs 1b, and the format ADR accepted by the human. Open item at its form: what Save does with the style of a point or line layer (rounds 62 and 63). Proposed.",
       "dates": {
         "opened": "2026-10-07",
         "done": null

@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `cb8d32fa52187455d2ed0a9b7717db419fe85f290b951486c60b13c1cf6f1bbd`) at `2026-10-14T07:32:50.875Z`.
+Generated from `PLAN.yaml` (sha256 `18081af0955e0bccda3bb728691e0123fb272b50464b03e2fff38057efad9642`) at `2026-10-14T07:42:35.735Z`.
 
 ## 1. Next
 
@@ -112,6 +112,8 @@ Generated from `PLAN.yaml` (sha256 `cb8d32fa52187455d2ed0a9b7717db419fe85f290b95
 - **shell-migration-milestone-5** — Shell migration, milestone 5 -- conditions, Problems and Jobs: one home for failures and running work (phase `prototype`) — never queued until placed
 - **shell-real-app-run-macos-linux** — Run the real app once on macOS and once on Linux after migration milestone 1 merges, and record what it finds (phase `prototype`) — never queued until placed
 - **shell-status-bar-one-height** — The status bar keeps one height, so a notice coming or going never changes the map's size; a notice that does not fit is cut, and its full text stays reachable (phase `prototype`) — never queued until placed
+- **engine-clause-composition-properties** — Engine test piece: clause composition, P5 and P6 over the admission property campaign (tests only; no product code, fixture or dependency) (phase `prototype`) — never queued until placed
+- **boundary-inventory** — Boundary inventory: one page, one table, read-only and descriptive (the architect): what each boundary's enforcement is, by code or the OS, by tests, by instruction only, or not built (phase `prototype`) — never queued until placed
 - **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark (phase `prototype`) — never queued until placed
 - **verify-quotes-dotted-paths** — verify-quotes: the hash-reference path grammar cannot begin with a dot, so a pinned cite into .github/ can never be checked (phase `prototype`) — never queued until placed
 
