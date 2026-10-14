@@ -549,3 +549,19 @@ Nothing above is edited.
 5. **Superseded index:** Amendment 1 item 1's second bullet and Amendment 3 item 8 → items 1 and 2.
 
 Nothing above is edited.
+
+### Amendment 5 — the build's results: two files over their ceilings, §7 not edited (class 8); the worker's deviations (class 2)
+
+*Written by the custodian after the build's results were seen, at the head eebf7298, before any gate. References only. The report is `state/consults/2026-10-14-export-current-view-after-unreported-fit-worker-report.md`.*
+
+1. **§7 (class 8).** By §7's own command against the merge base f8bc2951, the branch counts 467 lines against 690, over 8 files. Two files are over their ceilings: `src/publish/PublishPanel.tsx` at 72 against 60, and `src-tauri/src/publish.rs` at 26 against 20, which also takes group R past its 20. Group P is 109 against 110, and every other file is under its ceiling. §7 is not edited.
+2. **The worker's deviations (class 2),** as its report gives them:
+   - (a) UPP1 takes the availability boolean, not the box, as §2.2(c) allows; it adds a render case that the reason shows only while the option is disabled.
+   - (b) `npm ci` in `renderer/bundle-viewer`, which `npm run verify`'s typecheck step needs, ran in a shared hold.
+   - (c) E-CV's corner view, which §4 leaves unplaced: the suite reads the fit's box from the prompt's Row scope, then sets the camera at that box's lower-left corner, one zoom level in.
+   - (d) Line 194, item 42's on-main paragraph, was replaced whole, its bold lead included, as Amendment 3 item 5 says.
+3. **For the custodian's e2e,** the report names two risks: E-CV-RESIZE's mutation may not discriminate if, after Clear, the resize reaches `onViewportWithinLastQuery` and not the `onViewShown` arm; and E-CV-RESIZE is inconclusive by design if the window is already at or below 1024 by 640.
+4. **Owed, Documentation:** the disabled reason's source comment still calls the sentence a placeholder. Under Amendment 4 item 3 it is corrected in the PR.
+5. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
