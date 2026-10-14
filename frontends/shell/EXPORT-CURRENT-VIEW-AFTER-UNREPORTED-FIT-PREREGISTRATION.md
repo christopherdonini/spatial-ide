@@ -565,3 +565,15 @@ Nothing above is edited.
 5. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 6 — correction round 1, declared before its code: the e2e suite's open waits for the canvas; the disabled reason's comment (class 2)
+
+*Written by the custodian after the first e2e run was seen (`state/consults/2026-10-14-export-current-view-after-unreported-fit-e2e-custodian-run-1.md`), before any gate. References only. This is the piece's first correction round.*
+
+1. **e2e/export-view.mjs, `stepOpen` (EV0):** the poll for the first pixels reads `capturePixels` only once the hook exists, and treats its absence as nothing drawn yet, within the same bound. A defect of the suite (the record's E-CV-OPEN), not of the product; §4's rows, their assertions and their mutations are unchanged.
+2. **The disabled reason's source comment** says that the words are the human's, approved on 2026-10-14 (Amendment 4 item 3). The constant is unchanged.
+3. **Nothing else changes.** No product code beyond that comment. The custodian then runs every suite at the new head, and the three e2e mutations.
+4. **§7:** both changes are counted by §7's command at the new head. An overrun is class 8, and §7 is not edited.
+5. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
