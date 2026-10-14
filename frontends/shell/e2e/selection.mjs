@@ -57,7 +57,7 @@
 //   E-ASK-TWO      src/App.tsx, `answerOpenAsk`: `setLateCancel([finished])` in place of the append. Expected: E-ASK-TWO fails on the statements' paths (only the second bundle_path is shown). INCONCLUSIVE, as above, when the ask or the open is not standing before the choice.
 //   E-KINDS (point) src/canvas/clickPick.ts, `tapPixel`'s return line: `Math.round` in place of both `Math.trunc` calls. Expected: E-KINDS fails on the point's Navigate click (the inspected id is not the hover's), as the rounded tap did before OPEN-15; a pass means the position was not at the dot's edge in that run, and shows nothing about rounding.
 //   E-STATUS-HEIGHT styles.css, the status row back to `auto` and `.status-bar` back to `min-height: 1.5rem; max-height: 48px` in place of `height: var(--status-h)`. Expected: E-STATUS-HEIGHT fails
-//                  at S3 on the canvas height while the notice stands (B shorter than A). NOT YET OBSERVED: the custodian observes it in a run, records the failing step by name with the commit, and reverts it.
+//                  at S3 on the canvas height while the notice stands (B shorter than A). Observed at d9e9b817 by the custodian's e2e: it failed at S3 with the message beginning E-STATUS-HEIGHT: the canvas is 388 x 736 before the notice, 388 x 718.640625 while it stands and 388 x 736 after it clears
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, utimesSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
