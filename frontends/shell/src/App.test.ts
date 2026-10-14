@@ -56,9 +56,11 @@ import type { Terminal } from "./streaming/transport";
 // context jsdom does not provide.
 //
 // The *other* half of the D4 fix, `<WorkingCanvas key={admitted.dataset} .../>` forcing a remount
-// per dataset, is **not pinned by a unit test**: the stand-in `WorkingCanvas` in the mounted-`App`
-// suites records its mounts and unmounts per `dataset` prop value, so their counts hold with or
-// without the `key`.
+// per dataset, is **not pinned by a unit test**: every mounted-`App` suite replaces
+// `WorkingCanvas` with a stand-in that keys what it records on the `dataset` prop
+// (`App.layout.test.tsx`, `App.selection.test.tsx` and `App.workspace.test.tsx` record mounts and
+// unmounts in an effect on it; `App.lateResult.test.tsx` records props by it), so what they
+// record holds with or without the `key`.
 // `e2e/regression.mjs`'s `REOPEN'` step asserts banner/refusal absence immediately after a
 // reopen (before its own "Zoom to layer" click) specifically to give this half of the fix *some*
 // live evidence class, but that is a claim about what `REOPEN'` checks, not a claim that it has

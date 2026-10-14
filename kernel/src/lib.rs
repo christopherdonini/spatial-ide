@@ -19,7 +19,8 @@
 //!   **different ADR-006 classes**:
 //!   - **Streaming a query** is a **pure transformation**: an input snapshot plus parameters produce a
 //!     derived output; the stream writes no workspace state and no file of its own, so no
-//!     transaction boundary and no undo machinery is owed (DuckDB's spill is named below, by section).
+//!     transaction boundary and no undo machinery is owed (DuckDB's spill is named below, by
+//!     section).
 //!   - **Publishing a bundle** is a **class-3 external side effect**: it writes files outside any
 //!     transaction, in a location it does not own. It is **not undoable and is never described as
 //!     undoable** — ADR-006 requires a declared reversibility class instead, and publish declares
