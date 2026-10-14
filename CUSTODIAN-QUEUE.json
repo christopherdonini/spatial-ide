@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-14T18:11:16.932Z",
-  "plan_hash": "f02c998936157b49625ca20f92b1488341c1b5eb54444af2b8d6f0f477da6cd6",
+  "generated_at": "2026-10-14T18:37:34.936Z",
+  "plan_hash": "7ec915b0af8fce562d72fb53f6668927f07bb6e0313b9c0bb20b94e952d9f3d0",
   "priorities_approved": true,
   "next": {
     "id": "known-limitations-crs-epoch-edges-third-axis",
@@ -201,7 +201,7 @@
         "opened": "2026-10-14",
         "done": null
       },
-      "summary": "PLACED 2026-10-14 by the human (state/directives/2026-10-14-governance-smaller-reads-ignore-cut-state-rotation-decisions-pending.md); never slot 1; each merge the human's click: piece C, after B. Every obligation an archived entry carries is represented in PLAN or the continuity block first; the kept entries are listed in the PR body for the human. Its form is drafted after B's.",
+      "summary": "FORM COMMITTED 2026-10-14 (scripts/plan/DECISIONS-PENDING-OPEN-AND-ARCHIVE-PREREGISTRATION.md, a full form by section 21a and 21c, 1,260 lines over 16 files, drafted by the architect: state/consults/2026-10-14-governance-decisions-pending-open-and-archive-architect-draft.md, sha256 2031c8c9; pins hashed by the custodian at 76d038d5). OPEN-1 (which unmarked entries are open, before the dry run), OPEN-2 (a fourth reader in verify-quotes, only if the probe shows it), OPEN-3 (pinning a line into the ruling file against round 12 (a), a red line, typed words) and OPEN-4 (readings) with the human. Before: PLACED 2026-10-14 by the human (state/directives/2026-10-14-governance-smaller-reads-ignore-cut-state-rotation-decisions-pending.md); never slot 1; each merge the human's click: piece C, after B. Every obligation an archived entry carries is represented in PLAN or the continuity block first; the kept entries are listed in the PR body for the human. Its form is drafted after B's.",
       "blocked_by": [
         "governance-cut-state-cap-and-rotation"
       ]
