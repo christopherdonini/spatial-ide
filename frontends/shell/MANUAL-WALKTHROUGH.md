@@ -1858,7 +1858,7 @@ This Part is the Operator gate of `frontends/shell/SHELL-STATUS-BAR-ONE-HEIGHT-P
 | Z1 | Open `filter-zoned.parquet`, choose Select, and click one feature. Open the file again: the ended-selection notice is in the status bar. Click a feature with Select: the notice clears. | **Felt:** did the map move or change size when the notice came? Did it move when the notice cleared? |
 | Z2 | With a file open and no notice, read the bar. | It is two lines tall while it holds one line. **Record** anything that reads as wrong. |
 | Z3 | With Narrator on, open the file again over a selection. | **Record** whether the whole notice is read. |
-| Z4 | At 1024 × 640 (DevTools device toolbar), open the file again over a selection and read the bar. | It stays two lines tall, and if its items need more it scrolls inside. **Record** whether the notice needed scrolling to be seen. |
+| Z4 | At 1024 × 640 (a dev build, `npm run tauri dev`, with DevTools' device toolbar at 100%, as Part U's U1 sets it), open the file again over a selection and read the bar. | It stays two lines tall, and if its items need more it scrolls inside. **Record** whether the notice needed scrolling to be seen. |
 
 ## Result log
 
