@@ -1,16 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `ff428c8b72ec8d2e6e601d3df895b071300b50b5c6fa471d5d725c51344e04d2`) at `2026-10-14T16:53:46.368Z`.
+Generated from `PLAN.yaml` (sha256 `eb94bc5c228173178381b93bdf7d45e56357eff474ef910bf246ef10908955fc`) at `2026-10-14T17:00:10.190Z`.
 
 ## 1. Next
 
-- **b2-piece-1b-recording** — B2 piece 1b -- recording: the kernel's step commands for filter, scope and style, the session history on the machine, safe against a crash, and the docs/07 note (lane `kernel-protocol`)
+- **known-limitations-crs-epoch-edges-third-axis** — KNOWN-LIMITATIONS: a file's declared coordinate epoch, its edges value and a third CRS axis are not used, shown or carried into a bundle (lane `release`)
 
 ## 2. Ready
 
-- **b2-piece-1b-recording** — B2 piece 1b -- recording: the kernel's step commands for filter, scope and style, the session history on the machine, safe against a crash, and the docs/07 note (lane `kernel-protocol`, order 4, budget 0 min)
 - **known-limitations-crs-epoch-edges-third-axis** — KNOWN-LIMITATIONS: a file's declared coordinate epoch, its edges value and a third CRS axis are not used, shown or carried into a bundle (lane `release`, order null, budget 45 min)
-- **known-limitations-item-40-source-comment** — KNOWN-LIMITATIONS item 40's source comment: its three code locations pinned on main with their hashes, saying the work has merged (the comment only; item 40's words wait for the sitting) (lane `release`, order null, budget 20 min)
 
 ## 3. Waiting on the human (total: 0 min)
 
@@ -30,7 +28,8 @@ Generated from `PLAN.yaml` (sha256 `ff428c8b72ec8d2e6e601d3df895b071300b50b5c6fa
 
 ## 5. In progress
 
-- (none)
+- **b2-piece-1b-recording** — B2 piece 1b -- recording: the kernel's step commands for filter, scope and style, the session history on the machine, safe against a crash, and the docs/07 note — evidence: branch `cut/b2-piece-1b-recording`
+- **known-limitations-item-40-source-comment** — KNOWN-LIMITATIONS item 40's source comment: its three code locations pinned on main with their hashes, saying the work has merged (the comment only; item 40's words wait for the sitting) — evidence: branch `cut/known-limitations-item-40-source-comment`
 
 ## 6. Proposed / unscheduled
 
