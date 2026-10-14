@@ -10,7 +10,7 @@ import {
   MAP_MIN_HEIGHT_PX,
   MAP_MIN_WIDTH_PX,
   SPLITTER_PX,
-  STATUS_BAR_MAX_HEIGHT_PX,
+  STATUS_BAR_HEIGHT_PX,
   TOP_BAR_HEIGHT_PX,
 } from "./layoutConstants";
 import type { SizeRange } from "./layoutConstants";
@@ -95,7 +95,7 @@ export interface Viewport {
 }
 
 /** What the grid is given: the side regions' extents after fitting (0 for a closed region), and the
- * map's size as what remains in the worst case (attention strip and status bar at their caps). */
+ * map's size as what remains in the worst case (attention strip at its cap, status bar at its fixed height). */
 export interface EffectiveSizes {
   readonly layersWidth: number;
   readonly inspectorWidth: number;
@@ -106,8 +106,8 @@ export interface EffectiveSizes {
 
 /**
  * The fit function. At every viewport at or above `VIEWPORT_FLOOR` the map keeps `MAP_MIN_WIDTH_PX` x
- * `MAP_MIN_HEIGHT_PX`, however the state was reached and with the attention strip and status bar at
- * their caps:
+ * `MAP_MIN_HEIGHT_PX`, however the state was reached and with the attention strip at its cap and the
+ * status bar at its fixed height:
  * - the open side columns give up width in proportion to the slack each has above its own minimum, so
  *   a region already at its minimum gives up nothing until the other has none left; each cut is
  *   rounded up, so the fit never under-shrinks;
@@ -135,7 +135,7 @@ export function effectiveSizes(state: LayoutState, viewport: Viewport): Effectiv
     }
   }
 
-  const chrome = TOP_BAR_HEIGHT_PX + STATUS_BAR_MAX_HEIGHT_PX + ATTENTION_MAX_HEIGHT_PX;
+  const chrome = TOP_BAR_HEIGHT_PX + STATUS_BAR_HEIGHT_PX + ATTENTION_MAX_HEIGHT_PX;
   const activityOpen = state.activity.open;
   const room = viewport.height - chrome - MAP_MIN_HEIGHT_PX - SPLITTER_PX;
   const activityHeight = activityOpen ? Math.max(0, Math.min(state.activity.height, room)) : 0;

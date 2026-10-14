@@ -31,7 +31,7 @@ body,
   --status-item-bg: #f3d9d6;
   --status-item-fg: #4a0f0f;
   grid-template-columns: var(--layers-w) var(--layers-split) minmax(0, 1fr) var(--inspector-split) var(--inspector-w);
-  grid-template-rows: var(--top-bar-h) auto minmax(0, 1fr) var(--activity-split) var(--activity-h) auto;
+  grid-template-rows: var(--top-bar-h) auto minmax(0, 1fr) var(--activity-split) var(--activity-h) var(--status-h);
   grid-template-areas:
     "top top top top top"
     "layers split-layers attention split-inspector inspector"
@@ -158,9 +158,8 @@ body,
 
 .status-bar {
   grid-area: status;
-  box-sizing: border-box; /* the cap includes the padding and the border, so the fit's 48 px budget is the real cap */
-  min-height: 1.5rem;
-  max-height: var(--status-max-h);
+  box-sizing: border-box; /* the height includes the padding and the border, so the fit's 48 px reservation is the bar's real height */
+  height: var(--status-h);
   overflow-y: auto;
   display: flex;
   flex-wrap: wrap;

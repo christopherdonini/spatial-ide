@@ -749,3 +749,92 @@ From piece `b2-piece-1b-recording`, a committed style edit is persisted as a `st
 6. **The start:** milestone 2 has merged (PR #217). This piece waits for item 5 and for its slot: `shell-status-bar-one-height` goes before it in slot 2 if that piece's paths are disjoint from the Current view fix's (its form's OPEN items are with the human).
 
 Nothing above is edited.
+
+### Amendment 2 — the human's sight of the OPEN-9 blocks: H to K approved, the member named `provenance` (class 5); the five tests they add, with their own ceiling (class 9)
+
+*Written by the custodian on the human's typed ruling (`state/directives/2026-10-14-status-bar-two-lines-current-view-zero-size-1b-open-9-blocks-provenance.md`, item 3), before any code. The texts below are the architect's draft (`state/consults/2026-10-14-b2-1b-open-9-blocks-architect-draft.md`, lines 27-33, 62-64, 85-89, 106-108, 135-137 and 150-152, and line 90, at 2857bd8c), byte-copied by script, with the one word the ruling changes. None of them is the human's wording. Amendment 1 item 5 is discharged.*
+
+1. **The ruling.**
+   - Blocks H, I, J and K are approved as drafted, with one change: the member is named `provenance`, not `source`, so the step record and `describe` use one word for the same three values.
+   - Where the ruling of 2026-10-14 that Amendment 1 records says `dependencies.crs.source`, it reads `dependencies.crs.provenance`.
+   - Block I's reading is confirmed: the three words are `crs:declared`, `crs:asserted` and `crs:format-default`, as `describe`'s `crs.provenance` reports them.
+   - Block 0 takes the draft's replacement line. The §6 `dependencies` cell takes the draft's offered wording, with `provenance` in it, in place of Block H's substring edit. Block B is applied before Block K.
+2. **The order of application,** by script, as §2.7 says for blocks 0 and A to G: Block 0 as item 3 gives it; A to G as drafted; then item 4's cell, Block H (item 5), Block I (item 6), Block J (item 7), and Block K (item 8) last.
+3. **Block 0,** replacing §2.7's Block 0 line. It names the member, so under item 1 it says `provenance` where the draft says `source`. This is told to the human with this amendment; a different word there is theirs.
+
+```
+**Amended:** in piece 1b's form (`kernel/B2-1B-RECORDING-PREREGISTRATION.md`, §2.7), before acceptance: findings 3, 5 and 6 of the human's rulings of 2026-10-09, the registered actions, the session-history store and its bound, §12, and, under the human's ruling of 2026-10-14 (OPEN-9), `dependencies.crs`'s definition and provenance, the coordinate epoch's reservation and the registry's rule for coordinate parameters.
+```
+
+4. **The §6 `dependencies` cell.** The second cell of the `dependencies` row of §6's table (ADR-036 line 113 at 2857bd8c) is replaced whole by:
+
+```
+`{"fields":[{"name","type"}…],"crs":{"identifier","provenance","definition"},"geometry_types":[…]}`; each of the three members may instead be a named state, on its own. `geometry_types` are the types the file declares, as written, never the engine's encoding; where the file has no `geometry_types` key it is the named state `not-declared`, and an empty declaration is kept empty.
+```
+
+5. **Block H.** After §6's table, before `**Withheld line:**`, with one blank line on each side:
+
+```
+**`dependencies.crs`** names the coordinate space of the dataset the step was recorded on, as the engine admitted it at that open:
+- `identifier` is the identifier the engine admitted. It is a label only: an equal identifier never shows that two steps share a space, and every definition with no authority and code carries the same label, `(definition-only)`.
+- `definition` is `sha256:` and 64 lowercase hex characters, over the UTF-8 bytes of the definition text the engine admitted, as `describe` reports it in `crs.definition_json`: the string's value, not its JSON spelling, with nothing normalized. For a file's own declaration that text is the engine's serialization of the file's `crs` object, not the file's bytes; for a caller's assertion it is the text the caller sent. Equal hashes show the same definition text. Unequal hashes decide nothing: one definition written two ways hashes two ways, and a later version may serialize the same file's declaration differently.
+- Where the engine admitted no definition, as under the format's rule for an absent `crs` key, `definition` is the named state `none-admitted` (§2).
+- The text is hashed as held, not rewritten in §2's canonical subset: that subset writes keys in a schema's declared order and refuses numbers outside its domain, and a definition has keys no schema here declares and numbers nothing bounds.
+```
+
+6. **Block I,** appended as the last bullet of Block H's list, with the one word:
+
+```
+- `provenance` is the provenance class `describe` reports as `crs.provenance`, one of three words: `crs:declared`, the file's own `crs` member; `crs:asserted`, a caller's assertion over a file that declares none; `crs:format-default`, the format's rule for an absent `crs` key. A reader refuses any other word. A step recorded on a format-default admission therefore says so.
+```
+
+7. **Block J.** In §11, after the bullet beginning `- **Persisted feature ids.**`, insert:
+
+```
+- **Reserved by name, not yet defined:**
+  - **a selection scope** (§6, `scope`);
+  - **the coordinate epoch:** when a dataset's coordinates were observed, for a CRS whose coordinates change over time. It is a dataset fact that a later version may record as one value, as a named column holding a time per row, or as not stated. Version 1 records it nowhere, and a version-1 file's silence is not a statement that it is not stated. Adding it changes the shape, so it comes with a `version` step (§3), and a version-1 reader refuses the later file.
+```
+
+   And in §6's table, the `scope` row, as drafted:
+
+```
+§6, in the step line's table, the `scope` row: `A selection scope is reserved (§11).` becomes `A selection scope is reserved (§11, Reserved by name).`
+```
+
+8. **Block K,** applied to Block B's text once Block B is applied: after the sentence ending `in B2 the target is the project's one layer.`, insert one space and:
+
+```
+A parameter that holds coordinates names the space they are in, in `dependencies.crs`'s form (§6), within its own declared shape; an action with a coordinate parameter that names no space is not registered. No action registered here has one: a filter's predicate may reference attribute columns only, never the geometry column.
+```
+
+9. **The form notes, class 9 work inside the existing groups:**
+   - the writer reads `DatasetCrs::definition_json()` for `definition`, and `Dataset::admission()`'s `crs_provenance` for `provenance`, the value `describe` reads; both join §2.6's seams;
+   - the definition's hash is `spatial_renderer::canonical::sha256_hex`, already a kernel dependency: no new dependency and no lock change;
+   - `describe`'s `not-established` arm cannot be reached for an admitted dataset. In `record_step` it is a stated unreachable arm that refuses and writes nothing, never a fourth word: the choice Amendment 1 item 4 (e) gives `RefBuildError`;
+   - U7's worst-case line includes the `definition` member and the longest `provenance` word;
+   - by the architect's estimate, the ADR group grows by about 21 lines (to about 65 of its 130) and the kernel product by about 40 (inside its 950). §7 is not edited, and an overrun is class 8.
+10. **Class 9: the five tests, with their own ceiling.** Each is as the draft gives it under Block H's and Block I's Tests, with its one mutation, observed:
+    - K10 `two_definitions_under_one_identifier_record_one_label_and_two_definition_hashes`; mutation: the writer hashes `crs.identifier()`;
+    - K11 `a_format_default_admission_records_the_none_admitted_state`; mutation: the writer hashes an empty text when no definition was admitted;
+    - K12 `each_admission_class_records_the_provenance_describe_reports`, renamed under item 1 from the draft's name, which ends in `as_its_source`; mutation: the writer writes `crs.source().as_str()`;
+    - U8 `recover_refuses_a_crs_provenance_outside_the_three_classes`, renamed under item 1 from the draft's `recover_refuses_a_crs_source_outside_the_three_classes`; mutation: the reader's word check on `provenance` is removed;
+    - U9 `recover_refuses_a_definition_that_is_neither_a_sha256_nor_none_admitted`; mutation: the reader accepts any string for `definition`.
+    - **Where they live:** K10 to K12 in one new file, `kernel/tests/record_step_crs.rs`; U8 and U9 beside U1 to U7 in `session_history.rs`'s unit tests.
+    - **Their ceiling:** at most 220 lines, insertions plus deletions, the five tests with any helper only they use: the new file by §7's counting command on its path, and U8 and U9 by their line spans, which the worker lists. They are not counted against the kernel tests group, whose ceiling stays 700. An overrun is class 8.
+11. **Overtaken in this form's record** (the draft's conflict 5): §2.7's Not folded list, and §0's line saying that the steps meet neither R1 nor R2, are overtaken by blocks H to K; the Documentation item on §6's `(§11)` pointer is answered by Block J. Neither line is edited.
+12. **The unspelled values:** item 4's cell spells the three values OPEN-3 (a) ruled; Block I spells the fourth the impact answer found, `crs.source`'s vocabulary, as `provenance`'s three words.
+13. **The start:** this piece waits for its slot: `shell-status-bar-one-height` is in code in slot 2 before it.
+14. **Generation:** the node's generation goes up by one.
+15. **Superseded index:** §2.7's Block 0 line → item 3; §2.7's Not folded list → item 11; Amendment 1 item 5 → items 1 to 10; the ruling's `dependencies.crs.source` → item 1.
+
+Nothing above is edited.
+
+### Amendment 3 — the human's word on `provenance` in Block 0 and the test names (class 5)
+
+*Written by the custodian on the human's typed ruling (`state/directives/2026-10-14-e15-named-i2-live-row-build-24px-provenance-cv-2-4-item-40-comment.md`, item 4), before any code. References only.*
+
+1. **`provenance` stays wherever the member is named,** Block 0's line and the names of K12 and U8 included. Amendment 2 items 3 and 10 stand as written.
+2. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.

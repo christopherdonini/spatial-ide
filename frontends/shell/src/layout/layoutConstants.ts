@@ -32,8 +32,8 @@ export const ACTIVITY_HEIGHT_PX: SizeRange = { default: 200, min: 120, max: 480 
 
 /** Bounds the top bar's height. */
 export const TOP_BAR_HEIGHT_PX = 40;
-/** Bounds the status bar's height: two lines, then it scrolls inside. */
-export const STATUS_BAR_MAX_HEIGHT_PX = 48;
+/** Bounds the status bar's height, which is fixed at two lines (its grid row and its box both read this value), so a status item coming or going never changes the map's size; beyond two lines the bar scrolls inside. */
+export const STATUS_BAR_HEIGHT_PX = 48;
 /** Bounds the attention strip's height: then its content scrolls inside. It has no height when empty. */
 export const ATTENTION_MAX_HEIGHT_PX = 128;
 /** Bounds each splitter's thickness. */
