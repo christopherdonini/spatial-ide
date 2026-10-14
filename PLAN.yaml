@@ -5195,13 +5195,13 @@ nodes:
     order: null
     depends_on: [shell-status-bar-one-height, export-current-view-after-unreported-fit]
     needs_human: {kind: none, minutes: 0}
-    gate: none
+    gate: frontends/shell/E2E-README-STATUS-BAR-STEPS-PREREGISTRATION.md
     evidence: null
     budget_minutes: 0
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "PROPOSED 2026-10-14 by the human (state/directives/2026-10-14-status-bar-two-lines-current-view-zero-size-1b-open-9-blocks-provenance.md, item 1, OPEN-2 (b)): the README lines the status-bar form's section 2.7 names, in a docs-lane follow-up landing after both that piece and the Current view fix (which shares e2e/README.md); the window between the merges, when the README omits the new steps, is accepted by the human."
+    summary: "FORM COMMITTED 2026-10-14 (frontends/shell/E2E-README-STATUS-BAR-STEPS-PREREGISTRATION.md, a five-line form, drafted by the architect: state/consults/2026-10-14-e2e-readme-status-bar-steps-architect-draft.md, sha256 4c607170): line 770, the selection entry, gains E-STATUS-HEIGHT and E-DBLCLICK's run-last reason becomes history; as merged under OPEN-1 (d) there is one new step and no E-FOCUS stop, so the title above describes the original design and the form governs. OPEN-1 (the item 2e sight of the two new spans; (a) land as drafted, recommended) with the human. Code waits for #221's merge (the docs lane, one at a time). Before: PROPOSED 2026-10-14 by the human (state/directives/2026-10-14-status-bar-two-lines-current-view-zero-size-1b-open-9-blocks-provenance.md, item 1, OPEN-2 (b)): the README lines the status-bar form's section 2.7 names, in a docs-lane follow-up landing after both that piece and the Current view fix (which shares e2e/README.md); the window between the merges, when the README omits the new steps, is accepted by the human."
     dates: {opened: 2026-10-14, done: null}
   - id: b2-piece-1b-recording
     title: "B2 piece 1b -- recording: the kernel's step commands for filter, scope and style, the session history on the machine, safe against a crash, and the docs/07 note"
