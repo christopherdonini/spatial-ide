@@ -561,3 +561,16 @@ Nothing above is edited.
 4. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 4 — PR #220 gate 1: the architect FAIL on words only and the reviewer PASS WITH NOTES; their documentation (class 3); two record corrections and the count at the head (class 1)
+
+*Written by the custodian after both gate 1 reports (`state/consults/gates/2026-10-14-stale-test-names-and-comments-gate1-architect.md`, `state/consults/gates/2026-10-14-stale-test-names-and-comments-gate1-reviewer.md`). References only.*
+
+1. **Gate 1:** the architect FAIL on C-1's words only (gate log 515) at f73eb803; the reviewer PASS WITH NOTES (518) at ec6de56f.
+2. **The documentation, in the gates' words (class 3), no re-gate (AUTONOMY §31 (d)):** the architect's C-1, D-1, D-2 and D-3 at ec6de56f; the reviewer's D-1 at e415877c (one comment rewrapped, its words unchanged); the reviewer's D-2 in the PR body.
+3. **Record correction (the architect's D-4 (a)):** Amendment 2 item 1's list of the mounted-`App` suites leaves out `App.lateResult.test.tsx`, which records props by dataset (its line 331 at f73eb803). The item's conclusion stands.
+4. **Record correction (the architect's D-4 (b)):** every line cite in `state/consults/2026-10-14-stale-test-names-and-comments-worker-report.md` is at f73eb8038b632055732adfa85c41469ad77f9dbb.
+5. **§7 at the head (the reviewer's D-3):** 128 lines over 18 files by `git diff --numstat a5666a49...e415877c`, the same as at ec6de56f. Amendment 3 item 1's class 8 entry is unchanged.
+6. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.

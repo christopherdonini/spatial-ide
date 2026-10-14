@@ -577,3 +577,20 @@ Nothing above is edited.
 5. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 7 — PR #219 gate 1: both PASS WITH NOTES; their documentation (class 3); the architect's D-2 record items (classes 1 and 2); the walkthrough follow-up (class 1)
+
+*Written by the custodian after both gate 1 reports (`state/consults/gates/2026-10-14-export-current-view-after-unreported-fit-gate1-architect.md`, `state/consults/gates/2026-10-14-export-current-view-after-unreported-fit-gate1-reviewer.md`). References only.*
+
+1. **Gate 1:** the architect PASS WITH NOTES (gate log 517) at a792293d; the reviewer PASS WITH NOTES (520) at a23c5624.
+2. **The documentation, in the gates' words (class 3), no re-gate (AUTONOMY §31 (d)):** the architect's D-1, D-3 and D-4 at a23c5624; the reviewer's DOC-3 at db44c7ff; the architect's D-5 and the reviewer's DOC-1 in the PR body.
+3. **The architect's D-2, by reference:**
+   - (a) class 2: E-CV's mutation falls back to the view box while the ref is null, which §4's row does not have (D-2 (a));
+   - (b) §3's third prediction was not run and does not hold as written; the E-CV mutation stands in for it (D-2 (b); `state/consults/2026-10-14-export-current-view-after-unreported-fit-e2e-custodian-run-2.md`, its E-CV-OPEN mutation);
+   - (c) H3 is undecided (D-2 (c));
+   - (d) §7, by its own command against f8bc2951: 471 lines over 8 files at a23c5624 and at db44c7ff, against 690. Amendment 5 item 1's class 8 entries are unchanged, and there is no new overrun.
+4. **Class 2 against §9 X3:** Y3's step and expected outcome are the architect's D-4 words, not X3's (D-4).
+5. **The walkthrough's rows G1 and N5** still describe Current view as disabled until a pan or zoom. §2.6 keeps this piece's walkthrough edit to Part Y, so they are not edited here; the docs-lane follow-up `walkthrough-current-view-rows-g1-n5` is placed for them (the reviewer's DOC-4).
+6. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.

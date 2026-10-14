@@ -932,3 +932,17 @@ Nothing above is edited.
    - Not superseded: S0, S2, S3, G1, G2, the mutation, and §7's table.
 
 Nothing above is edited.
+
+### Amendment 4 — PR #218 gate 1: both PASS WITH NOTES; their documentation (class 3); the record items D-3 to D-5 (class 1, with class 2 for H3's hold)
+
+*Written by the custodian after both gate 1 reports (`state/consults/gates/2026-10-14-shell-status-bar-one-height-gate1-architect.md`, `state/consults/gates/2026-10-14-shell-status-bar-one-height-gate1-reviewer.md`). References only.*
+
+1. **Gate 1:** the architect PASS WITH NOTES (gate log 516) at 6f72d0a7, its condition met by pan-anchor's three runs alone (`state/consults/2026-10-14-shell-status-bar-one-height-e2e-custodian-run-2.md`, its pan-anchor section); the reviewer PASS WITH NOTES (519) at 720bb50d.
+2. **The documentation, in the gates' words (class 3), no re-gate (AUTONOMY §31 (d)):** the architect's D-1 and D-2 at 720bb50d; the reviewer's D-3 at c7ca9bee; the architect's D-5 (the verify commits) and the reviewer's D-1 in the PR body.
+3. **Superseded index (the architect's D-3):** the form's title → Amendment 1, item 1 (OPEN-1 (d)).
+4. **E-STATUS-HEIGHT's mutation (the architect's D-4):** B read 718.640625 at 880 wide, against the about 715.45 of Amendment 3 item 5, s5. Recorded, not asserted (`state/consults/2026-10-14-shell-status-bar-one-height-e2e-custodian-run-2.md`, its mutation section).
+5. **H3's diagnostic order run (the architect's D-5):** `state/consults/2026-10-14-shell-status-bar-one-height-e2e-h3-order.md`. E-DBLCLICK and E-SEL-FILTER pass in run 5's order. The run was in a shared hold, because the exclusive hold D-5 named was refused (class 2).
+6. **§7 at the head (the reviewer):** 166 of 218 over 6 files at 720bb50d; c7ca9bee changes the walkthrough only, outside the count. No class 8.
+7. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
