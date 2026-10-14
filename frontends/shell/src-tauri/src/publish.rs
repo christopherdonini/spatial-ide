@@ -1620,6 +1620,9 @@ mod tests {
     /// PRS (`frontends/shell/EXPORT-CURRENT-VIEW-AFTER-UNREPORTED-FIT-PREREGISTRATION.md`, Amendment 1 item 2): the
     /// Row scope sentence of a `ViewportBbox` scope is the human's typed words, byte for byte, with the four numbers
     /// in the order the sentence names them (xmin, ymin, xmax, ymax).
+    ///
+    /// RECORDED MUTATION: restore the old words in `row_scope_sentence`'s `ViewportBbox` arm. Observed at
+    /// 304ba2495dc7d4792ee9e104e146dfbc84b0a4b4: this test FAILED by name at its `assert_eq!` (left: "row scope: the current viewport extent only (xmin 2683000.5, ...", right: the human's sentence). Reverted.
     #[test]
     fn the_viewport_bbox_row_scope_sentence_is_the_humans_words_with_the_four_numbers() {
         let scope = PublishScope::ViewportBbox {

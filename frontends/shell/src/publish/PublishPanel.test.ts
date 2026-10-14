@@ -56,7 +56,8 @@ const PROMPT: PublishPromptData = {
 };
 
 // RECORDED MUTATION for "UPP1" (export-current-view-after-unreported-fit): `currentViewOptionDisabled` returns false whatever it is given. Expected failure: the first case, "disabled while the map has no view box".
-// NOT YET OBSERVED.
+// OBSERVED AT 304ba2495dc7d4792ee9e104e146dfbc84b0a4b4: FAILED -- "disabled while the map has no view box": AssertionError: expected false to be true // Object.is equality; the render case "a disabled Current view shows the reason, and an available one shows none (UPP1)" also failed.
+// Reverted after observing.
 describe("currentViewOptionDisabled (NEXT-CUT.md P3 item 3; UPP1)", () => {
   it("disabled while the map has no view box", () => {
     expect(currentViewOptionDisabled(false)).toBe(true);

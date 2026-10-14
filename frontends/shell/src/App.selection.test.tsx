@@ -709,7 +709,10 @@ describe("App: tools, the click, the selection and the inspection (milestone 2, 
   // debounced entry point). Expected failure: the query it issues.
   // OBSERVED AT f51b96a9cafbaf57b5f562edb8a0d64b51d9a604: FAILED -- "RB18: onViewShown writes the box and nothing else: no query, no last-asked box, no settled view": AssertionError: no query: expected 1 to be +0.
   // Reverted after observing. Re-aimed by export-current-view-after-unreported-fit (its Amendment 3 item 4 (b)): the title lost ", no settled view", and the radio's `disabled` reads
-  // gave way to the refusal-recovery observer at the end. NOT YET RE-OBSERVED at the new head.
+  // gave way to the refusal-recovery observer at the end.
+  // RE-OBSERVED AT 304ba2495dc7d4792ee9e104e146dfbc84b0a4b4 (i) the mutation above: FAILED -- "RB18: onViewShown writes the box and nothing else: no query, no last-asked box": AssertionError: no query: expected 1 to be +0 (the same
+  // first failure as before the re-aim). (ii) the new observer alone, with the query dropped (`onViewShown` writes `lastViewportBboxRef` and the box only): FAILED -- same test: AssertionError: no last-asked box: the recovery
+  // asks the whole dataset: expected { xmin: '0000000000000000', …(3) } to be null. Both reverted after observing.
   it("RB18: onViewShown writes the box and nothing else: no query, no last-asked box", async () => {
     await open("C:/data/a.parquet");
     useTool("Select");
@@ -725,7 +728,8 @@ describe("App: tools, the click, the selection and the inspection (milestone 2, 
   });
 
   // RECORDED MUTATION for "RCV1" (export-current-view-after-unreported-fit): App's Current-view getter reads `lastViewportBboxRef` (`getViewBox` decodes it). Expected failure: the toEqual, receiving b1.
-  // NOT YET OBSERVED.
+  // OBSERVED AT 304ba2495dc7d4792ee9e104e146dfbc84b0a4b4: FAILED -- "RCV1: after an issued Apply and the fit it triggers, Current view sends the box the fit showed": AssertionError: the box of the fit, not of the last pan: expected { kind: 'viewport-bbox', …(1) }
+  // to deeply equal { kind: 'viewport-bbox', …(1) } (receiving xmin 0, ymin 0, xmax 100, ymax 100, which is b1). The same mutation also failed RCV3. Reverted after observing.
   it("RCV1: after an issued Apply and the fit it triggers, Current view sends the box the fit showed", async () => {
     await open("C:/data/a.parquet");
     click(q(".publish-disclosure"));
@@ -741,7 +745,8 @@ describe("App: tools, the click, the selection and the inspection (milestone 2, 
   });
 
   // RECORDED MUTATION for "RCV2": drop the reset of the view box at an admission (`viewBox.set(null)` in `handleAdmitted`, App.tsx). Expected failure: Current view is enabled for B.
-  // NOT YET OBSERVED.
+  // OBSERVED AT 304ba2495dc7d4792ee9e104e146dfbc84b0a4b4: FAILED -- "RCV2: a reopen empties the view box: Current view is disabled again, and a prepare is refused with no call": AssertionError: B's canvas has reported nothing: expected false to be true.
+  // The same mutation also failed RB-DRAWN. Reverted after observing.
   it("RCV2: a reopen empties the view box: Current view is disabled again, and a prepare is refused with no call", async () => {
     await open("C:/data/a.parquet");
     await inAct(() => props().onViewportChanged(box(0, 0, 100, 100)));
@@ -757,7 +762,8 @@ describe("App: tools, the click, the selection and the inspection (milestone 2, 
 
   // RECORDED MUTATION for "RCV3": availability from the old signal (a `hasSettledView` state set by `onViewportChanged` only; App passes `getViewBox={() => (hasSettledView ? viewBox.get() : null)}`).
   // Expected failure: the radio is disabled after `onViewShown` alone.
-  // NOT YET OBSERVED.
+  // OBSERVED AT 304ba2495dc7d4792ee9e104e146dfbc84b0a4b4: FAILED -- "RCV3: Current view is available once the map has drawn the data, with no pan or zoom reported, and Export carries that box": AssertionError: a view was shown: expected true to be false.
+  // Reverted after observing.
   it("RCV3: Current view is available once the map has drawn the data, with no pan or zoom reported, and Export carries that box", async () => {
     await open("C:/data/a.parquet");
     click(q(".publish-disclosure"));
@@ -772,7 +778,8 @@ describe("App: tools, the click, the selection and the inspection (milestone 2, 
   });
 
   // RECORDED MUTATION for "RCV4": `handleApplyFilter`'s `getLastViewportBbox` reads the view box (encoded) in place of `lastViewportBboxRef`. Expected failure: the recovery's bbox, receiving b2's.
-  // NOT YET OBSERVED.
+  // OBSERVED AT 304ba2495dc7d4792ee9e104e146dfbc84b0a4b4: FAILED -- "RCV4: a refused Apply's recovery re-issues the box of the last pan or zoom, not the box a fit showed since": AssertionError: the recovery asks the last pan or zoom's box: expected { xmin: '4044000000000000', …(3) }
+  // to deeply equal { xmin: '0000000000000000', …(3) } (b2's box encoded, where b1's is expected). Reverted after observing.
   it("RCV4: a refused Apply's recovery re-issues the box of the last pan or zoom, not the box a fit showed since", async () => {
     await open("C:/data/a.parquet");
     const [b1, b2] = [box(0, 0, 100, 100), box(40, 40, 60, 60)];
