@@ -88,6 +88,8 @@ const ADMITTED_PATTERN_FUNCTIONS: &[&str] = &["~~", "~~*"];
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct AdmittedPredicate {
     text: String,
+    /// The column names stage 1 collected, each once, in order of first appearance.
+    columns: Vec<String>,
 }
 
 impl AdmittedPredicate {
@@ -195,7 +197,13 @@ impl AdmittedPredicate {
         // Reached only once every stage above returned `Ok`.
         lease.release_healthy();
 
-        Ok(Self { text })
+        let mut columns: Vec<String> = Vec::new();
+        for name in structural.columns {
+            if !columns.contains(&name) {
+                columns.push(name);
+            }
+        }
+        Ok(Self { text, columns })
     }
 
     /// Construct an `AdmittedPredicate` with **nothing checked** — `pub(crate)`, test-only.
@@ -211,7 +219,10 @@ impl AdmittedPredicate {
     /// rewritten", not "would admit").
     #[cfg(test)]
     pub(crate) fn unchecked_for_composition_test(text: String) -> Self {
-        Self { text }
+        Self {
+            text,
+            columns: Vec::new(),
+        }
     }
 
     /// The predicate's SQL text, exactly as admitted — never rewritten, normalized, or case-folded
@@ -219,6 +230,17 @@ impl AdmittedPredicate {
     /// the one paren pair the design note describes.
     pub fn sql_text(&self) -> &str {
         &self.text
+    }
+
+    /// The columns the predicate references, each once, in order of first appearance and spelled
+    /// as the predicate spells them. Admission matched every one to a field of the dataset's file
+    /// schema by that exact name, or refused the predicate, so a caller can look each up there.
+    ///
+    /// Its product caller is `kernel/src/session_history.rs`, which records them as a step's
+    /// `dependencies.fields` (ADR-036 §6; `kernel/B2-1B-RECORDING-PREREGISTRATION.md`, Amendment 1
+    /// item 4 (a)).
+    pub fn referenced_columns(&self) -> &[String] {
+        &self.columns
     }
 }
 
