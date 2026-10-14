@@ -50,10 +50,10 @@ import type { Terminal } from "./streaming/transport";
 // dataset survived, verbatim, into every later step's UI because nothing ever reset `canvasRefusal`
 // / `viewportRefusal` / `hover` on a fresh admission. This file asserts the fix's actual sequencing
 // directly, without rendering `<App />`. `admitAndResetStaleUiState` is exported from `App.tsx`
-// specifically so this reset sequencing -- the actual bug fix -- is testable on its own terms. `App`
-// is mounted elsewhere in this package (`App.layout.test.tsx`, `App.lateResult.test.tsx`), with
-// `react-dom/client` and `act`, and `WorkingCanvas` stood in because deck.gl's `Deck` needs a WebGL
-// context jsdom does not provide.
+// specifically so this reset sequencing -- the actual bug fix -- is testable on its own terms.
+// `App` is mounted elsewhere in this package (`App.layout.test.tsx`, `App.lateResult.test.tsx`),
+// with `react-dom/client` and `act`, and `WorkingCanvas` stood in because deck.gl's `Deck` needs a
+// WebGL context jsdom does not provide.
 //
 // The *other* half of the D4 fix, `<WorkingCanvas key={admitted.dataset} .../>` forcing a remount
 // per dataset, is **not pinned by a unit test**: every mounted-`App` suite replaces
