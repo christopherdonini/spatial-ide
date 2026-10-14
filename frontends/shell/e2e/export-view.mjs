@@ -11,12 +11,15 @@
 //   E-CV-RESIZE  EV6 Clear through the same seam and wait for the refit; prepare gives F'. Shrink the map (`page.setViewportSize`, as layout.mjs does); prepare gives R, and R differs from F'.
 // Nothing here is a measurement or a performance claim: the millisecond figures bound waiting. The prepare never executes; no bundle is written.
 //
-// RECORDED MUTATIONS, each applied alone, the suite run, the failing step recorded by name with the commit, then reverted. NOT YET OBSERVED: the custodian observes them (the e2e runs are the custodian's).
+// RECORDED MUTATIONS, each applied alone, the suite run, the failing step recorded by name with the commit, then reverted. Each observed at e3a14042 by the custodian's e2e (the record state/consults/2026-10-14-export-current-view-after-unreported-fit-e2e-custodian-run-2.md), the failing step and the opening words of its message as the record gives them.
 //   E-CV         src/App.tsx, the PublishPanel element: `getViewBox={() => { const b = lastViewportBboxRef.current; return b === null ? viewBox.get() : fromWireBbox(b, null); }}`.
 //                Expected: E-CV fails at EV4, F equal to A (a fit that reports only to `onViewShown` leaves the ref at the corner view).
+//                Observed: E-CV failed at EV4, F equal to A: E-CV: after the Apply and its fit, Current view still sends the earlier box: F [...
 //   E-CV-RESIZE  src/canvas/WorkingCanvas.tsx, the `onResize` handler: remove the `onViewShownRef.current?.(...)` call of the last arm. Expected: E-CV-RESIZE fails, R equal to F'.
+//                Observed: E-CV-RESIZE failed, R equal to F': E-CV-RESIZE: after the map shrank (1280x800 to 1088x680), Current view still sends the earlier box: R [...
 //   E-CV-OPEN    src/App.tsx, the PublishPanel element: availability from the old `hasSettledView` signal (a state set by `onViewportChanged` only; `getViewBox={() => (hasSettledView ? viewBox.get() : null)}`).
 //                Expected: E-CV-OPEN fails, the Current view radio disabled after the first pixels.
+//                Observed: E-CV-OPEN failed, the radio disabled after the first pixels: E-CV-OPEN: the Current view radio is disabled after the first pixels, before any input
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
