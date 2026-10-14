@@ -19,3 +19,14 @@ Out-of-scope: none of ADR / security / wire / guarantee is touched: no ADR file,
 ### Amendments
 
 *(Opens empty; append-only.)*
+
+### Amendment 1 — closing record: PR #221 merged
+
+*Written by the custodian after the merge. References only.*
+
+1. **Merged** by the human at 2026-10-14T21:29:32Z, merge commit c08b3eb26b90e08f550398449ba25f40192e5a61 (two parents: main 8534349a and the branch head cb9a9fd4).
+2. **Gate:** the single combined reviewer gate, PASS with no finding (gate log 521; `state/consults/gates/2026-10-14-known-limitations-item-40-source-comment-gate1-reviewer.md`).
+3. **Item 40's words** stay as they are until the sitting (the human's item 6).
+4. **PLAN:** the node is done, with `{pr: 221}`.
+
+Nothing above is edited.
