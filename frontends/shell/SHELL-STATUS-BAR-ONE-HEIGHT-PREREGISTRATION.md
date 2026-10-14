@@ -491,3 +491,353 @@ Opens empty, append-only.
 
 ## §12. Heavy runs
 The worker's and tester's briefs carry, as written, the paragraph at state/directives/2026-10-06-machine-script-adopted.md:12-22 @ 117aac6cca967bd43dda2f737ccab536f7a7073b sha256:7350977156bed7c94b0da4e8db806ba34c25c6678e65c46447a62d791ba9e8e1. This form names no other rule for running builds.
+
+### Amendment 1 — the human's rulings on OPEN-1 to OPEN-3, and the form restated for OPEN-1 (d) (class 5)
+
+*Drafted by the architect at main 2cf707a3 and appended by the custodian before any code, with no outcome seen. It holds references and replacement text. Each replacement is followed by a clause check, one entry per sentence (s1, s2 …), checked against the code at 2cf707a3. Nothing above is edited.*
+
+1. **The rulings.**
+   - OPEN-1: (d), state/directives/2026-10-14-status-bar-two-lines-current-view-zero-size-1b-open-9-blocks-provenance.md:9 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:60d30eac043c06c6df5c3aa5b9301878a03f0c0f9cd03655c5915d3e8b69b033. Every passage marked [OPEN-1 (a)], [OPEN-1 (b)], [OPEN-1 (c)] or [OPEN-1 (a) or (b)] falls away. Items 2 and 3 below replace the sections it touches.
+   - OPEN-2: (b), state/directives/2026-10-14-status-bar-two-lines-current-view-zero-size-1b-open-9-blocks-provenance.md:10 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:9caa52ff60d1960ea573af62517ba39c3203e989d2bd46ed2c682fd7600584d4. The piece stays disjoint, in slot 2 before b2-piece-1b-recording.
+   - OPEN-3: (b), state/directives/2026-10-14-status-bar-two-lines-current-view-zero-size-1b-open-9-blocks-provenance.md:11 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:213897d57468d922bb7801cbe170876f92aa694740eae102352238cee6a30467. Item 40 is not edited.
+   - The attention strip, state/directives/2026-10-14-status-bar-two-lines-current-view-zero-size-1b-open-9-blocks-provenance.md:12 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:d9173f61dc147319e844a1d6b8e7e4e9a75459e8b722e27cecea4d93e6b4a4c6. §1's strip bullet and §8 item 8 stand.
+
+2. **The sections the ruling names, restated for (d).**
+
+   **§2.1 styles.css**
+   - (a) The `.app` grid's last row track becomes `var(--status-h)` instead of `auto`. The bar's row never depends on its content.
+   - (b) **`.status-bar`:** `height: var(--status-h)` replaces `min-height: 1.5rem` and `max-height: var(--status-max-h)`. The rest of the rule is unchanged: `box-sizing: border-box`, `overflow-y: auto`, `flex-wrap: wrap`, the gap, the padding and the top border. So the items wrap as today, and beyond two lines the bar scrolls inside, as today.
+   - (c) No class or rule is added, and no item's rule changes.
+   - (d) **Comments.** The comment on the `box-sizing` line says that the height includes the padding and the border, so the fit's 48 px reservation is the bar's real height. These are Documentation.
+   - Check:
+     - (a) s1: the track is `auto` today: frontends/shell/src/styles.css:34 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:dcb018dbdc37f212e2f6fc2c09bf3bb82d78db0d1d7cd97c2c2503a6204eb1fa. It is the `status` area's row: frontends/shell/src/styles.css:41 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:c938c5c6cdad1670e46ebb9c91f75f0a8f699db4ebbc0ed5115f5348e31a0e10.
+     - (a) s2: StudioLayout sets the variable from a constant (§2.4 (a)), and no content enters the style object: frontends/shell/src/layout/StudioLayout.tsx:191-201 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:9c1d9b3103c5eed073e7e6ef94504185eafd356fb1405269029b494162798781.
+     - (b) s1: frontends/shell/src/styles.css:162-163 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:b477c0d6a6c7574a9c53053d927eaf76963952161f7b927627fa3ac22b926285.
+     - (b) s2: frontends/shell/src/styles.css:159-172 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:7db1301b36d263e867d332a30315f134e0908ab7395a46d8df42b081755705bb (box-sizing :161, overflow-y :164, flex-wrap :166, gap :168, padding :169, border :171).
+     - (b) s3: the wrap is :166 and the scroll is :164. Two lines is today's cap: frontends/shell/src/layout/layoutConstants.ts:35-36 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:0ce3175273f93fb9dc8c429c6a36fcb5637d75c8afd1661024c9b13aed4d10eb, whose value §2.2 keeps.
+     - (c) s1: no code claim. §8 item 4 (item 3 below) holds it.
+     - (d) s1: the comment line is frontends/shell/src/styles.css:161 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:11328fc8d3ea6fdfe73d24f3c9e8dead7a5ed3a8c6544ebc677c487f8a2468fd. The reservation is frontends/shell/src/layout/layoutState.ts:138 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:88eda6c92865430b601742fa59ae070de95728dd3f336e387dff6603ab6d0c6e.
+     - (d) s2: a classification.
+
+   **§2.2 layout/layoutConstants.ts**
+   - `STATUS_BAR_HEIGHT_PX = 48` replaces `STATUS_BAR_MAX_HEIGHT_PX = 48`; the value is unchanged. Its doc: it bounds the status bar's height, which is fixed at two lines; beyond two lines the bar scrolls inside.
+   - No other constant is added.
+   - The constant names the quantity it bounds (ADR-010 rule 6).
+   - Check:
+     - s1: frontends/shell/src/layout/layoutConstants.ts:35-36 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:0ce3175273f93fb9dc8c429c6a36fcb5637d75c8afd1661024c9b13aed4d10eb.
+     - s2 (the doc): the fixed height is §2.1 (a) and (b), and the scroll is frontends/shell/src/styles.css:164 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:d8e725cfd024c01d1f4bc5bed9d4756a29680fa40083016cf35e7ee4b88e2502. That two lines fit in 48 px rests on run 5: a two-line bar of 800 − 40 − 715.453125 = 44.546875 px (state/consults/2026-10-12-shell-migration-milestone-2-phase-b-e2e-custodian-run-5.md:17 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:f10aa01fd35f6d7d5ff6eedb880b0315686657dce714f8e3e5d8466ad30daeb9, evidence). H2 records it.
+     - s3: no code claim.
+     - s4: the name says height, and the doc says what it bounds.
+
+   **§2.3 layout/layoutState.ts**
+   - The fit's chrome uses `STATUS_BAR_HEIGHT_PX`. Its value is unchanged, so the fit reserves 216 px of chrome as before (40 + 48 + 128), and `effectiveSizes` returns the same sizes for every state and viewport.
+   - Where the doc comments say the status bar is at its cap, they now say it is at its fixed height.
+   - The reducer and `LayoutState` are unchanged.
+   - Check:
+     - s1: the import is frontends/shell/src/layout/layoutState.ts:13 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:a62c407080797107d6034508b3a7cb05950c42c995a9bc964f3c325bde7fdc29, and the sum is frontends/shell/src/layout/layoutState.ts:138 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:88eda6c92865430b601742fa59ae070de95728dd3f336e387dff6603ab6d0c6e. The values are frontends/shell/src/layout/layoutConstants.ts:33-38 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:f8a86ce25c3efbc479d91abcdf53417da88f9bc2edf1a8074a8820961bf39532. The sum is the constant's only use in the fit: frontends/shell/src/layout/layoutState.ts:119-150 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:eba84b6c110b0cb988c78147bcfe00b2a887ccadcd529df9ccaec7d722043d2f.
+     - s2: frontends/shell/src/layout/layoutState.ts:97-98 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:be6b8c66d75071a999b17572a2a6f83e41c7be5967b5e3e3e3a83f8122f3d087 and frontends/shell/src/layout/layoutState.ts:108-110 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:cde6fdf88d5a8bddc7767e3eabc72d9258572e49afddec5b3c06931806fcdf99.
+     - s3: frontends/shell/src/layout/layoutState.ts:31-90 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:702df1d073aea7a612fd68938276a48b014e6219f75a9b890481e716091ed804 is not edited.
+
+   **§2.4 layout/StudioLayout.tsx**
+   - (a) **The CSS variable.** `--status-h` comes from `STATUS_BAR_HEIGHT_PX`, and `--status-max-h` is removed.
+   - (b) **The footer is unchanged.** It holds the status items in §2.5 order, as today.
+   - (c) There is no new state, observer, button, `recordNamed` call or focus stop. `StudioLayoutProps` is unchanged, and App passes nothing new.
+   - (d) The component's doc comment names this form. It says that the status bar's row and height are one value, `STATUS_BAR_HEIGHT_PX`, so a status item coming or going never changes the map's size.
+   - Check:
+     - (a): the variable is set at frontends/shell/src/layout/StudioLayout.tsx:200 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:ea5afe6ef7e3a458aab782139056002c6f1077a020d9eb7bd4eb4657e9643443, and the constant is imported at frontends/shell/src/layout/StudioLayout.tsx:23-29 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:805ffc0447234e11d3317a4b9b201732bb081a5ebb8c0191595ad79bee0fdf9d. Its only CSS reader is frontends/shell/src/styles.css:163 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:ec42bf40a2367cbd8060d431f69684e5d3598b937f8c5b867edf3fa6a3f01d30, which §2.1 (b) removes.
+     - (b): frontends/shell/src/layout/StudioLayout.tsx:335-339 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:4d1968fdaacfeb237feeeb71fed66557fd389c04af0f07c18128f97f5aee4dc5, over frontends/shell/src/layout/contributions.ts:48-55 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:fb9a9cf0348859f32168e60781819505d9edfdb7ea3568287ec0bb4ba774c5a6.
+     - (c) s1: every layout `recordNamed` call is in frontends/shell/src/layout/StudioLayout.tsx:88-110 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:77ac9adbcbbdb339fa8b5473da21b2ca91269537c9a66aa731214f47fa5e2566, and none is added.
+     - (c) s2: frontends/shell/src/layout/StudioLayout.tsx:112-125 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:7ea13cd4a5240d02a61cc7603b00a94c3c9747f4c8d9540383a2aea5022000f9.
+     - (d): the doc comment is frontends/shell/src/layout/StudioLayout.tsx:34-45 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:48c7f3382e87b1cf5a24cb6b7df18bf7f64cafc0266ac2a4b4ef03c7e41d2c83. The map is the `minmax(0, 1fr)` track (frontends/shell/src/styles.css:33-34 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:2faa9f3bbb61db1b9c32dbd28ced91f996e08be695c4ba1a15d292c184a2cfe6). The other row tracks are `--top-bar-h`, the strip's `auto`, `--activity-split`, `--activity-h` and, after §2.1, `--status-h`, and none of the variables is set from a status item (StudioLayout.tsx:191-201 above). The strip's `auto` row is the one the human left alone (item 1), and it holds no status item: frontends/shell/src/layout/StudioLayout.tsx:258-262 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:e39f33fdc0a454d515504665d2bf5c52fcc826638bffd65643cece3d2c9d0851.
+
+   **§2.6 console/surfaceRegistry.ts.** Falls away: no class-C row. Check: §2.4 (c), and the ruling's no-console-row clause (item 1, OPEN-1).
+
+   **§4, the rows the ruling fixes**
+
+   | ID | Kind and file | Asserts | Mutation, and its expected failure |
+   |---|---|---|---|
+   | SB1 | render, src/layout/StudioLayout.test.tsx, a new describe block (the real StudioLayout, slots typed `Slots`, nothing mocked) | `.app`'s `--status-h` is `48px` (`STATUS_BAR_HEIGHT_PX`), and `.app` sets no `--status-max-h` | set `--status-h` from `TOP_BAR_HEIGHT_PX`; fails on the value |
+   | SB2 | render, same | Rendered with `status.selectionEnded` absent, then holding a `.selection-ended` element, then absent again: `.app`'s `--status-h` is the same in all three, and the footer holds the notice only in the second | set `--status-h` to 48 px when the `status.selectionEnded` slot has content (`hasContent`) and to 24 px otherwise; fails on the comparison |
+   | E-STATUS-HEIGHT | e2e, e2e/selection.mjs, run after E-ASK-TWO and before E-DBLCLICK | See below. | in styles.css, the status row back to `auto`, and `.status-bar` back to `min-height: 1.5rem; max-height: 48px` in place of `height: var(--status-h)`; fails at S3 on the canvas height while the notice stands (B shorter than A) |
+
+   - SB3 to SB7, U-FIT (changed), E-STATUS-FULL and E-FOCUS (changed) fall away. U-FIT and E-FOCUS stand unchanged (item 1, OPEN-1). The [OPEN-1 (b)] and [OPEN-1 (c)] paragraphs fall away.
+   - **E-STATUS-HEIGHT, step by step.**
+     - **S0.** `openFixture(page, consoleHandle, FIXTURE_FILTER, label)`; `buildScene(page, consoleHandle, label, { want: 1, min: 1 })`; `useTool` with Select; `useMode` with Add only, as E-SEL-FILTER does; one `clickAt` on the scene's first hit. Poll `readTab` with `pollUntil` until `selected` ≥ 1 and `statusItem` is null. Read A: `canvasRect(page)`, and the bounding-box heights of `.status-bar` and `.attention-strip`.
+     - **S1.** `openFixture` again. Poll until `statusItem` is not null, wait two animation frames, and read B.
+       - **G1** is the ruling's guard (item 1, OPEN-1). Its probe: the top of `.selection-ended`'s box is at or below the bottom of the footer's first element child's box, less 1 px. Both values are recorded.
+       - **G2:** the strip's height in B equals A's.
+       - If either guard is unmet, the step is INCONCLUSIVE (class 2, never a pass).
+     - **S2.** `buildScene` again, then one Select click. Poll until `statusItem` is null and `selected` ≥ 1. Read C, under G2.
+     - **S3.** The canvas's width and height are exactly equal in A, B and C, and the bar's height is 48 in all three.
+     - **Recorded, not asserted:** A's canvas height (§1 predicts 712 at 1280 × 800), and in B the bar's scrollHeight against its clientHeight (H2).
+   - **The proofs:**
+     - the human's property: E-STATUS-HEIGHT, on the real app, with the real notice, at the real window;
+     - the one value wired into the frame: SB1 and SB2;
+     - keyboard order: E-FOCUS, unchanged;
+     - the frame's map minimum: U1's property tests and U-FIT, unchanged.
+   - Check:
+     - the SB harness: frontends/shell/src/layout/StudioLayout.test.tsx:22-73 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:1986db86c345deb2e52db6d03b8f9d4af570579c0df44b17e3c804e2d3e59c04;
+     - the optional slot: frontends/shell/src/layout/contributions.ts:79-83 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:b72904c2f31872b672fe5d5f2d91117eb4e9b1dcefdfa49e11a05b49139f9078;
+     - the style object on `.app`: frontends/shell/src/layout/StudioLayout.tsx:225 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:aede39fae0e25293904808929047a59f1f11b042dfa775b2f94da060303b5274;
+     - `hasContent`: frontends/shell/src/layout/StudioLayout.tsx:73-76 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:2ca9fee9e0dc737ba983a8fe599cec293b6a93198a7b6beef374936faf64b5df;
+     - the e2e calls, in their real shapes: frontends/shell/e2e/selection.mjs:199-203 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:6feaafb60ce8a164364041a2af483b2177a1c5fa2b0a05b3e278cf33f1b182aa, frontends/shell/e2e/selection.mjs:270-280 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:8b3dc2000e6d99ff6fffb5d5a1e2b6ab7f064c90a861f432308ca550eff3066a, frontends/shell/e2e/selection.mjs:163-164 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:8c123f66cd06ff1f1209590e1064c1299fc5020d1716c51591b00a4d401be95d, frontends/shell/e2e/selection.mjs:186-189 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:b36288b255865fb08f60dd666ebc930a005211e572e6d009967e701418530f13, frontends/shell/e2e/selection.mjs:129-138 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:6c94973a5995341fc114debba0db2591bc3910d9ae00e324aa20ae2975b47424 and frontends/shell/e2e/selection.mjs:141-160 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:82fd527fdb7e240b6909b877a57b07f4bf359caab15793bc2070d177e1cce3b2;
+     - Select and Add only: frontends/shell/e2e/selection.mjs:332 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:07cb10c7a18d598d19a0188da84cb5644707a26695cd904d8eb0efe9e216027f and frontends/shell/e2e/selection.mjs:416 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:24b760b7a25d9616ac2806b6eece41e5e15e6e0b805d8ab6065e8540f7a41d57;
+     - the reopen-to-notice pattern: frontends/shell/e2e/selection.mjs:464-468 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:fe69b54d6789c9db6a5ca31b7d90301693b56b8c35c28cffe915794204295f9e;
+     - `canvasRect`: frontends/shell/e2e/lib.mjs:572-579 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:000eee7cef2907f0113e7a10e59cb0dd54799317127928d6c1fc250144098128;
+     - the notice element: frontends/shell/src/App.tsx:2266-2270 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:a634f5cebf8c4098ecabf9af54d4dfbeaab5657358b7a36c982678293931844d;
+     - it clears at the next selection transition: frontends/shell/src/App.selection.test.tsx:414-416 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:bf4d96e35b20defa7eee4de38f1b692ead8501abcac55f6391554e0e6e4adb31;
+     - the strip's class: frontends/shell/src/layout/StudioLayout.tsx:258 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:9c930fff9e3c991320e4b7c8c2f266c904a7998ee37f1e216a758e507a34f921;
+     - U-FIT's sizes stay right because the chrome is still 216. At 1280 × 800 with Activity open: 800 − 216 − (200 + 6) = 378, and 1280 − 260 − 340 − 12 = 668. At 1366 × 768: 768 − 216 − 206 = 346, and 1366 − 600 − 12 = 754. The test is frontends/shell/src/layout/layoutState.test.ts:127-134 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:64d6e1f5c9279ae0429d9e58d69e5c4063a0ed34a92e224daef591000bdf5f08, and the fit is frontends/shell/src/layout/layoutState.ts:138-149 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:bb0f99e44ad1511a9a2ec5d164e66e11717994a51516f3166ea8261bcb197c81.
+
+   **§7, restated**
+   - **Constants.** `STATUS_BAR_HEIGHT_PX = 48`, renaming `STATUS_BAR_MAX_HEIGHT_PX = 48`, with the value unchanged. No other constant, and no z-index.
+   - **Budget.** The command and `<base>` are unchanged.
+
+   | Group | Files (ceiling each) | Lines, at most |
+   |---|---|---|
+   | P product | styles.css ≤ 12, StudioLayout.tsx ≤ 10, layoutConstants.ts ≤ 6, layoutState.ts ≤ 10 | 38 |
+   | T tests | StudioLayout.test.tsx ≤ 70 | 70 |
+   | E e2e | selection.mjs ≤ 90, margin 20 | 110 |
+   | **Total** | **6 files** | **218** |
+
+   - Each group total is under the original table's (164, 208, 190), as §7 requires of a restatement.
+   - **Outside the count:** MANUAL-WALKTHROUGH.md ≤ 30. KNOWN-LIMITATIONS.md and e2e/README.md are not edited.
+   - An overrun is class 8, and this section is never edited to match it.
+   - Check: the value is frontends/shell/src/layout/layoutConstants.ts:36 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:3fa37ac06da8053d9b210e7bcd7940077cf52d5c5f9cace6d58f0396afebdb2e. The rest are declarations.
+
+3. **The consequences, through the rest of the form.**
+
+   **§0.6, restated**
+   - **H1.** With the status row and the bar's height both `var(--status-h)` = 48, the canvas's CSS width and height are identical before the ended-selection notice appears, while it stands and after it clears. Discriminator: E-STATUS-HEIGHT and its mutation. If it fails: I10.
+   - **H2.** At the WebView2 default font size, two lines of status items fit in the 48 px bar without scrolling. Discriminator: run 5's two-line bar (§2.2's check); E-STATUS-HEIGHT records B's scrollHeight against its clientHeight. Recorded, not asserted. If it fails: I2.
+   - **H3 and H4** are unchanged. Amendment 2, RS3, answers H4.
+   - **H5** falls away: nothing is cut.
+
+   **§1, restated**
+   - May claim: unchanged.
+   - May not claim: the first four bullets are unchanged. The fifth becomes: that every status item is in sight without scrolling the bar. Beyond two lines the bar scrolls inside, as it does today.
+   - **No change** to the wire, SKP, the kernel, the engine, the renderer, `src/canvas/`, `src/workspace/`, `src/feature/`, `src/publish/`, App.tsx, or any status item's text, order or role.
+   - **ADR-006:** the piece adds no state and no action. Nothing enters the workspace, and nothing is sent to the kernel.
+   - **ADRs cited:** unchanged.
+   - **Strings:** no new or changed operator string.
+   - **The Activity consequence falls away** (item 1, OPEN-1). The fit's reservation is unchanged, so Activity's clamp is unchanged.
+   - **Declared consequence.** The bar is 48 px tall whatever it holds. Where it held one line it was 24 px, so the map is now 24 px shorter there: at 1280 × 800, with the strip empty and Activity closed, 712 px where run 5 measured 736. This is arithmetic, not a measurement; E-STATUS-HEIGHT records it (A).
+   - Check:
+     - the scroll: frontends/shell/src/styles.css:164 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:d8e725cfd024c01d1f4bc5bed9d4756a29680fa40083016cf35e7ee4b88e2502;
+     - App.tsx: §2.10 below;
+     - no state: §2.4 (c);
+     - Activity's clamp: frontends/shell/src/layout/layoutState.ts:138-141 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:ea636a3cdf9656c6c9f0e1f28a2ffff90e7c455da4aea0574682fb4f6f669fc9;
+     - the one line at 24 px: run 5 (frontends/shell's §0.4 arithmetic over state/consults/2026-10-12-shell-migration-milestone-2-phase-b-e2e-custodian-run-5.md:17 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:f10aa01fd35f6d7d5ff6eedb880b0315686657dce714f8e3e5d8466ad30daeb9);
+     - 712 = 800 − 40 − 0 − 48. The top bar is frontends/shell/src/layout/layoutConstants.ts:34 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:2d0e246f7692fef9636a17c608cb9e59693e051dd6781c443ee30f80f41379c5. The strip is hidden when empty (frontends/shell/src/layout/StudioLayout.tsx:258 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:9c930fff9e3c991320e4b7c8c2f266c904a7998ee37f1e216a758e507a34f921 with frontends/shell/src/styles.css:53-55 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:92af1ac5a78f5e0b11a21f9b639ee53661a5cb95d658aceaa262c304da0d7d47). Activity is closed by default (frontends/shell/src/layout/layoutState.ts:51 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:1a823b58e36c69146854c27e4da4dcd4eafee6f976282754b74bd6ee720346d5), so its rows are 0 (frontends/shell/src/layout/StudioLayout.tsx:196-197 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:d6e18a9b7fc9d074739a39b95ecd9d4d430a378f16441eebc72ba656dfc192b0, frontends/shell/src/layout/layoutState.ts:141 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:b13bce130645d42efb0279e3b033c0f9b2afd1a354d8e900eba9b8a9644b6e19).
+
+   **§2.5 layout/regionParts.tsx.** Falls away: with no cut there is no span and no `title`. The file is not edited. Check: §2.1 (b) keeps the wrap.
+
+   **§2.7, restated: no existing test changes.**
+   - layoutState.test.ts is not edited. The defaults' predicted map size does not change: `[668, 378]` and `[754, 346]` stand (§4's check).
+   - layout.mjs is not edited.
+     - E-FOCUS's walk has no `status` stop, and (d) adds none: frontends/shell/e2e/layout.mjs:217 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:c72011cbbc1bd335826ad48322e0b2a2645cc7b1f4acd86b60b581418a1beb5a.
+     - E-FLOOR's comment names caps of 128 and 48, which stay true, and its assertion is predicted to pass: frontends/shell/e2e/layout.mjs:268-274 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:3c171f619cd5cd48ba3f8d19bc771d45fa9f4c0a6780bf4b673ffe43ed120c9d.
+   - e2e/README.md is not edited (item 4).
+   - App.tsx is not edited.
+   - **New:** SB1 and SB2 in StudioLayout.test.tsx, and E-STATUS-HEIGHT in selection.mjs.
+
+   **§2.8, restated: none.** No new or changed operator string. All four placeholders drop: the toggle's label, the footer's `aria-label`, the class-C statement, and item 40's drafted replacement with its clause list. Check: §2.4 (c), and OPEN-3 (b) (item 1).
+
+   **§2.9, restated.** A new Part, appended at the file's tail with a blank result log, under the letter Z (Amendment 2, RS8).
+
+   **§9's Operator rows (Part Z), restated**
+   - **Z0:** read §10, the last amendment first.
+   - **Z1:** open `filter-zoned.parquet`, choose Select, and click one feature. Open the file again: the ended-selection notice is in the status bar. **Felt:** did the map move or change size? Click a feature with Select: the notice clears. Did the map move?
+   - **Z2:** with a file open and no notice, read the bar. It is two lines tall while it holds one line. Record anything that reads as wrong.
+   - **Z3:** with Narrator on, open the file again over a selection. Record whether the whole notice is read.
+   - **Z4:** at 1024 × 640 (DevTools device toolbar), open the file again over a selection and read the bar. It stays two lines tall, and if its items need more it scrolls inside. Record whether the notice needed scrolling to be seen.
+   - The former Z2, Z3 and Z6 fall away.
+   - Check: Z1 is E-STATUS-HEIGHT's felt twin; Z2 is §2.1 (b); Z4 is frontends/shell/src/styles.css:164 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:d8e725cfd024c01d1f4bc5bed9d4756a29680fa40083016cf35e7ee4b88e2502.
+
+   **§2.10, restated**
+   - **May edit** (under `frontends/shell/`):
+     - `src/styles.css`;
+     - `src/layout/StudioLayout.tsx`, `src/layout/layoutConstants.ts` and `src/layout/layoutState.ts`;
+     - `src/layout/StudioLayout.test.tsx` (one new describe block, SB1 and SB2);
+     - `e2e/selection.mjs` (E-STATUS-HEIGHT before E-DBLCLICK; its name in the header's step list; its recorded-mutation lines);
+     - `MANUAL-WALKTHROUGH.md` (Part Z only).
+   - **Not edited:**
+     - `src/App.tsx`;
+     - `src/layout/regionParts.tsx`, `contributions.ts`, `statusItems.ts`, `actionRegistry.ts` and `layoutState.test.ts`;
+     - `src/console/surfaceRegistry.ts`;
+     - `e2e/layout.mjs` and `e2e/README.md`;
+     - `App.selection.test.tsx`, `App.layout.test.tsx`, `package.json` and `src-tauri/**`;
+     - everything under `src/canvas/`, `src/skp/`, `src/streaming/`, `src/residency/`, `src/workspace/`, `src/feature/` and `src/publish/`;
+     - every walkthrough Part but Z;
+     - the root `KNOWN-LIMITATIONS.md`;
+     - every file outside `frontends/shell`, records excepted.
+   - **Disjoint from the Current view fix** (Amendment 2, item 4). **Placement:** slot 2 before b2-piece-1b-recording (item 1, OPEN-2), with code starting after Amendment 2. No path under `protocol/`.
+   - Check: the SB harness's file is frontends/shell/src/layout/StudioLayout.test.tsx:1-18 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:c4b12c54d11a2dbc0cefd2829526ee269dc6b3bc8cba239d56be2de139b30dc1. The step list is frontends/shell/e2e/selection.mjs:7-8 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:f8c65f6aba1ae3f2021a1d0a4335172b31baea42ad5b152c99015c9e751658ad.
+
+   **§2.11.** The Not-claimed bullet becomes: whether the bar is a keyboard focus stop when its items need more than two lines and it scrolls. Chromium may make a scrolling element that has no focusable child focusable. This piece does not test it, and in E-FOCUS's run the bar does not scroll (Amendment 2, RS5). The rest of §2.11 is unchanged.
+
+   **§3, restated**
+   - **Fixture:** unchanged.
+   - **Predicted:**
+     - every existing suite passes at the head, with no test edited;
+     - SB1, SB2 and E-STATUS-HEIGHT pass;
+     - under E-STATUS-HEIGHT's mutation, the reading taken while the notice stands is shorter than A's. Run 5 gives 715.453125 against 736 at 1280 × 800: recorded, not asserted;
+     - E-FOCUS's walk is unchanged;
+     - H3's diagnostic run passes;
+     - wherever the bar held one line, every e2e suite now runs on a map 24 px shorter than at its last green run (§1). They are predicted to pass because they read the live box (frontends/shell/e2e/lib.mjs:572-579 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:000eee7cef2907f0113e7a10e59cb0dd54799317127928d6c1fc250144098128; frontends/shell/e2e/layout.mjs:75-91 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:ed6ffeb3cfcf2ea122b68096bf7ba5661d36aa9043d9872d105114a20d653fe7; frontends/shell/e2e/pan-anchor.mjs:130-131 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:a50ac717f4635cdaf3813cd32b9f74a700e548173d128255dccc0a904f7109b6). A failure is I7.
+
+   **§5, restated**
+   - **Predicted:** H1 to H4 (§0.6 as restated) and §3.
+   - **Declared unchanged:**
+     - every status item's text, order, class, role and style;
+     - the bar's wrap, gap, padding and scroll;
+     - `STATUS_ITEMS`, `Slots`, App.tsx and the Feature tab;
+     - the attention strip, its row and its cap;
+     - `LayoutState`, the reducer, the fit's 216 px of chrome, the map minimum, and U-FIT's sizes;
+     - every existing unit and e2e test, E-FOCUS and E-FLOOR included;
+     - E-DBLCLICK last;
+     - the dependencies and the lockfile.
+   - **Declared changed:** the map's height wherever the bar held one line (§1).
+   - **Invalidators:**
+     - I2 becomes: two lines of items do not fit in the 48 px bar in E-STATUS-HEIGHT's B at the default font size (H2).
+     - I4 becomes: the render harness (jsdom, frontends/shell/vitest.config.ts:10 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:01da41a69160e3c74942adc39630cd615223ae0232d19b70d7f7186ebc26ce31) cannot read a CSS custom property that StudioLayout sets on `.app`, so SB1 and SB2 cannot be built as written.
+     - I1, I3 (with G1 as restated) and I5 to I10 are unchanged.
+   - **Falsification:** the form is wrong if two fixed lines cannot hold the bar's items in the ordinary case at the default font size. The cut clause falls away.
+
+   **§6, restated**
+   - **Assertions:** SB1, SB2, E-STATUS-HEIGHT and every existing row.
+   - **Observations:** H2's fit, A's canvas height, and H3's diagnostic order run.
+   - **Measurements and forced scale factors:** none.
+   - **The human's:** Part Z's felt rows. There is no P6 sight, because there is no new string.
+
+   **§8, restated items** (the rest unchanged)
+   - 4. A status item's text changed, truncated or removed from the DOM; an item cut by CSS; or the bar's wrap or scroll removed.
+   - 5. Any region's size depending on the status bar's content.
+   - 9. Any new or changed operator string.
+   - 15. E-DBLCLICK moved from last, or any existing test or assertion changed.
+   - 16. Any edit to KNOWN-LIMITATIONS.md (OPEN-3 (b)).
+   - 17 (new). A button, toggle, console row, focus stop or new string for the status bar (OPEN-1 (d)).
+   - 18 (new). Any edit to e2e/README.md (OPEN-2 (b)).
+
+   **§9, restated bullets**
+   - The README lines of item 4 are deferred to `e2e-readme-status-bar-steps` (item 1, OPEN-2). Every other Documentation finding is fixed in the PR.
+   - The wording-block rule: §2.8 has no strings, and item 40 is not edited. Comments fall under item 2d.
+   - The suites are unchanged. The Operator rows are Part Z as restated above.
+
+4. **The README lines that move to `e2e-readme-status-bar-steps` (OPEN-2 (b)), as (d) leaves them.**
+   - frontends/shell/e2e/README.md:770 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:6da77c9c4dbb5dae1d1679841770791db8ceaac162845e8742248cba51f932f2, the selection entry's Asserted list:
+     - (i) E-STATUS-HEIGHT joins the list before E-DBLCLICK;
+     - (ii) E-DBLCLICK's parenthetical gives run 5's reason for running it last and names this piece as the move. That clause becomes history when this piece merges: the notice still takes a second line, but the map no longer moves. E-DBLCLICK stays last (§8 item 15).
+   - Unchanged under (d):
+     - frontends/shell/e2e/README.md:754 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:382acb61fa1fca8c310510df24991d555d530586d43bfb73eb92d9cf073ef03c (E-FOCUS's sentence; E-FOCUS is unchanged);
+     - frontends/shell/e2e/README.md:768 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:37ba93945310fec7f2d1aae23e356087323a448b1d2880919ec8fc8b9252b257;
+     - frontends/shell/e2e/README.md:774 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:aaea2844e8cac545942f546a9d881d0b7cac8cfcd70cfaab04986d5e3a1b001b.
+   - The node lands after both this piece and the Current view fix (§11, OPEN-2 (b)). The window between the merges is accepted (item 1, OPEN-2).
+
+5. **Generation:** the node's generation goes up by one.
+   **Superseded index:**
+   - §11's OPEN-1 to OPEN-3 → item 1;
+   - §2.1 to §2.4, §2.6, §4's rows and §7 → item 2;
+   - §0.6, §1, §2.5, §2.7 to §2.11, §3, §5, §6, §8 and §9 → item 3;
+   - §0.2's disclosure-pattern bullet, and §0.5's presence, recorder and render-harness bullets → fall away with OPEN-1 (a);
+   - §2.7's README bullet → item 4.
+
+Nothing above is edited.
+
+### Amendment 2 — the re-sweep at the code base, main 2cf707a3 (class 3; no class 1)
+
+*Drafted by the architect at main 2cf707a37be51100865999a5bd2991a8d9d1762f, before any code. PR #217 merged at 71fd2c4f (branch head 3d9e42e1), and #215 and #216 have merged since the form was drafted. The custodian adds each pin's sha256 by script. Where a row says the lines are the same, the proof is that the hash at 2cf707a3 equals the form's hash; if it differs, the row is a changed re-pin and is reported.*
+
+1. **RS1 to RS9 at 2cf707a3.**
+
+| Item | Answer |
+|---|---|
+| RS1 | Yes. `selectionEnded` is the last of `STATUS_ITEMS` (frontends/shell/src/layout/contributions.ts:48-55 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:fb9a9cf0348859f32168e60781819505d9edfdb7ea3568287ec0bb4ba774c5a6) and the one optional slot (frontends/shell/src/layout/contributions.ts:79-83 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:b72904c2f31872b672fe5d5f2d91117eb4e9b1dcefdfa49e11a05b49139f9078). App renders one `div.selection-ended` with `role="status"` and the text `noticeText(notice)` (frontends/shell/src/App.tsx:2266-2270 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:a634f5cebf8c4098ecabf9af54d4dfbeaab5657358b7a36c982678293931844d; frontends/shell/src/feature/FeatureTab.tsx:68-76 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:b98c0ad2f3344414b3866d30a04843ad33fd35fd84e2b2f3e2d16970f70565b0). It clears at the next selection transition (frontends/shell/src/App.selection.test.tsx:414-416 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:bf4d96e35b20defa7eee4de38f1b692ead8501abcac55f6391554e0e6e4adb31, inside RB4). Not I1. |
+| RS2 | The props are frontends/shell/src/layout/StudioLayout.tsx:112-125 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:7ea13cd4a5240d02a61cc7603b00a94c3c9747f4c8d9540383a2aea5022000f9, as §0.5 says. The footer is frontends/shell/src/layout/StudioLayout.tsx:335-339 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:4d1968fdaacfeb237feeeb71fed66557fd389c04af0f07c18128f97f5aee4dc5. `STATUS_ITEMS` and `Slots` are as in RS1. `STATUS_BAR_MAX_HEIGHT_PX` is declared at frontends/shell/src/layout/layoutConstants.ts:36 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:3fa37ac06da8053d9b210e7bcd7940077cf52d5c5f9cace6d58f0396afebdb2e and read at frontends/shell/src/layout/StudioLayout.tsx:27 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:a62c407080797107d6034508b3a7cb05950c42c995a9bc964f3c325bde7fdc29, frontends/shell/src/layout/StudioLayout.tsx:200 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:ea5afe6ef7e3a458aab782139056002c6f1077a020d9eb7bd4eb4657e9643443, frontends/shell/src/layout/layoutState.ts:13 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:a62c407080797107d6034508b3a7cb05950c42c995a9bc964f3c325bde7fdc29 and frontends/shell/src/layout/layoutState.ts:138 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:88eda6c92865430b601742fa59ae070de95728dd3f336e387dff6603ab6d0c6e. `--status-max-h` is set at StudioLayout.tsx:200 and read at frontends/shell/src/styles.css:163 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:ec42bf40a2367cbd8060d431f69684e5d3598b937f8c5b867edf3fa6a3f01d30. No test or e2e file reads either. |
+| RS3 | Five items. **Residency:** `.residency-status`, role status (frontends/shell/src/App.tsx:2195-2199 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:2f6e19ffd2d8060bfa5aba0102341336b9e166d661581f64d1220682097ba333); its longest text is an over-budget sentence with a suffix (frontends/shell/src/residency/residencyStatus.ts:464-474 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:eefb44a1f952b31b14b530a189e636948db7c5d8c8364a251acc8702e2435171). **Scan mirror:** `.status-scan-liveness`, no role (frontends/shell/src/layout/regionParts.tsx:208-213 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:052fe61f70c736116828dfd94d3c1431e7090d013d930b6549dc36c53f6116ba). **Scan incomplete:** `.scan-incomplete`, role status (frontends/shell/src/App.tsx:2209-2213 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:ba3b0fa6168d760e66b4a4eaf9b7bb040aa87ef8500e09d794111aeb40a9afad). **Watcher:** `.status-source-watch`, role status; its longest text is the degraded form (frontends/shell/src/layout/statusItems.ts:27-35 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:4710944952345cae029db5a1211d6fbdd0fd5a9df3df3f2fbc656e6705bfe7e9). **Ended selection:** as in RS1. Every read of a status item is its textContent or its presence (for example frontends/shell/e2e/selection.mjs:155 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:b4cd35d2a725b6241efa298cbe2c320ded3b4c7d195044c97007af8b68926264, frontends/shell/e2e/layout.mjs:438 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:2620b052278ee849011d12ee3fe2ad1bab96dbf97b698e9cdde5d82c135f3d0d, frontends/shell/e2e/residency-harness.mjs:846-849 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:affc8d7ea1da71380157fb5c2afb7bb901feaff6f02eee6a5d391ffc5c6385ea, frontends/shell/src/App.selection.test.tsx:257 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:e890f13737765edb563f6e60049bcd636833f7f596a1387299ad25cc47700ec7, frontends/shell/src/App.lateResult.test.tsx:606 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:b58d64d0cc41f320fad36cf9a0ac9a17c21ba58d5178f96e57896e9745cbbb55). There are two other reads, neither an item read. A page-wide `innerText` filtered to export lines (frontends/shell/e2e/selection.mjs:104-111 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:2889472451f6dad4c962001f6f127963b5cd0236d7e3c71bd209d9107d6402ca) sees the same text, since nothing is cut. E-FLOOR reads the bar's height (frontends/shell/e2e/layout.mjs:303-307 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:d14940156c0e4752dad1be599245f7d9d5fb0ba3fbf18a482d0d962f8133437d); its assertion is the map minimum, predicted to pass. No I7. |
+| RS4 | The order is frontends/shell/e2e/selection.mjs:761-787 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:613cb639fc7d14fdf1c6d3aabf27017c21b774ce021ebff2574f5f6f4848c916, with E-DBLCLICK last at frontends/shell/e2e/selection.mjs:787 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:9635711c3d226ffb5ae5558a1534bb73276c85c3b0f2ddf1177b1cc8580801ee. `readTab`'s `statusItem` is the textContent of `.selection-ended` (frontends/shell/e2e/selection.mjs:155 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:b4cd35d2a725b6241efa298cbe2c320ded3b4c7d195044c97007af8b68926264). `openFixture(page, consoleHandle, path, label)` is frontends/shell/e2e/selection.mjs:199-203 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:6feaafb60ce8a164364041a2af483b2177a1c5fa2b0a05b3e278cf33f1b182aa. `buildScene(page, consoleHandle, label, { want, min })` is frontends/shell/e2e/selection.mjs:270-280 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:8b3dc2000e6d99ff6fffb5d5a1e2b6ab7f064c90a861f432308ca550eff3066a and returns `{ hits, rect, notch }`. `useTool(page, name)` and `useMode(page, label)` are frontends/shell/e2e/selection.mjs:163-164 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:8c123f66cd06ff1f1209590e1064c1299fc5020d1716c51591b00a4d401be95d. `canvasRect` is frontends/shell/e2e/lib.mjs:572-579 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:000eee7cef2907f0113e7a10e59cb0dd54799317127928d6c1fc250144098128: the `.working-canvas` box, or null. Amendment 1's E-STATUS-HEIGHT is written in these shapes. |
+| RS5 | E-FOCUS's expected walk has no `status` stop (frontends/shell/e2e/layout.mjs:217 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:c72011cbbc1bd335826ad48322e0b2a2645cc7b1f4acd86b60b581418a1beb5a); a focus inside the footer is named `status` at frontends/shell/e2e/layout.mjs:207 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:f2146e2ee6adc9c59f3a620f8187487b8c335acf39c2ab0f9a012779810db888. In an ordinary run the bar holds the watcher item: the suite admits filter-zoned (frontends/shell/e2e/layout.mjs:106-115 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:bd6a35c4eebe1a2474ad78ff0f5100cd21e69ed810beff037613a2150614e915), and the item renders for an admitted dataset with no ended session (frontends/shell/src/App.tsx:2217-2219 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:48b6a7e93c608f8b7bcc8e5b5ee879f859af25ce9cd614676c8b6a2cd2de0f9f; frontends/shell/src/layout/statusItems.ts:27-28 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:751a07033c7ad6fd52f1089f0d39baf904f77a375ca52608b66e2fd557ebb9ae). No item holds a focusable element, and the bar does not scroll in that state, so E-FOCUS is unchanged. E-FLOOR's probe is frontends/shell/e2e/layout.mjs:285-299 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:f1f040efe7aa3cabbaf901f4041c7dcb8ca09eb141bc12462d4f005bfde777a9, and its assertion is frontends/shell/e2e/layout.mjs:309-310 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:a71dcc35eaa35a67a8a52737b4f05e957d02bad514a55fe28328caff0a12fe4d: 480 × 320 at 1024 × 640, unaffected by a fixed 48. |
+| RS6 | Not merged: `e2e/export-view.mjs` is absent at 2cf707a3, and the fix enters slot 1 now. Under OPEN-2 (b) this piece does not edit e2e/README.md, so the answer changes nothing. |
+| RS7 | The class-C layout rows are frontends/shell/src/console/surfaceRegistry.ts:275-323 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:17b49102d32771843b7772727a4a63c43ec3a8afc3b818f466e6a02a63cc28e2. Under (d) the piece adds no `recordNamed` call and no row (Amendment 1, §2.4 (c) and §2.6), so it needs no tie. |
+| RS8 | In use: A to N, P (twice), Q, R, S, T, U, V, X and W (frontends/shell/MANUAL-WALKTHROUGH.md:1808 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:1f88d5e46b14ae313cf26b223689c59481b95c6d44985d2000c4ea3e0c52541e is W, the last). Y belongs to the Current view fix (state/consults/2026-10-14-export-current-view-resweep-architect.md:58 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:cfea392dd60e5b70468b444c7394cbd6f8aa4f4cca40f4203c6a8ea6590b9248). Z is unused, so this Part is Z. |
+| RS9 | Item 40 is KNOWN-LIMITATIONS.md:382-384 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:e577fa251361c4d398d7ec98781f6379dbd25ba81609aedbe3b209a45fc6a3f2. Its status-bar sentence is KNOWN-LIMITATIONS.md:383 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:f51e2e55d1c8cbbab2896ab6b45a9560911082a7e7b366dd8c0feeb4be1c9825, moved 6 lines by item 42 at KNOWN-LIMITATIONS.md:191 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:5e99269df64111a8c264fa9d45ef54394431f182ebb4616ac6f919a14c05ee99. Its words are unapproved (the comment at :384), and the human ruled OPEN-3 (b): they stand as written and are seen at the sitting (Amendment 1, item 1). Not edited. |
+
+2. **Class 3 rows.**
+
+   **The `@ d59f1a6a` branch pins, now pinned on main.** No row changes text; the d59f1a6a text was compared in the worktree only for App.tsx, selection.mjs:787 and item 40.
+
+| Place in the form | Old pin | New pin | Change |
+|---|---|---|---|
+| §0.4 the footer | line 335-339 of StudioLayout.tsx | frontends/shell/src/layout/StudioLayout.tsx:335-339 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:4d1968fdaacfeb237feeeb71fed66557fd389c04af0f07c18128f97f5aee4dc5 | none |
+| §0.4 the list | line 48-55 of contributions.ts | frontends/shell/src/layout/contributions.ts:48-55 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:fb9a9cf0348859f32168e60781819505d9edfdb7ea3568287ec0bb4ba774c5a6 | none |
+| §0.4, §0.5 the optional slot and `Slots` | :79-83 @ d59f1a6a; line 79-83 of contributions.ts | frontends/shell/src/layout/contributions.ts:79-83 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:b72904c2f31872b672fe5d5f2d91117eb4e9b1dcefdfa49e11a05b49139f9078 | none; the bare `:79-83` gets its path |
+| §0.4, §2.8 the render | line 2266-2270 of App.tsx; App.tsx:2266-2270 @ d59f1a6a | frontends/shell/src/App.tsx:2266-2270 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:a634f5cebf8c4098ecabf9af54d4dfbeaab5657358b7a36c982678293931844d | none; §2.8's short path gets its full path (the bullet falls away, Amendment 1 item 3) |
+| §0.4 `noticeText` | line 68-76 of FeatureTab.tsx | frontends/shell/src/feature/FeatureTab.tsx:68-76 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:b98c0ad2f3344414b3866d30a04843ad33fd35fd84e2b2f3e2d16970f70565b0 | none |
+| §0.4, §2.8 the tab | line 128-132; FeatureTab.tsx:128-132 @ d59f1a6a | frontends/shell/src/feature/FeatureTab.tsx:128-132 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:ee4d82a73dea399880903ba050fdd5f123faad9065919d107cc97c19fe5edc11 | none; full path, as above |
+| §0.4 the style | line 642-652 of styles.css | frontends/shell/src/styles.css:642-652 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:403c97445da0f7e03d1be8e43e097bf50c9af152a3c6a20e485db8bce42bef54 | none |
+| §0.4 RB4 | line 399-431 of App.selection.test.tsx | frontends/shell/src/App.selection.test.tsx:399-431 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:97fbc3ff8907f456d8a7bd20b83a976ae0dfa081365a933775a5f4734565fdcb | none |
+| §0.4 E-DBLCLICK last | line 787 of selection.mjs | frontends/shell/e2e/selection.mjs:787 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:9635711c3d226ffb5ae5558a1534bb73276c85c3b0f2ddf1177b1cc8580801ee | none |
+| §0.4 scan incomplete | line 2209-2213 of App.tsx | frontends/shell/src/App.tsx:2209-2213 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:ba3b0fa6168d760e66b4a4eaf9b7bb040aa87ef8500e09d794111aeb40a9afad | none |
+| §0.4 item 40 | line 376-378 of KNOWN-LIMITATIONS.md | KNOWN-LIMITATIONS.md:382-384 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:e577fa251361c4d398d7ec98781f6379dbd25ba81609aedbe3b209a45fc6a3f2 | moved +6 (item 42 inserted); text unchanged |
+| §2.8 item 40's sentence | line 377 of KNOWN-LIMITATIONS.md | KNOWN-LIMITATIONS.md:383 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:f51e2e55d1c8cbbab2896ab6b45a9560911082a7e7b366dd8c0feeb4be1c9825 | moved +6; the bullet falls away |
+| §0.5 the props | line 112-125 of StudioLayout.tsx | frontends/shell/src/layout/StudioLayout.tsx:112-125 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:7ea13cd4a5240d02a61cc7603b00a94c3c9747f4c8d9540383a2aea5022000f9 | none |
+| §0.5 the render harness | line 174; line 453-457 of App.layout.test.tsx | frontends/shell/src/App.layout.test.tsx:174 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:4bd10d84582eceaacb3c7e0ab966664237252be92850cf0fe4f28a60c0fbe26a; frontends/shell/src/App.layout.test.tsx:453-457 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:6d7b3c5390e9034025e8f11a1705535e5338bcfbbb5d185f78116361562c4d49 | none (no longer bears under (d)) |
+| §0.5 `readTab` | line 140-160 of selection.mjs | frontends/shell/e2e/selection.mjs:140-160 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:b23b5ffd47fdb4cd56c1bee0b83d8788f3e276a280ab8fbff0dd5e7d47e98add | none |
+| §0.5 `useTool`, `useMode` | line 163-164 | frontends/shell/e2e/selection.mjs:163-164 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:8c123f66cd06ff1f1209590e1064c1299fc5020d1716c51591b00a4d401be95d | none |
+| §0.5 `openFixture` | line 199-203 | frontends/shell/e2e/selection.mjs:199-203 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:6feaafb60ce8a164364041a2af483b2177a1c5fa2b0a05b3e278cf33f1b182aa | none |
+| §0.5 `buildScene` | line 265-280 | frontends/shell/e2e/selection.mjs:265-280 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:1454aba7e20e7c24fc4d3aed4eba87d1e4c026ee023849fb50e2bc93f9367142 | none |
+| §0.5 `canvasRect` | line 572-579 of lib.mjs | frontends/shell/e2e/lib.mjs:572-579 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:000eee7cef2907f0113e7a10e59cb0dd54799317127928d6c1fc250144098128 | none |
+
+   **The `@ 117aac6c` pins whose lines moved or changed.**
+
+| Place in the form | Old pin | New pin | Change |
+|---|---|---|---|
+| §0.4 the CSS variable | frontends/shell/src/layout/StudioLayout.tsx:180 @ 117aac6cca967bd43dda2f737ccab536f7a7073b sha256:ea5afe6ef7e3a458aab782139056002c6f1077a020d9eb7bd4eb4657e9643443 | frontends/shell/src/layout/StudioLayout.tsx:200 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:ea5afe6ef7e3a458aab782139056002c6f1077a020d9eb7bd4eb4657e9643443 | moved +20 by phase B; text unchanged if the hashes match |
+| §0.4 the footer | frontends/shell/src/layout/StudioLayout.tsx:306-310 @ 117aac6cca967bd43dda2f737ccab536f7a7073b sha256:4d1968fdaacfeb237feeeb71fed66557fd389c04af0f07c18128f97f5aee4dc5 | frontends/shell/src/layout/StudioLayout.tsx:335-339 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:4d1968fdaacfeb237feeeb71fed66557fd389c04af0f07c18128f97f5aee4dc5 | moved +29 |
+| §0.5 the `recordNamed` call sites | frontends/shell/src/layout/StudioLayout.tsx:83-105 @ 117aac6cca967bd43dda2f737ccab536f7a7073b sha256:77ac9adbcbbdb339fa8b5473da21b2ca91269537c9a66aa731214f47fa5e2566 | frontends/shell/src/layout/StudioLayout.tsx:88-110 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:77ac9adbcbbdb339fa8b5473da21b2ca91269537c9a66aa731214f47fa5e2566 | moved +5 |
+| §0.5 the focus rule | frontends/shell/src/layout/StudioLayout.tsx:132-144 @ 117aac6cca967bd43dda2f737ccab536f7a7073b sha256:f737b80ed7d16f075e4f2b5d0969baba5ec4d463085bcab504184c4dd695e221 | frontends/shell/src/layout/StudioLayout.tsx:140-152 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:f737b80ed7d16f075e4f2b5d0969baba5ec4d463085bcab504184c4dd695e221 | moved +8 |
+| §0.5 the class-C layout rows | frontends/shell/src/console/surfaceRegistry.ts:275-324 @ 117aac6cca967bd43dda2f737ccab536f7a7073b sha256:dc05b341f5abc2dc005e451fcd83e8104e9e75806e350b22fe8c945c8b17afde | frontends/shell/src/console/surfaceRegistry.ts:275-323 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:17b49102d32771843b7772727a4a63c43ec3a8afc3b818f466e6a02a63cc28e2 | the seven rows end at :323, and :324 now opens phase B's `tool.set` row; :300's statement names the Feature tab. The hash comparison names what changed |
+
+   **The `@ 117aac6c` pins read at the same lines** (proved unchanged if the hashes match):
+   - styles.css :34 and :159-172;
+   - layoutConstants.ts :35-36;
+   - layoutState.ts :138;
+   - SHELL-MIGRATION-MILESTONE-1-PREREGISTRATION.md :163-172;
+   - the run-5 record, :17;
+   - residencyStatus.ts :439-473;
+   - regionParts.tsx :177-188, :196-214, :207, :216-225 and :219;
+   - statusItems.ts :27-35;
+   - MANUAL-WALKTHROUGH.md :215-216, :245 and :247;
+   - surfaceRegistry.ts :266-274;
+   - layout.mjs :75-91, :190-226 and :268-325;
+   - layoutState.test.ts :127-134;
+   - EXPORT-CURRENT-VIEW-AFTER-UNREPORTED-FIT-PREREGISTRATION.md :181-197;
+   - state/directives/2026-10-06-machine-script-adopted.md :12-22.
+
+3. **Class 1 rows: none.** No interface differs from §0.5, so I1 and I7 do not fire. The plan changes come from Amendment 1 (the ruling), not from this re-sweep.
+
+4. **Disjoint from the Current view fix.**
+   - **The fix's paths:** its §2.6 (frontends/shell/EXPORT-CURRENT-VIEW-AFTER-UNREPORTED-FIT-PREREGISTRATION.md:181-197 @ 2cf707a37be51100865999a5bd2991a8d9d1762f sha256:08d5801f68f16e73b83f69ac50b86cea251396085c412f862cced1ae809716fb) as its re-sweep reads it, plus the 2026-10-14 ruling's `getViewBox` source comment, which lands in App.tsx or PublishPanel.tsx. They are:
+     - App.tsx, PublishPanel.tsx and types.ts;
+     - App.selection.test.tsx and PublishPanel.test.ts;
+     - new e2e/export-view.mjs and package.json;
+     - e2e/README.md;
+     - MANUAL-WALKTHROUGH.md (Part Y);
+     - the root KNOWN-LIMITATIONS.md (item 42's note);
+     - src-tauri/src/publish.rs.
+   - **This piece's paths** (Amendment 1, §2.10):
+     - styles.css;
+     - StudioLayout.tsx, layoutConstants.ts and layoutState.ts;
+     - StudioLayout.test.tsx;
+     - e2e/selection.mjs;
+     - MANUAL-WALKTHROUGH.md (Part Z).
+   - **The only file both touch** is MANUAL-WALKTHROUGH.md, and the two Parts count as separate paths (§2.10). Both append at the tail, so the second merge keeps both Parts. Neither piece has a path under `protocol/`.
+   - **The zero-size note is unaffected.** With the bar fixed at 48, the map's height reaches 0 at a window up to 24 px taller than before. The fix's added condition (the map has a width and a height) is stated on the map's size, not on a window size, so it is unaffected.
+
+5. **The custodian's hash check,** by script before commit, at main 2cf707a37be51100865999a5bd2991a8d9d1762f:
+   - **The form's `@ 117aac6c` pins:** 28 in all. 23 hash equal at the same lines at 2cf707a3. The 5 that differ are exactly the moved rows of item 2's second table.
+   - **The `@ d59f1a6a` rows:** d59f1a6a is in main's history, so every row of item 2's first table (19 rows, 20 pins) was compared there, not only the three read in the worktree. Each pin hashes equal at its new pin, item 40's two rows included (moved +6).
+   - **The moved rows:** the four StudioLayout.tsx rows hash equal at their new lines. surfaceRegistry.ts's rows (275-324 at 117aac6c; 275-323 at 2cf707a3) differ in one line only, line 300: its statement names the Layer, Style and Feature tabs where it named the Layer and Style tabs. Under OPEN-1 (d) the piece adds no class-C row, so the change bears on nothing here.
+   - **Every pin above** carries its full revision and its sha256 over the whole cited lines, computed by the same script.
+
+Nothing above is edited.
