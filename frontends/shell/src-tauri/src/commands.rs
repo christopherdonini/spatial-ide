@@ -4,8 +4,8 @@
 //! Every Tauri command in this crate. Two families, kept visually distinct so a reviewer can tell
 //! them apart at a glance:
 //!
-//! - **SKP v0** (`open_dataset`, `describe`, `viewport_query`, `cancel`, `close_dataset`) — each
-//!   takes the exact request struct `protocol/skp` defines and returns the exact response or
+//! - **SKP v0** (`open_dataset`, `describe`, `viewport_query`, `cancel`, `close_dataset` and, from
+//!   `skp/0.12`, `record_step`) — each takes the exact request struct `protocol/skp` defines and returns the exact response or
 //!   `SkpError`. No renaming, no remapping: the same type is the fixture-verified wire shape and
 //!   the Tauri command's own argument/return type, so there is nothing here to drift.
 //! - **Binding-local** (`binding_*`) — named so they cannot be mistaken for SKP, excluded from the
@@ -20,11 +20,12 @@ use std::sync::{Arc, Mutex};
 
 use spatial_engine::CancelToken;
 use spatial_kernel::permission::GrantSet;
+use spatial_kernel::session_history::StepRecorder;
 use spatial_kernel::skp::SkpHost;
 use spatial_skp::v0::{
     CancelRequest, CancelResponse, CloseDatasetRequest, CloseDatasetResponse, DescribeRequest,
-    DescribeResponse, OpenDatasetRequest, OpenDatasetResponse, SkpError, ViewportQueryRequest,
-    ViewportQueryResponse,
+    DescribeResponse, OpenDatasetRequest, OpenDatasetResponse, RecordStepRequest,
+    RecordStepResponse, SkpError, ViewportQueryRequest, ViewportQueryResponse,
 };
 use tauri::{Emitter, Manager, State};
 // Entry-40 pass: `AppHandle::try_state` (used by `open_dataset`/`close_dataset` below) is a
@@ -127,6 +128,25 @@ pub fn close_dataset(
         tasks.stop(&dataset_for_stop);
     }
     result
+}
+
+/// **Runs on `spawn_blocking`.** One write and one flush of the session history
+/// (`kernel/src/session_history.rs`), which no task on the async runtime or the UI thread may wait
+/// on. The recorder is `None` when the per-user data directory could not be resolved at startup; the
+/// step is then refused by name, never dropped.
+#[tauri::command]
+pub async fn record_step(
+    state: State<'_, Option<Arc<StepRecorder>>>,
+    request: RecordStepRequest,
+) -> Result<RecordStepResponse, SkpError> {
+    let Some(recorder) = state.inner().clone() else {
+        return Err(SkpError::session_history_unwritable(
+            "no per-user data directory is available",
+        ));
+    };
+    tokio::task::spawn_blocking(move || recorder.record_step(request))
+        .await
+        .unwrap_or_else(|e| Err(SkpError::protocol("record_step_panicked", e.to_string())))
 }
 
 // -------------------------------------------------------------------------------------------
