@@ -431,3 +431,14 @@ Each mutation is applied, the named test fails, the failure is recorded by name 
   - (c) the pointer.
 
 ## §10. Amendments — opens empty, append-only
+
+### Amendment 1 — the human's rulings on OPEN-1 and OPEN-2 (class 5)
+
+*Written by the custodian on the human's ruling (`state/directives/2026-10-15-round-1b-i3-allowed-a-open-1-b-open-1-open-2.md`). References only.*
+
+1. **OPEN-1 (B):** an unpinned rooted line cite into `state/CUT-STATE.md` is advisory wherever it sits; a pinned one stays gated (§2 item 4; V1 and V2).
+2. **OPEN-2 (A):** every cap refusal writes the refused block to the scratch file, and the hooks are unchanged (§2 item 2).
+3. **Still open:** OPEN-3 and OPEN-4, before S5 and S6.
+4. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.

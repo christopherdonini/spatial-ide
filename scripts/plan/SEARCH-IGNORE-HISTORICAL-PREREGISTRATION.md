@@ -270,3 +270,13 @@ An invocation is a line in a file that runs (a script, a workflow, a hook config
 - **OPEN-3, approve W** (§2 item 4, assembled by §5), under §31 (e). This is your sentence, and the architect drafts it. "The Grep tool alone is not enough there" is read as: a Grep call that does not name the location does not reach it. If you meant that the Grep tool never suffices, say so, and the Grep clauses are dropped.
 
 ## §10. Amendments — opens empty, append-only
+
+### Amendment 1 — the human's ruling on OPEN-1 (class 5)
+
+*Written by the custodian on the human's ruling (`state/directives/2026-10-15-round-1b-i3-allowed-a-open-1-b-open-1-open-2.md`). References only.*
+
+1. **OPEN-1 (A):** the routine read's part 2 is the ledger entries dated within the 168 hours before the block's `flushed_at`, as §2 item 3 recommends; `WINDOW_HOURS = 168` (§7).
+2. **Still open:** OPEN-2 and OPEN-3, before S4.
+3. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.

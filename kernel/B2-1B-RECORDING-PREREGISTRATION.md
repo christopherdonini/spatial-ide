@@ -868,3 +868,14 @@ Nothing above is edited.
 7. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 6 — the human's ruling on I3: allowed, with console.mjs's two steps re-aimed (class 5; class 9 for the added path)
+
+*Written by the custodian on the human's ruling (`state/directives/2026-10-15-round-1b-i3-allowed-a-open-1-b-open-1-open-2.md`). References only.*
+
+1. **I3 is allowed.** The three one-line edits to existing unit tests (Amendment 5 item 2) stand.
+2. **`frontends/shell/e2e/console.mjs` joins §2.13's paths** (class 9). Its CLASSC' and GROUP' steps are re-aimed at the new behaviour: a style edit writes a class-A `record_step` row, and each issued Apply writes one between grouped queries. No other step changes.
+3. **Before any gate**, the custodian shows the human the exact changes to the two steps, with the e2e run that observes them.
+4. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
