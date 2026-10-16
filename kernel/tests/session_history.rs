@@ -235,7 +235,9 @@ fn a_refused_predicate_records_nothing_and_returns_its_own_typed_code() {
 /// name and record nothing (Amendment 1, item 4 (d): the kernel checks a value by wrapping it in a
 /// whole style document and calling the renderer's `parse`, and the lowercase rule is its own).
 ///
-/// RECORDED MUTATION: the `parse` call is removed. Expected failure: the opacity of 1.5 is recorded.
+/// RECORDED MUTATION: the `parse` call is removed. Expected failure: the opacity of 1.5 passes the
+/// style check, the record is made, and the writer's check against the reader's rules refuses the
+/// step `skp.session_history_unwritable`, so this test fails at its code assertion.
 #[test]
 fn a_style_value_the_style_model_refuses_is_refused_by_name_and_records_nothing() {
     let dir = scratch("style-parse");
@@ -266,8 +268,10 @@ fn a_style_value_the_style_model_refuses_is_refused_by_name_and_records_nothing(
     );
 }
 
-/// **RECORDED MUTATION** for the lowercase rule: it is removed. Expected failure: `#ABCDEF` is
-/// recorded, since the renderer's own `parse` accepts capitals.
+/// **RECORDED MUTATION** for the lowercase rule: it is removed. Expected failure: `#ABCDEF` passes
+/// the renderer's own `parse`, which accepts capitals, and the writer's check against the reader's
+/// rules refuses the step `skp.session_history_unwritable`, since the reader takes a colour only as
+/// lowercase hex; this test fails at its code assertion.
 #[test]
 fn a_colour_not_in_lowercase_is_refused_by_name_and_records_nothing() {
     let dir = scratch("style-lowercase");
@@ -640,7 +644,8 @@ impl Drop for DenyGuard {
 ///
 /// RECORDED MUTATION: the `.inspect_err(|_| drop(std::fs::remove_dir_all(&dir)))` in `create` is
 /// removed. Expected failure: the store root holds one `unsaved-` folder, and the test fails at
-/// its empty-root assertion.
+/// its empty-root assertion. Observed at fa620916: applied alone, the test run by its name failed
+/// at that assertion with a folder left in the store root.
 #[test]
 fn on_windows_a_record_whose_locations_write_is_denied_is_removed_and_the_root_is_empty() {
     if std::env::consts::OS != "windows" {

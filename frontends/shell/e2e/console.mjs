@@ -594,9 +594,11 @@ async function stepClassB(page) {
  * kernel/B2-1B-RECORDING-PREREGISTRATION.md Amendment 6). Before, a style edit wrote a class-C row
  * (statement "no API equivalent", owner "ADR-022") and this step asserted that row. Now a committed
  * style edit is recorded through `record_step` (`App.tsx` `handleStyleCommit`), a class-A row, and the
- * five style rows left the class-C table (`surfaceRegistry.ts`). The step keeps its purpose: the
- * console shows what a real style edit really wrote. The record is asynchronous (a step queue), so the
- * step polls with the suite's bounded poll.
+ * five style rows left the class-C table (`surfaceRegistry.ts`). Since correction round 1
+ * (Amendment 8), one of them, `style.resetToDefault`, is back in the class-C table for a Reset that
+ * changes nothing; its owner names docs/03, not ADR-022, and no style edit writes it. The step keeps
+ * its purpose: the console shows what a real style edit really wrote. The record is asynchronous (a
+ * step queue), so the step polls with the suite's bounded poll.
  *
  * The class-A row is matched by its rendered request text (`style.set`, `fillColor`, the value filled),
  * and a new matching row must appear after the edit (the count rises), so a row from an earlier edit
