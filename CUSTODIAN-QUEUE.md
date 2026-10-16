@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `a6f1313d57347e4e5f8357d4f3cf0d5c8e853131979a2cad31944ec692ef03f5`) at `2026-10-16T21:04:53.403Z`.
+Generated from `PLAN.yaml` (sha256 `8c82214c3cbaa58b720046db4a6de31b87069cbd6002eee38588e7ce42d2526c`) at `2026-10-16T21:55:29.081Z`.
 
 ## 1. Next
 
@@ -9,6 +9,7 @@ Generated from `PLAN.yaml` (sha256 `a6f1313d57347e4e5f8357d4f3cf0d5c8e853131979a
 ## 2. Ready
 
 - **known-limitations-crs-epoch-edges-third-axis** — KNOWN-LIMITATIONS: a file's declared coordinate epoch, its edges value and a third CRS axis are not used, shown or carried into a bundle (lane `release`, order null, budget 45 min)
+- **governance-search-ignore-historical** — A root .ignore over historical material (site, the generated queue JSON, the cut archive, drafts, gate reports), tested both ways with the agents' own search tool, and its search rule appended to AUTONOMY; the routine-read and search-corpus measurements taken before it (lane `governance`, order null, budget 0 min)
 
 ## 3. Waiting on the human (total: 0 min)
 
@@ -23,7 +24,6 @@ Generated from `PLAN.yaml` (sha256 `a6f1313d57347e4e5f8357d4f3cf0d5c8e853131979a
 - **signpath-application-draft** — Entry 77 — the SignPath OSS application and disclosure text drafted for the human sight, once a release is CI-built — blocked by: release-v0-1-1
 - **governance-cut-state-cap-and-rotation** — state/CUT-STATE.md: the six STANDING items moved out verbatim, a 6,144-byte cap on the continuity block in flush.mjs, and the ledger rotated into state/cut-archive/ by a named script, with the reading order's item 1 restated — blocked by: governance-search-ignore-historical
 - **governance-decisions-pending-open-and-archive** — DECISIONS-PENDING.md: open entries and recent rulings, the rest archived to state/cut-archive/, one shared helper for the ruling set in verify, verify-test-claims and verify-quotes, monthly rotation, and the reading order's item 3 restated; the second measurements after it — blocked by: governance-cut-state-cap-and-rotation
-- **governance-search-ignore-historical** — A root .ignore over historical material (site, the generated queue JSON, the cut archive, drafts, gate reports), tested both ways with the agents' own search tool, and its search rule appended to AUTONOMY; the routine-read and search-corpus measurements taken before it — blocked by: boundary-inventory
 - **site-design-v1** — Landing page redesign — DRAFT-4 (status strip, milestone banner, waiting-on-you cards with unblocks counts, the swimlane board) — blocked by: governance-ci-built-site
 
 ## 5. In progress
@@ -114,11 +114,12 @@ Generated from `PLAN.yaml` (sha256 `a6f1313d57347e4e5f8357d4f3cf0d5c8e853131979a
 - **walkthrough-current-view-rows-g1-n5** — MANUAL-WALKTHROUGH.md rows G1 and N5: Current view is no longer disabled until a pan or zoom (the docs-lane follow-up of export-current-view-after-unreported-fit, its gate 1 reviewer DOC-4) (phase `prototype`) — never queued until placed
 - **e2e-readme-status-bar-steps** — e2e/README.md: the status bar's two new steps and E-FOCUS's new stop in the layout and selection entries (the docs-lane follow-up of shell-status-bar-one-height, OPEN-2 (b)) (phase `prototype`) — never queued until placed
 - **engine-clause-composition-properties** — Engine test piece: clause composition, P5 and P6 over the admission property campaign (tests only; no product code, fixture or dependency) (phase `prototype`) — never queued until placed
-- **boundary-inventory** — Boundary inventory: one page, one table, read-only and descriptive (the architect): what each boundary's enforcement is, by code or the OS, by tests, by instruction only, or not built (phase `prototype`) — never queued until placed
 - **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark (phase `prototype`) — never queued until placed
 - **verify-quotes-dotted-paths** — verify-quotes: the hash-reference path grammar cannot begin with a dot, so a pinned cite into .github/ can never be checked (phase `prototype`) — never queued until placed
 - **source-changed-post-route-s5d-race** — source-changed.mjs's post route: step S5d (post-check-route-confirmed) loses its race to a tile's pre-check in about half the runs on this machine, at main's base too (phase `prototype`) — never queued until placed
 - **connection-reuse-recycled-interrupt-flake** — engine/tests/connection_reuse.rs: cancellation_before_the_first_batch_binds_a_recycled_connection_and_delivers_nothing failed once on ubuntu-24.04 in PR #222's pull_request run at a542097e, and the push run of the same commit passed it (phase `prototype`) — never queued until placed
+- **bundle-redaction-scan-not-in-product-publish** — The bundle redaction scan runs only in a test: no product publish scans its emitted files, though ADR-017's section 13 (Accepted) says a scan over every emitted file asserts no path, user name, machine identifier or credential is in a bundle (phase `prototype`) — never queued until placed
+- **session-log-token-redaction-rests-on-page-code** — The session token never reaching the session log rests on page code: binding_log_session_event appends page-supplied text verbatim, the page holds the token, and the data plane's Session::redact has only a test caller (phase `prototype`) — never queued until placed
 
 ### Unscheduled
 

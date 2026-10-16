@@ -623,3 +623,187 @@ Nothing above is edited. The re-sweep amendment (§0.3) follows before any code,
 4. **Superseded index:** Amendment 1 item 10's bullet on (i), and its "which words land is back with the human" → items 1 and 2.
 
 Nothing above is edited.
+
+### Amendment 3 — the re-sweep at code start absorbed before any code: the moved and changed pins (class 3); scope addition: card changes recorded in the session history, on `state/directives/2026-10-14-215-c1-216-merge-current-view-open-3-b2-1b-open-1-to-10.md`, item 4 (class 9); the bar's place, one dispatch, `ViewState.clauses`, the bare `/`, the harness, `/open` during the ask, H3 and the order (class 1, written after the re-sweep's results were seen); C9 is I4
+
+*Drafted by the architect at main b88b1d2f, before any code of this piece and after the re-sweep's results were seen. The re-sweep is `state/consults/2026-10-16-shell-migration-milestone-3-re-sweep.md`, read at b88b1d2fba04e43489d4ef480060f45df2026173 (B below) and cited by section. Its sha256 from line 5 to the end is 4ec40659e5e644d574dccee0a77b0302da69ba013435341261c7959d92272ee5, as its filing note gives. Every `@ ceff6d82…` pin is historical (§0.3): the tree at B is authoritative for the work, and the pin for what this form read. References only; nothing below is a quotation. Read the last amendment first.*
+
+1. **The 21 moved pins and the two bare cites (class 3).** Each Moved row of the re-sweep's §1 table is carried at its Lines-at-B span, at B, with the hash that table gives, which is the form's own. §2.5's bare cite of App.tsx's re-fit comment and UC8's bare cite of the test at :49-51 read as the two rows under that table. §0.5's engine pins moved because `AdmittedPredicate` gained a member and an accessor (re-sweep §3). `admit` and both ceilings are the same text, so this is not I4. No claim changes, and the table is not restated here.
+
+2. **The changed pins C2 to C8, C10 and C11.** Each is re-pinned at the span the re-sweep's §2 gives for it, except where a row below says otherwise.
+   - **C2 (class 3).** `activeFilterRef` is at the re-sweep's span. `activeFilter` is at frontends/shell/src/App.tsx:843 @ b88b1d2fba04e43489d4ef480060f45df2026173 sha256:a400e483fc84063be6c8ad223c0dd0e90331ee1d79c15f954296a4b8f9830c54 and is read from the view's `filter`. The re-sweep's line 836 holds `stepNoticeText`'s call, so its pin is not carried.
+   - **C3 (class 3).** §0.4's Export sentence reads: of the filter, the Export panel gets only `activeFilter !== null`, as `filterActive`. Its other props at B are App's view box and scope callbacks (re-sweep §2 C3). App's side is §0.4's read, not a §0.5 interface. Seam 6 holds as the re-sweep reads it.
+   - **C4 (class 3).** This is still the one window listener. Its dispatch consequence is item 6.
+   - **C5 (class 3).** `bareKey`, `scopeWords` and the four ids are milestone 2's additions, which §0.5 names. `matchChord` is the same text.
+   - **C6 (class 3 for the pin; class 1 for the two choices).**
+     - **Where the bar sits.** StudioLayout mounts the bar directly after the `.app-header` span, as its sibling, and before the tools block. The bar therefore keeps its place when a dataset is admitted and the tools appear. No test reads this order (re-sweep §2 C6). regression.mjs's read of that span's text is unaffected (frontends/shell/e2e/regression.mjs:378 @ b88b1d2fba04e43489d4ef480060f45df2026173 sha256:746b8a236d267c7ec4bcc5db1379ce1f75f25e28b514b267e68696d55ef47133).
+     - **How the list is drawn.** The list uses `position: fixed`. Its top is at the top bar's bottom edge, `--top-bar-h`, which StudioLayout already sets on `.app` (frontends/shell/src/layout/StudioLayout.tsx:201 @ b88b1d2fba04e43489d4ef480060f45df2026173 sha256:5da5477ac415bb9fa00e40b6ed2280256e46cf3c52b82f38bd319a177cee7c6c). Its left is at the input's left edge, read when the list opens and on a window resize while it is open.
+     - **Why it is not clipped.** `.top-bar`'s `overflow: hidden` (re-sweep §2 C6) is not edited. No rule in styles.css at b88b1d2f gives an ancestor of the bar a transform, filter or containment, so the fixed list is not clipped by the bar. The list covers the regions below only while it is open, and §8 item 11 forbids only a permanent element over the map.
+     - **The test.** E-SEARCH also asserts that, with the list open, `document.elementFromPoint` at the first option's centre returns that option, and that the option's top is at or below the top bar's bottom. Mutation E-SEARCH-b: draw `.command-list` in normal flow; it fails on `elementFromPoint`.
+   - **C7 (class 3).** The eleven-code table is identical. One cross-reference is reworded, so §0.5's interface, the codes, does not differ.
+   - **C8 (class 3).** `confirmOpen` was built, as §0.5 anticipated. Its consequence is item 11.
+   - **C10 and C11 (class 3).** Both are milestone 2's additions, which §0.5 anticipated. `selectTab(inspector, layer)` stays valid.
+
+3. **C9, PublishPanel's props: I4.**
+   - §0.3 classes an interface that differs from §0.5 as I4, with no qualifier for how much of it the plan consumes.
+   - §0.5 pins the panel's Props and names only milestone 2's three additions. At B the Props also replace `hasSettledView` and `getLastViewportBbox` with `getViewBox` and `subscribeViewBox`, from PR #219, which is not milestone 2 (re-sweep §2 C9).
+   - §5 says that I4, like every invalidator, means STOP and report. The re-sweep's C9 is the report. No code of this piece starts before the human answers OPEN-12 (§11 addition below).
+
+4. **B1, card changes recorded (class 9, scope addition).**
+   - **The rule.** The human's ruling of 2026-10-14, item 4, at the path in the heading: OPEN-10's docs/07 note, now docs/07_Roadmap.md:40 @ b88b1d2fba04e43489d4ef480060f45df2026173 sha256:33c66299384f5a1ca0cc944632c055f9e5c8da78bdc96ffdfe8cd6be71696a3b, and §2.10 L's item, now KNOWN-LIMITATIONS item 43 (KNOWN-LIMITATIONS.md:390 @ b88b1d2fba04e43489d4ef480060f45df2026173 sha256:c22c976f428e62d266bf47043a06e577a3dc7e77d07c4136a1aa34a97c1353eb). Both state that each filter change a user commits is recorded. Plan §7, which this form already pins, makes a clause toggle an ordinary step. A card change that recorded nothing would make both statements untrue.
+   - **Inside the human's rulings.** The step is piece 1b's registered `filter.apply` with a whole `Filter | null` (frontends/shell/src/skp/types.ts:301-303 @ b88b1d2fba04e43489d4ef480060f45df2026173 sha256:3eb82dd659ab2f9ff01515783f308b6d6717d76032bf4afa778a4f24dd04ebd2). No action, wire or kernel change is needed, so this item is decided here and not opened.
+   - **(a) §2 shape.**
+     - One helper in App writes `activeFilterRef`, dispatches the given transition on the view, and enqueues `{action: "filter.apply", params: {filter}}` for `admittedDatasetRef`'s dataset. This is what `commitActiveFilter` does at B (frontends/shell/src/App.tsx:987-996 @ b88b1d2fba04e43489d4ef480060f45df2026173 sha256:05f80495437e9063153300b3e1aec92d8f7fbc7c6e69014812e72238cbea530d).
+     - `commitActiveFilter` becomes the helper with `filter.apply`. §2.5's card commit is the helper with `filter.clauses.set`. No other site enqueues a filter step.
+     - The helper runs only as `applyFilterWith`'s `commit`, inside the same generation guard. Only an issued outcome is recorded; a refused, not-applied or shell-refused change records nothing.
+     - What is recorded is the combined filter as a value: `combineClauses` of the enabled cards, or `null` when none is on. It is never a clause, a clause id, an on/off state or a delta.
+     - `stepRecorder.ts`, `skp/` and the wire are not edited.
+   - **(b) §1 Principle 4's second bullet, and §2.5's Rows bullet,** read as follows.
+     - A card change that reaches the kernel shows as the class-A rows an Apply shows: `viewport_query`, then `record_step` when issued.
+     - The rows `filter.clauseAdd`, `filter.clauseToggle` and `filter.clauseRemove` are not added. Piece 1b set the precedent by removing the style rows once a step was recorded (frontends/shell/src/console/surfaceRegistry.ts:167-177 @ b88b1d2fba04e43489d4ef480060f45df2026173 sha256:bd7ea00160f62038df64c495f71ba947b40592bb63e64b3a05a1bef009a90986).
+     - One class-C row, `filter.clauseNotSent`, is added. App's handler records it for a change the shell refuses under OPEN-3 (A), which sends nothing. Its statement is a P6 placeholder, and its owner is docs/03's action console, as for `style.resetToDefault`'s row.
+   - **(c) §1's claims.**
+     - **May not claim, fourth bullet, reads:** that anything here is undoable or saved, or that a clause is recorded. Each issued card change is recorded in the kernel's session history as one `filter.apply` step holding the combined filter, as an issued Apply is. The history holds no clause, clause id, on/off state or card list. Clause changes are workspace mutations (ADR-006) with no undo, and B2's compaction is B2's.
+     - **May claim gains:** an issued card change records one `filter.apply` step with the combined filter (RC3, RC5, E-AND).
+     - **§2.5's sentence on the step's clause id reads:** the transition's `step` carries the clause id for the reducer, and the session history carries none.
+     - **§4's acceptance line for a toggle reads:** UC7 (the typed transition) and RC5 (the one recorded step). The shell keeps no log.
+     - **§8 item 14** reads as a shell-side log only. The kernel's session history is piece 1b's.
+   - **(d) §4.** Each mutation below is observed under §4's rule.
+     - **RC3** also asserts that the mock's `recordStep` receives exactly one `filter.apply`, after the outcome, whose filter equals what the manager received. Mutation RC3-b: the card commit skips the enqueue; it fails on the step count.
+     - **RC5** also asserts that the off step holds the remaining combination, the on step holds the restored one, and a refused toggle records none. Mutation RC5-b: enqueue the toggled clause's own text; it fails on the off step.
+     - **RC7** also asserts one `filter.clauseNotSent` row and no `recordStep`. Mutation RC7-b: drop the row; it fails on the row count.
+     - **RC14** does not assert the step. It stays item 39's clause check.
+     - **E-AND** also asserts that, after card B is added, the console holds one more `record_step` row that reached ok, whose request carries `.filter-active`'s text. This is the seam's end-to-end proof from the real shape. Mutation E-AND-b: the card commit skips the enqueue; it fails on the row.
+   - **(e) §5.**
+     - **Declared unchanged, added:** what an Apply records (App.recording.test.tsx's A1 and A3 pass unedited); `stepRecorder.ts`, `MAX_PENDING_STEP_RECORDS`, `noticeText` and `StepIntent`.
+     - **New invalidator I14:** recording a card change needs an edit to `stepRecorder.ts`, `skp/` or the wire, or a step that carries a clause.
+   - **(f) §8, added.**
+     - 25. A card change that records anything other than one `filter.apply` step holding the combined filter, records before its outcome or on a refusal, or enqueues from a second site.
+     - 26. A clause row whose statement says no API equivalent for a change that was sent.
+   - **(g) §9.** The P6 sight list gains `filter.clauseNotSent`'s statement, at AB11. `e2e:recording` is in every suite list (item 12).
+   - **(h) §7.** The work lands in B-P's App.tsx ≤ 200 and surfaceRegistry.ts ≤ 40, B-T's App.command.test.tsx ≤ 600, and B-E's command-bar.mjs ≤ 420. §7 is not edited, and an overrun is class 8.
+
+5. **B2, the record-failure notice for a card change (class 9, part of item 4).**
+   - **Behaviour.** A card change's step goes through the same queue. If it is not recorded, the attention strip shows the owner's existing filter notice (frontends/shell/src/workspace/stepRecorder.ts:80-86 @ b88b1d2fba04e43489d4ef480060f45df2026173 sha256:870569ab7e35d84d0d54fe11759bcca04f8c5f93a361ca68c22f11b1d8eca74f; the slot, frontends/shell/src/App.tsx:2175-2176 @ b88b1d2fba04e43489d4ef480060f45df2026173 sha256:3d231a759b044ce2e32a08d6d155f6906a594024742036f4867d3441d57178c4), the same sentence an Apply's shows.
+   - **No new string.** Those sentences stay piece 1b's P6 placeholders for the sitting (its Amendment 9, item 2).
+   - **Wording.** §2.5's Rows bullet and §1's operator-text bullet each gain this fact. The notice states the shell's consequence, that the filter was applied and the history did not take it, and carries the kernel's message as the kernel gave it.
+   - **New RC16 (B, render, App.command.test.tsx).** With `recordStep` refused, a card change is still applied (the cards and the applied filter change), and the strip shows the filter notice with the mock's message. Mutation: the card commit calls `recordStep` directly instead of enqueuing; it fails on the notice.
+
+6. **B3, one dispatch (class 1).** At B, `runAction` reaches only the region toggles and Zoom to layer (frontends/shell/src/layout/StudioLayout.tsx:157-161 @ b88b1d2fba04e43489d4ef480060f45df2026173 sha256:80fbe985163b06b5cbf772f081d537c264c4cc25b11228f9db596814a2f54809). The other four entries run through App's handlers (re-sweep §4 B3).
+   - **Shape.**
+     - StudioLayoutProps gains optional `onZoomToSelection` and `onClearSelection`. App passes its `handleZoomToSelection` and `handleClearSelection`, the functions the Feature tab's buttons call, as it passes `onZoomToLayer` and `onSelectTool`.
+     - `runAction` gains one arm per entry. Navigate and Select call `onSelectTool` with the entry's tool, and the two selection entries call the new props.
+     - This piece's `dataset.open` and `layer.revealExport` reach App the same way, by optional props.
+     - Every new prop is optional, so StudioLayout.test.tsx, which §2.9 does not list, compiles unedited. An absent prop leaves its entry unavailable.
+     - The listener's bare-key branch is not edited, since it already calls `onSelectTool`.
+   - **Availability.**
+     - Zoom to selection and Clear selection are available only while a dataset is on the map and App's selection has at least one member. That is the condition on which the Feature tab enables both buttons (frontends/shell/src/feature/FeatureTab.tsx:103 @ b88b1d2fba04e43489d4ef480060f45df2026173 sha256:cf60d1dbd2722f95afdb9c9f524b16d9b41268d424ade8e033c1fd27c3263d82; frontends/shell/src/feature/FeatureTab.tsx:133-140 @ b88b1d2fba04e43489d4ef480060f45df2026173 sha256:b694b5eca33aecb1d49bc04332412e0aaea8a98556490cffff4e1d3a42059316). App passes it as one optional boolean prop.
+     - Navigate and Select are available only while a dataset is on the map.
+   - **Wording.**
+     - §2.2's second availability bullet reads: Zoom to selection and Clear selection follow the Feature tab's empty-selection rule, and Navigate and Select need a dataset.
+     - §2.3's Running sentence reads: an applied action calls StudioLayout's one `runAction(id)`, which calls the function the entry's chord, bare key or button calls.
+     - §5's second falsification reads: the bar cannot run an entry through StudioLayout's one `runAction`, reaching the function its chord, bare key or button calls, without a second dispatch path.
+     - §8 item 8 reads: a bar-run entry that does not go through StudioLayout's one `runAction`, or that reaches a function other than the one its chord, bare key or button calls.
+   - **New RC17 (A, render, App.command.test.tsx).**
+     - Navigate and Select run from the bar switch the tool and record one `tool.set` row each.
+     - With nothing selected, both selection entries are listed `aria-disabled`, and Enter runs neither.
+     - With one feature selected by the stand-in click, Zoom to selection calls `fitToBbox` once and records one `selection.zoomTo` row, and Clear selection empties the selection and records one `selection.clear` row.
+     - Mutation RC17-a: the Clear selection arm clears through a copy that records no row; it fails on the row.
+     - Mutation RC17-b: leave the selection out of availability; it fails on the empty case.
+   - **§7.** Within A-P's StudioLayout.tsx ≤ 90 and App.tsx ≤ 80, and A-T's App.command.test.tsx ≤ 500.
+
+7. **B4, `ViewState.clauses` (class 1).**
+   - **The member.** §2.5's member is optional, `clauses?`, read through a reader beside milestone 2's readers that returns none when the member is absent. This follows milestone 2's route (frontends/shell/src/workspace/workspaceState.ts:60-66 @ b88b1d2fba04e43489d4ef480060f45df2026173 sha256:386b219718c2667b1942d3f9da166a7bab6a43211d54a4ed52c5a9f63490a7b5; frontends/shell/src/workspace/viewTransitions.ts:63-69 @ b88b1d2fba04e43489d4ef480060f45df2026173 sha256:2e56789b59ede25bb73e9d1d4ddb7bed64abd175fdf887af47e308686de00bdf).
+   - **The pinned tests.** A minted view stays the four-member object. frontends/shell/src/workspace/workspaceState.test.ts:46 @ b88b1d2fba04e43489d4ef480060f45df2026173 sha256:4204194667f729eefe4b17d41715669fba7666f31cc6d82203de82425804bbfd and frontends/shell/src/workspace/workspaceState.test.ts:155-163 @ b88b1d2fba04e43489d4ef480060f45df2026173 sha256:c86b2532c0d26c854507d8c694e7028dbddd3289339010e58c9e0b73e5b1ccb4 therefore pass unedited. After a rebind, the reader returns none.
+   - **The invariant** reads with the reader in place of the member.
+   - **Further members.** Any further member PR B needs, such as the counter behind `clause-<n>` that a pure `filter.apply` must read, is optional on the same terms.
+   - **UC7's union edit** is the UA4 test at frontends/shell/src/workspace/viewTransitions.test.ts:53 @ b88b1d2fba04e43489d4ef480060f45df2026173 sha256:7b7d53092e74c993634559e816d76facce54884f03547e09995f84d5b5c201cf. Its `satisfies` table, its key list (:66) and its title gain `filter.clauses.set` and cite this form. UA4's recorded mutation is observed again at that commit and recorded beside the first.
+   - **§7.** Within B-W's and B-T's ceilings.
+
+8. **B5, the bare `/` (class 1; the shape of Amendment 1, item 9).**
+   - **The matcher.** A third pure matcher in actionRegistry.ts, `matchCommandOpener(event, focus): boolean`, sits beside `matchChord` and `matchToolKey`.
+     - It matches on `event.key` being `/` and never on `event.code`, because the key's position differs by layout.
+     - It ignores Ctrl, Meta and Alt, `repeat`, `isComposing`, and an editable focus. It allows Shift.
+   - **On a hit,** the listener prevents the default, and the bar takes the focus with the draft `/`.
+   - **Unchanged.** `command.focus` keeps `bareKey: null`, so UB10 (frontends/shell/src/layout/actionRegistry.test.ts:249-257 @ b88b1d2fba04e43489d4ef480060f45df2026173 sha256:b45e46d6e8f67f8861c1e66d460ddd4586b53fb99267e41d050c5865aff2279d) and `matchToolKey`'s cast are not edited.
+   - **New UC10 (A, unit, actionRegistry.test.ts).**
+     - `/` matches bare, with Shift, and with a `code` other than `Slash`.
+     - Ctrl, Meta, Alt, `repeat`, composing and an editable focus do not match.
+     - `Slash` with another key does not match.
+     - Mutation: match on `event.code`; it fails on the Shift+Digit7 row.
+   - RC-SLASH's three cases and its mutation stand. The lines count as Amendment 1, item 9 says.
+
+9. **B6, the render harness (class 1; one correction, class 3).**
+   - **Which harness.** The copy takes App.selection.test.tsx's harness at B, not App.layout.test.tsx's, because RC8's ask case, RC9, RC11, RC12, RC14 and RC17 need its parts:
+     - a manager stand-in that records bbox and filter and settles issued, or with the refusal a test sets;
+     - a canvas stand-in that keeps its props and counts `fitToBbox` and resets;
+     - `publish/client` mocked to client.ts's signatures.
+   - **What it gains.** Its SKP-client mock gains `recordStep`, logged and refusable, as App.recording.test.tsx's mock has it (frontends/shell/src/App.recording.test.tsx:69-75 @ b88b1d2fba04e43489d4ef480060f45df2026173 sha256:c9d17b921982eed7a332be10d1b0617c5045a4a655cdaf511daef21ed69262ad). It also counts `fitToBounds`, as App.layout.test.tsx's stand-in does, for RC2.
+   - **Correction (class 3).** §4's stand-in signature `(bbox, bboxCrs, filter)` was already wrong at ceff6d82. The manager's signature is `(bbox, bboxCrs, nowMs, filter)`: frontends/shell/src/streaming/viewportStreamManager.ts:163-168 @ b88b1d2fba04e43489d4ef480060f45df2026173 sha256:cb533810c4f5834e6eff80cb41b9266610d80aac812b58f365d4295b614c6fba (unchanged since ceff6d82, re-sweep §3).
+
+10. **B7, names (class 3, a name).**
+    - **The Part.** The new Part is AB. The last Part at B is AA (frontends/shell/MANUAL-WALKTHROUGH.md:1897 @ b88b1d2fba04e43489d4ef480060f45df2026173 sha256:238a27a791a87412e125b40fd675f65a7bf16914ac65b0da1cef884a3673909c).
+    - **The rows.** Rows Y0 to Y12 read AB0 to AB12 wherever this form and Amendments 1 and 2 name them. The felt row Amendment 1, item 3 adds after Y4 is AB4a. AB12 stays not built (Amendment 1, item 8).
+    - **KNOWN-LIMITATIONS numbers.**
+      - They are read at the base of PR B's KNOWN-LIMITATIONS commit. They are the next free numbers after every number the file holds there and every number reserved by a committed form that has not been withdrawn.
+      - Item 44's form reserves 44, so while that form stands, the two items take 45 and 46, whether or not item 44 has landed. A third item, for OPEN-9 (i) (Amendment 2, item 2), takes the next number.
+      - The numbers and their base are recorded as a class 3 row in PR B's record.
+    - **Item 39.** Item 39's third sentence is a sub-line span of KNOWN-LIMITATIONS.md:379 @ b88b1d2fba04e43489d4ef480060f45df2026173 sha256:ade05ff3699847fc81592b239f647a4be3bb3b9338b4614efb3ef7196e647ade (the line's hash). It is unchanged since ceff6d82 (re-sweep §5). Its replacement stays under Amendment 1, item 10.
+
+11. **`/open` during the picker or the ask (class 1).**
+    - **The rule.** `requestPick()` keeps the button's own condition (§2.7), so `/open` does what a click of Open does at that moment.
+    - **What that means at B.** A second `confirmOpen` drops the first ask as Keep (frontends/shell/src/App.tsx:1148-1160 @ b88b1d2fba04e43489d4ef480060f45df2026173 sha256:2542da92eddef0b49db9120645bb15256c949619e96ce0f78ef02b5ce3800201). A second `/open` during the ask therefore drops the first open and starts a new pick, as a second click does. The busy line covers only `isOpenInFlight`.
+    - **Why no second rule.** A rule the button does not have would make the bar a second path (§8 item 8).
+    - **RC8's new case.** With the ask showing, `/open` calls the picker once more, and the first open does not proceed. Mutation RC8-b: `requestPick` returns busy while the ask is open; it fails on the picker count.
+
+12. **H3 and the suites (class 1).**
+    - **What "every existing e2e suite" covers.** It is the run set of piece 1b's custodian runs (`state/consults/2026-10-16-b2-piece-1b-recording-e2e-custodian-run-4.md`, its first block, cited as evidence):
+      - every `e2e:` script in package.json at the base except `e2e:debug`. This covers `selection`, `export-view` and `recording`, which were added, and `console` and `regression`, which piece 1b edited.
+      - `e2e:residency-harness`, by its exit code only; no figure it prints is recorded or claimed.
+      - `pan-anchor.mjs`, `source-watch-idle.mjs` and `source-changed.mjs`, which have no script. `source-changed.mjs` runs on both routes, the default and post.
+    - **S5d.** S5d on the post route is the PLAN item `source-changed-post-route-s5d-race`, which fails at main's base (the human's ruling, `state/directives/2026-10-16-222-adr-022-route-a-restore-and-reappend-reset-line-p6-s5d-own-item.md`). A failure of S5d alone is recorded beside the base's runs and is neither I12 at the base nor I3 at a head. A failure of any other step is.
+
+13. **The e2e suites at the base.** The custodian's runs at the base B, the exe built there, each suite a fresh app: every run passed (`state/consults/2026-10-16-shell-migration-milestone-3-e2e-custodian-base-run.md`). Class 1.
+
+14. **Rule 00 and order (class 1).**
+    - At B no node is in progress and no PR is open (re-sweep §9).
+    - PR A shares no path with `known-limitations-crs-epoch-edges-third-axis`.
+    - PR B and that node edit different numbered items of KNOWN-LIMITATIONS.md, which count as disjoint (`state/directives/2026-10-09-rulings-additions-reaim-identity-route-documents.md`, item 5). Neither waits for the other.
+    - Whichever merges later merges main in before its last gate run and re-reads its numbers (item 10), as that node's form, §E, also says. Its OPEN-1 and OPEN-2 hold only that node.
+
+15. **Generation:** the node's generation goes up by one.
+
+**§11 addition.**
+
+| Item | Subject | Recommended | Red line |
+|---|---|---|---|
+| OPEN-12 | I4 on PublishPanel's Props (item 3) | the human's | no |
+
+**§7.** Nothing is added. Each item's lines land in the groups it names. An overrun is class 8, and §7 is not edited.
+
+**Superseded index.**
+
+| Form passage | Superseded by |
+|---|---|
+| §0.3, which spans are current | items 1, 2 |
+| §0.4, the commit, the state, the Export sentence, the top bar | items 2, 4 |
+| §0.5, the export panel | item 3 |
+| §0.5 and §4, the render harness and the stand-in's signature | item 9 |
+| §0.6 H3; §3's suite prediction | item 12 |
+| §1, May claim, May not claim, Principle 4, operator text | items 4, 5 |
+| §2.2, availability | item 6 |
+| §2.3, where the bar sits, the list, Running | items 2 (C6), 6 |
+| §2.5, `ViewState`, the invariant, the step's clause id, the path to the kernel, Rows | items 4, 5, 7 |
+| §2.7, `requestPick` | item 11 |
+| §2.10, the Part, its rows, the numbers, item 39 | item 10 |
+| §4, RC3, RC5, RC7, RC8, E-AND, E-SEARCH, UC7; new RC16, RC17, UC10 | items 4, 11, 2, 7, 5, 6, 8 |
+| §5, declared unchanged, I14, falsification 2 | items 4, 6 |
+| §8 item 8, item 14's reading; new items 25 and 26 | items 6, 4 |
+| §9, suites and P6 sight | items 4, 12 |
+| §11 | OPEN-12 |
+| Amendment 1, item 9's place for `/` | item 8 |
+| Amendment 1 and 2, every Y row | item 10 |
+
+Read the last amendment first.
+
+Nothing above is edited.

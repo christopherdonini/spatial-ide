@@ -5026,10 +5026,10 @@ nodes:
     gate: none
     evidence: null
     budget_minutes: 0
-    generation: 3
+    generation: 4
     felt_verdict: false
     entries: []
-    summary: "2026-10-12 (state/directives/2026-10-12-current-view-graded-s1-placed-limitation-release-hold-214-merged.md, item 2): the Current view fix is placed directly before this milestone in slot 1. Before: RULED 2026-10-11 (state/directives/2026-10-11-harness-approval-open-9-i-withdrawn-a10-late-cancel-adr-029.md, item 2): OPEN-9 (i) withdrawn by the human; no sentence lands now; the architect drafts it with PR B under item 2e from the recognizer as built, by the mark the card shows; the form's Amendment 2 (generation 3). Before: RULED 2026-10-11 (state/directives/2026-10-11-merges-210-211-pilot-recorder-2f-milestone-3-rulings.md, item 5): OPEN-1 (A); OPEN-2 (A) with one felt row on the re-fit; OPEN-3 (A); OPEN-4 (a); OPEN-5 (A); OPEN-6 (a) and OPEN-7 (c), each leaving for a proposed node; OPEN-8 (b), Ctrl+K and a bare slash; OPEN-9: strings sighted at Y11, (ii) and item 39's sentence approved, (i) in the human's words FAILED the author's one check on its list of forms (state/consults/2026-10-11-shell-migration-milestone-3-open-9-i-check.md), and the author's words fail the same way, so it is back with the human (no code waits); OPEN-10 (a); OPEN-11 (b). The form's Amendment 1 (generation 2). Code waits for milestone 2's merge and the re-sweep amendment. Before: FORM COMMITTED 2026-10-11 (frontends/shell/SHELL-MIGRATION-MILESTONE-3-PREREGISTRATION.md, the architect's draft state/consults/2026-10-11-shell-migration-milestone-3-architect-draft.md; full form; about 5,600 lines over about 26 files; no engine, kernel or protocol path, so no impact read; pins hashed at ceff6d82; re-sweep at code start after milestone 2 merges). OPEN-1 to OPEN-11 to the human (OPEN-1 to OPEN-7 red lines, typed words only; OPEN-8 to OPEN-11 not), each with a recommendation; no code before the rulings and milestone 2's merge. Before: DIRECTION 2026-10-11 (state/directives/2026-10-11-direction-after-status-review.md, item 1): slot 1's next after milestone 2; the architect drafts its form and its question round while milestone 2 is in code (forms ahead). Before: Recorded 2026-10-07 by the human's ruling of the migration plan (state/directives/2026-10-07-migration-plan-v2-ruled.md; state/directives/SHELL-MIGRATION-PLAN-2026-10-07.md, section 7, bounded): seams 1 (full) and 2; the kernel stays the only authority on filter admission; no new SKP schema; the human may swap milestones 3 and 4. Proposed."
+    summary: "RE-SWEEP AT CODE START 2026-10-16 at main b88b1d2f (state/consults/2026-10-16-shell-migration-milestone-3-re-sweep.md; the custodian's e2e runs at the base, state/consults/2026-10-16-shell-migration-milestone-3-e2e-custodian-base-run.md: every run passed). AMENDMENT 3 (generation 4), drafted by the architect from it: 21 moved and 9 changed pins class 3; card changes recorded as one filter.apply step holding the combined filter (class 9, on the human's 2026-10-14 item 4 and the docs/07 note); the bar after the .app-header span, its list fixed-positioned; one runAction reaching all eight entries; ViewState.clauses optional behind a reader; a third matcher for the bare slash; App.selection.test.tsx's harness with recordStep; the walkthrough Part AB, rows AB0 to AB12. I4 FIRED on C9 (PublishPanel's Props changed by PR 219, not listed in section 0.5): STOP; OPEN-12 to the human (not a red line); NO CODE before the answer. Before: 2026-10-12 (state/directives/2026-10-12-current-view-graded-s1-placed-limitation-release-hold-214-merged.md, item 2): the Current view fix is placed directly before this milestone in slot 1. Before: RULED 2026-10-11 (state/directives/2026-10-11-harness-approval-open-9-i-withdrawn-a10-late-cancel-adr-029.md, item 2): OPEN-9 (i) withdrawn by the human; no sentence lands now; the architect drafts it with PR B under item 2e from the recognizer as built, by the mark the card shows; the form's Amendment 2 (generation 3). Before: RULED 2026-10-11 (state/directives/2026-10-11-merges-210-211-pilot-recorder-2f-milestone-3-rulings.md, item 5): OPEN-1 (A); OPEN-2 (A) with one felt row on the re-fit; OPEN-3 (A); OPEN-4 (a); OPEN-5 (A); OPEN-6 (a) and OPEN-7 (c), each leaving for a proposed node; OPEN-8 (b), Ctrl+K and a bare slash; OPEN-9: strings sighted at Y11, (ii) and item 39's sentence approved, (i) in the human's words FAILED the author's one check on its list of forms (state/consults/2026-10-11-shell-migration-milestone-3-open-9-i-check.md), and the author's words fail the same way, so it is back with the human (no code waits); OPEN-10 (a); OPEN-11 (b). The form's Amendment 1 (generation 2). Code waits for milestone 2's merge and the re-sweep amendment. Before: FORM COMMITTED 2026-10-11 (frontends/shell/SHELL-MIGRATION-MILESTONE-3-PREREGISTRATION.md, the architect's draft state/consults/2026-10-11-shell-migration-milestone-3-architect-draft.md; full form; about 5,600 lines over about 26 files; no engine, kernel or protocol path, so no impact read; pins hashed at ceff6d82; re-sweep at code start after milestone 2 merges). OPEN-1 to OPEN-11 to the human (OPEN-1 to OPEN-7 red lines, typed words only; OPEN-8 to OPEN-11 not), each with a recommendation; no code before the rulings and milestone 2's merge. Before: DIRECTION 2026-10-11 (state/directives/2026-10-11-direction-after-status-review.md, item 1): slot 1's next after milestone 2; the architect drafts its form and its question round while milestone 2 is in code (forms ahead). Before: Recorded 2026-10-07 by the human's ruling of the migration plan (state/directives/2026-10-07-migration-plan-v2-ruled.md; state/directives/SHELL-MIGRATION-PLAN-2026-10-07.md, section 7, bounded): seams 1 (full) and 2; the kernel stays the only authority on filter admission; no new SKP schema; the human may swap milestones 3 and 4. Proposed."
     dates: {opened: 2026-10-07, done: null}
   - id: shell-native-menus-macos
     title: "Native application menus on macOS, built from the action registry (milestone 3's OPEN-6, deferred)"
@@ -5242,24 +5242,24 @@ nodes:
     kind: task
     lane: governance
     phase: prototype
-    status: proposed
+    status: done
     order: null
     depends_on: [b2-piece-1b-recording]
     needs_human: {kind: none, minutes: 0}
     gate: none
-    evidence: null
+    evidence: {path: "state/consults/2026-10-16-boundary-inventory-architect.md"}
     budget_minutes: 0
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "PROPOSED 2026-10-14 by the human (state/directives/2026-10-14-two-slot-2-pieces-clause-composition-boundary-inventory.md, item 2): slot 2, after what is already queued there. The architect, read-only, one page, descriptive only. One table (boundary, enforced by code or the OS at path:line @ commit, supporting tests, instructed only, not built; a documented requirement is not enforcement), seven rows: file admission; publishing (exposure scan and audit); the data plane and its origin admission (ADR-020); control-plane tickets (ADR-019); credentials and tokens; the agents' filesystem limits; piece 1c's project-relative resolver (whether the authorisation stays attached to the object read, followed through to the engine's reopen by path; starting from the reuse index rows path-containment, engine-open-identity and reserved-filename-checks). An input to b2-piece-1c-save-and-reopen's form (ADR-036 line 81's owed answer); it changes nothing by itself."
-    dates: {opened: 2026-10-14, done: null}
+    summary: "DONE 2026-10-16: the architect's page filed at state/consults/2026-10-16-boundary-inventory-architect.md (read at main b88b1d2f, zero writes; 176 pins hashed by the custodian). The resolver row's answer at B: the authorisation would stay attached only to a pathname checked earlier, since every engine read re-resolves the path by name and no file identity is compared; the resolver is not built. Two candidates for triage, appended as proposed nodes: bundle-redaction-scan-not-in-product-publish and session-log-token-redaction-rests-on-page-code. Before: PROPOSED 2026-10-14 by the human (state/directives/2026-10-14-two-slot-2-pieces-clause-composition-boundary-inventory.md, item 2): slot 2, after what is already queued there. The architect, read-only, one page, descriptive only. One table (boundary, enforced by code or the OS at path:line @ commit, supporting tests, instructed only, not built; a documented requirement is not enforcement), seven rows: file admission; publishing (exposure scan and audit); the data plane and its origin admission (ADR-020); control-plane tickets (ADR-019); credentials and tokens; the agents' filesystem limits; piece 1c's project-relative resolver (whether the authorisation stays attached to the object read, followed through to the engine's reopen by path; starting from the reuse index rows path-containment, engine-open-identity and reserved-filename-checks). An input to b2-piece-1c-save-and-reopen's form (ADR-036 line 81's owed answer); it changes nothing by itself."
+    dates: {opened: 2026-10-14, done: 2026-10-16}
   - id: governance-search-ignore-historical
     title: "A root .ignore over historical material (site, the generated queue JSON, the cut archive, drafts, gate reports), tested both ways with the agents' own search tool, and its search rule appended to AUTONOMY; the routine-read and search-corpus measurements taken before it"
     kind: task
     lane: governance
     phase: prototype
-    status: blocked
+    status: ready
     order: null
     depends_on: [boundary-inventory]
     needs_human: {kind: none, minutes: 0}
@@ -5269,7 +5269,7 @@ nodes:
     generation: 2
     felt_verdict: false
     entries: []
-    summary: "OPEN-1 RULED 2026-10-15 (state/directives/2026-10-15-round-1b-i3-allowed-a-open-1-b-open-1-open-2.md): (A), the ledger entries of the seven days before the block's flush (Amendment 1). OPEN-2 and OPEN-3 still open, before S4. Before: FORM COMMITTED 2026-10-14 (scripts/plan/SEARCH-IGNORE-HISTORICAL-PREREGISTRATION.md, a full form by section 21c's size, 380 lines over 6 files, drafted by the architect: state/consults/2026-10-14-governance-search-ignore-historical-architect-draft.md, sha256 b7815de0; pins hashed by the custodian at b9b902bf). OPEN-1 (the ledger part's definition, before dispatch), OPEN-2 (the rule's hidden-folder clause, if the Grep tool searches hidden folders) and OPEN-3 (the words on how to search an excluded location) with the human. Before: PLACED 2026-10-14 by the human (state/directives/2026-10-14-governance-smaller-reads-ignore-cut-state-rotation-decisions-pending.md); never slot 1; each merge the human's click: piece A. The measurement script is written before the first measurement and run unchanged after C. NEXT: the architect drafts the form."
+    summary: "READY 2026-10-16 by derivation: its one dependency, boundary-inventory, is done. OPEN-2 and OPEN-3 are still with the human, before S4. Before: OPEN-1 RULED 2026-10-15 (state/directives/2026-10-15-round-1b-i3-allowed-a-open-1-b-open-1-open-2.md): (A), the ledger entries of the seven days before the block's flush (Amendment 1). OPEN-2 and OPEN-3 still open, before S4. Before: FORM COMMITTED 2026-10-14 (scripts/plan/SEARCH-IGNORE-HISTORICAL-PREREGISTRATION.md, a full form by section 21c's size, 380 lines over 6 files, drafted by the architect: state/consults/2026-10-14-governance-search-ignore-historical-architect-draft.md, sha256 b7815de0; pins hashed by the custodian at b9b902bf). OPEN-1 (the ledger part's definition, before dispatch), OPEN-2 (the rule's hidden-folder clause, if the Grep tool searches hidden folders) and OPEN-3 (the words on how to search an excluded location) with the human. Before: PLACED 2026-10-14 by the human (state/directives/2026-10-14-governance-smaller-reads-ignore-cut-state-rotation-decisions-pending.md); never slot 1; each merge the human's click: piece A. The measurement script is written before the first measurement and run unchanged after C. NEXT: the architect drafts the form."
     dates: {opened: 2026-10-14, done: null}
   - id: governance-cut-state-cap-and-rotation
     title: "state/CUT-STATE.md: the six STANDING items moved out verbatim, a 6,144-byte cap on the continuity block in flush.mjs, and the ledger rotated into state/cut-archive/ by a named script, with the reading order's item 1 restated"
@@ -5390,4 +5390,38 @@ nodes:
     felt_verdict: false
     entries: []
     summary: "PROPOSED 2026-10-16 by the custodian: in run 38910535607 (Product CI, Rust workspace, pull_request, at a542097e), the L1 portable job on ubuntu-24.04 failed this one test at its assertion in line 179 of engine/tests/connection_reuse.rs, whose message says a recycled connection's interrupt handle must reach the token; the other 11 tests of the file passed. The failed steps are filed byte-identical at state/consults/2026-10-16-pr222-ci-run-38910535607-attempt-1-failed-steps.txt. The push run 38910527939 of the same commit passed the same job. PR #222 changes no line of that test file; its engine change is to engine/src/predicate.rs, its test and engine/README.md. No earlier filed CI log records this test failing. Whether it is a timing race in the test or in the pool's interrupt binding is not known. The human grades and places it."
+    dates: {opened: 2026-10-16, done: null}
+  - id: bundle-redaction-scan-not-in-product-publish
+    title: "The bundle redaction scan runs only in a test: no product publish scans its emitted files, though ADR-017's section 13 (Accepted) says a scan over every emitted file asserts no path, user name, machine identifier or credential is in a bundle"
+    kind: task
+    lane: kernel-protocol
+    phase: prototype
+    status: proposed
+    order: null
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 60
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "PROPOSED 2026-10-16 by the custodian, for the human's triage: candidate 1 of the boundary inventory (state/consults/2026-10-16-boundary-inventory-architect.md, Candidates for triage). redaction::scan_directory (kernel/src/bundle/redaction.rs) has two callers, both in kernel/tests/publish.rs, over one fixture bundle; the product publish path through the permission boundary runs no scan of the emitted files, so a source whose text column holds a path would be published unscanned. The custodian confirmed the callers by search at b88b1d2f; nothing reproduced. A candidate until graded; the inventory does not grow to fix it."
+    dates: {opened: 2026-10-16, done: null}
+  - id: session-log-token-redaction-rests-on-page-code
+    title: "The session token never reaching the session log rests on page code: binding_log_session_event appends page-supplied text verbatim, the page holds the token, and the data plane's Session::redact has only a test caller"
+    kind: task
+    lane: shell
+    phase: prototype
+    status: proposed
+    order: null
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 60
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "PROPOSED 2026-10-16 by the custodian, for the human's triage: candidate 2 of the boundary inventory (state/consults/2026-10-16-boundary-inventory-architect.md, Candidates for triage). The comment in frontends/shell/src-tauri/src/state.rs says the token is never written to the session log; binding_log_session_event in commands.rs appends the page's text as given, and Session::redact in protocol/data-plane/src/session.rs is called only by its own test. The custodian confirmed the redact callers by search at b88b1d2f; nothing reproduced. A candidate until graded; the inventory does not grow to fix it."
     dates: {opened: 2026-10-16, done: null}
