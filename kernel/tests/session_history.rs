@@ -634,10 +634,10 @@ impl Drop for DenyGuard {
 /// for the process's own user on the root, with the rights `(OI)(CI)(WD)`, lets the `create_dir` of
 /// the record's folder succeed and refuses the write of `locations.json` inside it. The deny does
 /// not include delete: the product's own `remove_dir_all` is what is under test. The test drives
-/// only `StepRecorder::new` and `record_step`, runs `icacls` through `std::process::Command` with
-/// its exit status checked, and proves, in order: the refusal is `skp.session_history_unwritable`;
-/// its detail names `locations.json`, so the failure came after the folder was made; and the store
-/// root then holds no entry.
+/// the recorder only through `StepRecorder::new` and `record_step`, runs `icacls` through
+/// `std::process::Command` with its exit status checked, and proves, in order: the refusal is
+/// `skp.session_history_unwritable`; its detail names `locations.json`, so the failure came after
+/// the folder was made; and the store root then holds no entry.
 ///
 /// On any other operating system the test returns at once, checked at run time, and proves
 /// nothing there. The proof is CI's windows-latest job and a local Windows run.
@@ -679,7 +679,7 @@ fn on_windows_a_record_whose_locations_write_is_denied_is_removed_and_the_root_i
     let detail = e.fields["detail"].as_str();
     assert!(
         detail.contains("locations.json"),
-        "the failure came before the folder was made: {detail}"
+        "the refusal did not name locations.json: {detail}"
     );
     let left = records(&root);
     assert!(left.is_empty(), "a folder was left: {left:?}");

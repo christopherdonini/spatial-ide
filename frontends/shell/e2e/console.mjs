@@ -274,7 +274,8 @@ async function readItems(page) {
 }
 
 const RESIDENTIAL_PREDICATE = "zone = 'residential'";
-const GROUP_CALLS = 3; // the number of identical calls, and the expected residential-row count (Amendment 2 item 2)
+// the number of style edits GROUP' makes, each to a distinct fill colour, and the number of `style.set` `record_step` rows it expects above its baseline; at most 3, the fills `stepGroup` lists (re-aimed by kernel/B2-1B-RECORDING-PREREGISTRATION.md Amendment 6)
+const GROUP_CALLS = 3;
 // Step 6 (c)'s failure name: byte-copied by script from round 71's ruling, never typed.
 const GROUP_NOT_EXERCISED = "GROUP': grouping not exercised";
 
