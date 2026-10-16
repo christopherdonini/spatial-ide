@@ -137,7 +137,9 @@ fn a_format_default_admission_records_the_none_admitted_state() {
 /// **K12.** Each admission class records the provenance `describe` reports for the same open.
 ///
 /// RECORDED MUTATION: the writer writes `crs.source().as_str()`. Expected failure: the word is
-/// `file`, not `crs:declared`.
+/// `file`, not `crs:declared`; the writer checks the line against the reader's rules before it
+/// writes it and refuses it at `$.step.dependencies.crs.provenance`, so this test fails at its
+/// `recorded` expectation.
 #[test]
 fn each_admission_class_records_the_provenance_describe_reports() {
     let cases = [

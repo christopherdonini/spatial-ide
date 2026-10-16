@@ -605,7 +605,7 @@ async function stepClassB(page) {
  * that owner, which no such row has.
  */
 async function stepClassC(page) {
-  // RECORDED MUTATION, TO BE OBSERVED BY THE CUSTODIAN (B2 piece 1b; not yet observed at this edit): in
+  // RECORDED MUTATION, OBSERVED BY THE CUSTODIAN at 7b547f90 (e2e run 2): in
   // src/App.tsx `handleStyleCommit`, stop enqueuing the `style.set` step (remove the `stepQueue.enqueue` in the loop).
   // CLASSC' must then fail with "no new class-A record_step row ... reached ok". Revert afterwards.
   // Milestone 1 re-aim (the human's Decision A; PRE-REGISTRATION Amendment 6, OPEN-3 (a) as `style.mjs` has it): Style is
@@ -669,7 +669,8 @@ async function stepClassC(page) {
  * The window, `group` (each group is `×N` for its N >= 2 rows of one key), `split run` (no two adjacent
  * items in the window, nor the first and the item before it, share a key), the not-exercised name, `parse`
  * (each class-A row in the window parses on its own, I8) and `capacity` are all kept. Not weakened: a
- * window whose rows are not grouped still fails `not exercised`. Rows from CLASSC''s earlier edit may join
+ * window whose rows are not grouped still fails by name, at `split run` when two adjacent items share a key,
+ * and otherwise at the not-exercised name. Rows from CLASSC''s earlier edit may join
  * the same run, so the window is all `style.set` step rows, expected to be the baseline count plus
  * GROUP_CALLS.
  *
@@ -679,11 +680,11 @@ async function stepClassC(page) {
  * `console.toggleGroupExpanded`, owner naming docs/03, statement containing "no API equivalent".
  */
 async function stepGroup(page, consoleHandle) {
-  // RECORDED MUTATION, TO BE OBSERVED BY THE CUSTODIAN (B2 piece 1b; not yet observed at this edit): in
+  // RECORDED MUTATION, OBSERVED BY THE CUSTODIAN at 7b547f90 (e2e run 2) and again at 3dfc1a0e (e2e run 3): in
   // src/console/consoleViewModel.ts `groupConsecutiveEntries`, stop coalescing (emit every entry as its own single item).
-  // GROUP' must then fail with the "grouping not exercised" name. Revert afterwards.
-  // RECORDED MUTATION 2, TO BE OBSERVED BY THE CUSTODIAN (the human's 2026-10-16 direction, Amendment 7; not yet
-  // observed at this edit): in src/console/ConsolePanel.tsx `ConsoleGroupRow`, remove the header click's
+  // GROUP' then fails by name at its `split run` check. Reverted afterwards.
+  // RECORDED MUTATION 2, OBSERVED BY THE CUSTODIAN at 3dfc1a0e (e2e run 3; the human's 2026-10-16 direction,
+  // Amendment 7): in src/console/ConsolePanel.tsx `ConsoleGroupRow`, remove the header click's
   // `recordNamed("gui-action", "console.toggleGroupExpanded");` call. GROUP' must then fail with a message
   // starting "GROUP': toggle" (no entry written by the click). Revert afterwards.
   const isStyleStep = (r) => {

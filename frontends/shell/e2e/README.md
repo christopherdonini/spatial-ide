@@ -282,19 +282,20 @@ is the shipped `candidate`. `CLASSB'` drives `publishPrepareWithDestination` (th
 seam) and asserts the resulting class-B entry names `binding_publish_prepare_e2e_destination` with
 no copy button, no `{` anywhere in its row, a citation containing "not callable", and the
 destination path string absent from the WHOLE `.console-panel` DOM (ADR-024's fence, proven at the
-UI). `CLASSC'` sets the fill colour through the real `.style-fill-color` input and asserts the
-resulting class-C entry names "no API equivalent" with an owner containing "ADR-022". `GROUP'`
-issues 3 identical `queryWithFilter` calls and polls (the same declared bound) for exactly 3 residential
-untiled `viewport_query` rows (`bbox` null), never by counting every new `.console-group-header`, then
-asserts the grouping rule inside their window (the rows from the first to the last, with every item that
-holds them or lies between): each group's header reads `×N` for its N >= 2 rows of one key; no two adjacent
-items share a key (a run of consecutive identical entries forms one item, and a session-log line between
-the rows ends the run and passes); some group shows 2+ rows inside the window, else it fails as
-`GROUP': grouping not exercised` (round 71); each class-A row there parses on its own, never a
-merged/synthetic one (I8); and the label's total may grow by at most the recorder's 256 so none of its own
-rows can have been evicted. It reports the window's items and what actually varies (the residential
-request texts are expected byte-identical: `viewport_query` carries no per-call nonce, unlike
-`open_dataset`'s `cancel_key`). `COPYTRUNC'`
+UI). `CLASSC'` sets the fill colour through the real `.style-fill-color` input. It polls, within the same
+declared bound, for a new class-A `record_step` row for that `style.set` edit at `ok`, and asserts that
+no class-C entry with an owner containing `ADR-022` remains. `GROUP'` makes three fill-colour edits and
+polls (the same declared bound) for their class-A `record_step` rows (`style.set`), never by counting
+every new `.console-group-header`. It then asserts the grouping rule inside their window (the rows from
+the first to the last, with every item that holds them or lies between): each group's header reads `×N`
+for its N >= 2 rows of one key; no two adjacent items share a key (a run of consecutive identical
+entries forms one item, and a session-log line between the rows ends the run and passes); some group
+shows 2+ rows inside the window, else it fails as `GROUP': grouping not exercised` (round 71); each
+class-A row there parses on its own, never a merged/synthetic one (I8); and the label's total may grow
+by at most the recorder's 256 so none of its own rows can have been evicted. It reports the window's
+items. After the group is found, one click on its header must write exactly one entry: the class-C row
+for `console.toggleGroupExpanded`, its owner naming docs/03 and its statement containing
+`no API equivalent`. `COPYTRUNC'`
 drives a NEAR-CAP (exactly `MAX_CRS_DEFINITION_BYTES` = 65 536 bytes) `crsAssertion.definitionJson`
 -- built from the REAL pinned catalog definition padded with low-quote-density filler, so the
 double-JSON-encoding a naive arithmetic check would miss (the field is a STRING holding already-
@@ -798,3 +799,5 @@ Asserted, in order: `OPEN`; `APPLY` (the real Apply of `zone = 'residential'`, t
 **H6.** Each recorded opacity (the committed `0.37` and the default `180 / 255` that Reset sends, a 16-digit double) is compared with the value the shell applied, bit for bit. A difference fails `RECORD` with both bit patterns and the distance in units in the last place; it is a finding for the form (its class 2), not a tolerance to widen.
 
 **What it proves not.** E2 (a normal close removes that run's record) is not a step: this harness stops an app only with `taskkill /T /F` and cannot close it normally (the form's H5), so row AA4 of the walkthrough's Part AA carries it. The kill proves that a line the kernel replied to survives the process ending; it does not prove it survives a power loss, which the form does not claim.
+
+E2 is row AA4. `page.fill` dispatches the native `change` event itself, so what a real colour picker's close and a real range release do in WebView2 (H2) is row AA2's to prove. Each step's recorded mutation is in the file's header, with its commit and run.

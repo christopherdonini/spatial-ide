@@ -798,7 +798,11 @@ use spatial_skp::v0::{Filter, FilterApplyParams, RecordStepRequest, StepIntent, 
 ///
 /// RECORDED MUTATION: `DatasetRef::linked` records a project-relative locator holding `ds.path()` in
 /// place of the machine-recorded one, so the header's locator `at` carries the path. Expected
-/// failure: `the history names the fixture's path`.
+/// failure: the writer checks the header against the reader's rules before it writes it, so
+/// `record_step` refuses it at `$.resource.locators[0].at` and this test fails at its `recorded`
+/// expectation. RECORDED MUTATION 2, for the path scan itself: the step's
+/// `dependencies.geometry_types` carries `ds.path()`, which the reader accepts. Expected failure:
+/// `the history names the fixture's path`.
 #[test]
 fn a_session_history_carries_no_generation_session_reference_handle_path_or_user_name() {
     let d = workspace("session-history");

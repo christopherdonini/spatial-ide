@@ -274,8 +274,8 @@ Two consequences worth stating here rather than leaving to the module:
   history** (`session_history`, ADR-036 §9, Proposed). It records each filter and style step a
   client commits through `record_step`; it holds no workspace state, applies nothing and replays
   nothing. The reason the other two are absent differs per operation, which the single sentence that
-  used to sit here hid. This crate now orchestrates **two** operations with
-  **different ADR-006 classes**:
+  used to sit here hid. Besides recording steps, a workspace mutation (ADR-006 class 2) that this
+  crate never applies, it orchestrates **two** operations with **different ADR-006 classes**:
   - **Streaming a query** is a **pure transformation**: an input snapshot plus parameters produce a
     derived output; the stream writes no workspace state and no file of its own, so no
     transaction boundary and no undo machinery is owed (DuckDB's spill:
@@ -357,7 +357,7 @@ was itself (bake-off README §21 Q1 / §22.1).
 
 *Pointers only: nothing here restates a schema, an ADR or a limitation. Updated in the PR of every piece that changes what a pointer points to. At most 60 lines.*
 
-- **Last verified at:** d5863945 (every pointer checked at that commit)
+- **Last verified at:** d5863945 (every pointer checked at that commit); the session-history row's pointers at 3dfc1a0e
 - **Interfaces this module owns:**
   - SKP v0 host, five of the six commands → `protocol/skp/SKP-V0.md` §1; `spatial_kernel::skp::SkpHost` · pinned by `kernel/tests/skp_admission.rs::viewport_query_refuses_synchronously_on_a_crs_mismatch_before_minting_a_handle`, `kernel/tests/source_watch_ordering.rs::describe_after_an_end_carries_session_end_and_describe_cancel_close_still_answer`, `kernel/src/skp.rs::tests::the_real_describe_geometry_carries_the_engines_encoding_for_each_open`, `kernel/src/skp.rs::tests::the_real_describe_of_a_point_open_is_geoarrow_point_with_the_shared_key_set`, `kernel/src/skp.rs::tests::the_real_describe_of_a_line_open_is_its_line_encoding_with_the_shared_key_set`, `kernel/tests/skp_projection.rs::a_covering_naming_a_column_the_file_lacks_refuses_a_bbox_viewport_query_before_the_mint_and_describe_reports_no_covering`
   - Stream tickets → SKP-V0 §1 (`viewport_query`, `cancel`), §3 (`StreamHandle`); `spatial_kernel::skp::StreamRegistry`, `spatial_kernel::EngineSourceFactory::ticket_only` · pinned by `kernel/src/skp.rs::tests::a_ticket_redeems_exactly_once`, `kernel/tests/skp_admission.rs::a_raw_stream_params_start_is_refused_in_ticket_only_mode`, `kernel/src/skp.rs::ticket_drop_under_lock_regression::an_unwind_through_cancel_drops_its_swept_source_after_releasing_the_guard`, `kernel/src/skp.rs::ticket_drop_under_lock_regression::an_unwind_through_cancel_all_for_dataset_drops_its_retired_source_after_releasing_the_guard`, `kernel/src/skp.rs::ticket_drop_under_lock_regression::cancel_of_a_pending_ticket_whose_post_check_found_a_change_does_not_hang`
@@ -374,7 +374,7 @@ was itself (bake-off README §21 Q1 / §22.1).
   - Session history → ADR-036 §6, §9, §12 (Proposed), SKP-V0 §10; `spatial_kernel::session_history` (`StepRecorder`, `default_root`, `recover`) · pinned by `kernel/tests/session_history.rs::a_filter_step_recorded_through_record_step_reads_back_with_its_reference_dependencies_and_observation`, `kernel/tests/session_history_crash.rs::an_aborted_process_keeps_every_step_it_was_told_was_recorded`, `kernel/src/session_history.rs::tests::recovery_keeps_the_longest_valid_prefix_and_names_the_first_failing_line`
   - Lasting dataset reference → ADR-036 (Proposed); `spatial_kernel::dataset_ref` (`DatasetRef`, `DatasetUri`, `Admission`, `RefCheck`, `RefBuildError`, `RefParseError`) · pinned by `kernel/tests/dataset_ref.rs::a_reference_survives_a_reopen_through_open_dataset_and_reports_no_change_detected`, `kernel/tests/dataset_ref.rs::a_reopen_after_the_file_changed_names_each_changed_component`
   - Binaries and the bundle verifier → `slice-host` (`kernel/src/main.rs`), `publish-bundle` (`kernel/src/bin/publish-bundle.rs`), the `verify-bundle` example (`kernel/examples/verify-bundle.rs`) · pinned by `kernel/tests/publish_cli.rs::the_interactive_approval_requires_the_destination_name_and_refuses_everything_else`, `kernel/tests/verify_bundle.rs::a_real_bundle_verifies`
-  - No generation or session reference in a persisted artifact → pinned by `kernel/tests/no_generation_in_persisted_artifacts.rs::the_published_bundle_carries_no_session_reference_key_or_value`, `kernel/tests/no_generation_in_persisted_artifacts.rs::a_dataset_reference_carries_no_generation_session_reference_handle_path_or_assertion_attribution`
+  - No generation or session reference in a persisted artifact → pinned by `kernel/tests/no_generation_in_persisted_artifacts.rs::the_published_bundle_carries_no_session_reference_key_or_value`, `kernel/tests/no_generation_in_persisted_artifacts.rs::a_dataset_reference_carries_no_generation_session_reference_handle_path_or_assertion_attribution`, `kernel/tests/no_generation_in_persisted_artifacts.rs::a_session_history_carries_no_generation_session_reference_handle_path_or_user_name`
   - Instrument surface never on the wire → ADR-004 Amendment 4; `kernel/CANCELLATION-AND-TRACING.md` §5 · pinned by `kernel/tests/wire_bytes_invariant.rs::tracing_changes_no_byte_on_the_wire`, `kernel/tests/wire_bytes_invariant.rs::wire_bytes_invariant_holds_for_the_projected_ticket_path_case_too`
 - **Consumed from other modules:**
   - `spatial_engine` (`Dataset`, `BatchStream`, `CancelToken`, `EngineError`, `trace` (`start`, `TraceGuard`, `TraceKey`, `is_enabled`, `mark`), and the admission, projection, filter, watch and source descriptor types, `SourceObservation` among them) ← engine
@@ -389,7 +389,7 @@ was itself (bake-off README §21 Q1 / §22.1).
   - kernel halves of pieces filed elsewhere: `engine/SOURCE-WATCHER-PREREGISTRATION.md` (§2b), `engine/ADMISSION-PREREGISTRATION.md`, `engine/B1-PROJECTION-PREREGISTRATION.md`, `engine/B1-FOLLOWUPS-PREREGISTRATION.md`, `engine/FILTER-BIND-COERCIONS-PREREGISTRATION.md`, `engine/GEOMETRY-LINES-PREREGISTRATION.md`, `engine/GEOMETRY-POINTS-PREREGISTRATION.md`, `engine/WATCHER-FIRST-READ-PREREGISTRATION.md`, `engine/MULTIPOLYGON-MP1-PREREGISTRATION.md`, `engine/COVERING-NAMES-MISSING-COLUMN-PREREGISTRATION.md`, `frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md`, `protocol/skp/CANCEL-STATE-CLOSED-SET-PREREGISTRATION.md`, `protocol/skp/SKP-V0-LIVE-SECTIONS-AREA-C-PREREGISTRATION.md`, `protocol/data-plane/TERMINAL-WITHOUT-CREDIT-PREREGISTRATION.md`
   - design notes: `kernel/CANCELLATION-AND-TRACING.md`
 - **Proposed ADRs, binding nothing:** ADR-012, ADR-019, ADR-023, ADR-024, ADR-036
-- **Declared limits:** KNOWN-LIMITATIONS 5, 6, 8, 12, 16, 21, 28, 30, 32
+- **Declared limits:** KNOWN-LIMITATIONS 5, 6, 8, 12, 16, 21, 28, 30, 32, 43
 - **Ceilings:**
   - `TICKET_TTL`, `MAX_PENDING_TICKETS`, `TERMINAL_ENTRY_MAX_AGE`, `SESSION_END_EVENT_QUEUE_BOUND` (`kernel/src/skp.rs`)
   - `MAX_VIEWER_ASSETS`, `MAX_VIEWER_ASSET_BYTES` (`kernel/src/publish/viewer_assets.rs`) · `PUBLISH_WRITE_CHUNK_BYTES` (`kernel/src/publish/mod.rs`) · the reader's ceilings, `spatial_kernel::publish::ceilings::reader_ceilings` (`kernel/src/publish/ceilings.rs`)

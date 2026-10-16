@@ -18,8 +18,9 @@
 //!   history** (`session_history`, ADR-036 §9, Proposed). It records each filter and style step a
 //!   client commits through `record_step`; it holds no workspace state, applies nothing and replays
 //!   nothing. The reason the other two are absent differs per operation, which the single sentence
-//!   that used to sit here hid. This crate now orchestrates **two** operations with
-//!   **different ADR-006 classes**:
+//!   that used to sit here hid. Besides recording steps, a workspace mutation (ADR-006 class 2) that
+//!   this crate never applies, it orchestrates **two** operations with **different ADR-006
+//!   classes**:
 //!   - **Streaming a query** is a **pure transformation**: an input snapshot plus parameters produce a
 //!     derived output; the stream writes no workspace state and no file of its own, so no
 //!     transaction boundary and no undo machinery is owed (DuckDB's spill is named below, by

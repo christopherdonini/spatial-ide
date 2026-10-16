@@ -30,6 +30,15 @@
 // float parse (no `float_roundtrip`) could return one unit in the last place away. The suite compares each recorded
 // opacity with the value the shell applied BIT FOR BIT, and a difference fails the step with both bit patterns and the
 // distance in units in the last place, so a drift is a finding with its size, never a rounding the suite forgives.
+//
+// **Recorded mutations, observed by the custodian at 936b7982 (e2e run 1), each applied alone and reverted, each failing at
+// the step it names.** REC-APPLY: the `stepQueue.enqueue` line removed from `commitActiveFilter` (`App.tsx`); fails at APPLY,
+// `expected 1 record_step rows, all ok; saw []`. REC-STYLE: the enqueue loop removed from `handleStyleCommit` (`App.tsx`);
+// fails at STYLE, `expected 2 record_step rows, all ok; saw ["ok"]`. REC-RESET: the `onCommit` call removed from the Reset
+// handler (`StylePanel.tsx`); fails at RESET, `expected 5 record_step rows, all ok; saw ["ok","ok","ok"]`. REC-CHAIN: the kernel
+// writes every step's `parent` as null (`session_history.rs`); fails at RECORD, `step 2 does not chain: parent null`.
+// Not proved here: E2, which is row AA4; and H2 (a real colour picker's close and a real range release), because `page.fill`
+// dispatches `change` itself, which is row AA2's to prove.
 
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";

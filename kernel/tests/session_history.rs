@@ -144,8 +144,9 @@ fn text(v: &Json) -> String {
 /// the Arrow type `describe` spells, the CRS by its identifier, its provenance class and the hash of
 /// its definition text, and the file's declared geometry types.
 ///
-/// RECORDED MUTATION: the writer omits `data` from the step line. Expected failure: the read-back
-/// finds the line refused (`recover` names it), and this test fails at `recover`'s failure.
+/// RECORDED MUTATION: the writer omits `data` from the step line. Expected failure: the writer
+/// checks the line against the reader's rules before it writes it and refuses it (`MissingMember` at
+/// `$.step.data`), so this test fails at its `recorded` expectation.
 #[test]
 fn a_filter_step_recorded_through_record_step_reads_back_with_its_reference_dependencies_and_observation(
 ) {

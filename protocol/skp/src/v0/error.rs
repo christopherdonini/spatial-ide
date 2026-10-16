@@ -114,8 +114,11 @@ impl SkpError {
         )
     }
 
-    /// `record_step` (`skp/0.12`): the write or the flush failed (after a flush failure the bytes
-    /// may be in the file, so the message does not say they are not).
+    /// `record_step` (`skp/0.12`): the history could not be created (the shell's binding also
+    /// returns this when no per-user data directory resolves), locked or written, or the step's
+    /// line could not be built or breaks a rule the reader holds, so it is not written; `detail`
+    /// says which. After a flush failure the bytes may be in the file, so the message does not say
+    /// they are not.
     pub fn session_history_unwritable(detail: &str) -> Self {
         Self::protocol_with_fields(
             "session_history_unwritable",

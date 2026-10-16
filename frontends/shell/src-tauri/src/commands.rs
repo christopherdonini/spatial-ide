@@ -164,7 +164,7 @@ pub struct DataPlaneAttach {
 
 /// The one command that ever hands the shell's WebSocket client an endpoint and a credential.
 /// **Not SKP** — ADR-012 H6 forbids a transport detail on the semantic API, so this is named,
-/// documented and excluded from the command catalog rather than dressed up as a sixth command.
+/// documented and excluded from the command catalog rather than dressed up as an SKP command.
 #[tauri::command]
 pub fn binding_data_plane_attach(state: State<'_, DataPlaneHandle>) -> DataPlaneAttach {
     DataPlaneAttach {

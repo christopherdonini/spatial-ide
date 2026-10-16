@@ -1258,12 +1258,12 @@ intent = { action: "filter.apply", params: { filter: Filter | null } }
 ### 10.3 The contract
 
 - **Record only.** The client commits the change in its own state first. The kernel validates the intent, mints the step's `id` and `at`, takes `actor` (`user`) and `effect`, appends one line to the session history, flushes it, and replies. It applies nothing and holds no workspace state; nothing in SKP restores, undoes or replays a step.
-- **The order of checks:** (1) the version; (2) the catalog entry of the handle; (3) the live check `viewport_query` uses, so a dataset whose session has ended is refused with the end's code; (4) the action; (5) for a `filter.apply` that carries a filter, admission as §7.6 admits it; (6) for `style.set`, the value as the style model admits it; (7) the history's record for the open file, created at its first step; (8) the line's bounds; (9) one write of the whole line; (10) one flush; (11) the reply. A refusal at (1) to (8) writes nothing.
+- **The order of checks:** (1) the version; (2) the catalog entry of the handle; (3) the live check `viewport_query` uses, so a dataset whose session has ended is refused with the end's code; (4) the action; (5) for a `filter.apply` that carries a filter, admission as §7.6 admits it; (6) for `style.set`, the value as the style model admits it; (7) the history's record for the open file, created at its first step; (8) the line's bounds, and its members against the bounds the reader holds (ADR-036 §9); (9) one write of the whole line; (10) one flush; (11) the reply. A refusal at (1) to (6) writes nothing. At the first step for an open file, (7) creates the record: its folder, `locations.json` and the history's header line; a refusal at (8) leaves that record and writes no step. A failure at (7) removes what (7) wrote, as far as the operating system allows.
 - **The live check is the one ordering point.** A `close_dataset` or a session end that lands after it does not stop the write: the line is true of the open it names. `record_step` takes no lock a close waits on.
 - **Not cancellable, no progress, not idempotent:** one write and one flush, no stream or ticket, and each success appends one new step.
 - **The flush** asks the operating system to write the line to storage before the reply, as the audit log does. A crash of the application after the reply does not lose the step; a power loss is not claimed to preserve it. Where the history is kept, how it is recovered and when it is cleared are ADR-036 §9's.
 - **A failed write stops that history:** each later step for it is refused `skp.session_history_stopped`.
-- **Bounds.** A step's line is at most 262,144 bytes and the whole history at most 33,554,432 bytes; a step that would pass either is refused and not written. No wire member carries the figures.
+- **Bounds.** A step's line is at most 262,144 bytes and the whole history at most 33,554,432 bytes; a step that would pass either is refused and not written. A line with a member past a bound the reader holds (a text of more than 4,096 bytes, a list of more than 1,024 items) is refused `skp.session_history_unwritable` and not written, because the reader stops at the first line it refuses (ADR-036 §9). No wire member carries the figures.
 
 ### 10.4 Refusal taxonomy
 
@@ -1273,7 +1273,7 @@ Five new codes, all minted by the host:
 
 | Code | Fields | When |
 |---|---|---|
-| `skp.session_history_unwritable` | `detail` | the write or the flush failed; after a flush failure the bytes may be in the file |
+| `skp.session_history_unwritable` | `detail` | the history could not be created (also when no per-user data directory resolves), locked or written; or the line could not be built, or breaks a rule the reader holds (a member past a bound) and is not written; after a flush failure the bytes may be in the file |
 | `skp.session_history_full` | `limit` | the whole history would pass its ceiling |
 | `skp.session_history_stopped` | *(none)* | an earlier write to this history failed |
 | `skp.step_line_over_ceiling` | `saw`, `limit` | the step's line would pass its ceiling |
