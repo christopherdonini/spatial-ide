@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `8c82214c3cbaa58b720046db4a6de31b87069cbd6002eee38588e7ce42d2526c`) at `2026-10-16T21:55:29.081Z`.
+Generated from `PLAN.yaml` (sha256 `0ddb79f46f969b367ffe0bcf62d2c76df1119a71ea40b59d742f097448297278`) at `2026-10-16T22:01:03.625Z`.
 
 ## 1. Next
 
@@ -9,7 +9,6 @@ Generated from `PLAN.yaml` (sha256 `8c82214c3cbaa58b720046db4a6de31b87069cbd6002
 ## 2. Ready
 
 - **known-limitations-crs-epoch-edges-third-axis** — KNOWN-LIMITATIONS: a file's declared coordinate epoch, its edges value and a third CRS axis are not used, shown or carried into a bundle (lane `release`, order null, budget 45 min)
-- **governance-search-ignore-historical** — A root .ignore over historical material (site, the generated queue JSON, the cut archive, drafts, gate reports), tested both ways with the agents' own search tool, and its search rule appended to AUTONOMY; the routine-read and search-corpus measurements taken before it (lane `governance`, order null, budget 0 min)
 
 ## 3. Waiting on the human (total: 0 min)
 
@@ -28,7 +27,7 @@ Generated from `PLAN.yaml` (sha256 `8c82214c3cbaa58b720046db4a6de31b87069cbd6002
 
 ## 5. In progress
 
-- (none)
+- **governance-search-ignore-historical** — A root .ignore over historical material (site, the generated queue JSON, the cut archive, drafts, gate reports), tested both ways with the agents' own search tool, and its search rule appended to AUTONOMY; the routine-read and search-corpus measurements taken before it — evidence: branch `cut/search-ignore-historical`
 
 ## 6. Proposed / unscheduled
 

@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-16T21:55:29.213Z",
-  "plan_hash": "8c82214c3cbaa58b720046db4a6de31b87069cbd6002eee38588e7ce42d2526c",
+  "generated_at": "2026-10-16T22:01:03.755Z",
+  "plan_hash": "0ddb79f46f969b367ffe0bcf62d2c76df1119a71ea40b59d742f097448297278",
   "priorities_approved": true,
   "lanes": [
     {
@@ -8451,7 +8451,7 @@
       "kind": "task",
       "lane": "governance",
       "phase": "prototype",
-      "status": "ready",
+      "status": "in-progress",
       "order": null,
       "depends_on": [
         "boundary-inventory"
@@ -8461,12 +8461,14 @@
         "minutes": 0
       },
       "gate": "scripts/plan/SEARCH-IGNORE-HISTORICAL-PREREGISTRATION.md",
-      "evidence": null,
+      "evidence": {
+        "branch": "cut/search-ignore-historical"
+      },
       "budget_minutes": 0,
       "generation": 2,
       "felt_verdict": false,
       "entries": [],
-      "summary": "READY 2026-10-16 by derivation: its one dependency, boundary-inventory, is done. OPEN-2 and OPEN-3 are still with the human, before S4. Before: OPEN-1 RULED 2026-10-15 (state/directives/2026-10-15-round-1b-i3-allowed-a-open-1-b-open-1-open-2.md): (A), the ledger entries of the seven days before the block's flush (Amendment 1). OPEN-2 and OPEN-3 still open, before S4. Before: FORM COMMITTED 2026-10-14 (scripts/plan/SEARCH-IGNORE-HISTORICAL-PREREGISTRATION.md, a full form by section 21c's size, 380 lines over 6 files, drafted by the architect: state/consults/2026-10-14-governance-search-ignore-historical-architect-draft.md, sha256 b7815de0; pins hashed by the custodian at b9b902bf). OPEN-1 (the ledger part's definition, before dispatch), OPEN-2 (the rule's hidden-folder clause, if the Grep tool searches hidden folders) and OPEN-3 (the words on how to search an excluded location) with the human. Before: PLACED 2026-10-14 by the human (state/directives/2026-10-14-governance-smaller-reads-ignore-cut-state-rotation-decisions-pending.md); never slot 1; each merge the human's click: piece A. The measurement script is written before the first measurement and run unchanged after C. NEXT: the architect drafts the form.",
+      "summary": "IN PROGRESS 2026-10-17: the branch cut/search-ignore-historical at M0 = fbbffe89 (worktree C:/dev/wt/sih); one worker builds S1 to S3 (the script and its tests, the two probes, .ignore), runs M-1 and M-2 at M0, the control at S2 and O1 to O14, D1 and G at S3. S4, the AUTONOMY section, waits for OPEN-2 and OPEN-3; the PR opens after S4. Before: READY 2026-10-16 by derivation: its one dependency, boundary-inventory, is done. OPEN-2 and OPEN-3 are still with the human, before S4. Before: OPEN-1 RULED 2026-10-15 (state/directives/2026-10-15-round-1b-i3-allowed-a-open-1-b-open-1-open-2.md): (A), the ledger entries of the seven days before the block's flush (Amendment 1). OPEN-2 and OPEN-3 still open, before S4. Before: FORM COMMITTED 2026-10-14 (scripts/plan/SEARCH-IGNORE-HISTORICAL-PREREGISTRATION.md, a full form by section 21c's size, 380 lines over 6 files, drafted by the architect: state/consults/2026-10-14-governance-search-ignore-historical-architect-draft.md, sha256 b7815de0; pins hashed by the custodian at b9b902bf). OPEN-1 (the ledger part's definition, before dispatch), OPEN-2 (the rule's hidden-folder clause, if the Grep tool searches hidden folders) and OPEN-3 (the words on how to search an excluded location) with the human. Before: PLACED 2026-10-14 by the human (state/directives/2026-10-14-governance-smaller-reads-ignore-cut-state-rotation-decisions-pending.md); never slot 1; each merge the human's click: piece A. The measurement script is written before the first measurement and run unchanged after C. NEXT: the architect drafts the form.",
       "dates": {
         "opened": "2026-10-14",
         "done": null
