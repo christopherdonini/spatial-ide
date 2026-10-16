@@ -942,3 +942,15 @@ Nothing above is edited.
 4. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 12 — ADR-022 by route (a), the human's typed word; the Reset line at the sitting; S5d its own item (class 5)
+
+*Written by the custodian on the human's words (`state/directives/2026-10-16-222-adr-022-route-a-restore-and-reappend-reset-line-p6-s5d-own-item.md`). References only.*
+
+1. **ADR-022 (Amendment 9 item 1), route (a):** on the branch, the ADR is restored to B's bytes with git, the one restore the human's word covers (G3 is unchanged); a worker then appends Amendment 1 once more, with the C-5 words in place of `each edit is one step` and every other byte of the amendment as at a542097e.
+2. **Before ready:** the custodian's script check that the file above the amendment heading is byte-identical to main's, and that the PR's diff to the ADR is the appended amendment alone; the result goes in the PR body.
+3. **The console statement for a Reset that changes nothing** (class C, `style.resetToDefault`): a P6 placeholder, sighted at the sitting with the others.
+4. **S5d** (source-changed's post route): its own PLAN item, `source-changed-post-route-s5d-race`, appended as proposed; it fails at main's base, so this piece is not charged with it.
+5. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.

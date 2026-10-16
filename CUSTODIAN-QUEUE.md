@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `02bdf1d20feb76213d362cbbbd05bd6ce63be5a7ceff397d9801d8e549b7f176`) at `2026-10-16T13:53:08.316Z`.
+Generated from `PLAN.yaml` (sha256 `55b3efcc42869d719cdd24d10e229a02d3fa48b0d8eceadf23f51177ba207faf`) at `2026-10-16T18:46:00.702Z`.
 
 ## 1. Next
 
@@ -117,6 +117,8 @@ Generated from `PLAN.yaml` (sha256 `02bdf1d20feb76213d362cbbbd05bd6ce63be5a7ceff
 - **boundary-inventory** — Boundary inventory: one page, one table, read-only and descriptive (the architect): what each boundary's enforcement is, by code or the OS, by tests, by instruction only, or not built (phase `prototype`) — never queued until placed
 - **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark (phase `prototype`) — never queued until placed
 - **verify-quotes-dotted-paths** — verify-quotes: the hash-reference path grammar cannot begin with a dot, so a pinned cite into .github/ can never be checked (phase `prototype`) — never queued until placed
+- **source-changed-post-route-s5d-race** — source-changed.mjs's post route: step S5d (post-check-route-confirmed) loses its race to a tile's pre-check in about half the runs on this machine, at main's base too (phase `prototype`) — never queued until placed
+- **connection-reuse-recycled-interrupt-flake** — engine/tests/connection_reuse.rs: cancellation_before_the_first_batch_binds_a_recycled_connection_and_delivers_nothing failed once on ubuntu-24.04 in PR #222's pull_request run at a542097e, and the push run of the same commit passed it (phase `prototype`) — never queued until placed
 
 ### Unscheduled
 
