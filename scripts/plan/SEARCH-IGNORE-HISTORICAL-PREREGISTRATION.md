@@ -280,3 +280,17 @@ An invocation is a line in a file that runs (a script, a workflow, a hook config
 3. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 2 — S1 to S3 built, the baseline figures taken and the observations run; no invalidator; the deviations (class 2), written after the results were seen
+
+*Written by the custodian after the worker's report was seen. References only. The report is `state/consults/2026-10-16-governance-search-ignore-historical-s1-s3-worker-report.md` (its sha256 from line 5 to the end, cd7cc167dc5279e8587a6bc01b69522c085fc19d496ccd13fc13e2f2d2222533).*
+
+1. **Built:** S1 b1fa4319 (the script and T1 to T7), S2 adef3fda (the two probes), S3 7f09c0e3 (`.ignore`), on `cut/search-ignore-historical` from M0 fbbffe89. T1 to T7 pass, and each of M1 to M7 was observed failing at its named assertion (the report).
+2. **The figures at M0** (§2 item 5), each run twice with identical output, are in the report: M-1 and M-2 with their stderr lines, output digests, environment facts and the script's sha256 at S1. They go in the PR body, and into this form's closing amendment after the merge.
+3. **The observations:** P0 held at S2 and S3; the control at S2 found the drafts probe (O1, O2, O8); O1 to O13 came out as §4 predicts, and O6 found the hidden probe, so OPEN-2's H1 is live; O13 also listed the hidden probe (recorded, not predicted). O14's Glob listed 100 of 157 files and the probe was not among them; the worker's extra Glob row naming the file found it. The clause "Glob lists the files there" rests on O13, as §5 allows. D1 is identical at S2 and S3; G found no invocation of ripgrep.
+4. **The deviations (class 2):** M1 to M7 were observed against M0 with S1's files staged, before S1 existed, and the RECORDED MUTATION comments say so (the script's bytes are those of S1); the stderr field `entries=` counts the kept entries, a reading of §2 item 3, which does not define it; one comment line in the test file passes 100 columns.
+5. **§7 at S3:** 319 lines over 5 files, by its command; `AUTONOMY.md` is not yet written.
+6. **Still open:** OPEN-2 and OPEN-3, before S4. The gates run after S4, at the PR head.
+7. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
