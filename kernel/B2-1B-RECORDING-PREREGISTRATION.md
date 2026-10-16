@@ -906,3 +906,14 @@ Nothing above is edited.
 8. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 9 — the human's words on C-5 and on O3 (class 5)
+
+*Written by the custodian on the human's words (`state/directives/2026-10-16-1b-c5-adr-022-one-step-per-property-o3-still-waiting-to-be-sent.md`). References only.*
+
+1. **C-5:** in ADR-022 Amendment 1 (the sentence on ADR-006's class-2 machinery), the human's words replace `each edit is one step`; the rest of the sentence stands. ADR-022 then equals Amendment 1 item 2 with that one replacement. The architect checks the words clause by clause once, in gate 2 (AUTONOMY §31(b)); no re-gate.
+2. **O3 and its filter counterpart** (§2.10) end `still waiting to be sent` in place of `still waiting there`. Both stay P6 placeholders until the sitting.
+3. **Applied** on the branch by a worker, in one commit after correction round 1 and before gate 2, so that gate 2 reads one head.
+4. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
