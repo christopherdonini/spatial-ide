@@ -82,5 +82,5 @@ export function noticeText(report: StepRecordReport): string {
   const applied = report.intent.action === "filter.apply" ? "Filter applied." : "Style change applied.";
   return report.kind === "not-confirmed"
     ? `${applied} The session history did not confirm keeping it: ${report.message}`
-    : `${applied} It was not sent to the session history: ${report.waiting} earlier changes are still waiting there.`;
+    : `${applied} It was not sent to the session history: ${report.waiting} earlier changes are still waiting to be sent.`;
 }

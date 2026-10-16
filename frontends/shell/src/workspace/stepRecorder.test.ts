@@ -59,6 +59,6 @@ describe("the step queue (B2 piece 1b, section 2.5)", () => {
     expect(reports).toHaveLength(1);
     const report = reports[0]!;
     expect(report).toMatchObject({ kind: "not-sent", dataset: "ds_x", waiting: MAX_PENDING_STEP_RECORDS });
-    expect(noticeText(report)).toBe("Filter applied. It was not sent to the session history: 64 earlier changes are still waiting there.");
+    expect(noticeText(report)).toBe("Filter applied. It was not sent to the session history: 64 earlier changes are still waiting to be sent.");
   });
 });
