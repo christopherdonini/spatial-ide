@@ -220,10 +220,7 @@ impl StepRecorder {
         // Every handle `write_record` opened is closed when it returns an error, so the removal
         // below meets no open file.
         self.write_record(&dir, reference, ds, &header)
-            .map_err(|e| {
-                let _ = std::fs::remove_dir_all(&dir);
-                e
-            })
+            .inspect_err(|_| drop(std::fs::remove_dir_all(&dir)))
     }
 
     /// The files of a new record, in the folder `create` made.
