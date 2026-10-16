@@ -879,3 +879,15 @@ Nothing above is edited.
 4. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 7 — the human's direction on the re-aim: approved as committed; GROUP' also proves a group toggle's class-C row (class 5)
+
+*Written by the custodian on the human's direction (`state/directives/2026-10-16-1b-console-reaim-approved-group-toggle-class-c.md`). References only.*
+
+1. **Approved as committed** at 7b547f90: GROUP', and CLASSC' with its name and its comment's reason. Amendment 6 item 3 is met.
+2. **Added to GROUP' before the gates:** the class-C proof the earlier CLASSC' gave, on a group toggle, with its mutation; the step's existing mutation is observed again at the new head. The direction gives the assertion and the mutation.
+3. **The console suite** runs once at that head. On a pass with both mutations observed, both gates start without a further word.
+4. **Unchanged:** the unused helpers stay; the overrun stands as recorded in Amendment 5 item 3, class 8.
+5. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
