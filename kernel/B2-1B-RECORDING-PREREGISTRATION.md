@@ -917,3 +917,17 @@ Nothing above is edited.
 4. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 10 — gate 2: both FAIL; correction round 2 of 2, the last (class 2)
+
+*Written by the custodian after both gate 2 reports and the architect's answer on a test `cfg` were seen, at the head d2501969. References only. The reports: the architect `state/consults/gates/2026-10-16-b2-piece-1b-recording-gate2-architect.md` (gate-log 524, sha256 d740c0a3), its addendum `state/consults/gates/2026-10-16-b2-piece-1b-recording-gate2-architect-addendum-test-cfg.md` (sha256 1f9671e9, the answer to the custodian's question on §8 item 8, no verdict of its own), and the reviewer `state/consults/gates/2026-10-16-b2-piece-1b-recording-gate2-reviewer.md` (gate-log 525, sha256 ba4cbc57).*
+
+1. **Gate 2:** both FAIL. The architect: NC-1, a limit sentence's words, given; ND-1 to ND-4, words given; ND-5 the PR body; correction round 1's findings met; the clause check of the human's C-5 words passes, so they land as they stand. The reviewer: E-1 (Evidence), the cleanup after a failed record creation has a product seam on Windows and no test; C-1, the same sentence as NC-1, words given; D-1, the kernel index's verified line, words given. Evidence is otherwise closed at d2501969.
+2. **Correction round 2 of 2, the last, one worker-high, in code:** E-1's test in the form the addendum gives. It is a test under no `cfg`, which §8 item 8 blocks; it checks the operating system at run time, drives only product calls, and removes its ACE in a drop guard. Its recorded mutation is observed at the round's head. The comment saying that no test drives the removal is replaced by words naming the test and its seam. The reviewer's optional N1 (the newline literal written as `"\n"`) rides along.
+3. **In the same round, words:** NC-1 in the architect's words (the reviewer's C-1 gives the same sentence with one word more, and is met by them); ND-1 to ND-4; the reviewer's D-1, naming the round's code commit; and the walkthrough's GROUP' row (the reviewer's note N4), which the re-aim at 7b547f90 made untrue, in words the worker writes and lists.
+4. **Gate 3:** both gates, scoped to round 2, because the round adds a test. The words carry no re-gate of their own.
+5. **The custodian's:** the PR body (ND-5; the sentence that says no test reaches the removal is deleted; the round's words listed). Amendment 9 item 1 (ADR-022) still waits for the human's route; the human's words pass the architect's clause check.
+6. **If a blocking finding remains after gate 3,** the architect reduces the piece, by the two-round cap.
+7. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
