@@ -101,5 +101,13 @@
     "candidate_columns": "a,b"
    }
   }
+ },
+ {
+  "id": "resp-record-step",
+  "spec": "\u00a710.2 record_step response (an empty closed object)",
+  "wire_type": "record_step.response",
+  "expect": "accept",
+  "roundtrip": true,
+  "document": {}
  }
 ]

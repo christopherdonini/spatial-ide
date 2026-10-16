@@ -14,9 +14,13 @@
 //!
 //! ## What is deliberately absent
 //!
-//! - **No lineage DAG, no undo, no command/event log — and the reason differs per operation, which the
-//!   single sentence that used to sit here hid.** This crate now orchestrates **two** operations with
-//!   **different ADR-006 classes**:
+//! - **No lineage DAG and no undo. One command log exists, for workspace mutations: the session
+//!   history** (`session_history`, ADR-036 §9, Proposed). It records each filter and style step a
+//!   client commits through `record_step`; it holds no workspace state, applies nothing and replays
+//!   nothing. The reason the other two are absent differs per operation, which the single sentence
+//!   that used to sit here hid. Besides recording steps, a workspace mutation (ADR-006 class 2) that
+//!   this crate never applies, it orchestrates **two** operations with **different ADR-006
+//!   classes**:
 //!   - **Streaming a query** is a **pure transformation**: an input snapshot plus parameters produce a
 //!     derived output; the stream writes no workspace state and no file of its own, so no
 //!     transaction boundary and no undo machinery is owed (DuckDB's spill is named below, by
@@ -38,7 +42,8 @@
 //!   `spatial://dataset/<name>` logical URI, and each bundle claims an ADR-005 grade —
 //!   **Snapshot**, with its basis stated and the reason Exact is not claimed written down beside it.
 //!   Besides the bundle, the permission boundary's audit log (`permission::audit`) writes: it
-//!   creates its directory, appends to its file, and rotates it (`rotate_if_needed`). The kernel's
+//!   creates its directory, appends to its file, and rotates it (`rotate_if_needed`). The session history
+//!   (`session_history`) appends under the same data directory. The kernel's
 //!   own stream code opens no file for writing; DuckDB's default spill of intermediates is not
 //!   configured off by the engine (`kernel/CANCELLATION-AND-TRACING.md` §7; `kernel/RESULTS.md`,
 //!   the subsection on §5d being partially measurable).
@@ -74,6 +79,7 @@ pub mod dataset_ref;
 pub mod params;
 pub mod permission;
 pub mod publish;
+pub mod session_history;
 pub mod skp;
 
 pub use params::{StreamParams, OPERATION};

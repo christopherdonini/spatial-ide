@@ -1,0 +1,14 @@
+{
+  "skp": "skp/0.12",
+  "dataset": "ds_00112233445566778899aabbccddeeff",
+  "intent": {
+    "action": "style.set",
+    "params": {
+      "property": "outlineWidth",
+      "value": {
+        "value": 2.5,
+        "unit": "px"
+      }
+    }
+  }
+}

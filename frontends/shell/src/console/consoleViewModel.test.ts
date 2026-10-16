@@ -124,7 +124,7 @@ describe("buildRowViewModel", () => {
   });
 
   it("class C: the view model has no field an argument object or a JSON block could occupy (I6, run-time shape)", () => {
-    const entry = guiEntry(0, "style.setFillColor");
+    const entry = guiEntry(0, "style.togglePanelExpanded");
     const vm = buildRowViewModel(entry) as ClassCRowViewModel;
 
     expect(vm.kind).toBe("class-c");

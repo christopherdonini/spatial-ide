@@ -282,19 +282,20 @@ is the shipped `candidate`. `CLASSB'` drives `publishPrepareWithDestination` (th
 seam) and asserts the resulting class-B entry names `binding_publish_prepare_e2e_destination` with
 no copy button, no `{` anywhere in its row, a citation containing "not callable", and the
 destination path string absent from the WHOLE `.console-panel` DOM (ADR-024's fence, proven at the
-UI). `CLASSC'` sets the fill colour through the real `.style-fill-color` input and asserts the
-resulting class-C entry names "no API equivalent" with an owner containing "ADR-022". `GROUP'`
-issues 3 identical `queryWithFilter` calls and polls (the same declared bound) for exactly 3 residential
-untiled `viewport_query` rows (`bbox` null), never by counting every new `.console-group-header`, then
-asserts the grouping rule inside their window (the rows from the first to the last, with every item that
-holds them or lies between): each group's header reads `×N` for its N >= 2 rows of one key; no two adjacent
-items share a key (a run of consecutive identical entries forms one item, and a session-log line between
-the rows ends the run and passes); some group shows 2+ rows inside the window, else it fails as
-`GROUP': grouping not exercised` (round 71); each class-A row there parses on its own, never a
-merged/synthetic one (I8); and the label's total may grow by at most the recorder's 256 so none of its own
-rows can have been evicted. It reports the window's items and what actually varies (the residential
-request texts are expected byte-identical: `viewport_query` carries no per-call nonce, unlike
-`open_dataset`'s `cancel_key`). `COPYTRUNC'`
+UI). `CLASSC'` sets the fill colour through the real `.style-fill-color` input. It polls, within the same
+declared bound, for a new class-A `record_step` row for that `style.set` edit at `ok`, and asserts that
+no class-C entry with an owner containing `ADR-022` remains. `GROUP'` makes three fill-colour edits and
+polls (the same declared bound) for their class-A `record_step` rows (`style.set`), never by counting
+every new `.console-group-header`. It then asserts the grouping rule inside their window (the rows from
+the first to the last, with every item that holds them or lies between): each group's header reads `×N`
+for its N >= 2 rows of one key; no two adjacent items share a key (a run of consecutive identical
+entries forms one item, and a session-log line between the rows ends the run and passes); some group
+shows 2+ rows inside the window, else it fails as `GROUP': grouping not exercised` (round 71); each
+class-A row there parses on its own, never a merged/synthetic one (I8); and the label's total may grow
+by at most the recorder's 256 so none of its own rows can have been evicted. It reports the window's
+items. After the group is found, one click on its header must write exactly one entry: the class-C row
+for `console.toggleGroupExpanded`, its owner naming docs/03 and its statement containing
+`no API equivalent`. `COPYTRUNC'`
 drives a NEAR-CAP (exactly `MAX_CRS_DEFINITION_BYTES` = 65 536 bytes) `crsAssertion.definitionJson`
 -- built from the REAL pinned catalog definition padded with low-quote-density filler, so the
 double-JSON-encoding a naive arithmetic check would miss (the field is a STRING holding already-
@@ -782,3 +783,21 @@ npm run e2e:export-view
 `e2e/export-view.mjs` drives the Export panel's Current view on real WebView2 with `filter-zoned.parquet`, and records the fixture's sha256 before and after. Every box it reads is parsed from the Row scope line of the host's real approval prompt (prepared through the dev destination seam, then abandoned; nothing is executed and no bundle is written), and each prompt's sentence is matched whole against the human's wording. Asserted, each as a named step: `E-CV-OPEN` (after the first pixels and before any input, the Current view radio is not disabled), `E-CV` (a corner view set through `e2eSetViewState` gives box A; after Apply `zone = 'residential'`, once at least one feature is resident after it and the render has settled, Current view gives F and F differs from A) and `E-CV-RESIZE` (Clear through the same seam and the refit give F'; after `page.setViewportSize` shrinks the window, Current view gives R and R differs from F'). Recorded, not asserted: `EV5`, whether the box after a Zoom to layer click equals F.
 
 **What it proves not.** Two boxes "differ" when a side moves by more than a thousandth of the larger extent, a bound for telling them apart and not a tolerance on any area. The shrink uses the window sizes the harness bounds it with (85% of the inner size, not below 1024 x 640); a window already at that floor makes `E-CV-RESIZE` fail as inconclusive. That Current view sends what the map shows at a map size of 0 is not exercised, and the source comment of `getViewBox` says it does not hold there. Each step's recorded mutation is in the file's header, with the commit and the run that observed it.
+
+## Recording spec (b2-piece-1b-recording)
+
+```
+npm run e2e:recording
+```
+
+*Draft for the human's sight (the form's §9 and item 2e): the entry follows `kernel/B2-1B-RECORDING-PREREGISTRATION.md` §4 (E1) and §2.5, and its sentences are not the human's wording.*
+
+`e2e/recording.mjs` drives a filter and the style panel on real WebView2 with `filter-zoned.parquet`, and reads what the kernel wrote. The suite sets `LOCALAPPDATA` to a fresh scratch folder in its own environment before it launches the app (`lib.mjs` spawns it with that environment), so the session history lands in `<scratch>\spatial-ide\sessions` and nowhere else. It therefore launches its own app and refuses one already listening on the CDP port. The scratch folder is removed after a passing run and kept after a failing one.
+
+Asserted, in order: `OPEN`; `APPLY` (the real Apply of `zone = 'residential'`, then one `record_step` console row at `ok`); `STYLE` (a `0.37` fill opacity and a `#112233` fill colour, each a commit, each followed by its row at `ok`); `RESET` (the Reset button, which commits the default style: two more rows); and `RECORD` (E1: the process tree is killed, the history is read once the operating system has freed the kernel's lock, and it is a header and five steps, in order and chained, the header naming one dataset that every step names, the filter's `dependencies` naming the field `zone`, `locations.json` naming the same dataset). The suite waits on the console's rows because a live history is locked and cannot be read; a row at `ok` means the kernel replied, which it does only after its flush.
+
+**H6.** Each recorded opacity (the committed `0.37` and the default `180 / 255` that Reset sends, a 16-digit double) is compared with the value the shell applied, bit for bit. A difference fails `RECORD` with both bit patterns and the distance in units in the last place; it is a finding for the form (its class 2), not a tolerance to widen.
+
+**What it proves not.** E2 (a normal close removes that run's record) is not a step: this harness stops an app only with `taskkill /T /F` and cannot close it normally (the form's H5), so row AA4 of the walkthrough's Part AA carries it. The kill proves that a line the kernel replied to survives the process ending; it does not prove it survives a power loss, which the form does not claim.
+
+E2 is row AA4. `page.fill` dispatches the native `change` event itself, so what a real colour picker's close and a real range release do in WebView2 (H2) is row AA2's to prove. Each step's recorded mutation is in the file's header, with its commit and run.

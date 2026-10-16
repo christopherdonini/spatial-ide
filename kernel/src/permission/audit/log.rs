@@ -367,7 +367,7 @@ pub fn resolve_log_path() -> Result<PathBuf, AuditError> {
 /// No `dirs` crate — which would be a new dependency, and is in fact one of the MPL-2.0 spike-tree
 /// packages Step 0 had to make a decision about. The three variables below are the ones that crate
 /// would read on the two reference platforms.
-fn data_dir() -> Option<PathBuf> {
+pub(crate) fn data_dir() -> Option<PathBuf> {
     #[cfg(windows)]
     {
         std::env::var_os("LOCALAPPDATA").map(PathBuf::from)

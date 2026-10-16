@@ -79,9 +79,10 @@ import type { Terminal } from "./streaming/transport";
 import type { TileViewportStreamManager } from "./streaming/tileViewportStreamManager";
 import ErrorBanner from "./ErrorBanner";
 import { decodeHexF64, encodeHexF64 } from "./skp/codec";
-import { closeDataset, SkpCallError } from "./skp/client";
+import { closeDataset, recordStep, SkpCallError } from "./skp/client";
 import { listenDatasetSessionEnded } from "./skp/events";
 import type { Bbox, DatasetSessionEnded, EndReason, Filter } from "./skp/types";
+import { createStepQueue, noticeText as stepNoticeText } from "./workspace/stepRecorder";
 import { checkScope, resolveScope } from "./workspace/scope";
 import type { ResolvedScope, ScopeCheck } from "./workspace/scope";
 import { NO_MEMBERS, unionOfBounds } from "./workspace/selection";
@@ -818,11 +819,27 @@ export default function App() {
   const drawnViews = selectDrawnViews(workspace);
   const view = drawnViews[0] ?? null;
   const admitted = view === null ? null : selectAdmitted(workspace, view.id);
-  // NEXT-CUT.md (style-panel cut) P3: App-owned, ephemeral (ADR-022's consequences -- no persistence, no undo;
-  // binding note 4), starting at exactly today's fixed rendering (`DEFAULT_STYLE_STATE`'s own doc comment has
+  // NEXT-CUT.md (style-panel cut) P3: App-owned, ephemeral live state (ADR-022's consequences -- no undo; binding note 4;
+  // a committed edit is also recorded in the session history, below), starting at exactly today's fixed rendering (`DEFAULT_STYLE_STATE`'s own doc comment has
   // the hex/opacity math against `buildLayers.ts`'s pre-P2 constant). It is the view's `style`, and
   // `StylePanel`'s `onChange` (`handleStyleChange` below) dispatches one `style.set` per changed property.
   const style = view === null ? DEFAULT_STYLE_STATE : view.style;
+  // B2 piece 1b (B2-1B-RECORDING-PREREGISTRATION.md section 2.5): a committed filter or style edit is recorded in the kernel's
+  // session history after it is applied (ADR-022 Amendment 1). The queue sends one step at a time, in commit order, and the
+  // canvas never waits for it. A step that was not recorded shows `recordNotice`, for the dataset it was recorded on, until the
+  // dataset changes, and is logged too: neither is silent. `lastCommittedStyle` is the baseline `styleTransitions` diffs from.
+  const [recordNotice, setRecordNotice] = useState<{ dataset: string; text: string } | null>(null);
+  const [stepQueue] = useState(() =>
+    createStepQueue({
+      send: (dataset, intent) => recordStep(dataset, intent),
+      report: (report) => {
+        const text = stepNoticeText(report);
+        logSessionEvent(`step-record-${report.kind}`, text);
+        setRecordNotice({ dataset: report.dataset, text });
+      },
+    })
+  );
+  const lastCommittedStyle = useRef<StyleState>(DEFAULT_STYLE_STATE);
   const activeFilter = view === null ? null : view.filter;
   // Milestone 2, phase B (SHELL-MIGRATION-MILESTONE-2-PREREGISTRATION.md sections 2.2 and 2.3): the view's tool, mode, selection and
   // inspection, read through the readers that give the defaults.
@@ -832,6 +849,7 @@ export default function App() {
   const inspected = view === null ? null : viewInspected(view);
   const pinned = view !== null && viewPinned(view);
   const notice = view === null ? null : viewSelectionNotice(view);
+  const shownRecordNotice = admitted !== null && recordNotice?.dataset === admitted.dataset ? recordNotice.text : null;
   // `highlightLayers` caches on the Set's identity, and the reducer keeps the same Map while the selection is unchanged, so the Set
   // is rebuilt only when the selection is. The canvas's effect is keyed on `selected` and `inspected`, not on this wrapper.
   const selectedIds = useMemo(() => new Set(selection.keys()), [selection]);
@@ -961,15 +979,21 @@ export default function App() {
 
   /** Writes `activeFilterRef.current` (synchronously) and dispatches `filter.apply` on the view -- the one
    * function every successful Apply's commit goes through. A dataset-change reset writes the ref in
-   * `handleAdmitted` and the view's filter in the workspace's `resource.admitted`.
-   * `useCallback([])`: `dispatch` is React's own identity-stable function and the view's id is read from
-   * `viewIdRef`, so this never needs to change either -- see `handleAdmitted`'s own doc comment for why that
-   * stability matters. */
-  const commitActiveFilter = useCallback((filter: Filter | null) => {
-    activeFilterRef.current = filter;
-    const viewId = viewIdRef.current;
-    if (viewId !== null) dispatch({ type: "view.transition", view: viewId, transition: { action: "filter.apply", params: { filter } } });
-  }, []);
+   * `handleAdmitted` and the view's filter in the workspace's `resource.admitted`, and records nothing.
+   * It is also where the filter is recorded (section 2.5): after an issued outcome, never before it.
+   * `useCallback([stepQueue])`: `dispatch` is React's own identity-stable function, the view's id is read from
+   * `viewIdRef` and `stepQueue` is created once, so this never needs to change either -- see `handleAdmitted`'s
+   * own doc comment for why that stability matters. */
+  const commitActiveFilter = useCallback(
+    (filter: Filter | null) => {
+      activeFilterRef.current = filter;
+      const viewId = viewIdRef.current;
+      if (viewId !== null) dispatch({ type: "view.transition", view: viewId, transition: { action: "filter.apply", params: { filter } } });
+      const dataset = admittedDatasetRef.current;
+      if (dataset !== null) stepQueue.enqueue(dataset, { action: "filter.apply", params: { filter } });
+    },
+    [stepQueue]
+  );
   // `activeFilter` (the render value) is read below, in the JSX, passed to `FilterPanel` -- P3
   // (this piece) is what finally consumes the value P2 only ever wrote (see that piece's own
   // now-removed placeholder comment in git history).
@@ -1880,6 +1904,20 @@ export default function App() {
     }
   }
 
+  /** `StylePanel`'s `onCommit`, once per committed edit (a release, a picker's close, a keyboard step, Reset) and never per
+   * tick: the style is already applied by `onChange`, so this records one `style.set` step per property that differs from the
+   * last committed style, each carrying the value it sets. A Reset that differs in none records no step, and writes the
+   * console row `style.resetToDefault` instead, so that the operator sees it happened and recorded nothing (docs/01 principle 4). */
+  function handleStyleCommit(next: StyleState, source?: "reset"): void {
+    const previous = lastCommittedStyle.current;
+    lastCommittedStyle.current = next;
+    const transitions = styleTransitions(previous, next);
+    if (source === "reset" && transitions.length === 0) recordNamed("gui-action", "style.resetToDefault");
+    const dataset = admittedDatasetRef.current;
+    if (dataset === null) return;
+    for (const transition of transitions) stepQueue.enqueue(dataset, transition);
+  }
+
   return (
     <StudioLayout
       overlays={<ErrorBanner />}
@@ -2134,22 +2172,33 @@ export default function App() {
             <RefusalBlock refusal={sessionEnded} />
           </div>
         ),
-        "attention.canvasRefusal": admitted && canvasRefusal && (
-          <div className="canvas-refusal" role="alert">
-            {canvasRefusal}
-            <button
-              type="button"
-              onClick={() => {
-                // NEXT-CUT.md P3 item B (class C, `surfaceRegistry.ts`'s own
-                // "canvas.dismissCanvasRefusal" row): recorded at the point the action
-                // actually applies -- this click clears local state only, never the kernel.
-                recordNamed("gui-action", "canvas.dismissCanvasRefusal");
-                setCanvasRefusal(null);
-              }}
-            >
-              Dismiss
-            </button>
-          </div>
+        "attention.canvasRefusal": admitted && (canvasRefusal || shownRecordNotice) && (
+          <>
+            {canvasRefusal && (
+              <div className="canvas-refusal" role="alert">
+                {canvasRefusal}
+                <button
+                  type="button"
+                  onClick={() => {
+                    // NEXT-CUT.md P3 item B (class C, `surfaceRegistry.ts`'s own
+                    // "canvas.dismissCanvasRefusal" row): recorded at the point the action
+                    // actually applies -- this click clears local state only, never the kernel.
+                    recordNamed("gui-action", "canvas.dismissCanvasRefusal");
+                    setCanvasRefusal(null);
+                  }}
+                >
+                  Dismiss
+                </button>
+              </div>
+            )}
+            {/* B2 piece 1b: the owner's notice for a filter or style step the session history did not take (section 2.10, O1 to O3).
+              * Not dismissible, like the residency status: it ends with the dataset it names, and it never replaces a refusal above. */}
+            {shownRecordNotice && (
+              <div className="canvas-refusal record-notice" role="alert">
+                {shownRecordNotice}
+              </div>
+            )}
+          </>
         ),
         /* P3b: suppressed once the session-ended block is standing. The pre-check route sets BOTH (section 2b
          * keeps `setViewportRefusal` exactly as it was), and the block above renders the same code and the
@@ -2222,7 +2271,7 @@ export default function App() {
           * **Key prefixed, not the bare `admitted.dataset` string (reviewer gate, style-panel cut
           * P7 fixes).** `FilterPanel` above uses the identical dataset value as its own key -- see
           * its own comment for the duplicate-sibling-key finding this fixes on both ends. */
-        "inspector.style": admitted && <StylePanel key={`style-${admitted.dataset}`} style={style} onChange={handleStyleChange} />,
+        "inspector.style": admitted && <StylePanel key={`style-${admitted.dataset}`} style={style} onChange={handleStyleChange} onCommit={handleStyleCommit} />,
         /* Milestone 2's slots (SHELL-MIGRATION-MILESTONE-2-PREREGISTRATION.md §2.2, §2.6): the tool switch in the top bar (never over the
          * map) and the Feature tab, whose summary subscribes to the view box. The ended-selection notice is also a status bar item
          * (§2.3); the ceiling's refusal shows in the Feature tab only. */

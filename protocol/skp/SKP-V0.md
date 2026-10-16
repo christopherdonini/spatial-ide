@@ -10,7 +10,9 @@ it is not a promise about v1.
 architect-first workflow rule. Three premises in the cut brief were corrected in that review and the
 corrections are recorded here rather than smoothed over (§2).
 
-## 1. The five commands
+## 1. The six commands
+
+This section describes the original five; the sixth, `record_step` (`skp/0.12`), is §10's.
 
 Every request carries the version literal stated in §4 item 3 (`skp/0` at v0). The host compares it with `==` and refuses anything else
 (`skp.version_unsupported`) — see §4 for why nothing richer exists yet. Every response is
@@ -218,7 +220,8 @@ absent — a v0 that goes silent on an item is not a smaller spec, it is an unst
    parameter; `sql` stays absent, named absent by ADR-021's own "what this ADR does not decide."
    **`skp/0.6` (§9) adds no command either** — `viewport_query` gains an optional attribute
    projection parameter, on the same shape row-filter's own addition took.
-2. **Transport bindings** — one: Tauri invoke, for the five commands. **`skp/0.5` adds exactly one
+   **`skp/0.12` (§10) adds a sixth command, `record_step`**: it records, in the kernel's session history (ADR-036, Proposed), a filter or style change that a client has committed, and applies nothing. A command that sets a style stays absent.
+2. **Transport bindings** — one: Tauri invoke, for the six commands. **`skp/0.5` adds exactly one
    more binding for exactly one payload**: a Tauri event, `dataset_session_ended`, is the sole
    server-to-client push this spec ever defines (item 7 below). Still no control-plane websocket, no
    stdio, no MCP adapter. **`skp/0.6` (§9) adds no binding** — the projection rides the existing
@@ -232,9 +235,9 @@ absent — a v0 that goes silent on an item is not a smaller spec, it is an unst
    unchanged** — still no ranges, min/max, capability set, or handshake. A `skp/0.1` client and a
    `skp/0.2` host fail on the first call. **`skp/0.3` and `skp/0.4` each bumped the compared
    literal again**, and `==` is unchanged. **`skp/0.5` and `skp/0.6` (§9) each bumped the literal
-   again in turn, `==` still unchanged**. `skp/0.7` to `skp/0.11` each bumped the literal again in turn
-   (§8), `==` unchanged, and the literal the host compares today is `skp/0.11`.
-4. **Capability discovery** — none. No `capabilities` command. The client hardcodes v0's five
+   again in turn, `==` still unchanged**. `skp/0.7` to `skp/0.12` each bumped the literal again in turn
+   (§8), `==` unchanged, and the literal the host compares today is `skp/0.12`.
+4. **Capability discovery** — none. No `capabilities` command. The client hardcodes v0's six
    commands and cannot adapt to a future kernel.
 5. **Cancellation and progress** — cancellation: yes, for streams and for `open_dataset` (§2, C3).
    Progress: data-plane batches only. `open_dataset` is cancellable but not progress-reporting.
@@ -266,7 +269,7 @@ absent — a v0 that goes silent on an item is not a smaller spec, it is an unst
 7. **Subscriptions and events** — **one named exception, `skp/0.5`**: `dataset_session_ended`, a
    Tauri event carrying `{session, reason}`, emitted at most once per ended dataset-session
    generation (ADR-035 D4). It is not a subscription — there is no way to ask for it and no way to
-   turn it off, and no request or response on any of the five commands mentions it. No other
+   turn it off, and no request or response on any of the six commands mentions it. No other
    server-to-client push exists on the control plane in any other form.
 8. **Error taxonomy** — §5. The existing `engine::EngineError` taxonomy, surfaced verbatim; no new
    error invented, none flattened to a string. **v0.1 (§7) adds eleven `skp.filter_*` codes** to this
@@ -1114,6 +1117,15 @@ comparison retained; `deny_unknown_fields` kept both directions. `skp/1` stays R
 - **The reading this piece applies.** §§1–7 and §9 are the live current-shape description. §8's preamble names §§1–7. §9 is laid out as §7 and updated in place by its own dated notes. §7's lead of 2026-08-13 describes §§1–6 as they stood then.
 - **No wire change.** No key, value or command is added or removed; no code the host produces is added or removed; the kernel's serialized responses are unchanged; `protocol/data-plane/` has an empty diff.
 
+### skp/0.12 — `record_step` (B2 piece 1b, `kernel/B2-1B-RECORDING-PREREGISTRATION.md`, ADR-036 §12)
+
+**The version's FULL field set, as §8's own discipline requires:** one command and its two types, five codes, and no change to the other five commands.
+
+- **A sixth command, `record_step`:** request `{skp, dataset, intent}`, response `{}`; `intent` is §10.2's closed `{action, params}`. No `actor`, `at`, id or effect crosses the wire, and no id is returned (ADR-004 Amendment 4).
+- **Five new `skp.*` codes:** `skp.session_history_unwritable` (`detail`), `skp.session_history_full` (`limit`), `skp.session_history_stopped`, `skp.step_line_over_ceiling` (`saw`, `limit`) and `skp.style_value_not_admitted` (`property`, `detail`). §10.4 lists the codes it reuses.
+
+§1 and §4 are updated in place to count six commands; §5 is unchanged; `protocol/data-plane/` has an empty diff. Mechanics: the literal `"skp/0.11"` → `"skp/0.12"` is bumped in one commit with its fixtures (`protocol/skp/tests/data/*.json`, the conformance fixtures, `protocol/skp/tests/fixtures.rs`) and the shell's TypeScript literal and the two shell tests that carry it, together with `record_step`'s types and wire fixtures. The version-refusal fixture that named `skp/0.12` as an unsupported future version is renumbered to name `skp/0.13`. Plain `==` retained; `deny_unknown_fields` kept both directions; `skp/1` stays RESERVED. The kernel's `StepRecorder` hosts the command, so `SkpHost::new` is unchanged.
+
 ## 9. Attribute projection on `viewport_query`
 
 **Brief B stage B1** (`engine/B1-PROJECTION-PREREGISTRATION.md`), following ADR-023 Decision §§1–5
@@ -1221,3 +1233,52 @@ Full design and consequences: `docs/adr/ADR-023-attribute-projection-on-viewport
 (cited by this section; not itself accepted by this piece — see the preregistration's Header) and
 `docs/adr/ADR-021-row-filter-on-viewport-query.md`'s Note 2026-09-24 (the filter namespace widening,
 §7.3's own dated note above).
+
+## 10. `record_step`
+
+**B2 piece 1b** (`kernel/B2-1B-RECORDING-PREREGISTRATION.md` §2.2), following ADR-036 §12 (Proposed, binding nothing until accepted) and ADR-006's class 2. Laid out as §9 is.
+
+### 10.1 Version
+
+`skp` is now compared against `"skp/0.12"`, still `==` (§4 item 3); `deny_unknown_fields` stays on every derived struct in both directions (§8's `skp/0.12` entry).
+
+### 10.2 The wire shape
+
+```
+{ skp, dataset: DatasetHandle, intent }  →  {}
+
+intent = { action: "filter.apply", params: { filter: Filter | null } }
+       | { action: "style.set", params: { property: "fillColor" | "outlineColor", value: "#rrggbb" } }
+       | { action: "style.set", params: { property: "fillOpacity", value: <number> } }
+       | { action: "style.set", params: { property: "outlineWidth", value: { value: <number>, unit: "px" } } }
+```
+
+`Filter` is §7.2's. `filter` is always present, `null` for no filter, and a `params` without it is refused at deserialize, never read as "clear the filter". Any other action, property, unit or value type, and any unknown key, is refused at deserialize. `intent` has the shape of ADR-036 §6's `intent` member. No `actor`, `at`, id or effect crosses the wire: the kernel mints the first three and takes the effect from its action registry. No space or coordinate crosses it either, and `dataset` is the only handle. The response is an empty closed object; no step id is returned, because nothing reads one at this version.
+
+### 10.3 The contract
+
+- **Record only.** The client commits the change in its own state first. The kernel validates the intent, mints the step's `id` and `at`, takes `actor` (`user`) and `effect`, appends one line to the session history, flushes it, and replies. It applies nothing and holds no workspace state; nothing in SKP restores, undoes or replays a step.
+- **The order of checks:** (1) the version; (2) the catalog entry of the handle; (3) the live check `viewport_query` uses, so a dataset whose session has ended is refused with the end's code; (4) the action; (5) for a `filter.apply` that carries a filter, admission as §7.6 admits it; (6) for `style.set`, the value as the style model admits it; (7) the history's record for the open file, created at its first step; (8) the line's bounds, and its members against the rules the reader holds (ADR-036 §9); (9) one write of the whole line; (10) one flush; (11) the reply. A refusal at (1) to (6) writes nothing. At the first step for an open file, (7) creates the record: its folder, `locations.json` and the history's header line; a refusal at (8) leaves that record and writes no step. A failure at (7) removes what (7) wrote, as far as the operating system allows.
+- **The live check is the one ordering point.** A `close_dataset` or a session end that lands after it does not stop the write: the line is true of the open it names. `record_step` takes no lock a close waits on.
+- **Not cancellable, no progress, not idempotent:** one write and one flush, no stream or ticket, and each success appends one new step.
+- **The flush** asks the operating system to write the line to storage before the reply, as the audit log does. A crash of the application after the reply does not lose the step; a power loss is not claimed to preserve it. Where the history is kept, how it is recovered and when it is cleared are ADR-036 §9's.
+- **A failed write stops that history:** each later step for it is refused `skp.session_history_stopped`.
+- **Bounds.** A step's line is at most 262,144 bytes and the whole history at most 33,554,432 bytes; a step that would pass either is refused and not written. A line with a member past a bound the reader holds (for example a CRS identifier of more than 4,096 bytes, or more than 1,024 geometry types) is refused `skp.session_history_unwritable` and not written, because the reader stops at the first line it refuses (ADR-036 §9). No wire member carries the figures.
+
+### 10.4 Refusal taxonomy
+
+Reused: `skp.version_unsupported`; `skp.unknown_dataset` (no open dataset with the handle, or its close has begun); `engine.source_changed` and `engine.source_coverage_lost` (the session has ended, by the reason the end recorded); the `skp.filter_*` codes (§7.5) and `engine.connections_exhausted` (a fact about the admission pool, not the predicate), exactly as `viewport_query` returns them.
+
+Five new codes, all minted by the host:
+
+| Code | Fields | When |
+|---|---|---|
+| `skp.session_history_unwritable` | `detail` | the history could not be created (also when no per-user data directory resolves), locked or written; or the line could not be built, or breaks a rule the reader holds (a member past a bound) and is not written; after a flush failure the bytes may be in the file |
+| `skp.session_history_full` | `limit` | the whole history would pass its ceiling |
+| `skp.session_history_stopped` | *(none)* | an earlier write to this history failed |
+| `skp.step_line_over_ceiling` | `saw`, `limit` | the step's line would pass its ceiling |
+| `skp.style_value_not_admitted` | `property`, `detail` | the value is not one the style model admits, is not lowercase `#rrggbb`, or has no canonical spelling |
+
+### 10.5 Data plane
+
+**Unchanged, empty diff.** `record_step` opens no stream and mints no ticket.

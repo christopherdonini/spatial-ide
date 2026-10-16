@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
-//! **`SkpHost` — the five SKP v0 commands, meeting the engine and the data plane.**
+//! **`SkpHost` — five of the six SKP v0 commands, meeting the engine and the data plane.**
 //!
 //! `protocol/skp` defines the wire shapes with zero dependency on `engine`, `protocol/data-plane`
 //! or this crate; this module is where that changes on purpose. Every Tauri command handler in
@@ -1433,24 +1433,7 @@ impl SkpHost {
         // (`kernel/GENERATION-CLOSE-RACES-PREREGISTRATION.md` §2b).
         // **Refusals take their code from the reason, never `SourceChanged` for a coverage loss**
         // (`SOURCE-WATCHER-PREREGISTRATION.md` §2b; block-on-sight 3).
-        if let Err(not_live) = self.generations.live_generation(dataset_name) {
-            let reason = match not_live {
-                NotLive::Ended(reason) => reason,
-                NotLive::NotOpen => return Err(SkpError::unknown_dataset(dataset_name)),
-            };
-            return Err(error_of(&match reason {
-                SessionEndReason::ObservedChange => EngineError::SourceChanged {
-                    detail: "{this dataset's session ended when its source was observed to have \
-                             changed}"
-                        .to_string(),
-                },
-                SessionEndReason::CoverageLost => EngineError::SourceCoverageLost {
-                    detail: "{[P6 placeholder] this dataset's session ended when the advisory \
-                             watch on its source lost coverage}"
-                        .to_string(),
-                },
-            }));
-        }
+        require_live(&self.generations, dataset_name)?;
         let (query, projection) =
             build_viewport_query(ds, req).map_err(viewport_query_build_error_of)?;
         // Validated **before** any handle is minted (SKP-V0.md §1): `ViewportCrsMismatch`,
@@ -1612,9 +1595,39 @@ impl SkpHost {
     }
 }
 
-fn check_version(skp: &str) -> Result<(), SkpError> {
+pub(crate) fn check_version(skp: &str) -> Result<(), SkpError> {
     if skp != SKP_VERSION {
         return Err(SkpError::version_unsupported(skp));
+    }
+    Ok(())
+}
+
+/// The live check `viewport_query` and `record_step` (`session_history`) share: one function, so
+/// the two cannot answer differently about the same dataset. Refused by the end's own code when the
+/// session has ended, and as `skp.unknown_dataset` when the dataset is not open or its close has
+/// begun. It is the one point `record_step` linearizes at: an end that lands after it does not
+/// stop the write.
+pub(crate) fn require_live(
+    generations: &GenerationRegistry,
+    dataset_name: &str,
+) -> Result<(), SkpError> {
+    if let Err(not_live) = generations.live_generation(dataset_name) {
+        let reason = match not_live {
+            NotLive::Ended(reason) => reason,
+            NotLive::NotOpen => return Err(SkpError::unknown_dataset(dataset_name)),
+        };
+        return Err(error_of(&match reason {
+            SessionEndReason::ObservedChange => EngineError::SourceChanged {
+                detail: "{this dataset's session ended when its source was observed to have \
+                         changed}"
+                    .to_string(),
+            },
+            SessionEndReason::CoverageLost => EngineError::SourceCoverageLost {
+                detail: "{[P6 placeholder] this dataset's session ended when the advisory \
+                         watch on its source lost coverage}"
+                    .to_string(),
+            },
+        }));
     }
     Ok(())
 }
@@ -1709,7 +1722,7 @@ fn viewport_query_build_error_of(e: ViewportQueryBuildError) -> SkpError {
 /// residual exhaustion surfaces as the typed `engine.connections_exhausted`, **never** as a false
 /// binder refusal. ADR-021 item 8's twelve-code `skp.filter_*` list is untouched: this function
 /// mints no code either side of the match does not already mint.
-fn predicate_admit_error_of(e: PredicateAdmitError) -> SkpError {
+pub(crate) fn predicate_admit_error_of(e: PredicateAdmitError) -> SkpError {
     match e {
         PredicateAdmitError::Filter(fe) => filter_error_of(&fe),
         PredicateAdmitError::ConnectionsExhausted { class, capacity } => {

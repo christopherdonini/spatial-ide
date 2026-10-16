@@ -31,6 +31,7 @@ use std::sync::{Arc, Mutex};
 
 use spatial_data_plane::{serve, DataPlaneConfig};
 use spatial_kernel::permission::GrantSet;
+use spatial_kernel::session_history::{default_root, StepRecorder};
 use spatial_kernel::skp::SkpHost;
 use spatial_kernel::{Catalog, EngineSourceFactory};
 use tauri::{Emitter, Manager};
@@ -444,6 +445,10 @@ pub fn run() {
                 token: running.session.token_for_delivery().to_string(),
             };
 
+            // B2 piece 1b: the session history's recorder, built where `SkpHost` is, over the same
+            // `Arc`. `None` when no per-user data directory resolves; `record_step` then refuses by
+            // name. `end_session` runs on the normal exit event (`run`, below).
+            app.manage(default_root().map(|root| Arc::new(StepRecorder::new(root, host.clone()))));
             app.manage(host);
             app.manage(data_plane_handle);
             app.manage(session_log);
@@ -536,6 +541,7 @@ pub fn run() {
             commands::viewport_query,
             commands::cancel,
             commands::close_dataset,
+            commands::record_step,
             commands::binding_data_plane_attach,
             commands::binding_log_session_event,
             commands::binding_pick_file,
@@ -560,8 +566,18 @@ pub fn run() {
             // prevented here, synchronously (the runtime reads the answer straight after this
             // callback returns), and nothing waits on the event-loop thread: the drain runs on the
             // async runtime and ends in `app.exit(0)`, which re-enters this callback with a drain
-            // already begun, so it proceeds. `RunEvent::Exit` is not handled: the process ends
-            // straight after it. No audit record is written here.
+            // already begun, so it proceeds. `RunEvent::Exit` is handled for one thing only: the
+            // session history's normal-end clearing (ADR-036 §9); the process ends straight after
+            // it. A crash or an end forced from outside never reaches it, which is what leaves the
+            // history. No audit record is written here.
+            if matches!(event, tauri::RunEvent::Exit) {
+                if let Some(Some(recorder)) = app
+                    .try_state::<Option<Arc<StepRecorder>>>()
+                    .map(|state| state.inner().clone())
+                {
+                    recorder.end_session();
+                }
+            }
             if let tauri::RunEvent::ExitRequested { api, .. } = event {
                 if let Some(running) = app.try_state::<Arc<publish::RunningPublishes>>() {
                     if running.on_exit_requested() == publish::ExitAction::PreventAndDrain {

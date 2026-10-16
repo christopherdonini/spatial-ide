@@ -48,7 +48,7 @@ describe("the standing header (I6, NEXT-CUT.md P4): the three load-bearing phras
 
 describe("I6: class-B/C row shapes carry no copy affordance (named lint assertion; run-time shape)", () => {
   const bindingEntry: BindingCommandEntry = { seq: 0, kind: "binding-command", command: "binding_pick_file", outcome: "ok" };
-  const guiEntry: GuiActionEntry = { seq: 0, kind: "gui-action", action: "style.setFillColor" };
+  const guiEntry: GuiActionEntry = { seq: 0, kind: "gui-action", action: "style.togglePanelExpanded" };
 
   it("class-B view model has no copyText/request/rendered field", () => {
     const vm = buildRowViewModel(bindingEntry) as ClassBRowViewModel;

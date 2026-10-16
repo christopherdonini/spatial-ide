@@ -382,6 +382,59 @@ fn error_fixture_round_trips() {
     round_trip::<SkpError>("v0-error-example");
 }
 
+/// **P4** (`kernel/B2-1B-RECORDING-PREREGISTRATION.md` §4), `skp/0.12`: `record_step`'s two
+/// request fixtures and its response fixture round trip in the shape of the file, and each of the
+/// five new `skp.*` error fixtures is what the matching `SkpError` constructor produces, so a
+/// message the shell shows and the file a client reads cannot drift apart.
+///
+/// Mutation: `#[serde(rename = "dataset_handle")]` on `RecordStepRequest::dataset`. Expected
+/// failure: this test fails by name, at the first request fixture.
+#[test]
+fn record_step_fixtures_round_trip() {
+    for name in [
+        "v0-record_step-request-filter-apply",
+        "v0-record_step-request-style-set",
+    ] {
+        round_trip::<RecordStepRequest>(name);
+        assert_eq!(
+            fixture(name).get("skp").and_then(|s| s.as_str()),
+            Some(SKP_VERSION),
+            "{name}: `skp` field does not match the crate's own SKP_VERSION"
+        );
+    }
+    round_trip::<RecordStepResponse>("v0-record_step-response");
+
+    for (name, built) in [
+        (
+            "v0-error-session_history_unwritable",
+            SkpError::session_history_unwritable("the disk is full"),
+        ),
+        (
+            "v0-error-session_history_full",
+            SkpError::session_history_full(33_554_432),
+        ),
+        (
+            "v0-error-session_history_stopped",
+            SkpError::session_history_stopped(),
+        ),
+        (
+            "v0-error-step_line_over_ceiling",
+            SkpError::step_line_over_ceiling(262_145, 262_144),
+        ),
+        (
+            "v0-error-style_value_not_admitted",
+            SkpError::style_value_not_admitted("fillColor", "a colour is `#rrggbb` in lowercase"),
+        ),
+    ] {
+        round_trip::<SkpError>(name);
+        assert_eq!(
+            serde_json::to_value(&built).unwrap(),
+            fixture(name),
+            "{name}: the constructor and the fixture differ"
+        );
+    }
+}
+
 /// `skp/0.2`: `engine.identity_unusable` gains a `candidate_columns` field (NEXT-CUT.md P0) — the
 /// file's 64-bit integer columns, schema order, comma-joined (`SkpError::fields` has no list shape
 /// on the wire — `kernel/src/skp.rs::error_of`). `message` stays whatever `EngineError::Display`
@@ -457,17 +510,13 @@ fn crs_unit_serializes_to_its_four_declared_strings_and_refuses_any_other() {
     }
 }
 
-/// `skp/0.11` (LineString and MultiLineString admission,
-/// `engine/GEOMETRY-LINES-PREREGISTRATION.md`; this test was `skp_version_is_skp_0_10` before the
-/// lines cut, PL-5).
-/// Mutation: the literal back to `"skp/0.10"`. Expected failure: this test fails by name.
-///
-/// Observed over `534dd647` (the kernel commit) on the uncommitted tree of the wire commit:
-/// `skp_version_is_skp_0_11` FAILED with the mutation applied, at its `assert_eq!` (left
-/// `skp/0.10`, right `skp/0.11`), then reverted.
+/// `skp/0.12` (`record_step`, B2 piece 1b, `kernel/B2-1B-RECORDING-PREREGISTRATION.md`; this test
+/// was `skp_version_is_skp_0_11` before that piece, and `skp_version_is_skp_0_10` before the lines
+/// cut, PL-5).
+/// Mutation: the literal back to `"skp/0.11"`. Expected failure: this test fails by name.
 #[test]
-fn skp_version_is_skp_0_11() {
-    assert_eq!(SKP_VERSION, "skp/0.11");
+fn skp_version_is_skp_0_12() {
+    assert_eq!(SKP_VERSION, "skp/0.12");
 }
 
 /// **MP-1, `skp/0.9`, ADR-034 Decision 3 (`engine/MULTIPOLYGON-MP1-PREREGISTRATION.md` §4, row

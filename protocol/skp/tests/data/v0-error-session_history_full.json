@@ -1,0 +1,7 @@
+{
+  "code": "skp.session_history_full",
+  "message": "the session history is at its ceiling of 33554432 bytes (MAX_SESSION_HISTORY_BYTES); this step was not written",
+  "fields": {
+    "limit": "33554432"
+  }
+}

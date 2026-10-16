@@ -25,6 +25,11 @@ interface StylePanelProps {
    * a plain `useState` setter with no viewport/manager/network parameter anywhere in its own
    * signature (binding note 7: a style change issues no query). */
   onChange: (next: StyleState) => void;
+  /** B2-1B-RECORDING-PREREGISTRATION.md section 2.5: called once per COMMITTED edit with the whole next
+   * `StyleState` -- the native `change` event of each of the four controls (release of a range, close of a
+   * colour picker, one keyboard step) and Reset -- never per drag tick, which only `onChange` sees. A Reset says so
+   * in `source`: the owner shows a Reset that changes nothing in the console, where no step is recorded. */
+  onCommit: (next: StyleState, source?: "reset") => void;
 }
 
 /**
@@ -45,19 +50,27 @@ interface StylePanelProps {
  * (`document.ts`'s `DEFAULT_STYLE_STATE` doc comment: "no outline is drawn today"), so a freshly
  * opened dataset shows no outline until the operator raises this control above zero.
  *
- * **Ephemeral only** (binding note 4): `style` lives in `App.tsx`'s `useState`; nothing here or
- * there persists it (no project file, no `localStorage`, no session-recoverable state -- ADR-022's
- * consequences). "Reset to default" below is a FRESH EDIT setting `DEFAULT_STYLE_STATE` -- never
- * undo-flavoured language or machinery.
+ * **Live style is ephemeral** (binding note 4): `style` lives in the workspace; nothing here persists it
+ * (no project file, no `localStorage`). A COMMITTED edit is recorded by `onCommit` as a `style.set` step in
+ * the kernel's session history (ADR-022 Amendment 1; ADR-036, Proposed), which restores nothing and is not
+ * undo. "Reset to default" below is a FRESH EDIT setting `DEFAULT_STYLE_STATE` -- never undo-flavoured
+ * language or machinery.
  *
  * **No Save, no publish affordance** (D1 standing recommendation; binding note 8): the document
  * text is read-only, selectable, and copyable -- the hero round-trip is "copy this text, paste it
  * at `publish-bundle --style`," never a button anywhere in this tree.
  */
-export default function StylePanel({ style, onChange }: StylePanelProps) {
+export default function StylePanel({ style, onChange, onCommit }: StylePanelProps) {
   const [expanded, setExpanded] = useState(false);
+  const fillColorRef = useRef<HTMLInputElement>(null);
   const fillOpacityRef = useRef<HTMLInputElement>(null);
+  const outlineColorRef = useRef<HTMLInputElement>(null);
   const outlineWidthRef = useRef<HTMLInputElement>(null);
+  // The listeners below are bound once per disclosure; these refs give them the style and the callback as of the commit.
+  const styleRef = useRef(style);
+  styleRef.current = style;
+  const onCommitRef = useRef(onCommit);
+  onCommitRef.current = onCommit;
 
   // S2 (reviewer gate, action-console P7 fixes): React's own `onChange` prop is bound to the
   // native `input` event for `<input type="range">` (React treats "range" as a text-like control
@@ -72,22 +85,28 @@ export default function StylePanel({ style, onChange }: StylePanelProps) {
   // real. `onChange` on the elements below stays wired to the LIVE style update (fires every tick,
   // so the canvas keeps repainting as the operator drags); these two effects own ONLY the console
   // record, once per commit, never per tick.
+  //
+  // B2 piece 1b: the same native `change` of ALL FOUR controls is now the commit signal for `onCommit`
+  // (the session history's step), in place of the console rows these effects used to record: a commit
+  // shows as the captured `record_step` request (class A). A colour picker fires `change` when it closes.
+  // The next style is the control's own value over the style as of the commit, lowercased as `handleFillColor`
+  // does, so it does not depend on React having rendered the last tick.
   useEffect(() => {
     if (!expanded) return;
-    const el = fillOpacityRef.current;
-    if (!el) return;
-    const onCommit = () => recordNamed("gui-action", "style.setFillOpacity");
-    el.addEventListener("change", onCommit);
-    return () => el.removeEventListener("change", onCommit);
-  }, [expanded]);
-
-  useEffect(() => {
-    if (!expanded) return;
-    const el = outlineWidthRef.current;
-    if (!el) return;
-    const onCommit = () => recordNamed("gui-action", "style.setOutlineWidth");
-    el.addEventListener("change", onCommit);
-    return () => el.removeEventListener("change", onCommit);
+    const controls: Array<[HTMLInputElement | null, (value: string) => StyleState]> = [
+      [fillColorRef.current, (v) => ({ ...styleRef.current, fillColor: v.toLowerCase() })],
+      [fillOpacityRef.current, (v) => ({ ...styleRef.current, fillOpacity: Number(v) })],
+      [outlineColorRef.current, (v) => ({ ...styleRef.current, outlineColor: v.toLowerCase() })],
+      [outlineWidthRef.current, (v) => ({ ...styleRef.current, outlineWidth: Number(v) })],
+    ];
+    const removers: Array<() => void> = [];
+    for (const [el, next] of controls) {
+      if (!el) continue;
+      const onCommitChange = () => onCommitRef.current(next(el.value));
+      el.addEventListener("change", onCommitChange);
+      removers.push(() => el.removeEventListener("change", onCommitChange));
+    }
+    return () => removers.forEach((remove) => remove());
   }, [expanded]);
 
   function handleFillColor(e: ChangeEvent<HTMLInputElement>): void {
@@ -99,9 +118,6 @@ export default function StylePanel({ style, onChange }: StylePanelProps) {
     // (never trust a boundary even when the spec already guarantees it); `toStyleDocument`
     // normalizes a second time regardless when the document is built, so this is
     // belt-and-suspenders, not the only guard against a malformed literal (binding note 5).
-    // NEXT-CUT.md P3 item B (class C): recorded at the point this edit actually applies, i.e. the
-    // `onChange` call itself -- never on render.
-    recordNamed("gui-action", "style.setFillColor");
     onChange({ ...style, fillColor: e.target.value.toLowerCase() });
   }
 
@@ -113,7 +129,6 @@ export default function StylePanel({ style, onChange }: StylePanelProps) {
   }
 
   function handleOutlineColor(e: ChangeEvent<HTMLInputElement>): void {
-    recordNamed("gui-action", "style.setOutlineColor");
     onChange({ ...style, outlineColor: e.target.value.toLowerCase() });
   }
 
@@ -124,9 +139,9 @@ export default function StylePanel({ style, onChange }: StylePanelProps) {
   }
 
   function handleReset(): void {
-    // "Reset to default" is a FRESH EDIT, never undo-flavoured (NEXT-CUT.md binding note 4).
-    recordNamed("gui-action", "style.resetToDefault");
+    // "Reset to default" is a FRESH EDIT, never undo-flavoured (NEXT-CUT.md binding note 4). It is one commit.
     onChange(DEFAULT_STYLE_STATE);
+    onCommit(DEFAULT_STYLE_STATE, "reset");
   }
 
   return (
@@ -148,6 +163,7 @@ export default function StylePanel({ style, onChange }: StylePanelProps) {
             Fill colour
             <input
               type="color"
+              ref={fillColorRef}
               className="style-fill-color"
               value={style.fillColor}
               onChange={handleFillColor}
@@ -176,6 +192,7 @@ export default function StylePanel({ style, onChange }: StylePanelProps) {
             Outline colour
             <input
               type="color"
+              ref={outlineColorRef}
               className="style-outline-color"
               value={style.outlineColor}
               onChange={handleOutlineColor}

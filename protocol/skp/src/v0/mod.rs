@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
-//! SKP v0 — five commands, no more. See `../../SKP-V0.md`.
+//! SKP v0 — six commands, no more. See `../../SKP-V0.md`.
 
 pub mod codec;
 pub mod commands;
@@ -106,4 +106,10 @@ pub use handles::{CancelKey, DatasetHandle, SessionRef, StreamHandle};
 /// `protocol/data-plane/` has an empty diff. Same discipline again: `deny_unknown_fields` both
 /// directions, `==` unchanged, both sides' fixtures updated in the same commit as the literal bump
 /// (`SKP-V0.md` §8's `skp/0.11` entry).
-pub const SKP_VERSION: &str = "skp/0.11";
+///
+/// `skp/0.12` (B2 piece 1b, `kernel/B2-1B-RECORDING-PREREGISTRATION.md`): a sixth command,
+/// `record_step` (`SKP-V0.md` §10), a closed `StepIntent`, an empty `RecordStepResponse` and five
+/// `skp.*` refusal codes. The five other commands are unchanged; `protocol/data-plane/` has an
+/// empty diff. Same discipline again: `deny_unknown_fields` both directions, `==` unchanged, the
+/// fixtures updated in the same commit as the literal bump (`SKP-V0.md` §8's `skp/0.12` entry).
+pub const SKP_VERSION: &str = "skp/0.12";

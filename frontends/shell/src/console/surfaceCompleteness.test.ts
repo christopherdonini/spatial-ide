@@ -20,7 +20,7 @@ import { classARows, classBRows, classCRows } from "./surfaceRegistry";
  *
  * `skp/client.ts::call()` is the ONE place `invoke` is ever called with a non-literal command name
  * (I1: the console's sole capture choke point, `command` is a parameter, not a string) -- every
- * other `invoke(`/`invoke<` call site in the tree must pass a string literal. The five SKP command
+ * other `invoke(`/`invoke<` call site in the tree must pass a string literal. The six SKP command
  * names are therefore not read off *that* call -- they are derived from `call("<name>", ...)`'s own
  * literal call sites inside `skp/client.ts`, which is the mechanically-derivable form NEXT-CUT.md
  * P2 asks for.
@@ -108,8 +108,8 @@ function allInvokeSites(): InvokeSite[] {
   return out;
 }
 
-/** The five SKP command names, derived from `skp/client.ts`'s own `call("<name>", ...)` literal
- * call sites -- the mechanically-derivable form. If a sixth command is ever added, this set
+/** The six SKP command names, derived from `skp/client.ts`'s own `call("<name>", ...)` literal
+ * call sites -- the mechanically-derivable form. If a seventh command is ever added, this set
  * changes automatically; `skp/client.ts` and `console/surfaceRegistry.ts` must both be updated to
  * match, or the assertions below fail the build. */
 function deriveSkpCommandSetFromClient(): string[] {
@@ -195,15 +195,15 @@ describe("console/surfaceRegistry completeness scan (NEXT-CUT.md P2)", () => {
     });
   });
 
-  describe("class A: the five SKP commands", () => {
+  describe("class A: the six SKP commands", () => {
     const derived = deriveSkpCommandSetFromClient();
-    // Hard backstop, per NEXT-CUT.md P2: if this ever disagrees with `derived` above, a sixth
+    // Hard backstop, per NEXT-CUT.md P2: if this ever disagrees with `derived` above, a seventh
     // command has been added to skp/client.ts without updating this list -- update BOTH this
     // array and console/surfaceRegistry.ts's CLASS_A_ROWS together.
-    const expectedFive = ["cancel", "close_dataset", "describe", "open_dataset", "viewport_query"];
+    const expectedSix = ["cancel", "close_dataset", "describe", "open_dataset", "record_step", "viewport_query"];
 
-    it("skp/client.ts's own call(\"<name>\", ...) sites are exactly the five named commands", () => {
-      expect(derived).toEqual(expectedFive);
+    it("skp/client.ts's own call(\"<name>\", ...) sites are exactly the six named commands", () => {
+      expect(derived).toEqual(expectedSix);
     });
 
     it("the registry's class-A command set equals exactly skp/client.ts's derived command set", () => {
@@ -257,6 +257,18 @@ describe("console/surfaceRegistry completeness scan (NEXT-CUT.md P2)", () => {
       "generate_handler! list", () => {
       const notRegistered = [...registryCommandNames].filter((name) => !handlerSet.has(name)).sort();
       expect(notRegistered).toEqual([]);
+    });
+  });
+
+  describe("style edits are class A (B2 piece 1b)", () => {
+    // RECORDED MUTATION for this test: leave one style row in class C (re-add `style.setFillColor` to CLASS_C_ROWS in
+    // surfaceRegistry.ts). Expected failure: the class-C set still names a style edit.
+    // The one other `style.` row allowed is `style.resetToDefault` (Amendment 8, the architect's C-3): a Reset that changes
+    // nothing records no step, so it is not an edit that is recorded; `App.recording.test.tsx` "A4" proves when its row is written.
+    it("style edits are class-A record_step rows", () => {
+      const styleEdits = classCRows().filter((row) => /^style\./.test(row.action) && row.action !== "style.togglePanelExpanded");
+      expect(styleEdits.map((row) => row.action)).toEqual(["style.resetToDefault"]);
+      expect(classARows().map((row) => row.command)).toContain("record_step");
     });
   });
 

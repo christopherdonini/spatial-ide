@@ -22,10 +22,12 @@
 // **Grouping technique (GROUP')**: `consoleViewModel.ts`'s `groupConsecutiveEntries` coalesces only
 // CONSECUTIVE same-kind-same-name entries. Re-aimed (E2E-STALE-EXPECTATIONS-REAIM-PREREGISTRATION.md
 // section 2.3): the shipped arm is the candidate arm, where tile queries and session-log lines are also
-// recorded, so GROUP' no longer counts new group headers. It asserts the group by what the entries are:
-// exactly 3 residential UNTILED `viewport_query` rows (`bbox` null, the primary attempt of each Apply), found by a
-// bounded poll, then the grouping rule inside their window (Amendment 2 item 2, round 71): each group reads `×N` for
-// its rows, no run of identical entries is split, and some group shows 2+ rows (else "grouping not exercised").
+// recorded, so GROUP' no longer counts new group headers. It asserts the group by what the entries are.
+// Re-aimed again for B2 piece 1b (the human, 2026-10-15, round 1b, item 1): each issued Apply now writes a
+// `record_step` row between its queries, so GROUP' makes three style edits and asserts their adjacent class-A
+// `record_step` rows (`style.set`), found by a bounded poll, then the grouping rule inside their window
+// (Amendment 2 item 2, round 71): each group reads `×N` for its rows, no run of identical entries is split, and
+// some group shows 2+ rows (else "grouping not exercised").
 // REFUSAL' polls with a declared bound for the same reason (the refused entry reaches the DOM after the
 // hook returns). Neither suite step pins an arm: `main` reads the arm back and stops unless it is the
 // shipped one.
@@ -272,7 +274,8 @@ async function readItems(page) {
 }
 
 const RESIDENTIAL_PREDICATE = "zone = 'residential'";
-const GROUP_CALLS = 3; // the number of identical calls, and the expected residential-row count (Amendment 2 item 2)
+// the number of style edits GROUP' makes, each to a distinct fill colour, and the number of `style.set` `record_step` rows it expects above its baseline; at most 3, the fills `stepGroup` lists (re-aimed by kernel/B2-1B-RECORDING-PREREGISTRATION.md Amendment 6)
+const GROUP_CALLS = 3;
 // Step 6 (c)'s failure name: byte-copied by script from round 71's ruling, never typed.
 const GROUP_NOT_EXERCISED = "GROUP': grouping not exercised";
 
@@ -585,23 +588,43 @@ async function stepClassB(page) {
 
 /**
  * `CLASSC'`: a real style edit through the rendered `.style-panel` DOM (`style.mjs`'s own proven
- * `page.fill` technique for `type="color"`) -> a class-C entry appears with "no API equivalent"
- * language and an owner string containing "ADR-022"; no copy button (I6, and structurally
- * impossible anyway -- `ClassCRowViewModel` carries no field a copy button could read).
+ * `page.fill` technique for `type="color"`) -> a class-A `record_step` entry for that edit reaches
+ * `ok`, and no class-C entry with an "ADR-022" owner is written for it.
  *
- * Filtered to owner-contains-"ADR-022" BEFORE taking the last match (reviewer gate S5, S6,
- * action-console P7 fixes) -- not simply "the last class-C entry": `expandAllGroups` below clicks
- * every collapsed `.console-group-header`, and since S5 made `console.toggleGroupExpanded` itself
- * a recorded class-C action (reflexivity is the point), that click can add a LATER class-C entry
- * of its own (owner "docs/03..."), which a bare "last entry" selection would wrongly grab instead
- * of the style edit's own entry.
+ * Re-aimed at B2 piece 1b by the human's 2026-10-15 ruling (round 1b, item 1, recorded in
+ * kernel/B2-1B-RECORDING-PREREGISTRATION.md Amendment 6). Before, a style edit wrote a class-C row
+ * (statement "no API equivalent", owner "ADR-022") and this step asserted that row. Now a committed
+ * style edit is recorded through `record_step` (`App.tsx` `handleStyleCommit`), a class-A row, and the
+ * five style rows left the class-C table (`surfaceRegistry.ts`). Since correction round 1
+ * (Amendment 8), one of them, `style.resetToDefault`, is back in the class-C table for a Reset that
+ * changes nothing; its owner names docs/03, not ADR-022, and no style edit writes it. The step keeps
+ * its purpose: the console shows what a real style edit really wrote. The record is asynchronous (a
+ * step queue), so the step polls with the suite's bounded poll.
+ *
+ * The class-A row is matched by its rendered request text (`style.set`, `fillColor`, the value filled),
+ * and a new matching row must appear after the edit (the count rises), so a row from an earlier edit
+ * cannot satisfy it. `expandAllGroups` clicks collapsed group headers, which records class-C
+ * `console.toggleGroupExpanded` rows of its own; the ADR-022 check below looks for a class-C row with
+ * that owner, which no such row has.
  */
 async function stepClassC(page) {
-  // RECORDED MUTATION (milestone 1 re-aim), OBSERVED AT 65391e79b048f51f3ca4d7b5eeac7533f5b64639: the owner of the `style.setFillColor` row in
-  // src/console/surfaceRegistry.ts changed from "ADR-022 / ADR-023" to "docs/03". CLASSC' failed with "no .console-entry-class-c
-  // entry with an ADR-022 owner found after the style edit". Reverted; the worktree was clean before and after.
+  // RECORDED MUTATION, OBSERVED BY THE CUSTODIAN at 7b547f90 (e2e run 2): in
+  // src/App.tsx `handleStyleCommit`, stop enqueuing the `style.set` step (remove the `stepQueue.enqueue` in the loop).
+  // CLASSC' must then fail with "no new class-A record_step row ... reached ok". Revert afterwards.
   // Milestone 1 re-aim (the human's Decision A; PRE-REGISTRATION Amendment 6, OPEN-3 (a) as `style.mjs` has it): Style is
   // the Inspector's own tab, hidden until selected, so a real fill needs a real click on the tab first.
+  const FILL = "#112233";
+  const isFillStep = (e) => {
+    if (e.header !== "record_step" || e.requestText === null) return false;
+    try {
+      const p = JSON.parse(e.requestText);
+      return p.intent?.action === "style.set" && p.intent?.params?.property === "fillColor" && p.intent?.params?.value === FILL;
+    } catch {
+      return false;
+    }
+  };
+  const before = (await readClassAEntries(page)).filter(isFillStep).length;
+
   await page.click("#inspector-tab-style");
   await page.evaluate(() => {
     const btn = document.querySelector(".style-disclosure");
@@ -609,61 +632,101 @@ async function stepClassC(page) {
   });
   const fillColorPresent = await page.evaluate(() => document.querySelector(".style-fill-color") !== null);
   if (!fillColorPresent) throw new Error("CLASSC': .style-fill-color not present after expanding the style panel");
-  await page.fill(".style-fill-color", "#112233");
+  await page.fill(".style-fill-color", FILL);
   // Back to the Layer tab the suite's later steps were written with (REGRESS' re-runs `regression.mjs` on this same page); the
   // one click above must change nothing else.
   await page.click("#inspector-tab-layer");
 
-  await expandAllGroups(page);
-  const entries = await page.evaluate(() =>
-    Array.from(document.querySelectorAll(".console-entry-class-c")).map((el) => ({
-      statement: el.querySelector(".console-entry-prose")?.textContent ?? null,
-      owner: el.querySelector(".console-entry-owner")?.textContent ?? null,
-      hasCopyButton: el.querySelector(".console-copy-button") !== null,
-    }))
+  const found = await pollConsole(
+    async () => (await readClassAEntries(page)).filter(isFillStep),
+    (matches) => matches.length > before && matches[matches.length - 1].outcome === "ok"
   );
-  const styleEntries = entries.filter((e) => (e.owner ?? "").includes("ADR-022"));
-  const last = styleEntries[styleEntries.length - 1];
-  if (!last) throw new Error("CLASSC': no .console-entry-class-c entry with an ADR-022 owner found after the style edit");
-  if (last.statement === null || !last.statement.includes("no API equivalent")) {
-    throw new Error(`CLASSC': statement missing "no API equivalent". Actual: ${JSON.stringify(last.statement)}`);
+  const last = found.last[found.last.length - 1];
+  if (!found.ok) {
+    throw new Error(
+      `CLASSC': no new class-A record_step row for the style.set fillColor ${FILL} edit reached ok within ${CONSOLE_POLL_BOUND_MS}ms ` +
+        `(matching rows before ${before}, after ${found.last.length}, last outcome ${JSON.stringify(last?.outcome ?? null)})`
+    );
   }
-  if (last.owner === null || !last.owner.includes("ADR-022")) {
-    throw new Error(`CLASSC': owner missing "ADR-022". Actual: ${JSON.stringify(last.owner)}`);
-  }
-  if (last.hasCopyButton) throw new Error("CLASSC': a .console-copy-button was present inside a class-C entry");
-  return `style.setFillColor -> class-C entry: statement contains "no API equivalent" ("${last.statement}"); owner contains "ADR-022" ("${last.owner}"); no copy button`;
+  const classC = await page.evaluate(() =>
+    Array.from(document.querySelectorAll(".console-entry-class-c")).map((el) => el.querySelector(".console-entry-owner")?.textContent ?? "")
+  );
+  const adr022 = classC.filter((o) => o.includes("ADR-022"));
+  if (adr022.length !== 0) throw new Error(`CLASSC': ${adr022.length} class-C entr(y/ies) with an ADR-022 owner remain: ${JSON.stringify(adr022)}`);
+  return `style.setFillColor ${FILL} -> a new class-A record_step entry (matching rows ${before} -> ${found.last.length}) with outcome "${last.outcome}"; no class-C entry with an ADR-022 owner`;
 }
 
 /**
- * `GROUP'` (Amendment 2 item 2, round 71): GROUP_CALLS identical `queryWithFilter` calls; the rows they record are
- * asserted by what they ARE inside their window (see `windowOf`), never by counting every `.console-group-header`.
- * Settle, baseline (0 residential untiled rows, the label's total), the calls, then a bounded poll for exactly
- * GROUP_CALLS such rows with no collapsed group in the window (`presence`). `capacity`: R, the label's total minus
- * the baseline, must not exceed `MAX_CONSOLE_ENTRIES`, or the ring may have evicted the step's own rows. Then, in
- * order: `group` (each group is `×N` for its N >= 2 rows of one key), `split run` (no two adjacent items in the window,
- * nor the first and the item before it, share a key), the not-exercised name (some group shows 2+ rows inside the
- * window, so it never passes on singles only), `parse` (each class-A row in the window parses on its own, I8).
- * A session-log line between residential rows ends their run, so it passes.
+ * `GROUP'`: three style edits; the class-A `record_step` rows they record are asserted by what they ARE
+ * inside their window, never by counting every `.console-group-header`. Same purpose as before: adjacent
+ * identical console rows coalesce into one group (`consoleViewModel.ts`'s `groupConsecutiveEntries`; the
+ * grouping key of a class-A row is its command, so rows of one command with different request text group).
+ *
+ * Re-aimed at B2 piece 1b by the human's 2026-10-15 ruling (round 1b, item 1; Amendment 6). Before, the
+ * step made GROUP_CALLS identical `queryWithFilter` calls and asserted the group their three residential
+ * untiled `viewport_query` rows formed (Amendment 2 item 2, round 71). Now each issued Apply also writes a
+ * `record_step` row between its queries, so those rows interleave and cannot be adjacent (run 1: single
+ * viewport_query, single record_step, alternating). The smallest re-aim that still exercises coalescing is
+ * to make the repeated action one whose only row is the repeated one: a committed style edit writes exactly
+ * one class-A `record_step` row and no query, so GROUP_CALLS style edits to distinct fill colours give GROUP_CALLS adjacent `record_step` rows.
+ * The window, `group` (each group is `×N` for its N >= 2 rows of one key), `split run` (no two adjacent
+ * items in the window, nor the first and the item before it, share a key), the not-exercised name, `parse`
+ * (each class-A row in the window parses on its own, I8) and `capacity` are all kept. Not weakened: a
+ * window whose rows are not grouped still fails by name, at `split run` when two adjacent items share a key,
+ * and otherwise at the not-exercised name. Rows from CLASSC''s earlier edit may join
+ * the same run, so the window is all `style.set` step rows, expected to be the baseline count plus
+ * GROUP_CALLS.
+ *
+ * Added by the human's 2026-10-16 direction (Amendment 7): the class-C proof the earlier CLASSC' gave now
+ * sits here. After the group is found, one click on its header must write exactly one entry (the console
+ * label's total, read without any click, rises by 1) and that entry is the class-C row for
+ * `console.toggleGroupExpanded`, owner naming docs/03, statement containing "no API equivalent".
  */
 async function stepGroup(page, consoleHandle) {
+  // RECORDED MUTATION, OBSERVED BY THE CUSTODIAN at 7b547f90 (e2e run 2) and again at 3dfc1a0e (e2e run 3): in
+  // src/console/consoleViewModel.ts `groupConsecutiveEntries`, stop coalescing (emit every entry as its own single item).
+  // GROUP' then fails by name at its `split run` check. Reverted afterwards.
+  // RECORDED MUTATION 2, OBSERVED BY THE CUSTODIAN at 3dfc1a0e (e2e run 3; the human's 2026-10-16 direction,
+  // Amendment 7): in src/console/ConsolePanel.tsx `ConsoleGroupRow`, remove the header click's
+  // `recordNamed("gui-action", "console.toggleGroupExpanded");` call. GROUP' must then fail with a message
+  // starting "GROUP': toggle" (no entry written by the click). Revert afterwards.
+  const isStyleStep = (r) => {
+    if (r.key !== "a:record_step") return false;
+    try {
+      return JSON.parse(r.req).intent?.action === "style.set";
+    } catch {
+      return false;
+    }
+  };
+  const styleWindow = (items) => {
+    const res = items.flatMap((it, ii) => it.rows.filter(isStyleStep).map((r) => ({ r, ii })));
+    const [lo, hi, first] = [res[0]?.r.i, res.at(-1)?.r.i, res[0]?.ii ?? -1];
+    const wi = res.length === 0 ? [] : items.slice(first, res.at(-1).ii + 1).map((it) => ({ it, n: it.rows.filter((r) => r.i >= lo && r.i <= hi).length }));
+    return { res, wi, lo, hi, first };
+  };
+
   await waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 1500, timeoutMs: 15_000 });
   const baseline = await readConsoleLabel(page);
-  const baseRes = windowOf(await readItems(page)).res.length;
-  if (baseRes !== 0) throw new Error(`GROUP': baseline already holds ${baseRes} residential untiled row(s), expected 0`);
+  const baseRes = styleWindow(await readItems(page)).res.length;
 
-  for (let i = 0; i < GROUP_CALLS; i++) {
-    const outcome = await page.evaluate((p) => window.__SPATIAL_E2E__.queryWithFilter(p), RESIDENTIAL_PREDICATE);
-    if (outcome.kind !== "applied") {
-      throw new Error(`GROUP': queryWithFilter #${i + 1} of ${GROUP_CALLS} returned ${JSON.stringify(outcome)}, expected {kind:"applied"}`);
-    }
+  await page.click("#inspector-tab-style");
+  await page.evaluate(() => {
+    const btn = document.querySelector(".style-disclosure");
+    if (btn && btn.getAttribute("aria-expanded") !== "true") btn.click();
+  });
+  const fills = ["#223344", "#334455", "#445566"].slice(0, GROUP_CALLS);
+  for (const [i, fill] of fills.entries()) {
+    const present = await page.evaluate(() => document.querySelector(".style-fill-color") !== null);
+    if (!present) throw new Error(`GROUP': .style-fill-color not present before style edit #${i + 1} of ${GROUP_CALLS}`);
+    await page.fill(".style-fill-color", fill);
   }
+  await page.click("#inspector-tab-layer");
 
   const found = await pollConsole(
     async () => ({ items: await readItems(page), label: await readConsoleLabel(page) }),
     ({ items }) => {
-      const w = windowOf(items);
-      return w.res.length === GROUP_CALLS && !w.wi.some((x) => x.it.expanded === false);
+      const w = styleWindow(items);
+      return w.res.length === baseRes + GROUP_CALLS && !w.wi.some((x) => x.it.expanded === false);
     }
   );
   const { items, label } = found.last;
@@ -671,11 +734,11 @@ async function stepGroup(page, consoleHandle) {
   if (R > MAX_CONSOLE_ENTRIES) {
     throw new Error(`GROUP': capacity: ${R} entries were recorded since the baseline (label total ${label.total} - ${baseline.total}), more than the ring's ${MAX_CONSOLE_ENTRIES}`);
   }
-  const w = windowOf(items);
+  const w = styleWindow(items);
   const rowsIn = items.flatMap((it) => it.rows).filter((r) => r.i >= w.lo && r.i <= w.hi);
   if (!found.ok) {
     throw new Error(
-      `GROUP': presence: expected ${GROUP_CALLS} residential untiled rows and no collapsed group in their window within ${CONSOLE_POLL_BOUND_MS}ms (polled every ${CONSOLE_POLL_INTERVAL_MS}ms), ` +
+      `GROUP': presence: expected ${baseRes + GROUP_CALLS} style.set record_step rows (${baseRes} before plus ${GROUP_CALLS}) and no collapsed group in their window within ${CONSOLE_POLL_BOUND_MS}ms (polled every ${CONSOLE_POLL_INTERVAL_MS}ms), ` +
         `found ${w.res.length}, held by items ${JSON.stringify(w.res.map((x) => `${x.ii}:${items[x.ii].header ?? "single"}`))}; ` +
         `keys from the first found row to the last: ${JSON.stringify(rowsIn.map((r) => r.key.slice(0, 48)))}; console label total ${label.total} (baseline ${baseline.total}, R=${R})`
     );
@@ -705,8 +768,65 @@ async function stepGroup(page, consoleHandle) {
     }
   }
 
+  // The group-toggle class-C proof (the human's 2026-10-16 direction, Amendment 7). One click on a found
+  // group's header; what it wrote is counted from the console label's entry total (a read that clicks
+  // nothing), never from a read that expands groups.
+  const groupIdx = w.wi.findIndex((x) => x.it.header !== null);
+  await waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 1500, timeoutMs: 15_000 });
+  const beforeClick = await readConsoleLabel(page);
+  const clicked = await page.evaluate((ii) => {
+    const kids = Array.from(document.querySelector(".console-entries")?.children ?? []).filter((c) => c.matches(".console-group, .console-entry"));
+    const h = kids[ii]?.querySelector(".console-group-header");
+    if (!h) return false;
+    h.click();
+    return true;
+  }, w.first + groupIdx);
+  if (!clicked) throw new Error(`GROUP': toggle: no group header at item ${w.first + groupIdx} to click`);
+  const wrote = await pollConsole(() => readConsoleLabel(page), (l) => l.total !== null && l.total >= beforeClick.total + 1);
+  if (!wrote.ok) {
+    throw new Error(`GROUP': toggle: one click on a group header wrote no console entry within ${CONSOLE_POLL_BOUND_MS}ms (label total ${beforeClick.total} before, ${wrote.last.total} after)`);
+  }
+  await waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 1500, timeoutMs: 15_000 });
+  const afterClick = await readConsoleLabel(page);
+  if (afterClick.total - beforeClick.total !== 1) {
+    throw new Error(`GROUP': toggle: one click on a group header wrote ${afterClick.total - beforeClick.total} console entries (label total ${beforeClick.total} -> ${afterClick.total}), expected exactly 1`);
+  }
+  // The newest item holds that one entry. Read it without any click that records; when it is a coalesced
+  // group, expand it once (that click records a row after it, and the click's own row keeps its index).
+  const readNewest = (rowIndex) =>
+    page.evaluate((idx) => {
+      const kids = Array.from(document.querySelector(".console-entries")?.children ?? []).filter((c) => c.matches(".console-group, .console-entry"));
+      const last = kids.at(-1);
+      const h = last?.querySelector(".console-group-header") ?? null;
+      const rows = Array.from(last?.matches(".console-entry") ? [last] : (last?.querySelectorAll(".console-entry") ?? []));
+      const row = idx === null ? rows[0] : rows[idx];
+      return {
+        header: h?.textContent ?? null,
+        expanded: h ? h.getAttribute("aria-expanded") === "true" : null,
+        rowCount: rows.length,
+        classC: row?.classList.contains("console-entry-class-c") ?? false,
+        prose: row?.querySelector(".console-entry-prose")?.textContent ?? null,
+        owner: row?.querySelector(".console-entry-owner")?.textContent ?? null,
+      };
+    }, rowIndex);
+  let newest = await readNewest(null);
+  if (newest.header !== null) {
+    const n = Number(/^×(\d+)$/.exec(newest.header)?.[1]);
+    if (newest.expanded === false) {
+      await page.evaluate(() => {
+        const kids = Array.from(document.querySelector(".console-entries")?.children ?? []).filter((c) => c.matches(".console-group, .console-entry"));
+        kids.at(-1)?.querySelector(".console-group-header")?.click();
+      });
+      await waitForNextConsoleFrame(page);
+    }
+    newest = await readNewest(n - 1);
+  }
+  if (!newest.classC || !(newest.owner ?? "").includes("docs/03") || !(newest.prose ?? "").includes("no API equivalent")) {
+    throw new Error(`GROUP': toggle: the entry the click wrote is not the class-C row for console.toggleGroupExpanded: ${JSON.stringify(newest)}`);
+  }
+
   const distinct = new Set(w.res.map((x) => x.r.req)).size;
-  return `${GROUP_CALLS} identical queryWithFilter calls -> window items (key, rows inside): ${JSON.stringify(summary)}; ${exercised} group(s) show 2+ rows inside the window; ${distinct} distinct text(s) among the ${w.res.length} residential rows; R=${R} <= ${MAX_CONSOLE_ENTRIES}`;
+  return `${GROUP_CALLS} style edits -> window items (key, rows inside): ${JSON.stringify(summary)}; ${exercised} group(s) show 2+ rows inside the window; ${distinct} distinct text(s) among the ${w.res.length} style.set record_step rows; R=${R} <= ${MAX_CONSOLE_ENTRIES}; one group-header click wrote 1 entry (label total ${beforeClick.total} -> ${afterClick.total}), a class-C row with owner ${JSON.stringify(newest.owner)} and a statement containing "no API equivalent"`;
 }
 
 /**

@@ -60,3 +60,10 @@ This directory's fixtures were updated again in place, to the `skp/0.11` literal
 `geometry-lines-cut` (`engine/GEOMETRY-LINES-PREREGISTRATION.md` §2 W-L2); the version-refusal
 fixture that named `skp/0.11` as an unsupported future version was renumbered to name `skp/0.12`
 instead. No implementation file changed for that update either.
+
+This directory's fixtures were updated again in place, to the `skp/0.12` literal of PLAN node
+`b2-piece-1b-recording` (`kernel/B2-1B-RECORDING-PREREGISTRATION.md` §2.2); the version-refusal
+fixture that named `skp/0.12` as an unsupported future version was renumbered to name `skp/0.13`
+instead. The same update adds `record_step`'s accept and refuse rows, and `main.rs` maps its two
+wire types. The existing rows' `spec` citations name the literal they were written under and are not
+rewritten.

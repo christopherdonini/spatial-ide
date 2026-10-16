@@ -34,6 +34,7 @@
     "e2e:layout": "node e2e/layout.mjs",
     "e2e:selection": "node e2e/selection.mjs",
     "e2e:export-view": "node e2e/export-view.mjs",
+    "e2e:recording": "node e2e/recording.mjs",
     "e2e:residency-harness": "node e2e/residency-harness.mjs",
     "test:residency-trace": "node e2e/residencyTrace.test.mjs",
     "test:citation-integrity": "node e2e/citationIntegrity.test.mjs",
