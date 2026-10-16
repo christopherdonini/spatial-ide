@@ -931,3 +931,14 @@ Nothing above is edited.
 7. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 11 — gate 3: both PASS WITH NOTES; the last words; ADR-022 waits for the human (class 2)
+
+*Written by the custodian after both gate 3 reports were seen, at the head 3e63a839. References only. The reports: the architect `state/consults/gates/2026-10-16-b2-piece-1b-recording-gate3-architect.md` (gate-log 526, sha256 4d348d6c) with its addendum `state/consults/gates/2026-10-16-b2-piece-1b-recording-gate3-architect-addendum-group-calls.md` (sha256 4ad43c45, ND-7, no verdict of its own), and the reviewer `state/consults/gates/2026-10-16-b2-piece-1b-recording-gate3-reviewer.md` (gate-log 527, sha256 c7d4da13).*
+
+1. **Gate 3:** both PASS WITH NOTES. Correctness and Evidence are closed. The architect: ND-6 (the new test's doc) and ND-7 (the `GROUP_CALLS` comment in `e2e/console.mjs`, stale since the re-aim), words given. The reviewer: no finding; N-1 gives optional words for one assertion message, which is untrue for two of the details it can show.
+2. **The words:** ND-6, ND-7 and the reviewer's N-1, applied as given by one worker in one commit, with no re-gate (AUTONOMY §31(d)); the PR body lists them, and also the worker's own doc comments and messages that the reviewer's N-3 names.
+3. **Still before the merge:** Amendment 9 item 1, ADR-022 Amendment 1 in the human's words, by the route the human chooses; the words passed the architect's clause check in gate 2, and the human said no re-gate.
+4. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
