@@ -72,7 +72,7 @@ languages (all named refusals in `renderer/src/style.rs::V0_EXCLUDED`) · a styl
 
 ## Amendment 1 — style persistence granted for the session history (2026-10-14, the human)
 From piece `b2-piece-1b-recording`, a committed style edit is persisted as a `style.set` step in the session history ADR-036 defines (Proposed). This is the grant Consequences (b) left open, for that store only.
-- ADR-006's class-2 machinery is the kernel's step record: each edit is one step, recorded by the kernel's `record_step` command (ADR-036 §12), as one line flushed before the reply; a line that is not whole is never recovered (ADR-036 §9).
+- ADR-006's class-2 machinery is the kernel's step record: each committed change of one style property is one step, so a Reset records one step per property it changes, recorded by the kernel's `record_step` command (ADR-036 §12), as one line flushed before the reply; a line that is not whole is never recovered (ADR-036 §9).
 - docs/11's obligations: the record's and the step's identities (URI), ADR-036 §6 (schema), ADR-036 §9 (lifecycle), and the step's `actor` and `at` (provenance).
 - Consequence (a) stands: nothing is undone, and no UI implies undo.
 - Persisting a style in a project file or a lineage is not granted here.
