@@ -12,6 +12,7 @@ mod watch_support;
 
 use std::fs::{File, OpenOptions};
 use std::path::{Path, PathBuf};
+use std::process::Command;
 use std::sync::Arc;
 use std::time::{Duration, SystemTime};
 
@@ -580,4 +581,101 @@ fn a_header_member_past_a_reader_bound_is_refused_by_name_and_no_record_is_made(
         records(&dir.join("store")).is_empty(),
         "nothing was recorded"
     );
+}
+
+/// Runs `icacls` with `args` and fails the test unless it exits with success. A machine without
+/// `icacls` fails the test that needs it; nothing returns early.
+fn icacls(args: &[&str]) {
+    let out = Command::new("icacls")
+        .args(args)
+        .output()
+        .expect("icacls runs");
+    assert!(
+        out.status.success(),
+        "icacls {args:?} exited with {:?}: {}{}",
+        out.status.code(),
+        String::from_utf8_lossy(&out.stdout),
+        String::from_utf8_lossy(&out.stderr)
+    );
+}
+
+/// Removes the deny entry from the store root when it is dropped, whether the test passed or
+/// panicked, then resets the root's access list and removes the test's scratch folder, so that a
+/// failing run leaves nothing a later run or a person cannot delete.
+struct DenyGuard {
+    root: PathBuf,
+    scratch: PathBuf,
+    user: String,
+}
+
+impl Drop for DenyGuard {
+    fn drop(&mut self) {
+        let root = self.root.display().to_string();
+        let removals: [&[&str]; 2] = [
+            &[root.as_str(), "/remove:d", self.user.as_str()],
+            &[root.as_str(), "/reset", "/T", "/C", "/Q"],
+        ];
+        for args in removals {
+            let done = Command::new("icacls").args(args).output();
+            if !done.is_ok_and(|o| o.status.success()) {
+                eprintln!("icacls {args:?} did not succeed while removing the deny entry");
+            }
+        }
+        drop(std::fs::remove_dir_all(&self.scratch));
+    }
+}
+
+/// **E-1 (Amendment 10), the cleanup after a failed record creation.** The caller supplies the
+/// store root and a record's folder inherits the root's access list, so an inheritable deny entry
+/// for the process's own user on the root, with the rights `(OI)(CI)(WD)`, lets the `create_dir` of
+/// the record's folder succeed and refuses the write of `locations.json` inside it. The deny does
+/// not include delete: the product's own `remove_dir_all` is what is under test. The test drives
+/// only `StepRecorder::new` and `record_step`, runs `icacls` through `std::process::Command` with
+/// its exit status checked, and proves, in order: the refusal is `skp.session_history_unwritable`;
+/// its detail names `locations.json`, so the failure came after the folder was made; and the store
+/// root then holds no entry.
+///
+/// On any other operating system the test returns at once, checked at run time, and proves
+/// nothing there. The proof is CI's windows-latest job and a local Windows run.
+///
+/// RECORDED MUTATION: the `.inspect_err(|_| drop(std::fs::remove_dir_all(&dir)))` in `create` is
+/// removed. Expected failure: the store root holds one `unsaved-` folder, and the test fails at
+/// its empty-root assertion.
+#[test]
+fn on_windows_a_record_whose_locations_write_is_denied_is_removed_and_the_root_is_empty() {
+    if std::env::consts::OS != "windows" {
+        return;
+    }
+    let dir = scratch("record-creation-denied");
+    let path = fixture(&dir, "f1", &f1(1));
+    let host = host();
+    let handle = open(&host, &path);
+    let root = dir.join("store");
+    std::fs::create_dir_all(&root).expect("store root");
+
+    let who = Command::new("whoami").output().expect("whoami runs");
+    assert!(who.status.success(), "whoami exited with {:?}", who.status);
+    let user = String::from_utf8_lossy(&who.stdout).trim().to_string();
+    assert!(!user.is_empty(), "whoami printed no user");
+    icacls(&[
+        root.display().to_string().as_str(),
+        "/deny",
+        format!("{user}:(OI)(CI)(WD)").as_str(),
+    ]);
+    let _deny = DenyGuard {
+        root: root.clone(),
+        scratch: dir.clone(),
+        user,
+    };
+
+    let recorder = StepRecorder::new(root.clone(), host.clone());
+    let e = recorder.record_step(opacity(&handle, 0.5)).unwrap_err();
+    assert_eq!(e.code, "skp.session_history_unwritable");
+    let detail = e.fields["detail"].as_str();
+    assert!(
+        detail.contains("locations.json"),
+        "the failure came before the folder was made: {detail}"
+    );
+    let left = records(&root);
+    assert!(left.is_empty(), "a folder was left: {left:?}");
 }

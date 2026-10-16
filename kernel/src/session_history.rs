@@ -207,9 +207,15 @@ impl StepRecorder {
     /// the folder exists removes what was written before it is returned, so a refusal leaves no
     /// record that no run owns (`end_session` clears only the records in `records`).
     ///
-    /// No test drives the removal: the folder's name is fresh and random, and nothing a caller
-    /// supplies reaches the calls after it (the file writes, the lock), so no product input makes
-    /// one of them fail. A test would need a path of its own for the failure, and none is added.
+    /// The removal is driven by the test named below, in `kernel/tests/session_history.rs`, through
+    /// `StepRecorder::new` and `record_step` alone:
+    ///
+    /// `on_windows_a_record_whose_locations_write_is_denied_is_removed_and_the_root_is_empty`
+    ///
+    /// Its seam is the store root the caller supplies: the record's folder inherits the root's
+    /// ACL, so an inheritable deny-write ACE on the root lets the `create_dir` below succeed and
+    /// makes the write of `locations.json` fail, and the folder must then be gone. The test
+    /// returns at once on any other operating system.
     fn create(&self, reference: &DatasetRef, ds: &Dataset) -> Result<Record, SkpError> {
         let header = canonical(&header_object(reference.to_json()))?;
         reader_accepts(&header, true)?;
@@ -240,13 +246,8 @@ impl StepRecorder {
             ("version", Json::Int(1)),
             ("entries", Json::Arr(vec![entry])),
         ]);
-        std::fs::write(
-            dir.join(LOCATIONS),
-            canonical(&locations)?
-                + "
-",
-        )
-        .map_err(|e| unwritable(LOCATIONS, &e))?;
+        std::fs::write(dir.join(LOCATIONS), canonical(&locations)? + "\n")
+            .map_err(|e| unwritable(LOCATIONS, &e))?;
         // Read and write, not append: Windows refuses to lock an append-only handle. Nothing else
         // writes the file while it is locked, so each `write_all` lands at its end.
         let mut options = OpenOptions::new();
