@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `5ebf785f516b385f2f2ac2940fcaedcc35b5c1324e4fc4f6e156932ea0a82c3d`) at `2026-10-16T19:13:55.968Z`.
+Generated from `PLAN.yaml` (sha256 `a6f1313d57347e4e5f8357d4f3cf0d5c8e853131979a2cad31944ec692ef03f5`) at `2026-10-16T21:04:53.403Z`.
 
 ## 1. Next
 
@@ -28,7 +28,7 @@ Generated from `PLAN.yaml` (sha256 `5ebf785f516b385f2f2ac2940fcaedcc35b5c1324e4f
 
 ## 5. In progress
 
-- **b2-piece-1b-recording** — B2 piece 1b -- recording: the kernel's step commands for filter, scope and style, the session history on the machine, safe against a crash, and the docs/07 note — evidence: branch `cut/b2-piece-1b-recording`
+- (none)
 
 ## 6. Proposed / unscheduled
 
