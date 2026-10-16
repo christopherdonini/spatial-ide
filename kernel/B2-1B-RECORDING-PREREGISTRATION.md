@@ -891,3 +891,18 @@ Nothing above is edited.
 5. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 8 — gate 1: both FAIL; correction round 1 of 2 (class 2); the fifth error code recorded as class 9; one red line to the human
+
+*Written by the custodian after both gate 1 reports were seen, at the head 3dfc1a0e. References only. The reports: the architect `state/consults/gates/2026-10-16-b2-piece-1b-recording-gate1-architect.md` (gate-log 522, sha256 766d66f1) and the reviewer `state/consults/gates/2026-10-16-b2-piece-1b-recording-gate1-reviewer.md` (gate-log 523, sha256 f34f06c0).*
+
+1. **Gate 1:** both FAIL. The architect: Correctness C-1 to C-3, C-4 a sentence's words, C-5 a red line, Documentation D-1 to D-10. The reviewer: Correctness C-1, the same sentence as the architect's C-4; Evidence closed (every new test's mutation re-observed at the head, every suite green, CI green, every pin and hash recomputed, the lock diffs empty); Documentation D-1 to D-6.
+2. **Correction round 1 of 2, one worker-high, in code:** the architect's C-1 (each line checked against the reader's rules before it is written, refused by name with nothing written, a test and its mutation; U7's comment corrected); C-2 (a failed record creation removes what it wrote); C-3 (a Reset that changes nothing writes a console row, its statement a new string for the human's sight). The reviewer's C-1 is met by C-2's code, its alternative; its words are not used.
+3. **In the same round, words:** the architect's C-4 and D-1 to D-8; the reviewer's D-1 to D-4 and D-6. Where both reports give words for one place, or a code fix changes what a sentence must say, the worker writes words that hold at its head and lists them.
+4. **Gate 2:** both gates, scoped to the round, because the round changes code.
+5. **To the human (a red line, typed):** the architect's C-5, ADR-022 Amendment 1's words on one step per edit, which a Reset does not meet. ADR-022 is not changed before the human's words.
+6. **Class 9, recorded late (the architect's D-10):** the fifth error code, `skp.style_value_not_admitted`, is a wire addition. It landed at 10168433 before any amendment declared it; Amendment 4 item 4 recorded it as class 2. Both gates found that it holds.
+7. **The custodian's:** the PR body (the reviewer's D-5: §7 at the head by its command, 4,557 lines over 66 files; the strings the app shows through `{message}` and `{detail}`; the words applied in the round); the PLAN node names OPEN-6's consumer (the architect's D-9).
+8. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
