@@ -16,15 +16,19 @@ use std::sync::Arc;
 use std::time::{Duration, SystemTime};
 
 use serde_json::Value;
-use spatial_engine::fixture::{write_geoparquet, AttributeMode, FixtureSpec};
+use spatial_engine::fixture::{
+    write_geoparquet, AttributeMode, CoordinateDomain, CrsMode, DeclaredTypes, FixtureSpec,
+    LV95_PROJJSON,
+};
 use spatial_kernel::dataset_ref::{DatasetRef, DatasetUri};
 use spatial_kernel::session_history::{recover, StepRecorder};
 use spatial_kernel::skp::{session_end_channel, SkpHost, StreamRegistry};
 use spatial_kernel::Catalog;
 use spatial_renderer::canonical::{sha256_hex, to_canonical_string, Json};
 use spatial_skp::v0::{
-    CloseDatasetRequest, DatasetHandle, Filter, FilterApplyParams, OpenDatasetRequest,
-    OutlineWidthValue, PxUnit, RecordStepRequest, StepIntent, StyleSetParams, SKP_VERSION,
+    CloseDatasetRequest, CrsAssertion, DatasetHandle, Filter, FilterApplyParams,
+    OpenDatasetRequest, OutlineWidthValue, PxUnit, RecordStepRequest, StepIntent, StyleSetParams,
+    SKP_VERSION,
 };
 
 /// F1: 500 polygons, declared LV95, native `id`, a `zone` text column.
@@ -497,5 +501,82 @@ fn the_append_path_flushes_each_line_before_it_returns() {
     assert_eq!(
         append_path_faults(&source.replace(".sync_all()", ".flush()")),
         ["no sync_all"]
+    );
+}
+
+/// **C-1 (Amendment 8), the step.** The engine does not bound how many geometry types a file
+/// declares, and the reader takes at most 1,024 in a list (ADR-036 §6 as the kernel reads it). A
+/// step whose `dependencies.geometry_types` holds 1,025 is refused by name and its line is not
+/// written: the record keeps its header and reads back whole. Without the refusal the line would be
+/// written and `recover` would stop at it, so the history would be lost to the reader.
+///
+/// RECORDED MUTATION: the call to `reader_accepts` before the step's `append` is removed. Expected
+/// failure: the step is recorded, and this test fails at the `unwrap_err` on the refused step.
+#[test]
+fn a_step_member_past_a_reader_bound_is_refused_by_name_and_the_line_is_not_written() {
+    let dir = scratch("reader-bound-step");
+    let types = vec!["Polygon"; 1_025];
+    let spec = FixtureSpec {
+        declared_types: DeclaredTypes::Json(serde_json::to_string(&types).unwrap()),
+        ..f1(1)
+    };
+    let host = host();
+    let handle = open(&host, &fixture(&dir, "f1", &spec));
+    let recorder = StepRecorder::new(dir.join("store"), host);
+    let e = recorder.record_step(opacity(&handle, 0.5)).unwrap_err();
+    assert_eq!(e.code, "skp.session_history_unwritable");
+    let detail = e.fields["detail"].as_str();
+    assert!(
+        detail.contains("$.step.dependencies.geometry_types") && detail.contains("1024"),
+        "{detail}"
+    );
+    drop(recorder);
+
+    let dirs = records(&dir.join("store"));
+    assert_eq!(dirs.len(), 1, "the record the refused step began stays");
+    let got = recover(&dirs[0]);
+    assert!(got.failure.is_none(), "{:?}", got.failure);
+    assert_eq!(got.lines.len(), 1, "the header, and no step line");
+}
+
+/// **C-1 (Amendment 8), the header.** A caller's CRS assertion is admitted with an identifier of
+/// any length, and the reader takes a claim's identifier of at most 4,096 bytes. A first step for
+/// such an open is refused by name before anything is made: the store root holds no record.
+///
+/// RECORDED MUTATION: the call to `reader_accepts` before the header's `append` is removed.
+/// Expected failure: the header is written, the step check then refuses the step by its own path,
+/// and this test fails at the assertion that the refusal names the header's member.
+#[test]
+fn a_header_member_past_a_reader_bound_is_refused_by_name_and_no_record_is_made() {
+    let dir = scratch("reader-bound-header");
+    let spec = FixtureSpec {
+        crs_mode: CrsMode::AbsentKey,
+        domain: CoordinateDomain::Lv95Metres,
+        ..f1(1)
+    };
+    let path = fixture(&dir, "f1", &spec);
+    let host = host();
+    let open = OpenDatasetRequest {
+        skp: SKP_VERSION.to_string(),
+        path: path.display().to_string(),
+        cancel_key: "k".to_string(),
+        crs_assertion: Some(CrsAssertion {
+            identifier: "E".repeat(4_097),
+            definition_json: LV95_PROJJSON.to_string(),
+        }),
+        identity: None,
+    };
+    let handle = host.open_dataset(open).expect("open").dataset;
+    let recorder = StepRecorder::new(dir.join("store"), host);
+    let e = recorder.record_step(opacity(&handle, 0.5)).unwrap_err();
+    assert_eq!(e.code, "skp.session_history_unwritable");
+    let detail = e.fields["detail"].as_str();
+    assert!(
+        detail.contains("$.admission.crs_assertion.identifier") && detail.contains("4096"),
+        "{detail}"
+    );
+    assert!(
+        records(&dir.join("store")).is_empty(),
+        "nothing was recorded"
     );
 }

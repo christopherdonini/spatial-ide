@@ -129,6 +129,7 @@ vi.mock("./canvas/WorkingCanvas", () => {
 });
 
 import App from "./App";
+import { consoleRecorder, isGuiActionEntry } from "./console/recorder";
 import { __resetResidencyArmForTests, setResidencyArm } from "./residency/residencyArm";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -203,8 +204,8 @@ describe("App: a committed filter or style edit is recorded in the session histo
     expect(mocks.recorded, "the admission reset records none").toHaveLength(1);
   });
 
-  // RECORDED MUTATION for "A2": in `StylePanel.tsx` call `onCommit` from `handleFillOpacity` (the per-tick `onChange` path) as well.
-  // Expected failure: three steps are recorded before the release.
+  // RECORDED MUTATION for "A2": in `App.tsx` `handleStyleChange` (the per-tick `onChange` path), enqueue each `style.set`
+  // transition as well. Expected failure: a step is recorded while the drag is live.
   it("A2: a style drag records one style.set at release, not one per tick", async () => {
     await open("C:/data/a.parquet");
     click(q("#inspector-tab-style"));
@@ -234,5 +235,30 @@ describe("App: a committed filter or style edit is recorded in the session histo
       "Filter applied. The session history did not confirm keeping it: this session history takes no more steps: an earlier write to it failed"
     );
     expect(q(".filter-active")?.textContent, "the filter stays applied").toBe("Applied: zone = 'residential'");
+  });
+
+  // RECORDED MUTATIONS for "A4", each applied alone (Amendment 8, the architect's C-3). (i) In `handleStyleCommit` (App.tsx) remove
+  // `recordNamed("gui-action", "style.resetToDefault")`. Expected failure: the Reset at the default shows no console row. (ii) In the same
+  // line remove the `transitions.length === 0` condition. Expected failure: the Reset that changed the style also shows a row.
+  it("A4: a Reset that changes nothing records no step and shows one console row; a Reset that changes the style records its steps and shows none", async () => {
+    await open("C:/data/a.parquet");
+    click(q("#inspector-tab-style"));
+    click(q(".style-disclosure"));
+    const resetRows = () => consoleRecorder.entries().filter(isGuiActionEntry).filter((e) => e.action === "style.resetToDefault").length;
+    const before = resetRows();
+
+    click(q(".style-reset"));
+    expect(mocks.recorded, "a Reset at the default records no step").toEqual([]);
+    expect(resetRows() - before, "and shows one console row").toBe(1);
+
+    const range = q<HTMLInputElement>(".style-fill-opacity")!;
+    setValue(range, "0.30");
+    act(() => {
+      range.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+    expect(mocks.recorded, "the edit is recorded").toHaveLength(1);
+    await act(async () => q<HTMLButtonElement>(".style-reset")!.click());
+    expect(mocks.recorded, "a Reset that changes the style records its step").toHaveLength(2);
+    expect(resetRows() - before, "and shows no further row").toBe(1);
   });
 });

@@ -172,7 +172,8 @@ const CLASS_B_ROWS = [
  * mechanically completeness-checked (no call site exists to scan for); see
  * `surfaceCompleteness.test.ts`'s own comment on why that makes this table a review-maintained
  * one, which is why NEXT-CUT.md Part J's J3 walkthrough item exists. Style edits left this table in
- * B2 piece 1b: each committed edit is the class-A `record_step` row above. `as const satisfies` for
+ * B2 piece 1b: each committed edit is the class-A `record_step` row above. The one row that stays is
+ * `style.resetToDefault`, for a Reset that changes nothing: it records no step, so no class-A row shows it. `as const satisfies` for
  * the same literal-preserving reason `CLASS_B_ROWS` above uses it. */
 const CLASS_C_ROWS = [
   {
@@ -182,6 +183,14 @@ const CLASS_C_ROWS = [
       "no API equivalent exists -- StylePanel's collapsed/expanded disclosure is pure view state, " +
       "discarded on every dataset change.",
     owner: 'docs/03 §"The action console" (pure view state)',
+  },
+  {
+    class: "C",
+    action: "style.resetToDefault",
+    statement:
+      "[P6 placeholder] no API equivalent exists -- Reset to default found the style already at the default, so " +
+      "nothing changed and no step was sent to the session history.",
+    owner: 'docs/03 §"The action console"',
   },
   {
     class: "C",

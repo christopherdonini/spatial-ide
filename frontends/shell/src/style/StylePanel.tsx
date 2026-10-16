@@ -27,8 +27,9 @@ interface StylePanelProps {
   onChange: (next: StyleState) => void;
   /** B2-1B-RECORDING-PREREGISTRATION.md section 2.5: called once per COMMITTED edit with the whole next
    * `StyleState` -- the native `change` event of each of the four controls (release of a range, close of a
-   * colour picker, one keyboard step) and Reset -- never per drag tick, which only `onChange` sees. */
-  onCommit: (next: StyleState) => void;
+   * colour picker, one keyboard step) and Reset -- never per drag tick, which only `onChange` sees. A Reset says so
+   * in `source`: the owner shows a Reset that changes nothing in the console, where no step is recorded. */
+  onCommit: (next: StyleState, source?: "reset") => void;
 }
 
 /**
@@ -140,7 +141,7 @@ export default function StylePanel({ style, onChange, onCommit }: StylePanelProp
   function handleReset(): void {
     // "Reset to default" is a FRESH EDIT, never undo-flavoured (NEXT-CUT.md binding note 4). It is one commit.
     onChange(DEFAULT_STYLE_STATE);
-    onCommit(DEFAULT_STYLE_STATE);
+    onCommit(DEFAULT_STYLE_STATE, "reset");
   }
 
   return (

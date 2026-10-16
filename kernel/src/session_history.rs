@@ -144,8 +144,8 @@ impl StepRecorder {
 
     /// `record_step` (SKP-V0 §10.3), the checks in order: the version, the catalog entry, the live
     /// check (the one point it linearizes at), the action and its admission, then the record
-    /// (created at the first step for an opened file), the line, its bounds, one write and one
-    /// flush, and the reply.
+    /// (created at the first step for an opened file), the line, its bounds and its members
+    /// against the reader's rules, one write and one flush, and the reply.
     pub fn record_step(&self, req: RecordStepRequest) -> Result<RecordStepResponse, SkpError> {
         check_version(&req.skp)?;
         let name = req.dataset.as_str();
@@ -183,8 +183,9 @@ impl StepRecorder {
         let parent = rec.last_step.as_deref();
         let at = rfc3339_utc_now();
         let step = step_object(&id, parent, &at, kind, intent, dependencies, data);
-        rec.history
-            .append(&canonical(&Json::obj([("step", step)]))?, false)?;
+        let line = canonical(&Json::obj([("step", step)]))?;
+        reader_accepts(&line, false)?;
+        rec.history.append(&line, false)?;
         rec.last_step = Some(id);
         Ok(RecordStepResponse {})
     }
@@ -201,15 +202,38 @@ impl StepRecorder {
         }
     }
 
-    /// A new record: its folder, `locations.json`, and the locked history with its header.
+    /// A new record: its folder, `locations.json`, and the locked history with its header. The
+    /// header is checked against the reader's rules before anything is made, and a failure after
+    /// the folder exists removes what was written before it is returned, so a refusal leaves no
+    /// record that no run owns (`end_session` clears only the records in `records`).
+    ///
+    /// No test drives the removal: the folder's name is fresh and random, and nothing a caller
+    /// supplies reaches the calls after it (the file writes, the lock), so no product input makes
+    /// one of them fail. A test would need a path of its own for the failure, and none is added.
     fn create(&self, reference: &DatasetRef, ds: &Dataset) -> Result<Record, SkpError> {
-        let fail = |what: &str, e: &dyn std::fmt::Display| {
-            SkpError::session_history_unwritable(&format!("{what}: {e}"))
-        };
+        let header = canonical(&header_object(reference.to_json()))?;
+        reader_accepts(&header, true)?;
         let dir = self.root.join(format!("unsaved-{}", hex32()));
         std::fs::create_dir_all(&self.root)
             .and_then(|()| std::fs::create_dir(&dir))
-            .map_err(|e| fail("the record folder", &e))?;
+            .map_err(|e| unwritable("the record folder", &e))?;
+        // Every handle `write_record` opened is closed when it returns an error, so the removal
+        // below meets no open file.
+        self.write_record(&dir, reference, ds, &header)
+            .map_err(|e| {
+                let _ = std::fs::remove_dir_all(&dir);
+                e
+            })
+    }
+
+    /// The files of a new record, in the folder `create` made.
+    fn write_record(
+        &self,
+        dir: &Path,
+        reference: &DatasetRef,
+        ds: &Dataset,
+        header: &str,
+    ) -> Result<Record, SkpError> {
         let entry = Json::obj([
             ("dataset", Json::str(reference.uri().as_str())),
             ("path", Json::str(ds.path().to_string_lossy())),
@@ -219,8 +243,13 @@ impl StepRecorder {
             ("version", Json::Int(1)),
             ("entries", Json::Arr(vec![entry])),
         ]);
-        std::fs::write(dir.join(LOCATIONS), canonical(&locations)? + "\n")
-            .map_err(|e| fail(LOCATIONS, &e))?;
+        std::fs::write(
+            dir.join(LOCATIONS),
+            canonical(&locations)?
+                + "
+",
+        )
+        .map_err(|e| unwritable(LOCATIONS, &e))?;
         // Read and write, not append: Windows refuses to lock an append-only handle. Nothing else
         // writes the file while it is locked, so each `write_all` lands at its end.
         let mut options = OpenOptions::new();
@@ -229,20 +258,49 @@ impl StepRecorder {
             .write(true)
             .create_new(true)
             .open(dir.join(HISTORY));
-        let file = file.map_err(|e| fail(HISTORY, &e))?;
-        file.try_lock().map_err(|e| fail("the history lock", &e))?;
+        let file = file.map_err(|e| unwritable(HISTORY, &e))?;
+        file.try_lock()
+            .map_err(|e| unwritable("the history lock", &e))?;
         let mut rec = Record {
-            dir,
+            dir: dir.to_path_buf(),
             uri: reference.uri().clone(),
             path: ds.path().to_path_buf(),
             admission: reference.admission().clone(),
             history: History::new(file, |f| f.sync_all()),
             last_step: None,
         };
-        rec.history
-            .append(&canonical(&header_object(reference.to_json()))?, true)?;
+        rec.history.append(header, true)?;
         Ok(rec)
     }
+}
+
+/// A filesystem call failed while a record was being made.
+fn unwritable(what: &str, e: &dyn std::fmt::Display) -> SkpError {
+    SkpError::session_history_unwritable(&format!("{what}: {e}"))
+}
+
+/// Refuse a line the reader would refuse, before it is written (ADR-036 §9: the reader stops at the
+/// first line that fails, so a line it refuses loses the rest of the history). The member rules are
+/// the reader's own, [`check_header`] and [`check_step`], so the two cannot drift. The refusal is
+/// `skp.session_history_unwritable`, its `detail` naming the member's path and the rule it breaks.
+fn reader_accepts(line: &str, header: bool) -> Result<(), SkpError> {
+    let which = if header {
+        "the header line"
+    } else {
+        "the step line"
+    };
+    let refuse = |rule: String| {
+        SkpError::session_history_unwritable(&format!(
+            "{which} breaks a rule the reader holds, so it is not written: {rule}"
+        ))
+    };
+    let v: Value = serde_json::from_str(line).map_err(|e| refuse(format!("not JSON: {e}")))?;
+    let found = if header {
+        check_header(&v).map(drop)
+    } else {
+        check_step(&v["step"], ACTIONS)
+    };
+    found.map_err(|e| refuse(e.to_string()))
 }
 
 /// ADR-036 §6's header for a session history that has not saved a project.
@@ -818,14 +876,7 @@ fn read_line(
         .and_then(|o| o.keys().next());
     match (first, key.map(String::as_str)) {
         (true, _) => {
-            check(&v, "$", &HEADER)?;
-            let items = v["datasets"].as_array().filter(|a| !a.is_empty());
-            let items =
-                items.ok_or_else(|| malformed("$.datasets", "expected one to eight entries"))?;
-            let datasets = items
-                .iter()
-                .map(DatasetRef::parse)
-                .collect::<Res<Vec<_>>>()?;
+            let datasets = check_header(&v)?;
             chain.actions = v["actions"].as_u64().unwrap_or(0);
             *header = Some(Header {
                 actions: chain.actions,
@@ -834,12 +885,7 @@ fn read_line(
         }
         (false, Some("step")) => {
             let step = &v["step"];
-            check(step, "$.step", &STEP)?;
-            check_intent(
-                &step["intent"],
-                step["kind"].as_str().unwrap_or(""),
-                chain.actions,
-            )?;
+            check_step(step, chain.actions)?;
             if text_of(&step["parent"]) != chain.parent {
                 let rule = "a step's parent is the id of the step before it or, after a restored mark, the mark's `to`";
                 return Err(malformed("$.step.parent", rule));
@@ -875,6 +921,27 @@ fn read_line(
         }
     }
     Ok(text.to_string())
+}
+
+/// The header's member rules (ADR-036 §6): the closed shape, then each dataset entry as
+/// `DatasetRef::parse` reads it. The reader checks a header with this, and so does the writer
+/// before it writes one.
+fn check_header(v: &Value) -> Res<Vec<DatasetRef>> {
+    check(v, "$", &HEADER)?;
+    let items = v["datasets"].as_array().filter(|a| !a.is_empty());
+    let items = items.ok_or_else(|| malformed("$.datasets", "expected one to eight entries"))?;
+    items.iter().map(DatasetRef::parse).collect()
+}
+
+/// A step's member rules (ADR-036 §6): the closed shape, then its intent against the registry. The
+/// reader checks a step with this, and so does the writer before it writes one.
+fn check_step(step: &Value, actions: u64) -> Res<()> {
+    check(step, "$.step", &STEP)?;
+    check_intent(
+        &step["intent"],
+        step["kind"].as_str().unwrap_or(""),
+        actions,
+    )
 }
 
 /// A registered action's `params` are checked in full, and its `kind` against the registry. An
@@ -1198,9 +1265,14 @@ mod tests {
 
     /// U7. Control characters escape to six bytes, the worst under ADR-036 §2's canonical text.
     /// Bounded here by the engine's own ceilings (a predicate, a CRS definition) and, where none is
-    /// declared (a CRS identifier, a column name, a geometry type), by 4,096 bytes each: past that
-    /// the ceiling check refuses the step by name. Mutation: `MAX_STEP_LINE_BYTES` set below the
-    /// computed worst case. Expected failure: this test fails at the step line's assertion.
+    /// declared (a CRS identifier, a column name, a geometry type), by the reader's 4,096 bytes
+    /// each: a longer member is refused by name before it is written, because the writer checks
+    /// each line against the reader's rules (`reader_accepts`; the integration tests
+    /// `a_step_member_past_a_reader_bound_is_refused_by_name_and_the_line_is_not_written` and
+    /// `a_header_member_past_a_reader_bound_is_refused_by_name_and_no_record_is_made`). A line
+    /// whose members are each within the reader's bounds and which still passes the line ceiling is
+    /// refused `skp.step_line_over_ceiling`. Mutation: `MAX_STEP_LINE_BYTES` set below the computed
+    /// worst case. Expected failure: this test fails at the step line's assertion.
     #[test]
     fn the_worst_case_header_and_step_lines_fit_their_ceilings() {
         let ctrl = |n: usize| "\u{1}".repeat(n);

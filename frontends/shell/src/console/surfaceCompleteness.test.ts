@@ -263,9 +263,11 @@ describe("console/surfaceRegistry completeness scan (NEXT-CUT.md P2)", () => {
   describe("style edits are class A (B2 piece 1b)", () => {
     // RECORDED MUTATION for this test: leave one style row in class C (re-add `style.setFillColor` to CLASS_C_ROWS in
     // surfaceRegistry.ts). Expected failure: the class-C set still names a style edit.
+    // The one other `style.` row allowed is `style.resetToDefault` (Amendment 8, the architect's C-3): a Reset that changes
+    // nothing records no step, so it is not an edit that is recorded; `App.recording.test.tsx` "A4" proves when its row is written.
     it("style edits are class-A record_step rows", () => {
-      const styleEdits = classCRows().filter((row) => /^style\.(set|reset)/.test(row.action));
-      expect(styleEdits.map((row) => row.action)).toEqual([]);
+      const styleEdits = classCRows().filter((row) => /^style\./.test(row.action) && row.action !== "style.togglePanelExpanded");
+      expect(styleEdits.map((row) => row.action)).toEqual(["style.resetToDefault"]);
       expect(classARows().map((row) => row.command)).toContain("record_step");
     });
   });

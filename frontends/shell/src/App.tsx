@@ -1906,13 +1906,16 @@ export default function App() {
 
   /** `StylePanel`'s `onCommit`, once per committed edit (a release, a picker's close, a keyboard step, Reset) and never per
    * tick: the style is already applied by `onChange`, so this records one `style.set` step per property that differs from the
-   * last committed style, each carrying the value it sets. */
-  function handleStyleCommit(next: StyleState): void {
+   * last committed style, each carrying the value it sets. A Reset that differs in none records no step, and writes the
+   * console row `style.resetToDefault` instead, so that the operator sees it happened and recorded nothing (docs/01 principle 4). */
+  function handleStyleCommit(next: StyleState, source?: "reset"): void {
     const previous = lastCommittedStyle.current;
     lastCommittedStyle.current = next;
+    const transitions = styleTransitions(previous, next);
+    if (source === "reset" && transitions.length === 0) recordNamed("gui-action", "style.resetToDefault");
     const dataset = admittedDatasetRef.current;
     if (dataset === null) return;
-    for (const transition of styleTransitions(previous, next)) stepQueue.enqueue(dataset, transition);
+    for (const transition of transitions) stepQueue.enqueue(dataset, transition);
   }
 
   return (
