@@ -84,3 +84,14 @@ As named in the source comment: the describe payload's definition on the wire; b
 3. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 2 — closing record: PR #223 merged
+
+*Written by the custodian after the merge. References only.*
+
+1. **Merged** by the human at 2026-10-17T16:36:08Z, merge commit cb46f85acf691a9e8535f084d2bc67df1d3f2449 (two parents: main 5c265617 and the branch head 61c64a8f).
+2. **The worker's report:** `state/consults/2026-10-17-known-limitations-crs-epoch-edges-third-axis-worker-report.md` @ 3d93fc1d889d394d420c8a918f8872209dc376da, its sha256 from line 5 to the end 585557b4079c5e97143a7ad5477fbc5843381eb61ec239976743d497736d83db.
+3. **Gate:** the single combined reviewer gate, PASS WITH NOTES (gate log 528; `state/consults/gates/2026-10-17-known-limitations-crs-epoch-edges-third-axis-gate1-reviewer.md`, its sha256 deefc1f603d8923ea66a877ba61b89b44603af548ce8ca251efb068a3f8a7d6e); its D-1 was applied to the PR body, no re-gate.
+4. **PLAN:** the node is done, with `{pr: 223}`.
+
+Nothing above is edited.

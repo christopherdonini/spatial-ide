@@ -168,3 +168,18 @@ Nothing above is edited.
 7. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 4 — closing record: PR #224 merged
+
+*Written by the custodian after the merge. References only.*
+
+1. **Merged** by the human at 2026-10-17T16:36:21Z, merge commit 46e56dc9aba8c63eff8c08fe8ddb14a4af0cee8d (two parents: main cb46f85a, PR #223's merge, and the branch head 61b2e231).
+2. **The run report (§C.3):** `state/consults/2026-10-17-engine-clause-composition-properties-worker-report.md` @ 433a2088a651c7ebe6e816791217f89fe6d6da58, its sha256 from line 5 to the end 710c486fd4315d4183785360db5e9567d38e04e09438fcec7d338eea85621934. **The words worker's report:** `state/consults/2026-10-17-engine-clause-composition-properties-words-worker-report.md` @ be9515777895696d128b88f7fb696e71431dd764, its sha256 from line 5 to the end f70c74ca74fdd83ec25e1f7128f5fd3e8efa2a71d8b2d21b073768aff5c574a9.
+3. **Gates:** both PASS WITH NOTES at 93f2b927 (gate log 529, the architect, `state/consults/gates/2026-10-17-engine-clause-composition-properties-gate1-architect.md`, sha256 ea823cf4d05974d206f4128136cebf6cbb335c3844c6cd3b0090c90c97e2f98c; 530, the reviewer, `state/consults/gates/2026-10-17-engine-clause-composition-properties-gate1-reviewer.md`, sha256 2acfe5ee82e62864dde2555f678a7ba9ab427a5ad2c1342e5616eac91079a36a); the words applied at 61b2e231 with no re-gate (Amendment 3).
+4. **CI's step time (Amendment 3 item 5), a log reading and not a docs/08 measurement.** In PR #224's CI at 61b2e231, the job `cargo test --workspace (windows-latest)` runs the campaign in its step 7, `Run the ordinary suite`, with the rest of the workspace's tests:
+   - the pull_request run 39018134783 (job 117354350740): step 7 from 2026-10-17T08:42:53Z to 2026-10-17T08:55:04Z; the campaign binary `tests\admission_property_campaign.rs`, three tests, printed `finished in 18.44s`.
+   - the push run 39018131745 (job 117354342806): step 7 from 2026-10-17T08:43:21Z to 2026-10-17T08:56:35Z; the campaign binary `tests\admission_property_campaign.rs`, three tests, printed `finished in 24.23s`.
+   - The binary's three tests run in parallel, so neither figure is the new test's alone. The READY note in PLAN at 5c265617 swapped the two runs' events; the events above are GitHub's.
+5. **PLAN:** the node is done, with `{pr: 224}`.
+
+Nothing above is edited.

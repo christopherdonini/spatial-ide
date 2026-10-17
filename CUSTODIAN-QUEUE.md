@@ -1,14 +1,15 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `278ae457cadacad5530166836eb350e1ff625b4b28661b2adee02b3b35724608`) at `2026-10-17T16:47:50.976Z`.
+Generated from `PLAN.yaml` (sha256 `b6fe09bedb9f40e7d082400633cdafcd7532914a344e8e4b987ca9b092938fbb`) at `2026-10-17T16:55:20.905Z`.
 
 ## 1. Next
 
-- (nothing ready)
+- **e2e-readme-status-bar-steps** — e2e/README.md: the status bar's two new steps and E-FOCUS's new stop in the layout and selection entries (the docs-lane follow-up of shell-status-bar-one-height, OPEN-2 (b)) (lane `shell`)
 
 ## 2. Ready
 
-- (none)
+- **e2e-readme-status-bar-steps** — e2e/README.md: the status bar's two new steps and E-FOCUS's new stop in the layout and selection entries (the docs-lane follow-up of shell-status-bar-one-height, OPEN-2 (b)) (lane `shell`, order null, budget 0 min)
+- **source-changed-post-route-s5d-race** — source-changed.mjs's post route: step S5d (post-check-route-confirmed) loses its race to a tile's pre-check in about half the runs on this machine, at main's base too (lane `shell`, order null, budget 60 min)
 
 ## 3. Waiting on the human (total: 0 min)
 
@@ -17,8 +18,6 @@ Generated from `PLAN.yaml` (sha256 `278ae457cadacad5530166836eb350e1ff625b4b2866
 ## 4. Blocked on dependencies
 
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
-- **e2e-readme-status-bar-steps** — e2e/README.md: the status bar's two new steps and E-FOCUS's new stop in the layout and selection entries (the docs-lane follow-up of shell-status-bar-one-height, OPEN-2 (b)) — blocked by: known-limitations-crs-epoch-edges-third-axis
-- **source-changed-post-route-s5d-race** — source-changed.mjs's post route: step S5d (post-check-route-confirmed) loses its race to a tile's pre-check in about half the runs on this machine, at main's base too — blocked by: engine-clause-composition-properties
 - **briefb-b2-save-reopen** — B2 — Save project, Snapshot data, session history, lineage and preferences, in five stages, each with its own form — blocked by: decision-adr-029-scan-progress-route
 - **known-limitations-item-41-source-comment** — KNOWN-LIMITATIONS item 41's source comment: its code location pinned on main with its hash, saying the work has merged (the comment only; item 41's words still wait for their sight) — blocked by: e2e-readme-status-bar-steps
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer — blocked by: signpath-application-draft
@@ -30,8 +29,6 @@ Generated from `PLAN.yaml` (sha256 `278ae457cadacad5530166836eb350e1ff625b4b2866
 
 ## 5. In progress
 
-- **engine-clause-composition-properties** — Engine test piece: clause composition, P5 and P6 over the admission property campaign (tests only; no product code, fixture or dependency) — evidence: branch `cut/engine-clause-composition-properties`
-- **known-limitations-crs-epoch-edges-third-axis** — KNOWN-LIMITATIONS: a file's declared coordinate epoch, its edges value and a third CRS axis are not used, shown or carried into a bundle — evidence: branch `cut/known-limitations-item-44`
 - **governance-search-ignore-historical** — A root .ignore over historical material (site, the generated queue JSON, the cut archive, drafts, gate reports), tested both ways with the agents' own search tool, and its search rule appended to AUTONOMY; the routine-read and search-corpus measurements taken before it — evidence: branch `cut/search-ignore-historical`
 
 ## 6. Proposed / unscheduled
