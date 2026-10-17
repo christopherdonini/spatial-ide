@@ -1,14 +1,13 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `b6fe09bedb9f40e7d082400633cdafcd7532914a344e8e4b987ca9b092938fbb`) at `2026-10-17T16:55:20.905Z`.
+Generated from `PLAN.yaml` (sha256 `68088bbc67db341edd30314f888029d608e71563ef7ad6cbcd6f2a6125d52be6`) at `2026-10-17T17:13:07.987Z`.
 
 ## 1. Next
 
-- **e2e-readme-status-bar-steps** — e2e/README.md: the status bar's two new steps and E-FOCUS's new stop in the layout and selection entries (the docs-lane follow-up of shell-status-bar-one-height, OPEN-2 (b)) (lane `shell`)
+- **source-changed-post-route-s5d-race** — source-changed.mjs's post route: step S5d (post-check-route-confirmed) loses its race to a tile's pre-check in about half the runs on this machine, at main's base too (lane `shell`)
 
 ## 2. Ready
 
-- **e2e-readme-status-bar-steps** — e2e/README.md: the status bar's two new steps and E-FOCUS's new stop in the layout and selection entries (the docs-lane follow-up of shell-status-bar-one-height, OPEN-2 (b)) (lane `shell`, order null, budget 0 min)
 - **source-changed-post-route-s5d-race** — source-changed.mjs's post route: step S5d (post-check-route-confirmed) loses its race to a tile's pre-check in about half the runs on this machine, at main's base too (lane `shell`, order null, budget 60 min)
 
 ## 3. Waiting on the human (total: 0 min)
@@ -29,6 +28,7 @@ Generated from `PLAN.yaml` (sha256 `b6fe09bedb9f40e7d082400633cdafcd7532914a344e
 
 ## 5. In progress
 
+- **e2e-readme-status-bar-steps** — e2e/README.md: the selection entry gains E-STATUS-HEIGHT, and E-DBLCLICK's run-last reason becomes history (the docs-lane follow-up of shell-status-bar-one-height, OPEN-2 (b); as merged under OPEN-1 (d): one new step, no E-FOCUS stop) — evidence: branch `cut/e2e-readme-status-bar-steps`
 - **governance-search-ignore-historical** — A root .ignore over historical material (site, the generated queue JSON, the cut archive, drafts, gate reports), tested both ways with the agents' own search tool, and its search rule appended to AUTONOMY; the routine-read and search-corpus measurements taken before it — evidence: branch `cut/search-ignore-historical`
 
 ## 6. Proposed / unscheduled

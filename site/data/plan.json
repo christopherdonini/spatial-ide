@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-17T16:55:21.032Z",
-  "plan_hash": "b6fe09bedb9f40e7d082400633cdafcd7532914a344e8e4b987ca9b092938fbb",
+  "generated_at": "2026-10-17T17:13:08.134Z",
+  "plan_hash": "68088bbc67db341edd30314f888029d608e71563ef7ad6cbcd6f2a6125d52be6",
   "priorities_approved": true,
   "lanes": [
     {
@@ -8335,11 +8335,11 @@
     },
     {
       "id": "e2e-readme-status-bar-steps",
-      "title": "e2e/README.md: the status bar's two new steps and E-FOCUS's new stop in the layout and selection entries (the docs-lane follow-up of shell-status-bar-one-height, OPEN-2 (b))",
+      "title": "e2e/README.md: the selection entry gains E-STATUS-HEIGHT, and E-DBLCLICK's run-last reason becomes history (the docs-lane follow-up of shell-status-bar-one-height, OPEN-2 (b); as merged under OPEN-1 (d): one new step, no E-FOCUS stop)",
       "kind": "task",
       "lane": "shell",
       "phase": "prototype",
-      "status": "ready",
+      "status": "in-progress",
       "order": null,
       "depends_on": [
         "shell-status-bar-one-height",
@@ -8351,12 +8351,14 @@
         "minutes": 0
       },
       "gate": "frontends/shell/E2E-README-STATUS-BAR-STEPS-PREREGISTRATION.md",
-      "evidence": null,
+      "evidence": {
+        "branch": "cut/e2e-readme-status-bar-steps"
+      },
       "budget_minutes": 0,
       "generation": 2,
       "felt_verdict": false,
       "entries": [],
-      "summary": "READY 2026-10-17: item 44 merged (PR 223), so the docs lane's next piece. NEXT: the custodian's script applies section A's two edits to line 771 (moved from 770 with identical bytes, class 3) on a branch, then the PR and the single reviewer gate. Before: OPEN-1 RULED 2026-10-17 (state/directives/2026-10-17-placements-item-44-governance-clause-composition-readme-item-41-unknown-attempt.md, item 5; the form's Amendment 1, generation 2): the words land as drafted, the architect's under item 2d, so no sight of them is queued for the sitting. In the docs lane after item 44, one piece at a time. Before: FORM COMMITTED 2026-10-14 (frontends/shell/E2E-README-STATUS-BAR-STEPS-PREREGISTRATION.md, a five-line form, drafted by the architect: state/consults/2026-10-14-e2e-readme-status-bar-steps-architect-draft.md, sha256 4c607170): line 770, the selection entry, gains E-STATUS-HEIGHT and E-DBLCLICK's run-last reason becomes history; as merged under OPEN-1 (d) there is one new step and no E-FOCUS stop, so the title above describes the original design and the form governs. OPEN-1 (the item 2e sight of the two new spans; (a) land as drafted, recommended) with the human. Code waits for #221's merge (the docs lane, one at a time). Before: PROPOSED 2026-10-14 by the human (state/directives/2026-10-14-status-bar-two-lines-current-view-zero-size-1b-open-9-blocks-provenance.md, item 1, OPEN-2 (b)): the README lines the status-bar form's section 2.7 names, in a docs-lane follow-up landing after both that piece and the Current view fix (which shares e2e/README.md); the window between the merges, when the README omits the new steps, is accepted by the human.",
+      "summary": "GATE 1 REVIEWER PASS WITH NOTES (531, state/consults/gates/2026-10-17-e2e-readme-status-bar-steps-gate1-reviewer.md), the single gate: no Correctness or Evidence finding; D-1, this node's title, replaced on main in the reviewer's words, no re-gate. READY for the human's merge click (a merge commit), PR CI green at d9c083d0. Before: PR #225 OPENED 2026-10-17 at d9c083d0 over e54e4af2: section A's two edits applied to line 771 by the custodian's script, 1 line in and 1 out, every check by script. Before: READY 2026-10-17: item 44 merged (PR 223), so the docs lane's next piece. NEXT: the custodian's script applies section A's two edits to line 771 (moved from 770 with identical bytes, class 3) on a branch, then the PR and the single reviewer gate. Before: OPEN-1 RULED 2026-10-17 (state/directives/2026-10-17-placements-item-44-governance-clause-composition-readme-item-41-unknown-attempt.md, item 5; the form's Amendment 1, generation 2): the words land as drafted, the architect's under item 2d, so no sight of them is queued for the sitting. In the docs lane after item 44, one piece at a time. Before: FORM COMMITTED 2026-10-14 (frontends/shell/E2E-README-STATUS-BAR-STEPS-PREREGISTRATION.md, a five-line form, drafted by the architect: state/consults/2026-10-14-e2e-readme-status-bar-steps-architect-draft.md, sha256 4c607170): line 770, the selection entry, gains E-STATUS-HEIGHT and E-DBLCLICK's run-last reason becomes history; as merged under OPEN-1 (d) there is one new step and no E-FOCUS stop, so the title above describes the original design and the form governs. OPEN-1 (the item 2e sight of the two new spans; (a) land as drafted, recommended) with the human. Code waits for #221's merge (the docs lane, one at a time). Before: PROPOSED 2026-10-14 by the human (state/directives/2026-10-14-status-bar-two-lines-current-view-zero-size-1b-open-9-blocks-provenance.md, item 1, OPEN-2 (b)): the README lines the status-bar form's section 2.7 names, in a docs-lane follow-up landing after both that piece and the Current view fix (which shares e2e/README.md); the window between the merges, when the README omits the new steps, is accepted by the human.",
       "dates": {
         "opened": "2026-10-14",
         "done": null
