@@ -9,7 +9,7 @@ import path from 'node:path';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
-import { isDue, archiveNameFor, noticeLine, ROTATE_BYTES } from './rotate-cut-state.mjs';
+import { isDue, archiveNameFor, noticeLine, buildRotatedLedger, ROTATE_BYTES } from './rotate-cut-state.mjs';
 import { blockSizes, updateBlockFields, BLOCK_CAP_BYTES, BLOCK_HEADING, SESSION_CONTINUITY_FIELDS } from '../hooks/flush.mjs';
 import { decidePrecompact } from '../hooks/precompact-flush.mjs';
 import { decide } from '../hooks/stop-queue.mjs';
@@ -189,13 +189,14 @@ test('rotate-cut-state: a new block over the cap refuses before anything moves',
   assert.equal(staged(dir).length, 0);
 });
 
-test("rotate-cut-state: after the rotation commit and a ledger-only flush commit, session-resume prints the block, the precompact hook allows and the stop hook's continuity step passes", async () => {
+const r8 = async (rotatedShape) => {
   const SID = 'obs-b-sid';
   const ago = (s) => new Date(Date.now() - s * 1000);
   const dir = mkRepo({ 'README.md': 'a\n' }, `@${Math.floor(ago(300).getTime() / 1000)} +0000`);
   const A0 = sh(dir, ['rev-parse', 'HEAD']);
   const flushedAt = ago(120).toISOString().replace(/\.\d{3}Z$/, 'Z');
-  const real = fs.readFileSync(path.join(REPO_ROOT, 'state', 'CUT-STATE.md'), 'utf8'); // the real ledger's shape: a title line, a two-path Previous ledger line
+  const live = fs.readFileSync(path.join(REPO_ROOT, 'state', 'CUT-STATE.md'), 'utf8');
+  const real = rotatedShape ? buildRotatedLedger({ oldText: live, name: 'cut-state-r8.md', commit: A0 }) : live; // the real ledger as main holds it (before the first rotation: a title line and a two-path Previous ledger line; after it, the rotated shape)
   const seeded = updateBlockFields(real, { ...Object.fromEntries(SESSION_CONTINUITY_FIELDS.map((f) => [f, 'SENTINEL'])), flushed_at: flushedAt, tip: A0 });
   commit(dir, { 'state/CUT-STATE.md': seeded }, 'ledger flush', `@${Math.floor(ago(180).getTime() / 1000)} +0000`);
   sh(dir, ['push', '-q', 'origin', 'main']);
@@ -213,12 +214,12 @@ test("rotate-cut-state: after the rotation commit and a ledger-only flush commit
     const seededLines = seeded.split('\n');
     const h = seededLines.indexOf(BLOCK_HEADING);
     const rotatedText = fs.readFileSync(path.join(dir, 'state', 'CUT-STATE.md'), 'utf8');
-    assert.ok(seededLines[0].startsWith('# ') && h > 0, 'the seeded ledger has a title line before the block');
+    assert.ok(h >= 0, 'the block heading is found in the seeded ledger');
     assert.ok(rotatedText.startsWith(`${BLOCK_HEADING}\n`), 'the new file starts with the heading and has no line before it');
     assert.equal(seededLines.slice(h + 1, h + 9).length, 8);
     assert.deepEqual(rotatedText.split('\n').slice(1, 9), seededLines.slice(h + 1, h + 9), 'its fields are the eight seeded lines');
     const oldPrev = seededLines.find((l) => l.startsWith('Previous ledger:'));
-    assert.equal((oldPrev.match(/`state\/[^`]+`/g) ?? []).length, 2, 'the seeded Previous ledger line names two paths');
+    assert.ok((oldPrev.match(/`state\/[^`]+`/g) ?? []).length >= 1, 'the seeded Previous ledger line names at least one state/ path');
     assert.ok(rotatedText.includes(` Before it: \`${/`([^`]+)`/.exec(oldPrev)[1]}\`.`), 'its Before it path is the first backticked path of the seeded line');
     assert.ok(/\n\nLine references written before the rotation point into [^\n]+\n\n## Ledger\n$/.test(rotatedText), 'it ends with the notice, a blank line, ## Ledger and one newline');
     sh(dir, ['push', '-q', 'origin', 'main']);
@@ -253,6 +254,11 @@ test("rotate-cut-state: after the rotation commit and a ledger-only flush commit
   } finally {
     for (const [k, v] of [['CUSTODIAN_STOP_HOOK', saved.off], ['CUSTODIAN_PLAN_PATH', saved.plan]]) if (v === undefined) delete process.env[k]; else process.env[k] = v;
   }
+};
+
+test("rotate-cut-state: after the rotation commit and a ledger-only flush commit, session-resume prints the block, the precompact hook allows and the stop hook's continuity step passes", async () => {
+  await r8(false);
+  await r8(true);
 });
 
 test('rotate-cut-state: no hook in .claude/settings.json runs the rotation script', () => {
