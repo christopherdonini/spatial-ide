@@ -30,6 +30,13 @@
 //!   would create) is still absent after the campaign.
 //! - **P4** — no refusal carries data from the file: a refusal's rendered text (Display and Debug)
 //!   contains no attribute value the fixture wrote that the predicate itself did not already carry.
+//! - **P5 and P6** — two more, in their own test and seed: a join of 1 to 4 G1 texts, each admitted
+//!   alone, by the directive's join convention, which milestone 3's form specifies for the shell
+//!   (`join_clauses`: one text unchanged, two or more each in brackets, joined by ` AND `), is
+//!   admitted or refused only as too long or too deep, and if admitted, unless a run meets the
+//!   declared overflow exclusion, returns exactly the intersection of the ids the texts return
+//!   alone (P5); if it is admitted, every order-preserving subset of 2 to n-1 of its texts admits
+//!   too (P6).
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::panic::{catch_unwind, AssertUnwindSafe};
@@ -1269,4 +1276,169 @@ fn b1_an_implicit_coercion_is_admitted_and_fails_in_the_scan_carrying_file_data(
             other => panic!("{p:?}: expected a TypeNotAdmitted refusal, got {other:?}"),
         }
     }
+}
+
+const P5_SEED: u64 = 0x0B02_A005_0000_0005;
+const P5_CASES: usize = 200;
+const P5_DRAW_CAP: usize = 2_000;
+const P5_LABELS: [&str; 4] = [
+    "passed",
+    "excluded",
+    "skp.filter_too_deep",
+    "skp.filter_too_long",
+];
+/// The kept, hand-minimized witness: joined without brackets, its ids are not the intersection.
+const P5_WITNESS: [&str; 2] = ["zone ILIKE '_ivic'\nor flag", "zone = 'residential'"];
+
+/// The directive's join convention (its item 1), which milestone 3's form specifies for the shell;
+/// a test helper, not the shell's code: no text is no filter, one is itself byte for byte, two or
+/// more are each in one pair of brackets joined by `" AND "`.
+fn join_clauses(texts: &[String]) -> Option<String> {
+    match texts {
+        [] => None,
+        [one] => Some(one.clone()),
+        _ => Some(
+            texts
+                .iter()
+                .map(|t| format!("({t})"))
+                .collect::<Vec<_>>()
+                .join(" AND "),
+        ),
+    }
+}
+
+/// The set of ids of one stream over the whole extent, drained to its end, limit above the row
+/// count; a duplicate id is an error. `Err((true, _))` ended in an error, `Err((false, _))` did not.
+fn completed_ids(ds: &Dataset, ext: [f64; 4], text: &str) -> Result<BTreeSet<u64>, (bool, String)> {
+    let [xmin, ymin, xmax, ymax] = ext;
+    let view = Bbox {
+        xmin,
+        ymin,
+        xmax,
+        ymax,
+    };
+    let p = AdmittedPredicate::admit(text.to_string(), ds).expect("admitted above");
+    let q = ViewportQuery::viewport(view, ds.crs().identifier())
+        .with_limit(FIXTURE_FEATURES as u64 + 1)
+        .with_filter(p);
+    let mut stream = ds
+        .stream_with_cancel(&q, CancelToken::new())
+        .map_err(|e| (false, format!("start: {e}")))?;
+    let (mut ids, mut buf) = (Vec::new(), Vec::new());
+    while let Some(info) = stream.next_into(&mut buf) {
+        info.map_err(|e| (true, e.to_string()))?;
+        let reader = arrow::ipc::reader::StreamReader::try_new(std::io::Cursor::new(&buf), None)
+            .expect("ipc");
+        for batch in reader {
+            let batch = batch.expect("batch");
+            let col = batch.column_by_name(ID_COLUMN).expect("id");
+            let col = col.as_any().downcast_ref::<UInt64Array>().expect("u64");
+            ids.extend((0..batch.num_rows()).map(|r| col.value(r)));
+        }
+        buf.clear();
+    }
+    let set: BTreeSet<u64> = ids.iter().copied().collect();
+    (set.len() == ids.len())
+        .then_some(set)
+        .ok_or((false, "duplicate ids".to_string()))
+}
+
+/// One case: the join's admission (P5), the subsets of 2 to n-1 texts (P6), the n+1 runs, then the
+/// intersection (P5's result). `Ok` is the outcome's tally label, `Err` a candidate's detail.
+fn p5_case(
+    ds: &Dataset,
+    ext: [f64; 4],
+    texts: &[String],
+    subsets: &mut usize,
+) -> Result<&'static str, String> {
+    let n = texts.len();
+    let join = join_clauses(texts).expect("a case has a text");
+    match admit(ds, &join) {
+        Outcome::Admitted(_) => {}
+        Outcome::Refused(PredicateAdmitError::Filter(
+            e @ (FilterError::TooLong { .. } | FilterError::TooDeep { .. }),
+        )) => return Ok(code_of(&e)),
+        other => return Err(format!("P5 admission: {join:?}: {other:?}")),
+    }
+    for mask in 1u32..(1 << n) {
+        let subset: Vec<String> = (0..n)
+            .filter(|i| (mask >> i) & 1 == 1)
+            .map(|i| texts[i].clone())
+            .collect();
+        if !(2..n).contains(&subset.len()) {
+            continue;
+        }
+        match admit(ds, &join_clauses(&subset).expect("a subset has texts")) {
+            Outcome::Admitted(_) => *subsets += 1,
+            other => return Err(format!("P6 admission: {subset:?}: {other:?}")),
+        }
+    }
+    let (mut sets, mut excluded) = (Vec::new(), false);
+    for text in texts.iter().chain([&join]) {
+        match completed_ids(ds, ext, text) {
+            Err((true, e)) if is_declared_integer_arithmetic_overflow(text, &e) => excluded = true,
+            Err((_, e)) => return Err(format!("execution of {text:?}: {e}")),
+            Ok(set) => sets.push(set),
+        }
+    }
+    if excluded {
+        return Ok("excluded");
+    }
+    let want = sets[..n].iter().fold(sets[0].clone(), |a, s| &a & s);
+    if sets[n] != want {
+        return Err(format!(
+            "P5 result: {join:?}: {} ids, intersection {}",
+            sets[n].len(),
+            want.len()
+        ));
+    }
+    Ok("passed")
+}
+
+/// P5 and P6 of `engine/CLAUSE-COMPOSITION-PROPERTIES-PREREGISTRATION.md`, over 200 seeded G1
+/// cases and the kept witness. Mutation: `join_clauses` joins without the brackets
+/// (`.map(|t| format!("({t})"))` becomes `.map(|t| t.to_string())`); it fails by name on the
+/// witness's P5 result line.
+/// It mutates this Rust test helper, not the shell's combineClauses; milestone 3's form gives the shell's half to its unit row UC3 (combineClauses) and its e2e row E-AND (the joined text, end to end).
+#[test]
+fn a_join_of_clauses_each_admitted_alone_returns_their_intersection_and_its_subsets_admit() {
+    let fx = fixture();
+    let ds = Dataset::open(&fx.path).expect("open");
+    let (mut r, mut discarded, mut subsets) = (Rng::new(P5_SEED), 0, 0);
+    let (mut tally, mut candidates) = (BTreeMap::from(P5_LABELS.map(|k| (k, 0))), Vec::new());
+    println!("P5_SEED {P5_SEED:#x}, P5_CASES {P5_CASES}, witness {P5_WITNESS:?}");
+    let mut cases = vec![Vec::from(P5_WITNESS.map(String::from))];
+    for _ in 0..P5_CASES {
+        let (mut texts, n) = (Vec::new(), r.below(4) + 1);
+        while texts.len() < n {
+            let d = r.below(5);
+            let t = gen_expr(&mut r, d);
+            match admit(&ds, &t) {
+                Outcome::Admitted(_) => texts.push(t),
+                Outcome::Refused(_) => discarded += 1,
+                Outcome::Panicked(m) => panic!("admission panicked on {t:?}: {m}"),
+            }
+            assert!(discarded < P5_DRAW_CAP, "P5_DRAW_CAP reached");
+        }
+        cases.push(texts);
+    }
+    for (case, texts) in cases.iter().enumerate() {
+        match p5_case(&ds, fx.facts.extent, texts, &mut subsets) {
+            Ok(label) => *tally.entry(label).or_default() += 1,
+            Err(why) => candidates.push(format!("case {case} {texts:?}: {why}")),
+        }
+    }
+    println!("discarded {discarded}/{P5_DRAW_CAP}, P6 subsets admitted {subsets}, tally {tally:?}");
+    candidates.iter().for_each(|c| println!("  candidate {c}"));
+    assert!(candidates.is_empty(), "{} candidate(s)", candidates.len());
+
+    // The guard: the witness still separates a bare join from a bracketed one, written out here
+    // without `join_clauses`.
+    let ids = |t: String| completed_ids(&ds, fx.facts.extent, &t).expect("the guard's stream");
+    let bracketed = P5_WITNESS.map(|t| format!("({t})")).join(" AND ");
+    let separates = ids(P5_WITNESS.join(" AND ")) != ids(bracketed);
+    assert!(
+        separates,
+        "the witness no longer separates a bare join from a bracketed one"
+    );
 }
