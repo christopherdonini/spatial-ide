@@ -74,3 +74,13 @@ As named in the source comment: the describe payload's definition on the wire; b
 - OPEN-2: should the v0.1.0 release page's correction paragraph also name item 44? Changing published text is the human's; this piece does not touch it.
 
 ## Amendments
+
+### Amendment 1 — the human's rulings on OPEN-1 and OPEN-2 (class 5)
+
+*Written by the custodian on the human's ruling (`state/directives/2026-10-17-placements-item-44-governance-clause-composition-readme-item-41-unknown-attempt.md`, item 2). References only.*
+
+1. **OPEN-1:** §A's words are approved as drafted: the column-0 line, the item and the source comment. The source comment's bracket reads `The human's wording, approved`.
+2. **OPEN-2:** no. The v0.1.0 release page's paragraph is for corrections, and item 44 corrects nothing the notes claimed; the page is not touched.
+3. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.

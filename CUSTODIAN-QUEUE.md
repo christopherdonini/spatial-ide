@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `45fbd5dcd56539adfa1bb65460da0c4c76b3eea79395e89d13da2416841337be`) at `2026-10-16T22:26:38.942Z`.
+Generated from `PLAN.yaml` (sha256 `e93a20f6511b98d24d64b97688831b0fea6caee44a1e3353de5ae22794dad15b`) at `2026-10-17T07:23:45.279Z`.
 
 ## 1. Next
 
@@ -17,7 +17,10 @@ Generated from `PLAN.yaml` (sha256 `45fbd5dcd56539adfa1bb65460da0c4c76b3eea79395
 ## 4. Blocked on dependencies
 
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
+- **e2e-readme-status-bar-steps** — e2e/README.md: the status bar's two new steps and E-FOCUS's new stop in the layout and selection entries (the docs-lane follow-up of shell-status-bar-one-height, OPEN-2 (b)) — blocked by: known-limitations-crs-epoch-edges-third-axis
+- **source-changed-post-route-s5d-race** — source-changed.mjs's post route: step S5d (post-check-route-confirmed) loses its race to a tile's pre-check in about half the runs on this machine, at main's base too — blocked by: engine-clause-composition-properties
 - **briefb-b2-save-reopen** — B2 — Save project, Snapshot data, session history, lineage and preferences, in five stages, each with its own form — blocked by: decision-adr-029-scan-progress-route
+- **known-limitations-item-41-source-comment** — KNOWN-LIMITATIONS item 41's source comment: its code location pinned on main with its hash, saying the work has merged (the comment only; item 41's words still wait for their sight) — blocked by: e2e-readme-status-bar-steps
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer — blocked by: signpath-application-draft
 - **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-1-1
 - **signpath-application-draft** — Entry 77 — the SignPath OSS application and disclosure text drafted for the human sight, once a release is CI-built — blocked by: release-v0-1-1
@@ -111,14 +114,13 @@ Generated from `PLAN.yaml` (sha256 `45fbd5dcd56539adfa1bb65460da0c4c76b3eea79395
 - **shell-real-app-run-macos-linux** — Run the real app once on macOS and once on Linux after migration milestone 1 merges, and record what it finds (phase `prototype`) — never queued until placed
 - **pan-anchor-setcam-waits-for-its-own-reset** — e2e/pan-anchor.mjs: setCam waits for the view-state line its own reset produces, never a late line from the previous gesture (test only) (phase `prototype`) — never queued until placed
 - **walkthrough-current-view-rows-g1-n5** — MANUAL-WALKTHROUGH.md rows G1 and N5: Current view is no longer disabled until a pan or zoom (the docs-lane follow-up of export-current-view-after-unreported-fit, its gate 1 reviewer DOC-4) (phase `prototype`) — never queued until placed
-- **e2e-readme-status-bar-steps** — e2e/README.md: the status bar's two new steps and E-FOCUS's new stop in the layout and selection entries (the docs-lane follow-up of shell-status-bar-one-height, OPEN-2 (b)) (phase `prototype`) — never queued until placed
 - **engine-clause-composition-properties** — Engine test piece: clause composition, P5 and P6 over the admission property campaign (tests only; no product code, fixture or dependency) (phase `prototype`) — never queued until placed
 - **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark (phase `prototype`) — never queued until placed
 - **verify-quotes-dotted-paths** — verify-quotes: the hash-reference path grammar cannot begin with a dot, so a pinned cite into .github/ can never be checked (phase `prototype`) — never queued until placed
-- **source-changed-post-route-s5d-race** — source-changed.mjs's post route: step S5d (post-check-route-confirmed) loses its race to a tile's pre-check in about half the runs on this machine, at main's base too (phase `prototype`) — never queued until placed
 - **connection-reuse-recycled-interrupt-flake** — engine/tests/connection_reuse.rs: cancellation_before_the_first_batch_binds_a_recycled_connection_and_delivers_nothing failed once on ubuntu-24.04 in PR #222's pull_request run at a542097e, and the push run of the same commit passed it (phase `prototype`) — never queued until placed
 - **bundle-redaction-scan-not-in-product-publish** — The bundle redaction scan runs only in a test: no product publish scans its emitted files, though ADR-017's section 13 (Accepted) says a scan over every emitted file asserts no path, user name, machine identifier or credential is in a bundle (phase `prototype`) — never queued until placed
 - **session-log-token-redaction-rests-on-page-code** — The session token never reaching the session log rests on page code: binding_log_session_event appends page-supplied text verbatim, the page holds the token, and the data plane's Session::redact has only a test caller (phase `prototype`) — never queued until placed
+- **publish-approval-unknown-attempt-under-load** — Publish: an export's approval came back as unknown attempt under machine load (the status-bar e2e run 2 and the H3 order run): the cause first, the pending attempt's TTL elapsing between prepare and execute or an attempt the host lost; then whether the TTL suits a person reading the approval dialog, which shows no expiry (phase `prototype`) — never queued until placed
 
 ### Unscheduled
 

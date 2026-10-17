@@ -442,3 +442,16 @@ S0 settles OPEN-2's condition, and it shows which root-level cites become gated 
   - (v) The archive line is given in words.
 
 ## §10. Amendments — opens empty, append-only
+
+### Amendment 1 — the human's rulings on OPEN-1 to OPEN-4 (class 5)
+
+*Written by the custodian on the human's ruling (`state/directives/2026-10-17-placements-item-44-governance-clause-composition-readme-item-41-unknown-attempt.md`, item 3, C). References only.*
+
+1. **OPEN-1 (A):** the custodian's dry run lists every unmarked entry with the ruling it finds for it; the human strikes in the PR body the ones to archive, and what the human does not strike stays.
+2. **OPEN-2 (A):** the fourth reader (§2 item 2 (d)).
+3. **OPEN-3:** the human's own words, in the directive's item 3, C, which this form follows as written; the gate definitions are read with them and not edited.
+4. **OPEN-4:** readings (i) to (v) confirmed.
+5. **Still open:** none. The piece waits for B, its PLAN dependency.
+6. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.

@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-16T22:26:38.942Z",
-  "plan_hash": "45fbd5dcd56539adfa1bb65460da0c4c76b3eea79395e89d13da2416841337be",
+  "generated_at": "2026-10-17T07:23:45.279Z",
+  "plan_hash": "e93a20f6511b98d24d64b97688831b0fea6caee44a1e3353de5ae22794dad15b",
   "priorities_approved": true,
   "next": {
     "id": "known-limitations-crs-epoch-edges-third-axis",
@@ -19,7 +19,7 @@
       "opened": "2026-10-12",
       "done": null
     },
-    "summary": "FORM COMMITTED 2026-10-14 (KNOWN-LIMITATIONS-ITEM-44-CRS-EPOCH-EDGES-THIRD-AXIS-PREREGISTRATION.md, a five-line form for item 44, drafted by the architect: state/consults/2026-10-14-known-limitations-crs-epoch-edges-third-axis-architect-draft.md; its section D tag-side checks run and filed at state/consults/2026-10-14-known-limitations-crs-epoch-edges-third-axis-tag-checks.md: every clause holds at the v0.1.0 tag and on main; pins hashed by the custodian). The words differ from this node's title on one point: a third axis is carried in a published manifest inside the definition, unread. OPEN-1 (approve or replace the words) and OPEN-2 (whether the v0.1.0 release page names item 44) with the human. Before: PLACED 2026-10-12 by the human (state/directives/2026-10-12-item-42-current-view-amendment-7-guardian-readme-guardrails-brief.md, item 5; Fable's brief state/consults/GUARDRAILS-EPOCHS-HEIGHTS-DGGS-2026-10-12.md, section 4 item 1): the docs lane's piece after stale-test-names-and-comments. One KNOWN-LIMITATIONS item: a file's declared coordinate epoch, its edges value and a third CRS axis are not used, shown or carried into a bundle. The architect drafts it with its clause check under item 2e; the human approves or replaces it. Its number is the next free one at its base, clear of reserved numbers. The 45-minute budget is the custodian's estimate."
+    "summary": "OPEN-1 AND OPEN-2 RULED 2026-10-17 (state/directives/2026-10-17-placements-item-44-governance-clause-composition-readme-item-41-unknown-attempt.md, item 2; the form's Amendment 1, generation 2): section A's words approved as drafted; the v0.1.0 page's paragraph does not gain item 44. Before: FORM COMMITTED 2026-10-14 (KNOWN-LIMITATIONS-ITEM-44-CRS-EPOCH-EDGES-THIRD-AXIS-PREREGISTRATION.md, a five-line form for item 44, drafted by the architect: state/consults/2026-10-14-known-limitations-crs-epoch-edges-third-axis-architect-draft.md; its section D tag-side checks run and filed at state/consults/2026-10-14-known-limitations-crs-epoch-edges-third-axis-tag-checks.md: every clause holds at the v0.1.0 tag and on main; pins hashed by the custodian). The words differ from this node's title on one point: a third axis is carried in a published manifest inside the definition, unread. OPEN-1 (approve or replace the words) and OPEN-2 (whether the v0.1.0 release page names item 44) with the human. Before: PLACED 2026-10-12 by the human (state/directives/2026-10-12-item-42-current-view-amendment-7-guardian-readme-guardrails-brief.md, item 5; Fable's brief state/consults/GUARDRAILS-EPOCHS-HEIGHTS-DGGS-2026-10-12.md, section 4 item 1): the docs lane's piece after stale-test-names-and-comments. One KNOWN-LIMITATIONS item: a file's declared coordinate epoch, its edges value and a third CRS axis are not used, shown or carried into a bundle. The architect drafts it with its clause check under item 2e; the human approves or replaces it. Its number is the next free one at its base, clear of reserved numbers. The 45-minute budget is the custodian's estimate."
   },
   "ready": [
     {
@@ -39,7 +39,7 @@
         "opened": "2026-10-12",
         "done": null
       },
-      "summary": "FORM COMMITTED 2026-10-14 (KNOWN-LIMITATIONS-ITEM-44-CRS-EPOCH-EDGES-THIRD-AXIS-PREREGISTRATION.md, a five-line form for item 44, drafted by the architect: state/consults/2026-10-14-known-limitations-crs-epoch-edges-third-axis-architect-draft.md; its section D tag-side checks run and filed at state/consults/2026-10-14-known-limitations-crs-epoch-edges-third-axis-tag-checks.md: every clause holds at the v0.1.0 tag and on main; pins hashed by the custodian). The words differ from this node's title on one point: a third axis is carried in a published manifest inside the definition, unread. OPEN-1 (approve or replace the words) and OPEN-2 (whether the v0.1.0 release page names item 44) with the human. Before: PLACED 2026-10-12 by the human (state/directives/2026-10-12-item-42-current-view-amendment-7-guardian-readme-guardrails-brief.md, item 5; Fable's brief state/consults/GUARDRAILS-EPOCHS-HEIGHTS-DGGS-2026-10-12.md, section 4 item 1): the docs lane's piece after stale-test-names-and-comments. One KNOWN-LIMITATIONS item: a file's declared coordinate epoch, its edges value and a third CRS axis are not used, shown or carried into a bundle. The architect drafts it with its clause check under item 2e; the human approves or replaces it. Its number is the next free one at its base, clear of reserved numbers. The 45-minute budget is the custodian's estimate."
+      "summary": "OPEN-1 AND OPEN-2 RULED 2026-10-17 (state/directives/2026-10-17-placements-item-44-governance-clause-composition-readme-item-41-unknown-attempt.md, item 2; the form's Amendment 1, generation 2): section A's words approved as drafted; the v0.1.0 page's paragraph does not gain item 44. Before: FORM COMMITTED 2026-10-14 (KNOWN-LIMITATIONS-ITEM-44-CRS-EPOCH-EDGES-THIRD-AXIS-PREREGISTRATION.md, a five-line form for item 44, drafted by the architect: state/consults/2026-10-14-known-limitations-crs-epoch-edges-third-axis-architect-draft.md; its section D tag-side checks run and filed at state/consults/2026-10-14-known-limitations-crs-epoch-edges-third-axis-tag-checks.md: every clause holds at the v0.1.0 tag and on main; pins hashed by the custodian). The words differ from this node's title on one point: a third axis is carried in a published manifest inside the definition, unread. OPEN-1 (approve or replace the words) and OPEN-2 (whether the v0.1.0 release page names item 44) with the human. Before: PLACED 2026-10-12 by the human (state/directives/2026-10-12-item-42-current-view-amendment-7-guardian-readme-guardrails-brief.md, item 5; Fable's brief state/consults/GUARDRAILS-EPOCHS-HEIGHTS-DGGS-2026-10-12.md, section 4 item 1): the docs lane's piece after stale-test-names-and-comments. One KNOWN-LIMITATIONS item: a file's declared coordinate epoch, its edges value and a third CRS axis are not used, shown or carried into a bundle. The architect drafts it with its clause check under item 2e; the human approves or replaces it. Its number is the next free one at its base, clear of reserved numbers. The 45-minute budget is the custodian's estimate."
     }
   ],
   "waiting_on_human": {
@@ -75,6 +75,50 @@
       ]
     },
     {
+      "id": "e2e-readme-status-bar-steps",
+      "title": "e2e/README.md: the status bar's two new steps and E-FOCUS's new stop in the layout and selection entries (the docs-lane follow-up of shell-status-bar-one-height, OPEN-2 (b))",
+      "lane": "shell",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": null,
+      "budget_minutes": 0,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-14",
+        "done": null
+      },
+      "summary": "OPEN-1 RULED 2026-10-17 (state/directives/2026-10-17-placements-item-44-governance-clause-composition-readme-item-41-unknown-attempt.md, item 5; the form's Amendment 1, generation 2): the words land as drafted, the architect's under item 2d, so no sight of them is queued for the sitting. In the docs lane after item 44, one piece at a time. Before: FORM COMMITTED 2026-10-14 (frontends/shell/E2E-README-STATUS-BAR-STEPS-PREREGISTRATION.md, a five-line form, drafted by the architect: state/consults/2026-10-14-e2e-readme-status-bar-steps-architect-draft.md, sha256 4c607170): line 770, the selection entry, gains E-STATUS-HEIGHT and E-DBLCLICK's run-last reason becomes history; as merged under OPEN-1 (d) there is one new step and no E-FOCUS stop, so the title above describes the original design and the form governs. OPEN-1 (the item 2e sight of the two new spans; (a) land as drafted, recommended) with the human. Code waits for #221's merge (the docs lane, one at a time). Before: PROPOSED 2026-10-14 by the human (state/directives/2026-10-14-status-bar-two-lines-current-view-zero-size-1b-open-9-blocks-provenance.md, item 1, OPEN-2 (b)): the README lines the status-bar form's section 2.7 names, in a docs-lane follow-up landing after both that piece and the Current view fix (which shares e2e/README.md); the window between the merges, when the README omits the new steps, is accepted by the human.",
+      "blocked_by": [
+        "known-limitations-crs-epoch-edges-third-axis"
+      ]
+    },
+    {
+      "id": "source-changed-post-route-s5d-race",
+      "title": "source-changed.mjs's post route: step S5d (post-check-route-confirmed) loses its race to a tile's pre-check in about half the runs on this machine, at main's base too",
+      "lane": "shell",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": null,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-16",
+        "done": null
+      },
+      "summary": "PLACED 2026-10-17 by the human (state/directives/2026-10-17-placements-item-44-governance-clause-composition-readme-item-41-unknown-attempt.md, item 1): S3, a five-line form, at the tail of slot 2 after engine-clause-composition-properties and boundary-inventory (done), so it depends on the first; its first step reproduces the race under load with timing; no piece is charged with it. The form is drafted ahead, while the slot's current piece is in its gates. Before: APPROVED 2026-10-16 by the human as its own PLAN item, not yet placed (state/directives/2026-10-16-222-adr-022-route-a-restore-and-reappend-reset-line-p6-s5d-own-item.md): graded at triage, as a race in the step and not a product defect, unless the runs show the source-changed route itself wrong. It fails at main's base: in run 4b (state/consults/2026-10-16-b2-piece-1b-recording-e2e-custodian-run-4.md) the post route lost S5d at B 31e25f15 in 2 runs of 4, at 3dfc1a0e in 1 of 4 and at 10173747 in 3 of 4, so no piece is charged with it. Each failing run of runs 4 and 4b has one tile-session-ended-source-changed line and one tile-stream-mint-refused line after it, the gaps as run 4's record gives them; the step's own header note names the route's limit, a sibling tile whose mint resolves after the touch meets the pre-check. The proposed node source-changed-post-reopen-routes-watcher-visible concerns the same route's mtime touch.",
+      "blocked_by": [
+        "engine-clause-composition-properties"
+      ]
+    },
+    {
       "id": "briefb-b2-save-reopen",
       "title": "B2 — Save project, Snapshot data, session history, lineage and preferences, in five stages, each with its own form",
       "lane": "shell",
@@ -94,6 +138,28 @@
       "summary": "RE-DESCRIBED 2026-10-07 (evening) to cite state/directives/B2-BRIEF-2026-10-07.md, which replaces the migration plan's section 10 as the brief for B2's forms (state/directives/2026-10-07-b2-brief-and-evening-rulings.md); the rest of the plan stands. Stage 1 runs as pieces 1a, 1b and 1c (the nodes b2-piece-1a-step-record-and-dataset-reference, b2-piece-1b-recording and b2-piece-1c-save-and-reopen), and stage 3 as 3a and 3b, per the brief's section 9; piece 1a's form is stage 1's form. Stages 2 to 5 stay in this node for now. The evening rulings: the session history is on the machine, found by the project's identity, with crash recovery offered at the next open; the docs/07 note lands with stage 1 or just before it, typed by the human; no kept branches, the parent field stays; steps left behind after a save leave the lineage at the next Save project, an export keeps its own copy of its steps, and the session history has a saved-here mark; an incomplete lineage keeps the data's grade with a recipe-incomplete marker, no ADR-005 amendment, the format ADR defining the marker. Its dependencies stand. Before: RE-DESCRIBED 2026-10-07 per the migration plan's section 10 (state/directives/2026-10-07-migration-plan-v2-ruled.md; state/directives/SHELL-MIGRATION-PLAN-2026-10-07.md, section 10), which is the brief for B2's preregistration. Five stages, each with its own form (section 10.8; the human's answer to question 4): 1 Save project (linked) and reopen, with the lasting dataset reference, the kernel step commands and the session history with its crash safety; 2 the lineage file, compaction at Save project and the step record; 3 Snapshot data and the freeze-a-snapshot choice; 4 the views and restore (Data lineage, Map recipe, Sources); 5 sharing levels, tracking settings and the two-layer preferences. The human's answers: question 1, the session history is kept on the machine, keyed to the project, not in the project folder; question 2, one dated note in docs/07 in B2's pull request, typed by the human then; question 3, keeping a branch stays out of B2; questions 5 to 11 come to the human as open items in B2's forms. Its dependencies stand, the ADR-029 scan-progress ruling among them. Before: PLACED 2026-10-05 (the product-first direction 8.d): after the points and lines cuts; its dependencies stand, the ADR-029 scan-progress ruling among them. Before: Shell direction item (b), RULED 2026-09-23 (late): B2's screens wait for the new shell structure (shell-redesign-map-studio). They are also held by the 2026-09-27 session order until the human says otherwise (state/directives/2026-09-27-session-order.md, its last paragraph): they wait for the shell migration plan. The human, 2026-09-22: reference Save/reopen, then verified Prepare, as separately reviewable pieces; Save performs no whole-file scan; Prepare explicitly acquires or selects an eligible immutable revision (explicit operator intent; reuse without recopying; never silently rebind a mutable preview); verified operations read that artifact; rebinding creates a fresh generation; saved-work inputs have retention distinct from the rendering cache; missing/cancelled/failed/mismatched never display success; a single-dataset recipe, not a multi-layer project; one focused Save/Prepare design exercise resolves interaction choices before coding: a clickable prototype on synthetic data with a state/transition table, keyboard and accessibility behaviour, the failure states, and explicit selection of an eligible immutable revision; no whole-app redesign. the typed spatial-recipe schema, its atomic save and its preview/verified/mismatch state machine, once B1 closes PORTABILITY section 4 (Prepare's coherent-acquisition guarantee, defined without the OS) binds B2's preregistration when B2 starts (state/directives/2026-09-30-portability-and-handoff.md, item 1). Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33), item 10: the coherent-acquisition guarantee lives in a short Proposed ADR, drafted with B2's preregistration; its acceptance stays the human's.",
       "blocked_by": [
         "decision-adr-029-scan-progress-route"
+      ]
+    },
+    {
+      "id": "known-limitations-item-41-source-comment",
+      "title": "KNOWN-LIMITATIONS item 41's source comment: its code location pinned on main with its hash, saying the work has merged (the comment only; item 41's words still wait for their sight)",
+      "lane": "release",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": null,
+      "budget_minutes": 20,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-17",
+        "done": null
+      },
+      "summary": "PLACED 2026-10-17 by the human (state/directives/2026-10-17-placements-item-44-governance-clause-composition-readme-item-41-unknown-attempt.md, item 6): its own docs-lane line, by item 40's procedure, with the selection.ts pin on main. The five-line form is committed with this node (KNOWN-LIMITATIONS-ITEM-41-SOURCE-COMMENT-PREREGISTRATION.md, drafted by the custodian): line 388's clause on where the code is says the work has merged, and its one location becomes frontends/shell/src/workspace/selection.ts lines 119 to 157 pinned at PR 217's merge commit 71fd2c4f, the span identical at 2f18ad39, at 71fd2c4f and at 79cec8c5. In the docs lane after e2e-readme-status-bar-steps.",
+      "blocked_by": [
+        "e2e-readme-status-bar-steps"
       ]
     },
     {
@@ -179,7 +245,7 @@
         "opened": "2026-10-14",
         "done": null
       },
-      "summary": "OPEN-1 and OPEN-2 RULED 2026-10-15 (state/directives/2026-10-15-round-1b-i3-allowed-a-open-1-b-open-1-open-2.md): (B) and (A) (Amendment 1). OPEN-3 and OPEN-4 still open, before S5 and S6. Before: FORM COMMITTED 2026-10-14 (scripts/plan/CUT-STATE-CAP-AND-ROTATION-PREREGISTRATION.md, a full form by section 21a and 21c, 960 lines over 12 files, drafted by the architect: state/consults/2026-10-14-governance-cut-state-cap-and-rotation-architect-draft.md, sha256 283f1c03; pins hashed by the custodian at 513ca7b3). OPEN-1 (the directive's own cite into the ledger) and OPEN-2 (the scratch file when no hook runs flush.mjs) before dispatch; OPEN-3 (readings) and OPEN-4 (the words) before its last commits; with the human. Before: PLACED 2026-10-14 by the human (state/directives/2026-10-14-governance-smaller-reads-ignore-cut-state-rotation-decisions-pending.md); never slot 1; each merge the human's click: piece B, after A. Two gated citations into today's file name the archive path or their commit. Its form is drafted after A's.",
+      "summary": "OPEN-3 AND OPEN-4 RULED 2026-10-17 (state/directives/2026-10-17-placements-item-44-governance-clause-composition-readme-item-41-unknown-attempt.md, item 3; the form's Amendment 2, generation 3): readings (i) to (iv) confirmed; the added sentence, the notice with P as <commit> and the pointer approved as drafted. No OPEN item remains. Waits for A. Before: OPEN-1 and OPEN-2 RULED 2026-10-15 (state/directives/2026-10-15-round-1b-i3-allowed-a-open-1-b-open-1-open-2.md): (B) and (A) (Amendment 1). OPEN-3 and OPEN-4 still open, before S5 and S6. Before: FORM COMMITTED 2026-10-14 (scripts/plan/CUT-STATE-CAP-AND-ROTATION-PREREGISTRATION.md, a full form by section 21a and 21c, 960 lines over 12 files, drafted by the architect: state/consults/2026-10-14-governance-cut-state-cap-and-rotation-architect-draft.md, sha256 283f1c03; pins hashed by the custodian at 513ca7b3). OPEN-1 (the directive's own cite into the ledger) and OPEN-2 (the scratch file when no hook runs flush.mjs) before dispatch; OPEN-3 (readings) and OPEN-4 (the words) before its last commits; with the human. Before: PLACED 2026-10-14 by the human (state/directives/2026-10-14-governance-smaller-reads-ignore-cut-state-rotation-decisions-pending.md); never slot 1; each merge the human's click: piece B, after A. Two gated citations into today's file name the archive path or their commit. Its form is drafted after A's.",
       "blocked_by": [
         "governance-search-ignore-historical"
       ]
@@ -201,7 +267,7 @@
         "opened": "2026-10-14",
         "done": null
       },
-      "summary": "FORM COMMITTED 2026-10-14 (scripts/plan/DECISIONS-PENDING-OPEN-AND-ARCHIVE-PREREGISTRATION.md, a full form by section 21a and 21c, 1,260 lines over 16 files, drafted by the architect: state/consults/2026-10-14-governance-decisions-pending-open-and-archive-architect-draft.md, sha256 2031c8c9; pins hashed by the custodian at 76d038d5). OPEN-1 (which unmarked entries are open, before the dry run), OPEN-2 (a fourth reader in verify-quotes, only if the probe shows it), OPEN-3 (pinning a line into the ruling file against round 12 (a), a red line, typed words) and OPEN-4 (readings) with the human. Before: PLACED 2026-10-14 by the human (state/directives/2026-10-14-governance-smaller-reads-ignore-cut-state-rotation-decisions-pending.md); never slot 1; each merge the human's click: piece C, after B. Every obligation an archived entry carries is represented in PLAN or the continuity block first; the kept entries are listed in the PR body for the human. Its form is drafted after B's.",
+      "summary": "OPEN-1 TO OPEN-4 RULED 2026-10-17 (state/directives/2026-10-17-placements-item-44-governance-clause-composition-readme-item-41-unknown-attempt.md, item 3; the form's Amendment 1, generation 2): OPEN-1 (A), the human strikes in the PR body and what is not struck stays; OPEN-2 (A), the fourth reader; OPEN-3 in the human's own words, the directive's item 3; OPEN-4's readings (i) to (v) confirmed. No OPEN item remains. Waits for B. Before: FORM COMMITTED 2026-10-14 (scripts/plan/DECISIONS-PENDING-OPEN-AND-ARCHIVE-PREREGISTRATION.md, a full form by section 21a and 21c, 1,260 lines over 16 files, drafted by the architect: state/consults/2026-10-14-governance-decisions-pending-open-and-archive-architect-draft.md, sha256 2031c8c9; pins hashed by the custodian at 76d038d5). OPEN-1 (which unmarked entries are open, before the dry run), OPEN-2 (a fourth reader in verify-quotes, only if the probe shows it), OPEN-3 (pinning a line into the ruling file against round 12 (a), a red line, typed words) and OPEN-4 (readings) with the human. Before: PLACED 2026-10-14 by the human (state/directives/2026-10-14-governance-smaller-reads-ignore-cut-state-rotation-decisions-pending.md); never slot 1; each merge the human's click: piece C, after B. Every obligation an archived entry carries is represented in PLAN or the continuity block first; the kept entries are listed in the PR body for the human. Its form is drafted after B's.",
       "blocked_by": [
         "governance-cut-state-cap-and-rotation"
       ]
@@ -249,7 +315,7 @@
         "opened": "2026-10-14",
         "done": null
       },
-      "summary": "S1 TO S3 BUILT 2026-10-16 at 7f09c0e3 (state/consults/2026-10-16-governance-search-ignore-historical-s1-s3-worker-report.md; the form's Amendment 2, generation 3): no invalidator; the baseline figures taken at M0, each run twice; O1 to O13 as predicted, O6 found the hidden probe so H1 is live, O14's listing truncated and its clause resting on O13; D1 identical; G clean; section 7 at 319 lines over 5 files. NEXT: S4 after the human's OPEN-2 and OPEN-3, then the PR and both gates. The IN PROGRESS line below gives the local date, 2026-10-17; in UTC it was 2026-10-16. Before: IN PROGRESS 2026-10-17: the branch cut/search-ignore-historical at M0 = fbbffe89 (worktree C:/dev/wt/sih); one worker builds S1 to S3 (the script and its tests, the two probes, .ignore), runs M-1 and M-2 at M0, the control at S2 and O1 to O14, D1 and G at S3. S4, the AUTONOMY section, waits for OPEN-2 and OPEN-3; the PR opens after S4. Before: READY 2026-10-16 by derivation: its one dependency, boundary-inventory, is done. OPEN-2 and OPEN-3 are still with the human, before S4. Before: OPEN-1 RULED 2026-10-15 (state/directives/2026-10-15-round-1b-i3-allowed-a-open-1-b-open-1-open-2.md): (A), the ledger entries of the seven days before the block's flush (Amendment 1). OPEN-2 and OPEN-3 still open, before S4. Before: FORM COMMITTED 2026-10-14 (scripts/plan/SEARCH-IGNORE-HISTORICAL-PREREGISTRATION.md, a full form by section 21c's size, 380 lines over 6 files, drafted by the architect: state/consults/2026-10-14-governance-search-ignore-historical-architect-draft.md, sha256 b7815de0; pins hashed by the custodian at b9b902bf). OPEN-1 (the ledger part's definition, before dispatch), OPEN-2 (the rule's hidden-folder clause, if the Grep tool searches hidden folders) and OPEN-3 (the words on how to search an excluded location) with the human. Before: PLACED 2026-10-14 by the human (state/directives/2026-10-14-governance-smaller-reads-ignore-cut-state-rotation-decisions-pending.md); never slot 1; each merge the human's click: piece A. The measurement script is written before the first measurement and run unchanged after C. NEXT: the architect drafts the form.",
+      "summary": "OPEN-2 RULED 2026-10-17 (state/directives/2026-10-17-placements-item-44-governance-clause-composition-readme-item-41-unknown-attempt.md, item 3; the form's Amendment 3, generation 4): H1, the architect's first sentence, with the human's second and third. OPEN-3 waits for the assembled W: every clause landed, so W is section 2 item 4's text unchanged, given to the human. NEXT: S4 after the human approves W, then the PR and both gates. Before: S1 TO S3 BUILT 2026-10-16 at 7f09c0e3 (state/consults/2026-10-16-governance-search-ignore-historical-s1-s3-worker-report.md; the form's Amendment 2, generation 3): no invalidator; the baseline figures taken at M0, each run twice; O1 to O13 as predicted, O6 found the hidden probe so H1 is live, O14's listing truncated and its clause resting on O13; D1 identical; G clean; section 7 at 319 lines over 5 files. NEXT: S4 after the human's OPEN-2 and OPEN-3, then the PR and both gates. The IN PROGRESS line below gives the local date, 2026-10-17; in UTC it was 2026-10-16. Before: IN PROGRESS 2026-10-17: the branch cut/search-ignore-historical at M0 = fbbffe89 (worktree C:/dev/wt/sih); one worker builds S1 to S3 (the script and its tests, the two probes, .ignore), runs M-1 and M-2 at M0, the control at S2 and O1 to O14, D1 and G at S3. S4, the AUTONOMY section, waits for OPEN-2 and OPEN-3; the PR opens after S4. Before: READY 2026-10-16 by derivation: its one dependency, boundary-inventory, is done. OPEN-2 and OPEN-3 are still with the human, before S4. Before: OPEN-1 RULED 2026-10-15 (state/directives/2026-10-15-round-1b-i3-allowed-a-open-1-b-open-1-open-2.md): (A), the ledger entries of the seven days before the block's flush (Amendment 1). OPEN-2 and OPEN-3 still open, before S4. Before: FORM COMMITTED 2026-10-14 (scripts/plan/SEARCH-IGNORE-HISTORICAL-PREREGISTRATION.md, a full form by section 21c's size, 380 lines over 6 files, drafted by the architect: state/consults/2026-10-14-governance-search-ignore-historical-architect-draft.md, sha256 b7815de0; pins hashed by the custodian at b9b902bf). OPEN-1 (the ledger part's definition, before dispatch), OPEN-2 (the rule's hidden-folder clause, if the Grep tool searches hidden folders) and OPEN-3 (the words on how to search an excluded location) with the human. Before: PLACED 2026-10-14 by the human (state/directives/2026-10-14-governance-smaller-reads-ignore-cut-state-rotation-decisions-pending.md); never slot 1; each merge the human's click: piece A. The measurement script is written before the first measurement and run unchanged after C. NEXT: the architect drafts the form.",
       "evidence_label": "branch `cut/search-ignore-historical`"
     }
   ],
@@ -1737,25 +1803,6 @@
       "summary": "PROPOSED 2026-10-14 by the custodian from PR #219's gate 1 reviewer DOC-4 (state/consults/gates/2026-10-14-export-current-view-after-unreported-fit-gate1-reviewer.md): rows G1 and N5 of frontends/shell/MANUAL-WALKTHROUGH.md describe Current view as disabled with no settled view, which is untrue once #219 merges; that form's section 2.6 keeps its walkthrough edit to Part Y (its Amendment 7 item 5). Words only, in the docs lane, after the merge."
     },
     {
-      "id": "e2e-readme-status-bar-steps",
-      "title": "e2e/README.md: the status bar's two new steps and E-FOCUS's new stop in the layout and selection entries (the docs-lane follow-up of shell-status-bar-one-height, OPEN-2 (b))",
-      "lane": "shell",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 0,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-10-14",
-        "done": null
-      },
-      "summary": "FORM COMMITTED 2026-10-14 (frontends/shell/E2E-README-STATUS-BAR-STEPS-PREREGISTRATION.md, a five-line form, drafted by the architect: state/consults/2026-10-14-e2e-readme-status-bar-steps-architect-draft.md, sha256 4c607170): line 770, the selection entry, gains E-STATUS-HEIGHT and E-DBLCLICK's run-last reason becomes history; as merged under OPEN-1 (d) there is one new step and no E-FOCUS stop, so the title above describes the original design and the form governs. OPEN-1 (the item 2e sight of the two new spans; (a) land as drafted, recommended) with the human. Code waits for #221's merge (the docs lane, one at a time). Before: PROPOSED 2026-10-14 by the human (state/directives/2026-10-14-status-bar-two-lines-current-view-zero-size-1b-open-9-blocks-provenance.md, item 1, OPEN-2 (b)): the README lines the status-bar form's section 2.7 names, in a docs-lane follow-up landing after both that piece and the Current view fix (which shares e2e/README.md); the window between the merges, when the README omits the new steps, is accepted by the human."
-    },
-    {
       "id": "engine-clause-composition-properties",
       "title": "Engine test piece: clause composition, P5 and P6 over the admission property campaign (tests only; no product code, fixture or dependency)",
       "lane": "engine",
@@ -1772,7 +1819,7 @@
         "opened": "2026-10-14",
         "done": null
       },
-      "summary": "FORM COMMITTED 2026-10-14 (engine/CLAUSE-COMPOSITION-PROPERTIES-PREREGISTRATION.md, the five-line form, drafted by the architect: state/consults/2026-10-14-engine-clause-composition-properties-architect-draft.md, sha256 5bcb2c00; pins computed by the custodian): Scope at most 180 lines over 2 files, over section 21c's 150, so closed to the single gate from dispatch. OPEN-1 (the route; (A) recommended, both gates from dispatch) and OPEN-2 (the mutation record's sentence, the UC3 and E-AND wording) with the human. Waits behind b2-piece-1b-recording in slot 2. Before: IMPACT READ 2026-10-14 (state/consults/2026-10-14-engine-clause-composition-properties-impact-read-lead-data.md): one test file, about 135 to 155 lines; the join convention exists only in the proposed milestone 3 form; a question on the UC3 and E-AND wording goes to the human. NEXT: the architect drafts the five-line form. Before: PROPOSED 2026-10-14 by the human (state/directives/2026-10-14-two-slot-2-pieces-clause-composition-boundary-inventory.md, item 1): slot 2, after what is already queued there, not taking slot 1 nor delaying milestones 2 and 3. A five-line form; tests only. Reuses engine/tests/admission_property_campaign.rs (its SplitMix64 generator, its MultiType fixture, its G1 grammar). The join is the shell's convention. P5 (admission and the result's ids against the intersection), P6 (every order-preserving subset of an admitted join is admitted). The mutation (the test helper joins without the brackets) observed on a kept, minimized witness. Every failure is a candidate until reproduced and minimized; the report names seeds, case counts, excluded counts, time spent, the candidates and how many were real. The invariants are approved as written; the form may sharpen them, not widen them. A product defect goes through normal triage."
+      "summary": "OPEN-1 AND OPEN-2 RULED 2026-10-17 (state/directives/2026-10-17-placements-item-44-governance-clause-composition-readme-item-41-unknown-attempt.md, item 4; the form's Amendment 1, generation 2): (A), the five-line form with the reviewer and the architect from dispatch; (a), the drafted sentence. Before: FORM COMMITTED 2026-10-14 (engine/CLAUSE-COMPOSITION-PROPERTIES-PREREGISTRATION.md, the five-line form, drafted by the architect: state/consults/2026-10-14-engine-clause-composition-properties-architect-draft.md, sha256 5bcb2c00; pins computed by the custodian): Scope at most 180 lines over 2 files, over section 21c's 150, so closed to the single gate from dispatch. OPEN-1 (the route; (A) recommended, both gates from dispatch) and OPEN-2 (the mutation record's sentence, the UC3 and E-AND wording) with the human. Waits behind b2-piece-1b-recording in slot 2. Before: IMPACT READ 2026-10-14 (state/consults/2026-10-14-engine-clause-composition-properties-impact-read-lead-data.md): one test file, about 135 to 155 lines; the join convention exists only in the proposed milestone 3 form; a question on the UC3 and E-AND wording goes to the human. NEXT: the architect drafts the five-line form. Before: PROPOSED 2026-10-14 by the human (state/directives/2026-10-14-two-slot-2-pieces-clause-composition-boundary-inventory.md, item 1): slot 2, after what is already queued there, not taking slot 1 nor delaying milestones 2 and 3. A five-line form; tests only. Reuses engine/tests/admission_property_campaign.rs (its SplitMix64 generator, its MultiType fixture, its G1 grammar). The join is the shell's convention. P5 (admission and the result's ids against the intersection), P6 (every order-preserving subset of an admitted join is admitted). The mutation (the test helper joins without the brackets) observed on a kept, minimized witness. Every failure is a candidate until reproduced and minimized; the report names seeds, case counts, excluded counts, time spent, the candidates and how many were real. The invariants are approved as written; the form may sharpen them, not widen them. A product defect goes through normal triage."
     },
     {
       "id": "b2-piece-1c-save-and-reopen",
@@ -1813,25 +1860,6 @@
       "summary": "Seen 2026-10-05 committing tools/mods/EVIDENCE-RECORDER-V0-1-PREREGISTRATION.md: scripts/plan/verify-quotes.mjs, HASH_REF_RE, requires a path to start with a letter, digit or underscore, so .github/workflows/governance-ci.yml:81-83 @ 17063904 sha256:<hex> binds as github/workflows/governance-ci.yml and fails as unresolvable. The form writes its three such hashes as unchecked, in words, so that no raw sha256 token is left unbound. The same pins in state/consults pass only because that folder is not scanned. Test-only plus a one-character-class change is the likely size. Never queued until the human places it."
     },
     {
-      "id": "source-changed-post-route-s5d-race",
-      "title": "source-changed.mjs's post route: step S5d (post-check-route-confirmed) loses its race to a tile's pre-check in about half the runs on this machine, at main's base too",
-      "lane": "shell",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 60,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-10-16",
-        "done": null
-      },
-      "summary": "APPROVED 2026-10-16 by the human as its own PLAN item, not yet placed (state/directives/2026-10-16-222-adr-022-route-a-restore-and-reappend-reset-line-p6-s5d-own-item.md): graded at triage, as a race in the step and not a product defect, unless the runs show the source-changed route itself wrong. It fails at main's base: in run 4b (state/consults/2026-10-16-b2-piece-1b-recording-e2e-custodian-run-4.md) the post route lost S5d at B 31e25f15 in 2 runs of 4, at 3dfc1a0e in 1 of 4 and at 10173747 in 3 of 4, so no piece is charged with it. Each failing run of runs 4 and 4b has one tile-session-ended-source-changed line and one tile-stream-mint-refused line after it, the gaps as run 4's record gives them; the step's own header note names the route's limit, a sibling tile whose mint resolves after the touch meets the pre-check. The proposed node source-changed-post-reopen-routes-watcher-visible concerns the same route's mtime touch."
-    },
-    {
       "id": "connection-reuse-recycled-interrupt-flake",
       "title": "engine/tests/connection_reuse.rs: cancellation_before_the_first_batch_binds_a_recycled_connection_and_delivers_nothing failed once on ubuntu-24.04 in PR #222's pull_request run at a542097e, and the push run of the same commit passed it",
       "lane": "engine",
@@ -1848,7 +1876,7 @@
         "opened": "2026-10-16",
         "done": null
       },
-      "summary": "PROPOSED 2026-10-16 by the custodian: in run 38910535607 (Product CI, Rust workspace, pull_request, at a542097e), the L1 portable job on ubuntu-24.04 failed this one test at its assertion in line 179 of engine/tests/connection_reuse.rs, whose message says a recycled connection's interrupt handle must reach the token; the other 11 tests of the file passed. The failed steps are filed byte-identical at state/consults/2026-10-16-pr222-ci-run-38910535607-attempt-1-failed-steps.txt. The push run 38910527939 of the same commit passed the same job. PR #222 changes no line of that test file; its engine change is to engine/src/predicate.rs, its test and engine/README.md. No earlier filed CI log records this test failing. Whether it is a timing race in the test or in the pool's interrupt binding is not known. The human grades and places it."
+      "summary": "DIAGNOSIS FIRST, RULED 2026-10-17 (state/directives/2026-10-17-placements-item-44-governance-clause-composition-readme-item-41-unknown-attempt.md, item 1): a read-only diagnosis by lead-data, with no slot, beside the running work, on three questions: where the recycled connection's interrupt handle is bound relative to stream_with_cancel's return; whether a cancel in any window before the bind can still let a batch through; whether the test's is_bound() read can run before the bind. The human then grades it (the directive's item 1 names both outcomes). Before: PROPOSED 2026-10-16 by the custodian: in run 38910535607 (Product CI, Rust workspace, pull_request, at a542097e), the L1 portable job on ubuntu-24.04 failed this one test at its assertion in line 179 of engine/tests/connection_reuse.rs, whose message says a recycled connection's interrupt handle must reach the token; the other 11 tests of the file passed. The failed steps are filed byte-identical at state/consults/2026-10-16-pr222-ci-run-38910535607-attempt-1-failed-steps.txt. The push run 38910527939 of the same commit passed the same job. PR #222 changes no line of that test file; its engine change is to engine/src/predicate.rs, its test and engine/README.md. No earlier filed CI log records this test failing. Whether it is a timing race in the test or in the pool's interrupt binding is not known. The human grades and places it."
     },
     {
       "id": "bundle-redaction-scan-not-in-product-publish",
@@ -1887,6 +1915,25 @@
         "done": null
       },
       "summary": "PROPOSED 2026-10-16 by the custodian, for the human's triage: candidate 2 of the boundary inventory (state/consults/2026-10-16-boundary-inventory-architect.md, Candidates for triage). The comment in frontends/shell/src-tauri/src/state.rs says the token is never written to the session log; binding_log_session_event in commands.rs appends the page's text as given, and Session::redact in protocol/data-plane/src/session.rs is called only by its own test. The custodian confirmed the redact callers by search at b88b1d2f; nothing reproduced. A candidate until graded; the inventory does not grow to fix it."
+    },
+    {
+      "id": "publish-approval-unknown-attempt-under-load",
+      "title": "Publish: an export's approval came back as unknown attempt under machine load (the status-bar e2e run 2 and the H3 order run): the cause first, the pending attempt's TTL elapsing between prepare and execute or an attempt the host lost; then whether the TTL suits a person reading the approval dialog, which shows no expiry",
+      "lane": "shell",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-17",
+        "done": null
+      },
+      "summary": "ADDED 2026-10-17 by the human for triage (state/directives/2026-10-17-placements-item-44-governance-clause-composition-readme-item-41-unknown-attempt.md, item 7): graded at triage, S2 at most, since the refusal is visible and nothing wrong is produced. Seen in state/consults/2026-10-14-shell-status-bar-one-height-e2e-custodian-run-2.md (E-ASK-TWO's second export) and state/consults/2026-10-14-shell-status-bar-one-height-e2e-h3-order.md (E-EXPORT's export), each with other heavy runs beside it. The TTL is PENDING_ATTEMPT_TTL, line 68 of frontends/shell/src-tauri/src/publish.rs at 79cec8c5. The cause first; then the product question. Until it is triaged, the e2e export steps are to record the prepare-to-execute elapsed time and name a TTL expiry INCONCLUSIVE, not a failure. NOT YET BUILT: at 79cec8c5 no e2e export step records that time, so the interim rule needs an e2e change, which waits for the human's placement; until then a custodian e2e record that meets an unknown attempt at an export step says the cause cannot be told without that time and names the step INCONCLUSIVE, never a pass. Not yet placed."
     }
   ],
   "unscheduled": [

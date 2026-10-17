@@ -120,3 +120,18 @@ Rules for both:
 ## Amendments
 
 (Opens empty.)
+
+### Amendment 1 — the human's rulings on OPEN-1 and OPEN-2 (class 5)
+
+*Written by the custodian on the human's ruling (`state/directives/2026-10-17-placements-item-44-governance-clause-composition-readme-item-41-unknown-attempt.md`, item 4). References only.*
+
+1. **OPEN-1 (A):** this five-line form, with the reviewer and the architect, both to an affirmative PASS, from dispatch (§F).
+2. **OPEN-2 (a):** the drafted sentence goes into the test's doc comment, as §B item 4 says. It is byte-copied by script from `state/consults/2026-10-14-engine-clause-composition-properties-architect-draft.md:184 @ 79cec8c5e45767a2b96edec85b76d1a7b6734d2a sha256:1be808e1b8a6b88b52031f32745ad8d5baf1669df7f44e57dd71ed080d6c29b2` (a sub-line span: the words after the bold label; the hash is the whole line's):
+
+```text
+It mutates this Rust test helper, not the shell's combineClauses; milestone 3's form gives the shell's half to its unit row UC3 (combineClauses) and its e2e row E-AND (the joined text, end to end).
+```
+
+3. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.

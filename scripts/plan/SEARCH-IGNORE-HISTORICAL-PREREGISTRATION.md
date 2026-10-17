@@ -294,3 +294,14 @@ Nothing above is edited.
 7. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 3 — the human's ruling on OPEN-2, and W assembled for OPEN-3 (class 5)
+
+*Written by the custodian on the human's ruling (`state/directives/2026-10-17-placements-item-44-governance-clause-composition-readme-item-41-unknown-attempt.md`, item 3, A). References only.*
+
+1. **OPEN-2:** O6 found the hidden probe (Amendment 2 item 3), so §2 item 4's H1 is used: the rule's first sentence becomes the architect's H1 sentence, and the second and third stay the human's, byte-copied.
+2. **W, assembled from §5's table** and the observations of Amendment 2 item 3: O1, O2, O3, O4, O9, O11, O12 and O13 each came out as the table needs, so every clause lands unchanged and W is §2 item 4's text as written. It goes to the human for OPEN-3.
+3. **Still open:** OPEN-3, before S4.
+4. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.

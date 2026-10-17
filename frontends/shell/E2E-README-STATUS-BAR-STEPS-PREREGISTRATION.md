@@ -33,3 +33,13 @@ it runs last: while the status bar grew with its content, before `shell-status-b
 ### Amendments
 
 *(Opens empty; append-only.)*
+
+### Amendment 1 — the human's ruling on OPEN-1 (class 5)
+
+*Written by the custodian on the human's ruling (`state/directives/2026-10-17-placements-item-44-governance-clause-composition-readme-item-41-unknown-attempt.md`, item 5). References only.*
+
+1. **OPEN-1** (the architect's draft, its one item for the human): §A's words land as drafted. The human names them the architect's under item 2d of `state/directives/2026-10-11-direction-after-status-review.md`, so no sight of them is queued for the sitting; this form's opening paragraph says item 2e.
+2. **Order:** in the docs lane after item 44 (`known-limitations-crs-epoch-edges-third-axis`), one piece at a time.
+3. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.

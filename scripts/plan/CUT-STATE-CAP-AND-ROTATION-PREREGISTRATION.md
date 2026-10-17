@@ -442,3 +442,14 @@ Each mutation is applied, the named test fails, the failure is recorded by name 
 4. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 2 — the human's rulings on OPEN-3 and OPEN-4 (class 5)
+
+*Written by the custodian on the human's ruling (`state/directives/2026-10-17-placements-item-44-governance-clause-composition-readme-item-41-unknown-attempt.md`, item 3, B). References only.*
+
+1. **OPEN-3:** readings (i) to (iv) confirmed.
+2. **OPEN-4:** (a) the added sentence in item 1, (b) the notice with `<commit>` as P, and (c) the pointer, each approved as drafted.
+3. **Still open:** none. The piece waits for A, its PLAN dependency.
+4. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
