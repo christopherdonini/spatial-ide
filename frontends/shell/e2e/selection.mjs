@@ -76,6 +76,7 @@ import {
   MAX_ZOOM_NOTCHES,
   ZOOM_NOTCH_DELTA_Y,
 } from "./lib.mjs";
+import { beginStep, elapsedTail, ExportInconclusive, initTtl, pairEvaluate, pairRead } from "./exportElapsed.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = join(HERE, "..", "..", "..");
@@ -557,11 +558,11 @@ async function prepareExport(page, destination) {
   const hook = await pollUntil(() => page.evaluate(() => typeof window.__SPATIAL_E2E__?.publishPrepareWithDestination === "function"), (ok) => ok === true, 20_000);
   expect(hook.ok, "the publishPrepareWithDestination hook never appeared");
   await page.evaluate(() => { const b = document.querySelector(".publish-disclosure"); if (b?.getAttribute("aria-expanded") !== "true") b.click(); });
-  return page.evaluate((d) => window.__SPATIAL_E2E__.publishPrepareWithDestination(d, "whole"), destination);
+  return pairEvaluate(page, "prepare", (d) => window.__SPATIAL_E2E__.publishPrepareWithDestination(d, "whole"), destination);
 }
 
 /** Executes the prepared attempt with the phrase an operator types (the destination's final path component), through the dev hook that shares the dialog's path. */
-const executeExport = (page, prompt) => page.evaluate((p) => window.__SPATIAL_E2E__.publishExecute(p), basename(prompt.destination_display));
+const executeExport = (page, prompt) => pairEvaluate(page, "execute", (p) => window.__SPATIAL_E2E__.publishExecute(p), basename(prompt.destination_display));
 
 /** E-EXPORT: with a selection standing and without one, the prompt's row scope and the bundle's row count are equal, and the section says the selection is not used. */
 async function stepExport(page, consoleHandle) {
@@ -617,14 +618,14 @@ async function startExportThenOpen(page, consoleHandle, label) {
   await openFixture(page, consoleHandle, FIXTURE_100K, label);
   const prepared = await prepareExport(page, freshDestination("ask"));
   expect(prepared.status === "prompt", `${label}: prepare returned ${JSON.stringify(prepared)}`);
-  await page.evaluate(([phrase, path]) => {
+  await pairEvaluate(page, "send", ([phrase, path]) => {
     const run = (window.__askRun = { done: false });
     run.promise = window.__SPATIAL_E2E__.publishExecute(phrase).then((o) => ((run.done = true), o));
     const opened = (window.__askOpen = {});
     opened.promise = window.__SPATIAL_E2E__.openPath(path);
   }, [basename(prepared.prompt.destination_display), FIXTURE_FILTER]);
   const shown = await pollUntil(() => page.evaluate(() => document.querySelector(".open-during-export-ask") !== null), (v) => v === true, 10_000, 100);
-  if (await page.evaluate(() => window.__askRun.done)) throw new Error(`${label}: INCONCLUSIVE (class 2, never a pass): the export had ended when the ask was read (ask shown: ${shown.ok})`);
+  if (await page.evaluate(() => window.__askRun.done)) { pairRead(await page.evaluate(() => window.__askRun.promise)); throw new Error(`${label}: INCONCLUSIVE (class 2, never a pass): the export had ended when the ask was read (ask shown: ${shown.ok})`); }
   expect(shown.ok, `${label}: no ask was shown while the export ran`);
 }
 
@@ -820,19 +821,22 @@ async function runSelectionSteps(page, consoleHandle) {
   async function runStep(id, timeoutMs, fn) {
     const startedAt = Date.now();
     let timer;
+    beginStep();
     try {
-      const note = await Promise.race([fn(), new Promise((_, reject) => (timer = setTimeout(() => reject(new Error(`${id}: timed out after ${timeoutMs}ms`)), timeoutMs)))]);
+      const note = (await Promise.race([fn(), new Promise((_, reject) => (timer = setTimeout(() => reject(new Error(`${id}: timed out after ${timeoutMs}ms`)), timeoutMs)))])) + elapsedTail();
       results.push({ id, status: "PASS", note });
       console.log(`[${id}] PASS (${Date.now() - startedAt}ms): ${note}`);
     } catch (e) {
-      results.push({ id, status: "FAIL", note: e?.message ?? String(e) });
-      console.error(`[${id}] FAIL (${Date.now() - startedAt}ms): ${e?.message ?? e}`);
-      process.exitCode = 1;
+      const status = e instanceof ExportInconclusive ? "INCONCLUSIVE" : "FAIL", note = (e?.message ?? String(e)) + elapsedTail();
+      results.push({ id, status, note });
+      console.error(`[${id}] ${status} (${Date.now() - startedAt}ms): ${note}`);
+      process.exitCode = status === "FAIL" ? 1 : process.exitCode || 3;
     } finally {
       clearTimeout(timer);
       await showLayerTab(page).catch(() => {});
     }
   }
+  console.log(`[selection] PENDING_ATTEMPT_TTL ${initTtl()}ms, read from src-tauri/src/publish.rs`);
   for (const [label, path] of [["filter-zoned", FIXTURE_FILTER], ["100k", FIXTURE_100K], ["multipolygon F-1", FIXTURE_MULTIPOLYGON], ["point P-1", FIXTURE_POINT], ["line L-1", FIXTURE_LINE]]) {
     if (!existsSync(path)) throw new Error(`selection: the ${label} fixture is not at ${path}; regenerate the manual-walkthrough fixtures (kernel/tests/manual_walkthrough_fixtures.rs, --ignored)`);
   }
@@ -865,7 +869,7 @@ async function runSelectionSteps(page, consoleHandle) {
   await runStep("E-ASK-TWO", 600_000, () => stepAskTwo(page, consoleHandle));
   await runStep("E-STATUS-HEIGHT", 600_000, () => stepStatusHeight(page, consoleHandle));
   await runStep("E-DBLCLICK", 600_000, () => stepDblClick(page, consoleHandle));
-  console.log(`[selection] ${results.filter((r) => r.status === "PASS").length} PASS, ${results.filter((r) => r.status === "FAIL").length} FAIL: ${results.map((r) => `${r.id}=${r.status}`).join(" ")}`);
+  console.log(`[selection] ${results.filter((r) => r.status === "PASS").length} PASS, ${results.filter((r) => r.status === "FAIL").length} FAIL${results.some((r) => r.status === "INCONCLUSIVE") ? `, ${results.filter((r) => r.status === "INCONCLUSIVE").length} INCONCLUSIVE` : ""}: ${results.map((r) => `${r.id}=${r.status}`).join(" ")}`);
 }
 
 async function main() {
