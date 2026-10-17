@@ -453,3 +453,13 @@ Nothing above is edited.
 4. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 3 — PR #226's architect F-1, before code (class 3)
+
+*Written by the custodian before any code. References only: the architect's gate report on PR #226, `state/consults/gates/2026-10-17-governance-search-ignore-historical-gate1-architect.md` (gate-log 532), its F-1; the search-ignore form's Amendment 5 item 5.*
+
+1. **§2 item 8, part 1 of the after-C figure:** part 1 also leaves out the standing items' sections that item 1 then names (`AUTONOMY.md` §<n> part B, and `PRECEDENTS.md` P-035 and P-036). C's record gives their UTF-8 byte size beside part 1's figure, so the before and after pair is not read as a reduction it is not. §2 item 8 is not edited.
+2. **Dispatch:** M0 is the commit that adds this amendment; the branch `cut/cut-state-cap-and-rotation` in `C:/dev/wt/csr` starts there, S1 to S6 by §2 item 10.
+3. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.

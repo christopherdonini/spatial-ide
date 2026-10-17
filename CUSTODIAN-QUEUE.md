@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `235c9d754bd1d5be0fedfd3ebf244595eaea3bcfb2d16146f49a8fb3e90d83c5`) at `2026-10-17T21:20:26.366Z`.
+Generated from `PLAN.yaml` (sha256 `344f2e862444012c2bb5a6c3b44495e9680157b172102aabe430a2b02d49c39b`) at `2026-10-17T21:26:43.603Z`.
 
 ## 1. Next
 
@@ -9,7 +9,6 @@ Generated from `PLAN.yaml` (sha256 `235c9d754bd1d5be0fedfd3ebf244595eaea3bcfb2d1
 ## 2. Ready
 
 - **source-changed-post-reopen-routes-watcher-visible** — source-changed.mjs's post and reopen routes, and walkthrough Part N's N6 and N8, still change the source by an mtime touch the advisory watcher can see (lane `shell`, order null, budget 90 min)
-- **governance-cut-state-cap-and-rotation** — state/CUT-STATE.md: the six STANDING items moved out verbatim, a 6,144-byte cap on the continuity block in flush.mjs, and the ledger rotated into state/cut-archive/ by a named script, with the reading order's item 1 restated (lane `governance`, order null, budget 0 min)
 
 ## 3. Waiting on the human (total: 5 min)
 
@@ -32,6 +31,7 @@ Generated from `PLAN.yaml` (sha256 `235c9d754bd1d5be0fedfd3ebf244595eaea3bcfb2d1
 ## 5. In progress
 
 - **publish-approval-unknown-attempt-under-load** — Publish: an export's approval came back as unknown attempt under machine load (the status-bar e2e run 2 and the H3 order run): the cause first, the pending attempt's TTL elapsing between prepare and execute or an attempt the host lost; then whether the TTL suits a person reading the approval dialog, which shows no expiry — evidence: branch `cut/unknown-attempt-step-1`
+- **governance-cut-state-cap-and-rotation** — state/CUT-STATE.md: the six STANDING items moved out verbatim, a 6,144-byte cap on the continuity block in flush.mjs, and the ledger rotated into state/cut-archive/ by a named script, with the reading order's item 1 restated — evidence: branch `cut/cut-state-cap-and-rotation`
 
 ## 6. Proposed / unscheduled
 
