@@ -3,12 +3,16 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { spawnSync } from 'node:child_process';
+import { spawnSync, execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
+import { extractSessionContinuityBlock, buildOutput, READING_ORDER } from './session-resume.mjs';
 import {
   SESSION_CONTINUITY_FIELDS,
   BLOCK_HEADING,
+  BLOCK_CAP_BYTES,
+  BlockCapError,
+  blockSizes,
   blockFieldLabels,
   findBlockRange,
   updateBlockFields,
@@ -165,4 +169,129 @@ test('flush CLI: --file round-trip writes the field; the incident typo exits non
   assert.equal(fs.readFileSync(target, 'utf8'), before, 'a rejected flush must not modify the file');
 
   fs.rmSync(dir, { recursive: true, force: true });
+});
+
+// --- the block's cap (the human's governance direction, piece B; C1 to C7) -----------------------------------------
+//
+// The tests below are C1 to C7 of the form, in order. Incidentally, MC2 and MC3 also fail the tests that need a refusal.
+// RECORDED MUTATION (MC1) at ea69f46c4fc2, applied alone and reverted: the cap compared with `>=` -> fails by name: `flush: a block of exactly 6,144 UTF-8 bytes is written`.
+// RECORDED MUTATION (MC2) at ea69f46c4fc2, applied alone and reverted: the cap check removed -> fails by name: `flush: a block of 6,145 bytes is refused with BlockCapError`.
+// RECORDED MUTATION (MC3) at ea69f46c4fc2, applied alone and reverted: the size counted as string length -> fails by name: `flush: a non-ASCII block under the cap in characters and over it in UTF-8 bytes is refused`.
+// RECORDED MUTATION (MC4) at ea69f46c4fc2, applied alone and reverted: the field sizes counted as string length, so the largest by characters is named -> fails by name: `flush: the refusal names the largest field by UTF-8 bytes and every field's size`.
+// RECORDED MUTATION (MC5) at ea69f46c4fc2, applied alone and reverted: the size measured over findBlockRange's untrimmed lines -> fails by name: `flush: the cap measures the block session-resume prints, for the real ledger's shape`.
+// RECORDED MUTATION (MC6) at ea69f46c4fc2, applied alone and reverted: the scratch file written with the block cut to 6,144 bytes -> fails by name: `flush CLI: a refused block leaves the file byte-identical and is written whole to the scratch file the refusal names`.
+// RECORDED MUTATION (MC7) at ea69f46c4fc2, applied alone and reverted: the inside-repository check removed -> fails by name: `flush CLI: a temporary folder inside the repository gets no scratch file and the refusal says so`.
+
+// The `position` value that makes the fixture's block exactly `bytes` UTF-8 bytes (ASCII fill).
+function positionFor(bytes) {
+  const one = blockSizes(updateBlockFields(fixtureBlock(), { position: 'x' })).blockBytes;
+  return 'x'.repeat(bytes - one + 1);
+}
+const refusal = (text, updates) => {
+  try {
+    updateBlockFields(text, updates);
+  } catch (e) {
+    return e;
+  }
+  return null;
+};
+
+test('flush: a block of exactly 6,144 UTF-8 bytes is written', () => {
+  const out = updateBlockFields(fixtureBlock(), { position: positionFor(BLOCK_CAP_BYTES) });
+  assert.equal(blockSizes(out).blockBytes, 6144);
+});
+
+test('flush: a block of 6,145 bytes is refused with BlockCapError', () => {
+  const e = refusal(fixtureBlock(), { position: positionFor(BLOCK_CAP_BYTES + 1) });
+  assert.ok(e instanceof BlockCapError, String(e));
+  assert.match(e.message, /would be 6145 bytes \(UTF-8\), over the cap of 6144/);
+  assert.equal(Buffer.byteLength(e.block, 'utf8'), 6145);
+});
+
+test('flush: a non-ASCII block under the cap in characters and over it in UTF-8 bytes is refused', () => {
+  const text = fixtureBlock({ position: 'é'.repeat(3100) });
+  const block = extractSessionContinuityBlock(text);
+  assert.ok(block.length < 6144 && Buffer.byteLength(block, 'utf8') > 6144);
+  assert.ok(refusal(fixtureBlock(), { position: 'é'.repeat(3100) }) instanceof BlockCapError);
+});
+
+test("flush: the refusal names the largest field by UTF-8 bytes and every field's size", () => {
+  // position has the most characters, branches the most bytes
+  const values = { flushed_at: 'FLUSHED-AT-FIXTURE', tip: 'abc1234', branches: 'é'.repeat(2000), position: 'x'.repeat(3000),
+    'half-made judgments': 'none', 'intended sequencing (next session)': 'do the next thing', 'unreported findings': 'none', 'in-flight gate states': 'none' };
+  const e = refusal(fixtureBlock(), values);
+  assert.ok(e instanceof BlockCapError, String(e));
+  const size = (f) => `${f} ${Buffer.byteLength(`${f}: ${values[f]}`, 'utf8')}`;
+  assert.match(e.message, new RegExp(`Largest field: "branches", ${Buffer.byteLength(`branches: ${values.branches}`, 'utf8')} bytes\.`));
+  assert.ok(e.message.endsWith(`Field sizes: ${SESSION_CONTINUITY_FIELDS.map(size).join(', ')}.`), e.message);
+});
+
+test("flush: the cap measures the block session-resume prints, for the real ledger's shape", () => {
+  const real = fs.readFileSync(cutStatePath(REPO_ROOT), 'utf8');
+  const next = updateBlockFields(real, Object.fromEntries(SESSION_CONTINUITY_FIELDS.map((f) => [f, 'SENTINEL'])));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'spatial-flush-c5-'));
+  try {
+    fs.mkdirSync(path.join(dir, 'state'));
+    fs.writeFileSync(path.join(dir, 'state', 'CUT-STATE.md'), next, 'utf8');
+    const out = buildOutput(dir);
+    const printed = out.slice(READING_ORDER.length + 2, out.lastIndexOf('\n\nResume facts:'));
+    assert.equal(blockSizes(next).blockBytes, Buffer.byteLength(printed, 'utf8'));
+    assert.ok(blockSizes(next).blockBytes > 0);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+// The CLI with the temporary folder redirected (Node's own resolution: TMPDIR, TEMP and TMP).
+function runRefusal(target, tmp) {
+  const over = ['--field', 'flushed_at=FLUSHED-AT-FIXTURE', '--field', 'tip=abc1234', '--field', `position=${'é'.repeat(3100)}`];
+  return spawnSync(process.execPath, [CLI, '--file', target, ...over], {
+    encoding: 'utf8',
+    env: { ...process.env, TMPDIR: tmp, TEMP: tmp, TMP: tmp },
+  });
+}
+const inside = (parent, child) => {
+  const rel = path.relative(fs.realpathSync.native(parent), child);
+  return rel === '' || (!rel.startsWith('..') && !path.isAbsolute(rel));
+};
+
+test('flush CLI: a refused block leaves the file byte-identical and is written whole to the scratch file the refusal names', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'spatial-flush-c6-'));
+  try {
+    const target = path.join(dir, 'CUT-STATE.md');
+    const tmp = path.join(dir, 'tmp');
+    fs.mkdirSync(tmp);
+    fs.writeFileSync(target, fixtureBlock(), 'utf8');
+    const before = fs.readFileSync(target);
+    const r = runRefusal(target, tmp);
+    assert.equal(r.status, 1, r.stderr);
+    assert.ok(fs.readFileSync(target).equals(before), 'a refused flush must leave the file byte-identical');
+    const named = /written whole to (.+)\.\s*$/.exec(r.stderr)?.[1];
+    assert.ok(named, r.stderr);
+    assert.ok(inside(tmp, named) && !inside(REPO_ROOT, named), named);
+    const refused = refusal(fixtureBlock(), { flushed_at: 'FLUSHED-AT-FIXTURE', tip: 'abc1234', position: 'é'.repeat(3100) });
+    assert.ok(Buffer.byteLength(refused.block, 'utf8') > 6144);
+    assert.ok(fs.readFileSync(named).equals(Buffer.from(`${refused.block}\n`, 'utf8')), 'the scratch file holds the whole block and one newline');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('flush CLI: a temporary folder inside the repository gets no scratch file and the refusal says so', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'spatial-flush-c7-'));
+  try {
+    execFileSync('git', ['init', '-q'], { cwd: dir });
+    const target = path.join(dir, 'CUT-STATE.md');
+    const tmp = path.join(dir, 'tmp');
+    fs.mkdirSync(tmp);
+    fs.writeFileSync(target, fixtureBlock(), 'utf8');
+    const before = fs.readFileSync(target);
+    const r = runRefusal(target, tmp);
+    assert.equal(r.status, 1, r.stderr);
+    assert.match(r.stderr, /The file is unchanged; no scratch file was written \(/);
+    assert.ok(!fs.existsSync(path.join(tmp, 'spatial-ide-flush-refused')), 'no scratch folder inside the repository');
+    assert.ok(fs.readFileSync(target).equals(before));
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
 });
