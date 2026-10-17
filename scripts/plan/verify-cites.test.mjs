@@ -338,6 +338,8 @@ function ledgerRepo(doc) {
   return dir;
 }
 
+// RECORDED MUTATION (MV1): the ledger rule removed -> fails by name (no other test): `verify-cites: an unpinned line cite
+// into state/CUT-STATE.md past its end is advisory`. Observed at 2f4f825269a6, reverted.
 test('verify-cites: an unpinned line cite into state/CUT-STATE.md past its end is advisory', () => {
   const dir = ledgerRepo(() => 'see state/CUT-STATE.md:4 and engine/src/pool.rs:9');
   try {
@@ -351,6 +353,8 @@ test('verify-cites: an unpinned line cite into state/CUT-STATE.md past its end i
   }
 });
 
+// RECORDED MUTATION (MV2): the rule applied to pinned cites as well -> fails by name (no other test): `verify-cites: a pinned
+// line cite into state/CUT-STATE.md whose pin fails stays gated`. Observed at 2f4f825269a6, reverted.
 test('verify-cites: a pinned line cite into state/CUT-STATE.md whose pin fails stays gated', () => {
   const dir = ledgerRepo((rev) => `ok state/CUT-STATE.md:4 @ ${rev} sha256:00, bad state/CUT-STATE.md:9 @ ${rev} sha256:00`);
   try {
