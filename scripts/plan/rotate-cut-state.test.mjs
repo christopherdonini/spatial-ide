@@ -61,7 +61,13 @@ const bytes = (dir, rev) => execFileSync('git', ['show', rev], { cwd: dir, maxBu
 const snapshot = (dir) => JSON.stringify([sh(dir, ['rev-parse', 'HEAD']), sh(dir, ['status', '--porcelain']), fs.readFileSync(path.join(dir, 'state', 'CUT-STATE.md'), 'utf8'), fs.existsSync(path.join(dir, 'state', 'cut-archive'))]);
 after(() => { for (const d of dirs) fs.rmSync(d, { recursive: true, force: true }); });
 
-// RECORDED MUTATION: filled in per mutation below.
+// RECORDED MUTATION, each applied alone at bad88d11d131 and reverted; the named test failed (R1 to R9 are the
+// tests below, in order; a test named with others also failed because it needs the mutated behaviour):
+// MR1 the archive rewritten from its text without the final newline -> R1 (R2, R4, R8 too). MR2 the existing-name
+// check removed -> R2 only. MR3 the week taken to start on Sunday -> R3 only. MR4 `>=` -> R4 only. MR5 isDue
+// returns true -> R5 (R3, R4 too). MR6 the upstream check removed -> R6 only. MR7 the cap check moved after the
+// git mv -> R7 only. MR8 the rotation rewrites flushed_at -> R8 (R1 too). MR9 a SessionStart entry running the
+// script -> R9 only; applied to a copy of the settings read by the test, never to .claude/settings.json.
 test('rotate-cut-state: a due rotation stages the archive byte-identical to the ledger at HEAD and the new ledger\'s exact text', () => {
   const dir = mkRepo({ 'state/CUT-STATE.md': ledgerText() });
   const P = sh(dir, ['rev-parse', 'HEAD']);
