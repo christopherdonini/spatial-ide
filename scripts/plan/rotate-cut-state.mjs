@@ -14,11 +14,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { pathToFileURL } from 'node:url';
 import { blockSizes, BLOCK_CAP_BYTES, BLOCK_HEADING } from '../hooks/flush.mjs';
 
-const here = path.dirname(fileURLToPath(import.meta.url));
-export const REPO_ROOT = path.resolve(here, '..', '..');
 export const ROTATE_BYTES = 153600;
 const LEDGER = 'state/CUT-STATE.md';
 const ARCHIVE_DIR = 'state/cut-archive';
@@ -70,10 +68,12 @@ export function buildRotatedLedger({ oldText, name, commit }) {
 }
 
 function main(argv) {
-  let root = REPO_ROOT;
-  for (let i = 0; i < argv.length; i++) {
-    if (argv[i] === '--root' && argv[i + 1]) root = path.resolve(argv[++i]);
-    else throw new Refusal(`unknown argument: ${argv[i]}`);
+  if (argv.length) throw new Refusal(`unknown argument: ${argv[0]}`);
+  let root;
+  try {
+    root = execFileSync('git', ['rev-parse', '--show-toplevel'], { cwd: process.cwd(), encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).replace(/\r?\n$/, '');
+  } catch (e) {
+    throw new Refusal(`git rev-parse --show-toplevel failed in the working directory (${String(e.stderr ?? e.message).trim().split('\n')[0]})`);
   }
   const git = (args) => {
     try {

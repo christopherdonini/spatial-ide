@@ -10,7 +10,7 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 import { isDue, archiveNameFor, noticeLine, ROTATE_BYTES } from './rotate-cut-state.mjs';
-import { blockSizes, BLOCK_CAP_BYTES } from '../hooks/flush.mjs';
+import { blockSizes, updateBlockFields, BLOCK_CAP_BYTES, BLOCK_HEADING, SESSION_CONTINUITY_FIELDS } from '../hooks/flush.mjs';
 import { decidePrecompact } from '../hooks/precompact-flush.mjs';
 import { decide } from '../hooks/stop-queue.mjs';
 
@@ -55,12 +55,13 @@ function commit(dir, files, msg, date = null) { // stages only the files given (
   if (Object.keys(files).length) sh(dir, ['add', '--', ...Object.keys(files)]);
   sh(dir, ['commit', '-q', '-m', msg], date ? { GIT_COMMITTER_DATE: date, GIT_AUTHOR_DATE: date } : {});
 }
-const rot = (dir) => spawnSync(process.execPath, [ROTATE, '--root', dir], { encoding: 'utf8' });
+const rot = (dir) => spawnSync(process.execPath, [ROTATE], { cwd: dir, encoding: 'utf8' });
 const staged = (dir) => sh(dir, ['diff', '--cached', '--name-status', '--no-renames']).split('\n').filter(Boolean).sort();
 const bytes = (dir, rev) => execFileSync('git', ['show', rev], { cwd: dir, maxBuffer: 1 << 28 });
 const snapshot = (dir) => JSON.stringify([sh(dir, ['rev-parse', 'HEAD']), sh(dir, ['status', '--porcelain']), fs.readFileSync(path.join(dir, 'state', 'CUT-STATE.md'), 'utf8'), fs.existsSync(path.join(dir, 'state', 'cut-archive'))]);
 after(() => { for (const d of dirs) fs.rmSync(d, { recursive: true, force: true }); });
 
+// Timing: R1 and R2 read today's UTC date twice, and R4 and R5 commit an archive and then read this week's Monday; a run across UTC midnight, or across Monday 00:00Z, can fail them.
 // The tests below are R1 to R9 of the form, in order. Incidentally, MR1, MR5 and MR8 also fail the tests that need the mutated behaviour.
 // RECORDED MUTATION (MR1) at bad88d11d131, applied alone and reverted: the archive rewritten from its text without the final newline -> fails by name: `rotate-cut-state: a due rotation stages the archive byte-identical to the ledger at HEAD and the new ledger's exact text`.
 // RECORDED MUTATION (MR2) at bad88d11d131, applied alone and reverted: the existing-name check removed -> fails by name: `rotate-cut-state: a same-day collision takes -2, then -3, and no archive is overwritten`.
@@ -192,7 +193,9 @@ test("rotate-cut-state: after the rotation commit and a ledger-only flush commit
   const dir = mkRepo({ 'README.md': 'a\n' }, `@${Math.floor(ago(300).getTime() / 1000)} +0000`);
   const A0 = sh(dir, ['rev-parse', 'HEAD']);
   const flushedAt = ago(120).toISOString().replace(/\.\d{3}Z$/, 'Z');
-  commit(dir, { 'state/CUT-STATE.md': ledgerText({ flushedAt, tip: A0 }) }, 'ledger flush', `@${Math.floor(ago(180).getTime() / 1000)} +0000`);
+  const real = fs.readFileSync(path.join(REPO_ROOT, 'state', 'CUT-STATE.md'), 'utf8'); // the real ledger's shape: a title line, a two-path Previous ledger line
+  const seeded = updateBlockFields(real, { ...Object.fromEntries(SESSION_CONTINUITY_FIELDS.map((f) => [f, 'SENTINEL'])), flushed_at: flushedAt, tip: A0 });
+  commit(dir, { 'state/CUT-STATE.md': seeded }, 'ledger flush', `@${Math.floor(ago(180).getTime() / 1000)} +0000`);
   sh(dir, ['push', '-q', 'origin', 'main']);
   fs.writeFileSync(path.join(dir, 'CUSTODIAN-LEASE'), `lease: ${SID} since the test began\n`);
   const resume = () => spawnSync(process.execPath, [RESUME], { input: '{}', encoding: 'utf8', env: { ...process.env, CLAUDE_PROJECT_DIR: dir } });
@@ -205,6 +208,17 @@ test("rotate-cut-state: after the rotation commit and a ledger-only flush commit
     const r = rot(dir);
     assert.equal(r.status, 0, r.stderr);
     commit(dir, {}, 'rotate the ledger');
+    const seededLines = seeded.split('\n');
+    const h = seededLines.indexOf(BLOCK_HEADING);
+    const rotatedText = fs.readFileSync(path.join(dir, 'state', 'CUT-STATE.md'), 'utf8');
+    assert.ok(seededLines[0].startsWith('# ') && h > 0, 'the seeded ledger has a title line before the block');
+    assert.ok(rotatedText.startsWith(`${BLOCK_HEADING}\n`), 'the new file starts with the heading and has no line before it');
+    assert.equal(seededLines.slice(h + 1, h + 9).length, 8);
+    assert.deepEqual(rotatedText.split('\n').slice(1, 9), seededLines.slice(h + 1, h + 9), 'its fields are the eight seeded lines');
+    const oldPrev = seededLines.find((l) => l.startsWith('Previous ledger:'));
+    assert.equal((oldPrev.match(/`state\/[^`]+`/g) ?? []).length, 2, 'the seeded Previous ledger line names two paths');
+    assert.ok(rotatedText.includes(` Before it: \`${/`([^`]+)`/.exec(oldPrev)[1]}\`.`), 'its Before it path is the first backticked path of the seeded line');
+    assert.ok(/\n\nLine references written before the rotation point into [^\n]+\n\n## Ledger\n$/.test(rotatedText), 'it ends with the notice, a blank line, ## Ledger and one newline');
     sh(dir, ['push', '-q', 'origin', 'main']);
     const R = sh(dir, ['rev-parse', 'HEAD']);
     // At R: the precompact hook blocks (R changes two paths, so its tip cannot be a ledger-only commit's parent) and the stop hook's predicate is stale at R.
