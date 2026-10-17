@@ -478,3 +478,18 @@ Nothing above is edited.
 8. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 5 — gate 2: both FAIL, one attempt VOID; correction round 2; `ROTATE_BYTES` (class 3)
+
+*Written by the custodian after gate 2 and correction round 2 were seen, at the head 5201bc0b. References only. The reports: the architect `state/consults/gates/2026-10-17-governance-cut-state-cap-and-rotation-gate2-architect.md` (gate-log 541); the reviewer's attempt 2, VOID (gate-log 540, the custodian's record `state/consults/2026-10-17-governance-cut-state-cap-and-rotation-gate2-reviewer-void.md`), and its attempt 3 `state/consults/gates/2026-10-17-governance-cut-state-cap-and-rotation-gate2-reviewer.md` (gate-log 542); the round's worker report `state/consults/2026-10-17-governance-cut-state-cap-and-rotation-round-2-worker-report.md`.*
+
+1. **Gate 2:** the reviewer's attempt 2 is VOID: its report claimed runs that its transcript does not hold. The architect and the reviewer's attempt 3 FAIL on the same Correctness finding: R8 asserted the live ledger's pre-rotation shape (a title line, two `Previous ledger:` paths), which this piece's own rotation R removes, so main's CI would go red at R.
+2. **Correction round 2:** 1f4e8d5d (R8 runs over the live ledger and over `buildRotatedLedger` of it; the two assertions relaxed as the reviewer gave them; the comment in the architect's words) and 5201bc0b (MR8 and a new MR8b, the old title-line guard restored, observed at 1f4e8d5d).
+3. **§7:** 825 changed lines over 12 files at 5201bc0b; `scripts/plan/rotate-cut-state.test.mjs` 276 of 290. Amendment 4 item 4's three per-file figures are unchanged.
+4. **Deviation (class 3), the architect's D-7:** `ROTATE_BYTES` is exported beyond §2 item 3's four names. Its product use is inside `isDue`; its only importer is R4.
+5. **The gate's mutations:** the harness refused the reviewer's mutation edit at attempt 3, so MR6 and MR8 rest on the worker's observations at 143bf561, and MR8 also at 1f4e8d5d. Gate 3's reviewer makes MR8 and MR8b; if the harness refuses, the custodian makes them and records it.
+6. **Gate 3:** the architect on the round 2 diff only; the reviewer on the same diff, with R8 run and MR8 and MR8b made again. Every other verdict carries forward. This is the last correction round before the architect reduces (the 2026-09-18 record cap).
+7. **Still with the human:** the I6 reading (Amendment 4 item 6), before (b).
+8. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
