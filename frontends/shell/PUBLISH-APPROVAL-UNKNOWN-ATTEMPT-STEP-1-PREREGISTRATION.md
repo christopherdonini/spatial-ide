@@ -175,3 +175,15 @@ Nothing above is edited.
 6. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 3 — gate 1: both PASS WITH NOTES; three deviations (class 3); the words chosen
+
+*Written by the custodian after both gate 1 reports were seen, at the head 39dc2c8e. References only. The reports: the architect `state/consults/gates/2026-10-17-publish-approval-unknown-attempt-step-1-gate1-architect.md` (gate-log 536) and the reviewer `state/consults/gates/2026-10-17-publish-approval-unknown-attempt-step-1-gate1-reviewer.md` (gate-log 537).*
+
+1. **Gate 1:** both PASS WITH NOTES, with no Correctness or Evidence finding.
+2. **Three deviations (class 3), the architect's D3:** (a) the figure ends the line `runStep` prints, by §1.5, and not a line of its own, as the Change line says; §1.5 governs. (b) `publish.mjs`'s summary is a table whose export rows carry the figure, so §1.5's byte-identical summary holds for `selection.mjs`'s line only. (c) §2.2's exe was built at be6aa620, the head's base, not at the head; the branch changes no exe source (the reviewer's Evidence 4).
+3. **The words, with no re-gate:** the README's publish and selection entries take the architect's D1 and D2, which cover the reviewer's D1 and D2; the comments take the reviewer's D3 to D6; the PR body takes the reviewer's D7. One worker applies the words in one commit; the custodian checks them byte for byte against the reports.
+4. **M1:** the permission classifier refused the reviewer's re-run, so M1 rests on the worker's recorded observation at dcaed6ed, the observation of record by the human's ruling of this date; the custodian re-observes it once, or records the gap, in the closing amendment.
+5. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
