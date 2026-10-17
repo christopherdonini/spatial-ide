@@ -155,3 +155,14 @@ Whatever the outcome, this form's closing record is references and hashes only (
 ### Amendments
 
 *(Opens empty; append-only.)*
+
+### Amendment 1 — the human's ruling on OPEN-1 (class 5)
+
+*Written by the custodian on the human's ruling (`state/directives/2026-10-17-merges-223-224-w-approved-open-12-flake-s3-unknown-attempt-slot-1-s5d-route-a.md`, item 5), before any run of step 1. References only.*
+
+1. **OPEN-1 (A):** step 1 alone is on this five-line form, as drafted. A new form follows, written from what the runs show (§2).
+2. **Gates:** §4's single reviewer gate on the record.
+3. **The base:** B is main after engine-clause-composition-properties merged (PR #224, merge commit 46e56dc9aba8c63eff8c08fe8ddb14a4af0cee8d), or the main commit step 1 starts from, which the record names.
+4. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.

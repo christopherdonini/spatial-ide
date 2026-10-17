@@ -807,3 +807,20 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+### Amendment 4 — the human's ruling on OPEN-12: PublishPanel's Props re-pinned at B (class 3), and I4 lifted; the order behind the unknown-attempt node's first step (class 5)
+
+*Written by the custodian on the human's ruling (`state/directives/2026-10-17-merges-223-224-w-approved-open-12-flake-s3-unknown-attempt-slot-1-s5d-route-a.md`, items 2 and 4). References only.*
+
+1. **OPEN-12 (a).** PublishPanel's Props at B are the interface: `frontends/shell/src/publish/PublishPanel.tsx:316-340 @ b88b1d2fba04e43489d4ef480060f45df2026173 sha256:c96a903892194e291d04344dbfa921c51f457193cd1ad71897bbe98fe4847d04`, the span the re-sweep's §2 C9 gives, unchanged at main 46e56dc9aba8c63eff8c08fe8ddb14a4af0cee8d.
+   - The two members that differ from §0.5, `getViewBox` and `subscribeViewBox` in place of `hasSettledView` and `getLastViewportBbox`, are PR #219's. Its merge commit e57e6436ab3e7452f3f1a7b61837cba6b93a6211 is an ancestor of B, and this piece consumes neither member.
+   - They are re-pinned as class 3. Nothing else of I4 applies, so Amendment 3 item 3's STOP is lifted, and §0.5's export panel reads at this pin.
+2. **The order.** The node `publish-approval-unknown-attempt-under-load` holds slot 1 now. Its first step records the prepare-to-execute elapsed time in every export step, and a TTL expiry reads INCONCLUSIVE, not a failure. This piece's code starts when that step has merged, since the two share e2e paths. The node's PLAN dependency carries this.
+3. **The base.** §0.3 places the re-sweep at this piece's code base, the merge base with origin/main when PR A's branch is cut, which now follows that merge. Amendment 3 stands for B. What changed from B to that base is re-swept by §0.3's steps before any code, and its rows are appended then.
+4. **Generation:** the node's generation goes up by one.
+
+**§11.** OPEN-12 is answered. No OPEN item remains.
+
+Read the last amendment first.
+
+Nothing above is edited.

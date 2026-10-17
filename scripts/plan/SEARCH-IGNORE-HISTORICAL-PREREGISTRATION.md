@@ -305,3 +305,30 @@ Nothing above is edited.
 4. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 4 — the human's ruling on OPEN-3; S4's section with its placeholders replaced (class 5)
+
+*Written by the custodian on the human's ruling (`state/directives/2026-10-17-merges-223-224-w-approved-open-12-flake-s3-unknown-attempt-slot-1-s5d-route-a.md`, item 1). References only.*
+
+1. **OPEN-3:** W is approved as assembled (Amendment 3 item 2), in the architect's words. S4 follows.
+2. **The placeholders of §2 item 4, replaced by the custodian's script:** §<n> is §32, the next free number at M0 and at main 46e56dc9aba8c63eff8c08fe8ddb14a4af0cee8d, between which `AUTONOMY.md` is unchanged; the rule's pin is `state/directives/2026-10-14-governance-smaller-reads-ignore-cut-state-rotation-decisions-pending.md:23 @ fbbffe89ecf693eabfe95448007ae0444e305d19 sha256:8bd8015eca14482708510c7f25b68b6d3af9d817837db52b37f9f821cb3393fd`; the bracket takes its H1 words; the rule is H1's two sentences, then the second and third sentences byte-copied from inside that line's quotes; W is §2 item 4's text, byte-copied; the commit is S3, 7f09c0e3f318a17a77cc00d5b2f9de4abe48028c, where O1 to O14 were observed, with Claude Code 2.1.300 and ripgrep 15.2.0 (Amendment 2's report).
+3. **The bytes S4 appends** to `AUTONOMY.md`, after its last line: one empty line, then the eleven lines below, then a final newline, 1833 bytes, sha256 1d9b2fa8053bf73ca433a20ca8d9521c721fd4b3b0da8cd33b830ca933a1d4ad. One worker appends them in one commit, byte for byte from this amendment at the main commit that holds it, and checks §8 item 2.
+
+~~~markdown
+## §32. A tree-wide search excludes historical material (the human, 2026-10-14; `state/directives/2026-10-14-governance-smaller-reads-ignore-cut-state-rotation-decisions-pending.md`, piece A and the addendum's A; appended after §31 so that no line a record cites above it moves)
+
+The rule is the human's. It is byte-copied by script from `state/directives/2026-10-14-governance-smaller-reads-ignore-cut-state-rotation-decisions-pending.md:23 @ fbbffe89ecf693eabfe95448007ae0444e305d19 sha256:8bd8015eca14482708510c7f25b68b6d3af9d817837db52b37f9f821cb3393fd` (a sub-line span: the quoted sentences inside that line; the hash is the whole line's), and nothing in it is changed except its first sentence, replaced as the human approved in `scripts/plan/SEARCH-IGNORE-HISTORICAL-PREREGISTRATION.md`, OPEN-2:
+
+```text
+A tree-wide search excludes historical material: the paths in .ignore. A tree-wide `rg` from Bash also skips hidden folders such as .cut-archive/; the Grep tool does not. Before concluding that a ruling, precedent, review or design does not exist, search those locations explicitly. Active work keeps direct references to its own drafts and gate reports.
+```
+
+**Searching an excluded location** (the addendum's A; the architect's words, approved by the human in that form's OPEN-3): Name the location to search it: give the Grep tool that folder or that file as its path, run `rg --no-ignore` from Bash with that folder as its path, or Read the file by its name. A Grep call over the whole tree, or over a folder above the excluded one, does not reach it. The Glob tool still lists the files there by name.
+
+The excluded paths are the five lines of the root `.ignore`. Each method above was observed at 7f09c0e3f318a17a77cc00d5b2f9de4abe48028c with Claude Code 2.1.300 and ripgrep 15.2.0 (that form, §4, O1 to O14).
+~~~
+
+4. **Next:** S4, then the PR and both gates (§9).
+5. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
