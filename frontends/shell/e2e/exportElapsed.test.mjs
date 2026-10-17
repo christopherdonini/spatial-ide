@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
 // Plain Node test of exportElapsed.mjs (PUBLISH-APPROVAL-UNKNOWN-ATTEMPT-STEP-1-PREREGISTRATION.md section 2.1, T1 to T4): `npm run test:export-elapsed`, part of `npm run verify`.
+// RECORDED MUTATION: M1, verdict's comparison u > t replaced by true, applied alone at dcaed6edf21fe96776ee5dab1b938cf675972df2: T2 the E-EXPORT run line (U its printed duration) reads FAIL failed (so did T2 for E-ASK-TWO and T3); reverted.
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
