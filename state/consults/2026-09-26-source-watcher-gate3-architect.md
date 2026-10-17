@@ -106,7 +106,7 @@ Preregistration §10, Amendment 6: every row carries my gate-2 §6 row with the 
 - A stronger form would have referenced R:135 @ 04b3680, which already carries the pin on main. It is not required, and an append is not worth a round.
 - **Two conditions for the custodian:**
   1. The merge must be a merge commit, not a squash. That keeps 4137f4d reachable, together with the header's other commits (2daf371..f280f76, b178ee5, 722a551).
-  2. Row 13 says "the custodian's queue carries it". Today only `state/CUT-STATE.md:8` does; neither `PLAN.yaml` nor the queue does. Put it in the queue before the merge so the claim resolves.
+  2. Row 13 says "the custodian's queue carries it". Today only `state/CUT-STATE.md:8 @ 02ec6a34e4384ed7cf90c2d1277c290d038987d5 sha256:8afbfc18996b745fc0077d9a53c0dd69af2cdd2474454c78d7fb5efc0b8e857d` does; neither `PLAN.yaml` nor the queue does. Put it in the queue before the merge so the claim resolves.
 
 **Reviewer confirms:**
 - every hash in rows 1–11;
