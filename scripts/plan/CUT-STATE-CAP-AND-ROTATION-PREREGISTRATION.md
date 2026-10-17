@@ -463,3 +463,18 @@ Nothing above is edited.
 3. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 4 — gate 1: both FAIL; correction round 1; §7's per-file figures (class 8); deviations (class 3)
+
+*Written by the custodian after both gate 1 reports and correction round 1 were seen, at the head 620acf4f. References only. The reports: the architect `state/consults/gates/2026-10-17-governance-cut-state-cap-and-rotation-gate1-architect.md` (gate-log 538) and the reviewer `state/consults/gates/2026-10-17-governance-cut-state-cap-and-rotation-gate1-reviewer.md` (gate-log 539); the round's worker report `state/consults/2026-10-17-governance-cut-state-cap-and-rotation-round-1-worker-report.md`.*
+
+1. **Gate 1:** both FAIL on the same Correctness finding, the rotation script's `--root` option with test callers only (both C-1), and the architect's E-1, no rotation test from the real ledger's shape.
+2. **Correction round 1:** 143bf561 (C-1, E-1 and the timing comment; `REPO_ROOT` removed with the option, nothing else using it), e984a6a2 (MR6 and MR8 observed again at 143bf561) and 620acf4f (the words).
+3. **The words, with no re-gate:** `flush.mjs`'s header takes the architect's W-1; §33 takes the architect's W-2, D-2, D-3's first part and D-4, and the reviewer's D-3; the PR body takes the architect's W-3, D-3's second part and D-6's S2 bullet. The reviewer's C-2 and D-4 and the architect's D-5 are covered by those and not applied. The custodian checked each replacement against the report chosen for it, by script.
+4. **§7 (class 8):** 817 changed lines over 12 files by the counting command at 620acf4f, within 960 over 12. Three per-file figures pass §7's: `scripts/hooks/hooks.test.mjs` 24 of 20, `scripts/plan/verify-cites.test.mjs` 41 of 40, `AUTONOMY.md` 77 of 75. §7 is not edited.
+5. **Deviations (class 3), accepted at gate 1:** (a) §2 item 6: the directive's lines 37 and 38 are referenced by pin in §33 part A, not reproduced, under §8 item 8. (b) §2 item 5's statement that the §26 adjacency test reads lines 4 and 5 only does not hold: it finds the PRECEDENTS line by substring, so one lookup in `scripts/hooks/hooks.test.mjs` changed at 8965ba75, its assertions unchanged. (c) §2 item 3: with no `Previous ledger:` line in P's block, the new line leaves out `Before it`. (d) The flush CLI's inside-repository check covers this repository and the target file's, through `realpathSync.native`. (e) §4 MC4: the worker applied a wider mutation at 6372d6e9; MC4 as §4 states it was observed by the reviewer gate at c8b78e90. (f) §4 MR9 is observed by a substitute, a scratch copy of the settings read through R9's path, by the worker and again by the reviewer; no settings file was edited.
+6. **For the human, before (b):** D1's `verify-mutation.mjs` row differs by stdout sha256 between M0 and the head, because its output counts the 19 new tests, the same 19 by which the `node --test` count rises (the reviewer's E-1). On a literal reading that is I6, a STOP that goes to the human; the reviewer reads it as not I6. The shrink (b) waits for the human's reading.
+7. **Gate 2:** the architect on the code diff of 143bf561 and e984a6a2 only; the reviewer on the same diff, with R1 to R9 run and MR6 and MR8 made again. Every other verdict carries forward.
+8. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
