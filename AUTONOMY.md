@@ -549,3 +549,15 @@ The rule is the human's item 2, reproduced below because this section is where t
 - **From when:** the rule applies from the human's direction of 2026-10-11, queued at 18:23:36Z (the directive's filing note), before this section merged (the item's h).
 - **Where it is carried:** every gate brief carries it by reference. The architect's and the reviewer's definitions (`.claude/agents/architect.md`, `.claude/agents/reviewer.md`) carry it in one appended paragraph each.
 - **What stays:** the proportional-gates text of §22 (the 2026-10-05 product-first direction, section 2) is otherwise unchanged, and an untrue claim of a limit is still a Correctness finding (the item's g).
+
+## §32. A tree-wide search excludes historical material (the human, 2026-10-14; `state/directives/2026-10-14-governance-smaller-reads-ignore-cut-state-rotation-decisions-pending.md`, piece A and the addendum's A; appended after §31 so that no line a record cites above it moves)
+
+The rule is the human's. It is byte-copied by script from `state/directives/2026-10-14-governance-smaller-reads-ignore-cut-state-rotation-decisions-pending.md:23 @ fbbffe89ecf693eabfe95448007ae0444e305d19 sha256:8bd8015eca14482708510c7f25b68b6d3af9d817837db52b37f9f821cb3393fd` (a sub-line span: the quoted sentences inside that line; the hash is the whole line's), and nothing in it is changed except its first sentence, replaced as the human approved in `scripts/plan/SEARCH-IGNORE-HISTORICAL-PREREGISTRATION.md`, OPEN-2:
+
+```text
+A tree-wide search excludes historical material: the paths in .ignore. A tree-wide `rg` from Bash also skips hidden folders such as .cut-archive/; the Grep tool does not. Before concluding that a ruling, precedent, review or design does not exist, search those locations explicitly. Active work keeps direct references to its own drafts and gate reports.
+```
+
+**Searching an excluded location** (the addendum's A; the architect's words, approved by the human in that form's OPEN-3): Name the location to search it: give the Grep tool that folder or that file as its path, run `rg --no-ignore` from Bash with that folder as its path, or Read the file by its name. A Grep call over the whole tree, or over a folder above the excluded one, does not reach it. The Glob tool still lists the files there by name.
+
+The excluded paths are the five lines of the root `.ignore`. Each method above was observed at 7f09c0e3f318a17a77cc00d5b2f9de4abe48028c with Claude Code 2.1.300 and ripgrep 15.2.0 (that form, §4, O1 to O14).
