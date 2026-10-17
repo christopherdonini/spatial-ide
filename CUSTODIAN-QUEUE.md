@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `b76bb3110f896402f38c577621584b9d4cb481fba76a3b2bd89b687448830761`) at `2026-10-17T17:55:40.855Z`.
+Generated from `PLAN.yaml` (sha256 `4b814b82005ca7f207aa3b7a0f5b4f95f62d2ec2af4401727c6f9e496480e460`) at `2026-10-17T18:26:35.019Z`.
 
 ## 1. Next
 
@@ -30,6 +30,7 @@ Generated from `PLAN.yaml` (sha256 `b76bb3110f896402f38c577621584b9d4cb481fba76a
 ## 5. In progress
 
 - **e2e-readme-status-bar-steps** — e2e/README.md: the selection entry gains E-STATUS-HEIGHT, and E-DBLCLICK's run-last reason becomes history (the docs-lane follow-up of shell-status-bar-one-height, OPEN-2 (b); as merged under OPEN-1 (d): one new step, no E-FOCUS stop) — evidence: branch `cut/e2e-readme-status-bar-steps`
+- **publish-approval-unknown-attempt-under-load** — Publish: an export's approval came back as unknown attempt under machine load (the status-bar e2e run 2 and the H3 order run): the cause first, the pending attempt's TTL elapsing between prepare and execute or an attempt the host lost; then whether the TTL suits a person reading the approval dialog, which shows no expiry — evidence: branch `cut/unknown-attempt-step-1`
 - **governance-search-ignore-historical** — A root .ignore over historical material (site, the generated queue JSON, the cut archive, drafts, gate reports), tested both ways with the agents' own search tool, and its search rule appended to AUTONOMY; the routine-read and search-corpus measurements taken before it — evidence: branch `cut/search-ignore-historical`
 
 ## 6. Proposed / unscheduled
@@ -118,7 +119,6 @@ Generated from `PLAN.yaml` (sha256 `b76bb3110f896402f38c577621584b9d4cb481fba76a
 - **verify-quotes-dotted-paths** — verify-quotes: the hash-reference path grammar cannot begin with a dot, so a pinned cite into .github/ can never be checked (phase `prototype`) — never queued until placed
 - **bundle-redaction-scan-not-in-product-publish** — The bundle redaction scan runs only in a test: no product publish scans its emitted files, though ADR-017's section 13 (Accepted) says a scan over every emitted file asserts no path, user name, machine identifier or credential is in a bundle (phase `prototype`) — never queued until placed
 - **session-log-token-redaction-rests-on-page-code** — The session token never reaching the session log rests on page code: binding_log_session_event appends page-supplied text verbatim, the page holds the token, and the data plane's Session::redact has only a test caller (phase `prototype`) — never queued until placed
-- **publish-approval-unknown-attempt-under-load** — Publish: an export's approval came back as unknown attempt under machine load (the status-bar e2e run 2 and the H3 order run): the cause first, the pending attempt's TTL elapsing between prepare and execute or an attempt the host lost; then whether the TTL suits a person reading the approval dialog, which shows no expiry (phase `prototype`) — never queued until placed
 
 ### Unscheduled
 
