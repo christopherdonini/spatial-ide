@@ -1,27 +1,46 @@
 {
-  "generated_at": "2026-10-17T20:45:03.398Z",
-  "plan_hash": "28b2d1e6f3bed865bd62f2cdd965aab9cee643f89ba9a5719e8720ce875374bf",
+  "generated_at": "2026-10-17T20:51:32.496Z",
+  "plan_hash": "b02e83b95d5d4331bf09a155e6341b407d5b9e3f3d5ceffd8bdab48c47405c52",
   "priorities_approved": true,
   "next": {
-    "id": "governance-cut-state-cap-and-rotation",
-    "title": "state/CUT-STATE.md: the six STANDING items moved out verbatim, a 6,144-byte cap on the continuity block in flush.mjs, and the ledger rotated into state/cut-archive/ by a named script, with the reading order's item 1 restated",
-    "lane": "governance",
+    "id": "source-changed-post-reopen-routes-watcher-visible",
+    "title": "source-changed.mjs's post and reopen routes, and walkthrough Part N's N6 and N8, still change the source by an mtime touch the advisory watcher can see",
+    "lane": "shell",
     "phase": "prototype",
     "status": "ready",
     "order": null,
-    "budget_minutes": 0,
+    "budget_minutes": 90,
     "needs_human": {
       "kind": "none",
       "minutes": 0
     },
     "evidence": null,
     "dates": {
-      "opened": "2026-10-14",
+      "opened": "2026-10-09",
       "done": null
     },
-    "summary": "READY 2026-10-17: governance A merged (PR 226), so the governance lane next piece (A, B, C in order, never slot 1). NEXT: before code, PR 226 architect F-1 into this form (search-ignore form, Amendment 5 item 5), then its steps by its form. Before: BEFORE B's CODE 2026-10-17: PR 226's architect gate F-1 (search-ignore form, Amendment 5 item 5), B's after-C part 1 leaves out the standing items' sections that item 1 then names, their byte size beside the figure; for this form, before code. Before: OPEN-3 AND OPEN-4 RULED 2026-10-17 (state/directives/2026-10-17-placements-item-44-governance-clause-composition-readme-item-41-unknown-attempt.md, item 3; the form's Amendment 2, generation 3): readings (i) to (iv) confirmed; the added sentence, the notice with P as <commit> and the pointer approved as drafted. No OPEN item remains. Waits for A. Before: OPEN-1 and OPEN-2 RULED 2026-10-15 (state/directives/2026-10-15-round-1b-i3-allowed-a-open-1-b-open-1-open-2.md): (B) and (A) (Amendment 1). OPEN-3 and OPEN-4 still open, before S5 and S6. Before: FORM COMMITTED 2026-10-14 (scripts/plan/CUT-STATE-CAP-AND-ROTATION-PREREGISTRATION.md, a full form by section 21a and 21c, 960 lines over 12 files, drafted by the architect: state/consults/2026-10-14-governance-cut-state-cap-and-rotation-architect-draft.md, sha256 283f1c03; pins hashed by the custodian at 513ca7b3). OPEN-1 (the directive's own cite into the ledger) and OPEN-2 (the scratch file when no hook runs flush.mjs) before dispatch; OPEN-3 (readings) and OPEN-4 (the words) before its last commits; with the human. Before: PLACED 2026-10-14 by the human (state/directives/2026-10-14-governance-smaller-reads-ignore-cut-state-rotation-decisions-pending.md); never slot 1; each merge the human's click: piece B, after A. Two gated citations into today's file name the archive path or their commit. Its form is drafted after A's."
+    "summary": "FORM COMMITTED 2026-10-17 (frontends/shell/SOURCE-CHANGED-POST-REOPEN-ROUTES-WATCHER-VISIBLE-PREREGISTRATION.md, the full form, drafted by the architect: state/consults/2026-10-17-source-changed-post-reopen-routes-watcher-visible-architect-draft.md; 94 pins computed at 28163cb6) with its Amendment 1, OPEN-1 (A) ruled (state/directives/2026-10-17-227-m1-watcher-visible-open-1-a-item-23-node-228-merged.md, item 2): one piece, N6 and N8 included; reviewer and architect from dispatch. NEXT: its build in slot 2. Before: PLACED 2026-10-17 by the human (state/directives/2026-10-17-s5d-o3-ordered-watcher-visible-placed-unknown-attempt-open-1-2-a-flake-full-form-225-226.md, item 1): S3, in source-changed-post-route-s5d-race's slot, before it. It moves the post and reopen routes of source-changed.mjs to a change the watcher cannot see, as the re-aim did for the pre route; corrects S5d's pass note, which states a route no run has shown; and covers Part N's N6 and N8. Its form is drafted by the architect before any code. Before: PROPOSED 2026-10-09 by the custodian from the e2e re-aim form's OPEN-4 (state/consults/2026-10-09-e2e-stale-expectations-reaim-architect-draft.md): the re-aim moves only the default pre route of source-changed.mjs to a change the watcher cannot see; the post and reopen routes still touch the mtime, which the watcher sees while idle, and walkthrough Part N's N6 and N8 touch it by hand on the same premise. The triage ran the default route only, so their state is unobserved. The human grades and places it."
   },
   "ready": [
+    {
+      "id": "source-changed-post-reopen-routes-watcher-visible",
+      "title": "source-changed.mjs's post and reopen routes, and walkthrough Part N's N6 and N8, still change the source by an mtime touch the advisory watcher can see",
+      "lane": "shell",
+      "phase": "prototype",
+      "status": "ready",
+      "order": null,
+      "budget_minutes": 90,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-09",
+        "done": null
+      },
+      "summary": "FORM COMMITTED 2026-10-17 (frontends/shell/SOURCE-CHANGED-POST-REOPEN-ROUTES-WATCHER-VISIBLE-PREREGISTRATION.md, the full form, drafted by the architect: state/consults/2026-10-17-source-changed-post-reopen-routes-watcher-visible-architect-draft.md; 94 pins computed at 28163cb6) with its Amendment 1, OPEN-1 (A) ruled (state/directives/2026-10-17-227-m1-watcher-visible-open-1-a-item-23-node-228-merged.md, item 2): one piece, N6 and N8 included; reviewer and architect from dispatch. NEXT: its build in slot 2. Before: PLACED 2026-10-17 by the human (state/directives/2026-10-17-s5d-o3-ordered-watcher-visible-placed-unknown-attempt-open-1-2-a-flake-full-form-225-226.md, item 1): S3, in source-changed-post-route-s5d-race's slot, before it. It moves the post and reopen routes of source-changed.mjs to a change the watcher cannot see, as the re-aim did for the pre route; corrects S5d's pass note, which states a route no run has shown; and covers Part N's N6 and N8. Its form is drafted by the architect before any code. Before: PROPOSED 2026-10-09 by the custodian from the e2e re-aim form's OPEN-4 (state/consults/2026-10-09-e2e-stale-expectations-reaim-architect-draft.md): the re-aim moves only the default pre route of source-changed.mjs to a change the watcher cannot see; the post and reopen routes still touch the mtime, which the watcher sees while idle, and walkthrough Part N's N6 and N8 touch it by hand on the same premise. The triage ran the default route only, so their state is unobserved. The human grades and places it."
+    },
     {
       "id": "governance-cut-state-cap-and-rotation",
       "title": "state/CUT-STATE.md: the six STANDING items moved out verbatim, a 6,144-byte cap on the continuity block in flush.mjs, and the ledger rotated into state/cut-archive/ by a named script, with the reading order's item 1 restated",
@@ -271,30 +290,8 @@
         "opened": "2026-10-17",
         "done": null
       },
-      "summary": "GATE 1 ARCHITECT PASS WITH NOTES (536, state/consults/gates/2026-10-17-publish-approval-unknown-attempt-step-1-gate1-architect.md): no Correctness or Evidence finding; D1 and D2 the README words, D3 a class 3 row in the form, D4 the README worker's report filed (state/consults/2026-10-17-publish-approval-unknown-attempt-step-1-readme-worker-report.md). The reviewer gate running; the words applied after it, no re-gate. Before: README LINES WRITTEN 2026-10-17 at 39dc2c8e (main merged in at 71b71372): 154 changed lines, over the declared 150, class 6 (the form's Amendment 2); so both the reviewer and the architect gate PR 227. Before: OPEN-1 (A) AND OPEN-2 (A) RULED 2026-10-17 (state/directives/2026-10-17-s5d-o3-ordered-watcher-visible-placed-unknown-attempt-open-1-2-a-flake-full-form-225-226.md, item 2; the form's Amendment 1): as built; OPEN-2's (B) a later tests-lane piece, if wanted. NEXT: the README lines (PR 225 merged), then the single reviewer gate on PR 227. Before: STEP 1 BUILT 2026-10-17 at 80890488 (state/consults/2026-10-17-publish-approval-unknown-attempt-step-1-worker-report.md): 148 changed lines over 6 files, T1 to T4 passing, M1 observed. The custodian's e2e at the head (state/consults/2026-10-17-publish-approval-unknown-attempt-step-1-e2e-custodian-runs.md): R1 and R2 pass with every export step's figure; R3, a scratch wait past the TTL, reads APPROVED' INCONCLUSIVE and exits 3, as predicted. In R2 the figure reads 0 for the executes sent as the prepare returned, a fact for the cause step. NEXT: the README lines after PR 225 merges, then the PR and the single reviewer gate. Before: IN PROGRESS 2026-10-17 in slot 1, its first step (C:/dev/wt/ua1, branch cut/unknown-attempt-step-1 from main be6aa620): one worker-high builds the code and tests under the form's (A) shapes of OPEN-1 and OPEN-2, which are additive; the README lines wait for PR 225; the e2e runs R1 to R3 are the custodian's. Before: FORM COMMITTED 2026-10-17 (frontends/shell/PUBLISH-APPROVAL-UNKNOWN-ATTEMPT-STEP-1-PREREGISTRATION.md, its first step, drafted by the architect: state/consults/2026-10-17-publish-approval-unknown-attempt-step-1-architect-draft.md; 53 pins computed by the custodian at e54e4af2): a five-line form, single reviewer gate, about 135 changed lines over 8 files; one shared helper e2e/exportElapsed.mjs on the driver's monotonic clock; an unknown-attempt execute reads INCONCLUSIVE, never a pass, when the upper bound passes the TTL read from publish.rs, and FAIL otherwise; the README lines after PR 225 merges. OPEN-1 (the step's reach) and OPEN-2 (one INCONCLUSIVE form or two) with the human, (A) recommended for each. The draft finds that by their step durations the TTL did not end either attempt seen, and names the panel's dev hook as a lead for the cause step. Before: PLACED 2026-10-17 by the human (state/directives/2026-10-17-merges-223-224-w-approved-open-12-flake-s3-unknown-attempt-slot-1-s5d-route-a.md, item 4): slot 1 now. Its first step records the prepare-to-execute elapsed time in every export step, and a TTL expiry reads INCONCLUSIVE, not a failure; shell-migration-milestone-3's code starts when that step has merged. The first step takes a five-line form, drafted by the architect and committed before any code; the cause and the product question follow, graded at triage, S2 at most. Before: ADDED 2026-10-17 by the human for triage (state/directives/2026-10-17-placements-item-44-governance-clause-composition-readme-item-41-unknown-attempt.md, item 7): graded at triage, S2 at most, since the refusal is visible and nothing wrong is produced. Seen in state/consults/2026-10-14-shell-status-bar-one-height-e2e-custodian-run-2.md (E-ASK-TWO's second export) and state/consults/2026-10-14-shell-status-bar-one-height-e2e-h3-order.md (E-EXPORT's export), each with other heavy runs beside it. The TTL is PENDING_ATTEMPT_TTL, line 68 of frontends/shell/src-tauri/src/publish.rs at 79cec8c5. The cause first; then the product question. Until it is triaged, the e2e export steps are to record the prepare-to-execute elapsed time and name a TTL expiry INCONCLUSIVE, not a failure. NOT YET BUILT: at 79cec8c5 no e2e export step records that time, so the interim rule needs an e2e change, which waits for the human's placement; until then a custodian e2e record that meets an unknown attempt at an export step says the cause cannot be told without that time and names the step INCONCLUSIVE, never a pass. Not yet placed.",
+      "summary": "M1 RULED 2026-10-17 (state/directives/2026-10-17-227-m1-watcher-visible-open-1-a-item-23-node-228-merged.md, item 1): the worker's recorded observation is the observation of record; the custodian re-observes it once from the scratch patch and records it in the closing amendment, or records the gap only; then the human's click. Before: GATE 1 ARCHITECT PASS WITH NOTES (536, state/consults/gates/2026-10-17-publish-approval-unknown-attempt-step-1-gate1-architect.md): no Correctness or Evidence finding; D1 and D2 the README words, D3 a class 3 row in the form, D4 the README worker's report filed (state/consults/2026-10-17-publish-approval-unknown-attempt-step-1-readme-worker-report.md). The reviewer gate running; the words applied after it, no re-gate. Before: README LINES WRITTEN 2026-10-17 at 39dc2c8e (main merged in at 71b71372): 154 changed lines, over the declared 150, class 6 (the form's Amendment 2); so both the reviewer and the architect gate PR 227. Before: OPEN-1 (A) AND OPEN-2 (A) RULED 2026-10-17 (state/directives/2026-10-17-s5d-o3-ordered-watcher-visible-placed-unknown-attempt-open-1-2-a-flake-full-form-225-226.md, item 2; the form's Amendment 1): as built; OPEN-2's (B) a later tests-lane piece, if wanted. NEXT: the README lines (PR 225 merged), then the single reviewer gate on PR 227. Before: STEP 1 BUILT 2026-10-17 at 80890488 (state/consults/2026-10-17-publish-approval-unknown-attempt-step-1-worker-report.md): 148 changed lines over 6 files, T1 to T4 passing, M1 observed. The custodian's e2e at the head (state/consults/2026-10-17-publish-approval-unknown-attempt-step-1-e2e-custodian-runs.md): R1 and R2 pass with every export step's figure; R3, a scratch wait past the TTL, reads APPROVED' INCONCLUSIVE and exits 3, as predicted. In R2 the figure reads 0 for the executes sent as the prepare returned, a fact for the cause step. NEXT: the README lines after PR 225 merges, then the PR and the single reviewer gate. Before: IN PROGRESS 2026-10-17 in slot 1, its first step (C:/dev/wt/ua1, branch cut/unknown-attempt-step-1 from main be6aa620): one worker-high builds the code and tests under the form's (A) shapes of OPEN-1 and OPEN-2, which are additive; the README lines wait for PR 225; the e2e runs R1 to R3 are the custodian's. Before: FORM COMMITTED 2026-10-17 (frontends/shell/PUBLISH-APPROVAL-UNKNOWN-ATTEMPT-STEP-1-PREREGISTRATION.md, its first step, drafted by the architect: state/consults/2026-10-17-publish-approval-unknown-attempt-step-1-architect-draft.md; 53 pins computed by the custodian at e54e4af2): a five-line form, single reviewer gate, about 135 changed lines over 8 files; one shared helper e2e/exportElapsed.mjs on the driver's monotonic clock; an unknown-attempt execute reads INCONCLUSIVE, never a pass, when the upper bound passes the TTL read from publish.rs, and FAIL otherwise; the README lines after PR 225 merges. OPEN-1 (the step's reach) and OPEN-2 (one INCONCLUSIVE form or two) with the human, (A) recommended for each. The draft finds that by their step durations the TTL did not end either attempt seen, and names the panel's dev hook as a lead for the cause step. Before: PLACED 2026-10-17 by the human (state/directives/2026-10-17-merges-223-224-w-approved-open-12-flake-s3-unknown-attempt-slot-1-s5d-route-a.md, item 4): slot 1 now. Its first step records the prepare-to-execute elapsed time in every export step, and a TTL expiry reads INCONCLUSIVE, not a failure; shell-migration-milestone-3's code starts when that step has merged. The first step takes a five-line form, drafted by the architect and committed before any code; the cause and the product question follow, graded at triage, S2 at most. Before: ADDED 2026-10-17 by the human for triage (state/directives/2026-10-17-placements-item-44-governance-clause-composition-readme-item-41-unknown-attempt.md, item 7): graded at triage, S2 at most, since the refusal is visible and nothing wrong is produced. Seen in state/consults/2026-10-14-shell-status-bar-one-height-e2e-custodian-run-2.md (E-ASK-TWO's second export) and state/consults/2026-10-14-shell-status-bar-one-height-e2e-h3-order.md (E-EXPORT's export), each with other heavy runs beside it. The TTL is PENDING_ATTEMPT_TTL, line 68 of frontends/shell/src-tauri/src/publish.rs at 79cec8c5. The cause first; then the product question. Until it is triaged, the e2e export steps are to record the prepare-to-execute elapsed time and name a TTL expiry INCONCLUSIVE, not a failure. NOT YET BUILT: at 79cec8c5 no e2e export step records that time, so the interim rule needs an e2e change, which waits for the human's placement; until then a custodian e2e record that meets an unknown attempt at an export step says the cause cannot be told without that time and names the step INCONCLUSIVE, never a pass. Not yet placed.",
       "evidence_label": "branch `cut/unknown-attempt-step-1`"
-    },
-    {
-      "id": "known-limitations-item-41-source-comment",
-      "title": "KNOWN-LIMITATIONS item 41's source comment: its code location pinned on main with its hash, saying the work has merged (the comment only; item 41's words still wait for their sight)",
-      "lane": "release",
-      "phase": "prototype",
-      "status": "in-progress",
-      "order": null,
-      "budget_minutes": 20,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": {
-        "branch": "cut/known-limitations-item-41"
-      },
-      "dates": {
-        "opened": "2026-10-17",
-        "done": null
-      },
-      "summary": "GATE 1 REVIEWER PASS (535, state/consults/gates/2026-10-17-known-limitations-item-41-source-comment-gate1-reviewer.md), the single gate, no finding. PR #228 READY for the human's merge click (a merge commit). Before: BUILT 2026-10-17 at 25a542f1 (C:/dev/wt/kl41, base 28163cb6): the line, at 392 now (moved from 388 with identical bytes, class 3), replaced by section A's line by the worker's script, 1 in and 1 out; the pin recomputed. NEXT: the PR and the single reviewer gate. Before: READY 2026-10-17: e2e-readme-status-bar-steps merged (PR 225), so the docs lane next piece. NEXT: one worker applies section A by script, then the PR and the single reviewer gate. Before: PLACED 2026-10-17 by the human (state/directives/2026-10-17-placements-item-44-governance-clause-composition-readme-item-41-unknown-attempt.md, item 6): its own docs-lane line, by item 40's procedure, with the selection.ts pin on main. The five-line form is committed with this node (KNOWN-LIMITATIONS-ITEM-41-SOURCE-COMMENT-PREREGISTRATION.md, drafted by the custodian): line 388's clause on where the code is says the work has merged, and its one location becomes frontends/shell/src/workspace/selection.ts lines 119 to 157 pinned at PR 217's merge commit 71fd2c4f, the span identical at 2f18ad39, at 71fd2c4f and at 79cec8c5. In the docs lane after e2e-readme-status-bar-steps.",
-      "evidence_label": "branch `cut/known-limitations-item-41`"
     }
   ],
   "proposed": [
@@ -1458,25 +1455,6 @@
       "summary": "NOTED 2026-10-10 by the human (state/directives/2026-10-10-flake-hunt-run-1-flush-cancel-exit.md, item 3): stays proposed. The flake hunt's failures of this test (state/consults/FLAKE-HUNT-RUN-1-2026-10-10.md) were a missing event with nothing dropped from the trace, so this node's predicted mechanism was not what was observed; that cause is stream-flush-cancel-exit-marks-producer-cancelled. The custodian's check (state/consults/2026-10-10-flake-hunt-run-1-custodian-check.md) records the evidence's limits. Before: PROPOSED 2026-10-09 by the human's rulings of 2026-10-09 (state/directives/2026-10-09-rulings-on-the-eight-forms.md), item 6: a sibling site of wire-bytes-invariant-trace-flag-race (its form, section 0.7); cross-test stamping into a live trace, not observed failing; its own form, because it bears on a docs/08 budgeted assertion (engine/tests/slice.rs, the assertion near its line 815). The human places it later."
     },
     {
-      "id": "source-changed-post-reopen-routes-watcher-visible",
-      "title": "source-changed.mjs's post and reopen routes, and walkthrough Part N's N6 and N8, still change the source by an mtime touch the advisory watcher can see",
-      "lane": "shell",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 90,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-10-09",
-        "done": null
-      },
-      "summary": "PLACED 2026-10-17 by the human (state/directives/2026-10-17-s5d-o3-ordered-watcher-visible-placed-unknown-attempt-open-1-2-a-flake-full-form-225-226.md, item 1): S3, in source-changed-post-route-s5d-race's slot, before it. It moves the post and reopen routes of source-changed.mjs to a change the watcher cannot see, as the re-aim did for the pre route; corrects S5d's pass note, which states a route no run has shown; and covers Part N's N6 and N8. Its form is drafted by the architect before any code. Before: PROPOSED 2026-10-09 by the custodian from the e2e re-aim form's OPEN-4 (state/consults/2026-10-09-e2e-stale-expectations-reaim-architect-draft.md): the re-aim moves only the default pre route of source-changed.mjs to a change the watcher cannot see; the post and reopen routes still touch the mtime, which the watcher sees while idle, and walkthrough Part N's N6 and N8 touch it by hand on the same premise. The triage ran the default route only, so their state is unobserved. The human grades and places it."
-    },
-    {
       "id": "stale-assertion-messages-and-product-comments",
       "title": "Stale text outside the docs lane: an assertion message calling ADR-016 Amendment 1 proposed, a thrown e2e message with a stale line cite, and two product-code comments (crsAssertionState.ts and buildLayers.ts) carrying the same stale premises piece f corrects in tests",
       "lane": "shell",
@@ -1855,6 +1833,25 @@
         "done": null
       },
       "summary": "PROPOSED 2026-10-16 by the custodian, for the human's triage: candidate 2 of the boundary inventory (state/consults/2026-10-16-boundary-inventory-architect.md, Candidates for triage). The comment in frontends/shell/src-tauri/src/state.rs says the token is never written to the session log; binding_log_session_event in commands.rs appends the page's text as given, and Session::redact in protocol/data-plane/src/session.rs is called only by its own test. The custodian confirmed the redact callers by search at b88b1d2f; nothing reproduced. A candidate until graded; the inventory does not grow to fix it."
+    },
+    {
+      "id": "known-limitations-item-23-watcher-idle-end",
+      "title": "KNOWN-LIMITATIONS item 23: it says a source change goes unnoticed until a query is next issued, but on Windows the advisory watcher ends the session while idle on a change it can see",
+      "lane": "release",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 30,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-17",
+        "done": null
+      },
+      "summary": "ADDED 2026-10-17 by the human (state/directives/2026-10-17-227-m1-watcher-visible-open-1-a-item-23-node-228-merged.md, item 3), from the watcher-visible draft's findings outside scope (state/consults/2026-10-17-source-changed-post-reopen-routes-watcher-visible-architect-draft.md): a proposed node in the docs lane. The architect drafts the replacement words with a clause check under the wording-block rule, first checking the claim at the v0.1.0 tag; if the watcher ended idle sessions there too, the item takes item 8's form, a visible Corrected sentence saying what the item used to say, and the human decides a release-notes line on seeing the words."
     }
   ],
   "unscheduled": [

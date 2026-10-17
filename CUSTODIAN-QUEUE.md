@@ -1,13 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `28b2d1e6f3bed865bd62f2cdd965aab9cee643f89ba9a5719e8720ce875374bf`) at `2026-10-17T20:45:03.398Z`.
+Generated from `PLAN.yaml` (sha256 `b02e83b95d5d4331bf09a155e6341b407d5b9e3f3d5ceffd8bdab48c47405c52`) at `2026-10-17T20:51:32.496Z`.
 
 ## 1. Next
 
-- **governance-cut-state-cap-and-rotation** — state/CUT-STATE.md: the six STANDING items moved out verbatim, a 6,144-byte cap on the continuity block in flush.mjs, and the ledger rotated into state/cut-archive/ by a named script, with the reading order's item 1 restated (lane `governance`)
+- **source-changed-post-reopen-routes-watcher-visible** — source-changed.mjs's post and reopen routes, and walkthrough Part N's N6 and N8, still change the source by an mtime touch the advisory watcher can see (lane `shell`)
 
 ## 2. Ready
 
+- **source-changed-post-reopen-routes-watcher-visible** — source-changed.mjs's post and reopen routes, and walkthrough Part N's N6 and N8, still change the source by an mtime touch the advisory watcher can see (lane `shell`, order null, budget 90 min)
 - **governance-cut-state-cap-and-rotation** — state/CUT-STATE.md: the six STANDING items moved out verbatim, a 6,144-byte cap on the continuity block in flush.mjs, and the ledger rotated into state/cut-archive/ by a named script, with the reading order's item 1 restated (lane `governance`, order null, budget 0 min)
 
 ## 3. Waiting on the human (total: 0 min)
@@ -29,7 +30,6 @@ Generated from `PLAN.yaml` (sha256 `28b2d1e6f3bed865bd62f2cdd965aab9cee643f89ba9
 ## 5. In progress
 
 - **publish-approval-unknown-attempt-under-load** — Publish: an export's approval came back as unknown attempt under machine load (the status-bar e2e run 2 and the H3 order run): the cause first, the pending attempt's TTL elapsing between prepare and execute or an attempt the host lost; then whether the TTL suits a person reading the approval dialog, which shows no expiry — evidence: branch `cut/unknown-attempt-step-1`
-- **known-limitations-item-41-source-comment** — KNOWN-LIMITATIONS item 41's source comment: its code location pinned on main with its hash, saying the work has merged (the comment only; item 41's words still wait for their sight) — evidence: branch `cut/known-limitations-item-41`
 
 ## 6. Proposed / unscheduled
 
@@ -96,7 +96,6 @@ Generated from `PLAN.yaml` (sha256 `28b2d1e6f3bed865bd62f2cdd965aab9cee643f89ba9
 - **publish-sort-window-cancel-not-exercised-on-ci** — kernel/tests/publish_cancellation.rs: a_cancel_inside_the_sort_is_observed_rather_than_waited_out reddened on the Windows CI runner because QueryRunning never fired (the sort ended inside one poll interval) (phase `prototype`) — never queued until placed
 - **first-batch-factorial-ignored-trace-tests** — kernel/tests/first_batch_factorial.rs's two ignored measurement tests each start a trace in one binary with no shared lock (phase `prototype`) — never queued until placed
 - **slice-traced-test-cross-stamping** — engine/tests/slice.rs's traced test reads first cancellation stamps while its binary's other tests run unserialised, one of them cancelling (phase `prototype`) — never queued until placed
-- **source-changed-post-reopen-routes-watcher-visible** — source-changed.mjs's post and reopen routes, and walkthrough Part N's N6 and N8, still change the source by an mtime touch the advisory watcher can see (phase `prototype`) — never queued until placed
 - **stale-assertion-messages-and-product-comments** — Stale text outside the docs lane: an assertion message calling ADR-016 Amendment 1 proposed, a thrown e2e message with a stale line cite, and two product-code comments (crsAssertionState.ts and buildLayers.ts) carrying the same stale premises piece f corrects in tests (phase `prototype`) — never queued until placed
 - **app-key-remount-unit-test** — A unit test that pins App's per-dataset key remount of WorkingCanvas: App.layout.test.tsx's stand-in records mounts per dataset prop value, so R1 passes with or without the key (phase `prototype`) — never queued until placed
 - **stream-cancel-returns-left-unmarked** — The producer's cancel returns the flush piece leaves unmarked: a prepare error through classify, the two-read window in classify's marking arms, and the send to a receiver that is gone (is a disconnect an observation) (phase `prototype`) — never queued until placed
@@ -117,6 +116,7 @@ Generated from `PLAN.yaml` (sha256 `28b2d1e6f3bed865bd62f2cdd965aab9cee643f89ba9
 - **verify-quotes-dotted-paths** — verify-quotes: the hash-reference path grammar cannot begin with a dot, so a pinned cite into .github/ can never be checked (phase `prototype`) — never queued until placed
 - **bundle-redaction-scan-not-in-product-publish** — The bundle redaction scan runs only in a test: no product publish scans its emitted files, though ADR-017's section 13 (Accepted) says a scan over every emitted file asserts no path, user name, machine identifier or credential is in a bundle (phase `prototype`) — never queued until placed
 - **session-log-token-redaction-rests-on-page-code** — The session token never reaching the session log rests on page code: binding_log_session_event appends page-supplied text verbatim, the page holds the token, and the data plane's Session::redact has only a test caller (phase `prototype`) — never queued until placed
+- **known-limitations-item-23-watcher-idle-end** — KNOWN-LIMITATIONS item 23: it says a source change goes unnoticed until a query is next issued, but on Windows the advisory watcher ends the session while idle on a change it can see (phase `prototype`) — never queued until placed
 
 ### Unscheduled
 
