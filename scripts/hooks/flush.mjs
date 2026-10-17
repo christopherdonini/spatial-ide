@@ -40,7 +40,9 @@
 // session-resume prints), exceeds 6144 UTF-8 bytes is refused with BlockCapError: the message names
 // the largest field and every field's size. The file is left byte-identical and NOTHING is truncated,
 // anywhere. The CLI writes the refused block whole, plus one newline, to a new file in the folder
-// spatial-ide-flush-refused under os.tmpdir() (none if that folder is inside a repository) and exits 1.
+// spatial-ide-flush-refused under os.tmpdir() and names that file in the refusal. It writes no such
+// file, and the refusal says so, when that folder resolves inside this repository or inside the git
+// repository holding the target file, or when creating or writing the file fails. It exits 1.
 
 import fs from 'node:fs';
 import os from 'node:os';
