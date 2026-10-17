@@ -166,3 +166,25 @@ Whatever the outcome, this form's closing record is references and hashes only (
 4. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 2 — written after step 1's first pre-flight run was seen: §1.2's pin corrected to the exclusive hold's grant (class 3)
+
+*Written by the custodian after the first attempt's pre-flight run, before any counted run. References only.*
+
+1. **What happened.** The first attempt ran at B = be6aa6203a196f553ec08f697d678dfa08a78bd4, the exe built there. Its exclusive hold was granted with all cores; the script's line for this project reads `MACHINE_HOLD exclusive project=SpatialIDE cores=all affinity=FFFF shell=bash.exe:51024 also=bash.exe:34024 (commands started from now on inherit it; release when done)`. The pre-flight run (arm A, not counted) started at 2026-10-17T17:53:27Z. The app it launched read affinity 65535, so §1.7's stop fired after the pre-flight and before the spinner's reading and any counted run, and the hold was released. That run's artifacts are kept for the record. Its result is not counted.
+2. **§1.2's pin, corrected (class 3).** An exclusive hold grants all of the machine's cores to the commands started inside it, as check 4 showed on 2026-10-06 (65535 inside the hold, 255 after its release). So the spinner and the app inherit the hold's grant, not the session's pin to cores 0 to 7. §1.2's check now reads: the custodian records both processes' affinity once per series, and the series stops before its first counted run if either differs from the hold's grant. The arms are unchanged. Arm B still runs 6 busy threads, as §1.2 chose them; the machine has 16 logical cores, all granted to both the spinner and the app, and the record names that count.
+3. **The series runs again from its pre-flight,** in a new exclusive hold and under a new label. The first attempt's summary is kept beside it.
+4. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
+
+### Amendment 3 — the human's ruling on O3: ordered, not joined (class 5)
+
+*Written by the custodian on the human's ruling (`state/directives/2026-10-17-s5d-o3-ordered-watcher-visible-placed-unknown-attempt-open-1-2-a-flake-full-form-225-226.md`, item 1). References only.*
+
+1. **The order:** `source-changed-post-reopen-routes-watcher-visible` is placed in this node's slot, S3, before it, and this node depends on it. That piece moves the post and reopen routes to a change the watcher cannot see, corrects S5d's pass note, and covers Part N's N6 and N8.
+2. **Step 2:** when that piece has merged, the series re-runs at its merge base, by §1 with Amendment 2, and only then is S5d's race judged. Step 2's procedure, its base and anything the new route changes in §1 are written in an amendment before its first run.
+3. **Step 1's record stands as filed** (`state/consults/2026-10-17-source-changed-post-route-s5d-race-step-1-custodian-runs.md`, its second version, gate-log 534).
+4. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.

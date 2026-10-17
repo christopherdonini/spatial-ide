@@ -151,3 +151,14 @@ The closing record is references and hashes (the record cap).
 ### Amendments
 
 *(Opens empty; append-only.)*
+
+### Amendment 1 — the human's rulings on OPEN-1 and OPEN-2 (class 5)
+
+*Written by the custodian on the human's ruling (`state/directives/2026-10-17-s5d-o3-ordered-watcher-visible-placed-unknown-attempt-open-1-2-a-flake-full-form-225-226.md`, item 2). References only.*
+
+1. **OPEN-1 (A)** and **OPEN-2 (A)**, as built at 80890488: the step records the time and the TTL reading, and the cause step owns the rest; only §1.4's reading prints the INCONCLUSIVE status, and `selection.mjs`'s existing class-2 throws keep their FAIL lines.
+2. **OPEN-2's (B)** is its own tests-lane piece later, if it is wanted at all. No node is added for it now.
+3. **Still to do:** the README lines of §1.8 (PR #225 has merged), then the single reviewer gate at the final head.
+4. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.

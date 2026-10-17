@@ -1,14 +1,15 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `053fe517e11f38ee3e767a1f209147ff6f0420b6ed64aeedc3150c184ddadf84`) at `2026-10-17T17:42:04.241Z`.
+Generated from `PLAN.yaml` (sha256 `de1d6134a8fdbd18b5736b9ac0f629dba7a264883745bdd13f824d60cc050bdd`) at `2026-10-17T19:57:50.306Z`.
 
 ## 1. Next
 
-- **source-changed-post-route-s5d-race** — source-changed.mjs's post route: step S5d (post-check-route-confirmed) loses its race to a tile's pre-check in about half the runs on this machine, at main's base too (lane `shell`)
+- **known-limitations-item-41-source-comment** — KNOWN-LIMITATIONS item 41's source comment: its code location pinned on main with its hash, saying the work has merged (the comment only; item 41's words still wait for their sight) (lane `release`)
 
 ## 2. Ready
 
-- **source-changed-post-route-s5d-race** — source-changed.mjs's post route: step S5d (post-check-route-confirmed) loses its race to a tile's pre-check in about half the runs on this machine, at main's base too (lane `shell`, order null, budget 60 min)
+- **known-limitations-item-41-source-comment** — KNOWN-LIMITATIONS item 41's source comment: its code location pinned on main with its hash, saying the work has merged (the comment only; item 41's words still wait for their sight) (lane `release`, order null, budget 20 min)
+- **governance-cut-state-cap-and-rotation** — state/CUT-STATE.md: the six STANDING items moved out verbatim, a 6,144-byte cap on the continuity block in flush.mjs, and the ledger rotated into state/cut-archive/ by a named script, with the reading order's item 1 restated (lane `governance`, order null, budget 0 min)
 
 ## 3. Waiting on the human (total: 0 min)
 
@@ -18,19 +19,17 @@ Generated from `PLAN.yaml` (sha256 `053fe517e11f38ee3e767a1f209147ff6f0420b6ed64
 
 - **connection-reuse-recycled-interrupt-flake** — engine/tests/connection_reuse.rs: cancellation_before_the_first_batch_binds_a_recycled_connection_and_delivers_nothing failed once on ubuntu-24.04 in PR #222's pull_request run at a542097e, and the push run of the same commit passed it — blocked by: source-changed-post-route-s5d-race
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
+- **source-changed-post-route-s5d-race** — source-changed.mjs's post route: step S5d (post-check-route-confirmed) loses its race to a tile's pre-check in about half the runs on this machine, at main's base too — blocked by: source-changed-post-reopen-routes-watcher-visible
 - **briefb-b2-save-reopen** — B2 — Save project, Snapshot data, session history, lineage and preferences, in five stages, each with its own form — blocked by: decision-adr-029-scan-progress-route
-- **known-limitations-item-41-source-comment** — KNOWN-LIMITATIONS item 41's source comment: its code location pinned on main with its hash, saying the work has merged (the comment only; item 41's words still wait for their sight) — blocked by: e2e-readme-status-bar-steps
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer — blocked by: signpath-application-draft
 - **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-1-1
 - **signpath-application-draft** — Entry 77 — the SignPath OSS application and disclosure text drafted for the human sight, once a release is CI-built — blocked by: release-v0-1-1
-- **governance-cut-state-cap-and-rotation** — state/CUT-STATE.md: the six STANDING items moved out verbatim, a 6,144-byte cap on the continuity block in flush.mjs, and the ledger rotated into state/cut-archive/ by a named script, with the reading order's item 1 restated — blocked by: governance-search-ignore-historical
 - **governance-decisions-pending-open-and-archive** — DECISIONS-PENDING.md: open entries and recent rulings, the rest archived to state/cut-archive/, one shared helper for the ruling set in verify, verify-test-claims and verify-quotes, monthly rotation, and the reading order's item 3 restated; the second measurements after it — blocked by: governance-cut-state-cap-and-rotation
 - **site-design-v1** — Landing page redesign — DRAFT-4 (status strip, milestone banner, waiting-on-you cards with unblocks counts, the swimlane board) — blocked by: governance-ci-built-site
 
 ## 5. In progress
 
-- **e2e-readme-status-bar-steps** — e2e/README.md: the selection entry gains E-STATUS-HEIGHT, and E-DBLCLICK's run-last reason becomes history (the docs-lane follow-up of shell-status-bar-one-height, OPEN-2 (b); as merged under OPEN-1 (d): one new step, no E-FOCUS stop) — evidence: branch `cut/e2e-readme-status-bar-steps`
-- **governance-search-ignore-historical** — A root .ignore over historical material (site, the generated queue JSON, the cut archive, drafts, gate reports), tested both ways with the agents' own search tool, and its search rule appended to AUTONOMY; the routine-read and search-corpus measurements taken before it — evidence: branch `cut/search-ignore-historical`
+- **publish-approval-unknown-attempt-under-load** — Publish: an export's approval came back as unknown attempt under machine load (the status-bar e2e run 2 and the H3 order run): the cause first, the pending attempt's TTL elapsing between prepare and execute or an attempt the host lost; then whether the TTL suits a person reading the approval dialog, which shows no expiry — evidence: branch `cut/unknown-attempt-step-1`
 
 ## 6. Proposed / unscheduled
 
@@ -118,7 +117,6 @@ Generated from `PLAN.yaml` (sha256 `053fe517e11f38ee3e767a1f209147ff6f0420b6ed64
 - **verify-quotes-dotted-paths** — verify-quotes: the hash-reference path grammar cannot begin with a dot, so a pinned cite into .github/ can never be checked (phase `prototype`) — never queued until placed
 - **bundle-redaction-scan-not-in-product-publish** — The bundle redaction scan runs only in a test: no product publish scans its emitted files, though ADR-017's section 13 (Accepted) says a scan over every emitted file asserts no path, user name, machine identifier or credential is in a bundle (phase `prototype`) — never queued until placed
 - **session-log-token-redaction-rests-on-page-code** — The session token never reaching the session log rests on page code: binding_log_session_event appends page-supplied text verbatim, the page holds the token, and the data plane's Session::redact has only a test caller (phase `prototype`) — never queued until placed
-- **publish-approval-unknown-attempt-under-load** — Publish: an export's approval came back as unknown attempt under machine load (the status-bar e2e run 2 and the H3 order run): the cause first, the pending attempt's TTL elapsing between prepare and execute or an attempt the host lost; then whether the TTL suits a person reading the approval dialog, which shows no expiry (phase `prototype`) — never queued until placed
 
 ### Unscheduled
 

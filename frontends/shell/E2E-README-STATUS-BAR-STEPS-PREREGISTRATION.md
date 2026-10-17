@@ -43,3 +43,14 @@ it runs last: while the status bar grew with its content, before `shell-status-b
 3. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 2 — closing record: PR #225 merged
+
+*Written by the custodian after the merge. References only.*
+
+1. **Merged** by the human at 2026-10-17T19:35:34Z, merge commit 2db0b676d6ba15745206ac42e9913e24c4f3624e (two parents: main 81644ed0 and the branch head d9c083d0).
+2. **The line, moved (class 3):** this form's line 770 at 7c648c1c is line 771 at the PR's base e54e4af2, with the same bytes; the change replaced that line alone (the reviewer's check 1).
+3. **Gate:** the single combined reviewer gate, PASS WITH NOTES (gate log 531; `state/consults/gates/2026-10-17-e2e-readme-status-bar-steps-gate1-reviewer.md`, its sha256 3d71d1ff6b14c6614e36e3a6d7cf62bfffaab9cdcce07c78aefba4f2b9ef37f2); its D-1, the node's PLAN title, was replaced on main in the reviewer's words, no re-gate.
+4. **PLAN:** the node is done, with `{pr: 225}`.
+
+Nothing above is edited.
