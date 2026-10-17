@@ -346,3 +346,17 @@ Nothing above is edited.
 7. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 6 — closing record: PR #226 merged; the figures at M0 and the script at the merge commit (class 1)
+
+*Written by the custodian after the merge. References and hashes only.*
+
+1. **Merged** by the human at 2026-10-17T19:35:58Z, merge commit 78fcdf2312bc2d0784f5e7b821d053eb65a4c79e (two parents: main 2db0b676 and the branch head 16dd59f1, S4).
+2. **The figures at M0** (§2 item 5), as the S1 to S3 report records them and the gate-1 reviewer reproduced them (`state/consults/gates/2026-10-17-governance-search-ignore-historical-gate1-reviewer.md`): `state/consults/2026-10-16-governance-search-ignore-historical-s1-s3-worker-report.md` @ 79cec8c5e45767a2b96edec85b76d1a7b6734d2a, its sha256 from line 5 to the end cd7cc167dc5279e8587a6bc01b69522c085fc19d496ccd13fc13e2f2d2222533, the M-1 and M-2 lines.
+3. **The measured content at M0:** M-1 reads `state/CUT-STATE.md:1-4708 @ fbbffe89ecf693eabfe95448007ae0444e305d19 sha256:12fba52423a38094e9e1d45a9ad4ffe52e1a574f0d1658ed8896bb4d00b7bbbc` and `DECISIONS-PENDING.md:1-4268 @ fbbffe89ecf693eabfe95448007ae0444e305d19 sha256:8156e1a7e7d4eba6a7c296a4f21438c92c83fb35b5e326f8a755b4a9f7e1c42e`; M-2 reads the tree of fbbffe89ecf693eabfe95448007ae0444e305d19 itself, by `rg --files` from a clean checkout.
+4. **The script at the merge commit:** `scripts/plan/measure-reads.mjs:1-131 @ 78fcdf2312bc2d0784f5e7b821d053eb65a4c79e sha256:7b2d33db229c9e7ca3f404370b2705a1c0485693fae7ef7ca5d8878e8bba92e1`. Its digest equals S1's, b1fa4319's (round 15 (e)).
+5. **The observations of record:** the gate-1 reviewer's rows (Amendment 5 item 2).
+6. **What C takes from here:** the after-C figures go in C's closing record, naming this amendment; C's run of M-2 names the script at this merge commit (Amendment 5 item 5).
+7. **PLAN:** the node is done, with `{pr: 226}`.
+
+Nothing above is edited.

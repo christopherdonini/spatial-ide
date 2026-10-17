@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-17T19:52:11.316Z",
-  "plan_hash": "383bb335323122b852db8fc1971337fb21c68fbcbcd50c51b80db079520122cf",
+  "generated_at": "2026-10-17T19:57:50.433Z",
+  "plan_hash": "de1d6134a8fdbd18b5736b9ac0f629dba7a264883745bdd13f824d60cc050bdd",
   "priorities_approved": true,
   "lanes": [
     {
@@ -8339,7 +8339,7 @@
       "kind": "task",
       "lane": "shell",
       "phase": "prototype",
-      "status": "in-progress",
+      "status": "done",
       "order": null,
       "depends_on": [
         "shell-status-bar-one-height",
@@ -8352,16 +8352,16 @@
       },
       "gate": "frontends/shell/E2E-README-STATUS-BAR-STEPS-PREREGISTRATION.md",
       "evidence": {
-        "branch": "cut/e2e-readme-status-bar-steps"
+        "pr": 225
       },
       "budget_minutes": 0,
       "generation": 2,
       "felt_verdict": false,
       "entries": [],
-      "summary": "GATE 1 REVIEWER PASS WITH NOTES (531, state/consults/gates/2026-10-17-e2e-readme-status-bar-steps-gate1-reviewer.md), the single gate: no Correctness or Evidence finding; D-1, this node's title, replaced on main in the reviewer's words, no re-gate. READY for the human's merge click (a merge commit), PR CI green at d9c083d0. Before: PR #225 OPENED 2026-10-17 at d9c083d0 over e54e4af2: section A's two edits applied to line 771 by the custodian's script, 1 line in and 1 out, every check by script. Before: READY 2026-10-17: item 44 merged (PR 223), so the docs lane's next piece. NEXT: the custodian's script applies section A's two edits to line 771 (moved from 770 with identical bytes, class 3) on a branch, then the PR and the single reviewer gate. Before: OPEN-1 RULED 2026-10-17 (state/directives/2026-10-17-placements-item-44-governance-clause-composition-readme-item-41-unknown-attempt.md, item 5; the form's Amendment 1, generation 2): the words land as drafted, the architect's under item 2d, so no sight of them is queued for the sitting. In the docs lane after item 44, one piece at a time. Before: FORM COMMITTED 2026-10-14 (frontends/shell/E2E-README-STATUS-BAR-STEPS-PREREGISTRATION.md, a five-line form, drafted by the architect: state/consults/2026-10-14-e2e-readme-status-bar-steps-architect-draft.md, sha256 4c607170): line 770, the selection entry, gains E-STATUS-HEIGHT and E-DBLCLICK's run-last reason becomes history; as merged under OPEN-1 (d) there is one new step and no E-FOCUS stop, so the title above describes the original design and the form governs. OPEN-1 (the item 2e sight of the two new spans; (a) land as drafted, recommended) with the human. Code waits for #221's merge (the docs lane, one at a time). Before: PROPOSED 2026-10-14 by the human (state/directives/2026-10-14-status-bar-two-lines-current-view-zero-size-1b-open-9-blocks-provenance.md, item 1, OPEN-2 (b)): the README lines the status-bar form's section 2.7 names, in a docs-lane follow-up landing after both that piece and the Current view fix (which shares e2e/README.md); the window between the merges, when the README omits the new steps, is accepted by the human.",
+      "summary": "DONE 2026-10-17: PR #225 merged by the human at 2026-10-17T19:35:34Z, merge commit 2db0b676 (closing record, the form's Amendment 2; the worktree C:/dev/wt/e2erd swept after this record). Before: GATE 1 REVIEWER PASS WITH NOTES (531, state/consults/gates/2026-10-17-e2e-readme-status-bar-steps-gate1-reviewer.md), the single gate: no Correctness or Evidence finding; D-1, this node's title, replaced on main in the reviewer's words, no re-gate. READY for the human's merge click (a merge commit), PR CI green at d9c083d0. Before: PR #225 OPENED 2026-10-17 at d9c083d0 over e54e4af2: section A's two edits applied to line 771 by the custodian's script, 1 line in and 1 out, every check by script. Before: READY 2026-10-17: item 44 merged (PR 223), so the docs lane's next piece. NEXT: the custodian's script applies section A's two edits to line 771 (moved from 770 with identical bytes, class 3) on a branch, then the PR and the single reviewer gate. Before: OPEN-1 RULED 2026-10-17 (state/directives/2026-10-17-placements-item-44-governance-clause-composition-readme-item-41-unknown-attempt.md, item 5; the form's Amendment 1, generation 2): the words land as drafted, the architect's under item 2d, so no sight of them is queued for the sitting. In the docs lane after item 44, one piece at a time. Before: FORM COMMITTED 2026-10-14 (frontends/shell/E2E-README-STATUS-BAR-STEPS-PREREGISTRATION.md, a five-line form, drafted by the architect: state/consults/2026-10-14-e2e-readme-status-bar-steps-architect-draft.md, sha256 4c607170): line 770, the selection entry, gains E-STATUS-HEIGHT and E-DBLCLICK's run-last reason becomes history; as merged under OPEN-1 (d) there is one new step and no E-FOCUS stop, so the title above describes the original design and the form governs. OPEN-1 (the item 2e sight of the two new spans; (a) land as drafted, recommended) with the human. Code waits for #221's merge (the docs lane, one at a time). Before: PROPOSED 2026-10-14 by the human (state/directives/2026-10-14-status-bar-two-lines-current-view-zero-size-1b-open-9-blocks-provenance.md, item 1, OPEN-2 (b)): the README lines the status-bar form's section 2.7 names, in a docs-lane follow-up landing after both that piece and the Current view fix (which shares e2e/README.md); the window between the merges, when the README omits the new steps, is accepted by the human.",
       "dates": {
         "opened": "2026-10-14",
-        "done": null
+        "done": "2026-10-17"
       }
     },
     {
@@ -8459,7 +8459,7 @@
       "kind": "task",
       "lane": "governance",
       "phase": "prototype",
-      "status": "in-progress",
+      "status": "done",
       "order": null,
       "depends_on": [
         "boundary-inventory"
@@ -8470,16 +8470,16 @@
       },
       "gate": "scripts/plan/SEARCH-IGNORE-HISTORICAL-PREREGISTRATION.md",
       "evidence": {
-        "branch": "cut/search-ignore-historical"
+        "pr": 226
       },
       "budget_minutes": 0,
       "generation": 6,
       "felt_verdict": false,
       "entries": [],
-      "summary": "GATE 1 BOTH PASS WITH NOTES (532 the architect, state/consults/gates/2026-10-17-governance-search-ignore-historical-gate1-architect.md; 533 the reviewer, state/consults/gates/2026-10-17-governance-search-ignore-historical-gate1-reviewer.md): no Correctness or Evidence finding; O1 to O14 run again at the head, every clause of section 32 shown. The architect's D-1 (the figures' names) in the PR body and the reviewer's D-1 (Amendment 2's column count) in the form's Amendment 5, each in its words, no re-gate (generation 6). READY for the human's merge click (a merge commit), PR CI green at 16dd59f1. Before: S4 BUILT 2026-10-17 at 16dd59f1 (state/consults/2026-10-17-governance-search-ignore-historical-s4-worker-report.md): AUTONOMY.md section 32, the form's Amendment 4 bytes appended and checked byte for byte by the custodian; the count from M0 at 331 lines over 6 files. NEXT: the PR, then both gates (section 9). Before: OPEN-3 RULED 2026-10-17 (state/directives/2026-10-17-merges-223-224-w-approved-open-12-flake-s3-unknown-attempt-slot-1-s5d-route-a.md, item 1; the form's Amendment 4, generation 5): W approved as assembled, in the architect's words; S4's section built by the custodian's script with its placeholders replaced, held in Amendment 4 with its sha256. NEXT: S4 by one worker in C:/dev/wt/sih, then the PR and both gates. Before: OPEN-2 RULED 2026-10-17 (state/directives/2026-10-17-placements-item-44-governance-clause-composition-readme-item-41-unknown-attempt.md, item 3; the form's Amendment 3, generation 4): H1, the architect's first sentence, with the human's second and third. OPEN-3 waits for the assembled W: every clause landed, so W is section 2 item 4's text unchanged, given to the human. NEXT: S4 after the human approves W, then the PR and both gates. Before: S1 TO S3 BUILT 2026-10-16 at 7f09c0e3 (state/consults/2026-10-16-governance-search-ignore-historical-s1-s3-worker-report.md; the form's Amendment 2, generation 3): no invalidator; the baseline figures taken at M0, each run twice; O1 to O13 as predicted, O6 found the hidden probe so H1 is live, O14's listing truncated and its clause resting on O13; D1 identical; G clean; section 7 at 319 lines over 5 files. NEXT: S4 after the human's OPEN-2 and OPEN-3, then the PR and both gates. The IN PROGRESS line below gives the local date, 2026-10-17; in UTC it was 2026-10-16. Before: IN PROGRESS 2026-10-17: the branch cut/search-ignore-historical at M0 = fbbffe89 (worktree C:/dev/wt/sih); one worker builds S1 to S3 (the script and its tests, the two probes, .ignore), runs M-1 and M-2 at M0, the control at S2 and O1 to O14, D1 and G at S3. S4, the AUTONOMY section, waits for OPEN-2 and OPEN-3; the PR opens after S4. Before: READY 2026-10-16 by derivation: its one dependency, boundary-inventory, is done. OPEN-2 and OPEN-3 are still with the human, before S4. Before: OPEN-1 RULED 2026-10-15 (state/directives/2026-10-15-round-1b-i3-allowed-a-open-1-b-open-1-open-2.md): (A), the ledger entries of the seven days before the block's flush (Amendment 1). OPEN-2 and OPEN-3 still open, before S4. Before: FORM COMMITTED 2026-10-14 (scripts/plan/SEARCH-IGNORE-HISTORICAL-PREREGISTRATION.md, a full form by section 21c's size, 380 lines over 6 files, drafted by the architect: state/consults/2026-10-14-governance-search-ignore-historical-architect-draft.md, sha256 b7815de0; pins hashed by the custodian at b9b902bf). OPEN-1 (the ledger part's definition, before dispatch), OPEN-2 (the rule's hidden-folder clause, if the Grep tool searches hidden folders) and OPEN-3 (the words on how to search an excluded location) with the human. Before: PLACED 2026-10-14 by the human (state/directives/2026-10-14-governance-smaller-reads-ignore-cut-state-rotation-decisions-pending.md); never slot 1; each merge the human's click: piece A. The measurement script is written before the first measurement and run unchanged after C. NEXT: the architect drafts the form.",
+      "summary": "DONE 2026-10-17: PR #226 merged by the human at 2026-10-17T19:35:58Z, merge commit 78fcdf23 (closing record, the form's Amendment 6: the figures at M0 and the script's blob at the merge commit, its digest S1's; the worktree C:/dev/wt/sih swept after this record). Before: GATE 1 BOTH PASS WITH NOTES (532 the architect, state/consults/gates/2026-10-17-governance-search-ignore-historical-gate1-architect.md; 533 the reviewer, state/consults/gates/2026-10-17-governance-search-ignore-historical-gate1-reviewer.md): no Correctness or Evidence finding; O1 to O14 run again at the head, every clause of section 32 shown. The architect's D-1 (the figures' names) in the PR body and the reviewer's D-1 (Amendment 2's column count) in the form's Amendment 5, each in its words, no re-gate (generation 6). READY for the human's merge click (a merge commit), PR CI green at 16dd59f1. Before: S4 BUILT 2026-10-17 at 16dd59f1 (state/consults/2026-10-17-governance-search-ignore-historical-s4-worker-report.md): AUTONOMY.md section 32, the form's Amendment 4 bytes appended and checked byte for byte by the custodian; the count from M0 at 331 lines over 6 files. NEXT: the PR, then both gates (section 9). Before: OPEN-3 RULED 2026-10-17 (state/directives/2026-10-17-merges-223-224-w-approved-open-12-flake-s3-unknown-attempt-slot-1-s5d-route-a.md, item 1; the form's Amendment 4, generation 5): W approved as assembled, in the architect's words; S4's section built by the custodian's script with its placeholders replaced, held in Amendment 4 with its sha256. NEXT: S4 by one worker in C:/dev/wt/sih, then the PR and both gates. Before: OPEN-2 RULED 2026-10-17 (state/directives/2026-10-17-placements-item-44-governance-clause-composition-readme-item-41-unknown-attempt.md, item 3; the form's Amendment 3, generation 4): H1, the architect's first sentence, with the human's second and third. OPEN-3 waits for the assembled W: every clause landed, so W is section 2 item 4's text unchanged, given to the human. NEXT: S4 after the human approves W, then the PR and both gates. Before: S1 TO S3 BUILT 2026-10-16 at 7f09c0e3 (state/consults/2026-10-16-governance-search-ignore-historical-s1-s3-worker-report.md; the form's Amendment 2, generation 3): no invalidator; the baseline figures taken at M0, each run twice; O1 to O13 as predicted, O6 found the hidden probe so H1 is live, O14's listing truncated and its clause resting on O13; D1 identical; G clean; section 7 at 319 lines over 5 files. NEXT: S4 after the human's OPEN-2 and OPEN-3, then the PR and both gates. The IN PROGRESS line below gives the local date, 2026-10-17; in UTC it was 2026-10-16. Before: IN PROGRESS 2026-10-17: the branch cut/search-ignore-historical at M0 = fbbffe89 (worktree C:/dev/wt/sih); one worker builds S1 to S3 (the script and its tests, the two probes, .ignore), runs M-1 and M-2 at M0, the control at S2 and O1 to O14, D1 and G at S3. S4, the AUTONOMY section, waits for OPEN-2 and OPEN-3; the PR opens after S4. Before: READY 2026-10-16 by derivation: its one dependency, boundary-inventory, is done. OPEN-2 and OPEN-3 are still with the human, before S4. Before: OPEN-1 RULED 2026-10-15 (state/directives/2026-10-15-round-1b-i3-allowed-a-open-1-b-open-1-open-2.md): (A), the ledger entries of the seven days before the block's flush (Amendment 1). OPEN-2 and OPEN-3 still open, before S4. Before: FORM COMMITTED 2026-10-14 (scripts/plan/SEARCH-IGNORE-HISTORICAL-PREREGISTRATION.md, a full form by section 21c's size, 380 lines over 6 files, drafted by the architect: state/consults/2026-10-14-governance-search-ignore-historical-architect-draft.md, sha256 b7815de0; pins hashed by the custodian at b9b902bf). OPEN-1 (the ledger part's definition, before dispatch), OPEN-2 (the rule's hidden-folder clause, if the Grep tool searches hidden folders) and OPEN-3 (the words on how to search an excluded location) with the human. Before: PLACED 2026-10-14 by the human (state/directives/2026-10-14-governance-smaller-reads-ignore-cut-state-rotation-decisions-pending.md); never slot 1; each merge the human's click: piece A. The measurement script is written before the first measurement and run unchanged after C. NEXT: the architect drafts the form.",
       "dates": {
         "opened": "2026-10-14",
-        "done": null
+        "done": "2026-10-17"
       }
     },
     {
@@ -8488,7 +8488,7 @@
       "kind": "task",
       "lane": "governance",
       "phase": "prototype",
-      "status": "blocked",
+      "status": "ready",
       "order": null,
       "depends_on": [
         "governance-search-ignore-historical"
@@ -8503,7 +8503,7 @@
       "generation": 3,
       "felt_verdict": false,
       "entries": [],
-      "summary": "BEFORE B's CODE 2026-10-17: PR 226's architect gate F-1 (search-ignore form, Amendment 5 item 5), B's after-C part 1 leaves out the standing items' sections that item 1 then names, their byte size beside the figure; for this form, before code. Before: OPEN-3 AND OPEN-4 RULED 2026-10-17 (state/directives/2026-10-17-placements-item-44-governance-clause-composition-readme-item-41-unknown-attempt.md, item 3; the form's Amendment 2, generation 3): readings (i) to (iv) confirmed; the added sentence, the notice with P as <commit> and the pointer approved as drafted. No OPEN item remains. Waits for A. Before: OPEN-1 and OPEN-2 RULED 2026-10-15 (state/directives/2026-10-15-round-1b-i3-allowed-a-open-1-b-open-1-open-2.md): (B) and (A) (Amendment 1). OPEN-3 and OPEN-4 still open, before S5 and S6. Before: FORM COMMITTED 2026-10-14 (scripts/plan/CUT-STATE-CAP-AND-ROTATION-PREREGISTRATION.md, a full form by section 21a and 21c, 960 lines over 12 files, drafted by the architect: state/consults/2026-10-14-governance-cut-state-cap-and-rotation-architect-draft.md, sha256 283f1c03; pins hashed by the custodian at 513ca7b3). OPEN-1 (the directive's own cite into the ledger) and OPEN-2 (the scratch file when no hook runs flush.mjs) before dispatch; OPEN-3 (readings) and OPEN-4 (the words) before its last commits; with the human. Before: PLACED 2026-10-14 by the human (state/directives/2026-10-14-governance-smaller-reads-ignore-cut-state-rotation-decisions-pending.md); never slot 1; each merge the human's click: piece B, after A. Two gated citations into today's file name the archive path or their commit. Its form is drafted after A's.",
+      "summary": "READY 2026-10-17: governance A merged (PR 226), so the governance lane next piece (A, B, C in order, never slot 1). NEXT: before code, PR 226 architect F-1 into this form (search-ignore form, Amendment 5 item 5), then its steps by its form. Before: BEFORE B's CODE 2026-10-17: PR 226's architect gate F-1 (search-ignore form, Amendment 5 item 5), B's after-C part 1 leaves out the standing items' sections that item 1 then names, their byte size beside the figure; for this form, before code. Before: OPEN-3 AND OPEN-4 RULED 2026-10-17 (state/directives/2026-10-17-placements-item-44-governance-clause-composition-readme-item-41-unknown-attempt.md, item 3; the form's Amendment 2, generation 3): readings (i) to (iv) confirmed; the added sentence, the notice with P as <commit> and the pointer approved as drafted. No OPEN item remains. Waits for A. Before: OPEN-1 and OPEN-2 RULED 2026-10-15 (state/directives/2026-10-15-round-1b-i3-allowed-a-open-1-b-open-1-open-2.md): (B) and (A) (Amendment 1). OPEN-3 and OPEN-4 still open, before S5 and S6. Before: FORM COMMITTED 2026-10-14 (scripts/plan/CUT-STATE-CAP-AND-ROTATION-PREREGISTRATION.md, a full form by section 21a and 21c, 960 lines over 12 files, drafted by the architect: state/consults/2026-10-14-governance-cut-state-cap-and-rotation-architect-draft.md, sha256 283f1c03; pins hashed by the custodian at 513ca7b3). OPEN-1 (the directive's own cite into the ledger) and OPEN-2 (the scratch file when no hook runs flush.mjs) before dispatch; OPEN-3 (readings) and OPEN-4 (the words) before its last commits; with the human. Before: PLACED 2026-10-14 by the human (state/directives/2026-10-14-governance-smaller-reads-ignore-cut-state-rotation-decisions-pending.md); never slot 1; each merge the human's click: piece B, after A. Two gated citations into today's file name the archive path or their commit. Its form is drafted after A's.",
       "dates": {
         "opened": "2026-10-14",
         "done": null
@@ -8727,7 +8727,7 @@
       "kind": "task",
       "lane": "release",
       "phase": "prototype",
-      "status": "blocked",
+      "status": "ready",
       "order": null,
       "depends_on": [
         "e2e-readme-status-bar-steps"
@@ -8742,7 +8742,7 @@
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "PLACED 2026-10-17 by the human (state/directives/2026-10-17-placements-item-44-governance-clause-composition-readme-item-41-unknown-attempt.md, item 6): its own docs-lane line, by item 40's procedure, with the selection.ts pin on main. The five-line form is committed with this node (KNOWN-LIMITATIONS-ITEM-41-SOURCE-COMMENT-PREREGISTRATION.md, drafted by the custodian): line 388's clause on where the code is says the work has merged, and its one location becomes frontends/shell/src/workspace/selection.ts lines 119 to 157 pinned at PR 217's merge commit 71fd2c4f, the span identical at 2f18ad39, at 71fd2c4f and at 79cec8c5. In the docs lane after e2e-readme-status-bar-steps.",
+      "summary": "READY 2026-10-17: e2e-readme-status-bar-steps merged (PR 225), so the docs lane next piece. NEXT: one worker applies section A by script, then the PR and the single reviewer gate. Before: PLACED 2026-10-17 by the human (state/directives/2026-10-17-placements-item-44-governance-clause-composition-readme-item-41-unknown-attempt.md, item 6): its own docs-lane line, by item 40's procedure, with the selection.ts pin on main. The five-line form is committed with this node (KNOWN-LIMITATIONS-ITEM-41-SOURCE-COMMENT-PREREGISTRATION.md, drafted by the custodian): line 388's clause on where the code is says the work has merged, and its one location becomes frontends/shell/src/workspace/selection.ts lines 119 to 157 pinned at PR 217's merge commit 71fd2c4f, the span identical at 2f18ad39, at 71fd2c4f and at 79cec8c5. In the docs lane after e2e-readme-status-bar-steps.",
       "dates": {
         "opened": "2026-10-17",
         "done": null
