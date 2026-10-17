@@ -61,14 +61,18 @@ const bytes = (dir, rev) => execFileSync('git', ['show', rev], { cwd: dir, maxBu
 const snapshot = (dir) => JSON.stringify([sh(dir, ['rev-parse', 'HEAD']), sh(dir, ['status', '--porcelain']), fs.readFileSync(path.join(dir, 'state', 'CUT-STATE.md'), 'utf8'), fs.existsSync(path.join(dir, 'state', 'cut-archive'))]);
 after(() => { for (const d of dirs) fs.rmSync(d, { recursive: true, force: true }); });
 
-// RECORDED MUTATION, each applied alone at bad88d11d131 and reverted; the named test failed (R1 to R9 are the
-// tests below, in order; a test named with others also failed because it needs the mutated behaviour):
-// MR1 the archive rewritten from its text without the final newline -> R1 (R2, R4, R8 too). MR2 the existing-name
-// check removed -> R2 only. MR3 the week taken to start on Sunday -> R3 only. MR4 `>=` -> R4 only. MR5 isDue
-// returns true -> R5 (R3, R4 too). MR6 the upstream check removed -> R6 only. MR7 the cap check moved after the
-// git mv -> R7 only. MR8 the rotation rewrites flushed_at -> R8 (R1 too). MR9 a SessionStart entry running the
-// script -> R9 only; applied to a copy of the settings read by the test, never to .claude/settings.json.
-test('rotate-cut-state: a due rotation stages the archive byte-identical to the ledger at HEAD and the new ledger\'s exact text', () => {
+// The tests below are R1 to R9 of the form, in order. Incidentally, MR1, MR5 and MR8 also fail the tests that need the mutated behaviour.
+// RECORDED MUTATION (MR1) at bad88d11d131, applied alone and reverted: the archive rewritten from its text without the final newline -> fails by name: `rotate-cut-state: a due rotation stages the archive byte-identical to the ledger at HEAD and the new ledger's exact text`.
+// RECORDED MUTATION (MR2) at bad88d11d131, applied alone and reverted: the existing-name check removed -> fails by name: `rotate-cut-state: a same-day collision takes -2, then -3, and no archive is overwritten`.
+// RECORDED MUTATION (MR3) at bad88d11d131, applied alone and reverted: the week taken to start on Sunday -> fails by name: `rotate-cut-state: due from Monday 00:00Z after the last archive, not on the Sunday before`.
+// RECORDED MUTATION (MR4) at bad88d11d131, applied alone and reverted: `>=` in place of `>` -> fails by name: `rotate-cut-state: a ledger over 153,600 bytes is due mid-week, and one of exactly 153,600 is not`.
+// RECORDED MUTATION (MR5) at bad88d11d131, applied alone and reverted: isDue returns true -> fails by name: `rotate-cut-state: not due exits 0 and writes nothing`.
+// RECORDED MUTATION (MR6) at bad88d11d131, applied alone and reverted: the upstream check removed -> fails by name: `rotate-cut-state: refuses with exit 2 and writes nothing off main, on a modified tracked file, or with HEAD not equal to its upstream`.
+// RECORDED MUTATION (MR7) at bad88d11d131, applied alone and reverted: the cap check moved after the git mv -> fails by name: `rotate-cut-state: a new block over the cap refuses before anything moves`.
+// RECORDED MUTATION (MR8) at bad88d11d131, applied alone and reverted: the rotation rewrites flushed_at -> fails by name: `rotate-cut-state: after the rotation commit and a ledger-only flush commit, session-resume prints the block, the precompact hook allows and the stop hook's continuity step passes`.
+// RECORDED MUTATION (MR9) at bad88d11d131, applied alone and reverted: a SessionStart entry running the script, in a copy of the settings the test read (the tracked settings file was not edited) -> fails by name: `rotate-cut-state: no hook in .claude/settings.json runs the rotation script`.
+
+test("rotate-cut-state: a due rotation stages the archive byte-identical to the ledger at HEAD and the new ledger's exact text", () => {
   const dir = mkRepo({ 'state/CUT-STATE.md': ledgerText() });
   const P = sh(dir, ['rev-parse', 'HEAD']);
   const r = rot(dir);
@@ -182,7 +186,7 @@ test('rotate-cut-state: a new block over the cap refuses before anything moves',
   assert.equal(staged(dir).length, 0);
 });
 
-test('rotate-cut-state: after the rotation commit and a ledger-only flush commit, session-resume prints the block, the precompact hook allows and the stop hook\'s continuity step passes', async () => {
+test("rotate-cut-state: after the rotation commit and a ledger-only flush commit, session-resume prints the block, the precompact hook allows and the stop hook's continuity step passes", async () => {
   const SID = 'obs-b-sid';
   const ago = (s) => new Date(Date.now() - s * 1000);
   const dir = mkRepo({ 'README.md': 'a\n' }, `@${Math.floor(ago(300).getTime() / 1000)} +0000`);

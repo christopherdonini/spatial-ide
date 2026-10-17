@@ -1390,4 +1390,12 @@ test("session-resume: reading-order item 1 is the continuity block, the live led
   );
   assert.match(lines[1], /The standing items: AUTONOMY\.md §33 part B and PRECEDENTS\.md P-035 and P-036\.$/);
   assert.equal(lines[1].includes('SESSION-CONTINUITY block first'), false, 'the old item 1 is gone');
+  // The sections it names exist: AUTONOMY.md section 33 (with its part B) and the two PRECEDENTS.md entries.
+  const repo = path.resolve(here, '..', '..');
+  const autonomy = fs.readFileSync(path.join(repo, 'AUTONOMY.md'), 'utf8');
+  const precedents = fs.readFileSync(path.join(repo, 'PRECEDENTS.md'), 'utf8');
+  assert.match(autonomy, /^## §33\. [^\n]*standing items/m);
+  assert.match(autonomy, /^### Part B\. The standing items$/m);
+  assert.match(precedents, /^### P-035 — /m);
+  assert.match(precedents, /^### P-036 — /m);
 });

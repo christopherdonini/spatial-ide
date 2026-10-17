@@ -173,12 +173,14 @@ test('flush CLI: --file round-trip writes the field; the incident typo exits non
 
 // --- the block's cap (the human's governance direction, piece B; C1 to C7) -----------------------------------------
 //
-// RECORDED MUTATION, each applied alone at ea69f46c4fc2 and reverted; the named test failed:
-// MC1 the cap compared with `>=` -> C1. MC2 the check removed -> C2 (C3, C4, C6, C7 too: they need a refusal).
-// MC3 the size counted as string length -> C3 (C4, C5, C6, C7 too). MC4 the field sizes counted as string length,
-// so the largest by characters is named -> C4 only. MC5 the size measured over findBlockRange's untrimmed lines
-// -> C5 (C2 too). MC6 the scratch file written with the block cut to 6,144 bytes -> C6 only. MC7 the
-// inside-repository check removed -> C7 only. C1 to C7 are the tests below, in order.
+// The tests below are C1 to C7 of the form, in order. Incidentally, MC2 and MC3 also fail the tests that need a refusal.
+// RECORDED MUTATION (MC1) at ea69f46c4fc2, applied alone and reverted: the cap compared with `>=` -> fails by name: `flush: a block of exactly 6,144 UTF-8 bytes is written`.
+// RECORDED MUTATION (MC2) at ea69f46c4fc2, applied alone and reverted: the cap check removed -> fails by name: `flush: a block of 6,145 bytes is refused with BlockCapError`.
+// RECORDED MUTATION (MC3) at ea69f46c4fc2, applied alone and reverted: the size counted as string length -> fails by name: `flush: a non-ASCII block under the cap in characters and over it in UTF-8 bytes is refused`.
+// RECORDED MUTATION (MC4) at ea69f46c4fc2, applied alone and reverted: the field sizes counted as string length, so the largest by characters is named -> fails by name: `flush: the refusal names the largest field by UTF-8 bytes and every field's size`.
+// RECORDED MUTATION (MC5) at ea69f46c4fc2, applied alone and reverted: the size measured over findBlockRange's untrimmed lines -> fails by name: `flush: the cap measures the block session-resume prints, for the real ledger's shape`.
+// RECORDED MUTATION (MC6) at ea69f46c4fc2, applied alone and reverted: the scratch file written with the block cut to 6,144 bytes -> fails by name: `flush CLI: a refused block leaves the file byte-identical and is written whole to the scratch file the refusal names`.
+// RECORDED MUTATION (MC7) at ea69f46c4fc2, applied alone and reverted: the inside-repository check removed -> fails by name: `flush CLI: a temporary folder inside the repository gets no scratch file and the refusal says so`.
 
 // The `position` value that makes the fixture's block exactly `bytes` UTF-8 bytes (ASCII fill).
 function positionFor(bytes) {
