@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `fa785f3a99c1cbf2f0baa082360612414019b6605293aaf390b1ba4b5c766ade`) at `2026-10-17T21:10:38.976Z`.
+Generated from `PLAN.yaml` (sha256 `235c9d754bd1d5be0fedfd3ebf244595eaea3bcfb2d16146f49a8fb3e90d83c5`) at `2026-10-17T21:20:26.366Z`.
 
 ## 1. Next
 
@@ -11,9 +11,11 @@ Generated from `PLAN.yaml` (sha256 `fa785f3a99c1cbf2f0baa082360612414019b6605293
 - **source-changed-post-reopen-routes-watcher-visible** — source-changed.mjs's post and reopen routes, and walkthrough Part N's N6 and N8, still change the source by an mtime touch the advisory watcher can see (lane `shell`, order null, budget 90 min)
 - **governance-cut-state-cap-and-rotation** — state/CUT-STATE.md: the six STANDING items moved out verbatim, a 6,144-byte cap on the continuity block in flush.mjs, and the ledger rotated into state/cut-archive/ by a named script, with the reading order's item 1 restated (lane `governance`, order null, budget 0 min)
 
-## 3. Waiting on the human (total: 0 min)
+## 3. Waiting on the human (total: 5 min)
 
-- (none)
+### sight
+
+- **known-limitations-item-23-watcher-idle-end** — KNOWN-LIMITATIONS item 23: it says a source change goes unnoticed until a query is next issued, but on Windows the advisory watcher ends the session while idle on a change it can see (5 min)
 
 ## 4. Blocked on dependencies
 
@@ -116,7 +118,6 @@ Generated from `PLAN.yaml` (sha256 `fa785f3a99c1cbf2f0baa082360612414019b6605293
 - **verify-quotes-dotted-paths** — verify-quotes: the hash-reference path grammar cannot begin with a dot, so a pinned cite into .github/ can never be checked (phase `prototype`) — never queued until placed
 - **bundle-redaction-scan-not-in-product-publish** — The bundle redaction scan runs only in a test: no product publish scans its emitted files, though ADR-017's section 13 (Accepted) says a scan over every emitted file asserts no path, user name, machine identifier or credential is in a bundle (phase `prototype`) — never queued until placed
 - **session-log-token-redaction-rests-on-page-code** — The session token never reaching the session log rests on page code: binding_log_session_event appends page-supplied text verbatim, the page holds the token, and the data plane's Session::redact has only a test caller (phase `prototype`) — never queued until placed
-- **known-limitations-item-23-watcher-idle-end** — KNOWN-LIMITATIONS item 23: it says a source change goes unnoticed until a query is next issued, but on Windows the advisory watcher ends the session while idle on a change it can see (phase `prototype`) — never queued until placed
 
 ### Unscheduled
 

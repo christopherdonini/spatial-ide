@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-17T21:10:39.101Z",
-  "plan_hash": "fa785f3a99c1cbf2f0baa082360612414019b6605293aaf390b1ba4b5c766ade",
+  "generated_at": "2026-10-17T21:20:26.493Z",
+  "plan_hash": "235c9d754bd1d5be0fedfd3ebf244595eaea3bcfb2d16146f49a8fb3e90d83c5",
   "priorities_approved": true,
   "lanes": [
     {
@@ -8783,20 +8783,20 @@
       "kind": "task",
       "lane": "release",
       "phase": "prototype",
-      "status": "proposed",
+      "status": "blocked",
       "order": null,
       "depends_on": [],
       "needs_human": {
-        "kind": "none",
-        "minutes": 0
+        "kind": "sight",
+        "minutes": 5
       },
-      "gate": "none",
+      "gate": "KNOWN-LIMITATIONS-ITEM-23-WATCHER-IDLE-END-PREREGISTRATION.md",
       "evidence": null,
       "budget_minutes": 30,
-      "generation": 1,
+      "generation": 2,
       "felt_verdict": false,
       "entries": [],
-      "summary": "ADDED 2026-10-17 by the human (state/directives/2026-10-17-227-m1-watcher-visible-open-1-a-item-23-node-228-merged.md, item 3), from the watcher-visible draft's findings outside scope (state/consults/2026-10-17-source-changed-post-reopen-routes-watcher-visible-architect-draft.md): a proposed node in the docs lane. The architect drafts the replacement words with a clause check under the wording-block rule, first checking the claim at the v0.1.0 tag; if the watcher ended idle sessions there too, the item takes item 8's form, a visible Corrected sentence saying what the item used to say, and the human decides a release-notes line on seeing the words.",
+      "summary": "FORM COMMITTED 2026-10-17 (KNOWN-LIMITATIONS-ITEM-23-WATCHER-IDLE-END-PREREGISTRATION.md, the five-line form, drafted by the architect: state/consults/2026-10-17-known-limitations-item-23-watcher-idle-end-architect-draft.md; 25 pins computed at 607d8d16). THE TAG: neither the watcher nor item 23 is at v0.1.0 (state/consults/2026-10-17-known-limitations-item-23-tag-checks.md), so no Corrected sentence. WAITING ON THE HUMAN: OPEN-1, the words' sight under section 31; OPEN-2, a release-notes line (the draft recommends none). Then Amendment 1 and one worker applies the words. Before: ADDED 2026-10-17 by the human (state/directives/2026-10-17-227-m1-watcher-visible-open-1-a-item-23-node-228-merged.md, item 3), from the watcher-visible draft's findings outside scope (state/consults/2026-10-17-source-changed-post-reopen-routes-watcher-visible-architect-draft.md): a proposed node in the docs lane. The architect drafts the replacement words with a clause check under the wording-block rule, first checking the claim at the v0.1.0 tag; if the watcher ended idle sessions there too, the item takes item 8's form, a visible Corrected sentence saying what the item used to say, and the human decides a release-notes line on seeing the words.",
       "dates": {
         "opened": "2026-10-17",
         "done": null

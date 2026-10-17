@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-17T21:10:38.976Z",
-  "plan_hash": "fa785f3a99c1cbf2f0baa082360612414019b6605293aaf390b1ba4b5c766ade",
+  "generated_at": "2026-10-17T21:20:26.366Z",
+  "plan_hash": "235c9d754bd1d5be0fedfd3ebf244595eaea3bcfb2d16146f49a8fb3e90d83c5",
   "priorities_approved": true,
   "next": {
     "id": "source-changed-post-reopen-routes-watcher-visible",
@@ -62,10 +62,30 @@
     }
   ],
   "waiting_on_human": {
-    "total_minutes": 0,
+    "total_minutes": 5,
     "by_kind": {
       "click": [],
-      "sight": [],
+      "sight": [
+        {
+          "id": "known-limitations-item-23-watcher-idle-end",
+          "title": "KNOWN-LIMITATIONS item 23: it says a source change goes unnoticed until a query is next issued, but on Windows the advisory watcher ends the session while idle on a change it can see",
+          "lane": "release",
+          "phase": "prototype",
+          "status": "blocked",
+          "order": null,
+          "budget_minutes": 30,
+          "needs_human": {
+            "kind": "sight",
+            "minutes": 5
+          },
+          "evidence": null,
+          "dates": {
+            "opened": "2026-10-17",
+            "done": null
+          },
+          "summary": "FORM COMMITTED 2026-10-17 (KNOWN-LIMITATIONS-ITEM-23-WATCHER-IDLE-END-PREREGISTRATION.md, the five-line form, drafted by the architect: state/consults/2026-10-17-known-limitations-item-23-watcher-idle-end-architect-draft.md; 25 pins computed at 607d8d16). THE TAG: neither the watcher nor item 23 is at v0.1.0 (state/consults/2026-10-17-known-limitations-item-23-tag-checks.md), so no Corrected sentence. WAITING ON THE HUMAN: OPEN-1, the words' sight under section 31; OPEN-2, a release-notes line (the draft recommends none). Then Amendment 1 and one worker applies the words. Before: ADDED 2026-10-17 by the human (state/directives/2026-10-17-227-m1-watcher-visible-open-1-a-item-23-node-228-merged.md, item 3), from the watcher-visible draft's findings outside scope (state/consults/2026-10-17-source-changed-post-reopen-routes-watcher-visible-architect-draft.md): a proposed node in the docs lane. The architect drafts the replacement words with a clause check under the wording-block rule, first checking the claim at the v0.1.0 tag; if the watcher ended idle sessions there too, the item takes item 8's form, a visible Corrected sentence saying what the item used to say, and the human decides a release-notes line on seeing the words."
+        }
+      ],
       "ruling": [],
       "sitting": []
     }
@@ -1833,25 +1853,6 @@
         "done": null
       },
       "summary": "PROPOSED 2026-10-16 by the custodian, for the human's triage: candidate 2 of the boundary inventory (state/consults/2026-10-16-boundary-inventory-architect.md, Candidates for triage). The comment in frontends/shell/src-tauri/src/state.rs says the token is never written to the session log; binding_log_session_event in commands.rs appends the page's text as given, and Session::redact in protocol/data-plane/src/session.rs is called only by its own test. The custodian confirmed the redact callers by search at b88b1d2f; nothing reproduced. A candidate until graded; the inventory does not grow to fix it."
-    },
-    {
-      "id": "known-limitations-item-23-watcher-idle-end",
-      "title": "KNOWN-LIMITATIONS item 23: it says a source change goes unnoticed until a query is next issued, but on Windows the advisory watcher ends the session while idle on a change it can see",
-      "lane": "release",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 30,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-10-17",
-        "done": null
-      },
-      "summary": "ADDED 2026-10-17 by the human (state/directives/2026-10-17-227-m1-watcher-visible-open-1-a-item-23-node-228-merged.md, item 3), from the watcher-visible draft's findings outside scope (state/consults/2026-10-17-source-changed-post-reopen-routes-watcher-visible-architect-draft.md): a proposed node in the docs lane. The architect drafts the replacement words with a clause check under the wording-block rule, first checking the claim at the v0.1.0 tag; if the watcher ended idle sessions there too, the item takes item 8's form, a visible Corrected sentence saying what the item used to say, and the human decides a release-notes line on seeing the words."
     }
   ],
   "unscheduled": [
