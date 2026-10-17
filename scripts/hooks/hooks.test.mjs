@@ -1378,6 +1378,9 @@ test('telegram: sendTelegramDeduped treats different keys independently', async 
   assert.equal(b.deduped, false);
 });
 
+// RECORDED MUTATION (MS1): the old item 1 restored in READING_ORDER -> fails by name (no other test):
+// `session-resume: reading-order item 1 is the continuity block, the live ledger and the unfinished matter it names,
+// with the standing items' sections`. Observed at 8965ba7500f0, reverted.
 test("session-resume: reading-order item 1 is the continuity block, the live ledger and the unfinished matter it names, with the standing items' sections", () => {
   const lines = READING_ORDER.split('\n');
   assert.equal(lines.length, 7, 'the header and six items');
