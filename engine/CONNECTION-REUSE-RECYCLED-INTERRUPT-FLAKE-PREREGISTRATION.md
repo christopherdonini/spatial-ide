@@ -49,3 +49,14 @@ Out-of-scope: ADR, security and wire are not touched: no ADR file, nothing under
 ### Amendments
 
 *(Opens empty; append-only.)*
+
+### Amendment 1 — the human's rulings on OPEN-2 and OPEN-1: the full form replaces this one (class 5)
+
+*Written by the custodian on the human's ruling (`state/directives/2026-10-17-s5d-o3-ordered-watcher-visible-placed-unknown-attempt-open-1-2-a-flake-full-form-225-226.md`, item 3). References only.*
+
+1. **OPEN-2 (B):** the test cancels before `stream_with_cancel`, so the terminal is `Cancelled` on every interleaving, and the binding is still asserted from the fact recorded at the lease.
+2. **OPEN-1 (B):** the full form (`docs/PREREGISTRATION-TEMPLATE.md`), drafted from this form's content, with both gates from dispatch. Once committed it is this node's gate, and nothing is built under this five-line form.
+3. **Order:** slot 2's tail, after S5d.
+4. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.

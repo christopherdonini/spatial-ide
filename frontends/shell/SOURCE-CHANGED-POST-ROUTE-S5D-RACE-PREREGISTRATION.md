@@ -177,3 +177,14 @@ Nothing above is edited.
 4. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 3 — the human's ruling on O3: ordered, not joined (class 5)
+
+*Written by the custodian on the human's ruling (`state/directives/2026-10-17-s5d-o3-ordered-watcher-visible-placed-unknown-attempt-open-1-2-a-flake-full-form-225-226.md`, item 1). References only.*
+
+1. **The order:** `source-changed-post-reopen-routes-watcher-visible` is placed in this node's slot, S3, before it, and this node depends on it. That piece moves the post and reopen routes to a change the watcher cannot see, corrects S5d's pass note, and covers Part N's N6 and N8.
+2. **Step 2:** when that piece has merged, the series re-runs at its merge base, by §1 with Amendment 2, and only then is S5d's race judged. Step 2's procedure, its base and anything the new route changes in §1 are written in an amendment before its first run.
+3. **Step 1's record stands as filed** (`state/consults/2026-10-17-source-changed-post-route-s5d-race-step-1-custodian-runs.md`, its second version, gate-log 534).
+4. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.

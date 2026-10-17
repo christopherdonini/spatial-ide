@@ -1,14 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `3b24f3c2a77c37b329d9f950a6b1be0e4b0d3f68c96be806e7865c38f327ed99`) at `2026-10-17T19:46:39.552Z`.
+Generated from `PLAN.yaml` (sha256 `383bb335323122b852db8fc1971337fb21c68fbcbcd50c51b80db079520122cf`) at `2026-10-17T19:52:11.174Z`.
 
 ## 1. Next
 
-- **source-changed-post-route-s5d-race** — source-changed.mjs's post route: step S5d (post-check-route-confirmed) loses its race to a tile's pre-check in about half the runs on this machine, at main's base too (lane `shell`)
+- (nothing ready)
 
 ## 2. Ready
 
-- **source-changed-post-route-s5d-race** — source-changed.mjs's post route: step S5d (post-check-route-confirmed) loses its race to a tile's pre-check in about half the runs on this machine, at main's base too (lane `shell`, order null, budget 60 min)
+- (none)
 
 ## 3. Waiting on the human (total: 0 min)
 
@@ -18,6 +18,7 @@ Generated from `PLAN.yaml` (sha256 `3b24f3c2a77c37b329d9f950a6b1be0e4b0d3f68c96b
 
 - **connection-reuse-recycled-interrupt-flake** — engine/tests/connection_reuse.rs: cancellation_before_the_first_batch_binds_a_recycled_connection_and_delivers_nothing failed once on ubuntu-24.04 in PR #222's pull_request run at a542097e, and the push run of the same commit passed it — blocked by: source-changed-post-route-s5d-race
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
+- **source-changed-post-route-s5d-race** — source-changed.mjs's post route: step S5d (post-check-route-confirmed) loses its race to a tile's pre-check in about half the runs on this machine, at main's base too — blocked by: source-changed-post-reopen-routes-watcher-visible
 - **briefb-b2-save-reopen** — B2 — Save project, Snapshot data, session history, lineage and preferences, in five stages, each with its own form — blocked by: decision-adr-029-scan-progress-route
 - **known-limitations-item-41-source-comment** — KNOWN-LIMITATIONS item 41's source comment: its code location pinned on main with its hash, saying the work has merged (the comment only; item 41's words still wait for their sight) — blocked by: e2e-readme-status-bar-steps
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer — blocked by: signpath-application-draft
