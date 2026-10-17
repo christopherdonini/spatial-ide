@@ -17,7 +17,7 @@
 // and any export text before, after the open and after the export settles. If the export had already settled when the open returned, the record says so
 // and the observation is inconclusive. E-ASK and E-ASK-STATEMENT (stage 7) run before it, in their own functions.
 //
-// What none of this proves: a timing, a rate or a performance figure (there are none here; the millisecond numbers are bounds on waiting). A tap from a
+// What none of this proves: a timing, a rate or a performance figure (the millisecond numbers are bounds on waiting, and each export step's prepare-to-execute figure is a reading for triage, not a measurement). A tap from a
 // real WebView2 pointer is first exercised here: no earlier suite presses and releases without moving.
 //
 // RECORDED MUTATIONS. Each is named for the custodian to observe in a run at the stage's head; this stage applied none (port 5180 is reserved on the
@@ -52,7 +52,7 @@
 //   E-ASK (2)      is proven by RB12b at unit level (App.selection.test.tsx) and is not observable in e2e: Cancel and go on stops the export almost at once.
 //   E-ASK-STATEMENT src/App.tsx, `answerOpenAsk`: show the statement only when `cancel()` answers true (the loop body becomes `run.cancelChosen = false;
 //                  void run.cancel().then((answer) => { run.cancelChosen = answer; });`). The run has ended, so the host answers false. Expected: E-ASK-STATEMENT fails on the absent statement.
-//   Both steps are INCONCLUSIVE (class 2, never a pass) when the export had ended before the ask was read: the step then fails with that word in its message.
+//   Both steps are INCONCLUSIVE (class 2, never a pass) when the export had ended before the ask was read with an outcome other than `unknown-attempt`: the step then fails with that word in its message; an `unknown-attempt` there reads by exportElapsed.mjs's verdict.
 //   E-DBLCLICK     src/canvas/WorkingCanvas.tsx, the Deck props' `onClick`: remove the `if (event.type === "dblclick") return;` line. Expected: E-DBLCLICK fails on its first assertion (the Navigate double-click inspected an id); the Select count would fail next.
 //   E-ASK-TWO      src/App.tsx, `answerOpenAsk`: `setLateCancel([finished])` in place of the append. Expected: E-ASK-TWO fails on the statements' paths (only the second bundle_path is shown). INCONCLUSIVE, as above, when the ask or the open is not standing before the choice.
 //   E-KINDS (point) src/canvas/clickPick.ts, `tapPixel`'s return line: `Math.round` in place of both `Math.trunc` calls. Expected: E-KINDS fails on the point's Navigate click (the inspected id is not the hover's), as the rounded tap did before OPEN-15; a pass means the position was not at the dot's edge in that run, and shows nothing about rounding.
@@ -612,7 +612,7 @@ async function stepScope(page, consoleHandle) {
 
 /**
  * E-ASK's driver: opens the 100k fixture, starts a whole-file execute of it through the dev hook and, with it running, an open of filter-zoned; neither is awaited (the open waits on
- * the ask). `window.__askRun` and `window.__askOpen` hold the two promises. Throws INCONCLUSIVE (class 2, never a pass) when the export has ended by the time the ask is read.
+ * the ask). `window.__askRun` and `window.__askOpen` hold the two promises. When the export has ended by the time the ask is read, it checks the outcome with `pairRead` (an `unknown-attempt` throws that verdict's FAIL or INCONCLUSIVE) and otherwise throws INCONCLUSIVE (class 2, never a pass).
  */
 async function startExportThenOpen(page, consoleHandle, label) {
   await openFixture(page, consoleHandle, FIXTURE_100K, label);

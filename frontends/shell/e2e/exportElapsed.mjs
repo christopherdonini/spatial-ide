@@ -11,7 +11,7 @@ import { fileURLToPath } from "node:url";
 const PUBLISH_RS = join(dirname(fileURLToPath(import.meta.url)), "..", "src-tauri", "src", "publish.rs");
 let ttl = null; // PENDING_ATTEMPT_TTL in ms, read by initTtl
 let pairs = []; // this step's { p0, p1, e0 } stamps
-export class ExportInconclusive extends Error {} // runStep prints the third status, INCONCLUSIVE (never a pass), and the suite exits 3
+export class ExportInconclusive extends Error {} // runStep prints the third status, INCONCLUSIVE (never a pass), and the suite exits 3 when no step FAILed
 
 /** PENDING_ATTEMPT_TTL's seconds from publish.rs's text, in ms; a line it cannot read stops the suite as a harness failure. */
 export function readTtlMs(source) {
