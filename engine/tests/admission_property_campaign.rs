@@ -31,10 +31,12 @@
 //! - **P4** — no refusal carries data from the file: a refusal's rendered text (Display and Debug)
 //!   contains no attribute value the fixture wrote that the predicate itself did not already carry.
 //! - **P5 and P6** — two more, in their own test and seed: a join of 1 to 4 G1 texts, each admitted
-//!   alone, by the shell's convention (`join_clauses`: each text in brackets, joined by ` AND `) is
-//!   admitted or refused only as too long or too deep, and if admitted returns exactly the
-//!   intersection of the ids the texts return alone (P5); every order-preserving subset of 2 to
-//!   n-1 of its texts admits too (P6).
+//!   alone, by the directive's join convention, which milestone 3's form specifies for the shell
+//!   (`join_clauses`: one text unchanged, two or more each in brackets, joined by ` AND `), is
+//!   admitted or refused only as too long or too deep, and if admitted, unless a run meets the
+//!   declared overflow exclusion, returns exactly the intersection of the ids the texts return
+//!   alone (P5); if it is admitted, every order-preserving subset of 2 to n-1 of its texts admits
+//!   too (P6).
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::panic::{catch_unwind, AssertUnwindSafe};
@@ -1288,8 +1290,9 @@ const P5_LABELS: [&str; 4] = [
 /// The kept, hand-minimized witness: joined without brackets, its ids are not the intersection.
 const P5_WITNESS: [&str; 2] = ["zone ILIKE '_ivic'\nor flag", "zone = 'residential'"];
 
-/// The shell's join convention (the directive's item 1): no text is no filter, one is itself byte
-/// for byte, two or more are each in one pair of brackets joined by `" AND "`.
+/// The directive's join convention (its item 1), which milestone 3's form specifies for the shell;
+/// a test helper, not the shell's code: no text is no filter, one is itself byte for byte, two or
+/// more are each in one pair of brackets joined by `" AND "`.
 fn join_clauses(texts: &[String]) -> Option<String> {
     match texts {
         [] => None,
