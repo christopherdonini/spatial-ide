@@ -171,7 +171,14 @@ test('flush CLI: --file round-trip writes the field; the incident typo exits non
   fs.rmSync(dir, { recursive: true, force: true });
 });
 
-// --- the block's cap (the human, 2026-10-14; piece B, C1 to C7) -----------------------------------------
+// --- the block's cap (the human's governance direction, piece B; C1 to C7) -----------------------------------------
+//
+// RECORDED MUTATION, each applied alone at ea69f46c4fc2 and reverted; the named test failed:
+// MC1 the cap compared with `>=` -> C1. MC2 the check removed -> C2 (C3, C4, C6, C7 too: they need a refusal).
+// MC3 the size counted as string length -> C3 (C4, C5, C6, C7 too). MC4 the field sizes counted as string length,
+// so the largest by characters is named -> C4 only. MC5 the size measured over findBlockRange's untrimmed lines
+// -> C5 (C2 too). MC6 the scratch file written with the block cut to 6,144 bytes -> C6 only. MC7 the
+// inside-repository check removed -> C7 only. C1 to C7 are the tests below, in order.
 
 // The `position` value that makes the fixture's block exactly `bytes` UTF-8 bytes (ASCII fill).
 function positionFor(bytes) {

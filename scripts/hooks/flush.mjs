@@ -34,7 +34,7 @@
 // `flushed_at` defaults to now (ISO-8601 UTC) and `tip` to `git rev-parse HEAD` when omitted, so a
 // caller supplies only the prose fields. Reads and rewrites state/CUT-STATE.md in place.
 //
-// ## The block's cap (the human, 2026-10-14; BLOCK_CAP_BYTES)
+// ## The block's cap (the human's governance direction, piece B; BLOCK_CAP_BYTES)
 //
 // A write whose SESSION-CONTINUITY block, as extractSessionContinuityBlock returns it (what
 // session-resume prints), exceeds 6144 UTF-8 bytes is refused with BlockCapError: the message names
