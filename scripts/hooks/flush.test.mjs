@@ -217,7 +217,7 @@ test('flush: a non-ASCII block under the cap in characters and over it in UTF-8 
 
 test("flush: the refusal names the largest field by UTF-8 bytes and every field's size", () => {
   // position has the most characters, branches the most bytes
-  const values = { flushed_at: '2026-09-15T00:00:00Z', tip: 'abc1234', branches: 'é'.repeat(2000), position: 'x'.repeat(3000),
+  const values = { flushed_at: 'FLUSHED-AT-FIXTURE', tip: 'abc1234', branches: 'é'.repeat(2000), position: 'x'.repeat(3000),
     'half-made judgments': 'none', 'intended sequencing (next session)': 'do the next thing', 'unreported findings': 'none', 'in-flight gate states': 'none' };
   const e = refusal(fixtureBlock(), values);
   assert.ok(e instanceof BlockCapError, String(e));
@@ -244,7 +244,7 @@ test("flush: the cap measures the block session-resume prints, for the real ledg
 
 // The CLI with the temporary folder redirected (Node's own resolution: TMPDIR, TEMP and TMP).
 function runRefusal(target, tmp) {
-  const over = ['--field', 'flushed_at=2026-09-15T00:00:00Z', '--field', 'tip=abc1234', '--field', `position=${'é'.repeat(3100)}`];
+  const over = ['--field', 'flushed_at=FLUSHED-AT-FIXTURE', '--field', 'tip=abc1234', '--field', `position=${'é'.repeat(3100)}`];
   return spawnSync(process.execPath, [CLI, '--file', target, ...over], {
     encoding: 'utf8',
     env: { ...process.env, TMPDIR: tmp, TEMP: tmp, TMP: tmp },
@@ -269,7 +269,7 @@ test('flush CLI: a refused block leaves the file byte-identical and is written w
     const named = /written whole to (.+)\.\s*$/.exec(r.stderr)?.[1];
     assert.ok(named, r.stderr);
     assert.ok(inside(tmp, named) && !inside(REPO_ROOT, named), named);
-    const refused = refusal(fixtureBlock(), { flushed_at: '2026-09-15T00:00:00Z', tip: 'abc1234', position: 'é'.repeat(3100) });
+    const refused = refusal(fixtureBlock(), { flushed_at: 'FLUSHED-AT-FIXTURE', tip: 'abc1234', position: 'é'.repeat(3100) });
     assert.ok(Buffer.byteLength(refused.block, 'utf8') > 6144);
     assert.ok(fs.readFileSync(named).equals(Buffer.from(`${refused.block}\n`, 'utf8')), 'the scratch file holds the whole block and one newline');
   } finally {
