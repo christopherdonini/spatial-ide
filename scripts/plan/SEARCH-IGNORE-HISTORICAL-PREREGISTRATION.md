@@ -332,3 +332,17 @@ The excluded paths are the five lines of the root `.ignore`. Each method above w
 5. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 5 — gate 1: both PASS WITH NOTES; one correction to Amendment 2 (class 3)
+
+*Written by the custodian after both gate 1 reports were seen, at the head 16dd59f1. References only. The reports: the architect `state/consults/gates/2026-10-17-governance-search-ignore-historical-gate1-architect.md` (gate-log 532, sha256 9a9b0173) and the reviewer `state/consults/gates/2026-10-17-governance-search-ignore-historical-gate1-reviewer.md` (gate-log 533, sha256 026bd372).*
+
+1. **Gate 1:** both PASS WITH NOTES, with no Correctness or Evidence finding.
+2. **The observations of record** (§4) are the reviewer's rows in its report, at the head, with `claude --version` 2.1.300 and ripgrep 15.2.0: O1 to O13 each as predicted, O13 also listing the hidden probe; O14's listing stopped at 100 of 157 files without the probe, as at S3, so the Glob clause rests on O13, as §5 allows.
+3. **The reviewer's D-1, in its words:** Amendment 2 item 4's count of lines past 100 columns is corrected: at 16dd59f1275ed110333f6ceed38bee9b1dee975c, five comment lines pass 100 columns, `scripts/plan/measure-reads.test.mjs` lines 1, 2, 112 and 126 and `scripts/plan/measure-reads.mjs` line 6, by the PR #226 reviewer gate report.
+4. **The architect's D-1:** the PR body gains the figures' names, in the architect's words, with no re-gate.
+5. **For B's and C's forms,** before their code: the architect's F-1 (B's part 1 after B leaves out the standing items' sections that item 1 then names; their byte size goes beside the figure) and F-2 (C's run of M-2 names the script at the merge commit, since `C:/dev/wt/sih` will be gone).
+6. **Before the merge:** nothing else. The closing amendment pins the figures at M0 and the script's blob at the merge commit (§2 item 5).
+7. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
