@@ -1,14 +1,13 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `de1d6134a8fdbd18b5736b9ac0f629dba7a264883745bdd13f824d60cc050bdd`) at `2026-10-17T20:09:50.169Z`.
+Generated from `PLAN.yaml` (sha256 `3d8f28dd80cd2cc0f01c2d8999919ccb19cc08419aa6e42c1d16effbe1c2b9f6`) at `2026-10-17T20:15:01.093Z`.
 
 ## 1. Next
 
-- **known-limitations-item-41-source-comment** — KNOWN-LIMITATIONS item 41's source comment: its code location pinned on main with its hash, saying the work has merged (the comment only; item 41's words still wait for their sight) (lane `release`)
+- **governance-cut-state-cap-and-rotation** — state/CUT-STATE.md: the six STANDING items moved out verbatim, a 6,144-byte cap on the continuity block in flush.mjs, and the ledger rotated into state/cut-archive/ by a named script, with the reading order's item 1 restated (lane `governance`)
 
 ## 2. Ready
 
-- **known-limitations-item-41-source-comment** — KNOWN-LIMITATIONS item 41's source comment: its code location pinned on main with its hash, saying the work has merged (the comment only; item 41's words still wait for their sight) (lane `release`, order null, budget 20 min)
 - **governance-cut-state-cap-and-rotation** — state/CUT-STATE.md: the six STANDING items moved out verbatim, a 6,144-byte cap on the continuity block in flush.mjs, and the ledger rotated into state/cut-archive/ by a named script, with the reading order's item 1 restated (lane `governance`, order null, budget 0 min)
 
 ## 3. Waiting on the human (total: 0 min)
@@ -30,6 +29,7 @@ Generated from `PLAN.yaml` (sha256 `de1d6134a8fdbd18b5736b9ac0f629dba7a264883745
 ## 5. In progress
 
 - **publish-approval-unknown-attempt-under-load** — Publish: an export's approval came back as unknown attempt under machine load (the status-bar e2e run 2 and the H3 order run): the cause first, the pending attempt's TTL elapsing between prepare and execute or an attempt the host lost; then whether the TTL suits a person reading the approval dialog, which shows no expiry — evidence: branch `cut/unknown-attempt-step-1`
+- **known-limitations-item-41-source-comment** — KNOWN-LIMITATIONS item 41's source comment: its code location pinned on main with its hash, saying the work has merged (the comment only; item 41's words still wait for their sight) — evidence: branch `cut/known-limitations-item-41`
 
 ## 6. Proposed / unscheduled
 

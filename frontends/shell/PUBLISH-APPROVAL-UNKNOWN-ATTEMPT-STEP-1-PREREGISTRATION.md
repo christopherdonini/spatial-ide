@@ -162,3 +162,16 @@ The closing record is references and hashes (the record cap).
 4. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 2 — the README lines written; §7 over its ceiling (class 6); both gates
+
+*Written by the custodian after the README commit was seen. References only.*
+
+1. **Main merged in** at 71b71372 (a merge commit on the branch, no rebase), so §1.8's lines are written on the tree after PR #225.
+2. **The README lines** at 39dc2c8e: `frontends/shell/e2e/README.md`'s publish and selection entries, 3 lines in and 3 out, by one worker; the words are the worker's, each clause given with its line in the worker's report.
+3. **§7 (class 6):** 154 changed lines over 7 files by `git diff --numstat origin/main...39dc2c8e`, this form excluded, over the declared 150. No other file was trimmed to fit. §7 is not edited.
+4. **The gates:** by §21b, a size overrun closes the single-gate route, so both the reviewer and the architect gate PR #227, each blocking only on Correctness or Evidence.
+5. **The e2e at 80890488** (R1 to R3, the custodian's record) stand: the later commits are the main merge and the README lines, and neither changes an e2e script or the exe's sources.
+6. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
