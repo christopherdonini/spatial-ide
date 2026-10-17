@@ -135,3 +135,22 @@ It mutates this Rust test helper, not the shell's combineClauses; milestone 3's 
 3. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 2 — built at 93f2b927; two moved pins (class 3) and the deviations (class 2), written after the results were seen
+
+*Written by the custodian after the worker's report was seen. References only. The report, which is also §C.3's run report, is `state/consults/2026-10-17-engine-clause-composition-properties-worker-report.md` (its sha256 from line 5 to the end, 710c486fd4315d4183785360db5e9567d38e04e09438fcec7d338eea85621934).*
+
+1. **Built:** ec9c7664 (the test, its helpers and the module-doc bullet) and 93f2b927 (the owner's-index line), on `cut/engine-clause-composition-properties` from B e555177c; PR #224. §D's count is 171 lines over 2 files: 169 in and 0 out in the campaign file, 1 and 1 in `engine/README.md`, within 180.
+2. **At B:** no §E invalidator fired. The interfaces §E names are unchanged from 467dd47e; `AdmittedPredicate::admit` keeps its signature and refusals (the struct gained a field and `referenced_columns`). Two pins moved by 22 lines with identical bytes (class 3), both in E2: `engine/src/predicate.rs` lines 514 to 525 are now 536 to 547, and lines 952 to 955 are now 974 to 977. Every other pin is identical at B.
+3. **Against §E:** E1, zero candidates; E2, filter_too_deep 0 and filter_too_long 0; E3, 4 of 201 cases excluded, reported as a count; E4, under the mutation at ec9c7664 the test failed by name on the witness's P5 result line; E5, zero deletions in the campaign file, and the G1 to G4 tallies identical at B and at the head; E6, the suites and checks named passed (CI on the PR to come).
+4. **The witness:** derived by hand under the mutation from case 7 of `P5_SEED`, in seven recorded steps, to two texts (the report).
+5. **The deviations (class 2):**
+   - (a) E6 names clippy "as CI runs it". No workflow runs clippy. The worker ran clippy over the engine's tests, with no warning on an added line.
+   - (b) The module doc's line `The four properties:` stays as it was, because the campaign file takes insertions only (E5). The new bullet says it adds two.
+   - (c) The guard asserts a boolean, so a failure does not print two whole id sets.
+   - (d) Each minimization step was chosen by hand, and its three keeps were checked with a temporary probe test, never committed.
+   - (e) The report's items 5 to 7 are implementation choices within §A, listed there.
+6. **Next:** the reviewer and the architect, both from dispatch (Amendment 1 item 1), at the PR head.
+7. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
