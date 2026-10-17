@@ -187,3 +187,17 @@ Nothing above is edited.
 5. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 4 — the words applied; §7 at 160 (class 6); M1 re-observed by the custodian
+
+*Written by the custodian at the head 6a00d6a8, before the human's merge click. References only.*
+
+1. **The words** at 6a00d6a8, one commit by one worker (`state/consults/2026-10-17-publish-approval-unknown-attempt-step-1-words-worker-report.md`): the architect's D1 and D2 in the README's publish and selection entries, the reviewer's D3 to D6 in `selection.mjs`'s and `exportElapsed.mjs`'s comments. The custodian's check, by script: the nine spans taken from the two reports and applied to 39dc2c8e give the head's three files byte for byte, no other file changed, and each changed `.mjs` line is a comment.
+2. **§7 (class 6):** 160 changed lines (129 in, 31 out) over 7 files by `git diff --numstat origin/main...6a00d6a8`, this form excluded: the 6 above Amendment 2's 154 are the gates' words, applied with no re-gate (Amendment 3 item 3). §7 is not edited.
+3. **M1, re-observed once by the custodian** at 6a00d6a8 (`state/consults/2026-10-17-publish-approval-unknown-attempt-step-1-m1-custodian-run.md`, sha256 fcccca5039cdb8a836ec9a0026d4259f90fe644803ccd448a88c9b9374279134): with the mutation applied alone, `npm run test:export-elapsed` exits 1, and T2's E-EXPORT test fails by name, with T2's E-ASK-TWO and T3; reverted, the tree is clean and the five pass. The worker's observation at dcaed6ed stays the observation of record.
+4. **The e2e at 80890488** (R1 to R3) stand: the words change README text and comments only.
+5. **The PR body** takes the reviewer's D7.
+6. **Next:** PR #227 goes to the human for the merge click; the closing record follows the merge.
+7. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
