@@ -1,14 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `e93a20f6511b98d24d64b97688831b0fea6caee44a1e3353de5ae22794dad15b`) at `2026-10-17T07:23:45.279Z`.
+Generated from `PLAN.yaml` (sha256 `ff7a51f4d99edb51c744bb98cd51cea12f686b29bb4568fe171d896f2133466a`) at `2026-10-17T07:33:32.614Z`.
 
 ## 1. Next
 
-- **known-limitations-crs-epoch-edges-third-axis** — KNOWN-LIMITATIONS: a file's declared coordinate epoch, its edges value and a third CRS axis are not used, shown or carried into a bundle (lane `release`)
+- (nothing ready)
 
 ## 2. Ready
 
-- **known-limitations-crs-epoch-edges-third-axis** — KNOWN-LIMITATIONS: a file's declared coordinate epoch, its edges value and a third CRS axis are not used, shown or carried into a bundle (lane `release`, order null, budget 45 min)
+- (none)
 
 ## 3. Waiting on the human (total: 0 min)
 
@@ -30,6 +30,8 @@ Generated from `PLAN.yaml` (sha256 `e93a20f6511b98d24d64b97688831b0fea6caee44a1e
 
 ## 5. In progress
 
+- **engine-clause-composition-properties** — Engine test piece: clause composition, P5 and P6 over the admission property campaign (tests only; no product code, fixture or dependency) — evidence: branch `cut/engine-clause-composition-properties`
+- **known-limitations-crs-epoch-edges-third-axis** — KNOWN-LIMITATIONS: a file's declared coordinate epoch, its edges value and a third CRS axis are not used, shown or carried into a bundle — evidence: branch `cut/known-limitations-item-44`
 - **governance-search-ignore-historical** — A root .ignore over historical material (site, the generated queue JSON, the cut archive, drafts, gate reports), tested both ways with the agents' own search tool, and its search rule appended to AUTONOMY; the routine-read and search-corpus measurements taken before it — evidence: branch `cut/search-ignore-historical`
 
 ## 6. Proposed / unscheduled
@@ -114,7 +116,6 @@ Generated from `PLAN.yaml` (sha256 `e93a20f6511b98d24d64b97688831b0fea6caee44a1e
 - **shell-real-app-run-macos-linux** — Run the real app once on macOS and once on Linux after migration milestone 1 merges, and record what it finds (phase `prototype`) — never queued until placed
 - **pan-anchor-setcam-waits-for-its-own-reset** — e2e/pan-anchor.mjs: setCam waits for the view-state line its own reset produces, never a late line from the previous gesture (test only) (phase `prototype`) — never queued until placed
 - **walkthrough-current-view-rows-g1-n5** — MANUAL-WALKTHROUGH.md rows G1 and N5: Current view is no longer disabled until a pan or zoom (the docs-lane follow-up of export-current-view-after-unreported-fit, its gate 1 reviewer DOC-4) (phase `prototype`) — never queued until placed
-- **engine-clause-composition-properties** — Engine test piece: clause composition, P5 and P6 over the admission property campaign (tests only; no product code, fixture or dependency) (phase `prototype`) — never queued until placed
 - **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark (phase `prototype`) — never queued until placed
 - **verify-quotes-dotted-paths** — verify-quotes: the hash-reference path grammar cannot begin with a dot, so a pinned cite into .github/ can never be checked (phase `prototype`) — never queued until placed
 - **connection-reuse-recycled-interrupt-flake** — engine/tests/connection_reuse.rs: cancellation_before_the_first_batch_binds_a_recycled_connection_and_delivers_nothing failed once on ubuntu-24.04 in PR #222's pull_request run at a542097e, and the push run of the same commit passed it (phase `prototype`) — never queued until placed

@@ -1,47 +1,9 @@
 {
-  "generated_at": "2026-10-17T07:23:45.279Z",
-  "plan_hash": "e93a20f6511b98d24d64b97688831b0fea6caee44a1e3353de5ae22794dad15b",
+  "generated_at": "2026-10-17T07:33:32.614Z",
+  "plan_hash": "ff7a51f4d99edb51c744bb98cd51cea12f686b29bb4568fe171d896f2133466a",
   "priorities_approved": true,
-  "next": {
-    "id": "known-limitations-crs-epoch-edges-third-axis",
-    "title": "KNOWN-LIMITATIONS: a file's declared coordinate epoch, its edges value and a third CRS axis are not used, shown or carried into a bundle",
-    "lane": "release",
-    "phase": "prototype",
-    "status": "ready",
-    "order": null,
-    "budget_minutes": 45,
-    "needs_human": {
-      "kind": "none",
-      "minutes": 0
-    },
-    "evidence": null,
-    "dates": {
-      "opened": "2026-10-12",
-      "done": null
-    },
-    "summary": "OPEN-1 AND OPEN-2 RULED 2026-10-17 (state/directives/2026-10-17-placements-item-44-governance-clause-composition-readme-item-41-unknown-attempt.md, item 2; the form's Amendment 1, generation 2): section A's words approved as drafted; the v0.1.0 page's paragraph does not gain item 44. Before: FORM COMMITTED 2026-10-14 (KNOWN-LIMITATIONS-ITEM-44-CRS-EPOCH-EDGES-THIRD-AXIS-PREREGISTRATION.md, a five-line form for item 44, drafted by the architect: state/consults/2026-10-14-known-limitations-crs-epoch-edges-third-axis-architect-draft.md; its section D tag-side checks run and filed at state/consults/2026-10-14-known-limitations-crs-epoch-edges-third-axis-tag-checks.md: every clause holds at the v0.1.0 tag and on main; pins hashed by the custodian). The words differ from this node's title on one point: a third axis is carried in a published manifest inside the definition, unread. OPEN-1 (approve or replace the words) and OPEN-2 (whether the v0.1.0 release page names item 44) with the human. Before: PLACED 2026-10-12 by the human (state/directives/2026-10-12-item-42-current-view-amendment-7-guardian-readme-guardrails-brief.md, item 5; Fable's brief state/consults/GUARDRAILS-EPOCHS-HEIGHTS-DGGS-2026-10-12.md, section 4 item 1): the docs lane's piece after stale-test-names-and-comments. One KNOWN-LIMITATIONS item: a file's declared coordinate epoch, its edges value and a third CRS axis are not used, shown or carried into a bundle. The architect drafts it with its clause check under item 2e; the human approves or replaces it. Its number is the next free one at its base, clear of reserved numbers. The 45-minute budget is the custodian's estimate."
-  },
-  "ready": [
-    {
-      "id": "known-limitations-crs-epoch-edges-third-axis",
-      "title": "KNOWN-LIMITATIONS: a file's declared coordinate epoch, its edges value and a third CRS axis are not used, shown or carried into a bundle",
-      "lane": "release",
-      "phase": "prototype",
-      "status": "ready",
-      "order": null,
-      "budget_minutes": 45,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-10-12",
-        "done": null
-      },
-      "summary": "OPEN-1 AND OPEN-2 RULED 2026-10-17 (state/directives/2026-10-17-placements-item-44-governance-clause-composition-readme-item-41-unknown-attempt.md, item 2; the form's Amendment 1, generation 2): section A's words approved as drafted; the v0.1.0 page's paragraph does not gain item 44. Before: FORM COMMITTED 2026-10-14 (KNOWN-LIMITATIONS-ITEM-44-CRS-EPOCH-EDGES-THIRD-AXIS-PREREGISTRATION.md, a five-line form for item 44, drafted by the architect: state/consults/2026-10-14-known-limitations-crs-epoch-edges-third-axis-architect-draft.md; its section D tag-side checks run and filed at state/consults/2026-10-14-known-limitations-crs-epoch-edges-third-axis-tag-checks.md: every clause holds at the v0.1.0 tag and on main; pins hashed by the custodian). The words differ from this node's title on one point: a third axis is carried in a published manifest inside the definition, unread. OPEN-1 (approve or replace the words) and OPEN-2 (whether the v0.1.0 release page names item 44) with the human. Before: PLACED 2026-10-12 by the human (state/directives/2026-10-12-item-42-current-view-amendment-7-guardian-readme-guardrails-brief.md, item 5; Fable's brief state/consults/GUARDRAILS-EPOCHS-HEIGHTS-DGGS-2026-10-12.md, section 4 item 1): the docs lane's piece after stale-test-names-and-comments. One KNOWN-LIMITATIONS item: a file's declared coordinate epoch, its edges value and a third CRS axis are not used, shown or carried into a bundle. The architect drafts it with its clause check under item 2e; the human approves or replaces it. Its number is the next free one at its base, clear of reserved numbers. The 45-minute budget is the custodian's estimate."
-    }
-  ],
+  "next": null,
+  "ready": [],
   "waiting_on_human": {
     "total_minutes": 0,
     "by_kind": {
@@ -296,6 +258,50 @@
     }
   ],
   "in_progress": [
+    {
+      "id": "engine-clause-composition-properties",
+      "title": "Engine test piece: clause composition, P5 and P6 over the admission property campaign (tests only; no product code, fixture or dependency)",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": null,
+      "budget_minutes": 0,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "branch": "cut/engine-clause-composition-properties"
+      },
+      "dates": {
+        "opened": "2026-10-14",
+        "done": null
+      },
+      "summary": "IN PROGRESS 2026-10-17 in slot 2 (C:/dev/wt/ccp, B e555177c): one worker-high builds the test, the witness and the mutation, and first re-checks the form's pins and section E's interfaces at B. Overlap checked at dispatch: disjoint from governance A's branch and the docs lane's item 44; no PR awaiting merge. Before: OPEN-1 AND OPEN-2 RULED 2026-10-17 (state/directives/2026-10-17-placements-item-44-governance-clause-composition-readme-item-41-unknown-attempt.md, item 4; the form's Amendment 1, generation 2): (A), the five-line form with the reviewer and the architect from dispatch; (a), the drafted sentence. Before: FORM COMMITTED 2026-10-14 (engine/CLAUSE-COMPOSITION-PROPERTIES-PREREGISTRATION.md, the five-line form, drafted by the architect: state/consults/2026-10-14-engine-clause-composition-properties-architect-draft.md, sha256 5bcb2c00; pins computed by the custodian): Scope at most 180 lines over 2 files, over section 21c's 150, so closed to the single gate from dispatch. OPEN-1 (the route; (A) recommended, both gates from dispatch) and OPEN-2 (the mutation record's sentence, the UC3 and E-AND wording) with the human. Waits behind b2-piece-1b-recording in slot 2. Before: IMPACT READ 2026-10-14 (state/consults/2026-10-14-engine-clause-composition-properties-impact-read-lead-data.md): one test file, about 135 to 155 lines; the join convention exists only in the proposed milestone 3 form; a question on the UC3 and E-AND wording goes to the human. NEXT: the architect drafts the five-line form. Before: PROPOSED 2026-10-14 by the human (state/directives/2026-10-14-two-slot-2-pieces-clause-composition-boundary-inventory.md, item 1): slot 2, after what is already queued there, not taking slot 1 nor delaying milestones 2 and 3. A five-line form; tests only. Reuses engine/tests/admission_property_campaign.rs (its SplitMix64 generator, its MultiType fixture, its G1 grammar). The join is the shell's convention. P5 (admission and the result's ids against the intersection), P6 (every order-preserving subset of an admitted join is admitted). The mutation (the test helper joins without the brackets) observed on a kept, minimized witness. Every failure is a candidate until reproduced and minimized; the report names seeds, case counts, excluded counts, time spent, the candidates and how many were real. The invariants are approved as written; the form may sharpen them, not widen them. A product defect goes through normal triage.",
+      "evidence_label": "branch `cut/engine-clause-composition-properties`"
+    },
+    {
+      "id": "known-limitations-crs-epoch-edges-third-axis",
+      "title": "KNOWN-LIMITATIONS: a file's declared coordinate epoch, its edges value and a third CRS axis are not used, shown or carried into a bundle",
+      "lane": "release",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": null,
+      "budget_minutes": 45,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "branch": "cut/known-limitations-item-44"
+      },
+      "dates": {
+        "opened": "2026-10-12",
+        "done": null
+      },
+      "summary": "IN PROGRESS 2026-10-17 in the docs lane (C:/dev/wt/kl44, B e555177c): one worker applies section A by script, with Amendment 1's bracket. Before: OPEN-1 AND OPEN-2 RULED 2026-10-17 (state/directives/2026-10-17-placements-item-44-governance-clause-composition-readme-item-41-unknown-attempt.md, item 2; the form's Amendment 1, generation 2): section A's words approved as drafted; the v0.1.0 page's paragraph does not gain item 44. Before: FORM COMMITTED 2026-10-14 (KNOWN-LIMITATIONS-ITEM-44-CRS-EPOCH-EDGES-THIRD-AXIS-PREREGISTRATION.md, a five-line form for item 44, drafted by the architect: state/consults/2026-10-14-known-limitations-crs-epoch-edges-third-axis-architect-draft.md; its section D tag-side checks run and filed at state/consults/2026-10-14-known-limitations-crs-epoch-edges-third-axis-tag-checks.md: every clause holds at the v0.1.0 tag and on main; pins hashed by the custodian). The words differ from this node's title on one point: a third axis is carried in a published manifest inside the definition, unread. OPEN-1 (approve or replace the words) and OPEN-2 (whether the v0.1.0 release page names item 44) with the human. Before: PLACED 2026-10-12 by the human (state/directives/2026-10-12-item-42-current-view-amendment-7-guardian-readme-guardrails-brief.md, item 5; Fable's brief state/consults/GUARDRAILS-EPOCHS-HEIGHTS-DGGS-2026-10-12.md, section 4 item 1): the docs lane's piece after stale-test-names-and-comments. One KNOWN-LIMITATIONS item: a file's declared coordinate epoch, its edges value and a third CRS axis are not used, shown or carried into a bundle. The architect drafts it with its clause check under item 2e; the human approves or replaces it. Its number is the next free one at its base, clear of reserved numbers. The 45-minute budget is the custodian's estimate.",
+      "evidence_label": "branch `cut/known-limitations-item-44`"
+    },
     {
       "id": "governance-search-ignore-historical",
       "title": "A root .ignore over historical material (site, the generated queue JSON, the cut archive, drafts, gate reports), tested both ways with the agents' own search tool, and its search rule appended to AUTONOMY; the routine-read and search-corpus measurements taken before it",
@@ -1803,25 +1809,6 @@
       "summary": "PROPOSED 2026-10-14 by the custodian from PR #219's gate 1 reviewer DOC-4 (state/consults/gates/2026-10-14-export-current-view-after-unreported-fit-gate1-reviewer.md): rows G1 and N5 of frontends/shell/MANUAL-WALKTHROUGH.md describe Current view as disabled with no settled view, which is untrue once #219 merges; that form's section 2.6 keeps its walkthrough edit to Part Y (its Amendment 7 item 5). Words only, in the docs lane, after the merge."
     },
     {
-      "id": "engine-clause-composition-properties",
-      "title": "Engine test piece: clause composition, P5 and P6 over the admission property campaign (tests only; no product code, fixture or dependency)",
-      "lane": "engine",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 0,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-10-14",
-        "done": null
-      },
-      "summary": "OPEN-1 AND OPEN-2 RULED 2026-10-17 (state/directives/2026-10-17-placements-item-44-governance-clause-composition-readme-item-41-unknown-attempt.md, item 4; the form's Amendment 1, generation 2): (A), the five-line form with the reviewer and the architect from dispatch; (a), the drafted sentence. Before: FORM COMMITTED 2026-10-14 (engine/CLAUSE-COMPOSITION-PROPERTIES-PREREGISTRATION.md, the five-line form, drafted by the architect: state/consults/2026-10-14-engine-clause-composition-properties-architect-draft.md, sha256 5bcb2c00; pins computed by the custodian): Scope at most 180 lines over 2 files, over section 21c's 150, so closed to the single gate from dispatch. OPEN-1 (the route; (A) recommended, both gates from dispatch) and OPEN-2 (the mutation record's sentence, the UC3 and E-AND wording) with the human. Waits behind b2-piece-1b-recording in slot 2. Before: IMPACT READ 2026-10-14 (state/consults/2026-10-14-engine-clause-composition-properties-impact-read-lead-data.md): one test file, about 135 to 155 lines; the join convention exists only in the proposed milestone 3 form; a question on the UC3 and E-AND wording goes to the human. NEXT: the architect drafts the five-line form. Before: PROPOSED 2026-10-14 by the human (state/directives/2026-10-14-two-slot-2-pieces-clause-composition-boundary-inventory.md, item 1): slot 2, after what is already queued there, not taking slot 1 nor delaying milestones 2 and 3. A five-line form; tests only. Reuses engine/tests/admission_property_campaign.rs (its SplitMix64 generator, its MultiType fixture, its G1 grammar). The join is the shell's convention. P5 (admission and the result's ids against the intersection), P6 (every order-preserving subset of an admitted join is admitted). The mutation (the test helper joins without the brackets) observed on a kept, minimized witness. Every failure is a candidate until reproduced and minimized; the report names seeds, case counts, excluded counts, time spent, the candidates and how many were real. The invariants are approved as written; the form may sharpen them, not widen them. A product defect goes through normal triage."
-    },
-    {
       "id": "b2-piece-1c-save-and-reopen",
       "title": "B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark",
       "lane": "kernel-protocol",
@@ -1876,7 +1863,7 @@
         "opened": "2026-10-16",
         "done": null
       },
-      "summary": "DIAGNOSIS FIRST, RULED 2026-10-17 (state/directives/2026-10-17-placements-item-44-governance-clause-composition-readme-item-41-unknown-attempt.md, item 1): a read-only diagnosis by lead-data, with no slot, beside the running work, on three questions: where the recycled connection's interrupt handle is bound relative to stream_with_cancel's return; whether a cancel in any window before the bind can still let a batch through; whether the test's is_bound() read can run before the bind. The human then grades it (the directive's item 1 names both outcomes). Before: PROPOSED 2026-10-16 by the custodian: in run 38910535607 (Product CI, Rust workspace, pull_request, at a542097e), the L1 portable job on ubuntu-24.04 failed this one test at its assertion in line 179 of engine/tests/connection_reuse.rs, whose message says a recycled connection's interrupt handle must reach the token; the other 11 tests of the file passed. The failed steps are filed byte-identical at state/consults/2026-10-16-pr222-ci-run-38910535607-attempt-1-failed-steps.txt. The push run 38910527939 of the same commit passed the same job. PR #222 changes no line of that test file; its engine change is to engine/src/predicate.rs, its test and engine/README.md. No earlier filed CI log records this test failing. Whether it is a timing race in the test or in the pool's interrupt binding is not known. The human grades and places it."
+      "summary": "DIAGNOSIS DISPATCHED 2026-10-17 to lead-data, read-only, at main e555177c; its report path is state/consults/2026-10-17-connection-reuse-recycled-interrupt-flake-diagnosis-lead-data.md. Before: DIAGNOSIS FIRST, RULED 2026-10-17 (state/directives/2026-10-17-placements-item-44-governance-clause-composition-readme-item-41-unknown-attempt.md, item 1): a read-only diagnosis by lead-data, with no slot, beside the running work, on three questions: where the recycled connection's interrupt handle is bound relative to stream_with_cancel's return; whether a cancel in any window before the bind can still let a batch through; whether the test's is_bound() read can run before the bind. The human then grades it (the directive's item 1 names both outcomes). Before: PROPOSED 2026-10-16 by the custodian: in run 38910535607 (Product CI, Rust workspace, pull_request, at a542097e), the L1 portable job on ubuntu-24.04 failed this one test at its assertion in line 179 of engine/tests/connection_reuse.rs, whose message says a recycled connection's interrupt handle must reach the token; the other 11 tests of the file passed. The failed steps are filed byte-identical at state/consults/2026-10-16-pr222-ci-run-38910535607-attempt-1-failed-steps.txt. The push run 38910527939 of the same commit passed the same job. PR #222 changes no line of that test file; its engine change is to engine/src/predicate.rs, its test and engine/README.md. No earlier filed CI log records this test failing. Whether it is a timing race in the test or in the pool's interrupt binding is not known. The human grades and places it."
     },
     {
       "id": "bundle-redaction-scan-not-in-product-publish",
