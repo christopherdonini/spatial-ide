@@ -154,3 +154,17 @@ Nothing above is edited.
 7. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 3 — gate 1: both PASS WITH NOTES; the words; two corrections to Amendment 2 (class 2)
+
+*Written by the custodian after both gate 1 reports were seen, at the head 93f2b927. References only. The reports: the architect `state/consults/gates/2026-10-17-engine-clause-composition-properties-gate1-architect.md` (gate-log 529, sha256 ea823cf4) and the reviewer `state/consults/gates/2026-10-17-engine-clause-composition-properties-gate1-reviewer.md` (gate-log 530, sha256 2acfe5ee).*
+
+1. **Gate 1:** both PASS WITH NOTES, with no Correctness or Evidence finding.
+2. **The words, with no re-gate (AUTONOMY §31 (d)):** the module-doc bullet and the `join_clauses` doc take the architect's D1 and D2 words, which also meet the reviewer's D1 and D2 (the reviewer's own words are not used). The owner's index's last-verified line takes the architect's D3 words. One worker applies them in one commit. §D's count is then 176 lines over 2 files, within 180, and the campaign file still takes insertions only against B.
+3. **Amendment 2's report reference** (the architect's D4, the reviewer's D3): the report is `state/consults/2026-10-17-engine-clause-composition-properties-worker-report.md` @ 433a2088a651c7ebe6e816791217f89fe6d6da58, its sha256 from line 5 to the end as Amendment 2 states.
+4. **Amendment 2 item 3's E6, and item 5 (a)** (the architect's D5, the reviewer's D4), read as follows. E6: the suites and checks named passed, except clippy as CI runs it, which no workflow at e555177c runs (item 5 (a)); PR CI is to come. Item 5 (a): at e555177c no workflow runs clippy.
+5. **Owed in the closing amendment** (the architect's D5, the reviewer's D5): CI's step time for the campaign's test step, from PR #224's CI, by reference, as a log reading and not a docs/08 measurement.
+6. **Before the merge:** the words at the PR head, the PR body listing them, and PR CI green at that head, its Windows cargo test job included.
+7. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
