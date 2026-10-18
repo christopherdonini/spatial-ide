@@ -463,3 +463,89 @@ Nothing above is edited.
 3. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 4 — gate 1: both FAIL; correction round 1; §7's per-file figures (class 8); deviations (class 3)
+
+*Written by the custodian after both gate 1 reports and correction round 1 were seen, at the head 620acf4f. References only. The reports: the architect `state/consults/gates/2026-10-17-governance-cut-state-cap-and-rotation-gate1-architect.md` (gate-log 538) and the reviewer `state/consults/gates/2026-10-17-governance-cut-state-cap-and-rotation-gate1-reviewer.md` (gate-log 539); the round's worker report `state/consults/2026-10-17-governance-cut-state-cap-and-rotation-round-1-worker-report.md`.*
+
+1. **Gate 1:** both FAIL on the same Correctness finding, the rotation script's `--root` option with test callers only (both C-1), and the architect's E-1, no rotation test from the real ledger's shape.
+2. **Correction round 1:** 143bf561 (C-1, E-1 and the timing comment; `REPO_ROOT` removed with the option, nothing else using it), e984a6a2 (MR6 and MR8 observed again at 143bf561) and 620acf4f (the words).
+3. **The words, with no re-gate:** `flush.mjs`'s header takes the architect's W-1; §33 takes the architect's W-2, D-2, D-3's first part and D-4, and the reviewer's D-3; the PR body takes the architect's W-3, D-3's second part and D-6's S2 bullet. The reviewer's C-2 and D-4 and the architect's D-5 are covered by those and not applied. The custodian checked each replacement against the report chosen for it, by script.
+4. **§7 (class 8):** 817 changed lines over 12 files by the counting command at 620acf4f, within 960 over 12. Three per-file figures pass §7's: `scripts/hooks/hooks.test.mjs` 24 of 20, `scripts/plan/verify-cites.test.mjs` 41 of 40, `AUTONOMY.md` 77 of 75. §7 is not edited.
+5. **Deviations (class 3), accepted at gate 1:** (a) §2 item 6: the directive's lines 37 and 38 are referenced by pin in §33 part A, not reproduced, under §8 item 8. (b) §2 item 5's statement that the §26 adjacency test reads lines 4 and 5 only does not hold: it finds the PRECEDENTS line by substring, so one lookup in `scripts/hooks/hooks.test.mjs` changed at 8965ba75, its assertions unchanged. (c) §2 item 3: with no `Previous ledger:` line in P's block, the new line leaves out `Before it`. (d) The flush CLI's inside-repository check covers this repository and the target file's, through `realpathSync.native`. (e) §4 MC4: the worker applied a wider mutation at 6372d6e9; MC4 as §4 states it was observed by the reviewer gate at c8b78e90. (f) §4 MR9 is observed by a substitute, a scratch copy of the settings read through R9's path, by the worker and again by the reviewer; no settings file was edited.
+6. **For the human, before (b):** D1's `verify-mutation.mjs` row differs by stdout sha256 between M0 and the head, because its output counts the 19 new tests, the same 19 by which the `node --test` count rises (the reviewer's E-1). On a literal reading that is I6, a STOP that goes to the human; the reviewer reads it as not I6. The shrink (b) waits for the human's reading.
+7. **Gate 2:** the architect on the code diff of 143bf561 and e984a6a2 only; the reviewer on the same diff, with R1 to R9 run and MR6 and MR8 made again. Every other verdict carries forward.
+8. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
+
+### Amendment 5 — gate 2: both FAIL, one attempt VOID; correction round 2; `ROTATE_BYTES` (class 3)
+
+*Written by the custodian after gate 2 and correction round 2 were seen, at the head 5201bc0b. References only. The reports: the architect `state/consults/gates/2026-10-17-governance-cut-state-cap-and-rotation-gate2-architect.md` (gate-log 541); the reviewer's attempt 2, VOID (gate-log 540, the custodian's record `state/consults/2026-10-17-governance-cut-state-cap-and-rotation-gate2-reviewer-void.md`), and its attempt 3 `state/consults/gates/2026-10-17-governance-cut-state-cap-and-rotation-gate2-reviewer.md` (gate-log 542); the round's worker report `state/consults/2026-10-17-governance-cut-state-cap-and-rotation-round-2-worker-report.md`.*
+
+1. **Gate 2:** the reviewer's attempt 2 is VOID: its report claimed runs that its transcript does not hold. The architect and the reviewer's attempt 3 FAIL on the same Correctness finding: R8 asserted the live ledger's pre-rotation shape (a title line, two `Previous ledger:` paths), which this piece's own rotation R removes, so main's CI would go red at R.
+2. **Correction round 2:** 1f4e8d5d (R8 runs over the live ledger and over `buildRotatedLedger` of it; the two assertions relaxed as the reviewer gave them; the comment in the architect's words) and 5201bc0b (MR8 and a new MR8b, the old title-line guard restored, observed at 1f4e8d5d).
+3. **§7:** 825 changed lines over 12 files at 5201bc0b; `scripts/plan/rotate-cut-state.test.mjs` 276 of 290. Amendment 4 item 4's three per-file figures are unchanged.
+4. **Deviation (class 3), the architect's D-7:** `ROTATE_BYTES` is exported beyond §2 item 3's four names. Its product use is inside `isDue`; its only importer is R4.
+5. **The gate's mutations:** the harness refused the reviewer's mutation edit at attempt 3, so MR6 and MR8 rest on the worker's observations at 143bf561, and MR8 also at 1f4e8d5d. Gate 3's reviewer makes MR8 and MR8b; if the harness refuses, the custodian makes them and records it.
+6. **Gate 3:** the architect on the round 2 diff only; the reviewer on the same diff, with R8 run and MR8 and MR8b made again. Every other verdict carries forward. This is the last correction round before the architect reduces (the 2026-09-18 record cap).
+7. **Still with the human:** the I6 reading (Amendment 4 item 6), before (b).
+8. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
+
+### Amendment 6 — gate 3: both PASS WITH NOTES; the comment's words
+
+*Written by the custodian after both gate 3 reports and the words were seen, at the head 3436bb0e. References only. The reports: the architect `state/consults/gates/2026-10-17-governance-cut-state-cap-and-rotation-gate3-architect.md` (gate-log 543) and the reviewer `state/consults/gates/2026-10-17-governance-cut-state-cap-and-rotation-gate3-reviewer.md` (gate-log 544); the words worker's report `state/consults/2026-10-18-governance-cut-state-cap-and-rotation-gate3-words-worker-report.md`.*
+
+1. **Gate 3:** both PASS WITH NOTES, with no Correctness or Evidence finding. Gate 2's finding is resolved: R8 holds on the live ledger and on a rotated one. The reviewer made MR8 and MR8b again, each failing R8 by name, with no refusal, so §9's mutations stand made again for this round.
+2. **The words, with no re-gate:** the reviewer's D-1 is chosen over the architect's D-8, which names the same comment. Applied at 3436bb0e in one commit, the test's lines 200 and 201 in their comments only, and checked by the custodian by script.
+3. **§7:** 825 changed lines over 12 files at 3436bb0e, as Amendment 5 item 3.
+4. **Before the merge, in order:** the human's I6 reading (Amendment 4 item 6); then (b) by §2 item 10, with the block's size after a rotation checked by `blockSizes(buildRotatedLedger(...))` on (b)'s ledger first (the architect's gate 1 N-1); then E1 and E2 in the PR body, main merged in, and main frozen to the click.
+5. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
+
+### Amendment 7 — the human's I6 reading: not I6; D1's `verify-mutation.mjs` row
+
+*Written by the custodian on the human's ruling (`state/directives/2026-10-18-229-not-i6-item-23-words-approved-no-release-line-rule-00-e2e-readme-entries-227-merged.md`, item 1), after both runs below were seen. References only, and the diff the ruling asks for.*
+
+1. **The ruling:** not I6. The invalidator guards the existing mutation records, and the only difference is the lines the PR's own new tests add.
+2. **The runs,** by the custodian, `node scripts/plan/verify-mutation.mjs` from each tree's root: at M0 0ff2594e2f355321640a6942b710e7507b613151, in a detached worktree, and at the head 3436bb0ea64c90a73cd7fdda950793d62cb2f60a, in `C:/dev/wt/csr`, clean. Both exit 0. Stdout: one line each, sha256 c5cd2f9c733b42c1cd61ce27f204531ad76e22ee8d063037f310e589de6dbf98 at M0 and c0473621ce2be55c6513f79423ac3bfa449c1510a928369724aabd159170f564 at the head. Stderr: empty at M0; 19 lines at the head, sha256 d891258ecfa8bc39a54031968de0691128ef44b53a7fd6afc7423f465e2d7da0.
+3. **The diff,** stdout then stderr. In the stderr lines each path:line is written `line <n> of <path> (on the branch)`, 19 of them, because those files are not on main before the merge; the raw lines, with the hashes above, are in the PR body.
+
+```text
+--- M0 stdout
++++ head stdout
+@@ -1 +1 @@
+-verify:mutation PASS — all 0 new test(s) have a recorded mutation naming them.
++verify:mutation PASS — all 19 new test(s) have a recorded mutation naming them.
+--- M0 stderr
++++ head stderr
+@@ -0,0 +1,19 @@
++  ok   line 199 of scripts/hooks/flush.test.mjs (on the branch) — js test "flush: a block of exactly 6,144 UTF-8 bytes is written"
++  ok   line 204 of scripts/hooks/flush.test.mjs (on the branch) — js test "flush: a block of 6,145 bytes is refused with BlockCapError"
++  ok   line 211 of scripts/hooks/flush.test.mjs (on the branch) — js test "flush: a non-ASCII block under the cap in characters and over it in UTF-8 bytes is refused"
++  ok   line 218 of scripts/hooks/flush.test.mjs (on the branch) — js test "flush: the refusal names the largest field by UTF-8 bytes and every field's size"
++  ok   line 229 of scripts/hooks/flush.test.mjs (on the branch) — js test "flush: the cap measures the block session-resume prints, for the real ledger's shape"
++  ok   line 258 of scripts/hooks/flush.test.mjs (on the branch) — js test "flush CLI: a refused block leaves the file byte-identical and is written whole to the scratch file the refusal names"
++  ok   line 280 of scripts/hooks/flush.test.mjs (on the branch) — js test "flush CLI: a temporary folder inside the repository gets no scratch file and the refusal says so"
++  ok   line 1384 of scripts/hooks/hooks.test.mjs (on the branch) — js test "session-resume: reading-order item 1 is the continuity block, the live ledger and the unfinished matter it names, with the standing items' sections"
++  ok   line 80 of scripts/plan/rotate-cut-state.test.mjs (on the branch) — js test "rotate-cut-state: a due rotation stages the archive byte-identical to the ledger at HEAD and the new ledger's exact text"
++  ok   line 102 of scripts/plan/rotate-cut-state.test.mjs (on the branch) — js test "rotate-cut-state: a same-day collision takes -2, then -3, and no archive is overwritten"
++  ok   line 122 of scripts/plan/rotate-cut-state.test.mjs (on the branch) — js test "rotate-cut-state: due from Monday 00:00Z after the last archive, not on the Sunday before"
++  ok   line 134 of scripts/plan/rotate-cut-state.test.mjs (on the branch) — js test "rotate-cut-state: a ledger over 153,600 bytes is due mid-week, and one of exactly 153,600 is not"
++  ok   line 151 of scripts/plan/rotate-cut-state.test.mjs (on the branch) — js test "rotate-cut-state: not due exits 0 and writes nothing"
++  ok   line 161 of scripts/plan/rotate-cut-state.test.mjs (on the branch) — js test "rotate-cut-state: refuses with exit 2 and writes nothing off main, on a modified tracked file, or with HEAD not equal to its upstream"
++  ok   line 180 of scripts/plan/rotate-cut-state.test.mjs (on the branch) — js test "rotate-cut-state: a new block over the cap refuses before anything moves"
++  ok   line 261 of scripts/plan/rotate-cut-state.test.mjs (on the branch) — js test "rotate-cut-state: after the rotation commit and a ledger-only flush commit, session-resume prints the block, the precompact hook allows and the stop hook's continuity step passes"
++  ok   line 266 of scripts/plan/rotate-cut-state.test.mjs (on the branch) — js test "rotate-cut-state: no hook in .claude/settings.json runs the rotation script"
++  ok   line 343 of scripts/plan/verify-cites.test.mjs (on the branch) — js test "verify-cites: an unpinned line cite into state/CUT-STATE.md past its end is advisory"
++  ok   line 358 of scripts/plan/verify-cites.test.mjs (on the branch) — js test "verify-cites: a pinned line cite into state/CUT-STATE.md whose pin fails stays gated"
+```
+
+4. **Every line at M0 is at the head, identical and in the same order, but for one count.** M0's output holds no per-test line: its stderr is empty. Its one stdout line, the summary, is the head's one stdout line except for its count, 0 at M0 and 19 at the head, the same 19 new tests that the head's stderr names one per line.
+5. **Next, by §2 item 10:** (b); E1 and E2 in the PR body; main merged into the branch; main frozen to the click.
+6. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.

@@ -17,7 +17,7 @@
 // and any export text before, after the open and after the export settles. If the export had already settled when the open returned, the record says so
 // and the observation is inconclusive. E-ASK and E-ASK-STATEMENT (stage 7) run before it, in their own functions.
 //
-// What none of this proves: a timing, a rate or a performance figure (there are none here; the millisecond numbers are bounds on waiting). A tap from a
+// What none of this proves: a timing, a rate or a performance figure (the millisecond numbers are bounds on waiting, and each export step's prepare-to-execute figure is a reading for triage, not a measurement). A tap from a
 // real WebView2 pointer is first exercised here: no earlier suite presses and releases without moving.
 //
 // RECORDED MUTATIONS. Each is named for the custodian to observe in a run at the stage's head; this stage applied none (port 5180 is reserved on the
@@ -52,7 +52,7 @@
 //   E-ASK (2)      is proven by RB12b at unit level (App.selection.test.tsx) and is not observable in e2e: Cancel and go on stops the export almost at once.
 //   E-ASK-STATEMENT src/App.tsx, `answerOpenAsk`: show the statement only when `cancel()` answers true (the loop body becomes `run.cancelChosen = false;
 //                  void run.cancel().then((answer) => { run.cancelChosen = answer; });`). The run has ended, so the host answers false. Expected: E-ASK-STATEMENT fails on the absent statement.
-//   Both steps are INCONCLUSIVE (class 2, never a pass) when the export had ended before the ask was read: the step then fails with that word in its message.
+//   Both steps are INCONCLUSIVE (class 2, never a pass) when the export had ended before the ask was read with an outcome other than `unknown-attempt`: the step then fails with that word in its message; an `unknown-attempt` there reads by exportElapsed.mjs's verdict.
 //   E-DBLCLICK     src/canvas/WorkingCanvas.tsx, the Deck props' `onClick`: remove the `if (event.type === "dblclick") return;` line. Expected: E-DBLCLICK fails on its first assertion (the Navigate double-click inspected an id); the Select count would fail next.
 //   E-ASK-TWO      src/App.tsx, `answerOpenAsk`: `setLateCancel([finished])` in place of the append. Expected: E-ASK-TWO fails on the statements' paths (only the second bundle_path is shown). INCONCLUSIVE, as above, when the ask or the open is not standing before the choice.
 //   E-KINDS (point) src/canvas/clickPick.ts, `tapPixel`'s return line: `Math.round` in place of both `Math.trunc` calls. Expected: E-KINDS fails on the point's Navigate click (the inspected id is not the hover's), as the rounded tap did before OPEN-15; a pass means the position was not at the dot's edge in that run, and shows nothing about rounding.
@@ -76,6 +76,7 @@ import {
   MAX_ZOOM_NOTCHES,
   ZOOM_NOTCH_DELTA_Y,
 } from "./lib.mjs";
+import { beginStep, elapsedTail, ExportInconclusive, initTtl, pairEvaluate, pairRead } from "./exportElapsed.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = join(HERE, "..", "..", "..");
@@ -557,11 +558,11 @@ async function prepareExport(page, destination) {
   const hook = await pollUntil(() => page.evaluate(() => typeof window.__SPATIAL_E2E__?.publishPrepareWithDestination === "function"), (ok) => ok === true, 20_000);
   expect(hook.ok, "the publishPrepareWithDestination hook never appeared");
   await page.evaluate(() => { const b = document.querySelector(".publish-disclosure"); if (b?.getAttribute("aria-expanded") !== "true") b.click(); });
-  return page.evaluate((d) => window.__SPATIAL_E2E__.publishPrepareWithDestination(d, "whole"), destination);
+  return pairEvaluate(page, "prepare", (d) => window.__SPATIAL_E2E__.publishPrepareWithDestination(d, "whole"), destination);
 }
 
 /** Executes the prepared attempt with the phrase an operator types (the destination's final path component), through the dev hook that shares the dialog's path. */
-const executeExport = (page, prompt) => page.evaluate((p) => window.__SPATIAL_E2E__.publishExecute(p), basename(prompt.destination_display));
+const executeExport = (page, prompt) => pairEvaluate(page, "execute", (p) => window.__SPATIAL_E2E__.publishExecute(p), basename(prompt.destination_display));
 
 /** E-EXPORT: with a selection standing and without one, the prompt's row scope and the bundle's row count are equal, and the section says the selection is not used. */
 async function stepExport(page, consoleHandle) {
@@ -611,20 +612,20 @@ async function stepScope(page, consoleHandle) {
 
 /**
  * E-ASK's driver: opens the 100k fixture, starts a whole-file execute of it through the dev hook and, with it running, an open of filter-zoned; neither is awaited (the open waits on
- * the ask). `window.__askRun` and `window.__askOpen` hold the two promises. Throws INCONCLUSIVE (class 2, never a pass) when the export has ended by the time the ask is read.
+ * the ask). `window.__askRun` and `window.__askOpen` hold the two promises. When the export has ended by the time the ask is read, it checks the outcome with `pairRead` (an `unknown-attempt` throws that verdict's FAIL or INCONCLUSIVE) and otherwise throws INCONCLUSIVE (class 2, never a pass).
  */
 async function startExportThenOpen(page, consoleHandle, label) {
   await openFixture(page, consoleHandle, FIXTURE_100K, label);
   const prepared = await prepareExport(page, freshDestination("ask"));
   expect(prepared.status === "prompt", `${label}: prepare returned ${JSON.stringify(prepared)}`);
-  await page.evaluate(([phrase, path]) => {
+  await pairEvaluate(page, "send", ([phrase, path]) => {
     const run = (window.__askRun = { done: false });
     run.promise = window.__SPATIAL_E2E__.publishExecute(phrase).then((o) => ((run.done = true), o));
     const opened = (window.__askOpen = {});
     opened.promise = window.__SPATIAL_E2E__.openPath(path);
   }, [basename(prepared.prompt.destination_display), FIXTURE_FILTER]);
   const shown = await pollUntil(() => page.evaluate(() => document.querySelector(".open-during-export-ask") !== null), (v) => v === true, 10_000, 100);
-  if (await page.evaluate(() => window.__askRun.done)) throw new Error(`${label}: INCONCLUSIVE (class 2, never a pass): the export had ended when the ask was read (ask shown: ${shown.ok})`);
+  if (await page.evaluate(() => window.__askRun.done)) { pairRead(await page.evaluate(() => window.__askRun.promise)); throw new Error(`${label}: INCONCLUSIVE (class 2, never a pass): the export had ended when the ask was read (ask shown: ${shown.ok})`); }
   expect(shown.ok, `${label}: no ask was shown while the export ran`);
 }
 
@@ -820,19 +821,22 @@ async function runSelectionSteps(page, consoleHandle) {
   async function runStep(id, timeoutMs, fn) {
     const startedAt = Date.now();
     let timer;
+    beginStep();
     try {
-      const note = await Promise.race([fn(), new Promise((_, reject) => (timer = setTimeout(() => reject(new Error(`${id}: timed out after ${timeoutMs}ms`)), timeoutMs)))]);
+      const note = (await Promise.race([fn(), new Promise((_, reject) => (timer = setTimeout(() => reject(new Error(`${id}: timed out after ${timeoutMs}ms`)), timeoutMs)))])) + elapsedTail();
       results.push({ id, status: "PASS", note });
       console.log(`[${id}] PASS (${Date.now() - startedAt}ms): ${note}`);
     } catch (e) {
-      results.push({ id, status: "FAIL", note: e?.message ?? String(e) });
-      console.error(`[${id}] FAIL (${Date.now() - startedAt}ms): ${e?.message ?? e}`);
-      process.exitCode = 1;
+      const status = e instanceof ExportInconclusive ? "INCONCLUSIVE" : "FAIL", note = (e?.message ?? String(e)) + elapsedTail();
+      results.push({ id, status, note });
+      console.error(`[${id}] ${status} (${Date.now() - startedAt}ms): ${note}`);
+      process.exitCode = status === "FAIL" ? 1 : process.exitCode || 3;
     } finally {
       clearTimeout(timer);
       await showLayerTab(page).catch(() => {});
     }
   }
+  console.log(`[selection] PENDING_ATTEMPT_TTL ${initTtl()}ms, read from src-tauri/src/publish.rs`);
   for (const [label, path] of [["filter-zoned", FIXTURE_FILTER], ["100k", FIXTURE_100K], ["multipolygon F-1", FIXTURE_MULTIPOLYGON], ["point P-1", FIXTURE_POINT], ["line L-1", FIXTURE_LINE]]) {
     if (!existsSync(path)) throw new Error(`selection: the ${label} fixture is not at ${path}; regenerate the manual-walkthrough fixtures (kernel/tests/manual_walkthrough_fixtures.rs, --ignored)`);
   }
@@ -865,7 +869,7 @@ async function runSelectionSteps(page, consoleHandle) {
   await runStep("E-ASK-TWO", 600_000, () => stepAskTwo(page, consoleHandle));
   await runStep("E-STATUS-HEIGHT", 600_000, () => stepStatusHeight(page, consoleHandle));
   await runStep("E-DBLCLICK", 600_000, () => stepDblClick(page, consoleHandle));
-  console.log(`[selection] ${results.filter((r) => r.status === "PASS").length} PASS, ${results.filter((r) => r.status === "FAIL").length} FAIL: ${results.map((r) => `${r.id}=${r.status}`).join(" ")}`);
+  console.log(`[selection] ${results.filter((r) => r.status === "PASS").length} PASS, ${results.filter((r) => r.status === "FAIL").length} FAIL${results.some((r) => r.status === "INCONCLUSIVE") ? `, ${results.filter((r) => r.status === "INCONCLUSIVE").length} INCONCLUSIVE` : ""}: ${results.map((r) => `${r.id}=${r.status}`).join(" ")}`);
 }
 
 async function main() {
