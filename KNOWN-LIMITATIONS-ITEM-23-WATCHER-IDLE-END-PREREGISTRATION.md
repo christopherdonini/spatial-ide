@@ -85,3 +85,15 @@ M = 607d8d166f2667b1b3e9bb9e501b57b4938328b9, read by the architect. T = b391e43
 ## Amendments
 
 *(Opens empty; append-only.)*
+
+### Amendment 1 — the human's rulings on OPEN-1 and OPEN-2 (class 5)
+
+*Written by the custodian on the human's ruling (`state/directives/2026-10-18-229-not-i6-item-23-words-approved-no-release-line-rule-00-e2e-readme-entries-227-merged.md`, item 2). References only.*
+
+1. **OPEN-1:** §A's words are approved as drafted: the item text and the source comment. The source comment's bracket reads `The human's wording, approved`, and its `<date>` is the UTC date on which the words are applied, from `date -u +%F`.
+2. **The lines, as the file takes them:** the item's 14 lines are §A's with their four-space block indent removed, so the item starts at column 0 and its continuation lines keep four spaces, as the file has it. The source comment's one line keeps its four leading spaces, its indent under the item, as §A's heading for it says. They replace item 23's eight lines and its one source comment line.
+3. **OPEN-2:** no release-notes line. Neither the item nor the watcher is at the v0.1.0 tag (§D).
+4. **Next:** one worker applies the words by script, byte for byte from §A, in `C:/dev/wt/kl23` on the branch `cut/known-limitations-item-23` from the commit that adds this amendment; then the single reviewer gate (§E). Rule (00): the piece shares no path with the pieces in progress or PR #229.
+5. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.

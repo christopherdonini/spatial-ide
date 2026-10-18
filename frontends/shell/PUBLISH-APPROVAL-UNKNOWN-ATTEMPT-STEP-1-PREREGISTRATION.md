@@ -201,3 +201,16 @@ Nothing above is edited.
 7. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 5 — closing record of step 1: PR #227 merged
+
+*Written by the custodian after the merge. References only.*
+
+1. **Merged** by the human at 2026-10-18T08:09:04Z, merge commit 4e03f85a1d99e2dc6722b89f5d2949a7f5800a30 (two parents: main a006d128 and the branch head 6a00d6a8).
+2. **The worker's reports**, each with its sha256 from line 5 to the end: the build `state/consults/2026-10-17-publish-approval-unknown-attempt-step-1-worker-report.md` (89c29dc2b4c7742bead76f456827227faca7a65d44927842ffc3e6a0348cd86c); the README lines `state/consults/2026-10-17-publish-approval-unknown-attempt-step-1-readme-worker-report.md` (a028f0532c9c087a4981ccc7fa33a56ae3fb79cddaf35f23663c50e34b9c3a6b); the words `state/consults/2026-10-17-publish-approval-unknown-attempt-step-1-words-worker-report.md` (ccc4aa8c965770c14932ab9d89ba9453e708e005c5de46c84ffa0b2fcf11560d).
+3. **Gate 1:** both PASS WITH NOTES (gate log 536 and 537): `state/consults/gates/2026-10-17-publish-approval-unknown-attempt-step-1-gate1-architect.md` (sha256 fa8ce9d55dd8838b7821be2366eca4a64ba83af0290a70b0b7e2139d21631bf2) and `state/consults/gates/2026-10-17-publish-approval-unknown-attempt-step-1-gate1-reviewer.md` (sha256 753f24477ac17fb8680b8f3bda28a0c972568c98cd3c9101433479c60e0ba356).
+4. **The custodian's records:** the e2e R1 to R3 `state/consults/2026-10-17-publish-approval-unknown-attempt-step-1-e2e-custodian-runs.md` (sha256 8942a220a1bc3bd2093a801f036fb77c1b385de759422da30fa2f9720273bec0) and M1 re-observed `state/consults/2026-10-17-publish-approval-unknown-attempt-step-1-m1-custodian-run.md` (sha256 fcccca5039cdb8a836ec9a0026d4259f90fe644803ccd448a88c9b9374279134), as Amendment 4 item 3.
+5. **PLAN:** step 1 is done; the node stays open, because the cause and the product question are its later steps (this form's head). Its next step waits on the human. Milestone 3's dependency on this node, which stood for step 1 (the human's ruling of 2026-10-17, its item 4), is met and removed.
+6. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.

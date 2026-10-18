@@ -1,20 +1,20 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `a8a47496c7851d9bf41b6e84ce16f99941cfe7df42c08353c7dacc159b6e7f99`) at `2026-10-18T00:06:29.865Z`.
+Generated from `PLAN.yaml` (sha256 `423d1a41f096923434dad08bbb48eac51922eb14006717d2a540c776b4dea598`) at `2026-10-18T12:00:23.175Z`.
 
 ## 1. Next
 
-- **source-changed-post-reopen-routes-watcher-visible** — source-changed.mjs's post and reopen routes, and walkthrough Part N's N6 and N8, still change the source by an mtime touch the advisory watcher can see (lane `shell`)
+- (nothing ready)
 
 ## 2. Ready
 
-- **source-changed-post-reopen-routes-watcher-visible** — source-changed.mjs's post and reopen routes, and walkthrough Part N's N6 and N8, still change the source by an mtime touch the advisory watcher can see (lane `shell`, order null, budget 90 min)
+- (none)
 
-## 3. Waiting on the human (total: 5 min)
+## 3. Waiting on the human (total: 2 min)
 
-### sight
+### ruling
 
-- **known-limitations-item-23-watcher-idle-end** — KNOWN-LIMITATIONS item 23: it says a source change goes unnoticed until a query is next issued, but on Windows the advisory watcher ends the session while idle on a change it can see (5 min)
+- **publish-approval-unknown-attempt-under-load** — Publish: an export's approval came back as unknown attempt under machine load (the status-bar e2e run 2 and the H3 order run): the cause first, the pending attempt's TTL elapsing between prepare and execute or an attempt the host lost; then whether the TTL suits a person reading the approval dialog, which shows no expiry (2 min)
 
 ## 4. Blocked on dependencies
 
@@ -30,7 +30,8 @@ Generated from `PLAN.yaml` (sha256 `a8a47496c7851d9bf41b6e84ce16f99941cfe7df42c0
 
 ## 5. In progress
 
-- **publish-approval-unknown-attempt-under-load** — Publish: an export's approval came back as unknown attempt under machine load (the status-bar e2e run 2 and the H3 order run): the cause first, the pending attempt's TTL elapsing between prepare and execute or an attempt the host lost; then whether the TTL suits a person reading the approval dialog, which shows no expiry — evidence: branch `cut/unknown-attempt-step-1`
+- **source-changed-post-reopen-routes-watcher-visible** — source-changed.mjs's post and reopen routes, and walkthrough Part N's N6 and N8, still change the source by an mtime touch the advisory watcher can see — evidence: branch `cut/source-changed-watcher-visible`
+- **known-limitations-item-23-watcher-idle-end** — KNOWN-LIMITATIONS item 23: it says a source change goes unnoticed until a query is next issued, but on Windows the advisory watcher ends the session while idle on a change it can see — evidence: branch `cut/known-limitations-item-23`
 - **governance-cut-state-cap-and-rotation** — state/CUT-STATE.md: the six STANDING items moved out verbatim, a 6,144-byte cap on the continuity block in flush.mjs, and the ledger rotated into state/cut-archive/ by a named script, with the reading order's item 1 restated — evidence: branch `cut/cut-state-cap-and-rotation`
 
 ## 6. Proposed / unscheduled

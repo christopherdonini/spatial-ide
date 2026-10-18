@@ -505,3 +505,47 @@ Nothing above is edited.
 5. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 7 — the human's I6 reading: not I6; D1's `verify-mutation.mjs` row
+
+*Written by the custodian on the human's ruling (`state/directives/2026-10-18-229-not-i6-item-23-words-approved-no-release-line-rule-00-e2e-readme-entries-227-merged.md`, item 1), after both runs below were seen. References only, and the diff the ruling asks for.*
+
+1. **The ruling:** not I6. The invalidator guards the existing mutation records, and the only difference is the lines the PR's own new tests add.
+2. **The runs,** by the custodian, `node scripts/plan/verify-mutation.mjs` from each tree's root: at M0 0ff2594e2f355321640a6942b710e7507b613151, in a detached worktree, and at the head 3436bb0ea64c90a73cd7fdda950793d62cb2f60a, in `C:/dev/wt/csr`, clean. Both exit 0. Stdout: one line each, sha256 c5cd2f9c733b42c1cd61ce27f204531ad76e22ee8d063037f310e589de6dbf98 at M0 and c0473621ce2be55c6513f79423ac3bfa449c1510a928369724aabd159170f564 at the head. Stderr: empty at M0; 19 lines at the head, sha256 d891258ecfa8bc39a54031968de0691128ef44b53a7fd6afc7423f465e2d7da0.
+3. **The diff,** stdout then stderr. In the stderr lines each path:line is written `line <n> of <path> (on the branch)`, 19 of them, because those files are not on main before the merge; the raw lines, with the hashes above, are in the PR body.
+
+```text
+--- M0 stdout
++++ head stdout
+@@ -1 +1 @@
+-verify:mutation PASS — all 0 new test(s) have a recorded mutation naming them.
++verify:mutation PASS — all 19 new test(s) have a recorded mutation naming them.
+--- M0 stderr
++++ head stderr
+@@ -0,0 +1,19 @@
++  ok   line 199 of scripts/hooks/flush.test.mjs (on the branch) — js test "flush: a block of exactly 6,144 UTF-8 bytes is written"
++  ok   line 204 of scripts/hooks/flush.test.mjs (on the branch) — js test "flush: a block of 6,145 bytes is refused with BlockCapError"
++  ok   line 211 of scripts/hooks/flush.test.mjs (on the branch) — js test "flush: a non-ASCII block under the cap in characters and over it in UTF-8 bytes is refused"
++  ok   line 218 of scripts/hooks/flush.test.mjs (on the branch) — js test "flush: the refusal names the largest field by UTF-8 bytes and every field's size"
++  ok   line 229 of scripts/hooks/flush.test.mjs (on the branch) — js test "flush: the cap measures the block session-resume prints, for the real ledger's shape"
++  ok   line 258 of scripts/hooks/flush.test.mjs (on the branch) — js test "flush CLI: a refused block leaves the file byte-identical and is written whole to the scratch file the refusal names"
++  ok   line 280 of scripts/hooks/flush.test.mjs (on the branch) — js test "flush CLI: a temporary folder inside the repository gets no scratch file and the refusal says so"
++  ok   line 1384 of scripts/hooks/hooks.test.mjs (on the branch) — js test "session-resume: reading-order item 1 is the continuity block, the live ledger and the unfinished matter it names, with the standing items' sections"
++  ok   line 80 of scripts/plan/rotate-cut-state.test.mjs (on the branch) — js test "rotate-cut-state: a due rotation stages the archive byte-identical to the ledger at HEAD and the new ledger's exact text"
++  ok   line 102 of scripts/plan/rotate-cut-state.test.mjs (on the branch) — js test "rotate-cut-state: a same-day collision takes -2, then -3, and no archive is overwritten"
++  ok   line 122 of scripts/plan/rotate-cut-state.test.mjs (on the branch) — js test "rotate-cut-state: due from Monday 00:00Z after the last archive, not on the Sunday before"
++  ok   line 134 of scripts/plan/rotate-cut-state.test.mjs (on the branch) — js test "rotate-cut-state: a ledger over 153,600 bytes is due mid-week, and one of exactly 153,600 is not"
++  ok   line 151 of scripts/plan/rotate-cut-state.test.mjs (on the branch) — js test "rotate-cut-state: not due exits 0 and writes nothing"
++  ok   line 161 of scripts/plan/rotate-cut-state.test.mjs (on the branch) — js test "rotate-cut-state: refuses with exit 2 and writes nothing off main, on a modified tracked file, or with HEAD not equal to its upstream"
++  ok   line 180 of scripts/plan/rotate-cut-state.test.mjs (on the branch) — js test "rotate-cut-state: a new block over the cap refuses before anything moves"
++  ok   line 261 of scripts/plan/rotate-cut-state.test.mjs (on the branch) — js test "rotate-cut-state: after the rotation commit and a ledger-only flush commit, session-resume prints the block, the precompact hook allows and the stop hook's continuity step passes"
++  ok   line 266 of scripts/plan/rotate-cut-state.test.mjs (on the branch) — js test "rotate-cut-state: no hook in .claude/settings.json runs the rotation script"
++  ok   line 343 of scripts/plan/verify-cites.test.mjs (on the branch) — js test "verify-cites: an unpinned line cite into state/CUT-STATE.md past its end is advisory"
++  ok   line 358 of scripts/plan/verify-cites.test.mjs (on the branch) — js test "verify-cites: a pinned line cite into state/CUT-STATE.md whose pin fails stays gated"
+```
+
+4. **Every line at M0 is at the head, identical and in the same order, but for one count.** M0's output holds no per-test line: its stderr is empty. Its one stdout line, the summary, is the head's one stdout line except for its count, 0 at M0 and 19 at the head, the same 19 new tests that the head's stderr names one per line.
+5. **Next, by §2 item 10:** (b); E1 and E2 in the PR body; main merged into the branch; main frozen to the click.
+6. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
