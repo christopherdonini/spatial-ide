@@ -30,11 +30,12 @@
 // Custodian's decision, 2026-09-17, recorded as a class-2 deviation in the preregistration's section 10
 // Amendment 5 -- section 6 of that document named an existing counts-only hook, and no such hook existed.
 //
-// THE FIXTURE (X-4). A scratch COPY of the 100k manual-walkthrough fixture, copied per run, and
-// mutated by an MTIME TOUCH ONLY -- bytes untouched. A copy rather than the fixture itself
-// deliberately: other E2E steps share that file and a mutation would end their sessions too.
-// The copy is sha256-hashed BEFORE and AFTER the run (section 8.8), and the two hashes must be EQUAL:
-// that equality is what proves the mutation was an mtime touch and not a byte edit.
+// THE FIXTURE (X-4). Copies of the 100k manual-walkthrough fixture, copied per run -- never the fixture
+// itself: other E2E steps share that file and a change would end their sessions too. Every route opens
+// copy a through a directory junction and changes the source by repointing the junction to copy b (the
+// same bytes, mtime 120 s later), a change the advisory watcher cannot see (KNOWN-LIMITATIONS item 26).
+// SCRATCH_COPY is still copied and hashed BEFORE and AFTER the run (section 8.8) as the reference; every
+// copy must hash EQUAL to it, which proves no byte was edited.
 //
 // ----------------------------------------------------------------------------------------------
 // THE RECORDED MUTATION, and how to perform it (section 4 T10; run it ONCE, record the observed failure,
@@ -153,7 +154,7 @@
 // is minted).
 //
 // WHAT MAKES THIS THE POST-CHECK AND NOT A SECOND COPY OF THE PRE-CHECK. The pre-check route (S3
-// above) mutates the file BEFORE issuing the next query, so the kernel's live-generation check
+// above) repoints the junction BEFORE issuing the next query, so the kernel's live-generation check
 // inside `viewport_query` itself refuses -- the ticket is never minted. The post-check route must
 // instead let a tile's mint SUCCEED against the UNCHANGED file (so the pre-check passes) and only
 // then mutate, so the change is caught when that tile's own stream later drains. This driver has no
@@ -176,7 +177,7 @@
 //
 // WHAT THIS DOES NOT GUARANTEE, STATED RATHER THAN HIDDEN. A camera gesture can plan more than one
 // tile; this driver mutates on the FIRST `stream-issued` line it sees, and a SIBLING tile whose own
-// mint has not yet resolved at that instant would see the already-mutated file and hit the
+// mint has not yet resolved at that instant would see the already-repointed source and hit the
 // pre-check instead. That is not a silent false pass: `endSession` is idempotent (`tile-session-
 // ended-source-changed` is logged from exactly one first caller), and this driver asserts the
 // session log carries NO `tile-stream-mint-refused` line at all for the run -- the pre-check's own
@@ -249,20 +250,20 @@ const ROUTE = ENV_ROUTE === "post" || ENV_ROUTE === "reopen" ? ENV_ROUTE : "pre"
 const STREAM_ISSUED_POLL_MS = 5;
 const STREAM_ISSUED_WAIT_TIMEOUT_MS = 30_000;
 
-// ROUTE "pre" only (E2E-STALE-EXPECTATIONS-REAIM-PREREGISTRATION.md section 2.4). The advisory source watcher
+// EVERY route (E2E-STALE-EXPECTATIONS-REAIM-PREREGISTRATION.md section 2.4; SOURCE-CHANGED-POST-REOPEN-ROUTES-WATCHER-VISIBLE-PREREGISTRATION.md section 2.1). The advisory source watcher
 // (`engine/SOURCE-WATCHER-PREREGISTRATION.md`) ends the session on an mtime touch while the app is idle,
-// before any query, so the pre-check is re-aimed to a change the watcher cannot see: a directory junction
-// repointed after admission (KNOWN-LIMITATIONS item 26: caught at the next query's pre-check). Two copies of
+// before any query, so every route changes the source in a way the watcher cannot see: a directory junction
+// repointed after admission (KNOWN-LIMITATIONS item 26: caught at the next query's pre-check or a stream's post-check). Two copies of
 // the 100k fixture, `a` and `b`, differ in mtime only; S1 opens the file through a junction that starts on
-// `a`; S3 retargets it to `b`. The junction is made in-process with Node's own `symlinkSync(.., "junction")`:
+// `a`; the change is a repoint to `b` (R4 repoints back to `a`). The junction is made in-process with Node's own `symlinkSync(.., "junction")`:
 // no elevation, no spawned tool, no other link type, and never a recursive delete on it.
 const TARGETS_DIR = join(OUT_DIR, "source-changed-targets");
 const TARGET_A = join(TARGETS_DIR, "a");
 const TARGET_B = join(TARGETS_DIR, "b");
 const COPY_NAME = "source-changed-scratch.parquet";
 const JUNCTION = join(OUT_DIR, "source-changed-link");
-const B_MTIME_OFFSET_MS = 120_000; // the same offset S3 used for its touch
-const OPEN_PATH = ROUTE === "pre" ? join(JUNCTION, COPY_NAME) : SCRATCH_COPY;
+const B_MTIME_OFFSET_MS = 120_000; // how far ahead of a's mtime b's is set
+const OPEN_PATH = join(JUNCTION, COPY_NAME);
 const LOG_LINE_POLL_BOUND_MS = 10_000; // a bound on waiting, not a result (ADR-018)
 
 /** Points `JUNCTION` at `target`. A stale junction (an earlier run's) is removed with `unlinkSync`, which
@@ -277,7 +278,7 @@ function makeJunction(target) {
   symlinkSync(target, JUNCTION, "junction");
 }
 
-function layoutPreRoute() {
+function layoutJunction() {
   for (const dir of [TARGET_A, TARGET_B]) {
     mkdirSync(dir, { recursive: true });
     copyFileSync(FIXTURE_100K, join(dir, COPY_NAME));
@@ -285,6 +286,36 @@ function layoutPreRoute() {
   const later = new Date(Date.now() + B_MTIME_OFFSET_MS);
   utimesSync(join(TARGET_B, COPY_NAME), later, later);
   makeJunction(TARGET_A);
+}
+
+/** Fails by name off Windows; S3, the post route's S4 and R4 call this before they repoint. */
+function requireWindows(label) {
+  if (process.platform !== "win32") {
+    throw new Error(`${label}: the junction route is established on Windows only (the file-watching boundary, engine/src/watch.rs; KNOWN-LIMITATIONS items 1 and 24); it fails here rather than skipping`);
+  }
+}
+
+/** Repoints `JUNCTION` at `target`; EPERM/EACCES fails by name (invalidator I4) and is flagged `i4`. */
+function repoint(target, label) {
+  try {
+    makeJunction(target);
+  } catch (e) {
+    if (e.code !== "EPERM" && e.code !== "EACCES") throw e;
+    throw Object.assign(new Error(`${label}: the junction could not be retargeted without elevation (${e.code}); no other link type is tried and nothing is elevated (invalidator I4)`), { i4: true });
+  }
+}
+
+/** After a repoint: the opened path resolves inside `target` and both copies still hash to `reference`. */
+function assertRepointed(target, label, reference) {
+  const resolved = realpathSync(OPEN_PATH);
+  if (!resolved.toLowerCase().startsWith(realpathSync(target).toLowerCase())) {
+    throw new Error(`${label}: the opened path resolves to ${resolved}, not inside ${target}`);
+  }
+  const hashes = [TARGET_A, TARGET_B].map((d) => sha256(join(d, COPY_NAME)));
+  if (hashes.some((h) => h !== reference)) {
+    throw new Error(`${label}: a copy's bytes changed (${hashes.join(", ")} vs ${reference}); this mutation must change no byte (block-on-sight 8)`);
+  }
+  return resolved;
 }
 
 /** The first session-log line, written since `baselineLines`, that matches `pattern`; null after the bound. */
@@ -504,7 +535,7 @@ function lastViewStateZoom(consoleHandle) {
 }
 
 /** Full-width drags that carry the camera across the whole fixture (317 columns of 40 m cells, `engine/src/fixture.rs`) at the
- * current zoom: the bound the POST route's S4 already uses (milestone 1 re-aim, Decision A). The PRE route needs it for the same
+ * current zoom: the bound the POST route's S4 already uses (milestone 1 re-aim, Decision A). The PRE and REOPEN routes need it for the same
  * reason: two drags stay inside the cover S2's zoom-in search made resident, so no tile is planned and no query follows. */
 function dragsToCrossDataset(consoleHandle, rect) {
   const datasetPx = 317 * 40 * 2 ** (lastViewStateZoom(consoleHandle) ?? 0);
@@ -534,20 +565,20 @@ function viewStateLineCount(consoleHandle) {
 
 /**
  * POST route only. Polls for the FIRST new `stream-issued` line after `baseline` and, the instant
- * one appears, synchronously touches `scratchPath`'s mtime (no byte edit) and returns immediately --
- * every millisecond between detection and the touch is mechanism, not a claim (ADR-018).
+ * one appears, synchronously repoints `JUNCTION` at copy `b` (no byte edit) and returns immediately --
+ * every millisecond between detection and the repoint is mechanism, not a claim (ADR-018).
  *
  * Returns `{touchedAfterNewStreamIssued: true, count}` on success (`count` is the new
- * `stream-issued` total, for the report); throws if no new line appears within
- * `STREAM_ISSUED_WAIT_TIMEOUT_MS`, naming the ladder rung that failed to produce one.
+ * `stream-issued` total, for the report; the report's field names are unchanged); throws if no new
+ * line appears within `STREAM_ISSUED_WAIT_TIMEOUT_MS`, naming the ladder rung that failed to produce
+ * one, or the `i4`-flagged error `repoint` raises.
  */
-async function touchOnFirstNewStreamIssued(consoleHandle, scratchPath, baseline, rungLabel) {
+async function repointOnFirstNewStreamIssued(consoleHandle, baseline, rungLabel) {
   const start = Date.now();
   while (Date.now() - start < STREAM_ISSUED_WAIT_TIMEOUT_MS) {
     const now = streamIssuedCount(consoleHandle);
     if (now > baseline) {
-      const later = new Date(Date.now() + 120_000);
-      utimesSync(scratchPath, later, later);
+      repoint(TARGET_B, "S4");
       return { touchedAfterNewStreamIssued: true, count: now };
     }
     await sleep(STREAM_ISSUED_POLL_MS);
@@ -593,20 +624,18 @@ async function main() {
   mkdirSync(OUT_DIR, { recursive: true });
   copyFileSync(FIXTURE_100K, SCRATCH_COPY);
   const hashBefore = sha256(SCRATCH_COPY);
-  if (ROUTE === "pre") {
-    try {
-      layoutPreRoute();
-    } catch (e) {
-      console.error(`source-changed: could not lay out the junction route (${e.code ?? e.message}); no other link type is tried and nothing is elevated (invalidator I4)`);
-      process.exitCode = 1;
-      return;
-    }
-    const copyHashes = [TARGET_A, TARGET_B].map((d) => sha256(join(d, COPY_NAME)));
-    if (copyHashes.some((h) => h !== hashBefore)) {
-      console.error(`source-changed: the two copies do not hash to the fixture (${copyHashes.join(", ")} vs ${hashBefore})`);
-      process.exitCode = 1;
-      return;
-    }
+  try {
+    layoutJunction();
+  } catch (e) {
+    console.error(`source-changed: could not lay out the junction route (${e.code ?? e.message}); no other link type is tried and nothing is elevated (invalidator I4)`);
+    process.exitCode = 1;
+    return;
+  }
+  const copyHashes = [TARGET_A, TARGET_B].map((d) => sha256(join(d, COPY_NAME)));
+  if (copyHashes.some((h) => h !== hashBefore)) {
+    console.error(`source-changed: the two copies do not hash to the fixture (${copyHashes.join(", ")} vs ${hashBefore})`);
+    process.exitCode = 1;
+    return;
   }
 
   let session;
@@ -837,50 +866,20 @@ async function main() {
     observation.sessionLogBaselineLineCount = sessionLogBaselineLineCount;
 
     // ------------------------------------------------------------------------------------
-    // S3: change the source underneath it -- mtime only, bytes untouched. PRE and REOPEN routes:
+    // S3: change the source underneath it -- a junction repoint, bytes untouched. PRE and REOPEN routes:
     // the POST route (see this file's header note) must NOT mutate before a mint, so it defers the
-    // touch into S4 below, racing it against that gesture's own `stream-issued` line instead.
+    // repoint into S4 below, racing it against that gesture's own `stream-issued` line instead.
     // ------------------------------------------------------------------------------------
-    if (ROUTE === "pre") {
+    if (ROUTE !== "post") {
       await runStep("S3-retarget-junction", async () => {
-        if (process.platform !== "win32") {
-          throw new Error("S3: the junction route is established on Windows only (the file-watching boundary, engine/src/watch.rs; KNOWN-LIMITATIONS items 1 and 24); it fails here rather than skipping");
-        }
-        try {
-          makeJunction(TARGET_B);
-        } catch (e) {
-          if (e.code === "EPERM" || e.code === "EACCES") {
-            throw new Error(`S3: the junction could not be retargeted without elevation (${e.code}); no other link type is tried and nothing is elevated (invalidator I4)`);
-          }
-          throw e;
-        }
-        const resolved = realpathSync(OPEN_PATH);
-        if (!resolved.toLowerCase().startsWith(realpathSync(TARGET_B).toLowerCase())) {
-          throw new Error(`S3: the opened path resolves to ${resolved}, not inside ${TARGET_B}`);
-        }
-        const hashes = [TARGET_A, TARGET_B].map((d) => sha256(join(d, COPY_NAME)));
-        if (hashes.some((h) => h !== hashBefore)) {
-          throw new Error(`S3: a copy's bytes changed (${hashes.join(", ")} vs ${hashBefore}); this mutation must change no byte (block-on-sight 8)`);
-        }
+        requireWindows("S3");
+        repoint(TARGET_B, "S3");
+        const resolved = assertRepointed(TARGET_B, "S3", hashBefore);
         observation.hashAfterTouch = hashBefore;
         return `the junction now resolves to ${resolved}; both copies still hash to the fixture's sha256, so they differ in mtime only`;
       });
-    } else if (ROUTE !== "post") {
-      await runStep("S3-touch-mtime", async () => {
-        const later = new Date(Date.now() + 120_000);
-        utimesSync(SCRATCH_COPY, later, later);
-        const hashAfterTouch = sha256(SCRATCH_COPY);
-        if (hashAfterTouch !== hashBefore) {
-          throw new Error(
-            `S3: the scratch copy's bytes changed (${hashBefore} -> ${hashAfterTouch}); this mutation must be ` +
-              `an mtime touch only (block-on-sight 8)`
-          );
-        }
-        observation.hashAfterTouch = hashAfterTouch;
-        return "modification time moved forward; sha256 unchanged, so no byte was edited";
-      });
     } else {
-      await runStep("S3-touch-mtime", async () => "deferred to S4 (POST route): mutated only after a mint succeeds", "INFO");
+      await runStep("S3-retarget-junction", async () => "deferred to S4 (POST route): repointed only after a mint succeeds", "INFO");
     }
 
     // ------------------------------------------------------------------------------------
@@ -907,7 +906,7 @@ async function main() {
         const ladder = [];
 
         let rect = await requireCanvasRect(page);
-        const pan = await panByViewports(page, rect, ROUTE === "pre" ? dragsToCrossDataset(consoleHandle, rect) : 2);
+        const pan = await panByViewports(page, rect, ROUTE !== "post" ? dragsToCrossDataset(consoleHandle, rect) : 2);
         await waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 2000, timeoutMs: 30_000 });
         let after = viewportQueryCount(consoleHandle);
         ladder.push({ rung: "pan-beyond-viewport", ...pan, queriesBefore: before, queriesAfter: after });
@@ -931,7 +930,7 @@ async function main() {
           );
         }
         let preCheckNote = "";
-        if (ROUTE === "pre") {
+        if (ROUTE !== "post") {
           // The pre-check's own line (`logMintRefused`), not the watcher's: the junction change is invisible to the watcher.
           const hit = await findSessionLogLine(/tile-stream-mint-refused.*engine\.source_changed/, sessionLogBaselineLineCount);
           if (hit === null) {
@@ -943,7 +942,8 @@ async function main() {
         return `a viewport_query followed the "${observation.queryProducedBy}" gesture (${before} -> ${after} in the render trace)${preCheckNote}`;
       });
     } else {
-      await runStep("S4-issue-one-query-and-touch-on-mint", async () => {
+      await runStep("S4-issue-one-query-and-retarget-on-mint", async () => {
+        requireWindows("S4");
         // Same gesture ladder as the PRE route (proven to produce a query against the shipped
         // default arm, T10 runs 5/7), but racing `stream-issued` instead of `viewport_query` (see
         // this file's header note for why that is the later, mint-confirmed signal) and mutating
@@ -959,7 +959,7 @@ async function main() {
         // lines followed, and the status stayed "Showing all 20163 features in view". The pan is now bounded by the fixture's own extent:
         // drags go on, one box-width-ish each, up to the number that crosses the whole dataset (317 columns of 40 m cells,
         // `engine/src/fixture.rs`) at the current zoom -- a camera that has crossed it has been over every tile there is. The poll
-        // below touches the file on the first new `stream-issued` line and `shouldStop` would end the pan at the next drag boundary, but
+        // below repoints the junction on the first new `stream-issued` line and `shouldStop` would end the pan at the next drag boundary, but
         // that line only arrives after the pan has ended (tiles are planned on settle), so in practice the pan runs to its bound
         // (13 drags at S2's zoom). Nothing else about S4 changes.
         const zoomNow = lastViewStateZoom(consoleHandle) ?? 0;
@@ -968,10 +968,12 @@ async function main() {
         let raceResult = null;
         const panPromise = panByViewports(page, rect, maxDrags, () => raceResult !== null);
         let raceError = null;
+        let i4Error = null;
         try {
-          raceResult = await touchOnFirstNewStreamIssued(consoleHandle, SCRATCH_COPY, before, "pan-beyond-viewport");
+          raceResult = await repointOnFirstNewStreamIssued(consoleHandle, before, "pan-beyond-viewport");
         } catch (e) {
           raceError = e;
+          if (e.i4) i4Error = e;
         }
         const pan = await panPromise;
         await waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 2000, timeoutMs: 30_000 });
@@ -983,9 +985,10 @@ async function main() {
           const center = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
           const zoomPromise = zoomInOneNotch(page, consoleHandle, center);
           try {
-            raceResult = await touchOnFirstNewStreamIssued(consoleHandle, SCRATCH_COPY, after, "zoom-one-notch");
+            raceResult = await repointOnFirstNewStreamIssued(consoleHandle, after, "zoom-one-notch");
           } catch (e) {
             raceError = e;
+            if (e.i4) i4Error = e;
           }
           const zoom = await zoomPromise;
           await waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 2000, timeoutMs: 30_000 });
@@ -996,24 +999,19 @@ async function main() {
 
         observation.queryLadder = ladder;
         observation.queryProducedBy = raceResult ? ladder[ladder.length - 1].rung : null;
+        if (i4Error) throw i4Error;
         if (!raceResult) {
           throw new Error(
             `S4: no stream-issued line followed any gesture in the ladder, so there was never a mint to race a ` +
               `mutation against. Ladder: ${JSON.stringify(ladder)}`
           );
         }
-        const hashAfterTouch = sha256(SCRATCH_COPY);
-        if (hashAfterTouch !== hashBefore) {
-          throw new Error(
-            `S4: the scratch copy's bytes changed (${hashBefore} -> ${hashAfterTouch}); the race must touch mtime ` +
-              `only (block-on-sight 8)`
-          );
-        }
-        observation.hashAfterTouch = hashAfterTouch;
+        assertRepointed(TARGET_B, "S4", hashBefore);
+        observation.hashAfterTouch = hashBefore;
         return (
           `a stream-issued line followed the "${observation.queryProducedBy}" gesture ` +
-          `(${before} -> ${after} in the render trace); the scratch copy's mtime was touched on that signal, ` +
-          `sha256 unchanged`
+          `(${before} -> ${after} in the render trace); the junction was repointed to b on that signal; ` +
+          `both copies still hash to the fixture`
         );
       });
     }
@@ -1161,7 +1159,7 @@ async function main() {
       });
 
       await runStep("R2-successful-reopen-clears-and-identifies", async () => {
-        const outcome = await page.evaluate((p) => window.__SPATIAL_E2E__.openPath(p), SCRATCH_COPY);
+        const outcome = await page.evaluate((p) => window.__SPATIAL_E2E__.openPath(p), OPEN_PATH);
         if (outcome.kind !== "admitted") {
           throw new Error(`R2: openPath(scratch copy) returned ${JSON.stringify(outcome)}, expected {kind:"admitted"}`);
         }
@@ -1216,20 +1214,28 @@ async function main() {
       });
 
       await runStep("R4-second-source-change-ends-the-new-session", async () => {
-        const later = new Date(Date.now() + 120_000);
-        utimesSync(SCRATCH_COPY, later, later);
-        const hashAfterSecondTouch = sha256(SCRATCH_COPY);
-        if (hashAfterSecondTouch !== hashBefore) {
-          throw new Error(`R4: the scratch copy's bytes changed on the second touch (${hashBefore} -> ${hashAfterSecondTouch})`);
+        // The reopened generation sits on copy b; repoint the junction back to a while the app is idle.
+        const r4Baseline = newestSessionLog().lineCount ?? 0;
+        requireWindows("R4");
+        repoint(TARGET_A, "R4");
+        assertRepointed(TARGET_A, "R4", hashBefore);
+        // The idle check: the watcher cannot see a repoint, so the session must still be up before any gesture.
+        await waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 2000, timeoutMs: 30_000 });
+        if ((await statusStack(page)).sessionEndedPresent) {
+          throw new Error("R4: .canvas-session-ended appeared while the app was idle after the repoint, before any gesture");
         }
         const rect = await requireCanvasRect(page);
-        await panByViewports(page, rect, 2);
+        await panByViewports(page, rect, dragsToCrossDataset(consoleHandle, rect));
         await waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 3000, timeoutMs: 45_000 });
+        const hit = await findSessionLogLine(/tile-stream-mint-refused.*engine\.source_changed \{"detail":"\{mtime\}"\}/, r4Baseline);
+        if (hit === null) {
+          throw new Error(`R4: no tile-stream-mint-refused line with engine.source_changed {"detail":"{mtime}"} since R4's baseline (line ${r4Baseline}); the pre-check did not refuse the query`);
+        }
         const status = await statusStack(page);
         if (!status.sessionEndedPresent) {
           throw new Error("R4: a second source change on the reopened generation did not reproduce .canvas-session-ended");
         }
-        return "second mtime touch + a pan beyond residency reproduced .canvas-session-ended on the new generation";
+        return "the junction was repointed to a; the session stayed up while idle; the next query's pre-check refused with {mtime}; .canvas-session-ended reproduced on the new generation";
       });
     }
 
@@ -1271,14 +1277,14 @@ async function main() {
         }
         if (mintRefused.length > 0) {
           throw new Error(
-            `S5d: a "tile-stream-mint-refused" line appeared after this run's own baseline -- this run's touch ` +
+            `S5d: a "tile-stream-mint-refused" line appeared after this run's own baseline -- this run's change ` +
               `lost the race to a tile's PRE-check rather than landing on the POST-check route (see this file's ` +
               `header note on what this does and does not guarantee). Not a silent pass: this is exactly the ` +
               `route this assertion exists to distinguish. Evidence: ${JSON.stringify(observation.postCheckLogEvidence)}`
           );
         }
-        return `"tile-session-ended-source-changed" present, no "tile-stream-mint-refused" since this run's own ` +
-          `baseline -- the terminal (post-check) route ended this session, not the pre-check`;
+        return `"tile-session-ended-source-changed" present and no "tile-stream-mint-refused" since this run's own ` +
+          `baseline -- a session ended and no tile mint refusal was logged; which kernel route ended the generation is not read by this step`;
       });
     }
   } catch (e) {
@@ -1293,7 +1299,7 @@ async function main() {
     // The fixture hash, after use (section 8.8's "before and after").
     try {
       observation.hashAfter = existsSync(SCRATCH_COPY) ? sha256(SCRATCH_COPY) : null;
-      observation.copyHashesAfter = ROUTE === "pre" ? [TARGET_A, TARGET_B].map((d) => sha256(join(d, COPY_NAME))) : [];
+      observation.copyHashesAfter = [TARGET_A, TARGET_B].map((d) => sha256(join(d, COPY_NAME)));
       if (observation.copyHashesAfter.some((h) => h !== hashBefore)) {
         results.push({ id: "fixture-integrity", status: "FAIL", note: `a junction-route copy's bytes differ from the fixture (${observation.copyHashesAfter.join(", ")} vs ${hashBefore})` });
       } else if (observation.hashAfter !== null && observation.hashAfter !== hashBefore) {
