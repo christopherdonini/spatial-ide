@@ -197,8 +197,8 @@ const r8 = async (rotatedShape) => {
   const dir = mkRepo({ 'README.md': 'a\n' }, `@${Math.floor(ago(300).getTime() / 1000)} +0000`);
   const A0 = sh(dir, ['rev-parse', 'HEAD']);
   const flushedAt = ago(120).toISOString().replace(/\.\d{3}Z$/, 'Z');
-  const live = fs.readFileSync(path.join(REPO_ROOT, 'state', 'CUT-STATE.md'), 'utf8');
-  const real = rotatedShape ? buildRotatedLedger({ oldText: live, name: 'cut-state-r8.md', commit: A0 }) : live; // the real ledger as main holds it (before the first rotation: a title line and a two-path Previous ledger line; after it, the rotated shape)
+  const live = fs.readFileSync(path.join(REPO_ROOT, 'state', 'CUT-STATE.md'), 'utf8'); // the real ledger as main holds it (before the first rotation: a title line and a two-path Previous ledger line; after it, the rotated shape)
+  const real = rotatedShape ? buildRotatedLedger({ oldText: live, name: 'cut-state-r8.md', commit: A0 }) : live; // rotatedShape: that ledger rotated once more in memory, the shape the next rotation reads
   const seeded = updateBlockFields(real, { ...Object.fromEntries(SESSION_CONTINUITY_FIELDS.map((f) => [f, 'SENTINEL'])), flushed_at: flushedAt, tip: A0 });
   commit(dir, { 'state/CUT-STATE.md': seeded }, 'ledger flush', `@${Math.floor(ago(180).getTime() / 1000)} +0000`);
   sh(dir, ['push', '-q', 'origin', 'main']);
