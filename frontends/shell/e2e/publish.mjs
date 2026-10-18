@@ -44,6 +44,7 @@ import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { attachOrLaunch, attachConsole, CDP_PORT } from "./lib.mjs";
+import { beginStep, elapsedTail, ExportInconclusive, initTtl, pairEvaluate } from "./exportElapsed.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const OUT_DIR = join(HERE, "out");
@@ -279,7 +280,7 @@ async function stepApproved(page) {
   // scenario's own unique parent directory name is what actually correlates its two records.
   const destinationTag = basename(dirname(destination));
 
-  const prepareOutcome = await page.evaluate(
+  const prepareOutcome = await pairEvaluate(page, "prepare",
     (dest) => window.__SPATIAL_E2E__.publishPrepareWithDestination(dest, "whole"),
     destination
   );
@@ -351,7 +352,7 @@ async function stepApproved(page) {
   }
 
   await waitForHook(page, "publishExecute");
-  const executeOutcome = await page.evaluate(
+  const executeOutcome = await pairEvaluate(page, "execute",
     (phrase) => window.__SPATIAL_E2E__.publishExecute(phrase),
     derivedPhrase
   );
@@ -406,7 +407,7 @@ async function stepRefused(page) {
   const destination = freshDestination("refused");
   const destinationTag = basename(dirname(destination));
 
-  const prepareOutcome = await page.evaluate(
+  const prepareOutcome = await pairEvaluate(page, "prepare",
     (dest) => window.__SPATIAL_E2E__.publishPrepareWithDestination(dest, "whole"),
     destination
   );
@@ -417,7 +418,7 @@ async function stepRefused(page) {
 
   await waitForHook(page, "publishExecute");
   const wrongPhrase = "definitely-the-wrong-phrase";
-  const executeOutcome = await page.evaluate(
+  const executeOutcome = await pairEvaluate(page, "execute",
     (phrase) => window.__SPATIAL_E2E__.publishExecute(phrase),
     wrongPhrase
   );
@@ -471,7 +472,7 @@ async function stepFiltered(page) {
   }
 
   const destination = freshDestination("filtered");
-  const prepareOutcome = await page.evaluate(
+  const prepareOutcome = await pairEvaluate(page, "prepare",
     (dest) => window.__SPATIAL_E2E__.publishPrepareWithDestination(dest, "whole"),
     destination
   );
@@ -489,7 +490,7 @@ async function stepFiltered(page) {
   // (no `confirmation_phrase` field exists on `PublishPromptData` at all).
   const derivedPhrase = basename(prompt.destination_display);
   await waitForHook(page, "publishExecute");
-  const executeOutcome = await page.evaluate(
+  const executeOutcome = await pairEvaluate(page, "execute",
     (phrase) => window.__SPATIAL_E2E__.publishExecute(phrase),
     derivedPhrase
   );
@@ -587,23 +588,26 @@ async function main() {
 
   const consoleHandle = attachConsole(page);
 
-  /** @type {Array<{id: string, status: "PASS"|"FAIL"|"SKIP", note: string}>} */
+  /** @type {Array<{id: string, status: "PASS"|"FAIL"|"INCONCLUSIVE"|"SKIP", note: string}>} */
   const results = [];
 
   async function runStep(id, timeoutMs, fn) {
     const startedAt = Date.now();
+    beginStep();
     try {
-      const note = await withTimeout(fn(), timeoutMs, id);
+      const note = (await withTimeout(fn(), timeoutMs, id)) + elapsedTail();
       results.push({ id, status: "PASS", note });
       console.log(`[${id}] PASS (${Date.now() - startedAt}ms): ${note}`);
     } catch (e) {
-      const note = e?.message ?? String(e);
-      results.push({ id, status: "FAIL", note });
-      console.error(`[${id}] FAIL (${Date.now() - startedAt}ms): ${note}`);
+      const note = (e?.message ?? String(e)) + elapsedTail();
+      const status = e instanceof ExportInconclusive ? "INCONCLUSIVE" : "FAIL";
+      results.push({ id, status, note });
+      console.error(`[${id}] ${status} (${Date.now() - startedAt}ms): ${note}`);
     }
   }
 
   try {
+    console.log(`publish: PENDING_ATTEMPT_TTL ${initTtl()}ms, read from src-tauri/src/publish.rs`);
     console.log(`publish: waiting for the app to mount (up to ${MOUNT_READY_TIMEOUT_MS}ms)...`);
     const mountReady = await waitForMountReady(page);
     console.log(`publish: mount-readiness gate PASSED after ${mountReady.readyAfterMs}ms`);
@@ -637,14 +641,14 @@ async function main() {
     console.log("");
     console.log("== Summary ==");
     const idWidth = Math.max(...results.map((r) => r.id.length), "Step".length);
-    const statusWidth = 6;
+    const statusWidth = Math.max(6, ...results.map((r) => r.status.length));
     console.log(`${"Step".padEnd(idWidth)}  ${"Status".padEnd(statusWidth)}  Note`);
     console.log(`${"-".repeat(idWidth)}  ${"-".repeat(statusWidth)}  ${"-".repeat(40)}`);
     for (const r of results) {
       console.log(`${r.id.padEnd(idWidth)}  ${r.status.padEnd(statusWidth)}  ${r.note}`);
     }
 
-    process.exitCode = results.some((r) => r.status === "FAIL") ? 1 : 0;
+    process.exitCode = results.some((r) => r.status === "FAIL") ? 1 : results.some((r) => r.status === "INCONCLUSIVE") ? 3 : 0;
   } catch (e) {
     console.error(`publish: harness failure: ${e.stack ?? e.message}`);
     process.exitCode = 1;
