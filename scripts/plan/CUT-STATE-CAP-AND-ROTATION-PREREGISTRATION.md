@@ -493,3 +493,15 @@ Nothing above is edited.
 8. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 6 — gate 3: both PASS WITH NOTES; the comment's words
+
+*Written by the custodian after both gate 3 reports and the words were seen, at the head 3436bb0e. References only. The reports: the architect `state/consults/gates/2026-10-17-governance-cut-state-cap-and-rotation-gate3-architect.md` (gate-log 543) and the reviewer `state/consults/gates/2026-10-17-governance-cut-state-cap-and-rotation-gate3-reviewer.md` (gate-log 544); the words worker's report `state/consults/2026-10-18-governance-cut-state-cap-and-rotation-gate3-words-worker-report.md`.*
+
+1. **Gate 3:** both PASS WITH NOTES, with no Correctness or Evidence finding. Gate 2's finding is resolved: R8 holds on the live ledger and on a rotated one. The reviewer made MR8 and MR8b again, each failing R8 by name, with no refusal, so §9's mutations stand made again for this round.
+2. **The words, with no re-gate:** the reviewer's D-1 is chosen over the architect's D-8, which names the same comment. Applied at 3436bb0e in one commit, the test's lines 200 and 201 in their comments only, and checked by the custodian by script.
+3. **§7:** 825 changed lines over 12 files at 3436bb0e, as Amendment 5 item 3.
+4. **Before the merge, in order:** the human's I6 reading (Amendment 4 item 6); then (b) by §2 item 10, with the block's size after a rotation checked by `blockSizes(buildRotatedLedger(...))` on (b)'s ledger first (the architect's gate 1 N-1); then E1 and E2 in the PR body, main merged in, and main frozen to the click.
+5. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
