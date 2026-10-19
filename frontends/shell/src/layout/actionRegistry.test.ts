@@ -123,6 +123,8 @@ describe("U5: the registry's ids and shortcuts are unique", () => {
   // OBSERVED AT f49599353db52445c07e941e326c73f0c44a8925: FAILED -- "holds exactly the eight ids: the three toggles and Zoom to layer (question round 66, item 2), and milestone 2's four (RULED 2026-10-09, eight forms, item 4)":
   //   AssertionError: expected [ 'layer.zoomToLayer', …(6) ] to deeply equal [ 'layer.zoomToLayer', …(7) ]. Reverted after observing.
   // RECORDED MUTATION for "UC8 (the eleven ids)": delete the `dataset.open` entry from `ACTIONS` (actionRegistry.ts). Expected failure: the sorted ids lack "dataset.open".
+// OBSERVED AT fa6715541ccdef4285503a2b9bd59ec9a44943dc: FAILED -- "holds exactly the eleven ids: the eight of milestone 2 and, for milestone 3, command.focus, dataset.open and layer.revealExport (question round 66, item 2; SHELL-MIGRATION-MILESTONE-3-PREREGISTRATION.md section 4, UC8)":
+//   AssertionError: expected [ 'command.focus', …(9) ] to deeply equal [ 'command.focus', …(10) ]. Reverted after observing.
   it("holds exactly the eleven ids: the eight of milestone 2 and, for milestone 3, command.focus, dataset.open and layer.revealExport (question round 66, item 2; SHELL-MIGRATION-MILESTONE-3-PREREGISTRATION.md section 4, UC8)", () => {
     expect(ACTIONS.map((entry) => entry.id).sort()).toEqual([
       "command.focus",
@@ -141,6 +143,8 @@ describe("U5: the registry's ids and shortcuts are unique", () => {
 });
 
 // RECORDED MUTATION for "UC8": give `command.focus` the chord J in `ACTIONS`. Expected failure: Mod+K maps to nothing, and the chord J is held twice.
+// OBSERVED AT fa6715541ccdef4285503a2b9bd59ec9a44943dc: FAILED -- "UC8: Mod+K maps to command.focus (Meta on macOS), and every chord is unique": AssertionError: expected [ null, null, null ] to deeply equal [ 'command.focus', …(2) ];
+//   and "shortcuts are unique, and Zoom to layer has none": expected 3 to be 4. Reverted after observing.
 describe("UC8: Mod+K is the command bar's chord", () => {
   it("UC8: Mod+K maps to command.focus (Meta on macOS), and every chord is unique", () => {
     expect([matchChord(ctrl("k"), "other"), matchChord(meta("k"), "mac"), matchChord(ctrl("k"), "mac")]).toEqual(["command.focus", "command.focus", null]);
@@ -280,6 +284,9 @@ describe("UB10: the four ids milestone 2 adds", () => {
 });
 
 // RECORDED MUTATION for "UC10": in `matchCommandOpener` match on `event.code === "Slash"` instead of `event.key === "/"`. Expected failure: the Shift+Digit7 row (key "/", code Digit7) no longer matches.
+// OBSERVED AT fa6715541ccdef4285503a2b9bd59ec9a44943dc: FAILED -- "UC10: / matches bare, with Shift and on another code; Ctrl, Meta, Alt, repeat, composing and an editable focus do not; Slash with another key does not":
+//   AssertionError: expected [ true, true, false, false ] to deeply equal [ true, true, true, true ]
+//   (the Shift+Digit7 row is the third). Reverted after observing.
 describe("UC10: the bare / opens the command bar", () => {
   it("UC10: / matches bare, with Shift and on another code; Ctrl, Meta, Alt, repeat, composing and an editable focus do not; Slash with another key does not", () => {
     const slash = (over: Partial<KeyEventLike> = {}) => key("/", { code: "Slash", ...over });

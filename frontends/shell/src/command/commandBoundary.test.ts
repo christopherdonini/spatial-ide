@@ -39,6 +39,8 @@ function forbiddenImports(file: string): string[] {
 }
 
 // RECORDED MUTATION for "UC9": add `import "../skp/client";` to commandDraft.ts. Expected failure: the scan names the file and the specifier.
+// OBSERVED AT fa6715541ccdef4285503a2b9bd59ec9a44943dc: FAILED -- "UC9: no command source file has a forbidden import, and the scan found the command source files":
+//   AssertionError: expected [ 'command/commandDraft.ts imports ../skp/client' ] to deeply equal []. Reverted after observing.
 describe("UC9: nothing under src/command/ imports from skp/, streaming/, residency/ or canvas/", () => {
   it("UC9: no command source file has a forbidden import, and the scan found the command source files", () => {
     expect(commandSourceFiles(), "the scan found nothing to prove anything about").toEqual(expect.arrayContaining(["commandDraft.ts", "commandConstants.ts"]));

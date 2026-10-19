@@ -19,6 +19,8 @@ const idsOf = (draft: Draft): string[] => ("candidates" in draft ? draft.candida
 const WITH_WORD = ACTIONS.filter((entry) => entry.command !== null);
 
 // RECORDED MUTATION for "UC1" (PR A's half of the row): in `resolveDraft` make the plain search case-sensitive (`contains` compares without `toLowerCase`). Expected failure: ZOOM finds nothing.
+// OBSERVED AT fa6715541ccdef4285503a2b9bd59ec9a44943dc: FAILED -- "UC1: an exact /word runs, a prefix lists by word, plain text matches label or word in registry order, ? gives help, and command.focus is out of search":
+//   AssertionError: expected [] to deeply equal [ 'layer.zoomToLayer', …(1) ] (at the ZOOM search). Reverted after observing.
 describe("UC1: resolveDraft", () => {
   it("UC1: an exact /word runs, a prefix lists by word, plain text matches label or word in registry order, ? gives help, and command.focus is out of search", () => {
     expect(resolve("")).toEqual({ kind: "empty" });
@@ -71,6 +73,8 @@ function allStates(): BarState[] {
 const after = (pos: BarPos, state: BarState): BarState => ({ ...pos, completions: state.completions });
 
 // RECORDED MUTATION for "UC2": in `commandBarKey`'s Tab case return `open: true` instead of `open: false` (Tab reopens the list after completing). Expected failure: Tab leaves in at most two.
+// OBSERVED AT fa6715541ccdef4285503a2b9bd59ec9a44943dc: FAILED -- "UC2: over every state Shift+Tab leaves in one press, Tab in at most two and never applies, Enter never completes, Escape closes the list and then leaves, and composing keys do nothing":
+//   AssertionError: a second Tab leaves: {"draft":"/lay","open":true,"active":null}: expected [ true, 'none' ] to deeply equal [ false, 'none' ]. Reverted after observing.
 describe("UC2: commandBarKey", () => {
   it("UC2: over every state Shift+Tab leaves in one press, Tab in at most two and never applies, Enter never completes, Escape closes the list and then leaves, and composing keys do nothing", () => {
     const states = allStates();
