@@ -35,7 +35,8 @@
 // copy a through a directory junction and changes the source by repointing the junction to copy b (the
 // same bytes, mtime 120 s later), a change the advisory watcher cannot see (KNOWN-LIMITATIONS item 26).
 // SCRATCH_COPY is still copied and hashed BEFORE and AFTER the run (section 8.8) as the reference; every
-// copy must hash EQUAL to it, which proves no byte was edited.
+// copy must hash EQUAL to it, which proves no byte was edited. The repoint is made by a spawned Windows PowerShell 5.1 child (see the junction
+// comment below): Windows PowerShell 5.1 and its Add-Type are a runtime requirement of this driver.
 //
 // ----------------------------------------------------------------------------------------------
 // THE RECORDED MUTATION, and how to perform it (section 4 T10; run it ONCE, record the observed failure,
@@ -201,7 +202,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { createHash } from "node:crypto";
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -255,8 +256,10 @@ const STREAM_ISSUED_WAIT_TIMEOUT_MS = 30_000;
 // before any query, so every route changes the source in a way the watcher cannot see: a directory junction
 // repointed after admission (KNOWN-LIMITATIONS item 26: caught at the next query's pre-check or a stream's post-check). Two copies of
 // the 100k fixture, `a` and `b`, differ in mtime only; S1 opens the file through a junction that starts on
-// `a`; the change is a repoint to `b` (R4 repoints back to `a`). The junction is made in-process with Node's own `symlinkSync(.., "junction")`:
-// no elevation, no spawned tool, no other link type, and never a recursive delete on it.
+// `a`; the change is a repoint to `b` (R4 repoints back to `a`). The layout makes the junction once, in-process, with Node's own
+// `symlinkSync(.., "junction")`. Every REPOINT after that rewrites the existing junction's mount-point reparse data in place
+// (`FSCTL_SET_REPARSE_POINT`, so the open path exists at every instant) from ONE spawned Windows PowerShell 5.1 child that compiles a small
+// P/Invoke class with Add-Type: that is a runtime requirement of this driver. No elevation, no link-making tool, no other link type, no recursive delete.
 const TARGETS_DIR = join(OUT_DIR, "source-changed-targets");
 const TARGET_A = join(TARGETS_DIR, "a");
 const TARGET_B = join(TARGETS_DIR, "b");
@@ -266,8 +269,9 @@ const B_MTIME_OFFSET_MS = 120_000; // how far ahead of a's mtime b's is set
 const OPEN_PATH = join(JUNCTION, COPY_NAME);
 const LOG_LINE_POLL_BOUND_MS = 10_000; // a bound on waiting, not a result (ADR-018)
 
-/** Points `JUNCTION` at `target`. A stale junction (an earlier run's) is removed with `unlinkSync`, which
- * removes the link and not its target; EPERM/EACCES is the caller's to report (invalidator I4). */
+/** The LAYOUT only: makes `JUNCTION` at `target`. A stale junction (an earlier run's) is removed with `unlinkSync`, which
+ * removes the link and not its target; EPERM/EACCES is the caller's to report (invalidator I4). It runs before anything is
+ * opened; every later repoint is the helper's, in place (`repoint`). */
 function makeJunction(target) {
   try {
     lstatSync(JUNCTION);
@@ -295,14 +299,137 @@ function requireWindows(label) {
   }
 }
 
-/** Repoints `JUNCTION` at `target`; EPERM/EACCES fails by name (invalidator I4) and is flagged `i4`. */
-function repoint(target, label) {
-  try {
-    makeJunction(target);
-  } catch (e) {
-    if (e.code !== "EPERM" && e.code !== "EACCES") throw e;
-    throw Object.assign(new Error(`${label}: the junction could not be retargeted without elevation (${e.code}); no other link type is tried and nothing is elevated (invalidator I4)`), { i4: true });
+// The repoint helper: ONE Windows PowerShell 5.1 child, started once after the layout. Bounds on waiting, not results (ADR-018).
+const HELPER_START_TIMEOUT_MS = 60_000; // the Add-Type compile
+const HELPER_ANSWER_TIMEOUT_MS = 10_000;
+const HELPER_END_TIMEOUT_MS = 5_000;
+// Its one P/Invoke class. Set() opens the EXISTING junction directory and sends FSCTL_SET_REPARSE_POINT with a mount-point
+// REPARSE_DATA_BUFFER (SubstituteName `\??\<target>`, PrintName `<target>`), so the name is never deleted. It returns 0, or the Win32 error.
+const HELPER_CS = String.raw`using System;
+using System.Runtime.InteropServices;
+using System.Text;
+public static class JunctionRewrite {
+  [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+  static extern IntPtr CreateFileW(string name, uint access, uint share, IntPtr sa, uint disp, uint flags, IntPtr tmpl);
+  [DllImport("kernel32.dll", SetLastError = true)]
+  static extern bool DeviceIoControl(IntPtr h, uint code, byte[] inb, int inLen, IntPtr outb, int outLen, out int ret, IntPtr ov);
+  [DllImport("kernel32.dll")]
+  static extern bool CloseHandle(IntPtr h);
+  public static int Set(string link, string target) {
+    byte[] sub = Encoding.Unicode.GetBytes(@"\??\" + target), print = Encoding.Unicode.GetBytes(target);
+    int data = 8 + sub.Length + 2 + print.Length + 2;
+    byte[] b = new byte[8 + data];
+    BitConverter.GetBytes(0xA0000003u).CopyTo(b, 0);
+    BitConverter.GetBytes((ushort)data).CopyTo(b, 4);
+    BitConverter.GetBytes((ushort)sub.Length).CopyTo(b, 10);
+    BitConverter.GetBytes((ushort)(sub.Length + 2)).CopyTo(b, 12);
+    BitConverter.GetBytes((ushort)print.Length).CopyTo(b, 14);
+    sub.CopyTo(b, 16);
+    print.CopyTo(b, 16 + sub.Length + 2);
+    IntPtr h = CreateFileW(link, 0x40000000u, 7u, IntPtr.Zero, 3u, 0x02000000u | 0x00200000u, IntPtr.Zero);
+    if (h == (IntPtr)(-1)) return Marshal.GetLastWin32Error();
+    int ret;
+    bool ok = DeviceIoControl(h, 0x000900A4u, b, b.Length, IntPtr.Zero, 0, out ret, IntPtr.Zero);
+    int err = ok ? 0 : Marshal.GetLastWin32Error();
+    CloseHandle(h);
+    return err;
   }
+}`;
+// Its stdin script: compile, say ready, then one target per line in and one line out: `ok`, or the Win32 error number.
+const HELPER_PS = [
+  "Add-Type -TypeDefinition $env:SPATIAL_E2E_REPOINT_CS",
+  "[Console]::Out.WriteLine('ready'); [Console]::Out.Flush()",
+  "while (($t = [Console]::In.ReadLine()) -ne $null) { $t = $t.Trim(); if ($t.Length -eq 0) { continue }; $r = [JunctionRewrite]::Set($env:SPATIAL_E2E_REPOINT_LINK, $t); if ($r -eq 0) { $o = 'ok' } else { $o = [string]$r }; [Console]::Out.WriteLine($o); [Console]::Out.Flush() }",
+].join("\n");
+let repointHelper = null;
+
+/** The helper's next stdout line; rejects after `ms`, or if the helper exited first (its stderr is in the message). */
+function nextHelperLine(ms, what) {
+  const h = repointHelper;
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      h.wake = null;
+      reject(new Error(`${what}: no line from the repoint helper within ${ms}ms (stderr: ${h.err.trim() || "empty"})`));
+    }, ms);
+    const check = () => {
+      if (h.queue.length === 0 && !h.exited) { h.wake = check; return; }
+      clearTimeout(timer);
+      h.wake = null;
+      if (h.queue.length > 0) resolve(h.queue.shift());
+      else reject(new Error(`${what}: the repoint helper exited (code ${h.exitCode}) before answering (stderr: ${h.err.trim() || "empty"})`));
+    };
+    check();
+  });
+}
+
+/** Spawns the helper (the call carries a timeout) and waits for `ready`. */
+async function startRepointHelper() {
+  const child = spawn("powershell.exe", ["-NoProfile", "-NonInteractive", "-Command", "-"], {
+    stdio: ["pipe", "pipe", "pipe"],
+    windowsHide: true,
+    timeout: DEADLINE_MS + HELPER_START_TIMEOUT_MS,
+    env: { ...process.env, SPATIAL_E2E_REPOINT_CS: HELPER_CS, SPATIAL_E2E_REPOINT_LINK: JUNCTION },
+  });
+  const h = (repointHelper = { child, pid: child.pid, queue: [], wake: null, buf: "", err: "", exited: false, exitCode: null });
+  child.stdout.setEncoding("utf8");
+  child.stderr.setEncoding("utf8");
+  child.stdout.on("data", (d) => {
+    const parts = (h.buf + d).split("\n");
+    h.buf = parts.pop();
+    for (const p of parts) if (p.trim().length > 0) h.queue.push(p.trim());
+    h.wake?.();
+  });
+  child.stderr.on("data", (d) => { h.err += d; });
+  child.stdin.on("error", () => {});
+  child.on("error", (e) => { h.err += e.message; h.exited = true; h.wake?.(); });
+  child.on("close", (code) => { h.exited = true; h.exitCode = code; h.wake?.(); });
+  child.stdin.write(`${HELPER_PS}\n`);
+  const first = await nextHelperLine(HELPER_START_TIMEOUT_MS, "start");
+  if (first !== "ready") throw new Error(`the repoint helper's first line was ${JSON.stringify(first)}, not ready (stderr: ${h.err.trim() || "empty"})`);
+  console.log(`source-changed: repoint helper started (Windows PowerShell child, PID ${h.pid})`);
+}
+
+/** Sends one target and returns the helper's one-line answer. */
+async function askRepointHelper(target) {
+  const h = repointHelper;
+  if (!h) throw new Error("the repoint helper is not running");
+  h.child.stdin.write(`${target}\n`);
+  return nextHelperLine(HELPER_ANSWER_TIMEOUT_MS, `repoint to ${target}`);
+}
+
+/** Ends the helper by closing its stdin, then by its own PID if it has not gone; prints that it exited. */
+async function endRepointHelper(why) {
+  const h = repointHelper;
+  if (!h) return;
+  repointHelper = null;
+  h.child.stdin.end();
+  const waitExit = async () => {
+    for (let i = 0; i < HELPER_END_TIMEOUT_MS / 50 && !h.exited; i++) await sleep(50);
+    return h.exited;
+  };
+  let how = "after its stdin closed";
+  if (!(await waitExit())) {
+    try { process.kill(h.pid); } catch { /* already gone */ }
+    how = "after a kill by its own PID";
+    await waitExit();
+  }
+  console.log(`source-changed: repoint helper PID ${h.pid} ${h.exited ? `exited (code ${h.exitCode}) ${how}` : "did NOT exit"} (${why})`);
+}
+
+/** Repoints `JUNCTION` at `target` through the helper and awaits its answer. Win32 5 and 1314 are invalidator I4 (flagged `i4`); 4394
+ * (ERROR_REPARSE_TAG_MISMATCH) and any other answer fail by name. Every failure here is flagged `repointFailed`. */
+async function repoint(target, label) {
+  let answer;
+  try {
+    answer = await askRepointHelper(target);
+  } catch (e) {
+    throw Object.assign(new Error(`${label}: ${e.message}`), { repointFailed: true });
+  }
+  if (answer === "ok") return;
+  if (answer === "5" || answer === "1314") {
+    throw Object.assign(new Error(`${label}: the junction could not be retargeted without elevation (Win32 ${answer}); no other link type is tried and nothing is elevated (invalidator I4)`), { i4: true, repointFailed: true });
+  }
+  throw Object.assign(new Error(`${label}: the repoint helper answered ${JSON.stringify(answer)} for ${target}, expected ok (a number is a Win32 error; 4394 is ERROR_REPARSE_TAG_MISMATCH)`), { repointFailed: true });
 }
 
 /** After a repoint: the opened path resolves inside `target` and both copies still hash to `reference`. */
@@ -565,20 +692,20 @@ function viewStateLineCount(consoleHandle) {
 
 /**
  * POST route only. Polls for the FIRST new `stream-issued` line after `baseline` and, the instant
- * one appears, synchronously repoints `JUNCTION` at copy `b` (no byte edit) and returns immediately --
- * every millisecond between detection and the repoint is mechanism, not a claim (ADR-018).
+ * one appears, writes the request to repoint `JUNCTION` at copy `b` (no byte edit) to the helper, awaits its answer and
+ * returns -- every millisecond between detection and the repoint, a pipe round trip included, is mechanism, not a claim (ADR-018).
  *
  * Returns `{touchedAfterNewStreamIssued: true, count}` on success (`count` is the new
  * `stream-issued` total, for the report; the report's field names are unchanged); throws if no new
  * line appears within `STREAM_ISSUED_WAIT_TIMEOUT_MS`, naming the ladder rung that failed to produce
- * one, or the `i4`-flagged error `repoint` raises.
+ * one, or the `repointFailed`-flagged error `repoint` raises.
  */
 async function repointOnFirstNewStreamIssued(consoleHandle, baseline, rungLabel) {
   const start = Date.now();
   while (Date.now() - start < STREAM_ISSUED_WAIT_TIMEOUT_MS) {
     const now = streamIssuedCount(consoleHandle);
     if (now > baseline) {
-      repoint(TARGET_B, "S4");
+      await repoint(TARGET_B, "S4");
       return { touchedAfterNewStreamIssued: true, count: now };
     }
     await sleep(STREAM_ISSUED_POLL_MS);
@@ -606,10 +733,11 @@ async function statusStack(page) {
 }
 
 async function main() {
-  const watchdog = setTimeout(() => {
+  const watchdog = setTimeout(async () => {
     console.error(
       `source-changed: SPATIAL_E2E_DEADLINE_MS (default ${DEADLINE_MS}) exceeded -- presumed hung, failing loudly`
     );
+    await endRepointHelper("watchdog");
     process.exit(2);
   }, DEADLINE_MS);
   watchdog.unref();
@@ -638,11 +766,24 @@ async function main() {
     return;
   }
 
+  // The repoint helper starts once, after the layout (it is not started off Windows: S3, S4 and R4 fail by name there first).
+  if (process.platform === "win32") {
+    try {
+      await startRepointHelper();
+    } catch (e) {
+      console.error(`source-changed: could not start the repoint helper (Windows PowerShell 5.1 and Add-Type are required): ${e.message}`);
+      await endRepointHelper("start failed");
+      process.exitCode = 1;
+      return;
+    }
+  }
+
   let session;
   try {
     session = await attachOrLaunch();
   } catch (e) {
     console.error(`source-changed: could not attach to or launch the app: ${e.message}`);
+    await endRepointHelper("attach failed");
     process.exitCode = 1;
     return;
   }
@@ -873,7 +1014,7 @@ async function main() {
     if (ROUTE !== "post") {
       await runStep("S3-retarget-junction", async () => {
         requireWindows("S3");
-        repoint(TARGET_B, "S3");
+        await repoint(TARGET_B, "S3");
         const resolved = assertRepointed(TARGET_B, "S3", hashBefore);
         observation.hashAfterTouch = hashBefore;
         return `the junction now resolves to ${resolved}; both copies still hash to the fixture's sha256, so they differ in mtime only`;
@@ -968,12 +1109,12 @@ async function main() {
         let raceResult = null;
         const panPromise = panByViewports(page, rect, maxDrags, () => raceResult !== null);
         let raceError = null;
-        let i4Error = null;
+        let repointError = null;
         try {
           raceResult = await repointOnFirstNewStreamIssued(consoleHandle, before, "pan-beyond-viewport");
         } catch (e) {
           raceError = e;
-          if (e.i4) i4Error = e;
+          if (e.repointFailed) repointError = e;
         }
         const pan = await panPromise;
         await waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 2000, timeoutMs: 30_000 });
@@ -988,7 +1129,7 @@ async function main() {
             raceResult = await repointOnFirstNewStreamIssued(consoleHandle, after, "zoom-one-notch");
           } catch (e) {
             raceError = e;
-            if (e.i4) i4Error = e;
+            if (e.repointFailed) repointError = e;
           }
           const zoom = await zoomPromise;
           await waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 2000, timeoutMs: 30_000 });
@@ -999,7 +1140,7 @@ async function main() {
 
         observation.queryLadder = ladder;
         observation.queryProducedBy = raceResult ? ladder[ladder.length - 1].rung : null;
-        if (i4Error) throw i4Error;
+        if (repointError) throw repointError;
         if (!raceResult) {
           throw new Error(
             `S4: no stream-issued line followed any gesture in the ladder, so there was never a mint to race a ` +
@@ -1186,17 +1327,22 @@ async function main() {
         }
         const readout = await hoverAt(page, occupiedPoint.x, occupiedPoint.y);
         observation.r2ReadoutAfterNotches = readout;
-        if (readout === null || !readoutShowsAnId(readout)) {
+        // SUPERSEDED: the id expectation above (2026-09-22) was replaced by the human's ruling of 2026-10-19, item 2
+        // (`state/directives/2026-10-19-229-merged-rotation-230-ready-watcher-visible-i2-a-one-consult-r2-a-unknown-attempt-cause-a.md`):
+        // after the reopen and S2's notches the readout equals S2's readout from before the change, both null or the same text and class.
+        const expected = observation.readoutBefore;
+        const same = readout === null || expected === null ? readout === expected : readout.text === expected.text && readout.className === expected.className;
+        if (!same) {
           throw new Error(
             `R2: after reproducing S2's ${observation.notchesUsed} zoom-in notch(es) around the canvas ` +
-              `centre, hover at the formerly-occupied pixel is ${JSON.stringify(readout)}, expected an ` +
-              `"id <number>" readout (ordinary identification)`
+              `centre, hover at the formerly-occupied pixel is ${JSON.stringify(readout)}, expected S2's readout ` +
+              `from before the change, ${JSON.stringify(expected)}`
           );
         }
         return (
           `reopened; .canvas-session-ended cleared; ${counts.totalResidentVertices} vertices resident; ` +
           `after reproducing S2's ${observation.notchesUsed} zoom-in notch(es), hover reads ` +
-          `${JSON.stringify(readout.text)} (an id)`
+          `${JSON.stringify(readout)}, equal to S2's readout before the change ${JSON.stringify(expected)}`
         );
       });
 
@@ -1217,7 +1363,7 @@ async function main() {
         // The reopened generation sits on copy b; repoint the junction back to a while the app is idle.
         const r4Baseline = newestSessionLog().lineCount ?? 0;
         requireWindows("R4");
-        repoint(TARGET_A, "R4");
+        await repoint(TARGET_A, "R4");
         assertRepointed(TARGET_A, "R4", hashBefore);
         // The idle check: the watcher cannot see a repoint, so the session must still be up before any gesture.
         await waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 2000, timeoutMs: 30_000 });
@@ -1291,6 +1437,7 @@ async function main() {
     results.push({ id: "harness", status: "FAIL", note: e?.stack ?? e?.message ?? String(e) });
     console.error(`source-changed: harness failure: ${e?.stack ?? e?.message ?? String(e)}`);
   } finally {
+    await endRepointHelper("end of main");
     // The app's own session log, read (never sized) -- AI_DEVELOPMENT.md's stale-directory-entry
     // finding. Captured here so it lands in the report whether the run passed or failed.
     observation.sessionLog = newestSessionLog();
