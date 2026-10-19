@@ -92,12 +92,14 @@ function ledgerRepo(files) {
 }
 const ARCHIVE = 'state/cut-archive/DECISIONS-PENDING-2026-01-01.md';
 
+// RECORDED MUTATION (MT1a) at 8dd1e7af87cc, applied alone and reverted: verdictCiteExists reads the live file alone -> fails by name: `verify: a felt-verdict cite found only in an archived DECISIONS-PENDING file resolves` (and, incidentally, the other two).
 test('verify: a felt-verdict cite found only in an archived DECISIONS-PENDING file resolves', () => {
   const dir = ledgerRepo({ 'DECISIONS-PENDING.md': '# Decisions pending the human é\n', [ARCHIVE]: '**RULED 2026-09-13 (question set 1 →)** the ruling\n' });
   const hit = verdictCiteExists(dir, 'DECISIONS-PENDING.md RULED 2026-09-13 (question set 1 →)');
   assert.deepEqual(hit, { ok: true, reason: null });
 });
 
+// RECORDED MUTATION (MT2a) at 8dd1e7af87cc, applied alone and reverted: an archive's presence counted as a hit -> fails by name: `verify: a felt-verdict cite in no file of the ruling set still fails` (and, incidentally, the split-cite test).
 test('verify: a felt-verdict cite in no file of the ruling set still fails', () => {
   const dir = ledgerRepo({ 'DECISIONS-PENDING.md': 'live é\n', [ARCHIVE]: 'archived →\n' });
   const miss = verdictCiteExists(dir, 'DECISIONS-PENDING.md RULED 2099-01-01');
@@ -105,6 +107,7 @@ test('verify: a felt-verdict cite in no file of the ruling set still fails', () 
   assert.ok(miss.reason.includes(ARCHIVE) && miss.reason.includes('RULED 2099-01-01'), miss.reason);
 });
 
+// RECORDED MUTATION (MT3b) at 8dd1e7af87cc, applied alone and reverted: the set's texts joined with no separator before the search -> fails by name, and only this one: `verify: a cite split across the end of the live file and the start of an archive does not resolve`.
 test('verify: a cite split across the end of the live file and the start of an archive does not resolve', () => {
   const dir = ledgerRepo({ 'DECISIONS-PENDING.md': 'live é … RULED 2026-09-13 (question', [ARCHIVE]: ' set 1 →) the ruling\n' });
   assert.equal(verdictCiteExists(dir, 'DECISIONS-PENDING.md RULED 2026-09-13 (question set 1').ok, false);
