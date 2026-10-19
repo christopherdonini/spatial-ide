@@ -1656,6 +1656,7 @@ function archivedFixture({ live, archive, ruling = 'round 1, item 1', carrier = 
   return dir;
 }
 
+// RECORDED MUTATION (MT1b) at fb42c2590c9c, applied alone and reverted: loadDecisionsPending reads the live file alone -> fails by name, and only this one: `verify-test-claims: a withdrawn-test row whose ruling sits only in an archived DECISIONS-PENDING file is withdrawn`.
 test('verify-test-claims: a withdrawn-test row whose ruling sits only in an archived DECISIONS-PENDING file is withdrawn', () => {
   const dir = archivedFixture({ live: '# Decisions pending the human é\n', archive: SYNTH_LEDGER });
   const { findings, withdrawn } = runVerifyTestClaims({ repoRoot: dir });
@@ -1665,6 +1666,7 @@ test('verify-test-claims: a withdrawn-test row whose ruling sits only in an arch
   assert.equal(withdrawn[0].carrier, 'round 2, item 5');
 });
 
+// RECORDED MUTATION (MT2b) at fb42c2590c9c, applied alone and reverted: resolveCitation returns true when the set holds more than one file -> fails by name: `verify-test-claims: a ruling in no file of the ruling set still fails by name` (and, incidentally, the split-header test).
 test('verify-test-claims: a ruling in no file of the ruling set still fails by name', () => {
   const dir = archivedFixture({ live: SYNTH_LEDGER, archive: '# an archive →\n\n**RULED 2026-01-04 — question round 4 (fixture):**\n\n- *Item 1 — nothing:* **"ruled"**\n', ruling: 'round 99, item 1' });
   const { findings, withdrawn } = runVerifyTestClaims({ repoRoot: dir });
@@ -1674,6 +1676,7 @@ test('verify-test-claims: a ruling in no file of the ruling set still fails by n
   assert.match(findings[0].message, /unresolvable ruling: round 99, item 1/);
 });
 
+// RECORDED MUTATION (MT3a) at fb42c2590c9c, applied alone and reverted: the texts joined with a newline before resolving -> fails by name, and only this one: `verify-test-claims: a round header at the end of the live file and its item at the start of an archive never combine into a ruling`.
 test('verify-test-claims: a round header at the end of the live file and its item at the start of an archive never combine into a ruling', () => {
   const header = '**RULED 2026-01-01 — question round 1 (fixture):**';
   const dir = archivedFixture({ live: `# Decisions pending the human\n\n${header}`, archive: '- *Item 1 — entry 1, a fixture ruling:* **"ruled"** Applied: nothing.\n\n**RULED 2026-01-02 — question round 2 (fixture):**\n\n- *Item 5 — entry 2, a fixture carrier:* **"ruled"**\n' });
