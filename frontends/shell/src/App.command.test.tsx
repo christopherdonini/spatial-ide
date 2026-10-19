@@ -359,8 +359,8 @@ describe("App: the command bar (milestone 3, PR A), through the real App", () =>
     expect([document.activeElement, bar().value]).toEqual([bar(), "/"]);
     setValue(bar(), "");
     act(() => q("#region-map")!.focus());
-    expect(press(document.body, "/", { code: "Digit7", shiftKey: true })).toBe(false);
-    expect([document.activeElement, bar().value], "Shift+7 on a layout where / needs Shift").toEqual([bar(), "/"]);
+    expect(press(document.body, "/", { code: "Digit7", shiftKey: true }), "Shift+7 on a layout where / needs Shift: the default is prevented").toBe(false);
+    expect([document.activeElement, bar().value], "Shift+7: the bar holds the focus and the slash").toEqual([bar(), "/"]);
     setValue(bar(), "");
     const field = q<HTMLInputElement>(".filter-predicate")!;
     act(() => field.focus());
