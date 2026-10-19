@@ -561,3 +561,80 @@ A tree-wide search excludes historical material: the paths in .ignore. A tree-wi
 **Searching an excluded location** (the addendum's A; the architect's words, approved by the human in that form's OPEN-3): Name the location to search it: give the Grep tool that folder or that file as its path, run `rg --no-ignore` from Bash with that folder as its path, or Read the file by its name. A Grep call over the whole tree, or over a folder above the excluded one, does not reach it. The Glob tool still lists the files there by name.
 
 The excluded paths are the five lines of the root `.ignore`. Each method above was observed at 7f09c0e3f318a17a77cc00d5b2f9de4abe48028c with Claude Code 2.1.300 and ripgrep 15.2.0 (that form, §4, O1 to O14).
+
+## §33. The continuity block's cap, the ledger's weekly rotation, and the standing items (the human, 2026-10-14; `state/directives/2026-10-14-governance-smaller-reads-ignore-cut-state-rotation-decisions-pending.md`, piece B and the addendum's B; appended after §32 so that no line a record cites above it moves)
+
+### Part A. The rule
+
+The rule is the human's, in piece B and the addendum's B of `state/directives/2026-10-14-governance-smaller-reads-ignore-cut-state-rotation-decisions-pending.md`. It is byte-copied by script from `state/directives/2026-10-14-governance-smaller-reads-ignore-cut-state-rotation-decisions-pending.md:25-36 @ 0ff2594e2f355321640a6942b710e7507b613151 sha256:394a43f4f72cab728020d6143ddfbe1926b6ffb0360e1835a29a87d26883cf1e`, `state/directives/2026-10-14-governance-smaller-reads-ignore-cut-state-rotation-decisions-pending.md:39-40 @ 0ff2594e2f355321640a6942b710e7507b613151 sha256:7079c28ea55c728a62c39b8c9632b98f378c9e7d51a69e57500c5e31737a7487` and `state/directives/2026-10-14-governance-smaller-reads-ignore-cut-state-rotation-decisions-pending.md:68 @ 0ff2594e2f355321640a6942b710e7507b613151 sha256:4757c5b118cc3a901172ceba7a55e1d0726841fac6c31fecd801ae81d62d3517` (sha256 over those whole lines as committed, LF bytes), and nothing in the copies is changed. The first two spans lie inside piece B, `state/directives/2026-10-14-governance-smaller-reads-ignore-cut-state-rotation-decisions-pending.md:25-40 @ 0ff2594e2f355321640a6942b710e7507b613151 sha256:ec83cdafc584bdc44597648ad3e5c1a9d00553faffdc16fcc0008768addbd00c`. Its lines 37 and 38 (`state/directives/2026-10-14-governance-smaller-reads-ignore-cut-state-rotation-decisions-pending.md:37-38 @ 0ff2594e2f355321640a6942b710e7507b613151 sha256:06016b3da6fdc1a6a79cc3eeb38bad06afbc1887ce9fff0ccdc71963d9859d5b`) are not reproduced here: they cite two lines of the ledger by number, and this section writes no such cite without a pin. Their instruction is carried out by the pull request that adds this section, which pins the cites in `state/consults/2026-09-26-source-watcher-gate3-architect.md` and `state/consults/2026-09-26-stop-hook-lease-gate1-reviewer.md` at main commits (`scripts/plan/CUT-STATE-CAP-AND-ROTATION-PREREGISTRATION.md`, section 2 item 4).
+
+```text
+B. state/CUT-STATE.md: a small continuity block and a rotating ledger. The file keeps its name, because flush.mjs, precompact-flush.mjs and session-resume.mjs read it by name.
+   1. The six STANDING items in the continuity block, (00), (0), (2), (5), (14) and (18), move out verbatim, each with its source: PRECEDENTS.md for generalized rulings, AUTONOMY for mechanics. The block keeps at most a one-line pointer.
+   2. The cap in flush.mjs:
+      - flush.mjs refuses a SESSION-CONTINUITY block over 6,144 bytes, counted as UTF-8 bytes, not characters. The refusal names the largest field and the sizes.
+      - A refusal leaves the file byte-identical. Nothing is ever truncated automatically: unresolved findings, ownership and stop conditions are shortened by the custodian or kept.
+      - Tests: exactly 6,144 bytes passes; 6,145 fails; a non-ASCII block whose character count is under the cap but whose byte count is over it fails. Mutation: the cap removed, or counted in characters; a test fails.
+   3. Rotation:
+      - The ledger rotates every Monday, and sooner if the file passes 150 KB.
+      - A rotation is a git mv, byte-identical, to state/cut-archive/CUT-STATE-<date>.md. On a same-day collision the name takes a -2, -3 suffix, and no archive is ever overwritten.
+      - The new state/CUT-STATE.md starts with the continuity block, its "Previous ledger" line, and one notice: line references written before the rotation point into <archive path> at <commit>.
+      - The rotation commit is followed by a normal ledger-only flush commit. The freshness checker's ledger-only rule is not loosened. Show that the precompact and stop hooks pass after the first rotation, which is part of this piece.
+   4. Two gated citations point into today's file:
+```
+
+```text
+      Treat them as on 2026-09-24: each names the archive path, or the commit where the cited text sat. verify-cites passes before and after.
+   5. session-resume.mjs's reading order, item 1: "the continuity block, then the live ledger, plus any unfinished matter it names explicitly."
+```
+
+```text
+B: when flush.mjs refuses a block in the precompact or stop hook, it writes the refused block whole to a named scratch file outside the repository and names that path in the refusal. B's PR shows the live block under 6,144 bytes before the cap is enabled. Rotation is a named script the custodian runs at the start of a session, never inside a hook. The continuity block's pointer names the exact PRECEDENTS and AUTONOMY sections the six standing items moved to, and reading-order item 1 includes them.
+```
+
+The custodian's instantiation (not a quotation):
+
+- **(i) The cap.** `scripts/hooks/flush.mjs` refuses a write whose SESSION-CONTINUITY block, as `extractSessionContinuityBlock` returns it, exceeds 6144 UTF-8 bytes. The refusal names the largest field and every field's size, the file stays byte-identical, and nothing is truncated. The refused block is written whole to a new file in the folder `spatial-ide-flush-refused` under the operating system's temporary folder, and the refusal names that file's path. When that folder resolves inside this repository or inside the git repository holding the target file, or the file cannot be created or written, no file is written and the refusal says so. This section prints no path. The cap binds writes made through `flush.mjs`: a hand edit is not bound, and no hook runs `flush.mjs`.
+- **(ii) The session-start step.** After the lease, and with main brought level with origin, the custodian runs `node scripts/plan/rotate-cut-state.mjs`. When it stages a rotation, the custodian makes the rotation commit and pushes it, then makes a normal ledger-only flush commit with `scripts/hooks/flush.mjs` and pushes that. No hook runs the script.
+- **(iii) Line references.** One written before a rotation resolves through the notice at the head of the new ledger. A new line reference into `state/CUT-STATE.md` is pinned at a main commit with its hash.
+- **(iv) Section 0.** Its item 1 is read as item 1 of `READING_ORDER` in `scripts/hooks/session-resume.mjs`. §0 and §17 are not edited in place.
+
+### Part B. The standing items
+
+Items 1 to 4 are the items numbered (00), (0), (5) and (14) of the continuity block, moved out of it under piece B of the 2026-10-14 direction. Each is byte-copied by script from the line of `state/CUT-STATE.md` named below at main commit 0ff2594e2f355321640a6942b710e7507b613151, from its start marker up to the space before its end marker, and nothing in it is changed. The pin is that whole line's: an item is a sub-line span of it.
+
+**Item 1, from (00): a step the custodian runs before starting any piece.** Pin: `state/CUT-STATE.md:8 @ 0ff2594e2f355321640a6942b710e7507b613151 sha256:3f2cd3569c7f77dd02007a0de21f6ad126b0726672ee119c7a3cc535fce2562b`. Source: `state/directives/2026-10-07-awaiting-merge-leaves-the-slot.md:9 @ 0ff2594e2f355321640a6942b710e7507b613151 sha256:ddc539551c1fc8fc4fac62103ccaaecc9c6c130c113a245ff4f5c3dfb2521e91` (its item 3).
+
+```text
+(00) STANDING from 2026-10-07T16:34:47Z, the awaiting-merge direction: before starting any piece, list every in-progress piece AND every PR awaiting merge, and check disjoint paths and at most one touching protocol/, wire fixtures, Cargo.lock or package-lock.json (the kcrf start while #185 awaited merge broke this; both edited SKP-V0.md and kernel/README.md).
+```
+
+**Item 2, from (0): how heavy runs are held and briefed.** Pin: `state/CUT-STATE.md:8 @ 0ff2594e2f355321640a6942b710e7507b613151 sha256:3f2cd3569c7f77dd02007a0de21f6ad126b0726672ee119c7a3cc535fce2562b`. Source: `state/directives/2026-10-06-machine-script-adopted.md:6-23 @ 0ff2594e2f355321640a6942b710e7507b613151 sha256:aa48e3ee4b0890df27d4460d5aef6b5daa8cb5fc65c3aba43f55e6d69fd868ec`, and the two directives the item names by path, `state/directives/2026-10-06-machine-script-adopted.md` and `state/directives/2026-10-08-sole-session-heavy-runs.md`.
+
+```text
+(0) STANDING from 2026-10-06T17:11:45Z, THE MACHINE: the shared script is ADOPTED for this project's shared runs (state/directives/2026-10-06-machine-script-adopted.md, RULED). Every heavy command (more than two cores for more than about three minutes, or any timed measurement) runs inside a shared hold, in one Bash call of the paragraph's shape (the directive's lines 12 to 22, put AS WRITTEN into every worker, worker-high, tester, tester-high and reviewer brief, with <M> = ~/Development/Claude/machine/machine.ps1); CARGO_BUILD_JOBS=8 and RUST_TEST_THREADS=8 in shared runs; exits 96 to 99 are the script's (a 96 naming another heavy run: retry when status shows none; a 96 for CPU or cool-down: to the human); this project's two slots still run heavy runs one at a time (section B item 6), EXCEPT while the 2026-10-08 sole-session directive stands (state/directives/2026-10-08-sole-session-heavy-runs.md: the human, 04:25:07Z; overlap allowed, each in a shared hold; ends when another session runs or status shows another project hold); exclusive holds are the custodian's alone, ADOPTED 2026-10-06T22:09Z when check 4 passed inside a booking (a timed measurement, or a timing-sensitive re-run, uses hold exclusive with -NotQuietMinutes and -MaxWaitMinutes below the Bash call timeout; over 30 minutes, book at least an hour ahead; a 96 naming another heavy run is retried when status shows none); the session pin to cores 0 to 7 stays, set again after each restart (affinity 0xFF, read back); the script read at 17:12Z is 684 lines, changed 16:33:15Z, sha256 6826d814d961e3e15fadd9f9a79c6e0d5f7c695fad5a09e878376e9e9f33ea2b: a later reading that differs goes to the human before the next heavy run; never the script's run, book or cancel actions, -TargetPid, or a change to its folder; quote only this project's log lines; never read or change the other project's folders, transcripts or memory; nobody stops another project's run.
+```
+
+**Item 3, from (5): a list of working mechanics.** Pin: `state/CUT-STATE.md:9 @ 0ff2594e2f355321640a6942b710e7507b613151 sha256:b8611e1cfc0c98026f2874bd7b2d659d1544688912a16a79fba6b1c9f81cb283`. Sources, one per clause:
+
+- reports to files: `state/directives/2026-10-03-reports-to-files-two-pieces-trial.md`;
+- a RULED block per human answer: `state/directives/2026-09-29-fable-amendment-12-sighted-and-ruled-backfill.md:18-19 @ 0ff2594e2f355321640a6942b710e7507b613151 sha256:2336aa81695e627fc9cdeb04ba4adcc507a7bcb921fd2982a3fc720e8ff2b88a`;
+- refreshing at milestones: `state/directives/2026-09-29-flush-mirror-and-milestone-refresh.md`, item 5;
+- merges are the human's click, merge commit only: `state/directives/2026-10-07-awaiting-merge-leaves-the-slot.md:12 @ 0ff2594e2f355321640a6942b710e7507b613151 sha256:0b40dacbc7f5d443d5ad62d9f037dffe944275183930605d8d6a6b0f581ba4ea` (its item 6);
+- Guardian is live: `state/directives/2026-10-04-guardian-install-approval.md`; lead-data briefs carry one REPORT PATH line: `state/directives/MODS-GUARDIAN-V0-2026-10-03.md:23 @ 0ff2594e2f355321640a6942b710e7507b613151 sha256:03a4adab1a26e5d9ce708194ed4ae70cd7a27321826ddf4ff4edb4eddf6d2d1d` (its row G6);
+- record text via the Write tool, commit and publish in separate calls: no ruling was found in `state/directives/` or `DECISIONS-PENDING.md`; `tools/mods/spatial-guardian/README.md` states the mechanic among G1's limits;
+- worker and tester briefs route approved test commands through Bash: round 50, item 1, withdrawn on 2026-10-11 as item 4 says;
+- commit trailers in briefs name the agent definition model: `state/directives/2026-10-04-fable-advice-nodes-trailers-latency.md:22 @ 0ff2594e2f355321640a6942b710e7507b613151 sha256:fd71e7da7435c9ef5e22b675bb0fc546ada17475de0553d574575da9e0e9fde8`;
+- the publish test's next failure: round 51, item 3.
+
+```text
+(5) STANDING: reports to files; a RULED block per human answer; refresh this block at milestones; merges are the human's click, merge commit only; Guardian is live (record text via the Write tool, commit and publish in separate calls; lead-data briefs carry one REPORT PATH line); from evidence-recorder-v0's install on, worker and tester briefs route approved test commands through Bash (round 50 item 1); commit trailers in briefs name the agent definition model (Fable advice item 3); on the publish test next failure, file the failing job log verbatim before any re-run (round 51 item 3).
+```
+
+**Item 4, from (14): what worker and tester briefs say.** Pin: `state/CUT-STATE.md:8 @ 0ff2594e2f355321640a6942b710e7507b613151 sha256:3f2cd3569c7f77dd02007a0de21f6ad126b0726672ee119c7a3cc535fce2562b`. Source: round 50, item 1. Withdrawn: from the human's report that the Evidence Recorder is uninstalled (`state/directives/2026-10-11-recorder-uninstalled.md`), worker and tester briefs no longer carry this wording (`state/directives/2026-10-11-merges-210-211-pilot-recorder-2f-milestone-3-rulings.md`, item 3, and its RULED block of 2026-10-11). The item is kept here as it moved, not as a standing mechanic.
+
+```text
+(14) STANDING from round 50 item 1 (O-12 a): from evidence-recorder-v0's install on, worker and tester briefs say approved test commands run through the Bash tool, so the recorder records them.
+```
+
+The other two of the six, (2) and (18), are generalised rulings and moved to `PRECEDENTS.md` as P-035 and P-036.

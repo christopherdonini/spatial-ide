@@ -33,13 +33,35 @@
 //   node scripts/hooks/flush.mjs --file <path> ... # target a different file (default: the ledger)
 // `flushed_at` defaults to now (ISO-8601 UTC) and `tip` to `git rev-parse HEAD` when omitted, so a
 // caller supplies only the prose fields. Reads and rewrites state/CUT-STATE.md in place.
+//
+// ## The block's cap (the human's governance direction, piece B; BLOCK_CAP_BYTES)
+//
+// A write whose SESSION-CONTINUITY block, as extractSessionContinuityBlock returns it (what
+// session-resume prints), exceeds 6144 UTF-8 bytes is refused with BlockCapError: the message names
+// the largest field and every field's size. The file is left byte-identical and NOTHING is truncated,
+// anywhere. The CLI writes the refused block whole, plus one newline, to a new file in the folder
+// spatial-ide-flush-refused under os.tmpdir() and names that file in the refusal. It writes no such
+// file, and the refusal says so, when that folder resolves inside this repository or inside the git
+// repository holding the target file, or when creating or writing the file fails. It exits 1.
 
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { extractSessionContinuityBlock } from './session-resume.mjs';
 
 export const BLOCK_HEADING = '## SESSION-CONTINUITY';
+export const BLOCK_CAP_BYTES = 6144;
+
+/** Thrown when a write would leave the block over BLOCK_CAP_BYTES; `.block` is the refused block, whole. */
+export class BlockCapError extends Error {
+  constructor(message, block) {
+    super(message);
+    this.name = 'BlockCapError';
+    this.block = block;
+  }
+}
 
 // The canonical field labels, in block order. THE source of truth; flush.test.mjs pins it to the
 // real block. `flushed_at` and `tip` are the two precompact-flush.mjs reads; the rest are prose.
@@ -86,6 +108,22 @@ export function blockFieldLabels(text) {
     if (m) labels.push(m[1]);
   }
   return labels;
+}
+
+/**
+ * The block's size as session-resume prints it: { blockBytes, fields: [{ label, bytes }] }. blockBytes
+ * is the UTF-8 length of extractSessionContinuityBlock(text); a field's bytes are those of its whole
+ * `<label>: <value>` line, fields in block order. Never characters.
+ */
+export function blockSizes(text) {
+  const block = extractSessionContinuityBlock(text);
+  if (block === null) return { blockBytes: 0, fields: [] };
+  const fields = [];
+  for (const l of block.split('\n').slice(1)) {
+    const m = l.match(/^([A-Za-z][^:\n]*?):\s/);
+    if (m && SESSION_CONTINUITY_FIELDS.includes(m[1])) fields.push({ label: m[1], bytes: Buffer.byteLength(l, 'utf8') });
+  }
+  return { blockBytes: Buffer.byteLength(block, 'utf8'), fields };
 }
 
 function escapeRegExp(s) {
@@ -145,7 +183,18 @@ export function updateBlockFields(text, updates) {
   for (const key of keys) {
     lines[lineForKey[key]] = `${key}: ${updates[key]}`;
   }
-  return lines.join('\n');
+  const out = lines.join('\n');
+  const { blockBytes, fields } = blockSizes(out);
+  if (blockBytes > BLOCK_CAP_BYTES) {
+    let largest = fields[0];
+    for (const f of fields) if (f.bytes > largest.bytes) largest = f;
+    throw new BlockCapError(
+      `flush: refusing to write — the SESSION-CONTINUITY block would be ${blockBytes} bytes (UTF-8), over the cap of ${BLOCK_CAP_BYTES}. ` +
+        `Largest field: "${largest?.label}", ${largest?.bytes} bytes. Field sizes: ${fields.map((f) => `${f.label} ${f.bytes}`).join(', ')}.`,
+      extractSessionContinuityBlock(out),
+    );
+  }
+  return out;
 }
 
 function tryGit(args, cwd) {
@@ -181,6 +230,25 @@ export function parseArgs(argv) {
   return { updates, jsonPath, file };
 }
 
+// Writes the refused block whole (plus one newline, flag wx) to a new file under os.tmpdir(); returns the
+// sentence the CLI appends. No file when the folder resolves inside a repository, or the write fails.
+function writeRefused(block, targetFile) {
+  try {
+    const dir = path.join(fs.realpathSync.native(os.tmpdir()), 'spatial-ide-flush-refused');
+    const roots = [REPO_ROOT, tryGit(['rev-parse', '--show-toplevel'], path.dirname(path.resolve(targetFile)))];
+    for (const r of roots.filter(Boolean).map((x) => fs.realpathSync.native(x))) {
+      const rel = path.relative(r, dir);
+      if (rel === '' || (!rel.startsWith('..') && !path.isAbsolute(rel))) throw new Error('the temporary folder is inside a repository');
+    }
+    fs.mkdirSync(dir, { recursive: true });
+    const file = path.join(dir, `refused-${new Date().toISOString().replace(/[:.]/g, '-')}-${process.pid}.md`);
+    fs.writeFileSync(file, `${block}\n`, { encoding: 'utf8', flag: 'wx' });
+    return `The file is unchanged; the refused block is written whole to ${file}.`;
+  } catch (e) {
+    return `The file is unchanged; no scratch file was written (${e.message}).`;
+  }
+}
+
 function main() {
   const { updates, jsonPath, file } = parseArgs(process.argv.slice(2));
   let all = { ...updates };
@@ -201,7 +269,13 @@ function main() {
 
   const p = file ?? cutStatePath();
   const text = fs.readFileSync(p, 'utf8');
-  const next = updateBlockFields(text, all); // throws (writing nothing) on any problem
+  let next;
+  try {
+    next = updateBlockFields(text, all); // throws (writing nothing) on any problem
+  } catch (e) {
+    if (e instanceof BlockCapError) e.message += `\n${writeRefused(e.block, p)}`;
+    throw e;
+  }
   fs.writeFileSync(p, next, 'utf8');
   console.log(`flush: wrote ${Object.keys(all).length} field(s) into ${BLOCK_HEADING} of ${p}`);
 }
