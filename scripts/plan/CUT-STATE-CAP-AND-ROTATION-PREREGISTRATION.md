@@ -549,3 +549,23 @@ Nothing above is edited.
 6. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 8 — the closing record: the merge, commit R, flush commit F, E1 to E9
+
+*Written by the custodian after main's CI at F was read. References and hashes only; each row names its commit. The commands are §6's; their outputs are kept whole in the custodian's scratch folder, with the hashes below. The human's direction for this sequence: `state/directives/2026-10-19-229-merged-rotation-230-ready-watcher-visible-i2-a-one-consult-r2-a-unknown-attempt-cause-a.md`.*
+
+1. **Merged** by the human at 2026-10-19T12:56:02Z, merge commit 4b2a99767a7633b838b4eef178848bf08c71b9f6 (two parents: main bc0d1e9fbead1c49a0c3c5cc782f257b9950323b, which is (b), and the branch head ab0532e7e8b9e99650ad10595ba72462ba8f7703). Main took no commit between (b) and the click.
+2. **E1** at (b) bc0d1e9fbead1c49a0c3c5cc782f257b9950323b: the block is 4,300 bytes, under 6,144, as the PR body shows. I5 did not fire.
+3. **E2** at (b)'s parent 71d16a1170c6f44ec96b3692b416278df8d00f8c: each of the six spans equals its M0 copy, (00) 361, (0) 1,939, (5) 592, (14) 193, (2) 120 and (18) 449 bytes, as the PR body shows. I1 did not fire.
+4. **R** d86ebac73aa271625934b1d075bd87edd60c30d8: `node scripts/plan/rotate-cut-state.mjs` exited 0 on main at 4b2a9976, level with origin, and staged both paths; the commit was made signed off, then pushed. **E3:** `git rev-parse <R>^:state/CUT-STATE.md` and `git rev-parse <R>:state/cut-archive/CUT-STATE-2026-10-19.md` both print 5d3f326d993c633e1308a213ffaabb5aac42f2e3; `git diff --no-renames --name-status <R>^ <R>` lists two paths, `M state/CUT-STATE.md` and `A state/cut-archive/CUT-STATE-2026-10-19.md`. As predicted.
+5. **E4** at R, 2026-10-19T15:27:42Z: `precompact-flush.mjs` with `{"trigger":"manual","session_id":"obs-b-r"}` on stdin exits 2 with empty stdout and 2 stderr lines (sha256 348c23b4018f297a4318b1fccd0d532e47ecfb303388262e74e652a2d563050b), the first `block: flushed_at is more than 10 minutes old`. The Guardian predicate, through a one-line Node module over real git, prints `{"judged":true,"stale":true,"flushedAt":"2026-10-18T12:12:15Z"}`, and `git log -1 --format=%H HEAD -- state/CUT-STATE.md` prints R. As predicted.
+6. **E5** at R: `session-resume.mjs` with `{}` on stdin exits 0, stdout 23 lines, sha256 83ae89731c69eefcdaf7b2541a38c97c40beffbd4958764a6005d564220a3dee.
+7. **E6** at R: `verify-cites.mjs` exits 0 (stdout sha256 ce4210fbf5adaccad083b99625d7828f5e0a14a56fe7505168d2686aa41f29ef); `verify-quotes.mjs` exits 0 (stdout sha256 4b348e921b6d8ecd2bc6db3f992ee9c6e257822d904f474d939f30208ded9605).
+8. **F** d4ab5c727584f0a8668c5049aed9da9b6dfe459b: ledger-only, `flushed_at` 2026-10-19T15:31:22Z, carrying the entries held during the freeze; pushed. **E7** at 2026-10-19T15:35:53Z, 4 minutes 31 seconds after that `flushed_at`: the hook with `obs-b-f` exits 0, its one stderr line `allow: state/CUT-STATE.md SESSION-CONTINUITY block is fresh.`; the predicate prints `{"judged":true,"stale":false,"flushedAt":"2026-10-19T15:31:22Z"}`; the newest ledger commit is F. As predicted.
+9. **E8** at F: exit 0, stdout 23 lines, sha256 351898d332135238e68b96eb0d28fce2c347890736cf793abcf356097446b748.
+10. **E9** at F: `verify-cites.mjs` exits 0 (stdout sha256 ce4210fbf5adaccad083b99625d7828f5e0a14a56fe7505168d2686aa41f29ef); `verify-quotes.mjs` exits 0 (stdout sha256 4b348e921b6d8ecd2bc6db3f992ee9c6e257822d904f474d939f30208ded9605). Main's CI at F, every workflow its push started: Exposure scan (run 39279219930) success; Ported notices (run 39279219927) success; Pages (run 39279219906): its job `verify:plan (gate) · generate site/ · upload artifact` success, its deploy job still waiting at 2026-10-19T16:09Z, a deployment and not a check, its conclusion read again at the done commit. Governance CI is path-filtered and does not run on a ledger-only commit; at the merge commit it passed (run 39255937194).
+11. **Invalidators:** none fired. I3: E4 and E7 hold their predictions. I4: verify-cites passes at the merge (its step in Governance CI, run 39255937194), at R and at F (items 7 and 10).
+12. **Next, by §9:** one scoped reviewer pass over items 4 to 10, commits and hashes only; on its pass the node is done with `{pr: 229}`.
+13. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.

@@ -498,3 +498,45 @@ If `verify:cites` reports a cite into `source-changed.mjs` broken by this diff, 
 2. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 2 — the custodian's §4 runs: I2 fired; the human's rulings on I2 and R2 (class 5)
+
+*Written by the custodian on the human's ruling (`state/directives/2026-10-19-229-merged-rotation-230-ready-watcher-visible-i2-a-one-consult-r2-a-unknown-attempt-cause-a.md`, items 1 and 2). References only.*
+
+1. **The worker-high's report** `state/consults/2026-10-18-source-changed-post-reopen-routes-watcher-visible-worker-report.md` (the head aa30f99f0cccc29a3df190e170d76b0eee40c5c6) and **the custodian's §4 runs** `state/consults/2026-10-18-source-changed-post-reopen-routes-watcher-visible-custodian-runs.md` (sha256 f64ded057fd3ddd83055fa468d086cf27ad5cde8068a0cfbce1ee5c1b9cd1820): P1, P5 and P6 held; P2 did not (R2 failed in 3 of 3); P4 did not, and I2 fired, H2's re-read detail in post1, post3, post6, post7, post8 and W-M1. The piece stopped by §5.
+2. **I2: (A), bounded to one architect consult,** in the order and with the statement the ruling names. If it finds a gap-free way, §4's runs repeat at the new head. If it finds none, (B) with the ruling's one addition: a run in which a check reported that the source could not be re-read is INCONCLUSIVE for S5d, and S5d's step 2 judges the race on the runs without the gap.
+3. **R2: (a).** After the reopen, R2 asserts that its readout equals S2's readout from before the change. The 2026-09-22 id expectation is superseded.
+4. **Next:** the one architect consult; then one fresh brief for R2 and the consult's outcome; then §4's runs at the new head; then both gates.
+5. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
+
+### Amendment 3 — the one architect consult: IN PLACE; what the next round carries (class 3)
+
+*Written by the custodian after the consult was filed. References only. The consult: `state/consults/2026-10-19-source-changed-post-reopen-routes-watcher-visible-i2-architect-consult.md`, sha256 7f7efe57fb20e741537c8c826f1eafad0ca2d6e58cc0b1b8666acf5e5b10f9e9 from line 5 to the end.*
+
+1. **The outcome: IN PLACE.** The driver repoints by rewriting the existing junction's mount-point reparse data (`FSCTL_SET_REPARSE_POINT`), so the open path exists at every instant; the name in `out/` is never deleted. The mechanism is the consult's M6: one Windows PowerShell 5.1 child, spawned once after the layout, which compiles one P/Invoke class with Add-Type, takes one target per line on stdin and answers one line per target. The layout keeps its unlink and create, before anything is opened. The consult's 1(c) states why the watcher stays blind.
+2. **§8 items 4 and 12, as the consult reads them:** no elevation, no `mklink`, no other link type; nothing added to `package.json`, the lockfile or the tree. PowerShell 5.1 and Add-Type are a new runtime requirement of the driver, named in its header and the README entry. The gates judge this reading.
+3. **Words this changes** (the worker's, checked at the gates): A.3's "made in-process" and the driver comment's "no spawned tool", untrue of the repoint; §2.2's "synchronously on the trigger", which becomes: the request is written on the trigger and its answer awaited. The trigger, the 5 ms poll, the ladder and the bounds are unchanged (§8 item 3).
+4. **A new assertion:** each repoint's answer is `ok`, and `realpathSync(OPEN_PATH)` then resolves inside the named target. Its mutation, W-M6, is made under §4's rule: the answer check removed, the child told a wrong target, the step failing by name.
+5. **H3 and P6, re-aimed before the runs.** A rewrite keeps the junction's creation time, so H3 reads the junction's change time (`ctime`) instead. If `ctime` does not move with the rewrite, H3 is recorded as unread for that run, not as a failure.
+6. **The probe, before any app run:** a second Node process stats and opens `OPEN_PATH` in a loop while the child rewrites the junction between `a` and `b`. One `os error 3`, or any failed open, is H2 again: I2, a STOP to the human.
+7. **R2,** by Amendment 2 item 3, in the same round.
+8. **For S5d's amendment, not written here:** §2.9's "the same race" holds for the trigger; when the repoint lands now follows a pipe round trip, neither bounded nor measured (ADR-018).
+9. **§7:** the driver's ceiling stands; an overrun is class 8.
+10. **Next:** one fresh brief for items 3 to 7; the probe; the custodian's §4 runs at the new head with W-M6, in one exclusive hold; then both gates.
+11. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
+
+### Amendment 4 — round 2's runs: every prediction held, no invalidator; §7's figures (class 8)
+
+*Written by the custodian after round 2's runs were seen. References only. The round 2 report: `state/consults/2026-10-19-source-changed-post-reopen-routes-watcher-visible-round-2-worker-report.md`. The runs: `state/consults/2026-10-19-source-changed-post-reopen-routes-watcher-visible-round-2-custodian-runs.md`, sha256 dafd175c8ca29b898c00116456cd132d093964146c56e7651c5758e78b6d5682.*
+
+1. **The runs at bf527c1e,** 19 in one exclusive hold: P1, P2 (R2 by Amendment 2 item 3), P3, P4, P5 with W-M6 and W-M7, and P6 on the junction's change time held. No invalidator fired, and the re-read detail appears in no run. The repoint child exited in every run, and none was left running.
+2. **S5d's verdicts,** recorded and not predicted: PASS in 2 of 8 post runs, and FAIL in 6, each on its second condition, the change losing the race to a tile's pre-check. They are for S5d's step 2 (Amendment 3 item 8).
+3. **§7 (class 8),** by the form's command at bf527c1e: the driver 363 against its 220; the README 18 against 24; the walkthrough 33 against 40. The driver's overrun is round 2's in-place repoint and its answer check (Amendment 3 items 1, 4 and 9).
+4. **Next:** main merged into the branch; the PR; both gates (§9).
+5. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.

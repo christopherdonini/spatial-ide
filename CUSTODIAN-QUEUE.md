@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `423d1a41f096923434dad08bbb48eac51922eb14006717d2a540c776b4dea598`) at `2026-10-18T12:00:23.175Z`.
+Generated from `PLAN.yaml` (sha256 `666aff402fd42f543886441a0130d5c4c29c1b0d556feb4b1ab304265763632d`) at `2026-10-19T17:51:44.829Z`.
 
 ## 1. Next
 
@@ -25,14 +25,14 @@ Generated from `PLAN.yaml` (sha256 `423d1a41f096923434dad08bbb48eac51922eb140067
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer — blocked by: signpath-application-draft
 - **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-1-1
 - **signpath-application-draft** — Entry 77 — the SignPath OSS application and disclosure text drafted for the human sight, once a release is CI-built — blocked by: release-v0-1-1
-- **governance-decisions-pending-open-and-archive** — DECISIONS-PENDING.md: open entries and recent rulings, the rest archived to state/cut-archive/, one shared helper for the ruling set in verify, verify-test-claims and verify-quotes, monthly rotation, and the reading order's item 3 restated; the second measurements after it — blocked by: governance-cut-state-cap-and-rotation
 - **site-design-v1** — Landing page redesign — DRAFT-4 (status strip, milestone banner, waiting-on-you cards with unblocks counts, the swimlane board) — blocked by: governance-ci-built-site
 
 ## 5. In progress
 
 - **source-changed-post-reopen-routes-watcher-visible** — source-changed.mjs's post and reopen routes, and walkthrough Part N's N6 and N8, still change the source by an mtime touch the advisory watcher can see — evidence: branch `cut/source-changed-watcher-visible`
+- **shell-migration-milestone-3** — Shell migration, milestone 3 -- command bar and filter clauses: Ctrl+K, slash commands, typed /filter with field completion, clause cards with on and off — evidence: branch `cut/shell-migration-milestone-3-pr-a`
 - **known-limitations-item-23-watcher-idle-end** — KNOWN-LIMITATIONS item 23: it says a source change goes unnoticed until a query is next issued, but on Windows the advisory watcher ends the session while idle on a change it can see — evidence: branch `cut/known-limitations-item-23`
-- **governance-cut-state-cap-and-rotation** — state/CUT-STATE.md: the six STANDING items moved out verbatim, a 6,144-byte cap on the continuity block in flush.mjs, and the ledger rotated into state/cut-archive/ by a named script, with the reading order's item 1 restated — evidence: branch `cut/cut-state-cap-and-rotation`
+- **governance-decisions-pending-open-and-archive** — DECISIONS-PENDING.md: open entries and recent rulings, the rest archived to state/cut-archive/, one shared helper for the ruling set in verify, verify-test-claims and verify-quotes, monthly rotation, and the reading order's item 3 restated; the second measurements after it — evidence: branch `cut/decisions-pending-open-and-archive`
 
 ## 6. Proposed / unscheduled
 
@@ -108,7 +108,6 @@ Generated from `PLAN.yaml` (sha256 `423d1a41f096923434dad08bbb48eac51922eb140067
 - **docs-14-corpus-attribution-vs-docs-08** — docs/14 asks corpus attribution in demos and published bundles, which docs/08 line 40 now says are never redistributed (phase `prototype`) — never queued until placed
 - **e2e-first-poll-readout-elsewhere** — Two more e2e suites take a hover id from the readout's first poll after a pointer move: source-changed.mjs hoverAt and residency-harness.mjs tryHoverCandidate (phase `prototype`) — never queued until placed
 - **dataset-stream-doc-producer-runs-ahead** — engine/src/stream.rs: Dataset::stream's doc says it returns once the statement is prepared and produces the first batch on the first next_into; the producer thread prepares and runs ahead to the queue bound (phase `prototype`) — never queued until placed
-- **shell-migration-milestone-3** — Shell migration, milestone 3 -- command bar and filter clauses: Ctrl+K, slash commands, typed /filter with field completion, clause cards with on and off (phase `prototype`) — never queued until placed
 - **shell-native-menus-macos** — Native application menus on macOS, built from the action registry (milestone 3's OPEN-6, deferred) (phase `prototype`) — never queued until placed
 - **shell-scale-display** — The scale display in the status bar: a bar of a round length in the CRS's unit, shown only for a metre dataset (milestone 3's OPEN-7, deferred) (phase `prototype`) — never queued until placed
 - **shell-migration-milestone-5** — Shell migration, milestone 5 -- conditions, Problems and Jobs: one home for failures and running work (phase `prototype`) — never queued until placed

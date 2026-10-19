@@ -214,3 +214,27 @@ Nothing above is edited.
 6. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 6 — the cause step: (a) (class 5)
+
+*Written by the custodian on the human's ruling (`state/directives/2026-10-19-229-merged-rotation-230-ready-watcher-visible-i2-a-one-consult-r2-a-unknown-attempt-cause-a.md`, item 3). References only.*
+
+1. **The cause step: (a).** It waits for the next unknown attempt in any run. Every export step now prints its prepare-to-execute time (step 1, PR #227), and that time shows whether the attempt's TTL elapsed. No reproduction step is made.
+2. **The product step** stays open behind the cause.
+3. **PLAN:** the node is unscheduled while it waits, so it is never queued; the first unknown attempt seen in any run is recorded against this form.
+4. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
+
+### Amendment 7 — the first unknown attempt since step 1: the TTL is excluded (class 1)
+
+*Written by the custodian after the run was seen, under Amendment 6 item 3. References only. The record: `state/consults/2026-10-19-shell-migration-milestone-3-re-sweep-2-custodian.md`, §4 and §5, sha256 08632629bf97a57fec7acd99742d49725408b168a7ef2eb36362a519734aa9b8.*
+
+1. **The observation.** The custodian's shared series at milestone 3's code base 564aadae, the selection suite, run 2026-10-19T16:52:27Z to 16:56:52Z: E-EXPORT's execute returned `unknown-attempt`, with L 0 ms, U 92 ms and T 120,000 ms. The line is byte-copied in the record.
+2. **The reading, by §1.4:** FAIL, not INCONCLUSIVE. U is within T, so the TTL did not end this attempt: the first of the node's two causes is excluded for it.
+3. **What this run cannot tell.** The outcome has one shape (§0 F4), so it does not say whether the host lost the attempt or the panel's execute hook answered by itself before its effect held the attempt (§0 F4). L of 0 ms, the execute sent as soon as the prepare answered, is consistent with either. The run kept no app stderr and no console ledger, the row that would show whether the host was called (§0 F4).
+4. **Alone,** selection passed 18 of 18 twice in an exclusive hold (the record's §5): the attempt came under load, as the node's title has it.
+5. **Next, the human's:** what follows this observation. The node is blocked on that ruling.
+6. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
