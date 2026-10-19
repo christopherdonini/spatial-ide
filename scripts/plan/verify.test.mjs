@@ -71,11 +71,45 @@ test('verdictCiteExists requires the "DECISIONS-PENDING.md " prefix', () => {
 
 test('verdictCiteExists checks the cited text is actually present', () => {
   const dir = makeTempDir('verdict-cite-');
+  execFileSync('git', ['init', '-q'], { cwd: dir }); // the ruling set is listed through git
   fs.writeFileSync(path.join(dir, 'DECISIONS-PENDING.md'), '## RULED 2026-09-13\n\nsome ruling text\n');
   const hit = verdictCiteExists(dir, 'DECISIONS-PENDING.md RULED 2026-09-13');
   assert.equal(hit.ok, true);
   const miss = verdictCiteExists(dir, 'DECISIONS-PENDING.md RULED 2099-01-01');
   assert.equal(miss.ok, false);
+});
+
+// A temporary git repository whose index holds `files` (no commit is needed: the ruling set is listed from the index).
+function ledgerRepo(files) {
+  const dir = makeTempDir('verdict-set-');
+  execFileSync('git', ['init', '-q'], { cwd: dir });
+  for (const [rel, text] of Object.entries(files)) {
+    fs.mkdirSync(path.dirname(path.join(dir, rel)), { recursive: true });
+    fs.writeFileSync(path.join(dir, rel), text, 'utf8');
+  }
+  execFileSync('git', ['add', '--', ...Object.keys(files)], { cwd: dir });
+  return dir;
+}
+const ARCHIVE = 'state/cut-archive/DECISIONS-PENDING-2026-01-01.md';
+
+test('verify: a felt-verdict cite found only in an archived DECISIONS-PENDING file resolves', () => {
+  const dir = ledgerRepo({ 'DECISIONS-PENDING.md': '# Decisions pending the human é\n', [ARCHIVE]: '**RULED 2026-09-13 (question set 1 →)** the ruling\n' });
+  const hit = verdictCiteExists(dir, 'DECISIONS-PENDING.md RULED 2026-09-13 (question set 1 →)');
+  assert.deepEqual(hit, { ok: true, reason: null });
+});
+
+test('verify: a felt-verdict cite in no file of the ruling set still fails', () => {
+  const dir = ledgerRepo({ 'DECISIONS-PENDING.md': 'live é\n', [ARCHIVE]: 'archived →\n' });
+  const miss = verdictCiteExists(dir, 'DECISIONS-PENDING.md RULED 2099-01-01');
+  assert.equal(miss.ok, false);
+  assert.ok(miss.reason.includes(ARCHIVE) && miss.reason.includes('RULED 2099-01-01'), miss.reason);
+});
+
+test('verify: a cite split across the end of the live file and the start of an archive does not resolve', () => {
+  const dir = ledgerRepo({ 'DECISIONS-PENDING.md': 'live é … RULED 2026-09-13 (question', [ARCHIVE]: ' set 1 →) the ruling\n' });
+  assert.equal(verdictCiteExists(dir, 'DECISIONS-PENDING.md RULED 2026-09-13 (question set 1').ok, false);
+  assert.equal(verdictCiteExists(dir, 'DECISIONS-PENDING.md RULED 2026-09-13 (question').ok, true, 'each half alone is found');
+  assert.equal(verdictCiteExists(dir, 'DECISIONS-PENDING.md set 1 →)').ok, true);
 });
 
 test('verifyStatusAgreement flags a recorded status that disagrees with the derivation', () => {
