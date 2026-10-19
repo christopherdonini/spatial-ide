@@ -824,3 +824,47 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+### Amendment 5 — the re-sweep from B to the code base 564aadae: two moved pins (class 3); the base's suites and rule 00 (class 1)
+
+*Written by the custodian before any code, after the re-sweep's results were seen. References only. The record: `state/consults/2026-10-19-shell-migration-milestone-3-re-sweep-2-custodian.md`, sha256 08632629bf97a57fec7acd99742d49725408b168a7ef2eb36362a519734aa9b8.*
+
+1. **The code base** is 564aadae556a39c2f3a0f567730ec58e4cfe0439, where PR A's branch `cut/shell-migration-milestone-3-pr-a` is cut (§0.3, Amendment 4 item 3). Amendment 3 stands for B.
+2. **Pins (class 3).** Of the files the form's pins name, only `KNOWN-LIMITATIONS.md` changed from B to the base: item 44 landed above both lines Amendment 3 pins there, and each line is unchanged. Amendment 3 item 4's pin of line 390 reads at `KNOWN-LIMITATIONS.md:394 @ 564aadae556a39c2f3a0f567730ec58e4cfe0439 sha256:c22c976f428e62d266bf47043a06e577a3dc7e77d07c4136a1aa34a97c1353eb`; Amendment 3 item 10's pin of line 379 reads at `KNOWN-LIMITATIONS.md:383 @ 564aadae556a39c2f3a0f567730ec58e4cfe0439 sha256:ade05ff3699847fc81592b239f647a4be3bb3b9338b4614efb3ef7196e647ade`. Every other pin stands.
+3. **The §0.5 interfaces** are unchanged: no code path changed from B to the base (the record's §2).
+4. **The Part** is AB, and the two KNOWN-LIMITATIONS items take 45 and 46 by Amendment 3 item 10's rule, read again at PR B's KNOWN-LIMITATIONS commit (the record's §3).
+5. **The suites at the base (class 1)** (the record's §4 and §5). Every suite passed in the shared series but two:
+   - selection: E-EXPORT's execute returned `unknown-attempt` (U 92 ms, T 120,000 ms). Run alone twice in an exclusive hold, selection passed 18 of 18 both times, so by the machine rule the shared run's failure is not recorded as the suite's, and I12 does not fire. The attempt is recorded against `publish-approval-unknown-attempt-under-load` (its Amendment 7).
+   - source-changed, post route: S5d alone, recorded beside the runs (Amendment 3 item 12).
+6. **Rule 00 at the base (class 1).** In progress: `source-changed-post-reopen-routes-watcher-visible` (the source-changed driver, its README entry, walkthrough Part N) and `governance-decisions-pending-open-and-archive` (scripts under `scripts/plan/` and `scripts/hooks/`, and `AUTONOMY.md`). Awaiting merge: PR #230 (KNOWN-LIMITATIONS item 23). PR A shares no path with any of them, its README entry, its Part and its items counting as separate paths. No piece touches `protocol/`.
+7. **Next:** PR A's code from the base, by one worker-high.
+8. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
+
+### Amendment 6 — PR A's gate 1 (both FAIL) and correction round 1: the custodian's rows (class 3) and the round's e2e (class 2 for E-SEARCH-b); written after gate 1 and round 1's runs
+
+*References only. Gate 1: `state/consults/gates/2026-10-19-shell-migration-milestone-3-pr-a-gate1-architect.md` (549, A) and `state/consults/gates/2026-10-19-shell-migration-milestone-3-pr-a-gate1-reviewer.md` (550, R). Round 1: `state/consults/2026-10-19-shell-migration-milestone-3-pr-a-round-1-worker-report.md` (head 621cd1f3a0b5f12b8c837a45ebeffa472909fcb2). Its e2e: `state/consults/2026-10-19-shell-migration-milestone-3-pr-a-round-1-e2e-custodian-runs.md`, sha256 2773fdc5f110d308eb1f1c7218435cc37d97759b57a0ceaa56782921c34f5228.*
+
+1. **§2.2's third availability bullet (A's D5, class 3)** reads: `dataset.open` is available whenever App passes its handler; while an open is in flight it is listed as available, and running it starts nothing and shows the busy line, because `requestPick()` answers busy on the Open button's own condition (Amendment 3 item 11; RC8).
+2. **§2.4's result shapes (R's D3, class 3)** are the round 0 report's Differences item 1, as built.
+3. **Tab (A's C1)** now follows OPEN-1's ruled point: it completes an active option, or the only candidate whether the list is open or not, and a second Tab leaves. UC2's recorded mutation (Tab sets `open: true`) now fails on the assertion that Tab closes the list, not on Tab leaving in at most two; two more UC2 mutations are recorded (round 1 report).
+4. **E-SEARCH-b (class 2):** written down in round 1 and run by the custodian at the head: it fails E-SEARCH on the top-bar assertion before the predicted `elementFromPoint` line. Recorded in the round's e2e record.
+5. **Next:** the PR body (A's D6), then gate 2, both gates, scoped to round 1.
+6. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
+
+### Amendment 7 — PR A's gate 2 (both FAIL) and correction round 2: the custodian's rows (class 3), Amendment 6's references, the bar's focus rule as built, and the round's e2e (E-SEARCH-c observed as predicted); written after gate 2 and round 2's runs
+
+*References only. Gate 2: `state/consults/gates/2026-10-19-shell-migration-milestone-3-pr-a-gate2-architect.md` (551, A2) and `state/consults/gates/2026-10-19-shell-migration-milestone-3-pr-a-gate2-reviewer.md` (552, R2). Round 2: `state/consults/2026-10-19-shell-migration-milestone-3-pr-a-round-2-worker-report.md` (head 2fa7c8d09df2e8f21370c1bf68b23213a25615a0). Its e2e: `state/consults/2026-10-19-shell-migration-milestone-3-pr-a-round-2-e2e-custodian-runs.md` @ 4e4131125e70555ce6852f073e5e516912bfd9c3, sha256 de22c15ff17b99a81b652500649a1ca49ea83554f18a8f3fc9db026c86bb91db.*
+
+1. **§4's E-BARFOCUS row (gate 1 A's C1; A2's D4 and R2's D4, class 3)** reads: With no list open and no single candidate, Tab leaves the bar; Escape returns focus to the element held before. The step runs from an empty bar.
+2. **Amendment 6's references (A2's D5):** item 2's round 0 report is `state/consults/2026-10-19-shell-migration-milestone-3-pr-a-worker-report.md`, its Differences item 1; item 4's head is 621cd1f3a0b5f12b8c837a45ebeffa472909fcb2; the record its preamble hashes is @ afea0ff2fb785e06f208e28f0fb625d8cd359e5d.
+3. **§2.3's Running rule as built (A2's C1 and C2, R2's C1):** the bar runs an entry inside `flushSync`, so the action commits before the focus goes back by Escape's rule; round 1's clear in `apply` is removed. RC10 cases c (the region's splitter) and d (a region closed and opened again) are added, their mutations observed (round 2 report).
+4. **E-SEARCH-c (A2's E1):** written down in round 2 and run by the custodian at the head: it fails E-SEARCH on the `elementFromPoint` assertion, as predicted, so that assertion now has an observed failing mutation. Recorded in the round's e2e record.
+5. **Carried to PR B (A2's note):** after a completion, ArrowDown reopens the list, where §2.3 keeps it closed until the next typed character. PR A cannot reach it, since every PR A completion is an exact word that takes nothing; PR B's `/filter` can, and PR B settles it.
+6. **Next:** the PR body (R2's D5), then gate 3, both gates, scoped to round 2. The header's MUTATIONS sentence and the README's session-state sentence (A2's and R2's D1 and D3) take gate 3's words, fixed before the merge.
+7. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
