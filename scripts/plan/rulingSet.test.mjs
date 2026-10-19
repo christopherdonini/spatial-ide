@@ -14,6 +14,8 @@ const sh = (dir, args) => execFileSync('git', args, { cwd: dir, encoding: 'utf8'
 const put = (dir, rel, text) => { fs.mkdirSync(path.dirname(path.join(dir, rel)), { recursive: true }); fs.writeFileSync(path.join(dir, rel), text, 'utf8'); };
 after(() => { for (const d of dirs) fs.rmSync(d, { recursive: true, force: true }); });
 
+// RECORDED MUTATION (MH1) at 2914103800f4, applied alone and reverted: archives listed by reading the folder on disk -> fails by name: `rulingSet: the set is the live file, then every tracked state/cut-archive/DECISIONS-PENDING-*.md in ascending path order; an untracked one is left out`.
+// RECORDED MUTATION (MH2) at 2914103800f4, applied alone and reverted: the failure caught and the live file returned alone -> fails by name: `rulingSet: a git failure throws and never narrows the set to the live file`.
 test('rulingSet: the set is the live file, then every tracked state/cut-archive/DECISIONS-PENDING-*.md in ascending path order; an untracked one is left out', () => {
   const dir = tmp('ruling-set-');
   sh(dir, ['init', '-q', '-b', 'main']);
