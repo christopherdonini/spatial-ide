@@ -974,6 +974,7 @@ const RS_ARCHIVE = 'state/cut-archive/DECISIONS-PENDING-2026-01-01.md';
 const RS_QUOTE = 'the quick brown fox jumps over the lazy dog daily';
 const rsDoc = `Narrowed by \`${'DECISIONS-PENDING.md' + ':22'}\`, the human's answer verbatim: "${RS_QUOTE}" end.\n`;
 
+// RECORDED MUTATION (MT4) at c3e70acb4914, applied alone and reverted: the archives left out of the hash-scan list -> fails by name, and only this one: `verify-quotes: an invalid hash reference in an archived DECISIONS-PENDING file still fails by name`.
 test('verify-quotes: an invalid hash reference in an archived DECISIONS-PENDING file still fails by name', () => {
   const ref = `A trusted figure: \`T.md:1-2\` sha256:${sha256('not the cited content, on purpose, for this test')}\n`;
   const dir = gitTree({ 'T.md': 'Line one of the target file.\nLine two of the target file.\n', 'DECISIONS-PENDING.md': `# Decisions pending the human\n\n${ref}`, [RS_ARCHIVE]: `# an archive é →\n\n${ref}` });
@@ -982,6 +983,7 @@ test('verify-quotes: an invalid hash reference in an archived DECISIONS-PENDING 
   for (const f of hashFindings) assert.match(f.reason, /sha256 mismatch/);
 });
 
+// RECORDED MUTATION (MQ1) at c3e70acb4914, applied alone and reverted: the named-file search reads the live file alone -> fails by name, and only this one: `verify-quotes: a passage introduced by a DECISIONS-PENDING.md cite and found only in an archived file passes`.
 test('verify-quotes: a passage introduced by a DECISIONS-PENDING.md cite and found only in an archived file passes', () => {
   const dir = gitTree({ 'A-PREREGISTRATION.md': rsDoc, 'DECISIONS-PENDING.md': '# Decisions pending the human\n', [RS_ARCHIVE]: `# an archive é →\n\n${RS_QUOTE}\n` });
   const { findings, checked } = runVerifyQuotes({ repoRoot: dir, files: [path.join(dir, 'A-PREREGISTRATION.md')] });
@@ -989,6 +991,7 @@ test('verify-quotes: a passage introduced by a DECISIONS-PENDING.md cite and fou
   assert.equal(findings.length, 0, JSON.stringify(findings));
 });
 
+// RECORDED MUTATION (MQ2) at c3e70acb4914, applied alone and reverted: an archive's presence counted as found -> fails by name, and only this one: `verify-quotes: a passage introduced by a DECISIONS-PENDING.md cite and found in no file of the ruling set fails by name`.
 test('verify-quotes: a passage introduced by a DECISIONS-PENDING.md cite and found in no file of the ruling set fails by name', () => {
   const dir = gitTree({ 'A-PREREGISTRATION.md': rsDoc, 'B.md': `Elsewhere: ${RS_QUOTE}.\n`, 'DECISIONS-PENDING.md': '# Decisions pending the human\n', [RS_ARCHIVE]: '# an archive é →\n\nanother ruling entirely\n' });
   const { findings, checked } = runVerifyQuotes({ repoRoot: dir, files: [path.join(dir, 'A-PREREGISTRATION.md')] });
