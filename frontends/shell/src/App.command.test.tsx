@@ -234,7 +234,7 @@ describe("App: the command bar (milestone 3, PR A), through the real App", () =>
     expect(mocks.canvas.mounted, "the map is mounted once").toEqual([handleOf(1)]);
   });
 
-  // RECORDED MUTATION for "RC2": in StudioLayout.tsx's `runAction` toggle arm, dispatch the action without `apply` (`dispatch({ kind: "toggle", region })`, a copy that records no row). Expected failure: the row assertion.
+  // RECORDED MUTATION for "RC2": in StudioLayout.tsx pass CommandBar a copy of runAction whose toggle arm dispatches without apply (replace run={runAction} with run={(id) => { const region = TOGGLE_REGION[id]; if (region !== undefined) { dispatch({ kind: "toggle", region }); return "done"; } return runAction(id); }}), so the bar's path records no row and the buttons' path still does. Expected failure: the row assertion.
   // OBSERVED AT 6f83d5377e3592760d0286b82f45415b11c278ee: FAILED -- "RC2: each layout entry run from the bar flips the region its button flips and records the same row, and Zoom to layer calls fitToBounds once":
   //   AssertionError: /layers: the same row: expected [] to deeply equal [ 'layout.toggleLayers' ]. Reverted after observing.
   it("RC2: each layout entry run from the bar flips the region its button flips and records the same row, and Zoom to layer calls fitToBounds once", async () => {

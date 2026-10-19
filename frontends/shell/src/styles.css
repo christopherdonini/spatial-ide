@@ -1185,8 +1185,7 @@ body,
 }
 
 /* Milestone 3 (SHELL-MIGRATION-MILESTONE-3-PREREGISTRATION.md section 2.3, PR A): the command bar in the top bar, after `.app-header`. Its list and its one-line note are
-   `position: fixed` just below the top bar (`--top-bar-h`), because `.top-bar` clips what overflows it; they exist only while open, so nothing sits over the map when closed.
-   Colours are P6 placeholders. */
+   `position: fixed` just below the top bar (`--top-bar-h`), because `.top-bar` clips what overflows it. The list is rendered only while open. The note is rendered only while it holds a line, and the line goes when the draft changes, when the bar handles a key, or when the input loses the focus. Neither is a permanent element over the map. Colours are P6 placeholders. */
 .command-bar {
   flex: 0 1 20rem;
   min-width: 6rem;

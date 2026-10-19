@@ -13,8 +13,7 @@ import type { BarPos, Draft } from "./commandDraft";
 /**
  * The command bar (SHELL-MIGRATION-MILESTONE-3-PREREGISTRATION.md section 2.3, PR A): one text input in the top bar with the APG combobox roles, and a list that
  * is rendered only while open. It lists and runs registry entries and owns no behaviour of its own: an applied entry calls `run`, StudioLayout's one
- * `runAction`, the function its chord, bare key or button calls. Keys go through `commandBarKey`; the draft goes through `resolveDraft`. The list and the
- * one-line note are `position: fixed` below the top bar (whose `overflow: hidden` would clip them), never over the map while closed. Every operator string is a P6 placeholder.
+ * `runAction`, the function its chord, bare key or button calls. Keys go through `commandBarKey`; the draft goes through `resolveDraft`. The list and the one-line note are `position: fixed` below the top bar (whose `overflow: hidden` would clip them). The list is rendered only while open. The note is rendered only while it holds a line, which goes when the draft changes, when the bar handles a key, or when the input loses the focus. Every operator string is a P6 placeholder.
  */
 
 /** What a run left behind: the action is done and the bar gives the focus back, or it moved the focus itself, or it could not start. */

@@ -3,22 +3,23 @@
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
 // E2E TEST SURFACE (e2e/README.md) -- the command bar on real WebView2: E-CTRLK, E-SEARCH, E-HELP, E-BARFOCUS and E-REVEAL (asserted), from
-// SHELL-MIGRATION-MILESTONE-3-PREREGISTRATION.md section 4, and E-SLASH, the bare `/` with real keys in the Filter section's input (Amendment 1 item 9). Fixture:
+// SHELL-MIGRATION-MILESTONE-3-PREREGISTRATION.md section 4, and E-SLASH, the bare `/` sent by CDP key injection from the map and in the Filter section's input (Amendment 1 item 9; what that injection does not prove is below). Fixture:
 // `filter-zoned.parquet`; the suite records its sha256 before and after its run. Nothing here is a measurement or a performance claim.
 //
 // What CDP key injection proves and does not (section 0.6, H2): `page.keyboard.press` reaches the page's own `keydown` listener; it does NOT cross WebView2's
 // accelerator-key layer, so this suite cannot say that a real Ctrl+K gets there. That is the walkthrough's row for it (the human's observation).
 //
-// MUTATIONS, WRITTEN DOWN AND NOT RUN (section 4: the e2e rows' mutations are written down; this suite is run by the custodian on the port-5400 harness). Each is a replacement
-// of one exact text, found exactly once at the head that adds this file, and each is to be reverted after it is observed:
+// MUTATIONS (section 4: every mutation is observed). Written down by the worker; the custodian ran each alone at 7e4ea32a0ccef474b8b05ed582271a4baa24101f and each failed by its named step (state/consults/2026-10-19-shell-migration-milestone-3-pr-a-e2e-custodian-runs.md). Each is a replacement of one exact text, found exactly once at the head that adds this file, and each is to be reverted after it is observed:
 //   E-CTRLK   frontends/shell/src/layout/StudioLayout.tsx, replace `if (region !== undefined) apply({ kind: "toggle", region });` with `if (region !== undefined) dispatch({ kind: "toggle", region });`
 //             (the bar reaches a copy that does not record). Expected: step E-CTRLK fails, "E-CTRLK: 0 layout.toggleLayers rows were recorded, expected exactly 1".
 //   E-SEARCH  frontends/shell/src/command/commandDraft.ts, replace `contains(e.label, text) || contains(e.command ?? "", text)` with `contains(e.command ?? "", text)` (search matches words only).
 //             Expected: step E-SEARCH fails, "E-SEARCH: the text to lay lists 0 options ([]), expected the one entry Zoom to layer".
+//   E-SEARCH-b frontends/shell/src/styles.css, in the `.command-list, .command-note` rule, replace `.command-note {\n  position: fixed;` (two lines, `\n` a newline; found exactly once in that file) with `.command-note {\n  position: static;`
+//             (the list is drawn in normal flow). Expected, a prediction until the custodian observes it: step E-SEARCH fails, "E-SEARCH: with the list open, document.elementFromPoint at the first option's centre does not return that option".
 //   E-HELP    frontends/shell/src/command/commandDraft.ts, replace `registry.filter((e) => contains(e.label, query) || (e.command !== null && contains(e.command, query)))` with
 //             `registry.filter((e) => e.chord !== null && (contains(e.label, query) || (e.command !== null && contains(e.command, query))))` (help leaves out entries with no chord).
 //             Expected: step E-HELP fails, "E-HELP: ? lists 4 options, expected 11".
-//   E-BARFOCUS frontends/shell/src/command/commandDraft.ts, replace `if (key.shiftKey || !state.open || count === 0) return none;` with `return { pos, effect: none.effect, preventDefault: true };` (Tab is always intercepted).
+//   E-BARFOCUS frontends/shell/src/command/commandDraft.ts, replace `if (key.shiftKey || state.completed || count === 0) return none;` with `return { pos, effect: none.effect, preventDefault: true };` (Tab is always intercepted; until correction round 1 of PR #233 the guard read `!state.open` in place of `state.completed`).
 //             Expected: step E-BARFOCUS fails, "E-BARFOCUS: Tab with no list open left the bar's input holding the focus"; E-CTRLK fails too, on its Tab completion.
 //   E-REVEAL  frontends/shell/src/publish/PublishPanel.tsx, replace `reveal() { if (!expanded)` with `reveal() { handlePublishClick(); if (!expanded)` (the panel's click handler is called).
 //             Expected: step E-REVEAL fails, either "E-REVEAL: the approval prompt (.publish-dialog) is showing" or, while the host's native picker stands, "E-REVEAL: timed out after 60000ms".

@@ -46,6 +46,7 @@ describe("U5: Mod+B, Mod+I and Mod+J map to the three toggles", () => {
   it("matches the letter case-insensitively (Caps Lock reports an upper-case key)", () => {
     expect(matchChord(ctrl("I"), "other")).toBe("layout.toggleInspector");
   });
+  // Milestone 3: four chords (B, I, J, K); x is a letter no chord holds.
   it("a letter outside the three matches nothing", () => {
     expect(matchChord(ctrl("x"), "other")).toBeNull();
   });
