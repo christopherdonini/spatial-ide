@@ -967,3 +967,32 @@ test('a_hash_reference_split_by_a_rustfmt_wrapped_comment_continuation_verifies'
   const { hashFindings } = runVerifyQuotes({ repoRoot: dir, files: [path.join(dir, 'A.rs')] });
   assert.equal(hashFindings.length, 0, JSON.stringify(hashFindings));
 });
+
+// The ruling set (rulingSet.mjs): the live DECISIONS-PENDING.md and its tracked archives are hash-scanned, and a passage introduced by a
+// cite of the live file passes when one file of the set holds it. A line cite is assembled at run time, so no unpinned one is written here.
+const RS_ARCHIVE = 'state/cut-archive/DECISIONS-PENDING-2026-01-01.md';
+const RS_QUOTE = 'the quick brown fox jumps over the lazy dog daily';
+const rsDoc = `Narrowed by \`${'DECISIONS-PENDING.md' + ':22'}\`, the human's answer verbatim: "${RS_QUOTE}" end.\n`;
+
+test('verify-quotes: an invalid hash reference in an archived DECISIONS-PENDING file still fails by name', () => {
+  const ref = `A trusted figure: \`T.md:1-2\` sha256:${sha256('not the cited content, on purpose, for this test')}\n`;
+  const dir = gitTree({ 'T.md': 'Line one of the target file.\nLine two of the target file.\n', 'DECISIONS-PENDING.md': `# Decisions pending the human\n\n${ref}`, [RS_ARCHIVE]: `# an archive é →\n\n${ref}` });
+  const { hashFindings } = runVerifyQuotes({ repoRoot: dir });
+  assert.deepEqual(hashFindings.map((f) => f.relPath).sort(), ['DECISIONS-PENDING.md', RS_ARCHIVE]);
+  for (const f of hashFindings) assert.match(f.reason, /sha256 mismatch/);
+});
+
+test('verify-quotes: a passage introduced by a DECISIONS-PENDING.md cite and found only in an archived file passes', () => {
+  const dir = gitTree({ 'A-PREREGISTRATION.md': rsDoc, 'DECISIONS-PENDING.md': '# Decisions pending the human\n', [RS_ARCHIVE]: `# an archive é →\n\n${RS_QUOTE}\n` });
+  const { findings, checked } = runVerifyQuotes({ repoRoot: dir, files: [path.join(dir, 'A-PREREGISTRATION.md')] });
+  assert.equal(checked, 1);
+  assert.equal(findings.length, 0, JSON.stringify(findings));
+});
+
+test('verify-quotes: a passage introduced by a DECISIONS-PENDING.md cite and found in no file of the ruling set fails by name', () => {
+  const dir = gitTree({ 'A-PREREGISTRATION.md': rsDoc, 'B.md': `Elsewhere: ${RS_QUOTE}.\n`, 'DECISIONS-PENDING.md': '# Decisions pending the human\n', [RS_ARCHIVE]: '# an archive é →\n\nanother ruling entirely\n' });
+  const { findings, checked } = runVerifyQuotes({ repoRoot: dir, files: [path.join(dir, 'A-PREREGISTRATION.md')] });
+  assert.equal(checked, 1);
+  assert.equal(findings.length, 1, JSON.stringify(findings));
+  assert.match(findings[0].reason, /not found in named "DECISIONS-PENDING\.md"/);
+});
