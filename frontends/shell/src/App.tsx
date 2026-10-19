@@ -4,6 +4,7 @@
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 
 import AdmissionPanel from "./admission/AdmissionPanel";
+import type { AdmissionPanelHandle } from "./admission/AdmissionPanel";
 import { Admitted } from "./admission/admitDataset";
 import DescribeSummary from "./admission/DescribeSummary";
 import { FormattedRefusal, formatRefusal } from "./admission/formatRefusal";
@@ -41,6 +42,7 @@ import { registerE2eHook, unregisterE2eHook } from "./e2e-test-surface";
 import { isInstrumentedBuild } from "./isInstrumentedBuild";
 import NoticesPanel from "./notices/NoticesPanel";
 import PublishPanel from "./publish/PublishPanel";
+import type { PublishPanelHandle } from "./publish/PublishPanel";
 import type { ExportRunEnd, ExportRunReport } from "./publish/PublishPanel";
 import {
   getResidencyArm,
@@ -913,6 +915,9 @@ export default function App() {
   // debounced query happened to fire for.
   const lastViewportBboxRef = useRef<Bbox | null>(null);
   const canvasRef = useRef<WorkingCanvasHandle>(null);
+  /** The command bar's `/open` and `/export` reach the Layers panel and the Export panel through these handles (SHELL-MIGRATION-MILESTONE-3-PREREGISTRATION.md section 2.7). */
+  const admissionRef = useRef<AdmissionPanelHandle>(null);
+  const publishRef = useRef<PublishPanelHandle>(null);
   const managerRef = useRef<ViewportStreamManager | null>(null);
   /** P5f complex-gate should-fix 3: set ONLY inside the `[admitted]` effect's candidate-arm branch
    * (`null` for baseline, and reset to `null` in every cleanup) -- the Cancel JSX handler below reads
@@ -1924,6 +1929,11 @@ export default function App() {
       layersRow={admitted ? { pathDisplay: admitted.describe.source.path_display } : null}
       onZoomToLayer={() => void canvasRef.current?.fitToBounds()}
       onSelectTool={handleSelectTool}
+      onZoomToSelection={handleZoomToSelection}
+      onClearSelection={handleClearSelection}
+      selectionAvailable={selection.size > 0}
+      onOpenDataset={() => admissionRef.current?.requestPick() ?? "busy"}
+      onRevealExport={() => publishRef.current?.reveal()}
       /* Milestone 1 (SHELL-MIGRATION-MILESTONE-1-PREREGISTRATION.md section 2.2): every panel below keeps
        * its keys and its props and now lives in a slot of the Map Studio frame (`layout/`). A comment
        * below that speaks of `.app-main`, `.app-rail-top`, `.app-rail-bottom`, a flex column, or a
@@ -1932,7 +1942,7 @@ export default function App() {
       slots={{
         "region.layers": (
           <>
-            <AdmissionPanel onAdmitted={handleAdmitted} confirmOpen={confirmOpen} />
+            <AdmissionPanel ref={admissionRef} onAdmitted={handleAdmitted} confirmOpen={confirmOpen} />
             {asking && <OpenDuringExportAsk onKeep={() => answerOpenAsk(false)} onCancelAndGo={() => answerOpenAsk(true)} />}
             {lateCancel.map((outcome, index) => (
               <LateCancelStatement key={index} outcome={outcome} />
@@ -2313,6 +2323,7 @@ export default function App() {
           * copy held here. */
         "section.export": admitted && (
           <PublishPanel
+            ref={publishRef}
             key={`publish-${admitted.dataset}`}
             datasetHandle={admitted.dataset}
             style={style}

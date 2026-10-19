@@ -4,9 +4,11 @@
 import { Fragment, useEffect, useReducer, useRef, useState } from "react";
 import type { CSSProperties, ReactNode, RefObject } from "react";
 
+import CommandBar from "../command/CommandBar";
+import type { CommandBarHandle, RunOutcome } from "../command/CommandBar";
 import { recordNamed } from "../console/recorder";
 import type { Tool } from "../workspace/workspaceState";
-import { ACTIONS, ariaKeyShortcuts, currentPlatform, matchChord, matchToolKey, shortcutLabel } from "./actionRegistry";
+import { ACTIONS, ariaKeyShortcuts, currentPlatform, matchChord, matchCommandOpener, matchToolKey, shortcutLabel } from "./actionRegistry";
 import type { ActionId, ToolActionId } from "./actionRegistry";
 import {
   ACTIVITY_TABS,
@@ -125,15 +127,36 @@ export interface StudioLayoutProps {
   /** The registry's `tool.navigate` and `tool.select`, reached by their bare keys (milestone 2 §2.2). Consumer: App's
    * tool handler (§7 B-A, phase B). When absent a bare tool key is left alone, not consumed. */
   onSelectTool?: (tool: Tool) => void;
+  /** Milestone 3 (Amendment 3 item 6): the registry's `selection.zoomTo` and `selection.clear` are App's handlers behind the Feature tab's buttons, `dataset.open` is the Layers panel's
+   * `requestPick`, and `layer.revealExport` is the Export panel's `reveal`. An absent prop leaves its entry unavailable. `selectionAvailable` is the Feature tab's own enabling rule. */
+  onZoomToSelection?: () => void;
+  onClearSelection?: () => void;
+  selectionAvailable?: boolean;
+  onOpenDataset?: () => "started" | "busy";
+  onRevealExport?: () => void;
 }
 
-export default function StudioLayout({ overlays, slots, layersRow, onZoomToLayer, onSelectTool }: StudioLayoutProps) {
+export default function StudioLayout({
+  overlays,
+  slots,
+  layersRow,
+  onZoomToLayer,
+  onSelectTool,
+  onZoomToSelection,
+  onClearSelection,
+  selectionAvailable,
+  onOpenDataset,
+  onRevealExport,
+}: StudioLayoutProps) {
   const [state, dispatch] = useReducer(layoutReducer, undefined, initialLayoutState);
   const viewport = useViewport();
   const platform = currentPlatform();
   const sizes = effectiveSizes(state, viewport);
 
   const mapRef = useRef<HTMLElement>(null);
+  const barRef = useRef<CommandBarHandle>(null);
+  /** The element that held the focus before the command bar took it (Ctrl+K, the bare `/` or a Tab in). */
+  const heldRef = useRef<Element | null>(null);
   const regionRefs: Record<SideRegion, RefObject<HTMLElement>> = {
     layers: useRef<HTMLElement>(null),
     inspector: useRef<HTMLElement>(null),
@@ -154,10 +177,55 @@ export default function StudioLayout({ overlays, slots, layersRow, onZoomToLayer
     recordLayoutAction(action);
   }
 
-  function runAction(id: ActionId): void {
+  /** Whether the bar may run `id` now: with no dataset only open and the layout entries; the two selection entries follow the Feature tab's empty-selection rule. */
+  function available(id: ActionId): boolean {
+    const dataset = layersRow !== null;
+    switch (id) {
+      case "layer.zoomToLayer":
+        return dataset;
+      case "tool.navigate":
+      case "tool.select":
+        return dataset && onSelectTool !== undefined;
+      case "selection.zoomTo":
+        return dataset && selectionAvailable === true && onZoomToSelection !== undefined;
+      case "selection.clear":
+        return dataset && selectionAvailable === true && onClearSelection !== undefined;
+      case "dataset.open":
+        return onOpenDataset !== undefined;
+      case "layer.revealExport":
+        return dataset && onRevealExport !== undefined;
+      default:
+        return true;
+    }
+  }
+
+
+  /** Escape and an applied action: the focus goes back to the element held before, or to the map when that element is gone or inside a closed region. */
+  function leaveBar(): void {
+    const held = heldRef.current;
+    const back = held instanceof HTMLElement && held.isConnected && held.closest("[hidden]") === null ? held : mapRef.current;
+    back?.focus();
+  }
+
+  /** The one dispatch (milestone 3, Amendment 3 item 6): the keys, the buttons and the bar all arrive here, and each arm calls the function its chord, bare key or button calls. */
+  function runAction(id: ActionId): RunOutcome {
     const region = TOGGLE_REGION[id];
     if (region !== undefined) apply({ kind: "toggle", region });
     else if (id === "layer.zoomToLayer") onZoomToLayer();
+    else if (id === "tool.navigate" || id === "tool.select") onSelectTool?.(TOOL_OF_ACTION[id]);
+    else if (id === "selection.zoomTo") onZoomToSelection?.();
+    else if (id === "selection.clear") onClearSelection?.();
+    else if (id === "command.focus") {
+      barRef.current?.take();
+      return "moved-focus";
+    } else if (id === "dataset.open") return onOpenDataset?.() === "busy" ? "busy" : "done";
+    else if (id === "layer.revealExport") {
+      if (!state.inspector.open) apply({ kind: "toggle", region: "inspector" });
+      if (state.inspector.tab !== "layer") apply({ kind: "selectTab", region: "inspector", tab: "layer" });
+      onRevealExport?.();
+      return "moved-focus";
+    }
+    return "done";
   }
 
   // One `keydown` listener for the whole window; the closure is refreshed each render through a ref.
@@ -173,11 +241,17 @@ export default function StudioLayout({ overlays, slots, layersRow, onZoomToLayer
         runActionRef.current(id);
         return;
       }
-      // A bare tool key: the element that holds the key is the event's target, or the focused element when the
+      // A bare key: the element that holds the key is the event's target, or the focused element when the
       // event was dispatched on the window.
+      const holder = event.target instanceof Element ? event.target : document.activeElement;
+      if (matchCommandOpener(event, holder)) {
+        event.preventDefault();
+        barRef.current?.take("/");
+        return;
+      }
       const selectTool = onSelectToolRef.current;
       if (selectTool === undefined) return;
-      const tool = matchToolKey(event, event.target instanceof Element ? event.target : document.activeElement);
+      const tool = matchToolKey(event, holder);
       if (tool === null) return;
       event.preventDefault();
       selectTool(TOOL_OF_ACTION[tool]);
@@ -229,6 +303,7 @@ export default function StudioLayout({ overlays, slots, layersRow, onZoomToLayer
       {overlays}
       <header className="top-bar">
         <span className="app-header">Spatial IDE</span>
+        <CommandBar ref={barRef} registry={ACTIONS} platform={platform} available={available} run={runAction} leave={leaveBar} held={heldRef} />
         {hasContent(slots["topBar.tools"]) && <div className="top-bar-tools">{slots["topBar.tools"]}</div>}
         <div className="top-bar-toggles">
           {ACTIONS.map((entry) => {

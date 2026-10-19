@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
-import { useCallback, useEffect, useState } from "react";
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useState } from "react";
 
 import { registerE2eHook, unregisterE2eHook } from "../e2e-test-surface";
 import { isInstrumentedBuild } from "../isInstrumentedBuild";
@@ -270,6 +270,11 @@ interface Props {
   confirmOpen: () => Promise<boolean>;
 }
 
+/** What the command bar's `/open` calls (SHELL-MIGRATION-MILESTONE-3-PREREGISTRATION.md section 2.7): it does what a click of Open does at that moment. */
+export interface AdmissionPanelHandle {
+  requestPick(): "started" | "busy";
+}
+
 /**
  * The admission flow as product truth (NEXT-CUT.md): a file picker, then `open_dataset`'s verdict
  * rendered directly. Success is rendered by `App` (`DescribeSummary`, bound to the dataset on the map,
@@ -279,7 +284,7 @@ interface Props {
  * SAME function a plain retry uses, just with `AdmitOptions` set -- never a parallel admission
  * path.
  */
-export default function AdmissionPanel({ onAdmitted, confirmOpen }: Props) {
+const AdmissionPanel = forwardRef<AdmissionPanelHandle, Props>(function AdmissionPanel({ onAdmitted, confirmOpen }, ref) {
   const [state, setState] = useState<State>({ kind: "idle", note: null });
 
   // The one piece of the manual flow a path string can't replay itself -- everything from here
@@ -306,6 +311,9 @@ export default function AdmissionPanel({ onAdmitted, confirmOpen }: Props) {
     }
     await admitPath(path);
   }, [admitPath]);
+
+  // The Open button's own condition decides (section 2.7): busy starts nothing, else a pick starts, so a second `/open` during the picker or the ask starts a new pick, as a second click does.
+  useImperativeHandle(ref, () => ({ requestPick() { if (isOpenInFlight(state)) return "busy"; void handlePick(); return "started"; } }), [state, handlePick]);
 
   // E2E TEST SURFACE (dev builds only, e2e/README.md): `pickFile()` above opens a native dialog no
   // CDP driver can reach, so this hook lets the harness supply a path directly and run `admitPath`
@@ -423,4 +431,6 @@ export default function AdmissionPanel({ onAdmitted, confirmOpen }: Props) {
       )}
     </div>
   );
-}
+});
+
+export default AdmissionPanel;

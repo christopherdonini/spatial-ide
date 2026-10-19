@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState, useSyncExternalStore } from "react";
 
 import RefusalBlock from "../admission/RefusalBlock";
 import type { FormattedRefusal } from "../admission/formatRefusal";
@@ -339,6 +339,11 @@ export interface PublishPanelProps {
   onExportRunning: (run: ExportRunReport) => void;
 }
 
+/** What the command bar's `/export` calls (SHELL-MIGRATION-MILESTONE-3-PREREGISTRATION.md section 2.7): it opens the Export disclosure and focuses the button, and starts nothing. */
+export interface PublishPanelHandle {
+  reveal(): void;
+}
+
 /**
  * The publish affordance (`NEXT-CUT.md` P3): collapsed-by-default disclosure, a scope choice, one
  * "Export interactive map…" button. Placed in the Export section of the Inspector's Layer tab
@@ -353,7 +358,7 @@ export interface PublishPanelProps {
  * whichever is chosen, the approval prompt restates it in words (`PublishPromptData.row_scope`),
  * so a default here never silently ships more than the operator sees confirmed at the dialog.
  */
-export default function PublishPanel({
+const PublishPanel = forwardRef<PublishPanelHandle, PublishPanelProps>(function PublishPanel({
   datasetHandle,
   style,
   filterActive,
@@ -362,8 +367,17 @@ export default function PublishPanel({
   stageScope,
   checkStagedScope,
   onExportRunning,
-}: PublishPanelProps) {
+}, ref) {
   const [expanded, setExpanded] = useState(false);
+  const [revealed, setRevealed] = useState(0);
+  const rootRef = useRef<HTMLDivElement>(null);
+  // `reveal` expands (recording the existing row only if the panel was closed) and asks for the focus, which the effect below moves once the button is mounted.
+  useImperativeHandle(ref, () => ({ reveal() { if (!expanded) recordNamed("gui-action", "publish.togglePanelExpanded"); setExpanded(true); setRevealed((n) => n + 1); } }), [expanded]);
+  useEffect(() => {
+    if (revealed === 0) return;
+    const root = rootRef.current;
+    (root?.querySelector<HTMLButtonElement>(".publish-open:not(:disabled)") ?? root?.querySelector<HTMLElement>(".publish-disclosure"))?.focus();
+  }, [revealed]);
   const [scope, setScope] = useState<PublishScopeChoice>("current");
   const currentViewAvailable = useSyncExternalStore(subscribeViewBox, () => getViewBox() !== null);
   const [state, setState] = useState<PublishPanelState>({ kind: "idle" });
@@ -571,7 +585,7 @@ export default function PublishPanel({
   }, [datasetHandle, style, filterActive, scope]);
 
   return (
-    <div className="publish-panel">
+    <div ref={rootRef} className="publish-panel">
       <button
         type="button"
         className="publish-disclosure"
@@ -600,7 +614,9 @@ export default function PublishPanel({
       )}
     </div>
   );
-}
+});
+
+export default PublishPanel;
 
 export interface PublishControlsProps {
   state: PublishPanelState;
