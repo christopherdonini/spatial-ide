@@ -510,3 +510,21 @@ Nothing above is edited.
 5. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 3 — the one architect consult: IN PLACE; what the next round carries (class 3)
+
+*Written by the custodian after the consult was filed. References only. The consult: `state/consults/2026-10-19-source-changed-post-reopen-routes-watcher-visible-i2-architect-consult.md`, sha256 7f7efe57fb20e741537c8c826f1eafad0ca2d6e58cc0b1b8666acf5e5b10f9e9 from line 5 to the end.*
+
+1. **The outcome: IN PLACE.** The driver repoints by rewriting the existing junction's mount-point reparse data (`FSCTL_SET_REPARSE_POINT`), so the open path exists at every instant; the name in `out/` is never deleted. The mechanism is the consult's M6: one Windows PowerShell 5.1 child, spawned once after the layout, which compiles one P/Invoke class with Add-Type, takes one target per line on stdin and answers one line per target. The layout keeps its unlink and create, before anything is opened. The consult's 1(c) states why the watcher stays blind.
+2. **§8 items 4 and 12, as the consult reads them:** no elevation, no `mklink`, no other link type; nothing added to `package.json`, the lockfile or the tree. PowerShell 5.1 and Add-Type are a new runtime requirement of the driver, named in its header and the README entry. The gates judge this reading.
+3. **Words this changes** (the worker's, checked at the gates): A.3's "made in-process" and the driver comment's "no spawned tool", untrue of the repoint; §2.2's "synchronously on the trigger", which becomes: the request is written on the trigger and its answer awaited. The trigger, the 5 ms poll, the ladder and the bounds are unchanged (§8 item 3).
+4. **A new assertion:** each repoint's answer is `ok`, and `realpathSync(OPEN_PATH)` then resolves inside the named target. Its mutation, W-M6, is made under §4's rule: the answer check removed, the child told a wrong target, the step failing by name.
+5. **H3 and P6, re-aimed before the runs.** A rewrite keeps the junction's creation time, so H3 reads the junction's change time (`ctime`) instead. If `ctime` does not move with the rewrite, H3 is recorded as unread for that run, not as a failure.
+6. **The probe, before any app run:** a second Node process stats and opens `OPEN_PATH` in a loop while the child rewrites the junction between `a` and `b`. One `os error 3`, or any failed open, is H2 again: I2, a STOP to the human.
+7. **R2,** by Amendment 2 item 3, in the same round.
+8. **For S5d's amendment, not written here:** §2.9's "the same race" holds for the trigger; when the repoint lands now follows a pipe round trip, neither bounded nor measured (ADR-018).
+9. **§7:** the driver's ceiling stands; an overrun is class 8.
+10. **Next:** one fresh brief for items 3 to 7; the probe; the custodian's §4 runs at the new head with W-M6, in one exclusive hold; then both gates.
+11. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
