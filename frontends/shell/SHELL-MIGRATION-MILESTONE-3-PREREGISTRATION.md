@@ -824,3 +824,20 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+### Amendment 5 — the re-sweep from B to the code base 564aadae: two moved pins (class 3); the base's suites and rule 00 (class 1)
+
+*Written by the custodian before any code, after the re-sweep's results were seen. References only. The record: `state/consults/2026-10-19-shell-migration-milestone-3-re-sweep-2-custodian.md`, sha256 08632629bf97a57fec7acd99742d49725408b168a7ef2eb36362a519734aa9b8.*
+
+1. **The code base** is 564aadae556a39c2f3a0f567730ec58e4cfe0439, where PR A's branch `cut/shell-migration-milestone-3-pr-a` is cut (§0.3, Amendment 4 item 3). Amendment 3 stands for B.
+2. **Pins (class 3).** Of the files the form's pins name, only `KNOWN-LIMITATIONS.md` changed from B to the base: item 44 landed above both lines Amendment 3 pins there, and each line is unchanged. Amendment 3 item 4's pin of line 390 reads at `KNOWN-LIMITATIONS.md:394 @ 564aadae556a39c2f3a0f567730ec58e4cfe0439 sha256:c22c976f428e62d266bf47043a06e577a3dc7e77d07c4136a1aa34a97c1353eb`; Amendment 3 item 10's pin of line 379 reads at `KNOWN-LIMITATIONS.md:383 @ 564aadae556a39c2f3a0f567730ec58e4cfe0439 sha256:ade05ff3699847fc81592b239f647a4be3bb3b9338b4614efb3ef7196e647ade`. Every other pin stands.
+3. **The §0.5 interfaces** are unchanged: no code path changed from B to the base (the record's §2).
+4. **The Part** is AB, and the two KNOWN-LIMITATIONS items take 45 and 46 by Amendment 3 item 10's rule, read again at PR B's KNOWN-LIMITATIONS commit (the record's §3).
+5. **The suites at the base (class 1)** (the record's §4 and §5). Every suite passed in the shared series but two:
+   - selection: E-EXPORT's execute returned `unknown-attempt` (U 92 ms, T 120,000 ms). Run alone twice in an exclusive hold, selection passed 18 of 18 both times, so by the machine rule the shared run's failure is not recorded as the suite's, and I12 does not fire. The attempt is recorded against `publish-approval-unknown-attempt-under-load` (its Amendment 7).
+   - source-changed, post route: S5d alone, recorded beside the runs (Amendment 3 item 12).
+6. **Rule 00 at the base (class 1).** In progress: `source-changed-post-reopen-routes-watcher-visible` (the source-changed driver, its README entry, walkthrough Part N) and `governance-decisions-pending-open-and-archive` (scripts under `scripts/plan/` and `scripts/hooks/`, and `AUTONOMY.md`). Awaiting merge: PR #230 (KNOWN-LIMITATIONS item 23). PR A shares no path with any of them, its README entry, its Part and its items counting as separate paths. No piece touches `protocol/`.
+7. **Next:** PR A's code from the base, by one worker-high.
+8. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.

@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `9457f0dc6d825b22e86fff0ab9dff716bb5a9d10191c2176293ec2c69e34e278`) at `2026-10-19T16:39:03.695Z`.
+Generated from `PLAN.yaml` (sha256 `9a564a2da8ba6ff1ff1c0d13331c39d4ecd8f0e5c9a96fc9200168e389879aa3`) at `2026-10-19T17:31:25.392Z`.
 
 ## 1. Next
 
@@ -10,9 +10,11 @@ Generated from `PLAN.yaml` (sha256 `9457f0dc6d825b22e86fff0ab9dff716bb5a9d10191c
 
 - (none)
 
-## 3. Waiting on the human (total: 0 min)
+## 3. Waiting on the human (total: 2 min)
 
-- (none)
+### ruling
+
+- **publish-approval-unknown-attempt-under-load** — Publish: an export's approval came back as unknown attempt under machine load (the status-bar e2e run 2 and the H3 order run): the cause first, the pending attempt's TTL elapsing between prepare and execute or an attempt the host lost; then whether the TTL suits a person reading the approval dialog, which shows no expiry (2 min)
 
 ## 4. Blocked on dependencies
 
@@ -28,6 +30,7 @@ Generated from `PLAN.yaml` (sha256 `9457f0dc6d825b22e86fff0ab9dff716bb5a9d10191c
 ## 5. In progress
 
 - **source-changed-post-reopen-routes-watcher-visible** — source-changed.mjs's post and reopen routes, and walkthrough Part N's N6 and N8, still change the source by an mtime touch the advisory watcher can see — evidence: branch `cut/source-changed-watcher-visible`
+- **shell-migration-milestone-3** — Shell migration, milestone 3 -- command bar and filter clauses: Ctrl+K, slash commands, typed /filter with field completion, clause cards with on and off — evidence: branch `cut/shell-migration-milestone-3-pr-a`
 - **known-limitations-item-23-watcher-idle-end** — KNOWN-LIMITATIONS item 23: it says a source change goes unnoticed until a query is next issued, but on Windows the advisory watcher ends the session while idle on a change it can see — evidence: branch `cut/known-limitations-item-23`
 - **governance-decisions-pending-open-and-archive** — DECISIONS-PENDING.md: open entries and recent rulings, the rest archived to state/cut-archive/, one shared helper for the ruling set in verify, verify-test-claims and verify-quotes, monthly rotation, and the reading order's item 3 restated; the second measurements after it — evidence: branch `cut/decisions-pending-open-and-archive`
 
@@ -105,7 +108,6 @@ Generated from `PLAN.yaml` (sha256 `9457f0dc6d825b22e86fff0ab9dff716bb5a9d10191c
 - **docs-14-corpus-attribution-vs-docs-08** — docs/14 asks corpus attribution in demos and published bundles, which docs/08 line 40 now says are never redistributed (phase `prototype`) — never queued until placed
 - **e2e-first-poll-readout-elsewhere** — Two more e2e suites take a hover id from the readout's first poll after a pointer move: source-changed.mjs hoverAt and residency-harness.mjs tryHoverCandidate (phase `prototype`) — never queued until placed
 - **dataset-stream-doc-producer-runs-ahead** — engine/src/stream.rs: Dataset::stream's doc says it returns once the statement is prepared and produces the first batch on the first next_into; the producer thread prepares and runs ahead to the queue bound (phase `prototype`) — never queued until placed
-- **shell-migration-milestone-3** — Shell migration, milestone 3 -- command bar and filter clauses: Ctrl+K, slash commands, typed /filter with field completion, clause cards with on and off (phase `prototype`) — never queued until placed
 - **shell-native-menus-macos** — Native application menus on macOS, built from the action registry (milestone 3's OPEN-6, deferred) (phase `prototype`) — never queued until placed
 - **shell-scale-display** — The scale display in the status bar: a bar of a round length in the CRS's unit, shown only for a metre dataset (milestone 3's OPEN-7, deferred) (phase `prototype`) — never queued until placed
 - **shell-migration-milestone-5** — Shell migration, milestone 5 -- conditions, Problems and Jobs: one home for failures and running work (phase `prototype`) — never queued until placed
@@ -140,4 +142,3 @@ Generated from `PLAN.yaml` (sha256 `9457f0dc6d825b22e86fff0ab9dff716bb5a9d10191c
 - **mod-worktree-resource-protection** — Worktree and resource protection -- a mod (deferred by the 2026-10-03 mods-roadmap ruling) (phase `prototype`) — ambition, never queued
 - **recorder-write-latency-measure** — Evidence Recorder: a declared write-latency measure with its own sample, so the brief overhead acceptance can be established before the Recorder evaluation ends (Amendment 2 C2-d keeps E5 a lower bound) (phase `prototype`) — ambition, never queued
 - **reuse-round-1-bundle** — Reuse archaeology round 1, the advisor bundle, filed as one docs-and-data piece (not under docs/) (phase `prototype`) — ambition, never queued
-- **publish-approval-unknown-attempt-under-load** — Publish: an export's approval came back as unknown attempt under machine load (the status-bar e2e run 2 and the H3 order run): the cause first, the pending attempt's TTL elapsing between prepare and execute or an attempt the host lost; then whether the TTL suits a person reading the approval dialog, which shows no expiry (phase `prototype`) — ambition, never queued
