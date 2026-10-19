@@ -466,3 +466,19 @@ Nothing above is edited.
 4. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 3 — S0 to S8 built; at G0, I3 and the D1-a reading go to the human; the profile-path line; item 11 (d) (class 3); two per-file figures (class 8)
+
+*Written by the custodian after the worker's report and the custodian's own run of the G0 dry run. References only. The report: `state/consults/2026-10-19-governance-decisions-pending-open-and-archive-worker-report.md`.*
+
+1. **Built** at d7ebd86ba8270e76e65cb30311093ca0d68562f1 from M0: S1 to S8, each with its tests and its recorded mutations; the counting command gives 852 lines over 15 files.
+2. **S0** held §5's predictions but for one verify-quotes NOT-FOUND, a passage introduced by a `DECISIONS-PENDING.md` cite, which §2 item 2 (d), the fourth reader under OPEN-2 (A), covers. No I6. The probe's local commit was refused by the repository's pre-commit profile-path scan (item 5), so the five checks ran on the staged tree.
+3. **I3 at G0.** The custodian's `--dry-run` from the head, against main's `DECISIONS-PENDING.md` at e684c775, exits 3: the 79 entries item 4 keeps make the new file 234,390 bytes, over 153,600. By OPEN-1 (A) the human strikes in the PR body; at least 80,790 bytes of entries must be named in `--archive-entries`. STOP for the human.
+4. **D1-a, M0 against the head (I1, for the human's reading, as piece B's I6 was).** verify.mjs, verify-quotes and verify-test-claims are identical. verify-cites's stdout differs only in its file count, 2023 to 2027, the four new tracked files. verify-mutation's stdout differs only in its count, 0 to 26, and its stderr gains one line per new test. `node --test` goes from 483 to 509, all passing. Every difference is the piece's own new files and tests.
+5. **The profile-path line.** `DECISIONS-PENDING.md:1964 @ e684c7753c4f0dc1194e746f89b347f721eed68a sha256:8f05a7c041583a728ca8624b867c5bb4289c18239ddf5030922637ba1ec147ef` holds a path under a user profile, on main since 8b88c58a. S10's move makes every line of the file an added line, so the pre-commit scan, and the CI exposure scan on its range, refuse that commit. The file is append-only and the archive must be byte-identical to P (§8 item 1). How this is resolved is the human's, before S10.
+6. **Item 11 (d) (class 3).** B's R2 calls `archiveNameFor` with its own first argument, so a stem as the first argument would change B's tested behaviour (I5). The stem is mapped inside `rotate-decisions-pending.mjs` instead, and `rotate-cut-state.mjs` is untouched. The gates check this reading.
+7. **§7 (class 8).** The total is within 1,260 lines over 16 files. Two files pass their own figures: `verify-cites.mjs` 12 against 10, and `verify-test-claims.mjs` 29 against 20.
+8. **Next.** The human's strikes, D1-a reading and profile-path ruling; then the obligation sheet over the units the struck run archives, the PR body's dry run, and both gates at G0 (§2 item 12).
+9. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.

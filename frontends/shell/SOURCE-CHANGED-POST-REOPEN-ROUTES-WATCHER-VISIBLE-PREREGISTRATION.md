@@ -528,3 +528,15 @@ Nothing above is edited.
 11. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 4 — round 2's runs: every prediction held, no invalidator; §7's figures (class 8)
+
+*Written by the custodian after round 2's runs were seen. References only. The round 2 report: `state/consults/2026-10-19-source-changed-post-reopen-routes-watcher-visible-round-2-worker-report.md`. The runs: `state/consults/2026-10-19-source-changed-post-reopen-routes-watcher-visible-round-2-custodian-runs.md`, sha256 dafd175c8ca29b898c00116456cd132d093964146c56e7651c5758e78b6d5682.*
+
+1. **The runs at bf527c1e,** 19 in one exclusive hold: P1, P2 (R2 by Amendment 2 item 3), P3, P4, P5 with W-M6 and W-M7, and P6 on the junction's change time held. No invalidator fired, and the re-read detail appears in no run. The repoint child exited in every run, and none was left running.
+2. **S5d's verdicts,** recorded and not predicted: PASS in 2 of 8 post runs, and FAIL in 6, each on its second condition, the change losing the race to a tile's pre-check. They are for S5d's step 2 (Amendment 3 item 8).
+3. **§7 (class 8),** by the form's command at bf527c1e: the driver 363 against its 220; the README 18 against 24; the walkthrough 33 against 40. The driver's overrun is round 2's in-place repoint and its answer check (Amendment 3 items 1, 4 and 9).
+4. **Next:** main merged into the branch; the PR; both gates (§9).
+5. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
