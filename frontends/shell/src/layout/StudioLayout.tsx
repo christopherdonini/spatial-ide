@@ -172,6 +172,8 @@ export default function StudioLayout({
         focused !== null &&
         (regionRefs[action.region].current?.contains(focused) === true || focused.id === splitterId(action.region));
       if (holdsFocus) mapRef.current?.focus();
+      // The bar's `leaveBar` runs before this toggle commits, so it would give the focus back inside the region: forget the element it holds if the region contains it.
+      if (heldRef.current !== null && regionRefs[action.region].current?.contains(heldRef.current) === true) heldRef.current = null;
     }
     dispatch(action);
     recordLayoutAction(action);

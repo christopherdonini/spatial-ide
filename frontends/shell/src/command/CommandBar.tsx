@@ -25,7 +25,7 @@ export const COMMAND_UNAVAILABLE_MARK = "[P6 placeholder] not available";
 export const COMMAND_UNAVAILABLE_NOTE = "[P6 placeholder] That command is not available right now.";
 export const COMMAND_BUSY_NOTE = "[P6 placeholder] A file is already being opened.";
 export const COMMAND_EMPTY_NOTE = "[P6 placeholder] Type a command, or ? for the list.";
-export const COMMAND_PICK_NOTE = "[P6 placeholder] Choose a command with the arrow keys, or press Tab to complete its name.";
+export const COMMAND_PICK_NOTE = "[P6 placeholder] Choose a command with the arrow keys, then press Enter.";
 export const COMMAND_UNKNOWN_NOTE = "[P6 placeholder] No command has that name. Type ? for the list.";
 export const COMMAND_NONE_NOTE = "[P6 placeholder] Nothing matches that.";
 

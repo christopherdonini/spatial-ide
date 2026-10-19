@@ -334,6 +334,17 @@ describe("App: the command bar (milestone 3, PR A), through the real App", () =>
     expect(document.activeElement, "the input's region is closed: the map region").toBe(q("#region-map"));
   });
 
+  it("RC10 case b: a command run from the bar that closes the region holding the field the focus came from leaves the focus on the map region", async () => {
+    await open("C:/data/a.parquet");
+    const field = q<HTMLInputElement>(".filter-predicate")!;
+    act(() => field.focus());
+    press(window, "k", { ctrlKey: true });
+    expect(document.activeElement).toBe(bar());
+    await runBar("/inspector");
+    expect(hiddenOf("inspector"), "the command closed the Inspector").toBe(true);
+    expect(document.activeElement, "the field's region is closed: the map region, not the field").toBe(q("#region-map"));
+  });
+
   // RECORDED MUTATION for "RC13": in CommandBar.tsx stop updating `aria-activedescendant` (pass `undefined`). Expected failure: the active descendant after ArrowDown.
   // OBSERVED AT 6f83d5377e3592760d0286b82f45415b11c278ee: FAILED -- "RC13: the combobox has aria-expanded, aria-controls naming the listbox, and aria-activedescendant following the arrow keys":
   //   AssertionError: expected null to be 'command-list-option-0' (the first ArrowDown). Reverted after observing.

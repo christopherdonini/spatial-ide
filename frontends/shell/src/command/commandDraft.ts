@@ -54,11 +54,15 @@ export function completionOf(entry: ActionEntry): string | null {
   return entry.command === null ? null : `/${entry.command}`;
 }
 
-/** Where the bar stands: the typed text, whether the list is open, and the active option (an index into the options listed, or none). */
+/**
+ * Where the bar stands: the typed text, whether the list is open, the active option (an index into the options listed, or none), and whether Tab has just completed
+ * the draft (set by Tab's completion, cleared by the next typed character, so that a second Tab leaves).
+ */
 export interface BarPos {
   readonly draft: string;
   readonly open: boolean;
   readonly active: number | null;
+  readonly completed: boolean;
 }
 
 /** `BarPos` and what Tab would complete each listed option to (`completionOf`, in list order): the caller derives it from the draft. */
@@ -82,29 +86,29 @@ export interface BarStep {
   readonly preventDefault: boolean;
 }
 
-/** Typing opens the list on the first character and keeps no option active; an empty draft closes it. */
+/** Typing opens the list on the first character and keeps no option active; an empty draft closes it. Typing also clears `completed`. */
 export function typeDraft(draft: string): BarPos {
-  return { draft, open: draft !== "", active: null };
+  return { draft, open: draft !== "", active: null, completed: false };
 }
 
 /**
  * The one reducer for a key in the bar (section 2.3, OPEN-1 package (A)). A key during composition does nothing. Shift+Tab is never intercepted. Tab is
- * intercepted only to complete: with the list open and an option active, or the only option, to that option's word; the list then stays closed
- * until the next typed character, so a second Tab leaves. Tab never applies. Enter applies the active option, or else the draft, and never completes.
+ * intercepted only to complete: an active option of the open list, or else the only candidate whether the list is open or closed, to that option's word; the list
+ * then stays closed and `completed` stays set until the next typed character, so a second Tab leaves. Tab never applies. Enter applies the active option, or else the draft, and never completes.
  * Escape closes the list, or else leaves. ArrowDown and ArrowUp open the list and move the active option.
  */
 export function commandBarKey(state: BarState, key: BarKey): BarStep {
-  const pos: BarPos = { draft: state.draft, open: state.open, active: state.active };
+  const pos: BarPos = { draft: state.draft, open: state.open, active: state.active, completed: state.completed };
   const none: BarStep = { pos, effect: { kind: "none" }, preventDefault: false };
   if (key.isComposing) return none;
   const count = state.completions.length;
   switch (key.key) {
     case "Tab": {
-      if (key.shiftKey || !state.open || count === 0) return none;
-      const index = state.active ?? (count === 1 ? 0 : null);
+      if (key.shiftKey || state.completed || count === 0) return none;
+      const index = state.open && state.active !== null ? state.active : count === 1 ? 0 : null;
       const completion = index === null ? null : state.completions[index];
       if (completion === null) return none;
-      return { pos: { draft: completion, open: false, active: null }, effect: none.effect, preventDefault: true };
+      return { pos: { draft: completion, open: false, active: null, completed: true }, effect: none.effect, preventDefault: true };
     }
     case "Enter":
       return { pos, effect: state.open && state.active !== null ? { kind: "apply", index: state.active } : { kind: "applyDraft" }, preventDefault: true };

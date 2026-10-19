@@ -60,12 +60,12 @@ describe("UC1: resolveDraft", () => {
 const KEYS: BarKey[] = ["Tab", "Enter", "Escape", "ArrowDown", "ArrowUp", "a"].flatMap((key) => [false, true].map((shiftKey) => ({ key, shiftKey, isComposing: false })));
 const DRAFTS = ["", "/", "/lay", "/layers", "/zoom", "inspector", "?", "/zzz"];
 
-/** Every state the bar can be in: each draft, the list open or closed, and no option active or each option active. */
+/** Every state the bar can be in: each draft, the list open or closed (a closed list with one candidate among them), and no option active or each option active. */
 function allStates(): BarState[] {
   return DRAFTS.flatMap((draft) => {
     const completions = idsOf(resolve(draft)).map((id) => completionOf(ACTIONS.find((entry) => entry.id === id) as ActionEntry));
     const actives = [null, ...completions.map((_, index) => index)];
-    return [true, false].flatMap((open) => actives.map((active): BarState => ({ draft, open, active, completions })));
+    return [true, false].flatMap((open) => actives.map((active): BarState => ({ draft, open, active, completed: false, completions })));
   });
 }
 
@@ -80,13 +80,14 @@ describe("UC2: commandBarKey", () => {
     const states = allStates();
     expect(states.length, "the grid is not empty").toBeGreaterThan(30);
     for (const state of states) {
-      const label = JSON.stringify({ draft: state.draft, open: state.open, active: state.active });
+      const label = JSON.stringify({ draft: state.draft, open: state.open, active: state.active, completed: state.completed });
       const shiftTab = commandBarKey(state, { key: "Tab", shiftKey: true, isComposing: false });
       expect([shiftTab.preventDefault, shiftTab.effect.kind, shiftTab.pos.draft], `Shift+Tab leaves in one press: ${label}`).toEqual([false, "none", state.draft]);
 
       const first = commandBarKey(state, { key: "Tab", shiftKey: false, isComposing: false });
       expect(first.effect.kind, `Tab never applies: ${label}`).toBe("none");
       if (first.preventDefault) {
+        expect([first.pos.open, first.pos.active, first.pos.completed], `Tab closes the list and sets completed: ${label}`).toEqual([false, null, true]);
         const second = commandBarKey(after(first.pos, state), { key: "Tab", shiftKey: false, isComposing: false });
         expect([second.preventDefault, second.effect.kind], `a second Tab leaves: ${label}`).toEqual([false, "none"]);
       }
@@ -105,8 +106,18 @@ describe("UC2: commandBarKey", () => {
 
       for (const key of KEYS) {
         const composing = commandBarKey(state, { ...key, isComposing: true });
-        expect([composing.pos, composing.effect.kind, composing.preventDefault], `composing ${key.key}: ${label}`).toEqual([{ draft: state.draft, open: state.open, active: state.active }, "none", false]);
+        expect([composing.pos, composing.effect.kind, composing.preventDefault], `composing ${key.key}: ${label}`).toEqual([{ draft: state.draft, open: state.open, active: state.active, completed: state.completed }, "none", false]);
       }
     }
+
+    // The closed list with exactly one candidate (the human's OPEN-1 ruling: Tab completes the only candidate): it completes whether or not the list is open, and the next Tab leaves.
+    const tab: BarKey = { key: "Tab", shiftKey: false, isComposing: false };
+    const closedOne = states.find((state) => state.draft === "/lay" && !state.open && state.active === null)!;
+    expect(closedOne.completions, "the grid holds a closed list with one candidate").toEqual(["/layers"]);
+    const completed = commandBarKey(closedOne, tab);
+    expect([completed.pos, completed.preventDefault, completed.effect.kind], "Tab with the list closed completes the only candidate").toEqual([{ draft: "/layers", open: false, active: null, completed: true }, true, "none"]);
+    expect(commandBarKey(after(completed.pos, closedOne), tab).preventDefault, "and the next Tab leaves").toBe(false);
+    const closedMany = states.find((state) => state.draft === "/zoom" && !state.open && state.active === null)!;
+    expect(commandBarKey(closedMany, tab).preventDefault, "a closed list with several candidates and none active: Tab leaves").toBe(false);
   });
 });
