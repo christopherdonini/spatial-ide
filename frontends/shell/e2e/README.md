@@ -801,3 +801,17 @@ Asserted, in order: `OPEN`; `APPLY` (the real Apply of `zone = 'residential'`, t
 **What it proves not.** E2 (a normal close removes that run's record) is not a step: this harness stops an app only with `taskkill /T /F` and cannot close it normally (the form's H5), so row AA4 of the walkthrough's Part AA carries it. The kill proves that a line the kernel replied to survives the process ending; it does not prove it survives a power loss, which the form does not claim.
 
 E2 is row AA4. `page.fill` dispatches the native `change` event itself, so what a real colour picker's close and a real range release do in WebView2 (H2) is row AA2's to prove. Each step's recorded mutation is in the file's header, with its commit and run.
+
+## Command bar spec (shell-migration-milestone-3)
+
+```
+npm run e2e:command-bar
+```
+
+*Draft for the human's sight (the form's §9 and item 2e): the entry follows `SHELL-MIGRATION-MILESTONE-3-PREREGISTRATION.md` §4 and Amendment 1 item 9, and its sentences are not the human's wording.*
+
+`e2e/command-bar.mjs` drives the command bar on real WebView2 with `filter-zoned.parquet`, and records the fixture's sha256 before and after. Asserted, each as a named step: `E-CTRLK` (Ctrl+K focuses the bar; `/lay`, Tab and Enter flip the Layers region's `hidden`; exactly one more class-C row carries the registry's own text for `layout.toggleLayers`; the stored `.working-canvas` node is unchanged), `E-SEARCH` (with the plain text `inspector` listed, `document.elementFromPoint` at the first option's centre returns that option and its top is not above the top bar's bottom; ArrowDown then Enter flips the Inspector; the upper-case text `TO LAY`, which only the label of Zoom to layer contains, lists that one entry), `E-HELP` (`?` lists every registry entry, with every word and every chord label read from `src/layout/actionRegistry.ts`), `E-BARFOCUS` (focus alone opens no list; Tab and Shift+Tab leave in one press with no list open; Escape closes an open list and keeps the focus, and a second Escape returns it to the element held before), `E-REVEAL` (with the Inspector closed and its Style tab selected, `/export` shows the Inspector and its Layer tab, expands Export and puts the focus on `.publish-open`; no `.publish-dialog` appears) and `E-SLASH` (a `/` key pressed with the map focused puts the focus in the bar with `/` in it; a `/` pressed in the Filter section's input stays in that input and not in the bar).
+
+**What CDP key injection proves.** `page.keyboard.press` reaches the page's own `keydown` listener. It does not cross WebView2's accelerator-key layer, so this suite cannot say that a real Ctrl+K, or a `/` that needs Shift on some layouts, does. Those are rows of the walkthrough's Part for this milestone.
+
+**The layout is session state.** The suite closes what it opens (Layers, the Inspector, Activity, the Export disclosure); it leaves the Inspector open on its Layer tab and the Console expanded. Each step's mutation is written in the file's header, with the exact text it replaces; those are written down and not run.
