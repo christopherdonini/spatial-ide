@@ -334,6 +334,9 @@ describe("App: the command bar (milestone 3, PR A), through the real App", () =>
     expect(document.activeElement, "the input's region is closed: the map region").toBe(q("#region-map"));
   });
 
+  // RECORDED MUTATION for "RC10 case b": in StudioLayout.tsx's `apply` delete the line that sets `heldRef.current = null` (the bar returns the focus to the field in the region it just closed). Expected failure: the focus is on the field, not the map region.
+  // OBSERVED AT 31ae009b565a52357567f01a0eda51ca3658a2b9: FAILED -- "RC10 case b: a command run from the bar that closes the region holding the field the focus came from leaves the focus on the map region":
+  //   AssertionError: the field's region is closed: the map region, not the field: expected <input> to be <main id="region-map">. Reverted after observing.
   it("RC10 case b: a command run from the bar that closes the region holding the field the focus came from leaves the focus on the map region", async () => {
     await open("C:/data/a.parquet");
     const field = q<HTMLInputElement>(".filter-predicate")!;

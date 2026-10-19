@@ -72,9 +72,14 @@ function allStates(): BarState[] {
 /** The state after a step: the worst case for the next key, the list still offering the options it offered before. */
 const after = (pos: BarPos, state: BarState): BarState => ({ ...pos, completions: state.completions });
 
-// RECORDED MUTATION for "UC2": in `commandBarKey`'s Tab case return `open: true` instead of `open: false` (Tab reopens the list after completing). Expected failure: Tab leaves in at most two.
-// OBSERVED AT fa6715541ccdef4285503a2b9bd59ec9a44943dc: FAILED -- "UC2: over every state Shift+Tab leaves in one press, Tab in at most two and never applies, Enter never completes, Escape closes the list and then leaves, and composing keys do nothing":
-//   AssertionError: a second Tab leaves: {"draft":"/lay","open":true,"active":null}: expected [ true, 'none' ] to deeply equal [ false, 'none' ]. Reverted after observing.
+// RECORDED MUTATIONS for "UC2", each applied alone (the first was first observed at fa671554, against the reducer before correction round 1; all three are observed again here):
+// (a) in `commandBarKey`'s Tab case return `open: true` instead of `open: false` (Tab reopens the list after completing). Expected failure: the list is not closed after Tab.
+// (b) delete `state.completed || ` from the Tab guard (a second Tab completes again). Expected failure: Tab leaves in at most two.
+// (c) put `!state.open` back in the Tab guard in place of `state.completed` (Tab never completes with the list closed). Expected failure: the closed list with one candidate.
+// OBSERVED AT 31ae009b565a52357567f01a0eda51ca3658a2b9: FAILED -- "UC2: over every state Shift+Tab leaves in one press, Tab in at most two and never applies, Enter never completes, Escape closes the list and then leaves, and composing keys do nothing":
+//   (a) AssertionError: Tab closes the list and sets completed: {"draft":"/","open":true,"active":0,"completed":false}: expected [ true, null, true ] to deeply equal [ false, null, true ];
+//   (b) AssertionError: a second Tab leaves: {"draft":"/lay","open":true,"active":null,"completed":false}: expected [ true, 'none' ] to deeply equal [ false, 'none' ];
+//   (c) AssertionError: Tab with the list closed completes the only candidate: expected [ Array(3) ] to deeply equal [ { draft: '/layers', …(3) }, …(2) ]. Each reverted after observing.
 describe("UC2: commandBarKey", () => {
   it("UC2: over every state Shift+Tab leaves in one press, Tab in at most two and never applies, Enter never completes, Escape closes the list and then leaves, and composing keys do nothing", () => {
     const states = allStates();
