@@ -1400,6 +1400,7 @@ test("session-resume: reading-order item 1 is the continuity block, the live led
   assert.match(precedents, /^### P-036 — /m);
 });
 
+// RECORDED MUTATION (MS3) at b3f90b292e57, applied alone and reverted: the old item 3 restored in READING_ORDER -> fails by name, and only this one: `session-resume: reading-order item 3 is the open entries and recent rulings, with older rulings searched by date, round or entry, never read whole`.
 test('session-resume: reading-order item 3 is the open entries and recent rulings, with older rulings searched by date, round or entry, never read whole', () => {
   const lines = READING_ORDER.split('\n');
   assert.equal(lines.length, 7, 'the header and six items');
