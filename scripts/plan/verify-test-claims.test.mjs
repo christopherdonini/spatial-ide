@@ -1644,3 +1644,41 @@ test('a_git_error_in_the_range_check_does_not_exempt', () => {
   assert.equal(superseded.length, 0, `a git error is not a proof the line is introduced in the range: ${JSON.stringify(superseded)}`);
   assert.equal(findings.length, 1, JSON.stringify(findings));
 });
+
+// The ruling set (rulingSet.mjs): a ruling or carrier citation resolves inside ONE file of the live DECISIONS-PENDING.md and its tracked
+// archives. The fixtures are withdrawnFixture's repository with the synthetic ledger moved, whole or in part, into an archive.
+const ARCHIVED_LEDGER = 'state/cut-archive/DECISIONS-PENDING-2026-01-01.md';
+function archivedFixture({ live, archive, ruling = 'round 1, item 1', carrier = 'round 2, item 5' }) {
+  const { dir } = withdrawnFixture({ ruling, carrier, ledger: live });
+  fs.mkdirSync(path.join(dir, 'state', 'cut-archive'), { recursive: true });
+  fs.writeFileSync(path.join(dir, ARCHIVED_LEDGER), archive);
+  commitAll(dir, 'archive');
+  return dir;
+}
+
+test('verify-test-claims: a withdrawn-test row whose ruling sits only in an archived DECISIONS-PENDING file is withdrawn', () => {
+  const dir = archivedFixture({ live: '# Decisions pending the human é\n', archive: SYNTH_LEDGER });
+  const { findings, withdrawn } = runVerifyTestClaims({ repoRoot: dir });
+  assert.equal(findings.length, 0, JSON.stringify(findings));
+  assert.equal(withdrawn.length, 1, JSON.stringify(withdrawn));
+  assert.equal(withdrawn[0].ruling, 'round 1, item 1');
+  assert.equal(withdrawn[0].carrier, 'round 2, item 5');
+});
+
+test('verify-test-claims: a ruling in no file of the ruling set still fails by name', () => {
+  const dir = archivedFixture({ live: SYNTH_LEDGER, archive: '# an archive →\n\n**RULED 2026-01-04 — question round 4 (fixture):**\n\n- *Item 1 — nothing:* **"ruled"**\n', ruling: 'round 99, item 1' });
+  const { findings, withdrawn } = runVerifyTestClaims({ repoRoot: dir });
+  assert.equal(withdrawn.length, 0, JSON.stringify(withdrawn));
+  assert.equal(findings.length, 1, JSON.stringify(findings));
+  assert.equal(findings[0].kind, 'withdrawn-row');
+  assert.match(findings[0].message, /unresolvable ruling: round 99, item 1/);
+});
+
+test('verify-test-claims: a round header at the end of the live file and its item at the start of an archive never combine into a ruling', () => {
+  const header = '**RULED 2026-01-01 — question round 1 (fixture):**';
+  const dir = archivedFixture({ live: `# Decisions pending the human\n\n${header}`, archive: '- *Item 1 — entry 1, a fixture ruling:* **"ruled"** Applied: nothing.\n\n**RULED 2026-01-02 — question round 2 (fixture):**\n\n- *Item 5 — entry 2, a fixture carrier:* **"ruled"**\n' });
+  const { findings, withdrawn } = runVerifyTestClaims({ repoRoot: dir });
+  assert.equal(withdrawn.length, 0, JSON.stringify(withdrawn));
+  assert.equal(findings.length, 1, JSON.stringify(findings));
+  assert.match(findings[0].message, /unresolvable ruling: round 1, item 1/);
+});

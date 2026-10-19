@@ -97,6 +97,7 @@ import crypto from 'node:crypto';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { loadPlan } from './plan.mjs';
+import { readRulingSet } from './rulingSet.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 export const REPO_ROOT = path.resolve(here, '..', '..');
@@ -472,20 +473,16 @@ function findSupersededSpan(root, relPath, line, name, spans, mergeCommitGates) 
 }
 
 // Rider (a)/(b), mechanically (round 20 item 1; consult §2/§3): resolved once against the CURRENT
-// tree's DECISIONS-PENDING.md -- never pinned by hash, because the ledger is never cited by line or
-// pinned (round 12(a), round 14(a')). "Names the removal" is read by the gate, not checked here (the
-// README's boundary paragraph discloses this, as SUPERSEDED's replacement half is disclosed).
+// tree's ruling set -- the live DECISIONS-PENDING.md and its tracked archives (rulingSet.mjs) -- never
+// pinned by hash, because the ledger is never cited by line or pinned (round 12(a), round 14(a')).
+// "Names the removal" is read by the gate, not checked here (the README's boundary paragraph
+// discloses this, as SUPERSEDED's replacement half is disclosed). The array holds one text per file.
 const decisionsPendingCache = new Map();
 function loadDecisionsPending(root) {
   if (decisionsPendingCache.has(root)) return decisionsPendingCache.get(root);
-  let text = null;
-  try {
-    text = fs.readFileSync(path.join(root, 'DECISIONS-PENDING.md'), 'utf8');
-  } catch {
-    text = null;
-  }
-  decisionsPendingCache.set(root, text);
-  return text;
+  const texts = readRulingSet(root, gitList(root)).map((f) => f.text);
+  decisionsPendingCache.set(root, texts);
+  return texts;
 }
 
 // A line starting `**RULED <date>[ (...)] — question round N` -- the RULED block header.
@@ -519,13 +516,17 @@ function ledgerEntryResolves(ledgerText, entry) {
 
 const CITATION_RE = /round\s+(\d+)\s*,\s*item\s+(\d+)|entry\s+(\d+)/i;
 
-/** Resolves a `round N, item M` or `entry K` citation string against the ledger text. */
-function resolveCitation(ledgerText, citationText) {
-  if (ledgerText === null) return false;
+/** Resolves a `round N, item M` or `entry K` citation string against the ledger text of ONE file. */
+function resolveInText(ledgerText, citationText) {
   const m = CITATION_RE.exec(citationText ?? '');
   if (!m) return false;
   if (m[3] !== undefined) return ledgerEntryResolves(ledgerText, Number(m[3]));
   return ledgerRoundItemResolves(ledgerText, Number(m[1]), Number(m[2]));
+}
+
+/** The citation resolves when ONE text of the ruling set resolves it; nothing is joined across files. */
+function resolveCitation(texts, citationText) {
+  return texts.some((t) => resolveInText(t, citationText));
 }
 
 // Round 21 item 2 (entry 136), should-fix (a): `ruling:`/`carrier:` are matched as WHOLE keys --
