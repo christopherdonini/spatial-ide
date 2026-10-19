@@ -123,8 +123,8 @@ describe("U5: the registry's ids and shortcuts are unique", () => {
   // OBSERVED AT f49599353db52445c07e941e326c73f0c44a8925: FAILED -- "holds exactly the eight ids: the three toggles and Zoom to layer (question round 66, item 2), and milestone 2's four (RULED 2026-10-09, eight forms, item 4)":
   //   AssertionError: expected [ 'layer.zoomToLayer', …(6) ] to deeply equal [ 'layer.zoomToLayer', …(7) ]. Reverted after observing.
   // RECORDED MUTATION for "UC8 (the eleven ids)": delete the `dataset.open` entry from `ACTIONS` (actionRegistry.ts). Expected failure: the sorted ids lack "dataset.open".
-// OBSERVED AT fa6715541ccdef4285503a2b9bd59ec9a44943dc: FAILED -- "holds exactly the eleven ids: the eight of milestone 2 and, for milestone 3, command.focus, dataset.open and layer.revealExport (question round 66, item 2; SHELL-MIGRATION-MILESTONE-3-PREREGISTRATION.md section 4, UC8)":
-//   AssertionError: expected [ 'command.focus', …(9) ] to deeply equal [ 'command.focus', …(10) ]. Reverted after observing.
+  // OBSERVED AT fa6715541ccdef4285503a2b9bd59ec9a44943dc: FAILED -- "holds exactly the eleven ids: the eight of milestone 2 and, for milestone 3, command.focus, dataset.open and layer.revealExport (question round 66, item 2; SHELL-MIGRATION-MILESTONE-3-PREREGISTRATION.md section 4, UC8)":
+  //   AssertionError: expected [ 'command.focus', …(9) ] to deeply equal [ 'command.focus', …(10) ]. Reverted after observing.
   it("holds exactly the eleven ids: the eight of milestone 2 and, for milestone 3, command.focus, dataset.open and layer.revealExport (question round 66, item 2; SHELL-MIGRATION-MILESTONE-3-PREREGISTRATION.md section 4, UC8)", () => {
     expect(ACTIONS.map((entry) => entry.id).sort()).toEqual([
       "command.focus",
