@@ -85,6 +85,21 @@ function rotated(extra = []) {
 const keptBlock = (E, archiveText, name) => ['', ...E, '', `Archived copy: line ${archiveText.split('\n').indexOf(E[0]) + 1} of \`state/cut-archive/${name}\`.`];
 after(() => { for (const d of dirs) fs.rmSync(d, { recursive: true, force: true }); });
 
+// Each mutation below was applied alone to scripts/plan/rotate-decisions-pending.mjs at e8d92a1aa67d, the file run, and the mutation reverted
+// with the porcelain clean. The test named is the one it fails by name; a mutation that stops a rotation also fails every test that needs one.
+// RECORDED MUTATION (MR1) at e8d92a1aa67d: the archive rewritten from its text with the final newline trimmed -> fails by name: `rotate-decisions-pending: a due rotation stages the archive byte-identical to HEAD's DECISIONS-PENDING.md and the new file's exact text`.
+// RECORDED MUTATION (MR2) at e8d92a1aa67d: unmarked entries archived -> fails by name: `rotate-decisions-pending: a numbered entry without a resolution marker stays, and one with RULED, RESOLVED or APPLIED at its head is archived`.
+// RECORDED MUTATION (MR3) at e8d92a1aa67d: any line starting with two asterisks taken as a head -> fails by name: `rotate-decisions-pending: RULED, DIRECTIVE, FELT VERDICTS and CLOSED blocks and the Resolved section are archived, and a bold line inside an entry is not a head`.
+// RECORDED MUTATION (MR4) at e8d92a1aa67d: the archive line counted from 0 -> fails by name: `rotate-decisions-pending: each kept entry is followed by the archive line it came from, and an earlier archive line is replaced`.
+// RECORDED MUTATION (MR5) at e8d92a1aa67d: an absent entry number ignored instead of refused -> fails by name, and only this one: `rotate-decisions-pending: --archive-entries archives only unmarked numbered entries present at HEAD and refuses any other number`.
+// RECORDED MUTATION (MR6) at e8d92a1aa67d: the month comparison made <= -> fails by name, and only this one: `rotate-decisions-pending: due when the last archive is before the first of the month at 00:00Z, and not due when it is at that instant`.
+// RECORDED MUTATION (MR7) at e8d92a1aa67d: the size comparison made >= -> fails by name, and only this one: `rotate-decisions-pending: a file over 153,600 bytes is due mid-month, and one of exactly 153,600 is not`.
+// RECORDED MUTATION (MR8) at e8d92a1aa67d: the size guard removed -> fails by name, and only this one: `rotate-decisions-pending: when the open entries alone make the new file over 153,600 bytes it exits 3, writes nothing and says to tell the human`.
+// RECORDED MUTATION (MR9) at e8d92a1aa67d: the blob check removed -> fails by name, and only this one: `rotate-decisions-pending: refuses with exit 2 and writes nothing on a modified tracked file, HEAD not equal to its upstream, or a DECISIONS-PENDING.md blob that differs from origin/main's`.
+// RECORDED MUTATION (MR10) at e8d92a1aa67d: --dry-run goes on to stage the move -> fails by name, and only this one: `rotate-decisions-pending: --dry-run writes nothing and lists the kept units, the archived units and one obligation row per archived unit`.
+// RECORDED MUTATION (MR11) at e8d92a1aa67d: the archive written under state/archive/ -> fails by name: `rotate-decisions-pending: after a rotation commit the readers find the moved rulings in the archive: a felt-verdict cite, a withdrawn-test ruling and a pinned hash reference`.
+// RECORDED MUTATION (MR12) at e8d92a1aa67d: a SessionStart entry running the script, added to a scratch copy of the settings that the test was pointed at for one run (no .claude/settings.json was edited) -> fails by name, and only this one: `rotate-decisions-pending: no hook in .claude/settings.json runs the rotation script`.
+
 test("rotate-decisions-pending: a due rotation stages the archive byte-identical to HEAD's DECISIONS-PENDING.md and the new file's exact text", () => {
   const { dir, P, name, live, archive } = rotated();
   assert.deepEqual(staged(dir), [`A\tstate/cut-archive/${name}`, `M\t${DP}`].sort());
