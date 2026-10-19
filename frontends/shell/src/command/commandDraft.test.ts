@@ -67,10 +67,8 @@ function allStates(): BarState[] {
   });
 }
 
-/** The state after `pos`: the draft is the caller's, so the completions are derived again from it. */
-function stateAt(pos: BarPos): BarState {
-  return { ...pos, completions: idsOf(resolve(pos.draft)).map((id) => completionOf(ACTIONS.find((entry) => entry.id === id) as ActionEntry)) };
-}
+/** The state after a step: the worst case for the next key, the list still offering the options it offered before. */
+const after = (pos: BarPos, state: BarState): BarState => ({ ...pos, completions: state.completions });
 
 // RECORDED MUTATION for "UC2": in `commandBarKey`'s Tab case return `open: true` instead of `open: false` (Tab reopens the list after completing). Expected failure: Tab leaves in at most two.
 describe("UC2: commandBarKey", () => {
@@ -85,7 +83,7 @@ describe("UC2: commandBarKey", () => {
       const first = commandBarKey(state, { key: "Tab", shiftKey: false, isComposing: false });
       expect(first.effect.kind, `Tab never applies: ${label}`).toBe("none");
       if (first.preventDefault) {
-        const second = commandBarKey(stateAt(first.pos), { key: "Tab", shiftKey: false, isComposing: false });
+        const second = commandBarKey(after(first.pos, state), { key: "Tab", shiftKey: false, isComposing: false });
         expect([second.preventDefault, second.effect.kind], `a second Tab leaves: ${label}`).toEqual([false, "none"]);
       }
 
@@ -96,7 +94,7 @@ describe("UC2: commandBarKey", () => {
       const escape = commandBarKey(state, { key: "Escape", shiftKey: false, isComposing: false });
       if (state.open) {
         expect([escape.pos.open, escape.pos.active, escape.effect.kind], `Escape closes the list first: ${label}`).toEqual([false, null, "none"]);
-        expect(commandBarKey(stateAt(escape.pos), { key: "Escape", shiftKey: false, isComposing: false }).effect.kind, `then leaves: ${label}`).toBe("leave");
+        expect(commandBarKey(after(escape.pos, state), { key: "Escape", shiftKey: false, isComposing: false }).effect.kind, `then leaves: ${label}`).toBe("leave");
       } else {
         expect(escape.effect.kind, `Escape leaves: ${label}`).toBe("leave");
       }
