@@ -14,16 +14,16 @@
 //   E-CTRLK   frontends/shell/src/layout/StudioLayout.tsx, replace `if (region !== undefined) apply({ kind: "toggle", region });` with `if (region !== undefined) dispatch({ kind: "toggle", region });`
 //             (the bar reaches a copy that does not record). Expected: step E-CTRLK fails, "E-CTRLK: 0 layout.toggleLayers rows were recorded, expected exactly 1".
 //   E-SEARCH  frontends/shell/src/command/commandDraft.ts, replace `contains(e.label, text) || contains(e.command ?? "", text)` with `contains(e.command ?? "", text)` (search matches words only).
-//             Expected: step E-SEARCH fails, "E-SEARCH: the text to lay lists 0 options, expected the one entry Zoom to layer".
+//             Expected: step E-SEARCH fails, "E-SEARCH: the text to lay lists 0 options ([]), expected the one entry Zoom to layer".
 //   E-HELP    frontends/shell/src/command/commandDraft.ts, replace `registry.filter((e) => contains(e.label, query) || (e.command !== null && contains(e.command, query)))` with
 //             `registry.filter((e) => e.chord !== null && (contains(e.label, query) || (e.command !== null && contains(e.command, query))))` (help leaves out entries with no chord).
 //             Expected: step E-HELP fails, "E-HELP: ? lists 4 options, expected 11".
 //   E-BARFOCUS frontends/shell/src/command/commandDraft.ts, replace `if (key.shiftKey || !state.open || count === 0) return none;` with `return { pos, effect: none.effect, preventDefault: true };` (Tab is always intercepted).
-//             Expected: step E-BARFOCUS fails, "E-BARFOCUS: Tab with no list open left the bar's input holding the focus".
+//             Expected: step E-BARFOCUS fails, "E-BARFOCUS: Tab with no list open left the bar's input holding the focus"; E-CTRLK fails too, on its Tab completion.
 //   E-REVEAL  frontends/shell/src/publish/PublishPanel.tsx, replace `reveal() { if (!expanded)` with `reveal() { handlePublishClick(); if (!expanded)` (the panel's click handler is called).
 //             Expected: step E-REVEAL fails, either "E-REVEAL: the approval prompt (.publish-dialog) is showing" or, while the host's native picker stands, "E-REVEAL: timed out after 60000ms".
 //   E-SLASH   frontends/shell/src/layout/actionRegistry.ts, replace `return event.key === "/" && !isEditable(focus);` with `return event.key === "/";` (an editable focus no longer ignores it).
-//             Expected: step E-SLASH fails, "E-SLASH: / typed in the Filter section's input left it holding \"\", expected \"/\"".
+//             Expected: step E-SLASH fails, "E-SLASH: the focus left the Filter section's input when / was typed in it".
 //
 // `waitForMountReady`/`withTimeout` are duplicated from `layout.mjs` rather than imported, this workspace's own convention for sibling suites.
 

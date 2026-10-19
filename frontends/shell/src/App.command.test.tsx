@@ -223,6 +223,8 @@ describe("App: the command bar (milestone 3, PR A), through the real App", () =>
   const hiddenOf = (region: string) => q(`#region-${region}`)!.hidden;
 
   // RECORDED MUTATION for "RC1": in StudioLayout.tsx's `runAction`, drop the focus call from `command.focus`'s arm (delete `barRef.current?.take();`). Expected failure: the bar's input does not hold the focus.
+  // OBSERVED AT 6f83d5377e3592760d0286b82f45415b11c278ee: FAILED -- "RC1: Ctrl+K through the real window listener focuses the bar's input, and the map is mounted once":
+  //   AssertionError: the bar's input holds the focus: expected <body> to be <input> (the focus stayed on the body). Reverted after observing.
   it("RC1: Ctrl+K through the real window listener focuses the bar's input, and the map is mounted once", async () => {
     await open("C:/data/a.parquet");
     expect(document.activeElement).not.toBe(bar());
@@ -233,6 +235,8 @@ describe("App: the command bar (milestone 3, PR A), through the real App", () =>
   });
 
   // RECORDED MUTATION for "RC2": in StudioLayout.tsx's `runAction` toggle arm, dispatch the action without `apply` (`dispatch({ kind: "toggle", region })`, a copy that records no row). Expected failure: the row assertion.
+  // OBSERVED AT 6f83d5377e3592760d0286b82f45415b11c278ee: FAILED -- "RC2: each layout entry run from the bar flips the region its button flips and records the same row, and Zoom to layer calls fitToBounds once":
+  //   AssertionError: /layers: the same row: expected [] to deeply equal [ 'layout.toggleLayers' ]. Reverted after observing.
   it("RC2: each layout entry run from the bar flips the region its button flips and records the same row, and Zoom to layer calls fitToBounds once", async () => {
     await open("C:/data/a.parquet");
     const entries: [string, string, string][] = [["/layers", "layers", "layout.toggleLayers"], ["/inspector", "inspector", "layout.toggleInspector"], ["/activity", "activity", "layout.toggleActivity"]];
@@ -253,6 +257,8 @@ describe("App: the command bar (milestone 3, PR A), through the real App", () =>
   });
 
   // RECORDED MUTATION for "RC8": in App.tsx wire `onOpenDataset` to a no-op (`() => "started"`). Expected failure: the picker count.
+  // OBSERVED AT 6f83d5377e3592760d0286b82f45415b11c278ee: FAILED -- "RC8: /open calls the picker once, the button's path; while an open is in flight it calls nothing and shows the busy line":
+  //   AssertionError: the picker is called once: expected +0 to be 1. Reverted after observing.
   it("RC8: /open calls the picker once, the button's path; while an open is in flight it calls nothing and shows the busy line", async () => {
     await runBar("/open");
     expect(mocks.picks, "the picker is called once").toBe(1);
@@ -268,6 +274,8 @@ describe("App: the command bar (milestone 3, PR A), through the real App", () =>
   });
 
   // RECORDED MUTATION for "RC8 case b": in App.tsx make `onOpenDataset` answer busy while the ask stands (`asking ? "busy" : ...`). Expected failure: the picker count.
+  // OBSERVED AT 6f83d5377e3592760d0286b82f45415b11c278ee: FAILED -- "RC8 case b: with the ask showing, /open calls the picker once more and the first open does not proceed":
+  //   AssertionError: the picker is called once more, as a second click would: expected 1 to be 2. Reverted after observing.
   it("RC8 case b: with the ask showing, /open calls the picker once more and the first open does not proceed", async () => {
     await open("C:/data/a.parquet");
     mocks.pendingPrepare = new Promise(() => {});
@@ -285,6 +293,8 @@ describe("App: the command bar (milestone 3, PR A), through the real App", () =>
   });
 
   // RECORDED MUTATION for "RC9": in PublishPanel.tsx make `reveal()` also call `handlePublishClick()` (the panel's click handler). Expected failure: the prepare count.
+  // OBSERVED AT 6f83d5377e3592760d0286b82f45415b11c278ee: FAILED -- "RC9: /export opens the Inspector and its Layer tab, expands Export and focuses .publish-open, and publishPrepare is not called":
+  //   AssertionError: nothing is exported: expected 1 to be +0. Reverted after observing.
   it("RC9: /export opens the Inspector and its Layer tab, expands Export and focuses .publish-open, and publishPrepare is not called", async () => {
     await open("C:/data/a.parquet");
     press(window, "i", { ctrlKey: true });
@@ -303,6 +313,8 @@ describe("App: the command bar (milestone 3, PR A), through the real App", () =>
   });
 
   // RECORDED MUTATION for "RC10": in StudioLayout.tsx's `leaveBar` do not restore focus (delete `back?.focus();`). Expected failure: the focus is not on the filter input.
+  // OBSERVED AT 6f83d5377e3592760d0286b82f45415b11c278ee: FAILED -- "RC10: Escape returns focus to the filter input it came from, or to the map region when that input's region is closed":
+  //   AssertionError: nothing held it before: the map region: expected <input> to be <main id="region-map">. Reverted after observing.
   it("RC10: Escape returns focus to the filter input it came from, or to the map region when that input's region is closed", async () => {
     await open("C:/data/a.parquet");
     press(window, "k", { ctrlKey: true });
@@ -323,6 +335,8 @@ describe("App: the command bar (milestone 3, PR A), through the real App", () =>
   });
 
   // RECORDED MUTATION for "RC13": in CommandBar.tsx stop updating `aria-activedescendant` (pass `undefined`). Expected failure: the active descendant after ArrowDown.
+  // OBSERVED AT 6f83d5377e3592760d0286b82f45415b11c278ee: FAILED -- "RC13: the combobox has aria-expanded, aria-controls naming the listbox, and aria-activedescendant following the arrow keys":
+  //   AssertionError: expected null to be 'command-list-option-0' (the first ArrowDown). Reverted after observing.
   it("RC13: the combobox has aria-expanded, aria-controls naming the listbox, and aria-activedescendant following the arrow keys", async () => {
     expect([bar().getAttribute("role"), bar().getAttribute("aria-expanded"), q(".command-list")]).toEqual(["combobox", "false", null]);
     act(() => bar().focus());
@@ -344,6 +358,8 @@ describe("App: the command bar (milestone 3, PR A), through the real App", () =>
   });
 
   // RECORDED MUTATION for "RC15": in actionRegistry.ts's `isEditable` make the guard skip the bar (`if (focus?.closest?.(".command-bar")) return false`, a milestone 2 text-field guard that skips `.command-bar`). Expected failure: s switches the tool.
+  // OBSERVED AT 6f83d5377e3592760d0286b82f45415b11c278ee: FAILED -- "RC15: typing s and n in the bar types them and switches no tool":
+  //   AssertionError: neither key is prevented, so both are typed: expected [ false, false ] to deeply equal [ true, true ]. Reverted after observing.
   it("RC15: typing s and n in the bar types them and switches no tool", async () => {
     await open("C:/data/a.parquet");
     act(() => bar().focus());
@@ -353,6 +369,8 @@ describe("App: the command bar (milestone 3, PR A), through the real App", () =>
   });
 
   // RECORDED MUTATION for "RC-SLASH": in actionRegistry.ts's `matchCommandOpener` also ignore Shift (add `|| event.shiftKey` to the ignored modifiers). Expected failure: the Shift case leaves the bar empty.
+  // OBSERVED AT 6f83d5377e3592760d0286b82f45415b11c278ee: FAILED -- "RC-SLASH: / with no field focused focuses the bar and leaves / in it, so does Shift+/, and / in a text field changes nothing outside that field":
+  //   AssertionError: Shift+7 on a layout where / needs Shift: the default is prevented: expected true to be false. Reverted after observing.
   it("RC-SLASH: / with no field focused focuses the bar and leaves / in it, so does Shift+/, and / in a text field changes nothing outside that field", async () => {
     await open("C:/data/a.parquet");
     expect(press(document.body, "/", { code: "Slash" }), "the slash is not typed twice").toBe(false);
@@ -370,6 +388,8 @@ describe("App: the command bar (milestone 3, PR A), through the real App", () =>
 
   // RECORDED MUTATIONS for "RC17": (a) in App.tsx pass `onClearSelection` a copy that records no row (`() => transit({ action: "selection.clear", params: {} })`). Expected failure: the selection.clear row.
   // (b) in StudioLayout.tsx's `available` leave the selection out of both selection cases (delete `selectionAvailable === true && `). Expected failure: the empty case.
+  // OBSERVED AT 6f83d5377e3592760d0286b82f45415b11c278ee: FAILED -- "RC17: Navigate and Select run from the bar and record one tool.set row each; with nothing selected both selection entries are aria-disabled and run nothing; with a feature selected Zoom to selection and Clear selection run once and record their rows":
+  //   (a) AssertionError: expected [ +0, [] ] to deeply equal [ +0, [ 'selection.clear' ] ]; (b) AssertionError: expected [ null, null ] to deeply equal [ 'true', 'true' ]. Each reverted after observing.
   it("RC17: Navigate and Select run from the bar and record one tool.set row each; with nothing selected both selection entries are aria-disabled and run nothing; with a feature selected Zoom to selection and Clear selection run once and record their rows", async () => {
     await open("C:/data/a.parquet");
     const tools = mark();
