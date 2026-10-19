@@ -305,6 +305,9 @@ describe("App: the command bar (milestone 3, PR A), through the real App", () =>
   // RECORDED MUTATION for "RC10": in StudioLayout.tsx's `leaveBar` do not restore focus (delete `back?.focus();`). Expected failure: the focus is not on the filter input.
   it("RC10: Escape returns focus to the filter input it came from, or to the map region when that input's region is closed", async () => {
     await open("C:/data/a.parquet");
+    press(window, "k", { ctrlKey: true });
+    press(bar(), "Escape");
+    expect(document.activeElement, "nothing held it before: the map region").toBe(q("#region-map"));
     const field = q<HTMLInputElement>(".filter-predicate")!;
     act(() => field.focus());
     press(window, "k", { ctrlKey: true });

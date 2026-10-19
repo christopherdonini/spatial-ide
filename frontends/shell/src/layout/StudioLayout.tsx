@@ -200,10 +200,10 @@ export default function StudioLayout({
   }
 
 
-  /** Escape and an applied action: the focus goes back to the element held before, or to the map when that element is gone or inside a closed region. */
+  /** Escape and an applied action: the focus goes back to the element held before, or to the map when there was none (the page body), or it is gone or inside a closed region. */
   function leaveBar(): void {
     const held = heldRef.current;
-    const back = held instanceof HTMLElement && held.isConnected && held.closest("[hidden]") === null ? held : mapRef.current;
+    const back = held instanceof HTMLElement && held !== document.body && held.isConnected && held.closest("[hidden]") === null ? held : mapRef.current;
     back?.focus();
   }
 
