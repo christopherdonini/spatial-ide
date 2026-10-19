@@ -171,9 +171,9 @@
 // the call, so it runs on every reach of `mintAndStart`'s success path, and that call site's own
 // comment (`:1094-1095`) states it fires at the same moment the baseline arm's does -- right after
 // the real mint, never before. So a NEW `stream-issued` line is strictly AFTER the pre-check for
-// that tile already passed. Polling for one and mutating the instant it appears is therefore
-// mutating no earlier than "this tile's pre-check already passed", with the actual data transfer,
-// decode and render still ahead of it -- the same use this driver already makes of `[render-trace]
+// that tile already passed. Polling for one and writing the repoint request the instant it appears is therefore
+// mutating no earlier than "this tile's pre-check already passed"; the helper makes the repoint after it reads that request,
+// and whether that lands before this tile's drain is not established here (S5d's race; ADR-018) -- the same use this driver already makes of `[render-trace]
 // viewport_query` in S4 above, one product-emitted signal later in the same pipeline.
 //
 // WHAT THIS DOES NOT GUARANTEE, STATED RATHER THAN HIDDEN. A camera gesture can plan more than one
@@ -225,7 +225,7 @@ const OUT_DIR = join(dirname(fileURLToPath(import.meta.url)), "out");
 // The shared fixture, never opened by this script -- only copied.
 const FIXTURE_100K = "C:\\dev\\spatial-ide\\target\\fixtures\\manual-walkthrough\\100k-happy-path.parquet";
 const REGEN_COMMAND = "cargo test -p spatial-kernel --test manual_walkthrough_fixtures -- --ignored --nocapture";
-// X-4: the scratch copy this run opens and mutates. Under `e2e/out`, which is gitignored.
+// X-4: the reference copy, hashed before and after the run; no route opens it (every route opens a copy through the junction). Under `e2e/out`, which is gitignored.
 const SCRATCH_COPY = join(OUT_DIR, "source-changed-scratch.parquet");
 
 // Bounds on waiting, not results (ADR-018). Same shape as every sibling driver.
@@ -258,8 +258,8 @@ const STREAM_ISSUED_WAIT_TIMEOUT_MS = 30_000;
 // the 100k fixture, `a` and `b`, differ in mtime only; S1 opens the file through a junction that starts on
 // `a`; the change is a repoint to `b` (R4 repoints back to `a`). The layout makes the junction once, in-process, with Node's own
 // `symlinkSync(.., "junction")`. Every REPOINT after that rewrites the existing junction's mount-point reparse data in place
-// (`FSCTL_SET_REPARSE_POINT`, so the open path exists at every instant) from ONE spawned Windows PowerShell 5.1 child that compiles a small
-// P/Invoke class with Add-Type: that is a runtime requirement of this driver. No elevation, no link-making tool, no other link type, no recursive delete.
+// (`FSCTL_SET_REPARSE_POINT`; the name is never deleted; that an open through it never fails mid-rewrite is a reading no Windows document states) from ONE spawned Windows PowerShell 5.1 child that compiles a small
+// P/Invoke class with Add-Type: that is a runtime requirement of this driver. No elevation, no `mklink`, no other link type, no recursive delete.
 const TARGETS_DIR = join(OUT_DIR, "source-changed-targets");
 const TARGET_A = join(TARGETS_DIR, "a");
 const TARGET_B = join(TARGETS_DIR, "b");
@@ -1087,8 +1087,8 @@ async function main() {
         requireWindows("S4");
         // Same gesture ladder as the PRE route (proven to produce a query against the shipped
         // default arm, T10 runs 5/7), but racing `stream-issued` instead of `viewport_query` (see
-        // this file's header note for why that is the later, mint-confirmed signal) and mutating
-        // the instant a NEW one appears, instead of before the gesture at all.
+        // this file's header note for why that is the later, mint-confirmed signal) and requesting the repoint
+        // the instant a NEW one appears (the helper makes it after reading the request), instead of before the gesture at all.
         const before = streamIssuedCount(consoleHandle);
         const ladder = [];
 
