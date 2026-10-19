@@ -854,3 +854,17 @@ Nothing above is edited.
 6. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 7 — PR A's gate 2 (both FAIL) and correction round 2: the custodian's rows (class 3), Amendment 6's references, the bar's focus rule as built, and the round's e2e (E-SEARCH-c observed as predicted); written after gate 2 and round 2's runs
+
+*References only. Gate 2: `state/consults/gates/2026-10-19-shell-migration-milestone-3-pr-a-gate2-architect.md` (551, A2) and `state/consults/gates/2026-10-19-shell-migration-milestone-3-pr-a-gate2-reviewer.md` (552, R2). Round 2: `state/consults/2026-10-19-shell-migration-milestone-3-pr-a-round-2-worker-report.md` (head 2fa7c8d09df2e8f21370c1bf68b23213a25615a0). Its e2e: `state/consults/2026-10-19-shell-migration-milestone-3-pr-a-round-2-e2e-custodian-runs.md` @ 4e4131125e70555ce6852f073e5e516912bfd9c3, sha256 de22c15ff17b99a81b652500649a1ca49ea83554f18a8f3fc9db026c86bb91db.*
+
+1. **§4's E-BARFOCUS row (gate 1 A's C1; A2's D4 and R2's D4, class 3)** reads: With no list open and no single candidate, Tab leaves the bar; Escape returns focus to the element held before. The step runs from an empty bar.
+2. **Amendment 6's references (A2's D5):** item 2's round 0 report is `state/consults/2026-10-19-shell-migration-milestone-3-pr-a-worker-report.md`, its Differences item 1; item 4's head is 621cd1f3a0b5f12b8c837a45ebeffa472909fcb2; the record its preamble hashes is @ afea0ff2fb785e06f208e28f0fb625d8cd359e5d.
+3. **§2.3's Running rule as built (A2's C1 and C2, R2's C1):** the bar runs an entry inside `flushSync`, so the action commits before the focus goes back by Escape's rule; round 1's clear in `apply` is removed. RC10 cases c (the region's splitter) and d (a region closed and opened again) are added, their mutations observed (round 2 report).
+4. **E-SEARCH-c (A2's E1):** written down in round 2 and run by the custodian at the head: it fails E-SEARCH on the `elementFromPoint` assertion, as predicted, so that assertion now has an observed failing mutation. Recorded in the round's e2e record.
+5. **Carried to PR B (A2's note):** after a completion, ArrowDown reopens the list, where §2.3 keeps it closed until the next typed character. PR A cannot reach it, since every PR A completion is an exact word that takes nothing; PR B's `/filter` can, and PR B settles it.
+6. **Next:** the PR body (R2's D5), then gate 3, both gates, scoped to round 2. The header's MUTATIONS sentence and the README's session-state sentence (A2's and R2's D1 and D3) take gate 3's words, fixed before the merge.
+7. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
