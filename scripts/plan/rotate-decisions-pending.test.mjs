@@ -211,7 +211,7 @@ test('rotate-decisions-pending: when the open entries alone make the new file ov
   assert.equal(snapshot(dir), before);
 });
 
-test('rotate-decisions-pending: refuses with exit 2 and writes nothing on a modified tracked file, HEAD not equal to its upstream, or a DECISIONS-PENDING.md blob that differs from origin/main\'s', () => {
+test("rotate-decisions-pending: refuses with exit 2 and writes nothing on a modified tracked file, HEAD not equal to its upstream, or a DECISIONS-PENDING.md blob that differs from origin/main's", () => {
   const refused = (dir, why, ...args) => {
     const before = snapshot(dir);
     const r = rot(dir, ...args);
