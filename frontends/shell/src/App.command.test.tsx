@@ -334,9 +334,7 @@ describe("App: the command bar (milestone 3, PR A), through the real App", () =>
     expect(document.activeElement, "the input's region is closed: the map region").toBe(q("#region-map"));
   });
 
-  // RECORDED MUTATION for "RC10 case b": in StudioLayout.tsx's `apply` delete the line that sets `heldRef.current = null` (the bar returns the focus to the field in the region it just closed). Expected failure: the focus is on the field, not the map region.
-  // OBSERVED AT 31ae009b565a52357567f01a0eda51ca3658a2b9: FAILED -- "RC10 case b: a command run from the bar that closes the region holding the field the focus came from leaves the focus on the map region":
-  //   AssertionError: the field's region is closed: the map region, not the field: expected <input> to be <main id="region-map">. Reverted after observing.
+  // RECORDED MUTATION for "RC10 case b": in CommandBar.tsx's `applyEntry` make the run directly (replace `flushSync(() => run(id))` with `run(id)`), so `leave` reads the page before the run commits and the bar returns the focus to the field in the region it just closed. Expected failure: the focus is on the field, not the map region.
   it("RC10 case b: a command run from the bar that closes the region holding the field the focus came from leaves the focus on the map region", async () => {
     await open("C:/data/a.parquet");
     const field = q<HTMLInputElement>(".filter-predicate")!;
@@ -346,6 +344,32 @@ describe("App: the command bar (milestone 3, PR A), through the real App", () =>
     await runBar("/inspector");
     expect(hiddenOf("inspector"), "the command closed the Inspector").toBe(true);
     expect(document.activeElement, "the field's region is closed: the map region, not the field").toBe(q("#region-map"));
+  });
+
+  // RECORDED MUTATION for "RC10 case c": as case b's (replace `flushSync(() => run(id))` with `run(id)` in CommandBar.tsx's `applyEntry`), so the bar returns the focus to the Inspector's splitter, which the run then hides. Expected failure: the focus is on the splitter, not the map region.
+  it("RC10 case c: a command run from the bar that closes the region whose splitter the focus came from leaves the focus on the map region", async () => {
+    await open("C:/data/a.parquet");
+    act(() => q("#splitter-inspector")!.focus());
+    expect(document.activeElement, "the focus starts on the splitter").toBe(q("#splitter-inspector"));
+    press(window, "k", { ctrlKey: true });
+    expect(document.activeElement).toBe(bar());
+    await runBar("/inspector");
+    expect(hiddenOf("inspector"), "the command closed the Inspector").toBe(true);
+    expect(document.activeElement, "the splitter is hidden with its region: the map region, not the splitter").toBe(q("#region-map"));
+  });
+
+  // RECORDED MUTATION for "RC10 case d": in StudioLayout.tsx's `apply`, after the line `if (holdsFocus) mapRef.current?.focus();`, put back round 1's two lines (a comment, then `if (heldRef.current !== null && regionRefs[action.region].current?.contains(heldRef.current) === true) heldRef.current = null;`), so a region closed by a chord pressed in the bar makes the bar forget the field. Expected failure: the focus is on the map region, not the field.
+  it("RC10 case d: a region closed and opened again by chords pressed in the bar gives the focus back to the field it came from on Escape", async () => {
+    await open("C:/data/a.parquet");
+    const field = q<HTMLInputElement>(".filter-predicate")!;
+    act(() => field.focus());
+    press(window, "k", { ctrlKey: true });
+    press(bar(), "i", { ctrlKey: true });
+    expect(hiddenOf("inspector"), "the first chord closed the Inspector").toBe(true);
+    press(bar(), "i", { ctrlKey: true });
+    expect(hiddenOf("inspector"), "the second chord opened it again").toBe(false);
+    press(bar(), "Escape");
+    expect(document.activeElement, "the field is showing again: back to the field").toBe(field);
   });
 
   // RECORDED MUTATION for "RC13": in CommandBar.tsx stop updating `aria-activedescendant` (pass `undefined`). Expected failure: the active descendant after ArrowDown.

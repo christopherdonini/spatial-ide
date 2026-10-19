@@ -3,6 +3,7 @@
 
 import { forwardRef, useImperativeHandle, useLayoutEffect, useRef, useState } from "react";
 import type { KeyboardEvent, MutableRefObject } from "react";
+import { flushSync } from "react-dom";
 
 import { shortcutLabel } from "../layout/actionRegistry";
 import type { ActionEntry, ActionId, Platform } from "../layout/actionRegistry";
@@ -105,7 +106,8 @@ const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function Comman
   function applyEntry(id: ActionId, isAvailable: boolean): void {
     close();
     if (!isAvailable) return setNote(COMMAND_UNAVAILABLE_NOTE);
-    const outcome = run(id);
+    // The run commits before `leave` reads the page, so the focus goes back as Escape does: not into a region the run closed, nor onto its splitter.
+    const outcome = flushSync(() => run(id));
     if (outcome === "busy") return setNote(COMMAND_BUSY_NOTE);
     setNote(null);
     if (outcome === "done") leave();
