@@ -214,3 +214,14 @@ Nothing above is edited.
 6. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 6 — the cause step: (a) (class 5)
+
+*Written by the custodian on the human's ruling (`state/directives/2026-10-19-229-merged-rotation-230-ready-watcher-visible-i2-a-one-consult-r2-a-unknown-attempt-cause-a.md`, item 3). References only.*
+
+1. **The cause step: (a).** It waits for the next unknown attempt in any run. Every export step now prints its prepare-to-execute time (step 1, PR #227), and that time shows whether the attempt's TTL elapsed. No reproduction step is made.
+2. **The product step** stays open behind the cause.
+3. **PLAN:** the node is unscheduled while it waits, so it is never queued; the first unknown attempt seen in any run is recorded against this form.
+4. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.

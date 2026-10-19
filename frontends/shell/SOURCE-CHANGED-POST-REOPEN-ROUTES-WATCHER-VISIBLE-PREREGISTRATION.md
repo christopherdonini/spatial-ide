@@ -498,3 +498,15 @@ If `verify:cites` reports a cite into `source-changed.mjs` broken by this diff, 
 2. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 2 — the custodian's §4 runs: I2 fired; the human's rulings on I2 and R2 (class 5)
+
+*Written by the custodian on the human's ruling (`state/directives/2026-10-19-229-merged-rotation-230-ready-watcher-visible-i2-a-one-consult-r2-a-unknown-attempt-cause-a.md`, items 1 and 2). References only.*
+
+1. **The worker-high's report** `state/consults/2026-10-18-source-changed-post-reopen-routes-watcher-visible-worker-report.md` (the head aa30f99f0cccc29a3df190e170d76b0eee40c5c6) and **the custodian's §4 runs** `state/consults/2026-10-18-source-changed-post-reopen-routes-watcher-visible-custodian-runs.md` (sha256 f64ded057fd3ddd83055fa468d086cf27ad5cde8068a0cfbce1ee5c1b9cd1820): P1, P5 and P6 held; P2 did not (R2 failed in 3 of 3); P4 did not, and I2 fired, H2's re-read detail in post1, post3, post6, post7, post8 and W-M1. The piece stopped by §5.
+2. **I2: (A), bounded to one architect consult,** in the order and with the statement the ruling names. If it finds a gap-free way, §4's runs repeat at the new head. If it finds none, (B) with the ruling's one addition: a run in which a check reported that the source could not be re-read is INCONCLUSIVE for S5d, and S5d's step 2 judges the race on the runs without the gap.
+3. **R2: (a).** After the reopen, R2 asserts that its readout equals S2's readout from before the change. The 2026-09-22 id expectation is superseded.
+4. **Next:** the one architect consult; then one fresh brief for R2 and the consult's outcome; then §4's runs at the new head; then both gates.
+5. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
