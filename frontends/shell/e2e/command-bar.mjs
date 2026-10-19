@@ -15,7 +15,9 @@
 //   E-SEARCH  frontends/shell/src/command/commandDraft.ts, replace `contains(e.label, text) || contains(e.command ?? "", text)` with `contains(e.command ?? "", text)` (search matches words only).
 //             Expected: step E-SEARCH fails, "E-SEARCH: the text to lay lists 0 options ([]), expected the one entry Zoom to layer".
 //   E-SEARCH-b frontends/shell/src/styles.css, in the `.command-list, .command-note` rule, replace `.command-note {\n  position: fixed;` (two lines, `\n` a newline; found exactly once in that file) with `.command-note {\n  position: static;`
-//             (the list is drawn in normal flow). Expected, a prediction until the custodian observes it: step E-SEARCH fails, "E-SEARCH: with the list open, document.elementFromPoint at the first option's centre does not return that option".
+//             (the list is drawn in normal flow). Predicted: step E-SEARCH fails on its elementFromPoint line. Observed at 621cd1f3: step E-SEARCH fails, "E-SEARCH: the first option's top (18.890625) is above the top bar's bottom (40)", the next assertion (class 2, the form's Amendment 6 item 4); the elementFromPoint line is E-SEARCH-c's.
+//   E-SEARCH-c frontends/shell/src/styles.css, replace `.top-bar {\n  grid-area: top;` (two lines, `\n` a newline; found exactly once in that file) with `.top-bar {\n  transform: translateZ(0);\n  grid-area: top;`
+//             (the top bar becomes the list's containing block, and with the rule's own `overflow: hidden` it clips the list). Expected, a prediction until the custodian observes it: step E-SEARCH fails, "E-SEARCH: with the list open, document.elementFromPoint at the first option's centre does not return that option".
 //   E-HELP    frontends/shell/src/command/commandDraft.ts, replace `registry.filter((e) => contains(e.label, query) || (e.command !== null && contains(e.command, query)))` with
 //             `registry.filter((e) => e.chord !== null && (contains(e.label, query) || (e.command !== null && contains(e.command, query))))` (help leaves out entries with no chord).
 //             Expected: step E-HELP fails, "E-HELP: ? lists 4 options, expected 11".
