@@ -841,3 +841,16 @@ Nothing above is edited.
 8. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 6 — PR A's gate 1 (both FAIL) and correction round 1: the custodian's rows (class 3) and the round's e2e (class 2 for E-SEARCH-b); written after gate 1 and round 1's runs
+
+*References only. Gate 1: `state/consults/gates/2026-10-19-shell-migration-milestone-3-pr-a-gate1-architect.md` (549, A) and `state/consults/gates/2026-10-19-shell-migration-milestone-3-pr-a-gate1-reviewer.md` (550, R). Round 1: `state/consults/2026-10-19-shell-migration-milestone-3-pr-a-round-1-worker-report.md` (head 621cd1f3a0b5f12b8c837a45ebeffa472909fcb2). Its e2e: `state/consults/2026-10-19-shell-migration-milestone-3-pr-a-round-1-e2e-custodian-runs.md`, sha256 2773fdc5f110d308eb1f1c7218435cc37d97759b57a0ceaa56782921c34f5228.*
+
+1. **§2.2's third availability bullet (A's D5, class 3)** reads: `dataset.open` is available whenever App passes its handler; while an open is in flight it is listed as available, and running it starts nothing and shows the busy line, because `requestPick()` answers busy on the Open button's own condition (Amendment 3 item 11; RC8).
+2. **§2.4's result shapes (R's D3, class 3)** are the round 0 report's Differences item 1, as built.
+3. **Tab (A's C1)** now follows OPEN-1's ruled point: it completes an active option, or the only candidate whether the list is open or not, and a second Tab leaves. UC2's recorded mutation (Tab sets `open: true`) now fails on the assertion that Tab closes the list, not on Tab leaving in at most two; two more UC2 mutations are recorded (round 1 report).
+4. **E-SEARCH-b (class 2):** written down in round 1 and run by the custodian at the head: it fails E-SEARCH on the top-bar assertion before the predicted `elementFromPoint` line. Recorded in the round's e2e record.
+5. **Next:** the PR body (A's D6), then gate 2, both gates, scoped to round 1.
+6. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
