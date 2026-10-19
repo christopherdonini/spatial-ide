@@ -335,6 +335,8 @@ describe("App: the command bar (milestone 3, PR A), through the real App", () =>
   });
 
   // RECORDED MUTATION for "RC10 case b": in CommandBar.tsx's `applyEntry` make the run directly (replace `flushSync(() => run(id))` with `run(id)`), so `leave` reads the page before the run commits and the bar returns the focus to the field in the region it just closed. Expected failure: the focus is on the field, not the map region.
+  // OBSERVED AT 0e9944eabedcb862b04abf78234a7f19f4031358: FAILED -- "RC10 case b: a command run from the bar that closes the region holding the field the focus came from leaves the focus on the map region":
+  //   AssertionError: the field's region is closed: the map region, not the field: expected <input> to be <main id="region-map">. The mutation drops flushSync. Reverted after observing.
   it("RC10 case b: a command run from the bar that closes the region holding the field the focus came from leaves the focus on the map region", async () => {
     await open("C:/data/a.parquet");
     const field = q<HTMLInputElement>(".filter-predicate")!;
@@ -347,6 +349,8 @@ describe("App: the command bar (milestone 3, PR A), through the real App", () =>
   });
 
   // RECORDED MUTATION for "RC10 case c": as case b's (replace `flushSync(() => run(id))` with `run(id)` in CommandBar.tsx's `applyEntry`), so the bar returns the focus to the Inspector's splitter, which the run then hides. Expected failure: the focus is on the splitter, not the map region.
+  // OBSERVED AT 0e9944eabedcb862b04abf78234a7f19f4031358: FAILED -- "RC10 case c: a command run from the bar that closes the region whose splitter the focus came from leaves the focus on the map region":
+  //   AssertionError: the splitter is hidden with its region: the map region, not the splitter: expected <div id="splitter-inspector"> to be <main id="region-map">. The mutation drops flushSync. Reverted after observing.
   it("RC10 case c: a command run from the bar that closes the region whose splitter the focus came from leaves the focus on the map region", async () => {
     await open("C:/data/a.parquet");
     act(() => q("#splitter-inspector")!.focus());
@@ -359,6 +363,8 @@ describe("App: the command bar (milestone 3, PR A), through the real App", () =>
   });
 
   // RECORDED MUTATION for "RC10 case d": in StudioLayout.tsx's `apply`, after the line `if (holdsFocus) mapRef.current?.focus();`, put back round 1's two lines (a comment, then `if (heldRef.current !== null && regionRefs[action.region].current?.contains(heldRef.current) === true) heldRef.current = null;`), so a region closed by a chord pressed in the bar makes the bar forget the field. Expected failure: the focus is on the map region, not the field.
+  // OBSERVED AT 0e9944eabedcb862b04abf78234a7f19f4031358: FAILED -- "RC10 case d: a region closed and opened again by chords pressed in the bar gives the focus back to the field it came from on Escape":
+  //   AssertionError: the field is showing again: back to the field: expected <main id="region-map"> to be <input>. The mutation puts back round 1's two lines in `apply`. Reverted after observing.
   it("RC10 case d: a region closed and opened again by chords pressed in the bar gives the focus back to the field it came from on Escape", async () => {
     await open("C:/data/a.parquet");
     const field = q<HTMLInputElement>(".filter-predicate")!;
