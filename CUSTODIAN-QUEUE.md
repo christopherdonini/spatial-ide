@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `423d1a41f096923434dad08bbb48eac51922eb14006717d2a540c776b4dea598`) at `2026-10-18T12:00:23.175Z`.
+Generated from `PLAN.yaml` (sha256 `0ee0283e3161bfd76ce7b918398a30739b1748868d21f6676b2600d5377339cc`) at `2026-10-19T16:10:42.849Z`.
 
 ## 1. Next
 
@@ -10,11 +10,9 @@ Generated from `PLAN.yaml` (sha256 `423d1a41f096923434dad08bbb48eac51922eb140067
 
 - (none)
 
-## 3. Waiting on the human (total: 2 min)
+## 3. Waiting on the human (total: 0 min)
 
-### ruling
-
-- **publish-approval-unknown-attempt-under-load** — Publish: an export's approval came back as unknown attempt under machine load (the status-bar e2e run 2 and the H3 order run): the cause first, the pending attempt's TTL elapsing between prepare and execute or an attempt the host lost; then whether the TTL suits a person reading the approval dialog, which shows no expiry (2 min)
+- (none)
 
 ## 4. Blocked on dependencies
 
@@ -143,3 +141,4 @@ Generated from `PLAN.yaml` (sha256 `423d1a41f096923434dad08bbb48eac51922eb140067
 - **mod-worktree-resource-protection** — Worktree and resource protection -- a mod (deferred by the 2026-10-03 mods-roadmap ruling) (phase `prototype`) — ambition, never queued
 - **recorder-write-latency-measure** — Evidence Recorder: a declared write-latency measure with its own sample, so the brief overhead acceptance can be established before the Recorder evaluation ends (Amendment 2 C2-d keeps E5 a lower bound) (phase `prototype`) — ambition, never queued
 - **reuse-round-1-bundle** — Reuse archaeology round 1, the advisor bundle, filed as one docs-and-data piece (not under docs/) (phase `prototype`) — ambition, never queued
+- **publish-approval-unknown-attempt-under-load** — Publish: an export's approval came back as unknown attempt under machine load (the status-bar e2e run 2 and the H3 order run): the cause first, the pending attempt's TTL elapsing between prepare and execute or an attempt the host lost; then whether the TTL suits a person reading the approval dialog, which shows no expiry (phase `prototype`) — ambition, never queued

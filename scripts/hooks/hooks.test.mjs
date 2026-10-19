@@ -1316,7 +1316,7 @@ test('session-resume: the reading order names state/directives/ after DECISIONS-
   const at = (needle) => lines.findIndex((l) => l.includes(needle));
   const pending = at('DECISIONS-PENDING.md');
   const directives = at('state/directives/');
-  const precedents = at('PRECEDENTS.md');
+  const precedents = lines.findIndex((l) => l.startsWith('5. PRECEDENTS.md')); // item 1 now names PRECEDENTS.md too (piece B)
   assert.ok(pending >= 0 && precedents >= 0, 'the neighbouring steps exist');
   assert.equal(directives, pending + 1, 'directly after DECISIONS-PENDING.md');
   assert.equal(precedents, directives + 1, 'directly before PRECEDENTS.md');
@@ -1376,4 +1376,26 @@ test('telegram: sendTelegramDeduped treats different keys independently', async 
   const b = await sendTelegramDeduped('key-b', 'b', { projectRoot, now: 1000 });
   assert.equal(a.deduped, false);
   assert.equal(b.deduped, false);
+});
+
+// RECORDED MUTATION (MS1): the old item 1 restored in READING_ORDER -> fails by name (no other test):
+// `session-resume: reading-order item 1 is the continuity block, the live ledger and the unfinished matter it names,
+// with the standing items' sections`. Observed at 8965ba7500f0, reverted.
+test("session-resume: reading-order item 1 is the continuity block, the live ledger and the unfinished matter it names, with the standing items' sections", () => {
+  const lines = READING_ORDER.split('\n');
+  assert.equal(lines.length, 7, 'the header and six items');
+  assert.ok(
+    lines[1].startsWith('1. state/CUT-STATE.md — the continuity block, then the live ledger, plus any unfinished matter it names explicitly. '),
+    lines[1],
+  );
+  assert.match(lines[1], /The standing items: AUTONOMY\.md §33 part B and PRECEDENTS\.md P-035 and P-036\.$/);
+  assert.equal(lines[1].includes('SESSION-CONTINUITY block first'), false, 'the old item 1 is gone');
+  // The sections it names exist: AUTONOMY.md section 33 (with its part B) and the two PRECEDENTS.md entries.
+  const repo = path.resolve(here, '..', '..');
+  const autonomy = fs.readFileSync(path.join(repo, 'AUTONOMY.md'), 'utf8');
+  const precedents = fs.readFileSync(path.join(repo, 'PRECEDENTS.md'), 'utf8');
+  assert.match(autonomy, /^## §33\. [^\n]*standing items/m);
+  assert.match(autonomy, /^### Part B\. The standing items$/m);
+  assert.match(precedents, /^### P-035 — /m);
+  assert.match(precedents, /^### P-036 — /m);
 });

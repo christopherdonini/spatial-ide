@@ -504,3 +504,50 @@ than treated as settled, and no dependency bump should be merged under it withou
   - a node that does more than unblock.
 
 **Applied to:** none yet. `questions-mirror-t11-copy-glob`, the first case of this shape, was placed by the human in question round 36, before the directive.
+
+## From the continuity block's standing items (2026-10-14 direction, piece B, item 1)
+
+### P-035 — A rule every new piece must satisfy: portability rules R1 to R6
+
+**Ruling (referenced, not reproduced):** `state/directives/PORTABILITY-2026-09-30.md:31-65 @ 0ff2594e2f355321640a6942b710e7507b613151 sha256:c69eed809fbffa8c0d0ee6f3a750039e2a0d6ce17e17a021cef170ef24f6699b` (its section 2, the standing rule R1 to R6). The human's covering line, which that file's filing note names, is byte-copied by script from `state/directives/2026-09-30-portability-and-handoff.md:15-20 @ 0ff2594e2f355321640a6942b710e7507b613151 sha256:0903aa4aa83c5856b7c92aa811023ed4ba416a0cd099cbc8be424f034383d3f3`:
+
+```text
+HUMAN DIRECTION 2026-09-30: Windows-first development with continuously protected portability is a
+standing constraint: one codebase for Windows, macOS and Linux, with shared semantics, explicit
+platform implementations, continuously tested portability and honestly scoped support. Fable's
+PORTABILITY-2026-09-30.md is the plan. Placement guidance: port-1 after B-1; port-3 and port-4 wait
+for the shell migration's first merged milestone; port-2 when convenient, not ahead of the migration
+or B2.
+```
+
+**The item, moved** (byte-copied by script from `state/CUT-STATE.md:8 @ 0ff2594e2f355321640a6942b710e7507b613151 sha256:3f2cd3569c7f77dd02007a0de21f6ad126b0726672ee119c7a3cc535fce2562b`, the item numbered (2) there, from its start marker up to the space before its end marker):
+
+```text
+(2) STANDING RULE from 2026-09-30 (PORTABILITY-2026-09-30.md section 2): apply R1-R6 to new and materially changed work.
+```
+
+**Generalisation:** New and materially changed work follows R1 to R6 of `state/directives/PORTABILITY-2026-09-30.md` §2.
+
+**Scope and limits:**
+- R1 to R6 are the source's own words, in the span pinned above.
+- Earlier declared platform limitations are not made blocking (`state/directives/PORTABILITY-2026-09-30.md:3 @ 0ff2594e2f355321640a6942b710e7507b613151 sha256:8b2f0d735fc5bea822cc0a79aeede8432ecda26c3a1ce895460e4cbde74d1d82`).
+
+**Applied to:** recorded from the move on.
+
+### P-036 — Nothing filed here names the other project; no agent reads another project's records
+
+**Ruling (referenced, not reproduced):** `state/directives/2026-10-06-boot-mods-local-and-machine-script.md:15-16 @ 0ff2594e2f355321640a6942b710e7507b613151 sha256:bdabd38aa99a75422f364d640f021db2326c330cdfa3f501792a7471372f8302` (its items 2 and 3).
+
+**The item, moved** (byte-copied by script from `state/CUT-STATE.md:8 @ 0ff2594e2f355321640a6942b710e7507b613151 sha256:3f2cd3569c7f77dd02007a0de21f6ad126b0726672ee119c7a3cc535fce2562b`, the item numbered (18) there, from its start marker up to the space before its end marker):
+
+```text
+(18) STANDING from the second 2026-10-06 direction, item 3: this repository is public, so nothing filed here names the other project or states facts about it; write "the other project"; a message of the human that names it is filed with [the other project], and the filing note says so. Records filed before it are not edited. Item 2: no agent of this project reads another project's transcripts, memory or folders, and the same holds the other way.
+```
+
+**Generalisation:** Nothing filed in this repository names the other project or states facts about it, and no agent of this project reads another project's transcripts, memory or folders.
+
+**Scope and limits:**
+- It applies from 2026-10-06.
+- Earlier files stay as filed, and no history is rewritten (`state/directives/2026-10-06-probes-readme-node-and-script-adoption.md:9 @ 0ff2594e2f355321640a6942b710e7507b613151 sha256:123a5d5535f3bd9581aa9ab0a6f61a3e09baa822556b99d627e0d153ad42a16e`).
+
+**Applied to:** recorded from the move on.

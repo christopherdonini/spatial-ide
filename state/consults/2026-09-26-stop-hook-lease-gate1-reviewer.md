@@ -29,7 +29,7 @@
 
 **C2 (medium, non-blocking, custodian/architect to rule): nothing binds the lease id to Claude Code's stdin `session_id`.**
 - AI_DEVELOPMENT.md ("The lease and handover") requires only "a unique session id", and the form's Out-of-scope keeps that rule unchanged.
-- Evidence the two have diverged in practice: `state/CUT-STATE.md:332-333` on main records that the lease was taken by "81107ddf" at 19:06Z. The live `C:/dev/spatial-ide/CUSTODIAN-LEASE` now holds `a2e86f25-b924-4e6f-b34d-277157b55f70` (refreshed 19:18:36Z), which matches the local transcript `a2e86f25-….jsonl`. No local transcript for 81107ddf exists.
+- Evidence the two have diverged in practice: `state/CUT-STATE.md:332-333 @ 9b77d0f900d3b5b30e41005a063861e1e48a6a4d sha256:30b5cfdc946cd1a6709e6546df27c3001c0d93b2ee0dd9b2a3046f0b1559eb28` on main records that the lease was taken by "81107ddf" at 19:06Z. The live `C:/dev/spatial-ide/CUSTODIAN-LEASE` now holds `a2e86f25-b924-4e6f-b34d-277157b55f70` (refreshed 19:18:36Z), which matches the local transcript `a2e86f25-….jsonl`. No local transcript for 81107ddf exists.
 - Under this piece, a custodian that writes any id other than the stdin `session_id` gets an allow on every stop. The allow reason goes only to stderr, which the hook README says lands in the debug log, so the hook's continuation is disabled without anything visible in the transcript.
 - The tests write `lease: ${input.session_id}`. That matches the current live practice, so I do not call it an imagined interface, but the producer side is not pinned.
 - Disposition: a follow-up that states "lease id = the Stop hook's stdin `session_id`" in the lease rule (outside this piece).

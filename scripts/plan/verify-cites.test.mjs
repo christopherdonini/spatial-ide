@@ -325,3 +325,44 @@ test('a_pinned_loose_cite_keeps_the_trees_reason_when_the_pin_path_is_not_found'
   assert.equal(advisory.length, 1, JSON.stringify(advisory));
   assert.match(advisory[0].reason, /^line 9 exceeds engine\/src\/pool\.rs \(/);
 });
+
+// The ledger rotates (piece B, OPEN-1 (B)): an unpinned line cite into state/CUT-STATE.md is advisory
+// wherever it sits, a pinned one stays gated at its pin. A cite into another rooted file stays gated.
+function ledgerRepo(doc) {
+  const dir = gitTree({ 'state/CUT-STATE.md': 'a\nb\nc\nd\ne\n', 'engine/src/pool.rs': 'a\n' });
+  const rev = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: dir, encoding: 'utf8' }).trim();
+  fs.writeFileSync(path.join(dir, 'state/CUT-STATE.md'), 'a\n');
+  fs.writeFileSync(path.join(dir, 'notes.md'), doc(rev));
+  execFileSync('git', ['add', '-A'], { cwd: dir });
+  execFileSync('git', ['commit', '-q', '-m', 'rotate'], { cwd: dir });
+  return dir;
+}
+
+// RECORDED MUTATION (MV1): the ledger rule removed -> fails by name (no other test): `verify-cites: an unpinned line cite
+// into state/CUT-STATE.md past its end is advisory`. Observed at 2f4f825269a6, reverted.
+test('verify-cites: an unpinned line cite into state/CUT-STATE.md past its end is advisory', () => {
+  const dir = ledgerRepo(() => 'see state/CUT-STATE.md:4 and engine/src/pool.rs:9');
+  try {
+    const { gated, advisory } = runVerifyCites({ repoRoot: dir });
+    assert.equal(gated.length, 1, JSON.stringify(gated));
+    assert.match(gated[0].target, /^engine\/src\/pool\.rs:9$/);
+    assert.equal(advisory.length, 1, JSON.stringify(advisory));
+    assert.match(advisory[0].reason, /exceeds "state\/CUT-STATE\.md"/);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+// RECORDED MUTATION (MV2): the rule applied to pinned cites as well -> fails by name (no other test): `verify-cites: a pinned
+// line cite into state/CUT-STATE.md whose pin fails stays gated`. Observed at 2f4f825269a6, reverted.
+test('verify-cites: a pinned line cite into state/CUT-STATE.md whose pin fails stays gated', () => {
+  const dir = ledgerRepo((rev) => `ok state/CUT-STATE.md:4 @ ${rev} sha256:00, bad state/CUT-STATE.md:9 @ ${rev} sha256:00`);
+  try {
+    const { gated, advisory } = runVerifyCites({ repoRoot: dir });
+    assert.equal(gated.length, 1, JSON.stringify(gated));
+    assert.match(gated[0].reason, /exceeds "state\/CUT-STATE\.md" at pinned commit/);
+    assert.equal(advisory.length, 0, JSON.stringify(advisory));
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
