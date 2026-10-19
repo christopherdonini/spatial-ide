@@ -381,6 +381,7 @@ function dpRepo(doc) {
   return dir;
 }
 
+// RECORDED MUTATION (MV1) at a382c50813c3, applied alone and reverted: the rule removed (the target set back to the one ledger) -> fails by name, and only this one: `verify-cites: an unpinned DECISIONS-PENDING.md line cite past its end from a root-level file is advisory`.
 test('verify-cites: an unpinned DECISIONS-PENDING.md line cite past its end from a root-level file is advisory', () => {
   const dir = dpRepo(() => `see ${DP}:4 and engine/src/pool.rs:9`);
   try {
@@ -393,6 +394,7 @@ test('verify-cites: an unpinned DECISIONS-PENDING.md line cite past its end from
   }
 });
 
+// RECORDED MUTATION (MV2) at a382c50813c3, applied alone and reverted: the rule applied to pinned cites as well -> fails by name: `verify-cites: a pinned DECISIONS-PENDING.md line cite whose pin fails stays gated` (and B's own pinned CUT-STATE.md test, which shares the rule).
 test('verify-cites: a pinned DECISIONS-PENDING.md line cite whose pin fails stays gated', () => {
   const dir = dpRepo((rev) => `ok ${DP}:4 @ ${rev} sha256:00, bad ${DP}:9 @ ${rev} sha256:00`);
   try {
