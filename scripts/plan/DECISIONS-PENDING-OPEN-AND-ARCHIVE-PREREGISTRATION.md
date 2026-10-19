@@ -455,3 +455,14 @@ S0 settles OPEN-2's condition, and it shows which root-level cites become gated 
 6. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 2 — PR #226's architect F-2, before code (class 3)
+
+*Written by the custodian before any code, on the forward note in A's form (`scripts/plan/SEARCH-IGNORE-HISTORICAL-PREREGISTRATION.md`, Amendment 5 item 5) from PR #226's architect gate (`state/consults/gates/2026-10-17-governance-search-ignore-historical-gate1-architect.md`, F-2). References only.*
+
+1. **M-2's step 4 (§2 item 10).** A's step 4 runs the script from A's worktree `C:/dev/wt/sih`, which is gone. In M-2 the script is `scripts/plan/measure-reads.mjs` at C's merge commit, run from M-1's worktree detached at that commit; the corpus side stays in M-2's own worktree at the merge commit. §2 item 10's digest check (`git show <merge>:scripts/plan/measure-reads.mjs | sha256sum`, equal to A's S1 digest) still binds.
+2. **B is merged** (PR #229, merge commit 4b2a99767a7633b838b4eef178848bf08c71b9f6). Its first rotation, d86ebac73aa271625934b1d075bd87edd60c30d8 (B's Amendment 8), is the last `CUT-STATE` rotation commit that §2 item 10's closing record names, unless another lands first. C reads B's merged exports at M0 (§2 item 11 (d)).
+3. **M0** is the main commit that adds this amendment; the custodian names it at dispatch.
+4. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.

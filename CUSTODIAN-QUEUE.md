@@ -1,14 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `6292896af50f50e7d54f9936b3aac767f98a4cf8070341deb46894561091addb`) at `2026-10-19T16:30:30.080Z`.
+Generated from `PLAN.yaml` (sha256 `9457f0dc6d825b22e86fff0ab9dff716bb5a9d10191c2176293ec2c69e34e278`) at `2026-10-19T16:39:03.695Z`.
 
 ## 1. Next
 
-- **governance-decisions-pending-open-and-archive** — DECISIONS-PENDING.md: open entries and recent rulings, the rest archived to state/cut-archive/, one shared helper for the ruling set in verify, verify-test-claims and verify-quotes, monthly rotation, and the reading order's item 3 restated; the second measurements after it (lane `governance`)
+- (nothing ready)
 
 ## 2. Ready
 
-- **governance-decisions-pending-open-and-archive** — DECISIONS-PENDING.md: open entries and recent rulings, the rest archived to state/cut-archive/, one shared helper for the ruling set in verify, verify-test-claims and verify-quotes, monthly rotation, and the reading order's item 3 restated; the second measurements after it (lane `governance`, order null, budget 0 min)
+- (none)
 
 ## 3. Waiting on the human (total: 0 min)
 
@@ -29,6 +29,7 @@ Generated from `PLAN.yaml` (sha256 `6292896af50f50e7d54f9936b3aac767f98a4cf80703
 
 - **source-changed-post-reopen-routes-watcher-visible** — source-changed.mjs's post and reopen routes, and walkthrough Part N's N6 and N8, still change the source by an mtime touch the advisory watcher can see — evidence: branch `cut/source-changed-watcher-visible`
 - **known-limitations-item-23-watcher-idle-end** — KNOWN-LIMITATIONS item 23: it says a source change goes unnoticed until a query is next issued, but on Windows the advisory watcher ends the session while idle on a change it can see — evidence: branch `cut/known-limitations-item-23`
+- **governance-decisions-pending-open-and-archive** — DECISIONS-PENDING.md: open entries and recent rulings, the rest archived to state/cut-archive/, one shared helper for the ruling set in verify, verify-test-claims and verify-quotes, monthly rotation, and the reading order's item 3 restated; the second measurements after it — evidence: branch `cut/decisions-pending-open-and-archive`
 
 ## 6. Proposed / unscheduled
 

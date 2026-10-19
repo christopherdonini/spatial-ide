@@ -1,47 +1,9 @@
 {
-  "generated_at": "2026-10-19T16:30:30.080Z",
-  "plan_hash": "6292896af50f50e7d54f9936b3aac767f98a4cf8070341deb46894561091addb",
+  "generated_at": "2026-10-19T16:39:03.695Z",
+  "plan_hash": "9457f0dc6d825b22e86fff0ab9dff716bb5a9d10191c2176293ec2c69e34e278",
   "priorities_approved": true,
-  "next": {
-    "id": "governance-decisions-pending-open-and-archive",
-    "title": "DECISIONS-PENDING.md: open entries and recent rulings, the rest archived to state/cut-archive/, one shared helper for the ruling set in verify, verify-test-claims and verify-quotes, monthly rotation, and the reading order's item 3 restated; the second measurements after it",
-    "lane": "governance",
-    "phase": "prototype",
-    "status": "ready",
-    "order": null,
-    "budget_minutes": 0,
-    "needs_human": {
-      "kind": "none",
-      "minutes": 0
-    },
-    "evidence": null,
-    "dates": {
-      "opened": "2026-10-14",
-      "done": null
-    },
-    "summary": "READY 2026-10-19: governance B (#229) is done, so C is the lane's next piece (never slot 1); its form takes B's F-2 before code. Before: BEFORE C's CODE 2026-10-17: PR 226's architect gate F-2 (search-ignore form, Amendment 5 item 5), C's run of M-2 names the script at A's merge commit, since the sih worktree will be gone; for this form, before code. Before: OPEN-1 TO OPEN-4 RULED 2026-10-17 (state/directives/2026-10-17-placements-item-44-governance-clause-composition-readme-item-41-unknown-attempt.md, item 3; the form's Amendment 1, generation 2): OPEN-1 (A), the human strikes in the PR body and what is not struck stays; OPEN-2 (A), the fourth reader; OPEN-3 in the human's own words, the directive's item 3; OPEN-4's readings (i) to (v) confirmed. No OPEN item remains. Waits for B. Before: FORM COMMITTED 2026-10-14 (scripts/plan/DECISIONS-PENDING-OPEN-AND-ARCHIVE-PREREGISTRATION.md, a full form by section 21a and 21c, 1,260 lines over 16 files, drafted by the architect: state/consults/2026-10-14-governance-decisions-pending-open-and-archive-architect-draft.md, sha256 2031c8c9; pins hashed by the custodian at 76d038d5). OPEN-1 (which unmarked entries are open, before the dry run), OPEN-2 (a fourth reader in verify-quotes, only if the probe shows it), OPEN-3 (pinning a line into the ruling file against round 12 (a), a red line, typed words) and OPEN-4 (readings) with the human. Before: PLACED 2026-10-14 by the human (state/directives/2026-10-14-governance-smaller-reads-ignore-cut-state-rotation-decisions-pending.md); never slot 1; each merge the human's click: piece C, after B. Every obligation an archived entry carries is represented in PLAN or the continuity block first; the kept entries are listed in the PR body for the human. Its form is drafted after B's."
-  },
-  "ready": [
-    {
-      "id": "governance-decisions-pending-open-and-archive",
-      "title": "DECISIONS-PENDING.md: open entries and recent rulings, the rest archived to state/cut-archive/, one shared helper for the ruling set in verify, verify-test-claims and verify-quotes, monthly rotation, and the reading order's item 3 restated; the second measurements after it",
-      "lane": "governance",
-      "phase": "prototype",
-      "status": "ready",
-      "order": null,
-      "budget_minutes": 0,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-10-14",
-        "done": null
-      },
-      "summary": "READY 2026-10-19: governance B (#229) is done, so C is the lane's next piece (never slot 1); its form takes B's F-2 before code. Before: BEFORE C's CODE 2026-10-17: PR 226's architect gate F-2 (search-ignore form, Amendment 5 item 5), C's run of M-2 names the script at A's merge commit, since the sih worktree will be gone; for this form, before code. Before: OPEN-1 TO OPEN-4 RULED 2026-10-17 (state/directives/2026-10-17-placements-item-44-governance-clause-composition-readme-item-41-unknown-attempt.md, item 3; the form's Amendment 1, generation 2): OPEN-1 (A), the human strikes in the PR body and what is not struck stays; OPEN-2 (A), the fourth reader; OPEN-3 in the human's own words, the directive's item 3; OPEN-4's readings (i) to (v) confirmed. No OPEN item remains. Waits for B. Before: FORM COMMITTED 2026-10-14 (scripts/plan/DECISIONS-PENDING-OPEN-AND-ARCHIVE-PREREGISTRATION.md, a full form by section 21a and 21c, 1,260 lines over 16 files, drafted by the architect: state/consults/2026-10-14-governance-decisions-pending-open-and-archive-architect-draft.md, sha256 2031c8c9; pins hashed by the custodian at 76d038d5). OPEN-1 (which unmarked entries are open, before the dry run), OPEN-2 (a fourth reader in verify-quotes, only if the probe shows it), OPEN-3 (pinning a line into the ruling file against round 12 (a), a red line, typed words) and OPEN-4 (readings) with the human. Before: PLACED 2026-10-14 by the human (state/directives/2026-10-14-governance-smaller-reads-ignore-cut-state-rotation-decisions-pending.md); never slot 1; each merge the human's click: piece C, after B. Every obligation an archived entry carries is represented in PLAN or the continuity block first; the kept entries are listed in the PR body for the human. Its form is drafted after B's."
-    }
-  ],
+  "next": null,
+  "ready": [],
   "waiting_on_human": {
     "total_minutes": 0,
     "by_kind": {
@@ -273,6 +235,28 @@
       },
       "summary": "GATE PASS (545, state/consults/gates/2026-10-18-known-limitations-item-23-watcher-idle-end-reviewer.md); the worker's report state/consults/2026-10-18-known-limitations-item-23-watcher-idle-end-worker-report.md. NEXT: main merged into #230, ready, the human's click, the closing record. Before: OPEN-1 AND OPEN-2 RULED 2026-10-18 (state/directives/2026-10-18-229-not-i6-item-23-words-approved-no-release-line-rule-00-e2e-readme-entries-227-merged.md, item 2; the form's Amendment 1): the words approved as drafted, the item text and the source comment; no release-notes line. NEXT: one worker applies the words in C:/dev/wt/kl23, then the single reviewer gate. Before: FORM COMMITTED 2026-10-17 (KNOWN-LIMITATIONS-ITEM-23-WATCHER-IDLE-END-PREREGISTRATION.md, the five-line form, drafted by the architect: state/consults/2026-10-17-known-limitations-item-23-watcher-idle-end-architect-draft.md; 25 pins computed at 607d8d16). THE TAG: neither the watcher nor item 23 is at v0.1.0 (state/consults/2026-10-17-known-limitations-item-23-tag-checks.md), so no Corrected sentence. WAITING ON THE HUMAN: OPEN-1, the words' sight under section 31; OPEN-2, a release-notes line (the draft recommends none). Then Amendment 1 and one worker applies the words. Before: ADDED 2026-10-17 by the human (state/directives/2026-10-17-227-m1-watcher-visible-open-1-a-item-23-node-228-merged.md, item 3), from the watcher-visible draft's findings outside scope (state/consults/2026-10-17-source-changed-post-reopen-routes-watcher-visible-architect-draft.md): a proposed node in the docs lane. The architect drafts the replacement words with a clause check under the wording-block rule, first checking the claim at the v0.1.0 tag; if the watcher ended idle sessions there too, the item takes item 8's form, a visible Corrected sentence saying what the item used to say, and the human decides a release-notes line on seeing the words.",
       "evidence_label": "branch `cut/known-limitations-item-23`"
+    },
+    {
+      "id": "governance-decisions-pending-open-and-archive",
+      "title": "DECISIONS-PENDING.md: open entries and recent rulings, the rest archived to state/cut-archive/, one shared helper for the ruling set in verify, verify-test-claims and verify-quotes, monthly rotation, and the reading order's item 3 restated; the second measurements after it",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": null,
+      "budget_minutes": 0,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "branch": "cut/decisions-pending-open-and-archive"
+      },
+      "dates": {
+        "opened": "2026-10-14",
+        "done": null
+      },
+      "summary": "IN PROGRESS 2026-10-19: F-2 in the form (Amendment 2, class 3); M0 is the commit adding it; the branch cut/decisions-pending-open-and-archive in C:/dev/wt/dpa, S0 to S8 by one worker-high; then both gates at S8, the human's check of the kept list, then F0 (the freeze) to the click. Before: READY 2026-10-19: governance B (#229) is done, so C is the lane's next piece (never slot 1); its form takes B's F-2 before code. Before: BEFORE C's CODE 2026-10-17: PR 226's architect gate F-2 (search-ignore form, Amendment 5 item 5), C's run of M-2 names the script at A's merge commit, since the sih worktree will be gone; for this form, before code. Before: OPEN-1 TO OPEN-4 RULED 2026-10-17 (state/directives/2026-10-17-placements-item-44-governance-clause-composition-readme-item-41-unknown-attempt.md, item 3; the form's Amendment 1, generation 2): OPEN-1 (A), the human strikes in the PR body and what is not struck stays; OPEN-2 (A), the fourth reader; OPEN-3 in the human's own words, the directive's item 3; OPEN-4's readings (i) to (v) confirmed. No OPEN item remains. Waits for B. Before: FORM COMMITTED 2026-10-14 (scripts/plan/DECISIONS-PENDING-OPEN-AND-ARCHIVE-PREREGISTRATION.md, a full form by section 21a and 21c, 1,260 lines over 16 files, drafted by the architect: state/consults/2026-10-14-governance-decisions-pending-open-and-archive-architect-draft.md, sha256 2031c8c9; pins hashed by the custodian at 76d038d5). OPEN-1 (which unmarked entries are open, before the dry run), OPEN-2 (a fourth reader in verify-quotes, only if the probe shows it), OPEN-3 (pinning a line into the ruling file against round 12 (a), a red line, typed words) and OPEN-4 (readings) with the human. Before: PLACED 2026-10-14 by the human (state/directives/2026-10-14-governance-smaller-reads-ignore-cut-state-rotation-decisions-pending.md); never slot 1; each merge the human's click: piece C, after B. Every obligation an archived entry carries is represented in PLAN or the continuity block first; the kept entries are listed in the PR body for the human. Its form is drafted after B's.",
+      "evidence_label": "branch `cut/decisions-pending-open-and-archive`"
     }
   ],
   "proposed": [
