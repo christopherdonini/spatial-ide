@@ -206,3 +206,16 @@ Nothing above is edited.
 5. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 5 — gate 1: both FAIL, a wording block only; one author's words per sentence; a 9th file (class 6); the revs and E1's note (class 3)
+
+*Written by the custodian after both gate reports were seen. References only: `state/consults/gates/2026-10-20-publish-approval-ttl-ten-minutes-gate1-architect.md` (gate-log 563) and `state/consults/gates/2026-10-20-publish-approval-ttl-ten-minutes-gate1-reviewer.md` (gate-log 565).*
+
+1. **A wording block, no re-gate (AUTONOMY §31 (a), (d)).** Both gates name the same two sentences: `kernel/src/permission/grant.rs` line 412 at the head, and `frontends/shell/src/publish/PublishDialog.tsx` line 9 at the head. Neither sentence is the human's. Each gate gives its own words; the worker applies one author's, the architect's (its C1 and D1), for both: its D1 covers the reviewer's two gaps and adds the remount case it found, and its C1 says what the reviewer's says. The PR body lists them.
+2. **Budget (class 6; Scope not edited):** `kernel/src/permission/grant.rs` joins the diff, a 9th file against Scope's 8, for 2 changed lines; `PublishDialog.tsx` goes to about 13 of its 15.
+3. **The revs (the architect's D2):** Amendment 1's lead hashes the directive at f2052681230089450643c35a38f86de0eb82103f; Amendment 2's lead hashes its directive at b2433b7899434bc9b54e4e388893ce5cbcf38c3a; Amendment 4 item 1 hashes the E1 record at 4731a9a9b2023efd5531281a4ce280abe26d4ba5.
+4. **E1's run 2 (the architect's D3, the reviewer's E-a):** run 2 ran in its own shared hold, not alone on the machine as the rule's timing bullet has the custodian re-run a failure; the reading of run 1 is the architect's, its report's item 5. Neither gate blocks on it. A run alone is offered to the human.
+5. **The 601 s backdate (the reviewer's E-b):** `a_pending_attempt_past_its_ttl_is_treated_as_unknown` would panic on a Windows machine up less than 601 s; both CI runs at the head passed it. A named residual risk, not a defect at the head.
+6. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
