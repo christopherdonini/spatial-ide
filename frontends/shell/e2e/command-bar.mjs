@@ -56,7 +56,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { attachOrLaunch, attachConsole, waitForSettle, CDP_PORT, bufferPointToCss, canvasRect, findInteriorCandidate, fractionOf, hoverIdAfterBarrier } from "./lib.mjs";
+import { attachOrLaunch, attachConsole, waitForSettle, CDP_PORT, bufferPointToCss, canvasRect, findInteriorCandidate, fractionOf, hoverIdAfterBarrier, zoomInOneNotch, MAX_ZOOM_NOTCHES } from "./lib.mjs";
 import { loadShellModule } from "./tsModuleLoader.mjs";
 
 const OUT_DIR = join(dirname(fileURLToPath(import.meta.url)), "out");
@@ -502,16 +502,27 @@ async function stepPanel(page, consoleHandle) {
   return "with two cards, the panel's Apply left exactly one card holding its text; its Clear left none";
 }
 
-/** A CSS point of the page on a drawn feature: the interior candidate of the frame, tried in both row orders, taken only when the hover reads a confirmed id there (hoverIdAfterBarrier). */
-async function findFeaturePoint(page) {
-  const { candidate, bufferWidth, bufferHeight } = await findInteriorCandidate(page);
-  const rect = await canvasRect(page);
-  for (const flipY of [true, false]) {
-    const exact = bufferPointToCss(candidate, rect, bufferWidth, bufferHeight, flipY);
-    const css = { x: Math.round(exact.x), y: Math.round(exact.y) };
-    if ((await hoverIdAfterBarrier(page, css, "E-SEL")).ok) return css;
+/**
+ * A CSS point of the page on a drawn feature: the interior candidate of the frame, tried in both row orders, taken only when the hover reads a confirmed id there (hoverIdAfterBarrier).
+ * When neither order gives one, zoom in one notch at the canvas centre (as buildScene in selection.mjs does) and try a fresh candidate, up to MAX_ZOOM_NOTCHES.
+ */
+async function findFeaturePoint(page, consoleHandle) {
+  const gave = [];
+  for (let notch = 0; notch <= MAX_ZOOM_NOTCHES; notch += 1) {
+    if (notch > 0) {
+      const r = await canvasRect(page);
+      await zoomInOneNotch(page, consoleHandle, { x: r.left + r.width / 2, y: r.top + r.height / 2 });
+    }
+    const { candidate, bufferWidth, bufferHeight } = await findInteriorCandidate(page);
+    const rect = await canvasRect(page);
+    for (const flipY of [true, false]) {
+      const exact = bufferPointToCss(candidate, rect, bufferWidth, bufferHeight, flipY);
+      const css = { x: Math.round(exact.x), y: Math.round(exact.y) };
+      if ((await hoverIdAfterBarrier(page, css, "E-SEL")).ok) return css;
+    }
+    gave.push(`notch ${notch}: no confirmed id at the interior candidate in either row order`);
   }
-  throw new Error("E-SEL: no point of the map answers the hover with a confirmed feature id");
+  throw new Error(`E-SEL: no point of the map answers the hover with a confirmed feature id (${gave.join("; ")})`);
 }
 
 const selectedCount = (page) => page.evaluate(() => Number(/(\d+)\s*$/.exec(document.querySelector(".feature-selected")?.textContent ?? "")?.[1] ?? NaN));
@@ -521,7 +532,7 @@ async function stepSelection(page, consoleHandle) {
   await sendCondition(page, ZONE_A);
   await expectApplied("E-SEL", page, [ZONE_A]);
   await settleMap(consoleHandle);
-  const point = await findFeaturePoint(page);
+  const point = await findFeaturePoint(page, consoleHandle);
   await page.locator(".tool-switch-button", { hasText: "Select" }).click();
   await page.mouse.click(point.x, point.y);
   const one = await waitFor(() => selectedCount(page), (n) => n === 1, 5000);
