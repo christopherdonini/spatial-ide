@@ -23,6 +23,8 @@ const namesFor = (partial: string) => fieldOptions(source, partial).options.map(
 const at = (text: string, caret = text.length) => fieldTrigger(text, 8, caret);
 
 // RECORDED MUTATION for "UC6": in `quoteName` (fieldCompletion.ts) do not double an embedded quote (`"${name}"`). Expected failure: the a"b case.
+// OBSERVED AT 5aa84a3f2eb4f0096078af56f7d9e34e68fab489: FAILED -- "UC6: candidates are the schema without the geometry column in order, matched case-insensitively, options carry name and arrow_type only, at most FIELD_COMPLETION_MAX_OPTIONS, and insertion is double-quoted with the quote doubled":
+//   AssertionError: an embedded quote is doubled: a"b: expected '"a"b"' to be '"a""b"' // Object.is equality. Reverted after observing.
 describe("UC6: field completion", () => {
   it("UC6: candidates are the schema without the geometry column in order, matched case-insensitively, options carry name and arrow_type only, at most FIELD_COMPLETION_MAX_OPTIONS, and insertion is double-quoted with the quote doubled", () => {
     expect(namesFor(""), "the schema in order, without the geometry column").toEqual(["id", "zone", 'a"b', "Zone2"]);
@@ -43,6 +45,8 @@ describe("UC6: field completion", () => {
   });
 
   // RECORDED MUTATION for "UC6 (the trigger)": in `fieldTrigger` (fieldCompletion.ts) let the `@` follow any character (`(^|[\s(])` becomes `(^|.)`). Expected failure: the row where the `@` follows a letter.
+  // OBSERVED AT 5aa84a3f2eb4f0096078af56f7d9e34e68fab489: FAILED -- "UC6: the @ trigger is at the condition's start or after whitespace or (, with name characters up to the caret":
+  //   AssertionError: after a letter: expected { start: 9, end: 11, partial: 'z' } to be null. Reverted after observing.
   it("UC6: the @ trigger is at the condition's start or after whitespace or (, with name characters up to the caret", () => {
     expect(at("/filter @zo")).toEqual({ start: 8, end: 11, partial: "zo" });
     expect(at("/filter  @")).toEqual({ start: 9, end: 10, partial: "" });
