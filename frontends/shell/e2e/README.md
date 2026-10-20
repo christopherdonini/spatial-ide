@@ -237,19 +237,11 @@ session-ended state in place for the second (`openPath` on the same path does no
 so each scenario needs its own fresh launch -- observed as a zoom ladder producing zero motion at
 every notch on a second run against the same instance, silent otherwise.
 
-**`source-changed.mjs`'s post-check route (P5).** Setting `SPATIAL_E2E_SOURCE_CHANGED_ROUTE=post`
-switches the same driver from its default pre-check route (re-aimed, next paragraph) to a route that lets a
-tile's mint succeed against the file before the change and mutates only after, so the
-source-changed refusal is caught when that tile's own stream later drains rather than at mint time
-(`frontends/shell/e2e/source-changed.mjs:144-159`).
+**`source-changed.mjs`'s routes, and the change each makes.** Every route opens a copy of the 100k fixture through a directory junction (`e2e/out/source-changed-link`, made once by the layout with Node's `symlinkSync(.., "junction")`, no elevation) that points at copy `a`. It changes the source only by repointing the junction to copy `b`, which holds the same bytes with an mtime 120 s later. Each repoint rewrites the existing junction's mount-point reparse data in place (`FSCTL_SET_REPARSE_POINT`; the junction's name is never deleted, and no Windows document states that the rewrite is atomic, though no probe stat or open through it failed and no run's check reported that the source could not be re-read) from one Windows PowerShell 5.1 child that the driver spawns once after the layout and that compiles a small P/Invoke class with Add-Type; the driver sends it a target per line and awaits its one-line answer. Windows PowerShell 5.1 and Add-Type are therefore a runtime requirement of this driver; nothing is elevated and no other link type is used. The advisory source watcher cannot see that change (KNOWN-LIMITATIONS item 26), so only a query's pre-check or a stream's post-check can find it.
 
-**`source-changed.mjs`'s default (pre-check) route, re-aimed.** The advisory source watcher ends the session
-on an mtime touch it sees while the app is idle, before any query, so this route is aimed at a change the
-watcher cannot see (KNOWN-LIMITATIONS item 26). S1 opens a copy of the 100k fixture through a directory
-junction (`e2e/out/source-changed-link`, made in-process with Node's `symlinkSync(.., "junction")`, no
-elevation) that points at copy `a`; S3 retargets it to copy `b` (the same bytes, mtime 120 s later); S4's
-query is then refused by the pre-check, and the session log's `tile-stream-mint-refused` line carrying
-`engine.source_changed` is asserted. The `post` and `reopen` routes keep their mtime touch.
+- The default route repoints while the app is idle (S3). S4's query is then refused by the pre-check, and the session log's `tile-stream-mint-refused` line carrying `engine.source_changed` is asserted.
+- `SPATIAL_E2E_SOURCE_CHANGED_ROUTE=post` lets a tile's mint succeed against `a` and repoints on the first new `stream-issued` line, so the post-check can find the change when that tile's stream drains. Its S5d asserts a session-ended line and no `tile-stream-mint-refused` line since its baseline. It does not read which kernel route ended the session.
+- `SPATIAL_E2E_SOURCE_CHANGED_ROUTE=reopen` runs the default route through S5c, then reopens through the junction. R4 repoints the junction back to `a`: the session must stay up while the app idles, and the next query's pre-check line must follow.
 
 ## Action console spec (action-console cut, P5)
 
