@@ -404,3 +404,15 @@ Rule 00, for the custodian, at main 245cb051:
 4. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 2 — built and run: the code at the head; the custodian's e2e; prediction 3's P line not held in 3 of 8 (class 2; written after the runs were seen)
+
+*Written by the custodian after the runs were seen. References and hashes only.*
+
+1. **Built** on `cut/source-changed-s5d-inconclusive` from 71f5ebbbcb58e9b21e60de207b831e5581c81449: 217d6e8e3c130c00bb87b578235a0b9bf284a811 (the module, T1 to T7, the package script), 287b2bec4dcbcfafc240b0bd0114f7d43f5daad5 (M1 to M8 recorded), 61bf1c08af8c254d5439e4c492335d26836595bb (`source-changed.mjs`), 0e281e0793e159e8f24d47e3f8d6e9cf2c981045 (the README line). The worker's report: `state/consults/2026-10-20-source-changed-s5d-inconclusive-worker-report.md`.
+2. **The custodian's e2e (§4)** at 0e281e0793e159e8f24d47e3f8d6e9cf2c981045, step 2's exe (the path list empty): `state/consults/2026-10-20-source-changed-s5d-inconclusive-e2e-custodian-runs.md`, sha256 714628f30ae23a2025f84461bbf8c087f90eb1a0548557a248e26e4004dfae6e over the whole file at the commit that adds it. The 8 post runs read S5d INCONCLUSIVE, C2, each with exit code 3; the default and reopen routes read every step PASS, exit code 0.
+3. **§5 prediction 3 (class 2, a result):** no FAIL, at least one INCONCLUSIVE exiting 3 (8 of 8), every INCONCLUSIVE refusal `{mtime}`, and no W or R line all held. "Every run has a P line" did not hold: the stderr captures of post-1, post-7 and post-8 carry no P line, while each names the session log its run's report names (the record). Prediction 4 held.
+4. **The hold:** four requests for the exclusive hold were not granted while another project's heavy run stayed live, and nothing ran in them. The series ran in a slot the custodian booked by the human's word (`state/directives/2026-10-20-adr-024-note-clause-corrected-s5d-series-booked-after-the-ttl-worker.md`, item 2).
+5. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
