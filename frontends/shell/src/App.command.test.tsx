@@ -495,6 +495,8 @@ describe("App: the command bar (milestone 3, PR A), through the real App", () =>
 
   // RECORDED MUTATIONS for "RC3", each applied alone. (a) In filterClauses.ts's `combineClauses` join with ` OR ` in place of ` AND `. Expected failure: the manager's filter.
   // (b) (RC3-b, Amendment 3 item 4(d)) In App.tsx's `commitFilterChange` enqueue the step only for `filter.apply` (`if (dataset !== null && transition.action === "filter.apply")`), so the card commit records nothing. Expected failure: the step count.
+  // OBSERVED AT 174dfced0f1fcaa62a0cadde36201f13593d0d91: (a) FAILED -- "RC3: ...": AssertionError: the manager receives the combination with the dialect constant: expected { …(2) } to deeply equal { …(2) };
+  // (b) FAILED -- "RC3: ...": AssertionError: one card sends its text byte for byte: expected [ '"zone" = \'residential\'', [] ] to deeply equal [ '"zone" = \'residential\'', …(1) ] (no step was recorded). Each reverted after observing.
   it("RC3: two simple clauses reach the manager as (t1) AND (t2) with the dialect constant, two cards are on, the Applied line shows it, and one filter.apply step holding it is recorded after each outcome", async () => {
     await open("C:/data/a.parquet");
     await addClause(A);
@@ -509,6 +511,7 @@ describe("App: the command bar (milestone 3, PR A), through the real App", () =>
   });
 
   // RECORDED MUTATION for "RC4": in App.tsx's `changeClauses` dispatch `filter.clauses.set` with the proposal before `applyFilterWith` is awaited (insert `dispatch({ type: "view.transition", view: current.id, transition: { action: "filter.clauses.set", params: { clauses, step } } });` before `try {`). Expected failure: the card is added before the outcome.
+  // OBSERVED AT 174dfced0f1fcaa62a0cadde36201f13593d0d91: FAILED -- "RC4: ...": AssertionError: no card is added: expected [ '"zone" = \'residential\'', …(1) ] to deeply equal [ '"zone" = \'residential\'' ]. Reverted after observing.
   it("RC4: a clause the kernel refuses by name adds no card and changes nothing applied, and the refusal shows under the bar, which keeps its text", async () => {
     await open("C:/data/a.parquet");
     await addClause(A);
@@ -525,6 +528,8 @@ describe("App: the command bar (milestone 3, PR A), through the real App", () =>
 
   // RECORDED MUTATIONS for "RC5", each applied alone. (a) As RC4's: dispatch `filter.clauses.set` before the outcome. Expected failure: the refused toggle has flipped the card.
   // (b) (RC5-b) In App.tsx's `commitFilterChange` enqueue, for a `setEnabled` step, a filter holding the toggled clause's own text (replace the enqueued `filter` with `transition.action === "filter.clauses.set" && transition.params.step.kind === "setEnabled" ? { ...filter!, predicate: transition.params.clauses.find((c) => c.id === transition.params.step.clause)!.text } : filter`). Expected failure: the off step.
+  // OBSERVED AT 174dfced0f1fcaa62a0cadde36201f13593d0d91: (a) FAILED -- "RC5: ...": AssertionError: a refused toggle leaves the card as it was applied: expected [ 'true', 'true' ] to deeply equal [ 'true', 'false' ];
+  // (b) FAILED -- "RC5: ...": AssertionError: the off step holds the remaining combination, the on step the restored one: expected [ '"zone" = \'residential\'', …(3) ] to deeply equal [ '"zone" = \'residential\'', …(3) ]. Each reverted after observing.
   it("RC5: off issues the remaining combination and on restores it, each recorded once, and a refused toggle leaves the card as it was applied", async () => {
     await open("C:/data/a.parquet");
     await addClause(A);
@@ -543,6 +548,7 @@ describe("App: the command bar (milestone 3, PR A), through the real App", () =>
   });
 
   // RECORDED MUTATION for "RC6": in viewTransitions.ts's `filter.apply` case append the new card to the held ones (`clauses: [...viewClauses(view), { id: ..., ... }]`). Expected failure: the panel's Apply leaves two cards.
+  // OBSERVED AT 174dfced0f1fcaa62a0cadde36201f13593d0d91: FAILED -- "RC6: ...": AssertionError: one card, its text as typed: expected [ [ …(3) ], …(1) ] to deeply equal [ [ '  zone = \'x\'  ' ], …(1) ]. Reverted after observing.
   it("RC6: the panel's Apply replaces the cards with one holding its text, and Clear removes them all", async () => {
     await open("C:/data/a.parquet");
     await addClause(A);
@@ -556,6 +562,8 @@ describe("App: the command bar (milestone 3, PR A), through the real App", () =>
 
   // RECORDED MUTATIONS for "RC7", each applied alone. (a) In filterClauses.ts's `proposeClauseChange` send it anyway (replace `blockerOf`'s return, `return recognizeSimple(candidate.text) ? on.find((clause) => !recognizeSimple(clause.text)) : on[0];`, with `return on.length < 0 ? on[0] : undefined;`, so that no change is refused). Expected failure: the request count.
   // (b) (RC7-b) Drop the row (delete `recordNamed("gui-action", "filter.clauseNotSent");`). Expected failure: the row count.
+  // OBSERVED AT 174dfced0f1fcaa62a0cadde36201f13593d0d91: (a) FAILED -- "RC7: ...": AssertionError: no requestViewport call: expected 3 to be 2 // Object.is equality;
+  // (b) FAILED -- "RC7: ...": AssertionError: expected [] to deeply equal [ 'filter.clauseNotSent' ]. Each reverted after observing. (The first run of (a), at 8ae62df2, replaced the refusal branch in App.tsx and crashed the render with a TypeError before the count; it is not the mutation recorded.)
   it("RC7: an advanced clause beside a card that is on is not sent, with the shell's line and one filter.clauseNotSent row, and a card beside an advanced card that is on is not sent either", async () => {
     await open("C:/data/a.parquet");
     await addClause(A);
@@ -576,6 +584,7 @@ describe("App: the command bar (milestone 3, PR A), through the real App", () =>
   });
 
   // RECORDED MUTATION for "RC11": in viewTransitions.ts's `filter.clauses.set` case clear the selection (add `selection: NO_MEMBERS` to the returned view). Expected failure: the count falls to 0.
+  // OBSERVED AT 174dfced0f1fcaa62a0cadde36201f13593d0d91: FAILED -- "RC11: ...": AssertionError: the selection survived: expected +0 to be 1 // Object.is equality. Reverted after observing.
   it("RC11: with one feature selected, switching a card off leaves the count at 1", async () => {
     await open("C:/data/a.parquet");
     await addClause(A);
@@ -589,6 +598,7 @@ describe("App: the command bar (milestone 3, PR A), through the real App", () =>
   });
 
   // RECORDED MUTATION for "RC12": in viewTransitions.ts's `filter.clauses.set` case leave the filter as it was (`filter: view.filter`). Expected failure: the host call after the toggle.
+  // OBSERVED AT 174dfced0f1fcaa62a0cadde36201f13593d0d91: FAILED -- "RC12: ...": AssertionError: the host was not called: expected 1 to be +0 // Object.is equality. Reverted after observing.
   it("RC12: an export staged before a card toggle is refused at execute, and publishExecute is not called", async () => {
     await open("C:/data/a.parquet");
     await addClause(A);
@@ -607,6 +617,7 @@ describe("App: the command bar (milestone 3, PR A), through the real App", () =>
   });
 
   // RECORDED MUTATION for "RC14": in App.tsx's `applyFilterWith` make the reset a no-op (delete `canvasRef.current?.resetFitForNewGeneration();`). Expected failure: the reset count after an issued card change.
+  // OBSERVED AT 174dfced0f1fcaa62a0cadde36201f13593d0d91: FAILED -- "RC14: ...": AssertionError: an issued add: expected +0 to be 1 // Object.is equality. Reverted after observing.
   it("RC14: a card change resets the fit once on an issued outcome and never on a refusal, as an Apply does", async () => {
     await open("C:/data/a.parquet");
     const resets = () => mocks.canvas.resets;
@@ -621,6 +632,7 @@ describe("App: the command bar (milestone 3, PR A), through the real App", () =>
   });
 
   // RECORDED MUTATION for "RC16": in App.tsx's `commitFilterChange` send a card change's step directly (for `filter.clauses.set` call `void recordStep(dataset, { action: "filter.apply", params: { filter } }).catch(() => {})` in place of the enqueue). Expected failure: no notice stands.
+  // OBSERVED AT 174dfced0f1fcaa62a0cadde36201f13593d0d91: FAILED -- "RC16: ...": AssertionError: expected '(no element matches .record-notice)' to be 'Filter applied. The session history d…' // Object.is equality. Reverted after observing.
   it("RC16: with recordStep refused, a card change is still applied and the strip shows the filter notice with the kernel's message", async () => {
     mocks.refuseRecordWith = "this session history takes no more steps: an earlier write to it failed";
     await open("C:/data/a.parquet");
@@ -632,6 +644,7 @@ describe("App: the command bar (milestone 3, PR A), through the real App", () =>
   });
 
   // RECORDED MUTATION for "RC-FIELD" (a row beyond the table: the bar's list of field names): in App.tsx pass no schema (`filterFields={null}`). Expected failure: no field options.
+  // OBSERVED AT 174dfced0f1fcaa62a0cadde36201f13593d0d91: FAILED -- "RC-FIELD: ...": AssertionError: the schema in order, each name with its Arrow type, no geometry column: expected [] to deeply equal [ 'idUInt64', 'zoneUtf8' ]. Reverted after observing.
   it("RC-FIELD: after an @ the list holds the file's field names without the geometry column, Tab puts the name in double-quoted, the list stays closed, and Enter alone never completes", async () => {
     await open("C:/data/a.parquet");
     act(() => bar().focus());
