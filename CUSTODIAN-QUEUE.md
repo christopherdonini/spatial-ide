@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `6616da44533c1c29a6d4616eec506888e3babb5d2738c0ef24df78ef9a15623c`) at `2026-10-20T16:39:22.836Z`.
+Generated from `PLAN.yaml` (sha256 `38658f8ba6490dd5d601706681c6a126be5bd56634c73dc45206bb5cfe62cb74`) at `2026-10-20T16:51:58.402Z`.
 
 ## 1. Next
 
@@ -9,7 +9,6 @@ Generated from `PLAN.yaml` (sha256 `6616da44533c1c29a6d4616eec506888e3babb5d2738
 ## 2. Ready
 
 - **publish-approval-ttl-ten-minutes** — Publish: the pending attempt's TTL takes the value the human ruled, and the approval dialog states that expiry (one P6-placeholder sentence, no countdown) (lane `shell`, order null, budget 60 min)
-- **source-changed-post-route-s5d-race** — source-changed.mjs's post route: step S5d (post-check-route-confirmed) loses its race to a tile's pre-check in about half the runs on this machine, at main's base too (lane `shell`, order null, budget 60 min)
 
 ## 3. Waiting on the human (total: 0 min)
 
@@ -29,7 +28,7 @@ Generated from `PLAN.yaml` (sha256 `6616da44533c1c29a6d4616eec506888e3babb5d2738
 
 ## 5. In progress
 
-- **governance-decisions-pending-open-and-archive** — DECISIONS-PENDING.md: open entries and recent rulings, the rest archived to state/cut-archive/, one shared helper for the ruling set in verify, verify-test-claims and verify-quotes, monthly rotation, and the reading order's item 3 restated; the second measurements after it — evidence: branch `cut/decisions-pending-open-and-archive`
+- **source-changed-post-route-s5d-race** — source-changed.mjs's post route: step S5d (post-check-route-confirmed) loses its race to a tile's pre-check in about half the runs on this machine, at main's base too — evidence: branch `cut/source-changed-s5d-inconclusive`
 
 ## 6. Proposed / unscheduled
 

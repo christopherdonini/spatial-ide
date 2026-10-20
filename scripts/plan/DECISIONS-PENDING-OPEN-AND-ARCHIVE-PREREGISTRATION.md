@@ -548,3 +548,19 @@ Nothing above is edited.
 4. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 9 — closing record: PR #232 merged; the after-C measurement at the merge commit (class 1)
+
+*Written by the custodian after the merge. References and hashes only.*
+
+1. **Merged** by the human: merge commit 022665f9dba960ca2759bc01142b2d277a4a4927, `%cI` 2026-10-20T18:38:31+02:00 (two parents: main 71f5ebbbcb58e9b21e60de207b831e5581c81449 and the branch head 864aaf0db48006f06409e624e7cc36c29d0d1431, S10).
+2. **The migration** (§2 item 12): commit 864aaf0db48006f06409e624e7cc36c29d0d1431, in the merge. The archive is `state/cut-archive/DECISIONS-PENDING-2026-10-20.md`, blob 1bbb2d199120fd93c5879e137c9f0dd7130eae5f. P is 71f5ebbbcb58e9b21e60de207b831e5581c81449, whose `DECISIONS-PENDING.md` has the same blob id.
+3. **M-1** (§2 item 10), run 2026-10-20T16:47:23Z to 2026-10-20T16:47:30Z in a worktree detached at the merge commit with a clean porcelain. It ran twice, both exit 0, and stdout and stderr were byte-identical between the runs. The stderr line: `measure-reads: routine 022665f9dba960ca2759bc01142b2d277a4a4927 block=4984 ledger=21619 entries=41 window_from=2026-10-13T16:16:20.000Z outside_window=0 pending=43173 total=69781`. Stdout is 69781 bytes by `wc -c`, equal to `total`; its sha256 is dcbe381cf94ff2a8264b34fcd964c01a7e0fedaaed4a64118f73c6f257be19a7, the same in the second run.
+4. **M-2** (§2 item 10 and Amendment 2 item 1): a second worktree detached at the merge commit, its porcelain empty before and after; the script from M-1's worktree. Each run's pipe exited 0 and 0, with nothing on ripgrep's stderr, and the two runs were byte-identical. Stdout: `measure-reads: corpus 022665f9dba960ca2759bc01142b2d277a4a4927 files=1969 bytes=36013546`, sha256 5668323d90fa9047ac8b6d5984b7054430b2e59e21420d3dd1dcb54691eb4f08. Stderr: `tracked_not_listed=569`, sha256 ae657c4a507f9491145b418dbc0b8d10114836bcfa0a14964a6166a21b92fa7d. Both worktrees are removed.
+5. **The script:** `git show 022665f9dba960ca2759bc01142b2d277a4a4927:scripts/plan/measure-reads.mjs | sha256sum` is 7b2d33db229c9e7ca3f404370b2705a1c0485693fae7ef7ca5d8878e8bba92e1, equal to A's S1 digest (A's form, Amendment 6 item 4); M-1's worktree file has the same digest.
+6. **The environment facts:** `rg --version`'s first line is `ripgrep 14.1.1 (rev de4bc695b7)`, which differs from A's `ripgrep 15.2.0` and stands beside M-2's figure. `RIPGREP_CONFIG_PATH` is unset. `core.excludesFile` is not set (local, global and system each exit 1). `info/exclude` is present, 541 bytes, sha256 321dffcb77a68a6c079d35da12944866b895b4cc9fb3b1fae72fe9468c7eafeb, as A recorded. `C:/dev/wt` and `C:/dev` hold no `.ignore`, `.rgignore` or `.gitignore`. `claude --version` is `2.1.304 (Claude Code)` (A's: 2.1.300), node is v24.18.1 (as A's), and git is `git version 2.49.0.windows.1`.
+7. **The last `CUT-STATE` rotation** (Amendment 2 item 2): d86ebac73aa271625934b1d075bd87edd60c30d8, `%cI` 2026-10-19T17:27:05+02:00. None has landed since.
+8. **A's baseline row:** `scripts/plan/SEARCH-IGNORE-HISTORICAL-PREREGISTRATION.md`, Amendment 6, items 2 to 4.
+9. **PLAN:** the node is done, with `{pr: 232}`.
+
+Nothing above is edited.
