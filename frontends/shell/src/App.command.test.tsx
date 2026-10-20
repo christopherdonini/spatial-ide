@@ -670,6 +670,7 @@ describe("App: the command bar (milestone 3, PR A), through the real App", () =>
   });
 
   // RECORDED MUTATION for "RC-BUSY" (a row beyond the table: one change at a time, section 2.5, OPEN-2): in ClauseCards.tsx stop marking the switch while a change is pending (on the `role="switch"` button replace `aria-disabled={pending ? true : undefined}` with `aria-disabled={undefined}`). Expected failure: the card control is not aria-disabled.
+  // OBSERVED AT 5bb3c30c64803e2cd70a3f04df9af47deedc2dfa: FAILED -- "RC-BUSY: ...": AssertionError: the card control is aria-disabled: expected null to be 'true' // Object.is equality. Reverted after observing.
   it("RC-BUSY: while a change is pending the card controls and the bar's /filter Enter are aria-disabled and say so, and a second change is not sent", async () => {
     await open("C:/data/a.parquet");
     await addClause(A);
