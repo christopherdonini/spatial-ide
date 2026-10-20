@@ -942,3 +942,16 @@ Nothing above is edited.
 11. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 10 — PR B's build: budget overrun, §7 not edited (class 8, `CommandBar.tsx`); two files §7's groups do not name; step 9, E-SEL's camera; the custodian's e2e (class 1)
+
+*References only. The build report: `state/consults/2026-10-20-shell-migration-milestone-3-pr-b-worker-report.md` (head 4b9f7c890a6f5c0f36849861a9084e53e0ba2e24). Step 9: `state/consults/2026-10-20-shell-migration-milestone-3-pr-b-step-9-worker-report.md` (head 95bd9747e9042982b4baab42cc20330f9652fc52). The e2e: `state/consults/2026-10-20-shell-migration-milestone-3-pr-b-e2e-custodian-runs.md`, sha256 89512292823e70c1ff087e8a0d672fd5dc9feecd59bded3605dc993bd42e48d1.*
+
+1. **Budget overrun, §7 not edited (class 8).** B-P declares `CommandBar.tsx ≤ 120`. §7's counting command at 95bd9747e9042982b4baab42cc20330f9652fc52, from the merge base 19eacc529ac38f50889229800a6cad13e43ebe8f, gives it 107 insertions and 29 deletions: 136. The reason, the custodian's reading of the diff: the bar renders the field names as a second option list (name, type and the "more" row) beside the registry's, keeps the caret for a completion inside a condition, and shows a refused condition with the kernel's refusal block; the registry's option rows were re-indented into that choice, so they count as deletions and insertions. The build report records the figure and names no reason.
+2. **Two files in §2.9's boundaries that §7's groups do not name:** `src/command/commandConstants.ts` (3 lines), counted in B-P, and `src/layout/actionRegistry.test.ts` (6 lines), counted in B-T. The groups at 95bd9747: B-W 160 of 310, B-P 537 of 895, B-T 550 of 1,430, B-E 270 of 500 (`command-bar.mjs` 270 of 420); PR B's total 1,517.
+3. **Step 9 (E-SEL's camera).** In the custodian's run at 4b9f7c89, E-SEL failed on its own setup: every hover at the starting camera answered below the pick resolution. The build report's item 9 named the risk. The failure comes from PR B's own change to `e2e/command-bar.mjs`, so it is not I3; this record reads I3's and §2.9's "§7 G-E" as §7's e2e groups, A-E and B-E, as the step 9 report found no group named G-E. Step 9 zooms in one notch at a time, up to `lib.mjs`'s `MAX_ZOOM_NOTCHES`, until a hover confirms an id; it changes `command-bar.mjs` alone.
+4. **The e2e (Amendment 3 item 12):** H3 held; the post route failed on S5d alone, neither I3 nor I12. At 95bd9747 the new suite passed every step. The eight e2e mutations each failed by their named step: seven at 4b9f7c89, and E-SEL at 95bd9747. No unknown attempt.
+5. **Next:** the PR as a draft, then gate 1, both gates.
+6. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
