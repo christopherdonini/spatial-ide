@@ -238,3 +238,15 @@ Nothing above is edited.
 6. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 8 — after the first observation: (a), the architect's read-only diagnosis of the panel's F4 path (class 5)
+
+*Written by the custodian on the human's ruling (`state/directives/2026-10-20-230-231-233-merged-232-strikes-rule-d1-a-not-i1-profile-path-redact-unknown-attempt-a.md`, its last paragraph). References only.*
+
+1. **The diagnosis:** one read-only architect consult on the panel's F4 path (§0 F4) at main: whether the panel's execute hook, reached through the dev hook, can answer `unknown-attempt` by itself with the host never called, under the timing the e2e export steps use.
+2. **A full capture on the next run that shows one:** every artifact the series keeps for that run kept whole beside the record (the driver's output, the app's stderr, its session log and the report), and whatever the diagnosis names as the row that shows whether the host was called.
+3. **If the diagnosis shows the dev hook alone can produce the answer,** the cause step closes on it. The product step, the 120 s and the dialog's missing expiry, stays open for the human.
+4. **PLAN:** the node is unscheduled, never queued, with no human wait while the diagnosis runs and the capture waits for a run.
+5. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.

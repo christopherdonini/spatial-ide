@@ -1,26 +1,23 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `01d1a4114cacf6aaa54e1e4f043a6b5e3b9e10906f03d1f77de8774b6fecdd09`) at `2026-10-20T10:15:38.477Z`.
+Generated from `PLAN.yaml` (sha256 `b5a068b06533b45ce6cb2695a3b73d7645358fc37a9412ecaf30ab8c596b6364`) at `2026-10-20T10:23:47.680Z`.
 
 ## 1. Next
 
-- (nothing ready)
+- **source-changed-post-route-s5d-race** — source-changed.mjs's post route: step S5d (post-check-route-confirmed) loses its race to a tile's pre-check in about half the runs on this machine, at main's base too (lane `shell`)
 
 ## 2. Ready
 
+- **source-changed-post-route-s5d-race** — source-changed.mjs's post route: step S5d (post-check-route-confirmed) loses its race to a tile's pre-check in about half the runs on this machine, at main's base too (lane `shell`, order null, budget 60 min)
+
+## 3. Waiting on the human (total: 0 min)
+
 - (none)
-
-## 3. Waiting on the human (total: 2 min)
-
-### ruling
-
-- **publish-approval-unknown-attempt-under-load** — Publish: an export's approval came back as unknown attempt under machine load (the status-bar e2e run 2 and the H3 order run): the cause first, the pending attempt's TTL elapsing between prepare and execute or an attempt the host lost; then whether the TTL suits a person reading the approval dialog, which shows no expiry (2 min)
 
 ## 4. Blocked on dependencies
 
 - **connection-reuse-recycled-interrupt-flake** — engine/tests/connection_reuse.rs: cancellation_before_the_first_batch_binds_a_recycled_connection_and_delivers_nothing failed once on ubuntu-24.04 in PR #222's pull_request run at a542097e, and the push run of the same commit passed it — blocked by: source-changed-post-route-s5d-race
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
-- **source-changed-post-route-s5d-race** — source-changed.mjs's post route: step S5d (post-check-route-confirmed) loses its race to a tile's pre-check in about half the runs on this machine, at main's base too — blocked by: source-changed-post-reopen-routes-watcher-visible
 - **briefb-b2-save-reopen** — B2 — Save project, Snapshot data, session history, lineage and preferences, in five stages, each with its own form — blocked by: decision-adr-029-scan-progress-route
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer — blocked by: signpath-application-draft
 - **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-1-1
@@ -29,9 +26,7 @@ Generated from `PLAN.yaml` (sha256 `01d1a4114cacf6aaa54e1e4f043a6b5e3b9e10906f03
 
 ## 5. In progress
 
-- **source-changed-post-reopen-routes-watcher-visible** — source-changed.mjs's post and reopen routes, and walkthrough Part N's N6 and N8, still change the source by an mtime touch the advisory watcher can see — evidence: branch `cut/source-changed-watcher-visible`
-- **shell-migration-milestone-3** — Shell migration, milestone 3 -- command bar and filter clauses: Ctrl+K, slash commands, typed /filter with field completion, clause cards with on and off — evidence: branch `cut/shell-migration-milestone-3-pr-a`
-- **known-limitations-item-23-watcher-idle-end** — KNOWN-LIMITATIONS item 23: it says a source change goes unnoticed until a query is next issued, but on Windows the advisory watcher ends the session while idle on a change it can see — evidence: branch `cut/known-limitations-item-23`
+- **shell-migration-milestone-3** — Shell migration, milestone 3 -- command bar and filter clauses: Ctrl+K, slash commands, typed /filter with field completion, clause cards with on and off — evidence: branch `cut/shell-migration-milestone-3-pr-b`
 - **governance-decisions-pending-open-and-archive** — DECISIONS-PENDING.md: open entries and recent rulings, the rest archived to state/cut-archive/, one shared helper for the ruling set in verify, verify-test-claims and verify-quotes, monthly rotation, and the reading order's item 3 restated; the second measurements after it — evidence: branch `cut/decisions-pending-open-and-archive`
 
 ## 6. Proposed / unscheduled
@@ -142,3 +137,4 @@ Generated from `PLAN.yaml` (sha256 `01d1a4114cacf6aaa54e1e4f043a6b5e3b9e10906f03
 - **mod-worktree-resource-protection** — Worktree and resource protection -- a mod (deferred by the 2026-10-03 mods-roadmap ruling) (phase `prototype`) — ambition, never queued
 - **recorder-write-latency-measure** — Evidence Recorder: a declared write-latency measure with its own sample, so the brief overhead acceptance can be established before the Recorder evaluation ends (Amendment 2 C2-d keeps E5 a lower bound) (phase `prototype`) — ambition, never queued
 - **reuse-round-1-bundle** — Reuse archaeology round 1, the advisor bundle, filed as one docs-and-data piece (not under docs/) (phase `prototype`) — ambition, never queued
+- **publish-approval-unknown-attempt-under-load** — Publish: an export's approval came back as unknown attempt under machine load (the status-bar e2e run 2 and the H3 order run): the cause first, the pending attempt's TTL elapsing between prepare and execute or an attempt the host lost; then whether the TTL suits a person reading the approval dialog, which shows no expiry (phase `prototype`) — ambition, never queued

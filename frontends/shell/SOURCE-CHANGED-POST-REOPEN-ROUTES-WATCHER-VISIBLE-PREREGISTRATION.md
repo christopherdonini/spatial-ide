@@ -556,3 +556,26 @@ Nothing above is edited.
 9. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 6 — closing record: PR #231 merged
+
+*Written by the custodian after the merge, on the human's message of 2026-10-20 (`state/directives/2026-10-20-230-231-233-merged-232-strikes-rule-d1-a-not-i1-profile-path-redact-unknown-attempt-a.md`). References only.*
+
+1. **Merged** by the human at 2026-10-20T07:33:16Z, merge commit 6b829c08b0ffbe18919f36215b6969d0ff755e4d (two parents: main 3fa90769c735d0f5846e20110ec0f51b35a08ddb and the branch head b9a5780541a05cf94598e0218b8d3bba4e0ec1ba).
+2. **The reports:**
+   - round 1, the worker-high: `state/consults/2026-10-18-source-changed-post-reopen-routes-watcher-visible-worker-report.md` @ feafb6b0f42e3893b9a508466760083db6b818bc, sha256 11f702c5e4b0afd641581d0c2247f877b192585032a437ae67bee7762e72f80e from its line 5;
+   - the one I2 consult (Amendment 3): `state/consults/2026-10-19-source-changed-post-reopen-routes-watcher-visible-i2-architect-consult.md` @ feafb6b0f42e3893b9a508466760083db6b818bc, sha256 7f7efe57fb20e741537c8c826f1eafad0ca2d6e58cc0b1b8666acf5e5b10f9e9 from its line 5;
+   - round 2: `state/consults/2026-10-19-source-changed-post-reopen-routes-watcher-visible-round-2-worker-report.md` @ feafb6b0f42e3893b9a508466760083db6b818bc, sha256 a16744ffae5c48ae7f39cec6593771c95dcec13d898ebbe874b3fe4157af4fa5 from its line 5;
+   - gate 1's words: `state/consults/2026-10-19-source-changed-post-reopen-routes-watcher-visible-gate1-words-worker-report.md` @ feafb6b0f42e3893b9a508466760083db6b818bc, sha256 76e74a73d596185491b8fdc8c493c7d09674172c32e5e495db8d29f456ee4496 from its line 5.
+3. **The custodian's runs:**
+   - round 1 (Amendment 2): `state/consults/2026-10-18-source-changed-post-reopen-routes-watcher-visible-custodian-runs.md` @ feafb6b0f42e3893b9a508466760083db6b818bc, sha256 f64ded057fd3ddd83055fa468d086cf27ad5cde8068a0cfbce1ee5c1b9cd1820;
+   - round 2 (Amendment 4): `state/consults/2026-10-19-source-changed-post-reopen-routes-watcher-visible-round-2-custodian-runs.md` @ feafb6b0f42e3893b9a508466760083db6b818bc, sha256 dafd175c8ca29b898c00116456cd132d093964146c56e7651c5758e78b6d5682.
+4. **Gate 1,** both PASS WITH NOTES (§9):
+   - architect, gate-log 547: `state/consults/gates/2026-10-19-source-changed-post-reopen-routes-watcher-visible-gate1-architect.md` @ feafb6b0f42e3893b9a508466760083db6b818bc, sha256 66c9af6036489219e1c1f49190e4c86fad41336137977c0fda2bc5d4a2b604dd;
+   - reviewer, gate-log 548: `state/consults/gates/2026-10-19-source-changed-post-reopen-routes-watcher-visible-gate1-reviewer.md` @ feafb6b0f42e3893b9a508466760083db6b818bc, sha256 217ff56e6c3093295799900b7f2c1a291dc22621f114d5cfc71f9f215033c27e.
+5. **Operator (§9):** N6, N8 and Q1 are on main with blank result logs, queued for the next sitting.
+6. **For S5d's step 2:** §2.9, Amendment 3 item 8 and Amendment 5 item 7 (the architect's gate 1 seam notes (a) to (d)), stated in S5d's own amendment before its runs.
+7. **PLAN:** the node is done, with `{pr: 231}`; `source-changed-post-route-s5d-race`, which depends on it, is ready.
+8. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.

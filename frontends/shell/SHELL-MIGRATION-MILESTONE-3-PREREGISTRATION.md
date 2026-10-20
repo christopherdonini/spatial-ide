@@ -868,3 +868,34 @@ Nothing above is edited.
 7. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 8 — closing record of PR A: PR #233 merged; the superseded index (class 1)
+
+*Written by the custodian after the merge, on the human's message of 2026-10-20 (`state/directives/2026-10-20-230-231-233-merged-232-strikes-rule-d1-a-not-i1-profile-path-redact-unknown-attempt-a.md`). References only. The node stays in progress for PR B.*
+
+1. **Merged** by the human at 2026-10-20T07:33:48Z, merge commit 116ecb3ec9a23177ee54ee4c57ad29c357980cf5 (two parents: main 6b829c08b0ffbe18919f36215b6969d0ff755e4d and the branch head a5c62e78561386f03be559b9c6f691df64888d19).
+2. **The superseded index** (gate 3's architect, its D3; round 12, item (e)):
+   - §4's E-BARFOCUS row: superseded by Amendment 7 item 1.
+   - Amendment 6 item 2's report reference, item 4's head, and its preamble's hash rev: superseded by Amendment 7 item 2.
+3. **The worker-high's reports:**
+   - round 0, the build: `state/consults/2026-10-19-shell-migration-milestone-3-pr-a-worker-report.md` @ feafb6b0f42e3893b9a508466760083db6b818bc, sha256 cdda71238519c00fb82de7982b007090218232295b8e7f8911b94837146f4378 from its line 5;
+   - round 1: `state/consults/2026-10-19-shell-migration-milestone-3-pr-a-round-1-worker-report.md` @ feafb6b0f42e3893b9a508466760083db6b818bc, sha256 43de322065a18c3f5c3836c0fb94dc84ce606b059e51c961d3d9d24c9c6d6f37 from its line 5;
+   - round 2: `state/consults/2026-10-19-shell-migration-milestone-3-pr-a-round-2-worker-report.md` @ feafb6b0f42e3893b9a508466760083db6b818bc, sha256 b18c72874487e7e853faee5b4020b9f7bd530f79fe40c6b593ce6aad406dc61a from its line 5;
+   - gate 3's words: `state/consults/2026-10-19-shell-migration-milestone-3-pr-a-gate3-words-worker-report.md` @ feafb6b0f42e3893b9a508466760083db6b818bc, sha256 f74ac51aeb554fda8082ddfe093aecd17d5e84b504d9fdbc3ccf91be30d5b271 from its line 5.
+4. **The custodian's e2e records:**
+   - the code base's suites (Amendment 5): `state/consults/2026-10-19-shell-migration-milestone-3-re-sweep-2-custodian.md` @ feafb6b0f42e3893b9a508466760083db6b818bc, sha256 08632629bf97a57fec7acd99742d49725408b168a7ef2eb36362a519734aa9b8;
+   - round 0: `state/consults/2026-10-19-shell-migration-milestone-3-pr-a-e2e-custodian-runs.md` @ feafb6b0f42e3893b9a508466760083db6b818bc, sha256 290ded6bc84ac4158a15ec1a2f9ed1019d200141015e05c0456126f0dedd28d9;
+   - round 1 (Amendment 6): `state/consults/2026-10-19-shell-migration-milestone-3-pr-a-round-1-e2e-custodian-runs.md` @ feafb6b0f42e3893b9a508466760083db6b818bc, sha256 2773fdc5f110d308eb1f1c7218435cc37d97759b57a0ceaa56782921c34f5228;
+   - round 2 (Amendment 7): `state/consults/2026-10-19-shell-migration-milestone-3-pr-a-round-2-e2e-custodian-runs.md` @ feafb6b0f42e3893b9a508466760083db6b818bc, sha256 de22c15ff17b99a81b652500649a1ca49ea83554f18a8f3fc9db026c86bb91db.
+5. **The gates:**
+   - gate 1, both FAIL: architect, gate-log 549, `state/consults/gates/2026-10-19-shell-migration-milestone-3-pr-a-gate1-architect.md` @ feafb6b0f42e3893b9a508466760083db6b818bc, sha256 e13253bc7cc55d724fcedd07b44ae27acd12785e3c28d0c20c207636598e9dbb; reviewer, gate-log 550, `state/consults/gates/2026-10-19-shell-migration-milestone-3-pr-a-gate1-reviewer.md` @ feafb6b0f42e3893b9a508466760083db6b818bc, sha256 cc797732fd5a2a49159a4fe8643157689b45880f8203207c0cf063410e77ce3c;
+   - gate 2, both FAIL, scoped to round 1: architect, gate-log 551, `state/consults/gates/2026-10-19-shell-migration-milestone-3-pr-a-gate2-architect.md` @ feafb6b0f42e3893b9a508466760083db6b818bc, sha256 e5ebb49925c577d585dcac5c09e371a44aeb4ccdab5604749e7bed3646e27bda; reviewer, gate-log 552, `state/consults/gates/2026-10-19-shell-migration-milestone-3-pr-a-gate2-reviewer.md` @ feafb6b0f42e3893b9a508466760083db6b818bc, sha256 7cfef939fbc365add5238cc69bdacecc8c358b15d307edc1bfbd0ecb70fb77a4;
+   - gate 3, both PASS WITH NOTES, scoped to round 2: architect, gate-log 553, `state/consults/gates/2026-10-19-shell-migration-milestone-3-pr-a-gate3-architect.md` @ feafb6b0f42e3893b9a508466760083db6b818bc, sha256 dbcfaf9ba60b255c25caf98dd1281eec2965ee68801e0cf45f478275cc6388db; reviewer, gate-log 554, `state/consults/gates/2026-10-19-shell-migration-milestone-3-pr-a-gate3-reviewer.md` @ feafb6b0f42e3893b9a508466760083db6b818bc, sha256 903db6a089a1af66aca4b500d132d8c0bca6ad4fd9254f10ece858552f410c5a.
+6. **Two correction rounds,** the record cap's count; no third.
+7. **Carried to PR B:**
+   - Amendment 7 item 5, ArrowDown after a completion;
+   - gate 3's architect, outside its round: in the round 2 e2e record, the E-REVEAL mutation also fails E-SLASH, and `frontends/shell/e2e/command-bar.mjs`'s header does not predict that second failure. PR B's header words state it.
+8. **Next:** PR B's re-sweep from the code base 564aadae556a39c2f3a0f567730ec58e4cfe0439 to PR B's base, a class 3 row for every pin PR A moved (§0.3), in its own amendment before any code; then PR B's code by one worker-high on the branch `cut/shell-migration-milestone-3-pr-b`.
+9. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
