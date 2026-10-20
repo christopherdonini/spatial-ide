@@ -263,11 +263,14 @@ test('rotate-decisions-pending: after a rotation commit the readers find the mov
   const FELT = 'FELT VERDICTS 2026-01-01 — a fixture sitting (CLOSED)';
   const T = 'Line one of the target file.\nLine two of the target file.\n';
   const V1 = '# Doc\n\nVerified by test `an_obsolete_test_name_here`.\n';
-  const text = ['# Decisions pending the human', '', '## Pending', '',
-    '**RULED 2026-01-02 — question round 2 (fixture):**', '', `- *Item 1 — entry 8, a fixture ruling:* **"ruled"** a figure: \`T.md:1-2\` sha256:${sha(T)}`, '',
-    `**${FELT}:**`, 'row é →', '', '8. **[RULED 2026-01-03 — recorded as filed:]** a marked entry.', '', '9. **An open entry**', 'text', '', '## Resolved', '', '- done', ''].join('\n');
-  const dir = mkRepo({ 'T.md': T, 'X-PREREGISTRATION.md': V1, [DP]: text });
+  const dir = mkRepo({ 'T.md': T, 'X-PREREGISTRATION.md': V1 });
   const v1 = sh(dir, ['rev-parse', 'HEAD']);
+  const ok = `\`T.md:1-2\` @ ${v1} sha256:${sha(T)}`;
+  const bad = `\`T.md:1-2\` @ ${v1} sha256:${sha('a wrong figure')}`;
+  const text = ['# Decisions pending the human', '', '## Pending', '',
+    '**RULED 2026-01-02 — question round 2 (fixture):**', '', `- *Item 1 — entry 8, a fixture ruling:* **"ruled"** a figure: ${ok}; a wrong one: ${bad}`, '',
+    `**${FELT}:**`, 'row é →', '', '8. **[RULED 2026-01-03 — recorded as filed:]** a marked entry.', '', '9. **An open entry**', 'text', '', '## Resolved', '', '- done', ''].join('\n');
+  commit(dir, { [DP]: text }, 'the ledger, with two pinned hash references');
   const row = `- withdrawn-test: \`X-PREREGISTRATION.md:3\` @ ${v1} sha256:${sha(`${V1.split('\n')[2]}\n`)}; ruling: round 2, item 1; carrier: entry 8\n`;
   commit(dir, { 'X-PREREGISTRATION.md': `${V1}\n${row}`, 'NOTES.md': `see ${DP}:900\n` }, 'a withdrawn-test row and an unpinned cite');
   sh(dir, ['push', '-q', 'origin', 'main']);
@@ -282,7 +285,9 @@ test('rotate-decisions-pending: after a rotation commit the readers find the mov
   assert.equal(claims.findings.length, 0, JSON.stringify(claims.findings));
   assert.equal(claims.withdrawn.length, 1, 'a withdrawn-test ruling and carrier');
   const quotes = runVerifyQuotes({ repoRoot: dir });
-  assert.equal(quotes.hashFindings.length, 0, JSON.stringify(quotes.hashFindings));
+  assert.equal(quotes.hashFindings.length, 1, JSON.stringify(quotes.hashFindings));
+  assert.equal(quotes.hashFindings[0].relPath, `state/cut-archive/${fs.readdirSync(path.join(dir, 'state', 'cut-archive'))[0]}`, 'the archive is scanned');
+  assert.match(quotes.hashFindings[0].reason, /sha256 mismatch/);
   const cites = runVerifyCites({ repoRoot: dir });
   assert.equal(cites.gated.length, 0, JSON.stringify(cites.gated));
   assert.ok(cites.advisory.some((f) => f.relPath === 'NOTES.md' && f.target === `${DP}:900`), 'the unpinned cite past the new end is advisory');
