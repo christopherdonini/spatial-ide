@@ -1,14 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `9144455e2d331bee9df3f9b85f40ebb5c0bd35a9dab41c6e8f8c76b806553d05`) at `2026-10-20T23:40:32.207Z`.
+Generated from `PLAN.yaml` (sha256 `9713b66b070cb687c757a346f38e782867596bd70e06912e5f9a56534b5d7a62`) at `2026-10-20T23:47:32.319Z`.
 
 ## 1. Next
 
-- **connection-reuse-recycled-interrupt-flake** — engine/tests/connection_reuse.rs: cancellation_before_the_first_batch_binds_a_recycled_connection_and_delivers_nothing failed once on ubuntu-24.04 in PR #222's pull_request run at a542097e, and the push run of the same commit passed it (lane `engine`)
+- (nothing ready)
 
 ## 2. Ready
 
-- **connection-reuse-recycled-interrupt-flake** — engine/tests/connection_reuse.rs: cancellation_before_the_first_batch_binds_a_recycled_connection_and_delivers_nothing failed once on ubuntu-24.04 in PR #222's pull_request run at a542097e, and the push run of the same commit passed it (lane `engine`, order null, budget 60 min)
+- (none)
 
 ## 3. Waiting on the human (total: 0 min)
 
@@ -27,6 +27,7 @@ Generated from `PLAN.yaml` (sha256 `9144455e2d331bee9df3f9b85f40ebb5c0bd35a9dab4
 
 ## 5. In progress
 
+- **connection-reuse-recycled-interrupt-flake** — engine/tests/connection_reuse.rs: cancellation_before_the_first_batch_binds_a_recycled_connection_and_delivers_nothing failed once on ubuntu-24.04 in PR #222's pull_request run at a542097e, and the push run of the same commit passed it — evidence: branch `cut/connection-reuse-recycled-interrupt-flake`
 - **governance-plan-summaries-archive** — Governance D -- done nodes' summaries over 300 bytes moved verbatim from PLAN.yaml into state/cut-archive/ by a named script, one generated pointer line each, monthly beside C's rotation, and its rule appended to AUTONOMY; the measurements before and after it — evidence: branch `cut/plan-summaries-archive`
 
 ## 6. Proposed / unscheduled
