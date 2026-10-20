@@ -416,3 +416,16 @@ Nothing above is edited.
 5. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 3 — gate 1: both PASS WITH NOTES; Amendment 2 completed in the architect's words; one comment to the worker (class 3)
+
+*Written by the custodian after both gate reports were seen. References only: `state/consults/gates/2026-10-20-source-changed-s5d-inconclusive-gate1-architect.md` (gate-log 562) and `state/consults/gates/2026-10-20-source-changed-s5d-inconclusive-gate1-reviewer.md` (gate-log 564).*
+
+1. **Amendment 2 item 3's reason (the architect's D1, its words byte-copied):** Amendment 2 item 3 states no reason, which class 2 requires. Reason: not established — the suite reads no stderr, the P line is printed only where a stream's post-check recorded a finding (`kernel/src/lib.rs`, `end_session_if_source_changed`), and the runs do not show why the captures of post-1, post-7 and post-8 carry none. The frontend at the head includes milestone 3 (§11, rule 00) and step 2's at ed8731a7bdf19a48d37049cbe14e3d00d9db0372 did not, so the two series are not compared.
+2. **Amendment 2 item 2's rev (the architect's D2, its words byte-copied):** Amendment 2 item 2's sha256 714628f30ae23a2025f84461bbf8c087f90eb1a0548557a248e26e4004dfae6e is over `state/consults/2026-10-20-source-changed-s5d-inconclusive-e2e-custodian-runs.md` @ 907d3e0a3c5647ec6cf2fa90b5f0b398dcb69222.
+3. **To the worker, no re-gate (the architect's D3):** `frontends/shell/e2e/s5dVerdict.mjs`'s drift comment, line 9 at the head, replaced by the architect's words in its report; the PR body lists them.
+4. **The PR body** names the commits verify-cites, verify-quotes and verify-test-claims ran at (the architect's note under §9).
+5. **The reviewer's notes** (its items 1 to 4) are recorded in its report and change nothing here.
+6. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
