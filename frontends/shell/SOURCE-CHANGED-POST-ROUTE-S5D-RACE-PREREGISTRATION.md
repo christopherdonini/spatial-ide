@@ -307,3 +307,38 @@ Nothing above is edited.
 7. Generation: the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 5 — step 2's runs: O2, as predicted (class 1; written after step 2's runs were seen)
+
+*Written by the custodian after the runs. References only. The record: `state/consults/2026-10-20-source-changed-post-route-s5d-race-step-2-custodian-runs.md`, added in the commit that adds this amendment.*
+
+1. **The runs.** B is ed8731a7bdf19a48d37049cbe14e3d00d9db0372. Item 1's path list named two engine forms, so the exe was rebuilt at B; it is byte-identical to step 1's. The pre-flight and 16 counted runs ran in one exclusive hold, with both affinities at the hold's grant. Two deviations are recorded: a first hold request over 30 minutes was refused before anything ran, and the counted runs' app PIDs come from the runner's stop line.
+2. **What they show.** S5d failed in 14 of 16 counted runs, every failure C2. No run has a W or an R line, every run has a P line, and t_repoint was read in every run. No extension runs.
+3. **The outcome,** by Amendment 4 item 4: **O2**, as predicted. Nothing is pooled with step 1 or the watcher-visible piece's runs.
+4. **Next, by §2 and Amendment 4 item 6:** §4's single reviewer gate on the record; the architect drafts the follow-on with options (a) and (b), each with the seam's (d) additions (D8's clause and D9's comment corrected; each C2 run's P count to the human); then the STOP to the human with the rows.
+5. **PLAN:** the node is blocked on the human's ruling between the follow-on's options; the flake behind it stays blocked.
+6. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
+
+### Amendment 6 — step 2's gate, the record's second version, and the follow-on's options (class 3)
+
+*Written by the custodian after the gate and the options draft. References only. The gate: `state/consults/gates/2026-10-20-source-changed-post-route-s5d-race-step-2-gate1-reviewer.md` (gate-log 555). The options: `state/consults/2026-10-20-source-changed-post-route-s5d-race-o2-follow-on-options-architect.md`.*
+
+1. **The single reviewer gate (§4):** PASS WITH NOTES. No Correctness or Evidence finding; O2 confirmed.
+2. **Its D1, applied in its words, no re-gate:** the record's second version names the two quoted blocks that are not whole artifact lines (the pre-flight's affinity line and each row's S4 verdict and note). The first version stands at 0bbc1c9919ba8ef94f6c115414f11dfaa792963f.
+3. **The follow-on's options (§2, O2):** (a) a C2 run reads INCONCLUSIVE, never a pass; (b) S4's gesture narrowed to one tile. The architect recommends (a). Under both, Amendment 4 item 6's additions ride: D8's clause and D9's comment corrected, and each C2 run's P count goes to the human (all 0; the two passes 23).
+4. **Next:** the human chooses (a) or (b). The follow-on then gets its own form, full from dispatch (§21a; round 25, item 2 (e)).
+5. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
+
+### Amendment 7 — the human's ruling on O2: (a) (class 5)
+
+*Written by the custodian on the human's typed ruling. References only: `state/directives/2026-10-20-232-redaction-go-22-rows-placed-d1-b-accepted-234-items-45-46-yes-s5d-a-ttl-ten-minutes-plan-practice-stands.md`, item 5; the options `state/consults/2026-10-20-source-changed-post-route-s5d-race-o2-follow-on-options-architect.md`.*
+
+1. **(a):** a C2 run reads INCONCLUSIVE, never a pass. The suite's header says that the post-check route is evidenced by the P count in the custodian's run records, which the suite cannot read, and that S5d confirms it only in a run with no sibling refusal.
+2. **Route:** (a) changes what S5d asserts, so it gets its own full form from dispatch, with both gates (round 25 item 2 (e)); the architect drafts it. Its code merges after milestone 3, since it touches `e2e/README.md` (§3's rule while milestone 3 is open).
+3. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.

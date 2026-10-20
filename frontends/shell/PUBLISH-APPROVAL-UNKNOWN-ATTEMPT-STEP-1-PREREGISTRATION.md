@@ -265,3 +265,13 @@ Nothing above is edited.
 8. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 10 — the human's ruling on the product step: its own small piece after milestone 3 (class 5)
+
+*Written by the custodian on the human's typed ruling. References only: `state/directives/2026-10-20-232-redaction-go-22-rows-placed-d1-b-accepted-234-items-45-46-yes-s5d-a-ttl-ten-minutes-plan-practice-stands.md`, item 6.*
+
+1. **The cause step** is closed on the architect's finding (Amendment 9), and this node is done.
+2. **The product step** is its own small piece after milestone 3, graded S3: PLAN node publish-approval-ttl-ten-minutes. PENDING_ATTEMPT_TTL becomes 10 minutes, and the approval dialog gains one sentence, a P6 placeholder, that the approval expires after 10 minutes and the publish is then started over; no countdown. Its short form comes before any code.
+3. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
