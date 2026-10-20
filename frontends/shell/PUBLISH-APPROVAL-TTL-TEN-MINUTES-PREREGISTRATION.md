@@ -194,3 +194,15 @@ Nothing above is edited.
 4. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 4 — E1: two runs at the head, the first with FILTERED' FAIL (class 2; written after the runs were seen)
+
+*Written by the custodian after the runs were seen. References and hashes only.*
+
+1. **E1** at 5e922915419fff578d862ae1a47aefa39c955ba2: `state/consults/2026-10-20-publish-approval-ttl-ten-minutes-e1-custodian-runs.md`, sha256 75350cb671261570429fccd149d1334ed773a2a9b53e6b2c934d9772a6c90f66 over the whole file at the commit that adds it. The exe's sha256 is 525ac72d43661caf0a0f2f35f58581e3824ebbcc12c6facc69a09542c259ef3c.
+2. **Run 1** (with the build, in one shared hold): the header line, OPEN, APPROVED', REFUSED' and EXPIRED''s skip as §3 predicts; FILTERED' FAIL, `filter_scope` null.
+3. **Run 2** (class 2, a run §3 does not name): the same exe, a fresh app, its own shared hold; every step as §3 predicts, exit code 0.
+4. **For the gates:** the piece does not touch the filter path or `filter_scope`. Run 1's FAIL is recorded and not reproduced.
+5. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
