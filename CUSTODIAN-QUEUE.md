@@ -1,16 +1,20 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `ba60b0563394a799f9a972dc31feff8569ce5cd07f9defbfd0a0d822217ae8f0`) at `2026-10-20T15:10:31.872Z`.
+Generated from `PLAN.yaml` (sha256 `9e296b2f392ad4633ff974226f11bb020724ea6df2ba0ff76aebdd87d6cf06bb`) at `2026-10-20T15:17:24.353Z`.
 
 ## 1. Next
 
-- **source-changed-post-route-s5d-race** — source-changed.mjs's post route: step S5d (post-check-route-confirmed) loses its race to a tile's pre-check in about half the runs on this machine, at main's base too (lane `shell`)
+- (nothing ready)
 
 ## 2. Ready
 
-- **source-changed-post-route-s5d-race** — source-changed.mjs's post route: step S5d (post-check-route-confirmed) loses its race to a tile's pre-check in about half the runs on this machine, at main's base too (lane `shell`, order null, budget 60 min)
+- (none)
 
-## 3. Waiting on the human (total: 0 min)
+## 3. Waiting on the human (total: 5 min)
+
+### ruling
+
+- **source-changed-post-route-s5d-race** — source-changed.mjs's post route: step S5d (post-check-route-confirmed) loses its race to a tile's pre-check in about half the runs on this machine, at main's base too (5 min)
 
 ### sitting
 
