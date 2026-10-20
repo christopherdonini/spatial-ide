@@ -490,3 +490,19 @@ S0 settles OPEN-2's condition and the exposure question.
   - (vi) The pointer's date is a file name, not a number under §1's summary note (`AUTONOMY.md:50 @ 677ecd12985e671bcc8916a5efdea2ff9b731331 sha256:d43a56c1854231c7e3cc840a164080e7d1f8aa18e0a73a11a26514ff1c1b1794`).
 
 ## §10. Amendments — opens empty, append-only
+
+### Amendment 1 — the human's rulings on OPEN-1 to OPEN-7; the dispatch (class 5)
+
+*Written by the custodian on the human's ruling. References only: `state/directives/2026-10-20-235-and-236-clicked-d-open-1-to-7-ruled-runs-alone-only-when-a-claim-would-change.md`, from line 6.*
+
+1. **OPEN-1 (A):** a list of `{id, summary}` items under `summaries:`, in PLAN.yaml order; a duplicate id refuses the run.
+2. **OPEN-2 (A),** if S0 shows it: the named-file reader, as C's fourth reader.
+3. **OPEN-3:** the human sees the sheet at G0.
+4. **OPEN-4 (A):** the import proof and `summaryLines` on one fixed fixture; no network run.
+5. **OPEN-5 (B):** from S9 to the click, only commits touching PLAN.yaml, `CUSTODIAN-QUEUE.*` or `site/` are held; others land, and E-M names them. The branch merges main in once more before the click if main moved.
+6. **OPEN-6 (A):** item 6's span byte-copied into both homes; Part B's words approved as drafted.
+7. **OPEN-7:** readings (i) to (vi) confirmed.
+8. **M0** is the main commit that adds this amendment; the custodian names it at dispatch. The branch is `cut/plan-summaries-archive`, in `C:/dev/wt/psa`.
+9. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.

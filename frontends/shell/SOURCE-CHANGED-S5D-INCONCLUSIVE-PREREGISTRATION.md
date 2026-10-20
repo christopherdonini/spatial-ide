@@ -429,3 +429,12 @@ Nothing above is edited.
 6. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 4 — closing record: PR #235 merged (class 1)
+
+*Written by the custodian after the merge. References and hashes only.*
+
+1. **Merged** by the human at 2026-10-20T22:28:27Z: merge commit 682551f79aae4aaa5e5543d2fb7e49071cf72cb4, `%cI` 2026-10-21T00:28:26+02:00, its parents main 52b7f0b6fd48506a3c6554c866f71212c61f7dc5 and the branch head 7c5dbb3cf25cd3eea8d1bcc64c14572dbf9b91f2 (D3 applied, the gates' heads 0e281e07 plus that one comment).
+2. **PLAN:** the node is done, with `{pr: 235}`.
+
+Nothing above is edited.

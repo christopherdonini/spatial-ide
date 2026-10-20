@@ -4,6 +4,11 @@ Line references written before the rotation point into state/cut-archive/DECISIO
 
 ## Pending
 
+**RULED 2026-10-21 (headed; the fifth message, received 2026-10-20) — PR #235 clicked; PR #236's ADR-024 note to be re-dated to the day of the click before its click; governance D's OPEN-1 (A), OPEN-2 (A) if S0 shows it, OPEN-3 the sheet at G0, OPEN-4 (A), OPEN-5 (B) with main merged into the branch once more before the click if main moved, OPEN-6 (A) with Part B's words approved, OPEN-7's readings confirmed; no run alone before the merges, a run alone booked only when a claim would change with it (the human, typed, received at 22:29:15Z by the transcript; recorded verbatim at `state/directives/2026-10-20-235-and-236-clicked-d-open-1-to-7-ruled-runs-alone-only-when-a-claim-would-change.md`, from line 6, sha256 872dd659aeb9f7bd0735a3790e59d340a743b741c09c1539d0e4eefe261acba8 over lines 6 to the end at the commit that adds it):**
+
+- **The rulings** are the text, referenced and not restated.
+- **Applied:** both PRs merged before the message arrived (#235 at 2026-10-20T22:28:27Z; #236 at 2026-10-20T22:28:41Z, at its head d5aafacc), so the note on main is headed 2026-10-20, the UTC day of the click; the re-dating commit d1a1e771 reached the branch after the merge and is not on main; the heading is put to the human. Both closing records written and both nodes done; governance D's form Amendment 1, its node ready, its code by one worker-high.
+
 **RULED 2026-10-20 (received at 20:19:23Z) — governance piece D, finished nodes' summaries out of PLAN.yaml: placed in the governance lane after what is queued there, never slot 1, its rule appended to AUTONOMY on the human's words, the merge the human's click; the human's 2026-10-14 sentence "The PLAN.yaml summary trim stands as already placed" corrected, no trim having been placed, and D replacing it (the human's own message, the pasted direction and the typed addendum; recorded verbatim at `state/directives/2026-10-20-governance-d-done-node-summaries-archived-the-2026-10-14-trim-sentence-corrected.md`, from line 6, sha256 338b38a8f2964b5865b8202e0014f449c1edc9cdb356a928a6e170ea415bec44 over lines 6 to the end at the commit that adds it):**
 
 - **The rulings** are the text, referenced and not restated.

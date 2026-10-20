@@ -219,3 +219,14 @@ Nothing above is edited.
 6. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 6 — closing record: PR #236 merged; the note's heading; the sight placed (class 1)
+
+*Written by the custodian after the merge. References and hashes only: `state/directives/2026-10-20-235-and-236-clicked-d-open-1-to-7-ruled-runs-alone-only-when-a-claim-would-change.md`.*
+
+1. **Merged** by the human at 2026-10-20T22:28:41Z: merge commit 3e8c848bb7ad64da420837fa7aa92f9013f2f78a, `%cI` 2026-10-21T00:28:41+02:00, its parents 682551f79aae4aaa5e5543d2fb7e49071cf72cb4 (main after PR #235's merge) and the branch head d5aafacc387cd75c37571411753ff497e4742a49.
+2. **ADR-024's note** is on main under `## Appended note, 2026-10-20`, the UTC day of the click; its line's sha256 is f4018b1a149d07581184d7704447d3abae3c5d4633c1c2f2a357c2323fd7a6d6. The human asked for the heading to take the day of the click before the click; the click came first, and the re-dating commit d1a1e771b7a9f5408de487a91fdeb679628bab12 reached the branch after the merge and is not on main. The heading is put to the human.
+3. **The sight (§1):** this commit appends the expiry sentence's G3 sight to operator-sitting-queue's summary; that node's generation goes up by one.
+4. **PLAN:** the node is done, with `{pr: 236}`.
+
+Nothing above is edited.

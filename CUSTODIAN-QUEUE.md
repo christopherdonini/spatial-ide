@@ -1,20 +1,17 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `650ad15ae5e52a0c38b7e224463473921b6c4652a915a980f8c1f7851c38415e`) at `2026-10-20T22:01:30.144Z`.
+Generated from `PLAN.yaml` (sha256 `9d71c08697bd004738cd11f34feae4f98252b7669ad872c1a186c3e17f87da19`) at `2026-10-20T22:33:51.721Z`.
 
 ## 1. Next
 
-- (nothing ready)
+- **connection-reuse-recycled-interrupt-flake** — engine/tests/connection_reuse.rs: cancellation_before_the_first_batch_binds_a_recycled_connection_and_delivers_nothing failed once on ubuntu-24.04 in PR #222's pull_request run at a542097e, and the push run of the same commit passed it (lane `engine`)
 
 ## 2. Ready
 
-- (none)
+- **connection-reuse-recycled-interrupt-flake** — engine/tests/connection_reuse.rs: cancellation_before_the_first_batch_binds_a_recycled_connection_and_delivers_nothing failed once on ubuntu-24.04 in PR #222's pull_request run at a542097e, and the push run of the same commit passed it (lane `engine`, order null, budget 60 min)
+- **governance-plan-summaries-archive** — Governance D -- done nodes' summaries over 300 bytes moved verbatim from PLAN.yaml into state/cut-archive/ by a named script, one generated pointer line each, monthly beside C's rotation, and its rule appended to AUTONOMY; the measurements before and after it (lane `governance`, order null, budget 0 min)
 
-## 3. Waiting on the human (total: 10 min)
-
-### ruling
-
-- **governance-plan-summaries-archive** — Governance D -- done nodes' summaries over 300 bytes moved verbatim from PLAN.yaml into state/cut-archive/ by a named script, one generated pointer line each, monthly beside C's rotation, and its rule appended to AUTONOMY; the measurements before and after it (10 min)
+## 3. Waiting on the human (total: 0 min)
 
 ### sitting
 
@@ -22,7 +19,6 @@ Generated from `PLAN.yaml` (sha256 `650ad15ae5e52a0c38b7e224463473921b6c4652a915
 
 ## 4. Blocked on dependencies
 
-- **connection-reuse-recycled-interrupt-flake** — engine/tests/connection_reuse.rs: cancellation_before_the_first_batch_binds_a_recycled_connection_and_delivers_nothing failed once on ubuntu-24.04 in PR #222's pull_request run at a542097e, and the push run of the same commit passed it — blocked by: source-changed-post-route-s5d-race
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
 - **briefb-b2-save-reopen** — B2 — Save project, Snapshot data, session history, lineage and preferences, in five stages, each with its own form — blocked by: decision-adr-029-scan-progress-route
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer — blocked by: signpath-application-draft
@@ -32,8 +28,7 @@ Generated from `PLAN.yaml` (sha256 `650ad15ae5e52a0c38b7e224463473921b6c4652a915
 
 ## 5. In progress
 
-- **source-changed-post-route-s5d-race** — source-changed.mjs's post route: step S5d (post-check-route-confirmed) loses its race to a tile's pre-check in about half the runs on this machine, at main's base too — evidence: branch `cut/source-changed-s5d-inconclusive`
-- **publish-approval-ttl-ten-minutes** — Publish: the pending attempt's TTL takes the value the human ruled, and the approval dialog states that expiry (one P6-placeholder sentence, no countdown) — evidence: branch `cut/publish-approval-ttl-ten-minutes`
+- (none)
 
 ## 6. Proposed / unscheduled
 
