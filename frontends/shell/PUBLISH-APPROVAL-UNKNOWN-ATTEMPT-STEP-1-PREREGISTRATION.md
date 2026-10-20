@@ -250,3 +250,28 @@ Nothing above is edited.
 5. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 9 — the diagnosis: the dev hook alone can; the cause step closes on it (class 1; written after the diagnosis was seen)
+
+*Written by the custodian on the human's ruling (`state/directives/2026-10-20-230-231-233-merged-232-strikes-rule-d1-a-not-i1-profile-path-redact-unknown-attempt-a.md`, its last paragraph) after the architect's diagnosis was seen. The diagnosis: `state/consults/2026-10-20-publish-approval-unknown-attempt-f4-diagnosis-architect.md`, added in the commit that adds this amendment. References only.*
+
+1. **The diagnosis concludes THE DEV HOOK ALONE CAN** (its item 4). The panel's execute hook answers `unknown-attempt` with no host call while it holds no attempt; it learns the attempt only from a passive effect that runs after the prepare's answer has resolved; E-EXPORT sends the execute as soon as the prepare answers and waits for no render; and for the observed pair the host had no way to miss within U other than the TTL, which Amendment 7 item 2 excluded (its item 1). The ordering of the execute's task before the effect under load is its reading, marked [R].
+2. **The cause step closes on it,** by the ruling. The cause of the observed `unknown-attempt` is the dev hook's path (§0 F4), not the host's.
+3. **The dialog's Submit** cannot produce the answer this way (its item 2): an operator's `unknown-attempt` comes from the host.
+4. **The capture (Amendment 8 item 2)** stands for the next run that shows one. By the diagnosis's item 3, none of the artifacts the series keeps shows whether the host was called; the custodian adds no observer, since the cause step has closed.
+5. **The product step,** the 120 s and the dialog's missing expiry, stays open for the human.
+6. **Outside this node:** the diagnosis's out-of-scope fix (the attempt set where the prompt arrives, not in an effect) and the two comments it finds unsupported go to the proposed node `publish-dev-hook-attempt-from-effect`.
+7. **PLAN:** the node is blocked on the human's ruling for the product step.
+8. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
+
+### Amendment 10 — the human's ruling on the product step: its own small piece after milestone 3 (class 5)
+
+*Written by the custodian on the human's typed ruling. References only: `state/directives/2026-10-20-232-redaction-go-22-rows-placed-d1-b-accepted-234-items-45-46-yes-s5d-a-ttl-ten-minutes-plan-practice-stands.md`, item 6.*
+
+1. **The cause step** is closed on the architect's finding (Amendment 9), and this node is done.
+2. **The product step** is its own small piece after milestone 3, graded S3: PLAN node publish-approval-ttl-ten-minutes. PENDING_ATTEMPT_TTL becomes 10 minutes, and the approval dialog gains one sentence, a P6 placeholder, that the approval expires after 10 minutes and the publish is then started over; no countdown. Its short form comes before any code.
+3. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.

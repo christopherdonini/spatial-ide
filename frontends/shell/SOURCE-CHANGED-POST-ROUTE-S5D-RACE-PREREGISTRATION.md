@@ -188,3 +188,157 @@ Nothing above is edited.
 4. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 4 — step 2's procedure, base and classes on the watcher-blind route (class 1; written after step 1's runs and the watcher-visible piece's runs were seen)
+
+*Sources: this form's Amendments 2 and 3; `frontends/shell/SOURCE-CHANGED-POST-REOPEN-ROUTES-WATCHER-VISIBLE-PREREGISTRATION.md` ("WV" below: its §0.1 W8, §2.2, §2.9, §5, Amendments 3 to 6, and its Appendix R pins by R-number); its I2 consult `state/consults/2026-10-19-source-changed-post-reopen-routes-watcher-visible-i2-architect-consult.md`; its gate 1 reports `state/consults/gates/2026-10-19-source-changed-post-reopen-routes-watcher-visible-gate1-architect.md` ("gate 1 architect") and `state/consults/gates/2026-10-19-source-changed-post-reopen-routes-watcher-visible-gate1-reviewer.md` ("gate 1 reviewer"); its round 2 runs `state/consults/2026-10-19-source-changed-post-reopen-routes-watcher-visible-round-2-custodian-runs.md` ("round 2"); step 1's record `state/consults/2026-10-17-source-changed-post-route-s5d-race-step-1-custodian-runs.md`; the driver, kernel and engine at main d7dfb18e94fdc63e23d87530c1c8c56f4fa37023. References only. Each pin is labelled at its first use and cited by its label after that.*
+
+1. **The base and the build (§1.1).**
+   - B is the main commit step 2 starts from. The record gives its full hash.
+   - **The exe** is step 1's, built at be6aa6203a196f553ec08f697d678dfa08a78bd4 (step 1's record, Setup, Base B). The record states the sha256 it read before the pre-flight, and that sha256 equals the one step 1's Setup states.
+   - **The fact the record must show** is the output of `git diff --name-only be6aa6203a196f553ec08f697d678dfa08a78bd4 <B> -- Cargo.toml Cargo.lock engine protocol renderer kernel frontends/shell/src-tauri`, byte-copied with its exit code, and that output is empty. The paths are the workspace's members and root files and the shell's own crate.
+   - If it lists a path, the exe is rebuilt at B in a shared hold, as §1.1 orders. The record then names the new exe and its sha256.
+   - **The checkout.** The frontend is served from the e2e checkout, detached at B, and the driver runs from it. `git status --porcelain` is empty there before the pre-flight and after the last run.
+   - **The frontend's own changes.** The record also lists `git diff --name-only be6aa6203a196f553ec08f697d678dfa08a78bd4 <B> -- frontends/shell/src`. Where that list is not empty, the frontend is neither step 1's nor round 2's (item 4: nothing is pooled).
+   - **The harness** is §1.1's, as step 1's record disclosed it.
+
+2. **§1.4 on the new route: t_repoint replaces t_touch.**
+   - **What no longer exists.** §0 F1's touch instant has no source on this route, because b's mtime is set at layout time (WV §2.9): `frontends/shell/e2e/source-changed.mjs:285-293 @ d7dfb18e94fdc63e23d87530c1c8c56f4fa37023 sha256:9c0b57a3a1fd324bef775fef26e5fc51b9ce8904ba7312bdac7813897cb734d4` (D6). t_touch is not read.
+   - **What the route does:**
+     - When the driver sees the first new `stream-issued` entry, it writes one target line to the helper and awaits its answer: `frontends/shell/e2e/source-changed.mjs:703-710 @ d7dfb18e94fdc63e23d87530c1c8c56f4fa37023 sha256:0120463fdc53cb408b4f32406e2aeba8d9f1a15e5e8473bda2fa6f4c2063384b` (D1) and `frontends/shell/e2e/source-changed.mjs:393-398 @ d7dfb18e94fdc63e23d87530c1c8c56f4fa37023 sha256:62dc40e1e7d888d0930a3b4016978ac6487b9fee5e632997e1c8639135906f5e` (D2).
+     - The helper reads the line, rewrites the junction, then writes its answer: `frontends/shell/e2e/source-changed.mjs:342 @ d7dfb18e94fdc63e23d87530c1c8c56f4fa37023 sha256:48c94f21ddaa2b0afcf5565fa8602792277a50100554907755de69ec728a6691` (D4).
+     - S4 fails by name unless the answer is `ok` and the open path resolves inside `b`: `frontends/shell/e2e/source-changed.mjs:421-433 @ d7dfb18e94fdc63e23d87530c1c8c56f4fa37023 sha256:a4b38674193ba38f27241ddb0fd7ec50f3c4e126fa6a30a228e8f669630194ad` (D3) and `frontends/shell/e2e/source-changed.mjs:1143-1150 @ d7dfb18e94fdc63e23d87530c1c8c56f4fa37023 sha256:45fa8d9306304b2d9430beb3c6a124f065fd573c032f25094b0b63ac2b5d58c1` (D5).
+     - D1, D2 and D3 print nothing. The report's `raced` field carries a count and no time (D1). So neither the request nor the answer has a stamp.
+   - **t_repoint** is the junction's `ctimeMs` (WV Amendment 3 item 5).
+     - It is read with `lstatSync` on the checkout's `frontends/shell/e2e/out/source-changed-link`, after the run's report is written and before the next run's layout re-creates the junction (D6).
+     - By D4, the rewrite falls after the helper reads the request and before it writes the answer.
+     - If t_repoint is earlier than the first new `stream-issued` receipt, it did not record the repoint, because the request is written only after that entry is seen (D1). The row then records t_repoint as unread, and the gaps that use it are not written.
+   - **Each run's row, in this order:**
+     1. §1.4's first bullet. Its build commit is now two: be6aa620 for the exe and B for the checkout.
+     2. Every step's verdict, under the ids at B: `S3-retarget-junction` (INFO) and `S4-issue-one-query-and-retarget-on-mint`.
+     3. The first new `stream-issued` entry: its receive time, its text and S4's count of such entries (§0 F10).
+     4. The request, recorded as "not stamped".
+     5. The answer, recorded as "not stamped", with S4's verdict and note.
+     6. t_repoint.
+     7. The session-log lines as §1.4 names them.
+     8. The status block's message.
+     9. The stderr capture's P, W and R lines (item 3), in order.
+     10. The helper's exit line: `frontends/shell/e2e/source-changed.mjs:416 @ d7dfb18e94fdc63e23d87530c1c8c56f4fa37023 sha256:c91729d1f34fc7acd4351c901c66f3f5fe3e1b9aa1176617f681cc46a8261a29` (D7).
+   - **The gaps, in ms:**
+     - the session-ended stamp less t_repoint;
+     - each refusal's stamp less the session-ended stamp;
+     - t_repoint less the `stream-issued` receipt.
+   - **What the gaps are.** §1.4's closing paragraph applies to them unchanged: they are ordering evidence for §1.5, not a measurement. There is no p50 or p95, no docs/08 budget and no claim about speed, and the arms are not compared.
+     - t_repoint is the file system's stamp. It is a third point, beside the host's append (§0 F4) and the driver's receipt (§0 F10), all on one machine's wall clock. No resolution is claimed for any of the three.
+     - The repoint can land some time after the trigger. That delay is neither bounded nor measured (WV Amendment 3 item 8; ADR-018's terms).
+
+3. **§1.5 on the new route.**
+   - **P and W** are read as §1.5 states (§0 F9). On this route a W line is not a class; it is the first outcome in item 4.
+   - **R, the re-read detail, read on its own** (WV §2.9, H2). R is a refusal or a P line whose detail is the one both checks give when the source cannot be read at all: `engine/src/descriptor.rs:334-336 @ d7dfb18e94fdc63e23d87530c1c8c56f4fa37023 sha256:0f39c051236da114a752f29c03c50725a2b4a49875e9eb31223d9939263a704e` (E1) for the pre-check, and WV R53 for the post-check. A refusal that carries it is R, never C2.
+   - **Classes for each S5d failure on its refusal condition (§0 F2).** Every `tile-stream-mint-refused` line after S5d's baseline is read by its code and detail alone:
+     - **C1:** every refusal is `engine.source_changed` with one of §0 F8's two fixed details.
+     - **C2:** at least one refusal is `engine.source_changed` with a detail that is neither F8's nor R's. That detail is the pre-check's own descriptor finding: `{mtime}` in every C2 line of step 1 and round 2.
+       - The kernel runs that pre-check only after the live check has passed: `kernel/src/skp.rs:1436 @ d7dfb18e94fdc63e23d87530c1c8c56f4fa37023 sha256:8a3283c12d21190899182ea9cb8d0a1318ef878ed1df250f3a6a72eb269eb7d5` (K1), then §0 F6's pre-check pin. So a sibling's own pre-check found the change while the generation was live at that sibling's live check.
+       - C2 does not show which route made the end. The end is idempotent (§0 F6).
+     - **C3:** any other set of refusals.
+   - **A refusal logged after the session-ended line is classed by its detail, exactly as one logged before it.**
+     - The shell logs every refused mint first and unconditionally, even after the session has ended (§0 F5; gate 1 architect, section 4 (d)).
+     - The line's position shows only which way into the shell came first (§0 F7). The row records the position as a gap, and the position decides nothing.
+     - So round 2's six failures are each C2, with P present. Each shows the session-ended line, then one `{mtime}` refusal, with one P line counting 0 cancelled (gate 1 architect, section 4 (c)). One of them: `state/consults/2026-10-19-source-changed-post-reopen-routes-watcher-visible-round-2-custodian-runs.md:130-132 @ d7dfb18e94fdc63e23d87530c1c8c56f4fa37023 sha256:917ef67825ef05d11ca291938e3a68ad18658b5b4b44352ea18c071a060d155e` (Rec4).
+   - **Recorded beside P, not a class: the P line's count.**
+     - A call that finds the generation already ended returns 0 without a report: `kernel/src/skp.rs:914-917 @ d7dfb18e94fdc63e23d87530c1c8c56f4fa37023 sha256:e9ce6033a6ada54b77f5f0db32acb57e8449d1f5b6fdbec8692a84ba39f850d2` (K2). So a count above 0 comes only from the post-check call that made the end. A count of 0 shows neither way.
+     - In round 2, each passing run has a P line with a count above 0: `state/consults/2026-10-19-source-changed-post-reopen-routes-watcher-visible-round-2-custodian-runs.md:120-121 @ d7dfb18e94fdc63e23d87530c1c8c56f4fa37023 sha256:a7364ceeb57d9d02a1a34b7290f4cedbbc367d623669b58e06ca48bf1f0de0d9` (Rec2) and `state/consults/2026-10-19-source-changed-post-reopen-routes-watcher-visible-round-2-custodian-runs.md:169-170 @ d7dfb18e94fdc63e23d87530c1c8c56f4fa37023 sha256:3f86a7c7d2263088831c4574d48f3b7064c486acbabe0a0599815986bf6a2593` (Rec3). Each failing run has one P line counting 0 (Rec4; section 4 (c)).
+
+4. **§1.6 for step 2.**
+   - **How the outcomes are read.** The first match below wins. W and R are read from each run's capture before the next run starts.
+   - **Nothing is pooled.** By gate 1 architect, section 4 (b), step 2 pools no run with WV's round 1, WV's round 2 or step 1. Those runs ground the predictions below and count toward no outcome (WV §2.9).
+   - **O3** does not apply to step 2.
+   - **I1-late: the watcher on the route.** Any run with a W line. This is WV's I1 (WV §5) found after its merge, not O3 (WV §2.9).
+     - It stops the series at that run. No outcome below is named, S5d's race is not judged, and the node goes to the human with the rows.
+     - Predicted: not seen. The prediction rests on these data:
+       - none of round 2's 8 post runs has a W line: `state/consults/2026-10-19-source-changed-post-reopen-routes-watcher-visible-round-2-custodian-runs.md:31-38 @ d7dfb18e94fdc63e23d87530c1c8c56f4fa37023 sha256:4ef7e2021644663527cfe6c75a14e49ccd6837ca8c1047325de33c0f503054c7` (Rec1);
+       - those captures were shown live (gate 1 architect, Checks item 1, its §4 and §5 bullet);
+       - the consult's 1(c).
+   - **R-late: the re-read gap on the route.** Any run with R. This is WV's I2 found after its merge.
+     - WV's IN PLACE outcome rests on a reading that no Windows document states (WV Amendment 5 item 5). The consult names the detail's return as I2 again (its section 3).
+     - It stops the series as I1-late does.
+     - On 2026-10-19 (item 1) the human set an INCONCLUSIVE class for the fallback that was not reached. Whether such a run is INCONCLUSIVE for S5d is the human's decision. By gate 1 architect, section 4 (e), no such class is in force.
+     - Predicted: not seen. The data: round 2 shows the detail in no run (WV Amendment 4 item 1), and the probe at gate 1 had no failed stat or open (gate 1 reviewer, Checks item 5).
+   - **O4,** as §1.6, with two changes:
+     - S4 joins its first condition: S4's answer or resolve check failing (D3, D5), an I4 answer among them.
+     - W is read as above.
+     - Predicted: not seen. The data: in round 2, S1 to S5c passed and no invalidator fired (WV Amendment 4 item 1), and every post run has a P line (Rec1). Step 1's outcome was O3, which O4 precedes, so none of its 30 runs with known classes matched O4 (WV R19).
+   - **O2,** as §1.6. Predicted: **this is the result.** The data: each of round 2's six failures is C2 by item 3 (section 4 (c); Rec4), and step 1's B13 and B16 were C2 (WV R19).
+   - **O1,** as §1.6, and it needs at least one failing run; with none, O5 applies. Predicted: not the result, on O2's data.
+   - **O5,** as §1.6. Predicted: not the result. Round 2 failed S5d in 6 of 8 post runs on this route (Rec1).
+   - An outcome other than O2 is a recorded deviation (class 2), and these predictions are never edited.
+
+5. **§1.2, §1.3 and §1.7.**
+   - **What stands, with Amendment 2:**
+     - one exclusive hold;
+     - both processes' affinity recorded once per series, and a stop before the first counted run if either differs from the hold's grant;
+     - arm A with no load, and arm B with 6 busy threads;
+     - one pre-flight run (arm A, not counted) whose capture must gain lines from its own launch; otherwise STOP before the series, because P, W and R could not be read;
+     - 16 counted runs, A1 B1 … A8 B8;
+     - one extension of 16 runs in the same order if fewer than 3 runs fail S5d, and never a third series.
+   - **Two procedure additions** (step 1's record, Deviations 4 to 6):
+     - The series script names each run's artifacts from its arm and run number alone, refuses to overwrite one, and is not edited between the pre-flight and the last run.
+     - It reads W and R from each run's capture before the next run starts (item 4).
+   - **§1.7's stops stand.** The build stop is read as item 1's check. Three stops are added:
+     - the checkout is not at B, or is not clean;
+     - in the pre-flight, the repoint helper does not start: `frontends/shell/e2e/source-changed.mjs:770-779 @ d7dfb18e94fdc63e23d87530c1c8c56f4fa37023 sha256:9f3880d981852e7614dd80d0a1fa23bf3ea972382531f59b9435dfc243732406` (D10);
+     - a W or R line (item 4).
+
+6. **§2, mapped to step 2's outcomes.**
+   - **I1-late and R-late:** STOP to the human with the rows. No S5d follow-on is drafted. The human rules on WV's I1 or I2, found after its merge.
+   - **O4 and O5:** as §2.
+   - **O2:** as §2. That is a STOP to the human, and the architect drafts options (a) and (b). Section 4 (d) adds one thing to both options:
+     - S5d's block comment states that only the first route's lines are observable: `frontends/shell/e2e/source-changed.mjs:1388-1397 @ d7dfb18e94fdc63e23d87530c1c8c56f4fa37023 sha256:a0f0d4a039a876e55e204e8a4d34aac6d80aa103342ef5a92d449fbde1d6892c` (D9).
+     - Its refusal-failure message states that the change lost the race to a pre-check rather than landing on the post-check route: `frontends/shell/e2e/source-changed.mjs:1418-1431 @ d7dfb18e94fdc63e23d87530c1c8c56f4fa37023 sha256:0456296286a3be14d7a05de5a5dfa9e737642c9b721413af85e9227234b029ad` (D8).
+     - A C2 run does not show either (item 3). The follow-on corrects both texts, which WV §2.2 left to it.
+     - Each C2 run's P count (item 3) goes to the human with the rows. The suite cannot read it (WV §0.1 W8).
+   - **O1:** as §2, with section 4 (d) applied to its declared change:
+     1. The classification reads each refusal's detail, never its position against the session-ended line.
+     2. Its node test takes its real shape from two records: one C1 run from step 2's record, and round 2's C2 run in Rec4, whose refusal is logged after the session-ended line. The third case is one real capture with its P line removed.
+     3. A third mutation, M3: the classification is made positional, so a refusal after the session-ended line is read as a consequence whatever its detail. The C2 case must then fail by name.
+     4. D8's clause and D9's comment are corrected, as under O2.
+     5. The stale cites §2 names are now in the header's post-check note, `frontends/shell/e2e/source-changed.mjs:168-172 @ d7dfb18e94fdc63e23d87530c1c8c56f4fa37023 sha256:528e0e17c24f46d40ba5af3e7c4c5da23bbcec4899295141880ee0345aec1fec` (D11), and in D9.
+
+7. Generation: the node's generation goes up by one.
+
+Nothing above is edited.
+
+### Amendment 5 — step 2's runs: O2, as predicted (class 1; written after step 2's runs were seen)
+
+*Written by the custodian after the runs. References only. The record: `state/consults/2026-10-20-source-changed-post-route-s5d-race-step-2-custodian-runs.md`, added in the commit that adds this amendment.*
+
+1. **The runs.** B is ed8731a7bdf19a48d37049cbe14e3d00d9db0372. Item 1's path list named two engine forms, so the exe was rebuilt at B; it is byte-identical to step 1's. The pre-flight and 16 counted runs ran in one exclusive hold, with both affinities at the hold's grant. Two deviations are recorded: a first hold request over 30 minutes was refused before anything ran, and the counted runs' app PIDs come from the runner's stop line.
+2. **What they show.** S5d failed in 14 of 16 counted runs, every failure C2. No run has a W or an R line, every run has a P line, and t_repoint was read in every run. No extension runs.
+3. **The outcome,** by Amendment 4 item 4: **O2**, as predicted. Nothing is pooled with step 1 or the watcher-visible piece's runs.
+4. **Next, by §2 and Amendment 4 item 6:** §4's single reviewer gate on the record; the architect drafts the follow-on with options (a) and (b), each with the seam's (d) additions (D8's clause and D9's comment corrected; each C2 run's P count to the human); then the STOP to the human with the rows.
+5. **PLAN:** the node is blocked on the human's ruling between the follow-on's options; the flake behind it stays blocked.
+6. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
+
+### Amendment 6 — step 2's gate, the record's second version, and the follow-on's options (class 3)
+
+*Written by the custodian after the gate and the options draft. References only. The gate: `state/consults/gates/2026-10-20-source-changed-post-route-s5d-race-step-2-gate1-reviewer.md` (gate-log 555). The options: `state/consults/2026-10-20-source-changed-post-route-s5d-race-o2-follow-on-options-architect.md`.*
+
+1. **The single reviewer gate (§4):** PASS WITH NOTES. No Correctness or Evidence finding; O2 confirmed.
+2. **Its D1, applied in its words, no re-gate:** the record's second version names the two quoted blocks that are not whole artifact lines (the pre-flight's affinity line and each row's S4 verdict and note). The first version stands at 0bbc1c9919ba8ef94f6c115414f11dfaa792963f.
+3. **The follow-on's options (§2, O2):** (a) a C2 run reads INCONCLUSIVE, never a pass; (b) S4's gesture narrowed to one tile. The architect recommends (a). Under both, Amendment 4 item 6's additions ride: D8's clause and D9's comment corrected, and each C2 run's P count goes to the human (all 0; the two passes 23).
+4. **Next:** the human chooses (a) or (b). The follow-on then gets its own form, full from dispatch (§21a; round 25, item 2 (e)).
+5. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
+
+### Amendment 7 — the human's ruling on O2: (a) (class 5)
+
+*Written by the custodian on the human's typed ruling. References only: `state/directives/2026-10-20-232-redaction-go-22-rows-placed-d1-b-accepted-234-items-45-46-yes-s5d-a-ttl-ten-minutes-plan-practice-stands.md`, item 5; the options `state/consults/2026-10-20-source-changed-post-route-s5d-race-o2-follow-on-options-architect.md`.*
+
+1. **(a):** a C2 run reads INCONCLUSIVE, never a pass. The suite's header says that the post-check route is evidenced by the P count in the custodian's run records, which the suite cannot read, and that S5d confirms it only in a run with no sibling refusal.
+2. **Route:** (a) changes what S5d asserts, so it gets its own full form from dispatch, with both gates (round 25 item 2 (e)); the architect drafts it. Its code merges after milestone 3, since it touches `e2e/README.md` (§3's rule while milestone 3 is open).
+3. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.

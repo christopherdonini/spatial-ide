@@ -482,3 +482,58 @@ Nothing above is edited.
 9. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 4 — the human's rulings at G0: the strikes as a rule, D1-a not I1, the redaction on main first (class 5)
+
+*Written by the custodian on the human's rulings (`state/directives/2026-10-20-230-231-233-merged-232-strikes-rule-d1-a-not-i1-profile-path-redact-unknown-attempt-a.md`, items 1 to 3 under #232). References only. The sheet: `state/drafts/decisions-pending-c-obligations.md` on the branch at 6b8b3688ea0a99978ce9d641fef6dd6df6f1e38c, compiled from eight read-only architect passes filed beside it.*
+
+1. **The strikes, as a rule (item 1).** An unmarked entry is struck when a ruling was found for it and every obligation it still carries is represented; an entry with no ruling found stays. Of the 79: 63 have a ruling found, 7 of them carry an obligation not represented and stay; 16 more stay (5 PARTIAL, 3 RECORD ONLY, 8 NONE FOUND). 56 are struck, passed to `--archive-entries`. The struck dry run at the branch head keeps 23 entries and makes the new file 72,298 bytes, under 153,600, so I3 does not fire.
+2. **D1-a (item 2):** not I1. Every difference is the piece's own new files and tests, as with B's I6 (Amendment 3 item 4).
+3. **The profile path (item 3):** the human's word is to redact the line on main first, in one commit, with their one-line note at the end of the file. Their check first: two pinned hash spans cover the line at their pins (this form's Amendment 3 item 5, the line at e684c775; and `scripts/plan/SEARCH-IGNORE-HISTORICAL-PREREGISTRATION.md` Amendment 6 item 3, the whole ledger at fbbffe89). By item 3 the human is told before the commit, so the redaction and that message's RULED block wait for the human's answer.
+4. **The obligation sheet (§2 item 6).** Of the 243 archived blocks and marked entries, 22 carry an obligation not represented (24 in all); none of the 56 struck entries does. By §2 item 6 no rotation runs while one stands: each is placed in PLAN by its own PR (round A1) or in the continuity block, or the human rules it. The sheet lists them in full, and the PR body carries them for the human.
+5. **Next:** both gates at G0 on the sheet and the struck dry run (§2 item 12; §9); the human's answers on item 3's spans and on the 22 rows; then F0.
+6. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
+
+### Amendment 5 — gate 1 at G0 (the architect PASS WITH NOTES, the reviewer FAIL): correction round 1, the custodian's words, entry 104 kept (class 3)
+
+*Written by the custodian after gate 1. References only. The reports: `state/consults/gates/2026-10-20-governance-decisions-pending-open-and-archive-gate1-architect.md` (gate-log 556) and `state/consults/gates/2026-10-20-governance-decisions-pending-open-and-archive-gate1-reviewer.md` (557).*
+
+1. **E-1, named by both:** R11's hash-reference part passes with MT4 applied, and its reference is not pinned. Correction round 1, by one worker: R11 commits its fixture first, holds two references pinned there (one valid, one with a wrong sha256), and asserts exactly one finding, on the archive path, reading sha256 mismatch; MT4 is recorded again failing R11 by name at the fix commit.
+2. **The reviewer's D-2, in round 1:** `AUTONOMY.md` §34 Part B (ii)'s first sentence takes the reviewer's words, naming the bracketed marker.
+3. **The custodian's words, no re-gate:** the sheet's header and the eight passes' notes pin the read ledger whole (the architect's D-1); entry 118's row (D-2) and the counts as clause counts (the reviewer's D-3) take the gates' words; the PR body gains S0 and the predicted D1-b (the reviewer's D-1).
+4. **Entry 104 is kept (the architect's D-3).** Its mechanism (a) follow-on is the round-12 RULED block's row not represented, so Amendment 4 item 4's "none of the 56 struck entries does" does not hold for it. By the human's rule the entry stays: 55 struck, 24 kept. The struck dry run is run again and the PR body shows it; the kept list the human checks is the new one.
+5. **D1-b, predicted (the reviewer's D-1):** verify-cites's stdout file count rises by one, the archive path, a difference §5's exception does not name; by I2 it goes to the human before the click.
+6. **Next:** round 1; the custodian's words and the new dry run; gate 2, both, scoped to round 1 and the words.
+7. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
+
+### Amendment 6 — gate 2 at G0 (both PASS WITH NOTES): gate 1's findings resolved; the gates' words; the superseded index (class 3)
+
+*Written by the custodian after gate 2. References only. The reports: `state/consults/gates/2026-10-20-governance-decisions-pending-open-and-archive-gate2-architect.md` (gate-log 558) and `state/consults/gates/2026-10-20-governance-decisions-pending-open-and-archive-gate2-reviewer.md` (559). Round 1: `state/consults/2026-10-20-governance-decisions-pending-open-and-archive-round-1-worker-report.md` (head b83681d8b5a97260a52ce9286455be5aa25efa9f); the custodian's words at e174f367adf1ede1ab2d711ead72045c8a7a8880.*
+
+1. **Gate 1's findings:** E-1 and every Documentation finding of both gates resolved, by both gates.
+2. **The architect's D-1:** MR11b's comment line in `scripts/plan/rotate-decisions-pending.test.mjs` takes the architect's words, applied on the branch with F0's steps, no re-gate. The reviewer read its "only this one" as holding for that file's run; the words name that file and MT4's own record.
+3. **The architect's D-2:** the PR body's L<n> sentence, applied.
+4. **Superseded (the reviewer's N-2):** Superseded: Amendment 4 item 1's 56 struck, 7, 23 kept and 72,298 bytes, and item 4's 'none of the 56 struck entries does', by Amendment 5 item 4; the current figures (55 struck, 8, 24 kept, 77,060 bytes) are the sheet's section 'The human's rule, applied' at e174f367adf1ede1ab2d711ead72045c8a7a8880.
+5. **The reviewer's N-1, for F0:** the new file's blob depends on P, since the notice line carries P; a blob is compared at F0 only at S9's P.
+6. **Waiting on the human before F0:** the redaction (Amendment 4 item 3), the 22 rows not represented, and the predicted D1-b's file count (Amendment 5 item 5).
+7. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
+
+### Amendment 7 — the human's rulings headed 2026-10-21, items 1 to 3: the redaction made; the 22 rows placed, carried or superseded; the strike rule run again; verify-cites' extra file accepted (class 5)
+
+*Written by the custodian on the human's typed rulings. References only: `state/directives/2026-10-20-232-redaction-go-22-rows-placed-d1-b-accepted-234-items-45-46-yes-s5d-a-ttl-ten-minutes-plan-practice-stands.md`, items 1 to 3.*
+
+1. **The redaction (item 1):** made at 69c2fd751a42c78f509c8d71f211d59ae09419c0, with both notes. Each pinned span over the line reads its own commit. Main's `DECISIONS-PENDING.md` has since taken the two RULED blocks, so S9 reads its current blob.
+2. **The 22 rows (item 2):** placed in PLAN (operator-sitting-queue; the six proposed nodes of item 2e; briefb-b3-publish-v2's two lines), carried by the next window's draft (item 2b), ruled superseded (item 2c: L520, L1474, L1492), or done by the custodian's closing message (item 2d: L534). Item 1's note discharges E107 and L1523.
+3. **The strike rule, run again (item 2):** with those in PLAN, the eight entries kept for an obligation not represented are struck if nothing else holds them. The sheet shows each row's new resolution, and the struck dry run is run again on the branch after main is merged in.
+4. **F0's rows (§2 item 12):** the RULED blocks of 2026-10-20 and 2026-10-21, added after G0, get their obligation rows in the sheet. The kept list differs from G0's by the human's own rule (item 2), and the PR body shows the difference.
+5. **D1-b (item 3):** verify-cites reporting one more file, the archive, is accepted and recorded as the piece's own. Amendment 5 item 5's I2 is discharged.
+6. **Next:** main merged into the branch; the sheet and the dry run; a scoped check of the changed rows; then F0 on the human's word.
+7. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.

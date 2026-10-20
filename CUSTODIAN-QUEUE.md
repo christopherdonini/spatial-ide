@@ -1,23 +1,30 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `f28964aa832dff79999270004c08c49f2a1a4b5bfcc2e45bbaa8b8cfe4562023`) at `2026-10-20T10:34:56.371Z`.
+Generated from `PLAN.yaml` (sha256 `2e55af1560e59b261780b00d102e7fefff52c6cdc0ccd69a9bbdee76c73cb7cb`) at `2026-10-20T15:25:38.892Z`.
 
 ## 1. Next
 
-- **source-changed-post-route-s5d-race** — source-changed.mjs's post route: step S5d (post-check-route-confirmed) loses its race to a tile's pre-check in about half the runs on this machine, at main's base too (lane `shell`)
+- (nothing ready)
 
 ## 2. Ready
 
-- **source-changed-post-route-s5d-race** — source-changed.mjs's post route: step S5d (post-check-route-confirmed) loses its race to a tile's pre-check in about half the runs on this machine, at main's base too (lane `shell`, order null, budget 60 min)
-
-## 3. Waiting on the human (total: 0 min)
-
 - (none)
+
+## 3. Waiting on the human (total: 5 min)
+
+### ruling
+
+- **source-changed-post-route-s5d-race** — source-changed.mjs's post route: step S5d (post-check-route-confirmed) loses its race to a tile's pre-check in about half the runs on this machine, at main's base too (5 min)
+
+### sitting
+
+- **operator-sitting-queue** — The operator sitting queue -- the walkthrough Parts, P6 sights and felt verdicts owed to the human's sitting, in one list (no slot) (0 min)
 
 ## 4. Blocked on dependencies
 
 - **connection-reuse-recycled-interrupt-flake** — engine/tests/connection_reuse.rs: cancellation_before_the_first_batch_binds_a_recycled_connection_and_delivers_nothing failed once on ubuntu-24.04 in PR #222's pull_request run at a542097e, and the push run of the same commit passed it — blocked by: source-changed-post-route-s5d-race
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
+- **publish-approval-ttl-ten-minutes** — Publish: the pending attempt's TTL takes the value the human ruled, and the approval dialog states that expiry (one P6-placeholder sentence, no countdown) — blocked by: shell-migration-milestone-3
 - **briefb-b2-save-reopen** — B2 — Save project, Snapshot data, session history, lineage and preferences, in five stages, each with its own form — blocked by: decision-adr-029-scan-progress-route
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer — blocked by: signpath-application-draft
 - **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-1-1
@@ -113,6 +120,13 @@ Generated from `PLAN.yaml` (sha256 `f28964aa832dff79999270004c08c49f2a1a4b5bfcc2
 - **verify-quotes-dotted-paths** — verify-quotes: the hash-reference path grammar cannot begin with a dot, so a pinned cite into .github/ can never be checked (phase `prototype`) — never queued until placed
 - **bundle-redaction-scan-not-in-product-publish** — The bundle redaction scan runs only in a test: no product publish scans its emitted files, though ADR-017's section 13 (Accepted) says a scan over every emitted file asserts no path, user name, machine identifier or credential is in a bundle (phase `prototype`) — never queued until placed
 - **session-log-token-redaction-rests-on-page-code** — The session token never reaching the session log rests on page code: binding_log_session_event appends page-supplied text verbatim, the page holds the token, and the data plane's Session::redact has only a test caller (phase `prototype`) — never queued until placed
+- **publish-dev-hook-attempt-from-effect** — The export panel's publishExecute dev hook reads the current attempt from a passive effect, so an execute sent as soon as the prepare answers can return unknown-attempt with no host call (the e2e export steps under load) (phase `prototype`) — never queued until placed
+- **verify-quotes-round-item-cites** — verify-quotes resolves round + item cites (the quote checker's follow-on owed by round 12 item 1's Applied text) (phase `prototype`) — never queued until placed
+- **lod-tiers-geographic-crs** — LOD tiers for a geographic CRS -- its own preregistered gate, owed by the LOD form's amendment (phase `prototype`) — never queued until placed
+- **residency-instrument-followups** — Residency instrument follow-ups -- entry 25's heap-footprint fold-in, the deferred 5 GB clean-instrument attribution trial, and the clean-instrument run of the attribution pass (phase `prototype`) — never queued until placed
+- **notices-payload-dist-asset** — The raw notice payload, about 3 MB, moves to a fetched dist asset (entry 62) (phase `prototype`) — never queued until placed
+- **adr-020-appended-note** — ADR-020's appended note, owed by the quote baseline's corrected_by entry (entry 102; the docs lane) (phase `prototype`) — never queued until placed
+- **pre-1-0-trademark-search** — The trademark register search with counsel before 1.0 (the human's own) (phase `prototype`) — never queued until placed
 
 ### Unscheduled
 
@@ -137,4 +151,3 @@ Generated from `PLAN.yaml` (sha256 `f28964aa832dff79999270004c08c49f2a1a4b5bfcc2
 - **mod-worktree-resource-protection** — Worktree and resource protection -- a mod (deferred by the 2026-10-03 mods-roadmap ruling) (phase `prototype`) — ambition, never queued
 - **recorder-write-latency-measure** — Evidence Recorder: a declared write-latency measure with its own sample, so the brief overhead acceptance can be established before the Recorder evaluation ends (Amendment 2 C2-d keeps E5 a lower bound) (phase `prototype`) — ambition, never queued
 - **reuse-round-1-bundle** — Reuse archaeology round 1, the advisor bundle, filed as one docs-and-data piece (not under docs/) (phase `prototype`) — ambition, never queued
-- **publish-approval-unknown-attempt-under-load** — Publish: an export's approval came back as unknown attempt under machine load (the status-bar e2e run 2 and the H3 order run): the cause first, the pending attempt's TTL elapsing between prepare and execute or an attempt the host lost; then whether the TTL suits a person reading the approval dialog, which shows no expiry (phase `prototype`) — ambition, never queued
