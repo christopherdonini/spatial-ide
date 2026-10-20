@@ -2,11 +2,13 @@
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
 import type { ActionEntry, ActionId } from "../layout/actionRegistry";
+import { fieldTrigger } from "./fieldCompletion";
+import type { FieldTrigger } from "./fieldCompletion";
 
 /**
- * The command bar's two pure seams (SHELL-MIGRATION-MILESTONE-3-PREREGISTRATION.md section 2.3 and 2.4, PR A): `resolveDraft` turns the typed text
+ * The command bar's two pure seams (SHELL-MIGRATION-MILESTONE-3-PREREGISTRATION.md section 2.3 and 2.4): `resolveDraft` turns the typed text
  * into one narrow result, and `commandBarKey` is the one reducer every key goes through. Nothing here reads the DOM, the platform or the
- * SKP client. The `/filter` half of section 2.4 is PR B's.
+ * SKP client. `/filter` (PR B) keeps the condition after its word byte for byte and reads one thing inside it: the `@` trigger (`fieldCompletion.ts`).
  */
 
 /** An entry as the list shows it: with whether it can run now (an unavailable entry is listed, marked, and never run). */
@@ -21,7 +23,9 @@ export type Draft =
   | { readonly kind: "commands"; readonly word: string; readonly candidates: readonly Candidate[] }
   | { readonly kind: "search"; readonly query: string; readonly candidates: readonly Candidate[] }
   | { readonly kind: "run"; readonly id: ActionId; readonly available: boolean }
-  | { readonly kind: "unresolved"; readonly reason: "unknown-command" };
+  /** `/filter`, then the condition: the text after the first run of whitespace following the word, byte for byte, and the `@` trigger at the caret, if any. */
+  | { readonly kind: "filter"; readonly id: ActionId; readonly available: boolean; readonly text: string; readonly field: FieldTrigger | null }
+  | { readonly kind: "unresolved"; readonly reason: "unknown-command" | "filter-empty" };
 
 const contains = (haystack: string, needle: string): boolean => haystack.toLowerCase().includes(needle.toLowerCase());
 
@@ -29,8 +33,10 @@ const contains = (haystack: string, needle: string): boolean => haystack.toLower
  * What `text` means. `?` is help (every entry, narrowed by any text after it); `/word` is a command (an exact word of an entry that takes nothing
  * runs it, else the entries whose word starts with it are listed); anything else is a search, a case-insensitive substring match on label or
  * word in registry order, with no ranking. An entry with no word (`command.focus`) is in help and out of search. Registry order is the order of `registry`.
+ * A word that takes a condition, followed by whitespace, is a `filter` draft; a whitespace-only condition is `filter-empty`, the only use of a trim, and nothing is trimmed in
+ * the condition that is kept. `caret` is where the `@` trigger is read (the end of the text when absent).
  */
-export function resolveDraft(text: string, registry: readonly ActionEntry[], available: (id: ActionId) => boolean): Draft {
+export function resolveDraft(text: string, registry: readonly ActionEntry[], available: (id: ActionId) => boolean, caret: number = text.length): Draft {
   if (/^\s*$/.test(text)) return { kind: "empty" };
   const candidatesOf = (entries: readonly ActionEntry[]): Candidate[] => entries.map((entry) => ({ entry, available: available(entry.id) }));
   const withWord = registry.filter((entry) => entry.command !== null);
@@ -40,7 +46,13 @@ export function resolveDraft(text: string, registry: readonly ActionEntry[], ava
   }
   if (text.startsWith("/")) {
     const word = text.slice(1);
-    if (/\s/.test(word)) return { kind: "unresolved", reason: "unknown-command" };
+    const split = /^(\S*)(\s+)([\s\S]*)$/.exec(word);
+    if (split !== null) {
+      const entry = withWord.find((e) => e.takes === "condition" && e.command?.toLowerCase() === split[1].toLowerCase());
+      if (entry === undefined) return { kind: "unresolved", reason: "unknown-command" };
+      if (/^\s*$/.test(split[3])) return { kind: "unresolved", reason: "filter-empty" };
+      return { kind: "filter", id: entry.id, available: available(entry.id), text: split[3], field: fieldTrigger(text, 1 + split[1].length + split[2].length, caret) };
+    }
     const exact = withWord.find((entry) => entry.command?.toLowerCase() === word.toLowerCase());
     if (exact !== undefined && exact.takes === "nothing") return { kind: "run", id: exact.id, available: available(exact.id) };
     const starting = withWord.filter((entry) => entry.command?.toLowerCase().startsWith(word.toLowerCase()));
@@ -56,7 +68,7 @@ export function completionOf(entry: ActionEntry): string | null {
 
 /**
  * Where the bar stands: the typed text, whether the list is open, the active option (an index into the options listed, or none), and whether Tab has just completed
- * the draft (set by Tab's completion, cleared by the next typed character, so that a second Tab leaves).
+ * the draft (set by Tab's completion, cleared by the next typed character, so that a second Tab leaves, and so that the list stays closed until then: ArrowDown and ArrowUp do not reopen it).
  */
 export interface BarPos {
   readonly draft: string;
@@ -115,10 +127,10 @@ export function commandBarKey(state: BarState, key: BarKey): BarStep {
     case "Escape":
       return state.open ? { pos: { ...pos, open: false, active: null }, effect: none.effect, preventDefault: true } : { pos, effect: { kind: "leave" }, preventDefault: true };
     case "ArrowDown":
-      if (count === 0) return none;
+      if (count === 0 || state.completed) return none;
       return { pos: { ...pos, open: true, active: state.open && state.active !== null ? Math.min(state.active + 1, count - 1) : 0 }, effect: none.effect, preventDefault: true };
     case "ArrowUp": {
-      if (count === 0) return none;
+      if (count === 0 || state.completed) return none;
       const active = !state.open || state.active === null ? count - 1 : state.active === 0 ? null : state.active - 1;
       return { pos: { ...pos, open: true, active }, effect: none.effect, preventDefault: true };
     }

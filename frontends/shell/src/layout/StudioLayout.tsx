@@ -194,6 +194,8 @@ export default function StudioLayout({
         return onOpenDataset !== undefined;
       case "layer.revealExport":
         return dataset && onRevealExport !== undefined;
+      case "filter.addClause":
+        return false; // a product caller (App's clause handler) comes with the next step of PR B
       default:
         return true;
     }

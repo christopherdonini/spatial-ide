@@ -37,6 +37,7 @@ function noteFor(draft: Draft): string | null {
     case "unresolved":
       return COMMAND_UNKNOWN_NOTE;
     case "run":
+    case "filter": // the bar sends a `/filter` condition in the next step of PR B; until then Enter on one does nothing
       return null;
     default:
       return draft.candidates.length === 0 ? COMMAND_NONE_NOTE : COMMAND_PICK_NOTE;

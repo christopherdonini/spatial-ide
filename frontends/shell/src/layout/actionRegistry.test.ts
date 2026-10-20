@@ -126,10 +126,12 @@ describe("U5: the registry's ids and shortcuts are unique", () => {
   // RECORDED MUTATION for "UC8 (the eleven ids)": delete the `dataset.open` entry from `ACTIONS` (actionRegistry.ts). Expected failure: the sorted ids lack "dataset.open".
   // OBSERVED AT fa6715541ccdef4285503a2b9bd59ec9a44943dc: FAILED -- "holds exactly the eleven ids: the eight of milestone 2 and, for milestone 3, command.focus, dataset.open and layer.revealExport (question round 66, item 2; SHELL-MIGRATION-MILESTONE-3-PREREGISTRATION.md section 4, UC8)":
   //   AssertionError: expected [ 'command.focus', …(9) ] to deeply equal [ 'command.focus', …(10) ]. Reverted after observing.
-  it("holds exactly the eleven ids: the eight of milestone 2 and, for milestone 3, command.focus, dataset.open and layer.revealExport (question round 66, item 2; SHELL-MIGRATION-MILESTONE-3-PREREGISTRATION.md section 4, UC8)", () => {
+  // RECORDED MUTATION for "UC8 (the twelve ids)": delete the `filter.addClause` entry from `ACTIONS` (actionRegistry.ts). Expected failure: the sorted ids lack "filter.addClause".
+  it("holds exactly the twelve ids: the eight of milestone 2 and, for milestone 3, command.focus, dataset.open, layer.revealExport and filter.addClause (question round 66, item 2; SHELL-MIGRATION-MILESTONE-3-PREREGISTRATION.md section 4, UC8)", () => {
     expect(ACTIONS.map((entry) => entry.id).sort()).toEqual([
       "command.focus",
       "dataset.open",
+      "filter.addClause",
       "layer.revealExport",
       "layer.zoomToLayer",
       "layout.toggleActivity",
