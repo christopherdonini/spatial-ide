@@ -1,14 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `939d33234f3528efc76ed92abb9a78b97794e49cef7d3e7492e1bd3092971079`) at `2026-10-20T18:31:31.242Z`.
+Generated from `PLAN.yaml` (sha256 `e0c109e049e781e0f4b51cc4d9e01806b21d462c9d1077f3a4692b2f31e2e2fa`) at `2026-10-20T18:38:37.063Z`.
 
 ## 1. Next
 
-- **publish-approval-ttl-ten-minutes** — Publish: the pending attempt's TTL takes the value the human ruled, and the approval dialog states that expiry (one P6-placeholder sentence, no countdown) (lane `shell`)
+- (nothing ready)
 
 ## 2. Ready
 
-- **publish-approval-ttl-ten-minutes** — Publish: the pending attempt's TTL takes the value the human ruled, and the approval dialog states that expiry (one P6-placeholder sentence, no countdown) (lane `shell`, order null, budget 60 min)
+- (none)
 
 ## 3. Waiting on the human (total: 0 min)
 
@@ -29,6 +29,7 @@ Generated from `PLAN.yaml` (sha256 `939d33234f3528efc76ed92abb9a78b97794e49cef7d
 ## 5. In progress
 
 - **source-changed-post-route-s5d-race** — source-changed.mjs's post route: step S5d (post-check-route-confirmed) loses its race to a tile's pre-check in about half the runs on this machine, at main's base too — evidence: branch `cut/source-changed-s5d-inconclusive`
+- **publish-approval-ttl-ten-minutes** — Publish: the pending attempt's TTL takes the value the human ruled, and the approval dialog states that expiry (one P6-placeholder sentence, no countdown) — evidence: branch `cut/publish-approval-ttl-ten-minutes`
 
 ## 6. Proposed / unscheduled
 
