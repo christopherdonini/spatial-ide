@@ -6,7 +6,7 @@
 import { readFileSync } from "node:fs";
 
 export class S5dInconclusive extends Error {} // runStep prints the third status, INCONCLUSIVE (never a pass); the suite exits 3 when no step FAILed
-// Source text read where the details are defined (no import, no build dependency), so drift in either file fails by name.
+// Source text read where the details are defined (no import, no build dependency): a change in the matched arms' number or shape fails by name here, and a changed literal is read as it now stands (T5 also pins `require_live`'s).
 const SKP_RS = new URL("../../../kernel/src/skp.rs", import.meta.url);
 const DESCRIPTOR_RS = new URL("../../../engine/src/descriptor.rs", import.meta.url);
 const harnessFailure = (what) => new Error(`s5dVerdict: harness failure: ${what}`);
