@@ -1,16 +1,20 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `38658f8ba6490dd5d601706681c6a126be5bd56634c73dc45206bb5cfe62cb74`) at `2026-10-20T16:51:58.402Z`.
+Generated from `PLAN.yaml` (sha256 `5ec40cbd67d9f5361a9d7e6ae30607e5b8e54248e535935e2593d0e2984572e3`) at `2026-10-20T17:21:09.932Z`.
 
 ## 1. Next
 
-- **publish-approval-ttl-ten-minutes** — Publish: the pending attempt's TTL takes the value the human ruled, and the approval dialog states that expiry (one P6-placeholder sentence, no countdown) (lane `shell`)
+- (nothing ready)
 
 ## 2. Ready
 
-- **publish-approval-ttl-ten-minutes** — Publish: the pending attempt's TTL takes the value the human ruled, and the approval dialog states that expiry (one P6-placeholder sentence, no countdown) (lane `shell`, order null, budget 60 min)
+- (none)
 
-## 3. Waiting on the human (total: 0 min)
+## 3. Waiting on the human (total: 5 min)
+
+### ruling
+
+- **publish-approval-ttl-ten-minutes** — Publish: the pending attempt's TTL takes the value the human ruled, and the approval dialog states that expiry (one P6-placeholder sentence, no countdown) (5 min)
 
 ### sitting
 
