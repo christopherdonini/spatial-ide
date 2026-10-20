@@ -48,6 +48,21 @@ function commit(dir, files, msg, date = null) {
 }
 after(() => { for (const d of dirs) fs.rmSync(d, { recursive: true, force: true }); });
 
+// Each mutation below was applied alone to scripts/plan/rotate-plan-summaries.mjs at d93607315ede, this file run, the failure read by name, and the
+// mutation reverted with the porcelain clean. These are observations by application, not verify-mutation runs.
+// RECORDED MUTATION (MR1) at d93607315ede (S1): the archive line re-serialised from the parsed string -> fails by name (every test that needs a good run of the script also fails): `rotate-plan-summaries: a due run writes a new archive whose summary lines are byte-identical to the PLAN.yaml lines they replace, keyed by node id in PLAN.yaml order`.
+// RECORDED MUTATION (MR2) at d93607315ede (S1): the archive line written as an unquoted plain scalar -> fails by name (every test that needs a good run of the script also fails): `rotate-plan-summaries: each archived string, once parsed by yamlSubset, equals the summary it replaced`.
+// RECORDED MUTATION (MR3) at d93607315ede (S1): a generated comment line written above each pointer -> fails by name (every test that needs a good run of the script also fails): `rotate-plan-summaries: only the moved summary lines change; every other PLAN.yaml line is byte-identical and the line count is unchanged`.
+// RECORDED MUTATION (MR4) at d93607315ede (S1): taken always false -> fails by name, and only this one: `rotate-plan-summaries: the pointer is one generated line under 300 bytes naming the new archive, an earlier archive is never written over, and the pointer matches no site.mjs metric pattern`.
+// RECORDED MUTATION (MR5) at d93607315ede (S1): the size counted with .length -> fails by name (every test that needs a good run of the script also fails): `rotate-plan-summaries: a done node's summary of 300 UTF-8 bytes stays, 301 moves, and one under 300 characters but over 300 bytes moves`.
+// RECORDED MUTATION (MR6) at d93607315ede (S1): the status filter removed -> fails by name (every test that needs a good run of the script also fails): `rotate-plan-summaries: a node that is in-progress, ready, blocked, proposed or unscheduled is never moved, whatever its summary's size`.
+// RECORDED MUTATION (MR8a) at d93607315ede (S1): the parsed-equality assertion removed -> fails by name, and only this one: `rotate-plan-summaries: a round-trip mismatch refuses the whole run and writes nothing`.
+// RECORDED MUTATION (MR8b) at d93607315ede (S1): the archive's ids compared as a set -> fails by name, and only this one: `rotate-plan-summaries: a duplicate id refuses the whole run and writes nothing`.
+// RECORDED MUTATION (MR8c) at d93607315ede (S1): archive ids not in PLAN.yaml ignored -> fails by name, and only this one: `rotate-plan-summaries: an id missing from PLAN.yaml refuses the whole run and writes nothing`.
+// RECORDED MUTATION (MR10) at d93607315ede (S1): the marker matched by prefix and skipped -> fails by name, and only this one: `rotate-plan-summaries: a summary that begins with the marker but is not a generated pointer refuses, and a pointer whose archive does not hold its id refuses`.
+// RECORDED MUTATION (MR13) at d93607315ede (S1): --keep ignored -> fails by name, and only this one: `rotate-plan-summaries: --keep leaves the named summaries in place and the rest move`.
+// RECORDED MUTATION (MR9) at d93607315ede (S1): a YamlSubsetError caught at both parse sites (loadPlan in main, the parse check in verifyMove) and the run continued; caught at loadPlan alone the run still refuses through verifyMove's own parse, and R9 passes -> fails by name, and only this one: `rotate-plan-summaries: a summary written as a block scalar refuses the run with its line number and writes nothing`.
+
 const BASE = 'lead é → \\"q\\" \\u00e9 a #b c: d '; // YAML source between the quotes; the parsed text decodes both escapes
 const bytes = (n) => `"${BASE}${'x'.repeat(n - Buffer.byteLength(JSON.parse(`"${BASE}"`), 'utf8'))}"`; // parses to exactly n UTF-8 bytes
 const WIDE = `"${'é'.repeat(160)}"`; // 160 characters, 320 bytes
