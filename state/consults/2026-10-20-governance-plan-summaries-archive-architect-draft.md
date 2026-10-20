@@ -1,0 +1,510 @@
+*Custodian's filing note (2026-10-20): the architect's draft of governance D's full form (the human's direction of 2026-10-20 and its addendum), read only at main 677ecd12. The run 2026-10-20T20:34:00Z to 20:48:53Z by its transcript (Read 37, Grep 30, Glob 3 over both hand-backs); its first SubagentHandback, at 20:48:53Z. The harness marked the hand-back for a settings-file pattern; the custodian found two mentions of `.claude/settings.json`, a declared-unchanged line and R16, whose mutation MR16 would have needed an edit of that file, and asked for the revision filed beside this draft. Extracted by script; one final newline added if absent; nothing else changed.*
+
+---
+
+Drafted: governance-plan-summaries-archive, its full form, at main 677ecd12
+
+# Done nodes' summaries over 300 bytes moved verbatim from PLAN.yaml into state/cut-archive/ by a named script, monthly beside C's rotation, the rule appended to AUTONOMY, and the measurements before and after it (PLAN node `governance-plan-summaries-archive`, governance piece D) — preregistration
+
+**Form path:** `scripts/plan/PLAN-SUMMARIES-ARCHIVE-PREREGISTRATION.md`. When the custodian commits this form, the node's `gate` becomes that path.
+
+**Authority:** the human's direction of 2026-10-20, with its RULED block in `DECISIONS-PENDING.md` (cited by date, never by line). It is referenced here and not reproduced, except where §2 item 9 says otherwise. All spans are in `state/directives/2026-10-20-governance-d-done-node-summaries-archived-the-2026-10-14-trim-sentence-corrected.md`, read at 677ecd12:
+- the opening paragraph: line 6;
+- the correction of the 2026-10-14 sentence: line 8;
+- item 1: line 10; item 2: lines 11-15; item 3: line 16; item 4: line 17; item 5: lines 18-22; item 6: line 23; item 7: lines 24-27;
+- the out-of-scope line: line 29;
+- the addendum: lines 31-32.
+
+Each span is written `<directive>:<a>[-<b>] @ 677ecd12`. **This draft carries no sha256, because the drafter has no shell.** Before commit, the custodian expands every `@ 677ecd12` to the full commit id and adds its sha256 by script. This applies to every pin in this form.
+
+- **Node:** `governance-plan-summaries-archive` (cited by id, never by a PLAN.yaml line). It comes after governance C (`governance-decisions-pending-open-and-archive`, done, PR #232), whose form is `scripts/plan/DECISIONS-PENDING-OPEN-AND-ARCHIVE-PREREGISTRATION.md`. It goes in the governance lane after what is already queued there and never holds slot 1. The merge is the human's click.
+
+**Drafted by** the architect agent on the custodian's brief, read at main 677ecd12. **Committed before any code.** It is the node's gate. It is append-only once committed. An amendment made after any outcome has been seen says so in its first line.
+
+**Gating: full, reviewer and architect, from dispatch.**
+- By §21a (`AUTONOMY.md:315-332 @ 677ecd12`): a property under test. `verify:plan` parses PLAN.yaml and checks that the queue and the site have not drifted, and verify-quotes searches PLAN.yaml. The move changes what each of them reads.
+- By §21c's size (`AUTONOMY.md:347-357 @ 677ecd12`): §7 declares 800 lines.
+- Under §25 (e) (`AUTONOMY.md:482 @ 677ecd12`), no five-line form is used.
+
+It touches no ADR, no wire and no security posture. Verdicts are proportional (`AUTONOMY.md:389 @ 677ecd12`).
+
+## §0. Disclosure
+
+- **Read, not run.** The drafter has no shell. Every line number was read in the main checkout at 677ecd12 (a clean tree except for two untracked files outside every path named here). `DECISIONS-PENDING.md` is cited only by date, round or entry, and PLAN.yaml only by node id.
+- **The correction (line 8).** No PLAN.yaml summary trim was ever placed, and D replaces it. The node's summary already records this. Beyond the moves themselves, no code or record of this piece changes any summary.
+- **The parser** (the addendum requires it):
+  - **Its key grammar:** `KEY_RE` is `[A-Za-z_][A-Za-z0-9_]*` (`scripts/plan/yamlSubset.mjs:25 @ 677ecd12`). It has no hyphen. Every node id is kebab-case (`scripts/plan/plan.mjs:19 @ 677ecd12`). So a YAML map whose keys are node ids is refused by the very parser the addendum names. That is OPEN-1.
+  - **Block scalars** (`|`, `>` and their variants) are refused with the line number (`scripts/plan/yamlSubset.mjs:226-232 @ 677ecd12`; test `scripts/plan/yamlSubset.test.mjs:115-116 @ 677ecd12`).
+  - **A duplicate key in one map** is refused (`scripts/plan/yamlSubset.mjs:174-176 @ 677ecd12`). A duplicate node id is refused by `validatePlan` (`scripts/plan/plan.mjs:107-110 @ 677ecd12`).
+  - **A double-quoted scalar** is decoded by `JSON.parse` (`scripts/plan/yamlSubset.mjs:239-268 @ 677ecd12`). A comment is stripped after whitespace outside quotes (`scripts/plan/yamlSubset.mjs:48-61 @ 677ecd12`).
+  - **One line per scalar.** No string value can span lines. So every string summary sits on exactly one line: its key line.
+- **The summaries at 677ecd12, read by Grep, not by the parser.** 312 lines of PLAN.yaml contain `summary:`, and all 312 begin with four spaces and `summary: "`. No summary is a plain or block scalar. The human's figures (690,693 bytes; 151 of the 193 done nodes over 300 bytes) were the custodian's at b2433b78. S0 recounts them with the parser at M0.
+- **What reads a node's summary, with every read** (the addendum names four; the rest are listed so the set is closed):
+  - **queue.mjs.** `nodeSummary` copies `summary` (`scripts/plan/queue.mjs:42-56 @ 677ecd12`), but only for the ready, waiting, blocked, in-progress, proposed and unscheduled sets (`scripts/plan/queue.mjs:71-96 @ 677ecd12`; `deriveStates` skips done nodes, `scripts/plan/plan.mjs:15 @ 677ecd12`, `scripts/plan/plan.mjs:250-251 @ 677ecd12`). No done node's summary reaches `CUSTODIAN-QUEUE.md` or `.json`. Both files carry the plan's sha256 (`scripts/plan/queue.mjs:110 @ 677ecd12`, `scripts/plan/queue.mjs:80 @ 677ecd12`).
+  - **site.mjs.** It reads every node's summary in two places:
+    - `findMetricViolations` checks `title` and `summary` against `METRIC_RE` (`scripts/plan/site.mjs:38 @ 677ecd12`, `scripts/plan/site.mjs:52-69 @ 677ecd12`).
+    - `site/data/plan.json` embeds every node whole (`scripts/plan/site.mjs:737-748 @ 677ecd12`).
+
+    `site/index.html` shows no summary: a done box shows title, date and evidence (`scripts/plan/site.mjs:238-243 @ 677ecd12`), and its inline data carries `plan_hash` and the done nodes' id, title, lane and dates (`scripts/plan/site.mjs:636-643 @ 677ecd12`). The drift check renders with the build facts absent (`scripts/plan/site.mjs:853 @ 677ecd12`). A local generation reads `site/data/build-health.json` when it exists (`scripts/plan/site.mjs:937 @ 677ecd12`).
+  - **buildHealth.mjs** reads no PLAN.yaml. Its imports are `ghRepoSlug` from verify.mjs and `PRODUCT_CI_WORKFLOWS` from site.mjs (`scripts/plan/buildHealth.mjs:27-31 @ 677ecd12`). Its output is GitHub's API at the time it runs, written to a gitignored file (`scripts/plan/buildHealth.mjs:18-19 @ 677ecd12`, `scripts/plan/buildHealth.mjs:283-296 @ 677ecd12`).
+  - **questions-mirror.mjs** reads no PLAN.yaml. It imports `telegram.mjs`, `cloud.mjs` and `leaseHeldBy` from `stop-queue.mjs` (`scripts/hooks/questions-mirror.mjs:26-31 @ 677ecd12`). `leaseHeldBy` reads `CUSTODIAN-LEASE` only (`scripts/hooks/stop-queue.mjs:154-166 @ 677ecd12`). Its summary is a message summary (`scripts/hooks/questions-mirror.mjs:54-56 @ 677ecd12`).
+  - **Others, for a closed set.** None of these reads `summary`:
+    - verify.mjs, which parses, checks status agreement, and runs the two drift checks (`scripts/plan/verify.mjs:290-325 @ 677ecd12`);
+    - health.mjs (`scripts/plan/health.mjs:239-256 @ 677ecd12`);
+    - stop-queue.mjs (`scripts/hooks/stop-queue.mjs:349-357 @ 677ecd12`);
+    - docsOnly.mjs, which reads lane priorities and felt-verdict statuses (`scripts/plan/docsOnly.mjs:137-175 @ 677ecd12`);
+    - verify-test-claims.mjs, which reads status and gate (`scripts/plan/verify-test-claims.mjs:755-771 @ 677ecd12`);
+    - rotate-decisions-pending.mjs, whose dry run reads ids and statuses.
+
+    A Grep for `.summary` over the repository's JavaScript finds `scripts/plan/queue.mjs:54 @ 677ecd12` as the only PLAN reader.
+- **verify-cites and verify-quotes, against item 2's parenthetical.**
+  - **verify-cites** scans tracked `.md` files and code files' comments, never `.yaml` (`scripts/plan/verify-cites.mjs:302-311 @ 677ecd12`, `scripts/plan/verify-cites.mjs:89 @ 677ecd12`). PLAN.yaml and the archive are both outside its scan. A cite *into* PLAN.yaml is resolved against its line count, which the move keeps.
+  - **verify-quotes** scans preregistrations and ADRs for quote passages and hash references (`scripts/plan/verify-test-claims.mjs:746-748 @ 677ecd12`, `scripts/plan/verify-quotes.mjs:406-416 @ 677ecd12`). Neither PLAN.yaml nor the archive is scanned.
+  - **But verify-quotes reads PLAN.yaml as a source**, in two ways:
+    - its tree-wide haystack is every tracked file with a `yaml` extension, among others (`scripts/plan/verify-quotes.mjs:116 @ 677ecd12`, `scripts/plan/verify-quotes.mjs:834-840 @ 677ecd12`). The archive joins that haystack, so a passage found today only in a moved summary is still found.
+    - a passage whose nearest introducing cite names PLAN.yaml is searched in PLAN.yaml alone, in the working tree, whatever its pin (`scripts/plan/verify-quotes.mjs:900-917 @ 677ecd12`). Such a passage would fail after its summary moves.
+
+    C met the same shape for its ledger and built its fourth reader at `scripts/plan/verify-quotes.mjs:909 @ 677ecd12`. S0 settles whether any such passage exists. That is OPEN-2.
+- **The measurement script.** `routine` reads only `state/CUT-STATE.md` and `DECISIONS-PENDING.md` (`scripts/plan/measure-reads.mjs:61-63 @ 677ecd12`). `corpus` sums the committed sizes of the paths `rg --files` lists (`scripts/plan/measure-reads.mjs:90-118 @ 677ecd12`). `/state/cut-archive/` is in `.ignore` (`.ignore:3 @ 677ecd12`), so the archive leaves the corpus. Its bytes are never edited (A's §2 item 7 (a)).
+- **What C and B leave for reuse:**
+  - B's `archiveNameFor` (`scripts/plan/rotate-cut-state.mjs:40-46 @ 677ecd12`), with C's stem mapping (`scripts/plan/rotate-decisions-pending.mjs:150-155 @ 677ecd12`);
+  - C's `isDue` (`scripts/plan/rotate-decisions-pending.mjs:74-81 @ 677ecd12`);
+  - C's `parseUnits` and `classify` (`scripts/plan/rotate-decisions-pending.mjs:43-71 @ 677ecd12`);
+  - C's obligation-word regex shape (`scripts/plan/rotate-decisions-pending.mjs:31-32 @ 677ecd12`);
+  - C's refusal checks (`scripts/plan/rotate-decisions-pending.mjs:131-136 @ 677ecd12`).
+
+  Each module has a main guard, so importing one runs nothing.
+- **AUTONOMY and the README's ends.** `AUTONOMY.md` ends at line 666, the end of §34 (`AUTONOMY.md:642-666 @ 677ecd12`). `scripts/plan/README.md` ends at line 365.
+- **CI.** The governance workflow's path filters name PLAN.yaml (`.github/workflows/governance-ci.yml`, lines 80 and 97 at 677ecd12; a dot-prefixed path, written in words). D's PR and every later rotation commit on main therefore run governance CI.
+- **The exposure scan.** C's S10 was refused by the pre-commit profile-path scan on a moved line (C's form, Amendment 3 item 5). The archive's added lines are copies of PLAN.yaml lines. S0 runs the same scan over them.
+- **Reuse index.** The custodian ran `node tools/reuse.mjs` in the read-only clone of the reuse repository at 89bbac3738dbb46d47988e55a7c0f0d4f9fe4c5c. The output below is byte-copied from the custodian's brief:
+
+```text
+$ node tools/reuse.mjs archive summaries rotation
+No prior art recorded for "archive summaries rotation". Research it before planning an implementation.
+$ node tools/reuse.mjs yaml round trip verbatim move
+No prior art recorded for "yaml round trip verbatim move". Research it before planning an implementation.
+```
+
+  Two misses. They are noted and do not block. The design rests on B's and C's rotations and the code cited above.
+- **Machine.** Nothing here is a heavy run.
+
+## §1. May and may not claim
+
+**May claim**, each at the recorded commit:
+1. Each archived summary line is byte-identical to the PLAN.yaml line it replaced, and its parsed string equals the parsed summary (R1, R2, and E-P at S10).
+2. Only the moved summary lines change. Every other PLAN.yaml line is byte-identical, and the line count is unchanged (R3, E-P).
+3. Only done nodes whose parsed summary is over 300 UTF-8 bytes move, unless kept. No node of another status moves (R5, R6, R13).
+4. A second run, or a run with nothing to move, writes nothing. A refusal writes nothing (R7 to R11).
+5. Every existing check gives the same results before and after the code (D1-a) and before and after the move (D1-b), within §5's named differences. Each of the addendum's four readers gives the output §5's reader table predicts (E-R).
+6. The archive is outside the search corpus, and PLAN.yaml's own bytes fall by exactly the moved bytes (E-M).
+7. An archived summary is found by its node id with the Grep tool given `state/cut-archive/` as its path (O1, O2).
+
+**May not claim:**
+- That the obligation markers find every obligation. They flag rows; the custodian resolves them, and the human sees the kept ones.
+- That PLAN.yaml stays under any size between rotations.
+- Any token count or context size.
+- Anything on macOS.
+- Anything about the three out-of-scope matters (line 29): one file per node, the CI-built site, and the gate log's format.
+
+**Unchanged:**
+- `scripts/plan/yamlSubset.mjs`, `scripts/plan/plan.mjs`, `scripts/plan/measure-reads.mjs`;
+- `queue.mjs`, `site.mjs`, `buildHealth.mjs`, `health.mjs`, `verify.mjs`, `verify-cites.mjs`, `verify-test-claims.mjs`, `docsOnly.mjs`, `rotate-cut-state.mjs`, `rotate-decisions-pending.mjs`, `scripts/hooks/**`;
+- `verify-quotes.mjs`, except §2 item 6 under OPEN-2 (A);
+- `.ignore`, `.claude/settings.json` and the CI workflows (the last two written in words);
+- `site/data/health.json`;
+- every existing byte of `AUTONOMY.md` and `scripts/plan/README.md`;
+- every existing test's name and assertion;
+- PLAN.yaml on the branch, except the moved summary lines at S10.
+
+## §2. The change
+
+1. **What moves (items 1 and 5).**
+   - **Status.** A node is *done* when `loadPlan` (`scripts/plan/plan.mjs:50-67 @ 677ecd12`) at the run's HEAD records `status: done`.
+   - **Size.** Its summary is *over 300 UTF-8 bytes* when `typeof node.summary === 'string'` and `Buffer.byteLength(node.summary, 'utf8') > 300`. This is the parsed string, never the raw line.
+   - **Candidates.** A candidate is a done node over 300 bytes whose summary is not a pointer (item 3) and whose id is not given in `--keep`.
+   - **Never moved:** any node whose status is in-progress, ready, blocked, proposed or unscheduled, whatever its size.
+2. **`scripts/plan/rotate-plan-summaries.mjs`, the named script (item 2).**
+   - **Imports and conventions.** It uses Node's standard library; `loadPlan` from `plan.mjs`; `parseYamlSubset` from `yamlSubset.mjs`; `archiveNameFor` from `rotate-cut-state.mjs`; and `isDue`, `parseUnits` and `classify` from `rotate-decisions-pending.mjs`. Every git call uses an argument array and a 64 MiB buffer. It never fetches, commits or pushes. Its exports are `findCandidates`, `buildMove`, `verifyMove`, `pointerFor`, `isPointer` and `obligationRows`, each called by its own `main`.
+   - **Refusal (exit 2, nothing written).** It refuses when:
+     - `git status --porcelain` shows a tracked change;
+     - `HEAD` does not equal `@{u}`;
+     - `git rev-parse HEAD:PLAN.yaml` differs from `git rev-parse origin/main:PLAN.yaml`. This stands in for a branch check, as C's blob check does;
+     - PLAN.yaml at HEAD holds a CR byte;
+     - `loadPlan` throws: a block scalar (with its line number), a duplicate id, or anything outside the subset. No other reader of PLAN.yaml is used;
+     - a summary begins with the marker but is not exactly a pointer, or a pointer names an archive that is not tracked at HEAD or does not hold that id (item 3);
+     - a `--keep` id is not a candidate;
+     - `verifyMove` fails (below);
+     - the suffix would pass `-99`;
+     - any git call fails.
+   - **P** is `git rev-parse origin/main`.
+   - **Due.** `isDue({ lastArchiveIso, nowIso, sizeBytes: 0 })`, where `lastArchiveIso` is the `%cI` of `git log -1 --diff-filter=A --format=%cI -- ':(glob)state/cut-archive/PLAN-SUMMARIES-*.yaml'`. The human named no size trigger for D, hence the zero. Only `.due` and `.month` are used. When it is not due, it prints `rotate-plan-summaries: not due — the newest archive was added <iso>; this month began <month>.`, writes nothing and exits 0.
+   - **Nothing to move.** When it is due but there are no candidates, it prints one line, writes nothing (no empty archive) and exits 0.
+   - **The name.** `PLAN-SUMMARIES-<UTC date from the machine clock>.yaml`, through `archiveNameFor` with the stem and extension mapped as C maps its stem. A name taken in HEAD's tree or on disk takes `-2`, `-3` and so on. No archive is ever written over.
+   - **`buildMove`** builds two texts in memory, both LF with one final newline:
+     - **The archive (under OPEN-1 (A)):**
+       - line 1: `# Done nodes' summaries moved out of PLAN.yaml by scripts/plan/rotate-plan-summaries.mjs (AUTONOMY.md §<n>). Never edited.`;
+       - `source: {path: PLAN.yaml, commit: "<P>"}`;
+       - `summaries:`;
+       - then, for each candidate in PLAN.yaml order, `  - id: <id>` followed by **PLAN.yaml's own summary line for that node, copied byte for byte**. PLAN's summary lines sit at four spaces, which is where the list item's keys sit.
+     - **The new PLAN.yaml:** P's text with each moved node's summary line replaced by `    summary: "` + `pointerFor(<name>)` + `"`. Nothing else changes.
+   - **Locating a summary line.** The k-th `  - ` item under the top-level `nodes:` is `plan.nodes[k]`, and its `id` line must match. Its summary line is the one line in that item's range that begins with four spaces and `summary: `. Anything else refuses.
+   - **`verifyMove`** runs in memory, before any write:
+     - parse the new PLAN.yaml with `parseYamlSubset` and validate it;
+     - parse the archive with `parseYamlSubset`.
+     - **Assert:**
+       - the line counts are equal;
+       - every line differs from P's only at the moved lines;
+       - each moved line in the archive is byte-identical to P's line;
+       - the archive's ids are exactly the moved ids, in order, with no duplicate and none outside PLAN.yaml;
+       - each archived string, parsed, `===` the summary it replaced;
+       - the new plan's nodes deep-equal P's, except each moved summary, which equals its pointer.
+
+     Any failure refuses (exit 2, nothing written).
+   - **When due**, it writes the archive and PLAN.yaml, then `git add` both. It asserts that `git rev-parse :<each>` equals `git hash-object --stdin` of its in-memory text. A mismatch prints STOP and exits 2, with no rollback. It then prints the staged paths, both blob ids, the moved count, the moved bytes (item 8), and the next steps (item 4).
+   - **`--keep <id,...>`** leaves the named candidates in place (item 5).
+   - **`--dry-run`** writes nothing. It prints the candidates, the pointers found, the archive name, the moved bytes, and one row per candidate (item 5).
+3. **The pointer (the addendum).** `pointerFor(name)` is `[archived summary] state/cut-archive/<name>`. `isPointer(s)` is true exactly when `s` matches `^\[archived summary\] state/cut-archive/PLAN-SUMMARIES-\d{4}-\d\d-\d\d(?:-(?:[2-9]|[1-9]\d))?\.yaml$`.
+   - **Under 300 bytes:** the line is at most 87 bytes.
+   - **Written by the script alone:** no hand-written words.
+   - **Recognised and skipped:** a pointer is never a candidate. A summary that begins with `[archived summary]` but does not match refuses the run, so no hand-written text passes for a pointer. Every pointer must name a tracked archive that holds its id, or the run refuses.
+   - **Inert elsewhere:** it holds no `path:line` token and matches no `METRIC_RE` (R4).
+4. **The procedure (item 4), a session-start step, never in a hook.** It runs after `rotate-cut-state.mjs` and `rotate-decisions-pending.mjs`, with the same lease and fetch:
+   1. Run `--dry-run`. When it is due and has candidates, resolve every row (item 5). File the sheet at `state/drafts/plan-summaries-<UTC date>-obligations.md`.
+   2. Run the script, with `--keep` for every `stays` row.
+   3. Make sure no `site/data/build-health.json` is present. Run `node scripts/plan/queue.mjs` and `node scripts/plan/site.mjs`, then `git add` `CUSTODIAN-QUEUE.md`, `CUSTODIAN-QUEUE.json`, `site/index.html`, `site/data/plan.json` and the sheet.
+   4. Run `verify-cites.mjs`, `verify-quotes.mjs`, `verify-test-claims.mjs` and `verify.mjs --offline` on the staged tree and on HEAD, and compare exit codes and gated findings.
+   5. If they are equal, commit `chore: move done nodes' summaries from PLAN.yaml to state/cut-archive/<name>` (signed off) and push. If they differ, restore the index and every path from HEAD, commit nothing, and tell the human.
+
+   Each rotation writes a new archive file. Archive files are never edited.
+5. **Obligations (item 3).**
+   - **Found by `obligationRows`**, one row per candidate, giving:
+     - the id and the summary's bytes;
+     - the markers found, as two lists: in the current-state segment (the text before the first ` Before: `) and in the rest;
+     - every PLAN node id named as a whole word, with its status at HEAD;
+     - every DECISIONS-PENDING entry named (`entry <n>`, `entries <n>[, <n>…]`), each marked open when C's `classify` keeps it under the live `## Pending` at HEAD;
+     - every KNOWN-LIMITATIONS item named (`KNOWN-LIMITATIONS` followed by `item`/`items <n>…`), each marked present when a line `<n>. **` exists in `KNOWN-LIMITATIONS.md` at HEAD.
+   - **The markers** are §7's list: whole words, case-insensitive, in C's regex shape.
+   - **Resolved by the custodian, every row,** as one of:
+     - `home: plan <id>` (status not done at the run's HEAD);
+     - `home: decisions-pending entry <n>` (an entry `classify` keeps);
+     - `home: known-limitations item <n>`;
+     - `not owed: <proof>` (a test, a `path:line @ <main commit>`, a commit, a PR or a record showing it done or withdrawn; round 7's rule);
+     - `no obligation: <one-line reason>`;
+     - `stays: no home`, passed to `--keep`.
+
+     The three homes are the three the human named. The continuity block is not a home here, unlike in C.
+   - **The first migration.** The sheet is `state/drafts/plan-summaries-d-obligations.md` on the branch. The PR body lists every `stays` row in full, with the counts by resolution.
+   - **Monthly rotations.** A `stays` row does not stop the rest of the run (the human: such a summary stays until a home is placed). The custodian tells the human the kept ids.
+   - **Checked by:**
+     - the gate-1 reviewer, every row mechanically (each home exists with the stated status at G0; each proof resolves);
+     - the architect, every row resolved `not owed` or `no obligation` whose current-state markers are non-empty;
+     - the human, the `stays` list.
+6. **verify-quotes, under OPEN-2 (A) only, and only if S0 shows a difference.** In the named-file gate, when the one named file is PLAN.yaml, a passage passes when one tracked `state/cut-archive/PLAN-SUMMARIES-*.yaml` holds it. Each file is normalised on its own, and nothing is joined. This is about 6 lines beside C's line 909. Under OPEN-2 (B) or (C) it is not built.
+7. **The rule (item 6): `AUTONOMY.md` §`<n>` and `scripts/plan/README.md`, each appended after its last line.** `<n>` is 35 unless another section lands first. The custodian replaces the placeholders and byte-copies the span by script before the worker applies the text.
+
+~~~markdown
+## §<n>. Done nodes' summaries move from PLAN.yaml to state/cut-archive/ each month (the human, 2026-10-20; `state/directives/2026-10-20-governance-d-done-node-summaries-archived-the-2026-10-14-trim-sentence-corrected.md`, piece D and its addendum; appended after §<n-1> so that no line a record cites above it moves)
+
+### Part A. The rule
+
+The rule is the human's, item 6 of piece D. It is byte-copied by script from `state/directives/2026-10-20-governance-d-done-node-summaries-archived-the-2026-10-14-trim-sentence-corrected.md:23 @ <main commit> sha256:<hex>` (a sub-line span: the words after the item's label; the hash is the whole line's), and nothing in it is changed. Items 1 to 5, item 7 and the addendum are referenced and not reproduced.
+
+```text
+<item 6's words after its label, byte-copied by script>
+```
+
+### Part B. The custodian's instantiation (not a quotation)
+
+- **(i) What moves.** A node moves when PLAN.yaml, parsed by `scripts/plan/yamlSubset.mjs`, records it as done and its summary as a string of more than 300 UTF-8 bytes, unless the custodian keeps it with `--keep`. A node of any other status, a summary of 300 bytes or less, and a pointer never move.
+- **(ii) The move.** `node scripts/plan/rotate-plan-summaries.mjs` writes a new file, `state/cut-archive/PLAN-SUMMARIES-<date>.yaml` (the machine clock's UTC date; `-2`, `-3`, … when the name is taken). For each moved node it holds the node's id and its PLAN.yaml summary line, byte for byte. In PLAN.yaml that line becomes one generated line, `summary: "[archived summary] state/cut-archive/<name>"`. No other line changes, and the line count stays the same. The script checks this through the parser before it writes, stages both files, and writes nothing when it refuses. It never commits, pushes or fetches. An archive is never edited.
+- **(iii) When.** At session start, after `rotate-cut-state.mjs` and `rotate-decisions-pending.mjs`, with the same lease and fetch. It is due when no archive has been added, or when the newest was added before the first of the current month at 00:00Z. Run again in the same month, or with nothing to move, it writes nothing. No hook runs it.
+- **(iv) Before it runs.** The custodian runs it with `--dry-run`. One row per summary to be moved lists the markers it holds and the PLAN nodes, DECISIONS-PENDING entries and KNOWN-LIMITATIONS items it names. A summary that names something still owed moves only when the obligation has a live home: a PLAN node not done, an open DECISIONS-PENDING entry, or a KNOWN-LIMITATIONS item. Otherwise it is kept with `--keep`, and the human is told. Then the queue and the site are regenerated. `verify-cites`, `verify-quotes`, `verify-test-claims` and `verify --offline` run on the staged tree and on HEAD, and the rotation is committed only when they agree.
+- **(v) Searching.** An old summary is found by its node id in `state/cut-archive/`, by §32: give the Grep tool that folder as its path. A tree-wide search finds the node's pointer in PLAN.yaml, which names the file.
+- **(vi) §1.** It is not edited. The pointer lines are an edit to done nodes' summaries, made under this section.
+~~~
+
+   - **The README section.** It is headed `## \`rotate-plan-summaries.mjs\` — done nodes' summaries to \`state/cut-archive/\` (AUTONOMY.md §<n>)`. It holds the same Part A copy with its pin (OPEN-6 (A)), then usage (`[--dry-run] [--keep <id,...>]`), the exit codes (0 and 2), what it stages, and a line naming Part B.
+   - **Clause check, after the piece:**
+
+| Sentence | Against | Holds by |
+|---|---|---|
+| Part A, item 6's first two sentences (what a summary states; where a done node's history belongs) | norms for the custodian; no code enforces them | not a code claim, so no wording block; the markers (item 5) are the only mechanical aid |
+| Part A, item 6's third sentence (the monthly rotation moves what is left) | `findCandidates`, `isDue` | holds read with item 1's scope: done and over 300 bytes; a summary of 300 bytes or less stays, and Part B (i) says so (R5) |
+| Part A, item 6's fourth sentence (search by id under A's rule) | the archive's `- id:` lines; `.ignore:3` | O1 and O2 |
+| B (i) | `findCandidates` | R5, R6, R13, R10 |
+| B (ii) | `buildMove`, `verifyMove`, `archiveNameFor`, the staging | R1 to R4, R8, R11 |
+| B (iii) | `isDue` through the glob; the nothing-to-move branch; settings | R7, R12, R16 |
+| B (iv) | the procedure, item 4; `obligationRows` | R14; the rest is the custodian's procedure, and says so |
+| B (v) | as the fourth sentence | O1, O2 |
+| B (vi) | `AUTONOMY.md:67 @ 677ecd12` | not a code claim |
+
+   These sentences are the drafter's, not the human's (§31 (d) and (e)). The human approves Part B in OPEN-6.
+8. **The moved bytes.** `Σ over moved nodes of (bytes of P's summary line − bytes of the pointer line)`, without LFs, since the line count is unchanged. This equals `git cat-file -s <S9>:PLAN.yaml − git cat-file -s <S10>:PLAN.yaml`. The script prints it, and E-M checks it.
+9. **The measurements (item 7).** A's §2 item 5 procedure is used unchanged, with A's script at its bytes. The figures:
+   - **M-1, the routine read:** `measure-reads.mjs routine <rev>`. It is recorded although PLAN.yaml is not part of it (`scripts/plan/measure-reads.mjs:61-63 @ 677ecd12`).
+   - **M-2, the search corpus:** A's four steps, in a clean worktree detached at `<rev>`, with the script from M-1's worktree.
+   - **M-3, PLAN.yaml's bytes:** `git cat-file -s <rev>:PLAN.yaml`.
+
+   **Before D** at M0 (the main commit the branch starts from). **After D** at the merge commit. Each figure is run twice, and the two outputs must be byte-identical, as C's Amendment 9 recorded them. Each figure is recorded with:
+   - its stderr line and output sha256;
+   - the environment facts of A's step 3;
+   - `git show <rev>:scripts/plan/measure-reads.mjs | sha256sum`, which must equal A's S1 digest (A's form, Amendment 6 item 4).
+10. **Dates.** No date is typed anywhere:
+    - the archive name comes from the machine clock in UTC;
+    - the due rule reads `%cI`;
+    - held filings carry their receive times;
+    - the closing record's times come from `%cI`.
+11. **Order, and freezing main.**
+    - **The branch** is `cut/plan-summaries-archive`, in worktree `C:/dev/wt/psa`, from M0. M0 is the main commit carrying the dispatch amendment; the custodian names it.
+    - **Branch steps:**
+      - M: M-1 to M-3 at M0, twice each. No commit.
+      - S0: the probe (§4). No commit.
+      - S1: the script's exports, with R1 to R6, R8 to R10 and R13.
+      - S2: `main`, with R7, R11, R12, R14 and R16.
+      - S3: R15, the seam test.
+      - S4: §2 item 6, with Q1 and Q2, under OPEN-2 (A) only.
+      - S5: the README section and AUTONOMY §`<n>`, after OPEN-6.
+    - **D1-a:** M0 against S5.
+    - **G0, both gates at S5.** The PR body carries:
+      - the dry run against main's current PLAN.yaml (the candidates, the moved bytes, the sheet);
+      - S0's results;
+      - the predicted D1-b and reader table.
+    - **The human** checks the `stays` list and answers the OPEN items.
+    - **F0, the freeze (OPEN-5 (A)).** From here until the click, main takes no commit, and the human merges no other PR. PLAN.yaml edits, RULED blocks, directives and ledger entries wait in a scratch file outside the repository, each with its receive time. The human is told the order. Then:
+      - S9: `origin/main` merged into the branch, and the dry run again;
+      - new candidates since G0 get their rows. A candidate list that differs from G0's by id goes to the human (I6);
+      - S10: the script, the regeneration and the commit (item 4, steps 2 to 5), then push;
+      - D1-b (S9 against S10), E-P, E-R and E-O, in the PR body;
+      - one scoped reviewer pass over S9..S10, mechanical only.
+    - **After the click,** before any other main commit: the held filings, the node done with `{pr: N}`, then M-1 to M-3 at the merge commit, then the closing record.
+    - **Withdrawal.** Main was never touched, so nothing is restored. The freeze lifts and the held filings land.
+12. **Portability (R3).** There is no OS-conditional code. Paths from git use `/`, and `fs` paths go through `path.join`. Windows is supported (the live rows) and Linux is supported (CI runs every test). macOS is not observed. There is no user-visible reduction.
+
+## §3. Fixtures
+
+- **Temporary git repositories with a bare `origin`,** for R1 to R14 and R16. They hold:
+  - a PLAN.yaml built on `scripts/plan/fixtures/valid-plan.yaml`;
+  - a minimal `DECISIONS-PENDING.md` (one open entry and one marked entry);
+  - a `KNOWN-LIMITATIONS.md` with two items.
+- **The long summaries in the fixtures** hold `é` and `→`, a `\"` escape, a `\u00e9` escape, a ` #` sequence, a `: ` sequence and a trailing comment. One done node's summary is 300 bytes, one is 301, and one is under 300 characters but over 300 bytes. Each open status has a node over 300 bytes.
+- **R15** copies the working tree's PLAN.yaml (CI checks out LF) into a temporary repository and appends one synthetic done node over 300 bytes, so that at least one summary moves.
+- **The real tree,** for S0, D1-a, D1-b, E-P, E-R, E-M and O1/O2. It is never edited by a test.
+
+## §4. Tests, each with its mutation, and the probe
+
+Each mutation is applied, the named test fails, the failure is recorded by name with its commit in a `RECORDED MUTATION:` comment, and the mutation is reverted. That run is the observation of record, never `verify-mutation` (`docs/PREREGISTRATION-TEMPLATE.md:172 @ 677ecd12`).
+
+- R1 `rotate-plan-summaries: a due run writes a new archive whose summary lines are byte-identical to the PLAN.yaml lines they replace, keyed by node id in PLAN.yaml order`. **MR1:** the archive line re-serialised from the parsed string.
+- R2 `rotate-plan-summaries: each archived string, once parsed by yamlSubset, equals the summary it replaced`. **MR2:** the archive line written as an unquoted plain scalar.
+- R3 `rotate-plan-summaries: only the moved summary lines change; every other PLAN.yaml line is byte-identical and the line count is unchanged`. **MR3:** a generated comment line written above each pointer.
+- R4 `rotate-plan-summaries: the pointer is one generated line under 300 bytes naming the new archive, an earlier archive is never written over, and the pointer matches no site.mjs metric pattern`. The fixture forces a name collision. **MR4:** `taken` always false.
+- R5 `rotate-plan-summaries: a done node's summary of 300 UTF-8 bytes stays, 301 moves, and one under 300 characters but over 300 bytes moves`. **MR5:** the size counted with `.length`.
+- R6 `rotate-plan-summaries: a node that is in-progress, ready, blocked, proposed or unscheduled is never moved, whatever its summary's size`. **MR6:** the status filter removed.
+- R7 `rotate-plan-summaries: a second run changes nothing: not due in the same month, and due with nothing to move writes no archive`. **MR7:** an empty archive written when nothing qualifies.
+- R8a `rotate-plan-summaries: a round-trip mismatch refuses the whole run and writes nothing`. It calls `verifyMove` with an archive whose one summary differs by one escaped character, and runs the CLI to show that no file is written. **MR8a:** the parsed-equality assertion removed.
+- R8b `rotate-plan-summaries: a duplicate id refuses the whole run and writes nothing`. It covers `verifyMove` given an archive with one id twice, and a PLAN.yaml with a duplicate node id through the CLI. **MR8b:** the archive's ids compared as a set.
+- R8c `rotate-plan-summaries: an id missing from PLAN.yaml refuses the whole run and writes nothing`. It covers `verifyMove` given an archive id that PLAN.yaml lacks, and `--keep` naming an unknown id. **MR8c:** archive ids not in PLAN.yaml ignored.
+- R9 `rotate-plan-summaries: a summary written as a block scalar refuses the run with its line number and writes nothing`. **MR9:** a `YamlSubsetError` caught and the run continued over a line-based reading.
+- R10 `rotate-plan-summaries: a summary that begins with the marker but is not a generated pointer refuses, and a pointer whose archive does not hold its id refuses`. **MR10:** the marker matched by prefix and skipped.
+- R11 `rotate-plan-summaries: refuses with exit 2 and writes nothing on a modified tracked file, HEAD not equal to its upstream, a PLAN.yaml blob that differs from origin/main's, or a carriage return in PLAN.yaml`. **MR11:** the blob check removed.
+- R12 `rotate-plan-summaries: due when no PLAN-SUMMARIES archive was ever added or the newest was added before the month's first at 00:00Z, and a DECISIONS-PENDING archive does not count`. **MR12:** the glob widened to every file in `state/cut-archive/`.
+- R13 `rotate-plan-summaries: --keep leaves the named summaries in place and the rest move`. **MR13:** `--keep` ignored.
+- R14 `rotate-plan-summaries: --dry-run writes nothing and lists one obligation row per candidate with its markers in both segments and the PLAN nodes, DECISIONS-PENDING entries and KNOWN-LIMITATIONS items it names`. **MR14:** `--dry-run` stages the move.
+- R15 `rotate-plan-summaries: from the real PLAN.yaml, after a run the queue differs only in plan_hash, the site's plan.json only in plan_hash and the moved summaries, and both drift checks pass after regeneration`. This is the seam test from the real shape. It uses the real CLI, then `buildQueue`, `renderSite`, `checkQueueDrift` and `checkSiteDrift`. **MR15:** the status filter dropped, so an open node's long summary moves.
+- R16 `rotate-plan-summaries: no hook in .claude/settings.json runs the script`. **MR16:** a SessionStart entry running it.
+- Under OPEN-2 (A) only:
+  - Q1 `verify-quotes: a passage introduced by a PLAN.yaml cite and found only in a PLAN-SUMMARIES archive passes`. **MQ1:** the named-file search reads PLAN.yaml alone.
+  - Q2 `verify-quotes: a passage introduced by a PLAN.yaml cite and found in neither PLAN.yaml nor an archive fails by name`. **MQ2:** an archive's presence counted as found.
+
+**S0, the probe, before any code.** In a throwaway worktree detached at M0:
+1. Run `verify.mjs --offline`, `verify-cites.mjs`, `verify-quotes.mjs`, `verify-test-claims.mjs`, `verify-mutation.mjs`, `queue.mjs --check` and `site.mjs --check`. Record each one's exit code, stdout sha256 and stderr.
+2. With a scratch script outside the repository, apply §2 item 2's move by hand: every candidate's line copied to a probe archive under `state/cut-archive/`, and a probe pointer written in its place. Regenerate the queue and the site. Stage. Never commit.
+3. Run the repository's pre-commit profile-path scan over the staged diff.
+4. Run the seven again.
+5. Record every difference, the candidate count by the parser, the moved bytes, and the done-node count.
+6. Remove the worktree.
+
+S0 settles OPEN-2's condition and the exposure question.
+
+**Observations, at S10 on the branch, by the reviewer.** Each records the exact call, the result as returned, the commit, `claude --version` and `rg --version`'s first line.
+- **O1:** Grep `{"pattern":"id: <a moved id>$","path":"<worktree>\\state\\cut-archive","output_mode":"files_with_matches"}`. Predicted: the archive.
+- **O2:** the same call with the worktree root as its path. Predicted: PLAN.yaml only.
+
+## §5. Predictions · declared unchanged · invalidators
+
+**Predictions.** A wrong prediction is a result (class 2).
+- **S0:**
+  - verify-cites, verify-test-claims, verify-mutation and verify.mjs `--offline` are identical before and after;
+  - the two drift checks pass after regeneration;
+  - verify-quotes is identical unless a passage introduced by a PLAN.yaml cite quotes a moved summary;
+  - the scan finds nothing.
+- **No numeric prediction** is made for the candidate count or the moved bytes.
+- **E-P, at S10, by script:**
+  - `git diff --numstat <S9> <S10> -- PLAN.yaml` gives N insertions and N deletions;
+  - the archive has 3 + 2N lines;
+  - `git diff --name-only <S9> <S10>` lists exactly PLAN.yaml, the archive, `CUSTODIAN-QUEUE.md`, `CUSTODIAN-QUEUE.json`, `site/index.html`, `site/data/plan.json` and the sheet;
+  - R1 to R3's assertions hold on the real pair.
+- **E-R, the reader table, S9 against S10:**
+
+| Reader | What it takes from a done node's summary | Check | Predicted |
+|---|---|---|---|
+| queue.mjs | nothing | `CUSTODIAN-QUEUE.json` parsed, `plan_hash` and `generated_at` dropped, deep-equal; `CUSTODIAN-QUEUE.md` diff | equal; the `.md` differs on its `Generated from` line only |
+| site.mjs | the metric check; `plan.json` embeds it | `index.html` with `plan_hash` and `generated_at` normalised, equal; `plan.json` parsed, every node deep-equal except each moved node's `summary`, which is its pointer; `plan_hash`, `generated_at` dropped | as stated; no metric violation before or after |
+| buildHealth.mjs | nothing; no PLAN.yaml read | OPEN-4 | under OPEN-4 (A), no PLAN.yaml read |
+| questions-mirror.mjs | nothing; no PLAN.yaml read | `buildSummary` on the newest `state/questions/round-<n>.md`, at S9 and S10 | identical |
+
+  Every difference is recorded as the piece's own.
+- **E-M, after D:**
+  - (a) the archive is not in `rg --files` at the merge commit;
+  - (b) PLAN.yaml is in that list at M0 and at the merge;
+  - (c) `cat-file -s <S9>:PLAN.yaml − cat-file -s <S10>:PLAN.yaml` equals §2 item 8's moved bytes.
+
+  M-2's change from M0 to the merge is recorded with PLAN.yaml's term split into (c) and main's own PLAN.yaml commits from M0 to S9. Every other listed path that differs is named with its delta. No prediction is made for M-1.
+- **D1-a, declared unchanged between M0 and S5:** the exit code, stdout sha256 and stderr sha256 of the five checks, with these named exceptions:
+  - verify-cites's file count, by the new `.md` and `.mjs` files;
+  - verify-mutation's count and stderr, by the new tests;
+  - `node --test` counts, rising only by the new tests.
+- **D1-b, declared unchanged between S9 and S10:** the five checks by exit code, stdout sha256 and stderr; `queue.mjs --check` and `site.mjs --check` exit 0 at both; `node --test` counts equal. No exception is named.
+
+**Invalidators. Each is a STOP, and goes to the human:**
+- I1: D1-a differs outside its exceptions.
+- I2: D1-b differs.
+- I3: E-R differs from the table.
+- I4: E-M (a) or (c) fails.
+- I5: S0 shows a difference that OPEN-2 does not cover, or the scan finds a line.
+- I6: the candidate list at F0 differs from G0's by id, and the human has not seen it.
+- I7: the measure-reads digest at either rev differs from A's S1 digest.
+- I8: any figure differs between its two runs.
+- I9: a `stays` row lands in the archive.
+
+## §6. Instruments
+
+- **Assertions:** R1 to R16; Q1 and Q2 (conditional); D1-a, D1-b, E-P, E-R, E-M, O1, O2.
+- **Counts:** M-1 to M-3. These are deterministic byte counts at a rev, run twice by the worker and once more by the reviewer. They are not docs/08 measurements and carry no p50 or p95.
+- **Evidence:**
+  - the S0 table;
+  - the G0 and F0 dry runs and the sheet;
+  - S10's blob ids (the archive, PLAN.yaml at S9 and S10);
+  - `git diff --no-renames --name-status <S9> <S10>`.
+
+  Every row names its commit.
+
+## §7. Declared values and ceilings
+
+- **Values:**
+  - the threshold: over 300 UTF-8 bytes of the parsed summary;
+  - the month starts on the first at 00:00Z, and there is no size trigger;
+  - suffixes run to `-99`;
+  - exit codes are 0 and 2;
+  - git `maxBuffer` is 64 MiB;
+  - the archive glob is `state/cut-archive/PLAN-SUMMARIES-*.yaml`;
+  - the pointer form is §2 item 3's;
+  - the markers are `owed`, `owes`, `owing`, `waits`, `waiting`, `pending`, `held`, `until`, `next`, `follow-up`, `queued`, `later`, `not yet`, `deferred`, `outstanding`, `carried`, `still`, `open` and `todo`. C's `before` is left out, because every history segment opens with `Before:`.
+- **Line budget: at most 800 lines over at most 6 files.**
+  - `scripts/plan/rotate-plan-summaries.mjs`: 230
+  - `scripts/plan/rotate-plan-summaries.test.mjs`: 420
+  - `scripts/plan/verify-quotes.mjs`: 8 (OPEN-2 (A) only)
+  - `scripts/plan/verify-quotes.test.mjs`: 70 (OPEN-2 (A) only)
+  - `scripts/plan/README.md`: 30
+  - `AUTONOMY.md`: 42
+- **Counting command,** run at S5 and at the PR head: `git diff --numstat "$(git merge-base origin/main HEAD)" HEAD -- . ":(exclude)scripts/plan/PLAN-SUMMARIES-ARCHIVE-PREREGISTRATION.md" ":(exclude)PLAN.yaml" ":(exclude)state/cut-archive" ":(exclude)state/drafts" ":(exclude)state/consults" ":(exclude)CUSTODIAN-QUEUE.md" ":(exclude)CUSTODIAN-QUEUE.json" ":(exclude)site" | awk '{n+=$1+$2; f++} END {print n, f}'`.
+- **The moved lines, counted apart:** `git diff --numstat <S9> <S10> -- PLAN.yaml state/cut-archive`, recorded as E-P. These are data written by the script and proven by blob ids and R1 to R3, not code.
+- **An overrun** is class 8, and this section is never edited to match (`docs/PREREGISTRATION-TEMPLATE.md:169 @ 677ecd12`).
+
+## §8. Block-on-sight
+
+1. At S10, a PLAN.yaml line other than a moved summary line changed, or the line count changed.
+2. An archive summary line that is not byte-identical to P's line, or any archive edited after its commit.
+3. A moved node that was not done at P, or whose parsed summary was 300 bytes or less, or a pointer not of §2 item 3's form.
+4. A `stays` or unresolved row moved.
+5. The script run by a hook, or itself committing, pushing or fetching, or writing anything when it is not due, has nothing to move, or refuses.
+6. Any of these:
+   - a merge before the `stays` list, D1-b, E-P, E-R and O1/O2 are in the PR body;
+   - a main commit between F0 and the click;
+   - a generated file edited by hand.
+7. `AUTONOMY.md` or `scripts/plan/README.md` at the head is not M0's file plus appended bytes: `cmp -n "$(git cat-file -s <M0>:<f>)" <(git show <M0>:<f>) <(git show HEAD:<f>)` must exit 0 for each.
+8. `measure-reads.mjs`, `yamlSubset.mjs` or `plan.mjs` touched, or a second YAML reader in the script.
+9. A reader named in §1's unchanged list edited (verify-quotes under OPEN-2 (A) excepted).
+10. A typed date in a script or record.
+11. A line cite into PLAN.yaml, an archive or `DECISIONS-PENDING.md` in any file the piece adds or edits, this form included, unless it is pinned at a main commit with its hash (DECISIONS-PENDING never by line).
+12. A record that calls a `verify-mutation` run an observation of a mutation.
+13. A figure without its rev, its second identical run, the environment facts and the script's digest.
+14. Anything of the out-of-scope line: one file per node, the CI-built site, or the gate log's format.
+
+## §9. Gates
+
+- **Architect:**
+  - §8, item by item;
+  - R15 and R1 to R3 as the seam from the real shape;
+  - §2 item 1 against items 1 and 5;
+  - the sheet's `not owed` and `no obligation` rows (§2 item 5);
+  - E-R against the addendum;
+  - the clause check of §2 item 7.
+- **Reviewer:**
+  - the full diff;
+  - every mutation made again;
+  - every hash recomputed;
+  - S0, D1-a and the dry run run again;
+  - every row of the sheet checked mechanically;
+  - the counting command;
+  - O1 and O2 at S10;
+  - the scoped S9..S10 pass (D1-b, E-P, E-R).
+- **After the merge:** one scoped reviewer pass over the closing record: commits and hashes only.
+- **Suites:** the CI `node --test` globs, plus `verify:plan`, `cites`, `quotes`, `test-claims` and `mutation`, each named with its commit.
+- **Operator:** none. Nothing here is visible to a user.
+- **Verdicts are proportional:** a block only on Correctness or Evidence. Documentation findings are fixed before the merge.
+- **Rule 00, at main 677ecd12.** D's paths are:
+  - `scripts/plan/rotate-plan-summaries.mjs` and its test (new);
+  - `scripts/plan/verify-quotes.mjs` and its test (conditional);
+  - `scripts/plan/README.md` and `AUTONOMY.md`;
+  - at S10: PLAN.yaml, `CUSTODIAN-QUEUE.*`, `site/`, `state/cut-archive/` and `state/drafts/`.
+
+  None is under `protocol/`. The two pieces in hand:
+  - **S5d (a)** on `cut/source-changed-s5d-inconclusive`: `frontends/shell/e2e/s5dVerdict.mjs` and its test, `e2e/source-changed.mjs`, `frontends/shell/package.json`, and `e2e/README.md` (its form's rule-00 list, `frontends/shell/SOURCE-CHANGED-S5D-INCONCLUSIVE-PREREGISTRATION.md:380-386 @ 677ecd12`).
+  - **publish-approval-ttl-ten-minutes** on `cut/publish-approval-ttl-ten-minutes`: `publish.rs`, `PublishDialog.tsx` and its test, `e2e/exportElapsed.test.mjs`, `e2e/publish.mjs`, `e2e/README.md`, `MANUAL-WALKTHROUGH.md` Part G and ADR-024, and no PLAN or generated file on its branch (`frontends/shell/PUBLISH-APPROVAL-TTL-TEN-MINUTES-PREREGISTRATION.md:7 @ 677ecd12`).
+
+  Both are disjoint from D. The custodian confirms with `git diff --name-only origin/main...<branch>` at dispatch. Their merge clicks and the custodian's PLAN.yaml commits marking them done must land before F0 or after D's click. The human is told the order.
+
+## OPEN (the human's)
+
+- **OPEN-1, before S1: the archive's shape.** The subset's key grammar has no hyphen (§0), so a map keyed by node id cannot be parsed.
+  - (A) **Recommended:** a list of `{id, summary}` items under `summaries:`, in PLAN.yaml order. The script refuses a duplicate id. Searching `id: <id>` finds an entry.
+  - (B) Widen `KEY_RE`. That edits the parser every check depends on. Not recommended.
+  - (C) Your own words.
+- **OPEN-2, before S4, and only if S0 shows it: the named-file reader in verify-quotes.**
+  - (A) **Recommended:** §2 item 6, the same shape as C's fourth reader.
+  - (B) No change. Each such summary stays, with `--keep` and a `stays` row.
+  - (C) Your own words.
+- **OPEN-3, before G0's sheet, for sight:** §7's markers, §2 item 5's resolution forms, one row per candidate (C's shape), and the two segments. Expect most rows flagged, because history segments carry `NEXT:`.
+- **OPEN-4, before G0: buildHealth.mjs's before and after.** It reads GitHub's API and the clock, not PLAN.yaml.
+  - (A) **Recommended:** the import proof in E-R plus `summaryLines` run at S9 and S10 on one fixed fixture object, identical. No network run.
+  - (B) One paired network run at each commit, compared with `built_at` dropped, and any API fact that changed named.
+- **OPEN-5, before F0: the freeze.**
+  - (A) **Recommended:** C's F0. Main takes no commit and no other merge from S9 to the click, and filings are held.
+  - (B) Only commits touching PLAN.yaml, `CUSTODIAN-QUEUE.*` or `site/` are held. Others land, and E-M names them.
+- **OPEN-6, before S5: the rule's two homes.**
+  - (A) **Recommended:** item 6's span byte-copied into both AUTONOMY §`<n>` and the README section, because item 6 names both files.
+  - (B) The README names §`<n>` Part A and does not reproduce it.
+  - Part B's words (§2 item 7) are the drafter's, for your approval or replacement (§31 (e)).
+- **OPEN-7, readings, for sight. Each is recommended:**
+  - (i) Item 7's word *unchanged* on the corpus line means the instrument, since the addendum predicts the figure falls.
+  - (ii) *On the first of each month* means due from the first at 00:00Z, run at the first session start on or after it, with no size trigger.
+  - (iii) A home is one of the three named, and the continuity block is not one.
+  - (iv) A `stays` row does not stop the rest of a run.
+  - (v) *A duplicate id* means within PLAN.yaml or within the archive a run writes. A node re-archived in a later month appears in two archives, and both are found by id.
+  - (vi) The pointer's date is a file name, not a number under §1's summary note (`AUTONOMY.md:50 @ 677ecd12`).
+
+## §10. Amendments — opens empty, append-only
+
+---
+
+**What the drafter could not settle**
+1. Every line number above is a Read at 677ecd12 without a shell. No sha256 is filled, and the custodian must expand and hash each pin. The 312-line summary count is a Grep reading, not the parser's.
+2. Whether any preregistration has a quote passage introduced by a PLAN.yaml cite that quotes a moved summary (OPEN-2's condition). Only S0 can show it. The Grep found 239 `PLAN.yaml:<digits>` tokens across 99 files at 677ecd12, many in `state/consults/`, which verify-quotes does not scan.
+3. Whether any moved summary line trips the pre-commit profile-path scan, as C's ledger did. S0 step 3 shows it.
+4. The candidate count and moved bytes at M0. The human's 151 of 193 were at b2433b78.
+5. buildHealth.mjs's before and after cannot be byte-identical as a network run (OPEN-4).
+6. That branch protection requires up-to-date branches. The freeze recommendation (OPEN-5 (A)) assumes it does, as in the memory of past final-merge PRs. It was not read from the repository's settings.
+7. The AUTONOMY section number: 35 only if no other section lands before S5.
+8. The S5d (a) and TTL path lists come from their forms at 677ecd12, not from their branches.
