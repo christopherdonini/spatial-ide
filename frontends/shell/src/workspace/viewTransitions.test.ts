@@ -54,7 +54,9 @@ describe("UA4: transitions are pure and typed, and a style edit is one transitio
   // Expected failure: the sample for `inspect.pin` is not applied. (The table's completeness is tsc's.)
   // OBSERVED AT feaa43d329e6d900b6ae672547569f1b591e3052: FAILED -- "the union is exactly section 2.4's nine names, and every one of them is applied":
   //   AssertionError: inspect.pin is applied: expected undefined to be defined. Reverted after observing.
-  // The union gained `filter.clauses.set` (SHELL-MIGRATION-MILESTONE-3-PREREGISTRATION.md Amendment 3 item 7, UC7's declared edit); the mutation above is observed again at that commit.
+  // The union gained `filter.clauses.set` (SHELL-MIGRATION-MILESTONE-3-PREREGISTRATION.md Amendment 3 item 7, UC7's declared edit); the mutation above (delete the `inspect.pin` case) is observed again beside the first:
+  // OBSERVED AGAIN AT 9a9d1849f3dead11891642b95fe4a4ff0bffc76c: FAILED -- "the union is exactly section 2.4's nine names and milestone 3's filter.clauses.set, and every one of them is applied":
+  //   AssertionError: inspect.pin is applied: expected undefined to be defined. Reverted after observing.
   it("the union is exactly section 2.4's nine names and milestone 3's filter.clauses.set, and every one of them is applied", () => {
     // `satisfies` over the union's own names is what makes this table complete: tsc fails on a missing or an extra name.
     const samples = {
@@ -151,6 +153,8 @@ const TEXTS = ["a = 1", "\"zone\" = 'r'", " b IS NULL ", "c IN (1, 2)", "a = 1 O
 const filterOfText = (predicate: string) => ({ predicate, dialect: FILTER_DIALECT_DUCKDB_EXPR_0 });
 
 // RECORDED MUTATION for "UC7": in `applyViewTransition`'s `filter.clauses.set` case (viewTransitions.ts) leave `filter` unchanged for a `setEnabled` step (`filter: transition.params.step.kind === "setEnabled" ? view.filter : combineClauses(clauses)`). Expected failure: the invariant.
+// OBSERVED AT 9a9d1849f3dead11891642b95fe4a4ff0bffc76c: FAILED -- "UC7: filter.apply sets one clause or none, filter.clauses.set carries the step, and view.filter equals combineClauses(clauses) after every transition of 2,000 seeded sequences":
+//   AssertionError: seed 1, step 1: filter is the combination of the clauses: expected { predicate: 'a = 1', …(1) } to deeply equal null. Reverted after observing.
 describe("UC7: clause transitions are pure, and the view's filter is the combination of its clauses after every transition", () => {
   it("UC7: filter.apply sets one clause or none, filter.clauses.set carries the step, and view.filter equals combineClauses(clauses) after every transition of 2,000 seeded sequences", () => {
     const frozen = deepFreeze(structuredClone(view));

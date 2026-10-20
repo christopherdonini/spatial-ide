@@ -208,6 +208,8 @@ describe("UB14 (Amendment 7 item 6): consumer.acquired is idempotent, and an exp
 });
 
 // RECORDED MUTATION for "UC7 (resource.admitted)": in `admit` (workspaceState.ts) keep the clauses across a rebind (spread `bound` whole where `rebound` is spread, so that `clauses` stays). Expected failure: the reopened view still holds a card.
+// OBSERVED AT 9a9d1849f3dead11891642b95fe4a4ff0bffc76c: FAILED -- "a reopen leaves no clause and a null filter, and the clause counter is kept so that an id is never minted twice":
+//   AssertionError: expected [ null, [ { id: 'clause-1', …(2) } ] ] to deeply equal [ null, [] ]. Reverted after observing.
 describe("UC7 (SHELL-MIGRATION-MILESTONE-3-PREREGISTRATION.md section 4): resource.admitted resets the clauses with the filter", () => {
   it("a reopen leaves no clause and a null filter, and the clause counter is kept so that an id is never minted twice", () => {
     let state = run(initialWorkspaceState, admit("a"));

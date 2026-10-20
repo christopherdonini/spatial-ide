@@ -16,6 +16,8 @@ const clause = (n: number, text: string, enabled = true): FilterClause => ({ id:
 const filterOf = (predicate: string) => ({ predicate, dialect: FILTER_DIALECT_DUCKDB_EXPR_0 });
 
 // RECORDED MUTATION for "UC3": in `combineClauses` (filterClauses.ts) trim each text (`clause.text.trim()` where the text is read). Expected failure: the whitespace case.
+// OBSERVED AT 9a9d1849f3dead11891642b95fe4a4ff0bffc76c: FAILED -- "UC3: none gives null, one gives its text byte for byte, two or more give (t1) AND (t2) in card order, cards that are off are left out, and the dialect is the constant":
+//   AssertionError: whitespace and case are kept: expected { Object (predicate, dialect) } to deeply equal { …(2) }. Reverted after observing.
 describe("UC3: combineClauses", () => {
   it("UC3: none gives null, one gives its text byte for byte, two or more give (t1) AND (t2) in card order, cards that are off are left out, and the dialect is the constant", () => {
     expect(combineClauses([])).toBeNull();
@@ -33,6 +35,8 @@ describe("UC3: combineClauses", () => {
 });
 
 // RECORDED MUTATION for "UC4": in `recognizeSimple`'s name pattern (filterClauses.ts, `NAME`) let the bare name's tail class admit a closing bracket (`[A-Za-z0-9_]*` becomes `[A-Za-z0-9_)]*`). Expected failure: the escape row `a)=1`.
+// OBSERVED AT 9a9d1849f3dead11891642b95fe4a4ff0bffc76c: FAILED -- "UC4: the simple forms are accepted, literals holding ), -- and '' too, and the escapes and the texts that are not one form are refused":
+//   AssertionError: refused: "a)=1": expected true to be false // Object.is equality. Reverted after observing.
 describe("UC4: recognizeSimple", () => {
   it("UC4: the simple forms are accepted, literals holding ), -- and '' too, and the escapes and the texts that are not one form are refused", () => {
     const accepted = [
@@ -65,6 +69,8 @@ const propose = (clauses: readonly FilterClause[], request: Parameters<typeof pr
 const refusedBy = (proposal: ClauseProposal): string | null => (proposal.kind === "refuse" ? proposal.blocking : null);
 
 // RECORDED MUTATION for "UC5": in `proposeClauseChange`'s `blockerOf` (filterClauses.ts) ignore `enabled` (`const on = others;` for `others.filter((clause) => clause.enabled)`). Expected failure: the off-card row.
+// OBSERVED AT 9a9d1849f3dead11891642b95fe4a4ff0bffc76c: FAILED -- "UC5: simple next to simple is proposed, advanced alone is proposed, advanced with a card on or a card with an advanced card on is refused, and a card that is off blocks nothing":
+//   AssertionError: an off card blocks nothing: advanced is proposed: expected 'refuse' to be 'propose' // Object.is equality. Reverted after observing.
 describe("UC5: proposeClauseChange", () => {
   it("UC5: simple next to simple is proposed, advanced alone is proposed, advanced with a card on or a card with an advanced card on is refused, and a card that is off blocks nothing", () => {
     const first = propose([clause(1, SIMPLE)], { kind: "add", text: "b = 2" });
