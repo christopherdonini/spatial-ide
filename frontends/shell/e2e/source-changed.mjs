@@ -165,11 +165,11 @@
 // (`frontends/shell/src/diagnostics/renderTrace.ts:27-32`) names the baseline arm's call site
 // (`ViewportStreamManager.requestViewport`, right before it returns `{kind:"issued", streamHandle}`)
 // and states it fires at the moment a ticket actually mints. On the TILED arm specifically -- the
-// route this driver drives -- `traceStreamIssued` is called on line 1096 of
-// `frontends/shell/src/streaming/tileViewportStreamManager.ts`, AFTER `startStream(...)` on line
-// 1093 (already carrying the real, already-minted `ticket.stream`), unconditionally: no `if` guards
+// route this driver drives -- `traceStreamIssued` is called at the end of `mintAndStart` in
+// `frontends/shell/src/streaming/tileViewportStreamManager.ts`, AFTER `startStream(...)` (already
+// carrying the real, already-minted `ticket.stream`), unconditionally: no `if` guards
 // the call, so it runs on every reach of `mintAndStart`'s success path, and that call site's own
-// comment (`:1094-1095`) states it fires at the same moment the baseline arm's does -- right after
+// comment states it fires at the same moment the baseline arm's does -- right after
 // the real mint, never before. So a NEW `stream-issued` line is strictly AFTER the pre-check for
 // that tile already passed. Polling for one and writing the repoint request the instant it appears is therefore
 // mutating no earlier than "this tile's pre-check already passed"; the helper makes the repoint after it reads that request,
@@ -177,15 +177,26 @@
 // viewport_query` in S4 above, one product-emitted signal later in the same pipeline.
 //
 // WHAT THIS DOES NOT GUARANTEE, STATED RATHER THAN HIDDEN. A camera gesture can plan more than one
-// tile; this driver mutates on the FIRST `stream-issued` line it sees, and a SIBLING tile whose own
-// mint has not yet resolved at that instant would see the already-repointed source and hit the
-// pre-check instead. That is not a silent false pass: `endSession` is idempotent (`tile-session-
-// ended-source-changed` is logged from exactly one first caller), and this driver asserts the
-// session log carries NO `tile-stream-mint-refused` line at all for the run -- the pre-check's own
-// distinct log line (`logMintRefused`, `tileViewportStreamManager.ts:273-280`) -- so a run that
-// actually lost the race to the pre-check FAILS BY NAME on that assertion rather than passing on
-// the wrong route. No timing bound is asserted anywhere in this addition (ADR-018; A6) -- the
-// polling interval below is a mechanism, not a claim.
+// tile; this driver repoints on the FIRST `stream-issued` line it sees, and a SIBLING tile whose own
+// mint has not yet resolved can then meet the changed source at its own pre-check, which refuses
+// that mint. `logMintRefused` logs every refused tile mint, first in `mintAndStart`'s catch, even
+// after the session has ended, so S5d reads that sibling's `tile-stream-mint-refused` line and
+// classes it by its code and detail, never by its position (`e2e/s5dVerdict.mjs`). S5d reads:
+//   PASS -- a `tile-session-ended-source-changed` line and no `tile-stream-mint-refused` line since
+//   this run's baseline;
+//   INCONCLUSIVE, never a pass -- a session-ended line, and at least one refusal with
+//   `engine.source_changed` and the pre-check's own descriptor detail, none with another code or
+//   with the could-not-re-read detail: a sibling's pre-check found the change, and whether the
+//   post-check also found it is neither shown nor excluded. The suite then exits 3 unless a step
+//   failed or the deadline passed;
+//   FAIL -- no session-ended line; a refusal with another code, an unreadable one, or one with the
+//   could-not-re-read detail; or refusals that all report an end already made.
+// The post-check route is evidenced by the P count in the custodian's run records: the in-flight
+// count in the kernel's stderr line `session ended for dataset ...`, which only a stream's
+// post-check prints, and which is above 0 only when that post-check's call ended the generation.
+// This suite cannot read it. S5d confirms the post-check route only in a run with no sibling
+// refusal, and even there it reads no kernel line. No timing bound is asserted anywhere in this
+// addition (ADR-018; A6) -- the polling interval below is a mechanism, not a claim.
 
 import {
   copyFileSync,
@@ -219,6 +230,7 @@ import {
   waitForSettle,
   zoomInOneNotch,
 } from "./lib.mjs";
+import { S5dInconclusive, initRefusalDetails, s5dVerdict } from "./s5dVerdict.mjs";
 
 const OUT_DIR = join(dirname(fileURLToPath(import.meta.url)), "out");
 
@@ -749,6 +761,11 @@ async function main() {
     return;
   }
 
+  let refusalDetails = null; // POST route only: S5d's kernel details, read from source text before the layout (a precondition)
+  if (ROUTE === "post") {
+    try { refusalDetails = initRefusalDetails(); } catch (e) { console.error(`source-changed: ${e.message}`); process.exitCode = 1; return; }
+  }
+
   mkdirSync(OUT_DIR, { recursive: true });
   copyFileSync(FIXTURE_100K, SCRATCH_COPY);
   const hashBefore = sha256(SCRATCH_COPY);
@@ -791,7 +808,7 @@ async function main() {
   const { browser, page, launched } = session;
   const consoleHandle = attachConsole(page);
 
-  /** @type {Array<{id: string, status: "PASS"|"FAIL"|"INFO", note: string}>} */
+  /** @type {Array<{id: string, status: "PASS"|"FAIL"|"INFO"|"INCONCLUSIVE", note: string}>} */
   const results = [];
   /** @type {Record<string, unknown>} */
   const observation = { launched, cdpPort: CDP_PORT, fixture: OPEN_PATH, hashBefore };
@@ -812,8 +829,9 @@ async function main() {
       return true;
     } catch (e) {
       const note = e?.message ?? String(e);
-      results.push({ id, status: "FAIL", note });
-      console.error(`[${id}] FAIL: ${note}`);
+      const status = e instanceof S5dInconclusive ? "INCONCLUSIVE" : "FAIL"; // S5d only; the suite then exits 3 unless a step FAILed
+      results.push({ id, status, note });
+      console.error(`[${id}] ${status}: ${note}`);
       return false;
     }
   }
@@ -1386,14 +1404,14 @@ async function main() {
     }
 
     // ------------------------------------------------------------------------------------
-    // S5d: POST route only. The one assertion that distinguishes this run from a PRE-route one --
-    // not "a session ended" (S5a-c already prove that, on both routes) but WHICH product code path
-    // ended it. `tile-stream-mint-refused` (`logMintRefused`,
-    // `tileViewportStreamManager.ts:273-280`) is logged ONLY from the mint's own catch -- the
-    // PRE-check's route into this manager (`mintAndStart`'s `isSourceChangedRefusal` branch,
-    // `:952-954`). The terminal route (`onTerminal`'s `isSourceChangedTerminal` branch, `:1081-1083`)
-    // never logs it. `endSession` is idempotent (`:733`, `if (this.sessionEnded) return`), so
-    // whichever route reaches it FIRST is the only one whose log lines this run can observe.
+    // S5d: POST route only. It reads the session log's lines since this run's baseline and hands them
+    // to `s5dVerdict` (`e2e/s5dVerdict.mjs`). `tile-stream-mint-refused` is written by `logMintRefused`
+    // first in `mintAndStart`'s catch, before that catch checks whether the refusal ends the session,
+    // so a refused tile mint is logged even after the session has ended; `onTerminal` never logs it.
+    // `endSession` is latched by `sessionEnded`, so `tile-session-ended-source-changed` is logged once,
+    // by whichever way into this manager came first. Neither that line's position nor its detail tells
+    // which kernel route ended the generation, and this step reads no kernel stderr line. A refusal is
+    // classed by its code and detail alone (this file's header note).
     // ------------------------------------------------------------------------------------
     if (ROUTE === "post") {
       await runStep("S5d-post-check-route-confirmed", async () => {
@@ -1415,22 +1433,10 @@ async function main() {
           mintRefused,
           sessionEnded,
         };
-        if (sessionEnded.length === 0) {
-          throw new Error(
-            `S5d: no "tile-session-ended-source-changed" line appeared in the session log after this run's own ` +
-              `baseline (line ${sessionLogBaselineLineCount}) -- the terminal route never fired`
-          );
-        }
-        if (mintRefused.length > 0) {
-          throw new Error(
-            `S5d: a "tile-stream-mint-refused" line appeared after this run's own baseline -- this run's change ` +
-              `lost the race to a tile's PRE-check rather than landing on the POST-check route (see this file's ` +
-              `header note on what this does and does not guarantee). Not a silent pass: this is exactly the ` +
-              `route this assertion exists to distinguish. Evidence: ${JSON.stringify(observation.postCheckLogEvidence)}`
-          );
-        }
-        return `"tile-session-ended-source-changed" present and no "tile-stream-mint-refused" since this run's own ` +
-          `baseline -- a session ended and no tile mint refusal was logged; which kernel route ended the generation is not read by this step`;
+        const verdict = s5dVerdict({ newLines, baseline: sessionLogBaselineLineCount, details: refusalDetails });
+        if (verdict.status === "PASS") return verdict.message;
+        const message = verdict.class === null ? verdict.message : `${verdict.message} Evidence: ${JSON.stringify(observation.postCheckLogEvidence)}`; // rule 1 keeps its text
+        throw verdict.status === "INCONCLUSIVE" ? new S5dInconclusive(message) : new Error(message);
       });
     }
   } catch (e) {
@@ -1463,12 +1469,14 @@ async function main() {
     }
 
     const idWidth = Math.max(...results.map((r) => r.id.length), "Step".length);
-    console.log(`${"Step".padEnd(idWidth)}  Status  Note`);
-    console.log(`${"-".repeat(idWidth)}  ------  ${"-".repeat(40)}`);
-    for (const r of results) console.log(`${r.id.padEnd(idWidth)}  ${r.status.padEnd(6)}  ${r.note}`);
+    const statusWidth = Math.max(6, ...results.map((r) => r.status.length));
+    console.log(`${"Step".padEnd(idWidth)}  ${"Status".padEnd(statusWidth)}  Note`);
+    console.log(`${"-".repeat(idWidth)}  ${"-".repeat(statusWidth)}  ${"-".repeat(40)}`);
+    for (const r of results) console.log(`${r.id.padEnd(idWidth)}  ${r.status.padEnd(statusWidth)}  ${r.note}`);
 
     const anyFail = results.some((r) => r.status === "FAIL");
-    process.exitCode = anyFail ? 1 : 0;
+    const anyInconclusive = results.some((r) => r.status === "INCONCLUSIVE");
+    process.exitCode = anyFail ? 1 : anyInconclusive ? 3 : 0;
 
     try {
       const reportPath = join(OUT_DIR, `source-changed-${Date.now()}.json`);
