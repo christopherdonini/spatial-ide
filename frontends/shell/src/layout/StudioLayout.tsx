@@ -6,7 +6,9 @@ import type { CSSProperties, ReactNode, RefObject } from "react";
 
 import CommandBar from "../command/CommandBar";
 import type { CommandBarHandle, RunOutcome } from "../command/CommandBar";
+import type { FieldSource } from "../command/fieldCompletion";
 import { recordNamed } from "../console/recorder";
+import type { ClauseResult } from "../workspace/filterClauses";
 import type { Tool } from "../workspace/workspaceState";
 import { ACTIONS, ariaKeyShortcuts, currentPlatform, matchChord, matchCommandOpener, matchToolKey, shortcutLabel } from "./actionRegistry";
 import type { ActionId, ToolActionId } from "./actionRegistry";
@@ -134,6 +136,11 @@ export interface StudioLayoutProps {
   selectionAvailable?: boolean;
   onOpenDataset?: () => "started" | "busy";
   onRevealExport?: () => void;
+  /** Milestone 3 PR B (section 2.5): `filter.addClause` is App's clause handler, called with the condition the bar was given; `clausePending` is that handler's pending state (a bar or card change is in flight), and
+   * `filterFields` is the file's schema for field completion. An absent `onAddClause` leaves the entry unavailable. */
+  onAddClause?: (condition: string) => Promise<ClauseResult>;
+  clausePending?: boolean;
+  filterFields?: FieldSource | null;
 }
 
 export default function StudioLayout({
@@ -147,6 +154,9 @@ export default function StudioLayout({
   selectionAvailable,
   onOpenDataset,
   onRevealExport,
+  onAddClause,
+  clausePending,
+  filterFields,
 }: StudioLayoutProps) {
   const [state, dispatch] = useReducer(layoutReducer, undefined, initialLayoutState);
   const viewport = useViewport();
@@ -194,6 +204,8 @@ export default function StudioLayout({
         return onOpenDataset !== undefined;
       case "layer.revealExport":
         return dataset && onRevealExport !== undefined;
+      case "filter.addClause":
+        return dataset && onAddClause !== undefined;
       default:
         return true;
     }
@@ -208,7 +220,10 @@ export default function StudioLayout({
   }
 
   /** The one dispatch (milestone 3, Amendment 3 item 6): the keys, the buttons and the bar all arrive here, and each arm calls the function its chord, bare key or button calls. */
-  function runAction(id: ActionId): RunOutcome {
+  function runAction(id: ActionId): RunOutcome;
+  function runAction(id: ActionId, condition: string): Promise<ClauseResult>;
+  function runAction(id: ActionId, condition?: string): RunOutcome | Promise<ClauseResult> {
+    if (id === "filter.addClause") return onAddClause !== undefined && condition !== undefined ? onAddClause(condition) : Promise.resolve<ClauseResult>({ kind: "not-applied" });
     const region = TOGGLE_REGION[id];
     if (region !== undefined) apply({ kind: "toggle", region });
     else if (id === "layer.zoomToLayer") onZoomToLayer();
@@ -303,7 +318,7 @@ export default function StudioLayout({
       {overlays}
       <header className="top-bar">
         <span className="app-header">Spatial IDE</span>
-        <CommandBar ref={barRef} registry={ACTIONS} platform={platform} available={available} run={runAction} leave={leaveBar} held={heldRef} />
+        <CommandBar ref={barRef} registry={ACTIONS} platform={platform} available={available} run={runAction} leave={leaveBar} held={heldRef} fields={filterFields} filterPending={clausePending} />
         {hasContent(slots["topBar.tools"]) && <div className="top-bar-tools">{slots["topBar.tools"]}</div>}
         <div className="top-bar-toggles">
           {ACTIONS.map((entry) => {

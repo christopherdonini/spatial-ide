@@ -24,6 +24,7 @@ import type { LastClick } from "./feature/FeatureTab";
 import { lateCancelOutcome, LateCancelStatement, OpenDuringExportAsk } from "./feature/OpenDuringExportAsk";
 import type { FinishedOutcome } from "./feature/OpenDuringExportAsk";
 import { ToolSwitch } from "./feature/ToolSwitch";
+import ClauseCards from "./filter/ClauseCards";
 import FilterPanel from "./filter/FilterPanel";
 import { ScanLivenessMirror, WatcherStatusItem } from "./layout/regionParts";
 import StudioLayout from "./layout/StudioLayout";
@@ -85,6 +86,8 @@ import { closeDataset, recordStep, SkpCallError } from "./skp/client";
 import { listenDatasetSessionEnded } from "./skp/events";
 import type { Bbox, DatasetSessionEnded, EndReason, Filter } from "./skp/types";
 import { createStepQueue, noticeText as stepNoticeText } from "./workspace/stepRecorder";
+import { proposeClauseChange } from "./workspace/filterClauses";
+import type { ClauseRequest, ClauseResult } from "./workspace/filterClauses";
 import { checkScope, resolveScope } from "./workspace/scope";
 import type { ResolvedScope, ScopeCheck } from "./workspace/scope";
 import { NO_MEMBERS, unionOfBounds } from "./workspace/selection";
@@ -92,7 +95,9 @@ import type { SelectionMode } from "./workspace/selection";
 import { DEFAULT_SELECTION_MODE, DEFAULT_TOOL } from "./workspace/selectionConstants";
 import {
   styleTransitions,
+  viewClauses,
   viewInspected,
+  viewNextClauseNumber,
   viewPinned,
   viewSelection,
   viewSelectionMode,
@@ -982,35 +987,42 @@ export default function App() {
     ((bbox: Bbox | null, bboxCrs: string | null, filter: Filter | null) => Promise<RequestOutcome>) | null
   >(null);
 
-  /** Writes `activeFilterRef.current` (synchronously) and dispatches `filter.apply` on the view -- the one
-   * function every successful Apply's commit goes through. A dataset-change reset writes the ref in
-   * `handleAdmitted` and the view's filter in the workspace's `resource.admitted`, and records nothing.
-   * It is also where the filter is recorded (section 2.5): after an issued outcome, never before it.
+  /** Writes `activeFilterRef.current` (synchronously), dispatches `transition` on the view and records the filter -- the one
+   * function every successful filter change's commit goes through, an Apply's (`commitActiveFilter`) and a card change's (`filter.clauses.set`, milestone 3 section 2.5, Amendment 3 item 4).
+   * A dataset-change reset writes the ref in `handleAdmitted` and the view's filter in the workspace's `resource.admitted`, and records nothing.
+   * It is also where the filter is recorded (section 2.5): after an issued outcome, never before it, as one `filter.apply` step holding the combined filter and no clause.
    * `useCallback([stepQueue])`: `dispatch` is React's own identity-stable function, the view's id is read from
    * `viewIdRef` and `stepQueue` is created once, so this never needs to change either -- see `handleAdmitted`'s
    * own doc comment for why that stability matters. */
-  const commitActiveFilter = useCallback(
-    (filter: Filter | null) => {
+  const commitFilterChange = useCallback(
+    (filter: Filter | null, transition: ViewTransition) => {
       activeFilterRef.current = filter;
       const viewId = viewIdRef.current;
-      if (viewId !== null) dispatch({ type: "view.transition", view: viewId, transition: { action: "filter.apply", params: { filter } } });
+      if (viewId !== null) dispatch({ type: "view.transition", view: viewId, transition });
       const dataset = admittedDatasetRef.current;
       if (dataset !== null) stepQueue.enqueue(dataset, { action: "filter.apply", params: { filter } });
     },
     [stepQueue]
   );
+  const commitActiveFilter = useCallback(
+    (filter: Filter | null) => commitFilterChange(filter, { action: "filter.apply", params: { filter } }),
+    [commitFilterChange]
+  );
+  /** A bar or card change is pending (milestone 3 section 2.5, OPEN-2): the ref for the handler, the state for the controls. */
+  const clausePendingRef = useRef(false);
+  const [clausePending, setClausePending] = useState(false);
   // `activeFilter` (the render value) is read below, in the JSX, passed to `FilterPanel` -- P3
   // (this piece) is what finally consumes the value P2 only ever wrote (see that piece's own
   // now-removed placeholder comment in git history).
 
   /**
-   * `FilterPanel`'s own `onApply` prop. NOT the same function object the dev-only `queryWithFilter`
+   * The one call behind `FilterPanel`'s `onApply` (`handleApplyFilter`, below) and a card or bar change (`changeClauses`), each passing its own `commit`. NOT the same function object the dev-only `queryWithFilter`
    * E2E hook calls -- this callback and each hook (candidate-arm, baseline-arm) are three SEPARATE
    * `applyFilter(...)` calls, each building its own `ApplyFilterDeps` (this one below;
    * the hooks' own, this file, `registerE2eHook("queryWithFilter", ...)`) -- but all three route
    * through the identical `applyFilter` seam (NEXT-CUT.md filter-panel cut, deviation-3 retrofit:
    * "hook and panel drive the identical seam"), and, as of the N8 residual correction round 1,
-   * `handleApplyFilter`'s own `requestViewport` here and the candidate arm's dev-only `queryWithFilter`
+   * `applyFilterWith`'s own `requestViewport` here and the candidate arm's dev-only `queryWithFilter`
    * hook's `requestViewport` each carry the same admitted-generation guard. The baseline arm's own dev
    * `queryWithFilter` hook needs none: its `requestViewport` is bound to THIS effect's own
    * `issueViewportQuery` (below), whose `manager.requestViewport` already returns `{kind: "stopped"}`
@@ -1021,10 +1033,10 @@ export default function App() {
    * feeds the scan-liveness machine and the rider-1 `"query-issued"` clear exactly like the initial
    * load and the debounced pan/zoom already do -- one reporting wrapper, one seam, never a second
    * parallel path that would silently miss those two side effects for Apply-issued queries alone.
-   * `useCallback([commitActiveFilter])`: stable for the same reason `handleAdmitted` above is.
+   * `useCallback([])`: it reads only refs and its own arguments, so it never changes.
    */
-  const handleApplyFilter = useCallback(
-    (filter: Filter | null): Promise<ApplyFilterOutcome> => {
+  const applyFilterWith = useCallback(
+    (filter: Filter | null, commit: (filter: Filter | null) => void): Promise<ApplyFilterOutcome> => {
       // N8 residual correction: captured at issue time, the same "which generation was this FOR"
       // key `reportViewportOutcome`'s `forDataset`/`issueViewportQuery`'s `forThisEffect` already
       // use -- a completion arriving after a later admission must not commit A's filter/fit onto B.
@@ -1048,7 +1060,7 @@ export default function App() {
         getActiveFilter: () => activeFilterRef.current,
         commitActiveFilter: (f) => {
           if (forThisApply !== admittedDatasetRef.current) return;
-          commitActiveFilter(f);
+          commit(f);
         },
         // Human-approved design revision, 2026-08-15 walkthrough Part E E5 -- see `applyFilter`'s own
         // doc comment and `WorkingCanvasHandle.resetFitForNewGeneration`'s own doc comment.
@@ -1058,7 +1070,12 @@ export default function App() {
         },
       });
     },
-    [commitActiveFilter]
+    []
+  );
+  /** `FilterPanel`'s `onApply`: `applyFilterWith` committing `filter.apply` (milestone 3 section 2.5). A card change is the same call with its own commit (`changeClauses`). */
+  const handleApplyFilter = useCallback(
+    (filter: Filter | null): Promise<ApplyFilterOutcome> => applyFilterWith(filter, commitActiveFilter),
+    [applyFilterWith, commitActiveFilter]
   );
 
   /**
@@ -1923,6 +1940,33 @@ export default function App() {
     for (const transition of transitions) stepQueue.enqueue(dataset, transition);
   }
 
+  /**
+   * A card or bar change (milestone 3 section 2.5): `proposeClauseChange` computes the cards and the one combined filter, and an accepted one goes to the kernel through `applyFilterWith` exactly as an Apply does,
+   * its commit writing the filter and dispatching `filter.clauses.set`. So `applied` changes the cards and the filter together, and a refused or not-applied change changes neither. One change at a time: a second
+   * answers `busy`. Under OPEN-3 (A) the shell sends nothing for an advanced clause beside a card that is on, or for any clause beside an advanced card that is on, and records the class-C row `filter.clauseNotSent`.
+   */
+  async function changeClauses(request: ClauseRequest): Promise<ClauseResult> {
+    const current = viewIdRef.current === null ? undefined : workspaceRef.current.views[viewIdRef.current];
+    if (current === undefined || admittedDatasetRef.current === null) return { kind: "not-applied" };
+    if (clausePendingRef.current) return { kind: "busy" };
+    let number = viewNextClauseNumber(current);
+    const proposal = proposeClauseChange(viewClauses(current), request, () => `clause-${number++}`);
+    if (proposal.kind === "refuse") {
+      recordNamed("gui-action", "filter.clauseNotSent");
+      return { kind: "shell-refused", blocking: viewClauses(current).find((clause) => clause.id === proposal.blocking) ?? viewClauses(current)[0] };
+    }
+    const { clauses, filter, step } = proposal;
+    clausePendingRef.current = true;
+    setClausePending(true);
+    try {
+      const outcome = await applyFilterWith(filter, (f) => commitFilterChange(f, { action: "filter.clauses.set", params: { clauses, step } }));
+      return outcome.kind === "applied" ? { kind: "applied" } : outcome.kind === "refused" ? { kind: "refused", refusal: outcome.refusal } : { kind: "not-applied" };
+    } finally {
+      clausePendingRef.current = false;
+      setClausePending(false);
+    }
+  }
+
   return (
     <StudioLayout
       overlays={<ErrorBanner />}
@@ -1934,6 +1978,9 @@ export default function App() {
       selectionAvailable={selection.size > 0}
       onOpenDataset={() => admissionRef.current?.requestPick() ?? "busy"}
       onRevealExport={() => publishRef.current?.reveal()}
+      onAddClause={(condition) => changeClauses({ kind: "add", text: condition })}
+      clausePending={clausePending}
+      filterFields={admitted ? { schema: admitted.describe.schema, geometryColumn: admitted.describe.geometry.column } : null}
       /* Milestone 1 (SHELL-MIGRATION-MILESTONE-1-PREREGISTRATION.md section 2.2): every panel below keeps
        * its keys and its props and now lives in a slot of the Map Studio frame (`layout/`). A comment
        * below that speaks of `.app-main`, `.app-rail-top`, `.app-rail-bottom`, a flex column, or a
@@ -1960,6 +2007,7 @@ export default function App() {
           * `scanState` -- is reset independently via `admitAndResetStaleUiState`). Its home is the
           * Inspector's Filter section; its liveness line and Cancel stay inside it (ADR-021). */
         "section.filter": admitted && (
+          <>
           <FilterPanel
             // Reviewer gate, style-panel cut P7 fixes: prefixed, not the bare `admitted.dataset`
             // string -- `StylePanel` below is ALSO keyed per-dataset and is a DIRECT SIBLING of this
@@ -2046,6 +2094,8 @@ export default function App() {
               void managerRef.current?.cancelStream(handle);
             }}
           />
+          <ClauseCards key={`clauses-${admitted.dataset}`} clauses={view === null ? [] : viewClauses(view)} pending={clausePending} onChange={changeClauses} />
+          </>
         ),
         "region.map": admitted && (
           <div className="canvas-container">

@@ -3,7 +3,8 @@
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
 // E2E TEST SURFACE (e2e/README.md) -- the command bar on real WebView2: E-CTRLK, E-SEARCH, E-HELP, E-BARFOCUS and E-REVEAL (asserted), from
-// SHELL-MIGRATION-MILESTONE-3-PREREGISTRATION.md section 4, and E-SLASH, the bare `/` sent by CDP key injection from the map and in the Filter section's input (Amendment 1 item 9; what that injection does not prove is below). Fixture:
+// SHELL-MIGRATION-MILESTONE-3-PREREGISTRATION.md section 4, and E-SLASH, the bare `/` sent by CDP key injection from the map and in the Filter section's input (Amendment 1 item 9; what that injection does not prove is below). PR B adds E-FIELD, E-AND, E-REFUSE, E-TOOLONG, E-ADV, E-PANEL and E-SEL, the filter cards and
+// `/filter` (section 4; Amendment 3 item 4(d)): each but E-FIELD starts from the Filter section's Clear and sets its own cards through the bar. Fixture:
 // `filter-zoned.parquet`; the suite records its sha256 before and after its run. Nothing here is a measurement or a performance claim.
 //
 // What CDP key injection proves and does not (section 0.6, H2): `page.keyboard.press` reaches the page's own `keydown` listener; it does NOT cross WebView2's
@@ -20,13 +21,34 @@
 //             (the top bar becomes the list's containing block, and with the rule's own `overflow: hidden` it clips the list). Predicted, and observed at 2fa7c8d0: step E-SEARCH fails, "E-SEARCH: with the list open, document.elementFromPoint at the first option's centre does not return that option".
 //   E-HELP    frontends/shell/src/command/commandDraft.ts, replace `registry.filter((e) => contains(e.label, query) || (e.command !== null && contains(e.command, query)))` with
 //             `registry.filter((e) => e.chord !== null && (contains(e.label, query) || (e.command !== null && contains(e.command, query))))` (help leaves out entries with no chord).
-//             Expected: step E-HELP fails, "E-HELP: ? lists 4 options, expected 11".
+//             Expected: step E-HELP fails, "E-HELP: ? lists 4 options, expected 12" (12 entries since PR B's filter.addClause; observed at 2fa7c8d0, with 11 entries, as "expected 11").
 //   E-BARFOCUS frontends/shell/src/command/commandDraft.ts, replace `if (key.shiftKey || state.completed || count === 0) return none;` with `return { pos, effect: none.effect, preventDefault: true };` (Tab is always intercepted; until correction round 1 of PR #233 the guard read `!state.open` in place of `state.completed`).
 //             Expected: step E-BARFOCUS fails, "E-BARFOCUS: Tab with no list open left the bar's input holding the focus"; E-CTRLK fails too, on its Tab completion.
 //   E-REVEAL  frontends/shell/src/publish/PublishPanel.tsx, replace `reveal() { if (!expanded)` with `reveal() { handlePublishClick(); if (!expanded)` (the panel's click handler is called).
 //             Expected: step E-REVEAL fails, either "E-REVEAL: the approval prompt (.publish-dialog) is showing" or, while the host's native picker stands, "E-REVEAL: timed out after 60000ms".
+//             Step E-SLASH fails too, and this is expected (Amendment 8 item 7; the round 2 record, state/consults/2026-10-19-shell-migration-milestone-3-pr-a-round-2-e2e-custodian-runs.md): the handler the mutation calls has opened the host's native picker, which stands
+//             over the page while E-SLASH runs, so its first assertion fails with `E-SLASH: / pressed from the map left the bar focused holding "", expected it focused holding "/"`. Two steps fail for this one mutation.
 //   E-SLASH   frontends/shell/src/layout/actionRegistry.ts, replace `return event.key === "/" && !isEditable(focus);` with `return event.key === "/";` (an editable focus no longer ignores it).
 //             Expected: step E-SLASH fails, "E-SLASH: the focus left the Filter section's input when / was typed in it".
+//
+// PR B's MUTATIONS (section 4; Amendment 3 item 4(d)). Written down by the worker; the custodian ran each alone, seven at 4b9f7c890a6f5c0f36849861a9084e53e0ba2e24 and E-SEL at 95bd9747e9042982b4baab42cc20330f9652fc52, and each failed the step its entry names (state/consults/2026-10-20-shell-migration-milestone-3-pr-b-e2e-custodian-runs.md). Each is a replacement of one exact text, found exactly once at 984d7e34d060af384d59e9abdab0bbb8993876e6, and each is to be reverted after it is observed.
+//   E-FIELD   frontends/shell/src/command/fieldCompletion.ts, replace `export const quoteName = (name: string): string => \`"${name.replace(/"/g, '""')}"\`;` with `export const quoteName = (name: string): string => \`${name}\`;` (the name is put in unquoted).
+//             Expected: step E-FIELD fails, `E-FIELD: /filter @zo then Tab left "/filter zone" in the bar, expected "/filter \"zone\""`.
+//   E-AND     frontends/shell/src/workspace/filterClauses.ts, replace `.join(" AND ")` with `.join(" OR ")` (the cards are joined with OR).
+//             Expected: step E-AND fails on its empty-map check, `E-AND: with A and B on the map is NN.NN% non-background, expected it empty (at most 0.2%)`.
+//   E-AND-b   frontends/shell/src/App.tsx, replace `if (dataset !== null) stepQueue.enqueue(dataset, { action: "filter.apply", params: { filter } });` with `if (dataset !== null && transition.action === "filter.apply") stepQueue.enqueue(dataset, { action: "filter.apply", params: { filter } });` (a card change records no step).
+//             Expected: step E-AND fails on its record_step check, `E-AND: after card B was added the console holds N record_step rows against N + 1, the last carrying the combined text: ...` (N the count before B).
+//   E-REFUSE  frontends/shell/src/App.tsx, replace `    try {\n      const outcome = await applyFilterWith(filter, (f) =>` (two lines, `\n` a newline; found exactly once in that file) with `    dispatch({ type: "view.transition", view: current.id, transition: { action: "filter.clauses.set", params: { clauses, step } } });\n    try {\n      const outcome = await applyFilterWith(filter, (f) =>` (the card is added before the outcome).
+//             Expected: step E-REFUSE fails, `E-REFUSE: after the refusal the cards read {...}, expected one card "zone" = 'residential', Applied it, and the bar holding /filter "nope" = 1` (the cards read two texts).
+//             Step E-TOOLONG fails too, and this is expected: the mutation also adds E-TOOLONG's refused card B before its outcome, so that step fails with "E-TOOLONG: after the refusal the cards read 2 card(s) ...; card A alone was expected". Two steps fail for this one mutation.
+//   E-TOOLONG frontends/shell/src/App.tsx, replace `    const { clauses, filter, step } = proposal;\n` (one line and its newline; found exactly once in that file) with `    const { clauses, filter, step } = proposal;\n    if (filter !== null && filter.predicate.length > 4096) return { kind: "not-applied" };\n` (the shell drops a change above 4,096 bytes).
+//             Expected: step E-TOOLONG fails, `E-TOOLONG: card B (2102 bytes, 4209 combined) showed {"cleared":false,"code":null,"line":"[P6 placeholder] Not applied. Try again."}, expected the refusal code skp.filter_too_long`.
+//   E-ADV     frontends/shell/src/workspace/filterClauses.ts, replace `return recognizeSimple(candidate.text) ? on.find((clause) => !recognizeSimple(clause.text)) : on[0];` with `return on.length < 0 ? on[0] : undefined;` (no change is refused, so the expression is sent).
+//             Expected: step E-ADV fails on .filter-active, `E-ADV: .filter-active changed: the cards read {...}, expected card A alone and Applied it`.
+//   E-PANEL   frontends/shell/src/workspace/viewTransitions.ts, replace `clauses: [{ id: \`clause-${number}\`, text: filter.predicate, enabled: true }]` with `clauses: [...viewClauses(view), { id: \`clause-${number}\`, text: filter.predicate, enabled: true }]` (the panel's Apply appends a card).
+//             Expected: step E-PANEL fails, `E-PANEL: after the panel's Apply there are 3 cards [...], expected exactly 1 holding "zone" <> 'residential'`.
+//   E-SEL     frontends/shell/src/workspace/viewTransitions.ts, replace `return { ...view, filter: combineClauses(clauses), clauses, clauseCounter: counter };` with `return { ...view, filter: combineClauses(clauses), clauses, clauseCounter: counter, selection: NO_MEMBERS };` (a card change clears the selection).
+//             Expected: step E-SEL fails, `E-SEL: after the card was switched off the selection count is 0, expected 1`.
 //
 // `waitForMountReady`/`withTimeout` are duplicated from `layout.mjs` rather than imported, this workspace's own convention for sibling suites.
 
@@ -35,7 +57,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { attachOrLaunch, attachConsole, waitForSettle, CDP_PORT } from "./lib.mjs";
+import { attachOrLaunch, attachConsole, waitForSettle, CDP_PORT, bufferPointToCss, canvasRect, findInteriorCandidate, fractionOf, hoverIdAfterBarrier, zoomInOneNotch, MAX_ZOOM_NOTCHES } from "./lib.mjs";
 import { loadShellModule } from "./tsModuleLoader.mjs";
 
 const OUT_DIR = join(dirname(fileURLToPath(import.meta.url)), "out");
@@ -290,6 +312,242 @@ async function stepSlash(page) {
   return "/ pressed from the map focused the bar with / in it; / typed in the Filter section's input stayed there";
 }
 
+// ------------------------------------------------------------------------------------------------
+// PR B: the filter cards and /filter (E-FIELD, E-AND, E-REFUSE, E-TOOLONG, E-ADV, E-PANEL, E-SEL).
+// ------------------------------------------------------------------------------------------------
+
+const ZONE_A = `"zone" = 'residential'`;
+const ZONE_B = `"zone" <> 'residential'`;
+const ZONE_AB = `(${ZONE_A}) AND (${ZONE_B})`;
+const ADVANCED_TEXT = `"zone" = 'residential' OR "zone" IS NULL`;
+const FRACTION_MARGIN = 0.6; // filter.mjs's own margin: a filtered map is under this share of the unfiltered one
+const FRACTION_BLANK = 0.002; // filter-panel.mjs's own floor: at or under it the map is effectively blank
+const FRACTION_TOLERANCE = 0.02; // filter-panel.mjs's own: the same camera and the same filter, up to readback noise
+const KERNEL_FILTER_CEILING_BYTES = 4096; // engine/src/predicate.rs MAX_PREDICATE_BYTES, read here only to size the long cards (the kernel refuses; the shell has no ceiling)
+
+/** `"zone" <operator> ('<prefix>0000', ..., )` with `count` literals: a simple card (an IN list the kernel admits) of about 9 bytes a literal. */
+const longList = (operator, prefix, count) => `"zone" ${operator} (${Array.from({ length: count }, (_, i) => `'${prefix}${String(i).padStart(4, "0")}'`).join(", ")})`;
+
+async function waitFor(read, predicate, timeoutMs, pollMs = 200) {
+  const start = Date.now();
+  let last;
+  while (Date.now() - start < timeoutMs) {
+    last = await read();
+    if (predicate(last)) return { ok: true, last };
+    await sleep(pollMs);
+  }
+  return { ok: false, last };
+}
+
+const settleMap = (consoleHandle) => waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 3000, timeoutMs: 45_000 });
+const mapFraction = async (page) => fractionOf(await page.evaluate(() => window.__SPATIAL_E2E__.capturePixels()));
+/** The cards (texts and switch states), the Filter section's Applied line, and the bar's text. */
+const readCards = (page) =>
+  page.evaluate((selector) => ({
+    texts: [...document.querySelectorAll(".clause-card .clause-text")].map((e) => e.textContent),
+    on: [...document.querySelectorAll(".clause-switch")].map((b) => b.getAttribute("aria-checked")),
+    applied: document.querySelector(".filter-active")?.textContent ?? null,
+    bar: document.querySelector(selector).value,
+  }), BAR);
+
+/** Every rendered class-A `record_step` row, oldest first, with every group expanded: its request text and its outcome (recording.mjs reads them the same way). */
+async function readRecordStepRows(page) {
+  await page.evaluate(() => {
+    const panel = document.querySelector(".console-disclosure");
+    if (panel && panel.getAttribute("aria-expanded") !== "true") panel.click();
+  });
+  await page.evaluate(() => document.querySelectorAll('.console-group-header[aria-expanded="false"]').forEach((el) => el.click()));
+  return page.evaluate(() =>
+    [...document.querySelectorAll(".console-entry-class-a")]
+      .filter((el) => el.querySelector(".console-entry-header")?.textContent === "record_step")
+      .map((el) => ({ request: el.querySelector(".console-request-text")?.textContent ?? null, outcome: el.querySelector(".console-outcome")?.textContent ?? null }))
+  );
+}
+
+/** The Filter section's Clear: every card goes. A step starts from here. */
+async function clearCards(page, consoleHandle) {
+  await page.click("button.filter-clear");
+  const gone = await waitFor(() => page.evaluate(() => document.querySelectorAll(".clause-card").length), (n) => n === 0, 30_000);
+  if (!gone.ok) throw new Error(`the Filter section's Clear left ${gone.last} cards`);
+  await settleMap(consoleHandle);
+}
+
+/** `/filter <condition>` typed into the bar (set in one fill: a 2,100-byte text is not typed key by key) and Enter. Answers what the bar then showed: cleared (applied), a refusal code, or the shell's line. */
+async function sendCondition(page, condition) {
+  await page.focus(BAR);
+  await page.fill(BAR, `/filter ${condition}`);
+  await sleep(SETTLE_MS);
+  await page.keyboard.press("Enter");
+  const outcome = await waitFor(
+    () => page.evaluate((selector) => ({ cleared: document.querySelector(selector).value === "", code: document.querySelector(".command-result .admission-refusal-code")?.textContent ?? null, line: document.querySelector(".command-note:not(.command-result)")?.textContent ?? null }), BAR),
+    (o) => o.cleared || o.code !== null || o.line !== null,
+    30_000
+  );
+  if (!outcome.ok) throw new Error(`/filter ${condition.slice(0, 40)}...: the bar showed neither an applied change nor a refusal nor a line within 30 s`);
+  return outcome.last;
+}
+
+async function expectApplied(step, page, texts) {
+  const read = await waitFor(() => readCards(page), (c) => c.texts.length === texts.length, 30_000);
+  const expectedApplied = texts.length === 0 ? null : `Applied: ${texts.length === 1 ? texts[0] : `(${texts.join(") AND (")})`}`;
+  if (!read.ok || JSON.stringify(read.last.texts) !== JSON.stringify(texts)) throw new Error(`${step}: the cards read ${JSON.stringify(read.last?.texts)}, expected ${JSON.stringify(texts)}`);
+  return { cards: read.last, expectedApplied };
+}
+
+async function stepField(page) {
+  await resetBar(page);
+  await press(page, "Control+KeyK");
+  await page.keyboard.type("/filter @zo");
+  await sleep(SETTLE_MS);
+  const names = await page.evaluate(() => [...document.querySelectorAll(".command-list .command-field-name")].map((e) => e.textContent));
+  if (!names.includes("zone")) throw new Error(`E-FIELD: /filter @zo lists the field names ${JSON.stringify(names)}, expected "zone" among them`);
+  await press(page, "Tab");
+  const value = await page.inputValue(BAR);
+  if (value !== `/filter "zone"`) throw new Error(`E-FIELD: /filter @zo then Tab left ${JSON.stringify(value)} in the bar, expected ${JSON.stringify(`/filter "zone"`)}`);
+  if (await page.evaluate(() => document.querySelector(".command-list") !== null)) throw new Error("E-FIELD: the list is still open after the completion");
+  await resetBar(page);
+  return `/filter @zo listed the field names (${names.length}); Tab put "zone" in double-quoted and removed the @; the list closed`;
+}
+
+async function stepAnd(page, consoleHandle) {
+  await clearCards(page, consoleHandle);
+  const unfiltered = await mapFraction(page);
+  if (unfiltered <= 0.02) throw new Error(`E-AND: the unfiltered map is ${(unfiltered * 100).toFixed(2)}% non-background; nothing rendered to filter against`);
+  const sentA = await sendCondition(page, ZONE_A);
+  if (!sentA.cleared) throw new Error(`E-AND: card A was not applied (${JSON.stringify(sentA)})`);
+  await expectApplied("E-AND", page, [ZONE_A]);
+  await settleMap(consoleHandle);
+  const fractionA = await mapFraction(page);
+  if (fractionA >= unfiltered * FRACTION_MARGIN || fractionA <= FRACTION_BLANK) throw new Error(`E-AND: card A's map is ${(fractionA * 100).toFixed(2)}% non-background against ${(unfiltered * 100).toFixed(2)}% unfiltered; expected under ${FRACTION_MARGIN * 100}% of it and not blank`);
+  const settledRows = await waitFor(() => readRecordStepRows(page), (r) => r.every((row) => row.outcome === "ok"), 30_000);
+  if (!settledRows.ok) throw new Error(`E-AND: record_step rows had not all reached ok before card B (${JSON.stringify(settledRows.last?.map((row) => row.outcome))})`);
+  const rowsBefore = settledRows.last.length;
+  const sentB = await sendCondition(page, ZONE_B);
+  if (!sentB.cleared) throw new Error(`E-AND: card B was not applied (${JSON.stringify(sentB)})`);
+  const both = await expectApplied("E-AND", page, [ZONE_A, ZONE_B]);
+  await settleMap(consoleHandle);
+  const fractionAB = await mapFraction(page);
+  if (fractionAB > FRACTION_BLANK) throw new Error(`E-AND: with A and B on the map is ${(fractionAB * 100).toFixed(2)}% non-background, expected it empty (at most ${FRACTION_BLANK * 100}%)`);
+  if (both.cards.applied !== both.expectedApplied || both.cards.on.join() !== "true,true") throw new Error(`E-AND: .filter-active reads ${JSON.stringify(both.cards.applied)} with the cards ${both.cards.on.join()}, expected ${JSON.stringify(both.expectedApplied)} with true,true`);
+  const rows = await waitFor(() => readRecordStepRows(page), (r) => r.length === rowsBefore + 1 && r.every((row) => row.outcome === "ok"), 30_000);
+  if (!rows.ok || !rows.last.at(-1)?.request?.includes(JSON.stringify(ZONE_AB).slice(1, -1))) throw new Error(`E-AND: after card B was added the console holds ${rows.last?.length} record_step rows against ${rowsBefore} + 1, the last carrying the combined text: ${rows.last?.at(-1)?.request?.includes(JSON.stringify(ZONE_AB).slice(1, -1))}`);
+  await page.click(".clause-card:nth-child(2) .clause-switch");
+  const off = await waitFor(() => readCards(page), (c) => c.on.join() === "true,false" && c.applied === `Applied: ${ZONE_A}`, 30_000);
+  if (!off.ok) throw new Error(`E-AND: with B switched off the cards read ${JSON.stringify(off.last)}, expected on true,false and Applied: ${ZONE_A}`);
+  await settleMap(consoleHandle);
+  const fractionOff = await mapFraction(page);
+  if (Math.abs(fractionOff - fractionA) > FRACTION_TOLERANCE) throw new Error(`E-AND: with B off the map is ${(fractionOff * 100).toFixed(2)}% non-background, A's was ${(fractionA * 100).toFixed(2)}%: over ${FRACTION_TOLERANCE * 100} points apart`);
+  return `A ${(fractionA * 100).toFixed(1)}% non-bg (unfiltered ${(unfiltered * 100).toFixed(1)}%); A and B on: ${(fractionAB * 100).toFixed(2)}%, Applied the exact AND text, one more record_step row reached ok; B off: ${(fractionOff * 100).toFixed(1)}%, Applied A's text`;
+}
+
+async function stepRefuse(page, consoleHandle) {
+  await clearCards(page, consoleHandle);
+  await sendCondition(page, ZONE_A);
+  await expectApplied("E-REFUSE", page, [ZONE_A]);
+  await settleMap(consoleHandle);
+  const before = await mapFraction(page);
+  const draft = `/filter "nope" = 1`;
+  const refused = await sendCondition(page, `"nope" = 1`);
+  if (refused.code !== "skp.filter_unknown_column") throw new Error(`E-REFUSE: the bar showed ${JSON.stringify(refused)}, expected the refusal code skp.filter_unknown_column`);
+  const after = await readCards(page);
+  if (JSON.stringify(after.texts) !== JSON.stringify([ZONE_A]) || after.applied !== `Applied: ${ZONE_A}` || after.bar !== draft) throw new Error(`E-REFUSE: after the refusal the cards read ${JSON.stringify(after)}, expected one card ${ZONE_A}, Applied it, and the bar holding ${draft}`);
+  await settleMap(consoleHandle);
+  const fraction = await mapFraction(page);
+  if (Math.abs(fraction - before) > FRACTION_TOLERANCE) throw new Error(`E-REFUSE: the map is ${(fraction * 100).toFixed(2)}% non-background after the refusal, ${(before * 100).toFixed(2)}% before: over ${FRACTION_TOLERANCE * 100} points apart`);
+  await resetBar(page);
+  return `skp.filter_unknown_column shown by name in the bar; the cards and .filter-active unchanged; the map within ${FRACTION_TOLERANCE * 100} points (${(before * 100).toFixed(1)}% -> ${(fraction * 100).toFixed(1)}%)`;
+}
+
+async function stepTooLong(page, consoleHandle) {
+  const [cardA, cardB] = [longList("IN", "a", 232), longList("NOT IN", "b", 232)];
+  const lengths = [cardA.length, cardB.length, `(${cardA}) AND (${cardB})`.length];
+  if (!(lengths[0] < KERNEL_FILTER_CEILING_BYTES && lengths[1] < KERNEL_FILTER_CEILING_BYTES && lengths[2] > KERNEL_FILTER_CEILING_BYTES)) throw new Error(`E-TOOLONG: the harness texts are ${lengths.join(", ")} bytes; each card must be under ${KERNEL_FILTER_CEILING_BYTES} and the combination over`);
+  await clearCards(page, consoleHandle);
+  const sentA = await sendCondition(page, cardA);
+  if (!sentA.cleared) throw new Error(`E-TOOLONG: card A (${lengths[0]} bytes) was not admitted (${JSON.stringify(sentA)})`);
+  await expectApplied("E-TOOLONG", page, [cardA]);
+  const refused = await sendCondition(page, cardB);
+  if (refused.code !== "skp.filter_too_long") throw new Error(`E-TOOLONG: card B (${lengths[1]} bytes, ${lengths[2]} combined) showed ${JSON.stringify(refused)}, expected the refusal code skp.filter_too_long`);
+  const after = await readCards(page);
+  if (JSON.stringify(after.texts) !== JSON.stringify([cardA]) || after.applied !== `Applied: ${cardA}`) throw new Error(`E-TOOLONG: after the refusal the cards read ${after.texts.length} card(s) and Applied ${JSON.stringify(after.applied?.slice(0, 60))}; card A alone was expected`);
+  await resetBar(page);
+  return `card A (${lengths[0]} bytes) admitted; card B refused skp.filter_too_long by name at ${lengths[2]} combined bytes; A stays`;
+}
+
+async function stepAdvanced(page, consoleHandle) {
+  await clearCards(page, consoleHandle);
+  await sendCondition(page, ZONE_A);
+  await expectApplied("E-ADV", page, [ZONE_A]);
+  const shown = await sendCondition(page, ADVANCED_TEXT);
+  await sleep(SETTLE_MS);
+  const after = await readCards(page);
+  if (JSON.stringify(after.texts) !== JSON.stringify([ZONE_A]) || after.applied !== `Applied: ${ZONE_A}`) throw new Error(`E-ADV: .filter-active changed: the cards read ${JSON.stringify(after)}, expected card A alone and Applied it`);
+  if (shown.cleared || shown.code !== null || shown.line === null || !shown.line.includes("Not applied")) throw new Error(`E-ADV: the bar showed ${JSON.stringify(shown)}, expected the shell's line (Not applied ...) and no refusal`);
+  await resetBar(page);
+  return "an expression beside a card that is on: the shell's line in the bar, nothing sent; the cards and .filter-active unchanged";
+}
+
+async function stepPanel(page, consoleHandle) {
+  await clearCards(page, consoleHandle);
+  await sendCondition(page, ZONE_A);
+  await sendCondition(page, ZONE_B);
+  await expectApplied("E-PANEL", page, [ZONE_A, ZONE_B]);
+  await page.fill("input.filter-predicate", ZONE_B);
+  await page.click("button.filter-apply");
+  const one = await waitFor(() => readCards(page), (c) => c.applied === `Applied: ${ZONE_B}`, 30_000);
+  if (!one.ok || one.last.texts.length !== 1 || one.last.texts[0] !== ZONE_B) throw new Error(`E-PANEL: after the panel's Apply there are ${one.last?.texts.length} cards ${JSON.stringify(one.last?.texts)}, expected exactly 1 holding ${ZONE_B}`);
+  await page.click("button.filter-clear");
+  const none = await waitFor(() => readCards(page), (c) => c.texts.length === 0, 30_000);
+  if (!none.ok) throw new Error(`E-PANEL: after the panel's Clear there are ${none.last?.texts.length} cards, expected none`);
+  await settleMap(consoleHandle);
+  return "with two cards, the panel's Apply left exactly one card holding its text; its Clear left none";
+}
+
+/**
+ * A CSS point of the page on a drawn feature: the interior candidate of the frame, tried in both row orders, taken only when the hover reads a confirmed id there (hoverIdAfterBarrier).
+ * When neither order gives one, zoom in one notch at the canvas centre (as buildScene in selection.mjs does) and try a fresh candidate, up to MAX_ZOOM_NOTCHES.
+ */
+async function findFeaturePoint(page, consoleHandle) {
+  const gave = [];
+  for (let notch = 0; notch <= MAX_ZOOM_NOTCHES; notch += 1) {
+    if (notch > 0) {
+      const r = await canvasRect(page);
+      await zoomInOneNotch(page, consoleHandle, { x: r.left + r.width / 2, y: r.top + r.height / 2 });
+    }
+    const { candidate, bufferWidth, bufferHeight } = await findInteriorCandidate(page);
+    const rect = await canvasRect(page);
+    for (const flipY of [true, false]) {
+      const exact = bufferPointToCss(candidate, rect, bufferWidth, bufferHeight, flipY);
+      const css = { x: Math.round(exact.x), y: Math.round(exact.y) };
+      if ((await hoverIdAfterBarrier(page, css, "E-SEL")).ok) return css;
+    }
+    gave.push(`notch ${notch}: no confirmed id at the interior candidate in either row order`);
+  }
+  throw new Error(`E-SEL: no point of the map answers the hover with a confirmed feature id (${gave.join("; ")})`);
+}
+
+const selectedCount = (page) => page.evaluate(() => Number(/(\d+)\s*$/.exec(document.querySelector(".feature-selected")?.textContent ?? "")?.[1] ?? NaN));
+
+async function stepSelection(page, consoleHandle) {
+  await clearCards(page, consoleHandle);
+  await sendCondition(page, ZONE_A);
+  await expectApplied("E-SEL", page, [ZONE_A]);
+  await settleMap(consoleHandle);
+  const point = await findFeaturePoint(page, consoleHandle);
+  await page.locator(".tool-switch-button", { hasText: "Select" }).click();
+  await page.mouse.click(point.x, point.y);
+  const one = await waitFor(() => selectedCount(page), (n) => n === 1, 5000);
+  if (!one.ok) throw new Error(`E-SEL: a Select click at (${point.x}, ${point.y}) gave a selection count of ${one.last}, expected 1`);
+  await page.click(".clause-card .clause-switch");
+  const off = await waitFor(() => readCards(page), (c) => c.on.join() === "false", 30_000);
+  if (!off.ok) throw new Error(`E-SEL: the card did not switch off: ${JSON.stringify(off.last)}`);
+  await settleMap(consoleHandle);
+  const kept = await selectedCount(page);
+  await page.locator(".tool-switch-button", { hasText: "Navigate" }).click();
+  if (kept !== 1) throw new Error(`E-SEL: after the card was switched off the selection count is ${kept}, expected 1`);
+  return "one feature selected with a Select click; the card switched off; the count is still 1";
+}
+
 async function main() {
   if (!existsSync(FIXTURE_FILTER)) {
     console.error(`command-bar: fixture not found: ${FIXTURE_FILTER}\nRegenerate with:\n  ${REGEN_COMMAND}`);
@@ -330,6 +588,13 @@ async function main() {
     await runStep("E-BARFOCUS", 60_000, () => stepBarFocus(page));
     await runStep("E-REVEAL", 60_000, () => stepReveal(page, consoleHandle));
     await runStep("E-SLASH", 60_000, () => stepSlash(page));
+    await runStep("E-FIELD", 60_000, () => stepField(page));
+    await runStep("E-AND", 240_000, () => stepAnd(page, consoleHandle));
+    await runStep("E-REFUSE", 180_000, () => stepRefuse(page, consoleHandle));
+    await runStep("E-TOOLONG", 180_000, () => stepTooLong(page, consoleHandle));
+    await runStep("E-ADV", 120_000, () => stepAdvanced(page, consoleHandle));
+    await runStep("E-PANEL", 120_000, () => stepPanel(page, consoleHandle));
+    await runStep("E-SEL", 180_000, () => stepSelection(page, consoleHandle));
     const hashAfter = sha256(FIXTURE_FILTER);
     results.push({ id: "FIXTURES", status: hashBefore === hashAfter ? "PASS" : "FAIL", note: `filter-zoned.parquet sha256 ${hashBefore} -> ${hashAfter}` });
 

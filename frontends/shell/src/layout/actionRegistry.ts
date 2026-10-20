@@ -10,7 +10,8 @@
  * place the shell reads the platform** (§2.10, §8 item 12): `currentPlatform` below.
  *
  * Milestone 3 (SHELL-MIGRATION-MILESTONE-3-PREREGISTRATION.md section 2.2, PR A) adds `command.focus` (Mod+K), `dataset.open` and `layer.revealExport`
- * (question round 66, item 2), each entry's slash word (`command`, P6) and `matchCommandOpener`, the bare `/`. The command bar lists and runs entries.
+ * (question round 66, item 2), each entry's slash word (`command`, P6) and `matchCommandOpener`, the bare `/`. The command bar lists and runs entries. PR B adds
+ * `filter.addClause`, the one entry that takes a condition after its word (`/filter`); its caller is the bar.
  *
  * Callers: `StudioLayout`'s one `keydown` listener on `window` (via `matchChord`, `matchToolKey` and `matchCommandOpener`), the three
  * toggle buttons in the top bar and the Layers row's button (each by id); the tool switch's two buttons and the
@@ -30,7 +31,8 @@ export type ActionId =
   | "selection.clear"
   | "command.focus"
   | "dataset.open"
-  | "layer.revealExport";
+  | "layer.revealExport"
+  | "filter.addClause";
 
 /** A chord is the modifier (Mod) plus one letter. `letter` is the Latin letter matched on
  * `event.key`; `code` is the physical key matched instead when `event.key` is not a Latin letter (a
@@ -51,7 +53,7 @@ export interface ActionEntry {
   readonly scopeWords: string | null;
   /** The slash word the command bar runs the entry by (`/layers`; P6), or `null`: such an entry is in help and out of search. */
   readonly command: string | null;
-  /** What the word takes: `"condition"` is a typed condition after it (`/filter`, PR B). */
+  /** What the word takes: `"condition"` is a typed condition after it (`/filter`). */
   readonly takes: "nothing" | "condition";
 }
 
@@ -67,6 +69,7 @@ export const ACTIONS: readonly ActionEntry[] = [
   { id: "command.focus", label: "Command bar", chord: { letter: "k", code: "KeyK" }, bareKey: null, scopeWords: null, command: null, takes: "nothing" },
   { id: "dataset.open", label: "Open dataset", chord: null, bareKey: null, scopeWords: null, command: "open", takes: "nothing" },
   { id: "layer.revealExport", label: "Export", chord: null, bareKey: null, scopeWords: null, command: "export", takes: "nothing" },
+  { id: "filter.addClause", label: "Add filter", chord: null, bareKey: null, scopeWords: null, command: "filter", takes: "condition" },
 ];
 
 /** The registry's entry for `id`. Every id has one. */
