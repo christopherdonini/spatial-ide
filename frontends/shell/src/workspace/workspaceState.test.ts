@@ -7,7 +7,9 @@ import type { Admitted } from "../admission/admitDataset";
 import { FILTER_DIALECT_DUCKDB_EXPR_0 } from "../skp/types";
 import { DEFAULT_STYLE_STATE } from "../style/document";
 import {
+  viewClauses,
   viewInspected,
+  viewNextClauseNumber,
   viewPinned,
   viewSelection,
   viewSelectionMode,
@@ -202,5 +204,18 @@ describe("UB14 (Amendment 7 item 6): consumer.acquired is idempotent, and an exp
     const released = run(initialWorkspaceState, admit("a"), release("view-1"));
     expect(selectClosable(released)).toEqual(["ds_a"]);
     expect(selectClosable(workspaceReducer(released, acquire("view-1")))).toEqual([]);
+  });
+});
+
+// RECORDED MUTATION for "UC7 (resource.admitted)": in `admit` (workspaceState.ts) keep the clauses across a rebind (spread `bound` whole where `rebound` is spread, so that `clauses` stays). Expected failure: the reopened view still holds a card.
+describe("UC7 (SHELL-MIGRATION-MILESTONE-3-PREREGISTRATION.md section 4): resource.admitted resets the clauses with the filter", () => {
+  it("a reopen leaves no clause and a null filter, and the clause counter is kept so that an id is never minted twice", () => {
+    let state = run(initialWorkspaceState, admit("a"));
+    expect(Object.keys(state.views["view-1"]).sort(), "a minted view has no clause member").toEqual(["filter", "id", "resource", "style"]);
+    state = run(state, { type: "view.transition", view: "view-1", transition: { action: "filter.apply", params: { filter: filterOf("zone = 'r'") } } });
+    expect(viewClauses(state.views["view-1"]).map((c) => c.text)).toEqual(["zone = 'r'"]);
+    state = run(state, admit("b"));
+    expect([state.views["view-1"].filter, viewClauses(state.views["view-1"])]).toEqual([null, []]);
+    expect(viewNextClauseNumber(state.views["view-1"]), "the counter survives the reopen").toBe(2);
   });
 });

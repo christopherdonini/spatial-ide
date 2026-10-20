@@ -6,7 +6,8 @@
  * transition is an `{action, params}` object, the shape of ADR-036 section 6's `intent` member (Proposed, so it
  * binds nothing), applied by the pure `applyViewTransition`. The union is closed and is exactly the section's names:
  * `filter.apply` and `style.set` (phase A), then `tool.set`, `mode.set`, `selection.apply`, `selection.clear`,
- * `selection.end`, `inspect.set` and `inspect.pin`. Keystrokes, hover, navigation and layout are not transitions.
+ * `selection.end`, `inspect.set` and `inspect.pin`, and, from milestone 3 (SHELL-MIGRATION-MILESTONE-3-PREREGISTRATION.md section 2.5),
+ * `filter.clauses.set`. Keystrokes, hover, navigation and layout are not transitions.
  * There is no log and no undo (ADR-006; plan section 6.5): nothing here records a transition.
  *
  * A view's phase B members are optional (see `ViewState`); the readers below give their section 7 defaults.
@@ -15,12 +16,17 @@
 import type { AuthoritativeBbox } from "../canvas/viewportBbox";
 import type { Filter } from "../skp/types";
 import type { StyleState } from "../style/document";
+import { clauseNumber, combineClauses, NO_CLAUSES } from "./filterClauses";
+import type { ClauseStep, FilterClause } from "./filterClauses";
 import { applySelectionMode, NO_MEMBERS } from "./selection";
 import type { SelectionEndReason, SelectionMembers, SelectionMode, SelectionNotice } from "./selection";
 import { DEFAULT_SELECTION_MODE, DEFAULT_TOOL } from "./selectionConstants";
 import type { InspectedFeature, InspectedPick, Tool, ViewState } from "./workspaceState";
 
 export type FilterApplyTransition = { action: "filter.apply"; params: { filter: Filter | null } };
+
+/** The cards after one change. `step` names the clause that changed by its id; the view's `filter` is derived from `clauses`, never carried. */
+export type FilterClausesSetTransition = { action: "filter.clauses.set"; params: { clauses: readonly FilterClause[]; step: ClauseStep } };
 
 /** One transition per changed `StyleState` property. The style document carries `outline_width` as a bare number
  * (ADR-017 section 5a) and the shell draws it in pixels (`canvas/buildLayers.ts`), so the width is carried as
@@ -51,6 +57,7 @@ export type InspectPinTransition = { action: "inspect.pin"; params: { pinned: bo
 
 export type ViewTransition =
   | FilterApplyTransition
+  | FilterClausesSetTransition
   | StyleSetTransition
   | ToolSetTransition
   | ModeSetTransition
@@ -67,6 +74,10 @@ export const viewSelection = (view: ViewState): SelectionMembers => view.selecti
 export const viewSelectionNotice = (view: ViewState): SelectionNotice | null => view.selectionNotice ?? null;
 export const viewInspected = (view: ViewState): InspectedFeature | null => view.inspected ?? null;
 export const viewPinned = (view: ViewState): boolean => view.pinned ?? false;
+/** The cards of a view (milestone 3 section 2.5): an absent member is none. */
+export const viewClauses = (view: ViewState): readonly FilterClause[] => view.clauses ?? NO_CLAUSES;
+/** The number the next `clause-<n>` of this view takes. */
+export const viewNextClauseNumber = (view: ViewState): number => view.clauseCounter ?? 1;
 
 function applyStyleSet(style: StyleState, transition: StyleSetTransition): StyleState {
   const params = transition.params;
@@ -94,8 +105,18 @@ function applySelection(view: ViewState, params: SelectionApplyTransition["param
  * returns the view it was given. */
 export function applyViewTransition(view: ViewState, transition: ViewTransition): ViewState {
   switch (transition.action) {
-    case "filter.apply":
-      return { ...view, filter: transition.params.filter };
+    case "filter.apply": {
+      // An Apply replaces every card with one that holds its predicate, or with none (OPEN-2 (A)).
+      const filter = transition.params.filter;
+      if (filter === null) return { ...view, filter: null, clauses: NO_CLAUSES };
+      const number = viewNextClauseNumber(view);
+      return { ...view, filter, clauses: [{ id: `clause-${number}`, text: filter.predicate, enabled: true }], clauseCounter: number + 1 };
+    }
+    case "filter.clauses.set": {
+      const { clauses } = transition.params;
+      const counter = Math.max(viewNextClauseNumber(view), ...clauses.map((clause) => clauseNumber(clause.id) + 1));
+      return { ...view, filter: combineClauses(clauses), clauses, clauseCounter: counter };
+    }
     case "style.set":
       return { ...view, style: applyStyleSet(view.style, transition) };
     case "tool.set":
