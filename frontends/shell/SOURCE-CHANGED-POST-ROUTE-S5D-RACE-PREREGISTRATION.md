@@ -320,3 +320,15 @@ Nothing above is edited.
 6. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 6 — step 2's gate, the record's second version, and the follow-on's options (class 3)
+
+*Written by the custodian after the gate and the options draft. References only. The gate: `state/consults/gates/2026-10-20-source-changed-post-route-s5d-race-step-2-gate1-reviewer.md` (gate-log 555). The options: `state/consults/2026-10-20-source-changed-post-route-s5d-race-o2-follow-on-options-architect.md`.*
+
+1. **The single reviewer gate (§4):** PASS WITH NOTES. No Correctness or Evidence finding; O2 confirmed.
+2. **Its D1, applied in its words, no re-gate:** the record's second version names the two quoted blocks that are not whole artifact lines (the pre-flight's affinity line and each row's S4 verdict and note). The first version stands at 0bbc1c9919ba8ef94f6c115414f11dfaa792963f.
+3. **The follow-on's options (§2, O2):** (a) a C2 run reads INCONCLUSIVE, never a pass; (b) S4's gesture narrowed to one tile. The architect recommends (a). Under both, Amendment 4 item 6's additions ride: D8's clause and D9's comment corrected, and each C2 run's P count goes to the human (all 0; the two passes 23).
+4. **Next:** the human chooses (a) or (b). The follow-on then gets its own form, full from dispatch (§21a; round 25, item 2 (e)).
+5. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.

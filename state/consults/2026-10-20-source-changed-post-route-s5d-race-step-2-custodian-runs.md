@@ -1,6 +1,8 @@
 # source-changed-post-route-s5d-race, step 2: the custodian's runs of the post route on the watcher-blind route, alone and under this project's own load
 
-*The custodian's record (2026-10-20), under `frontends/shell/SOURCE-CHANGED-POST-ROUTE-S5D-RACE-PREREGISTRATION.md` (§1 with Amendments 2 and 4). Built by script from each run's artifacts: the suite log, the report JSON, the session log the report names, and the app's stderr capture, each copied whole into the custodian's scratch folder right after its run under a name from its arm and number. Every quoted line is byte-copied whole, carriage returns removed. The gaps are ordering evidence only: no p50 or p95, no docs/08 budget, no claim about speed, and the arms are not compared (§1.4; Amendment 4 item 2).*
+*The custodian's record (2026-10-20), under `frontends/shell/SOURCE-CHANGED-POST-ROUTE-S5D-RACE-PREREGISTRATION.md` (§1 with Amendments 2 and 4). Built by script from each run's artifacts: the suite log, the report JSON, the session log the report names, and the app's stderr capture, each copied whole into the custodian's scratch folder right after its run under a name from its arm and number. Every quoted line is byte-copied whole, carriage returns removed, except the two the lead-ins below name: the pre-flight's affinity line, cut from its summary line, and each row's S4 verdict and note, joined from two report fields. The gaps are ordering evidence only: no p50 or p95, no docs/08 budget, no claim about speed, and the arms are not compared (§1.4; Amendment 4 item 2).*
+
+*The second version: the first, at 0bbc1c9919ba8ef94f6c115414f11dfaa792963f (sha256 d811de6e03209757b8f39e69d77769c9ff7db190ff7177d4c99885b710785588), with its single reviewer gate's D1 words applied in the reviewer's words (`state/consults/gates/2026-10-20-source-changed-post-route-s5d-race-step-2-gate1-reviewer.md`, gate-log 555), no re-gate; nothing else changed.*
 
 ## Setup
 
@@ -57,7 +59,7 @@ MACHINE_HOLD exclusive project=SpatialIDE cores=all affinity=FFFF shell=bash.exe
 MACHINE_RELEASED project=SpatialIDE shell=bash.exe:30772 affinity=FF (cores 0-7)
 ```
 
-- **Affinity** (Amendment 2): the app's in the pre-flight and the spinner's, once for the series, each the hold's grant:
+- **Affinity** (Amendment 2): the app's in the pre-flight and the spinner's, once for the series, each the hold's grant. The first line is the pre-flight's summary line cut to its run name and its last two fields; the second is a whole summary line:
 
 ```text
 pre app-pid=37116 app-affinity=65535
@@ -121,7 +123,7 @@ fails-S5d 14 of 16; end 2026-10-20T11:23:50Z
 [render-trace] stream-issued {dataset: ds_5f3a7baf189c071080b9a922029f966a, streamHandle: sh_224595f6ed0acecb01e440f887c161c1}
 ```
 
-- **The repoint request:** not stamped. **The answer:** not stamped (item 2); S4's verdict and note:
+- **The repoint request:** not stamped. **The answer:** not stamped (item 2); S4's verdict and note, the report's `status` and `note` fields joined by one space:
 
 ```text
 PASS a stream-issued line followed the "pan-beyond-viewport" gesture (17 -> 21 in the render trace); the junction was repointed to b on that signal; both copies still hash to the fixture
@@ -166,7 +168,7 @@ source-changed: repoint helper PID 1784 exited (code 0) after its stdin closed (
 [render-trace] stream-issued {dataset: ds_e9dae8cfd596bdc67242f8f18717731f, streamHandle: sh_82bf58822b7a0027cc62a31d5f3f8ab0}
 ```
 
-- **The repoint request:** not stamped. **The answer:** not stamped (item 2); S4's verdict and note:
+- **The repoint request:** not stamped. **The answer:** not stamped (item 2); S4's verdict and note, the report's `status` and `note` fields joined by one space:
 
 ```text
 PASS a stream-issued line followed the "pan-beyond-viewport" gesture (17 -> 22 in the render trace); the junction was repointed to b on that signal; both copies still hash to the fixture
@@ -211,7 +213,7 @@ source-changed: repoint helper PID 38232 exited (code 0) after its stdin closed 
 [render-trace] stream-issued {dataset: ds_d6ac6b65f97d7d0d9a14159cc6514fe4, streamHandle: sh_129b60ee2f01f9a83d7befb07f7361de}
 ```
 
-- **The repoint request:** not stamped. **The answer:** not stamped (item 2); S4's verdict and note:
+- **The repoint request:** not stamped. **The answer:** not stamped (item 2); S4's verdict and note, the report's `status` and `note` fields joined by one space:
 
 ```text
 PASS a stream-issued line followed the "pan-beyond-viewport" gesture (17 -> 22 in the render trace); the junction was repointed to b on that signal; both copies still hash to the fixture
@@ -256,7 +258,7 @@ source-changed: repoint helper PID 29128 exited (code 0) after its stdin closed 
 [render-trace] stream-issued {dataset: ds_1c49c597d04ab47680061363a9c65de9, streamHandle: sh_1d415a511a5d0707bc74d46e7dfc516f}
 ```
 
-- **The repoint request:** not stamped. **The answer:** not stamped (item 2); S4's verdict and note:
+- **The repoint request:** not stamped. **The answer:** not stamped (item 2); S4's verdict and note, the report's `status` and `note` fields joined by one space:
 
 ```text
 PASS a stream-issued line followed the "pan-beyond-viewport" gesture (17 -> 22 in the render trace); the junction was repointed to b on that signal; both copies still hash to the fixture
@@ -301,7 +303,7 @@ source-changed: repoint helper PID 22200 exited (code 0) after its stdin closed 
 [render-trace] stream-issued {dataset: ds_8e67893a41084990db97e7468a9ecec9, streamHandle: sh_504ad7cac38ea911d0b8ae5678ec7052}
 ```
 
-- **The repoint request:** not stamped. **The answer:** not stamped (item 2); S4's verdict and note:
+- **The repoint request:** not stamped. **The answer:** not stamped (item 2); S4's verdict and note, the report's `status` and `note` fields joined by one space:
 
 ```text
 PASS a stream-issued line followed the "pan-beyond-viewport" gesture (17 -> 22 in the render trace); the junction was repointed to b on that signal; both copies still hash to the fixture
@@ -347,7 +349,7 @@ source-changed: repoint helper PID 22168 exited (code 0) after its stdin closed 
 [render-trace] stream-issued {dataset: ds_8124f0bab1ce89de947a9a6445908ab3, streamHandle: sh_1edec8873cfba4e4c2f44de39ecce66e}
 ```
 
-- **The repoint request:** not stamped. **The answer:** not stamped (item 2); S4's verdict and note:
+- **The repoint request:** not stamped. **The answer:** not stamped (item 2); S4's verdict and note, the report's `status` and `note` fields joined by one space:
 
 ```text
 PASS a stream-issued line followed the "pan-beyond-viewport" gesture (17 -> 22 in the render trace); the junction was repointed to b on that signal; both copies still hash to the fixture
@@ -393,7 +395,7 @@ source-changed: repoint helper PID 38916 exited (code 0) after its stdin closed 
 [render-trace] stream-issued {dataset: ds_2a5bd063fbb83d8e65b5c5c65ba75f57, streamHandle: sh_cb1fa368bef9e7244c6228f8fe1d46dd}
 ```
 
-- **The repoint request:** not stamped. **The answer:** not stamped (item 2); S4's verdict and note:
+- **The repoint request:** not stamped. **The answer:** not stamped (item 2); S4's verdict and note, the report's `status` and `note` fields joined by one space:
 
 ```text
 PASS a stream-issued line followed the "pan-beyond-viewport" gesture (17 -> 22 in the render trace); the junction was repointed to b on that signal; both copies still hash to the fixture
@@ -438,7 +440,7 @@ source-changed: repoint helper PID 28232 exited (code 0) after its stdin closed 
 [render-trace] stream-issued {dataset: ds_bbb0ba02c9a9b524049067dccf9c2db1, streamHandle: sh_be98619acec127820cf4cc9a43030be0}
 ```
 
-- **The repoint request:** not stamped. **The answer:** not stamped (item 2); S4's verdict and note:
+- **The repoint request:** not stamped. **The answer:** not stamped (item 2); S4's verdict and note, the report's `status` and `note` fields joined by one space:
 
 ```text
 PASS a stream-issued line followed the "pan-beyond-viewport" gesture (17 -> 22 in the render trace); the junction was repointed to b on that signal; both copies still hash to the fixture
@@ -484,7 +486,7 @@ source-changed: repoint helper PID 45376 exited (code 0) after its stdin closed 
 [render-trace] stream-issued {dataset: ds_772fbf38efeff3d67be67a7492db4777, streamHandle: sh_b1cb8e01a81f25447714d26fefcfb639}
 ```
 
-- **The repoint request:** not stamped. **The answer:** not stamped (item 2); S4's verdict and note:
+- **The repoint request:** not stamped. **The answer:** not stamped (item 2); S4's verdict and note, the report's `status` and `note` fields joined by one space:
 
 ```text
 PASS a stream-issued line followed the "pan-beyond-viewport" gesture (17 -> 22 in the render trace); the junction was repointed to b on that signal; both copies still hash to the fixture
@@ -529,7 +531,7 @@ source-changed: repoint helper PID 32824 exited (code 0) after its stdin closed 
 [render-trace] stream-issued {dataset: ds_d6bc5bcee7ef58a547e75bfdb34fd072, streamHandle: sh_42d14b8036513d777f5e7639029c1ffd}
 ```
 
-- **The repoint request:** not stamped. **The answer:** not stamped (item 2); S4's verdict and note:
+- **The repoint request:** not stamped. **The answer:** not stamped (item 2); S4's verdict and note, the report's `status` and `note` fields joined by one space:
 
 ```text
 PASS a stream-issued line followed the "pan-beyond-viewport" gesture (17 -> 22 in the render trace); the junction was repointed to b on that signal; both copies still hash to the fixture
@@ -575,7 +577,7 @@ source-changed: repoint helper PID 25816 exited (code 0) after its stdin closed 
 [render-trace] stream-issued {dataset: ds_cdd567e9dd9bab73b49d1000c3676732, streamHandle: sh_9b0c5237f9c8451034fde1106ea83c44}
 ```
 
-- **The repoint request:** not stamped. **The answer:** not stamped (item 2); S4's verdict and note:
+- **The repoint request:** not stamped. **The answer:** not stamped (item 2); S4's verdict and note, the report's `status` and `note` fields joined by one space:
 
 ```text
 PASS a stream-issued line followed the "pan-beyond-viewport" gesture (17 -> 23 in the render trace); the junction was repointed to b on that signal; both copies still hash to the fixture
@@ -619,7 +621,7 @@ source-changed: repoint helper PID 24344 exited (code 0) after its stdin closed 
 [render-trace] stream-issued {dataset: ds_afac70685212fb35fbb4730f430c594d, streamHandle: sh_69ec42e856e5121a16e79b3f5f5ae6e7}
 ```
 
-- **The repoint request:** not stamped. **The answer:** not stamped (item 2); S4's verdict and note:
+- **The repoint request:** not stamped. **The answer:** not stamped (item 2); S4's verdict and note, the report's `status` and `note` fields joined by one space:
 
 ```text
 PASS a stream-issued line followed the "pan-beyond-viewport" gesture (17 -> 22 in the render trace); the junction was repointed to b on that signal; both copies still hash to the fixture
@@ -665,7 +667,7 @@ source-changed: repoint helper PID 45012 exited (code 0) after its stdin closed 
 [render-trace] stream-issued {dataset: ds_8a1ef5c04d43263180697a7bd9e52c0c, streamHandle: sh_ff994f88fd5875f7332a0e7171d3ba07}
 ```
 
-- **The repoint request:** not stamped. **The answer:** not stamped (item 2); S4's verdict and note:
+- **The repoint request:** not stamped. **The answer:** not stamped (item 2); S4's verdict and note, the report's `status` and `note` fields joined by one space:
 
 ```text
 PASS a stream-issued line followed the "pan-beyond-viewport" gesture (17 -> 22 in the render trace); the junction was repointed to b on that signal; both copies still hash to the fixture
@@ -711,7 +713,7 @@ source-changed: repoint helper PID 41992 exited (code 0) after its stdin closed 
 [render-trace] stream-issued {dataset: ds_b03c7924bd34c5e9b1b3705d86c068bb, streamHandle: sh_ff1f6979c2fc2f8f9127e25fb5081589}
 ```
 
-- **The repoint request:** not stamped. **The answer:** not stamped (item 2); S4's verdict and note:
+- **The repoint request:** not stamped. **The answer:** not stamped (item 2); S4's verdict and note, the report's `status` and `note` fields joined by one space:
 
 ```text
 PASS a stream-issued line followed the "pan-beyond-viewport" gesture (17 -> 22 in the render trace); the junction was repointed to b on that signal; both copies still hash to the fixture
@@ -756,7 +758,7 @@ source-changed: repoint helper PID 1168 exited (code 0) after its stdin closed (
 [render-trace] stream-issued {dataset: ds_e8e71fb3ccab0073902d4b892eafc7d4, streamHandle: sh_7bfb09617e244c4163d90b00f19e5e60}
 ```
 
-- **The repoint request:** not stamped. **The answer:** not stamped (item 2); S4's verdict and note:
+- **The repoint request:** not stamped. **The answer:** not stamped (item 2); S4's verdict and note, the report's `status` and `note` fields joined by one space:
 
 ```text
 PASS a stream-issued line followed the "pan-beyond-viewport" gesture (17 -> 23 in the render trace); the junction was repointed to b on that signal; both copies still hash to the fixture
@@ -800,7 +802,7 @@ source-changed: repoint helper PID 27792 exited (code 0) after its stdin closed 
 [render-trace] stream-issued {dataset: ds_2aef56349d4c9ca1b41e680c03e5a41d, streamHandle: sh_435fed3721681af4b563b4af35967d26}
 ```
 
-- **The repoint request:** not stamped. **The answer:** not stamped (item 2); S4's verdict and note:
+- **The repoint request:** not stamped. **The answer:** not stamped (item 2); S4's verdict and note, the report's `status` and `note` fields joined by one space:
 
 ```text
 PASS a stream-issued line followed the "pan-beyond-viewport" gesture (17 -> 22 in the render trace); the junction was repointed to b on that signal; both copies still hash to the fixture
@@ -846,7 +848,7 @@ source-changed: repoint helper PID 35940 exited (code 0) after its stdin closed 
 [render-trace] stream-issued {dataset: ds_828ba3e28ead3b9d0c2ea18521e7f7df, streamHandle: sh_05396581e4ec00ec3dd374a20eb5a8d2}
 ```
 
-- **The repoint request:** not stamped. **The answer:** not stamped (item 2); S4's verdict and note:
+- **The repoint request:** not stamped. **The answer:** not stamped (item 2); S4's verdict and note, the report's `status` and `note` fields joined by one space:
 
 ```text
 PASS a stream-issued line followed the "pan-beyond-viewport" gesture (17 -> 22 in the render trace); the junction was repointed to b on that signal; both copies still hash to the fixture
