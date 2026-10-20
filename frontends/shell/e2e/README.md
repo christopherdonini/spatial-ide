@@ -212,7 +212,7 @@ credential-looking content). `REFUSED'` executes with a wrong phrase and asserts
 directory, no `.staging-*` debris, and an audit pair `refused`/`ApprovalRefused`. `EXPIRED'` is
 SKIPPED with a stated reason (`publish.mjs`'s own comment): `PENDING_ATTEMPT_TTL` has no
 env/test-shortenable knob, and the property is already unit-tested
-(`publish.rs::tests::a_pending_attempt_past_its_ttl_is_treated_as_unknown`) without a 120s sleep.
+(`publish.rs::tests::a_pending_attempt_past_its_ttl_is_treated_as_unknown`) without sleeping out the whole TTL.
 `FILTERED'` applies `zone = 'residential'` through `queryWithFilter` (the same seam a real
 `FilterPanel` Apply click uses), asserts the prompt's `filter_scope` is the conditional block's own
 sentence verbatim, then publishes whole-file and asserts the manifest's `operation.filter` says

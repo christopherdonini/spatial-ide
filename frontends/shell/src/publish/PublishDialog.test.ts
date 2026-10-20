@@ -1,17 +1,24 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
 import PublishDialog, {
+  APPROVAL_EXPIRY_MINUTES,
   nextPublishDialogState,
   settleExecuteOutcome,
   submitPublishAttempt,
 } from "./PublishDialog";
 import type { PublishDialogState } from "./PublishDialog";
 import type { ExecuteOutcome, PublishPromptData } from "./types";
+
+const HERE = dirname(fileURLToPath(import.meta.url));
 
 const CONFIRMING = (phrase: string): PublishDialogState => ({ kind: "confirming", phrase });
 const EXECUTING = (cancelRequested = false): PublishDialogState => ({ kind: "executing", cancelRequested });
@@ -198,6 +205,23 @@ describe(
         expect(html).toContain(value);
       }
       expect(html).toContain("This cannot be undone");
+    });
+
+    // RECORDED MUTATION: M3, the expiry paragraph deleted from PublishDialog.tsx, applied alone at 42e6fc141044: this test failed by name (D1 renders the approval-expiry sentence verbatim while the dialog asks for the phrase); reverted.
+    it("D1 renders the approval-expiry sentence verbatim while the dialog asks for the phrase", () => {
+      const html = renderedHtml();
+      const sentence = "This approval expires after 10 minutes, and the publish then has to be started over.";
+      const instructionAt = html.indexOf("Type the destination's final path component to confirm.");
+      expect(instructionAt).toBeGreaterThan(-1);
+      expect(html.indexOf(sentence)).toBeGreaterThan(instructionAt);
+    });
+
+    // RECORDED MUTATION: M4, publish.rs's 600 set to 300 alone, applied alone at 42e6fc141044: this test failed by name (D2 the expiry sentence's minutes are PENDING_ATTEMPT_TTL's, read from publish.rs; expected 600 to be 300); reverted.
+    it("D2 the expiry sentence's minutes are PENDING_ATTEMPT_TTL's, read from publish.rs", () => {
+      const rustSource = readFileSync(join(HERE, "../../src-tauri/src/publish.rs"), "utf8");
+      const match = rustSource.match(/PENDING_ATTEMPT_TTL\s*:\s*Duration\s*=\s*Duration::from_secs\((\d+)\)/);
+      expect(match).not.toBeNull();
+      expect(APPROVAL_EXPIRY_MINUTES * 60).toBe(Number((match as RegExpMatchArray)[1]));
     });
   }
 );

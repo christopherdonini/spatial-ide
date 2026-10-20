@@ -64,8 +64,9 @@ use tokio::sync::watch;
 /// (`spatial_kernel::permission::MAX_GRANT_LIFETIME`) — this bounds how long a pending attempt may
 /// sit waiting for the operator's DOM confirmation before the host discards it. The grant minted
 /// alongside it (see [`prepare_with_query`]) uses this same value as its own lifetime, so the two
-/// expire together rather than one silently outliving the other.
-pub const PENDING_ATTEMPT_TTL: Duration = Duration::from_secs(120);
+/// expire together rather than one silently outliving the other. 600 s is 10 minutes, under that
+/// 20-minute ceiling; the approval dialog states the expiry (`PublishDialog.tsx`).
+pub const PENDING_ATTEMPT_TTL: Duration = Duration::from_secs(600);
 
 /// The filter-scope sentence, from `NEXT-CUT.md`'s conditional block item 3 — **verbatim**, never
 /// silently dropped when the shell's active SQL filter would have applied to this publish.
@@ -1817,6 +1818,37 @@ mod tests {
         assert!(
             store.take("expired-id").is_none(),
             "a pending attempt past its declared TTL must not be returned"
+        );
+    }
+
+    // RECORDED MUTATION: M2, PENDING_ATTEMPT_TTL's 600 set back to 120, applied alone at 42e6fc141044: this test failed by name (publish::tests::a_pending_attempt_121s_old_is_still_taken_within_the_ttl, "must be returned"); reverted.
+    #[test]
+    fn a_pending_attempt_121s_old_is_still_taken_within_the_ttl() {
+        let d = workspace("ttl-within");
+        let ds = fixture(&d, 10);
+        let store = PendingAttempts::new();
+
+        store.insert(
+            "within-id".into(),
+            PendingAttempt {
+                dataset: ds,
+                dataset_name: "parcels".into(),
+                query: ViewportQuery::all(),
+                attributes: vec!["zone".into()],
+                style_source: STYLE.into(),
+                viewer: viewer(),
+                viewer_license: viewer_license(),
+                license: None,
+                destination: d.join("out"),
+                started_at: "2026-08-16T10:00:00Z".into(),
+                principal: Principal::from_environment(),
+                created_at: Instant::now() - Duration::from_secs(121),
+            },
+        );
+
+        assert!(
+            store.take("within-id").is_some(),
+            "a pending attempt 121 s old is within the 600 s TTL and must be returned"
         );
     }
 

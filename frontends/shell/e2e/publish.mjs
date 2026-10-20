@@ -607,7 +607,8 @@ async function main() {
   }
 
   try {
-    console.log(`publish: PENDING_ATTEMPT_TTL ${initTtl()}ms, read from src-tauri/src/publish.rs`);
+    const ttlMs = initTtl();
+    console.log(`publish: PENDING_ATTEMPT_TTL ${ttlMs}ms, read from src-tauri/src/publish.rs`);
     console.log(`publish: waiting for the app to mount (up to ${MOUNT_READY_TIMEOUT_MS}ms)...`);
     const mountReady = await waitForMountReady(page);
     console.log(`publish: mount-readiness gate PASSED after ${mountReady.readyAfterMs}ms`);
@@ -618,9 +619,9 @@ async function main() {
     await runStep("REFUSED'", 60_000, () => stepRefused(page));
 
     // EXPIRED' (NEXT-CUT.md P4: "cheap if the TTL seam permits shortening via env/test knob -- if
-    // not, skip with a stated reason"). `PENDING_ATTEMPT_TTL` (`publish.rs`) is a hardcoded 120s
+    // not, skip with a stated reason"). `PENDING_ATTEMPT_TTL` (`publish.rs`) is a hardcoded
     // constant with no env/test override -- adding one would touch the single-use/TTL design P1
-    // already built and reviewed, which is out of this piece's scope, and sleeping 120 real seconds
+    // already built and reviewed, which is out of this piece's scope, and sleeping out the whole TTL
     // for one E2E assertion is not "cheap" by this suite's own established budget discipline (every
     // other step here completes in well under a minute). The property itself IS already covered,
     // just not by this suite: `frontends/shell/src-tauri/src/publish.rs::tests::
@@ -628,8 +629,8 @@ async function main() {
     // no sleep, at the Rust unit level, and passes as part of `cargo test --lib` (this piece's own
     // required verify command).
     const expiredNote =
-      "no TTL-shortening env/test knob exists for PENDING_ATTEMPT_TTL (120s, publish.rs); " +
-      "sleeping 120s for one E2E assertion is not cheap (NEXT-CUT.md P4 permits skipping with a " +
+      `no TTL-shortening env/test knob exists for PENDING_ATTEMPT_TTL (${ttlMs / 1000}s, publish.rs); ` +
+      "sleeping out the TTL for one E2E assertion is not cheap (NEXT-CUT.md P4 permits skipping with a " +
       "stated reason). The property is unit-tested instead: " +
       "publish.rs::tests::a_pending_attempt_past_its_ttl_is_treated_as_unknown (backdated " +
       "created_at, no sleep) -- part of this piece's own required `cargo test --lib` run.";
