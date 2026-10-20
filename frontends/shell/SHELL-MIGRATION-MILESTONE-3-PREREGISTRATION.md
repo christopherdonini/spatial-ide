@@ -955,3 +955,18 @@ Nothing above is edited.
 6. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 11 — PR B's gate 1 (both PASS WITH NOTES): Amendment 10 corrected; the record's E-TOOLONG sentence; the KNOWN-LIMITATIONS numbers; correction round 1 and the word choices; written after gate 1 (class 3)
+
+*References only. Gate 1: `state/consults/gates/2026-10-20-shell-migration-milestone-3-pr-b-gate1-architect.md` (560, A) and `state/consults/gates/2026-10-20-shell-migration-milestone-3-pr-b-gate1-reviewer.md` (561, R). The KNOWN-LIMITATIONS draft: `state/consults/2026-10-20-shell-migration-milestone-3-open-9-i-architect-draft.md`.*
+
+1. **Amendment 10 corrected (A's D5, R's D6), in A's words with the rev filled:** Correction to Amendment 10 (class 3): its first line does not say it was written after results were seen, its items 2 and 3 name no class, and its preamble's sha256 of the e2e record names no rev. Amendment 10 was written after the build's count and the custodian's runs (class 1); item 3's E-SEL failure at 4b9f7c890a6f5c0f36849861a9084e53e0ba2e24 is class 2 against §3's prediction for e2e:command-bar, and its reading of §7 G-E as A-E and B-E is class 3; the record's sha256 89512292823e70c1ff087e8a0d672fd5dc9feecd59bded3605dc993bd42e48d1 is @ d2045496e50fd03a2401daa6275b9cdc7da6316e. Proof: the form's header rule on amendments made after an outcome, the template's classes 1 to 3, and round 15 (e).
+2. **The e2e record's E-TOOLONG sentence (A's O3, R's D8).** The record stays as filed. Its sentence that E-TOOLONG "failed behind" E-REFUSE's mutation is read as both gates read it: E-TOOLONG clears the cards first, and fails on its own refused card B, which the mutation adds before its outcome.
+3. **The KNOWN-LIMITATIONS numbers (class 3; the draft's §3).** Amendment 3 item 10's third item for OPEN-9 (i) counts (i) twice: §2.10 names two new items, and (i) is the OPEN-3 (A) item. (i) takes 45 and (ii) 46, read again at the base of the KNOWN-LIMITATIONS commit; no 47 is reserved.
+4. **Correction round 1, by one worker, no re-gate:** the gates' Documentation words in `e2e/command-bar.mjs`'s header, `e2e/README.md`'s entry, App.tsx's doc comments and Part AB. Where both gates word one sentence, one is taken: line 34's sentence, R's D2; the E-REFUSE line, A's D1 (b); the README's sentence, R's D1; App.tsx:1019, A's D3; App.tsx:1036, R's D5; AB11, A's D4. Each other finding has one author's words: A's D1 (c) and D3 (App.tsx:1025); R's D3, D4 (AB3, AB7) and D5 (App.tsx:1946).
+5. **The custodian's words in the PR body:** E-SEL's tool selection (A's D6, R's D7: A's words); H3 at 4b9f7c89 standing for 95bd9747 (A's D7); the round's list.
+6. **For the human (the 2026-10-11 direction, item 2b):** item 45, OPEN-9 (i), as drafted; item 46, a replacement for (ii)'s approved words, whose first clause no longer holds; item 39's sentence holds as approved. The KNOWN-LIMITATIONS commit follows the human's answer.
+7. **Next:** round 1; the PR body; the KNOWN-LIMITATIONS commit on the human's word; then the PR ready for the click.
+8. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
