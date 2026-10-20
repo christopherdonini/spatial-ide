@@ -1821,6 +1821,7 @@ mod tests {
         );
     }
 
+    // RECORDED MUTATION: M2, PENDING_ATTEMPT_TTL's 600 set back to 120, applied alone at 42e6fc141044: this test failed by name (publish::tests::a_pending_attempt_121s_old_is_still_taken_within_the_ttl, "must be returned"); reverted.
     #[test]
     fn a_pending_attempt_121s_old_is_still_taken_within_the_ttl() {
         let d = workspace("ttl-within");

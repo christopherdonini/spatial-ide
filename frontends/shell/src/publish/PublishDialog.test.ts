@@ -207,6 +207,7 @@ describe(
       expect(html).toContain("This cannot be undone");
     });
 
+    // RECORDED MUTATION: M3, the expiry paragraph deleted from PublishDialog.tsx, applied alone at 42e6fc141044: this test failed by name (D1 renders the approval-expiry sentence verbatim while the dialog asks for the phrase); reverted.
     it("D1 renders the approval-expiry sentence verbatim while the dialog asks for the phrase", () => {
       const html = renderedHtml();
       const sentence = "This approval expires after 10 minutes, and the publish then has to be started over.";
@@ -215,6 +216,7 @@ describe(
       expect(html.indexOf(sentence)).toBeGreaterThan(instructionAt);
     });
 
+    // RECORDED MUTATION: M4, publish.rs's 600 set to 300 alone, applied alone at 42e6fc141044: this test failed by name (D2 the expiry sentence's minutes are PENDING_ATTEMPT_TTL's, read from publish.rs; expected 600 to be 300); reverted.
     it("D2 the expiry sentence's minutes are PENDING_ATTEMPT_TTL's, read from publish.rs", () => {
       const rustSource = readFileSync(join(HERE, "../../src-tauri/src/publish.rs"), "utf8");
       const match = rustSource.match(/PENDING_ATTEMPT_TTL\s*:\s*Duration\s*=\s*Duration::from_secs\((\d+)\)/);

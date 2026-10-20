@@ -15,6 +15,7 @@ const E_EXPORT_LINE = "[E-EXPORT] FAIL (16077ms): E-EXPORT: execute (Selected 1)
 // byte-copied by script from state/consults/2026-10-14-shell-status-bar-one-height-e2e-custodian-run-2.md:15 @ e54e4af241908a6cd205b4412ed981987cf8807c sha256:c4d9fcfc3a0ea10a09b991b17b805f6a5104e4e98ae59103551ad994edc84c2a
 const E_ASK_TWO_LINE = "[E-ASK-TWO] FAIL (12200ms): E-ASK-TWO: the second export's outcome is {\"status\":\"unknown-attempt\"}; a finished bundle was needed";
 
+// RECORDED MUTATION: M1, publish.rs's 600 set back to 120, applied alone at 42e6fc141044: `npm run test:export-elapsed` failed T1 by name (T1 the TTL read from the real publish.rs is 600000 ms); reverted.
 test("T1 the TTL read from the real publish.rs is 600000 ms", () => {
   assert.equal(readTtlMs(readFileSync(new URL("../src-tauri/src/publish.rs", import.meta.url), "utf8")), TTL);
 });
