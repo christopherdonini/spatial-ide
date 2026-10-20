@@ -6,6 +6,10 @@ import type { KeyboardEvent } from "react";
 
 import type { ExecuteOutcome, PublishPromptData } from "./types";
 
+/** P6 placeholder (AUTONOMY.md section 31 f): the minutes are `PENDING_ATTEMPT_TTL`'s, pinned by `PublishDialog.test.ts` D2. */
+export const APPROVAL_EXPIRY_MINUTES = 10;
+export const APPROVAL_EXPIRY_SENTENCE = `This approval expires after ${APPROVAL_EXPIRY_MINUTES} minutes, and the publish then has to be started over.`;
+
 /**
  * The dialog's own lifecycle -- deliberately NOT the outcome data itself (that flows to the parent
  * via `onSettled`, below; this machine only ever tracks what the DIALOG shows). `"confirming"` is
@@ -209,7 +213,7 @@ export default function PublishDialog({
     dispatch({ kind: "cancel" });
     onSettled({ kind: "abandoned" });
     // No host abandon call: P1 exposed none (`CUT-STATE.md` P1's own phase table has no
-    // `binding_publish_abandon`); the pending attempt's own TTL (`PENDING_ATTEMPT_TTL`, 120s,
+    // `binding_publish_abandon`); the pending attempt's own TTL (`PENDING_ATTEMPT_TTL` in
     // `publish.rs`) is what reclaims it host-side -- this piece's own permitted fallback ("if not,
     // note the TTL covers it").
   }
@@ -270,6 +274,7 @@ export default function PublishDialog({
           <p className="publish-dialog-instruction">
             Type the destination's final path component to confirm.
           </p>
+          <p className="publish-dialog-expiry">{APPROVAL_EXPIRY_SENTENCE}</p>
           <input
             type="text"
             className="publish-dialog-phrase"
