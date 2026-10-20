@@ -173,3 +173,13 @@ No prior art recorded for "pending attempt timeout dialog". Research it before p
 4. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 2 — the human's answer on Amendment 1 item 3: one clause of the note corrected (class 5)
+
+*Written by the custodian on the human's ruling. References only: `state/directives/2026-10-20-adr-024-note-clause-corrected-s5d-series-booked-after-the-ttl-worker.md`, item 1 at line 8 (the file's sha256 from line 6 to the end, be7c45adb18959f3df4574d4f14d6e1fd873074dd56e1edf995360a72f2ae1ad, at the commit that adds it).*
+
+1. **The note's words** are the third message's (Amendment 1 item 2) with the one clause replaced as item 1 directs; the rest stands as typed. The composed note, one line plus its newline, has sha256 f4018b1a149d07581184d7704447d3abae3c5d4633c1c2f2a357c2323fd7a6d6. The custodian appends exactly that line under the heading Amendment 1 item 2 names, and checks its sha256 before the commit.
+2. **The clause, checked at the base:** the dialog's only sign of the limit is the host's grant-remaining figure, a number sent with the prompt and shown without re-derivation: frontends/shell/src/publish/PublishDialog.tsx:247-249 @ 0f0f55cf2bb769961c621281e79353a071b3f079 sha256:f58b79add1579adafb8ba05e68b0525f26d0241814d2f366a18670cd5b2d6e77.
+3. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.

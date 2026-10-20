@@ -4,6 +4,11 @@ Line references written before the rotation point into state/cut-archive/DECISIO
 
 ## Pending
 
+**RULED 2026-10-21 (headed; the fourth message, received 2026-10-20) — ADR-024's note for publish-approval-ttl-ten-minutes: one clause corrected in the human's words, the rest as typed; S5d (a)'s e2e series: booked for the first slot after the TTL worker's last run (the human, as pasted content in the human's own message, received at 19:26:35Z by the transcript; recorded verbatim at `state/directives/2026-10-20-adr-024-note-clause-corrected-s5d-series-booked-after-the-ttl-worker.md`, from line 6, sha256 be7c45adb18959f3df4574d4f14d6e1fd873074dd56e1edf995360a72f2ae1ad over lines 6 to the end at the commit that adds it):**
+
+- **The rulings** are the text, referenced and not restated.
+- **Applied:** the TTL form's Amendment 2 (the composed note's sha256; appended by the custodian as the branch's last commit before the click); S5d (a)'s series booked by the custodian when the TTL worker hands back, then run in that slot in one exclusive hold.
+
 **RULED 2026-10-21 (headed; the third message, received 2026-10-20) — publish-approval-ttl-ten-minutes: OPEN-1 (A), the five-line form with the reviewer and the architect from dispatch, AUTONOMY §25 (e) set aside for this piece; OPEN-2, the human's words for ADR-024's appended note, dated the day the piece merges (the human, as pasted content in the human's own message, received at 18:27:47Z by the transcript; recorded verbatim at `state/directives/2026-10-20-ttl-open-1-a-five-line-form-both-gates-open-2-adr-024-note-words.md`, from line 6, sha256 bd5309138eb602d6426fdb85a1968b0c476ab822c8bfa3d45c4554ff4cd27ca0 over lines 6 to the end at the commit that adds it):**
 
 - **The rulings** are the text, referenced and not restated.
