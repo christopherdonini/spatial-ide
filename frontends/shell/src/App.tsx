@@ -1016,13 +1016,13 @@ export default function App() {
   // now-removed placeholder comment in git history).
 
   /**
-   * `FilterPanel`'s own `onApply` prop. NOT the same function object the dev-only `queryWithFilter`
+   * The one call behind `FilterPanel`'s `onApply` (`handleApplyFilter`, below) and a card or bar change (`changeClauses`), each passing its own `commit`. NOT the same function object the dev-only `queryWithFilter`
    * E2E hook calls -- this callback and each hook (candidate-arm, baseline-arm) are three SEPARATE
    * `applyFilter(...)` calls, each building its own `ApplyFilterDeps` (this one below;
    * the hooks' own, this file, `registerE2eHook("queryWithFilter", ...)`) -- but all three route
    * through the identical `applyFilter` seam (NEXT-CUT.md filter-panel cut, deviation-3 retrofit:
    * "hook and panel drive the identical seam"), and, as of the N8 residual correction round 1,
-   * `handleApplyFilter`'s own `requestViewport` here and the candidate arm's dev-only `queryWithFilter`
+   * `applyFilterWith`'s own `requestViewport` here and the candidate arm's dev-only `queryWithFilter`
    * hook's `requestViewport` each carry the same admitted-generation guard. The baseline arm's own dev
    * `queryWithFilter` hook needs none: its `requestViewport` is bound to THIS effect's own
    * `issueViewportQuery` (below), whose `manager.requestViewport` already returns `{kind: "stopped"}`
@@ -1033,7 +1033,7 @@ export default function App() {
    * feeds the scan-liveness machine and the rider-1 `"query-issued"` clear exactly like the initial
    * load and the debounced pan/zoom already do -- one reporting wrapper, one seam, never a second
    * parallel path that would silently miss those two side effects for Apply-issued queries alone.
-   * `useCallback([commitActiveFilter])`: stable for the same reason `handleAdmitted` above is.
+   * `useCallback([])`: it reads only refs and its own arguments, so it never changes.
    */
   const applyFilterWith = useCallback(
     (filter: Filter | null, commit: (filter: Filter | null) => void): Promise<ApplyFilterOutcome> => {
@@ -1943,7 +1943,7 @@ export default function App() {
   /**
    * A card or bar change (milestone 3 section 2.5): `proposeClauseChange` computes the cards and the one combined filter, and an accepted one goes to the kernel through `applyFilterWith` exactly as an Apply does,
    * its commit writing the filter and dispatching `filter.clauses.set`. So `applied` changes the cards and the filter together, and a refused or not-applied change changes neither. One change at a time: a second
-   * answers `busy`. Under OPEN-3 (A) the shell sends nothing for an advanced clause beside another card, and records the class-C row `filter.clauseNotSent`.
+   * answers `busy`. Under OPEN-3 (A) the shell sends nothing for an advanced clause beside a card that is on, or for any clause beside an advanced card that is on, and records the class-C row `filter.clauseNotSent`.
    */
   async function changeClauses(request: ClauseRequest): Promise<ClauseResult> {
     const current = viewIdRef.current === null ? undefined : workspaceRef.current.views[viewIdRef.current];

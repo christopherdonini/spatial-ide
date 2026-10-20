@@ -4,7 +4,7 @@
 
 // E2E TEST SURFACE (e2e/README.md) -- the command bar on real WebView2: E-CTRLK, E-SEARCH, E-HELP, E-BARFOCUS and E-REVEAL (asserted), from
 // SHELL-MIGRATION-MILESTONE-3-PREREGISTRATION.md section 4, and E-SLASH, the bare `/` sent by CDP key injection from the map and in the Filter section's input (Amendment 1 item 9; what that injection does not prove is below). PR B adds E-FIELD, E-AND, E-REFUSE, E-TOOLONG, E-ADV, E-PANEL and E-SEL, the filter cards and
-// `/filter` (section 4; Amendment 3 item 4(d)): each starts from the Filter section's Clear and sets its own cards through the bar. Fixture:
+// `/filter` (section 4; Amendment 3 item 4(d)): each but E-FIELD starts from the Filter section's Clear and sets its own cards through the bar. Fixture:
 // `filter-zoned.parquet`; the suite records its sha256 before and after its run. Nothing here is a measurement or a performance claim.
 //
 // What CDP key injection proves and does not (section 0.6, H2): `page.keyboard.press` reaches the page's own `keydown` listener; it does NOT cross WebView2's
@@ -21,7 +21,7 @@
 //             (the top bar becomes the list's containing block, and with the rule's own `overflow: hidden` it clips the list). Predicted, and observed at 2fa7c8d0: step E-SEARCH fails, "E-SEARCH: with the list open, document.elementFromPoint at the first option's centre does not return that option".
 //   E-HELP    frontends/shell/src/command/commandDraft.ts, replace `registry.filter((e) => contains(e.label, query) || (e.command !== null && contains(e.command, query)))` with
 //             `registry.filter((e) => e.chord !== null && (contains(e.label, query) || (e.command !== null && contains(e.command, query))))` (help leaves out entries with no chord).
-//             Expected: step E-HELP fails, "E-HELP: ? lists 4 options, expected 12".
+//             Expected: step E-HELP fails, "E-HELP: ? lists 4 options, expected 12" (12 entries since PR B's filter.addClause; observed at 2fa7c8d0, with 11 entries, as "expected 11").
 //   E-BARFOCUS frontends/shell/src/command/commandDraft.ts, replace `if (key.shiftKey || state.completed || count === 0) return none;` with `return { pos, effect: none.effect, preventDefault: true };` (Tab is always intercepted; until correction round 1 of PR #233 the guard read `!state.open` in place of `state.completed`).
 //             Expected: step E-BARFOCUS fails, "E-BARFOCUS: Tab with no list open left the bar's input holding the focus"; E-CTRLK fails too, on its Tab completion.
 //   E-REVEAL  frontends/shell/src/publish/PublishPanel.tsx, replace `reveal() { if (!expanded)` with `reveal() { handlePublishClick(); if (!expanded)` (the panel's click handler is called).
@@ -31,7 +31,7 @@
 //   E-SLASH   frontends/shell/src/layout/actionRegistry.ts, replace `return event.key === "/" && !isEditable(focus);` with `return event.key === "/";` (an editable focus no longer ignores it).
 //             Expected: step E-SLASH fails, "E-SLASH: the focus left the Filter section's input when / was typed in it".
 //
-// PR B's MUTATIONS (section 4; Amendment 3 item 4(d)). Written down by the worker and not run: the app is the custodian's. Each is a replacement of one exact text, found exactly once at 984d7e34d060af384d59e9abdab0bbb8993876e6, and each is to be reverted after it is observed.
+// PR B's MUTATIONS (section 4; Amendment 3 item 4(d)). Written down by the worker; the custodian ran each alone, seven at 4b9f7c890a6f5c0f36849861a9084e53e0ba2e24 and E-SEL at 95bd9747e9042982b4baab42cc20330f9652fc52, and each failed the step its entry names (state/consults/2026-10-20-shell-migration-milestone-3-pr-b-e2e-custodian-runs.md). Each is a replacement of one exact text, found exactly once at 984d7e34d060af384d59e9abdab0bbb8993876e6, and each is to be reverted after it is observed.
 //   E-FIELD   frontends/shell/src/command/fieldCompletion.ts, replace `export const quoteName = (name: string): string => \`"${name.replace(/"/g, '""')}"\`;` with `export const quoteName = (name: string): string => \`${name}\`;` (the name is put in unquoted).
 //             Expected: step E-FIELD fails, `E-FIELD: /filter @zo then Tab left "/filter zone" in the bar, expected "/filter \"zone\""`.
 //   E-AND     frontends/shell/src/workspace/filterClauses.ts, replace `.join(" AND ")` with `.join(" OR ")` (the cards are joined with OR).
@@ -40,6 +40,7 @@
 //             Expected: step E-AND fails on its record_step check, `E-AND: after card B was added the console holds N record_step rows against N + 1, the last carrying the combined text: ...` (N the count before B).
 //   E-REFUSE  frontends/shell/src/App.tsx, replace `    try {\n      const outcome = await applyFilterWith(filter, (f) =>` (two lines, `\n` a newline; found exactly once in that file) with `    dispatch({ type: "view.transition", view: current.id, transition: { action: "filter.clauses.set", params: { clauses, step } } });\n    try {\n      const outcome = await applyFilterWith(filter, (f) =>` (the card is added before the outcome).
 //             Expected: step E-REFUSE fails, `E-REFUSE: after the refusal the cards read {...}, expected one card "zone" = 'residential', Applied it, and the bar holding /filter "nope" = 1` (the cards read two texts).
+//             Step E-TOOLONG fails too, and this is expected: the mutation also adds E-TOOLONG's refused card B before its outcome, so that step fails with "E-TOOLONG: after the refusal the cards read 2 card(s) ...; card A alone was expected". Two steps fail for this one mutation.
 //   E-TOOLONG frontends/shell/src/App.tsx, replace `    const { clauses, filter, step } = proposal;\n` (one line and its newline; found exactly once in that file) with `    const { clauses, filter, step } = proposal;\n    if (filter !== null && filter.predicate.length > 4096) return { kind: "not-applied" };\n` (the shell drops a change above 4,096 bytes).
 //             Expected: step E-TOOLONG fails, `E-TOOLONG: card B (2102 bytes, 4209 combined) showed {"cleared":false,"code":null,"line":"[P6 placeholder] Not applied. Try again."}, expected the refusal code skp.filter_too_long`.
 //   E-ADV     frontends/shell/src/workspace/filterClauses.ts, replace `return recognizeSimple(candidate.text) ? on.find((clause) => !recognizeSimple(clause.text)) : on[0];` with `return on.length < 0 ? on[0] : undefined;` (no change is refused, so the expression is sent).
