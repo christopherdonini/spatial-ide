@@ -11,6 +11,7 @@
  * stays the kernel's. The texts are never trimmed, case-folded or ceilinged here; the kernel's byte and depth ceilings refuse by name.
  */
 
+import type { FormattedRefusal } from "../admission/formatRefusal";
 import type { Filter } from "../skp/types";
 import { FILTER_DIALECT_DUCKDB_EXPR_0 } from "../skp/types";
 
@@ -105,6 +106,18 @@ export function proposeClauseChange(clauses: readonly FilterClause[], request: C
       return propose(clauses.filter((clause) => clause.id !== request.clause), { kind: "remove", clause: request.clause });
   }
 }
+
+/**
+ * What a card or bar change came to, as App reports it to the controls (section 2.5): `applied` (the cards and the filter changed together), `refused` (the kernel's refusal, nothing changed),
+ * `shell-refused` (the shell sent nothing under OPEN-3 (A); `blocking` is the card that is on and in the way), `not-applied` (throttled or superseded, nothing changed), or `busy`
+ * (a change is already pending).
+ */
+export type ClauseResult =
+  | { readonly kind: "applied" }
+  | { readonly kind: "refused"; readonly refusal: FormattedRefusal }
+  | { readonly kind: "shell-refused"; readonly blocking: FilterClause }
+  | { readonly kind: "not-applied" }
+  | { readonly kind: "busy" };
 
 /** The number in a `clause-<n>` id. */
 export const clauseNumber = (id: ClauseId): number => Number(id.slice("clause-".length));

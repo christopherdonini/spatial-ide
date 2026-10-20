@@ -39,9 +39,9 @@ describe("UC6: field completion", () => {
     expect(completeField("/filter @zo = 'r'", at("/filter @zo = 'r'", 11)!, "zone"), "the text after the caret is kept").toBe(`/filter "zone" = 'r'`);
 
     const many: FieldSource = { geometryColumn: "g", schema: Array.from({ length: FIELD_COMPLETION_MAX_OPTIONS + 1 }, (_, i) => ({ name: `c${i}`, arrow_type: "Int32" })) };
-    expect(fieldOptions(many, "")).toMatchObject({ more: true });
+    expect(fieldOptions(many, "")).toMatchObject({ hidden: 1 });
     expect(fieldOptions(many, "").options).toHaveLength(FIELD_COMPLETION_MAX_OPTIONS);
-    expect(fieldOptions({ ...many, schema: many.schema.slice(1) }, "")).toMatchObject({ more: false });
+    expect(fieldOptions({ ...many, schema: many.schema.slice(1) }, "")).toMatchObject({ hidden: 0 });
   });
 
   // RECORDED MUTATION for "UC6 (the trigger)": in `fieldTrigger` (fieldCompletion.ts) let the `@` follow any character (`(^|[\s(])` becomes `(^|.)`). Expected failure: the row where the `@` follows a letter.

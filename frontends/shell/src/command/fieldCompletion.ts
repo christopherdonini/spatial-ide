@@ -42,11 +42,11 @@ export function fieldTrigger(text: string, conditionStart: number, caret: number
   return found === null ? null : { start: conditionStart + found.index + found[1].length, end, partial: found[2] };
 }
 
-/** The options for the text after the `@`: names that contain it, case-insensitively, at most `FIELD_COMPLETION_MAX_OPTIONS`; `more` says that more matched than are listed. */
-export function fieldOptions(source: FieldSource, partial: string): { readonly options: readonly FieldOption[]; readonly more: boolean } {
+/** The options for the text after the `@`: names that contain it, case-insensitively, at most `FIELD_COMPLETION_MAX_OPTIONS`; `hidden` is how many more matched than are listed. */
+export function fieldOptions(source: FieldSource, partial: string): { readonly options: readonly FieldOption[]; readonly hidden: number } {
   const wanted = partial.toLowerCase();
   const matching = source.schema.filter((field) => field.name !== source.geometryColumn && field.name.toLowerCase().includes(wanted));
-  return { options: matching.slice(0, FIELD_COMPLETION_MAX_OPTIONS).map((field) => ({ name: field.name, arrowType: field.arrow_type })), more: matching.length > FIELD_COMPLETION_MAX_OPTIONS };
+  return { options: matching.slice(0, FIELD_COMPLETION_MAX_OPTIONS).map((field) => ({ name: field.name, arrowType: field.arrow_type })), hidden: Math.max(0, matching.length - FIELD_COMPLETION_MAX_OPTIONS) };
 }
 
 /** A name as a condition writes it: double-quoted, each `"` doubled. */

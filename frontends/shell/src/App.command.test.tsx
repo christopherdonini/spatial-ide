@@ -2,7 +2,8 @@
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
 /**
- * SHELL-MIGRATION-MILESTONE-3-PREREGISTRATION.md section 4, the PR A render rows RC1, RC2, RC8 (both cases), RC9, RC10, RC13, RC15 and RC17, and Amendment 1 item 9's RC-SLASH, through the REAL `App`.
+ * SHELL-MIGRATION-MILESTONE-3-PREREGISTRATION.md section 4, the PR A render rows RC1, RC2, RC8 (both cases), RC9, RC10, RC13, RC15 and RC17, and Amendment 1 item 9's RC-SLASH, and the PR B rows RC3 to RC7, RC11, RC12, RC14 and
+ * RC16 (and RC-FIELD, a row beyond the table), through the REAL `App`.
  * The harness is `App.selection.test.tsx`'s (Amendment 3 item 9): the same mocked boundaries (the SKP transport, the baseline stream manager, the WebGL canvas, `publish/client`), with the SKP
  * client's `recordStep` logged and refusable as `App.recording.test.tsx` has it, the canvas stand-in counting `fitToBounds` as well as `fitToBbox`, and the picker (`skp/dialog`) counted.
  * The registry, the layout, the bar and the panels are never mocked (invalidator I6).
@@ -19,11 +20,15 @@ const mocks = vi.hoisted(() => ({
   picks: 0,
   pickPath: null as string | null,
   prepares: 0,
+  /** PR B: when set, `publishPrepare` answers with an approval prompt (RC12), and `publishExecute` counts the calls the host would get. */
+  promptOnPrepare: false,
+  executes: 0,
   pendingPrepare: null as Promise<import("./publish/types").PrepareOutcome> | null,
   recorded: [] as { dataset: string; intent: unknown }[],
   refuseRecordWith: null as string | null,
-  manager: { requests: [] as { bbox: unknown; filter: unknown }[] },
-  canvas: { mounted: [] as string[], fitToBounds: 0, fitToBbox: [] as unknown[], props: null as import("./canvas/WorkingCanvas").WorkingCanvasProps | null },
+  /** `refuseContaining`: a request whose filter holds this text is refused `skp.filter_unknown_column`, as the kernel refuses an unknown column. */
+  manager: { requests: [] as { bbox: unknown; filter: unknown }[], refuseContaining: null as string | null },
+  canvas: { mounted: [] as string[], resets: 0, fitToBounds: 0, fitToBbox: [] as unknown[], props: null as import("./canvas/WorkingCanvas").WorkingCanvasProps | null },
 }));
 
 function describeFixture(): import("./skp/types").DescribeResponse {
@@ -32,7 +37,7 @@ function describeFixture(): import("./skp/types").DescribeResponse {
     crs: { identifier: "EPSG:2056", definition_json: null, source: "file", asserted_by: null, asserted_at: null, definition_provenance: null, axis_order: "easting,northing", axis_normalization: "none-performed", provenance: "crs:declared", axis_provenance: "axis:declared", display_convention: null, unit: "metre" },
     geometry: { column: "geometry", encoding: "geoarrow.polygon", declared_types: ["Polygon"], coordinate_layout: "interleaved-xy", frame: "authoritative-project-crs" },
     identity: { source: "file:id", uniqueness: "verified-at-open-full-file", verified_rows: "100000", max_value: "99999", js_exact: true, class: "native", session_statement: null },
-    schema: [{ name: "id", arrow_type: "UInt64", nullable: false, projectable: false }],
+    schema: [{ name: "id", arrow_type: "UInt64", nullable: false, projectable: false }, { name: "zone", arrow_type: "Utf8", nullable: true, projectable: true }, { name: "geometry", arrow_type: "Binary", nullable: false, projectable: false }],
     covering_bbox: true, row_count: { basis: "identity-uniqueness-scan-full-file", value: "100000" },
     extent: { basis: "not-established-at-open", value: null },
     license: { license: null, attribution: null, redistribution: null, declares_anything: false },
@@ -84,7 +89,12 @@ vi.mock("./publish/client", async (importOriginal) => ({
   subscribePublishProgress: () => () => {},
   publishPrepare: async (): Promise<import("./publish/types").PrepareOutcome> => {
     mocks.prepares += 1;
+    if (mocks.promptOnPrepare) return { status: "prompt", attempt_id: "at_1", prompt: { operation: "publish", class: 3, reversibility: "irreversible", source_name: "parcels.parquet", source_content_hash: "sha256:abc", style_hash: "sha256:def", destination_display: "C:/out/bundle", grantor: "operator", grant_remaining_s: 300, row_scope: "the whole file", filter_scope: null, outcome_summary: "a folder" } };
     return mocks.pendingPrepare ?? { status: "picker-cancelled" };
+  },
+  publishExecute: async (): Promise<import("./publish/types").ExecuteOutcome> => {
+    mocks.executes += 1;
+    return { status: "success", bundle_path: "C:/out/bundle", rows: 2000, partitions: 1, total_bytes: 1, manifest_bytes: 1, style_hash: "sha256:def", operation_digest: "sha256:ghi", build_millis: 0 };
   },
   publishCancel: async (): Promise<boolean> => true,
 }));
@@ -93,9 +103,14 @@ vi.mock("./skp/events", () => ({ listenDatasetSessionEnded: async () => () => {}
 
 vi.mock("./streaming/viewportStreamManager", () => {
   class MockViewportStreamManager {
-    requestViewport(bbox?: unknown, _bboxCrs?: unknown, _nowMs?: unknown, filter?: unknown): Promise<unknown> {
+    async requestViewport(bbox?: unknown, _bboxCrs?: unknown, _nowMs?: unknown, filter?: { predicate: string } | null): Promise<unknown> {
       mocks.manager.requests.push({ bbox, filter: filter ?? null });
-      return Promise.resolve({ kind: "issued", streamHandle: "st_1" });
+      const refuse = mocks.manager.refuseContaining;
+      if (refuse !== null && filter?.predicate.includes(refuse)) {
+        const { SkpCallError } = await import("./skp/client");
+        throw new SkpCallError({ code: "skp.filter_unknown_column", message: "no such column", fields: { column: refuse } });
+      }
+      return { kind: "issued", streamHandle: "st_1" };
     }
     async cancelStream(): Promise<void> {}
     async stop(): Promise<void> {}
@@ -121,7 +136,9 @@ vi.mock("./canvas/WorkingCanvas", () => {
         fitToBbox: (bbox) => {
           mocks.canvas.fitToBbox.push(bbox);
         },
-        resetFitForNewGeneration: () => {},
+        resetFitForNewGeneration: () => {
+          mocks.canvas.resets += 1;
+        },
         getResidentCounts: () => ({ totalResidentVertices: 0, totalResidentFeatures: 0 }),
         armFirstPixelRenderHook: () => false,
         disarmFirstPixelRenderHook: () => true,
@@ -144,8 +161,9 @@ vi.mock("./canvas/WorkingCanvas", () => {
 });
 
 import App from "./App";
-import { COMMAND_BUSY_NOTE, COMMAND_UNAVAILABLE_NOTE } from "./command/CommandBar";
+import { COMMAND_BUSY_NOTE, COMMAND_FIELD_NOTE, COMMAND_UNAVAILABLE_NOTE } from "./command/CommandBar";
 import { consoleRecorder, isGuiActionEntry } from "./console/recorder";
+import { CLAUSE_ADVANCED_MARK, CLAUSE_ADVANCED_NEW_LINE, CLAUSE_REFUSED_LINE, clauseBlockedLine } from "./filter/ClauseCards";
 import { __resetResidencyArmForTests, setResidencyArm } from "./residency/residencyArm";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -157,9 +175,9 @@ describe("App: the command bar (milestone 3, PR A), through the real App", () =>
   let root: Root;
 
   beforeEach(() => {
-    Object.assign(mocks, { opens: 0, holdOpen: null, picks: 0, pickPath: null, prepares: 0, pendingPrepare: null, recorded: [], refuseRecordWith: null });
-    Object.assign(mocks.manager, { requests: [] });
-    Object.assign(mocks.canvas, { mounted: [], fitToBounds: 0, fitToBbox: [], props: null });
+    Object.assign(mocks, { opens: 0, holdOpen: null, picks: 0, pickPath: null, prepares: 0, promptOnPrepare: false, executes: 0, pendingPrepare: null, recorded: [], refuseRecordWith: null });
+    Object.assign(mocks.manager, { requests: [], refuseContaining: null });
+    Object.assign(mocks.canvas, { mounted: [], resets: 0, fitToBounds: 0, fitToBbox: [], props: null });
     setResidencyArm("baseline");
     container = document.createElement("div");
     document.body.appendChild(container);
@@ -220,6 +238,17 @@ describe("App: the command bar (milestone 3, PR A), through the real App", () =>
     await inAct(() => void press(bar(), "Enter"));
   }
   const options = () => [...container.querySelectorAll(".command-list [role=option]")];
+  /** PR B: the cards (their texts and switches), the filters the manager has been asked for, and one `/filter` sent from the bar. */
+  const cardTexts = () => [...container.querySelectorAll(".clause-card .clause-text")].map((e) => e.textContent);
+  const switches = () => [...container.querySelectorAll<HTMLButtonElement>(".clause-switch")];
+  const states = () => switches().map((b) => b.getAttribute("aria-checked"));
+  const asked = () => mocks.manager.requests.map((r) => (r.filter as { predicate: string } | null)?.predicate ?? null);
+  const stepped = () => mocks.recorded.map((r) => (r.intent as { params: { filter: { predicate: string } | null } }).params.filter?.predicate ?? null);
+  const addClause = (condition: string) => runBar(`/filter ${condition}`);
+  const flip = (index: number) => inAct(() => switches()[index].click());
+  const A = `"zone" = 'residential'`;
+  const B = `"id" > 5`;
+  const AB = `(${A}) AND (${B})`;
   const hiddenOf = (region: string) => q(`#region-${region}`)!.hidden;
 
   // RECORDED MUTATION for "RC1": in StudioLayout.tsx's `runAction`, drop the focus call from `command.focus`'s arm (delete `barRef.current?.take();`). Expected failure: the bar's input does not hold the focus.
@@ -462,5 +491,167 @@ describe("App: the command bar (milestone 3, PR A), through the real App", () =>
     const cleared = mark();
     await runBar("/clear-selection");
     expect([mocks.canvas.props!.highlight!.selected.size, rowsSince(cleared)]).toEqual([0, ["selection.clear"]]);
+  });
+
+  // RECORDED MUTATIONS for "RC3", each applied alone. (a) In filterClauses.ts's `combineClauses` join with ` OR ` in place of ` AND `. Expected failure: the manager's filter.
+  // (b) (RC3-b, Amendment 3 item 4(d)) In App.tsx's `commitFilterChange` enqueue the step only for `filter.apply` (`if (dataset !== null && transition.action === "filter.apply")`), so the card commit records nothing. Expected failure: the step count.
+  it("RC3: two simple clauses reach the manager as (t1) AND (t2) with the dialect constant, two cards are on, the Applied line shows it, and one filter.apply step holding it is recorded after each outcome", async () => {
+    await open("C:/data/a.parquet");
+    await addClause(A);
+    expect([asked().at(-1), stepped()], "one card sends its text byte for byte").toEqual([A, [A]]);
+    expect(bar().value, "an applied /filter clears the draft").toBe("");
+    expect(document.activeElement, "and keeps the focus").toBe(bar());
+    await addClause(B);
+    expect(mocks.manager.requests.at(-1)!.filter).toEqual({ predicate: AB, dialect: "duckdb-expr/0" });
+    expect([cardTexts(), states()]).toEqual([[A, B], ["true", "true"]]);
+    expect(text(".filter-active"), "the Applied line shows the combination").toBe(`Applied: ${AB}`);
+    expect(stepped(), "one filter.apply step per outcome, the second holding what the manager received").toEqual([A, AB]);
+  });
+
+  // RECORDED MUTATION for "RC4": in App.tsx's `changeClauses` dispatch `filter.clauses.set` with the proposal before `applyFilterWith` is awaited (insert `dispatch({ type: "view.transition", view: current.id, transition: { action: "filter.clauses.set", params: { clauses, step } } });` before `try {`). Expected failure: the card is added before the outcome.
+  it("RC4: a clause the kernel refuses by name adds no card and changes nothing applied, and the refusal shows under the bar, which keeps its text", async () => {
+    await open("C:/data/a.parquet");
+    await addClause(A);
+    mocks.manager.refuseContaining = "nope";
+    await addClause(`"nope" = 1`);
+    expect(cardTexts(), "no card is added").toEqual([A]);
+    expect(text(".filter-active"), "the applied filter is unchanged").toBe(`Applied: ${A}`);
+    expect(asked().slice(-2), "the refused request, then the last applied filter again").toEqual([`(${A}) AND ("nope" = 1)`, A]);
+    expect(mocks.recorded, "nothing is recorded for a refusal").toHaveLength(1);
+    expect(text(".command-result .admission-refusal-code")).toBe("skp.filter_unknown_column");
+    expect(text(".command-result p")).toBe(CLAUSE_REFUSED_LINE);
+    expect(bar().value, "the bar keeps its text").toBe(`/filter "nope" = 1`);
+  });
+
+  // RECORDED MUTATIONS for "RC5", each applied alone. (a) As RC4's: dispatch `filter.clauses.set` before the outcome. Expected failure: the refused toggle has flipped the card.
+  // (b) (RC5-b) In App.tsx's `commitFilterChange` enqueue, for a `setEnabled` step, a filter holding the toggled clause's own text (replace the enqueued `filter` with `transition.action === "filter.clauses.set" && transition.params.step.kind === "setEnabled" ? { ...filter!, predicate: transition.params.clauses.find((c) => c.id === transition.params.step.clause)!.text } : filter`). Expected failure: the off step.
+  it("RC5: off issues the remaining combination and on restores it, each recorded once, and a refused toggle leaves the card as it was applied", async () => {
+    await open("C:/data/a.parquet");
+    await addClause(A);
+    await addClause(B);
+    await flip(1);
+    expect([asked().at(-1), states(), text(".filter-active")], "off: the remaining card, byte for byte").toEqual([A, ["true", "false"], `Applied: ${A}`]);
+    await flip(1);
+    expect([asked().at(-1), states()], "on: the combination again").toEqual([AB, ["true", "true"]]);
+    expect(stepped(), "the off step holds the remaining combination, the on step the restored one").toEqual([A, AB, A, AB]);
+    await flip(1);
+    mocks.manager.refuseContaining = `"id"`;
+    await flip(1);
+    expect(states(), "a refused toggle leaves the card as it was applied").toEqual(["true", "false"]);
+    expect([text(".filter-active"), stepped()], "the applied filter and the history are unchanged").toEqual([`Applied: ${A}`, [A, AB, A, AB, A]]);
+    expect([text(".clause-foot .clause-line"), text(".clause-foot .admission-refusal-code")]).toEqual([CLAUSE_REFUSED_LINE, "skp.filter_unknown_column"]);
+  });
+
+  // RECORDED MUTATION for "RC6": in viewTransitions.ts's `filter.apply` case append the new card to the held ones (`clauses: [...viewClauses(view), { id: ..., ... }]`). Expected failure: the panel's Apply leaves two cards.
+  it("RC6: the panel's Apply replaces the cards with one holding its text, and Clear removes them all", async () => {
+    await open("C:/data/a.parquet");
+    await addClause(A);
+    await addClause(B);
+    setValue(q<HTMLInputElement>(".filter-predicate")!, "  zone = 'x'  ");
+    await inAct(() => q<HTMLButtonElement>(".filter-apply")!.click());
+    expect([cardTexts(), text(".filter-active")], "one card, its text as typed").toEqual([["  zone = 'x'  "], "Applied:   zone = 'x'  "]);
+    await inAct(() => q<HTMLButtonElement>(".filter-clear")!.click());
+    expect([cardTexts(), q(".filter-active"), q(".clause-statement")], "Clear removes every card and the statement").toEqual([[], null, null]);
+  });
+
+  // RECORDED MUTATIONS for "RC7", each applied alone. (a) In App.tsx's `changeClauses` send a refused change anyway (replace `if (proposal.kind === "refuse") {` with `if (proposal.kind === "refuse" && false) {`). Expected failure: the request count.
+  // (b) (RC7-b) Drop the row (delete `recordNamed("gui-action", "filter.clauseNotSent");`). Expected failure: the row count.
+  it("RC7: an advanced clause beside a card that is on is not sent, with the shell's line and one filter.clauseNotSent row, and a card beside an advanced card that is on is not sent either", async () => {
+    await open("C:/data/a.parquet");
+    await addClause(A);
+    const [requests, from] = [mocks.manager.requests.length, mark()];
+    await addClause(`"zone" = 'a' OR "zone" IS NULL`);
+    expect(mocks.manager.requests.length, "no requestViewport call").toBe(requests);
+    expect(text(".command-note")).toBe(CLAUSE_ADVANCED_NEW_LINE);
+    expect([bar().value, cardTexts(), mocks.recorded.length], "the draft, the cards and the history stand").toEqual([`/filter "zone" = 'a' OR "zone" IS NULL`, [A], 1]);
+    expect(rowsSince(from)).toEqual(["filter.clauseNotSent"]);
+    await flip(0);
+    await addClause(`"zone" = 'a' OR "zone" IS NULL`);
+    expect(cardTexts().length, "with the other card off, the advanced one is added").toBe(2);
+    expect(q(".clause-advanced")!.textContent).toBe(CLAUSE_ADVANCED_MARK);
+    const before = mocks.manager.requests.length;
+    await flip(0);
+    expect([mocks.manager.requests.length, text(".clause-line")], "turning the simple card on beside an advanced one: not sent, and the advanced card is named").toEqual([before, clauseBlockedLine(`"zone" = 'a' OR "zone" IS NULL`)]);
+    expect(rowsSince(from)).toEqual(["filter.clauseNotSent", "filter.clauseNotSent"]);
+  });
+
+  // RECORDED MUTATION for "RC11": in viewTransitions.ts's `filter.clauses.set` case clear the selection (add `selection: NO_MEMBERS` to the returned view). Expected failure: the count falls to 0.
+  it("RC11: with one feature selected, switching a card off leaves the count at 1", async () => {
+    await open("C:/data/a.parquet");
+    await addClause(A);
+    await addClause(B);
+    click([...container.querySelectorAll(".tool-switch-button")].find((b) => b.textContent === "Select") ?? null);
+    await inAct(() => mocks.canvas.props!.onClickPick!({ kind: "feature", pick: { streamHandle: "st_1", batchSeq: 0, id: 1n, anchor: null }, bounds: { xmin: 0, ymin: 0, xmax: 10, ymax: 10 } }));
+    expect(mocks.canvas.props!.highlight!.selected.size).toBe(1);
+    await flip(1);
+    expect(states(), "the card went off").toEqual(["true", "false"]);
+    expect(mocks.canvas.props!.highlight!.selected.size, "the selection survived").toBe(1);
+  });
+
+  // RECORDED MUTATION for "RC12": in viewTransitions.ts's `filter.clauses.set` case leave the filter as it was (`filter: view.filter`). Expected failure: the host call after the toggle.
+  it("RC12: an export staged before a card toggle is refused at execute, and publishExecute is not called", async () => {
+    await open("C:/data/a.parquet");
+    await addClause(A);
+    await addClause(B);
+    mocks.promptOnPrepare = true;
+    await inAct(() => mocks.canvas.props!.onViewShown!({ xmin: 0, ymin: 0, xmax: 100, ymax: 100 }));
+    click(q(".publish-disclosure"));
+    click(q('input[name="publish-scope"][value="whole"]'));
+    await inAct(() => q<HTMLButtonElement>(".publish-open")!.click());
+    expect(q(".publish-dialog"), "the approval prompt stands").not.toBeNull();
+    await flip(1);
+    setValue(q<HTMLInputElement>(".publish-dialog-phrase")!, "bundle");
+    await inAct(() => q<HTMLButtonElement>(".publish-dialog-submit")!.click());
+    expect(mocks.executes, "the host was not called").toBe(0);
+    expect(text(".publish-panel .admission-refusal-message")).toBe("[P6 placeholder] The export was not run, because the filter changed after it was prepared. Nothing was written. Prepare it again.");
+  });
+
+  // RECORDED MUTATION for "RC14": in App.tsx's `applyFilterWith` make the reset a no-op (delete `canvasRef.current?.resetFitForNewGeneration();`). Expected failure: the reset count after an issued card change.
+  it("RC14: a card change resets the fit once on an issued outcome and never on a refusal, as an Apply does", async () => {
+    await open("C:/data/a.parquet");
+    const resets = () => mocks.canvas.resets;
+    const base = resets();
+    await addClause(A);
+    expect(resets() - base, "an issued add").toBe(1);
+    await flip(0);
+    expect(resets() - base, "an issued toggle").toBe(2);
+    mocks.manager.refuseContaining = "nope";
+    await addClause(`"nope" = 1`);
+    expect(resets() - base, "a refusal").toBe(2);
+  });
+
+  // RECORDED MUTATION for "RC16": in App.tsx's `commitFilterChange` send a card change's step directly (for `filter.clauses.set` call `void recordStep(dataset, { action: "filter.apply", params: { filter } }).catch(() => {})` in place of the enqueue). Expected failure: no notice stands.
+  it("RC16: with recordStep refused, a card change is still applied and the strip shows the filter notice with the kernel's message", async () => {
+    mocks.refuseRecordWith = "this session history takes no more steps: an earlier write to it failed";
+    await open("C:/data/a.parquet");
+    await addClause(A);
+    await inAct(() => {});
+    expect([cardTexts(), text(".filter-active")], "applied").toEqual([[A], `Applied: ${A}`]);
+    expect(mocks.recorded, "the step was tried").toHaveLength(1);
+    expect(text(".record-notice")).toBe("Filter applied. The session history did not confirm keeping it: this session history takes no more steps: an earlier write to it failed");
+  });
+
+  // RECORDED MUTATION for "RC-FIELD" (a row beyond the table: the bar's list of field names): in App.tsx pass no schema (`filterFields={null}`). Expected failure: no field options.
+  it("RC-FIELD: after an @ the list holds the file's field names without the geometry column, Tab puts the name in double-quoted, the list stays closed, and Enter alone never completes", async () => {
+    await open("C:/data/a.parquet");
+    act(() => bar().focus());
+    setValue(bar(), "/filter @");
+    expect(options().map((o) => o.textContent), "the schema in order, each name with its Arrow type, no geometry column").toEqual(["idUInt64", "zoneUtf8"]);
+    setValue(bar(), "/filter @ZO");
+    const sent = mocks.manager.requests.length;
+    expect(options().map((o) => o.querySelector(".command-field-name")!.textContent)).toEqual(["zone"]);
+    press(bar(), "ArrowDown");
+    await inAct(() => void press(bar(), "Enter"));
+    expect([bar().value, text(".command-note")], "Enter on an option does not complete").toEqual(["/filter @ZO", COMMAND_FIELD_NOTE]);
+    expect(mocks.manager.requests.length, "and sends nothing").toBe(sent);
+    setValue(bar(), "/filter @ZO");
+    expect(press(bar(), "Tab"), "Tab completes (and is prevented)").toBe(false);
+    expect([bar().value, q(".command-list")], "double-quoted, the list closed").toEqual(['/filter "zone"', null]);
+    press(bar(), "ArrowDown");
+    expect(q(".command-list"), "ArrowDown does not reopen it until the next typed character").toBeNull();
+    expect(press(bar(), "Tab"), "a second Tab leaves").toBe(true);
+    setValue(bar(), '/filter "zone" = @i');
+    click(options()[0]);
+    expect(bar().value, "a click completes too").toBe('/filter "zone" = "id"');
   });
 });
