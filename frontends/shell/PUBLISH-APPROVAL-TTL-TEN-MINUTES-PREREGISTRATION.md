@@ -183,3 +183,14 @@ Nothing above is edited.
 3. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 3 — built: §3's cargo command corrected (class 3); two per-file overruns (class 6); written after the results were seen
+
+*Written by the custodian after the worker's report was seen. References only: `state/consults/2026-10-20-publish-approval-ttl-ten-minutes-worker-report.md`.*
+
+1. **Built** on `cut/publish-approval-ttl-ten-minutes` from f2052681: step 1 ca5069bf1fdbbea76b474f78f470d2d450e51c44, step 2 4379f3c80d87cfe71969a72d47b54a777fdb2a5c, step 3 42e6fc1410447c331a4b213b02fdc220e834fc7a, and the mutation record 5e922915419fff578d862ae1a47aefa39c955ba2 (comments only). M1 to M4 were observed at 42e6fc1410447c331a4b213b02fdc220e834fc7a, each failing its named test (the report).
+2. **§3's cargo command (class 3).** The test's name alone with `--exact` matches nothing: it printed 0 passed and 68 filtered out with exit code 0. The command is `cargo test --manifest-path frontends/shell/src-tauri/Cargo.toml --locked --lib publish::tests::a_pending_attempt_121s_old_is_still_taken_within_the_ttl -- --exact`, the one M2 was observed with.
+3. **Budget (class 6; Scope not edited).** `frontends/shell/e2e/exportElapsed.test.mjs` has 5 changed lines against its 4, and `frontends/shell/src-tauri/src/publish.rs` has 36 against its 35. In each, the overrun is the comment recording that file's mutation. The total is 89 of 120, before ADR-024's note.
+4. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
