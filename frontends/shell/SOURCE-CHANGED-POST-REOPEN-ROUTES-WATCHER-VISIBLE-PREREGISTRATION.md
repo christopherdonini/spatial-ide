@@ -528,3 +528,54 @@ Nothing above is edited.
 11. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 4 — round 2's runs: every prediction held, no invalidator; §7's figures (class 8)
+
+*Written by the custodian after round 2's runs were seen. References only. The round 2 report: `state/consults/2026-10-19-source-changed-post-reopen-routes-watcher-visible-round-2-worker-report.md`. The runs: `state/consults/2026-10-19-source-changed-post-reopen-routes-watcher-visible-round-2-custodian-runs.md`, sha256 dafd175c8ca29b898c00116456cd132d093964146c56e7651c5758e78b6d5682.*
+
+1. **The runs at bf527c1e,** 19 in one exclusive hold: P1, P2 (R2 by Amendment 2 item 3), P3, P4, P5 with W-M6 and W-M7, and P6 on the junction's change time held. No invalidator fired, and the re-read detail appears in no run. The repoint child exited in every run, and none was left running.
+2. **S5d's verdicts,** recorded and not predicted: PASS in 2 of 8 post runs, and FAIL in 6, each on its second condition, the change losing the race to a tile's pre-check. They are for S5d's step 2 (Amendment 3 item 8).
+3. **§7 (class 8),** by the form's command at bf527c1e: the driver 363 against its 220; the README 18 against 24; the walkthrough 33 against 40. The driver's overrun is round 2's in-place repoint and its answer check (Amendment 3 items 1, 4 and 9).
+4. **Next:** main merged into the branch; the PR; both gates (§9).
+5. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
+
+### Amendment 5 — budget overrun, §7 not edited (class 8), and record corrections (class 3); written after round 2's runs and gate 1
+
+*References only. Gate 1: `state/consults/gates/2026-10-19-source-changed-post-reopen-routes-watcher-visible-gate1-architect.md` (gate-log 547) and `state/consults/gates/2026-10-19-source-changed-post-reopen-routes-watcher-visible-gate1-reviewer.md` (548), both PASS WITH NOTES; this is their D4. The words worker's report: `state/consults/2026-10-19-source-changed-post-reopen-routes-watcher-visible-gate1-words-worker-report.md`.*
+
+1. **§7 (class 8),** by the form's command at b9a5780541a05cf94598e0218b8d3bba4e0ec1ba: `frontends/shell/e2e/source-changed.mjs` 375 against 220; the README 18 against 24; the walkthrough 33 against 40. The driver's overrun is Amendment 3 items 1, 4 and 9 (the in-place repoint and its answer check) and gate 1's comment words.
+2. **The revs of the hashes (class 3).** Amendment 2 item 1's sha256 is of `state/consults/2026-10-18-source-changed-post-reopen-routes-watcher-visible-custodian-runs.md` @ 521fc031ed049fcda4a8c563aa1cd80799918ec9; Amendment 3's first line's, of `state/consults/2026-10-19-source-changed-post-reopen-routes-watcher-visible-i2-architect-consult.md` from its line 5, @ 53b521067b6b52b3b5344cd931c4fbfeb51d70ad; Amendment 4's first line's, of `state/consults/2026-10-19-source-changed-post-reopen-routes-watcher-visible-round-2-custodian-runs.md` @ bc2a987f28c7c90e07b043d65402bd910f35c22e.
+3. **Amendment 3's class.** It was written after round 1's runs were seen (Amendment 2 item 1) and changes claims (its items 4 and 5): class 1, not class 3.
+4. **W-M6 and W-M7.** W-M7 is declared in the round 2 worker report, before the runs. W-M6 was run telling the child the wrong target without removing the answer check: with the answer `ok` the check does nothing, so its failing lines are the realpath half. The answer check's non-`ok` branch is observed only in the round 2 worker's scratch error test, on bf527c1e's bytes.
+5. **"Exists at every instant"** (Amendment 3 item 1) is the consult's R2, a reading no Windows document states. Its evidence is the round 2 worker's probe, the reviewer's own probe run at gate 1, and P4 of the round 2 runs. The words at the head say so (gate 1, the reviewer's D1).
+6. **Gate 1's words** were applied at b9a5780541a05cf94598e0218b8d3bba4e0ec1ba by one worker, with no re-gate (§31 (d)). N6's row names the reviewer's case of a third text.
+7. **For S5d's step 2** (Amendment 3 item 8): the architect's gate 1 seam notes (a) to (d), among them that a refused mint is logged even after the session has ended, so S5d's second condition can fail on a refusal that follows the end. S5d's amendment states them.
+8. **Next:** the PR body's two sentences (the reviewer's D1 and D3), then ready, then the human's click.
+9. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
+
+### Amendment 6 — closing record: PR #231 merged
+
+*Written by the custodian after the merge, on the human's message of 2026-10-20 (`state/directives/2026-10-20-230-231-233-merged-232-strikes-rule-d1-a-not-i1-profile-path-redact-unknown-attempt-a.md`). References only.*
+
+1. **Merged** by the human at 2026-10-20T07:33:16Z, merge commit 6b829c08b0ffbe18919f36215b6969d0ff755e4d (two parents: main 3fa90769c735d0f5846e20110ec0f51b35a08ddb and the branch head b9a5780541a05cf94598e0218b8d3bba4e0ec1ba).
+2. **The reports:**
+   - round 1, the worker-high: `state/consults/2026-10-18-source-changed-post-reopen-routes-watcher-visible-worker-report.md` @ feafb6b0f42e3893b9a508466760083db6b818bc, sha256 11f702c5e4b0afd641581d0c2247f877b192585032a437ae67bee7762e72f80e from its line 5;
+   - the one I2 consult (Amendment 3): `state/consults/2026-10-19-source-changed-post-reopen-routes-watcher-visible-i2-architect-consult.md` @ feafb6b0f42e3893b9a508466760083db6b818bc, sha256 7f7efe57fb20e741537c8c826f1eafad0ca2d6e58cc0b1b8666acf5e5b10f9e9 from its line 5;
+   - round 2: `state/consults/2026-10-19-source-changed-post-reopen-routes-watcher-visible-round-2-worker-report.md` @ feafb6b0f42e3893b9a508466760083db6b818bc, sha256 a16744ffae5c48ae7f39cec6593771c95dcec13d898ebbe874b3fe4157af4fa5 from its line 5;
+   - gate 1's words: `state/consults/2026-10-19-source-changed-post-reopen-routes-watcher-visible-gate1-words-worker-report.md` @ feafb6b0f42e3893b9a508466760083db6b818bc, sha256 76e74a73d596185491b8fdc8c493c7d09674172c32e5e495db8d29f456ee4496 from its line 5.
+3. **The custodian's runs:**
+   - round 1 (Amendment 2): `state/consults/2026-10-18-source-changed-post-reopen-routes-watcher-visible-custodian-runs.md` @ feafb6b0f42e3893b9a508466760083db6b818bc, sha256 f64ded057fd3ddd83055fa468d086cf27ad5cde8068a0cfbce1ee5c1b9cd1820;
+   - round 2 (Amendment 4): `state/consults/2026-10-19-source-changed-post-reopen-routes-watcher-visible-round-2-custodian-runs.md` @ feafb6b0f42e3893b9a508466760083db6b818bc, sha256 dafd175c8ca29b898c00116456cd132d093964146c56e7651c5758e78b6d5682.
+4. **Gate 1,** both PASS WITH NOTES (§9):
+   - architect, gate-log 547: `state/consults/gates/2026-10-19-source-changed-post-reopen-routes-watcher-visible-gate1-architect.md` @ feafb6b0f42e3893b9a508466760083db6b818bc, sha256 66c9af6036489219e1c1f49190e4c86fad41336137977c0fda2bc5d4a2b604dd;
+   - reviewer, gate-log 548: `state/consults/gates/2026-10-19-source-changed-post-reopen-routes-watcher-visible-gate1-reviewer.md` @ feafb6b0f42e3893b9a508466760083db6b818bc, sha256 217ff56e6c3093295799900b7f2c1a291dc22621f114d5cfc71f9f215033c27e.
+5. **Operator (§9):** N6, N8 and Q1 are on main with blank result logs, queued for the next sitting.
+6. **For S5d's step 2:** §2.9, Amendment 3 item 8 and Amendment 5 item 7 (the architect's gate 1 seam notes (a) to (d)), stated in S5d's own amendment before its runs.
+7. **PLAN:** the node is done, with `{pr: 231}`; `source-changed-post-route-s5d-race`, which depends on it, is ready.
+8. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.

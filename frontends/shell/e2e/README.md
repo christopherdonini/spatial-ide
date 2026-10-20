@@ -237,19 +237,11 @@ session-ended state in place for the second (`openPath` on the same path does no
 so each scenario needs its own fresh launch -- observed as a zoom ladder producing zero motion at
 every notch on a second run against the same instance, silent otherwise.
 
-**`source-changed.mjs`'s post-check route (P5).** Setting `SPATIAL_E2E_SOURCE_CHANGED_ROUTE=post`
-switches the same driver from its default pre-check route (re-aimed, next paragraph) to a route that lets a
-tile's mint succeed against the file before the change and mutates only after, so the
-source-changed refusal is caught when that tile's own stream later drains rather than at mint time
-(`frontends/shell/e2e/source-changed.mjs:144-159`).
+**`source-changed.mjs`'s routes, and the change each makes.** Every route opens a copy of the 100k fixture through a directory junction (`e2e/out/source-changed-link`, made once by the layout with Node's `symlinkSync(.., "junction")`, no elevation) that points at copy `a`. It changes the source only by repointing the junction to copy `b`, which holds the same bytes with an mtime 120 s later. Each repoint rewrites the existing junction's mount-point reparse data in place (`FSCTL_SET_REPARSE_POINT`; the junction's name is never deleted, and no Windows document states that the rewrite is atomic, though no probe stat or open through it failed and no run's check reported that the source could not be re-read) from one Windows PowerShell 5.1 child that the driver spawns once after the layout and that compiles a small P/Invoke class with Add-Type; the driver sends it a target per line and awaits its one-line answer. Windows PowerShell 5.1 and Add-Type are therefore a runtime requirement of this driver; nothing is elevated and no other link type is used. The advisory source watcher cannot see that change (KNOWN-LIMITATIONS item 26), so only a query's pre-check or a stream's post-check can find it.
 
-**`source-changed.mjs`'s default (pre-check) route, re-aimed.** The advisory source watcher ends the session
-on an mtime touch it sees while the app is idle, before any query, so this route is aimed at a change the
-watcher cannot see (KNOWN-LIMITATIONS item 26). S1 opens a copy of the 100k fixture through a directory
-junction (`e2e/out/source-changed-link`, made in-process with Node's `symlinkSync(.., "junction")`, no
-elevation) that points at copy `a`; S3 retargets it to copy `b` (the same bytes, mtime 120 s later); S4's
-query is then refused by the pre-check, and the session log's `tile-stream-mint-refused` line carrying
-`engine.source_changed` is asserted. The `post` and `reopen` routes keep their mtime touch.
+- The default route repoints while the app is idle (S3). S4's query is then refused by the pre-check, and the session log's `tile-stream-mint-refused` line carrying `engine.source_changed` is asserted.
+- `SPATIAL_E2E_SOURCE_CHANGED_ROUTE=post` lets a tile's mint succeed against `a` and repoints on the first new `stream-issued` line, so the post-check can find the change when that tile's stream drains. Its S5d asserts a session-ended line and no `tile-stream-mint-refused` line since its baseline. It does not read which kernel route ended the session.
+- `SPATIAL_E2E_SOURCE_CHANGED_ROUTE=reopen` runs the default route through S5c, then reopens through the junction. R4 repoints the junction back to `a`: the session must stay up while the app idles, and the next query's pre-check line must follow.
 
 ## Action console spec (action-console cut, P5)
 
@@ -801,3 +793,17 @@ Asserted, in order: `OPEN`; `APPLY` (the real Apply of `zone = 'residential'`, t
 **What it proves not.** E2 (a normal close removes that run's record) is not a step: this harness stops an app only with `taskkill /T /F` and cannot close it normally (the form's H5), so row AA4 of the walkthrough's Part AA carries it. The kill proves that a line the kernel replied to survives the process ending; it does not prove it survives a power loss, which the form does not claim.
 
 E2 is row AA4. `page.fill` dispatches the native `change` event itself, so what a real colour picker's close and a real range release do in WebView2 (H2) is row AA2's to prove. Each step's recorded mutation is in the file's header, with its commit and run.
+
+## Command bar spec (shell-migration-milestone-3)
+
+```
+npm run e2e:command-bar
+```
+
+*Draft for the human's sight (the form's §9 and item 2e): the entry follows `SHELL-MIGRATION-MILESTONE-3-PREREGISTRATION.md` §4 and Amendment 1 item 9, and its sentences are not the human's wording.*
+
+`e2e/command-bar.mjs` drives the command bar on real WebView2 with `filter-zoned.parquet`, and records the fixture's sha256 before and after. Asserted, each as a named step: `E-CTRLK` (Ctrl+K focuses the bar; `/lay`, Tab and Enter flip the Layers region's `hidden`; exactly one more class-C row carries the registry's own text for `layout.toggleLayers`; the stored `.working-canvas` node is unchanged), `E-SEARCH` (with the plain text `inspector` listed, `document.elementFromPoint` at the first option's centre returns that option and its top is not above the top bar's bottom; ArrowDown then Enter flips the Inspector; the upper-case text `TO LAY`, which only the label of Zoom to layer contains, lists that one entry), `E-HELP` (`?` lists every registry entry, with every word and every chord label read from `src/layout/actionRegistry.ts`), `E-BARFOCUS` (focus alone opens no list; from an empty bar with no list open, Tab and Shift+Tab leave in one press; Escape closes an open list and keeps the focus, and a second Escape returns it to the element held before), `E-REVEAL` (with the Inspector closed and its Style tab selected, `/export` shows the Inspector and its Layer tab, expands Export and puts the focus on `.publish-open`; no `.publish-dialog` appears) and `E-SLASH` (a `/` key pressed with the map focused puts the focus in the bar with `/` in it; a `/` pressed in the Filter section's input stays in that input and not in the bar).
+
+**What CDP key injection proves.** `page.keyboard.press` reaches the page's own `keydown` listener. It does not cross WebView2's accelerator-key layer, so this suite cannot say that a real Ctrl+K, or a `/` that needs Shift on some layouts, does. Row AB1 of the walkthrough's Part AB is the real-key check for Ctrl+K (H2); no row checks a real `/`.
+
+**The layout is session state.** The suite closes what it opens (Layers, the Inspector, Activity, the Export disclosure); it leaves the Inspector open on its Layer tab and the Console expanded. Each mutation is in the file's header, with the exact text it replaces and the step it fails; the custodian ran all eight alone at 2fa7c8d0, and each failed that step (state/consults/2026-10-19-shell-migration-milestone-3-pr-a-round-2-e2e-custodian-runs.md).

@@ -97,3 +97,16 @@ M = 607d8d166f2667b1b3e9bb9e501b57b4938328b9, read by the architect. T = b391e43
 5. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 2 — closing record: PR #230 merged
+
+*Written by the custodian after the merge, on the human's message of 2026-10-20 (`state/directives/2026-10-20-230-231-233-merged-232-strikes-rule-d1-a-not-i1-profile-path-redact-unknown-attempt-a.md`). References only.*
+
+1. **Merged** by the human at 2026-10-20T07:32:52Z, merge commit 3fa90769c735d0f5846e20110ec0f51b35a08ddb (two parents: main a5951feebccb8f5e0994003a652d2af89bab0e99 and the branch head 9b47f539586b158f3469c5356014b7c640ff2581). `KNOWN-LIMITATIONS.md` has the same blob at the merge commit as at the branch head, 5f383ce3ed482bbcd948a4a9598fba59d56a67aa.
+2. **The worker's report:** `state/consults/2026-10-18-known-limitations-item-23-watcher-idle-end-worker-report.md` @ feafb6b0f42e3893b9a508466760083db6b818bc, sha256 fd5e5acf05a4ea3fd70870f6f3747285608da441143b90fe48d34455ca1ae104 from its line 5.
+3. **The single reviewer gate (§E):** PASS, gate-log 545: `state/consults/gates/2026-10-18-known-limitations-item-23-watcher-idle-end-reviewer.md` @ feafb6b0f42e3893b9a508466760083db6b818bc, sha256 2305edc0e906192da0771e1152d3c33f09ed706d3381fd16a730ce4e47fc00bd.
+4. **No release-notes line** (Amendment 1 item 3).
+5. **PLAN:** the node is done, with `{pr: 230}`.
+6. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.

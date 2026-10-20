@@ -824,3 +824,121 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+### Amendment 5 — the re-sweep from B to the code base 564aadae: two moved pins (class 3); the base's suites and rule 00 (class 1)
+
+*Written by the custodian before any code, after the re-sweep's results were seen. References only. The record: `state/consults/2026-10-19-shell-migration-milestone-3-re-sweep-2-custodian.md`, sha256 08632629bf97a57fec7acd99742d49725408b168a7ef2eb36362a519734aa9b8.*
+
+1. **The code base** is 564aadae556a39c2f3a0f567730ec58e4cfe0439, where PR A's branch `cut/shell-migration-milestone-3-pr-a` is cut (§0.3, Amendment 4 item 3). Amendment 3 stands for B.
+2. **Pins (class 3).** Of the files the form's pins name, only `KNOWN-LIMITATIONS.md` changed from B to the base: item 44 landed above both lines Amendment 3 pins there, and each line is unchanged. Amendment 3 item 4's pin of line 390 reads at `KNOWN-LIMITATIONS.md:394 @ 564aadae556a39c2f3a0f567730ec58e4cfe0439 sha256:c22c976f428e62d266bf47043a06e577a3dc7e77d07c4136a1aa34a97c1353eb`; Amendment 3 item 10's pin of line 379 reads at `KNOWN-LIMITATIONS.md:383 @ 564aadae556a39c2f3a0f567730ec58e4cfe0439 sha256:ade05ff3699847fc81592b239f647a4be3bb3b9338b4614efb3ef7196e647ade`. Every other pin stands.
+3. **The §0.5 interfaces** are unchanged: no code path changed from B to the base (the record's §2).
+4. **The Part** is AB, and the two KNOWN-LIMITATIONS items take 45 and 46 by Amendment 3 item 10's rule, read again at PR B's KNOWN-LIMITATIONS commit (the record's §3).
+5. **The suites at the base (class 1)** (the record's §4 and §5). Every suite passed in the shared series but two:
+   - selection: E-EXPORT's execute returned `unknown-attempt` (U 92 ms, T 120,000 ms). Run alone twice in an exclusive hold, selection passed 18 of 18 both times, so by the machine rule the shared run's failure is not recorded as the suite's, and I12 does not fire. The attempt is recorded against `publish-approval-unknown-attempt-under-load` (its Amendment 7).
+   - source-changed, post route: S5d alone, recorded beside the runs (Amendment 3 item 12).
+6. **Rule 00 at the base (class 1).** In progress: `source-changed-post-reopen-routes-watcher-visible` (the source-changed driver, its README entry, walkthrough Part N) and `governance-decisions-pending-open-and-archive` (scripts under `scripts/plan/` and `scripts/hooks/`, and `AUTONOMY.md`). Awaiting merge: PR #230 (KNOWN-LIMITATIONS item 23). PR A shares no path with any of them, its README entry, its Part and its items counting as separate paths. No piece touches `protocol/`.
+7. **Next:** PR A's code from the base, by one worker-high.
+8. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
+
+### Amendment 6 — PR A's gate 1 (both FAIL) and correction round 1: the custodian's rows (class 3) and the round's e2e (class 2 for E-SEARCH-b); written after gate 1 and round 1's runs
+
+*References only. Gate 1: `state/consults/gates/2026-10-19-shell-migration-milestone-3-pr-a-gate1-architect.md` (549, A) and `state/consults/gates/2026-10-19-shell-migration-milestone-3-pr-a-gate1-reviewer.md` (550, R). Round 1: `state/consults/2026-10-19-shell-migration-milestone-3-pr-a-round-1-worker-report.md` (head 621cd1f3a0b5f12b8c837a45ebeffa472909fcb2). Its e2e: `state/consults/2026-10-19-shell-migration-milestone-3-pr-a-round-1-e2e-custodian-runs.md`, sha256 2773fdc5f110d308eb1f1c7218435cc37d97759b57a0ceaa56782921c34f5228.*
+
+1. **§2.2's third availability bullet (A's D5, class 3)** reads: `dataset.open` is available whenever App passes its handler; while an open is in flight it is listed as available, and running it starts nothing and shows the busy line, because `requestPick()` answers busy on the Open button's own condition (Amendment 3 item 11; RC8).
+2. **§2.4's result shapes (R's D3, class 3)** are the round 0 report's Differences item 1, as built.
+3. **Tab (A's C1)** now follows OPEN-1's ruled point: it completes an active option, or the only candidate whether the list is open or not, and a second Tab leaves. UC2's recorded mutation (Tab sets `open: true`) now fails on the assertion that Tab closes the list, not on Tab leaving in at most two; two more UC2 mutations are recorded (round 1 report).
+4. **E-SEARCH-b (class 2):** written down in round 1 and run by the custodian at the head: it fails E-SEARCH on the top-bar assertion before the predicted `elementFromPoint` line. Recorded in the round's e2e record.
+5. **Next:** the PR body (A's D6), then gate 2, both gates, scoped to round 1.
+6. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
+
+### Amendment 7 — PR A's gate 2 (both FAIL) and correction round 2: the custodian's rows (class 3), Amendment 6's references, the bar's focus rule as built, and the round's e2e (E-SEARCH-c observed as predicted); written after gate 2 and round 2's runs
+
+*References only. Gate 2: `state/consults/gates/2026-10-19-shell-migration-milestone-3-pr-a-gate2-architect.md` (551, A2) and `state/consults/gates/2026-10-19-shell-migration-milestone-3-pr-a-gate2-reviewer.md` (552, R2). Round 2: `state/consults/2026-10-19-shell-migration-milestone-3-pr-a-round-2-worker-report.md` (head 2fa7c8d09df2e8f21370c1bf68b23213a25615a0). Its e2e: `state/consults/2026-10-19-shell-migration-milestone-3-pr-a-round-2-e2e-custodian-runs.md` @ 4e4131125e70555ce6852f073e5e516912bfd9c3, sha256 de22c15ff17b99a81b652500649a1ca49ea83554f18a8f3fc9db026c86bb91db.*
+
+1. **§4's E-BARFOCUS row (gate 1 A's C1; A2's D4 and R2's D4, class 3)** reads: With no list open and no single candidate, Tab leaves the bar; Escape returns focus to the element held before. The step runs from an empty bar.
+2. **Amendment 6's references (A2's D5):** item 2's round 0 report is `state/consults/2026-10-19-shell-migration-milestone-3-pr-a-worker-report.md`, its Differences item 1; item 4's head is 621cd1f3a0b5f12b8c837a45ebeffa472909fcb2; the record its preamble hashes is @ afea0ff2fb785e06f208e28f0fb625d8cd359e5d.
+3. **§2.3's Running rule as built (A2's C1 and C2, R2's C1):** the bar runs an entry inside `flushSync`, so the action commits before the focus goes back by Escape's rule; round 1's clear in `apply` is removed. RC10 cases c (the region's splitter) and d (a region closed and opened again) are added, their mutations observed (round 2 report).
+4. **E-SEARCH-c (A2's E1):** written down in round 2 and run by the custodian at the head: it fails E-SEARCH on the `elementFromPoint` assertion, as predicted, so that assertion now has an observed failing mutation. Recorded in the round's e2e record.
+5. **Carried to PR B (A2's note):** after a completion, ArrowDown reopens the list, where §2.3 keeps it closed until the next typed character. PR A cannot reach it, since every PR A completion is an exact word that takes nothing; PR B's `/filter` can, and PR B settles it.
+6. **Next:** the PR body (R2's D5), then gate 3, both gates, scoped to round 2. The header's MUTATIONS sentence and the README's session-state sentence (A2's and R2's D1 and D3) take gate 3's words, fixed before the merge.
+7. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
+
+### Amendment 8 — closing record of PR A: PR #233 merged; the superseded index (class 1)
+
+*Written by the custodian after the merge, on the human's message of 2026-10-20 (`state/directives/2026-10-20-230-231-233-merged-232-strikes-rule-d1-a-not-i1-profile-path-redact-unknown-attempt-a.md`). References only. The node stays in progress for PR B.*
+
+1. **Merged** by the human at 2026-10-20T07:33:48Z, merge commit 116ecb3ec9a23177ee54ee4c57ad29c357980cf5 (two parents: main 6b829c08b0ffbe18919f36215b6969d0ff755e4d and the branch head a5c62e78561386f03be559b9c6f691df64888d19).
+2. **The superseded index** (gate 3's architect, its D3; round 12, item (e)):
+   - §4's E-BARFOCUS row: superseded by Amendment 7 item 1.
+   - Amendment 6 item 2's report reference, item 4's head, and its preamble's hash rev: superseded by Amendment 7 item 2.
+3. **The worker-high's reports:**
+   - round 0, the build: `state/consults/2026-10-19-shell-migration-milestone-3-pr-a-worker-report.md` @ feafb6b0f42e3893b9a508466760083db6b818bc, sha256 cdda71238519c00fb82de7982b007090218232295b8e7f8911b94837146f4378 from its line 5;
+   - round 1: `state/consults/2026-10-19-shell-migration-milestone-3-pr-a-round-1-worker-report.md` @ feafb6b0f42e3893b9a508466760083db6b818bc, sha256 43de322065a18c3f5c3836c0fb94dc84ce606b059e51c961d3d9d24c9c6d6f37 from its line 5;
+   - round 2: `state/consults/2026-10-19-shell-migration-milestone-3-pr-a-round-2-worker-report.md` @ feafb6b0f42e3893b9a508466760083db6b818bc, sha256 b18c72874487e7e853faee5b4020b9f7bd530f79fe40c6b593ce6aad406dc61a from its line 5;
+   - gate 3's words: `state/consults/2026-10-19-shell-migration-milestone-3-pr-a-gate3-words-worker-report.md` @ feafb6b0f42e3893b9a508466760083db6b818bc, sha256 f74ac51aeb554fda8082ddfe093aecd17d5e84b504d9fdbc3ccf91be30d5b271 from its line 5.
+4. **The custodian's e2e records:**
+   - the code base's suites (Amendment 5): `state/consults/2026-10-19-shell-migration-milestone-3-re-sweep-2-custodian.md` @ feafb6b0f42e3893b9a508466760083db6b818bc, sha256 08632629bf97a57fec7acd99742d49725408b168a7ef2eb36362a519734aa9b8;
+   - round 0: `state/consults/2026-10-19-shell-migration-milestone-3-pr-a-e2e-custodian-runs.md` @ feafb6b0f42e3893b9a508466760083db6b818bc, sha256 290ded6bc84ac4158a15ec1a2f9ed1019d200141015e05c0456126f0dedd28d9;
+   - round 1 (Amendment 6): `state/consults/2026-10-19-shell-migration-milestone-3-pr-a-round-1-e2e-custodian-runs.md` @ feafb6b0f42e3893b9a508466760083db6b818bc, sha256 2773fdc5f110d308eb1f1c7218435cc37d97759b57a0ceaa56782921c34f5228;
+   - round 2 (Amendment 7): `state/consults/2026-10-19-shell-migration-milestone-3-pr-a-round-2-e2e-custodian-runs.md` @ feafb6b0f42e3893b9a508466760083db6b818bc, sha256 de22c15ff17b99a81b652500649a1ca49ea83554f18a8f3fc9db026c86bb91db.
+5. **The gates:**
+   - gate 1, both FAIL: architect, gate-log 549, `state/consults/gates/2026-10-19-shell-migration-milestone-3-pr-a-gate1-architect.md` @ feafb6b0f42e3893b9a508466760083db6b818bc, sha256 e13253bc7cc55d724fcedd07b44ae27acd12785e3c28d0c20c207636598e9dbb; reviewer, gate-log 550, `state/consults/gates/2026-10-19-shell-migration-milestone-3-pr-a-gate1-reviewer.md` @ feafb6b0f42e3893b9a508466760083db6b818bc, sha256 cc797732fd5a2a49159a4fe8643157689b45880f8203207c0cf063410e77ce3c;
+   - gate 2, both FAIL, scoped to round 1: architect, gate-log 551, `state/consults/gates/2026-10-19-shell-migration-milestone-3-pr-a-gate2-architect.md` @ feafb6b0f42e3893b9a508466760083db6b818bc, sha256 e5ebb49925c577d585dcac5c09e371a44aeb4ccdab5604749e7bed3646e27bda; reviewer, gate-log 552, `state/consults/gates/2026-10-19-shell-migration-milestone-3-pr-a-gate2-reviewer.md` @ feafb6b0f42e3893b9a508466760083db6b818bc, sha256 7cfef939fbc365add5238cc69bdacecc8c358b15d307edc1bfbd0ecb70fb77a4;
+   - gate 3, both PASS WITH NOTES, scoped to round 2: architect, gate-log 553, `state/consults/gates/2026-10-19-shell-migration-milestone-3-pr-a-gate3-architect.md` @ feafb6b0f42e3893b9a508466760083db6b818bc, sha256 dbcfaf9ba60b255c25caf98dd1281eec2965ee68801e0cf45f478275cc6388db; reviewer, gate-log 554, `state/consults/gates/2026-10-19-shell-migration-milestone-3-pr-a-gate3-reviewer.md` @ feafb6b0f42e3893b9a508466760083db6b818bc, sha256 903db6a089a1af66aca4b500d132d8c0bca6ad4fd9254f10ece858552f410c5a.
+6. **Two correction rounds,** the record cap's count; no third.
+7. **Carried to PR B:**
+   - Amendment 7 item 5, ArrowDown after a completion;
+   - gate 3's architect, outside its round: in the round 2 e2e record, the E-REVEAL mutation also fails E-SLASH, and `frontends/shell/e2e/command-bar.mjs`'s header does not predict that second failure. PR B's header words state it.
+8. **Next:** PR B's re-sweep from the code base 564aadae556a39c2f3a0f567730ec58e4cfe0439 to PR B's base, a class 3 row for every pin PR A moved (§0.3), in its own amendment before any code; then PR B's code by one worker-high on the branch `cut/shell-migration-milestone-3-pr-b`.
+9. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
+
+### Amendment 9 — PR B's re-sweep: the pins PR A moved (class 3); the base's Part, numbers and rule 00 (class 1)
+
+*Written by the custodian before any PR B code, after the re-sweep's results were seen. References only. The re-sweep is §0.3's last bullet, read only, at main d7dfb18e94fdc63e23d87530c1c8c56f4fa37023, after PR A merged (Amendment 8): each of the form's 84 distinct pins, its hash recomputed at its own revision (every one matches), its text located at PR A's code base 564aadae556a39c2f3a0f567730ec58e4cfe0439 and then at that main commit.*
+
+1. **PR B's base** is the main commit that adds this amendment, where PR B's branch `cut/shell-migration-milestone-3-pr-b` is cut. That commit changes no file a pin names, so every span below, read at d7dfb18e, reads the same there. For the work, the tree at the base is authoritative (§0.3).
+2. **The count.** 46 pins stand at the same lines as at PR A's code base; 11 were already historical there (Amendments 3 to 5 carry them); 25 moved; 2 changed.
+3. **The 20 pins PR A moved (class 3),** each the same text at a new span, its hash unchanged:
+   - form line 82: `frontends/shell/src/admission/AdmissionPanel.tsx:290-296` @ ceff6d82 reads at frontends/shell/src/admission/AdmissionPanel.tsx:307-313 @ d7dfb18e94fdc63e23d87530c1c8c56f4fa37023 sha256:03e18920860c94be49a0b6d145827aedc02ead71394f884ce594a64ac825d416
+   - form line 82: `frontends/shell/src/admission/AdmissionPanel.tsx:348-350` @ ceff6d82 reads at frontends/shell/src/admission/AdmissionPanel.tsx:370-372 @ d7dfb18e94fdc63e23d87530c1c8c56f4fa37023 sha256:37e5c4be9884a5966d94874fb2841bcfee0133bdca0ae8328bc7127577a7af05
+   - form line 58: `frontends/shell/src/App.tsx:236-241` @ ceff6d82 reads at frontends/shell/src/App.tsx:283-288 @ d7dfb18e94fdc63e23d87530c1c8c56f4fa37023 sha256:f62c0f8367da7de59c7fb9b3afd3fb2dcbde8a4970b383367a2689deb54d3168
+   - form line 58: `frontends/shell/src/App.tsx:243-272` @ ceff6d82 reads at frontends/shell/src/App.tsx:290-319 @ d7dfb18e94fdc63e23d87530c1c8c56f4fa37023 sha256:c7a54d34be5d50d5a152b108dc463c05062769b4df91400d4cedd2bfd55f5dfe
+   - form line 57: `frontends/shell/src/App.tsx:300-342` @ ceff6d82 reads at frontends/shell/src/App.tsx:347-389 @ d7dfb18e94fdc63e23d87530c1c8c56f4fa37023 sha256:7cdffbcce25b7468ae352072b1454fc68ef047db3d9efd2400158d4d0089973b
+   - form line 634: `frontends/shell/src/App.tsx:843` @ b88b1d2f reads at frontends/shell/src/App.tsx:845 @ d7dfb18e94fdc63e23d87530c1c8c56f4fa37023 sha256:a400e483fc84063be6c8ad223c0dd0e90331ee1d79c15f954296a4b8f9830c54
+   - form line 59: `frontends/shell/src/App.tsx:929-965` @ ceff6d82 reads at frontends/shell/src/App.tsx:1026-1062 @ d7dfb18e94fdc63e23d87530c1c8c56f4fa37023 sha256:d89199beacbc42d3481c8b4f0c5fe505e45a5ffd3196d1844d96e5d3c09b0eea
+   - form line 656: `frontends/shell/src/App.tsx:987-996` @ b88b1d2f reads at frontends/shell/src/App.tsx:992-1001 @ d7dfb18e94fdc63e23d87530c1c8c56f4fa37023 sha256:05f80495437e9063153300b3e1aec92d8f7fbc7c6e69014812e72238cbea530d
+   - form line 755: `frontends/shell/src/App.tsx:1148-1160` @ b88b1d2f reads at frontends/shell/src/App.tsx:1153-1165 @ d7dfb18e94fdc63e23d87530c1c8c56f4fa37023 sha256:2542da92eddef0b49db9120645bb15256c949619e96ce0f78ef02b5ce3800201
+   - form line 62: `frontends/shell/src/App.tsx:1407` @ ceff6d82 reads at frontends/shell/src/App.tsx:1600 @ d7dfb18e94fdc63e23d87530c1c8c56f4fa37023 sha256:e8cf144fc06f05d56fa8395b41eeb0792e680b2519818898b80ffa92899223b1
+   - form line 62: `frontends/shell/src/App.tsx:1568` @ ceff6d82 reads at frontends/shell/src/App.tsx:1761 @ d7dfb18e94fdc63e23d87530c1c8c56f4fa37023 sha256:c52ef30d7780c7f49f09ccda653a102fe17ba67015318aaa75640cc639f0cb85
+   - form line 63: `frontends/shell/src/App.tsx:1674-1688` @ ceff6d82 reads at frontends/shell/src/App.tsx:1962-1976 @ d7dfb18e94fdc63e23d87530c1c8c56f4fa37023 sha256:f92daa169dcdc97740cdd337c089da0da2350dd8f3ea33c5c0fcbdba84977aec
+   - form line 687: `frontends/shell/src/App.tsx:2175-2176` @ b88b1d2f reads at frontends/shell/src/App.tsx:2185-2186 @ d7dfb18e94fdc63e23d87530c1c8c56f4fa37023 sha256:3d231a759b044ce2e32a08d6d155f6906a594024742036f4867d3441d57178c4
+   - form line 728: `frontends/shell/src/layout/actionRegistry.test.ts:249-257` @ b88b1d2f reads at frontends/shell/src/layout/actionRegistry.test.ts:267-275 @ d7dfb18e94fdc63e23d87530c1c8c56f4fa37023 sha256:b45e46d6e8f67f8861c1e66d460ddd4586b53fb99267e41d050c5865aff2279d
+   - form line 66: `frontends/shell/src/layout/actionRegistry.ts:73-84` @ ceff6d82 reads at frontends/shell/src/layout/actionRegistry.ts:113-124 @ d7dfb18e94fdc63e23d87530c1c8c56f4fa37023 sha256:93c3a34180377b4260810cc0a132fdb11de42d0187b520c3b7a16e983f304a05
+   - form line 84: `frontends/shell/src/layout/actionRegistry.ts:86-95` @ ceff6d82 reads at frontends/shell/src/layout/actionRegistry.ts:126-135 @ d7dfb18e94fdc63e23d87530c1c8c56f4fa37023 sha256:f81523f33f7641bd3973902a8e0ca052e16cc014db9927359364ac69f8a2e8ab
+   - form line 640: `frontends/shell/src/layout/StudioLayout.tsx:201` @ b88b1d2f reads at frontends/shell/src/layout/StudioLayout.tsx:275 @ d7dfb18e94fdc63e23d87530c1c8c56f4fa37023 sha256:5da5477ac415bb9fa00e40b6ed2280256e46cf3c52b82f38bd319a177cee7c6c
+   - form line 71: `frontends/shell/src/publish/PublishPanel.tsx:328` @ ceff6d82 reads at frontends/shell/src/publish/PublishPanel.tsx:371 @ d7dfb18e94fdc63e23d87530c1c8c56f4fa37023 sha256:21189cbd2e2b67dd867b9107577692f69f55a00e242988f5935f5cda5e5a533f
+   - form line 71: `frontends/shell/src/publish/PublishPanel.tsx:502-514` @ ceff6d82 reads at frontends/shell/src/publish/PublishPanel.tsx:589-601 @ d7dfb18e94fdc63e23d87530c1c8c56f4fa37023 sha256:f27a42cb4420e2f72f54e7b8ea7452b9791403e1c17c7d8b016c41da8a3c0f65
+   - form line 83: `frontends/shell/src/publish/PublishPanel.tsx:604-611` @ ceff6d82 reads at frontends/shell/src/publish/PublishPanel.tsx:697-704 @ d7dfb18e94fdc63e23d87530c1c8c56f4fa37023 sha256:40ce288199da75877461e383f672943fe604400f7a76e76c9e1214fe8dec598a
+4. **The 5 pins moved by the other two merges (class 3),** KNOWN-LIMITATIONS item 23's new words (PR #230) and walkthrough Part N's rows (PR #231):
+   - form line 745: `frontends/shell/MANUAL-WALKTHROUGH.md:1897` @ b88b1d2f reads at frontends/shell/MANUAL-WALKTHROUGH.md:1902 @ d7dfb18e94fdc63e23d87530c1c8c56f4fa37023 sha256:238a27a791a87412e125b40fd675f65a7bf16914ac65b0da1cef884a3673909c
+   - form line 751: `KNOWN-LIMITATIONS.md:379` @ b88b1d2f reads at KNOWN-LIMITATIONS.md:389 @ d7dfb18e94fdc63e23d87530c1c8c56f4fa37023 sha256:ade05ff3699847fc81592b239f647a4be3bb3b9338b4614efb3ef7196e647ade
+   - form line 833: `KNOWN-LIMITATIONS.md:383` @ 564aadae reads at KNOWN-LIMITATIONS.md:389 @ d7dfb18e94fdc63e23d87530c1c8c56f4fa37023 sha256:ade05ff3699847fc81592b239f647a4be3bb3b9338b4614efb3ef7196e647ade
+   - form line 653: `KNOWN-LIMITATIONS.md:390` @ b88b1d2f reads at KNOWN-LIMITATIONS.md:400 @ d7dfb18e94fdc63e23d87530c1c8c56f4fa37023 sha256:c22c976f428e62d266bf47043a06e577a3dc7e77d07c4136a1aa34a97c1353eb
+   - form line 833: `KNOWN-LIMITATIONS.md:394` @ 564aadae reads at KNOWN-LIMITATIONS.md:400 @ d7dfb18e94fdc63e23d87530c1c8c56f4fa37023 sha256:c22c976f428e62d266bf47043a06e577a3dc7e77d07c4136a1aa34a97c1353eb
+5. **The 2 pins PR A changed (class 3).** `frontends/shell/src/layout/StudioLayout.tsx:146-150` @ ceff6d82 (form line 65) and `frontends/shell/src/layout/StudioLayout.tsx:157-161` @ b88b1d2f (Amendment 3 item 6) are `runAction` as it stood before PR A. PR A replaced it with the one dispatch (Amendment 3 item 6, B3), which reads at frontends/shell/src/layout/StudioLayout.tsx:210-229 @ d7dfb18e94fdc63e23d87530c1c8c56f4fa37023 sha256:a6fe1c664b56eb236c4117ee9ab2dc395aca5cc5b4df5f323e50255af733ee71.
+6. **The §0.5 code paths** changed from PR A's code base only by PR A, as built; from PR A's head to the base, only `frontends/shell/e2e/README.md` and `frontends/shell/e2e/source-changed.mjs` changed (PR #231), and PR B edits neither the source-changed driver nor that suite's README entry.
+7. **The Part and the numbers.** The walkthrough's last Part at the base is AA, so PR B's Part is AB. `KNOWN-LIMITATIONS.md`'s highest item is 44, so the two new items take 45 and 46, read again at PR B's KNOWN-LIMITATIONS commit (Amendment 3 item 10's rule).
+8. **Rule 00 at the base (class 1).** In progress: `governance-decisions-pending-open-and-archive` (its draft PR #232: scripts under `scripts/plan/` and `scripts/hooks/`, `AUTONOMY.md`, and at its rotation `DECISIONS-PENDING.md` and `state/cut-archive/`), and `source-changed-post-route-s5d-race`'s step 2 (its own form and record only). No PR awaits merge. PR B shares no path with them, its README entry, its Part and its items counting as separate paths. No piece touches `protocol/`.
+9. **Carried in:** Amendment 7 item 5 (ArrowDown after a completion) and Amendment 8 item 7 (the E-REVEAL header line). With PR B, the architect drafts the (i) sentence from the recognizer as built (Amendment 2 item 2).
+10. **Next:** PR B's code from the base by one worker-high.
+11. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.

@@ -225,3 +225,43 @@ Nothing above is edited.
 4. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 7 — the first unknown attempt since step 1: the TTL is excluded (class 1)
+
+*Written by the custodian after the run was seen, under Amendment 6 item 3. References only. The record: `state/consults/2026-10-19-shell-migration-milestone-3-re-sweep-2-custodian.md`, §4 and §5, sha256 08632629bf97a57fec7acd99742d49725408b168a7ef2eb36362a519734aa9b8.*
+
+1. **The observation.** The custodian's shared series at milestone 3's code base 564aadae, the selection suite, run 2026-10-19T16:52:27Z to 16:56:52Z: E-EXPORT's execute returned `unknown-attempt`, with L 0 ms, U 92 ms and T 120,000 ms. The line is byte-copied in the record.
+2. **The reading, by §1.4:** FAIL, not INCONCLUSIVE. U is within T, so the TTL did not end this attempt: the first of the node's two causes is excluded for it.
+3. **What this run cannot tell.** The outcome has one shape (§0 F4), so it does not say whether the host lost the attempt or the panel's execute hook answered by itself before its effect held the attempt (§0 F4). L of 0 ms, the execute sent as soon as the prepare answered, is consistent with either. The run kept no app stderr and no console ledger, the row that would show whether the host was called (§0 F4).
+4. **Alone,** selection passed 18 of 18 twice in an exclusive hold (the record's §5): the attempt came under load, as the node's title has it.
+5. **Next, the human's:** what follows this observation. The node is blocked on that ruling.
+6. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
+
+### Amendment 8 — after the first observation: (a), the architect's read-only diagnosis of the panel's F4 path (class 5)
+
+*Written by the custodian on the human's ruling (`state/directives/2026-10-20-230-231-233-merged-232-strikes-rule-d1-a-not-i1-profile-path-redact-unknown-attempt-a.md`, its last paragraph). References only.*
+
+1. **The diagnosis:** one read-only architect consult on the panel's F4 path (§0 F4) at main: whether the panel's execute hook, reached through the dev hook, can answer `unknown-attempt` by itself with the host never called, under the timing the e2e export steps use.
+2. **A full capture on the next run that shows one:** every artifact the series keeps for that run kept whole beside the record (the driver's output, the app's stderr, its session log and the report), and whatever the diagnosis names as the row that shows whether the host was called.
+3. **If the diagnosis shows the dev hook alone can produce the answer,** the cause step closes on it. The product step, the 120 s and the dialog's missing expiry, stays open for the human.
+4. **PLAN:** the node is unscheduled, never queued, with no human wait while the diagnosis runs and the capture waits for a run.
+5. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
+
+### Amendment 9 — the diagnosis: the dev hook alone can; the cause step closes on it (class 1; written after the diagnosis was seen)
+
+*Written by the custodian on the human's ruling (`state/directives/2026-10-20-230-231-233-merged-232-strikes-rule-d1-a-not-i1-profile-path-redact-unknown-attempt-a.md`, its last paragraph) after the architect's diagnosis was seen. The diagnosis: `state/consults/2026-10-20-publish-approval-unknown-attempt-f4-diagnosis-architect.md`, added in the commit that adds this amendment. References only.*
+
+1. **The diagnosis concludes THE DEV HOOK ALONE CAN** (its item 4). The panel's execute hook answers `unknown-attempt` with no host call while it holds no attempt; it learns the attempt only from a passive effect that runs after the prepare's answer has resolved; E-EXPORT sends the execute as soon as the prepare answers and waits for no render; and for the observed pair the host had no way to miss within U other than the TTL, which Amendment 7 item 2 excluded (its item 1). The ordering of the execute's task before the effect under load is its reading, marked [R].
+2. **The cause step closes on it,** by the ruling. The cause of the observed `unknown-attempt` is the dev hook's path (§0 F4), not the host's.
+3. **The dialog's Submit** cannot produce the answer this way (its item 2): an operator's `unknown-attempt` comes from the host.
+4. **The capture (Amendment 8 item 2)** stands for the next run that shows one. By the diagnosis's item 3, none of the artifacts the series keeps shows whether the host was called; the custodian adds no observer, since the cause step has closed.
+5. **The product step,** the 120 s and the dialog's missing expiry, stays open for the human.
+6. **Outside this node:** the diagnosis's out-of-scope fix (the attempt set where the prompt arrives, not in an effect) and the two comments it finds unsupported go to the proposed node `publish-dev-hook-attempt-from-effect`.
+7. **PLAN:** the node is blocked on the human's ruling for the product step.
+8. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
