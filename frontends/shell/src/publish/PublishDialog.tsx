@@ -6,7 +6,13 @@ import type { KeyboardEvent } from "react";
 
 import type { ExecuteOutcome, PublishPromptData } from "./types";
 
-/** P6 placeholder (AUTONOMY.md section 31 f): the minutes are `PENDING_ATTEMPT_TTL`'s, pinned by `PublishDialog.test.ts` D2. */
+/**
+ * P6 placeholder (AUTONOMY.md section 31 f): the minutes are `PENDING_ATTEMPT_TTL`'s, pinned by `PublishDialog.test.ts` D2.
+ * The sentence states the approval's lifetime, counted from the host's prepare, not the time left. The clock starts when
+ * `publish.rs` stashes the attempt, before this dialog mounts; and closing and reopening the Export disclosure remounts
+ * this dialog for the same attempt. The grant is minted just before the stash, so a Submit at the very end can be
+ * refused on the grant rather than as `unknown-attempt`; both are refusals.
+ */
 export const APPROVAL_EXPIRY_MINUTES = 10;
 export const APPROVAL_EXPIRY_SENTENCE = `This approval expires after ${APPROVAL_EXPIRY_MINUTES} minutes, and the publish then has to be started over.`;
 

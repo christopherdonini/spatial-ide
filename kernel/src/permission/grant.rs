@@ -409,7 +409,7 @@ impl GrantSet {
     /// Removes every grant matching these exact facts — **the "consumed" half of pruning**,
     /// `prune_expired`'s complement: a grant `boundary::execute` just located and used (S1's own
     /// gap) serves no further purpose the instant its single-use attempt is spent, whether or not
-    /// it would also have expired naturally on its own 120 s-class lifetime. Matches on the SAME
+    /// it would also have expired naturally at the end of its own lifetime. Matches on the SAME
     /// predicate `find` uses (`operation` and `scope_mismatch`), **ignoring expiry** — consumed is
     /// consumed either way — so a caller that just successfully (or unsuccessfully) executed an
     /// attempt can evict its grant immediately rather than waiting on a future `prune_expired` to
