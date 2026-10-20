@@ -250,3 +250,18 @@ Nothing above is edited.
 5. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 9 — the diagnosis: the dev hook alone can; the cause step closes on it (class 1; written after the diagnosis was seen)
+
+*Written by the custodian on the human's ruling (`state/directives/2026-10-20-230-231-233-merged-232-strikes-rule-d1-a-not-i1-profile-path-redact-unknown-attempt-a.md`, its last paragraph) after the architect's diagnosis was seen. The diagnosis: `state/consults/2026-10-20-publish-approval-unknown-attempt-f4-diagnosis-architect.md`, added in the commit that adds this amendment. References only.*
+
+1. **The diagnosis concludes THE DEV HOOK ALONE CAN** (its item 4). The panel's execute hook answers `unknown-attempt` with no host call while it holds no attempt; it learns the attempt only from a passive effect that runs after the prepare's answer has resolved; E-EXPORT sends the execute as soon as the prepare answers and waits for no render; and for the observed pair the host had no way to miss within U other than the TTL, which Amendment 7 item 2 excluded (its item 1). The ordering of the execute's task before the effect under load is its reading, marked [R].
+2. **The cause step closes on it,** by the ruling. The cause of the observed `unknown-attempt` is the dev hook's path (§0 F4), not the host's.
+3. **The dialog's Submit** cannot produce the answer this way (its item 2): an operator's `unknown-attempt` comes from the host.
+4. **The capture (Amendment 8 item 2)** stands for the next run that shows one. By the diagnosis's item 3, none of the artifacts the series keeps shows whether the host was called; the custodian adds no observer, since the cause step has closed.
+5. **The product step,** the 120 s and the dialog's missing expiry, stays open for the human.
+6. **Outside this node:** the diagnosis's out-of-scope fix (the attempt set where the prompt arrives, not in an effect) and the two comments it finds unsupported go to the proposed node `publish-dev-hook-attempt-from-effect`.
+7. **PLAN:** the node is blocked on the human's ruling for the product step.
+8. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
