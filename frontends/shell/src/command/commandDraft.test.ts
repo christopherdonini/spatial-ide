@@ -58,6 +58,8 @@ describe("UC1: resolveDraft", () => {
 });
 
 // RECORDED MUTATION for "UC1 (/filter, PR B's half of the row)": in `resolveDraft` (commandDraft.ts) trim the condition it keeps (`text: split[3].trim()`). Expected failure: the byte-for-byte case.
+// OBSERVED AT ca98a85d8dc2d86d4751fe90d6b7e0a166226e84: FAILED -- "UC1: /filter keeps the condition after its word byte for byte, a whitespace-only condition is filter-empty, a word that takes nothing is not given a condition, and the @ trigger is read at the caret":
+//   AssertionError: the first run of whitespace goes; the rest is kept: expected { kind: 'filter', …(4) } to deeply equal { kind: 'filter', …(4) }. Reverted after observing.
 describe("UC1 (PR B): /filter", () => {
   it("UC1: /filter keeps the condition after its word byte for byte, a whitespace-only condition is filter-empty, a word that takes nothing is not given a condition, and the @ trigger is read at the caret", () => {
     expect(idsOf(resolve("/filter")), "the word alone lists the entry that takes a condition").toEqual(["filter.addClause"]);
@@ -147,6 +149,8 @@ describe("UC2: commandBarKey", () => {
 });
 
 // RECORDED MUTATION for "UC2 (ArrowDown after a completion, SHELL-MIGRATION-MILESTONE-3-PREREGISTRATION.md Amendment 7 item 5)": in `commandBarKey` (commandDraft.ts) delete `|| state.completed` from the ArrowDown case's guard. Expected failure: ArrowDown reopens the list after a completion.
+// OBSERVED AT ca98a85d8dc2d86d4751fe90d6b7e0a166226e84: FAILED -- "UC2: after a completion ArrowDown and ArrowUp do not reopen the list, and the next typed character lets them open it again":
+//   AssertionError: ArrowDown after a completion: /: expected [ true, +0, 'none', true ] to deeply equal [ false, null, 'none', false ]. Reverted after observing.
 describe("UC2 (PR B): after a completion the list stays closed until the next typed character", () => {
   it("UC2: after a completion ArrowDown and ArrowUp do not reopen the list, and the next typed character lets them open it again", () => {
     const completed = allStates().filter((state) => state.completions.length > 0).map((state): BarState => ({ ...state, open: false, active: null, completed: true }));
