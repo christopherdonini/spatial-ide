@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-20T20:20:19.763Z",
-  "plan_hash": "61dac4af0babdde7cc430a3ba9dee90f5d449032aa8286b561e7751e41e3a1f1",
+  "generated_at": "2026-10-20T20:28:06.865Z",
+  "plan_hash": "8e9d9b0b6622d4a018463ff01e7907a3beea9b361384108f6afe69c92ce5ceaa",
   "priorities_approved": true,
   "lanes": [
     {
@@ -9051,6 +9051,33 @@
       "felt_verdict": false,
       "entries": [],
       "summary": "E1 RUN 2026-10-20 (state/consults/2026-10-20-publish-approval-ttl-ten-minutes-e1-custodian-runs.md; the form's Amendment 4): two publish runs at the head; run 1 FILTERED' FAIL on a null filter_scope, run 2 every step as predicted. NEXT: the PR, both gates; ADR-024's note last. Before: BUILT 2026-10-20 at 5e922915 (state/consults/2026-10-20-publish-approval-ttl-ten-minutes-worker-report.md; the form's Amendment 3: section 3's cargo command corrected, two per-file overruns from the mutation comments, 89 of 120 lines). NEXT: the custodian's E1 at the head after S5d (a)'s booked series, the PR, both gates; ADR-024's note last. Before: RULED 2026-10-21 (headed; the fourth message, state/directives/2026-10-20-adr-024-note-clause-corrected-s5d-series-booked-after-the-ttl-worker.md), item 1: the note's one clause corrected in the human's words (the form's Amendment 2, the composed note's sha256). IN PROGRESS 2026-10-20: code by one worker on cut/publish-approval-ttl-ten-minutes in C:/dev/wt/ttl, from main f2052681 (steps 1 to 4 of its brief; ADR-024's note left to the custodian). NEXT: the report audited and filed; the custodian's E1 at the head; both gates. Before: FORM COMMITTED 2026-10-20 (frontends/shell/PUBLISH-APPROVAL-TTL-TEN-MINUTES-PREREGISTRATION.md, from the architect's draft, its pins expanded by script) with its Amendment 1: RULED 2026-10-21 (headed; the third message; state/directives/2026-10-20-ttl-open-1-a-five-line-form-both-gates-open-2-adr-024-note-words.md), OPEN-1 (A), the five-line form with the reviewer and the architect from dispatch, section 25 (e) set aside for this piece; OPEN-2, the human's words for ADR-024's note, dated the day the piece merges, appended by the custodian as the branch's last commit before the click, after the human's answer on one clause (Amendment 1 item 3). NEXT: code by one worker; the custodian's E1 at the head; both gates. Before: FORM DRAFTED 2026-10-20 by the architect (state/consults/2026-10-20-publish-approval-ttl-ten-minutes-architect-draft.md): the value, one P6-placeholder sentence in the approval dialog, no countdown; 8 files besides the form. Its Out-of-scope line names two of section 21a's categories as touched (ADR-024's 120 s text, which needs an appended note in the human's words; the declared ceiling under test) and crosses section 21c's user-visible bound, so under AUTONOMY section 25 (e) no five-line form is committed until the human rules. OPEN-1, the route: (A) the five-line form with the reviewer and the architect from dispatch (recommended); (B) one reviewer, ADR-024's note in its own docs PR first; (C) the full form. OPEN-2: ADR-024's appended note, red-line text, the human's typed words. Not dispatched before both. Before: RULED 2026-10-21 (headed), item 6: the unknown-attempt node's product step as its own small piece after milestone 3, graded S3. PENDING_ATTEMPT_TTL in publish.rs takes the value item 6 names; the approval dialog gains one sentence, a P6 placeholder, that the approval expires after that time and the publish is then started over; no countdown. Its short form comes before any code. The cause step closed on the architect's finding (publish-approval-unknown-attempt-under-load, done).",
+      "dates": {
+        "opened": "2026-10-20",
+        "done": null
+      }
+    },
+    {
+      "id": "governance-plan-summaries-archive",
+      "title": "Governance D -- done nodes' summaries over 300 bytes moved verbatim from PLAN.yaml into state/cut-archive/ by a named script, one generated pointer line each, monthly beside C's rotation, and its rule appended to AUTONOMY; the measurements before and after it",
+      "kind": "task",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "ready",
+      "order": null,
+      "depends_on": [
+        "governance-decisions-pending-open-and-archive"
+      ],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "none",
+      "evidence": null,
+      "budget_minutes": 0,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [],
+      "summary": "PLACED 2026-10-20 by the human (state/directives/2026-10-20-governance-d-done-node-summaries-archived-the-2026-10-14-trim-sentence-corrected.md): next in the governance lane after governance C, never slot 1; the merge is the human's click. Scope: done nodes whose summary is over 300 UTF-8 bytes; open nodes untouched. Before the move, the form lists every summary to be moved that names something still owed, each with a live home, and a summary whose obligation has none stays. NEXT: its full form, drafted by the architect, before any code. This replaces the PLAN.yaml summary trim that the human's 2026-10-14 sentence named; no such trim was ever placed.",
       "dates": {
         "opened": "2026-10-20",
         "done": null

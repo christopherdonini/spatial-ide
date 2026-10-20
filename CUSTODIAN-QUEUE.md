@@ -1,14 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `61dac4af0babdde7cc430a3ba9dee90f5d449032aa8286b561e7751e41e3a1f1`) at `2026-10-20T20:20:19.632Z`.
+Generated from `PLAN.yaml` (sha256 `8e9d9b0b6622d4a018463ff01e7907a3beea9b361384108f6afe69c92ce5ceaa`) at `2026-10-20T20:28:06.736Z`.
 
 ## 1. Next
 
-- (nothing ready)
+- **governance-plan-summaries-archive** — Governance D -- done nodes' summaries over 300 bytes moved verbatim from PLAN.yaml into state/cut-archive/ by a named script, one generated pointer line each, monthly beside C's rotation, and its rule appended to AUTONOMY; the measurements before and after it (lane `governance`)
 
 ## 2. Ready
 
-- (none)
+- **governance-plan-summaries-archive** — Governance D -- done nodes' summaries over 300 bytes moved verbatim from PLAN.yaml into state/cut-archive/ by a named script, one generated pointer line each, monthly beside C's rotation, and its rule appended to AUTONOMY; the measurements before and after it (lane `governance`, order null, budget 0 min)
 
 ## 3. Waiting on the human (total: 0 min)
 

@@ -4,6 +4,11 @@ Line references written before the rotation point into state/cut-archive/DECISIO
 
 ## Pending
 
+**RULED 2026-10-20 (received at 20:19:23Z) — governance piece D, finished nodes' summaries out of PLAN.yaml: placed in the governance lane after what is queued there, never slot 1, its rule appended to AUTONOMY on the human's words, the merge the human's click; the human's 2026-10-14 sentence "The PLAN.yaml summary trim stands as already placed" corrected, no trim having been placed, and D replacing it (the human's own message, the pasted direction and the typed addendum; recorded verbatim at `state/directives/2026-10-20-governance-d-done-node-summaries-archived-the-2026-10-14-trim-sentence-corrected.md`, from line 6, sha256 338b38a8f2964b5865b8202e0014f449c1edc9cdb356a928a6e170ea415bec44 over lines 6 to the end at the commit that adds it):**
+
+- **The rulings** are the text, referenced and not restated.
+- **Applied:** PLAN node governance-plan-summaries-archive, ready in the governance lane after governance C; its full form drafted by the architect before any code, with the obligation list of item 3 and the measurement before D at the main commit its branch starts from.
+
 **RULED 2026-10-21 (headed; the fourth message, received 2026-10-20) — ADR-024's note for publish-approval-ttl-ten-minutes: one clause corrected in the human's words, the rest as typed; S5d (a)'s e2e series: booked for the first slot after the TTL worker's last run (the human, as pasted content in the human's own message, received at 19:26:35Z by the transcript; recorded verbatim at `state/directives/2026-10-20-adr-024-note-clause-corrected-s5d-series-booked-after-the-ttl-worker.md`, from line 6, sha256 be7c45adb18959f3df4574d4f14d6e1fd873074dd56e1edf995360a72f2ae1ad over lines 6 to the end at the commit that adds it):**
 
 - **The rulings** are the text, referenced and not restated.

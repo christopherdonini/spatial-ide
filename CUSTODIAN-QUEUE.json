@@ -1,9 +1,47 @@
 {
-  "generated_at": "2026-10-20T20:20:19.632Z",
-  "plan_hash": "61dac4af0babdde7cc430a3ba9dee90f5d449032aa8286b561e7751e41e3a1f1",
+  "generated_at": "2026-10-20T20:28:06.736Z",
+  "plan_hash": "8e9d9b0b6622d4a018463ff01e7907a3beea9b361384108f6afe69c92ce5ceaa",
   "priorities_approved": true,
-  "next": null,
-  "ready": [],
+  "next": {
+    "id": "governance-plan-summaries-archive",
+    "title": "Governance D -- done nodes' summaries over 300 bytes moved verbatim from PLAN.yaml into state/cut-archive/ by a named script, one generated pointer line each, monthly beside C's rotation, and its rule appended to AUTONOMY; the measurements before and after it",
+    "lane": "governance",
+    "phase": "prototype",
+    "status": "ready",
+    "order": null,
+    "budget_minutes": 0,
+    "needs_human": {
+      "kind": "none",
+      "minutes": 0
+    },
+    "evidence": null,
+    "dates": {
+      "opened": "2026-10-20",
+      "done": null
+    },
+    "summary": "PLACED 2026-10-20 by the human (state/directives/2026-10-20-governance-d-done-node-summaries-archived-the-2026-10-14-trim-sentence-corrected.md): next in the governance lane after governance C, never slot 1; the merge is the human's click. Scope: done nodes whose summary is over 300 UTF-8 bytes; open nodes untouched. Before the move, the form lists every summary to be moved that names something still owed, each with a live home, and a summary whose obligation has none stays. NEXT: its full form, drafted by the architect, before any code. This replaces the PLAN.yaml summary trim that the human's 2026-10-14 sentence named; no such trim was ever placed."
+  },
+  "ready": [
+    {
+      "id": "governance-plan-summaries-archive",
+      "title": "Governance D -- done nodes' summaries over 300 bytes moved verbatim from PLAN.yaml into state/cut-archive/ by a named script, one generated pointer line each, monthly beside C's rotation, and its rule appended to AUTONOMY; the measurements before and after it",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "ready",
+      "order": null,
+      "budget_minutes": 0,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-20",
+        "done": null
+      },
+      "summary": "PLACED 2026-10-20 by the human (state/directives/2026-10-20-governance-d-done-node-summaries-archived-the-2026-10-14-trim-sentence-corrected.md): next in the governance lane after governance C, never slot 1; the merge is the human's click. Scope: done nodes whose summary is over 300 UTF-8 bytes; open nodes untouched. Before the move, the form lists every summary to be moved that names something still owed, each with a live home, and a summary whose obligation has none stays. NEXT: its full form, drafted by the architect, before any code. This replaces the PLAN.yaml summary trim that the human's 2026-10-14 sentence named; no such trim was ever placed."
+    }
+  ],
   "waiting_on_human": {
     "total_minutes": 0,
     "by_kind": {
