@@ -393,3 +393,14 @@ Rule 00, for the custodian, at main 245cb051:
 
 - **Briefs.** The worker's brief carries, as written, the paragraph at `state/directives/2026-10-06-machine-script-adopted.md:12-22 @ 245cb051d157650f0633e86e2279b69f054e2bba sha256:7350977156bed7c94b0da4e8db806ba34c25c6678e65c46447a62d791ba9e8e1`. `npm run verify` and any rebuild run inside a shared hold.
 - **The e2e runs** are the custodian's, in one exclusive hold (that directive's notes, item a). Ten runs at about a minute each come to under 30 minutes, so no booking is needed.
+
+### Amendment 1 — the human's rulings on §11 (class 5)
+
+*Written by the custodian on the human's ruling. References only: `state/directives/2026-10-20-234-merged-232-f0-go-l534-grep-by-the-human-s5d-open-1-to-6-trademark-ruling-stands.md`, item 3.*
+
+1. **OPEN-1 to OPEN-5:** (A) each, as recommended: INCONCLUSIVE is the suite's permanent reading of a C2 run; C1 stays FAIL; R stays FAIL; a gate accepts any number of INCONCLUSIVE runs, recorded beside its runs; a C2 refusal beside a refusal with another code reads FAIL (C3), so T7 and M5 stand.
+2. **OPEN-6:** §2.4 D-H's drafted words are approved, its two statements included.
+3. **Code starts.** PR #234 is merged, so the README line may be written and the piece may merge after both gates.
+4. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.

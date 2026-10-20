@@ -1,20 +1,17 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `2e55af1560e59b261780b00d102e7fefff52c6cdc0ccd69a9bbdee76c73cb7cb`) at `2026-10-20T15:25:38.892Z`.
+Generated from `PLAN.yaml` (sha256 `6616da44533c1c29a6d4616eec506888e3babb5d2738c0ef24df78ef9a15623c`) at `2026-10-20T16:16:20.222Z`.
 
 ## 1. Next
 
-- (nothing ready)
+- **publish-approval-ttl-ten-minutes** — Publish: the pending attempt's TTL takes the value the human ruled, and the approval dialog states that expiry (one P6-placeholder sentence, no countdown) (lane `shell`)
 
 ## 2. Ready
 
-- (none)
+- **publish-approval-ttl-ten-minutes** — Publish: the pending attempt's TTL takes the value the human ruled, and the approval dialog states that expiry (one P6-placeholder sentence, no countdown) (lane `shell`, order null, budget 60 min)
+- **source-changed-post-route-s5d-race** — source-changed.mjs's post route: step S5d (post-check-route-confirmed) loses its race to a tile's pre-check in about half the runs on this machine, at main's base too (lane `shell`, order null, budget 60 min)
 
-## 3. Waiting on the human (total: 5 min)
-
-### ruling
-
-- **source-changed-post-route-s5d-race** — source-changed.mjs's post route: step S5d (post-check-route-confirmed) loses its race to a tile's pre-check in about half the runs on this machine, at main's base too (5 min)
+## 3. Waiting on the human (total: 0 min)
 
 ### sitting
 
@@ -24,7 +21,6 @@ Generated from `PLAN.yaml` (sha256 `2e55af1560e59b261780b00d102e7fefff52c6cdc0cc
 
 - **connection-reuse-recycled-interrupt-flake** — engine/tests/connection_reuse.rs: cancellation_before_the_first_batch_binds_a_recycled_connection_and_delivers_nothing failed once on ubuntu-24.04 in PR #222's pull_request run at a542097e, and the push run of the same commit passed it — blocked by: source-changed-post-route-s5d-race
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
-- **publish-approval-ttl-ten-minutes** — Publish: the pending attempt's TTL takes the value the human ruled, and the approval dialog states that expiry (one P6-placeholder sentence, no countdown) — blocked by: shell-migration-milestone-3
 - **briefb-b2-save-reopen** — B2 — Save project, Snapshot data, session history, lineage and preferences, in five stages, each with its own form — blocked by: decision-adr-029-scan-progress-route
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer — blocked by: signpath-application-draft
 - **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-1-1
@@ -33,7 +29,6 @@ Generated from `PLAN.yaml` (sha256 `2e55af1560e59b261780b00d102e7fefff52c6cdc0cc
 
 ## 5. In progress
 
-- **shell-migration-milestone-3** — Shell migration, milestone 3 -- command bar and filter clauses: Ctrl+K, slash commands, typed /filter with field completion, clause cards with on and off — evidence: branch `cut/shell-migration-milestone-3-pr-b`
 - **governance-decisions-pending-open-and-archive** — DECISIONS-PENDING.md: open entries and recent rulings, the rest archived to state/cut-archive/, one shared helper for the ruling set in verify, verify-test-claims and verify-quotes, monthly rotation, and the reading order's item 3 restated; the second measurements after it — evidence: branch `cut/decisions-pending-open-and-archive`
 
 ## 6. Proposed / unscheduled
