@@ -1279,10 +1279,13 @@ body,
   margin: 0 0 0.4rem;
 }
 
-/* The clause cards in the Filter section, after `.filter-panel` (section 2.6): normal flow, never an overlay. A card's text wraps; a card that is off is dimmed; the marker and the foot are P6 placeholders. */
+/* The clause cards in the Filter section, after `.filter-panel` (section 2.6): normal flow, never an overlay, and no padding while it holds nothing (the section is as tall as before until a card exists). A card's text wraps; a card that is off is dimmed; the marker and the foot are P6 placeholders. */
 .clause-cards {
-  padding: 0 1rem 1rem;
   max-width: 40rem;
+}
+
+.clause-cards:not(:empty) {
+  padding: 0 1rem 1rem;
 }
 
 .clause-statement,
