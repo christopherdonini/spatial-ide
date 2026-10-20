@@ -26,8 +26,8 @@ const mocks = vi.hoisted(() => ({
   pendingPrepare: null as Promise<import("./publish/types").PrepareOutcome> | null,
   recorded: [] as { dataset: string; intent: unknown }[],
   refuseRecordWith: null as string | null,
-  /** `refuseContaining`: a request whose filter holds this text is refused `skp.filter_unknown_column`, as the kernel refuses an unknown column. */
-  manager: { requests: [] as { bbox: unknown; filter: unknown }[], refuseContaining: null as string | null },
+  /** `refuseContaining`: a request whose filter holds this text is refused `skp.filter_unknown_column`, as the kernel refuses an unknown column. `hold`: a request waits for it (RC-BUSY). */
+  manager: { requests: [] as { bbox: unknown; filter: unknown }[], refuseContaining: null as string | null, hold: null as Promise<void> | null },
   canvas: { mounted: [] as string[], resets: 0, fitToBounds: 0, fitToBbox: [] as unknown[], props: null as import("./canvas/WorkingCanvas").WorkingCanvasProps | null },
 }));
 
@@ -105,6 +105,7 @@ vi.mock("./streaming/viewportStreamManager", () => {
   class MockViewportStreamManager {
     async requestViewport(bbox?: unknown, _bboxCrs?: unknown, _nowMs?: unknown, filter?: { predicate: string } | null): Promise<unknown> {
       mocks.manager.requests.push({ bbox, filter: filter ?? null });
+      if (mocks.manager.hold !== null) await mocks.manager.hold;
       const refuse = mocks.manager.refuseContaining;
       if (refuse !== null && filter?.predicate.includes(refuse)) {
         const { SkpCallError } = await import("./skp/client");
@@ -163,7 +164,7 @@ vi.mock("./canvas/WorkingCanvas", () => {
 import App from "./App";
 import { COMMAND_BUSY_NOTE, COMMAND_FIELD_NOTE, COMMAND_UNAVAILABLE_NOTE } from "./command/CommandBar";
 import { consoleRecorder, isGuiActionEntry } from "./console/recorder";
-import { CLAUSE_ADVANCED_MARK, CLAUSE_ADVANCED_NEW_LINE, CLAUSE_REFUSED_LINE, clauseBlockedLine } from "./filter/ClauseCards";
+import { CLAUSE_ADVANCED_MARK, CLAUSE_ADVANCED_NEW_LINE, CLAUSE_BUSY_LINE, CLAUSE_REFUSED_LINE, clauseBlockedLine } from "./filter/ClauseCards";
 import { __resetResidencyArmForTests, setResidencyArm } from "./residency/residencyArm";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -176,7 +177,7 @@ describe("App: the command bar (milestone 3, PR A), through the real App", () =>
 
   beforeEach(() => {
     Object.assign(mocks, { opens: 0, holdOpen: null, picks: 0, pickPath: null, prepares: 0, promptOnPrepare: false, executes: 0, pendingPrepare: null, recorded: [], refuseRecordWith: null });
-    Object.assign(mocks.manager, { requests: [], refuseContaining: null });
+    Object.assign(mocks.manager, { requests: [], refuseContaining: null, hold: null });
     Object.assign(mocks.canvas, { mounted: [], resets: 0, fitToBounds: 0, fitToBbox: [], props: null });
     setResidencyArm("baseline");
     container = document.createElement("div");
@@ -666,5 +667,24 @@ describe("App: the command bar (milestone 3, PR A), through the real App", () =>
     setValue(bar(), '/filter "zone" = @i');
     click(options()[0]);
     expect(bar().value, "a click completes too").toBe('/filter "zone" = "id"');
+  });
+
+  // RECORDED MUTATION for "RC-BUSY" (a row beyond the table: one change at a time, section 2.5, OPEN-2): in ClauseCards.tsx stop marking the switch while a change is pending (on the `role="switch"` button replace `aria-disabled={pending ? true : undefined}` with `aria-disabled={undefined}`). Expected failure: the card control is not aria-disabled.
+  it("RC-BUSY: while a change is pending the card controls and the bar's /filter Enter are aria-disabled and say so, and a second change is not sent", async () => {
+    await open("C:/data/a.parquet");
+    await addClause(A);
+    let release = () => {};
+    mocks.manager.hold = new Promise<void>((resolve) => (release = resolve));
+    await flip(0);
+    const sent = mocks.manager.requests.length;
+    expect(switches()[0].getAttribute("aria-disabled"), "the card control is aria-disabled").toBe("true");
+    await flip(0);
+    expect([text(".clause-line"), mocks.manager.requests.length], "a second click says so and sends nothing").toEqual([CLAUSE_BUSY_LINE, sent]);
+    await runBar(`/filter ${B}`);
+    expect([text(".command-note"), bar().getAttribute("aria-disabled"), mocks.manager.requests.length], "the bar says so too, and keeps its text").toEqual([CLAUSE_BUSY_LINE, "true", sent]);
+    release();
+    mocks.manager.hold = null;
+    await inAct(() => {});
+    expect([states(), asked().at(-1)], "the first change completed once").toEqual([["false"], null]);
   });
 });
