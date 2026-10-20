@@ -509,3 +509,17 @@ Nothing above is edited.
 7. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 6 — gate 2 at G0 (both PASS WITH NOTES): gate 1's findings resolved; the gates' words; the superseded index (class 3)
+
+*Written by the custodian after gate 2. References only. The reports: `state/consults/gates/2026-10-20-governance-decisions-pending-open-and-archive-gate2-architect.md` (gate-log 558) and `state/consults/gates/2026-10-20-governance-decisions-pending-open-and-archive-gate2-reviewer.md` (559). Round 1: `state/consults/2026-10-20-governance-decisions-pending-open-and-archive-round-1-worker-report.md` (head b83681d8b5a97260a52ce9286455be5aa25efa9f); the custodian's words at e174f367adf1ede1ab2d711ead72045c8a7a8880.*
+
+1. **Gate 1's findings:** E-1 and every Documentation finding of both gates resolved, by both gates.
+2. **The architect's D-1:** MR11b's comment line in `scripts/plan/rotate-decisions-pending.test.mjs` takes the architect's words, applied on the branch with F0's steps, no re-gate. The reviewer read its "only this one" as holding for that file's run; the words name that file and MT4's own record.
+3. **The architect's D-2:** the PR body's L<n> sentence, applied.
+4. **Superseded (the reviewer's N-2):** Superseded: Amendment 4 item 1's 56 struck, 7, 23 kept and 72,298 bytes, and item 4's 'none of the 56 struck entries does', by Amendment 5 item 4; the current figures (55 struck, 8, 24 kept, 77,060 bytes) are the sheet's section 'The human's rule, applied' at e174f367adf1ede1ab2d711ead72045c8a7a8880.
+5. **The reviewer's N-1, for F0:** the new file's blob depends on P, since the notice line carries P; a blob is compared at F0 only at S9's P.
+6. **Waiting on the human before F0:** the redaction (Amendment 4 item 3), the 22 rows not represented, and the predicted D1-b's file count (Amendment 5 item 5).
+7. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
