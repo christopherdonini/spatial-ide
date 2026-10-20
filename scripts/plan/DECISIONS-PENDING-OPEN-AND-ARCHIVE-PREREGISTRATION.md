@@ -523,3 +523,17 @@ Nothing above is edited.
 7. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 7 — the human's rulings headed 2026-10-21, items 1 to 3: the redaction made; the 22 rows placed, carried or superseded; the strike rule run again; verify-cites' extra file accepted (class 5)
+
+*Written by the custodian on the human's typed rulings. References only: `state/directives/2026-10-20-232-redaction-go-22-rows-placed-d1-b-accepted-234-items-45-46-yes-s5d-a-ttl-ten-minutes-plan-practice-stands.md`, items 1 to 3.*
+
+1. **The redaction (item 1):** made at 69c2fd751a42c78f509c8d71f211d59ae09419c0, with both notes. Each pinned span over the line reads its own commit. Main's `DECISIONS-PENDING.md` has since taken the two RULED blocks, so S9 reads its current blob.
+2. **The 22 rows (item 2):** placed in PLAN (operator-sitting-queue; the six proposed nodes of item 2e; briefb-b3-publish-v2's two lines), carried by the next window's draft (item 2b), ruled superseded (item 2c: L520, L1474, L1492), or done by the custodian's closing message (item 2d: L534). Item 1's note discharges E107 and L1523.
+3. **The strike rule, run again (item 2):** with those in PLAN, the eight entries kept for an obligation not represented are struck if nothing else holds them. The sheet shows each row's new resolution, and the struck dry run is run again on the branch after main is merged in.
+4. **F0's rows (§2 item 12):** the RULED blocks of 2026-10-20 and 2026-10-21, added after G0, get their obligation rows in the sheet. The kept list differs from G0's by the human's own rule (item 2), and the PR body shows the difference.
+5. **D1-b (item 3):** verify-cites reporting one more file, the archive, is accepted and recorded as the piece's own. Amendment 5 item 5's I2 is discharged.
+6. **Next:** main merged into the branch; the sheet and the dry run; a scoped check of the changed rows; then F0 on the human's word.
+7. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.

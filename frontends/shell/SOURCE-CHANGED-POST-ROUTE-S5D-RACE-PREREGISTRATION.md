@@ -332,3 +332,13 @@ Nothing above is edited.
 5. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 7 — the human's ruling on O2: (a) (class 5)
+
+*Written by the custodian on the human's typed ruling. References only: `state/directives/2026-10-20-232-redaction-go-22-rows-placed-d1-b-accepted-234-items-45-46-yes-s5d-a-ttl-ten-minutes-plan-practice-stands.md`, item 5; the options `state/consults/2026-10-20-source-changed-post-route-s5d-race-o2-follow-on-options-architect.md`.*
+
+1. **(a):** a C2 run reads INCONCLUSIVE, never a pass. The suite's header says that the post-check route is evidenced by the P count in the custodian's run records, which the suite cannot read, and that S5d confirms it only in a run with no sibling refusal.
+2. **Route:** (a) changes what S5d asserts, so it gets its own full form from dispatch, with both gates (round 25 item 2 (e)); the architect drafts it. Its code merges after milestone 3, since it touches `e2e/README.md` (§3's rule while milestone 3 is open).
+3. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.

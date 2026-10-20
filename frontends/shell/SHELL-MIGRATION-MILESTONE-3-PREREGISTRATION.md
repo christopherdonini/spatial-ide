@@ -970,3 +970,15 @@ Nothing above is edited.
 8. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 12 — the human's answers on PR B's KNOWN-LIMITATIONS sentences (class 5)
+
+*Written by the custodian on the human's typed answer. References only: `state/directives/2026-10-20-232-redaction-go-22-rows-placed-d1-b-accepted-234-items-45-46-yes-s5d-a-ttl-ten-minutes-plan-practice-stands.md`, item 4; the draft `state/consults/2026-10-20-shell-migration-milestone-3-open-9-i-architect-draft.md`.*
+
+1. **Item 45 (OPEN-9 (i)) and item 46 ((ii)'s replacement):** yes, the drafted words, under the 2026-10-11 direction's item 2b.
+2. **Item 39's third sentence:** the approved replacement, with the architect's optional wording: a change to the filter cards.
+3. **The KNOWN-LIMITATIONS commit:** one worker lands the three, numbered at that commit (Amendment 11 item 3), with their source comments naming the human's approval and the draft's item 2c cases; no re-gate; the PR body records it.
+4. **Next:** that commit, then PR #234 ready for the click; after the merge, its closing record, and Part AB joins operator-sitting-queue.
+5. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
