@@ -224,3 +224,103 @@ test('rotate-plan-summaries: --keep leaves the named summaries in place and the 
   for (const id of ['n-d301', 'n-comment']) assert.ok(text.includes(lineOf(PLAN, id)), `${id} stays`);
   assert.ok(!text.includes(lineOf(PLAN, 'n-wide')));
 });
+
+test('rotate-plan-summaries: a second run changes nothing: not due in the same month, and due with nothing to move writes no archive', () => {
+  const { dir } = ran();
+  commit(dir, {}, 'the rotation');
+  sh(dir, ['push', '-q', 'origin', 'main']);
+  const before = snapshot(dir);
+  const again = rot(dir);
+  assert.equal(again.status, 0, again.stderr);
+  assert.match(again.stdout, /^rotate-plan-summaries: not due — /);
+  assert.equal(again.stdout.trim().split('\n').length, 1);
+  assert.equal(snapshot(dir), before);
+  assert.equal(staged(dir).length, 0);
+  const none = mkRepo({ 'PLAN.yaml': planOf([node('n-short', 'done', '"short"'), node('n-in-progress', 'in-progress', bytes(400))]) });
+  const was = snapshot(none);
+  const r = rot(none);
+  assert.equal(r.status, 0, r.stderr);
+  assert.match(r.stdout, /^rotate-plan-summaries: nothing to move — /);
+  assert.equal(r.stdout.trim().split('\n').length, 1);
+  assert.equal(snapshot(none), was, 'no archive and no change');
+  assert.equal(staged(none).length, 0);
+});
+
+test("rotate-plan-summaries: refuses with exit 2 and writes nothing on a modified tracked file, HEAD not equal to its upstream, a PLAN.yaml blob that differs from origin/main's, or a carriage return in PLAN.yaml", () => {
+  const dirty = mkRepo({ 'PLAN.yaml': PLAN, 'README.md': 'one\n' });
+  fs.writeFileSync(path.join(dirty, 'README.md'), 'two\n');
+  refused(dirty, /git status --porcelain shows a tracked change/);
+  const ahead = mkRepo({ 'PLAN.yaml': PLAN });
+  commit(ahead, { 'README.md': 'unpushed\n' }, 'local only');
+  refused(ahead, /HEAD is not equal to its upstream/);
+  const differs = mkRepo({ 'PLAN.yaml': PLAN });
+  sh(differs, ['checkout', '-q', '-b', 'work']);
+  commit(differs, { 'PLAN.yaml': `${PLAN}# changed on the branch\n` }, 'change the plan');
+  sh(differs, ['push', '-q', '-u', 'origin', 'work']);
+  refused(differs, /PLAN\.yaml at HEAD is not the blob on origin\/main/);
+  refused(mkRepo({ 'PLAN.yaml': PLAN.replaceAll('\n', '\r\n') }), /PLAN\.yaml at HEAD holds a carriage return/);
+});
+
+test("rotate-plan-summaries: due when no PLAN-SUMMARIES archive was ever added or the newest was added before the month's first at 00:00Z, and a DECISIONS-PENDING archive does not count", () => {
+  const month = Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), 1);
+  const wasDue = (files, date) => {
+    const r = rot(mkRepo({ 'PLAN.yaml': PLAN, ...files }, date));
+    assert.equal(r.status, 0, r.stderr);
+    return !/not due/.test(r.stdout);
+  };
+  const ps = { 'state/cut-archive/PLAN-SUMMARIES-2020-01-01.yaml': 'summaries:\n' };
+  assert.equal(wasDue({}, PAST), true, 'no archive ever');
+  assert.equal(wasDue({ 'state/cut-archive/DECISIONS-PENDING-2020-01-01.md': 'x\n' }, new Date().toISOString()), true, 'a DECISIONS-PENDING archive added now does not count');
+  assert.equal(wasDue(ps, new Date().toISOString()), false, 'added now');
+  assert.equal(wasDue(ps, PAST), true, 'added in an earlier month');
+  assert.equal(wasDue(ps, new Date(month).toISOString()), false, 'added at the first, 00:00:00Z');
+  assert.equal(wasDue(ps, new Date(month - 1000).toISOString()), true, 'added a second before');
+});
+
+test('rotate-plan-summaries: --dry-run writes nothing and lists one obligation row per candidate with its markers in both segments and the PLAN nodes, DECISIONS-PENDING entries and KNOWN-LIMITATIONS items it names', () => {
+  const pad = 'z'.repeat(300);
+  const a = `Landed. Still waiting on n-in-progress until the next run; n-ready is owed (entries 3 and 7, KNOWN-LIMITATIONS items 2 and 5). ${pad} Before: this was held and queued.`;
+  const files = {
+    'PLAN.yaml': planOf([node('n-a', 'done', JSON.stringify(a)), node('n-b', 'done', JSON.stringify(`Landed cleanly. ${pad}`)), node('n-in-progress', 'in-progress', '"x"'), node('n-ready', 'ready', '"y"')]),
+    'DECISIONS-PENDING.md': '# Decisions pending the human\n\n## Pending\n\n7. **An open entry**\ntext\n\n3. **[RESOLVED 2026-01-01]** a marked entry.\n',
+    'KNOWN-LIMITATIONS.md': '# Known limitations\n\n1. **First** text\n\n2. **Second** text\n',
+  };
+  const dir = mkRepo(files);
+  const before = snapshot(dir);
+  const r = rot(dir, '--dry-run');
+  assert.equal(r.status, 0, r.stderr);
+  assert.equal(snapshot(dir), before);
+  assert.equal(staged(dir).length, 0);
+  assert.match(r.stdout, /^candidates \(2\); pointers found \(0\): none; kept by --keep \(0\): none$/m);
+  const rows = r.stdout.split('\n').filter((l) => l.startsWith('  ['));
+  assert.deepEqual(rows.map((l) => l.replace(/\d+ bytes/, 'N bytes')), [
+    '  [n-a] N bytes | current: owed, waiting, until, next, still | rest: held, queued | nodes: n-in-progress (in-progress), n-ready (ready) | entries: 3 (not open), 7 (open) | items: 2 (present), 5 (absent)',
+    '  [n-b] N bytes | current: none | rest: none | nodes: none | entries: none | items: none',
+  ]);
+  const blob = /blob ([0-9a-f]{40})$/m.exec(r.stdout)[1];
+  const bytesOf = /moved bytes: (\d+);/.exec(r.stdout)[1];
+  const real = rot(dir);
+  assert.equal(real.status, 0, real.stderr);
+  assert.equal(sh(dir, ['rev-parse', ':PLAN.yaml']), blob, 'the dry run named the blob the real run staged');
+  assert.match(real.stdout, new RegExp(`moved 2 summaries, ${bytesOf} bytes`));
+});
+
+function hooksRunningTheScript(settingsPath) {
+  const found = [];
+  const walk = (v) => {
+    if (Array.isArray(v)) v.forEach(walk);
+    else if (v && typeof v === 'object') for (const [k, x] of Object.entries(v)) { if (k === 'command' && typeof x === 'string') { if (x.includes('rotate-plan-summaries.mjs')) found.push(x); } else walk(x); }
+  };
+  walk(JSON.parse(fs.readFileSync(settingsPath, 'utf8')).hooks);
+  return found;
+}
+test('rotate-plan-summaries: no hook in .claude/settings.json runs the script', () => {
+  const real = path.join(here, '..', '..', '.claude', 'settings.json');
+  const copy = JSON.parse(fs.readFileSync(real, 'utf8'));
+  copy.hooks.SessionStart.push({ matcher: 'startup', hooks: [{ type: 'command', command: 'node "$CLAUDE_PROJECT_DIR/scripts/plan/rotate-plan-summaries.mjs"' }] });
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'rotps-settings-'));
+  dirs.push(tmp);
+  fs.writeFileSync(path.join(tmp, 'settings.json'), JSON.stringify(copy));
+  assert.equal(hooksRunningTheScript(path.join(tmp, 'settings.json')).length, 1, 'the reader finds a hook that runs the script');
+  assert.deepEqual(hooksRunningTheScript(real), []);
+});
