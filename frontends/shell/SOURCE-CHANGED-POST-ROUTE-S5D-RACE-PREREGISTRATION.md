@@ -307,3 +307,16 @@ Nothing above is edited.
 7. Generation: the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 5 — step 2's runs: O2, as predicted (class 1; written after step 2's runs were seen)
+
+*Written by the custodian after the runs. References only. The record: `state/consults/2026-10-20-source-changed-post-route-s5d-race-step-2-custodian-runs.md`, added in the commit that adds this amendment.*
+
+1. **The runs.** B is ed8731a7bdf19a48d37049cbe14e3d00d9db0372. Item 1's path list named two engine forms, so the exe was rebuilt at B; it is byte-identical to step 1's. The pre-flight and 16 counted runs ran in one exclusive hold, with both affinities at the hold's grant. Two deviations are recorded: a first hold request over 30 minutes was refused before anything ran, and the counted runs' app PIDs come from the runner's stop line.
+2. **What they show.** S5d failed in 14 of 16 counted runs, every failure C2. No run has a W or an R line, every run has a P line, and t_repoint was read in every run. No extension runs.
+3. **The outcome,** by Amendment 4 item 4: **O2**, as predicted. Nothing is pooled with step 1 or the watcher-visible piece's runs.
+4. **Next, by §2 and Amendment 4 item 6:** §4's single reviewer gate on the record; the architect drafts the follow-on with options (a) and (b), each with the seam's (d) additions (D8's clause and D9's comment corrected; each C2 run's P count to the human); then the STOP to the human with the rows.
+5. **PLAN:** the node is blocked on the human's ruling between the follow-on's options; the flake behind it stays blocked.
+6. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
