@@ -495,3 +495,17 @@ Nothing above is edited.
 6. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 5 — gate 1 at G0 (the architect PASS WITH NOTES, the reviewer FAIL): correction round 1, the custodian's words, entry 104 kept (class 3)
+
+*Written by the custodian after gate 1. References only. The reports: `state/consults/gates/2026-10-20-governance-decisions-pending-open-and-archive-gate1-architect.md` (gate-log 556) and `state/consults/gates/2026-10-20-governance-decisions-pending-open-and-archive-gate1-reviewer.md` (557).*
+
+1. **E-1, named by both:** R11's hash-reference part passes with MT4 applied, and its reference is not pinned. Correction round 1, by one worker: R11 commits its fixture first, holds two references pinned there (one valid, one with a wrong sha256), and asserts exactly one finding, on the archive path, reading sha256 mismatch; MT4 is recorded again failing R11 by name at the fix commit.
+2. **The reviewer's D-2, in round 1:** `AUTONOMY.md` §34 Part B (ii)'s first sentence takes the reviewer's words, naming the bracketed marker.
+3. **The custodian's words, no re-gate:** the sheet's header and the eight passes' notes pin the read ledger whole (the architect's D-1); entry 118's row (D-2) and the counts as clause counts (the reviewer's D-3) take the gates' words; the PR body gains S0 and the predicted D1-b (the reviewer's D-1).
+4. **Entry 104 is kept (the architect's D-3).** Its mechanism (a) follow-on is the round-12 RULED block's row not represented, so Amendment 4 item 4's "none of the 56 struck entries does" does not hold for it. By the human's rule the entry stays: 55 struck, 24 kept. The struck dry run is run again and the PR body shows it; the kept list the human checks is the new one.
+5. **D1-b, predicted (the reviewer's D-1):** verify-cites's stdout file count rises by one, the archive path, a difference §5's exception does not name; by I2 it goes to the human before the click.
+6. **Next:** round 1; the custodian's words and the new dry run; gate 2, both, scoped to round 1 and the words.
+7. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
