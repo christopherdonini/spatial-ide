@@ -482,3 +482,16 @@ Nothing above is edited.
 9. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 4 — the human's rulings at G0: the strikes as a rule, D1-a not I1, the redaction on main first (class 5)
+
+*Written by the custodian on the human's rulings (`state/directives/2026-10-20-230-231-233-merged-232-strikes-rule-d1-a-not-i1-profile-path-redact-unknown-attempt-a.md`, items 1 to 3 under #232). References only. The sheet: `state/drafts/decisions-pending-c-obligations.md` on the branch at 6b8b3688ea0a99978ce9d641fef6dd6df6f1e38c, compiled from eight read-only architect passes filed beside it.*
+
+1. **The strikes, as a rule (item 1).** An unmarked entry is struck when a ruling was found for it and every obligation it still carries is represented; an entry with no ruling found stays. Of the 79: 63 have a ruling found, 7 of them carry an obligation not represented and stay; 16 more stay (5 PARTIAL, 3 RECORD ONLY, 8 NONE FOUND). 56 are struck, passed to `--archive-entries`. The struck dry run at the branch head keeps 23 entries and makes the new file 72,298 bytes, under 153,600, so I3 does not fire.
+2. **D1-a (item 2):** not I1. Every difference is the piece's own new files and tests, as with B's I6 (Amendment 3 item 4).
+3. **The profile path (item 3):** the human's word is to redact the line on main first, in one commit, with their one-line note at the end of the file. Their check first: two pinned hash spans cover the line at their pins (this form's Amendment 3 item 5, the line at e684c775; and `scripts/plan/SEARCH-IGNORE-HISTORICAL-PREREGISTRATION.md` Amendment 6 item 3, the whole ledger at fbbffe89). By item 3 the human is told before the commit, so the redaction and that message's RULED block wait for the human's answer.
+4. **The obligation sheet (§2 item 6).** Of the 243 archived blocks and marked entries, 22 carry an obligation not represented (24 in all); none of the 56 struck entries does. By §2 item 6 no rotation runs while one stands: each is placed in PLAN by its own PR (round A1) or in the continuity block, or the human rules it. The sheet lists them in full, and the PR body carries them for the human.
+5. **Next:** both gates at G0 on the sheet and the struck dry run (§2 item 12; §9); the human's answers on item 3's spans and on the 22 rows; then F0.
+6. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
