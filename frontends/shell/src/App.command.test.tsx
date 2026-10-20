@@ -502,7 +502,7 @@ describe("App: the command bar (milestone 3, PR A), through the real App", () =>
     expect(bar().value, "an applied /filter clears the draft").toBe("");
     expect(document.activeElement, "and keeps the focus").toBe(bar());
     await addClause(B);
-    expect(mocks.manager.requests.at(-1)!.filter).toEqual({ predicate: AB, dialect: "duckdb-expr/0" });
+    expect(mocks.manager.requests.at(-1)!.filter, "the manager receives the combination with the dialect constant").toEqual({ predicate: AB, dialect: "duckdb-expr/0" });
     expect([cardTexts(), states()]).toEqual([[A, B], ["true", "true"]]);
     expect(text(".filter-active"), "the Applied line shows the combination").toBe(`Applied: ${AB}`);
     expect(stepped(), "one filter.apply step per outcome, the second holding what the manager received").toEqual([A, AB]);
@@ -554,7 +554,7 @@ describe("App: the command bar (milestone 3, PR A), through the real App", () =>
     expect([cardTexts(), q(".filter-active"), q(".clause-statement")], "Clear removes every card and the statement").toEqual([[], null, null]);
   });
 
-  // RECORDED MUTATIONS for "RC7", each applied alone. (a) In App.tsx's `changeClauses` send a refused change anyway (replace `if (proposal.kind === "refuse") {` with `if (proposal.kind === "refuse" && false) {`). Expected failure: the request count.
+  // RECORDED MUTATIONS for "RC7", each applied alone. (a) In filterClauses.ts's `proposeClauseChange` send it anyway (replace `blockerOf`'s return, `return recognizeSimple(candidate.text) ? on.find((clause) => !recognizeSimple(clause.text)) : on[0];`, with `return on.length < 0 ? on[0] : undefined;`, so that no change is refused). Expected failure: the request count.
   // (b) (RC7-b) Drop the row (delete `recordNamed("gui-action", "filter.clauseNotSent");`). Expected failure: the row count.
   it("RC7: an advanced clause beside a card that is on is not sent, with the shell's line and one filter.clauseNotSent row, and a card beside an advanced card that is on is not sent either", async () => {
     await open("C:/data/a.parquet");
