@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `9d71c08697bd004738cd11f34feae4f98252b7669ad872c1a186c3e17f87da19`) at `2026-10-20T22:33:51.721Z`.
+Generated from `PLAN.yaml` (sha256 `0f2560b1867c5769063097ff8b868554aec0c421a5e8f34e869059430d2993b8`) at `2026-10-20T22:41:20.437Z`.
 
 ## 1. Next
 
@@ -9,7 +9,6 @@ Generated from `PLAN.yaml` (sha256 `9d71c08697bd004738cd11f34feae4f98252b7669ad8
 ## 2. Ready
 
 - **connection-reuse-recycled-interrupt-flake** — engine/tests/connection_reuse.rs: cancellation_before_the_first_batch_binds_a_recycled_connection_and_delivers_nothing failed once on ubuntu-24.04 in PR #222's pull_request run at a542097e, and the push run of the same commit passed it (lane `engine`, order null, budget 60 min)
-- **governance-plan-summaries-archive** — Governance D -- done nodes' summaries over 300 bytes moved verbatim from PLAN.yaml into state/cut-archive/ by a named script, one generated pointer line each, monthly beside C's rotation, and its rule appended to AUTONOMY; the measurements before and after it (lane `governance`, order null, budget 0 min)
 
 ## 3. Waiting on the human (total: 0 min)
 
@@ -28,7 +27,7 @@ Generated from `PLAN.yaml` (sha256 `9d71c08697bd004738cd11f34feae4f98252b7669ad8
 
 ## 5. In progress
 
-- (none)
+- **governance-plan-summaries-archive** — Governance D -- done nodes' summaries over 300 bytes moved verbatim from PLAN.yaml into state/cut-archive/ by a named script, one generated pointer line each, monthly beside C's rotation, and its rule appended to AUTONOMY; the measurements before and after it — evidence: branch `cut/plan-summaries-archive`
 
 ## 6. Proposed / unscheduled
 
