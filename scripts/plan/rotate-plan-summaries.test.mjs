@@ -12,10 +12,13 @@ import { fileURLToPath } from 'node:url';
 
 import { findCandidates, buildMove, verifyMove, pointerFor, isPointer } from './rotate-plan-summaries.mjs';
 import { parseYamlSubset } from './yamlSubset.mjs';
-import { findMetricViolations } from './site.mjs';
+import { loadPlan } from './plan.mjs';
+import { buildQueue, renderMarkdown, checkQueueDrift } from './queue.mjs';
+import { findMetricViolations, renderSite, checkSiteDrift, readVerifyQuotesBaselineCount } from './site.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const ROTATE = path.join(here, 'rotate-plan-summaries.mjs');
+const REPO_ROOT = path.resolve(here, '..', '..');
 const DAY = 86400000;
 const PAST = new Date(Date.now() - 40 * DAY).toISOString(); // before this month's first, whatever today is
 const today = () => new Date().toISOString().slice(0, 10);
@@ -320,7 +323,7 @@ function hooksRunningTheScript(settingsPath) {
   return found;
 }
 test('rotate-plan-summaries: no hook in .claude/settings.json runs the script', () => {
-  const real = path.join(here, '..', '..', '.claude', 'settings.json');
+  const real = path.join(REPO_ROOT, '.claude', 'settings.json');
   const copy = JSON.parse(fs.readFileSync(real, 'utf8'));
   copy.hooks.SessionStart.push({ matcher: 'startup', hooks: [{ type: 'command', command: 'node "$CLAUDE_PROJECT_DIR/scripts/plan/rotate-plan-summaries.mjs"' }] });
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'rotps-settings-'));
@@ -328,4 +331,42 @@ test('rotate-plan-summaries: no hook in .claude/settings.json runs the script', 
   fs.writeFileSync(path.join(tmp, 'settings.json'), JSON.stringify(copy));
   assert.equal(hooksRunningTheScript(path.join(tmp, 'settings.json')).length, 1, 'the reader finds a hook that runs the script');
   assert.deepEqual(hooksRunningTheScript(real), []);
+});
+
+test("rotate-plan-summaries: from the real PLAN.yaml, after a run the queue differs only in plan_hash, the site's plan.json only in plan_hash and the moved summaries, and both drift checks pass after regeneration", () => {
+  const real = fs.readFileSync(path.join(REPO_ROOT, 'PLAN.yaml'), 'utf8');
+  assert.ok(!real.includes('\r'), 'LF, as CI checks out');
+  const head = parseYamlSubset(real);
+  const fit = (lines) => lines.map((l) => l.replace('lane: shell', `lane: ${head.lanes[0].id}`).replace('phase: prototype', `phase: ${head.phases[0].id}`));
+  const dir = mkRepo({ 'PLAN.yaml': `${real}${[...fit(node('synthetic-long-done', 'done', bytes(400))), ...fit(node('synthetic-long-ready', 'ready', bytes(400)))].join('\n')}\n` });
+  const planPath = path.join(dir, 'PLAN.yaml');
+  const GEN = new Date(0).toISOString();
+  const gen = () => {
+    const plan = loadPlan(planPath);
+    const queue = buildQueue(plan, { generatedAt: GEN });
+    const site = renderSite(plan, null, { repoSlug: 'o/r', generatedAt: GEN, buildHealth: null, governanceBaselineCount: readVerifyQuotesBaselineCount(REPO_ROOT) });
+    return { plan, queue, md: renderMarkdown(queue), site };
+  };
+  const before = gen();
+  const run = rot(dir);
+  assert.equal(run.status, 0, run.stdout + run.stderr);
+  const after = gen();
+  const name = staged(dir).find((l) => l.startsWith('A\t')).slice('A\tstate/cut-archive/'.length);
+  const gone = before.plan.nodes.filter((n) => n.status === 'done' && Buffer.byteLength(n.summary, 'utf8') > 300).map((n) => n.id);
+  assert.ok(gone.length >= 2 && gone.includes('synthetic-long-done') && !gone.includes('synthetic-long-ready'));
+  const strip = ({ plan_hash, generated_at, ...rest }) => rest;
+  assert.deepEqual(strip(after.queue), strip(before.queue), 'the queue differs only in plan_hash');
+  assert.notEqual(after.queue.plan_hash, before.queue.plan_hash);
+  const [mdBefore, mdAfter] = [before.md.split('\n'), after.md.split('\n')];
+  assert.deepEqual(mdAfter.flatMap((l, i) => (l !== mdBefore[i] ? [l.slice(0, 26)] : [])), ['Generated from `PLAN.yaml`'], 'the markdown differs on its Generated line only');
+  const [sb, sa] = [JSON.parse(before.site.planJson), JSON.parse(after.site.planJson)];
+  assert.deepEqual({ ...sa, nodes: null, plan_hash: null }, { ...sb, nodes: null, plan_hash: null });
+  assert.deepEqual(sa.nodes.map((n) => n.id), sb.nodes.map((n) => n.id));
+  sb.nodes.forEach((n, i) => assert.deepEqual(sa.nodes[i], gone.includes(n.id) ? { ...n, summary: pointerFor(name) } : n, n.id));
+  assert.equal(after.site.html.replaceAll(after.plan._meta.hash, '#'), before.site.html.replaceAll(before.plan._meta.hash, '#'), 'index.html differs only in plan_hash');
+  const out = path.join(dir, 'site');
+  fs.mkdirSync(path.join(out, 'data'), { recursive: true });
+  for (const [rel, body] of [['CUSTODIAN-QUEUE.md', after.md], ['CUSTODIAN-QUEUE.json', `${JSON.stringify(after.queue, null, 2)}\n`], ['site/index.html', after.site.html], ['site/data/plan.json', after.site.planJson], ['site/.nojekyll', '']]) fs.writeFileSync(path.join(dir, rel), body, 'utf8');
+  assert.deepEqual(checkQueueDrift({ planPath, outDir: dir }), { ok: true, problems: [] });
+  assert.deepEqual(checkSiteDrift({ planPath, outDir: out, repoSlug: 'o/r' }), { ok: true, problems: [] });
 });
