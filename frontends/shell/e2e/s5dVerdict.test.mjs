@@ -2,6 +2,15 @@
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
 // Plain Node test of s5dVerdict.mjs (SOURCE-CHANGED-S5D-INCONCLUSIVE-PREREGISTRATION.md section 4, T1 to T7): `npm run test:s5d-verdict`, part of `npm run verify`.
+// RECORDED MUTATIONS, each applied alone to s5dVerdict.mjs at 217d6e8e3c130c00bb87b578235a0b9bf284a811, the test run, its failure read by name, then reverted (porcelain clean after each):
+//   M1 the INCONCLUSIVE branch returns PASS: T2 and T3 fail.
+//   M2 the already-ended check removed: T5 fails.
+//   M3 positional, a refusal after the session-ended line counts as already-ended: T2 and T3 fail (T6 and T7 fail too).
+//   M4 the R check removed: T6 fails.
+//   M5 the other-code check removed: T7 fails.
+//   M6 rule 1 removed: T4 fails.
+//   M7 the refusal filter widened to every tile- line: T1 fails (T2, T3, T5 and T6 fail too).
+//   M8 readRefusalDetails' continuation join removed: T5 fails.
 // The log lines are the custodian's step 2 record (section 3), byte-copied by script, each with its one-line pin; T4 to T7 are section 3's four declared constructions from them.
 import assert from "node:assert/strict";
 import { test } from "node:test";
