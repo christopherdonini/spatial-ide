@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-20T17:21:10.062Z",
-  "plan_hash": "5ec40cbd67d9f5361a9d7e6ae30607e5b8e54248e535935e2593d0e2984572e3",
+  "generated_at": "2026-10-20T18:31:31.372Z",
+  "plan_hash": "939d33234f3528efc76ed92abb9a78b97794e49cef7d3e7492e1bd3092971079",
   "priorities_approved": true,
   "lanes": [
     {
@@ -9033,22 +9033,22 @@
       "kind": "task",
       "lane": "shell",
       "phase": "prototype",
-      "status": "blocked",
+      "status": "ready",
       "order": null,
       "depends_on": [
         "shell-migration-milestone-3"
       ],
       "needs_human": {
-        "kind": "ruling",
-        "minutes": 5
+        "kind": "none",
+        "minutes": 0
       },
-      "gate": "none",
+      "gate": "frontends/shell/PUBLISH-APPROVAL-TTL-TEN-MINUTES-PREREGISTRATION.md",
       "evidence": null,
       "budget_minutes": 60,
-      "generation": 1,
+      "generation": 2,
       "felt_verdict": false,
       "entries": [],
-      "summary": "FORM DRAFTED 2026-10-20 by the architect (state/consults/2026-10-20-publish-approval-ttl-ten-minutes-architect-draft.md): the value, one P6-placeholder sentence in the approval dialog, no countdown; 8 files besides the form. Its Out-of-scope line names two of section 21a's categories as touched (ADR-024's 120 s text, which needs an appended note in the human's words; the declared ceiling under test) and crosses section 21c's user-visible bound, so under AUTONOMY section 25 (e) no five-line form is committed until the human rules. OPEN-1, the route: (A) the five-line form with the reviewer and the architect from dispatch (recommended); (B) one reviewer, ADR-024's note in its own docs PR first; (C) the full form. OPEN-2: ADR-024's appended note, red-line text, the human's typed words. Not dispatched before both. Before: RULED 2026-10-21 (headed), item 6: the unknown-attempt node's product step as its own small piece after milestone 3, graded S3. PENDING_ATTEMPT_TTL in publish.rs takes the value item 6 names; the approval dialog gains one sentence, a P6 placeholder, that the approval expires after that time and the publish is then started over; no countdown. Its short form comes before any code. The cause step closed on the architect's finding (publish-approval-unknown-attempt-under-load, done).",
+      "summary": "FORM COMMITTED 2026-10-20 (frontends/shell/PUBLISH-APPROVAL-TTL-TEN-MINUTES-PREREGISTRATION.md, from the architect's draft, its pins expanded by script) with its Amendment 1: RULED 2026-10-21 (headed; the third message; state/directives/2026-10-20-ttl-open-1-a-five-line-form-both-gates-open-2-adr-024-note-words.md), OPEN-1 (A), the five-line form with the reviewer and the architect from dispatch, section 25 (e) set aside for this piece; OPEN-2, the human's words for ADR-024's note, dated the day the piece merges, appended by the custodian as the branch's last commit before the click, after the human's answer on one clause (Amendment 1 item 3). NEXT: code by one worker; the custodian's E1 at the head; both gates. Before: FORM DRAFTED 2026-10-20 by the architect (state/consults/2026-10-20-publish-approval-ttl-ten-minutes-architect-draft.md): the value, one P6-placeholder sentence in the approval dialog, no countdown; 8 files besides the form. Its Out-of-scope line names two of section 21a's categories as touched (ADR-024's 120 s text, which needs an appended note in the human's words; the declared ceiling under test) and crosses section 21c's user-visible bound, so under AUTONOMY section 25 (e) no five-line form is committed until the human rules. OPEN-1, the route: (A) the five-line form with the reviewer and the architect from dispatch (recommended); (B) one reviewer, ADR-024's note in its own docs PR first; (C) the full form. OPEN-2: ADR-024's appended note, red-line text, the human's typed words. Not dispatched before both. Before: RULED 2026-10-21 (headed), item 6: the unknown-attempt node's product step as its own small piece after milestone 3, graded S3. PENDING_ATTEMPT_TTL in publish.rs takes the value item 6 names; the approval dialog gains one sentence, a P6 placeholder, that the approval expires after that time and the publish is then started over; no countdown. Its short form comes before any code. The cause step closed on the architect's finding (publish-approval-unknown-attempt-under-load, done).",
       "dates": {
         "opened": "2026-10-20",
         "done": null
