@@ -899,3 +899,46 @@ Nothing above is edited.
 9. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 9 — PR B's re-sweep: the pins PR A moved (class 3); the base's Part, numbers and rule 00 (class 1)
+
+*Written by the custodian before any PR B code, after the re-sweep's results were seen. References only. The re-sweep is §0.3's last bullet, read only, at main d7dfb18e94fdc63e23d87530c1c8c56f4fa37023, after PR A merged (Amendment 8): each of the form's 84 distinct pins, its hash recomputed at its own revision (every one matches), its text located at PR A's code base 564aadae556a39c2f3a0f567730ec58e4cfe0439 and then at that main commit.*
+
+1. **PR B's base** is the main commit that adds this amendment, where PR B's branch `cut/shell-migration-milestone-3-pr-b` is cut. That commit changes no file a pin names, so every span below, read at d7dfb18e, reads the same there. For the work, the tree at the base is authoritative (§0.3).
+2. **The count.** 46 pins stand at the same lines as at PR A's code base; 11 were already historical there (Amendments 3 to 5 carry them); 25 moved; 2 changed.
+3. **The 20 pins PR A moved (class 3),** each the same text at a new span, its hash unchanged:
+   - form line 82: `frontends/shell/src/admission/AdmissionPanel.tsx:290-296` @ ceff6d82 reads at frontends/shell/src/admission/AdmissionPanel.tsx:307-313 @ d7dfb18e94fdc63e23d87530c1c8c56f4fa37023 sha256:03e18920860c94be49a0b6d145827aedc02ead71394f884ce594a64ac825d416
+   - form line 82: `frontends/shell/src/admission/AdmissionPanel.tsx:348-350` @ ceff6d82 reads at frontends/shell/src/admission/AdmissionPanel.tsx:370-372 @ d7dfb18e94fdc63e23d87530c1c8c56f4fa37023 sha256:37e5c4be9884a5966d94874fb2841bcfee0133bdca0ae8328bc7127577a7af05
+   - form line 58: `frontends/shell/src/App.tsx:236-241` @ ceff6d82 reads at frontends/shell/src/App.tsx:283-288 @ d7dfb18e94fdc63e23d87530c1c8c56f4fa37023 sha256:f62c0f8367da7de59c7fb9b3afd3fb2dcbde8a4970b383367a2689deb54d3168
+   - form line 58: `frontends/shell/src/App.tsx:243-272` @ ceff6d82 reads at frontends/shell/src/App.tsx:290-319 @ d7dfb18e94fdc63e23d87530c1c8c56f4fa37023 sha256:c7a54d34be5d50d5a152b108dc463c05062769b4df91400d4cedd2bfd55f5dfe
+   - form line 57: `frontends/shell/src/App.tsx:300-342` @ ceff6d82 reads at frontends/shell/src/App.tsx:347-389 @ d7dfb18e94fdc63e23d87530c1c8c56f4fa37023 sha256:7cdffbcce25b7468ae352072b1454fc68ef047db3d9efd2400158d4d0089973b
+   - form line 634: `frontends/shell/src/App.tsx:843` @ b88b1d2f reads at frontends/shell/src/App.tsx:845 @ d7dfb18e94fdc63e23d87530c1c8c56f4fa37023 sha256:a400e483fc84063be6c8ad223c0dd0e90331ee1d79c15f954296a4b8f9830c54
+   - form line 59: `frontends/shell/src/App.tsx:929-965` @ ceff6d82 reads at frontends/shell/src/App.tsx:1026-1062 @ d7dfb18e94fdc63e23d87530c1c8c56f4fa37023 sha256:d89199beacbc42d3481c8b4f0c5fe505e45a5ffd3196d1844d96e5d3c09b0eea
+   - form line 656: `frontends/shell/src/App.tsx:987-996` @ b88b1d2f reads at frontends/shell/src/App.tsx:992-1001 @ d7dfb18e94fdc63e23d87530c1c8c56f4fa37023 sha256:05f80495437e9063153300b3e1aec92d8f7fbc7c6e69014812e72238cbea530d
+   - form line 755: `frontends/shell/src/App.tsx:1148-1160` @ b88b1d2f reads at frontends/shell/src/App.tsx:1153-1165 @ d7dfb18e94fdc63e23d87530c1c8c56f4fa37023 sha256:2542da92eddef0b49db9120645bb15256c949619e96ce0f78ef02b5ce3800201
+   - form line 62: `frontends/shell/src/App.tsx:1407` @ ceff6d82 reads at frontends/shell/src/App.tsx:1600 @ d7dfb18e94fdc63e23d87530c1c8c56f4fa37023 sha256:e8cf144fc06f05d56fa8395b41eeb0792e680b2519818898b80ffa92899223b1
+   - form line 62: `frontends/shell/src/App.tsx:1568` @ ceff6d82 reads at frontends/shell/src/App.tsx:1761 @ d7dfb18e94fdc63e23d87530c1c8c56f4fa37023 sha256:c52ef30d7780c7f49f09ccda653a102fe17ba67015318aaa75640cc639f0cb85
+   - form line 63: `frontends/shell/src/App.tsx:1674-1688` @ ceff6d82 reads at frontends/shell/src/App.tsx:1962-1976 @ d7dfb18e94fdc63e23d87530c1c8c56f4fa37023 sha256:f92daa169dcdc97740cdd337c089da0da2350dd8f3ea33c5c0fcbdba84977aec
+   - form line 687: `frontends/shell/src/App.tsx:2175-2176` @ b88b1d2f reads at frontends/shell/src/App.tsx:2185-2186 @ d7dfb18e94fdc63e23d87530c1c8c56f4fa37023 sha256:3d231a759b044ce2e32a08d6d155f6906a594024742036f4867d3441d57178c4
+   - form line 728: `frontends/shell/src/layout/actionRegistry.test.ts:249-257` @ b88b1d2f reads at frontends/shell/src/layout/actionRegistry.test.ts:267-275 @ d7dfb18e94fdc63e23d87530c1c8c56f4fa37023 sha256:b45e46d6e8f67f8861c1e66d460ddd4586b53fb99267e41d050c5865aff2279d
+   - form line 66: `frontends/shell/src/layout/actionRegistry.ts:73-84` @ ceff6d82 reads at frontends/shell/src/layout/actionRegistry.ts:113-124 @ d7dfb18e94fdc63e23d87530c1c8c56f4fa37023 sha256:93c3a34180377b4260810cc0a132fdb11de42d0187b520c3b7a16e983f304a05
+   - form line 84: `frontends/shell/src/layout/actionRegistry.ts:86-95` @ ceff6d82 reads at frontends/shell/src/layout/actionRegistry.ts:126-135 @ d7dfb18e94fdc63e23d87530c1c8c56f4fa37023 sha256:f81523f33f7641bd3973902a8e0ca052e16cc014db9927359364ac69f8a2e8ab
+   - form line 640: `frontends/shell/src/layout/StudioLayout.tsx:201` @ b88b1d2f reads at frontends/shell/src/layout/StudioLayout.tsx:275 @ d7dfb18e94fdc63e23d87530c1c8c56f4fa37023 sha256:5da5477ac415bb9fa00e40b6ed2280256e46cf3c52b82f38bd319a177cee7c6c
+   - form line 71: `frontends/shell/src/publish/PublishPanel.tsx:328` @ ceff6d82 reads at frontends/shell/src/publish/PublishPanel.tsx:371 @ d7dfb18e94fdc63e23d87530c1c8c56f4fa37023 sha256:21189cbd2e2b67dd867b9107577692f69f55a00e242988f5935f5cda5e5a533f
+   - form line 71: `frontends/shell/src/publish/PublishPanel.tsx:502-514` @ ceff6d82 reads at frontends/shell/src/publish/PublishPanel.tsx:589-601 @ d7dfb18e94fdc63e23d87530c1c8c56f4fa37023 sha256:f27a42cb4420e2f72f54e7b8ea7452b9791403e1c17c7d8b016c41da8a3c0f65
+   - form line 83: `frontends/shell/src/publish/PublishPanel.tsx:604-611` @ ceff6d82 reads at frontends/shell/src/publish/PublishPanel.tsx:697-704 @ d7dfb18e94fdc63e23d87530c1c8c56f4fa37023 sha256:40ce288199da75877461e383f672943fe604400f7a76e76c9e1214fe8dec598a
+4. **The 5 pins moved by the other two merges (class 3),** KNOWN-LIMITATIONS item 23's new words (PR #230) and walkthrough Part N's rows (PR #231):
+   - form line 745: `frontends/shell/MANUAL-WALKTHROUGH.md:1897` @ b88b1d2f reads at frontends/shell/MANUAL-WALKTHROUGH.md:1902 @ d7dfb18e94fdc63e23d87530c1c8c56f4fa37023 sha256:238a27a791a87412e125b40fd675f65a7bf16914ac65b0da1cef884a3673909c
+   - form line 751: `KNOWN-LIMITATIONS.md:379` @ b88b1d2f reads at KNOWN-LIMITATIONS.md:389 @ d7dfb18e94fdc63e23d87530c1c8c56f4fa37023 sha256:ade05ff3699847fc81592b239f647a4be3bb3b9338b4614efb3ef7196e647ade
+   - form line 833: `KNOWN-LIMITATIONS.md:383` @ 564aadae reads at KNOWN-LIMITATIONS.md:389 @ d7dfb18e94fdc63e23d87530c1c8c56f4fa37023 sha256:ade05ff3699847fc81592b239f647a4be3bb3b9338b4614efb3ef7196e647ade
+   - form line 653: `KNOWN-LIMITATIONS.md:390` @ b88b1d2f reads at KNOWN-LIMITATIONS.md:400 @ d7dfb18e94fdc63e23d87530c1c8c56f4fa37023 sha256:c22c976f428e62d266bf47043a06e577a3dc7e77d07c4136a1aa34a97c1353eb
+   - form line 833: `KNOWN-LIMITATIONS.md:394` @ 564aadae reads at KNOWN-LIMITATIONS.md:400 @ d7dfb18e94fdc63e23d87530c1c8c56f4fa37023 sha256:c22c976f428e62d266bf47043a06e577a3dc7e77d07c4136a1aa34a97c1353eb
+5. **The 2 pins PR A changed (class 3).** `frontends/shell/src/layout/StudioLayout.tsx:146-150` @ ceff6d82 (form line 65) and `frontends/shell/src/layout/StudioLayout.tsx:157-161` @ b88b1d2f (Amendment 3 item 6) are `runAction` as it stood before PR A. PR A replaced it with the one dispatch (Amendment 3 item 6, B3), which reads at frontends/shell/src/layout/StudioLayout.tsx:210-229 @ d7dfb18e94fdc63e23d87530c1c8c56f4fa37023 sha256:a6fe1c664b56eb236c4117ee9ab2dc395aca5cc5b4df5f323e50255af733ee71.
+6. **The §0.5 code paths** changed from PR A's code base only by PR A, as built; from PR A's head to the base, only `frontends/shell/e2e/README.md` and `frontends/shell/e2e/source-changed.mjs` changed (PR #231), and PR B edits neither the source-changed driver nor that suite's README entry.
+7. **The Part and the numbers.** The walkthrough's last Part at the base is AA, so PR B's Part is AB. `KNOWN-LIMITATIONS.md`'s highest item is 44, so the two new items take 45 and 46, read again at PR B's KNOWN-LIMITATIONS commit (Amendment 3 item 10's rule).
+8. **Rule 00 at the base (class 1).** In progress: `governance-decisions-pending-open-and-archive` (its draft PR #232: scripts under `scripts/plan/` and `scripts/hooks/`, `AUTONOMY.md`, and at its rotation `DECISIONS-PENDING.md` and `state/cut-archive/`), and `source-changed-post-route-s5d-race`'s step 2 (its own form and record only). No PR awaits merge. PR B shares no path with them, its README entry, its Part and its items counting as separate paths. No piece touches `protocol/`.
+9. **Carried in:** Amendment 7 item 5 (ArrowDown after a completion) and Amendment 8 item 7 (the E-REVEAL header line). With PR B, the architect drafts the (i) sentence from the recognizer as built (Amendment 2 item 2).
+10. **Next:** PR B's code from the base by one worker-high.
+11. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
