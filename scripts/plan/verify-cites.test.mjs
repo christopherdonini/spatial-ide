@@ -366,3 +366,43 @@ test('verify-cites: a pinned line cite into state/CUT-STATE.md whose pin fails s
     fs.rmSync(dir, { recursive: true, force: true });
   }
 });
+
+// DECISIONS-PENDING.md rotates too (piece C): an unpinned line cite of it past its end is advisory from any citing folder, a pinned one stays
+// gated at its pin. The cite is assembled at run time, so no unpinned line cite into the ledger is written in this file.
+const DP = 'DECISIONS-PENDING.md';
+function dpRepo(doc) {
+  const dir = gitTree({ [DP]: 'a\nb\nc\nd\ne\n', 'engine/src/pool.rs': 'a\n' });
+  const rev = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: dir, encoding: 'utf8' }).trim();
+  fs.writeFileSync(path.join(dir, DP), 'a\n'); // the ledger after a rotation: one line
+  fs.mkdirSync(path.join(dir, 'docs'), { recursive: true });
+  for (const f of ['notes.md', 'docs/sub.md']) fs.writeFileSync(path.join(dir, f), doc(rev));
+  execFileSync('git', ['add', '-A'], { cwd: dir });
+  execFileSync('git', ['commit', '-q', '-m', 'rotate'], { cwd: dir });
+  return dir;
+}
+
+// RECORDED MUTATION (MV1) at a382c50813c3, applied alone and reverted: the rule removed (the target set back to the one ledger) -> fails by name, and only this one: `verify-cites: an unpinned DECISIONS-PENDING.md line cite past its end from a root-level file is advisory`.
+test('verify-cites: an unpinned DECISIONS-PENDING.md line cite past its end from a root-level file is advisory', () => {
+  const dir = dpRepo(() => `see ${DP}:4 and engine/src/pool.rs:9`);
+  try {
+    const { gated, advisory } = runVerifyCites({ repoRoot: dir });
+    assert.deepEqual(gated.map((f) => `${f.relPath} ${f.target}`).sort(), ['docs/sub.md engine/src/pool.rs:9', 'notes.md engine/src/pool.rs:9']);
+    assert.deepEqual(advisory.map((f) => f.relPath).sort(), ['docs/sub.md', 'notes.md'], 'from the root and from a subfolder');
+    for (const f of advisory) assert.match(f.reason, /exceeds [^ ]*DECISIONS-PENDING\.md/);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+// RECORDED MUTATION (MV2) at a382c50813c3, applied alone and reverted: the rule applied to pinned cites as well -> fails by name: `verify-cites: a pinned DECISIONS-PENDING.md line cite whose pin fails stays gated` (and B's own pinned CUT-STATE.md test, which shares the rule).
+test('verify-cites: a pinned DECISIONS-PENDING.md line cite whose pin fails stays gated', () => {
+  const dir = dpRepo((rev) => `ok ${DP}:4 @ ${rev} sha256:00, bad ${DP}:9 @ ${rev} sha256:00`);
+  try {
+    const { gated, advisory } = runVerifyCites({ repoRoot: dir });
+    assert.deepEqual(gated.map((f) => f.relPath), ['notes.md'], 'a root-level cite whose pin fails is gated');
+    assert.match(gated[0].reason, /exceeds "DECISIONS-PENDING\.md" at pinned commit/);
+    assert.deepEqual(advisory.map((f) => f.relPath), ['docs/sub.md'], 'from a subfolder it is advice, as for any suffix-resolved cite; the passing pin raises nothing');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});

@@ -47,8 +47,9 @@
 //     is printed as advice, but it does not fail the gate — the basename is ambiguous (our tree and a
 //     vendored crate can both hold a `state.rs`), so failing on the guess would be a false positive.
 //     A loose path that matches NOTHING in the tree is silently skipped (an external reference).
-//   - An UNPINNED rooted cite into `state/CUT-STATE.md` is advisory wherever it sits (the ledger is
-//     rotated, which moves its lines); a pinned one stays gated at its pin.
+//   - An UNPINNED rooted cite into `state/CUT-STATE.md`, and an unpinned cite of the root file named
+//     DECISIONS-PENDING.md, is advisory wherever it sits (both rotate, which moves their lines); a
+//     pinned one stays gated at its pin.
 //   - Excluded entirely: the repo's documented "cite docs by number" convention `docs/NN:section`
 //     (CLAUDE.md) — `docs/02:91` is doc 02 section 91, not file `docs/02` line 91.
 //
@@ -88,6 +89,9 @@ export const KNOWN_EXTS = new Set([
 export const CODE_EXTS = new Set(['rs', 'ts', 'tsx', 'js', 'jsx', 'mjs', 'cjs']);
 
 const ARCHIVED_PREFIXES = ['state/drafts/', 'state/consults/gates/'];
+
+// The two rotating ledgers: an unpinned line cite past the end of either is advisory, from any citing folder.
+const ROTATING_LEDGERS = new Set(['state/CUT-STATE.md', 'DECISIONS-PENDING.md']);
 
 // path:line[-line]. The path token starts with an identifier char (never `/` or `:`) so a match can
 // never begin inside a `://` scheme; it may contain `/ . _ + -` thereafter. The `:` is immediately
@@ -336,9 +340,9 @@ export function runVerifyCites({ repoRoot, filesGlob } = {}) {
       const at = { relPath, citeLine: cite.citeLine, target: cite.raw };
       const res = checkCitation(cite, index, root);
       if (res.status === 'ok') continue;
-      // OPEN-1 (B): the ledger rotates, so an unpinned line cite into it is advisory wherever it sits;
+      // OPEN-1 (B): the ledgers rotate, so an unpinned line cite into either is advisory wherever it sits;
       // a pinned one is not caught here and stays gated at its pin.
-      if (!cite.pin && cite.pathRaw.replace(/^\.\//, '') === 'state/CUT-STATE.md') {
+      if (!cite.pin && ROTATING_LEDGERS.has(cite.pathRaw.replace(/^\.\//, ''))) {
         advisory.push({ ...at, reason: res.reason ?? `no tracked file matches "${cite.pathRaw}"` });
         continue;
       }

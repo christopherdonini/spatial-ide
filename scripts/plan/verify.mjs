@@ -22,6 +22,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { loadPlan, deriveStatusMap } from './plan.mjs';
 import { checkQueueDrift } from './queue.mjs';
 import { checkSiteDrift } from './site.mjs';
+import { readRulingSet, LIVE_RULINGS } from './rulingSet.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 export const REPO_ROOT = path.resolve(here, '..', '..');
@@ -156,11 +157,11 @@ export function verdictCiteExists(repoRoot, cite) {
     return { ok: false, reason: `verdict.cite "${cite}" does not start with "DECISIONS-PENDING.md " or "RELEASE-<version>.md Amendment N"` };
   }
   const needle = cite.slice(prefix.length);
-  const p = path.join(repoRoot, 'DECISIONS-PENDING.md');
-  if (!fs.existsSync(p)) return { ok: false, reason: 'DECISIONS-PENDING.md does not exist' };
-  const text = fs.readFileSync(p, 'utf8');
-  const ok = text.includes(needle);
-  return { ok, reason: ok ? null : `DECISIONS-PENDING.md does not contain "${needle}"` };
+  if (!fs.existsSync(path.join(repoRoot, LIVE_RULINGS))) return { ok: false, reason: 'DECISIONS-PENDING.md does not exist' };
+  // The ruling set (rulingSet.mjs): the cite is looked for inside one file at a time, never across two.
+  const set = readRulingSet(repoRoot);
+  const ok = set.some((f) => f.text.includes(needle));
+  return { ok, reason: ok ? null : `no file of the ruling set (${set.map((f) => f.path).join(', ')}) contains "${needle}"` };
 }
 
 /** Verifies one node's evidence pointer. Returns an array of failure strings (empty = verified). */

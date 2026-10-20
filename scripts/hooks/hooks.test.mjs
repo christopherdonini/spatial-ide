@@ -1399,3 +1399,17 @@ test("session-resume: reading-order item 1 is the continuity block, the live led
   assert.match(precedents, /^### P-035 — /m);
   assert.match(precedents, /^### P-036 — /m);
 });
+
+// RECORDED MUTATION (MS3) at b3f90b292e57, applied alone and reverted: the old item 3 restored in READING_ORDER -> fails by name, and only this one: `session-resume: reading-order item 3 is the open entries and recent rulings, with older rulings searched by date, round or entry, never read whole`.
+test('session-resume: reading-order item 3 is the open entries and recent rulings, with older rulings searched by date, round or entry, never read whole', () => {
+  const lines = READING_ORDER.split('\n');
+  assert.equal(lines.length, 7, 'the header and six items');
+  // The human's words are inside the quotes of the 2026-10-14 directive's piece C, item 6: read from the tracked directive, not retyped.
+  const directive = fs.readFileSync(path.resolve(here, '..', '..', 'state', 'directives', '2026-10-14-governance-smaller-reads-ignore-cut-state-rotation-decisions-pending.md'), 'utf8');
+  const source = directive.split('\n').find((l) => l.includes("session-resume.mjs's reading order, item 3:"));
+  const words = source.slice(source.indexOf('"') + 1, source.lastIndexOf('"'));
+  assert.ok(words.startsWith('the open entries and recent rulings; search older rulings by date, round or entry'), words);
+  assert.equal(lines[3], `3. DECISIONS-PENDING.md — ${words}`);
+  assert.equal(lines[3].includes('RULED blocks (newest first)'), false, 'the old item 3 is gone');
+  assert.equal(/state\/directives\/|PRECEDENTS\.md/.test(lines[3]), false, 'it names neither, so the first-occurrence search above still finds it');
+});

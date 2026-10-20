@@ -108,6 +108,7 @@ import { execFileSync } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { buildTrackedIndex, extractCitations, resolveRef, classifyPath, topDirsOf, CODE_EXTS } from './verify-cites.mjs';
 import { claimFiles } from './verify-test-claims.mjs';
+import { rulingSetPaths, LIVE_RULINGS } from './rulingSet.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 export const REPO_ROOT = path.resolve(here, '..', '..');
@@ -394,10 +395,17 @@ function defaultScanFiles(root, index) {
 // the preregistration/ADR set PLUS these four named files/globs, PLUS every `.claude/agents/*.md`
 // (the custodian's dispatch brief, 2026-09-17, this round's item (d)). Hash references are checked here ONLY -- no quote
 // passage in any of these extra files is extracted or verified; they never join the quote haystack.
-const EXTRA_HASH_SCAN_FILES = ['DECISIONS-PENDING.md', 'AI_DEVELOPMENT.md', 'docs/PREREGISTRATION-TEMPLATE.md'];
+const EXTRA_HASH_SCAN_FILES = ['AI_DEVELOPMENT.md', 'docs/PREREGISTRATION-TEMPLATE.md'];
+
+// The ruling set's tracked files (rulingSet.mjs), absolute: the live DECISIONS-PENDING.md, then its archives.
+// The whole set is hash-scanned, so a moved ruling's hash references are still checked.
+function rulingFiles(root, index) {
+  return rulingSetPaths(index.files).filter((rel) => index.set.has(rel)).map((rel) => path.join(root, rel));
+}
 
 function defaultHashScanFiles(root, index) {
   const files = new Set(defaultScanFiles(root, index));
+  for (const abs of rulingFiles(root, index)) files.add(abs);
   for (const rel of EXTRA_HASH_SCAN_FILES) {
     if (index.set.has(rel)) files.add(path.join(root, rel));
   }
@@ -896,6 +904,9 @@ export function runVerifyQuotes({ repoRoot, files } = {}) {
         const named = (exact.length ? exact : all).map((f) => path.join(root, f));
         if (named.length === 1) {
           if (norm(named[0]).includes(p.normalized)) continue; // PASS: found in the one named file
+          // The named file is the live ruling file: a passage that moved to an archive passes when ONE file of the
+          // ruling set holds it, each file normalized on its own (nothing is joined across files).
+          if (named[0] === path.join(root, LIVE_RULINGS) && rulingFiles(root, index).some((abs) => norm(abs).includes(p.normalized))) continue;
           const known = matchBaseline(baselineEntries, usedBaseline, relPath, p.startLine, p.normalized);
           if (known) {
             baselined.push({ relPath, line: p.startLine, snippet, reason: known.reason });

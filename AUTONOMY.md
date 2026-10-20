@@ -638,3 +638,29 @@ Items 1 to 4 are the items numbered (00), (0), (5) and (14) of the continuity bl
 ```
 
 The other two of the six, (2) and (18), are generalised rulings and moved to `PRECEDENTS.md` as P-035 and P-036.
+
+## §34. DECISIONS-PENDING.md holds the open entries and recent rulings; the resolved part rotates into state/cut-archive/ (the human, 2026-10-14; that directive's piece C and the addendum's C; appended after §33 so that no line a record cites above it moves)
+
+### Part A. The rule
+
+The rule is the human's, in piece C (`state/directives/2026-10-14-governance-smaller-reads-ignore-cut-state-rotation-decisions-pending.md:42-63 @ 76d038d554913faae4165f6f1a20fd6c7175486a sha256:5701661f4a658b561a142face07f7d201c8fc0e954dbed81e7102106084ee98b`) and the addendum's C of `state/directives/2026-10-14-governance-smaller-reads-ignore-cut-state-rotation-decisions-pending.md`. C.1 to C.4 are referenced and not reproduced. C.5 to C.7 are byte-copied by script from `state/directives/2026-10-14-governance-smaller-reads-ignore-cut-state-rotation-decisions-pending.md:59-63 @ 76d038d554913faae4165f6f1a20fd6c7175486a sha256:af422a48e87f938b85c9d1a8c27a68c3fd2c5dcc00749864d21279133a8b8c24`, and the addendum's C from `state/directives/2026-10-14-governance-smaller-reads-ignore-cut-state-rotation-decisions-pending.md:69 @ 76d038d554913faae4165f6f1a20fd6c7175486a sha256:3f8034a7e418bafe8457656afc9ccf44d54b17315c4ac1c6f7d511fe02b77722`:
+
+```text
+   5. Further rotations:
+      - New RULED blocks keep landing in the live file. Its resolved part rotates on the first of each month, and sooner if the file passes 150 KB.
+      - If the open entries alone keep it over 150 KB, do not rotate again; tell me instead.
+   6. session-resume.mjs's reading order, item 3: "the open entries and recent rulings; search older rulings by date, round or entry in DECISIONS-PENDING.md and state/cut-archive/DECISIONS-PENDING-*.md, never read them whole."
+   7. About 116 unpinned DECISIONS-PENDING.md:<line> citations will point into the new short file, sometimes at unrelated text. verify-cites treats them as advisory, so CI stays green, and the notice in the new file is their way back. They sit in append-only records, so they stay as they are. From now on, cite a ruling by its date and round, or pin the line.
+```
+
+```text
+C: before merging, show that verify-cites treats an unpinned line past the new file's end as advisory. Monthly rotations use C.1's procedure: whole-file move, open entries copied with their archive line.
+```
+
+### Part B. The custodian's instantiation (not a quotation)
+
+- **(i) The ruling set.** `scripts/plan/rulingSet.mjs` lists it through git: the live `DECISIONS-PENDING.md`, then the tracked `state/cut-archive/DECISIONS-PENDING-*.md` files in ascending path order. A git failure throws and never narrows the set. A record is resolved inside one file of the set at a time, never across two. Three readers use it as the directive names them: `verdictCiteExists` in `scripts/plan/verify.mjs`, `loadDecisionsPending` in `scripts/plan/verify-test-claims.mjs`, and the hash-scan file list in `scripts/plan/verify-quotes.mjs`. A fourth, found by the form's probe and built under its OPEN-2 (A), is the same file's check of a quote passage introduced by a cite of the live file.
+- **(ii) What an open entry is.** Under `## Pending`, a RULED, DIRECTIVE, FELT VERDICTS or CLOSED block is archived, and so is a numbered entry whose head opens with a bracketed RULED, RESOLVED or APPLIED marker (`<n>. **[RULED`, `**[RESOLVED`, `**[APPLIED`) or that the human strikes (`--archive-entries`). Every other numbered entry stays. When an open entry is ruled, its head gains the marker `[RULED <date> — question round <n>; see the RULED block at the top; recorded as filed:]`, as entries 119 to 136 carry it, so that the next rotation archives it.
+- **(iii) The session-start step.** After `rotate-cut-state.mjs`, with the same lease and fetch, the custodian runs `node scripts/plan/rotate-decisions-pending.mjs --dry-run`. When it is due, every obligation row it lists is resolved first (an obligation is owed work not yet done; a standing rule inside an archived ruling stays binding where it is filed): represented in a PLAN node that is not done or in the continuity block, done, no obligation, or not represented, and no rotation runs while a row stands not represented. Then the script runs without `--dry-run`, `verify-cites`, `verify-quotes`, `verify-test-claims` and `verify --offline` are run on the staged tree and on HEAD and must agree in exit code and gated findings, and the custodian commits the rotation and pushes. Exit 3 means the open entries alone are over 153,600 bytes: nothing is rotated and the human is told. No hook runs the script.
+- **(iv) Line references.** One written before a rotation resolves through the notice at the head of the new file. A ruling is cited by its date and round, or the line is pinned (`path:line @ <main commit> sha256:<hex>`). An unpinned line reference into `DECISIONS-PENDING.md` past the new file's end is advisory in `verify-cites`, from any citing folder.
+- **(v) Section 0.** Its item 3 is read as item 3 of `READING_ORDER` in `scripts/hooks/session-resume.mjs`. §0 is not edited.
