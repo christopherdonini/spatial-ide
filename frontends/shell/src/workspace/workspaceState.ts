@@ -28,6 +28,7 @@ import type { AuthoritativeBbox } from "../canvas/viewportBbox";
 import type { Filter } from "../skp/types";
 import { DEFAULT_STYLE_STATE } from "../style/document";
 import type { StyleState } from "../style/document";
+import type { FilterClause } from "./filterClauses";
 import type { SelectionMembers, SelectionMode, SelectionNotice } from "./selection";
 import { applyViewTransition, endViewGeneration } from "./viewTransitions";
 import type { ViewTransition } from "./viewTransitions";
@@ -77,6 +78,11 @@ export interface ViewState {
   readonly selectionNotice?: SelectionNotice;
   readonly inspected?: InspectedFeature | null;
   readonly pinned?: boolean;
+  /** The filter clauses (SHELL-MIGRATION-MILESTONE-3-PREREGISTRATION.md section 2.5, Amendment 3 item 7), read through `viewClauses`: an absent member is none.
+   * `filter` always equals `combineClauses` of them. */
+  readonly clauses?: readonly FilterClause[];
+  /** The next `clause-<n>` to mint for this view, read through `viewNextClauseNumber`; an absent member is 1. A rebind keeps it, so an id is never minted twice in a session. */
+  readonly clauseCounter?: number;
 }
 
 export interface ResourceEntry {
@@ -139,9 +145,11 @@ function admit(state: WorkspaceState, admitted: Admitted): WorkspaceState {
     : { ...target, consumers: [...target.consumers, viewId] };
   // A rebind ends the old generation: the selection and the inspected feature name nothing in the new one (section 2.3).
   const bound = view.resource === key ? view : endViewGeneration(view, "reopened");
+  // The filter resets and with it the clauses (milestone 3 section 2.5).
+  const { clauses: _clauses, ...rebound } = bound;
   return {
     ...state,
-    views: { ...state.views, [viewId]: { ...bound, resource: key, filter: null } },
+    views: { ...state.views, [viewId]: { ...rebound, resource: key, filter: null } },
     resources,
   };
 }

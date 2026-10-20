@@ -537,3 +537,14 @@ Nothing above is edited.
 7. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 8 — F0, by the human's word (class 5)
+
+*Written by the custodian on the human's ruling. References only: `state/directives/2026-10-20-234-merged-232-f0-go-l534-grep-by-the-human-s5d-open-1-to-6-trademark-ruling-stands.md`, items 1 and 2.*
+
+1. **F0 begins after the commit that adds this amendment.** Main takes no commit until the click; RULED blocks, directive files and ledger entries wait in a scratch file outside the repository with their receive times (§2 item 12).
+2. **On the branch:** this message's RULED block gets its row, and the 2026-10-21 block's item 4 clause reads done (PR #234 merged); the architect's MR11b comment words (Amendment 6 item 2); S9, main merged in; S10, the rotation run and committed; D1-b, S9 against S10, with verify-cites' extra file accepted (Amendment 7 item 5); E-V. The kept list is the 16 the human's rule leaves (Amendment 7).
+3. **L534 (item 2):** the human runs the grep in the custodian's terminal; its result is filed after the click, with the name replaced.
+4. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.

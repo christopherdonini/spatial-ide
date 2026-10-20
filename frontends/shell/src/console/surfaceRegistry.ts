@@ -173,7 +173,9 @@ const CLASS_B_ROWS = [
  * `surfaceCompleteness.test.ts`'s own comment on why that makes this table a review-maintained
  * one, which is why NEXT-CUT.md Part J's J3 walkthrough item exists. Style edits left this table in
  * B2 piece 1b: each committed edit is the class-A `record_step` row above. The one row that stays is
- * `style.resetToDefault`, for a Reset that changes nothing: it records no step, so no class-A row shows it. `as const satisfies` for
+ * `style.resetToDefault`, for a Reset that changes nothing: it records no step, so no class-A row shows it. Milestone 3 adds `filter.clauseNotSent`
+ * (SHELL-MIGRATION-MILESTONE-3-PREREGISTRATION.md Amendment 3 item 4(b)), for a card or bar change the shell refuses under OPEN-3 (A) and so does not send;
+ * a change that is sent shows the class-A rows an Apply shows. `as const satisfies` for
  * the same literal-preserving reason `CLASS_B_ROWS` above uses it. */
 const CLASS_C_ROWS = [
   {
@@ -190,6 +192,13 @@ const CLASS_C_ROWS = [
     statement:
       "[P6 placeholder] no API equivalent exists -- Reset to default found the style already at the default, so " +
       "nothing changed and no step was sent to the session history.",
+    owner: 'docs/03 §"The action console"',
+  },
+  {
+    class: "C",
+    action: "filter.clauseNotSent",
+    statement:
+      "[P6 placeholder] no API equivalent exists -- the app did not send this filter change, because a condition that is not one of the simple forms can only be used on its own; nothing reached the kernel and the filter cards are unchanged.",
     owner: 'docs/03 §"The action console"',
   },
   {

@@ -5,10 +5,14 @@ import { describe, expect, it } from "vitest";
 
 import { FILTER_DIALECT_DUCKDB_EXPR_0 } from "../skp/types";
 import { DEFAULT_STYLE_STATE, type StyleState } from "../style/document";
+import { combineClauses, proposeClauseChange } from "./filterClauses";
+import type { ClauseId, ClauseRequest } from "./filterClauses";
 import {
   applyViewTransition,
   styleTransitions,
+  viewClauses,
   viewInspected,
+  viewNextClauseNumber,
   viewPinned,
   viewSelectionMode,
   viewTool,
@@ -50,10 +54,14 @@ describe("UA4: transitions are pure and typed, and a style edit is one transitio
   // Expected failure: the sample for `inspect.pin` is not applied. (The table's completeness is tsc's.)
   // OBSERVED AT feaa43d329e6d900b6ae672547569f1b591e3052: FAILED -- "the union is exactly section 2.4's nine names, and every one of them is applied":
   //   AssertionError: inspect.pin is applied: expected undefined to be defined. Reverted after observing.
-  it("the union is exactly section 2.4's nine names, and every one of them is applied", () => {
+  // The union gained `filter.clauses.set` (SHELL-MIGRATION-MILESTONE-3-PREREGISTRATION.md Amendment 3 item 7, UC7's declared edit); the mutation above (delete the `inspect.pin` case) is observed again beside the first:
+  // OBSERVED AGAIN AT 9a9d1849f3dead11891642b95fe4a4ff0bffc76c: FAILED -- "the union is exactly section 2.4's nine names and milestone 3's filter.clauses.set, and every one of them is applied":
+  //   AssertionError: inspect.pin is applied: expected undefined to be defined. Reverted after observing.
+  it("the union is exactly section 2.4's nine names and milestone 3's filter.clauses.set, and every one of them is applied", () => {
     // `satisfies` over the union's own names is what makes this table complete: tsc fails on a missing or an extra name.
     const samples = {
       "filter.apply": { action: "filter.apply", params: { filter: null } },
+      "filter.clauses.set": { action: "filter.clauses.set", params: { clauses: [], step: { kind: "remove", clause: "clause-1" } } },
       "style.set": { action: "style.set", params: { property: "fillOpacity", value: 0.25 } },
       "tool.set": { action: "tool.set", params: { tool: "select" } },
       "mode.set": { action: "mode.set", params: { mode: "replace" } },
@@ -64,7 +72,7 @@ describe("UA4: transitions are pure and typed, and a style edit is one transitio
       "inspect.pin": { action: "inspect.pin", params: { pinned: true } },
     } satisfies { [A in ViewTransition["action"]]: Extract<ViewTransition, { action: A }> };
     expect(Object.keys(samples).sort()).toEqual([
-      "filter.apply", "inspect.pin", "inspect.set", "mode.set", "selection.apply",
+      "filter.apply", "filter.clauses.set", "inspect.pin", "inspect.set", "mode.set", "selection.apply",
       "selection.clear", "selection.end", "style.set", "tool.set",
     ]);
     for (const transition of Object.values(samples)) {
@@ -127,5 +135,67 @@ describe("UB-TI2: inspection and its pin", () => {
     expect(viewInspected(cleared)).toBeNull();
     expect(viewPinned(cleared)).toBe(false);
     expect(applyViewTransition(cleared, { action: "inspect.set", params: null }), "clearing nothing").toBe(cleared);
+  });
+});
+
+/** A seeded generator (mulberry32), so a failing sequence replays. */
+function seeded(seed: number): () => number {
+  let a = seed;
+  return () => {
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+const TEXTS = ["a = 1", "\"zone\" = 'r'", " b IS NULL ", "c IN (1, 2)", "a = 1 OR b = 2", "d LIKE '%)%'", "x"];
+const filterOfText = (predicate: string) => ({ predicate, dialect: FILTER_DIALECT_DUCKDB_EXPR_0 });
+
+// RECORDED MUTATION for "UC7": in `applyViewTransition`'s `filter.clauses.set` case (viewTransitions.ts) leave `filter` unchanged for a `setEnabled` step (`filter: transition.params.step.kind === "setEnabled" ? view.filter : combineClauses(clauses)`). Expected failure: the invariant.
+// OBSERVED AT 9a9d1849f3dead11891642b95fe4a4ff0bffc76c: FAILED -- "UC7: filter.apply sets one clause or none, filter.clauses.set carries the step, and view.filter equals combineClauses(clauses) after every transition of 2,000 seeded sequences":
+//   AssertionError: seed 1, step 1: filter is the combination of the clauses: expected { predicate: 'a = 1', …(1) } to deeply equal null. Reverted after observing.
+describe("UC7: clause transitions are pure, and the view's filter is the combination of its clauses after every transition", () => {
+  it("UC7: filter.apply sets one clause or none, filter.clauses.set carries the step, and view.filter equals combineClauses(clauses) after every transition of 2,000 seeded sequences", () => {
+    const frozen = deepFreeze(structuredClone(view));
+    const one = applyViewTransition(frozen, { action: "filter.apply", params: { filter: filterOfText(" a = 1 ") } });
+    expect(viewClauses(one), "an Apply holds its predicate as one new enabled card").toEqual([{ id: "clause-1", text: " a = 1 ", enabled: true }]);
+    expect(viewClauses(frozen), "the input is not written").toEqual([]);
+    expect(viewClauses(applyViewTransition(one, { action: "filter.apply", params: { filter: null } })), "a Clear leaves none").toEqual([]);
+    const second = applyViewTransition(one, { action: "filter.apply", params: { filter: filterOfText("b = 2") } });
+    expect(viewClauses(second).map((c) => c.id), "an Apply replaces the cards with one, under a new id").toEqual(["clause-2"]);
+    const set = applyViewTransition(second, { action: "filter.clauses.set", params: { clauses: [{ id: "clause-7", text: "c = 3", enabled: true }], step: { kind: "add", clause: "clause-7" } } });
+    expect([set.filter?.predicate, viewNextClauseNumber(set)], "the counter passes the highest id held").toEqual(["c = 3", 8]);
+
+    let sequences = 0;
+    for (let seed = 1; seed <= 2000; seed += 1) {
+      const next = seeded(seed);
+      const pick = <T,>(items: readonly T[]): T => items[Math.floor(next() * items.length)];
+      let current: ViewState = deepFreeze(structuredClone(view));
+      for (let step = 0; step < 8; step += 1) {
+        const roll = next();
+        let transition: ViewTransition | null = null;
+        if (roll < 0.15) transition = { action: "filter.apply", params: { filter: next() < 0.3 ? null : filterOfText(pick(TEXTS)) } };
+        else {
+          const held = viewClauses(current);
+          let n = viewNextClauseNumber(current);
+          const mintId = (): ClauseId => `clause-${n++}`;
+          const request: ClauseRequest =
+            held.length === 0 || roll < 0.45
+              ? { kind: "add", text: pick(TEXTS) }
+              : roll < 0.8
+                ? { kind: "setEnabled", clause: pick(held).id, enabled: next() < 0.5 }
+                : { kind: "remove", clause: pick(held).id };
+          const proposal = proposeClauseChange(held, request, mintId);
+          if (proposal.kind === "propose") transition = { action: "filter.clauses.set", params: { clauses: proposal.clauses, step: proposal.step } };
+        }
+        if (transition === null) continue;
+        current = deepFreeze(applyViewTransition(current, transition));
+        expect(current.filter, `seed ${seed}, step ${step}: filter is the combination of the clauses`).toEqual(combineClauses(viewClauses(current)));
+        expect(new Set(viewClauses(current).map((c) => c.id)).size, `seed ${seed}, step ${step}: ids are unique`).toBe(viewClauses(current).length);
+      }
+      sequences += 1;
+    }
+    expect(sequences).toBe(2000);
   });
 });

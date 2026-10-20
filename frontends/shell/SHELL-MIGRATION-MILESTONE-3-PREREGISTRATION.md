@@ -982,3 +982,13 @@ Nothing above is edited.
 5. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 13 — closing record of PR B: PR #234 merged; the node done (class 1)
+
+*References only: `state/directives/2026-10-20-234-merged-232-f0-go-l534-grep-by-the-human-s5d-open-1-to-6-trademark-ruling-stands.md`; PR #234.*
+
+1. **PR #234 merged** at 2026-10-20T16:09:05Z, merge commit 45a5a5cdb0b119ff22236ca981ccdf07d428e68f, head 03b3f7fb0cf5c6469a4a767a5577cd0faf7bf556, a two-parent merge, so the branch's OBSERVED AT commits are reachable from main. PR A, #233, merged before it (Amendment 8).
+2. **The node is done.** Part AB joins operator-sitting-queue (Amendment 12 item 4); its result log stays blank for the human's sitting.
+3. **What follows:** publish-approval-ttl-ten-minutes, behind this node, is ready; S5d (a)'s README line may now be written.
+
+Nothing above is edited.

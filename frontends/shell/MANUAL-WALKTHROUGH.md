@@ -1923,3 +1923,46 @@ Fill in after running the rows above (the B2 piece 1b Part AA).
 - **AA2 (one record_step per release or close; felt):**
 - **AA3 (the folder, the header, the steps in order):**
 - **AA4 (the run's folder gone; AA3's folder still there):**
+
+## Part AB — the command bar and the filter cards at 1366 × 768: Ctrl+K, slash commands, `/filter` with field completion, and cards you switch on and off (shell-migration-milestone-3)
+
+This Part is the Operator gate of `frontends/shell/SHELL-MIGRATION-MILESTONE-3-PREREGISTRATION.md` §9 (its rows Y0 to Y11 are this Part's AB0 to AB11, per its Amendment 3 item 10; AB4a is the felt row Amendment 1 item 3 adds after AB4; the scale row Y12 is not built, Amendment 1 item 8), run only on a build after PR B's merge, at 1366 x 768, with a blank result log. It is the human's felt verdict on O-07 steps 2 and 3, and the human's observation of the form's H2 (does a real Ctrl+K reach the page in WebView2; AB1) and H4 (do keys typed in the bar stay out of the map; AB7). It is discharged only once it has been run and its result log filled in. **No duration appears in any row or expected outcome** (`docs/08_Testing.md`; ADR-018). **If anything deviates:** stop, record the exact step, and report it, as in every earlier Part. *Draft for the human's sight (the form's §9 and item 2e of `state/directives/2026-10-11-direction-after-status-review.md`): the step lines follow the form's §2.10 rows as its Amendments 1 and 3 change them; the Expected outcome cells and the sentences around the table are drafts, not the human's wording.*
+
+**Before AB1:** fixture `filter-zoned.parquet` (Part E's table), no new fixture; the window at 1366 x 768 (Part U's U1); the app started with no dataset open, so that AB1 opens one.
+
+| # | Step | Expected outcome |
+|---|---|---|
+| AB0 | Read the form's §10, the last amendment first. | Record the number of the last amendment you read. |
+| AB1 | O-07 step 2; **H2.** With real keys, press Ctrl+K, type `/open`, press Enter, then pick `filter-zoned.parquet`. | Ctrl+K puts the focus in the command bar in the top bar, and the browser does not take it. `/open` opens the file picker once, as the Open button does, and the picked file opens. **This row is the human's observation of H2:** if Ctrl+K does nothing with real keys, stop and record what happened. |
+| AB2 | Press Ctrl+K, type `?`, and read the help. | The help lists every command with its word and shortcut. **Felt:** are the prefixes (`/` for a command, `?` for help, plain words for search) clear without being told? |
+| AB3 | O-07 step 3. Press Ctrl+K, type `/filter @zo`, press Tab, type ` = 'residential'`, press Enter. Then type `/filter "zone" IS NOT NULL` and press Enter. | After the `@zo`, the list holds the file's field names that contain `zo`, each with its type. Tab puts `"zone"` in, double-quoted, and the `@` is gone. Enter adds a card, the bar empties and keeps the focus, and the map shows the filtered data. The second Enter adds a second card, and the Filter section's Applied line reads the two joined with AND, each inside brackets. **Felt:** the moment between Tab and Enter; did you know the two cards combine with AND; do they read as one filter on the layer; any trouble with the quotes? |
+| AB4 | Switch one card off, and on again. | The switch shows which cards are on. The Applied line follows: with a card off it is the other card's text alone. **Felt:** is it clear what is on? |
+| AB4a | Amendment 1 item 3, OPEN-2. Switch a card off and on again, and watch the map. | Each applied change re-fits the camera, as an Apply does. **Felt:** does the map re-fitting each time help or disorient? |
+| AB5 | With one feature selected (Part W), switch a card off. | The selected count in the Feature tab is unchanged. |
+| AB6 | OPEN-3 (A). With a card on, press Ctrl+K and add `/filter "zone" = 'residential' OR "zone" IS NULL`. | The bar shows a line that the shell did not apply it and why, nothing is sent, the cards and the Applied line do not change, and the Console in the Activity region (Ctrl+J) shows a `filter.clauseNotSent` row. Switch the other card off and add it again: it is added, with a mark that it is used on its own. |
+| AB7 | H4. In the bar, press Tab, then Shift+Tab, then Escape; then type, and press the arrow keys. | Shift+Tab leaves the bar in one press; Tab leaves it in one press, or in two when the first completes the only candidate or the chosen option. Escape closes an open list, then returns the focus to where it was. Arrow keys in the bar move the list or the caret and never move the map. **This row is the human's observation of H4.** |
+| AB8 | OPEN-5 (A). Type `/export` in the bar and press Enter. | The Inspector's Layer tab shows, the Export section opens, and the focus is on the Export button. Nothing is exported and no approval prompt appears. |
+| AB9 | OPEN-2 (A). Type a predicate in the Filter section's own input and press Apply; then press Clear. | The cards become that one card, holding the text as you typed it. Clear removes every card. **Felt:** was that what you expected? |
+| AB10 | With the focus in the bar and text in it, press Ctrl+B, Ctrl+I and Ctrl+J. | Each toggles its region, and the bar keeps its text. |
+| AB11 | The P6 sight of every new string of this milestone, and of the sentences OPEN-9 drafts; **read the last amendment first.** The bar: its name and its placeholder text; the list's mark for a command that is not available; the bar's lines for an empty bar, a list to choose from, an unknown command, nothing matching, a command that is not available, a file already being opened, an empty condition, a change still being applied, and Enter on a field name; the field list's overflow line. The commands: the labels Command bar, Open dataset, Export and Add filter, and the words /layers, /inspector, /activity, /zoom-to-layer, /navigate, /select, /zoom-to-selection, /clear-selection, /open, /export and /filter. The cards: the statement, the switch and Remove labels, the mark on an expression, and the lead lines for a refusal, a change not applied, a new condition that can only be used on its own, and a card that is in the way. The Console statement of filter.clauseNotSent. | Record the wording you approve or replace. Every one starts with [P6 placeholder] except the command labels and words, and stays a placeholder until then. |
+
+## Result log
+
+Fill in after running the rows above (the milestone-3 Part AB).
+
+- **Date run:**
+- **Run by:**
+- **Build/commit:**
+- **Last amendment read (its number):**
+- **AB1 (also H2):**
+- **AB2 (the prefixes; felt):**
+- **AB3 (the moment between Tab and Enter; AND; one filter on the layer; the quotes):**
+- **AB4 (is it clear what is on):**
+- **AB4a (the re-fit helps or disorients):**
+- **AB5:**
+- **AB6:**
+- **AB7 (also H4):**
+- **AB8:**
+- **AB9 (expected or not):**
+- **AB10:**
+- **AB11:**

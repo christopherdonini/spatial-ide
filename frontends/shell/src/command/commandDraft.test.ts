@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 
 import { ACTIONS } from "../layout/actionRegistry";
 import type { ActionEntry } from "../layout/actionRegistry";
-import { commandBarKey, completionOf, resolveDraft } from "./commandDraft";
+import { commandBarKey, completionOf, resolveDraft, typeDraft } from "./commandDraft";
 import type { BarKey, BarPos, BarState, Draft } from "./commandDraft";
 
 /**
@@ -14,7 +14,7 @@ import type { BarKey, BarPos, BarState, Draft } from "./commandDraft";
  */
 
 const always = () => true;
-const resolve = (text: string, available: (id: ActionEntry["id"]) => boolean = always): Draft => resolveDraft(text, ACTIONS, available);
+const resolve = (text: string, available: (id: ActionEntry["id"]) => boolean = always, caret?: number): Draft => resolveDraft(text, ACTIONS, available, caret);
 const idsOf = (draft: Draft): string[] => ("candidates" in draft ? draft.candidates.map((c) => c.entry.id) : []);
 const WITH_WORD = ACTIONS.filter((entry) => entry.command !== null);
 
@@ -25,7 +25,7 @@ describe("UC1: resolveDraft", () => {
   it("UC1: an exact /word runs, a prefix lists by word, plain text matches label or word in registry order, ? gives help, and command.focus is out of search", () => {
     expect(resolve("")).toEqual({ kind: "empty" });
     expect(resolve("  ")).toEqual({ kind: "empty" });
-    for (const entry of WITH_WORD) expect(resolve(`/${entry.command}`), entry.id).toEqual({ kind: "run", id: entry.id, available: true });
+    for (const entry of WITH_WORD.filter((e) => e.takes === "nothing")) expect(resolve(`/${entry.command}`), entry.id).toEqual({ kind: "run", id: entry.id, available: true });
     expect(resolve("/LAYERS")).toEqual({ kind: "run", id: "layout.toggleLayers", available: true });
     expect(resolve("/layers", (id) => id !== "layout.toggleLayers")).toEqual({ kind: "run", id: "layout.toggleLayers", available: false });
 
@@ -57,7 +57,28 @@ describe("UC1: resolveDraft", () => {
   });
 });
 
-const KEYS: BarKey[] = ["Tab", "Enter", "Escape", "ArrowDown", "ArrowUp", "a"].flatMap((key) => [false, true].map((shiftKey) => ({ key, shiftKey, isComposing: false })));
+// RECORDED MUTATION for "UC1 (/filter, PR B's half of the row)": in `resolveDraft` (commandDraft.ts) trim the condition it keeps (`text: split[3].trim()`). Expected failure: the byte-for-byte case.
+// OBSERVED AT ca98a85d8dc2d86d4751fe90d6b7e0a166226e84: FAILED -- "UC1: /filter keeps the condition after its word byte for byte, a whitespace-only condition is filter-empty, a word that takes nothing is not given a condition, and the @ trigger is read at the caret":
+//   AssertionError: the first run of whitespace goes; the rest is kept: expected { kind: 'filter', …(4) } to deeply equal { kind: 'filter', …(4) }. Reverted after observing.
+describe("UC1 (PR B): /filter", () => {
+  it("UC1: /filter keeps the condition after its word byte for byte, a whitespace-only condition is filter-empty, a word that takes nothing is not given a condition, and the @ trigger is read at the caret", () => {
+    expect(idsOf(resolve("/filter")), "the word alone lists the entry that takes a condition").toEqual(["filter.addClause"]);
+    expect(resolve("/fil")).toMatchObject({ kind: "commands", word: "fil" });
+    const kept = `"zone"  =   'a  b' \t `;
+    expect(resolve(`/filter   ${kept}`), "the first run of whitespace goes; the rest is kept").toEqual({ kind: "filter", id: "filter.addClause", available: true, text: kept, field: null });
+    expect(resolve("/FILTER\tx")).toMatchObject({ kind: "filter", text: "x" });
+    expect(resolve("/filter a = 1", () => false)).toMatchObject({ kind: "filter", available: false });
+    expect(resolve("/filter    ")).toEqual({ kind: "unresolved", reason: "filter-empty" });
+    expect(resolve("/filter \t ")).toEqual({ kind: "unresolved", reason: "filter-empty" });
+    expect(resolve("/filt x")).toEqual({ kind: "unresolved", reason: "unknown-command" });
+    expect(resolve("/layers x"), "a word that takes nothing takes no condition").toEqual({ kind: "unresolved", reason: "unknown-command" });
+    expect(resolve("/filter @zo")).toMatchObject({ kind: "filter", text: "@zo", field: { start: 8, end: 11, partial: "zo" } });
+    expect(resolve("/filter @zone = 1", always, 11)).toMatchObject({ field: { start: 8, end: 11, partial: "zo" } });
+    expect(resolve("/filter a = 1")).toMatchObject({ field: null });
+  });
+});
+
+const KEYS: BarKey[] =["Tab", "Enter", "Escape", "ArrowDown", "ArrowUp", "a"].flatMap((key) => [false, true].map((shiftKey) => ({ key, shiftKey, isComposing: false })));
 const DRAFTS = ["", "/", "/lay", "/layers", "/zoom", "inspector", "?", "/zzz"];
 
 /** Every state the bar can be in: each draft, the list open or closed (a closed list with one candidate among them), and no option active or each option active. */
@@ -124,5 +145,23 @@ describe("UC2: commandBarKey", () => {
     expect(commandBarKey(after(completed.pos, closedOne), tab).preventDefault, "and the next Tab leaves").toBe(false);
     const closedMany = states.find((state) => state.draft === "/zoom" && !state.open && state.active === null)!;
     expect(commandBarKey(closedMany, tab).preventDefault, "a closed list with several candidates and none active: Tab leaves").toBe(false);
+  });
+});
+
+// RECORDED MUTATION for "UC2 (ArrowDown after a completion, SHELL-MIGRATION-MILESTONE-3-PREREGISTRATION.md Amendment 7 item 5)": in `commandBarKey` (commandDraft.ts) delete `|| state.completed` from the ArrowDown case's guard. Expected failure: ArrowDown reopens the list after a completion.
+// OBSERVED AT ca98a85d8dc2d86d4751fe90d6b7e0a166226e84: FAILED -- "UC2: after a completion ArrowDown and ArrowUp do not reopen the list, and the next typed character lets them open it again":
+//   AssertionError: ArrowDown after a completion: /: expected [ true, +0, 'none', true ] to deeply equal [ false, null, 'none', false ]. Reverted after observing.
+describe("UC2 (PR B): after a completion the list stays closed until the next typed character", () => {
+  it("UC2: after a completion ArrowDown and ArrowUp do not reopen the list, and the next typed character lets them open it again", () => {
+    const completed = allStates().filter((state) => state.completions.length > 0).map((state): BarState => ({ ...state, open: false, active: null, completed: true }));
+    expect(completed.length, "the grid is not empty").toBeGreaterThan(5);
+    for (const state of completed) {
+      for (const key of ["ArrowDown", "ArrowUp"]) {
+        const step = commandBarKey(state, { key, shiftKey: false, isComposing: false });
+        expect([step.pos.open, step.pos.active, step.effect.kind, step.preventDefault], `${key} after a completion: ${state.draft}`).toEqual([false, null, "none", false]);
+      }
+    }
+    const typed: BarState = { ...typeDraft("/lay"), completions: ["/layers"] };
+    expect(commandBarKey(typed, { key: "ArrowDown", shiftKey: false, isComposing: false }).pos, "typing clears completed, so ArrowDown opens the list").toMatchObject({ open: true, active: 0 });
   });
 });
