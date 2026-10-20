@@ -506,3 +506,16 @@ S0 settles OPEN-2's condition and the exposure question.
 9. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 2 — built to G0: S1 to S5, S4 not built; M at M0; S0 and the dry run; the differences (class 3); the script's overrun (class 8); written after the results were seen
+
+*Written by the custodian after the worker's report was seen. References and hashes only: `state/consults/2026-10-20-governance-plan-summaries-archive-g0-worker-report.md`.*
+
+1. **Built** on `cut/plan-summaries-archive` from M0: S1 d93607315ede2cc9c22a18a102d54db89337e05d with its mutation record 0d5cdbd44f86e1c7f023f3781e4071320be15e22; S2 e11f7275a4c0a2b71ea2a5a46c0aca114e73e040 with aaf6787a24aa962b06e268964ecc5b831e17816d; S3 a73689f3cc6245d9c3e14cd588ca0f9eb4ffebec with f4a520c0a3e9105e8d4b3ce89b2e60ac470e1735; S5 2d60ac164e7a65e29e5e55a27eaa202062d31b83. S4 is not built: S0 shows no difference in verify-quotes, so OPEN-2 (A)'s condition is not met.
+2. **M at M0** (§2 item 7), each figure twice and byte-identical, in the report: M-1's routine total 81,398 bytes; M-2's corpus 1,986 files and 36,290,933 bytes; M-3's PLAN.yaml 695,917 bytes by `git cat-file -s`. The script's digest equals A's S1. Ripgrep's first line names rev 575938147b where C's closing record named de4bc695b7; the version is the same, 14.1.1.
+3. **S0 and the G0 dry run** (the report): the seven checks identical before and after a hand move; 153 candidates of 195 done nodes at M0; 405,897 moved bytes. The dry run ran in a throwaway clone, because main's PLAN.yaml has moved since M0 and the script's blob check refuses in the worktree; S9 merges main in and runs it again. The sheet, `state/drafts/2026-10-20-plan-summaries-d-obligations-g0.md` (sha256 f2f17760ce35134b71ce720ced20789d6ac94a24b6717614ddd8243a08a89af1), has 153 rows: 87 with no marker in the current-state segment, 28 with markers and a mechanical home, and 38 with markers and none, which stay by default. It goes to the human at G0 (OPEN-3).
+4. **Differences from the form (class 3), as the report's items 1 to 10:** a record commit after each code commit; MR9 caught at both parse sites; verifyMove returns a list of problems; R8a's CLI half shows a locator refusal; obligationRows lands in S2; one more refusal (the PLAN.yaml on disk not HEAD's) and four imports; the AUTONOMY placeholders resolved by script to §35 and §34; the dry run in a clone; R16's positive control; the throwaway worktrees removed.
+5. **Budget (class 8; §7 not edited):** `scripts/plan/rotate-plan-summaries.mjs` is 249 lines against its 230; the whole is 653 lines over 4 files against 800 over 6.
+6. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
