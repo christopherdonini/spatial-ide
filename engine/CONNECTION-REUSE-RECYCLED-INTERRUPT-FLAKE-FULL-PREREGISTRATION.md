@@ -278,3 +278,11 @@ Nothing above is edited.
 3. **PR #238** is open from `cut/connection-reuse-recycled-interrupt-flake` at 866b35791cd037159eb0619e80eb1bec8b4851ff. Gate 1, the architect and the reviewer, is dispatched at that head.
 
 Nothing above is edited.
+
+### Amendment 3 — Amendment 1's class label (class 1); written after gate 1's findings were seen
+
+*Written by the custodian on gate 1's architect report. References only.*
+
+1. Amendment 1's heading names classes 1 and 2, and no item in it is class 2: items 3 and 5 are class 1, and item 2 records every outcome as §5 predicts. The heading's class reference reads class 1 alone. Proof: Amendment 1, items 2, 3 and 5.
+
+Nothing above is edited.
