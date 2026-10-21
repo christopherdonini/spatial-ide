@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-21T14:34:39.928Z",
-  "plan_hash": "3a5768393056f4848752d1d36754a67cf66324406903a33a19128d7e0d6c1d1a",
+  "generated_at": "2026-10-21T15:15:17.235Z",
+  "plan_hash": "ce4e822fa0c5ffd223ce2a6ae76a1d2d39a02e19fc3ec87311a510f975461573",
   "priorities_approved": true,
   "lanes": [
     {
@@ -8326,7 +8326,7 @@
       "kind": "task",
       "lane": "shell",
       "phase": "prototype",
-      "status": "in-progress",
+      "status": "done",
       "order": null,
       "depends_on": [
         "export-current-view-after-unreported-fit"
@@ -8337,16 +8337,16 @@
       },
       "gate": "frontends/shell/WALKTHROUGH-CURRENT-VIEW-ROWS-G1-N5-PREREGISTRATION.md",
       "evidence": {
-        "branch": "cut/walkthrough-current-view-rows-g1-n5"
+        "pr": 239
       },
       "budget_minutes": 30,
       "generation": 4,
       "felt_verdict": false,
       "entries": [],
-      "summary": "READY FOR THE CLICK 2026-10-21: main merged into the branch at 3a58b669; PR #239 out of draft. The done commit lands on main after the click (the form's Amendment 3: verify.mjs refuses a done node whose PR is open). Before: IN PROGRESS 2026-10-21, after governance D's click (its form, frontends/shell/WALKTHROUGH-CURRENT-VIEW-ROWS-G1-N5-PREREGISTRATION.md, Amendment 1 item 4): branch cut/walkthrough-current-view-rows-g1-n5, PR #239 (draft) at b9369654; gate 1 PASS both (gate-log 572, 573; the form's Amendment 2); budget 30 (the form's section 7). Generation 3 for the form's Amendments 1 and 2, which the freeze held out of PLAN.yaml; both gates ran after Amendment 1, at the scope it records. NEXT on the branch: main merged in, the done commit, then ready for the human's click. Before: PLACED 2026-10-21 (state/directives/2026-10-21-placements-redaction-scan-1c-milestone-4-lanes-238-clicked-d-answers-adr-024-heading-kept.md, item 4): the docs lane, 1 of 6. Before: PROPOSED 2026-10-14 by the custodian from PR #219's gate 1 reviewer DOC-4 (state/consults/gates/2026-10-14-export-current-view-after-unreported-fit-gate1-reviewer.md): rows G1 and N5 of frontends/shell/MANUAL-WALKTHROUGH.md describe Current view as disabled with no settled view, which is untrue once #219 merges; that form's section 2.6 keeps its walkthrough edit to Part Y (its Amendment 7 item 5). Words only, in the docs lane, after the merge.",
+      "summary": "DONE 2026-10-21: PR #239 merged by the human, merge commit 4350a4a9 (%cI 2026-10-21T17:04:47+02:00); head 3a58b669, the rows at b9369654, 2 lines in frontends/shell/MANUAL-WALKTHROUGH.md; gate 1 PASS both (gate-log 572, 573); the form's closing Amendment 4. Before: READY FOR THE CLICK 2026-10-21: main merged into the branch at 3a58b669; PR #239 out of draft. The done commit lands on main after the click (the form's Amendment 3: verify.mjs refuses a done node whose PR is open). Before: IN PROGRESS 2026-10-21, after governance D's click (its form, frontends/shell/WALKTHROUGH-CURRENT-VIEW-ROWS-G1-N5-PREREGISTRATION.md, Amendment 1 item 4): branch cut/walkthrough-current-view-rows-g1-n5, PR #239 (draft) at b9369654; gate 1 PASS both (gate-log 572, 573; the form's Amendment 2); budget 30 (the form's section 7). Generation 3 for the form's Amendments 1 and 2, which the freeze held out of PLAN.yaml; both gates ran after Amendment 1, at the scope it records. NEXT on the branch: main merged in, the done commit, then ready for the human's click. Before: PLACED 2026-10-21 (state/directives/2026-10-21-placements-redaction-scan-1c-milestone-4-lanes-238-clicked-d-answers-adr-024-heading-kept.md, item 4): the docs lane, 1 of 6. Before: PROPOSED 2026-10-14 by the custodian from PR #219's gate 1 reviewer DOC-4 (state/consults/gates/2026-10-14-export-current-view-after-unreported-fit-gate1-reviewer.md): rows G1 and N5 of frontends/shell/MANUAL-WALKTHROUGH.md describe Current view as disabled with no settled view, which is untrue once #219 merges; that form's section 2.6 keeps its walkthrough edit to Part Y (its Amendment 7 item 5). Words only, in the docs lane, after the merge.",
       "dates": {
         "opened": "2026-10-14",
-        "done": null
+        "done": "2026-10-21"
       }
     },
     {
@@ -9113,7 +9113,7 @@
       "kind": "task",
       "lane": "kernel-protocol",
       "phase": "prototype",
-      "status": "blocked",
+      "status": "ready",
       "order": null,
       "depends_on": [
         "walkthrough-current-view-rows-g1-n5"

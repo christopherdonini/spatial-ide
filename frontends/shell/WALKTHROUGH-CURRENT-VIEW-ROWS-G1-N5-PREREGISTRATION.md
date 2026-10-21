@@ -280,3 +280,14 @@ Nothing above is edited.
 3. **Now:** the PR is out of draft for the human's click at that head.
 
 Nothing above is edited.
+
+## Amendment 4 — closing record: PR #239 merged; the node done (class 1)
+
+*Written by the custodian after the merge. References and hashes only.*
+
+1. **Merged** by the human: merge commit 4350a4a9c5c2e1b1fc42f744b1dd87545973c4e4, `%cI` 2026-10-21T17:04:47+02:00 (two parents: main 314ca154cb35f396f69d849f39f48a32b3c3b656 and the branch head 3a58b66966a72cfd4a294c32b6390f638343b76f, Amendment 3's main merge).
+2. **The change:** `git diff --numstat` from main to the head gives 2 insertions and 2 deletions, in `frontends/shell/MANUAL-WALKTHROUGH.md` alone (§7's ceiling is 4). The rows are the worker's b936965497436c210589de0226c105b3fce7a84c.
+3. **Gates:** gate 1 PASS both (gate-log 572 and 573; Amendment 2).
+4. **PLAN:** the node is done with `{pr: 239}`, in the commit that adds this amendment, as Amendment 3 item 2 places it. E2's checks run in that commit.
+
+Nothing above is edited.

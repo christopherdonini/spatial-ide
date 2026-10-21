@@ -1,27 +1,46 @@
 {
-  "generated_at": "2026-10-21T14:34:39.804Z",
-  "plan_hash": "3a5768393056f4848752d1d36754a67cf66324406903a33a19128d7e0d6c1d1a",
+  "generated_at": "2026-10-21T15:15:17.106Z",
+  "plan_hash": "ce4e822fa0c5ffd223ce2a6ae76a1d2d39a02e19fc3ec87311a510f975461573",
   "priorities_approved": true,
   "next": {
-    "id": "verify-quotes-round-item-cites",
-    "title": "verify-quotes resolves round + item cites (the quote checker's follow-on owed by round 12 item 1's Applied text)",
-    "lane": "governance",
+    "id": "adr-036-pre-acceptance-block",
+    "title": "ADR-036's pre-acceptance block: one block for the 2026-10-09 rulings (line 71's correction, the line-oriented form, ruling 4's lineage members, ruling 9's reader, the Documentation items at lines 3 and 192) and milestone 4's OPEN-4 (A′), a match value on fillColor with the step's dependencies naming the match column and its type; then the human types the acceptance",
+    "lane": "kernel-protocol",
     "phase": "prototype",
     "status": "ready",
     "order": null,
-    "budget_minutes": 120,
+    "budget_minutes": 60,
     "needs_human": {
       "kind": "none",
       "minutes": 0
     },
     "evidence": null,
     "dates": {
-      "opened": "2026-10-20",
+      "opened": "2026-10-21",
       "done": null
     },
-    "summary": "FORM DRAFTED 2026-10-21 (state/consults/2026-10-21-verify-quotes-round-item-cites-architect-draft.md): full form under §21a (about 450 lines over 7 files, and under its OPEN-2 (B) verify-test-claims' withdrawn-test resolution changes too); a resolver shared in scripts/plan/rulingSet.mjs; 15 new tests; budget 180 proposed. OPEN-1 to OPEN-7 for the human (the forms read; sharing; attribution; the scan set; what follows if cites do not resolve; the CI path filter; itemless blocks). The architect also found a latent gap: verify-test-claims' patterns miss bold item lines (round 41 on) and plural round headers. NEXT: the human's rulings, then the form committed with its pins. Before: PLACED 2026-10-21 (state/directives/2026-10-21-placements-redaction-scan-1c-milestone-4-lanes-238-clicked-d-answers-adr-024-heading-kept.md, item 5): the governance lane after D, 1 of 3, after governance-plan-summaries-archive. Before: RULED 2026-10-21 (headed), item 2e, proposed and unplaced. It represents governance C's sheet rows L1541 and E104: entry 104's mechanism (a) follow-on; verify-test-claims.mjs resolves round + item cites for withdrawn-test rows only, and verify-quotes.mjs not at all."
+    "summary": "FORM COMMITTED 2026-10-21 (kernel/ADR-036-PRE-ACCEPTANCE-BLOCK-PREREGISTRATION.md; the architect's form, state/consults/2026-10-21-adr-036-pre-acceptance-block-architect-form.md; 51 pins and 8 expanded cites by script; the 14 passages as they stand, and the human's two passages, checked byte for byte; Amendment 1); budget 60. For the human: B1's sentence cites KNOWN-LIMITATIONS items 19 to 28, of which 20 to 22 describe other limits. NEXT: S1 after PR #239 merges, then both gates, the click, the human's acceptance. Before: RULED 2026-10-21 (state/directives/2026-10-21-adr-036-block-ruled-open-a-c-b1-words-open-w-sentence-adr-022-amendment-2-steps-file.md): the human has seen the draft. OPEN-A (c), Part A with B1, B2, B4 and B5, B1's last sentence in the human's words; OPEN-L, R, D and S (a); OPEN-W (a), with one sentence in the human's words; OPEN-O (a), its condition not met (the walkthrough rows had started), so the block follows PR #239. NEXT: the form written from the draft with the rulings, pinned and committed; the ADR edit after PR #239 merges; then the human types the acceptance. Before: PLACED 2026-10-21 by the human (state/directives/2026-10-21-d-s10-go-adr-036-route-i-redaction-open-items-1c-and-milestone-4-ruled-docs-open-1-yes.md, route (i)): a docs-lane piece ahead of 1c's code applies one pre-acceptance block to ADR-036; the architect drafts it for the human's sight; the project file is project.spatial, the .spatial check on record; when the block has merged the human types the acceptance; 1c's OPEN-1 and milestone 4's OPEN-4 are settled by it. The architect's draft: state/consults/2026-10-21-adr-036-pre-acceptance-block-architect-draft.md, with OPEN-A, L, R, W, D and S for the human; its OPEN-O, the order against the walkthrough, is moot, the walkthrough having started first. Points from 1c's revision for the human at the block: B1's window reaches every later read by path, not only the open; the canonical grammar cannot write a view coordinate below 1e-6 (item W); item C, the reader ceilings, is 1c's. The custodian put it next in the docs lane after the walkthrough."
   },
   "ready": [
+    {
+      "id": "adr-036-pre-acceptance-block",
+      "title": "ADR-036's pre-acceptance block: one block for the 2026-10-09 rulings (line 71's correction, the line-oriented form, ruling 4's lineage members, ruling 9's reader, the Documentation items at lines 3 and 192) and milestone 4's OPEN-4 (A′), a match value on fillColor with the step's dependencies naming the match column and its type; then the human types the acceptance",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "ready",
+      "order": null,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-21",
+        "done": null
+      },
+      "summary": "FORM COMMITTED 2026-10-21 (kernel/ADR-036-PRE-ACCEPTANCE-BLOCK-PREREGISTRATION.md; the architect's form, state/consults/2026-10-21-adr-036-pre-acceptance-block-architect-form.md; 51 pins and 8 expanded cites by script; the 14 passages as they stand, and the human's two passages, checked byte for byte; Amendment 1); budget 60. For the human: B1's sentence cites KNOWN-LIMITATIONS items 19 to 28, of which 20 to 22 describe other limits. NEXT: S1 after PR #239 merges, then both gates, the click, the human's acceptance. Before: RULED 2026-10-21 (state/directives/2026-10-21-adr-036-block-ruled-open-a-c-b1-words-open-w-sentence-adr-022-amendment-2-steps-file.md): the human has seen the draft. OPEN-A (c), Part A with B1, B2, B4 and B5, B1's last sentence in the human's words; OPEN-L, R, D and S (a); OPEN-W (a), with one sentence in the human's words; OPEN-O (a), its condition not met (the walkthrough rows had started), so the block follows PR #239. NEXT: the form written from the draft with the rulings, pinned and committed; the ADR edit after PR #239 merges; then the human types the acceptance. Before: PLACED 2026-10-21 by the human (state/directives/2026-10-21-d-s10-go-adr-036-route-i-redaction-open-items-1c-and-milestone-4-ruled-docs-open-1-yes.md, route (i)): a docs-lane piece ahead of 1c's code applies one pre-acceptance block to ADR-036; the architect drafts it for the human's sight; the project file is project.spatial, the .spatial check on record; when the block has merged the human types the acceptance; 1c's OPEN-1 and milestone 4's OPEN-4 are settled by it. The architect's draft: state/consults/2026-10-21-adr-036-pre-acceptance-block-architect-draft.md, with OPEN-A, L, R, W, D and S for the human; its OPEN-O, the order against the walkthrough, is moot, the walkthrough having started first. Points from 1c's revision for the human at the block: B1's window reaches every later read by path, not only the open; the canonical grammar cannot write a view coordinate below 1e-6 (item W); item C, the reader ceilings, is 1c's. The custodian put it next in the docs lane after the walkthrough."
+    },
     {
       "id": "verify-quotes-round-item-cites",
       "title": "verify-quotes resolves round + item cites (the quote checker's follow-on owed by round 12 item 1's Applied text)",
@@ -114,28 +133,6 @@
       "summary": "PLACED 2026-10-21 (state/directives/2026-10-21-placements-redaction-scan-1c-milestone-4-lanes-238-clicked-d-answers-adr-024-heading-kept.md, item 4): the docs lane, 4 of 6, after adr-020-appended-note. Before: Advisory N4 of the close-races gate-1 architect report (state/consults/gates/2026-09-27-kernel-generation-close-races-gate1-architect.md, with a skeleton): after that piece merges, three ADR-035 passages describe removed code -- Decision 3's bullet on a generation with no session reference, its sub-bullet on invalidate marking before the live lookup, and Decision 2's mint-race arm. ADR-035 is Accepted and never edited; a dated note is appended only on the human's word (the adr-035-decision-4-note precedent, round 22 item 1). No wire change.",
       "blocked_by": [
         "adr-020-appended-note"
-      ]
-    },
-    {
-      "id": "adr-036-pre-acceptance-block",
-      "title": "ADR-036's pre-acceptance block: one block for the 2026-10-09 rulings (line 71's correction, the line-oriented form, ruling 4's lineage members, ruling 9's reader, the Documentation items at lines 3 and 192) and milestone 4's OPEN-4 (A′), a match value on fillColor with the step's dependencies naming the match column and its type; then the human types the acceptance",
-      "lane": "kernel-protocol",
-      "phase": "prototype",
-      "status": "blocked",
-      "order": null,
-      "budget_minutes": 60,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-10-21",
-        "done": null
-      },
-      "summary": "FORM COMMITTED 2026-10-21 (kernel/ADR-036-PRE-ACCEPTANCE-BLOCK-PREREGISTRATION.md; the architect's form, state/consults/2026-10-21-adr-036-pre-acceptance-block-architect-form.md; 51 pins and 8 expanded cites by script; the 14 passages as they stand, and the human's two passages, checked byte for byte; Amendment 1); budget 60. For the human: B1's sentence cites KNOWN-LIMITATIONS items 19 to 28, of which 20 to 22 describe other limits. NEXT: S1 after PR #239 merges, then both gates, the click, the human's acceptance. Before: RULED 2026-10-21 (state/directives/2026-10-21-adr-036-block-ruled-open-a-c-b1-words-open-w-sentence-adr-022-amendment-2-steps-file.md): the human has seen the draft. OPEN-A (c), Part A with B1, B2, B4 and B5, B1's last sentence in the human's words; OPEN-L, R, D and S (a); OPEN-W (a), with one sentence in the human's words; OPEN-O (a), its condition not met (the walkthrough rows had started), so the block follows PR #239. NEXT: the form written from the draft with the rulings, pinned and committed; the ADR edit after PR #239 merges; then the human types the acceptance. Before: PLACED 2026-10-21 by the human (state/directives/2026-10-21-d-s10-go-adr-036-route-i-redaction-open-items-1c-and-milestone-4-ruled-docs-open-1-yes.md, route (i)): a docs-lane piece ahead of 1c's code applies one pre-acceptance block to ADR-036; the architect drafts it for the human's sight; the project file is project.spatial, the .spatial check on record; when the block has merged the human types the acceptance; 1c's OPEN-1 and milestone 4's OPEN-4 are settled by it. The architect's draft: state/consults/2026-10-21-adr-036-pre-acceptance-block-architect-draft.md, with OPEN-A, L, R, W, D and S for the human; its OPEN-O, the order against the walkthrough, is moot, the walkthrough having started first. Points from 1c's revision for the human at the block: B1's window reaches every later read by path, not only the open; the canonical grammar cannot write a view coordinate below 1e-6 (item W); item C, the reader ceilings, is 1c's. The custodian put it next in the docs lane after the walkthrough.",
-      "blocked_by": [
-        "walkthrough-current-view-rows-g1-n5"
       ]
     },
     {
@@ -447,28 +444,6 @@
       },
       "summary": "STOPPED 2026-10-21 at O0 (state/consults/2026-10-21-bundle-redaction-scan-not-in-product-publish-o0-worker-report.md; the form's Amendment 2): three findings outside operator-declared in the built viewer's files. One is the AGPL text's password wording and one a /Home/ segment of a URL in a third-party licence, both carried verbatim in the notice; the third is an example drive path in a viewer source comment that the build keeps. P-3 falsified; no code; the scan not weakened. The human rules. Before: IN PROGRESS 2026-10-21: FORM COMMITTED (kernel/BUNDLE-REDACTION-SCAN-PREREGISTRATION.md: the architect's second revision, every cite written out, state/consults/2026-10-21-bundle-redaction-scan-not-in-product-publish-architect-revised-form-cites.md; 252 pins at 9a8bd442 by script; Amendment 1); budget 240 (the form's section 7); branch cut/bundle-redaction-scan from this commit, the form's B. RULED 2026-10-21 (state/directives/2026-10-21-d-s10-go-adr-036-route-i-redaction-open-items-1c-and-milestone-4-ruled-docs-open-1-yes.md): OPEN-1 to OPEN-4 (A); W6 approved as drafted; lead-data's impact read before the form (state/consults/2026-10-21-bundle-redaction-scan-not-in-product-publish-impact-read.md). NEXT: O0 at B by a worker-high, recorded as Amendment 2 before any code; a finding outside operator-declared stops the piece for the human. Before: PLACED 2026-10-21 (state/directives/2026-10-21-placements-redaction-scan-1c-milestone-4-lanes-238-clicked-d-answers-adr-024-heading-kept.md, item 1): graded S1; slot 1, ahead of the order. The architect's form first: what the test scan checks, where the product publish emits files, and the scan wired in before the bundle is handed over, refusing by name on a finding; the scan is never weakened to make it pass. Before: PROPOSED 2026-10-16 by the custodian, for the human's triage: candidate 1 of the boundary inventory (state/consults/2026-10-16-boundary-inventory-architect.md, Candidates for triage). redaction::scan_directory (kernel/src/bundle/redaction.rs) has two callers, both in kernel/tests/publish.rs, over one fixture bundle; the product publish path through the permission boundary runs no scan of the emitted files, so a source whose text column holds a path would be published unscanned. The custodian confirmed the callers by search at b88b1d2f; nothing reproduced. A candidate until graded; the inventory does not grow to fix it.",
       "evidence_label": "branch `cut/bundle-redaction-scan`"
-    },
-    {
-      "id": "walkthrough-current-view-rows-g1-n5",
-      "title": "MANUAL-WALKTHROUGH.md rows G1 and N5: Current view is no longer disabled until a pan or zoom (the docs-lane follow-up of export-current-view-after-unreported-fit, its gate 1 reviewer DOC-4)",
-      "lane": "shell",
-      "phase": "prototype",
-      "status": "in-progress",
-      "order": null,
-      "budget_minutes": 30,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": {
-        "branch": "cut/walkthrough-current-view-rows-g1-n5"
-      },
-      "dates": {
-        "opened": "2026-10-14",
-        "done": null
-      },
-      "summary": "READY FOR THE CLICK 2026-10-21: main merged into the branch at 3a58b669; PR #239 out of draft. The done commit lands on main after the click (the form's Amendment 3: verify.mjs refuses a done node whose PR is open). Before: IN PROGRESS 2026-10-21, after governance D's click (its form, frontends/shell/WALKTHROUGH-CURRENT-VIEW-ROWS-G1-N5-PREREGISTRATION.md, Amendment 1 item 4): branch cut/walkthrough-current-view-rows-g1-n5, PR #239 (draft) at b9369654; gate 1 PASS both (gate-log 572, 573; the form's Amendment 2); budget 30 (the form's section 7). Generation 3 for the form's Amendments 1 and 2, which the freeze held out of PLAN.yaml; both gates ran after Amendment 1, at the scope it records. NEXT on the branch: main merged in, the done commit, then ready for the human's click. Before: PLACED 2026-10-21 (state/directives/2026-10-21-placements-redaction-scan-1c-milestone-4-lanes-238-clicked-d-answers-adr-024-heading-kept.md, item 4): the docs lane, 1 of 6. Before: PROPOSED 2026-10-14 by the custodian from PR #219's gate 1 reviewer DOC-4 (state/consults/gates/2026-10-14-export-current-view-after-unreported-fit-gate1-reviewer.md): rows G1 and N5 of frontends/shell/MANUAL-WALKTHROUGH.md describe Current view as disabled with no settled view, which is untrue once #219 merges; that form's section 2.6 keeps its walkthrough edit to Part Y (its Amendment 7 item 5). Words only, in the docs lane, after the merge.",
-      "evidence_label": "branch `cut/walkthrough-current-view-rows-g1-n5`"
     }
   ],
   "proposed": [

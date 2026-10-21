@@ -5174,18 +5174,18 @@ nodes:
     kind: task
     lane: shell
     phase: prototype
-    status: in-progress
+    status: done
     order: null
     depends_on: [export-current-view-after-unreported-fit]
     needs_human: {kind: none, minutes: 0}
     gate: frontends/shell/WALKTHROUGH-CURRENT-VIEW-ROWS-G1-N5-PREREGISTRATION.md
-    evidence: {branch: cut/walkthrough-current-view-rows-g1-n5}
+    evidence: {pr: 239}
     budget_minutes: 30
     generation: 4
     felt_verdict: false
     entries: []
-    summary: "READY FOR THE CLICK 2026-10-21: main merged into the branch at 3a58b669; PR #239 out of draft. The done commit lands on main after the click (the form's Amendment 3: verify.mjs refuses a done node whose PR is open). Before: IN PROGRESS 2026-10-21, after governance D's click (its form, frontends/shell/WALKTHROUGH-CURRENT-VIEW-ROWS-G1-N5-PREREGISTRATION.md, Amendment 1 item 4): branch cut/walkthrough-current-view-rows-g1-n5, PR #239 (draft) at b9369654; gate 1 PASS both (gate-log 572, 573; the form's Amendment 2); budget 30 (the form's section 7). Generation 3 for the form's Amendments 1 and 2, which the freeze held out of PLAN.yaml; both gates ran after Amendment 1, at the scope it records. NEXT on the branch: main merged in, the done commit, then ready for the human's click. Before: PLACED 2026-10-21 (state/directives/2026-10-21-placements-redaction-scan-1c-milestone-4-lanes-238-clicked-d-answers-adr-024-heading-kept.md, item 4): the docs lane, 1 of 6. Before: PROPOSED 2026-10-14 by the custodian from PR #219's gate 1 reviewer DOC-4 (state/consults/gates/2026-10-14-export-current-view-after-unreported-fit-gate1-reviewer.md): rows G1 and N5 of frontends/shell/MANUAL-WALKTHROUGH.md describe Current view as disabled with no settled view, which is untrue once #219 merges; that form's section 2.6 keeps its walkthrough edit to Part Y (its Amendment 7 item 5). Words only, in the docs lane, after the merge."
-    dates: {opened: 2026-10-14, done: null}
+    summary: "DONE 2026-10-21: PR #239 merged by the human, merge commit 4350a4a9 (%cI 2026-10-21T17:04:47+02:00); head 3a58b669, the rows at b9369654, 2 lines in frontends/shell/MANUAL-WALKTHROUGH.md; gate 1 PASS both (gate-log 572, 573); the form's closing Amendment 4. Before: READY FOR THE CLICK 2026-10-21: main merged into the branch at 3a58b669; PR #239 out of draft. The done commit lands on main after the click (the form's Amendment 3: verify.mjs refuses a done node whose PR is open). Before: IN PROGRESS 2026-10-21, after governance D's click (its form, frontends/shell/WALKTHROUGH-CURRENT-VIEW-ROWS-G1-N5-PREREGISTRATION.md, Amendment 1 item 4): branch cut/walkthrough-current-view-rows-g1-n5, PR #239 (draft) at b9369654; gate 1 PASS both (gate-log 572, 573; the form's Amendment 2); budget 30 (the form's section 7). Generation 3 for the form's Amendments 1 and 2, which the freeze held out of PLAN.yaml; both gates ran after Amendment 1, at the scope it records. NEXT on the branch: main merged in, the done commit, then ready for the human's click. Before: PLACED 2026-10-21 (state/directives/2026-10-21-placements-redaction-scan-1c-milestone-4-lanes-238-clicked-d-answers-adr-024-heading-kept.md, item 4): the docs lane, 1 of 6. Before: PROPOSED 2026-10-14 by the custodian from PR #219's gate 1 reviewer DOC-4 (state/consults/gates/2026-10-14-export-current-view-after-unreported-fit-gate1-reviewer.md): rows G1 and N5 of frontends/shell/MANUAL-WALKTHROUGH.md describe Current view as disabled with no settled view, which is untrue once #219 merges; that form's section 2.6 keeps its walkthrough edit to Part Y (its Amendment 7 item 5). Words only, in the docs lane, after the merge."
+    dates: {opened: 2026-10-14, done: 2026-10-21}
   - id: e2e-readme-status-bar-steps
     title: "e2e/README.md: the selection entry gains E-STATUS-HEIGHT, and E-DBLCLICK's run-last reason becomes history (the docs-lane follow-up of shell-status-bar-one-height, OPEN-2 (b); as merged under OPEN-1 (d): one new step, no E-FOCUS stop)"
     kind: task
@@ -5651,7 +5651,7 @@ nodes:
     kind: task
     lane: kernel-protocol
     phase: prototype
-    status: blocked
+    status: ready
     order: null
     depends_on: [walkthrough-current-view-rows-g1-n5]
     needs_human: {kind: none, minutes: 0}
