@@ -639,3 +639,14 @@ Nothing above is edited.
 10. **Next:** one scoped reviewer pass over this record, commits and hashes only (§9).
 
 Nothing above is edited.
+
+### Amendment 13 — the scoped pass over the closing record: PASS WITH NOTES; Doc-1 recorded (class 1); written after the report was seen
+
+*Written by the custodian. References only: `state/consults/gates/2026-10-21-governance-plan-summaries-archive-closing-record-reviewer.md` (gate-log 575).*
+
+1. **The pass** (§9, after the merge) at main d6a3b9f4241641523906dec4e583941890f95a07: the commits, the blobs and the record's hash as Amendment 12 gives them; M-1 to M-3 once more at the merge commit, by the reviewer (§6), with the same stderr lines, byte counts and sha256s; E-M (a) and (b), the PLAN.yaml split and the record's table, by the reviewer's own script, with no differing row; the script's digest equal to A's S1. No Correctness or Evidence finding.
+2. **Doc-1**, in the reviewer's words (not the human's): **Amendment 12's record hash** is read @ d6a3b9f4241641523906dec4e583941890f95a07, the commit adding the record and Amendment 12.
+3. **What the pass could not check:** the custodian's run window and the byte-identity of its two runs, which rest on the run's output in the record; and the script's own printed moved bytes at S10, which Amendment 10 item 3 takes from the S10 report.
+4. **Governance D is closed.** No step remains on this node.
+
+Nothing above is edited.
