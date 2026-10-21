@@ -530,3 +530,17 @@ Nothing above is edited.
 4. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 4 — gate 1: both FAIL on C1 and C2; correction round 1; the record corrected (class 1); written after both gate reports were seen
+
+*Written by the custodian. References and hashes only: `state/consults/gates/2026-10-21-governance-plan-summaries-archive-gate1-architect.md` (gate-log 567) and `state/consults/gates/2026-10-21-governance-plan-summaries-archive-gate1-reviewer.md` (gate-log 568).*
+
+1. **Gate 1** at S5: both gates FAIL on the same two Correctness findings. C1: R15 refuses once PLAN.yaml holds pointers, because its temporary repository holds no archive, and its count of moved summaries assumes an unkept real candidate. C2: a failure after the first write is reported as a refusal that wrote nothing. The reviewer reproduced C1 on the script's own move at M0: R15 alone exits 1, and the CI globs give 526 of 527.
+2. **Correction round 1** of the two the record cap allows: one worker-high on the branch, for C1 and C2 as both reports give them, and for the Documentation words of item 3. MR15 is recorded again at the fixing commit, and R15 is shown passing on a rotated tree in a throwaway clone, before S10. Then gate 2, both gates.
+3. **The words (AUTONOMY §31 (d)), one author's per sentence.** The README's staging sentence and the test file's header: both gates give the same words. The README's exit-code sentence: the two differ in one phrase, and the reviewer's (`or failed on an unexpected error`) is applied, because the same sentence names STOP for a failure after the first write, and the architect's `stopped` would read as that STOP. The test file's mutation-commit comment and the due call's comment: the reviewer's alone.
+4. **The record (the architect's D4 words, the revs filled by script; the reviewer's Doc-7).** Amendment 2's item 5 is this piece's class 8 entry, budget overrun, §7 not edited, and its item 4 is read as class 1, the amendment's first line saying it was written after the results were seen. The sheet hashes of Amendment 2 item 3 and Amendment 3 item 3 are read @ b2df233db725d947c02c001b7d3f0f2db3d9bde6 and @ b5c1c8418ea6fbfbff98135539e63f57af47abea, the commits adding each sheet. §8 item 6's second bullet and §2 item 11's F0 bullet are read under Amendment 1 item 5 (OPEN-5 (B)): a held commit is one touching PLAN.yaml, CUSTODIAN-QUEUE.* or site/.
+5. **D1-b at S10 (the reviewer's Doc-6), predicted before S9.** The S10 commit adds the sheet at `state/drafts/plan-summaries-d-obligations.md` (§2 item 5), so verify-cites' stdout file count rises by one at S10, a difference §5 does not name. By I2 it goes to the human before S9. C's precedent: verify-cites' extra file, its archive, accepted as that piece's own (C's form, Amendment 5 item 5 and Amendment 7 item 5).
+6. **Not taken in this round:** the reviewer's suggestions on R4's bound and on `holds`' cost per pointer. Both are recorded in its report.
+7. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
