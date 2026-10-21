@@ -1,31 +1,50 @@
 {
-  "generated_at": "2026-10-20T22:33:51.721Z",
-  "plan_hash": "9d71c08697bd004738cd11f34feae4f98252b7669ad872c1a186c3e17f87da19",
+  "generated_at": "2026-10-21T04:32:29.988Z",
+  "plan_hash": "c32412bbcf1637cfc9ec4417e1bc48330bfb3750fcec190dc9617555f5347227",
   "priorities_approved": true,
   "next": {
-    "id": "connection-reuse-recycled-interrupt-flake",
-    "title": "engine/tests/connection_reuse.rs: cancellation_before_the_first_batch_binds_a_recycled_connection_and_delivers_nothing failed once on ubuntu-24.04 in PR #222's pull_request run at a542097e, and the push run of the same commit passed it",
-    "lane": "engine",
+    "id": "b2-piece-1c-save-and-reopen",
+    "title": "B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark",
+    "lane": "kernel-protocol",
     "phase": "prototype",
     "status": "ready",
     "order": null,
-    "budget_minutes": 60,
+    "budget_minutes": 0,
     "needs_human": {
       "kind": "none",
       "minutes": 0
     },
     "evidence": null,
     "dates": {
-      "opened": "2026-10-16",
+      "opened": "2026-10-07",
       "done": null
     },
-    "summary": "FULL FORM COMMITTED 2026-10-17 (engine/CONNECTION-REUSE-RECYCLED-INTERRUPT-FLAKE-FULL-PREREGISTRATION.md, drafted by the architect from the five-line form's content: state/consults/2026-10-17-connection-reuse-recycled-interrupt-flake-full-form-architect-draft.md; 62 pins computed at 28163cb6): the token cancelled before stream_with_cancel, the binding asserted from ConnectionFacts' new instrument member, lease_for_stream's comment corrected; M1 to M3, R1 to R3; at most 100 changed lines; both gates from dispatch; no OPEN item. Blocked behind S5d. Before: OPEN-2 (B) AND OPEN-1 (B) RULED 2026-10-17 (state/directives/2026-10-17-s5d-o3-ordered-watcher-visible-placed-unknown-attempt-open-1-2-a-flake-full-form-225-226.md, item 3; the five-line form's Amendment 1): the test cancels before stream_with_cancel, so the terminal is Cancelled on every interleaving, with the binding still asserted from the fact recorded at the lease; the full form, drafted by the architect from the five-line form's content, replaces it as the gate when committed; slot 2's tail, after S5d. Before: FORM COMMITTED 2026-10-17 (engine/CONNECTION-REUSE-RECYCLED-INTERRUPT-FLAKE-PREREGISTRATION.md, drafted by the architect: state/consults/2026-10-17-connection-reuse-recycled-interrupt-flake-architect-draft.md; 30 pins computed by the custodian at e54e4af2): ConnectionFacts gains one instrument member written at the bind, which the test asserts in place of the live token; lease_for_stream's comment corrected; at most 70 changed lines over 5 files. Not dispatched until OPEN-1 (the route: section 21a's guarantee category applies, so (A) this five-line form with both gates from dispatch, recommended, or (B) the full form) and OPEN-2 (the claim: the fix removes the misnaming but the test can still fail in that interleaving at its inconclusive panic; (A) the claim reduced and the terminal race a proposed node, recommended, or (B) the cancel moved before the stream, full form) are ruled. Blocked behind S5d. Before: GRADED S3 AND PLACED 2026-10-17 by the human (state/directives/2026-10-17-merges-223-224-w-approved-open-12-flake-s3-unknown-attempt-slot-1-s5d-route-a.md, item 3): the pool is right; the test's is_bound() read can run after a producer that matched nothing has finished and released the handle. The fix records the binding at bind time, in the stream's connection facts or an equivalent test-only fact, and the test asserts that fact instead of the live token. A five-line form, at slot 2's tail after S5d, so the node depends on it; the form is drafted ahead, after the diagnosis. Before: DIAGNOSIS FILED 2026-10-17 (state/consults/2026-10-17-connection-reuse-recycled-interrupt-flake-diagnosis-lead-data.md, sha256 ca9f0b20; read at main e555177c, run 07:32:37Z to 07:38:16Z by its transcript, its one write the report): Q1, the handle is bound on the caller's thread before stream_with_cancel returns, before the producer is spawned. Q2, no window before the bind lets a batch through: the producer checks the flag before prepare, and on this test's query no batch can be built at all. Q3, the is_bound() read cannot run before the bind; but nothing orders it against the producer's detach after produce returns, and on a query matching nothing the producer can reach that detach first, an interleaving in which the assertion at line 179 fails. The filed log fits that reading and carries no producer timing. Also recorded: the comment on lease_for_stream says no window exists before anything is interruptible, while before the bind it is the producer's flag check, not an interrupt, that stops a cancel; and inside flush, a flag first seen after its check lets that one batch be sent. The human grades it. Before: DIAGNOSIS DISPATCHED 2026-10-17 to lead-data, read-only, at main e555177c; its report path is state/consults/2026-10-17-connection-reuse-recycled-interrupt-flake-diagnosis-lead-data.md. Before: DIAGNOSIS FIRST, RULED 2026-10-17 (state/directives/2026-10-17-placements-item-44-governance-clause-composition-readme-item-41-unknown-attempt.md, item 1): a read-only diagnosis by lead-data, with no slot, beside the running work, on three questions: where the recycled connection's interrupt handle is bound relative to stream_with_cancel's return; whether a cancel in any window before the bind can still let a batch through; whether the test's is_bound() read can run before the bind. The human then grades it (the directive's item 1 names both outcomes). Before: PROPOSED 2026-10-16 by the custodian: in run 38910535607 (Product CI, Rust workspace, pull_request, at a542097e), the L1 portable job on ubuntu-24.04 failed this one test at its assertion in line 179 of engine/tests/connection_reuse.rs, whose message says a recycled connection's interrupt handle must reach the token; the other 11 tests of the file passed. The failed steps are filed byte-identical at state/consults/2026-10-16-pr222-ci-run-38910535607-attempt-1-failed-steps.txt. The push run 38910527939 of the same commit passed the same job. PR #222 changes no line of that test file; its engine change is to engine/src/predicate.rs, its test and engine/README.md. No earlier filed CI log records this test failing. Whether it is a timing race in the test or in the pool's interrupt binding is not known. The human grades and places it."
+    "summary": "PLACED 2026-10-21 (state/directives/2026-10-21-placements-redaction-scan-1c-milestone-4-lanes-238-clicked-d-answers-adr-024-heading-kept.md, item 2): slot 2; its form drafted ahead, with the boundary inventory as its input. Before its code, ADR-036 goes to Accepted: one architect consult confirms that the merged text carries blocks H to K as approved and the two guardrails checks, then the human types the acceptance. Before: NOTE 2026-10-14 (state/directives/2026-10-14-two-slot-2-pieces-clause-composition-boundary-inventory.md, item 2): boundary-inventory's table is an input to this piece's form (ADR-036 line 81: how the target checked is the target opened). Before: ADR-036'S TWO CHECKS ANSWERED 2026-10-12 (state/consults/2026-10-12-adr-036-guardrails-two-checks-architect.md; the guardrails brief, section 4 item 2): R1 no (dependencies.crs holds an identifier and a source; every definition-only CRS shares one identifier), R2 no (no epoch reserved); the smallest changes named, each version 1 if made before acceptance; R9's step parameters partly; one Documentation item (the selection-scope reservation points to a section that does not hold it). For the human when taking up acceptance; nothing drafted. Before: RULED 2026-10-09, ADR-036's ten findings (state/directives/2026-10-09-adr-036-ten-findings-rulings.md): ADR-036 stays Proposed, and the human accepts it together with this piece's amendments, before this piece merges. This piece's amendment carries findings 1, 2, 4 and 7 to 10 and the project file's line-oriented canonical form, with the architect's open acceptance items. Its form also takes the message's notes: the OneDrive test, including an online-only file whose open must never look frozen; a refusal of a second open that never outlives a crash; what happens on a lineage mismatch under ruling 4; and a strict reader that refuses duplicate keys and checks key order. Owed before acceptance: a check that no common application claims .spatial. File association and single instance are a later piece, and that dependency stays the human's typed word. Before: ADR-036 ACCEPTANCE INPUT 2026-10-08: the architect consult on the reuse round 1 findings (state/consults/2026-10-08-adr-036-reuse-round-1-findings-architect.md; ten findings, two touching red lines: round 70 OPEN-2 and the OPEN-7 carrying rule), for the human acceptance sight; not rulings. OWED BY ITS FORM (b2-piece-1a Amendment 5, item 8, 2026-10-08): the writer carrying rule (machine-recorded always; project-relative in canonical form when the data is inside the folder by containment, judged at save; never an absolute path); the resolver containment (open a project-relative target only when, with every link, junction and reparse point followed, it lies inside the resolved project folder; refuse anything else by name, a target it cannot resolve included; state how the target checked is the target opened; tests for a link out, and on Windows a junction out, a device name and a trailing dot or space). OPEN FOR THE HUMAN in its form (the architect note to Amendment 5): data inside the folder with no canonical spelling (a segment holding a backslash or a colon, legal on POSIX) cannot meet the ruled carrying rule; refuse the save, or carry machine-recorded alone and tell the user. Also its form states which locators the lineage file header carries. ALSO OWED (question round 70, 2026-10-08, state/directives/2026-10-08-round-70-rulings.md; b2-piece-1a Amendment 2, item 5): OPEN-2 at open (the question once, the copy or the same project, the move rule; its wording the human at P6); OPEN-3 recovery when the data changed or cannot be found (the app says so); OPEN-7 re-link on another machine, checked against the observation, naming each difference, none passing silently. ALSO OWED (question round 69, 2026-10-08, state/directives/2026-10-08-round-69-rulings.md; b2-piece-1a Amendment 1, item 5): its ADR-036 amendment states how a reader detects a project file and a lineage file from different saves, and what it shows then; its form states that a selection made by clicking is not saved, and how the human is told at Save project when one exists. Before: Recorded 2026-10-07 (evening) by the human's rulings (state/directives/2026-10-07-b2-brief-and-evening-rulings.md; state/directives/B2-BRIEF-2026-10-07.md, section 9): needs 1b, and the format ADR accepted by the human. Open item at its form: what Save does with the style of a point or line layer (rounds 62 and 63). Proposed."
   },
   "ready": [
     {
-      "id": "connection-reuse-recycled-interrupt-flake",
-      "title": "engine/tests/connection_reuse.rs: cancellation_before_the_first_batch_binds_a_recycled_connection_and_delivers_nothing failed once on ubuntu-24.04 in PR #222's pull_request run at a542097e, and the push run of the same commit passed it",
-      "lane": "engine",
+      "id": "b2-piece-1c-save-and-reopen",
+      "title": "B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "ready",
+      "order": null,
+      "budget_minutes": 0,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-07",
+        "done": null
+      },
+      "summary": "PLACED 2026-10-21 (state/directives/2026-10-21-placements-redaction-scan-1c-milestone-4-lanes-238-clicked-d-answers-adr-024-heading-kept.md, item 2): slot 2; its form drafted ahead, with the boundary inventory as its input. Before its code, ADR-036 goes to Accepted: one architect consult confirms that the merged text carries blocks H to K as approved and the two guardrails checks, then the human types the acceptance. Before: NOTE 2026-10-14 (state/directives/2026-10-14-two-slot-2-pieces-clause-composition-boundary-inventory.md, item 2): boundary-inventory's table is an input to this piece's form (ADR-036 line 81: how the target checked is the target opened). Before: ADR-036'S TWO CHECKS ANSWERED 2026-10-12 (state/consults/2026-10-12-adr-036-guardrails-two-checks-architect.md; the guardrails brief, section 4 item 2): R1 no (dependencies.crs holds an identifier and a source; every definition-only CRS shares one identifier), R2 no (no epoch reserved); the smallest changes named, each version 1 if made before acceptance; R9's step parameters partly; one Documentation item (the selection-scope reservation points to a section that does not hold it). For the human when taking up acceptance; nothing drafted. Before: RULED 2026-10-09, ADR-036's ten findings (state/directives/2026-10-09-adr-036-ten-findings-rulings.md): ADR-036 stays Proposed, and the human accepts it together with this piece's amendments, before this piece merges. This piece's amendment carries findings 1, 2, 4 and 7 to 10 and the project file's line-oriented canonical form, with the architect's open acceptance items. Its form also takes the message's notes: the OneDrive test, including an online-only file whose open must never look frozen; a refusal of a second open that never outlives a crash; what happens on a lineage mismatch under ruling 4; and a strict reader that refuses duplicate keys and checks key order. Owed before acceptance: a check that no common application claims .spatial. File association and single instance are a later piece, and that dependency stays the human's typed word. Before: ADR-036 ACCEPTANCE INPUT 2026-10-08: the architect consult on the reuse round 1 findings (state/consults/2026-10-08-adr-036-reuse-round-1-findings-architect.md; ten findings, two touching red lines: round 70 OPEN-2 and the OPEN-7 carrying rule), for the human acceptance sight; not rulings. OWED BY ITS FORM (b2-piece-1a Amendment 5, item 8, 2026-10-08): the writer carrying rule (machine-recorded always; project-relative in canonical form when the data is inside the folder by containment, judged at save; never an absolute path); the resolver containment (open a project-relative target only when, with every link, junction and reparse point followed, it lies inside the resolved project folder; refuse anything else by name, a target it cannot resolve included; state how the target checked is the target opened; tests for a link out, and on Windows a junction out, a device name and a trailing dot or space). OPEN FOR THE HUMAN in its form (the architect note to Amendment 5): data inside the folder with no canonical spelling (a segment holding a backslash or a colon, legal on POSIX) cannot meet the ruled carrying rule; refuse the save, or carry machine-recorded alone and tell the user. Also its form states which locators the lineage file header carries. ALSO OWED (question round 70, 2026-10-08, state/directives/2026-10-08-round-70-rulings.md; b2-piece-1a Amendment 2, item 5): OPEN-2 at open (the question once, the copy or the same project, the move rule; its wording the human at P6); OPEN-3 recovery when the data changed or cannot be found (the app says so); OPEN-7 re-link on another machine, checked against the observation, naming each difference, none passing silently. ALSO OWED (question round 69, 2026-10-08, state/directives/2026-10-08-round-69-rulings.md; b2-piece-1a Amendment 1, item 5): its ADR-036 amendment states how a reader detects a project file and a lineage file from different saves, and what it shows then; its form states that a selection made by clicking is not saved, and how the human is told at Save project when one exists. Before: Recorded 2026-10-07 (evening) by the human's rulings (state/directives/2026-10-07-b2-brief-and-evening-rulings.md; state/directives/B2-BRIEF-2026-10-07.md, section 9): needs 1b, and the format ADR accepted by the human. Open item at its form: what Save does with the style of a point or line layer (rounds 62 and 63). Proposed."
+    },
+    {
+      "id": "bundle-redaction-scan-not-in-product-publish",
+      "title": "The bundle redaction scan runs only in a test: no product publish scans its emitted files, though ADR-017's section 13 (Accepted) says a scan over every emitted file asserts no path, user name, machine identifier or credential is in a bundle",
+      "lane": "kernel-protocol",
       "phase": "prototype",
       "status": "ready",
       "order": null,
@@ -39,12 +58,12 @@
         "opened": "2026-10-16",
         "done": null
       },
-      "summary": "FULL FORM COMMITTED 2026-10-17 (engine/CONNECTION-REUSE-RECYCLED-INTERRUPT-FLAKE-FULL-PREREGISTRATION.md, drafted by the architect from the five-line form's content: state/consults/2026-10-17-connection-reuse-recycled-interrupt-flake-full-form-architect-draft.md; 62 pins computed at 28163cb6): the token cancelled before stream_with_cancel, the binding asserted from ConnectionFacts' new instrument member, lease_for_stream's comment corrected; M1 to M3, R1 to R3; at most 100 changed lines; both gates from dispatch; no OPEN item. Blocked behind S5d. Before: OPEN-2 (B) AND OPEN-1 (B) RULED 2026-10-17 (state/directives/2026-10-17-s5d-o3-ordered-watcher-visible-placed-unknown-attempt-open-1-2-a-flake-full-form-225-226.md, item 3; the five-line form's Amendment 1): the test cancels before stream_with_cancel, so the terminal is Cancelled on every interleaving, with the binding still asserted from the fact recorded at the lease; the full form, drafted by the architect from the five-line form's content, replaces it as the gate when committed; slot 2's tail, after S5d. Before: FORM COMMITTED 2026-10-17 (engine/CONNECTION-REUSE-RECYCLED-INTERRUPT-FLAKE-PREREGISTRATION.md, drafted by the architect: state/consults/2026-10-17-connection-reuse-recycled-interrupt-flake-architect-draft.md; 30 pins computed by the custodian at e54e4af2): ConnectionFacts gains one instrument member written at the bind, which the test asserts in place of the live token; lease_for_stream's comment corrected; at most 70 changed lines over 5 files. Not dispatched until OPEN-1 (the route: section 21a's guarantee category applies, so (A) this five-line form with both gates from dispatch, recommended, or (B) the full form) and OPEN-2 (the claim: the fix removes the misnaming but the test can still fail in that interleaving at its inconclusive panic; (A) the claim reduced and the terminal race a proposed node, recommended, or (B) the cancel moved before the stream, full form) are ruled. Blocked behind S5d. Before: GRADED S3 AND PLACED 2026-10-17 by the human (state/directives/2026-10-17-merges-223-224-w-approved-open-12-flake-s3-unknown-attempt-slot-1-s5d-route-a.md, item 3): the pool is right; the test's is_bound() read can run after a producer that matched nothing has finished and released the handle. The fix records the binding at bind time, in the stream's connection facts or an equivalent test-only fact, and the test asserts that fact instead of the live token. A five-line form, at slot 2's tail after S5d, so the node depends on it; the form is drafted ahead, after the diagnosis. Before: DIAGNOSIS FILED 2026-10-17 (state/consults/2026-10-17-connection-reuse-recycled-interrupt-flake-diagnosis-lead-data.md, sha256 ca9f0b20; read at main e555177c, run 07:32:37Z to 07:38:16Z by its transcript, its one write the report): Q1, the handle is bound on the caller's thread before stream_with_cancel returns, before the producer is spawned. Q2, no window before the bind lets a batch through: the producer checks the flag before prepare, and on this test's query no batch can be built at all. Q3, the is_bound() read cannot run before the bind; but nothing orders it against the producer's detach after produce returns, and on a query matching nothing the producer can reach that detach first, an interleaving in which the assertion at line 179 fails. The filed log fits that reading and carries no producer timing. Also recorded: the comment on lease_for_stream says no window exists before anything is interruptible, while before the bind it is the producer's flag check, not an interrupt, that stops a cancel; and inside flush, a flag first seen after its check lets that one batch be sent. The human grades it. Before: DIAGNOSIS DISPATCHED 2026-10-17 to lead-data, read-only, at main e555177c; its report path is state/consults/2026-10-17-connection-reuse-recycled-interrupt-flake-diagnosis-lead-data.md. Before: DIAGNOSIS FIRST, RULED 2026-10-17 (state/directives/2026-10-17-placements-item-44-governance-clause-composition-readme-item-41-unknown-attempt.md, item 1): a read-only diagnosis by lead-data, with no slot, beside the running work, on three questions: where the recycled connection's interrupt handle is bound relative to stream_with_cancel's return; whether a cancel in any window before the bind can still let a batch through; whether the test's is_bound() read can run before the bind. The human then grades it (the directive's item 1 names both outcomes). Before: PROPOSED 2026-10-16 by the custodian: in run 38910535607 (Product CI, Rust workspace, pull_request, at a542097e), the L1 portable job on ubuntu-24.04 failed this one test at its assertion in line 179 of engine/tests/connection_reuse.rs, whose message says a recycled connection's interrupt handle must reach the token; the other 11 tests of the file passed. The failed steps are filed byte-identical at state/consults/2026-10-16-pr222-ci-run-38910535607-attempt-1-failed-steps.txt. The push run 38910527939 of the same commit passed the same job. PR #222 changes no line of that test file; its engine change is to engine/src/predicate.rs, its test and engine/README.md. No earlier filed CI log records this test failing. Whether it is a timing race in the test or in the pool's interrupt binding is not known. The human grades and places it."
+      "summary": "PLACED 2026-10-21 (state/directives/2026-10-21-placements-redaction-scan-1c-milestone-4-lanes-238-clicked-d-answers-adr-024-heading-kept.md, item 1): graded S1; slot 1, ahead of the order. The architect's form first: what the test scan checks, where the product publish emits files, and the scan wired in before the bundle is handed over, refusing by name on a finding; the scan is never weakened to make it pass. Before: PROPOSED 2026-10-16 by the custodian, for the human's triage: candidate 1 of the boundary inventory (state/consults/2026-10-16-boundary-inventory-architect.md, Candidates for triage). redaction::scan_directory (kernel/src/bundle/redaction.rs) has two callers, both in kernel/tests/publish.rs, over one fixture bundle; the product publish path through the permission boundary runs no scan of the emitted files, so a source whose text column holds a path would be published unscanned. The custodian confirmed the callers by search at b88b1d2f; nothing reproduced. A candidate until graded; the inventory does not grow to fix it."
     },
     {
-      "id": "governance-plan-summaries-archive",
-      "title": "Governance D -- done nodes' summaries over 300 bytes moved verbatim from PLAN.yaml into state/cut-archive/ by a named script, one generated pointer line each, monthly beside C's rotation, and its rule appended to AUTONOMY; the measurements before and after it",
-      "lane": "governance",
+      "id": "walkthrough-current-view-rows-g1-n5",
+      "title": "MANUAL-WALKTHROUGH.md rows G1 and N5: Current view is no longer disabled until a pan or zoom (the docs-lane follow-up of export-current-view-after-unreported-fit, its gate 1 reviewer DOC-4)",
+      "lane": "shell",
       "phase": "prototype",
       "status": "ready",
       "order": null,
@@ -55,10 +74,10 @@
       },
       "evidence": null,
       "dates": {
-        "opened": "2026-10-20",
+        "opened": "2026-10-14",
         "done": null
       },
-      "summary": "RULED 2026-10-20 (the fifth message headed 2026-10-21; the form's Amendment 1): OPEN-1 (A), OPEN-2 (A) if S0 shows it, OPEN-3 the sheet at G0, OPEN-4 (A), OPEN-5 (B), OPEN-6 (A) with Part B approved, OPEN-7 confirmed. NEXT: S0 and the build by one worker-high on cut/plan-summaries-archive from M0, the commit adding Amendment 1. Before: FORM COMMITTED 2026-10-20 (scripts/plan/PLAN-SUMMARIES-ARCHIVE-PREREGISTRATION.md, from the architect's draft state/consults/2026-10-20-governance-plan-summaries-archive-architect-draft.md, its R16 and MR16 revised so that no mutation edits .claude/settings.json, 62 pins expanded by script). OPEN-1 to OPEN-7 with the human before S1 (the archive's shape, the named-file reader, the obligation sheet for sight, buildHealth's before and after, the freeze, the rule's two homes, the readings). Not dispatched before them. Before: PLACED 2026-10-20 by the human (state/directives/2026-10-20-governance-d-done-node-summaries-archived-the-2026-10-14-trim-sentence-corrected.md): next in the governance lane after governance C, never slot 1; the merge is the human's click. Scope: done nodes whose summary is over 300 UTF-8 bytes; open nodes untouched. Before the move, the form lists every summary to be moved that names something still owed, each with a live home, and a summary whose obligation has none stays. NEXT: its full form, drafted by the architect, before any code. This replaces the PLAN.yaml summary trim that the human's 2026-10-14 sentence named; no such trim was ever placed."
+      "summary": "PLACED 2026-10-21 (state/directives/2026-10-21-placements-redaction-scan-1c-milestone-4-lanes-238-clicked-d-answers-adr-024-heading-kept.md, item 4): the docs lane, 1 of 6. Before: PROPOSED 2026-10-14 by the custodian from PR #219's gate 1 reviewer DOC-4 (state/consults/gates/2026-10-14-export-current-view-after-unreported-fit-gate1-reviewer.md): rows G1 and N5 of frontends/shell/MANUAL-WALKTHROUGH.md describe Current view as disabled with no settled view, which is untrue once #219 merges; that form's section 2.6 keeps its walkthrough edit to Part Y (its Amendment 7 item 5). Words only, in the docs lane, after the merge."
     }
   ],
   "waiting_on_human": {
@@ -85,12 +104,78 @@
             "opened": "2026-10-20",
             "done": null
           },
-          "summary": "RULED 2026-10-21 (headed), item 2a; no slot. The list: walkthrough Parts P, T, W (W11 and the publish dialog's filter-scope sentence), Y (Y4), Z and AA, with their blank result logs; the P6 sights of item 40's words whole, the Reset-changes-nothing console line, O3 and its filter counterpart, KNOWN-LIMITATIONS items 37 and 38, and the mixed-kind placeholders of Parts P and T; T4's width and casing verdict and P4's topmost-symbol verdict; entry 95's pan re-feel and the candidate-2 decision; entry 48's L5 re-check. It represents governance C's obligation sheet rows L14, L62, L67, L87, L92, L243, L472, L490, L1602, E95 and E48. Every later P6 sight joins this list instead of a form alone; milestone 3's Part AB joined on PR #234's merge (the form's Amendment 13); the publish dialog's expiry sentence (publish-approval-ttl-ten-minutes, P6 placeholder), read at walkthrough Part G, G3, joined on PR #236's merge (that form's Amendment 6)."
+          "summary": "RULED 2026-10-21 (state/directives/2026-10-21-placements-redaction-scan-1c-milestone-4-lanes-238-clicked-d-answers-adr-024-heading-kept.md), item 6: the human schedules the sitting and gives its date; until then no release is scheduled. Before: RULED 2026-10-21 (headed), item 2a; no slot. The list: walkthrough Parts P, T, W (W11 and the publish dialog's filter-scope sentence), Y (Y4), Z and AA, with their blank result logs; the P6 sights of item 40's words whole, the Reset-changes-nothing console line, O3 and its filter counterpart, KNOWN-LIMITATIONS items 37 and 38, and the mixed-kind placeholders of Parts P and T; T4's width and casing verdict and P4's topmost-symbol verdict; entry 95's pan re-feel and the candidate-2 decision; entry 48's L5 re-check. It represents governance C's obligation sheet rows L14, L62, L67, L87, L92, L243, L472, L490, L1602, E95 and E48. Every later P6 sight joins this list instead of a form alone; milestone 3's Part AB joined on PR #234's merge (the form's Amendment 13); the publish dialog's expiry sentence (publish-approval-ttl-ten-minutes, P6 placeholder), read at walkthrough Part G, G3, joined on PR #236's merge (that form's Amendment 6)."
         }
       ]
     }
   },
   "blocked_on_dependencies": [
+    {
+      "id": "adr-020-appended-note",
+      "title": "ADR-020's appended note, owed by the quote baseline's corrected_by entry (entry 102; the docs lane)",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": null,
+      "budget_minutes": 30,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-20",
+        "done": null
+      },
+      "summary": "PLACED 2026-10-21 (state/directives/2026-10-21-placements-redaction-scan-1c-milestone-4-lanes-238-clicked-d-answers-adr-024-heading-kept.md, item 4): the docs lane, 3 of 6, after stale-assertion-messages-and-product-comments. Before: RULED 2026-10-21 (headed), item 2e, proposed and unplaced; the docs lane. It represents governance C's sheet row E102: the appended ADR-020 note that the quote baseline lists as owed (its corrected_by, an appended ADR-020 note, owed).",
+      "blocked_by": [
+        "stale-assertion-messages-and-product-comments"
+      ]
+    },
+    {
+      "id": "adr-035-close-races-note",
+      "title": "ADR-035 -- an appended, dated note recording what kernel-generation-close-races makes historical (Decision 3's no-session-reference case unreachable; invalidate marks only on a live removal; Decision 2's mint-race arm gone)",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": null,
+      "budget_minutes": 45,
+      "needs_human": {
+        "kind": "ruling",
+        "minutes": 5
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-27",
+        "done": null
+      },
+      "summary": "PLACED 2026-10-21 (state/directives/2026-10-21-placements-redaction-scan-1c-milestone-4-lanes-238-clicked-d-answers-adr-024-heading-kept.md, item 4): the docs lane, 4 of 6, after adr-020-appended-note. Before: Advisory N4 of the close-races gate-1 architect report (state/consults/gates/2026-09-27-kernel-generation-close-races-gate1-architect.md, with a skeleton): after that piece merges, three ADR-035 passages describe removed code -- Decision 3's bullet on a generation with no session reference, its sub-bullet on invalidate marking before the live lookup, and Decision 2's mint-race arm. ADR-035 is Accepted and never edited; a dated note is appended only on the human's word (the adr-035-decision-4-note precedent, round 22 item 1). No wire change.",
+      "blocked_by": [
+        "adr-020-appended-note"
+      ]
+    },
+    {
+      "id": "skp-line-cites-outside-close-races",
+      "title": "Stale line cites into kernel/src/skp.rs outside kernel-close-races-followups files -- shell streaming, App.tsx, pool_poll.rs, src-tauri lib.rs, the P4 corpus test and the persisted-artifacts test",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": null,
+      "budget_minutes": 0,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-05",
+        "done": null
+      },
+      "summary": "PLACED 2026-10-21 (state/directives/2026-10-21-placements-redaction-scan-1c-milestone-4-lanes-238-clicked-d-answers-adr-024-heading-kept.md, item 4): the docs lane, 5 of 6, after adr-035-close-races-note. Before: PROPOSED 2026-10-05, routed by question round 59 item 1 (kernel-close-races-followups OPEN-1 (B); the form Amendment 1, item 1): the stale skp.rs line cites in the files its draft OPEN-1 lists, other than liveTicketSet.ts, repointed by item. MP-1 moves skp.rs lines again, so after MP-1.",
+      "blocked_by": [
+        "adr-035-close-races-note"
+      ]
+    },
     {
       "id": "entry-79-b1-consult-items",
       "title": "Entry 79 — three items routed for Brief B stage B1's close",
@@ -111,6 +196,50 @@
       "summary": "Entry 79's three items were RULED on 2026-09-11 (the wider named set with projection_empty_list mandatory; hover shows every projected column with the bound at admission; describe carries per-column projectable) and apply at B1's close -- no ruling remains; this node follows the B1 half Items 1 and 3 were delivered by #134 (the named projection refusals with projection_empty_list; describe's per-column projectable). Item 2 (the hover showing every projected column) is B1's shell half, held by the 2026-09-27 session order until the human's shell migration plan, so this node waits on b1-shell-half (2026-09-27). It also depends on b1-close-nul-column-names: A2-1 belongs to B1's contract and lands before B1 closes (the 2026-09-29 A2-1 clarification, state/directives/2026-09-29-a2-1-clarification.md), and this node is the one that closes B1. At B1's close the human accepts ADR-023's Amendment 2026-09-29 and ADR-021's Note 2026-09-29 together, because the Note relies on the amendment's definition of not addressable (Fable, 2026-09-29, item 1, from #142's architect note 4; state/directives/2026-09-29-fable-amendment-12-sighted-and-ruled-backfill.md).",
       "blocked_by": [
         "b1-shell-half"
+      ]
+    },
+    {
+      "id": "b1-shell-half",
+      "title": "Shell migration, milestone 4 -- B1 shell half: attributes of the inspected feature, colour by category with its legend, and the table",
+      "lane": "shell",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": null,
+      "budget_minutes": 0,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-25",
+        "done": null
+      },
+      "summary": "PLACED 2026-10-21 (state/directives/2026-10-21-placements-redaction-scan-1c-milestone-4-lanes-238-clicked-d-answers-adr-024-heading-kept.md, item 3): milestone 4, slot 1 after the redaction piece; its form may be drafted meanwhile; rule (00) decides against 1c at dispatch. Its dependency on shell-redesign-map-studio is replaced by shell-migration-milestone-3, after which the migration plan of 2026-10-07 puts this milestone, and by the redaction piece, by this placement. Before: RE-DESCRIBED 2026-10-07 as the migration's milestone 4 (state/directives/2026-10-07-migration-plan-v2-ruled.md; state/directives/SHELL-MIGRATION-PLAN-2026-10-07.md, section 8): on the new shell, after milestones 1 to 3; attributes of the inspected feature in the Feature tab, colour by category in the Style tab with its legend (the one match of ADR-017, its section 5a), and the table in Activity with features and the three scope options. Its form settles where the table's features come from, a second consumer of the dataset's stream connections, and proposes no new SKP command without the human's ruling. Its depends_on is unchanged in this step. Before: O6 (MP-1 done 2026-10-06, #182; engine/MULTIPOLYGON-MP1-PREREGISTRATION.md section 2, O6, and its Amendment 6): b1-shell-half lands second, writes its lookup against MP-1 merged partToRow and resolvePick, and proves it end to end. Before: RULED 2026-09-25, question round 22, item 2 (B1's O7 as recommended): the named consumer of the engine half's non-null columns path and projectable, under round 8's producer exemption; gated by shell-redesign-map-studio. Held by the 2026-09-27 session order until the human says otherwise (state/directives/2026-09-27-session-order.md, its last paragraph): it waits for the shell migration plan, which Fable writes after the O-07 walkthrough, with state/drafts/design/LAYER-MODEL-DECISIONS-2026-09-28.md as an input.",
+      "blocked_by": [
+        "bundle-redaction-scan-not-in-product-publish"
+      ]
+    },
+    {
+      "id": "stale-assertion-messages-and-product-comments",
+      "title": "Stale text outside the docs lane: an assertion message calling ADR-016 Amendment 1 proposed, a thrown e2e message with a stale line cite, and two product-code comments (crsAssertionState.ts and buildLayers.ts) carrying the same stale premises piece f corrects in tests",
+      "lane": "shell",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": null,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-11",
+        "done": null
+      },
+      "summary": "PLACED 2026-10-21 (state/directives/2026-10-21-placements-redaction-scan-1c-milestone-4-lanes-238-clicked-d-answers-adr-024-heading-kept.md, item 4): the docs lane, 2 of 6, after walkthrough-current-view-rows-g1-n5. Before: PROPOSED 2026-10-11 by the human (state/directives/2026-10-11-open-11-a-piece-f-opens-ported-notices-required.md, item 2): piece f's form (frontends/shell/STALE-TEST-NAMES-AND-COMMENTS-PREREGISTRATION.md, 2.5 and its open question 4) routes four lines outside the docs lane here: engine/tests/session_identity.rs's assertion message, frontends/shell/e2e/regression.mjs's thrown message with the stale residencyStatus line cite, frontends/shell/src/admission/crsAssertionState.ts's harness premise, and frontends/shell/src/canvas/buildLayers.ts's no-attributes reason. The two messages change test strings and the two comments are product code, so the docs lane cannot take them. Stays proposed; the human grades and places it.",
+      "blocked_by": [
+        "walkthrough-current-view-rows-g1-n5"
       ]
     },
     {
@@ -202,6 +331,94 @@
       ]
     },
     {
+      "id": "flush-crlf-field-rewrite",
+      "title": "flush.mjs splits the ledger on LF and rewrites a field line without its CR, so a CRLF working-tree ledger ends with mixed line endings",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": null,
+      "budget_minutes": 30,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-02",
+        "done": null
+      },
+      "summary": "PLACED 2026-10-21 (state/directives/2026-10-21-placements-redaction-scan-1c-milestone-4-lanes-238-clicked-d-answers-adr-024-heading-kept.md, item 5): the governance lane after D, 3 of 3, after questions-mirror-item-count. Before: Routed by stop-hook-stale-continuity drafting consult (state/consults/2026-10-02-stop-hook-stale-continuity-architect-draft.md, open point 8): scripts/hooks/flush.mjs splits CUT-STATE.md on LF and writes a rewritten field line without its CR, so a CRLF working-tree ledger would end with mixed line endings. Out of that piece scope (its form declares flush.mjs unchanged). The repository checks the ledger out LF (.gitattributes eol=lf), so this matters only for a ledger written CRLF by some other tool (portability R1). Short form, a test with a CRLF ledger and its mutation.",
+      "blocked_by": [
+        "questions-mirror-item-count"
+      ]
+    },
+    {
+      "id": "questions-mirror-item-count",
+      "title": "questions-mirror.mjs's countItems counts one item high on a round file with a header rule, so a document send's summary names one item too many",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": null,
+      "budget_minutes": 30,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-02",
+        "done": null
+      },
+      "summary": "PLACED 2026-10-21 (state/directives/2026-10-21-placements-redaction-scan-1c-milestone-4-lanes-238-clicked-d-answers-adr-024-heading-kept.md, item 5): the governance lane after D, 2 of 3, after verify-quotes-round-item-cites. Before: Routed by round-mirror-pretooluse-hook's drafting consult (state/consults/2026-10-02-round-mirror-hook-architect-draft.md, item (c), first bullet): countItems and buildSummary count the --- rules plus one, so a round file with a header rule reads one item high; round 33's eleven items would be summarized as twelve. Not fixed in that piece, whose invalidator I2 keeps mirrorRound and buildSummary unchanged. Also, per Fable round-52 advice item 1 (state/directives/2026-10-04-fable-advice-round-52.md), confirmed by the custodian: the round file header miscounts red-line items, since state/questions/round-52.md reads RED LINE items: none while its items 1 and 3 were red-line items offered as holds only; the same piece should derive that header count from the items.",
+      "blocked_by": [
+        "verify-quotes-round-item-cites"
+      ]
+    },
+    {
+      "id": "shell-owners-index",
+      "title": "An owner's index for the shell (frontends/shell), so that shell-owned KNOWN-LIMITATIONS items and pointers are indexed somewhere",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": null,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-07",
+        "done": null
+      },
+      "summary": "PLACED 2026-10-21 (state/directives/2026-10-21-placements-redaction-scan-1c-milestone-4-lanes-238-clicked-d-answers-adr-024-heading-kept.md, item 4): the docs lane, 6 of 6, after skp-line-cites-outside-close-races. Before: Recorded 2026-10-07 by geometry-lines-cut's form (engine/GEOMETRY-LINES-PREREGISTRATION.md, section 2, Owner's index, the routed item settled; the points form's Amendment 5, item 13, second bullet): the engine and kernel owner's indexes list module-caused limits only, so the shell-owned KNOWN-LIMITATIONS items (34 to 38 once the lines cut lands) are indexed nowhere, because no shell owner's index exists. Creating one is a governance piece under the product-first freeze, so it waits for the freeze to lift or the human's call.",
+      "blocked_by": [
+        "skp-line-cites-outside-close-races"
+      ]
+    },
+    {
+      "id": "verify-quotes-round-item-cites",
+      "title": "verify-quotes resolves round + item cites (the quote checker's follow-on owed by round 12 item 1's Applied text)",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": null,
+      "budget_minutes": 120,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-20",
+        "done": null
+      },
+      "summary": "PLACED 2026-10-21 (state/directives/2026-10-21-placements-redaction-scan-1c-milestone-4-lanes-238-clicked-d-answers-adr-024-heading-kept.md, item 5): the governance lane after D, 1 of 3, after governance-plan-summaries-archive. Before: RULED 2026-10-21 (headed), item 2e, proposed and unplaced. It represents governance C's sheet rows L1541 and E104: entry 104's mechanism (a) follow-on; verify-test-claims.mjs resolves round + item cites for withdrawn-test rows only, and verify-quotes.mjs not at all.",
+      "blocked_by": [
+        "governance-plan-summaries-archive"
+      ]
+    },
+    {
       "id": "site-design-v1",
       "title": "Landing page redesign — DRAFT-4 (status strip, milestone banner, waiting-on-you cards with unblocks counts, the swimlane board)",
       "lane": "governance",
@@ -224,7 +441,30 @@
       ]
     }
   ],
-  "in_progress": [],
+  "in_progress": [
+    {
+      "id": "governance-plan-summaries-archive",
+      "title": "Governance D -- done nodes' summaries over 300 bytes moved verbatim from PLAN.yaml into state/cut-archive/ by a named script, one generated pointer line each, monthly beside C's rotation, and its rule appended to AUTONOMY; the measurements before and after it",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": null,
+      "budget_minutes": 0,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "branch": "cut/plan-summaries-archive"
+      },
+      "dates": {
+        "opened": "2026-10-20",
+        "done": null
+      },
+      "summary": "RULED 2026-10-21 (state/directives/2026-10-21-placements-redaction-scan-1c-milestone-4-lanes-238-clicked-d-answers-adr-024-heading-kept.md): D1-b's extra file at S10 accepted as the sheet's own, as with C; the 54 stays accepted, staying until a later rotation (the form's Amendment 8). NEXT: S9, then S10 under OPEN-5 (B), the scoped reviewer pass, the click. Before: WORD ROUND AT f54b54ac 2026-10-21 (the form's Amendment 7); the PR body carries the gate-2 reviewer's two additions. WAITING ON THE HUMAN before S9: D1-b's extra verify-cites file (I2) and the stays list (OPEN-3). Before: GATE 2 PASS WITH NOTES/PASS WITH NOTES 2026-10-21 (gate-log 570, 571): C1 and C2 closed; the word round by one worker (D5, D7) and the PR body (Doc-A, Doc-B), no re-gate; the form's Amendment 6. NEXT: S9 after the human's answer on D1-b's extra verify-cites file (I2) and the stays list (OPEN-3); then S10 under OPEN-5 (B). Before: ROUND 1 BUILT 2026-10-21 at 510f4bac (fix c8c0a294; state/consults/2026-10-21-governance-plan-summaries-archive-round-1-worker-report.md; the form's Amendment 5; the script 251 lines of 230, class 8). NEXT: gate 2, both gates; then S9 and S10 under OPEN-5 (B). Before: GATE 1 FAIL/FAIL 2026-10-21 (gate-log 567, 568) on C1 (R15 refuses once PLAN.yaml holds pointers) and C2 (a failure after the first write reported as a refusal), with words for D1 to D3 and the reviewer's Doc-4 and Doc-5; the form's Amendment 4. CORRECTION ROUND 1: one worker-high; then gate 2. Before: GATE 1 DISPATCHED 2026-10-21 at S5 2d60ac16, architect and reviewer; the PR body lists the 54 stays rows. Before: AT G0 2026-10-21: PR #237 open as a draft; every row of the sheet resolved (state/drafts/2026-10-21-plan-summaries-d-obligations-g0-resolved.md: no obligation 87, home 9, not owed 3, stays 54; the form's Amendment 3). NEXT: both gates at S5; the stays list to the human (OPEN-3); then S9 and S10 under OPEN-5 (B). Before: AT G0 2026-10-20: built to S5 at 2d60ac16, S4 not built (state/consults/2026-10-20-governance-plan-summaries-archive-g0-worker-report.md; the form's Amendment 2); 153 candidates, 405,897 moved bytes; the sheet state/drafts/2026-10-20-plan-summaries-d-obligations-g0.md, 38 rows staying by default. NEXT: the PR, both gates at S5, the sheet for the human (OPEN-3). Before: IN PROGRESS 2026-10-20: one worker-high on cut/plan-summaries-archive in C:/dev/wt/psa from M0 81c34c8b: M-1 to M-3 at M0, S0, S1 to S5, D1-a and the G0 dry run with its sheet; then both gates at G0 and the sheet for the human. Before: RULED 2026-10-20 (the fifth message headed 2026-10-21; the form's Amendment 1): OPEN-1 (A), OPEN-2 (A) if S0 shows it, OPEN-3 the sheet at G0, OPEN-4 (A), OPEN-5 (B), OPEN-6 (A) with Part B approved, OPEN-7 confirmed. NEXT: S0 and the build by one worker-high on cut/plan-summaries-archive from M0, the commit adding Amendment 1. Before: FORM COMMITTED 2026-10-20 (scripts/plan/PLAN-SUMMARIES-ARCHIVE-PREREGISTRATION.md, from the architect's draft state/consults/2026-10-20-governance-plan-summaries-archive-architect-draft.md, its R16 and MR16 revised so that no mutation edits .claude/settings.json, 62 pins expanded by script). OPEN-1 to OPEN-7 with the human before S1 (the archive's shape, the named-file reader, the obligation sheet for sight, buildHealth's before and after, the freeze, the rule's two homes, the readings). Not dispatched before them. Before: PLACED 2026-10-20 by the human (state/directives/2026-10-20-governance-d-done-node-summaries-archived-the-2026-10-14-trim-sentence-corrected.md): next in the governance lane after governance C, never slot 1; the merge is the human's click. Scope: done nodes whose summary is over 300 UTF-8 bytes; open nodes untouched. Before the move, the form lists every summary to be moved that names something still owed, each with a live home, and a summary whose obligation has none stays. NEXT: its full form, drafted by the architect, before any code. This replaces the PLAN.yaml summary trim that the human's 2026-10-14 sentence named; no such trim was ever placed.",
+      "evidence_label": "branch `cut/plan-summaries-archive`"
+    }
+  ],
   "proposed": [
     {
       "id": "governance-hash-grammar-shared",
@@ -396,25 +636,6 @@
         "done": null
       },
       "summary": "Deferred by the human 2026-09-22 to a bounded governance piece; the current regeneration procedure stays for this cut"
-    },
-    {
-      "id": "b1-shell-half",
-      "title": "Shell migration, milestone 4 -- B1 shell half: attributes of the inspected feature, colour by category with its legend, and the table",
-      "lane": "shell",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 0,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-25",
-        "done": null
-      },
-      "summary": "RE-DESCRIBED 2026-10-07 as the migration's milestone 4 (state/directives/2026-10-07-migration-plan-v2-ruled.md; state/directives/SHELL-MIGRATION-PLAN-2026-10-07.md, section 8): on the new shell, after milestones 1 to 3; attributes of the inspected feature in the Feature tab, colour by category in the Style tab with its legend (the one match of ADR-017, its section 5a), and the table in Activity with features and the three scope options. Its form settles where the table's features come from, a second consumer of the dataset's stream connections, and proposes no new SKP command without the human's ruling. Its depends_on is unchanged in this step. Before: O6 (MP-1 done 2026-10-06, #182; engine/MULTIPOLYGON-MP1-PREREGISTRATION.md section 2, O6, and its Amendment 6): b1-shell-half lands second, writes its lookup against MP-1 merged partToRow and resolvePick, and proves it end to end. Before: RULED 2026-09-25, question round 22, item 2 (B1's O7 as recommended): the named consumer of the engine half's non-null columns path and projectable, under round 8's producer exemption; gated by shell-redesign-map-studio. Held by the 2026-09-27 session order until the human says otherwise (state/directives/2026-09-27-session-order.md, its last paragraph): it waits for the shell migration plan, which Fable writes after the O-07 walkthrough, with state/drafts/design/LAYER-MODEL-DECISIONS-2026-09-28.md as an input."
     },
     {
       "id": "verify-mutation-test-temp-dirs",
@@ -683,25 +904,6 @@
       "summary": "Found by the architect while drafting audit-reader-char-boundary (state/consults/2026-10-01-audit-reader-char-boundary-architect-draft.md, the second report): audit_show_lines reads the log with read_to_string, which errors on any invalid UTF-8, and the CLI then refuses the whole log naming its path, so one bad byte hides every record rather than showing one CORRUPT line. Not a panic; trusted, local input; not reproduced. The architect suggests S2, or S3 under the unreproduced tie-breaker; graded at placement. Any fix that adds a CORRUPT form for such a line is new operator wording, which is the human ruling."
     },
     {
-      "id": "skp-line-cites-outside-close-races",
-      "title": "Stale line cites into kernel/src/skp.rs outside kernel-close-races-followups files -- shell streaming, App.tsx, pool_poll.rs, src-tauri lib.rs, the P4 corpus test and the persisted-artifacts test",
-      "lane": "kernel-protocol",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 0,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-10-05",
-        "done": null
-      },
-      "summary": "PROPOSED 2026-10-05, routed by question round 59 item 1 (kernel-close-races-followups OPEN-1 (B); the form Amendment 1, item 1): the stale skp.rs line cites in the files its draft OPEN-1 lists, other than liveTicketSet.ts, repointed by item. MP-1 moves skp.rs lines again, so after MP-1."
-    },
-    {
       "id": "session-generation-t1-t3-reobservation",
       "title": "kernel/tests/session_generation.rs T1 to T3 recorded mutations re-observed at a named commit, T1 describing the arm after #147",
       "lane": "kernel-protocol",
@@ -719,25 +921,6 @@
         "done": null
       },
       "summary": "PROPOSED 2026-10-05, routed by question round 59 item 3 (kernel-close-races-followups OPEN-3 (A); the form Amendment 1, item 3): the three recorded-mutation comments name no observation commit, and T1 describes the create_from_ticket arm before #147."
-    },
-    {
-      "id": "adr-035-close-races-note",
-      "title": "ADR-035 -- an appended, dated note recording what kernel-generation-close-races makes historical (Decision 3's no-session-reference case unreachable; invalidate marks only on a live removal; Decision 2's mint-race arm gone)",
-      "lane": "kernel-protocol",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 45,
-      "needs_human": {
-        "kind": "ruling",
-        "minutes": 5
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-27",
-        "done": null
-      },
-      "summary": "Advisory N4 of the close-races gate-1 architect report (state/consults/gates/2026-09-27-kernel-generation-close-races-gate1-architect.md, with a skeleton): after that piece merges, three ADR-035 passages describe removed code -- Decision 3's bullet on a generation with no session reference, its sub-bullet on invalidate marking before the live lookup, and Decision 2's mint-race arm. ADR-035 is Accepted and never edited; a dated note is appended only on the human's word (the adr-035-decision-4-note precedent, round 22 item 1). No wire change."
     },
     {
       "id": "adr-index-unknown-flag-writes",
@@ -892,25 +1075,6 @@
       "summary": "Filed on state/directives/2026-09-30-portability-and-handoff.md (the human's direction line and Fable's item 1) and state/directives/PORTABILITY-2026-09-30.md, section 3. Placement guidance, the human's line: port-4 waits for the shell migration's first merged milestone. Needs the support profiles (section 7, item 2) and a Linux machine or VM (section 7, item 4). The macOS smoke is the human's, on the MacBook. Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33): item 9 chooses a VM for the Linux L2 smoke, and L3 stays deferred; item 7 adopts the support profiles (the 2019 Intel MacBook for macOS L2 and L3). It stays proposed under the human's placement line above."
     },
     {
-      "id": "questions-mirror-item-count",
-      "title": "questions-mirror.mjs's countItems counts one item high on a round file with a header rule, so a document send's summary names one item too many",
-      "lane": "governance",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 30,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-10-02",
-        "done": null
-      },
-      "summary": "Routed by round-mirror-pretooluse-hook's drafting consult (state/consults/2026-10-02-round-mirror-hook-architect-draft.md, item (c), first bullet): countItems and buildSummary count the --- rules plus one, so a round file with a header rule reads one item high; round 33's eleven items would be summarized as twelve. Not fixed in that piece, whose invalidator I2 keeps mirrorRound and buildSummary unchanged. Also, per Fable round-52 advice item 1 (state/directives/2026-10-04-fable-advice-round-52.md), confirmed by the custodian: the round file header miscounts red-line items, since state/questions/round-52.md reads RED LINE items: none while its items 1 and 3 were red-line items offered as holds only; the same piece should derive that header count from the items."
-    },
-    {
       "id": "template-round15e-exception-pointer",
       "title": "docs/PREREGISTRATION-TEMPLATE.md gains one appended sentence pointing at round 34 item 4's narrow exception to round 15 (e), as AUTONOMY.md section 27 records it",
       "lane": "governance",
@@ -928,25 +1092,6 @@
         "done": null
       },
       "summary": "Routed by PR #156 gate 1 architect (state/consults/gates/2026-10-02-test-claims-same-pr-pin-gate1-architect.md, the round 15 (e) pointer section): the template's round 15 (e) and round 25 (d) lines read alone would fail the one row shape question round 34 item 4 allows; one sentence appended at the end of the template names AUTONOMY.md section 27 and round 34 item 4, reproducing nothing. Docs-only. Whether the architect and reviewer agent definitions need the same pointer is the human's and the custodian's call, raised with it."
-    },
-    {
-      "id": "flush-crlf-field-rewrite",
-      "title": "flush.mjs splits the ledger on LF and rewrites a field line without its CR, so a CRLF working-tree ledger ends with mixed line endings",
-      "lane": "governance",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 30,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-10-02",
-        "done": null
-      },
-      "summary": "Routed by stop-hook-stale-continuity drafting consult (state/consults/2026-10-02-stop-hook-stale-continuity-architect-draft.md, open point 8): scripts/hooks/flush.mjs splits CUT-STATE.md on LF and writes a rewritten field line without its CR, so a CRLF working-tree ledger would end with mixed line endings. Out of that piece scope (its form declares flush.mjs unchanged). The repository checks the ledger out LF (.gitattributes eol=lf), so this matters only for a ledger written CRLF by some other tool (portability R1). Short form, a test with a CRLF ledger and its mutation."
     },
     {
       "id": "skp-closed-domain-response-strings",
@@ -1253,25 +1398,6 @@
       "summary": "Routed 2026-10-07 by geometry-points-cut's closing record (engine/GEOMETRY-POINTS-PREREGISTRATION.md, Amendment 5, item 13; the gate-1 architect's noticed item 1; worker report 2's Noticed section): frontends/shell/e2e/regression.mjs's MP' step (MP-1, merged) opens multipolygon-f1.parquet, which has no covering, so by the points form's Amendment 1, item 6 it is expected to meet the no-covering refusal at its next run. F-1c, the covered twin, is written by kernel/tests/manual_walkthrough_fixtures.rs since the points cut. Existing E2E steps stay unedited, so a new step on F-1c is a class 9 addition in its own form. Waiting on the human's placement."
     },
     {
-      "id": "shell-owners-index",
-      "title": "An owner's index for the shell (frontends/shell), so that shell-owned KNOWN-LIMITATIONS items and pointers are indexed somewhere",
-      "lane": "governance",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 60,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-10-07",
-        "done": null
-      },
-      "summary": "Recorded 2026-10-07 by geometry-lines-cut's form (engine/GEOMETRY-LINES-PREREGISTRATION.md, section 2, Owner's index, the routed item settled; the points form's Amendment 5, item 13, second bullet): the engine and kernel owner's indexes list module-caused limits only, so the shell-owned KNOWN-LIMITATIONS items (34 to 38 once the lines cut lands) are indexed nowhere, because no shell owner's index exists. Creating one is a governance piece under the product-first freeze, so it waits for the freeze to lift or the human's call."
-    },
-    {
       "id": "corpus-line-files",
       "title": "A line file (LineString or MultiLineString) in the preregistered compatibility corpus, so that line admission is tried on a real-world file",
       "lane": "engine",
@@ -1384,25 +1510,6 @@
         "done": null
       },
       "summary": "NOTED 2026-10-10 by the human (state/directives/2026-10-10-flake-hunt-run-1-flush-cancel-exit.md, item 3): stays proposed. The flake hunt's failures of this test (state/consults/FLAKE-HUNT-RUN-1-2026-10-10.md) were a missing event with nothing dropped from the trace, so this node's predicted mechanism was not what was observed; that cause is stream-flush-cancel-exit-marks-producer-cancelled. The custodian's check (state/consults/2026-10-10-flake-hunt-run-1-custodian-check.md) records the evidence's limits. Before: PROPOSED 2026-10-09 by the human's rulings of 2026-10-09 (state/directives/2026-10-09-rulings-on-the-eight-forms.md), item 6: a sibling site of wire-bytes-invariant-trace-flag-race (its form, section 0.7); cross-test stamping into a live trace, not observed failing; its own form, because it bears on a docs/08 budgeted assertion (engine/tests/slice.rs, the assertion near its line 815). The human places it later."
-    },
-    {
-      "id": "stale-assertion-messages-and-product-comments",
-      "title": "Stale text outside the docs lane: an assertion message calling ADR-016 Amendment 1 proposed, a thrown e2e message with a stale line cite, and two product-code comments (crsAssertionState.ts and buildLayers.ts) carrying the same stale premises piece f corrects in tests",
-      "lane": "shell",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 60,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-10-11",
-        "done": null
-      },
-      "summary": "PROPOSED 2026-10-11 by the human (state/directives/2026-10-11-open-11-a-piece-f-opens-ported-notices-required.md, item 2): piece f's form (frontends/shell/STALE-TEST-NAMES-AND-COMMENTS-PREREGISTRATION.md, 2.5 and its open question 4) routes four lines outside the docs lane here: engine/tests/session_identity.rs's assertion message, frontends/shell/e2e/regression.mjs's thrown message with the stale residencyStatus line cite, frontends/shell/src/admission/crsAssertionState.ts's harness premise, and frontends/shell/src/canvas/buildLayers.ts's no-attributes reason. The two messages change test strings and the two comments are product code, so the docs lane cannot take them. Stays proposed; the human grades and places it."
     },
     {
       "id": "app-key-remount-unit-test",
@@ -1652,44 +1759,6 @@
       "summary": "PROPOSED 2026-10-14 by the custodian (state/consults/2026-10-14-shell-status-bar-one-height-e2e-custodian-run-1.md, pan-anchor): setCam clears the view-state log, calls e2eSetViewState with a jittered zoom, and returns the last line once any line has arrived; under load a late line from the previous drag (its gesture-end recenter) arrives first and is taken as the reset, so recenter-crossing-A reads a stale s0 and reports a residual of the whole drag (800 or 1100 buffer px) although the drag panned in full. The fix: wait for the line whose zoom is the call's own jittered value. Test only; no product code. Found on PR #218's e2e; three runs at main with the same canvas size passed, so it is timing-dependent, not the piece's."
     },
     {
-      "id": "walkthrough-current-view-rows-g1-n5",
-      "title": "MANUAL-WALKTHROUGH.md rows G1 and N5: Current view is no longer disabled until a pan or zoom (the docs-lane follow-up of export-current-view-after-unreported-fit, its gate 1 reviewer DOC-4)",
-      "lane": "shell",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 0,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-10-14",
-        "done": null
-      },
-      "summary": "PROPOSED 2026-10-14 by the custodian from PR #219's gate 1 reviewer DOC-4 (state/consults/gates/2026-10-14-export-current-view-after-unreported-fit-gate1-reviewer.md): rows G1 and N5 of frontends/shell/MANUAL-WALKTHROUGH.md describe Current view as disabled with no settled view, which is untrue once #219 merges; that form's section 2.6 keeps its walkthrough edit to Part Y (its Amendment 7 item 5). Words only, in the docs lane, after the merge."
-    },
-    {
-      "id": "b2-piece-1c-save-and-reopen",
-      "title": "B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark",
-      "lane": "kernel-protocol",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 0,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-10-07",
-        "done": null
-      },
-      "summary": "NOTE 2026-10-14 (state/directives/2026-10-14-two-slot-2-pieces-clause-composition-boundary-inventory.md, item 2): boundary-inventory's table is an input to this piece's form (ADR-036 line 81: how the target checked is the target opened). Before: ADR-036'S TWO CHECKS ANSWERED 2026-10-12 (state/consults/2026-10-12-adr-036-guardrails-two-checks-architect.md; the guardrails brief, section 4 item 2): R1 no (dependencies.crs holds an identifier and a source; every definition-only CRS shares one identifier), R2 no (no epoch reserved); the smallest changes named, each version 1 if made before acceptance; R9's step parameters partly; one Documentation item (the selection-scope reservation points to a section that does not hold it). For the human when taking up acceptance; nothing drafted. Before: RULED 2026-10-09, ADR-036's ten findings (state/directives/2026-10-09-adr-036-ten-findings-rulings.md): ADR-036 stays Proposed, and the human accepts it together with this piece's amendments, before this piece merges. This piece's amendment carries findings 1, 2, 4 and 7 to 10 and the project file's line-oriented canonical form, with the architect's open acceptance items. Its form also takes the message's notes: the OneDrive test, including an online-only file whose open must never look frozen; a refusal of a second open that never outlives a crash; what happens on a lineage mismatch under ruling 4; and a strict reader that refuses duplicate keys and checks key order. Owed before acceptance: a check that no common application claims .spatial. File association and single instance are a later piece, and that dependency stays the human's typed word. Before: ADR-036 ACCEPTANCE INPUT 2026-10-08: the architect consult on the reuse round 1 findings (state/consults/2026-10-08-adr-036-reuse-round-1-findings-architect.md; ten findings, two touching red lines: round 70 OPEN-2 and the OPEN-7 carrying rule), for the human acceptance sight; not rulings. OWED BY ITS FORM (b2-piece-1a Amendment 5, item 8, 2026-10-08): the writer carrying rule (machine-recorded always; project-relative in canonical form when the data is inside the folder by containment, judged at save; never an absolute path); the resolver containment (open a project-relative target only when, with every link, junction and reparse point followed, it lies inside the resolved project folder; refuse anything else by name, a target it cannot resolve included; state how the target checked is the target opened; tests for a link out, and on Windows a junction out, a device name and a trailing dot or space). OPEN FOR THE HUMAN in its form (the architect note to Amendment 5): data inside the folder with no canonical spelling (a segment holding a backslash or a colon, legal on POSIX) cannot meet the ruled carrying rule; refuse the save, or carry machine-recorded alone and tell the user. Also its form states which locators the lineage file header carries. ALSO OWED (question round 70, 2026-10-08, state/directives/2026-10-08-round-70-rulings.md; b2-piece-1a Amendment 2, item 5): OPEN-2 at open (the question once, the copy or the same project, the move rule; its wording the human at P6); OPEN-3 recovery when the data changed or cannot be found (the app says so); OPEN-7 re-link on another machine, checked against the observation, naming each difference, none passing silently. ALSO OWED (question round 69, 2026-10-08, state/directives/2026-10-08-round-69-rulings.md; b2-piece-1a Amendment 1, item 5): its ADR-036 amendment states how a reader detects a project file and a lineage file from different saves, and what it shows then; its form states that a selection made by clicking is not saved, and how the human is told at Save project when one exists. Before: Recorded 2026-10-07 (evening) by the human's rulings (state/directives/2026-10-07-b2-brief-and-evening-rulings.md; state/directives/B2-BRIEF-2026-10-07.md, section 9): needs 1b, and the format ADR accepted by the human. Open item at its form: what Save does with the style of a point or line layer (rounds 62 and 63). Proposed."
-    },
-    {
       "id": "verify-quotes-dotted-paths",
       "title": "verify-quotes: the hash-reference path grammar cannot begin with a dot, so a pinned cite into .github/ can never be checked",
       "lane": "governance",
@@ -1707,25 +1776,6 @@
         "done": null
       },
       "summary": "Seen 2026-10-05 committing tools/mods/EVIDENCE-RECORDER-V0-1-PREREGISTRATION.md: scripts/plan/verify-quotes.mjs, HASH_REF_RE, requires a path to start with a letter, digit or underscore, so .github/workflows/governance-ci.yml:81-83 @ 17063904 sha256:<hex> binds as github/workflows/governance-ci.yml and fails as unresolvable. The form writes its three such hashes as unchecked, in words, so that no raw sha256 token is left unbound. The same pins in state/consults pass only because that folder is not scanned. Test-only plus a one-character-class change is the likely size. Never queued until the human places it."
-    },
-    {
-      "id": "bundle-redaction-scan-not-in-product-publish",
-      "title": "The bundle redaction scan runs only in a test: no product publish scans its emitted files, though ADR-017's section 13 (Accepted) says a scan over every emitted file asserts no path, user name, machine identifier or credential is in a bundle",
-      "lane": "kernel-protocol",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 60,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-10-16",
-        "done": null
-      },
-      "summary": "PROPOSED 2026-10-16 by the custodian, for the human's triage: candidate 1 of the boundary inventory (state/consults/2026-10-16-boundary-inventory-architect.md, Candidates for triage). redaction::scan_directory (kernel/src/bundle/redaction.rs) has two callers, both in kernel/tests/publish.rs, over one fixture bundle; the product publish path through the permission boundary runs no scan of the emitted files, so a source whose text column holds a path would be published unscanned. The custodian confirmed the callers by search at b88b1d2f; nothing reproduced. A candidate until graded; the inventory does not grow to fix it."
     },
     {
       "id": "session-log-token-redaction-rests-on-page-code",
@@ -1764,25 +1814,6 @@
         "done": null
       },
       "summary": "Proposed 2026-10-20 by the custodian from publish-approval-unknown-attempt-under-load's cause step, closed on the architect's diagnosis (state/consults/2026-10-20-publish-approval-unknown-attempt-f4-diagnosis-architect.md, items 1 and 4): PublishPanel.tsx's execute hook returns unknown-attempt by itself while its attempt ref is null, and the ref is set only by a passive effect after the prepare's answer, so E-EXPORT's execute, sent at once, can land before it. The diagnosis's out-of-scope fix: set the attempt where the prompt arrives, before the prepare returns. Its comments in PublishPanel.tsx and e2e-test-surface.ts saying the hook always reads the freshest attempt are not true inside that window. The dialog's Submit is not affected. Never queued until placed."
-    },
-    {
-      "id": "verify-quotes-round-item-cites",
-      "title": "verify-quotes resolves round + item cites (the quote checker's follow-on owed by round 12 item 1's Applied text)",
-      "lane": "governance",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 120,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-10-20",
-        "done": null
-      },
-      "summary": "RULED 2026-10-21 (headed), item 2e, proposed and unplaced. It represents governance C's sheet rows L1541 and E104: entry 104's mechanism (a) follow-on; verify-test-claims.mjs resolves round + item cites for withdrawn-test rows only, and verify-quotes.mjs not at all."
     },
     {
       "id": "lod-tiers-geographic-crs",
@@ -1840,25 +1871,6 @@
         "done": null
       },
       "summary": "RULED 2026-10-21 (headed), item 2e, proposed and unplaced. It represents governance C's sheet row E62: moving the raw notice payload to a fetched dist asset, recorded in the then state/NEXT-CUT.md, since archived."
-    },
-    {
-      "id": "adr-020-appended-note",
-      "title": "ADR-020's appended note, owed by the quote baseline's corrected_by entry (entry 102; the docs lane)",
-      "lane": "kernel-protocol",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 30,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-10-20",
-        "done": null
-      },
-      "summary": "RULED 2026-10-21 (headed), item 2e, proposed and unplaced; the docs lane. It represents governance C's sheet row E102: the appended ADR-020 note that the quote baseline lists as owed (its corrected_by, an appended ADR-020 note, owed)."
     },
     {
       "id": "pre-1-0-trademark-search",

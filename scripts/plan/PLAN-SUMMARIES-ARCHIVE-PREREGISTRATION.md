@@ -506,3 +506,85 @@ S0 settles OPEN-2's condition and the exposure question.
 9. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 2 — built to G0: S1 to S5, S4 not built; M at M0; S0 and the dry run; the differences (class 3); the script's overrun (class 8); written after the results were seen
+
+*Written by the custodian after the worker's report was seen. References and hashes only: `state/consults/2026-10-20-governance-plan-summaries-archive-g0-worker-report.md`.*
+
+1. **Built** on `cut/plan-summaries-archive` from M0: S1 d93607315ede2cc9c22a18a102d54db89337e05d with its mutation record 0d5cdbd44f86e1c7f023f3781e4071320be15e22; S2 e11f7275a4c0a2b71ea2a5a46c0aca114e73e040 with aaf6787a24aa962b06e268964ecc5b831e17816d; S3 a73689f3cc6245d9c3e14cd588ca0f9eb4ffebec with f4a520c0a3e9105e8d4b3ce89b2e60ac470e1735; S5 2d60ac164e7a65e29e5e55a27eaa202062d31b83. S4 is not built: S0 shows no difference in verify-quotes, so OPEN-2 (A)'s condition is not met.
+2. **M at M0** (§2 item 7), each figure twice and byte-identical, in the report: M-1's routine total 81,398 bytes; M-2's corpus 1,986 files and 36,290,933 bytes; M-3's PLAN.yaml 695,917 bytes by `git cat-file -s`. The script's digest equals A's S1. Ripgrep's first line names rev 575938147b where C's closing record named de4bc695b7; the version is the same, 14.1.1.
+3. **S0 and the G0 dry run** (the report): the seven checks identical before and after a hand move; 153 candidates of 195 done nodes at M0; 405,897 moved bytes. The dry run ran in a throwaway clone, because main's PLAN.yaml has moved since M0 and the script's blob check refuses in the worktree; S9 merges main in and runs it again. The sheet, `state/drafts/2026-10-20-plan-summaries-d-obligations-g0.md` (sha256 f2f17760ce35134b71ce720ced20789d6ac94a24b6717614ddd8243a08a89af1), has 153 rows: 87 with no marker in the current-state segment, 28 with markers and a mechanical home, and 38 with markers and none, which stay by default. It goes to the human at G0 (OPEN-3).
+4. **Differences from the form (class 3), as the report's items 1 to 10:** a record commit after each code commit; MR9 caught at both parse sites; verifyMove returns a list of problems; R8a's CLI half shows a locator refusal; obligationRows lands in S2; one more refusal (the PLAN.yaml on disk not HEAD's) and four imports; the AUTONOMY placeholders resolved by script to §35 and §34; the dry run in a clone; R16's positive control; the throwaway worktrees removed.
+5. **Budget (class 8; §7 not edited):** `scripts/plan/rotate-plan-summaries.mjs` is 249 lines against its 230; the whole is 653 lines over 4 files against 800 over 6.
+6. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
+
+### Amendment 3 — G0: PR #237 opened as a draft; every row of the sheet resolved; the candidates over main's current PLAN.yaml (class 1); written after the dry run was seen
+
+*Written by the custodian. References and hashes only: `state/drafts/2026-10-21-plan-summaries-d-obligations-g0-resolved.md` and PR #237's body.*
+
+1. **PR #237** is open as a draft from `cut/plan-summaries-archive` at 2d60ac164e7a65e29e5e55a27eaa202062d31b83. Its body carries what §2 item 11's G0 bullet names.
+2. **The candidates over main's current PLAN.yaml** (§2 item 11), at 9831bb2163552f6e715fa29458f2c54124df10a2: the S5 script's own `findCandidates`, `buildMove` and `verifyMove`, imported and called by the custodian, give 153 candidates of 195 done nodes, the same ids as the G0 sheet, 405897 moved bytes, an archive of 309 lines, and no verifyMove problem. The CLI was not run, because its blob check refuses by design when the branch's PLAN.yaml is not main's. PLAN.yaml is unchanged from that commit to ead5b66ac6826bb52431ce77b406e3ffebb6d44a.
+3. **Every row resolved** (§2 item 5), at `state/drafts/2026-10-21-plan-summaries-d-obligations-g0-resolved.md` (sha256 202ad248e60756a90ba831dfc601601359b9cca99a0e1710faac83f74ba20b57): no obligation 87; home 9; not owed 3; stays 54. A home is taken only where the row's own current-state text places the obligation there; not owed only with a merged PR as the proof; every other row with a marker stays. The stays list goes to the human (OPEN-3).
+4. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
+
+### Amendment 4 — gate 1: both FAIL on C1 and C2; correction round 1; the record corrected (class 1); written after both gate reports were seen
+
+*Written by the custodian. References and hashes only: `state/consults/gates/2026-10-21-governance-plan-summaries-archive-gate1-architect.md` (gate-log 567) and `state/consults/gates/2026-10-21-governance-plan-summaries-archive-gate1-reviewer.md` (gate-log 568).*
+
+1. **Gate 1** at S5: both gates FAIL on the same two Correctness findings. C1: R15 refuses once PLAN.yaml holds pointers, because its temporary repository holds no archive, and its count of moved summaries assumes an unkept real candidate. C2: a failure after the first write is reported as a refusal that wrote nothing. The reviewer reproduced C1 on the script's own move at M0: R15 alone exits 1, and the CI globs give 526 of 527.
+2. **Correction round 1** of the two the record cap allows: one worker-high on the branch, for C1 and C2 as both reports give them, and for the Documentation words of item 3. MR15 is recorded again at the fixing commit, and R15 is shown passing on a rotated tree in a throwaway clone, before S10. Then gate 2, both gates.
+3. **The words (AUTONOMY §31 (d)), one author's per sentence.** The README's staging sentence and the test file's header: both gates give the same words. The README's exit-code sentence: the two differ in one phrase, and the reviewer's (`or failed on an unexpected error`) is applied, because the same sentence names STOP for a failure after the first write, and the architect's `stopped` would read as that STOP. The test file's mutation-commit comment and the due call's comment: the reviewer's alone.
+4. **The record (the architect's D4 words, the revs filled by script; the reviewer's Doc-7).** Amendment 2's item 5 is this piece's class 8 entry, budget overrun, §7 not edited, and its item 4 is read as class 1, the amendment's first line saying it was written after the results were seen. The sheet hashes of Amendment 2 item 3 and Amendment 3 item 3 are read @ b2df233db725d947c02c001b7d3f0f2db3d9bde6 and @ b5c1c8418ea6fbfbff98135539e63f57af47abea, the commits adding each sheet. §8 item 6's second bullet and §2 item 11's F0 bullet are read under Amendment 1 item 5 (OPEN-5 (B)): a held commit is one touching PLAN.yaml, CUSTODIAN-QUEUE.* or site/.
+5. **D1-b at S10 (the reviewer's Doc-6), predicted before S9.** The S10 commit adds the sheet at `state/drafts/plan-summaries-d-obligations.md` (§2 item 5), so verify-cites' stdout file count rises by one at S10, a difference §5 does not name. By I2 it goes to the human before S9. C's precedent: verify-cites' extra file, its archive, accepted as that piece's own (C's form, Amendment 5 item 5 and Amendment 7 item 5).
+6. **Not taken in this round:** the reviewer's suggestions on R4's bound and on `holds`' cost per pointer. Both are recorded in its report.
+7. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
+
+### Amendment 5 — correction round 1 built; budget overrun, §7 not edited (class 8); written after the results were seen
+
+*Written by the custodian after the worker's report was seen. References only: `state/consults/2026-10-21-governance-plan-summaries-archive-round-1-worker-report.md`.*
+
+1. **Built** on `cut/plan-summaries-archive` from 2d60ac164e7a65e29e5e55a27eaa202062d31b83: the fix commit c8c0a2949c841537d3a3d2800ef4da5b34cf344f (C1, C2 and the five word pairs of Amendment 4 item 3) and the record commit 510f4bacc1521fb85de84628b8686f334a2970aa (comment lines only).
+2. **Observed** (the report): MR15 at c8c0a2949c841537d3a3d2800ef4da5b34cf344f fails R15 by name. In a throwaway clone at c8c0a2949c841537d3a3d2800ef4da5b34cf344f, the script's own move committed there: R15 passes, with the synthetic node alone moved; with the archive removed from that clone's tree, R15 refuses by name. The brief's "delete R15's new archive copy" was read as removing the archive the copy step reads; both leave R15's temporary repository without the archive. C2 was checked by patched copies of the script in that clone: a failure after the staged write prints the refusal line at 2d60ac16 and the STOP line at c8c0a2949c841537d3a3d2800ef4da5b34cf344f.
+3. **Budget (class 8; §7 not edited):** `scripts/plan/rotate-plan-summaries.mjs` is 251 lines against its 230, two more than Amendment 2 item 5's 249; the whole is 663 lines over 4 files against 800 over 6.
+4. **Gate 2,** both gates, at the record commit.
+5. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
+
+### Amendment 6 — gate 2: both PASS WITH NOTES; the word round (class 1); written after both gate reports were seen
+
+*Written by the custodian. References only: `state/consults/gates/2026-10-21-governance-plan-summaries-archive-gate2-architect.md` (gate-log 570) and `state/consults/gates/2026-10-21-governance-plan-summaries-archive-gate2-reviewer.md` (gate-log 571).*
+
+1. **Gate 2** at the record commit: both gates PASS WITH NOTES, and both close C1 and C2. The reviewer made R15 on a rotated tree, MR15 and the C2 check again, and also ran the S10 shape: with the 54 stays rows passed to `--keep`, the script moves 99 summaries, 284,775 bytes, and R15 passes.
+2. **The architect's D6 words:** Amendment 5 item 3's figures are §7's counting command at 510f4bacc1521fb85de84628b8686f334a2970aa (the round's report, its §7 table); the script's two added lines are the fix commit's, its C2 STOP path (`scripts/plan/rotate-plan-summaries.mjs` lines 228-240 at that commit) and the due call's comment, now two lines (lines 192-193 at that commit).
+3. **The word round, no re-gate (AUTONOMY §31 (d)):** the architect's D5 words for the README's exit-code sentence and D7 words for R15's comment, applied by a worker; the reviewer's Doc-A and Doc-B words in the PR body, applied by the custodian, with a list of every word applied.
+4. **Before S9:** D1-b's predicted exception (Amendment 4 item 5) is with the human under I2; S9 waits for that answer.
+5. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
+
+### Amendment 7 — the gate-2 word round built (class 1)
+
+*Written by the custodian. References only: `state/consults/2026-10-21-governance-plan-summaries-archive-gate2-words-worker-report.md` and PR #237's body.*
+
+1. **The word round** of Amendment 6 item 3 is at f54b54ac4a9f9f73b482e865dacdb7e314f126fc: the README's exit-code sentence and R15's comment, in the architect's words, comment and prose lines only. §7 at that commit: 663 lines over 4 files, unchanged.
+2. **The PR body** carries the reviewer's Doc-A bullet and Doc-B section, byte for byte from its report, and lists every word applied in both rounds.
+
+Nothing above is edited.
+
+### Amendment 8 — the human's answers on D1-b's exception and the stays list (class 5)
+
+*Written by the custodian on the human's message. References only: `state/directives/2026-10-21-placements-redaction-scan-1c-milestone-4-lanes-238-clicked-d-answers-adr-024-heading-kept.md`.*
+
+1. **D1-b's exception (I2; Amendment 4 item 5):** accepted, the sheet's own file, as with C. At S10, verify-cites' stdout file count rises by one for `state/drafts/plan-summaries-d-obligations.md`, and that difference is the piece's own.
+2. **The stays list (OPEN-3):** accepted as resolved; the 54 rows stay in PLAN.yaml until a later rotation.
+3. **Next:** S9, then S10, under OPEN-5 (B).
+4. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.

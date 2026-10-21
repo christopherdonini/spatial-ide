@@ -254,3 +254,54 @@ Falsification: any unforced run at H that fails at the binding assertion or at t
 ## §10. Amendments
 
 (opens empty; append-only)
+
+### Amendment 1 — built: M1 to M3 and R1 to R3 observed; §7's figures; where the record sits; R2 and R3 at the code commit (classes 1 and 2); written after the results were seen
+
+*Written by the custodian after the worker's report was seen. References only: `state/consults/2026-10-21-connection-reuse-recycled-interrupt-flake-worker-report.md`.*
+
+1. **Built** on `cut/connection-reuse-recycled-interrupt-flake` from b2df233db725d947c02c001b7d3f0f2db3d9bde6: the code and test commit 03345bfa4224170aef340025300a45d78693722e, and the record commit 32c3e807f3f6e36184cb8071c7d4399127ff7f1c (comment lines only). No commit touches `engine/README.md`; its two owner's-index lines are lead-data's, as §9 says.
+2. **Observed** (the report), each with this file's one test run alone by name: M1 and M2 at 03345bfa4224170aef340025300a45d78693722e fail it at the binding assertion and at the None arm, with their messages (P-1); M3 at 03345bfa4224170aef340025300a45d78693722e passes (P-2); R1 at b2df233db725d947c02c001b7d3f0f2db3d9bde6 fails it at the live-token assertion, with its message; R2 at 03345bfa4224170aef340025300a45d78693722e passes; R3 at 03345bfa4224170aef340025300a45d78693722e gives 20 of 20 (P-3). No invalidator in §5 is met.
+3. **R2 and R3 at the code commit (class 1).** §4 places them at H. They were observed at 03345bfa4224170aef340025300a45d78693722e, before the record commit that names them; 32c3e807f3f6e36184cb8071c7d4399127ff7f1c adds 15 comment lines to that commit and no other line.
+4. **§7's figures** at 32c3e807f3f6e36184cb8071c7d4399127ff7f1c against B = b2df233db725d947c02c001b7d3f0f2db3d9bde6: engine/src/stream.rs 14, engine/src/dataset.rs 12, engine/tests/connection_reuse.rs 51, engine/README.md 0; 77 in all, of 100. No ceiling is passed.
+5. **Where the record sits (class 1).** The form names no place. The record is in the changed test's header comment, as earlier recorded mutations are in this module's test files.
+6. **Next:** lead-data's owner's-index update (§9), applied by a worker; then the PR and both gates.
+7. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
+
+### Amendment 2 — the owner's-index update applied; PR #238 (class 1)
+
+*Written by the custodian. References only: `state/consults/2026-10-21-connection-reuse-recycled-interrupt-flake-owners-index-update.md` and `state/consults/2026-10-21-connection-reuse-recycled-interrupt-flake-owners-index-apply-worker-report.md`.*
+
+1. **The owner's-index update** (§9) is lead-data's file above, filed unedited at ead5b66a. Commit ead5b66a's message carries one correction from lead-data's hand-back: the section's 47 test pointers split 44 under engine/ and 3 under kernel/tests/. A worker applied its two lines at 866b35791cd037159eb0619e80eb1bec8b4851ff, `engine/README.md` 2 added and 2 deleted.
+2. **§7 at the head 866b35791cd037159eb0619e80eb1bec8b4851ff:** engine/README.md 4 (ceiling 6), and 81 changed lines in all, of 100.
+3. **PR #238** is open from `cut/connection-reuse-recycled-interrupt-flake` at 866b35791cd037159eb0619e80eb1bec8b4851ff. Gate 1, the architect and the reviewer, is dispatched at that head.
+
+Nothing above is edited.
+
+### Amendment 3 — Amendment 1's class label (class 1); written after gate 1's findings were seen
+
+*Written by the custodian on gate 1's architect report. References only.*
+
+1. Amendment 1's heading names classes 1 and 2, and no item in it is class 2: items 3 and 5 are class 1, and item 2 records every outcome as §5 predicts. The heading's class reference reads class 1 alone. Proof: Amendment 1, items 2, 3 and 5.
+
+Nothing above is edited.
+
+### Amendment 4 — gate 1 complete; the word round (class 1)
+
+*Written by the custodian. References only: `state/consults/gates/2026-10-21-connection-reuse-recycled-interrupt-flake-gate1-architect.md` (gate-log 566), `state/consults/gates/2026-10-21-connection-reuse-recycled-interrupt-flake-gate1-reviewer.md` (gate-log 569) and `state/consults/2026-10-21-connection-reuse-recycled-interrupt-flake-gate1-words-worker-report.md`.*
+
+1. **Gate 1:** both gates PASS WITH NOTES, with no Correctness or Evidence finding. The reviewer made M1 to M3, R1, R2 and R3 again against their commits, R3 at the head, 20 of 20.
+2. **The word round, no re-gate** (AUTONOMY §31 (d)): the architect's class label is Amendment 3; the reviewer's words for `matches_nothing`'s doc are applied at 06f145de9c77ab9e8e49b4ee706533c8e01345d0, comment lines only; the PR body lists W1 to W6 in the reviewer's words and asks for a merge commit (§2.6, §9).
+3. **§7 at 06f145de9c77ab9e8e49b4ee706533c8e01345d0:** 81 changed lines of 100, `engine/tests/connection_reuse.rs` 51 of 60.
+
+Nothing above is edited.
+
+### Amendment 5 — closing record: PR #238 merged (class 1)
+
+*Written by the custodian after the merge. References and hashes only.*
+
+1. **Merged** by the human at 2026-10-21T04:24:20Z: merge commit 398ed6eaaaf102e3b60819989ab5651a0a82b515, `%cI` 2026-10-21T06:24:20+02:00, its parents main f922cbe0140283ab89c534b89487d4494b038302 and the branch head 06f145de9c77ab9e8e49b4ee706533c8e01345d0 (the gate-1 word round over 866b3579, the gates' head).
+2. **PLAN:** the node is done, with `{pr: 238}`.
+
+Nothing above is edited.

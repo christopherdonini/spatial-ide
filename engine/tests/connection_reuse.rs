@@ -82,12 +82,10 @@ fn until(what: &str, f: impl Fn() -> bool) {
 
 /// A viewport **outside the data entirely**, so the query matches no row at all.
 ///
-/// This is what makes the "cancel before the first batch" assertion structural rather than a race.
-/// A batch is only flushed when the pending payload reaches the size target or when the scan ends
-/// with something pending; a query that matches nothing can never satisfy either, so **zero
-/// batches is true whether or not the cancel wins**. What the cancel then decides is only the
-/// terminal, which is the one thing that test asserts about timing — and it asserts it with a
-/// message that names the race rather than leaving a reader to guess.
+/// Zero batches is then structural twice over. The test that uses it cancels before it opens the
+/// stream, so the producer stops before it prepares; and even a scan that ran could flush nothing,
+/// because `produce` flushes only a pending batch that holds at least one row, and a query that
+/// matches nothing has none.
 fn matches_nothing(facts: &FixtureFacts) -> ViewportQuery {
     let e = facts.extent;
     let w = e[2] - e[0];
@@ -150,12 +148,32 @@ fn two_sequential_streams_run_on_one_physical_connection() {
 fn cancellation_before_the_first_batch_binds_a_recycled_connection_and_delivers_nothing() {
     // **Lease generation 3** — open took 1, the warm-up stream 2, this stream 3.
     //
-    // Two things are asserted, because the second alone would not distinguish a working interrupt
-    // from a lucky flag check:
-    //   1. the *recycled* connection's interrupt handle is genuinely bound to this stream's token.
+    // The token is cancelled **before the stream is opened**, so the bind happens on a cancelled
+    // token: `attach` interrupts an idle connection, which DuckDB does not latch, and the
+    // producer's flag check before prepare ends the stream. That makes the terminal `Cancelled` on
+    // every interleaving, and it is why the terminal alone says nothing about the interrupt handle.
+    // Two things are asserted:
+    //   1. the *recycled* connection's interrupt handle was bound to this stream's token, read from
+    //      the connection facts recorded at the lease, never from the live token: the producer
+    //      detaches as soon as `produce` returns, which here can be before the next line runs.
     //      That is the regression this cut could introduce and the reason a first lease proves
     //      nothing — `cancel.rs` already pins what a bound handle then does to a running query.
-    //   2. nothing is delivered, and nothing is generated.
+    //   2. nothing is delivered, nothing is generated, and the terminal is `Cancelled`.
+    //
+    // RECORDED MUTATIONS (observed at 03345bfa: applied by hand, this test run alone by name with
+    // `--exact`, reverted):
+    //   M1. `lease_for_stream`'s `attach` statement deleted: fails at the binding assertion, with
+    //       its message.
+    //   M2. the producer's terminal `Err` arm sends nothing (`let _ = e;` for the send): fails at
+    //       the `None` arm, with that arm's message.
+    //   M3. the producer's cancel check before prepare deleted: this test passes, a survivor. Which
+    //       producer check stops this stream is not asserted here.
+    // RECORDED RUNS (pass or fail, no rate), with the scratch line `until("the producer to release
+    // its lease", || ds.connections().active_leases() == 0);` after `connection_facts()`:
+    //   R1. at b2df233d, where the binding assertion read the live token: fails at that assertion,
+    //       with its message.
+    //   R2. at 03345bfa: passes.
+    //   R3. at 03345bfa, without the scratch line: 20 runs, 20 passed.
     let (path, facts) = write("cancel-before-first", &big_spec());
     let ds = Dataset::open(&path).expect("open");
 
@@ -167,6 +185,7 @@ fn cancellation_before_the_first_batch_binds_a_recycled_connection_and_delivers_
     });
 
     let cancel = CancelToken::new();
+    cancel.cancel();
     let mut stream = ds
         .stream_with_cancel(&matches_nothing(&facts), cancel.clone())
         .expect("stream");
@@ -177,17 +196,15 @@ fn cancellation_before_the_first_batch_binds_a_recycled_connection_and_delivers_
         "this test needs a recycled connection"
     );
     assert!(
-        cancel.is_bound(),
+        f.interrupt_bound_at_lease,
         "a recycled connection's interrupt handle must reach the token, or cancellation degrades \
          to the between-batches flag this engine's whole premise rejects"
     );
 
-    cancel.cancel();
-
     let mut buf = Vec::new();
     let terminal = stream.next_into(&mut buf);
-    // **Structural, not a race.** The query matches no row, so no batch can be flushed on any
-    // interleaving — this assertion holds whether the cancel arrived before the scan ended or not.
+    // **Structural, not a race.** The producer stopped before it prepared, and the query matches no
+    // row, so no batch is generated on any interleaving.
     assert_eq!(
         stream.stats().batches_generated.load(Ordering::SeqCst),
         0,
@@ -196,8 +213,8 @@ fn cancellation_before_the_first_batch_binds_a_recycled_connection_and_delivers_
     match terminal {
         Some(Err(EngineError::Cancelled)) => {}
         None => panic!(
-            "the scan completed before the cancel was issued, so this trial says nothing about \
-             cancellation. It is reported as inconclusive rather than counted as a pass"
+            "the stream ended with no terminal, although its token was cancelled before the stream \
+             was opened; a cancelled stream must end `Cancelled`"
         ),
         other => panic!(
             "expected a cancelled terminal, got {:?}",
