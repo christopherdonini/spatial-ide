@@ -622,3 +622,20 @@ Nothing above is edited.
 4. **Next:** the final merge of main into the branch, the PR body (D1-b, E-P, E-R and E-O), and the human's click.
 
 Nothing above is edited.
+
+### Amendment 12 — closing record: PR #237 merged; the after-D measurement at the merge commit (class 1)
+
+*Written by the custodian after the merge. References and hashes only: `state/consults/2026-10-21-governance-plan-summaries-archive-after-d-measurement.md`, sha256 9f12c428810c1050d780af103bf5b68aa68b5c0c168d5a39643d3fe920ad529f.*
+
+1. **Merged** by the human: merge commit 16b3d36045cb3b122bb19baeadbaa22de29e9132, `%cI` 2026-10-21T14:35:38+02:00 (two parents: main 6c3795c5257013d5471bacf68d8c7bb6a2006e0b and the branch head 6045a6dfc0e092f63192f64a6bafc326cfa5b07c, the final merge). The held filings and this node done with `{pr: 237}` are main's next commit, 5a630ed53caf8ce9564962f97ad1ed2ab750fab7, `%cI` 2026-10-21T14:53:41+02:00, before any other (§2 item 11).
+2. **The move** (§2 item 4): S10 120cd55dadd68ab4670776f6882b3e028624edf2, in the merge. At the merge commit the archive `state/cut-archive/PLAN-SUMMARIES-2026-10-21.yaml` is blob 56ba73a11869c682f177be816f7c4bc30511b1d1 and PLAN.yaml is blob 841e0527f16aac1d770a035424ddd52c5526bc03, both S10's.
+3. **M-1** (§2 item 9), in a worktree detached at the merge commit with a clean porcelain; the run's script ran 2026-10-21T12:54:55Z to 2026-10-21T12:55:08Z. Twice, both exit 0, stdout and stderr byte-identical between the runs. The stderr line: `measure-reads: routine 16b3d36045cb3b122bb19baeadbaa22de29e9132 block=5843 ledger=39940 entries=91 window_from=2026-10-14T09:27:28.000Z outside_window=0 pending=51320 total=97108`. Stdout is 97108 bytes by `wc -c`, equal to `total`; its sha256 is dc9237bfabdd8df356d1eda283631be26034aba300c731c2cd28ab27a0fb9f4b, and the stderr's f3c0e70ac4a0f5434f35f598887393ce0c1e8295cc77e87c52f406957001178d. At M0 the total was 81,398 (Amendment 2 item 2). §5 makes no prediction for M-1.
+4. **M-2:** a second worktree detached at the merge commit, its porcelain empty before and after; the script from M-1's worktree. Each run's pipe exited 0 and 0, with nothing on ripgrep's stderr, and the two runs were byte-identical. Stdout: `measure-reads: corpus 16b3d36045cb3b122bb19baeadbaa22de29e9132 files=2011 bytes=36607014`, sha256 1d8d6e2dd2cfa4346405090d002f4676b3c4163fea85f31faa402220e7c2d0f8. Stderr: `tracked_not_listed=586`, sha256 2ec3fa59ee33f80ee30fb8dd9838d6b413be1145e0ace82020031c2c6e178462. At M0: 1,986 files and 36,290,933 bytes; the M0 list, saved in a third clean worktree at M0, gives that figure again. All three worktrees are removed.
+5. **M-3:** `git cat-file -s 16b3d36045cb3b122bb19baeadbaa22de29e9132:PLAN.yaml` is 412316 on both runs (stdout sha256 b94487c1a11fcf02ed7525994c04ff2bd9af0ec2e4dc548d4f5af4f8bcad2ce9). At M0: 695,917.
+6. **E-M** (§5): (a) and (b) hold, and (c) is Amendment 10 item 3. M-2 changed by +25 files and +316,081 bytes. PLAN.yaml's term, −283,601, is (c)'s −291,520 plus main's own PLAN.yaml commits from M0 to S9, +7,919. The other 37 differing paths, +599,682 bytes, are each named with their delta in the record. No listed path is gone.
+7. **The script:** `git show <merge commit>:scripts/plan/measure-reads.mjs | sha256sum` is 7b2d33db229c9e7ca3f404370b2705a1c0485693fae7ef7ca5d8878e8bba92e1, equal to A's S1 digest; M-1's worktree file has the same digest.
+8. **The environment facts:** `rg --version`'s first line is `ripgrep 14.1.1 (rev 575938147b)`, as at M0 (Amendment 2 item 2). `RIPGREP_CONFIG_PATH` is unset. `core.excludesFile` is not set (local, global and system each exit 1). `info/exclude` is present, 541 bytes, sha256 321dffcb77a68a6c079d35da12944866b895b4cc9fb3b1fae72fe9468c7eafeb, as at M0. `C:/dev/wt` and `C:/dev` hold no `.ignore`, `.rgignore` or `.gitignore`. `claude --version` is `2.1.306 (Claude Code)` (2.1.305 at M0); node v24.18.1 and `git version 2.49.0.windows.1`, as at M0.
+9. **Invalidators:** I4, I7 and I8 are not raised.
+10. **Next:** one scoped reviewer pass over this record, commits and hashes only (§9).
+
+Nothing above is edited.
