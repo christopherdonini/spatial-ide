@@ -363,3 +363,15 @@ this machine's Node 24.18.1/Windows combination — it fails with `MODULE_NOT_FO
 `node --test <file>` for any single file, or via glob, only via a bare directory argument — use the
 glob form for a local run on Windows; `governance-ci.yml`'s own `ubuntu-latest` runner uses the
 literal directory-argument form as specified.
+
+## `rotate-plan-summaries.mjs` — done nodes' summaries to `state/cut-archive/` (AUTONOMY.md §35)
+
+The rule is the human's, item 6 of piece D, byte-copied by script from `state/directives/2026-10-20-governance-d-done-node-summaries-archived-the-2026-10-14-trim-sentence-corrected.md:23 @ 81c34c8b28ac030f15ac4ecacdb72ff48aa66483 sha256:2df8ce388e1588d1cd2620548b20312b90080504eddcc14db2444a6b5cdf18ff` (a sub-line span: the words after the item's label; the hash is the whole line's), and nothing in it is changed:
+
+```text
+a node's summary states its current state and what is owed. When a node is done, its history belongs in its form's closing record and the ledger. The monthly rotation moves what is left. Old summaries are searched by id in state/cut-archive/, by A's rule for excluded locations.
+```
+
+`node scripts/plan/rotate-plan-summaries.mjs [--dry-run] [--keep <id,...>]` is run by the custodian at session start, after `rotate-cut-state.mjs` and `rotate-decisions-pending.mjs`; no hook runs it. Exit codes: 0 (it staged the move, was not due, had nothing to move, or printed a dry run) and 2 (it refused, or failed on an unexpected error, before writing anything; or STOP, when anything failed from the first write on, with nothing rolled back).
+
+When it is due, has something to move and is not a dry run, it stages two files and nothing else: `PLAN.yaml` with each moved summary line replaced by one generated pointer, and a new `state/cut-archive/PLAN-SUMMARIES-<date>.yaml` holding each moved node's id and its summary line byte for byte. It never commits, pushes or fetches. `--dry-run` writes nothing and lists the candidates and one obligation row each; `--keep` leaves the named candidates in place. The custodian's procedure, and what a row must be resolved to, are in Part B of AUTONOMY.md §35.
