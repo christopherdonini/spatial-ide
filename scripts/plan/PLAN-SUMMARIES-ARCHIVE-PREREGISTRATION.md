@@ -544,3 +544,15 @@ Nothing above is edited.
 7. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 5 — correction round 1 built; budget overrun, §7 not edited (class 8); written after the results were seen
+
+*Written by the custodian after the worker's report was seen. References only: `state/consults/2026-10-21-governance-plan-summaries-archive-round-1-worker-report.md`.*
+
+1. **Built** on `cut/plan-summaries-archive` from 2d60ac164e7a65e29e5e55a27eaa202062d31b83: the fix commit c8c0a2949c841537d3a3d2800ef4da5b34cf344f (C1, C2 and the five word pairs of Amendment 4 item 3) and the record commit 510f4bacc1521fb85de84628b8686f334a2970aa (comment lines only).
+2. **Observed** (the report): MR15 at c8c0a2949c841537d3a3d2800ef4da5b34cf344f fails R15 by name. In a throwaway clone at c8c0a2949c841537d3a3d2800ef4da5b34cf344f, the script's own move committed there: R15 passes, with the synthetic node alone moved; with the archive removed from that clone's tree, R15 refuses by name. The brief's "delete R15's new archive copy" was read as removing the archive the copy step reads; both leave R15's temporary repository without the archive. C2 was checked by patched copies of the script in that clone: a failure after the staged write prints the refusal line at 2d60ac16 and the STOP line at c8c0a2949c841537d3a3d2800ef4da5b34cf344f.
+3. **Budget (class 8; §7 not edited):** `scripts/plan/rotate-plan-summaries.mjs` is 251 lines against its 230, two more than Amendment 2 item 5's 249; the whole is 663 lines over 4 files against 800 over 6.
+4. **Gate 2,** both gates, at the record commit.
+5. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.

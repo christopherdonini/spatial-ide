@@ -286,3 +286,13 @@ Nothing above is edited.
 1. Amendment 1's heading names classes 1 and 2, and no item in it is class 2: items 3 and 5 are class 1, and item 2 records every outcome as §5 predicts. The heading's class reference reads class 1 alone. Proof: Amendment 1, items 2, 3 and 5.
 
 Nothing above is edited.
+
+### Amendment 4 — gate 1 complete; the word round (class 1)
+
+*Written by the custodian. References only: `state/consults/gates/2026-10-21-connection-reuse-recycled-interrupt-flake-gate1-architect.md` (gate-log 566), `state/consults/gates/2026-10-21-connection-reuse-recycled-interrupt-flake-gate1-reviewer.md` (gate-log 569) and `state/consults/2026-10-21-connection-reuse-recycled-interrupt-flake-gate1-words-worker-report.md`.*
+
+1. **Gate 1:** both gates PASS WITH NOTES, with no Correctness or Evidence finding. The reviewer made M1 to M3, R1, R2 and R3 again against their commits, R3 at the head, 20 of 20.
+2. **The word round, no re-gate** (AUTONOMY §31 (d)): the architect's class label is Amendment 3; the reviewer's words for `matches_nothing`'s doc are applied at 06f145de9c77ab9e8e49b4ee706533c8e01345d0, comment lines only; the PR body lists W1 to W6 in the reviewer's words and asks for a merge commit (§2.6, §9).
+3. **§7 at 06f145de9c77ab9e8e49b4ee706533c8e01345d0:** 81 changed lines of 100, `engine/tests/connection_reuse.rs` 51 of 60.
+
+Nothing above is edited.
