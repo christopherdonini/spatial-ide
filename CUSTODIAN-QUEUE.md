@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `726698af77c9fa87bd87cc9f8c40020b6273e940510a2da96dc3008bc2f7e1e4`) at `2026-10-21T21:36:45.610Z`.
+Generated from `PLAN.yaml` (sha256 `9d90b5148f25cd57c639f427ea231977decd52380c3415b47b72b268c568baee`) at `2026-10-21T21:55:56.127Z`.
 
 ## 1. Next
 
@@ -118,7 +118,7 @@ Generated from `PLAN.yaml` (sha256 `726698af77c9fa87bd87cc9f8c40020b6273e940510a
 - **notices-payload-dist-asset** — The raw notice payload, about 3 MB, moves to a fetched dist asset (entry 62) (phase `prototype`) — never queued until placed
 - **pre-1-0-trademark-search** — The trademark register search with counsel before 1.0 (the human's own) (phase `prototype`) — never queued until placed
 - **record-step-style-match-widening** — record_step admits a style.set match value on fillColor, with the step's dependencies naming the match column and its type (milestone 4's OPEN-4 (A′)): a small data-lane piece, or the first commit of piece 1c's step 1 (phase `prototype`) — never queued until placed
-- **adr-017-note-product-redaction-gate** — An ADR-017 note in the human's typed words: the product publish now runs the redaction scan over every emitted file and refuses by name on a finding (bundle-redaction-scan-not-in-product-publish), and Corrigendum 4's new uninterruptible term (phase `prototype`) — never queued until placed
+- **adr-017-note-product-redaction-gate** — An ADR-017 note in the human's typed words: the product publish now runs the redaction scan over every emitted file, except a viewer file whose bytes the viewer's build scanned, and refuses by name on a finding (bundle-redaction-scan-not-in-product-publish); the build-time scan, the reviewed list and the skip; and Corrigendum 4's new uninterruptible term (phase `prototype`) — never queued until placed
 
 ### Unscheduled
 
