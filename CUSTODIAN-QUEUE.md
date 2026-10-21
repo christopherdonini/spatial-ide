@@ -1,14 +1,13 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `ce4e822fa0c5ffd223ce2a6ae76a1d2d39a02e19fc3ec87311a510f975461573`) at `2026-10-21T15:15:17.106Z`.
+Generated from `PLAN.yaml` (sha256 `38eba8936320f284a6635a1b257f7872f92800efc51e50cdda8af67441186921`) at `2026-10-21T15:22:03.889Z`.
 
 ## 1. Next
 
-- **adr-036-pre-acceptance-block** — ADR-036's pre-acceptance block: one block for the 2026-10-09 rulings (line 71's correction, the line-oriented form, ruling 4's lineage members, ruling 9's reader, the Documentation items at lines 3 and 192) and milestone 4's OPEN-4 (A′), a match value on fillColor with the step's dependencies naming the match column and its type; then the human types the acceptance (lane `kernel-protocol`)
+- **verify-quotes-round-item-cites** — verify-quotes resolves round + item cites (the quote checker's follow-on owed by round 12 item 1's Applied text) (lane `governance`)
 
 ## 2. Ready
 
-- **adr-036-pre-acceptance-block** — ADR-036's pre-acceptance block: one block for the 2026-10-09 rulings (line 71's correction, the line-oriented form, ruling 4's lineage members, ruling 9's reader, the Documentation items at lines 3 and 192) and milestone 4's OPEN-4 (A′), a match value on fillColor with the step's dependencies naming the match column and its type; then the human types the acceptance (lane `kernel-protocol`, order null, budget 60 min)
 - **verify-quotes-round-item-cites** — verify-quotes resolves round + item cites (the quote checker's follow-on owed by round 12 item 1's Applied text) (lane `governance`, order null, budget 120 min)
 
 ## 3. Waiting on the human (total: 0 min)
@@ -38,6 +37,7 @@ Generated from `PLAN.yaml` (sha256 `ce4e822fa0c5ffd223ce2a6ae76a1d2d39a02e19fc3e
 ## 5. In progress
 
 - **bundle-redaction-scan-not-in-product-publish** — The bundle redaction scan runs only in a test: no product publish scans its emitted files, though ADR-017's section 13 (Accepted) says a scan over every emitted file asserts no path, user name, machine identifier or credential is in a bundle — evidence: branch `cut/bundle-redaction-scan`
+- **adr-036-pre-acceptance-block** — ADR-036's pre-acceptance block: one block for the 2026-10-09 rulings (line 71's correction, the line-oriented form, ruling 4's lineage members, ruling 9's reader, the Documentation items at lines 3 and 192) and milestone 4's OPEN-4 (A′), a match value on fillColor with the step's dependencies naming the match column and its type; then the human types the acceptance — evidence: branch `cut/adr-036-pre-acceptance-block`
 
 ## 6. Proposed / unscheduled
 
