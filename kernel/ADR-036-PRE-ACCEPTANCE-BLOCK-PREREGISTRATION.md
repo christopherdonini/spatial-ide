@@ -553,3 +553,15 @@ Nothing above is edited.
 3. **Next:** V1 is rerun with both changes, the reviewer checks them once more, and then the PR is ready for the human's click.
 
 Nothing above is edited.
+
+### Amendment 5 — closing record: PR #240 merged; ADR-036 accepted; the node done (class 1)
+
+*Written by the custodian after the merge. References and hashes only.*
+
+1. **Merged** by the human: merge commit e8f110bb2dfd0233b7593ff31be95af02504c757, `%cI` 2026-10-21T21:44:48+02:00 (two parents: main c63a06968d9ed65b56670fa0a76ba4a2e0582a38 and the branch head b12a5402710e7bb4e85d0f7ef61806787c166bb8, Amendment 4's round 2).
+2. **The change:** `git diff --numstat` from main to the merge gives 44 insertions and 18 deletions in `docs/adr/ADR-036-project-folder-step-record-and-dataset-reference.md`, 62 lines against §7's ceiling of 90, and 1 and 1 in `docs/README.md`.
+3. **Gates:** gate-log 576 to 580 (Amendments 2 to 4).
+4. **The acceptance commit,** in Amendment 4 item 1's order: 7cf76f9f92dee75086d7da1e196a6eda6a6b84b2, on the merge. It changes one line of ADR-036, the Status line, to `Accepted 2026-10-22`, and one line of `docs/README.md`, its row, from `frontends/shell/scripts/adrIndex.mjs`.
+5. **PLAN:** the node is done with `{pr: 240}`, in the commit that adds this amendment. The worktree is removed after it.
+
+Nothing above is edited.

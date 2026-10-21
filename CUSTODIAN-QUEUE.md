@@ -1,14 +1,15 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `406e2ffaac3ab6597bddcd37dedb5c03547064949f2ad3e17afbf6667d1e7d8b`) at `2026-10-21T17:01:11.739Z`.
+Generated from `PLAN.yaml` (sha256 `9a50383d52a275a5b41f16a1d524ce0270c7d1820abea124896f914c755ffb7d`) at `2026-10-21T22:10:56.938Z`.
 
 ## 1. Next
 
-- (nothing ready)
+- **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark (lane `kernel-protocol`)
 
 ## 2. Ready
 
-- (none)
+- **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark (lane `kernel-protocol`, order null, budget 0 min)
+- **stale-assertion-messages-and-product-comments** — Stale text outside the docs lane: an assertion message calling ADR-016 Amendment 1 proposed, a thrown e2e message with a stale line cite, and two product-code comments (crsAssertionState.ts and buildLayers.ts) carrying the same stale premises piece f corrects in tests (lane `shell`, order null, budget 60 min)
 
 ## 3. Waiting on the human (total: 0 min)
 
@@ -20,11 +21,9 @@ Generated from `PLAN.yaml` (sha256 `406e2ffaac3ab6597bddcd37dedb5c03547064949f2a
 
 - **adr-020-appended-note** — ADR-020's appended note, owed by the quote baseline's corrected_by entry (entry 102; the docs lane) — blocked by: stale-assertion-messages-and-product-comments
 - **adr-035-close-races-note** — ADR-035 -- an appended, dated note recording what kernel-generation-close-races makes historical (Decision 3's no-session-reference case unreachable; invalidate marks only on a live removal; Decision 2's mint-race arm gone) — blocked by: adr-020-appended-note
-- **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark — blocked by: adr-036-pre-acceptance-block
 - **skp-line-cites-outside-close-races** — Stale line cites into kernel/src/skp.rs outside kernel-close-races-followups files -- shell streaming, App.tsx, pool_poll.rs, src-tauri lib.rs, the P4 corpus test and the persisted-artifacts test — blocked by: adr-035-close-races-note
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
 - **b1-shell-half** — Shell migration, milestone 4 -- B1 shell half: attributes of the inspected feature, colour by category with its legend, and the table — blocked by: bundle-redaction-scan-not-in-product-publish
-- **stale-assertion-messages-and-product-comments** — Stale text outside the docs lane: an assertion message calling ADR-016 Amendment 1 proposed, a thrown e2e message with a stale line cite, and two product-code comments (crsAssertionState.ts and buildLayers.ts) carrying the same stale premises piece f corrects in tests — blocked by: adr-036-pre-acceptance-block
 - **briefb-b2-save-reopen** — B2 — Save project, Snapshot data, session history, lineage and preferences, in five stages, each with its own form — blocked by: decision-adr-029-scan-progress-route
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer — blocked by: signpath-application-draft
 - **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-1-1
@@ -37,7 +36,6 @@ Generated from `PLAN.yaml` (sha256 `406e2ffaac3ab6597bddcd37dedb5c03547064949f2a
 ## 5. In progress
 
 - **bundle-redaction-scan-not-in-product-publish** — The bundle redaction scan runs only in a test: no product publish scans its emitted files, though ADR-017's section 13 (Accepted) says a scan over every emitted file asserts no path, user name, machine identifier or credential is in a bundle — evidence: branch `cut/bundle-redaction-scan`
-- **adr-036-pre-acceptance-block** — ADR-036's pre-acceptance block: one block for the 2026-10-09 rulings (line 71's correction, the line-oriented form, ruling 4's lineage members, ruling 9's reader, the Documentation items at lines 3 and 192) and milestone 4's OPEN-4 (A′), a match value on fillColor with the step's dependencies naming the match column and its type; then the human types the acceptance — evidence: branch `cut/adr-036-pre-acceptance-block`
 - **verify-quotes-round-item-cites** — verify-quotes resolves round + item cites (the quote checker's follow-on owed by round 12 item 1's Applied text) — evidence: branch `cut/verify-quotes-round-item-cites`
 
 ## 6. Proposed / unscheduled
@@ -120,7 +118,7 @@ Generated from `PLAN.yaml` (sha256 `406e2ffaac3ab6597bddcd37dedb5c03547064949f2a
 - **notices-payload-dist-asset** — The raw notice payload, about 3 MB, moves to a fetched dist asset (entry 62) (phase `prototype`) — never queued until placed
 - **pre-1-0-trademark-search** — The trademark register search with counsel before 1.0 (the human's own) (phase `prototype`) — never queued until placed
 - **record-step-style-match-widening** — record_step admits a style.set match value on fillColor, with the step's dependencies naming the match column and its type (milestone 4's OPEN-4 (A′)): a small data-lane piece, or the first commit of piece 1c's step 1 (phase `prototype`) — never queued until placed
-- **adr-017-note-product-redaction-gate** — An ADR-017 note in the human's typed words: the product publish now runs the redaction scan over every emitted file and refuses by name on a finding (bundle-redaction-scan-not-in-product-publish), and Corrigendum 4's new uninterruptible term (phase `prototype`) — never queued until placed
+- **adr-017-note-product-redaction-gate** — An ADR-017 note in the human's typed words: the product publish now runs the redaction scan over every emitted file, except a viewer file whose bytes the viewer's build scanned, and refuses by name on a finding (bundle-redaction-scan-not-in-product-publish); the build-time scan, the reviewed list and the skip; and Corrigendum 4's new uninterruptible term (phase `prototype`) — never queued until placed
 
 ### Unscheduled
 
