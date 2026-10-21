@@ -97,7 +97,7 @@ import crypto from 'node:crypto';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { loadPlan } from './plan.mjs';
-import { readRulingSet } from './rulingSet.mjs';
+import { readRulingSet, resolveRoundItem } from './rulingSet.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 export const REPO_ROOT = path.resolve(here, '..', '..');
@@ -485,26 +485,17 @@ function loadDecisionsPending(root) {
   return texts;
 }
 
-// A line starting `**RULED <date>[ (...)] — question round N` -- the RULED block header.
-const RULED_HEADER_RE = /^\*\*RULED \d{4}-\d{2}-\d{2}(?: \([^)]*\))? — question round (\d+)/;
-// A line `- *Item M —` at column 0, inside a RULED block.
-const RULED_ITEM_RE = /^- \*Item (\d+) —/;
-// The next block/heading boundary that closes a RULED block's own span.
-const BLOCK_BOUNDARY_RE = /^(\*\*|## )/;
+// `state/questions/round-N.md` when tracked (an itemless RULED block's item resolves there, the form's OPEN-7 (A)), else null.
+const trackedPathsCache = new Map();
+function trackedRoundFileText(root, round) {
+  if (!trackedPathsCache.has(root)) trackedPathsCache.set(root, new Set(gitList(root)));
+  const rel = `state/questions/round-${round}.md`;
+  return trackedPathsCache.get(root).has(rel) && fs.existsSync(path.join(root, rel)) ? fs.readFileSync(path.join(root, rel), 'utf8') : null;
+}
 
-/** `round N, item M` resolves when N's own RULED header exists and item M sits inside its block. */
-function ledgerRoundItemResolves(ledgerText, round, item) {
-  const lines = ledgerText.split('\n');
-  for (let i = 0; i < lines.length; i++) {
-    const hm = RULED_HEADER_RE.exec(lines[i]);
-    if (!hm || Number(hm[1]) !== round) continue;
-    for (let j = i + 1; j < lines.length; j++) {
-      if (BLOCK_BOUNDARY_RE.test(lines[j])) break;
-      const im = RULED_ITEM_RE.exec(lines[j]);
-      if (im && Number(im[1]) === item) return true;
-    }
-  }
-  return false;
+/** `round N, item M` resolves by the shared resolver (rulingSet.mjs resolveRoundItem), over the one text given. */
+function ledgerRoundItemResolves(ledgerText, round, item, roundFileText = null) {
+  return resolveRoundItem([ledgerText], round, item, roundFileText).ok;
 }
 
 /** `entry K` resolves when a line starting `K. **[RULED` exists (the custodian's reading of rider (a)'s
@@ -517,16 +508,16 @@ function ledgerEntryResolves(ledgerText, entry) {
 const CITATION_RE = /round\s+(\d+)\s*,\s*item\s+(\d+)|entry\s+(\d+)/i;
 
 /** Resolves a `round N, item M` or `entry K` citation string against the ledger text of ONE file. */
-function resolveInText(ledgerText, citationText) {
+function resolveInText(ledgerText, citationText, readRoundFile) {
   const m = CITATION_RE.exec(citationText ?? '');
   if (!m) return false;
   if (m[3] !== undefined) return ledgerEntryResolves(ledgerText, Number(m[3]));
-  return ledgerRoundItemResolves(ledgerText, Number(m[1]), Number(m[2]));
+  return ledgerRoundItemResolves(ledgerText, Number(m[1]), Number(m[2]), readRoundFile ? readRoundFile(Number(m[1])) : null);
 }
 
 /** The citation resolves when ONE text of the ruling set resolves it; nothing is joined across files. */
-function resolveCitation(texts, citationText) {
-  return texts.some((t) => resolveInText(t, citationText));
+function resolveCitation(texts, citationText, readRoundFile) {
+  return texts.some((t) => resolveInText(t, citationText, readRoundFile));
 }
 
 // Round 21 item 2 (entry 136), should-fix (a): `ruling:`/`carrier:` are matched as WHOLE keys --
@@ -557,13 +548,13 @@ function withdrawnRiders(root, lineText) {
   const rulingMatch = WITHDRAWN_RULING_RE.exec(outside);
   if (!rulingMatch) return { ok: false, failure: 'no ruling' };
   const rulingText = rulingMatch[1].trim();
-  if (!CITATION_EXACT_RE.test(rulingText) || !resolveCitation(loadDecisionsPending(root), rulingText)) {
+  if (!CITATION_EXACT_RE.test(rulingText) || !resolveCitation(loadDecisionsPending(root), rulingText, (r) => trackedRoundFileText(root, r))) {
     return { ok: false, failure: `unresolvable ruling: ${rulingText}` };
   }
   const carrierMatch = WITHDRAWN_CARRIER_RE.exec(outside);
   if (!carrierMatch) return { ok: false, failure: 'no carrier' };
   const carrierText = carrierMatch[1].trim();
-  if (!CITATION_EXACT_RE.test(carrierText) || !resolveCitation(loadDecisionsPending(root), carrierText)) {
+  if (!CITATION_EXACT_RE.test(carrierText) || !resolveCitation(loadDecisionsPending(root), carrierText, (r) => trackedRoundFileText(root, r))) {
     return { ok: false, failure: `unresolvable carrier: ${carrierText}` };
   }
   return { ok: true, ruling: rulingText, carrier: carrierText };

@@ -108,7 +108,7 @@ import { execFileSync } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { buildTrackedIndex, extractCitations, resolveRef, classifyPath, topDirsOf, CODE_EXTS } from './verify-cites.mjs';
 import { claimFiles } from './verify-test-claims.mjs';
-import { rulingSetPaths, LIVE_RULINGS } from './rulingSet.mjs';
+import { rulingSetPaths, LIVE_RULINGS, resolveRoundItem } from './rulingSet.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 export const REPO_ROOT = path.resolve(here, '..', '..');
@@ -804,13 +804,43 @@ function checkHashRef(root, index, relPath, text, ref, topDirs) {
   return { ok: true, resolvedPath, slice };
 }
 
+// --- Round + item cites (VERIFY-QUOTES-ROUND-ITEM-CITES-PREREGISTRATION.md §2.1 to §2.5). Constants declared at their site. ---
+// A `> ` blockquote line is not read.
+const CITE_BLOCKQUOTE_LINE_RE = /^\s*>/;
+// Spans masked before reading: an inline backtick span, and a straight or curly double-quoted span on the same line.
+const CITE_SKIP_SPAN_RES = [/(`+)[^\n]*?\1/g, /"[^"\n]*"/g, /“[^”\n]*”/g];
+// `round N, item M` / `round N item M` / `round N, items M ...`, case-insensitive; M followed by no letter or digit (`item 2e` is out).
+const CITE_HEAD_RE = /\bround\s+(\d+),?\s+(items?)\s+(\d+)(?![0-9A-Za-z])/gi;
+// After a plural head only: `, K`, `and K`, `, and K`, or `to K` (a range names its two endpoints).
+const CITE_TAIL_RE = /(?:,\s*(?:and\s+)?|\s+and\s+)(\d+)(?![0-9A-Za-z])|\s+to\s+(\d+)(?![0-9A-Za-z])/y;
+
+/** Every round + item cite of `text` as [{ line, round, item }], one per named item; the span kinds above are skipped. */
+function extractRoundItemCites(text) {
+  const out = [];
+  text.split('\n').forEach((raw, i) => {
+    if (CITE_BLOCKQUOTE_LINE_RE.test(raw)) return;
+    let line = raw;
+    for (const re of CITE_SKIP_SPAN_RES) line = line.replace(re, (m) => ' '.repeat(m.length));
+    for (const m of line.matchAll(CITE_HEAD_RE)) {
+      const round = Number(m[1]);
+      out.push({ line: i + 1, round, item: Number(m[3]) });
+      if (m[2].toLowerCase() !== 'items') continue;
+      CITE_TAIL_RE.lastIndex = m.index + m[0].length;
+      for (let t = CITE_TAIL_RE.exec(line); t; t = CITE_TAIL_RE.exec(line)) out.push({ line: i + 1, round, item: Number(t[1] ?? t[2]) });
+    }
+  });
+  return out;
+}
+
 /**
  * Scans `files` (default: every tracked `*PREREGISTRATION*.md` and `docs/adr/*.md`; explicit paths
  * need not be tracked -- a scratch copy of another branch's file is scannable) for verbatim-introduced
  * quotes and checks each against the tracked tree, excluding every extracted quotation (including the
  * baseline file itself) from the searchable text. Returns
  * { findings, advisories, baselined, checked, scanned, unmatchedBaseline, baselineErrors, hashFindings,
- * hashBaselined, unmatchedHashBaseline, hashBaselineErrors }.
+ * hashBaselined, unmatchedHashBaseline, hashBaselineErrors, citeFindings: [{ relPath, line, cite, reason }],
+ * citesChecked }. citeFindings is the round + item pass: each cite resolved against the ruling set by
+ * resolveRoundItem (rulingSet.mjs), one file at a time.
  */
 export function runVerifyQuotes({ repoRoot, files } = {}) {
   const root = repoRoot ?? REPO_ROOT;
@@ -944,6 +974,27 @@ export function runVerifyQuotes({ repoRoot, files } = {}) {
       findings.push({ relPath, line: p.startLine, snippet });
     }
   }
+  // Round + item cites: the ruling set's texts are read once, and only when a scanned file carries a cite.
+  const citeFindings = [];
+  let citesChecked = 0;
+  let rulingTexts = null;
+  const roundFileCache = new Map();
+  const roundFileText = (round) => {
+    if (!roundFileCache.has(round)) {
+      const rel = `state/questions/round-${round}.md`;
+      roundFileCache.set(round, index.set.has(rel) ? fs.readFileSync(path.join(root, rel), 'utf8') : null);
+    }
+    return roundFileCache.get(round);
+  };
+  for (const absPath of scanAbs) {
+    const relPath = path.relative(root, absPath).split(path.sep).join('/');
+    for (const c of extractRoundItemCites(fs.readFileSync(absPath, 'utf8'))) {
+      citesChecked++;
+      rulingTexts ??= rulingFiles(root, index).map((abs) => fs.readFileSync(abs, 'utf8'));
+      const res = resolveRoundItem(rulingTexts, c.round, c.item, roundFileText(c.round));
+      if (!res.ok) citeFindings.push({ relPath, line: c.line, cite: `round ${c.round}, item ${c.item}`, reason: res.reason });
+    }
+  }
   const unmatchedBaseline = baselineEntries.filter((_, i) => !usedBaseline.has(i));
   const unmatchedHashBaseline = hashBaselineEntries.filter((_, i) => !usedHashBaseline.has(i));
   return {
@@ -958,6 +1009,8 @@ export function runVerifyQuotes({ repoRoot, files } = {}) {
     hashBaselined,
     unmatchedHashBaseline,
     hashBaselineErrors,
+    citeFindings,
+    citesChecked,
   };
 }
 
@@ -1048,6 +1101,8 @@ function main() {
     hashBaselined,
     unmatchedHashBaseline,
     hashBaselineErrors,
+    citeFindings,
+    citesChecked,
   } = runVerifyQuotes(opts);
 
   console.log(
@@ -1107,17 +1162,18 @@ function main() {
 
   const verified = checked - baselined.length - advisories.length - findings.length;
   const noHashErrors = hashFindings.length === 0 && hashBaselineErrors.length === 0;
-  if (findings.length === 0 && baselineErrors.length === 0 && noHashErrors) {
+  if (findings.length === 0 && baselineErrors.length === 0 && noHashErrors && citeFindings.length === 0) {
     console.log(
-      `verify:quotes PASS — ${checked} checked, ${verified} verified, ${baselined.length} baselined, ${advisories.length} advisory, 0 baseline entry errors, 0 hash-reference errors (${hashBaselined.length} hash-baselined), 0 hash-baseline entry errors.`,
+      `verify:quotes PASS — ${checked} checked, ${verified} verified, ${baselined.length} baselined, ${advisories.length} advisory, 0 baseline entry errors, 0 hash-reference errors (${hashBaselined.length} hash-baselined), 0 hash-baseline entry errors, ${citesChecked - citeFindings.length} ruling cites resolved, 0 ruling-cite errors.`,
     );
     return;
   }
   console.error(
-    `verify:quotes FAIL — ${findings.length} not found, ${baselineErrors.length} baseline entry error(s), ${hashFindings.length} hash-reference error(s), ${hashBaselineErrors.length} hash-baseline entry error(s):`,
+    `verify:quotes FAIL — ${findings.length} not found, ${baselineErrors.length} baseline entry error(s), ${hashFindings.length} hash-reference error(s), ${hashBaselineErrors.length} hash-baseline entry error(s), ${citeFindings.length} ruling-cite error(s):`,
   );
   for (const f of findings) console.error(`  FAIL — quote not found: ${f.relPath}:${f.line} "${f.snippet}…"`);
   for (const h of hashFindings) console.error(`  FAIL — hash reference: ${h.relPath}:${h.line} — ${h.reason}`);
+  for (const c of citeFindings) console.error(`  FAIL — ruling cite: ${c.relPath}:${c.line} — ${c.cite} — ${c.reason}`);
   process.exitCode = 1;
 }
 

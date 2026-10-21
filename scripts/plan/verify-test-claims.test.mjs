@@ -1685,3 +1685,19 @@ test('verify-test-claims: a round header at the end of the live file and its ite
   assert.equal(findings.length, 1, JSON.stringify(findings));
   assert.match(findings[0].message, /unresolvable ruling: round 1, item 1/);
 });
+
+// Round + item cites (VERIFY-QUOTES-ROUND-ITEM-CITES-PREREGISTRATION.md §4, C1): both tools resolve a cite by rulingSet.mjs's resolveRoundItem.
+// The block's header and bold item line are copied by script from the real archive at 40b04b46, found by round 46, never by a line number.
+// MC1: verify-test-claims keeps its own single-asterisk item pattern (the mutation observed is recorded in the S1 report, with the commit).
+test('verify-test-claims: a withdrawn-test row whose ruling cites a round with bold item lines resolves', () => {
+  const archive = execFileSync('git', ['show', '40b04b46:state/cut-archive/DECISIONS-PENDING-2026-10-20.md'], { cwd: REPO_ROOT, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 }).split('\n');
+  const h = archive.findIndex((l) => /^\*\*RULED \d{4}-\d{2}-\d{2}[^—]*— question round 46 /.test(l));
+  assert.ok(h >= 0, 'no real block for round 46');
+  const item = archive.slice(h + 1).find((l) => /^- \*\*Item 1 —/.test(l));
+  assert.ok(item, 'no bold item 1 in the real block for round 46');
+  const dir = withdrawnFixture({ ruling: 'round 46, item 1', ledger: `${SYNTH_LEDGER}\n${archive[h]}\n\n${item}\n` }).dir;
+  const { findings, withdrawn } = runVerifyTestClaims({ repoRoot: dir });
+  assert.equal(findings.length, 0, JSON.stringify(findings));
+  assert.equal(withdrawn.length, 1, JSON.stringify(withdrawn));
+  assert.equal(withdrawn[0].ruling, 'round 46, item 1');
+});
