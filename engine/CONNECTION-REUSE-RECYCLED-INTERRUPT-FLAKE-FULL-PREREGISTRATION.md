@@ -268,3 +268,13 @@ Falsification: any unforced run at H that fails at the binding assertion or at t
 7. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 2 — the owner's-index update applied; PR #238 (class 1)
+
+*Written by the custodian. References only: `state/consults/2026-10-21-connection-reuse-recycled-interrupt-flake-owners-index-update.md` and `state/consults/2026-10-21-connection-reuse-recycled-interrupt-flake-owners-index-apply-worker-report.md`.*
+
+1. **The owner's-index update** (§9) is lead-data's file above, filed unedited at ead5b66a. Commit ead5b66a's message carries one correction from lead-data's hand-back: the section's 47 test pointers split 44 under engine/ and 3 under kernel/tests/. A worker applied its two lines at 866b35791cd037159eb0619e80eb1bec8b4851ff, `engine/README.md` 2 added and 2 deleted.
+2. **§7 at the head 866b35791cd037159eb0619e80eb1bec8b4851ff:** engine/README.md 4 (ceiling 6), and 81 changed lines in all, of 100.
+3. **PR #238** is open from `cut/connection-reuse-recycled-interrupt-flake` at 866b35791cd037159eb0619e80eb1bec8b4851ff. Gate 1, the architect and the reviewer, is dispatched at that head.
+
+Nothing above is edited.
