@@ -1,46 +1,27 @@
 {
-  "generated_at": "2026-10-21T12:47:53.810Z",
-  "plan_hash": "a3b01eb39d76cb14f96d95c29e6e411197af0042ac90cbcf2acf97782b6cbdda",
+  "generated_at": "2026-10-21T13:05:33.399Z",
+  "plan_hash": "2fe2bdd4628758bbc76c01fa3999a7c3049cb6d5a444b1388d47ce5b4ab41b26",
   "priorities_approved": true,
   "next": {
-    "id": "bundle-redaction-scan-not-in-product-publish",
-    "title": "The bundle redaction scan runs only in a test: no product publish scans its emitted files, though ADR-017's section 13 (Accepted) says a scan over every emitted file asserts no path, user name, machine identifier or credential is in a bundle",
-    "lane": "kernel-protocol",
+    "id": "verify-quotes-round-item-cites",
+    "title": "verify-quotes resolves round + item cites (the quote checker's follow-on owed by round 12 item 1's Applied text)",
+    "lane": "governance",
     "phase": "prototype",
     "status": "ready",
     "order": null,
-    "budget_minutes": 60,
+    "budget_minutes": 120,
     "needs_human": {
       "kind": "none",
       "minutes": 0
     },
     "evidence": null,
     "dates": {
-      "opened": "2026-10-16",
+      "opened": "2026-10-20",
       "done": null
     },
-    "summary": "PLACED 2026-10-21 (state/directives/2026-10-21-placements-redaction-scan-1c-milestone-4-lanes-238-clicked-d-answers-adr-024-heading-kept.md, item 1): graded S1; slot 1, ahead of the order. The architect's form first: what the test scan checks, where the product publish emits files, and the scan wired in before the bundle is handed over, refusing by name on a finding; the scan is never weakened to make it pass. Before: PROPOSED 2026-10-16 by the custodian, for the human's triage: candidate 1 of the boundary inventory (state/consults/2026-10-16-boundary-inventory-architect.md, Candidates for triage). redaction::scan_directory (kernel/src/bundle/redaction.rs) has two callers, both in kernel/tests/publish.rs, over one fixture bundle; the product publish path through the permission boundary runs no scan of the emitted files, so a source whose text column holds a path would be published unscanned. The custodian confirmed the callers by search at b88b1d2f; nothing reproduced. A candidate until graded; the inventory does not grow to fix it."
+    "summary": "PLACED 2026-10-21 (state/directives/2026-10-21-placements-redaction-scan-1c-milestone-4-lanes-238-clicked-d-answers-adr-024-heading-kept.md, item 5): the governance lane after D, 1 of 3, after governance-plan-summaries-archive. Before: RULED 2026-10-21 (headed), item 2e, proposed and unplaced. It represents governance C's sheet rows L1541 and E104: entry 104's mechanism (a) follow-on; verify-test-claims.mjs resolves round + item cites for withdrawn-test rows only, and verify-quotes.mjs not at all."
   },
   "ready": [
-    {
-      "id": "bundle-redaction-scan-not-in-product-publish",
-      "title": "The bundle redaction scan runs only in a test: no product publish scans its emitted files, though ADR-017's section 13 (Accepted) says a scan over every emitted file asserts no path, user name, machine identifier or credential is in a bundle",
-      "lane": "kernel-protocol",
-      "phase": "prototype",
-      "status": "ready",
-      "order": null,
-      "budget_minutes": 60,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-10-16",
-        "done": null
-      },
-      "summary": "PLACED 2026-10-21 (state/directives/2026-10-21-placements-redaction-scan-1c-milestone-4-lanes-238-clicked-d-answers-adr-024-heading-kept.md, item 1): graded S1; slot 1, ahead of the order. The architect's form first: what the test scan checks, where the product publish emits files, and the scan wired in before the bundle is handed over, refusing by name on a finding; the scan is never weakened to make it pass. Before: PROPOSED 2026-10-16 by the custodian, for the human's triage: candidate 1 of the boundary inventory (state/consults/2026-10-16-boundary-inventory-architect.md, Candidates for triage). redaction::scan_directory (kernel/src/bundle/redaction.rs) has two callers, both in kernel/tests/publish.rs, over one fixture bundle; the product publish path through the permission boundary runs no scan of the emitted files, so a source whose text column holds a path would be published unscanned. The custodian confirmed the callers by search at b88b1d2f; nothing reproduced. A candidate until graded; the inventory does not grow to fix it."
-    },
     {
       "id": "verify-quotes-round-item-cites",
       "title": "verify-quotes resolves round + item cites (the quote checker's follow-on owed by round 12 item 1's Applied text)",
@@ -445,6 +426,28 @@
     }
   ],
   "in_progress": [
+    {
+      "id": "bundle-redaction-scan-not-in-product-publish",
+      "title": "The bundle redaction scan runs only in a test: no product publish scans its emitted files, though ADR-017's section 13 (Accepted) says a scan over every emitted file asserts no path, user name, machine identifier or credential is in a bundle",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": null,
+      "budget_minutes": 240,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "branch": "cut/bundle-redaction-scan"
+      },
+      "dates": {
+        "opened": "2026-10-16",
+        "done": null
+      },
+      "summary": "IN PROGRESS 2026-10-21: FORM COMMITTED (kernel/BUNDLE-REDACTION-SCAN-PREREGISTRATION.md: the architect's second revision, every cite written out, state/consults/2026-10-21-bundle-redaction-scan-not-in-product-publish-architect-revised-form-cites.md; 252 pins at 9a8bd442 by script; Amendment 1); budget 240 (the form's section 7); branch cut/bundle-redaction-scan from this commit, the form's B. RULED 2026-10-21 (state/directives/2026-10-21-d-s10-go-adr-036-route-i-redaction-open-items-1c-and-milestone-4-ruled-docs-open-1-yes.md): OPEN-1 to OPEN-4 (A); W6 approved as drafted; lead-data's impact read before the form (state/consults/2026-10-21-bundle-redaction-scan-not-in-product-publish-impact-read.md). NEXT: O0 at B by a worker-high, recorded as Amendment 2 before any code; a finding outside operator-declared stops the piece for the human. Before: PLACED 2026-10-21 (state/directives/2026-10-21-placements-redaction-scan-1c-milestone-4-lanes-238-clicked-d-answers-adr-024-heading-kept.md, item 1): graded S1; slot 1, ahead of the order. The architect's form first: what the test scan checks, where the product publish emits files, and the scan wired in before the bundle is handed over, refusing by name on a finding; the scan is never weakened to make it pass. Before: PROPOSED 2026-10-16 by the custodian, for the human's triage: candidate 1 of the boundary inventory (state/consults/2026-10-16-boundary-inventory-architect.md, Candidates for triage). redaction::scan_directory (kernel/src/bundle/redaction.rs) has two callers, both in kernel/tests/publish.rs, over one fixture bundle; the product publish path through the permission boundary runs no scan of the emitted files, so a source whose text column holds a path would be published unscanned. The custodian confirmed the callers by search at b88b1d2f; nothing reproduced. A candidate until graded; the inventory does not grow to fix it.",
+      "evidence_label": "branch `cut/bundle-redaction-scan`"
+    },
     {
       "id": "walkthrough-current-view-rows-g1-n5",
       "title": "MANUAL-WALKTHROUGH.md rows G1 and N5: Current view is no longer disabled until a pan or zoom (the docs-lane follow-up of export-current-view-after-unreported-fit, its gate 1 reviewer DOC-4)",
@@ -1912,6 +1915,25 @@
         "done": null
       },
       "summary": "PROPOSED 2026-10-21 by the custodian, from milestone 4's OPEN-4 (A′), ruled by the human (state/directives/2026-10-21-d-s10-go-adr-036-route-i-redaction-open-items-1c-and-milestone-4-ruled-docs-open-1-yes.md) and carried by ADR-036's pre-acceptance block (adr-036-pre-acceptance-block). The option's text (state/consults/2026-10-21-b1-shell-half-milestone-4-architect-draft.md, OPEN-4): a small data-lane piece widens record_step before milestone 4's PR B merges, or the widening is the first commit of 1c's step 1. It touches protocol/ (that draft's overlap section), so rule (00) keeps it apart from 1c's protocol/ steps. Which of the two is the human's; the human places it."
+    },
+    {
+      "id": "adr-017-note-product-redaction-gate",
+      "title": "An ADR-017 note in the human's typed words: the product publish now runs the redaction scan over every emitted file and refuses by name on a finding (bundle-redaction-scan-not-in-product-publish), and Corrigendum 4's new uninterruptible term",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 0,
+      "needs_human": {
+        "kind": "ruling",
+        "minutes": 10
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-21",
+        "done": null
+      },
+      "summary": "PROPOSED 2026-10-21 by the custodian, under the redaction scan's OPEN-4 (A), ruled by the human (state/directives/2026-10-21-d-s10-go-adr-036-route-i-redaction-open-items-1c-and-milestone-4-ruled-docs-open-1-yes.md): no ADR text in that piece; the custodian proposes a node for an ADR-017 note in the human's typed words, naming the product gate and Corrigendum 4's new term (kernel/BUNDLE-REDACTION-SCAN-PREREGISTRATION.md, OPEN-4). The architect's second revision adds a point (state/consults/2026-10-21-bundle-redaction-scan-not-in-product-publish-architect-revised-form-cites.md, What I could not settle, item 4): Corrigendum 4's table and kernel/CANCELLATION-AND-TRACING.md section 3 do not list the Finalizing window; whether this node also covers that design note is the human's. The human places it."
     }
   ],
   "unscheduled": [

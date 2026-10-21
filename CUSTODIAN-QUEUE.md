@@ -1,14 +1,13 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `a3b01eb39d76cb14f96d95c29e6e411197af0042ac90cbcf2acf97782b6cbdda`) at `2026-10-21T12:47:53.810Z`.
+Generated from `PLAN.yaml` (sha256 `2fe2bdd4628758bbc76c01fa3999a7c3049cb6d5a444b1388d47ce5b4ab41b26`) at `2026-10-21T13:05:33.399Z`.
 
 ## 1. Next
 
-- **bundle-redaction-scan-not-in-product-publish** — The bundle redaction scan runs only in a test: no product publish scans its emitted files, though ADR-017's section 13 (Accepted) says a scan over every emitted file asserts no path, user name, machine identifier or credential is in a bundle (lane `kernel-protocol`)
+- **verify-quotes-round-item-cites** — verify-quotes resolves round + item cites (the quote checker's follow-on owed by round 12 item 1's Applied text) (lane `governance`)
 
 ## 2. Ready
 
-- **bundle-redaction-scan-not-in-product-publish** — The bundle redaction scan runs only in a test: no product publish scans its emitted files, though ADR-017's section 13 (Accepted) says a scan over every emitted file asserts no path, user name, machine identifier or credential is in a bundle (lane `kernel-protocol`, order null, budget 60 min)
 - **verify-quotes-round-item-cites** — verify-quotes resolves round + item cites (the quote checker's follow-on owed by round 12 item 1's Applied text) (lane `governance`, order null, budget 120 min)
 
 ## 3. Waiting on the human (total: 0 min)
@@ -38,6 +37,7 @@ Generated from `PLAN.yaml` (sha256 `a3b01eb39d76cb14f96d95c29e6e411197af0042ac90
 
 ## 5. In progress
 
+- **bundle-redaction-scan-not-in-product-publish** — The bundle redaction scan runs only in a test: no product publish scans its emitted files, though ADR-017's section 13 (Accepted) says a scan over every emitted file asserts no path, user name, machine identifier or credential is in a bundle — evidence: branch `cut/bundle-redaction-scan`
 - **walkthrough-current-view-rows-g1-n5** — MANUAL-WALKTHROUGH.md rows G1 and N5: Current view is no longer disabled until a pan or zoom (the docs-lane follow-up of export-current-view-after-unreported-fit, its gate 1 reviewer DOC-4) — evidence: branch `cut/walkthrough-current-view-rows-g1-n5`
 
 ## 6. Proposed / unscheduled
@@ -120,6 +120,7 @@ Generated from `PLAN.yaml` (sha256 `a3b01eb39d76cb14f96d95c29e6e411197af0042ac90
 - **notices-payload-dist-asset** — The raw notice payload, about 3 MB, moves to a fetched dist asset (entry 62) (phase `prototype`) — never queued until placed
 - **pre-1-0-trademark-search** — The trademark register search with counsel before 1.0 (the human's own) (phase `prototype`) — never queued until placed
 - **record-step-style-match-widening** — record_step admits a style.set match value on fillColor, with the step's dependencies naming the match column and its type (milestone 4's OPEN-4 (A′)): a small data-lane piece, or the first commit of piece 1c's step 1 (phase `prototype`) — never queued until placed
+- **adr-017-note-product-redaction-gate** — An ADR-017 note in the human's typed words: the product publish now runs the redaction scan over every emitted file and refuses by name on a finding (bundle-redaction-scan-not-in-product-publish), and Corrigendum 4's new uninterruptible term (phase `prototype`) — never queued until placed
 
 ### Unscheduled
 
