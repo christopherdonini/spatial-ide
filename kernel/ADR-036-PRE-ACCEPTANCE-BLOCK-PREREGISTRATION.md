@@ -505,3 +505,27 @@ Assertions only (V1 to V6). No measurement.
 7. **Budget and next:** 60 minutes (§7), set in PLAN.yaml with this commit. S1 comes after PR #239 merges, at its own base B, by a worker; then both gates.
 
 Nothing above is edited.
+
+### Amendment 2 — gate 1: the architect FAIL on C-1, the reviewer PASS WITH NOTES; correction round 1, C3 added (class 9), and two record corrections; written after both gate reports were seen
+
+*Written by the custodian. References only: `state/consults/gates/2026-10-21-adr-036-pre-acceptance-block-gate1-architect.md` (gate-log 576) and `state/consults/gates/2026-10-21-adr-036-pre-acceptance-block-gate1-reviewer.md` (gate-log 577).*
+
+1. **Gate 1** at 70edd381ac6a1bf62d57de49b39dfa1ad95bac05. The architect FAILs on C-1, a Correctness finding: A4's last clause still says containment keeps a path inside the project folder, which the human's B1 sentence no longer supports. The reviewer PASSes WITH NOTES. It has no Correctness or Evidence finding; V1 rebuilt by its own script byte for byte; the 61 pins recomputed, none failing; every check and CI green.
+2. **C3 (class 9), in the architect's words for the gate, joins §2.4.** In A4's new line, the span
+   ```
+   Canonical form is checked on the text alone and does not by itself keep a path inside the project folder: containment, below, does;
+   ```
+   becomes
+   ```
+   Canonical form is checked on the text alone and does not by itself show that a path leads inside the project folder: containment, below, checks that when the data is opened;
+   ```
+   The rest of the line is unchanged. These are red-line ADR words, the architect's and not the human's, and the human sees them at the click. §7's count becomes 64, under 90.
+3. **Corrections to this form's record, in the gates' words** (neither is the human's):
+   - (a) the architect's D-1: §2.1 A3's first Checked-against item overstates the subset: it escapes every code point below U+0020 (`renderer/src/canonical.rs:28-30` @ 46158863299b14f49e581de9e6662b3fe3b0afba sha256:60248654b02ba325163dc0b1d4c9cbc49d2981de5cd7ae11faec484a5d2d0f72), not U+007F to U+009F. The conclusion stands, since U+000A is among those it escapes.
+   - (b) the reviewer's D2: Amendment 1 item 3's count is corrected: the form carries 61 pins of the form `@ 2879e17f1f4ece340473efa53b69f16bd0b91745 sha256:<hex>`, 11 in the header and 50 in §0 to §9, each recomputed at gate 1 of PR #240 with none failing.
+4. **For the human, with no replacement words:**
+   - the architect's H-1: the cited range "items 19 to 28" takes in items 20 to 22, which describe other limits. It is not blocking, and it is the human's own words;
+   - the architect's H-2 and the reviewer's D1: A0 says "The last sentence of §5's containment rule" for a passage of two sentences; and A0's added cite and attribution sentence, and A6's rewritten clause of the architect's own, came after the draft the human ruled on.
+5. **Next:** the worker applies C3 by script on the branch and reruns V1 with it. Then a scoped re-gate: the architect on C3, and the reviewer on V1 and the diff.
+
+Nothing above is edited.
