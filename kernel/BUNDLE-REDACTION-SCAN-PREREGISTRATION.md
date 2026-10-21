@@ -578,3 +578,17 @@ Read at main 9a8bd4428251f6102610d514328d9fc49495e66e, a clean tree except two u
 7. **OPEN-4 (A)'s node** for an ADR-017 note, in the human's typed words, is proposed with the held PLAN changes; the revised report's point on the design notes goes with it.
 
 Nothing above is edited.
+
+## Amendment 2 — O0: STOP, three findings outside `operator-declared` (class 1); written after the result was seen
+
+*Written by the custodian before any code. References only: `state/consults/2026-10-21-bundle-redaction-scan-not-in-product-publish-o0-worker-report.md`.*
+
+1. **O0** (§4), at B ed2024c2401500c26d7a2bf2944f995dd43f04e8: the viewer built with `npm run build`; the 2,000-feature fixture published through `publish_unguarded` with the built `dist/` and `bundled_viewer_license()`'s copyright and route; the unchanged `scan_directory` with those two strings declared. Eight findings. Five are `operator-declared`. Three are not: `credential` in `viewer/NOTICE.txt` at byte 19092, and `local-filesystem-path` in `viewer/NOTICE.txt` at byte 111337 and in `viewer/app.js` at byte 7291. The positive control fired. **P-3 is falsified**, and the piece stops before code (§4, O0's paragraph).
+2. **Where each comes from**, as the custodian read the built files at B (no excerpt is reproduced here):
+   - the `credential` finding is the word that names a password in section 6 of the GNU Affero General Public License's text, which the notice carries verbatim;
+   - the first `local-filesystem-path` finding is a `/Home/` path segment inside an `https` URL, in the third-party licence text `LICENSES/third-party/duckdb-1.5.5/snappy/LICENSE`, which the notice carries verbatim;
+   - the second is the example drive path in a comment of `renderer/bundle-viewer/src/manifest.ts` (its URI-scheme rule), which the viewer's build keeps in `app.js`.
+   None of the three is a path, user name, machine identifier or credential of this machine. That is the custodian's reading, not a verdict of the scan.
+3. **The scan is not weakened** (§8 item 2), and no code is written. The human rules what follows. Their ruling is recorded in the next amendment before any code.
+
+Nothing above is edited.
