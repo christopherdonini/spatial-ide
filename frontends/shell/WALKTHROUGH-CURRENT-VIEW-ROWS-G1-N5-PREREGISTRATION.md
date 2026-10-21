@@ -270,3 +270,13 @@ Nothing above is edited.
 2. **Next (§2.5):** after governance D's click, the branch merges main in, the node's in-progress edit and its done commit with `{pr: 239}` follow, and the PR leaves draft for the human's click.
 
 Nothing above is edited.
+
+## Amendment 3 — after governance D's click: main merged in; the done commit's place corrected (class 3); written after the check was seen
+
+*Written by the custodian. References only: PR #239; the branch's merge commit below.*
+
+1. **Main merged in** at 3a58b66966a72cfd4a294c32b6390f638343b76f, with parents b936965497436c210589de0226c105b3fce7a84c and main 40b04b46b33a6ce7a86160fac4a616ad1683ff1e, after governance D's click (PR #237, §2.5 (c)). The branch's diff against main is still `frontends/shell/MANUAL-WALKTHROUGH.md` alone.
+2. **The done commit's place (class 3):** Amendment 2 item 2 puts the done commit with `{pr: 239}` on the branch before the PR leaves draft. On the branch, `node scripts/plan/verify.mjs` then exits 1, naming this node: PR #239 is not merged. CI runs that check, so the edit was dropped uncommitted. The done commit lands on main after the human's click, as governance C's and D's did.
+3. **Now:** the PR is out of draft for the human's click at that head.
+
+Nothing above is edited.
