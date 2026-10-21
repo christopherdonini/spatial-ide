@@ -1,8 +1,9 @@
 # ADR-036 — B2's file formats: the project folder, the step record and the lasting dataset reference
 
-**Status:** Proposed. **It binds nothing until the human accepts it.** Acceptance is due before piece 1c (`b2-piece-1c-save-and-reopen`) merges, the first piece that writes a file that a later version or another person reads. It is not architect-blockable until accepted.
+**Status:** Proposed. **It binds nothing until the human accepts it.** Acceptance is due once the pre-acceptance block (piece `adr-036-pre-acceptance-block`) has merged, and before piece 1c (`b2-piece-1c-save-and-reopen`), the first piece that writes a file that a later version or another person reads, starts its code. It is not architect-blockable until accepted.
 **Drafted by:** the architect, in piece 1a's form (`kernel/B2-1A-STEP-RECORD-AND-DATASET-REFERENCE-PREREGISTRATION.md`, §2.3).
 **Amended:** in piece 1b's form (`kernel/B2-1B-RECORDING-PREREGISTRATION.md`, §2.7), before acceptance: findings 3, 5 and 6 of the human's rulings of 2026-10-09, the registered actions, the session-history store and its bound, §12, and, under the human's ruling of 2026-10-14 (OPEN-9), `dependencies.crs`'s definition and provenance, the coordinate epoch's reservation and the registry's rule for coordinate parameters.
+**Amended:** in piece `adr-036-pre-acceptance-block`'s form (`kernel/ADR-036-PRE-ACCEPTANCE-BLOCK-PREREGISTRATION.md`, §2), before acceptance, by the human's route (i) (`state/directives/2026-10-21-d-s10-go-adr-036-route-i-redaction-open-items-1c-and-milestone-4-ruled-docs-open-1-yes.md`) and the human's rulings on the block (`state/directives/2026-10-21-adr-036-block-ruled-open-a-c-b1-words-open-w-sentence-adr-022-amendment-2-steps-file.md`): the project file's name; canonical form (ruling 9); containment and the carrying rule (ruling 1, and piece 1c's OPEN-4 and OPEN-5); the copy-or-same question (ruling 8); the line-oriented layout; ruling 4's lineage members; the observation's integers bounded and the Snapshot column reserved (piece 1c's OPEN-14 and OPEN-15); the timing in the Status line and in §11; and milestone 4's OPEN-4 (A′), a match on `fillColor`. The last two sentences of §5's containment rule, and the clause after the semicolon in §11's `workspace` bullet, are the human's words.
 **Related:** ADR-005; ADR-006; ADR-016 and its Amendment 1; ADR-017 §6 (named unknown states); docs/02 (Projects); docs/09; docs/11 (ResourceRef; stable feature IDs); docs/14 (open formats).
 
 ## Context
@@ -17,20 +18,41 @@ A project is a folder, one project per folder:
 
 ```
 <project folder>/
-  <project file>           the project file: one canonical JSON document
+  project.spatial          the project file: one JSON document in §2's line-oriented layout
   .spatial/
     lineage.jsonl          the lineage: step records, JSON Lines
 ```
 
-> **OPEN, until the human accepts this ADR: the project file's name and extension.** The draft named it `project.spatial.json`. A file ending in `.json` cannot open the application by double-click, so the name and the extension are settled at acceptance.
+**The project file's name** is `project.spatial`, one fixed name (the human's ruling 2 of 2026-10-09). A web search found no common application that claims the `.spatial` extension (`state/consults/2026-10-21-spatial-extension-check-custodian.md`). File association and single instance are not decided here; they are a later piece's.
 
 Nothing else in the folder belongs to the format. The session history, the per-project preferences and the machine's locations for a project's datasets live on the machine, behind the application-directory boundary, and are found by the project's identity (§4). None of them is ever in the folder.
 
+**The project file's members,** in this order and no other: `format` and `version` (§3); `project`, the project's identity (§4); `datasets`, an array holding one dataset entry (§5); `lineage` (§8); and `workspace` (§11).
+
 ### 2. Encoding
 
-- **Encoding:** UTF-8 without BOM, with LF line ends, in the canonical JSON subset of `spatial_renderer::canonical`, the one number grammar this repository writes.
-  - The project file is one document followed by one LF.
-  - A steps file is one document per line, each followed by LF.
+- **Encoding:** UTF-8 without BOM, with LF line ends, in the canonical JSON subset of `spatial_renderer::canonical`, the one number grammar this repository writes: every key, string and number is spelled as that subset spells it, and each object's members are in the order this ADR declares.
+  - The project file is one document in the line-oriented layout below, followed by one LF.
+  - A steps file is one document per line, with no whitespace outside strings, each followed by LF.
+  - A reader refuses any other spelling, order or layout, naming the line.
+- **The line-oriented layout** of the project file, so that a diff between two saves shows each member that changed (docs/01, derived rule "Plain text everywhere."; docs/02, Projects):
+  - each member of an object and each element of an array is on a line of its own;
+  - each line is indented by two spaces for each object or array that encloses it;
+  - a member is its key, `:`, one space and its value;
+  - an object or array that is not empty opens with `{` or `[` at the end of the line where it begins, and closes with `}` or `]` on a line of its own, indented as that line is;
+  - an empty object is `{}` and an empty array is `[]`;
+  - a member or element followed by another in the same object or array ends in `,`, after its last character;
+  - no line holds trailing whitespace, and there is no blank line.
+  The document `{"a":1,"b":[],"c":{"d":"x"}}` is laid out as:
+  ```
+  {
+    "a": 1,
+    "b": [],
+    "c": {
+      "d": "x"
+    }
+  }
+  ```
 - **Closed key sets:** a reader refuses an unknown key, a missing key and a duplicate key, naming the key's path, except inside §3's one opaque slot.
 - **Unknown values:** an unknown or not-applicable value is a named state `{"state": <word>, "basis": <text>}` (ADR-017 §6's form). `null` appears only where this ADR declares it.
 - **Large integers:** an integer that can exceed 2^53 − 1 is written as a decimal string, so every reader holds it exactly (ADR-016 §7's width rule).
@@ -52,7 +74,7 @@ Nothing else in the folder belongs to the format. The session history, the per-p
 
 - The dataset form cannot collide with a bundle's `spatial://dataset/<name>`, whose name refuses `/`.
 - Each identity is 128 bits from the operating system's CSPRNG. Each authorises nothing, and none is a handle.
-- **A project opened from a second folder.** When a project's identity opens from a second folder while the first folder still exists, the user is asked once whether it is a copy or the same project. A copy gets a new identity and keeps its lineage, and its data links become its own: re-linking the data in one never changes where the other finds its data. The same project is remembered for that folder, and the question is not asked again there. If the first folder no longer exists, the project has moved, and nothing is asked. The question's wording is the human's at P6.
+- **A project opened from a second folder.** When a project's identity opens from a folder this machine has not opened it from, the user is asked once whether it is a copy or the same project if the first folder still holds a project with this identity, or if the first folder cannot be reached. If the first folder is gone, or holds another project or none, the project has moved, and nothing is asked. A copy gets a new identity, always written to the newly opened folder, and keeps its lineage, and its data links become its own: re-linking the data in one never changes where the other finds its data. The same project is remembered for that folder, and the question is not asked again there. The question's wording is the human's at P6.
 
 ### 5. The lasting dataset reference
 
@@ -67,21 +89,23 @@ A dataset entry, in the project file and in a steps file's header, is `{"resourc
 | `cache_status` | `linked` | `snapshot` |
 | `portability_policy` | `linked-live-file` | `snapshot-sealed` |
 
+The Snapshot column is reserved and is not part of version 1: a version-1 reader refuses a `content_hash` that is not the state `not-taken`, a `cache_status` other than `linked` and a `portability_policy` other than `linked-live-file`. A snapshot reference comes with stage 3, and with a `version` step (§3).
+
 `locators` holds one or more `{"kind", "at"}` objects:
-- `project-relative`: `at` is a path relative to the project folder, `/`-separated and in canonical form. Canonical form is not empty, does not begin with `/`, has no empty, `.` or `..` segment, and holds no `\` and no `:`, so that each path inside the folder has one spelling on every operating system. A reader refuses an `at` outside canonical form. Canonical form is checked on the text alone and does not by itself keep a path inside the project folder: containment, below, does;
+- `project-relative`: `at` is a path relative to the project folder, `/`-separated and in canonical form. Canonical form is not empty, does not begin with `/`, has no empty, `.` or `..` segment, and holds no `\`, no `:` and no control character (U+0000 to U+001F and U+007F to U+009F). No segment ends in a dot or a space, and no segment is a reserved device name: the part of the segment before its first `.`, with trailing spaces removed, is none of `CON`, `PRN`, `AUX`, `NUL`, `CONIN$`, `CONOUT$`, `COM0` to `COM9`, `COM¹`, `COM²`, `COM³`, `LPT0` to `LPT9`, `LPT¹`, `LPT²` and `LPT³`, compared without regard to ASCII case. A reader refuses an `at` outside canonical form. Canonical form fixes how a path is written, not which file it names: on a file system that ignores case or normalises Unicode, two texts in canonical form can name one file. Canonical form is checked on the text alone and does not by itself show that a path leads inside the project folder: containment, below, checks that when the data is opened;
 - `machine-recorded`: `at` is the reference's own logical URI, which the machine's location store resolves.
 
 Locators are built and resolved in the kernel only. No frontend builds or parses one.
 
-**Which locators a project file carries.** A dataset entry in a project file always carries a `machine-recorded` locator. It also carries a `project-relative` locator, in canonical form, when the data is inside the project folder by the containment rule below, judged when the project is saved. It never carries an absolute path (§2). This rule binds the writer; a reader reads the locators an entry holds.
+**Which locators a project file carries.** A dataset entry in a project file always carries a `machine-recorded` locator. It also carries a `project-relative` locator, in canonical form, when the data is inside the project folder, is reached from it without a link (containment, below), and its path has a canonical form, each judged when the project is saved. Data inside the folder whose path has no canonical form on this machine carries the `machine-recorded` locator only, and the save is not refused. An entry never carries an absolute path (§2). This rule binds the writer; a reader reads the locators an entry holds.
 
-**Containment.** A `project-relative` locator never points outside the project folder. Two rules hold this, and they are different things:
+**Containment.** A `project-relative` locator is checked to lead inside the project folder, by two rules that are different things:
 - **canonical form** (above), which a reader checks on the text, before anything is resolved;
-- **containment,** which the resolver that opens the data checks on the resolved target, before it opens it. The resolver resolves the project folder and the target, following every symbolic link, junction and other reparse point, and opens the target only if its resolved path lies inside the resolved project folder. A target that resolves outside the folder is refused by name and never opened, however it gets there: through a link, through a name the operating system resolves to a device (such as `NUL` on Windows), or through a name the operating system rewrites (such as a segment ending in a dot or a space on Windows). A target that cannot be resolved is refused the same way.
+- **containment,** which the resolver that opens the data checks before it opens it, on every platform. The resolver goes from the project folder through each segment of the target and refuses every symbolic link and junction it meets below the folder, whether it points inside or outside; it opens the target only if each segment exists, each but the last is a folder, and the last is a regular file. A refused target is not opened, and is refused by name: a link, a name the operating system resolves to a device (such as `NUL` on Windows), a name the operating system rewrites (such as a segment ending in a dot or a space on Windows), or a target that cannot be resolved. A file kept by a cloud-sync service is not a link, and the resolver must open it. The check is made when the data is opened. A link or a rename that another program makes afterwards is not prevented, at the open or at any later read; a change the detector or the advisory watch sees ends the session, as KNOWN-LIMITATIONS items 19 and 23 to 28 describe, and piece 1c's form declares the rest.
 
-Piece 1c builds the writer and the resolver. Its form states how the target that is checked is the target that is opened.
+Piece 1c builds the writer and the resolver.
 
-**`observed`** is the change-detection observation of the open that the reference was bound to: `byte_size`; `modified_ns` (a decimal string in minimal form, or the state `not-reported`); `footer_length`; `footer_sha256` (64 lowercase hex characters, or the state `not-read-over-ceiling`). Minimal form is digits only, with no sign and no leading zero unless the value is 0. A reader refuses any other spelling of either value, so each value has one spelling.
+**`observed`** is the change-detection observation of the open that the reference was bound to: `byte_size`; `modified_ns` (a decimal string in minimal form, or the state `not-reported`); `footer_length`; `footer_sha256` (64 lowercase hex characters, or the state `not-read-over-ceiling`). Minimal form is digits only, with no sign and no leading zero unless the value is 0. A reader refuses any other spelling of either value, so each value has one spelling. `byte_size` and `footer_length` are integers no greater than 2^53 − 1, so §2's rule for large integers does not reach them: a writer refuses to bind a reference to a larger file, and a reader refuses a larger value.
 - It is a change detector, not an identity. It is not a content hash, not a source revision and not a snapshot claim.
 - A change it does not see is not a check that passed: a same-size, same-mtime data-page edit is not detected (`engine/src/descriptor.rs`, module header).
 - It never raises the grade.
@@ -148,9 +172,9 @@ A selection alone is not a step.
 | `actions` | Action | `kind` | Effect | `params` | Collapse key | Wide collapse |
 |---|---|---|---|---|---|---|
 | 1 | `filter.apply` | `data` | workspace mutation | `{"filter":{"predicate":<text>,"dialect":"duckdb-expr/0"}}` or `{"filter":null}`; the predicate is admitted as `viewport_query` admits it | (`filter.apply`, `filter`, the layer) | yes |
-| 2 | `style.set` | `style` | workspace mutation | `{"property":<"fillColor"\|"fillOpacity"\|"outlineColor"\|"outlineWidth">,"value":<value>}`; a colour is `#rrggbb` in lowercase, an opacity a number from 0 to 1, a width `{"value":<number>,"unit":"px"}`; each value is one ADR-017 §5a admits | (`style.set`, the `property`, the layer) | yes |
+| 2 | `style.set` | `style` | workspace mutation | `{"property":<"fillColor"\|"fillOpacity"\|"outlineColor"\|"outlineWidth">,"value":<value>}`; a colour is `#rrggbb` in lowercase, an opacity a number from 0 to 1, a width `{"value":<number>,"unit":"px"}`; for `fillColor` only, the value may instead be ADR-017 §5a's match, `{"match":{"column":<text>,"cases":[{"when":<text>,"then":<colour>}…],"on_null":<colour>,"on_unmatched":<colour>}}`, whose column is a column of the open dataset that §5a's match admits; each value is one ADR-017 §5a admits | (`style.set`, the `property`, the layer) | yes |
 
-A `filter.apply` step's `dependencies` name the predicate's fields with their types; a `style.set` step's name none.
+A `filter.apply` step's `dependencies` name the predicate's fields with their types. A `style.set` step whose value is a match names the match column with its type; any other `style.set` step names none.
 
 ### 7. Names against ADR-006
 
@@ -167,7 +191,8 @@ A `filter.apply` step's `dependencies` name the predicate's fields with their ty
 ### 8. The lineage file
 
 - **What it holds:** every contributing step of the project as saved, in parent order.
-- **How it is written:** whole, at each Save project, by writing a new file in the folder and renaming it over the old one. Piece 1c's amendment to this ADR states how a reader detects a project file and a lineage file from different saves, and what it shows then.
+- **How it is written:** whole, at each Save project, by writing a new file in the folder and renaming it over the old one. The lineage file is replaced first, and the project file after it.
+- **What the project file records of it:** the project file's `lineage` member is `{"sha256":<"sha256:" and 64 lowercase hex characters>,"steps":<int>}`, the sha256 over the lineage file's bytes as written and the number of its step and withheld lines; or, where the project keeps no lineage file, the named state `not-kept` (§2). A reader never reads a lineage file whose bytes or count differ from the member as the project's lineage without saying so. Piece 1c's amendment to this ADR states how a reader tells which save each file is from, and what it shows then.
 - **Its properties:**
   - `completeness` is `{"state":"complete"}` or `{"state":"incomplete","withheld":<int>,"kinds_not_recorded":[<kind>…]}`;
   - `starts` is `{"state":"at-first-save"}` or `{"state":"later","basis":<text>}`.
@@ -189,9 +214,9 @@ The same format, with `purpose` `export-copy`. Where the copy is stored is piece
 
 ### 11. What this ADR does not decide
 
-- **The project file's `workspace` member** (the filters as applied, the style document, the map view, the analysis settings). Piece 1c proposes it as an amendment to this ADR, accepted together with it.
+- **The project file's `workspace` member** (the filters as applied, the style document, the map view, the analysis settings). It is a member of version 1, reserved by name: piece 1c defines its shape in an amendment to this ADR, appended after acceptance and landing no later than 1c's writer; no version-1 project file exists before piece 1c's writer, so 1c's amendment defining workspace completes version 1 and is not a version step.
 - **Work left to later pieces:**
-  - how a reader detects a project file and a lineage file from different saves, and what it shows then (1c, §8);
+  - how a reader tells which save a project file and a lineage file are from, and what it shows then (1c, §8);
   - the export copy's storage (2);
   - the snapshot store, its retention and coherent acquisition (3a);
   - the sharing and tracking defaults, and the marker's wording (5).
@@ -199,6 +224,7 @@ The same format, with `purpose` `export-copy`. Where the copy is stored is piece
 - **Reserved by name, not yet defined:**
   - **a selection scope** (§6, `scope`);
   - **the coordinate epoch:** when a dataset's coordinates were observed, for a CRS whose coordinates change over time. It is a dataset fact that a later version may record as one value, as a named column holding a time per row, or as not stated. Version 1 records it nowhere, and a version-1 file's silence is not a statement that it is not stated. Adding it changes the shape, so it comes with a `version` step (§3), and a version-1 reader refuses the later file.
+  - **the Snapshot column** of §5's table (stage 3).
 - **Out of B2 altogether:** projects with several datasets; workflows, notebooks and replay (Alpha); branches (Beta).
 
 ### 12. How a step reaches the record
