@@ -82,12 +82,10 @@ fn until(what: &str, f: impl Fn() -> bool) {
 
 /// A viewport **outside the data entirely**, so the query matches no row at all.
 ///
-/// This is what makes the "cancel before the first batch" assertion structural rather than a race.
-///
 /// Zero batches is then structural twice over. The test that uses it cancels before it opens the
 /// stream, so the producer stops before it prepares; and even a scan that ran could flush nothing,
-/// because a batch is only flushed when the pending payload reaches the size target or when the
-/// scan ends with something pending, and a query that matches nothing can satisfy neither.
+/// because `produce` flushes only a pending batch that holds at least one row, and a query that
+/// matches nothing has none.
 fn matches_nothing(facts: &FixtureFacts) -> ViewportQuery {
     let e = facts.extent;
     let w = e[2] - e[0];
