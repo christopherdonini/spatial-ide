@@ -599,3 +599,54 @@ Nothing above is edited.
 4. **Generation:** unchanged in PLAN.yaml under the hold; it goes up with the held filings after the click.
 
 Nothing above is edited.
+
+### Amendment 10 — S10 built: the move committed; D1-b, E-P, E-R and E-M (c) as predicted; P is a later main commit (class 1); written after the results were seen
+
+*Written by the custodian after the worker's report was seen. References and hashes only: `state/consults/2026-10-21-governance-plan-summaries-archive-s10-worker-report.md`.*
+
+1. **S10** is 120cd55dadd68ab4670776f6882b3e028624edf2 on `cut/plan-summaries-archive`, pushed, its parent S9 e01738917ef271ff65ee01740c5fbfca36237b73. The archive `state/cut-archive/PLAN-SUMMARIES-2026-10-21.yaml` (blob 56ba73a11869c682f177be816f7c4bc30511b1d1, 203 lines); PLAN.yaml blob 841e0527f16aac1d770a035424ddd52c5526bc03, from S9's 83abe8bbc6f9b8007b8694f90b83ac713d444fa1; 100 summaries moved, 291,520 bytes; the 54 stays rows kept; the sheet at sha256 9ed1c66ed6ab64ce5068aedeb91e2601d545a99a9fc2e17835f8b3667075a977.
+2. **Step 4 and D1-b, S9 against S10:** the five checks' exit codes, stdout and stderr equal, except verify-cites' stdout file count, 2132 to 2133, the sheet's (Amendment 8 item 1). queue.mjs and site.mjs `--check` exit 0 at both. The CI globs: 527 tests, 527 passed, at both, the counts files byte-equal. verify-mutation ran with S9's base given explicitly (54d072687e79f8cb9a77ca942aa6809dad4e326b), since origin/main had moved; its output equals S9's. The shared hold's command printed no exit-code line, at S9 as at S10.
+3. **E-P, E-R and E-M (c):** 100 insertions and 100 deletions in PLAN.yaml; the archive's 203 lines equal 3 + 2N; exactly the seven paths; `verifyMove` on the real pair returns no problem. E-R as §5's table predicts: the queue's JSON deep-equal and its Markdown different on the `Generated from` line only; the site equal once normalised, each moved node's summary its pointer; no metric violation at either; `buildSummary` byte-identical. E-M (c): 703,836 − 412,316 = 291,520, the script's moved bytes.
+4. **P:** the archive's `source` commit is main's ab9a4b4f957aaf61dedd5e08446bf98fdca55d7f, where S9's dry run printed 54d072687e79f8cb9a77ca942aa6809dad4e326b. Main moved after S9 by commits touching none of PLAN.yaml, `CUSTODIAN-QUEUE.*` or `site/` (Amendment 1 item 5), and P's PLAN.yaml blob is S9's. The candidate ids are S9's, so I6 is not raised again. The two generators' output went to /dev/null; their exit codes, 0, are in the report.
+5. **Next:** the scoped reviewer pass over S9..S10 with O1 and O2; the PR body; main merged in once more before the click.
+
+Nothing above is edited.
+
+### Amendment 11 — the scoped S10 pass: PASS WITH NOTES (class 1); written after the report was seen
+
+*Written by the custodian. References only: `state/consults/gates/2026-10-21-governance-plan-summaries-archive-s10-reviewer.md` (gate-log 574).*
+
+1. **The pass** (§9, reviewer) at S10: R1 to R3 on the real pair, by the reviewer's own script with a negative control; the sheet, the stays list and I9; E-P, E-M (c), D1-b and E-R as predicted. The CI globs' exit code, which the worker did not see printed (Amendment 10 item 2), printed 0 in the reviewer's run.
+2. **E-O:** O1 found the archive alone and O2 found PLAN.yaml alone, as §4 predicts, at 120cd55dadd68ab4670776f6882b3e028624edf2, with `claude --version` and `rg --version`'s first line recorded in the report.
+3. **N1:** the sheet's directive path and the archive's `source` commit are on main and not yet in the branch's history. The final merge of main into the branch, before the click (Amendment 1 item 5), brings both in; after it, `git cat-file -e HEAD:<that path>` and `git merge-base --is-ancestor ab9a4b4f957aaf61dedd5e08446bf98fdca55d7f HEAD` both exit 0.
+4. **Next:** the final merge of main into the branch, the PR body (D1-b, E-P, E-R and E-O), and the human's click.
+
+Nothing above is edited.
+
+### Amendment 12 — closing record: PR #237 merged; the after-D measurement at the merge commit (class 1)
+
+*Written by the custodian after the merge. References and hashes only: `state/consults/2026-10-21-governance-plan-summaries-archive-after-d-measurement.md`, sha256 9f12c428810c1050d780af103bf5b68aa68b5c0c168d5a39643d3fe920ad529f.*
+
+1. **Merged** by the human: merge commit 16b3d36045cb3b122bb19baeadbaa22de29e9132, `%cI` 2026-10-21T14:35:38+02:00 (two parents: main 6c3795c5257013d5471bacf68d8c7bb6a2006e0b and the branch head 6045a6dfc0e092f63192f64a6bafc326cfa5b07c, the final merge). The held filings and this node done with `{pr: 237}` are main's next commit, 5a630ed53caf8ce9564962f97ad1ed2ab750fab7, `%cI` 2026-10-21T14:53:41+02:00, before any other (§2 item 11).
+2. **The move** (§2 item 4): S10 120cd55dadd68ab4670776f6882b3e028624edf2, in the merge. At the merge commit the archive `state/cut-archive/PLAN-SUMMARIES-2026-10-21.yaml` is blob 56ba73a11869c682f177be816f7c4bc30511b1d1 and PLAN.yaml is blob 841e0527f16aac1d770a035424ddd52c5526bc03, both S10's.
+3. **M-1** (§2 item 9), in a worktree detached at the merge commit with a clean porcelain; the run's script ran 2026-10-21T12:54:55Z to 2026-10-21T12:55:08Z. Twice, both exit 0, stdout and stderr byte-identical between the runs. The stderr line: `measure-reads: routine 16b3d36045cb3b122bb19baeadbaa22de29e9132 block=5843 ledger=39940 entries=91 window_from=2026-10-14T09:27:28.000Z outside_window=0 pending=51320 total=97108`. Stdout is 97108 bytes by `wc -c`, equal to `total`; its sha256 is dc9237bfabdd8df356d1eda283631be26034aba300c731c2cd28ab27a0fb9f4b, and the stderr's f3c0e70ac4a0f5434f35f598887393ce0c1e8295cc77e87c52f406957001178d. At M0 the total was 81,398 (Amendment 2 item 2). §5 makes no prediction for M-1.
+4. **M-2:** a second worktree detached at the merge commit, its porcelain empty before and after; the script from M-1's worktree. Each run's pipe exited 0 and 0, with nothing on ripgrep's stderr, and the two runs were byte-identical. Stdout: `measure-reads: corpus 16b3d36045cb3b122bb19baeadbaa22de29e9132 files=2011 bytes=36607014`, sha256 1d8d6e2dd2cfa4346405090d002f4676b3c4163fea85f31faa402220e7c2d0f8. Stderr: `tracked_not_listed=586`, sha256 2ec3fa59ee33f80ee30fb8dd9838d6b413be1145e0ace82020031c2c6e178462. At M0: 1,986 files and 36,290,933 bytes; the M0 list, saved in a third clean worktree at M0, gives that figure again. All three worktrees are removed.
+5. **M-3:** `git cat-file -s 16b3d36045cb3b122bb19baeadbaa22de29e9132:PLAN.yaml` is 412316 on both runs (stdout sha256 b94487c1a11fcf02ed7525994c04ff2bd9af0ec2e4dc548d4f5af4f8bcad2ce9). At M0: 695,917.
+6. **E-M** (§5): (a) and (b) hold, and (c) is Amendment 10 item 3. M-2 changed by +25 files and +316,081 bytes. PLAN.yaml's term, −283,601, is (c)'s −291,520 plus main's own PLAN.yaml commits from M0 to S9, +7,919. The other 37 differing paths, +599,682 bytes, are each named with their delta in the record. No listed path is gone.
+7. **The script:** `git show <merge commit>:scripts/plan/measure-reads.mjs | sha256sum` is 7b2d33db229c9e7ca3f404370b2705a1c0485693fae7ef7ca5d8878e8bba92e1, equal to A's S1 digest; M-1's worktree file has the same digest.
+8. **The environment facts:** `rg --version`'s first line is `ripgrep 14.1.1 (rev 575938147b)`, as at M0 (Amendment 2 item 2). `RIPGREP_CONFIG_PATH` is unset. `core.excludesFile` is not set (local, global and system each exit 1). `info/exclude` is present, 541 bytes, sha256 321dffcb77a68a6c079d35da12944866b895b4cc9fb3b1fae72fe9468c7eafeb, as at M0. `C:/dev/wt` and `C:/dev` hold no `.ignore`, `.rgignore` or `.gitignore`. `claude --version` is `2.1.306 (Claude Code)` (2.1.305 at M0); node v24.18.1 and `git version 2.49.0.windows.1`, as at M0.
+9. **Invalidators:** I4, I7 and I8 are not raised.
+10. **Next:** one scoped reviewer pass over this record, commits and hashes only (§9).
+
+Nothing above is edited.
+
+### Amendment 13 — the scoped pass over the closing record: PASS WITH NOTES; Doc-1 recorded (class 1); written after the report was seen
+
+*Written by the custodian. References only: `state/consults/gates/2026-10-21-governance-plan-summaries-archive-closing-record-reviewer.md` (gate-log 575).*
+
+1. **The pass** (§9, after the merge) at main d6a3b9f4241641523906dec4e583941890f95a07: the commits, the blobs and the record's hash as Amendment 12 gives them; M-1 to M-3 once more at the merge commit, by the reviewer (§6), with the same stderr lines, byte counts and sha256s; E-M (a) and (b), the PLAN.yaml split and the record's table, by the reviewer's own script, with no differing row; the script's digest equal to A's S1. No Correctness or Evidence finding.
+2. **Doc-1**, in the reviewer's words (not the human's): **Amendment 12's record hash** is read @ d6a3b9f4241641523906dec4e583941890f95a07, the commit adding the record and Amendment 12.
+3. **What the pass could not check:** the custodian's run window and the byte-identity of its two runs, which rest on the run's output in the record; and the script's own printed moved bytes at S10, which Amendment 10 item 3 takes from the S10 report.
+4. **Governance D is closed.** No step remains on this node.
+
+Nothing above is edited.
