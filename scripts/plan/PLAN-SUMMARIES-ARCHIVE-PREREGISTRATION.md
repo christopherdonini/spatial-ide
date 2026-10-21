@@ -611,3 +611,14 @@ Nothing above is edited.
 5. **Next:** the scoped reviewer pass over S9..S10 with O1 and O2; the PR body; main merged in once more before the click.
 
 Nothing above is edited.
+
+### Amendment 11 — the scoped S10 pass: PASS WITH NOTES (class 1); written after the report was seen
+
+*Written by the custodian. References only: `state/consults/gates/2026-10-21-governance-plan-summaries-archive-s10-reviewer.md` (gate-log 574).*
+
+1. **The pass** (§9, reviewer) at S10: R1 to R3 on the real pair, by the reviewer's own script with a negative control; the sheet, the stays list and I9; E-P, E-M (c), D1-b and E-R as predicted. The CI globs' exit code, which the worker did not see printed (Amendment 10 item 2), printed 0 in the reviewer's run.
+2. **E-O:** O1 found the archive alone and O2 found PLAN.yaml alone, as §4 predicts, at 120cd55dadd68ab4670776f6882b3e028624edf2, with `claude --version` and `rg --version`'s first line recorded in the report.
+3. **N1:** the sheet's directive path and the archive's `source` commit are on main and not yet in the branch's history. The final merge of main into the branch, before the click (Amendment 1 item 5), brings both in; after it, `git cat-file -e HEAD:<that path>` and `git merge-base --is-ancestor ab9a4b4f957aaf61dedd5e08446bf98fdca55d7f HEAD` both exit 0.
+4. **Next:** the final merge of main into the branch, the PR body (D1-b, E-P, E-R and E-O), and the human's click.
+
+Nothing above is edited.
