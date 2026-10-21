@@ -1,7 +1,9 @@
 // Tests for rotate-plan-summaries.mjs (the form's R1 to R16, scripts/plan/PLAN-SUMMARIES-ARCHIVE-PREREGISTRATION.md section 4).
 // Fixtures are temporary git repositories, each with a bare repository as origin. Their summaries hold é (2 bytes), → (3 bytes),
-// a \" escape, a é escape, a ` #` sequence, a `: ` sequence and a trailing comment. No date is typed: the archive's name comes
-// from the machine clock, the past from epoch arithmetic. A run across UTC midnight can fail the tests that read today's date.
+// a \" escape, a \u00e9 escape, a ` #` sequence, a `: ` sequence and a trailing comment. The dates the assertions read are not
+// typed: the archive's name comes from the machine clock, the past from epoch arithmetic; the fixture dates (the 2020-01-01
+// archive names, the nodes' opened date, the RESOLVED marker's date) are data no assertion compares with the clock. A run
+// across UTC midnight can fail the tests that read today's date.
 import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -51,8 +53,9 @@ function commit(dir, files, msg, date = null) {
 }
 after(() => { for (const d of dirs) fs.rmSync(d, { recursive: true, force: true }); });
 
-// Each mutation below was applied alone to scripts/plan/rotate-plan-summaries.mjs at d93607315ede, this file run, the failure read by name, and the
-// mutation reverted with the porcelain clean. These are observations by application, not verify-mutation runs.
+// Each mutation below was applied alone at the commit its line names — to scripts/plan/rotate-plan-summaries.mjs, except MR16,
+// which was applied to this file's R16 — this file run, the failure read by name, and the mutation reverted with the porcelain
+// clean. These are observations by application, not verify-mutation runs.
 // RECORDED MUTATION (MR1) at d93607315ede (S1): the archive line re-serialised from the parsed string -> fails by name (every test that needs a good run of the script also fails): `rotate-plan-summaries: a due run writes a new archive whose summary lines are byte-identical to the PLAN.yaml lines they replace, keyed by node id in PLAN.yaml order`.
 // RECORDED MUTATION (MR2) at d93607315ede (S1): the archive line written as an unquoted plain scalar -> fails by name (every test that needs a good run of the script also fails): `rotate-plan-summaries: each archived string, once parsed by yamlSubset, equals the summary it replaced`.
 // RECORDED MUTATION (MR3) at d93607315ede (S1): a generated comment line written above each pointer -> fails by name (every test that needs a good run of the script also fails): `rotate-plan-summaries: only the moved summary lines change; every other PLAN.yaml line is byte-identical and the line count is unchanged`.
@@ -339,7 +342,11 @@ test("rotate-plan-summaries: from the real PLAN.yaml, after a run the queue diff
   assert.ok(!real.includes('\r'), 'LF, as CI checks out');
   const head = parseYamlSubset(real);
   const fit = (lines) => lines.map((l) => l.replace('lane: shell', `lane: ${head.lanes[0].id}`).replace('phase: prototype', `phase: ${head.phases[0].id}`));
-  const dir = mkRepo({ 'PLAN.yaml': `${real}${[...fit(node('synthetic-long-done', 'done', bytes(400))), ...fit(node('synthetic-long-ready', 'ready', bytes(400)))].join('\n')}\n` });
+  // every archive the real tree tracks goes into the first commit, byte for byte (that commit is dated PAST, so the run is still due and
+  // a same-day name takes -2): once PLAN.yaml holds pointers, the script refuses a pointer whose archive is not tracked at HEAD
+  const archives = sh(REPO_ROOT, ['ls-files', '--', ':(glob)state/cut-archive/PLAN-SUMMARIES-*.yaml']).split('\n').filter(Boolean);
+  const held = Object.fromEntries(archives.map((rel) => [rel, fs.readFileSync(path.join(REPO_ROOT, rel))]));
+  const dir = mkRepo({ 'PLAN.yaml': `${real}${[...fit(node('synthetic-long-done', 'done', bytes(400))), ...fit(node('synthetic-long-ready', 'ready', bytes(400)))].join('\n')}\n`, ...held });
   const planPath = path.join(dir, 'PLAN.yaml');
   const GEN = new Date(0).toISOString();
   const gen = () => {
@@ -354,7 +361,7 @@ test("rotate-plan-summaries: from the real PLAN.yaml, after a run the queue diff
   const after = gen();
   const name = staged(dir).find((l) => l.startsWith('A\t')).slice('A\tstate/cut-archive/'.length);
   const gone = before.plan.nodes.filter((n) => n.status === 'done' && Buffer.byteLength(n.summary, 'utf8') > 300).map((n) => n.id);
-  assert.ok(gone.length >= 2 && gone.includes('synthetic-long-done') && !gone.includes('synthetic-long-ready'));
+  assert.ok(gone.length >= 1 && gone.includes('synthetic-long-done') && !gone.includes('synthetic-long-ready'));
   const strip = ({ plan_hash, generated_at, ...rest }) => rest;
   assert.deepEqual(strip(after.queue), strip(before.queue), 'the queue differs only in plan_hash');
   assert.notEqual(after.queue.plan_hash, before.queue.plan_hash);

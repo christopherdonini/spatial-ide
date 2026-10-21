@@ -189,7 +189,9 @@ function main(argv) {
 
   const now = new Date();
   const last = git(['log', '-1', '--diff-filter=A', '--format=%cI', '--', `:(glob)${ARCHIVE_DIR}/PLAN-SUMMARIES-*.yaml`]) || null;
-  const due = isDue({ lastArchiveIso: last, nowIso: now, sizeBytes: 0 }); // the human named no size trigger: only .due and .month are used
+  // the human named no size trigger, so sizeBytes is 0 and the size branch never fires; .due and .month gate and word the run,
+  // and the dry run prints .reason
+  const due = isDue({ lastArchiveIso: last, nowIso: now, sizeBytes: 0 });
   if (!due.due) {
     console.log(`rotate-plan-summaries: not due — the newest archive was added ${last}; this month began ${due.month}.`);
     return 0;
@@ -223,19 +225,19 @@ function main(argv) {
   }
 
   const files = { [`${ARCHIVE_DIR}/${archiveName}`]: move.archive, 'PLAN.yaml': move.text };
-  try {
+  try { // the next statement is the first write: every failure from here on is a STOP, never the refusal that says nothing was written
     fs.mkdirSync(path.join(root, ARCHIVE_DIR), { recursive: true });
     for (const [rel, body] of Object.entries(files)) fs.writeFileSync(path.join(root, rel), body, 'utf8');
     git(['add', '--', ...Object.keys(files)]);
+    for (const [rel, body] of Object.entries(files)) {
+      if (git(['rev-parse', `:${rel}`]) !== git(['hash-object', '--stdin'], body)) throw new Stop(`the staged blob of ${rel} differs from the in-memory text`);
+    }
+    console.log(`rotate-plan-summaries: staged:\n${git(['diff', '--cached', '--name-status', '--no-renames'])}`);
+    console.log(`blobs: ${archiveName} ${git(['rev-parse', `:${ARCHIVE_DIR}/${archiveName}`])}, PLAN.yaml ${git(['rev-parse', ':PLAN.yaml'])}; P is ${P}; moved ${move.moved.length} summaries, ${move.movedBytes} bytes.`);
+    console.log(`Next: node scripts/plan/queue.mjs and node scripts/plan/site.mjs (no site/data/build-health.json present), git add CUSTODIAN-QUEUE.md CUSTODIAN-QUEUE.json site/index.html site/data/plan.json and the sheet; run verify-cites, verify-quotes, verify-test-claims and verify --offline on this staged tree and on HEAD and compare; when equal, git commit -s -m "chore: move done nodes' summaries from PLAN.yaml to ${ARCHIVE_DIR}/${archiveName}" and push; when they differ, restore the index and every path from HEAD, commit nothing, and tell the human.`);
   } catch (e) {
-    throw new Stop(e.message);
+    throw e instanceof Stop ? e : new Stop(e.message);
   }
-  for (const [rel, body] of Object.entries(files)) {
-    if (git(['rev-parse', `:${rel}`]) !== git(['hash-object', '--stdin'], body)) throw new Stop(`the staged blob of ${rel} differs from the in-memory text`);
-  }
-  console.log(`rotate-plan-summaries: staged:\n${git(['diff', '--cached', '--name-status', '--no-renames'])}`);
-  console.log(`blobs: ${archiveName} ${git(['rev-parse', `:${ARCHIVE_DIR}/${archiveName}`])}, PLAN.yaml ${git(['rev-parse', ':PLAN.yaml'])}; P is ${P}; moved ${move.moved.length} summaries, ${move.movedBytes} bytes.`);
-  console.log(`Next: node scripts/plan/queue.mjs and node scripts/plan/site.mjs (no site/data/build-health.json present), git add CUSTODIAN-QUEUE.md CUSTODIAN-QUEUE.json site/index.html site/data/plan.json and the sheet; run verify-cites, verify-quotes, verify-test-claims and verify --offline on this staged tree and on HEAD and compare; when equal, git commit -s -m "chore: move done nodes' summaries from PLAN.yaml to ${ARCHIVE_DIR}/${archiveName}" and push; when they differ, restore the index and every path from HEAD, commit nothing, and tell the human.`);
   return 0;
 }
 
