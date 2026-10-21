@@ -636,6 +636,19 @@ pub struct ConnectionFacts {
     pub lease_generation: u64,
     /// Whether this query received a connection that already existed and was already configured.
     pub reused_an_existing_connection: bool,
+    /// Whether this stream's cancellation token held its connection's interrupt handle when the
+    /// lease was taken: read once from the token on the caller's thread, after `lease_for_stream`
+    /// bound it and before the producer thread is spawned, and never written again. The live token
+    /// cannot answer this afterwards: the producer thread detaches the handle as soon as `produce`
+    /// returns, which on a short query can be before the caller's next line runs.
+    ///
+    /// **Instrument fact (the human, 2026-09-16, round 5 item 4): its only caller is the test
+    /// suite**, `engine/tests/connection_reuse.rs`'s
+    /// `cancellation_before_the_first_batch_binds_a_recycled_connection_and_delivers_nothing`.
+    /// Not behind `cfg(test)` or the `fixture` feature, because the property it proves — that a
+    /// recycled connection's interrupt handle reaches the token — is the shipped pool's, and a fact
+    /// compiled only into a test build would prove it about a build nobody runs. Never an SKP field.
+    pub interrupt_bound_at_lease: bool,
 }
 
 /// How many times a batch's attribute column has been assembled from **more than one** chunk run.
@@ -1223,6 +1236,7 @@ impl Dataset {
             physical_id: lease.physical_id(),
             lease_generation: lease.generation(),
             reused_an_existing_connection: lease.reused_an_existing_connection(),
+            interrupt_bound_at_lease: cancel.is_bound(),
         };
         // Stamped on the caller's thread, before the producer starts — the same place the token is
         // bound to the connection, which is what makes this the boundary a trace wants.

@@ -1928,9 +1928,15 @@ fn check_geometry_column(schema: &SchemaRef, geometry_column: &str) -> Result<()
 /// A leased DuckDB connection for one stream, with its interrupt handle already bound to `cancel`.
 ///
 /// **The lease is taken here — on the caller's thread — rather than inside the producer thread**,
-/// so there is no window in which a cancel could arrive before anything is interruptible. The
-/// configuration statement no longer runs here at all: it ran once when this physical connection
-/// was created, which is the whole of what this cut removes from the query's critical path.
+/// so the handle is bound before `stream_with_cancel` returns and before the producer starts. A
+/// cancel that completed before the bind cannot interrupt this stream's connection, which is not
+/// yet bound: `attach` sees its flag and interrupts the idle connection, which DuckDB does not
+/// latch (`cancel.rs`), and what stops the stream is the producer's flag check before prepare
+/// (`produce`), which ends it `Cancelled` before any statement runs. A cancel whose call overlaps
+/// the bind is either seen by `attach` in the same way or reaches the bound handle, as a cancel
+/// arriving after the bind does. The configuration statement no longer runs here at all: it ran
+/// once when this physical connection was created, which is the whole of what this cut removes from
+/// the query's critical path.
 ///
 /// If the attach fails the lease is dropped rather than returned: a connection whose cancellation
 /// binding did not take is one this engine has established nothing about.
