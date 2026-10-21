@@ -261,3 +261,12 @@ Opens empty, append-only, classes 1 to 9. A yes to OPEN-1 is class 9, and a no i
 5. **Rule 00 at this commit:** disjoint from governance D's branch paths, except §2.5's held PLAN edits; from the redaction scan's drafted paths (no walkthrough row, its draft's §9); from milestone 4's drafted paths (a new Part only, edits neither G nor N); from piece 1c's draft (no walkthrough Part); and from ADR-036's block (one ADR file).
 
 Nothing above is edited.
+
+## Amendment 2 — gate 1 complete: both PASS (class 1); written after both gate reports were seen
+
+*Written by the custodian. References only: `state/consults/gates/2026-10-21-walkthrough-current-view-rows-g1-n5-gate1-architect.md` (gate-log 572) and `state/consults/gates/2026-10-21-walkthrough-current-view-rows-g1-n5-gate1-reviewer.md` (gate-log 573).*
+
+1. **Gate 1** at b936965497436c210589de0226c105b3fce7a84c: the architect and the reviewer PASS, with no finding. No words are owed.
+2. **Next (§2.5):** after governance D's click, the branch merges main in, the node's in-progress edit and its done commit with `{pr: 239}` follow, and the PR leaves draft for the human's click.
+
+Nothing above is edited.
