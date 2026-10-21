@@ -541,3 +541,15 @@ Nothing above is edited.
 5. **For the human, still open:** the order of this merge and the Status edit; items 19 to 28; and A0's attribution (Amendment 2 item 4). These go with the click.
 
 Nothing above is edited.
+
+### Amendment 4 — the human's answers: order (1), and round 2 with their two changes (class 5)
+
+*Written by the custodian on the human's message. References only: `state/directives/2026-10-21-adr-036-order-1-b1-range-a0-two-sentences-redaction-viewer-hash-skip-adr-022-provenance-o0-file-verify-quotes-ruled.md`, items 1 to 3.*
+
+1. **Order (1):** this PR merges first. Then the acceptance commit sets the Status line to `Accepted 2026-10-22` as the human typed it, and regenerates `docs/README.md`'s row.
+2. **Round 2, the human's words, applied by script on the branch.** Each span occurs once at d0c257d9f2ef18e6b7b60228fae7eedcdfd082c0, and nothing else changes:
+   - in B1's containment bullet, `KNOWN-LIMITATIONS items 19 to 28` becomes `KNOWN-LIMITATIONS items 19 and 23 to 28`;
+   - in A0's provenance line, `The last sentence of §5's containment rule` becomes `The last two sentences of §5's containment rule`.
+3. **Next:** V1 is rerun with both changes, the reviewer checks them once more, and then the PR is ready for the human's click.
+
+Nothing above is edited.
