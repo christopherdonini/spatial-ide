@@ -161,6 +161,21 @@ fn cancellation_before_the_first_batch_binds_a_recycled_connection_and_delivers_
     //      That is the regression this cut could introduce and the reason a first lease proves
     //      nothing — `cancel.rs` already pins what a bound handle then does to a running query.
     //   2. nothing is delivered, nothing is generated, and the terminal is `Cancelled`.
+    //
+    // RECORDED MUTATIONS (observed at 03345bfa: applied by hand, this test run alone by name with
+    // `--exact`, reverted):
+    //   M1. `lease_for_stream`'s `attach` statement deleted: fails at the binding assertion, with
+    //       its message.
+    //   M2. the producer's terminal `Err` arm sends nothing (`let _ = e;` for the send): fails at
+    //       the `None` arm, with that arm's message.
+    //   M3. the producer's cancel check before prepare deleted: this test passes, a survivor. Which
+    //       producer check stops this stream is not asserted here.
+    // RECORDED RUNS (pass or fail, no rate), with the scratch line `until("the producer to release
+    // its lease", || ds.connections().active_leases() == 0);` after `connection_facts()`:
+    //   R1. at b2df233d, where the binding assertion read the live token: fails at that assertion,
+    //       with its message.
+    //   R2. at 03345bfa: passes.
+    //   R3. at 03345bfa, without the scratch line: 20 runs, 20 passed.
     let (path, facts) = write("cancel-before-first", &big_spec());
     let ds = Dataset::open(&path).expect("open");
 
