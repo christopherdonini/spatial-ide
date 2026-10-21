@@ -1679,6 +1679,51 @@ fn write_hostile_batch(
     w.close().unwrap();
 }
 
+/// Write a GeoParquet file with one Polygon feature per value of `zones`: `id` (`UInt64`, from 0),
+/// `geometry` (WKB, a unit square in LV95) and `zone` (`Utf8`, the given text as it is). The
+/// redaction scan's tests publish a source whose styled column holds a path. GeoParquet metadata
+/// as in [`write_hostile_names`].
+pub fn write_zone_texts(path: &Path, zones: &[&str]) {
+    let (mut ids, mut geoms, mut texts) = (
+        UInt64Builder::new(),
+        BinaryBuilder::new(),
+        StringBuilder::new(),
+    );
+    for (i, zone) in zones.iter().enumerate() {
+        let (e, n) = (2_600_000.0 + 2.0 * i as f64, 1_200_000.0);
+        ids.append_value(i as u64);
+        geoms.append_value(encode_polygon(&[vec![
+            [e, n],
+            [e + 1.0, n],
+            [e + 1.0, n + 1.0],
+            [e, n + 1.0],
+            [e, n],
+        ]]));
+        texts.append_value(zone);
+    }
+    let schema = Arc::new(Schema::new(vec![
+        Field::new("id", DataType::UInt64, false),
+        Field::new("geometry", DataType::Binary, false),
+        Field::new("zone", DataType::Utf8, false),
+    ]));
+    let columns: Vec<ArrayRef> = vec![
+        Arc::new(ids.finish()),
+        Arc::new(geoms.finish()),
+        Arc::new(texts.finish()),
+    ];
+    let batch = RecordBatch::try_new(schema.clone(), columns).unwrap();
+    let geo = format!(
+        "{{\"version\":\"1.1.0\",\"primary_column\":\"geometry\",\"columns\":{{\"geometry\":{{\
+          \"encoding\":\"WKB\",\"geometry_types\":[\"Polygon\"],\"crs\":{LV95_PROJJSON}}}}}}}"
+    );
+    let props = WriterProperties::builder()
+        .set_key_value_metadata(Some(vec![KeyValue::new("geo".to_string(), geo)]))
+        .build();
+    let mut w = ArrowWriter::try_new(File::create(path).unwrap(), schema, Some(props)).unwrap();
+    w.write(&batch).unwrap();
+    w.close().unwrap();
+}
+
 /// Write a GeoParquet file declaring a covering `bbox` struct column under `struct_name`, with
 /// child names `children` (`[xmin, ymin, xmax, ymax]`) and a declared covering path of
 /// `(declared_struct_name, declared_children)` -- the P0 covering probe's own writer

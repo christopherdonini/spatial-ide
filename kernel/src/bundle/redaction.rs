@@ -45,6 +45,14 @@
 //! honest statement is therefore **"a printable run of at least [`MIN_PRINTABLE_RUN`] bytes
 //! containing one of the named shapes"**, not "any path". The scan is a necessary condition, never
 //! a sufficient one, and these are two of the places that is true.
+//!
+//! ## Where the product runs it
+//!
+//! `publish` runs `scan` over every staged file before the rename, except a `viewer/` file whose
+//! bytes match the viewer build's record, and refuses on the first file holding a match that is not
+//! operator-declared; the viewer's build compiles this file on its own and runs `scan_directory`
+//! over its `dist/` (`renderer/bundle-viewer/scripts/scan-dist.rs`), so this file names nothing
+//! outside `std`; `scan_directory` stays the tests' whole-bundle report.
 
 /// One thing the scan found, with enough context to act on it.
 #[derive(Clone, Debug, PartialEq)]
@@ -339,10 +347,45 @@ pub fn scan_directory(
     root: &std::path::Path,
     machine: &MachineIdentifiers,
 ) -> std::io::Result<Vec<Finding>> {
+    let mut findings = walk(root, machine, &mut || Ok(()), &|_, _| false, &|e| e, false)?;
+    findings.sort_by(|a, b| (&a.file, a.byte_offset).cmp(&(&b.file, b.byte_offset)));
+    Ok(findings)
+}
+
+/// The first file holding a finding that is not [`OPERATOR_DECLARED`]: its relative name and its
+/// findings, sorted by offset. `None` when every file is clean or declared. The product publish's
+/// gate; `before_each_file` is its cancellation check, and `io_error` makes a failed listing or
+/// read the caller's error rather than a pass.
+pub(crate) fn first_undeclared_findings<E>(
+    root: &std::path::Path,
+    machine: &MachineIdentifiers,
+    mut before_each_file: impl FnMut() -> Result<(), E>,
+    skip: impl Fn(&str, &[u8]) -> bool,
+    io_error: impl Fn(std::io::Error) -> E,
+) -> Result<Option<(String, Vec<Finding>)>, E> {
+    let mut f = walk(root, machine, &mut before_each_file, &skip, &io_error, true)?;
+    f.retain(|x| x.class != OPERATOR_DECLARED);
+    f.sort_by_key(|x| x.byte_offset);
+    Ok((!f.is_empty()).then(|| (f[0].file.clone(), f)))
+}
+
+/// The one walk: depth-first, entries sorted, each file read whole. `skip` sees the bytes read and
+/// may pass the file over. With `first_only` it stops after the first file holding a finding that
+/// is not [`OPERATOR_DECLARED`], and returns what it found up to there.
+fn walk<E>(
+    root: &std::path::Path,
+    machine: &MachineIdentifiers,
+    before_each_file: &mut dyn FnMut() -> Result<(), E>,
+    skip: &dyn Fn(&str, &[u8]) -> bool,
+    io_error: &dyn Fn(std::io::Error) -> E,
+    first_only: bool,
+) -> Result<Vec<Finding>, E> {
     let mut findings = Vec::new();
     let mut stack = vec![root.to_path_buf()];
     while let Some(dir) = stack.pop() {
-        let mut entries: Vec<_> = std::fs::read_dir(&dir)?.collect::<std::io::Result<Vec<_>>>()?;
+        let mut entries: Vec<_> = std::fs::read_dir(&dir)
+            .and_then(|rd| rd.collect())
+            .map_err(io_error)?;
         // Deterministic order, so two runs of the scan report findings in the same sequence.
         entries.sort_by_key(|e| e.path());
         for entry in entries {
@@ -351,16 +394,22 @@ pub fn scan_directory(
                 stack.push(path);
                 continue;
             }
+            before_each_file()?;
             let rel = path
                 .strip_prefix(root)
                 .unwrap_or(&path)
                 .to_string_lossy()
                 .replace('\\', "/");
-            let bytes = std::fs::read(&path)?;
+            let bytes = std::fs::read(&path).map_err(io_error)?;
+            if skip(&rel, &bytes) {
+                continue;
+            }
             findings.extend(scan(&rel, &bytes, machine));
+            if first_only && findings.iter().any(|f| f.class != OPERATOR_DECLARED) {
+                return Ok(findings);
+            }
         }
     }
-    findings.sort_by(|a, b| (&a.file, a.byte_offset).cmp(&(&b.file, b.byte_offset)));
     Ok(findings)
 }
 

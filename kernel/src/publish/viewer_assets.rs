@@ -25,7 +25,10 @@
 //! (`docs/09`). Every path here is checked to be relative, `..`-free, drive-letter-free and
 //! component-clean **before** anything is written, and the refusal is typed.
 
+use std::collections::BTreeMap;
 use std::path::Path;
+
+use spatial_renderer::canonical;
 
 use super::PublishError;
 
@@ -46,6 +49,8 @@ pub struct ViewerAsset {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ViewerAssets {
     assets: Vec<ViewerAsset>,
+    /// The viewer build's record: viewer-relative path to the sha256 its scan passed.
+    build_record: BTreeMap<String, String>,
 }
 
 impl ViewerAssets {
@@ -78,7 +83,10 @@ impl ViewerAssets {
                 });
             }
         }
-        Ok(Self { assets })
+        Ok(Self {
+            assets,
+            build_record: BTreeMap::new(),
+        })
     }
 
     /// Read every file under `dir`, recursively, keeping paths relative to it.
@@ -140,6 +148,24 @@ impl ViewerAssets {
             });
         }
         Self::new(out)
+    }
+
+    /// Attach the viewer build's record (`renderer/bundle-viewer/viewer-asset-hashes.json`'s
+    /// `assets`), read by the shell's `bundled_viewer`. Without one, nothing is skipped.
+    pub fn with_build_record(mut self, assets: BTreeMap<String, String>) -> Self {
+        self.build_record = assets;
+        self
+    }
+
+    /// Whether the publish's redaction gate may skip this staged file: `bundle_rel` is `viewer/<p>`,
+    /// the record has an entry for that same `<p>`, and the staged bytes hash to it. Anything else,
+    /// a malformed key or value included, is `false`, so the file is scanned.
+    pub(crate) fn is_built_asset(&self, bundle_rel: &str, bytes: &[u8]) -> bool {
+        bundle_rel
+            .strip_prefix(crate::bundle::VIEWER_DIR)
+            .and_then(|rest| rest.strip_prefix('/'))
+            .and_then(|path| self.build_record.get(path))
+            .is_some_and(|hash| *hash == canonical::sha256_hex(bytes))
     }
 
     pub fn iter(&self) -> impl Iterator<Item = &ViewerAsset> {
@@ -304,6 +330,38 @@ mod tests {
             "two orders of the same assets must produce the same bundle"
         );
         assert_eq!(a.iter().next().unwrap().path, "a.html");
+    }
+
+    #[test]
+    fn only_a_viewer_file_whose_bytes_hash_to_its_own_build_record_entry_is_skipped() {
+        let bytes = b"console.log(1);".as_slice();
+        let asset = ViewerAsset {
+            path: "app.js".into(),
+            bytes: bytes.to_vec(),
+        };
+        let bare = ViewerAssets::new(vec![asset]).unwrap();
+        let record = BTreeMap::from([("app.js".to_string(), canonical::sha256_hex(bytes))]);
+        let with = bare.clone().with_build_record(record);
+        assert!(
+            with.is_built_asset("viewer/app.js", bytes),
+            "matching bytes"
+        );
+        assert!(
+            !with.is_built_asset("viewer/app.js", b"console.log(2);"),
+            "one byte changed"
+        );
+        assert!(
+            !with.is_built_asset("style.json", bytes),
+            "another path, the same bytes"
+        );
+        assert!(
+            !with.is_built_asset("viewer/other.js", bytes),
+            "no entry for the path"
+        );
+        assert!(
+            !bare.is_built_asset("viewer/app.js", bytes),
+            "no record at all"
+        );
     }
 
     #[test]

@@ -6,7 +6,7 @@
   "type": "module",
   "description": "The static bundle viewer: the renderer module's projected publishing canvas. Vanilla TypeScript — this does NOT decide ADR-001's open React-vs-Svelte question.",
   "scripts": {
-    "build": "node build.mjs",
+    "build": "node build.mjs && node scripts/scan-dist.mjs",
     "typecheck": "tsc --noEmit",
     "test": "node --test \"scripts/**/*.test.mjs\"",
     "test:e2e": "node --test e2e/zoom-anchor.mjs",
