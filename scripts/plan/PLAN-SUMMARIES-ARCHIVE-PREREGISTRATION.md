@@ -588,3 +588,14 @@ Nothing above is edited.
 4. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 9 — the human's answer on I6; the S10 sheet; S10 next (class 5)
+
+*Written by the custodian on the human's message. References and hashes only: `state/directives/2026-10-21-d-s10-go-adr-036-route-i-redaction-open-items-1c-and-milestone-4-ruled-docs-open-1-yes.md`.*
+
+1. **I6:** S9's candidate list differs from G0's by one id, `connection-reuse-recycled-interrupt-flake`, new, with none gone and the common ids in G0's order (`state/consults/2026-10-21-governance-plan-summaries-archive-s9-worker-report.md`). The human has seen it, and its row is `no obligation`.
+2. **The sheet at S10** (§2 item 5), built by script from S9's dry run and G0's resolved sheet (Amendment 3 item 3), with G0's 153 resolutions unchanged and their current-state markers equal at S9: 154 rows; no obligation 88, home 9, not owed 3, stays 54. Its sha256 is 9ed1c66ed6ab64ce5068aedeb91e2601d545a99a9fc2e17835f8b3667075a977. The worker copies it to `state/drafts/plan-summaries-d-obligations.md` byte for byte, and the 54 stays rows go to `--keep`.
+3. **S10** by one worker-high on the branch at S9's merge commit e01738917ef271ff65ee01740c5fbfca36237b73, then the scoped reviewer pass over S9..S10 with O1 and O2. Main has moved since S9 by commits touching none of PLAN.yaml, `CUSTODIAN-QUEUE.*` or `site/`; the branch merges main in once more before the click (Amendment 1 item 5).
+4. **Generation:** unchanged in PLAN.yaml under the hold; it goes up with the held filings after the click.
+
+Nothing above is edited.
