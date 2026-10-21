@@ -529,3 +529,15 @@ Nothing above is edited.
 5. **Next:** the worker applies C3 by script on the branch and reruns V1 with it. Then a scoped re-gate: the architect on C3, and the reviewer on V1 and the diff.
 
 Nothing above is edited.
+
+### Amendment 3 — correction round 1 built; the scoped re-gate, both PASS WITH NOTES; the count corrected (class 1); written after both reports were seen
+
+*Written by the custodian. References only: `state/consults/2026-10-21-adr-036-pre-acceptance-block-round-1-worker-report.md`; `state/consults/gates/2026-10-21-adr-036-pre-acceptance-block-gate2-architect.md` (gate-log 578); `state/consults/gates/2026-10-21-adr-036-pre-acceptance-block-gate2-reviewer.md` (gate-log 579).*
+
+1. **Round 1** is d0c257d9f2ef18e6b7b60228fae7eedcdfd082c0, one commit on 70edd381ac6a1bf62d57de49b39dfa1ad95bac05. It changes one line of ADR-036, C3, as Amendment 2 item 2 gives it.
+2. **The scoped re-gate:** both PASS WITH NOTES. The architect closes C-1 and finds no other containment or canonical-form guarantee in the new text. The reviewer finds the diff equal to Amendment 2's spans, V1 with C3 byte-equal by its own script, every check passing, and CI green at the head.
+3. **The count, in the reviewer's words** (not the human's): Amendment 2 item 2's predicted count is corrected: `git diff --numstat ad921f552f25a138bf845368e2e9e1f726d73812...d0c257d9f2ef18e6b7b60228fae7eedcdfd082c0 -- docs/adr/ADR-036-project-folder-step-record-and-dataset-reference.md` gives 44 + 18 = 62, not 64, because C3 rewrites the line A4 already replaces and so adds no line against B. 62 is under the ceiling of 90.
+4. **The PR body** names H as this round's head, as §7 requires.
+5. **For the human, still open:** the order of this merge and the Status edit; items 19 to 28; and A0's attribution (Amendment 2 item 4). These go with the click.
+
+Nothing above is edited.
