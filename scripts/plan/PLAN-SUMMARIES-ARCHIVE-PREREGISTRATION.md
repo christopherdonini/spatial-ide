@@ -577,3 +577,14 @@ Nothing above is edited.
 2. **The PR body** carries the reviewer's Doc-A bullet and Doc-B section, byte for byte from its report, and lists every word applied in both rounds.
 
 Nothing above is edited.
+
+### Amendment 8 — the human's answers on D1-b's exception and the stays list (class 5)
+
+*Written by the custodian on the human's message. References only: `state/directives/2026-10-21-placements-redaction-scan-1c-milestone-4-lanes-238-clicked-d-answers-adr-024-heading-kept.md`.*
+
+1. **D1-b's exception (I2; Amendment 4 item 5):** accepted, the sheet's own file, as with C. At S10, verify-cites' stdout file count rises by one for `state/drafts/plan-summaries-d-obligations.md`, and that difference is the piece's own.
+2. **The stays list (OPEN-3):** accepted as resolved; the 54 rows stay in PLAN.yaml until a later rotation.
+3. **Next:** S9, then S10, under OPEN-5 (B).
+4. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.

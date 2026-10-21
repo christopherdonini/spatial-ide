@@ -1,14 +1,16 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `0486051b5823579d1b2debac60114605172a9a326da6b11b3dc6d1fc40046677`) at `2026-10-21T03:25:20.081Z`.
+Generated from `PLAN.yaml` (sha256 `c32412bbcf1637cfc9ec4417e1bc48330bfb3750fcec190dc9617555f5347227`) at `2026-10-21T04:32:29.988Z`.
 
 ## 1. Next
 
-- (nothing ready)
+- **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark (lane `kernel-protocol`)
 
 ## 2. Ready
 
-- (none)
+- **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark (lane `kernel-protocol`, order null, budget 0 min)
+- **bundle-redaction-scan-not-in-product-publish** — The bundle redaction scan runs only in a test: no product publish scans its emitted files, though ADR-017's section 13 (Accepted) says a scan over every emitted file asserts no path, user name, machine identifier or credential is in a bundle (lane `kernel-protocol`, order null, budget 60 min)
+- **walkthrough-current-view-rows-g1-n5** — MANUAL-WALKTHROUGH.md rows G1 and N5: Current view is no longer disabled until a pan or zoom (the docs-lane follow-up of export-current-view-after-unreported-fit, its gate 1 reviewer DOC-4) (lane `shell`, order null, budget 0 min)
 
 ## 3. Waiting on the human (total: 0 min)
 
@@ -18,16 +20,24 @@ Generated from `PLAN.yaml` (sha256 `0486051b5823579d1b2debac60114605172a9a326da6
 
 ## 4. Blocked on dependencies
 
+- **adr-020-appended-note** — ADR-020's appended note, owed by the quote baseline's corrected_by entry (entry 102; the docs lane) — blocked by: stale-assertion-messages-and-product-comments
+- **adr-035-close-races-note** — ADR-035 -- an appended, dated note recording what kernel-generation-close-races makes historical (Decision 3's no-session-reference case unreachable; invalidate marks only on a live removal; Decision 2's mint-race arm gone) — blocked by: adr-020-appended-note
+- **skp-line-cites-outside-close-races** — Stale line cites into kernel/src/skp.rs outside kernel-close-races-followups files -- shell streaming, App.tsx, pool_poll.rs, src-tauri lib.rs, the P4 corpus test and the persisted-artifacts test — blocked by: adr-035-close-races-note
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
+- **b1-shell-half** — Shell migration, milestone 4 -- B1 shell half: attributes of the inspected feature, colour by category with its legend, and the table — blocked by: bundle-redaction-scan-not-in-product-publish
+- **stale-assertion-messages-and-product-comments** — Stale text outside the docs lane: an assertion message calling ADR-016 Amendment 1 proposed, a thrown e2e message with a stale line cite, and two product-code comments (crsAssertionState.ts and buildLayers.ts) carrying the same stale premises piece f corrects in tests — blocked by: walkthrough-current-view-rows-g1-n5
 - **briefb-b2-save-reopen** — B2 — Save project, Snapshot data, session history, lineage and preferences, in five stages, each with its own form — blocked by: decision-adr-029-scan-progress-route
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer — blocked by: signpath-application-draft
 - **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-1-1
 - **signpath-application-draft** — Entry 77 — the SignPath OSS application and disclosure text drafted for the human sight, once a release is CI-built — blocked by: release-v0-1-1
+- **flush-crlf-field-rewrite** — flush.mjs splits the ledger on LF and rewrites a field line without its CR, so a CRLF working-tree ledger ends with mixed line endings — blocked by: questions-mirror-item-count
+- **questions-mirror-item-count** — questions-mirror.mjs's countItems counts one item high on a round file with a header rule, so a document send's summary names one item too many — blocked by: verify-quotes-round-item-cites
+- **shell-owners-index** — An owner's index for the shell (frontends/shell), so that shell-owned KNOWN-LIMITATIONS items and pointers are indexed somewhere — blocked by: skp-line-cites-outside-close-races
+- **verify-quotes-round-item-cites** — verify-quotes resolves round + item cites (the quote checker's follow-on owed by round 12 item 1's Applied text) — blocked by: governance-plan-summaries-archive
 - **site-design-v1** — Landing page redesign — DRAFT-4 (status strip, milestone banner, waiting-on-you cards with unblocks counts, the swimlane board) — blocked by: governance-ci-built-site
 
 ## 5. In progress
 
-- **connection-reuse-recycled-interrupt-flake** — engine/tests/connection_reuse.rs: cancellation_before_the_first_batch_binds_a_recycled_connection_and_delivers_nothing failed once on ubuntu-24.04 in PR #222's pull_request run at a542097e, and the push run of the same commit passed it — evidence: branch `cut/connection-reuse-recycled-interrupt-flake`
 - **governance-plan-summaries-archive** — Governance D -- done nodes' summaries over 300 bytes moved verbatim from PLAN.yaml into state/cut-archive/ by a named script, one generated pointer line each, monthly beside C's rotation, and its rule appended to AUTONOMY; the measurements before and after it — evidence: branch `cut/plan-summaries-archive`
 
 ## 6. Proposed / unscheduled
@@ -43,7 +53,6 @@ Generated from `PLAN.yaml` (sha256 `0486051b5823579d1b2debac60114605172a9a326da6
 - **briefb-b3-publish-v2** — Brief B, stage B3 — bundle v2 and CLI replay through the same publish implementation (phase `prototype`) — never queued until placed
 - **briefb-part-o-walkthrough** — Part O — the nine-step recipe walkthrough, after B3 only (phase `prototype`) — never queued until placed
 - **governance-ci-built-site** — Governance -- the site built by CI after merge, the design also addressing tracked-queue conflicts between sibling PRs (phase `prototype`) — never queued until placed
-- **b1-shell-half** — Shell migration, milestone 4 -- B1 shell half: attributes of the inspected feature, colour by category with its legend, and the table (phase `prototype`) — never queued until placed
 - **verify-mutation-test-temp-dirs** — verify-mutation's own tests remove their mkdtemp directories (weekly window (b)) (phase `prototype`) — never queued until placed
 - **extent-degenerate-zoom-doc** — extent.ts's doc matches its degenerate-zoom behaviour (weekly window (c)) (phase `prototype`) — never queued until placed
 - **verify-quotes-show-cites-narrowed** — verify-quotes --show-cites prints no false FAILs when narrowed (weekly window (e)) (phase `prototype`) — never queued until placed
@@ -58,9 +67,7 @@ Generated from `PLAN.yaml` (sha256 `0486051b5823579d1b2debac60114605172a9a326da6
 - **shell-session-log-line-framing** — The shell's session log keeps one line per record: level escaped, and carriage returns escaped in both fields (wave-1 A1-2) (phase `prototype`) — never queued until placed
 - **tile-issue-epoch-growth** — TileViewportStreamManager's issueEpoch map bounded within a dataset session (wave-1 A5 observation 5) (phase `prototype`) — never queued until placed
 - **audit-show-invalid-utf8-whole-refusal** — publish-bundle --audit-show refuses the whole audit log over one invalid UTF-8 byte, instead of reporting that line as CORRUPT (node 6 drafting consult) (phase `prototype`) — never queued until placed
-- **skp-line-cites-outside-close-races** — Stale line cites into kernel/src/skp.rs outside kernel-close-races-followups files -- shell streaming, App.tsx, pool_poll.rs, src-tauri lib.rs, the P4 corpus test and the persisted-artifacts test (phase `prototype`) — never queued until placed
 - **session-generation-t1-t3-reobservation** — kernel/tests/session_generation.rs T1 to T3 recorded mutations re-observed at a named commit, T1 describing the arm after #147 (phase `prototype`) — never queued until placed
-- **adr-035-close-races-note** — ADR-035 -- an appended, dated note recording what kernel-generation-close-races makes historical (Decision 3's no-session-reference case unreachable; invalidate marks only on a live removal; Decision 2's mint-race arm gone) (phase `prototype`) — never queued until placed
 - **adr-index-unknown-flag-writes** — frontends/shell/scripts/adrIndex.mjs writes docs/README.md when given an unknown flag; it should refuse any argument other than --check (phase `prototype`) — never queued until placed
 - **b1-session-ordinal-refusal-wording** — The projection_column_is_identity refusal says a session-ordinal identity is mapped from file_row_number -- the message states the identity's real class (wave-2 A1-1, S2) (phase `prototype`) — never queued until placed
 - **shell-admit-describe-failure-closes-open** — admitDataset closes the dataset when describe fails after a successful open_dataset (wave-2 W2-C observation 2, S2) (phase `prototype`) — never queued until placed
@@ -69,9 +76,7 @@ Generated from `PLAN.yaml` (sha256 `0486051b5823579d1b2debac60114605172a9a326da6
 - **port-2-macos-l1-and-app-dirs** — PORT-2 -- macOS L1 for the Cargo workspace: macos-latest in the same matrix, one application-directory boundary replacing the two resolvers, and a case-policy test on a case-insensitive volume (phase `prototype`) — never queued until placed
 - **port-3-shell-l1** — PORT-3 -- the Tauri shell crate checked and tested on Linux and macOS in product-ci-shell (L1 for the shell) (phase `prototype`) — never queued until placed
 - **port-4-l2-smoke** — PORT-4 -- L2: unsigned tauri build on Linux and macOS as a package check, a Linux application smoke test under a virtual display, and the macOS smoke by hand (MACOS-BRINGUP resumed) (phase `prototype`) — never queued until placed
-- **questions-mirror-item-count** — questions-mirror.mjs's countItems counts one item high on a round file with a header rule, so a document send's summary names one item too many (phase `prototype`) — never queued until placed
 - **template-round15e-exception-pointer** — docs/PREREGISTRATION-TEMPLATE.md gains one appended sentence pointing at round 34 item 4's narrow exception to round 15 (e), as AUTONOMY.md section 27 records it (phase `prototype`) — never queued until placed
-- **flush-crlf-field-rewrite** — flush.mjs splits the ledger on LF and rewrites a field line without its CR, so a CRLF working-tree ledger ends with mixed line endings (phase `prototype`) — never queued until placed
 - **skp-closed-domain-response-strings** — Other SKP response fields with a closed value domain are still typed String on the reader (crs.source, identity.class, sanity.level and others) (phase `prototype`) — never queued until placed
 - **publish-unix-quota-perm-errors** — EDQUOT and EPERM in publish error classification on unix (wave-3 W3-A observation 1) (phase `prototype`) — never queued until placed
 - **publish-bundle-sigterm** — SIGTERM handling in publish-bundle on unix (wave-3 W3-A observation 3) (phase `prototype`) — never queued until placed
@@ -88,14 +93,12 @@ Generated from `PLAN.yaml` (sha256 `0486051b5823579d1b2debac60114605172a9a326da6
 - **verify-offline-note-test-flake** — scripts/plan/verify.test.mjs's offline-note test failed once on a pull_request run and passed on a re-run; its bare assertion carries no message, so the cause is unknown (phase `prototype`) — never queued until placed
 - **slice-budgets-cancel-cells-on-trace-pair** — The docs/08 measurement harness scores its cancellation cells on ADR-018's pair (cancel_requested to the producer's cancel_observed, from the engine trace), with the client-to-adapter interval kept as a reported figure (phase `prototype`) — never queued until placed
 - **mp-prime-e2e-covered-fixture** — E2E: MP-1's step MP' opens F-1, which has no covering, so it is predicted to meet the no-covering refusal; a step on F-1c, its covered twin (phase `prototype`) — never queued until placed
-- **shell-owners-index** — An owner's index for the shell (frontends/shell), so that shell-owned KNOWN-LIMITATIONS items and pointers are indexed somewhere (phase `prototype`) — never queued until placed
 - **corpus-line-files** — A line file (LineString or MultiLineString) in the preregistered compatibility corpus, so that line admission is tried on a real-world file (phase `prototype`) — never queued until placed
 - **lines-class-budget-measurement** — Measure docs/08's Lines class (1M features / 10M vertices) for the working canvas, once lines are drawn (phase `prototype`) — never queued until placed
 - **covering-case-collision-binds-other-column** — A declared covering whose path differs from two schema names only by case: DuckDB may bind it to the other column, a wrong-rows risk that predates the covering piece (phase `prototype`) — never queued until placed
 - **publish-sort-window-cancel-not-exercised-on-ci** — kernel/tests/publish_cancellation.rs: a_cancel_inside_the_sort_is_observed_rather_than_waited_out reddened on the Windows CI runner because QueryRunning never fired (the sort ended inside one poll interval) (phase `prototype`) — never queued until placed
 - **first-batch-factorial-ignored-trace-tests** — kernel/tests/first_batch_factorial.rs's two ignored measurement tests each start a trace in one binary with no shared lock (phase `prototype`) — never queued until placed
 - **slice-traced-test-cross-stamping** — engine/tests/slice.rs's traced test reads first cancellation stamps while its binary's other tests run unserialised, one of them cancelling (phase `prototype`) — never queued until placed
-- **stale-assertion-messages-and-product-comments** — Stale text outside the docs lane: an assertion message calling ADR-016 Amendment 1 proposed, a thrown e2e message with a stale line cite, and two product-code comments (crsAssertionState.ts and buildLayers.ts) carrying the same stale premises piece f corrects in tests (phase `prototype`) — never queued until placed
 - **app-key-remount-unit-test** — A unit test that pins App's per-dataset key remount of WorkingCanvas: App.layout.test.tsx's stand-in records mounts per dataset prop value, so R1 passes with or without the key (phase `prototype`) — never queued until placed
 - **stream-cancel-returns-left-unmarked** — The producer's cancel returns the flush piece leaves unmarked: a prepare error through classify, the two-read window in classify's marking arms, and the send to a receiver that is gone (is a disconnect an observation) (phase `prototype`) — never queued until placed
 - **filter-identity-alias-ambiguous-guidance-line-and-note** — A guidance line in the app for skp.filter_identity_alias_ambiguous, in the human's wording at P6, and a KNOWN-LIMITATIONS note: a declared identity beside the file's own id column refuses the first filter on id, and the message does not say what to do (phase `prototype`) — never queued until placed
@@ -109,17 +112,12 @@ Generated from `PLAN.yaml` (sha256 `0486051b5823579d1b2debac60114605172a9a326da6
 - **shell-migration-milestone-5** — Shell migration, milestone 5 -- conditions, Problems and Jobs: one home for failures and running work (phase `prototype`) — never queued until placed
 - **shell-real-app-run-macos-linux** — Run the real app once on macOS and once on Linux after migration milestone 1 merges, and record what it finds (phase `prototype`) — never queued until placed
 - **pan-anchor-setcam-waits-for-its-own-reset** — e2e/pan-anchor.mjs: setCam waits for the view-state line its own reset produces, never a late line from the previous gesture (test only) (phase `prototype`) — never queued until placed
-- **walkthrough-current-view-rows-g1-n5** — MANUAL-WALKTHROUGH.md rows G1 and N5: Current view is no longer disabled until a pan or zoom (the docs-lane follow-up of export-current-view-after-unreported-fit, its gate 1 reviewer DOC-4) (phase `prototype`) — never queued until placed
-- **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark (phase `prototype`) — never queued until placed
 - **verify-quotes-dotted-paths** — verify-quotes: the hash-reference path grammar cannot begin with a dot, so a pinned cite into .github/ can never be checked (phase `prototype`) — never queued until placed
-- **bundle-redaction-scan-not-in-product-publish** — The bundle redaction scan runs only in a test: no product publish scans its emitted files, though ADR-017's section 13 (Accepted) says a scan over every emitted file asserts no path, user name, machine identifier or credential is in a bundle (phase `prototype`) — never queued until placed
 - **session-log-token-redaction-rests-on-page-code** — The session token never reaching the session log rests on page code: binding_log_session_event appends page-supplied text verbatim, the page holds the token, and the data plane's Session::redact has only a test caller (phase `prototype`) — never queued until placed
 - **publish-dev-hook-attempt-from-effect** — The export panel's publishExecute dev hook reads the current attempt from a passive effect, so an execute sent as soon as the prepare answers can return unknown-attempt with no host call (the e2e export steps under load) (phase `prototype`) — never queued until placed
-- **verify-quotes-round-item-cites** — verify-quotes resolves round + item cites (the quote checker's follow-on owed by round 12 item 1's Applied text) (phase `prototype`) — never queued until placed
 - **lod-tiers-geographic-crs** — LOD tiers for a geographic CRS -- its own preregistered gate, owed by the LOD form's amendment (phase `prototype`) — never queued until placed
 - **residency-instrument-followups** — Residency instrument follow-ups -- entry 25's heap-footprint fold-in, the deferred 5 GB clean-instrument attribution trial, and the clean-instrument run of the attribution pass (phase `prototype`) — never queued until placed
 - **notices-payload-dist-asset** — The raw notice payload, about 3 MB, moves to a fetched dist asset (entry 62) (phase `prototype`) — never queued until placed
-- **adr-020-appended-note** — ADR-020's appended note, owed by the quote baseline's corrected_by entry (entry 102; the docs lane) (phase `prototype`) — never queued until placed
 - **pre-1-0-trademark-search** — The trademark register search with counsel before 1.0 (the human's own) (phase `prototype`) — never queued until placed
 
 ### Unscheduled

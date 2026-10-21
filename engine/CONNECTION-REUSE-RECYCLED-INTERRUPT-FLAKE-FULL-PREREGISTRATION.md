@@ -296,3 +296,12 @@ Nothing above is edited.
 3. **§7 at 06f145de9c77ab9e8e49b4ee706533c8e01345d0:** 81 changed lines of 100, `engine/tests/connection_reuse.rs` 51 of 60.
 
 Nothing above is edited.
+
+### Amendment 5 — closing record: PR #238 merged (class 1)
+
+*Written by the custodian after the merge. References and hashes only.*
+
+1. **Merged** by the human at 2026-10-21T04:24:20Z: merge commit 398ed6eaaaf102e3b60819989ab5651a0a82b515, `%cI` 2026-10-21T06:24:20+02:00, its parents main f922cbe0140283ab89c534b89487d4494b038302 and the branch head 06f145de9c77ab9e8e49b4ee706533c8e01345d0 (the gate-1 word round over 866b3579, the gates' head).
+2. **PLAN:** the node is done, with `{pr: 238}`.
+
+Nothing above is edited.
