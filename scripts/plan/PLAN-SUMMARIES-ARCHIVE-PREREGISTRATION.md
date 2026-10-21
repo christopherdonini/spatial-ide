@@ -568,3 +568,12 @@ Nothing above is edited.
 5. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 7 — the gate-2 word round built (class 1)
+
+*Written by the custodian. References only: `state/consults/2026-10-21-governance-plan-summaries-archive-gate2-words-worker-report.md` and PR #237's body.*
+
+1. **The word round** of Amendment 6 item 3 is at f54b54ac4a9f9f73b482e865dacdb7e314f126fc: the README's exit-code sentence and R15's comment, in the architect's words, comment and prose lines only. §7 at that commit: 663 lines over 4 files, unchanged.
+2. **The PR body** carries the reviewer's Doc-A bullet and Doc-B section, byte for byte from its report, and lists every word applied in both rounds.
+
+Nothing above is edited.
