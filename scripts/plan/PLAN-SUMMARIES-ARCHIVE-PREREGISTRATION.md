@@ -556,3 +556,15 @@ Nothing above is edited.
 5. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 6 — gate 2: both PASS WITH NOTES; the word round (class 1); written after both gate reports were seen
+
+*Written by the custodian. References only: `state/consults/gates/2026-10-21-governance-plan-summaries-archive-gate2-architect.md` (gate-log 570) and `state/consults/gates/2026-10-21-governance-plan-summaries-archive-gate2-reviewer.md` (gate-log 571).*
+
+1. **Gate 2** at the record commit: both gates PASS WITH NOTES, and both close C1 and C2. The reviewer made R15 on a rotated tree, MR15 and the C2 check again, and also ran the S10 shape: with the 54 stays rows passed to `--keep`, the script moves 99 summaries, 284,775 bytes, and R15 passes.
+2. **The architect's D6 words:** Amendment 5 item 3's figures are §7's counting command at 510f4bacc1521fb85de84628b8686f334a2970aa (the round's report, its §7 table); the script's two added lines are the fix commit's, its C2 STOP path (`scripts/plan/rotate-plan-summaries.mjs` lines 228-240 at that commit) and the due call's comment, now two lines (lines 192-193 at that commit).
+3. **The word round, no re-gate (AUTONOMY §31 (d)):** the architect's D5 words for the README's exit-code sentence and D7 words for R15's comment, applied by a worker; the reviewer's Doc-A and Doc-B words in the PR body, applied by the custodian, with a list of every word applied.
+4. **Before S9:** D1-b's predicted exception (Amendment 4 item 5) is with the human under I2; S9 waits for that answer.
+5. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
