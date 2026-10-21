@@ -343,8 +343,8 @@ test("rotate-plan-summaries: from the real PLAN.yaml, after a run the queue diff
   assert.ok(!real.includes('\r'), 'LF, as CI checks out');
   const head = parseYamlSubset(real);
   const fit = (lines) => lines.map((l) => l.replace('lane: shell', `lane: ${head.lanes[0].id}`).replace('phase: prototype', `phase: ${head.phases[0].id}`));
-  // every archive the real tree tracks goes into the first commit, byte for byte (that commit is dated PAST, so the run is still due and
-  // a same-day name takes -2): once PLAN.yaml holds pointers, the script refuses a pointer whose archive is not tracked at HEAD
+  // every PLAN-SUMMARIES archive the real tree tracks goes into the first commit, byte for byte (that commit is dated PAST, so the run is still due,
+  // and a real archive named for today makes the run take the next free suffix): once PLAN.yaml holds pointers, the script refuses a pointer whose archive is not tracked at HEAD
   const archives = sh(REPO_ROOT, ['ls-files', '--', ':(glob)state/cut-archive/PLAN-SUMMARIES-*.yaml']).split('\n').filter(Boolean);
   const held = Object.fromEntries(archives.map((rel) => [rel, fs.readFileSync(path.join(REPO_ROOT, rel))]));
   const dir = mkRepo({ 'PLAN.yaml': `${real}${[...fit(node('synthetic-long-done', 'done', bytes(400))), ...fit(node('synthetic-long-ready', 'ready', bytes(400)))].join('\n')}\n`, ...held });
