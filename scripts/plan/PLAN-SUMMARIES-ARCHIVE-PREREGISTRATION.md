@@ -519,3 +519,14 @@ Nothing above is edited.
 6. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 3 — G0: PR #237 opened as a draft; every row of the sheet resolved; the candidates over main's current PLAN.yaml (class 1); written after the dry run was seen
+
+*Written by the custodian. References and hashes only: `state/drafts/2026-10-21-plan-summaries-d-obligations-g0-resolved.md` and PR #237's body.*
+
+1. **PR #237** is open as a draft from `cut/plan-summaries-archive` at 2d60ac164e7a65e29e5e55a27eaa202062d31b83. Its body carries what §2 item 11's G0 bullet names.
+2. **The candidates over main's current PLAN.yaml** (§2 item 11), at 9831bb2163552f6e715fa29458f2c54124df10a2: the S5 script's own `findCandidates`, `buildMove` and `verifyMove`, imported and called by the custodian, give 153 candidates of 195 done nodes, the same ids as the G0 sheet, 405897 moved bytes, an archive of 309 lines, and no verifyMove problem. The CLI was not run, because its blob check refuses by design when the branch's PLAN.yaml is not main's. PLAN.yaml is unchanged from that commit to ead5b66ac6826bb52431ce77b406e3ffebb6d44a.
+3. **Every row resolved** (§2 item 5), at `state/drafts/2026-10-21-plan-summaries-d-obligations-g0-resolved.md` (sha256 202ad248e60756a90ba831dfc601601359b9cca99a0e1710faac83f74ba20b57): no obligation 87; home 9; not owed 3; stays 54. A home is taken only where the row's own current-state text places the obligation there; not owed only with a merged PR as the proof; every other row with a marker stays. The stays list goes to the human (OPEN-3).
+4. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
