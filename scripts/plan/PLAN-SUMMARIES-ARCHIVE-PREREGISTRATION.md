@@ -588,3 +588,37 @@ Nothing above is edited.
 4. **Generation:** the node's generation goes up by one.
 
 Nothing above is edited.
+
+### Amendment 9 — the human's answer on I6; the S10 sheet; S10 next (class 5)
+
+*Written by the custodian on the human's message. References and hashes only: `state/directives/2026-10-21-d-s10-go-adr-036-route-i-redaction-open-items-1c-and-milestone-4-ruled-docs-open-1-yes.md`.*
+
+1. **I6:** S9's candidate list differs from G0's by one id, `connection-reuse-recycled-interrupt-flake`, new, with none gone and the common ids in G0's order (`state/consults/2026-10-21-governance-plan-summaries-archive-s9-worker-report.md`). The human has seen it, and its row is `no obligation`.
+2. **The sheet at S10** (§2 item 5), built by script from S9's dry run and G0's resolved sheet (Amendment 3 item 3), with G0's 153 resolutions unchanged and their current-state markers equal at S9: 154 rows; no obligation 88, home 9, not owed 3, stays 54. Its sha256 is 9ed1c66ed6ab64ce5068aedeb91e2601d545a99a9fc2e17835f8b3667075a977. The worker copies it to `state/drafts/plan-summaries-d-obligations.md` byte for byte, and the 54 stays rows go to `--keep`.
+3. **S10** by one worker-high on the branch at S9's merge commit e01738917ef271ff65ee01740c5fbfca36237b73, then the scoped reviewer pass over S9..S10 with O1 and O2. Main has moved since S9 by commits touching none of PLAN.yaml, `CUSTODIAN-QUEUE.*` or `site/`; the branch merges main in once more before the click (Amendment 1 item 5).
+4. **Generation:** unchanged in PLAN.yaml under the hold; it goes up with the held filings after the click.
+
+Nothing above is edited.
+
+### Amendment 10 — S10 built: the move committed; D1-b, E-P, E-R and E-M (c) as predicted; P is a later main commit (class 1); written after the results were seen
+
+*Written by the custodian after the worker's report was seen. References and hashes only: `state/consults/2026-10-21-governance-plan-summaries-archive-s10-worker-report.md`.*
+
+1. **S10** is 120cd55dadd68ab4670776f6882b3e028624edf2 on `cut/plan-summaries-archive`, pushed, its parent S9 e01738917ef271ff65ee01740c5fbfca36237b73. The archive `state/cut-archive/PLAN-SUMMARIES-2026-10-21.yaml` (blob 56ba73a11869c682f177be816f7c4bc30511b1d1, 203 lines); PLAN.yaml blob 841e0527f16aac1d770a035424ddd52c5526bc03, from S9's 83abe8bbc6f9b8007b8694f90b83ac713d444fa1; 100 summaries moved, 291,520 bytes; the 54 stays rows kept; the sheet at sha256 9ed1c66ed6ab64ce5068aedeb91e2601d545a99a9fc2e17835f8b3667075a977.
+2. **Step 4 and D1-b, S9 against S10:** the five checks' exit codes, stdout and stderr equal, except verify-cites' stdout file count, 2132 to 2133, the sheet's (Amendment 8 item 1). queue.mjs and site.mjs `--check` exit 0 at both. The CI globs: 527 tests, 527 passed, at both, the counts files byte-equal. verify-mutation ran with S9's base given explicitly (54d072687e79f8cb9a77ca942aa6809dad4e326b), since origin/main had moved; its output equals S9's. The shared hold's command printed no exit-code line, at S9 as at S10.
+3. **E-P, E-R and E-M (c):** 100 insertions and 100 deletions in PLAN.yaml; the archive's 203 lines equal 3 + 2N; exactly the seven paths; `verifyMove` on the real pair returns no problem. E-R as §5's table predicts: the queue's JSON deep-equal and its Markdown different on the `Generated from` line only; the site equal once normalised, each moved node's summary its pointer; no metric violation at either; `buildSummary` byte-identical. E-M (c): 703,836 − 412,316 = 291,520, the script's moved bytes.
+4. **P:** the archive's `source` commit is main's ab9a4b4f957aaf61dedd5e08446bf98fdca55d7f, where S9's dry run printed 54d072687e79f8cb9a77ca942aa6809dad4e326b. Main moved after S9 by commits touching none of PLAN.yaml, `CUSTODIAN-QUEUE.*` or `site/` (Amendment 1 item 5), and P's PLAN.yaml blob is S9's. The candidate ids are S9's, so I6 is not raised again. The two generators' output went to /dev/null; their exit codes, 0, are in the report.
+5. **Next:** the scoped reviewer pass over S9..S10 with O1 and O2; the PR body; main merged in once more before the click.
+
+Nothing above is edited.
+
+### Amendment 11 — the scoped S10 pass: PASS WITH NOTES (class 1); written after the report was seen
+
+*Written by the custodian. References only: `state/consults/gates/2026-10-21-governance-plan-summaries-archive-s10-reviewer.md` (gate-log 574).*
+
+1. **The pass** (§9, reviewer) at S10: R1 to R3 on the real pair, by the reviewer's own script with a negative control; the sheet, the stays list and I9; E-P, E-M (c), D1-b and E-R as predicted. The CI globs' exit code, which the worker did not see printed (Amendment 10 item 2), printed 0 in the reviewer's run.
+2. **E-O:** O1 found the archive alone and O2 found PLAN.yaml alone, as §4 predicts, at 120cd55dadd68ab4670776f6882b3e028624edf2, with `claude --version` and `rg --version`'s first line recorded in the report.
+3. **N1:** the sheet's directive path and the archive's `source` commit are on main and not yet in the branch's history. The final merge of main into the branch, before the click (Amendment 1 item 5), brings both in; after it, `git cat-file -e HEAD:<that path>` and `git merge-base --is-ancestor ab9a4b4f957aaf61dedd5e08446bf98fdca55d7f HEAD` both exit 0.
+4. **Next:** the final merge of main into the branch, the PR body (D1-b, E-P, E-R and E-O), and the human's click.
+
+Nothing above is edited.
