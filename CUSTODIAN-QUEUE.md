@@ -1,14 +1,15 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `7066901b1cf9ea747818c8e129dd71c01580b485f9a62fe1a4febe6007ea19a9`) at `2026-10-21T17:09:36.350Z`.
+Generated from `PLAN.yaml` (sha256 `726698af77c9fa87bd87cc9f8c40020b6273e940510a2da96dc3008bc2f7e1e4`) at `2026-10-21T21:36:45.610Z`.
 
 ## 1. Next
 
-- (nothing ready)
+- **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark (lane `kernel-protocol`)
 
 ## 2. Ready
 
-- (none)
+- **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark (lane `kernel-protocol`, order null, budget 0 min)
+- **stale-assertion-messages-and-product-comments** — Stale text outside the docs lane: an assertion message calling ADR-016 Amendment 1 proposed, a thrown e2e message with a stale line cite, and two product-code comments (crsAssertionState.ts and buildLayers.ts) carrying the same stale premises piece f corrects in tests (lane `shell`, order null, budget 60 min)
 
 ## 3. Waiting on the human (total: 0 min)
 
@@ -20,11 +21,9 @@ Generated from `PLAN.yaml` (sha256 `7066901b1cf9ea747818c8e129dd71c01580b485f9a6
 
 - **adr-020-appended-note** — ADR-020's appended note, owed by the quote baseline's corrected_by entry (entry 102; the docs lane) — blocked by: stale-assertion-messages-and-product-comments
 - **adr-035-close-races-note** — ADR-035 -- an appended, dated note recording what kernel-generation-close-races makes historical (Decision 3's no-session-reference case unreachable; invalidate marks only on a live removal; Decision 2's mint-race arm gone) — blocked by: adr-020-appended-note
-- **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark — blocked by: adr-036-pre-acceptance-block
 - **skp-line-cites-outside-close-races** — Stale line cites into kernel/src/skp.rs outside kernel-close-races-followups files -- shell streaming, App.tsx, pool_poll.rs, src-tauri lib.rs, the P4 corpus test and the persisted-artifacts test — blocked by: adr-035-close-races-note
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
 - **b1-shell-half** — Shell migration, milestone 4 -- B1 shell half: attributes of the inspected feature, colour by category with its legend, and the table — blocked by: bundle-redaction-scan-not-in-product-publish
-- **stale-assertion-messages-and-product-comments** — Stale text outside the docs lane: an assertion message calling ADR-016 Amendment 1 proposed, a thrown e2e message with a stale line cite, and two product-code comments (crsAssertionState.ts and buildLayers.ts) carrying the same stale premises piece f corrects in tests — blocked by: adr-036-pre-acceptance-block
 - **briefb-b2-save-reopen** — B2 — Save project, Snapshot data, session history, lineage and preferences, in five stages, each with its own form — blocked by: decision-adr-029-scan-progress-route
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer — blocked by: signpath-application-draft
 - **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-1-1
@@ -37,7 +36,6 @@ Generated from `PLAN.yaml` (sha256 `7066901b1cf9ea747818c8e129dd71c01580b485f9a6
 ## 5. In progress
 
 - **bundle-redaction-scan-not-in-product-publish** — The bundle redaction scan runs only in a test: no product publish scans its emitted files, though ADR-017's section 13 (Accepted) says a scan over every emitted file asserts no path, user name, machine identifier or credential is in a bundle — evidence: branch `cut/bundle-redaction-scan`
-- **adr-036-pre-acceptance-block** — ADR-036's pre-acceptance block: one block for the 2026-10-09 rulings (line 71's correction, the line-oriented form, ruling 4's lineage members, ruling 9's reader, the Documentation items at lines 3 and 192) and milestone 4's OPEN-4 (A′), a match value on fillColor with the step's dependencies naming the match column and its type; then the human types the acceptance — evidence: branch `cut/adr-036-pre-acceptance-block`
 - **verify-quotes-round-item-cites** — verify-quotes resolves round + item cites (the quote checker's follow-on owed by round 12 item 1's Applied text) — evidence: branch `cut/verify-quotes-round-item-cites`
 
 ## 6. Proposed / unscheduled
