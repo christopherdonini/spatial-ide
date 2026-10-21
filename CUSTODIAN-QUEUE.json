@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-21T13:37:14.655Z",
-  "plan_hash": "35c51c42ee2c5c42e4f218f67116d75b76dd19eb375ec678adfec7dd0d7796e4",
+  "generated_at": "2026-10-21T13:47:02.142Z",
+  "plan_hash": "929d4e639e35f736b8d1eab88a1795cc67bcdbbf571a43f15939ab4d6fbe424e",
   "priorities_approved": true,
   "next": {
     "id": "verify-quotes-round-item-cites",
@@ -19,7 +19,7 @@
       "opened": "2026-10-20",
       "done": null
     },
-    "summary": "PLACED 2026-10-21 (state/directives/2026-10-21-placements-redaction-scan-1c-milestone-4-lanes-238-clicked-d-answers-adr-024-heading-kept.md, item 5): the governance lane after D, 1 of 3, after governance-plan-summaries-archive. Before: RULED 2026-10-21 (headed), item 2e, proposed and unplaced. It represents governance C's sheet rows L1541 and E104: entry 104's mechanism (a) follow-on; verify-test-claims.mjs resolves round + item cites for withdrawn-test rows only, and verify-quotes.mjs not at all."
+    "summary": "FORM DRAFTED 2026-10-21 (state/consults/2026-10-21-verify-quotes-round-item-cites-architect-draft.md): full form under §21a (about 450 lines over 7 files, and under its OPEN-2 (B) verify-test-claims' withdrawn-test resolution changes too); a resolver shared in scripts/plan/rulingSet.mjs; 15 new tests; budget 180 proposed. OPEN-1 to OPEN-7 for the human (the forms read; sharing; attribution; the scan set; what follows if cites do not resolve; the CI path filter; itemless blocks). The architect also found a latent gap: verify-test-claims' patterns miss bold item lines (round 41 on) and plural round headers. NEXT: the human's rulings, then the form committed with its pins. Before: PLACED 2026-10-21 (state/directives/2026-10-21-placements-redaction-scan-1c-milestone-4-lanes-238-clicked-d-answers-adr-024-heading-kept.md, item 5): the governance lane after D, 1 of 3, after governance-plan-summaries-archive. Before: RULED 2026-10-21 (headed), item 2e, proposed and unplaced. It represents governance C's sheet rows L1541 and E104: entry 104's mechanism (a) follow-on; verify-test-claims.mjs resolves round + item cites for withdrawn-test rows only, and verify-quotes.mjs not at all."
   },
   "ready": [
     {
@@ -39,7 +39,7 @@
         "opened": "2026-10-20",
         "done": null
       },
-      "summary": "PLACED 2026-10-21 (state/directives/2026-10-21-placements-redaction-scan-1c-milestone-4-lanes-238-clicked-d-answers-adr-024-heading-kept.md, item 5): the governance lane after D, 1 of 3, after governance-plan-summaries-archive. Before: RULED 2026-10-21 (headed), item 2e, proposed and unplaced. It represents governance C's sheet rows L1541 and E104: entry 104's mechanism (a) follow-on; verify-test-claims.mjs resolves round + item cites for withdrawn-test rows only, and verify-quotes.mjs not at all."
+      "summary": "FORM DRAFTED 2026-10-21 (state/consults/2026-10-21-verify-quotes-round-item-cites-architect-draft.md): full form under §21a (about 450 lines over 7 files, and under its OPEN-2 (B) verify-test-claims' withdrawn-test resolution changes too); a resolver shared in scripts/plan/rulingSet.mjs; 15 new tests; budget 180 proposed. OPEN-1 to OPEN-7 for the human (the forms read; sharing; attribution; the scan set; what follows if cites do not resolve; the CI path filter; itemless blocks). The architect also found a latent gap: verify-test-claims' patterns miss bold item lines (round 41 on) and plural round headers. NEXT: the human's rulings, then the form committed with its pins. Before: PLACED 2026-10-21 (state/directives/2026-10-21-placements-redaction-scan-1c-milestone-4-lanes-238-clicked-d-answers-adr-024-heading-kept.md, item 5): the governance lane after D, 1 of 3, after governance-plan-summaries-archive. Before: RULED 2026-10-21 (headed), item 2e, proposed and unplaced. It represents governance C's sheet rows L1541 and E104: entry 104's mechanism (a) follow-on; verify-test-claims.mjs resolves round + item cites for withdrawn-test rows only, and verify-quotes.mjs not at all."
     }
   ],
   "waiting_on_human": {
