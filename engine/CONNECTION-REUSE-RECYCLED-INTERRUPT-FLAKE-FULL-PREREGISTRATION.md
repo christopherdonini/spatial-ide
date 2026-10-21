@@ -254,3 +254,17 @@ Falsification: any unforced run at H that fails at the binding assertion or at t
 ## §10. Amendments
 
 (opens empty; append-only)
+
+### Amendment 1 — built: M1 to M3 and R1 to R3 observed; §7's figures; where the record sits; R2 and R3 at the code commit (classes 1 and 2); written after the results were seen
+
+*Written by the custodian after the worker's report was seen. References only: `state/consults/2026-10-21-connection-reuse-recycled-interrupt-flake-worker-report.md`.*
+
+1. **Built** on `cut/connection-reuse-recycled-interrupt-flake` from b2df233db725d947c02c001b7d3f0f2db3d9bde6: the code and test commit 03345bfa4224170aef340025300a45d78693722e, and the record commit 32c3e807f3f6e36184cb8071c7d4399127ff7f1c (comment lines only). No commit touches `engine/README.md`; its two owner's-index lines are lead-data's, as §9 says.
+2. **Observed** (the report), each with this file's one test run alone by name: M1 and M2 at 03345bfa4224170aef340025300a45d78693722e fail it at the binding assertion and at the None arm, with their messages (P-1); M3 at 03345bfa4224170aef340025300a45d78693722e passes (P-2); R1 at b2df233db725d947c02c001b7d3f0f2db3d9bde6 fails it at the live-token assertion, with its message; R2 at 03345bfa4224170aef340025300a45d78693722e passes; R3 at 03345bfa4224170aef340025300a45d78693722e gives 20 of 20 (P-3). No invalidator in §5 is met.
+3. **R2 and R3 at the code commit (class 1).** §4 places them at H. They were observed at 03345bfa4224170aef340025300a45d78693722e, before the record commit that names them; 32c3e807f3f6e36184cb8071c7d4399127ff7f1c adds 15 comment lines to that commit and no other line.
+4. **§7's figures** at 32c3e807f3f6e36184cb8071c7d4399127ff7f1c against B = b2df233db725d947c02c001b7d3f0f2db3d9bde6: engine/src/stream.rs 14, engine/src/dataset.rs 12, engine/tests/connection_reuse.rs 51, engine/README.md 0; 77 in all, of 100. No ceiling is passed.
+5. **Where the record sits (class 1).** The form names no place. The record is in the changed test's header comment, as earlier recorded mutations are in this module's test files.
+6. **Next:** lead-data's owner's-index update (§9), applied by a worker; then the PR and both gates.
+7. **Generation:** the node's generation goes up by one.
+
+Nothing above is edited.
