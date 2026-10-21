@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-21T16:48:05.420Z",
-  "plan_hash": "95bb0bfe2f2709b23adf6c5506b79ec9726382aaef22bbb004f828fd583fb941",
+  "generated_at": "2026-10-21T17:01:12.049Z",
+  "plan_hash": "406e2ffaac3ab6597bddcd37dedb5c03547064949f2ad3e17afbf6667d1e7d8b",
   "priorities_approved": true,
   "lanes": [
     {
@@ -8890,7 +8890,7 @@
       "kind": "task",
       "lane": "governance",
       "phase": "prototype",
-      "status": "ready",
+      "status": "in-progress",
       "order": null,
       "depends_on": [
         "governance-plan-summaries-archive"
@@ -8899,15 +8899,17 @@
         "kind": "none",
         "minutes": 0
       },
-      "gate": "none",
-      "evidence": null,
-      "budget_minutes": 120,
-      "generation": 2,
+      "gate": "scripts/plan/VERIFY-QUOTES-ROUND-ITEM-CITES-PREREGISTRATION.md",
+      "evidence": {
+        "branch": "cut/verify-quotes-round-item-cites"
+      },
+      "budget_minutes": 180,
+      "generation": 3,
       "felt_verdict": false,
       "entries": [
         104
       ],
-      "summary": "RULED 2026-10-21 (state/directives/2026-10-21-adr-036-order-1-b1-range-a0-two-sentences-redaction-viewer-hash-skip-adr-022-provenance-o0-file-verify-quotes-ruled.md, item 7): OPEN-1 (A), skipping all three span kinds; OPEN-2 (B); OPEN-3 to OPEN-7 (A). NEXT: the form committed with the rulings and its pins; the node in progress. Before: FORM DRAFTED 2026-10-21 (state/consults/2026-10-21-verify-quotes-round-item-cites-architect-draft.md): full form under §21a (about 450 lines over 7 files, and under its OPEN-2 (B) verify-test-claims' withdrawn-test resolution changes too); a resolver shared in scripts/plan/rulingSet.mjs; 15 new tests; budget 180 proposed. OPEN-1 to OPEN-7 for the human (the forms read; sharing; attribution; the scan set; what follows if cites do not resolve; the CI path filter; itemless blocks). The architect also found a latent gap: verify-test-claims' patterns miss bold item lines (round 41 on) and plural round headers. NEXT: the human's rulings, then the form committed with its pins. Before: PLACED 2026-10-21 (state/directives/2026-10-21-placements-redaction-scan-1c-milestone-4-lanes-238-clicked-d-answers-adr-024-heading-kept.md, item 5): the governance lane after D, 1 of 3, after governance-plan-summaries-archive. Before: RULED 2026-10-21 (headed), item 2e, proposed and unplaced. It represents governance C's sheet rows L1541 and E104: entry 104's mechanism (a) follow-on; verify-test-claims.mjs resolves round + item cites for withdrawn-test rows only, and verify-quotes.mjs not at all.",
+      "summary": "IN PROGRESS: FORM COMMITTED (scripts/plan/VERIFY-QUOTES-ROUND-ITEM-CITES-PREREGISTRATION.md; the architect's draft with the human's rulings, Amendment 1; pins by script); budget 180; branch cut/verify-quotes-round-item-cites from this commit. NEXT: S1 by a worker. Before: RULED 2026-10-21 (state/directives/2026-10-21-adr-036-order-1-b1-range-a0-two-sentences-redaction-viewer-hash-skip-adr-022-provenance-o0-file-verify-quotes-ruled.md, item 7): OPEN-1 (A), skipping all three span kinds; OPEN-2 (B); OPEN-3 to OPEN-7 (A). NEXT: the form committed with the rulings and its pins; the node in progress. Before: FORM DRAFTED 2026-10-21 (state/consults/2026-10-21-verify-quotes-round-item-cites-architect-draft.md): full form under §21a (about 450 lines over 7 files, and under its OPEN-2 (B) verify-test-claims' withdrawn-test resolution changes too); a resolver shared in scripts/plan/rulingSet.mjs; 15 new tests; budget 180 proposed. OPEN-1 to OPEN-7 for the human (the forms read; sharing; attribution; the scan set; what follows if cites do not resolve; the CI path filter; itemless blocks). The architect also found a latent gap: verify-test-claims' patterns miss bold item lines (round 41 on) and plural round headers. NEXT: the human's rulings, then the form committed with its pins. Before: PLACED 2026-10-21 (state/directives/2026-10-21-placements-redaction-scan-1c-milestone-4-lanes-238-clicked-d-answers-adr-024-heading-kept.md, item 5): the governance lane after D, 1 of 3, after governance-plan-summaries-archive. Before: RULED 2026-10-21 (headed), item 2e, proposed and unplaced. It represents governance C's sheet rows L1541 and E104: entry 104's mechanism (a) follow-on; verify-test-claims.mjs resolves round + item cites for withdrawn-test rows only, and verify-quotes.mjs not at all.",
       "dates": {
         "opened": "2026-10-20",
         "done": null

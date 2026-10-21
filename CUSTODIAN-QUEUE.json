@@ -1,47 +1,9 @@
 {
-  "generated_at": "2026-10-21T16:48:05.299Z",
-  "plan_hash": "95bb0bfe2f2709b23adf6c5506b79ec9726382aaef22bbb004f828fd583fb941",
+  "generated_at": "2026-10-21T17:01:11.739Z",
+  "plan_hash": "406e2ffaac3ab6597bddcd37dedb5c03547064949f2ad3e17afbf6667d1e7d8b",
   "priorities_approved": true,
-  "next": {
-    "id": "verify-quotes-round-item-cites",
-    "title": "verify-quotes resolves round + item cites (the quote checker's follow-on owed by round 12 item 1's Applied text)",
-    "lane": "governance",
-    "phase": "prototype",
-    "status": "ready",
-    "order": null,
-    "budget_minutes": 120,
-    "needs_human": {
-      "kind": "none",
-      "minutes": 0
-    },
-    "evidence": null,
-    "dates": {
-      "opened": "2026-10-20",
-      "done": null
-    },
-    "summary": "RULED 2026-10-21 (state/directives/2026-10-21-adr-036-order-1-b1-range-a0-two-sentences-redaction-viewer-hash-skip-adr-022-provenance-o0-file-verify-quotes-ruled.md, item 7): OPEN-1 (A), skipping all three span kinds; OPEN-2 (B); OPEN-3 to OPEN-7 (A). NEXT: the form committed with the rulings and its pins; the node in progress. Before: FORM DRAFTED 2026-10-21 (state/consults/2026-10-21-verify-quotes-round-item-cites-architect-draft.md): full form under §21a (about 450 lines over 7 files, and under its OPEN-2 (B) verify-test-claims' withdrawn-test resolution changes too); a resolver shared in scripts/plan/rulingSet.mjs; 15 new tests; budget 180 proposed. OPEN-1 to OPEN-7 for the human (the forms read; sharing; attribution; the scan set; what follows if cites do not resolve; the CI path filter; itemless blocks). The architect also found a latent gap: verify-test-claims' patterns miss bold item lines (round 41 on) and plural round headers. NEXT: the human's rulings, then the form committed with its pins. Before: PLACED 2026-10-21 (state/directives/2026-10-21-placements-redaction-scan-1c-milestone-4-lanes-238-clicked-d-answers-adr-024-heading-kept.md, item 5): the governance lane after D, 1 of 3, after governance-plan-summaries-archive. Before: RULED 2026-10-21 (headed), item 2e, proposed and unplaced. It represents governance C's sheet rows L1541 and E104: entry 104's mechanism (a) follow-on; verify-test-claims.mjs resolves round + item cites for withdrawn-test rows only, and verify-quotes.mjs not at all."
-  },
-  "ready": [
-    {
-      "id": "verify-quotes-round-item-cites",
-      "title": "verify-quotes resolves round + item cites (the quote checker's follow-on owed by round 12 item 1's Applied text)",
-      "lane": "governance",
-      "phase": "prototype",
-      "status": "ready",
-      "order": null,
-      "budget_minutes": 120,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-10-20",
-        "done": null
-      },
-      "summary": "RULED 2026-10-21 (state/directives/2026-10-21-adr-036-order-1-b1-range-a0-two-sentences-redaction-viewer-hash-skip-adr-022-provenance-o0-file-verify-quotes-ruled.md, item 7): OPEN-1 (A), skipping all three span kinds; OPEN-2 (B); OPEN-3 to OPEN-7 (A). NEXT: the form committed with the rulings and its pins; the node in progress. Before: FORM DRAFTED 2026-10-21 (state/consults/2026-10-21-verify-quotes-round-item-cites-architect-draft.md): full form under §21a (about 450 lines over 7 files, and under its OPEN-2 (B) verify-test-claims' withdrawn-test resolution changes too); a resolver shared in scripts/plan/rulingSet.mjs; 15 new tests; budget 180 proposed. OPEN-1 to OPEN-7 for the human (the forms read; sharing; attribution; the scan set; what follows if cites do not resolve; the CI path filter; itemless blocks). The architect also found a latent gap: verify-test-claims' patterns miss bold item lines (round 41 on) and plural round headers. NEXT: the human's rulings, then the form committed with its pins. Before: PLACED 2026-10-21 (state/directives/2026-10-21-placements-redaction-scan-1c-milestone-4-lanes-238-clicked-d-answers-adr-024-heading-kept.md, item 5): the governance lane after D, 1 of 3, after governance-plan-summaries-archive. Before: RULED 2026-10-21 (headed), item 2e, proposed and unplaced. It represents governance C's sheet rows L1541 and E104: entry 104's mechanism (a) follow-on; verify-test-claims.mjs resolves round + item cites for withdrawn-test rows only, and verify-quotes.mjs not at all."
-    }
-  ],
+  "next": null,
+  "ready": [],
   "waiting_on_human": {
     "total_minutes": 0,
     "by_kind": {
@@ -447,6 +409,28 @@
       },
       "summary": "RULED 2026-10-21 (state/directives/2026-10-21-adr-036-order-1-b1-range-a0-two-sentences-redaction-viewer-hash-skip-adr-022-provenance-o0-file-verify-quotes-ruled.md): order (1), this PR first, then the acceptance commit; B1's range becomes items 19 and 23 to 28 and A0 says the last two sentences, both the human's words, applied as round 2 before the click. Before: RE-GATE PASS WITH NOTES both 2026-10-21 (578, 579; the form's Amendment 3): C3 at d0c257d9 closes C-1; §7 62. READY FOR THE CLICK once the human answers the order question, with items 19 to 28 and A0's attribution beside it. After the merge: the acceptance commit, Status line Accepted 2026-10-22 and docs/README.md regenerated. Before: PR #240 GATE 1 2026-10-21: architect FAIL (576, C-1: A4's last clause claims containment keeps a path inside), reviewer PASS WITH NOTES (577). Correction round 1 (the form's Amendment 2): C3 in the architect's words (class 9); two record corrections. For the human: items 19 to 28; A0's attribution and the additions after the sighted draft. NEXT: the worker applies C3 and reruns V1; a scoped re-gate. Before: IN PROGRESS 2026-10-21: PR #239 merged, so the docs lane's next piece starts; branch cut/adr-036-pre-acceptance-block from this commit, the form's B. Rule (00): the redaction scan, in progress and stopped at O0, touches nothing under docs/, and no PR awaits merge. S1 by a worker on the branch: the edit by script, the regenerated docs/README.md row, V1 to V5. The human accepted ADR-036 in their third message headed 2026-10-22. Its Status edit is held on one question: this block's in-place edits first, or the block as an appended amendment. The branch is reversible, and nothing merges before their answer and click. Before: FORM COMMITTED 2026-10-21 (kernel/ADR-036-PRE-ACCEPTANCE-BLOCK-PREREGISTRATION.md; the architect's form, state/consults/2026-10-21-adr-036-pre-acceptance-block-architect-form.md; 51 pins and 8 expanded cites by script; the 14 passages as they stand, and the human's two passages, checked byte for byte; Amendment 1); budget 60. For the human: B1's sentence cites KNOWN-LIMITATIONS items 19 to 28, of which 20 to 22 describe other limits. NEXT: S1 after PR #239 merges, then both gates, the click, the human's acceptance. Before: RULED 2026-10-21 (state/directives/2026-10-21-adr-036-block-ruled-open-a-c-b1-words-open-w-sentence-adr-022-amendment-2-steps-file.md): the human has seen the draft. OPEN-A (c), Part A with B1, B2, B4 and B5, B1's last sentence in the human's words; OPEN-L, R, D and S (a); OPEN-W (a), with one sentence in the human's words; OPEN-O (a), its condition not met (the walkthrough rows had started), so the block follows PR #239. NEXT: the form written from the draft with the rulings, pinned and committed; the ADR edit after PR #239 merges; then the human types the acceptance. Before: PLACED 2026-10-21 by the human (state/directives/2026-10-21-d-s10-go-adr-036-route-i-redaction-open-items-1c-and-milestone-4-ruled-docs-open-1-yes.md, route (i)): a docs-lane piece ahead of 1c's code applies one pre-acceptance block to ADR-036; the architect drafts it for the human's sight; the project file is project.spatial, the .spatial check on record; when the block has merged the human types the acceptance; 1c's OPEN-1 and milestone 4's OPEN-4 are settled by it. The architect's draft: state/consults/2026-10-21-adr-036-pre-acceptance-block-architect-draft.md, with OPEN-A, L, R, W, D and S for the human; its OPEN-O, the order against the walkthrough, is moot, the walkthrough having started first. Points from 1c's revision for the human at the block: B1's window reaches every later read by path, not only the open; the canonical grammar cannot write a view coordinate below 1e-6 (item W); item C, the reader ceilings, is 1c's. The custodian put it next in the docs lane after the walkthrough.",
       "evidence_label": "branch `cut/adr-036-pre-acceptance-block`"
+    },
+    {
+      "id": "verify-quotes-round-item-cites",
+      "title": "verify-quotes resolves round + item cites (the quote checker's follow-on owed by round 12 item 1's Applied text)",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": null,
+      "budget_minutes": 180,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "branch": "cut/verify-quotes-round-item-cites"
+      },
+      "dates": {
+        "opened": "2026-10-20",
+        "done": null
+      },
+      "summary": "IN PROGRESS: FORM COMMITTED (scripts/plan/VERIFY-QUOTES-ROUND-ITEM-CITES-PREREGISTRATION.md; the architect's draft with the human's rulings, Amendment 1; pins by script); budget 180; branch cut/verify-quotes-round-item-cites from this commit. NEXT: S1 by a worker. Before: RULED 2026-10-21 (state/directives/2026-10-21-adr-036-order-1-b1-range-a0-two-sentences-redaction-viewer-hash-skip-adr-022-provenance-o0-file-verify-quotes-ruled.md, item 7): OPEN-1 (A), skipping all three span kinds; OPEN-2 (B); OPEN-3 to OPEN-7 (A). NEXT: the form committed with the rulings and its pins; the node in progress. Before: FORM DRAFTED 2026-10-21 (state/consults/2026-10-21-verify-quotes-round-item-cites-architect-draft.md): full form under §21a (about 450 lines over 7 files, and under its OPEN-2 (B) verify-test-claims' withdrawn-test resolution changes too); a resolver shared in scripts/plan/rulingSet.mjs; 15 new tests; budget 180 proposed. OPEN-1 to OPEN-7 for the human (the forms read; sharing; attribution; the scan set; what follows if cites do not resolve; the CI path filter; itemless blocks). The architect also found a latent gap: verify-test-claims' patterns miss bold item lines (round 41 on) and plural round headers. NEXT: the human's rulings, then the form committed with its pins. Before: PLACED 2026-10-21 (state/directives/2026-10-21-placements-redaction-scan-1c-milestone-4-lanes-238-clicked-d-answers-adr-024-heading-kept.md, item 5): the governance lane after D, 1 of 3, after governance-plan-summaries-archive. Before: RULED 2026-10-21 (headed), item 2e, proposed and unplaced. It represents governance C's sheet rows L1541 and E104: entry 104's mechanism (a) follow-on; verify-test-claims.mjs resolves round + item cites for withdrawn-test rows only, and verify-quotes.mjs not at all.",
+      "evidence_label": "branch `cut/verify-quotes-round-item-cites`"
     }
   ],
   "proposed": [

@@ -1,14 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `95bb0bfe2f2709b23adf6c5506b79ec9726382aaef22bbb004f828fd583fb941`) at `2026-10-21T16:48:05.299Z`.
+Generated from `PLAN.yaml` (sha256 `406e2ffaac3ab6597bddcd37dedb5c03547064949f2ad3e17afbf6667d1e7d8b`) at `2026-10-21T17:01:11.739Z`.
 
 ## 1. Next
 
-- **verify-quotes-round-item-cites** — verify-quotes resolves round + item cites (the quote checker's follow-on owed by round 12 item 1's Applied text) (lane `governance`)
+- (nothing ready)
 
 ## 2. Ready
 
-- **verify-quotes-round-item-cites** — verify-quotes resolves round + item cites (the quote checker's follow-on owed by round 12 item 1's Applied text) (lane `governance`, order null, budget 120 min)
+- (none)
 
 ## 3. Waiting on the human (total: 0 min)
 
@@ -38,6 +38,7 @@ Generated from `PLAN.yaml` (sha256 `95bb0bfe2f2709b23adf6c5506b79ec9726382aaef22
 
 - **bundle-redaction-scan-not-in-product-publish** — The bundle redaction scan runs only in a test: no product publish scans its emitted files, though ADR-017's section 13 (Accepted) says a scan over every emitted file asserts no path, user name, machine identifier or credential is in a bundle — evidence: branch `cut/bundle-redaction-scan`
 - **adr-036-pre-acceptance-block** — ADR-036's pre-acceptance block: one block for the 2026-10-09 rulings (line 71's correction, the line-oriented form, ruling 4's lineage members, ruling 9's reader, the Documentation items at lines 3 and 192) and milestone 4's OPEN-4 (A′), a match value on fillColor with the step's dependencies naming the match column and its type; then the human types the acceptance — evidence: branch `cut/adr-036-pre-acceptance-block`
+- **verify-quotes-round-item-cites** — verify-quotes resolves round + item cites (the quote checker's follow-on owed by round 12 item 1's Applied text) — evidence: branch `cut/verify-quotes-round-item-cites`
 
 ## 6. Proposed / unscheduled
 
