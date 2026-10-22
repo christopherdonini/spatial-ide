@@ -354,3 +354,13 @@ None of these blocks dispatch: F7 alone matches the human's placement. A yes mus
 4. **Next:** the PR, in draft until the sitting (§2.3), and both gates. OPEN-1 to OPEN-4 stay the human's.
 
 Nothing above is edited.
+
+## Amendment 2 — gate 1: both PASS WITH NOTES (class 1); written after the reports were seen
+
+*Written by the custodian. References only: `state/consults/gates/2026-10-22-walkthrough-row-f7-cli-refusal-gate1-architect.md` (gate-log 591); `state/consults/gates/2026-10-22-walkthrough-row-f7-cli-refusal-gate1-reviewer.md` (gate-log 592).*
+
+1. **Both PASS WITH NOTES** at 8fbd04ccde1ba35e8dde225223d6d5f8d1ec0222, main 53e30138, #241 at 2fc01f59. No Correctness or Evidence finding.
+2. **D1** (the architect's words, not the human's) is applied in the PR body: the two bullets on #241 not merging at the sitting, and on #241 changing before its merge.
+3. **Next:** the PR stays in draft until the sitting (§2.3); there it is clicked first, then #241. This node's done commit is held until after #241's click. OPEN-1 to OPEN-4 stay the human's.
+
+Nothing above is edited.
