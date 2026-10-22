@@ -344,3 +344,13 @@ None of these blocks dispatch: F7 alone matches the human's placement. A yes mus
 - This sentence is true only from #241's merge, so it shares F7's order (§2.3).
 - **Recommended: (b).** The new F7 sends the operator into Part G, so the prerequisite belongs with it.
 
+## Amendment 1 — the row built; §4 item 4's licence path corrected (class 3); R-F7 as predicted (class 1); written after the results were seen
+
+*Written by the custodian. References only: `state/consults/2026-10-22-walkthrough-row-f7-cli-refusal-worker-report.md`; `state/consults/2026-10-22-walkthrough-row-f7-cli-refusal-r-f7-tester-report.md`.*
+
+1. **The row** is 8fbd04ccde1ba35e8dde225223d6d5f8d1ec0222 on `cut/walkthrough-row-f7-cli-refusal`, from B fd47e6cf101b7105a9257ced914351ff06032e90: §4 items 1 to 3 hold, and §7 counts 1 line removed and 1 added in the one file.
+2. **§4 item 4's last check (class 3):** `renderer/bundle-viewer/LICENSES` does not exist; the licence texts are in the repository root's `LICENSES/`, as the redaction form's own clause names them. The check reads `git diff <B′>..<head> -- LICENSES renderer/bundle-viewer/notice.mjs renderer/bundle-viewer/portedNotices.mjs`; from B′ c7d02156d042c25f14d84c841ac89268ea5cec78 to 2fc01f5955a0dc21d51ee4cdffc3e5c55800959d it is empty. Item 4's other checks hold at 2fc01f5955a0dc21d51ee4cdffc3e5c55800959d.
+3. **R-F7 as predicted** at 2fc01f5955a0dc21d51ee4cdffc3e5c55800959d: exit code 1; stderr's last line begins `[publish] ` and names `viewer/NOTICE.txt`; no `--out` directory and no staging sibling; the audit log's last line an outcome line, refused, `RedactionFinding`.
+4. **Next:** the PR, in draft until the sitting (§2.3), and both gates. OPEN-1 to OPEN-4 stay the human's.
+
+Nothing above is edited.
