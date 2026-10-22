@@ -76,3 +76,6 @@ From piece `b2-piece-1b-recording`, a committed style edit is persisted as a `st
 - docs/11's obligations: the record's and the step's identities (URI), ADR-036 §6 (schema), ADR-036 §9 (lifecycle), and the step's `actor` and `at` (provenance).
 - Consequence (a) stands: nothing is undone, and no UI implies undo.
 - Persisting a style in a project file or a lineage is not granted here.
+
+## Amendment 2 — style persistence granted for the project file (2026-10-22, the human)
+Amendment 2 (b2-piece-1c-save-and-reopen): from piece 1c, the §5a style document is persisted in the project file, in the workspace member ADR-036 defines. The save is ADR-006 class 2 and atomic. docs/11's obligations are met by the project URI, ADR-036 for the schema, and save and reopen for the lifecycle. Provenance does not yet travel with the project file. The lineage member stays a named state until a later piece writes it; the saved-here mark says only that the saved style is the one the session's recorded steps reach, and those steps are kept in the session history on this machine while it lasts. Consequence (a) stands, and the lineage is not granted by this amendment.
