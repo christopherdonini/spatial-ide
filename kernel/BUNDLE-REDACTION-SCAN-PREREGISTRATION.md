@@ -846,3 +846,13 @@ Nothing above is edited.
 2. **D1, the record's correction, in the architect's words** (not the human's): Amendment 3 item 2 compares `canonical::sha256_hex(bytes)`, which returns `sha256:` followed by the hex digest, with a record value item 1 fixes as 64 lowercase hex, so no entry `scan-dist.mjs` writes could match. `is_built_asset` compares the record's value with the bare hex digest of the staged bytes, and U1, T6 and T8 write their records in item 1's form. Proof: T8 with a record in `scan-dist.mjs`'s form, the form V3 asserts, and R1.
 
 Nothing above is edited.
+
+## Amendment 6 — gate 1, the reviewer: FAIL; R1 not run; correction round 1 (class 1); written after the reports were seen
+
+*Written by the custodian. References only: `state/consults/gates/2026-10-22-bundle-redaction-scan-not-in-product-publish-gate1-reviewer.md` (gate-log 582); `state/consults/2026-10-22-bundle-redaction-scan-not-in-product-publish-r1-tester-report-1.md`.*
+
+1. **Gate 1, the reviewer, FAIL** at 6a10ee24e79ab17a3905c3de810844c41160f3ee: the architect's C1 to C3 confirmed, C1 reproduced by a probe; E-1; D-1 to D-3.
+2. **R1 did not run** at that head: the dev server's port lies inside the machine's excluded TCP range, so the app could not launch. Freeing it is the human's. R1 and R2 run after the correction round, at its head.
+3. **Correction round 1,** one worker-high: C1 by the architect's remedy, with U1's added assert and T8's record written byte for byte as `scan-dist.mjs` writes it; C2 by the scratch mirror; C3 by the per-file walk; D-2's words. Then U1, T6, T8 and M8 to M10, M12 and M13 are re-observed at its commit. D-1 is the PR body's, and the custodian makes it. D-3, row F7, is the human's to place. The architect's scoped re-gate of C1 to C3 and the reviewer's scoped check follow.
+
+Nothing above is edited.
