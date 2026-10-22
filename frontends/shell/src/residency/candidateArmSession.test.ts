@@ -176,6 +176,21 @@ describe("startCandidateArmSession", () => {
     expect(session.manager.activeLevel).toBe(DEFAULT_TILE_GRID_LEVEL);
   });
 
+  // RECORDED MUTATION for "PA-U7" (the session): the first look passes `null` (`filter, null)` in place of `filter, deps.columns ?? null)`). Expected failure: the first call's
+  // sixth argument below is null.
+  it("PA-U7: the first look and every tile's query pass the session's columns", async () => {
+    const columns = ["area", "zone"];
+    const canvas = fakeCanvas({ pushTileBatch: vi.fn(() => ({ ...OK_INGEST, fitAnchor: { xmin: 0, ymin: 0, xmax: 10, ymax: 10 } })) });
+    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, columns });
+    await session.reissueUnrestricted(null, null);
+    lastSink().onBatch(new Uint8Array([1]), true);
+    lastSink().onTerminal({ kind: "Completed", detail: "" });
+    session.manager.onCameraChange({ xmin: 0, ymin: 0, xmax: 10, ymax: 10 });
+
+    expect(viewportQueryMock.mock.calls.length).toBeGreaterThan(1);
+    expect(viewportQueryMock.mock.calls.map((call) => call[5])).toEqual(viewportQueryMock.mock.calls.map(() => columns));
+  });
+
   it("reissueUnrestricted issues ONE plain, untiled viewport_query (bbox: null) -- the tile grid's own anchor problem", async () => {
     const canvas = fakeCanvas();
     const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas });
@@ -184,7 +199,7 @@ describe("startCandidateArmSession", () => {
 
     expect(outcome).toEqual({ kind: "issued", streamHandle: "sh_1" });
     // P5f complex-gate should-fix 4: bounded now (`UNTILED_FIRST_LOOK_ROW_LIMIT`), not `limit: null`.
-    expect(viewportQueryMock).toHaveBeenCalledWith("ds_x", null, null, UNTILED_LOOK_LIMIT, null);
+    expect(viewportQueryMock).toHaveBeenCalledWith("ds_x", null, null, UNTILED_LOOK_LIMIT, null, null);
     expect(session.manager.gridFrame).toBeNull(); // not established until the stream reaches its own terminal
   });
 
@@ -320,10 +335,7 @@ describe("startCandidateArmSession", () => {
     // new generation's own untiled stream reaching ITS terminal is what re-establishes it, exactly
     // like the dataset's own first open.
     expect(outcome).toEqual({ kind: "issued", streamHandle: "sh_2" });
-    expect(viewportQueryMock).toHaveBeenCalledWith("ds_x", null, null, UNTILED_LOOK_LIMIT, {
-      predicate: "x > 1",
-      dialect: "duckdb_expr_0",
-    });
+    expect(viewportQueryMock).toHaveBeenCalledWith("ds_x", null, null, UNTILED_LOOK_LIMIT, { predicate: "x > 1", dialect: "duckdb_expr_0" }, null);
   });
 
   it("a tile batch reporting overBudget sets the manager's over-budget flag; never throws a baseline-style refusal", async () => {
@@ -1889,6 +1901,7 @@ describe("Item B: the settled-partial signal (RESIDENCY-DEBT-1B.md, BS5/BS6)", (
     const onTileSuperseded = vi.fn();
     const manager = new TileViewportStreamManager({
       dataset: "ds_x",
+      columns: null,
       residency,
       onBatch: vi.fn(),
       onTileSuperseded,

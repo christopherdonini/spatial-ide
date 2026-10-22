@@ -9,6 +9,7 @@ import { Admitted } from "./admission/admitDataset";
 import DescribeSummary from "./admission/DescribeSummary";
 import { FormattedRefusal, formatRefusal } from "./admission/formatRefusal";
 import RefusalBlock from "./admission/RefusalBlock";
+import { projectionFor } from "./attributes/projection";
 import type { AuthoritativeBbox } from "./canvas/viewportBbox";
 import WorkingCanvas, { WorkingCanvasHandle } from "./canvas/WorkingCanvas";
 import { latchedHoverReadout, type HoverReadout } from "./canvas/pick";
@@ -1561,6 +1562,8 @@ export default function App() {
       const session = startCandidateArmSession({
         dataset: admitted.dataset,
         crsUnit: admitted.describe.crs.unit,
+        // Milestone 4 PR A: the open's projection set, on the first look and on every tile's query (fixed for the open, `attributes/projection.ts`).
+        columns: projectionFor(admitted.describe),
         canvas,
         // P7: the tile-size sweep selector's own dev-gated read, at the exact point the candidate
         // session is constructed -- `getResidencyTileSizeLevel()` returns `null` (unset) unless a
@@ -1673,6 +1676,7 @@ export default function App() {
 
     const manager = new ViewportStreamManager({
       dataset: admitted.dataset,
+      columns: projectionFor(admitted.describe), // Milestone 4 PR A: the open's projection set, on every query
       onStreamOpened: (streamHandle) => {
         // N8 residual correction round 1 (item 7 probe): for consistency with `onFailureTerminal`/
         // `onDeliveryCompleted`/`onBatchRows` immediately below, not because this one is independently

@@ -3,8 +3,8 @@
 
 /**
  * SHELL-MIGRATION-MILESTONE-2-PREREGISTRATION.md section 2.4 (seam 3): the typed, pure transitions of a view. A
- * transition is an `{action, params}` object, the shape of ADR-036 section 6's `intent` member (Proposed, so it
- * binds nothing), applied by the pure `applyViewTransition`. The union is closed and is exactly the section's names:
+ * transition is an `{action, params}` object, the shape of ADR-036 section 6's `intent` member (Accepted
+ * 2026-10-22), applied by the pure `applyViewTransition`. The union is closed and is exactly the section's names:
  * `filter.apply` and `style.set` (phase A), then `tool.set`, `mode.set`, `selection.apply`, `selection.clear`,
  * `selection.end`, `inspect.set` and `inspect.pin`, and, from milestone 3 (SHELL-MIGRATION-MILESTONE-3-PREREGISTRATION.md section 2.5),
  * `filter.clauses.set`. Keystrokes, hover, navigation and layout are not transitions.

@@ -60,7 +60,7 @@ describe("ViewportStreamManager (supersede-on-pan, D3.7)", () => {
     await manager.requestViewport(null, null, 1_000);
 
     expect(cancelMock).not.toHaveBeenCalled();
-    expect(viewportQueryMock).toHaveBeenCalledWith("ds_x", null, null, null, null);
+    expect(viewportQueryMock).toHaveBeenCalledWith("ds_x", null, null, null, null, null);
     expect(startStreamMock).toHaveBeenCalledTimes(1);
     expect(startStreamMock.mock.calls[0][0].ticketHandle).toBe("sh_a");
     expect(manager.activeStreamHandle).toBe("sh_a");
@@ -73,7 +73,18 @@ describe("ViewportStreamManager (supersede-on-pan, D3.7)", () => {
 
     await manager.requestViewport(null, null, 1_000, filter);
 
-    expect(viewportQueryMock).toHaveBeenCalledWith("ds_x", null, null, null, filter);
+    expect(viewportQueryMock).toHaveBeenCalledWith("ds_x", null, null, null, filter, null);
+  });
+
+  // RECORDED MUTATION for "PA-U7" (this manager): pass `null` in place of `this.opts.columns ?? null`. Expected failure: the sixth argument below is null.
+  it("PA-U7: the manager passes its columns option on every viewport_query call", async () => {
+    const columns = ["area", "zone"];
+    mockStream("sh_a");
+    const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch: vi.fn(), onSuperseded: vi.fn(), columns });
+
+    await manager.requestViewport(null, null, 1_000);
+
+    expect(viewportQueryMock.mock.calls.map((call) => call[5])).toEqual([columns]);
   });
 
   it("a batch for the active stream is admitted with an ascending sequence number", async () => {
