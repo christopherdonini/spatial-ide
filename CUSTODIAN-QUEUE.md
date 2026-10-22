@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `b32d1d007ef97397533da1e3d8fc2d168517d952efa5625f08faf71463119e31`) at `2026-10-22T12:33:01.958Z`.
+Generated from `PLAN.yaml` (sha256 `84d4aa4b2ef540396145af212b920608a3beaf18d3bbbbba3a97a3ec910b1899`) at `2026-10-22T12:57:34.667Z`.
 
 ## 1. Next
 
@@ -9,7 +9,6 @@ Generated from `PLAN.yaml` (sha256 `b32d1d007ef97397533da1e3d8fc2d168517d952efa5
 ## 2. Ready
 
 - **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark (lane `kernel-protocol`, order null, budget 0 min)
-- **stale-assertion-messages-and-product-comments** — Stale text outside the docs lane: an assertion message calling ADR-016 Amendment 1 proposed, a thrown e2e message with a stale line cite, and two product-code comments (crsAssertionState.ts and buildLayers.ts) carrying the same stale premises piece f corrects in tests (lane `shell`, order null, budget 60 min)
 - **walkthrough-row-f7-cli-refusal** — MANUAL-WALKTHROUGH.md row F7: a publish-bundle CLI publish with the real built viewer is refused under the redaction scan (its W12), so F7 points at Part G's rows, with the CLI refusal line (lane `shell`, order null, budget 30 min)
 
 ## 3. Waiting on the human (total: 0 min)
@@ -37,6 +36,7 @@ Generated from `PLAN.yaml` (sha256 `b32d1d007ef97397533da1e3d8fc2d168517d952efa5
 ## 5. In progress
 
 - **bundle-redaction-scan-not-in-product-publish** — The bundle redaction scan runs only in a test: no product publish scans its emitted files, though ADR-017's section 13 (Accepted) says a scan over every emitted file asserts no path, user name, machine identifier or credential is in a bundle — evidence: branch `cut/bundle-redaction-scan`
+- **stale-assertion-messages-and-product-comments** — Stale text outside the docs lane: an assertion message calling ADR-016 Amendment 1 proposed, a thrown e2e message with a stale line cite, and two product-code comments (crsAssertionState.ts and buildLayers.ts) carrying the same stale premises piece f corrects in tests — evidence: branch `cut/stale-assertion-messages-and-product-comments`
 - **verify-quotes-round-item-cites** — verify-quotes resolves round + item cites (the quote checker's follow-on owed by round 12 item 1's Applied text) — evidence: branch `cut/verify-quotes-round-item-cites`
 
 ## 6. Proposed / unscheduled

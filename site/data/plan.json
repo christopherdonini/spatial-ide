@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-22T12:33:02.121Z",
-  "plan_hash": "b32d1d007ef97397533da1e3d8fc2d168517d952efa5625f08faf71463119e31",
+  "generated_at": "2026-10-22T12:57:35.152Z",
+  "plan_hash": "84d4aa4b2ef540396145af212b920608a3beaf18d3bbbbba3a97a3ec910b1899",
   "priorities_approved": true,
   "lanes": [
     {
@@ -7247,7 +7247,7 @@
       "kind": "task",
       "lane": "shell",
       "phase": "prototype",
-      "status": "ready",
+      "status": "in-progress",
       "order": null,
       "depends_on": [
         "stale-test-names-and-comments",
@@ -7258,12 +7258,14 @@
         "minutes": 0
       },
       "gate": "frontends/shell/STALE-ASSERTION-MESSAGES-AND-PRODUCT-COMMENTS-PREREGISTRATION.md",
-      "evidence": null,
+      "evidence": {
+        "branch": "cut/stale-assertion-messages-and-product-comments"
+      },
       "budget_minutes": 60,
       "generation": 4,
       "felt_verdict": false,
       "entries": [],
-      "summary": "RULED 2026-10-22 (state/directives/2026-10-22-away-until-monday-241-r1-on-5400-f7-a-milestone-4-1c-code-o0-b-docs-lane-ruled-i4-a.md): OPEN-1 (A), OPEN-2 yes, OPEN-3 (a); the form's Amendment 1, then code. The F7 piece follows it in the lane, before #241's merge. Before: WAITING ON THE HUMAN 2026-10-22: the form's OPEN-1 (the two message strings in the docs lane; recommended (A)), OPEN-2 (recommended yes) and OPEN-3 (recommended (a)). No code before OPEN-1's answer. needs_human goes back to none when they are ruled. Before: FORM COMMITTED 2026-10-21 (frontends/shell/STALE-ASSERTION-MESSAGES-AND-PRODUCT-COMMENTS-PREREGISTRATION.md; the architect's draft, state/consults/2026-10-21-stale-assertion-messages-and-product-comments-architect-draft.md): full form and full gating (section 21a category 4); four rows, M1 (the assertion message), M2 (K7's thrown message), C1 (crsAssertionState.ts) and B1 (buildLayers.ts); at most 27 lines over 4 files; budget 60. OPEN-1 (the two message strings in the docs lane; recommended (A)), OPEN-2 (regression.mjs's three more stale comment cites; recommended yes) and OPEN-3 (same-class lines outside the four files; recommended (a), a new node) are the human's. No code before OPEN-1's answer; B1 waits if milestone 4 enters code first. Before: MOVED 2026-10-21 in the docs lane's chain: it now follows adr-036-pre-acceptance-block, which the human placed ahead of 1c's code (state/directives/2026-10-21-d-s10-go-adr-036-route-i-redaction-open-items-1c-and-milestone-4-ruled-docs-open-1-yes.md, route (i)) and the custodian put next after the walkthrough, the lane's piece in progress. Before: PLACED 2026-10-21 (state/directives/2026-10-21-placements-redaction-scan-1c-milestone-4-lanes-238-clicked-d-answers-adr-024-heading-kept.md, item 4): the docs lane, 2 of 6, after walkthrough-current-view-rows-g1-n5. Before: PROPOSED 2026-10-11 by the human (state/directives/2026-10-11-open-11-a-piece-f-opens-ported-notices-required.md, item 2): piece f's form (frontends/shell/STALE-TEST-NAMES-AND-COMMENTS-PREREGISTRATION.md, 2.5 and its open question 4) routes four lines outside the docs lane here: engine/tests/session_identity.rs's assertion message, frontends/shell/e2e/regression.mjs's thrown message with the stale residencyStatus line cite, frontends/shell/src/admission/crsAssertionState.ts's harness premise, and frontends/shell/src/canvas/buildLayers.ts's no-attributes reason. The two messages change test strings and the two comments are product code, so the docs lane cannot take them. Stays proposed; the human grades and places it.",
+      "summary": "IN PROGRESS 2026-10-22: branch cut/stale-assertion-messages-and-product-comments from main 4b26d279 (B), worktree C:/dev/wt/samc; rule (00) checked at dispatch against #241 (none of the four files), verify-quotes (scripts/plan) and piece 1c's form; a worker makes the seven spans. Before: RULED 2026-10-22 (state/directives/2026-10-22-away-until-monday-241-r1-on-5400-f7-a-milestone-4-1c-code-o0-b-docs-lane-ruled-i4-a.md): OPEN-1 (A), OPEN-2 yes, OPEN-3 (a); the form's Amendment 1, then code. The F7 piece follows it in the lane, before #241's merge. Before: WAITING ON THE HUMAN 2026-10-22: the form's OPEN-1 (the two message strings in the docs lane; recommended (A)), OPEN-2 (recommended yes) and OPEN-3 (recommended (a)). No code before OPEN-1's answer. needs_human goes back to none when they are ruled. Before: FORM COMMITTED 2026-10-21 (frontends/shell/STALE-ASSERTION-MESSAGES-AND-PRODUCT-COMMENTS-PREREGISTRATION.md; the architect's draft, state/consults/2026-10-21-stale-assertion-messages-and-product-comments-architect-draft.md): full form and full gating (section 21a category 4); four rows, M1 (the assertion message), M2 (K7's thrown message), C1 (crsAssertionState.ts) and B1 (buildLayers.ts); at most 27 lines over 4 files; budget 60. OPEN-1 (the two message strings in the docs lane; recommended (A)), OPEN-2 (regression.mjs's three more stale comment cites; recommended yes) and OPEN-3 (same-class lines outside the four files; recommended (a), a new node) are the human's. No code before OPEN-1's answer; B1 waits if milestone 4 enters code first. Before: MOVED 2026-10-21 in the docs lane's chain: it now follows adr-036-pre-acceptance-block, which the human placed ahead of 1c's code (state/directives/2026-10-21-d-s10-go-adr-036-route-i-redaction-open-items-1c-and-milestone-4-ruled-docs-open-1-yes.md, route (i)) and the custodian put next after the walkthrough, the lane's piece in progress. Before: PLACED 2026-10-21 (state/directives/2026-10-21-placements-redaction-scan-1c-milestone-4-lanes-238-clicked-d-answers-adr-024-heading-kept.md, item 4): the docs lane, 2 of 6, after walkthrough-current-view-rows-g1-n5. Before: PROPOSED 2026-10-11 by the human (state/directives/2026-10-11-open-11-a-piece-f-opens-ported-notices-required.md, item 2): piece f's form (frontends/shell/STALE-TEST-NAMES-AND-COMMENTS-PREREGISTRATION.md, 2.5 and its open question 4) routes four lines outside the docs lane here: engine/tests/session_identity.rs's assertion message, frontends/shell/e2e/regression.mjs's thrown message with the stale residencyStatus line cite, frontends/shell/src/admission/crsAssertionState.ts's harness premise, and frontends/shell/src/canvas/buildLayers.ts's no-attributes reason. The two messages change test strings and the two comments are product code, so the docs lane cannot take them. Stays proposed; the human grades and places it.",
       "dates": {
         "opened": "2026-10-11",
         "done": null
