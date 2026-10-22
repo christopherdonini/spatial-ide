@@ -4520,13 +4520,13 @@ nodes:
     order: null
     depends_on: []
     needs_human: {kind: none, minutes: 0}
-    gate: none
+    gate: frontends/shell/WALKTHROUGH-ROW-F7-CLI-REFUSAL-PREREGISTRATION.md
     evidence: null
     budget_minutes: 30
-    generation: 1
+    generation: 2
     felt_verdict: false
     entries: []
-    summary: "PLACED 2026-10-22 by the human (state/directives/2026-10-22-away-until-monday-241-r1-on-5400-f7-a-milestone-4-1c-code-o0-b-docs-lane-ruled-i4-a.md), F7 (a): the docs-lane piece pointing F7 at the Part G rows, with the CLI refusal line; it lands before #241's merge. From the redaction form's Amendment 3 additions, E1 (state/consults/2026-10-21-bundle-redaction-scan-not-in-product-publish-architect-amendment-3-cli-doc.md). Next in the docs lane after stale-assertion-messages-and-product-comments. Its form is drafted by the architect."
+    summary: "FORM COMMITTED 2026-10-22 (frontends/shell/WALKTHROUGH-ROW-F7-CLI-REFUSAL-PREREGISTRATION.md; the architect's draft, state/consults/2026-10-22-walkthrough-row-f7-cli-refusal-architect-draft.md): full form and gating (section 21a category 4); F7 points at Part G's rows with the CLI refusal line; R-F7, one refused CLI publish by a tester at #241's head; §2.3's order: this PR is clicked first at the sitting, then #241, with no main commit between. OPEN-1 to OPEN-4 the human's (recommended b, b, a, b). NEXT: after the docs lane's piece 2 awaits its click, the row by a worker, R-F7, both gates; the PR stays draft until the sitting. Before: PLACED 2026-10-22 by the human (state/directives/2026-10-22-away-until-monday-241-r1-on-5400-f7-a-milestone-4-1c-code-o0-b-docs-lane-ruled-i4-a.md), F7 (a): the docs-lane piece pointing F7 at the Part G rows, with the CLI refusal line; it lands before #241's merge. From the redaction form's Amendment 3 additions, E1 (state/consults/2026-10-21-bundle-redaction-scan-not-in-product-publish-architect-amendment-3-cli-doc.md). Next in the docs lane after stale-assertion-messages-and-product-comments. Its form is drafted by the architect."
     dates: {opened: 2026-10-22, done: null}
   - id: stale-lines-outside-the-four-files
     title: "Same-class stale lines outside the docs-lane piece's four files: residencyStatus.test.ts's titles and comments calling ruled strings drafts, residencyArm.test.ts's App-cannot-be-rendered comment, WorkingCanvas.test.ts's no-mount line, and engine/src/identity.rs's two stale line cites into session_identity.rs"
