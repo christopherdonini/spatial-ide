@@ -4,6 +4,16 @@ Line references written before the rotation point into state/cut-archive/DECISIO
 
 ## Pending
 
+**RULED 2026-10-22 (headed 2026-10-22) — away until Monday 2026-10-26: #241's R1 under the port-5400 harness approval of 2026-10-11, everything but R2 completed, gates included, then #241 awaits the human and leaves slot 1; F7 (a), a docs-lane piece landing before #241's merge; slot 1, milestone 4 with PR A first if rule (00) finds it disjoint from #241, else its form finalised and its first commit waiting; slot 2, piece 1c's code, O0 (B) with the custodian's probe file in the human's OneDrive folder marked online-only, or O0 waiting for Monday with step 1 up to the resolver; the docs lane's OPEN-1 (A), OPEN-2 yes, OPEN-3 (a), then item 41's comment, the ADR notes and the stale cites; verify-quotes I4 (A), the round-72 header recorded as the one unread block and a cite to it refused by name and pinned instead; Monday's list (the human, typed, received at 12:22:27Z by the transcript; recorded verbatim at `state/directives/2026-10-22-away-until-monday-241-r1-on-5400-f7-a-milestone-4-1c-code-o0-b-docs-lane-ruled-i4-a.md`, from line 6, sha256 91d50f1f2b7252274c7685d9dfd0660b0668c63a968f5c1b3618df64114d96ac over lines 6 to the end at the commit that adds it):**
+
+- **The rulings** are the text, referenced and not restated.
+- **Applied:**
+  - **#241:** R1 by a tester at its head under the harness. Then the PR is out of draft for Monday's R2 and click.
+  - **The docs lane:** its form's Amendment 1 records the rulings; the code follows. The F7 piece is placed next in the lane so that it lands before #241's merge. Then item 41's comment, the ADR notes and the stale cites. OPEN-3 (a) becomes a proposed node.
+  - **Milestone 4:** its form is finalised by the architect with its rulings. Rule (00) is checked at dispatch against #241, piece 1c and the docs lane.
+  - **Piece 1c:** O0's probe file is made by the custodian. 1c's one path shared with #241, `kernel/README.md`, is edited only after #241 merges.
+  - **verify-quotes:** its form's Amendment 3 records I4 (A), then S3, the PR and both gates.
+
 **RULED 2026-10-21 (headed 2026-10-22, the fifth message) — the redaction scan's Amendment 3: OPEN-1 (B); OPEN-2 (A), with O1's STOP as the guard; OPEN-3 (A); OPEN-4 (A), stated in §1 and the CLI's module doc; OPEN-5 (A); OPEN-6 yes to W6′ as drafted; OPEN-7 no ADR text in this piece, the ADR-017 note node carrying the build-time scan, the reviewed list and the skip later, in the human's words; ADR-022 Amendment 2 by reading (a), the human's provenance sentences replacing the provenance clause only (the human, pasted as their whole message, received at 21:19:54Z by the transcript; recorded verbatim at `state/directives/2026-10-21-redaction-amendment-3-open-1-to-7-ruled-adr-022-amendment-2-reading-a.md`, from line 6, sha256 7acff78a4c1e22fe5a9e4c83bd6138aeec06b304f85dfc00353c18fb24e37172 over lines 6 to the end at the commit that adds it):**
 
 - **The rulings** are the text, referenced and not restated.
