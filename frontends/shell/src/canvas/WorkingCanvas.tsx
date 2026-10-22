@@ -574,7 +574,7 @@ export interface WorkingCanvasProps {
    * and a change of size while no area is last asked for (Amendment 3). It issues no query and is not the area last asked for. */
   onViewShown?: (bbox: AuthoritativeBbox) => void;
   /** A decoded batch would have passed `RESIDENT_ATTRIBUTE_MAX_BYTES` and was kept with its geometry and no attributes (`limits.ts`). A report only; App shows the status item. */
-  onAttributesNotHeld?: () => void;
+  onAttributesNotHeld: () => void;
 }
 
 const INITIAL_ZOOM = 0;
