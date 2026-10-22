@@ -406,3 +406,13 @@ Nothing above is edited.
 5. **Noted, not done:** the carrier call's round-file reader has no test of its own (both gates' N-1); a follow-on, not required for this merge.
 
 Nothing above is edited.
+
+## §10 Amendment 7 — H-1 ruled by the human (class 5)
+
+*Written by the custodian on the human's message. References only: `state/directives/2026-10-22-242-h-1-round-72-pin-f7-open-items-milestone-4-open-16-b-adr-020-corrigendum-a-1c-adr-036-words-approved-disk-parity-node.md`, item 1; the architect's H-1 note in `state/consults/2026-10-22-verify-quotes-round-item-cites-gate1-words-reconciled-architect.md`, its sections 1 and 2.*
+
+1. **H-1:** a record's cite to question round 72's ruling pins the item's line in the tracked `state/questions/round-72.md`, by a hash pin at a main commit, never a line of the archive. That is the hash pin of Amendment 3, item 1.
+2. **The words follow:** the clause that the architect's H-1 note gives for a pin at the question file is appended where that note places it, in the header's sentence in `scripts/plan/verify-quotes.mjs` and in the README's sentence in `scripts/plan/README.md`. A worker applies it with no re-gate (§9, as Amendment 4, item 3 applied the reconciled words), and the PR body lists it. A header line may be rewrapped at a word boundary; no word changes.
+3. **Next:** S4, the closing amendment (Amendment 6, item 4), at the head that carries the clause; then the PR leaves draft for the human's click, the last of the four at the sitting.
+
+Nothing above is edited.

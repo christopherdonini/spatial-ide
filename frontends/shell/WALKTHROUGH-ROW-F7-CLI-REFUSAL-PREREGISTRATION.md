@@ -364,3 +364,15 @@ Nothing above is edited.
 3. **Next:** the PR stays in draft until the sitting (§2.3); there it is clicked first, then #241. This node's done commit is held until after #241's click. OPEN-1 to OPEN-4 stay the human's.
 
 Nothing above is edited.
+
+## Amendment 3 — the human's answers: OPEN-1 (b), OPEN-2 (b) and OPEN-4 (b) (class 9), OPEN-3 (a) (class 5); written after the gates' reports were seen and before the added rows' code
+
+*Written by the custodian on the human's message. References only: `state/directives/2026-10-22-242-h-1-round-72-pin-f7-open-items-milestone-4-open-16-b-adr-020-corrigendum-a-1c-adr-036-words-approved-disk-parity-node.md`, item 2; the OPEN items above, each option (b)'s words and clause check.*
+
+1. **OPEN-1 (b), OPEN-2 (b) and OPEN-4 (b) join the piece (class 9):** the architect's words under each are applied byte for byte. In Part F (P1): row F8, and the span of the intro's line that OPEN-1 names; the deviation paragraph's last clause, rewrapped, its `cargo build` sentence unchanged. In Part G (P2): G7's parenthetical and its contrast clause. §7's ceilings for each yes bind, at most 14 lines in all, and §8 item 1's exception covers these rows.
+2. **OPEN-3 (a):** `MACOS-BRINGUP.md` is not edited. The custodian's note is on `port-4-l2-smoke`'s summary, for the resume.
+3. **Rule (00) for P1 and P2,** re-checked at this commit: no piece in progress and no PR awaiting merge edits Part F or Part G. Milestone 4's PR A adds only its own Part, after Part AB; #241, #242 and #243 edit no walkthrough line; piece 1c's branch has not edited the file.
+4. **The scoped check:** the answers came after the gates, so both gates re-check only the added rows, at the head that carries them, against each option's clause check (the OPEN items' first paragraph). OPEN-4's clause is true only from #241's merge, so it shares F7's order (§2.3).
+5. **Next:** the words by a worker on `cut/walkthrough-row-f7-cli-refusal` at 8fbd04ccde1ba35e8dde225223d6d5f8d1ec0222; the scoped check; the PR stays in draft until the sitting (§2.3), where it is clicked first. This node's done commit stays held until after #241's click.
+
+Nothing above is edited.

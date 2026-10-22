@@ -1118,3 +1118,14 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 5: the human's OPEN-16 (b) and their reading of OPEN-17 (b) (class 5), with `tableSource.ts` joining PR B (class 9), written before PR C's and PR B's code
+
+*Written by the custodian on the human's message. References only: `state/directives/2026-10-22-242-h-1-round-72-pin-f7-open-items-milestone-4-open-16-b-adr-020-corrigendum-a-1c-adr-036-words-approved-disk-parity-node.md`, item 3; OPEN-16 and OPEN-17 above; Amendment 1, items 3 and 4.*
+
+1. **OPEN-16 (b):** PR B builds its colour cases from one bounded first-scope query through PR C's `tableSource` and its single stream, as option (b) states, and §2.3 (d)'s source binds so. The PRs run in the order A, C, B. KL-3 is the human's line under OPEN-7, as given.
+2. **Class 9, recorded before PR B's code:** `frontends/shell/src/table/tableSource.ts` joins PR B's list (§2.6, its conditional entry) with 30 lines in B-P, as §7 names under OPEN-16 (b). §7 is not edited.
+3. **OPEN-17 (b)** stands as Amendment 1, item 4 records it. In the human's reading it changes nothing of 1c's order.
+4. **Next:** PR A waits for #243 (Amendment 4, row 16). PR C's and PR B's dispatch amendments are drafted ahead by the architect, each re-swept at its own base before its code.
+
+Nothing above is edited.
