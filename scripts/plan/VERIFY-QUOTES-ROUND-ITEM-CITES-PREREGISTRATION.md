@@ -394,3 +394,15 @@ Nothing above is edited.
 2. **Next:** the scoped re-gates at 91ccdab4; H-1 stays the human's.
 
 Nothing above is edited.
+
+## §10 Amendment 6 — the scoped re-gates: both PASS WITH NOTES (class 1); written after the reports were seen
+
+*Written by the custodian. References only: `state/consults/gates/2026-10-22-verify-quotes-round-item-cites-gate2-architect.md` (gate-log 589); `state/consults/gates/2026-10-22-verify-quotes-round-item-cites-gate2-reviewer.md` (gate-log 590).*
+
+1. **Both PASS WITH NOTES** at 91ccdab4904b5937b53b296b03a91a62b41fd2f3: gate 1's C-1 and E-1 are closed; MC2 is re-observed failing alone at that commit (the reviewer's check 2).
+2. **D-4, one comment line,** at the blockquote constant's site in `scripts/plan/verify-quotes.mjs`, by a worker with no re-gate, in the architect's words.
+3. **The PR body:** the architect's D-3 is applied; it covers the reviewer's D-1.
+4. **S4, the closing amendment,** waits for H-1 and carries, as references: the architect's D-1 and D-2 rows (D-2 citing the reviewer's re-observation at 91ccdab4), and §7's figures at the final head.
+5. **Noted, not done:** the carrier call's round-file reader has no test of its own (both gates' N-1); a follow-on, not required for this merge.
+
+Nothing above is edited.
