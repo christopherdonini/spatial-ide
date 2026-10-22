@@ -1,17 +1,21 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `4e2441de1fca70ac40cf55bd0d2b1de7c6fa53261e733cc9583709a78c4b7783`) at `2026-10-22T02:43:13.263Z`.
+Generated from `PLAN.yaml` (sha256 `cd2d82e1614c8e9209a85ef662a275f76c7097bee310f495c52b964357cdcaf4`) at `2026-10-22T03:11:36.881Z`.
 
 ## 1. Next
 
-- **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark (lane `kernel-protocol`)
+- (nothing ready)
 
 ## 2. Ready
 
-- **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark (lane `kernel-protocol`, order null, budget 0 min)
-- **stale-assertion-messages-and-product-comments** — Stale text outside the docs lane: an assertion message calling ADR-016 Amendment 1 proposed, a thrown e2e message with a stale line cite, and two product-code comments (crsAssertionState.ts and buildLayers.ts) carrying the same stale premises piece f corrects in tests (lane `shell`, order null, budget 60 min)
+- (none)
 
-## 3. Waiting on the human (total: 0 min)
+## 3. Waiting on the human (total: 10 min)
+
+### ruling
+
+- **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark (5 min)
+- **stale-assertion-messages-and-product-comments** — Stale text outside the docs lane: an assertion message calling ADR-016 Amendment 1 proposed, a thrown e2e message with a stale line cite, and two product-code comments (crsAssertionState.ts and buildLayers.ts) carrying the same stale premises piece f corrects in tests (5 min)
 
 ### sitting
 
