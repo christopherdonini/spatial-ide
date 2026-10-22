@@ -376,3 +376,13 @@ Nothing above is edited.
 5. **Next:** the words by a worker on `cut/walkthrough-row-f7-cli-refusal` at 8fbd04ccde1ba35e8dde225223d6d5f8d1ec0222; the scoped check; the PR stays in draft until the sitting (§2.3), where it is clicked first. This node's done commit stays held until after #241's click.
 
 Nothing above is edited.
+
+## Amendment 4 — the three yes answers built (class 1); written after the result was seen
+
+*Written by the custodian. References only: `state/consults/2026-10-22-walkthrough-row-f7-cli-refusal-open-words-worker-report.md`.*
+
+1. **The rows** are abc900f2b4706669bc4abbc35024b28a451a5e86 on `cut/walkthrough-row-f7-cli-refusal`, on 8fbd04ccde1ba35e8dde225223d6d5f8d1ec0222: OPEN-1 (b)'s F8 and intro line, OPEN-2 (b)'s two G7 spans and OPEN-4 (b)'s clause, each in the form's words, byte for byte. §4 items 1 to 3 hold at that head. §7 counts 13 lines in the one file (7 added, 6 removed), within 14: OPEN-4's old clause was two lines, so it counts 3 + 2.
+2. **Disclosed:** OPEN-4's words carry no code spans where the old clause had three (`renderer/bundle-viewer/dist`, `npm run build`, `renderer/bundle-viewer`), as the form gives them. The scoped check reads it.
+3. **Next:** both gates' scoped check of the added rows at abc900f2 (Amendment 3, item 4); the PR body names the head, the count and the words. The PR stays in draft until the sitting (§2.3).
+
+Nothing above is edited.

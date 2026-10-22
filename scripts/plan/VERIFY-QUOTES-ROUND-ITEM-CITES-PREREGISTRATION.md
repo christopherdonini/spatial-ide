@@ -416,3 +416,16 @@ Nothing above is edited.
 3. **Next:** S4, the closing amendment (Amendment 6, item 4), at the head that carries the clause; then the PR leaves draft for the human's click, the last of the four at the sitting.
 
 Nothing above is edited.
+
+## §10 Amendment 8 — S4, the closing amendment: references and hashes only (class 1); written after the head was seen
+
+*Written by the custodian. References only: `state/consults/gates/2026-10-22-verify-quotes-round-item-cites-gate2-architect.md`, its D-1 and D-2; `state/consults/gates/2026-10-22-verify-quotes-round-item-cites-gate2-reviewer.md`, its check 2; `state/consults/2026-10-22-verify-quotes-round-item-cites-h-1-clause-worker-report.md`.*
+
+1. **The final head** is 2d2e4633a15b7fa05ed7a10b7637a0f4943f23fd: Amendment 7's clause in the two files it names, on af77b0d10514c9bdca0a46367b9660450d85b295 (D-4). The suite is 543 tests (U6 as amended).
+2. **§7 at that head,** by its command over `49a7f532...2d2e4633` (the range Amendment 4, item 4 records): 416 lines over 7 files, within 550 and 7.
+3. **D-1, in the architect's words:** The round-1 report's step 1, negative case, carries the test's expected failure text, `round 66, item 9`, as its instrument's output; it is not a reference.
+4. **D-2, in the architect's words:** MC2 was observed on b08a1fec4e3405153b4998882427355fa18db319's tree with C2 uncommitted (the round-1 report, step 2); `scripts/plan/verify-test-claims.mjs` is unchanged from b08a1fec to 91ccdab4 (the same report, step 4's diff list). The reviewer re-observed MC2 failing alone at 91ccdab4904b5937b53b296b03a91a62b41fd2f3 (gate 2's reviewer report, its check 2).
+5. **Recorded before and not repeated:** the §7 range (Amendment 4, item 4); S1's third parameter (Amendment 2, item 1, as Amendment 4, item 4 corrects it).
+6. **Next:** the PR body names the head and lists Amendment 7's clause; the PR leaves draft. The merge is the human's click, the last of the four at the sitting, by a merge commit.
+
+Nothing above is edited.
