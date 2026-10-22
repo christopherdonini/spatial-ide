@@ -869,3 +869,12 @@ Nothing above is edited.
 6. **Before the merge:** R1 and R2 at the final head, and the human's placement of walkthrough row F7. The dev port R1 needs is the human's to free; R2 is the human's publish through the native dialog.
 
 Nothing above is edited.
+
+## Amendment 8 — R1 as predicted at the head, under the port-5400 harness (class 1); written after the result was seen
+
+*Written by the custodian. References only: `state/consults/2026-10-22-bundle-redaction-scan-not-in-product-publish-r1-tester-report-2.md`; the human's word, `state/directives/2026-10-22-away-until-monday-241-r1-on-5400-f7-a-milestone-4-1c-code-o0-b-docs-lane-ruled-i4-a.md`, under `state/directives/2026-10-11-harness-approval-open-9-i-withdrawn-a10-late-cancel-adr-029.md`, item 1.*
+
+1. **R1** at 2fc01f5955a0dc21d51ee4cdffc3e5c55800959d, the debug app under the port-5400 harness: APPROVED' passes through the skip, its bundle's `viewer/` files each equal to the build record's entry (`NOTICE.txt` 826e55d1f585edef8431791033a6beacd6379dc0615ad749a97a7467ab4805fb), its audit pair a success; REFUSED' passes as before. The viewer build's scan matches the two `NOTICE.txt` rows and finds the `app.js` row gone.
+2. **Before the merge:** R2 at the final head, the human's, on Monday 2026-10-26; and the F7 piece clicked first (its form's §2.3).
+
+Nothing above is edited.
