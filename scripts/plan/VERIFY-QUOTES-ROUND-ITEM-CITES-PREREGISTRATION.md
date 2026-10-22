@@ -385,3 +385,12 @@ Nothing above is edited.
 6. **Next:** the reconciled words; correction round 1 by a worker (C2, MC2, the words); then scoped re-gates.
 
 Nothing above is edited.
+
+## §10 Amendment 5 — correction round 1 built (class 1); written after the result was seen
+
+*Written by the custodian. References only: `state/consults/2026-10-22-verify-quotes-round-item-cites-round-1-worker-report.md`; `state/consults/2026-10-22-verify-quotes-round-item-cites-gate1-words-reconciled-architect.md`.*
+
+1. **Round 1** is 91ccdab4904b5937b53b296b03a91a62b41fd2f3: C2 with MC2 observed failing alone, and sections 1 to 4 of the reconciled words applied, each found once and replaced. The suite is 543 (U6 as amended); U4 holds; §7 over 49a7f532...H is 415 lines over 7 files.
+2. **Next:** the scoped re-gates at 91ccdab4; H-1 stays the human's.
+
+Nothing above is edited.
