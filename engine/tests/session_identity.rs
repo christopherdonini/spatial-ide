@@ -190,9 +190,8 @@ fn a_single_file_keyless_source_admits_on_the_session_tier_and_records_its_basis
     assert_eq!(
         ds.identity().uniqueness().as_str(),
         "by-construction-within-generation",
-        "the third what-was-checked value, naming the basis. It is the PROPOSED ADR-016 \
-         Amendment 1's, not the accepted ADR's — ADR-016 §6 as accepted lists two, and nothing \
-         here treats the amendment as binding"
+        "the third what-was-checked value, naming the basis. ADR-016 Amendment 1 item 1 \
+         (Accepted) adds it to the two §6 values settled at the ADR's acceptance"
     );
     // Nothing counted, so nothing is claimed. `js_exact` in particular must stay unknown rather
     // than default to true (ADR-016 §7).
