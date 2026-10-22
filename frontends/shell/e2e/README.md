@@ -807,3 +807,15 @@ npm run e2e:command-bar
 **What CDP key injection proves.** `page.keyboard.press` reaches the page's own `keydown` listener. It does not cross WebView2's accelerator-key layer, so this suite cannot say that a real Ctrl+K, or a `/` that needs Shift on some layouts, does. Row AB1 of the walkthrough's Part AB is the real-key check for Ctrl+K (H2); no row checks a real `/`.
 
 **The layout is session state.** The suite closes what it opens (Layers, the Inspector, Activity, the Export disclosure); it leaves the Inspector open on its Layer tab and the Console expanded. Each mutation is in the file's header, with the exact text it replaces and the step it fails; the custodian ran all eight of PR A's alone at 2fa7c8d0, and each failed that step (state/consults/2026-10-19-shell-migration-milestone-3-pr-a-round-2-e2e-custodian-runs.md). The header also states that the E-REVEAL mutation fails E-SLASH as well. PR B's eight mutations are in the header the same way. The custodian ran each alone, seven at 4b9f7c89 and E-SEL at 95bd9747, and each failed the step its entry names; E-REFUSE's also failed E-TOOLONG (state/consults/2026-10-20-shell-migration-milestone-3-pr-b-e2e-custodian-runs.md).
+
+## Attributes spec (shell-migration-milestone-4, PR A)
+
+```
+npm run e2e:attributes
+```
+
+*Draft for the human's sight (the form's section 9 and Amendment 2 item 3): the entry follows `SHELL-MIGRATION-MILESTONE-4-PREREGISTRATION.md` section 4 (PA-E1, PA-E3) and its sentences are not the human's wording.*
+
+`e2e/attributes.mjs` drives the Feature tab's Attributes section on real WebView2 with two fixtures, and records each fixture's sha256 before and after. `attributes-multitype.parquet` and its oracle `attributes-multitype.oracle.json` come from `cargo test -p spatial-kernel --test manual_walkthrough_fixtures generate_the_attributes_multitype_fixture -- --ignored --nocapture` (500 polygons, seven columns; the oracle holds five ids at the middle of the grid, read out of the file through DuckDB); `filter-zoned.parquet` is the filter suite's. Asserted, each as a named step: `PA-E1` (a Navigate click at a point whose id `hoverIdAfterBarrier` took, on an oracle id, shows `zone`, `area`, `f32`, `i64`, `flag` and `text` in that order with the oracle's text for each, `i64` to the last digit; a NULL `zone` shows the marker; the not-projected line names `d32`; at least two oracle ids are reached, one with a NULL zone) and `PA-E3` (six features clicked unfiltered show at least two different zones; under `zone = 'residential'` three features clicked all show `residential`).
+
+**What it proves not.** It takes no timing and makes no performance claim. It reaches the oracle ids by aiming at the middle of the fitted grid, so a camera that fits differently can fail `PA-E1` for want of a hit, which the step's message says. It does not reach the resident attribute limit (`RESIDENT_ATTRIBUTE_MAX_BYTES` is 268,435,456 bytes; PA-U6 proves the limit at unit level). Each step's recorded mutation is in the file's header.
