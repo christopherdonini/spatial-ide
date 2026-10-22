@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
-import { tableFromIPC } from "apache-arrow";
+import { tableFromIPC, tableToIPC } from "apache-arrow";
+import type { Table } from "apache-arrow";
+
+import { isReadableAttributeType } from "../attributes/values";
 
 /** ADR-010 rule 1's envelope tag, as `engine::envelope::BatchEnvelope` writes it. A batch whose
  * schema names a different frame is refused rather than rendered -- a bare buffer's only proof of
@@ -66,6 +69,66 @@ export class UnexpectedEncodingError extends Error {
   }
 }
 
+/**
+ * A batch whose attribute columns are not exactly the list this open projects, in order, after `id` and the geometry column
+ * (`attribute_columns` in the schema metadata, and the schema's own fields). Refused rather than read by position: a value read
+ * under the wrong name is a wrong value (SHELL-MIGRATION-MILESTONE-4-PREREGISTRATION.md section 2.2 (c)). The text is a P6
+ * placeholder and states the shell's own fact only.
+ */
+export class UnexpectedProjectionError extends Error {
+  constructor(
+    public readonly expected: readonly string[],
+    public readonly declared: string | undefined,
+    public readonly fieldNames: readonly string[]
+  ) {
+    super(
+      `[P6 placeholder] batch schema names attribute_columns ${declared ?? "(absent)"} and fields ${JSON.stringify(fieldNames)}; ` +
+        `this open projects ${JSON.stringify(expected)} -- refusing rather than reading columns by position`
+    );
+    this.name = "UnexpectedProjectionError";
+  }
+}
+
+/**
+ * The projected columns of one batch, held as one named copy out of the IPC message (ADR-004: the message buffer is released
+ * with the message). `data` is an Arrow IPC stream of those columns alone, in the declared order, whose row `i` is the row `i` of
+ * `ids`; `attributes/values.ts`'s `readRow` is the only reader. `rows` is `null` as decoded; a duplicate drop sets it to the source
+ * row of each kept row (`tileResidentSet.ts`). `bytes` is `data.byteLength`, the figure `RESIDENT_ATTRIBUTE_MAX_BYTES` sums.
+ */
+export interface BatchAttributes {
+  readonly names: readonly string[];
+  readonly data: Uint8Array;
+  readonly bytes: number;
+  readonly rows: Int32Array | null;
+}
+
+const sameNames = (a: readonly string[] | null, b: readonly string[]): boolean => a !== null && a.length === b.length && a.every((n, i) => n === b[i]);
+
+/** The batch's attribute columns, checked against the open's `projection` and copied; `null` when the open projects none. */
+function copyAttributes(table: Table, geometryColumn: string, projection: readonly string[] | null): BatchAttributes | null {
+  const expected = projection ?? [];
+  const declared = table.schema.metadata.get("attribute_columns");
+  let parsed: unknown = null;
+  try {
+    parsed = declared === undefined ? null : JSON.parse(declared);
+  } catch {
+    parsed = null;
+  }
+  const names = Array.isArray(parsed) && parsed.every((n) => typeof n === "string") ? (parsed as string[]) : null;
+  const fieldNames = table.schema.fields.map((field) => field.name);
+  if (!sameNames(names, expected) || !sameNames(fieldNames, ["id", geometryColumn, ...expected])) {
+    throw new UnexpectedProjectionError(expected, declared, fieldNames);
+  }
+  if (projection === null) return null;
+  for (const field of table.schema.fields.slice(2)) {
+    if (!isReadableAttributeType(field.type)) {
+      throw new Error(`[P6 placeholder] attribute column ${JSON.stringify(field.name)} has type ${String(field.type)}, which the shell does not read`);
+    }
+  }
+  const data = tableToIPC(table.select([...projection]), "stream");
+  return { names: [...projection], data, bytes: data.byteLength, rows: null };
+}
+
 /** One ring: its `[x, y]` vertices in the dataset's own CRS, f64. */
 export type Ring = Array<[number, number]>;
 /** One part: a polygon's rings. Ring 0 is the exterior; any further rings are holes. */
@@ -111,21 +174,27 @@ export interface ResidentBatch {
    * `checkPickCeiling` bounds (ADR-010 rule 6). */
   partCount: number;
   totalVertices: number;
+  /** The projected attribute columns, co-indexed with `ids` from the same decode pass (ADR-010 rule 2): the block `copyAttributes`
+   * made, `null` when the open projects no column, or `"not-held"` when the block would pass `RESIDENT_ATTRIBUTE_MAX_BYTES`
+   * (`limits.ts`; the geometry stays). REQUIRED: every site that rebuilds a batch must carry it (milestone 4 PR A, Amendment 3 item 5). */
+  attributes: BatchAttributes | "not-held" | null;
 }
 
 /**
  * Decode one self-contained Arrow IPC batch (`engine::envelope::TaggedBatch`'s wire form) into a
  * `ResidentBatch`. Throws `UnexpectedFrameError` if the schema's `frame` metadata is not what rule
  * 1 requires, `UnexpectedEncodingError` if its `geometry_encoding` is not `expectedEncoding` (the
- * open's own, from `describe`) or is none of the five encodings the shell reads, and propagates a decode error
- * rather than returning a partial batch.
+ * open's own, from `describe`) or is none of the five encodings the shell reads, `UnexpectedProjectionError` if its attribute
+ * columns are not exactly `projection` (the open's set, `attributes/projection.ts`; `null` for none), and propagates a decode
+ * error rather than returning a partial batch. `projection` is REQUIRED, with no default.
  */
 export function decodeBatch(
   streamHandle: string,
   batchSeq: number,
   ipcBytes: Uint8Array,
   geometryColumn: string,
-  expectedEncoding: string
+  expectedEncoding: string,
+  projection: readonly string[] | null
 ): ResidentBatch {
   const table = tableFromIPC(ipcBytes);
   const frame = table.schema.metadata.get("frame");
@@ -152,6 +221,8 @@ export function decodeBatch(
   if (!geomVector) {
     throw new Error(`batch carries no \`${geometryColumn}\` column`);
   }
+
+  const attributes = copyAttributes(table, geometryColumn, projection);
 
   const n = table.numRows;
   const ids = new BigUint64Array(n);
@@ -234,5 +305,6 @@ export function decodeBatch(
     partToRow: Int32Array.from(partRows),
     partCount: partRows.length,
     totalVertices,
+    attributes,
   };
 }

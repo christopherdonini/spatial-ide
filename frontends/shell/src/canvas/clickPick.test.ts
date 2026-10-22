@@ -17,6 +17,7 @@ const batch: ResidentBatch = {
   ids: BigUint64Array.from([10n, 20n]),
   ...partsOfFeatures([[[ring(0, 0, 1)], [ring(10, 10, 2)]], [[ring(100, 100, 1)]]]),
   totalVertices: 12,
+  attributes: null,
 };
 
 interface Calls {

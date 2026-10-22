@@ -30,6 +30,7 @@ function batch(): ResidentBatch {
       [], // a feature with no rings at all -- degenerate but must not crash the lookup
     ]),
     totalVertices: 4 + 7,
+    attributes: null,
   };
 }
 
@@ -76,7 +77,7 @@ describe("resolvePick (ADR-010 rule 2's indirection)", () => {
    * FAILED by name with the mutation applied, then reverted.
    */
   it("an ordinal on row 1's part resolves row 1's id, and two parts of row 0 resolve identically (SH-4)", () => {
-    const f1 = decodeBatch("sh_f1", 5, loadBatchFixture("lv95-multipolygon-batch"), "geometry", ENCODING_MULTIPOLYGON);
+    const f1 = decodeBatch("sh_f1", 5, loadBatchFixture("lv95-multipolygon-batch"), "geometry", ENCODING_MULTIPOLYGON, null);
     expect(f1.partCount).toBe(6);
 
     const onRow1 = resolvePick(f1, 3);
@@ -113,7 +114,7 @@ describe("resolvePick (ADR-010 rule 2's indirection)", () => {
    * FAILED by name with the mutation applied, at `expect(picked).not.toBeNull()` (`expected null not to be null`), then reverted.
    */
   it("an ordinal on a point resolves that row's id, anchored at the point (SH-P3)", () => {
-    const p1 = decodeBatch("sh_p1", 4, loadBatchFixture("lv95-point-batch"), "geometry", ENCODING_POINT);
+    const p1 = decodeBatch("sh_p1", 4, loadBatchFixture("lv95-point-batch"), "geometry", ENCODING_POINT, null);
     pointP1Positions().forEach((position, k) => {
       const picked = resolvePick(p1, k);
       expect(picked).not.toBeNull();
@@ -145,7 +146,8 @@ describe("resolvePick (ADR-010 rule 2's indirection)", () => {
       6,
       loadBatchFixture("lv95-multilinestring-batch"),
       "geometry",
-      ENCODING_MULTILINESTRING
+      ENCODING_MULTILINESTRING,
+      null
     );
     expect(ml1.partCount).toBe(6);
     const rows = multilinestringMl1Positions();

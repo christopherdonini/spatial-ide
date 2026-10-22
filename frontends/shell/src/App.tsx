@@ -809,6 +809,9 @@ export function routeDatasetSessionEndedEvent(
   deps.dispatch(event.reason, deps.admittedDataset);
 }
 
+/** The status item for batches kept without attributes (a P6 placeholder; milestone 4 PR A, section 2.2 (d)): it states the canvas's fact only. */
+const ATTRIBUTES_NOT_HELD_TEXT = "[P6 placeholder] Some features' attributes are not held: the resident attribute limit was reached.";
+
 /**
  * Cut 1's whole shell: an admission flow, a working canvas, viewport-driven streaming with
  * supersede-on-pan, a filter panel, a style panel (ADR-017 §5a; ADR-022; NEXT-CUT.md's
@@ -827,6 +830,10 @@ export default function App() {
   const drawnViews = selectDrawnViews(workspace);
   const view = drawnViews[0] ?? null;
   const admitted = view === null ? null : selectAdmitted(workspace, view.id);
+  // Milestone 4 PR A: the open's projection set, fixed for the open (`attributes/projection.ts`): what the canvas's decode expects of every batch.
+  const projection = useMemo(() => (admitted === null ? null : projectionFor(admitted.describe)), [admitted]);
+  // The dataset whose batches the canvas has kept without attributes (`limits.ts`'s ceiling), for the status item; a new open is a new dataset, so it clears itself.
+  const [attributesNotHeld, setAttributesNotHeld] = useState<string | null>(null);
   // NEXT-CUT.md (style-panel cut) P3: App-owned, ephemeral live state (ADR-022's consequences -- no undo; binding note 4;
   // a committed edit is also recorded in the session history, below), starting at exactly today's fixed rendering (`DEFAULT_STYLE_STATE`'s own doc comment has
   // the hex/opacity math against `buildLayers.ts`'s pre-P2 constant). It is the view's `style`, and
@@ -2138,6 +2145,10 @@ export default function App() {
                   ref={canvasRef}
                   geometryColumn={admitted.describe.geometry.column}
                   geometryEncoding={admitted.describe.geometry.encoding}
+                  projection={projection}
+                  onAttributesNotHeld={() => {
+                    if (admitted.dataset === admittedDatasetRef.current) setAttributesNotHeld(admitted.dataset);
+                  }}
                   crsUnit={admitted.describe.crs.unit}
                   style={drawn.style}
                   /* Milestone 2: the tool fixes the cursor; a click is picked at its own pixel (OPEN-1 (A)) and handled by the tool; the highlight
@@ -2288,10 +2299,19 @@ export default function App() {
          * remove it. It only clears via `nextResidencyStatus`'s own "delivery-complete" / "dataset-changed" /
          * "query-issued" transitions, and `residencyStatusText` (`residency/residencyStatus.ts`) is the ONE place
          * that renders any of its variants. */
-        "status.residency": admitted && residencyStatus && (
-          <div className="residency-status" role="status">
-            {residencyStatusText(residencyStatus)}
-          </div>
+        "status.residency": admitted && (residencyStatus || attributesNotHeld === admitted.dataset) && (
+          <>
+            {residencyStatus && (
+              <div className="residency-status" role="status">
+                {residencyStatusText(residencyStatus)}
+              </div>
+            )}
+            {attributesNotHeld === admitted.dataset && (
+              <div className="attributes-not-held" role="status">
+                {ATTRIBUTES_NOT_HELD_TEXT}
+              </div>
+            )}
+          </>
         ),
         /* OPEN-6 (question round 67): a read-only mirror of the filter panel's liveness line, so a scan stays
          * visible with the Inspector closed. It has no Cancel; Cancel stays in `FilterPanel` (ADR-021). */

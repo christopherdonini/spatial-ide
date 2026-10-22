@@ -232,9 +232,18 @@ export class TileResidentSet {
       const parts: ResidentBatch["parts"] = new Array(keepIdx.length);
       const partRows: number[] = [];
       let totalVertices = 0;
+      // The attribute block keeps its data and is read through a row map: kept row `dstIdx` reads the decode pass's row `srcIdx`, set in this same loop step
+      // (milestone 4 Amendment 3 item 3). Every batch reaches here as decoded, `rows` null; a block that already holds a map would need a second one, which nothing makes.
+      const block = batch.attributes;
+      const held = block === null || block === "not-held" ? null : block;
+      if (held !== null && held.rows !== null) {
+        throw new Error("a batch whose attribute block already holds a row map cannot be deduplicated again");
+      }
+      const rows = held === null ? null : new Int32Array(keepIdx.length);
       keepIdx.forEach((srcIdx, dstIdx) => {
         ids[dstIdx] = batch.ids[srcIdx];
         parts[dstIdx] = batch.parts[srcIdx];
+        if (rows !== null) rows[dstIdx] = srcIdx;
         for (const rings of parts[dstIdx]) {
           partRows.push(dstIdx);
           for (const ring of rings) {
@@ -250,6 +259,7 @@ export class TileResidentSet {
         partToRow: Int32Array.from(partRows),
         partCount: partRows.length,
         totalVertices,
+        attributes: held === null || rows === null ? block : { ...held, rows },
       };
     }
 
