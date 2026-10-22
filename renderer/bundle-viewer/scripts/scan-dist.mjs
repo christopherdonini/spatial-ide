@@ -13,7 +13,7 @@
 // that matches nothing is printed as not found and does not fail the build.
 //
 // The record, `viewer-asset-hashes.json` beside `dist/` (never inside it, on `dist-metafile.json`'s
-// rule), is `{"version":1,"assets":{"<dist-relative path>":"<sha256>"}}` over the bytes on disk. The
+// rule), is `{"version":1,"assets":{"<dist-relative path>":"<sha256, 64 lowercase hex>"}}` over the bytes on disk. The
 // publish skips a `viewer/` file only when its staged bytes hash to the entry for that same path.
 //
 //   node scripts/scan-dist.mjs
