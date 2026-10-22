@@ -111,16 +111,22 @@
 // with item lines (`- *Item M` / `- **Item M`) resolves M when it is among them, and a block with none
 // resolves M when the tracked state/questions/round-N.md has a line starting `M. `. M must be followed by a
 // byte that is not a letter or digit (so a directive item such as `item 2e` is out). Not read: inside an
-// inline backtick span, inside a straight or curly double-quoted span on the same line, or on a `> ` line;
-// fenced blocks are read. The scan set is the quote pass's own (claimFiles, or exactly the explicit files).
+// inline backtick span; inside a straight or curly double-quoted span on the same line (straight `"` marks
+// pair left to right on their line, so an unpaired `"`, such as an inch mark, hides any cite up to the next
+// `"`); or on a line whose first non-blank character is `>`; fenced blocks are read. Each line is read on
+// its own: a cite broken across a line break is not read, and a list is read only up to the break. A list
+// reads each `, K`, `, and K`, `and K` or `to K` that directly follows it on the line, so a number after
+// a list (`items 1 and 2, 15 tests` reads item 15) is resolved as an item. The scan set is the quote
+// pass's own (claimFiles, or exactly the explicit files).
 // A failure prints `FAIL — ruling cite: <file>:<line> — <cite> — <reason>` and exits 1; no baseline route
-// exists for it. DISCLOSED GAPS: a sub-clause cite (`item 2(b)`), an entry cite, a clause cite, a directive
-// item (`…, item 2e`), a bare round, and a cite in a file outside the scan set are not checked; and the
-// check proves EXISTENCE of the item in its block, not that the cite means what its sentence says. THE ONE
-// UNREAD BLOCK: the RULED header for question round 72, in the 2026-10-20 archive, names its round outside
-// the header grammar (in a trailing parenthesis, after the PR), so no cite to it resolves -- a cite to round
-// 72 by item is refused by name, and a record cites that ruling by a hash pin instead (the form's
-// Amendment 3, item 1).
+// exists for it. DISCLOSED GAPS: a sub-clause letter (the `(b)` of `item 2(b)`, whose item 2 is checked),
+// an entry cite, a clause cite, a directive item (`…, item 2e`), a bare round, a `rounds N and M, items …`
+// list, and a cite in a file outside the scan set are not checked; and the check proves EXISTENCE of the
+// item -- in its block, or, for a block with no item lines, as a line starting `M. ` in the tracked
+// state/questions/round-N.md -- not that the cite means what its sentence says. THE ONE UNREAD BLOCK: the
+// RULED header for question round 72, in the 2026-10-20 archive, names its round outside the header grammar
+// (in a trailing parenthesis, after the PR), so no cite to it resolves -- a cite to round 72 by item is
+// refused by name, and a record cites that ruling by a hash pin instead (the form's Amendment 3, item 1).
 
 import fs from 'node:fs';
 import path from 'node:path';

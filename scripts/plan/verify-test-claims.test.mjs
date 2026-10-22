@@ -1701,3 +1701,35 @@ test('verify-test-claims: a withdrawn-test row whose ruling cites a round with b
   assert.equal(withdrawn.length, 1, JSON.stringify(withdrawn));
   assert.equal(withdrawn[0].ruling, 'round 46, item 1');
 });
+
+// Round + item cites (VERIFY-QUOTES-ROUND-ITEM-CITES-PREREGISTRATION.md §10 Amendment 4, item 2, C2): an itemless RULED block's item resolves through the tracked state/questions/round-N.md.
+// The block for question rounds 66 and 67 is copied by script from the real archive at 40b04b46, found by round (rulingSet.mjs' header grammar), and state/questions/round-66.md is copied from the same commit.
+// MC2: the round-file reader dropped from both of withdrawnRiders' calls (the mutation observed is recorded in the correction round's report, with the commit).
+test('verify-test-claims: a withdrawn-test row whose ruling cites an itemless round resolves through the tracked round file', () => {
+  const show = (p) => execFileSync('git', ['show', `40b04b46:${p}`], { cwd: REPO_ROOT, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+  const archive = show('state/cut-archive/DECISIONS-PENDING-2026-10-20.md').split('\n');
+  const h = archive.findIndex((l) => /^\*\*RULED \d{4}-\d{2}-\d{2}(?: \([^)]*\))? — (?:question )?rounds 66 and 67(?![0-9])/.test(l));
+  assert.ok(h >= 0, 'no real block for rounds 66 and 67');
+  let end = h + 1;
+  while (end < archive.length && !/^(\*\*|## )/.test(archive[end])) end += 1;
+  const block = archive.slice(h, end).join('\n');
+  assert.ok(!/^- \*{1,2}Item \d+/m.test(block), 'the real block for rounds 66 and 67 has item lines');
+  const roundFile = show('state/questions/round-66.md');
+  assert.match(roundFile, /^2\. /m, 'the real round 66 file has no item 2');
+  assert.doesNotMatch(roundFile, /^9\. /m, 'the real round 66 file has an item 9');
+  const build = (ruling) => {
+    const dir = withdrawnFixture({ ruling, ledger: `${SYNTH_LEDGER}\n${block}\n` }).dir;
+    fs.mkdirSync(path.join(dir, 'state', 'questions'), { recursive: true });
+    fs.writeFileSync(path.join(dir, 'state', 'questions', 'round-66.md'), roundFile);
+    commitAll(dir, 'round file');
+    return dir;
+  };
+  const ok = runVerifyTestClaims({ repoRoot: build('round 66, item 2') });
+  assert.equal(ok.findings.length, 0, JSON.stringify(ok.findings));
+  assert.equal(ok.withdrawn.length, 1, JSON.stringify(ok.withdrawn));
+  assert.equal(ok.withdrawn[0].ruling, 'round 66, item 2');
+  const bad = runVerifyTestClaims({ repoRoot: build('round 66, item 9') });
+  assert.equal(bad.withdrawn.length, 0, JSON.stringify(bad.withdrawn));
+  assert.equal(bad.findings.length, 1, JSON.stringify(bad.findings));
+  assert.match(bad.findings[0].message, /unresolvable ruling: round 66, item 9/);
+});
