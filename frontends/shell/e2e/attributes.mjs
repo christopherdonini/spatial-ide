@@ -10,8 +10,8 @@
 //          The step does not assume where the camera is: it finds features as PA-E3 does (`capturePixels` pixels, each confirmed through `hoverIdAfterBarrier`), fits the screen position of a grid cell
 //          from those hovers, aims at the oracle cells' predicted centres, confirms the id at each point before the click, and zooms in a notch at a time if nothing answers. It passes with at least
 //          two oracle ids reached by click, the NULL-zone id among them; the PASS line names the ids reached and the hover count.
-//   PA-E3  `filter-zoned.parquet`. Unfiltered, the features clicked show at least two different zones (a click that read one row for every feature would show one). Under `zone = 'residential'`,
-//          every feature clicked shows that zone.
+//   PA-E3  `filter-zoned.parquet`. Unfiltered, the features clicked show at least two different zones (a click that read one row for every feature would show one); each clicked id's zone is then read again under the filter `id = N`, where its batch holds that one row, and the two
+//          must match. Under `zone = 'residential'`, every feature clicked shows that zone.
 //
 // No id is taken from a first poll: every id comes through `hoverIdAfterBarrier` from lib.mjs. The Feature tab is read from the real DOM. Each fixture's sha256 is read before and after the run
 // and must be equal. What none of this proves: a timing, a rate or a performance figure. The millisecond numbers are bounds on waiting.
@@ -19,7 +19,7 @@
 // RECORDED MUTATIONS. Each is named for the custodian to observe in a run at the PR's head. Apply one alone, run `npm run e2e:attributes`, record the failing step by name with the commit, and revert it.
 //   PA-E1  src/attributes/projection.ts, `projectionFor`: `names.slice(0, ATTRIBUTE_PROJECTION_MAX)` becomes `names.slice(0, Math.min(ATTRIBUTE_PROJECTION_MAX, names.length - 1))`.
 //          Expected: PA-E1 fails on the names of the projected columns (`text`, the last, is missing).
-//   PA-E3  src/canvas/clickPick.ts, `resolveClickPick`: `readRow(candidate.batch, row)` becomes `readRow(candidate.batch, 0)`. Expected: PA-E3 fails because every feature clicked unfiltered shows one zone.
+//   PA-E3  src/canvas/clickPick.ts, `resolveClickPick`: `readRow(candidate.batch, row)` becomes `readRow(candidate.batch, 0)`. Expected: PA-E3 fails because a zone read unfiltered differs from the same id's zone read under `id = N`.
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { basename } from "node:path";
@@ -274,18 +274,29 @@ async function stepZones(page, consoleHandle) {
   for (const { point, id } of await distinctFeatures(page, consoleHandle, "PA-E3 unfiltered", 6)) {
     const shown = await zoneOf(point);
     expect(shown.id === id, `PA-E3: the Feature tab shows id ${shown.id}; the oracle id at that pointer is ${id}`);
-    unfiltered.push(shown);
+    unfiltered.push({ ...shown, point });
   }
   const zones = new Set(unfiltered.map((f) => f.zone));
   expect(zones.size >= 2, `PA-E3: ${unfiltered.length} features clicked unfiltered all show ${JSON.stringify([...zones])}; their zones differ in the file, so one row was read for every feature`);
 
-  const applied = await page.evaluate((predicate) => window.__SPATIAL_E2E__.queryWithFilter(predicate), "zone = 'residential'");
-  expect(applied.kind === "applied", `PA-E3: queryWithFilter("zone = 'residential'") returned ${JSON.stringify(applied)}, expected {kind:"applied"}`);
-  await waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 3000, timeoutMs: 45_000 });
+  const applyFilter = async (predicate) => {
+    const applied = await page.evaluate((p) => window.__SPATIAL_E2E__.queryWithFilter(p), predicate);
+    expect(applied.kind === "applied", `PA-E3: queryWithFilter(${JSON.stringify(predicate)}) returned ${JSON.stringify(applied)}, expected {kind:"applied"}`);
+    await waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 3000, timeoutMs: 45_000 });
+  };
+  // Under `id = N` the batch holds that one row, so row 0 is the row: the zone read there must be the zone read from the full batch.
+  const reread = [];
+  for (const { point, id, zone } of unfiltered) {
+    await applyFilter(`id = ${id}`);
+    const alone = await zoneOf(point);
+    expect(alone.id === id && alone.zone === zone, `PA-E3: clicked unfiltered, id ${id} shows zone ${JSON.stringify(zone)}; under id = ${id} the same pointer shows id ${alone.id} with zone ${JSON.stringify(alone.zone)}`);
+    reread.push(id);
+  }
+  await applyFilter("zone = 'residential'");
   const filtered = [];
   for (const { point } of await distinctFeatures(page, consoleHandle, "PA-E3 filtered", 3)) filtered.push(await zoneOf(point));
   expect(filtered.every((f) => f.zone === "residential"), `PA-E3: under zone = 'residential' the features clicked show ${JSON.stringify(filtered.map((f) => f.zone))}`);
-  return `unfiltered clicks showed ${JSON.stringify([...zones])}; under zone = 'residential' ${filtered.length} clicks all showed residential`;
+  return `unfiltered clicks showed ${JSON.stringify([...zones])}; ids ${JSON.stringify(reread)} each read the same zone again under id = N; under zone = 'residential' ${filtered.length} clicks all showed residential`;
 }
 
 // ------------------------------------------------------------------------------------------------
