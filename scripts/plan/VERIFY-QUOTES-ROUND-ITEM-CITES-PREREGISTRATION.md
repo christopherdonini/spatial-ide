@@ -360,3 +360,12 @@ Nothing above is edited.
 4. **S3 has not run.** The human rules how I4 is met, and the ruling is recorded in the next amendment before S3.
 
 Nothing above is edited.
+
+## §10 Amendment 3 — I4 met by the human's (A) (class 5)
+
+*Written by the custodian on the human's message. References only: `state/directives/2026-10-22-away-until-monday-241-r1-on-5400-f7-a-milestone-4-1c-code-o0-b-docs-lane-ruled-i4-a.md`.*
+
+1. **I4 (A):** question round 72's RULED header, in the 2026-10-20 archive, is recorded as the one unread block of the ruling set. A cite to round 72 by item is refused by name; a record cites that ruling by a hash pin instead.
+2. **S3 follows.** The header paragraph's disclosed gaps name that block. Then the PR and both gates.
+
+Nothing above is edited.

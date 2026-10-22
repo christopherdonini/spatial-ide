@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-22T12:24:38.866Z",
-  "plan_hash": "c85653987a632946c7445555b7608abd82498af8a59e2e96d8a5db934ec5b4d6",
+  "generated_at": "2026-10-22T12:33:02.121Z",
+  "plan_hash": "b32d1d007ef97397533da1e3d8fc2d168517d952efa5625f08faf71463119e31",
   "priorities_approved": true,
   "lanes": [
     {
@@ -7260,12 +7260,62 @@
       "gate": "frontends/shell/STALE-ASSERTION-MESSAGES-AND-PRODUCT-COMMENTS-PREREGISTRATION.md",
       "evidence": null,
       "budget_minutes": 60,
-      "generation": 3,
+      "generation": 4,
       "felt_verdict": false,
       "entries": [],
       "summary": "RULED 2026-10-22 (state/directives/2026-10-22-away-until-monday-241-r1-on-5400-f7-a-milestone-4-1c-code-o0-b-docs-lane-ruled-i4-a.md): OPEN-1 (A), OPEN-2 yes, OPEN-3 (a); the form's Amendment 1, then code. The F7 piece follows it in the lane, before #241's merge. Before: WAITING ON THE HUMAN 2026-10-22: the form's OPEN-1 (the two message strings in the docs lane; recommended (A)), OPEN-2 (recommended yes) and OPEN-3 (recommended (a)). No code before OPEN-1's answer. needs_human goes back to none when they are ruled. Before: FORM COMMITTED 2026-10-21 (frontends/shell/STALE-ASSERTION-MESSAGES-AND-PRODUCT-COMMENTS-PREREGISTRATION.md; the architect's draft, state/consults/2026-10-21-stale-assertion-messages-and-product-comments-architect-draft.md): full form and full gating (section 21a category 4); four rows, M1 (the assertion message), M2 (K7's thrown message), C1 (crsAssertionState.ts) and B1 (buildLayers.ts); at most 27 lines over 4 files; budget 60. OPEN-1 (the two message strings in the docs lane; recommended (A)), OPEN-2 (regression.mjs's three more stale comment cites; recommended yes) and OPEN-3 (same-class lines outside the four files; recommended (a), a new node) are the human's. No code before OPEN-1's answer; B1 waits if milestone 4 enters code first. Before: MOVED 2026-10-21 in the docs lane's chain: it now follows adr-036-pre-acceptance-block, which the human placed ahead of 1c's code (state/directives/2026-10-21-d-s10-go-adr-036-route-i-redaction-open-items-1c-and-milestone-4-ruled-docs-open-1-yes.md, route (i)) and the custodian put next after the walkthrough, the lane's piece in progress. Before: PLACED 2026-10-21 (state/directives/2026-10-21-placements-redaction-scan-1c-milestone-4-lanes-238-clicked-d-answers-adr-024-heading-kept.md, item 4): the docs lane, 2 of 6, after walkthrough-current-view-rows-g1-n5. Before: PROPOSED 2026-10-11 by the human (state/directives/2026-10-11-open-11-a-piece-f-opens-ported-notices-required.md, item 2): piece f's form (frontends/shell/STALE-TEST-NAMES-AND-COMMENTS-PREREGISTRATION.md, 2.5 and its open question 4) routes four lines outside the docs lane here: engine/tests/session_identity.rs's assertion message, frontends/shell/e2e/regression.mjs's thrown message with the stale residencyStatus line cite, frontends/shell/src/admission/crsAssertionState.ts's harness premise, and frontends/shell/src/canvas/buildLayers.ts's no-attributes reason. The two messages change test strings and the two comments are product code, so the docs lane cannot take them. Stays proposed; the human grades and places it.",
       "dates": {
         "opened": "2026-10-11",
+        "done": null
+      }
+    },
+    {
+      "id": "walkthrough-row-f7-cli-refusal",
+      "title": "MANUAL-WALKTHROUGH.md row F7: a publish-bundle CLI publish with the real built viewer is refused under the redaction scan (its W12), so F7 points at Part G's rows, with the CLI refusal line",
+      "kind": "task",
+      "lane": "shell",
+      "phase": "prototype",
+      "status": "ready",
+      "order": null,
+      "depends_on": [],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "none",
+      "evidence": null,
+      "budget_minutes": 30,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [],
+      "summary": "PLACED 2026-10-22 by the human (state/directives/2026-10-22-away-until-monday-241-r1-on-5400-f7-a-milestone-4-1c-code-o0-b-docs-lane-ruled-i4-a.md), F7 (a): the docs-lane piece pointing F7 at the Part G rows, with the CLI refusal line; it lands before #241's merge. From the redaction form's Amendment 3 additions, E1 (state/consults/2026-10-21-bundle-redaction-scan-not-in-product-publish-architect-amendment-3-cli-doc.md). Next in the docs lane after stale-assertion-messages-and-product-comments. Its form is drafted by the architect.",
+      "dates": {
+        "opened": "2026-10-22",
+        "done": null
+      }
+    },
+    {
+      "id": "stale-lines-outside-the-four-files",
+      "title": "Same-class stale lines outside the docs-lane piece's four files: residencyStatus.test.ts's titles and comments calling ruled strings drafts, residencyArm.test.ts's App-cannot-be-rendered comment, WorkingCanvas.test.ts's no-mount line, and engine/src/identity.rs's two stale line cites into session_identity.rs",
+      "kind": "task",
+      "lane": "shell",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "depends_on": [],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "none",
+      "evidence": null,
+      "budget_minutes": 60,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [],
+      "summary": "PROPOSED 2026-10-22 under the human's OPEN-3 (a) (state/directives/2026-10-22-away-until-monday-241-r1-on-5400-f7-a-milestone-4-1c-code-o0-b-docs-lane-ruled-i4-a.md) on frontends/shell/STALE-ASSERTION-MESSAGES-AND-PRODUCT-COMMENTS-PREREGISTRATION.md: the lines its OPEN-3 lists, from piece f's re-sweep and the architect's draft. Two are describe titles, so name changes with their own list evidence. The human places it.",
+      "dates": {
+        "opened": "2026-10-22",
         "done": null
       }
     },
@@ -8904,7 +8954,7 @@
         "branch": "cut/verify-quotes-round-item-cites"
       },
       "budget_minutes": 180,
-      "generation": 4,
+      "generation": 5,
       "felt_verdict": false,
       "entries": [
         104
@@ -9004,7 +9054,8 @@
       "status": "blocked",
       "order": null,
       "depends_on": [
-        "stale-assertion-messages-and-product-comments"
+        "stale-assertion-messages-and-product-comments",
+        "walkthrough-row-f7-cli-refusal"
       ],
       "needs_human": {
         "kind": "none",
@@ -9018,7 +9069,7 @@
       "entries": [
         102
       ],
-      "summary": "PLACED 2026-10-21 (state/directives/2026-10-21-placements-redaction-scan-1c-milestone-4-lanes-238-clicked-d-answers-adr-024-heading-kept.md, item 4): the docs lane, 3 of 6, after stale-assertion-messages-and-product-comments. Before: RULED 2026-10-21 (headed), item 2e, proposed and unplaced; the docs lane. It represents governance C's sheet row E102: the appended ADR-020 note that the quote baseline lists as owed (its corrected_by, an appended ADR-020 note, owed).",
+      "summary": "ORDER 2026-10-22 (state/directives/2026-10-22-away-until-monday-241-r1-on-5400-f7-a-milestone-4-1c-code-o0-b-docs-lane-ruled-i4-a.md): after the F7 piece in the docs lane, the human's order being the open items, then item 41's comment, the ADR notes and the stale cites. Before: PLACED 2026-10-21 (state/directives/2026-10-21-placements-redaction-scan-1c-milestone-4-lanes-238-clicked-d-answers-adr-024-heading-kept.md, item 4): the docs lane, 3 of 6, after stale-assertion-messages-and-product-comments. Before: RULED 2026-10-21 (headed), item 2e, proposed and unplaced; the docs lane. It represents governance C's sheet row E102: the appended ADR-020 note that the quote baseline lists as owed (its corrected_by, an appended ADR-020 note, owed).",
       "dates": {
         "opened": "2026-10-20",
         "done": null
