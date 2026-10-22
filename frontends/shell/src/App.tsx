@@ -810,7 +810,7 @@ export function routeDatasetSessionEndedEvent(
 }
 
 /** The status item for batches kept without attributes (a P6 placeholder; milestone 4 PR A, section 2.2 (d)): it states the canvas's fact only. */
-const ATTRIBUTES_NOT_HELD_TEXT = "[P6 placeholder] Some features' attributes are not held: the resident attribute limit was reached.";
+const ATTRIBUTES_NOT_HELD_TEXT = "[P6 placeholder] Some features' attributes were not held since this dataset was opened: the resident attribute limit was reached.";
 
 /**
  * Cut 1's whole shell: an admission flow, a working canvas, viewport-driven streaming with
@@ -2298,7 +2298,8 @@ export default function App() {
          * status is NOT dismissible -- no close control, deliberately; dismissing a `.canvas-refusal` must never
          * remove it. It only clears via `nextResidencyStatus`'s own "delivery-complete" / "dataset-changed" /
          * "query-issued" transitions, and `residencyStatusText` (`residency/residencyStatus.ts`) is the ONE place
-         * that renders any of its variants. */
+         * that renders any of its variants.
+         * The attributes-not-held item (milestone 4 PR A, section 2.2 (d)) shares this slot: the canvas's onAttributesNotHeld report sets it, and it stays until the next dataset is opened. */
         "status.residency": admitted && (residencyStatus || attributesNotHeld === admitted.dataset) && (
           <>
             {residencyStatus && (
