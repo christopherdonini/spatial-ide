@@ -809,7 +809,13 @@ export function routeDatasetSessionEndedEvent(
   deps.dispatch(event.reason, deps.admittedDataset);
 }
 
-/** The status item for batches kept without attributes (a P6 placeholder; milestone 4 PR A, section 2.2 (d)): it states the canvas's fact only. */
+/**
+ * The status item for batches kept without attributes (a P6 placeholder; milestone 4 PR A, section 2.2 (d)): it states the canvas's fact only.
+ *
+ * Not covered (Amendment 4 rows 4 and 13): the baseline arm, which only the dev-gated `setResidencyArm` switch selects, reports before its vertex-ceiling check.
+ * `WorkingCanvas`'s `pushBatch` runs `withinAttributes`, which calls `onAttributesNotHeld`, and only then `residentRef.current.addBatch`, which can refuse the batch
+ * (`ResidentVertexCeilingExceeded`). So a batch that check then refuses can still set this item. The candidate arm's `pushTileBatch` refuses no batch.
+ */
 const ATTRIBUTES_NOT_HELD_TEXT = "[P6 placeholder] Some features' attributes were not held since this dataset was opened: the resident attribute limit was reached.";
 
 /**
