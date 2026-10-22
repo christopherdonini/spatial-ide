@@ -1,47 +1,9 @@
 {
-  "generated_at": "2026-10-22T14:31:57.505Z",
-  "plan_hash": "6677a75d509c9353b23601569ead9418ffdf4e572916c9fb9a91a71879a88a23",
+  "generated_at": "2026-10-22T14:47:00.038Z",
+  "plan_hash": "2376879be2d6b949ac34c62d339d930ea842ac3edcf5ac105954e248bfdd7f4b",
   "priorities_approved": true,
-  "next": {
-    "id": "walkthrough-row-f7-cli-refusal",
-    "title": "MANUAL-WALKTHROUGH.md row F7: a publish-bundle CLI publish with the real built viewer is refused under the redaction scan (its W12), so F7 points at Part G's rows, with the CLI refusal line",
-    "lane": "shell",
-    "phase": "prototype",
-    "status": "ready",
-    "order": null,
-    "budget_minutes": 30,
-    "needs_human": {
-      "kind": "none",
-      "minutes": 0
-    },
-    "evidence": null,
-    "dates": {
-      "opened": "2026-10-22",
-      "done": null
-    },
-    "summary": "FORM COMMITTED 2026-10-22 (frontends/shell/WALKTHROUGH-ROW-F7-CLI-REFUSAL-PREREGISTRATION.md; the architect's draft, state/consults/2026-10-22-walkthrough-row-f7-cli-refusal-architect-draft.md): full form and gating (section 21a category 4); F7 points at Part G's rows with the CLI refusal line; R-F7, one refused CLI publish by a tester at #241's head; §2.3's order: this PR is clicked first at the sitting, then #241, with no main commit between. OPEN-1 to OPEN-4 the human's (recommended b, b, a, b). NEXT: after the docs lane's piece 2 awaits its click, the row by a worker, R-F7, both gates; the PR stays draft until the sitting. Before: PLACED 2026-10-22 by the human (state/directives/2026-10-22-away-until-monday-241-r1-on-5400-f7-a-milestone-4-1c-code-o0-b-docs-lane-ruled-i4-a.md), F7 (a): the docs-lane piece pointing F7 at the Part G rows, with the CLI refusal line; it lands before #241's merge. From the redaction form's Amendment 3 additions, E1 (state/consults/2026-10-21-bundle-redaction-scan-not-in-product-publish-architect-amendment-3-cli-doc.md). Next in the docs lane after stale-assertion-messages-and-product-comments. Its form is drafted by the architect."
-  },
-  "ready": [
-    {
-      "id": "walkthrough-row-f7-cli-refusal",
-      "title": "MANUAL-WALKTHROUGH.md row F7: a publish-bundle CLI publish with the real built viewer is refused under the redaction scan (its W12), so F7 points at Part G's rows, with the CLI refusal line",
-      "lane": "shell",
-      "phase": "prototype",
-      "status": "ready",
-      "order": null,
-      "budget_minutes": 30,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-10-22",
-        "done": null
-      },
-      "summary": "FORM COMMITTED 2026-10-22 (frontends/shell/WALKTHROUGH-ROW-F7-CLI-REFUSAL-PREREGISTRATION.md; the architect's draft, state/consults/2026-10-22-walkthrough-row-f7-cli-refusal-architect-draft.md): full form and gating (section 21a category 4); F7 points at Part G's rows with the CLI refusal line; R-F7, one refused CLI publish by a tester at #241's head; §2.3's order: this PR is clicked first at the sitting, then #241, with no main commit between. OPEN-1 to OPEN-4 the human's (recommended b, b, a, b). NEXT: after the docs lane's piece 2 awaits its click, the row by a worker, R-F7, both gates; the PR stays draft until the sitting. Before: PLACED 2026-10-22 by the human (state/directives/2026-10-22-away-until-monday-241-r1-on-5400-f7-a-milestone-4-1c-code-o0-b-docs-lane-ruled-i4-a.md), F7 (a): the docs-lane piece pointing F7 at the Part G rows, with the CLI refusal line; it lands before #241's merge. From the redaction form's Amendment 3 additions, E1 (state/consults/2026-10-21-bundle-redaction-scan-not-in-product-publish-architect-amendment-3-cli-doc.md). Next in the docs lane after stale-assertion-messages-and-product-comments. Its form is drafted by the architect."
-    }
-  ],
+  "next": null,
+  "ready": [],
   "waiting_on_human": {
     "total_minutes": 0,
     "by_kind": {
@@ -426,6 +388,28 @@
       },
       "summary": "GATE 1 2026-10-22: the architect PASS WITH NOTES (state/consults/gates/2026-10-22-stale-assertion-messages-and-product-comments-gate1-architect.md, gate-log 587): D1, a class 3 correction, in the form's Amendment 2. The reviewer running. Before: PR #243 OPENED 2026-10-22 (draft, head b24e5281); gate 1, the architect and the reviewer, dispatched. Before: BUILT 2026-10-22 at b24e5281 (state/consults/2026-10-22-stale-assertion-messages-and-product-comments-worker-report.md): the seven spans, 34 lines over the four files against B 4b26d279, within 39; every suite passes. NEXT the PR, both gates. Before: IN PROGRESS 2026-10-22: branch cut/stale-assertion-messages-and-product-comments from main 4b26d279 (B), worktree C:/dev/wt/samc; rule (00) checked at dispatch against #241 (none of the four files), verify-quotes (scripts/plan) and piece 1c's form; a worker makes the seven spans. Before: RULED 2026-10-22 (state/directives/2026-10-22-away-until-monday-241-r1-on-5400-f7-a-milestone-4-1c-code-o0-b-docs-lane-ruled-i4-a.md): OPEN-1 (A), OPEN-2 yes, OPEN-3 (a); the form's Amendment 1, then code. The F7 piece follows it in the lane, before #241's merge. Before: WAITING ON THE HUMAN 2026-10-22: the form's OPEN-1 (the two message strings in the docs lane; recommended (A)), OPEN-2 (recommended yes) and OPEN-3 (recommended (a)). No code before OPEN-1's answer. needs_human goes back to none when they are ruled. Before: FORM COMMITTED 2026-10-21 (frontends/shell/STALE-ASSERTION-MESSAGES-AND-PRODUCT-COMMENTS-PREREGISTRATION.md; the architect's draft, state/consults/2026-10-21-stale-assertion-messages-and-product-comments-architect-draft.md): full form and full gating (section 21a category 4); four rows, M1 (the assertion message), M2 (K7's thrown message), C1 (crsAssertionState.ts) and B1 (buildLayers.ts); at most 27 lines over 4 files; budget 60. OPEN-1 (the two message strings in the docs lane; recommended (A)), OPEN-2 (regression.mjs's three more stale comment cites; recommended yes) and OPEN-3 (same-class lines outside the four files; recommended (a), a new node) are the human's. No code before OPEN-1's answer; B1 waits if milestone 4 enters code first. Before: MOVED 2026-10-21 in the docs lane's chain: it now follows adr-036-pre-acceptance-block, which the human placed ahead of 1c's code (state/directives/2026-10-21-d-s10-go-adr-036-route-i-redaction-open-items-1c-and-milestone-4-ruled-docs-open-1-yes.md, route (i)) and the custodian put next after the walkthrough, the lane's piece in progress. Before: PLACED 2026-10-21 (state/directives/2026-10-21-placements-redaction-scan-1c-milestone-4-lanes-238-clicked-d-answers-adr-024-heading-kept.md, item 4): the docs lane, 2 of 6, after walkthrough-current-view-rows-g1-n5. Before: PROPOSED 2026-10-11 by the human (state/directives/2026-10-11-open-11-a-piece-f-opens-ported-notices-required.md, item 2): piece f's form (frontends/shell/STALE-TEST-NAMES-AND-COMMENTS-PREREGISTRATION.md, 2.5 and its open question 4) routes four lines outside the docs lane here: engine/tests/session_identity.rs's assertion message, frontends/shell/e2e/regression.mjs's thrown message with the stale residencyStatus line cite, frontends/shell/src/admission/crsAssertionState.ts's harness premise, and frontends/shell/src/canvas/buildLayers.ts's no-attributes reason. The two messages change test strings and the two comments are product code, so the docs lane cannot take them. Stays proposed; the human grades and places it.",
       "evidence_label": "branch `cut/stale-assertion-messages-and-product-comments`"
+    },
+    {
+      "id": "walkthrough-row-f7-cli-refusal",
+      "title": "MANUAL-WALKTHROUGH.md row F7: a publish-bundle CLI publish with the real built viewer is refused under the redaction scan (its W12), so F7 points at Part G's rows, with the CLI refusal line",
+      "lane": "shell",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": null,
+      "budget_minutes": 45,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "branch": "cut/walkthrough-row-f7-cli-refusal"
+      },
+      "dates": {
+        "opened": "2026-10-22",
+        "done": null
+      },
+      "summary": "IN PROGRESS 2026-10-22: branch cut/walkthrough-row-f7-cli-refusal from main fd47e6cf (B), worktree C:/dev/wt/f7; budget 45 (the form's section 7); rule (00) checked at dispatch (Part F only: #241, #242, #243, milestone 4 PR A and 1c's step 1 all disjoint). The row and section 4 items 1 to 4 at #241's head 2fc01f59 by a worker; R-F7 by a tester in #241's worktree. OPEN-1 to OPEN-4 the human's (a yes after the gates gets a scoped check). The PR stays draft until the sitting (section 2.3). Before: FORM COMMITTED 2026-10-22 (frontends/shell/WALKTHROUGH-ROW-F7-CLI-REFUSAL-PREREGISTRATION.md; the architect's draft, state/consults/2026-10-22-walkthrough-row-f7-cli-refusal-architect-draft.md): full form and gating (section 21a category 4); F7 points at Part G's rows with the CLI refusal line; R-F7, one refused CLI publish by a tester at #241's head; §2.3's order: this PR is clicked first at the sitting, then #241, with no main commit between. OPEN-1 to OPEN-4 the human's (recommended b, b, a, b). NEXT: after the docs lane's piece 2 awaits its click, the row by a worker, R-F7, both gates; the PR stays draft until the sitting. Before: PLACED 2026-10-22 by the human (state/directives/2026-10-22-away-until-monday-241-r1-on-5400-f7-a-milestone-4-1c-code-o0-b-docs-lane-ruled-i4-a.md), F7 (a): the docs-lane piece pointing F7 at the Part G rows, with the CLI refusal line; it lands before #241's merge. From the redaction form's Amendment 3 additions, E1 (state/consults/2026-10-21-bundle-redaction-scan-not-in-product-publish-architect-amendment-3-cli-doc.md). Next in the docs lane after stale-assertion-messages-and-product-comments. Its form is drafted by the architect.",
+      "evidence_label": "branch `cut/walkthrough-row-f7-cli-refusal`"
     },
     {
       "id": "verify-quotes-round-item-cites",

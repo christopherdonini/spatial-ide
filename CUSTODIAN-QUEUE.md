@@ -1,14 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `6677a75d509c9353b23601569ead9418ffdf4e572916c9fb9a91a71879a88a23`) at `2026-10-22T14:31:57.505Z`.
+Generated from `PLAN.yaml` (sha256 `2376879be2d6b949ac34c62d339d930ea842ac3edcf5ac105954e248bfdd7f4b`) at `2026-10-22T14:47:00.038Z`.
 
 ## 1. Next
 
-- **walkthrough-row-f7-cli-refusal** — MANUAL-WALKTHROUGH.md row F7: a publish-bundle CLI publish with the real built viewer is refused under the redaction scan (its W12), so F7 points at Part G's rows, with the CLI refusal line (lane `shell`)
+- (nothing ready)
 
 ## 2. Ready
 
-- **walkthrough-row-f7-cli-refusal** — MANUAL-WALKTHROUGH.md row F7: a publish-bundle CLI publish with the real built viewer is refused under the redaction scan (its W12), so F7 points at Part G's rows, with the CLI refusal line (lane `shell`, order null, budget 30 min)
+- (none)
 
 ## 3. Waiting on the human (total: 0 min)
 
@@ -37,6 +37,7 @@ Generated from `PLAN.yaml` (sha256 `6677a75d509c9353b23601569ead9418ffdf4e572916
 - **bundle-redaction-scan-not-in-product-publish** — The bundle redaction scan runs only in a test: no product publish scans its emitted files, though ADR-017's section 13 (Accepted) says a scan over every emitted file asserts no path, user name, machine identifier or credential is in a bundle — evidence: branch `cut/bundle-redaction-scan`
 - **b1-shell-half** — Shell migration, milestone 4 -- B1 shell half: attributes of the inspected feature, colour by category with its legend, and the table — evidence: branch `cut/b1-shell-half-pr-a`
 - **stale-assertion-messages-and-product-comments** — Stale text outside the docs lane: an assertion message calling ADR-016 Amendment 1 proposed, a thrown e2e message with a stale line cite, and two product-code comments (crsAssertionState.ts and buildLayers.ts) carrying the same stale premises piece f corrects in tests — evidence: branch `cut/stale-assertion-messages-and-product-comments`
+- **walkthrough-row-f7-cli-refusal** — MANUAL-WALKTHROUGH.md row F7: a publish-bundle CLI publish with the real built viewer is refused under the redaction scan (its W12), so F7 points at Part G's rows, with the CLI refusal line — evidence: branch `cut/walkthrough-row-f7-cli-refusal`
 - **verify-quotes-round-item-cites** — verify-quotes resolves round + item cites (the quote checker's follow-on owed by round 12 item 1's Applied text) — evidence: branch `cut/verify-quotes-round-item-cites`
 
 ## 6. Proposed / unscheduled
