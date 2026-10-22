@@ -5620,14 +5620,14 @@ nodes:
     status: blocked
     order: null
     depends_on: [stale-assertion-messages-and-product-comments, walkthrough-row-f7-cli-refusal]
-    needs_human: {kind: none, minutes: 0}
+    needs_human: {kind: ruling, minutes: 5}
     gate: none
     evidence: null
     budget_minutes: 30
     generation: 2
     felt_verdict: false
     entries: [102]
-    summary: "ORDER 2026-10-22 (state/directives/2026-10-22-away-until-monday-241-r1-on-5400-f7-a-milestone-4-1c-code-o0-b-docs-lane-ruled-i4-a.md): after the F7 piece in the docs lane, the human's order being the open items, then item 41's comment, the ADR notes and the stale cites. Before: PLACED 2026-10-21 (state/directives/2026-10-21-placements-redaction-scan-1c-milestone-4-lanes-238-clicked-d-answers-adr-024-heading-kept.md, item 4): the docs lane, 3 of 6, after stale-assertion-messages-and-product-comments. Before: RULED 2026-10-21 (headed), item 2e, proposed and unplaced; the docs lane. It represents governance C's sheet row E102: the appended ADR-020 note that the quote baseline lists as owed (its corrected_by, an appended ADR-020 note, owed)."
+    summary: "FORM DRAFTED 2026-10-22 (state/consults/2026-10-22-adr-020-appended-note-architect-draft.md): a full form, as ADR-020 is named in section 21a; its file at the root. OPEN-1, the corrigendum words, is red-line text and waits for the human's typed answer; OPEN-2 and OPEN-3 are the human's. NEXT: after #243 and #244 merge and OPEN-1 is answered, the form is committed with its pins and the piece starts. Before: ORDER 2026-10-22 (state/directives/2026-10-22-away-until-monday-241-r1-on-5400-f7-a-milestone-4-1c-code-o0-b-docs-lane-ruled-i4-a.md): after the F7 piece in the docs lane, the human's order being the open items, then item 41's comment, the ADR notes and the stale cites. Before: PLACED 2026-10-21 (state/directives/2026-10-21-placements-redaction-scan-1c-milestone-4-lanes-238-clicked-d-answers-adr-024-heading-kept.md, item 4): the docs lane, 3 of 6, after stale-assertion-messages-and-product-comments. Before: RULED 2026-10-21 (headed), item 2e, proposed and unplaced; the docs lane. It represents governance C's sheet row E102: the appended ADR-020 note that the quote baseline lists as owed (its corrected_by, an appended ADR-020 note, owed)."
     dates: {opened: 2026-10-20, done: null}
   - id: pre-1-0-trademark-search
     title: "The trademark register search with counsel before 1.0 (the human's own)"
