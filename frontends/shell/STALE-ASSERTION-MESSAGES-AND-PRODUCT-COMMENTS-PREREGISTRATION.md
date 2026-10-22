@@ -385,3 +385,12 @@ Options:
 5. **Next:** the code, by a worker, on its own branch. Rule (00) is re-checked at dispatch; B1's `frontends/shell/src/canvas/buildLayers.ts` is in milestone 4's draft too (§2.5).
 
 Nothing above is edited.
+
+## Amendment 2 — gate 1, the architect: PASS WITH NOTES; D1, a class 3 correction in the architect's words; written after the report was seen
+
+*Written by the custodian. References only: `state/consults/gates/2026-10-22-stale-assertion-messages-and-product-comments-gate1-architect.md` (gate-log 587).*
+
+1. **Gate 1, the architect, PASS WITH NOTES** at b24e5281aef6da8b744de3ca840e9ffc10503cb6: no Correctness or Evidence finding. The reviewer's gate 1 runs at the same head.
+2. **D1, the architect's words, its pin made by script:** Correction (class 3): §2.1 C1's clause check says `crsAssertionState.test.ts:4-13` imports only vitest and the state module; it also imports the type `CrsCatalogEntry` (`frontends/shell/src/admission/crsAssertionState.test.ts:6` @ 39182e74e204dbac2f6212afe980f93f59e8f8a2 sha256:ac1c81ed08a9957d7bd449f17178cbffcb97e7bd5c9b6d056a8f8cbc9eb75f06). The clause "with no mount" is unchanged: the file imports no React or DOM module.
+
+Nothing above is edited.

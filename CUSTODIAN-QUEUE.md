@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `09551c8fafdf10a5e597c36ce59a271a93bfb8394e4ca27c76f6e6600bb3a6de`) at `2026-10-22T13:42:37.304Z`.
+Generated from `PLAN.yaml` (sha256 `56e851dab162ca2bc7af6b3575a59f906282cc6c182dff1c859aca2be8555f2b`) at `2026-10-22T13:55:50.940Z`.
 
 ## 1. Next
 
@@ -9,6 +9,7 @@ Generated from `PLAN.yaml` (sha256 `09551c8fafdf10a5e597c36ce59a271a93bfb8394e4c
 ## 2. Ready
 
 - **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark (lane `kernel-protocol`, order null, budget 0 min)
+- **b1-shell-half** — Shell migration, milestone 4 -- B1 shell half: attributes of the inspected feature, colour by category with its legend, and the table (lane `shell`, order null, budget 0 min)
 - **walkthrough-row-f7-cli-refusal** — MANUAL-WALKTHROUGH.md row F7: a publish-bundle CLI publish with the real built viewer is refused under the redaction scan (its W12), so F7 points at Part G's rows, with the CLI refusal line (lane `shell`, order null, budget 30 min)
 
 ## 3. Waiting on the human (total: 0 min)
@@ -23,7 +24,6 @@ Generated from `PLAN.yaml` (sha256 `09551c8fafdf10a5e597c36ce59a271a93bfb8394e4c
 - **adr-035-close-races-note** — ADR-035 -- an appended, dated note recording what kernel-generation-close-races makes historical (Decision 3's no-session-reference case unreachable; invalidate marks only on a live removal; Decision 2's mint-race arm gone) — blocked by: adr-020-appended-note
 - **skp-line-cites-outside-close-races** — Stale line cites into kernel/src/skp.rs outside kernel-close-races-followups files -- shell streaming, App.tsx, pool_poll.rs, src-tauri lib.rs, the P4 corpus test and the persisted-artifacts test — blocked by: adr-035-close-races-note
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
-- **b1-shell-half** — Shell migration, milestone 4 -- B1 shell half: attributes of the inspected feature, colour by category with its legend, and the table — blocked by: bundle-redaction-scan-not-in-product-publish
 - **briefb-b2-save-reopen** — B2 — Save project, Snapshot data, session history, lineage and preferences, in five stages, each with its own form — blocked by: decision-adr-029-scan-progress-route
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer — blocked by: signpath-application-draft
 - **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-1-1

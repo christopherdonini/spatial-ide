@@ -369,3 +369,19 @@ Nothing above is edited.
 2. **S3 follows.** The header paragraph's disclosed gaps name that block. Then the PR and both gates.
 
 Nothing above is edited.
+
+## §10 Amendment 4 — gate 1: both FAIL; correction round 1 (class 9 for E-1's test, class 1 for the records); written after the reports were seen
+
+*Written by the custodian. References only: `state/consults/gates/2026-10-22-verify-quotes-round-item-cites-gate1-architect.md` (gate-log 585); `state/consults/gates/2026-10-22-verify-quotes-round-item-cites-gate1-reviewer.md` (gate-log 586).*
+
+1. **Gate 1 at b08a1fec4e3405153b4998882427355fa18db319:** the architect FAIL (C-1, words only; D-1 to D-3; H-1 to the human) and the reviewer FAIL (E-1; D-1 to D-4). Both close the code's correctness.
+2. **E-1 (class 9, before its code):** one test is added in `scripts/plan/verify-test-claims.test.mjs`, C2 `verify-test-claims: a withdrawn-test row whose ruling cites an itemless round resolves through the tracked round file`. It also shows the cite failing by name when the round file lacks the item. Its fixture byte-copies, at 40b04b46, the real RULED block for question rounds 66 and 67 and `state/questions/round-66.md`, found by round. Its mutation, MC2, drops the round-file reader from `withdrawnRiders`' two calls; it is observed failing alone, with the commit id. U6 becomes: the suite grows by exactly 16 tests.
+3. **The words:** the architect's W1 to W6 and the reviewer's D-1 to D-3 replace the same sentences. The architect reconciles them into one set, filed before the worker applies it with no re-gate (§9); the PR body lists them.
+4. **Records corrected:**
+   - Amendment 2, item 1's fourth sentence: the only two calls of `resolveCitation`, both in `withdrawnRiders`, now pass the round-file reader, and neither it nor `resolveInText` is exported; U4 holds (S2's report, step 4).
+   - §7, not edited (class 8 by its letter): its command over B...H at b08a1fec gives 3,240 lines over 32 files, because the range carries main's merges at c86b2c9c and 49a7f532; over 49a7f532...H it gives 375 lines over 7 files, the piece's own, within 550 and 7.
+   - The line numbers in the step reports (S2's archive and ledger lines at 85ac5d78, S1's `verify-quotes.mjs` line at 81a287a6, S3's at 8e04dbe2) are their instruments' output, not references. The record's reference to the unread block is Amendment 2, item 3.
+5. **H-1 is the human's,** on Monday 2026-10-26: whether a record's hash pin for that block's ruling points into the archive or at the round's tracked question file. The header's and the README's words follow the ruling, so the merge waits for it.
+6. **Next:** the reconciled words; correction round 1 by a worker (C2, MC2, the words); then scoped re-gates.
+
+Nothing above is edited.
