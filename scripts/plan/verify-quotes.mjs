@@ -126,7 +126,8 @@
 // state/questions/round-N.md -- not that the cite means what its sentence says. THE ONE UNREAD BLOCK: the
 // RULED header for question round 72, in the 2026-10-20 archive, names its round outside the header grammar
 // (in a trailing parenthesis, after the PR), so no cite to it resolves -- a cite to round 72 by item is
-// refused by name, and a record cites that ruling by a hash pin instead (the form's Amendment 3, item 1).
+// refused by name, and a record cites that ruling by a hash pin instead, at the round's tracked
+// state/questions/round-72.md (the form's Amendment 3, item 1).
 
 import fs from 'node:fs';
 import path from 'node:path';
