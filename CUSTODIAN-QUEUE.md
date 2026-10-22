@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `7989a7384d8213d877c07c25efb594f24ba6ffbd05be42c4a261248b6c3f9b19`) at `2026-10-22T20:45:11.946Z`.
+Generated from `PLAN.yaml` (sha256 `5f18f752a8e8b9d3df33c1875b9b5573fcc0383698ae68628de9ec9ed2a283bb`) at `2026-10-22T22:17:29.117Z`.
 
 ## 1. Next
 
@@ -122,6 +122,7 @@ Generated from `PLAN.yaml` (sha256 `7989a7384d8213d877c07c25efb594f24ba6ffbd05be
 - **pre-1-0-trademark-search** — The trademark register search with counsel before 1.0 (the human's own) (phase `prototype`) — never queued until placed
 - **record-step-style-match-widening** — record_step admits a style.set match value on fillColor, with the step's dependencies naming the match column and its type (milestone 4's OPEN-4 (A′)): a small data-lane piece, or the first commit of piece 1c's step 1 (phase `prototype`) — never queued until placed
 - **adr-017-note-product-redaction-gate** — An ADR-017 note in the human's typed words: the product publish now runs the redaction scan over every emitted file, except a viewer file whose bytes the viewer's build scanned, and refuses by name on a finding (bundle-redaction-scan-not-in-product-publish); the build-time scan, the reviewed list and the skip; and Corrigendum 4's new uninterruptible term (phase `prototype`) — never queued until placed
+- **guardian-parity-git-timeout-under-load** — The Guardian parity test (scripts/hooks/guardian-continuity-parity.test.mjs) reads a fixture as not judged when a git call outruns its timeout under a shared load; the bound is chosen from a measurement (phase `prototype`) — never queued until placed
 
 ### Unscheduled
 
