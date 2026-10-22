@@ -856,3 +856,16 @@ Nothing above is edited.
 3. **Correction round 1,** one worker-high: C1 by the architect's remedy, with U1's added assert and T8's record written byte for byte as `scan-dist.mjs` writes it; C2 by the scratch mirror; C3 by the per-file walk; D-2's words. Then U1, T6, T8 and M8 to M10, M12 and M13 are re-observed at its commit. D-1 is the PR body's, and the custodian makes it. D-3, row F7, is the human's to place. The architect's scoped re-gate of C1 to C3 and the reviewer's scoped check follow.
 
 Nothing above is edited.
+
+## Amendment 7 — correction round 1 built; the scoped re-gate and check, both PASS WITH NOTES (class 1); written after both reports were seen
+
+*Written by the custodian. References only: `state/consults/2026-10-22-bundle-redaction-scan-not-in-product-publish-worker-report-2.md`; `state/consults/gates/2026-10-22-bundle-redaction-scan-not-in-product-publish-gate2-architect.md` (gate-log 583); `state/consults/gates/2026-10-22-bundle-redaction-scan-not-in-product-publish-gate2-reviewer.md` (gate-log 584).*
+
+1. **Correction round 1** is 95edf33be3640fd68dbed77f6d5055e6189506a1, one commit on 6a10ee24e79ab17a3905c3de810844c41160f3ee: C1, C2, C3 and D-2, as both gate 1 reports give them. The change stands at 888 lines against 1,222.
+2. **The scoped re-gate and the scoped check: both PASS WITH NOTES.** C1 to C3 are closed. The reviewer's probe, with the real built `NOTICE.txt` and the real record, gives `Success`; its control, with the `sha256:` form, is refused at byte 19092.
+3. **The findings held, in the reviewer's words (its D-A, not the human's):** §2.3's "Findings held" bound is kept by `walk`'s `first_only` arm in kernel/src/bundle/redaction.rs at 95edf33be3640fd68dbed77f6d5055e6189506a1. No test asserts it: `first_undeclared_findings` returns the same result with or without it, and the file's `mod tests` is on §2.4's byte-identical list.
+4. **The architect's D-A and D-B,** two comment lines, are applied on the branch by a worker, and the PR body lists them.
+5. **Report-2's M8 and M9 lines** for U1 are two below the head's; the reviewer's observation at the head stands.
+6. **Before the merge:** R1 and R2 at the final head, and the human's placement of walkthrough row F7. The dev port R1 needs is the human's to free; R2 is the human's publish through the native dialog.
+
+Nothing above is edited.
