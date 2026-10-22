@@ -837,3 +837,12 @@ Nothing above is edited.
 3. **Next:** lead-data's owner's-index update, applied on the branch; then the PR, R1 and R2 at its head, and both gates.
 
 Nothing above is edited.
+
+## Amendment 5 — gate 1, the architect: FAIL; Amendment 3 item 2's hash form corrected (class 1); written after the report was seen
+
+*Written by the custodian. References only: `state/consults/gates/2026-10-22-bundle-redaction-scan-not-in-product-publish-gate1-architect.md` (gate-log 581).*
+
+1. **Gate 1, the architect, FAIL** at 6a10ee24e79ab17a3905c3de810844c41160f3ee: C1, C2 and C3, and D1. The reviewer's gate 1 runs at the same head, and the corrections are made in one round.
+2. **D1, the record's correction, in the architect's words** (not the human's): Amendment 3 item 2 compares `canonical::sha256_hex(bytes)`, which returns `sha256:` followed by the hex digest, with a record value item 1 fixes as 64 lowercase hex, so no entry `scan-dist.mjs` writes could match. `is_built_asset` compares the record's value with the bare hex digest of the staged bytes, and U1, T6 and T8 write their records in item 1's form. Proof: T8 with a record in `scan-dist.mjs`'s form, the form V3 asserts, and R1.
+
+Nothing above is edited.
