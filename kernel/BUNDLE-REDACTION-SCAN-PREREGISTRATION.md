@@ -827,3 +827,13 @@ file's bytes match the record's entry for that path.
   - Ordinary use reaches all of it: every publish carries the viewer.
 
 Nothing above is edited.
+
+## Amendment 4 — the code built; one ceiling overrun (class 8) (class 1); written after the result was seen
+
+*Written by the custodian. References only: `state/consults/2026-10-22-bundle-redaction-scan-not-in-product-publish-worker-report-1.md`.*
+
+1. **Built** at 979a7d5d27c13216318f468a40fc0203b43e8f9c, one commit on f88255437e64e8ba34e78e6c8273678f85718acf (main merged in; B′ c7d02156d042c25f14d84c841ac89268ea5cec78). `git diff --numstat B′...H` gives 828 insertions and 14 deletions over 22 files, the code files of Amendment 3 item 10's table. `kernel/README.md` and `engine/README.md` wait for the owner's-index update (§9).
+2. **Class 8:** `renderer/bundle-viewer/src/manifest.ts` changes 7 lines against item 10's ceiling of 3. W9 replaces three comment lines with four, so the ceiling could not be met. It is recorded here, and item 10 is not edited.
+3. **Next:** lead-data's owner's-index update, applied on the branch; then the PR, R1 and R2 at its head, and both gates.
+
+Nothing above is edited.
