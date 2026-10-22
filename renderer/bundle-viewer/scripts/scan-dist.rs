@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
 //! The viewer build's scan of `dist/`: the kernel's own `redaction::scan_directory`, compiled on its
-//! own by `scan-dist.mjs`, so the build and the publish run the same bytes of scanner.
+//! own by `scan-dist.mjs`, from the same source file the kernel compiles (the `#[path]` below).
 //!
 //! One line per finding: file, class and byte offset, tab-separated, and never an excerpt. No
 //! identities and no declared strings: the build machine's names are not the operator's, and the

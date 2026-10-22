@@ -3269,9 +3269,11 @@ mod tests {
         std::fs::write(viewer_dir.join("NOTICE.txt"), notice).unwrap();
         let record = resources.join(VIEWER_BUILD_RECORD);
         let hash = spatial_renderer::canonical::sha256_hex(notice);
+        let hash = hash.strip_prefix("sha256:").unwrap();
+        // Byte for byte as `scan-dist.mjs` writes it: `JSON.stringify({version, assets})` and `\n`.
         std::fs::write(
             &record,
-            format!(r#"{{"version":1,"assets":{{"NOTICE.txt":"{hash}"}}}}"#),
+            format!("{{\"version\":1,\"assets\":{{\"NOTICE.txt\":\"{hash}\"}}}}\n"),
         )
         .unwrap();
 

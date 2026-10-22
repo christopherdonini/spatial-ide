@@ -371,7 +371,8 @@ pub(crate) fn first_undeclared_findings<E>(
 
 /// The one walk: depth-first, entries sorted, each file read whole. `skip` sees the bytes read and
 /// may pass the file over. With `first_only` it stops after the first file holding a finding that
-/// is not [`OPERATOR_DECLARED`], and returns what it found up to there.
+/// is not [`OPERATOR_DECLARED`] and returns that file's findings alone: an earlier file's are
+/// dropped before the next file is read.
 fn walk<E>(
     root: &std::path::Path,
     machine: &MachineIdentifiers,
@@ -404,9 +405,13 @@ fn walk<E>(
             if skip(&rel, &bytes) {
                 continue;
             }
-            findings.extend(scan(&rel, &bytes, machine));
-            if first_only && findings.iter().any(|f| f.class != OPERATOR_DECLARED) {
-                return Ok(findings);
+            let found = scan(&rel, &bytes, machine);
+            if first_only {
+                if found.iter().any(|f| f.class != OPERATOR_DECLARED) {
+                    return Ok(found);
+                }
+            } else {
+                findings.extend(found);
             }
         }
     }

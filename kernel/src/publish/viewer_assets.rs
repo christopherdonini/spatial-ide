@@ -158,14 +158,17 @@ impl ViewerAssets {
     }
 
     /// Whether the publish's redaction gate may skip this staged file: `bundle_rel` is `viewer/<p>`,
-    /// the record has an entry for that same `<p>`, and the staged bytes hash to it. Anything else,
-    /// a malformed key or value included, is `false`, so the file is scanned.
+    /// the record has an entry for that same `<p>`, and the bare hex sha256 of the staged bytes
+    /// equals it. Anything else, a malformed key or value included, is `false`, so the file is
+    /// scanned.
     pub(crate) fn is_built_asset(&self, bundle_rel: &str, bytes: &[u8]) -> bool {
         bundle_rel
             .strip_prefix(crate::bundle::VIEWER_DIR)
             .and_then(|rest| rest.strip_prefix('/'))
             .and_then(|path| self.build_record.get(path))
-            .is_some_and(|hash| *hash == canonical::sha256_hex(bytes))
+            .is_some_and(|hash| {
+                canonical::sha256_hex(bytes).strip_prefix("sha256:") == Some(hash.as_str())
+            })
     }
 
     pub fn iter(&self) -> impl Iterator<Item = &ViewerAsset> {
@@ -340,7 +343,9 @@ mod tests {
             bytes: bytes.to_vec(),
         };
         let bare = ViewerAssets::new(vec![asset]).unwrap();
-        let record = BTreeMap::from([("app.js".to_string(), canonical::sha256_hex(bytes))]);
+        let prefixed = canonical::sha256_hex(bytes);
+        let hex = prefixed.strip_prefix("sha256:").unwrap().to_string();
+        let record = BTreeMap::from([("app.js".to_string(), hex)]);
         let with = bare.clone().with_build_record(record);
         assert!(
             with.is_built_asset("viewer/app.js", bytes),
@@ -361,6 +366,12 @@ mod tests {
         assert!(
             !bare.is_built_asset("viewer/app.js", bytes),
             "no record at all"
+        );
+        let in_prefixed_form =
+            bare.with_build_record(BTreeMap::from([("app.js".to_string(), prefixed)]));
+        assert!(
+            !in_prefixed_form.is_built_asset("viewer/app.js", bytes),
+            "an entry in the sha256: form"
         );
     }
 

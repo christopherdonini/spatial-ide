@@ -16,7 +16,7 @@
 // rule), is `{"version":1,"assets":{"<dist-relative path>":"<sha256>"}}` over the bytes on disk. The
 // publish skips a `viewer/` file only when its staged bytes hash to the entry for that same path.
 //
-//   node scripts/scan-dist.mjs [dist-dir [record-file]]
+//   node scripts/scan-dist.mjs
 
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
@@ -72,7 +72,9 @@ function scan(dir) {
 }
 
 /** Run the scan and, only if it passes, write the record. Returns the exit code. */
-export function main(dist = join(root, 'dist'), record = join(root, 'viewer-asset-hashes.json')) {
+function main() {
+  const dist = join(root, 'dist');
+  const record = join(root, 'viewer-asset-hashes.json');
   rmSync(record, { force: true });
   let found;
   try {
@@ -101,5 +103,5 @@ export function main(dist = join(root, 'dist'), record = join(root, 'viewer-asse
 }
 
 if (process.argv[1] && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url))) {
-  process.exit(main(...process.argv.slice(2)));
+  process.exit(main());
 }

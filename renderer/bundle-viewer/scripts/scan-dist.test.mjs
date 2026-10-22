@@ -8,20 +8,29 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { cpSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
 import { compare, listFiles } from './scan-dist.mjs';
 
-/** Run the real script over a copy of `dist/`, with its record in the same scratch directory. */
+/**
+ * Run the unchanged script in a scratch mirror of the tree it finds itself in: it takes its root
+ * from its own location, so `dist/` and the record sit under `<tmp>/renderer/bundle-viewer/`, and
+ * the driver's `#[path]` reaches `<tmp>/kernel/src/bundle/redaction.rs`.
+ */
 function runOnCopy(plant) {
   const scratch = mkdtempSync(join(tmpdir(), 'scan-dist-test-'));
-  const dist = join(scratch, 'dist');
-  const record = join(scratch, 'viewer-asset-hashes.json');
+  const viewer = join(scratch, 'renderer', 'bundle-viewer');
+  const dist = join(viewer, 'dist');
+  const record = join(viewer, 'viewer-asset-hashes.json');
+  mkdirSync(join(scratch, 'kernel', 'src', 'bundle'), { recursive: true });
+  cpSync('../../kernel/src/bundle/redaction.rs', join(scratch, 'kernel', 'src', 'bundle', 'redaction.rs'));
+  for (const f of ['scan-dist.mjs', 'scan-dist.rs']) cpSync(join('scripts', f), join(viewer, 'scripts', f));
+  cpSync('redaction-reviewed.json', join(viewer, 'redaction-reviewed.json'));
   cpSync('dist', dist, { recursive: true });
   plant?.(dist);
-  const run = spawnSync(process.execPath, ['scripts/scan-dist.mjs', dist, record], { encoding: 'utf8' });
+  const run = spawnSync(process.execPath, [join(viewer, 'scripts', 'scan-dist.mjs')], { encoding: 'utf8' });
   return { run, dist, record, done: () => rmSync(scratch, { recursive: true, force: true }) };
 }
 

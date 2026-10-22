@@ -1165,10 +1165,11 @@ fn a_viewer_asset_matching_its_build_record_is_published_and_the_same_asset_one_
     let recorded = b"notice text: the word password appears here\n".to_vec();
     let mut changed = recorded.clone();
     changed[0] = b'N';
-    let record = BTreeMap::from([(
-        "NOTICE.txt".to_string(),
-        spatial_renderer::canonical::sha256_hex(&recorded),
-    )]);
+    let hex = spatial_renderer::canonical::sha256_hex(&recorded)
+        .strip_prefix("sha256:")
+        .unwrap()
+        .to_string();
+    let record = BTreeMap::from([("NOTICE.txt".to_string(), hex)]);
     let viewer_with = |notice: Vec<u8>| {
         ViewerAssets::new(vec![
             ViewerAsset {
