@@ -745,3 +745,113 @@ The source for every ruling is `state/directives/2026-10-21-d-s10-go-adr-036-rou
 6. **Next:** PR A's re-sweep at its base (§0.3), recorded as an amendment before its code. PR A's `buildLayers.ts` comment waits for the docs-lane piece's merge (§2.9).
 
 Nothing above is edited.
+
+## Amendment 2 — PR A's re-sweep at B 55618ab5, written after the re-sweep's and the base series' results were seen: no pin moved and no invalidator; four class-3 rows (the text check's wrap, a test title, `document.ts`'s words, the fifth positive at b24e5281); the Part and the numbers; the base's suites and rule 00 (class 1)
+
+*Written after the re-sweep's and the base e2e series' results were seen, before any PR A code. The architect drafted it read-only at main c6de9b48cde727684de7fec7bb44323fe24d0a02. It is references only, and nothing below is a quotation. The re-sweep is `state/consults/2026-10-22-b1-shell-half-pr-a-re-sweep.md`, sha256 from its line 5 c7c9b7b81f640270a4d734cbb2b01a17a3530f3797f7e2da7e3831e1732f6d39. The series is `state/consults/2026-10-22-b1-shell-half-pr-a-base-e2e-tester-report.md`, sha256 from its line 5 4b0827c471257e77ca63091638af3f24e3796792da09b3b43409484423186a52. B is 55618ab54c32f1e0712d4a657d1e3f1b30c0ef8f. Every `@ 4b26d279` pin is historical (§0.3). For the work, the tree at B is authoritative.*
+
+1. **The pins.** None moved and none changed (the re-sweep's step 1). The §0.2 interfaces read at B as §0.2 states them (its step 2), so I4 does not fire. Every PR A file in §2.6 exists at B, and its six new files do not (its step 2, last paragraph).
+
+2. **The re-sweep's four notes (class 3).**
+   - **(a) The wrapped text check.** `Proposed, so it binds nothing` runs across `frontends/shell/src/workspace/viewTransitions.ts:6-7` @ 55618ab54c32f1e0712d4a657d1e3f1b30c0ef8f sha256:7ccc0e5c8560a6e994c8b031916b8dfdc1a46295b493012341ea4744c0fe33ff. A line-by-line search finds nothing at B, so §4's second check fails its own self-test (re-sweep note 1).
+     - §2.2 (g)'s sixth bullet is read as that two-line span.
+     - §4's text-check paragraph reads: **Text checks at PR A's head**, by script. Each pattern is searched twice in each file named: once line by line, and once over the file's text with each line's leading whitespace, leading comment marker (`//!`, `//` or `*`) and trailing whitespace removed and the lines joined by one space. Each pattern is self-tested positive at the base in at least one of the two runs. At the head it has zero matches in both runs:
+       - `requests none`, `requests no projection` and `gains no parameter` in `frontends/shell/src` and `renderer/tests`;
+       - `Proposed, so it binds nothing` in `frontends/shell/src/workspace/viewTransitions.ts`.
+     - The self-test at B:
+       - `requests no projection` is positive at `frontends/shell/src/skp/client.ts:122` @ 55618ab54c32f1e0712d4a657d1e3f1b30c0ef8f sha256:c4dbd2d71a4fd6a4def8ef340b9d4bf2e3742ae1a9a10ced4f1de2a03197de10 and `frontends/shell/src/skp/client.test.ts:43` @ 55618ab54c32f1e0712d4a657d1e3f1b30c0ef8f sha256:f71a6cc33b3b44c6236c9e1d4e34619e6ac4dc80f915a2342ab58a7f4bb30c99;
+       - `gains no parameter` is positive at `frontends/shell/src/skp/types.ts:262` @ 55618ab54c32f1e0712d4a657d1e3f1b30c0ef8f sha256:db14ea2888c71d6ac649fdbb131f3c7892db8736529b7541bb6811cb124aaaff;
+       - `requests none` is positive at `frontends/shell/src/style/document.ts:20` @ 55618ab54c32f1e0712d4a657d1e3f1b30c0ef8f sha256:df755c15b565488b71dc128e77dccac4f71d1ab153f6943c230c4633b3d6a2d9 and `renderer/tests/style_shell_agreement.rs:39` @ 55618ab54c32f1e0712d4a657d1e3f1b30c0ef8f sha256:a082692c1d782e3faf5121db14d16419bb6d6d0fbc0c130d8b11da0532a7b5b8;
+       - `Proposed, so it binds nothing` is positive in the joined run only, over lines 6 and 7.
+   - **(b) The test title in `frontends/shell/src/skp/client.test.ts`.** The check reaches the title at `frontends/shell/src/skp/client.test.ts:43` @ 55618ab54c32f1e0712d4a657d1e3f1b30c0ef8f sha256:f71a6cc33b3b44c6236c9e1d4e34619e6ac4dc80f915a2342ab58a7f4bb30c99 (re-sweep note 2). That file is a PR A test file (§2.6), so this is a test-text fix.
+     - The title reads: `sends columns: null as an explicit null when the caller passes null, never omitted`.
+     - The test's call passes `null` for `columns`. Its body, its doc comment and its recorded mutation (omit the key) stay as they are.
+     - Clause check against the body as it stands at `frontends/shell/src/skp/client.test.ts:44-48` @ 55618ab54c32f1e0712d4a657d1e3f1b30c0ef8f sha256:a6bde0ec0918e939969af20036a387033191a308453957a92796495c1a9e9cb1:
+       - "explicit null" is the `toBeNull` assertion;
+       - "never omitted" is the `toHaveProperty("columns")` assertion;
+       - "when the caller passes null" is the call's argument once §2.2 (b) makes `columns` required.
+     - These are not the human's words. The edit fits A-T's `client 50` (§7).
+   - **(c) `document.ts`'s bullet after the clause comes out.** Removing the clause from `frontends/shell/src/style/document.ts:18-22` @ 55618ab54c32f1e0712d4a657d1e3f1b30c0ef8f sha256:d8b7d7e56fb24a3965cedc29ccdfc655e3ce7a499187ab206e5e96e91da387f1 leaves a lowercase "so" after a full stop, and "not a wire restriction" loses its antecedent (re-sweep note 3).
+     - The bullet reads, wrapped as the file wraps:
+       ```
+        * - **Literal-only.** `StyleDocumentV0`'s type has no `match` variant at all -- there is no field to
+        *   set that would produce one. So categorical/match styling is still unavailable live. The wire
+        *   does not prevent it: the shell's `viewport_query` calls carry the open's projection set
+        *   (`projectionFor`; `null` when no column is projectable). There is no wider model here.
+       ```
+     - Clause check at PR A's head:
+       - The type has no `match` variant: `frontends/shell/src/style/document.ts:109-118` @ 55618ab54c32f1e0712d4a657d1e3f1b30c0ef8f sha256:f4017650ff734303b5cb2ceb04195557bb50eb179be1ab5844f04cd1ac922e19, which PR A does not edit (§2.6, comment only).
+       - Unavailable live: the canvas passes one `fillColor` (`frontends/shell/src/canvas/buildLayers.ts:447` @ 55618ab54c32f1e0712d4a657d1e3f1b30c0ef8f sha256:0a58685b0d83fd756ea6585db8d0197e06e033323fae97b86e8043dbbc276639, `frontends/shell/src/canvas/buildLayers.ts:470` @ 55618ab54c32f1e0712d4a657d1e3f1b30c0ef8f sha256:4a19c0098a5ad5403e537096f9e2b4c05d34c41bfa86c3e630271cc6e219bc35), and PR A touches only that file's comment.
+       - The calls carry the open's set: §2.2 (a) and (b), asserted by PA-U1 and PA-U7.
+       - "There is no wider model here" is unchanged.
+     - These are not the human's words. ADR-023's B1 condition (1) asks for exactly this correction in the piece (RULED 2026-09-14, question set D, item D2, condition 1; carried at `docs/adr/ADR-023-attribute-projection-on-viewport-query.md:144` @ c6de9b48cde727684de7fec7bb44323fe24d0a02 sha256:18b6453d6e8e8120764205e9d89730c9cf88420e33656caca15d839577dd2a72).
+   - **(d) The fifth positive at b24e5281.** At b24e5281, `frontends/shell/src/canvas/buildLayers.ts`'s doc comment on `ResolvedDrawParams` carries `requests none`. That branch commit is named here with no line pin (re-sweep note 4 and step 5). The other positives there match §2.2 (g)'s list.
+     - §4's text checks are run at the PR A head that goes to the gate, after main with #243's merge has been merged into PR A's branch (§2.9).
+     - At that head the first bullet's runs also reach `buildLayers.ts`. Its self-test is the positive at b24e5281, and its zero follows §2.2 (g)'s fifth bullet (item 5).
+
+3. **The Part and the numbers.**
+   - **The Part is AC.** The last Part at B is AB (`frontends/shell/MANUAL-WALKTHROUGH.md:1927` @ 55618ab54c32f1e0712d4a657d1e3f1b30c0ef8f sha256:4917a05ad91af5f3bcba369d513f01f305aa06eb7d1042ae5a0931cb2ee1a3d5). No branch in flight adds a Part (re-sweep step 3).
+   - **KL-4 is item 51 and KL-7 is item 52.**
+     - The highest item at B is 46 (`KNOWN-LIMITATIONS.md:407` @ 55618ab54c32f1e0712d4a657d1e3f1b30c0ef8f sha256:e2a1de35da75f57c0f947eedf774921d7600f1be9e9b8d1ca9ebb89339eb78eb).
+     - #241's item is 47, a branch fact at 2fc01f59.
+     - 1c places its items after it and withdraws K-1 (`kernel/B2-1C-SAVE-AND-REOPEN-PREREGISTRATION.md:513-514` @ c6de9b48cde727684de7fec7bb44323fe24d0a02 sha256:17ee5e3fa2ef4595fc3ab89c10b8e1e700c0c1f2d66d6375648124cf80041eec), so its K-2 to K-4 take 48 to 50 (re-sweep step 4).
+     - The numbers are read again at PR A's KNOWN-LIMITATIONS commit. A change there is class 3, with the tree authoritative.
+
+4. **The base series (class 1).**
+   - **Result.** The 14 `e2e:` scripts in `frontends/shell/package.json` other than `e2e:debug` each ended rc 0 at B, on an exe built at B. `e2e:residency-harness` was read by its exit code only.
+   - **Fixtures.** They were hash-identical before and after, nothing was regenerated, and the 5 GB fixture was not used.
+   - **The harness** ran under §9's port-5400 approval:
+     - the overlay through `TAURI_CONFIG`;
+     - vite with `--strictPort`;
+     - the npx shim on PATH, and for `recording` its waiting variant;
+     - one shared hold for each run;
+     - a cargo target outside the worktree.
+   - **Four attempts failed on harness causes,** each disclosed in the series:
+     - publish twice, its deadline spent on a cargo build of its verify example;
+     - the first exe build, before the shell's generated notice file existed;
+     - recording once: the stock shim leaves the app detached, so the suite's stop released nothing, and its RECORD step met a live lock after OPEN, APPLY, STYLE and RESET had passed.
+   - **None is I3.**
+     - In each case the series shows the cause in the launcher or the build.
+     - Each suite then passed at the same commit, with no product change, on the corrected harness: publish with its example built, and recording with the waiting shim.
+     - The exe build is not a suite.
+     - The reading, class 1: under I3, a failure whose recorded cause is the harness, and which passes at the same commit on the corrected harness, is not an e2e failure. The correction is carried into every later run of this piece. That means the waiting shim for `recording`, and publish's verify example built before its deadline starts.
+     - The custodian judged the same.
+
+5. **§2.2 (g)'s `buildLayers.ts` bullet against #243 (class 3).**
+   - After main with #243's merge has been merged into PR A's branch, PR A removes the clause naming `viewport_query`'s projection since `skp/0.6` and the shell requesting none, and re-wraps (re-sweep step 5).
+   - The comment's sentence reads:
+     ```
+      * `0..1` opacity). The shell's style documents are literal-only (`style/document.ts`'s
+      * `StyleDocumentV0` has no `match` variant), so this is exactly ONE colour for a whole style, not
+      * a per-feature table -- a plain array, deck.gl's own "constant attribute" shape, is what this
+      * type carries and what `buildLayers` below passes straight through unchanged. */
+     ```
+   - Clause check at PR A's head:
+     - "Literal-only" and "no `match` variant": `frontends/shell/src/style/document.ts:109-118` @ 55618ab54c32f1e0712d4a657d1e3f1b30c0ef8f sha256:f4017650ff734303b5cb2ceb04195557bb50eb179be1ab5844f04cd1ac922e19, not edited by PR A.
+     - "Exactly ONE colour": `frontends/shell/src/canvas/buildLayers.ts:447` @ 55618ab54c32f1e0712d4a657d1e3f1b30c0ef8f sha256:0a58685b0d83fd756ea6585db8d0197e06e033323fae97b86e8043dbbc276639 and `frontends/shell/src/canvas/buildLayers.ts:470` @ 55618ab54c32f1e0712d4a657d1e3f1b30c0ef8f sha256:4a19c0098a5ad5403e537096f9e2b4c05d34c41bfa86c3e630271cc6e219bc35, with PR A editing that file's comment only (§2.6, ceiling 6).
+     - "A plain array … is what this type carries": the `fillColor` tuple at `frontends/shell/src/canvas/buildLayers.ts:36` @ c6de9b48cde727684de7fec7bb44323fe24d0a02 sha256:563daa957fb0d092226396673fd1b3a9a138a279727bef9fc27147d9799aa968.
+     - The sentence does not say that the shell requests no projection, or that `viewport_query` carries no attributes.
+   - These are not the human's words. The worker applies them, and the PR body lists them.
+
+6. **Rule 00 at B (class 1)** (re-sweep step 6; §2.9; Amendment 1 item 4):
+   - 1c's branch is at B, with no commit and none of the six shared files.
+   - The docs lane is at b24e5281. It shares `buildLayers.ts` only, as §2.9 says.
+   - #241 is at 2fc01f59 and is disjoint.
+   - `verify-quotes-round-item-cites` is at b08a1fec and is disjoint.
+   - The F7 piece edits Part F only.
+   - PR A's Part AC and its items 51 and 52 are separate paths.
+
+7. **Next:** PR A's code from B, by one worker-high, on `cut/b1-shell-half-pr-a`.
+8. **Generation:** the node's generation goes up by one.
+
+9. **F1, the scriptless drivers at B (the architect's finding, (a); the custodian's row):** `state/consults/2026-10-22-b1-shell-half-pr-a-scriptless-drivers-tester-report.md`. `pan-anchor.mjs`, `source-watch-idle.mjs` and `source-changed.mjs`'s default route pass every step; the post route's S5d is INCONCLUSIVE, twice, with every other step passing. Milestone 3's Amendment 3 item 12 records an S5d-only result beside the runs, neither I12 nor I3, and that holds here.
+10. **F2 (the custodian's row, on the architect's finding):** PR A does not merge before #243. If #243 is dropped, PR A edits B's sentence in its place, and that edit is class 3. `carries no attributes` joins §4's first text-check bullet, positive at B at `frontends/shell/src/canvas/buildLayers.ts:31` @ 55618ab54c32f1e0712d4a657d1e3f1b30c0ef8f sha256:ba2218b8e148ec04b7d7f37f80ce20beb5acf6da6d0f491a2b08632e95102335.
+11. **F3 (class 3; the architect's words, not the human's):** §2.2 (g)'s first bullet, `frontends/shell/src/skp/client.ts:122-123` @ 55618ab54c32f1e0712d4a657d1e3f1b30c0ef8f sha256:d2fbf847e1ae29847d76a0da301dd89ffc62612d48ad06975436c3cbd409662d, is replaced once line 124 sends the parameter by:
+    ```
+        // `skp/0.6`: the caller's projection set, sent as given (`projectionFor`'s list, or `null`
+        // when no column is projectable); `null` is sent as `null`, never omitted.
+    ```
+
+Read the last amendment first.
+
+Nothing above is edited.
