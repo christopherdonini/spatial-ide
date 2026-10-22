@@ -1,0 +1,8 @@
+[package]
+name = "b2-1c-onedrive-probe"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+# Its own root: the repository's workspace and lockfile stay untouched.
+[workspace]
