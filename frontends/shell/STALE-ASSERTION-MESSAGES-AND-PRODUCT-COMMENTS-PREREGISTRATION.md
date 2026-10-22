@@ -394,3 +394,14 @@ Nothing above is edited.
 2. **D1, the architect's words, its pin made by script:** Correction (class 3): §2.1 C1's clause check says `crsAssertionState.test.ts:4-13` imports only vitest and the state module; it also imports the type `CrsCatalogEntry` (`frontends/shell/src/admission/crsAssertionState.test.ts:6` @ 39182e74e204dbac2f6212afe980f93f59e8f8a2 sha256:ac1c81ed08a9957d7bd449f17178cbffcb97e7bd5c9b6d056a8f8cbc9eb75f06). The clause "with no mount" is unchanged: the file imports no React or DOM module.
 
 Nothing above is edited.
+
+## Amendment 3 — gate 1, the reviewer: FAIL on E5 alone, met by a re-run (class 1); written after the report was seen
+
+*Written by the custodian. References only: `state/consults/gates/2026-10-22-stale-assertion-messages-and-product-comments-gate1-reviewer.md` (gate-log 588).*
+
+1. **Gate 1, the reviewer, FAIL** at b24e5281aef6da8b744de3ca840e9ffc10503cb6, on E5 alone: one job of Governance CI's pull_request run 39790303500 failed on GitHub API 503s inside `verify.mjs`; the push run at the same head passed.
+2. **E5 met:** the custodian re-ran the failed job; attempt 2 concluded success, and every check of #243 is green. No code changed.
+3. **D-1** is applied in the PR body (the reviewer's words). D-2 is a note on the worker report's line count; the record is not edited.
+4. **Next:** #243 leaves draft and awaits the human's click.
+
+Nothing above is edited.

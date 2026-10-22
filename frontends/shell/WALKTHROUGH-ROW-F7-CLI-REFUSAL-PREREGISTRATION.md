@@ -344,3 +344,45 @@ None of these blocks dispatch: F7 alone matches the human's placement. A yes mus
 - This sentence is true only from #241's merge, so it shares F7's order (§2.3).
 - **Recommended: (b).** The new F7 sends the operator into Part G, so the prerequisite belongs with it.
 
+## Amendment 1 — the row built; §4 item 4's licence path corrected (class 3); R-F7 as predicted (class 1); written after the results were seen
+
+*Written by the custodian. References only: `state/consults/2026-10-22-walkthrough-row-f7-cli-refusal-worker-report.md`; `state/consults/2026-10-22-walkthrough-row-f7-cli-refusal-r-f7-tester-report.md`.*
+
+1. **The row** is 8fbd04ccde1ba35e8dde225223d6d5f8d1ec0222 on `cut/walkthrough-row-f7-cli-refusal`, from B fd47e6cf101b7105a9257ced914351ff06032e90: §4 items 1 to 3 hold, and §7 counts 1 line removed and 1 added in the one file.
+2. **§4 item 4's last check (class 3):** `renderer/bundle-viewer/LICENSES` does not exist; the licence texts are in the repository root's `LICENSES/`, as the redaction form's own clause names them. The check reads `git diff <B′>..<head> -- LICENSES renderer/bundle-viewer/notice.mjs renderer/bundle-viewer/portedNotices.mjs`; from B′ c7d02156d042c25f14d84c841ac89268ea5cec78 to 2fc01f5955a0dc21d51ee4cdffc3e5c55800959d it is empty. Item 4's other checks hold at 2fc01f5955a0dc21d51ee4cdffc3e5c55800959d.
+3. **R-F7 as predicted** at 2fc01f5955a0dc21d51ee4cdffc3e5c55800959d: exit code 1; stderr's last line begins `[publish] ` and names `viewer/NOTICE.txt`; no `--out` directory and no staging sibling; the audit log's last line an outcome line, refused, `RedactionFinding`.
+4. **Next:** the PR, in draft until the sitting (§2.3), and both gates. OPEN-1 to OPEN-4 stay the human's.
+
+Nothing above is edited.
+
+## Amendment 2 — gate 1: both PASS WITH NOTES (class 1); written after the reports were seen
+
+*Written by the custodian. References only: `state/consults/gates/2026-10-22-walkthrough-row-f7-cli-refusal-gate1-architect.md` (gate-log 591); `state/consults/gates/2026-10-22-walkthrough-row-f7-cli-refusal-gate1-reviewer.md` (gate-log 592).*
+
+1. **Both PASS WITH NOTES** at 8fbd04ccde1ba35e8dde225223d6d5f8d1ec0222, main 53e30138, #241 at 2fc01f59. No Correctness or Evidence finding.
+2. **D1** (the architect's words, not the human's) is applied in the PR body: the two bullets on #241 not merging at the sitting, and on #241 changing before its merge.
+3. **Next:** the PR stays in draft until the sitting (§2.3); there it is clicked first, then #241. This node's done commit is held until after #241's click. OPEN-1 to OPEN-4 stay the human's.
+
+Nothing above is edited.
+
+## Amendment 3 — the human's answers: OPEN-1 (b), OPEN-2 (b) and OPEN-4 (b) (class 9), OPEN-3 (a) (class 5); written after the gates' reports were seen and before the added rows' code
+
+*Written by the custodian on the human's message. References only: `state/directives/2026-10-22-242-h-1-round-72-pin-f7-open-items-milestone-4-open-16-b-adr-020-corrigendum-a-1c-adr-036-words-approved-disk-parity-node.md`, item 2; the OPEN items above, each option (b)'s words and clause check.*
+
+1. **OPEN-1 (b), OPEN-2 (b) and OPEN-4 (b) join the piece (class 9):** the architect's words under each are applied byte for byte. In Part F (P1): row F8, and the span of the intro's line that OPEN-1 names; the deviation paragraph's last clause, rewrapped, its `cargo build` sentence unchanged. In Part G (P2): G7's parenthetical and its contrast clause. §7's ceilings for each yes bind, at most 14 lines in all, and §8 item 1's exception covers these rows.
+2. **OPEN-3 (a):** `MACOS-BRINGUP.md` is not edited. The custodian's note is on `port-4-l2-smoke`'s summary, for the resume.
+3. **Rule (00) for P1 and P2,** re-checked at this commit: no piece in progress and no PR awaiting merge edits Part F or Part G. Milestone 4's PR A adds only its own Part, after Part AB; #241, #242 and #243 edit no walkthrough line; piece 1c's branch has not edited the file.
+4. **The scoped check:** the answers came after the gates, so both gates re-check only the added rows, at the head that carries them, against each option's clause check (the OPEN items' first paragraph). OPEN-4's clause is true only from #241's merge, so it shares F7's order (§2.3).
+5. **Next:** the words by a worker on `cut/walkthrough-row-f7-cli-refusal` at 8fbd04ccde1ba35e8dde225223d6d5f8d1ec0222; the scoped check; the PR stays in draft until the sitting (§2.3), where it is clicked first. This node's done commit stays held until after #241's click.
+
+Nothing above is edited.
+
+## Amendment 4 — the three yes answers built (class 1); written after the result was seen
+
+*Written by the custodian. References only: `state/consults/2026-10-22-walkthrough-row-f7-cli-refusal-open-words-worker-report.md`.*
+
+1. **The rows** are abc900f2b4706669bc4abbc35024b28a451a5e86 on `cut/walkthrough-row-f7-cli-refusal`, on 8fbd04ccde1ba35e8dde225223d6d5f8d1ec0222: OPEN-1 (b)'s F8 and intro line, OPEN-2 (b)'s two G7 spans and OPEN-4 (b)'s clause, each in the form's words, byte for byte. §4 items 1 to 3 hold at that head. §7 counts 13 lines in the one file (7 added, 6 removed), within 14: OPEN-4's old clause was two lines, so it counts 3 + 2.
+2. **Disclosed:** OPEN-4's words carry no code spans where the old clause had three (`renderer/bundle-viewer/dist`, `npm run build`, `renderer/bundle-viewer`), as the form gives them. The scoped check reads it.
+3. **Next:** both gates' scoped check of the added rows at abc900f2 (Amendment 3, item 4); the PR body names the head, the count and the words. The PR stays in draft until the sitting (§2.3).
+
+Nothing above is edited.
