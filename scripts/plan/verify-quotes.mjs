@@ -832,7 +832,7 @@ function checkHashRef(root, index, relPath, text, ref, topDirs) {
 }
 
 // --- Round + item cites (VERIFY-QUOTES-ROUND-ITEM-CITES-PREREGISTRATION.md §2.1 to §2.5). Constants declared at their site. ---
-// A `> ` blockquote line is not read.
+// A line whose first non-blank character is `>` is not read.
 const CITE_BLOCKQUOTE_LINE_RE = /^\s*>/;
 // Spans masked before reading: an inline backtick span, and a straight or curly double-quoted span on the same line.
 const CITE_SKIP_SPAN_RES = [/(`+)[^\n]*?\1/g, /"[^"\n]*"/g, /“[^”\n]*”/g];
