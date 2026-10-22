@@ -349,3 +349,23 @@ Opens empty, append-only.
 3. **Budget:** 180 minutes (§7), set in PLAN.yaml with this commit. **S1** follows on `cut/verify-quotes-round-item-cites`, cut from this commit (B). Rule (00) is re-checked when the redaction scan's Amendment 3 names its CI step's workflow file.
 
 Nothing above is edited.
+
+## §10 Amendment 2 — S1 built; S2: STOP on I4 (class 1); written after the result was seen
+
+*Written by the custodian. References only: `state/consults/2026-10-21-verify-quotes-round-item-cites-s1-worker-report.md`; `state/consults/2026-10-21-verify-quotes-round-item-cites-s2-worker-report.md`.*
+
+1. **S1** is 81a287a667d13cfd989331ddcd65357dc6915092: the 15 tests of §4, each of its 15 mutations observed failing alone at that commit; the suite from 527 to 542 (U6); 344 lines over 5 files (§7). It gives `resolveCitation` and `resolveInText` an optional third parameter, `readRoundFile`, through which `withdrawnRiders` binds the round-file reader (§2.6). §2.6 names `resolveCitation`'s signature unchanged. Every two-argument call is unchanged, and U4 holds (item 2). The gates rule on it.
+2. **S2,** at 85ac5d781508318f9177d31c9fe15d12eb365011 (S1 with main merged in at c86b2c9c): U1 to U5 hold. P1: 836 ruling cites resolved (floor 400). P2: 152 refused with MQ4, MQ5 and MQ13 applied together (floor 100). P3: U = 0 (ceiling 10). P4: 0 unresolved in each of the four forms it scanned.
+3. **I4 fired, by its letter.** One RULED header in the ruling set names its question round outside §2.3 (i)'s grammar. It is the block for question round 72, in the 2026-10-20 archive. It is headed by PR #217, and the round is named in a parenthesis at the end of its header. The block has no item lines; the round's tracked question file has one item. No file of the scan set cites round 72 by item (U = 0). Such a cite would fail by name; it would not pass. Every item-like line inside a round-headed block matches §2.3 (iii): 166 of 166.
+4. **S3 has not run.** The human rules how I4 is met, and the ruling is recorded in the next amendment before S3.
+
+Nothing above is edited.
+
+## §10 Amendment 3 — I4 met by the human's (A) (class 5)
+
+*Written by the custodian on the human's message. References only: `state/directives/2026-10-22-away-until-monday-241-r1-on-5400-f7-a-milestone-4-1c-code-o0-b-docs-lane-ruled-i4-a.md`.*
+
+1. **I4 (A):** question round 72's RULED header, in the 2026-10-20 archive, is recorded as the one unread block of the ruling set. A cite to round 72 by item is refused by name; a record cites that ruling by a hash pin instead.
+2. **S3 follows.** The header paragraph's disclosed gaps name that block. Then the PR and both gates.
+
+Nothing above is edited.

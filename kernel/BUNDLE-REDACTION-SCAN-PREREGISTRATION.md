@@ -827,3 +827,45 @@ file's bytes match the record's entry for that path.
   - Ordinary use reaches all of it: every publish carries the viewer.
 
 Nothing above is edited.
+
+## Amendment 4 — the code built; one ceiling overrun (class 8) (class 1); written after the result was seen
+
+*Written by the custodian. References only: `state/consults/2026-10-22-bundle-redaction-scan-not-in-product-publish-worker-report-1.md`.*
+
+1. **Built** at 979a7d5d27c13216318f468a40fc0203b43e8f9c, one commit on f88255437e64e8ba34e78e6c8273678f85718acf (main merged in; B′ c7d02156d042c25f14d84c841ac89268ea5cec78). `git diff --numstat B′...H` gives 828 insertions and 14 deletions over 22 files, the code files of Amendment 3 item 10's table. `kernel/README.md` and `engine/README.md` wait for the owner's-index update (§9).
+2. **Class 8:** `renderer/bundle-viewer/src/manifest.ts` changes 7 lines against item 10's ceiling of 3. W9 replaces three comment lines with four, so the ceiling could not be met. It is recorded here, and item 10 is not edited.
+3. **Next:** lead-data's owner's-index update, applied on the branch; then the PR, R1 and R2 at its head, and both gates.
+
+Nothing above is edited.
+
+## Amendment 5 — gate 1, the architect: FAIL; Amendment 3 item 2's hash form corrected (class 1); written after the report was seen
+
+*Written by the custodian. References only: `state/consults/gates/2026-10-22-bundle-redaction-scan-not-in-product-publish-gate1-architect.md` (gate-log 581).*
+
+1. **Gate 1, the architect, FAIL** at 6a10ee24e79ab17a3905c3de810844c41160f3ee: C1, C2 and C3, and D1. The reviewer's gate 1 runs at the same head, and the corrections are made in one round.
+2. **D1, the record's correction, in the architect's words** (not the human's): Amendment 3 item 2 compares `canonical::sha256_hex(bytes)`, which returns `sha256:` followed by the hex digest, with a record value item 1 fixes as 64 lowercase hex, so no entry `scan-dist.mjs` writes could match. `is_built_asset` compares the record's value with the bare hex digest of the staged bytes, and U1, T6 and T8 write their records in item 1's form. Proof: T8 with a record in `scan-dist.mjs`'s form, the form V3 asserts, and R1.
+
+Nothing above is edited.
+
+## Amendment 6 — gate 1, the reviewer: FAIL; R1 not run; correction round 1 (class 1); written after the reports were seen
+
+*Written by the custodian. References only: `state/consults/gates/2026-10-22-bundle-redaction-scan-not-in-product-publish-gate1-reviewer.md` (gate-log 582); `state/consults/2026-10-22-bundle-redaction-scan-not-in-product-publish-r1-tester-report-1.md`.*
+
+1. **Gate 1, the reviewer, FAIL** at 6a10ee24e79ab17a3905c3de810844c41160f3ee: the architect's C1 to C3 confirmed, C1 reproduced by a probe; E-1; D-1 to D-3.
+2. **R1 did not run** at that head: the dev server's port lies inside the machine's excluded TCP range, so the app could not launch. Freeing it is the human's. R1 and R2 run after the correction round, at its head.
+3. **Correction round 1,** one worker-high: C1 by the architect's remedy, with U1's added assert and T8's record written byte for byte as `scan-dist.mjs` writes it; C2 by the scratch mirror; C3 by the per-file walk; D-2's words. Then U1, T6, T8 and M8 to M10, M12 and M13 are re-observed at its commit. D-1 is the PR body's, and the custodian makes it. D-3, row F7, is the human's to place. The architect's scoped re-gate of C1 to C3 and the reviewer's scoped check follow.
+
+Nothing above is edited.
+
+## Amendment 7 — correction round 1 built; the scoped re-gate and check, both PASS WITH NOTES (class 1); written after both reports were seen
+
+*Written by the custodian. References only: `state/consults/2026-10-22-bundle-redaction-scan-not-in-product-publish-worker-report-2.md`; `state/consults/gates/2026-10-22-bundle-redaction-scan-not-in-product-publish-gate2-architect.md` (gate-log 583); `state/consults/gates/2026-10-22-bundle-redaction-scan-not-in-product-publish-gate2-reviewer.md` (gate-log 584).*
+
+1. **Correction round 1** is 95edf33be3640fd68dbed77f6d5055e6189506a1, one commit on 6a10ee24e79ab17a3905c3de810844c41160f3ee: C1, C2, C3 and D-2, as both gate 1 reports give them. The change stands at 888 lines against 1,222.
+2. **The scoped re-gate and the scoped check: both PASS WITH NOTES.** C1 to C3 are closed. The reviewer's probe, with the real built `NOTICE.txt` and the real record, gives `Success`; its control, with the `sha256:` form, is refused at byte 19092.
+3. **The findings held, in the reviewer's words (its D-A, not the human's):** §2.3's "Findings held" bound is kept by `walk`'s `first_only` arm in kernel/src/bundle/redaction.rs at 95edf33be3640fd68dbed77f6d5055e6189506a1. No test asserts it: `first_undeclared_findings` returns the same result with or without it, and the file's `mod tests` is on §2.4's byte-identical list.
+4. **The architect's D-A and D-B,** two comment lines, are applied on the branch by a worker, and the PR body lists them.
+5. **Report-2's M8 and M9 lines** for U1 are two below the head's; the reviewer's observation at the head stands.
+6. **Before the merge:** R1 and R2 at the final head, and the human's placement of walkthrough row F7. The dev port R1 needs is the human's to free; R2 is the human's publish through the native dialog.
+
+Nothing above is edited.

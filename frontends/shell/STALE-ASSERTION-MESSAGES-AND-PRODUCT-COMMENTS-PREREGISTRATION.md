@@ -373,3 +373,15 @@ Options:
 - (a) A new proposed docs-lane node for them.
 - (b) Fold them into this piece by class 9. That is three more files, about 25 lines, and two name changes.
 - **Recommended: (a).** This piece stays the node's four lines, and the name changes get their own list evidence.
+
+## Amendment 1 — the human's rulings on OPEN-1 to OPEN-3 (class 5, with class 9 for OPEN-2's yes)
+
+*Written by the custodian before any code. References only: `state/directives/2026-10-22-away-until-monday-241-r1-on-5400-f7-a-milestone-4-1c-code-o0-b-docs-lane-ruled-i4-a.md`; the architect's draft, `state/consults/2026-10-21-stale-assertion-messages-and-product-comments-architect-draft.md`.*
+
+1. **OPEN-1 (A):** the placement admits the two message strings, M1 and M2, into this piece only.
+2. **OPEN-2, yes (class 9):** §2.3's three re-aimed comment cites in `frontends/shell/e2e/regression.mjs` are in scope, under §7's ceilings for OPEN-2: 15 lines for that file, 39 in all.
+3. **OPEN-3 (a):** the same-class lines outside the four files become the proposed node `stale-lines-outside-the-four-files`.
+4. **The pins:** the draft's 116 line cites at 39182e74 were pinned by script at 39182e74e204dbac2f6212afe980f93f59e8f8a2 when the form was committed, and its four "as it stands" blocks were checked against that tree.
+5. **Next:** the code, by a worker, on its own branch. Rule (00) is re-checked at dispatch; B1's `frontends/shell/src/canvas/buildLayers.ts` is in milestone 4's draft too (§2.5).
+
+Nothing above is edited.
