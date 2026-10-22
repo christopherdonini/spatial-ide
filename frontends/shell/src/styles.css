@@ -329,6 +329,37 @@ body,
   font-family: ui-monospace, monospace;
 }
 
+/* Milestone 4 PR A: the inspected feature's projected values, one name and value per row; a long text wraps and never widens the tab. */
+.feature-attributes {
+  margin-top: 0.5rem;
+}
+
+.feature-attributes-list {
+  margin: 0.25rem 0;
+}
+
+.feature-attribute {
+  display: grid;
+  grid-template-columns: minmax(4rem, 8rem) 1fr;
+  gap: 0.5rem;
+}
+
+.feature-attribute-name {
+  opacity: 0.8;
+}
+
+.feature-attribute-value {
+  margin: 0;
+  font-family: ui-monospace, monospace;
+  overflow-wrap: anywhere;
+}
+
+.feature-attributes-not-held,
+.feature-attributes-none,
+.feature-attributes-unprojected {
+  opacity: 0.8;
+}
+
 .feature-pin[aria-pressed="true"] {
   font-weight: 600;
   box-shadow: inset 0 -2px 0 currentColor;
@@ -641,7 +672,8 @@ body,
 /* P4 item 3, rider-1 pattern: persistent, not dismissible -- same visual family as
    `.residency-status`, a status-bar item now (milestone 1). */
 .scan-incomplete,
-.selection-ended {
+.selection-ended,
+.attributes-not-held {
   padding: 0.1rem 0.5rem;
   background: var(--status-item-bg);
   color: var(--status-item-fg);

@@ -12,7 +12,11 @@ import { act } from "react";
 import { createRoot, Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
+import type { ProjectionSummary } from "../attributes/projection";
+import { ATTRIBUTE_NULL_MARKER, readRow } from "../attributes/values";
+import { decodeBatch } from "../canvas/decodeBatch";
 import { HOVER_BELOW_RESOLUTION_TEXT, HOVER_SESSION_ENDED_TEXT, idLine } from "../canvas/HoverReadoutView";
+import { attributeBatchIpc } from "../testUtils/attributeBatchIpc";
 import type { SelectionCounts, SelectionNotice } from "../workspace/selection";
 import type { InspectedFeature } from "../workspace/workspaceState";
 import { FeatureTab } from "./FeatureTab";
@@ -23,7 +27,8 @@ import type { FeatureTabProps, LastClick } from "./FeatureTab";
 const PICK_A = { streamHandle: "s1", batchSeq: 0, id: 42n, anchor: [1.5, 2.5] as [number, number] };
 const PICK_B = { streamHandle: "s1", batchSeq: 0, id: 77n, anchor: null };
 const BOUNDS = { xmin: 0, ymin: 0, xmax: 1, ymax: 1 };
-const INSPECTED_A: InspectedFeature = { pick: PICK_A, bounds: BOUNDS };
+const INSPECTED_A: InspectedFeature = { pick: PICK_A, bounds: BOUNDS, row: null };
+const NOTHING_PROJECTED: ProjectionSummary = { projected: [], notProjected: [], leftOut: 0 };
 const COUNTS_NONE: SelectionCounts = { selected: 0, outsideView: null, inViewNotDrawn: null, reason: null };
 const COUNTS_FIVE: SelectionCounts = { selected: 5, outsideView: 2, inViewNotDrawn: 1, reason: null };
 
@@ -51,6 +56,7 @@ describe("FeatureTab", () => {
       root.render(
         <FeatureTab
           inspected={null}
+          projection={NOTHING_PROJECTED}
           pinned={false}
           inspectedStatus={null}
           lastClick={null}
@@ -207,5 +213,33 @@ describe("FeatureTab", () => {
     );
     mount({ notice: { kind: "ended", reason: "reopened", dropped: 1 } });
     expect(q(".feature-notice")?.getAttribute("role")).toBe("status");
+  });
+
+  // RECORDED MUTATION for "PA-R1": in `attributesSection` skip the cells whose value is a NULL (`row.filter((cell) => cell.value.kind !== "null").map(...)`). Expected failure:
+  // the names lose "tag", the first column.
+  it("PA-R1: shows every projected column in declared order, the NULL marker, the not-projected line, and the not-held and no-column states", () => {
+    const columns = [
+      { name: "tag", kind: "utf8" as const, values: [null] },
+      { name: "n", kind: "int64" as const, values: [5n] },
+      { name: "f", kind: "float64" as const, values: [1.5] },
+    ];
+    const { ipc, encoding } = attributeBatchIpc([42n], columns);
+    const row = readRow(decodeBatch("sh_r", 0, ipc, "geometry", encoding, ["tag", "n", "f"]), 0);
+    const all = (selector: string) => [...container.querySelectorAll(selector)].map((e) => e.textContent);
+
+    mount({ inspected: { ...INSPECTED_A, row }, projection: { projected: ["tag", "n", "f"], notProjected: ["d32"], leftOut: 3 } });
+    expect(all(".feature-attribute-name")).toEqual(["tag", "n", "f"]);
+    expect(all(".feature-attribute-value")).toEqual([ATTRIBUTE_NULL_MARKER, "5", "1.5"]);
+    expect(text(".feature-attributes-unprojected")).toBe("[P6 placeholder] Not projected: d32. 3 projectable columns left out over the limit of 32.");
+
+    mount({ inspected: { ...INSPECTED_A, row: "not-held" } });
+    expect(text(".feature-attributes-not-held")).toContain("not held");
+    expect(q(".feature-attribute")).toBeNull();
+    expect(q(".feature-attributes-unprojected"), "nothing is left out").toBeNull();
+
+    mount({ inspected: INSPECTED_A });
+    expect(text(".feature-attributes-none")).toContain("No attribute column is projected");
+    mount({});
+    expect(q(".feature-attributes"), "nothing inspected, no Attributes section").toBeNull();
   });
 });

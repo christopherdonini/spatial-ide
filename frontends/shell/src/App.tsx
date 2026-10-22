@@ -9,7 +9,7 @@ import { Admitted } from "./admission/admitDataset";
 import DescribeSummary from "./admission/DescribeSummary";
 import { FormattedRefusal, formatRefusal } from "./admission/formatRefusal";
 import RefusalBlock from "./admission/RefusalBlock";
-import { projectionFor } from "./attributes/projection";
+import { projectionFor, projectionSummary } from "./attributes/projection";
 import type { AuthoritativeBbox } from "./canvas/viewportBbox";
 import WorkingCanvas, { WorkingCanvasHandle } from "./canvas/WorkingCanvas";
 import { latchedHoverReadout, type HoverReadout } from "./canvas/pick";
@@ -2371,6 +2371,7 @@ export default function App() {
             // them in this milestone (Amendment 2 item 9).
             facts={{ filterApplied: activeFilter !== null, viewComplete: scanState.kind === "complete" }}
             inspected={inspected}
+            projection={projectionSummary(admitted.describe)}
             pinned={pinned}
             lastClick={lastClick}
             notice={notice}

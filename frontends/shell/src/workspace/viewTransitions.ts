@@ -13,6 +13,7 @@
  * A view's phase B members are optional (see `ViewState`); the readers below give their section 7 defaults.
  */
 
+import type { AttributeRow } from "../attributes/values";
 import type { AuthoritativeBbox } from "../canvas/viewportBbox";
 import type { Filter } from "../skp/types";
 import type { StyleState } from "../style/document";
@@ -50,7 +51,7 @@ export type SelectionEndTransition = {
 };
 export type InspectSetTransition = {
   action: "inspect.set";
-  params: { pick: InspectedPick; bounds: AuthoritativeBbox } | null;
+  params: { pick: InspectedPick; bounds: AuthoritativeBbox; row: AttributeRow | "not-held" | null } | null;
 };
 /** Pinning needs something inspected: with nothing inspected, `pinned: true` leaves the view unpinned. */
 export type InspectPinTransition = { action: "inspect.pin"; params: { pinned: boolean } };
@@ -143,7 +144,7 @@ export function applyViewTransition(view: ViewState, transition: ViewTransition)
       if (params === null) {
         return viewInspected(view) === null && !viewPinned(view) ? view : { ...view, inspected: null, pinned: false };
       }
-      return { ...view, inspected: { pick: params.pick, bounds: params.bounds } };
+      return { ...view, inspected: { pick: params.pick, bounds: params.bounds, row: params.row } };
     }
     case "inspect.pin": {
       const pinned = transition.params.pinned && viewInspected(view) !== null;

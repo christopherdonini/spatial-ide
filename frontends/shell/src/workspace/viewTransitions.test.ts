@@ -68,7 +68,7 @@ describe("UA4: transitions are pure and typed, and a style edit is one transitio
       "selection.apply": { action: "selection.apply", params: { mode: "add", id: 1n, bounds: box(0, 0, 1, 1) } },
       "selection.clear": { action: "selection.clear", params: {} },
       "selection.end": { action: "selection.end", params: { reason: "reopened", dropped: 1 } },
-      "inspect.set": { action: "inspect.set", params: { pick: pickOf(1n), bounds: box(0, 0, 1, 1) } },
+      "inspect.set": { action: "inspect.set", params: { pick: pickOf(1n), bounds: box(0, 0, 1, 1), row: null } },
       "inspect.pin": { action: "inspect.pin", params: { pinned: true } },
     } satisfies { [A in ViewTransition["action"]]: Extract<ViewTransition, { action: A }> };
     expect(Object.keys(samples).sort()).toEqual([
@@ -123,8 +123,8 @@ describe("UB-TI2: inspection and its pin", () => {
   //   AssertionError: nothing to pin: expected true to be false // Object.is equality. Reverted after observing.
   it("stores the pick and its bounds, pins only a standing feature, and null clears and unpins", () => {
     const a = pickOf(7n);
-    const inspected = applyViewTransition(view, { action: "inspect.set", params: { pick: a, bounds: box(0, 0, 2, 2) } });
-    expect(viewInspected(inspected)).toEqual({ pick: a, bounds: box(0, 0, 2, 2) });
+    const inspected = applyViewTransition(view, { action: "inspect.set", params: { pick: a, bounds: box(0, 0, 2, 2), row: null } });
+    expect(viewInspected(inspected)).toEqual({ pick: a, bounds: box(0, 0, 2, 2), row: null });
     expect(viewPinned(applyViewTransition(view, { action: "inspect.pin", params: { pinned: true } })), "nothing to pin").toBe(false);
     const pinned = applyViewTransition(inspected, { action: "inspect.pin", params: { pinned: true } });
     expect(viewPinned(pinned)).toBe(true);

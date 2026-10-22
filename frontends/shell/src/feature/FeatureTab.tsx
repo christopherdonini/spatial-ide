@@ -6,6 +6,10 @@ import {
   HOVER_SESSION_ENDED_TEXT,
   idLine,
 } from "../canvas/HoverReadoutView";
+import { ATTRIBUTE_PROJECTION_MAX } from "../attributes/projection";
+import type { ProjectionSummary } from "../attributes/projection";
+import { displayValue } from "../attributes/values";
+import type { AttributeRow } from "../attributes/values";
 import { actionEntry } from "../layout/actionRegistry";
 import type { SelectionCounts, SelectionNotice } from "../workspace/selection";
 import type { InspectedFeature, InspectedPick } from "../workspace/workspaceState";
@@ -19,6 +23,9 @@ import type { InspectedFeature, InspectedPick } from "../workspace/workspaceStat
  * A pure view: it holds no state, makes no call and records nothing. Every value is App's, and so is every handler (the
  * class-C rows are written in App's handlers). **It never renders an element with the class `hover-readout`** (§8 item
  * 15): the readout stays over the map (Amendment 1 A8), and this tab is not a second one.
+ *
+ * **Attributes (milestone 4 PR A, section 2.2 (f)):** under the inspected feature, every projected column in declared order with its value or the NULL marker (ADR-023
+ * entry 79 item (2)), a line naming the columns that are not projected, and the not-held state named. The values are the inspected feature's own `row`, copied at the click.
  *
  * Labels: Feature, Pin, Zoom to selection and Clear selection are the human's (Amendment 1 A11), as are the words
  * `Selected, ignoring filter` (the plan's section 3 label; only that count is shown, A9). The two refusals' texts are
@@ -45,6 +52,39 @@ const STATUS_TEXT: Record<InspectedStatus, string> = {
   "outside-view": "[P6 placeholder] Not drawn: outside the view.",
   "in-view-not-drawn": "[P6 placeholder] Not drawn: in the view.",
 };
+
+const NO_COLUMN_PROJECTED_TEXT = "[P6 placeholder] No attribute column is projected for this dataset.";
+const NOT_HELD_TEXT = "[P6 placeholder] Attributes are not held for this feature: the resident attribute limit was reached.";
+
+/** The line naming what the open leaves out: the columns the kernel does not admit for projection, and the projectable ones over the cap. */
+function unprojectedLine(summary: ProjectionSummary): string | null {
+  const parts = [
+    summary.notProjected.length > 0 ? `Not projected: ${summary.notProjected.join(", ")}` : null,
+    summary.leftOut > 0 ? `${summary.leftOut} projectable ${summary.leftOut === 1 ? "column" : "columns"} left out over the limit of ${ATTRIBUTE_PROJECTION_MAX}` : null,
+  ].filter((part) => part !== null);
+  return parts.length === 0 ? null : `[P6 placeholder] ${parts.join(". ")}.`;
+}
+
+function attributesSection(row: AttributeRow | "not-held" | null, summary: ProjectionSummary): JSX.Element {
+  const unprojected = unprojectedLine(summary);
+  return (
+    <section className="feature-attributes" aria-label="[P6 placeholder] Attributes">
+      {row === "not-held" && <p className="feature-attributes-not-held">{NOT_HELD_TEXT}</p>}
+      {row === null && <p className="feature-attributes-none">{NO_COLUMN_PROJECTED_TEXT}</p>}
+      {row !== null && row !== "not-held" && (
+        <dl className="feature-attributes-list">
+          {row.map((cell) => (
+            <div className="feature-attribute" key={cell.name}>
+              <dt className="feature-attribute-name">{cell.name}</dt>
+              <dd className="feature-attribute-value">{displayValue(cell.value)}</dd>
+            </div>
+          ))}
+        </dl>
+      )}
+      {unprojected !== null && <p className="feature-attributes-unprojected">{unprojected}</p>}
+    </section>
+  );
+}
 
 function lastClickLine(click: LastClick): JSX.Element {
   switch (click.kind) {
@@ -77,6 +117,8 @@ export function noticeText(notice: SelectionNotice): string {
 
 export interface FeatureTabProps {
   inspected: InspectedFeature | null;
+  /** What the open projects and leaves out (`attributes/projection.ts`'s `projectionSummary`), fixed for the open. */
+  projection: ProjectionSummary;
   pinned: boolean;
   inspectedStatus: InspectedStatus | null;
   lastClick: LastClick | null;
@@ -89,6 +131,7 @@ export interface FeatureTabProps {
 
 export function FeatureTab({
   inspected,
+  projection,
   pinned,
   inspectedStatus,
   lastClick,
@@ -113,6 +156,7 @@ export function FeatureTab({
               Pin
             </button>
             {inspectedStatus !== null && <p className="feature-status">{STATUS_TEXT[inspectedStatus]}</p>}
+            {attributesSection(inspected.row, projection)}
           </>
         )}
         {lastClick !== null && lastClickLine(lastClick)}
