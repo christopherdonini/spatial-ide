@@ -878,3 +878,15 @@ Nothing above is edited.
 2. **Before the merge:** R2 at the final head, the human's, on Monday 2026-10-26; and the F7 piece clicked first (its form's §2.3).
 
 Nothing above is edited.
+
+## Amendment 9 — #244's gate 2 outside-scope finding on the dev remedies, by the human's ruling; (e) fixed before the merge (class 1); written after the reports were seen
+
+*Written by the custodian. References only: `state/consults/gates/2026-10-23-walkthrough-row-f7-cli-refusal-gate2-reviewer.md`, its section headed Outside this scope, item 2 (gate-log 594); the architect's reconciliation `state/consults/2026-10-23-walkthrough-row-f7-cli-refusal-gate2-words-reconciled-architect.md`, item 4 and its words (a) to (f); the human's ruling `state/directives/2026-10-23-clicks-245-246-247-sort-window-fix-before-port-2-covering-case-route-1-244-c1-milestone-4-and-1c-open-items-ruled.md`, its paragraph opening `#244, C1`; `state/directives/2026-10-05-product-first-direction.md`, section 2.*
+
+1. **The finding:** on Windows, tauri-utils' `resource_dir()` is the executable's directory, so a `tauri dev` run resolves the build-time copy and `packaged` is true. The comments the architect's item 4 lists as (a) to (f) read as untrue there, and the dev-remedy branches of `resolve_viewer_dir` and `read_build_record` are not reached in ordinary Windows use. No behaviour changes; macOS and Linux are unvalidated.
+2. **(e),** `read_build_record`'s doc comment, is this piece's own sentence: a documentation finding, fixed on `cut/bundle-redaction-scan` before the merge with the architect's (e) words and no re-gate (`state/directives/2026-10-05-product-first-direction.md`, section 2); the PR body lists it, and the reviewer's diff check and CI run at the new head. Its lines count toward §7's 45 outside `mod tests` and `resolver_tests` (Amendment 3, item 10); an overrun is class 8.
+3. **(a) to (d) and (f)** were on main before this piece and are not its text: they go to the proposed node `shell-resource-dir-dev-comments`, after this piece merges.
+4. **What the new head reopens** (Amendment 7 item 6, Amendment 8 item 2): R1, re-run at the new head by a tester under the port-5400 harness; R2's installer, taken from the new head's CI run; F7's §4 item 4, re-run at the new head (that form's §2.3).
+5. **Next:** the worker's commit, the reviewer's diff check and R1; then R2, the human's, on Monday 2026-10-26, after #244's click.
+
+Nothing above is edited.

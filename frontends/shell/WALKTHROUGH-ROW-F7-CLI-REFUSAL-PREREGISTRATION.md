@@ -398,3 +398,16 @@ Nothing above is edited.
 5. **Next:** the architect reconciles the two gates' words into one set for the human, within §7's 14 lines; the human answers on Monday 2026-10-26, before this PR's click. On a yes the rows are applied with no re-gate and the PR body lists them.
 
 Nothing above is edited.
+
+## Amendment 6 — the human's answers to C1 and D1 (class 1); written after the gates' reports were seen and before the words are applied
+
+*Written by the custodian. References only: the human's ruling `state/directives/2026-10-23-clicks-245-246-247-sort-window-fix-before-port-2-covering-case-route-1-244-c1-milestone-4-and-1c-open-items-ruled.md`, its paragraph opening `#244, C1`; `state/consults/gates/2026-10-23-walkthrough-row-f7-cli-refusal-gate2-reviewer.md`, C1 and D1; `state/consults/gates/2026-10-23-walkthrough-row-f7-cli-refusal-gate2-architect.md`, C1 and D2; the architect's reconciliation `state/consults/2026-10-23-walkthrough-row-f7-cli-refusal-gate2-words-reconciled-architect.md`, items 1 to 3.*
+
+1. **C1:** the reviewer's replacement parenthetical, by the human's ruling, in place of the architect's; OPEN-4 (b)'s condition and remedy stand.
+2. **D1:** yes, as Amendment 5 item 2 records D1: OPEN-4's clause carries code spans on `renderer/bundle-viewer/dist`, `viewer-asset-hashes.json`, `npm run build` and `renderer/bundle-viewer`, and G7's parenthetical marks `serve-bundle.mjs`.
+3. **The lines,** by script at abc900f2b4706669bc4abbc35024b28a451a5e86: OPEN-4's sentence wraps greedily at 100 columns from line 279's kept bytes to 4 lines of 91, 78, 95, 12 columns, as the reviewer's D1 counts them; G7 stays one line. §7: OPEN-4 is 4 added and 2 removed against B, and the total 14 of 14, at the ceiling, which the human accepted.
+4. **A4 and OPEN-4's premise:** §0's (A4) and OPEN-4's What happens are superseded on Windows by gate 2's C1 in both reports and the architect's D2, read at #241's 2fc01f5955a0dc21d51ee4cdffc3e5c55800959d. Only the parenthetical and the code spans change.
+5. **The reviewer's outside-scope item 2** (#241's dev remedies) goes to #241's record by the human's ruling: `kernel/BUNDLE-REDACTION-SCAN-PREREGISTRATION.md`, Amendment 9.
+6. **Next:** a worker applies the words on `cut/walkthrough-row-f7-cli-refusal` with no re-gate (Amendment 5, item 5), and the PR body lists them; §4 item 4 is re-run at #241's final head (§2.3); the click on Monday 2026-10-26.
+
+Nothing above is edited.

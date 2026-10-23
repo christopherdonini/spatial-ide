@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `cedfb0327adeaf4e367e4f88a1bc0c260a6cee704a41963df19160e44083a162`) at `2026-10-23T17:05:49.270Z`.
+Generated from `PLAN.yaml` (sha256 `6b64004ccb06d31bdd82f1c32261ba4a8fcd437963bc4284010c75bb4a5f7d01`) at `2026-10-23T17:17:46.754Z`.
 
 ## 1. Next
 
@@ -116,6 +116,7 @@ Generated from `PLAN.yaml` (sha256 `cedfb0327adeaf4e367e4f88a1bc0c260a6cee704a41
 - **shell-real-app-run-macos-linux** — Run the real app once on macOS and once on Linux after migration milestone 1 merges, and record what it finds (phase `prototype`) — never queued until placed
 - **pan-anchor-setcam-waits-for-its-own-reset** — e2e/pan-anchor.mjs: setCam waits for the view-state line its own reset produces, never a late line from the previous gesture (test only) (phase `prototype`) — never queued until placed
 - **verify-quotes-dotted-paths** — verify-quotes: the hash-reference path grammar cannot begin with a dot, so a pinned cite into .github/ can never be checked (phase `prototype`) — never queued until placed
+- **shell-resource-dir-dev-comments** — Shell comments on resource_dir under tauri dev read as untrue on Windows: bundled_viewer, resolve_viewer_dir (twice), commands.rs and two resolver tests say a dev run supplies no resource directory (phase `prototype`) — never queued until placed
 - **publish-dev-hook-attempt-from-effect** — The export panel's publishExecute dev hook reads the current attempt from a passive effect, so an execute sent as soon as the prepare answers can return unknown-attempt with no host call (the e2e export steps under load) (phase `prototype`) — never queued until placed
 - **lod-tiers-geographic-crs** — LOD tiers for a geographic CRS -- its own preregistered gate, owed by the LOD form's amendment (phase `prototype`) — never queued until placed
 - **residency-instrument-followups** — Residency instrument follow-ups -- entry 25's heap-footprint fold-in, the deferred 5 GB clean-instrument attribution trial, and the clean-instrument run of the attribution pass (phase `prototype`) — never queued until placed
