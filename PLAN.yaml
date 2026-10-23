@@ -3551,17 +3551,17 @@ nodes:
     kind: task
     lane: governance
     phase: prototype
-    status: ready
+    status: in-progress
     order: null
     depends_on: [verify-quotes-round-item-cites]
     needs_human: {kind: none, minutes: 0}
-    gate: none
-    evidence: null
-    budget_minutes: 30
-    generation: 2
+    gate: scripts/hooks/QUESTIONS-MIRROR-ITEM-COUNT-PREREGISTRATION.md
+    evidence: {branch: cut/questions-mirror-item-count}
+    budget_minutes: 90
+    generation: 3
     felt_verdict: false
     entries: []
-    summary: "PLACED 2026-10-21 (state/directives/2026-10-21-placements-redaction-scan-1c-milestone-4-lanes-238-clicked-d-answers-adr-024-heading-kept.md, item 5): the governance lane after D, 2 of 3, after verify-quotes-round-item-cites. Before: Routed by round-mirror-pretooluse-hook's drafting consult (state/consults/2026-10-02-round-mirror-hook-architect-draft.md, item (c), first bullet): countItems and buildSummary count the --- rules plus one, so a round file with a header rule reads one item high; round 33's eleven items would be summarized as twelve. Not fixed in that piece, whose invalidator I2 keeps mirrorRound and buildSummary unchanged. Also, per Fable round-52 advice item 1 (state/directives/2026-10-04-fable-advice-round-52.md), confirmed by the custodian: the round file header miscounts red-line items, since state/questions/round-52.md reads RED LINE items: none while its items 1 and 3 were red-line items offered as holds only; the same piece should derive that header count from the items."
+    summary: "IN PROGRESS 2026-10-23: FORM COMMITTED (scripts/hooks/QUESTIONS-MIRROR-ITEM-COUNT-PREREGISTRATION.md; the architect's drafting consult state/consults/2026-10-23-questions-mirror-item-count-architect-draft.md, with the custodian's Amendment 1; 19 pins by script): the full form under section 21a (a property under test); countItems counts the numbered items in sequence, the red-line header reads a marker after one leading label, the summary's n = 0 and n = 1 grammar; T14, T15 and M15 to M21; I1 and I2 over the committed round files; 120 lines over two files; budget 90. Branch cut/questions-mirror-item-count from this commit. NEXT: the code by a worker; then the PR and both gates. Before: PLACED 2026-10-21 (state/directives/2026-10-21-placements-redaction-scan-1c-milestone-4-lanes-238-clicked-d-answers-adr-024-heading-kept.md, item 5): the governance lane after D, 2 of 3, after verify-quotes-round-item-cites. Before: Routed by round-mirror-pretooluse-hook's drafting consult (state/consults/2026-10-02-round-mirror-hook-architect-draft.md, item (c), first bullet): countItems and buildSummary count the --- rules plus one, so a round file with a header rule reads one item high; round 33's eleven items would be summarized as twelve. Not fixed in that piece, whose invalidator I2 keeps mirrorRound and buildSummary unchanged. Also, per Fable round-52 advice item 1 (state/directives/2026-10-04-fable-advice-round-52.md), confirmed by the custodian: the round file header miscounts red-line items, since state/questions/round-52.md reads RED LINE items: none while its items 1 and 3 were red-line items offered as holds only; the same piece should derive that header count from the items."
     dates: {opened: 2026-10-02, done: null}
   - id: template-round15e-exception-pointer
     title: "docs/PREREGISTRATION-TEMPLATE.md gains one appended sentence pointing at round 34 item 4's narrow exception to round 15 (e), as AUTONOMY.md section 27 records it"

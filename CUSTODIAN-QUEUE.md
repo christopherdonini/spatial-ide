@@ -1,14 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `a09a191a13706aa7ac4143c3d25c375cd70e2bdde5e91294ef5f51117d3d112e`) at `2026-10-23T08:20:47.769Z`.
+Generated from `PLAN.yaml` (sha256 `bb5909af284d0b9efb8b047074e3b8924a192ffeda1d584080142634c22d4683`) at `2026-10-23T08:30:08.501Z`.
 
 ## 1. Next
 
-- **questions-mirror-item-count** — questions-mirror.mjs's countItems counts one item high on a round file with a header rule, so a document send's summary names one item too many (lane `governance`)
+- (nothing ready)
 
 ## 2. Ready
 
-- **questions-mirror-item-count** — questions-mirror.mjs's countItems counts one item high on a round file with a header rule, so a document send's summary names one item too many (lane `governance`, order null, budget 30 min)
+- (none)
 
 ## 3. Waiting on the human (total: 0 min)
 
@@ -36,6 +36,7 @@ Generated from `PLAN.yaml` (sha256 `a09a191a13706aa7ac4143c3d25c375cd70e2bdde5e9
 - **bundle-redaction-scan-not-in-product-publish** — The bundle redaction scan runs only in a test: no product publish scans its emitted files, though ADR-017's section 13 (Accepted) says a scan over every emitted file asserts no path, user name, machine identifier or credential is in a bundle — evidence: branch `cut/bundle-redaction-scan`
 - **b1-shell-half** — Shell migration, milestone 4 -- B1 shell half: attributes of the inspected feature, colour by category with its legend, and the table — evidence: branch `cut/b1-shell-half-pr-a`
 - **walkthrough-row-f7-cli-refusal** — MANUAL-WALKTHROUGH.md row F7: a publish-bundle CLI publish with the real built viewer is refused under the redaction scan (its W12), so F7 points at Part G's rows, with the CLI refusal line — evidence: branch `cut/walkthrough-row-f7-cli-refusal`
+- **questions-mirror-item-count** — questions-mirror.mjs's countItems counts one item high on a round file with a header rule, so a document send's summary names one item too many — evidence: branch `cut/questions-mirror-item-count`
 
 ## 6. Proposed / unscheduled
 
