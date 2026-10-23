@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `79a0f261d195f136b03384ec42a5d82862b8f373d67ba93dff8faf1c6facc088`) at `2026-10-23T09:05:04.124Z`.
+Generated from `PLAN.yaml` (sha256 `c6b09fb6ecc490dccb5274bb944bfea6593cbac031df8fbe937bc10fe89c9d2b`) at `2026-10-23T09:13:24.105Z`.
 
 ## 1. Next
 
@@ -125,6 +125,7 @@ Generated from `PLAN.yaml` (sha256 `79a0f261d195f136b03384ec42a5d82862b8f373d67b
 - **verify-cites-out-of-range-line-count** — verify-cites' out-of-range reason states a line count one too high for a file that ends in a newline (phase `prototype`) — never queued until placed
 - **verify-cites-reversed-range** — verify-cites checks a reversed range (end below start) by its larger end only (phase `prototype`) — never queued until placed
 - **engine-column-name-case-siblings** — Column names that differ only by letter case beyond the covering: the geometry column matched by byte equality while DuckDB binds identifiers case-insensitively, and the identity, projected and filter columns (phase `prototype`) — never queued until placed
+- **macos-normalization-roots-uncanonicalized** — On macOS the audit log normalization roots are read uncanonicalized while recorded destinations are canonicalized, so a symlinked temporary-directory root never matches (phase `prototype`) — never queued until placed
 
 ### Unscheduled
 
