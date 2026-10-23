@@ -13,8 +13,9 @@ name: Product CI — Rust workspace
 #
 # It means, per matrix entry: the workspace compiles on that entry's runner and its ordinary test
 # suite passes. The Windows entry is the reference profile. The ubuntu-24.04 entry is Linux L1 for
-# the Cargo workspace only, as PORT-1-LINUX-L1-PREREGISTRATION.md defines it, and every run of either
-# entry prints the tests it ignores in its own step.
+# the Cargo workspace only, as PORT-1-LINUX-L1-PREREGISTRATION.md defines it. The macos-latest entry
+# is macOS L1 for the Cargo workspace only, as PORT-2-MACOS-L1-AND-APP-DIRS-PREREGISTRATION.md
+# defines it. Every run of any entry prints the tests it ignores in its own step.
 #
 # It does **not** mean any of the following, and must never be cited for them:
 #
@@ -24,27 +25,33 @@ name: Product CI — Rust workspace
 #     that drifts between and within sessions, which the bake-off README §21/§22 records as
 #     asymmetric and uncancellable by ratio. A number taken here would not be a smaller number, it
 #     would not be a measurement. Nothing in this workflow may fill a results table.
-#   - **Nothing about macOS, and nothing about Linux beyond L1 for the workspace.** Not the Tauri
-#     shell or any excluded crate, not L2 or L3, and no other distribution or architecture. The
-#     file watcher's own test targets are compiled out off Windows and do not run on Linux.
+#   - **Nothing about Linux or macOS beyond L1 for the workspace.** Not the Tauri shell or any
+#     excluded crate, not L2 or L3, no other distribution or architecture, no Intel Mac, and no
+#     macOS version that has not run here. The file watcher's own test targets are compiled out off
+#     Windows and do not run on Linux or macOS.
 #   - **Nothing about the ADR-003 hardware-validation gate** (`docs/07`), which is about native
 #     WebView integration, frame pacing, GPU behaviour and picking latency on real hardware. No
 #     amount of green here advances it.
 #
 # ## Runner choice
 #
-# **Two matrix entries.** `windows-latest` is the reference profile in `CLAUDE.md` (Windows 10 /
+# **Three matrix entries.** `windows-latest` is the reference profile in `CLAUDE.md` (Windows 10 /
 # MSVC / WebView2), and every claim this repository makes is scoped to it. `ubuntu-24.04` is pinned
 # to a version, not to `ubuntu-latest`: that pins the OS release only, and the image's contents can
-# still change from run to run. A profile step reports the OS release and architecture on each run.
+# still change from run to run. `macos-latest` is not pinned: the label pins nothing, so it names
+# whichever image GitHub maps it to when the run starts, and a claim for macOS covers only the
+# versions that have run here. A profile step reports the OS release and architecture on each Linux
+# and macOS run.
 # The Linux entry catches only the path-separator and case-sensitivity assumptions the suite
 # exercises; `publish/mod.rs`'s `replace('\\', "/")` and
 # `viewer_assets.rs`'s backslash rejection are places where such assumptions have surface. The
 # Windows check keeps its name, since a rename would orphan anything that watches it.
 #
-# The Linux entry's ignores that Windows does not have are each named by a reason that cites its
-# owning boundary, and the list step prints them. What is and is not claimed for Linux lives in
-# `KNOWN-LIMITATIONS.md` item 1, and its premise is PORT-1-LINUX-L1-PREREGISTRATION.md.
+# The Linux and macOS entries' ignores that Windows does not have are each named by a reason that
+# cites its owning boundary, and the list step prints them. What is and is not claimed for them
+# lives in `KNOWN-LIMITATIONS.md` item 1. Linux's premise is PORT-1-LINUX-L1-PREREGISTRATION.md, and
+# macOS's is PORT-2-MACOS-L1-AND-APP-DIRS-PREREGISTRATION.md, which also rules that the entry
+# installs nothing beyond the toolchain action the other entries use.
 #
 # The notes below were written before the Linux entry existed and are kept as they were: a lifted
 # caveat whose evidence has been erased cannot be checked.

@@ -98,6 +98,7 @@ pub const ARROW_CRATE_VERSION_REQUIREMENT: &str = "58";
 /// The one classifying function for a column name that does not round-trip through this engine's
 /// own admission — `engine/B1-PROJECTION-PREREGISTRATION.md` §10 Amendment 12, 12.1(c).
 pub(crate) mod addressability;
+pub mod app_dirs;
 pub mod attributes;
 pub mod cancel;
 pub mod crs;

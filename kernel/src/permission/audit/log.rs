@@ -5,8 +5,11 @@
 //!
 //! ## Location, and why it is not beside the bundle
 //!
-//! Default `<data-dir>/spatial-ide/audit/publish.jsonl` — `%LOCALAPPDATA%` on Windows,
-//! `$XDG_DATA_HOME` else `$HOME/.local/share` elsewhere. `SPATIAL_IDE_AUDIT_LOG` overrides it with
+//! Default `<data-dir>/spatial-ide/audit/publish.jsonl`, where `<data-dir>` is the application-directory
+//! boundary's per-user data directory (`spatial_engine::app_dirs::user_data_dir`): `%LOCALAPPDATA%` on
+//! Windows, `$HOME/Library/Application Support` on macOS, `$XDG_DATA_HOME` else `$HOME/.local/share` on
+//! other Unix, each used only when it is an absolute path.
+//! `SPATIAL_IDE_AUDIT_LOG` overrides it with
 //! an absolute path, and **there is deliberately no value that turns it off**: an unauditable
 //! class-3 operation does not run, and a switch to disable the log would be a switch to disable the
 //! gate.
@@ -362,22 +365,15 @@ pub fn resolve_log_path() -> Result<PathBuf, AuditError> {
     Ok(base.join("spatial-ide").join("audit").join("publish.jsonl"))
 }
 
-/// The per-user data directory, from the environment.
+/// The per-user data directory, from the application-directory boundary.
 ///
-/// No `dirs` crate — which would be a new dependency, and is in fact one of the MPL-2.0 spike-tree
-/// packages Step 0 had to make a decision about. The three variables below are the ones that crate
-/// would read on the two reference platforms.
+/// The platform rule lives in `spatial_engine::app_dirs` and nowhere here: `%LOCALAPPDATA%` on
+/// Windows, `$HOME/Library/Application Support` on macOS, and `$XDG_DATA_HOME` else
+/// `$HOME/.local/share` on other Unix, each used only when it is an absolute path. `None` when the
+/// platform's variable is unset, empty or relative, so a log never lands relative to the working
+/// directory. The session store reaches the same directory through this function.
 pub(crate) fn data_dir() -> Option<PathBuf> {
-    #[cfg(windows)]
-    {
-        std::env::var_os("LOCALAPPDATA").map(PathBuf::from)
-    }
-    #[cfg(not(windows))]
-    {
-        std::env::var_os("XDG_DATA_HOME")
-            .map(PathBuf::from)
-            .or_else(|| std::env::var_os("HOME").map(|h| PathBuf::from(h).join(".local/share")))
-    }
+    spatial_engine::app_dirs::user_data_dir()
 }
 
 /// Whether `path` is `root` or lies beneath it.

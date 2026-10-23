@@ -141,7 +141,7 @@ fn write_source(path: &Path) {
 #[test]
 #[cfg_attr(
     not(windows),
-    ignore = "boundary: application directories (engine/src/lod.rs); deferred by engine/LOD-PREREGISTRATION.md Amendment 8(a)"
+    ignore = "boundary: application directories and free space (engine/src/app_dirs.rs, engine/src/lod.rs); deferred by engine/LOD-PREREGISTRATION.md Amendment 8(a)"
 )]
 fn the_preflight_refuses_before_the_first_tier_is_written() {
     let dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"))

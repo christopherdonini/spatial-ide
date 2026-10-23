@@ -139,14 +139,14 @@ pub const LOD_TIER_MAX_RELATIVE_BYTES: f64 = 1.0;
 pub const LOD_TIER_SET_HARD_BOUND_RELATIVE_BYTES: f64 =
     LOD_TIER_COUNT as f64 * LOD_TIER_MAX_RELATIVE_BYTES;
 
-/// The app-local cache subdirectory tiers live in, under `%LOCALAPPDATA%`
-/// (`LOD-PREREGISTRATION.md` §10 Amendment 1: "the sidecar directory lives in the app-local cache
-/// (%LOCALAPPDATA%\\spatial-ide\\tiers\\<content-hash>\\), never beside the source file without the
-/// user's word").
+/// The app-local cache subdirectory tiers live in, below the tier cache root that
+/// [`crate::app_dirs`] decides (`LOD-PREREGISTRATION.md` §10 Amendment 1 rules the location: app-local
+/// and never beside the source file without the user's word). On Windows the root is
+/// `%LOCALAPPDATA%`; no other platform declares one yet (Amendment 8 (a)).
 ///
 /// **Resolved from the environment once, never discovered from the source's location.** A source may
 /// sit on read-only or shared storage, and writing next to it is a side effect the user did not ask
-/// for — which is why a missing `LOCALAPPDATA` is a typed refusal
+/// for — which is why a root that cannot be resolved is a typed refusal
 /// ([`LOD_TIER_ROOT_UNRESOLVED`]) and never a fallback beside the source.
 pub const LOD_TIER_ROOT: &str = "spatial-ide/tiers";
 
@@ -199,7 +199,8 @@ pub const LOD_TIER_LARGER_THAN_SOURCE: &str = "engine.lod_tier_larger_than_sourc
 /// than writing three tiers' worth of bytes on an assumption.
 pub const LOD_INSUFFICIENT_DISK: &str = "engine.lod_insufficient_disk";
 
-/// `%LOCALAPPDATA%` is not set, so [`LOD_TIER_ROOT`] cannot be resolved.
+/// The tier cache root cannot be resolved, so [`LOD_TIER_ROOT`] has nothing to sit under:
+/// [`crate::app_dirs`] decides the root, and the refusal's detail carries its reason.
 ///
 /// **Not one of §7's four declared refusal identifiers.** §7 declares the four above; this is the
 /// typed form Amendment 1's tier-location ruling requires — "never beside the source file without
@@ -1159,24 +1160,24 @@ pub fn build_tiers(
 // The sidecar directory and its manifest.
 // ---------------------------------------------------------------------------------------------
 
-/// `%LOCALAPPDATA%\spatial-ide\tiers\<source-content-hash>\` (Amendment 1).
+/// `<tier cache root>\spatial-ide\tiers\<source-content-hash>\` (Amendment 1), where
+/// [`crate::app_dirs::tier_cache_dir`] decides the root.
 ///
-/// **The variable is read from the environment and nothing is substituted for it.** No new crate is
-/// taken for this; Windows is the reference platform (`CLAUDE.md`), and a platform whose app-local
-/// cache is somewhere else needs its own declared value rather than a guess made here.
+/// **The root is decided by the application-directory boundary and nothing is substituted for it.**
+/// No new crate is taken for this; a platform whose app-local cache is somewhere else needs its own
+/// declared value in that boundary rather than a guess made here. This function holds no cfg.
 fn tier_directory(source_content_hash: &str) -> Result<PathBuf> {
-    let root = std::env::var_os("LOCALAPPDATA").ok_or_else(|| {
+    let root = crate::app_dirs::tier_cache_dir().map_err(|reason| {
         refusal(
             LOD_TIER_ROOT_UNRESOLVED,
-            "LOCALAPPDATA is not set, so the declared tier root cannot be resolved. A tier is \
-             never written beside its source instead: a source may sit on read-only or shared \
-             storage, and writing next to it is a side effect the user did not ask for"
-                .to_string(),
+            format!(
+                "{reason}, so the declared tier root cannot be resolved. A tier is \
+                 never written beside its source instead: a source may sit on read-only or shared \
+                 storage, and writing next to it is a side effect the user did not ask for"
+            ),
         )
     })?;
-    Ok(PathBuf::from(root)
-        .join(LOD_TIER_ROOT)
-        .join(source_content_hash))
+    Ok(root.join(LOD_TIER_ROOT).join(source_content_hash))
 }
 
 fn read_manifest(path: &Path) -> HashMap<u8, TierRecord> {
