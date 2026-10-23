@@ -197,3 +197,13 @@ Nothing above is edited.
 5. **Next:** the PR (draft) and both gates (§9).
 
 Nothing above is edited.
+
+## §10 Amendment 3 — gate 1: two claims superseded by the header's corrected sentences (class 1); written after the gate results were seen
+
+*Written by the custodian on main after gate 1's results were seen. References only: the gate 1 reports `state/consults/gates/2026-10-23-verify-cites-pin-resolution-and-line-zero-gate1-architect.md` (C1, D1) and `state/consults/gates/2026-10-23-verify-cites-pin-resolution-and-line-zero-gate1-reviewer.md` (C-1, C-2, C-3, probes P1 to P4); the reconciled words `state/consults/2026-10-23-verify-cites-pin-resolution-and-line-zero-gate1-words-reconciled-architect.md`, entries 1 and 2; the worker's commit 1b529f497153519c139f34e8029ccdc752f9fdd0 on `cut/verify-cites-pin-resolution-and-line-zero`.*
+
+1. **§1's first may-not-claim bullet, its second sentence, and §2.3's second bullet** are untrue: a cite whose file is gone from the tree can pass at its pin at another file the tree now matches (the reviewer's P1 and P2). They are superseded by the reconciled words' entry 2, which the header carries from 1b529f497153519c139f34e8029ccdc752f9fdd0.
+2. **§1's first may-claim** is read with §2.1's conditions: a line-0 cite with no match, or pinned at a commit not found, keeps that reason, and a loose one with no match is skipped (the reviewer's P3 and P4); the reconciled words' entry 1 is the header's statement of it.
+3. **Superseded index:** §1, may not claim, bullet 1, sentence 2 → item 1; §2.3, bullet 2 → item 1; §1, may claim 1 → read with item 2, not replaced.
+
+Nothing above is edited.
