@@ -451,3 +451,15 @@ Nothing above is edited.
 4. **Next:** the worker-high's build; then, after the two merges, main merged into the branch, E1 to E3, the PR and both gates.
 
 Nothing above is edited.
+
+## §10 Amendment 5 — the build: §7 overrun (class 8); P4's whole list (class 2); two corrections and one open comment (class 1); written after the results were seen
+
+*Written by the custodian after the build's results were seen, before E1 and the gates. References only: the worker-high's report `state/consults/2026-10-23-port-2-macos-l1-and-app-dirs-build-worker-report.md`; the commits 6c21888e1be1dd723219e160c66c672fdb44967c and 83d2ecef8dba33017e47310d7fab8e2be5ee5123.*
+
+1. **§7 (class 8):** 939 changed lines over 15 files by §7's command over 1f7d06b5...83d2ecef, against 850 over 16; the new files run past their estimates (`app_dirs.rs`, E-K and E-L). §7 is not edited, and nothing is trimmed.
+2. **P4 (class 2):** the ignored entries are byte-identical at the base and the head (57 and 57); the whole sorted output differs by three lines, each `0 tests, 0 benchmarks`, for the three new binaries, which hold no ignored test. §5 is not edited; the gates read it.
+3. **As predicted:** A1 to A3, E-K, E-L, K1 and T1 pass on Windows, and each fails under its own mutation, M1 to M7, observed on Windows (K1's macOS observation is E3's); the check prints 19 sites in 7 files, 0 outside; I9 holds at the base. CI's macOS entry fails on the sort-window test alone at both pushes (Amendment 4 item 3), and that binary stops the run.
+4. **Class 1:** the worker-high corrected the prepared change twice: a workflow-comment sentence the form does not give removed, and an unused import moved into the tests module. W3's words name a case not covered, for item 43's source comment, and no text for it is given: the architect's gate reads it.
+5. **Next:** the sort-window fix and 1c step 1 merge; main merged into this branch (I11); E1 to E3 at the merged head; the PR and both gates.
+
+Nothing above is edited.
