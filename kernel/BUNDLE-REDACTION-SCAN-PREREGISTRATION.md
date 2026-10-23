@@ -890,3 +890,12 @@ Nothing above is edited.
 5. **Next:** the worker's commit, the reviewer's diff check and R1; then R2, the human's, on Monday 2026-10-26, after #244's click.
 
 Nothing above is edited.
+
+## Amendment 10 — (e) applied at the new head (class 1); written after the result was seen
+
+*Written by the custodian. References only: `state/consults/2026-10-23-bundle-redaction-scan-not-in-product-publish-e-words-worker-report.md`; the head 147ef82c7d14b537b5c3fc51673090c9b082a1f5.*
+
+1. **(e) applied at 147ef82c7d14b537b5c3fc51673090c9b082a1f5,** one commit on 2fc01f5955a0dc21d51ee4cdffc3e5c55800959d: `read_build_record`'s doc comment in the architect's words, its paragraph re-wrapped greedily at 100 columns to five lines (its old third line was 103 columns), so 5 added and 3 removed; `publish.rs` at 44 of §7's 45 outside `mod tests` and `resolver_tests`; `cargo fmt --check` and `cargo check` exit 0.
+2. **Next, at this head:** the reviewer's scoped check (the diff, (e)'s clause check, the count, CI, and F7's §4 item 4 for that form's record); R1 by a tester under the port-5400 harness; R2's installer from this head's CI run; R2 on Monday 2026-10-26, after #244's click.
+
+Nothing above is edited.
