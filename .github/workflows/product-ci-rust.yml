@@ -237,7 +237,7 @@ jobs:
       # folding it into the workspace would let a dependency bump silently change a measured
       # artifact.
       - name: Run the ordinary suite
-        run: cargo test --workspace --locked
+        run: cargo test --workspace --locked ${{ runner.os == 'macOS' && '--no-fail-fast' || '' }}
 
       # PORTABILITY R6: each run prints the tests it does not run, so a skip is visible rather than
       # absent. Runs after a successful build even when the suite step failed.
