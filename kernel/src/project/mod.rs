@@ -8,10 +8,14 @@
 //!   would not write.
 //! - [`file`]: the project file, `project.spatial`: its writer, which lays the document out through
 //!   `spatial_renderer::canonical` (ADR-022 decision 3), and its reader.
+//! - [`store`]: the identity, the machine store's paths, `folders.json`, and the atomic replace of
+//!   `project.spatial`.
 //!
-//! Nothing here opens a dataset, holds a handle or touches a project folder.
+//! Nothing here opens a dataset or holds a handle. Only [`store`] touches a project folder, and it
+//! writes one file there.
 
 pub mod file;
+pub mod store;
 pub mod strict_json;
 
 use std::fmt;
@@ -64,5 +68,13 @@ impl FromStr for ProjectUri {
         } else {
             Err(NotAProjectUri)
         }
+    }
+}
+
+impl ProjectUri {
+    /// From 16 random bytes: the store mints them from the operating system's CSPRNG.
+    pub(crate) fn from_bytes(bytes: [u8; PROJECT_HEX_LEN / 2]) -> Self {
+        let hex: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
+        ProjectUri(format!("{PROJECT_URI_PREFIX}{hex}"))
     }
 }
