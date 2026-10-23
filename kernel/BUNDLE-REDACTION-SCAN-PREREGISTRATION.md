@@ -899,3 +899,13 @@ Nothing above is edited.
 2. **Next, at this head:** the reviewer's scoped check (the diff, (e)'s clause check, the count, CI, and F7's §4 item 4 for that form's record); R1 by a tester under the port-5400 harness; R2's installer from this head's CI run; R2 on Monday 2026-10-26, after #244's click.
 
 Nothing above is edited.
+
+## Amendment 11 — R1 at 147ef82c stopped on FILTERED' in a shared run; the scoped check PASS WITH NOTES, the branch conflicting with main (class 1); written after both results were seen
+
+*Written by the custodian. References only: `state/consults/2026-10-23-bundle-redaction-scan-not-in-product-publish-r1-tester-report-3.md`; `state/consults/gates/2026-10-23-bundle-redaction-scan-not-in-product-publish-e-scoped-reviewer.md` (gate-log 603).*
+
+1. **R1 at 147ef82c7d14b537b5c3fc51673090c9b082a1f5:** APPROVED' and REFUSED' as Amendment 8 item 1 predicts, every `viewer/` file equal to the build record's entry; the suite exited 1 on FILTERED', whose prompt carried no `filter_scope` sentence after a filter was applied. That step passed at 2fc01f59, and the head changes a doc comment only. A timing-sensitive failure in a shared run is not recorded as a failure (the machine rule): the custodian re-runs the suite alone. The custodian's reading, not a finding: the suite's prepare hook may still hold the filter state from before the filter applied, as React re-registers it after the change.
+2. **The scoped check of (e): PASS WITH NOTES.** The diff, (e)'s clause check, §7's 44 of 45 and F7's §4 item 4 hold at this head. Its E-1: the branch conflicts with main in `KNOWN-LIMITATIONS.md` (item 47 here, items 51 and 52 on main, at the same place), so the pull_request workflows did not run at this head and the PR cannot merge as it stands. Its N-1 and N-2 are recorded here by reference, not in the comment.
+3. **Next, in this order:** main merged into the branch with a merge commit, the conflict resolved by keeping both sides in item order; at the merge head, R1 re-run alone on the machine by the custodian; R2's installer from that head's pull_request CI run; F7's §4 item 4 at that head; R2, the human's, on Monday 2026-10-26, after #244's click.
+
+Nothing above is edited.

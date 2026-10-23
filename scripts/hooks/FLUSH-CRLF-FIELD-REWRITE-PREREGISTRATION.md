@@ -171,3 +171,12 @@ Nothing above is edited.
 5. **Next:** correction round 1, one commit by a worker on the branch; then the scoped re-gate, the architect on E1 and C1's lines, the reviewer on the new lines and their run.
 
 Nothing above is edited.
+
+## §10 Amendment 4 — correction round 1 applied (class 1); written after the result was seen
+
+*Written by the custodian. References only: `state/consults/2026-10-23-flush-crlf-field-rewrite-correction-1-worker-report.md`; the head 9beca99e3c99862d86684fee2c6bd18cce89e92c.*
+
+1. **Applied at 9beca99e3c99862d86684fee2c6bd18cce89e92c,** one commit on 197d81ea: C1, the contract bullet in the architect's words (+2 −2), and E1 fix (i), T2's five lines (+5); both taken from the architect's gate 1 report by script. T2 and the file pass, 20 of 20; the rotate-cut-state suite 9 of 9; the scripts suite 553 of 553. §7 at 5 and 46, 51 of 68.
+2. **Next:** the scoped re-gate (Amendment 3 item 5), both gates, running at this head.
+
+Nothing above is edited.
