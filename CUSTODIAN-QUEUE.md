@@ -1,14 +1,15 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `d1bb76610ee5a48aa72ed96008c70e123fd8a894e5f364668e0a64e99e37d470`) at `2026-10-23T14:13:11.477Z`.
+Generated from `PLAN.yaml` (sha256 `b8382017668ec73b8d3be8f2a8c0b2c83d1dd7d09f41467be1381c64ca859894`) at `2026-10-23T16:22:26.763Z`.
 
 ## 1. Next
 
-- (nothing ready)
+- **publish-sort-window-cancel-not-exercised-on-ci** — kernel/tests/publish_cancellation.rs: a_cancel_inside_the_sort_is_observed_rather_than_waited_out reddened on the Windows CI runner because QueryRunning never fired (the sort ended inside one poll interval) (lane `kernel-protocol`)
 
 ## 2. Ready
 
-- (none)
+- **publish-sort-window-cancel-not-exercised-on-ci** — kernel/tests/publish_cancellation.rs: a_cancel_inside_the_sort_is_observed_rather_than_waited_out reddened on the Windows CI runner because QueryRunning never fired (the sort ended inside one poll interval) (lane `kernel-protocol`, order null, budget 60 min)
+- **flush-crlf-field-rewrite** — flush.mjs splits the ledger on LF and rewrites a field line without its CR, so a CRLF working-tree ledger ends with mixed line endings (lane `governance`, order null, budget 30 min)
 
 ## 3. Waiting on the human (total: 0 min)
 
@@ -20,6 +21,7 @@ Generated from `PLAN.yaml` (sha256 `d1bb76610ee5a48aa72ed96008c70e123fd8a894e5f3
 
 - **adr-020-appended-note** — ADR-020's appended note, owed by the quote baseline's corrected_by entry (entry 102; the docs lane) — blocked by: walkthrough-row-f7-cli-refusal
 - **adr-035-close-races-note** — ADR-035 -- an appended, dated note recording what kernel-generation-close-races makes historical (Decision 3's no-session-reference case unreachable; invalidate marks only on a live removal; Decision 2's mint-race arm gone) — blocked by: adr-020-appended-note
+- **lod-tier-identity-binds-file-name** — The LOD tier builder takes the identity name DuckDB bound and looks it up among the file's own footer names, so a renamed identity column reaches a different column there — blocked by: port-2-macos-l1-and-app-dirs
 - **skp-line-cites-outside-close-races** — Stale line cites into kernel/src/skp.rs outside kernel-close-races-followups files -- shell streaming, App.tsx, pool_poll.rs, src-tauri lib.rs, the P4 corpus test and the persisted-artifacts test — blocked by: adr-035-close-races-note
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
 - **session-log-token-redaction-rests-on-page-code** — The session token never reaching the session log rests on page code: binding_log_session_event appends page-supplied text verbatim, the page holds the token, and the data plane's Session::redact has only a test caller — blocked by: b2-piece-1c-save-and-reopen
@@ -29,7 +31,6 @@ Generated from `PLAN.yaml` (sha256 `d1bb76610ee5a48aa72ed96008c70e123fd8a894e5f3
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer — blocked by: signpath-application-draft
 - **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-2-0
 - **signpath-application-draft** — Entry 77 — the SignPath OSS application and disclosure text drafted for the human sight, once a release is CI-built — blocked by: release-v0-2-0
-- **flush-crlf-field-rewrite** — flush.mjs splits the ledger on LF and rewrites a field line without its CR, so a CRLF working-tree ledger ends with mixed line endings — blocked by: questions-mirror-item-count
 - **governance-hash-grammar-shared** — Share the path:line @ rev sha256:hex reference grammar between verify-test-claims.mjs and verify-quotes.mjs — blocked by: guardian-parity-git-timeout-under-load
 - **guardian-parity-git-timeout-under-load** — The Guardian parity test (scripts/hooks/guardian-continuity-parity.test.mjs) reads a fixture as not judged when a git call outruns its timeout under a shared load; the bound is chosen from a measurement — blocked by: flush-crlf-field-rewrite
 - **shell-owners-index** — An owner's index for the shell (frontends/shell), so that shell-owned KNOWN-LIMITATIONS items and pointers are indexed somewhere — blocked by: skp-line-cites-outside-close-races
@@ -45,8 +46,6 @@ Generated from `PLAN.yaml` (sha256 `d1bb76610ee5a48aa72ed96008c70e123fd8a894e5f3
 - **bundle-redaction-scan-not-in-product-publish** — The bundle redaction scan runs only in a test: no product publish scans its emitted files, though ADR-017's section 13 (Accepted) says a scan over every emitted file asserts no path, user name, machine identifier or credential is in a bundle — evidence: branch `cut/bundle-redaction-scan`
 - **b1-shell-half** — Shell migration, milestone 4 -- B1 shell half: attributes of the inspected feature, colour by category with its legend, and the table — evidence: branch `cut/b1-shell-half-pr-a`
 - **walkthrough-row-f7-cli-refusal** — MANUAL-WALKTHROUGH.md row F7: a publish-bundle CLI publish with the real built viewer is refused under the redaction scan (its W12), so F7 points at Part G's rows, with the CLI refusal line — evidence: branch `cut/walkthrough-row-f7-cli-refusal`
-- **questions-mirror-item-count** — questions-mirror.mjs's countItems counts one item high on a round file with a header rule, so a document send's summary names one item too many — evidence: branch `cut/questions-mirror-item-count`
-- **verify-cites-pin-resolution-and-line-zero** — verify-cites: a pinned cite starting at line 0 gets a false reason, and a pin is read only at the path as written — evidence: branch `cut/verify-cites-pin-resolution-and-line-zero`
 - **port-2-macos-l1-and-app-dirs** — PORT-2 -- macOS L1 for the Cargo workspace: macos-latest in the same matrix, one application-directory boundary replacing the two resolvers, and a case-policy test on a case-insensitive volume — evidence: branch `cut/port-2-macos-l1-and-app-dirs`
 
 ## 6. Proposed / unscheduled
@@ -101,7 +100,6 @@ Generated from `PLAN.yaml` (sha256 `d1bb76610ee5a48aa72ed96008c70e123fd8a894e5f3
 - **mp-prime-e2e-covered-fixture** — E2E: MP-1's step MP' opens F-1, which has no covering, so it is predicted to meet the no-covering refusal; a step on F-1c, its covered twin (phase `prototype`) — never queued until placed
 - **corpus-line-files** — A line file (LineString or MultiLineString) in the preregistered compatibility corpus, so that line admission is tried on a real-world file (phase `prototype`) — never queued until placed
 - **lines-class-budget-measurement** — Measure docs/08's Lines class (1M features / 10M vertices) for the working canvas, once lines are drawn (phase `prototype`) — never queued until placed
-- **publish-sort-window-cancel-not-exercised-on-ci** — kernel/tests/publish_cancellation.rs: a_cancel_inside_the_sort_is_observed_rather_than_waited_out reddened on the Windows CI runner because QueryRunning never fired (the sort ended inside one poll interval) (phase `prototype`) — never queued until placed
 - **first-batch-factorial-ignored-trace-tests** — kernel/tests/first_batch_factorial.rs's two ignored measurement tests each start a trace in one binary with no shared lock (phase `prototype`) — never queued until placed
 - **slice-traced-test-cross-stamping** — engine/tests/slice.rs's traced test reads first cancellation stamps while its binary's other tests run unserialised, one of them cancelling (phase `prototype`) — never queued until placed
 - **stale-lines-outside-the-four-files** — Same-class stale lines outside the docs-lane piece's four files: residencyStatus.test.ts's titles and comments calling ruled strings drafts, residencyArm.test.ts's App-cannot-be-rendered comment, WorkingCanvas.test.ts's no-mount line, and engine/src/identity.rs's two stale line cites into session_identity.rs (phase `prototype`) — never queued until placed
