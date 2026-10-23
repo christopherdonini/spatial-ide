@@ -507,9 +507,9 @@ nodes:
     kind: task
     lane: governance
     phase: prototype
-    status: proposed
+    status: blocked
     order: null
-    depends_on: [governance-test-claims-superseded-scanner]
+    depends_on: [governance-test-claims-superseded-scanner, guardian-parity-git-timeout-under-load]
     needs_human: {kind: none, minutes: 0}
     gate: none
     evidence: null
@@ -517,7 +517,7 @@ nodes:
     generation: 1
     felt_verdict: false
     entries: [111]
-    summary: "Architect gate, governance-test-claims-superseded attempt 1, S2: once governance/verify-quotes lands on main, export its HASH_REF_RE/GAP grammar and import it here instead of the local derived copy -- consumers named: this piece's verify-test-claims.mjs and verify-quotes.mjs itself. Restored 2026-09-24 (PR #117 fresh-count attempt-1 architect S1: merge 6191a7c had dropped it); depends_on names the scanner node (the attempt-2 architect should-fix). Found 2026-10-02 while committing exposure-scan-ci-backstop's form: the grammar's path must begin with a letter, digit or underscore, so a span in .github/ or .githooks/ cannot be hash-pinned (verify-quotes reads it without its leading dot and fails to resolve it); that form references its six such spans in plain text."
+    summary: "RULED 2026-10-23 (state/directives/2026-10-23-weekend-covering-case-s1-session-log-redaction-s2-governance-and-docs-order-v0-2-scope-port-2-approved.md), item 3: fifth in the governance lane, after the parity-timeout node; the remaining small governance nodes follow it. Before: Architect gate, governance-test-claims-superseded attempt 1, S2: once governance/verify-quotes lands on main, export its HASH_REF_RE/GAP grammar and import it here instead of the local derived copy -- consumers named: this piece's verify-test-claims.mjs and verify-quotes.mjs itself. Restored 2026-09-24 (PR #117 fresh-count attempt-1 architect S1: merge 6191a7c had dropped it); depends_on names the scanner node (the attempt-2 architect should-fix). Found 2026-10-02 while committing exposure-scan-ci-backstop's form: the grammar's path must begin with a letter, digit or underscore, so a span in .github/ or .githooks/ cannot be hash-pinned (verify-quotes reads it without its leading dot and fails to resolve it); that form references its six such spans in plain text."
     dates: {opened: 2026-09-18, done: null}
 
   - id: governance-test-claims-superseded-followups
@@ -3412,7 +3412,7 @@ nodes:
     kind: task
     lane: platform
     phase: prototype
-    status: proposed
+    status: ready
     order: null
     depends_on: [port-1-linux-l1]
     needs_human: {kind: none, minutes: 0}
@@ -3422,7 +3422,7 @@ nodes:
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "Filed on state/directives/2026-09-30-portability-and-handoff.md (the human's direction line and Fable's item 1) and state/directives/PORTABILITY-2026-09-30.md, section 3. Carries section 1c item 1 (the audit log and the LOD tier root resolve application directories differently) and section 1c item 2 as a candidate to verify (case sensitivity keyed on the OS, not the filesystem; read from code, not observed on a Mac). Placement guidance, the human's line: port-2 when convenient, not ahead of the shell migration or B2. Needs runner minutes (section 7, item 1). No new dependency. Wave-3 intake (state/cloud/wave3/W3-A.md, custodian fields): finding A-3, an empty or relative XDG_DATA_HOME gives a working-directory-relative audit log (proven on Linux); section 1c-1's correction that the LOD tier root reads LOCALAPPDATA with no cfg; section 1c-2's correction that case-insensitive Linux mounts share macOS's gap; the audit log's POSIX file mode (W3-A observation 2). Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33): item 6 approves its runner minutes once PORT-1 is green; item 7 adopts the support profiles (macOS 14 or later on Apple Silicon for CI). It stays proposed under the human's placement line above. Notes for this piece's form from PORT-1's gates (state/consults/gates/2026-10-03-port-1-linux-l1-gate1-reviewer.md, S2-6; state/consults/gates/2026-10-03-port-1-linux-l1-gate1-architect.md, N4 and N5): T1 of scripts/plan/cfg-boundary.test.mjs pins the tree's site counts per file, so an architect-approved boundary edit updates T1 in the same PR; derive P3 from a sorted --list set difference at P1, not from greps of test targets."
+    summary: "RULED 2026-10-23 (state/directives/2026-10-23-weekend-covering-case-s1-session-log-redaction-s2-governance-and-docs-order-v0-2-scope-port-2-approved.md), item 6: approved to proceed. The human's typed word for CI: macos-latest joins the Cargo workspace's matrix with the same toolchain the Linux L1 job installs, nothing else installed; the repository is public, so runner minutes are not a cost. Platform lane; forms ahead; gates as usual. NEXT: its form drafted by the architect. Before: Filed on state/directives/2026-09-30-portability-and-handoff.md (the human's direction line and Fable's item 1) and state/directives/PORTABILITY-2026-09-30.md, section 3. Carries section 1c item 1 (the audit log and the LOD tier root resolve application directories differently) and section 1c item 2 as a candidate to verify (case sensitivity keyed on the OS, not the filesystem; read from code, not observed on a Mac). Placement guidance, the human's line: port-2 when convenient, not ahead of the shell migration or B2. Needs runner minutes (section 7, item 1). No new dependency. Wave-3 intake (state/cloud/wave3/W3-A.md, custodian fields): finding A-3, an empty or relative XDG_DATA_HOME gives a working-directory-relative audit log (proven on Linux); section 1c-1's correction that the LOD tier root reads LOCALAPPDATA with no cfg; section 1c-2's correction that case-insensitive Linux mounts share macOS's gap; the audit log's POSIX file mode (W3-A observation 2). Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33): item 6 approves its runner minutes once PORT-1 is green; item 7 adopts the support profiles (macOS 14 or later on Apple Silicon for CI). It stays proposed under the human's placement line above. Notes for this piece's form from PORT-1's gates (state/consults/gates/2026-10-03-port-1-linux-l1-gate1-reviewer.md, S2-6; state/consults/gates/2026-10-03-port-1-linux-l1-gate1-architect.md, N4 and N5): T1 of scripts/plan/cfg-boundary.test.mjs pins the tree's site counts per file, so an architect-approved boundary edit updates T1 in the same PR; derive P3 from a sorted --list set difference at P1, not from greps of test targets."
     dates: {opened: 2026-09-30, done: null}
 
   - id: port-3-shell-l1
@@ -3561,7 +3561,7 @@ nodes:
     generation: 3
     felt_verdict: false
     entries: []
-    summary: "IN PROGRESS 2026-10-23: FORM COMMITTED (scripts/hooks/QUESTIONS-MIRROR-ITEM-COUNT-PREREGISTRATION.md; the architect's drafting consult state/consults/2026-10-23-questions-mirror-item-count-architect-draft.md, with the custodian's Amendment 1; 19 pins by script): the full form under section 21a (a property under test); countItems counts the numbered items in sequence, the red-line header reads a marker after one leading label, the summary's n = 0 and n = 1 grammar; T14, T15 and M15 to M21; I1 and I2 over the committed round files; 120 lines over two files; budget 90. Branch cut/questions-mirror-item-count from this commit. NEXT: the code by a worker; then the PR and both gates. Before: PLACED 2026-10-21 (state/directives/2026-10-21-placements-redaction-scan-1c-milestone-4-lanes-238-clicked-d-answers-adr-024-heading-kept.md, item 5): the governance lane after D, 2 of 3, after verify-quotes-round-item-cites. Before: Routed by round-mirror-pretooluse-hook's drafting consult (state/consults/2026-10-02-round-mirror-hook-architect-draft.md, item (c), first bullet): countItems and buildSummary count the --- rules plus one, so a round file with a header rule reads one item high; round 33's eleven items would be summarized as twelve. Not fixed in that piece, whose invalidator I2 keeps mirrorRound and buildSummary unchanged. Also, per Fable round-52 advice item 1 (state/directives/2026-10-04-fable-advice-round-52.md), confirmed by the custodian: the round file header miscounts red-line items, since state/questions/round-52.md reads RED LINE items: none while its items 1 and 3 were red-line items offered as holds only; the same piece should derive that header count from the items."
+    summary: "RULED 2026-10-23 (state/directives/2026-10-23-weekend-covering-case-s1-session-log-redaction-s2-governance-and-docs-order-v0-2-scope-port-2-approved.md), item 3: second in the governance lane, after verify-cites-pin-resolution-and-line-zero. It was in progress before the message arrived (form at c7e94a85, its build dispatched): the build finishes, and the PR and gates wait until the first has merged unless the human lets the two run side by side. Before: IN PROGRESS 2026-10-23: FORM COMMITTED (scripts/hooks/QUESTIONS-MIRROR-ITEM-COUNT-PREREGISTRATION.md; the architect's drafting consult state/consults/2026-10-23-questions-mirror-item-count-architect-draft.md, with the custodian's Amendment 1; 19 pins by script): the full form under section 21a (a property under test); countItems counts the numbered items in sequence, the red-line header reads a marker after one leading label, the summary's n = 0 and n = 1 grammar; T14, T15 and M15 to M21; I1 and I2 over the committed round files; 120 lines over two files; budget 90. Branch cut/questions-mirror-item-count from this commit. NEXT: the code by a worker; then the PR and both gates. Before: PLACED 2026-10-21 (state/directives/2026-10-21-placements-redaction-scan-1c-milestone-4-lanes-238-clicked-d-answers-adr-024-heading-kept.md, item 5): the governance lane after D, 2 of 3, after verify-quotes-round-item-cites. Before: Routed by round-mirror-pretooluse-hook's drafting consult (state/consults/2026-10-02-round-mirror-hook-architect-draft.md, item (c), first bullet): countItems and buildSummary count the --- rules plus one, so a round file with a header rule reads one item high; round 33's eleven items would be summarized as twelve. Not fixed in that piece, whose invalidator I2 keeps mirrorRound and buildSummary unchanged. Also, per Fable round-52 advice item 1 (state/directives/2026-10-04-fable-advice-round-52.md), confirmed by the custodian: the round file header miscounts red-line items, since state/questions/round-52.md reads RED LINE items: none while its items 1 and 3 were red-line items offered as holds only; the same piece should derive that header count from the items."
     dates: {opened: 2026-10-02, done: null}
   - id: template-round15e-exception-pointer
     title: "docs/PREREGISTRATION-TEMPLATE.md gains one appended sentence pointing at round 34 item 4's narrow exception to round 15 (e), as AUTONOMY.md section 27 records it"
@@ -3612,7 +3612,7 @@ nodes:
     generation: 2
     felt_verdict: false
     entries: []
-    summary: "PLACED 2026-10-21 (state/directives/2026-10-21-placements-redaction-scan-1c-milestone-4-lanes-238-clicked-d-answers-adr-024-heading-kept.md, item 5): the governance lane after D, 3 of 3, after questions-mirror-item-count. Before: Routed by stop-hook-stale-continuity drafting consult (state/consults/2026-10-02-stop-hook-stale-continuity-architect-draft.md, open point 8): scripts/hooks/flush.mjs splits CUT-STATE.md on LF and writes a rewritten field line without its CR, so a CRLF working-tree ledger would end with mixed line endings. Out of that piece scope (its form declares flush.mjs unchanged). The repository checks the ledger out LF (.gitattributes eol=lf), so this matters only for a ledger written CRLF by some other tool (portability R1). Short form, a test with a CRLF ledger and its mutation."
+    summary: "RULED 2026-10-23 (state/directives/2026-10-23-weekend-covering-case-s1-session-log-redaction-s2-governance-and-docs-order-v0-2-scope-port-2-approved.md), item 3: third in the governance lane, after questions-mirror-item-count. Before: PLACED 2026-10-21 (state/directives/2026-10-21-placements-redaction-scan-1c-milestone-4-lanes-238-clicked-d-answers-adr-024-heading-kept.md, item 5): the governance lane after D, 3 of 3, after questions-mirror-item-count. Before: Routed by stop-hook-stale-continuity drafting consult (state/consults/2026-10-02-stop-hook-stale-continuity-architect-draft.md, open point 8): scripts/hooks/flush.mjs splits CUT-STATE.md on LF and writes a rewritten field line without its CR, so a CRLF working-tree ledger would end with mixed line endings. Out of that piece scope (its form declares flush.mjs unchanged). The repository checks the ledger out LF (.gitattributes eol=lf), so this matters only for a ledger written CRLF by some other tool (portability R1). Short form, a test with a CRLF ledger and its mutation."
     dates: {opened: 2026-10-02, done: null}
   - id: questions-mirror-t11-copy-glob
     title: "questions-mirror.test.mjs T11 copies every top-level .mjs of scripts/hooks/ and scripts/plan/ into its test project instead of a fixed six-file list (test-only, before stop-hook-stale-continuity merges)"
@@ -4264,7 +4264,7 @@ nodes:
     kind: task
     lane: engine
     phase: prototype
-    status: proposed
+    status: ready
     order: null
     depends_on: []
     needs_human: {kind: none, minutes: 0}
@@ -4274,7 +4274,7 @@ nodes:
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "PROPOSED 2026-10-09 by the human's rulings of 2026-10-09 (state/directives/2026-10-09-rulings-on-the-eight-forms.md), item 2: the P0 of covering-names-missing-column (its Amendment 1) showed DuckDB binds covering paths ASCII case-insensitively; with two schema names that differ only by case, the binder may bind the covering to the other column. The human grades and places it later; it does not block the covering piece."
+    summary: "RULED 2026-10-23 (state/directives/2026-10-23-weekend-covering-case-s1-session-log-redaction-s2-governance-and-docs-order-v0-2-scope-port-2-approved.md), item 1: graded S1; a five-line form: a covering path that matches more than one schema name case-insensitively refuses the open by name, with the engine's code and a KNOWN-LIMITATIONS line in the architect's words for the human's sight; engine only; slot 2, interleaved under OPEN-17's model, if rule (00) finds it disjoint from 1c's groups, else first in slot 1 after PR A. NEXT: the five-line form by lead-data; rule (00) read at the form. Before: PROPOSED 2026-10-09 by the human's rulings of 2026-10-09 (state/directives/2026-10-09-rulings-on-the-eight-forms.md), item 2: the P0 of covering-names-missing-column (its Amendment 1) showed DuckDB binds covering paths ASCII case-insensitively; with two schema names that differ only by case, the binder may bind the covering to the other column. The human grades and places it later; it does not block the covering piece."
     dates: {opened: 2026-10-09, done: null}
 
   - id: publish-sort-window-cancel-not-exercised-on-ci
@@ -4891,7 +4891,7 @@ nodes:
     kind: task
     lane: governance
     phase: prototype
-    status: proposed
+    status: ready
     order: null
     depends_on: []
     needs_human: {kind: none, minutes: 0}
@@ -4901,7 +4901,7 @@ nodes:
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "PROPOSED 2026-10-08 from PR #191's attempt-2 reviewer gate (gate-log 442): C3, a cite starting at line 0 is reported by its end line, in the tree path and the pin path alike (it still fails, no tier changes); and the D4 limit, a pin is read at the path as written from the repo root, so a relative, .md-fallback or basename cite keeps the tree verdict. Recorded in the verify-cites-pinned-citations closing record (Amendment 2, item 7). Under the freeze, a finding is recorded as a proposed node."
+    summary: "RULED 2026-10-23 (state/directives/2026-10-23-weekend-covering-case-s1-session-log-redaction-s2-governance-and-docs-order-v0-2-scope-port-2-approved.md), item 3: the governance lane's first after #242, ahead of questions-mirror-item-count. NEXT: its form by the architect. Before: PROPOSED 2026-10-08 from PR #191's attempt-2 reviewer gate (gate-log 442): C3, a cite starting at line 0 is reported by its end line, in the tree path and the pin path alike (it still fails, no tier changes); and the D4 limit, a pin is read at the path as written from the repo root, so a relative, .md-fallback or basename cite keeps the tree verdict. Recorded in the verify-cites-pinned-citations closing record (Amendment 2, item 7). Under the freeze, a finding is recorded as a proposed node."
     dates: {opened: 2026-10-08, done: null}
 
   - id: docs-14-corpus-attribution-vs-docs-08
@@ -5447,9 +5447,9 @@ nodes:
     kind: task
     lane: shell
     phase: prototype
-    status: proposed
+    status: blocked
     order: null
-    depends_on: []
+    depends_on: [b2-piece-1c-save-and-reopen]
     needs_human: {kind: none, minutes: 0}
     gate: none
     evidence: null
@@ -5457,7 +5457,7 @@ nodes:
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "PROPOSED 2026-10-16 by the custodian, for the human's triage: candidate 2 of the boundary inventory (state/consults/2026-10-16-boundary-inventory-architect.md, Candidates for triage). The comment in frontends/shell/src-tauri/src/state.rs says the token is never written to the session log; binding_log_session_event in commands.rs appends the page's text as given, and Session::redact in protocol/data-plane/src/session.rs is called only by its own test. The custodian confirmed the redact callers by search at b88b1d2f; nothing reproduced. A candidate until graded; the inventory does not grow to fix it."
+    summary: "RULED 2026-10-23 (state/directives/2026-10-23-weekend-covering-case-s1-session-log-redaction-s2-governance-and-docs-order-v0-2-scope-port-2-approved.md), item 2: graded S2; binding_log_session_event runs Session::redact on the text before it appends; a test shows a token in the page's text never reaches the log. The custodian's call under rule (00): after 1c's src-tauri group merges (1c's section 2.7 edits commands.rs), not inside 1c; its dependency reads the whole node until that group's merge is recorded. Its form is drafted ahead. Before: PROPOSED 2026-10-16 by the custodian, for the human's triage: candidate 2 of the boundary inventory (state/consults/2026-10-16-boundary-inventory-architect.md, Candidates for triage). The comment in frontends/shell/src-tauri/src/state.rs says the token is never written to the session log; binding_log_session_event in commands.rs appends the page's text as given, and Session::redact in protocol/data-plane/src/session.rs is called only by its own test. The custodian confirmed the redact callers by search at b88b1d2f; nothing reproduced. A candidate until graded; the inventory does not grow to fix it."
     dates: {opened: 2026-10-16, done: null}
   - id: known-limitations-item-41-source-comment
     title: "KNOWN-LIMITATIONS item 41's source comment: its code location pinned on main with its hash, saying the work has merged (the comment only; item 41's words still wait for their sight)"
@@ -5627,7 +5627,7 @@ nodes:
     generation: 2
     felt_verdict: false
     entries: [102]
-    summary: "NOTED 2026-10-23: #243 merged (c1f782db) and #242 merged (c52abe27), so OPEN-3 reads (a) at dispatch; the piece waits for #244's merge. Before: RULED 2026-10-22 (headed 2026-10-23; state/directives/2026-10-22-242-h-1-round-72-pin-f7-open-items-milestone-4-open-16-b-adr-020-corrigendum-a-1c-adr-036-words-approved-disk-parity-node.md), item 4: OPEN-1 (A), yes to section 2.1's words, headed Corrigendum and dated by the appending commit; OPEN-2 (A); OPEN-3 (a) if #242 has merged at dispatch, else (b). Its form is committed with these answers when the piece starts, after #243 and #244 merge, outside #244's freeze window. Before: FORM DRAFTED 2026-10-22 (state/consults/2026-10-22-adr-020-appended-note-architect-draft.md): a full form, as ADR-020 is named in section 21a; its file at the root. OPEN-1, the corrigendum words, is red-line text and waits for the human's typed answer; OPEN-2 and OPEN-3 are the human's. NEXT: after #243 and #244 merge and OPEN-1 is answered, the form is committed with its pins and the piece starts. Before: ORDER 2026-10-22 (state/directives/2026-10-22-away-until-monday-241-r1-on-5400-f7-a-milestone-4-1c-code-o0-b-docs-lane-ruled-i4-a.md): after the F7 piece in the docs lane, the human's order being the open items, then item 41's comment, the ADR notes and the stale cites. Before: PLACED 2026-10-21 (state/directives/2026-10-21-placements-redaction-scan-1c-milestone-4-lanes-238-clicked-d-answers-adr-024-heading-kept.md, item 4): the docs lane, 3 of 6, after stale-assertion-messages-and-product-comments. Before: RULED 2026-10-21 (headed), item 2e, proposed and unplaced; the docs lane. It represents governance C's sheet row E102: the appended ADR-020 note that the quote baseline lists as owed (its corrected_by, an appended ADR-020 note, owed)."
+    summary: "RULED 2026-10-23 (state/directives/2026-10-23-weekend-covering-case-s1-session-log-redaction-s2-governance-and-docs-order-v0-2-scope-port-2-approved.md), item 4: the docs lane's first after #243 and #244; OPEN-3 (a), #242 having merged. Then walkthrough-stale-cites-l5-degrees-p1, then sitting-wording-n1-to-n7. Before: NOTED 2026-10-23: #243 merged (c1f782db) and #242 merged (c52abe27), so OPEN-3 reads (a) at dispatch; the piece waits for #244's merge. Before: RULED 2026-10-22 (headed 2026-10-23; state/directives/2026-10-22-242-h-1-round-72-pin-f7-open-items-milestone-4-open-16-b-adr-020-corrigendum-a-1c-adr-036-words-approved-disk-parity-node.md), item 4: OPEN-1 (A), yes to section 2.1's words, headed Corrigendum and dated by the appending commit; OPEN-2 (A); OPEN-3 (a) if #242 has merged at dispatch, else (b). Its form is committed with these answers when the piece starts, after #243 and #244 merge, outside #244's freeze window. Before: FORM DRAFTED 2026-10-22 (state/consults/2026-10-22-adr-020-appended-note-architect-draft.md): a full form, as ADR-020 is named in section 21a; its file at the root. OPEN-1, the corrigendum words, is red-line text and waits for the human's typed answer; OPEN-2 and OPEN-3 are the human's. NEXT: after #243 and #244 merge and OPEN-1 is answered, the form is committed with its pins and the piece starts. Before: ORDER 2026-10-22 (state/directives/2026-10-22-away-until-monday-241-r1-on-5400-f7-a-milestone-4-1c-code-o0-b-docs-lane-ruled-i4-a.md): after the F7 piece in the docs lane, the human's order being the open items, then item 41's comment, the ADR notes and the stale cites. Before: PLACED 2026-10-21 (state/directives/2026-10-21-placements-redaction-scan-1c-milestone-4-lanes-238-clicked-d-answers-adr-024-heading-kept.md, item 4): the docs lane, 3 of 6, after stale-assertion-messages-and-product-comments. Before: RULED 2026-10-21 (headed), item 2e, proposed and unplaced; the docs lane. It represents governance C's sheet row E102: the appended ADR-020 note that the quote baseline lists as owed (its corrected_by, an appended ADR-020 note, owed)."
     dates: {opened: 2026-10-20, done: null}
   - id: pre-1-0-trademark-search
     title: "The trademark register search with counsel before 1.0 (the human's own)"
@@ -5736,9 +5736,9 @@ nodes:
     kind: task
     lane: governance
     phase: prototype
-    status: proposed
+    status: blocked
     order: null
-    depends_on: []
+    depends_on: [flush-crlf-field-rewrite]
     needs_human: {kind: none, minutes: 0}
     gate: none
     evidence: null
@@ -5746,5 +5746,39 @@ nodes:
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "PROPOSED 2026-10-22 by the human (state/directives/2026-10-22-242-h-1-round-72-pin-f7-open-items-milestone-4-open-16-b-adr-020-corrigendum-a-1c-adr-036-words-approved-disk-parity-node.md, item 8), graded S3 by the human: the parity test's git call time is measured under a shared hold before its bound is chosen. Seen at a custodian gate on 2026-10-22 (the ledger's entry for milestone 4 PR A's row 15): the fixture PS9 read not judged once under load, where its git calls outran their timeout; alone the file passed 15 of 15, and the gate then passed. The timeout is STOP_RUN_OPTS in scripts/hooks/guardian-continuity-parity.test.mjs; the mod's own folder is not written."
+    summary: "RULED 2026-10-23 (state/directives/2026-10-23-weekend-covering-case-s1-session-log-redaction-s2-governance-and-docs-order-v0-2-scope-port-2-approved.md), item 3: fourth in the governance lane, after flush-crlf-field-rewrite. Before: PROPOSED 2026-10-22 by the human (state/directives/2026-10-22-242-h-1-round-72-pin-f7-open-items-milestone-4-open-16-b-adr-020-corrigendum-a-1c-adr-036-words-approved-disk-parity-node.md, item 8), graded S3 by the human: the parity test's git call time is measured under a shared hold before its bound is chosen. Seen at a custodian gate on 2026-10-22 (the ledger's entry for milestone 4 PR A's row 15): the fixture PS9 read not judged once under load, where its git calls outran their timeout; alone the file passed 15 of 15, and the gate then passed. The timeout is STOP_RUN_OPTS in scripts/hooks/guardian-continuity-parity.test.mjs; the mod's own folder is not written."
     dates: {opened: 2026-10-22, done: null}
+  - id: walkthrough-stale-cites-l5-degrees-p1
+    title: "Two walkthrough rows cite stale lines: Part L's L5 and the degrees tile grid Part P's P1 (the sitting script's D1 and D2)"
+    kind: task
+    lane: shell
+    phase: prototype
+    status: blocked
+    order: null
+    depends_on: [adr-020-appended-note]
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 30
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "PLACED 2026-10-23 by the human (state/directives/2026-10-23-weekend-covering-case-s1-session-log-redaction-s2-governance-and-docs-order-v0-2-scope-port-2-approved.md, item 4): the docs lane's second after #243 and #244, after adr-020-appended-note. The sitting script (state/drafts/sitting-script-2026-10-23.md), section 2, D1 and D2: the architect found two rows of frontends/shell/MANUAL-WALKTHROUGH.md whose line cites no longer point at what they name. A docs piece; the rows' words are corrected by cite, not by verdict."
+    dates: {opened: 2026-10-23, done: null}
+  - id: sitting-wording-n1-to-n7
+    title: "The sitting script's seven wording findings, N1 to N7: each string's clause untrue at main replaced in the architect's words, prepared as pieces for the human's yes at the sitting"
+    kind: task
+    lane: shell
+    phase: prototype
+    status: blocked
+    order: null
+    depends_on: [walkthrough-stale-cites-l5-degrees-p1]
+    needs_human: {kind: sitting, minutes: 10}
+    gate: none
+    evidence: null
+    budget_minutes: 60
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "PLACED 2026-10-23 by the human (state/directives/2026-10-23-weekend-covering-case-s1-session-log-redaction-s2-governance-and-docs-order-v0-2-scope-port-2-approved.md, item 4): the docs lane's third after #243 and #244. The sitting script (state/drafts/sitting-script-2026-10-23.md), section 2, N1 to N7: seven strings, each with a clause untrue at main and the architect's replacement words (N5 is the human's own wording). The architect prepares them as pieces with the words, split as the files fall; the human's yes, own words or acceptance as it stands is given at the sitting, and no string changes before it."
+    dates: {opened: 2026-10-23, done: null}
