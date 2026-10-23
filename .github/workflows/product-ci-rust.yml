@@ -195,6 +195,8 @@ jobs:
             job_name: "cargo test --workspace (windows-latest)"
           - os: ubuntu-24.04
             job_name: "L1 portable correctness · cargo test --workspace (ubuntu-24.04)"
+          - os: macos-latest
+            job_name: "L1 portable correctness · cargo test --workspace (macos-latest)"
     runs-on: ${{ matrix.os }}
     # The vendored DuckDB build dominates a cold run. Bounded so a hung job is killed rather than
     # burning the default six hours.
@@ -213,6 +215,10 @@ jobs:
       - name: Runner profile (Linux)
         if: ${{ runner.os == 'Linux' }}
         run: grep -E '^(NAME|VERSION_ID)=' /etc/os-release && uname -m
+
+      - name: Runner profile (macOS)
+        if: ${{ runner.os == 'macOS' }}
+        run: sw_vers -productVersion && uname -m
 
       # Split from the test step so a compile failure is reported as one, rather than as a test
       # run that never started. `--tests` builds the integration targets too, including the
