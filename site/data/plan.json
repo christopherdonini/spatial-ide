@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-23T11:30:21.917Z",
-  "plan_hash": "b8ad2b626482a0c329eda4c1383bf9a73aed030d31e79c2c6c7a236c44ea0289",
+  "generated_at": "2026-10-23T11:40:35.769Z",
+  "plan_hash": "dd95a7fc21fb7f7bcc3a080a0df4c161832fef8466292bceff860f1ff1991d4c",
   "priorities_approved": true,
   "lanes": [
     {
@@ -7877,20 +7877,22 @@
       "kind": "task",
       "lane": "governance",
       "phase": "prototype",
-      "status": "ready",
+      "status": "in-progress",
       "order": null,
       "depends_on": [],
       "needs_human": {
         "kind": "none",
         "minutes": 0
       },
-      "gate": "none",
-      "evidence": null,
-      "budget_minutes": 45,
-      "generation": 1,
+      "gate": "scripts/plan/VERIFY-CITES-PIN-RESOLUTION-AND-LINE-ZERO-PREREGISTRATION.md",
+      "evidence": {
+        "branch": "cut/verify-cites-pin-resolution-and-line-zero"
+      },
+      "budget_minutes": 90,
+      "generation": 2,
       "felt_verdict": false,
       "entries": [],
-      "summary": "RULED 2026-10-23 (state/directives/2026-10-23-weekend-open-items-ruled-verify-cites-pin-covering-case-port-2-session-log-test-feature-v0-2-findings-graded.md), item 2: OPEN-1 (A), OPEN-2 (A), OPEN-3 (A). NEXT: the form committed with its pins and the E0 list; then its code by a worker. Before: FORM DRAFTED 2026-10-23 (state/consults/2026-10-23-verify-cites-pin-resolution-and-line-zero-architect-draft.md): the full form (the C2 test's fixture is a property under test); C3, a cite starting at line 0 gets a reason of its own in the tree and at the pin; D4, a pin is read at the files the tree resolves the path to, then at the path as written; seven tests and their mutations; E0, I1 and I2 over the tracked tree; 210 lines over two files; budget 90 proposed. OPEN-1 to OPEN-3 the human's (the architect recommends A each); OPEN-4, two defects outside the piece, recorded as proposed nodes. NEXT: the human's answers, then the form committed with its pins and E0. Before: RULED 2026-10-23 (state/directives/2026-10-23-weekend-covering-case-s1-session-log-redaction-s2-governance-and-docs-order-v0-2-scope-port-2-approved.md), item 3: the governance lane's first after #242, ahead of questions-mirror-item-count. NEXT: its form by the architect. Before: PROPOSED 2026-10-08 from PR #191's attempt-2 reviewer gate (gate-log 442): C3, a cite starting at line 0 is reported by its end line, in the tree path and the pin path alike (it still fails, no tier changes); and the D4 limit, a pin is read at the path as written from the repo root, so a relative, .md-fallback or basename cite keeps the tree verdict. Recorded in the verify-cites-pinned-citations closing record (Amendment 2, item 7). Under the freeze, a finding is recorded as a proposed node.",
+      "summary": "IN PROGRESS 2026-10-23: FORM COMMITTED (scripts/plan/VERIFY-CITES-PIN-RESOLUTION-AND-LINE-ZERO-PREREGISTRATION.md; the architect's drafting consult state/consults/2026-10-23-verify-cites-pin-resolution-and-line-zero-architect-draft.md, with the custodian's Amendment 1: 26 pins, the human's OPEN-1 to OPEN-3 (A), E0 by script, 0 pinned advisory entries, rule (00) by the branch diffs); budget 90; branch cut/verify-cites-pin-resolution-and-line-zero from this commit. NEXT: the code by a worker; then the PR and both gates. Before: RULED 2026-10-23 (state/directives/2026-10-23-weekend-open-items-ruled-verify-cites-pin-covering-case-port-2-session-log-test-feature-v0-2-findings-graded.md), item 2: OPEN-1 (A), OPEN-2 (A), OPEN-3 (A). NEXT: the form committed with its pins and the E0 list; then its code by a worker. Before: FORM DRAFTED 2026-10-23 (state/consults/2026-10-23-verify-cites-pin-resolution-and-line-zero-architect-draft.md): the full form (the C2 test's fixture is a property under test); C3, a cite starting at line 0 gets a reason of its own in the tree and at the pin; D4, a pin is read at the files the tree resolves the path to, then at the path as written; seven tests and their mutations; E0, I1 and I2 over the tracked tree; 210 lines over two files; budget 90 proposed. OPEN-1 to OPEN-3 the human's (the architect recommends A each); OPEN-4, two defects outside the piece, recorded as proposed nodes. NEXT: the human's answers, then the form committed with its pins and E0. Before: RULED 2026-10-23 (state/directives/2026-10-23-weekend-covering-case-s1-session-log-redaction-s2-governance-and-docs-order-v0-2-scope-port-2-approved.md), item 3: the governance lane's first after #242, ahead of questions-mirror-item-count. NEXT: its form by the architect. Before: PROPOSED 2026-10-08 from PR #191's attempt-2 reviewer gate (gate-log 442): C3, a cite starting at line 0 is reported by its end line, in the tree path and the pin path alike (it still fails, no tier changes); and the D4 limit, a pin is read at the path as written from the repo root, so a relative, .md-fallback or basename cite keeps the tree verdict. Recorded in the verify-cites-pinned-citations closing record (Amendment 2, item 7). Under the freeze, a finding is recorded as a proposed node.",
       "dates": {
         "opened": "2026-10-08",
         "done": null
