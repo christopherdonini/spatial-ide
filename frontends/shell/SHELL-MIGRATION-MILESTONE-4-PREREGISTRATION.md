@@ -1129,3 +1129,16 @@ Nothing above is edited.
 4. **Next:** PR A waits for #243 (Amendment 4, row 16). PR C's and PR B's dispatch amendments are drafted ahead by the architect, each re-swept at its own base before its code.
 
 Nothing above is edited.
+
+## Amendment 6: PR A's closing record, written after its gate 1 results were seen. Four per-file overruns are class 8; two readings are class 1; one item stays open.
+
+*Written by the custodian after PR A's gate 1 reports were seen, at PR A's final head 0ed4b305b6e5573355ce0610f9227a7d03a806f6. References only, and nothing below is a quotation. The reports are `state/consults/gates/2026-10-23-b1-shell-half-pr-a-gate1-architect.md` and `state/consults/gates/2026-10-23-b1-shell-half-pr-a-gate1-reviewer.md`; the words applied are `state/consults/2026-10-23-b1-shell-half-pr-a-gate1-words-reconciled-architect.md`. §7 is not edited.*
+
+1. **Class 8,** by §7's command over `c1f782db29c3ce4b2fd3b8954966494a21679b71...0ed4b305b6e5573355ce0610f9227a7d03a806f6`: `frontends/shell/src/style/document.ts` 7 of 6 (Amendment 4 row 1); `frontends/shell/src/canvas/buildLayers.ts` 7 of 6 (Amendment 2 item 5); `frontends/shell/src/streaming/viewportStreamManager.test.ts` 88 of 40 and `frontends/shell/src/residency/candidateArmSession.test.ts` 149 of 60 (Amendment 4 row 2). No other file passes its ceiling, and no group passes its total.
+2. **Class 1:** PR A rewords the `feature.inspect` statement in `frontends/shell/src/console/surfaceRegistry.ts`, a file §2.6 lists, as an exception to §5's declared-unchanged strings. It is a P6 placeholder, for sight at Part AC row AC10.
+3. **Class 1:** Amendment 2 item 2 (a)'s joined run is read with the whitespace after the comment marker also removed. Read so, its self-test at 55618ab54c32f1e0712d4a657d1e3f1b30c0ef8f is positive, and every pattern is zero at 35085072824b5bcd657c37e3ca1603cbb1693e93 under both readings (the reviewer's gate 1 report, What I checked, item 5).
+4. **Open:** LargeUtf8 and Utf8View (`state/consults/2026-10-22-b1-shell-half-pr-a-amendment-4-architect-draft.md`, What I could not settle, item 2).
+
+Read the last amendment first.
+
+Nothing above is edited.
