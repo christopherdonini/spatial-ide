@@ -411,3 +411,12 @@ Nothing above is edited.
 6. **Next:** a worker applies the words on `cut/walkthrough-row-f7-cli-refusal` with no re-gate (Amendment 5, item 5), and the PR body lists them; §4 item 4 is re-run at #241's final head (§2.3); the click on Monday 2026-10-26.
 
 Nothing above is edited.
+
+## Amendment 7 — the human's C1 and D1 answers applied (class 1); written after the result was seen
+
+*Written by the custodian. References only: `state/consults/2026-10-23-walkthrough-row-f7-cli-refusal-c1-d1-words-worker-report.md`; the head 76f4b9225f1e9fc091570112a4855a6f0543967c.*
+
+1. **Applied at 76f4b9225f1e9fc091570112a4855a6f0543967c**, one commit on abc900f2b4706669bc4abbc35024b28a451a5e86: OPEN-4's parenthetical in the reviewer's words with D1's code spans, four lines of 91, 78, 95 and 12 columns, recomputed by the worker's own script byte for byte equal to the custodian's; G7's `serve-bundle.mjs` marked, one line. §7 at 8 added and 6 removed, 14 of 14; §4 items 1 to 3 hold.
+2. **Next:** the PR body lists the words; §4 item 4 re-run at #241's final head (§2.3, the redaction form's Amendment 9); the click on Monday 2026-10-26.
+
+Nothing above is edited.

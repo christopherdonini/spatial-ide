@@ -159,3 +159,15 @@ Nothing above is edited.
 4. **Next:** the PR (draft) and both gates (§9).
 
 Nothing above is edited.
+
+## §10 Amendment 3 — gate 1: both FAIL; correction round 1, E1's seam assertion and C1's words (class 1); written after the reports were seen
+
+*Written by the custodian after both reports were seen. References only: `state/consults/gates/2026-10-23-flush-crlf-field-rewrite-gate1-architect.md` (gate-log 601); `state/consults/gates/2026-10-23-flush-crlf-field-rewrite-gate1-reviewer.md` (gate-log 602).*
+
+1. **Both FAIL at 197d81ea607027f26511d9df39f44aea8d726fb5.** The architect: E1 (Evidence), §1's Seams bullet claims T2 proves the written file into both readers, and T2 asserts `extractSessionContinuityBlock`'s output only; and C1, the contract bullet's last clause. The reviewer: C1 alone, the same clause, observed by its probe (a tab after a field's colon is written back as one space). The code change and the mutations hold in both reports.
+2. **C1, words only:** the architect's replacement for the contract bullet, which states the reviewer's clause too (every other line left byte for byte) and the separator written back; applied with no re-gate, and the PR body lists it. §1's may-claim 3 is read as narrowed to lines, in the words of the architect's C1, its last bullet; §1 is not edited.
+3. **E1, the architect's fix (i):** T2 also reads both written files through `parseSessionContinuity` and asserts the two results equal and the tip read back, a seam proof added on this gate's finding, not a mutation kill (M1 does not fail it, since the reader normalizes). §7 is predicted at 5 and 46, 51 in all.
+4. **Noted:** the reviewer's scripts suite failed in a shared run on the guardian parity test reading `not judged`, and that file passed alone; a timing-sensitive shared-run failure, not recorded as a failure.
+5. **Next:** correction round 1, one commit by a worker on the branch; then the scoped re-gate, the architect on E1 and C1's lines, the reviewer on the new lines and their run.
+
+Nothing above is edited.
