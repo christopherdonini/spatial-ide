@@ -185,3 +185,14 @@ Rule (00) is at `AUTONOMY.md:609` @ ed2c89e0da7ab853ffa0325a59a8a7c8a266fa5e sha
 4. **Next:** the P0 by a worker, on unmodified main at this commit, its outputs filed under `state/drafts/covering-case-collision-p0/` and its result recorded as a class-1 `Amendment:` line before any code.
 
 Nothing above is edited.
+
+## Amendment 2 — the P0: H3, STOP before any code (class 1); written after the result was seen
+
+*Written by the custodian after the P0's result was seen. References only: `state/consults/2026-10-23-covering-case-collision-binds-other-column-p0-worker-report.md`; the outputs `state/drafts/covering-case-collision-p0/p0-output.txt` (sha256 30984e890e73919ad6b7648d2f9309023112e4afcde918774a1c91346dbb98d1) and `state/drafts/covering-case-collision-p0/p0-scratch.rs.txt` (sha256 b4256b0ae82ad56e2f2537728c5cbe8cf8b54ee67829dede6a931ee9dbacbfa1).*
+
+1. **Result: H3, at both levels.** In every row DESCRIBE and the Arrow export rename the later name that matches an earlier one ignoring case (r1: `BBOX` read as `BBOX_1`; r2: `bbox` read as `bbox_1`; r4: the child `XMIN` read as `XMIN_1`). No two resident names, and no two struct children, differ only by case, so no resident-schema check can see the collision. The rows agree; Amendment 1 item 3's prediction holds, and holds for struct children too.
+2. **By the selection rule, the piece STOPS** before any code and returns to the custodian and the architect: the Change as written cannot fire, and a check of the file's own footer names is a different piece that likely crosses §21c. No code lands under this form.
+3. **Observed on main, recorded as a fact:** r2 (the file writes `BBOX` first, then `bbox`; the covering declares `bbox`) opens with its covering kept, and a bbox stream over the declared struct's true extent returns 0 rows: the covering is read from the other struct, with no refusal. That is the wrong-rows risk the node names, reproduced; r1 and r3 return the declared struct's 10 rows.
+4. **Next:** the architect reads this result for the human, with the siblings check (`state/consults/2026-10-23-engine-column-name-case-siblings-lead-data-check.md`): what change could refuse r2's file, at which layer, and its form; the human decides the route. Nothing is dispatched under this form until then.
+
+Nothing above is edited.
