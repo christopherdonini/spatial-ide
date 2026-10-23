@@ -57,6 +57,9 @@ export interface ViewportStreamManagerOptions {
    * "Engine messages state engine facts; owners state consequences").
    */
   onSessionEnded?: (detail: string) => void;
+  /** The open's projection set (`attributes/projection.ts`'s `projectionFor`), passed as the `columns` of every `viewport_query` this manager sends; `null` when no column is
+   * projectable. REQUIRED, with no default, as the tile manager's is: a defaulted `null` would be a manager that silently asks for no attributes (milestone 4 PR A, section 2.2 (b)). */
+  columns: string[] | null;
 }
 
 /**
@@ -189,7 +192,7 @@ export class ViewportStreamManager {
       return { kind: "superseded" }; // superseded (or stopped, which also bumps the generation) while cancelling the previous stream
     }
 
-    const { stream } = await viewportQuery(this.opts.dataset, bbox, bboxCrs, null, filter);
+    const { stream } = await viewportQuery(this.opts.dataset, bbox, bboxCrs, null, filter, this.opts.columns);
     // Amendment 4 item 1 (the wave-1 fold-in of Finding A2-1): the latch is read BEFORE the
     // generation comparison, because a session end is the more specific fact -- the same ordering
     // `requestViewport`'s own top-of-function `sessionEnded` check already uses. A late-minted

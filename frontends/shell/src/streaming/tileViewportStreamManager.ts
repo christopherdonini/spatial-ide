@@ -73,6 +73,9 @@ export interface TileViewportStreamManagerOptions {
    * P6's own sweep is across SEPARATE sessions, never a mid-session change. Defaults to
    * `DEFAULT_TILE_GRID_LEVEL`. */
   level?: TileGridLevel;
+  /** The open's projection set (`attributes/projection.ts`'s `projectionFor`), passed as the `columns` of every `viewport_query` this manager sends -- `null` when no
+   * column is projectable. REQUIRED, with no default: a defaulted `null` would be a manager that silently asks for no attributes (milestone 4 PR A, section 2.2 (b)). */
+  columns: string[] | null;
   residency: TileResidencyAccessor;
   /** A batch arrived for `tileKey`'s currently active stream -- raw wire bytes, exactly like
    * `ViewportStreamManager.onBatch`'s own payload; decoding and residency bookkeeping are the
@@ -938,7 +941,7 @@ export class TileViewportStreamManager {
 
     let ticket: { stream: string };
     try {
-      ticket = await viewportQuery(this.opts.dataset, wireBbox, null, null, this.currentFilter);
+      ticket = await viewportQuery(this.opts.dataset, wireBbox, null, null, this.currentFilter, this.opts.columns);
     } catch (err) {
       // Entry 87 §2.3(i), unconditional: named before anything below decides what to do about it.
       logMintRefused(tileKey, err);

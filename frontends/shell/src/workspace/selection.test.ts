@@ -184,7 +184,7 @@ describe("UB4: the end of a generation ends the selection", () => {
       { type: "resource.admitted", admitted: admittedOf("a") },
       act({ action: "selection.apply", params: { mode: "add", id: 1n, bounds: unit } }),
       act({ action: "selection.apply", params: { mode: "add", id: 2n, bounds: unit } }),
-      act({ action: "inspect.set", params: { pick: pick(1n), bounds: unit } }),
+      act({ action: "inspect.set", params: { pick: pick(1n), bounds: unit, row: null } }),
       act({ action: "inspect.pin", params: { pinned: true } })
     );
 
@@ -257,7 +257,7 @@ describe("UB5: nothing but a selection transition or a generation end touches th
       { action: "style.set", params: { property: "fillColor", value: "#010203" } },
       { action: "tool.set", params: { tool: "select" } },
       { action: "mode.set", params: { mode: "remove" } },
-      { action: "inspect.set", params: { pick: { streamHandle: "s", batchSeq: 0, id: 1n, anchor: null }, bounds: unit } },
+      { action: "inspect.set", params: { pick: { streamHandle: "s", batchSeq: 0, id: 1n, anchor: null }, bounds: unit, row: null } },
       { action: "inspect.pin", params: { pinned: true } },
       { action: "inspect.set", params: null },
     ];

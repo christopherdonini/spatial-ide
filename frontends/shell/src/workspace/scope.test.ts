@@ -65,7 +65,7 @@ describe("UB6: checkScope names each of the five changes", () => {
       act({ action: "style.set", params: { property: "fillColor", value: "#abcdef" } }),
       act({ action: "tool.set", params: { tool: "select" } }),
       act({ action: "mode.set", params: { mode: "replace" } }),
-      act({ action: "inspect.set", params: { pick: { streamHandle: "s", batchSeq: 0, id: 1n, anchor: null }, bounds: unit } })
+      act({ action: "inspect.set", params: { pick: { streamHandle: "s", batchSeq: 0, id: 1n, anchor: null }, bounds: unit, row: null } })
     );
     expect(checkScope(staged, scopeOf(looked))).toEqual({ ok: true });
   });

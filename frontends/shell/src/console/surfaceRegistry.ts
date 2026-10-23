@@ -349,7 +349,7 @@ const CLASS_C_ROWS = [
     class: "C",
     action: "feature.inspect",
     statement:
-      "[P6 placeholder] no API equivalent exists -- inspecting the feature under a click is pure view state for this session, never sent to the kernel.",
+      "[P6 placeholder] no API equivalent exists -- inspecting the feature under a click, and the attribute values it shows, is pure view state for this session: the values came with the batches the map already holds, and nothing is sent to the kernel.",
     owner: 'docs/03 §"The action console" (pure view state)',
   },
   {

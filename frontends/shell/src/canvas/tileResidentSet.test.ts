@@ -3,7 +3,10 @@
 
 import { describe, expect, it } from "vitest";
 
-import type { ResidentBatch } from "./decodeBatch";
+import { readRow } from "../attributes/values";
+import { decodeBatch } from "./decodeBatch";
+import type { BatchAttributes, ResidentBatch } from "./decodeBatch";
+import { attributeBatchIpc } from "../testUtils/attributeBatchIpc";
 import { partsOfFeatures, partsOfPolygons } from "../testUtils/partsOfPolygons";
 import { cellSizeForLevel, coverMembershipFor, deriveTileGridFrame, tileCoverForBbox, tileKeyToString } from "./tileGrid";
 import { INITIAL_TILE_KEY } from "./tileGridConstants";
@@ -18,6 +21,7 @@ function batch(streamHandle: string, batchSeq: number, ids: number[], verticesPe
     ids: idArray,
     ...partsOfPolygons(polygons),
     totalVertices: ids.length * verticesPerFeature,
+    attributes: null,
   };
 }
 
@@ -50,6 +54,7 @@ describe("TileResidentSet.addBatch: dedupe keeps features whole and re-indexes p
         [[ring()]], // id 7
       ]),
       totalVertices: 24,
+      attributes: null,
     };
     const result = set.addBatch("0:1", incoming);
     expect(result.duplicatesDropped).toBe(1);
@@ -59,6 +64,45 @@ describe("TileResidentSet.addBatch: dedupe keeps features whole and re-indexes p
     expect(Array.from(accepted.partToRow)).toEqual([0, 0, 0, 1]);
     expect(accepted.partCount).toBe(4);
     expect(accepted.totalVertices).toBe(16);
+  });
+});
+
+describe("TileResidentSet.addBatch: a duplicate drop and the attributes (milestone 4 Amendment 3 item 3)", () => {
+  /** Ids 2 (two parts), 5 (three) and 7 (one), as the SH-7 test above has them, with a text column `tag`; tile "0:0" already owns id 2. */
+  function drop(projection: string[] | null, over: Partial<ResidentBatch> = {}) {
+    const columns = projection === null ? [] : [{ name: "tag", kind: "utf8" as const, values: ["two", "five", "seven"] }];
+    const { ipc, encoding } = attributeBatchIpc([2n, 5n, 7n], columns, [2, 3, 1]);
+    const decoded = decodeBatch("sh_b", 0, ipc, "geometry", encoding, projection);
+    const set = new TileResidentSet();
+    set.addBatch("0:0", batch("sh_a", 0, [2]));
+    return { decoded, accepted: set.addBatch("0:1", { ...decoded, ...over }).accepted! };
+  }
+  const tag = (text: string) => [{ name: "tag", value: { kind: "text", text } }];
+
+  // RECORDED MUTATION for "PA-U9": the rebuild carries the block with `rows: null` (`{ ...held, rows: null }`). Expected failure: row 0 of the accepted batch reads "two".
+  it("a duplicate drop carries the attributes with a row map, so each kept row reads its own values", () => {
+    const { decoded, accepted } = drop(["tag"]);
+    expect(Array.from(accepted.ids)).toEqual([5n, 7n]);
+    expect(readRow(accepted, 0)).toEqual(tag("five"));
+    expect(readRow(accepted, 1)).toEqual(tag("seven"));
+    const [from, to] = [decoded.attributes as BatchAttributes, accepted.attributes as BatchAttributes];
+    expect(to.data).toBe(from.data); // the same bytes: no second copy
+    expect(to.bytes).toBe(from.bytes);
+    expect(Array.from(to.rows!)).toEqual([1, 2]);
+    expect(Array.from(accepted.partToRow)).toEqual([0, 0, 0, 1]);
+  });
+
+  // RECORDED MUTATION for "PA-U10": the rebuild writes `null` for any block that is not an object (`held === null || rows === null ? null : ...`). Expected failure: the not-held case.
+  it("a duplicate drop keeps a not-held batch not-held and a null batch null", () => {
+    expect(drop(["tag"], { attributes: "not-held" }).accepted.attributes).toBe("not-held");
+    expect(drop(null).accepted.attributes).toBeNull();
+  });
+
+  it("refuses to deduplicate a batch that already holds a row map", () => {
+    const { accepted } = drop(["tag"]);
+    const set = new TileResidentSet();
+    set.addBatch("0:0", batch("sh_a", 0, [5]));
+    expect(() => set.addBatch("0:1", accepted)).toThrow(/row map/);
   });
 });
 
