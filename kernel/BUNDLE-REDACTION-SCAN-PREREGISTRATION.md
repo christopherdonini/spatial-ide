@@ -909,3 +909,12 @@ Nothing above is edited.
 3. **Next, in this order:** main merged into the branch with a merge commit, the conflict resolved by keeping both sides in item order; at the merge head, R1 re-run alone on the machine by the custodian; R2's installer from that head's pull_request CI run; F7's §4 item 4 at that head; R2, the human's, on Monday 2026-10-26, after #244's click.
 
 Nothing above is edited.
+
+## Amendment 12 — main merged into the branch: the merge head (class 1); written after the result was seen
+
+*Written by the custodian. References only: `state/consults/2026-10-23-bundle-redaction-scan-not-in-product-publish-main-merge-worker-report.md`; the merge head 50c634a85e0486bba0d7bff425defd91fcbab788.*
+
+1. **The merge head 50c634a85e0486bba0d7bff425defd91fcbab788,** parents 147ef82c7d14b537b5c3fc51673090c9b082a1f5 and main's a42a7ff53842d66d8b2537a29849eb2dc4fce8e3: the one conflict, `KNOWN-LIMITATIONS.md`, resolved with both sides kept in item order (46, 47, 51, 52), main's file byte for byte apart from item 47. The PR's 24 files are the same list as at 147ef82c; `cargo fmt` and the four verify tools exit 0 there. The PR no longer conflicts with main.
+2. **This is the final head** for Amendment 7 item 6 and Amendment 8 item 2. **Next, at it:** R1 by a tester under the port-5400 harness, F7's §4 item 4 with it, and R1 alone on the machine by the custodian if FILTERED' fails again (Amendment 11 item 1); R2's installer from this head's pull_request CI run; R2, the human's, on Monday 2026-10-26, after #244's click.
+
+Nothing above is edited.
