@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `ad4ab3facea1ffb01535460e8897721ee3c22242bcb7360387e3f993812fffa6`) at `2026-10-23T09:39:36.721Z`.
+Generated from `PLAN.yaml` (sha256 `f30234ea71a1a82a91f3be07deca66d1bf3d14c3224f7ab3bd806626ffccee86`) at `2026-10-23T09:55:21.532Z`.
 
 ## 1. Next
 
@@ -29,13 +29,16 @@ Generated from `PLAN.yaml` (sha256 `ad4ab3facea1ffb01535460e8897721ee3c22242bcb7
 - **walkthrough-stale-cites-l5-degrees-p1** — Two walkthrough rows cite stale lines: Part L's L5 and the degrees tile grid Part P's P1 (the sitting script's D1 and D2) — blocked by: adr-020-appended-note
 - **briefb-b2-save-reopen** — B2 — Save project, Snapshot data, session history, lineage and preferences, in five stages, each with its own form — blocked by: decision-adr-029-scan-progress-route
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer — blocked by: signpath-application-draft
-- **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-1-1
-- **signpath-application-draft** — Entry 77 — the SignPath OSS application and disclosure text drafted for the human sight, once a release is CI-built — blocked by: release-v0-1-1
+- **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-2-0
+- **signpath-application-draft** — Entry 77 — the SignPath OSS application and disclosure text drafted for the human sight, once a release is CI-built — blocked by: release-v0-2-0
 - **flush-crlf-field-rewrite** — flush.mjs splits the ledger on LF and rewrites a field line without its CR, so a CRLF working-tree ledger ends with mixed line endings — blocked by: questions-mirror-item-count
 - **governance-hash-grammar-shared** — Share the path:line @ rev sha256:hex reference grammar between verify-test-claims.mjs and verify-quotes.mjs — blocked by: guardian-parity-git-timeout-under-load
 - **guardian-parity-git-timeout-under-load** — The Guardian parity test (scripts/hooks/guardian-continuity-parity.test.mjs) reads a fixture as not judged when a git call outruns its timeout under a shared load; the bound is chosen from a measurement — blocked by: flush-crlf-field-rewrite
 - **shell-owners-index** — An owner's index for the shell (frontends/shell), so that shell-owned KNOWN-LIMITATIONS items and pointers are indexed somewhere — blocked by: skp-line-cites-outside-close-races
+- **verify-cites-out-of-range-line-count** — verify-cites' out-of-range reason states a line count one too high for a file that ends in a newline — blocked by: governance-hash-grammar-shared
+- **verify-cites-reversed-range** — verify-cites checks a reversed range (end below start) by its larger end only — blocked by: verify-cites-out-of-range-line-count
 - **site-design-v1** — Landing page redesign — DRAFT-4 (status strip, milestone banner, waiting-on-you cards with unblocks counts, the swimlane board) — blocked by: governance-ci-built-site
+- **macos-normalization-roots-uncanonicalized** — On macOS the audit log normalization roots are read uncanonicalized while recorded destinations are canonicalized, so a symlinked temporary-directory root never matches — blocked by: port-2-macos-l1-and-app-dirs
 
 ## 5. In progress
 
@@ -53,7 +56,6 @@ Generated from `PLAN.yaml` (sha256 `ad4ab3facea1ffb01535460e8897721ee3c22242bcb7
 - **crs-zoom-constants-per-unit** — ADR-013 A1 item 6, the remaining class -- MAX_ZOOM and extent.ts's fit and degenerate zoom constants declared per CRS unit (crs-unit's STOP LIST Q2) (phase `prototype`) — never queued until placed
 - **interactive-zoom-ceiling** — A declared ceiling for interactive zoom (ADR-010 rule 6) -- crs-unit's STOP LIST Q3 (phase `prototype`) — never queued until placed
 - **shell-redesign-map-studio** — Shell redesign -- the Map studio direction (the human's choice of 2026-09-23; a design reference, not Authority; the migration plan is to be ruled) (phase `prototype`) — never queued until placed
-- **release-v0-1-1** — v0.1.1 release (patch) — the human schedules it; static-CRT declined (69a stands), evidence-archive and SignPath draft ride it (phase `prototype`) — never queued until placed
 - **briefb-b3-publish-v2** — Brief B, stage B3 — bundle v2 and CLI replay through the same publish implementation (phase `prototype`) — never queued until placed
 - **briefb-part-o-walkthrough** — Part O — the nine-step recipe walkthrough, after B3 only (phase `prototype`) — never queued until placed
 - **governance-ci-built-site** — Governance -- the site built by CI after merge, the design also addressing tracked-queue conflicts between sibling PRs (phase `prototype`) — never queued until placed
@@ -122,15 +124,14 @@ Generated from `PLAN.yaml` (sha256 `ad4ab3facea1ffb01535460e8897721ee3c22242bcb7
 - **pre-1-0-trademark-search** — The trademark register search with counsel before 1.0 (the human's own) (phase `prototype`) — never queued until placed
 - **record-step-style-match-widening** — record_step admits a style.set match value on fillColor, with the step's dependencies naming the match column and its type (milestone 4's OPEN-4 (A′)): a small data-lane piece, or the first commit of piece 1c's step 1 (phase `prototype`) — never queued until placed
 - **adr-017-note-product-redaction-gate** — An ADR-017 note in the human's typed words: the product publish now runs the redaction scan over every emitted file, except a viewer file whose bytes the viewer's build scanned, and refuses by name on a finding (bundle-redaction-scan-not-in-product-publish); the build-time scan, the reviewed list and the skip; and Corrigendum 4's new uninterruptible term (phase `prototype`) — never queued until placed
-- **verify-cites-out-of-range-line-count** — verify-cites' out-of-range reason states a line count one too high for a file that ends in a newline (phase `prototype`) — never queued until placed
-- **verify-cites-reversed-range** — verify-cites checks a reversed range (end below start) by its larger end only (phase `prototype`) — never queued until placed
 - **engine-column-name-case-siblings** — Column names that differ only by letter case beyond the covering: the geometry column matched by byte equality while DuckDB binds identifiers case-insensitively, and the identity, projected and filter columns (phase `prototype`) — never queued until placed
-- **macos-normalization-roots-uncanonicalized** — On macOS the audit log normalization roots are read uncanonicalized while recorded destinations are canonicalized, so a symlinked temporary-directory root never matches (phase `prototype`) — never queued until placed
+- **release-v0-2-0** — v0.2.0 release (pre-release): the hero slice with milestone 4, piece 1c and the redaction scan, v0.1.1 folded in; the human schedules it (phase `prototype`) — never queued until placed
 
 ### Unscheduled
 
 - **governance-verify-mutation-header-token** — verify-mutation.mjs -- the RECORDED MUTATION token is accepted anywhere inside the check's fixed window around a test, so a token in a file header or in a neighbouring test's comment greens a test that carries no mutation of its own (phase `prototype`) — ambition, never queued
 - **decision-adr-029-scan-progress-route** — ADR-029's scan-progress route, given G1 (a minimal crate patch exposing the connection handle; raw ffi end to end on the scan path; upstream first) -- deferred to Brief B's B2 by the human, round 16 item 3 (phase `prototype`) — ambition, never queued
+- **release-v0-1-1** — v0.1.1 release (patch) — the human schedules it; static-CRT declined (69a stands), evidence-archive and SignPath draft ride it (phase `prototype`) — ambition, never queued
 - **notebooks-record-replay** — Notebooks: record and replay (03) (phase `alpha`) — ambition, never queued
 - **mcp-server-permission-model** — MCP server with the permission model (04) (phase `alpha`) — ambition, never queued
 - **first-external-plugin-skp-client** — First external plugin as an out-of-process SKP client (02) (phase `alpha`) — ambition, never queued
