@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
-//! **The lasting dataset reference**: ADR-036 §5 (Proposed, binding nothing until the human
-//! accepts it), built by `kernel/B2-1A-STEP-RECORD-AND-DATASET-REFERENCE-PREREGISTRATION.md` §2.4.
+//! **The lasting dataset reference**: ADR-036 §5 (Accepted 2026-10-22), built by
+//! `kernel/B2-1A-STEP-RECORD-AND-DATASET-REFERENCE-PREREGISTRATION.md` §2.4.
 //!
 //! A format and a comparison, and nothing else: this module opens nothing, reads nothing, hashes
 //! nothing and takes no lease. A [`DatasetRef`] is built from an open dataset's existing accessors
@@ -155,12 +155,18 @@ pub enum RefCheck {
     },
 }
 
-/// Why a reference could not be built: the open was admitted under a CRS assertion with no
-/// definition. The engine allows one; the wire claim requires one, and an empty claim is not
-/// recorded in its place.
+/// Why a reference could not be built. The open was admitted under a CRS assertion with no
+/// definition: the engine allows one, the wire claim requires one, and an empty claim is not
+/// recorded in its place. Or the open's observation holds an integer a reader would refuse.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum RefBuildError {
     AssertionWithoutDefinition,
+    /// `byte_size` or `footer_length` is over 2^53 - 1 (ADR-036 §5): a writer binds no reference
+    /// to such a file, so it never writes a value that its reader refuses.
+    ObservationOverExactBound {
+        member: &'static str,
+        value: u64,
+    },
 }
 
 /// Why a reference's text was refused: a closed set, each naming the member's path (`$` is the
@@ -205,17 +211,20 @@ pub struct DatasetRef {
 impl DatasetRef {
     /// Build a reference to the file `ds` was opened over, from its existing accessors alone: the
     /// descriptor read at open, the admitted CRS and the admitted identity source. No read. The
-    /// locators are `[machine-recorded]`; a project-relative one is built by piece 1c.
+    /// locators are `[machine-recorded]`; a project-relative one is built by piece 1c. A file
+    /// whose size or footer length is over 2^53 - 1 is refused ([`exact_observation`]).
     pub fn linked(uri: DatasetUri, ds: &Dataset) -> Result<DatasetRef, RefBuildError> {
         let crs = ds.crs();
         let crs_assertion = claim_of(crs.source(), crs.identifier(), crs.definition_json())?;
         let identity = mapped_column(ds).map(|column| IdentityDeclaration {
             column: column.to_string(),
         });
+        let observed = ds.descriptor().observation();
+        exact_observation(&observed)?;
         Ok(DatasetRef {
             uri,
             locators: vec![Locator::MachineRecorded],
-            observed: ds.descriptor().observation(),
+            observed,
             admission: Admission {
                 crs_assertion,
                 identity,
@@ -339,6 +348,19 @@ fn claim_of(
         identifier: identifier.to_string(),
         definition_json: definition.to_string(),
     }))
+}
+
+/// The writer's half of the reader's integer bound (ADR-036 §5): an observation whose `byte_size`
+/// or `footer_length` the reader would refuse is not bound.
+fn exact_observation(o: &SourceObservation) -> Result<(), RefBuildError> {
+    let integers = [
+        ("byte_size", o.byte_size()),
+        ("footer_length", o.footer_length()),
+    ];
+    match integers.into_iter().find(|(_, v)| *v > MAX_EXACT_INTEGER) {
+        Some((member, value)) => Err(RefBuildError::ObservationOverExactBound { member, value }),
+        None => Ok(()),
+    }
 }
 
 /// The column of a caller's identity declaration, when the open was admitted under one.
@@ -536,13 +558,38 @@ fn parse_resource(v: &Value, path: &str) -> Result<(DatasetUri, Vec<Locator>), R
     Ok((uri, locators))
 }
 
+/// ADR-036 §5's reserved device names, declared as data (OPEN-20 (A)). A segment is refused when
+/// its part before the first `.`, with trailing spaces removed, is one of these, compared without
+/// regard to ASCII case.
+const RESERVED_DEVICE_NAMES: [&str; 32] = [
+    "CON", "PRN", "AUX", "NUL", "CONIN$", "CONOUT$", "COM0", "COM1", "COM2", "COM3", "COM4",
+    "COM5", "COM6", "COM7", "COM8", "COM9", "COM¹", "COM²", "COM³", "LPT0", "LPT1", "LPT2", "LPT3",
+    "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9", "LPT¹", "LPT²", "LPT³",
+];
+
 /// ADR-036 §5's canonical form for a `project-relative` locator, checked on the string alone: no
-/// empty, `.` or `..` segment (which also refuses an empty `at` and a leading `/`), and no backslash
-/// or `:`. Containment, that the resolved target lies inside the resolved project folder, is not
+/// empty, `.` or `..` segment (which also refuses an empty `at` and a leading `/`), no backslash
+/// or `:`, no control character (U+0000 to U+001F and U+007F to U+009F), no segment ending in a dot
+/// or a space, and no segment that is a reserved device name ([`RESERVED_DEVICE_NAMES`]).
+/// Containment, that the resolved target lies inside the resolved project folder, is not
 /// checked here: piece 1c's resolver checks it. No path type is used, nothing is joined and no
 /// file is touched.
 fn in_canonical_form(at: &str, path: &str) -> Result<(), RefParseError> {
-    if at.contains(['\\', ':']) || at.split('/').any(|s| matches!(s, "" | "." | "..")) {
+    let control = |c: char| matches!(c, '\0'..='\u{1f}' | '\u{7f}'..='\u{9f}');
+    let device = |segment: &str| {
+        let stem = segment
+            .split('.')
+            .next()
+            .unwrap_or("")
+            .trim_end_matches(' ');
+        RESERVED_DEVICE_NAMES
+            .iter()
+            .any(|d| d.eq_ignore_ascii_case(stem))
+    };
+    let unusable = |segment: &str| {
+        matches!(segment, "" | "." | "..") || segment.ends_with(['.', ' ']) || device(segment)
+    };
+    if at.contains(['\\', ':']) || at.contains(control) || at.split('/').any(unusable) {
         return Err(malformed(
             path,
             "a project-relative locator is in canonical form",
@@ -877,5 +924,77 @@ mod tests {
             };
             assert_eq!(word.unwrap_err(), unknown);
         }
+    }
+
+    #[test]
+    fn canonical_form_refuses_device_names_trailing_dot_or_space_and_control_characters() {
+        let refused = [
+            "NUL",
+            "nul.parquet",
+            "data/Con.txt",
+            "data/aux .x",
+            "COM1",
+            "lpt9.csv",
+            "CONIN$",
+            "conout$.x",
+            "COM¹",
+            "lpt³.dat",
+            "data/x.",
+            "data /x",
+            "x ",
+            "data/x. ",
+            "a\u{0}b",
+            "a\u{1f}b",
+            "a\u{7f}b",
+            "a\u{9f}b",
+        ];
+        for at in refused {
+            assert!(
+                in_canonical_form(at, "$").is_err(),
+                "{at:?} must be refused"
+            );
+        }
+        let accepted = [
+            "data/parcels.parquet",
+            "data/console.parquet",
+            "data/nul_island.parquet",
+            "data/COM10.csv",
+            "data/com.txt",
+            "data/auxiliary",
+            "a b/c d.parquet",
+            "é/ü.parquet",
+            "data/.hidden",
+            "data/a.b.c",
+            "a\u{a0}b",
+        ];
+        for at in accepted {
+            assert!(
+                in_canonical_form(at, "$").is_ok(),
+                "{at:?} must be accepted"
+            );
+        }
+    }
+
+    #[test]
+    fn an_observation_over_the_exact_integer_bound_is_refused_at_bind() {
+        let bound = |size: u64, footer: u64| {
+            exact_observation(&SourceObservation::recorded(size, Some(5), footer, None))
+        };
+        assert_eq!(bound(MAX_EXACT_INTEGER, MAX_EXACT_INTEGER), Ok(()));
+        let size = MAX_EXACT_INTEGER + 1;
+        assert_eq!(
+            bound(size, 0),
+            Err(RefBuildError::ObservationOverExactBound {
+                member: "byte_size",
+                value: size
+            })
+        );
+        assert_eq!(
+            bound(0, u64::MAX),
+            Err(RefBuildError::ObservationOverExactBound {
+                member: "footer_length",
+                value: u64::MAX
+            })
+        );
     }
 }

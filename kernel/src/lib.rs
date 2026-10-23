@@ -15,8 +15,8 @@
 //! ## What is deliberately absent
 //!
 //! - **No lineage DAG and no undo. One command log exists, for workspace mutations: the session
-//!   history** (`session_history`, ADR-036 §9, Proposed). It records each filter and style step a
-//!   client commits through `record_step`; it holds no workspace state, applies nothing and replays
+//!   history** (`session_history`, ADR-036 §9, Accepted 2026-10-22). It records each filter and style
+//!   step a client commits through `record_step`; it holds no workspace state, applies nothing and replays
 //!   nothing. The reason the other two are absent differs per operation, which the single sentence
 //!   that used to sit here hid. Besides recording steps, a workspace mutation (ADR-006 class 2) that
 //!   this crate never applies, it orchestrates **two** operations with **different ADR-006
