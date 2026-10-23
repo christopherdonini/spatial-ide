@@ -11,9 +11,12 @@
 // EACH against the working tree: the referenced file must exist AND the cited line (or, for a range,
 // both endpoints) must be within that file's line count. Every reference that does NOT resolve is
 // printed with the citing `file:line` and the bad target; the process exits 1 if any reference is
-// unresolved, 0 if all resolve. PINNED FALLBACK: a cite that does not resolve in the tree but is directly
-// followed by `@ <commit>` (7-40 hex digits) is read at that commit instead: the commit must exist, the
-// path must be a file there, and the line must be within it.
+// unresolved, 0 if all resolve. A cite starting or ending at line 0 never resolves; where its reason
+// would say a line exceeds a file, it names line 0 instead (lines count from 1). PINNED FALLBACK: a cite
+// that does not resolve in the tree but is directly followed by `@ <commit>` (7-40 hex digits) is read
+// at that commit instead: the commit must exist, a path must be a file there, and the line must be
+// within it. The paths tried, in order, are the files the tree resolves the path to (the exact set if
+// any, else the suffix set), then the path as written; the cite passes at the first holding the line.
 //
 // DEFAULT FILE SET (override with `--files <glob>`):
 //   - every tracked `*.md`               — the WHOLE file is scanned (prose citations count).
@@ -58,9 +61,10 @@
 // right line count but the wrong file among same-basename siblings; and, by the tiering above, a
 // stale LOOSE reference (it is surfaced as advice, never gated). Of the pin: one after a closing
 // backtick or after two spaces is not read; one on a cite that resolves in the tree is not checked; a
-// hex word right after `@` is read as a pin; a pin is read at the path as written, from the repo
-// root, so a relative, `.md`-fallback or basename cite keeps the tree's verdict. Node's standard
-// library only.
+// hex word right after `@` is read as a pin; a pin is read only at the files the tree now resolves the
+// path to, then at the path as written (the pin's own file list is never searched), so a file gone from
+// the tree is read only if it is the path as written, and the cite can pass at another file the tree
+// now matches; a loose cite matching nothing is not read at its pin. Node's standard library only.
 //
 // RELATIONSHIP to frontends/shell/e2e/citationIntegrity.test.mjs (the human's item 2, "extend the
 // citation-integrity scan to all files"): that e2e check is a DIFFERENT defect class — it proves a
@@ -248,42 +252,51 @@ export function checkCitation(cite, index, repoRoot) {
   const { exact, all } = resolveRef(cite.pathRaw, cite.relPath, index);
   if (all.length === 0) return { status: 'no-match' };
   const maxL = Math.max(cite.startL, cite.endL);
+  const zero = cite.startL === 0 || cite.endL === 0;
   const validStart = cite.startL >= 1 && cite.endL >= 1;
   const inRange = (cands) => validStart && cands.some((c) => maxL <= lineCount(repoRoot, c));
   if (exact.length) {
     if (inRange(exact)) return { status: 'ok' };
+    if (zero) return { status: 'oob-exact', reason: `line 0 does not exist in "${exact[0]}" (lines count from 1)` };
     const lc = Math.max(...exact.map((c) => lineCount(repoRoot, c)));
     return { status: 'oob-exact', reason: `line ${maxL} exceeds "${exact[0]}" (${lc} lines)` };
   }
   if (inRange(all)) return { status: 'ok' };
-  const lc = Math.max(...all.map((c) => lineCount(repoRoot, c)));
   const which = all.length === 1 ? all[0] : `${all.length} same-basename candidates`;
+  if (zero) return { status: 'oob-suffix', reason: `line 0 does not exist in ${which} (lines count from 1)` };
+  const lc = Math.max(...all.map((c) => lineCount(repoRoot, c)));
   return { status: 'oob-suffix', reason: `line ${maxL} exceeds ${which} (${lc} lines)` };
 }
 
 /**
  * A citation that carries a pin (`path:line[-line] @ <commit>`) is read at that commit: the commit
- * must exist, the file must exist there, and the line (or range end) must be within it. Returns
- * { ok: true } or { ok: false, reason, missingFile? } (missingFile: nothing at that path there). Git only reads; a commit git cannot find is a failing pin.
+ * must exist, a path of `paths` (the files to try, in order) must be a file there, and the line (or range
+ * end) must be within it. Returns { ok: true } at the first path that holds the line, else the first failure
+ * that is not a missing file, else { ok: false, reason, missingFile: true } naming the path as written.
+ * Git only reads; a commit git cannot find is a failing pin.
  */
-export function checkPinned(cite, repoRoot) {
+export function checkPinned(cite, repoRoot, paths) {
   const git = (args) =>
     execFileSync('git', args, { cwd: repoRoot, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], maxBuffer: 1 << 28 });
   try { git(['cat-file', '-e', `${cite.pin}^{commit}`]); } catch { return { ok: false, reason: `pinned commit ${cite.pin} not found` }; }
-  const p = cite.pathRaw.replace(/^\.\//, '');
-  let text;
-  try { text = git(['cat-file', 'blob', `${cite.pin}:${p}`]); } catch {
-    let kind = '';
-    try { kind = git(['cat-file', '-t', `${cite.pin}:${p}`]).trim(); } catch { /* absent */ }
-    if (kind === 'tree') return { ok: false, reason: `"${p}" is a directory at pinned commit ${cite.pin}` };
-    return { ok: false, missingFile: true, reason: `"${p}" not found at pinned commit ${cite.pin}` };
-  }
   const maxL = Math.max(cite.startL, cite.endL);
-  const lc = text.split('\n').length;
-  if (cite.startL < 1 || cite.endL < 1 || maxL > lc) {
-    return { ok: false, reason: `line ${maxL} exceeds "${p}" at pinned commit ${cite.pin} (${lc} lines)` };
+  let failure = null;
+  for (const p of paths) {
+    let text;
+    try { text = git(['cat-file', 'blob', `${cite.pin}:${p}`]); } catch {
+      let kind = '';
+      try { kind = git(['cat-file', '-t', `${cite.pin}:${p}`]).trim(); } catch { /* absent */ }
+      if (kind === 'tree') failure ??= { ok: false, reason: `"${p}" is a directory at pinned commit ${cite.pin}` };
+      continue;
+    }
+    const lc = text.split('\n').length;
+    if (cite.startL === 0 || cite.endL === 0) {
+      failure ??= { ok: false, reason: `line 0 does not exist in "${p}" at pinned commit ${cite.pin} (lines count from 1)` };
+    } else if (maxL > lc) {
+      failure ??= { ok: false, reason: `line ${maxL} exceeds "${p}" at pinned commit ${cite.pin} (${lc} lines)` };
+    } else return { ok: true };
   }
-  return { ok: true };
+  return failure ?? { ok: false, missingFile: true, reason: `"${cite.pathRaw.replace(/^\.\//, '')}" not found at pinned commit ${cite.pin}` };
 }
 
 function globToRegExp(glob) {
@@ -348,7 +361,8 @@ export function runVerifyCites({ repoRoot, filesGlob } = {}) {
       }
       let pinReason = null;
       if (cite.pin && (res.status !== 'no-match' || cls === 'rooted')) {
-        const pr = checkPinned(cite, root);
+        const rr = resolveRef(cite.pathRaw, relPath, index);
+        const pr = checkPinned(cite, root, [...new Set([...(rr.exact.length ? rr.exact : rr.all), cite.pathRaw.replace(/^\.\//, '')])]);
         if (pr.ok) continue;
         // A pin that only says "not found" does not replace a reason the tree already found a file for.
         if (!(pr.missingFile && res.status !== 'no-match')) pinReason = pr.reason;
