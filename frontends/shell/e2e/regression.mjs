@@ -97,9 +97,9 @@ const CRS_UNDECLARED_MESSAGE =
   "GeoParquet's OGC:CRS84 default is applied only when the crs key is absent in a file of " +
   "version 1.0.0 or 1.1.0; otherwise assert a CRS to open the file (docs/05, no silent " +
   "conversion)";
-// Verbatim from `engine/src/error.rs:244`'s `Self::FormatDefaultContradicted` `Display` arm, with
-// the `{detail}` minted at `engine/src/dataset.rs:1017`'s `format!("at level ...")`, inside
-// `convict_or_record` (`dataset.rs:1009`), fed by `dataset.rs`'s `sanity_check`, `geo.bbox` branch -- read back
+// Verbatim from `engine/src/error.rs`'s `Self::FormatDefaultContradicted` `Display` arm, with
+// the `{detail}` minted at `engine/src/dataset.rs`'s `format!("at level ...")`, inside
+// `convict_or_record`, fed by `dataset.rs`'s `sanity_check`, `geo.bbox` branch -- read back
 // from a real run against `absent-crs-contradicted.parquet` (this fixture's own `geo.bbox`
 // [2600000, 1200000, 2600400, 1200400], `geo.version` "1.1.0", so the format-rule reference is
 // "geoparquet:1.1.0#crs-absent-default"; `SanityLevel::Metadata.as_str()` is "metadata"), not
@@ -1140,10 +1140,10 @@ async function establishAboveThresholdHoverK6(page, consoleHandle, label) {
 }
 
 /** Clicks "Zoom to layer" (the same real button `A7'` already drives) to refit the WHOLE dataset
- * into view via `fitToExtent` (one atomic camera change, `WorkingCanvas.tsx:1227`), then settles
+ * into view via `WorkingCanvas.tsx`'s `fitToExtent` (one atomic camera change), then settles
  * -- never `page.reload()` (this suite's own established precedent: `residency-harness.mjs`'s own
- * "P3i-b B4" paragraph of the block labelled S4, `e2e/residency-harness.mjs:1971-1977` (first
- * paragraph labelled at `:1952`), treats a mid-script reload as riskier than this). A plain DOM `btn.click()`, not a
+ * "P3i-b B4" paragraph of the block labelled S4, in `runFieldSequenceIdentityCheck`'s doc comment,
+ * treats a mid-script reload as riskier than this). A plain DOM `btn.click()`, not a
  * real `page.mouse.click()` at the button's own screen position -- the pointer is NEVER moved by
  * this call, which is exactly what K6's own "pointer stationary" premise (this section's own top
  * comment) needs whether this is used to CROSS the threshold (assertion (i)) or merely to RESET the
@@ -1827,7 +1827,7 @@ async function stepK7(page, consoleHandle) {
   if (settledStatus !== K7_SETTLED_PARTIAL_TEXT) {
     throw new Error(
       `K7: expected .residency-status after the last zoom-out notch to be the declared partial-view status ` +
-        `verbatim (residencyStatus.ts:429-430) but it was ${JSON.stringify(settledStatus)} (per-notch snapshot ` +
+        `verbatim (residencyStatus.ts's SETTLED_PARTIAL_WITHIN_BUDGET_TEXT) but it was ${JSON.stringify(settledStatus)} (per-notch snapshot ` +
         `at the end of the loop: ${JSON.stringify(lastStatus)}); expected ${JSON.stringify(K7_SETTLED_PARTIAL_TEXT)}`
     );
   }
