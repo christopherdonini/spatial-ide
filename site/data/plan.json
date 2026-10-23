@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-23T16:57:00.891Z",
-  "plan_hash": "a42a8d6756d348ea56d7aa8228efa3c7ca2681b9fa5e2c0c57a88f03432ee0d6",
+  "generated_at": "2026-10-23T17:05:49.395Z",
+  "plan_hash": "cedfb0327adeaf4e367e4f88a1bc0c260a6cee704a41963df19160e44083a162",
   "priorities_approved": true,
   "lanes": [
     {
@@ -5839,7 +5839,7 @@
       "kind": "task",
       "lane": "governance",
       "phase": "prototype",
-      "status": "ready",
+      "status": "in-progress",
       "order": null,
       "depends_on": [
         "questions-mirror-item-count"
@@ -5848,13 +5848,15 @@
         "kind": "none",
         "minutes": 0
       },
-      "gate": "none",
-      "evidence": null,
-      "budget_minutes": 30,
-      "generation": 2,
+      "gate": "scripts/hooks/FLUSH-CRLF-FIELD-REWRITE-PREREGISTRATION.md",
+      "evidence": {
+        "branch": "cut/flush-crlf-field-rewrite"
+      },
+      "budget_minutes": 60,
+      "generation": 3,
       "felt_verdict": false,
       "entries": [],
-      "summary": "RULED 2026-10-23 (state/directives/2026-10-23-clicks-245-246-247-sort-window-fix-before-port-2-covering-case-route-1-244-c1-milestone-4-and-1c-open-items-ruled.md): OPEN-1 the full form; OPEN-2 per line. Before: DRAFTED AHEAD 2026-10-23 (state/consults/2026-10-23-flush-crlf-field-rewrite-architect-draft.md), not committed: the full form (a property under test), each rewritten field line keeping the terminator of the line it replaces, an LF ledger byte-identical; two tests and three mutations; 68 lines over flush.mjs and its test; budget 60. For the human: OPEN-1 the form (recommended A, full) and OPEN-2 the terminator for a mixed file (recommended A, per line). rotate-cut-state.mjs, the other writer of the ledger, writes LF throughout and is not changed. Before: RULED 2026-10-23 (state/directives/2026-10-23-weekend-covering-case-s1-session-log-redaction-s2-governance-and-docs-order-v0-2-scope-port-2-approved.md), item 3: third in the governance lane, after questions-mirror-item-count. Before: PLACED 2026-10-21 (state/directives/2026-10-21-placements-redaction-scan-1c-milestone-4-lanes-238-clicked-d-answers-adr-024-heading-kept.md, item 5): the governance lane after D, 3 of 3, after questions-mirror-item-count. Before: Routed by stop-hook-stale-continuity drafting consult (state/consults/2026-10-02-stop-hook-stale-continuity-architect-draft.md, open point 8): scripts/hooks/flush.mjs splits CUT-STATE.md on LF and writes a rewritten field line without its CR, so a CRLF working-tree ledger would end with mixed line endings. Out of that piece scope (its form declares flush.mjs unchanged). The repository checks the ledger out LF (.gitattributes eol=lf), so this matters only for a ledger written CRLF by some other tool (portability R1). Short form, a test with a CRLF ledger and its mutation.",
+      "summary": "IN PROGRESS 2026-10-23: FORM COMMITTED (scripts/hooks/FLUSH-CRLF-FIELD-REWRITE-PREREGISTRATION.md, the full form; the architect's drafting consult state/consults/2026-10-23-flush-crlf-field-rewrite-architect-draft.md, with the custodian's Amendment 1: 24 pins, the human's OPEN-1 full form and OPEN-2 per line, rule (00) by the branch diffs); budget 60; branch cut/flush-crlf-field-rewrite from this commit. NEXT: the code by a worker; then the PR and both gates. Before: RULED 2026-10-23 (state/directives/2026-10-23-clicks-245-246-247-sort-window-fix-before-port-2-covering-case-route-1-244-c1-milestone-4-and-1c-open-items-ruled.md): OPEN-1 the full form; OPEN-2 per line. Before: DRAFTED AHEAD 2026-10-23 (state/consults/2026-10-23-flush-crlf-field-rewrite-architect-draft.md), not committed: the full form (a property under test), each rewritten field line keeping the terminator of the line it replaces, an LF ledger byte-identical; two tests and three mutations; 68 lines over flush.mjs and its test; budget 60. For the human: OPEN-1 the form (recommended A, full) and OPEN-2 the terminator for a mixed file (recommended A, per line). rotate-cut-state.mjs, the other writer of the ledger, writes LF throughout and is not changed. Before: RULED 2026-10-23 (state/directives/2026-10-23-weekend-covering-case-s1-session-log-redaction-s2-governance-and-docs-order-v0-2-scope-port-2-approved.md), item 3: third in the governance lane, after questions-mirror-item-count. Before: PLACED 2026-10-21 (state/directives/2026-10-21-placements-redaction-scan-1c-milestone-4-lanes-238-clicked-d-answers-adr-024-heading-kept.md, item 5): the governance lane after D, 3 of 3, after questions-mirror-item-count. Before: Routed by stop-hook-stale-continuity drafting consult (state/consults/2026-10-02-stop-hook-stale-continuity-architect-draft.md, open point 8): scripts/hooks/flush.mjs splits CUT-STATE.md on LF and writes a rewritten field line without its CR, so a CRLF working-tree ledger would end with mixed line endings. Out of that piece scope (its form declares flush.mjs unchanged). The repository checks the ledger out LF (.gitattributes eol=lf), so this matters only for a ledger written CRLF by some other tool (portability R1). Short form, a test with a CRLF ledger and its mutation.",
       "dates": {
         "opened": "2026-10-02",
         "done": null
