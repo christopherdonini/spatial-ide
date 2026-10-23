@@ -1083,3 +1083,16 @@ Amendment 2 (b2-piece-1c-save-and-reopen): from piece 1c, the §5a style documen
 ````
 
 Nothing above is edited.
+
+## Amendment 2 — step 1's commits N1 to N7 built (class 1); the kernel product group over its ceiling (class 8); five moved pins (class 3); written after the result was seen
+
+*Written by the custodian. References only: `state/consults/2026-10-23-b2-piece-1c-save-and-reopen-step-1-n1-to-n7-worker-report.md`.*
+
+1. **Built:** N1 36708c1377488ae3f0a7a01203baada6e425e056 (main merged at 43a39222ebe6fbe1352c2268ef54521921028b66) to N7 7109aeb2431d9ca9379cb15b0d027dba78a20217, on `cut/b2-piece-1c-save-and-reopen`, each pushed; nothing past N7. Each new test's mutation was observed failing alone at 7109aeb2, fifteen in all, among them the one test item 5 names. The custodian checked by script that each ADR file at N2 is the file at N1, one LF and its annex (Amendment 1's Annexes A and B), Annex A dated 2026-10-22, N2's UTC commit date.
+2. **Class 8:** by §2.11's command over `43a39222...7109aeb2`, the kernel product group counts 2,099 lines against 1,350; 534 of them are inline `mod tests` in its product files, which count there by path. §7 is not edited. The other groups hold: the probe 144 of 150, ADR text 45 of 80, the renderer 123 of 200, kernel tests 145 of 1,000.
+3. **Class 3:** five ADR-036 lines that §0.3 and §2.10 pin at ad921f55 are at new lines at N1, their facts unchanged: 27 at 28, 42 at 64, 101 at 125, 128 at 152, 182 at 207.
+4. **Read (class 1):** Amendment 1 item 6's clippy check with `-D warnings` exits 101 at every commit on main's own code under rustc 1.97.1 (`renderer/src/canonical.rs`'s `write_double`, which N3 keeps byte-identical, `renderer/src/style.rs` and `engine/src`); no CI workflow runs clippy. Without `-D` it exits 0 at N3 to N7 with the same 45 warnings at each, none in the added code. The gates read that run.
+5. **Disclosed for the gates:** one test §4 does not name, in `kernel/src/session_history.rs`, covering N6's order and spelling refusals, with its mutation; values declared at their sites that §7 does not list (the project reader's depth and string bound, `folders.json`'s reader's size and depth, the rename pause, the session-history line reader's depth and string bound); `MAX_KNOWN_FOLDERS` counting `first` among its 256; the first N3 test run void (a scratch copy built in the same target directory) and re-run.
+6. **Next:** O1 (the resolver, `judge` and the save orchestration) after O0's amendment on Monday 2026-10-26; P1 to P6 after PR A merges; R1 after #241 merges. Step 1's PR opens after them.
+
+Nothing above is edited.
