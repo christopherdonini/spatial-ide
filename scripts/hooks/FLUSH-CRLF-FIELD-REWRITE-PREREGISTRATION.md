@@ -180,3 +180,12 @@ Nothing above is edited.
 2. **Next:** the scoped re-gate (Amendment 3 item 5), both gates, running at this head.
 
 Nothing above is edited.
+
+## §10 Amendment 5 — gate 2, the scoped re-gate: the architect PASS, the reviewer PASS WITH NOTES; the closing record (class 1); written after both reports were seen
+
+*Written by the custodian. References only: `state/consults/gates/2026-10-23-flush-crlf-field-rewrite-gate2-architect.md` (gate-log 604); `state/consults/gates/2026-10-23-flush-crlf-field-rewrite-gate2-reviewer.md` (gate-log 605); the head 9beca99e3c99862d86684fee2c6bd18cce89e92c.*
+
+1. **Both pass at the head.** The reviewer's one note, D1, the PR body written for the gate 1 head, is fixed: the body names this head, the correction commit, 51 lines, Amendments 1 to 4, the C1 words as the architect's and the E1 assertion.
+2. **The record is closed** for the human's click, a merge commit. §7 at 5 and 46, 51 of 68; no class 8.
+
+Nothing above is edited.
