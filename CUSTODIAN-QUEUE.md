@@ -1,16 +1,20 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `3a50ccd60d09b207ee54ea32d1493f33a852560b8395448f39abe43d1c477c11`) at `2026-10-23T20:07:37.358Z`.
+Generated from `PLAN.yaml` (sha256 `aec14d4dbc7cde9fbce133389d772513e925a8dc6a4364c22ee6f272d0266060`) at `2026-10-23T20:15:58.524Z`.
 
 ## 1. Next
 
-- **publish-sort-window-cancel-not-exercised-on-ci** — kernel/tests/publish_cancellation.rs: a_cancel_inside_the_sort_is_observed_rather_than_waited_out reddened on the Windows CI runner because QueryRunning never fired (the sort ended inside one poll interval) (lane `kernel-protocol`)
+- (nothing ready)
 
 ## 2. Ready
 
-- **publish-sort-window-cancel-not-exercised-on-ci** — kernel/tests/publish_cancellation.rs: a_cancel_inside_the_sort_is_observed_rather_than_waited_out reddened on the Windows CI runner because QueryRunning never fired (the sort ended inside one poll interval) (lane `kernel-protocol`, order null, budget 60 min)
+- (none)
 
-## 3. Waiting on the human (total: 0 min)
+## 3. Waiting on the human (total: 5 min)
+
+### ruling
+
+- **publish-sort-window-cancel-not-exercised-on-ci** — kernel/tests/publish_cancellation.rs: a_cancel_inside_the_sort_is_observed_rather_than_waited_out reddened on the Windows CI runner because QueryRunning never fired (the sort ended inside one poll interval) (5 min)
 
 ### sitting
 
