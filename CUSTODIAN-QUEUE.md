@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `42be4c7a22fab41c5fd3d9423bf46c27ab62690d3cc76590128e6ee8e3e6a1e3`) at `2026-10-23T10:25:24.051Z`.
+Generated from `PLAN.yaml` (sha256 `3e87f0113fc42b1ed1d8e4fcd7b3be24fd70a933d321952f9760350a2be893fc`) at `2026-10-23T10:36:32.573Z`.
 
 ## 1. Next
 
@@ -126,6 +126,7 @@ Generated from `PLAN.yaml` (sha256 `42be4c7a22fab41c5fd3d9423bf46c27ab62690d3cc7
 - **adr-017-note-product-redaction-gate** — An ADR-017 note in the human's typed words: the product publish now runs the redaction scan over every emitted file, except a viewer file whose bytes the viewer's build scanned, and refuses by name on a finding (bundle-redaction-scan-not-in-product-publish); the build-time scan, the reviewed list and the skip; and Corrigendum 4's new uninterruptible term (phase `prototype`) — never queued until placed
 - **engine-column-name-case-siblings** — Column names that differ only by letter case beyond the covering: the geometry column matched by byte equality while DuckDB binds identifiers case-insensitively, and the identity, projected and filter columns (phase `prototype`) — never queued until placed
 - **release-v0-2-0** — v0.2.0 release (pre-release): the hero slice with milestone 4, piece 1c and the redaction scan, v0.1.1 folded in; the human schedules it (phase `prototype`) — never queued until placed
+- **questions-mirror-red-line-dotted-lead** — The round-mirror hook's header misses a red-line item whose marker follows a lead holding a full stop (phase `prototype`) — never queued until placed
 
 ### Unscheduled
 

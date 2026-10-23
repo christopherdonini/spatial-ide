@@ -194,3 +194,26 @@ Each mutation is observed by applying it, running the named test, recording the 
 6. **Next:** the code, the tests, the mutations and the I1 and I2 runs, by one worker on `cut/questions-mirror-item-count` from this commit; then the PR and both gates.
 
 Nothing above is edited.
+
+## §10 Amendment 2 — after gate 1: §1 may-claim 3 bounded by §7's pattern; the option text in §1's second may-not-claim; the bare test-file cites as pins (class 1); written by the custodian
+
+*Written after the architect's and the reviewer's gate 1 results on PR #245 (post-result): `state/consults/gates/2026-10-23-questions-mirror-item-count-gate1-architect.md` and `state/consults/gates/2026-10-23-questions-mirror-item-count-gate1-reviewer.md`. They found §1 may-claim 3 wider than §7's pattern; no §3 or §4 prediction and no run changes.*
+
+1. §1 may-claim 3 is bounded by §7's red-line pattern: a question is listed when its text opens with `RED LINE`, or opens with a run of characters holding no full stop, em dash or newline, then `. ` or ` — `, then `RED LINE`, case-sensitive; every other question is not listed. So `OPEN-1 — RED LINE` and `Do we proceed — RED LINE items stay held?` are listed, and `§2.1 — RED LINE`, `AUTONOMY.md section 25 — RED LINE` and `Item 5. F — RED LINE` are not. The claim's second sentence is read through this rule.
+2. §1's second may-not-claim counts an item's option lines as part of its own text.
+3. The bare line cites into `scripts/hooks/questions-mirror.test.mjs` in §0, §1 and §4 are historical pins read at 769c39af0ea83a245205d42e9817cba859372f1e, the commit the form's **Drafted by** line names, where that file is as at B (Amendment 1, item 1): the pin is authoritative for what the form describes, and the tree after this piece is not what they describe.
+
+Nothing above is edited.
+
+## §10 Amendment 3 — scope addition: the README's summary sentence (class 9); written by the custodian
+
+*Scope addition, on the standing directive `state/directives/2026-10-05-product-first-direction.md`, section 2, after the reviewer's gate 1 finding D1; committed before the edit.*
+
+- §2: in `scripts/hooks/README.md`, the sentence giving the `> 4096` summary message's shape states §2.3's three cases. No code changes.
+- §4: no test and no mutation; the edit is prose and no behaviour moves.
+- §5: unchanged as §5 states; I4 is read against §7 as this amendment extends it. Invalidator: any other README text changed.
+- §7: `scripts/hooks/README.md`, at most 4 lines by `git diff --numstat B...HEAD -- scripts/hooks/README.md`, outside the two-file total.
+- §8: item 5 reads §7 as extended. §9: unchanged.
+- Rule (00) for the added path: `cut/bundle-redaction-scan` at 2fc01f59 does not name it; `cut/walkthrough-row-f7-cli-refusal` at abc900f2 does not name it; `cut/b1-shell-half-pr-a` at 35085072 does not name it; `cut/b2-piece-1c-save-and-reopen` at 7109aeb2 does not name it; `verify-cites-pin-resolution-and-line-zero` has no branch yet, and its drafted form names only `scripts/plan/verify-cites.mjs` and its test (`git diff --name-only origin/main...<branch>`, run at the commit that adds this amendment).
+
+Nothing above is edited.
