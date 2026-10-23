@@ -152,7 +152,7 @@ describe("startCandidateArmSession", () => {
   it("deps.tileGridLevel reaches the manager's own activeLevel, for each of the three locked levels", () => {
     for (const level of ["coarse", "medium", "fine"] as const) {
       const canvas = fakeCanvas();
-      const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, tileGridLevel: level });
+      const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, tileGridLevel: level, columns: null });
       expect(session.manager.activeLevel).toBe(level);
     }
   });
@@ -162,7 +162,7 @@ describe("startCandidateArmSession", () => {
   // exactly, the same as before this piece existed (no `level` option was ever passed).
   it("omitting tileGridLevel reproduces DEFAULT_TILE_GRID_LEVEL -- unset means unchanged behavior", () => {
     const canvas = fakeCanvas();
-    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas });
+    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, columns: null });
     expect(session.manager.activeLevel).toBe(DEFAULT_TILE_GRID_LEVEL);
   });
 
@@ -172,19 +172,34 @@ describe("startCandidateArmSession", () => {
   // the shape this session actually receives at its one real call site.
   it("an explicit null tileGridLevel also reproduces DEFAULT_TILE_GRID_LEVEL", () => {
     const canvas = fakeCanvas();
-    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, tileGridLevel: null });
+    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, tileGridLevel: null, columns: null });
     expect(session.manager.activeLevel).toBe(DEFAULT_TILE_GRID_LEVEL);
+  });
+
+  // RECORDED MUTATION for "PA-U7" (the session): the first look passes `null` (`filter, null)` in place of `filter, deps.columns)`). Expected failure: the first call's
+  // sixth argument below is null.
+  it("PA-U7: the first look and every tile's query pass the session's columns", async () => {
+    const columns = ["area", "zone"];
+    const canvas = fakeCanvas({ pushTileBatch: vi.fn(() => ({ ...OK_INGEST, fitAnchor: { xmin: 0, ymin: 0, xmax: 10, ymax: 10 } })) });
+    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, columns });
+    await session.reissueUnrestricted(null, null);
+    lastSink().onBatch(new Uint8Array([1]), true);
+    lastSink().onTerminal({ kind: "Completed", detail: "" });
+    session.manager.onCameraChange({ xmin: 0, ymin: 0, xmax: 10, ymax: 10 });
+
+    expect(viewportQueryMock.mock.calls.length).toBeGreaterThan(1);
+    expect(viewportQueryMock.mock.calls.map((call) => call[5])).toEqual(viewportQueryMock.mock.calls.map(() => columns));
   });
 
   it("reissueUnrestricted issues ONE plain, untiled viewport_query (bbox: null) -- the tile grid's own anchor problem", async () => {
     const canvas = fakeCanvas();
-    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas });
+    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, columns: null });
 
     const outcome = await session.reissueUnrestricted(null, null);
 
     expect(outcome).toEqual({ kind: "issued", streamHandle: "sh_1" });
     // P5f complex-gate should-fix 4: bounded now (`UNTILED_FIRST_LOOK_ROW_LIMIT`), not `limit: null`.
-    expect(viewportQueryMock).toHaveBeenCalledWith("ds_x", null, null, UNTILED_LOOK_LIMIT, null);
+    expect(viewportQueryMock).toHaveBeenCalledWith("ds_x", null, null, UNTILED_LOOK_LIMIT, null, null);
     expect(session.manager.gridFrame).toBeNull(); // not established until the stream reaches its own terminal
   });
 
@@ -199,7 +214,7 @@ describe("startCandidateArmSession", () => {
         .mockReturnValueOnce({ ...OK_INGEST, fitAnchor: { xmin: 0, ymin: 0, xmax: 0, ymax: 0 } })
         .mockReturnValue({ ...OK_INGEST, fitAnchor: { xmin: 0, ymin: 0, xmax: 10, ymax: 10 } }),
     });
-    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas });
+    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, columns: null });
     await session.reissueUnrestricted(null, null);
 
     const sink = lastSink();
@@ -242,6 +257,7 @@ describe("startCandidateArmSession", () => {
       dataset: "ds_degrees",
       crsUnit: fixture.crs.unit,
       canvas: degreesCanvas,
+      columns: null,
     });
     await degreesSession.reissueUnrestricted(null, null);
     lastSink().onBatch(new Uint8Array([1]), true);
@@ -260,6 +276,7 @@ describe("startCandidateArmSession", () => {
       dataset: "ds_metre",
       crsUnit: metreFixture.crs.unit,
       canvas: metreCanvas,
+      columns: null,
     });
     await metreSession.reissueUnrestricted(null, null);
     lastSink().onBatch(new Uint8Array([1]), true);
@@ -273,7 +290,7 @@ describe("startCandidateArmSession", () => {
       const canvas = fakeCanvas({
         pushTileBatch: vi.fn(() => ({ ...OK_INGEST, fitAnchor: { xmin: 0, ymin: 0, xmax: 0, ymax: 0 } })),
       });
-      const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas });
+      const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, columns: null });
       await session.reissueUnrestricted(null, null);
       lastSink().onBatch(new Uint8Array([1]), true);
       completeUntiledLook(); // P5f should-fix 4: establishment now happens at the stream's own terminal
@@ -301,7 +318,7 @@ describe("startCandidateArmSession", () => {
     const canvas = fakeCanvas({
       pushTileBatch: vi.fn(() => ({ ...OK_INGEST, fitAnchor: { xmin: 0, ymin: 0, xmax: 0, ymax: 0 } })),
     });
-    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas });
+    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, columns: null });
     await session.reissueUnrestricted(null, null);
     lastSink().onBatch(new Uint8Array([1]), true);
     completeUntiledLook(); // P5f should-fix 4: establishment now happens at the stream's own terminal
@@ -320,10 +337,7 @@ describe("startCandidateArmSession", () => {
     // new generation's own untiled stream reaching ITS terminal is what re-establishes it, exactly
     // like the dataset's own first open.
     expect(outcome).toEqual({ kind: "issued", streamHandle: "sh_2" });
-    expect(viewportQueryMock).toHaveBeenCalledWith("ds_x", null, null, UNTILED_LOOK_LIMIT, {
-      predicate: "x > 1",
-      dialect: "duckdb_expr_0",
-    });
+    expect(viewportQueryMock).toHaveBeenCalledWith("ds_x", null, null, UNTILED_LOOK_LIMIT, { predicate: "x > 1", dialect: "duckdb_expr_0" }, null);
   });
 
   it("a tile batch reporting overBudget sets the manager's over-budget flag; never throws a baseline-style refusal", async () => {
@@ -333,7 +347,7 @@ describe("startCandidateArmSession", () => {
         .mockReturnValueOnce({ ...OK_INGEST, fitAnchor: { xmin: 0, ymin: 0, xmax: 0, ymax: 0 } })
         .mockReturnValue({ ...OK_INGEST, overBudget: true, fitAnchor: { xmin: 0, ymin: 0, xmax: 0, ymax: 0 } }),
     });
-    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas });
+    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, columns: null });
     await session.reissueUnrestricted(null, null);
     // P5f complex-gate should-fix 4: the untiled "first look" stream now runs to its OWN natural
     // terminal (bounded by `UNTILED_FIRST_LOOK_ROW_LIMIT`) before the frame establishes -- so a
@@ -360,7 +374,7 @@ describe("startCandidateArmSession", () => {
 
   it("stop() cancels an in-flight untiled stream and refuses further planning", async () => {
     const canvas = fakeCanvas();
-    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas });
+    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, columns: null });
     await session.reissueUnrestricted(null, null);
 
     await session.stop();
@@ -376,7 +390,7 @@ describe("startCandidateArmSession", () => {
   // to `selfCancelledUntiledStreams` BEFORE calling `skpCancel`, the same discipline).
   it("stop()'s own cancel of the untiled stream suppresses its eventual terminal -- never logged, never misreported as a failure", async () => {
     const canvas = fakeCanvas();
-    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas });
+    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, columns: null });
     await session.reissueUnrestricted(null, null);
     const staleSink = lastSink(); // sh_1's own sink, captured before stop()
 
@@ -401,7 +415,7 @@ describe("startCandidateArmSession", () => {
         .mockReturnValueOnce({ ...OK_INGEST, fitAnchor: { xmin: 0, ymin: 0, xmax: 0, ymax: 0 } })
         .mockReturnValue({ ...OK_INGEST, overBudget: true, fitAnchor: { xmin: 0, ymin: 0, xmax: 0, ymax: 0 } }),
     });
-    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas });
+    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, columns: null });
     await session.reissueUnrestricted(null, null);
     lastSink().onBatch(new Uint8Array([1]), true);
     completeUntiledLook();
@@ -433,7 +447,7 @@ describe("startCandidateArmSession", () => {
     const canvas = fakeCanvas({
       pushTileBatch: vi.fn(() => ({ ...OK_INGEST, overBudget: true, fitAnchor: { xmin: 0, ymin: 0, xmax: 0, ymax: 0 } })),
     });
-    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas });
+    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, columns: null });
     await session.reissueUnrestricted(null, null);
     cancelMock.mockClear();
 
@@ -471,7 +485,7 @@ describe("startCandidateArmSession: onResidencyStatusChange (viewport-residency 
       getResidentCounts: vi.fn(() => ({ totalResidentVertices: 30, totalResidentFeatures: 3 })),
     });
     const onResidencyStatusChange = vi.fn();
-    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, onResidencyStatusChange });
+    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, onResidencyStatusChange, columns: null });
 
     await session.reissueUnrestricted(null, null);
     onResidencyStatusChange.mockClear(); // drop reissueUnrestricted's own query-issued event(s)
@@ -494,7 +508,7 @@ describe("startCandidateArmSession: onResidencyStatusChange (viewport-residency 
         getResidentCounts: vi.fn(() => ({ totalResidentVertices: 30, totalResidentFeatures: 3 })),
       });
       const onResidencyStatusChange = vi.fn();
-      const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, onResidencyStatusChange });
+      const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, onResidencyStatusChange, columns: null });
       await session.reissueUnrestricted(null, null);
       lastSink().onBatch(new Uint8Array([1]), true);
       completeUntiledLook();
@@ -527,7 +541,7 @@ describe("startCandidateArmSession: onResidencyStatusChange (viewport-residency 
       getResidentCounts: vi.fn(() => ({ totalResidentVertices: 2_000_000, totalResidentFeatures: 900 })),
     });
     const onResidencyStatusChange = vi.fn();
-    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, onResidencyStatusChange });
+    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, onResidencyStatusChange, columns: null });
 
     await session.reissueUnrestricted(null, null);
     onResidencyStatusChange.mockClear();
@@ -543,7 +557,7 @@ describe("startCandidateArmSession: onResidencyStatusChange (viewport-residency 
   it("reissueUnrestricted (Apply/Clear, or the dataset's own first look) emits query-issued at the clear", async () => {
     const canvas = fakeCanvas();
     const onResidencyStatusChange = vi.fn();
-    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, onResidencyStatusChange });
+    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, onResidencyStatusChange, columns: null });
 
     await session.reissueUnrestricted(null, null);
 
@@ -565,7 +579,7 @@ describe("startCandidateArmSession: onResidencyStatusChange (viewport-residency 
         getResidentCounts: vi.fn(() => ({ totalResidentVertices: 2_000_000, totalResidentFeatures: 900 })),
       });
       const onResidencyStatusChange = vi.fn();
-      const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, onResidencyStatusChange });
+      const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, onResidencyStatusChange, columns: null });
       await session.reissueUnrestricted(null, null);
       lastSink().onBatch(new Uint8Array([1]), true);
       completeUntiledLook(); // P5f should-fix 4: a real pan below needs a real, established frame
@@ -607,7 +621,7 @@ describe("startCandidateArmSession: onResidencyStatusChange (viewport-residency 
         getResidentCounts: vi.fn(() => ({ totalResidentVertices: 10, totalResidentFeatures: 1 })),
       });
       const onResidencyStatusChange = vi.fn();
-      const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, onResidencyStatusChange });
+      const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, onResidencyStatusChange, columns: null });
       await session.reissueUnrestricted(null, null);
       lastSink().onBatch(new Uint8Array([1]), true);
       completeUntiledLook(); // P5f should-fix 4: establishes the frame at the stream's own terminal
@@ -634,7 +648,7 @@ describe("startCandidateArmSession: onResidencyStatusChange (viewport-residency 
     const canvas = fakeCanvas({
       pushTileBatch: vi.fn(() => ({ ...OK_INGEST, fitAnchor: { xmin: 0, ymin: 0, xmax: 0, ymax: 0 } })),
     });
-    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas });
+    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, columns: null });
     await session.reissueUnrestricted(null, null);
 
     expect(() => lastSink().onBatch(new Uint8Array([1]), true)).not.toThrow();
@@ -668,7 +682,7 @@ describe("emitResidencyStatus: the stalled field (S5, session-level wiring of fi
         })),
       });
       const onResidencyStatusChange = vi.fn();
-      const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, onResidencyStatusChange });
+      const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, onResidencyStatusChange, columns: null });
       await session.reissueUnrestricted(null, null);
       lastSink().onBatch(new Uint8Array([1]), true);
       completeUntiledLook();
@@ -709,7 +723,7 @@ describe("emitResidencyStatus: the stalled field (S5, session-level wiring of fi
       getResidentCounts: vi.fn(() => ({ totalResidentVertices: 2_000_000, totalResidentFeatures: 900 })),
     });
     const onResidencyStatusChange = vi.fn();
-    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, onResidencyStatusChange });
+    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, onResidencyStatusChange, columns: null });
     await session.reissueUnrestricted(null, null);
     onResidencyStatusChange.mockClear();
     // The untiled bootstrap's own batch, over budget -- no tile was ever planned, so both
@@ -758,7 +772,7 @@ describe("banner impossibility under the candidate arm (item B, P4)", () => {
     // `CandidateArmSessionDeps` (this file's own interface) has exactly three fields:
     // `dataset`/`canvas`/`onResidencyStatusChange` -- no `onCanvasRefusal` field exists for this
     // object literal to populate even deliberately; TypeScript itself would refuse one.
-    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas });
+    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, columns: null });
 
     await expect(session.reissueUnrestricted(null, null)).resolves.toEqual({ kind: "issued", streamHandle: "sh_1" });
     expect(() => lastSink().onBatch(new Uint8Array([1]), true)).not.toThrow();
@@ -788,7 +802,7 @@ describe("countedIssuedTileKeys reset on reissueUnrestricted (P5f complex-gate s
       const canvas = fakeCanvas({
         pushTileBatch: vi.fn(() => ({ ...OK_INGEST, fitAnchor: { xmin: 0, ymin: 0, xmax: 0, ymax: 0 } })),
       });
-      const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas });
+      const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, columns: null });
       await session.reissueUnrestricted(null, null);
       lastSink().onBatch(new Uint8Array([1]), true);
       completeUntiledLook();
@@ -844,7 +858,7 @@ describe("applyScanEvent wiring (P5f complex-gate should-fix 3: the Cancel affor
       pushTileBatch: vi.fn(() => ({ ...OK_INGEST, fitAnchor: { xmin: 0, ymin: 0, xmax: 0, ymax: 0 } })),
     });
     const applyScanEvent = vi.fn();
-    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, applyScanEvent });
+    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, applyScanEvent, columns: null });
 
     await session.reissueUnrestricted(null, null);
     expect(applyScanEvent).toHaveBeenCalledWith(expect.objectContaining({ kind: "issued" }));
@@ -860,7 +874,7 @@ describe("applyScanEvent wiring (P5f complex-gate should-fix 3: the Cancel affor
     const canvas = fakeCanvas({
       pushTileBatch: vi.fn(() => ({ ...OK_INGEST, fitAnchor: { xmin: 0, ymin: 0, xmax: 0, ymax: 0 } })),
     });
-    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas });
+    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, columns: null });
     await session.reissueUnrestricted(null, null);
     expect(() => {
       lastSink().onBatch(new Uint8Array([1]), true);
@@ -894,7 +908,7 @@ describe("relinquishFill (Item A, decisions 32a/33b: the scoped relief lever)", 
     });
     const applyScanEvent = vi.fn();
     const onResidencyStatusChange = vi.fn();
-    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, applyScanEvent, onResidencyStatusChange });
+    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, applyScanEvent, onResidencyStatusChange, columns: null });
     await session.reissueUnrestricted(null, null);
     lastSink().onBatch(new Uint8Array([1]), true);
     completeUntiledLook();
@@ -1025,7 +1039,7 @@ describe("relinquishFill (Item A, decisions 32a/33b: the scoped relief lever)", 
       getResidentCounts: vi.fn(() => ({ totalResidentVertices: 10, totalResidentFeatures: 1 })),
     });
     const onResidencyStatusChange = vi.fn();
-    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, onResidencyStatusChange });
+    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, onResidencyStatusChange, columns: null });
 
     // The dataset's own first look, deliberately left running -- no batch/terminal fired, so no grid
     // frame exists yet and no tile work could possibly be outstanding either (mirrors the reviewer's
@@ -1092,7 +1106,7 @@ describe("relinquishFill (Piece 1, entry 35 -- also cancels the untiled stream o
     });
     const applyScanEvent = vi.fn();
     const onResidencyStatusChange = vi.fn();
-    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, applyScanEvent, onResidencyStatusChange });
+    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, applyScanEvent, onResidencyStatusChange, columns: null });
 
     await session.reissueUnrestricted(null, null); // gen1 bootstrap
     lastSink().onBatch(new Uint8Array([1]), true);
@@ -1230,7 +1244,7 @@ describe("M2: isFillComplete never reads true over a tile skipped-as-tracked acr
         markTilePartial: vi.fn((tileKey: string) => completeTileKeys.delete(tileKey)),
       });
       const onResidencyStatusChange = vi.fn();
-      const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, onResidencyStatusChange });
+      const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, onResidencyStatusChange, columns: null });
       await session.reissueUnrestricted(null, null);
       lastSink().onBatch(new Uint8Array([1]), true);
       completeUntiledLook();
@@ -1368,7 +1382,7 @@ describe("B1: a non-Completed terminal for a tile skipped-as-tracked across two 
         markTilePartial: vi.fn((tileKey: string) => completeTileKeys.delete(tileKey)),
       });
       const onResidencyStatusChange = vi.fn();
-      const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, onResidencyStatusChange });
+      const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, onResidencyStatusChange, columns: null });
       await session.reissueUnrestricted(null, null);
       lastSink().onBatch(new Uint8Array([1]), true);
       completeUntiledLook();
@@ -1497,7 +1511,7 @@ describe("INITIAL_TILE_KEY's own two-terminal bootstrap marking (P6b item 2b)", 
         fitAnchor: { xmin: 0, ymin: 0, xmax: 0, ymax: 0 },
       })),
     });
-    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas });
+    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, columns: null });
     await session.reissueUnrestricted(null, null);
     lastSink().onBatch(new Uint8Array([1]), true);
     completeUntiledLook();
@@ -1513,7 +1527,7 @@ describe("INITIAL_TILE_KEY's own two-terminal bootstrap marking (P6b item 2b)", 
         fitAnchor: { xmin: 0, ymin: 0, xmax: 0, ymax: 0 },
       })),
     });
-    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas });
+    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, columns: null });
     await session.reissueUnrestricted(null, null);
     lastSink().onBatch(new Uint8Array([1]), true);
     completeUntiledLook();
@@ -1558,7 +1572,7 @@ describe("hasHeadroom tightened to a declared 0.9 margin (P6b item 7)", () => {
       getResidentCounts: vi.fn(() => ({ totalResidentVertices: residentVertices, totalResidentFeatures: 1 })),
       applyTileViewportContext: vi.fn(() => false), // stays over budget after the re-check
     });
-    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas });
+    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, columns: null });
     await session.reissueUnrestricted(null, null);
     lastSink().onBatch(new Uint8Array([1]), true);
     completeUntiledLook();
@@ -1636,7 +1650,7 @@ describe("hasHeadroom tightened to a declared 0.9 margin (P6b item 7)", () => {
       markTileComplete: vi.fn((tileKey: string) => completeTileKeys.add(tileKey)),
     });
     const onResidencyStatusChange = vi.fn();
-    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, onResidencyStatusChange });
+    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, onResidencyStatusChange, columns: null });
 
     await session.reissueUnrestricted(null, null);
     lastSink().onBatch(new Uint8Array([1]), true);
@@ -1766,7 +1780,7 @@ describe("Item B: the settled-partial signal (RESIDENCY-DEBT-1B.md, BS5/BS6)", (
         markTilePartial: vi.fn((tileKey: string) => completeTileKeys.delete(tileKey)),
       });
       const onResidencyStatusChange = vi.fn();
-      const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, onResidencyStatusChange });
+      const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, onResidencyStatusChange, columns: null });
 
       // Bootstrap: establishes the frame. Untrimmed -- never affects `manager.overBudget`.
       const pushTileBatch = canvas.pushTileBatch as ReturnType<typeof vi.fn>;
@@ -1889,6 +1903,7 @@ describe("Item B: the settled-partial signal (RESIDENCY-DEBT-1B.md, BS5/BS6)", (
     const onTileSuperseded = vi.fn();
     const manager = new TileViewportStreamManager({
       dataset: "ds_x",
+      columns: null,
       residency,
       onBatch: vi.fn(),
       onTileSuperseded,
@@ -1942,7 +1957,7 @@ describe("Item B: the settled-partial signal (RESIDENCY-DEBT-1B.md, BS5/BS6)", (
         getResidentCounts: vi.fn(() => ({ totalResidentVertices: 10, totalResidentFeatures: 9 })),
       });
       const onResidencyStatusChange = vi.fn();
-      const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, onResidencyStatusChange });
+      const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, onResidencyStatusChange, columns: null });
       const bbox = { xmin: -10, ymin: -10, xmax: 10, ymax: 10 };
 
       // Generation 1: bootstrap, then a real plan -- settled-complete, the ordinary case (gen1's own
@@ -2035,7 +2050,7 @@ describe("Item B: the settled-partial signal (RESIDENCY-DEBT-1B.md, BS5/BS6)", (
         markTilePartial: vi.fn((tileKey: string) => completeTileKeys.delete(tileKey)),
       });
       const onResidencyStatusChange = vi.fn();
-      const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, onResidencyStatusChange });
+      const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, onResidencyStatusChange, columns: null });
       await session.reissueUnrestricted(null, null);
       lastSink().onBatch(new Uint8Array([1]), true);
       completeUntiledLook();
@@ -2110,7 +2125,7 @@ describe("Item B: the settled-partial signal (RESIDENCY-DEBT-1B.md, BS5/BS6)", (
         })),
       });
       const onResidencyStatusChange = vi.fn();
-      const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, onResidencyStatusChange });
+      const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, onResidencyStatusChange, columns: null });
       await session.reissueUnrestricted(null, null);
       lastSink().onBatch(new Uint8Array([1]), true);
       completeUntiledLook();
@@ -2165,7 +2180,7 @@ describe("Item B: the settled-partial signal (RESIDENCY-DEBT-1B.md, BS5/BS6)", (
         })),
       });
       const onResidencyStatusChange = vi.fn();
-      const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, onResidencyStatusChange });
+      const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, onResidencyStatusChange, columns: null });
 
       // Gen1: an ordinary bootstrap, its own untiled stream completed -- establishes the frame.
       await session.reissueUnrestricted(null, null);
@@ -2262,7 +2277,7 @@ describe("Item B: the settled-partial signal (RESIDENCY-DEBT-1B.md, BS5/BS6)", (
         markTilePartial: vi.fn((tileKey: string) => completeTileKeys.delete(tileKey)),
       });
       const onResidencyStatusChange = vi.fn();
-      const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, onResidencyStatusChange });
+      const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, onResidencyStatusChange, columns: null });
       await session.reissueUnrestricted(null, null);
       lastSink().onBatch(new Uint8Array([1]), true);
       // The untiled stream reaches its OWN terminal here, and never again in this test --
@@ -2336,7 +2351,7 @@ describe("F1 close-out (entry 44's second finding) + F2 close-out (entry 43): a 
    * bbox (so each test can re-plan over the identical covering set) and "A"'s own real tile key
    * (read from round 1's own `applyTileViewportContext` call, never assumed). */
   async function bootstrapAndArmOverBudget(canvas: WorkingCanvasHandle, onResidencyStatusChange: (event: ResidencyStatusEvent) => void) {
-    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, onResidencyStatusChange });
+    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, onResidencyStatusChange, columns: null });
     await session.reissueUnrestricted(null, null);
     lastSink().onBatch(new Uint8Array([1]), true);
     completeUntiledLook();
@@ -2539,7 +2554,7 @@ describe("entry 48 (a): the untiled first look is eviction-protected while in vi
             : { ...OK_INGEST, fitAnchor: FAR_TILE_EXTENT, batchExtent: FAR_TILE_EXTENT }
         ),
       });
-      const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas });
+      const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, columns: null });
       await session.reissueUnrestricted(null, null);
       lastSink().onBatch(new Uint8Array([1]), true);
       completeUntiledLook();
@@ -2616,7 +2631,7 @@ describe("entry 48 (a): the untiled first look is eviction-protected while in vi
       const canvas = fakeCanvas({
         pushTileBatch: vi.fn(() => ({ ...OK_INGEST, fitAnchor: FIRST_LOOK_EXTENT, batchExtent: FIRST_LOOK_EXTENT })),
       });
-      const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas });
+      const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, columns: null });
 
       // Generation 1: establishes the grid frame.
       await session.reissueUnrestricted(null, null);
@@ -2684,7 +2699,7 @@ describe("entry 48 (a): the untiled first look is eviction-protected while in vi
             : { ...OK_INGEST, fitAnchor: OLD_GEN_EXTENT, batchExtent: OLD_GEN_EXTENT };
         }),
       });
-      const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas });
+      const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, columns: null });
 
       // Generation 1: establishes the grid frame, admits E1 under INITIAL_TILE_KEY.
       await session.reissueUnrestricted(null, null);
@@ -2783,7 +2798,7 @@ describe("entry 48 (a): the untiled first look is eviction-protected while in vi
         // (the THIRD argument, channel 1) never reaches this check.
         applyTileViewportContext: vi.fn((covering: readonly string[]) => !covering.includes(INITIAL_TILE_KEY)),
       });
-      const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas });
+      const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, columns: null });
       await session.reissueUnrestricted(null, null);
       // The untiled first look's own row limit is hit this batch -- truncated, durably partial.
       lastSink().onBatch(new Uint8Array([1]), true);
@@ -2880,7 +2895,7 @@ describe("the sticky-relinquished status, end-to-end (Piece 1, entry 35)", () =>
       getResidentCounts: vi.fn(() => ({ totalResidentVertices: 5, totalResidentFeatures: 2 })),
     });
     const onResidencyStatusChange = vi.fn();
-    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, onResidencyStatusChange });
+    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, onResidencyStatusChange, columns: null });
 
     // Bootstrap, deliberately left running -- no frame exists yet.
     await session.reissueUnrestricted(null, null);
@@ -2921,7 +2936,7 @@ describe("the sticky-relinquished status, end-to-end (Piece 1, entry 35)", () =>
       getResidentCounts: vi.fn(() => ({ totalResidentVertices: 5, totalResidentFeatures: 2 })),
     });
     const onResidencyStatusChange = vi.fn();
-    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, onResidencyStatusChange });
+    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, onResidencyStatusChange, columns: null });
 
     // Bootstrap, deliberately left running -- no frame exists yet.
     await session.reissueUnrestricted(null, null);
@@ -2981,7 +2996,7 @@ describe("the sticky-relinquished status, end-to-end (Piece 1, entry 35)", () =>
         isTileCompleteInCandidateSet: vi.fn(() => true),
       });
       const onResidencyStatusChange = vi.fn();
-      const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, onResidencyStatusChange });
+      const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, onResidencyStatusChange, columns: null });
 
       await session.reissueUnrestricted(null, null);
       lastSink().onBatch(new Uint8Array([1]), true);
@@ -3032,7 +3047,7 @@ describe("the sticky-relinquished status, end-to-end (Piece 1, entry 35)", () =>
         isTileCompleteInCandidateSet: vi.fn(() => true),
       });
       const onResidencyStatusChange = vi.fn();
-      const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, onResidencyStatusChange });
+      const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, onResidencyStatusChange, columns: null });
 
       await session.reissueUnrestricted(null, null);
       lastSink().onBatch(new Uint8Array([1]), true);
@@ -3093,7 +3108,7 @@ describe("stale within-budget clears on the invalidating gesture (Piece 2(i), en
         isTileCompleteInCandidateSet: vi.fn((tileKey: string) => completeTileKeys.has(tileKey)),
       });
       const onResidencyStatusChange = vi.fn();
-      const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, onResidencyStatusChange });
+      const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, onResidencyStatusChange, columns: null });
       await session.reissueUnrestricted(null, null);
       lastSink().onBatch(new Uint8Array([1]), true);
       completeUntiledLook();
@@ -3149,7 +3164,7 @@ describe("stale within-budget clears on the invalidating gesture (Piece 2(i), en
         getResidentCounts: vi.fn(() => ({ totalResidentVertices: 10, totalResidentFeatures: 1 })),
       });
       const onResidencyStatusChange = vi.fn();
-      const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, onResidencyStatusChange });
+      const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, onResidencyStatusChange, columns: null });
       await session.reissueUnrestricted(null, null);
       lastSink().onBatch(new Uint8Array([1]), true);
       completeUntiledLook();
@@ -3193,7 +3208,7 @@ describe("the untiled sink's failed terminal feeds the typed-partiality accounti
         isTileResidentInCandidateSet: vi.fn(() => true),
         isTileCompleteInCandidateSet: vi.fn(() => true),
       });
-      const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas });
+      const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, columns: null });
 
       // Gen1 bootstrap: establishes the frame via a genuine Completed terminal.
       await session.reissueUnrestricted(null, null);
@@ -3261,7 +3276,7 @@ describe("the untiled sink's failed terminal feeds the typed-partiality accounti
         isTileResidentInCandidateSet: vi.fn(() => true),
         isTileCompleteInCandidateSet: vi.fn(() => true),
       });
-      const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas });
+      const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, columns: null });
 
       // Gen1 bootstrap: establishes the frame via a genuine Completed terminal.
       await session.reissueUnrestricted(null, null);
@@ -3307,7 +3322,7 @@ describe("the untiled sink's failed terminal feeds the typed-partiality accounti
       getResidentCounts: vi.fn(() => ({ totalResidentVertices: 5, totalResidentFeatures: 2 })),
     });
     const onResidencyStatusChange = vi.fn();
-    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, onResidencyStatusChange });
+    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, onResidencyStatusChange, columns: null });
 
     // Gen1 bootstrap: deliberately left open, no batch, no terminal -- STILL FRAMELESS.
     await session.reissueUnrestricted(null, null);
@@ -3400,7 +3415,7 @@ describe("entry 84: a clean Completed terminal that delivered no batch marks the
    * `completeUntiledLook`), then ONE camera change plans the single covering tile and mints its
    * stream. Returns that stream's own sink for the caller to terminate by hand. */
   async function armOneTile(canvas: WorkingCanvasHandle, onResidencyStatusChange: (event: ResidencyStatusEvent) => void) {
-    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, onResidencyStatusChange });
+    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, onResidencyStatusChange, columns: null });
     await session.reissueUnrestricted(null, null);
     lastSink().onBatch(new Uint8Array([1]), true);
     completeUntiledLook();
@@ -3569,7 +3584,7 @@ describe("candidate arm: a source-changed terminal clears every resident tile (b
   it("a_source_changed_terminal_on_either_stream_clears_every_resident_tile", async () => {
     const canvas = fakeCanvas();
     const onSessionEnded = vi.fn();
-    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, onSessionEnded });
+    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, onSessionEnded, columns: null });
     await session.reissueUnrestricted(null, null);
     // The reissue's own clear happens before the query; only what the terminal causes is counted.
     (canvas.clearAllTiles as ReturnType<typeof vi.fn>).mockClear();
@@ -3594,7 +3609,7 @@ describe("candidate arm: a source-changed terminal clears every resident tile (b
   it("a TILE stream's terminal ends the session and clears every tile", async () => {
     const canvas = fakeCanvas();
     const onSessionEnded = vi.fn();
-    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, onSessionEnded });
+    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, onSessionEnded, columns: null });
     await session.reissueUnrestricted(null, null);
     lastSink().onBatch(new Uint8Array([1]), true);
     completeUntiledLook(); // establishes the grid frame, so real tiles can be planned
@@ -3625,7 +3640,7 @@ describe("candidate arm: a source-changed terminal clears every resident tile (b
   it("the owner is told once, whichever sink or however many terminals", async () => {
     const canvas = fakeCanvas();
     const onSessionEnded = vi.fn();
-    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, onSessionEnded });
+    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, onSessionEnded, columns: null });
     await session.reissueUnrestricted(null, null);
     (canvas.clearAllTiles as ReturnType<typeof vi.fn>).mockClear();
 
@@ -3646,7 +3661,7 @@ describe("candidate arm: a source-changed terminal clears every resident tile (b
   // { kind: 'session-ended' }`.
   it("reissueUnrestricted is refused after the session ended", async () => {
     const canvas = fakeCanvas();
-    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas });
+    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, columns: null });
     await session.reissueUnrestricted(null, null);
     lastSink().onTerminal(sourceChangedTerminal());
     (canvas.clearAllTiles as ReturnType<typeof vi.fn>).mockClear();
@@ -3667,7 +3682,7 @@ describe("candidate arm: a source-changed terminal clears every resident tile (b
   it("an ordinary untiled terminal clears nothing", async () => {
     const canvas = fakeCanvas();
     const onSessionEnded = vi.fn();
-    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, onSessionEnded });
+    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, onSessionEnded, columns: null });
     await session.reissueUnrestricted(null, null);
     (canvas.clearAllTiles as ReturnType<typeof vi.fn>).mockClear();
 
@@ -3695,7 +3710,7 @@ describe("candidate arm: a source-changed terminal clears every resident tile (b
   it("SH15: an event-route end while the first look's viewportQuery is pending ends it", async () => {
     const canvas = fakeCanvas();
     const onSessionEnded = vi.fn();
-    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, onSessionEnded });
+    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, onSessionEnded, columns: null });
 
     let resolveViewportQuery!: (v: { stream: string }) => void;
     viewportQueryMock.mockReset().mockReturnValueOnce(
@@ -3730,7 +3745,7 @@ describe("candidate arm: a source-changed terminal clears every resident tile (b
    */
   it("SH16: an untiled batch after an event-route end reaches no pushTileBatch, and the untiled handle is cancelled", async () => {
     const canvas = fakeCanvas();
-    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas });
+    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, columns: null });
     await session.reissueUnrestricted(null, null);
     const sink = lastSink();
     cancelMock.mockClear();

@@ -827,3 +827,85 @@ file's bytes match the record's entry for that path.
   - Ordinary use reaches all of it: every publish carries the viewer.
 
 Nothing above is edited.
+
+## Amendment 4 — the code built; one ceiling overrun (class 8) (class 1); written after the result was seen
+
+*Written by the custodian. References only: `state/consults/2026-10-22-bundle-redaction-scan-not-in-product-publish-worker-report-1.md`.*
+
+1. **Built** at 979a7d5d27c13216318f468a40fc0203b43e8f9c, one commit on f88255437e64e8ba34e78e6c8273678f85718acf (main merged in; B′ c7d02156d042c25f14d84c841ac89268ea5cec78). `git diff --numstat B′...H` gives 828 insertions and 14 deletions over 22 files, the code files of Amendment 3 item 10's table. `kernel/README.md` and `engine/README.md` wait for the owner's-index update (§9).
+2. **Class 8:** `renderer/bundle-viewer/src/manifest.ts` changes 7 lines against item 10's ceiling of 3. W9 replaces three comment lines with four, so the ceiling could not be met. It is recorded here, and item 10 is not edited.
+3. **Next:** lead-data's owner's-index update, applied on the branch; then the PR, R1 and R2 at its head, and both gates.
+
+Nothing above is edited.
+
+## Amendment 5 — gate 1, the architect: FAIL; Amendment 3 item 2's hash form corrected (class 1); written after the report was seen
+
+*Written by the custodian. References only: `state/consults/gates/2026-10-22-bundle-redaction-scan-not-in-product-publish-gate1-architect.md` (gate-log 581).*
+
+1. **Gate 1, the architect, FAIL** at 6a10ee24e79ab17a3905c3de810844c41160f3ee: C1, C2 and C3, and D1. The reviewer's gate 1 runs at the same head, and the corrections are made in one round.
+2. **D1, the record's correction, in the architect's words** (not the human's): Amendment 3 item 2 compares `canonical::sha256_hex(bytes)`, which returns `sha256:` followed by the hex digest, with a record value item 1 fixes as 64 lowercase hex, so no entry `scan-dist.mjs` writes could match. `is_built_asset` compares the record's value with the bare hex digest of the staged bytes, and U1, T6 and T8 write their records in item 1's form. Proof: T8 with a record in `scan-dist.mjs`'s form, the form V3 asserts, and R1.
+
+Nothing above is edited.
+
+## Amendment 6 — gate 1, the reviewer: FAIL; R1 not run; correction round 1 (class 1); written after the reports were seen
+
+*Written by the custodian. References only: `state/consults/gates/2026-10-22-bundle-redaction-scan-not-in-product-publish-gate1-reviewer.md` (gate-log 582); `state/consults/2026-10-22-bundle-redaction-scan-not-in-product-publish-r1-tester-report-1.md`.*
+
+1. **Gate 1, the reviewer, FAIL** at 6a10ee24e79ab17a3905c3de810844c41160f3ee: the architect's C1 to C3 confirmed, C1 reproduced by a probe; E-1; D-1 to D-3.
+2. **R1 did not run** at that head: the dev server's port lies inside the machine's excluded TCP range, so the app could not launch. Freeing it is the human's. R1 and R2 run after the correction round, at its head.
+3. **Correction round 1,** one worker-high: C1 by the architect's remedy, with U1's added assert and T8's record written byte for byte as `scan-dist.mjs` writes it; C2 by the scratch mirror; C3 by the per-file walk; D-2's words. Then U1, T6, T8 and M8 to M10, M12 and M13 are re-observed at its commit. D-1 is the PR body's, and the custodian makes it. D-3, row F7, is the human's to place. The architect's scoped re-gate of C1 to C3 and the reviewer's scoped check follow.
+
+Nothing above is edited.
+
+## Amendment 7 — correction round 1 built; the scoped re-gate and check, both PASS WITH NOTES (class 1); written after both reports were seen
+
+*Written by the custodian. References only: `state/consults/2026-10-22-bundle-redaction-scan-not-in-product-publish-worker-report-2.md`; `state/consults/gates/2026-10-22-bundle-redaction-scan-not-in-product-publish-gate2-architect.md` (gate-log 583); `state/consults/gates/2026-10-22-bundle-redaction-scan-not-in-product-publish-gate2-reviewer.md` (gate-log 584).*
+
+1. **Correction round 1** is 95edf33be3640fd68dbed77f6d5055e6189506a1, one commit on 6a10ee24e79ab17a3905c3de810844c41160f3ee: C1, C2, C3 and D-2, as both gate 1 reports give them. The change stands at 888 lines against 1,222.
+2. **The scoped re-gate and the scoped check: both PASS WITH NOTES.** C1 to C3 are closed. The reviewer's probe, with the real built `NOTICE.txt` and the real record, gives `Success`; its control, with the `sha256:` form, is refused at byte 19092.
+3. **The findings held, in the reviewer's words (its D-A, not the human's):** §2.3's "Findings held" bound is kept by `walk`'s `first_only` arm in kernel/src/bundle/redaction.rs at 95edf33be3640fd68dbed77f6d5055e6189506a1. No test asserts it: `first_undeclared_findings` returns the same result with or without it, and the file's `mod tests` is on §2.4's byte-identical list.
+4. **The architect's D-A and D-B,** two comment lines, are applied on the branch by a worker, and the PR body lists them.
+5. **Report-2's M8 and M9 lines** for U1 are two below the head's; the reviewer's observation at the head stands.
+6. **Before the merge:** R1 and R2 at the final head, and the human's placement of walkthrough row F7. The dev port R1 needs is the human's to free; R2 is the human's publish through the native dialog.
+
+Nothing above is edited.
+
+## Amendment 8 — R1 as predicted at the head, under the port-5400 harness (class 1); written after the result was seen
+
+*Written by the custodian. References only: `state/consults/2026-10-22-bundle-redaction-scan-not-in-product-publish-r1-tester-report-2.md`; the human's word, `state/directives/2026-10-22-away-until-monday-241-r1-on-5400-f7-a-milestone-4-1c-code-o0-b-docs-lane-ruled-i4-a.md`, under `state/directives/2026-10-11-harness-approval-open-9-i-withdrawn-a10-late-cancel-adr-029.md`, item 1.*
+
+1. **R1** at 2fc01f5955a0dc21d51ee4cdffc3e5c55800959d, the debug app under the port-5400 harness: APPROVED' passes through the skip, its bundle's `viewer/` files each equal to the build record's entry (`NOTICE.txt` 826e55d1f585edef8431791033a6beacd6379dc0615ad749a97a7467ab4805fb), its audit pair a success; REFUSED' passes as before. The viewer build's scan matches the two `NOTICE.txt` rows and finds the `app.js` row gone.
+2. **Before the merge:** R2 at the final head, the human's, on Monday 2026-10-26; and the F7 piece clicked first (its form's §2.3).
+
+Nothing above is edited.
+
+## Amendment 9 — #244's gate 2 outside-scope finding on the dev remedies, by the human's ruling; (e) fixed before the merge (class 1); written after the reports were seen
+
+*Written by the custodian. References only: `state/consults/gates/2026-10-23-walkthrough-row-f7-cli-refusal-gate2-reviewer.md`, its section headed Outside this scope, item 2 (gate-log 594); the architect's reconciliation `state/consults/2026-10-23-walkthrough-row-f7-cli-refusal-gate2-words-reconciled-architect.md`, item 4 and its words (a) to (f); the human's ruling `state/directives/2026-10-23-clicks-245-246-247-sort-window-fix-before-port-2-covering-case-route-1-244-c1-milestone-4-and-1c-open-items-ruled.md`, its paragraph opening `#244, C1`; `state/directives/2026-10-05-product-first-direction.md`, section 2.*
+
+1. **The finding:** on Windows, tauri-utils' `resource_dir()` is the executable's directory, so a `tauri dev` run resolves the build-time copy and `packaged` is true. The comments the architect's item 4 lists as (a) to (f) read as untrue there, and the dev-remedy branches of `resolve_viewer_dir` and `read_build_record` are not reached in ordinary Windows use. No behaviour changes; macOS and Linux are unvalidated.
+2. **(e),** `read_build_record`'s doc comment, is this piece's own sentence: a documentation finding, fixed on `cut/bundle-redaction-scan` before the merge with the architect's (e) words and no re-gate (`state/directives/2026-10-05-product-first-direction.md`, section 2); the PR body lists it, and the reviewer's diff check and CI run at the new head. Its lines count toward §7's 45 outside `mod tests` and `resolver_tests` (Amendment 3, item 10); an overrun is class 8.
+3. **(a) to (d) and (f)** were on main before this piece and are not its text: they go to the proposed node `shell-resource-dir-dev-comments`, after this piece merges.
+4. **What the new head reopens** (Amendment 7 item 6, Amendment 8 item 2): R1, re-run at the new head by a tester under the port-5400 harness; R2's installer, taken from the new head's CI run; F7's §4 item 4, re-run at the new head (that form's §2.3).
+5. **Next:** the worker's commit, the reviewer's diff check and R1; then R2, the human's, on Monday 2026-10-26, after #244's click.
+
+Nothing above is edited.
+
+## Amendment 10 — (e) applied at the new head (class 1); written after the result was seen
+
+*Written by the custodian. References only: `state/consults/2026-10-23-bundle-redaction-scan-not-in-product-publish-e-words-worker-report.md`; the head 147ef82c7d14b537b5c3fc51673090c9b082a1f5.*
+
+1. **(e) applied at 147ef82c7d14b537b5c3fc51673090c9b082a1f5,** one commit on 2fc01f5955a0dc21d51ee4cdffc3e5c55800959d: `read_build_record`'s doc comment in the architect's words, its paragraph re-wrapped greedily at 100 columns to five lines (its old third line was 103 columns), so 5 added and 3 removed; `publish.rs` at 44 of §7's 45 outside `mod tests` and `resolver_tests`; `cargo fmt --check` and `cargo check` exit 0.
+2. **Next, at this head:** the reviewer's scoped check (the diff, (e)'s clause check, the count, CI, and F7's §4 item 4 for that form's record); R1 by a tester under the port-5400 harness; R2's installer from this head's CI run; R2 on Monday 2026-10-26, after #244's click.
+
+Nothing above is edited.
+
+## Amendment 11 — R1 at 147ef82c stopped on FILTERED' in a shared run; the scoped check PASS WITH NOTES, the branch conflicting with main (class 1); written after both results were seen
+
+*Written by the custodian. References only: `state/consults/2026-10-23-bundle-redaction-scan-not-in-product-publish-r1-tester-report-3.md`; `state/consults/gates/2026-10-23-bundle-redaction-scan-not-in-product-publish-e-scoped-reviewer.md` (gate-log 603).*
+
+1. **R1 at 147ef82c7d14b537b5c3fc51673090c9b082a1f5:** APPROVED' and REFUSED' as Amendment 8 item 1 predicts, every `viewer/` file equal to the build record's entry; the suite exited 1 on FILTERED', whose prompt carried no `filter_scope` sentence after a filter was applied. That step passed at 2fc01f59, and the head changes a doc comment only. A timing-sensitive failure in a shared run is not recorded as a failure (the machine rule): the custodian re-runs the suite alone. The custodian's reading, not a finding: the suite's prepare hook may still hold the filter state from before the filter applied, as React re-registers it after the change.
+2. **The scoped check of (e): PASS WITH NOTES.** The diff, (e)'s clause check, §7's 44 of 45 and F7's §4 item 4 hold at this head. Its E-1: the branch conflicts with main in `KNOWN-LIMITATIONS.md` (item 47 here, items 51 and 52 on main, at the same place), so the pull_request workflows did not run at this head and the PR cannot merge as it stands. Its N-1 and N-2 are recorded here by reference, not in the comment.
+3. **Next, in this order:** main merged into the branch with a merge commit, the conflict resolved by keeping both sides in item order; at the merge head, R1 re-run alone on the machine by the custodian; R2's installer from that head's pull_request CI run; F7's §4 item 4 at that head; R2, the human's, on Monday 2026-10-26, after #244's click.
+
+Nothing above is edited.

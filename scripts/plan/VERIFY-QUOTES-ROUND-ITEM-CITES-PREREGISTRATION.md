@@ -349,3 +349,83 @@ Opens empty, append-only.
 3. **Budget:** 180 minutes (§7), set in PLAN.yaml with this commit. **S1** follows on `cut/verify-quotes-round-item-cites`, cut from this commit (B). Rule (00) is re-checked when the redaction scan's Amendment 3 names its CI step's workflow file.
 
 Nothing above is edited.
+
+## §10 Amendment 2 — S1 built; S2: STOP on I4 (class 1); written after the result was seen
+
+*Written by the custodian. References only: `state/consults/2026-10-21-verify-quotes-round-item-cites-s1-worker-report.md`; `state/consults/2026-10-21-verify-quotes-round-item-cites-s2-worker-report.md`.*
+
+1. **S1** is 81a287a667d13cfd989331ddcd65357dc6915092: the 15 tests of §4, each of its 15 mutations observed failing alone at that commit; the suite from 527 to 542 (U6); 344 lines over 5 files (§7). It gives `resolveCitation` and `resolveInText` an optional third parameter, `readRoundFile`, through which `withdrawnRiders` binds the round-file reader (§2.6). §2.6 names `resolveCitation`'s signature unchanged. Every two-argument call is unchanged, and U4 holds (item 2). The gates rule on it.
+2. **S2,** at 85ac5d781508318f9177d31c9fe15d12eb365011 (S1 with main merged in at c86b2c9c): U1 to U5 hold. P1: 836 ruling cites resolved (floor 400). P2: 152 refused with MQ4, MQ5 and MQ13 applied together (floor 100). P3: U = 0 (ceiling 10). P4: 0 unresolved in each of the four forms it scanned.
+3. **I4 fired, by its letter.** One RULED header in the ruling set names its question round outside §2.3 (i)'s grammar. It is the block for question round 72, in the 2026-10-20 archive. It is headed by PR #217, and the round is named in a parenthesis at the end of its header. The block has no item lines; the round's tracked question file has one item. No file of the scan set cites round 72 by item (U = 0). Such a cite would fail by name; it would not pass. Every item-like line inside a round-headed block matches §2.3 (iii): 166 of 166.
+4. **S3 has not run.** The human rules how I4 is met, and the ruling is recorded in the next amendment before S3.
+
+Nothing above is edited.
+
+## §10 Amendment 3 — I4 met by the human's (A) (class 5)
+
+*Written by the custodian on the human's message. References only: `state/directives/2026-10-22-away-until-monday-241-r1-on-5400-f7-a-milestone-4-1c-code-o0-b-docs-lane-ruled-i4-a.md`.*
+
+1. **I4 (A):** question round 72's RULED header, in the 2026-10-20 archive, is recorded as the one unread block of the ruling set. A cite to round 72 by item is refused by name; a record cites that ruling by a hash pin instead.
+2. **S3 follows.** The header paragraph's disclosed gaps name that block. Then the PR and both gates.
+
+Nothing above is edited.
+
+## §10 Amendment 4 — gate 1: both FAIL; correction round 1 (class 9 for E-1's test, class 1 for the records); written after the reports were seen
+
+*Written by the custodian. References only: `state/consults/gates/2026-10-22-verify-quotes-round-item-cites-gate1-architect.md` (gate-log 585); `state/consults/gates/2026-10-22-verify-quotes-round-item-cites-gate1-reviewer.md` (gate-log 586).*
+
+1. **Gate 1 at b08a1fec4e3405153b4998882427355fa18db319:** the architect FAIL (C-1, words only; D-1 to D-3; H-1 to the human) and the reviewer FAIL (E-1; D-1 to D-4). Both close the code's correctness.
+2. **E-1 (class 9, before its code):** one test is added in `scripts/plan/verify-test-claims.test.mjs`, C2 `verify-test-claims: a withdrawn-test row whose ruling cites an itemless round resolves through the tracked round file`. It also shows the cite failing by name when the round file lacks the item. Its fixture byte-copies, at 40b04b46, the real RULED block for question rounds 66 and 67 and `state/questions/round-66.md`, found by round. Its mutation, MC2, drops the round-file reader from `withdrawnRiders`' two calls; it is observed failing alone, with the commit id. U6 becomes: the suite grows by exactly 16 tests.
+3. **The words:** the architect's W1 to W6 and the reviewer's D-1 to D-3 replace the same sentences. The architect reconciles them into one set, filed before the worker applies it with no re-gate (§9); the PR body lists them.
+4. **Records corrected:**
+   - Amendment 2, item 1's fourth sentence: the only two calls of `resolveCitation`, both in `withdrawnRiders`, now pass the round-file reader, and neither it nor `resolveInText` is exported; U4 holds (S2's report, step 4).
+   - §7, not edited (class 8 by its letter): its command over B...H at b08a1fec gives 3,240 lines over 32 files, because the range carries main's merges at c86b2c9c and 49a7f532; over 49a7f532...H it gives 375 lines over 7 files, the piece's own, within 550 and 7.
+   - The line numbers in the step reports (S2's archive and ledger lines at 85ac5d78, S1's `verify-quotes.mjs` line at 81a287a6, S3's at 8e04dbe2) are their instruments' output, not references. The record's reference to the unread block is Amendment 2, item 3.
+5. **H-1 is the human's,** on Monday 2026-10-26: whether a record's hash pin for that block's ruling points into the archive or at the round's tracked question file. The header's and the README's words follow the ruling, so the merge waits for it.
+6. **Next:** the reconciled words; correction round 1 by a worker (C2, MC2, the words); then scoped re-gates.
+
+Nothing above is edited.
+
+## §10 Amendment 5 — correction round 1 built (class 1); written after the result was seen
+
+*Written by the custodian. References only: `state/consults/2026-10-22-verify-quotes-round-item-cites-round-1-worker-report.md`; `state/consults/2026-10-22-verify-quotes-round-item-cites-gate1-words-reconciled-architect.md`.*
+
+1. **Round 1** is 91ccdab4904b5937b53b296b03a91a62b41fd2f3: C2 with MC2 observed failing alone, and sections 1 to 4 of the reconciled words applied, each found once and replaced. The suite is 543 (U6 as amended); U4 holds; §7 over 49a7f532...H is 415 lines over 7 files.
+2. **Next:** the scoped re-gates at 91ccdab4; H-1 stays the human's.
+
+Nothing above is edited.
+
+## §10 Amendment 6 — the scoped re-gates: both PASS WITH NOTES (class 1); written after the reports were seen
+
+*Written by the custodian. References only: `state/consults/gates/2026-10-22-verify-quotes-round-item-cites-gate2-architect.md` (gate-log 589); `state/consults/gates/2026-10-22-verify-quotes-round-item-cites-gate2-reviewer.md` (gate-log 590).*
+
+1. **Both PASS WITH NOTES** at 91ccdab4904b5937b53b296b03a91a62b41fd2f3: gate 1's C-1 and E-1 are closed; MC2 is re-observed failing alone at that commit (the reviewer's check 2).
+2. **D-4, one comment line,** at the blockquote constant's site in `scripts/plan/verify-quotes.mjs`, by a worker with no re-gate, in the architect's words.
+3. **The PR body:** the architect's D-3 is applied; it covers the reviewer's D-1.
+4. **S4, the closing amendment,** waits for H-1 and carries, as references: the architect's D-1 and D-2 rows (D-2 citing the reviewer's re-observation at 91ccdab4), and §7's figures at the final head.
+5. **Noted, not done:** the carrier call's round-file reader has no test of its own (both gates' N-1); a follow-on, not required for this merge.
+
+Nothing above is edited.
+
+## §10 Amendment 7 — H-1 ruled by the human (class 5)
+
+*Written by the custodian on the human's message. References only: `state/directives/2026-10-22-242-h-1-round-72-pin-f7-open-items-milestone-4-open-16-b-adr-020-corrigendum-a-1c-adr-036-words-approved-disk-parity-node.md`, item 1; the architect's H-1 note in `state/consults/2026-10-22-verify-quotes-round-item-cites-gate1-words-reconciled-architect.md`, its sections 1 and 2.*
+
+1. **H-1:** a record's cite to question round 72's ruling pins the item's line in the tracked `state/questions/round-72.md`, by a hash pin at a main commit, never a line of the archive. That is the hash pin of Amendment 3, item 1.
+2. **The words follow:** the clause that the architect's H-1 note gives for a pin at the question file is appended where that note places it, in the header's sentence in `scripts/plan/verify-quotes.mjs` and in the README's sentence in `scripts/plan/README.md`. A worker applies it with no re-gate (§9, as Amendment 4, item 3 applied the reconciled words), and the PR body lists it. A header line may be rewrapped at a word boundary; no word changes.
+3. **Next:** S4, the closing amendment (Amendment 6, item 4), at the head that carries the clause; then the PR leaves draft for the human's click, the last of the four at the sitting.
+
+Nothing above is edited.
+
+## §10 Amendment 8 — S4, the closing amendment: references and hashes only (class 1); written after the head was seen
+
+*Written by the custodian. References only: `state/consults/gates/2026-10-22-verify-quotes-round-item-cites-gate2-architect.md`, its D-1 and D-2; `state/consults/gates/2026-10-22-verify-quotes-round-item-cites-gate2-reviewer.md`, its check 2; `state/consults/2026-10-22-verify-quotes-round-item-cites-h-1-clause-worker-report.md`.*
+
+1. **The final head** is 2d2e4633a15b7fa05ed7a10b7637a0f4943f23fd: Amendment 7's clause in the two files it names, on af77b0d10514c9bdca0a46367b9660450d85b295 (D-4). The suite is 543 tests (U6 as amended).
+2. **§7 at that head,** by its command over `49a7f532...2d2e4633` (the range Amendment 4, item 4 records): 416 lines over 7 files, within 550 and 7.
+3. **D-1, in the architect's words:** The round-1 report's step 1, negative case, carries the test's expected failure text, `round 66, item 9`, as its instrument's output; it is not a reference.
+4. **D-2, in the architect's words:** MC2 was observed on b08a1fec4e3405153b4998882427355fa18db319's tree with C2 uncommitted (the round-1 report, step 2); `scripts/plan/verify-test-claims.mjs` is unchanged from b08a1fec to 91ccdab4 (the same report, step 4's diff list). The reviewer re-observed MC2 failing alone at 91ccdab4904b5937b53b296b03a91a62b41fd2f3 (gate 2's reviewer report, its check 2).
+5. **Recorded before and not repeated:** the §7 range (Amendment 4, item 4); S1's third parameter (Amendment 2, item 1, as Amendment 4, item 4 corrects it).
+6. **Next:** the PR body names the head and lists Amendment 7's clause; the PR leaves draft. The merge is the human's click, the last of the four at the sitting, by a merge commit.
+
+Nothing above is edited.

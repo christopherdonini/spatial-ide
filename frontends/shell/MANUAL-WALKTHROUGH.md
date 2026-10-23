@@ -1966,3 +1966,32 @@ Fill in after running the rows above (the milestone-3 Part AB).
 - **AB9 (expected or not):**
 - **AB10:**
 - **AB11:**
+
+## Part AC — the attributes of the inspected feature: click a feature and read its columns, a NULL, and what the app leaves out (shell-migration-milestone-4, PR A)
+
+This Part is the Operator gate of `frontends/shell/SHELL-MIGRATION-MILESTONE-4-PREREGISTRATION.md` §9, with PR A's rows only, run only on a build after PR A's merge, with a blank result log. It is the human's felt verdict on O-07 step 5's attributes and on the form's OPEN-2 (b) question (does the first view feel slower on a file with many columns). Its row numbers are §9's own, so AC3 to AC8 are left for PR B and PR C to add. Every sentence in it is a draft for the human's sight (P6) and none is the human's wording.
+
+**Before AC1:** fixture `attributes-multitype.parquet`, new (500 polygons with seven attribute columns; regenerate with `cargo test -p spatial-kernel --test manual_walkthrough_fixtures generate_the_attributes_multitype_fixture -- --ignored --nocapture`, which also writes `attributes-multitype.oracle.json`, the values of five ids that `e2e/attributes.mjs` compares); the app started with no dataset open, so that AC1 opens one.
+
+| # | Step | Expected outcome |
+|---|---|---|
+| AC0 | Read the form's §10, the last amendment first. | Record the number of the last amendment you read. |
+| AC1 | O-07 step 5. Open `attributes-multitype.parquet`. With the Navigate tool, click a feature. Open the Feature tab if it is not showing. | Under the feature's id, the Feature tab lists `zone`, `area`, `f32`, `i64`, `flag` and `text`, in that order, each with its value. The `i64` value shows every digit. **Felt:** is it readable, and where did you look? |
+| AC2 | Click features until one shows no value for `zone` (about one in five). Read the line under the values. | A missing value shows the marker, not an empty cell. A line under the values names the columns that are not shown (`d32`, and the covering box column if the file has one). **Felt:** is it clear what the marker means and why those columns are left out? |
+| AC9 | Move the pointer over a feature without clicking. | The readout at the bottom left of the map shows the feature's id and the coordinates of its first vertex only. **Felt:** did you expect attributes on hover? (KNOWN-LIMITATIONS item 52.) |
+| AC10 | The P6 sight of every new string of PR A, and of B1's eight projection refusal messages from their committed error fixtures (`protocol/skp/tests/data/v0-error-projection_*.json`, OPEN-14). The Attributes section: its three lines (no column is projected, the attributes are not held for this feature, and the not-projected line with its count of columns left out over the limit of 32) and the marker for a missing value. The status bar: its line for attributes that are not held. The console's row for inspecting a feature. The Attributes section's name as a screen reader reads it. The three messages for attribute data the shell does not read, from the source: `UnexpectedProjectionError` and the column-type message in `frontends/shell/src/canvas/decodeBatch.ts`, and `readCell`'s message in `frontends/shell/src/attributes/values.ts`. **Read the last amendment first.** | Record, for each string, whether it stands, and the wording you want where it does not. |
+| AC11 | OPEN-2 (b). Open a real parcel file with many columns, and look at the map as it first fills. | **Felt:** did the first view feel slower than before this change? No figure is taken and none is claimed. |
+
+## Result log
+
+Fill in after running the rows above (the milestone-4 Part AC).
+
+- **Date run:**
+- **Run by:**
+- **Build/commit:**
+- **Last amendment read (its number):**
+- **AC1 (readable; where you looked; felt):**
+- **AC2 (the marker; the line of columns left out; felt):**
+- **AC9 (expected attributes on hover or not):**
+- **AC10 (the strings; the eight refusal messages):**
+- **AC11 (slower or not; felt):**

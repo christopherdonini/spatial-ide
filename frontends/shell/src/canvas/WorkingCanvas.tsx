@@ -42,7 +42,9 @@ import {
   DECKGL_PICK_INDEX_CEILING,
   MAX_RESIDENT_VERTICES,
   PickCeilingExceeded,
+  residentAttributeBytes,
   ResidentVertexCeilingExceeded,
+  withinAttributeCeiling,
 } from "./limits";
 import { buildHighlightLayers, createDrawnEmitter } from "./highlightLayers";
 import type { Highlight } from "./highlightLayers";
@@ -519,6 +521,9 @@ export interface WorkingCanvasProps {
    * anything else rather than walking it at a guessed nesting depth. REQUIRED, with no default: a
    * defaulted expectation would be exactly the silent assumption the check exists to remove. */
   geometryEncoding: string;
+  /** This open's projection set (`attributes/projection.ts`'s `projectionFor`): the attribute columns every batch of this dataset must carry, in order, or `null` for none.
+   * `decodeBatch` refuses a batch whose columns are anything else. REQUIRED, with no default, for the reason `geometryEncoding` is (milestone 4 PR A, section 2.2 (c)). */
+  projection: readonly string[] | null;
   /** `skp/0.4`, crs-unit-fact-and-bounds: this dataset's own `describe.crs.unit` fact -- REQUIRED,
    * with no default (this piece's preregistration §8 item 2 names a defaulted unit block-on-sight).
    * Selects `RECENTER_MAX_DRIFT[crsUnit]` at this component's four `recenterThresholdForBudget`
@@ -568,6 +573,8 @@ export interface WorkingCanvasProps {
   /** The box the map shows, reported where the camera moved or the canvas changed size and nothing was asked for: the auto-fit,
    * and a change of size while no area is last asked for (Amendment 3). It issues no query and is not the area last asked for. */
   onViewShown?: (bbox: AuthoritativeBbox) => void;
+  /** A decoded batch would have passed `RESIDENT_ATTRIBUTE_MAX_BYTES` and was kept with its geometry and no attributes (`limits.ts`). A report only; App shows the status item. */
+  onAttributesNotHeld: () => void;
 }
 
 const INITIAL_ZOOM = 0;
@@ -847,7 +854,7 @@ export function createHoverRepickScheduler(deps: HoverRepickDeps): HoverRepickSc
 }
 
 const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(function WorkingCanvas(
-  { dataset, geometryColumn, geometryEncoding, crsUnit, onHover, onCanvasRefusal, onResidentCeilingExceeded, onViewportChanged, onViewportWithinLastQuery, style, tool = "navigate", onClickPick, highlight = NO_HIGHLIGHT, onSelectionDrawnChange, onViewShown },
+  { dataset, geometryColumn, geometryEncoding, projection, crsUnit, onHover, onCanvasRefusal, onResidentCeilingExceeded, onViewportChanged, onViewportWithinLastQuery, style, tool = "navigate", onClickPick, highlight = NO_HIGHLIGHT, onSelectionDrawnChange, onViewShown, onAttributesNotHeld },
   ref
 ) {
   const canvasElRef = useRef<HTMLCanvasElement | null>(null);
@@ -1047,6 +1054,16 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
   onSelectionDrawnChangeRef.current = onSelectionDrawnChange;
   const onViewShownRef = useRef(onViewShown);
   onViewShownRef.current = onViewShown;
+  const onAttributesNotHeldRef = useRef(onAttributesNotHeld);
+  onAttributesNotHeldRef.current = onAttributesNotHeld;
+  const projectionRef = useRef(projection);
+  projectionRef.current = projection;
+  /** Marks `decoded` not-held when its attributes would pass the ceiling together with those of `held`, the batches resident now, and says so once (section 2.2 (d)). */
+  function withinAttributes(decoded: ResidentBatch, held: readonly ResidentBatch[]): ResidentBatch {
+    const kept = withinAttributeCeiling(decoded, residentAttributeBytes(held));
+    if (kept !== decoded) onAttributesNotHeldRef.current?.();
+    return kept;
+  }
   /** The one place the drawn set leaves this component: `render()` passes every pass's set, only a changed one is emitted. */
   const emitDrawnRef = useRef<((drawn: ReadonlySet<bigint>) => void) | null>(null);
   if (emitDrawnRef.current === null) emitDrawnRef.current = createDrawnEmitter((drawn) => onSelectionDrawnChangeRef.current?.(drawn));
@@ -1440,7 +1457,7 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
         begin("frame-decode");
         let batch: ReturnType<typeof decodeBatch>;
         try {
-          batch = decodeBatch(streamHandle, batchSeq, ipcBytes, geometryColumn, geometryEncoding);
+          batch = withinAttributes(decodeBatch(streamHandle, batchSeq, ipcBytes, geometryColumn, geometryEncoding, projectionRef.current), residentRef.current.getBatches());
         } finally {
           end("frame-decode");
         }
@@ -1662,7 +1679,7 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
         begin("frame-decode");
         let batch: ReturnType<typeof decodeBatch>;
         try {
-          batch = decodeBatch(streamHandle, batchSeq, ipcBytes, geometryColumn, geometryEncoding);
+          batch = withinAttributes(decodeBatch(streamHandle, batchSeq, ipcBytes, geometryColumn, geometryEncoding, projectionRef.current), tileResidentRef.current.getBatches());
         } finally {
           end("frame-decode");
         }

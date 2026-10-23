@@ -1,0 +1,30 @@
+// usage: node vcpin-i.mjs <checkerA.mjs> <checkerB.mjs> <treeRoot>
+import { pathToFileURL } from 'node:url';
+import path from 'node:path';
+const [,, a, b, tree] = process.argv;
+const A = await import(pathToFileURL(path.resolve(a)).href);
+const B = await import(pathToFileURL(path.resolve(b)).href);
+const run = (m) => { const t = Date.now(); const r = m.runVerifyCites({ repoRoot: tree }); return { r, ms: Date.now() - t }; };
+const ra = run(A), rb = run(B);
+const key = (f) => `${f.relPath}\t${f.citeLine}\t${f.target}`;
+const full = (f) => `${key(f)}\t${f.reason}`;
+const sortSet = (xs) => xs.map(full).sort();
+for (const [name, k] of [['gated', 'gated'], ['advisory', 'advisory']]) {
+  const sa = sortSet(ra.r[k]), sb = sortSet(rb.r[k]);
+  console.log(`== ${name}: A=${sa.length} B=${sb.length}`);
+  const ma = new Map(ra.r[k].map((f) => [key(f), f])), mb = new Map(rb.r[k].map((f) => [key(f), f]));
+  let diffs = 0;
+  for (const [kk, f] of ma) {
+    const g = mb.get(kk);
+    if (!g) { diffs++; console.log(`CHANGED(${name} leaves) class=D4-leaves?  ${full(f)}`); }
+    else if (g.reason !== f.reason) {
+      diffs++;
+      const cls = /target/.test('') ? '' : (/:0(-\d+)?$/.test(f.target) || /\b0-\d+$|:0$/.test(f.target)) ? 'C3' : 'D4-reason';
+      console.log(`CHANGED(${name} reason) class=${cls}\n   A: ${full(f)}\n   B: ${full(g)}`);
+    }
+  }
+  for (const [kk, g] of mb) if (!ma.has(kk)) { diffs++; console.log(`ADDED(${name}) class=INVALIDATOR-I1  ${full(g)}`); }
+  console.log(`differences(${name}) = ${diffs}`);
+  if (process.env.VCPIN_LIST) { console.log('-- A set'); sa.forEach((x) => console.log('  ' + x)); console.log('-- B set'); sb.forEach((x) => console.log('  ' + x)); }
+}
+console.log(`wall A=${ra.ms}ms B=${rb.ms}ms scanned A=${ra.r.scanned} B=${rb.r.scanned}`);

@@ -43,6 +43,7 @@ const polygons: ResidentBatch = {
     [[ring(1200, 2200, 5)]],
   ]),
   totalVertices: 20,
+  attributes: null,
 };
 /** A line open: row 0 has two parts (two paths), row 1 one. */
 const lines: ResidentBatch = {
@@ -51,6 +52,7 @@ const lines: ResidentBatch = {
   ids: BigUint64Array.from([1n, 2n]),
   ...partsOfFeatures([[[ring(1000, 2000, 1)], [ring(1010, 2010, 1)]], [[ring(1100, 2100, 1)]]]),
   totalVertices: 12,
+  attributes: null,
 };
 /** A point open: each row one part holding one single-position ring. */
 const pt = (x: number, y: number): Part[] => [[[[x, y]]]];
@@ -60,6 +62,7 @@ const points: ResidentBatch = {
   ids: BigUint64Array.from([1n, 2n, 3n]),
   ...partsOfFeatures([pt(1001, 2001), pt(1002, 2002), pt(1003, 2003)]),
   totalVertices: 3,
+  attributes: null,
 };
 const propsOf = (l: { props: unknown }) => l.props as { id: string; pickable: boolean; data: unknown[]; getWidth?: number; getRadius?: number; getColor?: unknown; getLineColor?: unknown };
 

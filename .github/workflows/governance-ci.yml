@@ -31,7 +31,11 @@ name: Governance CI — plan, queue, site
 # -- or is a recorded, classified `hashEntries` baseline entry, advisory rather than gated the same way
 # a quote finding is (round 15, item 3's hash-finding baseline route: a hash reference sitting in text
 # this piece's own authority does not own, e.g. an already-landed, closed piece's append-only amendment,
-# that cannot be fixed in place). A `byte-copied from` marker's reproduction may sit on the marker's own
+# that cannot be fixed in place). Every `round N, item M` cite that verify:quotes reads (in a file it scans,
+# on one line, outside backtick spans, double-quoted spans and lines whose first non-blank character is `>`)
+# resolves against the ruling set (DECISIONS-PENDING.md and each tracked archive), one file at a time: the item
+# exists, not what the cite means (verify-quotes.mjs's header lists the forms not read).
+# A `byte-copied from` marker's reproduction may sit on the marker's own
 # line (before or after it) as well as on the line after it, and a reference rustfmt has wrapped across
 # two `//`-commented lines is still recognized as one (see verify-quotes.mjs's own header for both).
 # For a passage with no `path:line` beside it this proves only that the words occur somewhere in the
@@ -146,7 +150,7 @@ jobs:
       - name: verify:cites (path:line references resolve against the tree)
         run: node scripts/plan/verify-cites.mjs
 
-      - name: verify:quotes (a passage marked verbatim occurs in its named file when a path:line cite introduces it, otherwise in the tracked tree's non-quotation text, after presentation normalization, and every path:a-b @ rev sha256:hex reference recomputes; recorded baseline entries advisory)
+      - name: verify:quotes (a passage marked verbatim occurs in its named file when a path:line cite introduces it, otherwise in the tracked tree's non-quotation text, after presentation normalization, and every path:a-b @ rev sha256:hex reference recomputes, and every `round N, item M` cite it reads on one line resolves against the ruling set; recorded baseline entries advisory)
         run: node scripts/plan/verify-quotes.mjs
 
       - name: verify:test-claims (a test named in a preregistration/ADR actually exists)

@@ -96,6 +96,7 @@ function mount(extra: Partial<WorkingCanvasProps> = {}) {
     dataset: "d1",
     geometryColumn: "geometry",
     geometryEncoding: ENCODING_POLYGON,
+    projection: null,
     crsUnit: "metre",
     onHover: vi.fn(),
     onCanvasRefusal: vi.fn(),
@@ -303,7 +304,7 @@ describe("the tap (UB7's wiring, OPEN-1 (A))", () => {
 
 describe("the highlight prop (section 2.2)", () => {
   const firstId = (): bigint =>
-    decodeBatch("sh_a", 0, loadBatchFixture("lv95-polygon-batch"), "geometry", ENCODING_POLYGON).ids[0];
+    decodeBatch("sh_a", 0, loadBatchFixture("lv95-polygon-batch"), "geometry", ENCODING_POLYGON, null).ids[0];
 
   // RECORDED MUTATION for "the highlight" (order): in `render()` (WorkingCanvas.tsx) put the highlight layers before the data layers
   // (`[...highlightResult.layers, ...layers]`). Expected failure: the last layer is the data layer.

@@ -154,6 +154,9 @@ export interface CandidateArmSessionDeps {
    * piece, the `TileViewportStreamManager` construction below passed no `level` option at all. Optional
    * so every pre-existing test/call site of this function keeps compiling and behaving unchanged. */
   tileGridLevel?: TileGridLevel | null;
+  /** The open's projection set (`attributes/projection.ts`'s `projectionFor`), passed as the `columns` of the first look and of every tile's `viewport_query`; `null`
+   * when no column is projectable. REQUIRED, with no default, as the tile manager's option is: a defaulted `null` would be a session that silently asks for no attributes (milestone 4 PR A, section 2.2 (b)). */
+  columns: string[] | null;
   /**
    * **This dataset's session ended: the source was observed to have changed** (P3b §2a(iii); Brief A
    * boundary 4). Fired **exactly once** per session, after this session has cleared the tile
@@ -919,6 +922,7 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
     // `opts.level ?? DEFAULT_TILE_GRID_LEVEL` fallback already handles -- see `tileGridLevel`'s own
     // doc comment above for why that reproduces this session's pre-P7 behavior exactly when unset.
     level: deps.tileGridLevel ?? undefined,
+    columns: deps.columns,
     residency: {
       // Defect A: "planning treats partial as non-resident" -- `isTileCompleteInCandidateSet`, not
       // the older, weaker `isTileResidentInCandidateSet` (which stays `true` for a partial tile; that
@@ -1271,7 +1275,7 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
     // established from the first batch alone -- see `establishFrameFromExtent`'s own doc comment and
     // `tileGrid.ts`'s top doc comment for the full account of why this changed. Propagates a refusal
     // (`SkpCallError`) unchanged -- see this module's own doc comment.
-    const { stream } = await viewportQuery(dataset, bbox, null, encodeDecU64(BigInt(UNTILED_FIRST_LOOK_ROW_LIMIT)), filter);
+    const { stream } = await viewportQuery(dataset, bbox, null, encodeDecU64(BigInt(UNTILED_FIRST_LOOK_ROW_LIMIT)), filter, deps.columns);
     if (stopped) {
       await skpCancel(stream).catch(() => {});
       return { kind: "stopped" };

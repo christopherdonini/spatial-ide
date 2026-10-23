@@ -251,7 +251,9 @@ order the prompts will ask**.
 **The 4096 fallback:** the boundary is measured on the message text as `[...text].length` (Unicode
 code points, matching Telegram's own "characters" limit). `≤ 4096` → one plain-text `sendMessage`
 of the file contents. `> 4096` → a short summary message
-(`Question round <n> — <k> items; full text attached (copy-paste ready)`) **then** `sendDocument`
+(`Question round <n> — <k> items; full text attached (copy-paste ready)`; `<k>` counts the numbered
+items that open a paragraph, in order from `1. `; a count of one gives `1 item;`, and a count of 0 is
+left out) **then** `sendDocument`
 of the round file with that same summary as the caption. The CLI exits `0` on success and `1` (with
 a stderr line) on a missing file, missing token/chat-id env, or an API error. The pure-ish core
 `mirrorRound({ file, sendMessage, sendDocument, readFile })` takes its dependencies injected, so

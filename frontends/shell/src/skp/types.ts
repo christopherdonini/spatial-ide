@@ -259,8 +259,8 @@ export interface ViewportQueryRequest {
   filter: Filter | null; // always present, `null` means no filter (matches `bbox_crs`'s discipline)
   /** `skp/0.6`, attribute projection on `viewport_query`. An ordered, caller-declared attribute
    * projection. Always present; `null` means no attribute columns (unchanged from every version
-   * before this one). This shell's own client sends `columns: null` and gains no parameter --
-   * the consumer is this half's shell counterpart (hover, `match`, the panel). */
+   * before this one). `viewportQuery`'s callers pass the open's projection set (`projectionFor`),
+   * which is `null` when no column is projectable. */
   columns: string[] | null;
 }
 export interface ViewportQueryResponse {

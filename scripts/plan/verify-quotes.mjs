@@ -100,6 +100,34 @@
 // FIRST candidate it finds, in the fixed order same-line-after / next-line / same-line-before -- a
 // reproduction split across more than one of those, or sitting more than one blank line down, is not
 // found and fails by name for lack of a resolvable reproduction rather than being silently accepted.
+//
+// ROUND + ITEM CITES (VERIFY-QUOTES-ROUND-ITEM-CITES-PREREGISTRATION.md §2.1 to §2.4; GATED, citeFindings):
+// a `round N, item M` / `round N item M` cite (optionally preceded by `question `, case-insensitive; also
+// `items M, K and L` and `items M to K`, whose endpoints are each resolved; a trailing `(x)` is read, not
+// resolved) in a scanned file must resolve against the ruling set -- the live DECISIONS-PENDING.md and each
+// tracked state/cut-archive/DECISIONS-PENDING-*.md (rulingFiles) -- by resolveRoundItem (rulingSet.mjs, shared
+// with verify-test-claims), ONE FILE AT A TIME, nothing joined across files. A RULED block header names the
+// round (`rounds N and M` counts for both); the block runs to the next line starting `**` or `## `; a block
+// with item lines (`- *Item M` / `- **Item M`) resolves M when it is among them, and a block with none
+// resolves M when the tracked state/questions/round-N.md has a line starting `M. `. M must be followed by a
+// byte that is not a letter or digit (so a directive item such as `item 2e` is out). Not read: inside an
+// inline backtick span; inside a straight or curly double-quoted span on the same line (straight `"` marks
+// pair left to right on their line, so an unpaired `"`, such as an inch mark, hides any cite up to the next
+// `"`); or on a line whose first non-blank character is `>`; fenced blocks are read. Each line is read on
+// its own: a cite broken across a line break is not read, and a list is read only up to the break. A list
+// reads each `, K`, `, and K`, `and K` or `to K` that directly follows it on the line, so a number after
+// a list (`items 1 and 2, 15 tests` reads item 15) is resolved as an item. The scan set is the quote
+// pass's own (claimFiles, or exactly the explicit files).
+// A failure prints `FAIL — ruling cite: <file>:<line> — <cite> — <reason>` and exits 1; no baseline route
+// exists for it. DISCLOSED GAPS: a sub-clause letter (the `(b)` of `item 2(b)`, whose item 2 is checked),
+// an entry cite, a clause cite, a directive item (`…, item 2e`), a bare round, a `rounds N and M, items …`
+// list, and a cite in a file outside the scan set are not checked; and the check proves EXISTENCE of the
+// item -- in its block, or, for a block with no item lines, as a line starting `M. ` in the tracked
+// state/questions/round-N.md -- not that the cite means what its sentence says. THE ONE UNREAD BLOCK: the
+// RULED header for question round 72, in the 2026-10-20 archive, names its round outside the header grammar
+// (in a trailing parenthesis, after the PR), so no cite to it resolves -- a cite to round 72 by item is
+// refused by name, and a record cites that ruling by a hash pin instead, at the round's tracked
+// state/questions/round-72.md (the form's Amendment 3, item 1).
 
 import fs from 'node:fs';
 import path from 'node:path';
@@ -108,7 +136,7 @@ import { execFileSync } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { buildTrackedIndex, extractCitations, resolveRef, classifyPath, topDirsOf, CODE_EXTS } from './verify-cites.mjs';
 import { claimFiles } from './verify-test-claims.mjs';
-import { rulingSetPaths, LIVE_RULINGS } from './rulingSet.mjs';
+import { rulingSetPaths, LIVE_RULINGS, resolveRoundItem } from './rulingSet.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 export const REPO_ROOT = path.resolve(here, '..', '..');
@@ -804,13 +832,43 @@ function checkHashRef(root, index, relPath, text, ref, topDirs) {
   return { ok: true, resolvedPath, slice };
 }
 
+// --- Round + item cites (VERIFY-QUOTES-ROUND-ITEM-CITES-PREREGISTRATION.md §2.1 to §2.5). Constants declared at their site. ---
+// A line whose first non-blank character is `>` is not read.
+const CITE_BLOCKQUOTE_LINE_RE = /^\s*>/;
+// Spans masked before reading: an inline backtick span, and a straight or curly double-quoted span on the same line.
+const CITE_SKIP_SPAN_RES = [/(`+)[^\n]*?\1/g, /"[^"\n]*"/g, /“[^”\n]*”/g];
+// `round N, item M` / `round N item M` / `round N, items M ...`, case-insensitive; M followed by no letter or digit (`item 2e` is out).
+const CITE_HEAD_RE = /\bround\s+(\d+),?\s+(items?)\s+(\d+)(?![0-9A-Za-z])/gi;
+// After a plural head only: `, K`, `and K`, `, and K`, or `to K` (a range names its two endpoints).
+const CITE_TAIL_RE = /(?:,\s*(?:and\s+)?|\s+and\s+)(\d+)(?![0-9A-Za-z])|\s+to\s+(\d+)(?![0-9A-Za-z])/y;
+
+/** Every round + item cite of `text` as [{ line, round, item }], one per named item; the span kinds above are skipped. */
+function extractRoundItemCites(text) {
+  const out = [];
+  text.split('\n').forEach((raw, i) => {
+    if (CITE_BLOCKQUOTE_LINE_RE.test(raw)) return;
+    let line = raw;
+    for (const re of CITE_SKIP_SPAN_RES) line = line.replace(re, (m) => ' '.repeat(m.length));
+    for (const m of line.matchAll(CITE_HEAD_RE)) {
+      const round = Number(m[1]);
+      out.push({ line: i + 1, round, item: Number(m[3]) });
+      if (m[2].toLowerCase() !== 'items') continue;
+      CITE_TAIL_RE.lastIndex = m.index + m[0].length;
+      for (let t = CITE_TAIL_RE.exec(line); t; t = CITE_TAIL_RE.exec(line)) out.push({ line: i + 1, round, item: Number(t[1] ?? t[2]) });
+    }
+  });
+  return out;
+}
+
 /**
  * Scans `files` (default: every tracked `*PREREGISTRATION*.md` and `docs/adr/*.md`; explicit paths
  * need not be tracked -- a scratch copy of another branch's file is scannable) for verbatim-introduced
  * quotes and checks each against the tracked tree, excluding every extracted quotation (including the
  * baseline file itself) from the searchable text. Returns
  * { findings, advisories, baselined, checked, scanned, unmatchedBaseline, baselineErrors, hashFindings,
- * hashBaselined, unmatchedHashBaseline, hashBaselineErrors }.
+ * hashBaselined, unmatchedHashBaseline, hashBaselineErrors, citeFindings: [{ relPath, line, cite, reason }],
+ * citesChecked }. citeFindings is the round + item pass: each cite resolved against the ruling set by
+ * resolveRoundItem (rulingSet.mjs), one file at a time.
  */
 export function runVerifyQuotes({ repoRoot, files } = {}) {
   const root = repoRoot ?? REPO_ROOT;
@@ -944,6 +1002,27 @@ export function runVerifyQuotes({ repoRoot, files } = {}) {
       findings.push({ relPath, line: p.startLine, snippet });
     }
   }
+  // Round + item cites: the ruling set's texts are read once, and only when a scanned file carries a cite.
+  const citeFindings = [];
+  let citesChecked = 0;
+  let rulingTexts = null;
+  const roundFileCache = new Map();
+  const roundFileText = (round) => {
+    if (!roundFileCache.has(round)) {
+      const rel = `state/questions/round-${round}.md`;
+      roundFileCache.set(round, index.set.has(rel) ? fs.readFileSync(path.join(root, rel), 'utf8') : null);
+    }
+    return roundFileCache.get(round);
+  };
+  for (const absPath of scanAbs) {
+    const relPath = path.relative(root, absPath).split(path.sep).join('/');
+    for (const c of extractRoundItemCites(fs.readFileSync(absPath, 'utf8'))) {
+      citesChecked++;
+      rulingTexts ??= rulingFiles(root, index).map((abs) => fs.readFileSync(abs, 'utf8'));
+      const res = resolveRoundItem(rulingTexts, c.round, c.item, roundFileText(c.round));
+      if (!res.ok) citeFindings.push({ relPath, line: c.line, cite: `round ${c.round}, item ${c.item}`, reason: res.reason });
+    }
+  }
   const unmatchedBaseline = baselineEntries.filter((_, i) => !usedBaseline.has(i));
   const unmatchedHashBaseline = hashBaselineEntries.filter((_, i) => !usedHashBaseline.has(i));
   return {
@@ -958,6 +1037,8 @@ export function runVerifyQuotes({ repoRoot, files } = {}) {
     hashBaselined,
     unmatchedHashBaseline,
     hashBaselineErrors,
+    citeFindings,
+    citesChecked,
   };
 }
 
@@ -1048,6 +1129,8 @@ function main() {
     hashBaselined,
     unmatchedHashBaseline,
     hashBaselineErrors,
+    citeFindings,
+    citesChecked,
   } = runVerifyQuotes(opts);
 
   console.log(
@@ -1107,17 +1190,18 @@ function main() {
 
   const verified = checked - baselined.length - advisories.length - findings.length;
   const noHashErrors = hashFindings.length === 0 && hashBaselineErrors.length === 0;
-  if (findings.length === 0 && baselineErrors.length === 0 && noHashErrors) {
+  if (findings.length === 0 && baselineErrors.length === 0 && noHashErrors && citeFindings.length === 0) {
     console.log(
-      `verify:quotes PASS — ${checked} checked, ${verified} verified, ${baselined.length} baselined, ${advisories.length} advisory, 0 baseline entry errors, 0 hash-reference errors (${hashBaselined.length} hash-baselined), 0 hash-baseline entry errors.`,
+      `verify:quotes PASS — ${checked} checked, ${verified} verified, ${baselined.length} baselined, ${advisories.length} advisory, 0 baseline entry errors, 0 hash-reference errors (${hashBaselined.length} hash-baselined), 0 hash-baseline entry errors, ${citesChecked - citeFindings.length} ruling cites resolved, 0 ruling-cite errors.`,
     );
     return;
   }
   console.error(
-    `verify:quotes FAIL — ${findings.length} not found, ${baselineErrors.length} baseline entry error(s), ${hashFindings.length} hash-reference error(s), ${hashBaselineErrors.length} hash-baseline entry error(s):`,
+    `verify:quotes FAIL — ${findings.length} not found, ${baselineErrors.length} baseline entry error(s), ${hashFindings.length} hash-reference error(s), ${hashBaselineErrors.length} hash-baseline entry error(s), ${citeFindings.length} ruling-cite error(s):`,
   );
   for (const f of findings) console.error(`  FAIL — quote not found: ${f.relPath}:${f.line} "${f.snippet}…"`);
   for (const h of hashFindings) console.error(`  FAIL — hash reference: ${h.relPath}:${h.line} — ${h.reason}`);
+  for (const c of citeFindings) console.error(`  FAIL — ruling cite: ${c.relPath}:${c.line} — ${c.cite} — ${c.reason}`);
   process.exitCode = 1;
 }
 

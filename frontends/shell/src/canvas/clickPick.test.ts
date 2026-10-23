@@ -4,8 +4,10 @@
 import { describe, expect, it } from "vitest";
 
 import { createTapHandler, resolveClickPick, tapPixel, type ClickPick, type ClickPickDeps } from "./clickPick";
+import { decodeBatch } from "./decodeBatch";
 import type { ResidentBatch } from "./decodeBatch";
 import { resolvePick, type PickResult } from "./pick";
+import { attributeBatchIpc } from "../testUtils/attributeBatchIpc";
 import { partsOfFeatures } from "../testUtils/partsOfPolygons";
 
 /** SHELL-MIGRATION-MILESTONE-2-PREREGISTRATION.md section 4, UB7 and UB8: the click's own pick (OPEN-1 (A)). */
@@ -17,6 +19,7 @@ const batch: ResidentBatch = {
   ids: BigUint64Array.from([10n, 20n]),
   ...partsOfFeatures([[[ring(0, 0, 1)], [ring(10, 10, 2)]], [[ring(100, 100, 1)]]]),
   totalVertices: 12,
+  attributes: null,
 };
 
 interface Calls {
@@ -76,11 +79,26 @@ describe("UB7: resolveClickPick", () => {
         kind: "feature",
         pick: { streamHandle: "sh_click", batchSeq: 0, id: 10n, anchor: [0, 0] },
         bounds: { xmin: 0, ymin: 0, xmax: 12, ymax: 12 },
+        row: null,
       });
     }
     const single = resolveClickPick(depsFor({ batch, gpuOrdinal: 2 }, false), 1, 1);
     expect(single.kind === "feature" && single.pick.id).toBe(20n);
     expect(single.kind === "feature" && single.bounds).toEqual({ xmin: 100, ymin: 100, xmax: 101, ymax: 101 });
+  });
+
+  // RECORDED MUTATION for "PA-U5": in `resolveClickPick` read the row by the GPU ordinal (`readRow(candidate.batch, candidate.gpuOrdinal)`). Expected failure: the second part
+  // of row 0 (ordinal 1) reads row 1's value.
+  it("PA-U5: the click's row comes through partToRow, and every part of a multipolygon gives the one row", () => {
+    const { ipc, encoding } = attributeBatchIpc([10n, 20n], [{ name: "tag", kind: "utf8", values: ["x", "y"] }], [2, 1]);
+    const decoded = decodeBatch("sh_a", 0, ipc, "geometry", encoding, ["tag"]);
+    expect(Array.from(decoded.partToRow)).toEqual([0, 0, 1]);
+    const tag = (text: string) => [{ name: "tag", value: { kind: "text", text } }];
+    const rowAt = (gpuOrdinal: number) => {
+      const result = resolveClickPick(depsFor({ batch: decoded, gpuOrdinal }, false), 1, 1);
+      return result.kind === "feature" ? result.row : "not a feature";
+    };
+    expect([rowAt(0), rowAt(1), rowAt(2)]).toEqual([tag("x"), tag("x"), tag("y")]);
   });
 
   // RECORDED MUTATION for "UB7" (an ordinal that resolves to no row): in `resolveClickPick` (clickPick.ts) answer a feature for a null

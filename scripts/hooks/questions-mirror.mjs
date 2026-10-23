@@ -43,16 +43,26 @@ export function extractRoundNumber(file) {
   return m ? m[1] : '?';
 }
 
-/** Item count = the `---` separator rules (one between each pair of items) + 1; a fileful of one
- * item has no rule. Best-effort, for the summary line only. */
+/** Item count = the numbered items `1. `, `2. `, ... each opening a paragraph (the first line or a line after
+ * an empty line), counted in order from 1. Best-effort, for the summary line only. Two limits: a file
+ * whose items are not numbered `<n>. ` at a paragraph's start (some hand-written ones) is not counted by
+ * its items, and counts 0 when no paragraph opens `1. `; and a paragraph inside an item's own text (its
+ * question or an option) that opens with the next number in sequence is counted: the count can read high. */
 export function countItems(text) {
-  const rules = (text.match(/^---\s*$/gm) || []).length;
-  return rules > 0 ? rules + 1 : 1;
+  let expected = 1;
+  let afterEmpty = true;
+  for (const line of text.split(/\r?\n/)) {
+    if (afterEmpty && /^(\d+)\. /.exec(line)?.[1] === String(expected)) expected += 1;
+    afterEmpty = line === '';
+  }
+  return expected - 1;
 }
 
 /** The short message that sits above the attached document (also reused as the document caption). */
 export function buildSummary(file, text) {
-  return `Question round ${extractRoundNumber(file)} — ${countItems(text)} items; full text attached (copy-paste ready)`;
+  const n = countItems(text);
+  const count = n === 0 ? '' : `${n} ${n === 1 ? 'item' : 'items'}; `;
+  return `Question round ${extractRoundNumber(file)} — ${count}full text attached (copy-paste ready)`;
 }
 
 /**
@@ -116,7 +126,7 @@ async function main() {
 
 // ---- Hook mode (--hook): PreToolUse on AskUserQuestion. Exits 0 with empty stdout on every path. ----
 
-const RED_LINE = /^(?:Item \d+\. )?RED LINE/;
+const RED_LINE = /^(?:[^.—\n]*?(?:\. | — ))?RED LINE/;
 
 function wellFormed(questions) {
   if (!Array.isArray(questions) || questions.length === 0) return false;

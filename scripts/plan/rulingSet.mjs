@@ -36,3 +36,67 @@ export function readRulingSet(repoRoot, tracked = trackedPaths(repoRoot)) {
   }
   return out;
 }
+
+// --- Round + item resolution (VERIFY-QUOTES-ROUND-ITEM-CITES-PREREGISTRATION.md §2.3 and §2.6). ---
+// Constants, declared at their site (the form's §7). A RULED block header: `**RULED <date>`, an optional parenthetical, ` — `, an
+// optional `question `, then `round N` or `rounds N and M`.
+const RULED_BLOCK_HEADER_RE = /^\*\*RULED \d{4}-\d{2}-\d{2}(?: \([^)]*\))? — (?:question )?(?:round (\d+)|rounds (\d+) and (\d+))(?![0-9])/;
+// An item line inside a block: `- *Item M` (single asterisk) or `- **Item M` (bold).
+const RULED_ITEM_LINE_RE = /^- \*{1,2}Item (\d+)(?![0-9])/;
+// The next line that closes a block's own span.
+const RULED_BLOCK_BOUNDARY_RE = /^(\*\*|## )/;
+// An item line of a mirrored question file: `M. `.
+const QUESTION_FILE_ITEM_RE = /^(\d+)\. /;
+
+// One parse per distinct text for the life of the process: a run resolves hundreds of cites against the same few texts.
+const rulingBlocksCache = new Map();
+function rulingBlocks(text) {
+  const cached = rulingBlocksCache.get(text);
+  if (cached) return cached;
+  const blocks = [];
+  let cur = null;
+  for (const line of text.split('\n')) {
+    if (RULED_BLOCK_BOUNDARY_RE.test(line)) {
+      const m = RULED_BLOCK_HEADER_RE.exec(line);
+      cur = m ? { rounds: m[1] !== undefined ? [Number(m[1])] : [Number(m[2]), Number(m[3])], items: new Set() } : null;
+      if (cur) blocks.push(cur);
+      continue;
+    }
+    const im = cur && RULED_ITEM_LINE_RE.exec(line);
+    if (im) cur.items.add(Number(im[1]));
+  }
+  rulingBlocksCache.set(text, blocks);
+  return blocks;
+}
+
+function questionFileHasItem(text, item) {
+  return text.split('\n').some((l) => {
+    const m = QUESTION_FILE_ITEM_RE.exec(l);
+    return m && Number(m[1]) === item;
+  });
+}
+
+/**
+ * `round N, item M` against the ruling set: `texts` is one text per file of the set, each resolved on its own (nothing is joined across
+ * files). A block with item lines decides by them; a block with none decides by `roundFileText`, the tracked `state/questions/round-N.md`
+ * text or null. Returns { ok: true } or { ok: false, reason }, the reason stating what this resolver found.
+ */
+export function resolveRoundItem(texts, round, item, roundFileText) {
+  let reason = null;
+  for (const text of texts) {
+    for (const block of rulingBlocks(text)) {
+      if (!block.rounds.includes(round)) continue;
+      if (block.items.size > 0) {
+        if (block.items.has(item)) return { ok: true };
+        reason ??= `question round ${round}'s RULED block has no item ${item}`;
+      } else if (roundFileText == null) {
+        reason ??= `question round ${round}'s RULED block has no item lines, and state/questions/round-${round}.md is not tracked`;
+      } else if (questionFileHasItem(roundFileText, item)) {
+        return { ok: true };
+      } else {
+        reason ??= `question round ${round}'s RULED block has no item lines, and state/questions/round-${round}.md has no item ${item}`;
+      }
+    }
+  }
+  return { ok: false, reason: reason ?? `no RULED block for question round ${round} in any file of the ruling set` };
+}

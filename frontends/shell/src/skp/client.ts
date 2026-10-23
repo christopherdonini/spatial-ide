@@ -95,22 +95,22 @@ export function describe(dataset: string): Promise<DescribeResponse> {
 }
 
 /**
- * `filter` is `Filter | null`, defaulting to `null` -- every existing call site (viewport-driven
- * streaming with no predicate) is unaffected, and it is the ONE function both a future filter panel
+ * `filter` is `Filter | null`, required -- it is the ONE function both `FilterPanel`'s Apply
  * and the dev-only E2E hook (`e2e-test-surface.ts`'s `queryWithFilter`, wired through
  * `ViewportStreamManager.requestViewport`) call to actually send one (NEXT-CUT.md P5: "client only,
  * no logic" -- this function does not parse, admit, or otherwise inspect `filter.predicate`; only
  * the kernel does, and it may refuse it). `filter: null` is sent explicitly, never omitted, matching
  * the `bbox_crs` discipline (SKP-V0.md "v0.1" section): `ViewportQueryRequest.filter` is
  * `Option<Filter>` with no `#[serde(default)]` on the Rust side, so an absent key is a deserialize
- * failure, not a tolerated omission.
+ * failure, not a tolerated omission. `columns` is required for the same reason and sent the same way.
  */
 export function viewportQuery(
   dataset: string,
   bbox: Bbox | null,
   bboxCrs: string | null,
   limit: DecU64 | null,
-  filter: Filter | null = null
+  filter: Filter | null,
+  columns: string[] | null
 ): Promise<ViewportQueryResponse> {
   return call("viewport_query", {
     skp: SKP_VERSION,
@@ -119,9 +119,9 @@ export function viewportQuery(
     bbox_crs: bboxCrs,
     limit,
     filter,
-    // `skp/0.6`: this shell requests no projection (condition (1); the wire can carry one, this
-    // half of B1 does not send one -- the consumer is the shell half, per the caller rule).
-    columns: null,
+    // `skp/0.6`: the caller's projection set, sent as given (`projectionFor`'s list, or `null`
+    // when no column is projectable); `null` is sent as `null`, never omitted.
+    columns,
   });
 }
 

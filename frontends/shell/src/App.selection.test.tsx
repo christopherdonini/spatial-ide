@@ -306,7 +306,7 @@ describe("App: tools, the click, the selection and the inspection (milestone 2, 
   const pressed = (element: Element | null) => element?.getAttribute("aria-pressed");
 
   const clickFeature = (id: bigint, bounds = box(0, 0, 10, 10)) =>
-    act(() => props().onClickPick!({ kind: "feature", pick: pick(id), bounds }));
+    act(() => props().onClickPick!({ kind: "feature", pick: pick(id), bounds, row: null }));
   const clickNothing = () => act(() => props().onClickPick!({ kind: "nothing" }));
   const selected = () => [...props().highlight!.selected].sort();
   const selectedCount = () => text(".feature-selected");

@@ -60,6 +60,7 @@ function makeManager(overrides: Partial<TileViewportStreamManagerOptions> = {}) 
   const onTerminal = vi.fn();
   const manager = new TileViewportStreamManager({
     dataset: "ds_x",
+    columns: null,
     residency: fakeResidency(),
     onBatch,
     onTileSuperseded,
@@ -251,6 +252,18 @@ describe("TileViewportStreamManager", () => {
       expect(args[2]).toBeNull(); // bbox_crs
       expect(args[3]).toBeNull(); // limit
     });
+  });
+
+  // RECORDED MUTATION for "PA-U7" (this manager): pass `null` in place of `this.opts.columns` at the `viewportQuery` call. Expected failure: a sixth argument below is null.
+  it("PA-U7: every tile's viewport_query passes the columns option", () => {
+    const columns = ["area", "zone"];
+    const { manager } = makeManager({ columns });
+    manager.establishGridFrame(ANCHOR, "metre");
+    viewportQueryMock.mockReturnValue(new Promise(() => {}));
+    manager.onCameraChange(ANCHOR);
+
+    expect(viewportQueryMock.mock.calls.length).toBeGreaterThan(0);
+    expect(viewportQueryMock.mock.calls.map((call) => call[5])).toEqual(viewportQueryMock.mock.calls.map(() => columns));
   });
 
   describe("batch delivery and per-tile supersede discipline (D3.7, per-tile)", () => {
