@@ -4,6 +4,15 @@ Line references written before the rotation point into state/cut-archive/DECISIO
 
 ## Pending
 
+**RULED 2026-10-23 — the clicks: #243 clicked; #242 clicked too, out of the listed order, if S4 is on main; #244 and #241 stay for Monday, #244 immediately before #241, after R2 (the human, typed, received at 07:49:07Z by the transcript; recorded verbatim at `state/directives/2026-10-23-243-clicked-242-clicked-out-of-order-s4-on-main-244-then-241-monday-after-r2.md`, from line 6, sha256 14cfa5b7491d53049b807e7f01bfe35538a55acbc9fd150471cb1ee85b292c80 over lines 6 to the end at the commit that adds it):**
+
+- **The rulings** are the text, referenced and not restated.
+- **Applied:**
+  - **#243:** merged by the human, merge commit c1f782db (%cI 2026-10-23T09:49:53+02:00). Its node is done with {pr: 243}.
+  - **#242:** S4 is its form's Amendment 8, on main since 443cefba; the custodian said so. Before the answer, #242's merge with main at c1f782db was computed clean, and CI's governance steps were run on that tree, each exit 0. Merged by the human, merge commit c52abe27 (%cI 2026-10-23T10:03:59+02:00). Its node is done with {pr: 242}, and questions-mirror-item-count is ready by its dependency.
+  - **#244 and #241:** Monday, #244 immediately before #241, after #241's R2.
+  - **Milestone 4 PR A:** main, with #243's merge, is merged into its branch (8270fa00), as its form's Amendment 4, row 16 orders.
+
 **RULED 2026-10-22 (headed 2026-10-23) — #242's H-1, a cite to round 72 pinning the item's line in the tracked `state/questions/round-72.md`, never a line of the archive, the header's and the README's words following, then S4 and the human's click; F7's OPEN-1 (b), OPEN-2 (b), OPEN-3 (a) and OPEN-4 (b), in the architect's words; milestone 4's OPEN-16 (b), and OPEN-17 (b) the custodian's, changing nothing of 1c's order in the human's reading; ADR-020's corrigendum OPEN-1 (A), yes to §2.1's words, headed "Corrigendum" and dated by the appending commit, OPEN-2 (A), OPEN-3 (a) if #242 has merged at dispatch, else (b); piece 1c's ADR-036 Amendment 1 approved as drafted, with OPEN-V1 to OPEN-V3, OPEN-F1, OPEN-M1, OPEN-M2 and OPEN-C1 (a) in the architect's words, F1's reader refusal and test recorded by amendment before code, the approval given before step 1's PR opens, O0 waiting for the human's file on Monday and step 1 proceeding up to the resolver; item 41's comment owed by nothing; the older D: build folders of done pieces that the ledger does not name cleared after they are listed in the ledger; the parity test's timeout under load a proposed governance node graded S3; the sitting script, Friday's window draft and the forms ahead until Monday (the human, typed, received at 22:10:23Z by the transcript; recorded verbatim at `state/directives/2026-10-22-242-h-1-round-72-pin-f7-open-items-milestone-4-open-16-b-adr-020-corrigendum-a-1c-adr-036-words-approved-disk-parity-node.md`, from line 6, sha256 ddc02ac29a1478704a5a61a642267f7003a0f8f3f43fff9bceefae140f460e1b over lines 6 to the end at the commit that adds it):**
 
 - **The rulings** are the text, referenced and not restated.
