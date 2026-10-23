@@ -20,8 +20,8 @@
 //   - a known key whose `<label>:` line is not present EXACTLY ONCE in the block throws.
 //   - a value carrying a newline throws (the block is line-addressed; a multi-line value would
 //     corrupt the block silently).
-//   - a rewritten field line keeps the line ending of the line it replaces (CRLF stays CRLF, LF stays
-//     LF), and no byte outside the rewritten values changes.
+//   - a rewritten field line is written as `<label>: <value>` and keeps the line ending of the line
+//     it replaces (CRLF stays CRLF, LF stays LF); every other line is left byte for byte.
 // Any throw means NOTHING is written: the CLI catches it, prints it, and exits non-zero. There is
 // no path by which a requested field is silently skipped.
 //

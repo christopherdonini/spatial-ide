@@ -7,6 +7,7 @@ import { spawnSync, execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 import { extractSessionContinuityBlock, buildOutput, READING_ORDER } from './session-resume.mjs';
+import { parseSessionContinuity } from './precompact-flush.mjs';
 import {
   SESSION_CONTINUITY_FIELDS,
   BLOCK_HEADING,
@@ -317,6 +318,7 @@ test('flush CLI: a CRLF copy of the real ledger keeps CRLF on every line, and se
   const real = fs.readFileSync(cutStatePath(REPO_ROOT), 'utf8').replace(/\r\n/g, '\n');
   const fields = ['--field', 'flushed_at=2026-09-16T00:00:00Z', '--field', 'tip=feed1234', '--field', 'position=new position'];
   const printed = {};
+  const parsed = {};
   for (const [name, text] of [['crlf', crlf(real)], ['lf', real]]) {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), `spatial-flush-t2-${name}-`));
     try {
@@ -326,6 +328,7 @@ test('flush CLI: a CRLF copy of the real ledger keeps CRLF on every line, and se
       const r = spawnSync(process.execPath, [CLI, '--file', target, ...fields], { encoding: 'utf8', env: { ...process.env, CUSTODIAN_TELEGRAM_DRY_RUN: '1' } });
       assert.equal(r.status, 0, r.stderr);
       const written = fs.readFileSync(target, 'utf8');
+      parsed[name] = parseSessionContinuity(written);
       if (name === 'crlf') assert.ok(!/(^|[^\r])\n/.test(written), 'an LF without a CR before it in the CRLF file');
       const out = buildOutput(dir);
       printed[name] = out.slice(0, out.lastIndexOf('\n\nResume facts:'));
@@ -335,4 +338,6 @@ test('flush CLI: a CRLF copy of the real ledger keeps CRLF on every line, and se
   }
   assert.ok(printed.lf.includes('position: new position'));
   assert.equal(printed.crlf, printed.lf);
+  assert.deepEqual(parsed.crlf, parsed.lf);
+  assert.equal(parsed.lf.tip, 'feed1234');
 });
