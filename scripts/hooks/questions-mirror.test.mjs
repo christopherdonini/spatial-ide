@@ -43,6 +43,7 @@ test('questions-mirror: a round of exactly 4096 chars sends one message and no d
 // Mutation killed: the document send is dropped / the two sends are reversed. Requiring exactly two
 // calls in [message, document] order kills both "skip sendDocument" and "sendDocument before the
 // summary".
+// RECORDED MUTATION: M17, observed at f5570106 (applied, run, reverted): the n = 0 branch of buildSummary removed -> questions-mirror: a round over 4096 sends the summary message THEN the document fails at assert.equal(order[0][1], ...): 'Question round 7 — 0 items; full text attached (copy-paste ready)' where the n = 0 text is expected.
 test('questions-mirror: a round over 4096 sends the summary message THEN the document', async () => {
   const order = [];
   const out = await mirrorRound({
@@ -344,6 +345,7 @@ test('the_outcome_line_records_the_round_the_mode_and_the_send_result', (t) => {
 });
 
 // RECORDED MUTATION: M13, observed at 753dcaf (applied, run, reverted): the hook calls sendMessage with the text directly -> a_round_over_4096_characters_is_sent_as_a_document_from_the_hook fails at assert.equal(lines.length, 2): 4 !== 2.
+// RECORDED MUTATION: M18, observed at f5570106 (applied, run, reverted): countItems restored to the rules plus one -> a_round_over_4096_characters_is_sent_as_a_document_from_the_hook fails at assert.equal(lines[0], ...): the dry-run line reads 'Question round 8 — 2 items; ...' where '1 item' is expected.
 test('a_round_over_4096_characters_is_sent_as_a_document_from_the_hook', (t) => {
   const dir = hookProject(t);
   const r = runHook(dir, callOf([{ question: 'Long?', options: [{ label: 'a', description: 'd'.repeat(4200) }] }]));
@@ -362,6 +364,9 @@ const committedQuestions = (n) =>
     .split('\n\n')
     .flatMap((p) => /^\d+\. (.*)/.exec(p.split('\n')[0])?.[1] ?? []);
 
+// RECORDED MUTATION: M15, observed at f5570106 (applied, run, reverted): countItems restored to the rules plus one -> the_document_summary_counts_numbered_items_not_rules fails at assert.equal(buildSummary(file, text), four): 'Question round 52 — 5 items; ...' where '4 items' is expected.
+// RECORDED MUTATION: M16, observed at f5570106 (applied, run, reverted): the sequence check dropped (every paragraph-opening number counted) -> the_document_summary_counts_numbered_items_not_rules fails at the assert.equal on the nested text: '5 items' where '3 items' is expected.
+// RECORDED MUTATION: M21, observed at f5570106 (applied, run, reverted): countItems splits on \n only -> the_document_summary_counts_numbered_items_not_rules fails at the CRLF assert.equal: 'Question round 52 — full text attached (copy-paste ready)' where '4 items' is expected.
 test('the_document_summary_counts_numbered_items_not_rules', () => {
   const file = 'state/questions/round-52.md';
   const text = fs.readFileSync(path.join(repoRoot, file), 'utf8');
@@ -372,6 +377,8 @@ test('the_document_summary_counts_numbered_items_not_rules', () => {
   assert.equal(buildSummary(file, text.replace(/\n/g, '\r\n')), four);
 });
 
+// RECORDED MUTATION: M19, observed at f5570106 (applied, run, reverted): the old anchored pattern restored -> the_header_lists_a_red_line_item_whose_marker_follows_its_label fails at the first assert.match: the round 52 header reads 'RED LINE items: none.' where 'RED LINE items: 1, 3.' is expected.
+// RECORDED MUTATION: M20, observed at f5570106 (applied, run, reverted): the marker matched anywhere -> the_header_lists_a_red_line_item_whose_marker_follows_its_label fails at the final assert.match: the one-question header reads 'RED LINE items: 1.' where 'RED LINE items: none.' is expected.
 test('the_header_lists_a_red_line_item_whose_marker_follows_its_label', (t) => {
   for (const [round, list] of [[52, '1, 3'], [59, '1, 2, 4']]) {
     const dir = hookProject(t);
