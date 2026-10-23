@@ -1398,9 +1398,11 @@ pub fn bundled_viewer(
 /// The file `scripts/scan-dist.mjs` writes and `tauri.conf.json` ships beside the viewer directory.
 const VIEWER_BUILD_RECORD: &str = "viewer-asset-hashes.json";
 
-/// The viewer build's record, in the viewer directory's parent: the resource directory when
-/// packaged, `renderer/bundle-viewer` in the dev tree. A file that is missing, unreadable, not
-/// JSON, of a `version` other than 1 or with a member beyond `version` and `assets` stops the publish.
+/// The viewer build's record, in the viewer directory's parent: the resource directory when one
+/// resolved (a packaged build, or on Windows a `tauri dev` run's cargo output directory),
+/// `renderer/bundle-viewer` when the dev-tree path was taken. A file that is missing, unreadable,
+/// not JSON, of a `version` other than 1 or with a member beyond `version` and `assets` stops the
+/// publish.
 fn read_build_record(
     dir: &std::path::Path,
     packaged: bool,
