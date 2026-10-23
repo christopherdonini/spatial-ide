@@ -430,3 +430,13 @@ Nothing above is edited.
 5. **The piece waits for the human,** by I1: the human orders the nodes (this test's and any E0b adds), or lands this piece without the macOS entry and without W1. The worktree keeps the worker-high's prepared change for steps 3 and 4, uncommitted and never compiled; it is resumed or discarded on the human's answer.
 
 Nothing above is edited.
+
+## §10 Amendment 3 — E0b: every entry green, macOS equal to Linux by test name; the E0 failure is intermittent; I1 still waits for the human (class 2); written after E0b's result was seen
+
+*Written by the custodian after E0b's result was seen. References only: the worker's report `state/consults/2026-10-23-port-2-macos-l1-and-app-dirs-e0b-probe-worker-report.md`; the probe commit c99c3c553147745e3715b27094277df9be06e755 on `probe/port-2-macos-no-fail-fast`, deleted after this amendment; its product-ci-rust run 39960207028.*
+
+1. **E0b's result (class 2).** Run 39960207028, at E0's tree with `--no-fail-fast` on the macOS entry only, concluded success on all three entries. The macOS entry ran the same 106 test binaries as Linux, with 927 tests passed, 0 failed and 75 ignored, and its sorted list of test names and statuses equals Linux's. So P2's run-list half, unjudged at E0, holds at E0's tree.
+2. **The E0 failure is intermittent.** `a_cancel_inside_the_sort_is_observed_rather_than_waited_out` passed in E0b on the same tree, as it failed once on Windows on 2026-10-09 and passed on the re-run (node `publish-sort-window-cancel-not-exercised-on-ci`). It is that node's defect, a test whose trigger may not fire inside one poll interval, and not a macOS-only failure. E0b found no other macOS failure.
+3. **I1 still stands**, and these results do not lift it: the human orders the sort-window node, or lands this piece without the macOS entry and without W1. Neither gate has seen this piece's code; the worker-high's prepared change for steps 3 and 4 stays uncommitted in the piece's worktree until the human answers.
+
+Nothing above is edited.
