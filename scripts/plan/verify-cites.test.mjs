@@ -320,6 +320,9 @@ test('a_pinned_cite_whose_line_is_past_the_file_end_at_that_commit_fails_by_name
 });
 
 // A pin cited when `late.rs` did not exist yet: every path is missing at the pin, so the tree's reason stays.
+// RECORDED MUTATION (C2, fixture changed) at eb499a8910b8, applied alone and reverted: the reason choice made unconditional (the
+// `pr.missingFile` condition removed, so a pin that only says "not found" replaces the tree's reason) -> fails by name, and only this one:
+// `a_pinned_loose_cite_keeps_the_trees_reason_when_the_pin_path_is_not_found` (the reason did not match the tree's wording).
 test('a_pinned_loose_cite_keeps_the_trees_reason_when_the_pin_path_is_not_found', () => {
   const { dir } = pinnedRepo((rev) => `see late.rs:9 @ ${rev} sha256:00`);
   try {
@@ -336,6 +339,8 @@ test('a_pinned_loose_cite_keeps_the_trees_reason_when_the_pin_path_is_not_found'
 
 // Line 0 does not exist (lines count from 1); the cites are assembled at run time, so no line-0 cite is written in this file.
 const AT0 = (p, to = '') => `${p}:${0}${to}`;
+// RECORDED MUTATION (M-C3a) at eb499a8910b8, applied alone and reverted: both line-0 returns in checkCitation removed -> fails by
+// name, and only this one: `a_cite_starting_at_line_0_is_reported_at_line_0_in_the_tree` (the exact-tier reason did not match).
 test('a_cite_starting_at_line_0_is_reported_at_line_0_in_the_tree', () => {
   const dir = gitTree({ 'engine/src/pool.rs': 'a\nb\nc\n', 'docs-notes.md': `see ${AT0('engine/src/pool.rs', '-2')} and ${AT0('pool.rs')}` });
   try {
@@ -349,6 +354,8 @@ test('a_cite_starting_at_line_0_is_reported_at_line_0_in_the_tree', () => {
   }
 });
 
+// RECORDED MUTATION (M-C3b) at eb499a8910b8, applied alone and reverted: the line-0 branch in checkPinned disabled (its condition
+// made false) -> fails by name, and only this one: `a_pinned_cite_starting_at_line_0_is_reported_at_line_0_at_its_pin` (gated was empty).
 test('a_pinned_cite_starting_at_line_0_is_reported_at_line_0_at_its_pin', () => {
   const gated = pinnedRun((rev) => `see ${AT0('engine/src/pool.rs', '-2')} @ ${rev} sha256:00`, 'gated');
   assert.equal(gated.length, 1, JSON.stringify(gated));
@@ -370,6 +377,8 @@ function pinnedAfter(before, after, noteRel, doc) {
   return dir;
 }
 
+// RECORDED MUTATION (M-D4a) at eb499a8910b8, applied alone and reverted: the pin read at the path as written only -> fails by name:
+// this test, `a_pinned_basename_cite_is_read_at_its_suffix_match` and `a_pinned_basename_cite_past_its_resolved_files_end_gives_the_pins_reason`.
 test('a_pinned_relative_or_md_fallback_cite_is_read_at_the_file_the_tree_resolves', () => {
   const five = 'a\nb\nc\nd\ne\n';
   const dir = pinnedAfter(
@@ -386,17 +395,24 @@ test('a_pinned_relative_or_md_fallback_cite_is_read_at_the_file_the_tree_resolve
   }
 });
 
+// RECORDED MUTATION (M-D4b) at eb499a8910b8, applied alone and reverted: the list built from the exact set only -> fails by name:
+// this test and `a_pinned_basename_cite_past_its_resolved_files_end_gives_the_pins_reason` (both read the basename cite at its suffix match).
 test('a_pinned_basename_cite_is_read_at_its_suffix_match', () => {
   const advisory = pinnedRun((rev) => `see pool.rs:4 @ ${rev} sha256:00`, 'advisory');
   assert.equal(advisory.length, 0, JSON.stringify(advisory));
 });
 
+// RECORDED MUTATION (M-D4c) at eb499a8910b8, applied alone and reverted: the failure kept only from the read of the path as written
+// instead of the first path found -> fails by name, and only this one: `a_pinned_basename_cite_past_its_resolved_files_end_gives_the_pins_reason`.
 test('a_pinned_basename_cite_past_its_resolved_files_end_gives_the_pins_reason', () => {
   const advisory = pinnedRun((rev) => `see pool.rs:9 @ ${rev} sha256:00`, 'advisory');
   assert.equal(advisory.length, 1, JSON.stringify(advisory));
   assert.match(advisory[0].reason, /exceeds "engine\/src\/pool\.rs" at pinned commit/);
 });
 
+// RECORDED MUTATION (M-D4d) at eb499a8910b8, applied alone and reverted: the path as written dropped from the list -> fails by name:
+// this test and `a_pinned_cite_whose_path_is_a_directory_at_that_commit_fails_by_name` (the list is then empty for a rooted cite with no match).
+// Narrowed to drop the path as written only when the tree has candidates, it fails this test and no other.
 test('a_pinned_cite_still_passes_at_the_path_as_written_when_the_tree_resolves_elsewhere', () => {
   const dir = pinnedAfter(
     { 'scripts/x.mjs': 'a\nb\nc\nd\ne\n', 'renderer/v/scripts/x.mjs': 'a\nb\n' },
