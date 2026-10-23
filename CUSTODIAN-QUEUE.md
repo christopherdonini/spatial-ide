@@ -1,14 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `dd95a7fc21fb7f7bcc3a080a0df4c161832fef8466292bceff860f1ff1991d4c`) at `2026-10-23T11:40:35.556Z`.
+Generated from `PLAN.yaml` (sha256 `5027d9758de337f60f6bf7d11e7dc51a28605ef1ff8e8c73bdf6816956579d25`) at `2026-10-23T11:59:50.981Z`.
 
 ## 1. Next
 
-- **port-2-macos-l1-and-app-dirs** — PORT-2 -- macOS L1 for the Cargo workspace: macos-latest in the same matrix, one application-directory boundary replacing the two resolvers, and a case-policy test on a case-insensitive volume (lane `platform`)
+- (nothing ready)
 
 ## 2. Ready
 
-- **port-2-macos-l1-and-app-dirs** — PORT-2 -- macOS L1 for the Cargo workspace: macos-latest in the same matrix, one application-directory boundary replacing the two resolvers, and a case-policy test on a case-insensitive volume (lane `platform`, order null, budget 240 min)
+- (none)
 
 ## 3. Waiting on the human (total: 0 min)
 
@@ -47,6 +47,7 @@ Generated from `PLAN.yaml` (sha256 `dd95a7fc21fb7f7bcc3a080a0df4c161832fef846629
 - **walkthrough-row-f7-cli-refusal** — MANUAL-WALKTHROUGH.md row F7: a publish-bundle CLI publish with the real built viewer is refused under the redaction scan (its W12), so F7 points at Part G's rows, with the CLI refusal line — evidence: branch `cut/walkthrough-row-f7-cli-refusal`
 - **questions-mirror-item-count** — questions-mirror.mjs's countItems counts one item high on a round file with a header rule, so a document send's summary names one item too many — evidence: branch `cut/questions-mirror-item-count`
 - **verify-cites-pin-resolution-and-line-zero** — verify-cites: a pinned cite starting at line 0 gets a false reason, and a pin is read only at the path as written — evidence: branch `cut/verify-cites-pin-resolution-and-line-zero`
+- **port-2-macos-l1-and-app-dirs** — PORT-2 -- macOS L1 for the Cargo workspace: macos-latest in the same matrix, one application-directory boundary replacing the two resolvers, and a case-policy test on a case-insensitive volume — evidence: branch `cut/port-2-macos-l1-and-app-dirs`
 
 ## 6. Proposed / unscheduled
 
