@@ -45,8 +45,9 @@ export function extractRoundNumber(file) {
 
 /** Item count = the numbered items `1. `, `2. `, ... each opening a paragraph (the first line or a line after
  * an empty line), counted in order from 1. Best-effort, for the summary line only. Two limits: a file
- * whose items are not numbered `<n>. ` at a paragraph's start (a hand-written one) counts 0; and a
- * question whose own text holds a paragraph opening with the next item's number is counted one high. */
+ * whose items are not numbered `<n>. ` at a paragraph's start (some hand-written ones) is not counted by
+ * its items, and counts 0 when no paragraph opens `1. `; and a paragraph inside an item's own text (its
+ * question or an option) that opens with the next number in sequence is counted: the count can read high. */
 export function countItems(text) {
   let expected = 1;
   let afterEmpty = true;
