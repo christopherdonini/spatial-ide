@@ -440,3 +440,14 @@ Nothing above is edited.
 3. **I1 still stands**, and these results do not lift it: the human orders the sort-window node, or lands this piece without the macOS entry and without W1. Neither gate has seen this piece's code; the worker-high's prepared change for steps 3 and 4 stays uncommitted in the piece's worktree until the human answers.
 
 Nothing above is edited.
+
+## §10 Amendment 4 — the human's answer to I1: the sort-window node ahead, the prepared code committed to the branch, the piece landing after that fix with its macOS entry and W1 (class 1); written after E0b's result was seen
+
+*Written by the custodian. References only: the human's ruling `state/directives/2026-10-23-clicks-245-246-247-sort-window-fix-before-port-2-covering-case-route-1-244-c1-milestone-4-and-1c-open-items-ruled.md`, its paragraph opening `Port-2, I1`; Amendments 2 and 3.*
+
+1. **I1 is answered:** the human orders the node `publish-sort-window-cancel-not-exercised-on-ci` ahead of this piece (graded S3, its own form), and this piece lands after that fix with its macOS entry and W1. The other route, landing without the entry and without W1, is not taken.
+2. **The prepared change is resumed** (Amendment 2 item 5): steps 3 and 4 of Amendment 1 item 7, §2 items 2 to 8 and §4's tests and mutations, by one worker-high from E0 on this branch; committed and pushed, not merged. §2 item 6 takes every occurrence of the reason in the three engine files (Amendment 2 item 4); `kernel/tests/no_generation_in_persisted_artifacts.rs` waits on OPEN-C (a), as Amendment 1 item 5 says.
+3. **The order to the merge:** `publish-sort-window-cancel-not-exercised-on-ci` merges first, and 1c step 1 merges first (Amendment 1 item 6); main is then merged into this branch (I11), and E1 to E3 are read at the merged head. The PR does not go ready before that head. A red macOS entry on this branch's pushes before that merge, on the sort-window test alone, is that node's known defect (Amendment 3 item 2) and is not E1.
+4. **Next:** the worker-high's build; then, after the two merges, main merged into the branch, E1 to E3, the PR and both gates.
+
+Nothing above is edited.
