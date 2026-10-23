@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `c51718f70c31f78215086038af65c6dad71900347db816a2d384b016af3faa03`) at `2026-10-23T08:53:42.983Z`.
+Generated from `PLAN.yaml` (sha256 `79a0f261d195f136b03384ec42a5d82862b8f373d67ba93dff8faf1c6facc088`) at `2026-10-23T09:05:04.124Z`.
 
 ## 1. Next
 
@@ -122,6 +122,9 @@ Generated from `PLAN.yaml` (sha256 `c51718f70c31f78215086038af65c6dad71900347db8
 - **pre-1-0-trademark-search** — The trademark register search with counsel before 1.0 (the human's own) (phase `prototype`) — never queued until placed
 - **record-step-style-match-widening** — record_step admits a style.set match value on fillColor, with the step's dependencies naming the match column and its type (milestone 4's OPEN-4 (A′)): a small data-lane piece, or the first commit of piece 1c's step 1 (phase `prototype`) — never queued until placed
 - **adr-017-note-product-redaction-gate** — An ADR-017 note in the human's typed words: the product publish now runs the redaction scan over every emitted file, except a viewer file whose bytes the viewer's build scanned, and refuses by name on a finding (bundle-redaction-scan-not-in-product-publish); the build-time scan, the reviewed list and the skip; and Corrigendum 4's new uninterruptible term (phase `prototype`) — never queued until placed
+- **verify-cites-out-of-range-line-count** — verify-cites' out-of-range reason states a line count one too high for a file that ends in a newline (phase `prototype`) — never queued until placed
+- **verify-cites-reversed-range** — verify-cites checks a reversed range (end below start) by its larger end only (phase `prototype`) — never queued until placed
+- **engine-column-name-case-siblings** — Column names that differ only by letter case beyond the covering: the geometry column matched by byte equality while DuckDB binds identifiers case-insensitively, and the identity, projected and filter columns (phase `prototype`) — never queued until placed
 
 ### Unscheduled
 
