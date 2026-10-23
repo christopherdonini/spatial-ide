@@ -61,7 +61,7 @@ test('questions-mirror: a round over 4096 sends the summary message THEN the doc
   assert.equal(order.length, 2);
   assert.equal(order[0][0], 'message');
   assert.equal(order[1][0], 'document');
-  assert.equal(order[0][1], 'Question round 7 — 1 items; full text attached (copy-paste ready)');
+  assert.equal(order[0][1], 'Question round 7 — full text attached (copy-paste ready)');
   assert.equal(order[1][1], 'state/questions/round-7.md');
   assert.equal(order[1][2], order[0][1]); // the caption is the same summary as the message above it
 });
@@ -93,7 +93,7 @@ test('questions-mirror: buildMultipartBody carries the boundary, filename, and r
   assert.ok(str.includes('name="caption"'), 'caption field present');
   assert.ok(str.includes('filename="round-9.md"'), 'filename present in the document part');
   assert.ok(body.includes(fileBuffer), 'raw file bytes present as a contiguous slice');
-  assert.equal(buildSummary('state/questions/round-9.md', 'one\n\n---\n\ntwo'), 'Question round 9 — 2 items; full text attached (copy-paste ready)');
+  assert.equal(buildSummary('state/questions/round-9.md', '1. one\n\n---\n\n2. two'), 'Question round 9 — 2 items; full text attached (copy-paste ready)');
 });
 
 // ---- The round mirror as a PreToolUse hook (ROUND-MIRROR-PRETOOLUSE-HOOK-PREREGISTRATION.md, §3, §4) ----
@@ -351,6 +351,37 @@ test('a_round_over_4096_characters_is_sent_as_a_document_from_the_hook', (t) => 
   assert.deepEqual(roundFiles(dir), ['round-7.md', 'round-8.md']);
   const lines = r.stderr.split('\n').filter((l) => l !== '');
   assert.equal(lines.length, 2);
-  assert.match(lines[0], /^\[telegram dry-run\] would send: Question round 8 — \d+ items?; full text attached/);
+  assert.equal(lines[0], '[telegram dry-run] would send: Question round 8 — 1 item; full text attached (copy-paste ready)');
   assert.match(lines[1], /^\[telegram dry-run\] would send document: .*round-8\.md /);
+});
+
+// The item questions of a committed hook-written round: each paragraph-opening `<n>. ` line, minus its prefix.
+const committedQuestions = (n) =>
+  fs
+    .readFileSync(path.join(repoRoot, 'state', 'questions', `round-${n}.md`), 'utf8')
+    .split('\n\n')
+    .flatMap((p) => /^\d+\. (.*)/.exec(p.split('\n')[0])?.[1] ?? []);
+
+test('the_document_summary_counts_numbered_items_not_rules', () => {
+  const file = 'state/questions/round-52.md';
+  const text = fs.readFileSync(path.join(repoRoot, file), 'utf8');
+  const four = 'Question round 52 — 4 items; full text attached (copy-paste ready)';
+  assert.equal(buildSummary(file, text), four);
+  const nested = '1. one\n  (1) a\n\n---\n\n2. two\n\n1. inner\n\n2. inner\n\n---\n\n3. three\n';
+  assert.equal(buildSummary(file, nested), 'Question round 52 — 3 items; full text attached (copy-paste ready)');
+  assert.equal(buildSummary(file, text.replace(/\n/g, '\r\n')), four);
+});
+
+test('the_header_lists_a_red_line_item_whose_marker_follows_its_label', (t) => {
+  for (const [round, list] of [[52, '1, 3'], [59, '1, 2, 4']]) {
+    const dir = hookProject(t);
+    const questions = committedQuestions(round).map((question) => ({ question, options: [{ label: 'a' }] }));
+    assertQuiet(runHook(dir, callOf(questions)));
+    const text = fs.readFileSync(path.join(dir, 'state', 'questions', 'round-8.md'), 'utf8');
+    assert.match(text, new RegExp(`RED LINE items: ${list}\\. `), `round ${round}`);
+  }
+  const dir = hookProject(t);
+  assertQuiet(runHook(dir, callOf([{ question: 'Was round 52 a RED LINE round?', options: [{ label: 'a' }] }])));
+  const none = fs.readFileSync(path.join(dir, 'state', 'questions', 'round-8.md'), 'utf8');
+  assert.match(none, /RED LINE items: none\. /);
 });
