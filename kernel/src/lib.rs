@@ -78,6 +78,7 @@ pub mod bundle;
 pub mod dataset_ref;
 pub mod params;
 pub mod permission;
+pub mod project;
 pub mod publish;
 pub mod session_history;
 pub mod skp;
