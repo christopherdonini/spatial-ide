@@ -178,6 +178,12 @@ fn cases(a: &Path, b: &Path) -> Vec<Case> {
 #[test]
 fn the_audit_log_resolves_under_this_platforms_data_directory_and_never_relative_to_the_working_directory(
 ) {
+    // RECORDED MUTATION: the_audit_log_resolves_under_this_platforms_data_directory_and_never_relative_to_the_working_directory
+    // (M4, `data_dir` in `kernel/src/permission/audit/log.rs` keeps its pre-change body): the first
+    // failing assertion is the status check of the second Windows case, label `LOCALAPPDATA relative,
+    // XDG_DATA_HOME set and ignored`, left `Some(0)` and right `Some(1)`, the reader having printed a
+    // log path relative to the working directory. Observed on Windows (the form's OPEN-2 (a)) at
+    // 6c21888e.
     let root = Scratch::new("cases");
     let (a, b) = (root.path().join("a"), root.path().join("b"));
 

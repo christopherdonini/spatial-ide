@@ -139,6 +139,11 @@ mod tests {
 
     #[test]
     fn the_rule_table_resolves_each_platform_from_its_own_variables() {
+        // RECORDED MUTATION: the_rule_table_resolves_each_platform_from_its_own_variables
+        // (M1, the macOS arm of `data_dir_for` joins `XDG_DATA_DEFAULT_SUBDIR` instead of
+        // `MACOS_DATA_SUBDIR`): the first failing assertion is the macOS-with-all-variables one, message
+        // `macOS uses the native location below HOME and ignores XDG_DATA_HOME`, left the `.local/share`
+        // spelling and right the `Library/Application Support` spelling. Observed on Windows at 6c21888e.
         let (local, home, xdg) = (abs("p2-local"), abs("p2-home"), abs("p2-xdg"));
         let all = || {
             env_of(vec![
@@ -196,6 +201,11 @@ mod tests {
 
     #[test]
     fn an_empty_or_relative_value_is_treated_as_unset_never_as_a_relative_directory() {
+        // RECORDED MUTATION: an_empty_or_relative_value_is_treated_as_unset_never_as_a_relative_directory
+        // (M2, `absolute_value` drops its `is_absolute` check): the first failing assertion is the
+        // Windows one in the second pass of the loop, message `Windows with LOCALAPPDATA = "rel"`, left
+        // `Some("rel")` and right `None`; the empty value passes because the empty check stays. Observed
+        // on Windows at 6c21888e.
         let home = abs("p2-home");
         for bad in ["", "rel"] {
             let bad_value = |name: &'static str| (name, OsString::from(bad));
@@ -240,6 +250,10 @@ mod tests {
 
     #[test]
     fn the_tier_root_resolves_on_windows_only_and_never_from_localappdata_elsewhere() {
+        // RECORDED MUTATION: the_tier_root_resolves_on_windows_only_and_never_from_localappdata_elsewhere
+        // (M3, `tier_root_for` reads `LOCALAPPDATA` on every `Os`): the first failing assertion is the
+        // loop's one for macOS, message `MacOs must not take a tier root from LOCALAPPDATA`, left an `Ok`
+        // holding the temporary directory and right the undeclared-root `Err`. Observed on Windows at 6c21888e.
         let local = abs("p2-local");
         let env = env_of(vec![
             set("LOCALAPPDATA", &local),

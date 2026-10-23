@@ -66,6 +66,11 @@ fn root_spelling(p: &Path) -> String {
 )]
 fn on_a_case_insensitive_volume_a_destination_typed_in_another_case_is_recorded_in_its_on_disk_case_under_its_profile_token(
 ) {
+    // RECORDED MUTATION: on_a_case_insensitive_volume_a_destination_typed_in_another_case_is_recorded_in_its_on_disk_case_under_its_profile_token
+    // (M6, `resolve_destination` rejoins the typed parent instead of canonicalizing it): the first
+    // failing assertion is the final equality, left `<user-home>/iNNER/bundle` and right
+    // `<user-home>/Inner/bundle`; the precondition passes. Observed on Windows at
+    // 6c21888e. Not observed on macOS: that observation is E3's, and E3 has not run.
     let n = NEXT.fetch_add(1, Ordering::SeqCst);
     let temp =
         std::fs::canonicalize(std::env::temp_dir()).expect("the temporary directory resolves");

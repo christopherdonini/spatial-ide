@@ -72,6 +72,11 @@ impl Drop for RestoreLocalAppData {
 
 #[test]
 fn the_tier_root_is_refused_by_name_where_it_is_not_declared_and_nothing_is_written() {
+    // RECORDED MUTATION: the_tier_root_is_refused_by_name_where_it_is_not_declared_and_nothing_is_written
+    // (M5, `tier_directory` reads `LOCALAPPDATA` directly): the first failing assertion is the refusal
+    // identifier check, message `the refusal is the tier root's own, by name`, left
+    // `engine.lod_insufficient_disk` and right `engine.lod_tier_root_unresolved`. Observed on Windows
+    // (the form's OPEN-2 (a)) at 6c21888e.
     let scratch = Scratch::new();
     let source_path = scratch.path().join("source.parquet");
     write_geoparquet(

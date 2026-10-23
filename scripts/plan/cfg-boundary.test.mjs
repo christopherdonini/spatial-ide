@@ -65,6 +65,8 @@ const NONE = "cfg-boundary: 0 sites in 0 files, 0 outside every boundary\n";
 test("the_boundary_check_passes_on_the_shipped_tree_and_lists_every_boundary_site", () => {
   // RECORDED MUTATION: the_boundary_check_passes_on_the_shipped_tree_and_lists_every_boundary_site
   // (M1, engine/src/lod.rs dropped from the allowlist): the first assertion, status 0, failed: actual 1 with the message cfg-boundary: engine/src/lod.rs:927 outside every boundary. Observed at 824d561.
+  // RECORDED MUTATION (PORT-2): the_boundary_check_passes_on_the_shipped_tree_and_lists_every_boundary_site
+  // (M7, engine/src/app_dirs.rs dropped from the allowlist): the first assertion, status 0, failed: actual 1 with the message cfg-boundary: engine/src/app_dirs.rs:45 outside every boundary. Observed on Windows at 6c21888e.
   const r = run(ROOT);
   assert.equal(r.status, 0, r.stdout + r.stderr);
   assert.equal(r.stderr, "");
