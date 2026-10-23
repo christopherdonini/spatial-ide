@@ -386,3 +386,15 @@ Nothing above is edited.
 3. **Next:** both gates' scoped check of the added rows at abc900f2 (Amendment 3, item 4); the PR body names the head, the count and the words. The PR stays in draft until the sitting (§2.3).
 
 Nothing above is edited.
+
+## Amendment 5 — the scoped check: both FAIL on C1 alone, a wording finding on words the human approved (class 1); written after the reports were seen
+
+*Written by the custodian. References only: `state/consults/gates/2026-10-23-walkthrough-row-f7-cli-refusal-gate2-architect.md` (gate-log 593); `state/consults/gates/2026-10-23-walkthrough-row-f7-cli-refusal-gate2-reviewer.md` (gate-log 594).*
+
+1. **Both FAIL at abc900f2b4706669bc4abbc35024b28a451a5e86** on one finding, C1: OPEN-4's parenthetical states that the shell's publish refuses without the viewer's build record. On the Windows dev tree the shell's own build copies that record as a bundled resource and stops when it is missing, so the operator does not reach Part G's publish. Each gate gives replacement words with their clause check. The words at the head are the architect's that the human approved (Amendment 3), so the finding is named for the human (§31), and the rows are not changed before the human's answer. The other added rows pass, and the reviewer's checks (§4 items 1 to 3, §7 at 13 of 14, verify-cites, verify-quotes, CI) hold at that head.
+2. **D1** (both gates): the code spans the words do not carry (Amendment 4, item 2), and the same in G7's new parenthetical (the architect's). Named for the human with C1.
+3. **D2** (the architect): this form's A4 and OPEN-4 premise, a pre-#241 dev tree refused at Part G's publish with W8, does not hold on Windows by C1's reading. The amendment that records the human's answer names it by reference; nothing above is edited.
+4. **Noted:** the filed worker report (`state/consults/2026-10-22-walkthrough-row-f7-cli-refusal-open-words-worker-report.md`) counts five hunks where `git diff -U0` gives four (the reviewer). Out of scope here and routed by the custodian: both gates read two comments of #241's head on `resource_dir` under `tauri dev` as untrue on Windows.
+5. **Next:** the architect reconciles the two gates' words into one set for the human, within §7's 14 lines; the human answers on Monday 2026-10-26, before this PR's click. On a yes the rows are applied with no re-gate and the PR body lists them.
+
+Nothing above is edited.
