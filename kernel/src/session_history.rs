@@ -2,9 +2,9 @@
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
 //! **The session history**: the kernel's command log for workspace mutations (ADR-006 class 2),
-//! written by `record_step` (`protocol/skp/SKP-V0.md` §10) in ADR-036's step format (Proposed, §6
-//! and §9; `kernel/B2-1B-RECORDING-PREREGISTRATION.md` §2.3). It replays nothing and holds no
-//! workspace state beyond the last step's id.
+//! written by `record_step` (`protocol/skp/SKP-V0.md` §10) in ADR-036's step format (Accepted
+//! 2026-10-22, §6 and §9; `kernel/B2-1B-RECORDING-PREREGISTRATION.md` §2.3). It replays nothing
+//! and holds no workspace state beyond the last step's id.
 //!
 //! - **Crash safety.** One `write_all` and one `sync_all` per line, no buffer in the process, and
 //!   the file locked exclusively while the session lives (the operating system frees the lock when
@@ -24,6 +24,7 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 
 use serde_json::Value;
+use spatial_engine::crs::MAX_CRS_DEFINITION_BYTES;
 use spatial_engine::{AdmittedPredicate, Dataset, MAX_PREDICATE_BYTES};
 use spatial_renderer::canonical::{sha256_hex, to_canonical_string, Json};
 use spatial_renderer::style::{self, MAX_OUTLINE_WIDTH};
@@ -36,6 +37,7 @@ use crate::dataset_ref::{
     DatasetRef, DatasetUri, RefParseError,
 };
 use crate::permission::audit::{log::data_dir, rfc3339_utc_now};
+use crate::project::strict_json::{self, Layout, Limits, StrictError};
 use crate::skp::{check_version, predicate_admit_error_of, require_live, SkpHost};
 
 /// Declared ceilings (ADR-010 rule 6; ADR-036 §9), checked before any write: a step's line, the
@@ -45,6 +47,13 @@ const MAX_HEADER_LINE_BYTES: usize = 1_048_576;
 const MAX_SESSION_HISTORY_BYTES: u64 = 33_554_432;
 /// The action vocabulary this kernel registers (ADR-036 §3, §6): a header's `actions`.
 const ACTIONS: u64 = 2;
+/// What the strict reader bounds in one line (ADR-036 §2). The line's own ceiling is checked by
+/// the caller, before the reader sees it.
+const LINE_LIMITS: Limits = Limits {
+    max_bytes: usize::MAX,
+    max_depth: 32,
+    max_string_bytes: MAX_CRS_DEFINITION_BYTES,
+};
 const HISTORY: &str = "history.jsonl";
 const LOCATIONS: &str = "locations.json";
 
@@ -292,13 +301,17 @@ fn reader_accepts(line: &str, header: bool) -> Result<(), SkpError> {
             "{which} breaks a rule the reader holds, so it is not written: {rule}"
         ))
     };
-    let v: Value = serde_json::from_str(line).map_err(|e| refuse(format!("not JSON: {e}")))?;
+    let parsed = strict_json::parse(line.as_bytes(), &LINE_LIMITS)
+        .map_err(|e: StrictError| refuse(format!("not JSON: {e}")))?;
+    let v = strict_json::to_value(&parsed);
     let found = if header {
         check_header(&v).map(drop)
     } else {
         check_step(&v["step"], ACTIONS)
     };
-    found.map_err(|e| refuse(e.to_string()))
+    found
+        .and_then(|()| in_writers_form(&parsed, line, header))
+        .map_err(|e| refuse(e.to_string()))
 }
 
 /// ADR-036 §6's header for a session history that has not saved a project.
@@ -511,6 +524,8 @@ enum S {
     /// `YYYY-MM-DDTHH:MM:SSZ`: RFC 3339, UTC, whole seconds (the shape only).
     At,
     Observed,
+    /// A dataset entry: read by `DatasetRef::parse`.
+    Entry,
     Word(&'static [&'static str]),
     Int(u64, u64),
     Num(f64),
@@ -574,7 +589,7 @@ const HEADER: S = S::Obj(&[
         ),
     ),
     ("actions", S::Int(1, 1_000_000)),
-    ("datasets", S::List(&S::Any, 8)),
+    ("datasets", S::List(&S::Entry, 8)),
     ("lineage", S::Null),
 ]);
 const REVERSIBILITY: S = S::Word(&["reversible", "compensatable", "irreversible"]);
@@ -660,6 +675,8 @@ const STEP: S = S::Obj(&[
     ("scope", S::Obj(&[("kind", S::Word(&["layer"]))])),
     ("links", S::List(&LINK, 16)),
 ]);
+const STEP_LINE: S = S::Obj(&[("step", STEP)]);
+const MARK_LINE: S = S::Obj(&[("mark", MARK)]);
 const MARK: S = S::Tagged(
     "kind",
     &[
@@ -706,6 +723,7 @@ fn check(v: &Value, path: &str, shape: &S) -> Res<()> {
             }
         }
         S::Observed => parse_observed(v, path).map(drop),
+        S::Entry => Ok(()),
         S::Word(words) => {
             let w = text(MAX_TEXT)?;
             if words.contains(&w) {
@@ -859,14 +877,8 @@ fn read_line(
         return Err(malformed("$", "the line holds a NUL"));
     }
     let text = std::str::from_utf8(body).map_err(|_| malformed("$", "the line is not UTF-8"))?;
-    let v: Value =
-        serde_json::from_str(text).map_err(|e| malformed("$", format!("not JSON: {e}")))?;
-    if has_duplicate_key(text) {
-        return Err(malformed(
-            "$",
-            "an object holds a duplicate key (ADR-036 §2)",
-        ));
-    }
+    let parsed = strict_json::parse(body, &LINE_LIMITS).map_err(|e| malformed(&e.path, e.rule))?;
+    let v = strict_json::to_value(&parsed);
     let text_of = |v: &Value| v.as_str().map(str::to_string);
     let key = v
         .as_object()
@@ -918,7 +930,176 @@ fn read_line(
             ))
         }
     }
+    in_writers_form(&parsed, text, first)?;
     Ok(text.to_string())
+}
+
+/// What a line must also be (ADR-036 §2), checked after its member rules: its members in the
+/// order its shape declares, and its text in the writer's own spelling. The reader checks a line
+/// with this, and so does the writer before it writes one.
+fn in_writers_form(parsed: &Json, text: &str, header: bool) -> Res<()> {
+    let is_key = |k: &str| matches!(parsed, Json::Obj(ms) if ms.first().is_some_and(|m| m.0 == k));
+    let line = if header {
+        &HEADER
+    } else if is_key("step") {
+        &STEP_LINE
+    } else {
+        &MARK_LINE
+    };
+    in_order(parsed, "$", line)?;
+    let registered = step_member(parsed, "intent").and_then(|intent| {
+        let Json::Str(action) = obj_get(intent, "action")? else {
+            return None;
+        };
+        let (_, _, shape) = REGISTRY.iter().find(|r| r.0 == action.as_str())?;
+        Some((obj_get(intent, "params")?, shape))
+    });
+    if let Some((params, shape)) = registered {
+        in_order(params, "$.step.intent.params", shape)?;
+    }
+    spelled(parsed, text)
+}
+
+fn obj_get<'a>(j: &'a Json, key: &str) -> Option<&'a Json> {
+    match j {
+        Json::Obj(ms) => ms.iter().find(|(k, _)| k == key).map(|(_, v)| v),
+        _ => None,
+    }
+}
+
+fn step_member<'a>(line: &'a Json, key: &str) -> Option<&'a Json> {
+    obj_get(obj_get(line, "step")?, key)
+}
+
+/// `Err` when an object lists exactly the members its shape declares, in another order. Whether
+/// the members are the right ones is `check`'s: this is lenient about every other difference.
+fn in_order(j: &Json, path: &str, shape: &S) -> Res<()> {
+    let sorted = |keys: &[&str], ms: &[(String, Json)]| {
+        let listed: Vec<&str> = ms.iter().map(|(k, _)| k.as_str()).collect();
+        let same_set = listed.len() == keys.len() && keys.iter().all(|k| listed.contains(k));
+        if same_set && listed != keys {
+            let rule = format!(
+                "the members are out of the declared order, which is {}",
+                keys.join(", ")
+            );
+            return Err(malformed(path, rule));
+        }
+        Ok(())
+    };
+    let each = |ms: &[(String, Json)], members: &[(&str, S)]| {
+        let child = |(k, sub): &(&str, S)| {
+            let found = ms.iter().find(|(m, _)| m == k);
+            found.map_or(Ok(()), |(_, v)| in_order(v, &join(path, k), sub))
+        };
+        members.iter().try_for_each(child)
+    };
+    match (shape, j) {
+        (S::Obj(members), Json::Obj(ms)) => {
+            let keys: Vec<&str> = members.iter().map(|m| m.0).collect();
+            sorted(&keys, ms)?;
+            each(ms, members)
+        }
+        (S::Tagged(tag, variants), Json::Obj(ms)) => {
+            let word = obj_get(j, tag).and_then(|w| match w {
+                Json::Str(w) => Some(w.as_str()),
+                _ => None,
+            });
+            let Some((_, members)) = variants.iter().find(|(name, _)| Some(*name) == word) else {
+                return Ok(());
+            };
+            let keys: Vec<&str> = std::iter::once(*tag)
+                .chain(members.iter().map(|m| m.0))
+                .collect();
+            sorted(&keys, ms)?;
+            each(ms, members)
+        }
+        (S::State(_), Json::Obj(ms)) => sorted(&["state", "basis"], ms),
+        (S::List(item, _), Json::Arr(items)) => items
+            .iter()
+            .enumerate()
+            .try_for_each(|(i, x)| in_order(x, &format!("{path}[{i}]"), item)),
+        (S::Or(a, b), _) => in_order(j, path, a).and_then(|()| in_order(j, path, b)),
+        (S::StateOr(inner), _) => {
+            in_order(j, path, &S::State(&[])).and_then(|()| in_order(j, path, inner))
+        }
+        // Their writers are `observed_json` and `DatasetRef::to_json`: the same members, in the
+        // same order, and a named state's basis is free text.
+        (S::Observed, _) => {
+            let written =
+                parse_observed(&strict_json::to_value(j), path).map(|o| observed_json(&o));
+            same_members(j, path, written.ok())
+        }
+        (S::Entry, _) => {
+            let written = DatasetRef::parse(&strict_json::to_value(j)).map(|r| r.to_json());
+            same_members(j, path, written.ok())
+        }
+        _ => Ok(()),
+    }
+}
+
+fn same_members(read: &Json, path: &str, written: Option<Json>) -> Res<()> {
+    let Some(at) = written.and_then(|w| strict_json::member_order_difference(read, &w)) else {
+        return Ok(());
+    };
+    let at = format!("{path}{}", at.trim_start_matches('$'));
+    Err(malformed(&at, "the members are out of the declared order"))
+}
+
+/// The line is the writer's spelling of what it holds. The one opaque slot (ADR-036 §3), the
+/// `params` of an action this reader has not registered, is kept as written: the bytes around it
+/// are the writer's spelling, and the slot is whatever valid JSON the line holds there.
+fn spelled(parsed: &Json, text: &str) -> Res<()> {
+    let refuse = |e: StrictError| malformed("$", e.rule);
+    let mut plain = parsed.clone();
+    let slot = opaque_params(&mut plain);
+    let Some(slot) = slot else {
+        return strict_json::check_spelling(parsed, text.as_bytes(), Layout::Compact)
+            .map_err(refuse);
+    };
+    let marker = "\u{1}opaque\u{1}";
+    *slot = Json::str(marker);
+    let spelled = strict_json::spelling(&plain, Layout::Compact).map_err(refuse)?;
+    let token = to_canonical_string(&Json::str(marker)).unwrap_or_default();
+    let (head, tail) = match spelled.split_once(&token) {
+        Some(parts) if spelled.matches(&token).count() == 1 => parts,
+        _ => {
+            return Err(malformed(
+                "$",
+                "the line cannot be checked around its opaque slot",
+            ))
+        }
+    };
+    let around =
+        text.len() >= head.len() + tail.len() && text.starts_with(head) && text.ends_with(tail);
+    if around {
+        Ok(())
+    } else {
+        Err(malformed(
+            "$",
+            "the bytes around the opaque slot are not the writer's spelling",
+        ))
+    }
+}
+
+/// The `params` of a step whose action this reader has not registered.
+fn opaque_params(line: &mut Json) -> Option<&mut Json> {
+    let Json::Obj(top) = line else { return None };
+    let Json::Obj(step) = &mut top.iter_mut().find(|(k, _)| k == "step")?.1 else {
+        return None;
+    };
+    let Json::Obj(intent) = &mut step.iter_mut().find(|(k, _)| k == "intent")?.1 else {
+        return None;
+    };
+    let known = intent.iter().any(|(k, v)| {
+        k == "action" && matches!(v, Json::Str(a) if REGISTRY.iter().any(|r| r.0 == a))
+    });
+    if known {
+        return None;
+    }
+    intent
+        .iter_mut()
+        .find(|(k, _)| k == "params")
+        .map(|(_, v)| v)
 }
 
 /// The header's member rules (ADR-036 §6): the closed shape, then each dataset entry as
@@ -957,38 +1138,6 @@ fn check_intent(intent: &Value, kind: &str, actions: u64) -> Res<()> {
             format!("`{action}` is not registered, and `actions` {actions} is not greater than {ACTIONS}"),
         )),
     }
-}
-
-/// Whether any object in `text` (already valid JSON) holds two keys that decode equal.
-fn has_duplicate_key(text: &str) -> bool {
-    let bytes = text.as_bytes();
-    let mut stack: Vec<Option<Vec<String>>> = Vec::new();
-    let mut i = 0;
-    while i < bytes.len() {
-        match bytes[i] {
-            b'{' => stack.push(Some(Vec::new())),
-            b'[' => stack.push(None),
-            b'}' | b']' => drop(stack.pop()),
-            b'"' => {
-                let start = i;
-                i += 1;
-                while bytes[i] != b'"' {
-                    i += if bytes[i] == b'\\' { 2 } else { 1 };
-                }
-                let is_key = text[i + 1..].trim_start().starts_with(':');
-                if let (Some(Some(keys)), true) = (stack.last_mut(), is_key) {
-                    let key = serde_json::from_str::<String>(&text[start..=i]).unwrap_or_default();
-                    if keys.contains(&key) {
-                        return true;
-                    }
-                    keys.push(key);
-                }
-            }
-            _ => {}
-        }
-        i += 1;
-    }
-    false
 }
 
 #[cfg(test)]
@@ -1392,5 +1541,67 @@ mod tests {
                 "{bad}: {rule}"
             );
         }
+    }
+
+    /// OPEN-19 (A): a line is read by the strict reader. Its members must be in the order its shape
+    /// declares and its text in the writer's own spelling, but for the one opaque slot, which is
+    /// kept as written (ADR-036 §2, §3). Mutation: the call of `in_writers_form` in `read_line`
+    /// removed. Expected failure: this test fails at the first fault, which is kept.
+    #[test]
+    fn recover_refuses_a_line_out_of_declared_order_or_off_canonical_spelling() {
+        let lines = h1();
+        let faults = [
+            (
+                "a header member out of order",
+                0,
+                r#""version":1,"purpose":"session-history""#,
+                r#""purpose":"session-history","version":1"#,
+            ),
+            (
+                "a dataset entry out of order",
+                0,
+                r#""cache_status":"linked","portability_policy":"linked-live-file""#,
+                r#""portability_policy":"linked-live-file","cache_status":"linked""#,
+            ),
+            (
+                "a step member out of order",
+                1,
+                r#""at":"2026-10-14T10:00:00Z","kind":"data""#,
+                r#""kind":"data","at":"2026-10-14T10:00:00Z""#,
+            ),
+            (
+                "a registered action's params out of order",
+                1,
+                r#""predicate":"zone = 'civic'","dialect":"duckdb-expr/0""#,
+                r#""dialect":"duckdb-expr/0","predicate":"zone = 'civic'""#,
+            ),
+            (
+                "a space after a colon",
+                1,
+                r#""parent":null"#,
+                r#""parent": null"#,
+            ),
+            (
+                "a number not in canonical spelling",
+                2,
+                r#""value":0.5"#,
+                r#""value":0.50"#,
+            ),
+        ];
+        for (what, at, from, to) in faults {
+            assert!(lines[at].contains(from), "{what}: the fault applies");
+            let mut broken = lines.clone();
+            broken[at] = lines[at].replacen(from, to, 1);
+            let (line, rule) = failure(&broken).unwrap_or_else(|| panic!("{what} is kept"));
+            assert_eq!(line, at + 1, "{what}: {rule}");
+        }
+
+        // The opaque slot is kept as written, and what surrounds it is checked.
+        let intent = r#"{"action":"layer.reorder","params":{ "order" : [2, 1.50] }}"#;
+        let opaque = step(2, Some(1), "data", intent, &sound());
+        let history = |line: String| vec![header(3), lines[1].clone(), line];
+        assert_eq!(failure(&history(opaque.clone())), None);
+        let spaced = opaque.replacen(r#""parent":"#, r#""parent": "#, 1);
+        assert_eq!(failure(&history(spaced)).map(|f| f.0), Some(3));
     }
 }
