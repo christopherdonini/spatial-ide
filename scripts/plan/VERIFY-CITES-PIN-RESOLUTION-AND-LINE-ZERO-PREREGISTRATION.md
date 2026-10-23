@@ -185,3 +185,15 @@ Each test is end to end through `runVerifyCites`, on a temporary git repository 
 6. **Next:** the code, the tests, the mutations and the I1 and I2 runs, by one worker on `cut/verify-cites-pin-resolution-and-line-zero` from this commit; then the PR and both gates.
 
 Nothing above is edited.
+
+## §10 Amendment 2 — the build: two mutations fail more tests than §4 predicts (class 2); written after the results were seen
+
+*Written by the custodian after the build's results were seen, before the gates. References only: the worker's report `state/consults/2026-10-23-verify-cites-pin-resolution-and-line-zero-worker-report.md`; the head 7a23dbad24d3efc923e5108a9047811a2909aacf; the mutations observed at eb499a89.*
+
+1. **M-D4b** (the list built from the exact set only) fails T-D4b, as §4 predicts, and also T-D4c: with no exact candidate, T-D4c's basename cite keeps the tree's reason instead of the pin's. §4's "T-D4b only" is a miss.
+2. **M-D4d** (the path as written dropped from the list) fails T-D4d, as §4 predicts, and also the existing test `a_pinned_cite_whose_path_is_a_directory_at_that_commit_fails_by_name`: a rooted cite with no match then has no path to read at its pin. A narrowed variant, the path as written dropped only when the tree has candidates, fails T-D4d only. Both are recorded in the test file's RECORDED MUTATION comments, as observed.
+3. **Everything else as predicted:** M-C3a, M-C3b, M-D4a, M-D4c and the C2 test's mutation fail the tests §4 names; I1 and I2 each show the one C3 change at the gate report's line-0 cite, reason only, and nothing else (the D4 classes empty, as Amendment 1 item 3 predicted); §7 at 60, 106 and 166 against 60, 150 and 210.
+4. **Class 2:** §4 and §5 are not edited, no test is changed by these results, and no invalidator is met. The gates read the two observations.
+5. **Next:** the PR (draft) and both gates (§9).
+
+Nothing above is edited.
