@@ -148,3 +148,14 @@ Each mutation is observed by applying it, running the named test, recording the 
 5. **Next:** the code, T1 and T2, the mutations M1 to M3 and P2's base-line run, by one worker on `cut/flush-crlf-field-rewrite` from this commit; then the PR and both gates.
 
 Nothing above is edited.
+
+## §10 Amendment 2 — the build: P3 falsified, M3 fails one rotate-cut-state test besides T1 (class 2); written after the results were seen
+
+*Written by the custodian after the build's results were seen, before the gates. References only: the worker's report `state/consults/2026-10-23-flush-crlf-field-rewrite-worker-report.md`; the head 197d81ea607027f26511d9df39f44aea8d726fb5; the mutations observed at 8bfc3e69.*
+
+1. **P3 is falsified.** M3 (a CR appended to every written line) fails T1 at (b) and (c), as §4 predicts, and also `rotate-cut-state: after the rotation commit and a ledger-only flush commit, session-resume prints the block, the precompact hook allows and the stop hook's continuity step passes`, at its eight-fields assertion: the seeded flush writes LF lines, and that test reads them. The test pins the LF terminator for the flush the rotation path runs. It is recorded in the test file's MC10.
+2. **As predicted:** P1 (every existing test of both files green at the head, unedited); P2 (M1 fails T1 at (a) and (b), passes (c), and fails T2 at its no-bare-LF assertion); M2 fails T1 at (b) only; §7 at 5 and 41, 46 in all, against 8, 60 and 68.
+3. **Class 2:** §3 to §5 are not edited, no test is changed by this result, and no invalidator is met. The gates read the observation.
+4. **Next:** the PR (draft) and both gates (§9).
+
+Nothing above is edited.
