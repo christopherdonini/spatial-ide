@@ -1,14 +1,13 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `b0a5c8f5661ec08af6a74da7d6a87367619336296f3e61640386596ad6dd3a61`) at `2026-10-23T10:57:00.456Z`.
+Generated from `PLAN.yaml` (sha256 `df31f6581d3c54f178f91f4f0ccb5acd53dad7ac5d8769d4d3f31435f974df4d`) at `2026-10-23T11:04:59.829Z`.
 
 ## 1. Next
 
-- **covering-case-collision-binds-other-column** — A declared covering whose path differs from two schema names only by case: DuckDB may bind it to the other column, a wrong-rows risk that predates the covering piece (lane `engine`)
+- **verify-cites-pin-resolution-and-line-zero** — verify-cites: a pinned cite starting at line 0 gets a false reason, and a pin is read only at the path as written (lane `governance`)
 
 ## 2. Ready
 
-- **covering-case-collision-binds-other-column** — A declared covering whose path differs from two schema names only by case: DuckDB may bind it to the other column, a wrong-rows risk that predates the covering piece (lane `engine`, order null, budget 60 min)
 - **verify-cites-pin-resolution-and-line-zero** — verify-cites: a pinned cite starting at line 0 gets a false reason, and a pin is read only at the path as written (lane `governance`, order null, budget 45 min)
 - **port-2-macos-l1-and-app-dirs** — PORT-2 -- macOS L1 for the Cargo workspace: macos-latest in the same matrix, one application-directory boundary replacing the two resolvers, and a case-policy test on a case-insensitive volume (lane `platform`, order null, budget 240 min)
 
@@ -42,6 +41,7 @@ Generated from `PLAN.yaml` (sha256 `b0a5c8f5661ec08af6a74da7d6a87367619336296f3e
 
 ## 5. In progress
 
+- **covering-case-collision-binds-other-column** — A declared covering whose path differs from two schema names only by case: DuckDB may bind it to the other column, a wrong-rows risk that predates the covering piece — evidence: branch `cut/covering-case-collision-binds-other-column`
 - **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **bundle-redaction-scan-not-in-product-publish** — The bundle redaction scan runs only in a test: no product publish scans its emitted files, though ADR-017's section 13 (Accepted) says a scan over every emitted file asserts no path, user name, machine identifier or credential is in a bundle — evidence: branch `cut/bundle-redaction-scan`
 - **b1-shell-half** — Shell migration, milestone 4 -- B1 shell half: attributes of the inspected feature, colour by category with its legend, and the table — evidence: branch `cut/b1-shell-half-pr-a`
