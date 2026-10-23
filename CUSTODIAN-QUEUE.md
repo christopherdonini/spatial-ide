@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `09469781ff598f9ed8368b14e83dc6b72f9c0a07ce68c6ad7dfbf845fe90c215`) at `2026-10-23T18:46:36.150Z`.
+Generated from `PLAN.yaml` (sha256 `f1674b765e75f9ba5d386f378b4ea326880f966b496e2e4daaf875046d2e2262`) at `2026-10-23T19:03:34.194Z`.
 
 ## 1. Next
 
@@ -116,6 +116,7 @@ Generated from `PLAN.yaml` (sha256 `09469781ff598f9ed8368b14e83dc6b72f9c0a07ce68
 - **shell-real-app-run-macos-linux** — Run the real app once on macOS and once on Linux after migration milestone 1 merges, and record what it finds (phase `prototype`) — never queued until placed
 - **pan-anchor-setcam-waits-for-its-own-reset** — e2e/pan-anchor.mjs: setCam waits for the view-state line its own reset produces, never a late line from the previous gesture (test only) (phase `prototype`) — never queued until placed
 - **verify-quotes-dotted-paths** — verify-quotes: the hash-reference path grammar cannot begin with a dot, so a pinned cite into .github/ can never be checked (phase `prototype`) — never queued until placed
+- **publish-e2e-filtered-step-shared-run-failure** — The publish e2e suite's FILTERED' step failed once in a shared run: the prompt carried no filter_scope sentence after a filter was applied (at 147ef82c), not reproduced at the next head (phase `prototype`) — never queued until placed
 - **shell-resource-dir-dev-comments** — Shell comments on resource_dir under tauri dev read as untrue on Windows: bundled_viewer, resolve_viewer_dir (twice), commands.rs and two resolver tests say a dev run supplies no resource directory (phase `prototype`) — never queued until placed
 - **publish-dev-hook-attempt-from-effect** — The export panel's publishExecute dev hook reads the current attempt from a passive effect, so an execute sent as soon as the prepare answers can return unknown-attempt with no host call (the e2e export steps under load) (phase `prototype`) — never queued until placed
 - **lod-tiers-geographic-crs** — LOD tiers for a geographic CRS -- its own preregistered gate, owed by the LOD form's amendment (phase `prototype`) — never queued until placed

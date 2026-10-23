@@ -918,3 +918,13 @@ Nothing above is edited.
 2. **This is the final head** for Amendment 7 item 6 and Amendment 8 item 2. **Next, at it:** R1 by a tester under the port-5400 harness, F7's §4 item 4 with it, and R1 alone on the machine by the custodian if FILTERED' fails again (Amendment 11 item 1); R2's installer from this head's pull_request CI run; R2, the human's, on Monday 2026-10-26, after #244's click.
 
 Nothing above is edited.
+
+## Amendment 13 — R1 at the final head, as predicted; R2's installer (class 1); written after the result was seen
+
+*Written by the custodian. References only: `state/consults/2026-10-23-bundle-redaction-scan-not-in-product-publish-r1-tester-report-4.md`; the final head 50c634a85e0486bba0d7bff425defd91fcbab788.*
+
+1. **R1 at 50c634a85e0486bba0d7bff425defd91fcbab788:** as Amendment 8 item 1 predicts. APPROVED', REFUSED' and FILTERED' pass; every `viewer/` file of APPROVED''s bundle equals the build record's entry, `viewer/NOTICE.txt` 826e55d1f585edef8431791033a6beacd6379dc0615ad749a97a7467ab4805fb; the three audit pairs as the steps say. FILTERED''s one failure at 147ef82c did not recur, so the solo re-run of Amendment 11 item 1 is not owed; the failure is routed to the proposed node `publish-e2e-filtered-step-shared-run-failure`.
+2. **R2's installer:** the `spatial-ide-nsis-installer` artifact of run 40005770562 (pull_request, the shell workflow) at this head, sha256 4640616dd63fa5e5662d8ab6d8c60170f441ff0e2672598f21b29cbf0912259a, taken for the human outside the repository.
+3. **Next:** R2, the human's publish through the native dialog with that installer, on Monday 2026-10-26, after #244's click (F7's §2.3); then the click.
+
+Nothing above is edited.

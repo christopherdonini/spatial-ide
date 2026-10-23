@@ -420,3 +420,12 @@ Nothing above is edited.
 2. **Next:** the PR body lists the words; §4 item 4 re-run at #241's final head (§2.3, the redaction form's Amendment 9); the click on Monday 2026-10-26.
 
 Nothing above is edited.
+
+## Amendment 8 — §4 item 4 at #241's final head (class 1); written after the result was seen
+
+*Written by the custodian. References only: `state/consults/2026-10-23-bundle-redaction-scan-not-in-product-publish-r1-tester-report-4.md`, its F7 lines; #241's final head 50c634a85e0486bba0d7bff425defd91fcbab788 (the redaction form's Amendment 12).*
+
+1. **§4 item 4 holds at 50c634a85e0486bba0d7bff425defd91fcbab788:** the W12 paragraph byte-equal to the redaction form's block; `ViewerAssets::` only as `from_dir`; `with_build_record` absent; `run_inner`'s skip; the two `NOTICE.txt` rows; the corrected LICENSES diff from B′ empty. §2.3's re-run is met for this head.
+2. **Next:** this PR's click first, then #241's, on Monday 2026-10-26.
+
+Nothing above is edited.
