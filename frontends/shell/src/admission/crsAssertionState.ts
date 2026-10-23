@@ -6,9 +6,9 @@ import type { CrsAssertion } from "../skp/types";
 
 /**
  * `CrsAssertionForm`'s pure state and submission logic, kept separate from the React component
- * (this package's own convention -- see `App.tsx`'s `admitAndResetStaleUiState`/`nextScanState`,
- * and `App.test.ts`'s own top comment on why: no `@testing-library/react`-equivalent harness
- * exists here, so anything worth a unit test is factored out of JSX and tested directly).
+ * so that it is unit-tested as plain functions, with no mount (`crsAssertionState.test.ts`,
+ * `CrsAssertionForm.test.ts`). This package's own convention: `App.test.ts` tests `App.tsx`'s
+ * `admitAndResetStaleUiState` and `nextScanState` the same way, without rendering `App`.
  */
 
 export type CrsAssertionRoute = "none" | "catalog" | "paste";

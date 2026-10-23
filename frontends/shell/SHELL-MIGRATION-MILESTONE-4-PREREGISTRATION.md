@@ -745,3 +745,387 @@ The source for every ruling is `state/directives/2026-10-21-d-s10-go-adr-036-rou
 6. **Next:** PR A's re-sweep at its base (§0.3), recorded as an amendment before its code. PR A's `buildLayers.ts` comment waits for the docs-lane piece's merge (§2.9).
 
 Nothing above is edited.
+
+## Amendment 2 — PR A's re-sweep at B 55618ab5, written after the re-sweep's and the base series' results were seen: no pin moved and no invalidator; four class-3 rows (the text check's wrap, a test title, `document.ts`'s words, the fifth positive at b24e5281); the Part and the numbers; the base's suites and rule 00 (class 1)
+
+*Written after the re-sweep's and the base e2e series' results were seen, before any PR A code. The architect drafted it read-only at main c6de9b48cde727684de7fec7bb44323fe24d0a02. It is references only, and nothing below is a quotation. The re-sweep is `state/consults/2026-10-22-b1-shell-half-pr-a-re-sweep.md`, sha256 from its line 5 c7c9b7b81f640270a4d734cbb2b01a17a3530f3797f7e2da7e3831e1732f6d39. The series is `state/consults/2026-10-22-b1-shell-half-pr-a-base-e2e-tester-report.md`, sha256 from its line 5 4b0827c471257e77ca63091638af3f24e3796792da09b3b43409484423186a52. B is 55618ab54c32f1e0712d4a657d1e3f1b30c0ef8f. Every `@ 4b26d279` pin is historical (§0.3). For the work, the tree at B is authoritative.*
+
+1. **The pins.** None moved and none changed (the re-sweep's step 1). The §0.2 interfaces read at B as §0.2 states them (its step 2), so I4 does not fire. Every PR A file in §2.6 exists at B, and its six new files do not (its step 2, last paragraph).
+
+2. **The re-sweep's four notes (class 3).**
+   - **(a) The wrapped text check.** `Proposed, so it binds nothing` runs across `frontends/shell/src/workspace/viewTransitions.ts:6-7` @ 55618ab54c32f1e0712d4a657d1e3f1b30c0ef8f sha256:7ccc0e5c8560a6e994c8b031916b8dfdc1a46295b493012341ea4744c0fe33ff. A line-by-line search finds nothing at B, so §4's second check fails its own self-test (re-sweep note 1).
+     - §2.2 (g)'s sixth bullet is read as that two-line span.
+     - §4's text-check paragraph reads: **Text checks at PR A's head**, by script. Each pattern is searched twice in each file named: once line by line, and once over the file's text with each line's leading whitespace, leading comment marker (`//!`, `//` or `*`) and trailing whitespace removed and the lines joined by one space. Each pattern is self-tested positive at the base in at least one of the two runs. At the head it has zero matches in both runs:
+       - `requests none`, `requests no projection` and `gains no parameter` in `frontends/shell/src` and `renderer/tests`;
+       - `Proposed, so it binds nothing` in `frontends/shell/src/workspace/viewTransitions.ts`.
+     - The self-test at B:
+       - `requests no projection` is positive at `frontends/shell/src/skp/client.ts:122` @ 55618ab54c32f1e0712d4a657d1e3f1b30c0ef8f sha256:c4dbd2d71a4fd6a4def8ef340b9d4bf2e3742ae1a9a10ced4f1de2a03197de10 and `frontends/shell/src/skp/client.test.ts:43` @ 55618ab54c32f1e0712d4a657d1e3f1b30c0ef8f sha256:f71a6cc33b3b44c6236c9e1d4e34619e6ac4dc80f915a2342ab58a7f4bb30c99;
+       - `gains no parameter` is positive at `frontends/shell/src/skp/types.ts:262` @ 55618ab54c32f1e0712d4a657d1e3f1b30c0ef8f sha256:db14ea2888c71d6ac649fdbb131f3c7892db8736529b7541bb6811cb124aaaff;
+       - `requests none` is positive at `frontends/shell/src/style/document.ts:20` @ 55618ab54c32f1e0712d4a657d1e3f1b30c0ef8f sha256:df755c15b565488b71dc128e77dccac4f71d1ab153f6943c230c4633b3d6a2d9 and `renderer/tests/style_shell_agreement.rs:39` @ 55618ab54c32f1e0712d4a657d1e3f1b30c0ef8f sha256:a082692c1d782e3faf5121db14d16419bb6d6d0fbc0c130d8b11da0532a7b5b8;
+       - `Proposed, so it binds nothing` is positive in the joined run only, over lines 6 and 7.
+   - **(b) The test title in `frontends/shell/src/skp/client.test.ts`.** The check reaches the title at `frontends/shell/src/skp/client.test.ts:43` @ 55618ab54c32f1e0712d4a657d1e3f1b30c0ef8f sha256:f71a6cc33b3b44c6236c9e1d4e34619e6ac4dc80f915a2342ab58a7f4bb30c99 (re-sweep note 2). That file is a PR A test file (§2.6), so this is a test-text fix.
+     - The title reads: `sends columns: null as an explicit null when the caller passes null, never omitted`.
+     - The test's call passes `null` for `columns`. Its body, its doc comment and its recorded mutation (omit the key) stay as they are.
+     - Clause check against the body as it stands at `frontends/shell/src/skp/client.test.ts:44-48` @ 55618ab54c32f1e0712d4a657d1e3f1b30c0ef8f sha256:a6bde0ec0918e939969af20036a387033191a308453957a92796495c1a9e9cb1:
+       - "explicit null" is the `toBeNull` assertion;
+       - "never omitted" is the `toHaveProperty("columns")` assertion;
+       - "when the caller passes null" is the call's argument once §2.2 (b) makes `columns` required.
+     - These are not the human's words. The edit fits A-T's `client 50` (§7).
+   - **(c) `document.ts`'s bullet after the clause comes out.** Removing the clause from `frontends/shell/src/style/document.ts:18-22` @ 55618ab54c32f1e0712d4a657d1e3f1b30c0ef8f sha256:d8b7d7e56fb24a3965cedc29ccdfc655e3ce7a499187ab206e5e96e91da387f1 leaves a lowercase "so" after a full stop, and "not a wire restriction" loses its antecedent (re-sweep note 3).
+     - The bullet reads, wrapped as the file wraps:
+       ```
+        * - **Literal-only.** `StyleDocumentV0`'s type has no `match` variant at all -- there is no field to
+        *   set that would produce one. So categorical/match styling is still unavailable live. The wire
+        *   does not prevent it: the shell's `viewport_query` calls carry the open's projection set
+        *   (`projectionFor`; `null` when no column is projectable). There is no wider model here.
+       ```
+     - Clause check at PR A's head:
+       - The type has no `match` variant: `frontends/shell/src/style/document.ts:109-118` @ 55618ab54c32f1e0712d4a657d1e3f1b30c0ef8f sha256:f4017650ff734303b5cb2ceb04195557bb50eb179be1ab5844f04cd1ac922e19, which PR A does not edit (§2.6, comment only).
+       - Unavailable live: the canvas passes one `fillColor` (`frontends/shell/src/canvas/buildLayers.ts:447` @ 55618ab54c32f1e0712d4a657d1e3f1b30c0ef8f sha256:0a58685b0d83fd756ea6585db8d0197e06e033323fae97b86e8043dbbc276639, `frontends/shell/src/canvas/buildLayers.ts:470` @ 55618ab54c32f1e0712d4a657d1e3f1b30c0ef8f sha256:4a19c0098a5ad5403e537096f9e2b4c05d34c41bfa86c3e630271cc6e219bc35), and PR A touches only that file's comment.
+       - The calls carry the open's set: §2.2 (a) and (b), asserted by PA-U1 and PA-U7.
+       - "There is no wider model here" is unchanged.
+     - These are not the human's words. ADR-023's B1 condition (1) asks for exactly this correction in the piece (RULED 2026-09-14, question set D, item D2, condition 1; carried at `docs/adr/ADR-023-attribute-projection-on-viewport-query.md:144` @ c6de9b48cde727684de7fec7bb44323fe24d0a02 sha256:18b6453d6e8e8120764205e9d89730c9cf88420e33656caca15d839577dd2a72).
+   - **(d) The fifth positive at b24e5281.** At b24e5281, `frontends/shell/src/canvas/buildLayers.ts`'s doc comment on `ResolvedDrawParams` carries `requests none`. That branch commit is named here with no line pin (re-sweep note 4 and step 5). The other positives there match §2.2 (g)'s list.
+     - §4's text checks are run at the PR A head that goes to the gate, after main with #243's merge has been merged into PR A's branch (§2.9).
+     - At that head the first bullet's runs also reach `buildLayers.ts`. Its self-test is the positive at b24e5281, and its zero follows §2.2 (g)'s fifth bullet (item 5).
+
+3. **The Part and the numbers.**
+   - **The Part is AC.** The last Part at B is AB (`frontends/shell/MANUAL-WALKTHROUGH.md:1927` @ 55618ab54c32f1e0712d4a657d1e3f1b30c0ef8f sha256:4917a05ad91af5f3bcba369d513f01f305aa06eb7d1042ae5a0931cb2ee1a3d5). No branch in flight adds a Part (re-sweep step 3).
+   - **KL-4 is item 51 and KL-7 is item 52.**
+     - The highest item at B is 46 (`KNOWN-LIMITATIONS.md:407` @ 55618ab54c32f1e0712d4a657d1e3f1b30c0ef8f sha256:e2a1de35da75f57c0f947eedf774921d7600f1be9e9b8d1ca9ebb89339eb78eb).
+     - #241's item is 47, a branch fact at 2fc01f59.
+     - 1c places its items after it and withdraws K-1 (`kernel/B2-1C-SAVE-AND-REOPEN-PREREGISTRATION.md:513-514` @ c6de9b48cde727684de7fec7bb44323fe24d0a02 sha256:17ee5e3fa2ef4595fc3ab89c10b8e1e700c0c1f2d66d6375648124cf80041eec), so its K-2 to K-4 take 48 to 50 (re-sweep step 4).
+     - The numbers are read again at PR A's KNOWN-LIMITATIONS commit. A change there is class 3, with the tree authoritative.
+
+4. **The base series (class 1).**
+   - **Result.** The 14 `e2e:` scripts in `frontends/shell/package.json` other than `e2e:debug` each ended rc 0 at B, on an exe built at B. `e2e:residency-harness` was read by its exit code only.
+   - **Fixtures.** They were hash-identical before and after, nothing was regenerated, and the 5 GB fixture was not used.
+   - **The harness** ran under §9's port-5400 approval:
+     - the overlay through `TAURI_CONFIG`;
+     - vite with `--strictPort`;
+     - the npx shim on PATH, and for `recording` its waiting variant;
+     - one shared hold for each run;
+     - a cargo target outside the worktree.
+   - **Four attempts failed on harness causes,** each disclosed in the series:
+     - publish twice, its deadline spent on a cargo build of its verify example;
+     - the first exe build, before the shell's generated notice file existed;
+     - recording once: the stock shim leaves the app detached, so the suite's stop released nothing, and its RECORD step met a live lock after OPEN, APPLY, STYLE and RESET had passed.
+   - **None is I3.**
+     - In each case the series shows the cause in the launcher or the build.
+     - Each suite then passed at the same commit, with no product change, on the corrected harness: publish with its example built, and recording with the waiting shim.
+     - The exe build is not a suite.
+     - The reading, class 1: under I3, a failure whose recorded cause is the harness, and which passes at the same commit on the corrected harness, is not an e2e failure. The correction is carried into every later run of this piece. That means the waiting shim for `recording`, and publish's verify example built before its deadline starts.
+     - The custodian judged the same.
+
+5. **§2.2 (g)'s `buildLayers.ts` bullet against #243 (class 3).**
+   - After main with #243's merge has been merged into PR A's branch, PR A removes the clause naming `viewport_query`'s projection since `skp/0.6` and the shell requesting none, and re-wraps (re-sweep step 5).
+   - The comment's sentence reads:
+     ```
+      * `0..1` opacity). The shell's style documents are literal-only (`style/document.ts`'s
+      * `StyleDocumentV0` has no `match` variant), so this is exactly ONE colour for a whole style, not
+      * a per-feature table -- a plain array, deck.gl's own "constant attribute" shape, is what this
+      * type carries and what `buildLayers` below passes straight through unchanged. */
+     ```
+   - Clause check at PR A's head:
+     - "Literal-only" and "no `match` variant": `frontends/shell/src/style/document.ts:109-118` @ 55618ab54c32f1e0712d4a657d1e3f1b30c0ef8f sha256:f4017650ff734303b5cb2ceb04195557bb50eb179be1ab5844f04cd1ac922e19, not edited by PR A.
+     - "Exactly ONE colour": `frontends/shell/src/canvas/buildLayers.ts:447` @ 55618ab54c32f1e0712d4a657d1e3f1b30c0ef8f sha256:0a58685b0d83fd756ea6585db8d0197e06e033323fae97b86e8043dbbc276639 and `frontends/shell/src/canvas/buildLayers.ts:470` @ 55618ab54c32f1e0712d4a657d1e3f1b30c0ef8f sha256:4a19c0098a5ad5403e537096f9e2b4c05d34c41bfa86c3e630271cc6e219bc35, with PR A editing that file's comment only (§2.6, ceiling 6).
+     - "A plain array … is what this type carries": the `fillColor` tuple at `frontends/shell/src/canvas/buildLayers.ts:36` @ c6de9b48cde727684de7fec7bb44323fe24d0a02 sha256:563daa957fb0d092226396673fd1b3a9a138a279727bef9fc27147d9799aa968.
+     - The sentence does not say that the shell requests no projection, or that `viewport_query` carries no attributes.
+   - These are not the human's words. The worker applies them, and the PR body lists them.
+
+6. **Rule 00 at B (class 1)** (re-sweep step 6; §2.9; Amendment 1 item 4):
+   - 1c's branch is at B, with no commit and none of the six shared files.
+   - The docs lane is at b24e5281. It shares `buildLayers.ts` only, as §2.9 says.
+   - #241 is at 2fc01f59 and is disjoint.
+   - `verify-quotes-round-item-cites` is at b08a1fec and is disjoint.
+   - The F7 piece edits Part F only.
+   - PR A's Part AC and its items 51 and 52 are separate paths.
+
+7. **Next:** PR A's code from B, by one worker-high, on `cut/b1-shell-half-pr-a`.
+8. **Generation:** the node's generation goes up by one.
+
+9. **F1, the scriptless drivers at B (the architect's finding, (a); the custodian's row):** `state/consults/2026-10-22-b1-shell-half-pr-a-scriptless-drivers-tester-report.md`. `pan-anchor.mjs`, `source-watch-idle.mjs` and `source-changed.mjs`'s default route pass every step; the post route's S5d is INCONCLUSIVE, twice, with every other step passing. Milestone 3's Amendment 3 item 12 records an S5d-only result beside the runs, neither I12 nor I3, and that holds here.
+10. **F2 (the custodian's row, on the architect's finding):** PR A does not merge before #243. If #243 is dropped, PR A edits B's sentence in its place, and that edit is class 3. `carries no attributes` joins §4's first text-check bullet, positive at B at `frontends/shell/src/canvas/buildLayers.ts:31` @ 55618ab54c32f1e0712d4a657d1e3f1b30c0ef8f sha256:ba2218b8e148ec04b7d7f37f80ce20beb5acf6da6d0f491a2b08632e95102335.
+11. **F3 (class 3; the architect's words, not the human's):** §2.2 (g)'s first bullet, `frontends/shell/src/skp/client.ts:122-123` @ 55618ab54c32f1e0712d4a657d1e3f1b30c0ef8f sha256:d2fbf847e1ae29847d76a0da301dd89ffc62612d48ad06975436c3cbd409662d, is replaced once line 124 sends the parameter by:
+    ```
+        // `skp/0.6`: the caller's projection set, sent as given (`projectionFor`'s list, or `null`
+        // when no column is projectable); `null` is sent as `null`, never omitted.
+    ```
+
+Read the last amendment first.
+
+Nothing above is edited.
+
+## Amendment 3: scope addition (class 9), written after the worker's I1 stop was seen. Three product files, their tests, one test helper and nine null fills join PR A's list in §2.6. The duplicate drop keeps a row map. Every new member is required (class 1).
+
+*Written after PR A's worker stopped at I1, and before any PR A code. The stop is recorded in `state/consults/2026-10-22-b1-shell-half-pr-a-i1-stop-worker-report.md`. This is a scope addition. §2.6's last paragraph makes a file added to a PR's list class 9 (round 25, item 2 (a)). The standing rule that adds the work is the cross-module seam rule (RULED 2026-09-16, question round 4): the decode, residency and inspect seam is written against what the residency and click code have at B. The architect drafted this read-only at main 0ff8db4e, with the code at B 55618ab54c32f1e0712d4a657d1e3f1b30c0ef8f. §7 is not edited. Nothing below is a quotation.*
+
+1. **The need (class 1).** At B, three product sites outside §2.6 build, by naming fields, the objects that §2.2 (c) and (e) widen:
+   - `trimBatchToVertexBudget` rebuilds a `ResidentBatch` (`frontends/shell/src/canvas/tileIngest.ts:222-230` @ 55618ab54c32f1e0712d4a657d1e3f1b30c0ef8f sha256:6458473d12a5b53c143101aef80ad38984fec70cd3933f84f996e8e8a4dc1191).
+   - `TileResidentSet.addBatch` rebuilds one after a duplicate drop and re-indexes the rows (`frontends/shell/src/canvas/tileResidentSet.ts:225-254` @ 55618ab54c32f1e0712d4a657d1e3f1b30c0ef8f sha256:12b3dbe647e1430f7c4345028bfa10603ecd61a6b4144e3030546524fed21d6f).
+   - `clickEffect` builds `inspect.set`'s params from the click (`frontends/shell/src/feature/clickEffect.ts:67-71` @ 55618ab54c32f1e0712d4a657d1e3f1b30c0ef8f sha256:b3a973da2f27c158386073b6cc4b9fdfbe85bf4a73f683b85058443ff86c1a86). Its `ClickInput` mirrors `ClickPick` (`frontends/shell/src/feature/clickEffect.ts:17-34` @ 55618ab54c32f1e0712d4a657d1e3f1b30c0ef8f sha256:ff89fd3b570de70c863f78711d910322333369e9611029909270699ee1e0aec2), and App passes the canvas's click to it unchanged (`frontends/shell/src/App.tsx:1880-1886` @ 55618ab54c32f1e0712d4a657d1e3f1b30c0ef8f sha256:e13752cdff297b3864b15cba933c5003bbea33a9e63fb6eaaeead5d8f6a77d7f).
+
+   Both rebuilds are on the candidate arm's ingest path (`frontends/shell/src/canvas/tileIngest.ts:169-179` @ 55618ab54c32f1e0712d4a657d1e3f1b30c0ef8f sha256:8adb13ff329e20f54fb5e00345144bde8c8de5f71ee987214e32cb15a61512fb). Left unedited, each one drops the new member.
+
+2. **The trim (`tileIngest.ts`): carried unchanged.**
+   - The trim keeps a prefix. Kept row r is source row r for every r below the count, and `partToRow` is the source's prefix (`frontends/shell/src/canvas/tileIngest.ts:195-205` @ 55618ab54c32f1e0712d4a657d1e3f1b30c0ef8f sha256:4858de580c79654137b65dcda4770d0ef62dec3b69e92570fa6262c93f0b8646). So every row a kept part resolves to is the decode pass's own row for that id.
+   - The trimmed batch therefore carries `attributes` as the same object: `null`, `"not-held"`, or the block. No copy is made (ADR-004).
+   - `bytes` stays the source's. The rows trimmed away stay in `data` until the batch is released, so PA-U6's sum is the bytes actually held.
+   - The trim's choice of rows and the vertex ceiling are unchanged. I8 is not met.
+
+3. **The duplicate drop (`tileResidentSet.ts`): carried with a row map.**
+   - **The rebuild.** The attribute block gains `rows: Int32Array | null`. `decodeBatch` sets it to `null`. `addBatch`'s rebuild sets `rows[dst] = srcIdx` in the same `keepIdx` loop that writes `ids`, `parts` and `partToRow` (`frontends/shell/src/canvas/tileResidentSet.ts:235-244` @ 55618ab54c32f1e0712d4a657d1e3f1b30c0ef8f sha256:4057e861123d652865bd610739de20f782bbc39ba6f336c367f853776978aed4). It carries `names`, `data` and `bytes` unchanged, as the same objects. `"not-held"` and `null` are carried unchanged. The no-duplicate path, which returns the same batch, is unchanged.
+   - **The reader.** `values.ts`'s `readRow(batch, row)` reads `data` at `row` when `rows` is null, and at `rows[row]` otherwise. It is the only reader of `data`.
+   - **No second map.** In product, every batch reaches `addBatch` with `rows` null: either from `decodeBatch`, or from a trim that carries it unchanged. So no map is ever composed, and no code path does it.
+   - **Why §5's falsification and §8 item 4 are untouched.** `data` is read at the decode pass's own row index for that feature. That index is written in the same loop step that copies the feature's id and parts from the decoded batch. §8 item 4 is met as written. §5's first condition is what PA-U9 tests.
+   - **Why not mark the batch not-held instead.** A deduped batch would then hold no attributes whenever it repeats a feature that is already resident. In the candidate arm that means every feature straddling a tile edge, and every tile overlapping the first look (`frontends/shell/src/canvas/tileResidentSet.ts:58-82` @ 55618ab54c32f1e0712d4a657d1e3f1b30c0ef8f sha256:5650cf50ff4df474e02b5066213cb522ec70a86a9b15f3bed8bfedda50872787). That is ordinary use, so KL-4 (not held past the ceiling) would be untrue, which is a Correctness finding.
+   - **Why not copy the kept rows.** That would be a second copy per deduped batch on the ingest path (ADR-004), and it is a docs/08 risk with no budget to measure it against (OPEN-2 (b)).
+   - **What the row map costs.** `rows` is not attribute data and is not summed into `RESIDENT_ATTRIBUTE_MAX_BYTES`. It costs 4 bytes per kept row. `partToRow` costs the same per part and is not summed either.
+
+4. **The click (`clickEffect.ts`).**
+   - `ClickInput`'s feature member gains `row`, mirroring `ClickPick` (`frontends/shell/src/canvas/clickPick.ts:30-33` @ 55618ab54c32f1e0712d4a657d1e3f1b30c0ef8f sha256:8c0e25c0d50f5b25633e726c01728743fc92519a061d09d55ed9555f2e686f5c).
+   - The Navigate branch's `inspect.set` params carry `{pick, bounds, row}`.
+   - The Select branch and the pinned branch are unchanged. Neither sets an inspected feature.
+
+5. **Every new member is required (class 1, the reading of §2.2 (c) and (e)).**
+   - **The choice.** These are required, each typed with `null` as §2.2 writes it: `ResidentBatch.attributes`, `row` on `ClickPick`, on `ClickInput`, on `inspect.set`'s params and on `InspectedFeature`. `decodeBatch`'s projection is a required sixth parameter, and `WorkingCanvas`'s `projection` prop is required.
+   - **Against (c).** §2.2 (c) puts the attributes in the decode pass under ADR-010 rule 2, which builds the decoded members together so that a desync is structurally hard. A required member makes the compiler find every site that builds a `ResidentBatch`: the two found at this stop, and any later one. If the member were optional, both rebuilds would have compiled and silently dropped the data. The missing member would then read as `null`, and the Feature tab would state that no column is projected, which is untrue for that feature.
+   - **Against (e).** `row` is kept for the generation (ADR-010 rule 5). Required, the compiler proves that each of its four product writers carries it: `resolveClickPick`, App's pass-through, `clickEffect`, and the `inspect.set` reducer (`frontends/shell/src/workspace/viewTransitions.ts:141-147` @ 55618ab54c32f1e0712d4a657d1e3f1b30c0ef8f sha256:6aa223d39b40e3e76baa823d0058be2ace0648b9414ad0e65f208a83c77e5dcb).
+   - **No defaults.** A default value for the sixth parameter or for the prop would be used only by tests. That is a code path with no product caller (§8 item 13).
+   - **What this means for the unlisted tests.** Nine of them take a null fill (item 6). Each fill is true of its fixture, because none of them projects a column. App's describe fixture has no projectable column (`frontends/shell/src/App.selection.test.tsx:62` @ 55618ab54c32f1e0712d4a657d1e3f1b30c0ef8f sha256:d2ce2baec6c7b93bfae5084837579bc03266602587b10f3d940f731d0e70e481), and the canvas tests' batches carry no attribute column. No assertion, title, comment or recorded mutation changes. In-list test files take their fills inside their own §7 ceilings.
+
+6. **The files added to PR A's list in §2.6, and their lines (class 9).** §7 is not edited. These figures are declared beside it, they are counted by §7's command, and an overrun of either is class 8.
+
+| Group | Files (ceiling each) | At most |
+|---|---|---|
+| A-P, added | `frontends/shell/src/feature/clickEffect.ts` 10, `frontends/shell/src/canvas/tileIngest.ts` 8, `frontends/shell/src/canvas/tileResidentSet.ts` 30 | 48 |
+| A-T, added | `frontends/shell/src/feature/clickEffect.test.ts` (new) 70, `frontends/shell/src/canvas/tileIngest.test.ts` 60, `frontends/shell/src/canvas/tileResidentSet.test.ts` 110, `frontends/shell/src/testUtils/attributeBatchIpc.ts` (new) 80 | 320 |
+| A-T, null fills | `frontends/shell/src/canvas/buildLayers.test.ts` 14, `frontends/shell/src/canvas/highlightLayers.test.ts` 6, `frontends/shell/src/canvas/pick.test.ts` 8, `frontends/shell/src/canvas/residentSet.test.ts` 4, `frontends/shell/src/canvas/WorkingCanvas.wiring.test.tsx` 4, `frontends/shell/src/App.command.test.tsx` 4, `frontends/shell/src/App.selection.test.tsx` 2, `frontends/shell/src/workspace/selection.test.ts` 4, `frontends/shell/src/workspace/scope.test.ts` 2 | 48 |
+| **Added** | | **416** |
+
+   - **PR A's new totals:** 53 files, and 3,524 + 416 = 3,940 lines.
+   - **The four fill forms.** Each null fill takes one of these forms: `attributes: null` in a `ResidentBatch` literal; `row: null` in a click or `inspect.set` literal; `null` as `decodeBatch`'s sixth argument; or `projection: null` in props.
+   - **The fill sites at B:**
+     - `frontends/shell/src/canvas/buildLayers.test.ts:55` @ 55618ab54c32f1e0712d4a657d1e3f1b30c0ef8f sha256:67863fe067fdf546ff458503bfc601a15327b2f0338cf390fde5271410d950de, `:148`, `:185`, `:270`, `:357`, `:407`;
+     - `frontends/shell/src/canvas/highlightLayers.test.ts:36` @ 55618ab54c32f1e0712d4a657d1e3f1b30c0ef8f sha256:df5a80d2ed8673c95bbd05439088d48545c73519bc8821d69fd79d55719fde82, `:48`, `:57`;
+     - `frontends/shell/src/canvas/pick.test.ts:32` @ 55618ab54c32f1e0712d4a657d1e3f1b30c0ef8f sha256:025f9646aec8b3fba3446cb4e60dcd2513902b3d2bbe3ce1c02cd335ca796219, `:79`, `:116`, `:143`;
+     - `frontends/shell/src/canvas/residentSet.test.ts:11` @ 55618ab54c32f1e0712d4a657d1e3f1b30c0ef8f sha256:84ac69112af30386e368b8302aa7665c0a96b52d7bbf81e940b01dc6689442b8, `:45`;
+     - `frontends/shell/src/canvas/WorkingCanvas.wiring.test.tsx:93-106` @ 55618ab54c32f1e0712d4a657d1e3f1b30c0ef8f sha256:1591f6a97d7e0ec10090bcb40a389597c2680d427f3d82a5a3c2ba2338b50fb9 (the base props: the cast hides the required prop from `tsc`, so the fill is named here) and `:306`;
+     - `frontends/shell/src/App.command.test.tsx:487` @ 55618ab54c32f1e0712d4a657d1e3f1b30c0ef8f sha256:d76ecb5688ba2629fcc53f75fe5174442191b69b1d0d8834eb3a8c1c855828e6, `:594`;
+     - `frontends/shell/src/App.selection.test.tsx:309` @ 55618ab54c32f1e0712d4a657d1e3f1b30c0ef8f sha256:456479e38924c0f4d2a4730ca2c346bf98945c3a0180f6907e5f9940e4cff3e7;
+     - `frontends/shell/src/workspace/selection.test.ts:187` @ 55618ab54c32f1e0712d4a657d1e3f1b30c0ef8f sha256:c99db66a5b006a9d15bb304a283724f5d6b9734e07b718fe615b606175a84621, `:260`;
+     - `frontends/shell/src/workspace/scope.test.ts:68` @ 55618ab54c32f1e0712d4a657d1e3f1b30c0ef8f sha256:48f7ba8f46e5fcc5d0a33672a588be413ba65b321fa76c5a9c25809520954767.
+
+7. **Tests, one mutation each.** Each mutation is observed as §4 states: apply it, run the named test, record its failure by name with the commit, and revert. No `verify-mutation` run is an observation.
+
+| ID | File | Test | Asserts | Mutation; expected failure |
+|---|---|---|---|---|
+| PA-U8 | `tileIngest.test.ts` | `trimBatchToVertexBudget carries the attributes unchanged, so each kept row reads its own values` | The batch is decoded from the helper's IPC: ids 11, 22 and 33, with a text column `tag` holding a, b and c. Trimmed to two whole features, `trimmed.attributes` is the source's object (`toBe`), and `readRow` gives a and b. A not-held batch, trimmed, stays `"not-held"`. | The trim's literal writes `attributes: null`. The test fails. |
+| PA-U9 | `tileResidentSet.test.ts` | `a duplicate drop carries the attributes with a row map, so each kept row reads its own values` | Tile `0:0` owns id 2. A decoded batch of ids 2, 5 and 7 (`tag` two, five, seven; id 2 has two parts) is added under `0:1`. The accepted ids are 5 and 7, and `readRow` gives five and seven. `accepted.attributes.data` is the decoded batch's `data` (`toBe`), and `bytes` are equal. `partToRow` is as the SH-7 test states. | The rebuild carries the block with `rows: null`. Row 0 then reads two, and the test fails. |
+| PA-U10 | `tileResidentSet.test.ts` | `a duplicate drop keeps a not-held batch not-held and a null batch null` | The same drop over a not-held batch accepts it not-held. Over a batch decoded with projection `null`, it accepts it with `attributes` null. | The rebuild writes `null` for any block that is not an object. The not-held case fails. |
+| PA-U11 | `clickEffect.test.ts` | `a Navigate click on a feature carries its row into inspect.set, and the reducer keeps it on the inspected feature` | The test calls `clickEffect` with a Navigate view and a feature click. The click's `row` is `readRow` of a decoded batch's row 1. The effect's `inspect.set` carries that row, and `applyViewTransition` puts it on `inspected.row`. This is pure: nothing is mocked. | The Navigate branch sends `row: null`. The test fails. |
+
+   - **One IPC builder, used by all.** The batches in PA-U8 to PA-U11 come from the real `decodeBatch` and `readRow`, over IPC built by `testUtils/attributeBatchIpc.ts`. PA-U3 uses the same helper, so there is one builder.
+   - **The helper writes the engine's envelope shape:** `id`, then geometry, then the attributes, with `attribute_columns` as a JSON array of names (`engine/src/envelope.rs:239-256` @ 0ff8db4e35dec6c6ed4afbd51645e1cae757c15c sha256:39ad563ec0b97ac390e14b49a6d47683b88a9a58d9e831e71a9e1bd0189b7522; `engine/tests/data/golden/polygon-wire.golden:34` @ 0ff8db4e35dec6c6ed4afbd51645e1cae757c15c sha256:8a3b1dd61e56bc91da04804d365e6488717fb4ab745d2736814a65144291c031).
+   - **No literal blocks.** No test writes an attribute block as a literal (§8 item 17).
+   - **End to end.** The product's own end-to-end proof of the click path stays PA-E1.
+
+8. **§5.**
+   - **Declared unchanged:**
+     - every existing test in `tileIngest.test.ts` and `tileResidentSet.test.ts`, by assertion;
+     - the trim's choice of rows;
+     - the dedupe's ownership, its suppressor bookkeeping and `duplicatesDropped`;
+     - a rebuilt batch's `partToRow`, `partCount` and `totalVertices`;
+     - the vertex ceiling;
+     - H6. Neither the trim nor the dedupe copies the data; PA-U8 and PA-U9 assert that `data` is the same object.
+   - **Invalidators:**
+     - I1 fires if `tsc --noEmit` at PR A's head needs an edit to a file outside §2.6 and this amendment.
+     - I8 is as stated in §5.
+
+9. **§8 and §9.**
+   - **§8 item 4** is read to include two more cases, for every PR: `data` indexed anywhere other than `values.ts`'s reader; and a rebuilt `ResidentBatch` that drops, defaults or re-copies its attributes.
+   - **§8 item 17's seams** gain the rebuild seam, proved from the real decode by PA-U8 to PA-U10.
+   - **The reviewer adds:**
+     - `tsc --noEmit` clean at the head;
+     - the nine null-fill files' diffs contain only item 6's four forms;
+     - the mutations of PA-U8 to PA-U11, applied again.
+   - **The architect adds:** a check of item 3's row map against §8 item 4.
+
+10. **Rule (00) for the added paths** (§2.9; Amendment 2 item 6):
+    - **#241**, at 2fc01f59: it has no path under `frontends/shell/src`. Disjoint.
+    - **#242**, `verify-quotes-round-item-cites`: its paths are `scripts/plan/**` and `.github/workflows/governance-ci.yml`. Disjoint.
+    - **#243**, the docs lane at b24e5281: its four paths (§2.9) include `frontends/shell/src/canvas/buildLayers.ts`, not `buildLayers.test.ts`. Disjoint.
+    - **#244**, F7: it edits Part F of `frontends/shell/MANUAL-WALKTHROUGH.md` only. Disjoint.
+    - **1c's step 1:** its groups name none of the added paths (`kernel/B2-1C-SAVE-AND-REOPEN-PREREGISTRATION.md:441-458` @ 0ff8db4e35dec6c6ed4afbd51645e1cae757c15c sha256:8b86ef554cb7d295430fe97959b28460bdd5fa5ae44871bb6a14672781f85439). Its shell-tests group names no file. Under OPEN-17 (b) (Amendment 1 item 4) and 1c's own order (`kernel/B2-1C-SAVE-AND-REOPEN-PREREGISTRATION.md:575-577` @ 0ff8db4e35dec6c6ed4afbd51645e1cae757c15c sha256:fab38342bc3bc001dcacfdee8c25ccc2eb85bcdfa6cabc60150a6fe68731a196), it edits nothing under `frontends/shell` until PR A merges. Disjoint.
+    - **This form's later PRs:** PR C edits `workspace/selection.test.ts`, and PR B edits `canvas/buildLayers.test.ts`. Each comes after PR A's merge, in OPEN-11's order.
+
+11. **Forward note (class 1).** PR C's `ResidentBatch.filter` (§2.4 (c)) is required under item 5's reading, and it meets the same two rebuild sites. PR C's re-sweep adds `tileIngest.ts` and `tileResidentSet.ts`, by class 9, before its code.
+
+12. **Next:** PR A's code from B under this amendment, by one worker-high.
+
+Read the last amendment first.
+
+Nothing above is edited.
+
+## Amendment 4: PR A's code read at 37b9d756, written after that code was seen and before its gates. D1 is class 8. The managers' `columns` and the canvas's new callback become required (class 1, a code change). The status item for features without attributes states a past fact (class 1, a code change). D3 to D11 are read (class 1), with one record correction (class 3).
+
+*Written after PR A's code at 37b9d756267d25a30d8445615ff4e76de10b6e61 was seen, and before its gates; revised after the tester's `e2e:attributes` run at that head was seen (`state/consults/2026-10-22-b1-shell-half-pr-a-attributes-suite-tester-report.md`). The architect drafted it read-only at main 72868422, with the code at that head and B at 55618ab54c32f1e0712d4a657d1e3f1b30c0ef8f. The worker's report is `state/consults/2026-10-22-b1-shell-half-pr-a-worker-report.md`, cited by its D numbers. Code at the head is not on main, so it is cited by path and symbol, with commit 37b9d756. §7 is not edited, and no file joins §2.6. Nothing below is a quotation.*
+
+1. **D1 (class 8).** By §7's command over `55618ab5...37b9d756`, `frontends/shell/src/style/document.ts` counts 7 lines against its ceiling of 6 (the worker's report, its §7 table and D1). The overrun is the four-line bullet of Amendment 2 item 2 (c). It is recorded here as class 8, and §7 is not edited. A-P stays under its total.
+
+2. **D2, and the canvas's new callback (class 1; a code change before the gates).**
+   - **The reading.** §2.2 (b) does not say whether the option is required. Amendment 3 item 5's "no defaults" reading of §8 item 13 covers every option and prop that PR A adds to carry the projection or what follows from it. At the head:
+     - An absent `columns` that sends `null` is a code path only tests take. App passes the option at both construction sites: `startCandidateArmSession` and `new ViewportStreamManager` in `frontends/shell/src/App.tsx`.
+     - The same holds for an absent `onAttributesNotHeld`.
+     - The tile manager's required `columns` is the form to follow.
+     - A forgotten option would fail loudly, not silently: the canvas decodes with the open's set and refuses an empty batch through `UnexpectedProjectionError`. So this row rests on §8 item 13, not on §5.
+   - **The change:**
+     - `frontends/shell/src/streaming/viewportStreamManager.ts`: the option becomes `columns: string[] | null` (required). The `viewportQuery` call passes `this.opts.columns`, and the doc comment says the option is required with no default, as the tile manager's is.
+     - `frontends/shell/src/residency/candidateArmSession.ts`: `CandidateArmSessionDeps.columns` becomes required. The tile manager's option and the first look's sixth argument both pass `deps.columns`.
+     - `frontends/shell/src/canvas/WorkingCanvas.tsx`: `onAttributesNotHeld` becomes required.
+     - `frontends/shell/src/streaming/viewportStreamManager.test.ts` and `frontends/shell/src/residency/candidateArmSession.test.ts`:
+       - add `columns: null` at each construction site that passes no `columns`;
+       - update the two PA-U7 recorded-mutation comments to `this.opts.columns` and `deps.columns`. The mutations stay the same.
+     - `frontends/shell/src/canvas/WorkingCanvas.wiring.test.tsx` needs no fill. Its base props are a cast (Amendment 3 item 6), so its diff stays within the four fill forms.
+   - **I1.** At the head, `new ViewportStreamManager(` and `startCandidateArmSession(` occur only in the two test files above, in `App.tsx` and in `candidateArmSession.ts`. `<WorkingCanvas` is rendered only in `App.tsx` and in the wiring test. So `tsc` needs no file outside the list.
+   - **§7.**
+     - The three product files stay within their ceilings: 20, 30 and 80.
+     - The two test files will pass their per-file ceilings of 40 and 60. That is class 8, counted by §7's command at the gate head and recorded in the closing amendment. §7 is not edited, and A-T stays under its total.
+     - The PA-U7 mutations are observed again at the new head (§9).
+
+3. **D3 (class 1).** The status item shares the existing `status.residency` slot. That is "a status item" under §2.2 (d). A slot of its own would need `frontends/shell/src/layout/contributions.ts`, which is outside §2.6 (I1). Accepted.
+
+4. **The status item's claim (Correctness, class 1; a code change before the gates).**
+   - **The defect.** At the head, App sets the item on the canvas's first not-held report and clears it only when the next dataset opens (`attributesNotHeld` and the `status.residency` entry in `frontends/shell/src/App.tsx`). Its text, `ATTRIBUTES_NOT_HELD_TEXT`, states a present state. That is untrue once the not-held batches have been let go (evicted or superseded) while the item still shows.
+   - **Ordinary use reaches it.** 268,435,456 bytes over 2,000,000 resident points is about 134 bytes of copied attribute data per row. This is arithmetic from the two declared constants in `frontends/shell/src/canvas/limits.ts`, not a measurement.
+   - **The words.** These are a P6 placeholder, not the human's wording. The worker applies them and the PR body lists them. `ATTRIBUTES_NOT_HELD_TEXT` becomes:
+     `[P6 placeholder] Some features' attributes were not held since this dataset was opened: the resident attribute limit was reached.`
+   - **Each clause checked at the head:**
+     - "were not held": the `onAttributesNotHeld` handler fires only when `withinAttributeCeiling` returns a not-held batch (`withinAttributes` in `WorkingCanvas.tsx`).
+     - "since this dataset was opened": the state is keyed to `admitted.dataset`, and a new open mints a new handle. The App test for the status item asserts the clear.
+     - "the resident attribute limit was reached": `withinAttributeCeiling`'s condition.
+     - The text still contains `not held`, so that test's assertion holds.
+   - **Not covered, named for the source comment:** the baseline arm, which only a dev switch selects, reports before the vertex-ceiling check. A batch that this check then refuses can still set the item.
+   - **§7:** a few lines of `App.tsx`, within 150.
+
+5. **D4 (class 1).** Accepted. The throw in `TileResidentSet.addBatch` (`frontends/shell/src/canvas/tileResidentSet.ts`) refuses a state that no product path builds (Amendment 3 item 3). Without the guard, a second dedupe would write `rows[dst] = srcIdx` over an already-mapped block: a silent wrong value, which is what §5's falsification and ADR-010 rule 2 exist to prevent. It adds no behaviour that a caller selects, unlike row 2's defaults. It is the same discipline as `decodeBatch`'s null-id refusal. Its test stays.
+
+6. **D5 (class 1; no defect).**
+   - Every engine envelope is built by `build` (`engine/src/envelope.rs:110-117` @ 728684220a3080d180b48878e93d909daca1db5b sha256:56f65ca5a52c97456c4103debdf3681ed06493b6912f5f8fa14ff6a0dfa9013b). `build` writes `attribute_columns` without a condition, `[]` when nothing is projected (`engine/src/envelope.rs:242-251` @ 728684220a3080d180b48878e93d909daca1db5b sha256:fb992a0f1e3d7f0c6bb71c30ef0c324ea866a29e8818c4afaa71542b58437965).
+   - The golden shows `[]` for the unprojected viewport stream (`engine/tests/data/golden/polygon-wire.golden:8` @ 728684220a3080d180b48878e93d909daca1db5b sha256:0bdca9f96d0328f85f797de54f32074ad534bf0ea1a306d8488b0139c74c43d4) and `["zone"]` for a projected one (`engine/tests/data/golden/polygon-wire.golden:34` @ 728684220a3080d180b48878e93d909daca1db5b sha256:8a3b1dd61e56bc91da04804d365e6488717fb4ab745d2736814a65144291c031).
+   - A search finds the key in each of the five committed IPC fixtures that the shell tests read (`engine/tests/data/geoarrow/*.arrows`; binary, so no line).
+   - No product batch lacks the key. Refusing a batch without it is §2.2 (c)'s "not exactly that list". The two hand-built batches in `frontends/shell/src/canvas/decodeBatch.test.ts` that now write `"[]"` match the engine's shape.
+
+7. **D6, settled by the run (Evidence; a code change before the gates, class 1).**
+   - **What happened.** At 37b9d756, PA-E1 failed twice for want of a hit (the tester's report, its PA-E1 lines). `pointsAroundCentre`'s estimate of the cells fell on rows 0 to 3 of the 23-by-22 grid. The oracle's five ids sit on rows 10 and 11.
+   - **The fix, in `frontends/shell/e2e/attributes.mjs` only (A-E):**
+     - `pointsAroundCentre` and `FIT_MARGIN_FRACTION` are removed.
+     - The step finds features by §4's method: PA-E3's `candidatePoints`, `capturePixels` pixels that are each confirmed through `hoverIdAfterBarrier`.
+     - From the confirmed hovers, it fits the screen position of a grid cell. Under the generator's placement, an id's column is `id mod 23` and its row is `floor(id / 23)`, so x is linear in the column and y in the row. The fit uses hovers whose ids differ in column and in row.
+     - It then aims at the oracle cells' predicted centres, confirms each id through `hoverIdAfterBarrier` before the click, and zooms in a notch at a time (as `distinctFeatures` does) if those points answer nothing or are below the pick resolution.
+   - The generator and the oracle are unchanged, and §3 stands.
+   - **What the fixed step must show:**
+     - at least two of the oracle's ids reached by click, 242 (the NULL `zone`) among them;
+     - for each, the Feature tab's id equal to the hovered id;
+     - the six projected names in declared order;
+     - every value equal to the oracle's, the NULL shown as the marker;
+     - `d32` named in the not-projected line;
+     - no not-held line;
+     - the reached ids and the hover count printed on the PASS line.
+   - **Still to come.** H1 and H7 are discriminated by that pass, and PA-E1's mutation is observed on it.
+   - **Evidence, not Authority.** In the oracle the generator wrote to PR A's worktree (gitignored), all five ids carry an `i64` whose magnitude is over 2^53. So any oracle id the step reaches exercises §3's prediction about 64-bit values. D-report's list of three understates this.
+
+8. **D7 (class 1).** `frontends/shell/src/App.attributes.test.tsx` uses the stand-ins of `App.workspace.test.tsx`: the SKP client, the baseline manager and the WebGL canvas.
+   - Nothing on I5's list is mocked.
+   - In PA-R2, everything from decode to the tab is real.
+   - The manager's own passing of `columns` is PA-U7, against the transport mock.
+   - The shipped arm's App wiring (the candidate session) is proven only end to end, by PA-E1 and PA-E3.
+   - For this file, §4's "transport boundary" is read to include those platform stand-ins.
+
+9. **D8 (class 1).** Four tests at 37b9d756 have no §4 row and no recorded mutation. Each discharges nothing:
+   - in `frontends/shell/src/App.attributes.test.tsx`: the test titled `PA-A1: hands the open's projection set to the manager and to the canvas`, and the test titled `shows a status item when the canvas keeps a batch without attributes, and not for the next open`;
+   - the row-map refusal test in `frontends/shell/src/canvas/tileResidentSet.test.ts` (row 5);
+   - `displayValue`'s case with no projection in `frontends/shell/src/attributes/values.test.ts`.
+
+   PA-A1 is this amendment's name for the first test.
+
+10. **D11 (class 1).** Part AC carries §9's rows 0, 1, 2, 9, 10 and 11, numbered as §9 numbers them. Rows AC3 to AC8 are left for PR B (3 to 5) and PR C (6 to 8). AC10 covers PR A's strings, and each later PR names its own strings in its rows.
+
+11. **D9, D10 and the count (class 3).**
+    - The report counts 16 mutation runs. The transcript shows 15, as the custodian's filing note states: thirteen tests, with PA-U7's three counted apart. The observations are those 15 runs at 37b9d756.
+    - D10 needs nothing.
+
+12. **§8 at the head, item by item (class 1).**
+
+| Item | Reading at 37b9d756 |
+|---|---|
+| 1, 2 | Met, by the worker's file list and empty lock diff. The reviewer confirms from the diff. |
+| 3 | Met: no command, field or literal is added. |
+| 4 | Met. `data` is indexed only in `readRow` (`frontends/shell/src/attributes/values.ts`), and `rows` is written in `addBatch`'s `keepIdx` loop. |
+| 5 | Met: `readCell` makes every integer a `bigint`. |
+| 6, 7, 10, 11 | Not applicable to PR A. |
+| 8 | Met. `projectionFor` returns `null`, never `[]`, and reads only `projectable`. |
+| 9 | Met: `displayValue` shows the marker for a NULL. |
+| 12 | Met: no "undo" in the new product text that was read. |
+| 13 | Not met at the head: row 2. |
+| 14, 15 | Met. The new strings are P6 placeholders stating the shell's own facts. Row 4 is about truth, not ownership. |
+| 16 | Met. |
+| 17 | The request fixture is met (PA-U2), and the rebuild seam is met (PA-U8 to PA-U10, from the real decode). The decode of a real engine batch with projected columns is shown by PA-E3's pass at 37b9d756 for a `Utf8` column. PA-E1 failed for want of a hit (row 7), so the multitype columns are Evidence, pending. |
+| 18 | D1 is recorded as class 8 (row 1), and §7 is not edited. This amendment adds no scope. The observations are not `verify-mutation` runs. Test text here is named with its commit. |
+| 19 | Nothing is quoted. |
+| 20 | No OPEN-16 code. The 1c-shared files are edited under OPEN-17 (b) (Amendment 1 item 4). |
+
+   ADR-023 §11 item 3: `isReadableAttributeType` admits nothing. `projectionFor` alone chooses, from `projectable` only. The check refuses to read a column type the shell's reader lacks. Read so; see what could not be settled, item 2.
+
+13. **KNOWN-LIMITATIONS item 51 (Documentation, must-fix before the merge; a draft, not the human's wording).**
+    - **Why it must change.** At the head, the item says the status bar reports that some attributes "are not held", and also that "they come back". With row 4, the item says instead:
+
+    ```
+    51. **Attributes are not held for features loaded once the map holds 268,435,456 bytes of attribute data.**
+        The Feature tab shows the attribute values read for the feature you click. The map holds at most 268,435,456 bytes (256 MiB) of attribute data in all, over every batch of features it keeps. A batch that would take it past that keeps its shapes without its attribute values; this limit drops nothing from the map and refuses nothing. Clicking a feature of such a batch shows that its attributes are not held, and from then until the next dataset is opened the status bar says that some features' attributes were not held. A batch the map loads again after letting it go is read again under the same limit.
+    ```
+
+    - **Each clause checked at the head:**
+      - "read for the feature you click": `resolveClickPick` calls `readRow` at the click, and the result is carried to `inspected.row`.
+      - "at most … over every batch it keeps": `residentAttributeBytes` over the active set's `getBatches()`, in `pushBatch` and `pushTileBatch`.
+      - "keeps its shapes … refuses nothing": `withinAttributeCeiling` returns the batch marked `"not-held"`, with no throw.
+      - "shows that its attributes are not held": `NOT_HELD_TEXT` in `frontends/shell/src/feature/FeatureTab.tsx`.
+      - "until the next dataset is opened … were not held": row 4.
+      - "read again under the same limit": every push decodes and calls `withinAttributes`.
+    - **Not covered (for the source comment):** the dev-only baseline arm's early report (row 4).
+
+14. **The `status.residency` slot's comment in `frontends/shell/src/App.tsx` (Documentation, must-fix; not the human's wording).** Append this sentence:
+
+    `The attributes-not-held item (milestone 4 PR A, section 2.2 (d)) shares this slot: the canvas's onAttributesNotHeld report sets it, and it stays until the next dataset is opened.`
+
+    Clause check: the report sets it, through the handler passed to `WorkingCanvas`; it stays until the next open, row 4.
+
+15. **PA-E3's mutation (class 1, conditional).**
+    - PA-E3 passed at 37b9d756: its unfiltered clicks showed three different zones (the tester's report, its PA-E3 line). The run stopped at PA-E1, so neither e2e mutation was observed.
+    - Under `readRow(candidate.batch, 0)`, every row of the filtered half is `residential`. The unfiltered half catches the mutation only if the six features it clicks share batches whose row 0 shows one zone.
+    - If the tester's observation at the next head shows the mutation surviving, PA-E3 as written is an Evidence failure. The fix, inside `frontends/shell/e2e/attributes.mjs` and A-E: each unfiltered id's zone is read again under the filter `id = N`, where its batch holds that one row, and the two must match.
+
+16. **Next, in order.**
+    1. Rows 2, 4, 7, 13 and 14, by one worker on PR A's branch.
+    2. After #243 merges, main is merged into the branch, and Amendment 2 item 5's sentence is applied to `buildLayers.ts`. PR A does not merge before #243 (Amendment 2 item 10).
+    3. **The tester, at that head:**
+       - **(a) The fixtures, before the merge.** The generator exists only on the branch, and writes under its own worktree. The suite reads `C:\dev\spatial-ide\target\fixtures\manual-walkthrough\`. So the generator is run at the head in PR A's worktree, and its two files are compared by sha256 with the shared folder's copies. Those copies are the ones the 37b9d756 run placed there and recorded in the tester's report.
+       - Row 7 leaves the generator unchanged, so a later head must reproduce both recorded hashes, and the shared copies stand. A different hash is a stop, reported before any suite runs (§3). It is not a replacement.
+       - After the merge, the generator runs from the main checkout into the shared folder, under the same rule.
+       - **(b) The runs.** Every e2e suite, plus `e2e:attributes`. The fixtures are checked by hash before and after. Both e2e mutations are observed: H2, H1, H7, PA-E1 and PA-E3.
+    4. The architect's and reviewer's gates at that head. The PR body states that round 8's exemption closes at PR A for B1's non-null path (§2.2 (b)), and lists the words applied from rows 4, 13 and 14.
+
+Read the last amendment first.
+
+Nothing above is edited.
+
+## Amendment 5: the human's OPEN-16 (b) and their reading of OPEN-17 (b) (class 5), with `tableSource.ts` joining PR B (class 9), written before PR C's and PR B's code
+
+*Written by the custodian on the human's message. References only: `state/directives/2026-10-22-242-h-1-round-72-pin-f7-open-items-milestone-4-open-16-b-adr-020-corrigendum-a-1c-adr-036-words-approved-disk-parity-node.md`, item 3; OPEN-16 and OPEN-17 above; Amendment 1, items 3 and 4.*
+
+1. **OPEN-16 (b):** PR B builds its colour cases from one bounded first-scope query through PR C's `tableSource` and its single stream, as option (b) states, and §2.3 (d)'s source binds so. The PRs run in the order A, C, B. KL-3 is the human's line under OPEN-7, as given.
+2. **Class 9, recorded before PR B's code:** `frontends/shell/src/table/tableSource.ts` joins PR B's list (§2.6, its conditional entry) with 30 lines in B-P, as §7 names under OPEN-16 (b). §7 is not edited.
+3. **OPEN-17 (b)** stands as Amendment 1, item 4 records it. In the human's reading it changes nothing of 1c's order.
+4. **Next:** PR A waits for #243 (Amendment 4, row 16). PR C's and PR B's dispatch amendments are drafted ahead by the architect, each re-swept at its own base before its code.
+
+Nothing above is edited.
