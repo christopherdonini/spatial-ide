@@ -45,7 +45,7 @@ function readCell(vector: Vector, index: number): AttributeValue {
   if (DataType.isFloat(type) && type.precision !== Precision.HALF) {
     return { kind: type.precision === Precision.SINGLE ? "float32" : "float64", number: raw as number };
   }
-  throw new Error(`attribute column of type ${String(type)} is not readable`);
+  throw new Error(`[P6 placeholder] attribute column of type ${String(type)} is not readable`);
 }
 
 /** The Arrow table over a block's copied bytes, parsed once per block (a view over the copy, never over the IPC message). */

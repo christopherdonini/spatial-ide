@@ -95,7 +95,7 @@ export function describe(dataset: string): Promise<DescribeResponse> {
 }
 
 /**
- * `filter` is `Filter | null`, required -- it is the ONE function both a future filter panel
+ * `filter` is `Filter | null`, required -- it is the ONE function both `FilterPanel`'s Apply
  * and the dev-only E2E hook (`e2e-test-surface.ts`'s `queryWithFilter`, wired through
  * `ViewportStreamManager.requestViewport`) call to actually send one (NEXT-CUT.md P5: "client only,
  * no logic" -- this function does not parse, admit, or otherwise inspect `filter.predicate`; only

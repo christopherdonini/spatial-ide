@@ -814,7 +814,7 @@ export function routeDatasetSessionEndedEvent(
  *
  * Not covered (Amendment 4 rows 4 and 13): the baseline arm, which only the dev-gated `setResidencyArm` switch selects, reports before its vertex-ceiling check.
  * `WorkingCanvas`'s `pushBatch` runs `withinAttributes`, which calls `onAttributesNotHeld`, and only then `residentRef.current.addBatch`, which can refuse the batch
- * (`ResidentVertexCeilingExceeded`). So a batch that check then refuses can still set this item. The candidate arm's `pushTileBatch` refuses no batch.
+ * (`ResidentVertexCeilingExceeded`). So a batch that check then refuses can still set this item. The candidate arm's `pushTileBatch` has no vertex-ceiling refusal, but the same order holds there: `withinAttributes` runs on the decoded batch before `ingestTileBatch` evicts, trims or deduplicates it, so a batch that the vertex budget then trims to nothing, or whose every feature is already resident from another tile, can still set this item, and a batch is judged against the bytes held before that call's evictions.
  */
 const ATTRIBUTES_NOT_HELD_TEXT = "[P6 placeholder] Some features' attributes were not held since this dataset was opened: the resident attribute limit was reached.";
 
