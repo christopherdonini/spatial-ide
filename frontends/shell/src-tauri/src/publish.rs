@@ -1391,7 +1391,49 @@ pub fn bundled_viewer(
             dir.display()
         )
     })?;
-    Ok((viewer, bundled_viewer_license()))
+    let record = read_build_record(&dir, resource_dir.is_some())?;
+    Ok((viewer.with_build_record(record), bundled_viewer_license()))
+}
+
+/// The file `scripts/scan-dist.mjs` writes and `tauri.conf.json` ships beside the viewer directory.
+const VIEWER_BUILD_RECORD: &str = "viewer-asset-hashes.json";
+
+/// The viewer build's record, in the viewer directory's parent: the resource directory when one
+/// resolved (a packaged build, or on Windows a `tauri dev` run's cargo output directory),
+/// `renderer/bundle-viewer` when the dev-tree path was taken. A file that is missing, unreadable,
+/// not JSON, of a `version` other than 1 or with a member beyond `version` and `assets` stops the
+/// publish.
+fn read_build_record(
+    dir: &std::path::Path,
+    packaged: bool,
+) -> Result<std::collections::BTreeMap<String, String>, String> {
+    #[derive(serde::Deserialize)]
+    #[serde(deny_unknown_fields)]
+    struct Record {
+        version: u32,
+        assets: std::collections::BTreeMap<String, String>,
+    }
+    let path = dir.parent().unwrap_or(dir).join(VIEWER_BUILD_RECORD);
+    std::fs::read_to_string(&path)
+        .map_err(|e| e.to_string())
+        .and_then(|text| serde_json::from_str::<Record>(&text).map_err(|e| e.to_string()))
+        .and_then(|r| match r.version {
+            1 => Ok(r.assets),
+            v => Err(format!("version {v} is not 1")),
+        })
+        .map_err(|detail| {
+            let remedy = if packaged {
+                "the viewer resources are missing from the installed application — reinstall Spatial IDE, \
+                 or the install is incomplete"
+            } else {
+                "run `npm run build` in renderer/bundle-viewer first"
+            };
+            format!(
+                "[P6 placeholder] the reference bundle viewer's build record could not be read at {} \
+                 ({detail}) — {remedy}",
+                path.display()
+            )
+        })
 }
 
 /// The dev-tree checkout path: `CARGO_MANIFEST_DIR` points at `frontends/shell/src-tauri` at
@@ -1734,7 +1776,17 @@ mod tests {
     /// Runs `prepare` end to end and unwraps the prompt, panicking with the outcome otherwise — most
     /// tests below want a granted, prompted attempt as their starting point.
     fn prepared(d: &Path, name: &str) -> (Mutex<GrantSet>, PendingAttempts, String, String) {
-        let ds = fixture(d, 50);
+        prepared_with(d, name, fixture(d, 50), viewer(), viewer_license())
+    }
+
+    /// As [`prepared`], over the caller's dataset, viewer and viewer licence.
+    fn prepared_with(
+        d: &Path,
+        name: &str,
+        ds: Arc<Dataset>,
+        viewer: ViewerAssets,
+        viewer_license: ViewerLicenseInput,
+    ) -> (Mutex<GrantSet>, PendingAttempts, String, String) {
         let dest = d.join(format!("out-{name}"));
         let grants = Mutex::new(GrantSet::new());
         let store = PendingAttempts::new();
@@ -1746,8 +1798,8 @@ mod tests {
             STYLE.into(),
             PublishScope::WholeFile,
             false,
-            viewer(),
-            viewer_license(),
+            viewer,
+            viewer_license,
             dest,
             "2026-08-16T10:00:00Z".into(),
         );
@@ -3157,6 +3209,107 @@ mod tests {
             message.starts_with("publish.destination_exists: "),
             "C's grant must have survived A's consumption: {message}"
         );
+    }
+
+    /// The redaction form's T1, from the real shape: `prepare`, `execute`, `boundary::execute`,
+    /// `publish_prepared`. A path in the styled column reaches the data partition, the gate refuses,
+    /// and the shell's `Refused` carries the typed code, the file and the class.
+    #[test]
+    fn a_publish_whose_styled_column_holds_a_path_is_refused_by_the_redaction_scan_and_nothing_reaches_the_destination(
+    ) {
+        let _guard = env_lock();
+        let d = workspace("redaction-path-in-data");
+        let log = d.join("audit.jsonl");
+        std::env::set_var(spatial_kernel::permission::AUDIT_LOG_ENV, &log);
+        let source = d.join("parcels.parquet");
+        let mut zones = vec!["residential"; 10];
+        zones[3] = r"C:\Users\someone\AppData\Local\Temp\leak.parquet";
+        spatial_engine::fixture::write_zone_texts(&source, &zones);
+        let ds = Dataset::open(&source).unwrap();
+        ds.pin_content(&CancelToken::new()).unwrap();
+
+        let (grants, store, id, phrase) =
+            prepared_with(&d, "path", Arc::new(ds), viewer(), viewer_license());
+        let outcome = execute(&grants, &store, &id, &phrase);
+        let ExecuteOutcome::Refused { message } = outcome else {
+            panic!("got {outcome:?}")
+        };
+        assert!(
+            message.starts_with("publish.redaction_finding: "),
+            "{message}"
+        );
+        assert!(message.contains("data/part-00000.arrows"), "{message}");
+        assert!(message.contains("local-filesystem-path"), "{message}");
+        assert!(!d.join("out-path").exists(), "no bundle at the destination");
+        assert_eq!(staging_entries(&d, "out-path"), 0);
+        let raw = std::fs::read_to_string(&log).unwrap();
+        assert_eq!(raw.lines().count(), 2, "{raw}");
+        let outcome_line: serde_json::Value =
+            serde_json::from_str(raw.lines().last().unwrap()).unwrap();
+        assert_eq!(outcome_line["outcome"], "refused");
+        assert_eq!(outcome_line["error_kind"], "RedactionFinding");
+    }
+
+    /// The redaction form's T8: `bundled_viewer` reads the build record beside the viewer directory
+    /// and hands it to the kernel, so a viewer file matching it is published; without the record the
+    /// viewer is not handed over at all.
+    #[test]
+    fn bundled_viewer_reads_the_build_record_beside_the_viewer_directory_and_refuses_without_it() {
+        let _guard = env_lock();
+        let d = workspace("build-record");
+        let log = d.join("audit.jsonl");
+        std::env::set_var(spatial_kernel::permission::AUDIT_LOG_ENV, &log);
+        let resources = d.join("resources");
+        let viewer_dir = resources.join("bundle-viewer");
+        std::fs::create_dir_all(&viewer_dir).unwrap();
+        let notice = b"notice text: the word password appears here\n";
+        std::fs::write(
+            viewer_dir.join("index.html"),
+            b"<!doctype html><title>t</title>",
+        )
+        .unwrap();
+        std::fs::write(viewer_dir.join("NOTICE.txt"), notice).unwrap();
+        let record = resources.join(VIEWER_BUILD_RECORD);
+        let hash = spatial_renderer::canonical::sha256_hex(notice);
+        let hash = hash.strip_prefix("sha256:").unwrap();
+        // The serialization `scan-dist.mjs` writes: `JSON.stringify({version, assets})` and `\n`.
+        std::fs::write(
+            &record,
+            format!("{{\"version\":1,\"assets\":{{\"NOTICE.txt\":\"{hash}\"}}}}\n"),
+        )
+        .unwrap();
+
+        let (viewer, license) = bundled_viewer(Some(&resources)).unwrap();
+        let (grants, store, id, phrase) =
+            prepared_with(&d, "record", fixture(&d, 50), viewer, license);
+        let outcome = execute(&grants, &store, &id, &phrase);
+        assert!(
+            matches!(outcome, ExecuteOutcome::Success { .. }),
+            "got {outcome:?}"
+        );
+        assert!(d
+            .join("out-record")
+            .join("viewer")
+            .join("NOTICE.txt")
+            .exists());
+
+        std::fs::remove_file(&record).unwrap();
+        let message = bundled_viewer(Some(&resources)).unwrap_err();
+        assert!(message.starts_with("[P6 placeholder] "), "{message}");
+        // The remedy is the one the viewer directory's own refusal gives.
+        let missing = resolve_viewer_dir(Some(&resources), |_| false).unwrap_err();
+        let remedy = missing.split_once(" — ").unwrap().1;
+        assert!(message.ends_with(remedy), "{message} / {remedy}");
+    }
+
+    /// The redaction form's T9: the packaged resources carry the record at the name `bundled_viewer`
+    /// joins onto the resource directory.
+    #[test]
+    fn the_packaged_resources_carry_the_build_record_at_the_path_bundled_viewer_reads() {
+        let conf: serde_json::Value =
+            serde_json::from_str(include_str!("../tauri.conf.json")).unwrap();
+        let key = "../../../renderer/bundle-viewer/viewer-asset-hashes.json";
+        assert_eq!(conf["bundle"]["resources"][key], VIEWER_BUILD_RECORD);
     }
 
     /// The `.<name>.staging-<hex>` entries the kernel has created beside `dest_name` in `parent`.

@@ -330,9 +330,10 @@ function safeRelativePath(path: string, at: string): string {
     // the content hash fails. A manifest is untrusted input in the `docs/09` sense, and ADR-017 §14
     // requires every asset path to be bundle-relative — an absolute URL is not one.
     //
-    // *(No example URL is written literally in this comment, because `boundaries.test.mjs` refuses
-    // any absolute URL anywhere in the built `dist/app.js` and esbuild keeps comments. That test is
-    // right to have no allowlist; the cases live in `manifest.test.mjs` instead.)*
+    // *(No example URL is written literally in this comment, because boundaries.test.mjs refuses
+    // any absolute URL anywhere in the built dist/app.js. The build strips comments (build.mjs),
+    // but this rule does not lean on that. That test is right to have no allowlist; the cases live
+    // in manifest.test.mjs instead.)*
     //
     // The scheme grammar is RFC 3986's: a letter followed by letters, digits, `+`, `-` or `.`, then
     // a colon. Anchored, so an ordinary relative path with a colon later in it is unaffected.
