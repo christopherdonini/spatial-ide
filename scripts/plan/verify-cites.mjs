@@ -11,12 +11,12 @@
 // EACH against the working tree: the referenced file must exist AND the cited line (or, for a range,
 // both endpoints) must be within that file's line count. Every reference that does NOT resolve is
 // printed with the citing `file:line` and the bad target; the process exits 1 if any reference is
-// unresolved, 0 if all resolve. A cite starting or ending at line 0 fails with a reason naming line 0
-// (lines count from 1). PINNED FALLBACK: a cite that does not resolve in the tree but is directly
-// followed by `@ <commit>` (7-40 hex digits) is read at that commit instead: the commit must exist, a
-// path must be a file there, and the line must be within it. The paths tried, in order, are the files the
-// tree resolves the path to (the exact set if any, else the suffix set), then the path as written; the
-// cite passes at the first holding the line.
+// unresolved, 0 if all resolve. A cite starting or ending at line 0 never resolves; where its reason
+// would say a line exceeds a file, it names line 0 instead (lines count from 1). PINNED FALLBACK: a cite
+// that does not resolve in the tree but is directly followed by `@ <commit>` (7-40 hex digits) is read
+// at that commit instead: the commit must exist, a path must be a file there, and the line must be
+// within it. The paths tried, in order, are the files the tree resolves the path to (the exact set if
+// any, else the suffix set), then the path as written; the cite passes at the first holding the line.
 //
 // DEFAULT FILE SET (override with `--files <glob>`):
 //   - every tracked `*.md`               — the WHOLE file is scanned (prose citations count).
@@ -61,10 +61,10 @@
 // right line count but the wrong file among same-basename siblings; and, by the tiering above, a
 // stale LOOSE reference (it is surfaced as advice, never gated). Of the pin: one after a closing
 // backtick or after two spaces is not read; one on a cite that resolves in the tree is not checked; a
-// hex word right after `@` is read as a pin; a pin is read at the files the tree resolves the path to,
-// then at the path as written, so a relative, `.md`-fallback or basename cite to a file no longer in the
-// tree is read at the path as written only, and a loose cite matching nothing is not read at its pin.
-// Node's standard library only.
+// hex word right after `@` is read as a pin; a pin is read only at the files the tree now resolves the
+// path to, then at the path as written (the pin's own file list is never searched), so a file gone from
+// the tree is read only if it is the path as written, and the cite can pass at another file the tree
+// now matches; a loose cite matching nothing is not read at its pin. Node's standard library only.
 //
 // RELATIONSHIP to frontends/shell/e2e/citationIntegrity.test.mjs (the human's item 2, "extend the
 // citation-integrity scan to all files"): that e2e check is a DIFFERENT defect class — it proves a
