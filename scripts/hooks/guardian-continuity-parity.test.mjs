@@ -372,6 +372,11 @@ after(() => {
 // `PS1`, `PS2`, `PS3`, `PS5`, `PS6`, `PS8`, `PS9`, `PS10`, `guardian parity: the mod's stale-block
 // check and the Stop hook's stale-continuity check agree on every fixture`. Observed at 54eba872 with
 // this change, node --version v24.18.1 and git --version 2.49.0.windows.1.
+// RECORDED MUTATION: the `syncBuiltinESMExports();` call in before() deleted -> fails: `PS1`, `PS2`,
+// `PS3`, `PS4a`, `PS4b`, `PS5`, `PS6`, `PS7`, `PS8`, `PS9`, `PS10`, `PS18`, `PS19`, `guardian parity: the
+// mod's stale-block check and the Stop hook's stale-continuity check agree on every fixture` and
+// `guardian parity: a Stop-hook git call that outruns its timeout is recorded as a timeout, not read
+// as an outcome`. Observed at 6d76bcdb with node --version v24.18.1 and git --version 2.49.0.windows.1.
 test("guardian parity: the mod's stale-block check and the Stop hook's stale-continuity check agree on every fixture", async (t) => {
   assert.deepEqual(
     FIXTURES.map((fx) => fx.id),
@@ -405,6 +410,9 @@ test('guardian parity: the fixture set reaches stale, fresh and not judged on th
   }
 });
 
+// RECORDED MUTATION: the mod runner's `timedOut: r.error?.code === 'ETIMEDOUT'` replaced by
+// `timedOut: false` -> fails: `guardian parity: a mod-side git call that outruns the runner's timeout
+// is recorded as a timeout, not read as an outcome`. Observed at 6d76bcdb with node --version v24.18.1 and git --version 2.49.0.windows.1.
 test("guardian parity: a mod-side git call that outruns the runner's timeout is recorded as a timeout, not read as an outcome", async () => {
   const calls = [];
   const outcome = await modOutcome(buildFixture('PS7'), [], calls, process.execPath, SLEEP_PREFIX);
@@ -413,6 +421,10 @@ test("guardian parity: a mod-side git call that outruns the runner's timeout is 
   assert.match(timeoutFinding('PS7', calls), /timed out/);
 });
 
+// RECORDED MUTATION: the observer's catch `record(error.status ?? null, error.code === 'ETIMEDOUT')`
+// replaced by `record(error.status ?? null, false)` -> fails: `guardian parity: a Stop-hook git call
+// that outruns its timeout is recorded as a timeout, not read as an outcome`. Observed at 6d76bcdb
+// with node --version v24.18.1 and git --version 2.49.0.windows.1.
 test("guardian parity: a Stop-hook git call that outruns its timeout is recorded as a timeout, not read as an outcome", async () => {
   const calls = [];
   substitute = true;
