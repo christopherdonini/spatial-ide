@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `7049b2e93c4e88dfc94ee682f811428446194d013fe3e60a9606615f4897c3a2`) at `2026-10-24T08:21:46.513Z`.
+Generated from `PLAN.yaml` (sha256 `664b4783e7cd24795a8869f6a6aa8af9ddadc5eaab63283ebfc7fb741cd44723`) at `2026-10-24T08:46:58.208Z`.
 
 ## 1. Next
 
@@ -43,7 +43,7 @@ Generated from `PLAN.yaml` (sha256 `7049b2e93c4e88dfc94ee682f811428446194d013fe3
 - **publish-sort-window-cancel-not-exercised-on-ci** — kernel/tests/publish_cancellation.rs: a_cancel_inside_the_sort_is_observed_rather_than_waited_out reddened on the Windows CI runner because QueryRunning never fired (the sort ended inside one poll interval) — evidence: branch `cut/publish-sort-window-cancel-not-exercised-on-ci`
 - **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **bundle-redaction-scan-not-in-product-publish** — The bundle redaction scan runs only in a test: no product publish scans its emitted files, though ADR-017's section 13 (Accepted) says a scan over every emitted file asserts no path, user name, machine identifier or credential is in a bundle — evidence: branch `cut/bundle-redaction-scan`
-- **b1-shell-half** — Shell migration, milestone 4 -- B1 shell half: attributes of the inspected feature, colour by category with its legend, and the table — evidence: branch `cut/b1-shell-half-pr-a`
+- **b1-shell-half** — Shell migration, milestone 4 -- B1 shell half: attributes of the inspected feature, colour by category with its legend, and the table — evidence: branch `cut/b1-shell-half-pr-c`
 - **walkthrough-row-f7-cli-refusal** — MANUAL-WALKTHROUGH.md row F7: a publish-bundle CLI publish with the real built viewer is refused under the redaction scan (its W12), so F7 points at Part G's rows, with the CLI refusal line — evidence: branch `cut/walkthrough-row-f7-cli-refusal`
 - **known-limitations-items-51-52-render-numbers** — KNOWN-LIMITATIONS items 51 and 52 follow item 46 with no line at column 0, so they render as 47 and 48 — evidence: branch `cut/known-limitations-items-51-52-render-numbers`
 - **port-2-macos-l1-and-app-dirs** — PORT-2 -- macOS L1 for the Cargo workspace: macos-latest in the same matrix, one application-directory boundary replacing the two resolvers, and a case-policy test on a case-insensitive volume — evidence: branch `cut/port-2-macos-l1-and-app-dirs`

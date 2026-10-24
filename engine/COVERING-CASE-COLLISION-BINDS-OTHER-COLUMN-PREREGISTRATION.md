@@ -196,3 +196,17 @@ Nothing above is edited.
 4. **Next:** the architect reads this result for the human, with the siblings check (`state/consults/2026-10-23-engine-column-name-case-siblings-lead-data-check.md`): what change could refuse r2's file, at which layer, and its form; the human decides the route. Nothing is dispatched under this form until then.
 
 Nothing above is edited.
+
+## Amendment 3 — the form superseded by the full form (class 1); written after the route read and the human's rulings were seen
+
+*Written by the custodian. References only: the route read `state/consults/2026-10-23-covering-case-collision-binds-other-column-route-architect-read.md`; the ruling `state/directives/2026-10-23-clicks-245-246-247-sort-window-fix-before-port-2-covering-case-route-1-244-c1-milestone-4-and-1c-open-items-ruled.md`, its covering-case paragraph; the ruling `state/directives/2026-10-24-sort-window-a-both-gates-pr-c-table-ceiling-approved-covering-case-open-a-to-f-kl-item-51-line-probe-branch.md`, its item 3; the full form `engine/COVERING-CASE-COLLISION-BINDS-OTHER-COLUMN-FULL-PREREGISTRATION.md`.*
+
+1. **No code landed under this form** (Amendment 2, item 2).
+2. **This form is superseded** by the full form, `engine/COVERING-CASE-COLLISION-BINDS-OTHER-COLUMN-FULL-PREREGISTRATION.md`, from its commit.
+3. **What binds further.** This form's section 3 text, section 4 words, OPEN rulings and budget bind nothing further, except where the full form names them: §2.6's text (a); and, by the 2026-10-24 ruling, F-2's ruling for item 9 (its OPEN-B) and this form's OPEN-4 (A) (its OPEN-C).
+4. **The branch** `cut/covering-case-collision-binds-other-column` is at b0637a7fb6fe9ce7815d402428b251740f9e0253, an earlier main commit, with no commit of its own; the first P0's outputs are on main under `state/drafts/covering-case-collision-p0/`. The full form reuses the branch, brought to main at its commit by a fast-forward.
+5. **The PLAN node's gate** moves to the full form, in the custodian's commit on main that adds it.
+
+6. **Its two claimed tests are superseded,** never to be written under this form, by the full form's §4, whose own tests replace them: `engine/COVERING-CASE-COLLISION-BINDS-OTHER-COLUMN-PREREGISTRATION.md:8` @ 4e9dd53def3019fa0f5b08e2e655fcb032cf8c10 sha256:355ffc5ad9445b87ba5236b03e167067de386f244050d4cf13e264b1be829818.
+
+Nothing above is edited.
