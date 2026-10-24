@@ -1451,6 +1451,16 @@ fn a_join_of_clauses_each_admitted_alone_returns_their_intersection_and_its_subs
 /// range, and `i64 * i64` was observed ending in this error; a comparison of `i64 * C` with a
 /// constant was observed completing, so it is not used) ends the stream in error whose whole text
 /// is `OVERFLOW_TERMINAL`: no file value and no SQL.
+///
+/// RECORDED MUTATION: M1, the out-of-range arm of `classify` in `engine/src/stream.rs` deleted,
+/// applied alone at commit 86612bdd3bf5d2d8c193e9eea70c7265b14afe47. T1 fails at
+/// `assert_eq!(text, OVERFLOW_TERMINAL)`, the text being DuckDB's `Out of Range Error: Overflow in
+/// multiplication of INT64`. Same run: `the_type_walk_agrees_with_the_binder_over_the_p0_matrix`
+/// fails on 135 counterexamples (B-T1: 4564 admitted, 5164 refused, 135 failures);
+/// `a_join_of_clauses_each_admitted_alone_returns_their_intersection_and_its_subsets_admit` fails on
+/// 4 candidates (excluded 0, 4 unmutated); `filter_admission_property_campaign` still passes (its
+/// seeds reach no stream error); `only_duckdbs_out_of_range_class_is_read_as_an_evaluation_failure`
+/// fails.
 #[test]
 fn an_admitted_integer_overflow_ends_the_stream_with_the_fixed_detail() {
     let fx = fixture();

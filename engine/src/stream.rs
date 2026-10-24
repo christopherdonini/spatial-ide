@@ -2686,6 +2686,10 @@ mod tests {
     /// the start of DuckDB's message and nowhere else, and `classify` keeps every other message and
     /// still returns a cancellation first. The literals are unit inputs only; the real shapes are
     /// proven by `an_admitted_integer_overflow_ends_the_stream_with_the_fixed_detail` and B-T1.
+    ///
+    /// RECORDED MUTATION: M2, `is_out_of_range` returning true for every message, applied alone at
+    /// commit 86612bdd3bf5d2d8c193e9eea70c7265b14afe47. This test fails at its first non-range sample,
+    /// `read as out of range: IO Error: No files found that match the pattern "x.parquet"`.
     #[test]
     fn only_duckdbs_out_of_range_class_is_read_as_an_evaluation_failure() {
         assert!(is_out_of_range(
