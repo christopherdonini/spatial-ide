@@ -131,3 +131,15 @@ One string a user can see changes.
 - **The stop rules** in notes B and E bind the worker: an overflow case ending in DuckDB's own text, or T1's predicate refused at admission, stops the piece for a class 3 amendment.
 
 ## Amendments (opens empty; append-only)
+
+## Amendment 1 — written after the worker-high's first runs were seen, before any commit: T1's predicate replaced; the campaign under M1 read as note E reads it (class 3)
+
+*Written by the custodian. References only: the worker-high's stop report (`state/consults/2026-10-24-stream-evaluation-failure-fixed-detail-worker-stop-report.md`).*
+
+1. **T1's predicate.** Note E's `i64 * 9223372036854775807 > 0` does not overflow on the campaign fixture: with the piece's working-tree code on f0804432 it is admitted and completes, returning 376 ids, so note E's "It overflows on any row with |i64| ≥ 2." is false as observed. T1's predicate becomes `i64 * i64 > 0`, which the worker's probe observed admitted and ending in error with the terminal text exactly `query: ` followed by S1, all four of note E's assertions passing in a one-off run. T1's name, fixture and four assertions are unchanged. Why the forms comparing with a constant complete is not determined and not claimed.
+2. **The campaign under M1.** At that run the campaign's seeds reached no overflow (its stream-error count was 0 in all four generators), so the Tests+mutation line's "each failing under M1" is read for the campaign as note E reads it: observed, not assumed. M1's record names which of the three changed tests fail and on how many cases; T1, in the campaign's file, carries M1 there.
+3. **`classify`'s signature.** The worker's code passes the phase and DuckDB's message apart, so the check reads DuckDB's message without the engine's phase prefix, where note B places it; `Cancelled` is still returned first, and every other failure renders as before. It is a private function: within the Change line, for the gates to read.
+4. **Not met:** neither stop rule as notes B and E write them. B-T1 printed `B-T1: 4564 admitted, 5164 refused, 0 failures`, every overflow ending in the fixed detail; T1's predicate was admitted.
+5. **Next:** the worker-high continues from its uncommitted work, with T1's predicate as item 1: the commits, M1 and M2 observed and recorded, the checks.
+
+Nothing above is edited.
