@@ -1,20 +1,18 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `aec14d4dbc7cde9fbce133389d772513e925a8dc6a4364c22ee6f272d0266060`) at `2026-10-23T20:15:58.524Z`.
+Generated from `PLAN.yaml` (sha256 `b52fce54aaf74193baae1462d0345c843f2e5cfed08b91f6899353c457bdb32c`) at `2026-10-24T07:42:16.439Z`.
 
 ## 1. Next
 
-- (nothing ready)
+- **publish-sort-window-cancel-not-exercised-on-ci** — kernel/tests/publish_cancellation.rs: a_cancel_inside_the_sort_is_observed_rather_than_waited_out reddened on the Windows CI runner because QueryRunning never fired (the sort ended inside one poll interval) (lane `kernel-protocol`)
 
 ## 2. Ready
 
-- (none)
+- **publish-sort-window-cancel-not-exercised-on-ci** — kernel/tests/publish_cancellation.rs: a_cancel_inside_the_sort_is_observed_rather_than_waited_out reddened on the Windows CI runner because QueryRunning never fired (the sort ended inside one poll interval) (lane `kernel-protocol`, order null, budget 60 min)
+- **known-limitations-items-51-52-render-numbers** — KNOWN-LIMITATIONS items 51 and 52 follow item 46 with no line at column 0, so they render as 47 and 48 (lane `release`, order null, budget 30 min)
+- **guardian-parity-git-timeout-under-load** — The Guardian parity test (scripts/hooks/guardian-continuity-parity.test.mjs) reads a fixture as not judged when a git call outruns its timeout under a shared load; the bound is chosen from a measurement (lane `governance`, order null, budget 60 min)
 
-## 3. Waiting on the human (total: 5 min)
-
-### ruling
-
-- **publish-sort-window-cancel-not-exercised-on-ci** — kernel/tests/publish_cancellation.rs: a_cancel_inside_the_sort_is_observed_rather_than_waited_out reddened on the Windows CI runner because QueryRunning never fired (the sort ended inside one poll interval) (5 min)
+## 3. Waiting on the human (total: 0 min)
 
 ### sitting
 
@@ -35,7 +33,6 @@ Generated from `PLAN.yaml` (sha256 `aec14d4dbc7cde9fbce133389d772513e925a8dc6a43
 - **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-2-0
 - **signpath-application-draft** — Entry 77 — the SignPath OSS application and disclosure text drafted for the human sight, once a release is CI-built — blocked by: release-v0-2-0
 - **governance-hash-grammar-shared** — Share the path:line @ rev sha256:hex reference grammar between verify-test-claims.mjs and verify-quotes.mjs — blocked by: guardian-parity-git-timeout-under-load
-- **guardian-parity-git-timeout-under-load** — The Guardian parity test (scripts/hooks/guardian-continuity-parity.test.mjs) reads a fixture as not judged when a git call outruns its timeout under a shared load; the bound is chosen from a measurement — blocked by: flush-crlf-field-rewrite
 - **shell-owners-index** — An owner's index for the shell (frontends/shell), so that shell-owned KNOWN-LIMITATIONS items and pointers are indexed somewhere — blocked by: skp-line-cites-outside-close-races
 - **verify-cites-out-of-range-line-count** — verify-cites' out-of-range reason states a line count one too high for a file that ends in a newline — blocked by: governance-hash-grammar-shared
 - **verify-cites-reversed-range** — verify-cites checks a reversed range (end below start) by its larger end only — blocked by: verify-cites-out-of-range-line-count
@@ -49,7 +46,6 @@ Generated from `PLAN.yaml` (sha256 `aec14d4dbc7cde9fbce133389d772513e925a8dc6a43
 - **bundle-redaction-scan-not-in-product-publish** — The bundle redaction scan runs only in a test: no product publish scans its emitted files, though ADR-017's section 13 (Accepted) says a scan over every emitted file asserts no path, user name, machine identifier or credential is in a bundle — evidence: branch `cut/bundle-redaction-scan`
 - **b1-shell-half** — Shell migration, milestone 4 -- B1 shell half: attributes of the inspected feature, colour by category with its legend, and the table — evidence: branch `cut/b1-shell-half-pr-a`
 - **walkthrough-row-f7-cli-refusal** — MANUAL-WALKTHROUGH.md row F7: a publish-bundle CLI publish with the real built viewer is refused under the redaction scan (its W12), so F7 points at Part G's rows, with the CLI refusal line — evidence: branch `cut/walkthrough-row-f7-cli-refusal`
-- **flush-crlf-field-rewrite** — flush.mjs splits the ledger on LF and rewrites a field line without its CR, so a CRLF working-tree ledger ends with mixed line endings — evidence: branch `cut/flush-crlf-field-rewrite`
 - **port-2-macos-l1-and-app-dirs** — PORT-2 -- macOS L1 for the Cargo workspace: macos-latest in the same matrix, one application-directory boundary replacing the two resolvers, and a case-policy test on a case-insensitive volume — evidence: branch `cut/port-2-macos-l1-and-app-dirs`
 
 ## 6. Proposed / unscheduled
@@ -63,6 +59,7 @@ Generated from `PLAN.yaml` (sha256 `aec14d4dbc7cde9fbce133389d772513e925a8dc6a43
 - **briefb-b3-publish-v2** — Brief B, stage B3 — bundle v2 and CLI replay through the same publish implementation (phase `prototype`) — never queued until placed
 - **briefb-part-o-walkthrough** — Part O — the nine-step recipe walkthrough, after B3 only (phase `prototype`) — never queued until placed
 - **governance-ci-built-site** — Governance -- the site built by CI after merge, the design also addressing tracked-queue conflicts between sibling PRs (phase `prototype`) — never queued until placed
+- **table-max-attribute-bytes-measurement** — TABLE_MAX_ATTRIBUTE_BYTES, the table's first-scope ceiling of 64 MiB, is declared and unmeasured: measure it before any performance claim (phase `prototype`) — never queued until placed
 - **verify-mutation-test-temp-dirs** — verify-mutation's own tests remove their mkdtemp directories (weekly window (b)) (phase `prototype`) — never queued until placed
 - **extent-degenerate-zoom-doc** — extent.ts's doc matches its degenerate-zoom behaviour (weekly window (c)) (phase `prototype`) — never queued until placed
 - **verify-quotes-show-cites-narrowed** — verify-quotes --show-cites prints no false FAILs when narrowed (weekly window (e)) (phase `prototype`) — never queued until placed
@@ -104,6 +101,7 @@ Generated from `PLAN.yaml` (sha256 `aec14d4dbc7cde9fbce133389d772513e925a8dc6a43
 - **mp-prime-e2e-covered-fixture** — E2E: MP-1's step MP' opens F-1, which has no covering, so it is predicted to meet the no-covering refusal; a step on F-1c, its covered twin (phase `prototype`) — never queued until placed
 - **corpus-line-files** — A line file (LineString or MultiLineString) in the preregistered compatibility corpus, so that line admission is tried on a real-world file (phase `prototype`) — never queued until placed
 - **lines-class-budget-measurement** — Measure docs/08's Lines class (1M features / 10M vertices) for the working canvas, once lines are drawn (phase `prototype`) — never queued until placed
+- **engine-open-neighbour-reads-unbound-to-cancel** — At a dataset open, read_kv_metadata and probe_schema's two statements are not bound to the open's cancel token (phase `prototype`) — never queued until placed
 - **first-batch-factorial-ignored-trace-tests** — kernel/tests/first_batch_factorial.rs's two ignored measurement tests each start a trace in one binary with no shared lock (phase `prototype`) — never queued until placed
 - **slice-traced-test-cross-stamping** — engine/tests/slice.rs's traced test reads first cancellation stamps while its binary's other tests run unserialised, one of them cancelling (phase `prototype`) — never queued until placed
 - **stale-lines-outside-the-four-files** — Same-class stale lines outside the docs-lane piece's four files: residencyStatus.test.ts's titles and comments calling ruled strings drafts, residencyArm.test.ts's App-cannot-be-rendered comment, WorkingCanvas.test.ts's no-mount line, and engine/src/identity.rs's two stale line cites into session_identity.rs (phase `prototype`) — never queued until placed
