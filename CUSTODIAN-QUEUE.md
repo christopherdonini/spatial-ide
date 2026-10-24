@@ -1,14 +1,13 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `5f9cbc3d953c3dd2b7afc90f35adb1a0cc47732c8c4d086297abc6874fef1fdd`) at `2026-10-24T07:56:46.226Z`.
+Generated from `PLAN.yaml` (sha256 `40067dc6cb5c2c4a2d7c14c52c87cbbe28e95032827972d53013b9bdb14f74f5`) at `2026-10-24T08:12:05.002Z`.
 
 ## 1. Next
 
-- **known-limitations-items-51-52-render-numbers** — KNOWN-LIMITATIONS items 51 and 52 follow item 46 with no line at column 0, so they render as 47 and 48 (lane `release`)
+- **guardian-parity-git-timeout-under-load** — The Guardian parity test (scripts/hooks/guardian-continuity-parity.test.mjs) reads a fixture as not judged when a git call outruns its timeout under a shared load; the bound is chosen from a measurement (lane `governance`)
 
 ## 2. Ready
 
-- **known-limitations-items-51-52-render-numbers** — KNOWN-LIMITATIONS items 51 and 52 follow item 46 with no line at column 0, so they render as 47 and 48 (lane `release`, order null, budget 30 min)
 - **guardian-parity-git-timeout-under-load** — The Guardian parity test (scripts/hooks/guardian-continuity-parity.test.mjs) reads a fixture as not judged when a git call outruns its timeout under a shared load; the bound is chosen from a measurement (lane `governance`, order null, budget 60 min)
 
 ## 3. Waiting on the human (total: 0 min)
@@ -46,6 +45,7 @@ Generated from `PLAN.yaml` (sha256 `5f9cbc3d953c3dd2b7afc90f35adb1a0cc47732c8c4d
 - **bundle-redaction-scan-not-in-product-publish** — The bundle redaction scan runs only in a test: no product publish scans its emitted files, though ADR-017's section 13 (Accepted) says a scan over every emitted file asserts no path, user name, machine identifier or credential is in a bundle — evidence: branch `cut/bundle-redaction-scan`
 - **b1-shell-half** — Shell migration, milestone 4 -- B1 shell half: attributes of the inspected feature, colour by category with its legend, and the table — evidence: branch `cut/b1-shell-half-pr-a`
 - **walkthrough-row-f7-cli-refusal** — MANUAL-WALKTHROUGH.md row F7: a publish-bundle CLI publish with the real built viewer is refused under the redaction scan (its W12), so F7 points at Part G's rows, with the CLI refusal line — evidence: branch `cut/walkthrough-row-f7-cli-refusal`
+- **known-limitations-items-51-52-render-numbers** — KNOWN-LIMITATIONS items 51 and 52 follow item 46 with no line at column 0, so they render as 47 and 48 — evidence: branch `cut/known-limitations-items-51-52-render-numbers`
 - **port-2-macos-l1-and-app-dirs** — PORT-2 -- macOS L1 for the Cargo workspace: macos-latest in the same matrix, one application-directory boundary replacing the two resolvers, and a case-policy test on a case-insensitive volume — evidence: branch `cut/port-2-macos-l1-and-app-dirs`
 
 ## 6. Proposed / unscheduled
