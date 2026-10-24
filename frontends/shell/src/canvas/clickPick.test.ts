@@ -8,6 +8,7 @@ import { decodeBatch } from "./decodeBatch";
 import type { ResidentBatch } from "./decodeBatch";
 import { resolvePick, type PickResult } from "./pick";
 import { attributeBatchIpc } from "../testUtils/attributeBatchIpc";
+import { FILTER_DIALECT_DUCKDB_EXPR_0 } from "../skp/types";
 import { partsOfFeatures } from "../testUtils/partsOfPolygons";
 
 /** SHELL-MIGRATION-MILESTONE-2-PREREGISTRATION.md section 4, UB7 and UB8: the click's own pick (OPEN-1 (A)). */
@@ -19,7 +20,7 @@ const batch: ResidentBatch = {
   ids: BigUint64Array.from([10n, 20n]),
   ...partsOfFeatures([[[ring(0, 0, 1)], [ring(10, 10, 2)]], [[ring(100, 100, 1)]]]),
   totalVertices: 12,
-  attributes: null,
+  attributes: null, filter: null,
 };
 
 interface Calls {
@@ -80,6 +81,7 @@ describe("UB7: resolveClickPick", () => {
         pick: { streamHandle: "sh_click", batchSeq: 0, id: 10n, anchor: [0, 0] },
         bounds: { xmin: 0, ymin: 0, xmax: 12, ymax: 12 },
         row: null,
+        filter: null,
       });
     }
     const single = resolveClickPick(depsFor({ batch, gpuOrdinal: 2 }, false), 1, 1);
@@ -91,7 +93,7 @@ describe("UB7: resolveClickPick", () => {
   // of row 0 (ordinal 1) reads row 1's value.
   it("PA-U5: the click's row comes through partToRow, and every part of a multipolygon gives the one row", () => {
     const { ipc, encoding } = attributeBatchIpc([10n, 20n], [{ name: "tag", kind: "utf8", values: ["x", "y"] }], [2, 1]);
-    const decoded = decodeBatch("sh_a", 0, ipc, "geometry", encoding, ["tag"]);
+    const decoded = decodeBatch("sh_a", 0, ipc, "geometry", encoding, ["tag"], null);
     expect(Array.from(decoded.partToRow)).toEqual([0, 0, 1]);
     const tag = (text: string) => [{ name: "tag", value: { kind: "text", text } }];
     const rowAt = (gpuOrdinal: number) => {
@@ -99,6 +101,15 @@ describe("UB7: resolveClickPick", () => {
       return result.kind === "feature" ? result.row : "not a feature";
     };
     expect([rowAt(0), rowAt(1), rowAt(2)]).toEqual([tag("x"), tag("x"), tag("y")]);
+  });
+
+  // RECORDED MUTATION for "PC-U11": in `resolveClickPick` return `filter: null`. Expected failure: the result's filter is null where the batch's filter object was expected.
+  it("PC-U11: resolveClickPick carries the candidate batch's filter as the same object", () => {
+    const filter = { predicate: "zone = 'residential'", dialect: FILTER_DIALECT_DUCKDB_EXPR_0 };
+    const { ipc, encoding } = attributeBatchIpc([10n], []);
+    const decoded = decodeBatch("sh_a", 0, ipc, "geometry", encoding, null, filter);
+    const result = resolveClickPick(depsFor({ batch: decoded, gpuOrdinal: 0 }, false), 1, 1);
+    expect(result.kind === "feature" && result.filter).toBe(filter);
   });
 
   // RECORDED MUTATION for "UB7" (an ordinal that resolves to no row): in `resolveClickPick` (clickPick.ts) answer a feature for a null

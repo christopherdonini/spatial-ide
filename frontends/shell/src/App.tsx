@@ -595,8 +595,8 @@ export function makeManagerCallbacks(
   }
 ): Pick<ViewportStreamManagerOptions, "onBatch" | "onSuperseded" | "onTerminal"> {
   return {
-    onBatch: (streamHandle, batchSeq, payload) => {
-      const rowsInBatch = canvas?.pushBatch(streamHandle, batchSeq, payload) ?? 0;
+    onBatch: (streamHandle, batchSeq, payload, filter) => {
+      const rowsInBatch = canvas?.pushBatch(streamHandle, batchSeq, payload, filter) ?? 0;
       handlers.onBatchRows?.(streamHandle, rowsInBatch);
     },
     onSuperseded: (streamHandle) => {

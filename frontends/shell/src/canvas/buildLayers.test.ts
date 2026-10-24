@@ -53,7 +53,7 @@ function batch(streamHandle: string, batchSeq: number): ResidentBatch {
       ],
     ]),
     totalVertices: 4 + 6,
-    attributes: null,
+    attributes: null, filter: null,
   };
 }
 
@@ -184,7 +184,7 @@ describe("buildLayers -- one datum per part (SH-8)", () => {
         [[[[2_600_200, 1_200_200], [2_600_201, 1_200_200], [2_600_201, 1_200_201], [2_600_200, 1_200_200]]]],
       ]),
       totalVertices: 16,
-      attributes: null,
+      attributes: null, filter: null,
     };
   }
 
@@ -269,7 +269,7 @@ describe("buildLayers -- P9 paint-cost fix (viewport-residency cut, Amendment 23
  */
 describe("buildLayers -- a point open (SH-P2)", () => {
   function p1(streamHandle: string, batchSeq: number): ResidentBatch {
-    return decodeBatch(streamHandle, batchSeq, loadBatchFixture("lv95-point-batch"), "geometry", ENCODING_POINT, null);
+    return decodeBatch(streamHandle, batchSeq, loadBatchFixture("lv95-point-batch"), "geometry", ENCODING_POINT, null, null);
   }
 
   it("a point batch gives one pickable ScatterplotLayer with the radius, fill and stroke rule, no PathLayer, and the ceiling counted in partCount (SH-P2)", () => {
@@ -356,7 +356,7 @@ describe("buildLayers -- a point open (SH-P2)", () => {
  */
 describe("buildLayers -- a line open (SH-L2)", () => {
   function l1(streamHandle: string, batchSeq: number): ResidentBatch {
-    return decodeBatch(streamHandle, batchSeq, loadBatchFixture("lv95-linestring-batch"), "geometry", ENCODING_LINESTRING, null);
+    return decodeBatch(streamHandle, batchSeq, loadBatchFixture("lv95-linestring-batch"), "geometry", ENCODING_LINESTRING, null, null);
   }
 
   it("a line batch gives one pickable PathLayer with the pixel width, colour and rounding, no SolidPolygonLayer, a casing first only with an outline, and the ceiling counted in partCount (SH-L2)", () => {
@@ -412,6 +412,7 @@ describe("buildLayers -- a line open (SH-L2)", () => {
       loadBatchFixture("lv95-multilinestring-batch"),
       "geometry",
       ENCODING_MULTILINESTRING,
+      null,
       null
     );
     const mlData = buildLayers([ml], frame, FIXED_DRAW, "line")[0].props.data as Array<Array<[number, number]>>;

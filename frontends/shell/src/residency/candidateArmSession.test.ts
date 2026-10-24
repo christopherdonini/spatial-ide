@@ -105,6 +105,7 @@ function fakeCanvas(overrides: Partial<WorkingCanvasHandle> = {}): WorkingCanvas
     pushTileBatch: vi.fn(() => OK_INGEST),
     clearTile: vi.fn(),
     clearAllTiles: vi.fn(),
+    residentIdsStreamedUnder: vi.fn(() => new Set<bigint>()),
     isTileResidentInCandidateSet: vi.fn(() => false),
     // Mirrors `isTileResidentInCandidateSet`'s own default: a tile this fake has never been told
     // about is neither resident nor complete -- a test that needs a covering tile to read as
@@ -191,6 +192,18 @@ describe("startCandidateArmSession", () => {
     expect(viewportQueryMock.mock.calls.map((call) => call[5])).toEqual(viewportQueryMock.mock.calls.map(() => columns));
   });
 
+  // RECORDED MUTATION for "PC-U12" (the session): the untiled sink passes `null` to `ingestAndMaybeEstablishFrame` in place of `filter`. Expected failure: the first look's batch reaches `pushTileBatch` with a null fifth argument.
+  it("PC-U12: the first look's batch reaches pushTileBatch with the filter its stream was issued with, as the same object", async () => {
+    const canvas = fakeCanvas();
+    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, columns: null });
+    const filter = { predicate: "zone = 'residential'", dialect: "duckdb-expr/0" };
+    await session.reissueUnrestricted(null, filter);
+
+    lastSink().onBatch(new Uint8Array([1]), true);
+
+    expect((canvas.pushTileBatch as ReturnType<typeof vi.fn>).mock.calls[0][4]).toBe(filter);
+  });
+
   it("reissueUnrestricted issues ONE plain, untiled viewport_query (bbox: null) -- the tile grid's own anchor problem", async () => {
     const canvas = fakeCanvas();
     const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, columns: null });
@@ -227,7 +240,7 @@ describe("startCandidateArmSession", () => {
 
     sink.onTerminal({ kind: "Completed", detail: "" });
 
-    expect(canvas.pushTileBatch).toHaveBeenCalledWith(INITIAL_TILE_KEY, "sh_1", 0, expect.any(Uint8Array));
+    expect(canvas.pushTileBatch).toHaveBeenCalledWith(INITIAL_TILE_KEY, "sh_1", 0, expect.any(Uint8Array), null);
     expect(session.manager.gridFrame).not.toBeNull();
     expect(canvas.establishTileGridContext).toHaveBeenCalledTimes(1);
 
@@ -1063,7 +1076,7 @@ describe("relinquishFill (Item A, decisions 32a/33b: the scoped relief lever)", 
     // status's own claim true, not merely asserted.
     expect(cancelMock).not.toHaveBeenCalled();
     expect(() => lastSink().onBatch(new Uint8Array([1]), true)).not.toThrow();
-    expect(canvas.pushTileBatch).toHaveBeenCalledWith(INITIAL_TILE_KEY, "sh_1", 0, expect.any(Uint8Array));
+    expect(canvas.pushTileBatch).toHaveBeenCalledWith(INITIAL_TILE_KEY, "sh_1", 0, expect.any(Uint8Array), null);
   });
 
   it("returns the tile keys it actually touched, matching manager.relinquishOutstanding's own summary", async () => {
