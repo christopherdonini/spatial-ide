@@ -7,6 +7,7 @@ import { spawnSync, execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 import { extractSessionContinuityBlock, buildOutput, READING_ORDER } from './session-resume.mjs';
+import { parseSessionContinuity } from './precompact-flush.mjs';
 import {
   SESSION_CONTINUITY_FIELDS,
   BLOCK_HEADING,
@@ -181,6 +182,9 @@ test('flush CLI: --file round-trip writes the field; the incident typo exits non
 // RECORDED MUTATION (MC5) at ea69f46c4fc2, applied alone and reverted: the size measured over findBlockRange's untrimmed lines -> fails by name: `flush: the cap measures the block session-resume prints, for the real ledger's shape`.
 // RECORDED MUTATION (MC6) at ea69f46c4fc2, applied alone and reverted: the scratch file written with the block cut to 6,144 bytes -> fails by name: `flush CLI: a refused block leaves the file byte-identical and is written whole to the scratch file the refusal names`.
 // RECORDED MUTATION (MC7) at ea69f46c4fc2, applied alone and reverted: the inside-repository check removed -> fails by name: `flush CLI: a temporary folder inside the repository gets no scratch file and the refusal says so`.
+// RECORDED MUTATION (MC8) at 8bfc3e69, applied alone and reverted: the CR dropped (the line before the change) -> fails by name: `flush: a CRLF ledger keeps CRLF on every field line it writes, and an LF ledger is byte-identical`, at (a) and (b) and not (c); and `flush CLI: a CRLF copy of the real ledger keeps CRLF on every line, and session-resume prints the same block as for the LF write`.
+// RECORDED MUTATION (MC9) at 8bfc3e69, applied alone and reverted: the terminator taken from the file (a CR whenever the text holds CRLF) -> fails by name: `flush: a CRLF ledger keeps CRLF on every field line it writes, and an LF ledger is byte-identical`, at (b) only.
+// RECORDED MUTATION (MC10) at 8bfc3e69, applied alone and reverted: a CR appended to every written line -> fails by name: `flush: a CRLF ledger keeps CRLF on every field line it writes, and an LF ledger is byte-identical`, at (b) and (c) and not (a); and, in scripts/plan/rotate-cut-state.test.mjs, `rotate-cut-state: after the rotation commit and a ledger-only flush commit, session-resume prints the block, the precompact hook allows and the stop hook's continuity step passes`.
 
 // The `position` value that makes the fixture's block exactly `bytes` UTF-8 bytes (ASCII fill).
 function positionFor(bytes) {
@@ -294,4 +298,46 @@ test('flush CLI: a temporary folder inside the repository gets no scratch file a
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }
+});
+
+// --- the written line keeps its own line ending (flush-crlf-field-rewrite, T1 and T2) -----------------------------------
+const crlf = (s) => s.replaceAll('\n', '\r\n');
+const onlyTipCrlf = (s) => s.replace(/^(tip: .*)$/m, '$1\r');
+
+test('flush: a CRLF ledger keeps CRLF on every field line it writes, and an LF ledger is byte-identical', () => {
+  const u = { flushed_at: '2026-09-16T00:00:00Z', tip: 'feed1234', position: 'new position' };
+  const t = { tip: 'feed1234', position: 'new position' };
+  // One deep equality: a failure's diff names element 0 = (a), 1 = (b), 2 = (c).
+  assert.deepEqual(
+    [updateBlockFields(crlf(fixtureBlock()), u), updateBlockFields(onlyTipCrlf(fixtureBlock()), t), updateBlockFields(fixtureBlock(), u)],
+    [crlf(fixtureBlock(u)), onlyTipCrlf(fixtureBlock(t)), fixtureBlock(u)],
+  );
+});
+
+test('flush CLI: a CRLF copy of the real ledger keeps CRLF on every line, and session-resume prints the same block as for the LF write', () => {
+  const real = fs.readFileSync(cutStatePath(REPO_ROOT), 'utf8').replace(/\r\n/g, '\n');
+  const fields = ['--field', 'flushed_at=2026-09-16T00:00:00Z', '--field', 'tip=feed1234', '--field', 'position=new position'];
+  const printed = {};
+  const parsed = {};
+  for (const [name, text] of [['crlf', crlf(real)], ['lf', real]]) {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), `spatial-flush-t2-${name}-`));
+    try {
+      fs.mkdirSync(path.join(dir, 'state'));
+      const target = path.join(dir, 'state', 'CUT-STATE.md');
+      fs.writeFileSync(target, text, 'utf8');
+      const r = spawnSync(process.execPath, [CLI, '--file', target, ...fields], { encoding: 'utf8', env: { ...process.env, CUSTODIAN_TELEGRAM_DRY_RUN: '1' } });
+      assert.equal(r.status, 0, r.stderr);
+      const written = fs.readFileSync(target, 'utf8');
+      parsed[name] = parseSessionContinuity(written);
+      if (name === 'crlf') assert.ok(!/(^|[^\r])\n/.test(written), 'an LF without a CR before it in the CRLF file');
+      const out = buildOutput(dir);
+      printed[name] = out.slice(0, out.lastIndexOf('\n\nResume facts:'));
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  }
+  assert.ok(printed.lf.includes('position: new position'));
+  assert.equal(printed.crlf, printed.lf);
+  assert.deepEqual(parsed.crlf, parsed.lf);
+  assert.equal(parsed.lf.tip, 'feed1234');
 });
