@@ -1,47 +1,9 @@
 {
-  "generated_at": "2026-10-24T09:15:59.585Z",
-  "plan_hash": "13281d991124427b67298d10455d8b459eb9447dc46d213efc42cd51d471cb59",
+  "generated_at": "2026-10-24T09:28:58.565Z",
+  "plan_hash": "f94ab982800af0a28a864a9c87453a96e9137a934ddcda2e4107b661bb5694aa",
   "priorities_approved": true,
-  "next": {
-    "id": "guardian-parity-git-timeout-under-load",
-    "title": "The Guardian parity test (scripts/hooks/guardian-continuity-parity.test.mjs) reads a fixture as not judged when a git call outruns its timeout under a shared load; the bound is chosen from a measurement",
-    "lane": "governance",
-    "phase": "prototype",
-    "status": "ready",
-    "order": null,
-    "budget_minutes": 60,
-    "needs_human": {
-      "kind": "none",
-      "minutes": 0
-    },
-    "evidence": null,
-    "dates": {
-      "opened": "2026-10-22",
-      "done": null
-    },
-    "summary": "READY 2026-10-24: flush-crlf-field-rewrite merged as PR #248, so this node is the governance lane's next piece (its OPEN-1 yes, its OPEN-2 a finding, RULED 2026-10-23). Before: RULED 2026-10-23 (state/directives/2026-10-23-clicks-245-246-247-sort-window-fix-before-port-2-covering-case-route-1-244-c1-milestone-4-and-1c-open-items-ruled.md): OPEN-1 yes (no re-read); OPEN-2 recorded as a finding. Before: DRAFTED AHEAD 2026-10-23 (state/consults/2026-10-23-guardian-parity-git-timeout-under-load-architect-draft.md), not committed: the full form; the test's git calls on both sides recorded, a timed-out read failing by name instead of being compared, two tests and their mutations; the runner's bound chosen by a declared rule from a series under a shared hold (20 runs of the file, 10 of the governance suite), not a docs/08 figure; at most 130 lines in the one test file; nothing under the mod's folder. For the human: OPEN-1 (no re-read, recommended) and OPEN-2 (the Stop hook's own timeout value, a finding only). Before: DRAFTING AHEAD 2026-10-23: the architect drafts the form, read only, ahead of its turn (after flush-crlf-field-rewrite); nothing is committed from it until then. Before: RULED 2026-10-23 (state/directives/2026-10-23-weekend-covering-case-s1-session-log-redaction-s2-governance-and-docs-order-v0-2-scope-port-2-approved.md), item 3: fourth in the governance lane, after flush-crlf-field-rewrite. Before: PROPOSED 2026-10-22 by the human (state/directives/2026-10-22-242-h-1-round-72-pin-f7-open-items-milestone-4-open-16-b-adr-020-corrigendum-a-1c-adr-036-words-approved-disk-parity-node.md, item 8), graded S3 by the human: the parity test's git call time is measured under a shared hold before its bound is chosen. Seen at a custodian gate on 2026-10-22 (the ledger's entry for milestone 4 PR A's row 15): the fixture PS9 read not judged once under load, where its git calls outran their timeout; alone the file passed 15 of 15, and the gate then passed. The timeout is STOP_RUN_OPTS in scripts/hooks/guardian-continuity-parity.test.mjs; the mod's own folder is not written."
-  },
-  "ready": [
-    {
-      "id": "guardian-parity-git-timeout-under-load",
-      "title": "The Guardian parity test (scripts/hooks/guardian-continuity-parity.test.mjs) reads a fixture as not judged when a git call outruns its timeout under a shared load; the bound is chosen from a measurement",
-      "lane": "governance",
-      "phase": "prototype",
-      "status": "ready",
-      "order": null,
-      "budget_minutes": 60,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-10-22",
-        "done": null
-      },
-      "summary": "READY 2026-10-24: flush-crlf-field-rewrite merged as PR #248, so this node is the governance lane's next piece (its OPEN-1 yes, its OPEN-2 a finding, RULED 2026-10-23). Before: RULED 2026-10-23 (state/directives/2026-10-23-clicks-245-246-247-sort-window-fix-before-port-2-covering-case-route-1-244-c1-milestone-4-and-1c-open-items-ruled.md): OPEN-1 yes (no re-read); OPEN-2 recorded as a finding. Before: DRAFTED AHEAD 2026-10-23 (state/consults/2026-10-23-guardian-parity-git-timeout-under-load-architect-draft.md), not committed: the full form; the test's git calls on both sides recorded, a timed-out read failing by name instead of being compared, two tests and their mutations; the runner's bound chosen by a declared rule from a series under a shared hold (20 runs of the file, 10 of the governance suite), not a docs/08 figure; at most 130 lines in the one test file; nothing under the mod's folder. For the human: OPEN-1 (no re-read, recommended) and OPEN-2 (the Stop hook's own timeout value, a finding only). Before: DRAFTING AHEAD 2026-10-23: the architect drafts the form, read only, ahead of its turn (after flush-crlf-field-rewrite); nothing is committed from it until then. Before: RULED 2026-10-23 (state/directives/2026-10-23-weekend-covering-case-s1-session-log-redaction-s2-governance-and-docs-order-v0-2-scope-port-2-approved.md), item 3: fourth in the governance lane, after flush-crlf-field-rewrite. Before: PROPOSED 2026-10-22 by the human (state/directives/2026-10-22-242-h-1-round-72-pin-f7-open-items-milestone-4-open-16-b-adr-020-corrigendum-a-1c-adr-036-words-approved-disk-parity-node.md, item 8), graded S3 by the human: the parity test's git call time is measured under a shared hold before its bound is chosen. Seen at a custodian gate on 2026-10-22 (the ledger's entry for milestone 4 PR A's row 15): the fixture PS9 read not judged once under load, where its git calls outran their timeout; alone the file passed 15 of 15, and the gate then passed. The timeout is STOP_RUN_OPTS in scripts/hooks/guardian-continuity-parity.test.mjs; the mod's own folder is not written."
-    }
-  ],
+  "next": null,
+  "ready": [],
   "waiting_on_human": {
     "total_minutes": 0,
     "by_kind": {
@@ -623,6 +585,28 @@
       },
       "summary": "GATE 1 PASS WITH NOTES 2026-10-24 (gate-log 606, state/consults/gates/2026-10-24-known-limitations-items-51-52-render-numbers-gate1-reviewer.md): one line, one file, item 42's form, the conflict with #241 confirmed both ways; the note: resolve #241's block first, then the line, and re-check. NEXT: #241 merges (Monday), main merged into this branch, the reviewer's check again, then the click. Before: PR #249 OPENED 2026-10-24 as a draft (branch cut/known-limitations-items-51-52-render-numbers, head 196a4f59): the one line before item 51, in item 42's form, made by script; numstat 1 0. A trial merge with #241's head conflicts in KNOWN-LIMITATIONS.md either way round, so #241 merges first, then main is merged into this branch and the reviewer checks it again before the click. The reviewer's gate 1 runs at 196a4f59. Before: RULED 2026-10-24 (state/directives/2026-10-24-sort-window-a-both-gates-pr-c-table-ceiling-approved-covering-case-open-a-to-f-kl-item-51-line-probe-branch.md), item 4: one column-0 comment line before item 51, in item 42's form, as its own one-line docs-lane commit now, with the reviewer's check that nothing else changed. Found by the architect's PR C dispatch draft (state/consults/2026-10-23-b1-shell-half-pr-c-dispatch-amendment-architect-draft.md, could-not-settle item 3). PR #241 adds item 47 at the same place; the order of the two merges is read before the PR opens.",
       "evidence_label": "branch `cut/known-limitations-items-51-52-render-numbers`"
+    },
+    {
+      "id": "guardian-parity-git-timeout-under-load",
+      "title": "The Guardian parity test (scripts/hooks/guardian-continuity-parity.test.mjs) reads a fixture as not judged when a git call outruns its timeout under a shared load; the bound is chosen from a measurement",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": null,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "branch": "cut/guardian-parity-git-timeout-under-load"
+      },
+      "dates": {
+        "opened": "2026-10-22",
+        "done": null
+      },
+      "summary": "FORM COMMITTED 2026-10-24 (scripts/hooks/GUARDIAN-PARITY-GIT-TIMEOUT-UNDER-LOAD-PREREGISTRATION.md; the architect's draft state/consults/2026-10-23-guardian-parity-git-timeout-under-load-architect-draft.md, 19 pins at c8351520): the full form, both gates from dispatch; OPEN-1 (A) and OPEN-2 as a finding stated in its header note; rule (00) clear at this commit. NEXT: the instrument (section 2, T35 to T38, the observer, three recorded mutations) by a worker in C:/dev/wt/gpt; then the series L0 and L1 by a tester inside a shared hold; Amendment 1 with the figures and B; the bound commit; both gates. Before: READY 2026-10-24: flush-crlf-field-rewrite merged as PR #248, so this node is the governance lane's next piece (its OPEN-1 yes, its OPEN-2 a finding, RULED 2026-10-23). Before: RULED 2026-10-23 (state/directives/2026-10-23-clicks-245-246-247-sort-window-fix-before-port-2-covering-case-route-1-244-c1-milestone-4-and-1c-open-items-ruled.md): OPEN-1 yes (no re-read); OPEN-2 recorded as a finding. Before: DRAFTED AHEAD 2026-10-23 (state/consults/2026-10-23-guardian-parity-git-timeout-under-load-architect-draft.md), not committed: the full form; the test's git calls on both sides recorded, a timed-out read failing by name instead of being compared, two tests and their mutations; the runner's bound chosen by a declared rule from a series under a shared hold (20 runs of the file, 10 of the governance suite), not a docs/08 figure; at most 130 lines in the one test file; nothing under the mod's folder. For the human: OPEN-1 (no re-read, recommended) and OPEN-2 (the Stop hook's own timeout value, a finding only). Before: DRAFTING AHEAD 2026-10-23: the architect drafts the form, read only, ahead of its turn (after flush-crlf-field-rewrite); nothing is committed from it until then. Before: RULED 2026-10-23 (state/directives/2026-10-23-weekend-covering-case-s1-session-log-redaction-s2-governance-and-docs-order-v0-2-scope-port-2-approved.md), item 3: fourth in the governance lane, after flush-crlf-field-rewrite. Before: PROPOSED 2026-10-22 by the human (state/directives/2026-10-22-242-h-1-round-72-pin-f7-open-items-milestone-4-open-16-b-adr-020-corrigendum-a-1c-adr-036-words-approved-disk-parity-node.md, item 8), graded S3 by the human: the parity test's git call time is measured under a shared hold before its bound is chosen. Seen at a custodian gate on 2026-10-22 (the ledger's entry for milestone 4 PR A's row 15): the fixture PS9 read not judged once under load, where its git calls outran their timeout; alone the file passed 15 of 15, and the gate then passed. The timeout is STOP_RUN_OPTS in scripts/hooks/guardian-continuity-parity.test.mjs; the mod's own folder is not written.",
+      "evidence_label": "branch `cut/guardian-parity-git-timeout-under-load`"
     },
     {
       "id": "port-2-macos-l1-and-app-dirs",
