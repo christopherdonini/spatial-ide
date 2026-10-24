@@ -260,6 +260,7 @@ export class TileResidentSet {
         partCount: partRows.length,
         totalVertices,
         attributes: held === null || rows === null ? block : { ...held, rows },
+        filter: batch.filter,
       };
     }
 

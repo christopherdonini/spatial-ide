@@ -6,7 +6,7 @@ import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 
 import { registerE2eHook, unregisterE2eHook } from "../e2e-test-surface";
 import type { PixelColorCount, PixelRegion, PixelRegionSummary, PixelSamplePoint, PixelSummary } from "../e2e-test-surface";
-import type { CrsUnit } from "../skp/types";
+import type { CrsUnit, Filter } from "../skp/types";
 import { logSessionEvent } from "../diagnostics/log";
 import {
   recordResidencyBatch,
@@ -120,7 +120,7 @@ export interface WorkingCanvasHandle {
    * success, `0` on a declared-ceiling refusal (nothing was added) -- so the caller (`App.tsx`'s
    * `makeManagerCallbacks`, NEXT-CUT.md P4) can accumulate a cumulative row count for the
    * scan-liveness indicator without decoding the batch a second time itself. */
-  pushBatch(streamHandle: string, batchSeq: number, ipcBytes: Uint8Array): number;
+  pushBatch(streamHandle: string, batchSeq: number, ipcBytes: Uint8Array, filter: Filter | null): number;
   /** Drops every resident batch belonging to a superseded or closed stream. */
   clearStream(streamHandle: string): void;
   /** Re-fit the camera ("zoom to layer") to the layer's best-known extent -- the dataset-lifetime
@@ -175,6 +175,9 @@ export interface WorkingCanvasHandle {
    * counting logic, a read-only accessor. Reached only from the DEV-only `residencyEndStep` E2E hook
    * (`App.tsx`), never from product code. */
   getResidentCounts(): ResidentCounts;
+  /** Milestone 4 PR C (section 2.4 (c)): the ids of the resident batches whose `ResidentBatch.filter` `streamedUnder` accepts, read off the arm's resident set; it changes nothing.
+   * REQUIRED, with no `?`: its product caller is `table/tableScope.ts`, through App (the second scope's "an id in a resident batch streamed under the view's filter"). */
+  residentIdsStreamedUnder(streamedUnder: (filter: Filter | null) => boolean): ReadonlySet<bigint>;
   /** M1/M3/M7/S7 (viewport-residency cut P1b): arms a PERSISTENT `onAfterRender` render-tick hook on
    * THIS instance's `deck`, feeding `recordResidencyRenderTick` on every render observed while armed
    * -- see this file's own doc comment on `firstPixelArmedRef` for why this is exposed as a METHOD
@@ -206,7 +209,7 @@ export interface WorkingCanvasHandle {
    * only maintains via `TileViewportStreamManager.setOverBudget`, applied by the caller from this
    * method's own return value).
    */
-  pushTileBatch(tileKey: string, streamHandle: string, batchSeq: number, ipcBytes: Uint8Array): TileBatchIngestOutcome;
+  pushTileBatch(tileKey: string, streamHandle: string, batchSeq: number, ipcBytes: Uint8Array, filter: Filter | null): TileBatchIngestOutcome;
   /** Drops one tile's residency -- per-tile supersede-on-pan, or an explicit eviction. Mirrors
    * `clearStream` above, tile-keyed instead of stream-keyed. */
   clearTile(tileKey: string): void;
@@ -1453,11 +1456,11 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
   useImperativeHandle(
     ref,
     () => ({
-      pushBatch(streamHandle, batchSeq, ipcBytes) {
+      pushBatch(streamHandle, batchSeq, ipcBytes, filter) {
         begin("frame-decode");
         let batch: ReturnType<typeof decodeBatch>;
         try {
-          batch = withinAttributes(decodeBatch(streamHandle, batchSeq, ipcBytes, geometryColumn, geometryEncoding, projectionRef.current), residentRef.current.getBatches());
+          batch = withinAttributes(decodeBatch(streamHandle, batchSeq, ipcBytes, geometryColumn, geometryEncoding, projectionRef.current, filter), residentRef.current.getBatches());
         } finally {
           end("frame-decode");
         }
@@ -1609,6 +1612,14 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
         lastQueriedRef.current = null;
       },
 
+      residentIdsStreamedUnder(streamedUnder) {
+        const ids = new Set<bigint>();
+        for (const batch of activeBatches()) {
+          if (streamedUnder(batch.filter)) for (const id of batch.ids) ids.add(id);
+        }
+        return ids;
+      },
+
       getResidentCounts() {
         // Candidate arm (P3w): reads `tileResidentRef`'s own totals instead -- see `render()`'s
         // identical `armRef.current` ternary; for baseline this is byte-identical to before.
@@ -1675,11 +1686,11 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
       // "extract the pure decision, keep the imperative handle thin" split `pushBatch` above already
       // could not follow (no WebGL-free way to test it) but this NEW logic can, and does
       // (`tileIngest.test.ts`).
-      pushTileBatch(tileKey, streamHandle, batchSeq, ipcBytes) {
+      pushTileBatch(tileKey, streamHandle, batchSeq, ipcBytes, filter) {
         begin("frame-decode");
         let batch: ReturnType<typeof decodeBatch>;
         try {
-          batch = withinAttributes(decodeBatch(streamHandle, batchSeq, ipcBytes, geometryColumn, geometryEncoding, projectionRef.current), tileResidentRef.current.getBatches());
+          batch = withinAttributes(decodeBatch(streamHandle, batchSeq, ipcBytes, geometryColumn, geometryEncoding, projectionRef.current, filter), tileResidentRef.current.getBatches());
         } finally {
           end("frame-decode");
         }

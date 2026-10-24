@@ -6,6 +6,7 @@ import { describe, expect, it } from "vitest";
 import { readRow } from "../attributes/values";
 import { decodeBatch } from "./decodeBatch";
 import type { BatchAttributes, ResidentBatch } from "./decodeBatch";
+import { FILTER_DIALECT_DUCKDB_EXPR_0 } from "../skp/types";
 import { attributeBatchIpc } from "../testUtils/attributeBatchIpc";
 import { partsOfFeatures, partsOfPolygons } from "../testUtils/partsOfPolygons";
 import { cellSizeForLevel, coverMembershipFor, deriveTileGridFrame, tileCoverForBbox, tileKeyToString } from "./tileGrid";
@@ -21,7 +22,7 @@ function batch(streamHandle: string, batchSeq: number, ids: number[], verticesPe
     ids: idArray,
     ...partsOfPolygons(polygons),
     totalVertices: ids.length * verticesPerFeature,
-    attributes: null,
+    attributes: null, filter: null,
   };
 }
 
@@ -54,7 +55,7 @@ describe("TileResidentSet.addBatch: dedupe keeps features whole and re-indexes p
         [[ring()]], // id 7
       ]),
       totalVertices: 24,
-      attributes: null,
+      attributes: null, filter: null,
     };
     const result = set.addBatch("0:1", incoming);
     expect(result.duplicatesDropped).toBe(1);
@@ -72,7 +73,7 @@ describe("TileResidentSet.addBatch: a duplicate drop and the attributes (milesto
   function drop(projection: string[] | null, over: Partial<ResidentBatch> = {}) {
     const columns = projection === null ? [] : [{ name: "tag", kind: "utf8" as const, values: ["two", "five", "seven"] }];
     const { ipc, encoding } = attributeBatchIpc([2n, 5n, 7n], columns, [2, 3, 1]);
-    const decoded = decodeBatch("sh_b", 0, ipc, "geometry", encoding, projection);
+    const decoded = decodeBatch("sh_b", 0, ipc, "geometry", encoding, projection, null);
     const set = new TileResidentSet();
     set.addBatch("0:0", batch("sh_a", 0, [2]));
     return { decoded, accepted: set.addBatch("0:1", { ...decoded, ...over }).accepted! };
@@ -96,6 +97,14 @@ describe("TileResidentSet.addBatch: a duplicate drop and the attributes (milesto
   it("a duplicate drop keeps a not-held batch not-held and a null batch null", () => {
     expect(drop(["tag"], { attributes: "not-held" }).accepted.attributes).toBe("not-held");
     expect(drop(null).accepted.attributes).toBeNull();
+  });
+
+  // RECORDED MUTATION for "PC-U9": the rebuild writes `filter: null`. Expected failure: the accepted batch's filter is null where the decoded batch's filter object was expected.
+  it("PC-U9: a duplicate drop carries the filter as the same object", () => {
+    const filter = { predicate: "zone = 'residential'", dialect: FILTER_DIALECT_DUCKDB_EXPR_0 };
+    const { accepted } = drop(["tag"], { filter });
+    expect(Array.from(accepted.ids)).toEqual([5n, 7n]);
+    expect(accepted.filter).toBe(filter);
   });
 
   it("refuses to deduplicate a batch that already holds a row map", () => {

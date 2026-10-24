@@ -65,7 +65,7 @@ describe("UA4: transitions are pure and typed, and a style edit is one transitio
       "style.set": { action: "style.set", params: { property: "fillOpacity", value: 0.25 } },
       "tool.set": { action: "tool.set", params: { tool: "select" } },
       "mode.set": { action: "mode.set", params: { mode: "replace" } },
-      "selection.apply": { action: "selection.apply", params: { mode: "add", id: 1n, bounds: box(0, 0, 1, 1) } },
+      "selection.apply": { action: "selection.apply", params: { mode: "add", id: 1n, bounds: box(0, 0, 1, 1), row: null, filter: null } },
       "selection.clear": { action: "selection.clear", params: {} },
       "selection.end": { action: "selection.end", params: { reason: "reopened", dropped: 1 } },
       "inspect.set": { action: "inspect.set", params: { pick: pickOf(1n), bounds: box(0, 0, 1, 1), row: null } },
