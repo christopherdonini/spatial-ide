@@ -184,3 +184,14 @@ Nothing above is edited.
 6. **Next:** the architect re-gates E1, scoped; then the click.
 
 Nothing above is edited.
+
+## Amendment 3 — the closing record (class 1); written after gate 2 was seen
+
+*Written by the custodian. References only.*
+
+1. Gate 2 (E1, scoped), the architect, at 7780de9b: PASS WITH NOTES (`state/consults/gates/2026-10-24-guardian-parity-git-timeout-under-load-gate2-architect.md`; gate-log 611). E1 is closed; D1 and D2 are closed by Amendment 2 items 4 and 3.
+2. Its N1: the PR's checks at 7780de9b, 8 of 8 pass (runs 40102017706, 40102017760, 40102022446, 40102022453, 40102022487, 40102022656, each with head sha 7780de9b), so P4's governance-ci half holds at the head as well.
+3. Its N2: the six lines 7780de9b adds equal the reviewer's D1 block byte for byte, and it deletes none (the custodian's script over `git diff -U0 7235aa0c 7780de9b`).
+4. The record is closed: ready for the click, as a merge commit.
+
+Nothing above is edited.
