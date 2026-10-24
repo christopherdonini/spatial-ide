@@ -228,7 +228,8 @@ fn hostile_names_round_trip_to_their_own_columns() {
 /// Case-folding collisions never reach the SELECT list as ambiguous names: DuckDB's reader renames
 /// them (`Zone` -> `Zone_1`, and a real `Zone_1` then -> `Zone_1_1`) and the engine's resident schema
 /// carries the renamed names, so every projected name binds exactly one column. A column differing
-/// from the identity or geometry only in case is renamed the same way (`ID_1`, `GEOMETRY_1`).
+/// from the identity is renamed the same way (`ID_1`). One differing from the geometry column only
+/// in case now refuses the open (covering-case form, G-5).
 #[test]
 fn hostile_names_colliding_after_case_folding_bind_one_column_each() {
     let cols = [
@@ -248,19 +249,12 @@ fn hostile_names_colliding_after_case_folding_bind_one_column_each() {
             name: "ID",
             int: false,
         },
-        Col {
-            name: "GEOMETRY",
-            int: false,
-        },
     ];
     let path = path_for("casefold");
     write(&path, "id", &cols);
     let ds = Dataset::open(&path).expect("open");
     let names = file_names(&ds);
-    assert_eq!(
-        &names[2..],
-        &["zone", "Zone_1", "Zone_1_1", "ID_1", "GEOMETRY_1"]
-    );
+    assert_eq!(&names[2..], &["zone", "Zone_1", "Zone_1_1", "ID_1"]);
     let batches = drain(&ds, &names[2..]).expect("stream");
     for (k, name) in names[2..].iter().enumerate() {
         assert_eq!(string_values(&batches, name), expected(k), "{name:?}");
