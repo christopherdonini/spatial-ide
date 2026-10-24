@@ -9,8 +9,7 @@
 //          (`kernel/tests/manual_walkthrough_fixtures.rs`, `generate_the_filter_fixture`, run by the tester into its own folder, whose file's sha256 equals the shared copy's): give it as
 //          SPATIAL_E2E_FILTER_ZONE_COUNTS, the printed array, e.g. `[517, 498, 480, 505]` (ZONE_VALUES order, `residential` first). Without it PC-E1 fails and says so; it is never skipped.
 //   PC-E2  O-07 step 6. On `filter-zoned.parquet`, three features are selected with the Select tool (found through `hoverIdAfterBarrier`, as attributes.mjs finds them). The third scope lists the three; the filter
-//          `id <> <the third id>` then hides exactly one of them. The second scope lists the other two, and counts the hidden one as not established (the first scope's result under that filter reaches the
-//          limit, so it is not complete); the third scope still lists three.
+//          `id <> <the third id>` then hides exactly one of them. The second scope lists the other two (the map holds them from streams asked for under that filter) and its line names 2 of 3 selected features; the third scope still lists three.
 //   PC-E3  `100k-happy-path.parquet`, no filter. The first scope reaches the limit: its line names the first 1,000 features returned and says more may be there, and the grid holds 1,000 rows.
 //   PC-E4  `slow-filter-scan.parquet` with `id > 3999900` applied (the late-matching scan filter-panel.mjs uses), the Table tab shown with the first scope, after the map settles: (1) the liveness line shows, with Cancel;
 //          (2) the table's handle is the one the `stream-issued` render-trace line names after the table's class-A `viewport_query` row (bbox null, limit "1000", against the first look's 10000); (3) after Cancel a class-A

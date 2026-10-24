@@ -160,7 +160,7 @@ describe("PC-R2: a session end clears the rows and shows the owner line", () => 
 
     await show({ shown: true, sessionEnded: true });
     expect(cells()).toEqual([]);
-    expect(text(".table-line")).toBe("[P6 placeholder] The file changed, so the table was cleared; open the file again to load it.");
+    expect(text(".table-line")).toBe("[P6 placeholder] The dataset's session ended, so the table was cleared; open the file again to load it.");
     expect(cancelMock).toHaveBeenCalledWith("sh_1");
     await show({ shown: false, sessionEnded: true });
     await show({ shown: true, sessionEnded: true });

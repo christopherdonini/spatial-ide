@@ -11,6 +11,7 @@
 import { act, forwardRef, useImperativeHandle } from "react";
 import { createRoot, Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { ExportRunEnd, ExportRunReport, PublishPanelHandle, PublishPanelProps } from "./publish/PublishPanel";
 
 const mocks = vi.hoisted(() => ({
   mintCounter: 0,
@@ -18,7 +19,7 @@ const mocks = vi.hoisted(() => ({
   queries: [] as unknown[][],
   cancels: [] as string[],
   sinks: new Map<string, { onBatch: (payload: Uint8Array, contiguous: boolean) => void; onTerminal: (terminal: { kind: string; detail: string }) => void }>(),
-  exportRunning: null as null | ((run: { cancel: () => Promise<boolean>; ended: Promise<unknown> }) => void),
+  exportRunning: null as null | ((run: ExportRunReport) => void),
   canvas: { props: null as import("./canvas/WorkingCanvas").WorkingCanvasProps | null },
 }));
 
@@ -93,7 +94,7 @@ vi.mock("./streaming/viewportStreamManager", () => {
 });
 
 vi.mock("./publish/PublishPanel", () => {
-  const MockPublishPanel = forwardRef<{ reveal(): void }, { onExportRunning: NonNullable<typeof mocks.exportRunning> }>(function MockPublishPanel(props, ref) {
+  const MockPublishPanel = forwardRef<PublishPanelHandle, Pick<PublishPanelProps, "onExportRunning">>(function MockPublishPanel(props, ref) {
     mocks.exportRunning = props.onExportRunning;
     useImperativeHandle(ref, () => ({ reveal: () => {} }), []);
     return null;
@@ -194,9 +195,10 @@ describe("App: the Table tab in Activity (milestone 4 PR C), through the real Ap
   const tab = (id: string) => click(q(`#activity-tab-${id}`));
   const sinkOf = (handle: string) => mocks.sinks.get(handle)!;
   const run = () => {
-    let end!: (value: unknown) => void;
-    const ended = new Promise<unknown>((resolve) => (end = resolve));
-    return { run: { cancel: async () => true, ended }, end };
+    let end!: (value: ExportRunEnd) => void;
+    const ended = new Promise<ExportRunEnd>((resolve) => (end = resolve));
+    const report: ExportRunReport = { cancel: async () => true, ended };
+    return { run: report, end };
   };
 
   it("the Table tab is third in Activity; the table issues nothing until it is shown, then one query with bbox null, the limit, the view's filter and the open's projection", async () => {
@@ -238,7 +240,7 @@ describe("App: the Table tab in Activity (milestone 4 PR C), through the real Ap
     expect(mocks.queries).toHaveLength(1);
     expect(q(".table-note")?.textContent).toContain("not loading while an export runs");
 
-    await act(async () => first.end({ phase: "execute", outcome: { kind: "cancelled" } }));
+    await act(async () => first.end({ phase: "execute", outcome: { status: "unknown-attempt" } }));
     await flush();
     expect(mocks.queries).toHaveLength(2);
     expect(q(".table-note")).toBeNull();

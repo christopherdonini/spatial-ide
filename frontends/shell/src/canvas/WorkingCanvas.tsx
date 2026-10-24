@@ -176,7 +176,7 @@ export interface WorkingCanvasHandle {
    * (`App.tsx`), never from product code. */
   getResidentCounts(): ResidentCounts;
   /** Milestone 4 PR C (section 2.4 (c)): the ids of the resident batches whose `ResidentBatch.filter` `streamedUnder` accepts, read off the arm's resident set; it changes nothing.
-   * REQUIRED, with no `?`: its product caller is `table/tableScope.ts`, through App (the second scope's "an id in a resident batch streamed under the view's filter"). */
+   * REQUIRED, with no `?`: its product caller is `table/TableTab.tsx`, through App's `residentIdsStreamedUnder` callback, and `table/tableScope.ts`'s `secondScope` reads the set it returns (the second scope's "an id in a resident batch streamed under the view's filter"). */
   residentIdsStreamedUnder(streamedUnder: (filter: Filter | null) => boolean): ReadonlySet<bigint>;
   /** M1/M3/M7/S7 (viewport-residency cut P1b): arms a PERSISTENT `onAfterRender` render-tick hook on
    * THIS instance's `deck`, feeding `recordResidencyRenderTick` on every render observed while armed

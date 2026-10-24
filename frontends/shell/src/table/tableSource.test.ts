@@ -26,7 +26,7 @@ import type { Filter } from "../skp/types";
 import { TileViewportStreamManager } from "../streaming/tileViewportStreamManager";
 import type { StreamSink } from "../streaming/transport";
 import { attributeBatchIpc } from "../testUtils/attributeBatchIpc";
-import { REAL_SOURCE_CHANGED_TERMINAL_DETAIL } from "../testUtils/terminalShapes";
+import { REAL_SOURCE_CHANGED_TERMINAL_DETAIL, REAL_SOURCE_COVERAGE_LOST_TERMINAL_DETAIL } from "../testUtils/terminalShapes";
 import { TABLE_MAX_ATTRIBUTE_BYTES, TABLE_MAX_ROWS } from "./tableConstants";
 import { resultIsComplete, TableSource, tableLine } from "./tableSource";
 
@@ -181,5 +181,18 @@ describe("the first scope's source (section 2.4 (b))", () => {
     expect(cancelMock).not.toHaveBeenCalledWith("sh_1");
     sinkOf("sh_1").onBatch(tagBatch([5n]), true);
     expect(source.getSnapshot().count).toBe(1);
+  });
+
+  // RECORDED MUTATION for "PC-U16": in `isSessionEndedTerminal` (streaming/liveTicketSet.ts) match only `engine.source_changed`. Expected failure: PC-U16 (the session-ended callback is not called).
+  it("PC-U16: a coverage-lost terminal ends the table with the same ended line as a source change", async () => {
+    const onSessionEnded = vi.fn();
+    const source = newSource(onSessionEnded);
+    await source.start(null);
+    await flush();
+    sinkOf("sh_1").onBatch(tagBatch([1n]), true);
+    sinkOf("sh_1").onTerminal({ kind: "ProducerFailed", detail: REAL_SOURCE_COVERAGE_LOST_TERMINAL_DETAIL });
+    expect(onSessionEnded).toHaveBeenCalledWith(REAL_SOURCE_COVERAGE_LOST_TERMINAL_DETAIL);
+    expect(source.getSnapshot()).toMatchObject({ phase: "ended", count: 0 });
+    expect(tableLine(source.getSnapshot())).toBe("[P6 placeholder] The dataset's session ended, so the table was cleared; open the file again to load it.");
   });
 });

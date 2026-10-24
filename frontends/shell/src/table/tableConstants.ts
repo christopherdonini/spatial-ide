@@ -6,7 +6,7 @@
  * This file imports nothing, so `workspace/selection.ts` can read `CAPTURED_ROW_MAX_BYTES` under the workspace's import rule (UA6).
  */
 
-/** The counted bytes one captured row may hold in a selection member (`workspace/selection.ts`'s `capturedRow`), so 10,000 members hold at most 160 MiB. A row past it is cut, with a marker. */
+/** The counted bytes one captured row may hold in a selection member (`workspace/selection.ts`'s `capturedRow`), so 10,000 members count at most 163,840,000 bytes (156.25 MiB); the count is declared by `cellBytes`, not a measured heap size. A row past it is cut, with a marker. */
 export const CAPTURED_ROW_MAX_BYTES = 16_384;
 
 /** The first scope's `limit` (section 7): the table asks for at most this many features. */
@@ -16,7 +16,7 @@ export const TABLE_MAX_ROWS = 1_000;
 export const TABLE_ROW_HEIGHT_PX = 24;
 export const TABLE_OVERSCAN_ROWS = 10;
 
-// TABLE_MAX_IN_FLIGHT (milestone 4 section 7, 1) is not a constant here: tableSource holds one stream handle and cancels it before it issues another, so no code would read the constant.
+// TABLE_MAX_IN_FLIGHT (milestone 4 section 7, 1) is not a constant here: tableSource holds one stream handle and cancels it before it issues another, so no code would read the constant. Not covered: a start made before the previous viewport_query has been answered issues at once, and the earlier ticket is cancelled when its answer arrives, so for that window the kernel holds two table tickets, each with a stream connection.
 
 /**
  * The attribute data the first scope's rows may hold in all: the sum of `attributes.bytes` (each batch's copy of its projected
