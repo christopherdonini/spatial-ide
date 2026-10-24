@@ -248,13 +248,16 @@ fn a_cancel_inside_the_sort_is_observed_rather_than_waited_out() {
 
     // **This used to return early with an `eprintln!`, then it failed on every run that missed the
     // window. It now reports by name and returns; two points bound what that rests on.**
-    // (1) The design note's claim is reachability only: if `QueryRunning` fires, it is inside the
-    // window (`kernel/CANCELLATION-AND-TRACING.md`, `kernel/src/publish/mod.rs`'s `WouldBlock`
-    // arm) — not that it always fires, so a fast machine can legitimately miss the window.
-    // (2) The line below is visible in a CI log only because libtest's capture intercepts the print
-    // macros (`eprintln!`, which hid the old note) and not a write to the stderr handle. That is
-    // observed behaviour of the toolchain, not a documented guarantee: if a toolchain stops showing
-    // the line, this test goes silent again, which is the defect this branch exists to remove.
+    // (1) The design note's "Deterministic by construction" (`kernel/CANCELLATION-AND-TRACING.md`
+    // §4, the `QueryRunning` row; `kernel/src/publish/mod.rs`'s `WouldBlock` arm) says where the
+    // phase fires: if `QueryRunning` fires, it is inside the window. It does not say the phase
+    // always fires, so a fast machine can legitimately miss the window.
+    // (2) The line below reaches a CI log because libtest's capture intercepts the print macros
+    // (`eprintln!`, which hid the old note) and not a write to the stderr handle. That is observed
+    // behaviour, not a documented guarantee: observed at rustc 1.97.1 (8bab26f4f 2026-07-14)
+    // locally and at rustc 1.99.1 (58cf8f9c3 2026-10-13) on windows-latest and ubuntu-24.04 (run
+    // 40079051071). If a later toolchain stops showing the line, this test goes silent again, which
+    // is the defect this branch exists to remove.
     let phases = rec.phases();
     let saw_running = rec.saw(PublishPhase::QueryRunning);
     if !saw_running {
