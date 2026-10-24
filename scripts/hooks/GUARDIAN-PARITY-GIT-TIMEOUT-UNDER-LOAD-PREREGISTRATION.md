@@ -171,3 +171,16 @@ Recommendation: **(A)**. It is smaller, masks nothing, and stays within the node
 7. **Next:** the PR at 7235aa0c, both gates.
 
 Nothing above is edited.
+
+## Amendment 2 — gate 1's record (class 1); written after gate 1 was seen
+
+*Written by the custodian. References only: gate 1's reviewer report (`state/consults/gates/2026-10-24-guardian-parity-git-timeout-under-load-gate1-reviewer.md`), whose items D2 to D4 are below with its two placeholders filled; items 3 and 4 also answer the architect's D2 and D1 (`state/consults/gates/2026-10-24-guardian-parity-git-timeout-under-load-gate1-architect.md`).*
+
+1. §4's three recorded mutations, those §1 lists as unchanged, were re-observed at 7235aa0c in gate 1: the inverted comparison and the PS7 build fail as recorded, and the failed `git log` read as fresh fails its recorded tests and T37. The test's comments record it at 7780de9b. Amendment 1 item 1's P5 sentence rests on the three mutations §4 adds, not on these.
+2. P4's governance-ci half holds: run 40087162109 at 7235aa0c passes every T35 subtest.
+3. Amendment 1 item 6: PS18 has no non-zero exit; the exit-128 reads are PS4a's `log`, PS19's `show` and PS7's parent show, and PS7 reads fresh.
+4. L1's hold was declared with `-Minutes` 60, against §7's 30 (the series report's hold lines).
+5. §5's falsification clause is not met, by gate 1's ruling.
+6. **Next:** the architect re-gates E1, scoped; then the click.
+
+Nothing above is edited.
