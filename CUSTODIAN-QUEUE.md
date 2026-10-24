@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `fedf1d1a344fd5586e9d4228dc0e5940136063d701758ae8b664fdd8a24494a7`) at `2026-10-24T14:49:05.669Z`.
+Generated from `PLAN.yaml` (sha256 `270e6d39bebd611a1ac9ab99048dc52823b065d4a5ebfd09d2511a5e3778fffe`) at `2026-10-24T15:10:50.442Z`.
 
 ## 1. Next
 
@@ -59,6 +59,7 @@ Generated from `PLAN.yaml` (sha256 `fedf1d1a344fd5586e9d4228dc0e5940136063d70175
 - **b1-shell-half** — Shell migration, milestone 4 -- B1 shell half: attributes of the inspected feature, colour by category with its legend, and the table — evidence: branch `cut/b1-shell-half-pr-c`
 - **walkthrough-row-f7-cli-refusal** — MANUAL-WALKTHROUGH.md row F7: a publish-bundle CLI publish with the real built viewer is refused under the redaction scan (its W12), so F7 points at Part G's rows, with the CLI refusal line — evidence: branch `cut/walkthrough-row-f7-cli-refusal`
 - **known-limitations-items-51-52-render-numbers** — KNOWN-LIMITATIONS items 51 and 52 follow item 46 with no line at column 0, so they render as 47 and 48 — evidence: branch `cut/known-limitations-items-51-52-render-numbers`
+- **autonomy-section-36-filler-slot** — AUTONOMY.md section 36: the filler slot, the human's standing rule of 2026-10-24, appended in their words — evidence: branch `docs/filler-slot-rule`
 - **guardian-parity-git-timeout-under-load** — The Guardian parity test (scripts/hooks/guardian-continuity-parity.test.mjs) reads a fixture as not judged when a git call outruns its timeout under a shared load; the bound is chosen from a measurement — evidence: branch `cut/guardian-parity-git-timeout-under-load`
 - **port-2-macos-l1-and-app-dirs** — PORT-2 -- macOS L1 for the Cargo workspace: macos-latest in the same matrix, one application-directory boundary replacing the two resolvers, and a case-policy test on a case-insensitive volume — evidence: branch `cut/port-2-macos-l1-and-app-dirs`
 
