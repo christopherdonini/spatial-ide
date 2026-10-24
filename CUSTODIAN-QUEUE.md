@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `bea29c82ee52094e241f199b8bfdcae74b81b7397fda289ab60ac73bf63e8b6a`) at `2026-10-24T18:21:21.810Z`.
+Generated from `PLAN.yaml` (sha256 `774c8efd1c24dfe19967b45dd18c3b4d4a181fd5f81ad09720ccd59c7de84d29`) at `2026-10-24T18:40:54.923Z`.
 
 ## 1. Next
 
@@ -91,6 +91,7 @@ Generated from `PLAN.yaml` (sha256 `bea29c82ee52094e241f199b8bfdcae74b81b7397fda
 - **b1-session-ordinal-refusal-wording** — The projection_column_is_identity refusal says a session-ordinal identity is mapped from file_row_number -- the message states the identity's real class (wave-2 A1-1, S2) (phase `prototype`) — never queued until placed
 - **shell-admit-describe-failure-closes-open** — admitDataset closes the dataset when describe fails after a successful open_dataset (wave-2 W2-C observation 2, S2) (phase `prototype`) — never queued until placed
 - **engine-query-terminal-detail-sql-audit** — Every other engine.query terminal detail repeats a slice of the composed SQL (W2-B observation 2): audit the stream-terminal paths, then decide whether to withhold DuckDB text more widely (phase `prototype`) — never queued until placed
+- **admitted-integer-overflow-silent-wraparound** — An admitted same-type BIGINT product that overflows may wrap silently and return wrong rows with no error, observed outside the engine on the locked duckdb crate (O1 of stream-evaluation-failure-fixed-detail gate 1) (phase `prototype`) — never queued until placed
 - **port-3-shell-l1** — PORT-3 -- the Tauri shell crate checked and tested on Linux and macOS in product-ci-shell (L1 for the shell) (phase `prototype`) — never queued until placed
 - **port-4-l2-smoke** — PORT-4 -- L2: unsigned tauri build on Linux and macOS as a package check, a Linux application smoke test under a virtual display, and the macOS smoke by hand (MACOS-BRINGUP resumed) (phase `prototype`) — never queued until placed
 - **template-round15e-exception-pointer** — docs/PREREGISTRATION-TEMPLATE.md gains one appended sentence pointing at round 34 item 4's narrow exception to round 15 (e), as AUTONOMY.md section 27 records it (phase `prototype`) — never queued until placed
