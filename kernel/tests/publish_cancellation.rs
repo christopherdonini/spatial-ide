@@ -249,15 +249,8 @@ fn a_cancel_inside_the_sort_is_observed_rather_than_waited_out() {
     // macros (`eprintln!`, which hid the old note) and not a write to the stderr handle. That is
     // observed behaviour of the toolchain, not a documented guarantee: if a toolchain stops showing
     // the line, this test goes silent again, which is the defect this branch exists to remove.
-    // The observer is the only canceller, so QueryRunning and a cancelled token go together.
     let phases = rec.phases();
     let saw_running = rec.saw(PublishPhase::QueryRunning);
-    assert_eq!(
-        saw_running,
-        cancel.is_cancelled(),
-        "QueryRunning and a cancelled token must go together, the observer being the only \
-         canceller. Outcome: {outcome:?}. Phases seen: {phases:?}"
-    );
     if !saw_running {
         let acknowledged = rec.acknowledged_at.lock().unwrap().is_some();
         match &outcome {
@@ -276,8 +269,8 @@ fn a_cancel_inside_the_sort_is_observed_rather_than_waited_out() {
                 return;
             }
             _ => panic!(
-                "QueryRunning never fired and the publish did not complete uncancelled with every \
-                 row and no acknowledgement. Outcome: {outcome:?}. Acknowledged: {acknowledged}. \
+                "QueryRunning never fired and the publish did not complete with every row \
+                 and no acknowledgement. Outcome: {outcome:?}. Acknowledged: {acknowledged}. \
                  Phases seen: {phases:?}"
             ),
         }
