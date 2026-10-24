@@ -112,3 +112,16 @@ The custodian confirms each by `git diff --name-only origin/main...<branch>`.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 2 — the closing record: gate 1, the gate's words applied, the head's CI (class 1); written after both reports and the words commit were seen
+
+*Written by the custodian. References only: `state/consults/gates/2026-10-24-publish-sort-window-cancel-not-exercised-on-ci-gate1-architect.md` (gate-log 607), `state/consults/gates/2026-10-24-publish-sort-window-cancel-not-exercised-on-ci-gate1-reviewer.md` (gate-log 608), `state/consults/2026-10-24-publish-sort-window-cancel-not-exercised-on-ci-gate1-words-worker-report.md`; the final head a853802efda0ff8677bf5fd76f875dad0d79d897.*
+
+1. **Gate 1.** The architect and the reviewer both PASS WITH NOTES at 14cdbcc0, with no Correctness or Evidence finding. The reviewer re-observed M1 and L0 at that head and read C0's two job logs and both of the head's Rust runs.
+2. **The words.** The architect's replacement for the comment (its D1 and D2) also answers the reviewer's D1, and is the one applied, by a853802e. One line over 100 columns is broken at a space, the words unchanged. No assertion, string or test changed, so M1's recorded failure text stands.
+3. **The count.** 45 added and 14 removed in the one file, 59 of the declared 80.
+4. **The words commit's message** carries a sign-off line the worker typed, before its trailer lines, as well as the configured sign-off that `-s` added after them. The address in the typed line is already in the repository's records. The commit is not amended (no amend, no force push). The code is unaffected, and every check passes.
+5. **CI at the head:** 18 of 18 checks pass.
+6. **The record is closed** for the human's click, a merge commit. Port-2 follows it, with main merged into its branch.
+
+Nothing above is edited.
