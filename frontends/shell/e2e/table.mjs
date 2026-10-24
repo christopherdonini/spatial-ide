@@ -349,7 +349,7 @@ async function stepSlowCancel(page, consoleHandle) {
   await page.locator(".table-cancel").click();
   const cancelled = await pollUntil(
     async () => (await classARows(page)).filter((r) => r.command === "cancel" && r.request?.handle === handle),
-    (found) => found.length === cancelsBefore + 1,
+    (found) => found.length === cancelsBefore + 1 && found.at(-1).outcome !== "pending",
     10_000
   );
   expect(cancelled.ok, `PC-E4: no class-A cancel row carrying ${handle} appeared after Cancel (${cancelled.last.length} such rows)`);
