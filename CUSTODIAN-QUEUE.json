@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-24T14:25:27.117Z",
-  "plan_hash": "754db97eb87257cd5df0de3fde1d633adc94399ba15c3b1dd9a24270a4071126",
+  "generated_at": "2026-10-24T14:38:49.299Z",
+  "plan_hash": "9c6b4a115686b4d3b8d1ecca628951cd3a70b860aa97fe4bcb71df1b2cd334de",
   "priorities_approved": true,
   "next": {
     "id": "corpus-line-files",
@@ -97,25 +97,6 @@
         "done": null
       },
       "summary": "FILLER QUEUE entry 4b (RULED 2026-10-24: state/directives/2026-10-24-weekend-exception-third-product-slot-placements-forms-ahead-250-click.md, line 12; made the standing filler slot by state/directives/2026-10-24-filler-slot-standing-rule-appended-to-autonomy.md, line 8; state/FILLER-QUEUE.md): placed, graded S3, after engine-cancel-before-execute-siblings; a five-line form under section 21c's size, the reviewer and the architect from dispatch, section 25 (e) set aside; any string a user sees a P6 placeholder for the sitting, any red-line text to the human. Before: PROPOSED 2026-10-10 by stream-flush-cancel-exit-marks-producer-cancelled's form (engine/STREAM-FLUSH-CANCEL-EXIT-PREREGISTRATION.md, section 2.3; the custodian records it, as the form asks): the three rows that form leaves out of scope, from the custodian's check of the flake hunt (state/consults/2026-10-10-flake-hunt-run-1-custodian-check.md). A prepare error under a cancel returns Cancelled through classify unmarked; the two marking classify arms read the token twice, so a cancel between the reads returns Cancelled unmarked; the send to a receiver that is gone returns Cancelled with no flag read. Its form chooses between a classify that marks when it returns Cancelled and a seam, and says whether a disconnect is an ADR-018 observation. Read from code, not observed. The human grades and places it."
-    },
-    {
-      "id": "stream-evaluation-failure-fixed-detail",
-      "title": "An admitted predicate's evaluation failure (same-type integer overflow) ends the stream with a fixed, engine-authored detail carrying no file values and no SQL (B-1's 5c, merged with W2-B observation 2)",
-      "lane": "engine",
-      "phase": "prototype",
-      "status": "ready",
-      "order": null,
-      "budget_minutes": 120,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-29",
-        "done": null
-      },
-      "summary": "FILLER QUEUE entry 2 (RULED 2026-10-24: state/directives/2026-10-24-weekend-exception-third-product-slot-placements-forms-ahead-250-click.md, line 10; made the standing filler slot by state/directives/2026-10-24-filler-slot-standing-rule-appended-to-autonomy.md, line 8; state/FILLER-QUEUE.md): placed, graded S2, its strings are P6 placeholders for the sitting; a five-line form under section 21c's size, the reviewer and the architect from dispatch, section 25 (e) set aside; any string a user sees a P6 placeholder for the sitting, any red-line text to the human. NEXT: the first filler dispatched: lead-data drafts the five-line form, the custodian commits it before code, then a worker and both gates. Before: Filed on the 2026-09-29 sightings (state/directives/2026-09-29-a2-1-and-b-1-sightings.md, Fable's B-1 point 4): same-type integer overflow (u8 + 1, or unary minus on a signed minimum) involves no conversion and no type rule can predict it, so it leaves B-1 for its own node, merged with W2-B's observation 2 (every engine.query terminal detail repeats a slice of the composed SQL; state/cloud/wave2/W2-B.md). The direction: an evaluation failure ends the stream with a fixed, engine-authored detail that carries no file values and no SQL; this node's strings go to the human; until it lands, the #139 campaign's leak assertion excludes exactly this class, named in the test. Fable's grading note: the overflow values come from rows in view, in a file the client can already query -- hygiene, not confidentiality. Evidence: state/drafts/b1-p0/ (2.5; 91 overflow leaks and 8 without a value in the generated cases)."
     },
     {
       "id": "type-walk-rule2-residual-reasons",
@@ -737,6 +718,28 @@
   ],
   "in_progress": [
     {
+      "id": "stream-evaluation-failure-fixed-detail",
+      "title": "An admitted predicate's evaluation failure (same-type integer overflow) ends the stream with a fixed, engine-authored detail carrying no file values and no SQL (B-1's 5c, merged with W2-B observation 2)",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": null,
+      "budget_minutes": 120,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "branch": "cut/stream-evaluation-failure-fixed-detail"
+      },
+      "dates": {
+        "opened": "2026-09-29",
+        "done": null
+      },
+      "summary": "FORM COMMITTED 2026-10-24 (engine/STREAM-EVALUATION-FAILURE-FIXED-DETAIL-PREREGISTRATION.md): lead-data's five lines and notes A to G, 59 pins at ae8cfdcc; 3 files under engine/, about 135 of 150 lines; the custodian's settlement: OPEN-1 (A), the three exclusions replaced by an asserted ending; OPEN-2 out, engine-query-terminal-detail-sql-audit proposed; OPEN-3 a filler by the human's placement; OPEN-4 no new code; OPEN-5 no effect from #241. Gates: the reviewer and the architect, from dispatch. NEXT: code by a worker-high in C:/dev/wt/sefd, a shared hold only. Before: FILLER QUEUE entry 2 (RULED 2026-10-24: state/directives/2026-10-24-weekend-exception-third-product-slot-placements-forms-ahead-250-click.md, line 10; made the standing filler slot by state/directives/2026-10-24-filler-slot-standing-rule-appended-to-autonomy.md, line 8; state/FILLER-QUEUE.md): placed, graded S2, its strings are P6 placeholders for the sitting; a five-line form under section 21c's size, the reviewer and the architect from dispatch, section 25 (e) set aside; any string a user sees a P6 placeholder for the sitting, any red-line text to the human. NEXT: the first filler dispatched: lead-data drafts the five-line form, the custodian commits it before code, then a worker and both gates. Before: Filed on the 2026-09-29 sightings (state/directives/2026-09-29-a2-1-and-b-1-sightings.md, Fable's B-1 point 4): same-type integer overflow (u8 + 1, or unary minus on a signed minimum) involves no conversion and no type rule can predict it, so it leaves B-1 for its own node, merged with W2-B's observation 2 (every engine.query terminal detail repeats a slice of the composed SQL; state/cloud/wave2/W2-B.md). The direction: an evaluation failure ends the stream with a fixed, engine-authored detail that carries no file values and no SQL; this node's strings go to the human; until it lands, the #139 campaign's leak assertion excludes exactly this class, named in the test. Fable's grading note: the overflow values come from rows in view, in a file the client can already query -- hygiene, not confidentiality. Evidence: state/drafts/b1-p0/ (2.5; 91 overflow leaks and 8 without a value in the generated cases).",
+      "evidence_label": "branch `cut/stream-evaluation-failure-fixed-detail`"
+    },
+    {
       "id": "covering-case-collision-binds-other-column",
       "title": "A declared covering whose path differs from two schema names only by case: DuckDB may bind it to the other column, a wrong-rows risk that predates the covering piece",
       "lane": "engine",
@@ -1312,6 +1315,25 @@
         "done": null
       },
       "summary": "Wave-2 S2 record (state/cloud/wave2/W2-C.md, unproven observation 2; recorded as filed, the 2026-09-28 S1 batch): a describe failure after a successful open falls to the catch without closing the dataset, leaving its catalog entry, OpenRecord and watch; no reachable describe refusal after a successful open was found, so the path is unreachable today."
+    },
+    {
+      "id": "engine-query-terminal-detail-sql-audit",
+      "title": "Every other engine.query terminal detail repeats a slice of the composed SQL (W2-B observation 2): audit the stream-terminal paths, then decide whether to withhold DuckDB text more widely",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "ruling",
+        "minutes": 10
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-24",
+        "done": null
+      },
+      "summary": "PROPOSED 2026-10-24 by stream-evaluation-failure-fixed-detail's form (engine/STREAM-EVALUATION-FAILURE-FIXED-DETAIL-PREREGISTRATION.md, the settlement's OPEN-2; the draft state/consults/2026-10-24-stream-evaluation-failure-fixed-detail-lead-data-draft.md, OPEN-2): W2-B observation 2 (state/cloud/wave2/W2-B.md), every other engine.query terminal detail repeating a slice of the composed SQL, stays out of that piece. First an audit of which stream-terminal paths still carry DuckDB text with SQL after B-1, then whether to withhold DuckDB text more widely: a contract question that trades away diagnostics and the fetch site's design note, so the human's to decide. Not graded; for the human's placement."
     },
     {
       "id": "port-3-shell-l1",
@@ -1957,7 +1979,7 @@
         "opened": "2026-10-20",
         "done": null
       },
-      "summary": "RULED 2026-10-24 (state/directives/2026-10-24-weekend-exception-third-product-slot-placements-forms-ahead-250-click.md, line 17): a form ahead, drafted by lead-data, drafts only; the node stays proposed. Before: RULED 2026-10-21 (headed), item 2e, proposed and unplaced; it meets R1, R6 and R10 of the guardrails brief (the human's words). It represents governance C's sheet row L1591: item 1 (2)'s follow-on, geographic-CRS tiers, which engine/LOD-PREREGISTRATION.md's amendment says is owed its own preregistered gate."
+      "summary": "FORM AHEAD DRAFTED 2026-10-24 (state/consults/2026-10-24-lod-tiers-geographic-crs-form-ahead-lead-data-draft.md): the full form, about 850 changed lines, so not a filler; it lifts T8's refusal, so a property under test changes; five questions for the human when it is placed (OPEN-1 the key set, OPEN-2 the ellipsoid, OPEN-3 edges and epoch, OPEN-4 the square-metre record, OPEN-5 the method); its paths overlap port-2 (engine/src/lod.rs, engine/tests/lod_tier_builder.rs), so it cannot start while port-2 is in flight. Stays proposed. Before: RULED 2026-10-24 (state/directives/2026-10-24-weekend-exception-third-product-slot-placements-forms-ahead-250-click.md, line 17): a form ahead, drafted by lead-data, drafts only; the node stays proposed. Before: RULED 2026-10-21 (headed), item 2e, proposed and unplaced; it meets R1, R6 and R10 of the guardrails brief (the human's words). It represents governance C's sheet row L1591: item 1 (2)'s follow-on, geographic-CRS tiers, which engine/LOD-PREREGISTRATION.md's amendment says is owed its own preregistered gate."
     },
     {
       "id": "residency-instrument-followups",
