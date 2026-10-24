@@ -1798,7 +1798,7 @@ fn produce(
 
     let mut stmt = conn
         .prepare(sql)
-        .map_err(|e| classify(cancel, format!("prepare: {e}")))?;
+        .map_err(|e| classify(cancel, "prepare", &e.to_string()))?;
     // **This is not "planning" in the query-planner sense.** The file path is a bound parameter
     // (`FROM read_parquet(?)`), so DuckDB cannot open the file, read its footer, or plan the scan
     // yet — it does not know which file. What this call costs is settled by `SPAN_STATEMENT_PREPARE`
@@ -1853,7 +1853,7 @@ fn produce(
             if cancel.is_cancelled() {
                 crate::trace::mark(crate::trace::PRODUCER_CANCELLED, 0, 0);
             }
-            return Err(classify(cancel, format!("execute: {e}")));
+            return Err(classify(cancel, "execute", &e.to_string()));
         }
         crate::cancel::Guarded::Ok(arrow) => arrow,
     };
@@ -1933,7 +1933,7 @@ fn produce(
                 if cancel.is_cancelled() {
                     crate::trace::mark(crate::trace::PRODUCER_CANCELLED, 0, 0);
                 }
-                return Err(classify(cancel, format!("duckdb fetch panicked: {detail}")));
+                return Err(classify(cancel, "duckdb fetch panicked", &detail));
             }
         };
 
@@ -2588,11 +2588,28 @@ fn flush(
     .map_err(|_| EngineError::Cancelled)
 }
 
-fn classify(cancel: &CancelToken, detail: String) -> EngineError {
+/// The whole terminal detail for a stream whose evaluation went out of range (an admitted
+/// predicate's integer `+`, `-`, `*` or unary `-` overflowing). DuckDB's own message for this class
+/// names operands read from the file, so it is withheld. `[P6 placeholder]`: the words are the
+/// engine's own facts, with no consequence sentence; the human's wording is owed at P6.
+const OUT_OF_RANGE_DETAIL: &str = "[P6 placeholder] a value computed while this query ran was out of range for its type; the row values and the query text are withheld";
+
+/// DuckDB's out-of-range class, read from `message` (DuckDB's own text, without the engine's phase
+/// prefix) by its label at the very start and nowhere else, so a file value that happens to carry
+/// the words is not misread.
+fn is_out_of_range(message: &str) -> bool {
+    message.starts_with("Out of Range Error")
+}
+
+/// A cancellation is returned first; DuckDB's out-of-range class ends with the fixed
+/// `OUT_OF_RANGE_DETAIL`; every other failure keeps `phase` and DuckDB's own `message`.
+fn classify(cancel: &CancelToken, phase: &str, message: &str) -> EngineError {
     if cancel.is_cancelled() {
         EngineError::Cancelled
+    } else if is_out_of_range(message) {
+        EngineError::Query(OUT_OF_RANGE_DETAIL.to_string())
     } else {
-        EngineError::Query(detail)
+        EngineError::Query(format!("{phase}: {message}"))
     }
 }
 
@@ -2663,6 +2680,45 @@ mod tests {
         assert!(estimate_bytes(MAX_ROWS_PER_BATCH, 0) < MAX_BATCH_BYTES);
         // A geometry-free batch of the maximum row count leaves room for real geometry.
         assert!(estimate_bytes(MAX_ROWS_PER_BATCH, 0) * 4 < MAX_BATCH_BYTES);
+    }
+
+    /// `only_duckdbs_out_of_range_class_is_read_as_an_evaluation_failure`: the class label is read at
+    /// the start of DuckDB's message and nowhere else, and `classify` keeps every other message and
+    /// still returns a cancellation first. The literals are unit inputs only; the real shapes are
+    /// proven by `an_admitted_integer_overflow_ends_the_stream_with_the_fixed_detail` and B-T1.
+    #[test]
+    fn only_duckdbs_out_of_range_class_is_read_as_an_evaluation_failure() {
+        assert!(is_out_of_range(
+            "Out of Range Error: Overflow in multiplication of INT64 (5221210998874447054 * 2)"
+        ));
+        for other in [
+            "IO Error: No files found that match the pattern \"x.parquet\"",
+            "Conversion Error: Could not convert string 'abc' to INT64",
+            "Binder Error: Referenced column \"nope\" not found in FROM clause!",
+            "IO Error: a value reading Out of Range Error: Overflow in multiplication of INT64",
+            " Out of Range Error: preceded by a space",
+        ] {
+            assert!(!is_out_of_range(other), "read as out of range: {other}");
+        }
+        let live = CancelToken::new();
+        assert!(matches!(
+            classify(&live, "execute", "Out of Range Error: Overflow in addition of INT64"),
+            EngineError::Query(d) if d == OUT_OF_RANGE_DETAIL
+        ));
+        assert!(matches!(
+            classify(&live, "prepare", "Binder Error: no such column"),
+            EngineError::Query(d) if d == "prepare: Binder Error: no such column"
+        ));
+        let cancelled = CancelToken::new();
+        cancelled.cancel();
+        assert!(matches!(
+            classify(
+                &cancelled,
+                "execute",
+                "Out of Range Error: Overflow in addition of INT64"
+            ),
+            EngineError::Cancelled
+        ));
     }
 
     /// E-11: `float32_costs_four_bytes_in_the_estimate`. Mutation: remove the arm (falls through to
