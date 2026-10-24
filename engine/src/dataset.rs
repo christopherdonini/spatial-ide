@@ -11,7 +11,7 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 
-use arrow::datatypes::{DataType, Field, Schema, SchemaRef};
+use arrow::datatypes::{DataType, Field, FieldRef, Schema, SchemaRef};
 use duckdb::Connection;
 
 use crate::addressability::{not_addressable, not_addressable_for_field, render_visible_escape};
@@ -344,7 +344,8 @@ impl Dataset {
         // identity scan — so instead of dropping it at the end of open, it is *returned* to the
         // pool. Nothing new is created and no new statement runs in the prelude; the first stream
         // then finds a configured connection already there. If open fails, the lease is dropped and
-        // the connection discarded, because a `Dataset` that does not exist owns nothing.
+        // the connection discarded, because a `Dataset` that does not exist owns nothing. The
+        // connection also serves the file's name tree (`read_file_names`).
         let pool = ConnectionPool::new(connections);
         let lease = pool.acquire(LeaseClass::Maintenance)?;
         let conn = lease.connection();
@@ -426,14 +427,18 @@ impl Dataset {
         }
 
         let file_schema = probe_schema(conn, &path_str)?;
-        check_geometry_column(&file_schema, &geo.primary_column)?;
+        // The file's own names (the covering-case form, §2.1): a second input to the two checks
+        // below, never a replacement for a resident field.
+        let file_names = read_file_names(conn, &path_str, cancel)?;
+        check_names_align(&file_names, &file_schema)?;
+        check_geometry_column(&file_schema, &file_names, &geo.primary_column)?;
 
         // **The one place a declared covering is judged usable** (the covering-names-missing-column
         // form, §2a). It runs once, here, ahead of both of `sanity_check`'s early returns, so a
         // file that declares its own CRS is judged too; `sanity_check` takes the result as a
-        // parameter and decides nothing of its own. No SQL: the declared paths and the resident
-        // schema are all it reads.
-        let covering_finding = judge_covering(geo.covering.as_ref(), &file_schema);
+        // parameter and decides nothing of its own. No SQL: the declared paths, the resident
+        // schema and the file's name tree are all it reads.
+        let covering_finding = judge_covering(geo.covering.as_ref(), &file_schema, &file_names)?;
 
         // The provenance of what was just admitted. A caller's assertion is its own class and is
         // decided here, because `format_semantics` is not told about assertions: the format governs
@@ -1412,63 +1417,257 @@ impl CoveringFinding {
     }
 }
 
-/// The one decision on whether a declared covering is usable (the covering-names-missing-column
-/// form, §2a), taken once at open, from the declared paths and the resident schema alone.
-/// **It takes no `Connection` and issues no statement.**
-///
-/// A U+0000 path is checked first, unchanged; otherwise the first of the four paths that the
-/// schema walk does not resolve; otherwise `None` (no declared covering, or a usable one).
-fn judge_covering(covering: Option<&CoveringBbox>, schema: &SchemaRef) -> Option<CoveringFinding> {
-    let covering = covering?;
-    if let Some(reason) = covering_not_addressable_reason(covering) {
-        return Some(CoveringFinding::NotAddressable { reason });
+/// One node of the file's own schema tree, as `parquet_schema` lists it: the name the file writes,
+/// never the one DuckDB binds (the covering-case form, §2.1). Private to the open path.
+struct NameNode {
+    name: String,
+    children: Vec<NameNode>,
+}
+
+/// The file's own names: one statement, `parquet_schema`, drained in full inside [`cancellable`]
+/// (unlike `read_kv_metadata` and `probe_schema`, it is bound to the open's cancel token) and
+/// rebuilt in pre-order by `num_children`. The first row is the writer's root, which is not a
+/// column. Rows that do not form exactly one tree are refused.
+fn read_file_names(conn: &Connection, path: &str, cancel: &CancelToken) -> Result<NameNode> {
+    let rows: Vec<(String, Option<i64>)> = cancellable(conn, cancel, |conn| {
+        let mut stmt = conn
+            .prepare("SELECT name, num_children FROM parquet_schema(?)")
+            .map_err(|e| EngineError::Source(format!("prepare parquet schema: {e}")))?;
+        let rows: Vec<(String, Option<i64>)> = stmt
+            .query_map([path], |row| Ok((row.get(0)?, row.get(1)?)))
+            .map_err(|e| EngineError::Source(format!("read parquet schema: {e}")))?
+            .collect::<std::result::Result<Vec<_>, _>>()
+            .map_err(|e| EngineError::Source(format!("parquet schema row: {e}")))?;
+        Ok(rows)
+    })?;
+    let not_a_tree = || EngineError::InternalInconsistency {
+        detail: "the rows of parquet_schema do not form one schema tree; which column each name \
+                 reads could not be decided"
+            .into(),
+    };
+    let mut open: Vec<(NameNode, i64)> = Vec::new();
+    let mut root = None;
+    for (name, count) in rows {
+        let left = count.unwrap_or(0);
+        if root.is_some() || left < 0 {
+            return Err(not_a_tree());
+        }
+        open.push((
+            NameNode {
+                name,
+                children: Vec::new(),
+            },
+            left,
+        ));
+        while open.last().is_some_and(|(_, left)| *left == 0) {
+            let (node, _) = open.pop().ok_or_else(not_a_tree)?;
+            match open.last_mut() {
+                Some((parent, left)) => {
+                    parent.children.push(node);
+                    *left -= 1;
+                }
+                None => root = Some(node),
+            }
+        }
     }
-    [
+    if open.is_empty() {
+        root.ok_or_else(not_a_tree)
+    } else {
+        Err(not_a_tree())
+    }
+}
+
+/// The file's n columns line up with the first n resident fields; trailing resident fields are
+/// names the file does not hold, such as a `k=v` folder's key (covering-case form, §2.2, K2).
+fn check_names_align(file: &NameNode, schema: &SchemaRef) -> Result<()> {
+    let (n, m) = (file.children.len(), schema.fields().len());
+    if m < n {
+        return Err(EngineError::InternalInconsistency {
+            detail: format!(
+                "the file's footer lists {n} top-level column(s) but the schema probe reported \
+                 {m}; which column each name reads could not be decided"
+            ),
+        });
+    }
+    Ok(())
+}
+
+/// The nodes whose name matches `name` ignoring ASCII case: a byte-equal name is one of them, and
+/// two byte-equal nodes are two. The one counting site of clause (a).
+fn case_matches(nodes: &[NameNode], name: &str) -> Vec<usize> {
+    nodes
+        .iter()
+        .enumerate()
+        .filter(|(_, n)| n.name.eq_ignore_ascii_case(name))
+        .map(|(i, _)| i)
+        .collect()
+}
+
+/// Rendered names, each in backticks.
+fn ticked(names: &[String]) -> String {
+    names
+        .iter()
+        .map(|n| format!("`{n}`"))
+        .collect::<Vec<_>>()
+        .join(", ")
+}
+
+/// A name path for a message.
+fn joined(segments: &[&str]) -> String {
+    render_visible_escape(&segments.join("."))
+}
+
+/// What [`field_path_exists`] found along one declared covering path. Paths are rendered.
+enum PathWalk {
+    Resolves,
+    /// A segment matches none of the file's names at its level.
+    Absent,
+    /// A segment matches more than one of the file's names (clause (a)).
+    Ambiguous {
+        matches: Vec<String>,
+    },
+    /// A segment matches one file name, but the resident field at that position is read under a
+    /// name that does not match it (clause (b)).
+    Misbound {
+        file_path: String,
+        resident_path: String,
+    },
+    /// A struct's field count differs between the file and the resident schema.
+    Inconsistent {
+        file_path: String,
+        file_count: usize,
+        resident_count: usize,
+    },
+}
+
+/// The one decision on whether a declared covering is usable (the covering-names-missing-column
+/// form, §2a; the covering-case form, §2.4), taken once at open, from the declared paths, the
+/// resident schema and the file's name tree alone. **It takes no `Connection` and issues no
+/// statement.**
+///
+/// A U+0000 path is checked first, unchanged. Then the first ambiguous, misbound or inconsistent
+/// walk, in path order, refuses the open even if another path is absent; else the first absent path.
+fn judge_covering(
+    covering: Option<&CoveringBbox>,
+    schema: &SchemaRef,
+    file: &NameNode,
+) -> Result<Option<CoveringFinding>> {
+    let Some(covering) = covering else {
+        return Ok(None);
+    };
+    if let Some(reason) = covering_not_addressable_reason(covering) {
+        return Ok(Some(CoveringFinding::NotAddressable { reason }));
+    }
+    let mut absent = None;
+    for p in [
         &covering.xmin,
         &covering.ymin,
         &covering.xmax,
         &covering.ymax,
-    ]
-    .into_iter()
-    .find(|p| !field_path_exists(schema, p))
-    .map(|p| CoveringFinding::Absent {
-        path: p.0.join("."),
-    })
+    ] {
+        let declared = render_visible_escape(&p.0.join("."));
+        match field_path_exists(file, schema, p) {
+            PathWalk::Resolves => {}
+            PathWalk::Absent => {
+                absent.get_or_insert_with(|| p.0.join("."));
+            }
+            PathWalk::Ambiguous { matches } => {
+                return Err(EngineError::GeoMetadata(format!(
+                    "the covering names `{declared}`, which matches more than one name in the \
+                     file's schema when ASCII letter case is ignored: {}",
+                    ticked(&matches)
+                )));
+            }
+            PathWalk::Misbound {
+                file_path,
+                resident_path,
+            } => {
+                return Err(EngineError::GeoMetadata(format!(
+                    "the covering names `{declared}`, which the file's schema holds as \
+                     `{file_path}`, but that column is read under the name `{resident_path}`, so \
+                     the declared name does not read it"
+                )));
+            }
+            PathWalk::Inconsistent {
+                file_path,
+                file_count,
+                resident_count,
+            } => {
+                return Err(EngineError::InternalInconsistency {
+                    detail: format!(
+                        "the file's footer lists {file_count} field(s) inside `{file_path}` but \
+                         the schema probe reported {resident_count}; which field each name reads \
+                         could not be decided"
+                    ),
+                });
+            }
+        }
+    }
+    Ok(absent.map(|path| CoveringFinding::Absent { path }))
 }
 
-/// Whether a covering path resolves to a real field, walking struct children.
+/// Walks one covering path through the file's names, aligned by position with the resident
+/// fields.
 ///
 /// Each segment is compared with **ASCII case-insensitive equality**, at the top level and at
 /// every child: that is the rule the P0 showed the pinned DuckDB binder applying (the
 /// covering-names-missing-column form, Amendment 1, item 4). The P0 showed a top-level name
 /// differing by a non-ASCII letter's case not binding; a non-ASCII child name is outside what
 /// this piece claims. It is DuckDB's rule, never a filesystem's or an OS's.
-fn field_path_exists(schema: &SchemaRef, path: &crate::geoparquet::FieldPath) -> bool {
-    let mut segments = path.0.iter();
-    let Some(first) = segments.next() else {
-        return false;
-    };
-    let Some(field) = schema
-        .fields()
-        .iter()
-        .find(|f| f.name().eq_ignore_ascii_case(first))
-    else {
-        return false;
-    };
-    let mut current = field.clone();
-    for segment in segments {
-        let DataType::Struct(children) = current.data_type() else {
-            return false;
+///
+/// At each level: no file name matches (absent); more than one does (clause (a)); one does, but
+/// the resident field there is read under a name that does not match (clause (b)); then, if a
+/// segment follows, the resident field must be a struct with the file's field count.
+fn field_path_exists(
+    file: &NameNode,
+    schema: &SchemaRef,
+    path: &crate::geoparquet::FieldPath,
+) -> PathWalk {
+    let mut file_level: &[NameNode] = &file.children;
+    let mut resident_level: &[FieldRef] = schema.fields();
+    let (mut file_path, mut resident_path): (Vec<&str>, Vec<&str>) = (Vec::new(), Vec::new());
+    for (depth, segment) in path.0.iter().enumerate() {
+        let j = match case_matches(file_level, segment).as_slice() {
+            [] => return PathWalk::Absent,
+            [j] => *j,
+            many => {
+                let matches = many
+                    .iter()
+                    .map(|&i| {
+                        let mut at = file_path.clone();
+                        at.push(&file_level[i].name);
+                        joined(&at)
+                    })
+                    .collect();
+                return PathWalk::Ambiguous { matches };
+            }
         };
-        match children
-            .iter()
-            .find(|f| f.name().eq_ignore_ascii_case(segment))
-        {
-            Some(child) => current = child.clone(),
-            None => return false,
+        let (node, field) = (&file_level[j], &resident_level[j]);
+        file_path.push(&node.name);
+        resident_path.push(field.name());
+        if !field.name().eq_ignore_ascii_case(segment) {
+            return PathWalk::Misbound {
+                file_path: joined(&file_path),
+                resident_path: joined(&resident_path),
+            };
         }
+        if depth + 1 == path.0.len() {
+            break;
+        }
+        let DataType::Struct(children) = field.data_type() else {
+            return PathWalk::Absent;
+        };
+        if children.len() != node.children.len() {
+            return PathWalk::Inconsistent {
+                file_path: joined(&file_path),
+                file_count: node.children.len(),
+                resident_count: children.len(),
+            };
+        }
+        file_level = &node.children;
+        resident_level = children;
     }
-    true
+    PathWalk::Resolves
 }
 
 /// Run one open-path query bound to the caller's cancellation token.
@@ -1889,24 +2088,52 @@ fn run_identity_scan(
 }
 
 /// The geometry column, checked at open so a stream cannot fail halfway for a reason that was
-/// knowable up front.
+/// knowable up front, **judged against the file's own names** (the covering-case form, §2.3).
+///
+/// In this order: (1) a `geo.primary_column` that matches more than one of the file's top-level
+/// names ignoring ASCII case, a byte-equal one included, is refused as
+/// [`EngineError::GeoMetadata`] (clause (a)); (2) one that matches no name byte for byte keeps the
+/// existing [`EngineError::Source`] refusal, so a name spelled like a name DuckDB generated is
+/// refused too; (3) one whose resident field, at the file column's position, is read under another
+/// name is refused as `GeoMetadata`; (4) the U+0000 and type checks run on that resident field.
 ///
 /// **12.1(d)'s geometry row.** `schema` already carries DESCRIBE's own bound name at this position
 /// (`probe_schema`), so a declared name that does not round-trip is found here exactly as it is
 /// declared — and is refused as [`EngineError::GeoMetadata`], naming the U+0000 fact, never as
 /// "the file does not contain" (which is false: the file does contain it, under a name nothing can
 /// address). Test N-8.
-fn check_geometry_column(schema: &SchemaRef, geometry_column: &str) -> Result<()> {
-    let geom = schema
-        .fields()
+fn check_geometry_column(schema: &SchemaRef, file: &NameNode, geometry_column: &str) -> Result<()> {
+    let declared = render_visible_escape(geometry_column);
+    let matches = case_matches(&file.children, geometry_column);
+    if matches.len() > 1 {
+        let names: Vec<String> = matches
+            .iter()
+            .map(|&i| render_visible_escape(&file.children[i].name))
+            .collect();
+        return Err(EngineError::GeoMetadata(format!(
+            "`geo.primary_column` names `{declared}`, which matches more than one name in the \
+             file's schema when ASCII letter case is ignored: {}",
+            ticked(&names)
+        )));
+    }
+    let j = file
+        .children
         .iter()
-        .find(|f| f.name() == geometry_column)
+        .position(|n| n.name == geometry_column)
         .ok_or_else(|| {
             EngineError::Source(format!(
                 "`geo.primary_column` names `{}`, which the file does not contain",
                 render_visible_escape(geometry_column)
             ))
         })?;
+    let geom = &schema.fields()[j];
+    if geom.name() != geometry_column {
+        return Err(EngineError::GeoMetadata(format!(
+            "`geo.primary_column` names `{declared}`, which the file contains, but that column is \
+             read under the name `{}`, so the declared name does not read it",
+            render_visible_escape(geom.name())
+        )));
+    }
     if let Some(fact) = not_addressable_for_field(geom) {
         return Err(EngineError::GeoMetadata(format!(
             "`geo.primary_column` names the geometry column, but {}",
