@@ -86,6 +86,8 @@ import { decodeHexF64, encodeHexF64 } from "./skp/codec";
 import { closeDataset, recordStep, SkpCallError } from "./skp/client";
 import { listenDatasetSessionEnded } from "./skp/events";
 import type { Bbox, DatasetSessionEnded, EndReason, Filter } from "./skp/types";
+import TableTab from "./table/TableTab";
+import { TableSource } from "./table/tableSource";
 import { createStepQueue, noticeText as stepNoticeText } from "./workspace/stepRecorder";
 import { proposeClauseChange } from "./workspace/filterClauses";
 import type { ClauseRequest, ClauseResult } from "./workspace/filterClauses";
@@ -934,6 +936,11 @@ export default function App() {
   // debounced query happened to fire for.
   const lastViewportBboxRef = useRef<Bbox | null>(null);
   const canvasRef = useRef<WorkingCanvasHandle>(null);
+  /** Milestone 4 PR C (section 2.4): the table's first scope for this open (`table/tableSource.ts`), one per admitted dataset; the ref is for the export handler, which cancels its stream. */
+  const [tableSource, setTableSource] = useState<TableSource | null>(null);
+  const tableSourceRef = useRef<TableSource | null>(null);
+  /** Whether the Table tab is shown (Activity open, this tab selected), reported by the layout. */
+  const [tableShown, setTableShown] = useState(false);
   /** The command bar's `/open` and `/export` reach the Layers panel and the Export panel through these handles (SHELL-MIGRATION-MILESTONE-3-PREREGISTRATION.md section 2.7). */
   const admissionRef = useRef<AdmissionPanelHandle>(null);
   const publishRef = useRef<PublishPanelHandle>(null);
@@ -1165,6 +1172,7 @@ export default function App() {
   const handleExportRunning = useCallback((report: ExportRunReport): void => {
     const resource = admittedDatasetRef.current;
     if (resource === null) return;
+    tableSourceRef.current?.cancel(); // section 2.4 (e): the table's stream ends as the export's consumer is acquired
     const id: ExportConsumerId = `export-${++exportSeqRef.current}`;
     const run: ExportRun = { cancel: report.cancel, cancelChosen: false, end: null };
     exportRunsRef.current.set(id, run);
@@ -1365,6 +1373,35 @@ export default function App() {
       setHover,
     });
   }, []);
+
+  /** The table's first scope for this open (milestone 4 PR C, section 2.4 (b)): built with the open, disposed (its stream cancelled) when the dataset is replaced or closed. */
+  useEffect(() => {
+    if (!admitted) {
+      tableSourceRef.current = null;
+      setTableSource(null);
+      return;
+    }
+    const dataset = admitted.dataset;
+    const source = new TableSource({
+      dataset,
+      geometryColumn: admitted.describe.geometry.column,
+      geometryEncoding: admitted.describe.geometry.encoding,
+      projection,
+      onSessionEnded: (detail) => endSession(detail, dataset), // bound to this generation
+    });
+    tableSourceRef.current = source;
+    setTableSource(source);
+    return () => {
+      source.dispose();
+      if (tableSourceRef.current === source) tableSourceRef.current = null;
+    };
+  }, [admitted, projection, endSession]);
+  /** An export run holds a consumer of the dataset: the table issues nothing meanwhile (section 2.4 (e)). */
+  const exportHeld = admitted !== null && (workspace.resources[admitted.dataset]?.consumers.some((consumer) => consumer.startsWith("export-")) ?? false);
+  const residentIdsStreamedUnder = useCallback(
+    (streamedUnder: (filter: Filter | null) => boolean): ReadonlySet<bigint> => canvasRef.current?.residentIdsStreamedUnder(streamedUnder) ?? NO_IDS,
+    []
+  );
 
   /**
    * **§2d's reason-keyed entry** (D5; round 18 item 2): the `dataset_session_ended` event route,
@@ -1998,6 +2035,7 @@ export default function App() {
       onAddClause={(condition) => changeClauses({ kind: "add", text: condition })}
       clausePending={clausePending}
       filterFields={admitted ? { schema: admitted.describe.schema, geometryColumn: admitted.describe.geometry.column } : null}
+      onTableShownChange={setTableShown}
       /* Milestone 1 (SHELL-MIGRATION-MILESTONE-1-PREREGISTRATION.md section 2.2): every panel below keeps
        * its keys and its props and now lives in a slot of the Map Studio frame (`layout/`). A comment
        * below that speaks of `.app-main`, `.app-rail-top`, `.app-rail-bottom`, a flex column, or a
@@ -2431,6 +2469,23 @@ export default function App() {
           * doc comment). Placed last so it reads as a standing, always-available surface, not a
           * per-dataset panel. */
         "activity.notices": <NoticesPanel />,
+        /* Milestone 4 PR C (section 2.4): the table, keyed on the dataset like the panels above so a new open starts on the first scope. */
+        "activity.table": admitted && (
+          <TableTab
+            key={admitted.dataset}
+            source={tableSource}
+            shown={tableShown}
+            exportHeld={exportHeld}
+            sessionEnded={sessionEnded !== null}
+            viewFilter={activeFilter}
+            members={selection}
+            columns={projection ?? []}
+            residentIdsStreamedUnder={residentIdsStreamedUnder}
+            mapSettled={!isScanInFlight(scanState)}
+            recordScopeSet={() => recordNamed("gui-action", "table.scopeSet")}
+            recordCancel={() => recordNamed("gui-action", "table.cancel")}
+          />
+        ),
       }}
     />
   );
