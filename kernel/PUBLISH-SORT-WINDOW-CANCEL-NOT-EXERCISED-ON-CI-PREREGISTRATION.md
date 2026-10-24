@@ -86,3 +86,29 @@ The custodian confirms each by `git diff --name-only origin/main...<branch>`.
 - **OPEN-4:** port-2's §1 and W1 words are port-2's text. They are noted on its node for its next amendment, and nothing here changes for them.
 
 ## Amendments (opens empty; append-only)
+
+## Amendment 1 — written after the worker's step 2 run and its L0 run were seen, before M1, C0 or any push: the token conditions struck (class 3)
+
+*Written by the custodian. References only. The runs are the worker-high's, at its local commit 7f7af5a580cf5b95ac1122ca26048be7f94be340 (not pushed), as its hand-back reports them; that commit is the change as first briefed.*
+
+1. **What the runs showed.** Step 2 passed all six tests of the file, and on this machine the window was reached, so the existing assertions ran. L0 (the observer's QueryRunning arm dropped, scratch only) failed at the consistency assertion: the outcome was `Ok` with every row and partition, no phase was seen, and `cancel.is_cancelled()` read true.
+2. **Why (class 3: a fact the form relied on is false).** `BatchStream`'s `Drop` cancels the token on every drop, a stream that ran to completion included (engine/src/stream.rs:898-908 @ 80713d4433e7a7f853d13e1fec5e2cfc3d9cd40e sha256:59e6fb89cc203213ddb0853675f55cda4ef24770e83d455f60b53a4c473196bb). The token's own documentation says the same (engine/src/cancel.rs:100-115 @ 80713d4433e7a7f853d13e1fec5e2cfc3d9cd40e sha256:816d5f0a469f4057d76980ceb3bb26538444f6c0fd69a84217e89d52c482481f). So after any completed publish, `is_cancelled()` reads true. These parts of the form are false as written, and the INCONCLUSIVE branch they guard could never be reached:
+   - the Change line's condition "the token was never cancelled";
+   - section B's consistency bullet, `rec.saw(QueryRunning) == cancel.is_cancelled()`;
+   - the sub-bullet "there is no QueryRunning and the token is not cancelled", in its second half;
+   - the Tests+mutation line's "and the token is never cancelled".
+3. **The correction.** Those conditions are struck.
+   - **The INCONCLUSIVE shape:** no QueryRunning among the run's phases; an `Ok` outcome with `rows == FEATURES` and `partitions > 0`; no acknowledgement reported.
+   - **When QueryRunning fired,** every existing assertion runs byte for byte, as before.
+   - **Any other shape** fails, with the outcome and phases in its message.
+   - **No assertion is made on the token's flag.** Nothing is lost by that. The observer is the only canceller inside the run, and a cancel that took effect would show as a refused or partial outcome or as an acknowledgement, and each of those fails.
+4. **M1** is unchanged as a mutation. Its prediction now reads: QueryRunning never fires and the outcome is `Err(Cancelled)`, so the test fails by name at its shape guard, on every machine.
+5. **Unchanged:** the Scope line (one file, 80 lines), the test's name, the Out-of-scope line, L0 and C0 as the settlement gives them, and the gates. The worker's commit 7f7af5a5 stays; the correction is a second commit on it.
+6. **Superseded index:**
+   - the Change line's "the token was never cancelled": by item 3;
+   - section B's consistency bullet, and its sub-bullet's second half: by item 3;
+   - the Tests+mutation line's "and the token is never cancelled": by item 4.
+
+Read the last amendment first.
+
+Nothing above is edited.
