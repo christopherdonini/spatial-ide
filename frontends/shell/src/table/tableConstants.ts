@@ -16,7 +16,7 @@ export const TABLE_MAX_ROWS = 1_000;
 export const TABLE_ROW_HEIGHT_PX = 24;
 export const TABLE_OVERSCAN_ROWS = 10;
 
-// TABLE_MAX_IN_FLIGHT (milestone 4 section 7, 1) is not a constant here: tableSource holds one stream handle and cancels it before it issues another, so no code would read the constant. Not covered: a start made before the previous viewport_query has been answered issues at once, and the earlier ticket is cancelled when its answer arrives, so for that window the kernel holds two table tickets, each with a stream connection.
+// TABLE_MAX_IN_FLIGHT (milestone 4 section 7, 1) is not a constant here: tableSource holds one stream handle and cancels it before it issues another, so no code would read the constant. Not covered: a start made before the previous viewport_query has been answered issues at once, and each earlier ticket is cancelled when its own answer arrives, so until each answer arrives and its cancel lands the kernel holds one more table ticket for each such start, each with a stream connection.
 
 /**
  * The attribute data the first scope's rows may hold in all: the sum of `attributes.bytes` (each batch's copy of its projected

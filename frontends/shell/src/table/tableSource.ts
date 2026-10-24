@@ -24,7 +24,7 @@ import { TABLE_MAX_ATTRIBUTE_BYTES, TABLE_MAX_ROWS } from "./tableConstants";
  * its batches decoded by the real `decodeBatch` (the geometry is walked and dropped), the ids and attribute blocks kept in arrival order.
  *
  * **One stream, structurally** (Amendment 8 item 3): this source holds one handle, and `start` cancels it, through the client's `cancel`, before it issues the next `viewport_query`. It issues nothing on pan: the tab asks for
- * a start when it is shown, the scope is the first, no export consumer is held and the filter is the view's, and for a cancel when any of those stops being true. A start made before the previous `viewport_query` has been answered issues at once and the earlier ticket is cancelled when its answer arrives, so for that window two tickets are held (`tableConstants.ts`'s comment on `TABLE_MAX_IN_FLIGHT`).
+ * a start when it is shown, the scope is the first, no export consumer is held and the filter is the view's, and for a cancel when any of those stops being true. A start made before the previous `viewport_query` has been answered issues at once, and each earlier ticket is cancelled when its own answer arrives, so until each answer arrives and its cancel lands, one more ticket is held for each such start (`tableConstants.ts`'s comment on `TABLE_MAX_IN_FLIGHT`).
  *
  * **The held bytes** (Amendment 7 item 5): before a batch is added, its `attributes.bytes` joins the sum held; a total past `TABLE_MAX_ATTRIBUTE_BYTES` adds nothing more, cancels the stream and ends the result "stopped", keeping the rows already added.
  */
