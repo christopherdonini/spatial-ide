@@ -231,12 +231,12 @@ describe("App: the Table tab in Activity (milestone 4 PR C), through the real Ap
     await flush();
     expect(mocks.cancels).toEqual(["st_t1"]); // the run's report cancels the table's running stream
     expect(q(".table-liveness")).toBeNull();
-    expect(q(".table-note")?.textContent).toContain("not loading while an export runs");
 
     tab("console");
     tab("table"); // shown again, but the consumer is held
     await flush();
     expect(mocks.queries).toHaveLength(1);
+    expect(q(".table-note")?.textContent).toContain("not loading while an export runs");
 
     await act(async () => first.end({ phase: "execute", outcome: { kind: "cancelled" } }));
     await flush();

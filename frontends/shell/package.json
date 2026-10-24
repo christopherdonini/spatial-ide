@@ -37,6 +37,7 @@
     "e2e:recording": "node e2e/recording.mjs",
     "e2e:command-bar": "node e2e/command-bar.mjs",
     "e2e:attributes": "node e2e/attributes.mjs",
+    "e2e:table": "node e2e/table.mjs",
     "e2e:residency-harness": "node e2e/residency-harness.mjs",
     "test:residency-trace": "node e2e/residencyTrace.test.mjs",
     "test:citation-integrity": "node e2e/citationIntegrity.test.mjs",
