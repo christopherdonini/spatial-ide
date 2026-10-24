@@ -1454,3 +1454,35 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 9: PR C's head series, written after its results were seen and before gate 1. One line of PR C's own suite is fixed (class 1, a code change in a §2.6 file). The existing suites' failures that did not reproduce are read as not I3 on this record, for gate 1 to check (class 1).
+
+*Written by the custodian at PR C's head ec95eacb69766759ec454f2f5aae9688b49458b1, after the series' results were seen and before gate 1. References only, and nothing below is a quotation. Each report's sha256 is over its lines from line 5 to the end, as its filing note gives it. §7 is not edited.*
+
+1. **The record.**
+   - The build, to bc315fb9d163dc292501618836bc25353c467bd8: `state/consults/2026-10-24-b1-shell-half-pr-c-code-worker-report.md` (sha256 b6a07c8ee3dbedcd85c075fa01904d4c58fd52501389dd3cb5cdbd96ec92fd1e).
+   - The head series at bc315fb9, stopped at `e2e:refusal-contract-baseline`: `state/consults/2026-10-24-b1-shell-half-pr-c-head-series-tester-report.md` (sha256 80811ccf7482c733c098999f6e7b5eada8471772acc858889344fc4aa5b6a885).
+   - The diagnosis at bc315fb9 and at the base frontend a533a598e4e139e2fbd2793ded328472cc977036: `state/consults/2026-10-24-b1-shell-half-pr-c-refusal-diagnosis-tester-report.md` (sha256 5d6b453356d1322cadbcb6611429bc1c92f2f56a086973845891f76da1e4898f).
+   - The re-run at bc315fb9, stopped at `e2e:table` PC-E4: `state/consults/2026-10-24-b1-shell-half-pr-c-head-series-rerun-tester-report.md` (sha256 0917bd226e4af1c3815499ae21bf4be6d498056bf7a8009ed8323d1de9b8e34c).
+   - The fix, to ec95eacb: `state/consults/2026-10-24-b1-shell-half-pr-c-pc-e4-poll-fix-worker-report.md` (sha256 0fbb09d8239cc49a6394af6913c5be7825127e1b1deaa9042d9c2eb69d1495d7).
+   - The follow-up at ec95eacb and a533a598: `state/consults/2026-10-24-b1-shell-half-pr-c-follow-up-e2e-tester-report.md` (sha256 21358f89d3e01b338062ab9d5bad3b372cc9608e774b708b19d334a0dcc8a883).
+
+2. **PC-E4's step 3 (class 1, a code change in a §2.6 file).**
+   - **The defect** (the re-run report, finding 1): step 3's poll ended when a class-A `cancel` row carrying the table's handle existed, and assertion 3 then read that row's outcome, which could still be pending.
+   - **The fix,** one line of `frontends/shell/e2e/table.mjs` at ec95eacb: the poll also waits for that row's outcome to leave pending, within the suite's settle window. Assertion 3, the other steps, the file's mutation text and Amendment 8 item 6 are unchanged.
+   - **The count.** By §7's command over e5e6e03a, `table.mjs` is 418 of C-E's 540.
+   - **The result** (the follow-up report): at ec95eacb `e2e:table` passed 3 of 3, PC-E4 included. PC-E4's mutation, applied alone, failed at assertion 3 with no cancel row carrying the handle.
+   - **The re-run report's note** that the race made PC-E4's mutation a weaker discriminator is answered on this record: with the poll fixed, the unmutated suite passed every run and the mutation failed by its named failure.
+
+3. **Existing suites that failed and did not reproduce (class 1, the custodian's reading, for gate 1).**
+   - `e2e:refusal-contract-baseline` failed on both runs in the head series, with the machine heavily loaded. In the diagnosis it passed 5 of 5 at the head and 4 of 4 at the base, and no cause was settled. It passed in the re-run with the machine loaded.
+   - `e2e:layout` and `e2e:selection` each failed once in the re-run at full load, and each passed on its one re-run.
+   - `pan-anchor.mjs` passed 14 and then 15 of 16 at the head in the re-run, at the step `recenter-crossing-A`. In the follow-up it passed 16 of 16 twice at the head and twice at a533a598, at low load.
+   - **The reading.** None of these is read as I3. None failed again at the head when re-run, and none is shown to fail for a reason in PR C's diff. Their cause is not shown, and load is not shown to be it. A later failure of any of them at the head is I3, and a stop.
+   - **Not product failures:** `e2e:recording`'s two failures under the default shim are the harness's (the re-run report, finding 5); it passed under the waiting shim. The source-changed post route's rc 3, S5d inconclusive, matches the base series' record.
+
+4. **Next.** Gate 1 at ec95eacb, the architect and the reviewer, reading this amendment with the rest.
+
+Read the last amendment first.
+
+Nothing above is edited.
