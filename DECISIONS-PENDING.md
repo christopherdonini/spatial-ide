@@ -4,6 +4,16 @@ Line references written before the rotation point into state/cut-archive/DECISIO
 
 ## Pending
 
+**RULED 2026-10-24 (the message headed "Governance piece E: rules as records", its addendum replaced by the correction headed 2026-10-25) —governance piece E: the rules now in the agent definitions move into one small record per rule, each agent receiving only its role's rules for the moment it works in, with a check for a rule whose facts changed; governance lane, after what is queued there, never holding slot 1; the human's words the authority for the format and the procedures, never for a rule's content; each merge the human's click. Four readings first, their reports under state/consults/ only; E1 one piece, full form (records, `scripts/plan/rules.mjs`, a governance-ci check, selective loading, the content mapped from the audit's sections 2 and 3, lead-data's three duties, the -high variants retired only on reading 3, AUTONOMY's closing section, the measurement); E3, E4 and a weekly inactivity list later, none placed before E1's measurement; the seven PRECEDENTS cites re-pinned now, in a commit of their own; a fresh-session practice once reading 3 is in.** The human's message, verbatim: `state/directives/2026-10-24-governance-piece-e-rules-as-records-readings-e1-repin-fresh-session-practice.md` (sha256 from line 6 d60d7d6946407786247d0da620dedf8a63602c30ecd0d1b967cc953179bfe132); its addendum withdrawn and replaced by the correction headed 2026-10-25, verbatim: `state/directives/2026-10-24-governance-piece-e-addendum-corrected.md` (sha256 from line 6 c1509bbedb9650bcd66e6a2649d4594f22a320b775bfef519efe88043769eee7). The advisor's audit, a consult: `state/consults/2026-10-24-agent-briefs-rulebook-audit-advisor.md`.
+
+- **The rulings** are the text, referenced and not restated.
+- **Applied:**
+  - **Filed first:** this message and the audit, straight to main as records, before any record cites them; the audit's size and sha256 checked before the copy.
+  - **PLAN:** `governance-e-readings` ready (lines 10 onward); `governance-e1-rules-as-records` blocked, after `verify-cites-out-of-range-line-count` (the governance queue's tail) and the readings; `governance-e3-module-claude-md`, `governance-e4-rulebook-into-records` and `governance-rule-inactivity-list` proposed, unplaced until the human has seen E1's measurement.
+  - **Now:** the seven PRECEDENTS cites the audit's section 5 lists re-pinned in a commit of their own; a re-pin that needs a reading goes to the human.
+  - **lead-data** (line 19 onward, item 6): from this message, a form draft goes to lead-data only when the human asks for one; other drafts go to the architect.
+  - **The fresh-session practice** (line 80 onward) waits for reading 3.
+
 **RULED 2026-10-24 (headed 2026-10-24, the second message) — the filler slot, a standing rule appended to AUTONOMY.md in the human's words; the weekend exception of 2026-10-24 becomes it, its eight numbered items the filler queue's first entries in that order; the governance and docs lanes unchanged.** The human's message, verbatim: `state/directives/2026-10-24-filler-slot-standing-rule-appended-to-autonomy.md` (sha256 from line 6 8a5307cbfc1123f298f07ff6f1fe0b08dfe775c0d4ce8095dba22cd3c14ef704).
 
 - **The rule** is the text, referenced and not restated.

@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-24T15:29:22.645Z",
-  "plan_hash": "7f5b33e06afaa12e51a00d30b3511c428ddd47d5105eabf5996bb3ca9709611f",
+  "generated_at": "2026-10-24T15:38:11.025Z",
+  "plan_hash": "4bde55c1cfbbfd40eadaf82f2f23eb809deefac057cbd5aa6aed639a4e2a3798",
   "priorities_approved": true,
   "next": {
     "id": "corpus-line-files",
@@ -211,6 +211,25 @@
         "done": null
       },
       "summary": "FILLER QUEUE entry 1 (RULED 2026-10-24: state/directives/2026-10-24-weekend-exception-third-product-slot-placements-forms-ahead-250-click.md, line 9; made the standing filler slot by state/directives/2026-10-24-filler-slot-standing-rule-appended-to-autonomy.md, line 8; state/FILLER-QUEUE.md): placed, graded S2; a five-line form under section 21c's size, the reviewer and the architect from dispatch, section 25 (e) set aside; any string a user sees a P6 placeholder for the sitting, any red-line text to the human. NEXT: skipped at dispatch while port-2, in flight, edits kernel/src/permission/audit/log.rs (rule (00)); dispatched when that overlap clears. Before: From wave 3's W3-A (section 1c-2 correction (b)), RECORD S2, code-path-only (state/cloud/wave3/W3-A.md, custodian fields): on Windows, component_eq in kernel/src/permission/audit/normalize.rs uses eq_ignore_ascii_case and is_inside in kernel/src/permission/audit/log.rs uses to_ascii_lowercase, while NTFS also folds non-ASCII letters. Neither the worker nor the custodian observed an escape, and whether the resolved destination already carries the on-disk case is not settled: the form's first step settles it. Windows is the supported platform. Proposed, not placed."
+    },
+    {
+      "id": "governance-e-readings",
+      "title": "Piece E readings before E1's form: context loaded in a custodian session; this project's own transcript tally; the installed Claude Code facts; the bytes one worker and one reviewer dispatch receive",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "ready",
+      "order": null,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-24",
+        "done": null
+      },
+      "summary": "RULED 2026-10-24 (state/directives/2026-10-24-governance-piece-e-rules-as-records-readings-e1-repin-fresh-session-practice.md, line 10 onward; the advisor audit state/consults/2026-10-24-agent-briefs-rulebook-audit-advisor.md): four readings, only their reports under state/consults/ committed. 1: context once in a custodian session partway through a piece (the slash command is the human's to type: the custodian cannot run built-in commands). 2: a read-only tally of this project's own transcripts on this machine over 14 days, tokens by session and agent type, the 20 largest tool results by size, counts only, this project's transcript directory alone and named. 3: from the installed Claude Code and its documentation: whether clear starts a new session id; whether a dispatch sets effort per call and whether CLAUDE_CODE_EFFORT_LEVEL is set here; whether a subfolder CLAUDE.md loads when an agent reads a file there, subagents included. 4: the bytes one worker and one reviewer dispatch receive today."
     },
     {
       "id": "posix-backslash-in-shared-path-logic",
@@ -581,6 +600,29 @@
       "summary": "RE-TARGETED 2026-10-23 to v0.2 by the human (state/directives/2026-10-23-weekend-open-items-ruled-verify-cites-pin-covering-case-port-2-session-log-test-feature-v0-2-findings-graded.md, item 6, O1): it rides release-v0-2-0 in place of the folded v0.1.1. Before: RULED 2026-09-14 (question set D, D3): draft the application after v0.1.1; nothing is submitted; SignPath Foundation as the named publisher and the required disclosure section per the evaluation note",
       "blocked_by": [
         "release-v0-2-0"
+      ]
+    },
+    {
+      "id": "governance-e1-rules-as-records",
+      "title": "Piece E1: rules as records, a rule catalogue under rules/, a selector scripts/plan/rules.mjs, a generated block in each agent definition and a governance-ci check",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": null,
+      "budget_minutes": 600,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-24",
+        "done": null
+      },
+      "summary": "RULED 2026-10-24 (state/directives/2026-10-24-governance-piece-e-rules-as-records-readings-e1-repin-fresh-session-practice.md, line 19 onward; its addendum at line 91 withdrawn and replaced by state/directives/2026-10-24-governance-piece-e-addendum-corrected.md, lines 10 and 11): one piece, full form, the architect drafting the records; governance lane after what is queued there, never holding slot 1; each merge the human's click. The human approves the generated definitions and the mapping in the PR, and each row retired as stale by explicit approval. The human's words are the authority for the format and procedures only; each rule keeps its own source. Its measurement: reading 4 again at the merge from a fresh session, and the gate first-pass rate and runs per node over the ten gated pieces before and after, as evidence, not proof of cause.",
+      "blocked_by": [
+        "verify-cites-out-of-range-line-count",
+        "governance-e-readings"
       ]
     },
     {
@@ -2097,6 +2139,63 @@
         "done": null
       },
       "summary": "RULED 2026-10-21 (state/directives/2026-10-21-redaction-amendment-3-open-1-to-7-ruled-adr-022-amendment-2-reading-a.md), OPEN-7 of the redaction form's Amendment 3: no ADR text in that piece; this note also carries the build-time scan, the reviewed list and the skip, later, in the human's words. Before: PROPOSED 2026-10-21 by the custodian, under the redaction scan's OPEN-4 (A), ruled by the human (state/directives/2026-10-21-d-s10-go-adr-036-route-i-redaction-open-items-1c-and-milestone-4-ruled-docs-open-1-yes.md): no ADR text in that piece; the custodian proposes a node for an ADR-017 note in the human's typed words, naming the product gate and Corrigendum 4's new term (kernel/BUNDLE-REDACTION-SCAN-PREREGISTRATION.md, OPEN-4). The architect's second revision adds a point (state/consults/2026-10-21-bundle-redaction-scan-not-in-product-publish-architect-revised-form-cites.md, What I could not settle, item 4): Corrigendum 4's table and kernel/CANCELLATION-AND-TRACING.md section 3 do not list the Finalizing window; whether this node also covers that design note is the human's. The human places it."
+    },
+    {
+      "id": "governance-e3-module-claude-md",
+      "title": "Piece E3: a small generated CLAUDE.md per product module from the rules whose paths match, if reading 3 confirms on-demand loading",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 120,
+      "needs_human": {
+        "kind": "ruling",
+        "minutes": 5
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-24",
+        "done": null
+      },
+      "summary": "RULED 2026-10-24 (state/directives/2026-10-24-governance-piece-e-rules-as-records-readings-e1-repin-fresh-session-practice.md, line 71 onward): later, its own small piece; not placed until the human has seen E1's measurement. The reviewer's product checklist stays in its definition."
+    },
+    {
+      "id": "governance-e4-rulebook-into-records",
+      "title": "Piece E4: the rest of AUTONOMY, AI_DEVELOPMENT and PRECEDENTS move into rule records, each rule when it is next touched or cited",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 120,
+      "needs_human": {
+        "kind": "ruling",
+        "minutes": 5
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-24",
+        "done": null
+      },
+      "summary": "RULED 2026-10-24 (state/directives/2026-10-24-governance-piece-e-rules-as-records-readings-e1-repin-fresh-session-practice.md, line 71 onward): later, its own small piece, after E3; not placed until the human has seen E1's measurement."
+    },
+    {
+      "id": "governance-rule-inactivity-list",
+      "title": "A weekly inactivity list of rules whose moment shows no occurrence in four weeks, or unknown, built from existing records only",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "ruling",
+        "minutes": 5
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-24",
+        "done": null
+      },
+      "summary": "RULED 2026-10-24 (state/directives/2026-10-24-governance-piece-e-rules-as-records-readings-e1-repin-fresh-session-practice.md, line 71 onward): later, its own small piece, after E4; it flags rules to look at, never rules to retire; not placed until the human has seen E1's measurement."
     },
     {
       "id": "engine-column-name-case-siblings",
