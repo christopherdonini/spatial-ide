@@ -684,7 +684,6 @@ a node's summary states its current state and what is owed. When a node is done,
 - **(v) Searching.** An old summary is found by its node id in `state/cut-archive/`, by §32: give the Grep tool that folder as its path. A tree-wide search finds the node's pointer in PLAN.yaml, which names the file.
 - **(vi) §1.** It is not edited. The pointer lines are an edit to done nodes' summaries, made under this section.
 
----
 ## §36. The filler slot (the human, 2026-10-24; `state/directives/2026-10-24-filler-slot-standing-rule-appended-to-autonomy.md`, line 8; appended after §35 so that no line a record cites above it moves)
 
 The rule is the human's, appended in their words, as their message asks (its line 6). It is byte-copied by script from `state/directives/2026-10-24-filler-slot-standing-rule-appended-to-autonomy.md:8 @ ae8cfdcc5dd632473a561a48c4401a08ccd8cb0e sha256:1135b89c01d0e676bce0bc42a4d6710af445fa0ae95ed12ef6ca0fef7a4d4e84`:
@@ -694,4 +693,4 @@ The filler slot. Beside slots 1 and 2 there is a third slot that is never idle w
 ```
 
 - **From when:** the rule applies from the human's message of 2026-10-24, queued at 14:01:54Z (the directive's filing note), before this section merged.
-- **The filler queue:** `state/FILLER-QUEUE.md`, in the human's order. Its first entries are the eight numbered items of the weekend exception of 2026-10-24 (`state/directives/2026-10-24-weekend-exception-third-product-slot-placements-forms-ahead-250-click.md`, lines 9 to 16).
+- **The filler queue:** `state/FILLER-QUEUE.md`. The weekend exception the rule names is `state/directives/2026-10-24-weekend-exception-third-product-slot-placements-forms-ahead-250-click.md`; its numbered items are its lines 9 to 16.
