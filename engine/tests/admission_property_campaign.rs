@@ -1013,15 +1013,19 @@ struct Counterexample {
     detail: String,
 }
 
+/// The terminal text of that class: `query: ` and the engine's fixed detail, byte for byte (the
+/// engine's constant is private, so its text is written here once).
+const OVERFLOW_TERMINAL: &str = "query: [P6 placeholder] a value computed while this query ran was out of range for its type; the row values and the query text are withheld";
+
 /// The campaign's one declared exclusion (section 2.5(d); section 2.10): overflow in admitted
 /// integer arithmetic (`+`, `-`, `*`, unary `-`), whose operand conversions are all lossless
-/// widenings -- out of scope for this piece, and routed to node
-/// `stream-evaluation-failure-fixed-detail`. Identified by both of these: the predicate's typed
-/// class, integer arithmetic (this fixture's own integer-typed operands, `i64` and `id`, and any
-/// integer literal, joined by `+`, `-` or `*`), and a terminal text containing `Overflow`. Removed
-/// when node `stream-evaluation-failure-fixed-detail` lands.
+/// widenings. Such a stream ends in error by direction (B-1 point 4), and node
+/// `stream-evaluation-failure-fixed-detail` makes its terminal text the fixed detail alone.
+/// Identified by both of these: the predicate's typed class, integer arithmetic (this fixture's own
+/// integer-typed operands, `i64` and `id`, joined by `+`, `-` or `*`), and a terminal text equal to
+/// `OVERFLOW_TERMINAL`. DuckDB's own text is no longer read.
 fn is_declared_integer_arithmetic_overflow(predicate: &str, terminal_error: &str) -> bool {
-    if !terminal_error.contains("Overflow") {
+    if terminal_error != OVERFLOW_TERMINAL {
         return false;
     }
     ["i64", "id"].iter().any(|c| {
@@ -1441,4 +1445,28 @@ fn a_join_of_clauses_each_admitted_alone_returns_their_intersection_and_its_subs
         separates,
         "the witness no longer separates a bare join from a bracketed one"
     );
+}
+
+/// An admitted predicate whose integer arithmetic overflows on the fixture (`i64` spans the 64-bit
+/// range, and `i64 * i64` was observed ending in this error; a comparison of `i64 * C` with a
+/// constant was observed completing, so it is not used) ends the stream in error whose whole text
+/// is `OVERFLOW_TERMINAL`: no file value and no SQL.
+#[test]
+fn an_admitted_integer_overflow_ends_the_stream_with_the_fixed_detail() {
+    let fx = fixture();
+    let ds = Dataset::open(&fx.path).expect("open");
+    let predicate = "i64 * i64 > 0";
+    assert!(
+        matches!(admit(&ds, predicate), Outcome::Admitted(_)),
+        "the predicate is not admitted, so nothing below would be about the stream"
+    );
+    let (ended_in_error, text) = completed_ids(&ds, fx.facts.extent, predicate)
+        .expect_err("the stream must end in error, not complete");
+    assert!(ended_in_error, "no terminal error from the stream: {text}");
+    assert_eq!(text, OVERFLOW_TERMINAL);
+    assert!(
+        leaked(&file_tokens(), predicate, &text).is_empty(),
+        "file data in: {text}"
+    );
+    assert!(!text.contains("read_parquet("), "SQL in: {text}");
 }
