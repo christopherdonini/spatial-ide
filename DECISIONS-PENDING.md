@@ -4,6 +4,23 @@ Line references written before the rotation point into state/cut-archive/DECISIO
 
 ## Pending
 
+**RULED 2026-10-24 (headed 2026-10-24, the second message) — the filler slot, a standing rule appended to AUTONOMY.md in the human's words; the weekend exception of 2026-10-24 becomes it, its eight numbered items the filler queue's first entries in that order; the governance and docs lanes unchanged.** The human's message, verbatim: `state/directives/2026-10-24-filler-slot-standing-rule-appended-to-autonomy.md` (sha256 from line 6 8a5307cbfc1123f298f07ff6f1fe0b08dfe775c0d4ce8095dba22cd3c14ef704).
+
+- **The rule** is the text, referenced and not restated.
+- **Applied:**
+  - **AUTONOMY.md §36:** appended at the end, the rule's line byte-copied by script and pinned, by a docs-lane pull request for the click, with the reviewer's check that the bytes match and nothing else changed. The rule applies from the message, before that pull request merges.
+  - **The filler queue:** `state/FILLER-QUEUE.md`: the fifteen pieces of the eight items in the human's order, a status column the custodian keeps, the fillers merged and the hours slots 1 and 2 waited (both for the weekly window, from 2026-10-24), and a section for the custodian's proposed additions.
+  - **Briefs:** a filler's worker and tester briefs carry, beside THE MACHINE paragraph, that a filler takes a shared hold only.
+
+**RULED 2026-10-24 (headed 2026-10-24, the first message) — a weekend exception until Monday 2026-10-26: a third product slot for engine, kernel and platform pieces that touch no file under frontends/shell, each under §21c's size, a five-line form with the reviewer and the architect from dispatch (§25 (e) set aside), one in flight at a time, disjoint by rule (00); eight placements in order, skipping any whose dependency is not done or whose paths overlap at dispatch; grades S2 where named, S3 otherwise; a string a user sees a P6 placeholder for the sitting, red-line text to the human; forms ahead for lod-tiers-geographic-crs and ADR-023's acceptance notes, drafts only; #250 clicked; #249 after #241 on Monday.** The human's message, verbatim: `state/directives/2026-10-24-weekend-exception-third-product-slot-placements-forms-ahead-250-click.md` (sha256 from line 6 af5c97a913961f1511e6b4c29141499d356ec92b7dac18b1c5b6bb4192fd3102). The second message, above, makes it the standing filler slot.
+
+- **The rulings** are the text, referenced and not restated.
+- **Applied:**
+  - **Clicks:** #250 merged (4a1a3c39); `publish-sort-window-cancel-not-exercised-on-ci` done. Port-2's other wait, 1c step 1, is still open, so port-2 still waits.
+  - **Placements:** the fifteen nodes ready, each marked with its entry and grade; `pre-admission-change-detail-braces` placed at its scope (i), the braces only, its ruling need cleared.
+  - **First dispatch:** entry 1 skipped (port-2's branch edits `kernel/src/permission/audit/log.rs`, rule (00)); entry 2's five-line form drafted by lead-data.
+  - **Forms ahead:** `lod-tiers-geographic-crs` by lead-data and ADR-023's acceptance notes by the architect, drafts only.
+
 **RULED 2026-10-24 (headed 2026-10-24) — the sort-window fix by OPEN-1 (A), the five-line form with the reviewer and the architect from dispatch, AUTONOMY.md §25 (e) set aside for it as for the clause-composition piece; milestone 4 PR C's TABLE_MAX_ATTRIBUTE_BYTES = 64 MiB approved as a declared, unmeasured ceiling, its derivation stated at the constant and its behaviour at the ceiling stated in the table's own words, a measurement a later node before any performance claim; covering-case's revised full form: OPEN-A no P6 marker (the texts to the human's sight before the merge), OPEN-B yes (item 9's sentence redrafted beside item 53; the primary-column refusal in item 53), OPEN-C yes, OPEN-D a proposed node (engine lane, S3, the custodian's; no KNOWN-LIMITATIONS line), OPEN-E widened (a declared name matching more than one of the file's names, byte-equal or case-insensitively, refuses by name; the same clause (a) for the covering and the primary column), OPEN-F the custodian's (if run, recorded with no claim); KNOWN-LIMITATIONS: one column-0 comment line before item 51, in item 42's form, its own one-line docs-lane commit now, with the reviewer's check that nothing else changed; the probe branch the human deletes.** The human's message, verbatim: `state/directives/2026-10-24-sort-window-a-both-gates-pr-c-table-ceiling-approved-covering-case-open-a-to-f-kl-item-51-line-probe-branch.md` (sha256 from line 6 60ee8c2d1d81283a4f3607b3a18a2b091792bfa0986825778873d898b932a712).
 
 - **The rulings** are the text, referenced and not restated.
