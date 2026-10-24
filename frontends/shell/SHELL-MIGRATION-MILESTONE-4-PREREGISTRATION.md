@@ -1521,3 +1521,29 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 11: PR C's closing record, written after its gate 2 results were seen. No file or group passes its ceiling, so there is no class 8. Gate 2's notes are applied. Amendment 10 item 5 is class 1, not class 3, and one of its sentences is withdrawn (correction round 2 of 2).
+
+*Written by the custodian after PR C's gate 2 reports were seen, at PR C's final head a5f7d9ac025a3d9a54d255b2b3dde74dcca36189. References only, and nothing below is a quotation. The reports are `state/consults/gates/2026-10-24-b1-shell-half-pr-c-gate2-architect.md` (sha256 fdb6be33a3e39b6e16f911fecef63254419566fe2df55ce148aecfd93495a705) and `state/consults/gates/2026-10-24-b1-shell-half-pr-c-gate2-reviewer.md` (sha256 4e6ffc702bea5f40df2cc67f55319745953e41aca0b6a1e05c12b26694e95195), both PASS WITH NOTES; gate 1's are named in Amendment 10. §7 is not edited.*
+
+1. **No class 8.** By §7's command over `e5e6e03a3a10e1c9427efd153d74b5a997023436...a5f7d9ac025a3d9a54d255b2b3dde74dcca36189`: 56 files and 2,527 lines of the 4,248 declared. No file passes its ceiling, and no group passes its total. They equal the reviewer's gate 2 check 3 at 580d389e. a5f7d9ac replaces one line in each of three files: two of them are new in PR C, so the count is unchanged, and the third, `KNOWN-LIMITATIONS.md`, is outside it.
+2. **Gate 2's notes, applied with no re-gate (§31).**
+   - N1, the round-trip window's ticket count, at a5f7d9ac in three comments, in the architect's words. The reviewer's N1 is met by them.
+   - The architect's N2, and the reviewer's N2 and N3, are applied in the PR body: the carried texts are re-copied from a5f7d9ac, and the reviewer's Evidence words are added.
+3. **Amendment 10 item 5 (the architect's gate 2 N3; the reviewer's N4 is met by it).**
+   - The item is class 1, a record made after the results of what gate 1's findings invalidate. It is not class 3, which never changes a claim.
+   - The fourth sentence of its first bullet is withdrawn: it restated Amendment 9 item 3's conclusion past the correction ceiling.
+4. **Open, not PR C's:**
+   - the reviewer's gate 1 suggestions S1 to S6;
+   - the architect's points for the P6 sight, at AC7 and AC8;
+   - the measurement node for the table's ceiling;
+   - the proposed node on main's session-end wording (Amendment 10 item 7).
+5. **The Part.** Part AC's rows AC6 to AC8 join `operator-sitting-queue` on PR C's merge (§9, Operator).
+
+**Superseded:**
+- Amendment 10's heading and item 5, on the class only.
+- Amendment 10 item 5's first bullet, its fourth sentence.
+
+Read the last amendment first.
+
+Nothing above is edited.
