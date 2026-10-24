@@ -201,6 +201,12 @@ impl PublishProgress for Recorder {
 /// construction rather than by wall-clock luck. The fifth section fired on a fixed 5 s delay after
 /// `Querying`, which had already carried the operation into partition writing in six of seven
 /// trials; the trigger here cannot make that mistake because it is the phase itself.
+///
+/// RECORDED MUTATION (observed at e58f98e3: applied, this test run alone, reverted): the first
+/// `watch.check()?;` of the partition loop in `kernel/src/publish/mod.rs` becomes `return
+/// Err(PublishError::Cancelled);`. OBSERVED FAILURE: the shape guard's panic, `QueryRunning never
+/// fired and the publish did not complete with every row and no acknowledgement. Outcome:
+/// Err(Cancelled). Acknowledged: true. Phases seen: [VerifyingSource, Querying]`.
 #[test]
 fn a_cancel_inside_the_sort_is_observed_rather_than_waited_out() {
     struct OnQueryRunning {
