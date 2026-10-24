@@ -1486,3 +1486,38 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 10: PR C's gate 1 record and the classes of its fixes, written after gate 1's reports were seen and before the fixes. C1 and E1 are fixed in §2.6 files and re-gated on their delta (class 1, code changes; one test added after a gate finding, class 4). The Documentation findings are applied in the gates' words. Two clauses of Amendment 9 are corrected (class 3). Correction round 1.
+
+*Written by the custodian after PR C's gate 1 reports were seen, at PR C's head ec95eacb69766759ec454f2f5aae9688b49458b1. References only, and nothing below is a quotation. The reports are `state/consults/gates/2026-10-24-b1-shell-half-pr-c-gate1-architect.md` (sha256 43f8bc4d92cde8126087ed8e5af2f471cb2cc012b3215290bdec934aa2541cd1) and `state/consults/gates/2026-10-24-b1-shell-half-pr-c-gate1-reviewer.md` (sha256 1b45c8e9ab0cedea314363d11c0d70df9fa4a22b0a60aa235965ab1643b445a4), both FAIL. §7 is not edited.*
+
+1. **C1, both reports (class 1, a code change).**
+   - The Table's ended line states only the table's consequence, for every session end, in the words of the architect's C1 fix, a P6 placeholder for sight at AC8. The reviewer's option 2. A line per end code (the reviewer's option 1) is not taken.
+   - PC-R2's expected line follows it, and PC-R2's mutation is observed again.
+   - **PC-U16 (class 4, a test added after a gate finding),** in `frontends/shell/src/table/tableSource.test.ts`: a coverage-lost terminal reaching the table's sink ends the table, and its line is the same ended line. Mutation: the session-end check the table uses matches only `engine.source_changed`; PC-U16 fails by name.
+   - AC8's phrase follows, in the words of the architect's C1 fix.
+2. **E1, both reports (class 1, a test fixture change).** PC-U4's PublishPanel stand-in is typed by the real `ExportRunReport` and the real props, and its run ends with a real `ExportRunEnd`, an execute outcome of `unknown-attempt`. PC-U4's mutation is observed again.
+3. **Documentation, applied in the gates' words with no re-gate (§31).**
+   - The architect's D1 to D6, and D9's walkthrough words.
+   - The reviewer's D5 and D6 are met by the architect's D3 and D4. The reviewer's D7 is met by the architect's D1 and D2.
+   - `table/tableSource.ts`'s one-stream sentence names the same round-trip window, in the worker's words.
+   - The PR body's corrections (the architect's D7 and D9's sight list; the reviewer's D1 to D3) are the custodian's.
+4. **Class 1, a statement change (the architect's D9).** PR C rewords the statement for switching Activity tabs in `frontends/shell/src/console/surfaceRegistry.ts`, a §2.6 file, as an exception to §5's declared-unchanged strings. It is a P6 placeholder, for sight at AC8, with the code `table-failed`.
+5. **Class 3, Amendment 9's corrections.**
+   - Item 3's reading, its second sentence, is untrue for two suites. `e2e:refusal-contract-baseline` failed its immediate re-run in the head series, and `pan-anchor.mjs` failed its immediate re-run in the re-run series. Each passed every later run at the head: the refusal suite 5 of 5 in the diagnosis and once in the re-run; `pan-anchor.mjs` 16 of 16 twice in the follow-up, at ec95eacb, whose product code is bc315fb9's. The reading's conclusion stands on that record and on PR C's diff, as both reports read it, and its last sentence still holds.
+   - Item 2's settle-window clause is wrong. The poll waits within the step's own bound; the file's settle window is a different constant (the reviewer's D4).
+6. **Not taken in this round:** the reviewer's suggestions S1 to S6. The architect's points for the P6 sight go to the sitting, at AC7 and AC8.
+7. **Outside PR C:** on main, the hover readout and the Feature tab's notice word every session end as a source change (the architect's C1 note). That goes to the proposed node `session-end-lines-name-coverage-lost-as-source-change`, for the human, and not to this PR.
+8. **Next.**
+   1. One worker applies items 1 to 4 at the head, in one commit.
+   2. Gate 2 re-gates C1's and E1's delta, with the reviewer and the architect.
+   3. No e2e suite asserts the ended line (by search at ec95eacb), so the e2e is not re-run for it.
+
+**Superseded:**
+- Amendment 9 item 3: the reading's second sentence.
+- Amendment 9 item 2: its settle-window clause.
+- §4's PC-R2: its expected line, by item 1. §4 gains PC-U16.
+
+Read the last amendment first.
+
+Nothing above is edited.
