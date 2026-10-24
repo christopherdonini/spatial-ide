@@ -214,7 +214,12 @@ fn a_cancel_inside_the_sort_is_observed_rather_than_waited_out() {
         token: CancelToken,
     }
     impl PublishProgress for OnQueryRunning {
-        fn phase(&self, _phase: PublishPhase) {}
+        fn phase(&self, phase: PublishPhase) {
+            self.rec.phase(phase);
+            if phase == PublishPhase::QueryRunning {
+                self.token.cancel();
+            }
+        }
         fn partition_written(&self, i: usize, r: usize, b: u64) {
             self.rec.partition_written(i, r, b)
         }
