@@ -367,11 +367,16 @@ after(() => {
 // return { judged: true, stale: false }`) -> fails: `PS4a`, `guardian parity: the mod's stale-block
 // check and the Stop hook's stale-continuity check agree on every fixture`. Observed at 54eba872 with
 // this change, node --version v24.18.1 and git --version 2.49.0.windows.1.
+// Re-observed at 7235aa0c (the git-timeout form, section 4) -> fails: `PS4a`, `guardian parity:
+// the mod's stale-block check and the Stop hook's stale-continuity check agree on every fixture`
+// and `guardian parity: a mod-side git call that outruns the runner's timeout is recorded as a
+// timeout, not read as an outcome`, with node --version v24.18.1 and git --version 2.49.0.windows.1.
 // RECORDED MUTATION: in the working tree only and reverted, never committed: stop-queue.mjs's
 // judgeContinuity comparison inverted (`stale: current.flushedAt !== parent.flushedAt`) -> fails:
 // `PS1`, `PS2`, `PS3`, `PS5`, `PS6`, `PS8`, `PS9`, `PS10`, `guardian parity: the mod's stale-block
 // check and the Stop hook's stale-continuity check agree on every fixture`. Observed at 54eba872 with
 // this change, node --version v24.18.1 and git --version 2.49.0.windows.1.
+// Re-observed at 7235aa0c (the git-timeout form, section 4) with the same failures.
 // RECORDED MUTATION: the `syncBuiltinESMExports();` call in before() deleted -> fails: `PS1`, `PS2`,
 // `PS3`, `PS4a`, `PS4b`, `PS5`, `PS6`, `PS7`, `PS8`, `PS9`, `PS10`, `PS18`, `PS19`, `guardian parity: the
 // mod's stale-block check and the Stop hook's stale-continuity check agree on every fixture` and
@@ -402,6 +407,7 @@ test("guardian parity: the mod's stale-block check and the Stop hook's stale-con
 // `FIXTURES.find((f) => f.id === 'PS7').build(dir)`) -> fails: `guardian parity: the fixture set
 // reaches stale, fresh and not judged on the Stop hook`. Observed at 54eba872 with this change, node
 // --version v24.18.1 and git --version 2.49.0.windows.1.
+// Re-observed at 7235aa0c (the git-timeout form, section 4) with the same failures.
 test('guardian parity: the fixture set reaches stale, fresh and not judged on the Stop hook', async () => {
   const results = await computeAll();
   const reached = new Set([...results.values()].filter((r) => r.finding == null).map((r) => r.stop));
