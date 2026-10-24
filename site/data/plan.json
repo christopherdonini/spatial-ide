@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-24T15:10:50.668Z",
-  "plan_hash": "270e6d39bebd611a1ac9ab99048dc52823b065d4a5ebfd09d2511a5e3778fffe",
+  "generated_at": "2026-10-24T15:20:28.858Z",
+  "plan_hash": "aa53c5d79c3722df8224dfe0e9bca886e70086c3677444c898bcae27a82022d1",
   "priorities_approved": true,
   "lanes": [
     {
@@ -7442,7 +7442,7 @@
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "IN PROGRESS 2026-10-24: the human's standing rule appended to AUTONOMY.md as section 36 in their words (state/directives/2026-10-24-filler-slot-standing-rule-appended-to-autonomy.md, lines 6 and 8), byte-copied by script and pinned at ae8cfdcc, 12 lines added at the end; draft PR #254 at 3fdb355b on docs/filler-slot-rule. The rule applies from the message, before the merge. NEXT: the reviewer's check that the bytes match and nothing else changed; then the click.",
+      "summary": "CLOSED FOR THE CLICK 2026-10-24 at b630948f (PR #254): the reviewer's check PASS WITH NOTES (gate-log 612, state/consults/gates/2026-10-24-autonomy-section-36-filler-slot-gate1-reviewer.md); its D1 and D2, the custodian's own bullet and break, applied with no re-gate; CI 4 of 4 at the head. NEXT: the human's click, a merge commit. Before: IN PROGRESS 2026-10-24: the human's standing rule appended to AUTONOMY.md as section 36 in their words (state/directives/2026-10-24-filler-slot-standing-rule-appended-to-autonomy.md, lines 6 and 8), byte-copied by script and pinned at ae8cfdcc, 12 lines added at the end; draft PR #254 at 3fdb355b on docs/filler-slot-rule. The rule applies from the message, before the merge. NEXT: the reviewer's check that the bytes match and nothing else changed; then the click.",
       "dates": {
         "opened": "2026-10-24",
         "done": null

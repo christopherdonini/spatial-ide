@@ -4615,7 +4615,7 @@ nodes:
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "IN PROGRESS 2026-10-24: the human's standing rule appended to AUTONOMY.md as section 36 in their words (state/directives/2026-10-24-filler-slot-standing-rule-appended-to-autonomy.md, lines 6 and 8), byte-copied by script and pinned at ae8cfdcc, 12 lines added at the end; draft PR #254 at 3fdb355b on docs/filler-slot-rule. The rule applies from the message, before the merge. NEXT: the reviewer's check that the bytes match and nothing else changed; then the click."
+    summary: "CLOSED FOR THE CLICK 2026-10-24 at b630948f (PR #254): the reviewer's check PASS WITH NOTES (gate-log 612, state/consults/gates/2026-10-24-autonomy-section-36-filler-slot-gate1-reviewer.md); its D1 and D2, the custodian's own bullet and break, applied with no re-gate; CI 4 of 4 at the head. NEXT: the human's click, a merge commit. Before: IN PROGRESS 2026-10-24: the human's standing rule appended to AUTONOMY.md as section 36 in their words (state/directives/2026-10-24-filler-slot-standing-rule-appended-to-autonomy.md, lines 6 and 8), byte-copied by script and pinned at ae8cfdcc, 12 lines added at the end; draft PR #254 at 3fdb355b on docs/filler-slot-rule. The rule applies from the message, before the merge. NEXT: the reviewer's check that the bytes match and nothing else changed; then the click."
     dates: {opened: 2026-10-24, done: null}
 
   - id: stale-lines-outside-the-four-files
