@@ -1378,11 +1378,11 @@ body,
   overflow-y: auto;
 }
 
-/* Milestone 4 PR C (SHELL-MIGRATION-MILESTONE-4-PREREGISTRATION.md section 2.4): the Table tab in Activity. The tab fills the Activity region's panel; the grid scrolls inside it, so a long result never grows the region. */
+/* Milestone 4 PR C (SHELL-MIGRATION-MILESTONE-4-PREREGISTRATION.md section 2.4): the Table tab in Activity. The tab is as tall as the Activity region less its tab list (the region's own height is `--activity-h`); the grid scrolls inside it, so a long result never grows the region and the windowed grid draws only what it shows. */
 .table-tab {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  height: calc(var(--activity-h) - 2.5rem);
   min-height: 0;
   padding: 0.25rem 0.75rem;
   font-size: 0.8rem;

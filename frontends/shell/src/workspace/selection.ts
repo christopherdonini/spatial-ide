@@ -57,7 +57,7 @@ function cellBytes(cell: AttributeCell): number {
 }
 
 /** The row a member keeps: as given while its cells' counted bytes stay within `CAPTURED_ROW_MAX_BYTES`; else its cells before the first that would pass it, with the number cut (pure; the cut is a marker, never a silent drop). */
-export function capturedRow(row: AttributeRow | "not-held" | null): CapturedRow {
+function capturedRow(row: AttributeRow | "not-held" | null): CapturedRow {
   if (row === null || row === "not-held") return row;
   let total = 0;
   for (let i = 0; i < row.length; i++) {
