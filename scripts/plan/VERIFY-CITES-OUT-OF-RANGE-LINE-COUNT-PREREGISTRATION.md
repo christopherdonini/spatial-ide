@@ -160,3 +160,17 @@ This piece's paths: scripts/plan/verify-cites.mjs and scripts/plan/verify-cites.
 - **Node `verify-quotes-cite-listing-line-count`** (the sibling count in verify-quotes' cite listing) is proposed for the human.
 
 ## Amendments (opens empty; append-only)
+
+## Amendment 1 — the closing record, written after gate 1's report and the words commit were seen: two comment lines and the PR body in the reviewer's words, with no re-gate (class 1)
+
+*Written by the custodian at the PR's final head b333159c94dc041e4c5f884fd46f0ab0799b4380. References only, and nothing below is a quotation. The gate: `state/consults/gates/2026-10-25-verify-cites-out-of-range-line-count-gate1-reviewer.md` (gate-log 624; sha256 2b5b743e302eabb73b0a2afde118461280f8dddf71a73bb6a59e6c33ac1cf559), the reviewer alone, FAIL on wording only. The words commit: `state/consults/2026-10-25-verify-cites-out-of-range-line-count-gate1-words-worker-report.md` (sha256 from line 5 1a9afbd33dff2adca70d591165f8b4a8329b1eac18cc95fca54ab3ca3d741afe).*
+
+1. **The words, applied with no re-gate** (AUTONOMY §31; the wording-block rule of `state/directives/2026-10-11-direction-after-status-review.md`, item 2). None is the human's wording.
+   - C1: the header's line 12 takes the reviewer's words, so that the header no longer states the bound as the line count, and the Out-of-scope line's guarantee clause holds at the head.
+   - D1: line 104 takes the reviewer's words.
+   - D2 and D3: the PR body's figures name their commits, and the body lists the words applied.
+2. **The size.** By the numstat from the merge base f031fa3c to b333159c, the diff is 70 lines in the two files the Scope names, under its 100.
+3. **The settlement's run.** The gate repeated it over a clean tree at main 147cc32c: 2392 files scanned by both checkers, gated 0 and 0, advisory 97 and 97, and 82 count-only differences, with nothing else. The worker's run over main ff406cea gave 2391 files, with the same figures and classes. The two comment lines change no code, so neither run is repeated at b333159c.
+4. **The record.** This is correction round 1 of 2.
+
+Nothing above is edited.
