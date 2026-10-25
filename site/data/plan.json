@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-25T20:15:14.885Z",
-  "plan_hash": "d290f7a158fd43f81ecd43ed5e78898ff5748842ca201b22e908cbc0e294a2e8",
+  "generated_at": "2026-10-25T20:34:29.870Z",
+  "plan_hash": "adefb368ec8c0329e910613d118674ee1eb10ea1f7ad75a133152114a196e15f",
   "priorities_approved": true,
   "lanes": [
     {
@@ -7203,13 +7203,13 @@
         "kind": "none",
         "minutes": 0
       },
-      "gate": "none",
+      "gate": "kernel/FIRST-BATCH-FACTORIAL-IGNORED-TRACE-TESTS-PREREGISTRATION.md",
       "evidence": null,
       "budget_minutes": 60,
       "generation": 2,
       "felt_verdict": false,
       "entries": [],
-      "summary": "FORM DRAFTED AHEAD 2026-10-25 (state/consults/2026-10-25-first-batch-factorial-ignored-trace-tests-five-line-form-architect-draft.md): a file-local lock taken first by the two in-process cancellation cells in kernel/tests/first_batch_factorial.rs, in the sibling piece's shape; M-1 per test observed on an export in release with the fixtures copied in; about 28 of a declared 40 lines; OPEN-1 (A) and OPEN-2 (A), the custodian's. NEXT: the form committed on main when #259 leaves the filler slot; then a worker. Before: FILLER QUEUE entry 6b (RULED 2026-10-24: state/directives/2026-10-24-weekend-exception-third-product-slot-placements-forms-ahead-250-click.md, line 14; made the standing filler slot by state/directives/2026-10-24-filler-slot-standing-rule-appended-to-autonomy.md, line 8; state/FILLER-QUEUE.md): placed, graded S3; a five-line form under section 21c's size, the reviewer and the architect from dispatch, section 25 (e) set aside; any string a user sees a P6 placeholder for the sitting, any red-line text to the human. Before: PROPOSED 2026-10-09 by the human's rulings of 2026-10-09 (state/directives/2026-10-09-rulings-on-the-eight-forms.md), item 6: a sibling site of wire-bytes-invariant-trace-flag-race (its form, section 0.7); outside CI, racing only if run together; a lock or a stated one-at-a-time rule. The human places it later.",
+      "summary": "FORM COMMITTED 2026-10-25 (kernel/FIRST-BATCH-FACTORIAL-IGNORED-TRACE-TESTS-PREREGISTRATION.md; the architect's draft state/consults/2026-10-25-first-batch-factorial-ignored-trace-tests-five-line-form-architect-draft.md; 36 pins): a file-local lock taken first by the two in-process cancellation cells, about 28 of a declared 40 lines; M-1 per test observed on a release export with the fixtures copied in, separate cargo targets; OPEN-1 (A) and OPEN-2 (A); the reviewer and the architect from dispatch. NEXT: a worker builds it on its own branch. Before: FORM DRAFTED AHEAD 2026-10-25 (state/consults/2026-10-25-first-batch-factorial-ignored-trace-tests-five-line-form-architect-draft.md): a file-local lock taken first by the two in-process cancellation cells in kernel/tests/first_batch_factorial.rs, in the sibling piece's shape; M-1 per test observed on an export in release with the fixtures copied in; about 28 of a declared 40 lines; OPEN-1 (A) and OPEN-2 (A), the custodian's. NEXT: the form committed on main when #259 leaves the filler slot; then a worker. Before: FILLER QUEUE entry 6b (RULED 2026-10-24: state/directives/2026-10-24-weekend-exception-third-product-slot-placements-forms-ahead-250-click.md, line 14; made the standing filler slot by state/directives/2026-10-24-filler-slot-standing-rule-appended-to-autonomy.md, line 8; state/FILLER-QUEUE.md): placed, graded S3; a five-line form under section 21c's size, the reviewer and the architect from dispatch, section 25 (e) set aside; any string a user sees a P6 placeholder for the sitting, any red-line text to the human. Before: PROPOSED 2026-10-09 by the human's rulings of 2026-10-09 (state/directives/2026-10-09-rulings-on-the-eight-forms.md), item 6: a sibling site of wire-bytes-invariant-trace-flag-race (its form, section 0.7); outside CI, racing only if run together; a lock or a stated one-at-a-time rule. The human places it later.",
       "dates": {
         "opened": "2026-10-09",
         "done": null
