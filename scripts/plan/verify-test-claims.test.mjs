@@ -1735,6 +1735,9 @@ test('verify-test-claims: a withdrawn-test row whose ruling cites an itemless ro
   assert.match(bad.findings[0].message, /unresolvable ruling: round 66, item 9/);
 });
 
+// RECORDED MUTATION (M1): verify-test-claims.mjs builds its pattern with `hashRefRegExp({ pathRequired: false })`
+// -- applied alone, this test run, then reverted; fails by name with actual "refused: another file's path"
+// against expected 'refused: no pinned reference'; observed at 7b380c3b2b092e0dcef33a7babe0617affa18568.
 // A bare `:3` reference on a withdrawn row has no path of its own: verify-test-claims builds its pattern
 // with `pathRequired: true`, so the row reads "no pinned reference", not "another file's path".
 test('a_withdrawn_test_row_with_only_a_bare_line_reference_has_no_pinned_reference', () => {
@@ -1749,6 +1752,9 @@ test('a_withdrawn_test_row_with_only_a_bare_line_reference_has_no_pinned_referen
   assert.equal(rowFindings[0].message, 'refused: no pinned reference', JSON.stringify(findings));
 });
 
+// RECORDED MUTATION (M2): in hashRefGrammar.mjs the rev group `[^\\s\`]+` becomes `[0-9a-f]{12,40}` -- applied
+// alone, this test run, then reverted; fails by name with actual { quotes: 1, claims: 0 } against expected
+// { quotes: 0, claims: 1 }; observed at 7b380c3b2b092e0dcef33a7babe0617affa18568.
 // One pin with a 7-character rev, read by both checkers through hashRefGrammar.mjs: verify-quotes finds no
 // unbound or failing hash reference, and verify-test-claims counts one superseded claim.
 test('a_seven_character_rev_pin_binds_in_both_checkers_through_the_shared_grammar', () => {
