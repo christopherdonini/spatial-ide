@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `9536c10428dee16319aa935d46e1afd696362807e9fd0ef093d0364de10d9646`) at `2026-10-25T10:15:51.184Z`.
+Generated from `PLAN.yaml` (sha256 `16424a521995ba723a38d7aa8fa366aa5e9d1c65f0569929954da596293783b7`) at `2026-10-25T16:29:06.451Z`.
 
 ## 1. Next
 
@@ -19,6 +19,7 @@ Generated from `PLAN.yaml` (sha256 `9536c10428dee16319aa935d46e1afd696362807e9fd
 - **session-generation-t1-t3-reobservation** — kernel/tests/session_generation.rs T1 to T3 recorded mutations re-observed at a named commit, T1 describing the arm after #147 (lane `kernel-protocol`, order null, budget 0 min)
 - **windows-case-fold-non-ascii** — The audit case policy on Windows folds non-ASCII letters as NTFS does, so a profile path differing only in non-ASCII case cannot escape the user-home redaction (wave 3's 1c-2 correction, S2, code-path-only) (lane `kernel-protocol`, order null, budget 60 min)
 - **governance-e-readings** — Piece E readings before E1's form: context loaded in a custodian session; this project's own transcript tally; the installed Claude Code facts; the bytes one worker and one reviewer dispatch receive (lane `governance`, order null, budget 60 min)
+- **verify-cites-out-of-range-line-count** — verify-cites' out-of-range reason states a line count one too high for a file that ends in a newline (lane `governance`, order null, budget 30 min)
 - **posix-backslash-in-shared-path-logic** — Shared path logic stops treating a backslash as a separator on POSIX: distinct audit destinations stay distinct, and a viewer asset named with a backslash is refused, not renamed (wave-3 A-1, S2) (lane `platform`, order null, budget 90 min)
 - **publish-bundle-sigterm** — SIGTERM handling in publish-bundle on unix (wave-3 W3-A observation 3) (lane `platform`, order null, budget 90 min)
 - **publish-unix-quota-perm-errors** — EDQUOT and EPERM in publish error classification on unix (wave-3 W3-A observation 1) (lane `platform`, order null, budget 90 min)
@@ -47,21 +48,18 @@ Generated from `PLAN.yaml` (sha256 `9536c10428dee16319aa935d46e1afd696362807e9fd
 - **signpath-application-draft** — Entry 77 — the SignPath OSS application and disclosure text drafted for the human sight, once a release is CI-built — blocked by: release-v0-2-0
 - **governance-e1-rules-as-records** — Piece E1: rules as records, a rule catalogue under rules/, a selector scripts/plan/rules.mjs, a generated block in each agent definition and a governance-ci check — blocked by: verify-cites-out-of-range-line-count, governance-e-readings
 - **shell-owners-index** — An owner's index for the shell (frontends/shell), so that shell-owned KNOWN-LIMITATIONS items and pointers are indexed somewhere — blocked by: skp-line-cites-outside-close-races
-- **verify-cites-out-of-range-line-count** — verify-cites' out-of-range reason states a line count one too high for a file that ends in a newline — blocked by: governance-hash-grammar-shared
 - **verify-cites-reversed-range** — verify-cites checks a reversed range (end below start) by its larger end only — blocked by: verify-cites-out-of-range-line-count
 - **site-design-v1** — Landing page redesign — DRAFT-4 (status strip, milestone banner, waiting-on-you cards with unblocks counts, the swimlane board) — blocked by: governance-ci-built-site
 - **macos-normalization-roots-uncanonicalized** — On macOS the audit log normalization roots are read uncanonicalized while recorded destinations are canonicalized, so a symlinked temporary-directory root never matches — blocked by: port-2-macos-l1-and-app-dirs
 
 ## 5. In progress
 
-- **stream-evaluation-failure-fixed-detail** — An admitted predicate's evaluation failure (same-type integer overflow) ends the stream with a fixed, engine-authored detail carrying no file values and no SQL, at the prepare and execute sites (the fetch site: stream-fetch-overflow-fixed-detail) (B-1's 5c, merged with W2-B observation 2) — evidence: branch `cut/stream-evaluation-failure-fixed-detail`
 - **covering-case-collision-binds-other-column** — A declared covering whose path differs from two schema names only by case: DuckDB may bind it to the other column, a wrong-rows risk that predates the covering piece — evidence: branch `cut/covering-case-collision-binds-other-column`
 - **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **bundle-redaction-scan-not-in-product-publish** — The bundle redaction scan runs only in a test: no product publish scans its emitted files, though ADR-017's section 13 (Accepted) says a scan over every emitted file asserts no path, user name, machine identifier or credential is in a bundle — evidence: branch `cut/bundle-redaction-scan`
 - **b1-shell-half** — Shell migration, milestone 4 -- B1 shell half: attributes of the inspected feature, colour by category with its legend, and the table — evidence: branch `cut/b1-shell-half-pr-c`
 - **walkthrough-row-f7-cli-refusal** — MANUAL-WALKTHROUGH.md row F7: a publish-bundle CLI publish with the real built viewer is refused under the redaction scan (its W12), so F7 points at Part G's rows, with the CLI refusal line — evidence: branch `cut/walkthrough-row-f7-cli-refusal`
 - **known-limitations-items-51-52-render-numbers** — KNOWN-LIMITATIONS items 51 and 52 follow item 46 with no line at column 0, so they render as 47 and 48 — evidence: branch `cut/known-limitations-items-51-52-render-numbers`
-- **governance-hash-grammar-shared** — Share the path:line @ rev sha256:hex reference grammar between verify-test-claims.mjs and verify-quotes.mjs — evidence: branch `cut/governance-hash-grammar-shared`
 - **port-2-macos-l1-and-app-dirs** — PORT-2 -- macOS L1 for the Cargo workspace: macos-latest in the same matrix, one application-directory boundary replacing the two resolvers, and a case-policy test on a case-insensitive volume — evidence: branch `cut/port-2-macos-l1-and-app-dirs`
 
 ## 6. Proposed / unscheduled

@@ -5,7 +5,7 @@
 | Entry | PLAN node | Grade | The human's note | Status |
 |---|---|---|---|---|
 | 1 | `windows-case-fold-non-ascii` | S2 | — | skipped at dispatch 2026-10-24: port-2, in flight, edits kernel/src/permission/audit/log.rs (rule (00)) |
-| 2 | `stream-evaluation-failure-fixed-detail` | S2 | its strings are P6 placeholders for the sitting | in flight from 2026-10-24: the five-line form committed (`engine/STREAM-EVALUATION-FAILURE-FIXED-DETAIL-PREREGISTRATION.md`); code next; route B ruled 2026-10-25 (the claim narrowed to prepare and execute; the fetch case is entry 9); closed for the click 2026-10-25 at 52e6caf3 |
+| 2 | `stream-evaluation-failure-fixed-detail` | S2 | its strings are P6 placeholders for the sitting | in flight from 2026-10-24: the five-line form committed (`engine/STREAM-EVALUATION-FAILURE-FIXED-DETAIL-PREREGISTRATION.md`); code next; route B ruled 2026-10-25 (the claim narrowed to prepare and execute; the fetch case is entry 9); closed for the click 2026-10-25 at 52e6caf3; merged 2026-10-25 (#255) |
 | 3 | `pre-admission-change-detail-braces` | S3 | the braces removed, the words staying placeholders (the node's scope (i)) | skipped at dispatch 2026-10-25: 1c step 1, in progress, edits kernel/src/lib.rs (rule (00)) |
 | 4a | `engine-cancel-before-execute-siblings` | S3 | — | skipped at dispatch 2026-10-25: #252, awaiting the click, edits engine/src/dataset.rs (rule (00)) |
 | 4b | `stream-cancel-returns-left-unmarked` | S3 | after engine-cancel-before-execute-siblings | skipped at dispatch 2026-10-25: its dependency, 4a, is not done |
@@ -23,7 +23,7 @@
 
 ## Fillers merged
 
-None yet.
+- 2026-10-25: entry 2, `stream-evaluation-failure-fixed-detail`, PR #255 (b50ad639), S2; its fetch-site case is entry 9.
 
 ## Hours slots 1 and 2 spent waiting
 
