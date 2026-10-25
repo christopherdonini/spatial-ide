@@ -29,7 +29,8 @@
 
 From 2026-10-24. Each wait is entered here with its start and end from `date -u` and what the slot waited on, for the weekly window.
 
-None entered yet.
+- **Slot 1,** from 2026-10-24T20:07:10Z (#253 out of draft for the click, commit f520f798), open: milestone 4's PR B follows 1c step 1's merge (OPEN-18 (b)), and 1c step 1 waits on O0's file, the human's (Monday).
+- **Slot 2,** from 2026-10-24T14:01:54Z (the rule's message, by the transcript; the wait began before it, when 1c step 1's N1 to N7 were built on 2026-10-23), open: 1c step 1's O1 waits on O0's file, the human's (Monday); #252 waits for the click after #241's R2.
 
 ## The custodian's proposed additions
 
