@@ -347,18 +347,25 @@ fn touch_modification_time(path: &Path) {
 
 /// **T1 — the end-to-end test from the real shape.**
 ///
-/// The window this exercises is the only one in which the dead-ticket arm is reachable at all
-/// (§5 prediction 1): a ticket minted, its generation ended while the ticket is still pending, and
-/// the redemption arriving afterwards. Every step runs through the product path — the ticket comes
+/// The window this exercises is the one §5 prediction 1 names, with every liveness read after the
+/// end: a ticket minted, its generation ended while the ticket is still pending, and the redemption
+/// arriving afterwards, so `create_from_ticket`'s first read refuses by name. Since
+/// `kernel/TICKET-LIVENESS-REDEEM-PREREGISTRATION.md` §2b (#147) the same refusal is also reached
+/// when the end is recorded after that first read and before `redeem`, at the second read
+/// `redeem_or_liveness_refusal` makes; that order is pinned in-crate by
+/// `an_end_between_liveness_and_redeem_refuses_by_its_code`, in `kernel/src/skp.rs`'s
+/// `ticket_drop_under_lock_regression` module. Every step runs through the product path — the ticket comes
 /// from `SkpHost::viewport_query`, the generation is ended by the `open_engine_stream` refusal arm
 /// that ends it on `EngineError::SourceChanged` and not by this test, and
 /// the redemption goes through `SourceFactory::create` on the constructor the shell installs.
 ///
-/// RECORDED MUTATION: delete the `TicketLiveness::EndedBySourceChange` arm from
-/// `EngineSourceFactory::create_from_ticket` (`kernel/src/lib.rs`), leaving `Live | Unknown |
-/// EndedBySourceChange | EndedByCoverageLoss => tickets.redeem(..)`. Expected failure:
-/// `a_ticket_whose_generation_ended_refuses_at_redemption_with_its_typed_code` fails on the prefix
-/// assertion, the refusal having degraded to `redeem`'s "was cancelled before it was redeemed".
+/// RECORDED MUTATION: in `EngineSourceFactory::liveness_refusal` (`kernel/src/lib.rs`), which
+/// `create_from_ticket` calls before `redeem` and `redeem_or_liveness_refusal` calls again when
+/// `redeem` refuses, delete the `TicketLiveness::EndedBySourceChange` arm and add that variant to
+/// the `Live | Unknown => None` arm, so neither read refuses by name. Applied at `959f4706fbd8824dc27352d719dae71c9a1a7c4d`, run alone
+/// and reverted: `a_ticket_whose_generation_ended_refuses_at_redemption_with_its_typed_code`
+/// FAILED on `the refusal must carry its typed code as a prefix`, the detail being `redeem`'s
+/// `was cancelled before it was redeemed`.
 #[test]
 fn a_ticket_whose_generation_ended_refuses_at_redemption_with_its_typed_code() {
     let path = dead_ticket_fixture("dead-ticket-refusal");
@@ -429,14 +436,14 @@ fn a_ticket_whose_generation_ended_refuses_at_redemption_with_its_typed_code() {
 /// (`engine/ADMISSION-PREREGISTRATION.md:742-744`), asserted negatively so that re-introducing it
 /// fails here by name.
 ///
-/// RECORDED MUTATION: map `TicketLiveness::Unknown` to the source-changed refusal alongside
-/// `EndedBySourceChange` in `create_from_ticket`. Observed failure (performed once on this branch,
-/// then reverted): `an_unknown_handle_falls_through_to_the_ticket_registrys_own_refusal` FAILED on
-/// the `is unknown` assertion, which fires before the negative one and prints the fabricated
-/// diagnosis in full — *"`redeem`'s own refusal is what answers: engine.source_changed: refused: the
-/// source file changed while it was open ({this dataset's session ended…"*. The preregistration
-/// predicted the negative assertion; the positive one is simply written first, and both cover the
-/// same defect.
+/// RECORDED MUTATION: in `EngineSourceFactory::liveness_refusal` (`kernel/src/lib.rs`), the first
+/// read `create_from_ticket` makes, add `TicketLiveness::Unknown` to the `EndedBySourceChange` arm
+/// and leave `Live => None`, so a handle this registry has no record of is answered with the
+/// source-changed refusal. Applied at `959f4706fbd8824dc27352d719dae71c9a1a7c4d`, run alone and reverted:
+/// `an_unknown_handle_falls_through_to_the_ticket_registrys_own_refusal` FAILED on the
+/// `is unknown` assertion, which fires before the negative one, its detail carrying the
+/// `engine.source_changed: ` prefix. The preregistration predicted the negative assertion; the
+/// positive one is simply written first, and both cover the same defect.
 #[test]
 fn an_unknown_handle_falls_through_to_the_ticket_registrys_own_refusal() {
     let catalog = Arc::new(Catalog::new());
@@ -480,9 +487,10 @@ fn an_unknown_handle_falls_through_to_the_ticket_registrys_own_refusal() {
 /// it would need a clock this file must not take (ADR-018). It is stated at `prune_locked`'s own
 /// doc, and §7 declares the value as the existing sum rather than a second constant.
 ///
-/// RECORDED MUTATION: drop the `st.dead_tickets.retain(..)` line from `forget_dataset`. Expected
-/// failure: `the_dead_ticket_record_is_bounded` fails on the
-/// after-close count assertion.
+/// RECORDED MUTATION: drop the `st.dead_tickets.retain(..)` line from
+/// `GenerationRegistry::forget_dataset` (`kernel/src/skp.rs`; `mint_for_open`'s own line of that
+/// form stays). Applied at `959f4706fbd8824dc27352d719dae71c9a1a7c4d`, run alone and reverted: `the_dead_ticket_record_is_bounded`
+/// FAILED on `close clears this dataset's dead handles` (`left: 1`).
 #[test]
 fn the_dead_ticket_record_is_bounded() {
     let g = GenerationRegistry::new();
