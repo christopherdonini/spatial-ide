@@ -354,7 +354,8 @@ fn touch_modification_time(path: &Path) {
 /// when the end is recorded after that first read and before `redeem`, at the second read
 /// `redeem_or_liveness_refusal` makes; that order is pinned in-crate by
 /// `an_end_between_liveness_and_redeem_refuses_by_its_code`, in `kernel/src/skp.rs`'s
-/// `ticket_drop_under_lock_regression` module. Every step runs through the product path — the ticket comes
+/// `ticket_drop_under_lock_regression` module. Every step runs through the product path — the
+/// ticket comes
 /// from `SkpHost::viewport_query`, the generation is ended by the `open_engine_stream` refusal arm
 /// that ends it on `EngineError::SourceChanged` and not by this test, and
 /// the redemption goes through `SourceFactory::create` on the constructor the shell installs.
@@ -362,8 +363,9 @@ fn touch_modification_time(path: &Path) {
 /// RECORDED MUTATION: in `EngineSourceFactory::liveness_refusal` (`kernel/src/lib.rs`), which
 /// `create_from_ticket` calls before `redeem` and `redeem_or_liveness_refusal` calls again when
 /// `redeem` refuses, delete the `TicketLiveness::EndedBySourceChange` arm and add that variant to
-/// the `Live | Unknown => None` arm, so neither read refuses by name. Applied at `959f4706fbd8824dc27352d719dae71c9a1a7c4d`, run alone
-/// and reverted: `a_ticket_whose_generation_ended_refuses_at_redemption_with_its_typed_code`
+/// the `Live | Unknown => None` arm, so neither read refuses by name. Applied at
+/// `959f4706fbd8824dc27352d719dae71c9a1a7c4d`, run alone and reverted:
+/// `a_ticket_whose_generation_ended_refuses_at_redemption_with_its_typed_code`
 /// FAILED on `the refusal must carry its typed code as a prefix`, the detail being `redeem`'s
 /// `was cancelled before it was redeemed`.
 #[test]
@@ -439,11 +441,12 @@ fn a_ticket_whose_generation_ended_refuses_at_redemption_with_its_typed_code() {
 /// RECORDED MUTATION: in `EngineSourceFactory::liveness_refusal` (`kernel/src/lib.rs`), the first
 /// read `create_from_ticket` makes, add `TicketLiveness::Unknown` to the `EndedBySourceChange` arm
 /// and leave `Live => None`, so a handle this registry has no record of is answered with the
-/// source-changed refusal. Applied at `959f4706fbd8824dc27352d719dae71c9a1a7c4d`, run alone and reverted:
-/// `an_unknown_handle_falls_through_to_the_ticket_registrys_own_refusal` FAILED on the
-/// `is unknown` assertion, which fires before the negative one, its detail carrying the
-/// `engine.source_changed: ` prefix. The preregistration predicted the negative assertion; the
-/// positive one is simply written first, and both cover the same defect.
+/// source-changed refusal. Applied at `959f4706fbd8824dc27352d719dae71c9a1a7c4d`, run alone and
+/// reverted: `an_unknown_handle_falls_through_to_the_ticket_registrys_own_refusal` FAILED on the
+/// `is unknown` assertion (`` `redeem`'s own refusal is what answers ``), which fires before the
+/// negative one, its detail carrying the `engine.source_changed: ` prefix. The preregistration
+/// predicted the negative assertion; the positive one is simply written first, and both cover the
+/// same defect.
 #[test]
 fn an_unknown_handle_falls_through_to_the_ticket_registrys_own_refusal() {
     let catalog = Arc::new(Catalog::new());
@@ -489,8 +492,9 @@ fn an_unknown_handle_falls_through_to_the_ticket_registrys_own_refusal() {
 ///
 /// RECORDED MUTATION: drop the `st.dead_tickets.retain(..)` line from
 /// `GenerationRegistry::forget_dataset` (`kernel/src/skp.rs`; `mint_for_open`'s own line of that
-/// form stays). Applied at `959f4706fbd8824dc27352d719dae71c9a1a7c4d`, run alone and reverted: `the_dead_ticket_record_is_bounded`
-/// FAILED on `close clears this dataset's dead handles` (`left: 1`).
+/// form stays). Applied at `959f4706fbd8824dc27352d719dae71c9a1a7c4d`, run alone and reverted:
+/// `the_dead_ticket_record_is_bounded` FAILED on `close clears this dataset's dead handles`
+/// (`left: 1`).
 #[test]
 fn the_dead_ticket_record_is_bounded() {
     let g = GenerationRegistry::new();
