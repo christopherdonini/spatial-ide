@@ -2588,21 +2588,30 @@ fn flush(
     .map_err(|_| EngineError::Cancelled)
 }
 
-/// The whole terminal detail for a stream whose evaluation went out of range (an admitted
-/// predicate's integer `+`, `-`, `*` or unary `-` overflowing). DuckDB's own message for this class
-/// names operands read from the file, so it is withheld. `[P6 placeholder]`: the words are the
+/// The whole terminal detail when a stream that was not cancelled fails with DuckDB's text
+/// beginning with its out-of-range class label (`is_out_of_range`), as the prepare and execute
+/// sites pass DuckDB's text; on the product path the known source is an admitted predicate's
+/// integer `+`, `-`, `*` or unary `-` overflowing. DuckDB's own message for this class names
+/// operands read from the file, so at those sites it is withheld. Proven at the execute site by
+/// `an_admitted_integer_overflow_ends_the_stream_with_the_fixed_detail` and B-T1; no test starts
+/// from the prepare site. Not at the fetch site: there the `duckdb` crate's fetch panic (1.10505.0,
+/// `Arrow::next` in src/arrow_batch.rs) puts its own words before DuckDB's, so the label is not at
+/// the start and an overflow first raised during a fetch keeps DuckDB's text, operands included;
+/// node `stream-fetch-overflow-fixed-detail` holds that case. `[P6 placeholder]`: the words are the
 /// engine's own facts, with no consequence sentence; the human's wording is owed at P6.
 const OUT_OF_RANGE_DETAIL: &str = "[P6 placeholder] a value computed while this query ran was out of range for its type; the row values and the query text are withheld";
 
-/// DuckDB's out-of-range class, read from `message` (DuckDB's own text, without the engine's phase
-/// prefix) by its label at the very start and nowhere else, so a file value that happens to carry
-/// the words is not misread.
+/// DuckDB's out-of-range class, read from `message` (without the engine's phase prefix: DuckDB's
+/// own text at the prepare and execute sites; at the fetch site the `duckdb` crate's panic payload,
+/// whose own words come first, so the crate's payload does not match) by its label at the very
+/// start and nowhere else, so a file value that happens to carry the words is not misread.
 fn is_out_of_range(message: &str) -> bool {
     message.starts_with("Out of Range Error")
 }
 
 /// A cancellation is returned first; DuckDB's out-of-range class ends with the fixed
-/// `OUT_OF_RANGE_DETAIL`; every other failure keeps `phase` and DuckDB's own `message`.
+/// `OUT_OF_RANGE_DETAIL`; every other failure keeps `phase` and `message` as passed (DuckDB's text
+/// at prepare and execute, the crate's panic payload at the fetch site).
 fn classify(cancel: &CancelToken, phase: &str, message: &str) -> EngineError {
     if cancel.is_cancelled() {
         EngineError::Cancelled

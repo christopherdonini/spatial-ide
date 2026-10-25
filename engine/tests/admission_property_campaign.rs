@@ -1022,7 +1022,8 @@ const OVERFLOW_TERMINAL: &str = "query: [P6 placeholder] a value computed while 
 /// widenings. Such a stream ends in error by direction (B-1 point 4), and node
 /// `stream-evaluation-failure-fixed-detail` makes its terminal text the fixed detail alone.
 /// Identified by both of these: the predicate's typed class, integer arithmetic (this fixture's own
-/// integer-typed operands, `i64` and `id`, joined by `+`, `-` or `*`), and a terminal text equal to
+/// integer-typed operands, `i64` and `id`, and any integer literal, joined by `+`, `-` or `*`;
+/// keyed on `i64` or `id` written beside ` + `, ` - ` or ` * `), and a terminal text equal to
 /// `OVERFLOW_TERMINAL`. DuckDB's own text is no longer read.
 fn is_declared_integer_arithmetic_overflow(predicate: &str, terminal_error: &str) -> bool {
     if terminal_error != OVERFLOW_TERMINAL {
