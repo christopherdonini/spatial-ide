@@ -173,3 +173,20 @@ Nothing above is edited.
 - Gate 1's W1 words: replaced by item 2's.
 
 Nothing above is edited.
+
+## Amendment 3 — the closing record, written after gate 2's reports and the words commit were seen: gate 2's words applied with no re-gate, the PR title, the size, the Change line's reference item and the title superseded (class 1)
+
+*Written by the custodian at the PR's final head 52e6caf36ee55224f643a370900391935f01d594. References only, and nothing below is a quotation. Gate 2: `state/consults/gates/2026-10-25-stream-evaluation-failure-fixed-detail-gate2-architect.md` (sha256 da748fe21b3291297e37300ebc796c8ab0fe6c5a33daeb9fb2088b630a3b18dd) and `state/consults/gates/2026-10-25-stream-evaluation-failure-fixed-detail-gate2-reviewer.md` (sha256 da2030434a0ec767a8757133b534e1aab8a1df15c7b252d7372d78ba77e845f3), both FAIL on wording only. The words commit: `state/consults/2026-10-25-stream-evaluation-failure-fixed-detail-gate2-x1-worker-report.md` (sha256 from line 5 905ac1c966d8ea665f8bf51f45646139e78a0da6146da6b06ecc8b1a75a9c917).*
+
+1. **Gate 2's words, applied with no re-gate (§31).**
+   - The architect's X1 words for the campaign's doc sentence on such a stream's terminal are at 52e6caf3. The reviewer's C2 (a), on the same sentence, is met by them.
+   - The reviewer's C2 (b) words are the PR's title.
+   - C1, E1 and O1 are carried by their nodes. The execute site is proven at the head by the reviewer's M1 run.
+2. **The size.** By the numstat from the merge base f0804432 to 52e6caf3, the diff is 147 lines in the three files the Scope names, under its 150. There is no class 8.
+3. **The Change line's reference item (Amendment 2 item 6, step 3).** The Change line's claim holds at the prepare and execute sites, proven by T1 and B-T1. The claim is that this class's terminal detail carries no file value and no SQL. The fetch site is node `stream-fetch-overflow-fixed-detail`'s.
+4. **The string.** S1 is the only string a user sees. It is a P6 placeholder for the sitting, unchanged.
+
+**Superseded:**
+- The title's claim: read with Amendment 2, item 1 (both gates' D2). The title is unedited.
+
+Nothing above is edited.

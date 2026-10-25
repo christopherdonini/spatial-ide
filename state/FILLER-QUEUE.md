@@ -5,7 +5,7 @@
 | Entry | PLAN node | Grade | The human's note | Status |
 |---|---|---|---|---|
 | 1 | `windows-case-fold-non-ascii` | S2 | — | skipped at dispatch 2026-10-24: port-2, in flight, edits kernel/src/permission/audit/log.rs (rule (00)) |
-| 2 | `stream-evaluation-failure-fixed-detail` | S2 | its strings are P6 placeholders for the sitting | in flight from 2026-10-24: the five-line form committed (`engine/STREAM-EVALUATION-FAILURE-FIXED-DETAIL-PREREGISTRATION.md`); code next; route B ruled 2026-10-25 (the claim narrowed to prepare and execute; the fetch case is entry 9) |
+| 2 | `stream-evaluation-failure-fixed-detail` | S2 | its strings are P6 placeholders for the sitting | in flight from 2026-10-24: the five-line form committed (`engine/STREAM-EVALUATION-FAILURE-FIXED-DETAIL-PREREGISTRATION.md`); code next; route B ruled 2026-10-25 (the claim narrowed to prepare and execute; the fetch case is entry 9); closed for the click 2026-10-25 at 52e6caf3 |
 | 3 | `pre-admission-change-detail-braces` | S3 | the braces removed, the words staying placeholders (the node's scope (i)) | queued |
 | 4a | `engine-cancel-before-execute-siblings` | S3 | — | queued |
 | 4b | `stream-cancel-returns-left-unmarked` | S3 | after engine-cancel-before-execute-siblings | queued |
