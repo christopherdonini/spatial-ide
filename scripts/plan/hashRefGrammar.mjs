@@ -1,11 +1,13 @@
 // scripts/plan/hashRefGrammar.mjs -- the `path:line @ <rev> sha256:<hex>` reference grammar, defined once
-// and imported by verify-quotes.mjs (path optional: a bare `:line` binds to the nearest preceding path)
-// and verify-test-claims.mjs (path required). A leaf: it imports nothing, so neither checker's import
-// of the other can make a cycle. The shapes the grammar accepts are described at verify-quotes.mjs's
-// "THE `//` CONTINUATION GRAMMAR" comment. Node's standard library only (here: nothing).
+// and imported by verify-quotes.mjs (path optional: verify-quotes binds a bare `:line` to the nearest
+// preceding path:line citation in the same paragraph) and verify-test-claims.mjs (path required). A leaf:
+// it imports nothing, so both checkers import it with no cycle (verify-quotes.mjs imports
+// verify-test-claims.mjs, so exporting the grammar from verify-quotes.mjs would make one). The shapes the
+// grammar accepts are described in verify-quotes.mjs's "HASH-CHECKED REFERENCES" comment and its
+// "THE `//` CONTINUATION GRAMMAR" paragraph. Node's standard library only (here: nothing).
 
 // Horizontal whitespace, or exactly one rustfmt `//` comment continuation, where `\s*` would otherwise go.
-export const GAP = '[ \\t]*(?:\\n[ \\t]*//[ \\t]?)?[ \\t]*';
+const GAP = '[ \\t]*(?:\\n[ \\t]*//[ \\t]?)?[ \\t]*';
 
 const PATH = '([A-Za-z0-9_][A-Za-z0-9_./+-]*)';
 
