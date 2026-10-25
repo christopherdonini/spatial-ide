@@ -9,7 +9,7 @@
 | 3 | `pre-admission-change-detail-braces` | S3 | the braces removed, the words staying placeholders (the node's scope (i)) | skipped at dispatch 2026-10-25: 1c step 1, in progress, edits kernel/src/lib.rs (rule (00)) |
 | 4a | `engine-cancel-before-execute-siblings` | S3 | — | skipped at dispatch 2026-10-25: #252, awaiting the click, edits engine/src/dataset.rs (rule (00)) |
 | 4b | `stream-cancel-returns-left-unmarked` | S3 | after engine-cancel-before-execute-siblings | skipped at dispatch 2026-10-25: its dependency, 4a, is not done |
-| 5 | `kernel-close-during-open-admission` | S3 | test only | form drafted 2026-10-25 (`state/consults/2026-10-25-kernel-close-during-open-admission-five-line-form-architect-draft.md`); its OPEN-1 with the human before the form is committed |
+| 5 | `kernel-close-during-open-admission` | S3 | test only | form drafted 2026-10-25 (`state/consults/2026-10-25-kernel-close-during-open-admission-five-line-form-architect-draft.md`); its OPEN-1 with the human before the form is committed; OPEN-1 ruled (A) 2026-10-25 (`state/directives/2026-10-25-filler-entry-5-open-1-a-pr-b-open-1-2-3-a-o1-probe-lead-data-designs-tester-high-runs.md`, item 1); the form next |
 | 6a | `session-generation-t1-t3-reobservation` | S3 | — | queued |
 | 6b | `first-batch-factorial-ignored-trace-tests` | S3 | — | queued |
 | 6c | `slice-traced-test-cross-stamping` | S3 | — | queued |
