@@ -6,10 +6,10 @@
 |---|---|---|---|---|
 | 1 | `windows-case-fold-non-ascii` | S2 | — | skipped at dispatch 2026-10-24: port-2, in flight, edits kernel/src/permission/audit/log.rs (rule (00)) |
 | 2 | `stream-evaluation-failure-fixed-detail` | S2 | its strings are P6 placeholders for the sitting | in flight from 2026-10-24: the five-line form committed (`engine/STREAM-EVALUATION-FAILURE-FIXED-DETAIL-PREREGISTRATION.md`); code next; route B ruled 2026-10-25 (the claim narrowed to prepare and execute; the fetch case is entry 9); closed for the click 2026-10-25 at 52e6caf3 |
-| 3 | `pre-admission-change-detail-braces` | S3 | the braces removed, the words staying placeholders (the node's scope (i)) | queued |
-| 4a | `engine-cancel-before-execute-siblings` | S3 | — | queued |
-| 4b | `stream-cancel-returns-left-unmarked` | S3 | after engine-cancel-before-execute-siblings | queued |
-| 5 | `kernel-close-during-open-admission` | S3 | test only | queued |
+| 3 | `pre-admission-change-detail-braces` | S3 | the braces removed, the words staying placeholders (the node's scope (i)) | skipped at dispatch 2026-10-25: 1c step 1, in progress, edits kernel/src/lib.rs (rule (00)) |
+| 4a | `engine-cancel-before-execute-siblings` | S3 | — | skipped at dispatch 2026-10-25: #252, awaiting the click, edits engine/src/dataset.rs (rule (00)) |
+| 4b | `stream-cancel-returns-left-unmarked` | S3 | after engine-cancel-before-execute-siblings | skipped at dispatch 2026-10-25: its dependency, 4a, is not done |
+| 5 | `kernel-close-during-open-admission` | S3 | test only | form drafted 2026-10-25 (`state/consults/2026-10-25-kernel-close-during-open-admission-five-line-form-architect-draft.md`); its OPEN-1 with the human before the form is committed |
 | 6a | `session-generation-t1-t3-reobservation` | S3 | — | queued |
 | 6b | `first-batch-factorial-ignored-trace-tests` | S3 | — | queued |
 | 6c | `slice-traced-test-cross-stamping` | S3 | — | queued |
