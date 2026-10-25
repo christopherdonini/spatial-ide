@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `98b85490eb126da0e20f62abde1911a7271484011f4b5a130ae21a4b7ff35687`) at `2026-10-25T16:46:46.849Z`.
+Generated from `PLAN.yaml` (sha256 `f4bcf8f1c7582c550c4a0dc8831cf65ca17c0652b07e09e6ece987794d88d947`) at `2026-10-25T16:54:12.987Z`.
 
 ## 1. Next
 
@@ -19,7 +19,6 @@ Generated from `PLAN.yaml` (sha256 `98b85490eb126da0e20f62abde1911a7271484011f4b
 - **session-generation-t1-t3-reobservation** — kernel/tests/session_generation.rs T1 to T3 recorded mutations re-observed at a named commit, T1 describing the arm after #147 (lane `kernel-protocol`, order null, budget 0 min)
 - **windows-case-fold-non-ascii** — The audit case policy on Windows folds non-ASCII letters as NTFS does, so a profile path differing only in non-ASCII case cannot escape the user-home redaction (wave 3's 1c-2 correction, S2, code-path-only) (lane `kernel-protocol`, order null, budget 60 min)
 - **governance-e-readings** — Piece E readings before E1's form: context loaded in a custodian session; this project's own transcript tally; the installed Claude Code facts; the bytes one worker and one reviewer dispatch receive (lane `governance`, order null, budget 60 min)
-- **verify-cites-out-of-range-line-count** — verify-cites' out-of-range reason states a line count one too high for a file that ends in a newline (lane `governance`, order null, budget 60 min)
 - **posix-backslash-in-shared-path-logic** — Shared path logic stops treating a backslash as a separator on POSIX: distinct audit destinations stay distinct, and a viewer asset named with a backslash is refused, not renamed (wave-3 A-1, S2) (lane `platform`, order null, budget 90 min)
 - **publish-bundle-sigterm** — SIGTERM handling in publish-bundle on unix (wave-3 W3-A observation 3) (lane `platform`, order null, budget 90 min)
 - **publish-unix-quota-perm-errors** — EDQUOT and EPERM in publish error classification on unix (wave-3 W3-A observation 1) (lane `platform`, order null, budget 90 min)
@@ -60,6 +59,7 @@ Generated from `PLAN.yaml` (sha256 `98b85490eb126da0e20f62abde1911a7271484011f4b
 - **b1-shell-half** — Shell migration, milestone 4 -- B1 shell half: attributes of the inspected feature, colour by category with its legend, and the table — evidence: branch `cut/b1-shell-half-pr-c`
 - **walkthrough-row-f7-cli-refusal** — MANUAL-WALKTHROUGH.md row F7: a publish-bundle CLI publish with the real built viewer is refused under the redaction scan (its W12), so F7 points at Part G's rows, with the CLI refusal line — evidence: branch `cut/walkthrough-row-f7-cli-refusal`
 - **known-limitations-items-51-52-render-numbers** — KNOWN-LIMITATIONS items 51 and 52 follow item 46 with no line at column 0, so they render as 47 and 48 — evidence: branch `cut/known-limitations-items-51-52-render-numbers`
+- **verify-cites-out-of-range-line-count** — verify-cites' out-of-range reason states a line count one too high for a file that ends in a newline — evidence: branch `cut/verify-cites-out-of-range-line-count`
 - **port-2-macos-l1-and-app-dirs** — PORT-2 -- macOS L1 for the Cargo workspace: macos-latest in the same matrix, one application-directory boundary replacing the two resolvers, and a case-policy test on a case-insensitive volume — evidence: branch `cut/port-2-macos-l1-and-app-dirs`
 
 ## 6. Proposed / unscheduled
