@@ -5983,14 +5983,48 @@ nodes:
     order: null
     depends_on: [governance-hash-grammar-shared]
     needs_human: {kind: none, minutes: 0}
-    gate: none
+    gate: scripts/plan/VERIFY-CITES-OUT-OF-RANGE-LINE-COUNT-PREREGISTRATION.md
     evidence: null
-    budget_minutes: 30
+    budget_minutes: 60
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "UNBLOCKED 2026-10-25: governance-hash-grammar-shared merged (#256); the governance lane's next piece. Before: RULED 2026-10-23 (state/directives/2026-10-23-weekend-open-items-ruled-verify-cites-pin-covering-case-port-2-session-log-test-feature-v0-2-findings-graded.md), item 7: graded S3; the governance lane after the current queue, after governance-hash-grammar-shared. Before: PROPOSED 2026-10-23 from verify-cites-pin-resolution-and-line-zero's drafting consult (state/consults/2026-10-23-verify-cites-pin-resolution-and-line-zero-architect-draft.md, OPEN-4): the checker counts the pieces of a split on newlines, so a 5-line file is reported as 6 lines in every out-of-range reason; the reviewer's probe at PR #191's attempt-2 gate showed it. Outside that piece, since fixing it there would change every out-of-range reason in its I1 run. For the human's grading and placement."
+    summary: "FORM COMMITTED 2026-10-25 (scripts/plan/VERIFY-CITES-OUT-OF-RANGE-LINE-COUNT-PREREGISTRATION.md; the architect's draft state/consults/2026-10-25-verify-cites-out-of-range-line-count-five-line-form-architect-draft.md; 13 pins): every out-of-range reason prints the file's true line count, the bound kept and disclosed in the header; 2 files, budget 100 lines; T1 to T4 with M1 to M4; the reviewer alone; the bound itself proposed as verify-cites-past-end-bound. NEXT: a worker builds it on its own branch. Before: UNBLOCKED 2026-10-25: governance-hash-grammar-shared merged (#256); the governance lane's next piece. Before: RULED 2026-10-23 (state/directives/2026-10-23-weekend-open-items-ruled-verify-cites-pin-covering-case-port-2-session-log-test-feature-v0-2-findings-graded.md), item 7: graded S3; the governance lane after the current queue, after governance-hash-grammar-shared. Before: PROPOSED 2026-10-23 from verify-cites-pin-resolution-and-line-zero's drafting consult (state/consults/2026-10-23-verify-cites-pin-resolution-and-line-zero-architect-draft.md, OPEN-4): the checker counts the pieces of a split on newlines, so a 5-line file is reported as 6 lines in every out-of-range reason; the reviewer's probe at PR #191's attempt-2 gate showed it. Outside that piece, since fixing it there would change every out-of-range reason in its I1 run. For the human's grading and placement."
     dates: {opened: 2026-10-23, done: null}
+  - id: verify-cites-past-end-bound
+    title: "verify-cites passes a cite to the line just past the end of a file that ends in a newline, or to line 1 of an empty file: the bound, with a design for such cites inside immutable records"
+    kind: task
+    lane: governance
+    phase: prototype
+    status: proposed
+    order: null
+    depends_on: [verify-cites-out-of-range-line-count]
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 60
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "PROPOSED 2026-10-25 from verify-cites-out-of-range-line-count's drafting consult, OPEN-1: verify-cites checks a cited line against the pieces of a split on newlines, so a cite to the line just past the end of a file that ends in a newline, or to line 1 of an empty file, passes in the tree and at a pin. The custodian's enumeration at main 5315a6a5, with the bound corrected, found 13 cites that would change, 5 of them gated and 8 advisory, all in filed reports under state/consults/ and state/consults/gates/, which are byte-identical records and cannot be edited; so the fix needs a design for such cites inside immutable records before the bound changes. verify-cites-out-of-range-line-count corrected the count each reason prints and disclosed the bound in the header; it did not change the bound. For the human's grading and placement."
+    dates: {opened: 2026-10-25, done: null}
+  - id: verify-quotes-cite-listing-line-count
+    title: "verify-quotes cite listing states a line count one too high for a file that ends in a newline and lists the line past the end as blank"
+    kind: task
+    lane: governance
+    phase: prototype
+    status: proposed
+    order: null
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 60
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "PROPOSED 2026-10-25 from verify-cites-out-of-range-line-count's drafting consult: the cite listing in verify-quotes (listCiteContents) splits a file on newlines and counts the pieces, so for a file that ends in a newline its out-of-range note states a line count one too high, and the line just past the end is listed as a blank line instead of out of range. The hash check in verify-quotes reads lines by a different slice and is not affected. Outside verify-cites-out-of-range-line-count, which changes verify-cites only. For the human's grading and placement."
+    dates: {opened: 2026-10-25, done: null}
   - id: governance-e-readings
     title: "Piece E readings before E1's form: context loaded in a custodian session; this project's own transcript tally; the installed Claude Code facts; the bytes one worker and one reviewer dispatch receive"
     kind: task

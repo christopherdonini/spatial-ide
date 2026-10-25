@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `16424a521995ba723a38d7aa8fa366aa5e9d1c65f0569929954da596293783b7`) at `2026-10-25T16:29:06.451Z`.
+Generated from `PLAN.yaml` (sha256 `98b85490eb126da0e20f62abde1911a7271484011f4b5a130ae21a4b7ff35687`) at `2026-10-25T16:46:46.849Z`.
 
 ## 1. Next
 
@@ -19,7 +19,7 @@ Generated from `PLAN.yaml` (sha256 `16424a521995ba723a38d7aa8fa366aa5e9d1c65f056
 - **session-generation-t1-t3-reobservation** — kernel/tests/session_generation.rs T1 to T3 recorded mutations re-observed at a named commit, T1 describing the arm after #147 (lane `kernel-protocol`, order null, budget 0 min)
 - **windows-case-fold-non-ascii** — The audit case policy on Windows folds non-ASCII letters as NTFS does, so a profile path differing only in non-ASCII case cannot escape the user-home redaction (wave 3's 1c-2 correction, S2, code-path-only) (lane `kernel-protocol`, order null, budget 60 min)
 - **governance-e-readings** — Piece E readings before E1's form: context loaded in a custodian session; this project's own transcript tally; the installed Claude Code facts; the bytes one worker and one reviewer dispatch receive (lane `governance`, order null, budget 60 min)
-- **verify-cites-out-of-range-line-count** — verify-cites' out-of-range reason states a line count one too high for a file that ends in a newline (lane `governance`, order null, budget 30 min)
+- **verify-cites-out-of-range-line-count** — verify-cites' out-of-range reason states a line count one too high for a file that ends in a newline (lane `governance`, order null, budget 60 min)
 - **posix-backslash-in-shared-path-logic** — Shared path logic stops treating a backslash as a separator on POSIX: distinct audit destinations stay distinct, and a viewer asset named with a backslash is refused, not renamed (wave-3 A-1, S2) (lane `platform`, order null, budget 90 min)
 - **publish-bundle-sigterm** — SIGTERM handling in publish-bundle on unix (wave-3 W3-A observation 3) (lane `platform`, order null, budget 90 min)
 - **publish-unix-quota-perm-errors** — EDQUOT and EPERM in publish error classification on unix (wave-3 W3-A observation 1) (lane `platform`, order null, budget 90 min)
@@ -130,6 +130,8 @@ Generated from `PLAN.yaml` (sha256 `16424a521995ba723a38d7aa8fa366aa5e9d1c65f056
 - **pre-1-0-trademark-search** — The trademark register search with counsel before 1.0 (the human's own) (phase `prototype`) — never queued until placed
 - **record-step-style-match-widening** — record_step admits a style.set match value on fillColor, with the step's dependencies naming the match column and its type (milestone 4's OPEN-4 (A′)): a small data-lane piece, or the first commit of piece 1c's step 1 (phase `prototype`) — never queued until placed
 - **adr-017-note-product-redaction-gate** — An ADR-017 note in the human's typed words: the product publish now runs the redaction scan over every emitted file, except a viewer file whose bytes the viewer's build scanned, and refuses by name on a finding (bundle-redaction-scan-not-in-product-publish); the build-time scan, the reviewed list and the skip; and Corrigendum 4's new uninterruptible term (phase `prototype`) — never queued until placed
+- **verify-cites-past-end-bound** — verify-cites passes a cite to the line just past the end of a file that ends in a newline, or to line 1 of an empty file: the bound, with a design for such cites inside immutable records (phase `prototype`) — never queued until placed
+- **verify-quotes-cite-listing-line-count** — verify-quotes cite listing states a line count one too high for a file that ends in a newline and lists the line past the end as blank (phase `prototype`) — never queued until placed
 - **governance-e3-module-claude-md** — Piece E3: a small generated CLAUDE.md per product module from the rules whose paths match, if reading 3 confirms on-demand loading (phase `prototype`) — never queued until placed
 - **governance-e4-rulebook-into-records** — Piece E4: the rest of AUTONOMY, AI_DEVELOPMENT and PRECEDENTS move into rule records, each rule when it is next touched or cited (phase `prototype`) — never queued until placed
 - **governance-rule-inactivity-list** — A weekly inactivity list of rules whose moment shows no occurrence in four weeks, or unknown, built from existing records only (phase `prototype`) — never queued until placed
