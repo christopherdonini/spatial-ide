@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `68c9eabcadb27edd8ab93455694cd4fdbe8b5dfa8325c822bb3172496e5aa221`) at `2026-10-25T17:36:24.893Z`.
+Generated from `PLAN.yaml` (sha256 `498960b056d7c8bc03f459b5c86d5036cc8615afe64ab07c35d7e207338e7149`) at `2026-10-25T17:44:47.162Z`.
 
 ## 1. Next
 
@@ -14,7 +14,6 @@ Generated from `PLAN.yaml` (sha256 `68c9eabcadb27edd8ab93455694cd4fdbe8b5dfa8325
 - **stream-cancel-returns-left-unmarked** — The producer's cancel returns the flush piece leaves unmarked: a prepare error through classify, the two-read window in classify's marking arms, and the send to a receiver that is gone (is a disconnect an observation) (lane `engine`, order null, budget 120 min)
 - **type-walk-rule2-residual-reasons** — Type walk: a rule-2 result over a column or an integer literal, refused by rule 7's bit-width bound, keeps the residual reason although its value is a constant NULL (for example f32 > NULL + 100000) (lane `engine`, order null, budget 60 min)
 - **first-batch-factorial-ignored-trace-tests** — kernel/tests/first_batch_factorial.rs's two ignored measurement tests each start a trace in one binary with no shared lock (lane `kernel-protocol`, order null, budget 60 min)
-- **kernel-close-during-open-admission** — A close naming a handle between open_dataset's catalog insert and its admission forgets the name, then open mints a generation and returns Ok for a dataset the catalog no longer has (node 4's drafting consult, N1; unreachable in the product) (lane `kernel-protocol`, order null, budget 60 min)
 - **pre-admission-change-detail-braces** — Four kernel P6-placeholder detail strings are wrapped in literal braces, which reach the operator message; the watcher form declares each such string starts with the bracketed placeholder tag (lane `kernel-protocol`, order null, budget 30 min)
 - **session-generation-t1-t3-reobservation** — kernel/tests/session_generation.rs T1 to T3 recorded mutations re-observed at a named commit, T1 describing the arm after #147 (lane `kernel-protocol`, order null, budget 0 min)
 - **windows-case-fold-non-ascii** — The audit case policy on Windows folds non-ASCII letters as NTFS does, so a profile path differing only in non-ASCII case cannot escape the user-home redaction (wave 3's 1c-2 correction, S2, code-path-only) (lane `kernel-protocol`, order null, budget 60 min)
@@ -54,6 +53,7 @@ Generated from `PLAN.yaml` (sha256 `68c9eabcadb27edd8ab93455694cd4fdbe8b5dfa8325
 ## 5. In progress
 
 - **covering-case-collision-binds-other-column** — A declared covering whose path differs from two schema names only by case: DuckDB may bind it to the other column, a wrong-rows risk that predates the covering piece — evidence: branch `cut/covering-case-collision-binds-other-column`
+- **kernel-close-during-open-admission** — A close naming a handle between open_dataset's catalog insert and its admission forgets the name, then open mints a generation and returns Ok for a dataset the catalog no longer has (node 4's drafting consult, N1; unreachable in the product) — evidence: branch `cut/kernel-close-during-open-admission`
 - **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **bundle-redaction-scan-not-in-product-publish** — The bundle redaction scan runs only in a test: no product publish scans its emitted files, though ADR-017's section 13 (Accepted) says a scan over every emitted file asserts no path, user name, machine identifier or credential is in a bundle — evidence: branch `cut/bundle-redaction-scan`
 - **b1-shell-half** — Shell migration, milestone 4 -- B1 shell half: attributes of the inspected feature, colour by category with its legend, and the table — evidence: branch `cut/b1-shell-half-pr-c`
