@@ -9,7 +9,7 @@
 // WHAT THIS SCRIPT DOES: it scans a set of tracked text files for `path:line` and `path:line-line`
 // references (e.g. `engine/src/pool.rs:99`, `WorkingCanvas.tsx:805`, `foo.ts:158-167`) and resolves
 // EACH against the working tree: the referenced file must exist AND the cited line (or, for a range,
-// both endpoints) must be within that file's line count. Every reference that does NOT resolve is
+// both endpoints) must be within that file, as the bound below defines it. Every reference that does NOT resolve is
 // printed with the citing `file:line` and the bad target; the process exits 1 if any reference is
 // unresolved, 0 if all resolve. A cite starting or ending at line 0 never resolves; where its reason
 // would say a line exceeds a file, it names line 0 instead (lines count from 1). Here and below, a line is
@@ -101,7 +101,7 @@ export const CODE_EXTS = new Set(['rs', 'ts', 'tsx', 'js', 'jsx', 'mjs', 'cjs'])
 
 const ARCHIVED_PREFIXES = ['state/drafts/', 'state/consults/gates/'];
 
-// The two rotating ledgers: an unpinned line cite past the end of either is advisory, from any citing folder.
+// The two rotating ledgers: an unpinned line cite into either that does not resolve is advisory, from any citing folder.
 const ROTATING_LEDGERS = new Set(['state/CUT-STATE.md', 'DECISIONS-PENDING.md']);
 
 // path:line[-line]. The path token starts with an identifier char (never `/` or `:`) so a match can
