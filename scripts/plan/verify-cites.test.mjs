@@ -509,6 +509,7 @@ test('verify-cites: a pinned DECISIONS-PENDING.md line cite whose pin fails stay
   }
 });
 
+// RECORDED MUTATION (M1) at 4ec98d9f9e90e3f437073507fd0e1ad6b60c9629, applied alone and reverted: the exact tier's figure taken from `pieces` -> fails by name: `an_exact_out_of_range_reason_counts_the_lines_of_a_newline_ended_file` and `an_out_of_range_reason_for_an_empty_file_counts_0_lines`
 test('an_exact_out_of_range_reason_counts_the_lines_of_a_newline_ended_file', () => {
   const dir = tmpTree({ 'engine/src/pool.rs': 'a\nb\nc\n' });
   const res = checkCitation({ pathRaw: 'engine/src/pool.rs', startL: 9, endL: 9, relPath: 'docs/x.md' }, mkIndex(['engine/src/pool.rs']), dir);
@@ -516,6 +517,7 @@ test('an_exact_out_of_range_reason_counts_the_lines_of_a_newline_ended_file', ()
   assert.match(res.reason, /^line 9 exceeds "engine\/src\/pool\.rs" \(3 lines\)$/);
 });
 
+// RECORDED MUTATION (M2) at 4ec98d9f9e90e3f437073507fd0e1ad6b60c9629, applied alone and reverted: the suffix tier's figure taken from `pieces` -> fails by name, and only this one: `a_suffix_out_of_range_reason_counts_the_lines_of_a_newline_ended_file`
 test('a_suffix_out_of_range_reason_counts_the_lines_of_a_newline_ended_file', () => {
   const dir = tmpTree({ 'engine/src/pool.rs': 'a\nb\nc\n' });
   const res = checkCitation({ pathRaw: 'pool.rs', startL: 9, endL: 9, relPath: 'docs/x.md' }, mkIndex(['engine/src/pool.rs']), dir);
@@ -523,12 +525,14 @@ test('a_suffix_out_of_range_reason_counts_the_lines_of_a_newline_ended_file', ()
   assert.match(res.reason, /\(3 lines\)$/);
 });
 
+// RECORDED MUTATION (M3) at 4ec98d9f9e90e3f437073507fd0e1ad6b60c9629, applied alone and reverted: checkPinned's figure taken from `pieces` -> fails by name, and only this one: `a_pinned_out_of_range_reason_counts_the_lines_of_a_newline_ended_file`
 test('a_pinned_out_of_range_reason_counts_the_lines_of_a_newline_ended_file', () => {
   const gated = pinnedRun((rev) => `see engine/src/pool.rs:9 @ ${rev} sha256:00`, 'gated');
   assert.equal(gated.length, 1, JSON.stringify(gated));
   assert.match(gated[0].reason, /at pinned commit [0-9a-f]+ \(5 lines\)$/);
 });
 
+// RECORDED MUTATION (M4) at 4ec98d9f9e90e3f437073507fd0e1ad6b60c9629, applied alone and reverted: the helper's empty-file term dropped (the reason prints 1) -> fails by name, and only this one: `an_out_of_range_reason_for_an_empty_file_counts_0_lines`
 test('an_out_of_range_reason_for_an_empty_file_counts_0_lines', () => {
   const dir = tmpTree({ 'engine/src/pool.rs': '' });
   const res = checkCitation({ pathRaw: 'engine/src/pool.rs', startL: 2, endL: 2, relPath: 'docs/x.md' }, mkIndex(['engine/src/pool.rs']), dir);
