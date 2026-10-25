@@ -5099,6 +5099,13 @@ mod ticket_drop_under_lock_regression {
     /// open returns. M1 below is the fix shape. A fix flips this test, and it is then replaced
     /// under the fix's own form. It claims no property: it states what the code does, not what it
     /// should do.
+    ///
+    /// RECORDED MUTATION (M1): in `open_dataset`'s Watching arm, immediately before
+    /// `SessionRef::mint()`, return `Err(SkpError::unknown_dataset(handle.as_str()))` when
+    /// `self.catalog.get(handle.as_str())` is `None`. Applied at
+    /// `bc7b0fbd479f97d05a60f4f48578c9870fed639e`, run and reverted: this test FAILED at its
+    /// expect on the open's result, `the open returns Ok although a close ran inside its
+    /// admission` (the open returned `skp.unknown_dataset`).
     #[test]
     fn a_close_during_open_admission_leaves_a_generation_for_a_name_the_catalog_no_longer_holds() {
         let path = fixture("kcdo-close-during-admission");
