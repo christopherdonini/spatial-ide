@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-25T08:56:47.444Z",
-  "plan_hash": "4c22e0a17602d1411ad52d02c3127f50987ee5361feb568494fcb0923df047ce",
+  "generated_at": "2026-10-25T09:08:36.638Z",
+  "plan_hash": "78e476d07739971055e4d0abed6d8658c13a95dcb51bfcc2c22cae6b4d4c0e8f",
   "priorities_approved": true,
   "next": {
     "id": "corpus-line-files",
@@ -230,25 +230,6 @@
         "done": null
       },
       "summary": "READING 1 (state/directives/2026-10-25-255-route-b-o1-lead-data-probe-session-end-lines-s2-context-monday-no-redaction-pr.md, item 4): /context on Monday, once, in the custodian's session, partway through a piece. Before: READINGS 2 TO 4 FILED 2026-10-24 (state/consults/2026-10-24-governance-e-reading-2-transcript-tally-tester-report.md; state/consults/2026-10-24-governance-e-reading-3-claude-code-facts.md; state/consults/2026-10-24-governance-e-reading-4-dispatch-bytes-custodian.md). Reading 1 waits for the human: context is a built-in command the custodian cannot run. Reading 3: the per-call effort parameter exists (2.1.292 or later; installed 2.1.306), CLAUDE_CODE_EFFORT_LEVEL is not set here, and whether clear gives a new session id is not documented, so it is observed at the first checkpoint. Before: RULED 2026-10-24 (state/directives/2026-10-24-governance-piece-e-rules-as-records-readings-e1-repin-fresh-session-practice.md, line 10 onward; the advisor audit state/consults/2026-10-24-agent-briefs-rulebook-audit-advisor.md): four readings, only their reports under state/consults/ committed. 1: context once in a custodian session partway through a piece (the slash command is the human's to type: the custodian cannot run built-in commands). 2: a read-only tally of this project's own transcripts on this machine over 14 days, tokens by session and agent type, the 20 largest tool results by size, counts only, this project's transcript directory alone and named. 3: from the installed Claude Code and its documentation: whether clear starts a new session id; whether a dispatch sets effort per call and whether CLAUDE_CODE_EFFORT_LEVEL is set here; whether a subfolder CLAUDE.md loads when an agent reads a file there, subagents included. 4: the bytes one worker and one reviewer dispatch receive today."
-    },
-    {
-      "id": "governance-hash-grammar-shared",
-      "title": "Share the path:line @ rev sha256:hex reference grammar between verify-test-claims.mjs and verify-quotes.mjs",
-      "lane": "governance",
-      "phase": "prototype",
-      "status": "ready",
-      "order": null,
-      "budget_minutes": 90,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-18",
-        "done": null
-      },
-      "summary": "FORM COMMITTED 2026-10-25 (scripts/plan/HASH-GRAMMAR-SHARED-PREREGISTRATION.md; the architect's draft state/consults/2026-10-25-governance-hash-grammar-shared-five-line-form-architect-draft.md; 42 pins): one definition of the grammar in a new leaf module, scripts/plan/hashRefGrammar.mjs, imported by verify-quotes.mjs (path optional) and verify-test-claims.mjs (path required), each compiled pattern byte for byte today's; 5 files, budget 140 lines; T1 and T2 with M1 and M2; the reviewer alone (OPEN-1 (A)); the leading-dot gap proposed as governance-hash-ref-leading-dot-path (OPEN-2 (B)). NEXT: a worker builds it on its own branch. Before: UNBLOCKED 2026-10-25: guardian-parity-git-timeout-under-load merged (#251). Before: RULED 2026-10-23 (state/directives/2026-10-23-weekend-covering-case-s1-session-log-redaction-s2-governance-and-docs-order-v0-2-scope-port-2-approved.md), item 3: fifth in the governance lane, after the parity-timeout node; the remaining small governance nodes follow it. Before: Architect gate, governance-test-claims-superseded attempt 1, S2: once governance/verify-quotes lands on main, export its HASH_REF_RE/GAP grammar and import it here instead of the local derived copy -- consumers named: this piece's verify-test-claims.mjs and verify-quotes.mjs itself. Restored 2026-09-24 (PR #117 fresh-count attempt-1 architect S1: merge 6191a7c had dropped it); depends_on names the scanner node (the attempt-2 architect should-fix). Found 2026-10-02 while committing exposure-scan-ci-backstop's form: the grammar's path must begin with a letter, digit or underscore, so a span in .github/ or .githooks/ cannot be hash-pinned (verify-quotes reads it without its leading dot and fails to resolve it); that form references its six such spans in plain text."
     },
     {
       "id": "posix-backslash-in-shared-path-logic",
@@ -931,6 +912,28 @@
       },
       "summary": "GATE 1 PASS WITH NOTES 2026-10-24 (gate-log 606, state/consults/gates/2026-10-24-known-limitations-items-51-52-render-numbers-gate1-reviewer.md): one line, one file, item 42's form, the conflict with #241 confirmed both ways; the note: resolve #241's block first, then the line, and re-check. NEXT: #241 merges (Monday), main merged into this branch, the reviewer's check again, then the click. Before: PR #249 OPENED 2026-10-24 as a draft (branch cut/known-limitations-items-51-52-render-numbers, head 196a4f59): the one line before item 51, in item 42's form, made by script; numstat 1 0. A trial merge with #241's head conflicts in KNOWN-LIMITATIONS.md either way round, so #241 merges first, then main is merged into this branch and the reviewer checks it again before the click. The reviewer's gate 1 runs at 196a4f59. Before: RULED 2026-10-24 (state/directives/2026-10-24-sort-window-a-both-gates-pr-c-table-ceiling-approved-covering-case-open-a-to-f-kl-item-51-line-probe-branch.md), item 4: one column-0 comment line before item 51, in item 42's form, as its own one-line docs-lane commit now, with the reviewer's check that nothing else changed. Found by the architect's PR C dispatch draft (state/consults/2026-10-23-b1-shell-half-pr-c-dispatch-amendment-architect-draft.md, could-not-settle item 3). PR #241 adds item 47 at the same place; the order of the two merges is read before the PR opens.",
       "evidence_label": "branch `cut/known-limitations-items-51-52-render-numbers`"
+    },
+    {
+      "id": "governance-hash-grammar-shared",
+      "title": "Share the path:line @ rev sha256:hex reference grammar between verify-test-claims.mjs and verify-quotes.mjs",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": null,
+      "budget_minutes": 90,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "branch": "cut/governance-hash-grammar-shared"
+      },
+      "dates": {
+        "opened": "2026-09-18",
+        "done": null
+      },
+      "summary": "BUILDING 2026-10-25 on cut/governance-hash-grammar-shared (C:/dev/wt/hgs, from main b5e39efd): a worker under the committed form; the reviewer alone after it. Before: FORM COMMITTED 2026-10-25 (scripts/plan/HASH-GRAMMAR-SHARED-PREREGISTRATION.md; the architect's draft state/consults/2026-10-25-governance-hash-grammar-shared-five-line-form-architect-draft.md; 42 pins): one definition of the grammar in a new leaf module, scripts/plan/hashRefGrammar.mjs, imported by verify-quotes.mjs (path optional) and verify-test-claims.mjs (path required), each compiled pattern byte for byte today's; 5 files, budget 140 lines; T1 and T2 with M1 and M2; the reviewer alone (OPEN-1 (A)); the leading-dot gap proposed as governance-hash-ref-leading-dot-path (OPEN-2 (B)). NEXT: a worker builds it on its own branch. Before: UNBLOCKED 2026-10-25: guardian-parity-git-timeout-under-load merged (#251). Before: RULED 2026-10-23 (state/directives/2026-10-23-weekend-covering-case-s1-session-log-redaction-s2-governance-and-docs-order-v0-2-scope-port-2-approved.md), item 3: fifth in the governance lane, after the parity-timeout node; the remaining small governance nodes follow it. Before: Architect gate, governance-test-claims-superseded attempt 1, S2: once governance/verify-quotes lands on main, export its HASH_REF_RE/GAP grammar and import it here instead of the local derived copy -- consumers named: this piece's verify-test-claims.mjs and verify-quotes.mjs itself. Restored 2026-09-24 (PR #117 fresh-count attempt-1 architect S1: merge 6191a7c had dropped it); depends_on names the scanner node (the attempt-2 architect should-fix). Found 2026-10-02 while committing exposure-scan-ci-backstop's form: the grammar's path must begin with a letter, digit or underscore, so a span in .github/ or .githooks/ cannot be hash-pinned (verify-quotes reads it without its leading dot and fails to resolve it); that form references its six such spans in plain text.",
+      "evidence_label": "branch `cut/governance-hash-grammar-shared`"
     },
     {
       "id": "port-2-macos-l1-and-app-dirs",
