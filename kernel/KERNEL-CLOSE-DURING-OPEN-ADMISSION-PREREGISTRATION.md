@@ -133,3 +133,18 @@ The piece's only path is kernel/src/skp.rs, plus the form on main.
 The Out-of-scope line's guarantee clause and note 4's guarantee bullet 2 overstate kernel-generation-close-races' record: that piece declared `open_dataset` unchanged (`kernel/GENERATION-CLOSE-RACES-PREREGISTRATION.md` §5, Declared unchanged), and its §1 May-not-claim list does not name this interleaving. Read literally, its §1 claim (i) and its §5 Falsification second bullet are met by this test's items 4 and 7, in an interleaving the product cannot reach; on note 4's reading, that those claims describe the state at a close's return, they are not. The proof is the test `a_close_during_open_admission_leaves_a_generation_for_a_name_the_catalog_no_longer_holds` (kernel/src/skp.rs @ 7b437be3), items 4 and 7; the fix node `open-dataset-refuses-a-name-closed-during-admission` is to remove that state.
 
 *The words above are the architect's, from its gate 1 report (`state/consults/gates/2026-10-25-kernel-close-during-open-admission-gate1-architect.md`, D2), byte for byte; the heading's level follows this form's. Nothing above is edited.*
+
+## Amendment 2 — the closing record, written after gate 1's reports and the words commit were seen: the gate's words applied with no re-gate (class 1)
+
+*Written by the custodian at the PR's final head 4e7029d97b2ca0d19b74c083b83228b8d57024c9. References only, and nothing below is a quotation. The gate: `state/consults/gates/2026-10-25-kernel-close-during-open-admission-gate1-architect.md` (gate-log 625; sha256 362ee555bb821908117c30da1fc26226e84a3338ac0b058a48af140492d4f1c3) and `state/consults/gates/2026-10-25-kernel-close-during-open-admission-gate1-reviewer.md` (gate-log 626; sha256 c313d517134db933d543febcf1d99b7b9b8867f3cf38209b7c2cb78ef9825098), both PASS WITH NOTES. The words commit: `state/consults/2026-10-25-kernel-close-during-open-admission-gate1-words-worker-report.md` (sha256 from line 5 9073045b1ea438af89f876688dc3131ca2ea201fc49a2d0987b6c030bba406e3).*
+
+1. **The words, applied with no re-gate** (AUTONOMY §31). None is the human's wording.
+   - The architect's D1: the test's doc-comment sentence on why the product cannot reach the window, at 4e7029d9.
+   - The architect's D2: Amendment 1, the guarantee reading corrected.
+   - The reviewer's D1: the PR body's Rule (00) line names the commit the settlement records.
+2. **The size.** By the numstat from the merge base dd0b6113 to 4e7029d9, the diff is 129 lines in the one file the Scope names, under its 140, all inside the test module.
+3. **The reviewer's observation** on the build report (`state/consults/2026-10-25-kernel-close-during-open-admission-build-worker-report.md`): the report counts 47 test-result lines for the kernel crate, where the gate's run printed 45; the totals agree (379 passed, 0 failed, 41 ignored).
+4. **The architect's notes.** N2: the fix node's title is narrowed in PLAN to what M1 reaches. N1 and N3 call for no change; N1 is in the PR body for the human.
+5. **The record.** This is correction round 1 of 2.
+
+Nothing above is edited.
