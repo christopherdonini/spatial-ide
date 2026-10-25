@@ -11,7 +11,7 @@
 | 4b | `stream-cancel-returns-left-unmarked` | S3 | after engine-cancel-before-execute-siblings | skipped at dispatch 2026-10-25: its dependency, 4a, is not done |
 | 5 | `kernel-close-during-open-admission` | S3 | test only | form drafted 2026-10-25 (`state/consults/2026-10-25-kernel-close-during-open-admission-five-line-form-architect-draft.md`); its OPEN-1 with the human before the form is committed; OPEN-1 ruled (A) 2026-10-25 (`state/directives/2026-10-25-filler-entry-5-open-1-a-pr-b-open-1-2-3-a-o1-probe-lead-data-designs-tester-high-runs.md`, item 1); in flight from 2026-10-25: the five-line form committed (`kernel/KERNEL-CLOSE-DURING-OPEN-ADMISSION-PREREGISTRATION.md`); built at 7b437be3, draft PR #258; gate 1 both PASS WITH NOTES; closed for the click 2026-10-25 at 4e7029d9 |
 | 6a | `session-generation-t1-t3-reobservation` | S3 | — | queued; form drafted ahead 2026-10-25 (`state/consults/2026-10-25-session-generation-t1-t3-reobservation-five-line-form-architect-draft.md`); in flight from 2026-10-25: the five-line form committed (`kernel/SESSION-GENERATION-T1-T3-REOBSERVATION-PREREGISTRATION.md`); built at 26c88a93, draft PR #259; gate 1 next |
-| 6b | `first-batch-factorial-ignored-trace-tests` | S3 | — | queued |
+| 6b | `first-batch-factorial-ignored-trace-tests` | S3 | — | queued; form drafted ahead 2026-10-25 (`state/consults/2026-10-25-first-batch-factorial-ignored-trace-tests-five-line-form-architect-draft.md`), committed when entry 6a leaves the slot |
 | 6c | `slice-traced-test-cross-stamping` | S3 | — | queued |
 | 7a | `redaction-hostname-off-windows` | S3 | proven on the Linux L1 job | queued |
 | 7b | `posix-backslash-in-shared-path-logic` | S3 | proven on the Linux L1 job | queued |
