@@ -55,6 +55,7 @@ vi.mock("@deck.gl/core", async (importOriginal) => {
 });
 
 import { __resetResidencyArmForTests, setResidencyArm } from "../residency/residencyArm";
+import { FILTER_DIALECT_DUCKDB_EXPR_0 } from "../skp/types";
 import { DEFAULT_STYLE_STATE } from "../style/document";
 import { loadBatchFixture } from "../testUtils/batchFixtures";
 import { decodeBatch, ENCODING_POLYGON } from "./decodeBatch";
@@ -111,7 +112,7 @@ function mount(extra: Partial<WorkingCanvasProps> = {}) {
   render({});
   const push = (): void => {
     act(() => {
-      ref.current!.pushBatch("sh_a", 0, loadBatchFixture("lv95-polygon-batch"));
+      ref.current!.pushBatch("sh_a", 0, loadBatchFixture("lv95-polygon-batch"), null);
     });
   };
   return { ref, base, render, push };
@@ -294,7 +295,7 @@ describe("the tap (UB7's wiring, OPEN-1 (A))", () => {
     const onClickPick = vi.fn();
     const { ref } = mount({ onClickPick, geometryEncoding: "geoarrow.linestring" });
     act(() => {
-      ref.current!.pushBatch("sh_l", 0, loadBatchFixture("lv95-linestring-batch"));
+      ref.current!.pushBatch("sh_l", 0, loadBatchFixture("lv95-linestring-batch"), null);
     });
     theDeck().props.onClick({}, { type: "click", srcEvent: { clientX: 3, clientY: 4 } });
     expect(theDeck().pickCalls.at(-1)).toMatchObject({ x: 3, y: 4 });
@@ -304,7 +305,7 @@ describe("the tap (UB7's wiring, OPEN-1 (A))", () => {
 
 describe("the highlight prop (section 2.2)", () => {
   const firstId = (): bigint =>
-    decodeBatch("sh_a", 0, loadBatchFixture("lv95-polygon-batch"), "geometry", ENCODING_POLYGON, null).ids[0];
+    decodeBatch("sh_a", 0, loadBatchFixture("lv95-polygon-batch"), "geometry", ENCODING_POLYGON, null, null).ids[0];
 
   // RECORDED MUTATION for "the highlight" (order): in `render()` (WorkingCanvas.tsx) put the highlight layers before the data layers
   // (`[...highlightResult.layers, ...layers]`). Expected failure: the last layer is the data layer.
@@ -360,5 +361,29 @@ describe("the highlight prop (section 2.2)", () => {
     await frames(2);
     expect(onSelectionDrawnChange).toHaveBeenCalledTimes(2);
     expect(onSelectionDrawnChange.mock.calls[1][0].size).toBe(0);
+  });
+});
+
+describe("PC-U7: the filter a stream was issued with is on the resident batch (milestone 4 PR C, section 2.4 (c))", () => {
+  // RECORDED MUTATION for "PC-U7": in `pushBatch` pass `null` to `decodeBatch` in place of `filter`. Expected failure: no resident batch was streamed under the filter object.
+  it("PC-U7: a batch pushed through pushBatch, and one through pushTileBatch, under filter F is resident with filter F", () => {
+    const filter = { predicate: "zone = 'residential'", dialect: FILTER_DIALECT_DUCKDB_EXPR_0 };
+    const streamedUnder = (f: unknown): boolean => f === filter;
+    const { ref } = mount();
+    act(() => {
+      ref.current!.pushBatch("sh_a", 0, loadBatchFixture("lv95-polygon-batch"), filter);
+    });
+    expect(ref.current!.residentIdsStreamedUnder(streamedUnder).size).toBeGreaterThan(0);
+    expect(ref.current!.residentIdsStreamedUnder((f) => f === null).size).toBe(0);
+
+    act(() => root.unmount());
+    root = createRoot(container);
+    __resetResidencyArmForTests();
+    setResidencyArm("candidate");
+    const tiled = mount();
+    act(() => {
+      tiled.ref.current!.pushTileBatch("0:0", "sh_t", 0, loadBatchFixture("lv95-polygon-batch"), filter);
+    });
+    expect(tiled.ref.current!.residentIdsStreamedUnder(streamedUnder).size).toBeGreaterThan(0);
   });
 });

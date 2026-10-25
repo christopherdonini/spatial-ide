@@ -293,7 +293,7 @@ const CLASS_C_ROWS = [
     class: "C",
     action: "layout.selectActivityTab",
     statement:
-      "[P6 placeholder] no API equivalent exists -- switching the Activity region between its Console and Notices tabs is pure view state for this session, never sent to the kernel.",
+      "[P6 placeholder] no API equivalent exists -- switching the Activity region between its Console, Notices and Table tabs is pure view state for this session, never sent to the kernel.",
     owner: 'docs/03 §"The action console" (pure view state)',
   },
   {
@@ -364,6 +364,20 @@ const CLASS_C_ROWS = [
     action: "dataset.openDuringExport",
     statement:
       "[P6 placeholder] no API equivalent exists -- answering the question asked when a dataset is opened while an export runs is a choice made in the window; the cancel request it may send and the open that follows are recorded by their own rows.",
+    owner: 'docs/03 §"The action console" (pure view state)',
+  },
+  {
+    class: "C",
+    action: "table.scopeSet",
+    statement:
+      "[P6 placeholder] no API equivalent exists -- choosing which features the Table lists (Filtered, Selected, or Selected, ignoring filter) is pure view state for this session; only Filtered asks the kernel for features, and its query is the viewport_query row shown beside this one.",
+    owner: 'docs/03 §"The action console" (pure view state)',
+  },
+  {
+    class: "C",
+    action: "table.cancel",
+    statement:
+      "[P6 placeholder] no API equivalent exists -- the Cancel button beside the Table's loading line is the app's own control; the cancel request it sends is the cancel row shown beside this one.",
     owner: 'docs/03 §"The action console" (pure view state)',
   },
 ] as const satisfies readonly ClassCRow[];

@@ -5,6 +5,7 @@ import { tableFromIPC, tableToIPC } from "apache-arrow";
 import type { Table } from "apache-arrow";
 
 import { isReadableAttributeType } from "../attributes/values";
+import type { Filter } from "../skp/types";
 
 /** ADR-010 rule 1's envelope tag, as `engine::envelope::BatchEnvelope` writes it. A batch whose
  * schema names a different frame is refused rather than rendered -- a bare buffer's only proof of
@@ -178,6 +179,9 @@ export interface ResidentBatch {
    * made, `null` when the open projects no column, or `"not-held"` when the block would pass `RESIDENT_ATTRIBUTE_MAX_BYTES`
    * (`limits.ts`; the geometry stays). REQUIRED: every site that rebuilds a batch must carry it (milestone 4 PR A, Amendment 3 item 5). */
   attributes: BatchAttributes | "not-held" | null;
+  /** The filter the stream that delivered this batch was issued with (milestone 4 PR C, section 2.4 (c)): set in the decode call from the manager's `onBatch`, carried as the same object by
+   * every rebuild, and read by the table's second scope and by the click's captured member. `null` when the stream was issued with none. REQUIRED, so every site that rebuilds a batch carries it. */
+  filter: Filter | null;
 }
 
 /**
@@ -186,7 +190,7 @@ export interface ResidentBatch {
  * 1 requires, `UnexpectedEncodingError` if its `geometry_encoding` is not `expectedEncoding` (the
  * open's own, from `describe`) or is none of the five encodings the shell reads, `UnexpectedProjectionError` if its attribute
  * columns are not exactly `projection` (the open's set, `attributes/projection.ts`; `null` for none), and propagates a decode
- * error rather than returning a partial batch. `projection` is REQUIRED, with no default.
+ * error rather than returning a partial batch. `projection` and `filter` are REQUIRED, with no default.
  */
 export function decodeBatch(
   streamHandle: string,
@@ -194,7 +198,8 @@ export function decodeBatch(
   ipcBytes: Uint8Array,
   geometryColumn: string,
   expectedEncoding: string,
-  projection: readonly string[] | null
+  projection: readonly string[] | null,
+  filter: Filter | null
 ): ResidentBatch {
   const table = tableFromIPC(ipcBytes);
   const frame = table.schema.metadata.get("frame");
@@ -306,5 +311,6 @@ export function decodeBatch(
     partCount: partRows.length,
     totalVertices,
     attributes,
+    filter,
   };
 }

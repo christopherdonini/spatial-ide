@@ -100,6 +100,7 @@ vi.mock("./canvas/WorkingCanvas", () => {
         pushTileBatch: () => ({ rowsAdmitted: 0, duplicatesDropped: 0, evictedTileKeys: [], overBudget: false, fitAnchor: null, batchExtent: null }),
         clearTile: () => {},
         clearAllTiles: () => {},
+        residentIdsStreamedUnder: () => new Set<bigint>(),
         isTileResidentInCandidateSet: () => false,
         isTileCompleteInCandidateSet: () => false,
         markTilePartial: () => {},
@@ -173,7 +174,7 @@ describe("App: the open's projection set and the inspected feature's attributes 
         { name: "area", kind: "float64", values: areas },
       ]
     );
-    const batch = decodeBatch("st_1", 0, ipc, "geometry", encoding, props().projection);
+    const batch = decodeBatch("st_1", 0, ipc, "geometry", encoding, props().projection, null);
     const on = (gpuOrdinal: number) =>
       resolveClickPick(
         { pickCandidateAt: () => ({ batch, gpuOrdinal }), belowPickResolutionNow: () => false, resolveCandidate: (c) => resolvePick(c.batch, c.gpuOrdinal) },

@@ -84,7 +84,7 @@ const viewportMockState = vi.hoisted(() => {
   // routed through `onTerminal`).
   const onSessionEndedByDataset = new Map<string, (detail: string) => void>();
   const onStreamOpenedByDataset = new Map<string, (streamHandle: string) => void>();
-  const onBatchByDataset = new Map<string, (streamHandle: string, batchSeq: number, payload: unknown) => void>();
+  const onBatchByDataset = new Map<string, (streamHandle: string, batchSeq: number, payload: unknown, filter: unknown) => void>();
   return {
     firstRequestDeferreds,
     secondRequestDeferreds,
@@ -239,7 +239,7 @@ vi.mock("./streaming/viewportStreamManager", () => {
       onTerminal?: (streamHandle: string, terminal: { kind: string; detail: string }) => void;
       onSessionEnded?: (detail: string) => void;
       onStreamOpened?: (streamHandle: string) => void;
-      onBatch?: (streamHandle: string, batchSeq: number, payload: unknown) => void;
+      onBatch?: (streamHandle: string, batchSeq: number, payload: unknown, filter: unknown) => void;
     }) {
       this.dataset = opts.dataset;
       // N8 residual correction: captured so a test can invoke `onFailureTerminal` directly (via
@@ -344,6 +344,7 @@ vi.mock("./canvas/WorkingCanvas", () => {
         pushTileBatch: () => ({ rowsAdmitted: 0, duplicatesDropped: 0, evictedTileKeys: [], overBudget: false, fitAnchor: null, batchExtent: null }),
         clearTile: () => {},
         clearAllTiles: () => {},
+        residentIdsStreamedUnder: () => new Set<bigint>(),
         isTileResidentInCandidateSet: () => false,
         isTileCompleteInCandidateSet: () => false,
         markTilePartial: () => {},
@@ -675,7 +676,7 @@ describe("App: a late old-generation viewport outcome, after a reopen, through t
     // `WorkingCanvas.pushBatch` always reports 0 rows admitted regardless of the payload given here,
     // so this is `{kind:"batch", rows: 0}` at the App level -- the CLASS of bug (ignoring stream
     // identity) is what this asserts, not a specific row count.
-    act(() => onBatchA("a-first-stream", 1, {}));
+    act(() => onBatchA("a-first-stream", 1, {}, null));
     expect(container.querySelector(".scan-liveness")?.textContent).toContain("scanning, no matching rows yet");
     expect(container.querySelector(".filter-cancel")).not.toBeNull();
 

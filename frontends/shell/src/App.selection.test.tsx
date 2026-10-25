@@ -194,6 +194,7 @@ vi.mock("./canvas/WorkingCanvas", () => {
         pushTileBatch: () => ({ rowsAdmitted: 0, duplicatesDropped: 0, evictedTileKeys: [], overBudget: false, fitAnchor: null, batchExtent: null }),
         clearTile: () => {},
         clearAllTiles: () => {},
+        residentIdsStreamedUnder: () => new Set<bigint>(),
         isTileResidentInCandidateSet: () => false,
         isTileCompleteInCandidateSet: () => false,
         markTilePartial: () => {},
@@ -306,7 +307,7 @@ describe("App: tools, the click, the selection and the inspection (milestone 2, 
   const pressed = (element: Element | null) => element?.getAttribute("aria-pressed");
 
   const clickFeature = (id: bigint, bounds = box(0, 0, 10, 10)) =>
-    act(() => props().onClickPick!({ kind: "feature", pick: pick(id), bounds, row: null }));
+    act(() => props().onClickPick!({ kind: "feature", pick: pick(id), bounds, row: null, filter: null }));
   const clickNothing = () => act(() => props().onClickPick!({ kind: "nothing" }));
   const selected = () => [...props().highlight!.selected].sort();
   const selectedCount = () => text(".feature-selected");
