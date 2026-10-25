@@ -166,3 +166,18 @@ This piece's paths are kernel/tests/session_generation.rs and the form on main. 
 - **Rule (00)** was checked again at main 2c5a4b96 by `git diff --name-only origin/main...<branch>` for every open branch: none touches `kernel/tests/session_generation.rs`, and none touches `protocol/`.
 
 ## Amendments (opens empty; append-only)
+
+## Amendment 1 — the closing record, written after gate 1's reports and the words commit were seen: the gate's words applied with no re-gate, and the observation method's deviation named (class 1)
+
+*Written by the custodian at the PR's final head 44107aa726206d33d61efac0cd5b251a8e51fe5e. References only, and nothing below is a quotation. The gate: `state/consults/gates/2026-10-25-session-generation-t1-t3-reobservation-gate1-architect.md` (gate-log 627; sha256 d372a07d5c13efe11b41e78673e587009a91a003df37ceb0bb0173b484c6dfa9) and `state/consults/gates/2026-10-25-session-generation-t1-t3-reobservation-gate1-reviewer.md` (gate-log 628; sha256 1efa0c1b285959a05a44a87b4291c4e19039657f555213bf5d09c3c35a8d39de), both PASS WITH NOTES. The words commit: `state/consults/2026-10-25-session-generation-t1-t3-reobservation-gate1-words-worker-report.md` (sha256 from line 5 17e5b90ae37549d70795964e1351e0bf260f132e4bca09d1c0e13551b32064de).*
+
+1. **The words, applied with no re-gate** (AUTONOMY §31). None is the human's wording.
+   - The four doc spans are rewrapped at 100 columns, every word kept: W1, W2 and W4 in the reviewer's words (its D1), W3 in the architect's (its D1 and D2).
+   - W3 now names its failing assertion by its message as well, as the Change line requires (the architect's D2).
+   - The PR body's sentence on the long lines takes the reviewer's words (its D2).
+2. **The size.** By the numstat from the merge base 959f4706 to 44107aa7, the diff is 46 lines in the one file the Scope names, under its 60, every changed line a doc line.
+3. **The observation method's deviation** (the architect's D3). Note 2 orders the export built with its own cargo target. The build's runs used one target for both the export and the worktree, by the custodian's brief; the worker disclosed it (`state/consults/2026-10-25-session-generation-t1-t3-reobservation-build-worker-report.md`, disclosure 1, and its filing note). The reviewer's re-observation of M1 to M3 used a separate target for its export.
+4. **The reviewer's method note.** The extracted export's files carry the commit's mtime, older than the warm target's build, so the reviewer's first unmutated run reused a binary built from another checkout; it touched the export's sources, and every run after that compiled from the export.
+5. **The record.** This is correction round 1 of 2.
+
+Nothing above is edited.
