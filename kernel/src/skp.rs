@@ -5095,7 +5095,8 @@ mod ticket_drop_under_lock_regression {
     /// before the mint, leaves a generation for a name the catalog no longer holds.
     ///
     /// **This pins today's behaviour: a known gap the product cannot reach.** The handle is 16
-    /// bytes of OS CSPRNG that only this open returns, so nothing can name the entry before the
+    /// bytes of OS CSPRNG that only this open returns, and `Catalog::names`, which this test's
+    /// watch calls, has no product caller, so nothing in the product can name the entry before the
     /// open returns. M1 below is the fix shape. A fix flips this test, and it is then replaced
     /// under the fix's own form. It claims no property: it states what the code does, not what it
     /// should do.
