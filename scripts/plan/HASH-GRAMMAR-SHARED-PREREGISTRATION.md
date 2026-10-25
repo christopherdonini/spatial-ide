@@ -151,3 +151,15 @@ This piece's paths: scripts/plan/hashRefGrammar.mjs, scripts/plan/verify-quotes.
 - **The node's budget** is 90 minutes, from 30 (the draft's last unsettled item).
 
 ## Amendments (opens empty; append-only)
+
+## Amendment 1 — the closing record, written after the gate's report and the notes commit were seen: the two notes applied with no re-gate, the size, one display note (class 1)
+
+*Written by the custodian at the PR's final head a88e862102723c5b83d04cb72f9522f4a2988648. References only, and nothing below is a quotation. The gate: `state/consults/gates/2026-10-25-governance-hash-grammar-shared-gate1-reviewer.md` (gate-log 623; sha256 a0e1e325ff3e9f195086410fbe5aeb21f5ace91e8605276da9285958b5ebaba1), the reviewer alone, PASS WITH NOTES. The notes commit: `state/consults/2026-10-25-governance-hash-grammar-shared-gate1-notes-worker-report.md` (sha256 from line 5 23ff9927a8162c1a30e6cfce2c81906f829819032c6d4423b7fbdf450dc5646c).*
+
+1. **The notes, applied with no re-gate.**
+   - C-note 1: `GAP` is defined in the leaf module but not exported, because nothing imports it. The factory is the module's one export. The Change line's `GAP` is read as defined there, not exported.
+   - D1: the module's header comment takes the reviewer's words.
+2. **The size.** By the numstat from the merge base b5e39efd to a88e8621, the diff is 130 lines in the five files the Scope names, under its 140. There is no class 8.
+3. **A display note, outside the diff (the reviewer's D2).** The build report (`state/consults/2026-10-25-governance-hash-grammar-shared-build-worker-report.md`) shows the two pattern sources in their string-literal spelling, with doubled backslashes. The real sources have single backslashes. The equality the report claims holds: the reviewer's own comparison printed both and found them identical.
+
+Nothing above is edited.
