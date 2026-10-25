@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `311d98d818fc04c169c89029c4db2166674ab6644b12f2734f16523167ac6e4a`) at `2026-10-25T20:52:20.050Z`.
+Generated from `PLAN.yaml` (sha256 `939ed269b71d6c43c16bcca0317ea3f6770b584b3ea94cee91ba27d10b308413`) at `2026-10-25T21:05:20.076Z`.
 
 ## 1. Next
 
@@ -110,6 +110,7 @@ Generated from `PLAN.yaml` (sha256 `311d98d818fc04c169c89029c4db2166674ab6644b12
 - **mp-prime-e2e-covered-fixture** — E2E: MP-1's step MP' opens F-1, which has no covering, so it is predicted to meet the no-covering refusal; a step on F-1c, its covered twin (phase `prototype`) — never queued until placed
 - **lines-class-budget-measurement** — Measure docs/08's Lines class (1M features / 10M vertices) for the working canvas, once lines are drawn (phase `prototype`) — never queued until placed
 - **engine-open-neighbour-reads-unbound-to-cancel** — At a dataset open, read_kv_metadata and probe_schema's two statements are not bound to the open's cancel token (phase `prototype`) — never queued until placed
+- **fixture-s-regeneration-entry-point** — A dedicated regeneration entry point and a kernel/FIXTURES.md record for the fixture S (parcels-145mb.parquet), like the G5 one (phase `prototype`) — never queued until placed
 - **stale-lines-outside-the-four-files** — Same-class stale lines outside the docs-lane piece's four files: residencyStatus.test.ts's titles and comments calling ruled strings drafts, residencyArm.test.ts's App-cannot-be-rendered comment, WorkingCanvas.test.ts's no-mount line, and engine/src/identity.rs's two stale line cites into session_identity.rs (phase `prototype`) — never queued until placed
 - **app-key-remount-unit-test** — A unit test that pins App's per-dataset key remount of WorkingCanvas: App.layout.test.tsx's stand-in records mounts per dataset prop value, so R1 passes with or without the key (phase `prototype`) — never queued until placed
 - **filter-identity-alias-ambiguous-guidance-line-and-note** — A guidance line in the app for skp.filter_identity_alias_ambiguous, in the human's wording at P6, and a KNOWN-LIMITATIONS note: a declared identity beside the file's own id column refuses the first filter on id, and the message does not say what to do (phase `prototype`) — never queued until placed
