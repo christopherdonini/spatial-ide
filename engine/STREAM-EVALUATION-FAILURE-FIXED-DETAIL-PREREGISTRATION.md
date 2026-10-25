@@ -143,3 +143,33 @@ One string a user can see changes.
 5. **Next:** the worker-high continues from its uncommitted work, with T1's predicate as item 1: the commits, M1 and M2 observed and recorded, the checks.
 
 Nothing above is edited.
+
+## Amendment 2 — the human's route B (class 5), written after gate 1's reports and the architect's route draft were seen, before any further commit: the claim narrows to the prepare and execute sites, and the fetch site is a node of its own
+
+*Written by the custodian at the PR's head 27924bbe2fe7cd2655db3406227153b55dccd671, after gate 1 (both FAIL: the architect on wording, W1 and D1; the reviewer on C1 and E1, the fetch site) and the route draft were seen. References only, and nothing below is a quotation. The ruling: `state/directives/2026-10-25-255-route-b-o1-lead-data-probe-session-end-lines-s2-context-monday-no-redaction-pr.md`, item 1 (sha256 from line 6 ebe31bd9e43cb2b48a5977300bb06569495c3d557d9f3d67674a7786b3c0cecd). Gate 1: `state/consults/gates/2026-10-24-stream-evaluation-failure-fixed-detail-gate1-architect.md` and `state/consults/gates/2026-10-24-stream-evaluation-failure-fixed-detail-gate1-reviewer.md`. The route draft: `state/consults/2026-10-24-stream-evaluation-failure-fixed-detail-route-architect-draft.md` (sha256 from line 5 91c0cc0ad1ba9b4e9dfca60209761d57c3116a6db6afa53fb5ed116e507d828e). The Change line is lead-data's wording and is not edited.*
+
+1. **The claim (class 5, the human's ruling, item 1).**
+   - The claim holds at the prepare and execute sites, and is proven at execute by T1 and B-T1. The claim is that this class's terminal detail carries no file value and no SQL.
+   - At the fetch site, the locked duckdb crate's panic wrapper puts its own words before DuckDB's, so the check does not match there.
+   - That case belongs to node `stream-fetch-overflow-fixed-detail`, proposed and on the filler queue after the current entries.
+2. **The words (class 1, approved by the human, item 1).** The code is unchanged. Three doc comments take the route draft's route B words 1 to 3:
+   - the doc above `OUT_OF_RANGE_DETAIL`;
+   - the doc above `is_out_of_range`;
+   - the last clause of `classify`'s doc.
+
+   The campaign's `is_declared_integer_arithmetic_overflow` doc takes gate 1's D1 words, which the route draft keeps (its route B, item 4). Gate 1's W1 words for the same comments are superseded.
+3. **Gate 1's findings under the narrowed claim.** The reviewer's C1 and E1 are about the fetch site, which item 1 moves out of this piece's claim. Their substance goes to the new node, with no code change here. The reviewer's O1 is node `admitted-integer-overflow-silent-wraparound`.
+4. **The re-gate (the custodian's ruling on the route draft's open item).** Gate 2 runs on the head that carries item 2's words:
+   - the reviewer re-gates C1 and E1 against the narrowed claim, and the words against the code;
+   - the architect checks this amendment and the words.
+5. **The size.** Item 2 changes comment lines only, in files the Scope names. The worker counts the diff against §21c's 150 lines. A count past 150 is a stop, reported to the human.
+6. **Next.**
+   1. A worker applies item 2's words at the head, in one commit.
+   2. Gate 2 runs as item 4.
+   3. The closing amendment carries the Change line's reference item and gate 2's record.
+
+**Superseded:**
+- The Change line's claim: read with item 1. The line is unedited.
+- Gate 1's W1 words: replaced by item 2's.
+
+Nothing above is edited.

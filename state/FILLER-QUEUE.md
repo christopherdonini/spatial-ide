@@ -5,7 +5,7 @@
 | Entry | PLAN node | Grade | The human's note | Status |
 |---|---|---|---|---|
 | 1 | `windows-case-fold-non-ascii` | S2 | — | skipped at dispatch 2026-10-24: port-2, in flight, edits kernel/src/permission/audit/log.rs (rule (00)) |
-| 2 | `stream-evaluation-failure-fixed-detail` | S2 | its strings are P6 placeholders for the sitting | in flight from 2026-10-24: the five-line form committed (`engine/STREAM-EVALUATION-FAILURE-FIXED-DETAIL-PREREGISTRATION.md`); code next |
+| 2 | `stream-evaluation-failure-fixed-detail` | S2 | its strings are P6 placeholders for the sitting | in flight from 2026-10-24: the five-line form committed (`engine/STREAM-EVALUATION-FAILURE-FIXED-DETAIL-PREREGISTRATION.md`); code next; route B ruled 2026-10-25 (the claim narrowed to prepare and execute; the fetch case is entry 9) |
 | 3 | `pre-admission-change-detail-braces` | S3 | the braces removed, the words staying placeholders (the node's scope (i)) | queued |
 | 4a | `engine-cancel-before-execute-siblings` | S3 | — | queued |
 | 4b | `stream-cancel-returns-left-unmarked` | S3 | after engine-cancel-before-execute-siblings | queued |
@@ -19,6 +19,7 @@
 | 7d | `publish-bundle-sigterm` | S3 | proven on the Linux L1 job | queued |
 | 8a | `corpus-line-files` | S3 | — | queued |
 | 8b | `type-walk-rule2-residual-reasons` | S3 | — | queued |
+| 9 | `stream-fetch-overflow-fixed-detail` | S3 | after the current entries (the human's direction of 2026-10-25, item 1); the architect's estimate puts it past §21c's line bound, so at its turn the size is checked first | queued (proposed in PLAN) |
 
 ## Fillers merged
 

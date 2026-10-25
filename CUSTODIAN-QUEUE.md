@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `69a4813dbf7d1b56ab7226219947f97dc32ea14e80a0dd5d3ab5fad91e761516`) at `2026-10-24T19:54:20.985Z`.
+Generated from `PLAN.yaml` (sha256 `1768accfcbacd9d7aa62d447247ec266bf6e26aebabd183737402b29559e950f`) at `2026-10-25T08:24:38.566Z`.
 
 ## 1. Next
 
@@ -37,6 +37,7 @@ Generated from `PLAN.yaml` (sha256 `69a4813dbf7d1b56ab7226219947f97dc32ea14e80a0
 - **lod-tier-identity-binds-file-name** — The LOD tier builder takes the identity name DuckDB bound and looks it up among the file's own footer names, so a renamed identity column reaches a different column there — blocked by: port-2-macos-l1-and-app-dirs
 - **skp-line-cites-outside-close-races** — Stale line cites into kernel/src/skp.rs outside kernel-close-races-followups files -- shell streaming, App.tsx, pool_poll.rs, src-tauri lib.rs, the P4 corpus test and the persisted-artifacts test — blocked by: adr-035-close-races-note
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
+- **session-end-lines-name-coverage-lost-as-source-change** — The hover readout and the Feature tab word every session end as a source change, coverage-lost included, although the engine says coverage-lost is never a source change (milestone 4 PR C gate 1, the architect's C1 note) — blocked by: b1-shell-half
 - **session-log-token-redaction-rests-on-page-code** — The session token never reaching the session log rests on page code: binding_log_session_event appends page-supplied text verbatim, the page holds the token, and the data plane's Session::redact has only a test caller — blocked by: b2-piece-1c-save-and-reopen
 - **sitting-wording-n1-to-n7** — The sitting script's seven wording findings, N1 to N7: each string's clause untrue at main replaced in the architect's words, prepared as pieces for the human's yes at the sitting — blocked by: walkthrough-stale-cites-l5-degrees-p1
 - **walkthrough-stale-cites-l5-degrees-p1** — Two walkthrough rows cite stale lines: Part L's L5 and the degrees tile grid Part P's P1 (the sitting script's D1 and D2) — blocked by: adr-020-appended-note
@@ -54,7 +55,7 @@ Generated from `PLAN.yaml` (sha256 `69a4813dbf7d1b56ab7226219947f97dc32ea14e80a0
 
 ## 5. In progress
 
-- **stream-evaluation-failure-fixed-detail** — An admitted predicate's evaluation failure (same-type integer overflow) ends the stream with a fixed, engine-authored detail carrying no file values and no SQL (B-1's 5c, merged with W2-B observation 2) — evidence: branch `cut/stream-evaluation-failure-fixed-detail`
+- **stream-evaluation-failure-fixed-detail** — An admitted predicate's evaluation failure (same-type integer overflow) ends the stream with a fixed, engine-authored detail carrying no file values and no SQL, at the prepare and execute sites (the fetch site: stream-fetch-overflow-fixed-detail) (B-1's 5c, merged with W2-B observation 2) — evidence: branch `cut/stream-evaluation-failure-fixed-detail`
 - **covering-case-collision-binds-other-column** — A declared covering whose path differs from two schema names only by case: DuckDB may bind it to the other column, a wrong-rows risk that predates the covering piece — evidence: branch `cut/covering-case-collision-binds-other-column`
 - **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **bundle-redaction-scan-not-in-product-publish** — The bundle redaction scan runs only in a test: no product publish scans its emitted files, though ADR-017's section 13 (Accepted) says a scan over every emitted file asserts no path, user name, machine identifier or credential is in a bundle — evidence: branch `cut/bundle-redaction-scan`
@@ -92,7 +93,7 @@ Generated from `PLAN.yaml` (sha256 `69a4813dbf7d1b56ab7226219947f97dc32ea14e80a0
 - **shell-admit-describe-failure-closes-open** — admitDataset closes the dataset when describe fails after a successful open_dataset (wave-2 W2-C observation 2, S2) (phase `prototype`) — never queued until placed
 - **engine-query-terminal-detail-sql-audit** — Every other engine.query terminal detail repeats a slice of the composed SQL (W2-B observation 2): audit the stream-terminal paths, then decide whether to withhold DuckDB text more widely (phase `prototype`) — never queued until placed
 - **admitted-integer-overflow-silent-wraparound** — An admitted same-type BIGINT product that overflows may wrap silently and return wrong rows with no error, observed outside the engine on the locked duckdb crate (O1 of stream-evaluation-failure-fixed-detail gate 1) (phase `prototype`) — never queued until placed
-- **session-end-lines-name-coverage-lost-as-source-change** — The hover readout and the Feature tab word every session end as a source change, coverage-lost included, although the engine says coverage-lost is never a source change (milestone 4 PR C gate 1, the architect's C1 note) (phase `prototype`) — never queued until placed
+- **stream-fetch-overflow-fixed-detail** — An admitted predicate's integer overflow first raised during a fetch ends the stream with the fixed detail: the duckdb crate's fetch panic wrapper recognised by its fixed prefixes, anchored (route B of stream-evaluation-failure-fixed-detail) (phase `prototype`) — never queued until placed
 - **port-3-shell-l1** — PORT-3 -- the Tauri shell crate checked and tested on Linux and macOS in product-ci-shell (L1 for the shell) (phase `prototype`) — never queued until placed
 - **port-4-l2-smoke** — PORT-4 -- L2: unsigned tauri build on Linux and macOS as a package check, a Linux application smoke test under a virtual display, and the macOS smoke by hand (MACOS-BRINGUP resumed) (phase `prototype`) — never queued until placed
 - **template-round15e-exception-pointer** — docs/PREREGISTRATION-TEMPLATE.md gains one appended sentence pointing at round 34 item 4's narrow exception to round 15 (e), as AUTONOMY.md section 27 records it (phase `prototype`) — never queued until placed
