@@ -12,7 +12,13 @@
 // both endpoints) must be within that file's line count. Every reference that does NOT resolve is
 // printed with the citing `file:line` and the bad target; the process exits 1 if any reference is
 // unresolved, 0 if all resolve. A cite starting or ending at line 0 never resolves; where its reason
-// would say a line exceeds a file, it names line 0 instead (lines count from 1). PINNED FALLBACK: a cite
+// would say a line exceeds a file, it names line 0 instead (lines count from 1). Here and below, a line is
+// within a file (and does not exceed it) when it is no higher than the number of pieces the file's text
+// splits into at newlines. For a file that ends in a newline, and for an empty file, that is one more than
+// its line count, so a cite to the line just past such a file's end passes, in the tree and at a pin (node
+// verify-cites-past-end-bound). Every reason that prints a line count prints the file's true count: a final
+// newline ends the last line and starts no new one, and an empty file has 0 lines.
+// PINNED FALLBACK: a cite
 // that does not resolve in the tree but is directly followed by `@ <commit>` (7-40 hex digits) is read
 // at that commit instead: the commit must exist, a path must be a file there, and the line must be
 // within it. The paths tried, in order, are the files the tree resolves the path to (the exact set if
@@ -58,7 +64,8 @@
 //
 // WHAT THIS DOES NOT CATCH (disclosed): a cited line that moved but stayed in range (this checks
 // existence and bounds, not that line N still says what the citation implies); a citation with the
-// right line count but the wrong file among same-basename siblings; and, by the tiering above, a
+// right line count but the wrong file among same-basename siblings; a cite to the line just past the end of a file that ends in a newline,
+// or to line 1 of an empty file (the bound above); and, by the tiering above, a
 // stale LOOSE reference (it is surfaced as advice, never gated). Of the pin: one after a closing
 // backtick or after two spaces is not read; one on a cite that resolves in the tree is not checked; a
 // hex word right after `@` is read as a pin; a pin is read only at the files the tree now resolves the
@@ -229,15 +236,15 @@ export function classifyPath(pathRaw, topDirs) {
   return 'loose';
 }
 
+// The check's bound is the split's piece count, one above the line count for a file that ends in a newline or is empty: it can only fail to flag a cite just past the end, never flag a real one (node verify-cites-past-end-bound). The reasons print `lines`, the true count.
+function countOf(text) {
+  const pieces = text.split('\n').length;
+  return { pieces, lines: pieces - (text === '' || text.endsWith('\n') ? 1 : 0) };
+}
 const lineCountCache = new Map();
 function lineCount(repoRoot, relPath) {
   const key = repoRoot + '\0' + relPath;
-  if (!lineCountCache.has(key)) {
-    const text = fs.readFileSync(path.join(repoRoot, relPath), 'utf8');
-    // split('\n').length is line count, lenient by 1 for a trailing newline — leniency here can
-    // only fail to flag a just-past-the-end cite, never wrongly flag a real one.
-    lineCountCache.set(key, text.split('\n').length);
-  }
+  if (!lineCountCache.has(key)) lineCountCache.set(key, countOf(fs.readFileSync(path.join(repoRoot, relPath), 'utf8')));
   return lineCountCache.get(key);
 }
 
@@ -254,17 +261,17 @@ export function checkCitation(cite, index, repoRoot) {
   const maxL = Math.max(cite.startL, cite.endL);
   const zero = cite.startL === 0 || cite.endL === 0;
   const validStart = cite.startL >= 1 && cite.endL >= 1;
-  const inRange = (cands) => validStart && cands.some((c) => maxL <= lineCount(repoRoot, c));
+  const inRange = (cands) => validStart && cands.some((c) => maxL <= lineCount(repoRoot, c).pieces);
   if (exact.length) {
     if (inRange(exact)) return { status: 'ok' };
     if (zero) return { status: 'oob-exact', reason: `line 0 does not exist in "${exact[0]}" (lines count from 1)` };
-    const lc = Math.max(...exact.map((c) => lineCount(repoRoot, c)));
+    const lc = Math.max(...exact.map((c) => lineCount(repoRoot, c).lines));
     return { status: 'oob-exact', reason: `line ${maxL} exceeds "${exact[0]}" (${lc} lines)` };
   }
   if (inRange(all)) return { status: 'ok' };
   const which = all.length === 1 ? all[0] : `${all.length} same-basename candidates`;
   if (zero) return { status: 'oob-suffix', reason: `line 0 does not exist in ${which} (lines count from 1)` };
-  const lc = Math.max(...all.map((c) => lineCount(repoRoot, c)));
+  const lc = Math.max(...all.map((c) => lineCount(repoRoot, c).lines));
   return { status: 'oob-suffix', reason: `line ${maxL} exceeds ${which} (${lc} lines)` };
 }
 
@@ -289,11 +296,11 @@ export function checkPinned(cite, repoRoot, paths) {
       if (kind === 'tree') failure ??= { ok: false, reason: `"${p}" is a directory at pinned commit ${cite.pin}` };
       continue;
     }
-    const lc = text.split('\n').length;
+    const lc = countOf(text);
     if (cite.startL === 0 || cite.endL === 0) {
       failure ??= { ok: false, reason: `line 0 does not exist in "${p}" at pinned commit ${cite.pin} (lines count from 1)` };
-    } else if (maxL > lc) {
-      failure ??= { ok: false, reason: `line ${maxL} exceeds "${p}" at pinned commit ${cite.pin} (${lc} lines)` };
+    } else if (maxL > lc.pieces) {
+      failure ??= { ok: false, reason: `line ${maxL} exceeds "${p}" at pinned commit ${cite.pin} (${lc.lines} lines)` };
     } else return { ok: true };
   }
   return failure ?? { ok: false, missingFile: true, reason: `"${cite.pathRaw.replace(/^\.\//, '')}" not found at pinned commit ${cite.pin}` };

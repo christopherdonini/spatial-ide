@@ -508,3 +508,30 @@ test('verify-cites: a pinned DECISIONS-PENDING.md line cite whose pin fails stay
     fs.rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test('an_exact_out_of_range_reason_counts_the_lines_of_a_newline_ended_file', () => {
+  const dir = tmpTree({ 'engine/src/pool.rs': 'a\nb\nc\n' });
+  const res = checkCitation({ pathRaw: 'engine/src/pool.rs', startL: 9, endL: 9, relPath: 'docs/x.md' }, mkIndex(['engine/src/pool.rs']), dir);
+  assert.equal(res.status, 'oob-exact');
+  assert.match(res.reason, /^line 9 exceeds "engine\/src\/pool\.rs" \(3 lines\)$/);
+});
+
+test('a_suffix_out_of_range_reason_counts_the_lines_of_a_newline_ended_file', () => {
+  const dir = tmpTree({ 'engine/src/pool.rs': 'a\nb\nc\n' });
+  const res = checkCitation({ pathRaw: 'pool.rs', startL: 9, endL: 9, relPath: 'docs/x.md' }, mkIndex(['engine/src/pool.rs']), dir);
+  assert.equal(res.status, 'oob-suffix');
+  assert.match(res.reason, /\(3 lines\)$/);
+});
+
+test('a_pinned_out_of_range_reason_counts_the_lines_of_a_newline_ended_file', () => {
+  const gated = pinnedRun((rev) => `see engine/src/pool.rs:9 @ ${rev} sha256:00`, 'gated');
+  assert.equal(gated.length, 1, JSON.stringify(gated));
+  assert.match(gated[0].reason, /at pinned commit [0-9a-f]+ \(5 lines\)$/);
+});
+
+test('an_out_of_range_reason_for_an_empty_file_counts_0_lines', () => {
+  const dir = tmpTree({ 'engine/src/pool.rs': '' });
+  const res = checkCitation({ pathRaw: 'engine/src/pool.rs', startL: 2, endL: 2, relPath: 'docs/x.md' }, mkIndex(['engine/src/pool.rs']), dir);
+  assert.equal(res.status, 'oob-exact');
+  assert.match(res.reason, /\(0 lines\)$/);
+});
