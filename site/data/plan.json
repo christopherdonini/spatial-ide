@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-26T03:47:09.617Z",
-  "plan_hash": "3f494b451fc30f824ed6f215638f3900e14be2e83f96569109361968533fdfa8",
+  "generated_at": "2026-10-26T03:55:01.346Z",
+  "plan_hash": "a0f9d49db9bad7d4bee91a3671ac507e9d1be74b430e6237dce392ab1124d042",
   "priorities_approved": true,
   "lanes": [
     {
@@ -5225,7 +5225,7 @@
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "PLACED S3 2026-10-26 (state/directives/2026-10-26-resent-2026-10-25-o1-s1-clang-cl-route-a-hugeint-cast-b-five-nodes-placed.md, item 2): after 6a, as the custodian proposed; the next free filler turn after 5b. Before: PROPOSED 2026-10-25 by the custodian under session-generation-t1-t3-reobservation's drafting consult, OPEN-2 (A) (state/consults/2026-10-25-session-generation-t1-t3-reobservation-five-line-form-architect-draft.md): kernel/tests/session_generation.rs holds five more recorded-mutation comments that name no observation commit (the draft's OPEN-2 lists them by line at a305e541); each to be re-observed and to name its commit, as entry 6a does for T1 to T3; one of them, a torn-read mutation, is not deterministically observable and needs its own reading. For the human to place; S3 unless graded.",
+      "summary": "NEXT IN THE FILLER SLOT 2026-10-26: entry 5b, ahead of it, is held on the human, and a held entry leaves the slot (the human's 6b precedent); kernel/tests/session_generation.rs is in no in-flight branch; the architect drafts its five-line form (state/consults/2026-10-26-session-generation-other-recorded-mutations-name-no-commit-five-line-form-architect-draft.md). Before: PLACED S3 2026-10-26 (state/directives/2026-10-26-resent-2026-10-25-o1-s1-clang-cl-route-a-hugeint-cast-b-five-nodes-placed.md, item 2): after 6a, as the custodian proposed; the next free filler turn after 5b. Before: PROPOSED 2026-10-25 by the custodian under session-generation-t1-t3-reobservation's drafting consult, OPEN-2 (A) (state/consults/2026-10-25-session-generation-t1-t3-reobservation-five-line-form-architect-draft.md): kernel/tests/session_generation.rs holds five more recorded-mutation comments that name no observation commit (the draft's OPEN-2 lists them by line at a305e541); each to be re-observed and to name its commit, as entry 6a does for T1 to T3; one of them, a torn-read mutation, is not deterministically observable and needs its own reading. For the human to place; S3 unless graded.",
       "dates": {
         "opened": "2026-10-25",
         "done": null
