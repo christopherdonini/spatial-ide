@@ -14,6 +14,8 @@
 | 6b | `first-batch-factorial-ignored-trace-tests` | S3 | — | queued; form drafted ahead 2026-10-25 (`state/consults/2026-10-25-first-batch-factorial-ignored-trace-tests-five-line-form-architect-draft.md`); in flight from 2026-10-25: the five-line form committed (`kernel/FIRST-BATCH-FACTORIAL-IGNORED-TRACE-TESTS-PREREGISTRATION.md`); code next; route R3b ruled 2026-10-26 (`state/directives/2026-10-26-o1-s1-257-258-259-merged-6b-r3b-held-on-the-human-6c-runs-fixture-s-entry-point-6d.md`, item 1); held on the human from 2026-10-26 (C: to be freed), out of the filler slot; resumes ahead of the next entry once S is in place |
 | 6c | `slice-traced-test-cross-stamping` | S3 | — | queued; next in the filler slot from 2026-10-26, its form drafted first |
 | 6d | `fixture-s-regeneration-entry-point` | S3 | after 6c and before 7a, a five-line form (the human's direction of 2026-10-26, item 2) | queued |
+| 5b | `open-dataset-refuses-a-name-closed-during-admission` | S3 | after 6b resumes and after 6c, which starts now (the human's resent direction of 2026-10-25, item 2) | queued |
+| 5c | `session-generation-other-recorded-mutations-name-no-commit` | S3 | the next free turn after 5b (the same item) | queued |
 | 7a | `redaction-hostname-off-windows` | S3 | proven on the Linux L1 job | queued |
 | 7b | `posix-backslash-in-shared-path-logic` | S3 | proven on the Linux L1 job | queued |
 | 7c | `publish-unix-quota-perm-errors` | S3 | proven on the Linux L1 job | queued |
@@ -37,5 +39,4 @@ From 2026-10-24. Each wait is entered here with its start and end from `date -u`
 
 ## The custodian's proposed additions
 
-- 2026-10-25: `open-dataset-refuses-a-name-closed-during-admission` (S3 unless graded), the fix entry 5's test pins (its form's settlement, OPEN-2); after entry 5. For the human to place.
-- 2026-10-25: `session-generation-other-recorded-mutations-name-no-commit` (S3 unless graded), the file's other recorded-mutation comments that name no commit (entry 6a's drafting consult, OPEN-2 (A)); after entry 6a. For the human to place.
+None open: the two proposed on 2026-10-25 were placed by the human on 2026-10-26 (entries 5b and 5c).

@@ -1,27 +1,46 @@
 {
-  "generated_at": "2026-10-26T00:39:05.377Z",
-  "plan_hash": "652e5be29beb481f8a0d083422512b87ae820e9b0bfca0522071636cabfa2b7f",
+  "generated_at": "2026-10-26T00:46:42.947Z",
+  "plan_hash": "d00ce3e372e9ddac53583730f1aba75a0df852b48bc3efa275f24b5b9d5c482c",
   "priorities_approved": true,
   "next": {
-    "id": "corpus-line-files",
-    "title": "A line file (LineString or MultiLineString) in the preregistered compatibility corpus, so that line admission is tried on a real-world file",
+    "id": "admitted-integer-overflow-silent-wraparound",
+    "title": "An admitted same-type BIGINT product that overflows may wrap silently and return wrong rows with no error, observed outside the engine on the locked duckdb crate (O1 of stream-evaluation-failure-fixed-detail gate 1)",
     "lane": "engine",
     "phase": "prototype",
     "status": "ready",
     "order": null,
-    "budget_minutes": 120,
+    "budget_minutes": 60,
     "needs_human": {
       "kind": "none",
       "minutes": 0
     },
     "evidence": null,
     "dates": {
-      "opened": "2026-10-07",
+      "opened": "2026-10-24",
       "done": null
     },
-    "summary": "FILLER QUEUE entry 8a (RULED 2026-10-24: state/directives/2026-10-24-weekend-exception-third-product-slot-placements-forms-ahead-250-click.md, line 16; made the standing filler slot by state/directives/2026-10-24-filler-slot-standing-rule-appended-to-autonomy.md, line 8; state/FILLER-QUEUE.md): placed, graded S3; a five-line form under section 21c's size, the reviewer and the architect from dispatch, section 25 (e) set aside; any string a user sees a P6 placeholder for the sitting, any red-line text to the human. Before: Recorded 2026-10-07 by geometry-lines-cut's form (engine/GEOMETRY-LINES-PREREGISTRATION.md, section 3, the corpus): no file in engine/compat-corpus/of-record/MANIFEST.json declares a line type, so the lines cut may not claim that any real-world line file opens, and no P4 row waits for it. A corpus addition is its own preregistered piece. Waiting on the human's placement."
+    "summary": "PLACED S1 2026-10-26 (state/directives/2026-10-26-resent-2026-10-25-o1-s1-clang-cl-route-a-hugeint-cast-b-five-nodes-placed.md, item 1): slot 1, ahead of order, the full form, both gates. Route (a): the Windows build of the bundled DuckDB compiled with clang-cl, proven first by a probe on its own cargo target (never a shared one), nothing committed. Route (b), its fallback: the composition casts both operands of an admitted BIGINT product to HUGEINT, an ADR-021 Note in the human's words. Not routes: refusal at admission, a declared limitation as the end state, a vendored patch or a fork. NEXT: the architect drafts the full form (route a, route b its fallback section, the pinned test grown from the probe against the i128 oracle, run on the Linux L1 job too); clang-cl's presence on the machine and on the Windows runner image reported; the rebuild under a booking on the custodian's estimate. Before: GRADED S1 2026-10-26 by the human (state/directives/2026-10-26-o1-s1-257-258-259-merged-6b-r3b-held-on-the-human-6c-runs-fixture-s-entry-point-6d.md), on route (a) then (b) as the human's paste of 2026-10-25 gives them; that paste reached the custodian only as a resend the same day, filed as its own directive beside this one. Before: READ 2026-10-25 by lead-data (state/consults/2026-10-25-admitted-integer-overflow-silent-wraparound-probe-reading-lead-data.md), for the human's grade (S1 if a predicate the engine admits can return the wrong rows with no error): the report shows it, 88 of 136 engine runs across 22 cells, admission Ok, no error, ids different from the exact count; the R runs (operands at or above 2 to the 32) ended in the fixed detail, which corrects the every-run clause of the summary below. The mechanism by lead-data's reading: the bundled DuckDB's int64 multiply on this MSVC build skips its overflow check when both operand magnitudes are below 2 to the 32, and statistics propagation then folds the filter on the wrapped range to an empty result; a GCC or Clang build would take the checked path, unverified. Any resolution touches a red line (an ADR-021 Note, a dependency or build change, a predicate rewrite, a declared limitation). NEXT: the human grades the node. Before: PROBE RUN 2026-10-25 (state/consults/2026-10-25-admitted-integer-overflow-silent-wraparound-probe-run-tester-high-report.md; the tester-high, nothing committed; two processes byte-identical): every admitted P1 and P2 run through Dataset::stream_with_cancel ended with no error, and 88 of 136 engine runs delivered an id set different from the exact count, with the independent DuckDB connection agreeing with the engine; operands of magnitude at or above 2 to the 32 ended in the fixed detail. NEXT: lead-data reads the results; then the human grades the node. Before: DESIGN FILED 2026-10-25 (state/consults/2026-10-25-admitted-integer-overflow-silent-wraparound-probe-design-lead-data-draft.md): eleven fixtures (two writers, statistics on and off), three admitted predicates through Dataset::stream_with_cancel in two shapes, independent counts against exact i128 arithmetic, the statistics path first (disabled optimizers), the operator by magnitude, the vendored source read. The custodian's choices: OPEN-1 to OPEN-4 (a). NEXT: a tester-high runs it in C:/dev/wt/o1-probe (detached at fb361420, nothing committed); lead-data reads the results. Before: RUNNER RULED (a) 2026-10-25 (state/directives/2026-10-25-filler-entry-5-open-1-a-pr-b-open-1-2-3-a-o1-probe-lead-data-designs-tester-high-runs.md, item 3): lead-data designs the probe, a tester-high runs it under the machine rules with nothing committed, and lead-data reads the results; lead-data keeps no shell. NEXT: lead-data's design. Proposed and ungraded until the human grades it on the report. Before: RULED 2026-10-25 (state/directives/2026-10-25-255-route-b-o1-lead-data-probe-session-end-lines-s2-context-monday-no-redaction-pr.md, item 2): lead-data reproduces it through Dataset::stream_with_cancel first, a probe under the machine rules with nothing committed: the reviewer's two cases through an admitted predicate on a fixture of that magnitude, each with and without the comparison, the row counts against an independent DuckDB connection's; then the mechanism, the row-group statistics path checked first. Graded on the report: S1 if a predicate the engine admits can return the wrong rows with no error. Proposed and ungraded until then; nothing in the campaign is loosened. HELD: lead-data's definition has no shell, so the runner is the human's question. Before: PROPOSED 2026-10-24 by stream-evaluation-failure-fixed-detail's gate 1 (state/consults/gates/2026-10-24-stream-evaluation-failure-fixed-detail-gate1-reviewer.md, O1; the summary drafted in state/consults/2026-10-24-stream-evaluation-failure-fixed-detail-route-architect-draft.md), for the human's routing: on the locked duckdb crate, outside the engine, a BIGINT v * v with v near 4e9 returned rows with no error where the product overflows (v * v < 0 returned the 1,024 rows of that magnitude; on a 2,048-row file whose last row overflows, v * v > 0 returned 0 rows instead of 2,046), while operands near 3.6e18 raised. The mechanism is not determined and it has not been run through the engine. It is the class B-1 point 4 routes to stream-evaluation-failure-fixed-detail, whose direction assumes the overflow ends the stream in error. First: reproduce through Dataset::stream_with_cancel and determine the mechanism; then the human's decision. Any resolution that changes what admission admits is an ADR-021 Note and a red line. Not graded."
   },
   "ready": [
+    {
+      "id": "admitted-integer-overflow-silent-wraparound",
+      "title": "An admitted same-type BIGINT product that overflows may wrap silently and return wrong rows with no error, observed outside the engine on the locked duckdb crate (O1 of stream-evaluation-failure-fixed-detail gate 1)",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "ready",
+      "order": null,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-24",
+        "done": null
+      },
+      "summary": "PLACED S1 2026-10-26 (state/directives/2026-10-26-resent-2026-10-25-o1-s1-clang-cl-route-a-hugeint-cast-b-five-nodes-placed.md, item 1): slot 1, ahead of order, the full form, both gates. Route (a): the Windows build of the bundled DuckDB compiled with clang-cl, proven first by a probe on its own cargo target (never a shared one), nothing committed. Route (b), its fallback: the composition casts both operands of an admitted BIGINT product to HUGEINT, an ADR-021 Note in the human's words. Not routes: refusal at admission, a declared limitation as the end state, a vendored patch or a fork. NEXT: the architect drafts the full form (route a, route b its fallback section, the pinned test grown from the probe against the i128 oracle, run on the Linux L1 job too); clang-cl's presence on the machine and on the Windows runner image reported; the rebuild under a booking on the custodian's estimate. Before: GRADED S1 2026-10-26 by the human (state/directives/2026-10-26-o1-s1-257-258-259-merged-6b-r3b-held-on-the-human-6c-runs-fixture-s-entry-point-6d.md), on route (a) then (b) as the human's paste of 2026-10-25 gives them; that paste reached the custodian only as a resend the same day, filed as its own directive beside this one. Before: READ 2026-10-25 by lead-data (state/consults/2026-10-25-admitted-integer-overflow-silent-wraparound-probe-reading-lead-data.md), for the human's grade (S1 if a predicate the engine admits can return the wrong rows with no error): the report shows it, 88 of 136 engine runs across 22 cells, admission Ok, no error, ids different from the exact count; the R runs (operands at or above 2 to the 32) ended in the fixed detail, which corrects the every-run clause of the summary below. The mechanism by lead-data's reading: the bundled DuckDB's int64 multiply on this MSVC build skips its overflow check when both operand magnitudes are below 2 to the 32, and statistics propagation then folds the filter on the wrapped range to an empty result; a GCC or Clang build would take the checked path, unverified. Any resolution touches a red line (an ADR-021 Note, a dependency or build change, a predicate rewrite, a declared limitation). NEXT: the human grades the node. Before: PROBE RUN 2026-10-25 (state/consults/2026-10-25-admitted-integer-overflow-silent-wraparound-probe-run-tester-high-report.md; the tester-high, nothing committed; two processes byte-identical): every admitted P1 and P2 run through Dataset::stream_with_cancel ended with no error, and 88 of 136 engine runs delivered an id set different from the exact count, with the independent DuckDB connection agreeing with the engine; operands of magnitude at or above 2 to the 32 ended in the fixed detail. NEXT: lead-data reads the results; then the human grades the node. Before: DESIGN FILED 2026-10-25 (state/consults/2026-10-25-admitted-integer-overflow-silent-wraparound-probe-design-lead-data-draft.md): eleven fixtures (two writers, statistics on and off), three admitted predicates through Dataset::stream_with_cancel in two shapes, independent counts against exact i128 arithmetic, the statistics path first (disabled optimizers), the operator by magnitude, the vendored source read. The custodian's choices: OPEN-1 to OPEN-4 (a). NEXT: a tester-high runs it in C:/dev/wt/o1-probe (detached at fb361420, nothing committed); lead-data reads the results. Before: RUNNER RULED (a) 2026-10-25 (state/directives/2026-10-25-filler-entry-5-open-1-a-pr-b-open-1-2-3-a-o1-probe-lead-data-designs-tester-high-runs.md, item 3): lead-data designs the probe, a tester-high runs it under the machine rules with nothing committed, and lead-data reads the results; lead-data keeps no shell. NEXT: lead-data's design. Proposed and ungraded until the human grades it on the report. Before: RULED 2026-10-25 (state/directives/2026-10-25-255-route-b-o1-lead-data-probe-session-end-lines-s2-context-monday-no-redaction-pr.md, item 2): lead-data reproduces it through Dataset::stream_with_cancel first, a probe under the machine rules with nothing committed: the reviewer's two cases through an admitted predicate on a fixture of that magnitude, each with and without the comparison, the row counts against an independent DuckDB connection's; then the mechanism, the row-group statistics path checked first. Graded on the report: S1 if a predicate the engine admits can return the wrong rows with no error. Proposed and ungraded until then; nothing in the campaign is loosened. HELD: lead-data's definition has no shell, so the runner is the human's question. Before: PROPOSED 2026-10-24 by stream-evaluation-failure-fixed-detail's gate 1 (state/consults/gates/2026-10-24-stream-evaluation-failure-fixed-detail-gate1-reviewer.md, O1; the summary drafted in state/consults/2026-10-24-stream-evaluation-failure-fixed-detail-route-architect-draft.md), for the human's routing: on the locked duckdb crate, outside the engine, a BIGINT v * v with v near 4e9 returned rows with no error where the product overflows (v * v < 0 returned the 1,024 rows of that magnitude; on a 2,048-row file whose last row overflows, v * v > 0 returned 0 rows instead of 2,046), while operands near 3.6e18 raised. The mechanism is not determined and it has not been run through the engine. It is the class B-1 point 4 routes to stream-evaluation-failure-fixed-detail, whose direction assumes the overflow ends the stream in error. First: reproduce through Dataset::stream_with_cancel and determine the mechanism; then the human's decision. Any resolution that changes what admission admits is an ADR-021 Note and a red line. Not graded."
+    },
     {
       "id": "corpus-line-files",
       "title": "A line file (LineString or MultiLineString) in the preregistered compatibility corpus, so that line admission is tried on a real-world file",
@@ -137,6 +156,25 @@
       "summary": "PLACED 2026-10-26 (state/directives/2026-10-26-o1-s1-257-258-259-merged-6b-r3b-held-on-the-human-6c-runs-fixture-s-entry-point-6d.md, item 2): S3, filler entry 6d, after 6c and before 7a, a five-line form: it writes S alone from spec_s as the G5 entry point writes G5, its disk check reading the drive the output lives on with a floor sized to what it writes, the full hash checked, and S recorded in kernel/FIXTURES.md on G5's model; nothing else changes, and the matrix generator's C: check stays as that cut's recorded preflight. Before: PROPOSED 2026-10-25 by the custodian from state/consults/2026-10-25-first-batch-factorial-ignored-trace-tests-fixture-s-route-architect.md (R3c): the fixture S (parcels-145mb.parquet) has no dedicated regeneration entry point and no kernel/FIXTURES.md entry; its only documented route is the measured factorial pass. An entry point like the G5 one, with its record and hash check, would let a piece regenerate S without a measured pass. For the human to place; S3 unless graded."
     },
     {
+      "id": "open-dataset-refuses-a-name-closed-during-admission",
+      "title": "open_dataset refuses at admission when a close has removed the catalog entry (the fix kernel-close-during-open-admission pins, in M1 shape; a close after that check and the ChecksOnly arm are for its own form)",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "ready",
+      "order": null,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-25",
+        "done": null
+      },
+      "summary": "PLACED S3 2026-10-26 (state/directives/2026-10-26-resent-2026-10-25-o1-s1-clang-cl-route-a-hugeint-cast-b-five-nodes-placed.md, item 2): filler entry 5b, after 6b resumes and after 6c (6c starts now), a five-line form; the shape: the catalog check and the mint under the lock close_dataset's removal takes, and the ChecksOnly arm the same check; past the five-line budget, M1's shape with the narrowed title and the remaining window its own proposed node; the SKP-V0 wire words are the human's, in that item. Before: TITLE NARROWED 2026-10-25 by #258 gate 1's architect (state/consults/gates/2026-10-25-kernel-close-during-open-admission-gate1-architect.md, N2): M1 checks under the per-open latch, which close_dataset never takes, so a close between the check and the mint stays open, and the ChecksOnly arm is untouched; the fix's own form closes those windows or keeps the narrower title, and states whether its skp.unknown_dataset refusal of open_dataset is a wire change (SKP-V0). Before: PROPOSED 2026-10-25 by the custodian under kernel-close-during-open-admission's OPEN-2 (state/consults/2026-10-25-kernel-close-during-open-admission-five-line-form-architect-draft.md): the fix that test pins. Its smallest shape is that form's M1: in open_dataset's Watching arm, before the mint, refuse as skp.unknown_dataset when the catalog no longer holds the name, so no generation is minted for a dataset a close has forgotten. A fix flips the pinned test by name (the human's ruling, state/directives/2026-10-25-filler-entry-5-open-1-a-pr-b-open-1-2-3-a-o1-probe-lead-data-designs-tester-high-runs.md, item 1) and replaces it under its own form. Unreachable in the product (the handle is minted from the OS CSPRNG). For the human to place; S3 unless graded."
+    },
+    {
       "id": "pre-admission-change-detail-braces",
       "title": "Four kernel P6-placeholder detail strings are wrapped in literal braces, which reach the operator message; the watcher form declares each such string starts with the bracketed placeholder tag",
       "lane": "kernel-protocol",
@@ -154,6 +192,25 @@
         "done": null
       },
       "summary": "FILLER QUEUE entry 3 (RULED 2026-10-24: state/directives/2026-10-24-weekend-exception-third-product-slot-placements-forms-ahead-250-click.md, line 11; made the standing filler slot by state/directives/2026-10-24-filler-slot-standing-rule-appended-to-autonomy.md, line 8; state/FILLER-QUEUE.md): placed, graded S3, the braces removed, the words staying placeholders (the node's scope (i)); a five-line form under section 21c's size, the reviewer and the architect from dispatch, section 25 (e) set aside; any string a user sees a P6 placeholder for the sitting, any red-line text to the human. Before: Proposed by PR 173 gate-1 reviewer, N-3 (state/consults/gates/2026-10-04-watch-grandparent-spawn-signal-gate1-reviewer.md); widened by Fable 2026-10-04 advice, item 2 (state/directives/2026-10-04-fable-advice-nodes-trailers-latency.md), checked by the custodian at f3426ba8: four detail literals open with a brace before the P6 placeholder tag and close with a brace, at kernel/src/skp.rs lines 1024 (the pre-admission Change refusal), 1445 and 1521, and kernel/src/lib.rs line 528; two others in skp.rs (1233 and 1329) are unbraced. engine/SOURCE-WATCHER-PREREGISTRATION.md section 7 (its placeholder row) declares that each new operator string starts with the bracketed tag. Two scopes for the human to choose between at placement: (i) braces only, removing the two brace characters from each of the four literals so they match the declared form, with no new wording; (ii) the final wording of the placeholder strings, which is the human ruling P6 reserves. Never queued until the human places it."
+    },
+    {
+      "id": "session-generation-other-recorded-mutations-name-no-commit",
+      "title": "kernel/tests/session_generation.rs: the recorded-mutation comments outside T1 to T3 that name no observation commit, each re-observed and named",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "ready",
+      "order": null,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-25",
+        "done": null
+      },
+      "summary": "PLACED S3 2026-10-26 (state/directives/2026-10-26-resent-2026-10-25-o1-s1-clang-cl-route-a-hugeint-cast-b-five-nodes-placed.md, item 2): after 6a, as the custodian proposed; the next free filler turn after 5b. Before: PROPOSED 2026-10-25 by the custodian under session-generation-t1-t3-reobservation's drafting consult, OPEN-2 (A) (state/consults/2026-10-25-session-generation-t1-t3-reobservation-five-line-form-architect-draft.md): kernel/tests/session_generation.rs holds five more recorded-mutation comments that name no observation commit (the draft's OPEN-2 lists them by line at a305e541); each to be re-observed and to name its commit, as entry 6a does for T1 to T3; one of them, a torn-read mutation, is not deterministically observable and needs its own reading. For the human to place; S3 unless graded."
     },
     {
       "id": "windows-case-fold-non-ascii",
@@ -192,6 +249,25 @@
         "done": null
       },
       "summary": "READING 1 (state/directives/2026-10-25-255-route-b-o1-lead-data-probe-session-end-lines-s2-context-monday-no-redaction-pr.md, item 4): /context on Monday, once, in the custodian's session, partway through a piece. Before: READINGS 2 TO 4 FILED 2026-10-24 (state/consults/2026-10-24-governance-e-reading-2-transcript-tally-tester-report.md; state/consults/2026-10-24-governance-e-reading-3-claude-code-facts.md; state/consults/2026-10-24-governance-e-reading-4-dispatch-bytes-custodian.md). Reading 1 waits for the human: context is a built-in command the custodian cannot run. Reading 3: the per-call effort parameter exists (2.1.292 or later; installed 2.1.306), CLAUDE_CODE_EFFORT_LEVEL is not set here, and whether clear gives a new session id is not documented, so it is observed at the first checkpoint. Before: RULED 2026-10-24 (state/directives/2026-10-24-governance-piece-e-rules-as-records-readings-e1-repin-fresh-session-practice.md, line 10 onward; the advisor audit state/consults/2026-10-24-agent-briefs-rulebook-audit-advisor.md): four readings, only their reports under state/consults/ committed. 1: context once in a custodian session partway through a piece (the slash command is the human's to type: the custodian cannot run built-in commands). 2: a read-only tally of this project's own transcripts on this machine over 14 days, tokens by session and agent type, the 20 largest tool results by size, counts only, this project's transcript directory alone and named. 3: from the installed Claude Code and its documentation: whether clear starts a new session id; whether a dispatch sets effort per call and whether CLAUDE_CODE_EFFORT_LEVEL is set here; whether a subfolder CLAUDE.md loads when an agent reads a file there, subagents included. 4: the bytes one worker and one reviewer dispatch receive today."
+    },
+    {
+      "id": "verify-cites-past-end-bound",
+      "title": "verify-cites passes a cite to the line just past the end of a file that ends in a newline, or to line 1 of an empty file: the bound, with a design for such cites inside immutable records",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "ready",
+      "order": null,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-25",
+        "done": null
+      },
+      "summary": "PLACED S3 2026-10-26 (state/directives/2026-10-26-resent-2026-10-25-o1-s1-clang-cl-route-a-hugeint-cast-b-five-nodes-placed.md, item 2): the governance lane, next, a five-line form. The design: a closed list of the cites the old bound passes, read by verify-cites, which passes those under the old bound; governance-ci fails if the list gains an entry, and it may only shrink; no record is edited. verify-quotes-cite-listing-line-count is folded in as its second line. Before: PROPOSED 2026-10-25 from verify-cites-out-of-range-line-count's drafting consult, OPEN-1: verify-cites checks a cited line against the pieces of a split on newlines, so a cite to the line just past the end of a file that ends in a newline, or to line 1 of an empty file, passes in the tree and at a pin. The custodian's enumeration at main 5315a6a5, with the bound corrected, found 13 cites that would change, 5 of them gated and 8 advisory, all in filed reports under state/consults/ and state/consults/gates/, which are byte-identical records and cannot be edited; so the fix needs a design for such cites inside immutable records before the bound changes. verify-cites-out-of-range-line-count corrected the count each reason prints and disclosed the bound in the header; it did not change the bound. For the human's grading and placement."
     },
     {
       "id": "verify-cites-reversed-range",
@@ -628,6 +704,28 @@
       ]
     },
     {
+      "id": "governance-hash-ref-leading-dot-path",
+      "title": "A hash-pinned reference can name a path that starts with a dot (.github/, .githooks/): the shared reference grammar admits it, with its own tests",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": null,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-25",
+        "done": null
+      },
+      "summary": "PLACED S3 2026-10-26 (state/directives/2026-10-26-resent-2026-10-25-o1-s1-clang-cl-route-a-hugeint-cast-b-five-nodes-placed.md, item 2): the governance lane after verify-cites-past-end-bound, a five-line form with its own tests; the widening and the tests as that item gives them. Before: PROPOSED 2026-10-25 by governance-hash-grammar-shared's form (the custodian's settlement, OPEN-2), for the human's placement: the reference grammar's path must begin with a letter, digit or underscore, so a span in .github/ or .githooks/ cannot be hash-pinned (verify-quotes reads it without its leading dot and fails to resolve it), as governance-hash-grammar-shared's summary records from 2026-10-02. Widening the path's first character changes what both checkers bind, so it needs its own tests; it lands in scripts/plan/hashRefGrammar.mjs once governance-hash-grammar-shared merges. Not graded.",
+      "blocked_by": [
+        "verify-cites-past-end-bound"
+      ]
+    },
+    {
       "id": "shell-owners-index",
       "title": "An owner's index for the shell (frontends/shell), so that shell-owned KNOWN-LIMITATIONS items and pointers are indexed somewhere",
       "lane": "governance",
@@ -873,25 +971,6 @@
     }
   ],
   "proposed": [
-    {
-      "id": "governance-hash-ref-leading-dot-path",
-      "title": "A hash-pinned reference can name a path that starts with a dot (.github/, .githooks/): the shared reference grammar admits it, with its own tests",
-      "lane": "governance",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 60,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-10-25",
-        "done": null
-      },
-      "summary": "PROPOSED 2026-10-25 by governance-hash-grammar-shared's form (the custodian's settlement, OPEN-2), for the human's placement: the reference grammar's path must begin with a letter, digit or underscore, so a span in .github/ or .githooks/ cannot be hash-pinned (verify-quotes reads it without its leading dot and fails to resolve it), as governance-hash-grammar-shared's summary records from 2026-10-02. Widening the path's first character changes what both checkers bind, so it needs its own tests; it lands in scripts/plan/hashRefGrammar.mjs once governance-hash-grammar-shared merges. Not graded."
-    },
     {
       "id": "lod-tier-selection",
       "title": "LOD tier selection -- which tier a viewport draws (renderer/shell, under its own gate); the named product caller of build_tiers (RULED 2026-09-17, round 8); the prepare report and the two labels' shell surface owed here; the operator walkthrough",
@@ -1235,25 +1314,6 @@
       "summary": "Found by the architect while drafting audit-reader-char-boundary (state/consults/2026-10-01-audit-reader-char-boundary-architect-draft.md, the second report): audit_show_lines reads the log with read_to_string, which errors on any invalid UTF-8, and the CLI then refuses the whole log naming its path, so one bad byte hides every record rather than showing one CORRUPT line. Not a panic; trusted, local input; not reproduced. The architect suggests S2, or S3 under the unreproduced tie-breaker; graded at placement. Any fix that adds a CORRUPT form for such a line is new operator wording, which is the human ruling."
     },
     {
-      "id": "session-generation-other-recorded-mutations-name-no-commit",
-      "title": "kernel/tests/session_generation.rs: the recorded-mutation comments outside T1 to T3 that name no observation commit, each re-observed and named",
-      "lane": "kernel-protocol",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 60,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-10-25",
-        "done": null
-      },
-      "summary": "PROPOSED 2026-10-25 by the custodian under session-generation-t1-t3-reobservation's drafting consult, OPEN-2 (A) (state/consults/2026-10-25-session-generation-t1-t3-reobservation-five-line-form-architect-draft.md): kernel/tests/session_generation.rs holds five more recorded-mutation comments that name no observation commit (the draft's OPEN-2 lists them by line at a305e541); each to be re-observed and to name its commit, as entry 6a does for T1 to T3; one of them, a torn-read mutation, is not deterministically observable and needs its own reading. For the human to place; S3 unless graded."
-    },
-    {
       "id": "adr-index-unknown-flag-writes",
       "title": "frontends/shell/scripts/adrIndex.mjs writes docs/README.md when given an unknown flag; it should refuse any argument other than --check",
       "lane": "governance",
@@ -1311,25 +1371,6 @@
       "summary": "Wave-2 S2 record (state/cloud/wave2/W2-C.md, unproven observation 2; recorded as filed, the 2026-09-28 S1 batch): a describe failure after a successful open falls to the catch without closing the dataset, leaving its catalog entry, OpenRecord and watch; no reachable describe refusal after a successful open was found, so the path is unreachable today."
     },
     {
-      "id": "open-dataset-refuses-a-name-closed-during-admission",
-      "title": "open_dataset refuses at admission when a close has removed the catalog entry (the fix kernel-close-during-open-admission pins, in M1 shape; a close after that check and the ChecksOnly arm are for its own form)",
-      "lane": "kernel-protocol",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 60,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-10-25",
-        "done": null
-      },
-      "summary": "TITLE NARROWED 2026-10-25 by #258 gate 1's architect (state/consults/gates/2026-10-25-kernel-close-during-open-admission-gate1-architect.md, N2): M1 checks under the per-open latch, which close_dataset never takes, so a close between the check and the mint stays open, and the ChecksOnly arm is untouched; the fix's own form closes those windows or keeps the narrower title, and states whether its skp.unknown_dataset refusal of open_dataset is a wire change (SKP-V0). Before: PROPOSED 2026-10-25 by the custodian under kernel-close-during-open-admission's OPEN-2 (state/consults/2026-10-25-kernel-close-during-open-admission-five-line-form-architect-draft.md): the fix that test pins. Its smallest shape is that form's M1: in open_dataset's Watching arm, before the mint, refuse as skp.unknown_dataset when the catalog no longer holds the name, so no generation is minted for a dataset a close has forgotten. A fix flips the pinned test by name (the human's ruling, state/directives/2026-10-25-filler-entry-5-open-1-a-pr-b-open-1-2-3-a-o1-probe-lead-data-designs-tester-high-runs.md, item 1) and replaces it under its own form. Unreachable in the product (the handle is minted from the OS CSPRNG). For the human to place; S3 unless graded."
-    },
-    {
       "id": "engine-query-terminal-detail-sql-audit",
       "title": "Every other engine.query terminal detail repeats a slice of the composed SQL (W2-B observation 2): audit the stream-terminal paths, then decide whether to withhold DuckDB text more widely",
       "lane": "engine",
@@ -1347,25 +1388,6 @@
         "done": null
       },
       "summary": "PROPOSED 2026-10-24 by stream-evaluation-failure-fixed-detail's form (engine/STREAM-EVALUATION-FAILURE-FIXED-DETAIL-PREREGISTRATION.md, the settlement's OPEN-2; the draft state/consults/2026-10-24-stream-evaluation-failure-fixed-detail-lead-data-draft.md, OPEN-2): W2-B observation 2 (state/cloud/wave2/W2-B.md), every other engine.query terminal detail repeating a slice of the composed SQL, stays out of that piece. First an audit of which stream-terminal paths still carry DuckDB text with SQL after B-1, then whether to withhold DuckDB text more widely: a contract question that trades away diagnostics and the fetch site's design note, so the human's to decide. Not graded; for the human's placement."
-    },
-    {
-      "id": "admitted-integer-overflow-silent-wraparound",
-      "title": "An admitted same-type BIGINT product that overflows may wrap silently and return wrong rows with no error, observed outside the engine on the locked duckdb crate (O1 of stream-evaluation-failure-fixed-detail gate 1)",
-      "lane": "engine",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 60,
-      "needs_human": {
-        "kind": "ruling",
-        "minutes": 10
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-10-24",
-        "done": null
-      },
-      "summary": "GRADED S1 2026-10-26 by the human (state/directives/2026-10-26-o1-s1-257-258-259-merged-6b-r3b-held-on-the-human-6c-runs-fixture-s-entry-point-6d.md), on route (a) then (b) as the human's paste of 2026-10-25 gives them; that paste reached the custodian only as a resend the same day, filed as its own directive beside this one. Before: READ 2026-10-25 by lead-data (state/consults/2026-10-25-admitted-integer-overflow-silent-wraparound-probe-reading-lead-data.md), for the human's grade (S1 if a predicate the engine admits can return the wrong rows with no error): the report shows it, 88 of 136 engine runs across 22 cells, admission Ok, no error, ids different from the exact count; the R runs (operands at or above 2 to the 32) ended in the fixed detail, which corrects the every-run clause of the summary below. The mechanism by lead-data's reading: the bundled DuckDB's int64 multiply on this MSVC build skips its overflow check when both operand magnitudes are below 2 to the 32, and statistics propagation then folds the filter on the wrapped range to an empty result; a GCC or Clang build would take the checked path, unverified. Any resolution touches a red line (an ADR-021 Note, a dependency or build change, a predicate rewrite, a declared limitation). NEXT: the human grades the node. Before: PROBE RUN 2026-10-25 (state/consults/2026-10-25-admitted-integer-overflow-silent-wraparound-probe-run-tester-high-report.md; the tester-high, nothing committed; two processes byte-identical): every admitted P1 and P2 run through Dataset::stream_with_cancel ended with no error, and 88 of 136 engine runs delivered an id set different from the exact count, with the independent DuckDB connection agreeing with the engine; operands of magnitude at or above 2 to the 32 ended in the fixed detail. NEXT: lead-data reads the results; then the human grades the node. Before: DESIGN FILED 2026-10-25 (state/consults/2026-10-25-admitted-integer-overflow-silent-wraparound-probe-design-lead-data-draft.md): eleven fixtures (two writers, statistics on and off), three admitted predicates through Dataset::stream_with_cancel in two shapes, independent counts against exact i128 arithmetic, the statistics path first (disabled optimizers), the operator by magnitude, the vendored source read. The custodian's choices: OPEN-1 to OPEN-4 (a). NEXT: a tester-high runs it in C:/dev/wt/o1-probe (detached at fb361420, nothing committed); lead-data reads the results. Before: RUNNER RULED (a) 2026-10-25 (state/directives/2026-10-25-filler-entry-5-open-1-a-pr-b-open-1-2-3-a-o1-probe-lead-data-designs-tester-high-runs.md, item 3): lead-data designs the probe, a tester-high runs it under the machine rules with nothing committed, and lead-data reads the results; lead-data keeps no shell. NEXT: lead-data's design. Proposed and ungraded until the human grades it on the report. Before: RULED 2026-10-25 (state/directives/2026-10-25-255-route-b-o1-lead-data-probe-session-end-lines-s2-context-monday-no-redaction-pr.md, item 2): lead-data reproduces it through Dataset::stream_with_cancel first, a probe under the machine rules with nothing committed: the reviewer's two cases through an admitted predicate on a fixture of that magnitude, each with and without the comparison, the row counts against an independent DuckDB connection's; then the mechanism, the row-group statistics path checked first. Graded on the report: S1 if a predicate the engine admits can return the wrong rows with no error. Proposed and ungraded until then; nothing in the campaign is loosened. HELD: lead-data's definition has no shell, so the runner is the human's question. Before: PROPOSED 2026-10-24 by stream-evaluation-failure-fixed-detail's gate 1 (state/consults/gates/2026-10-24-stream-evaluation-failure-fixed-detail-gate1-reviewer.md, O1; the summary drafted in state/consults/2026-10-24-stream-evaluation-failure-fixed-detail-route-architect-draft.md), for the human's routing: on the locked duckdb crate, outside the engine, a BIGINT v * v with v near 4e9 returned rows with no error where the product overflows (v * v < 0 returned the 1,024 rows of that magnitude; on a 2,048-row file whose last row overflows, v * v > 0 returned 0 rows instead of 2,046), while operands near 3.6e18 raised. The mechanism is not determined and it has not been run through the engine. It is the class B-1 point 4 routes to stream-evaluation-failure-fixed-detail, whose direction assumes the overflow ends the stream in error. First: reproduce through Dataset::stream_with_cancel and determine the mechanism; then the human's decision. Any resolution that changes what admission admits is an ADR-021 Note and a red line. Not graded."
     },
     {
       "id": "stream-fetch-overflow-fixed-detail",
@@ -2128,44 +2150,6 @@
       "summary": "RULED 2026-10-21 (state/directives/2026-10-21-redaction-amendment-3-open-1-to-7-ruled-adr-022-amendment-2-reading-a.md), OPEN-7 of the redaction form's Amendment 3: no ADR text in that piece; this note also carries the build-time scan, the reviewed list and the skip, later, in the human's words. Before: PROPOSED 2026-10-21 by the custodian, under the redaction scan's OPEN-4 (A), ruled by the human (state/directives/2026-10-21-d-s10-go-adr-036-route-i-redaction-open-items-1c-and-milestone-4-ruled-docs-open-1-yes.md): no ADR text in that piece; the custodian proposes a node for an ADR-017 note in the human's typed words, naming the product gate and Corrigendum 4's new term (kernel/BUNDLE-REDACTION-SCAN-PREREGISTRATION.md, OPEN-4). The architect's second revision adds a point (state/consults/2026-10-21-bundle-redaction-scan-not-in-product-publish-architect-revised-form-cites.md, What I could not settle, item 4): Corrigendum 4's table and kernel/CANCELLATION-AND-TRACING.md section 3 do not list the Finalizing window; whether this node also covers that design note is the human's. The human places it."
     },
     {
-      "id": "verify-cites-past-end-bound",
-      "title": "verify-cites passes a cite to the line just past the end of a file that ends in a newline, or to line 1 of an empty file: the bound, with a design for such cites inside immutable records",
-      "lane": "governance",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 60,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-10-25",
-        "done": null
-      },
-      "summary": "PROPOSED 2026-10-25 from verify-cites-out-of-range-line-count's drafting consult, OPEN-1: verify-cites checks a cited line against the pieces of a split on newlines, so a cite to the line just past the end of a file that ends in a newline, or to line 1 of an empty file, passes in the tree and at a pin. The custodian's enumeration at main 5315a6a5, with the bound corrected, found 13 cites that would change, 5 of them gated and 8 advisory, all in filed reports under state/consults/ and state/consults/gates/, which are byte-identical records and cannot be edited; so the fix needs a design for such cites inside immutable records before the bound changes. verify-cites-out-of-range-line-count corrected the count each reason prints and disclosed the bound in the header; it did not change the bound. For the human's grading and placement."
-    },
-    {
-      "id": "verify-quotes-cite-listing-line-count",
-      "title": "verify-quotes cite listing states a line count one too high for a file that ends in a newline and lists the line past the end as blank",
-      "lane": "governance",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 60,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-10-25",
-        "done": null
-      },
-      "summary": "PROPOSED 2026-10-25 from verify-cites-out-of-range-line-count's drafting consult: the cite listing in verify-quotes (listCiteContents) splits a file on newlines and counts the pieces, so for a file that ends in a newline its out-of-range note states a line count one too high, and the line just past the end is listed as a blank line instead of out of range. The hash check in verify-quotes reads lines by a different slice and is not affected. Outside verify-cites-out-of-range-line-count, which changes verify-cites only. For the human's grading and placement."
-    },
-    {
       "id": "governance-e3-module-claude-md",
       "title": "Piece E3: a small generated CLAUDE.md per product module from the rules whose paths match, if reading 3 confirms on-demand loading",
       "lane": "governance",
@@ -2700,6 +2684,25 @@
         "done": null
       },
       "summary": "WITHDRAWN 2026-10-08 by the human (state/directives/2026-10-08-reuse-round-1-private-repository.md): the research lives in the human's private repository, read from a clone outside every repository; nothing is copied into this repository; PR #192 closed unmerged; the form's Amendment 2 closes it. Before: GATE 1 REVIEWER FAIL (443, E1: 366 lines of placed code over the section 21c bound close the single-gate route; Correctness PASS); Amendment 1, class 6, generation 2: both gates apply; the architect gate and a reviewer re-gate on the amendment next; H1 (tilde and temporary folder paths in the notes) to the human. Before: PR #192 OPEN 2026-10-08 at 2ae29e9d: the archive arrived as the human upload (16:36:01Z), sha256 50d87a03 matched; placed byte-identical under reuse/ (139 files) by the custodian; check-index, verify-cites over reuse/** and the default set, the staged profile scan and the governance checkers all exit 0; five-line form at ab44cd2c; the single reviewer gate next. Before: V2 ARCHIVE 2026-10-08 (state/directives/2026-10-08-reuse-round-1-v2.md): spatial-ide-reuse-round-1-v2.zip, sha256 50d87a03eb42148608209edbad2d905bcea0e1c369f1d3330f86fb54d2409526, replaces the first; placed after #190 merges (five citations pinned at 14acee0b resolve only once #190 is in main; the pinned fallback is #191); verify the sha256 first, then tools/check-index.mjs and verify-cites over the placed folder. WAITING ON THE HUMAN (needs_human ruling): this archive did not reach the session either; the human names the route (for example Google Drive through the connector, or a path on this PC). #190 and #191 merged 2026-10-08. Before: PLACED 2026-10-08 by the human (state/directives/2026-10-08-reuse-round-1.md, item 1): slot 2, after #190 has merged and after verify-cites-pinned-citations; no mod, pilot, trial or record rule; not under docs/ (it holds code, and docs/ is CC-BY-4.0). Before the PR: no other project named, no user-profile path, its check-index.mjs and the repository checkers run on it; if verify-cites flags a citation inside it, stop and tell the human (no checker change, no exemption, no edit to the notes); fetch-cache.mjs is not run, and the clone cache is never inside the repo. WAITING: the archive did not reach the session; the human is asked for it and its sha256."
+    },
+    {
+      "id": "verify-quotes-cite-listing-line-count",
+      "title": "verify-quotes cite listing states a line count one too high for a file that ends in a newline and lists the line past the end as blank",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "unscheduled",
+      "order": null,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-25",
+        "done": null
+      },
+      "summary": "FOLDED 2026-10-26 (state/directives/2026-10-26-resent-2026-10-25-o1-s1-clang-cl-route-a-hugeint-cast-b-five-nodes-placed.md, item 2): S4, the second line of verify-cites-past-end-bound (the same root, counting the pieces of a newline split); not its own node. Before: PROPOSED 2026-10-25 from verify-cites-out-of-range-line-count's drafting consult: the cite listing in verify-quotes (listCiteContents) splits a file on newlines and counts the pieces, so for a file that ends in a newline its out-of-range note states a line count one too high, and the line just past the end is listed as a blank line instead of out of range. The hash check in verify-quotes reads lines by a different slice and is not affected. Outside verify-cites-out-of-range-line-count, which changes verify-cites only. For the human's grading and placement."
     }
   ]
 }

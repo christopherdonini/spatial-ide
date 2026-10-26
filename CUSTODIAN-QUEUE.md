@@ -1,22 +1,26 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `652e5be29beb481f8a0d083422512b87ae820e9b0bfca0522071636cabfa2b7f`) at `2026-10-26T00:39:05.377Z`.
+Generated from `PLAN.yaml` (sha256 `d00ce3e372e9ddac53583730f1aba75a0df852b48bc3efa275f24b5b9d5c482c`) at `2026-10-26T00:46:42.947Z`.
 
 ## 1. Next
 
-- **corpus-line-files** — A line file (LineString or MultiLineString) in the preregistered compatibility corpus, so that line admission is tried on a real-world file (lane `engine`)
+- **admitted-integer-overflow-silent-wraparound** — An admitted same-type BIGINT product that overflows may wrap silently and return wrong rows with no error, observed outside the engine on the locked duckdb crate (O1 of stream-evaluation-failure-fixed-detail gate 1) (lane `engine`)
 
 ## 2. Ready
 
+- **admitted-integer-overflow-silent-wraparound** — An admitted same-type BIGINT product that overflows may wrap silently and return wrong rows with no error, observed outside the engine on the locked duckdb crate (O1 of stream-evaluation-failure-fixed-detail gate 1) (lane `engine`, order null, budget 60 min)
 - **corpus-line-files** — A line file (LineString or MultiLineString) in the preregistered compatibility corpus, so that line admission is tried on a real-world file (lane `engine`, order null, budget 120 min)
 - **engine-cancel-before-execute-siblings** — The six other cancel.attach sites reuse the execute-window guard, so a cancel before execution stops the work, not only the outcome (dataset.rs identity scan and index.rs first, their work unbounded) (lane `engine`, order null, budget 90 min)
 - **slice-traced-test-cross-stamping** — engine/tests/slice.rs's traced test reads first cancellation stamps while its binary's other tests run unserialised, one of them cancelling (lane `engine`, order null, budget 60 min)
 - **stream-cancel-returns-left-unmarked** — The producer's cancel returns the flush piece leaves unmarked: a prepare error through classify, the two-read window in classify's marking arms, and the send to a receiver that is gone (is a disconnect an observation) (lane `engine`, order null, budget 120 min)
 - **type-walk-rule2-residual-reasons** — Type walk: a rule-2 result over a column or an integer literal, refused by rule 7's bit-width bound, keeps the residual reason although its value is a constant NULL (for example f32 > NULL + 100000) (lane `engine`, order null, budget 60 min)
 - **fixture-s-regeneration-entry-point** — A dedicated regeneration entry point and a kernel/FIXTURES.md record for the fixture S (parcels-145mb.parquet), like the G5 one (lane `kernel-protocol`, order null, budget 60 min)
+- **open-dataset-refuses-a-name-closed-during-admission** — open_dataset refuses at admission when a close has removed the catalog entry (the fix kernel-close-during-open-admission pins, in M1 shape; a close after that check and the ChecksOnly arm are for its own form) (lane `kernel-protocol`, order null, budget 60 min)
 - **pre-admission-change-detail-braces** — Four kernel P6-placeholder detail strings are wrapped in literal braces, which reach the operator message; the watcher form declares each such string starts with the bracketed placeholder tag (lane `kernel-protocol`, order null, budget 30 min)
+- **session-generation-other-recorded-mutations-name-no-commit** — kernel/tests/session_generation.rs: the recorded-mutation comments outside T1 to T3 that name no observation commit, each re-observed and named (lane `kernel-protocol`, order null, budget 60 min)
 - **windows-case-fold-non-ascii** — The audit case policy on Windows folds non-ASCII letters as NTFS does, so a profile path differing only in non-ASCII case cannot escape the user-home redaction (wave 3's 1c-2 correction, S2, code-path-only) (lane `kernel-protocol`, order null, budget 60 min)
 - **governance-e-readings** — Piece E readings before E1's form: context loaded in a custodian session; this project's own transcript tally; the installed Claude Code facts; the bytes one worker and one reviewer dispatch receive (lane `governance`, order null, budget 60 min)
+- **verify-cites-past-end-bound** — verify-cites passes a cite to the line just past the end of a file that ends in a newline, or to line 1 of an empty file: the bound, with a design for such cites inside immutable records (lane `governance`, order null, budget 60 min)
 - **verify-cites-reversed-range** — verify-cites checks a reversed range (end below start) by its larger end only (lane `governance`, order null, budget 30 min)
 - **posix-backslash-in-shared-path-logic** — Shared path logic stops treating a backslash as a separator on POSIX: distinct audit destinations stay distinct, and a viewer asset named with a backslash is refused, not renamed (wave-3 A-1, S2) (lane `platform`, order null, budget 90 min)
 - **publish-bundle-sigterm** — SIGTERM handling in publish-bundle on unix (wave-3 W3-A observation 3) (lane `platform`, order null, budget 90 min)
@@ -45,6 +49,7 @@ Generated from `PLAN.yaml` (sha256 `652e5be29beb481f8a0d083422512b87ae820e9b0bfc
 - **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-2-0
 - **signpath-application-draft** — Entry 77 — the SignPath OSS application and disclosure text drafted for the human sight, once a release is CI-built — blocked by: release-v0-2-0
 - **governance-e1-rules-as-records** — Piece E1: rules as records, a rule catalogue under rules/, a selector scripts/plan/rules.mjs, a generated block in each agent definition and a governance-ci check — blocked by: governance-e-readings
+- **governance-hash-ref-leading-dot-path** — A hash-pinned reference can name a path that starts with a dot (.github/, .githooks/): the shared reference grammar admits it, with its own tests — blocked by: verify-cites-past-end-bound
 - **shell-owners-index** — An owner's index for the shell (frontends/shell), so that shell-owned KNOWN-LIMITATIONS items and pointers are indexed somewhere — blocked by: skp-line-cites-outside-close-races
 - **site-design-v1** — Landing page redesign — DRAFT-4 (status strip, milestone banner, waiting-on-you cards with unblocks counts, the swimlane board) — blocked by: governance-ci-built-site
 - **macos-normalization-roots-uncanonicalized** — On macOS the audit log normalization roots are read uncanonicalized while recorded destinations are canonicalized, so a symlinked temporary-directory root never matches — blocked by: port-2-macos-l1-and-app-dirs
@@ -64,7 +69,6 @@ Generated from `PLAN.yaml` (sha256 `652e5be29beb481f8a0d083422512b87ae820e9b0bfc
 
 ### Proposed
 
-- **governance-hash-ref-leading-dot-path** — A hash-pinned reference can name a path that starts with a dot (.github/, .githooks/): the shared reference grammar admits it, with its own tests (phase `prototype`) — never queued until placed
 - **lod-tier-selection** — LOD tier selection -- which tier a viewport draws (renderer/shell, under its own gate); the named product caller of build_tiers (RULED 2026-09-17, round 8); the prepare report and the two labels' shell surface owed here; the operator walkthrough (phase `prototype`) — never queued until placed
 - **crs-zoom-constants-per-unit** — ADR-013 A1 item 6, the remaining class -- MAX_ZOOM and extent.ts's fit and degenerate zoom constants declared per CRS unit (crs-unit's STOP LIST Q2) (phase `prototype`) — never queued until placed
 - **interactive-zoom-ceiling** — A declared ceiling for interactive zoom (ADR-010 rule 6) -- crs-unit's STOP LIST Q3 (phase `prototype`) — never queued until placed
@@ -83,13 +87,10 @@ Generated from `PLAN.yaml` (sha256 `652e5be29beb481f8a0d083422512b87ae820e9b0bfc
 - **shell-session-log-line-framing** — The shell's session log keeps one line per record: level escaped, and carriage returns escaped in both fields (wave-1 A1-2) (phase `prototype`) — never queued until placed
 - **tile-issue-epoch-growth** — TileViewportStreamManager's issueEpoch map bounded within a dataset session (wave-1 A5 observation 5) (phase `prototype`) — never queued until placed
 - **audit-show-invalid-utf8-whole-refusal** — publish-bundle --audit-show refuses the whole audit log over one invalid UTF-8 byte, instead of reporting that line as CORRUPT (node 6 drafting consult) (phase `prototype`) — never queued until placed
-- **session-generation-other-recorded-mutations-name-no-commit** — kernel/tests/session_generation.rs: the recorded-mutation comments outside T1 to T3 that name no observation commit, each re-observed and named (phase `prototype`) — never queued until placed
 - **adr-index-unknown-flag-writes** — frontends/shell/scripts/adrIndex.mjs writes docs/README.md when given an unknown flag; it should refuse any argument other than --check (phase `prototype`) — never queued until placed
 - **b1-session-ordinal-refusal-wording** — The projection_column_is_identity refusal says a session-ordinal identity is mapped from file_row_number -- the message states the identity's real class (wave-2 A1-1, S2) (phase `prototype`) — never queued until placed
 - **shell-admit-describe-failure-closes-open** — admitDataset closes the dataset when describe fails after a successful open_dataset (wave-2 W2-C observation 2, S2) (phase `prototype`) — never queued until placed
-- **open-dataset-refuses-a-name-closed-during-admission** — open_dataset refuses at admission when a close has removed the catalog entry (the fix kernel-close-during-open-admission pins, in M1 shape; a close after that check and the ChecksOnly arm are for its own form) (phase `prototype`) — never queued until placed
 - **engine-query-terminal-detail-sql-audit** — Every other engine.query terminal detail repeats a slice of the composed SQL (W2-B observation 2): audit the stream-terminal paths, then decide whether to withhold DuckDB text more widely (phase `prototype`) — never queued until placed
-- **admitted-integer-overflow-silent-wraparound** — An admitted same-type BIGINT product that overflows may wrap silently and return wrong rows with no error, observed outside the engine on the locked duckdb crate (O1 of stream-evaluation-failure-fixed-detail gate 1) (phase `prototype`) — never queued until placed
 - **stream-fetch-overflow-fixed-detail** — An admitted predicate's integer overflow first raised during a fetch ends the stream with the fixed detail: the duckdb crate's fetch panic wrapper recognised by its fixed prefixes, anchored (route B of stream-evaluation-failure-fixed-detail) (phase `prototype`) — never queued until placed
 - **port-3-shell-l1** — PORT-3 -- the Tauri shell crate checked and tested on Linux and macOS in product-ci-shell (L1 for the shell) (phase `prototype`) — never queued until placed
 - **port-4-l2-smoke** — PORT-4 -- L2: unsigned tauri build on Linux and macOS as a package check, a Linux application smoke test under a virtual display, and the macOS smoke by hand (MACOS-BRINGUP resumed) (phase `prototype`) — never queued until placed
@@ -130,8 +131,6 @@ Generated from `PLAN.yaml` (sha256 `652e5be29beb481f8a0d083422512b87ae820e9b0bfc
 - **pre-1-0-trademark-search** — The trademark register search with counsel before 1.0 (the human's own) (phase `prototype`) — never queued until placed
 - **record-step-style-match-widening** — record_step admits a style.set match value on fillColor, with the step's dependencies naming the match column and its type (milestone 4's OPEN-4 (A′)): a small data-lane piece, or the first commit of piece 1c's step 1 (phase `prototype`) — never queued until placed
 - **adr-017-note-product-redaction-gate** — An ADR-017 note in the human's typed words: the product publish now runs the redaction scan over every emitted file, except a viewer file whose bytes the viewer's build scanned, and refuses by name on a finding (bundle-redaction-scan-not-in-product-publish); the build-time scan, the reviewed list and the skip; and Corrigendum 4's new uninterruptible term (phase `prototype`) — never queued until placed
-- **verify-cites-past-end-bound** — verify-cites passes a cite to the line just past the end of a file that ends in a newline, or to line 1 of an empty file: the bound, with a design for such cites inside immutable records (phase `prototype`) — never queued until placed
-- **verify-quotes-cite-listing-line-count** — verify-quotes cite listing states a line count one too high for a file that ends in a newline and lists the line past the end as blank (phase `prototype`) — never queued until placed
 - **governance-e3-module-claude-md** — Piece E3: a small generated CLAUDE.md per product module from the rules whose paths match, if reading 3 confirms on-demand loading (phase `prototype`) — never queued until placed
 - **governance-e4-rulebook-into-records** — Piece E4: the rest of AUTONOMY, AI_DEVELOPMENT and PRECEDENTS move into rule records, each rule when it is next touched or cited (phase `prototype`) — never queued until placed
 - **governance-rule-inactivity-list** — A weekly inactivity list of rules whose moment shows no occurrence in four weeks, or unknown, built from existing records only (phase `prototype`) — never queued until placed
@@ -163,3 +162,4 @@ Generated from `PLAN.yaml` (sha256 `652e5be29beb481f8a0d083422512b87ae820e9b0bfc
 - **mod-worktree-resource-protection** — Worktree and resource protection -- a mod (deferred by the 2026-10-03 mods-roadmap ruling) (phase `prototype`) — ambition, never queued
 - **recorder-write-latency-measure** — Evidence Recorder: a declared write-latency measure with its own sample, so the brief overhead acceptance can be established before the Recorder evaluation ends (Amendment 2 C2-d keeps E5 a lower bound) (phase `prototype`) — ambition, never queued
 - **reuse-round-1-bundle** — Reuse archaeology round 1, the advisor bundle, filed as one docs-and-data piece (not under docs/) (phase `prototype`) — ambition, never queued
+- **verify-quotes-cite-listing-line-count** — verify-quotes cite listing states a line count one too high for a file that ends in a newline and lists the line past the end as blank (phase `prototype`) — ambition, never queued
