@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `48b5c13db5eced325d5527bf9ddc129b90612f7f7703a6b84374d8215d229234`) at `2026-10-26T01:25:40.557Z`.
+Generated from `PLAN.yaml` (sha256 `83166bcebe0362fd16a8086cc23b7731746503434ced2c923c34520a151f7e90`) at `2026-10-26T01:33:51.572Z`.
 
 ## 1. Next
 
@@ -10,7 +10,6 @@ Generated from `PLAN.yaml` (sha256 `48b5c13db5eced325d5527bf9ddc129b90612f7f7703
 
 - **corpus-line-files** — A line file (LineString or MultiLineString) in the preregistered compatibility corpus, so that line admission is tried on a real-world file (lane `engine`, order null, budget 120 min)
 - **engine-cancel-before-execute-siblings** — The six other cancel.attach sites reuse the execute-window guard, so a cancel before execution stops the work, not only the outcome (dataset.rs identity scan and index.rs first, their work unbounded) (lane `engine`, order null, budget 90 min)
-- **slice-traced-test-cross-stamping** — engine/tests/slice.rs's traced test reads first cancellation stamps while its binary's other tests run unserialised, one of them cancelling (lane `engine`, order null, budget 60 min)
 - **stream-cancel-returns-left-unmarked** — The producer's cancel returns the flush piece leaves unmarked: a prepare error through classify, the two-read window in classify's marking arms, and the send to a receiver that is gone (is a disconnect an observation) (lane `engine`, order null, budget 120 min)
 - **type-walk-rule2-residual-reasons** — Type walk: a rule-2 result over a column or an integer literal, refused by rule 7's bit-width bound, keeps the residual reason although its value is a constant NULL (for example f32 > NULL + 100000) (lane `engine`, order null, budget 60 min)
 - **fixture-s-regeneration-entry-point** — A dedicated regeneration entry point and a kernel/FIXTURES.md record for the fixture S (parcels-145mb.parquet), like the G5 one (lane `kernel-protocol`, order null, budget 60 min)
@@ -60,6 +59,7 @@ Generated from `PLAN.yaml` (sha256 `48b5c13db5eced325d5527bf9ddc129b90612f7f7703
 ## 5. In progress
 
 - **covering-case-collision-binds-other-column** — A declared covering whose path differs from two schema names only by case: DuckDB may bind it to the other column, a wrong-rows risk that predates the covering piece — evidence: branch `cut/covering-case-collision-binds-other-column`
+- **slice-traced-test-cross-stamping** — engine/tests/slice.rs's traced test reads first cancellation stamps while its binary's other tests run unserialised, one of them cancelling — evidence: branch `cut/slice-traced-test-cross-stamping`
 - **first-batch-factorial-ignored-trace-tests** — kernel/tests/first_batch_factorial.rs's two ignored measurement tests each start a trace in one binary with no shared lock — evidence: branch `cut/first-batch-factorial-ignored-trace-tests`
 - **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **bundle-redaction-scan-not-in-product-publish** — The bundle redaction scan runs only in a test: no product publish scans its emitted files, though ADR-017's section 13 (Accepted) says a scan over every emitted file asserts no path, user name, machine identifier or credential is in a bundle — evidence: branch `cut/bundle-redaction-scan`
