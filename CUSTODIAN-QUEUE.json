@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-26T00:54:11.543Z",
-  "plan_hash": "2631432ce8370f609e19c068ded5c27f7aa9654f1742d40a130a120689cbfd71",
+  "generated_at": "2026-10-26T01:17:55.504Z",
+  "plan_hash": "f6ecab6d8096bfd2bef1a03c36a47f849ec6f69b87cdccfe6a129a81ddc7efff",
   "priorities_approved": true,
   "next": {
     "id": "admitted-integer-overflow-silent-wraparound",
@@ -96,7 +96,7 @@
         "opened": "2026-10-09",
         "done": null
       },
-      "summary": "FILLER QUEUE entry 6c (RULED 2026-10-24: state/directives/2026-10-24-weekend-exception-third-product-slot-placements-forms-ahead-250-click.md, line 14; made the standing filler slot by state/directives/2026-10-24-filler-slot-standing-rule-appended-to-autonomy.md, line 8; state/FILLER-QUEUE.md): placed, graded S3; a five-line form under section 21c's size, the reviewer and the architect from dispatch, section 25 (e) set aside; any string a user sees a P6 placeholder for the sitting, any red-line text to the human. Before: NOTED 2026-10-10 by the human (state/directives/2026-10-10-flake-hunt-run-1-flush-cancel-exit.md, item 3): stays proposed. The flake hunt's failures of this test (state/consults/FLAKE-HUNT-RUN-1-2026-10-10.md) were a missing event with nothing dropped from the trace, so this node's predicted mechanism was not what was observed; that cause is stream-flush-cancel-exit-marks-producer-cancelled. The custodian's check (state/consults/2026-10-10-flake-hunt-run-1-custodian-check.md) records the evidence's limits. Before: PROPOSED 2026-10-09 by the human's rulings of 2026-10-09 (state/directives/2026-10-09-rulings-on-the-eight-forms.md), item 6: a sibling site of wire-bytes-invariant-trace-flag-race (its form, section 0.7); cross-test stamping into a live trace, not observed failing; its own form, because it bears on a docs/08 budgeted assertion (engine/tests/slice.rs, the assertion near its line 815). The human places it later."
+      "summary": "FORM COMMITTED 2026-10-26 (engine/SLICE-TRACED-TEST-CROSS-STAMPING-PREREGISTRATION.md; the architect's draft state/consults/2026-10-26-slice-traced-test-cross-stamping-five-line-form-architect-draft.md; 68 pins): a file-local RwLock in engine/tests/slice.rs, the traced test exclusive, ten streaming tests shared, five of them quiescing their dataset's leases, about 70 of a declared 100 lines; three mutations; OPEN-1 (A) and OPEN-2 (A); a cargo target of its own; the reviewer and the architect from dispatch. NEXT: a worker builds it on its own branch. Before: FILLER QUEUE entry 6c (RULED 2026-10-24: state/directives/2026-10-24-weekend-exception-third-product-slot-placements-forms-ahead-250-click.md, line 14; made the standing filler slot by state/directives/2026-10-24-filler-slot-standing-rule-appended-to-autonomy.md, line 8; state/FILLER-QUEUE.md): placed, graded S3; a five-line form under section 21c's size, the reviewer and the architect from dispatch, section 25 (e) set aside; any string a user sees a P6 placeholder for the sitting, any red-line text to the human. Before: NOTED 2026-10-10 by the human (state/directives/2026-10-10-flake-hunt-run-1-flush-cancel-exit.md, item 3): stays proposed. The flake hunt's failures of this test (state/consults/FLAKE-HUNT-RUN-1-2026-10-10.md) were a missing event with nothing dropped from the trace, so this node's predicted mechanism was not what was observed; that cause is stream-flush-cancel-exit-marks-producer-cancelled. The custodian's check (state/consults/2026-10-10-flake-hunt-run-1-custodian-check.md) records the evidence's limits. Before: PROPOSED 2026-10-09 by the human's rulings of 2026-10-09 (state/directives/2026-10-09-rulings-on-the-eight-forms.md), item 6: a sibling site of wire-bytes-invariant-trace-flag-race (its form, section 0.7); cross-test stamping into a live trace, not observed failing; its own form, because it bears on a docs/08 budgeted assertion (engine/tests/slice.rs, the assertion near its line 815). The human places it later."
     },
     {
       "id": "stream-cancel-returns-left-unmarked",
@@ -251,25 +251,6 @@
       "summary": "READING 1 (state/directives/2026-10-25-255-route-b-o1-lead-data-probe-session-end-lines-s2-context-monday-no-redaction-pr.md, item 4): /context on Monday, once, in the custodian's session, partway through a piece. Before: READINGS 2 TO 4 FILED 2026-10-24 (state/consults/2026-10-24-governance-e-reading-2-transcript-tally-tester-report.md; state/consults/2026-10-24-governance-e-reading-3-claude-code-facts.md; state/consults/2026-10-24-governance-e-reading-4-dispatch-bytes-custodian.md). Reading 1 waits for the human: context is a built-in command the custodian cannot run. Reading 3: the per-call effort parameter exists (2.1.292 or later; installed 2.1.306), CLAUDE_CODE_EFFORT_LEVEL is not set here, and whether clear gives a new session id is not documented, so it is observed at the first checkpoint. Before: RULED 2026-10-24 (state/directives/2026-10-24-governance-piece-e-rules-as-records-readings-e1-repin-fresh-session-practice.md, line 10 onward; the advisor audit state/consults/2026-10-24-agent-briefs-rulebook-audit-advisor.md): four readings, only their reports under state/consults/ committed. 1: context once in a custodian session partway through a piece (the slash command is the human's to type: the custodian cannot run built-in commands). 2: a read-only tally of this project's own transcripts on this machine over 14 days, tokens by session and agent type, the 20 largest tool results by size, counts only, this project's transcript directory alone and named. 3: from the installed Claude Code and its documentation: whether clear starts a new session id; whether a dispatch sets effort per call and whether CLAUDE_CODE_EFFORT_LEVEL is set here; whether a subfolder CLAUDE.md loads when an agent reads a file there, subagents included. 4: the bytes one worker and one reviewer dispatch receive today."
     },
     {
-      "id": "verify-cites-past-end-bound",
-      "title": "verify-cites passes a cite to the line just past the end of a file that ends in a newline, or to line 1 of an empty file: the bound, with a design for such cites inside immutable records",
-      "lane": "governance",
-      "phase": "prototype",
-      "status": "ready",
-      "order": null,
-      "budget_minutes": 60,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-10-25",
-        "done": null
-      },
-      "summary": "PLACED S3 2026-10-26 (state/directives/2026-10-26-resent-2026-10-25-o1-s1-clang-cl-route-a-hugeint-cast-b-five-nodes-placed.md, item 2): the governance lane, next, a five-line form. The design: a closed list of the cites the old bound passes, read by verify-cites, which passes those under the old bound; governance-ci fails if the list gains an entry, and it may only shrink; no record is edited. verify-quotes-cite-listing-line-count is folded in as its second line. Before: PROPOSED 2026-10-25 from verify-cites-out-of-range-line-count's drafting consult, OPEN-1: verify-cites checks a cited line against the pieces of a split on newlines, so a cite to the line just past the end of a file that ends in a newline, or to line 1 of an empty file, passes in the tree and at a pin. The custodian's enumeration at main 5315a6a5, with the bound corrected, found 13 cites that would change, 5 of them gated and 8 advisory, all in filed reports under state/consults/ and state/consults/gates/, which are byte-identical records and cannot be edited; so the fix needs a design for such cites inside immutable records before the bound changes. verify-cites-out-of-range-line-count corrected the count each reason prints and disclosed the bound in the header; it did not change the bound. For the human's grading and placement."
-    },
-    {
       "id": "verify-cites-reversed-range",
       "title": "verify-cites checks a reversed range (end below start) by its larger end only",
       "lane": "governance",
@@ -366,11 +347,31 @@
     }
   ],
   "waiting_on_human": {
-    "total_minutes": 0,
+    "total_minutes": 5,
     "by_kind": {
       "click": [],
       "sight": [],
-      "ruling": [],
+      "ruling": [
+        {
+          "id": "verify-cites-past-end-bound",
+          "title": "verify-cites passes a cite to the line just past the end of a file that ends in a newline, or to line 1 of an empty file: the bound, with a design for such cites inside immutable records",
+          "lane": "governance",
+          "phase": "prototype",
+          "status": "blocked",
+          "order": null,
+          "budget_minutes": 60,
+          "needs_human": {
+            "kind": "ruling",
+            "minutes": 5
+          },
+          "evidence": null,
+          "dates": {
+            "opened": "2026-10-25",
+            "done": null
+          },
+          "summary": "DRAFTED 2026-10-26 (state/consults/2026-10-26-verify-cites-past-end-bound-five-line-form-architect-draft.md): as folded with verify-quotes-cite-listing-line-count, not a five-line form: the second line changes an existing test's asserted figure (verify-quotes.test.mjs line 189, file has 4 lines for a three-line file), a property under test, and the two lines come to about 156 changed lines. THE HUMAN'S RULING (OPEN-1): (A) the full form for both lines, both gates, the architect's recommendation; (B) a five-line form for the first line alone, the reviewer alone, the second line back on its own node. Nothing committed until then. Before: PLACED S3 2026-10-26 (state/directives/2026-10-26-resent-2026-10-25-o1-s1-clang-cl-route-a-hugeint-cast-b-five-nodes-placed.md, item 2): the governance lane, next, a five-line form. The design: a closed list of the cites the old bound passes, read by verify-cites, which passes those under the old bound; governance-ci fails if the list gains an entry, and it may only shrink; no record is edited. verify-quotes-cite-listing-line-count is folded in as its second line. Before: PROPOSED 2026-10-25 from verify-cites-out-of-range-line-count's drafting consult, OPEN-1: verify-cites checks a cited line against the pieces of a split on newlines, so a cite to the line just past the end of a file that ends in a newline, or to line 1 of an empty file, passes in the tree and at a pin. The custodian's enumeration at main 5315a6a5, with the bound corrected, found 13 cites that would change, 5 of them gated and 8 advisory, all in filed reports under state/consults/ and state/consults/gates/, which are byte-identical records and cannot be edited; so the fix needs a design for such cites inside immutable records before the bound changes. verify-cites-out-of-range-line-count corrected the count each reason prints and disclosed the bound in the header; it did not change the bound. For the human's grading and placement."
+        }
+      ],
       "sitting": [
         {
           "id": "operator-sitting-queue",
