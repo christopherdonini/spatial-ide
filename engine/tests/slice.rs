@@ -124,8 +124,25 @@ impl Drop for Watchdog {
 /// stamp nothing and take neither. A quiesced producer can still stamp the post-check pair and
 /// `producer_finished` after its lease is released; the test reads neither name.
 ///
-/// RECORDED MUTATION: <M-1: the insertion; the test's name and message; the 40-hex commit>
-/// RECORDED MUTATION: <M-2: the insertion; the ten names and the message; the 40-hex commit>
+/// RECORDED MUTATION: M-1: in `exclusive()`, after the write guard is taken, the insertion
+/// `std::mem::forget(trace::start(trace::TraceKey::default()));` failed
+/// `cancelling_mid_stream_stops_production_promptly`, run alone with `--exact`, at its start's
+/// expect, with the message `no other trace is running`; observed at
+/// 8a79b7f06cee3068314ea583792f56c98049b078.
+/// RECORDED MUTATION: M-2: in `shared()`, after the read guard is taken, the insertion
+/// `panic!("M-2: shared() reached");` failed exactly these ten tests, in a run of the whole binary,
+/// each with the message `M-2: shared() reached`, and no other test:
+/// `streaming_the_whole_file_returns_every_feature_with_bit_identical_coordinates`,
+/// `the_payload_is_variable_width_geoarrow_with_holes`,
+/// `a_viewport_filter_selects_a_subset_and_every_selected_feature_intersects_it`,
+/// `a_viewport_cannot_name_a_definition_only_crs_because_that_identifier_names_nothing`,
+/// `a_viewport_without_a_covering_bbox_column_is_refused_not_silently_scanned`,
+/// `every_batch_carries_the_envelope_not_just_the_first`,
+/// `cancelling_before_the_first_batch_stops_the_stream_without_producing_anything`,
+/// `dropping_the_stream_cancels_the_query`,
+/// `a_paused_consumer_bounds_producer_resident_memory` and
+/// `the_first_batch_is_handed_over_before_the_result_is_materialized`; observed at
+/// 8a79b7f06cee3068314ea583792f56c98049b078.
 static TRACE_LOCK: std::sync::RwLock<()> = std::sync::RwLock::new(());
 
 fn exclusive() -> std::sync::RwLockWriteGuard<'static, ()> {
@@ -142,7 +159,15 @@ fn shared() -> std::sync::RwLockReadGuard<'static, ()> {
 /// dataset with no active lease has no producer left that can stamp it. Bounded at ten seconds and
 /// loud on a miss, in the shape of the kernel's trace-span suite.
 ///
-/// RECORDED MUTATION: <M-3: the replacement; the five names and the message; the 40-hex commit>
+/// RECORDED MUTATION: M-3: in the assertion, the left side `ds.connections().active_leases()`
+/// replaced by `ds.connections().active_leases() + 1` failed exactly these five tests, in a run of
+/// the whole binary, and no other test: `the_payload_is_variable_width_geoarrow_with_holes`,
+/// `a_viewport_cannot_name_a_definition_only_crs_because_that_identifier_names_nothing`,
+/// `a_viewport_without_a_covering_bbox_column_is_refused_not_silently_scanned`,
+/// `dropping_the_stream_cancels_the_query` and `a_paused_consumer_bounds_producer_resident_memory`;
+/// each with the message `this test's dataset still held a lease 10s after its stream was dropped,
+/// so its producer could still stamp the traced test's trace` (left 1, right 0); observed at
+/// 8a79b7f06cee3068314ea583792f56c98049b078.
 fn quiesce(ds: &Dataset) {
     const WINDOW: Duration = Duration::from_secs(10);
     let deadline = Instant::now() + WINDOW;
