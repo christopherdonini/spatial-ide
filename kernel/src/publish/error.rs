@@ -183,6 +183,19 @@ pub enum PublishError {
         carried: String,
     },
 
+    /// The redaction scan (ADR-017 §13; `bundle::redaction`) found, in one staged file, a match that
+    /// is not operator-declared. Raised after every staged file is written and before the rename, so
+    /// no bundle exists under the destination name. The staging directory is then removed as on every
+    /// other failure, or reported by `StagingNotRemoved`. Carries that file's bundle-relative path,
+    /// the first match's class and byte offset, and the number of such matches in that file. Never
+    /// the matched text: a credential match would carry the credential (`docs/09`).
+    RedactionFinding {
+        file: String,
+        class: &'static str,
+        byte_offset: usize,
+        count: usize,
+    },
+
     /// A declared ceiling was reached (ADR-010 rule 6).
     CeilingExceeded {
         ceiling: &'static str,
@@ -267,6 +280,7 @@ impl PublishError {
             Self::GeometryEncodingNotPublishable { .. } => {
                 "publish.geometry_encoding_not_publishable"
             }
+            Self::RedactionFinding { .. } => "publish.redaction_finding",
             Self::CeilingExceeded { .. } => "publish.ceiling_exceeded",
             Self::ReaderCeilingExceeded { .. } => "publish.reader_ceiling_exceeded",
             Self::Cancelled => "publish.cancelled",
@@ -403,6 +417,13 @@ impl std::fmt::Display for PublishError {
                 f,
                 "[P6 placeholder] refused: a version-1 bundle carries the {carried} encoding only, \
                  and this dataset's encoding is {encoding}"
+            ),
+            // A P6 placeholder: the wording is the human's.
+            Self::RedactionFinding { file, class, byte_offset, count } => write!(
+                f,
+                "[P6 placeholder] refused: the redaction scan (ADR-017 §13) found {count} \
+                 match(es) in `{file}` that are not operator-declared, the first of class `{class}` \
+                 at byte {byte_offset}; no bundle was created at the destination"
             ),
             Self::CeilingExceeded { ceiling, limit, saw } => write!(
                 f,

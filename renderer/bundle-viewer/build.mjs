@@ -30,6 +30,12 @@ const result = await build({
   target: 'es2022',
   outfile: 'dist/app.js',
   sourcemap: false,
+  // **Comments are stripped** (the redaction form's Amendment 3): a source comment reached
+  // dist/app.js and carried an example drive path into every published bundle. minifyWhitespace
+  // drops comments here; minifyIdentifiers and minifySyntax stay off, and legalComments is set to
+  // 'eof' so licence comments are kept (esbuild 0.28.2, as the lockfile pins it).
+  minifyWhitespace: true,
+  legalComments: 'eof',
   // No absolute paths in the output, and no build-time environment leaking into it.
   absWorkingDir: process.cwd(),
   logLevel: 'info',
