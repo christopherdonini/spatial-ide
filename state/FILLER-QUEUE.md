@@ -21,7 +21,7 @@
 | 7c | `publish-unix-quota-perm-errors` | S3 | proven on the Linux L1 job | skipped at dispatch 2026-10-26: #241, awaiting the click, edits kernel/src/publish/error.rs (rule (00)) |
 | 7d | `publish-bundle-sigterm` | S3 | proven on the Linux L1 job | skipped at dispatch 2026-10-26: #241, awaiting the click, edits kernel/src/bin/publish-bundle.rs (rule (00)) |
 | 8a | `corpus-line-files` | S3 | — | form drafted 2026-10-26 (`state/consults/2026-10-26-corpus-line-files-five-line-form-architect-draft.md`); held on the human's ruling (OPEN-1, red-line text: the source, its licence reading, the set and the sighting line) |
-| 8b | `type-walk-rule2-residual-reasons` | S3 | — | next in the filler slot from 2026-10-26 (8a held on the human); its form drafting |
+| 8b | `type-walk-rule2-residual-reasons` | S3 | — | form drafted 2026-10-26 (`state/consults/2026-10-26-type-walk-rule2-residual-reasons-five-line-form-architect-draft.md`); held on the human's ruling (OPEN-1 the route, OPEN-2 the sentence's words, OPEN-3 F-C) |
 | 9 | `stream-fetch-overflow-fixed-detail` | S3 | after the current entries (the human's direction of 2026-10-25, item 1); the architect's estimate puts it past §21c's line bound, so at its turn the size is checked first | queued (proposed in PLAN) |
 
 ## Fillers merged
@@ -40,3 +40,4 @@ From 2026-10-24. Each wait is entered here with its start and end from `date -u`
 ## The custodian's proposed additions
 
 - `open-dataset-close-serialised-under-the-catalog-lock` (proposed 2026-10-26, from entry 5b's draft, `state/consults/2026-10-26-open-dataset-refuses-a-name-closed-during-admission-five-line-form-architect-draft.md`, OPEN-1, as the human's direction provides): the windows entry 5b's M1 shape leaves open; unreachable in the shipped app. The architect's recommendation: (A) place it on the filler queue, S3.
+- `literal-only-float-integer-arithmetic-refused` (proposed 2026-10-26, from entry 8b's draft, `state/consults/2026-10-26-type-walk-rule2-residual-reasons-five-line-form-architect-draft.md`, F-A): literal-only float and integer arithmetic refused although FILTER-BIND section 2.5(a) and ADR-021's Note admit it; read only, never run; a fix changes admission, likely full gating, so probably not a filler.

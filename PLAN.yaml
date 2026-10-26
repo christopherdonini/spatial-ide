@@ -4141,18 +4141,35 @@ nodes:
     kind: task
     lane: engine
     phase: prototype
-    status: ready
+    status: blocked
     order: null
     depends_on: [type-walk-null-literal-arithmetic]
-    needs_human: {kind: none, minutes: 0}
+    needs_human: {kind: ruling, minutes: 10}
     gate: none
     evidence: null
     budget_minutes: 60
     generation: 2
     felt_verdict: false
     entries: []
-    summary: "NEXT IN THE FILLER SLOT 2026-10-26 (entries 6d, 5b, 5c and 8a held on the human; 7a to 7d skipped by rule (00)): the architect drafts its five-line form (state/consults/2026-10-26-type-walk-rule2-residual-reasons-five-line-form-architect-draft.md). Before: FILLER QUEUE entry 8b (RULED 2026-10-24: state/directives/2026-10-24-weekend-exception-third-product-slot-placements-forms-ahead-250-click.md, line 16; made the standing filler slot by state/directives/2026-10-24-filler-slot-standing-rule-appended-to-autonomy.md, line 8; state/FILLER-QUEUE.md): placed, graded S3; a five-line form under section 21c's size, the reviewer and the architect from dispatch, section 25 (e) set aside; any string a user sees a P6 placeholder for the sitting, any red-line text to the human. Before: Proposed by node 10's architect draft (state/consults/2026-10-03-type-walk-null-literal-arithmetic-architect-draft.md, finding F7 and question Q-3): question round 43, item 1 admits only the decimal-literal shape, so comparisons of a rule-2 result over a column or an integer literal that rule 7's bit-width bound refuses keep the residual conversion_rounds sentence, which is false of a constant NULL. Never queued until the human places it."
+    summary: "DRAFTED 2026-10-26 (state/consults/2026-10-26-type-walk-rule2-residual-reasons-five-line-form-architect-draft.md): route (A), the recommended one, rewords T-C's fifth sentence so that every conversion_rounds refusal states a conversion refused by type (a P6 placeholder), engine/src/predicate.rs and one new test, about 95 lines, no admission outcome moved; a P-0 probe first. THE HUMAN'S RULING: OPEN-1 the route ((A); (B) a sixth reason, (C) admitting the constant-NULL shapes, each a red-line ADR-021 Note; (D) as it stands); OPEN-2 the sentence's words, now or at the sitting; OPEN-3 F-C kept out. F-A proposed as literal-only-float-integer-arithmetic-refused. Before: NEXT IN THE FILLER SLOT 2026-10-26 (entries 6d, 5b, 5c and 8a held on the human; 7a to 7d skipped by rule (00)): the architect drafts its five-line form (state/consults/2026-10-26-type-walk-rule2-residual-reasons-five-line-form-architect-draft.md). Before: FILLER QUEUE entry 8b (RULED 2026-10-24: state/directives/2026-10-24-weekend-exception-third-product-slot-placements-forms-ahead-250-click.md, line 16; made the standing filler slot by state/directives/2026-10-24-filler-slot-standing-rule-appended-to-autonomy.md, line 8; state/FILLER-QUEUE.md): placed, graded S3; a five-line form under section 21c's size, the reviewer and the architect from dispatch, section 25 (e) set aside; any string a user sees a P6 placeholder for the sitting, any red-line text to the human. Before: Proposed by node 10's architect draft (state/consults/2026-10-03-type-walk-null-literal-arithmetic-architect-draft.md, finding F7 and question Q-3): question round 43, item 1 admits only the decimal-literal shape, so comparisons of a rule-2 result over a column or an integer literal that rule 7's bit-width bound refuses keep the residual conversion_rounds sentence, which is false of a constant NULL. Never queued until the human places it."
     dates: {opened: 2026-10-03, done: null}
+  - id: literal-only-float-integer-arithmetic-refused
+    title: "Literal-only arithmetic mixing a double literal and an integer literal (1e3 + 5 > 0) is refused as conversion_rounds, although FILTER-BIND section 2.5(a) and ADR-021's Note admit two numeric literals within the bounds in +, - and * (F-A of the type-walk-rule2-residual-reasons draft)"
+    kind: task
+    lane: engine
+    phase: prototype
+    status: proposed
+    order: null
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 120
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "PROPOSED 2026-10-26 by the custodian from type-walk-rule2-residual-reasons's draft (state/consults/2026-10-26-type-walk-rule2-residual-reasons-five-line-form-architect-draft.md, note 4, F-A; its OPEN-5): the walk's arithmetic arm needs a non-literal float for rule 6 and a non-literal integer for rule 5, so 1e3 + 5 > 0 and 0.5 + 1e3 > 0 refuse as conversion_rounds, while FILTER-BIND section 2.5(a) says a double literal with an integer follows rule 5 and ADR-021's Note admits two numeric literals within the bounds inside +, - and *. Read only, never run; B-T1's probe set builds column-op-operand only, so nothing pins it. A fix changes what admission admits: an ADR-021 reading, likely full gating. Proposed and unplaced until the human places it."
+    dates: {opened: 2026-10-26, done: null}
   - id: pre-admission-change-detail-braces
     title: "Four kernel P6-placeholder detail strings are wrapped in literal braces, which reach the operator message; the watcher form declares each such string starts with the bracketed placeholder tag"
     kind: task
