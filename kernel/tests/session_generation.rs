@@ -240,7 +240,7 @@ fn forget_dataset_removes_the_generation_the_invalidation_and_every_attribution(
 /// `GenerationRegistry::attribute_ticket` (`kernel/src/skp.rs`). Applied at
 /// `2a6adbb10d2ab8bc65e3a3ab8fb9ae057683afcf`, run alone and reverted, it fails nothing here:
 /// `dead_generation_attributions_are_pruned_rather_than_accumulating` PASSED. Each round's
-/// `invalidate` prunes after it removes the generation. Every public method that reads the
+/// `invalidate` prunes after it removes the generation. Every public method that answers from the
 /// attributions prunes before it reads them, except `invalidate`, whose filter keeps only the
 /// generation it ends; so, without a clock this file must not take (ADR-018), the call is not
 /// observable through this registry's public methods.
