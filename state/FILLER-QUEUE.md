@@ -9,10 +9,11 @@
 | 3 | `pre-admission-change-detail-braces` | S3 | the braces removed, the words staying placeholders (the node's scope (i)) | skipped at dispatch 2026-10-25: 1c step 1, in progress, edits kernel/src/lib.rs (rule (00)) |
 | 4a | `engine-cancel-before-execute-siblings` | S3 | — | skipped at dispatch 2026-10-25: #252, awaiting the click, edits engine/src/dataset.rs (rule (00)) |
 | 4b | `stream-cancel-returns-left-unmarked` | S3 | after engine-cancel-before-execute-siblings | skipped at dispatch 2026-10-25: its dependency, 4a, is not done |
-| 5 | `kernel-close-during-open-admission` | S3 | test only | form drafted 2026-10-25 (`state/consults/2026-10-25-kernel-close-during-open-admission-five-line-form-architect-draft.md`); its OPEN-1 with the human before the form is committed; OPEN-1 ruled (A) 2026-10-25 (`state/directives/2026-10-25-filler-entry-5-open-1-a-pr-b-open-1-2-3-a-o1-probe-lead-data-designs-tester-high-runs.md`, item 1); in flight from 2026-10-25: the five-line form committed (`kernel/KERNEL-CLOSE-DURING-OPEN-ADMISSION-PREREGISTRATION.md`); built at 7b437be3, draft PR #258; gate 1 both PASS WITH NOTES; closed for the click 2026-10-25 at 4e7029d9 |
-| 6a | `session-generation-t1-t3-reobservation` | S3 | — | queued; form drafted ahead 2026-10-25 (`state/consults/2026-10-25-session-generation-t1-t3-reobservation-five-line-form-architect-draft.md`); in flight from 2026-10-25: the five-line form committed (`kernel/SESSION-GENERATION-T1-T3-REOBSERVATION-PREREGISTRATION.md`); built at 26c88a93, draft PR #259; gate 1 both PASS WITH NOTES; closed for the click 2026-10-25 at 44107aa7 |
-| 6b | `first-batch-factorial-ignored-trace-tests` | S3 | — | queued; form drafted ahead 2026-10-25 (`state/consults/2026-10-25-first-batch-factorial-ignored-trace-tests-five-line-form-architect-draft.md`); in flight from 2026-10-25: the five-line form committed (`kernel/FIRST-BATCH-FACTORIAL-IGNORED-TRACE-TESTS-PREREGISTRATION.md`); code next |
-| 6c | `slice-traced-test-cross-stamping` | S3 | — | queued |
+| 5 | `kernel-close-during-open-admission` | S3 | test only | form drafted 2026-10-25 (`state/consults/2026-10-25-kernel-close-during-open-admission-five-line-form-architect-draft.md`); its OPEN-1 with the human before the form is committed; OPEN-1 ruled (A) 2026-10-25 (`state/directives/2026-10-25-filler-entry-5-open-1-a-pr-b-open-1-2-3-a-o1-probe-lead-data-designs-tester-high-runs.md`, item 1); in flight from 2026-10-25: the five-line form committed (`kernel/KERNEL-CLOSE-DURING-OPEN-ADMISSION-PREREGISTRATION.md`); built at 7b437be3, draft PR #258; gate 1 both PASS WITH NOTES; closed for the click 2026-10-25 at 4e7029d9; merged 2026-10-26 (#258) |
+| 6a | `session-generation-t1-t3-reobservation` | S3 | — | queued; form drafted ahead 2026-10-25 (`state/consults/2026-10-25-session-generation-t1-t3-reobservation-five-line-form-architect-draft.md`); in flight from 2026-10-25: the five-line form committed (`kernel/SESSION-GENERATION-T1-T3-REOBSERVATION-PREREGISTRATION.md`); built at 26c88a93, draft PR #259; gate 1 both PASS WITH NOTES; closed for the click 2026-10-25 at 44107aa7; merged 2026-10-26 (#259) |
+| 6b | `first-batch-factorial-ignored-trace-tests` | S3 | — | queued; form drafted ahead 2026-10-25 (`state/consults/2026-10-25-first-batch-factorial-ignored-trace-tests-five-line-form-architect-draft.md`); in flight from 2026-10-25: the five-line form committed (`kernel/FIRST-BATCH-FACTORIAL-IGNORED-TRACE-TESTS-PREREGISTRATION.md`); code next; route R3b ruled 2026-10-26 (`state/directives/2026-10-26-o1-s1-257-258-259-merged-6b-r3b-held-on-the-human-6c-runs-fixture-s-entry-point-6d.md`, item 1); held on the human from 2026-10-26 (C: to be freed), out of the filler slot; resumes ahead of the next entry once S is in place |
+| 6c | `slice-traced-test-cross-stamping` | S3 | — | queued; next in the filler slot from 2026-10-26, its form drafted first |
+| 6d | `fixture-s-regeneration-entry-point` | S3 | after 6c and before 7a, a five-line form (the human's direction of 2026-10-26, item 2) | queued |
 | 7a | `redaction-hostname-off-windows` | S3 | proven on the Linux L1 job | queued |
 | 7b | `posix-backslash-in-shared-path-logic` | S3 | proven on the Linux L1 job | queued |
 | 7c | `publish-unix-quota-perm-errors` | S3 | proven on the Linux L1 job | queued |
@@ -23,6 +24,8 @@
 
 ## Fillers merged
 
+- 2026-10-26: entry 5, `kernel-close-during-open-admission`, PR #258 (1d2e2283), S3; its fix proposed as `open-dataset-refuses-a-name-closed-during-admission`.
+- 2026-10-26: entry 6a, `session-generation-t1-t3-reobservation`, PR #259 (8a27ba7d), S3.
 - 2026-10-25: entry 2, `stream-evaluation-failure-fixed-detail`, PR #255 (b50ad639), S2; its fetch-site case is entry 9.
 
 ## Hours slots 1 and 2 spent waiting
