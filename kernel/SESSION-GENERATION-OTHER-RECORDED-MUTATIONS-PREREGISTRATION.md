@@ -240,3 +240,15 @@ This piece's paths are kernel/tests/session_generation.rs and the form on main. 
 - **Rule (00)** was checked again at main 564a98b2 by `git diff --name-only origin/main...<branch>` for every open branch and the branches in flight: none touches `kernel/tests/session_generation.rs`, and none touches `protocol/`.
 
 ## Amendments (opens empty; append-only)
+
+## Amendment 1 — the closing record, written after gate 1's reports and the words commit were seen: the gate's word applied with no re-gate (class 1)
+
+*Written by the custodian at the PR's final head aa62b6d0cd1fa34093d17bcc012a1f325f70f3d5. References only, and nothing below is a quotation. The gate: `state/consults/gates/2026-10-26-session-generation-other-recorded-mutations-name-no-commit-gate1-architect.md` (gate-log 631; sha256 08222b4700fd5ce8bb7f234d9db1b416cf20f1eb9db6327a2342e7ddbe284899) and `state/consults/gates/2026-10-26-session-generation-other-recorded-mutations-name-no-commit-gate1-reviewer.md` (gate-log 632; sha256 f70caf24dada64dea7f0894bbe8d8cba15d9ee0e25d3216b181e2a48a1183861), both PASS WITH NOTES. The build: `state/consults/2026-10-26-session-generation-other-recorded-mutations-name-no-commit-build-worker-report.md` (sha256 from line 5 7329c72974279a371008e9ed29dcacc2d71ad537667db69c81429db0281c8766). The words commit: `state/consults/2026-10-26-session-generation-other-recorded-mutations-name-no-commit-gate1-words-worker-report.md` (sha256 from line 5 dc832d597a6952a2c32bf829a0072adfc576d8358b66ff11ecd77463ae4f8952).*
+
+1. **The word, applied with no re-gate** (AUTONOMY §31). It is not the human's wording. Both gates found W-C's premise sentence too broad (forget_dataset reads the attributions with no prune); the architect's one-word fix (D1) is applied, and the reviewer's four-line rewrite (its D1), which says the same, is not. W-C at the head therefore differs from note 1's fence in that one word. The PR body's W-B parenthesis takes the reviewer's words (its D2).
+2. **The size.** By the numstat from the merge base 2a6adbb1 to aa62b6d0, the diff is 49 lines in and 17 out, in the one file the Scope names, under its 90, every changed line a doc line.
+3. **The observations,** twice: by the worker on its export of the base, and by the reviewer on its own export with its own cargo target; each time each of M-A to M-E as the words record it.
+4. **Recorded slips, no bearing on the evidence:** the worker's report counts two unit-test lock sites where there are more, all under cfg(test); the reviewer's report counts eight holds where its own list and its transcript show eleven, all shared.
+5. **The record.** This is correction round 1 of 2.
+
+Nothing above is edited.
