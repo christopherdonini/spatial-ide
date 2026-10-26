@@ -247,3 +247,15 @@ Each clause checked against the code at dcd85569:
 - **Rule (00)** was checked again at main dcd85569 by `git diff --name-only origin/main...<branch>` for every open branch and the branches in flight: none touches `engine/tests/slice.rs`, and none touches `protocol/`.
 
 ## Amendments (opens empty; append-only)
+
+## Amendment 1 — the closing record, written after gate 1's reports were seen (class 1)
+
+*Written by the custodian at the PR's final head 6859cc1b852ef0f38c8a632b5fd759d4e4fbd778. References only, and nothing below is a quotation. The gate: `state/consults/gates/2026-10-26-slice-traced-test-cross-stamping-gate1-architect.md` (gate-log 629; sha256 579783cdf8ca130ff8573cf68cc2ff8ec66023622cd4e96539e29b9f92de72d7), PASS WITH NOTES, and `state/consults/gates/2026-10-26-slice-traced-test-cross-stamping-gate1-reviewer.md` (gate-log 630; sha256 aa9b96c773cc0dde6738d269ae6bdedc29eab016b3ece42a8e23384c93b4516d), PASS. The build: `state/consults/2026-10-26-slice-traced-test-cross-stamping-build-worker-report.md` (sha256 from line 5 b72ae67b7b33722b3f6820565e2bea0ae5bedf7e8f4be0204c5e33c48d707ac9).*
+
+1. **No words owed.** Neither gate found anything in Correctness, Evidence or Documentation; the doc words are as committed.
+2. **The size.** By the numstat from the merge base 1fd4923c to 6859cc1b, the diff is 92 lines added and 0 removed, in the one file the Scope names, under its 100.
+3. **The mutations,** observed twice: by the worker on the branch's code commit, and by the reviewer on its own export of that commit with its own cargo target; each time each mutation failed exactly its predicted set.
+4. **The failing-run limit** both gates note (the architect's N-1, the reviewer's first note): the Change line's claim holds of runs in which the binary passes, as note 4's May-not-claim list already bounds; nothing is changed for it.
+5. **The record.** No correction round was needed.
+
+Nothing above is edited.
