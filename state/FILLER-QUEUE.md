@@ -16,11 +16,11 @@
 | 6d | `fixture-s-regeneration-entry-point` | S3 | after 6c and before 7a, a five-line form (the human's direction of 2026-10-26, item 2) | form drafted 2026-10-26 (`state/consults/2026-10-26-fixture-s-regeneration-entry-point-five-line-form-architect-draft.md`): over section 21c's size; held on the human's ruling (OPEN-1, a 260-line note or the full form; OPEN-6, whether 6b may take S from it) |
 | 5b | `open-dataset-refuses-a-name-closed-during-admission` | S3 | after 6b resumes and after 6c, which starts now (the human's resent direction of 2026-10-25, item 2) | form drafted ahead 2026-10-26 (`state/consults/2026-10-26-open-dataset-refuses-a-name-closed-during-admission-five-line-form-architect-draft.md`): M1's shape by the human's fallback; the human's OPEN-1 (the proposed node's placement) and OPEN-2 (an SKP-V0 section 8 note) before it is committed |
 | 5c | `session-generation-other-recorded-mutations-name-no-commit` | S3 | the next free turn after 5b (the same item) | queued |
-| 7a | `redaction-hostname-off-windows` | S3 | proven on the Linux L1 job | queued |
-| 7b | `posix-backslash-in-shared-path-logic` | S3 | proven on the Linux L1 job | queued |
-| 7c | `publish-unix-quota-perm-errors` | S3 | proven on the Linux L1 job | queued |
-| 7d | `publish-bundle-sigterm` | S3 | proven on the Linux L1 job | queued |
-| 8a | `corpus-line-files` | S3 | — | queued |
+| 7a | `redaction-hostname-off-windows` | S3 | proven on the Linux L1 job | skipped at dispatch 2026-10-26: #241, awaiting the click, edits kernel/src/bundle/redaction.rs (rule (00)) |
+| 7b | `posix-backslash-in-shared-path-logic` | S3 | proven on the Linux L1 job | skipped at dispatch 2026-10-26: #241, awaiting the click, edits kernel/src/publish/viewer_assets.rs (rule (00)) |
+| 7c | `publish-unix-quota-perm-errors` | S3 | proven on the Linux L1 job | skipped at dispatch 2026-10-26: #241, awaiting the click, edits kernel/src/publish/error.rs (rule (00)) |
+| 7d | `publish-bundle-sigterm` | S3 | proven on the Linux L1 job | skipped at dispatch 2026-10-26: #241, awaiting the click, edits kernel/src/bin/publish-bundle.rs (rule (00)) |
+| 8a | `corpus-line-files` | S3 | — | next in the filler slot from 2026-10-26 (6d, 5b and 5c held on the human; 7a to 7d skipped by rule (00)); its form drafting (`state/consults/2026-10-26-corpus-line-files-five-line-form-architect-draft.md`) |
 | 8b | `type-walk-rule2-residual-reasons` | S3 | — | queued |
 | 9 | `stream-fetch-overflow-fixed-detail` | S3 | after the current entries (the human's direction of 2026-10-25, item 1); the architect's estimate puts it past §21c's line bound, so at its turn the size is checked first | queued (proposed in PLAN) |
 
