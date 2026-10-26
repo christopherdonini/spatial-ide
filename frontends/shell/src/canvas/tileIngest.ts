@@ -229,5 +229,6 @@ export function trimBatchToVertexBudget(batch: ResidentBatch, remainingVertices:
     totalVertices: vertices,
     // The kept rows are a prefix, so each is the decode pass's own row for its id: the block is carried unchanged, the same object (no copy; milestone 4 Amendment 3 item 2).
     attributes: batch.attributes,
+    filter: batch.filter,
   };
 }

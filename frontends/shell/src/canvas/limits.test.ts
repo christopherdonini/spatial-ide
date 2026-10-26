@@ -45,7 +45,7 @@ describe("declared ceilings (ADR-010 rule 6)", () => {
 describe("the resident attribute ceiling (SHELL-MIGRATION-MILESTONE-4-PREREGISTRATION.md section 2.2 (d))", () => {
   const decoded = (handle: string, ids: bigint[]) => {
     const { ipc, encoding } = attributeBatchIpc(ids, [{ name: "tag", kind: "utf8", values: ids.map((id) => `v${id}`) }]);
-    return decodeBatch(handle, 0, ipc, "geometry", encoding, ["tag"]);
+    return decodeBatch(handle, 0, ipc, "geometry", encoding, ["tag"], null);
   };
 
   // RECORDED MUTATION for "PA-U6": in `withinAttributeCeiling` leave the new batch out of the sum (`heldBytes <= RESIDENT_ATTRIBUTE_MAX_BYTES`). Expected failure:

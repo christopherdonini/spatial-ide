@@ -157,3 +157,41 @@ Opens empty.
 Recommendation: **(A)**. It is smaller, masks nothing, and stays within the node as written. (B) is a scope addition (class 9) if it is wanted later.
 
 **OPEN-2: the Stop hook's own 2000 ms.** If the series shows a Stop-side call at 2000 ms under suite load, should a proposal follow? Recommendation: record it in Amendment 1 as a finding only. Any change belongs to another node, which is the human's to place, because the value is the stale-continuity form's §7 budget.
+
+## Amendment 1 — the series and the bound (class 1); written after the instrument and the series were seen
+
+*Written by the custodian. References only: the instrument's report `state/consults/2026-10-24-guardian-parity-git-timeout-under-load-instrument-worker-report.md`; the series report `state/consults/2026-10-24-guardian-parity-git-timeout-under-load-series-tester-report.md` (its TAP files with their sha256s, its statistics and its scripts are named there).*
+
+1. **The instrument** is 6d76bcdb, its recorded mutations 7235aa0c: 103 added and 10 removed in `scripts/hooks/guardian-continuity-parity.test.mjs`, 113 of §7's 130. I1 did not fire: `syncBuiltinESMExports()` rebinds `stop-queue.mjs`'s import on Node v24.18.1. The three mutations fail their named tests (P5), and T35's non-vacuity holds unmutated and fails under the third (P4, locally).
+2. **The series** ran at 7235aa0c on node v24.18.1, git 2.49.0.windows.1 and 8 cores, each half inside one shared hold. L0 (20 runs): no timeout; the largest call 69 ms. L1 (10 runs of governance-ci's command, 555 of 555 passing in each): no timeout; p95 203 ms (mod) and 225 ms (stop); the largest call 612 ms. Other shared holds of this project ran beside L1 (milestone 4 PR C's and covering-case's builds), which can only raise its times.
+3. **The rule** (§5): X = 612 ms (L1 run 5, fixture PS6, the mod side's third call), so B = min(10000, max(2000, 1000 × ceil(2 × 612 / 1000))) = 2000. P1, P2 and P3 hold. I3 and I5 did not fire: the longest T37 and T38 run was 4582.8 ms under L1, under three times the timeout.
+4. **No bound commit** (§2 item 4): the rule keeps `STOP_RUN_OPTS.timeout` at 2000.
+5. **OPEN-2:** no Stop-side call reached 2000 ms (its largest was 510 ms). No finding.
+6. **For the gates:** PS4a, PS18 and PS19 read not judged on both sides in all 30 runs, as the fixture set expects, and their exit-128 reads recur in the unloaded runs. They are the fixtures', not load. Whether they meet §5's falsification clause is the gates' to read.
+7. **Next:** the PR at 7235aa0c, both gates.
+
+Nothing above is edited.
+
+## Amendment 2 — gate 1's record (class 1); written after gate 1 was seen
+
+*Written by the custodian. References only: gate 1's reviewer report (`state/consults/gates/2026-10-24-guardian-parity-git-timeout-under-load-gate1-reviewer.md`), whose items D2 to D4 are below with its two placeholders filled; items 3 and 4 also answer the architect's D2 and D1 (`state/consults/gates/2026-10-24-guardian-parity-git-timeout-under-load-gate1-architect.md`).*
+
+1. §4's three recorded mutations, those §1 lists as unchanged, were re-observed at 7235aa0c in gate 1: the inverted comparison and the PS7 build fail as recorded, and the failed `git log` read as fresh fails its recorded tests and T37. The test's comments record it at 7780de9b. Amendment 1 item 1's P5 sentence rests on the three mutations §4 adds, not on these.
+2. P4's governance-ci half holds: run 40087162109 at 7235aa0c passes every T35 subtest.
+3. Amendment 1 item 6: PS18 has no non-zero exit; the exit-128 reads are PS4a's `log`, PS19's `show` and PS7's parent show, and PS7 reads fresh.
+4. L1's hold was declared with `-Minutes` 60, against §7's 30 (the series report's hold lines).
+5. §5's falsification clause is not met, by gate 1's ruling.
+6. **Next:** the architect re-gates E1, scoped; then the click.
+
+Nothing above is edited.
+
+## Amendment 3 — the closing record (class 1); written after gate 2 was seen
+
+*Written by the custodian. References only.*
+
+1. Gate 2 (E1, scoped), the architect, at 7780de9b: PASS WITH NOTES (`state/consults/gates/2026-10-24-guardian-parity-git-timeout-under-load-gate2-architect.md`; gate-log 611). E1 is closed; D1 and D2 are closed by Amendment 2 items 4 and 3.
+2. Its N1: the PR's checks at 7780de9b, 8 of 8 pass (runs 40102017706, 40102017760, 40102022446, 40102022453, 40102022487, 40102022656, each with head sha 7780de9b), so P4's governance-ci half holds at the head as well.
+3. Its N2: the six lines 7780de9b adds equal the reviewer's D1 block byte for byte, and it deletes none (the custodian's script over `git diff -U0 7235aa0c 7780de9b`).
+4. The record is closed: ready for the click, as a merge commit.
+
+Nothing above is edited.

@@ -6,6 +6,7 @@ import { describe, expect, it } from "vitest";
 import { readRow } from "../attributes/values";
 import { decodeBatch } from "./decodeBatch";
 import type { BatchAttributes, ResidentBatch } from "./decodeBatch";
+import { FILTER_DIALECT_DUCKDB_EXPR_0 } from "../skp/types";
 import { attributeBatchIpc } from "../testUtils/attributeBatchIpc";
 import { partsOfFeatures, partsOfPolygons } from "../testUtils/partsOfPolygons";
 import { extentOfBatch, unionBbox } from "./extent";
@@ -24,7 +25,7 @@ function batch(streamHandle: string, batchSeq: number, ids: number[], verticesPe
     ids: idArray,
     ...partsOfPolygons(polygons),
     totalVertices: ids.length * verticesPerFeature,
-    attributes: null,
+    attributes: null, filter: null,
   };
 }
 
@@ -418,7 +419,7 @@ describe("trimBatchToVertexBudget: whole features, every part, partToRow a prefi
         [[ring()], [ring()], [ring()]], // C: three parts
       ]),
       totalVertices: 24,
-      attributes: null,
+      attributes: null, filter: null,
     };
   }
 
@@ -449,7 +450,7 @@ describe("ingestTileBatch: unionedExtent mirrors fitAnchorRef's own accumulation
       ids: new BigUint64Array([BigInt(1)]),
       ...partsOfPolygons([[[[x, y]]]]),
       totalVertices: 1,
-      attributes: null,
+      attributes: null, filter: null,
     });
     const r1 = ingestTileBatch(baseParams({ tileSet, tileKey: "0:0", batch: rings(0, 0) }));
     expect(r1.unionedExtent).toEqual({ xmin: 0, ymin: 0, xmax: 0, ymax: 0 });
@@ -480,7 +481,7 @@ describe("ingestTileBatch: T-D, batchExtent's own admitted-rows-only contract", 
       ids: new BigUint64Array(features.map((f) => BigInt(f.id))),
       ...partsOfPolygons(features.map((f) => [Array.from({ length: f.vertices }, () => [f.x, f.y] as [number, number])])),
       totalVertices: features.reduce((sum, f) => sum + f.vertices, 0),
-      attributes: null,
+      attributes: null, filter: null,
     };
   }
 
@@ -626,7 +627,7 @@ describe("trimBatchToVertexBudget: the attributes (milestone 4 Amendment 3 item 
   // RECORDED MUTATION for "PA-U8": in the trim's returned literal write `attributes: null`. Expected failure: `trimmed.attributes` is not the source's block.
   it("trimBatchToVertexBudget carries the attributes unchanged, so each kept row reads its own values", () => {
     const { ipc, encoding } = attributeBatchIpc([11n, 22n, 33n], [{ name: "tag", kind: "utf8", values: ["a", "b", "c"] }]);
-    const source = decodeBatch("sh_t", 0, ipc, "geometry", encoding, ["tag"]);
+    const source = decodeBatch("sh_t", 0, ipc, "geometry", encoding, ["tag"], null);
     const trimmed = trimBatchToVertexBudget(source, 8); // each feature is one 4-vertex ring: two whole features
     expect(Array.from(trimmed.ids)).toEqual([11n, 22n]);
     expect(trimmed.attributes).toBe(source.attributes); // the same object: no copy
@@ -634,5 +635,16 @@ describe("trimBatchToVertexBudget: the attributes (milestone 4 Amendment 3 item 
     expect(readRow(trimmed, 1)).toEqual([{ name: "tag", value: { kind: "text", text: "b" } }]);
     expect((trimmed.attributes as BatchAttributes).bytes).toBe((source.attributes as BatchAttributes).bytes); // the rows trimmed away stay held until release
     expect(trimBatchToVertexBudget({ ...source, attributes: "not-held" }, 8).attributes).toBe("not-held");
+  });
+});
+
+describe("trimBatchToVertexBudget: the filter (milestone 4 PR C, section 2.4 (c))", () => {
+  // RECORDED MUTATION for "PC-U8": in the trim's returned literal write `filter: null`. Expected failure: `trimmed.filter` is null where the source's filter object was expected.
+  it("PC-U8: trimBatchToVertexBudget carries the filter as the same object", () => {
+    const filter = { predicate: "zone = 'residential'", dialect: FILTER_DIALECT_DUCKDB_EXPR_0 };
+    const { ipc, encoding } = attributeBatchIpc([11n, 22n, 33n], [{ name: "tag", kind: "utf8", values: ["a", "b", "c"] }]);
+    const trimmed = trimBatchToVertexBudget(decodeBatch("sh_t", 0, ipc, "geometry", encoding, ["tag"], filter), 8);
+    expect(Array.from(trimmed.ids)).toEqual([11n, 22n]);
+    expect(trimmed.filter).toBe(filter);
   });
 });

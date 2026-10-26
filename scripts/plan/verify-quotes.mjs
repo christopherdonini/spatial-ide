@@ -74,7 +74,7 @@
 // recomputed over `git show <rev>:<path>` lines a..b (each line with its LF) and failed by name on a
 // mismatch or an unresolvable rev, path or range; `@ <rev>` defaults to HEAD when absent. The reference
 // itself may be split across two physical lines by a rustfmt-wrapped `//` comment continuation (see
-// GAP); a reference broken across three or more lines is not recognized. A `byte-copied
+// hashRefGrammar.mjs's GAP); a reference broken across three or more lines is not recognized. A `byte-copied
 // from ` prefix additionally requires a reproduction near it -- same line after the marker, the next
 // non-blank line, or same line before the marker (see reproducedTextNear) -- to be a byte-exact
 // substring of those lines (or, for the same-line-before shape, to CONTAIN those lines byte-exact; see
@@ -136,6 +136,7 @@ import { execFileSync } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { buildTrackedIndex, extractCitations, resolveRef, classifyPath, topDirsOf, CODE_EXTS } from './verify-cites.mjs';
 import { claimFiles } from './verify-test-claims.mjs';
+import { hashRefRegExp } from './hashRefGrammar.mjs';
 import { rulingSetPaths, LIVE_RULINGS, resolveRoundItem } from './rulingSet.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -553,7 +554,7 @@ function matchHashBaseline(entries, used, relPath, line, reason) {
 // placement, with or without backticks) bound to the nearest preceding path:line CITATION in the same
 // paragraph (nearestPathInParagraph, above --
 // the shell and LOD lines above both use this shape too, for a second/third reference to a path already
-// named earlier in the same sentence or bullet). The grammar below treats the leading and trailing
+// named earlier in the same sentence or bullet). The grammar (hashRefGrammar.mjs) treats the leading and trailing
 // backtick as INDEPENDENTLY optional rather than modelling the two placements as separate alternatives:
 // a lone `` ` `` opportunistically consumed wherever one sits (right after the line range for the
 // OUTSIDE shape, right after the hash for the INSIDE shape, absent for a fully bare reference) covers
@@ -578,7 +579,7 @@ function matchHashBaseline(entries, used, relPath, line, reason) {
 // as owed, not fixed in place (engine/LOD-PREREGISTRATION.md's Amendment 14, the row on
 // `engine/tests/lod_tier_builder.rs:190-191`): `` `engine/tests/common/mod.rs:55` @ 43a3039a3a4d ``,
 // rustfmt-wrapped, continues onto the NEXT `//`-commented line before `sha256:...` -- the two lines,
-// stripped of their own individual `// ` comment markers, form one contiguous reference. `GAP` (below)
+// stripped of their own individual `// ` comment markers, form one contiguous reference. `GAP` (hashRefGrammar.mjs)
 // matches ordinary horizontal whitespace OR exactly one such continuation (a newline, then a `//`
 // comment marker with its own optional leading/trailing horizontal whitespace) wherever the grammar
 // would otherwise only accept `\s*` -- deliberately not `\s` generally (which already matches `\n` on
@@ -586,12 +587,7 @@ function matchHashBaseline(entries, used, relPath, line, reason) {
 // only ONE continuation, not several (the real case splits at exactly one point; a reference broken
 // across three or more physical lines is not a shape this grammar was built against and is left
 // unrecognized rather than guessed at).
-const GAP = '[ \\t]*(?:\\n[ \\t]*//[ \\t]?)?[ \\t]*';
-const HASH_REF_RE = new RegExp(
-  '(byte-copied from\\s+)?`?(?:([A-Za-z0-9_][A-Za-z0-9_./+-]*))?:(\\d+)(?:-(\\d+))?`?' +
-    `(?:${GAP}@${GAP}([^\\s\`]+))?${GAP}sha256:([0-9a-f]{64})\`?`,
-  'g',
-);
+const HASH_REF_RE = hashRefRegExp({ pathRequired: false });
 
 // Every raw `sha256:<64 hex>` token, regardless of what (if anything) precedes it -- used to find one
 // the grammar above did NOT bind into any reference at all (round-12 fix round item (b): "never

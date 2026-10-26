@@ -945,9 +945,9 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
       // needing to track a second, tile-specific "was this a wasted re-fetch" history of its own.
       hasHeadroom,
     },
-    onBatch: (tileKey, streamHandle, batchSeq, payload) => {
+    onBatch: (tileKey, streamHandle, batchSeq, payload, filter) => {
       countTileStreamIssuedOnce(tileKey); // catches a queued-then-issued tile never seen in `issued`
-      ingestAndMaybeEstablishFrame(tileKey, streamHandle, batchSeq, payload);
+      ingestAndMaybeEstablishFrame(tileKey, streamHandle, batchSeq, payload, filter);
     },
     onTileSuperseded: (tileKey) => {
       countTileStreamEndedOnce(tileKey);
@@ -1102,10 +1102,11 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
     tileKey: string,
     streamHandle: string,
     _batchSeq: number,
-    payload: Uint8Array
+    payload: Uint8Array,
+    filter: Filter | null
   ): void {
     if (!canvas) return;
-    const outcome = canvas.pushTileBatch(tileKey, streamHandle, _batchSeq, payload);
+    const outcome = canvas.pushTileBatch(tileKey, streamHandle, _batchSeq, payload, filter);
     // Item C/D evidence (this piece's own smoke-validation criterion): dedupe/eviction counters are
     // console-visible via `WorkingCanvas.tsx`'s own `traceTileIngest` call, right where `pushTileBatch`
     // computes `outcome` -- `diagnostics/renderTrace.ts` is this codebase's own "console-only
@@ -1317,7 +1318,7 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
         // `establishFrameFromExtent` can anchor the grid frame on the WHOLE stream's own union, not
         // this one batch alone -- see `onTerminal` below, and `tileGrid.ts`'s top doc comment for the
         // full account of why the anchor must be the complete union.
-        ingestAndMaybeEstablishFrame(INITIAL_TILE_KEY, stream, seq, batchPayload);
+        ingestAndMaybeEstablishFrame(INITIAL_TILE_KEY, stream, seq, batchPayload, filter);
       },
       onProgress: () => {},
       onTerminal: (terminal) => {

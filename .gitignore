@@ -6,6 +6,7 @@ node_modules/
 dist/
 dist-measure/
 dist-metafile.json
+viewer-asset-hashes.json
 .vite/
 
 # Generated at build time (RELEASE-0.1 Amendment 3, item 2) -- one source, `notice.mjs`'s

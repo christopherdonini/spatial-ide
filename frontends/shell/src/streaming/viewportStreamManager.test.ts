@@ -87,6 +87,19 @@ describe("ViewportStreamManager (supersede-on-pan, D3.7)", () => {
     expect(viewportQueryMock.mock.calls.map((call) => call[5])).toEqual([columns]);
   });
 
+  // RECORDED MUTATION for "PC-U12" (this manager): pass `null` in place of `filter` in the `this.opts.onBatch(...)` call. Expected failure: the fourth argument is null where the filter object was expected.
+  it("PC-U12: onBatch carries the filter its stream was issued with, as the same object", async () => {
+    mockStream("sh_a");
+    const onBatch = vi.fn();
+    const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch, onSuperseded: vi.fn(), columns: null });
+    const filter = { predicate: "zone = 'residential'", dialect: "duckdb-expr/0" };
+    await manager.requestViewport(null, null, 1_000, filter);
+
+    sinkFor(0).onBatch(new Uint8Array([1]), true);
+
+    expect(onBatch.mock.calls[0][3]).toBe(filter);
+  });
+
   it("a batch for the active stream is admitted with an ascending sequence number", async () => {
     mockStream("sh_a");
     const onBatch = vi.fn();
@@ -99,8 +112,8 @@ describe("ViewportStreamManager (supersede-on-pan, D3.7)", () => {
     sink.onBatch(p1, true);
     sink.onBatch(p2, true);
 
-    expect(onBatch).toHaveBeenNthCalledWith(1, "sh_a", 0, p1);
-    expect(onBatch).toHaveBeenNthCalledWith(2, "sh_a", 1, p2);
+    expect(onBatch).toHaveBeenNthCalledWith(1, "sh_a", 0, p1, null);
+    expect(onBatch).toHaveBeenNthCalledWith(2, "sh_a", 1, p2, null);
   });
 
   it("supersede: cancels the previous stream before minting the next ticket, in that order", async () => {

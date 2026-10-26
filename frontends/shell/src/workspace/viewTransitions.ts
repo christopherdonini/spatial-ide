@@ -42,7 +42,7 @@ export type ToolSetTransition = { action: "tool.set"; params: { tool: Tool } };
 export type ModeSetTransition = { action: "mode.set"; params: { mode: SelectionMode } };
 export type SelectionApplyTransition = {
   action: "selection.apply";
-  params: { mode: SelectionMode; id: bigint; bounds: AuthoritativeBbox };
+  params: { mode: SelectionMode; id: bigint; bounds: AuthoritativeBbox; row: AttributeRow | "not-held" | null; filter: Filter | null };
 };
 export type SelectionClearTransition = { action: "selection.clear"; params: Record<string, never> };
 export type SelectionEndTransition = {
@@ -96,7 +96,7 @@ function applyStyleSet(style: StyleState, transition: StyleSetTransition): Style
 
 function applySelection(view: ViewState, params: SelectionApplyTransition["params"]): ViewState {
   const members = viewSelection(view);
-  const outcome = applySelectionMode(members, params.mode, params.id, params.bounds);
+  const outcome = applySelectionMode(members, params.mode, params.id, { bounds: params.bounds, row: params.row, filter: params.filter });
   if (outcome.kind === "refused") return { ...view, selectionNotice: { kind: "refused", refusal: outcome.refusal } };
   if (outcome.members === members && view.selectionNotice === undefined) return view;
   return { ...view, selection: outcome.members, selectionNotice: undefined };

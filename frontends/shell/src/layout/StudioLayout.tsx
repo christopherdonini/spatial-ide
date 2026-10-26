@@ -141,6 +141,8 @@ export interface StudioLayoutProps {
   onAddClause?: (condition: string) => Promise<ClauseResult>;
   clausePending?: boolean;
   filterFields?: FieldSource | null;
+  /** Milestone 4 PR C (section 2.4 (b)): called with whether the Table tab is shown (Activity open and the Table tab selected), on mount and on each change. Consumer: App, which hands it to the Table tab so the first scope issues only while shown. */
+  onTableShownChange?: (shown: boolean) => void;
 }
 
 export default function StudioLayout({
@@ -157,8 +159,11 @@ export default function StudioLayout({
   onAddClause,
   clausePending,
   filterFields,
+  onTableShownChange,
 }: StudioLayoutProps) {
   const [state, dispatch] = useReducer(layoutReducer, undefined, initialLayoutState);
+  const tableShown = state.activity.open && state.activity.tab === "table";
+  useEffect(() => onTableShownChange?.(tableShown), [onTableShownChange, tableShown]);
   const viewport = useViewport();
   const platform = currentPlatform();
   const sizes = effectiveSizes(state, viewport);

@@ -1,0 +1,192 @@
+# An admitted predicate's evaluation failure ends the stream with a fixed, engine-authored detail carrying no file values and no SQL — five-line short form (`AUTONOMY.md` §21d)
+
+*Committed before any code. Append-only once committed; an amendment written after any run of this piece's tests has been seen says so in its first line. PLAN node stream-evaluation-failure-fixed-detail, the filler queue's entry 2 (`state/FILLER-QUEUE.md`; the human's standing filler rule, `state/directives/2026-10-24-filler-slot-standing-rule-appended-to-autonomy.md`, line 8), graded S2 by the human. The five lines and notes A to G are lead-data's draft (`state/consults/2026-10-24-stream-evaluation-failure-fixed-detail-lead-data-draft.md`, read only at main ae8cfdcc; its sha256 from line 5 is 5dbff0402207dfe4f75a530fca770085b59c6aa201a868b70557187646c1400d), carried byte for byte except for the pins: every cite at ae8cfdcc is pinned by script at ae8cfdcc5dd632473a561a48c4401a08ccd8cb0e, and a cite written with no path takes the path named nearest before it. The reviewer and the architect gate it from dispatch; round 25, item 2 (e) is set aside for it by the filler rule.*
+
+```
+Authority: PLAN node `stream-evaluation-failure-fixed-detail` (PLAN.yaml:3373-3389 @ ae8cfdcc5dd632473a561a48c4401a08ccd8cb0e sha256:9c3cf50918a7c47cca538289e88eac2635e60a95b5c6b045bf1668ea4d50a576), the filler queue's entry 2, graded S2, its strings P6 placeholders for the sitting (state/directives/2026-10-24-weekend-exception-third-product-slot-placements-forms-ahead-250-click.md:10 @ ae8cfdcc5dd632473a561a48c4401a08ccd8cb0e sha256:60b23d4789fad18718b17dd04f798bff68c65b7422eefc70c2e126618df607d9 and state/directives/2026-10-24-weekend-exception-third-product-slot-placements-forms-ahead-250-click.md:17 @ ae8cfdcc5dd632473a561a48c4401a08ccd8cb0e sha256:a95fc3b6965a28a4f046f756e30e618628a5e600eb9ea2e80cd152931038ee47); the standing filler rule, a five-line form under §21c's size with the reviewer and the architect gating from dispatch and round 25, item 2 (e) set aside (state/directives/2026-10-24-filler-slot-standing-rule-appended-to-autonomy.md:8 @ ae8cfdcc5dd632473a561a48c4401a08ccd8cb0e sha256:1135b89c01d0e676bce0bc42a4d6710af445fa0ae95ed12ef6ca0fef7a4d4e84); the direction is the human's B-1 point 4 (state/directives/2026-09-29-a2-1-and-b-1-sightings.md:67-75 @ ae8cfdcc5dd632473a561a48c4401a08ccd8cb0e sha256:fbf36b193cb9986bb1aaa937a975fcda241960fd6c5257b3c75ddf7e94659081), and the class is FILTER-BIND §2.5(d) (engine/FILTER-BIND-COERCIONS-PREREGISTRATION.md:97 @ ae8cfdcc5dd632473a561a48c4401a08ccd8cb0e sha256:638e6abd6aa3af68345756102392b9815336e2e8a2959805c6e2bce59ea7960c) as O-6 rules it (state/directives/B-1-RULINGS-AND-TYPED-TEXTS-2026-09-30.md:12 @ ae8cfdcc5dd632473a561a48c4401a08ccd8cb0e sha256:756781b0464e39c2a58b68dc4d81e6f5b7f7f40ff6ceff45cf8e3e1f8a10d203); the reuse index found no prior art on any of three searches (evaluation failure detail; integer overflow error message; error detail sql leak), a miss noted here.
+Scope: 3 files, engine/src/stream.rs, engine/tests/admission_property_campaign.rs, engine/tests/filter_type_admission.rs; declared line budget 150 (insertions plus deletions, AUTONOMY.md:357 @ ae8cfdcc5dd632473a561a48c4401a08ccd8cb0e sha256:367596df34a73d122765d000ba5df601dbe54da9e5a6aefca966747809a44fec), about 135 estimated (section C); this form exempt; no new dependency, no new `pub` item, no new `EngineError` variant, and no file under kernel/, protocol/, frontends/, or KNOWN-LIMITATIONS.md.
+Change: when a stream's DuckDB failure is not a cancellation and DuckDB's message begins with its out-of-range class label, `classify` (engine/src/stream.rs:2591-2597 @ ae8cfdcc5dd632473a561a48c4401a08ccd8cb0e sha256:263373ed439c59df863ad2a407364319dd85e20a7ae7add17f31d5a13257b362) returns `EngineError::Query` carrying one fixed, engine-authored `[P6 placeholder]` detail instead of DuckDB's message, so the terminal detail for an admitted predicate's same-type integer overflow carries no file value and no SQL; every other DuckDB failure keeps its own text, and the three test sites that excluded this class by DuckDB's `Overflow` text instead assert that the class ends with exactly that fixed detail (OPEN-1).
+Tests+mutation: T1 an_admitted_integer_overflow_ends_the_stream_with_the_fixed_detail (new, engine/tests/admission_property_campaign.rs), M1: `classify`'s out-of-range arm deleted, so DuckDB's message passes as before; T1 fails by name at its equality assertion; T2 only_duckdbs_out_of_range_class_is_read_as_an_evaluation_failure (new, engine/src/stream.rs mod tests), M2: the out-of-range check returns true for every message, so T2 fails by name on its non-range samples; changed, each failing under M1: filter_admission_property_campaign (stream-error half), a_join_of_clauses_each_admitted_alone_returns_their_intersection_and_its_subsets_admit (P5's call site), the_type_walk_agrees_with_the_binder_over_the_p0_matrix (B-T1 (iii)); each mutation observed by applying it, running the named tests, recording the failing assertion with the commit in a `RECORDED MUTATION:` doc line, and reverting.
+Out-of-scope: ADR: no status line or amendment, and ADR-021's Note leaves integer overflow undecided (docs/adr/ADR-021-row-filter-on-viewport-query.md:265 @ ae8cfdcc5dd632473a561a48c4401a08ccd8cb0e sha256:c69f5c769759153e20d322e6661a09a0bf36425c489beb99d8d235c145887e37); security: nothing ADR-020, ADR-009 or ADR-021 governs, with no admission rule, refusal code or extension load changed; wire: no SKP or data-plane message, literal, field or code, the terminal code stays `engine.query`, SKP-V0 §5's message rule is unchanged (protocol/skp/SKP-V0.md:343-344 @ ae8cfdcc5dd632473a561a48c4401a08ccd8cb0e sha256:8363598a8624e8a2af14e065f498efa55dc6c311d0c3c6947cd629ae00de9157), and nothing under protocol/ changes; guarantee: touched by §21a's letter only as properties currently under test, and only strengthened: the three sites that accepted any `Overflow` text for the §2.5(d) class accept exactly the fixed detail for that class alone, the leak assertion is unchanged, `classify` still returns `Cancelled` first (no ADR-018 change), and no ceiling, docs/08 claim or undo class changes; the five-line form with both gates from dispatch stands by the human's filler rule, which sets round 25, item 2 (e) aside.
+```
+
+**The reuse index**, byte for byte as the custodian ran it for the draft's brief (the read-only clone at 89bbac3738dbb46d47988e55a7c0f0d4f9fe4c5c):
+
+```text
+$ node tools/reuse.mjs evaluation failure detail
+No prior art recorded for "evaluation failure detail". Research it before planning an implementation.
+$ node tools/reuse.mjs integer overflow error message
+No prior art recorded for "integer overflow error message". Research it before planning an implementation.
+$ node tools/reuse.mjs error detail sql leak
+No prior art recorded for "error detail sql leak". Research it before planning an implementation.
+```
+
+*Notes A to G are lead-data's notes from its draft, carried byte for byte except for the pins. They are this form's reading. Where one puts a question to the custodian or the human, the settlement after them answers it.*
+
+## A. The engine path, and where a user sees the detail
+
+- **Where the detail is made.** The producer `produce` turns a DuckDB failure into a terminal error through `classify` at three sites: prepare (engine/src/stream.rs:1799-1801 @ ae8cfdcc5dd632473a561a48c4401a08ccd8cb0e sha256:1f6866b74430c28445959c7901442ac5d5c4cfd96b567cf420bd62570bfca6ec), execute (engine/src/stream.rs:1848-1857 @ ae8cfdcc5dd632473a561a48c4401a08ccd8cb0e sha256:63cb9947924b9aa7c809e6349d8fbde04544c41e41b55ae717ef7445ec1d410e) and the fetch panic (engine/src/stream.rs:1913-1937 @ ae8cfdcc5dd632473a561a48c4401a08ccd8cb0e sha256:ff0153095c0f4a298d8521a29c02304bbbdc0d2b9a9117205da4ef17bfbce142). `classify` returns `Cancelled` if the token is cancelled, and otherwise `EngineError::Query(detail)` (engine/src/stream.rs:2591-2597 @ ae8cfdcc5dd632473a561a48c4401a08ccd8cb0e sha256:263373ed439c59df863ad2a407364319dd85e20a7ae7add17f31d5a13257b362), where `detail` is the engine's phase prefix plus DuckDB's text. The terminal passes through unchanged after the post-check (engine/src/stream.rs:1366-1375 @ ae8cfdcc5dd632473a561a48c4401a08ccd8cb0e sha256:f474129d7bb580c12ea056ef880aae648a7503171053807abdaa61b6b134d1c6). `Display` is `query: {d}` (engine/src/error.rs:350 @ ae8cfdcc5dd632473a561a48c4401a08ccd8cb0e sha256:b18b8215983c504a63823b204dbc852161ed16d8138f478e03c6c9644ca3cd5c).
+- **What DuckDB's text carries for this class.** It names the operands, which are values from the rows in view. The P0 matrix had 91 leaking cases and 8 without a value (state/drafts/b1-p0/B1-P0-AND-PROPOSAL.md:80-82 @ ae8cfdcc5dd632473a561a48c4401a08ccd8cb0e sha256:1f9e6584a32a8b185e66db484c5d2ef09c9bda9903a400b66e59b8e9300cf9ea and state/drafts/b1-p0/B1-P0-AND-PROPOSAL.md:89-92 @ ae8cfdcc5dd632473a561a48c4401a08ccd8cb0e sha256:1c3da8ac9f07bd48ffa03a8b2ec6d4eb33fc21d3afc276c1039633f29211516c). W2-B records a slice of the composed SQL in `engine.query` details (state/cloud/wave2/W2-B.md:88 @ ae8cfdcc5dd632473a561a48c4401a08ccd8cb0e sha256:f1707f520fb61128ea67f89632dfd65e070aa36a14cbb37409a160dae2a59cfe). The observed shape is `Out of Range Error: Overflow in multiplication of INT64`, byte-copied from evidence, a gate report's account of a run (state/consults/gates/2026-09-28-wave2-b-admission-campaign-merge-gate1-reviewer.md:75 @ ae8cfdcc5dd632473a561a48c4401a08ccd8cb0e sha256:045c17a3818fd9d7b988069f08fd04cd4068535d6e4e547a1c47763c11310d96).
+- **The kernel.** It prefixes the code: `terminal_detail_of` builds `"<code>: <display>"` (kernel/src/skp.rs:2050-2052 @ ae8cfdcc5dd632473a561a48c4401a08ccd8cb0e sha256:7b791429f3ee7ca8baa5d1f3052d48d773a1b2be91cc8157345514e1de0339ca), and `Query` maps to `query` (kernel/src/skp.rs:2127 @ ae8cfdcc5dd632473a561a48c4401a08ccd8cb0e sha256:e407f3d069d504feb69891e5664c915a4ba457b7aec7aede16eb9256d2c98849). The kernel hands that string to the data plane mid-stream (kernel/src/lib.rs:700-704 @ ae8cfdcc5dd632473a561a48c4401a08ccd8cb0e sha256:4b1f967a5599ab67580b35977f0878afd649f39b03c37ba2fdff0f9ad44dfd62), which closes the stream as `ProducerFailed` (protocol/data-plane/src/adapter_ws.rs:211 @ ae8cfdcc5dd632473a561a48c4401a08ccd8cb0e sha256:423c7838f3d2194235dbc188459a1e0ad813153ae7dfc01914f868b952320782, protocol/data-plane/src/adapter_ws.rs:310 @ ae8cfdcc5dd632473a561a48c4401a08ccd8cb0e sha256:422ce7125e7f9cfdbfdff8b974625739a9dd33ce71e2f26ad2e4b649020bd26d). No kernel line changes, because the variant and its `Display` shape are unchanged.
+- **The shell.** The operator reads the canvas banner `stream ProducerFailed: <message>`, where `message` is the detail with its `engine.` code stripped (frontends/shell/src/App.tsx:1719 @ ae8cfdcc5dd632473a561a48c4401a08ccd8cb0e sha256:adcb36706d2448fa73d6f341dc056226ed64aa067683c44511f254ddaae3327b; frontends/shell/src/streaming/formatTerminalRefusal.ts:33-45 @ ae8cfdcc5dd632473a561a48c4401a08ccd8cb0e sha256:38450f8b0f5253ab15004cd3042f2f3ddfa2b0799388e677ddb8065b06c299c9). The session log records the whole detail (frontends/shell/src/App.tsx:1714 @ ae8cfdcc5dd632473a561a48c4401a08ccd8cb0e sha256:85b48c94252bb875333c0d8021c3518d0d462a0fc41793942a075f98e17733a8). No shell line changes.
+- **Publish.** Publish is not reached: a filtered publish is refused before any stream (kernel/src/publish/mod.rs:461-463 @ ae8cfdcc5dd632473a561a48c4401a08ccd8cb0e sha256:d6323accacf61f2c15a28f184992b6a6cd5e6c2a05cc56efa0f9ca0ef7b7c602).
+- **No new seam.** The engine-to-kernel seam is the same variant and the same `Display` format, so the cross-module rule has nothing new to prove.
+
+## B. The class (settles item 1)
+
+- **In scope.** A stream's DuckDB failure whose DuckDB message begins with DuckDB's out-of-range class label, when the stream was not cancelled. On the product path that is the §2.5(d) class: integer `+`, `-`, `*` and unary `-` overflowing. The only computed expressions in the composed SQL are the caller's admitted predicate and the DOUBLE bbox comparisons (engine/src/stream.rs:1440-1465 @ ae8cfdcc5dd632473a561a48c4401a08ccd8cb0e sha256:ba9b72895450609333a8d3227f76a4842b113ff8a2aa3bb707f7b4bd1162058e), so I know of no other product source of this class.
+- **Detection (my settlement; the gates check it).** The check matches DuckDB's class label at the start of DuckDB's message, after the engine's phase prefix. It never matches anywhere else in the text, so a file value that happens to contain the words is not misread.
+  - This repository has observed the label only in the gate report's account above.
+  - The fetch site's panic payload format is unobserved here.
+  - **Stop rule:** if the worker's first B-T1 run shows any overflow case ending in DuckDB's own text, the worker stops and reports. The fix is then a class 3 amendment, never a looser match.
+- **Out of scope by default: W2-B observation 2**, that every other `engine.query` terminal detail repeats composed SQL (state/cloud/wave2/W2-B.md:123 @ ae8cfdcc5dd632473a561a48c4401a08ccd8cb0e sha256:0c6309739007b4e95de01ea74750c9cd5f248cfbaa2a0f8f331d3ec217efe576). This change does not cover it within the size, because covering it means withholding DuckDB's text for every stream failure, I/O included. That contradicts the fetch site's own design note, "Keep what the panic actually said." (engine/src/stream.rs:1914 @ ae8cfdcc5dd632473a561a48c4401a08ccd8cb0e sha256:27da71287e997a9504943d21bc55647b85c1d9ed6020a4c48ce9344de12a6ac5), and loses diagnostics. That is a contract question, so it goes to OPEN-2 with its own node proposed. T2 holds the boundary: M2, which masks every message, fails it.
+
+## C. The size (settles item 2)
+
+Estimated insertions plus deletions, by §21c's counting rule (AUTONOMY.md:357 @ ae8cfdcc5dd632473a561a48c4401a08ccd8cb0e sha256:367596df34a73d122765d000ba5df601dbe54da9e5a6aefca966747809a44fec):
+
+| File | What changes | Lines |
+|---|---|---|
+| engine/src/stream.rs | the fixed detail as a private const with its doc; the private out-of-range check; `classify`'s arm and doc; T2 | about 40 |
+| engine/tests/admission_property_campaign.rs | header doc (engine/tests/admission_property_campaign.rs:33-39 @ ae8cfdcc5dd632473a561a48c4401a08ccd8cb0e sha256:24fdf6dabcd3949c748070f3fab3e2dea5f4b6c816f00d35b7182a9a7909d718); `is_declared_integer_arithmetic_overflow` (engine/tests/admission_property_campaign.rs:1016-1032 @ ae8cfdcc5dd632473a561a48c4401a08ccd8cb0e sha256:28064433feb53976108e1765d68b5270473630f6fc2e52006c750e7d63848a7a) replaced by a function asserting the fixed detail for the same typed class; its two call sites (engine/tests/admission_property_campaign.rs:1162 @ ae8cfdcc5dd632473a561a48c4401a08ccd8cb0e sha256:5b4acc551a78903557b575e2b61799f1240bdd060f33bd7a0cb853e557aa896d, engine/tests/admission_property_campaign.rs:1379 @ ae8cfdcc5dd632473a561a48c4401a08ccd8cb0e sha256:52d25adbd4fdf42ef5faaa7d1d91deff79fb400b52e9e16ac43a61bbae63b56a); the expected text once; T1, reusing `completed_ids` (engine/tests/admission_property_campaign.rs:1312-1344 @ ae8cfdcc5dd632473a561a48c4401a08ccd8cb0e sha256:96df4e10f0a28e1fc0f264fbbb79252ec123497dd215fc3f7fd085ca72137047) and `file_tokens` (engine/tests/admission_property_campaign.rs:973-992 @ ae8cfdcc5dd632473a561a48c4401a08ccd8cb0e sha256:6521870b32a8df60a670fc33418c5f79f51f6fd2b2d3b565b41af9da0e2459c7) | about 72 |
+| engine/tests/filter_type_admission.rs | `is_declared_overflow` and its doc (engine/tests/filter_type_admission.rs:991-1001 @ ae8cfdcc5dd632473a561a48c4401a08ccd8cb0e sha256:c845f505c24f4578870277d5af5167a9b65cd1857bf9f69b4ce78bc4420d4b73) re-keyed the same way; call site (engine/tests/filter_type_admission.rs:1338 @ ae8cfdcc5dd632473a561a48c4401a08ccd8cb0e sha256:79a2b60cc51ff6f4df1beaa83515a41a6b1895a050b60b0458588516abb283a6) | about 24 |
+
+- **Total:** about 135 of a declared 150, in 3 files of 8. This fits, but the margin is thin. If the count crosses 150, it is a class 6 amendment, and the Scope line is never edited.
+- **§21c's other bounds:** no new dependency and no new exposure surface. The user-visible bound is OPEN-3.
+- **Not on the brief's reading list.** I found engine/tests/filter_type_admission.rs by search. Its B-T1 (iii) excludes this class by `Overflow` text (engine/tests/filter_type_admission.rs:999-1001 @ ae8cfdcc5dd632473a561a48c4401a08ccd8cb0e sha256:166f7b68e73a4b12a1aa2935f4dc22c216e384be9078a5a50bb27b0aea6399c6), so it fails the moment the text is fixed. It has to be in Scope.
+
+## D. The strings (settles item 3)
+
+One string a user can see changes.
+
+- **S1, the fixed detail.** It is the payload of `EngineError::Query`, in the precedent's form (engine/src/error.rs:422-431 @ ae8cfdcc5dd632473a561a48c4401a08ccd8cb0e sha256:55a229626ee25249a8a987c45df80dc39d8ed63e1a3d937d7062475a67cc58dd), with the `[P6 placeholder] ` prefix that SOURCE-WATCHER §7 declares (engine/SOURCE-WATCHER-PREREGISTRATION.md:402 @ ae8cfdcc5dd632473a561a48c4401a08ccd8cb0e sha256:e5e74985a9b4182d8f89cb5ec64bd7e3f0c5f03c1f614fd5566074d4975af192). Draft words, mine, not the human's, stating engine facts only and no consequence:
+  `[P6 placeholder] a value computed while this query ran was out of range for its type; the row values and the query text are withheld`
+- **Where the operator meets it:**
+  - the canvas banner: `stream ProducerFailed: query: [P6 placeholder] …`;
+  - the session log: `engine.query: query: [P6 placeholder] …`.
+  - The doubled "query" comes from the unchanged `Display` (engine/src/error.rs:350 @ ae8cfdcc5dd632473a561a48c4401a08ccd8cb0e sha256:b18b8215983c504a63823b204dbc852161ed16d8138f478e03c6c9644ca3cd5c). I note it for the sitting and do not change it, because changing it would change every `engine.query` message.
+- S1 joins the sitting's sight list as a P6 placeholder, on the custodian's record. There is no red-line text.
+
+## E. Tests and mutations (settles item 4)
+
+- **A correction to the brief.** At ae8cfdcc the campaign's leak assertion carries no exclusion. Its own comment says a leak is always a counterexample (engine/tests/admission_property_campaign.rs:1150-1158 @ ae8cfdcc5dd632473a561a48c4401a08ccd8cb0e sha256:316c0ed320687247543010e6c641f7ec50e7fef25dccc3190b2a5f93d1921e72). The class is excluded at three other sites:
+  - the campaign's "ends in error" half (engine/tests/admission_property_campaign.rs:1160-1167 @ ae8cfdcc5dd632473a561a48c4401a08ccd8cb0e sha256:9574213234167bf267cce6635514f1c025f480ef4233d5b057f35e2e169e3fc8);
+  - P5's call site (engine/tests/admission_property_campaign.rs:1376-1386 @ ae8cfdcc5dd632473a561a48c4401a08ccd8cb0e sha256:706badc0bd01063244c7c2d004d6f7153f08315f9b51a57d980c61ba2b0d14ff), which CLAUSE-COMPOSITION item 13 assigns to this node's form (engine/CLAUSE-COMPOSITION-PROPERTIES-PREREGISTRATION.md:40 @ ae8cfdcc5dd632473a561a48c4401a08ccd8cb0e sha256:5a89423088d5e989abe2fb102cbad1220a098c3127ca58c270b9e1964769cce5);
+  - B-T1 (iii) (engine/tests/filter_type_admission.rs:1334-1345 @ ae8cfdcc5dd632473a561a48c4401a08ccd8cb0e sha256:9ac96e0343d24fa6b8c5e2102d2e2195d57abcb918cb0a65affb45bfcc6bc492).
+- **What changes at those sites.** Each loses its DuckDB-text test. Each then accepts a stream error only when the predicate is of the same typed class as today *and* the terminal text equals exactly `query: ` + S1. Every other stream error still fails. The leak assertion now meets this class's fixed text with no exclusion, so the campaign asserts this class.
+- **T1.** On the campaign fixture, `i64` spans the 64-bit range (engine/src/fixture.rs:404-408 @ ae8cfdcc5dd632473a561a48c4401a08ccd8cb0e sha256:cc1f190662a79460e4ab46a4ce94b4b32aa99e5727d61a582cadb1a46a4393ac).
+  - Predicate: `i64 * 9223372036854775807 > 0`, over the whole extent. It overflows on any row with |i64| ≥ 2.
+  - Asserts: the predicate is admitted, so a refusal fails loudly rather than passing vacuously; the stream ends in error; the error equals `query: ` + S1 byte for byte; and it contains no `file_tokens()` entry and no `read_parquet(`.
+  - If admission refuses this predicate at the worker's run, the worker stops and reports (class 3).
+  - Under M1, T1 fails at the equality assertion.
+- **T2.** A unit test of the private check.
+  - Input shaped like the gate report's out-of-range message → true.
+  - An I/O, a conversion and a binder message → false.
+  - Its literals are unit inputs only. The real shape is proven by T1 and B-T1.
+  - Under M2, T2 fails on the first false sample.
+- **What fails under M1 among the changed tests:**
+  - B-T1, on its overflow cases. Its part 1 is the P0 matrix's 7,620 cases (state/drafts/b1-p0/B1-P0-AND-PROPOSAL.md:88 @ ae8cfdcc5dd632473a561a48c4401a08ccd8cb0e sha256:edd4a90a30e2d7eb3bb2f110e6cac834099b79b40b72e11dd069e6463d69e888). The count is recorded at the run, not predicted.
+  - P5, on its excluded cases: 4 of 201 at that piece's closing (engine/CLAUSE-COMPOSITION-PROPERTIES-PREREGISTRATION.md:145 @ ae8cfdcc5dd632473a561a48c4401a08ccd8cb0e sha256:eef46d762962edea190ec64a3948f5f1f25388cfd8e3d4e8a5743a2842bb5936).
+  - The campaign, if its seeds reach an overflow. The 2026-09-28 gate report saw three. This is observed, not assumed.
+- **Kernel tests.** None change. kernel/tests/typed_terminal_codes.rs needs no edit: its prefix test builds four variants and none is `Query` (kernel/tests/typed_terminal_codes.rs:380-398 @ ae8cfdcc5dd632473a561a48c4401a08ccd8cb0e sha256:f21430e32c162509ba2a4769eed65e3e284541d92ff7eaaa43c9ec58b4a6b06a), and no variant is added. A search for `Overflow` and `engine.query` under kernel/ finds no test asserting this text. #241's edit of that file is untouched.
+
+## F. Out-of-scope readings (settles item 5)
+
+- **ADR.** None is amended. ADR-021's Note leaves integer overflow undecided (docs/adr/ADR-021-row-filter-on-viewport-query.md:265 @ ae8cfdcc5dd632473a561a48c4401a08ccd8cb0e sha256:c69f5c769759153e20d322e6661a09a0bf36425c489beb99d8d235c145887e37). ADR-010's surfaced-error rule (docs/adr/ADR-010-render-frames-origins-boundaries.md:82 @ ae8cfdcc5dd632473a561a48c4401a08ccd8cb0e sha256:f02fe0482bd64195c5d0b3108475d065d291e9aa23b1b3a4e018b32ea6d1d779) still holds, because the stream still ends with a typed terminal that names the class.
+- **Security.** Fable's grading note calls this hygiene, not confidentiality (state/directives/2026-09-29-a2-1-and-b-1-sightings.md:74-75 @ ae8cfdcc5dd632473a561a48c4401a08ccd8cb0e sha256:addc4ee5df8d381ce19fb65a0c98d5e510bea43da3c7d67cef39391687fe2dd7). No admission rule, refusal code or extension load changes.
+- **Wire.**
+  - There is no terminal-code change and no SKP or data-plane field change.
+  - The `detail` string's text changes for this class only, inside the existing free-text field, under SKP-V0 §5's unchanged rule that `message` is `Display` verbatim.
+  - Nothing under `protocol/` changes, so the at-most-one-protocol rule is untouched.
+  - A distinct code would be a wire change; see OPEN-4.
+- **Guarantee.**
+  - The properties under test are strengthened only, as the line says.
+  - No record is edited. FILTER-BIND §1's "may not claim" list (engine/FILTER-BIND-COERCIONS-PREREGISTRATION.md:53 @ ae8cfdcc5dd632473a561a48c4401a08ccd8cb0e sha256:7205f46230cd51670df97686a7d6a94679d2bb3151bf950316c311704d209aec) is immutable, and this form is where the claim now lives.
+- **Owner's index.** No pointer changes, so no index update follows. That matters because engine/README.md is in #241's paths and in covering-case's.
+
+## G. Rule (00), path by path (settles item 6)
+
+- **engine/src/stream.rs.** It is in no listed branch. Port-2 touches engine/src/{app_dirs,lib,lod}.rs, covering-case touches engine/src/dataset.rs, and #241 touches engine/src/fixture.rs. Disjoint.
+- **engine/tests/admission_property_campaign.rs.** In no listed branch. Disjoint. It calls `spatial_engine::fixture`, which #241 edits; that is a contact, not an overlap (OPEN-5).
+- **engine/tests/filter_type_admission.rs.** In no listed branch. Disjoint. It has the same fixture contact.
+- **Not touched by this piece:**
+  - KNOWN-LIMITATIONS.md, including items 9, 47, 51 to 56 and port-2's;
+  - engine/README.md;
+  - every kernel/ file, including kernel/tests/typed_terminal_codes.rs and kernel/src/lib.rs;
+  - frontends/shell/ and its MANUAL-WALKTHROUGH.md;
+  - protocol/;
+  - AUTONOMY.md;
+  - scripts/;
+  - .github/;
+  - any e2e README suite entry.
+- **Entry 1** (`kernel/src/permission/audit/log.rs`) is not touched.
+
+## The custodian's settlement of the draft's OPEN-1 to OPEN-5 (class 1, before any code)
+
+- **OPEN-1: (A).** At each of the three sites the DuckDB-text test is removed and replaced by an asserted ending: the predicate is of the same typed class as today, and the terminal text equals exactly `query: ` followed by S1. The node keeps an overflow ending the stream (its direction, B-1 point 4); what the records say is removed when this lands is the exclusion by DuckDB's text, and (A) removes it without widening the accepted class. (B) would accept S1 for any admitted predicate, broader than O-6; (C) cannot hold once the text no longer carries the key.
+- **OPEN-2:** out, as the draft says. The node `engine-query-terminal-detail-sql-audit` is proposed in PLAN.yaml (engine lane), for the human's placement: an audit of which stream-terminal paths still carry DuckDB text with SQL, then whether to withhold it more widely, a contract question with a diagnostics cost.
+- **OPEN-3:** the piece is a filler. The human placed this node on the filler queue graded S2 with "its strings are P6 placeholders for the sitting" (`state/directives/2026-10-24-weekend-exception-third-product-slot-placements-forms-ahead-250-click.md`, line 10), and the standing rule makes a filler's user-visible strings P6 placeholders (`state/directives/2026-10-24-filler-slot-standing-rule-appended-to-autonomy.md`, line 8). The behaviour (the stream ends in a failure banner) is unchanged; one string changes, and S1 joins the sitting's sight list.
+- **OPEN-4:** no distinct code here; it would be a wire change and its own node, if wanted.
+- **OPEN-5:** #241's diff of `engine/src/fixture.rs` (`git diff --numstat origin/main...origin/cut/bundle-redaction-scan -- engine/src/fixture.rs`: 45 added, 0 deleted) adds one function, `write_zone_texts`, and changes neither `AttributeMode::MultiType` nor `FilterWitness`. Neither B-T1's overflow set nor P5's excluded count moves if #241 merges first.
+- **The stop rules** in notes B and E bind the worker: an overflow case ending in DuckDB's own text, or T1's predicate refused at admission, stops the piece for a class 3 amendment.
+
+## Amendments (opens empty; append-only)
+
+## Amendment 1 — written after the worker-high's first runs were seen, before any commit: T1's predicate replaced; the campaign under M1 read as note E reads it (class 3)
+
+*Written by the custodian. References only: the worker-high's stop report (`state/consults/2026-10-24-stream-evaluation-failure-fixed-detail-worker-stop-report.md`).*
+
+1. **T1's predicate.** Note E's `i64 * 9223372036854775807 > 0` does not overflow on the campaign fixture: with the piece's working-tree code on f0804432 it is admitted and completes, returning 376 ids, so note E's "It overflows on any row with |i64| ≥ 2." is false as observed. T1's predicate becomes `i64 * i64 > 0`, which the worker's probe observed admitted and ending in error with the terminal text exactly `query: ` followed by S1, all four of note E's assertions passing in a one-off run. T1's name, fixture and four assertions are unchanged. Why the forms comparing with a constant complete is not determined and not claimed.
+2. **The campaign under M1.** At that run the campaign's seeds reached no overflow (its stream-error count was 0 in all four generators), so the Tests+mutation line's "each failing under M1" is read for the campaign as note E reads it: observed, not assumed. M1's record names which of the three changed tests fail and on how many cases; T1, in the campaign's file, carries M1 there.
+3. **`classify`'s signature.** The worker's code passes the phase and DuckDB's message apart, so the check reads DuckDB's message without the engine's phase prefix, where note B places it; `Cancelled` is still returned first, and every other failure renders as before. It is a private function: within the Change line, for the gates to read.
+4. **Not met:** neither stop rule as notes B and E write them. B-T1 printed `B-T1: 4564 admitted, 5164 refused, 0 failures`, every overflow ending in the fixed detail; T1's predicate was admitted.
+5. **Next:** the worker-high continues from its uncommitted work, with T1's predicate as item 1: the commits, M1 and M2 observed and recorded, the checks.
+
+Nothing above is edited.
+
+## Amendment 2 — the human's route B (class 5), written after gate 1's reports and the architect's route draft were seen, before any further commit: the claim narrows to the prepare and execute sites, and the fetch site is a node of its own
+
+*Written by the custodian at the PR's head 27924bbe2fe7cd2655db3406227153b55dccd671, after gate 1 (both FAIL: the architect on wording, W1 and D1; the reviewer on C1 and E1, the fetch site) and the route draft were seen. References only, and nothing below is a quotation. The ruling: `state/directives/2026-10-25-255-route-b-o1-lead-data-probe-session-end-lines-s2-context-monday-no-redaction-pr.md`, item 1 (sha256 from line 6 ebe31bd9e43cb2b48a5977300bb06569495c3d557d9f3d67674a7786b3c0cecd). Gate 1: `state/consults/gates/2026-10-24-stream-evaluation-failure-fixed-detail-gate1-architect.md` and `state/consults/gates/2026-10-24-stream-evaluation-failure-fixed-detail-gate1-reviewer.md`. The route draft: `state/consults/2026-10-24-stream-evaluation-failure-fixed-detail-route-architect-draft.md` (sha256 from line 5 91c0cc0ad1ba9b4e9dfca60209761d57c3116a6db6afa53fb5ed116e507d828e). The Change line is lead-data's wording and is not edited.*
+
+1. **The claim (class 5, the human's ruling, item 1).**
+   - The claim holds at the prepare and execute sites, and is proven at execute by T1 and B-T1. The claim is that this class's terminal detail carries no file value and no SQL.
+   - At the fetch site, the locked duckdb crate's panic wrapper puts its own words before DuckDB's, so the check does not match there.
+   - That case belongs to node `stream-fetch-overflow-fixed-detail`, proposed and on the filler queue after the current entries.
+2. **The words (class 1, approved by the human, item 1).** The code is unchanged. Three doc comments take the route draft's route B words 1 to 3:
+   - the doc above `OUT_OF_RANGE_DETAIL`;
+   - the doc above `is_out_of_range`;
+   - the last clause of `classify`'s doc.
+
+   The campaign's `is_declared_integer_arithmetic_overflow` doc takes gate 1's D1 words, which the route draft keeps (its route B, item 4). Gate 1's W1 words for the same comments are superseded.
+3. **Gate 1's findings under the narrowed claim.** The reviewer's C1 and E1 are about the fetch site, which item 1 moves out of this piece's claim. Their substance goes to the new node, with no code change here. The reviewer's O1 is node `admitted-integer-overflow-silent-wraparound`.
+4. **The re-gate (the custodian's ruling on the route draft's open item).** Gate 2 runs on the head that carries item 2's words:
+   - the reviewer re-gates C1 and E1 against the narrowed claim, and the words against the code;
+   - the architect checks this amendment and the words.
+5. **The size.** Item 2 changes comment lines only, in files the Scope names. The worker counts the diff against §21c's 150 lines. A count past 150 is a stop, reported to the human.
+6. **Next.**
+   1. A worker applies item 2's words at the head, in one commit.
+   2. Gate 2 runs as item 4.
+   3. The closing amendment carries the Change line's reference item and gate 2's record.
+
+**Superseded:**
+- The Change line's claim: read with item 1. The line is unedited.
+- Gate 1's W1 words: replaced by item 2's.
+
+Nothing above is edited.
+
+## Amendment 3 — the closing record, written after gate 2's reports and the words commit were seen: gate 2's words applied with no re-gate, the PR title, the size, the Change line's reference item and the title superseded (class 1)
+
+*Written by the custodian at the PR's final head 52e6caf36ee55224f643a370900391935f01d594. References only, and nothing below is a quotation. Gate 2: `state/consults/gates/2026-10-25-stream-evaluation-failure-fixed-detail-gate2-architect.md` (sha256 da748fe21b3291297e37300ebc796c8ab0fe6c5a33daeb9fb2088b630a3b18dd) and `state/consults/gates/2026-10-25-stream-evaluation-failure-fixed-detail-gate2-reviewer.md` (sha256 da2030434a0ec767a8757133b534e1aab8a1df15c7b252d7372d78ba77e845f3), both FAIL on wording only. The words commit: `state/consults/2026-10-25-stream-evaluation-failure-fixed-detail-gate2-x1-worker-report.md` (sha256 from line 5 905ac1c966d8ea665f8bf51f45646139e78a0da6146da6b06ecc8b1a75a9c917).*
+
+1. **Gate 2's words, applied with no re-gate (§31).**
+   - The architect's X1 words for the campaign's doc sentence on such a stream's terminal are at 52e6caf3. The reviewer's C2 (a), on the same sentence, is met by them.
+   - The reviewer's C2 (b) words are the PR's title.
+   - C1, E1 and O1 are carried by their nodes. The execute site is proven at the head by the reviewer's M1 run.
+2. **The size.** By the numstat from the merge base f0804432 to 52e6caf3, the diff is 147 lines in the three files the Scope names, under its 150. There is no class 8.
+3. **The Change line's reference item (Amendment 2 item 6, step 3).** The Change line's claim holds at the prepare and execute sites, proven by T1 and B-T1. The claim is that this class's terminal detail carries no file value and no SQL. The fetch site is node `stream-fetch-overflow-fixed-detail`'s.
+4. **The string.** S1 is the only string a user sees. It is a P6 placeholder for the sitting, unchanged.
+
+**Superseded:**
+- The title's claim: read with Amendment 2, item 1 (both gates' D2). The title is unedited.
+
+Nothing above is edited.

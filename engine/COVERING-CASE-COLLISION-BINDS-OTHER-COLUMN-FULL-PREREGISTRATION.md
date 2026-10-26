@@ -719,3 +719,18 @@ Rule (00): `AUTONOMY.md:609 @ 5c6b7e377c4aabec3e8ab1a658125b0a53db4929 sha256:db
 8. **K2's added column (the custodian's item, class 1, under OPEN-3).** A column that a `k=v` folder adds (`year` in k1) is not among the file's names. By the human's OPEN-3 (absence judged against the file's names), after this piece a covering path naming such a column is dropped as absent, and a `geo.primary_column` naming it is refused as `engine.source` with D4's text; at main both are judged against the resident names, which hold it. §5's changed-outcome list gains this case by this item. No row measured it and no test is added; the gates may ask for one. This is lead-data's could-not-settle item 3 in the draft this amendment is filed from.
 
 Nothing above is edited.
+
+## Amendment 2 — gate 1's record and the words chosen (class 1); written after gate 1 was seen
+
+*Written by the custodian. References only: gate 1's architect report (`state/consults/gates/2026-10-24-covering-case-collision-binds-other-column-gate1-architect.md`, gate-log 613) and reviewer report (`state/consults/gates/2026-10-24-covering-case-collision-binds-other-column-gate1-reviewer.md`, gate-log 614), both PASS WITH NOTES at 77bbbc63.*
+
+1. **No Correctness or Evidence finding blocks.** The reviewer re-observed all 18 mutations at the head and ran the engine suite, the three kernel tests and clippy (exit code 0, no warning in the piece's files), closing the worker's unprinted clippy exit code; CI is 11 of 11 at the head.
+2. **The words applied before the merge, with no re-gate** (none is the human's wording):
+   - item 9's appended sentence: the architect's D-1 words, so it names a field-level match and the U+0000 exception as item 53 does;
+   - the commit slot in item 9's and item 53's comments: the reviewer's D-1 words (`21fb02d9`), chosen over the architect's D-2 first half, as the shorter of two true readings (the code is byte-identical at 9fb3e4c3, 21fb02d9 and the head);
+   - item 53's comment on the P0: the architect's D-2 second half.
+   - In the PR body, not a tracked file: the reviewer's D-2 words for the K2 bullet, and the architect's D-3 case, by code reading, not run.
+3. **§11 after the words:** item 9's sentence and the two comments differ from §11's blocks by exactly the words in item 2; §11 is not edited. The new item 9 sentence goes on the human's sight list with the others (OPEN-A).
+4. **Next:** the words by a worker; the `engine/README.md` owner's-index line after #241 merges (OPEN-C); then the click.
+
+Nothing above is edited.
