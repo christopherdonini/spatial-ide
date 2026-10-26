@@ -118,8 +118,13 @@ fn live_generation_never_resurrects_an_invalidated_generation() {
     }
 }
 
-/// Mutation recorded in-source: making `attribute_ticket` insert unconditionally (returning `true`
-/// when the dataset has no live generation) fails this test's second half.
+/// RECORDED MUTATION: in `GenerationRegistry::attribute_ticket` (`kernel/src/skp.rs`), replace
+/// its `let Some((g, _)) = st.live.get(dataset) else { return false; };` and `let g = *g;` with
+/// `let g = st.live.get(dataset).map_or(0, |(g, _)| *g);`, so a dataset with no live generation
+/// has its ticket inserted under generation 0, which `mint_for_open` never issues, and `true`
+/// returned; the `closing` refusal stays. Applied at `2a6adbb10d2ab8bc65e3a3ab8fb9ae057683afcf`,
+/// run alone and reverted: `a_ticket_is_attributable_only_under_a_live_generation` FAILED on
+/// `an ended session attributes nothing`, the assertion of its second half.
 #[test]
 fn a_ticket_is_attributable_only_under_a_live_generation() {
     let g = GenerationRegistry::new();
@@ -142,9 +147,14 @@ fn a_ticket_is_attributable_only_under_a_live_generation() {
     assert_eq!(g.attributed_ticket_count(), 0);
 }
 
-/// Mutation recorded in-source: changing `invalidate`'s filter to `d == dataset` alone (dropping
-/// `*tg == g`) returns tickets from an older generation and this test's cross-dataset assertion
-/// fails.
+/// RECORDED MUTATION: in `GenerationRegistry::invalidate` (`kernel/src/skp.rs`), drop `*tg == g`
+/// from the filter that collects the ended tickets, leaving `d == dataset` alone. Applied at
+/// `2a6adbb10d2ab8bc65e3a3ab8fb9ae057683afcf`, run alone and reverted, it fails nothing here:
+/// `invalidate_returns_exactly_the_tickets_of_the_generation_it_ended` PASSED. An attribution
+/// naming an older generation of a name is left when `invalidate` runs only if `mint_for_open`
+/// minted again for that name while it was still live, with no pruning call between, since
+/// `prune_locked` sweeps an attribution whose generation is no longer live. This test mints
+/// each name once, and `SkpHost::open_dataset` mints a fresh `DatasetHandle` for every open.
 #[test]
 fn invalidate_returns_exactly_the_tickets_of_the_generation_it_ended() {
     let g = GenerationRegistry::new();
@@ -226,8 +236,14 @@ fn forget_dataset_removes_the_generation_the_invalidation_and_every_attribution(
 /// (`TICKET_TTL + TERMINAL_ENTRY_MAX_AGE`) is not asserted here — it would need a clock this test
 /// must not take (ADR-018) — and is stated in `prune_locked`'s own doc.
 ///
-/// Mutation recorded in-source: removing the `Self::prune_locked` call from `attribute_ticket`
-/// leaves the dead entries in place and this test fails.
+/// RECORDED MUTATION: remove the `Self::prune_locked(&mut st)` call from
+/// `GenerationRegistry::attribute_ticket` (`kernel/src/skp.rs`). Applied at
+/// `2a6adbb10d2ab8bc65e3a3ab8fb9ae057683afcf`, run alone and reverted, it fails nothing here:
+/// `dead_generation_attributions_are_pruned_rather_than_accumulating` PASSED. Each round's
+/// `invalidate` prunes after it removes the generation. Every public method that answers from the
+/// attributions prunes before it reads them, except `invalidate`, whose filter keeps only the
+/// generation it ends; so, without a clock this file must not take (ADR-018), the call is not
+/// observable through this registry's public methods.
 #[test]
 fn dead_generation_attributions_are_pruned_rather_than_accumulating() {
     let g = GenerationRegistry::new();
@@ -248,13 +264,25 @@ fn dead_generation_attributions_are_pruned_rather_than_accumulating() {
 /// The `Mutex` under concurrent use — two threads minting, attributing and invalidating the same
 /// registry.
 ///
-/// **Asserts a count and an invariant, never a timing.** What it establishes is that the registry
-/// is internally consistent under concurrent access and does not deadlock or poison: every ticket
-/// either belongs to the live generation or does not, and the map stays bounded by the same rule.
+/// **Asserts a count and a bound, never a timing.** What it establishes is that two threads
+/// using the registry at once neither deadlock nor panic, that some attributions land under a
+/// live generation, and that once the session is ended no attribution survives. It does not
+/// establish that each attribution `attribute_ticket` answers `true` for names a generation still
+/// live when inserted (the torn read below).
 ///
-/// Mutation recorded in-source: replacing the `Mutex` with unsynchronised interior mutability does
-/// not compile; making `attribute_ticket` read `live` outside the lock it later inserts under
-/// reintroduces the torn read this exercises.
+/// RECORDED MUTATION, the first of two: replace `GenerationRegistry`'s `Mutex<GenerationState>`
+/// with `RefCell<GenerationState>`, each `lock().unwrap_or_else(..)` becoming `borrow_mut()`.
+/// Applied at `2a6adbb10d2ab8bc65e3a3ab8fb9ae057683afcf` and reverted: `spatial-kernel`
+/// does not build, failing with E0277 (`cannot be shared between threads safely`) at, among
+/// any other sites, `impl SourceFactory for EngineSourceFactory` (`kernel/src/lib.rs`): that
+/// trait is `Send + Sync` and the factory holds the registry in an `Arc`. The second, by
+/// reading only and never observed: make `attribute_ticket` read `live` under one lock and
+/// insert under a second, so that another thread's `invalidate` and `mint_for_open` can fall
+/// between the two: the ticket is then attributed to the generation just ended, and `true` is
+/// returned. That interleaving is timing-dependent, and this test's assertions hold under it in
+/// any case: such an attribution still counts toward `total`, and the next pruning call sweeps
+/// it, so the final count is 0 either way. The window can open in this test; the test does not
+/// detect it.
 #[test]
 fn the_registry_is_consistent_when_two_threads_use_it_at_once() {
     let g: Arc<GenerationRegistry> = GenerationRegistry::new();
@@ -541,10 +569,14 @@ fn the_dead_ticket_record_is_bounded() {
 /// prunes the attributions it just read, in the same call, so **without** this record a handle that
 /// was just ended is indistinguishable from one that was never minted.
 ///
-/// RECORDED MUTATION: move the `st.dead_tickets.insert(..)` loop in `invalidate` to after the
-/// `Self::prune_locked(&mut st)` call and source it from `st.tickets` instead of `ended`. Expected
-/// failure: `a_ticket_whose_generation_ended_is_recorded_dead_before_the_prune_sweeps_it` fails on
-/// the `EndedBySourceChange` assertion, the attribution having already been swept.
+/// RECORDED MUTATION: in `GenerationRegistry::invalidate` (`kernel/src/skp.rs`), move the
+/// `st.dead_tickets.insert(..)` loop to after the `Self::prune_locked(&mut st)` call, taking
+/// its handles from `st.tickets` (those naming this dataset and generation, collected into a
+/// `Vec` first so that it builds) instead of from `ended`. Applied at
+/// `2a6adbb10d2ab8bc65e3a3ab8fb9ae057683afcf`, run alone and reverted:
+/// `a_ticket_whose_generation_ended_is_recorded_dead_before_the_prune_sweeps_it` FAILED on
+/// `and the record kept the handle` (`left: 0`), which fires before the `EndedBySourceChange`
+/// assertion; both cover the same defect, the prune having swept the attribution first.
 #[test]
 fn a_ticket_whose_generation_ended_is_recorded_dead_before_the_prune_sweeps_it() {
     let g = GenerationRegistry::new();
