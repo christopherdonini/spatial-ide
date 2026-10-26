@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `eb4adaa831f82783faa4bf3233d975877e00556e07dc4f7052ae3dc02ae16565`) at `2026-10-26T02:36:27.798Z`.
+Generated from `PLAN.yaml` (sha256 `d9cfb0b16a44357e07bc6feb1c82623e34c5dc1b2fefe6e9b9a06650e5881f62`) at `2026-10-26T02:58:42.816Z`.
 
 ## 1. Next
 
@@ -12,8 +12,6 @@ Generated from `PLAN.yaml` (sha256 `eb4adaa831f82783faa4bf3233d975877e00556e07dc
 - **engine-cancel-before-execute-siblings** — The six other cancel.attach sites reuse the execute-window guard, so a cancel before execution stops the work, not only the outcome (dataset.rs identity scan and index.rs first, their work unbounded) (lane `engine`, order null, budget 90 min)
 - **stream-cancel-returns-left-unmarked** — The producer's cancel returns the flush piece leaves unmarked: a prepare error through classify, the two-read window in classify's marking arms, and the send to a receiver that is gone (is a disconnect an observation) (lane `engine`, order null, budget 120 min)
 - **type-walk-rule2-residual-reasons** — Type walk: a rule-2 result over a column or an integer literal, refused by rule 7's bit-width bound, keeps the residual reason although its value is a constant NULL (for example f32 > NULL + 100000) (lane `engine`, order null, budget 60 min)
-- **fixture-s-regeneration-entry-point** — A dedicated regeneration entry point and a kernel/FIXTURES.md record for the fixture S (parcels-145mb.parquet), like the G5 one (lane `kernel-protocol`, order null, budget 60 min)
-- **open-dataset-refuses-a-name-closed-during-admission** — open_dataset refuses at admission when a close has removed the catalog entry (the fix kernel-close-during-open-admission pins, in M1 shape; a close after that check and the ChecksOnly arm are for its own form) (lane `kernel-protocol`, order null, budget 60 min)
 - **pre-admission-change-detail-braces** — Four kernel P6-placeholder detail strings are wrapped in literal braces, which reach the operator message; the watcher form declares each such string starts with the bracketed placeholder tag (lane `kernel-protocol`, order null, budget 30 min)
 - **session-generation-other-recorded-mutations-name-no-commit** — kernel/tests/session_generation.rs: the recorded-mutation comments outside T1 to T3 that name no observation commit, each re-observed and named (lane `kernel-protocol`, order null, budget 60 min)
 - **windows-case-fold-non-ascii** — The audit case policy on Windows folds non-ASCII letters as NTFS does, so a profile path differing only in non-ASCII case cannot escape the user-home redaction (wave 3's 1c-2 correction, S2, code-path-only) (lane `kernel-protocol`, order null, budget 60 min)
@@ -24,11 +22,13 @@ Generated from `PLAN.yaml` (sha256 `eb4adaa831f82783faa4bf3233d975877e00556e07dc
 - **publish-unix-quota-perm-errors** — EDQUOT and EPERM in publish error classification on unix (wave-3 W3-A observation 1) (lane `platform`, order null, budget 90 min)
 - **redaction-hostname-off-windows** — The redaction scan knows the machine's hostname off Windows, so machine-identifier findings reach an audit record's residual_classes there too (wave-3 A-2, S2, sent to Fable for weighing) (lane `platform`, order null, budget 60 min)
 
-## 3. Waiting on the human (total: 15 min)
+## 3. Waiting on the human (total: 25 min)
 
 ### ruling
 
 - **admitted-integer-overflow-silent-wraparound** — An admitted same-type BIGINT product that overflows may wrap silently and return wrong rows with no error, observed outside the engine on the locked duckdb crate (O1 of stream-evaluation-failure-fixed-detail gate 1) (10 min)
+- **fixture-s-regeneration-entry-point** — A dedicated regeneration entry point and a kernel/FIXTURES.md record for the fixture S (parcels-145mb.parquet), like the G5 one (5 min)
+- **open-dataset-refuses-a-name-closed-during-admission** — open_dataset refuses at admission when a close has removed the catalog entry (the fix kernel-close-during-open-admission pins, in M1 shape; a close after that check and the ChecksOnly arm are for its own form) (5 min)
 - **verify-cites-past-end-bound** — verify-cites passes a cite to the line just past the end of a file that ends in a newline, or to line 1 of an empty file: the bound, with a design for such cites inside immutable records (5 min)
 
 ### sitting
@@ -93,6 +93,7 @@ Generated from `PLAN.yaml` (sha256 `eb4adaa831f82783faa4bf3233d975877e00556e07dc
 - **adr-index-unknown-flag-writes** — frontends/shell/scripts/adrIndex.mjs writes docs/README.md when given an unknown flag; it should refuse any argument other than --check (phase `prototype`) — never queued until placed
 - **b1-session-ordinal-refusal-wording** — The projection_column_is_identity refusal says a session-ordinal identity is mapped from file_row_number -- the message states the identity's real class (wave-2 A1-1, S2) (phase `prototype`) — never queued until placed
 - **shell-admit-describe-failure-closes-open** — admitDataset closes the dataset when describe fails after a successful open_dataset (wave-2 W2-C observation 2, S2) (phase `prototype`) — never queued until placed
+- **open-dataset-close-serialised-under-the-catalog-lock** — open_dataset's catalog check and mint, in both arms, serialised with close_dataset's forget and removal, and no OpenRecord inserted after a close (the windows the M1 shape leaves) (phase `prototype`) — never queued until placed
 - **engine-query-terminal-detail-sql-audit** — Every other engine.query terminal detail repeats a slice of the composed SQL (W2-B observation 2): audit the stream-terminal paths, then decide whether to withhold DuckDB text more widely (phase `prototype`) — never queued until placed
 - **stream-fetch-overflow-fixed-detail** — An admitted predicate's integer overflow first raised during a fetch ends the stream with the fixed detail: the duckdb crate's fetch panic wrapper recognised by its fixed prefixes, anchored (route B of stream-evaluation-failure-fixed-detail) (phase `prototype`) — never queued until placed
 - **port-3-shell-l1** — PORT-3 -- the Tauri shell crate checked and tested on Linux and macOS in product-ci-shell (L1 for the shell) (phase `prototype`) — never queued until placed

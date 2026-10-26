@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-26T02:36:27.923Z",
-  "plan_hash": "eb4adaa831f82783faa4bf3233d975877e00556e07dc4f7052ae3dc02ae16565",
+  "generated_at": "2026-10-26T02:58:42.956Z",
+  "plan_hash": "d9cfb0b16a44357e07bc6feb1c82623e34c5dc1b2fefe6e9b9a06650e5881f62",
   "priorities_approved": true,
   "lanes": [
     {
@@ -5479,14 +5479,14 @@
       "kind": "task",
       "lane": "kernel-protocol",
       "phase": "prototype",
-      "status": "ready",
+      "status": "blocked",
       "order": null,
       "depends_on": [
         "kernel-close-during-open-admission"
       ],
       "needs_human": {
-        "kind": "none",
-        "minutes": 0
+        "kind": "ruling",
+        "minutes": 5
       },
       "gate": "none",
       "evidence": null,
@@ -5494,9 +5494,36 @@
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "PLACED S3 2026-10-26 (state/directives/2026-10-26-resent-2026-10-25-o1-s1-clang-cl-route-a-hugeint-cast-b-five-nodes-placed.md, item 2): filler entry 5b, after 6b resumes and after 6c (6c starts now), a five-line form; the shape: the catalog check and the mint under the lock close_dataset's removal takes, and the ChecksOnly arm the same check; past the five-line budget, M1's shape with the narrowed title and the remaining window its own proposed node; the SKP-V0 wire words are the human's, in that item. Before: TITLE NARROWED 2026-10-25 by #258 gate 1's architect (state/consults/gates/2026-10-25-kernel-close-during-open-admission-gate1-architect.md, N2): M1 checks under the per-open latch, which close_dataset never takes, so a close between the check and the mint stays open, and the ChecksOnly arm is untouched; the fix's own form closes those windows or keeps the narrower title, and states whether its skp.unknown_dataset refusal of open_dataset is a wire change (SKP-V0). Before: PROPOSED 2026-10-25 by the custodian under kernel-close-during-open-admission's OPEN-2 (state/consults/2026-10-25-kernel-close-during-open-admission-five-line-form-architect-draft.md): the fix that test pins. Its smallest shape is that form's M1: in open_dataset's Watching arm, before the mint, refuse as skp.unknown_dataset when the catalog no longer holds the name, so no generation is minted for a dataset a close has forgotten. A fix flips the pinned test by name (the human's ruling, state/directives/2026-10-25-filler-entry-5-open-1-a-pr-b-open-1-2-3-a-o1-probe-lead-data-designs-tester-high-runs.md, item 1) and replaces it under its own form. Unreachable in the product (the handle is minted from the OS CSPRNG). For the human to place; S3 unless graded.",
+      "summary": "FORM DRAFTED AHEAD 2026-10-26 (state/consults/2026-10-26-open-dataset-refuses-a-name-closed-during-admission-five-line-form-architect-draft.md): the human's fallback applies (closing the whole window also changes close_dataset, past the five-line budget), so M1's shape with the narrowed title, about 107 lines in kernel/src/skp.rs, protocol/skp/SKP-V0.md and the earlier form's amendment; the remaining windows proposed as open-dataset-close-serialised-under-the-catalog-lock. THE HUMAN'S RULING: OPEN-1, that node's placement; OPEN-2, whether SKP-V0's section 8 gains a no-literal-change note. The custodian's OPEN-3 (A). Its turn: after entry 6b resumes. Before: PLACED S3 2026-10-26 (state/directives/2026-10-26-resent-2026-10-25-o1-s1-clang-cl-route-a-hugeint-cast-b-five-nodes-placed.md, item 2): filler entry 5b, after 6b resumes and after 6c (6c starts now), a five-line form; the shape: the catalog check and the mint under the lock close_dataset's removal takes, and the ChecksOnly arm the same check; past the five-line budget, M1's shape with the narrowed title and the remaining window its own proposed node; the SKP-V0 wire words are the human's, in that item. Before: TITLE NARROWED 2026-10-25 by #258 gate 1's architect (state/consults/gates/2026-10-25-kernel-close-during-open-admission-gate1-architect.md, N2): M1 checks under the per-open latch, which close_dataset never takes, so a close between the check and the mint stays open, and the ChecksOnly arm is untouched; the fix's own form closes those windows or keeps the narrower title, and states whether its skp.unknown_dataset refusal of open_dataset is a wire change (SKP-V0). Before: PROPOSED 2026-10-25 by the custodian under kernel-close-during-open-admission's OPEN-2 (state/consults/2026-10-25-kernel-close-during-open-admission-five-line-form-architect-draft.md): the fix that test pins. Its smallest shape is that form's M1: in open_dataset's Watching arm, before the mint, refuse as skp.unknown_dataset when the catalog no longer holds the name, so no generation is minted for a dataset a close has forgotten. A fix flips the pinned test by name (the human's ruling, state/directives/2026-10-25-filler-entry-5-open-1-a-pr-b-open-1-2-3-a-o1-probe-lead-data-designs-tester-high-runs.md, item 1) and replaces it under its own form. Unreachable in the product (the handle is minted from the OS CSPRNG). For the human to place; S3 unless graded.",
       "dates": {
         "opened": "2026-10-25",
+        "done": null
+      }
+    },
+    {
+      "id": "open-dataset-close-serialised-under-the-catalog-lock",
+      "title": "open_dataset's catalog check and mint, in both arms, serialised with close_dataset's forget and removal, and no OpenRecord inserted after a close (the windows the M1 shape leaves)",
+      "kind": "task",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "depends_on": [
+        "open-dataset-refuses-a-name-closed-during-admission"
+      ],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "none",
+      "evidence": null,
+      "budget_minutes": 120,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [],
+      "summary": "PROPOSED 2026-10-26 by the custodian, as the human's direction for open-dataset-refuses-a-name-closed-during-admission provides (state/directives/2026-10-26-resent-2026-10-25-o1-s1-clang-cl-route-a-hugeint-cast-b-five-nodes-placed.md, item 2: past the five-line budget, the remaining window its own proposed node), from that piece's draft (state/consults/2026-10-26-open-dataset-refuses-a-name-closed-during-admission-five-line-form-architect-draft.md, OPEN-1): the windows the M1 shape leaves open: a close between forget_dataset and the catalog removal, after the open's check; the ChecksOnly arm; and an OpenRecord inserted after a close ran whole between the latch's release and the insert. The shape: the catalog's write guard held across forget_dataset and the removal, or close-races section 2c reordered; the lock order latch, then catalog, then generations. Evidence: no deterministic seam reaches these windows, so its form settles with the human first whether a threaded test with its nondeterminism disclosed, or a proof by reading, is accepted. Unreachable in the shipped app. Proposed and unplaced until the human places it.",
+      "dates": {
+        "opened": "2026-10-26",
         "done": null
       }
     },
@@ -7223,12 +7250,12 @@
       "kind": "task",
       "lane": "kernel-protocol",
       "phase": "prototype",
-      "status": "ready",
+      "status": "blocked",
       "order": null,
       "depends_on": [],
       "needs_human": {
-        "kind": "none",
-        "minutes": 0
+        "kind": "ruling",
+        "minutes": 5
       },
       "gate": "none",
       "evidence": null,
@@ -7236,7 +7263,7 @@
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "PLACED 2026-10-26 (state/directives/2026-10-26-o1-s1-257-258-259-merged-6b-r3b-held-on-the-human-6c-runs-fixture-s-entry-point-6d.md, item 2): S3, filler entry 6d, after 6c and before 7a, a five-line form: it writes S alone from spec_s as the G5 entry point writes G5, its disk check reading the drive the output lives on with a floor sized to what it writes, the full hash checked, and S recorded in kernel/FIXTURES.md on G5's model; nothing else changes, and the matrix generator's C: check stays as that cut's recorded preflight. Before: PROPOSED 2026-10-25 by the custodian from state/consults/2026-10-25-first-batch-factorial-ignored-trace-tests-fixture-s-route-architect.md (R3c): the fixture S (parcels-145mb.parquet) has no dedicated regeneration entry point and no kernel/FIXTURES.md entry; its only documented route is the measured factorial pass. An entry point like the G5 one, with its record and hash check, would let a piece regenerate S without a measured pass. For the human to place; S3 unless graded.",
+      "summary": "DRAFTED 2026-10-26 (state/consults/2026-10-26-fixture-s-regeneration-entry-point-five-line-form-architect-draft.md): over the size of section 21c (about 200 to 245 changed lines over 2 files: a new ignored test binary kernel/tests/regenerate_fixture_s.rs writing S from a field-for-field restatement of spec_s, a drive check on the output folder's resolved drive with a floor of twice S's size, a .partial file renamed only on the full hash; and S's section in kernel/FIXTURES.md). THE HUMAN'S RULING: OPEN-1, a one-line note under section 21c setting this piece's bound at 260 lines (the architect's recommendation), or the full form; OPEN-6, whether entry 6b may take S from this entry point, written to D:, instead of the matrix generator. The custodian's: OPEN-2 to OPEN-5 (A). Before: PLACED 2026-10-26 (state/directives/2026-10-26-o1-s1-257-258-259-merged-6b-r3b-held-on-the-human-6c-runs-fixture-s-entry-point-6d.md, item 2): S3, filler entry 6d, after 6c and before 7a, a five-line form: it writes S alone from spec_s as the G5 entry point writes G5, its disk check reading the drive the output lives on with a floor sized to what it writes, the full hash checked, and S recorded in kernel/FIXTURES.md on G5's model; nothing else changes, and the matrix generator's C: check stays as that cut's recorded preflight. Before: PROPOSED 2026-10-25 by the custodian from state/consults/2026-10-25-first-batch-factorial-ignored-trace-tests-fixture-s-route-architect.md (R3c): the fixture S (parcels-145mb.parquet) has no dedicated regeneration entry point and no kernel/FIXTURES.md entry; its only documented route is the measured factorial pass. An entry point like the G5 one, with its record and hash check, would let a piece regenerate S without a measured pass. For the human to place; S3 unless graded.",
       "dates": {
         "opened": "2026-10-25",
         "done": null
