@@ -108,6 +108,55 @@ impl Drop for Watchdog {
     }
 }
 
+/// **The trace is process-global, and one test here reads two of its stamps.**
+///
+/// While a trace runs, `spatial_engine::trace` records the `mark` of every thread in this process,
+/// and an event names no stream. `cancelling_mid_stream_stops_production_promptly` reads the first
+/// `cancellation_requested` and the first `producer_cancelled` in its trace and asserts docs/08's
+/// cancellation budget on the interval between them. Another test here that cancels a token can
+/// stamp the first, and a producer that finds its stream cancelled, a dropped stream included, can
+/// stamp the second; either, landing in that trace, could stand in for the test's own. So that
+/// test takes `exclusive()` as its first statement, and every test here whose stream reaches a
+/// producer takes `shared()` as its first statement; each holds its guard to the end of its body,
+/// and the shared tests still run beside each other. A producer is never joined and can outlive its
+/// stream, so a shared test that drops a stream before the stream has ended calls `quiesce` before
+/// its body ends. Tests that open no stream, or whose only stream is refused before it is built,
+/// stamp nothing and take neither. A quiesced producer can still stamp the post-check pair and
+/// `producer_finished` after its lease is released; the test reads neither name.
+///
+/// RECORDED MUTATION: <M-1: the insertion; the test's name and message; the 40-hex commit>
+/// RECORDED MUTATION: <M-2: the insertion; the ten names and the message; the 40-hex commit>
+static TRACE_LOCK: std::sync::RwLock<()> = std::sync::RwLock::new(());
+
+fn exclusive() -> std::sync::RwLockWriteGuard<'static, ()> {
+    TRACE_LOCK.write().unwrap_or_else(|e| e.into_inner())
+}
+
+fn shared() -> std::sync::RwLockReadGuard<'static, ()> {
+    TRACE_LOCK.read().unwrap_or_else(|e| e.into_inner())
+}
+
+/// Wait until this dataset holds no lease, before a shared test's guard is released.
+///
+/// A producer stamps `producer_cancelled` inside `produce`, before it gives its lease up, so a
+/// dataset with no active lease has no producer left that can stamp it. Bounded at ten seconds and
+/// loud on a miss, in the shape of the kernel's trace-span suite.
+///
+/// RECORDED MUTATION: <M-3: the replacement; the five names and the message; the 40-hex commit>
+fn quiesce(ds: &Dataset) {
+    const WINDOW: Duration = Duration::from_secs(10);
+    let deadline = Instant::now() + WINDOW;
+    while ds.connections().active_leases() != 0 && Instant::now() < deadline {
+        std::thread::sleep(Duration::from_millis(5));
+    }
+    assert_eq!(
+        ds.connections().active_leases(),
+        0,
+        "this test's dataset still held a lease {WINDOW:?} after its stream was dropped, so its \
+         producer could still stamp the traced test's trace"
+    );
+}
+
 fn small() -> FixtureSpec {
     FixtureSpec {
         features: 2_000,
@@ -440,6 +489,7 @@ fn a_latitude_first_source_is_admitted_under_the_formats_override_with_its_decla
 
 #[test]
 fn streaming_the_whole_file_returns_every_feature_with_bit_identical_coordinates() {
+    let _serial = shared();
     let _wd = Watchdog::new(
         "streaming_the_whole_file_returns_every_feature_with_bit_identical_coordinates",
     );
@@ -464,6 +514,7 @@ fn streaming_the_whole_file_returns_every_feature_with_bit_identical_coordinates
 
 #[test]
 fn the_payload_is_variable_width_geoarrow_with_holes() {
+    let _serial = shared();
     let _wd = Watchdog::new("the_payload_is_variable_width_geoarrow_with_holes");
     let spec = FixtureSpec {
         features: 400,
@@ -522,10 +573,13 @@ fn the_payload_is_variable_width_geoarrow_with_holes() {
             .map(String::as_str),
         Some("geoarrow.polygon")
     );
+    drop(s);
+    quiesce(&ds);
 }
 
 #[test]
 fn a_viewport_filter_selects_a_subset_and_every_selected_feature_intersects_it() {
+    let _serial = shared();
     let _wd = Watchdog::new(
         "a_viewport_filter_selects_a_subset_and_every_selected_feature_intersects_it",
     );
@@ -578,6 +632,7 @@ fn a_viewport_in_another_crs_is_refused_because_nothing_here_reprojects() {
 
 #[test]
 fn a_viewport_cannot_name_a_definition_only_crs_because_that_identifier_names_nothing() {
+    let _serial = shared();
     let _wd = Watchdog::new("a_viewport_cannot_name_a_definition_only_crs");
     // ADR-015 §7.3. Every definition-only dataset carries the same placeholder identifier, so
     // matching a caller's echo of it would be a name comparison over a string that is not a name.
@@ -614,10 +669,12 @@ fn a_viewport_cannot_name_a_definition_only_crs_because_that_identifier_names_no
             filter: None
         })
         .is_ok());
+    quiesce(&ds);
 }
 
 #[test]
 fn a_viewport_without_a_covering_bbox_column_is_refused_not_silently_scanned() {
+    let _serial = shared();
     let _wd =
         Watchdog::new("a_viewport_without_a_covering_bbox_column_is_refused_not_silently_scanned");
     let (path, _) = write(
@@ -640,10 +697,12 @@ fn a_viewport_without_a_covering_bbox_column_is_refused_not_silently_scanned() {
     ));
     // …while an unfiltered stream over the same file is fine.
     assert!(ds.stream(&ViewportQuery::all()).is_ok());
+    quiesce(&ds);
 }
 
 #[test]
 fn every_batch_carries_the_envelope_not_just_the_first() {
+    let _serial = shared();
     let _wd = Watchdog::new("every_batch_carries_the_envelope_not_just_the_first");
     let (path, _) = write(
         "tagging",
@@ -687,6 +746,7 @@ fn every_batch_carries_the_envelope_not_just_the_first() {
 
 #[test]
 fn cancelling_before_the_first_batch_stops_the_stream_without_producing_anything() {
+    let _serial = shared();
     let _wd = Watchdog::new(
         "cancelling_before_the_first_batch_stops_the_stream_without_producing_anything",
     );
@@ -754,6 +814,7 @@ fn cancelling_before_the_first_batch_stops_the_stream_without_producing_anything
 
 #[test]
 fn cancelling_mid_stream_stops_production_promptly() {
+    let _serial = exclusive();
     let _wd = Watchdog::new("cancelling_mid_stream_stops_production_promptly");
     let (path, _) = write(
         "cancel-mid",
@@ -843,6 +904,7 @@ fn cancelling_mid_stream_stops_production_promptly() {
 
 #[test]
 fn dropping_the_stream_cancels_the_query() {
+    let _serial = shared();
     let _wd = Watchdog::new("dropping_the_stream_cancels_the_query");
     let (path, _) = write(
         "cancel-drop",
@@ -862,10 +924,12 @@ fn dropping_the_stream_cancels_the_query() {
         cancel.is_cancelled(),
         "an abandoned stream must not leave DuckDB scanning"
     );
+    quiesce(&ds);
 }
 
 #[test]
 fn a_paused_consumer_bounds_producer_resident_memory() {
+    let _serial = shared();
     let _wd = Watchdog::new("a_paused_consumer_bounds_producer_resident_memory");
     // H3, on the producer's own counter rather than an OS reading — the same basis the bake-off's
     // bounded-memory claim rested on.
@@ -911,10 +975,13 @@ fn a_paused_consumer_bounds_producer_resident_memory() {
         plateau <= 1 + (spatial_engine::MAX_QUEUED_BATCHES + 1) as u64,
         "generated {plateau} batches while the consumer was paused"
     );
+    drop(s);
+    quiesce(&ds);
 }
 
 #[test]
 fn the_first_batch_is_handed_over_before_the_result_is_materialized() {
+    let _serial = shared();
     let _wd = Watchdog::new("the_first_batch_is_handed_over_before_the_result_is_materialized");
     // The property that separates streaming from collect-then-chunk. `docs/08`'s "First pixels
     // < 100 ms after query start" cannot be met by an engine that materializes first.
