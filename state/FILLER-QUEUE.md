@@ -20,8 +20,8 @@
 | 7b | `posix-backslash-in-shared-path-logic` | S3 | proven on the Linux L1 job | skipped at dispatch 2026-10-26: #241, awaiting the click, edits kernel/src/publish/viewer_assets.rs (rule (00)) |
 | 7c | `publish-unix-quota-perm-errors` | S3 | proven on the Linux L1 job | skipped at dispatch 2026-10-26: #241, awaiting the click, edits kernel/src/publish/error.rs (rule (00)) |
 | 7d | `publish-bundle-sigterm` | S3 | proven on the Linux L1 job | skipped at dispatch 2026-10-26: #241, awaiting the click, edits kernel/src/bin/publish-bundle.rs (rule (00)) |
-| 8a | `corpus-line-files` | S3 | — | next in the filler slot from 2026-10-26 (6d, 5b and 5c held on the human; 7a to 7d skipped by rule (00)); its form drafting (`state/consults/2026-10-26-corpus-line-files-five-line-form-architect-draft.md`) |
-| 8b | `type-walk-rule2-residual-reasons` | S3 | — | queued |
+| 8a | `corpus-line-files` | S3 | — | form drafted 2026-10-26 (`state/consults/2026-10-26-corpus-line-files-five-line-form-architect-draft.md`); held on the human's ruling (OPEN-1, red-line text: the source, its licence reading, the set and the sighting line) |
+| 8b | `type-walk-rule2-residual-reasons` | S3 | — | next in the filler slot from 2026-10-26 (8a held on the human); its form drafting |
 | 9 | `stream-fetch-overflow-fixed-detail` | S3 | after the current entries (the human's direction of 2026-10-25, item 1); the architect's estimate puts it past §21c's line bound, so at its turn the size is checked first | queued (proposed in PLAN) |
 
 ## Fillers merged
