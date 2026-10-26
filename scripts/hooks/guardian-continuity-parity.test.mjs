@@ -17,10 +17,11 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { execFileSync, spawnSync } from 'node:child_process';
-
+import childProcess, { execFileSync, spawnSync } from 'node:child_process';
+import { syncBuiltinESMExports } from 'node:module';
 import { decide } from './stop-queue.mjs';
 import { judgeContinuity } from '../../tools/mods/spatial-guardian/hooks/continuity.mjs';
+const realExecFileSync = childProcess.execFileSync; // taken before any hook runs: a root before() may run at registration
 
 // ---------------------------------------------------------------------------
 // The environment: a synthetic Telegram config, and none of the overrides that would end the Stop
@@ -36,6 +37,8 @@ before(() => {
   for (const name of ENV_TOUCHED) savedEnv.set(name, process.env[name]);
   process.env.CUSTODIAN_TELEGRAM_DRY_RUN = '1';
   for (const name of ENV_DELETED) delete process.env[name];
+  childProcess.execFileSync = observer; // stop-queue.mjs imports execFileSync by name; the sync rebinds it
+  syncBuiltinESMExports();
 });
 
 after(() => {
@@ -43,6 +46,8 @@ after(() => {
     if (value === undefined) delete process.env[name];
     else process.env[name] = value;
   }
+  childProcess.execFileSync = realExecFileSync;
+  syncBuiltinESMExports();
 });
 
 // ---------------------------------------------------------------------------
@@ -238,13 +243,57 @@ const ENGINE_STDOUT_BOUND = 4194304;
 const STALE_OPENING = 'stale SESSION-CONTINUITY: the newest commit touching state/CUT-STATE.md is ';
 const NOT_JUDGED_OPENING = 'stop-queue: continuity not judged (';
 
+// The instrument (the git-timeout form, section 2): every continuity git call on both sides is timed
+// and recorded as { side, args, ms, exitCode, timedOut }. The observer wraps the Stop hook's git calls
+// while `observed` is an array, and only T38 sets `substitute`, which swaps one `log` call's program
+// for a sleeping child under the product's own options.
+const SLEEP_PREFIX = ['-e', 'setTimeout(() => {}, 60000)', '--'];
+let observed = null;
+let substitute = false;
+
+function observer(file, args, opts) {
+  if (observed === null || file !== 'git' || !Array.isArray(args)) return realExecFileSync(file, args, opts);
+  const t0 = performance.now();
+  const record = (exitCode, timedOut) => observed.push({ side: 'stop', args, ms: performance.now() - t0, exitCode, timedOut });
+  try {
+    const out = substitute && args[0] === 'log' ? realExecFileSync(process.execPath, [...SLEEP_PREFIX, ...args], opts) : realExecFileSync(file, args, opts);
+    record(0, false);
+    return out;
+  } catch (error) {
+    record(error.status ?? null, error.code === 'ETIMEDOUT');
+    throw error;
+  }
+}
+
+const isRead = (c) => c.args[0] === 'log' || c.args[0] === 'show';
+
+function timeoutFinding(id, calls) {
+  const c = calls.find((x) => x.timedOut && isRead(x));
+  return c ? `${id}: timed out: the ${c.side}'s git ${c.args.join(' ')} ran ${Math.round(c.ms)} ms against its timeout, so the fixture was not read` : null;
+}
+
+function gitMsLine(id, calls) {
+  const seen = { mod: 0, stop: 0 };
+  const parts = calls.filter(isRead).map((c) => `${c.side}:${seen[c.side]++}=${Math.round(c.ms)}${c.exitCode === 0 ? '' : `(exit ${c.exitCode})`}`);
+  return `${id} git ms: ${parts.join(' ')}`;
+}
+
+function buildFixture(id) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'guardian-parity-'));
+  dirs.push(dir);
+  FIXTURES.find((fx) => fx.id === id).build(dir);
+  return dir;
+}
+
 // The mod's side. `run` is shaped to the engine's process-run result: it rejects when the child
 // cannot start or outruns its timeout, and otherwise resolves { exitCode, stdout, stderr,
 // isStdoutTruncated, isStderrTruncated }. It never models a truncation, so it records any stdout at or
 // over the engine's bound, and the fixture then fails.
-async function modOutcome(dir, oversize) {
+async function modOutcome(dir, oversize, calls = [], program = 'git', prefix = []) {
   const run = async (args) => {
-    const r = spawnSync('git', args, { cwd: dir, encoding: 'utf8', ...STOP_RUN_OPTS });
+    const t0 = performance.now();
+    const r = spawnSync(program, [...prefix, ...args], { cwd: dir, encoding: 'utf8', ...STOP_RUN_OPTS });
+    calls.push({ side: 'mod', args, ms: performance.now() - t0, exitCode: r.status, timedOut: r.error?.code === 'ETIMEDOUT' });
     if (r.error) throw r.error;
     if (Buffer.byteLength(r.stdout, 'utf8') >= ENGINE_STDOUT_BOUND) oversize.push(args.join(' '));
     return { exitCode: r.status ?? 1, stdout: r.stdout, stderr: r.stderr, isStdoutTruncated: false, isStderrTruncated: false };
@@ -255,7 +304,7 @@ async function modOutcome(dir, oversize) {
 }
 
 // The Stop hook's side: the shipped `decide`, with a lease this session holds written untracked.
-async function stopOutcome(dir) {
+async function stopOutcome(dir, calls = []) {
   const sessionId = `parity-${Math.random().toString(36).slice(2)}`;
   fs.writeFileSync(path.join(dir, 'CUSTODIAN-LEASE'), `lease: ${sessionId} refreshed: ${new Date().toISOString()}\n`);
   const input = {
@@ -267,7 +316,13 @@ async function stopOutcome(dir) {
     background_tasks: [{ id: 'bg-1' }],
     session_crons: [],
   };
-  const result = await decide(input, { projectRoot: dir });
+  observed = calls;
+  let result;
+  try {
+    result = await decide(input, { projectRoot: dir });
+  } finally {
+    observed = null;
+  }
   if (result.decision === 'block' && result.reason.startsWith(STALE_OPENING)) return 'stale';
   if (result.stderr.includes(NOT_JUDGED_OPENING)) return 'not judged';
   return 'fresh';
@@ -288,9 +343,10 @@ function computeAll() {
       try {
         fx.build(dir);
         const oversize = [];
-        const mod = await modOutcome(dir, oversize);
-        const stop = await stopOutcome(dir);
-        results.set(fx.id, { mod, stop, oversize });
+        const calls = [];
+        const mod = await modOutcome(dir, oversize, calls);
+        const stop = await stopOutcome(dir, calls);
+        results.set(fx.id, { mod, stop, oversize, calls, finding: timeoutFinding(fx.id, calls) });
       } catch (error) {
         results.set(fx.id, { error });
       } finally {
@@ -311,11 +367,21 @@ after(() => {
 // return { judged: true, stale: false }`) -> fails: `PS4a`, `guardian parity: the mod's stale-block
 // check and the Stop hook's stale-continuity check agree on every fixture`. Observed at 54eba872 with
 // this change, node --version v24.18.1 and git --version 2.49.0.windows.1.
+// Re-observed at 7235aa0c (the git-timeout form, section 4) -> fails: `PS4a`, `guardian parity:
+// the mod's stale-block check and the Stop hook's stale-continuity check agree on every fixture`
+// and `guardian parity: a mod-side git call that outruns the runner's timeout is recorded as a
+// timeout, not read as an outcome`, with node --version v24.18.1 and git --version 2.49.0.windows.1.
 // RECORDED MUTATION: in the working tree only and reverted, never committed: stop-queue.mjs's
 // judgeContinuity comparison inverted (`stale: current.flushedAt !== parent.flushedAt`) -> fails:
 // `PS1`, `PS2`, `PS3`, `PS5`, `PS6`, `PS8`, `PS9`, `PS10`, `guardian parity: the mod's stale-block
 // check and the Stop hook's stale-continuity check agree on every fixture`. Observed at 54eba872 with
 // this change, node --version v24.18.1 and git --version 2.49.0.windows.1.
+// Re-observed at 7235aa0c (the git-timeout form, section 4) with the same failures.
+// RECORDED MUTATION: the `syncBuiltinESMExports();` call in before() deleted -> fails: `PS1`, `PS2`,
+// `PS3`, `PS4a`, `PS4b`, `PS5`, `PS6`, `PS7`, `PS8`, `PS9`, `PS10`, `PS18`, `PS19`, `guardian parity: the
+// mod's stale-block check and the Stop hook's stale-continuity check agree on every fixture` and
+// `guardian parity: a Stop-hook git call that outruns its timeout is recorded as a timeout, not read
+// as an outcome`. Observed at 6d76bcdb with node --version v24.18.1 and git --version 2.49.0.windows.1.
 test("guardian parity: the mod's stale-block check and the Stop hook's stale-continuity check agree on every fixture", async (t) => {
   assert.deepEqual(
     FIXTURES.map((fx) => fx.id),
@@ -329,6 +395,9 @@ test("guardian parity: the mod's stale-block check and the Stop hook's stale-con
       assert.equal(r.error, undefined, `building or reading the fixture failed: ${r.error?.stack}`);
       assert.deepEqual(r.oversize, [], 'a stdout reached the engine bound the runner does not model');
       t.diagnostic(`${fx.id}: mod ${r.mod}, Stop hook ${r.stop}`);
+      t.diagnostic(gitMsLine(fx.id, r.calls));
+      assert.equal(r.finding, null, r.finding ?? '');
+      assert.ok(r.calls.some((c) => c.side === 'stop' && c.args[0] === 'log'), `${fx.id}: the observer saw no Stop-side git log, so the Stop side was not instrumented`);
       assert.equal(r.mod, r.stop, `${fx.id}: the mod reads ${r.mod} and the Stop hook reads ${r.stop}`);
     });
   }
@@ -338,10 +407,40 @@ test("guardian parity: the mod's stale-block check and the Stop hook's stale-con
 // `FIXTURES.find((f) => f.id === 'PS7').build(dir)`) -> fails: `guardian parity: the fixture set
 // reaches stale, fresh and not judged on the Stop hook`. Observed at 54eba872 with this change, node
 // --version v24.18.1 and git --version 2.49.0.windows.1.
+// Re-observed at 7235aa0c (the git-timeout form, section 4) with the same failures.
 test('guardian parity: the fixture set reaches stale, fresh and not judged on the Stop hook', async () => {
   const results = await computeAll();
-  const reached = new Set([...results.values()].map((r) => r.stop));
+  const reached = new Set([...results.values()].filter((r) => r.finding == null).map((r) => r.stop));
   for (const outcome of ['stale', 'fresh', 'not judged']) {
     assert.ok(reached.has(outcome), `no fixture reaches ${outcome} on the Stop hook (reached: ${[...reached].join(', ')})`);
   }
+});
+
+// RECORDED MUTATION: the mod runner's `timedOut: r.error?.code === 'ETIMEDOUT'` replaced by
+// `timedOut: false` -> fails: `guardian parity: a mod-side git call that outruns the runner's timeout
+// is recorded as a timeout, not read as an outcome`. Observed at 6d76bcdb with node --version v24.18.1 and git --version 2.49.0.windows.1.
+test("guardian parity: a mod-side git call that outruns the runner's timeout is recorded as a timeout, not read as an outcome", async () => {
+  const calls = [];
+  const outcome = await modOutcome(buildFixture('PS7'), [], calls, process.execPath, SLEEP_PREFIX);
+  assert.equal(outcome, 'not judged');
+  assert.equal(calls.filter((c) => c.args[0] === 'log' && c.timedOut).length, 1);
+  assert.match(timeoutFinding('PS7', calls), /timed out/);
+});
+
+// RECORDED MUTATION: the observer's catch `record(error.status ?? null, error.code === 'ETIMEDOUT')`
+// replaced by `record(error.status ?? null, false)` -> fails: `guardian parity: a Stop-hook git call
+// that outruns its timeout is recorded as a timeout, not read as an outcome`. Observed at 6d76bcdb
+// with node --version v24.18.1 and git --version 2.49.0.windows.1.
+test("guardian parity: a Stop-hook git call that outruns its timeout is recorded as a timeout, not read as an outcome", async () => {
+  const calls = [];
+  substitute = true;
+  let outcome;
+  try {
+    outcome = await stopOutcome(buildFixture('PS7'), calls);
+  } finally {
+    substitute = false;
+  }
+  assert.equal(outcome, 'not judged'); // stderr holds the not-judged opening
+  assert.ok(calls.some((c) => c.args[0] === 'log' && c.timedOut), 'the timed-out log was not recorded');
+  assert.match(timeoutFinding('PS7', calls), /timed out/);
 });

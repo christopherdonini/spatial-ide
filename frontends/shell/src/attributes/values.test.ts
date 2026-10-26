@@ -12,7 +12,7 @@ import { ATTRIBUTE_NULL_MARKER, displayValue, readRow } from "./values";
 function shown(columns: AttributeColumn[], rows: number): string[][] {
   const ids = Array.from({ length: rows }, (_, i) => BigInt(i));
   const { ipc, encoding } = attributeBatchIpc(ids, columns);
-  const batch = decodeBatch("sh_v", 0, ipc, "geometry", encoding, columns.map((c) => c.name));
+  const batch = decodeBatch("sh_v", 0, ipc, "geometry", encoding, columns.map((c) => c.name), null);
   return ids.map((_, row) => (readRow(batch, row) as Exclude<ReturnType<typeof readRow>, string | null>).map((cell) => displayValue(cell.value)));
 }
 
@@ -47,7 +47,7 @@ describe("readRow and displayValue (SHELL-MIGRATION-MILESTONE-4-PREREGISTRATION.
 
   it("reads null for a batch decoded with no projection, and a not-held batch as not-held", () => {
     const { ipc, encoding } = attributeBatchIpc([1n], []);
-    const batch = decodeBatch("sh_v", 0, ipc, "geometry", encoding, null);
+    const batch = decodeBatch("sh_v", 0, ipc, "geometry", encoding, null, null);
     expect(readRow(batch, 0)).toBeNull();
     expect(readRow({ attributes: "not-held" }, 0)).toBe("not-held");
   });

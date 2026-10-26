@@ -1096,3 +1096,43 @@ Nothing above is edited.
 6. **Next:** O1 (the resolver, `judge` and the save orchestration) after O0's amendment on Monday 2026-10-26; P1 to P6 after PR A merges; R1 after #241 merges. Step 1's PR opens after them.
 
 Nothing above is edited.
+
+## Amendment 3 — OPEN-17 (b) for milestone 4's PR C, written before PR C's code: which step 1 commits proceed beside PR C and which wait for its merge (class 1); steps 2 and 3 unchanged; rule (00) at this amendment (class 1)
+
+*Written by the custodian. The words are the architect's (`state/consults/2026-10-23-b1-shell-half-pr-c-dispatch-amendment-architect-draft.md`, item 2), drafted read-only at main 858092e340ac650822afea87b50b3ce00e50bd40. References only, and nothing below is a quotation. Self-references are by section and item. The sources are milestone 4's form (`frontends/shell/SHELL-MIGRATION-MILESTONE-4-PREREGISTRATION.md`): OPEN-17's option (b) and its recommendation, its Amendment 1 item 4, its Amendment 5 item 3, and its Amendment 7. "PR C's files" means milestone 4's §2.6 PR C list with its Amendment 7 item 3's additions. "Beside PR C" means from PR C's dispatch until its merge.*
+
+1. **Why.** Amendment 1 item 6 replaced §2.14's milestone-4 order for step 1, and it orders step 1 against PR A only. Now that PR A has merged, nothing in this form keeps step 1's shell work off PR C's files. For the time beside PR C, this amendment governs step 1, and item 6 holds for everything else.
+
+2. **Step 1 beside PR C:**
+
+   | Step 1 work (Amendment 1 item 6) | Beside PR C |
+   |---|---|
+   | N0 to N7 | Built (Amendment 2 item 1). No PR C file. |
+   | O1, after O0's amendment | Proceeds: kernel only. |
+   | P1, main merged | Proceeds. |
+   | P2, the bump | Proceeds. Its literal sites are `frontends/shell/src/skp/types.ts`, `frontends/shell/src/skp/client.test.ts` and `frontends/shell/src/admission/admitDataset.test.ts` (milestone 4's PR C re-sweep, step 5), and none of them is a PR C file. The version named in the comment at `frontends/shell/src/console/surfaceRegistry.ts:78` @ 858092e340ac650822afea87b50b3ce00e50bd40 sha256:36741303019b9f49f7d2b9ba9e6d388b75020faacf237b4a8372b40f5d1175e4 states when `record_step` was added. It is not a literal site, and P2 leaves it as it is. |
+   | P3, the kernel's handler | Proceeds: `kernel/src` only. |
+   | P4, `src-tauri` | Waits for PR C's merge. It is disjoint by file, but the shell's completeness test requires a class-B row in `console/surfaceRegistry.ts`, a PR C file, for every `binding_*` handler in `lib.rs` (`frontends/shell/src/console/surfaceCompleteness.test.ts:250-253` @ 858092e340ac650822afea87b50b3ce00e50bd40 sha256:2dcd782b6bc77ebc84035854324b3a3e498a83b5d7b44c64e2f693158ecbbed1). So `binding_pick_project_folder` cannot land green without it. |
+   | P5, the shell product and its tests | Waits for PR C's merge. `App.tsx` and `console/surfaceRegistry.ts` are PR C files. A seventh `call(...)` in `skp/client.ts` must change the registry's class-A rows with it (`frontends/shell/src/console/surfaceRegistry.ts:76-78` @ 858092e340ac650822afea87b50b3ce00e50bd40 sha256:47274c8074797ae2a5c3d02a573b6bb34ef31e1bcdb84d3a48ccd8d507a0690b; `frontends/shell/src/console/surfaceCompleteness.test.ts:209` @ 858092e340ac650822afea87b50b3ce00e50bd40 sha256:4f77567ad30fbbf6b3dc0e8a553cf306d056c79b43049d6ab6c3345f4c9df5a2). |
+   | P6, the e2e work | Waits for PR C's merge. `package.json` is a PR C file. The `e2e/README.md` entry is a separate path. |
+   | R1, after #241 merges | Proceeds: `kernel/README.md`; the KNOWN-LIMITATIONS items 48 to 50, which are separate paths; and the Part, at a letter no piece in flight holds, so not AC. |
+
+3. **Files step 1 does not edit beside PR C: any of PR C's files.**
+   - That includes `workspace/viewTransitions.ts`, which §2.14 lets step 1 edit only under I1.
+   - The shell-tests group names no file. A new test file is disjoint, but an edit to any of PR C's test or fill files is not.
+   - A need for any of PR C's files beside PR C is I1 for step 1: stop and report.
+
+4. **After PR C merges.**
+   - Main is merged into step 1's branch, by a merge, never a rebase.
+   - Then P4 to P6 are written against `App.tsx`, `console/surfaceRegistry.ts`, `package.json` and `workspace/viewTransitions.ts` as PR C left them (the seam rule; §2.14's last order bullet).
+   - Every literal site is found again at that merge's base, PR C's new files included. A site PR C added is bumped inside the version-literal group (≤ 30 files). An overrun is class 8.
+
+5. **Steps 2 and 3.** §2.14's order sentence, that no 1c step dispatches while a milestone 4 PR is in progress or awaiting merge, stands for them. Amendment 1 item 6 replaced it for step 1 only. Neither step is in flight beside PR C.
+
+6. **Milestone 4's PR B.** This amendment orders nothing against PR B. That order is the human's, and it is recorded before PR B's dispatch.
+
+7. **Rule (00) at this amendment (class 1).**
+   - Step 1's branch, at 7109aeb2431d9ca9379cb15b0d027dba78a20217, names no path under `frontends/` in its diff from 43a39222 (milestone 4's PR C re-sweep, step 5).
+   - Step 1 is the one piece on `protocol/`, and PR C touches none.
+
+Nothing above is edited.

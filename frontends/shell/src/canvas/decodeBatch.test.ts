@@ -85,7 +85,7 @@ describe("decodeBatch", () => {
     ];
     const ipc = buildBatch(ids, polygons);
 
-    const batch = decodeBatch("sh_test", 0, ipc, "geometry", ENCODING_POLYGON, null);
+    const batch = decodeBatch("sh_test", 0, ipc, "geometry", ENCODING_POLYGON, null, null);
     expect(Array.from(batch.ids)).toEqual([7n, 9n]);
     expect(batch.parts).toHaveLength(2);
     expect(batch.parts[0]).toHaveLength(1); // a Polygon is one part
@@ -104,23 +104,23 @@ describe("decodeBatch", () => {
   it("preserves ids exactly for values above Number.MAX_SAFE_INTEGER (ADR-016 §7)", () => {
     const huge = 18_446_744_073_709_551_615n; // u64::MAX
     const ipc = buildBatch([huge], [[[[0, 0], [1, 0], [0, 1], [0, 0]]]]);
-    const batch = decodeBatch("sh_test", 0, ipc, "geometry", ENCODING_POLYGON, null);
+    const batch = decodeBatch("sh_test", 0, ipc, "geometry", ENCODING_POLYGON, null, null);
     expect(batch.ids[0]).toBe(huge);
   });
 
   it("refuses a batch whose schema does not carry the expected frame tag (ADR-010 rule 1)", () => {
     const ipc = buildBatch([1n], [[[[0, 0], [1, 0], [0, 1], [0, 0]]]], "some-other-frame");
-    expect(() => decodeBatch("sh_test", 0, ipc, "geometry", ENCODING_POLYGON, null)).toThrow(UnexpectedFrameError);
+    expect(() => decodeBatch("sh_test", 0, ipc, "geometry", ENCODING_POLYGON, null, null)).toThrow(UnexpectedFrameError);
   });
 
   it("refuses a batch with no frame tag at all -- untagged is not tolerated as a default", () => {
     const ipc = buildBatch([1n], [[[[0, 0], [1, 0], [0, 1], [0, 0]]]], null);
-    expect(() => decodeBatch("sh_test", 0, ipc, "geometry", ENCODING_POLYGON, null)).toThrow(UnexpectedFrameError);
+    expect(() => decodeBatch("sh_test", 0, ipc, "geometry", ENCODING_POLYGON, null, null)).toThrow(UnexpectedFrameError);
   });
 
   it("refuses a batch missing the named geometry column", () => {
     const ipc = buildBatch([1n], [[[[0, 0], [1, 0], [0, 1], [0, 0]]]]);
-    expect(() => decodeBatch("sh_test", 0, ipc, "the_wrong_column", ENCODING_POLYGON, null)).toThrow(
+    expect(() => decodeBatch("sh_test", 0, ipc, "the_wrong_column", ENCODING_POLYGON, null, null)).toThrow(
       /no `the_wrong_column`/
     );
   });
@@ -143,7 +143,7 @@ describe("decodeBatch", () => {
     table.schema.metadata.set("attribute_columns", "[]");
     const ipc = tableToIPC(table, "stream");
 
-    expect(() => decodeBatch("sh_test", 0, ipc, "geometry", ENCODING_POLYGON, null)).toThrow(/null id/);
+    expect(() => decodeBatch("sh_test", 0, ipc, "geometry", ENCODING_POLYGON, null, null)).toThrow(/null id/);
   });
 
   /**
@@ -159,7 +159,7 @@ describe("decodeBatch", () => {
    * FAILED by name with the mutation applied, then reverted.
    */
   it("the engine's F-1 batch decodes to its parts, partToRow, partCount and totalVertices (SH-1)", () => {
-    const batch = decodeBatch("sh_f1", 0, loadBatchFixture("lv95-multipolygon-batch"), "geometry", ENCODING_MULTIPOLYGON, null);
+    const batch = decodeBatch("sh_f1", 0, loadBatchFixture("lv95-multipolygon-batch"), "geometry", ENCODING_MULTIPOLYGON, null, null);
     const [ox, oy, u] = [2_600_000, 1_200_000, 10];
     const at = (x: number, y: number, s: number) => SQUARE(ox + x * u, oy + y * u, s * u);
 
@@ -201,33 +201,33 @@ describe("decodeBatch", () => {
   it("a mismatched, unknown or missing geometry_encoding throws UnexpectedEncodingError (SH-2)", () => {
     const polygon = loadBatchFixture("lv95-polygon-batch");
     const multipolygon = loadBatchFixture("lv95-multipolygon-batch");
-    expect(() => decodeBatch("sh", 0, multipolygon, "geometry", ENCODING_POLYGON, null)).toThrow(UnexpectedEncodingError);
-    expect(() => decodeBatch("sh", 0, polygon, "geometry", ENCODING_MULTIPOLYGON, null)).toThrow(UnexpectedEncodingError);
+    expect(() => decodeBatch("sh", 0, multipolygon, "geometry", ENCODING_POLYGON, null, null)).toThrow(UnexpectedEncodingError);
+    expect(() => decodeBatch("sh", 0, polygon, "geometry", ENCODING_MULTIPOLYGON, null, null)).toThrow(UnexpectedEncodingError);
     // None of the five values the shell reads, even when the open's expectation names the same string.
     const unknown = buildBatch([1n], [[[[0, 0], [1, 0], [0, 1], [0, 0]]]], EXPECTED_FRAME, "geoarrow.geometrycollection");
-    expect(() => decodeBatch("sh", 0, unknown, "geometry", "geoarrow.geometrycollection", null)).toThrow(
+    expect(() => decodeBatch("sh", 0, unknown, "geometry", "geoarrow.geometrycollection", null, null)).toThrow(
       UnexpectedEncodingError
     );
     // A line batch under a polygon expectation is refused, and a polygon batch under a line one, and a
     // linestring batch under a multilinestring one.
     const linestring = loadBatchFixture("lv95-linestring-batch");
     const multilinestring = loadBatchFixture("lv95-multilinestring-batch");
-    expect(() => decodeBatch("sh", 0, linestring, "geometry", ENCODING_POLYGON, null)).toThrow(UnexpectedEncodingError);
-    expect(() => decodeBatch("sh", 0, multilinestring, "geometry", ENCODING_POLYGON, null)).toThrow(UnexpectedEncodingError);
-    expect(() => decodeBatch("sh", 0, polygon, "geometry", ENCODING_LINESTRING, null)).toThrow(UnexpectedEncodingError);
-    expect(() => decodeBatch("sh", 0, linestring, "geometry", ENCODING_MULTILINESTRING, null)).toThrow(
+    expect(() => decodeBatch("sh", 0, linestring, "geometry", ENCODING_POLYGON, null, null)).toThrow(UnexpectedEncodingError);
+    expect(() => decodeBatch("sh", 0, multilinestring, "geometry", ENCODING_POLYGON, null, null)).toThrow(UnexpectedEncodingError);
+    expect(() => decodeBatch("sh", 0, polygon, "geometry", ENCODING_LINESTRING, null, null)).toThrow(UnexpectedEncodingError);
+    expect(() => decodeBatch("sh", 0, linestring, "geometry", ENCODING_MULTILINESTRING, null, null)).toThrow(
       UnexpectedEncodingError
     );
     // A point batch under a polygon expectation is refused, and a polygon batch under a point one.
     const point = loadBatchFixture("lv95-point-batch");
-    expect(() => decodeBatch("sh", 0, point, "geometry", ENCODING_POLYGON, null)).toThrow(UnexpectedEncodingError);
-    expect(() => decodeBatch("sh", 0, polygon, "geometry", ENCODING_POINT, null)).toThrow(UnexpectedEncodingError);
+    expect(() => decodeBatch("sh", 0, point, "geometry", ENCODING_POLYGON, null, null)).toThrow(UnexpectedEncodingError);
+    expect(() => decodeBatch("sh", 0, polygon, "geometry", ENCODING_POINT, null, null)).toThrow(UnexpectedEncodingError);
     const untagged = buildBatch([1n], [[[[0, 0], [1, 0], [0, 1], [0, 0]]]], EXPECTED_FRAME, null);
-    expect(() => decodeBatch("sh", 0, untagged, "geometry", ENCODING_POLYGON, null)).toThrow(UnexpectedEncodingError);
+    expect(() => decodeBatch("sh", 0, untagged, "geometry", ENCODING_POLYGON, null, null)).toThrow(UnexpectedEncodingError);
 
     let thrown: unknown;
     try {
-      decodeBatch("sh", 0, multipolygon, "geometry", ENCODING_POLYGON, null);
+      decodeBatch("sh", 0, multipolygon, "geometry", ENCODING_POLYGON, null, null);
     } catch (e) {
       thrown = e;
     }
@@ -259,7 +259,7 @@ describe("decodeBatch", () => {
    * FAILED by name with the mutation applied (the hand-built polygon decode test failed with it), then reverted.
    */
   it("the engine's polygon batch gives one part per feature (SH-3)", () => {
-    const batch = decodeBatch("sh_poly", 0, loadBatchFixture("lv95-polygon-batch"), "geometry", ENCODING_POLYGON, null);
+    const batch = decodeBatch("sh_poly", 0, loadBatchFixture("lv95-polygon-batch"), "geometry", ENCODING_POLYGON, null, null);
     expect(Array.from(batch.ids)).toEqual([0n, 1n, 2n]);
     expect(batch.parts.map((f) => f.length)).toEqual([1, 1, 1]);
     expect(Array.from(batch.partToRow)).toEqual([0, 1, 2]);
@@ -292,7 +292,7 @@ describe("decodeBatch", () => {
    * FAILED by name with the mutation applied (`TypeError: ring is not iterable`, thrown in the ring walk at this test's decode call, before any assertion), then reverted.
    */
   it("the engine's point batch decodes to one single-position part per row, partToRow the identity, bits unchanged (SH-P1)", () => {
-    const batch = decodeBatch("sh_p1", 0, loadBatchFixture("lv95-point-batch"), "geometry", ENCODING_POINT, null);
+    const batch = decodeBatch("sh_p1", 0, loadBatchFixture("lv95-point-batch"), "geometry", ENCODING_POINT, null, null);
     const positions = pointP1Positions();
 
     expect(Array.from(batch.ids)).toEqual([0n, 1n, 2n, 3n, 4n, 5n]);
@@ -352,7 +352,7 @@ describe("decodeBatch", () => {
    * FAILED by name with the mutation applied, at `expect(l1.parts[k][0]).toHaveLength(1)` (`expected [ …(2) ] to have a length of 1 but got 2`), then reverted.
    */
   it("the engine's line batches decode to one path per part, partToRow, partCount and totalVertices, bits unchanged (SH-L1)", () => {
-    const l1 = decodeBatch("sh_l1", 0, loadBatchFixture("lv95-linestring-batch"), "geometry", ENCODING_LINESTRING, null);
+    const l1 = decodeBatch("sh_l1", 0, loadBatchFixture("lv95-linestring-batch"), "geometry", ENCODING_LINESTRING, null, null);
     expect(Array.from(l1.ids)).toEqual([0n, 1n, 2n, 3n, 4n]);
     expect(l1.parts).toHaveLength(5);
     lineL1Positions().forEach((positions, k) => {
@@ -375,7 +375,9 @@ describe("decodeBatch", () => {
       0,
       loadBatchFixture("lv95-multilinestring-batch"),
       "geometry",
-      ENCODING_MULTILINESTRING, null
+      ENCODING_MULTILINESTRING,
+      null,
+      null
     );
     expect(Array.from(ml1.ids)).toEqual([0n, 1n, 2n]);
     expect(ml1.parts.map((f) => f.length)).toEqual([2, 1, 3]);
@@ -410,7 +412,7 @@ describe("decodeBatch: the projected attribute columns (PA-U3)", () => {
 
   it("PA-U3: reads the columns after geometry in declared order, co-indexed with ids, off a copy; a mismatch is refused by name", () => {
     const { ipc, encoding } = attributeBatchIpc([7n, 9n], COLUMNS);
-    const batch = decodeBatch("sh_a", 0, ipc, "geometry", encoding, ["tag", "n"]);
+    const batch = decodeBatch("sh_a", 0, ipc, "geometry", encoding, ["tag", "n"], null);
     expect(Array.from(batch.ids)).toEqual([7n, 9n]);
     const block = batch.attributes as BatchAttributes;
     expect(block.names).toEqual(["tag", "n"]);
@@ -427,11 +429,11 @@ describe("decodeBatch: the projected attribute columns (PA-U3)", () => {
     ]);
 
     const fresh = attributeBatchIpc([7n, 9n], COLUMNS).ipc;
-    expect(() => decodeBatch("sh_a", 0, fresh, "geometry", encoding, ["n", "tag"])).toThrow(UnexpectedProjectionError);
-    expect(() => decodeBatch("sh_a", 0, fresh, "geometry", encoding, ["tag"])).toThrow(/attribute_columns \["tag","n"\]/);
-    expect(() => decodeBatch("sh_a", 0, fresh, "geometry", encoding, null)).toThrow(UnexpectedProjectionError);
+    expect(() => decodeBatch("sh_a", 0, fresh, "geometry", encoding, ["n", "tag"], null)).toThrow(UnexpectedProjectionError);
+    expect(() => decodeBatch("sh_a", 0, fresh, "geometry", encoding, ["tag"], null)).toThrow(/attribute_columns \["tag","n"\]/);
+    expect(() => decodeBatch("sh_a", 0, fresh, "geometry", encoding, null, null)).toThrow(UnexpectedProjectionError);
     const none = attributeBatchIpc([7n], []);
-    expect(decodeBatch("sh_a", 0, none.ipc, "geometry", none.encoding, null).attributes).toBeNull();
-    expect(() => decodeBatch("sh_a", 0, none.ipc, "geometry", none.encoding, ["tag"])).toThrow(UnexpectedProjectionError);
+    expect(decodeBatch("sh_a", 0, none.ipc, "geometry", none.encoding, null, null).attributes).toBeNull();
+    expect(() => decodeBatch("sh_a", 0, none.ipc, "geometry", none.encoding, ["tag"], null)).toThrow(UnexpectedProjectionError);
   });
 });

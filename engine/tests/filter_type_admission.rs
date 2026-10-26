@@ -991,13 +991,17 @@ fn is_declared_cast(kind: &str, from: &str, to: &str, in_division: bool) -> bool
 /// Section 2.5(d)'s declared campaign exclusion: overflow in admitted integer arithmetic
 /// (`+`, `-`, `*`, unary `-`). Every admission rule this piece implements only ever admits
 /// `+`/`-`/`*` between two "Integer"-class operands or a float-involving pair (section 2.5(a)),
-/// and float arithmetic never raises DuckDB's "Overflow" error text at v1.5.5 (correction round 2,
+/// and float arithmetic never raises DuckDB's out-of-range error at v1.5.5 (correction round 2,
 /// W11; architect B8) (IEEE 754 has no such trap) -- so an admitted case whose operator is one of
-/// these four and whose stream error contains "Overflow" is, by construction, exactly section
-/// 2.5(d)'s class, with no need to separately re-derive "both operands are integer" from the
-/// case's own text. `/` is excluded by name: section 2.5(d) names only `+`, `-`, `*` and unary `-`.
+/// these four and whose stream error is the engine's fixed out-of-range detail is, by
+/// construction, exactly section 2.5(d)'s class, with no need to separately re-derive "both
+/// operands are integer" from the case's own text. `/` is excluded by name: section 2.5(d) names
+/// only `+`, `-`, `*` and unary `-`. The text is `query: ` and the engine's fixed detail, byte for
+/// byte (the engine's constant is private, so its text is written here once); DuckDB's own text
+/// is no longer read.
 fn is_declared_overflow(arith_op: Option<&str>, terminal_error: &str) -> bool {
-    terminal_error.contains("Overflow") && matches!(arith_op, Some("+") | Some("-") | Some("*"))
+    const OVERFLOW_TERMINAL: &str = "query: [P6 placeholder] a value computed while this query ran was out of range for its type; the row values and the query text are withheld";
+    terminal_error == OVERFLOW_TERMINAL && matches!(arith_op, Some("+") | Some("-") | Some("*"))
 }
 
 /// section 10 Amendment 4's B-T1 enumeration part 2: discriminators.txt's N-ARY lists

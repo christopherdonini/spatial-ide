@@ -55,7 +55,10 @@
 //!    pin and publish**, which is a faithful substitution and is recorded as what it is.
 //! 4. **Stream, ordered, writing one partition per batch**, hashing and bounding as it goes.
 //! 5. **Write the style, the viewer and the manifest.**
-//! 6. **Re-check the source with the fail-closed heuristic**, write the sidecar, then rename.
+//! 6. **Re-check the source with the fail-closed heuristic**, write the sidecar, **scan every
+//!    staged file for the `docs/09` classes** (`bundle::redaction`; a match that is not
+//!    operator-declared refuses; a viewer/ file whose bytes match the viewer build's record was
+//!    scanned at that build and is not scanned again), then rename.
 //!
 //! ## Declared recovery policy (ADR-010 rule 7)
 //!
@@ -70,6 +73,7 @@ use spatial_engine::{CancelToken, Dataset, ViewportQuery};
 use spatial_renderer::canonical;
 use spatial_renderer::CompiledStyle;
 
+use crate::bundle::redaction::{self, MachineIdentifiers};
 use crate::bundle::{
     self, Asset, BuildInfo, Column, Filter, FormatDeclaration, Known, License, LicenseTerms,
     Locator, Manifest, Operation, Redistribution, Reproducibility, ResourceRef, Software, Unknown,
@@ -928,6 +932,42 @@ fn run_inner(
         bundle::BUILD_INFO_PATH,
         canonical::to_canonical_string(&build_info.to_json())?.as_bytes(),
     )?;
+
+    // **The redaction gate (ADR-017 §13): every staged file, as it is on disk, before the rename.**
+    // It runs the same `redaction::scan` the format suite runs, with the same two declared strings:
+    // the viewer's copyright and its corresponding-source route. A viewer/ file whose bytes hash to
+    // the viewer build's record for that same path is not scanned again: the viewer's build ran
+    // this scan over those bytes, for the path and credential classes, and allowed only its
+    // reviewed findings. Every other file, the partitions, the manifest, the style and build-info
+    // included, is always scanned. Cancellation is checked before each file, so the window between
+    // checks is one file's read and scan: not bounded in time, and in bytes only by that file's own
+    // size. A match that is not operator-declared refuses with `RedactionFinding`. A file or
+    // directory that cannot be read ends the publish with `PublishError::Io`, never a pass.
+    let machine = MachineIdentifiers {
+        declared: vec![
+            req.viewer_license.copyright.clone(),
+            req.viewer_license.corresponding_source.at.clone(),
+        ],
+        ..MachineIdentifiers::from_environment()
+    };
+    if let Some((file, found)) = redaction::first_undeclared_findings(
+        staging.path(),
+        &machine,
+        || watch.check(),
+        |rel, bytes| req.viewer.is_built_asset(rel, bytes),
+        |e| PublishError::Io {
+            context: "scanning the staged bundle for the redaction classes".into(),
+            raw_os_error: e.raw_os_error(),
+            detail: e.to_string(),
+        },
+    )? {
+        return Err(PublishError::RedactionFinding {
+            file,
+            class: found[0].class,
+            byte_offset: found[0].byte_offset,
+            count: found.len(),
+        });
+    }
 
     // The figure the caller is handed covers the whole bundle, sidecar included.
     let total_bytes = staging.total_bytes()?;

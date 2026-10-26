@@ -24,7 +24,7 @@ authority. P-033 is from the human's second directive of 2026-09-13, carried ver
 
 ### P-001 — Mechanical closure under §A
 
-**Ruling (verbatim, `AI_DEVELOPMENT.md:416`, Amendment 1 §B):** "Mechanical closure under §A."
+**Ruling (verbatim, `AI_DEVELOPMENT.md:457 @ e07a1f45f255231a16411f9738ecf497eee0ae40 sha256:26e05eaad62a728b4a2ccf1ddc02b645ae6fb536fd87fe8fd3878c64ecc6d6b3`, Amendment 1 §B):** "Mechanical closure under §A."
 
 **Generalisation:** A piece closed under Amendment 1 §A's bounded-closing-attempt rule is a
 delegated closure, reported, never queued for a ruling.
@@ -39,7 +39,7 @@ merely because it is the second failed attempt — §A's own conditions still ga
 
 ### P-002 — Wording that follows the ruled standard
 
-**Ruling (verbatim, `AI_DEVELOPMENT.md:417-420`, Amendment 1 §B):** "**Wording that follows the
+**Ruling (verbatim, `AI_DEVELOPMENT.md:458-461 @ e07a1f45f255231a16411f9738ecf497eee0ae40 sha256:0c3da729eef55bf1570405809e12e3b268e36747cb5b304de91864f5184a2cec`, Amendment 1 §B):** "**Wording that follows the
 ruled standard** — a string asserts only what the system did or verified; absent is stated, never
 omitted; no wire-level claims in UI text; no durations (ADR-018); no perf words. The human sights
 strings only when a **new state** is introduced, never for new wording of an existing state."
@@ -54,7 +54,7 @@ new. Does not cover docs/08-normative claims (those are always the human's, P-01
 
 ### P-003 — Formatting, citation, line-number and tense nits
 
-**Ruling (verbatim, `AI_DEVELOPMENT.md:421`, Amendment 1 §B):** "Formatting, citation, line-number
+**Ruling (verbatim, `AI_DEVELOPMENT.md:462 @ e07a1f45f255231a16411f9738ecf497eee0ae40 sha256:851d61398b3e5a57c77f7692311478d8e6e8f3b441d9276bfe42c3b4ae267846`, Amendment 1 §B):** "Formatting, citation, line-number
 and tense nits: fixed in sweeps, never queued."
 
 **Generalisation:** Mechanical text nits (formatting, citation accuracy, line numbers, tense) are
@@ -67,7 +67,7 @@ also changes what is being asserted is not a nit.
 
 ### P-004 — Test re-aims that encode an already-ruled contract
 
-**Ruling (verbatim, `AI_DEVELOPMENT.md:422`, Amendment 1 §B):** "Test re-aims that encode an
+**Ruling (verbatim, `AI_DEVELOPMENT.md:463 @ e07a1f45f255231a16411f9738ecf497eee0ae40 sha256:a2f11fec61be30909abdcc4008df934cde347335e32896931f022476dcc245ba`, Amendment 1 §B):** "Test re-aims that encode an
 already-ruled contract: reported with the ruling cited."
 
 **Generalisation:** A test changed to match a contract the human has already ruled on is a
@@ -81,7 +81,7 @@ which restates this for a specific case (entry 80).
 
 ### P-005 — CI, watcher, hygiene and tooling mechanics
 
-**Ruling (verbatim, `AI_DEVELOPMENT.md:423`, Amendment 1 §B):** "CI, watcher, hygiene and tooling
+**Ruling (verbatim, `AI_DEVELOPMENT.md:464 @ e07a1f45f255231a16411f9738ecf497eee0ae40 sha256:02ccce5b4f0639a34d7ef162809f4ea529dfc7c8a2bbd8a45461cfff131cab6e`, Amendment 1 §B):** "CI, watcher, hygiene and tooling
 mechanics (eol pins, hooks, watchers)."
 
 **Generalisation:** Fixes to CI configuration, watcher scripts, and repository hygiene tooling
@@ -94,7 +94,7 @@ gate checks for (those stay red-line/escalated).
 
 ### P-006 — Escalation triggers
 
-**Ruling (verbatim, `AI_DEVELOPMENT.md:425-426`, Amendment 1 §B):** "**Escalate to the human when:**
+**Ruling (verbatim, `AI_DEVELOPMENT.md:466-467 @ e07a1f45f255231a16411f9738ecf497eee0ae40 sha256:2fd87c3e06e813ffaf60a7afde9a8f343bb8bc7370298216e4d2b6c982cf7955`, Amendment 1 §B):** "**Escalate to the human when:**
 authority is missing; a product decision is needed; a guarantee changes; user-visible behaviour
 changes; or a §A closing attempt fails."
 
@@ -108,7 +108,7 @@ of how small the remaining work looks.
 
 ## Always-the-human classes (source: `AI_DEVELOPMENT.md` Amendment 1 §B, "Always the human (red lines, unchanged)")
 
-The matrix line (verbatim, `AI_DEVELOPMENT.md:410-413`, Amendment 1 §B): "**Always the human (red
+The matrix line (verbatim, `AI_DEVELOPMENT.md:451-454 @ e07a1f45f255231a16411f9738ecf497eee0ae40 sha256:573c907fab55b870ebdc353b7f19459438e3b74c8667217b4c07f8f5a332d821`, Amendment 1 §B): "**Always the human (red
 lines, unchanged):** ADR statuses and amendments; preregistered gate pass/fail rulings; walkthrough
 evidence and felt verdicts; new exposure surfaces and public exposure; dependency changes; history
 rewrites; security posture; docs/08 normative rows; scope changes to a ruled item; any change to

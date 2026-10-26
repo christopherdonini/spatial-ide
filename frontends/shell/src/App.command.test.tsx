@@ -146,6 +146,7 @@ vi.mock("./canvas/WorkingCanvas", () => {
         pushTileBatch: () => ({ rowsAdmitted: 0, duplicatesDropped: 0, evictedTileKeys: [], overBudget: false, fitAnchor: null, batchExtent: null }),
         clearTile: () => {},
         clearAllTiles: () => {},
+        residentIdsStreamedUnder: () => new Set<bigint>(),
         isTileResidentInCandidateSet: () => false,
         isTileCompleteInCandidateSet: () => false,
         markTilePartial: () => {},
@@ -484,7 +485,7 @@ describe("App: the command bar (milestone 3, PR A), through the real App", () =>
 
     click([...container.querySelectorAll(".tool-switch-button")].find((b) => b.textContent === "Select") ?? null);
     const bounds = { xmin: 0, ymin: 0, xmax: 10, ymax: 10 };
-    await inAct(() => mocks.canvas.props!.onClickPick!({ kind: "feature", pick: { streamHandle: "st_1", batchSeq: 0, id: 1n, anchor: null }, bounds, row: null }));
+    await inAct(() => mocks.canvas.props!.onClickPick!({ kind: "feature", pick: { streamHandle: "st_1", batchSeq: 0, id: 1n, anchor: null }, bounds, row: null, filter: null }));
     expect(mocks.canvas.props!.highlight!.selected.size).toBe(1);
     const some = mark();
     await runBar("/zoom-to-selection");
@@ -591,7 +592,7 @@ describe("App: the command bar (milestone 3, PR A), through the real App", () =>
     await addClause(A);
     await addClause(B);
     click([...container.querySelectorAll(".tool-switch-button")].find((b) => b.textContent === "Select") ?? null);
-    await inAct(() => mocks.canvas.props!.onClickPick!({ kind: "feature", pick: { streamHandle: "st_1", batchSeq: 0, id: 1n, anchor: null }, bounds: { xmin: 0, ymin: 0, xmax: 10, ymax: 10 }, row: null }));
+    await inAct(() => mocks.canvas.props!.onClickPick!({ kind: "feature", pick: { streamHandle: "st_1", batchSeq: 0, id: 1n, anchor: null }, bounds: { xmin: 0, ymin: 0, xmax: 10, ymax: 10 }, row: null, filter: null }));
     expect(mocks.canvas.props!.highlight!.selected.size).toBe(1);
     await flip(1);
     expect(states(), "the card went off").toEqual(["true", "false"]);

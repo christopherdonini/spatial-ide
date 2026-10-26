@@ -1142,3 +1142,408 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 7: PR C's re-sweep at C e7eb8f2e and its base series at a533a598, written after both results were seen. No invalidator. Rows 8 and 13 are moved cites, and row 18's number and §2.6's count are corrected (class 3). Four product files, five test files and thirteen fill files join PR C's list, and the first scope's held bytes are bounded under ADR-010 rule 6 by a declared ceiling, at which the first scope stops and its line says so, on the human's ruling of 2026-10-24 (class 9). The base series, the readings, the Part rows, the numbers 54 to 56 and rule (00) are class 1.
+
+*Written after PR C's re-sweep and its base e2e series were seen, before any PR C code. Drafted read-only by the architect at main 858092e340ac650822afea87b50b3ce00e50bd40 (`state/consults/2026-10-23-b1-shell-half-pr-c-dispatch-amendment-architect-draft.md`, item 1), from its PR C draft drafted ahead (`state/consults/2026-10-22-b1-shell-half-pr-c-and-pr-b-ahead-architect-draft.md`, PR C part); item 5 and the lines that depend on it redrafted read-only at main 4de4b9a91837a4faa181e8f1e8b6260158db665d (`state/consults/2026-10-24-b1-shell-half-pr-c-amendment-7-table-ceiling-redraft-architect.md`). References only; nothing below is a quotation, and none of it is the human's wording. Item 5's value and behaviour rest on the human's ruling of 2026-10-24 (`state/directives/2026-10-24-sort-window-a-both-gates-pr-c-table-ceiling-approved-covering-case-open-a-to-f-kl-item-51-line-probe-branch.md`, item 2), restated in the architect's words. The re-sweep is `state/consults/2026-10-23-b1-shell-half-pr-c-re-sweep.md` (its sha256 from line 5 c4c4f1db3c1ca1a7550320ca8fc849112b0b079343c5f91bec19fb31185d0bb2), at C = e7eb8f2e98c4dcb033161573f8b8fa312169d70d. The base series is `state/consults/2026-10-23-b1-shell-half-pr-c-base-series-tester-report.md` (its sha256 from line 5 4ae2519fbe32648839bd0501df84d891f818a68b2bf0ae46433268de7e851c63), run at a533a598e4e139e2fbd2793ded328472cc977036 (by script, the 20 files of `git diff --name-only e7eb8f2e98c4dcb033161573f8b8fa312169d70d a533a598e4e139e2fbd2793ded328472cc977036`, every one a record: `CUSTODIAN-QUEUE.json`, `CUSTODIAN-QUEUE.md`, `PLAN.yaml`, `frontends/shell/WALKTHROUGH-ROW-F7-CLI-REFUSAL-PREREGISTRATION.md`, `kernel/BUNDLE-REDACTION-SCAN-PREREGISTRATION.md`, `scripts/hooks/FLUSH-CRLF-FIELD-REWRITE-PREREGISTRATION.md`, `site/data/plan.json`, `site/index.html`, `state/CUT-STATE.md`, `state/consults/2026-10-23-b1-shell-half-pr-c-re-sweep.md`, `state/consults/2026-10-23-bundle-redaction-scan-not-in-product-publish-e-words-worker-report.md`, `state/consults/2026-10-23-bundle-redaction-scan-not-in-product-publish-main-merge-worker-report.md`, `state/consults/2026-10-23-bundle-redaction-scan-not-in-product-publish-r1-tester-report-3.md`, `state/consults/2026-10-23-bundle-redaction-scan-not-in-product-publish-r1-tester-report-4.md`, `state/consults/2026-10-23-covering-case-collision-binds-other-column-full-form-revised-lead-data-draft.md`, `state/consults/2026-10-23-flush-crlf-field-rewrite-correction-1-worker-report.md`, `state/consults/gates/2026-10-23-bundle-redaction-scan-not-in-product-publish-e-scoped-reviewer.md`, `state/consults/gates/2026-10-23-flush-crlf-field-rewrite-gate2-architect.md`, `state/consults/gates/2026-10-23-flush-crlf-field-rewrite-gate2-reviewer.md`, `state/gate-log.json`). Every pin at 4b26d279, 55618ab5, c6de9b48, 0ff8db4e, 72868422 or e6dfe624, and every fact of 507197c1, is historical (§0.3). For PR C's work the tree at C is authoritative, and at the code's base the tree at that base. The scope addition rests on the cross-module seam rule (RULED 2026-09-16, question round 4) and on §2.6's last paragraph (round 25, item 2 (a)). §7 is not edited.*
+
+1. **The re-sweep at C (§0.3).** By the re-sweep's step 1, rows 1 to 7, 9 to 12, 14 to 17 and 19 are Same. I4 does not fire.
+   - **Row 6.** No `ResidentBatch` rebuild site exists in product code beyond `trimBatchToVertexBudget` (`tileIngest.ts`) and `TileResidentSet.addBatch` (`tileResidentSet.ts`), plus `withinAttributeCeiling`'s spread (`limits.ts`).
+   - **Row 7.** The product callers of `.pushBatch(` and `.pushTileBatch(` are `App.tsx` and `candidateArmSession.ts` only.
+   - **Row 8, moved (class 3).** §2.4 (e)'s App pin and §0.2's two arm pins are at the lines that row names at C, and their bytes are identical. The `projection` memo is `projectionFor(admitted.describe)`.
+   - **Row 13, moved (class 3).** §0.2's and §2.4 (e)'s tile-manager comment pins are three lines later at C, and their bytes are identical. The comment still calls the class composition-unreachable, so §2.4 (e)'s restatement stands as written.
+   - **Row 18 (class 3, tree authoritative).** The highest KNOWN-LIMITATIONS item at C is 52, not 46.
+   - **The pins (class 1).** The re-sweep's step 3 recomputes all 138 of the form's pins at their own commits, and all 138 match.
+     - In PR C's sections, 10 pins are Changed at C. Each one is PR A's own merged edit, declared by Amendments 2 to 4, and rows 1 to 7 read the interfaces that result. Reading: a §0.2 interface that PR A changed as this form declares is the base's interface, not I4.
+   - **The fixtures (row 17).** The three named fixtures hash equal to the records.
+     - #241's branch changes `engine/src/fixture.rs` only by adding `write_zone_texts`.
+     - `MultiType` and `write_geoparquet` are untouched.
+
+2. **§2.6's count (class 3).** §2.6 says PR C has 31 files, but its list names 30: 19 product, 10 test and 1 e2e (the re-sweep's step 2). The 19 existing files are present at C. The 11 declared-new files are absent, and no `src/table/` path exists.
+
+3. **Scope addition (class 9), declared before any of its code.**
+   - **Why.** `ResidentBatch.filter` (§2.4 (c)) is required, under Amendment 3 item 5's reading and its item 11's forward note. The filter can reach a batch and a selection member only through files outside §2.6's PR C list:
+     - the canvas's decode and push site, `WorkingCanvas.tsx`;
+     - the two rebuilds (row 6);
+     - `clickEffect.ts`, whose Select branch builds `selection.apply` (the re-sweep's row 5).
+   - **Confirmed at C.** All 22 paths below are present at C (the re-sweep's step 2, last bullet), and rows 6 and 7 find no further site.
+
+   | Group | Files (ceiling each) | At most |
+   |---|---|---|
+   | C-P, added | `frontends/shell/src/canvas/WorkingCanvas.tsx` 40, `frontends/shell/src/canvas/tileIngest.ts` 4, `frontends/shell/src/canvas/tileResidentSet.ts` 4, `frontends/shell/src/feature/clickEffect.ts` 10 | 58 |
+   | C-T, added | `frontends/shell/src/canvas/WorkingCanvas.wiring.test.tsx` 60, `frontends/shell/src/canvas/tileIngest.test.ts` 40, `frontends/shell/src/canvas/tileResidentSet.test.ts` 40, `frontends/shell/src/feature/clickEffect.test.ts` 50, `frontends/shell/src/canvas/clickPick.test.ts` 40 | 230 |
+   | C-T, fills | `frontends/shell/src/canvas/buildLayers.test.ts` 12, `frontends/shell/src/canvas/highlightLayers.test.ts` 6, `frontends/shell/src/canvas/pick.test.ts` 10, `frontends/shell/src/canvas/residentSet.test.ts` 4, `frontends/shell/src/attributes/values.test.ts` 4, `frontends/shell/src/canvas/limits.test.ts` 4, `frontends/shell/src/feature/FeatureTab.test.tsx` 4, `frontends/shell/src/App.command.test.tsx` 4, `frontends/shell/src/App.selection.test.tsx` 4, `frontends/shell/src/App.attributes.test.tsx` 4, `frontends/shell/src/workspace/scope.test.ts` 4, `frontends/shell/src/workspace/viewTransitions.test.ts` 6, `frontends/shell/src/layout/StudioLayout.test.tsx` 2 | 68 |
+   | **Added** | | **356** |
+
+   - **PR C's new totals:** 52 files, and 3,840 + 356 = 4,196 lines. These are counted by §7's command, and an overrun of a file or a group is class 8.
+   - **The fill forms.** Each fill takes one of these forms, and each is true of its fixture, which is streamed with no filter:
+     - `null` as `decodeBatch`'s seventh argument;
+     - `filter: null` in a `ResidentBatch` or click literal;
+     - `row: null, filter: null` in a `selection.apply` literal;
+     - `"activity.table": null` in a slots record.
+   - **A fill outside the list,** or any edit that `tsc --noEmit` needs outside §2.6 and this item, is I1. It is recorded by class 9 before its code, as Amendment 3 did.
+   - **Risks.** `decodeBatch.test.ts` and the three managers' tests take the new argument at every call. PR A overran two of the same managers' test files (Amendment 6 item 1). An overrun is class 8, and §7 is not edited.
+
+4. **Readings (class 1).**
+   - **The filter is `decodeBatch`'s required seventh parameter,** beside `streamHandle` and `batchSeq`, so every member is set in the decode call, as `projection` is.
+     - Each manager's `onBatch` carries the filter its stream was issued with.
+     - `pushBatch` and `pushTileBatch` take that filter and pass it to `decodeBatch`.
+     - The two rebuilds carry it as the same object, and `withinAttributeCeiling`'s spread carries it with no edit.
+     - With the parameter required, `tsc` finds every caller, `tableSource.ts` included.
+   - **`candidateArmSession.ts`.** §2.6 lists it among PR C's three managers, and also says `residency/` is not edited beyond the first look's argument. For PR C, the line is read as: no change to residency planning, budget, retry or lifecycle. The session's only edit carries the stream's filter from its `onBatch`, and from the untiled sink, to `pushTileBatch`. Any other edit there is I1.
+   - **Selection members.**
+     - `SelectionMembers` values become `{bounds, row, filter}`, and `unionOfBounds` and `countSelection` read `.bounds`.
+     - The assertion at `frontends/shell/src/workspace/selection.test.ts:62` @ 858092e340ac650822afea87b50b3ce00e50bd40 sha256:1de349b2408c94f4823fca182e315af801201d80547986a874fbeee2f71ee389 keeps its claim; only its access path changes.
+     - `FeaturePanel.tsx` and `workspaceState.ts` are not edited.
+   - **`CAPTURED_ROW_MAX_BYTES` lives in `table/tableConstants.ts`, which imports nothing.** `workspace/selection.ts` may import it: UA6 forbids only React, `skp/client`, `streaming/`, `residency/` and `canvas/` (`frontends/shell/src/workspace/workspaceBoundary.test.ts:28-32` @ 858092e340ac650822afea87b50b3ce00e50bd40 sha256:7666d10fc949cfaecde25aa169501bb9a87d2362a0290cff2751b7b63b693d00). The cut is pure, and it happens in `selection.ts` when a member is added.
+   - **`tableSource.ts` decodes through the real `decodeBatch`,** with the open's geometry column, encoding and projection. It keeps `ids` and `attributes`, and walks the geometry and drops it, with no figure claimed (OPEN-2 (b)). Its `limit` is `encodeDecU64(BigInt(TABLE_MAX_ROWS))`.
+   - **The second scope's second test** (an id in a resident batch streamed under the view's filter) uses one `WorkingCanvas` handle method. Its product caller is `tableScope`, through App.
+   - **Nothing for PR B lands in PR C.** `tableSource` has the Table tab as its only product caller. Round 8's producer exemption is not invoked.
+
+5. **The first scope's held bytes (class 9, on ADR-010 rule 6: capacity ceilings are declared, not discovered; the value and the behaviour are the human's ruling of 2026-10-24, item 2, restated here in the architect's words).**
+   - **The gap.** The first scope's copied attribute bytes have no declared ceiling, and they are not in `RESIDENT_ATTRIBUTE_MAX_BYTES`'s sum, which covers the canvas's active set only. The engine bounds each batch, not the sum over up to 1,000 rows' batches.
+   - **The ceiling.** `TABLE_MAX_ATTRIBUTE_BYTES` = 67,108,864 (64 MiB), declared in `table/tableConstants.ts` beside §7's table constants. Its doc comment states the derivation: 1,000 rows (`TABLE_MAX_ROWS`) × 32 columns (`ATTRIBUTE_PROJECTION_MAX`) × about 2 KiB a value. The value is declared, not measured. Its measurement is the PLAN node `table-max-attribute-bytes-measurement`, before any performance claim. The comment's words are the architect's (the redraft consult, section 1 of its changes), applied by the worker and listed in the PR body.
+   - **What it sums.** The `attributes.bytes` of each batch the first scope has added, as `RESIDENT_ATTRIBUTE_MAX_BYTES` sums them for the canvas; a batch with `attributes` null adds 0. The sum is per result: a superseding stream starts it at 0. `tableSource` does not call `withinAttributeCeiling` and holds no `"not-held"` batch.
+   - **Its behaviour: the first scope stops adding rows, and its line says so.**
+     - **Adding rows** is `tableSource` appending each decoded batch of its one stream, its ids and values, to the result, in arrival order.
+     - **Where it stops.** Before appending a batch, the source adds that batch's bytes to the sum held. If the total would pass the ceiling, the batch is not appended. A total equal to the ceiling is within, as `withinAttributeCeiling` reads it. The source then cancels its stream through the client's `cancel`, as Cancel does, and appends no later batch of that stream.
+     - **What it keeps and shows.** Every row of the batches appended before the stop, with its values, in arrival order. The batch that would pass is decoded before the check and released, so the result holds at most the ceiling.
+     - **What it says, and where.** The stopped line below shows in the count line's place, and the liveness line ends. No count line shows for a stopped result.
+     - The stop is the source's own, not an operator action, so it records no class C row (§2.5).
+     - Supersede, hide, collapse, open, replace, generation end, session end and `engine.source_changed` act on a stopped result as §2.4 (b) states.
+   - **What else this changes in the first scope.**
+     - **Not-held:** the first scope has no not-held state, and no table row is marked not-held. The canvas's not-held marking (§2.2 (d)) is unchanged.
+     - **The count line:** §2.4 (b)'s two lines stand for a result that ends Completed. The stopped line is a third, for a stopped result.
+     - **The ids:** a stopped result holds the ids of the rows it shows, and only those. For §2.4 (c), a stopped result is not complete. A member whose id it lacks is counted not established (P6), never failed. A member whose id it holds passes, by §2.4 (c)'s third case.
+     - **PR B:** nothing for PR B lands in PR C (item 4). PR B's cases query through `tableSource` meets the same stop, and PR B's amendment states what follows.
+   - **The stopped line** (a P6 placeholder in the architect's words, not the human's wording; sighted at Part row AC7):
+     `[P6 placeholder] The table stopped adding features: the next ones returned would have taken its attribute data past 64 MiB. Showing the first ${n} features returned, in no declared order; more may pass the filter.`
+     - "stopped adding features": no batch is appended after the one that would pass. "Features" is plan §3's label for the table's rows (§2.4 (a)).
+     - "the next ones returned would have taken its attribute data past 64 MiB": the batch the stream returned and the source did not append. "64 MiB" is written from `TABLE_MAX_ATTRIBUTE_BYTES`.
+     - "the first ${n} features returned": `n` is the rows held, in arrival order.
+     - "in no declared order": the query has no sort (§2.4 (b)).
+     - "more may pass the filter": the stream is cancelled before its terminal.
+   - **Files.** No file is added: `tableConstants.ts`, `tableSource.ts`, `TableTab.tsx`, `tableSource.test.ts` and `tableScope.test.ts` are on §2.6's list, inside their §7 ceilings.
+
+6. **Tests, e2e and fixtures.**
+   - **The standing rows.** §4's PC-U1 to PC-E4 stand. `tableSource.test.ts` builds its batches with `testUtils/attributeBatchIpc.ts` and mocks only the transport; mocking `decodeBatch` is I5.
+   - **New rows.** Each mutation is observed as §4 states: apply it, run the named test, record its failure by name with the commit, and revert. No `verify-mutation` run is an observation.
+     - **PC-U7** (`WorkingCanvas.wiring.test.tsx`): a batch pushed through `pushBatch` and through `pushTileBatch` under filter F is resident with `filter` F. Mutation: the push passes `null`; fails.
+     - **PC-U8** (`tileIngest.test.ts`): the trim carries `filter` as the same object. Mutation: the literal writes `null`; fails.
+     - **PC-U9** (`tileResidentSet.test.ts`): the duplicate drop carries `filter`. Mutation: the same; fails.
+     - **PC-U10** (`clickEffect.test.ts`): a Select click on a feature carries `row` and `filter` into `selection.apply`, and the reducer keeps them on the member. Mutation: the Select branch sends `filter: null`; fails.
+     - **PC-U11** (`clickPick.test.ts`): `resolveClickPick` carries the candidate batch's `filter`. Mutation: `null`; fails.
+     - **PC-U12** (the three managers' tests, in PA-U7's shape): every `onBatch` carries its stream's filter, the first look included. Mutation: the first look passes `null`; fails.
+     - **PC-U13** (`tableSource.test.ts`): batches are decoded by the real `decodeBatch` from the helper's IPC, and the test reads each batch's `attributes.bytes` from its decode. The first k batches sum within `TABLE_MAX_ATTRIBUTE_BYTES`, and the next one passes it. The result holds exactly the first k batches' ids and values, in arrival order. The source cancels its stream once, and a batch delivered after the stop is not added. The stopped line shows with `n` equal to the rows held, and no count line shows. Mutation: the sum omitted, each batch checked alone; fails.
+     - **PC-U14** (`tableScope.test.ts`): a stopped first-scope result is not complete. A member whose id it lacks is counted not established, never failed. Mutation: a stopped result read as complete; fails.
+   - **§5, declared unchanged:**
+     - every existing assertion in `tileIngest.test.ts` and `tileResidentSet.test.ts`;
+     - the trim's and the dedupe's choices;
+     - `applySelectionMode`'s outcomes and `SELECTION_MAX_FEATURES`;
+     - `countSelection`'s counts;
+     - the layout reducer (§2.1).
+   - **E2E.** PR C adds `frontends/shell/e2e/table.mjs`, one `e2e:table` script line and one `e2e/README.md` entry.
+     - The tester's series at PR C's gate head is every suite at the base plus `e2e:table`, with PC-E1 to PC-E4's mutations observed.
+     - It runs on the port-5400 harness under THE MACHINE paragraph (§9), with Amendment 2 item 4's harness corrections carried over.
+     - No e2e step is designed to reach item 5's ceiling. PC-U13 and PC-U14 prove the stop from real decoded batches. The stopped line in any suite is a §3 prediction miss, class 2.
+   - **Fixtures.** No new generator, and `kernel/tests/manual_walkthrough_fixtures.rs` is not edited.
+     - PC-E1's oracle count is what `generate_the_filter_fixture` prints. The tester runs it into its own folder and checks that its file's sha256 equals the shared copy's, and the series report records both the count and the hash.
+     - §3's "complete under one zone" prediction needs `residential`'s count to be below 1,000. A miss is class 2.
+
+7. **The base series at a533a598 (class 1).**
+   - **The suites.** Every one of the 15 `e2e:` scripts other than `e2e:debug` ended rc 0 on its first run, on an exe built at that commit. `e2e:residency-harness` was read by its exit code only. PA-E1 and PA-E3 pass, so H2 holds at the base.
+   - **The scriptless drivers.** `pan-anchor.mjs`, `source-watch-idle.mjs` and `source-changed.mjs`'s default route pass. The post route ended rc 3 twice, with S5d INCONCLUSIVE and every other step passing. That is the result Amendment 2 item 9 records for PR A, so it is not I3.
+   - **I6.** No `skp.projection_` line appears in any of the 20 runs' app stderr, so I6 does not fire.
+   - **Fixtures.** All 34 files are hash-identical before and after. Nothing was regenerated, and the 5 GB fixture was not used.
+   - **The one harness failure.** The first exe build failed because the shell's generated notice file did not yet exist, as in Amendment 2 item 4. A build is not a suite.
+
+8. **The Part and the numbers.**
+   - **The Part.** PR C's rows are AC6 to AC8, which are §9's rows 6 to 8 (Amendment 4 item 10), with PR C's new strings named in those rows.
+     - Part AC's heading (`frontends/shell/MANUAL-WALKTHROUGH.md:1970` @ 858092e340ac650822afea87b50b3ce00e50bd40 sha256:a95fc1fe8e74796d52df6b1f5a1c8ddd78529584ffd0c2328e1f343cc7e0e8e2) and its opening sentence (`frontends/shell/MANUAL-WALKTHROUGH.md:1972` @ 858092e340ac650822afea87b50b3ce00e50bd40 sha256:574690e973a68488505dea77d170b067033bd90b65264a47e4e8ecb89d87df83) name PR A's rows only. PR C's records commit adds PR C to both.
+     - The Part's fixture line gains `filter-zoned.parquet`, `100k-happy-path.parquet` and `slow-filter-scan.parquet`.
+     - AC7 names item 5's stopped line, for sight as its text: no Part step is designed to reach the ceiling.
+   - **KNOWN-LIMITATIONS: KL-1 is item 54, KL-2 item 55 and KL-5 item 56.**
+     - Item 47 is #241's, items 48 to 50 are 1c's K-2 to K-4, and items 51 and 52 are PR A's (`KNOWN-LIMITATIONS.md:411` @ 858092e340ac650822afea87b50b3ce00e50bd40 sha256:b4f07b8082142aba87d5ce0dad3a288886bf74baae30fb3800f114034578acda, `KNOWN-LIMITATIONS.md:415` @ 858092e340ac650822afea87b50b3ce00e50bd40 sha256:e2ddec1bc1a34ca80c976b2283ff16e32a390eed52e90a09f8706c5f11225e6b).
+     - Item 53 is held by covering-case's committed form: its Scope line (`engine/COVERING-CASE-COLLISION-BINDS-OTHER-COLUMN-PREREGISTRATION.md:6` @ 858092e340ac650822afea87b50b3ce00e50bd40 sha256:37b5c3f5505f8ab7d3a79a0e9afa9bdcdee6f4aaeaadec19492ce7d7d899042b) and its section 4 (`engine/COVERING-CASE-COLLISION-BINDS-OTHER-COLUMN-PREREGISTRATION.md:88` @ 858092e340ac650822afea87b50b3ce00e50bd40 sha256:eb9f6ac119f751add0d6a6c6e121fb5770c2cc139a8a21a83360c05009f0b32a). That piece stopped at H3 before any code (its Amendment 2), and its route is the human's. The number stays held until that route releases it. PR C's numbers do not move if it is released.
+     - Unless item 53 stands directly above item 54 at PR C's KNOWN-LIMITATIONS commit, a line at column 0 goes before item 54 so that it renders as 54, as for items 42 and 44 (`KNOWN-LIMITATIONS.md:190` @ 858092e340ac650822afea87b50b3ce00e50bd40 sha256:d858151dbabc620e4429a2cc6b262301e64599f96cf7878c56dd5daf45cf4382).
+     - Item 54 also states item 5's ceiling and its stop, as one sentence in its paragraph and one clause in its source comment. The words are the architect's (the redraft consult, section 5 of its changes), a draft for the human's sight and not the human's wording.
+     - The numbers are read again at that commit, against every branch in flight. A change there is class 3, with the tree authoritative.
+
+9. **Rule (00) at C (class 1), by the re-sweep's step 5, file by file against PR C's 52 files and its records.**
+   - **#241** (at 147ef82c at the re-sweep): `KNOWN-LIMITATIONS.md` only, for item 47, a separate path.
+   - **#244, F7:** `frontends/shell/MANUAL-WALKTHROUGH.md`, Parts F and G only. Separate Parts are separate paths.
+   - **1c's step 1** (at 7109aeb2): its diff from 43a39222 names no path under `frontends/`. Its version-literal sites are none of PR C's files. 1c's form records the OPEN-17 (b) interleave for PR C in its own Amendment 3, appended before PR C's code.
+   - **port-2** (fb162627 at the re-sweep): its 16 declared files are at `PORT-2-MACOS-L1-AND-APP-DIRS-PREREGISTRATION.md:260-276` @ 858092e340ac650822afea87b50b3ce00e50bd40 sha256:b4768e57e2a86ae698295215d1538c0322b39d2b209f856b93f8ac09e053aeab, and none is under `frontends/`. Its KNOWN-LIMITATIONS edits are items 1 and 43.
+   - **`cut/flush-crlf-field-rewrite`:** `scripts/hooks/` only.
+   - **covering-case:** no branch commit. Its form's files are disjoint, apart from item 53 (a separate path).
+   - **`record-step-style-match-widening`** is unplaced. PR C edits neither `skp/types.ts` nor `skp/client.test.ts`.
+   - **No other `cut/*` branch ahead of main overlaps** (the re-sweep's step 5, last bullet).
+   - **`protocol/`:** PR C touches none, and step 1 is its one piece.
+   - **Before PR C's code,** each in-flight branch's `git diff --name-only origin/main...<branch>` is read again at the dispatch commit (#241 at 50c634a8, port-2 at 83d2ecef, and any branch moved since C), and the result is recorded in the PR body.
+
+10. **§8 and §9.**
+    - **§8 item 4** also covers a rebuilt `ResidentBatch` that drops or defaults `filter`.
+    - **§8 item 11** also covers the stopped line: it claims no more than item 5 establishes, and a stopped result is never read as complete.
+    - **§8 item 13:** the canvas's new handle method, and `TABLE_MAX_ATTRIBUTE_BYTES` with its check, have their product callers in PR C.
+    - **§8 item 17** gains the filter seam, proved from the real decode by PC-U7 to PC-U12.
+    - **The architect adds:**
+      - no PR B hook in `tableSource`;
+      - `candidateArmSession.ts`'s diff is only the filter argument (item 4);
+      - item 5's ceiling and its stop are checked against ADR-010 rule 6 and the human's ruling of 2026-10-24, item 2: the derivation at the constant, the measurement node named, no performance claim, no not-held state in the table, and no row left out without the stopped line.
+    - **The reviewer adds:**
+      - `tsc --noEmit` clean at the head;
+      - the thirteen fill files' diffs contain only item 3's forms;
+      - the mutations of PC-U7 to PC-U14, applied again.
+
+11. **Next.**
+    1. 1c's Amendment 3 is appended (class 1).
+    2. This amendment is pinned by script.
+    3. `cut/b1-shell-half-pr-c` is brought to main at this amendment's commit, by a fast-forward or a merge, never a rebase. The PR body names §7's base.
+    4. PR C's code, by one worker-high.
+    5. The node's generation goes up by one.
+
+**Superseded for PR C:**
+- §2.6's PR C count: by item 2.
+- §2.6's PR C list: added to by item 3.
+- §0.2's and §2.4 (e)'s App and tile-manager pins: by item 1, rows 8 and 13.
+- §7's PR C totals: read with item 3's additions, §7 unedited.
+- §2.4 (b)'s terminals and count line: added to by item 5 (the stop and its line).
+- §2.4 (c)'s complete result: read with item 5 (a stopped result is not complete).
+
+Read the last amendment first.
+
+Nothing above is edited.
+
+## Amendment 8: PR C's scope addition and readings, written after the worker-high's I1 stop was seen, before any PR C code. Six test files join PR C's list, two fill forms are added, and four listed test files gain fill lines (class 9). `actionRegistry.ts` is not edited, `TABLE_MAX_IN_FLIGHT` is met by structure, the canvas's new handle method is required, PC-U6 has its home, PC-E4's last clause is read, and the worker's first run is named (class 1).
+
+*Written after PR C's worker-high stopped at I1 on `cut/b1-shell-half-pr-c` at 4e9dd53def3019fa0f5b08e2e655fcb032cf8c10, with nothing committed, and before any PR C code. Drafted read-only by the architect at main 905f31c8633570057c24c15173f1400cdb32214c (`state/consults/2026-10-24-b1-shell-half-pr-c-amendment-8-architect-draft.md`). The stop is `state/consults/2026-10-24-b1-shell-half-pr-c-i1-stop-worker-report.md` (its sha256 from line 5 d6b46362cda8e6e42dc58e7002577ad1c243e1c8dee987e3309281f757340e3c). References only; nothing below is a quotation, and none of it is the human's wording. The scope addition rests on the cross-module seam rule (RULED 2026-09-16, question round 4) and on §2.6's last paragraph (round 25, item 2 (a)). Every `@ 905f31c8` pin is read at that commit; for PR C's work the tree at its code's base is authoritative (§0.3). §7 and Amendment 7 are not edited.*
+
+1. **`App.test.ts`, and the second caller by the same route (class 9).**
+   - **The need.** Amendment 7 item 4 makes the filter `onBatch`'s required fourth argument. `makeManagerCallbacks`'s `onBatch` passes it to `pushBatch` (`frontends/shell/src/App.tsx:598-601` @ 905f31c8633570057c24c15173f1400cdb32214c sha256:f0ec5ce4cc43991c8b672bc54f1c1162d93f3f3b8588fe71ae61cca47c2593dc), on the baseline arm only (`frontends/shell/src/App.tsx:1707` @ 905f31c8633570057c24c15173f1400cdb32214c sha256:ba7a3797d42d154a6f416ea90d282581511462eaaf9a51a16ac7c678d523a2a4).
+   - **Caller 1, found by `tsc`.** `App.test.ts` calls `callbacks.onBatch` with three arguments (`frontends/shell/src/App.test.ts:428` @ 905f31c8633570057c24c15173f1400cdb32214c sha256:1490ed2f62dd78d465406af43c8daf184fa3f1e5674f6c14c5b1612cca5d6e8c, `frontends/shell/src/App.test.ts:439` @ 905f31c8633570057c24c15173f1400cdb32214c sha256:54037026b5749d540d2d4370fbdc56699432a74e9898264fd38a077ebe4dd3f6, `frontends/shell/src/App.test.ts:510` @ 905f31c8633570057c24c15173f1400cdb32214c sha256:85607f6744c0dc36b3054125938e89ac4194ad918dc7eb6bd3b8847701429033, `frontends/shell/src/App.test.ts:519` @ 905f31c8633570057c24c15173f1400cdb32214c sha256:54037026b5749d540d2d4370fbdc56699432a74e9898264fd38a077ebe4dd3f6, `frontends/shell/src/App.test.ts:526` @ 905f31c8633570057c24c15173f1400cdb32214c sha256:8ced74ec6977bfb2cdf1fb37b2e24c32297ef09991642c90d67d8ad2483c4227) and asserts three arguments on `pushBatch` (`frontends/shell/src/App.test.ts:431` @ 905f31c8633570057c24c15173f1400cdb32214c sha256:e677ee00edd7f17893b7caeec4832240a9a6b6e075d2cd9286b4de6c2c83b305).
+   - **Caller 2, found by neither `tsc` nor the suite.** `App.lateResult.test.tsx` captures App's `onBatch` option through its mocked `ViewportStreamManager`, typed by the mock's own three-parameter list (`frontends/shell/src/App.lateResult.test.tsx:87` @ 905f31c8633570057c24c15173f1400cdb32214c sha256:b7aa12f3f9532417a51cc21c07360c7442de263c427c08d93cc263fd168f9c37, `frontends/shell/src/App.lateResult.test.tsx:242` @ 905f31c8633570057c24c15173f1400cdb32214c sha256:4b88104791722361225fe9b9c07975f32981a047ef490c914a46834999b02e28), and calls it with three arguments (`frontends/shell/src/App.lateResult.test.tsx:678` @ 905f31c8633570057c24c15173f1400cdb32214c sha256:4aa20e3b5f433e9f0a545c210ca5d23c350ac95cad2e365ba9dbec25f0dcfe2b).
+     - It compiles because the mock declares its own type. It passes because the mocked canvas's `pushBatch` ignores its arguments.
+     - After PR C it encodes an interface the manager no longer has, so it joins the list.
+   - **Reading (class 1).** Amendment 7 item 4's statement that `tsc` finds every caller holds for a call typed by the real option. It does not reach a callback captured through a mock's own type. Such callers are found by the search below.
+   - **The search, at 905f31c8** (confirmed by script at 1c43eff9, where `frontends/shell` is unchanged since 905f31c8: `onBatch\b` in 15 of the tracked `.ts` and `.tsx` files under `frontends/shell/src`; the constructor and session search in `App.tsx`, `residency/candidateArmSession.test.ts`, `residency/candidateArmSession.ts`, `streaming/tileViewportStreamManager.test.ts`, `streaming/viewportStreamManager.test.ts`):
+     - The regex `onBatch\b` over `frontends/shell/src` gives 15 files.
+     - Outside the three managers, `candidateArmSession.ts` and their tests, every hit was read:
+       - `streaming/transport.ts`, `streaming/adapterWs.ts` and its test use `StreamSink.onBatch(payload, contiguous)`, a different interface;
+       - `instrument/residencyInstrument.ts`, `e2e-test-surface.ts` and `canvas/WorkingCanvas.tsx` hit only in comments;
+       - `App.tsx` is the product site;
+       - `App.test.ts` and `App.lateResult.test.tsx` are the two callers.
+     - `new (TileViewportStreamManager|ViewportStreamManager)\(` and `startCandidateArmSession\(` appear in code only in `App.tsx`, `candidateArmSession.ts` and the two managers' tests.
+     - No third caller exists.
+   - **Fill forms, added to Amendment 7 item 3's:**
+     - `null` as `onBatch`'s fourth argument, and as `pushBatch`'s fourth expected argument in the assertion that mirrors that call;
+     - in a mock's own capture type, a fourth parameter, typed as that type types `payload`.
+     - Each is true of its fixture: every stream these tests model is issued with no filter (synthetic handles in `App.test.ts`; A's first look in `App.lateResult.test.tsx`).
+     - No assertion, title, comment or recorded mutation changes, apart from PC-U15 below.
+   - **PC-U15** (`App.test.ts`, new; the title in the architect's words: `onBatch passes its stream's filter to pushBatch as the same object`).
+     - It calls `makeManagerCallbacks` over a stand-in canvas, then `onBatch` with a filter object F.
+     - `pushBatch`'s fourth argument is F (`toBe`).
+     - Mutation: `makeManagerCallbacks` passes `null` to `pushBatch`; the test fails.
+     - It proves the App site of the filter seam, which PC-U7 (from `pushBatch` on) and PC-U12 (up to `onBatch`) do not reach. The baseline arm only a dev switch selects, so this site has no end-to-end proof. That is named here, not claimed.
+
+2. **`frontends/shell/src/layout/actionRegistry.ts`: not edited (class 1).**
+   - §2.4 names no registry entry. OPEN-10 (a)'s reveal entries are PR B's (§2.3 (j)), and the Table tab is reached through Activity's tabs (§2.4 (a)).
+   - The test that pins exactly twelve ids (`frontends/shell/src/layout/actionRegistry.test.ts:132` @ 905f31c8633570057c24c15173f1400cdb32214c sha256:db4d286897bc1f3064af3a5c72381deef5303e9ec4325eb90ee40f5ed4e624a0) stays off the list.
+   - C-P's `actionRegistry 15` goes unused; §7's figures are ceilings.
+   - An entry added in PR C is outside §2.4, and its test edit would be I1.
+
+3. **`TABLE_MAX_IN_FLIGHT`: met by structure, not declared as a constant (class 1).**
+   - A constant with no reader is a `pub` item without a product caller (§8 item 13), and a guard compared against it could never fire.
+   - **The bound** (§7: 1 table stream per open) holds by the source's structure. `tableSource` keeps one stream handle, and calls `cancel` on it before it issues the next `viewport_query`. Hide, collapse, open, replace, generation end and session end cancel it (§2.4 (b)).
+   - **Proof.** PC-U1's "supersede cancels" is read to include call order: the held handle's `cancel` call comes before the next `viewport_query` call. PC-R1 also applies, and §8 item 10 checks it.
+   - **No claim past the shell's own count.** The engine may hold a cancelled stream until its cancel completes. That is the window §2.4 (e) and KL-5 name.
+   - **The comment** (the architect's words, not the human's). The worker adds it to `frontends/shell/src/table/tableConstants.ts`, and the PR body lists it: `TABLE_MAX_IN_FLIGHT (milestone 4 section 7, 1) is not a constant here: tableSource holds one stream handle and cancels it before it issues another, so no code would read the constant.`
+     - The reviewer checks each clause at the head: the one handle field; PC-U1's order assertion; the constant's absence.
+   - **PR B:** its cases query (OPEN-16 (b)) goes through the same handle. PR B's amendment states how.
+
+4. **The canvas's new handle method (Amendment 7 item 4): required (class 1), with its stand-ins (class 9).**
+   - **The reading.** The method has no `?` in `WorkingCanvasHandle`, and App calls it with no `?.` on the method (Amendment 3 item 5; Amendment 4 item 2; §8 item 13).
+     - If optional, the component could omit it and still compile.
+     - App's call would then need a branch for an absent method that only a stand-in takes.
+     - `fitToBbox?` (`frontends/shell/src/canvas/WorkingCanvas.tsx:138-142` @ 905f31c8633570057c24c15173f1400cdb32214c sha256:b20d4b86484afb015faecdafca267839ab109035bdb723b672073e8edd1462a8) is milestone 2's reading for its own member, and it is not followed here.
+   - **The stand-ins.** The search for `clearAllTiles:` in `frontends/shell/src/**/*.test.*` finds 10 handle literals in 9 files at 905f31c8 (confirmed by script at 1c43eff9: 10 in 9):
+     - `App.command.test.tsx`, `App.selection.test.tsx` and `App.attributes.test.tsx` are already on the list (Amendment 7 item 3);
+     - `residency/candidateArmSession.test.ts` is on §2.6's list;
+     - `App.test.ts` (two literals) and `App.lateResult.test.tsx` join by item 1;
+     - `App.layout.test.tsx`, `App.recording.test.tsx` and `App.workspace.test.tsx` join here.
+     - The stop report's seven files outside the list are four.
+   - **The fill form.** One line in each literal: the method stubbed to answer that no id is resident, in the method's return type. It is true of every stand-in, because none stores a batch.
+   - **The method's name and signature are the worker's,** and the PR body names them. It reads the resident set and changes nothing.
+
+5. **PC-U6's home: `frontends/shell/src/table/tableSource.test.ts` (class 1), inside its §7 320.**
+   - **Real code.** The real `TileViewportStreamManager` and the real `tableSource`.
+   - **What is mocked: only the transport,** as the tile manager's test mocks it (`frontends/shell/src/streaming/tileViewportStreamManager.test.ts:9-32` @ 905f31c8633570057c24c15173f1400cdb32214c sha256:8aa08567c2b52e6ec63fe6553c5a3c92a1e8944b2986082fea79382e5cc07d02):
+     - `skp/client`'s `viewportQuery` and `cancel`, with the real `SkpCallError`;
+     - `dataPlaneAttach`;
+     - `startStream`;
+     - `logSessionEvent`.
+     - If `tableSource` reaches the transport through other modules, those modules are the ones mocked; the source's imports are read first.
+   - **Batches** come from `testUtils/attributeBatchIpc.ts` through the real `decodeBatch` (Amendment 7 item 6).
+   - **Asserts:**
+     - while the table's stream is open, a tile whose first `viewport_query` is rejected with `engine.connections_exhausted` is issued again exactly once: two calls with its bbox, and the mint-recovered log line;
+     - there is no `cancel` for the table's handle;
+     - a table batch delivered after the retry is added.
+   - **Mutation:** `isRetryableRefusal` returns `false` (`frontends/shell/src/streaming/tileViewportStreamManager.ts:327-330` @ 905f31c8633570057c24c15173f1400cdb32214c sha256:4a2cc59965f594d13da97743995490a62a70a25e03a5dcf67618948e64621ea4); the test fails.
+   - **Limits.** Nothing on I5's list is mocked. PC-U6 claims nothing about the engine's admission count; that is KL-5.
+
+6. **PC-E4 (class 1).**
+   - **What it asserts.** The fixture is `slow-filter-scan.parquet`, with Activity open on the Table tab and the first scope, after the canvas settles:
+     1. the liveness line shows, with Cancel;
+     2. the table's handle is the one named by the `stream-issued` render-trace line that follows the table's class-A `viewport_query` row. That row is identified by `bbox` null and `limit` 1,000, against the first look's 10,000 (`frontends/shell/src/canvas/tileGridConstants.ts:185` @ 905f31c8633570057c24c15173f1400cdb32214c sha256:61c4f5a8d589f14a8f542eb00fe28e216fb08f39d63081b68417f3e95da2996b);
+     3. after Cancel, a class-A `cancel` row whose request carries that handle shows, with an ok outcome (`frontends/shell/src/skp/client.ts:46-68` @ 905f31c8633570057c24c15173f1400cdb32214c sha256:78d84ae58de45811296f59f06426ee29f1c2d86f72f30d4c43dc830b2d6cf4c7; `frontends/shell/src/console/ConsolePanel.tsx:162-175` @ 905f31c8633570057c24c15173f1400cdb32214c sha256:2f3c69491ecb9f59336b0da1ad4d07a5ac6b919e21f8787589b8fae095b66a0b);
+     4. the liveness line and Cancel are gone, and no further class-A `viewport_query` row with the table's request appears within the suite's settle window.
+   - **"With no stream left"** reads: the table's one stream was cancelled through the client, the kernel accepted the cancel, and the table issued no other. No SKP reply or operator surface shows the engine releasing the stream. That case is not covered, and the suite's source comment says so.
+   - **The trace call.** `tableSource` calls `traceStreamIssued` once at its mint (`frontends/shell/src/diagnostics/renderTrace.ts:33-35` @ 905f31c8633570057c24c15173f1400cdb32214c sha256:36e9559673b0c6aeef4cb7e8a4add37b054cf549921c5d75a51874a56b334742), as `frontends/shell/src/streaming/viewportStreamManager.ts:373` @ 905f31c8633570057c24c15173f1400cdb32214c sha256:2621f2c014b5b2f8f74305df126b464eba0db620d10a1433e9bdb539f1594903, `frontends/shell/src/streaming/tileViewportStreamManager.ts:1102` @ 905f31c8633570057c24c15173f1400cdb32214c sha256:11ca98aa7ec8848bd54b11df1c9667168d23d62d19ab9937346391cc74fe885c and `frontends/shell/src/residency/candidateArmSession.ts:1442` @ 905f31c8633570057c24c15173f1400cdb32214c sha256:7a630ad1783618bb22e21ea1ab67b5f786a69f684768e12270da110334679ca7 do. It calls no `recordResidency*` function.
+   - **Not `residencyInFlightStreamCount`.** It counts only while the instrument is enabled, and only the residency managers' streams (`frontends/shell/src/instrument/residencyInstrument.ts:785-804` @ 905f31c8633570057c24c15173f1400cdb32214c sha256:14cad29cb1319b1d08ff3e7b6c0e7e0bd2120b8f9160e8a366f2d8b0be0161d0).
+   - **Mutation: §4's, unchanged.** Cancel is not wired to `cancel` (`frontends/shell/src/skp/client.ts:128` @ 905f31c8633570057c24c15173f1400cdb32214c sha256:2b1dcbef2bf6bdb430a1a69ee13f0b5b7ae92e2ec8102d34b6e6897b53c69005; the tree is authoritative over the 4b26d279 pin). Expected failure: assertion 3.
+
+7. **The worker's first run (class 1).**
+   - **The four `src/notices/*` failures** came from `npx vitest run` with no build in a fresh worktree. Those tests read the metafiles that `pretest` builds (`frontends/shell/src/notices/portedNotices.test.ts:13-14` @ 905f31c8633570057c24c15173f1400cdb32214c sha256:c07df8bf45023c4ba8dd3a88342c82b3b8bc69ddfc7621268e96e770422b9ebb).
+   - **Amendment 2 item 4 does not cover them.** It is a reading under I3 for the exe build. `npm run verify` needs no cover: it builds before it tests (`frontends/shell/package.json:17` @ 905f31c8633570057c24c15173f1400cdb32214c sha256:05891c6dd73e8f40c216c798178e8b59c32f631d177c9bd2f97f6b142f5a7202), with `prebuild` building the viewer and the notice first (`frontends/shell/package.json:12` @ 905f31c8633570057c24c15173f1400cdb32214c sha256:c69fb205aae327b13eff714ba2b8d4e4bc3208ebf40b63434aada69970e69fb6). A notices failure inside `npm run verify` is a verify failure.
+   - **First, at the base, before any edit, under one shared hold:**
+     1. `npm ci` in `renderer/bundle-viewer`, if its `node_modules` is absent (`frontends/shell/scripts/buildViewerFirst.mjs:27-33` @ 905f31c8633570057c24c15173f1400cdb32214c sha256:c8ad1617b2d5e6ed58621ad7e81c09e468d18b10f77b78770975c48bc939b5d3);
+     2. `npm run build` in `frontends/shell`;
+     3. `npx vitest run src/notices`, recording rc and each file's result.
+   - A failure there is a stop, reported before code.
+
+8. **The addition (class 9).** These lines are counted by §7's command. An overrun of a file or a group is class 8.
+
+   | Group | Files (ceiling each) | At most |
+   |---|---|---|
+   | C-T, added | `frontends/shell/src/App.test.ts` 30 (fills 12, stubs 2, PC-U15 16) | 30 |
+   | C-T, fills added | `frontends/shell/src/App.lateResult.test.tsx` 8, `frontends/shell/src/App.layout.test.tsx` 2, `frontends/shell/src/App.recording.test.tsx` 2, `frontends/shell/src/App.workspace.test.tsx` 2 | 14 |
+   | C-T, lines added to listed files | `frontends/shell/src/App.command.test.tsx` 2, `frontends/shell/src/App.selection.test.tsx` 2, `frontends/shell/src/App.attributes.test.tsx` 2 (each beside Amendment 7 item 3's 4), `frontends/shell/src/residency/candidateArmSession.test.ts` 2 (beside §7's C-T managers 80) | 8 |
+   | **Added** | | **52** |
+
+   - **PR C's new totals:** 57 files, and 4,196 + 52 = 4,248 lines.
+   - **I1.** A further edit that `tsc --noEmit` needs outside §2.6, Amendment 7 item 3 and this amendment is I1. So is a caller found by item 1's search outside them.
+
+9. **§8 and §9.**
+   - **§8 item 17** gains the filter seam's App site, proved by PC-U15.
+   - **The architect adds:**
+     - the handle method required, with no `?.` on it;
+     - one `traceStreamIssued` per table mint, and no `recordResidency*` in `table/`;
+     - no `TABLE_MAX_IN_FLIGHT` export;
+     - `actionRegistry.ts` unedited.
+   - **The reviewer adds:**
+     - item 1's search run again at the head, with no three-argument `onBatch` call or capture;
+     - the diffs of item 8's files contain only item 1's and item 4's forms, plus PC-U15;
+     - the mutations of PC-U6 and PC-U15, applied again.
+
+10. **Rule (00) for the added paths.** The five added paths are under `frontends/shell/src`. They join Amendment 7 item 9's re-read at dispatch. By script at 1c43eff9, `git diff --name-only origin/main...<branch>` for #241, #244, #249, #250, port-2, 1c step 1, covering-case names none of them (the parity piece has no branch yet; its one file is under `scripts/hooks/`); the PR body records it.
+
+11. **Next.**
+    1. This amendment is pinned by script.
+    2. `cut/b1-shell-half-pr-c` is brought to main at this amendment's commit, by a fast-forward or a merge, never a rebase.
+    3. The worker-high runs item 7's base run, then writes PR C's code. Its step-1 patch is its own unreviewed work.
+    4. The node's generation goes up by one.
+
+**Superseded for PR C:**
+- §2.6's PR C list: added to by items 1, 4 and 8.
+- §7's PR C totals: read with Amendment 7 item 3 and item 8. §7 is unedited.
+- Amendment 7 item 3's fill forms and three of its ceilings: added to by items 1, 4 and 8. Amendment 7 is unedited.
+- Amendment 7 item 4's statement that `tsc` finds every caller: read with item 1.
+- §7's `TABLE_MAX_IN_FLIGHT` row: met by structure, item 3.
+- §4's PC-U1: read with item 3. PC-U6: its home is item 5. PC-E4: read by item 6. §4 gains PC-U15 (item 1).
+- The stop report's count of stand-in files: item 4.
+
+Read the last amendment first.
+
+Nothing above is edited.
+
+## Amendment 9: PR C's head series, written after its results were seen and before gate 1. One line of PR C's own suite is fixed (class 1, a code change in a §2.6 file). The existing suites' failures that did not reproduce are read as not I3 on this record, for gate 1 to check (class 1).
+
+*Written by the custodian at PR C's head ec95eacb69766759ec454f2f5aae9688b49458b1, after the series' results were seen and before gate 1. References only, and nothing below is a quotation. Each report's sha256 is over its lines from line 5 to the end, as its filing note gives it. §7 is not edited.*
+
+1. **The record.**
+   - The build, to bc315fb9d163dc292501618836bc25353c467bd8: `state/consults/2026-10-24-b1-shell-half-pr-c-code-worker-report.md` (sha256 b6a07c8ee3dbedcd85c075fa01904d4c58fd52501389dd3cb5cdbd96ec92fd1e).
+   - The head series at bc315fb9, stopped at `e2e:refusal-contract-baseline`: `state/consults/2026-10-24-b1-shell-half-pr-c-head-series-tester-report.md` (sha256 80811ccf7482c733c098999f6e7b5eada8471772acc858889344fc4aa5b6a885).
+   - The diagnosis at bc315fb9 and at the base frontend a533a598e4e139e2fbd2793ded328472cc977036: `state/consults/2026-10-24-b1-shell-half-pr-c-refusal-diagnosis-tester-report.md` (sha256 5d6b453356d1322cadbcb6611429bc1c92f2f56a086973845891f76da1e4898f).
+   - The re-run at bc315fb9, stopped at `e2e:table` PC-E4: `state/consults/2026-10-24-b1-shell-half-pr-c-head-series-rerun-tester-report.md` (sha256 0917bd226e4af1c3815499ae21bf4be6d498056bf7a8009ed8323d1de9b8e34c).
+   - The fix, to ec95eacb: `state/consults/2026-10-24-b1-shell-half-pr-c-pc-e4-poll-fix-worker-report.md` (sha256 0fbb09d8239cc49a6394af6913c5be7825127e1b1deaa9042d9c2eb69d1495d7).
+   - The follow-up at ec95eacb and a533a598: `state/consults/2026-10-24-b1-shell-half-pr-c-follow-up-e2e-tester-report.md` (sha256 21358f89d3e01b338062ab9d5bad3b372cc9608e774b708b19d334a0dcc8a883).
+
+2. **PC-E4's step 3 (class 1, a code change in a §2.6 file).**
+   - **The defect** (the re-run report, finding 1): step 3's poll ended when a class-A `cancel` row carrying the table's handle existed, and assertion 3 then read that row's outcome, which could still be pending.
+   - **The fix,** one line of `frontends/shell/e2e/table.mjs` at ec95eacb: the poll also waits for that row's outcome to leave pending, within the suite's settle window. Assertion 3, the other steps, the file's mutation text and Amendment 8 item 6 are unchanged.
+   - **The count.** By §7's command over e5e6e03a, `table.mjs` is 418 of C-E's 540.
+   - **The result** (the follow-up report): at ec95eacb `e2e:table` passed 3 of 3, PC-E4 included. PC-E4's mutation, applied alone, failed at assertion 3 with no cancel row carrying the handle.
+   - **The re-run report's note** that the race made PC-E4's mutation a weaker discriminator is answered on this record: with the poll fixed, the unmutated suite passed every run and the mutation failed by its named failure.
+
+3. **Existing suites that failed and did not reproduce (class 1, the custodian's reading, for gate 1).**
+   - `e2e:refusal-contract-baseline` failed on both runs in the head series, with the machine heavily loaded. In the diagnosis it passed 5 of 5 at the head and 4 of 4 at the base, and no cause was settled. It passed in the re-run with the machine loaded.
+   - `e2e:layout` and `e2e:selection` each failed once in the re-run at full load, and each passed on its one re-run.
+   - `pan-anchor.mjs` passed 14 and then 15 of 16 at the head in the re-run, at the step `recenter-crossing-A`. In the follow-up it passed 16 of 16 twice at the head and twice at a533a598, at low load.
+   - **The reading.** None of these is read as I3. None failed again at the head when re-run, and none is shown to fail for a reason in PR C's diff. Their cause is not shown, and load is not shown to be it. A later failure of any of them at the head is I3, and a stop.
+   - **Not product failures:** `e2e:recording`'s two failures under the default shim are the harness's (the re-run report, finding 5); it passed under the waiting shim. The source-changed post route's rc 3, S5d inconclusive, matches the base series' record.
+
+4. **Next.** Gate 1 at ec95eacb, the architect and the reviewer, reading this amendment with the rest.
+
+Read the last amendment first.
+
+Nothing above is edited.
+
+## Amendment 10: PR C's gate 1 record and the classes of its fixes, written after gate 1's reports were seen and before the fixes. C1 and E1 are fixed in §2.6 files and re-gated on their delta (class 1, code changes; one test added after a gate finding, class 4). The Documentation findings are applied in the gates' words. Two clauses of Amendment 9 are corrected (class 3). Correction round 1.
+
+*Written by the custodian after PR C's gate 1 reports were seen, at PR C's head ec95eacb69766759ec454f2f5aae9688b49458b1. References only, and nothing below is a quotation. The reports are `state/consults/gates/2026-10-24-b1-shell-half-pr-c-gate1-architect.md` (sha256 43f8bc4d92cde8126087ed8e5af2f471cb2cc012b3215290bdec934aa2541cd1) and `state/consults/gates/2026-10-24-b1-shell-half-pr-c-gate1-reviewer.md` (sha256 1b45c8e9ab0cedea314363d11c0d70df9fa4a22b0a60aa235965ab1643b445a4), both FAIL. §7 is not edited.*
+
+1. **C1, both reports (class 1, a code change).**
+   - The Table's ended line states only the table's consequence, for every session end, in the words of the architect's C1 fix, a P6 placeholder for sight at AC8. The reviewer's option 2. A line per end code (the reviewer's option 1) is not taken.
+   - PC-R2's expected line follows it, and PC-R2's mutation is observed again.
+   - **PC-U16 (class 4, a test added after a gate finding),** in `frontends/shell/src/table/tableSource.test.ts`: a coverage-lost terminal reaching the table's sink ends the table, and its line is the same ended line. Mutation: the session-end check the table uses matches only `engine.source_changed`; PC-U16 fails by name.
+   - AC8's phrase follows, in the words of the architect's C1 fix.
+2. **E1, both reports (class 1, a test fixture change).** PC-U4's PublishPanel stand-in is typed by the real `ExportRunReport` and the real props, and its run ends with a real `ExportRunEnd`, an execute outcome of `unknown-attempt`. PC-U4's mutation is observed again.
+3. **Documentation, applied in the gates' words with no re-gate (§31).**
+   - The architect's D1 to D6, and D9's walkthrough words.
+   - The reviewer's D5 and D6 are met by the architect's D3 and D4. The reviewer's D7 is met by the architect's D1 and D2.
+   - `table/tableSource.ts`'s one-stream sentence names the same round-trip window, in the worker's words.
+   - The PR body's corrections (the architect's D7 and D9's sight list; the reviewer's D1 to D3) are the custodian's.
+4. **Class 1, a statement change (the architect's D9).** PR C rewords the statement for switching Activity tabs in `frontends/shell/src/console/surfaceRegistry.ts`, a §2.6 file, as an exception to §5's declared-unchanged strings. It is a P6 placeholder, for sight at AC8, with the code `table-failed`.
+5. **Class 3, Amendment 9's corrections.**
+   - Item 3's reading, its second sentence, is untrue for two suites. `e2e:refusal-contract-baseline` failed its immediate re-run in the head series, and `pan-anchor.mjs` failed its immediate re-run in the re-run series. Each passed every later run at the head: the refusal suite 5 of 5 in the diagnosis and once in the re-run; `pan-anchor.mjs` 16 of 16 twice in the follow-up, at ec95eacb, whose product code is bc315fb9's. The reading's conclusion stands on that record and on PR C's diff, as both reports read it, and its last sentence still holds.
+   - Item 2's settle-window clause is wrong. The poll waits within the step's own bound; the file's settle window is a different constant (the reviewer's D4).
+6. **Not taken in this round:** the reviewer's suggestions S1 to S6. The architect's points for the P6 sight go to the sitting, at AC7 and AC8.
+7. **Outside PR C:** on main, the hover readout and the Feature tab's notice word every session end as a source change (the architect's C1 note). That goes to the proposed node `session-end-lines-name-coverage-lost-as-source-change`, for the human, and not to this PR.
+8. **Next.**
+   1. One worker applies items 1 to 4 at the head, in one commit.
+   2. Gate 2 re-gates C1's and E1's delta, with the reviewer and the architect.
+   3. No e2e suite asserts the ended line (by search at ec95eacb), so the e2e is not re-run for it.
+
+**Superseded:**
+- Amendment 9 item 3: the reading's second sentence.
+- Amendment 9 item 2: its settle-window clause.
+- §4's PC-R2: its expected line, by item 1. §4 gains PC-U16.
+
+Read the last amendment first.
+
+Nothing above is edited.
+
+## Amendment 11: PR C's closing record, written after its gate 2 results were seen. No file or group passes its ceiling, so there is no class 8. Gate 2's notes are applied. Amendment 10 item 5 is class 1, not class 3, and one of its sentences is withdrawn (correction round 2 of 2).
+
+*Written by the custodian after PR C's gate 2 reports were seen, at PR C's final head a5f7d9ac025a3d9a54d255b2b3dde74dcca36189. References only, and nothing below is a quotation. The reports are `state/consults/gates/2026-10-24-b1-shell-half-pr-c-gate2-architect.md` (sha256 fdb6be33a3e39b6e16f911fecef63254419566fe2df55ce148aecfd93495a705) and `state/consults/gates/2026-10-24-b1-shell-half-pr-c-gate2-reviewer.md` (sha256 4e6ffc702bea5f40df2cc67f55319745953e41aca0b6a1e05c12b26694e95195), both PASS WITH NOTES; gate 1's are named in Amendment 10. §7 is not edited.*
+
+1. **No class 8.** By §7's command over `e5e6e03a3a10e1c9427efd153d74b5a997023436...a5f7d9ac025a3d9a54d255b2b3dde74dcca36189`: 56 files and 2,527 lines of the 4,248 declared. No file passes its ceiling, and no group passes its total. They equal the reviewer's gate 2 check 3 at 580d389e. a5f7d9ac replaces one line in each of three files: two of them are new in PR C, so the count is unchanged, and the third, `KNOWN-LIMITATIONS.md`, is outside it.
+2. **Gate 2's notes, applied with no re-gate (§31).**
+   - N1, the round-trip window's ticket count, at a5f7d9ac in three comments, in the architect's words. The reviewer's N1 is met by them.
+   - The architect's N2, and the reviewer's N2 and N3, are applied in the PR body: the carried texts are re-copied from a5f7d9ac, and the reviewer's Evidence words are added.
+3. **Amendment 10 item 5 (the architect's gate 2 N3; the reviewer's N4 is met by it).**
+   - The item is class 1, a record made after the results of what gate 1's findings invalidate. It is not class 3, which never changes a claim.
+   - The fourth sentence of its first bullet is withdrawn: it restated Amendment 9 item 3's conclusion past the correction ceiling.
+4. **Open, not PR C's:**
+   - the reviewer's gate 1 suggestions S1 to S6;
+   - the architect's points for the P6 sight, at AC7 and AC8;
+   - the measurement node for the table's ceiling;
+   - the proposed node on main's session-end wording (Amendment 10 item 7).
+5. **The Part.** Part AC's rows AC6 to AC8 join `operator-sitting-queue` on PR C's merge (§9, Operator).
+
+**Superseded:**
+- Amendment 10's heading and item 5, on the class only.
+- Amendment 10 item 5's first bullet, its fourth sentence.
+
+Read the last amendment first.
+
+Nothing above is edited.

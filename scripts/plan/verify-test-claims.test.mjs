@@ -26,6 +26,7 @@ import {
   plannedGateFiles,
   REPO_ROOT,
 } from './verify-test-claims.mjs';
+import { runVerifyQuotes } from './verify-quotes.mjs';
 
 // Every temp directory this file creates is removed after its own run (§2.9,
 // TEST-CLAIMS-FOLLOWUPS-PREREGISTRATION.md; §6's delta check: 0 `verify-test-claims-*` directories net
@@ -1732,4 +1733,41 @@ test('verify-test-claims: a withdrawn-test row whose ruling cites an itemless ro
   assert.equal(bad.withdrawn.length, 0, JSON.stringify(bad.withdrawn));
   assert.equal(bad.findings.length, 1, JSON.stringify(bad.findings));
   assert.match(bad.findings[0].message, /unresolvable ruling: round 66, item 9/);
+});
+
+// RECORDED MUTATION (M1): verify-test-claims.mjs builds its pattern with `hashRefRegExp({ pathRequired: false })`
+// -- applied alone, this test run, then reverted; fails by name with actual "refused: another file's path"
+// against expected 'refused: no pinned reference'; observed at 7b380c3b2b092e0dcef33a7babe0617affa18568.
+// A bare `:3` reference on a withdrawn row has no path of its own: verify-test-claims builds its pattern
+// with `pathRequired: true`, so the row reads "no pinned reference", not "another file's path".
+test('a_withdrawn_test_row_with_only_a_bare_line_reference_has_no_pinned_reference', () => {
+  const { dir } = rowTextFixture(
+    (rev) => `- withdrawn-test: \`:3\` @ ${rev} sha256:${'a'.repeat(64)}; ruling: round 1, item 1; carrier: round 2, item 5\n`,
+    { doc: DOC_WITH_REAL_CLAIM, withRealTest: true },
+  );
+  const { findings, withdrawn } = runVerifyTestClaims({ repoRoot: dir });
+  assert.equal(withdrawn.length, 0, JSON.stringify(withdrawn));
+  const rowFindings = findings.filter((f) => f.kind === 'withdrawn-row');
+  assert.equal(rowFindings.length, 1, JSON.stringify(findings));
+  assert.equal(rowFindings[0].message, 'refused: no pinned reference', JSON.stringify(findings));
+});
+
+// RECORDED MUTATION (M2): in hashRefGrammar.mjs the rev group `[^\\s\`]+` becomes `[0-9a-f]{12,40}` -- applied
+// alone, this test run, then reverted; fails by name with actual { quotes: 1, claims: 0 } against expected
+// { quotes: 0, claims: 1 }; observed at 7b380c3b2b092e0dcef33a7babe0617affa18568.
+// One pin with a 7-character rev, read by both checkers through hashRefGrammar.mjs: verify-quotes finds no
+// unbound or failing hash reference, and verify-test-claims counts one superseded claim.
+test('a_seven_character_rev_pin_binds_in_both_checkers_through_the_shared_grammar', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'verify-test-claims-shared-grammar-'));
+  const v1Rev = gitRepoAt(dir, SUPERSEDED_DOC, SUPERSEDED_V1);
+  const row = pinRow({ relPath: SUPERSEDED_DOC, pinnedLine: SUPERSEDED_CLAIM_LINE, rev: v1Rev.slice(0, 7), hash: sha256Hex(lineOfV1(SUPERSEDED_CLAIM_LINE)), word: 'superseded' });
+  fs.writeFileSync(path.join(dir, SUPERSEDED_DOC), `${SUPERSEDED_V1}\n${row}`);
+  commitAll(dir, 'v2');
+  const quotes = runVerifyQuotes({ repoRoot: dir, files: [path.join(dir, SUPERSEDED_DOC)] });
+  const claims = runVerifyTestClaims({ repoRoot: dir });
+  assert.deepEqual(
+    { quotes: quotes.hashFindings.length, claims: claims.superseded.length },
+    { quotes: 0, claims: 1 },
+    JSON.stringify({ hashFindings: quotes.hashFindings, superseded: claims.superseded, findings: claims.findings }),
+  );
 });

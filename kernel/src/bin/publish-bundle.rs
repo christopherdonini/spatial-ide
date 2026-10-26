@@ -44,6 +44,19 @@
 //! did not author. **The two `--license*` families are different things** — `--license` is the
 //! *data*'s terms, `--viewer-license` is the *program*'s.
 //!
+//! **This binary's publish skips no viewer file** (the redaction form's Amendment 3). It takes no
+//! viewer build record: `--viewer` is read with `ViewerAssets::from_dir` alone, so the redaction
+//! gate's skip of recorded viewer files never applies here. The reference viewer's own build
+//! (`renderer/bundle-viewer/dist`) carries licence texts in its `NOTICE.txt` that hold a
+//! `credential` match and a `local-filesystem-path` match, so a publish with that build is refused
+//! with `PublishError::RedactionFinding`. The refusal names `viewer/NOTICE.txt`, unless a top-level
+//! bundle file (`build-info.json`, `manifest.json`, `style.json`) holds a match first: the gate
+//! reads those, then `viewer/`, then `data/`. A rerun of the hero slice's acceptance run
+//! (`kernel/RESULTS.md`), which publishes that build through this binary, is refused the same way.
+//! Every test that runs this binary gives it a synthetic viewer that holds no match. The shell's
+//! publish is the one that reads the build record, and it skips a `viewer/` file only when the
+//! file's bytes match the record's entry for that path.
+//!
 //! ## Publishing is a class-3 external side effect (ADR-006), and it now goes through a gate
 //!
 //! Every run passes `spatial_kernel::permission::boundary::execute`: a scoped grant, an explicit

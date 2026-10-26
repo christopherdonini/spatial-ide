@@ -224,7 +224,7 @@ describe("FeatureTab", () => {
       { name: "f", kind: "float64" as const, values: [1.5] },
     ];
     const { ipc, encoding } = attributeBatchIpc([42n], columns);
-    const row = readRow(decodeBatch("sh_r", 0, ipc, "geometry", encoding, ["tag", "n", "f"]), 0);
+    const row = readRow(decodeBatch("sh_r", 0, ipc, "geometry", encoding, ["tag", "n", "f"], null), 0);
     const all = (selector: string) => [...container.querySelectorAll(selector)].map((e) => e.textContent);
 
     mount({ inspected: { ...INSPECTED_A, row }, projection: { projected: ["tag", "n", "f"], notProjected: ["d32"], leftOut: 3 } });

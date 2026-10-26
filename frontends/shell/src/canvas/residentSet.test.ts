@@ -19,7 +19,7 @@ function batch(streamHandle: string, batchSeq: number, totalVertices: number, fe
     ids,
     ...partsOfFeatures(Array.from({ length: featureCount }, () => [[[[0, 0]]]])),
     totalVertices,
-    attributes: null,
+    attributes: null, filter: null,
   };
 }
 

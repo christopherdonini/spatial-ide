@@ -28,8 +28,9 @@ export interface ViewportStreamManagerOptions {
   dataset: string;
   /** A batch admitted for rendering -- only ever called for the *currently active* stream; a batch
    * belonging to a superseded stream is dropped before this is called (D3.7's own assertable
-   * criterion: "zero batches from a superseded stream render after its supersession"). */
-  onBatch: (streamHandle: string, batchSeq: number, payload: Uint8Array) => void;
+   * criterion: "zero batches from a superseded stream render after its supersession"). `filter` is the
+   * one this stream was issued with (milestone 4 PR C, section 2.4 (c)), for the decode that sets `ResidentBatch.filter`. */
+  onBatch: (streamHandle: string, batchSeq: number, payload: Uint8Array, filter: Filter | null) => void;
   /** A stream was superseded or closed; its resident batches should be dropped. */
   onSuperseded: (streamHandle: string) => void;
   onTerminal?: (streamHandle: string, terminal: Terminal) => void;
@@ -295,7 +296,7 @@ export class ViewportStreamManager {
           recordResidencyBatchArrived();
         }
         const seq = this.nextBatchSeq++;
-        this.opts.onBatch(streamHandleAtStart, seq, payload);
+        this.opts.onBatch(streamHandleAtStart, seq, payload, filter);
       },
       onProgress: () => {},
       onTerminal: (terminal) => {

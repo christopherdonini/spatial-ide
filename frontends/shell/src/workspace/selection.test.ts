@@ -7,7 +7,8 @@ import type { Admitted } from "../admission/admitDataset";
 import type { AuthoritativeBbox } from "../canvas/viewportBbox";
 import { FILTER_DIALECT_DUCKDB_EXPR_0 } from "../skp/types";
 import { DEFAULT_STYLE_STATE } from "../style/document";
-import { applySelectionMode, countSelection, NO_MEMBERS, type SelectionMembers } from "./selection";
+import { applySelectionMode as applyToMember, countSelection, NO_MEMBERS, type SelectionInput, type SelectionMember, type SelectionMembers, type SelectionMode } from "./selection";
+import { CAPTURED_ROW_MAX_BYTES } from "../table/tableConstants";
 import { SELECTION_MAX_FEATURES } from "./selectionConstants";
 import {
   applyViewTransition,
@@ -21,7 +22,10 @@ import { initialWorkspaceState, workspaceReducer, type ViewState, type Workspace
 
 /** SHELL-MIGRATION-MILESTONE-2-PREREGISTRATION.md section 4, UB1 to UB5: the selection contract (section 2.3). */
 const box = (xmin: number, ymin: number, xmax: number, ymax: number): AuthoritativeBbox => ({ xmin, ymin, xmax, ymax });
-const members = (...entries: [bigint, AuthoritativeBbox][]): SelectionMembers => new Map(entries);
+const memberOf = (bounds: AuthoritativeBbox): SelectionMember => ({ bounds, row: null, filter: null });
+const members = (...entries: [bigint, AuthoritativeBbox][]): SelectionMembers => new Map(entries.map(([id, bounds]) => [id, memberOf(bounds)]));
+/** Milestone 4 PR C: a member is `{bounds, row, filter}`; these tests click with no row and no filter, so they pass their box and read `.bounds` back. */
+const applySelectionMode = (m: SelectionMembers, mode: SelectionMode, id: bigint, bounds: AuthoritativeBbox) => applyToMember(m, mode, id, { bounds, row: null, filter: null });
 const ids = (m: SelectionMembers): bigint[] => [...m.keys()].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
 const unit = box(0, 0, 1, 1);
 const FACTS = { filterApplied: false, viewComplete: false };
@@ -59,7 +63,7 @@ describe("UB1: the four modes", () => {
     const first = applySelectionMode(NO_MEMBERS, "add", 5n, box(0, 0, 4, 4)).members;
     const second = applySelectionMode(first, "add", 5n, box(0, 0, 2, 2));
     expect(second.members.size).toBe(1);
-    expect(second.members.get(5n)).toEqual(box(0, 0, 4, 4));
+    expect(second.members.get(5n)?.bounds).toEqual(box(0, 0, 4, 4));
   });
 
   // RECORDED MUTATION for "UB1" (no write to the input): in `withMember` (selection.ts) add to the given map instead of a copy
@@ -83,8 +87,8 @@ describe("UB1: the four modes", () => {
 //   AssertionError: expected { kind: 'changed', …(1) } to deeply equal { kind: 'refused', …(2) }. Reverted after observing.
 describe("UB2: the ceiling refuses by name and leaves the set unchanged", () => {
   const full = (): SelectionMembers => {
-    const m = new Map<bigint, AuthoritativeBbox>();
-    for (let i = 0; i < SELECTION_MAX_FEATURES; i++) m.set(BigInt(i), unit);
+    const m = new Map<bigint, SelectionMember>();
+    for (let i = 0; i < SELECTION_MAX_FEATURES; i++) m.set(BigInt(i), memberOf(unit));
     return m;
   };
 
@@ -122,14 +126,14 @@ describe("UB2: the ceiling refuses by name and leaves the set unchanged", () => 
     const base: ViewState = { id: "view-1", resource: "ds_a", filter: null, style: DEFAULT_STYLE_STATE, selection: full() };
     const refused = applyViewTransition(base, {
       action: "selection.apply",
-      params: { mode: "add", id: 123_456n, bounds: unit },
+      params: { mode: "add", id: 123_456n, bounds: unit, row: null, filter: null },
     });
     expect(viewSelection(refused)).toBe(base.selection);
     expect(viewSelectionNotice(refused)).toEqual({
       kind: "refused",
       refusal: { code: "selection.ceiling", max: SELECTION_MAX_FEATURES, attempted: SELECTION_MAX_FEATURES + 1 },
     });
-    const cleared = applyViewTransition(refused, { action: "selection.apply", params: { mode: "remove", id: 0n, bounds: unit } });
+    const cleared = applyViewTransition(refused, { action: "selection.apply", params: { mode: "remove", id: 0n, bounds: unit, row: null, filter: null } });
     expect(viewSelectionNotice(cleared)).toBeNull();
   });
 });
@@ -182,8 +186,8 @@ describe("UB4: the end of a generation ends the selection", () => {
     run(
       initialWorkspaceState,
       { type: "resource.admitted", admitted: admittedOf("a") },
-      act({ action: "selection.apply", params: { mode: "add", id: 1n, bounds: unit } }),
-      act({ action: "selection.apply", params: { mode: "add", id: 2n, bounds: unit } }),
+      act({ action: "selection.apply", params: { mode: "add", id: 1n, bounds: unit, row: null, filter: null } }),
+      act({ action: "selection.apply", params: { mode: "add", id: 2n, bounds: unit, row: null, filter: null } }),
       act({ action: "inspect.set", params: { pick: pick(1n), bounds: unit, row: null } }),
       act({ action: "inspect.pin", params: { pinned: true } })
     );
@@ -281,5 +285,26 @@ describe("UB5: nothing but a selection transition or a generation end touches th
     expect(away).toEqual({ selected: 2, outsideView: 2, inViewNotDrawn: 0, reason: null });
     expect(back).toEqual(near);
     expect(ids(held)).toEqual([1n, 2n]);
+  });
+});
+
+describe("PC-U3: a member keeps the click's row and filter, cuts a long row with a marker, and a generation end drops it (milestone 4 PR C, section 2.4 (c))", () => {
+  const filter = { predicate: "zone = 'residential'", dialect: FILTER_DIALECT_DUCKDB_EXPR_0 };
+  const cell = (name: string, text: string) => ({ name, value: { kind: "text" as const, text } });
+  const take = (id: bigint, row: SelectionInput["row"]) => applyToMember(NO_MEMBERS, "add", id, { bounds: unit, row, filter }).members.get(id);
+
+  // RECORDED MUTATION for "PC-U3": in `capturedRow` (selection.ts) return the row whole (`return row;` as its first statement). Expected failure: the long row is kept uncut.
+  it("PC-U3: the member carries the row and the filter, a row past CAPTURED_ROW_MAX_BYTES is cut with its marker, and a generation end drops the member", () => {
+    const row = [cell("tag", "a")];
+    expect(take(1n, row)).toEqual({ bounds: unit, row, filter });
+    expect(take(1n, row)?.filter).toBe(filter);
+    expect(take(1n, "not-held")?.row).toBe("not-held");
+    expect(take(2n, [cell("a", "x"), cell("b", "y".repeat(CAPTURED_ROW_MAX_BYTES)), cell("c", "z")])?.row).toEqual({ cut: [cell("a", "x")], omitted: 2 });
+
+    const admitted = { dataset: "ds_a", session: "sr_a", describe: { source: { path_display: "C:/data/a.parquet" } } } as unknown as Admitted;
+    const apply: WorkspaceAction = { type: "view.transition", view: "view-1", transition: { action: "selection.apply", params: { mode: "add", id: 1n, bounds: unit, row, filter } } };
+    const held = [{ type: "resource.admitted", admitted } as WorkspaceAction, apply].reduce(workspaceReducer, initialWorkspaceState);
+    expect(viewSelection(held.views["view-1"]).get(1n)).toEqual({ bounds: unit, row, filter });
+    expect(viewSelection(workspaceReducer(held, { type: "resource.generationEnded", resource: "ds_a" }).views["view-1"]).size).toBe(0);
   });
 });
