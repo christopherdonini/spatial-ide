@@ -141,3 +141,10 @@ Clause checks:
 - **Rule (00)** was checked again at main 744d6b3c by `git diff --name-only origin/main...<branch>` for every open branch and the branches in flight: none touches `kernel/tests/regenerate_fixture_s.rs` or `kernel/FIXTURES.md`. Entry 6b, held on the human, has left the filler slot; this piece is the one filler in flight.
 
 ## Amendments (opens empty; append-only)
+
+### Amendment 1 (2026-10-27), class 1: the observation. Written after the piece's results were seen.
+
+- **The regeneration** (the Tests+mutation line's unmutated full run, release build, at d505a6054f6d80e4c778623db15b32ee192896a8, the code commit): it passed and wrote `parcels-145mb.parquet` to the piece's own folder on D:, 151,629,665 B, sha256 fe61e704fcc01d40b0e453d81a4987fc23862dcc38d62bd1f9635d124433ac7a: S's recorded size and hash. The custodian read the file's size and full sha256 again from disk after the run. This is the observation `kernel/FIXTURES.md`'s determinism sentence names.
+- **M-1 to M-7** each failed the test the line names, where its prediction says (`state/consults/2026-10-27-fixture-s-regeneration-entry-point-build-worker-report.md`); M-7 failed at `sha256 mismatch` and left only the `.mismatch` file. Each is recorded in its RECORDED MUTATION doc line, naming d505a6054f6d80e4c778623db15b32ee192896a8.
+- **Figures:** 231 lines over the 2 files of the Scope, under the human's 260.
+- Nothing is invalidated. Determinism across machines and toolchains is not established (the determinism sentence says so).
