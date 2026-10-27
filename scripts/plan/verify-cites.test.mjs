@@ -552,6 +552,7 @@ function commitList(dir, ...entries) {
   gitIn(dir, 'commit', '-q', '-m', 'list');
 }
 
+// RECORDED MUTATION (M1) at 7df4983f7dae524a85a468fabe98f75222e3aa1d, applied alone and reverted: checkCitation's bound read from `pieces` again -> fails by name: `a_cite_to_the_line_just_past_the_end_of_a_newline_ended_file_fails`, and two other tests: `a_cite_to_line_1_of_an_empty_file_fails` and `a_cite_on_the_legacy_bound_list_passes_under_the_old_bound_only_from_its_listed_file`.
 test('a_cite_to_the_line_just_past_the_end_of_a_newline_ended_file_fails', () => {
   const dir = tmpTree({ 'engine/src/pool.rs': 'a\nb\nc\n' });
   const res = checkCitation({ pathRaw: 'engine/src/pool.rs', startL: 4, endL: 4, relPath: 'docs/x.md' }, mkIndex(['engine/src/pool.rs']), dir);
@@ -559,6 +560,7 @@ test('a_cite_to_the_line_just_past_the_end_of_a_newline_ended_file_fails', () =>
   assert.match(res.reason, /^line 4 exceeds "engine\/src\/pool\.rs" \(3 lines\)$/);
 });
 
+// RECORDED MUTATION (M2) at 7df4983f7dae524a85a468fabe98f75222e3aa1d, applied alone and reverted: the empty-file term in countOf dropped -> fails by name: `a_cite_to_line_1_of_an_empty_file_fails`, and `an_out_of_range_reason_for_an_empty_file_counts_0_lines`.
 test('a_cite_to_line_1_of_an_empty_file_fails', () => {
   const dir = tmpTree({ 'engine/src/pool.rs': '' });
   const res = checkCitation({ pathRaw: 'engine/src/pool.rs', startL: 1, endL: 1, relPath: 'docs/x.md' }, mkIndex(['engine/src/pool.rs']), dir);
@@ -566,12 +568,14 @@ test('a_cite_to_line_1_of_an_empty_file_fails', () => {
   assert.match(res.reason, /^line 1 exceeds "engine\/src\/pool\.rs" \(0 lines\)$/);
 });
 
+// RECORDED MUTATION (M3) at 7df4983f7dae524a85a468fabe98f75222e3aa1d, applied alone and reverted: checkPinned's bound read from `pieces` again -> fails by name: `a_pinned_cite_to_the_line_just_past_the_end_at_its_commit_fails`, and only this one.
 test('a_pinned_cite_to_the_line_just_past_the_end_at_its_commit_fails', () => {
   const gated = pinnedRun((rev) => `see engine/src/pool.rs:6 @ ${rev} sha256:00`, 'gated');
   assert.equal(gated.length, 1, JSON.stringify(gated));
   assert.match(gated[0].reason, /^line 6 exceeds "engine\/src\/pool\.rs" at pinned commit [0-9a-f]+ \(5 lines\)$/);
 });
 
+// RECORDED MUTATION (M4) at 7df4983f7dae524a85a468fabe98f75222e3aa1d, applied alone and reverted: the list lookup keyed by the cite alone, without its citing file -> fails by name: `a_cite_on_the_legacy_bound_list_passes_under_the_old_bound_only_from_its_listed_file`, and only this one.
 test('a_cite_on_the_legacy_bound_list_passes_under_the_old_bound_only_from_its_listed_file', () => {
   const dir = gitTree({ 'engine/src/pool.rs': 'a\nb\nc\n', 'docs/a.md': 'see engine/src/pool.rs:4', 'docs/b.md': 'see engine/src/pool.rs:4' });
   try {
@@ -584,6 +588,7 @@ test('a_cite_on_the_legacy_bound_list_passes_under_the_old_bound_only_from_its_l
   }
 });
 
+// RECORDED MUTATION (M5) at 7df4983f7dae524a85a468fabe98f75222e3aa1d, applied alone and reverted: checkPinned's old-bound term removed -> fails by name: `a_pinned_cite_on_the_legacy_bound_list_passes_under_the_old_bound_at_its_pin`, and only this one.
 test('a_pinned_cite_on_the_legacy_bound_list_passes_under_the_old_bound_at_its_pin', () => {
   const dir = pinnedAfter({ 'engine/src/pool.rs': 'a\nb\nc\nd\ne\n' }, { 'engine/src/pool.rs': 'a\n', [LB]: lbJson({ path: 'docs-notes.md', cite: 'engine/src/pool.rs:6' }) }, 'docs-notes.md', (rev) => `see engine/src/pool.rs:6 @ ${rev} sha256:00`);
   try {
@@ -594,6 +599,7 @@ test('a_pinned_cite_on_the_legacy_bound_list_passes_under_the_old_bound_at_its_p
   }
 });
 
+// RECORDED MUTATION (M6) at 7df4983f7dae524a85a468fabe98f75222e3aa1d, applied alone and reverted: the subset check replaced by a count comparison -> fails by name: `the_legacy_bound_list_may_shrink_but_a_gained_entry_fails_by_name_even_at_the_same_count`, and only this one.
 test('the_legacy_bound_list_may_shrink_but_a_gained_entry_fails_by_name_even_at_the_same_count', () => {
   const [A, B, C] = ['a.md', 'b.md', 'c.md'].map((p) => ({ path: p, cite: 'engine/src/pool.rs:4' }));
   const dir = gitTree({ 'engine/src/pool.rs': 'a\n' });
@@ -610,6 +616,7 @@ test('the_legacy_bound_list_may_shrink_but_a_gained_entry_fails_by_name_even_at_
   }
 });
 
+// RECORDED MUTATION (M7) at 7df4983f7dae524a85a468fabe98f75222e3aa1d, applied alone and reverted: the shallow-clone check removed -> fails by name: `the_legacy_bound_list_check_fails_by_name_in_a_shallow_clone`, and only this one.
 test('the_legacy_bound_list_check_fails_by_name_in_a_shallow_clone', () => {
   const src = gitTree({ 'a.md': 'x\n' });
   const out = fs.mkdtempSync(path.join(os.tmpdir(), 'verify-cites-shallow-'));
