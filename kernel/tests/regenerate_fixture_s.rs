@@ -115,6 +115,10 @@ fn tiny() -> FixtureSpec {
     }
 }
 
+/// RECORDED MUTATION: M-7, `spec_s()`'s seed `0x5EED_2056_0000_0008`;
+/// observed at d505a6054f6d80e4c778623db15b32ee192896a8 (release, into the m7 folder):
+/// fails with "sha256 mismatch: expected fe61e704..., got bfe55c91...".
+///
 /// `SPATIAL_REGEN_OUT=<an absolute path>/parcels-145mb.parquet cargo test --release -p
 /// spatial-kernel --test regenerate_fixture_s -- --ignored --exact regenerate_parcels_145mb_fixture
 /// --nocapture`
@@ -125,6 +129,9 @@ fn regenerate_parcels_145mb_fixture() {
     regenerate(&out_path(&raw), &spec_s(), S_SHA256, 2 * S_BYTES);
 }
 
+/// RECORDED MUTATION: M-1, deleting `regenerate`'s `assert!(!out.exists(), ..)`;
+/// observed at d505a6054f6d80e4c778623db15b32ee192896a8 (debug):
+/// fails with "panic did not contain expected string", the panic being the sha256 mismatch.
 #[test]
 #[should_panic(expected = "already exists")]
 fn refuses_to_overwrite_an_existing_output_path() {
@@ -133,12 +140,18 @@ fn refuses_to_overwrite_an_existing_output_path() {
     regenerate(&path, &tiny(), S_SHA256, 0);
 }
 
+/// RECORDED MUTATION: M-2, deleting `out_path`'s `assert!(p.is_absolute(), ..)`;
+/// observed at d505a6054f6d80e4c778623db15b32ee192896a8 (debug):
+/// fails with "test did not panic as expected".
 #[test]
 #[should_panic(expected = "absolute")]
 fn refuses_a_relative_output_path() {
     out_path("target/x/parcels-145mb.parquet");
 }
 
+/// RECORDED MUTATION: M-3, `drive_of` returning `Some('C')`;
+/// observed at d505a6054f6d80e4c778623db15b32ee192896a8 (debug):
+/// fails at its first assertion, left `Some('C')`, right `Some('D')`.
 #[cfg(windows)]
 #[test]
 fn the_drive_is_read_from_the_resolved_path() {
@@ -148,6 +161,9 @@ fn the_drive_is_read_from_the_resolved_path() {
     assert!(drive_of(&resolved(&std::env::temp_dir())).is_some());
 }
 
+/// RECORDED MUTATION: M-4, `resolved` returning the folder as given;
+/// observed at d505a6054f6d80e4c778623db15b32ee192896a8 (debug):
+/// fails at `assert_eq!(via_link, direct, "the junction resolves to its target")`.
 #[cfg(windows)]
 #[test]
 fn the_volume_read_follows_a_junction() {
@@ -164,6 +180,9 @@ fn the_volume_read_follows_a_junction() {
     assert_ne!(via_link, link, "the volume read uses the resolved folder");
 }
 
+/// RECORDED MUTATION: M-5, deleting `require_floor`'s floor `assert!`;
+/// observed at d505a6054f6d80e4c778623db15b32ee192896a8 (debug):
+/// fails with "test did not panic as expected".
 #[cfg(windows)]
 #[test]
 #[should_panic(expected = "below the floor")]
@@ -171,6 +190,9 @@ fn refuses_below_the_floor_on_the_outputs_volume() {
     require_floor(&resolved(&scratch("floor")), u64::MAX);
 }
 
+/// RECORDED MUTATION: M-6, deleting the `if sha != expected` block;
+/// observed at d505a6054f6d80e4c778623db15b32ee192896a8 (debug):
+/// fails at `expect_err("S accepted")`, message "S accepted: ()".
 #[cfg(windows)]
 #[test]
 fn a_hash_mismatch_leaves_no_output_and_names_both_hashes() {

@@ -131,7 +131,7 @@ re-verify the hash there and record any mismatch, exactly as for any other machi
 
 **Guardrails.** The Regenerate command refuses an existing file, a relative path, and a drive with less than twice S's size free, read on the drive the output's folder resolves to with junctions followed (this machine's `target/` is a junction to D:, as G5's table records). It writes to `<name>.partial` and renames it to the Path only when the full SHA-256 matches; on a mismatch it renames it to `<name>.mismatch` and stops.
 
-**Determinism.** Cross-machine and cross-toolchain determinism is not established, as for G5 above.
+**Determinism.** One regeneration by this command, at d505a6054f6d80e4c778623db15b32ee192896a8, matched the Size and SHA-256 above on this machine (this piece's form, Amendment 1). Cross-machine and cross-toolchain determinism is not established, as for G5 above.
 
 The other writer of S is `engine/tests/import_layout_fixtures.rs`'s matrix generator, which writes it under its own folder when this Path is absent or does not match; its C: disk check is that cut's recorded preflight and is unchanged.
 
