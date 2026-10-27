@@ -116,6 +116,25 @@ generator's deterministic regenerability (confirmed twice, above) as the deeper 
 cross-machine/cross-toolchain caveat above still applies to any regeneration on D:'s own toolchain —
 re-verify the hash there and record any mismatch, exactly as for any other machine.
 
+## `parcels-145mb.parquet` — the first-batch cut's 145 MB source fixture, S
+
+| Field | Value |
+|---|---|
+| **Path** | `target/slice-evidence/first-batch/parcels-145mb.parquet`, where `kernel/tests/first_batch_factorial.rs` and `kernel/tests/query_window_attribution.rs` read it |
+| **Size** | 151,629,665 bytes |
+| **SHA-256** | `fe61e704fcc01d40b0e453d81a4987fc23862dcc38d62bd1f9635d124433ac7a` |
+| **Generator** | `spec_s()` in `kernel/tests/first_batch_factorial.rs`, restated field for field in `kernel/tests/regenerate_fixture_s.rs` |
+| **Regenerate** | `SPATIAL_REGEN_OUT=<an absolute path>/parcels-145mb.parquet cargo test --release -p spatial-kernel --test regenerate_fixture_s -- --ignored --exact regenerate_parcels_145mb_fixture --nocapture` (Windows only) |
+| **Writer** | `spatial_engine::fixture::write_geoparquet_cancellable` (arrow-rs); `first_batch_factorial.rs` writes through `write_geoparquet`, a wrapper over it |
+
+**Exact generation spec** (`spec_s()`): `features` 100_000, `avg_vertices` 100, `hole_every` 7, `seed` 0x5EED_2056_0000_0007, `chunk` 8_192, `row_group_rows` 8_192, `license` `LicenseMode::DeclaredBySource`; every other field is `FixtureSpec::default()`'s, so the SHA-256 above, not this list, is the spec's pin.
+
+**Guardrails.** The Regenerate command refuses an existing file, a relative path, and a drive with less than twice S's size free, read on the drive the output's folder resolves to with junctions followed (this machine's `target/` is a junction to D:, as G5's table records). It writes to `<name>.partial` and renames it to the output path only when the full SHA-256 matches; on a mismatch it renames it to `<name>.mismatch` and stops.
+
+**Determinism.** One regeneration by this command, at d505a6054f6d80e4c778623db15b32ee192896a8, matched the Size and SHA-256 above on this machine (this piece's form, Amendment 1). Cross-machine and cross-toolchain determinism is not established, as for G5 above.
+
+The other writer of S is `engine/tests/import_layout_fixtures.rs`'s matrix generator, which writes it under its own folder when this Path is absent or does not match; its C: disk check is that cut's recorded preflight and is unchanged.
+
 ## The GeoParquet compatibility corpus: pointer only
 
 - **Local path:** `target/fixtures/compat-corpus/`, under the main checkout. It is untracked.
