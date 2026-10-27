@@ -148,3 +148,8 @@ Clause checks:
 - **M-1 to M-7** each failed the test the line names, where its prediction says (`state/consults/2026-10-27-fixture-s-regeneration-entry-point-build-worker-report.md`); M-7 failed at `sha256 mismatch` and left only the `.mismatch` file. Each is recorded in its RECORDED MUTATION doc line, naming d505a6054f6d80e4c778623db15b32ee192896a8.
 - **Figures:** 231 lines over the 2 files of the Scope, under the human's 260.
 - Nothing is invalidated. Determinism across machines and toolchains is not established (the determinism sentence says so).
+
+### Amendment 2 (2026-10-27), class 3: two corrections from gate 1, in the architect's words (`state/consults/gates/2026-10-27-fixture-s-regeneration-entry-point-gate1-architect.md`, D2 and D3). Written after gate 1's reports were seen.
+
+- Correction to note 6 (Portability): product CI runs the workspace suite on windows-latest and ubuntu-24.04 only (`.github/workflows/product-ci-rust.yml:194-197` at 7939326c84bb1b6592cf2147e0f5ecd5d73739cf, sha256 d06209e30a3082d5514bd9d4b3873a329f21324eab4e0c444d370e1c2c377e27), so the two cross-platform tests run on Windows and Linux CI, not macOS. Windows CI runs all six cheap tests, as the note says. (The pin is written in the dot-path form; its sha256 was recomputed by the custodian at 7939326c and equals the one the architect copied from note 6.)
+- Correction to Amendment 1: the RECORDED MUTATION doc lines it names are in `kernel/tests/regenerate_fixture_s.rs` at d033b201f1903564841b6233f21d5cfde5ecc763, the record commit on the unmerged branch `cut/fixture-s-regeneration-entry-point`.

@@ -401,3 +401,19 @@ The answers are the human's, in `state/directives/2026-10-26-clicks-260-261-244-
 - **§9:** one more cold clang-cl build on the probe's own target under H2's booking, the log checked as before (clang-cl only) and for the define on every DuckDB unit; then P0 as §9 has it. A failure of that build, or of a pass criterion that is not a build failure, stops for the human (OPEN-4 (A)); route (b) is then the route, with its ADR-021 Note in the human's words.
 - **The build-of-record sentence** gains the human's clause (the direction, its last paragraph but one), the define written in once confirmed; the gate checks it against the config and the header.
 - **Unchanged:** the crate, its build script, its source and the dependency version; route (b)'s pre-code work stays unstarted.
+
+### Amendment 2 (2026-10-27): the define confirmed, and P0's second attempt. Written after P0's results were seen.
+
+- **The report:** `state/consults/2026-10-27-admitted-integer-overflow-silent-wraparound-p0-second-run-tester-high-report.md`. Nothing in this amendment grades it; lead-data reads it against §5 next.
+- **The define** (the direction, item 1): `-DDUCKDB_STATIC_BUILD`. By the report, the vendored 1.5.5 header `duckdb/common/winapi.hpp` defines `DUCKDB_API` empty on Windows when `DUCKDB_STATIC_BUILD` is defined, all under `#ifndef DUCKDB_API`; the macro's other uses in the vendored source (two in `duckdb.h`) only choose export or import decorations; the crate's build script defines `DUCKDB_BUILD_LIBRARY` on Windows and neither of the others. The header's lines are byte-copied in the report.
+- **§2a's `.cargo/config.toml`** is now these bytes (sha256 6889110645ec075c0cba3bf4aa71c4b43e5b5dfafe7d5a3e8228c05c5010e35f, read from the probe checkout):
+
+```toml
+# Bundled DuckDB on Windows: see engine/Cargo.toml, above the `duckdb` dependency.
+[env]
+"CXX_x86_64-pc-windows-msvc" = "clang-cl"
+"CXXFLAGS_x86_64-pc-windows-msvc" = "-DDUCKDB_STATIC_BUILD"
+```
+
+- **The build-of-record sentence's clause** (the human's words, from the direction, the define filled in as the direction says): ", with DuckDB's export decorations switched off for this static build (-DDUCKDB_STATIC_BUILD), because clang-cl rejects the exported deleted functions in DuckDB 1.5.5's variant_stats.hpp".
+- **The build:** one cold clang-cl build passed; by the report, all 352 DuckDB compile units name clang-cl and carry the define, none names cl.exe, and no compiler-rt name appears in the archive or the probe executable (the linker line itself was not seen).
