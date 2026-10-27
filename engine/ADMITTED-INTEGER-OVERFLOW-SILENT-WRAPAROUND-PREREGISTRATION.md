@@ -392,3 +392,12 @@ The answers are the human's, in `state/directives/2026-10-26-clicks-260-261-244-
 - **Rule (00)** was checked at main 2699ae50 by `git diff --name-only origin/main...<branch>` for every open branch and the branches in flight: none touches `.cargo/config.toml`, `engine/Cargo.toml`, `engine/tests/admitted_integer_overflow.rs`, `CONTRIBUTING.md` or `CLAUDE.md`.
 
 ## Amendments (opens empty; append-only)
+
+### Amendment 1 (2026-10-27): the human's direction after P0's stop at P-3. Written after P0's build outcome had been seen.
+
+- **What was seen:** P0 stopped at P-3 (`state/consults/2026-10-27-admitted-integer-overflow-silent-wraparound-p0-run-tester-high-report.md`): clang-cl could not build the bundled DuckDB, because DuckDB 1.5.5's own header exports deleted functions, which clang-cl rejects.
+- **The direction:** `state/directives/2026-10-27-o1-route-a-continues-duckdb-export-decorations-off-by-the-header-switch.md`, referenced and not restated. Route (a) continues; §5's fallback condition is read by the human as not having fired.
+- **§2a:** the `.cargo/config.toml` bytes gain one entry in the same `[env]` table, beside the CXX entry: `CXXFLAGS_x86_64-pc-windows-msvc`, set to the define the tester confirms from the vendored header (the direction, item 1). Its exact bytes, with the header's macro structure byte-copied, are recorded in the next amendment, after the tester's report.
+- **§9:** one more cold clang-cl build on the probe's own target under H2's booking, the log checked as before (clang-cl only) and for the define on every DuckDB unit; then P0 as §9 has it. A failure of that build, or of a pass criterion that is not a build failure, stops for the human (OPEN-4 (A)); route (b) is then the route, with its ADR-021 Note in the human's words.
+- **The build-of-record sentence** gains the human's clause (the direction, its last paragraph but one), the define written in once confirmed; the gate checks it against the config and the header.
+- **Unchanged:** the crate, its build script, its source and the dependency version; route (b)'s pre-code work stays unstarted.

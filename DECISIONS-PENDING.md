@@ -4,6 +4,11 @@ Line references written before the rotation point into state/cut-archive/DECISIO
 
 ## Pending
 
+**RULED 2026-10-27 — O1 (`admitted-integer-overflow-silent-wraparound`): route (a) continues and the fallback has not fired; DuckDB's export decorations are switched off for this static build by winapi.hpp's own switch, the define confirmed by the tester from the vendored 1.5.5 header (DUCKDB_STATIC_BUILD if honoured, else an empty DUCKDB_API), every other use of it reported, a behaviour-changing use outside the header a stop; the define in the same .cargo/config.toml [env] table as CXXFLAGS_x86_64-pc-windows-msvc, Windows only, nothing in the crate changed; one more cold clang-cl build on the probe's target under H2's booking, then P0 as the form has it; a failure goes to the human (OPEN-4 (A)), route (b) then the route; the build-of-record sentence gains the human's clause; route (b)'s pre-code work stays unstarted (`state/directives/2026-10-27-o1-route-a-continues-duckdb-export-decorations-off-by-the-header-switch.md`).**
+
+- **The ruling** is the text, referenced and not restated.
+- **Applied this session:** the filing; the form's Amendment 1; the tester dispatched.
+
 **RULED 2026-10-26 — #260 and #261 clicked; #244 out of draft for the click, then R2 (done), then #241's click, then #249 and #252 refreshed on main and out of draft, 4a and 4b unskipped on #252's merge; O1: H1 done, H2 booked shared, W-1 and W-2 as the architect worded them, OPEN-1 to OPEN-5 and OPEN-7 to OPEN-9 as recommended (OPEN-5 the cheap run first), OPEN-6 the human's CLAUDE.md words, compiler-rt a stop; entry 9 heads the filler queue when O1 merges; verify-cites-past-end-bound on Draft B, S3 alone, verify-quotes-cite-listing-line-count back to its own node, S4, last in governance; 6d's 260-line note, R3b stands, C: cleared; 5b OPEN-1 (A) and OPEN-2 (B); 8a Microsoft Road Detections under the stated licence stop; 8b route (A), F-A after it (`state/directives/2026-10-26-clicks-260-261-244-r2-241-o1-answers-pb-draft-b-6d-260-lines-5b-8a-8b-rulings.md`).**
 
 - **The rulings** are the text, referenced and not restated.
