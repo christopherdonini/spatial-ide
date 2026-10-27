@@ -15,6 +15,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
+import { pathToFileURL } from 'node:url';
 import {
   isPathShaped,
   extractCitations,
@@ -538,4 +539,91 @@ test('an_out_of_range_reason_for_an_empty_file_counts_0_lines', () => {
   const res = checkCitation({ pathRaw: 'engine/src/pool.rs', startL: 2, endL: 2, relPath: 'docs/x.md' }, mkIndex(['engine/src/pool.rs']), dir);
   assert.equal(res.status, 'oob-exact');
   assert.match(res.reason, /\(0 lines\)$/);
+});
+
+// The bound is the file's true line count; a cite on the legacy-bound list (by citing file and token) keeps the old, split-piece bound.
+const LB = 'scripts/plan/verify-cites-legacy-bound.json';
+const lbJson = (...entries) => JSON.stringify({ $doc: 'test', entries }) + '\n';
+const gitIn = (dir, ...a) => execFileSync('git', a, { cwd: dir, encoding: 'utf8' }).trim();
+function commitList(dir, ...entries) {
+  fs.mkdirSync(path.dirname(path.join(dir, LB)), { recursive: true });
+  fs.writeFileSync(path.join(dir, LB), lbJson(...entries));
+  gitIn(dir, 'add', '-A');
+  gitIn(dir, 'commit', '-q', '-m', 'list');
+}
+
+test('a_cite_to_the_line_just_past_the_end_of_a_newline_ended_file_fails', () => {
+  const dir = tmpTree({ 'engine/src/pool.rs': 'a\nb\nc\n' });
+  const res = checkCitation({ pathRaw: 'engine/src/pool.rs', startL: 4, endL: 4, relPath: 'docs/x.md' }, mkIndex(['engine/src/pool.rs']), dir);
+  assert.equal(res.status, 'oob-exact');
+  assert.match(res.reason, /^line 4 exceeds "engine\/src\/pool\.rs" \(3 lines\)$/);
+});
+
+test('a_cite_to_line_1_of_an_empty_file_fails', () => {
+  const dir = tmpTree({ 'engine/src/pool.rs': '' });
+  const res = checkCitation({ pathRaw: 'engine/src/pool.rs', startL: 1, endL: 1, relPath: 'docs/x.md' }, mkIndex(['engine/src/pool.rs']), dir);
+  assert.equal(res.status, 'oob-exact');
+  assert.match(res.reason, /^line 1 exceeds "engine\/src\/pool\.rs" \(0 lines\)$/);
+});
+
+test('a_pinned_cite_to_the_line_just_past_the_end_at_its_commit_fails', () => {
+  const gated = pinnedRun((rev) => `see engine/src/pool.rs:6 @ ${rev} sha256:00`, 'gated');
+  assert.equal(gated.length, 1, JSON.stringify(gated));
+  assert.match(gated[0].reason, /^line 6 exceeds "engine\/src\/pool\.rs" at pinned commit [0-9a-f]+ \(5 lines\)$/);
+});
+
+test('a_cite_on_the_legacy_bound_list_passes_under_the_old_bound_only_from_its_listed_file', () => {
+  const dir = gitTree({ 'engine/src/pool.rs': 'a\nb\nc\n', 'docs/a.md': 'see engine/src/pool.rs:4', 'docs/b.md': 'see engine/src/pool.rs:4' });
+  try {
+    commitList(dir, { path: 'docs/a.md', cite: 'engine/src/pool.rs:4' });
+    const { gated, listErrors } = runVerifyCites({ repoRoot: dir });
+    assert.deepEqual(gated.map((f) => f.relPath), ['docs/b.md'], JSON.stringify(gated));
+    assert.deepEqual(listErrors, []);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('a_pinned_cite_on_the_legacy_bound_list_passes_under_the_old_bound_at_its_pin', () => {
+  const dir = pinnedAfter({ 'engine/src/pool.rs': 'a\nb\nc\nd\ne\n' }, { 'engine/src/pool.rs': 'a\n', [LB]: lbJson({ path: 'docs-notes.md', cite: 'engine/src/pool.rs:6' }) }, 'docs-notes.md', (rev) => `see engine/src/pool.rs:6 @ ${rev} sha256:00`);
+  try {
+    const { gated, listErrors } = runVerifyCites({ repoRoot: dir });
+    assert.deepEqual([gated, listErrors], [[], []], JSON.stringify(gated));
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('the_legacy_bound_list_may_shrink_but_a_gained_entry_fails_by_name_even_at_the_same_count', () => {
+  const [A, B, C] = ['a.md', 'b.md', 'c.md'].map((p) => ({ path: p, cite: 'engine/src/pool.rs:4' }));
+  const dir = gitTree({ 'engine/src/pool.rs': 'a\n' });
+  try {
+    commitList(dir, A, B); // the oldest commit that changes the list is excepted
+    commitList(dir, A); // a shrink
+    assert.deepEqual(runVerifyCites({ repoRoot: dir }).listErrors, []);
+    commitList(dir, C); // one entry for one, the same count: C is gained
+    const { listErrors } = runVerifyCites({ repoRoot: dir });
+    assert.equal(listErrors.length, 1, JSON.stringify(listErrors));
+    assert.ok(listErrors[0].includes(gitIn(dir, 'rev-parse', '--short=12', 'HEAD')) && listErrors[0].includes('c.md'), listErrors[0]);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('the_legacy_bound_list_check_fails_by_name_in_a_shallow_clone', () => {
+  const src = gitTree({ 'a.md': 'x\n' });
+  const out = fs.mkdtempSync(path.join(os.tmpdir(), 'verify-cites-shallow-'));
+  try {
+    commitList(src);
+    gitIn(src, 'commit', '-q', '--allow-empty', '-m', 'second');
+    const clone = path.join(out, 'c');
+    gitIn(out, 'clone', '-q', '--depth', '1', pathToFileURL(src).href, clone);
+    assert.equal(gitIn(clone, 'rev-parse', '--is-shallow-repository'), 'true');
+    const { listErrors } = runVerifyCites({ repoRoot: clone });
+    assert.equal(listErrors.length, 1, JSON.stringify(listErrors));
+    assert.match(listErrors[0], /^shallow clone: /);
+  } finally {
+    fs.rmSync(src, { recursive: true, force: true });
+    fs.rmSync(out, { recursive: true, force: true });
+  }
 });

@@ -12,12 +12,17 @@
 // both endpoints) must be within that file, as the bound below defines it. Every reference that does NOT resolve is
 // printed with the citing `file:line` and the bad target; the process exits 1 if any reference is
 // unresolved, 0 if all resolve. A cite starting or ending at line 0 never resolves; where its reason
-// would say a line exceeds a file, it names line 0 instead (lines count from 1). Here and below, a line is
-// within a file (and does not exceed it) when it is no higher than the number of pieces the file's text
-// splits into at newlines. For a file that ends in a newline, and for an empty file, that is one more than
-// its line count, so a cite to the line just past such a file's end passes, in the tree and at a pin (node
-// verify-cites-past-end-bound). Every reason that prints a line count prints the file's true count: a final
-// newline ends the last line and starts no new one, and an empty file has 0 lines.
+// would say a line exceeds a file, it names line 0 instead (lines count from 1). Here and below, a file's
+// line count is its true count (a final newline ends the last line and starts no new one, and an empty file
+// has 0 lines); a line is within a file (and does not exceed it) when it is no higher than that count, in the
+// tree and at a pin, and every reason that prints a line count prints it. LEGACY BOUND (node
+// verify-cites-past-end-bound): a cite that scripts/plan/verify-cites-legacy-bound.json lists by its citing
+// file and its token as written is also within a file when its line is no higher than the number of pieces
+// the file's text splits into at newlines, one more than the line count for a file that ends in a newline or
+// is empty, in the tree and at its pin. The list holds cites inside filed records, which are not edited. The
+// scan fails when the list, at a commit on HEAD's first-parent history that changes it, holds an entry its
+// first parent's list does not (an absent list holds none), the oldest such commit excepted, and it fails in
+// a shallow clone, where that history cannot be read.
 // PINNED FALLBACK: a cite
 // that does not resolve in the tree but is directly followed by `@ <commit>` (7-40 hex digits) is read
 // at that commit instead: the commit must exist, a path must be a file there, and the line must be
@@ -64,8 +69,11 @@
 //
 // WHAT THIS DOES NOT CATCH (disclosed): a cited line that moved but stayed in range (this checks
 // existence and bounds, not that line N still says what the citation implies); a citation with the
-// right line count but the wrong file among same-basename siblings; a cite to the line just past the end of a file that ends in a newline,
-// or to line 1 of an empty file (the bound above); and, by the tiering above, a
+// right line count but the wrong file among same-basename siblings; a listed cite (the legacy bound above) to the line just past the end of a file that ends in a newline,
+// or to line 1 of an empty file; a list entry no longer needed is not reported; a change to the list is
+// checked against its history only once committed; and that history is read along first parents, so a commit
+// reached only through a merge's second parent is checked as part of the merge, not alone; and, by the
+// tiering above, a
 // stale LOOSE reference (it is surfaced as advice, never gated). Of the pin: one after a closing
 // backtick or after two spaces is not read; one on a cite that resolves in the tree is not checked; a
 // hex word right after `@` is read as a pin; a pin is read only at the files the tree now resolves the
@@ -236,7 +244,13 @@ export function classifyPath(pathRaw, topDirs) {
   return 'loose';
 }
 
-// The check's bound is the split's piece count, one above the line count for a file that ends in a newline or is empty: it can only fail to flag a cite just past the end, never flag a real one (node verify-cites-past-end-bound). The reasons print `lines`, the true count.
+// `lines`, the true count, is the check's bound and the count every reason prints; `pieces`, the split's piece count, is the bound only for a cite on the legacy-bound list (see the header).
+const LEGACY_LIST = 'scripts/plan/verify-cites-legacy-bound.json';
+function legacyKeys(text) {
+  const keys = new Set();
+  for (const e of JSON.parse(text).entries) if (typeof e?.path === 'string' && typeof e.cite === 'string') keys.add(JSON.stringify([e.path, e.cite]));
+  return keys;
+}
 function countOf(text) {
   const pieces = text.split('\n').length;
   return { pieces, lines: pieces - (text === '' || text.endsWith('\n') ? 1 : 0) };
@@ -261,7 +275,7 @@ export function checkCitation(cite, index, repoRoot) {
   const maxL = Math.max(cite.startL, cite.endL);
   const zero = cite.startL === 0 || cite.endL === 0;
   const validStart = cite.startL >= 1 && cite.endL >= 1;
-  const inRange = (cands) => validStart && cands.some((c) => maxL <= lineCount(repoRoot, c).pieces);
+  const inRange = (cands) => validStart && cands.some((c) => { const n = lineCount(repoRoot, c); return maxL <= n.lines || (cite.oldBound === true && maxL <= n.pieces); });
   if (exact.length) {
     if (inRange(exact)) return { status: 'ok' };
     if (zero) return { status: 'oob-exact', reason: `line 0 does not exist in "${exact[0]}" (lines count from 1)` };
@@ -299,7 +313,7 @@ export function checkPinned(cite, repoRoot, paths) {
     const lc = countOf(text);
     if (cite.startL === 0 || cite.endL === 0) {
       failure ??= { ok: false, reason: `line 0 does not exist in "${p}" at pinned commit ${cite.pin} (lines count from 1)` };
-    } else if (maxL > lc.pieces) {
+    } else if (maxL > lc.lines && !(cite.oldBound === true && maxL <= lc.pieces)) {
       failure ??= { ok: false, reason: `line ${maxL} exceeds "${p}" at pinned commit ${cite.pin} (${lc.lines} lines)` };
     } else return { ok: true };
   }
@@ -331,7 +345,23 @@ export function selectFiles(index, filesGlob) {
 }
 
 /**
- * Runs the scan. Returns { gated, advisory, scanned }. Each finding is
+ * The legacy-bound list's history along HEAD's first parents: every commit after the oldest that changes it
+ * must hold only entries its first parent's list holds (an absent list holds none); a shallow clone fails.
+ */
+export function legacyListErrors(root) {
+  const git = (args) => execFileSync('git', args, { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], maxBuffer: 1 << 28 });
+  if (git(['rev-parse', '--is-shallow-repository']).trim() === 'true') return ["shallow clone: the legacy-bound list's history cannot be read"];
+  const keysAt = (rev) => { try { return legacyKeys(git(['show', `${rev}:${LEGACY_LIST}`])); } catch (e) { if (e instanceof SyntaxError || e instanceof TypeError) throw e; return new Set(); } };
+  const errors = [];
+  for (const c of git(['log', '--first-parent', '--reverse', '--format=%H', '--', LEGACY_LIST]).split('\n').filter(Boolean).slice(1)) {
+    const before = keysAt(`${c}^1`);
+    for (const k of keysAt(c)) if (!before.has(k)) errors.push(`legacy-bound list gained an entry at ${c.slice(0, 12)}: ${k}`);
+  }
+  return errors;
+}
+
+/**
+ * Runs the scan. Returns { gated, advisory, scanned, listErrors }. Each finding is
  * { relPath, citeLine, target, reason }. `gated` findings drive the exit code; `advisory` findings
  * are printed for information only (see the two-tier note at the top of this file).
  */
@@ -342,6 +372,8 @@ export function runVerifyCites({ repoRoot, filesGlob } = {}) {
   const files = selectFiles(index, filesGlob);
   const gated = [];
   const advisory = [];
+  const listPath = path.join(root, LEGACY_LIST);
+  const legacy = fs.existsSync(listPath) ? legacyKeys(fs.readFileSync(listPath, 'utf8')) : new Set();
   for (const relPath of files) {
     const ext = extOf(relPath);
     const text = fs.readFileSync(path.join(root, relPath), 'utf8');
@@ -355,6 +387,7 @@ export function runVerifyCites({ repoRoot, filesGlob } = {}) {
     const sink = archived ? advisory : gated;
     for (const cite of cites) {
       cite.relPath = relPath;
+      cite.oldBound = legacy.has(JSON.stringify([relPath, cite.raw]));
       const cls = classifyPath(cite.pathRaw, topDirs);
       if (cls === 'doc-number') continue;
       const at = { relPath, citeLine: cite.citeLine, target: cite.raw };
@@ -386,7 +419,7 @@ export function runVerifyCites({ repoRoot, filesGlob } = {}) {
       }
     }
   }
-  return { gated, advisory, scanned: files.length };
+  return { gated, advisory, scanned: files.length, listErrors: legacyListErrors(root) };
 }
 
 function parseArgs(argv) {
@@ -407,15 +440,20 @@ function line(f) {
 
 function main() {
   const args = parseArgs(process.argv.slice(2));
-  const { gated, advisory, scanned } = runVerifyCites({ repoRoot: REPO_ROOT, filesGlob: args.files });
+  const { gated, advisory, scanned, listErrors } = runVerifyCites({ repoRoot: REPO_ROOT, filesGlob: args.files });
   const failing = args.strict ? [...gated, ...advisory] : gated;
 
   if (!args.quiet && advisory.length && !args.strict) {
     console.error(`verify:cites — ${advisory.length} advisory (loose/ambiguous, not gated):`);
     for (const f of advisory) console.error(line(f));
   }
+  if (listErrors.length) {
+    console.error(`verify:cites FAIL — ${listErrors.length} legacy-bound list error(s):`);
+    for (const e of listErrors) console.error(`  - ${e}`);
+    process.exitCode = 1;
+  }
   if (failing.length === 0) {
-    console.log(
+    if (!listErrors.length) console.log(
       `verify:cites PASS — every rooted (in-tree) path:line reference across ${scanned} file(s) resolves.` +
         (advisory.length ? ` (${advisory.length} loose reference(s) advised above.)` : ''),
     );
