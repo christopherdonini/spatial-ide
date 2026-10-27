@@ -129,7 +129,7 @@ re-verify the hash there and record any mismatch, exactly as for any other machi
 
 **Exact generation spec** (`spec_s()`): `features` 100_000, `avg_vertices` 100, `hole_every` 7, `seed` 0x5EED_2056_0000_0007, `chunk` 8_192, `row_group_rows` 8_192, `license` `LicenseMode::DeclaredBySource`; every other field is `FixtureSpec::default()`'s, so the SHA-256 above, not this list, is the spec's pin.
 
-**Guardrails.** The Regenerate command refuses an existing file, a relative path, and a drive with less than twice S's size free, read on the drive the output's folder resolves to with junctions followed (this machine's `target/` is a junction to D:, as G5's table records). It writes to `<name>.partial` and renames it to the Path only when the full SHA-256 matches; on a mismatch it renames it to `<name>.mismatch` and stops.
+**Guardrails.** The Regenerate command refuses an existing file, a relative path, and a drive with less than twice S's size free, read on the drive the output's folder resolves to with junctions followed (this machine's `target/` is a junction to D:, as G5's table records). It writes to `<name>.partial` and renames it to the output path only when the full SHA-256 matches; on a mismatch it renames it to `<name>.mismatch` and stops.
 
 **Determinism.** One regeneration by this command, at d505a6054f6d80e4c778623db15b32ee192896a8, matched the Size and SHA-256 above on this machine (this piece's form, Amendment 1). Cross-machine and cross-toolchain determinism is not established, as for G5 above.
 
