@@ -165,3 +165,11 @@ This piece's paths are the six in Draft A's Scope (four in Draft B), plus the fo
 - **Final:** 185 by `git diff --numstat 07445119...1043a783`, insertions plus deletions, the list counted as the Scope line says: `scripts/plan/verify-cites.mjs` 68, `scripts/plan/verify-cites.test.mjs` 95, `scripts/plan/verify-cites-legacy-bound.json` 18, `.github/workflows/governance-ci.yml` 4; 4 files.
 - **The reason:** note 6's estimate was about 134; the code came to 68 lines against about 55, and the seven tests with their RECORDED MUTATION comments to 95 against about 60. Nothing was trimmed to fit.
 - **The route:** 185 crosses §21c's bound, so the single-gate route closed (§21b, the mid-piece clause, first seen at the list commit 7df4983f, 178 lines): the architect gate is taken beside the reviewer. The five-line form stays; the Scope line is not edited.
+
+### Amendment 3 (2026-10-27): the closing record, written after gate 1's reports were seen. References and hashes only.
+
+- **The final head:** 1043a783db52adc4b1ec874f3837908adf72a236; no commit after gate 1.
+- **Gate 1:** `state/consults/gates/2026-10-27-verify-cites-past-end-bound-gate1-architect.md` (gate-log 633, sha256 e62ee78366b1745ba1e3f677b979f7b5c2067d2dcd5936b1912ec9f36544c661) and `state/consults/gates/2026-10-27-verify-cites-past-end-bound-gate1-reviewer.md` (gate-log 634, sha256 64864a06b3d26a2450126114059428c10e45858e58cd1ad0d1ab7dca040df856), both PASS WITH NOTES, with no Correctness or Evidence finding.
+- **The reviewer's D1 and D2** concern the PR body, the custodian's words; both are replaced by the reviewer's words, with no re-gate (§31).
+- **For the human, with no replacement words** (the reviewer's D1): the Scope line says header comments only for the workflow file; R5 sits as a comment above the plan job's checkout step, where note 5 places it. The Scope line is not edited.
+- **CI at the final head:** every check passes (the reviewer's check 4).
