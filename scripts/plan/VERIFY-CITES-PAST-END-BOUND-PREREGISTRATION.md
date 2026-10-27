@@ -158,3 +158,10 @@ This piece's paths are the six in Draft A's Scope (four in Draft B), plus the fo
 - **The result**, observed at 7df4983f7dae524a85a468fabe98f75222e3aa1d (`state/consults/2026-10-27-verify-cites-past-end-bound-worker-stop-report.md`): M1 fails that test and two more, `a_cite_to_line_1_of_an_empty_file_fails` and `a_cite_on_the_legacy_bound_list_passes_under_the_old_bound_only_from_its_listed_file`.
 - **The reason:** both other tests assert a cite that the true count fails and the split's piece count passes (line 1 of an empty file, whose split has one piece; a just-past-end cite from a file the list does not name), so a bound read from `pieces` fails them too. "Alone" could not hold for M1 as worded.
 - The mutation is detected by its named test. The prediction is not edited; the RECORDED MUTATION comment states the outcome observed. Nothing else changes.
+
+### Amendment 2 (2026-10-27), class 6: budget deviation, Scope not edited. Written after the piece's results were seen.
+
+- **Declared:** 150 lines over 4 files (the Scope line).
+- **Final:** 185 by `git diff --numstat 07445119...1043a783`, insertions plus deletions, the list counted as the Scope line says: `scripts/plan/verify-cites.mjs` 68, `scripts/plan/verify-cites.test.mjs` 95, `scripts/plan/verify-cites-legacy-bound.json` 18, `.github/workflows/governance-ci.yml` 4; 4 files.
+- **The reason:** note 6's estimate was about 134; the code came to 68 lines against about 55, and the seven tests with their RECORDED MUTATION comments to 95 against about 60. Nothing was trimmed to fit.
+- **The route:** 185 crosses §21c's bound, so the single-gate route closed (§21b, the mid-piece clause, first seen at the list commit 7df4983f, 178 lines): the architect gate is taken beside the reviewer. The five-line form stays; the Scope line is not edited.
