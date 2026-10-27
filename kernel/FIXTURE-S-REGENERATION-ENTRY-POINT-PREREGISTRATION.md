@@ -153,3 +153,11 @@ Clause checks:
 
 - Correction to note 6 (Portability): product CI runs the workspace suite on windows-latest and ubuntu-24.04 only (`.github/workflows/product-ci-rust.yml:194-197` at 7939326c84bb1b6592cf2147e0f5ecd5d73739cf, sha256 d06209e30a3082d5514bd9d4b3873a329f21324eab4e0c444d370e1c2c377e27), so the two cross-platform tests run on Windows and Linux CI, not macOS. Windows CI runs all six cheap tests, as the note says. (The pin is written in the dot-path form; its sha256 was recomputed by the custodian at 7939326c and equals the one the architect copied from note 6.)
 - Correction to Amendment 1: the RECORDED MUTATION doc lines it names are in `kernel/tests/regenerate_fixture_s.rs` at d033b201f1903564841b6233f21d5cfde5ecc763, the record commit on the unmerged branch `cut/fixture-s-regeneration-entry-point`.
+
+### Amendment 3 (2026-10-27): the closing record, written after gate 1's reports and the words commit were seen. References and hashes only.
+
+- **The final head:** fb0f8b923a3a7d4319b9c84abf4d6edac0e5cf23, the words commit; its diff from d033b201 is one line of `kernel/FIXTURES.md`.
+- **Gate 1:** `state/consults/gates/2026-10-27-fixture-s-regeneration-entry-point-gate1-architect.md` (gate-log 635, sha256 7d6845c1274bbb52ce4f92c2a46d9f0214dcf575acaa25492de2b2e4cc73f4c8) and `state/consults/gates/2026-10-27-fixture-s-regeneration-entry-point-gate1-reviewer.md` (gate-log 636, sha256 94320a37b689a6103773c9540b457aaecf084bb9481eca7ac9d5be55628d69d7), both PASS WITH NOTES, with no Correctness or Evidence finding.
+- **The architect's D1** is applied at the final head by a worker from the pair, with no re-gate (§31): `state/consults/2026-10-27-fixture-s-regeneration-entry-point-words-worker-report.md`. **D2 and D3** are Amendment 2.
+- **Figures:** 233 lines over the 2 files of the Scope, under the human's 260.
+- **CI at the final head:** 15 of 15 checks pass (read by gh before this record).
