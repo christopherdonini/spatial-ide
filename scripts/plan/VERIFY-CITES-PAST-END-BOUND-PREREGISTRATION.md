@@ -151,3 +151,10 @@ This piece's paths are the six in Draft A's Scope (four in Draft B), plus the fo
 - **Rule (00)** was checked again at main e54457e3 by `git diff --name-only origin/main...<branch>` for every open branch and the branches in flight: none touches the four files of the Scope line. Nothing touches `protocol/`.
 
 ## Amendments (opens empty; append-only)
+
+### Amendment 1 (2026-10-27), class 2: a deviation recorded after results. Written after the piece's mutation results were seen.
+
+- **The prediction** (the Tests+mutation line): M1, checkCitation's bound read from `pieces` again, fails `a_cite_to_the_line_just_past_the_end_of_a_newline_ended_file_fails` by name, alone.
+- **The result**, observed at 7df4983f7dae524a85a468fabe98f75222e3aa1d (`state/consults/2026-10-27-verify-cites-past-end-bound-worker-stop-report.md`): M1 fails that test and two more, `a_cite_to_line_1_of_an_empty_file_fails` and `a_cite_on_the_legacy_bound_list_passes_under_the_old_bound_only_from_its_listed_file`.
+- **The reason:** both other tests assert a cite that the true count fails and the split's piece count passes (line 1 of an empty file, whose split has one piece; a just-past-end cite from a file the list does not name), so a bound read from `pieces` fails them too. "Alone" could not hold for M1 as worded.
+- The mutation is detected by its named test. The prediction is not edited; the RECORDED MUTATION comment states the outcome observed. Nothing else changes.
