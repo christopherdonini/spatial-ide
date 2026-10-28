@@ -36,6 +36,13 @@ arrow = { workspace = true }
 # a fresh runner) was the SYMPTOM that surfaced this latent runtime fetch — the reason to fix it is
 # the property, not the red build. `json = ["bundled"]`: no new crate in the tree, only more of
 # DuckDB's own vendored sources.
+#
+# [THE HUMAN'S WORDS FOR THE BUILD OF RECORD — directive 2026-10-26 (resent), item 1; inserted as answered under AUTONOMY §31, not reworded]
+# The Windows build of the bundled DuckDB is compiled with clang-cl (CXX_x86_64-pc-windows-msvc=clang-cl), with DuckDB's export decorations switched off for this static build (-DDUCKDB_STATIC_BUILD), because clang-cl rejects the exported deleted functions in DuckDB 1.5.5's variant_stats.hpp, in CI and on the development machine, so that DuckDB's int64 multiply takes the compiler's checked path, as the Linux build does, and as DuckDB's source has the macOS build do. An engine test pins it: in an admitted predicate, a BIGINT column holding 4000000000 squared ends in the fixed detail, and the products that fit in its cells return exactly the rows exact arithmetic selects.
+#
+# The one case `.cargo/config.toml` does not reach is a cargo run whose working directory is outside
+# this checkout: that build uses MSVC's cl.exe and no define. It is a developer-only case;
+# `engine/tests/admitted_integer_overflow.rs` pins the outcome the build of record gives.
 duckdb = { version = "1.10505.0", features = ["bundled", "parquet", "json"] }
 serde_json = "1"
 # Content-addressed identity for derived artifacts (docs/02, docs/05): a spatial index is keyed by

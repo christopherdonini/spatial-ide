@@ -26,6 +26,7 @@ AI-native spatial computing platform: headless Rust kernel speaking SKP, Tauri s
 ## Environment
 
 Windows 10 Pro 22H2 (build 19045) · Rust stable (MSVC) · WebView2 · VS Build Tools **with the "Desktop development with C++" workload** (MSVC v143 + Windows SDK — without it cargo fails with `link.exe not found`) · Node 24 LTS (npm 11+) (required for Tauri frontend tooling). The desktop shell (`frontends/shell/`) is React + TypeScript (ADR-001's 2026-08-09 amendment, scoped to the shell); `renderer/bundle-viewer` and the archived ADR-003 spike frontend stay vanilla TypeScript.
+The Windows build also needs clang-cl on PATH (LLVM 20.1.8, or the Visual Studio C++ Clang compiler component with its x64\bin folder on PATH): the bundled DuckDB is compiled with it.
 
 ## Custodian
 
