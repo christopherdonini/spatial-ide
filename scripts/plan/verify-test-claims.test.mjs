@@ -1772,6 +1772,8 @@ test('a_seven_character_rev_pin_binds_in_both_checkers_through_the_shared_gramma
   );
 });
 
+// RECORDED MUTATION (M1): the leading-dot alternative removed from the path -- applied alone, this test run, then
+// reverted; fails by name with actual { quotes: 2, claims: 0 } against expected { quotes: 0, claims: 1 }; observed at 850efbd89ad18daf8c14a0c485eb657cf868abb7.
 // A dot-led path keeps its dot: one pin and one unpinned reference to line 3 of .github/workflows/X-PREREGISTRATION.md.
 test('a_leading_dot_path_pin_resolves_in_both_checkers', () => {
   const rel = `.github/workflows/${SUPERSEDED_DOC}`;
@@ -1791,6 +1793,12 @@ test('a_leading_dot_path_pin_resolves_in_both_checkers', () => {
   );
 });
 
+// RECORDED MUTATION (M2): the preceding-character guard removed -- applied alone, this test run, then reverted; fails by
+// name with actual [{0,1},{0,1},{0,0},{0,1}] against four { quotes: 1, claims: 0 }; observed at 850efbd89ad18daf8c14a0c485eb657cf868abb7.
+// RECORDED MUTATION (M3): the dot's lookahead and the first character both widened to every path character -- applied alone,
+// this test run, then reverted; fails by name with actual [{0,0},{1,0},{1,0},{1,0}] (the ./ entry resolves); observed at 850efbd89ad18daf8c14a0c485eb657cf868abb7.
+// RECORDED MUTATION (M4): the interior restriction removed (`|/)*`) -- applied alone, this test run, then reverted; fails by
+// name with actual [{1,0},{1,0},{1,0},{0,0}] (sub/../ resolves); observed at 850efbd89ad18daf8c14a0c485eb657cf868abb7.
 // A `.` or `..` segment binds nowhere: each pin follows a plain cite of the same line in its paragraph.
 test('each_dot_or_dot_dot_segment_reference_binds_in_neither_checker', () => {
   const got = ['./', '../', '', 'sub/../'].map((pre) => {
