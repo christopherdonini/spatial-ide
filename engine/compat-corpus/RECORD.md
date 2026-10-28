@@ -101,3 +101,18 @@ for h in $(sha256sum < "$C/MANIFEST.json" | cut -d' ' -f1) $(node -e 'const m=re
   git grep -hoE "${h:0:12}[0-9a-f]{52}" | sort -u | grep -vx "$h"
 done
 ```
+
+## Lines set (LF-1; `engine/CORPUS-LINE-FILES-PREREGISTRATION.md`)
+
+One real-world LineString file beside the manifest, which is untouched, so the 21 rows above and C1 to C4 stand. It is untracked at `lines/` under the corpus of record; `lines/msrd-pcn.observe.txt` is the stdout of `scripts/observe.py` for it, as captured. The copied `README.md`'s layout table, a pin as of 2026-09-10, does not list `lines/` and is never read as current.
+
+| id | path | producer and version | invocation | inputs | sha256 | bytes | procedure recorded | why |
+|---|---|---|---|---|---|---|---|---|
+| LF-1 | `lines/msrd-pcn.parquet` | downloaded, with no local writer; footer: parquet-cpp-arrow version 21.0.0 (`parquet_footer_created_by` in `lines/msrd-pcn.observe.txt`) | `curl -sL` of https://data.source.coop/nlebovits/microsoft-ml-road-detections/road-detections/by_country/country=PCN/PCN.parquet at 2026-10-28T16:12:10Z and 16:12:13Z; the host returned ETag `"05c124aa1ac11e03f1014d7a81902784"`, Last-Modified `Fri, 14 Aug 2026 14:47:29 GMT` and `x-amz-version-id` `iPXiHL81i_94eKD.9x_RX7x6RAEbJF6T` both times | that object, at that version id | ea32059406b8ae19d839e3bb9f7c808fbb2d858fbdea555063ae2c6fd3fcc24d | 5545 | no | the input is a version-pinned object URL, which is neither a hash-pinned corpus file nor a commit-pinned URL (this file's Header, "Procedure recorded"). The versions of the software that wrote the bytes are held only as the footer's `parquet-cpp-arrow version 21.0.0`. The input's continued availability is not checked |
+
+**Verify (LF-1).** Run from the main checkout's root, or set `CORPUS`. It prints `row true disk true` when the row's one 64-hex value and its bytes cell equal the observation's, and the file on disk has that sha256 and size.
+
+```sh
+C="${CORPUS:-target/fixtures/compat-corpus}"
+node -e 'const fs=require("fs"),c=require("crypto");const o=JSON.parse(fs.readFileSync("engine/compat-corpus/lines/msrd-pcn.observe.txt","utf8").split("\n").slice(1).join("\n"));const r=fs.readFileSync("engine/compat-corpus/RECORD.md","utf8").split("\n").filter(l=>l.startsWith("| LF-1 |"));const x=r.length===1?r[0].match(/[0-9a-f]{64}/g):[];const f=fs.readFileSync(process.argv[1]);console.log("row",x.length===1&&x[0]===o.sha256&&r[0].includes("| "+o.bytes+" |"),"disk",c.createHash("sha256").update(f).digest("hex")===o.sha256&&f.length===o.bytes)' "$C/lines/msrd-pcn.parquet"
+```

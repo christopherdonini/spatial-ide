@@ -95,4 +95,17 @@ By regeneration means the procedure `RECORD.md` records for each entry, as its p
 - `retired/test_geoparquet_1_1.parquet`
 - `retired/test_with_fid_and_geometry_bbox.parquet`
 
+## Lines set (LF-1)
+
+| id | path | licence as the source names it | primary source (URL, pinned) | retrieved (UTC) | sha256 of the fetched bytes | set |
+|---|---|---|---|---|---|---|
+| LF-1 | `lines/msrd-pcn.parquet` | Open Data Commons Open Database License (ODbL), named by `LICENSE` and by `README.md` of the rights holder's repository at the pinned commit; neither states a version number, and none is inferred. Whether it is open is the human's reading | `LICENSE` of `microsoft/RoadDetections` at commit c1a8d6995ebcfcf248a764f6b67b13e2b3356f06 (113 bytes, byte-stable; the fetch URL is not recorded in the form's Amendment 1) | 2026-10-28T16:13:36Z | 1e4162322549351e6ce131d66c3c6c6cb56755db58e0475138e3f41cd94c4b3c | local-only — fetch-only, never redistributed (the human's ruling on OPEN-1 (A), `state/directives/2026-10-26-clicks-260-261-244-r2-241-o1-answers-pb-draft-b-6d-260-lines-5b-8a-8b-rulings.md`) |
+
+Other sources consulted for LF-1, fetched twice, byte-stable:
+
+| # | URL | retrieved (UTC) | sha256 | byte-stable | what it names for the material |
+|---|---|---|---|---|---|
+| S8 | `README.md` of `microsoft/RoadDetections` at c1a8d6995ebcfcf248a764f6b67b13e2b3356f06 (9387 bytes; the fetch URL and time are not recorded in Amendment 1) | not recorded | b42c3e8272e22f552bcf0c294508f5add2ef8ff5d8f681e51ddb6f082c82576f | yes | ODbL, with a link to https://opendatacommons.org/licenses/odbl/ |
+| S9 | the mirror's `collection.json` (9592 bytes; the fetch URL is not recorded in Amendment 1) | 2026-10-28T16:13:54Z | 87750e290b96d0396996007fe85c30aa7a14f5b8188fb4a838038a897692c311 | yes | `ODbL-1.0`, with a licence link to the same page; a processor's statement, not the licence pin |
+
 Sighted by the human: RULED 2026-09-26 — question round 27, items 1, 2 and 3.
