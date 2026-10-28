@@ -495,3 +495,27 @@ opt-level = 2
   - The architect's PASS WITH NOTES stands.
 - **Scope:** seven files, with `engine/README.md` and `frontends/shell/src-tauri/Cargo.toml` added. The closing amendment extends Amendment 6's class-8 figure; §7 is not edited.
 - **Disclosed, not in scope:** `spikes/adr-029-g1-scan-progress` builds the bundled DuckDB in its own dev profile, without NDEBUG, and no CI runs it. By the same reading, a debug run of it on Windows meets the same assert.
+
+### Amendment 8 (2026-10-28), class 1: correction round 1's results, gate 1's D-1 and D-3, A.1's figure, the link line and the helper listings. Written after the round's results were seen. References and hashes only.
+
+- **D-1** (gate 1's architect report): Amendment 5's parenthesis on T-o states the wrong direction. On MSVC, T-o's `a * b > 0` completed without a row exact arithmetic selects (1 id, [0], where exact arithmetic selects ids 0 and 1: the M1 T-o table in `state/consults/2026-10-28-admitted-integer-overflow-silent-wraparound-build-worker-report.md`), since 2^28 × 2^60 = 2^88 wraps to 0 in int64.
+- **D-3:** the five sha256 values in Amendments 3 and 4 hold at main fd149e2449c4e32c35a7964263adf12201c9bd7e, recomputed by script over each file from line 5 to its end.
+- **A.1** (`state/directives/2026-10-28-rulings-by-lane-o1-filler-order-8a-governance-slots-docs-adr-017-note.md`, A.1): Amendment 5's T-B deviation is the MSVC path flagging a product of magnitude exactly 2^63 as an overflow; T-e's i64::MIN product (−2^31 × 2^32) is that case, a false error on the build being replaced, with no wrong rows.
+  - The figure, on the warm MSVC target at 5d9a7eb3 with the config deleted: `SELECT a * b` over the one row (-2147483648, 4294967296) ended in `Out of Range Error: Overflow in multiplication of INT64 (-2147483648 * 4294967296)!`.
+  - Source: `state/consults/2026-10-28-admitted-integer-overflow-silent-wraparound-link-line-and-helper-listings-tester-report.md`, step 4.
+- **Amendment 7's addition at 4943d8b4a0272e02ea9d49371bb4ae1a069fbad6:** `state/consults/2026-10-28-admitted-integer-overflow-silent-wraparound-correction-round-1-worker-report.md`. The local check counted 326 DuckDB units in the shell workspace's dev build, by `running:` lines naming a `.cpp`: every one clang-cl, with NDEBUG and the define, and none cl.exe. The release build below counted 352 by its `-c` lines; the units between the two counts are not read here.
+- **E-1, the link line** (`state/directives/2026-10-28-266-link-line-local-capture-helper-routine-listing.md`), captured once, locally, at 49297300 in the probe checkout on the clang-cl target, by the ruled command; nothing committed.
+  - The target held no release build, so the command built the release profile once, DuckDB included, before the link.
+  - The raw output is `o1-link-verbose-lib.txt` in the local evidence folder (sha256 bd8067f09e321f2edeb40a9ddf754f65e9b7aabdfaf7409b59dcdb7055e3d28b).
+  - The linker opened 152 library basenames (`state/consults/2026-10-28-admitted-integer-overflow-silent-wraparound-link-line-and-helper-listings-tester-report.md`, step 1), with `clang_rt` at 0.
+  - The release DuckDB units: 352 of 352 clang-cl with the define, none cl.exe.
+  - This ruling supersedes Amendment 3's sentence that the PR's Windows build captures the link line.
+- **The helper listings** (the same ruling), raw files in the local evidence folder:
+  - `llvm-nm --undefined-only` over the release DuckDB archive (listing sha256 d4612343e78aeee589727870f60868f0682ebf1f18f466750fac62792e1f316a) and the debug one (1de4277112d2be2c84f3ac98a073dfa92959ed32db09831fadd3844781167368): none of the fifteen helpers, and no `clang_rt`.
+  - Over the engine test objects (89aa6b78141404150daafb8ec56bae25bcd2c8a69f203bacfb02ceaade48ab12): `__fixdfti` in the pinned test's own object and in the `spatial_engine` rlib, and `__floattidf` and `__floatuntidf` in the rlib. None of the other twelve, and no `clang_rt`.
+  - `dumpbin /dependents` on the release test binary (08dc6dab544b70cd50552cb1281a4c82834d6e19a1fa1d97a176f397fec5ab8d): the MSVC runtime and system DLLs only.
+  - The linker opened no `clang_rt` library. It did open Rust's own `libcompiler_builtins` rlib. Which archive resolved the three helpers was not traced.
+- **The stop:** by the ruling, a helper referenced means the PR stops for the human's word, so the ADR-030 sentence waits for that word.
+  - The three references are in Rust-generated code, not in DuckDB's archives.
+  - `engine/src` is unchanged by this PR (`git diff` over the merge base is empty), so by inference main's engine carries the same references. A build of main has not checked this.
+- **Next:** the human's word; then gate 2, the reviewer (Amendment 7, §9).

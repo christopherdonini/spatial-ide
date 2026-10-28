@@ -1,14 +1,13 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `96bd6a970c441a16fff16120c6c306b3f6f53cbbc5fc03b6175c6faf076d4104`) at `2026-10-28T16:17:11.844Z`.
+Generated from `PLAN.yaml` (sha256 `d3c25ffd04ace9ec095d9db0f50f3bd66c8ab73a35df97427008673acd076235`) at `2026-10-28T16:55:29.435Z`.
 
 ## 1. Next
 
-- **admitted-integer-overflow-silent-wraparound** — An admitted same-type BIGINT product that overflows may wrap silently and return wrong rows with no error, observed outside the engine on the locked duckdb crate (O1 of stream-evaluation-failure-fixed-detail gate 1) (lane `engine`)
+- **corpus-line-files** — A line file (LineString or MultiLineString) in the preregistered compatibility corpus, so that line admission is tried on a real-world file (lane `engine`)
 
 ## 2. Ready
 
-- **admitted-integer-overflow-silent-wraparound** — An admitted same-type BIGINT product that overflows may wrap silently and return wrong rows with no error, observed outside the engine on the locked duckdb crate (O1 of stream-evaluation-failure-fixed-detail gate 1) (lane `engine`, order null, budget 60 min)
 - **corpus-line-files** — A line file (LineString or MultiLineString) in the preregistered compatibility corpus, so that line admission is tried on a real-world file (lane `engine`, order null, budget 120 min)
 - **engine-cancel-before-execute-siblings** — The six other cancel.attach sites reuse the execute-window guard, so a cancel before execution stops the work, not only the outcome (dataset.rs identity scan and index.rs first, their work unbounded) (lane `engine`, order null, budget 90 min)
 - **stream-cancel-returns-left-unmarked** — The producer's cancel returns the flush piece leaves unmarked: a prepare error through classify, the two-read window in classify's marking arms, and the send to a receiver that is gone (is a disconnect an observation) (lane `engine`, order null, budget 120 min)
@@ -24,7 +23,11 @@ Generated from `PLAN.yaml` (sha256 `96bd6a970c441a16fff16120c6c306b3f6f53cbbc5fc
 - **publish-unix-quota-perm-errors** — EDQUOT and EPERM in publish error classification on unix (wave-3 W3-A observation 1) (lane `platform`, order null, budget 90 min)
 - **redaction-hostname-off-windows** — The redaction scan knows the machine's hostname off Windows, so machine-identifier findings reach an audit record's residual_classes there too (wave-3 A-2, S2, sent to Fable for weighing) (lane `platform`, order null, budget 60 min)
 
-## 3. Waiting on the human (total: 0 min)
+## 3. Waiting on the human (total: 10 min)
+
+### ruling
+
+- **admitted-integer-overflow-silent-wraparound** — An admitted same-type BIGINT product that overflows may wrap silently and return wrong rows with no error, observed outside the engine on the locked duckdb crate (O1 of stream-evaluation-failure-fixed-detail gate 1) (10 min)
 
 ### sitting
 
