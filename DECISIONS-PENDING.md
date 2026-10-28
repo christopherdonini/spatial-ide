@@ -4,6 +4,15 @@ Line references written before the rotation point into state/cut-archive/DECISIO
 
 ## Pending
 
+**RULED 2026-10-28 — Addendum 2 to piece E: the Claude Code upgrade (2.1.312 or later) before the next session, then the hooks' own tests, reading 2's agent-type tally re-run on three days of post-upgrade transcripts before E1 uses it, Guardian's live checks again with the build in the ledger, SubagentStop counts before and after not comparable; /clear gives a new id and takes the lease handover, a compaction does not; autoCompactWindow 300000 in this checkout's settings.local.json, measured again a week later; the prompt audit filed and used beside the advisor's in E1's mapping; E3 becomes path-scoped rules under .claude/rules/, after a sibling-worktree loading test; the reviewer's model, two options for the human (`state/directives/2026-10-28-governance-piece-e-addendum-2-upgrade-clear-compact-window-prompt-audit-e3-path-rules-reviewer-model.md`).**
+
+- **The ruling** is the text, referenced and not restated.
+- **Applied this session:**
+  - The filing.
+  - Item 3: the custodian's edit adding the line to `.claude/settings.local.json` was refused by Guardian G8 (configuring Claude settings is the human's own act). The line is the human's to add, and nothing routes around the refusal.
+  - Item 4: the audit already run is `state/consults/2026-10-04-prompt-audit.md` (filed at 884fc727). From its line 5 it is byte-equal to the human's root file `PROMPT-AUDIT-2026-10-04.md`, and by script it holds no profile path, so nothing new is filed.
+  - Item 6: the two options go to the human.
+
 **RULED 2026-10-28 — rulings by lane: A, #266 (O1): Amendment 5's T-B on M1 not an invalidator, its mechanism in the amendment; 535 lines accepted; W-2 the architect's words; OPEN-7 (A); the build-of-record sentence final in the human's words; gate 1's Correctness and Evidence findings take correction rounds as the form has them, Documentation findings must-fix with no re-gate; after the click entry 9 heads the filler queue, the worktrees may go once the raw evidence is local, no KNOWN-LIMITATIONS item, the v0.2 release-note line in the human's words; B, the filler order after 8a; C, 8a's partition rule and stops; D, 5b and 8b as ruled; E, governance: VQ last, E1 after the human's reading 1; F, slots 1 and 2's order; G, the docs lane gains adr-017-note-product-redaction-gate in the human's words; H, Friday's window (`state/directives/2026-10-28-rulings-by-lane-o1-filler-order-8a-governance-slots-docs-adr-017-note.md`).**
 
 - **The ruling** is the text, referenced and not restated.
