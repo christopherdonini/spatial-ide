@@ -385,6 +385,15 @@ fn cell(f: &Fx, predicate: &str, view: bool) -> String {
     )
 }
 
+/// RECORDED MUTATION: M1, both `[env]` entries removed from `.cargo/config.toml` (the MSVC build main
+/// ships: cl.exe, no define), observed at commit 5d9a7eb3f446b0d2ced5785805e3ca6c8765cdf0 in a second
+/// checkout on its own target (all 352 DuckDB units compiled by cl.exe). This test fails: 28 of 30
+/// cells did not end in the fixed detail, among them S-ar-n all [v * v > 0], which completed with 2
+/// ids, and the T-o cells, which completed with wrapped rows (T-o-ar-n all [a * b > 0]: 1 id); the
+/// T-m cells ended in the fixed detail.
+/// RECORDED MUTATION: M4, the out-of-range arm of `classify` in `engine/src/stream.rs` deleted,
+/// applied alone at commit 5d9a7eb3f446b0d2ced5785805e3ca6c8765cdf0. This test fails: 30 of 30 cells
+/// did not end in the fixed detail, the first (A-ar-n all [v * v > 0]) ending in DuckDB's own text.
 #[test]
 fn an_admitted_bigint_product_that_overflows_ends_the_stream_in_the_fixed_detail() {
     // Every cell's terminal is collected before anything is asserted, so a failure names them all.
@@ -407,6 +416,13 @@ fn an_admitted_bigint_product_that_overflows_ends_the_stream_in_the_fixed_detail
     );
 }
 
+/// RECORDED MUTATION: M2, the composition `format!("({})", f.sql_text())` in `engine/src/stream.rs`
+/// changed to `format!("NOT ({})", f.sql_text())`, applied alone at commit
+/// 5d9a7eb3f446b0d2ced5785805e3ca6c8765cdf0. This test fails at its first cell: E-ar-n all
+/// [v * v > 0] completed with 1 ids, first [0], where exact arithmetic selects 5.
+/// RECORDED MUTATION: M1, as recorded at the first test of this file, observed at commit
+/// 5d9a7eb3f446b0d2ced5785805e3ca6c8765cdf0. This test also fails, which the form does not predict:
+/// T-e-ar-n all [a * b > 0] ended in the fixed detail on the MSVC build.
 #[test]
 fn an_admitted_bigint_product_that_fits_returns_exactly_the_rows_exact_arithmetic_selects() {
     for f in fixtures().iter().filter(|f| f.fixed.is_empty()) {
@@ -422,6 +438,9 @@ fn an_admitted_bigint_product_that_fits_returns_exactly_the_rows_exact_arithmeti
     }
 }
 
+/// RECORDED MUTATION: M1, as recorded at the first test of this file, observed at commit
+/// 5d9a7eb3f446b0d2ced5785805e3ca6c8765cdf0. This test fails: 24 runs completed with a wrong id set,
+/// the first A-ar-n all [v * v > 0], which delivered 1023 ids where exact arithmetic selects 2047.
 #[test]
 fn no_admitted_bigint_product_completes_with_rows_exact_arithmetic_does_not_select() {
     // The S1 condition, asserted absent: over every file and predicate here, a run that completes
@@ -446,6 +465,10 @@ fn no_admitted_bigint_product_completes_with_rows_exact_arithmetic_does_not_sele
     );
 }
 
+/// RECORDED MUTATION: M3, the BOOLEAN check at the end of `bind_admit` in `engine/src/predicate.rs`
+/// (the `inferred != &DataType::Boolean` branch) removed, applied alone at commit
+/// 5d9a7eb3f446b0d2ced5785805e3ca6c8765cdf0. This test fails at C1: `v * v` was refused as
+/// `TypeNotAdmitted` (a later stage), not as `NotBoolean`.
 #[test]
 fn a_bare_product_and_a_decimal_beside_an_integer_are_still_refused() {
     let ds = open(fixture("B-ar-s"));
@@ -473,6 +496,9 @@ fn a_bare_product_and_a_decimal_beside_an_integer_are_still_refused() {
     );
 }
 
+/// RECORDED MUTATION: M1, as recorded at the first test of this file, observed at commit
+/// 5d9a7eb3f446b0d2ced5785805e3ca6c8765cdf0. This test fails at its first cell: B-ar-s all
+/// [4000000000 * 4000000000 > 0] completed with 0 ids, where exact arithmetic selects 2048.
 #[test]
 fn a_literal_only_bigint_product_returns_the_rows_exact_arithmetic_selects() {
     // A literal-only product (the form's H-L) is not an overflow the stream raises: it completes
