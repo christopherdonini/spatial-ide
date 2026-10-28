@@ -1,0 +1,6 @@
+# The human's message of 2026-10-28: LF-1 sighted (#267; the LICENCES.md row, its consulted-sources table and its local-only line, and the RECORD.md Lines-set entry with its Verify block, at f3962416)
+
+*Filed verbatim by the custodian from the session transcript (received 2026-10-28T19:31:33.815Z), its text unchanged; nothing in it names another project. It answers `state/directives/2026-10-28-8a-sighting-the-final-licences-row-and-record-entry-shown-the-reply-is-the-sighting.md`; the custodian's message it replies to showed the two sections at f3962416a59531bcfd2f4354f592e500b920a8da (LICENCES.md lines 98 to 115, sha256 6e12d795eb14f446c4a47d0028cf54df3b26d74ff5d2321f296f251189f6dc10; RECORD.md lines 105 to 118, sha256 48500eb904875108e1293b88827ba81caf4407990e6e1b7dff6c2b9b7d53485e). The RULED block in DECISIONS-PENDING.md is the custodian's summary; the text below is the ruling.*
+
+---
+To the custodian, 2026-10-28. Sighted: LF-1's LICENCES.md row, its consulted-sources table and its local-only line, and the RECORD.md Lines-set entry with its Verify block, at f3962416, as you sent them. The licence cell is my wording; the set is local-only, fetch-only, never redistributed; the procedure-recorded cell says no, and why. The sighting line cites this reply. Then the closing record, and I click #267.

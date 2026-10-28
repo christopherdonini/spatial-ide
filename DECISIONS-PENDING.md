@@ -4,6 +4,11 @@ Line references written before the rotation point into state/cut-archive/DECISIO
 
 ## Pending
 
+**RULED 2026-10-28 — LF-1 sighted: the LICENCES.md row, its consulted-sources table and its local-only line, and the RECORD.md Lines-set entry with its Verify block, at f3962416, as shown; the sighting line cites this reply; then the closing record, and the human clicks #267 (`state/directives/2026-10-28-8a-lf1-sighted-the-licence-row-and-the-record-entry-at-f3962416.md`).**
+
+- **The ruling** is the text, referenced and not restated.
+- **Applied this session:** the filing; the sighting line extended on the branch, citing this directive; then the closing record.
+
 **RULED 2026-10-28 — 8a's sighting: not today's direction; the final LICENCES.md row and RECORD.md entry go to the human byte for byte at the PR's head, in the custodian's next message; the human's reply is the LF-1 sighting, and the sighting line cites that reply's directive; the merge waits for it (`state/directives/2026-10-28-8a-sighting-the-final-licences-row-and-record-entry-shown-the-reply-is-the-sighting.md`).**
 
 - **The ruling** is the text, referenced and not restated.
