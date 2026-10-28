@@ -445,3 +445,53 @@ The answers are the human's, in `state/directives/2026-10-26-clicks-260-261-244-
 
 - **Declared** (§7): 450 lines over 4 files. **Final at 49297300**, by §7's counting command: 535 lines over the 4 files (`.cargo/config.toml` 4, `engine/Cargo.toml` 7, `engine/tests/admitted_integer_overflow.rs` 523, `CONTRIBUTING.md` 1); with `CLAUDE.md`'s one line, which the settlement adds to the Scope, 536 over 5 files.
 - **The reason:** the pinned test came to 523 lines against the estimate of about 350, mostly by rustfmt's expansion of its cell tables; nothing was trimmed to fit.
+
+### Amendment 7 (2026-10-28), class 9: scope addition, gate 1's C-1 and OPEN-7 (A), under the human's rulings of 2026-10-28 (`state/directives/2026-10-28-rulings-by-lane-o1-filler-order-8a-governance-slots-docs-adr-017-note.md`, A.3 and A.5). Written after gate 1's reports were seen, before any code of the addition.
+
+- **What adds the work:** gate 1's reviewer report, C-1 (`state/consults/gates/2026-10-28-admitted-integer-overflow-silent-wraparound-gate1-reviewer.md`, gate-log 641): on Windows the shell's debug build aborts inside DuckDB under clang-cl, and product-ci-shell is red at 49297300. A.5 sends it to a correction round as this form has them. The human's OPEN-7 answer (`state/directives/2026-10-26-clicks-260-261-244-r2-241-o1-answers-pb-draft-b-6d-260-lines-5b-8a-8b-rulings.md`, OPEN-7) and A.3 put `engine/README.md` in this PR.
+- **§2, the shell's DuckDB:** `frontends/shell/src-tauri/Cargo.toml` gains these nine lines at its end, after one blank line. The table is the one the root `Cargo.toml` carries under the same name, with this comment:
+
+```toml
+# DuckDB built as the root workspace builds it: the root's `[profile.dev.package.libduckdb-sys]`
+# does not reach this crate, which is its own workspace. Without `debug = false` here,
+# libduckdb-sys compiles DuckDB without NDEBUG, and under clang-cl on Windows (`.cargo/config.toml`)
+# the `#ifdef __clang__` asserts in DuckDB's `duckdb/common/bit_utils.hpp` compare its 64-bit zero
+# counts against `__builtin_clzl` and `__builtin_ctzl`, which take an `unsigned long`, 32 bits under
+# Windows' LLP64 model: the asserts fail and the test binary aborts.
+[profile.dev.package.libduckdb-sys]
+debug = false
+opt-level = 2
+```
+
+  - The reading behind the comment:
+    - libduckdb-sys 1.10505.0's build script (`build_bundled_cc.rs`, lines 127 to 133) defines NDEBUG only when cargo's `DEBUG` is false.
+    - The vendored DuckDB 1.5.5 header `duckdb/common/bit_utils.hpp` asserts under `#ifdef __clang__` at lines 44 to 46 and 61 to 63.
+    - `D_ASSERT` is `assert` when NDEBUG is absent.
+  - The reviewer's option (b), `-DNDEBUG` in the `CXXFLAGS` entry, is not taken. It would change Amendment 2's bytes and the human's sentence (A.4).
+- **§2, `engine/README.md`** (OPEN-7 (A)):
+  - Line 523's measurement scope takes the architect's replacement words (gate 1's architect report, D-4).
+  - Its owner's index gains this form under the preregistrations in this module, and the pinned test in the Viewport stream line's pinned-by list.
+  - Its last-verified line moves to the new head.
+  - Documentation only; no code.
+- **§2, `engine/Cargo.toml`** (A.4 and gate 1's Documentation findings):
+  - The sentence line takes A.4's sentence, byte-copied by script. It differs from the committed line in one character: a semicolon after `variant_stats.hpp`, where the branch has a comma.
+  - The marker above the sentence names its source: `# [THE HUMAN'S WORDS FOR THE BUILD OF RECORD — directive 2026-10-28 (rulings by lane), A.4; inserted as answered under AUTONOMY §31, not reworded]`.
+  - The three comment lines below take the architect's replacement words (D-2), which name both developer-only cases. The reviewer's D-1 names the same two.
+- **§4:**
+  - The shell's own suite on product-ci-shell's Windows entry passes at the new head. That is the job `typecheck · build · vitest · cargo test`, running `cargo test --manifest-path frontends/shell/src-tauri/Cargo.toml --locked`.
+  - Its mutation, M5, is the table removed, and it is already observed. At 49297300, the head without the table, that job aborted at the assert on both runs (gate 1's reviewer report, C-1). It is not re-run.
+  - A local check sits beside it: `libduckdb-sys` alone, built in the shell's workspace on a new dedicated target, `D:/wt-targets/o1-shell`, with `CC_ENABLE_DEBUG_OUTPUT=1`. Every DuckDB unit names clang-cl and carries NDEBUG.
+- **§5:**
+  - Unchanged: §3, §5 and every prediction; the root workspace's builds; release builds, which already define NDEBUG; `.cargo/config.toml` (Amendment 2's bytes).
+  - Invalidator: the shell's cargo test on the Windows entry aborting in DuckDB at the new head, or a unit in the local check without NDEBUG. Either stops for the human (the direction of 2026-10-27, item 4).
+- **§8:** the items stand. Added: the profile set anywhere but the shell's own `Cargo.toml` (no `RUSTFLAGS`, no `CXXFLAGS` change, no workflow).
+- **§9:**
+  - Gate 1's Documentation findings are applied at the same head, with no re-gate (A.5).
+  - Then gate 2, the reviewer, checks:
+    - C-1 at the new head;
+    - E-1 by the human's ruling (`state/directives/2026-10-28-266-link-line-local-capture-helper-routine-listing.md`): a tester's local capture and the helper listings;
+    - the architect's E-1 and E-2, read from CI;
+    - this addition.
+  - The architect's PASS WITH NOTES stands.
+- **Scope:** seven files, with `engine/README.md` and `frontends/shell/src-tauri/Cargo.toml` added. The closing amendment extends Amendment 6's class-8 figure; §7 is not edited.
+- **Disclosed, not in scope:** `spikes/adr-029-g1-scan-progress` builds the bundled DuckDB in its own dev profile, without NDEBUG, and no CI runs it. By the same reading, a debug run of it on Windows meets the same assert.
