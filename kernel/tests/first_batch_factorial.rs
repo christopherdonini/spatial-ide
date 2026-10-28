@@ -1296,7 +1296,7 @@ fn the_5gb_clustered_cell() {
 /// RECORDED MUTATION: M-1, inserted in `serial()` after the lock is taken and before it returns:
 /// `std::mem::forget(spatial_engine::trace::start(spatial_engine::trace::TraceKey::default()));`
 /// Observed on an export of code commit 3c8e91f634246b620e8346b2d34acca597a6385e, release build,
-/// `--ignored --exact`, each test alone. Unmutated, `cancellation_holds_with_pruning_in_the_path`
+/// `--ignored --exact`, each run alone. Unmutated, `cancellation_holds_with_pruning_in_the_path`
 /// passed; under M-1 it failed at its start's expect, `no other trace is running`.
 /// `cancellation_holds_with_pruning_in_the_path_on_h5` was not run (its fixture H5 was absent), so
 /// its M-1 is a reading, not an observation.
