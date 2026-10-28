@@ -434,3 +434,14 @@ The answers are the human's, in `state/directives/2026-10-26-clicks-260-261-244-
 - **M1's words** (§4) read, from this amendment on: M1, both `[env]` entries removed from `.cargo/config.toml` (the MSVC build main ships: cl.exe, no define), observed at the piece's commit that holds the test, in the dedicated MSVC checkout and target `D:/wt-targets/o1-msvc` (§9, item 4), its cold build booked on the custodian's estimate by the human's OPEN-5 answer (`state/directives/2026-10-26-clicks-260-261-244-r2-241-o1-answers-pb-draft-b-6d-260-lines-5b-8a-8b-rulings.md`, OPEN-5: the cheap run first, else that booking; the consult shows the cheap run as described is not a commit). §8 item 1 stands as written: M1 never runs on a shared target.
 - **T-A** collects every cell's terminal before it asserts and names them in its failure message (test text only, no `pub` item), so that the same M1 run observes T-o on MSVC, as §4 says it does; its prediction is unchanged.
 - **Unchanged:** the other mutations, every prediction in §3 and §5, and the gates.
+
+### Amendment 5 (2026-10-28), class 2: deviations recorded after results. Written after the piece's mutation results were seen.
+
+- **M1** (§4 and Amendment 4), observed at 5d9a7eb3f446b0d2ced5785805e3ca6c8765cdf0 on the MSVC build (`state/consults/2026-10-28-admitted-integer-overflow-silent-wraparound-build-worker-report.md`): T-A, T-C and T-E fail as predicted. **T-B also fails, not predicted:** on MSVC, T-e-ar-n's `a * b > 0` ends in the fixed detail although its products fit, so the MSVC build raises an overflow on an exact product. The row is not identified. The one-sided hole is observed on MSVC (T-o's `a * b > 0` completes with a row exact arithmetic does not select), as §4 says the run records.
+- **M2**, observed at 5d9a7eb3f446b0d2ced5785805e3ca6c8765cdf0: T-B fails at its first exact cell, as predicted; T-C and T-E fail beside it, since the mutation's wrong rows reach them. Recorded, not a stop.
+- The predictions are not edited.
+
+### Amendment 6 (2026-10-28), class 8: budget overrun, §7 not edited. Written after the piece's results were seen.
+
+- **Declared** (§7): 450 lines over 4 files. **Final at 49297300**, by §7's counting command: 535 lines over the 4 files (`.cargo/config.toml` 4, `engine/Cargo.toml` 7, `engine/tests/admitted_integer_overflow.rs` 523, `CONTRIBUTING.md` 1); with `CLAUDE.md`'s one line, which the settlement adds to the Scope, 536 over 5 files.
+- **The reason:** the pinned test came to 523 lines against the estimate of about 350, mostly by rustfmt's expansion of its cell tables; nothing was trimmed to fit.
