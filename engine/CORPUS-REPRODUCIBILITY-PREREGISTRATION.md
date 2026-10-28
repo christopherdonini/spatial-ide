@@ -790,3 +790,7 @@ It records gate 1's results (class 1) and RULED 2026-09-26 — question round 27
 - Amendment 2, item 4.2(d): "byte-copied", for #12's cell (5.2).
 - Amendment 2, item 5: disposed by round 27, items 1 to 4.
 - Amendment 2, the custodian's note on deleting `C:\dev\corpus-regen`: deferred (item 7).
+
+### Amendment 4 — class 5, on the human's ruling of 2026-10-28 (`state/directives/2026-10-28-266-not-a-stop-rust-helpers-8a-licence-cell-licences-max-130-reviewer-option-b-item-4-done.md`, item 2): `LICENCES_MAX_LINES`. The text below the heading is the human's, quoted verbatim.
+
+LICENCES_MAX_LINES is 130 (from 100). The ceiling was declared for the twelve point files of record; the lines set adds entries of the same shape, and (f) and (g) read with the new value.

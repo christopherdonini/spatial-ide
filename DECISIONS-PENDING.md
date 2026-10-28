@@ -4,6 +4,11 @@ Line references written before the rotation point into state/cut-archive/DECISIO
 
 ## Pending
 
+**RULED 2026-10-28 — #266 not a stop: the three helpers are Rust's i128–f64 conversions resolved by Rust's compiler_builtins, confirmed on main's rlib in the sefd target, the ADR-030 record in the human's words, gate 2 proceeds; 8a: the licence cell in the human's words, the corpus form's LICENCES_MAX_LINES 130 by a class 5 amendment in the human's words, the row in the existing rows' shape, the worker's undisclosed scratch run recorded and not re-run; item 6: option (b), a Sonnet high-effort reviewer for single-gate pieces only, ten pieces, after the upgrade, measured against the gate-failure baseline, the before from /usage's reviewer line the human pastes, (a) not adopted, mutation observations the gates' own; item 4 done, the human's user settings untouched (`state/directives/2026-10-28-266-not-a-stop-rust-helpers-8a-licence-cell-licences-max-130-reviewer-option-b-item-4-done.md`).**
+
+- **The ruling** is the text, referenced and not restated.
+- **Applied this session:** the filing; the sefd check (the same three in both rlibs); O1's Amendment 9; the corpus form's Amendment 4; 8a's gate 1 architect report filed (gate-log 642).
+
 **RULED 2026-10-28 — Addendum 2, item 3, corrected: the settings write is the human's, as G8 says; the human set autoCompactWindow 300000 in this checkout's .claude/settings.local.json; the custodian reads it, records the value and the path in the ledger and changes nothing in it; G8's refusal is recorded as a refusal that held, not a stop; the rest of the addendum stands (`state/directives/2026-10-28-governance-piece-e-addendum-2-item-3-corrected-the-settings-write-is-the-humans.md`).**
 
 - **The ruling** is the text, referenced and not restated.

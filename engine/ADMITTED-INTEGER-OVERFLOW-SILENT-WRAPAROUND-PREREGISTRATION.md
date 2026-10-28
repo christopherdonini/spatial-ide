@@ -519,3 +519,12 @@ opt-level = 2
   - The three references are in Rust-generated code, not in DuckDB's archives.
   - `engine/src` is unchanged by this PR (`git diff` over the merge base is empty), so by inference main's engine carries the same references. A build of main has not checked this.
 - **Next:** the human's word; then gate 2, the reviewer (Amendment 7, §9).
+
+### Amendment 9 (2026-10-28), class 1: the human's ruling on Amendment 8's stop, and the ADR-030 record. Written after the round's results were seen. References and hashes only.
+
+- **The ruling:** `state/directives/2026-10-28-266-not-a-stop-rust-helpers-8a-licence-cell-licences-max-130-reviewer-option-b-item-4-done.md`, item 1. It is not a stop: the three helpers are Rust's i128–f64 conversions, resolved by Rust's own compiler_builtins, and the notice set is unchanged. Gate 2 proceeds.
+- **The check the ruling names**, `llvm-nm --undefined-only` over main's `spatial_engine` rlibs in the existing sefd target, with no build:
+  - two rlibs, written 2026-10-25T18:00:22Z and 2026-10-25T19:26:51Z (listing sha256 34f312da5a23b176896389462abf35512761143b17c2f454b67c41b33d67b470 and 814ea012d4da6ab019f87378ca98baee6802af8c4cd3738a7bf49158bac6b935, in the local evidence folder);
+  - each references `__fixdfti`, `__floattidf` and `__floatuntidf` once;
+  - neither references any of the other twelve helpers, and neither holds `clang_rt`.
+- **The ADR-030 record, the human's words:** DuckDB's archives reference no helper; no clang_rt library was referenced or opened; the three i128–f64 helpers are Rust's, present in main's rlib, resolved by Rust's compiler_builtins, which the linker opened.
