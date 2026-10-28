@@ -4,6 +4,11 @@ Line references written before the rotation point into state/cut-archive/DECISIO
 
 ## Pending
 
+**RULED 2026-10-28 — governance piece F, a tidy repository in place: nothing leaves the repository, no history rewritten, its visibility unchanged; the governance lane, placed next, before E1, never holding slot 1; the full form, both gates and the human's click; the mapping table first, approved by the human in the form; a moves-only commit by git mv (R100 on every line), then a paths commit; the move map governance/MOVED.tsv by script; citations through the map with negative tests; the proof by unchanged check results; a governance-ci check on stray forms; a quiet window, rule (00) set aside for the move commit alone; the README drafted by the architect, its words approved in the PR; the measurement; the out-of-scope list (`state/directives/2026-10-28-governance-piece-f-a-tidy-repository-in-place.md`).**
+
+- **The ruling** is the text, referenced and not restated.
+- **Applied this session:** the filing; the PLAN node placed; the architect drafts the full form, its mapping table first, when the governance lane takes it.
+
 **RULED 2026-10-28 — filler entry 9 (stream-fetch-overflow-fixed-detail), OPEN-1: (B), both shapes anchored at the start, nothing looser; the claim split (the wrapped shape observed through the engine; the bare shape recognised and proven by a unit test fed DuckDB's source-composed text, cited to the source line, never observed through the engine, upgraded in the record if step 0 observes it); OPEN-2 and OPEN-3 as the custodian settled them; step 0 on the clang-cl build after #266 (`state/directives/2026-10-28-entry-9-open-1-b-both-shapes-anchored-the-claim-split-step-0-on-clang-cl.md`).**
 
 - **The ruling** is the text, referenced and not restated.
