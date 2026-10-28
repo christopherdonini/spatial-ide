@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `dcefd0f679ac812ceb6cd81eb30d53f8df46141a80f9660375405d68b29bb722`) at `2026-10-28T10:31:51.607Z`.
+Generated from `PLAN.yaml` (sha256 `97a0331cd1cd4eeb4827ba014fc6b580c30c46033667fdd1492e6872536fbb77`) at `2026-10-28T10:47:00.933Z`.
 
 ## 1. Next
 
@@ -102,6 +102,7 @@ Generated from `PLAN.yaml` (sha256 `dcefd0f679ac812ceb6cd81eb30d53f8df46141a80f9
 - **verify-offline-note-test-flake** — scripts/plan/verify.test.mjs's offline-note test failed once on a pull_request run and passed on a re-run; its bare assertion carries no message, so the cause is unknown (phase `prototype`) — never queued until placed
 - **slice-budgets-cancel-cells-on-trace-pair** — The docs/08 measurement harness scores its cancellation cells on ADR-018's pair (cancel_requested to the producer's cancel_observed, from the engine trace), with the client-to-adapter interval kept as a reported figure (phase `prototype`) — never queued until placed
 - **mp-prime-e2e-covered-fixture** — E2E: MP-1's step MP' opens F-1, which has no covering, so it is predicted to meet the no-covering refusal; a step on F-1c, its covered twin (phase `prototype`) — never queued until placed
+- **corpus-natural-earth-line-files** — Natural Earth vector lines, public domain, generated into the compatibility corpus by a project generator, carrying a real-world MultiLineString (8a's OPEN-1 (B)) (phase `prototype`) — never queued until placed
 - **lines-class-budget-measurement** — Measure docs/08's Lines class (1M features / 10M vertices) for the working canvas, once lines are drawn (phase `prototype`) — never queued until placed
 - **engine-open-neighbour-reads-unbound-to-cancel** — At a dataset open, read_kv_metadata and probe_schema's two statements are not bound to the open's cancel token (phase `prototype`) — never queued until placed
 - **stale-lines-outside-the-four-files** — Same-class stale lines outside the docs-lane piece's four files: residencyStatus.test.ts's titles and comments calling ruled strings drafts, residencyArm.test.ts's App-cannot-be-rendered comment, WorkingCanvas.test.ts's no-mount line, and engine/src/identity.rs's two stale line cites into session_identity.rs (phase `prototype`) — never queued until placed
