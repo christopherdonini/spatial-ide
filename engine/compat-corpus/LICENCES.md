@@ -112,4 +112,4 @@ Local-only set, lines (1):
 
 - `lines/msrd-pcn.parquet` — fetch-only, never redistributed
 
-Sighted by the human: RULED 2026-09-26 — question round 27, items 1, 2 and 3.
+Sighted by the human: RULED 2026-09-26 — question round 27, items 1, 2 and 3; RULED 2026-10-28 — LF-1 (`state/directives/2026-10-28-8a-lf1-sighted-the-licence-row-and-the-record-entry-at-f3962416.md`).
