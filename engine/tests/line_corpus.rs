@@ -3,7 +3,7 @@
 
 //! `engine/CORPUS-LINE-FILES-PREREGISTRATION.md`'s T1 and T2: corpus row LF-1, a real-world
 //! LineString file, opened and streamed whole against the outcomes its Amendment 1 registered
-//! before any run.
+//! before any engine run.
 //!
 //! **Ignored**, because they read the on-disk corpus outside any worktree
 //! (`engine/tests/admission_p4_corpus.rs`'s `CORPUS_ROOT`). Run: `cargo test -p spatial-engine
