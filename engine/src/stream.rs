@@ -2784,6 +2784,17 @@ mod tests {
     /// for an INT64 multiplication overflow: the format at line 77 of
     /// `src/include/duckdb/common/operator/multiply.hpp`, under the type name `Out of Range` at
     /// line 116 of `src/common/exception.cpp` and `src/common/error_data.cpp` lines 65 and 67.
+    ///
+    /// RECORDED MUTATION: M2, after the wrapper strip `fetch_panic_duckdb_text` accepting any inner
+    /// text (`Some(inner) => Some(inner)`), applied alone at commit
+    /// e967da3344bd7c2e2e7ea1be1e3e425bd0e28b48. This test fails at its first negative sample, the
+    /// wrapper with an IO Error inside: left `Some("IO Error: No files found that match the pattern
+    /// \"x.parquet\"")`, right `None`.
+    /// RECORDED MUTATION: M3, the anchored strips replaced by a search for the label after the crate
+    /// prefix (`rest.find("Out of Range Error").map(|at| &rest[at..])`), applied alone at commit
+    /// e967da3344bd7c2e2e7ea1be1e3e425bd0e28b48. This test fails at the label-later sample, the label
+    /// later in the text after the crate prefix: left `Some("Out of Range Error: Overflow in
+    /// multiplication of INT64 (3600000000000000000 * 3600000000000000000)!")`, right `None`.
     #[test]
     fn the_fetch_panic_is_read_as_out_of_range_only_by_its_fixed_prefixes_at_the_start() {
         const WRAPPED: &str = "Failed to fetch Arrow record batch: Invalid Input Error: Attempting to execute an unsuccessful or closed pending query result\nError: Out of Range Error: Overflow in multiplication of INT64 (3600000000000000000 * 3600000000000000000)!";

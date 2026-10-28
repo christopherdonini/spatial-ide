@@ -171,6 +171,11 @@ fn run(ds: &Dataset, extent: [f64; 4], predicate: &str, view: bool) -> Run {
     out
 }
 
+/// RECORDED MUTATION: M1, the fetch arm in `engine/src/stream.rs` restored to pass the raw payload
+/// to `classify` (`classify(cancel, "duckdb fetch panicked", &detail)`, so the recogniser is not
+/// called), applied alone at commit e967da3344bd7c2e2e7ea1be1e3e425bd0e28b48. This test fails at
+/// assertion 4, `all: the terminal after 31 batches is not the fixed detail`, with the left side
+/// beginning `query: duckdb fetch panicked: Failed to fetch Arrow record batch: `.
 #[test]
 fn an_admitted_integer_overflow_first_raised_during_a_fetch_ends_the_stream_with_the_fixed_detail()
 {
