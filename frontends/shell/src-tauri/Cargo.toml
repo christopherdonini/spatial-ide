@@ -95,3 +95,13 @@ spatial-engine = { path = "../../../engine", features = ["fixture"] }
 # for THIS crate's own test build (Cargo's per-crate feature unification, the same
 # `spatial-engine`/`fixture` precedent above) -- it activates no crate that was not already compiled.
 tokio = { version = "1", features = ["macros"] }
+
+# DuckDB built as the root workspace builds it: the root's `[profile.dev.package.libduckdb-sys]`
+# does not reach this crate, which is its own workspace. Without `debug = false` here,
+# libduckdb-sys compiles DuckDB without NDEBUG, and under clang-cl on Windows (`.cargo/config.toml`)
+# the `#ifdef __clang__` asserts in DuckDB's `duckdb/common/bit_utils.hpp` compare its 64-bit zero
+# counts against `__builtin_clzl` and `__builtin_ctzl`, which take an `unsigned long`, 32 bits under
+# Windows' LLP64 model: the asserts fail and the test binary aborts.
+[profile.dev.package.libduckdb-sys]
+debug = false
+opt-level = 2
