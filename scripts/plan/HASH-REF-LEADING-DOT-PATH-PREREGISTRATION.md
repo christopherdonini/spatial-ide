@@ -119,3 +119,12 @@ The paths are the brief's; I cannot read branches.
 - **The first result** (`state/consults/2026-10-28-governance-hash-ref-leading-dot-path-worker-stop-report.md`): applied as the dot made optional while the character after it stayed a letter, digit or underscore, M3 passed both tests: in that shape `./X` never matches, so it is not the mutation the words name.
 - **The worded shape, observed** (`state/consults/2026-10-28-governance-hash-ref-leading-dot-path-build-worker-report.md`, at 850efbd89ad18daf8c14a0c485eb657cf868abb7): the dot's lookahead and the first path character both widened to every path character; `each_dot_or_dot_dot_segment_reference_binds_in_neither_checker` fails by name with the `./` entry resolving. Its RECORDED MUTATION comment names that shape.
 - The prediction is not edited. Nothing else changes.
+
+### Amendment 2 (2026-10-28): the closing record, written after gate 1's report and the words commit were seen. References and hashes only.
+
+- **The final head:** 6451013b7b3bca5044a0fb22a43e4b1076d74ac6, the words commit; its diff from bf9c8463 is 4 line(s) in and 3 out of `scripts/plan/hashRefGrammar.mjs`.
+- **Gate 1:** `state/consults/gates/2026-10-28-governance-hash-ref-leading-dot-path-gate1-reviewer.md` (gate-log 639, sha256 1b77423453890d7f56c8a0f0368d9714adc06a2decbc406c9bf0f1d48252d013),  PASS WITH NOTES, with no Correctness or Evidence finding.
+- **The reviewer's D1 (the grammar comment)** is applied at the final head by a worker from the pair, with no re-gate (§31): `state/consults/2026-10-28-governance-hash-ref-leading-dot-path-words-worker-report.md`.
+- **Figures:** 52 lines over the Scope, under 110.
+- **OPEN-2 (A)'s residuals, disclosed** (the settlement): verify-cites still reads a dot-led `path:line` without its dot, as a loose, unmatched reference; a bare `:line` after a dot-led cite in the same paragraph binds, through verify-cites' citation reader, to the dotless path and fails by name (fails closed); verify-quotes' advisory cite listing shows no hash mark for a dot-led cite. The reviewer probed all three (the gate report, its check 3).
+- **CI at the final head:** 8 of 8 checks pass (read by gh before this record).
