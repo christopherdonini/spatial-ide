@@ -4,6 +4,11 @@ Line references written before the rotation point into state/cut-archive/DECISIO
 
 ## Pending
 
+**RULED 2026-10-28 — O1: the P3 and T-c-ar-s Q3 cells accepted (every overflow DuckDB evaluates), one EXPLAIN of P3 on one statistics file filed with the P0 amendment, a product evaluated after all being OPEN-4 (A) and the human's; then the amendment, the architect on M1, the code; the archive check the ADR-030 evidence, the PR's Windows build capturing the link line once; 6b: OPEN-6 reversed, S taken from the entry point's output, its full sha256 checked on the copy at the first-batch folder, nothing freed on C:, R3b's other terms standing; #262 stands as recorded; the human clicks #262 and #263; 8a goes ahead (`state/directives/2026-10-28-o1-p3-accepted-one-explain-6b-takes-s-from-6d-262-stands-8a-goes-ahead.md`).**
+
+- **The ruling** is the text, referenced and not restated.
+- **Applied this session:** the filing; S placed and checked; 6b's Amendment 1; the EXPLAIN dispatched.
+
 **RULED 2026-10-27 — O1 (`admitted-integer-overflow-silent-wraparound`): route (a) continues and the fallback has not fired; DuckDB's export decorations are switched off for this static build by winapi.hpp's own switch, the define confirmed by the tester from the vendored 1.5.5 header (DUCKDB_STATIC_BUILD if honoured, else an empty DUCKDB_API), every other use of it reported, a behaviour-changing use outside the header a stop; the define in the same .cargo/config.toml [env] table as CXXFLAGS_x86_64-pc-windows-msvc, Windows only, nothing in the crate changed; one more cold clang-cl build on the probe's target under H2's booking, then P0 as the form has it; a failure goes to the human (OPEN-4 (A)), route (b) then the route; the build-of-record sentence gains the human's clause; route (b)'s pre-code work stays unstarted (`state/directives/2026-10-27-o1-route-a-continues-duckdb-export-decorations-off-by-the-header-switch.md`).**
 
 - **The ruling** is the text, referenced and not restated.

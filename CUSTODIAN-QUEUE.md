@@ -1,35 +1,31 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `163f76e568c8d665cda7fe77118da18a4ef96ee578d0f7de377cdc49c0a365d3`) at `2026-10-27T22:28:49.142Z`.
+Generated from `PLAN.yaml` (sha256 `5253eb52f88e5118458e00fd6d02a6480159a94994f78348298adbea4390f86f`) at `2026-10-28T09:33:53.681Z`.
 
 ## 1. Next
 
-- **corpus-line-files** — A line file (LineString or MultiLineString) in the preregistered compatibility corpus, so that line admission is tried on a real-world file (lane `engine`)
+- **admitted-integer-overflow-silent-wraparound** — An admitted same-type BIGINT product that overflows may wrap silently and return wrong rows with no error, observed outside the engine on the locked duckdb crate (O1 of stream-evaluation-failure-fixed-detail gate 1) (lane `engine`)
 
 ## 2. Ready
 
+- **admitted-integer-overflow-silent-wraparound** — An admitted same-type BIGINT product that overflows may wrap silently and return wrong rows with no error, observed outside the engine on the locked duckdb crate (O1 of stream-evaluation-failure-fixed-detail gate 1) (lane `engine`, order null, budget 60 min)
 - **corpus-line-files** — A line file (LineString or MultiLineString) in the preregistered compatibility corpus, so that line admission is tried on a real-world file (lane `engine`, order null, budget 120 min)
 - **engine-cancel-before-execute-siblings** — The six other cancel.attach sites reuse the execute-window guard, so a cancel before execution stops the work, not only the outcome (dataset.rs identity scan and index.rs first, their work unbounded) (lane `engine`, order null, budget 90 min)
 - **stream-cancel-returns-left-unmarked** — The producer's cancel returns the flush piece leaves unmarked: a prepare error through classify, the two-read window in classify's marking arms, and the send to a receiver that is gone (is a disconnect an observation) (lane `engine`, order null, budget 120 min)
 - **type-walk-rule2-residual-reasons** — Type walk: a rule-2 result over a column or an integer literal, refused by rule 7's bit-width bound, keeps the residual reason although its value is a constant NULL (for example f32 > NULL + 100000) (lane `engine`, order null, budget 60 min)
 - **adr-020-appended-note** — ADR-020's appended note, owed by the quote baseline's corrected_by entry (entry 102; the docs lane) (lane `kernel-protocol`, order null, budget 30 min)
-- **fixture-s-regeneration-entry-point** — A dedicated regeneration entry point and a kernel/FIXTURES.md record for the fixture S (parcels-145mb.parquet), like the G5 one (lane `kernel-protocol`, order null, budget 60 min)
 - **open-dataset-refuses-a-name-closed-during-admission** — open_dataset refuses at admission when a close has removed the catalog entry (the fix kernel-close-during-open-admission pins, in M1 shape; a close after that check and the ChecksOnly arm are for its own form) (lane `kernel-protocol`, order null, budget 60 min)
 - **pre-admission-change-detail-braces** — Four kernel P6-placeholder detail strings are wrapped in literal braces, which reach the operator message; the watcher form declares each such string starts with the bracketed placeholder tag (lane `kernel-protocol`, order null, budget 30 min)
 - **windows-case-fold-non-ascii** — The audit case policy on Windows folds non-ASCII letters as NTFS does, so a profile path differing only in non-ASCII case cannot escape the user-home redaction (wave 3's 1c-2 correction, S2, code-path-only) (lane `kernel-protocol`, order null, budget 60 min)
 - **governance-e-readings** — Piece E readings before E1's form: context loaded in a custodian session; this project's own transcript tally; the installed Claude Code facts; the bytes one worker and one reviewer dispatch receive (lane `governance`, order null, budget 60 min)
-- **verify-cites-past-end-bound** — verify-cites passes a cite to the line just past the end of a file that ends in a newline, or to line 1 of an empty file: the bound, with a design for such cites inside immutable records (lane `governance`, order null, budget 60 min)
+- **governance-hash-ref-leading-dot-path** — A hash-pinned reference can name a path that starts with a dot (.github/, .githooks/): the shared reference grammar admits it, with its own tests (lane `governance`, order null, budget 60 min)
 - **verify-cites-reversed-range** — verify-cites checks a reversed range (end below start) by its larger end only (lane `governance`, order null, budget 30 min)
 - **posix-backslash-in-shared-path-logic** — Shared path logic stops treating a backslash as a separator on POSIX: distinct audit destinations stay distinct, and a viewer asset named with a backslash is refused, not renamed (wave-3 A-1, S2) (lane `platform`, order null, budget 90 min)
 - **publish-bundle-sigterm** — SIGTERM handling in publish-bundle on unix (wave-3 W3-A observation 3) (lane `platform`, order null, budget 90 min)
 - **publish-unix-quota-perm-errors** — EDQUOT and EPERM in publish error classification on unix (wave-3 W3-A observation 1) (lane `platform`, order null, budget 90 min)
 - **redaction-hostname-off-windows** — The redaction scan knows the machine's hostname off Windows, so machine-identifier findings reach an audit record's residual_classes there too (wave-3 A-2, S2, sent to Fable for weighing) (lane `platform`, order null, budget 60 min)
 
-## 3. Waiting on the human (total: 5 min)
-
-### ruling
-
-- **admitted-integer-overflow-silent-wraparound** — An admitted same-type BIGINT product that overflows may wrap silently and return wrong rows with no error, observed outside the engine on the locked duckdb crate (O1 of stream-evaluation-failure-fixed-detail gate 1) (5 min)
+## 3. Waiting on the human (total: 0 min)
 
 ### sitting
 
@@ -52,7 +48,6 @@ Generated from `PLAN.yaml` (sha256 `163f76e568c8d665cda7fe77118da18a4ef96ee578d0
 - **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-2-0
 - **signpath-application-draft** — Entry 77 — the SignPath OSS application and disclosure text drafted for the human sight, once a release is CI-built — blocked by: release-v0-2-0
 - **governance-e1-rules-as-records** — Piece E1: rules as records, a rule catalogue under rules/, a selector scripts/plan/rules.mjs, a generated block in each agent definition and a governance-ci check — blocked by: governance-e-readings
-- **governance-hash-ref-leading-dot-path** — A hash-pinned reference can name a path that starts with a dot (.github/, .githooks/): the shared reference grammar admits it, with its own tests — blocked by: verify-cites-past-end-bound
 - **shell-owners-index** — An owner's index for the shell (frontends/shell), so that shell-owned KNOWN-LIMITATIONS items and pointers are indexed somewhere — blocked by: skp-line-cites-outside-close-races
 - **site-design-v1** — Landing page redesign — DRAFT-4 (status strip, milestone banner, waiting-on-you cards with unblocks counts, the swimlane board) — blocked by: governance-ci-built-site
 - **macos-normalization-roots-uncanonicalized** — On macOS the audit log normalization roots are read uncanonicalized while recorded destinations are canonicalized, so a symlinked temporary-directory root never matches — blocked by: port-2-macos-l1-and-app-dirs

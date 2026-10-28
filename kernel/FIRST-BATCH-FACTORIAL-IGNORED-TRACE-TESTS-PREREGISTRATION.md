@@ -191,3 +191,9 @@ This piece's paths are kernel/tests/first_batch_factorial.rs and the form on mai
 - **Rule (00)** was checked again at main 85993523 by `git diff --name-only origin/main...<branch>` for every open branch: none touches `kernel/tests/first_batch_factorial.rs`, and none touches `protocol/`.
 
 ## Amendments (opens empty; append-only)
+
+### Amendment 1 (2026-10-28), class 1: the fixture S, its source and its hash.
+
+- **The ruling:** `state/directives/2026-10-28-o1-p3-accepted-one-explain-6b-takes-s-from-6d-262-stands-8a-goes-ahead.md`, item 2 (OPEN-6 of the entry point's draft reversed); R3b's other terms stand.
+- **The source:** the file the fixture-S entry point's unmutated release run wrote, `D:/wt-targets/fsre-out/full/parcels-145mb.parquet` (the run report `state/consults/2026-10-27-fixture-s-regeneration-entry-point-build-worker-report.md`; the entry point's form, `kernel/FIXTURE-S-REGENERATION-ENTRY-POINT-PREREGISTRATION.md`, Amendment 1).
+- **The copy:** `target/slice-evidence/first-batch/parcels-145mb.parquet` in the main checkout, placed by the custodian on 2026-10-28; its size 151629665 B and its full sha256 fe61e704fcc01d40b0e453d81a4987fc23862dcc38d62bd1f9635d124433ac7a, read from the copy after placing, equal S's recorded figures. Nothing was freed on C:.
