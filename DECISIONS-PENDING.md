@@ -4,6 +4,11 @@ Line references written before the rotation point into state/cut-archive/DECISIO
 
 ## Pending
 
+**RULED 2026-10-28 — filler entry 9 (stream-fetch-overflow-fixed-detail), OPEN-1: (B), both shapes anchored at the start, nothing looser; the claim split (the wrapped shape observed through the engine; the bare shape recognised and proven by a unit test fed DuckDB's source-composed text, cited to the source line, never observed through the engine, upgraded in the record if step 0 observes it); OPEN-2 and OPEN-3 as the custodian settled them; step 0 on the clang-cl build after #266 (`state/directives/2026-10-28-entry-9-open-1-b-both-shapes-anchored-the-claim-split-step-0-on-clang-cl.md`).**
+
+- **The ruling** is the text, referenced and not restated.
+- **Applied this session:** the filing; next, the form committed from the draft with its pins expanded by script and the settlement carrying this ruling, then step 0 by a tester-high.
+
 **RULED 2026-10-28 — LF-1 sighted: the LICENCES.md row, its consulted-sources table and its local-only line, and the RECORD.md Lines-set entry with its Verify block, at f3962416, as shown; the sighting line cites this reply; then the closing record, and the human clicks #267 (`state/directives/2026-10-28-8a-lf1-sighted-the-licence-row-and-the-record-entry-at-f3962416.md`).**
 
 - **The ruling** is the text, referenced and not restated.
