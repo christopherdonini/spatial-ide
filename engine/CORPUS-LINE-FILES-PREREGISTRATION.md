@@ -213,3 +213,21 @@ That is about 142 against a declared 150, in 4 files, with no new dependency (sh
   - It also names that the versions of the software that wrote the bytes are held only as the footer's `parquet-cpp-arrow version 21.0.0`.
   - The input's continued availability is not checked.
 - §3 is not edited.
+
+### Amendment 3 (2026-10-28), class 1: the licence documents' fetch URLs and times, which Amendment 1 left out. Written after the fetch and the build were seen; from the custodian's fetch, by its transcript.
+
+- `LICENSE`: `curl -sL https://raw.githubusercontent.com/microsoft/RoadDetections/c1a8d6995ebcfcf248a764f6b67b13e2b3356f06/LICENSE`, at 2026-10-28T16:13:36Z and 16:13:38Z.
+- `README.md`: `curl -sL https://raw.githubusercontent.com/microsoft/RoadDetections/c1a8d6995ebcfcf248a764f6b67b13e2b3356f06/README.md`, at 2026-10-28T16:13:41Z and 16:13:43Z.
+- `collection.json`: `curl -sL -D <headers> https://data.source.coop/nlebovits/microsoft-ml-road-detections/road-detections/collection.json`, at 2026-10-28T16:13:54Z and 16:13:56Z.
+- The commit c1a8d6995ebcfcf248a764f6b67b13e2b3356f06 is the head of the repository's default branch, `main`, read by `gh api repos/microsoft/RoadDetections/commits/main` just before the fetches.
+- The build's LICENCES cells that say these are not recorded (`state/consults/2026-10-28-corpus-line-files-build-worker-report.md`, disclosure 3) take them at the gate.
+
+### Amendment 4 (2026-10-28), class 6: budget deviation, Scope not edited. Written after the build was seen.
+
+- **Declared:** 150 lines over the test and both records, the observation file generated and exempt.
+- **Final** at e834dcf7, by `git diff --numstat origin/main...HEAD`: 165. That is `engine/tests/line_corpus.rs` 137, `engine/compat-corpus/RECORD.md` 15 and `engine/compat-corpus/LICENCES.md` 13; the observation file's 111 are exempt.
+- **The reason:** the test came to 137 lines, and nothing was trimmed to fit (`state/consults/2026-10-28-corpus-line-files-build-worker-report.md`, disclosure 1).
+- **The route:** both gates, the reviewer and the architect, from dispatch (§36); the five-line form stays.
+- **Disclosed for the gates:** `engine/compat-corpus/LICENCES.md` grows from 98 lines to 111 at the head.
+  - That is past the 100 the corpus form declares as `LICENCES_MAX_LINES` (`engine/CORPUS-REPRODUCIBILITY-PREREGISTRATION.md`, §7).
+  - This form orders the section, and by the worker's search no script enforces the ceiling (`state/consults/2026-10-28-corpus-line-files-build-worker-report.md`, disclosure 2).

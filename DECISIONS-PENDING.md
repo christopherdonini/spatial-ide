@@ -4,6 +4,11 @@ Line references written before the rotation point into state/cut-archive/DECISIO
 
 ## Pending
 
+**RULED 2026-10-28 — Addendum 2, item 3, corrected: the settings write is the human's, as G8 says; the human set autoCompactWindow 300000 in this checkout's .claude/settings.local.json; the custodian reads it, records the value and the path in the ledger and changes nothing in it; G8's refusal is recorded as a refusal that held, not a stop; the rest of the addendum stands (`state/directives/2026-10-28-governance-piece-e-addendum-2-item-3-corrected-the-settings-write-is-the-humans.md`).**
+
+- **The ruling** is the text, referenced and not restated.
+- **Applied this session:** the filing; the file read (the value 300000, modified 2026-10-28T17:14:50Z, sha256 cbb7d8c23f44c71a7ec3580bb96e295135bbcbb8b60fd3f70b178393ed5d3634, gitignored) and recorded in the ledger; nothing in it changed.
+
 **RULED 2026-10-28 — Addendum 2 to piece E: the Claude Code upgrade (2.1.312 or later) before the next session, then the hooks' own tests, reading 2's agent-type tally re-run on three days of post-upgrade transcripts before E1 uses it, Guardian's live checks again with the build in the ledger, SubagentStop counts before and after not comparable; /clear gives a new id and takes the lease handover, a compaction does not; autoCompactWindow 300000 in this checkout's settings.local.json, measured again a week later; the prompt audit filed and used beside the advisor's in E1's mapping; E3 becomes path-scoped rules under .claude/rules/, after a sibling-worktree loading test; the reviewer's model, two options for the human (`state/directives/2026-10-28-governance-piece-e-addendum-2-upgrade-clear-compact-window-prompt-audit-e3-path-rules-reviewer-model.md`).**
 
 - **The ruling** is the text, referenced and not restated.
