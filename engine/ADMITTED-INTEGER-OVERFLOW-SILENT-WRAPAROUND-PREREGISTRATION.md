@@ -528,3 +528,26 @@ opt-level = 2
   - each references `__fixdfti`, `__floattidf` and `__floatuntidf` once;
   - neither references any of the other twelve helpers, and neither holds `clang_rt`.
 - **The ADR-030 record, the human's words:** DuckDB's archives reference no helper; no clang_rt library was referenced or opened; the three i128–f64 helpers are Rust's, present in main's rlib, resolved by Rust's compiler_builtins, which the linker opened.
+
+### Amendment 10 (2026-10-28): the closing record, written after gates 1 to 3 and correction round 1 were seen. References and hashes only.
+
+- **The final head:** 4943d8b4a0272e02ea9d49371bb4ae1a069fbad6.
+- **Gate 1**, at 49297300:
+  - `state/consults/gates/2026-10-28-admitted-integer-overflow-silent-wraparound-gate1-architect.md` (sha256 b730661ccc97eabb07b42ca6321a77ac3fb14599ae67a6cd1e7b1cda6f5faed8), gate-log 640, PASS WITH NOTES;
+  - `state/consults/gates/2026-10-28-admitted-integer-overflow-silent-wraparound-gate1-reviewer.md` (sha256 2e8525978da274b0fd964aabaaf90e1ecc1805d031b3af0379418c26d678e751), gate-log 641, FAIL.
+- **Correction round 1** (Amendments 7 to 9): `state/consults/2026-10-28-admitted-integer-overflow-silent-wraparound-correction-round-1-worker-report.md` (sha256 d509cead526b59e54d8a8c2c017d670f43eac643c35d5c208016b7afae90d76b) and `state/consults/2026-10-28-admitted-integer-overflow-silent-wraparound-link-line-and-helper-listings-tester-report.md` (sha256 c9bf5664d5a720e2e76697b8d284c092e9cce46b2ce46e682acd42432efa744d).
+- **Gate 2**, at the final head: `state/consults/gates/2026-10-28-admitted-integer-overflow-silent-wraparound-gate2-reviewer.md` (sha256 e9cc7c85030462e62cc9d5e877a0c7c5cf25f984106345c36a147a516843644c), gate-log 644, FAIL on E-1.
+  - The custodian deleted the branch's and the PR's `tauri build` cache entries and re-ran the job.
+  - The re-run, job 123017921905, compiled libduckdb-sys in the run.
+- **Gate 3:** `state/consults/gates/2026-10-28-admitted-integer-overflow-silent-wraparound-gate3-reviewer.md` (sha256 718746ce68d3984d40d921cc26b88b4b87f9714a333dc8a762084b86298765fb), gate-log 645, PASS WITH NOTES; E-1 is closed. Per its N-1, the head's installer build of record is job 123017921905.
+- **Documentation:**
+  - Gate 1's words were applied at the final head (Amendment 7; `state/consults/2026-10-28-admitted-integer-overflow-silent-wraparound-correction-round-1-worker-report.md`).
+  - Gate 2's D-1 was applied to the PR body by the custodian.
+  - Gate 2's D-2: Amendment 7's last-verified item was applied as a clause naming 5d9a7eb3 (engine/README.md, the Last verified line at 4943d8b4), not as a move of the whole line to the new head.
+- **Figures** (gate 2's D-3), extending Amendment 6's class-8 figure, with §7 not edited. At the final head:
+  - §7's four files come to 537 lines;
+  - all seven files come to 555 lines in and 4 out.
+- **CI at the final head:** 16 of 16 checks pass, read by gh before this record.
+- **The v0.2 release-note line** is the human's words, `state/directives/2026-10-28-rulings-by-lane-o1-filler-order-8a-governance-slots-docs-adr-017-note.md`, A.7. It is carried by the release node.
+- **Merge:** with a merge commit, as the PR body says, so that 5d9a7eb3 stays reachable.
+- **After the merge** (§9 item 7): every local build needs clang-cl, and the in-flight branches merge main before their next build on a shared target.
