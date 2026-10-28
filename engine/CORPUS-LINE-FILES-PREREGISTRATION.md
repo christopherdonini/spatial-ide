@@ -231,3 +231,21 @@ That is about 142 against a declared 150, in 4 files, with no new dependency (sh
 - **Disclosed for the gates:** `engine/compat-corpus/LICENCES.md` grows from 98 lines to 111 at the head.
   - That is past the 100 the corpus form declares as `LICENCES_MAX_LINES` (`engine/CORPUS-REPRODUCIBILITY-PREREGISTRATION.md`, §7).
   - This form orders the section, and by the worker's search no script enforces the ceiling (`state/consults/2026-10-28-corpus-line-files-build-worker-report.md`, disclosure 2).
+
+### Amendment 5 (2026-10-28): the closing record, written after gate 1's reports, the words commit and the human's sighting were seen. References and hashes only.
+
+- **The final head:** 281b9c05168f090218dd600f438aff54a080057b, the sighting-line commit on the words commit f3962416.
+- **Build:** `state/consults/2026-10-28-corpus-line-files-build-worker-report.md` (sha256 f1d4ce1d5d481c2b97044b41097ad0a018ac1f31020582de9c0775e66c128fe9).
+- **Gate 1:**
+  - `state/consults/gates/2026-10-28-corpus-line-files-gate1-architect.md` (sha256 05a7bff026c5d806f59045ed13a60328587945f58bdc181ff10bb2c31cd28227), gate-log 642, FAIL. Every blocking finding was in the LF-1 licence section, which is red-line text.
+  - `state/consults/gates/2026-10-28-corpus-line-files-gate1-reviewer.md` (sha256 11a7fb6b53e1df6150a6007138e03fd598c6809726497c297aab089c3b7a1a52), gate-log 643, PASS WITH NOTES.
+- **The human's words:** `state/directives/2026-10-28-266-not-a-stop-rust-helpers-8a-licence-cell-licences-max-130-reviewer-option-b-item-4-done.md`, item 2: the licence cell, and `LICENCES_MAX_LINES` set to 130 by the corpus form's Amendment 4 (class 5). The undisclosed scratch run stays recorded in the build report's filing note, with no re-run.
+- **The words commit** f3962416: `state/consults/2026-10-28-corpus-line-files-words-worker-report.md` (sha256 9636a49ea9903e0c530817720dea1b8f99f08901b3c623e0f9dc336229dc1b84). It carries:
+  - the licence cell in the human's words;
+  - the URLs and times from Amendment 3;
+  - LF-1 in a local-only list by name;
+  - the architect's D-1 and D-2.
+  - The reviewer's Doc-2 was applied to the PR body by the custodian.
+- **The sighting:** `state/directives/2026-10-28-8a-lf1-sighted-the-licence-row-and-the-record-entry-at-f3962416.md`. It sights the two sections at f3962416, shown to the human byte for byte. The sighting line at the final head cites it, which clears the architect's block by that report's own condition.
+- **Figures:** 171 lines by the form's counting (`engine/tests/line_corpus.rs` 137, `engine/compat-corpus/RECORD.md` 15, `engine/compat-corpus/LICENCES.md` 19), extending Amendment 4's class-6 figure; the Scope is not edited. `LICENCES.md` has 115 lines, under the 130 the corpus form now sets.
+- **CI at the final head:** 15 of 15 checks pass, read by gh before this record.
