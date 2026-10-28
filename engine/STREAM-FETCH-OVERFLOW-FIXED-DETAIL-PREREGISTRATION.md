@@ -314,3 +314,16 @@ No prior art recorded for "fixed detail fetch". Research it before planning an i
   - The other unmerged `cut/` branches on origin carry no open PR and no node in progress, so they are not in flight: `cut/b1-close-nul-names` (last commit 2026-09-29, no PR), `cut/kernel-ticket-drop-followups-p1-base` (last commit 2026-10-03, no PR), `cut/publish-approval-ttl-ten-minutes` (last commit 2026-10-21, its PR #236 merged), `cut/workspace-rustfmt` (last commit 2026-10-02, its PR #157 merged).
 
 ## §10 Amendments (opens empty; append-only)
+
+### Amendment 1 (2026-10-28), class 1: step 0 recorded. Written after step 0's results were seen. References and hashes only.
+
+- **The report:** `state/consults/2026-10-28-stream-fetch-overflow-fixed-detail-step0-tester-high-report.md`, at main c98921bc2e0309bad64730bbe42bf7548014032b, on the clang-cl build (the config's sha256 as Amendment 2 of the O1 form gives it; one cold DuckDB build on the checkout's own target).
+- **No invalidator** (§5, items 1 to 6) fired. Cell I raised on both files, with no wrap.
+- **The shapes** (the settlement's OPEN-1 (B)):
+  - The wrapped shape was observed on all 16 runs (F-1M and F-4M, both query shapes, twice per process, two processes), each terminal byte-identical: 263 bytes, sha256 1a18f782fb2bf7242d176e8cd47cc98432c11df3b72301bf5ab8e2b46fe5fd25.
+  - The crate prefix, the wrapper and the label are contiguous, with one LF inside the wrapper (the report's byte offsets).
+  - The bare shape was not observed, so its claim stays as the settlement words it: recognised, proven by a unit sample, never observed through the engine.
+  - No other shape appeared.
+- **N by §3's size rule:** 1,000,000. Every F-1M run delivered 31 batches before the terminal; F-4M delivered 123.
+- **The raw files**, in the local evidence folder under `2026-10-28/e9-step0/`: `e9_step0_probe.rs` (sha256 b55ce87c71c2bcff72401e65f831a1cc8c18a9a5beeccfdd8086050380ac728e), `e9s0-proc1-stdout.txt` (sha256 26f9c46b43d7c4a55c7adf5b9a30e1893911c308b28ef1f7bf623cb158cfa6f8), `e9s0-proc1-stderr.txt` (sha256 7ce3e85abb806956691e8c896cf39dbb03ec65fe0c09711a64b27ff552d92eaf), `e9s0-proc2-stdout.txt` (sha256 1d006aac552839f2a37f783ff4f7a7afd07fc964827c168bcf96ac478fc4f69c), `e9s0-proc2-stderr.txt` (sha256 0646b9ac114bde197bd356ec8de1a5f6e6885ed7c514309d8e3da020e8a76fba). The constants of §2 item 1 are byte-copied by script from these records and the source lines §0 item 3 names.
+- **Next under §9:** the code, by a worker, on a branch in its own checkout and on its own new target.
