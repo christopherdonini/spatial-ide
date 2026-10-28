@@ -4,6 +4,11 @@ Line references written before the rotation point into state/cut-archive/DECISIO
 
 ## Pending
 
+**RULED 2026-10-28 — 8a's sighting: not today's direction; the final LICENCES.md row and RECORD.md entry go to the human byte for byte at the PR's head, in the custodian's next message; the human's reply is the LF-1 sighting, and the sighting line cites that reply's directive; the merge waits for it (`state/directives/2026-10-28-8a-sighting-the-final-licences-row-and-record-entry-shown-the-reply-is-the-sighting.md`).**
+
+- **The ruling** is the text, referenced and not restated.
+- **Applied this session:** the filing; the words round on #267 runs first, so that the rows shown are final.
+
 **RULED 2026-10-28 — #266 not a stop: the three helpers are Rust's i128–f64 conversions resolved by Rust's compiler_builtins, confirmed on main's rlib in the sefd target, the ADR-030 record in the human's words, gate 2 proceeds; 8a: the licence cell in the human's words, the corpus form's LICENCES_MAX_LINES 130 by a class 5 amendment in the human's words, the row in the existing rows' shape, the worker's undisclosed scratch run recorded and not re-run; item 6: option (b), a Sonnet high-effort reviewer for single-gate pieces only, ten pieces, after the upgrade, measured against the gate-failure baseline, the before from /usage's reviewer line the human pastes, (a) not adopted, mutation observations the gates' own; item 4 done, the human's user settings untouched (`state/directives/2026-10-28-266-not-a-stop-rust-helpers-8a-licence-cell-licences-max-130-reviewer-option-b-item-4-done.md`).**
 
 - **The ruling** is the text, referenced and not restated.
