@@ -6167,17 +6167,17 @@ nodes:
     kind: task
     lane: governance
     phase: prototype
-    status: ready
+    status: blocked
     order: null
     depends_on: []
-    needs_human: {kind: none, minutes: 0}
+    needs_human: {kind: ruling, minutes: 30}
     gate: none
     evidence: null
     budget_minutes: 600
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "PLACED 2026-10-28 by the human (state/directives/2026-10-28-governance-piece-f-a-tidy-repository-in-place.md): the governance lane, next, before E1 (which waits on reading 1); never holds slot 1; the full form with both gates and the human's click. NEXT: the architect drafts the full form, the mapping table of every root file and every form first (its new path or stays, with a one-line reason), for the human's approval in the form; the README words approved in the PR."
+    summary: "FULL FORM DRAFTED 2026-10-28 (state/consults/2026-10-28-governance-f-tidy-repository-in-place-form-architect-draft.md): the mapping table (every root entry and every form), a moves-only commit of 186 renames, a paths commit of about 1,250 lines over about 40 files plus the PLAN gate lines by script. WAITING ON THE HUMAN: the mapping table's approval in the form, and OPEN-1, OPEN-2, OPEN-3, OPEN-4, OPEN-5, OPEN-6, OPEN-7, OPEN-8, OPEN-9, OPEN-10. Then the form committed with the settlement. Before: PLACED 2026-10-28 by the human (state/directives/2026-10-28-governance-piece-f-a-tidy-repository-in-place.md): the governance lane, next, before E1 (which waits on reading 1); never holds slot 1; the full form with both gates and the human's click. NEXT: the architect drafts the full form, the mapping table of every root file and every form first (its new path or stays, with a one-line reason), for the human's approval in the form; the README words approved in the PR."
     dates: {opened: 2026-10-28, done: null}
 
   - id: governance-e1-rules-as-records
