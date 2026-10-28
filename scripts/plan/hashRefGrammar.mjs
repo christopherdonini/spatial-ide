@@ -9,7 +9,12 @@
 // Horizontal whitespace, or exactly one rustfmt `//` comment continuation, where `\s*` would otherwise go.
 const GAP = '[ \\t]*(?:\\n[ \\t]*//[ \\t]?)?[ \\t]*';
 
-const PATH = '([A-Za-z0-9_][A-Za-z0-9_./+-]*)';
+// A path segment, first or interior, that starts with a dot needs a letter, digit or underscore after the dot
+// (`.github/`), and a path's first character is otherwise a letter, digit or underscore; nothing is read as a path
+// (or, for verify-quotes, a bare `:line`) directly after a path character. So a `.` or `..` segment is not a path,
+// and `./x`, `../x`, `.:3` and `sub/../x` bind nowhere.
+const NOT_AFTER_PATH_CHAR = '(?<![A-Za-z0-9_./+-])';
+const PATH = '((?:\\.(?=[A-Za-z0-9_]))?[A-Za-z0-9_](?:[A-Za-z0-9_.+-]|/(?!\\.(?![A-Za-z0-9_])))*)';
 
 /**
  * A NEW global RegExp on every call, never a shared object: the readers drive it through `lastIndex`, so
@@ -20,6 +25,7 @@ export function hashRefRegExp({ pathRequired }) {
   const pathPart = pathRequired ? PATH : `(?:${PATH})?`;
   return new RegExp(
     '(byte-copied from\\s+)?`?' +
+      NOT_AFTER_PATH_CHAR +
       pathPart +
       ':(\\d+)(?:-(\\d+))?`?' +
       `(?:${GAP}@${GAP}([^\\s\`]+))?${GAP}sha256:([0-9a-f]{64})\`?`,

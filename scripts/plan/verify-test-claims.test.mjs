@@ -1771,3 +1771,47 @@ test('a_seven_character_rev_pin_binds_in_both_checkers_through_the_shared_gramma
     JSON.stringify({ hashFindings: quotes.hashFindings, superseded: claims.superseded, findings: claims.findings }),
   );
 });
+
+// RECORDED MUTATION (M1): the leading-dot alternative removed from the path -- applied alone, this test run, then
+// reverted; fails by name with actual { quotes: 2, claims: 0 } against expected { quotes: 0, claims: 1 }; observed at 850efbd89ad18daf8c14a0c485eb657cf868abb7.
+// A dot-led path keeps its dot: one pin and one unpinned reference to line 3 of .github/workflows/X-PREREGISTRATION.md.
+test('a_leading_dot_path_pin_resolves_in_both_checkers', () => {
+  const rel = `.github/workflows/${SUPERSEDED_DOC}`;
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'verify-test-claims-leading-dot-'));
+  fs.mkdirSync(path.join(dir, '.github', 'workflows'), { recursive: true });
+  const v1Rev = gitRepoAt(dir, rel, SUPERSEDED_V1);
+  const hash = sha256Hex(lineOfV1(SUPERSEDED_CLAIM_LINE));
+  const row = pinRow({ relPath: rel, pinnedLine: SUPERSEDED_CLAIM_LINE, rev: v1Rev, hash, word: 'superseded' });
+  fs.writeFileSync(path.join(dir, rel), `${SUPERSEDED_V1}\n${row}\n\`${rel}:${SUPERSEDED_CLAIM_LINE} sha256:${hash}\`\n`);
+  commitAll(dir, 'v2');
+  const quotes = runVerifyQuotes({ repoRoot: dir, files: [path.join(dir, rel)] });
+  const claims = runVerifyTestClaims({ repoRoot: dir });
+  assert.deepEqual(
+    { quotes: quotes.hashFindings.length, claims: claims.superseded.length },
+    { quotes: 0, claims: 1 },
+    JSON.stringify({ hashFindings: quotes.hashFindings, superseded: claims.superseded, findings: claims.findings }),
+  );
+});
+
+// RECORDED MUTATION (M2): the preceding-character guard removed -- applied alone, this test run, then reverted; fails by
+// name with actual [{0,1},{0,1},{0,0},{0,1}] against four { quotes: 1, claims: 0 }; observed at 850efbd89ad18daf8c14a0c485eb657cf868abb7.
+// RECORDED MUTATION (M3): the dot's lookahead and the first character both widened to every path character -- applied alone,
+// this test run, then reverted; fails by name with actual [{0,0},{1,0},{1,0},{1,0}] (the ./ entry resolves); observed at 850efbd89ad18daf8c14a0c485eb657cf868abb7.
+// RECORDED MUTATION (M4): the interior restriction removed (`|/)*`) -- applied alone, this test run, then reverted; fails by
+// name with actual [{1,0},{1,0},{1,0},{0,0}] (sub/../ resolves); observed at 850efbd89ad18daf8c14a0c485eb657cf868abb7.
+// A `.` or `..` segment binds nowhere: each pin follows a plain cite of the same line in its paragraph.
+test('each_dot_or_dot_dot_segment_reference_binds_in_neither_checker', () => {
+  const got = ['./', '../', '', 'sub/../'].map((pre) => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'verify-test-claims-dot-segment-'));
+    const v1Rev = gitRepoAt(dir, SUPERSEDED_DOC, SUPERSEDED_V1);
+    const hash = sha256Hex(lineOfV1(SUPERSEDED_CLAIM_LINE));
+    const relPath = pre === '' ? '.' : `${pre}${SUPERSEDED_DOC}`;
+    const row = pinRow({ relPath, pinnedLine: SUPERSEDED_CLAIM_LINE, rev: v1Rev, hash, word: 'superseded' });
+    fs.writeFileSync(path.join(dir, SUPERSEDED_DOC), `${SUPERSEDED_V1}\nSee ${SUPERSEDED_DOC}:${SUPERSEDED_CLAIM_LINE}.\n${row}`);
+    commitAll(dir, 'v2');
+    const quotes = runVerifyQuotes({ repoRoot: dir, files: [path.join(dir, SUPERSEDED_DOC)] });
+    const claims = runVerifyTestClaims({ repoRoot: dir });
+    return { quotes: quotes.hashFindings.length, claims: claims.superseded.length };
+  });
+  assert.deepEqual(got, Array(4).fill({ quotes: 1, claims: 0 }), JSON.stringify(got));
+});
