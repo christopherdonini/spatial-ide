@@ -417,3 +417,13 @@ The answers are the human's, in `state/directives/2026-10-26-clicks-260-261-244-
 
 - **The build-of-record sentence's clause** (the human's words, from the direction, the define filled in as the direction says): ", with DuckDB's export decorations switched off for this static build (-DDUCKDB_STATIC_BUILD), because clang-cl rejects the exported deleted functions in DuckDB 1.5.5's variant_stats.hpp".
 - **The build:** one cold clang-cl build passed; by the report, all 352 DuckDB compile units name clang-cl and carry the define, none names cl.exe, and no compiler-rt name appears in the archive or the probe executable (the linker line itself was not seen).
+
+### Amendment 3 (2026-10-28), class 1: P0 recorded. Written after P0's results, lead-data's reading and the EXPLAIN were seen. References and hashes only.
+
+- **The first P0** stopped at P-3: `state/consults/2026-10-27-admitted-integer-overflow-silent-wraparound-p0-run-tester-high-report.md` (sha256 from line 5, 7c61dbaa576dbd2c735953e6bda6e1b178917e39c62ebaed2e76f69e44f0eddc); Amendment 1.
+- **The second P0** is this form's P0 record: its cells, tallies and build facts as `state/consults/2026-10-27-admitted-integer-overflow-silent-wraparound-p0-second-run-tester-high-report.md` gives them (sha256 from line 5, accbcfe1b8007b27d9521136a20365748c2f2c8e83e552684193f0772a437ef2); Amendment 2 records the define and the config.
+- **The reading:** `state/consults/2026-10-27-admitted-integer-overflow-silent-wraparound-p0-reading-lead-data.md` (sha256 from line 5, 11e3d1c854ef39182780dad72e65c8e8ddaecb50ae41ad3b75d4614396351089): the pass criteria met, no invalidator.
+- **The statistics-file cells** (P3 and T-c-ar-s Q3 completing equal to X): accepted by the human's ruling, `state/directives/2026-10-28-o1-p3-accepted-one-explain-6b-takes-s-from-6d-262-stands-8a-goes-ahead.md`, item 1 (every overflow DuckDB evaluates); the one EXPLAIN it orders, `state/consults/2026-10-28-admitted-integer-overflow-silent-wraparound-p3-explain-tester-high-report.md` (sha256 from line 5, 215bf85b891051c89aedbcc31c0cb03e30d308e465dd36f3bb83e4686b0cd233), shows the IS NOT NULL folded with no multiply evaluated, so OPEN-4 (A) is not reached.
+- **W-1:** the architect's replacement words, as the human's answers settle them (`state/directives/2026-10-26-clicks-260-261-244-r2-241-o1-answers-pb-draft-b-6d-260-lines-5b-8a-8b-rulings.md`, W-1), P0's L1 having completed rather than ended in the fixed detail.
+- **ADR-030:** the archive check in the second P0 stands as the evidence; the PR's Windows build captures the link line once, for the record (the ruling, item 1).
+- **Next under §9:** the architect's call on M1, then the code.
