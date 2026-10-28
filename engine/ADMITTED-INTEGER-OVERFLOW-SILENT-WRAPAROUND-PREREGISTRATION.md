@@ -427,3 +427,10 @@ The answers are the human's, in `state/directives/2026-10-26-clicks-260-261-244-
 - **W-1:** the architect's replacement words, as the human's answers settle them (`state/directives/2026-10-26-clicks-260-261-244-r2-241-o1-answers-pb-draft-b-6d-260-lines-5b-8a-8b-rulings.md`, W-1), P0's L1 having completed rather than ended in the fixed detail.
 - **ADR-030:** the archive check in the second P0 stands as the evidence; the PR's Windows build captures the link line once, for the record (the ruling, item 1).
 - **Next under §9:** the architect's call on M1, then the code.
+
+### Amendment 4 (2026-10-28), class 4: M1 corrected on the architect's call. Written after P0's results were seen.
+
+- **The call:** `state/consults/2026-10-28-admitted-integer-overflow-silent-wraparound-m1-architect.md` (sha256 from line 5, 4fcdab1952c5861d51f8b8b1990ee2ff7e23b8dd16041cfae12c2af8bbbcda3d), the architect's consult that Amendment 3 names.
+- **M1's words** (§4) read, from this amendment on: M1, both `[env]` entries removed from `.cargo/config.toml` (the MSVC build main ships: cl.exe, no define), observed at the piece's commit that holds the test, in the dedicated MSVC checkout and target `D:/wt-targets/o1-msvc` (§9, item 4), its cold build booked on the custodian's estimate by the human's OPEN-5 answer (`state/directives/2026-10-26-clicks-260-261-244-r2-241-o1-answers-pb-draft-b-6d-260-lines-5b-8a-8b-rulings.md`, OPEN-5: the cheap run first, else that booking; the consult shows the cheap run as described is not a commit). §8 item 1 stands as written: M1 never runs on a shared target.
+- **T-A** collects every cell's terminal before it asserts and names them in its failure message (test text only, no `pub` item), so that the same M1 run observes T-o on MSVC, as §4 says it does; its prediction is unchanged.
+- **Unchanged:** the other mutations, every prediction in §3 and §5, and the gates.
