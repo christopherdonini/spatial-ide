@@ -1,14 +1,13 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `0e5926d42b451aa3deaebc8b2e830b1b87036b38bc9910f14a9faf1867c3e8f3`) at `2026-10-28T20:04:38.720Z`.
+Generated from `PLAN.yaml` (sha256 `11bd4775b1fde74e6c4092293ee0f5c15558b61d4f440bda16361bb1693bbbfa`) at `2026-10-28T20:31:57.977Z`.
 
 ## 1. Next
 
-- **corpus-line-files** — A line file (LineString or MultiLineString) in the preregistered compatibility corpus, so that line admission is tried on a real-world file (lane `engine`)
+- **engine-cancel-before-execute-siblings** — The six other cancel.attach sites reuse the execute-window guard, so a cancel before execution stops the work, not only the outcome (dataset.rs identity scan and index.rs first, their work unbounded) (lane `engine`)
 
 ## 2. Ready
 
-- **corpus-line-files** — A line file (LineString or MultiLineString) in the preregistered compatibility corpus, so that line admission is tried on a real-world file (lane `engine`, order null, budget 120 min)
 - **engine-cancel-before-execute-siblings** — The six other cancel.attach sites reuse the execute-window guard, so a cancel before execution stops the work, not only the outcome (dataset.rs identity scan and index.rs first, their work unbounded) (lane `engine`, order null, budget 90 min)
 - **stream-cancel-returns-left-unmarked** — The producer's cancel returns the flush piece leaves unmarked: a prepare error through classify, the two-read window in classify's marking arms, and the send to a receiver that is gone (is a disconnect an observation) (lane `engine`, order null, budget 120 min)
 - **type-walk-rule2-residual-reasons** — Type walk: a rule-2 result over a column or an integer literal, refused by rule 7's bit-width bound, keeps the residual reason although its value is a constant NULL (for example f32 > NULL + 100000) (lane `engine`, order null, budget 60 min)
