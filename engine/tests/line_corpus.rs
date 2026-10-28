@@ -55,7 +55,8 @@ fn row_path() -> PathBuf {
 /// T1. The file opens as its metadata says: `geoarrow.linestring`, no `crs` key so
 /// `crs:format-default`, no `id` column so session ordinals, and a usable covering.
 ///
-/// RECORDED MUTATION: none yet.
+/// RECORDED MUTATION: M-1, in `encoding_for_declared_types` the all-LineString arm returns `MultiLineString`: this test FAILED at its encoding assertion (left MultiLineString, right LineString), observed over 3b9e0662fe9d4823c6d3d63f597444fd85e0352b, then reverted.
+/// RECORDED MUTATION: M-3, `==` to `!=` in `file_matches`'s hash comparison: this test FAILED at `pre-open hash`, observed over 3b9e0662fe9d4823c6d3d63f597444fd85e0352b, then reverted.
 #[test]
 #[ignore = "reads the on-disk compatibility corpus (C:\\dev\\spatial-ide\\target\\fixtures\\compat-corpus)"]
 fn a_real_world_line_file_opens_with_the_encoding_crs_provenance_and_identity_its_metadata_gives() {
@@ -82,7 +83,9 @@ fn a_real_world_line_file_opens_with_the_encoding_crs_provenance_and_identity_it
 /// T2. Streamed whole with `ViewportQuery::all()`: no refusal, 12 rows with 12 unique ids, every
 /// position inside the observation's `bbox` member, comparisons inclusive.
 ///
-/// RECORDED MUTATION: none yet.
+/// RECORDED MUTATION: M-1, as in T1: this test FAILED at the `coordinate pairs` downcast of the geometry column, observed over 3b9e0662fe9d4823c6d3d63f597444fd85e0352b, then reverted.
+/// RECORDED MUTATION: M-2, in `read_line` y pushed before x: this test FAILED at `positions outside the bbox member` and T1 passed, observed over 3b9e0662fe9d4823c6d3d63f597444fd85e0352b, then reverted.
+/// RECORDED MUTATION: M-3, `==` to `!=` in `file_matches`'s hash comparison: this test FAILED at `pre-open hash`, observed over 3b9e0662fe9d4823c6d3d63f597444fd85e0352b, then reverted.
 #[test]
 #[ignore = "reads the on-disk compatibility corpus (C:\\dev\\spatial-ide\\target\\fixtures\\compat-corpus)"]
 fn a_real_world_line_file_streams_whole_one_row_per_feature_each_position_inside_its_bbox_member() {
