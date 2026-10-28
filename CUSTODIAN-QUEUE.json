@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-28T09:47:33.501Z",
-  "plan_hash": "bc8994b6618cfae9826751bae6ef2f18f511afcee544a9bd105c075cd82a0f64",
+  "generated_at": "2026-10-28T10:00:08.293Z",
+  "plan_hash": "7137932cd7f5c3510b561b396639efc7efacb8ce98c38238efa21943cbfe3fb6",
   "priorities_approved": true,
   "next": {
     "id": "admitted-integer-overflow-silent-wraparound",
@@ -229,7 +229,7 @@
         "opened": "2026-10-25",
         "done": null
       },
-      "summary": "PLACED S3 2026-10-26 (state/directives/2026-10-26-resent-2026-10-25-o1-s1-clang-cl-route-a-hugeint-cast-b-five-nodes-placed.md, item 2): the governance lane after verify-cites-past-end-bound, a five-line form with its own tests; the widening and the tests as that item gives them. Before: PROPOSED 2026-10-25 by governance-hash-grammar-shared's form (the custodian's settlement, OPEN-2), for the human's placement: the reference grammar's path must begin with a letter, digit or underscore, so a span in .github/ or .githooks/ cannot be hash-pinned (verify-quotes reads it without its leading dot and fails to resolve it), as governance-hash-grammar-shared's summary records from 2026-10-02. Widening the path's first character changes what both checkers bind, so it needs its own tests; it lands in scripts/plan/hashRefGrammar.mjs once governance-hash-grammar-shared merges. Not graded."
+      "summary": "FORM COMMITTED 2026-10-28 (scripts/plan/HASH-REF-LEADING-DOT-PATH-PREREGISTRATION.md; the architect's draft state/consults/2026-10-28-governance-hash-ref-leading-dot-path-five-line-form-architect-draft.md; 28 pins): the grammar reads a dot-led segment only before a letter, digit or underscore, binds no . or .. segment, and reads no path or bare line directly after a path character; 2 files, 110 lines; two tests, M1 to M4; OPEN-1 (B), OPEN-2 (A), OPEN-3 (A); the reviewer alone. NEXT: a worker builds it on its own branch. Before: PLACED S3 2026-10-26 (state/directives/2026-10-26-resent-2026-10-25-o1-s1-clang-cl-route-a-hugeint-cast-b-five-nodes-placed.md, item 2): the governance lane after verify-cites-past-end-bound, a five-line form with its own tests; the widening and the tests as that item gives them. Before: PROPOSED 2026-10-25 by governance-hash-grammar-shared's form (the custodian's settlement, OPEN-2), for the human's placement: the reference grammar's path must begin with a letter, digit or underscore, so a span in .github/ or .githooks/ cannot be hash-pinned (verify-quotes reads it without its leading dot and fails to resolve it), as governance-hash-grammar-shared's summary records from 2026-10-02. Widening the path's first character changes what both checkers bind, so it needs its own tests; it lands in scripts/plan/hashRefGrammar.mjs once governance-hash-grammar-shared merges. Not graded."
     },
     {
       "id": "verify-cites-reversed-range",
