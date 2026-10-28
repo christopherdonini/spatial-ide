@@ -112,3 +112,10 @@ The paths are the brief's; I cannot read branches.
 - **Rule (00)** was checked again at main 958c986d by `git diff --name-only origin/main...<branch>` for every open branch and the branches in flight: none touches `scripts/plan/hashRefGrammar.mjs` or `scripts/plan/verify-test-claims.test.mjs`. Nothing touches `protocol/`.
 
 ## Amendments (opens empty; append-only)
+
+### Amendment 1 (2026-10-28), class 2: a deviation recorded after results. Written after the piece's mutation results were seen.
+
+- **The prediction** (the Tests+mutation line): M3, a leading dot admitted before any path character, so the `./` entry resolves and the deepEqual fails by name.
+- **The first result** (`state/consults/2026-10-28-governance-hash-ref-leading-dot-path-worker-stop-report.md`): applied as the dot made optional while the character after it stayed a letter, digit or underscore, M3 passed both tests: in that shape `./X` never matches, so it is not the mutation the words name.
+- **The worded shape, observed** (`state/consults/2026-10-28-governance-hash-ref-leading-dot-path-build-worker-report.md`, at 850efbd89ad18daf8c14a0c485eb657cf868abb7): the dot's lookahead and the first path character both widened to every path character; `each_dot_or_dot_dot_segment_reference_binds_in_neither_checker` fails by name with the `./` entry resolving. Its RECORDED MUTATION comment names that shape.
+- The prediction is not edited. Nothing else changes.
