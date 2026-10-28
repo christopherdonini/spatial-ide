@@ -162,3 +162,54 @@ That is about 142 against a declared 150, in 4 files, with no new dependency (sh
 - **Rule (00)** was checked at main 0c7cc351 by `git diff --name-only origin/main...<branch>` for every open branch and the branches in flight: none touches the piece's files or `engine/compat-corpus/lines/`; nothing touches `protocol/`.
 
 ## Amendments (opens empty; append-only)
+
+### Amendment 1 (2026-10-28), class 1: the fetch, the observation and the settlement's predictions. Written after the fetch and the observation were seen, before any code and any engine run.
+
+- **The partition** (the human's ruling C, `state/directives/2026-10-28-rulings-by-lane-o1-filler-order-8a-governance-slots-docs-adr-017-note.md`):
+  - The mirror's listing is an anonymous S3 `list-type=2` over the prefix `nlebovits/microsoft-ml-road-detections/road-detections/by_country/` in the bucket `us-west-2.opendata.source.coop`, taken at 2026-10-28T16:11Z: 235 keys, response sha256 c67f60091790dcc36e4d8e1e092c8f11744c831d7492e0a64c8187de56b4623c.
+  - The smallest partition it lists is `country=PCN/PCN.parquet`, at 5545 bytes. This is the first of ruling C's three tries.
+- **The fetch, twice** (§4 item 2), by the custodian on the main checkout with network (OPEN-3):
+  - The command was `curl -sL` of `https://data.source.coop/nlebovits/microsoft-ml-road-detections/road-detections/by_country/country=PCN/PCN.parquet`, run at 2026-10-28T16:12:10Z and 16:12:13Z.
+  - Both copies are sha256 ea32059406b8ae19d839e3bb9f7c808fbb2d858fbdea555063ae2c6fd3fcc24d, 5545 bytes.
+  - Both times the host returned ETag `"05c124aa1ac11e03f1014d7a81902784"`, Last-Modified `Fri, 14 Aug 2026 14:47:29 GMT`, and `x-amz-version-id` `iPXiHL81i_94eKD.9x_RX7x6RAEbJF6T`.
+  - The S3 endpoint returns the same bytes when asked for that version id.
+- **Placed** untracked at `target/fixtures/compat-corpus/lines/msrd-pcn.parquet`.
+  - The file name, fixed here, carries no glob metacharacter and no `key=value` segment.
+  - The row id is `LF-1`.
+- **The observation** (§4 item 3):
+  - The command was `scripts/observe.py lines/msrd-pcn.parquet`, run once from the corpus root in `target/corpus-venv` with `PYTHONDONTWRITEBYTECODE=1`. It exited 0 with an empty stderr.
+  - The local `scripts/observe.py` is byte-equal to `of-record/`'s (sha256 68345b38dc300e3453dfea551f853c3ec85bbc44a2982de1be372fc8b77d1a16).
+  - Its stdout is 2580 bytes, 111 lines with the CRLF ends Windows Python wrote, sha256 cf3eafbabb32c49c22501771c734d7d81261f1b7b6153ad02f9289ca16a15274. It is kept outside the repository and enters the branch as `engine/compat-corpus/lines/msrd-pcn.observe.txt`, as captured, with git's LF normalisation the only change (Scope, item 2).
+  - None of §4's stops is met: the `bbox` member is present, `parquet_open_error` is null, and `geometry_types` is `["LineString"]`.
+- **The predictions** (§4 item 4), derived from the observation by the engine's rules:
+  - **Encoding:** `geoarrow.linestring`, since every geometry is a LineString. M-1 stands as worded.
+  - **CRS:** no `crs` key, so `crs_provenance` is `crs:format-default`.
+  - **Identity:** no `id` column (the columns are `country`, `width_meters`, `geometry_type`, `geometry` and `bbox`), so `IdSource::SessionOrdinal`.
+  - **Covering:** `Dataset::covering()` is `Some`; the covering's four columns are the fields of the schema's `bbox` struct.
+  - **Stream,** with `ViewportQuery::all()`:
+    - no refusal;
+    - 12 rows, with 12 unique ids;
+    - every position inside the observation's `bbox` member, comparisons inclusive.
+- **The licence** (the settlement's OPEN-1 (A)):
+  - **The rights holder's statement:** the repository `microsoft/RoadDetections` at commit c1a8d6995ebcfcf248a764f6b67b13e2b3356f06.
+    - `LICENSE`: 113 bytes, sha256 1e4162322549351e6ce131d66c3c6c6cb56755db58e0475138e3f41cd94c4b3c, fetched twice by `curl -sL` at 2026-10-28T16:13:36Z and 16:13:38Z, byte-stable.
+    - `README.md`: 9387 bytes, sha256 b42c3e8272e22f552bcf0c294508f5add2ef8ff5d8f681e51ddb6f082c82576f, fetched twice, byte-stable.
+    - Both name the Open Data Commons Open Database License (ODbL). The README links https://opendatacommons.org/licenses/odbl/.
+  - **The mirror's catalogue:** `collection.json`, 9592 bytes, sha256 87750e290b96d0396996007fe85c30aa7a14f5b8188fb4a838038a897692c311, fetched twice at 2026-10-28T16:13:54Z and 16:13:56Z, byte-stable.
+    - It gives the license as `ODbL-1.0`.
+    - Its license link goes to the same page, titled as v1.0.
+  - **The custodian's reading:** the two name the same licence; the mirror adds a version number that the rights holder's statement does not state. So this is not ruling C's stop.
+  - Both texts go to the human now; the human's word on the licence row is owed before the merge in any case.
+  - The licence cell names what the rights holder states, and the version number is not inferred.
+- **The raw files** (the listing, the headers, the observation's stdout, the three licence documents) are in the local evidence folder, outside every repository, under `2026-10-28/8a/`.
+
+### Amendment 2 (2026-10-28), class 2: §3's procedure-recorded reason, a deviation recorded after the fetch. Written after the fetch was seen.
+
+- **§3 registered** "procedure recorded: no", with the reason naming an unversioned input.
+- **What the fetch found:** the host versions the object (Amendment 1: `x-amz-version-id`, and the same bytes come back by that version id).
+- **The RECORD row:**
+  - The cell stays "no".
+  - Its reason names a version-pinned object URL, which is neither a hash-pinned corpus file nor a commit-pinned URL under RECORD.md's definition of "yes".
+  - It also names that the versions of the software that wrote the bytes are held only as the footer's `parquet-cpp-arrow version 21.0.0`.
+  - The input's continued availability is not checked.
+- §3 is not edited.
