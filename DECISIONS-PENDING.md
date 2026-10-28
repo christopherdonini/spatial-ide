@@ -4,6 +4,16 @@ Line references written before the rotation point into state/cut-archive/DECISIO
 
 ## Pending
 
+**RULED 2026-10-28 — rulings by lane: A, #266 (O1): Amendment 5's T-B on M1 not an invalidator, its mechanism in the amendment; 535 lines accepted; W-2 the architect's words; OPEN-7 (A); the build-of-record sentence final in the human's words; gate 1's Correctness and Evidence findings take correction rounds as the form has them, Documentation findings must-fix with no re-gate; after the click entry 9 heads the filler queue, the worktrees may go once the raw evidence is local, no KNOWN-LIMITATIONS item, the v0.2 release-note line in the human's words; B, the filler order after 8a; C, 8a's partition rule and stops; D, 5b and 8b as ruled; E, governance: VQ last, E1 after the human's reading 1; F, slots 1 and 2's order; G, the docs lane gains adr-017-note-product-redaction-gate in the human's words; H, Friday's window (`state/directives/2026-10-28-rulings-by-lane-o1-filler-order-8a-governance-slots-docs-adr-017-note.md`).**
+
+- **The ruling** is the text, referenced and not restated.
+- **Applied this session:** the filing.
+
+**RULED 2026-10-28 — #266: the link line captured once, locally, by a tester with `-C link-arg=/VERBOSE:LIB` on the clang-cl target, the raw output in the local evidence folder, the basenames filed; beyond the archive check, yes: `llvm-nm --undefined-only` over the DuckDB archive and the engine test objects for the 128-bit helpers and clang_rt, and `dumpbin /dependents`; any reference a stop for the human; the listings filed with the P0 amendment; #264 and #265 merged (`state/directives/2026-10-28-266-link-line-local-capture-helper-routine-listing.md`).**
+
+- **The ruling** is the text, referenced and not restated.
+- **Applied this session:** the filing; the two done records.
+
 **RULED 2026-10-28 — O1: the P3 and T-c-ar-s Q3 cells accepted (every overflow DuckDB evaluates), one EXPLAIN of P3 on one statistics file filed with the P0 amendment, a product evaluated after all being OPEN-4 (A) and the human's; then the amendment, the architect on M1, the code; the archive check the ADR-030 evidence, the PR's Windows build capturing the link line once; 6b: OPEN-6 reversed, S taken from the entry point's output, its full sha256 checked on the copy at the first-batch folder, nothing freed on C:, R3b's other terms standing; #262 stands as recorded; the human clicks #262 and #263; 8a goes ahead (`state/directives/2026-10-28-o1-p3-accepted-one-explain-6b-takes-s-from-6d-262-stands-8a-goes-ahead.md`).**
 
 - **The ruling** is the text, referenced and not restated.
