@@ -1292,6 +1292,14 @@ fn the_5gb_clustered_cell() {
 /// stopped its trace before the lock is released. The lock orders these two tests only: the other
 /// ignored passes run unserialised beside them under a bare `--ignored`, and `kernel/RESULTS.md`'s
 /// commands run each of these two alone with `--exact`.
+///
+/// RECORDED MUTATION: M-1, inserted in `serial()` after the lock is taken and before it returns:
+/// `std::mem::forget(spatial_engine::trace::start(spatial_engine::trace::TraceKey::default()));`
+/// Observed on an export of code commit 3c8e91f634246b620e8346b2d34acca597a6385e, release build,
+/// `--ignored --exact`, each test alone. Unmutated, `cancellation_holds_with_pruning_in_the_path`
+/// passed; under M-1 it failed at its start's expect, `no other trace is running`.
+/// `cancellation_holds_with_pruning_in_the_path_on_h5` was not run (its fixture H5 was absent), so
+/// its M-1 is a reading, not an observation.
 static TRACE_SERIAL: std::sync::Mutex<()> = std::sync::Mutex::new(());
 
 fn serial() -> std::sync::MutexGuard<'static, ()> {
