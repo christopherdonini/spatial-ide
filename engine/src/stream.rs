@@ -1912,7 +1912,10 @@ fn produce(
             Ok(None) => break,
             Err(payload) => {
                 // Keep what the panic actually said. ADR-010 rule 7 asks for a *surfaced* error, and
-                // "duckdb fetch failed" surfaces the phase without the reason.
+                // "duckdb fetch failed" surfaces the phase without the reason. The one exception is
+                // DuckDB's out-of-range class in the shapes `fetch_panic_duckdb_text` accepts: its
+                // text names operands read from the file, so it ends the stream with the fixed
+                // detail, as at the prepare and execute sites.
                 let detail = payload
                     .downcast_ref::<&str>()
                     .map(|s| (*s).to_string())
@@ -1933,7 +1936,7 @@ fn produce(
                 if cancel.is_cancelled() {
                     crate::trace::mark(crate::trace::PRODUCER_CANCELLED, 0, 0);
                 }
-                return Err(classify(cancel, "duckdb fetch panicked", &detail));
+                return Err(classify_fetch_panic(cancel, &detail));
             }
         };
 
@@ -2590,28 +2593,52 @@ fn flush(
 
 /// The whole terminal detail when a stream that was not cancelled fails with DuckDB's text
 /// beginning with its out-of-range class label (`is_out_of_range`), as the prepare and execute
-/// sites pass DuckDB's text; on the product path the known source is an admitted predicate's
-/// integer `+`, `-`, `*` or unary `-` overflowing. DuckDB's own message for this class names
-/// operands read from the file, so at those sites it is withheld. Proven at the execute site by
-/// `an_admitted_integer_overflow_ends_the_stream_with_the_fixed_detail` and B-T1; no test starts
-/// from the prepare site. Not at the fetch site: there the `duckdb` crate's fetch panic (1.10505.0,
-/// `Arrow::next` in src/arrow_batch.rs) puts its own words before DuckDB's, so the label is not at
-/// the start and an overflow first raised during a fetch keeps DuckDB's text, operands included;
-/// node `stream-fetch-overflow-fixed-detail` holds that case. `[P6 placeholder]`: the words are the
-/// engine's own facts, with no consequence sentence; the human's wording is owed at P6.
+/// sites pass DuckDB's text and as the fetch site passes it once `fetch_panic_duckdb_text` has
+/// read it out of the `duckdb` crate's panic payload (the accepted shapes only); on the product
+/// path the known source is an admitted predicate's integer `+`, `-`, `*` or unary `-` overflowing.
+/// DuckDB's own message for this class names operands read from the file, so at these sites it is
+/// withheld. Proven at the execute site by `an_admitted_integer_overflow_ends_the_stream_with_the_fixed_detail`
+/// and B-T1, and at the fetch site by
+/// `an_admitted_integer_overflow_first_raised_during_a_fetch_ends_the_stream_with_the_fixed_detail`
+/// (the wrapped payload shape, observed; the bare shape by a unit sample only); no test starts
+/// from the prepare site. `[P6 placeholder]`: the words are the engine's own facts, with no
+/// consequence sentence; the human's wording is owed at P6.
 const OUT_OF_RANGE_DETAIL: &str = "[P6 placeholder] a value computed while this query ran was out of range for its type; the row values and the query text are withheld";
 
-/// DuckDB's out-of-range class, read from `message` (without the engine's phase prefix: DuckDB's
-/// own text at the prepare and execute sites; at the fetch site the `duckdb` crate's panic payload,
-/// whose own words come first, so the crate's payload does not match) by its label at the very
-/// start and nowhere else, so a file value that happens to carry the words is not misread.
+/// The `duckdb` crate's own words in front of DuckDB's text in its fetch panic: the bytes before
+/// `{err}` at line 46 of `src/arrow_batch.rs` in duckdb 1.10505.0 (`Arrow::next`), byte-copied by script.
+const FETCH_PANIC_PREFIX: &str = "Failed to fetch Arrow record batch: ";
+
+/// DuckDB's wrapper when its streaming result is already closed, up to and including the `Error: `
+/// after the LF, byte-copied by script from the bytes the form's Amendment 1 records at step 0. DuckDB
+/// v1.5.5 (libduckdb-sys 1.10505.0) composes it: the type name `Invalid Input` at line 146 of
+/// `src/common/exception.cpp`, then `src/common/error_data.cpp` lines 65 and 67, then the message
+/// of `src/main/stream_query_result.cpp` line 181 and the format of its line 183.
+const PENDING_RESULT_WRAPPER: &str = "Invalid Input Error: Attempting to execute an unsuccessful or closed pending query result\nError: ";
+
+/// DuckDB's text read out of the `duckdb` crate's fetch panic payload, by anchored prefix strips
+/// only: `FETCH_PANIC_PREFIX` at the start; then DuckDB's text itself (the bare shape) or the text
+/// after `PENDING_RESULT_WRAPPER` at its start (the wrapped shape); then `is_out_of_range`. Any
+/// other payload, a doubly wrapped one included, is `None`. Nothing is searched for.
+fn fetch_panic_duckdb_text(payload: &str) -> Option<&str> {
+    let rest = payload.strip_prefix(FETCH_PANIC_PREFIX)?;
+    match rest.strip_prefix(PENDING_RESULT_WRAPPER) {
+        Some(inner) => is_out_of_range(inner).then_some(inner),
+        None => is_out_of_range(rest).then_some(rest),
+    }
+}
+
+/// DuckDB's out-of-range class, read from `message` (DuckDB's own text, without the engine's phase
+/// prefix: as the prepare and execute sites pass it, and as `fetch_panic_duckdb_text` returns it
+/// from the fetch site's panic payload) by its label at the very start and nowhere else, so a file
+/// value that happens to carry the words is not misread.
 fn is_out_of_range(message: &str) -> bool {
     message.starts_with("Out of Range Error")
 }
 
 /// A cancellation is returned first; DuckDB's out-of-range class ends with the fixed
 /// `OUT_OF_RANGE_DETAIL`; every other failure keeps `phase` and `message` as passed (DuckDB's text
-/// at prepare and execute, the crate's panic payload at the fetch site).
+/// at prepare and execute; at the fetch site, `classify_fetch_panic`'s choice).
 fn classify(cancel: &CancelToken, phase: &str, message: &str) -> EngineError {
     if cancel.is_cancelled() {
         EngineError::Cancelled
@@ -2620,6 +2647,16 @@ fn classify(cancel: &CancelToken, phase: &str, message: &str) -> EngineError {
     } else {
         EngineError::Query(format!("{phase}: {message}"))
     }
+}
+
+/// `classify` for the fetch site: DuckDB's text when `fetch_panic_duckdb_text` reads it out of the
+/// payload, else the payload whole, so every other payload renders as `duckdb fetch panicked: <payload>`.
+fn classify_fetch_panic(cancel: &CancelToken, payload: &str) -> EngineError {
+    classify(
+        cancel,
+        "duckdb fetch panicked",
+        fetch_panic_duckdb_text(payload).unwrap_or(payload),
+    )
 }
 
 fn column_u64(chunk: &arrow::array::RecordBatch, name: &str) -> Result<Vec<u64>> {
@@ -2732,6 +2769,81 @@ mod tests {
             ),
             EngineError::Cancelled
         ));
+    }
+
+    /// `the_fetch_panic_is_read_as_out_of_range_only_by_its_fixed_prefixes_at_the_start`: the fetch
+    /// arm's payload is DuckDB's out-of-range text only when the crate's fixed prefix is at its start
+    /// and DuckDB's text, or DuckDB's fixed wrapper then its text, follows with the label at its
+    /// start; every other payload keeps `duckdb fetch panicked: <payload>` byte for byte, and a
+    /// cancellation is returned first. The literals are unit inputs only; the wrapped shape is
+    /// proven end to end by `an_admitted_integer_overflow_first_raised_during_a_fetch_ends_the_stream_with_the_fixed_detail`.
+    ///
+    /// The wrapped sample is the payload as step 0 recorded it (the form's Amendment 1; 233 bytes on
+    /// all 16 runs), byte-copied by script. The bare sample was never observed through the engine:
+    /// it is the crate's prefix followed by the text DuckDB v1.5.5 (libduckdb-sys 1.10505.0) composes
+    /// for an INT64 multiplication overflow: the format at line 77 of
+    /// `src/include/duckdb/common/operator/multiply.hpp`, under the type name `Out of Range` at
+    /// line 116 of `src/common/exception.cpp` and `src/common/error_data.cpp` lines 65 and 67.
+    #[test]
+    fn the_fetch_panic_is_read_as_out_of_range_only_by_its_fixed_prefixes_at_the_start() {
+        const WRAPPED: &str = "Failed to fetch Arrow record batch: Invalid Input Error: Attempting to execute an unsuccessful or closed pending query result\nError: Out of Range Error: Overflow in multiplication of INT64 (3600000000000000000 * 3600000000000000000)!";
+        const BARE: &str = "Failed to fetch Arrow record batch: Out of Range Error: Overflow in multiplication of INT64 (3600000000000000000 * 3600000000000000000)!";
+        const DUCKDB_TEXT: &str = "Out of Range Error: Overflow in multiplication of INT64 (3600000000000000000 * 3600000000000000000)!";
+        let crate_prefix = &BARE[..BARE.len() - DUCKDB_TEXT.len()];
+        let wrapped_head = &WRAPPED[..WRAPPED.len() - DUCKDB_TEXT.len()];
+        let io = "IO Error: No files found that match the pattern \"x.parquet\"";
+
+        let live = CancelToken::new();
+        for (name, payload) in [("wrapped", WRAPPED), ("bare", BARE)] {
+            assert_eq!(
+                fetch_panic_duckdb_text(payload),
+                Some(DUCKDB_TEXT),
+                "{name}"
+            );
+            assert!(
+                matches!(classify_fetch_panic(&live, payload), EngineError::Query(d) if d == OUT_OF_RANGE_DETAIL),
+                "{name} sample is not the fixed detail"
+            );
+        }
+
+        let wrapper_io = format!("{wrapped_head}{io}");
+        let crate_io = format!("{crate_prefix}{io}");
+        let label_later = format!("{crate_prefix}IO Error: a value reading {DUCKDB_TEXT}");
+        let no_crate_prefix = WRAPPED[crate_prefix.len()..].to_string();
+        let leading_space = format!(" {WRAPPED}");
+        let doubly_wrapped = format!("{wrapped_head}{wrapped_head}{DUCKDB_TEXT}");
+        let negatives = [
+            ("the wrapper with an IO Error inside", wrapper_io),
+            ("the crate prefix with an IO Error", crate_io),
+            (
+                "the label later in the text after the crate prefix",
+                label_later,
+            ),
+            ("the wrapper without the crate prefix", no_crate_prefix),
+            ("a leading space", leading_space),
+            ("a doubly wrapped payload", doubly_wrapped),
+        ];
+        for (name, payload) in &negatives {
+            assert_eq!(fetch_panic_duckdb_text(payload), None, "{name}");
+            match classify_fetch_panic(&live, payload) {
+                EngineError::Query(d) => {
+                    assert_eq!(d, format!("duckdb fetch panicked: {payload}"), "{name}")
+                }
+                other => panic!("{name}: not a query error: {other:?}"),
+            }
+        }
+
+        let cancelled = CancelToken::new();
+        cancelled.cancel();
+        for payload in [WRAPPED, BARE, io] {
+            assert!(
+                matches!(
+                    classify_fetch_panic(&cancelled, payload),
+                    EngineError::Cancelled
+                ),
+                "a cancelled token is returned first: {payload}"
+            );
+        }
     }
 
     /// E-11: `float32_costs_four_bytes_in_the_estimate`. Mutation: remove the arm (falls through to
