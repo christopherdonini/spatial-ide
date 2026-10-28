@@ -197,3 +197,11 @@ This piece's paths are kernel/tests/first_batch_factorial.rs and the form on mai
 - **The ruling:** `state/directives/2026-10-28-o1-p3-accepted-one-explain-6b-takes-s-from-6d-262-stands-8a-goes-ahead.md`, item 2 (OPEN-6 of the entry point's draft reversed); R3b's other terms stand.
 - **The source:** the file the fixture-S entry point's unmutated release run wrote, `D:/wt-targets/fsre-out/full/parcels-145mb.parquet` (the run report `state/consults/2026-10-27-fixture-s-regeneration-entry-point-build-worker-report.md`; the entry point's form, `kernel/FIXTURE-S-REGENERATION-ENTRY-POINT-PREREGISTRATION.md`, Amendment 1).
 - **The copy:** `target/slice-evidence/first-batch/parcels-145mb.parquet` in the main checkout, placed by the custodian on 2026-10-28; its size 151629665 B and its full sha256 fe61e704fcc01d40b0e453d81a4987fc23862dcc38d62bd1f9635d124433ac7a, read from the copy after placing, equal S's recorded figures. Nothing was freed on C:.
+
+### Amendment 2 (2026-10-28): the closing record, written after gate 1's reports and the words commit were seen. References and hashes only.
+
+- **The final head:** 94ec3ad852767b00695619767bdcbf7bdc4e5927, the words commit; its diff from a45c206d is 1 line(s) in and 1 out of `kernel/tests/first_batch_factorial.rs`.
+- **Gate 1:** `state/consults/gates/2026-10-28-first-batch-factorial-ignored-trace-tests-gate1-architect.md` (gate-log 637, sha256 010ad229c82eaf621cff3bd217222b0e9b071e043a7a31fc1c8b826a63b911a0) and `state/consults/gates/2026-10-28-first-batch-factorial-ignored-trace-tests-gate1-reviewer.md` (gate-log 638, sha256 085021c557d6c10aaf6fcafd230b0d74c28dce4c2de02e701ab33a2b3bcba5fe), both PASS WITH NOTES, with no Correctness or Evidence finding.
+- **The architect's D-1 (each run alone)** is applied at the final head by a worker from the pair, with no re-gate (§31): `state/consults/2026-10-28-first-batch-factorial-ignored-trace-tests-words-worker-report.md`.
+- **Figures:** 30 lines over the Scope, under 40.
+- **CI at the final head:** 18 of 18 checks pass (read by gh before this record).
