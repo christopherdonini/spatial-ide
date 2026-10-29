@@ -4,6 +4,16 @@ Line references written before the rotation point into state/cut-archive/DECISIO
 
 ## Pending
 
+**RULED 2026-10-29 — wait loops and background shells, standing: in every agent's brief a wait loop sleeps at least one second per turn and carries a hard timeout that ends it; a background shell left running when its piece closes is killed at the piece's closing record, and the closing checklist says so (`state/directives/2026-10-29-wait-loops-sleep-and-time-out-background-shells-killed-at-closing.md`).**
+
+- **The ruling** is the text, referenced and not restated.
+- **Applied this session:** the filing; the closing checklist, which no file held, appended to AUTONOMY.md as its section 37 in the human's words; every brief from now carries the first clause.
+
+**RULED 2026-10-29 — governance piece F: the mapping table approved as drafted, rule R and its delta rows included; OPEN-1 to OPEN-6, OPEN-8 and OPEN-10 (A); OPEN-7 (A) widened to every file that directs a reader or an author to open a file, path only, in C2, plus (C), one dated pointer appended at the end of AUTONOMY.md; OPEN-9 (B), plus one live observation of G3 after the move, on main, its refusal text in the ledger (`state/directives/2026-10-29-governance-f-mapping-table-approved-open-1-to-open-10-ruled.md`).**
+
+- **The ruling** is the text, referenced and not restated.
+- **Applied this session:** the filing; the form committed from the draft with the settlement, its cites pinned by script; then the build.
+
 **RULED 2026-10-28 — governance piece F, a tidy repository in place: nothing leaves the repository, no history rewritten, its visibility unchanged; the governance lane, placed next, before E1, never holding slot 1; the full form, both gates and the human's click; the mapping table first, approved by the human in the form; a moves-only commit by git mv (R100 on every line), then a paths commit; the move map governance/MOVED.tsv by script; citations through the map with negative tests; the proof by unchanged check results; a governance-ci check on stray forms; a quiet window, rule (00) set aside for the move commit alone; the README drafted by the architect, its words approved in the PR; the measurement; the out-of-scope list (`state/directives/2026-10-28-governance-piece-f-a-tidy-repository-in-place.md`).**
 
 - **The ruling** is the text, referenced and not restated.
