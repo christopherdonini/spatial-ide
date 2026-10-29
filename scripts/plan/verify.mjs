@@ -23,6 +23,7 @@ import { loadPlan, deriveStatusMap } from './plan.mjs';
 import { checkQueueDrift } from './queue.mjs';
 import { checkSiteDrift } from './site.mjs';
 import { readRulingSet, LIVE_RULINGS } from './rulingSet.mjs';
+import { loadMovedMap, currentPath } from './movedMap.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 export const REPO_ROOT = path.resolve(here, '..', '..');
@@ -147,11 +148,13 @@ export function verdictCiteExists(repoRoot, cite) {
   // where the human's walkthrough verdicts were quoted verbatim before the plan existed).
   const rel = typeof cite === 'string' ? /^(RELEASE-[0-9][^ ]*\.md) Amendment (\d+)\b/.exec(cite) : null;
   if (rel) {
-    const rp = path.join(repoRoot, rel[1]);
-    if (!fs.existsSync(rp)) return { ok: false, reason: `verdict.cite "${cite}": ${rel[1]} does not exist` };
+    // The release record may have moved (governance/MOVED.tsv): the cite names it as written, the file is read where it is.
+    const recordPath = currentPath(loadMovedMap(repoRoot), rel[1]);
+    const rp = path.join(repoRoot, recordPath);
+    if (!fs.existsSync(rp)) return { ok: false, reason: `verdict.cite "${cite}": ${recordPath} does not exist` };
     const text = fs.readFileSync(rp, 'utf8');
     const has = new RegExp('Amendment ' + rel[2] + '(?![0-9])').test(text);
-    return has ? { ok: true, reason: null } : { ok: false, reason: `verdict.cite "${cite}": Amendment ${rel[2]} not found in ${rel[1]}` };
+    return has ? { ok: true, reason: null } : { ok: false, reason: `verdict.cite "${cite}": Amendment ${rel[2]} not found in ${recordPath}` };
   }
   if (typeof cite !== 'string' || !cite.startsWith(prefix)) {
     return { ok: false, reason: `verdict.cite "${cite}" does not start with "DECISIONS-PENDING.md " or "RELEASE-<version>.md Amendment N"` };
@@ -196,7 +199,7 @@ export function verifyEvidence(node, { repoRoot, offline, slug }) {
     return result.ok ? [] : [`${tag}: ${result.reason}`];
   }
   if (evidence.path !== undefined) {
-    const [filePath] = evidence.path.split('#');
+    const filePath = currentPath(loadMovedMap(repoRoot), evidence.path.split('#')[0]);
     return trackedPathExists(repoRoot, filePath) ? [] : [`${tag}: path "${filePath}" is not a tracked file`];
   }
   if (evidence.log !== undefined) {
@@ -317,7 +320,7 @@ export function runVerify({ planPath, repoRoot, siteDir, offline }) {
   const queueDrift = checkQueueDrift({ planPath, outDir: path.dirname(planPath) });
   if (!queueDrift.ok) failures.push(...queueDrift.problems.map((p) => `queue drift: ${p}`));
 
-  const resolvedSiteDir = siteDir ?? path.join(path.dirname(planPath), 'site');
+  const resolvedSiteDir = siteDir ?? path.join(repoRoot, 'site');
   const siteDrift = checkSiteDrift({ planPath, outDir: resolvedSiteDir, repoSlug: slug ?? undefined });
   if (!siteDrift.ok) failures.push(...siteDrift.problems.map((p) => `site drift: ${p}`));
 

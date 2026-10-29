@@ -269,7 +269,7 @@ function parseArgs(argv) {
 function main() {
   const args = parseArgs(process.argv.slice(2));
   const planPath = args.plan ?? path.join(REPO_ROOT, 'PLAN.yaml');
-  const siteDir = args.outDir ?? path.join(path.dirname(planPath), 'site');
+  const siteDir = args.outDir ?? path.join(REPO_ROOT, 'site');
   const repoRoot = REPO_ROOT;
 
   const plan = loadPlan(planPath);

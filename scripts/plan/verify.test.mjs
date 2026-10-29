@@ -13,6 +13,7 @@ import {
   verifyNotDoneEvidenceNotMerged,
   adrStatusAccepted,
   verdictCiteExists,
+  verifyEvidence,
   commitOnMain,
 } from './verify.mjs';
 
@@ -329,4 +330,21 @@ test("verifyNotDoneEvidenceNotMerged passes when an in-progress node's evidence 
     const failures = verifyNotDoneEvidenceNotMerged(node, { prResults });
     assert.deepEqual(failures, [], `expected no failure for ${detail}, got: ${JSON.stringify(failures)}`);
   }
+});
+
+// --- governance piece F: the move map (the form's sections 2.2, OPEN-6 and 4; test T13) ------------------------
+
+test('verify: a RELEASE verdict cite and an evidence path resolve through the move map', () => {
+  const commit = 'a'.repeat(40);
+  const dir = ledgerRepo({
+    'governance/MOVED.tsv': `old\tnew\tcommit\nDECISIONS-PENDING.md\tgovernance/DECISIONS-PENDING.md\t${commit}\nRELEASE-0.1.md\tgovernance/RELEASE-0.1.md\t${commit}\n`,
+    'governance/RELEASE-0.1.md': '## Amendment 3\n\nthe sitting results\n',
+    'governance/DECISIONS-PENDING.md': '# Decisions pending\n',
+  });
+  assert.deepEqual(verdictCiteExists(dir, 'RELEASE-0.1.md Amendment 3'), { ok: true, reason: null });
+  const missing = verdictCiteExists(dir, 'RELEASE-0.1.md Amendment 4');
+  assert.equal(missing.ok, false);
+  assert.match(missing.reason, /Amendment 4 not found in governance\/RELEASE-0\.1\.md/);
+  const node = { id: 'n', evidence: { path: 'DECISIONS-PENDING.md#open' } };
+  assert.deepEqual(verifyEvidence(node, { repoRoot: dir, offline: true }), []);
 });

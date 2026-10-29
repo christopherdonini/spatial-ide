@@ -13,6 +13,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { normalizeText, extractQuotePassages, extractHashRefs, runVerifyQuotes, listCiteContents, REPO_ROOT } from './verify-quotes.mjs';
+import { movedRepo, commitFiles, removeAfter, X_OLD, X_NEW } from './movedFixture.mjs';
 
 function sha256(s) {
   return crypto.createHash('sha256').update(Buffer.from(s, 'utf8')).digest('hex');
@@ -1151,4 +1152,50 @@ test("verify-quotes: a real record line with an item past its round's last item 
   assert.equal(citeFindings.length, 1, JSON.stringify(citeFindings));
   assert.equal(citeFindings[0].cite, 'round 19, item 9');
   assert.match(citeFindings[0].reason, /RULED block has no item 9/);
+});
+
+// --- governance piece F: the move map (the form's sections 2.3 and 4; tests T8 and T9) -----------------------
+
+test('verify-quotes: a hash reference to an old path at a pre-move rev reads the old path at that rev', (t) => {
+  const { dir, before, move } = movedRepo();
+  removeAfter(t, dir);
+  const hash = sha256('one\ntwo\n');
+  commitFiles(
+    dir,
+    { 'rec.md': `At the pin: \`a/X-PREREGISTRATION.md:1-2\` @ ${before} sha256:${hash}\n\nAfter the move: \`a/X-PREREGISTRATION.md:1-2\` @ ${move} sha256:${hash}\n` },
+    'a record written after the move',
+    '2026-03-01T00:00:00Z',
+  );
+  const { hashFindings } = runVerifyQuotes({ repoRoot: dir, files: [path.join(dir, 'rec.md')] });
+  assert.deepEqual(hashFindings, []);
+});
+
+test('verify-quotes: a baseline entry keyed by an old path waives the same finding at the new path', (t) => {
+  const { dir } = movedRepo({}, 'Verbatim: "a lonely wolf howls beneath the pale full moon under starlit skies tonight" end.\n');
+  removeAfter(t, dir);
+  commitFiles(
+    dir,
+    {
+      'scripts/plan/verify-quotes.baseline.json': JSON.stringify({
+        $doc: 'entries leave when corrected; none is added except by a ruling; a new mismatch always fails.',
+        entries: [
+          {
+            file: X_OLD,
+            line: 1,
+            words: 'a lonely wolf howls beneath the pale full moon under starlit skies',
+            reason: 'known offender',
+            disposition: 'unfindable-by-construction',
+            ruling: 'round 11, 2026-09-17',
+          },
+        ],
+      }),
+    },
+    'a baseline written before the move',
+    '2026-03-01T00:00:00Z',
+  );
+  const { findings, baselined, unmatchedBaseline } = runVerifyQuotes({ repoRoot: dir, files: [path.join(dir, X_NEW)] });
+  assert.deepEqual(findings, []);
+  assert.equal(baselined.length, 1, JSON.stringify(baselined));
+  assert.equal(baselined[0].relPath, X_NEW);
+  assert.deepEqual(unmatchedBaseline, []);
 });

@@ -1413,3 +1413,17 @@ test('session-resume: reading-order item 3 is the open entries and recent ruling
   assert.equal(lines[3].includes('RULED blocks (newest first)'), false, 'the old item 3 is gone');
   assert.equal(/state\/directives\/|PRECEDENTS\.md/.test(lines[3]), false, 'it names neither, so the first-occurrence search above still finds it');
 });
+
+// --- governance piece F: the reading order names paths that exist (the form's section 4; test T15) ---
+
+test('session-resume: every path the reading order names exists at HEAD', () => {
+  const repoRoot = path.resolve(here, '..', '..');
+  const tracked = execFileSync('git', ['ls-tree', '-r', '--name-only', 'HEAD'], { cwd: repoRoot, encoding: 'utf8', maxBuffer: 1 << 28 }).split('\n').filter(Boolean);
+  const named = READING_ORDER.match(/(?:[A-Za-z0-9_.-]+\/)*[A-Za-z0-9_*.-]+\.(?:md|json|yaml)|(?:[A-Za-z0-9_.-]+\/)+(?![A-Za-z0-9_*.-])/g) ?? [];
+  assert.ok(named.length >= 8, `the reading order names paths: ${JSON.stringify(named)}`);
+  for (const p of new Set(named)) {
+    const re = p.includes('*') ? new RegExp('^' + p.split('*').map((s) => s.replace(/[.+?^${}()|[\]\\]/g, '\\$&')).join('[^/]*') + '$') : null;
+    const found = p.endsWith('/') ? tracked.some((f) => f.startsWith(p)) : re ? tracked.some((f) => re.test(f)) : tracked.includes(p);
+    assert.ok(found, `the reading order names "${p}", which HEAD does not hold`);
+  }
+});
