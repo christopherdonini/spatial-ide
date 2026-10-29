@@ -52,7 +52,7 @@ before it returns a handle. **`open_dataset` is cancellable but not progress-rep
 docs/01 principle-7 shortfall, not a silent gap (§2, C3).
 
 Refusal skp.unknown_dataset: the catalog no longer holds the name at admission. Wire change: an added refusal on open_dataset, the existing code; no message changes shape.
-<!-- The refusal above is made in SkpHost::open_dataset's Watching arm, at one check after the watch's resolves_unchanged and before the mint. A close that removes the name after that check, and the ChecksOnly arm, are not refused; neither is reachable in the shipped app: the handle is minted from the OS CSPRNG and returned only by this open, and Catalog::names has no product caller. The remaining window is proposed as its own node. -->
+<!-- The refusal above is made in SkpHost::open_dataset's Watching arm, at one check after the watch's resolves_unchanged and before the mint. A close that removes the name after that check, and the ChecksOnly arm, are not refused; neither is reachable in the shipped app: the handle is minted from the OS CSPRNG and returned only by this open, and Catalog::names has no product caller. Both windows are left to the node open-dataset-close-serialised-under-the-catalog-lock, placed as filler entry 10. -->
 
 ### `describe`
 

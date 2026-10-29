@@ -5044,9 +5044,9 @@ mod ticket_drop_under_lock_regression {
         );
     }
 
-    // `kernel/KERNEL-CLOSE-DURING-OPEN-ADMISSION-PREREGISTRATION.md` pinned, and
-    // `kernel/OPEN-DATASET-REFUSES-A-NAME-CLOSED-DURING-ADMISSION-PREREGISTRATION.md` replaced, the
-    // test below: a real close run from inside `open_dataset`'s admission. No sleep, spawned
+    // `kernel/KERNEL-CLOSE-DURING-OPEN-ADMISSION-PREREGISTRATION.md` pinned the test that
+    // `kernel/OPEN-DATASET-REFUSES-A-NAME-CLOSED-DURING-ADMISSION-PREREGISTRATION.md` replaced with
+    // the test below: a real close run from inside `open_dataset`'s admission. No sleep, spawned
     // thread or timeout.
 
     /// What [`CloseOnAdmissionWatch`] saw and did on its one call, inside the open's admission: the
@@ -5105,17 +5105,18 @@ mod ticket_drop_under_lock_regression {
         assert_eq!(result.expect_err(w).code, "skp.unknown_dataset", "{w}");
     }
 
-    /// KCDO. A close run from inside `open_dataset`'s admission, after the catalog insert and
-    /// before the mint, makes the open refuse as `skp.unknown_dataset`, with nothing minted,
-    /// inserted or emitted.
+    /// KCDO. A close run from inside the Watching arm's admission, in the watch's
+    /// `resolves_unchanged` (after the catalog insert and before the check that precedes the mint),
+    /// makes the open refuse as `skp.unknown_dataset`: no generation is minted, no `OpenRecord` is
+    /// inserted and nothing is emitted.
     ///
     /// This test replaces, under `kernel/OPEN-DATASET-REFUSES-A-NAME-CLOSED-DURING-ADMISSION-PREREGISTRATION.md`,
     /// the one `kernel/KERNEL-CLOSE-DURING-OPEN-ADMISSION-PREREGISTRATION.md` pinned. The handle is
     /// 16 bytes of OS CSPRNG that only this open returns, and `Catalog::names`, which this test's
     /// watch calls, has no product caller, so nothing in the product can name the entry before the
     /// open returns. Two windows stay open, both unreachable in the product: a close that removes
-    /// the name after the check, and the ChecksOnly arm. The proposed node
-    /// `open-dataset-close-serialised-under-the-catalog-lock` takes them.
+    /// the name after the check, and the ChecksOnly arm. The node placed as filler entry 10,
+    /// `open-dataset-close-serialised-under-the-catalog-lock`, takes them.
     ///
     /// RECORDED MUTATION (the fix alone): at 5e38ffae942180fbd1b82d53046568113948bbf8, the product
     /// change before this test existed, the test the earlier form pinned FAILED at its expect on
