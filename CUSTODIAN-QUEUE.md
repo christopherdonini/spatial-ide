@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `64cf5e7c21d1e4d740a8be38547746b8c1ec2ced2c1f78dadcb774dd2dff3db1`) at `2026-10-29T12:13:35.821Z`.
+Generated from `PLAN.yaml` (sha256 `5561ce1390157e3af31f00e83ab81aeab5b6bbd9fdf75cbff67e80db3b3c2f19`) at `2026-10-29T12:29:37.038Z`.
 
 ## 1. Next
 
@@ -19,13 +19,13 @@ Generated from `PLAN.yaml` (sha256 `64cf5e7c21d1e4d740a8be38547746b8c1ec2ced2c1f
 - **posix-backslash-in-shared-path-logic** — Shared path logic stops treating a backslash as a separator on POSIX: distinct audit destinations stay distinct, and a viewer asset named with a backslash is refused, not renamed (wave-3 A-1, S2) (lane `platform`, order null, budget 90 min)
 - **publish-bundle-sigterm** — SIGTERM handling in publish-bundle on unix (wave-3 W3-A observation 3) (lane `platform`, order null, budget 90 min)
 - **publish-unix-quota-perm-errors** — EDQUOT and EPERM in publish error classification on unix (wave-3 W3-A observation 1) (lane `platform`, order null, budget 90 min)
-- **redaction-hostname-off-windows** — The redaction scan knows the machine's hostname off Windows, so machine-identifier findings reach an audit record's residual_classes there too (wave-3 A-2, S2, sent to Fable for weighing) (lane `platform`, order null, budget 60 min)
 
-## 3. Waiting on the human (total: 15 min)
+## 3. Waiting on the human (total: 25 min)
 
 ### ruling
 
 - **engine-cancel-before-execute-siblings** — The six other cancel.attach sites reuse the execute-window guard, so a cancel before execution stops the work, not only the outcome (dataset.rs identity scan and index.rs first, their work unbounded) (15 min)
+- **redaction-hostname-off-windows** — The redaction scan knows the machine's hostname off Windows, so machine-identifier findings reach an audit record's residual_classes there too (wave-3 A-2, S2, sent to Fable for weighing) (10 min)
 
 ### sitting
 

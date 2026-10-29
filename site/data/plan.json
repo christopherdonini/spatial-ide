@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-29T12:13:36.162Z",
-  "plan_hash": "64cf5e7c21d1e4d740a8be38547746b8c1ec2ced2c1f78dadcb774dd2dff3db1",
+  "generated_at": "2026-10-29T12:29:37.244Z",
+  "plan_hash": "5561ce1390157e3af31f00e83ab81aeab5b6bbd9fdf75cbff67e80db3b3c2f19",
   "priorities_approved": true,
   "lanes": [
     {
@@ -4523,12 +4523,12 @@
       "kind": "task",
       "lane": "platform",
       "phase": "prototype",
-      "status": "ready",
+      "status": "blocked",
       "order": null,
       "depends_on": [],
       "needs_human": {
-        "kind": "none",
-        "minutes": 0
+        "kind": "ruling",
+        "minutes": 10
       },
       "gate": "none",
       "evidence": null,
@@ -4536,7 +4536,7 @@
       "generation": 2,
       "felt_verdict": false,
       "entries": [],
-      "summary": "FILLER QUEUE entry 7a (RULED 2026-10-24: state/directives/2026-10-24-weekend-exception-third-product-slot-placements-forms-ahead-250-click.md, line 15; made the standing filler slot by state/directives/2026-10-24-filler-slot-standing-rule-appended-to-autonomy.md, line 8; state/FILLER-QUEUE.md): placed, graded S3, proven on the Linux L1 job; a five-line form under section 21c's size, the reviewer and the architect from dispatch, section 25 (e) set aside; any string a user sees a P6 placeholder for the sitting, any red-line text to the human. Before: Wave-3 finding A-2, RECORD S2 and sent to Fable for weighing in the after-wave batch (state/cloud/wave3/W3-A.md, custodian fields), proven on Linux: MachineIdentifiers::from_environment reads only COMPUTERNAME and HOSTNAME (kernel/src/bundle/redaction.rs), and default Linux shells do not export HOSTNAME, so the property kernel/PERMISSION-BOUNDARY.md states for machine-identifier findings silently weakens off Windows (PORTABILITY R1). The fix puts the hostname behind a named boundary (R2); any new dependency is a decision for its form. Windows always sets COMPUTERNAME. Proposed, not placed.",
+      "summary": "FORM DRAFTED 2026-10-29 (state/consults/2026-10-29-redaction-hostname-off-windows-five-line-form-lead-data-draft.md): the OS hostname as a fallback on Linux, Route A, three files, about 145 of 150 lines. WAITING ON THE HUMAN: OPEN-1 (macOS) and OPEN-2 (the Linux CLI refusal under section 21c); committed only after #270 merges. Before: FILLER QUEUE entry 7a (RULED 2026-10-24: state/directives/2026-10-24-weekend-exception-third-product-slot-placements-forms-ahead-250-click.md, line 15; made the standing filler slot by state/directives/2026-10-24-filler-slot-standing-rule-appended-to-autonomy.md, line 8; state/FILLER-QUEUE.md): placed, graded S3, proven on the Linux L1 job; a five-line form under section 21c's size, the reviewer and the architect from dispatch, section 25 (e) set aside; any string a user sees a P6 placeholder for the sitting, any red-line text to the human. Before: Wave-3 finding A-2, RECORD S2 and sent to Fable for weighing in the after-wave batch (state/cloud/wave3/W3-A.md, custodian fields), proven on Linux: MachineIdentifiers::from_environment reads only COMPUTERNAME and HOSTNAME (kernel/src/bundle/redaction.rs), and default Linux shells do not export HOSTNAME, so the property kernel/PERMISSION-BOUNDARY.md states for machine-identifier findings silently weakens off Windows (PORTABILITY R1). The fix puts the hostname behind a named boundary (R2); any new dependency is a decision for its form. Windows always sets COMPUTERNAME. Proposed, not placed.",
       "dates": {
         "opened": "2026-09-30",
         "done": null
