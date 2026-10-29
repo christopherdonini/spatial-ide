@@ -51,6 +51,9 @@ anything.
 before it returns a handle. **`open_dataset` is cancellable but not progress-reporting** — a named
 docs/01 principle-7 shortfall, not a silent gap (§2, C3).
 
+Refusal skp.unknown_dataset: the catalog no longer holds the name at admission. Wire change: an added refusal on open_dataset, the existing code; no message changes shape.
+<!-- The refusal above is made in SkpHost::open_dataset's Watching arm, at one check after the watch's resolves_unchanged and before the mint. A close that removes the name after that check, and the ChecksOnly arm, are not refused; neither is reachable in the shipped app: the handle is minted from the OS CSPRNG and returned only by this open, and Catalog::names has no product caller. The remaining window is proposed as its own node. -->
+
 ### `describe`
 
 ```
@@ -1125,6 +1128,10 @@ comparison retained; `deny_unknown_fields` kept both directions. `skp/1` stays R
 - **Five new `skp.*` codes:** `skp.session_history_unwritable` (`detail`), `skp.session_history_full` (`limit`), `skp.session_history_stopped`, `skp.step_line_over_ceiling` (`saw`, `limit`) and `skp.style_value_not_admitted` (`property`, `detail`). §10.4 lists the codes it reuses.
 
 §1 and §4 are updated in place to count six commands; §5 is unchanged; `protocol/data-plane/` has an empty diff. Mechanics: the literal `"skp/0.11"` → `"skp/0.12"` is bumped in one commit with its fixtures (`protocol/skp/tests/data/*.json`, the conformance fixtures, `protocol/skp/tests/fixtures.rs`) and the shell's TypeScript literal and the two shell tests that carry it, together with `record_step`'s types and wire fixtures. The version-refusal fixture that named `skp/0.12` as an unsupported future version is renumbered to name `skp/0.13`. Plain `==` retained; `deny_unknown_fields` kept both directions; `skp/1` stays RESERVED. The kernel's `StepRecorder` hosts the command, so `SkpHost::new` is unchanged.
+
+### Note: open_dataset refuses a name closed during its admission (2026-10-26; no literal change)
+
+**skp/0.12 stands; no literal is bumped and no fixture changes.** §1's open_dataset section gains one paragraph in place: open_dataset may refuse as skp.unknown_dataset, the existing code, with its existing message and handle field. No key, value or command is added or removed; protocol/data-plane/ has an empty diff.
 
 ## 9. Attribute projection on `viewport_query`
 
