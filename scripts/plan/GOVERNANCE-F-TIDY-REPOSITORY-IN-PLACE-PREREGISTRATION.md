@@ -604,3 +604,9 @@ The human's ruling is `state/directives/2026-10-29-governance-f-mapping-table-ap
 - **Rule (00) at this commit,** by `git diff --name-only origin/main...<branch>` at main 4a49daa6 over the open PRs (#268) and the branches in flight (`cut/b2-piece-1c-save-and-reopen`, `cut/port-2-macos-l1-and-app-dirs`), against C2's paths: none touches them. Section 9's timing governs: the check is run again at dispatch and before the click, and C2 gets no exception.
 
 ## §10. Amendments (opens empty, append-only)
+
+### Amendment 1 (2026-10-29), class 2: deviations declared before the moves-only commit and the paths commit, written after phase 1's tests and mutations were seen.
+
+- **The build is staged.** C2's logic and tests were built first, with no move and no path edit, on the branch `wip/governance-f-scripts` at 810f6f158d909e15a505d12c0e4aa7b7aa923178 from main at 447b8497 (`state/consults/2026-10-29-governance-f-tidy-repository-in-place-phase1-worker-report.md`). C2 carries those files over by path. The PR keeps section 2.2's two commits, M and then C2.
+- **A seventh new file.** C2 also adds `scripts/plan/movedFixture.mjs`, the new tests' shared fixture. Section 2.2's list of what C2 adds reads with it, and section 5's verify-cites prediction reads scanned(C2) equals scanned(P) plus 7.
+- **Rule R's delta rows at P,** authorised in advance by section 2.1: this form, and `kernel/OPEN-DATASET-REFUSES-A-NAME-CLOSED-DURING-ADMISSION-PREREGISTRATION.md` (committed a6843238). M is re-derived at P and the PR body lists them.
