@@ -1021,9 +1021,10 @@ const OVERFLOW_TERMINAL: &str = "query: [P6 placeholder] a value computed while 
 /// integer arithmetic (`+`, `-`, `*`, unary `-`), whose operand conversions are all lossless
 /// widenings. Such a stream ends in error by direction (B-1 point 4), and node
 /// `stream-evaluation-failure-fixed-detail` makes its terminal text the fixed detail alone when the
-/// error is raised at the prepare or execute site; an overflow first raised during a fetch keeps
-/// DuckDB's text (node `stream-fetch-overflow-fixed-detail`), which this check does not accept, so
-/// it is a counterexample at both call sites.
+/// error is raised at the prepare or execute site, and node `stream-fetch-overflow-fixed-detail`
+/// does the same for an overflow first raised during a fetch, in the payload shapes the engine
+/// accepts; an overflow that keeps DuckDB's text, in any other shape, is not accepted by this check,
+/// so it is a counterexample at both call sites.
 /// Identified by both of these: the predicate's typed class, integer arithmetic (this fixture's own
 /// integer-typed operands, `i64` and `id`, and any integer literal, joined by `+`, `-` or `*`;
 /// keyed on `i64` or `id` written beside ` + `, ` - ` or ` * `), and a terminal text equal to
