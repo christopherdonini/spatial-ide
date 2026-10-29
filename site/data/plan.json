@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-29T11:38:50.485Z",
-  "plan_hash": "8c8c626d745366f1a1ca87e0671ff884aa553a4562819654540c40ce75f9f678",
+  "generated_at": "2026-10-29T12:02:45.666Z",
+  "plan_hash": "f78959d93e4e87ad040d0472161dbee385a3e31619b6cb3741c9f979d432f7fc",
   "priorities_approved": true,
   "lanes": [
     {
@@ -4471,14 +4471,14 @@
       "kind": "task",
       "lane": "engine",
       "phase": "prototype",
-      "status": "ready",
+      "status": "blocked",
       "order": null,
       "depends_on": [
         "engine-cancel-before-stream-window"
       ],
       "needs_human": {
-        "kind": "none",
-        "minutes": 0
+        "kind": "ruling",
+        "minutes": 15
       },
       "gate": "none",
       "evidence": null,
@@ -4486,7 +4486,7 @@
       "generation": 2,
       "felt_verdict": false,
       "entries": [],
-      "summary": "FILLER QUEUE entry 4a (RULED 2026-10-24: state/directives/2026-10-24-weekend-exception-third-product-slot-placements-forms-ahead-250-click.md, line 12; made the standing filler slot by state/directives/2026-10-24-filler-slot-standing-rule-appended-to-autonomy.md, line 8; state/FILLER-QUEUE.md): placed, graded S3; a five-line form under section 21c's size, the reviewer and the architect from dispatch, section 25 (e) set aside; any string a user sees a P6 placeholder for the sitting, any red-line text to the human. Before: Recorded by engine/CANCEL-BEFORE-EXECUTE-PREREGISTRATION.md, section 2 item 4, from the architect's sibling search (state/consults/2026-09-30-engine-cancel-before-execute-architect-draft.md, item 2): engine/src/dataset.rs:1332 (metadata and the covering sample, bounded), engine/src/dataset.rs:1636 (the identity scan at open, unbounded by file size), engine/src/index.rs:332 (query_arrow materialising up to MAX_INDEXED_FEATURES), engine/src/rowgroup.rs:336 (parquet_metadata, bounded by the footer), engine/src/layout.rs:345 and engine/src/layout.rs:438 (the measurement harness only), each at 8efc554, have the same pre-execute window with no check before executing; each checks after detach, so the outcome is Cancelled and the work is not stopped. Proposed, not placed: the human places it. Also carried here from gate 1 on PR #146 (state/consults/gates/2026-09-30-cancel-before-execute-gate1-reviewer.md, N4): engine/README.md item 3's blockquote, which the gate-1 architect ruled still true but which reads inconsistently with the corrected attach doc, and the lease_for_stream doc in engine/src/dataset.rs that the form's section 0 names false.",
+      "summary": "FORM DRAFTED 2026-10-29 (state/consults/2026-10-29-engine-cancel-before-execute-siblings-five-line-form-lead-data-draft.md): six sites through execute_guarded, about 115 of 150 lines. WAITING ON THE HUMAN: OPEN-1 to OPEN-4; the form is committed only after #270 merges. Before: FILLER QUEUE entry 4a (RULED 2026-10-24: state/directives/2026-10-24-weekend-exception-third-product-slot-placements-forms-ahead-250-click.md, line 12; made the standing filler slot by state/directives/2026-10-24-filler-slot-standing-rule-appended-to-autonomy.md, line 8; state/FILLER-QUEUE.md): placed, graded S3; a five-line form under section 21c's size, the reviewer and the architect from dispatch, section 25 (e) set aside; any string a user sees a P6 placeholder for the sitting, any red-line text to the human. Before: Recorded by engine/CANCEL-BEFORE-EXECUTE-PREREGISTRATION.md, section 2 item 4, from the architect's sibling search (state/consults/2026-09-30-engine-cancel-before-execute-architect-draft.md, item 2): engine/src/dataset.rs:1332 (metadata and the covering sample, bounded), engine/src/dataset.rs:1636 (the identity scan at open, unbounded by file size), engine/src/index.rs:332 (query_arrow materialising up to MAX_INDEXED_FEATURES), engine/src/rowgroup.rs:336 (parquet_metadata, bounded by the footer), engine/src/layout.rs:345 and engine/src/layout.rs:438 (the measurement harness only), each at 8efc554, have the same pre-execute window with no check before executing; each checks after detach, so the outcome is Cancelled and the work is not stopped. Proposed, not placed: the human places it. Also carried here from gate 1 on PR #146 (state/consults/gates/2026-09-30-cancel-before-execute-gate1-reviewer.md, N4): engine/README.md item 3's blockquote, which the gate-1 architect ruled still true but which reads inconsistently with the corrected attach doc, and the lease_for_stream doc in engine/src/dataset.rs that the form's section 0 names false.",
       "dates": {
         "opened": "2026-09-30",
         "done": null
