@@ -623,3 +623,19 @@ The human's ruling is `state/directives/2026-10-29-governance-f-mapping-table-ap
 - **Check 3, as corrected:** for each row, the oldest commit of `git log --follow --format=%H M -- <new>` equals the oldest of `git log --follow --format=%H M^ -- <old>`, and the two commit lists, M excluded, are equal. This is section 1's claim, each moved file's history reachable by `git log --follow`, stated on both sides of M.
 - **M is made again** at the new P, main's head when the build resumes, and checks 1 to 3 are run there; the first M is discarded unpushed.
 - **Section 5's counts read with Amendment 1's delta rows:** M has 188 R100 lines and nothing else, and the Markdown files in the code folders fall by 160.
+
+### Amendment 4 (2026-10-29), class 9: scope addition on the piece's direction (`state/directives/2026-10-28-governance-piece-f-a-tidy-repository-in-place.md`, items 3 and 4), declared before any code of it, written after a first C2 was seen.
+
+- **Why** (`state/consults/2026-10-29-governance-f-tidy-repository-in-place-phase2-second-stop-worker-report.md`): at a first C2, staged and never committed, `verify-test-claims.mjs` gave 31 findings where P gave none (superseded 11 to 4, withdrawn 17 to 0). It compares a superseded or withdrawn row's pinned path with the citing form's current path, and reads the pinned line with `git show <rev>:<current path>`, so every such row in a moved form stops matching. Section 2.2's table gave the script its plan path only.
+- **Section 2 shape.** `scripts/plan/verify-test-claims.mjs` resolves through `scripts/plan/movedMap.mjs`, as verify-cites and verify-quotes do: a pinned reference's path and the citing form's path are compared after both are mapped through `governance/MOVED.tsv`; a pinned line is read at its rev from the path the file had at that rev (the old path when the row's move commit is not an ancestor of the rev); the blame of a claim line follows the rename. With no MOVED.tsv the script behaves as today.
+- **Section 4 tests, each with one mutation, observed by applying it, running the test, recording its failure by name with its commit, and reverting:**
+  - T18 `verify-test-claims: a superseded pin to a form's old path, written before the move, still exempts its claim after the move`. Mutation: compare the pinned path with the form's current path without the map. Predicted: the claim is reported as not found.
+  - T19 `verify-test-claims: a withdrawn-test row pinned at a form's old path before the move stays valid after the move`. Mutation: read the pinned line at the rev from the form's current path. Predicted: the row is refused.
+- **Section 5, declared unchanged:** verify-test-claims at C2 equals P (exit 0; the finding, planned, superseded and withdrawn sets equal after mapping; the scanned count equal). An invalidator: a superseded or withdrawn row valid at P and not at C2, or the reverse.
+- **Sections 7 to 9:** the addition is counted inside C2's budget and adds no file (the script and its test file are already in section 2.2's table); section 8 item 3 reads with this row; the gates read it with the rest of C2.
+
+### Amendment 5 (2026-10-29), class 2: three readings of the first C2, recorded before C2 is committed and written after it was seen (`state/consults/2026-10-29-governance-f-tidy-repository-in-place-phase2-second-stop-worker-report.md`, its readings 1 to 3).
+
+- **T15** leaves out of its path check the one old root path inside the human's words that `session-resume.mjs`'s reading order carries byte for byte; every other name stays checked, and its mutation was observed again.
+- **`ROTATING_LEDGERS`** in `verify-cites.mjs` holds `governance/DECISIONS-PENDING.md` beside the old name, so that the test fixtures with no map keep working; production resolves through the map either way.
+- **`verify-cites.test.mjs`** keeps its line 475 as it is: the table's edit there would break its own assertion that a subfolder is advice.
