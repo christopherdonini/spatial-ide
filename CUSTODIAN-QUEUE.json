@@ -1,65 +1,27 @@
 {
-  "generated_at": "2026-10-29T12:52:09.682Z",
-  "plan_hash": "574af963a9aa8e7ef12ce908f63a4b9607e3be115ef4cc6ecd7532dfbd100e60",
+  "generated_at": "2026-10-29T12:59:02.816Z",
+  "plan_hash": "a3fe4d6588f840224fc447394c85d3ed8d14c7782d946f7f31098080d910616f",
   "priorities_approved": true,
   "next": {
-    "id": "pre-admission-change-detail-braces",
-    "title": "Four kernel P6-placeholder detail strings are wrapped in literal braces, which reach the operator message; the watcher form declares each such string starts with the bracketed placeholder tag",
-    "lane": "kernel-protocol",
+    "id": "governance-e-readings",
+    "title": "Piece E readings before E1's form: context loaded in a custodian session; this project's own transcript tally; the installed Claude Code facts; the bytes one worker and one reviewer dispatch receive",
+    "lane": "governance",
     "phase": "prototype",
     "status": "ready",
     "order": null,
-    "budget_minutes": 30,
+    "budget_minutes": 60,
     "needs_human": {
       "kind": "none",
       "minutes": 0
     },
     "evidence": null,
     "dates": {
-      "opened": "2026-10-04",
+      "opened": "2026-10-24",
       "done": null
     },
-    "summary": "FILLER QUEUE entry 3 (RULED 2026-10-24: state/directives/2026-10-24-weekend-exception-third-product-slot-placements-forms-ahead-250-click.md, line 11; made the standing filler slot by state/directives/2026-10-24-filler-slot-standing-rule-appended-to-autonomy.md, line 8; state/FILLER-QUEUE.md): placed, graded S3, the braces removed, the words staying placeholders (the node's scope (i)); a five-line form under section 21c's size, the reviewer and the architect from dispatch, section 25 (e) set aside; any string a user sees a P6 placeholder for the sitting, any red-line text to the human. Before: Proposed by PR 173 gate-1 reviewer, N-3 (state/consults/gates/2026-10-04-watch-grandparent-spawn-signal-gate1-reviewer.md); widened by Fable 2026-10-04 advice, item 2 (state/directives/2026-10-04-fable-advice-nodes-trailers-latency.md), checked by the custodian at f3426ba8: four detail literals open with a brace before the P6 placeholder tag and close with a brace, at kernel/src/skp.rs lines 1024 (the pre-admission Change refusal), 1445 and 1521, and kernel/src/lib.rs line 528; two others in skp.rs (1233 and 1329) are unbraced. engine/SOURCE-WATCHER-PREREGISTRATION.md section 7 (its placeholder row) declares that each new operator string starts with the bracketed tag. Two scopes for the human to choose between at placement: (i) braces only, removing the two brace characters from each of the four literals so they match the declared form, with no new wording; (ii) the final wording of the placeholder strings, which is the human ruling P6 reserves. Never queued until the human places it."
+    "summary": "ADDENDUM 2 2026-10-28 (state/directives/2026-10-28-governance-piece-e-addendum-2-upgrade-clear-compact-window-prompt-audit-e3-path-rules-reviewer-model.md): reading 2's table by agent type rests on 2.1.306 subagent transcripts that may hold placeholder usage; it is re-run on three days of transcripts written after the human's upgrade to 2.1.312 or later, before E1 uses it as its baseline (the main-session table stands); the auto-compact window is measured again by reading 2's method a week after it is set. Before: READING 1 (state/directives/2026-10-25-255-route-b-o1-lead-data-probe-session-end-lines-s2-context-monday-no-redaction-pr.md, item 4): /context on Monday, once, in the custodian's session, partway through a piece. Before: READINGS 2 TO 4 FILED 2026-10-24 (state/consults/2026-10-24-governance-e-reading-2-transcript-tally-tester-report.md; state/consults/2026-10-24-governance-e-reading-3-claude-code-facts.md; state/consults/2026-10-24-governance-e-reading-4-dispatch-bytes-custodian.md). Reading 1 waits for the human: context is a built-in command the custodian cannot run. Reading 3: the per-call effort parameter exists (2.1.292 or later; installed 2.1.306), CLAUDE_CODE_EFFORT_LEVEL is not set here, and whether clear gives a new session id is not documented, so it is observed at the first checkpoint. Before: RULED 2026-10-24 (state/directives/2026-10-24-governance-piece-e-rules-as-records-readings-e1-repin-fresh-session-practice.md, line 10 onward; the advisor audit state/consults/2026-10-24-agent-briefs-rulebook-audit-advisor.md): four readings, only their reports under state/consults/ committed. 1: context once in a custodian session partway through a piece (the slash command is the human's to type: the custodian cannot run built-in commands). 2: a read-only tally of this project's own transcripts on this machine over 14 days, tokens by session and agent type, the 20 largest tool results by size, counts only, this project's transcript directory alone and named. 3: from the installed Claude Code and its documentation: whether clear starts a new session id; whether a dispatch sets effort per call and whether CLAUDE_CODE_EFFORT_LEVEL is set here; whether a subfolder CLAUDE.md loads when an agent reads a file there, subagents included. 4: the bytes one worker and one reviewer dispatch receive today."
   },
   "ready": [
-    {
-      "id": "pre-admission-change-detail-braces",
-      "title": "Four kernel P6-placeholder detail strings are wrapped in literal braces, which reach the operator message; the watcher form declares each such string starts with the bracketed placeholder tag",
-      "lane": "kernel-protocol",
-      "phase": "prototype",
-      "status": "ready",
-      "order": null,
-      "budget_minutes": 30,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-10-04",
-        "done": null
-      },
-      "summary": "FILLER QUEUE entry 3 (RULED 2026-10-24: state/directives/2026-10-24-weekend-exception-third-product-slot-placements-forms-ahead-250-click.md, line 11; made the standing filler slot by state/directives/2026-10-24-filler-slot-standing-rule-appended-to-autonomy.md, line 8; state/FILLER-QUEUE.md): placed, graded S3, the braces removed, the words staying placeholders (the node's scope (i)); a five-line form under section 21c's size, the reviewer and the architect from dispatch, section 25 (e) set aside; any string a user sees a P6 placeholder for the sitting, any red-line text to the human. Before: Proposed by PR 173 gate-1 reviewer, N-3 (state/consults/gates/2026-10-04-watch-grandparent-spawn-signal-gate1-reviewer.md); widened by Fable 2026-10-04 advice, item 2 (state/directives/2026-10-04-fable-advice-nodes-trailers-latency.md), checked by the custodian at f3426ba8: four detail literals open with a brace before the P6 placeholder tag and close with a brace, at kernel/src/skp.rs lines 1024 (the pre-admission Change refusal), 1445 and 1521, and kernel/src/lib.rs line 528; two others in skp.rs (1233 and 1329) are unbraced. engine/SOURCE-WATCHER-PREREGISTRATION.md section 7 (its placeholder row) declares that each new operator string starts with the bracketed tag. Two scopes for the human to choose between at placement: (i) braces only, removing the two brace characters from each of the four literals so they match the declared form, with no new wording; (ii) the final wording of the placeholder strings, which is the human ruling P6 reserves. Never queued until the human places it."
-    },
-    {
-      "id": "windows-case-fold-non-ascii",
-      "title": "The audit case policy on Windows folds non-ASCII letters as NTFS does, so a profile path differing only in non-ASCII case cannot escape the user-home redaction (wave 3's 1c-2 correction, S2, code-path-only)",
-      "lane": "kernel-protocol",
-      "phase": "prototype",
-      "status": "ready",
-      "order": null,
-      "budget_minutes": 60,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-30",
-        "done": null
-      },
-      "summary": "FILLER QUEUE entry 1 (RULED 2026-10-24: state/directives/2026-10-24-weekend-exception-third-product-slot-placements-forms-ahead-250-click.md, line 9; made the standing filler slot by state/directives/2026-10-24-filler-slot-standing-rule-appended-to-autonomy.md, line 8; state/FILLER-QUEUE.md): placed, graded S2; a five-line form under section 21c's size, the reviewer and the architect from dispatch, section 25 (e) set aside; any string a user sees a P6 placeholder for the sitting, any red-line text to the human. NEXT: skipped at dispatch while port-2, in flight, edits kernel/src/permission/audit/log.rs (rule (00)); dispatched when that overlap clears. Before: From wave 3's W3-A (section 1c-2 correction (b)), RECORD S2, code-path-only (state/cloud/wave3/W3-A.md, custodian fields): on Windows, component_eq in kernel/src/permission/audit/normalize.rs uses eq_ignore_ascii_case and is_inside in kernel/src/permission/audit/log.rs uses to_ascii_lowercase, while NTFS also folds non-ASCII letters. Neither the worker nor the custodian observed an escape, and whether the resolved destination already carries the on-disk case is not settled: the form's first step settles it. Windows is the supported platform. Proposed, not placed."
-    },
     {
       "id": "governance-e-readings",
       "title": "Piece E readings before E1's form: context loaded in a custodian session; this project's own transcript tally; the installed Claude Code facts; the bytes one worker and one reviewer dispatch receive",
@@ -78,82 +40,6 @@
         "done": null
       },
       "summary": "ADDENDUM 2 2026-10-28 (state/directives/2026-10-28-governance-piece-e-addendum-2-upgrade-clear-compact-window-prompt-audit-e3-path-rules-reviewer-model.md): reading 2's table by agent type rests on 2.1.306 subagent transcripts that may hold placeholder usage; it is re-run on three days of transcripts written after the human's upgrade to 2.1.312 or later, before E1 uses it as its baseline (the main-session table stands); the auto-compact window is measured again by reading 2's method a week after it is set. Before: READING 1 (state/directives/2026-10-25-255-route-b-o1-lead-data-probe-session-end-lines-s2-context-monday-no-redaction-pr.md, item 4): /context on Monday, once, in the custodian's session, partway through a piece. Before: READINGS 2 TO 4 FILED 2026-10-24 (state/consults/2026-10-24-governance-e-reading-2-transcript-tally-tester-report.md; state/consults/2026-10-24-governance-e-reading-3-claude-code-facts.md; state/consults/2026-10-24-governance-e-reading-4-dispatch-bytes-custodian.md). Reading 1 waits for the human: context is a built-in command the custodian cannot run. Reading 3: the per-call effort parameter exists (2.1.292 or later; installed 2.1.306), CLAUDE_CODE_EFFORT_LEVEL is not set here, and whether clear gives a new session id is not documented, so it is observed at the first checkpoint. Before: RULED 2026-10-24 (state/directives/2026-10-24-governance-piece-e-rules-as-records-readings-e1-repin-fresh-session-practice.md, line 10 onward; the advisor audit state/consults/2026-10-24-agent-briefs-rulebook-audit-advisor.md): four readings, only their reports under state/consults/ committed. 1: context once in a custodian session partway through a piece (the slash command is the human's to type: the custodian cannot run built-in commands). 2: a read-only tally of this project's own transcripts on this machine over 14 days, tokens by session and agent type, the 20 largest tool results by size, counts only, this project's transcript directory alone and named. 3: from the installed Claude Code and its documentation: whether clear starts a new session id; whether a dispatch sets effort per call and whether CLAUDE_CODE_EFFORT_LEVEL is set here; whether a subfolder CLAUDE.md loads when an agent reads a file there, subagents included. 4: the bytes one worker and one reviewer dispatch receive today."
-    },
-    {
-      "id": "verify-cites-reversed-range",
-      "title": "verify-cites checks a reversed range (end below start) by its larger end only",
-      "lane": "governance",
-      "phase": "prototype",
-      "status": "ready",
-      "order": null,
-      "budget_minutes": 30,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-10-23",
-        "done": null
-      },
-      "summary": "RULED 2026-10-23 (state/directives/2026-10-23-weekend-open-items-ruled-verify-cites-pin-covering-case-port-2-session-log-test-feature-v0-2-findings-graded.md), item 7: graded S3; the governance lane after verify-cites-out-of-range-line-count. Before: PROPOSED 2026-10-23 from verify-cites-pin-resolution-and-line-zero's drafting consult (state/consults/2026-10-23-verify-cites-pin-resolution-and-line-zero-architect-draft.md, OPEN-4): a cite whose range runs backwards is checked against its larger end and passes when that line exists. Outside that piece. For the human's grading and placement."
-    },
-    {
-      "id": "posix-backslash-in-shared-path-logic",
-      "title": "Shared path logic stops treating a backslash as a separator on POSIX: distinct audit destinations stay distinct, and a viewer asset named with a backslash is refused, not renamed (wave-3 A-1, S2)",
-      "lane": "platform",
-      "phase": "prototype",
-      "status": "ready",
-      "order": null,
-      "budget_minutes": 90,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-30",
-        "done": null
-      },
-      "summary": "FILLER QUEUE entry 7b (RULED 2026-10-24: state/directives/2026-10-24-weekend-exception-third-product-slot-placements-forms-ahead-250-click.md, line 15; made the standing filler slot by state/directives/2026-10-24-filler-slot-standing-rule-appended-to-autonomy.md, line 8; state/FILLER-QUEUE.md): placed, graded S3, proven on the Linux L1 job; a five-line form under section 21c's size, the reviewer and the architect from dispatch, section 25 (e) set aside; any string a user sees a P6 placeholder for the sitting, any red-line text to the human. Before: Wave-3 finding A-1, RECORD S2 (state/cloud/wave3/W3-A.md, custodian fields), proven on Linux by the reproducers on cloud/wave3-A (8a2ba65, kernel/tests/wave3_a_portability_audit.rs): kernel/src/permission/audit/normalize.rs rewrites every backslash to a slash on every OS, so two different POSIX destinations are recorded as one audit string; kernel/src/publish/viewer_assets.rs rewrites a walked file name the same way before validate_relative_path can refuse the backslash. The same pattern at the audit log's is_inside (a false refusal only) and the redaction scan's file label (display only). PORTABILITY R1 and R4. Windows is correct. Proposed, not placed."
-    },
-    {
-      "id": "publish-bundle-sigterm",
-      "title": "SIGTERM handling in publish-bundle on unix (wave-3 W3-A observation 3)",
-      "lane": "platform",
-      "phase": "prototype",
-      "status": "ready",
-      "order": null,
-      "budget_minutes": 90,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-10-02",
-        "done": null
-      },
-      "summary": "FILLER QUEUE entry 7d (RULED 2026-10-24: state/directives/2026-10-24-weekend-exception-third-product-slot-placements-forms-ahead-250-click.md, line 15; made the standing filler slot by state/directives/2026-10-24-filler-slot-standing-rule-appended-to-autonomy.md, line 8; state/FILLER-QUEUE.md): placed, graded S3, proven on the Linux L1 job; a five-line form under section 21c's size, the reviewer and the architect from dispatch, section 25 (e) set aside; any string a user sees a P6 placeholder for the sitting, any red-line text to the human. Before: Routed by port-1-linux-l1 drafting consult (state/consults/2026-10-02-port-1-linux-l1-architect-draft.md, point 6; its intake table): publish-bundle (kernel/src/bin/publish-bundle.rs) has no SIGTERM handling on unix (state/cloud/wave3/W3-A.md, observation 3). New cancellation behaviour under ADR-018, so out of port-1; placement is the human."
-    },
-    {
-      "id": "publish-unix-quota-perm-errors",
-      "title": "EDQUOT and EPERM in publish error classification on unix (wave-3 W3-A observation 1)",
-      "lane": "platform",
-      "phase": "prototype",
-      "status": "ready",
-      "order": null,
-      "budget_minutes": 90,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-10-02",
-        "done": null
-      },
-      "summary": "FILLER QUEUE entry 7c (RULED 2026-10-24: state/directives/2026-10-24-weekend-exception-third-product-slot-placements-forms-ahead-250-click.md, line 15; made the standing filler slot by state/directives/2026-10-24-filler-slot-standing-rule-appended-to-autonomy.md, line 8; state/FILLER-QUEUE.md): placed, graded S3, proven on the Linux L1 job; a five-line form under section 21c's size, the reviewer and the architect from dispatch, section 25 (e) set aside; any string a user sees a P6 placeholder for the sitting, any red-line text to the human. Before: Routed by port-1-linux-l1 drafting consult (state/consults/2026-10-02-port-1-linux-l1-architect-draft.md, point 6; its intake table): publish unix error tables (kernel/src/publish/error.rs, the OS error classification boundary) do not classify EDQUOT and EPERM as the Windows side classifies quota and permission failures (state/cloud/wave3/W3-A.md, observation 1). A user-visible error class change, so out of port-1; placement is the human."
     }
   ],
   "waiting_on_human": {
@@ -419,6 +305,28 @@
       ]
     },
     {
+      "id": "pre-admission-change-detail-braces",
+      "title": "Four kernel P6-placeholder detail strings are wrapped in literal braces, which reach the operator message; the watcher form declares each such string starts with the bracketed placeholder tag",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": null,
+      "budget_minutes": 30,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-04",
+        "done": null
+      },
+      "summary": "WAITS ON PIECE F 2026-10-29: its first step commits a form, which lands at its governance path only after #270 merges. Before: FILLER QUEUE entry 3 (RULED 2026-10-24: state/directives/2026-10-24-weekend-exception-third-product-slot-placements-forms-ahead-250-click.md, line 11; made the standing filler slot by state/directives/2026-10-24-filler-slot-standing-rule-appended-to-autonomy.md, line 8; state/FILLER-QUEUE.md): placed, graded S3, the braces removed, the words staying placeholders (the node's scope (i)); a five-line form under section 21c's size, the reviewer and the architect from dispatch, section 25 (e) set aside; any string a user sees a P6 placeholder for the sitting, any red-line text to the human. Before: Proposed by PR 173 gate-1 reviewer, N-3 (state/consults/gates/2026-10-04-watch-grandparent-spawn-signal-gate1-reviewer.md); widened by Fable 2026-10-04 advice, item 2 (state/directives/2026-10-04-fable-advice-nodes-trailers-latency.md), checked by the custodian at f3426ba8: four detail literals open with a brace before the P6 placeholder tag and close with a brace, at kernel/src/skp.rs lines 1024 (the pre-admission Change refusal), 1445 and 1521, and kernel/src/lib.rs line 528; two others in skp.rs (1233 and 1329) are unbraced. engine/SOURCE-WATCHER-PREREGISTRATION.md section 7 (its placeholder row) declares that each new operator string starts with the bracketed tag. Two scopes for the human to choose between at placement: (i) braces only, removing the two brace characters from each of the four literals so they match the declared form, with no new wording; (ii) the final wording of the placeholder strings, which is the human ruling P6 reserves. Never queued until the human places it.",
+      "blocked_by": [
+        "governance-f-tidy-repository-in-place"
+      ]
+    },
+    {
       "id": "skp-line-cites-outside-close-races",
       "title": "Stale line cites into kernel/src/skp.rs outside kernel-close-races-followups files -- shell streaming, App.tsx, pool_poll.rs, src-tauri lib.rs, the P4 corpus test and the persisted-artifacts test",
       "lane": "kernel-protocol",
@@ -438,6 +346,28 @@
       "summary": "PLACED 2026-10-21 (state/directives/2026-10-21-placements-redaction-scan-1c-milestone-4-lanes-238-clicked-d-answers-adr-024-heading-kept.md, item 4): the docs lane, 5 of 6, after adr-035-close-races-note. Before: PROPOSED 2026-10-05, routed by question round 59 item 1 (kernel-close-races-followups OPEN-1 (B); the form Amendment 1, item 1): the stale skp.rs line cites in the files its draft OPEN-1 lists, other than liveTicketSet.ts, repointed by item. MP-1 moves skp.rs lines again, so after MP-1.",
       "blocked_by": [
         "adr-035-close-races-note"
+      ]
+    },
+    {
+      "id": "windows-case-fold-non-ascii",
+      "title": "The audit case policy on Windows folds non-ASCII letters as NTFS does, so a profile path differing only in non-ASCII case cannot escape the user-home redaction (wave 3's 1c-2 correction, S2, code-path-only)",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": null,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-30",
+        "done": null
+      },
+      "summary": "WAITS ON PIECE F 2026-10-29: its first step commits a form, which lands at its governance path only after #270 merges. Before: FILLER QUEUE entry 1 (RULED 2026-10-24: state/directives/2026-10-24-weekend-exception-third-product-slot-placements-forms-ahead-250-click.md, line 9; made the standing filler slot by state/directives/2026-10-24-filler-slot-standing-rule-appended-to-autonomy.md, line 8; state/FILLER-QUEUE.md): placed, graded S2; a five-line form under section 21c's size, the reviewer and the architect from dispatch, section 25 (e) set aside; any string a user sees a P6 placeholder for the sitting, any red-line text to the human. NEXT: skipped at dispatch while port-2, in flight, edits kernel/src/permission/audit/log.rs (rule (00)); dispatched when that overlap clears. Before: From wave 3's W3-A (section 1c-2 correction (b)), RECORD S2, code-path-only (state/cloud/wave3/W3-A.md, custodian fields): on Windows, component_eq in kernel/src/permission/audit/normalize.rs uses eq_ignore_ascii_case and is_inside in kernel/src/permission/audit/log.rs uses to_ascii_lowercase, while NTFS also folds non-ASCII letters. Neither the worker nor the custodian observed an escape, and whether the resolved destination already carries the on-disk case is not settled: the form's first step settles it. Windows is the supported platform. Proposed, not placed.",
+      "blocked_by": [
+        "governance-f-tidy-repository-in-place"
       ]
     },
     {
@@ -705,6 +635,28 @@
       ]
     },
     {
+      "id": "verify-cites-reversed-range",
+      "title": "verify-cites checks a reversed range (end below start) by its larger end only",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": null,
+      "budget_minutes": 30,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-23",
+        "done": null
+      },
+      "summary": "WAITS ON PIECE F 2026-10-29: its first step commits a form, which lands at its governance path only after #270 merges. Before: RULED 2026-10-23 (state/directives/2026-10-23-weekend-open-items-ruled-verify-cites-pin-covering-case-port-2-session-log-test-feature-v0-2-findings-graded.md), item 7: graded S3; the governance lane after verify-cites-out-of-range-line-count. Before: PROPOSED 2026-10-23 from verify-cites-pin-resolution-and-line-zero's drafting consult (state/consults/2026-10-23-verify-cites-pin-resolution-and-line-zero-architect-draft.md, OPEN-4): a cite whose range runs backwards is checked against its larger end and passes when that line exists. Outside that piece. For the human's grading and placement.",
+      "blocked_by": [
+        "governance-f-tidy-repository-in-place"
+      ]
+    },
+    {
       "id": "site-design-v1",
       "title": "Landing page redesign — DRAFT-4 (status strip, milestone banner, waiting-on-you cards with unblocks counts, the swimlane board)",
       "lane": "governance",
@@ -746,6 +698,72 @@
       "summary": "RULED 2026-10-23 (state/directives/2026-10-23-weekend-open-items-ruled-verify-cites-pin-covering-case-port-2-session-log-test-feature-v0-2-findings-graded.md), item 7: graded S3; the platform lane after port-2-macos-l1-and-app-dirs. Before: PROPOSED 2026-10-23 from port-2-macos-l1-and-app-dirs's drafting consult (state/consults/2026-10-23-port-2-macos-l1-and-app-dirs-architect-draft.md, What I could not settle): the audit log's normalization roots are read from the environment uncanonicalized (kernel/src/permission/audit/normalize.rs) while destinations are canonicalized; on macOS the temporary directory sits under a symlinked path, so its root would never match a recorded destination, and the test of a destination under a user-profile path would then skip its token assertion without saying so. From platform knowledge, not observed. For the human's grading and placement.",
       "blocked_by": [
         "port-2-macos-l1-and-app-dirs"
+      ]
+    },
+    {
+      "id": "posix-backslash-in-shared-path-logic",
+      "title": "Shared path logic stops treating a backslash as a separator on POSIX: distinct audit destinations stay distinct, and a viewer asset named with a backslash is refused, not renamed (wave-3 A-1, S2)",
+      "lane": "platform",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": null,
+      "budget_minutes": 90,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-30",
+        "done": null
+      },
+      "summary": "WAITS ON PIECE F 2026-10-29: its first step commits a form, which lands at its governance path only after #270 merges. Before: FILLER QUEUE entry 7b (RULED 2026-10-24: state/directives/2026-10-24-weekend-exception-third-product-slot-placements-forms-ahead-250-click.md, line 15; made the standing filler slot by state/directives/2026-10-24-filler-slot-standing-rule-appended-to-autonomy.md, line 8; state/FILLER-QUEUE.md): placed, graded S3, proven on the Linux L1 job; a five-line form under section 21c's size, the reviewer and the architect from dispatch, section 25 (e) set aside; any string a user sees a P6 placeholder for the sitting, any red-line text to the human. Before: Wave-3 finding A-1, RECORD S2 (state/cloud/wave3/W3-A.md, custodian fields), proven on Linux by the reproducers on cloud/wave3-A (8a2ba65, kernel/tests/wave3_a_portability_audit.rs): kernel/src/permission/audit/normalize.rs rewrites every backslash to a slash on every OS, so two different POSIX destinations are recorded as one audit string; kernel/src/publish/viewer_assets.rs rewrites a walked file name the same way before validate_relative_path can refuse the backslash. The same pattern at the audit log's is_inside (a false refusal only) and the redaction scan's file label (display only). PORTABILITY R1 and R4. Windows is correct. Proposed, not placed.",
+      "blocked_by": [
+        "governance-f-tidy-repository-in-place"
+      ]
+    },
+    {
+      "id": "publish-bundle-sigterm",
+      "title": "SIGTERM handling in publish-bundle on unix (wave-3 W3-A observation 3)",
+      "lane": "platform",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": null,
+      "budget_minutes": 90,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-02",
+        "done": null
+      },
+      "summary": "WAITS ON PIECE F 2026-10-29: its first step commits a form, which lands at its governance path only after #270 merges. Before: FILLER QUEUE entry 7d (RULED 2026-10-24: state/directives/2026-10-24-weekend-exception-third-product-slot-placements-forms-ahead-250-click.md, line 15; made the standing filler slot by state/directives/2026-10-24-filler-slot-standing-rule-appended-to-autonomy.md, line 8; state/FILLER-QUEUE.md): placed, graded S3, proven on the Linux L1 job; a five-line form under section 21c's size, the reviewer and the architect from dispatch, section 25 (e) set aside; any string a user sees a P6 placeholder for the sitting, any red-line text to the human. Before: Routed by port-1-linux-l1 drafting consult (state/consults/2026-10-02-port-1-linux-l1-architect-draft.md, point 6; its intake table): publish-bundle (kernel/src/bin/publish-bundle.rs) has no SIGTERM handling on unix (state/cloud/wave3/W3-A.md, observation 3). New cancellation behaviour under ADR-018, so out of port-1; placement is the human.",
+      "blocked_by": [
+        "governance-f-tidy-repository-in-place"
+      ]
+    },
+    {
+      "id": "publish-unix-quota-perm-errors",
+      "title": "EDQUOT and EPERM in publish error classification on unix (wave-3 W3-A observation 1)",
+      "lane": "platform",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": null,
+      "budget_minutes": 90,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-02",
+        "done": null
+      },
+      "summary": "WAITS ON PIECE F 2026-10-29: its first step commits a form, which lands at its governance path only after #270 merges. Before: FILLER QUEUE entry 7c (RULED 2026-10-24: state/directives/2026-10-24-weekend-exception-third-product-slot-placements-forms-ahead-250-click.md, line 15; made the standing filler slot by state/directives/2026-10-24-filler-slot-standing-rule-appended-to-autonomy.md, line 8; state/FILLER-QUEUE.md): placed, graded S3, proven on the Linux L1 job; a five-line form under section 21c's size, the reviewer and the architect from dispatch, section 25 (e) set aside; any string a user sees a P6 placeholder for the sitting, any red-line text to the human. Before: Routed by port-1-linux-l1 drafting consult (state/consults/2026-10-02-port-1-linux-l1-architect-draft.md, point 6; its intake table): publish unix error tables (kernel/src/publish/error.rs, the OS error classification boundary) do not classify EDQUOT and EPERM as the Windows side classifies quota and permission failures (state/cloud/wave3/W3-A.md, observation 1). A user-visible error class change, so out of port-1; placement is the human.",
+      "blocked_by": [
+        "governance-f-tidy-repository-in-place"
       ]
     }
   ],
