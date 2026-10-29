@@ -333,3 +333,18 @@ No prior art recorded for "fixed detail fetch". Research it before planning an i
 - **Declared** (§7): at most 380 lines over 4 files. **Final at 5efcc669**, by §7's counting command: 432 lines over the 4 files (`engine/README.md` 2/2, `engine/src/stream.rs` 139/16, `engine/tests/admission_property_campaign.rs` 4/3, `engine/tests/stream_fetch_overflow.rs` 266/0).
 - **The reason:** the E1 file came to 266 lines against about 185, and `engine/src/stream.rs` to 155 against about 100 (`state/consults/2026-10-28-stream-fetch-overflow-fixed-detail-build-worker-report.md`); nothing was trimmed to fit.
 - **Disclosed for the gates, not changed:** `engine/tests/admitted_integer_overflow.rs`'s header (lines 14 to 16 at main) still says the fetch site is not reached and belongs to this node, which is now stale; the file is outside this form's Scope. The worker's report also discloses one `git fetch --dry-run` against the brief's no-network rule, and a commit and its push in one call.
+
+### Amendment 3 (2026-10-29): the closing record, written after gate 1's reports and the words commit were seen. References and hashes only.
+
+- **The final head:** a873a2d7fc550d4f57447d8888e5cf4bb69a92a8, the words commit on the record commit 5efcc669 and the code commit e967da33.
+- **Step 0:** `state/consults/2026-10-28-stream-fetch-overflow-fixed-detail-step0-tester-high-report.md` (sha256 25e16a2f56dc74a672482fadaf5612e9dfd28288b55fd9594d884482c8f96e5c), recorded by Amendment 1.
+- **Build:** `state/consults/2026-10-28-stream-fetch-overflow-fixed-detail-build-worker-report.md` (sha256 9edaa4c4c584acd0d4ccd975506a8a6131813b757927157491e5272440bc4b19).
+- **Gate 1:**
+  - `state/consults/gates/2026-10-28-stream-fetch-overflow-fixed-detail-gate1-architect.md` (sha256 e65bab762af13ebdf8d34ccb5f24f34dfa21729981cd6c736394e9e0f1581eec), gate-log 646, PASS WITH NOTES.
+  - `state/consults/gates/2026-10-28-stream-fetch-overflow-fixed-detail-gate1-reviewer.md` (sha256 4ab4a6e6d561c91c81279169abeb0919ffe7802e8082bc7ad8d8042864732520), gate-log 647, PASS WITH NOTES.
+- **The words commit** a873a2d7: `state/consults/2026-10-29-stream-fetch-overflow-fixed-detail-gate1-words-worker-report.md` (sha256 from line 5 4753c5fbe5d7d7965363ad20a3e5356fa0cdcc9c6be9aab7181efc74d57c4804). It carries the architect's D1 to D5, with no re-gate (AUTONOMY §31); the reviewer's D1 is the architect's D5. None is the human's wording.
+- **E-open-1:** CI at the final head, read by gh before this record: 18 of 18 checks pass, and E1 and T3 pass on both L1 entries (pull_request run 40825378124: L1 portable correctness · cargo test --workspace (ubuntu-24.04); pull_request run 40825378124: cargo test --workspace (windows-latest); push run 40825373271: L1 portable correctness · cargo test --workspace (ubuntu-24.04); push run 40825373271: cargo test --workspace (windows-latest)).
+- **E-open-2:** the PR body claims what §1 claims as the settlement splits it: the wrapped shape observed, the bare shape by a unit sample only, nothing for macOS or another crate or DuckDB version.
+- **Notes with no fix:** the architect's N1 to N3 and the reviewer's notes. Both reports read Amendment 2's stale header as still true, and incomplete rather than false.
+- **Figures:** 437 lines over the 4 files by §7's counting command (`engine/README.md` 2/2, `engine/src/stream.rs` 144/16, `engine/tests/admission_property_campaign.rs` 4/3, `engine/tests/stream_fetch_overflow.rs` 266/0), extending Amendment 2's class 8 figure; §7 is not edited.
+- **Merge:** by merge commit, so that the README's pin to e967da33 stays reachable on main (the architect's D5).
