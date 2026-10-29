@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-29T12:37:47.166Z",
-  "plan_hash": "56a741e766a56b7a9a256874bab5c59a4b843f1b7aa05251431cf1e6bd55c894",
+  "generated_at": "2026-10-29T12:45:09.318Z",
+  "plan_hash": "5f912de4e9b9641543b45e29e6a03af3a6d766337ffed16a0320581812550337",
   "priorities_approved": true,
   "lanes": [
     {
@@ -9582,11 +9582,12 @@
       "kind": "task",
       "lane": "kernel-protocol",
       "phase": "prototype",
-      "status": "ready",
+      "status": "blocked",
       "order": null,
       "depends_on": [
         "stale-assertion-messages-and-product-comments",
-        "walkthrough-row-f7-cli-refusal"
+        "walkthrough-row-f7-cli-refusal",
+        "governance-f-tidy-repository-in-place"
       ],
       "needs_human": {
         "kind": "none",
@@ -9600,7 +9601,7 @@
       "entries": [
         102
       ],
-      "summary": "RULED 2026-10-23 (state/directives/2026-10-23-weekend-covering-case-s1-session-log-redaction-s2-governance-and-docs-order-v0-2-scope-port-2-approved.md), item 4: the docs lane's first after #243 and #244; OPEN-3 (a), #242 having merged. Then walkthrough-stale-cites-l5-degrees-p1, then sitting-wording-n1-to-n7. Before: NOTED 2026-10-23: #243 merged (c1f782db) and #242 merged (c52abe27), so OPEN-3 reads (a) at dispatch; the piece waits for #244's merge. Before: RULED 2026-10-22 (headed 2026-10-23; state/directives/2026-10-22-242-h-1-round-72-pin-f7-open-items-milestone-4-open-16-b-adr-020-corrigendum-a-1c-adr-036-words-approved-disk-parity-node.md), item 4: OPEN-1 (A), yes to section 2.1's words, headed Corrigendum and dated by the appending commit; OPEN-2 (A); OPEN-3 (a) if #242 has merged at dispatch, else (b). Its form is committed with these answers when the piece starts, after #243 and #244 merge, outside #244's freeze window. Before: FORM DRAFTED 2026-10-22 (state/consults/2026-10-22-adr-020-appended-note-architect-draft.md): a full form, as ADR-020 is named in section 21a; its file at the root. OPEN-1, the corrigendum words, is red-line text and waits for the human's typed answer; OPEN-2 and OPEN-3 are the human's. NEXT: after #243 and #244 merge and OPEN-1 is answered, the form is committed with its pins and the piece starts. Before: ORDER 2026-10-22 (state/directives/2026-10-22-away-until-monday-241-r1-on-5400-f7-a-milestone-4-1c-code-o0-b-docs-lane-ruled-i4-a.md): after the F7 piece in the docs lane, the human's order being the open items, then item 41's comment, the ADR notes and the stale cites. Before: PLACED 2026-10-21 (state/directives/2026-10-21-placements-redaction-scan-1c-milestone-4-lanes-238-clicked-d-answers-adr-024-heading-kept.md, item 4): the docs lane, 3 of 6, after stale-assertion-messages-and-product-comments. Before: RULED 2026-10-21 (headed), item 2e, proposed and unplaced; the docs lane. It represents governance C's sheet row E102: the appended ADR-020 note that the quote baseline lists as owed (its corrected_by, an appended ADR-020 note, owed).",
+      "summary": "WAITS ON PIECE F 2026-10-29: ruled 2026-10-22; its form is committed when the piece starts, at its governance path, only after #270 merges. Before: RULED 2026-10-23 (state/directives/2026-10-23-weekend-covering-case-s1-session-log-redaction-s2-governance-and-docs-order-v0-2-scope-port-2-approved.md), item 4: the docs lane's first after #243 and #244; OPEN-3 (a), #242 having merged. Then walkthrough-stale-cites-l5-degrees-p1, then sitting-wording-n1-to-n7. Before: NOTED 2026-10-23: #243 merged (c1f782db) and #242 merged (c52abe27), so OPEN-3 reads (a) at dispatch; the piece waits for #244's merge. Before: RULED 2026-10-22 (headed 2026-10-23; state/directives/2026-10-22-242-h-1-round-72-pin-f7-open-items-milestone-4-open-16-b-adr-020-corrigendum-a-1c-adr-036-words-approved-disk-parity-node.md), item 4: OPEN-1 (A), yes to section 2.1's words, headed Corrigendum and dated by the appending commit; OPEN-2 (A); OPEN-3 (a) if #242 has merged at dispatch, else (b). Its form is committed with these answers when the piece starts, after #243 and #244 merge, outside #244's freeze window. Before: FORM DRAFTED 2026-10-22 (state/consults/2026-10-22-adr-020-appended-note-architect-draft.md): a full form, as ADR-020 is named in section 21a; its file at the root. OPEN-1, the corrigendum words, is red-line text and waits for the human's typed answer; OPEN-2 and OPEN-3 are the human's. NEXT: after #243 and #244 merge and OPEN-1 is answered, the form is committed with its pins and the piece starts. Before: ORDER 2026-10-22 (state/directives/2026-10-22-away-until-monday-241-r1-on-5400-f7-a-milestone-4-1c-code-o0-b-docs-lane-ruled-i4-a.md): after the F7 piece in the docs lane, the human's order being the open items, then item 41's comment, the ADR notes and the stale cites. Before: PLACED 2026-10-21 (state/directives/2026-10-21-placements-redaction-scan-1c-milestone-4-lanes-238-clicked-d-answers-adr-024-heading-kept.md, item 4): the docs lane, 3 of 6, after stale-assertion-messages-and-product-comments. Before: RULED 2026-10-21 (headed), item 2e, proposed and unplaced; the docs lane. It represents governance C's sheet row E102: the appended ADR-020 note that the quote baseline lists as owed (its corrected_by, an appended ADR-020 note, owed).",
       "dates": {
         "opened": "2026-10-20",
         "done": null
