@@ -3,7 +3,7 @@
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
 // scripts/plan/forms-layout.mjs -- governance piece F's layout check (the form
-// scripts/plan/GOVERNANCE-F-TIDY-REPOSITORY-IN-PLACE-PREREGISTRATION.md, section 2.5): every tracked
+// governance/forms/scripts/GOVERNANCE-F-TIDY-REPOSITORY-IN-PLACE-PREREGISTRATION.md, section 2.5): every tracked
 // `*PREREGISTRATION*.md` lives under governance/forms/ or state/, or is one of the two exact paths the
 // human's ruling of OPEN-1 leaves under docs/. Each other path fails by name. Node's standard library only.
 

@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
 // scripts/plan/movedMap.mjs -- the shared resolution of governance piece F's move map (the form
-// scripts/plan/GOVERNANCE-F-TIDY-REPOSITORY-IN-PLACE-PREREGISTRATION.md, section 2.3), used by
+// governance/forms/scripts/GOVERNANCE-F-TIDY-REPOSITORY-IN-PLACE-PREREGISTRATION.md, section 2.3), used by
 // verify-cites, verify-quotes, verify and site. governance/MOVED.tsv holds one row per rename of a
 // moves-only commit: `old<TAB>new<TAB>commit`. A tree with no such file has an empty map, and every
 // caller then behaves exactly as it did before the map existed. Node's standard library only.

@@ -335,7 +335,7 @@ test("verifyNotDoneEvidenceNotMerged passes when an in-progress node's evidence 
 
 // --- governance piece F: the move map (the form's sections 2.2, OPEN-6 and 4; test T13) ------------------------
 
-// RECORDED MUTATION at e91bcf30807a (the commit holding this test), applied alone and reverted: path.join(repoRoot, rel[1]) for the release record, and, separately, the evidence path used as written; each fails the test alone -> fails by name: `verify: a RELEASE verdict cite and an evidence path resolve through the move map`.
+// RECORDED MUTATION at e91bcf30807a (phase 1's commit, on the branch wip/governance-f-scripts; this branch carries the test from it by patch and does not contain the commit), applied alone and reverted: path.join(repoRoot, rel[1]) for the release record, and, separately, the evidence path used as written; each fails the test alone -> fails by name: `verify: a RELEASE verdict cite and an evidence path resolve through the move map`.
 test('verify: a RELEASE verdict cite and an evidence path resolve through the move map', () => {
   const commit = 'a'.repeat(40);
   const dir = ledgerRepo({

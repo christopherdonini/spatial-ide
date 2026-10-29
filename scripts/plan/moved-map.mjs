@@ -3,7 +3,7 @@
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
 // scripts/plan/moved-map.mjs -- governance piece F's move-map tool (the form
-// scripts/plan/GOVERNANCE-F-TIDY-REPOSITORY-IN-PLACE-PREREGISTRATION.md, sections 2.1 to 2.4).
+// governance/forms/scripts/GOVERNANCE-F-TIDY-REPOSITORY-IN-PLACE-PREREGISTRATION.md, sections 2.1 to 2.4).
 //
 //   plan [--all]          print rule R's rows at HEAD, `old<TAB>new`, sorted by old (--all adds the files that stay)
 //   add <commit>          append the rows of a moves-only commit to governance/MOVED.tsv

@@ -1416,7 +1416,7 @@ test('session-resume: reading-order item 3 is the open entries and recent ruling
 
 // --- governance piece F: the reading order names paths that exist (the form's section 4; test T15) ---
 
-// RECORDED MUTATION at e91bcf30807a (the commit holding this test), applied alone and reverted: one name in the reading order changed to a path HEAD does not hold (item 5, PRECEDENTS.md to governance/PRECEDENTS.md) -> fails by name: `session-resume: every path the reading order names exists at HEAD`.
+// RECORDED MUTATION at e91bcf30807a (phase 1's commit, on the branch wip/governance-f-scripts; this branch carries the test from it by patch and does not contain the commit), applied alone and reverted: one name in the reading order changed to a path HEAD does not hold (item 5, PRECEDENTS.md to governance/PRECEDENTS.md) -> fails by name: `session-resume: every path the reading order names exists at HEAD`.
 // RECORDED MUTATION, re-observed for the paths commit's change to this test (it now leaves out the one stale mention inside the human's words), on the working tree over the moves-only commit a8ae51d9d0a7 before the paths commit was made, applied alone and reverted (session-resume.mjs sha256 prefix a7806948f33d1ec8 before and after): item 5 set back to the root name PRECEDENTS.md -> fails by name: `session-resume: every path the reading order names exists at HEAD` ("names \"PRECEDENTS.md\", which HEAD does not hold").
 test('session-resume: every path the reading order names exists at HEAD', () => {
   const repoRoot = path.resolve(here, '..', '..');

@@ -627,7 +627,7 @@ test('bug 5: release evidence is labelled like tag evidence', () => {
 
 // The three command-line entry points are run from a copy of scripts/plan/ in a temporary repository root, with
 // the plan in a folder of its own: each must name <root>/site, never <plan folder>/site.
-// RECORDED MUTATION at e91bcf30807a (the commit holding this test), applied alone and reverted: the default out-dir taken from the plan's folder, in site.mjs, health.mjs and verify.mjs, each alone -> fails by name: `site: the default output folder is the repository's site/ whatever the plan path`.
+// RECORDED MUTATION at e91bcf30807a (phase 1's commit, on the branch wip/governance-f-scripts; this branch carries the test from it by patch and does not contain the commit), applied alone and reverted: the default out-dir taken from the plan's folder, in site.mjs, health.mjs and verify.mjs, each alone -> fails by name: `site: the default output folder is the repository's site/ whatever the plan path`.
 test("site: the default output folder is the repository's site/ whatever the plan path", (t) => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'site-default-'));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));

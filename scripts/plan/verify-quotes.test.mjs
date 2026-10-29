@@ -1156,7 +1156,7 @@ test("verify-quotes: a real record line with an item past its round's last item 
 
 // --- governance piece F: the move map (the form's sections 2.3 and 4; tests T8 and T9) -----------------------
 
-// RECORDED MUTATION at e91bcf30807a (the commit holding this test), applied alone and reverted: the new path read at every rev (today's order: the current tree first) -> fails by name: `verify-quotes: a hash reference to an old path at a pre-move rev reads the old path at that rev`.
+// RECORDED MUTATION at e91bcf30807a (phase 1's commit, on the branch wip/governance-f-scripts; this branch carries the test from it by patch and does not contain the commit), applied alone and reverted: the new path read at every rev (today's order: the current tree first) -> fails by name: `verify-quotes: a hash reference to an old path at a pre-move rev reads the old path at that rev`.
 test('verify-quotes: a hash reference to an old path at a pre-move rev reads the old path at that rev', (t) => {
   const { dir, before, move } = movedRepo();
   removeAfter(t, dir);
@@ -1171,7 +1171,7 @@ test('verify-quotes: a hash reference to an old path at a pre-move rev reads the
   assert.deepEqual(hashFindings, []);
 });
 
-// RECORDED MUTATION at e91bcf30807a (the commit holding this test), applied alone and reverted: the baseline `file` compared raw in matchBaseline -> fails by name: `verify-quotes: a baseline entry keyed by an old path waives the same finding at the new path`.
+// RECORDED MUTATION at e91bcf30807a (phase 1's commit, on the branch wip/governance-f-scripts; this branch carries the test from it by patch and does not contain the commit), applied alone and reverted: the baseline `file` compared raw in matchBaseline -> fails by name: `verify-quotes: a baseline entry keyed by an old path waives the same finding at the new path`.
 test('verify-quotes: a baseline entry keyed by an old path waives the same finding at the new path', (t) => {
   const { dir } = movedRepo({}, 'Verbatim: "a lonely wolf howls beneath the pale full moon under starlit skies tonight" end.\n');
   removeAfter(t, dir);

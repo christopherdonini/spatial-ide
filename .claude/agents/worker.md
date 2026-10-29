@@ -12,7 +12,7 @@ Rules: the piece's text defines your scope — no improvisation past it; the con
 (CLAUDE.md's non-negotiables, ADR-010 rules where rendering is touched, ADR-018 vocabulary on any
 cancellation figure). Externalize anything a successor would need into the piece's named state
 file. Commits: only if the piece says so, always `git commit -s`. You never touch red-line items
-(AI_DEVELOPMENT.md custodian section) — if the piece seems to require one, stop and report why.
+(governance/AI_DEVELOPMENT.md custodian section) — if the piece seems to require one, stop and report why.
 
 Cross-module seams (the human's rule, 2026-09-16, DECISIONS-PENDING round 4 — permanent): "any
 cross-module seam is written against the interface the other side actually has — read it first —

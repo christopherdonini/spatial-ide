@@ -29,7 +29,7 @@ const ALLOWED = [
   'docs/experiments/NATIVE-WGPU-RENDERER-BAKEOFF-PREREGISTRATION.md',
 ];
 
-// RECORDED MUTATION at e91bcf30807a (the commit holding this test), applied alone and reverted: every path under docs/ allowed -> fails by name: `forms-layout: a preregistration outside governance/forms/ and state/ fails by name`.
+// RECORDED MUTATION at e91bcf30807a (phase 1's commit, on the branch wip/governance-f-scripts; this branch carries the test from it by patch and does not contain the commit), applied alone and reverted: every path under docs/ allowed -> fails by name: `forms-layout: a preregistration outside governance/forms/ and state/ fails by name`.
 test('forms-layout: a preregistration outside governance/forms/ and state/ fails by name', (t) => {
   const dir = layoutRepo(t, [...ALLOWED, 'docs/x/NEW-PREREGISTRATION.md', 'engine/OLD-PREREGISTRATION.md']);
   const run = spawnSync(process.execPath, [script, '--root', dir], { encoding: 'utf8' });
@@ -39,7 +39,7 @@ test('forms-layout: a preregistration outside governance/forms/ and state/ fails
   assert.equal((run.stderr.match(/^ {2}- /gm) ?? []).length, 2, run.stderr);
 });
 
-// RECORDED MUTATION at e91bcf30807a (the commit holding this test), applied alone and reverted: the state/ allowance dropped -> fails by name: `forms-layout: state/ and the two exact docs/ paths are allowed`.
+// RECORDED MUTATION at e91bcf30807a (phase 1's commit, on the branch wip/governance-f-scripts; this branch carries the test from it by patch and does not contain the commit), applied alone and reverted: the state/ allowance dropped -> fails by name: `forms-layout: state/ and the two exact docs/ paths are allowed`.
 test('forms-layout: state/ and the two exact docs/ paths are allowed', (t) => {
   const dir = layoutRepo(t, ALLOWED);
   const run = spawnSync(process.execPath, [script, '--root', dir], { encoding: 'utf8' });
