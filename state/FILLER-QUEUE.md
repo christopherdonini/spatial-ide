@@ -23,11 +23,15 @@
 | 8a | `corpus-line-files` | S3 | — | form drafted 2026-10-26 (`state/consults/2026-10-26-corpus-line-files-five-line-form-architect-draft.md`); ruled 2026-10-26 (`state/directives/2026-10-26-clicks-260-261-244-r2-241-o1-answers-pb-draft-b-6d-260-lines-5b-8a-8b-rulings.md`, OPEN-1 (A)); go 2026-10-28; the five-line form committed ahead 2026-10-28 (`engine/CORPUS-LINE-FILES-PREREGISTRATION.md`); in the slot from 2026-10-28: fetched (PCN, twice, byte-equal) and settled (the form's Amendments 1 and 2); built at e834dcf7 (Amendments 3 and 4); PR #267, gate 1 (gate-log 642, 643), the words at f3962416, sighted by the human; closed at 281b9c05 (Amendment 5); merged 2026-10-28 (#267) |
 | 8b | `type-walk-rule2-residual-reasons` | S3 | — | form drafted 2026-10-26 (`state/consults/2026-10-26-type-walk-rule2-residual-reasons-five-line-form-architect-draft.md`); held on the human's ruling (OPEN-1 the route, OPEN-2 the sentence's words, OPEN-3 F-C) |
 | 8c | `literal-only-float-integer-arithmetic-refused` | S3 | after 8b (the human's ruling of 2026-10-26) | queued |
-| 9 | `stream-fetch-overflow-fixed-detail` | S3 | after the current entries (the human's direction of 2026-10-25, item 1); the architect's estimate puts it past §21c's line bound, so at its turn the size is checked first | heads the queue from 2026-10-28 (O1 merged, #266; the human's rulings of 2026-10-28, B and A.6), after 8a in the slot; at or under 260 lines a five-line form, over 260 the full form with both gates, in the filler slot; its strings P6 placeholders; in the slot from 2026-10-28; PR #268, gate 1 both PASS WITH NOTES; closed for the click 2026-10-29 at a873a2d7 |
+| 9 | `stream-fetch-overflow-fixed-detail` | S3 | after the current entries (the human's direction of 2026-10-25, item 1); the architect's estimate puts it past §21c's line bound, so at its turn the size is checked first | heads the queue from 2026-10-28 (O1 merged, #266; the human's rulings of 2026-10-28, B and A.6), after 8a in the slot; at or under 260 lines a five-line form, over 260 the full form with both gates, in the filler slot; its strings P6 placeholders; in the slot from 2026-10-28; PR #268, gate 1 both PASS WITH NOTES; closed for the click 2026-10-29 at a873a2d7; merged 2026-10-29 (#268, 073a5476) |
 | 10 | `open-dataset-close-serialised-under-the-catalog-lock` | S3 | after entry 9 (the human's ruling of 2026-10-26) | queued |
 
 ## Fillers merged
 
+- 2026-10-29: entry 9, `stream-fetch-overflow-fixed-detail`, PR #268 (073a5476), S3.
+- 2026-10-28: entry 8a, `corpus-line-files`, PR #267 (f5f91424), S3.
+- 2026-10-28: entry 6b, `first-batch-factorial-ignored-trace-tests`, PR #264 (a6a89695), S3.
+- 2026-10-27: entry 6d, `fixture-s-regeneration-entry-point`, PR #263 (9a2a9df4), S3.
 - 2026-10-26: entry 5c, `session-generation-other-recorded-mutations-name-no-commit`, PR #261 (5c879ae5), S3.
 - 2026-10-26: entry 6c, `slice-traced-test-cross-stamping`, PR #260 (00347e1c), S3.
 - 2026-10-26: entry 5, `kernel-close-during-open-admission`, PR #258 (1d2e2283), S3; its fix proposed as `open-dataset-refuses-a-name-closed-during-admission`.

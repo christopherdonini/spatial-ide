@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `25aaffb197b088b40c43cdce487b6548a15df21376c131d3ed128a9fea2263c4`) at `2026-10-29T06:55:56.313Z`.
+Generated from `PLAN.yaml` (sha256 `cd613c1afd8adeddca314920882729450751ea9b1efd4759a05885eda808731e`) at `2026-10-29T07:16:14.468Z`.
 
 ## 1. Next
 
@@ -10,7 +10,6 @@ Generated from `PLAN.yaml` (sha256 `25aaffb197b088b40c43cdce487b6548a15df21376c1
 
 - **engine-cancel-before-execute-siblings** — The six other cancel.attach sites reuse the execute-window guard, so a cancel before execution stops the work, not only the outcome (dataset.rs identity scan and index.rs first, their work unbounded) (lane `engine`, order null, budget 90 min)
 - **stream-cancel-returns-left-unmarked** — The producer's cancel returns the flush piece leaves unmarked: a prepare error through classify, the two-read window in classify's marking arms, and the send to a receiver that is gone (is a disconnect an observation) (lane `engine`, order null, budget 120 min)
-- **stream-fetch-overflow-fixed-detail** — An admitted predicate's integer overflow first raised during a fetch ends the stream with the fixed detail: the duckdb crate's fetch panic wrapper recognised by its fixed prefixes, anchored (route B of stream-evaluation-failure-fixed-detail) (lane `engine`, order null, budget 120 min)
 - **type-walk-rule2-residual-reasons** — Type walk: a rule-2 result over a column or an integer literal, refused by rule 7's bit-width bound, keeps the residual reason although its value is a constant NULL (for example f32 > NULL + 100000) (lane `engine`, order null, budget 60 min)
 - **adr-020-appended-note** — ADR-020's appended note, owed by the quote baseline's corrected_by entry (entry 102; the docs lane) (lane `kernel-protocol`, order null, budget 30 min)
 - **open-dataset-refuses-a-name-closed-during-admission** — open_dataset refuses at admission when a close has removed the catalog entry (the fix kernel-close-during-open-admission pins, in M1 shape; a close after that check and the ChecksOnly arm are for its own form) (lane `kernel-protocol`, order null, budget 60 min)
