@@ -1,16 +1,16 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `a3fe4d6588f840224fc447394c85d3ed8d14c7782d946f7f31098080d910616f`) at `2026-10-29T12:59:02.816Z`.
+Generated from `PLAN.yaml` (sha256 `f88ac9b99207ff5c5b49da901a335ee191c9536f0297df3eeed06015f6cd5829`) at `2026-10-29T13:07:23.207Z`.
 
 ## 1. Next
 
-- **governance-e-readings** — Piece E readings before E1's form: context loaded in a custodian session; this project's own transcript tally; the installed Claude Code facts; the bytes one worker and one reviewer dispatch receive (lane `governance`)
+- (nothing ready)
 
 ## 2. Ready
 
-- **governance-e-readings** — Piece E readings before E1's form: context loaded in a custodian session; this project's own transcript tally; the installed Claude Code facts; the bytes one worker and one reviewer dispatch receive (lane `governance`, order null, budget 60 min)
+- (none)
 
-## 3. Waiting on the human (total: 47 min)
+## 3. Waiting on the human (total: 57 min)
 
 ### click
 
@@ -25,6 +25,7 @@ Generated from `PLAN.yaml` (sha256 `a3fe4d6588f840224fc447394c85d3ed8d14c7782d94
 ### sitting
 
 - **operator-sitting-queue** — The operator sitting queue -- the walkthrough Parts, P6 sights and felt verdicts owed to the human's sitting, in one list (no slot) (0 min)
+- **governance-e-readings** — Piece E readings before E1's form: context loaded in a custodian session; this project's own transcript tally; the installed Claude Code facts; the bytes one worker and one reviewer dispatch receive (10 min)
 
 ## 4. Blocked on dependencies
 

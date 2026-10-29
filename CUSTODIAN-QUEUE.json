@@ -1,49 +1,11 @@
 {
-  "generated_at": "2026-10-29T12:59:02.816Z",
-  "plan_hash": "a3fe4d6588f840224fc447394c85d3ed8d14c7782d946f7f31098080d910616f",
+  "generated_at": "2026-10-29T13:07:23.207Z",
+  "plan_hash": "f88ac9b99207ff5c5b49da901a335ee191c9536f0297df3eeed06015f6cd5829",
   "priorities_approved": true,
-  "next": {
-    "id": "governance-e-readings",
-    "title": "Piece E readings before E1's form: context loaded in a custodian session; this project's own transcript tally; the installed Claude Code facts; the bytes one worker and one reviewer dispatch receive",
-    "lane": "governance",
-    "phase": "prototype",
-    "status": "ready",
-    "order": null,
-    "budget_minutes": 60,
-    "needs_human": {
-      "kind": "none",
-      "minutes": 0
-    },
-    "evidence": null,
-    "dates": {
-      "opened": "2026-10-24",
-      "done": null
-    },
-    "summary": "ADDENDUM 2 2026-10-28 (state/directives/2026-10-28-governance-piece-e-addendum-2-upgrade-clear-compact-window-prompt-audit-e3-path-rules-reviewer-model.md): reading 2's table by agent type rests on 2.1.306 subagent transcripts that may hold placeholder usage; it is re-run on three days of transcripts written after the human's upgrade to 2.1.312 or later, before E1 uses it as its baseline (the main-session table stands); the auto-compact window is measured again by reading 2's method a week after it is set. Before: READING 1 (state/directives/2026-10-25-255-route-b-o1-lead-data-probe-session-end-lines-s2-context-monday-no-redaction-pr.md, item 4): /context on Monday, once, in the custodian's session, partway through a piece. Before: READINGS 2 TO 4 FILED 2026-10-24 (state/consults/2026-10-24-governance-e-reading-2-transcript-tally-tester-report.md; state/consults/2026-10-24-governance-e-reading-3-claude-code-facts.md; state/consults/2026-10-24-governance-e-reading-4-dispatch-bytes-custodian.md). Reading 1 waits for the human: context is a built-in command the custodian cannot run. Reading 3: the per-call effort parameter exists (2.1.292 or later; installed 2.1.306), CLAUDE_CODE_EFFORT_LEVEL is not set here, and whether clear gives a new session id is not documented, so it is observed at the first checkpoint. Before: RULED 2026-10-24 (state/directives/2026-10-24-governance-piece-e-rules-as-records-readings-e1-repin-fresh-session-practice.md, line 10 onward; the advisor audit state/consults/2026-10-24-agent-briefs-rulebook-audit-advisor.md): four readings, only their reports under state/consults/ committed. 1: context once in a custodian session partway through a piece (the slash command is the human's to type: the custodian cannot run built-in commands). 2: a read-only tally of this project's own transcripts on this machine over 14 days, tokens by session and agent type, the 20 largest tool results by size, counts only, this project's transcript directory alone and named. 3: from the installed Claude Code and its documentation: whether clear starts a new session id; whether a dispatch sets effort per call and whether CLAUDE_CODE_EFFORT_LEVEL is set here; whether a subfolder CLAUDE.md loads when an agent reads a file there, subagents included. 4: the bytes one worker and one reviewer dispatch receive today."
-  },
-  "ready": [
-    {
-      "id": "governance-e-readings",
-      "title": "Piece E readings before E1's form: context loaded in a custodian session; this project's own transcript tally; the installed Claude Code facts; the bytes one worker and one reviewer dispatch receive",
-      "lane": "governance",
-      "phase": "prototype",
-      "status": "ready",
-      "order": null,
-      "budget_minutes": 60,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-10-24",
-        "done": null
-      },
-      "summary": "ADDENDUM 2 2026-10-28 (state/directives/2026-10-28-governance-piece-e-addendum-2-upgrade-clear-compact-window-prompt-audit-e3-path-rules-reviewer-model.md): reading 2's table by agent type rests on 2.1.306 subagent transcripts that may hold placeholder usage; it is re-run on three days of transcripts written after the human's upgrade to 2.1.312 or later, before E1 uses it as its baseline (the main-session table stands); the auto-compact window is measured again by reading 2's method a week after it is set. Before: READING 1 (state/directives/2026-10-25-255-route-b-o1-lead-data-probe-session-end-lines-s2-context-monday-no-redaction-pr.md, item 4): /context on Monday, once, in the custodian's session, partway through a piece. Before: READINGS 2 TO 4 FILED 2026-10-24 (state/consults/2026-10-24-governance-e-reading-2-transcript-tally-tester-report.md; state/consults/2026-10-24-governance-e-reading-3-claude-code-facts.md; state/consults/2026-10-24-governance-e-reading-4-dispatch-bytes-custodian.md). Reading 1 waits for the human: context is a built-in command the custodian cannot run. Reading 3: the per-call effort parameter exists (2.1.292 or later; installed 2.1.306), CLAUDE_CODE_EFFORT_LEVEL is not set here, and whether clear gives a new session id is not documented, so it is observed at the first checkpoint. Before: RULED 2026-10-24 (state/directives/2026-10-24-governance-piece-e-rules-as-records-readings-e1-repin-fresh-session-practice.md, line 10 onward; the advisor audit state/consults/2026-10-24-agent-briefs-rulebook-audit-advisor.md): four readings, only their reports under state/consults/ committed. 1: context once in a custodian session partway through a piece (the slash command is the human's to type: the custodian cannot run built-in commands). 2: a read-only tally of this project's own transcripts on this machine over 14 days, tokens by session and agent type, the 20 largest tool results by size, counts only, this project's transcript directory alone and named. 3: from the installed Claude Code and its documentation: whether clear starts a new session id; whether a dispatch sets effort per call and whether CLAUDE_CODE_EFFORT_LEVEL is set here; whether a subfolder CLAUDE.md loads when an agent reads a file there, subagents included. 4: the bytes one worker and one reviewer dispatch receive today."
-    }
-  ],
+  "next": null,
+  "ready": [],
   "waiting_on_human": {
-    "total_minutes": 47,
+    "total_minutes": 57,
     "by_kind": {
       "click": [
         {
@@ -145,6 +107,25 @@
             "done": null
           },
           "summary": "PR C MERGED 2026-10-25 (#253): Part AC rows AC6 to AC8 join (frontends/shell/MANUAL-WALKTHROUGH.md), with the P6 strings #253's body lists for sight (among them the Console's statement for switching Activity tabs, the code table-failed and the Table's ended line) and the architect's gate 1 sight points at AC7 and AC8 (state/consults/gates/2026-10-24-b1-shell-half-pr-c-gate1-architect.md). Before: SITTING SCRIPT ASSEMBLED 2026-10-23 (state/drafts/sitting-script-2026-10-23.md; the architect's P6 strings and verdicts at state/consults/2026-10-23-operator-sitting-queue-p6-strings-and-verdicts-architect.md): the Parts' rows byte-copied, every string with its clause check; findings N1 to N7 (wording, the human's at the sitting) and D1 to D7 (notes; two stale walkthrough cites in L5 and the degrees P1, for a docs-lane piece). Before: RULED 2026-10-22 (headed 2026-10-23; state/directives/2026-10-22-242-h-1-round-72-pin-f7-open-items-milestone-4-open-16-b-adr-020-corrigendum-a-1c-adr-036-words-approved-disk-parity-node.md), item 9: until Monday, the custodian assembles the sitting script from this list, every Part with its rows and every P6 string with its clause check, in one document under state/drafts/. Before: RULED 2026-10-21 (state/directives/2026-10-21-placements-redaction-scan-1c-milestone-4-lanes-238-clicked-d-answers-adr-024-heading-kept.md), item 6: the human schedules the sitting and gives its date; until then no release is scheduled. Before: RULED 2026-10-21 (headed), item 2a; no slot. The list: walkthrough Parts P, T, W (W11 and the publish dialog's filter-scope sentence), Y (Y4), Z and AA, with their blank result logs; the P6 sights of item 40's words whole, the Reset-changes-nothing console line, O3 and its filter counterpart, KNOWN-LIMITATIONS items 37 and 38, and the mixed-kind placeholders of Parts P and T; T4's width and casing verdict and P4's topmost-symbol verdict; entry 95's pan re-feel and the candidate-2 decision; entry 48's L5 re-check. It represents governance C's obligation sheet rows L14, L62, L67, L87, L92, L243, L472, L490, L1602, E95 and E48. Every later P6 sight joins this list instead of a form alone; milestone 3's Part AB joined on PR #234's merge (the form's Amendment 13); the publish dialog's expiry sentence (publish-approval-ttl-ten-minutes, P6 placeholder), read at walkthrough Part G, G3, joined on PR #236's merge (that form's Amendment 6)."
+        },
+        {
+          "id": "governance-e-readings",
+          "title": "Piece E readings before E1's form: context loaded in a custodian session; this project's own transcript tally; the installed Claude Code facts; the bytes one worker and one reviewer dispatch receive",
+          "lane": "governance",
+          "phase": "prototype",
+          "status": "blocked",
+          "order": null,
+          "budget_minutes": 60,
+          "needs_human": {
+            "kind": "sitting",
+            "minutes": 10
+          },
+          "evidence": null,
+          "dates": {
+            "opened": "2026-10-24",
+            "done": null
+          },
+          "summary": "WAITING ON THE HUMAN 2026-10-29: reading 1 is the context slash command, which only the human can type in the custodian's session; reading 2's re-run needs three days of transcripts after the upgrade to 2.1.312 or later (this session's transcript records 2.1.311). Before: ADDENDUM 2 2026-10-28 (state/directives/2026-10-28-governance-piece-e-addendum-2-upgrade-clear-compact-window-prompt-audit-e3-path-rules-reviewer-model.md): reading 2's table by agent type rests on 2.1.306 subagent transcripts that may hold placeholder usage; it is re-run on three days of transcripts written after the human's upgrade to 2.1.312 or later, before E1 uses it as its baseline (the main-session table stands); the auto-compact window is measured again by reading 2's method a week after it is set. Before: READING 1 (state/directives/2026-10-25-255-route-b-o1-lead-data-probe-session-end-lines-s2-context-monday-no-redaction-pr.md, item 4): /context on Monday, once, in the custodian's session, partway through a piece. Before: READINGS 2 TO 4 FILED 2026-10-24 (state/consults/2026-10-24-governance-e-reading-2-transcript-tally-tester-report.md; state/consults/2026-10-24-governance-e-reading-3-claude-code-facts.md; state/consults/2026-10-24-governance-e-reading-4-dispatch-bytes-custodian.md). Reading 1 waits for the human: context is a built-in command the custodian cannot run. Reading 3: the per-call effort parameter exists (2.1.292 or later; installed 2.1.306), CLAUDE_CODE_EFFORT_LEVEL is not set here, and whether clear gives a new session id is not documented, so it is observed at the first checkpoint. Before: RULED 2026-10-24 (state/directives/2026-10-24-governance-piece-e-rules-as-records-readings-e1-repin-fresh-session-practice.md, line 10 onward; the advisor audit state/consults/2026-10-24-agent-briefs-rulebook-audit-advisor.md): four readings, only their reports under state/consults/ committed. 1: context once in a custodian session partway through a piece (the slash command is the human's to type: the custodian cannot run built-in commands). 2: a read-only tally of this project's own transcripts on this machine over 14 days, tokens by session and agent type, the 20 largest tool results by size, counts only, this project's transcript directory alone and named. 3: from the installed Claude Code and its documentation: whether clear starts a new session id; whether a dispatch sets effort per call and whether CLAUDE_CODE_EFFORT_LEVEL is set here; whether a subfolder CLAUDE.md loads when an agent reads a file there, subagents included. 4: the bytes one worker and one reviewer dispatch receive today."
         }
       ]
     }
