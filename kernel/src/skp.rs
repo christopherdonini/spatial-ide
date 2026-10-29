@@ -5117,10 +5117,22 @@ mod ticket_drop_under_lock_regression {
     /// the name after the check, and the ChecksOnly arm. The proposed node
     /// `open-dataset-close-serialised-under-the-catalog-lock` takes them.
     ///
-    /// M1: delete the new check in the Watching arm; this test fails at its `expect_err` on the
-    /// open's result. M2: move the check after `mint_for_open`; it fails at its no-live-generation
-    /// assertion. M3: on the refusal, insert the `OpenRecord` carrying the watch before returning;
-    /// it fails at its no-record assertion. (Observed by applying each; recorded below.)
+    /// RECORDED MUTATION (the fix alone): at 5e38ffae942180fbd1b82d53046568113948bbf8, the product
+    /// change before this test existed, the test the earlier form pinned FAILED at its expect on
+    /// the open's result, `the open returns Ok although a close ran inside its admission` (the
+    /// open returned `skp.unknown_dataset`); it was the only kernel test that failed.
+    ///
+    /// RECORDED MUTATION (M1): delete the new check in the Watching arm. Applied at
+    /// 68773f09a83cc6de00968506ac6919ad138c7a5b, run and reverted: this test FAILED at its
+    /// `expect_err` on the open's result (the open returned Ok).
+    ///
+    /// RECORDED MUTATION (M2): move the check after `mint_for_open`. Applied at
+    /// 68773f09a83cc6de00968506ac6919ad138c7a5b, run and reverted: this test FAILED at its first
+    /// `no live generation` assertion, on `live_session`.
+    ///
+    /// RECORDED MUTATION (M3): on the refusal, insert the `OpenRecord` carrying the watch before
+    /// returning. Applied at 68773f09a83cc6de00968506ac6919ad138c7a5b, run and reverted: this test
+    /// FAILED at its `the open inserted no record` assertion.
     #[test]
     fn a_close_during_open_admission_refuses_the_open_and_mints_no_generation() {
         let path = fixture("kcdo-close-during-admission");
