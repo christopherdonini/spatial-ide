@@ -2,7 +2,6 @@
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 //
 // Tests for forms-layout.mjs -- governance piece F's layout check (the form's sections 2.5 and 4, T12 and T12b).
-// Each test's mutation, observed alone and reverted, is recorded in the piece's report.
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -30,6 +29,7 @@ const ALLOWED = [
   'docs/experiments/NATIVE-WGPU-RENDERER-BAKEOFF-PREREGISTRATION.md',
 ];
 
+// RECORDED MUTATION at e91bcf30807a (the commit holding this test), applied alone and reverted: every path under docs/ allowed -> fails by name: `forms-layout: a preregistration outside governance/forms/ and state/ fails by name`.
 test('forms-layout: a preregistration outside governance/forms/ and state/ fails by name', (t) => {
   const dir = layoutRepo(t, [...ALLOWED, 'docs/x/NEW-PREREGISTRATION.md', 'engine/OLD-PREREGISTRATION.md']);
   const run = spawnSync(process.execPath, [script, '--root', dir], { encoding: 'utf8' });
@@ -39,6 +39,7 @@ test('forms-layout: a preregistration outside governance/forms/ and state/ fails
   assert.equal((run.stderr.match(/^ {2}- /gm) ?? []).length, 2, run.stderr);
 });
 
+// RECORDED MUTATION at e91bcf30807a (the commit holding this test), applied alone and reverted: the state/ allowance dropped -> fails by name: `forms-layout: state/ and the two exact docs/ paths are allowed`.
 test('forms-layout: state/ and the two exact docs/ paths are allowed', (t) => {
   const dir = layoutRepo(t, ALLOWED);
   const run = spawnSync(process.execPath, [script, '--root', dir], { encoding: 'utf8' });

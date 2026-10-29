@@ -637,11 +637,11 @@ test('the_legacy_bound_list_check_fails_by_name_in_a_shallow_clone', () => {
 });
 
 // --- governance piece F: the move map (the form's sections 2.3 and 4; tests T1 to T7) -----------------------
-// Each test's mutation, observed alone and reverted, is recorded in the piece's report, not here.
 
 const REC = 'rec.md';
 const CITES_X = (line, pin = '') => `The record cites a/X-PREREGISTRATION.md:${line}${pin} here.\n`;
 
+// RECORDED MUTATION at e91bcf30807a (the commit holding this test), applied alone and reverted: the line count of a mapped cite read at the move commit's parent, not at HEAD -> fails by name: `verify-cites: an unpinned old-path cite written before the move resolves to the new path at HEAD`.
 test('verify-cites: an unpinned old-path cite written before the move resolves to the new path at HEAD', (t) => {
   const { dir } = movedRepo({ [REC]: CITES_X(4) });
   removeAfter(t, dir);
@@ -651,6 +651,7 @@ test('verify-cites: an unpinned old-path cite written before the move resolves t
   assert.deepEqual(advisory, []);
 });
 
+// RECORDED MUTATION at e91bcf30807a (the commit holding this test), applied alone and reverted: the map lookup dropped (resolveMoved returns null), so the suffix tier answers and the finding is advisory -> fails by name: `verify-cites: an old-path cite past the end of the moved file fails by name, naming the new path`.
 test('verify-cites: an old-path cite past the end of the moved file fails by name, naming the new path', (t) => {
   const { dir } = movedRepo({ [REC]: CITES_X(9) });
   removeAfter(t, dir);
@@ -660,6 +661,7 @@ test('verify-cites: an old-path cite past the end of the moved file fails by nam
   assert.equal(gated[0].reason, `line 9 exceeds "${X_NEW}" (3 lines)`);
 });
 
+// RECORDED MUTATION at e91bcf30807a (the commit holding this test), applied alone and reverted: the post-move check skipped -> fails by name: `verify-cites: an old-path cite written after the move fails by name`.
 test('verify-cites: an old-path cite written after the move fails by name', (t) => {
   const { dir, move } = movedRepo();
   removeAfter(t, dir);
@@ -669,6 +671,7 @@ test('verify-cites: an old-path cite written after the move fails by name', (t) 
   assert.equal(gated[0].reason, `old path "${X_OLD}" cited after the move at ${move.slice(0, 12)}; cite "${X_NEW}"`);
 });
 
+// RECORDED MUTATION at e91bcf30807a (the commit holding this test), applied alone and reverted: blame's uncommitted sentinel treated as written before the move -> fails by name: `verify-cites: an uncommitted old-path cite fails as written after the move`.
 test('verify-cites: an uncommitted old-path cite fails as written after the move', (t) => {
   const { dir, move } = movedRepo({ [REC]: 'a clean record\n' });
   removeAfter(t, dir);
@@ -679,6 +682,7 @@ test('verify-cites: an uncommitted old-path cite fails as written after the move
   assert.equal(gated[0].reason, `old path "${X_OLD}" cited after the move at ${move.slice(0, 12)}; cite "${X_NEW}"`);
 });
 
+// RECORDED MUTATION at e91bcf30807a (the commit holding this test), applied alone and reverted: committer dates compared instead of ancestry -> fails by name: `verify-cites: an old-path cite from a branch forked before the move passes after the merge`.
 test('verify-cites: an old-path cite from a branch forked before the move passes after the merge', (t) => {
   const { dir, before } = movedRepo();
   removeAfter(t, dir);
@@ -691,6 +695,7 @@ test('verify-cites: an old-path cite from a branch forked before the move passes
   assert.deepEqual(advisory, []);
 });
 
+// RECORDED MUTATION at e91bcf30807a (the commit holding this test), applied alone and reverted: pinned cites routed through the map and the post-move check -> fails by name: `verify-cites: a pinned old-path cite written after the move is read at its pin, unchanged`.
 test('verify-cites: a pinned old-path cite written after the move is read at its pin, unchanged', (t) => {
   const { dir, before } = movedRepo();
   removeAfter(t, dir);
@@ -701,6 +706,7 @@ test('verify-cites: a pinned old-path cite written after the move is read at its
   assert.deepEqual(advisory, []);
 });
 
+// RECORDED MUTATION at e91bcf30807a (the commit holding this test), applied alone and reverted: the citing file's current folder used, in both resolveRefMapped and resolveMoved -> fails by name: `verify-cites: a moved file's relative cite resolves against its pre-move folder`.
 test("verify-cites: a moved file's relative cite resolves against its pre-move folder", (t) => {
   const { dir } = movedRepo({}, 'one\ntwo\nsee src/lib.rs:9 here\n');
   removeAfter(t, dir);

@@ -1416,6 +1416,7 @@ test('session-resume: reading-order item 3 is the open entries and recent ruling
 
 // --- governance piece F: the reading order names paths that exist (the form's section 4; test T15) ---
 
+// RECORDED MUTATION at e91bcf30807a (the commit holding this test), applied alone and reverted: one name in the reading order changed to a path HEAD does not hold (item 5, PRECEDENTS.md to governance/PRECEDENTS.md) -> fails by name: `session-resume: every path the reading order names exists at HEAD`.
 test('session-resume: every path the reading order names exists at HEAD', () => {
   const repoRoot = path.resolve(here, '..', '..');
   const tracked = execFileSync('git', ['ls-tree', '-r', '--name-only', 'HEAD'], { cwd: repoRoot, encoding: 'utf8', maxBuffer: 1 << 28 }).split('\n').filter(Boolean);

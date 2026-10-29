@@ -2,7 +2,6 @@
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 //
 // Tests for moved-map.mjs -- governance piece F's move-map tool (the form's sections 2.3 and 4, T10 and T11).
-// Each test's mutation, observed alone and reverted, is recorded in the piece's report.
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -16,6 +15,7 @@ import { movedRepo, commitFiles, git, removeAfter, X_NEW } from './movedFixture.
 
 const script = path.join(path.dirname(fileURLToPath(import.meta.url)), 'moved-map.mjs');
 
+// RECORDED MUTATION at e91bcf30807a (the commit holding this test), applied alone and reverted: the row count compared instead of the bytes -> fails by name: `moved-map: --check fails by name on a hand-edited row`.
 test('moved-map: --check fails by name on a hand-edited row', (t) => {
   const { dir } = movedRepo();
   removeAfter(t, dir);
@@ -29,6 +29,7 @@ test('moved-map: --check fails by name on a hand-edited row', (t) => {
   assert.match(run.stderr, /row "a\/X-PREREGISTRATION\.md\tgovernance\/forms\/a\/X-PREREGISTRATION\.md\t[0-9a-f]{40}" is missing/);
 });
 
+// RECORDED MUTATION at e91bcf30807a (the commit holding this test), applied alone and reverted: rename detection widened from -M100% to -M and the status test widened from R100 to any R -> fails by name: `moved-map: add refuses a commit with any line other than R100`.
 test('moved-map: add refuses a commit with any line other than R100', (t) => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'moved-add-'));
   removeAfter(t, dir);
