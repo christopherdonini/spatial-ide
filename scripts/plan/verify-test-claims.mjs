@@ -97,6 +97,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { loadPlan } from './plan.mjs';
 import { readRulingSet, resolveRoundItem } from './rulingSet.mjs';
 import { hashRefRegExp } from './hashRefGrammar.mjs';
+import { loadMovedMap, currentPath, chainFrom, originPath, pathAtRev } from './movedMap.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 export const REPO_ROOT = path.resolve(here, '..', '..');
@@ -250,12 +251,12 @@ function containsWithdrawnTestOutsideBackticks(lineText) {
  * property to inherit from the source. Returns
  * `[{ startLine, endLine, rev, hash, reference, lineText }]`.
  */
-function markedSpans(relPath, text, containsMarker) {
+function markedSpans(root, relPath, text, containsMarker) {
   const out = [];
   HASH_REF_RE.lastIndex = 0;
   let m;
   while ((m = HASH_REF_RE.exec(text))) {
-    if (m[2] !== relPath) continue;
+    if (!samePinnedPath(root, m[2], relPath)) continue;
     const rev = m[5];
     if (!rev || !COMMIT_ID_RE.test(rev)) continue;
     const refLine = lineOf(text, m.index);
@@ -271,8 +272,9 @@ function markedSpans(relPath, text, containsMarker) {
 /** SUPERSEDED's own spans (round 14 item 2). Excludes any line also marked `withdrawn-test`
  * (the consult's Row-grammar precedence: a withdrawn row that fails its own riders must not fall
  * back to exempting as superseded). */
-function supersededSpans(relPath, text) {
+function supersededSpans(root, relPath, text) {
   return markedSpans(
+    root,
     relPath,
     text,
     (lineText) => containsSupersededOutsideBackticks(lineText) && !containsWithdrawnTestOutsideBackticks(lineText),
@@ -283,12 +285,35 @@ function supersededSpans(relPath, text) {
 // `findSupersededSpan` below may re-ask the same (rev, path) pair once per span per claim -- attempt-1
 // reviewer S5, measured at ~21 ms/spawn on that box.
 const gitShowCache = new Map();
+// Governance piece F's move map (scripts/plan/movedMap.mjs, governance/MOVED.tsv), loaded once per
+// run for a root; with no MOVED.tsv the map is empty and both helpers below return their input.
+const movedMaps = new Map();
+function movedMapOf(root) {
+  if (!movedMaps.has(root)) movedMaps.set(root, loadMovedMap(root));
+  return movedMaps.get(root);
+}
+// A pinned reference's path names the citing form when both are the same file after the map: a row
+// written before the move pins the form by its old path.
+function samePinnedPath(root, pinnedPath, relPath) {
+  if (pinnedPath === relPath) return true;
+  const map = movedMapOf(root);
+  return currentPath(map, pinnedPath) === currentPath(map, relPath);
+}
+// The path the form had at `rev`: the newest row whose move commit is an ancestor of rev, else the
+// path before its first move.
+function pathAtPinnedRev(root, relPath, rev) {
+  const map = movedMapOf(root);
+  const chain = chainFrom(map, originPath(map, relPath));
+  if (chain.length === 0) return relPath;
+  return pathAtRev(root, { chain, path: chain[chain.length - 1].new }, rev);
+}
 function gitShowFile(root, rev, relPath) {
-  const key = `${root}\u0000${rev}\u0000${relPath}`;
+  const shownPath = pathAtPinnedRev(root, relPath, rev);
+  const key = `${root}\u0000${rev}\u0000${shownPath}`;
   if (gitShowCache.has(key)) return gitShowCache.get(key);
   let out;
   try {
-    out = execFileSync('git', ['show', `${rev}:${relPath}`], { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+    out = execFileSync('git', ['show', `${rev}:${shownPath}`], { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
   } catch {
     out = null;
   }
@@ -645,7 +670,7 @@ function computeWithdrawnRows(root, relPath, text) {
     let grammarAccepted = false;
     if (!ref) {
       reason = 'refused: no pinned reference';
-    } else if (ref.path !== relPath) {
+    } else if (!samePinnedPath(root, ref.path, relPath)) {
       reason = "refused: another file's path";
     } else if (!ref.rev || !COMMIT_ID_RE.test(ref.rev)) {
       reason = 'refused: no commit-id rev';
@@ -808,6 +833,7 @@ export function mergeCommitGateFiles(plan) {
  */
 export function runVerifyTestClaims({ repoRoot, plannedGates, mergeCommitGates } = {}) {
   const root = repoRoot ?? REPO_ROOT;
+  movedMaps.delete(root); // a MOVED.tsv written since the last run is read afresh
   const exempt = plannedGates ?? new Set();
   const samePrGates = mergeCommitGates ?? new Set();
   const files = gitList(root);
@@ -831,7 +857,7 @@ export function runVerifyTestClaims({ repoRoot, plannedGates, mergeCommitGates }
     } = computeWithdrawnRows(root, rel, text);
     if (rowMainUnchecked) withdrawnMainUnchecked = true;
     findings.push(...rowFindings);
-    const spans = supersededSpans(rel, text);
+    const spans = supersededSpans(root, rel, text);
 
     for (const c of extractClaimedTests(text)) {
       claims++;
@@ -868,7 +894,7 @@ function main() {
   let notes = new Map();
   let mergeCommitGates = new Set();
   try {
-    const plan = loadPlan(path.join(REPO_ROOT, 'PLAN.yaml'));
+    const plan = loadPlan(path.join(REPO_ROOT, 'governance/PLAN.yaml'));
     notes = plannedGateNotes(plan);
     plannedGates = plannedGateFiles(plan);
     mergeCommitGates = mergeCommitGateFiles(plan);

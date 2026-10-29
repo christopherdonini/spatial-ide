@@ -707,3 +707,5 @@ Standing, for every agent's briefs: a wait loop sleeps at least one second per t
 - **The closing checklist.** No file held one before this section. It is this list, run by the custodian before a piece's closing record is committed:
   1. Every background shell or process started for the piece, by the custodian or by its agents (their transcripts' background calls, and the process list filtered to this project's paths), is checked, and any still running is killed by its own PID. The ledger entry for the closing record says so.
 - **In briefs:** every agent's brief carries the rule's first clause, and asks the agent to report the background shells it leaves: none, or each one killed by its own PID.
+
+*Pointer, 2026-10-29 (governance piece F; the human's OPEN-7 (C) of that date): this file and the other governance files now sit in `governance/`, with the preregistration forms in `governance/forms/`. The old path of every moved file resolves through `governance/MOVED.tsv`.*

@@ -134,7 +134,8 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { buildTrackedIndex, extractCitations, resolveRef, classifyPath, topDirsOf, CODE_EXTS } from './verify-cites.mjs';
+import { buildTrackedIndex, extractCitations, resolveRefMapped, classifyPath, topDirsOf, CODE_EXTS } from './verify-cites.mjs';
+import { loadMovedMap, currentPath, pathAtRev } from './movedMap.mjs';
 import { claimFiles } from './verify-test-claims.mjs';
 import { hashRefRegExp } from './hashRefGrammar.mjs';
 import { rulingSetPaths, LIVE_RULINGS, resolveRoundItem } from './rulingSet.mjs';
@@ -424,7 +425,7 @@ function defaultScanFiles(root, index) {
 // the preregistration/ADR set PLUS these four named files/globs, PLUS every `.claude/agents/*.md`
 // (the custodian's dispatch brief, 2026-09-17, this round's item (d)). Hash references are checked here ONLY -- no quote
 // passage in any of these extra files is extracted or verified; they never join the quote haystack.
-const EXTRA_HASH_SCAN_FILES = ['AI_DEVELOPMENT.md', 'docs/PREREGISTRATION-TEMPLATE.md'];
+const EXTRA_HASH_SCAN_FILES = ['governance/AI_DEVELOPMENT.md', 'docs/PREREGISTRATION-TEMPLATE.md'];
 
 // The ruling set's tracked files (rulingSet.mjs), absolute: the live DECISIONS-PENDING.md, then its archives.
 // The whole set is hash-scanned, so a moved ruling's hash references are still checked.
@@ -432,10 +433,11 @@ function rulingFiles(root, index) {
   return rulingSetPaths(index.files).filter((rel) => index.set.has(rel)).map((rel) => path.join(root, rel));
 }
 
-function defaultHashScanFiles(root, index) {
+function defaultHashScanFiles(root, index, map) {
   const files = new Set(defaultScanFiles(root, index));
   for (const abs of rulingFiles(root, index)) files.add(abs);
-  for (const rel of EXTRA_HASH_SCAN_FILES) {
+  for (const written of EXTRA_HASH_SCAN_FILES) {
+    const rel = currentPath(map, written);
     if (index.set.has(rel)) files.add(path.join(root, rel));
   }
   for (const rel of index.files) {
@@ -512,10 +514,10 @@ function validateBaselineEntries(entries) {
 // (file, line, words-as-a-normalized-PREFIX-of-the-passage): a stale entry whose line shifted, or whose
 // recorded words no longer prefix what is actually there today, matches nothing -- it does not silently
 // waive a different bad quote that happens to land on the same line.
-function matchBaseline(entries, used, relPath, line, normalizedPassage) {
+function matchBaseline(entries, used, relPath, line, normalizedPassage, map) {
   for (let i = 0; i < entries.length; i++) {
     const e = entries[i];
-    if (used.has(i) || e.file !== relPath || e.line !== line) continue;
+    if (used.has(i) || currentPath(map, e.file) !== relPath || e.line !== line) continue;
     const wordsNorm = normalizeText(e.words ?? '');
     if (wordsNorm && normalizedPassage.startsWith(wordsNorm)) {
       used.add(i);
@@ -530,10 +532,10 @@ function matchBaseline(entries, used, relPath, line, normalizedPassage) {
 // (a fixed diagnostic string `checkHashRef`/`findUnboundHashTokens` produce, not quoted prose): a
 // finding whose reason no longer starts with what the entry recorded -- the reference moved to a
 // DIFFERENT failure at the same line -- does not silently waive it.
-function matchHashBaseline(entries, used, relPath, line, reason) {
+function matchHashBaseline(entries, used, relPath, line, reason, map) {
   for (let i = 0; i < entries.length; i++) {
     const e = entries[i];
-    if (used.has(i) || e.file !== relPath || e.line !== line) continue;
+    if (used.has(i) || currentPath(map, e.file) !== relPath || e.line !== line) continue;
     if (typeof e.reason === 'string' && e.reason && reason.startsWith(e.reason)) {
       used.add(i);
       return e;
@@ -762,8 +764,10 @@ function reproducedTextNear(text, ref) {
  * sibling branch's own file (e.g. engine/LOD-PREREGISTRATION.md line 531's `engine/tests/common/mod.rs`,
  * tracked on `engine/lod-tier-builder` but not on this branch) from the branch actually doing the
  * citing. A path neither in the current index nor resolvable at the cited rev still fails by name.
+ * A path that names a moved file (`map`, movedMap.mjs) resolves to its new path, and is read at a rev
+ * that precedes the move under its old path (governance piece F's form, section 2.3).
  */
-function checkHashRef(root, index, relPath, text, ref, topDirs) {
+function checkHashRef(root, index, relPath, text, ref, topDirs, map) {
   let pathRaw = ref.pathRaw;
   if (!pathRaw) {
     const bound = nearestPathInParagraph(text, ref.start, topDirs);
@@ -772,12 +776,13 @@ function checkHashRef(root, index, relPath, text, ref, topDirs) {
     }
     pathRaw = bound.pathRaw;
   }
-  const { exact, all } = resolveRef(pathRaw, relPath, index);
+  const { exact, all, mapped } = resolveRefMapped(pathRaw, relPath, index, map);
   const named = exact.length ? exact : all;
   let resolvedPath;
   let content;
   if (named.length === 1) {
-    resolvedPath = named[0];
+    // A moved file's old path is read at a rev from before the move (the form's section 2.3).
+    resolvedPath = mapped ? pathAtRev(root, mapped, ref.rev) : named[0];
     content = gitShowFile(root, ref.rev, resolvedPath);
     if (content === null) {
       return { ok: false, reason: `unresolvable rev "${ref.rev}" for "${resolvedPath}" -- git show failed` };
@@ -870,13 +875,14 @@ export function runVerifyQuotes({ repoRoot, files } = {}) {
   const root = repoRoot ?? REPO_ROOT;
   const index = buildTrackedIndex(root);
   const topDirs = topDirsOf(index);
+  const map = loadMovedMap(root);
   const scanAbs = (files && files.length ? files : defaultScanFiles(root, index)).map((f) => path.resolve(f));
   // Hash references are scanned wider than quote passages, for hash checking only, with no quote
   // haystack (round-12 fix round item (d)): an explicit `files` override scans exactly those files for
   // both; the default run additionally hash-checks DECISIONS-PENDING.md, AI_DEVELOPMENT.md,
   // docs/PREREGISTRATION-TEMPLATE.md and every .claude/agents/*.md, none of which ever enters quote
   // extraction or the quote-verification haystack.
-  const hashScanAbs = files && files.length ? scanAbs : defaultHashScanFiles(root, index).map((f) => path.resolve(f));
+  const hashScanAbs = files && files.length ? scanAbs : defaultHashScanFiles(root, index, map).map((f) => path.resolve(f));
   const baselineEntries = loadBaseline(root);
   const baselineErrors = validateBaselineEntries(baselineEntries);
   const usedBaseline = new Set();
@@ -920,7 +926,7 @@ export function runVerifyQuotes({ repoRoot, files } = {}) {
     const text = fs.readFileSync(absPath, 'utf8');
     const refs = extractHashRefs(text);
     const recordHashResult = (line, reason) => {
-      const known = matchHashBaseline(hashBaselineEntries, usedHashBaseline, relPath, line, reason);
+      const known = matchHashBaseline(hashBaselineEntries, usedHashBaseline, relPath, line, reason, map);
       if (known) {
         hashBaselined.push({ relPath, line, reason });
         return;
@@ -934,7 +940,7 @@ export function runVerifyQuotes({ repoRoot, files } = {}) {
       );
     }
     for (const ref of refs) {
-      const res = checkHashRef(root, index, relPath, text, ref, topDirs);
+      const res = checkHashRef(root, index, relPath, text, ref, topDirs, map);
       if (!res.ok) recordHashResult(ref.line, res.reason);
     }
   }
@@ -954,14 +960,14 @@ export function runVerifyQuotes({ repoRoot, files } = {}) {
       const pathCite = nearestPathIntro(text, p.introEnd, topDirs);
 
       if (pathCite) {
-        const { exact, all } = resolveRef(pathCite.pathRaw, relPath, index);
+        const { exact, all } = resolveRefMapped(pathCite.pathRaw, relPath, index, map);
         const named = (exact.length ? exact : all).map((f) => path.join(root, f));
         if (named.length === 1) {
           if (norm(named[0]).includes(p.normalized)) continue; // PASS: found in the one named file
           // The named file is the live ruling file: a passage that moved to an archive passes when ONE file of the
           // ruling set holds it, each file normalized on its own (nothing is joined across files).
           if (named[0] === path.join(root, LIVE_RULINGS) && rulingFiles(root, index).some((abs) => norm(abs).includes(p.normalized))) continue;
-          const known = matchBaseline(baselineEntries, usedBaseline, relPath, p.startLine, p.normalized);
+          const known = matchBaseline(baselineEntries, usedBaseline, relPath, p.startLine, p.normalized, map);
           if (known) {
             baselined.push({ relPath, line: p.startLine, snippet, reason: known.reason });
             continue;
@@ -990,7 +996,7 @@ export function runVerifyQuotes({ repoRoot, files } = {}) {
       }
       if (found) continue;
 
-      const known = matchBaseline(baselineEntries, usedBaseline, relPath, p.startLine, p.normalized);
+      const known = matchBaseline(baselineEntries, usedBaseline, relPath, p.startLine, p.normalized, map);
       if (known) {
         baselined.push({ relPath, line: p.startLine, snippet, reason: known.reason });
         continue;
@@ -1050,6 +1056,7 @@ export function listCiteContents({ repoRoot, files } = {}) {
   const root = repoRoot ?? REPO_ROOT;
   const index = buildTrackedIndex(root);
   const topDirs = topDirsOf(index);
+  const map = loadMovedMap(root);
   const scanAbs = (files && files.length ? files : defaultScanFiles(root, index)).map((f) => path.resolve(f));
   const out = [];
   for (const absPath of scanAbs) {
@@ -1058,13 +1065,13 @@ export function listCiteContents({ repoRoot, files } = {}) {
     const text = fs.readFileSync(absPath, 'utf8');
     const hashByKey = new Map();
     for (const ref of extractHashRefs(text)) {
-      const res = checkHashRef(root, index, relPath, text, ref, topDirs);
+      const res = checkHashRef(root, index, relPath, text, ref, topDirs, map);
       const key = `${ref.line}:${ref.pathRaw}:${ref.startLine}`;
       hashByKey.set(key, res.ok ? 'hash: PASS' : `hash: FAIL — ${res.reason}`);
     }
     for (const c of extractCitations(text, { commentsOnly: CODE_EXTS.has(ext) })) {
       if (classifyPath(c.pathRaw, topDirs) === 'doc-number') continue;
-      const { exact, all } = resolveRef(c.pathRaw, relPath, index);
+      const { exact, all } = resolveRefMapped(c.pathRaw, relPath, index, map);
       const cands = exact.length ? exact : all;
       let target, firstLine;
       if (cands.length === 0) {

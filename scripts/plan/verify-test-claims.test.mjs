@@ -566,7 +566,8 @@ function withdrawnFixture({
   const tail = omitCarrier ? `ruling: ${ruling}` : `ruling: ${ruling}; carrier: ${carrier}`;
   const row = `- ${marker}: \`${WITHDRAWN_DOC}:${pinnedLine}\` @ ${v1Rev} sha256:${usedHash}; ${tail}\n`;
   fs.writeFileSync(path.join(dir, WITHDRAWN_DOC), `${WITHDRAWN_V1}\n${row}`);
-  fs.writeFileSync(path.join(dir, 'DECISIONS-PENDING.md'), ledger);
+  fs.mkdirSync(path.join(dir, 'governance'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'governance/DECISIONS-PENDING.md'), ledger);
   commitAll(dir, 'v2');
   return { dir, v1Rev };
 }
@@ -654,7 +655,8 @@ test('a_withdrawn_test_row_also_marked_superseded_does_not_exempt_as_superseded'
   const hash = sha256Hex(nthLineOf(v1, 3) + nthLineOf(v1, 4));
   const row = `- superseded, withdrawn-test: \`${WITHDRAWN_DOC}:3-4\` @ ${v1Rev} sha256:${hash}\n`;
   fs.writeFileSync(path.join(dir, WITHDRAWN_DOC), `${v1}\n${row}`);
-  fs.writeFileSync(path.join(dir, 'DECISIONS-PENDING.md'), SYNTH_LEDGER);
+  fs.mkdirSync(path.join(dir, 'governance'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'governance/DECISIONS-PENDING.md'), SYNTH_LEDGER);
   commitAll(dir, 'v2');
   const { findings, superseded, withdrawn } = runVerifyTestClaims({ repoRoot: dir });
   assert.equal(superseded.length, 0, `must not exempt as superseded: ${JSON.stringify(superseded)}`);
@@ -692,7 +694,8 @@ test('a_withdrawn_test_row_pinning_a_line_range_does_not_exempt', () => {
   const hash = sha256Hex(nthLineOf(v1, 3) + nthLineOf(v1, 4));
   const row = `- withdrawn-test: \`${WITHDRAWN_DOC}:3-4\` @ ${v1Rev} sha256:${hash}; ruling: round 1, item 1; carrier: round 2, item 5\n`;
   fs.writeFileSync(path.join(dir, WITHDRAWN_DOC), `${v1}\n${row}`);
-  fs.writeFileSync(path.join(dir, 'DECISIONS-PENDING.md'), SYNTH_LEDGER);
+  fs.mkdirSync(path.join(dir, 'governance'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'governance/DECISIONS-PENDING.md'), SYNTH_LEDGER);
   commitAll(dir, 'v2');
   const { findings, withdrawn } = runVerifyTestClaims({ repoRoot: dir });
   assert.equal(withdrawn.length, 0, `a line-range pin must not exempt: ${JSON.stringify(withdrawn)}`);
@@ -729,7 +732,8 @@ test('a_withdrawn_name_claimed_in_another_file_stays_a_finding', () => {
   // Same rev/hash as a valid row over THIS file's own history -- only the path field is wrong.
   const row = `- withdrawn-test: \`Y-PREREGISTRATION.md:${WITHDRAWN_CLAIM_LINE}\` @ ${v1Rev} sha256:${hash}; ruling: round 1, item 1; carrier: round 2, item 5\n`;
   fs.writeFileSync(path.join(dir, WITHDRAWN_DOC), `${WITHDRAWN_V1}\n${row}`);
-  fs.writeFileSync(path.join(dir, 'DECISIONS-PENDING.md'), SYNTH_LEDGER);
+  fs.mkdirSync(path.join(dir, 'governance'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'governance/DECISIONS-PENDING.md'), SYNTH_LEDGER);
   commitAll(dir, 'v2');
   const { findings, withdrawn } = runVerifyTestClaims({ repoRoot: dir });
   assert.equal(withdrawn.length, 0, `a row naming a different path must not exempt this file's claim: ${JSON.stringify(withdrawn)}`);
@@ -795,7 +799,8 @@ test('a_withdrawn_test_row_pinning_a_line_whose_claimed_test_exists_still_fails_
   fs.mkdirSync(path.join(dir, 'engine', 'src'), { recursive: true });
   fs.writeFileSync(path.join(dir, WITHDRAWN_DOC), pregV1);
   fs.writeFileSync(path.join(dir, 'engine/src/lib.rs'), '#[test]\nfn a_real_test_that_exists() { assert!(true); }\n');
-  fs.writeFileSync(path.join(dir, 'DECISIONS-PENDING.md'), SYNTH_LEDGER);
+  fs.mkdirSync(path.join(dir, 'governance'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'governance/DECISIONS-PENDING.md'), SYNTH_LEDGER);
   execFileSync('git', ['init', '-q'], { cwd: dir });
   execFileSync('git', ['config', 'user.email', 't@e.com'], { cwd: dir });
   execFileSync('git', ['config', 'user.name', 'T'], { cwd: dir });
@@ -845,7 +850,8 @@ test('a_row_key_overruling_is_not_recognized_as_a_ruling_key', () => {
   const hash = sha256Hex(nthLineOf(WITHDRAWN_V1, WITHDRAWN_CLAIM_LINE));
   const row = `- withdrawn-test: \`${WITHDRAWN_DOC}:${WITHDRAWN_CLAIM_LINE}\` @ ${v1Rev} sha256:${hash}; overruling: round 1, item 1; carrier: round 2, item 5\n`;
   fs.writeFileSync(path.join(dir, WITHDRAWN_DOC), `${WITHDRAWN_V1}\n${row}`);
-  fs.writeFileSync(path.join(dir, 'DECISIONS-PENDING.md'), SYNTH_LEDGER);
+  fs.mkdirSync(path.join(dir, 'governance'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'governance/DECISIONS-PENDING.md'), SYNTH_LEDGER);
   commitAll(dir, 'v2');
   const { findings, withdrawn } = runVerifyTestClaims({ repoRoot: dir });
   assert.equal(withdrawn.length, 0, `overruling: must not be read as a ruling: key: ${JSON.stringify(withdrawn)}`);
@@ -864,7 +870,8 @@ test('a_row_key_miscarrier_is_not_recognized_as_a_carrier_key', () => {
   const hash = sha256Hex(nthLineOf(WITHDRAWN_V1, WITHDRAWN_CLAIM_LINE));
   const row = `- withdrawn-test: \`${WITHDRAWN_DOC}:${WITHDRAWN_CLAIM_LINE}\` @ ${v1Rev} sha256:${hash}; ruling: round 1, item 1; miscarrier: round 2, item 5\n`;
   fs.writeFileSync(path.join(dir, WITHDRAWN_DOC), `${WITHDRAWN_V1}\n${row}`);
-  fs.writeFileSync(path.join(dir, 'DECISIONS-PENDING.md'), SYNTH_LEDGER);
+  fs.mkdirSync(path.join(dir, 'governance'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'governance/DECISIONS-PENDING.md'), SYNTH_LEDGER);
   commitAll(dir, 'v2');
   const { findings, withdrawn } = runVerifyTestClaims({ repoRoot: dir });
   assert.equal(withdrawn.length, 0, `miscarrier: must not be read as a carrier: key: ${JSON.stringify(withdrawn)}`);
@@ -887,7 +894,8 @@ test('a_withdrawn_test_row_with_ruling_and_carrier_only_inside_a_backtick_span_i
   const hash = sha256Hex(nthLineOf(WITHDRAWN_V1, WITHDRAWN_CLAIM_LINE));
   const row = `- withdrawn-test: \`${WITHDRAWN_DOC}:${WITHDRAWN_CLAIM_LINE}\` @ ${v1Rev} sha256:${hash}; \`ruling: round 1, item 1; carrier: round 2, item 5\`\n`;
   fs.writeFileSync(path.join(dir, WITHDRAWN_DOC), `${WITHDRAWN_V1}\n${row}`);
-  fs.writeFileSync(path.join(dir, 'DECISIONS-PENDING.md'), SYNTH_LEDGER);
+  fs.mkdirSync(path.join(dir, 'governance'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'governance/DECISIONS-PENDING.md'), SYNTH_LEDGER);
   commitAll(dir, 'v2');
   const { findings, withdrawn } = runVerifyTestClaims({ repoRoot: dir });
   assert.equal(withdrawn.length, 0, `a backticked ruling/carrier clause must not resolve: ${JSON.stringify(withdrawn)}`);
@@ -934,7 +942,8 @@ function rowTextFixture(rowText, { doc = WITHDRAWN_V1, ledger = SYNTH_LEDGER, wi
   const v1Rev = gitRepoAt(dir, WITHDRAWN_DOC, doc);
   const row = typeof rowText === 'function' ? rowText(v1Rev) : rowText;
   fs.writeFileSync(path.join(dir, WITHDRAWN_DOC), `${doc}\n${row}`);
-  fs.writeFileSync(path.join(dir, 'DECISIONS-PENDING.md'), ledger);
+  fs.mkdirSync(path.join(dir, 'governance'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'governance/DECISIONS-PENDING.md'), ledger);
   commitAll(dir, 'v2');
   return { dir, v1Rev };
 }
@@ -1173,7 +1182,8 @@ test('a_marker_after_other_text_on_a_bullet_does_not_exempt', () => {
   const hash = sha256Hex(nthLineOf(WITHDRAWN_V1, WITHDRAWN_CLAIM_LINE));
   const row = `- Also, withdrawn-test: \`${WITHDRAWN_DOC}:${WITHDRAWN_CLAIM_LINE}\` @ ${v1Rev} sha256:${hash}; ruling: round 1, item 1; carrier: round 2, item 5\n`;
   fs.writeFileSync(path.join(dir, WITHDRAWN_DOC), `${WITHDRAWN_V1}\n${row}`);
-  fs.writeFileSync(path.join(dir, 'DECISIONS-PENDING.md'), SYNTH_LEDGER);
+  fs.mkdirSync(path.join(dir, 'governance'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'governance/DECISIONS-PENDING.md'), SYNTH_LEDGER);
   commitAll(dir, 'v2');
   const { findings, withdrawn } = runVerifyTestClaims({ repoRoot: dir });
   assert.equal(withdrawn.length, 0, JSON.stringify(withdrawn));
@@ -1241,7 +1251,8 @@ test('a_withdrawn_test_row_whose_pinned_line_names_no_test_fails_by_name', () =>
   const hash = sha256Hex(nthLineOf(v1, 3));
   const row = `- withdrawn-test: \`${WITHDRAWN_DOC}:3\` @ ${v1Rev} sha256:${hash}; ruling: round 1, item 1; carrier: round 2, item 5\n`;
   fs.writeFileSync(path.join(dir, WITHDRAWN_DOC), `${v1}\n${row}`);
-  fs.writeFileSync(path.join(dir, 'DECISIONS-PENDING.md'), SYNTH_LEDGER);
+  fs.mkdirSync(path.join(dir, 'governance'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'governance/DECISIONS-PENDING.md'), SYNTH_LEDGER);
   commitAll(dir, 'v2');
   const { findings, withdrawn } = runVerifyTestClaims({ repoRoot: dir });
   assert.equal(withdrawn.length, 0, JSON.stringify(withdrawn));
@@ -1280,7 +1291,8 @@ function withdrawnFixtureWithRemote({ ancestorOfMain }) {
   const hash = sha256Hex(nthLineOf(DOC_WITH_REAL_CLAIM, 3));
   const row = `- withdrawn-test: \`${WITHDRAWN_DOC}:3\` @ ${v1Rev} sha256:${hash}; ruling: round 1, item 1; carrier: round 2, item 5\n`;
   fs.writeFileSync(path.join(dir, WITHDRAWN_DOC), `${DOC_WITH_REAL_CLAIM}\n${row}`);
-  fs.writeFileSync(path.join(dir, 'DECISIONS-PENDING.md'), SYNTH_LEDGER);
+  fs.mkdirSync(path.join(dir, 'governance'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'governance/DECISIONS-PENDING.md'), SYNTH_LEDGER);
   commitAll(dir, 'v2');
   return { dir };
 }
@@ -1322,7 +1334,8 @@ test('a_withdrawn_test_row_whose_rev_is_not_a_commit_fails_by_name', () => {
   const hash = sha256Hex(nthLineOf(DOC_WITH_REAL_CLAIM, 3));
   const row = `- withdrawn-test: \`${WITHDRAWN_DOC}:3\` @ deadbeef sha256:${hash}; ruling: round 1, item 1; carrier: round 2, item 5\n`;
   fs.writeFileSync(path.join(dir, WITHDRAWN_DOC), `${DOC_WITH_REAL_CLAIM}\n${row}`);
-  fs.writeFileSync(path.join(dir, 'DECISIONS-PENDING.md'), SYNTH_LEDGER);
+  fs.mkdirSync(path.join(dir, 'governance'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'governance/DECISIONS-PENDING.md'), SYNTH_LEDGER);
   commitAll(dir, 'v2');
   const { findings, withdrawn } = runVerifyTestClaims({ repoRoot: dir });
   assert.equal(withdrawn.length, 0, JSON.stringify(withdrawn));
@@ -1384,7 +1397,8 @@ test('a_valid_row_with_condition_e_skipped_sets_withdrawn_main_unchecked', () =>
   const hash = sha256Hex(nthLineOf(DOC_WITH_REAL_CLAIM, 3));
   const row = `- withdrawn-test: \`${WITHDRAWN_DOC}:3\` @ ${v1Rev} sha256:${hash}; ruling: round 1, item 1; carrier: round 2, item 5\n`;
   fs.writeFileSync(path.join(dir, WITHDRAWN_DOC), `${DOC_WITH_REAL_CLAIM}\n${row}`);
-  fs.writeFileSync(path.join(dir, 'DECISIONS-PENDING.md'), SYNTH_LEDGER);
+  fs.mkdirSync(path.join(dir, 'governance'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'governance/DECISIONS-PENDING.md'), SYNTH_LEDGER);
   commitAll(dir, 'v2');
   const { findings, withdrawn, withdrawnMainUnchecked } = runVerifyTestClaims({ repoRoot: dir });
   assert.equal(withdrawn.length, 0, JSON.stringify(withdrawn));
@@ -1590,7 +1604,8 @@ test('a_withdrawn_test_row_at_a_same_pr_commit_still_fails_by_name', () => {
   execFileSync('git', ['init', '-q', '--bare', bareDir]);
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'verify-test-claims-samepr-withdrawn-'));
   gitRepoAt(dir, WITHDRAWN_DOC, '# Doc\n\n');
-  fs.writeFileSync(path.join(dir, 'DECISIONS-PENDING.md'), SYNTH_LEDGER);
+  fs.mkdirSync(path.join(dir, 'governance'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'governance/DECISIONS-PENDING.md'), SYNTH_LEDGER);
   commitAll(dir, 'ledger');
   sameprGit(dir, 'branch', '-M', 'main');
   sameprGit(dir, 'remote', 'add', 'origin', bareDir);
@@ -1814,4 +1829,62 @@ test('each_dot_or_dot_dot_segment_reference_binds_in_neither_checker', () => {
     return { quotes: quotes.hashFindings.length, claims: claims.superseded.length };
   });
   assert.deepEqual(got, Array(4).fill({ quotes: 1, claims: 0 }), JSON.stringify(got));
+});
+
+// --- governance piece F: a pin written before a form moved (the form's Amendment 4; tests T18 and T19) ---
+
+/**
+ * A form at `docRel` holds `rowFor(v1Rev)`, a pin row written before the move; a moves-only commit then
+ * renames it to `governance/forms/<docRel>`, and governance/MOVED.tsv, naming that commit, is committed
+ * after it. Returns { dir, v1Rev, newRel }.
+ */
+function movedFormFixture({ docRel, v1, rowFor, ledger }) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'verify-test-claims-moved-'));
+  fs.mkdirSync(path.join(dir, path.dirname(docRel)), { recursive: true });
+  const v1Rev = gitRepoAt(dir, docRel, v1);
+  fs.writeFileSync(path.join(dir, docRel), `${v1}\n${rowFor(v1Rev)}`);
+  if (ledger !== undefined) {
+    fs.mkdirSync(path.join(dir, 'governance'), { recursive: true });
+    fs.writeFileSync(path.join(dir, 'governance', 'DECISIONS-PENDING.md'), ledger);
+  }
+  commitAll(dir, 'v2: the pin row, written before the move');
+  const newRel = `governance/forms/${docRel}`;
+  fs.mkdirSync(path.dirname(path.join(dir, newRel)), { recursive: true });
+  execFileSync('git', ['mv', '--', docRel, newRel], { cwd: dir });
+  execFileSync('git', ['commit', '-q', '-m', 'the moves-only commit'], { cwd: dir });
+  const moveRev = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: dir, encoding: 'utf8' }).trim();
+  fs.writeFileSync(path.join(dir, 'governance', 'MOVED.tsv'), `old\tnew\tcommit\n${docRel}\t${newRel}\t${moveRev}\n`);
+  commitAll(dir, 'MOVED.tsv');
+  return { dir, v1Rev, newRel };
+}
+
+// RECORDED MUTATION, observed on the working tree over the moves-only commit a8ae51d9d0a7 before the paths commit was made, applied alone and reverted (verify-test-claims.mjs sha256 prefix 47673e0005097c69 before and after): the pinned reference's path compared with the form's current path without the map (`m[2] !== relPath` in markedSpans) -> fails by name: `verify-test-claims: a superseded pin to a form's old path, written before the move, still exempts its claim after the move` ("no binding finding expected": the claim is reported as not found). The T19 test still passes under this mutation.
+test("verify-test-claims: a superseded pin to a form's old path, written before the move, still exempts its claim after the move", () => {
+  const docRel = 'old/X-PREREGISTRATION.md';
+  const { dir, newRel } = movedFormFixture({
+    docRel,
+    v1: SUPERSEDED_V1,
+    rowFor: (rev) => pinRow({ relPath: docRel, pinnedLine: SUPERSEDED_CLAIM_LINE, rev, hash: sha256Hex(lineOfV1(SUPERSEDED_CLAIM_LINE)), word: 'superseded' }),
+  });
+  const { findings, superseded } = runVerifyTestClaims({ repoRoot: dir });
+  assert.equal(findings.length, 0, `no binding finding expected: ${JSON.stringify(findings)}`);
+  assert.equal(superseded.length, 1, JSON.stringify(superseded));
+  assert.equal(superseded[0].relPath, newRel);
+  assert.equal(superseded[0].name, SUPERSEDED_CLAIM_NAME);
+});
+
+// RECORDED MUTATION, observed on the working tree over the moves-only commit a8ae51d9d0a7 before the paths commit was made, applied alone and reverted (verify-test-claims.mjs sha256 prefix 47673e0005097c69 before and after): the pinned line read at the rev from the form's current path (`const shownPath = relPath;` in gitShowFile) -> fails by name: `verify-test-claims: a withdrawn-test row pinned at a form's old path before the move stays valid after the move` ("refused: hash does not recompute"); the T18 test fails under it too, since it reads the same pinned line.
+test("verify-test-claims: a withdrawn-test row pinned at a form's old path before the move stays valid after the move", () => {
+  const docRel = 'old/X-PREREGISTRATION.md';
+  const { dir, newRel } = movedFormFixture({
+    docRel,
+    v1: WITHDRAWN_V1,
+    ledger: SYNTH_LEDGER,
+    rowFor: (rev) => `- withdrawn-test: \`${docRel}:${WITHDRAWN_CLAIM_LINE}\` @ ${rev} sha256:${sha256Hex(nthLineOf(WITHDRAWN_V1, WITHDRAWN_CLAIM_LINE))}; ruling: round 1, item 1; carrier: round 2, item 5\n`,
+  });
+  const { findings, withdrawn } = runVerifyTestClaims({ repoRoot: dir });
+  assert.equal(findings.length, 0, `no binding finding expected: ${JSON.stringify(findings)}`);
+  assert.equal(withdrawn.length, 1, JSON.stringify(withdrawn));
+  assert.equal(withdrawn[0].relPath, newRel);
+  assert.equal(withdrawn[0].name, WITHDRAWN_CLAIM_NAME);
 });

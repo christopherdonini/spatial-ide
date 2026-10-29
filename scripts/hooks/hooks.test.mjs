@@ -382,7 +382,7 @@ test('stop-queue: block reason names the lane and budget', async () => {
     const result = await decide(input, { projectRoot });
     assert.equal(result.decision, 'block');
     assert.match(result.reason, /lane shell, budget 50 min/);
-    assert.match(result.reason, /Regenerate CUSTODIAN-QUEUE\.md if PLAN\.yaml changed; ledger before ending\./);
+    assert.match(result.reason, /Regenerate governance\/CUSTODIAN-QUEUE\.md if governance\/PLAN\.yaml changed; ledger before ending\./);
   } finally {
     delete process.env.CUSTODIAN_PLAN_PATH;
   }
@@ -1316,12 +1316,12 @@ test('session-resume: the reading order names state/directives/ after DECISIONS-
   const at = (needle) => lines.findIndex((l) => l.includes(needle));
   const pending = at('DECISIONS-PENDING.md');
   const directives = at('state/directives/');
-  const precedents = lines.findIndex((l) => l.startsWith('5. PRECEDENTS.md')); // item 1 now names PRECEDENTS.md too (piece B)
+  const precedents = lines.findIndex((l) => l.startsWith('5. governance/PRECEDENTS.md')); // item 1 now names PRECEDENTS.md too (piece B)
   assert.ok(pending >= 0 && precedents >= 0, 'the neighbouring steps exist');
   assert.equal(directives, pending + 1, 'directly after DECISIONS-PENDING.md');
   assert.equal(precedents, directives + 1, 'directly before PRECEDENTS.md');
   assert.equal(lines[directives], "4. state/directives/ — the human's instructions, recorded verbatim, newest first.");
-  assert.match(lines[precedents], /^5\. PRECEDENTS\.md/);
+  assert.match(lines[precedents], /^5\. governance\/PRECEDENTS\.md/);
 });
 
 // ---------------------------------------------------------------------------
@@ -1388,12 +1388,12 @@ test("session-resume: reading-order item 1 is the continuity block, the live led
     lines[1].startsWith('1. state/CUT-STATE.md — the continuity block, then the live ledger, plus any unfinished matter it names explicitly. '),
     lines[1],
   );
-  assert.match(lines[1], /The standing items: AUTONOMY\.md §33 part B and PRECEDENTS\.md P-035 and P-036\.$/);
+  assert.match(lines[1], /The standing items: governance\/AUTONOMY\.md §33 part B and governance\/PRECEDENTS\.md P-035 and P-036\.$/);
   assert.equal(lines[1].includes('SESSION-CONTINUITY block first'), false, 'the old item 1 is gone');
   // The sections it names exist: AUTONOMY.md section 33 (with its part B) and the two PRECEDENTS.md entries.
   const repo = path.resolve(here, '..', '..');
-  const autonomy = fs.readFileSync(path.join(repo, 'AUTONOMY.md'), 'utf8');
-  const precedents = fs.readFileSync(path.join(repo, 'PRECEDENTS.md'), 'utf8');
+  const autonomy = fs.readFileSync(path.join(repo, 'governance/AUTONOMY.md'), 'utf8');
+  const precedents = fs.readFileSync(path.join(repo, 'governance/PRECEDENTS.md'), 'utf8');
   assert.match(autonomy, /^## §33\. [^\n]*standing items/m);
   assert.match(autonomy, /^### Part B\. The standing items$/m);
   assert.match(precedents, /^### P-035 — /m);
@@ -1409,7 +1409,46 @@ test('session-resume: reading-order item 3 is the open entries and recent ruling
   const source = directive.split('\n').find((l) => l.includes("session-resume.mjs's reading order, item 3:"));
   const words = source.slice(source.indexOf('"') + 1, source.lastIndexOf('"'));
   assert.ok(words.startsWith('the open entries and recent rulings; search older rulings by date, round or entry'), words);
-  assert.equal(lines[3], `3. DECISIONS-PENDING.md — ${words}`);
+  assert.equal(lines[3], `3. governance/DECISIONS-PENDING.md — ${words}`);
   assert.equal(lines[3].includes('RULED blocks (newest first)'), false, 'the old item 3 is gone');
   assert.equal(/state\/directives\/|PRECEDENTS\.md/.test(lines[3]), false, 'it names neither, so the first-occurrence search above still finds it');
+});
+
+// --- governance piece F: the reading order names paths that exist (the form's section 4; test T15) ---
+
+// RECORDED MUTATION at e91bcf30807a (the commit holding this test), applied alone and reverted: one name in the reading order changed to a path HEAD does not hold (item 5, PRECEDENTS.md to governance/PRECEDENTS.md) -> fails by name: `session-resume: every path the reading order names exists at HEAD`.
+// RECORDED MUTATION, re-observed for the paths commit's change to this test (it now leaves out the one stale mention inside the human's words), on the working tree over the moves-only commit a8ae51d9d0a7 before the paths commit was made, applied alone and reverted (session-resume.mjs sha256 prefix a7806948f33d1ec8 before and after): item 5 set back to the root name PRECEDENTS.md -> fails by name: `session-resume: every path the reading order names exists at HEAD` ("names \"PRECEDENTS.md\", which HEAD does not hold").
+test('session-resume: every path the reading order names exists at HEAD', () => {
+  const repoRoot = path.resolve(here, '..', '..');
+  const tracked = execFileSync('git', ['ls-tree', '-r', '--name-only', 'HEAD'], { cwd: repoRoot, encoding: 'utf8', maxBuffer: 1 << 28 }).split('\n').filter(Boolean);
+  // Item 3 carries the human's own words, byte for byte (the item 3 test pins them to the directive). They still name the ledger by its old root path; that one mention resolves through governance/MOVED.tsv and is left out here, and every other name in the line stays checked.
+  const checked = READING_ORDER.replace('entry in DECISIONS-PENDING.md and', 'entry and');
+  const named = checked.match(/(?:[A-Za-z0-9_.-]+\/)*[A-Za-z0-9_*.-]+\.(?:md|json|yaml)|(?:[A-Za-z0-9_.-]+\/)+(?![A-Za-z0-9_*.-])/g) ?? [];
+  assert.ok(named.length >= 8, `the reading order names paths: ${JSON.stringify(named)}`);
+  for (const p of new Set(named)) {
+    const re = p.includes('*') ? new RegExp('^' + p.split('*').map((s) => s.replace(/[.+?^${}()|[\]\\]/g, '\\$&')).join('[^/]*') + '$') : null;
+    const found = p.endsWith('/') ? tracked.some((f) => f.startsWith(p)) : re ? tracked.some((f) => re.test(f)) : tracked.includes(p);
+    assert.ok(found, `the reading order names "${p}", which HEAD does not hold`);
+  }
+});
+
+// --- governance piece F: the Stop hook's default plan path (the form's section 4; test T14) ---
+
+// RECORDED MUTATION, observed on the working tree over the moves-only commit a8ae51d9d0a7 before the paths commit was made, applied alone and reverted (the file's sha256 prefix 58c8ad94165e6af0 before and after): the default plan path in stop-queue.mjs set back to the root PLAN.yaml -> fails by name: `stop-queue: the default plan path is governance/PLAN.yaml` ("the hook did not reach the plan", the allow that says there is no plan).
+test('stop-queue: the default plan path is governance/PLAN.yaml', async () => {
+  const projectRoot = makeTempDir('stop-default-plan-');
+  const saved = process.env.CUSTODIAN_PLAN_PATH;
+  delete process.env.CUSTODIAN_PLAN_PATH;
+  try {
+    fs.mkdirSync(path.join(projectRoot, 'governance'), { recursive: true });
+    fs.copyFileSync(path.join(fixturesDir, 'valid-plan.yaml'), path.join(projectRoot, 'governance', 'PLAN.yaml'));
+    const input = baseStopInput();
+    writeHeldLease(projectRoot, input.session_id);
+    const result = await decide(input, { projectRoot });
+    // Step 5 read the plan: a block that names the plan's next node, not the allow that says there is no plan.
+    assert.equal(result.decision, 'block', `the hook did not reach the plan: ${result.stderr}`);
+    assert.match(result.reason, /lane shell, budget 50 min/);
+  } finally {
+    if (saved !== undefined) process.env.CUSTODIAN_PLAN_PATH = saved;
+  }
 });

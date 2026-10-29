@@ -21,6 +21,7 @@ import { execFileSync } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { loadPlan, deriveStates, indexById, prioritiesApproved, NEEDS_HUMAN_ORDER } from './plan.mjs';
 import { formatEvidence } from './queue.mjs';
+import { loadMovedMap, currentPath } from './movedMap.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 export const REPO_ROOT = path.resolve(here, '..', '..');
@@ -105,7 +106,7 @@ function evidenceLink(evidence, repoSlug) {
     return `<a href="https://github.com/${repoSlug}/commit/${encodeURIComponent(evidence.commit)}">commit ${esc(evidence.commit)}</a>`;
   }
   if (evidence.path !== undefined) {
-    const [filePath] = evidence.path.split('#');
+    const filePath = currentPath(loadMovedMap(REPO_ROOT), evidence.path.split('#')[0]);
     return `<a href="https://github.com/${repoSlug}/blob/main/${filePath}">${esc(evidence.path)}</a>`;
   }
   if (evidence.log !== undefined) return esc(evidence.log);
@@ -916,8 +917,8 @@ function parseArgs(argv) {
 
 function main() {
   const args = parseArgs(process.argv.slice(2));
-  const planPath = args.plan ?? path.join(REPO_ROOT, 'PLAN.yaml');
-  const outDir = args.outDir ?? path.join(path.dirname(planPath), 'site');
+  const planPath = args.plan ?? path.join(REPO_ROOT, 'governance/PLAN.yaml');
+  const outDir = args.outDir ?? path.join(REPO_ROOT, 'site');
   const repoSlug = args.repo ?? gitRepoSlug();
 
   if (args.check) {

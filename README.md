@@ -9,21 +9,30 @@ a headless spatial kernel; the UI, the CLI, the notebooks, and the AI are all cl
 *(Those two paragraphs are the project's own statement of what it is building, `docs/00_Vision.md`.
 What follows is what exists today.)*
 
-Every statement below about the installed application was written after the operator ran it: the
-build this release ships, installed on a clean Windows account and walked through step by step, as
-`frontends/shell/MANUAL-WALKTHROUGH.md` Part M records it and `RELEASE-0.1.md` Amendments 15–18 keep
-the operator's own words. Two builds, precisely: the walkthrough rows whose code paths this build
-changed were re-run on it (install and first open, the filter and status rows, the hover row, the
-packaged-executable origin check), and the rows it did not touch — style, the publish and audit
-rows, the bundle viewer, the development-build origin rows, the deliberate-refusal row — stand from
-the candidate build they were run on, with `git diff --stat 998be05 13471a9` as the proof that
-nothing under their paths changed (Amendments 17 and 18). Everything else can be checked against a
-file in this repository.
+## What works today
 
-## What v0.1.0 is
+What works today is what the last release does: v0.1.0, the first packaged build of the project's
+Prototype hero slice, for Windows x64. In the installed application you can:
 
-The first packaged Windows build of the **Prototype hero slice**: open a GeoParquet, filter it in
-SQL, style it, publish it as a static interactive bundle.
+- open a GeoParquet file and see its features on the map, with a summary of the file (verified with
+  a file in EPSG:2056);
+- filter the map with a SQL condition, such as `id < 100`, and use **Zoom to layer** to fit the map
+  to the features that match;
+- style the features with a fill colour and opacity and an outline colour and width, the same for
+  every feature;
+- hover a feature to read its `id`;
+- publish the whole file, or an area of the map, as a static interactive bundle, after a dialog in
+  which you type the destination folder's name to confirm. The filter is not published: a bundle
+  cannot record one. The bundle is a folder holding the data, a viewer page and a manifest; it opens
+  in a browser, with your style, once the folder is served over HTTP, and the application does not
+  serve it.
+
+The operator ran each of these on the installed application. The verdicts, with those behind the
+Install and Local-first sections below, are in `governance/RELEASE-0.1.md`, Amendments 15, 16 and
+18, against the rows of Part M in `frontends/shell/MANUAL-WALKTHROUGH.md`; Amendment 17 records which
+rows were re-run on the final build and which stand from the candidate build. `main` is ahead of
+v0.1.0, and nothing on this page is claimed for it.
+
 That is the whole claim. Every limit is declared by name in [`KNOWN-LIMITATIONS.md`](KNOWN-LIMITATIONS.md);
 please read it before forming an expectation — in particular, v0.1.0 carries two pinned coordinate
 reference systems, EPSG:2056 and EPSG:3857, and refuses any file whose declared CRS puts latitude
@@ -31,8 +40,32 @@ first (EPSG:4326 — WGS 84 latitude/longitude, which most public GeoParquet dec
 by decision, not by accident); it reads polygons only, styles by literal only, and runs on Windows
 only.
 
-This release makes no performance statement. The project records no timing, throughput or size claim
-without a measurement against its own budgets (`docs/08_Testing.md`), and none is made here.
+## What this repository is
+
+- `README.md`, `QUICKSTART.md`, `KNOWN-LIMITATIONS.md`, `LICENSE`, `DEPENDENCY-LICENSES.md`,
+  `CONTRIBUTING.md` and `DCO` are for readers and contributors; `CLAUDE.md`, `Cargo.toml` and
+  `Cargo.lock` are read by tools.
+- `docs/` — the project constitution: vision, principles, architecture, and the decisions
+  (`docs/adr/`). `docs/README.md` is its index. Accepted decisions are immutable; corrections are
+  appended, dated.
+- `kernel/`, `engine/`, `renderer/`, `protocol/`, `frontends/` — one directory per module of the
+  architecture (`docs/02_Architecture.md`).
+- `governance/` — how the work is run: the plan (`PLAN.yaml`), the rulings ledger, the working
+  rules, the audits, the release records and checklists. `governance/forms/` holds the
+  preregistration forms, one folder for each top-level folder they came from and `root/` for those
+  from the root; `governance/MOVED.tsv` lists every moved file's old path, new path and move commit.
+- `state/` — the working record: the human's directives, consults, gate reports and the state of
+  the work in hand.
+- `site/` — the plan's status page, generated from `governance/PLAN.yaml`.
+- `scripts/` — the plan's checks, the session hooks, the evidence tools and the licence audit.
+- `tools/` — the test-data corpus manifest (`tools/corpus/`) and the session mods (`tools/mods/`).
+- `spikes/` — throwaway validation code whose written conclusions are the deliverable.
+- `LICENSES/` — the licence texts, and which applies where (`LICENSES/README.md`).
+
+The SKP protocol specification and all file formats are open, permanently (`docs/14`).
+
+How the work is run, where a new preregistration form goes, and how a path from before the move
+resolves: [`governance/README.md`](governance/README.md).
 
 ## Install
 
@@ -55,19 +88,6 @@ already present on the machine the walkthrough ran on.
 [`QUICKSTART.md`](QUICKSTART.md): what your GeoParquet needs (a declared CRS whose definition
 establishes an easting-first axis order, and an identity column), what the app says when it refuses
 a file, and the slice end to end.
-
-## What this repository is
-
-- `docs/` — the project constitution: vision, principles, architecture, and the decisions
-  (`docs/adr/`). `docs/README.md` is its index. Accepted decisions are immutable; corrections are
-  appended, dated.
-- `kernel/`, `engine/`, `renderer/`, `protocol/`, `frontends/` — one directory per module of the
-  architecture (`docs/02_Architecture.md`).
-- `spikes/` — throwaway validation code whose written conclusions are the deliverable.
-- `frontends/shell/MANUAL-WALKTHROUGH.md` — the operator walkthroughs each cut is verified against,
-  with the human's verdicts recorded verbatim.
-
-The SKP protocol specification and all file formats are open, permanently (`docs/14`).
 
 ## Local-first
 
