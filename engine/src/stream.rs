@@ -2600,9 +2600,9 @@ fn flush(
 /// withheld. Proven at the execute site by `an_admitted_integer_overflow_ends_the_stream_with_the_fixed_detail`
 /// and B-T1, and at the fetch site by
 /// `an_admitted_integer_overflow_first_raised_during_a_fetch_ends_the_stream_with_the_fixed_detail`
-/// (the wrapped payload shape, observed; the bare shape by a unit sample only); no test starts
-/// from the prepare site. `[P6 placeholder]`: the words are the engine's own facts, with no
-/// consequence sentence; the human's wording is owed at P6.
+/// (an INT64 `*` only; the wrapped payload shape, observed; the bare shape by a unit sample only);
+/// no test starts from the prepare site. `[P6 placeholder]`: the words are the engine's own facts,
+/// with no consequence sentence; the human's wording is owed at P6.
 const OUT_OF_RANGE_DETAIL: &str = "[P6 placeholder] a value computed while this query ran was out of range for its type; the row values and the query text are withheld";
 
 /// The `duckdb` crate's own words in front of DuckDB's text in its fetch panic: the bytes before
@@ -2610,10 +2610,11 @@ const OUT_OF_RANGE_DETAIL: &str = "[P6 placeholder] a value computed while this 
 const FETCH_PANIC_PREFIX: &str = "Failed to fetch Arrow record batch: ";
 
 /// DuckDB's wrapper when its streaming result is already closed, up to and including the `Error: `
-/// after the LF, byte-copied by script from the bytes the form's Amendment 1 records at step 0. DuckDB
-/// v1.5.5 (libduckdb-sys 1.10505.0) composes it: the type name `Invalid Input` at line 146 of
-/// `src/common/exception.cpp`, then `src/common/error_data.cpp` lines 65 and 67, then the message
-/// of `src/main/stream_query_result.cpp` line 181 and the format of its line 183.
+/// after the LF, byte-copied by script from step 0's recorded terminal, bytes 66 to 163 (the step-0
+/// report the form's Amendment 1 names). DuckDB v1.5.5 (libduckdb-sys 1.10505.0) composes it: the
+/// type name `Invalid Input` at line 146 of `src/common/exception.cpp`, then
+/// `src/common/error_data.cpp` lines 65 and 67, then the message of
+/// `src/main/stream_query_result.cpp` line 181 and the format of its line 183.
 const PENDING_RESULT_WRAPPER: &str = "Invalid Input Error: Attempting to execute an unsuccessful or closed pending query result\nError: ";
 
 /// DuckDB's text read out of the `duckdb` crate's fetch panic payload, by anchored prefix strips
@@ -2649,8 +2650,11 @@ fn classify(cancel: &CancelToken, phase: &str, message: &str) -> EngineError {
     }
 }
 
-/// `classify` for the fetch site: DuckDB's text when `fetch_panic_duckdb_text` reads it out of the
-/// payload, else the payload whole, so every other payload renders as `duckdb fetch panicked: <payload>`.
+/// `classify` for the fetch site, a cancellation first: DuckDB's text when
+/// `fetch_panic_duckdb_text` reads it out of the payload, else the payload whole, so every other
+/// payload renders as `duckdb fetch panicked: <payload>` (a payload that itself begins with the
+/// label, which the crate's fetch panic never does, still reads as out of range, as before this
+/// piece).
 fn classify_fetch_panic(cancel: &CancelToken, payload: &str) -> EngineError {
     classify(
         cancel,
@@ -2778,10 +2782,11 @@ mod tests {
     /// cancellation is returned first. The literals are unit inputs only; the wrapped shape is
     /// proven end to end by `an_admitted_integer_overflow_first_raised_during_a_fetch_ends_the_stream_with_the_fixed_detail`.
     ///
-    /// The wrapped sample is the payload as step 0 recorded it (the form's Amendment 1; 233 bytes on
-    /// all 16 runs), byte-copied by script. The bare sample was never observed through the engine:
-    /// it is the crate's prefix followed by the text DuckDB v1.5.5 (libduckdb-sys 1.10505.0) composes
-    /// for an INT64 multiplication overflow: the format at line 77 of
+    /// The wrapped sample is the payload as step 0 recorded it (in the step-0 report the form's
+    /// Amendment 1 names: the terminal's bytes after `query: duckdb fetch panicked: `, 233 bytes,
+    /// identical on all 16 runs), byte-copied by script. The bare sample was never observed through
+    /// the engine: it is the crate's prefix followed by the text DuckDB v1.5.5 (libduckdb-sys
+    /// 1.10505.0) composes for an INT64 multiplication overflow: the format at line 77 of
     /// `src/include/duckdb/common/operator/multiply.hpp`, under the type name `Out of Range` at
     /// line 116 of `src/common/exception.cpp` and `src/common/error_data.cpp` lines 65 and 67.
     ///
