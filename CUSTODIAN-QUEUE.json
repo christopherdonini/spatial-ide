@@ -1,46 +1,27 @@
 {
-  "generated_at": "2026-10-29T12:29:37.038Z",
-  "plan_hash": "5561ce1390157e3af31f00e83ab81aeab5b6bbd9fdf75cbff67e80db3b3c2f19",
+  "generated_at": "2026-10-29T12:37:47.035Z",
+  "plan_hash": "56a741e766a56b7a9a256874bab5c59a4b843f1b7aa05251431cf1e6bd55c894",
   "priorities_approved": true,
   "next": {
-    "id": "type-walk-rule2-residual-reasons",
-    "title": "Type walk: a rule-2 result over a column or an integer literal, refused by rule 7's bit-width bound, keeps the residual reason although its value is a constant NULL (for example f32 > NULL + 100000)",
-    "lane": "engine",
+    "id": "adr-020-appended-note",
+    "title": "ADR-020's appended note, owed by the quote baseline's corrected_by entry (entry 102; the docs lane)",
+    "lane": "kernel-protocol",
     "phase": "prototype",
     "status": "ready",
     "order": null,
-    "budget_minutes": 60,
+    "budget_minutes": 30,
     "needs_human": {
       "kind": "none",
       "minutes": 0
     },
     "evidence": null,
     "dates": {
-      "opened": "2026-10-03",
+      "opened": "2026-10-20",
       "done": null
     },
-    "summary": "RULED 2026-10-26: OPEN-1 (A); OPEN-2 the placeholder lands now, worded at P6; OPEN-3 F-C stays out; OPEN-4 (A); OPEN-5 F-A placed after this piece, F-B after P-0. (state/directives/2026-10-26-clicks-260-261-244-r2-241-o1-answers-pb-draft-b-6d-260-lines-5b-8a-8b-rulings.md) Before: DRAFTED 2026-10-26 (state/consults/2026-10-26-type-walk-rule2-residual-reasons-five-line-form-architect-draft.md): route (A), the recommended one, rewords T-C's fifth sentence so that every conversion_rounds refusal states a conversion refused by type (a P6 placeholder), engine/src/predicate.rs and one new test, about 95 lines, no admission outcome moved; a P-0 probe first. THE HUMAN'S RULING: OPEN-1 the route ((A); (B) a sixth reason, (C) admitting the constant-NULL shapes, each a red-line ADR-021 Note; (D) as it stands); OPEN-2 the sentence's words, now or at the sitting; OPEN-3 F-C kept out. F-A proposed as literal-only-float-integer-arithmetic-refused. Before: NEXT IN THE FILLER SLOT 2026-10-26 (entries 6d, 5b, 5c and 8a held on the human; 7a to 7d skipped by rule (00)): the architect drafts its five-line form (state/consults/2026-10-26-type-walk-rule2-residual-reasons-five-line-form-architect-draft.md). Before: FILLER QUEUE entry 8b (RULED 2026-10-24: state/directives/2026-10-24-weekend-exception-third-product-slot-placements-forms-ahead-250-click.md, line 16; made the standing filler slot by state/directives/2026-10-24-filler-slot-standing-rule-appended-to-autonomy.md, line 8; state/FILLER-QUEUE.md): placed, graded S3; a five-line form under section 21c's size, the reviewer and the architect from dispatch, section 25 (e) set aside; any string a user sees a P6 placeholder for the sitting, any red-line text to the human. Before: Proposed by node 10's architect draft (state/consults/2026-10-03-type-walk-null-literal-arithmetic-architect-draft.md, finding F7 and question Q-3): question round 43, item 1 admits only the decimal-literal shape, so comparisons of a rule-2 result over a column or an integer literal that rule 7's bit-width bound refuses keep the residual conversion_rounds sentence, which is false of a constant NULL. Never queued until the human places it."
+    "summary": "RULED 2026-10-23 (state/directives/2026-10-23-weekend-covering-case-s1-session-log-redaction-s2-governance-and-docs-order-v0-2-scope-port-2-approved.md), item 4: the docs lane's first after #243 and #244; OPEN-3 (a), #242 having merged. Then walkthrough-stale-cites-l5-degrees-p1, then sitting-wording-n1-to-n7. Before: NOTED 2026-10-23: #243 merged (c1f782db) and #242 merged (c52abe27), so OPEN-3 reads (a) at dispatch; the piece waits for #244's merge. Before: RULED 2026-10-22 (headed 2026-10-23; state/directives/2026-10-22-242-h-1-round-72-pin-f7-open-items-milestone-4-open-16-b-adr-020-corrigendum-a-1c-adr-036-words-approved-disk-parity-node.md), item 4: OPEN-1 (A), yes to section 2.1's words, headed Corrigendum and dated by the appending commit; OPEN-2 (A); OPEN-3 (a) if #242 has merged at dispatch, else (b). Its form is committed with these answers when the piece starts, after #243 and #244 merge, outside #244's freeze window. Before: FORM DRAFTED 2026-10-22 (state/consults/2026-10-22-adr-020-appended-note-architect-draft.md): a full form, as ADR-020 is named in section 21a; its file at the root. OPEN-1, the corrigendum words, is red-line text and waits for the human's typed answer; OPEN-2 and OPEN-3 are the human's. NEXT: after #243 and #244 merge and OPEN-1 is answered, the form is committed with its pins and the piece starts. Before: ORDER 2026-10-22 (state/directives/2026-10-22-away-until-monday-241-r1-on-5400-f7-a-milestone-4-1c-code-o0-b-docs-lane-ruled-i4-a.md): after the F7 piece in the docs lane, the human's order being the open items, then item 41's comment, the ADR notes and the stale cites. Before: PLACED 2026-10-21 (state/directives/2026-10-21-placements-redaction-scan-1c-milestone-4-lanes-238-clicked-d-answers-adr-024-heading-kept.md, item 4): the docs lane, 3 of 6, after stale-assertion-messages-and-product-comments. Before: RULED 2026-10-21 (headed), item 2e, proposed and unplaced; the docs lane. It represents governance C's sheet row E102: the appended ADR-020 note that the quote baseline lists as owed (its corrected_by, an appended ADR-020 note, owed)."
   },
   "ready": [
-    {
-      "id": "type-walk-rule2-residual-reasons",
-      "title": "Type walk: a rule-2 result over a column or an integer literal, refused by rule 7's bit-width bound, keeps the residual reason although its value is a constant NULL (for example f32 > NULL + 100000)",
-      "lane": "engine",
-      "phase": "prototype",
-      "status": "ready",
-      "order": null,
-      "budget_minutes": 60,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-10-03",
-        "done": null
-      },
-      "summary": "RULED 2026-10-26: OPEN-1 (A); OPEN-2 the placeholder lands now, worded at P6; OPEN-3 F-C stays out; OPEN-4 (A); OPEN-5 F-A placed after this piece, F-B after P-0. (state/directives/2026-10-26-clicks-260-261-244-r2-241-o1-answers-pb-draft-b-6d-260-lines-5b-8a-8b-rulings.md) Before: DRAFTED 2026-10-26 (state/consults/2026-10-26-type-walk-rule2-residual-reasons-five-line-form-architect-draft.md): route (A), the recommended one, rewords T-C's fifth sentence so that every conversion_rounds refusal states a conversion refused by type (a P6 placeholder), engine/src/predicate.rs and one new test, about 95 lines, no admission outcome moved; a P-0 probe first. THE HUMAN'S RULING: OPEN-1 the route ((A); (B) a sixth reason, (C) admitting the constant-NULL shapes, each a red-line ADR-021 Note; (D) as it stands); OPEN-2 the sentence's words, now or at the sitting; OPEN-3 F-C kept out. F-A proposed as literal-only-float-integer-arithmetic-refused. Before: NEXT IN THE FILLER SLOT 2026-10-26 (entries 6d, 5b, 5c and 8a held on the human; 7a to 7d skipped by rule (00)): the architect drafts its five-line form (state/consults/2026-10-26-type-walk-rule2-residual-reasons-five-line-form-architect-draft.md). Before: FILLER QUEUE entry 8b (RULED 2026-10-24: state/directives/2026-10-24-weekend-exception-third-product-slot-placements-forms-ahead-250-click.md, line 16; made the standing filler slot by state/directives/2026-10-24-filler-slot-standing-rule-appended-to-autonomy.md, line 8; state/FILLER-QUEUE.md): placed, graded S3; a five-line form under section 21c's size, the reviewer and the architect from dispatch, section 25 (e) set aside; any string a user sees a P6 placeholder for the sitting, any red-line text to the human. Before: Proposed by node 10's architect draft (state/consults/2026-10-03-type-walk-null-literal-arithmetic-architect-draft.md, finding F7 and question Q-3): question round 43, item 1 admits only the decimal-literal shape, so comparisons of a rule-2 result over a column or an integer literal that rule 7's bit-width bound refuses keep the residual conversion_rounds sentence, which is false of a constant NULL. Never queued until the human places it."
-    },
     {
       "id": "adr-020-appended-note",
       "title": "ADR-020's appended note, owed by the quote baseline's corrected_by entry (entry 102; the docs lane)",
@@ -343,6 +324,28 @@
       "summary": "ORDERED 2026-10-29: after engine-cancel-before-execute-siblings, as the filler queue's row 4b gives the human's note; recorded as a dependency so the queue does not offer it first. Before: FILLER QUEUE entry 4b (RULED 2026-10-24: state/directives/2026-10-24-weekend-exception-third-product-slot-placements-forms-ahead-250-click.md, line 12; made the standing filler slot by state/directives/2026-10-24-filler-slot-standing-rule-appended-to-autonomy.md, line 8; state/FILLER-QUEUE.md): placed, graded S3, after engine-cancel-before-execute-siblings; a five-line form under section 21c's size, the reviewer and the architect from dispatch, section 25 (e) set aside; any string a user sees a P6 placeholder for the sitting, any red-line text to the human. Before: PROPOSED 2026-10-10 by stream-flush-cancel-exit-marks-producer-cancelled's form (engine/STREAM-FLUSH-CANCEL-EXIT-PREREGISTRATION.md, section 2.3; the custodian records it, as the form asks): the three rows that form leaves out of scope, from the custodian's check of the flake hunt (state/consults/2026-10-10-flake-hunt-run-1-custodian-check.md). A prepare error under a cancel returns Cancelled through classify unmarked; the two marking classify arms read the token twice, so a cancel between the reads returns Cancelled unmarked; the send to a receiver that is gone returns Cancelled with no flag read. Its form chooses between a classify that marks when it returns Cancelled and a seam, and says whether a disconnect is an ADR-018 observation. Read from code, not observed. The human grades and places it.",
       "blocked_by": [
         "engine-cancel-before-execute-siblings"
+      ]
+    },
+    {
+      "id": "type-walk-rule2-residual-reasons",
+      "title": "Type walk: a rule-2 result over a column or an integer literal, refused by rule 7's bit-width bound, keeps the residual reason although its value is a constant NULL (for example f32 > NULL + 100000)",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": null,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-03",
+        "done": null
+      },
+      "summary": "WAITS ON PIECE F 2026-10-29: ruled 2026-10-26 with its form drafted; the form is committed at its governance path only after #270 merges, as an old-location form before then is piece F's invalidator. Before: RULED 2026-10-26: OPEN-1 (A); OPEN-2 the placeholder lands now, worded at P6; OPEN-3 F-C stays out; OPEN-4 (A); OPEN-5 F-A placed after this piece, F-B after P-0. (state/directives/2026-10-26-clicks-260-261-244-r2-241-o1-answers-pb-draft-b-6d-260-lines-5b-8a-8b-rulings.md) Before: DRAFTED 2026-10-26 (state/consults/2026-10-26-type-walk-rule2-residual-reasons-five-line-form-architect-draft.md): route (A), the recommended one, rewords T-C's fifth sentence so that every conversion_rounds refusal states a conversion refused by type (a P6 placeholder), engine/src/predicate.rs and one new test, about 95 lines, no admission outcome moved; a P-0 probe first. THE HUMAN'S RULING: OPEN-1 the route ((A); (B) a sixth reason, (C) admitting the constant-NULL shapes, each a red-line ADR-021 Note; (D) as it stands); OPEN-2 the sentence's words, now or at the sitting; OPEN-3 F-C kept out. F-A proposed as literal-only-float-integer-arithmetic-refused. Before: NEXT IN THE FILLER SLOT 2026-10-26 (entries 6d, 5b, 5c and 8a held on the human; 7a to 7d skipped by rule (00)): the architect drafts its five-line form (state/consults/2026-10-26-type-walk-rule2-residual-reasons-five-line-form-architect-draft.md). Before: FILLER QUEUE entry 8b (RULED 2026-10-24: state/directives/2026-10-24-weekend-exception-third-product-slot-placements-forms-ahead-250-click.md, line 16; made the standing filler slot by state/directives/2026-10-24-filler-slot-standing-rule-appended-to-autonomy.md, line 8; state/FILLER-QUEUE.md): placed, graded S3; a five-line form under section 21c's size, the reviewer and the architect from dispatch, section 25 (e) set aside; any string a user sees a P6 placeholder for the sitting, any red-line text to the human. Before: Proposed by node 10's architect draft (state/consults/2026-10-03-type-walk-null-literal-arithmetic-architect-draft.md, finding F7 and question Q-3): question round 43, item 1 admits only the decimal-literal shape, so comparisons of a rule-2 result over a column or an integer literal that rule 7's bit-width bound refuses keep the residual conversion_rounds sentence, which is false of a constant NULL. Never queued until the human places it.",
+      "blocked_by": [
+        "governance-f-tidy-repository-in-place"
       ]
     },
     {
