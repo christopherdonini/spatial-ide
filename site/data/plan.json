@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-29T05:32:39.579Z",
-  "plan_hash": "62ed99840cff38837e74241ccb2c6d680f8935f625c4de48caaad0ada89474a3",
+  "generated_at": "2026-10-29T05:54:15.071Z",
+  "plan_hash": "8b14431aaed20152d1af70665be345b62ca11c35820b77ecc19e8411c545df48",
   "priorities_approved": true,
   "lanes": [
     {
@@ -9972,15 +9972,43 @@
         "kind": "none",
         "minutes": 0
       },
-      "gate": "none",
+      "gate": "scripts/plan/GOVERNANCE-F-TIDY-REPOSITORY-IN-PLACE-PREREGISTRATION.md",
+      "merge": "merge-commit",
       "evidence": null,
       "budget_minutes": 600,
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "RULED 2026-10-29 by the human (state/directives/2026-10-29-governance-f-mapping-table-approved-open-1-to-open-10-ruled.md): the mapping table approved as drafted; OPEN-1 to OPEN-10 ruled (OPEN-7 widened, plus C; OPEN-9 B, plus one live observation of G3 after the move). NEXT: the form committed from the draft with the settlement, its cites pinned by script; then the build. Before: FULL FORM DRAFTED 2026-10-28 (state/consults/2026-10-28-governance-f-tidy-repository-in-place-form-architect-draft.md): the mapping table (every root entry and every form), a moves-only commit of 186 renames, a paths commit of about 1,250 lines over about 40 files plus the PLAN gate lines by script. WAITING ON THE HUMAN: the mapping table's approval in the form, and OPEN-1, OPEN-2, OPEN-3, OPEN-4, OPEN-5, OPEN-6, OPEN-7, OPEN-8, OPEN-9, OPEN-10. Then the form committed with the settlement. Before: PLACED 2026-10-28 by the human (state/directives/2026-10-28-governance-piece-f-a-tidy-repository-in-place.md): the governance lane, next, before E1 (which waits on reading 1); never holds slot 1; the full form with both gates and the human's click. NEXT: the architect drafts the full form, the mapping table of every root file and every form first (its new path or stays, with a one-line reason), for the human's approval in the form; the README words approved in the PR.",
+      "summary": "FORM COMMITTED 2026-10-29 (scripts/plan/GOVERNANCE-F-TIDY-REPOSITORY-IN-PLACE-PREREGISTRATION.md; 35 pins at 79476279): the full form with the human's rulings in its settlement (state/directives/2026-10-29-governance-f-mapping-table-approved-open-1-to-open-10-ruled.md). NEXT: the build by a worker-high on a branch, its own checkout: the scripts and tests first, then the moves-only commit M at a held main and the paths commit C2; then both gates, the README words in the PR, the human's click. Before: RULED 2026-10-29 by the human (state/directives/2026-10-29-governance-f-mapping-table-approved-open-1-to-open-10-ruled.md): the mapping table approved as drafted; OPEN-1 to OPEN-10 ruled (OPEN-7 widened, plus C; OPEN-9 B, plus one live observation of G3 after the move). NEXT: the form committed from the draft with the settlement, its cites pinned by script; then the build. Before: FULL FORM DRAFTED 2026-10-28 (state/consults/2026-10-28-governance-f-tidy-repository-in-place-form-architect-draft.md): the mapping table (every root entry and every form), a moves-only commit of 186 renames, a paths commit of about 1,250 lines over about 40 files plus the PLAN gate lines by script. WAITING ON THE HUMAN: the mapping table's approval in the form, and OPEN-1, OPEN-2, OPEN-3, OPEN-4, OPEN-5, OPEN-6, OPEN-7, OPEN-8, OPEN-9, OPEN-10. Then the form committed with the settlement. Before: PLACED 2026-10-28 by the human (state/directives/2026-10-28-governance-piece-f-a-tidy-repository-in-place.md): the governance lane, next, before E1 (which waits on reading 1); never holds slot 1; the full form with both gates and the human's click. NEXT: the architect drafts the full form, the mapping table of every root file and every form first (its new path or stays, with a one-line reason), for the human's approval in the form; the README words approved in the PR.",
       "dates": {
         "opened": "2026-10-28",
+        "done": null
+      }
+    },
+    {
+      "id": "governance-f-after-week-rust-ci-figure",
+      "title": "Governance piece F, the after-week Rust CI figure: the form-only Rust CI runs in the 168 h after the merge, recorded as a class 1 row in piece F's form",
+      "kind": "task",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": null,
+      "depends_on": [
+        "governance-f-tidy-repository-in-place"
+      ],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "none",
+      "evidence": null,
+      "budget_minutes": 30,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [],
+      "summary": "PLACED 2026-10-29 by the human's OPEN-10 (A) (state/directives/2026-10-29-governance-f-mapping-table-approved-open-1-to-open-10-ruled.md): 168 h after piece F's merge, the after-week Rust CI figure (the form's measurement block, item (c)) is recorded as a class 1 row in piece F's form. Blocked on piece F.",
+      "dates": {
+        "opened": "2026-10-29",
         "done": null
       }
     },
@@ -10238,7 +10266,7 @@
       "entries": [
         137
       ],
-      "summary": "O1's release-note line, the human's words: state/directives/2026-10-28-rulings-by-lane-o1-filler-order-8a-governance-slots-docs-adr-017-note.md, A.7, verbatim when v0.2's notes are written (O1 in v0.2's scope, A.6; the clang-cl installer first exercised at v0.2's artifact walk, entry 137, OPEN-1 (a)). Before: PROPOSED 2026-10-23 by the human's ruling (state/directives/2026-10-23-weekend-open-items-ruled-verify-cites-pin-covering-case-port-2-session-log-test-feature-v0-2-findings-graded.md, item 6) on decision entry 137, the v0.2 scope proposal (state/consults/2026-10-23-v0-2-scope-proposal-architect.md): O1 fold (v0.1.1 folded into this node; m13-bracketed-values and signpath-application-draft re-targeted here; AUTONOMY section 11's from v0.1.1 read as from the next release); O2 piece 1c whole; O3 milestone 4 whole; O4 both newly graded fixes; O5 ADR-023's acceptance at B1's close and the ADR-017 note before the tag; O6 as recommended. OPEN-1 (a), the CI artifact of a walked candidate, with the artifact rows re-run on the tag's build; OPEN-2 (a) for the hero path and every 1c and milestone 4 string, (b) for the rest by the human's list at the sitting; OPEN-3 a release/0.2.0 branch; OPEN-4 v0.2.0, marked pre-release; OPEN-5 a fresh local account, no VM. The release notes and the tag message are the human's typed words. No date: the human schedules the release; until then nothing is scheduled.",
+      "summary": "Governance piece F OPEN-8 (A), the human's (state/directives/2026-10-29-governance-f-mapping-table-approved-open-1-to-open-10-ruled.md): the README's statement of what works today, the last release's operator-verified behaviour, is updated at each tag as a release step; v0.2's release notes carry it next. O1's release-note line, the human's words: state/directives/2026-10-28-rulings-by-lane-o1-filler-order-8a-governance-slots-docs-adr-017-note.md, A.7, verbatim when v0.2's notes are written (O1 in v0.2's scope, A.6; the clang-cl installer first exercised at v0.2's artifact walk, entry 137, OPEN-1 (a)). Before: PROPOSED 2026-10-23 by the human's ruling (state/directives/2026-10-23-weekend-open-items-ruled-verify-cites-pin-covering-case-port-2-session-log-test-feature-v0-2-findings-graded.md, item 6) on decision entry 137, the v0.2 scope proposal (state/consults/2026-10-23-v0-2-scope-proposal-architect.md): O1 fold (v0.1.1 folded into this node; m13-bracketed-values and signpath-application-draft re-targeted here; AUTONOMY section 11's from v0.1.1 read as from the next release); O2 piece 1c whole; O3 milestone 4 whole; O4 both newly graded fixes; O5 ADR-023's acceptance at B1's close and the ADR-017 note before the tag; O6 as recommended. OPEN-1 (a), the CI artifact of a walked candidate, with the artifact rows re-run on the tag's build; OPEN-2 (a) for the hero path and every 1c and milestone 4 string, (b) for the rest by the human's list at the sitting; OPEN-3 a release/0.2.0 branch; OPEN-4 v0.2.0, marked pre-release; OPEN-5 a fresh local account, no VM. The release notes and the tag message are the human's typed words. No date: the human schedules the release; until then nothing is scheduled.",
       "dates": {
         "opened": "2026-10-23",
         "done": null

@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `62ed99840cff38837e74241ccb2c6d680f8935f625c4de48caaad0ada89474a3`) at `2026-10-29T05:32:39.447Z`.
+Generated from `PLAN.yaml` (sha256 `8b14431aaed20152d1af70665be345b62ca11c35820b77ecc19e8411c545df48`) at `2026-10-29T05:54:14.941Z`.
 
 ## 1. Next
 
@@ -47,6 +47,7 @@ Generated from `PLAN.yaml` (sha256 `62ed99840cff38837e74241ccb2c6d680f8935f625c4
 - **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-2-0
 - **signpath-application-draft** — Entry 77 — the SignPath OSS application and disclosure text drafted for the human sight, once a release is CI-built — blocked by: release-v0-2-0
 - **governance-e1-rules-as-records** — Piece E1: rules as records, a rule catalogue under rules/, a selector scripts/plan/rules.mjs, a generated block in each agent definition and a governance-ci check — blocked by: governance-e-readings
+- **governance-f-after-week-rust-ci-figure** — Governance piece F, the after-week Rust CI figure: the form-only Rust CI runs in the 168 h after the merge, recorded as a class 1 row in piece F's form — blocked by: governance-f-tidy-repository-in-place
 - **shell-owners-index** — An owner's index for the shell (frontends/shell), so that shell-owned KNOWN-LIMITATIONS items and pointers are indexed somewhere — blocked by: skp-line-cites-outside-close-races
 - **site-design-v1** — Landing page redesign — DRAFT-4 (status strip, milestone banner, waiting-on-you cards with unblocks counts, the swimlane board) — blocked by: governance-ci-built-site
 - **macos-normalization-roots-uncanonicalized** — On macOS the audit log normalization roots are read uncanonicalized while recorded destinations are canonicalized, so a symlinked temporary-directory root never matches — blocked by: port-2-macos-l1-and-app-dirs
