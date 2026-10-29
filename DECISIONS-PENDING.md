@@ -4,6 +4,11 @@ Line references written before the rotation point into state/cut-archive/DECISIO
 
 ## Pending
 
+**RULED 2026-10-29 — the custodian's three questions: AUTONOMY.md §37 stays for now, and E1 carries it into a rule record, its checklist going to scripts/plan/README.md under that rule's id, piece F moving the file and nothing more; OPEN-8's release step is one line in RELEASE-DAY-CHECKLIST.md section 0 beside the README line, committed straight to main before F's move commit; 5b runs on, the quiet window being the moment of the move commit, not a freeze, and after the move its branch merges main (`state/directives/2026-10-29-section-37-for-now-release-step-in-checklist-section-0-5b-runs-on.md`).**
+
+- **The ruling** is the text, referenced and not restated.
+- **Applied this session:** the filing; the checklist line, byte-copied (this commit); piece F's form Amendment 2 (class 5); E1's node carries §37; 5b runs on.
+
 **RULED 2026-10-29 — wait loops and background shells, standing: in every agent's brief a wait loop sleeps at least one second per turn and carries a hard timeout that ends it; a background shell left running when its piece closes is killed at the piece's closing record, and the closing checklist says so (`state/directives/2026-10-29-wait-loops-sleep-and-time-out-background-shells-killed-at-closing.md`).**
 
 - **The ruling** is the text, referenced and not restated.

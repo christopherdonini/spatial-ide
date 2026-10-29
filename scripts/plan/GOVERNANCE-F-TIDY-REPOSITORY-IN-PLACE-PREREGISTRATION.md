@@ -610,3 +610,9 @@ The human's ruling is `state/directives/2026-10-29-governance-f-mapping-table-ap
 - **The build is staged.** C2's logic and tests were built first, with no move and no path edit, on the branch `wip/governance-f-scripts` at 810f6f158d909e15a505d12c0e4aa7b7aa923178 from main at 447b8497 (`state/consults/2026-10-29-governance-f-tidy-repository-in-place-phase1-worker-report.md`). C2 carries those files over by path. The PR keeps section 2.2's two commits, M and then C2.
 - **A seventh new file.** C2 also adds `scripts/plan/movedFixture.mjs`, the new tests' shared fixture. Section 2.2's list of what C2 adds reads with it, and section 5's verify-cites prediction reads scanned(C2) equals scanned(P) plus 7.
 - **Rule R's delta rows at P,** authorised in advance by section 2.1: this form, and `kernel/OPEN-DATASET-REFUSES-A-NAME-CLOSED-DURING-ADMISSION-PREREGISTRATION.md` (committed a6843238). M is re-derived at P and the PR body lists them.
+
+### Amendment 2 (2026-10-29), class 5: the human's ruling of 2026-10-29 (`state/directives/2026-10-29-section-37-for-now-release-step-in-checklist-section-0-5b-runs-on.md`), quoted verbatim, before the moves-only commit.
+
+- **OPEN-8's release step leaves C2** (line 10): "It commits straight to main as process text, before F's move commit, so F's two commits stay pure and the move carries it." The settlement's OPEN-8 sentence on C2 reads through it, and section 2.2's table does not gain `RELEASE-DAY-CHECKLIST.md`. The step is in `RELEASE-DAY-CHECKLIST.md` section 0, committed with this amendment.
+- **The quiet window** (line 12): "The quiet window is the moment of C1's commit, not a freeze of the filler slot". Section 9's hold of main reads through it: a main commit after P is merged into the branch, with R, `rewrite-gates` and the proof re-run, as section 9 provides.
+- **AUTONOMY.md** (line 8): "Piece F moves the file, nothing more." Its section 37 stays as it is.

@@ -12,6 +12,7 @@ are mechanical and were run, or are re-run, before the human's step that depends
 - [ ] `main` is what will be tagged: `git status` clean, `git log -1` is the intended commit, CI green on that commit (`gh run list --branch main --limit 5`).
 - [ ] Part M was run by the human on the packaged build and its record is in `frontends/shell/MANUAL-WALKTHROUGH.md` ("### Part M run") — the verdicts verbatim. **No tag before Part M** (`RELEASE-0.1.md` Amendment 13: "a document describing an artifact is written after running it, not before").
 - [ ] `KNOWN-LIMITATIONS.md`, `README.md`, `QUICKSTART.md` finalized from Part M's record — no `[M: …]` bracket remains (`grep -rn "\[M:" README.md QUICKSTART.md KNOWN-LIMITATIONS.md` prints nothing). Item 4 written last.
+- [ ] the README's works-today section names the release, claims only the rows the sitting verified, and names main as ahead. — the human, 2026-10-29 (`state/directives/2026-10-29-section-37-for-now-release-step-in-checklist-section-0-5b-runs-on.md`, line 10).
 - [ ] `git diff --stat <built-commit> main` names only documentation — the installer that will be attached was built from a commit whose code equals the tagged commit's (the custodian records the built commit in `RELEASE-0.1.md`'s last amendment).
 
 ## 1. The artifact (custodian, re-verified by the human)
