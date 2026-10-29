@@ -694,3 +694,16 @@ The filler slot. Beside slots 1 and 2 there is a third slot that is never idle w
 
 - **From when:** the rule applies from the human's message of 2026-10-24, queued at 14:01:54Z (the directive's filing note), before this section merged.
 - **The filler queue:** `state/FILLER-QUEUE.md`. The weekend exception the rule names is `state/directives/2026-10-24-weekend-exception-third-product-slot-placements-forms-ahead-250-click.md`; its numbered items are its lines 9 to 16.
+
+## §37. Wait loops, background shells and the closing checklist (the human, 2026-10-29; `state/directives/2026-10-29-wait-loops-sleep-and-time-out-background-shells-killed-at-closing.md`, line 6; appended after §36 so that no line a record cites above it moves)
+
+The rule is the human's, appended in their words. It is byte-copied by script from `state/directives/2026-10-29-wait-loops-sleep-and-time-out-background-shells-killed-at-closing.md:6 @ af6d75521d145874732f7d114f087eb0676881a0 sha256:d0b8b9f33769c62fa60624d3d26b69898370127ee213a99799b8485ee5b862f8`, a sub-line span: the line's last sentence, from its word Standing to its end.
+
+```text
+Standing, for every agent's briefs: a wait loop sleeps at least one second per turn and carries a hard timeout that ends it; a background shell left running when its piece closes is killed at the piece's closing record, and the closing checklist says so.
+```
+
+- **From when:** the human's message of 2026-10-29, received at 05:25:29Z (the directive's filing note).
+- **The closing checklist.** No file held one before this section. It is this list, run by the custodian before a piece's closing record is committed:
+  1. Every background shell or process started for the piece, by the custodian or by its agents (their transcripts' background calls, and the process list filtered to this project's paths), is checked, and any still running is killed by its own PID. The ledger entry for the closing record says so.
+- **In briefs:** every agent's brief carries the rule's first clause, and asks the agent to report the background shells it leaves: none, or each one killed by its own PID.
