@@ -1000,10 +1000,12 @@ struct OpenRecord {
 }
 
 /// The per-open latch the sink writes into before admission (§2b's "Open and admission"). Lock
-/// order: latch, then generations — the admission code below is the only place that ever holds
-/// both, latch outer; the sink's own `Admitted` arm always drops the latch guard before it ever
-/// reaches into `generations` (via `SessionInvalidator::end_generation`), so the two are never
-/// held by two different threads in opposite order.
+/// order: latch, then the catalog's read guard, then generations — the admission code below is
+/// the only place that ever holds the latch with either, latch outer; the catalog's read guard
+/// is taken and released inside `Catalog::get`, before the mint, and `Catalog` never reaches the
+/// latch. The sink's own `Admitted` arm always drops the latch guard before it ever reaches into
+/// `generations` (via `SessionInvalidator::end_generation`), so the latch and `generations` are
+/// never held by two different threads in opposite order.
 enum LatchState {
     PreAdmission { recorded: Option<WatchSignal> },
     Admitted,
@@ -1239,6 +1241,16 @@ impl SkpHost {
                                 .to_string(),
                         },
                     }));
+                }
+                // `kernel/OPEN-DATASET-REFUSES-A-NAME-CLOSED-DURING-ADMISSION-PREREGISTRATION.md`:
+                // a close that ran inside `resolves_unchanged` above removed this entry, so the
+                // open refuses before the mint. The guard is dropped first, then the watch (its
+                // threads call the sink, which takes the latch). Nothing is minted, inserted,
+                // emitted or removed.
+                if self.catalog.get(handle.as_str()).is_none() {
+                    drop(guard);
+                    drop(watch);
+                    return Err(SkpError::unknown_dataset(handle.as_str()));
                 }
                 // Step 3: mint, still under the latch, before it flips to `Admitted`.
                 let session = SessionRef::mint();
