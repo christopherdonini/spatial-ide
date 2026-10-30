@@ -1000,10 +1000,12 @@ struct OpenRecord {
 }
 
 /// The per-open latch the sink writes into before admission (§2b's "Open and admission"). Lock
-/// order: latch, then generations — the admission code below is the only place that ever holds
-/// both, latch outer; the sink's own `Admitted` arm always drops the latch guard before it ever
-/// reaches into `generations` (via `SessionInvalidator::end_generation`), so the two are never
-/// held by two different threads in opposite order.
+/// order: latch, then the catalog's read guard, then generations — the admission code below is
+/// the only place that ever holds the latch with either, latch outer; the catalog's read guard
+/// is taken and released inside `Catalog::get`, before the mint, and `Catalog` never reaches the
+/// latch. The sink's own `Admitted` arm always drops the latch guard before it ever reaches into
+/// `generations` (via `SessionInvalidator::end_generation`), so the latch and `generations` are
+/// never held by two different threads in opposite order.
 enum LatchState {
     PreAdmission { recorded: Option<WatchSignal> },
     Admitted,
@@ -1239,6 +1241,16 @@ impl SkpHost {
                                 .to_string(),
                         },
                     }));
+                }
+                // `kernel/OPEN-DATASET-REFUSES-A-NAME-CLOSED-DURING-ADMISSION-PREREGISTRATION.md`:
+                // a close that ran inside `resolves_unchanged` above removed this entry, so the
+                // open refuses before the mint. The guard is dropped first, then the watch (its
+                // threads call the sink, which takes the latch). Nothing is minted, inserted,
+                // emitted or removed.
+                if self.catalog.get(handle.as_str()).is_none() {
+                    drop(guard);
+                    drop(watch);
+                    return Err(SkpError::unknown_dataset(handle.as_str()));
                 }
                 // Step 3: mint, still under the latch, before it flips to `Admitted`.
                 let session = SessionRef::mint();
@@ -5032,8 +5044,10 @@ mod ticket_drop_under_lock_regression {
         );
     }
 
-    // `kernel/KERNEL-CLOSE-DURING-OPEN-ADMISSION-PREREGISTRATION.md`: a real close run from inside
-    // `open_dataset`'s admission. No sleep, spawned thread or timeout.
+    // `kernel/KERNEL-CLOSE-DURING-OPEN-ADMISSION-PREREGISTRATION.md` pinned the test that
+    // `kernel/OPEN-DATASET-REFUSES-A-NAME-CLOSED-DURING-ADMISSION-PREREGISTRATION.md` replaced with
+    // the test below: a real close run from inside `open_dataset`'s admission. No sleep, spawned
+    // thread or timeout.
 
     /// What [`CloseOnAdmissionWatch`] saw and did on its one call, inside the open's admission: the
     /// catalog's names, the new name's live generation, and the result of the close.
@@ -5091,24 +5105,37 @@ mod ticket_drop_under_lock_regression {
         assert_eq!(result.expect_err(w).code, "skp.unknown_dataset", "{w}");
     }
 
-    /// KCDO. A close run from inside `open_dataset`'s admission, after the catalog insert and
-    /// before the mint, leaves a generation for a name the catalog no longer holds.
+    /// KCDO. A close run from inside the Watching arm's admission, in the watch's
+    /// `resolves_unchanged` (after the catalog insert and before the check that precedes the mint),
+    /// makes the open refuse as `skp.unknown_dataset`: no generation is minted, no `OpenRecord` is
+    /// inserted and nothing is emitted.
     ///
-    /// **This pins today's behaviour: a known gap the product cannot reach.** The handle is 16
-    /// bytes of OS CSPRNG that only this open returns, and `Catalog::names`, which this test's
+    /// This test replaces, under `kernel/OPEN-DATASET-REFUSES-A-NAME-CLOSED-DURING-ADMISSION-PREREGISTRATION.md`,
+    /// the one `kernel/KERNEL-CLOSE-DURING-OPEN-ADMISSION-PREREGISTRATION.md` pinned. The handle is
+    /// 16 bytes of OS CSPRNG that only this open returns, and `Catalog::names`, which this test's
     /// watch calls, has no product caller, so nothing in the product can name the entry before the
-    /// open returns. M1 below is the fix shape. A fix flips this test, and it is then replaced
-    /// under the fix's own form. It claims no property: it states what the code does, not what it
-    /// should do.
+    /// open returns. Two windows stay open, both unreachable in the product: a close that removes
+    /// the name after the check, and the ChecksOnly arm. The node placed as filler entry 10,
+    /// `open-dataset-close-serialised-under-the-catalog-lock`, takes them.
     ///
-    /// RECORDED MUTATION (M1): in `open_dataset`'s Watching arm, immediately before
-    /// `SessionRef::mint()`, return `Err(SkpError::unknown_dataset(handle.as_str()))` when
-    /// `self.catalog.get(handle.as_str())` is `None`. Applied at
-    /// `bc7b0fbd479f97d05a60f4f48578c9870fed639e`, run and reverted: this test FAILED at its
-    /// expect on the open's result, `the open returns Ok although a close ran inside its
-    /// admission` (the open returned `skp.unknown_dataset`).
+    /// RECORDED MUTATION (the fix alone): at 5e38ffae942180fbd1b82d53046568113948bbf8, the product
+    /// change before this test existed, the test the earlier form pinned FAILED at its expect on
+    /// the open's result, `the open returns Ok although a close ran inside its admission` (the
+    /// open returned `skp.unknown_dataset`); it was the only kernel test that failed.
+    ///
+    /// RECORDED MUTATION (M1): delete the new check in the Watching arm. Applied at
+    /// 68773f09a83cc6de00968506ac6919ad138c7a5b, run and reverted: this test FAILED at its
+    /// `expect_err` on the open's result (the open returned Ok).
+    ///
+    /// RECORDED MUTATION (M2): move the check after `mint_for_open`. Applied at
+    /// 68773f09a83cc6de00968506ac6919ad138c7a5b, run and reverted: this test FAILED at its first
+    /// `no live generation` assertion, on `live_session`.
+    ///
+    /// RECORDED MUTATION (M3): on the refusal, insert the `OpenRecord` carrying the watch before
+    /// returning. Applied at 68773f09a83cc6de00968506ac6919ad138c7a5b, run and reverted: this test
+    /// FAILED at its `the open inserted no record` assertion.
     #[test]
-    fn a_close_during_open_admission_leaves_a_generation_for_a_name_the_catalog_no_longer_holds() {
+    fn a_close_during_open_admission_refuses_the_open_and_mints_no_generation() {
         let path = fixture("kcdo-close-during-admission");
         let (tx, rx) = super::session_end_channel();
         let seen = Arc::new(Mutex::new(None));
@@ -5132,32 +5159,42 @@ mod ticket_drop_under_lock_regression {
         assert_eq!(names.len(), 1, "the entry was in the catalog");
         assert_eq!(live, Err(NotLive::NotOpen), "no generation yet");
         assert_eq!(closed.expect("inner close").cancelled_streams, 0);
-        // 2. The open still returns Ok, for the name the close just forgot.
-        let open = opened.expect("the open returns Ok although a close ran inside its admission");
-        let name = open.dataset.as_str().to_string();
-        assert_eq!(name, names[0]);
-        // 3. The catalog no longer holds it.
+        // 2. The open refuses as `skp.unknown_dataset`, naming the handle the close removed.
+        let refusal = opened.expect_err("the open refuses a name a close removed inside it");
+        assert_eq!(refusal.code, "skp.unknown_dataset");
+        let name = names[0].clone();
+        assert_eq!(
+            refusal.fields.get("handle"),
+            Some(&name),
+            "the handle field"
+        );
+        // 3. The catalog does not hold it.
         assert!(host.catalog().get(&name).is_none(), "the entry is gone");
-        // 4. A live generation carries the reference the open returned; the host holds a record.
-        assert_eq!(live_session(&host, &name), Some(open.session.clone()));
-        assert!(holds_a_record(&host, &name), "the open inserted its record");
-        assert!(!dropped.load(Ordering::SeqCst), "the watch is still held");
+        // 4. No live generation and no record; the refused open dropped its watch.
+        assert!(live_session(&host, &name).is_none(), "no live generation");
+        let live = host.generations().live_generation(&name);
+        assert_eq!(live, Err(NotLive::NotOpen), "no live generation");
+        assert!(!holds_a_record(&host, &name), "the open inserted no record");
+        assert!(
+            dropped.load(Ordering::SeqCst),
+            "the refused open dropped the watch"
+        );
         // 5. describe and viewport_query refuse the handle, and no ticket was minted.
+        let handle: DatasetHandle = name.parse().expect("a minted handle");
         let request = DescribeRequest {
             skp: SKP_VERSION.to_string(),
-            dataset: open.dataset.clone(),
+            dataset: handle.clone(),
         };
         assert_unknown_dataset(host.describe(request), "describe");
-        let query = unrestricted_query(open.dataset.clone());
+        let query = unrestricted_query(handle.clone());
         assert_unknown_dataset(host.viewport_query(query), "viewport_query");
         let minted = host.tickets.tickets.lock().expect("map").len();
         assert_eq!(minted, 0, "the refused query minted no ticket");
         // 6. Nothing was emitted.
         assert!(matches!(rx.try_recv(), Err(mpsc::TryRecvError::Empty)));
-        // 7. A second close refuses, releases the watch, and leaves the generation live.
-        assert_unknown_dataset(host.close_dataset(close_req(open.dataset)), "second close");
-        assert!(!holds_a_record(&host, &name), "record removed");
-        assert!(dropped.load(Ordering::SeqCst), "watch dropped");
-        assert_eq!(live_session(&host, &name), Some(open.session));
+        // 7. A second close refuses, and there is still no record and no generation.
+        assert_unknown_dataset(host.close_dataset(close_req(handle)), "second close");
+        assert!(!holds_a_record(&host, &name), "still no record");
+        assert!(live_session(&host, &name).is_none(), "still no generation");
     }
 }

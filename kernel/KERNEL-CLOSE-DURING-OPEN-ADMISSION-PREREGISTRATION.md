@@ -148,3 +148,12 @@ The Out-of-scope line's guarantee clause and note 4's guarantee bullet 2 oversta
 5. **The record.** This is correction round 1 of 2.
 
 Nothing above is edited.
+
+## Amendment 3 — the pinned test is replaced; superseded pins to lines 9 and 133 (written after the replacing piece's fix commit and its first kernel test run were seen)
+
+The piece is `open-dataset-refuses-a-name-closed-during-admission`, under `kernel/OPEN-DATASET-REFUSES-A-NAME-CLOSED-DURING-ADMISSION-PREREGISTRATION.md` (its OPEN-3 settlement). Both pins are at the piece's base on main; the tree at that commit is authoritative for what the lines said, and these pins are historical.
+
+1. kernel/KERNEL-CLOSE-DURING-OPEN-ADMISSION-PREREGISTRATION.md:9 @ fa3d09f693466334b71c5d9258f243f5282918bc sha256:29de1baeebc7b5c7a2c768b4c45baf4a2422496769f8d31e222c166eec227172 — superseded as of this amendment; replaced by the test a_close_during_open_admission_refuses_the_open_and_mints_no_generation in kernel/src/skp.rs.
+2. kernel/KERNEL-CLOSE-DURING-OPEN-ADMISSION-PREREGISTRATION.md:133 @ fa3d09f693466334b71c5d9258f243f5282918bc sha256:b67a56142b0db61f8dac8efd6efa3e45c6ba3d707be91fb32896ab1dd3e0739b — superseded as of this amendment; replaced by the test a_close_during_open_admission_refuses_the_open_and_mints_no_generation in kernel/src/skp.rs.
+
+Nothing above is edited.
