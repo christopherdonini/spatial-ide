@@ -179,7 +179,7 @@ jobs:
       - name: governance/MOVED.tsv equals its regeneration from the moves-only commits it names
         run: node scripts/plan/moved-map.mjs --check
 
-      - name: preregistration forms sit under governance/forms/ or state/ (or are one of the two allowed docs/ paths)
+      - name: preregistration forms sit under governance/forms/ or state/ (or are docs/PREREGISTRATION-TEMPLATE.md or under docs/experiments/)
         run: node scripts/plan/forms-layout.mjs
 
   cfg-boundary:

@@ -31,13 +31,13 @@ The operator ran each of these on the installed application. The verdicts, with 
 Install and Local-first sections below, are in `governance/RELEASE-0.1.md`, Amendments 15, 16 and
 18, against the rows of Part M in `frontends/shell/MANUAL-WALKTHROUGH.md`; Amendment 17 records which
 rows were re-run on the final build and which stand from the candidate build. `main` is ahead of
-v0.1.0, and nothing on this page is claimed for it.
+v0.1.0, and no behaviour on this page is claimed for it.
 
 That is the whole claim. Every limit is declared by name in [`KNOWN-LIMITATIONS.md`](KNOWN-LIMITATIONS.md);
 please read it before forming an expectation — in particular, v0.1.0 carries two pinned coordinate
 reference systems, EPSG:2056 and EPSG:3857, and refuses any file whose declared CRS puts latitude
-first (EPSG:4326 — WGS 84 latitude/longitude, which most public GeoParquet declares — among them:
-by decision, not by accident); it reads polygons only, styles by literal only, and runs on Windows
+first (EPSG:4326, WGS 84 latitude/longitude, which most public GeoParquet declares; by decision, not
+by accident); it reads polygons only, styles by literal only, and runs on Windows
 only.
 
 ## What this repository is
@@ -52,12 +52,14 @@ only.
   architecture (`docs/02_Architecture.md`).
 - `governance/` — how the work is run: the plan (`PLAN.yaml`), the rulings ledger, the working
   rules, the audits, the release records and checklists. `governance/forms/` holds the
-  preregistration forms, one folder for each top-level folder they came from and `root/` for those
+  preregistration forms (the two under `docs/` and the drafts under `state/` excepted), one folder
+  for each top-level folder they came from and `root/` for those
   from the root; `governance/MOVED.tsv` lists every moved file's old path, new path and move commit.
 - `state/` — the working record: the human's directives, consults, gate reports and the state of
   the work in hand.
 - `site/` — the plan's status page, generated from `governance/PLAN.yaml`.
-- `scripts/` — the plan's checks, the session hooks, the evidence tools and the licence audit.
+- `scripts/` — the plan's checks, the session hooks, the evidence tools, the licence and notice
+  audits, and measurement helpers.
 - `tools/` — the test-data corpus manifest (`tools/corpus/`) and the session mods (`tools/mods/`).
 - `spikes/` — throwaway validation code whose written conclusions are the deliverable.
 - `LICENSES/` — the licence texts, and which applies where (`LICENSES/README.md`).

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 //
-// Tests for forms-layout.mjs -- governance piece F's layout check (the form's sections 2.5 and 4, T12 and T12b).
+// Tests for forms-layout.mjs -- governance piece F's layout check (the form's sections 2.5 and 4, T12 and T12b; T12c is Amendment 6's class 1 change).
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -45,4 +45,19 @@ test('forms-layout: state/ and the two exact docs/ paths are allowed', (t) => {
   const run = spawnSync(process.execPath, [script, '--root', dir], { encoding: 'utf8' });
   assert.equal(run.status, 0, run.stdout + run.stderr);
   assert.match(run.stdout, /^forms-layout PASS -- 4 preregistration file\(s\)/);
+});
+
+// RECORDED MUTATION on f6168c99 with this commit's change applied, applied alone and reverted: the docs/experiments/ allowance dropped -> fails by name: `forms-layout: any preregistration under docs/experiments/ is allowed, and nothing else under docs/`.
+test('forms-layout: any preregistration under docs/experiments/ is allowed, and nothing else under docs/', (t) => {
+  const one = layoutRepo(t, [...ALLOWED, 'docs/experiments/NEW-EXPERIMENT-PREREGISTRATION.md']);
+  const runOne = spawnSync(process.execPath, [script, '--root', one], { encoding: 'utf8' });
+  assert.equal(runOne.status, 0, runOne.stdout + runOne.stderr);
+  assert.match(runOne.stdout, /^forms-layout PASS -- 5 preregistration file\(s\)/);
+
+  const two = layoutRepo(t, [...ALLOWED, 'docs/OTHER-PREREGISTRATION.md', 'docs/experiments-old/X-PREREGISTRATION.md']);
+  const runTwo = spawnSync(process.execPath, [script, '--root', two], { encoding: 'utf8' });
+  assert.equal(runTwo.status, 1, runTwo.stdout + runTwo.stderr);
+  assert.match(runTwo.stderr, /docs\/OTHER-PREREGISTRATION\.md: a preregistration outside governance\/forms\/ and state\//);
+  assert.match(runTwo.stderr, /docs\/experiments-old\/X-PREREGISTRATION\.md: a preregistration outside governance\/forms\/ and state\//);
+  assert.equal((runTwo.stderr.match(/^ {2}- /gm) ?? []).length, 2, runTwo.stderr);
 });
