@@ -28,6 +28,10 @@
 // at that commit instead: the commit must exist, a path must be a file there, and the line must be
 // within it. The paths tried, in order, are the files the tree resolves the path to (the exact set if
 // any, else the suffix set), then the path as written; the cite passes at the first holding the line.
+// MOVE MAP (governance piece F's form, section 2.3; movedMap.mjs): where governance/MOVED.tsv exists, an UNPINNED
+// cite whose path names a moved file resolves to the new path, read at HEAD, before the exact and suffix tiers, in
+// the tier the path as written has; a moved citing file reads its relative cites from its pre-move folder; and a
+// mapped cite on a line written after the move (git blame) fails by name. A pinned cite takes none of this.
 //
 // DEFAULT FILE SET (override with `--files <glob>`):
 //   - every tracked `*.md`               — the WHOLE file is scanned (prose citations count).
@@ -94,6 +98,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { loadMovedMap, resolveMoved, originPath, currentPath, postMoveChecker } from './movedMap.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 export const REPO_ROOT = path.resolve(here, '..', '..');
@@ -110,7 +115,9 @@ export const CODE_EXTS = new Set(['rs', 'ts', 'tsx', 'js', 'jsx', 'mjs', 'cjs'])
 const ARCHIVED_PREFIXES = ['state/drafts/', 'state/consults/gates/'];
 
 // The two rotating ledgers: an unpinned line cite into either that does not resolve is advisory, from any citing folder.
-const ROTATING_LEDGERS = new Set(['state/CUT-STATE.md', 'DECISIONS-PENDING.md']);
+const ROTATING_LEDGERS = new Set(['state/CUT-STATE.md', 'DECISIONS-PENDING.md', 'governance/DECISIONS-PENDING.md']);
+// ROTATING_LEDGERS compares the path after the move map: a ledger cited by its old or its new path is the same ledger.
+const isRotatingLedger = (map, written) => [...ROTATING_LEDGERS].some((l) => currentPath(map, l) === currentPath(map, written));
 
 // path:line[-line]. The path token starts with an identifier char (never `/` or `:`) so a match can
 // never begin inside a `://` scheme; it may contain `/ . _ + -` thereafter. The `:` is immediately
@@ -227,6 +234,19 @@ export function resolveRef(pathRaw, citingRel, index) {
   return { exact: [...exact], all: [...all] };
 }
 
+/**
+ * resolveRef through the move map (movedMap.mjs; the form's section 2.3): a path that names a moved file
+ * resolves to its new path, before the exact and suffix tiers; any other path resolves as resolveRef does,
+ * from the folder the citing file had before it moved. With an empty map this is resolveRef. The result
+ * carries `mapped` (the movedMap hit) when the map resolved the path.
+ */
+export function resolveRefMapped(pathRaw, citingRel, index, map) {
+  if (!map || map.rows.length === 0) return resolveRef(pathRaw, citingRel, index);
+  const hit = resolveMoved(map, pathRaw, citingRel);
+  if (hit && index.set.has(hit.path)) return { exact: hit.exact ? [hit.path] : [], all: [hit.path], mapped: hit };
+  return resolveRef(pathRaw, originPath(map, citingRel), index);
+}
+
 export function topDirsOf(index) {
   const dirs = new Set();
   for (const f of index.files) {
@@ -269,8 +289,13 @@ function lineCount(repoRoot, relPath) {
  *   'oob-exact'  — an EXACT (confident) file resolves but the cited line exceeds it (a real defect).
  *   'oob-suffix' — only a best-effort basename guess resolves and its line is out of range (advice).
  */
-export function checkCitation(cite, index, repoRoot) {
-  const { exact, all } = resolveRef(cite.pathRaw, cite.relPath, index);
+export function checkCitation(cite, index, repoRoot, map) {
+  const { exact, all, mapped } = resolveRefMapped(cite.pathRaw, cite.relPath, index, map);
+  const res = checkResolved(cite, exact, all, repoRoot);
+  return mapped ? { ...res, mapped } : res;
+}
+
+function checkResolved(cite, exact, all, repoRoot) {
   if (all.length === 0) return { status: 'no-match' };
   const maxL = Math.max(cite.startL, cite.endL);
   const zero = cite.startL === 0 || cite.endL === 0;
@@ -374,6 +399,8 @@ export function runVerifyCites({ repoRoot, filesGlob } = {}) {
   const advisory = [];
   const listPath = path.join(root, LEGACY_LIST);
   const legacy = fs.existsSync(listPath) ? legacyKeys(fs.readFileSync(listPath, 'utf8')) : new Set();
+  const map = loadMovedMap(root);
+  const post = map.rows.length ? postMoveChecker(root) : null;
   for (const relPath of files) {
     const ext = extOf(relPath);
     const text = fs.readFileSync(path.join(root, relPath), 'utf8');
@@ -391,11 +418,17 @@ export function runVerifyCites({ repoRoot, filesGlob } = {}) {
       const cls = classifyPath(cite.pathRaw, topDirs);
       if (cls === 'doc-number') continue;
       const at = { relPath, citeLine: cite.citeLine, target: cite.raw };
-      const res = checkCitation(cite, index, root);
+      // A pinned cite takes the path it always took: no map, no post-move check (the form's section 2.3).
+      const res = checkCitation(cite, index, root, cite.pin ? undefined : map);
+      if (res.mapped && post.writtenAfter(res.mapped.row, relPath, cite.citeLine)) {
+        const row = res.mapped.row;
+        (res.mapped.exact ? sink : advisory).push({ ...at, reason: `old path "${row.old}" cited after the move at ${row.commit.slice(0, 12)}; cite "${res.mapped.path}"` });
+        continue;
+      }
       if (res.status === 'ok') continue;
       // OPEN-1 (B): the ledgers rotate, so an unpinned line cite into either is advisory wherever it sits;
       // a pinned one is not caught here and stays gated at its pin.
-      if (!cite.pin && ROTATING_LEDGERS.has(cite.pathRaw.replace(/^\.\//, ''))) {
+      if (!cite.pin && isRotatingLedger(map, cite.pathRaw.replace(/^\.\//, ''))) {
         advisory.push({ ...at, reason: res.reason ?? `no tracked file matches "${cite.pathRaw}"` });
         continue;
       }

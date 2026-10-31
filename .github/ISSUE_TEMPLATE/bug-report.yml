@@ -7,7 +7,7 @@ body:
     attributes:
       value: |
         Thanks for filing this. Reports here feed the admission corpus
-        (`engine/ADMISSION-PREREGISTRATION.md` §3, "The compatibility-corpus manifest") — the more
+        (`governance/forms/engine/ADMISSION-PREREGISTRATION.md` §3, "The compatibility-corpus manifest") — the more
         of the fields below you can fill in, the more directly a report becomes a new corpus row
         rather than needing a follow-up question first.
 

@@ -82,36 +82,38 @@ name: Governance CI — plan, queue, site
 on:
   push:
     paths:
-      - "PLAN.yaml"
+      - "governance/PLAN.yaml"
+      - "governance/MOVED.tsv"
       - "scripts/plan/**"
       - "scripts/hooks/**"
       - "scripts/evidence/**"
       - "tools/mods/**"
       - "site/**"
-      - "CUSTODIAN-QUEUE.md"
-      - "CUSTODIAN-QUEUE.json"
+      - "governance/CUSTODIAN-QUEUE.md"
+      - "governance/CUSTODIAN-QUEUE.json"
       - ".claude/settings.json"
       - ".github/workflows/governance-ci.yml"
       - "**/*PREREGISTRATION*.md"
       - "docs/adr/**"
-      - "AI_DEVELOPMENT.md"
+      - "governance/AI_DEVELOPMENT.md"
       - ".claude/agents/*.md"
       - "**/*.rs"
   pull_request:
     paths:
-      - "PLAN.yaml"
+      - "governance/PLAN.yaml"
+      - "governance/MOVED.tsv"
       - "scripts/plan/**"
       - "scripts/hooks/**"
       - "scripts/evidence/**"
       - "tools/mods/**"
       - "site/**"
-      - "CUSTODIAN-QUEUE.md"
-      - "CUSTODIAN-QUEUE.json"
+      - "governance/CUSTODIAN-QUEUE.md"
+      - "governance/CUSTODIAN-QUEUE.json"
       - ".claude/settings.json"
       - ".github/workflows/governance-ci.yml"
       - "**/*PREREGISTRATION*.md"
       - "docs/adr/**"
-      - "AI_DEVELOPMENT.md"
+      - "governance/AI_DEVELOPMENT.md"
       - ".claude/agents/*.md"
       - "**/*.rs"
   workflow_dispatch:
@@ -173,6 +175,12 @@ jobs:
 
       - name: site/ drift check
         run: node scripts/plan/site.mjs --check
+
+      - name: governance/MOVED.tsv equals its regeneration from the moves-only commits it names
+        run: node scripts/plan/moved-map.mjs --check
+
+      - name: preregistration forms sit under governance/forms/ or state/ (or are docs/PREREGISTRATION-TEMPLATE.md or under docs/experiments/)
+        run: node scripts/plan/forms-layout.mjs
 
   cfg-boundary:
     name: cfg boundary (PORTABILITY R2)

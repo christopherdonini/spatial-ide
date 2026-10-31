@@ -21,7 +21,7 @@
 
 .EXAMPLE
   # After every Restart, before opening anything else:
-  powershell -NoProfile -ExecutionPolicy Bypass -File run-cold-open.ps1
+  powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-cold-open.ps1
 #>
 
 [CmdletBinding()]
@@ -33,7 +33,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-Set-Location $PSScriptRoot
+Set-Location (Join-Path $PSScriptRoot '..')
 
 $outDir   = 'target\slice-evidence\scale-pass\cold-open'
 $fixture  = 'target\slice-evidence\scale-pass\parcels-5gb.parquet'

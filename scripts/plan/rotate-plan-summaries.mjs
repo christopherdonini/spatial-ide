@@ -78,7 +78,7 @@ export function buildMove({ text, nodes, candidates, name, commit }) {
   });
   const next = [...lines];
   for (const m of moved) next[m.idx] = m.newLine;
-  const head = ["# Done nodes' summaries moved out of PLAN.yaml by scripts/plan/rotate-plan-summaries.mjs (AUTONOMY.md §35). Never edited.", `source: {path: PLAN.yaml, commit: "${commit}"}`, 'summaries:'];
+  const head = ["# Done nodes' summaries moved out of governance/PLAN.yaml by scripts/plan/rotate-plan-summaries.mjs (governance/AUTONOMY.md §35). Never edited.", `source: {path: governance/PLAN.yaml, commit: "${commit}"}`, 'summaries:'];
   const archive = [...head, ...moved.flatMap((m) => [`  - id: ${m.id}`, m.oldLine])].join('\n') + '\n';
   const movedBytes = moved.reduce((sum, m) => sum + Buffer.byteLength(m.oldLine, 'utf8') - Buffer.byteLength(m.newLine, 'utf8'), 0);
   return { archive, text: next.join('\n'), moved, movedBytes };
@@ -177,11 +177,11 @@ function main(argv) {
   if (git(['status', '--porcelain']).split('\n').some((l) => l.trim() !== '' && !l.startsWith('??') && !l.startsWith('!!'))) throw new Refusal('git status --porcelain shows a tracked change');
   if (git(['rev-parse', 'HEAD']) !== git(['rev-parse', '@{u}'])) throw new Refusal('HEAD is not equal to its upstream (@{u})');
   const P = git(['rev-parse', 'origin/main']);
-  if (git(['rev-parse', 'HEAD:PLAN.yaml']) !== git(['rev-parse', 'origin/main:PLAN.yaml'])) throw new Refusal('PLAN.yaml at HEAD is not the blob on origin/main');
-  const text = raw(['show', 'HEAD:PLAN.yaml']);
-  if (text.includes('\r')) throw new Refusal('PLAN.yaml at HEAD holds a carriage return');
-  const plan = loadPlan(path.join(root, 'PLAN.yaml'));
-  if (plan._meta.text !== text) throw new Refusal('the PLAN.yaml on disk is not the one at HEAD');
+  if (git(['rev-parse', 'HEAD:governance/PLAN.yaml']) !== git(['rev-parse', 'origin/main:governance/PLAN.yaml'])) throw new Refusal('governance/PLAN.yaml at HEAD is not the blob on origin/main');
+  const text = raw(['show', 'HEAD:governance/PLAN.yaml']);
+  if (text.includes('\r')) throw new Refusal('governance/PLAN.yaml at HEAD holds a carriage return');
+  const plan = loadPlan(path.join(root, 'governance/PLAN.yaml'));
+  if (plan._meta.text !== text) throw new Refusal('the governance/PLAN.yaml on disk is not the one at HEAD');
   const holds = (name, id) => {
     try { return (parseYamlSubset(raw(['show', `HEAD:${ARCHIVE_DIR}/${name}`])).summaries ?? []).some((s) => s?.id === id); } catch { return false; }
   };
@@ -212,7 +212,7 @@ function main(argv) {
   if (problems.length) throw new Refusal(`verifyMove failed: ${problems.join('; ')}`);
 
   if (args.dryRun) {
-    const ctx = { nodes: plan.nodes, pending: raw(['show', 'HEAD:DECISIONS-PENDING.md']), limitations: raw(['show', 'HEAD:KNOWN-LIMITATIONS.md']) };
+    const ctx = { nodes: plan.nodes, pending: raw(['show', 'HEAD:governance/DECISIONS-PENDING.md']), limitations: raw(['show', 'HEAD:KNOWN-LIMITATIONS.md']) };
     console.log(`rotate-plan-summaries: dry run — due: ${due.reason}. The archive would be ${ARCHIVE_DIR}/${archiveName}; P is ${P}.`);
     console.log(`candidates (${candidates.length}); pointers found (${pointers.length}): ${pointers.map((n) => n.id).join(', ') || 'none'}; kept by --keep (${kept.length}): ${kept.map((n) => n.id).join(', ') || 'none'}`);
     console.log(`moved bytes: ${move.movedBytes}; the new PLAN.yaml: blob ${git(['hash-object', '--stdin'], move.text)}`);
@@ -224,7 +224,7 @@ function main(argv) {
     return 0;
   }
 
-  const files = { [`${ARCHIVE_DIR}/${archiveName}`]: move.archive, 'PLAN.yaml': move.text };
+  const files = { [`${ARCHIVE_DIR}/${archiveName}`]: move.archive, 'governance/PLAN.yaml': move.text };
   try { // the next statement is the first write: every failure from here on is a STOP, never the refusal that says nothing was written
     fs.mkdirSync(path.join(root, ARCHIVE_DIR), { recursive: true });
     for (const [rel, body] of Object.entries(files)) fs.writeFileSync(path.join(root, rel), body, 'utf8');
@@ -233,8 +233,8 @@ function main(argv) {
       if (git(['rev-parse', `:${rel}`]) !== git(['hash-object', '--stdin'], body)) throw new Stop(`the staged blob of ${rel} differs from the in-memory text`);
     }
     console.log(`rotate-plan-summaries: staged:\n${git(['diff', '--cached', '--name-status', '--no-renames'])}`);
-    console.log(`blobs: ${archiveName} ${git(['rev-parse', `:${ARCHIVE_DIR}/${archiveName}`])}, PLAN.yaml ${git(['rev-parse', ':PLAN.yaml'])}; P is ${P}; moved ${move.moved.length} summaries, ${move.movedBytes} bytes.`);
-    console.log(`Next: node scripts/plan/queue.mjs and node scripts/plan/site.mjs (no site/data/build-health.json present), git add CUSTODIAN-QUEUE.md CUSTODIAN-QUEUE.json site/index.html site/data/plan.json and the sheet; run verify-cites, verify-quotes, verify-test-claims and verify --offline on this staged tree and on HEAD and compare; when equal, git commit -s -m "chore: move done nodes' summaries from PLAN.yaml to ${ARCHIVE_DIR}/${archiveName}" and push; when they differ, restore the index and every path from HEAD, commit nothing, and tell the human.`);
+    console.log(`blobs: ${archiveName} ${git(['rev-parse', `:${ARCHIVE_DIR}/${archiveName}`])}, governance/PLAN.yaml ${git(['rev-parse', ':governance/PLAN.yaml'])}; P is ${P}; moved ${move.moved.length} summaries, ${move.movedBytes} bytes.`);
+    console.log(`Next: node scripts/plan/queue.mjs and node scripts/plan/site.mjs (no site/data/build-health.json present), git add governance/CUSTODIAN-QUEUE.md governance/CUSTODIAN-QUEUE.json site/index.html site/data/plan.json and the sheet; run verify-cites, verify-quotes, verify-test-claims and verify --offline on this staged tree and on HEAD and compare; when equal, git commit -s -m "chore: move done nodes' summaries from governance/PLAN.yaml to ${ARCHIVE_DIR}/${archiveName}" and push; when they differ, restore the index and every path from HEAD, commit nothing, and tell the human.`);
   } catch (e) {
     throw e instanceof Stop ? e : new Stop(e.message);
   }

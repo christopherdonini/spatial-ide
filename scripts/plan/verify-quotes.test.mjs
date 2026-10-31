@@ -13,6 +13,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { normalizeText, extractQuotePassages, extractHashRefs, runVerifyQuotes, listCiteContents, REPO_ROOT } from './verify-quotes.mjs';
+import { movedRepo, commitFiles, removeAfter, X_OLD, X_NEW } from './movedFixture.mjs';
 
 function sha256(s) {
   return crypto.createHash('sha256').update(Buffer.from(s, 'utf8')).digest('hex');
@@ -977,15 +978,15 @@ const rsDoc = `Narrowed by \`${'DECISIONS-PENDING.md' + ':22'}\`, the human's an
 // RECORDED MUTATION (MT4) at c3e70acb4914, applied alone and reverted: the archives left out of the hash-scan list -> fails by name, and only this one: `verify-quotes: an invalid hash reference in an archived DECISIONS-PENDING file still fails by name`.
 test('verify-quotes: an invalid hash reference in an archived DECISIONS-PENDING file still fails by name', () => {
   const ref = `A trusted figure: \`T.md:1-2\` sha256:${sha256('not the cited content, on purpose, for this test')}\n`;
-  const dir = gitTree({ 'T.md': 'Line one of the target file.\nLine two of the target file.\n', 'DECISIONS-PENDING.md': `# Decisions pending the human\n\n${ref}`, [RS_ARCHIVE]: `# an archive é →\n\n${ref}` });
+  const dir = gitTree({ 'T.md': 'Line one of the target file.\nLine two of the target file.\n', 'governance/DECISIONS-PENDING.md': `# Decisions pending the human\n\n${ref}`, [RS_ARCHIVE]: `# an archive é →\n\n${ref}` });
   const { hashFindings } = runVerifyQuotes({ repoRoot: dir });
-  assert.deepEqual(hashFindings.map((f) => f.relPath).sort(), ['DECISIONS-PENDING.md', RS_ARCHIVE]);
+  assert.deepEqual(hashFindings.map((f) => f.relPath).sort(), ['governance/DECISIONS-PENDING.md', RS_ARCHIVE]);
   for (const f of hashFindings) assert.match(f.reason, /sha256 mismatch/);
 });
 
 // RECORDED MUTATION (MQ1) at c3e70acb4914, applied alone and reverted: the named-file search reads the live file alone -> fails by name, and only this one: `verify-quotes: a passage introduced by a DECISIONS-PENDING.md cite and found only in an archived file passes`.
 test('verify-quotes: a passage introduced by a DECISIONS-PENDING.md cite and found only in an archived file passes', () => {
-  const dir = gitTree({ 'A-PREREGISTRATION.md': rsDoc, 'DECISIONS-PENDING.md': '# Decisions pending the human\n', [RS_ARCHIVE]: `# an archive é →\n\n${RS_QUOTE}\n` });
+  const dir = gitTree({ 'A-PREREGISTRATION.md': rsDoc, 'governance/DECISIONS-PENDING.md': '# Decisions pending the human\n', [RS_ARCHIVE]: `# an archive é →\n\n${RS_QUOTE}\n` });
   const { findings, checked } = runVerifyQuotes({ repoRoot: dir, files: [path.join(dir, 'A-PREREGISTRATION.md')] });
   assert.equal(checked, 1);
   assert.equal(findings.length, 0, JSON.stringify(findings));
@@ -993,7 +994,7 @@ test('verify-quotes: a passage introduced by a DECISIONS-PENDING.md cite and fou
 
 // RECORDED MUTATION (MQ2) at c3e70acb4914, applied alone and reverted: an archive's presence counted as found -> fails by name, and only this one: `verify-quotes: a passage introduced by a DECISIONS-PENDING.md cite and found in no file of the ruling set fails by name`.
 test('verify-quotes: a passage introduced by a DECISIONS-PENDING.md cite and found in no file of the ruling set fails by name', () => {
-  const dir = gitTree({ 'A-PREREGISTRATION.md': rsDoc, 'B.md': `Elsewhere: ${RS_QUOTE}.\n`, 'DECISIONS-PENDING.md': '# Decisions pending the human\n', [RS_ARCHIVE]: '# an archive é →\n\nanother ruling entirely\n' });
+  const dir = gitTree({ 'A-PREREGISTRATION.md': rsDoc, 'B.md': `Elsewhere: ${RS_QUOTE}.\n`, 'governance/DECISIONS-PENDING.md': '# Decisions pending the human\n', [RS_ARCHIVE]: '# an archive é →\n\nanother ruling entirely\n' });
   const { findings, checked } = runVerifyQuotes({ repoRoot: dir, files: [path.join(dir, 'A-PREREGISTRATION.md')] });
   assert.equal(checked, 1);
   assert.equal(findings.length, 1, JSON.stringify(findings));
@@ -1025,20 +1026,20 @@ const riQuestionFile = (round) => execFileSync('git', ['show', `${RI_REV}:state/
 const RI_TOP = '# Decisions pending the human\n\n';
 const riLive = (...blocks) => `${RI_TOP}${blocks.map((b) => `${b.header}\n\n${b.lines.slice(0, 1).join('\n')}`).join('\n\n')}\n`;
 function riRun(files, text) {
-  const dir = gitTree({ 'A-PREREGISTRATION.md': text, 'DECISIONS-PENDING.md': RI_TOP, ...files });
+  const dir = gitTree({ 'A-PREREGISTRATION.md': text, 'governance/DECISIONS-PENDING.md': RI_TOP, ...files });
   return runVerifyQuotes({ repoRoot: dir, files: [path.join(dir, 'A-PREREGISTRATION.md')] });
 }
 
 // MQ1: the item compared as M+1.
 test("verify-quotes: a round and item cite resolves against its RULED block's item line", () => {
-  const { citeFindings, citesChecked } = riRun({ 'DECISIONS-PENDING.md': riLive(riSingle) }, 'The ruling is question round 12, item 1.\n');
+  const { citeFindings, citesChecked } = riRun({ 'governance/DECISIONS-PENDING.md': riLive(riSingle) }, 'The ruling is question round 12, item 1.\n');
   assert.equal(citesChecked, 1);
   assert.equal(citeFindings.length, 0, JSON.stringify(citeFindings));
 });
 
 // MQ2: a header match resolves without an item check.
 test('verify-quotes: a cite naming an item its block lacks fails by name', () => {
-  const { citeFindings } = riRun({ 'DECISIONS-PENDING.md': riLive(riSingle) }, 'The ruling is round 12, item 5.\n');
+  const { citeFindings } = riRun({ 'governance/DECISIONS-PENDING.md': riLive(riSingle) }, 'The ruling is round 12, item 5.\n');
   assert.equal(citeFindings.length, 1, JSON.stringify(citeFindings));
   assert.equal(citeFindings[0].cite, 'round 12, item 5');
   assert.equal(citeFindings[0].line, 1);
@@ -1047,21 +1048,21 @@ test('verify-quotes: a cite naming an item its block lacks fails by name', () =>
 
 // MQ3: no header found returns ok.
 test('verify-quotes: a cite of a round with no RULED block fails by name', () => {
-  const { citeFindings } = riRun({ 'DECISIONS-PENDING.md': riLive(riSingle) }, 'The ruling is round 99, item 1.\n');
+  const { citeFindings } = riRun({ 'governance/DECISIONS-PENDING.md': riLive(riSingle) }, 'The ruling is round 99, item 1.\n');
   assert.equal(citeFindings.length, 1, JSON.stringify(citeFindings));
   assert.match(citeFindings[0].reason, /no RULED block for question round 99 in any file of the ruling set/);
 });
 
 // MQ4: the item pattern takes one asterisk only.
 test('verify-quotes: a bold item line resolves', () => {
-  const { citeFindings, citesChecked } = riRun({ 'DECISIONS-PENDING.md': riLive(riBold) }, 'The ruling is question round 46, item 1.\n');
+  const { citeFindings, citesChecked } = riRun({ 'governance/DECISIONS-PENDING.md': riLive(riBold) }, 'The ruling is question round 46, item 1.\n');
   assert.equal(citesChecked, 1);
   assert.equal(citeFindings.length, 0, JSON.stringify(citeFindings));
 });
 
 // MQ5: the plural header reads its first round only.
 test("verify-quotes: a plural round header with no item lines resolves its item in the round's question file", () => {
-  const files = { 'DECISIONS-PENDING.md': riLive(riPlural), 'state/questions/round-67.md': riQuestionFile(67) };
+  const files = { 'governance/DECISIONS-PENDING.md': riLive(riPlural), 'state/questions/round-67.md': riQuestionFile(67) };
   const { citeFindings, citesChecked } = riRun(files, 'The ruling is round 67, item 2.\n');
   assert.equal(citesChecked, 1);
   assert.equal(citeFindings.length, 0, JSON.stringify(citeFindings));
@@ -1069,7 +1070,7 @@ test("verify-quotes: a plural round header with no item lines resolves its item 
 
 // MQ6: an itemless block resolves any item.
 test("verify-quotes: an itemless block's cite fails by name when the question file lacks the item", () => {
-  const files = { 'DECISIONS-PENDING.md': riLive(riPlural), 'state/questions/round-66.md': riQuestionFile(66) };
+  const files = { 'governance/DECISIONS-PENDING.md': riLive(riPlural), 'state/questions/round-66.md': riQuestionFile(66) };
   const { citeFindings } = riRun(files, 'The ruling is round 66, item 9.\nAnd round 66, item 2.\n');
   assert.equal(citeFindings.length, 1, JSON.stringify(citeFindings));
   assert.equal(citeFindings[0].line, 1);
@@ -1078,7 +1079,7 @@ test("verify-quotes: an itemless block's cite fails by name when the question fi
 
 // MQ7: the question file consulted for every block.
 test('verify-quotes: a block with item lines is authoritative over the question file', () => {
-  const files = { 'DECISIONS-PENDING.md': riLive(riSingle), 'state/questions/round-12.md': 'Question round 12\n\n---\n\n7. An item the block does not carry\n' };
+  const files = { 'governance/DECISIONS-PENDING.md': riLive(riSingle), 'state/questions/round-12.md': 'Question round 12\n\n---\n\n7. An item the block does not carry\n' };
   const { citeFindings } = riRun(files, 'The ruling is round 12, item 7.\n');
   assert.equal(citeFindings.length, 1, JSON.stringify(citeFindings));
   assert.match(citeFindings[0].reason, /RULED block has no item 7/);
@@ -1086,7 +1087,7 @@ test('verify-quotes: a block with item lines is authoritative over the question 
 
 // MQ8: the live file read alone.
 test('verify-quotes: a cite resolves when its block is only in an archived ruling file', () => {
-  const files = { 'DECISIONS-PENDING.md': RI_TOP, [RS_ARCHIVE]: riLive(riSingle) };
+  const files = { 'governance/DECISIONS-PENDING.md': RI_TOP, [RS_ARCHIVE]: riLive(riSingle) };
   const { citeFindings, citesChecked } = riRun(files, 'The ruling is round 12, item 1.\n');
   assert.equal(citesChecked, 1);
   assert.equal(citeFindings.length, 0, JSON.stringify(citeFindings));
@@ -1094,7 +1095,7 @@ test('verify-quotes: a cite resolves when its block is only in an archived rulin
 
 // MQ9: the set's texts joined before resolving.
 test('verify-quotes: a header in one ruling file and the item in another does not resolve', () => {
-  const files = { 'DECISIONS-PENDING.md': `${RI_TOP}${riSingle.header}\n`, [RS_ARCHIVE]: `${riSingle.lines[0]}\n\n${riBold.header}\n\n${riBold.lines[0]}\n` };
+  const files = { 'governance/DECISIONS-PENDING.md': `${RI_TOP}${riSingle.header}\n`, [RS_ARCHIVE]: `${riSingle.lines[0]}\n\n${riBold.header}\n\n${riBold.lines[0]}\n` };
   const { citeFindings } = riRun(files, 'The ruling is round 12, item 1.\n');
   assert.equal(citeFindings.length, 1, JSON.stringify(citeFindings));
   assert.match(citeFindings[0].reason, /has no item lines, and state\/questions\/round-12\.md is not tracked/);
@@ -1111,7 +1112,7 @@ test('verify-quotes: a cite inside a backtick span or a quoted span is not read'
 // MQ11: a list reads its first number only.
 test('verify-quotes: list, range and no-comma forms resolve each named item', () => {
   const text = ['See question round 12 item 1.', 'See round 12, items 1 and 2.', 'See round 12, items 1 to 2.', 'See round 12, items 1 and 3.', 'A directive: round 12, item 2e.', ''].join('\n');
-  const { citeFindings, citesChecked } = riRun({ 'DECISIONS-PENDING.md': `${riSingle.header}\n\n${riSingle.lines.join('\n')}\n` }, text);
+  const { citeFindings, citesChecked } = riRun({ 'governance/DECISIONS-PENDING.md': `${riSingle.header}\n\n${riSingle.lines.join('\n')}\n` }, text);
   assert.equal(citesChecked, 7);
   assert.equal(citeFindings.length, 1, JSON.stringify(citeFindings));
   assert.equal(citeFindings[0].line, 4);
@@ -1151,4 +1152,52 @@ test("verify-quotes: a real record line with an item past its round's last item 
   assert.equal(citeFindings.length, 1, JSON.stringify(citeFindings));
   assert.equal(citeFindings[0].cite, 'round 19, item 9');
   assert.match(citeFindings[0].reason, /RULED block has no item 9/);
+});
+
+// --- governance piece F: the move map (the form's sections 2.3 and 4; tests T8 and T9) -----------------------
+
+// RECORDED MUTATION at e91bcf30807a (phase 1's commit, on the branch wip/governance-f-scripts; this branch carries the test from it by patch and does not contain the commit), applied alone and reverted: the new path read at every rev (today's order: the current tree first) -> fails by name: `verify-quotes: a hash reference to an old path at a pre-move rev reads the old path at that rev`.
+test('verify-quotes: a hash reference to an old path at a pre-move rev reads the old path at that rev', (t) => {
+  const { dir, before, move } = movedRepo();
+  removeAfter(t, dir);
+  const hash = sha256('one\ntwo\n');
+  commitFiles(
+    dir,
+    { 'rec.md': `At the pin: \`a/X-PREREGISTRATION.md:1-2\` @ ${before} sha256:${hash}\n\nAfter the move: \`a/X-PREREGISTRATION.md:1-2\` @ ${move} sha256:${hash}\n` },
+    'a record written after the move',
+    '2026-03-01T00:00:00Z',
+  );
+  const { hashFindings } = runVerifyQuotes({ repoRoot: dir, files: [path.join(dir, 'rec.md')] });
+  assert.deepEqual(hashFindings, []);
+});
+
+// RECORDED MUTATION at e91bcf30807a (phase 1's commit, on the branch wip/governance-f-scripts; this branch carries the test from it by patch and does not contain the commit), applied alone and reverted: the baseline `file` compared raw in matchBaseline -> fails by name: `verify-quotes: a baseline entry keyed by an old path waives the same finding at the new path`.
+test('verify-quotes: a baseline entry keyed by an old path waives the same finding at the new path', (t) => {
+  const { dir } = movedRepo({}, 'Verbatim: "a lonely wolf howls beneath the pale full moon under starlit skies tonight" end.\n');
+  removeAfter(t, dir);
+  commitFiles(
+    dir,
+    {
+      'scripts/plan/verify-quotes.baseline.json': JSON.stringify({
+        $doc: 'entries leave when corrected; none is added except by a ruling; a new mismatch always fails.',
+        entries: [
+          {
+            file: X_OLD,
+            line: 1,
+            words: 'a lonely wolf howls beneath the pale full moon under starlit skies',
+            reason: 'known offender',
+            disposition: 'unfindable-by-construction',
+            ruling: 'round 11, 2026-09-17',
+          },
+        ],
+      }),
+    },
+    'a baseline written before the move',
+    '2026-03-01T00:00:00Z',
+  );
+  const { findings, baselined, unmatchedBaseline } = runVerifyQuotes({ repoRoot: dir, files: [path.join(dir, X_NEW)] });
+  assert.deepEqual(findings, []);
+  assert.equal(baselined.length, 1, JSON.stringify(baselined));
+  assert.equal(baselined[0].relPath, X_NEW);
+  assert.deepEqual(unmatchedBaseline, []);
 });
