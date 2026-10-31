@@ -25,3 +25,9 @@ Ten fillers in the week, each with its PR and merge commit as the queue records 
   - The queue recorded slot 1's first wait as one open span (147.9 h to the window's end). It was not closed when O1 entered the slot; the queue's correction line is filed with this report.
 - **Slot 2:** 154.0 h, one wait from 2026-10-24T14:01:54Z, open: 1c step 1 waits on O0's file, the human's.
 - Both slots wait on the same file. The human's direction of 2026-10-31 (line 12) places it in the human's OneDrive; if it is not on this machine by Monday 2026-11-02, O0 waits for the human's return.
+
+## O1's slot-1 hours, appended 2026-10-31
+
+- The human's direction of 2026-10-28 (`state/directives/2026-10-28-rulings-by-lane-o1-filler-order-8a-governance-slots-docs-adr-017-note.md`, line 39) asks for these: "O1's slot-1 hours included". The report as filed gave slot 1's waiting hours only.
+- O1 ran in slot 1 from 2026-10-26T00:46Z (the ledger's minute for the ruling that put it there) to 2026-10-28T19:05:24Z (#266 merged, by `gh`): 66.3 h.
+- The hours were held in scratch while main was held for #270's click, and appended after it.
