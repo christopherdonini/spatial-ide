@@ -1676,13 +1676,17 @@ fn field_path_exists(
 /// (`docs/01` principle 7): attach the connection's interrupt handle before the statement runs,
 /// detach after it, and report a token that was cancelled as `Cancelled` rather than returning a
 /// value read from an interrupted query. Nothing about what runs changes when nothing cancels.
+///
+/// `run` goes through `CancelToken::execute_guarded`, so a cancel that landed between the attach and
+/// DuckDB's own clear of its interrupt either refuses the read before it starts or is re-raised
+/// while it runs.
 fn cancellable<T>(
     conn: &Connection,
     cancel: &CancelToken,
     run: impl FnOnce(&Connection) -> Result<T>,
 ) -> Result<T> {
     cancel.attach(Arc::clone(&conn.interrupt_handle()))?;
-    let outcome = run(conn);
+    let outcome = cancel.execute_guarded(|| run(conn)).into_result();
     cancel.detach();
     if cancel.is_cancelled() {
         return Err(EngineError::Cancelled);
@@ -1999,13 +2003,18 @@ fn admit_identity(
     // `skip` arm above (a declared, explicitly-unverified mapping) both return before this line, so
     // neither ever bumps the counter. Counting the call rather than its outcome is deliberate — a
     // scan that goes on to refuse (a duplicate or negative value) still read the column, and the
-    // property under test is "a read happened", not "identity was admitted".
-    IDENTITY_VERIFICATION_SCANS.fetch_add(1, Ordering::SeqCst);
+    // property under test is "a read happened", not "identity was admitted". The increment is inside
+    // the guarded closure below, so a scan the guard refuses before it starts is not counted.
 
     // Bound to the caller's token before the scan starts, so a cancel arriving mid-scan reaches
     // DuckDB's interrupt rather than waiting for a whole column to be read (principle 7).
     cancel.attach(std::sync::Arc::clone(&conn.interrupt_handle()))?;
-    let scan = run_identity_scan(conn, &sql);
+    let scan = cancel
+        .execute_guarded(|| {
+            IDENTITY_VERIFICATION_SCANS.fetch_add(1, Ordering::SeqCst);
+            run_identity_scan(conn, &sql)
+        })
+        .into_result();
     cancel.detach();
     if cancel.is_cancelled() {
         return Err(EngineError::Cancelled);

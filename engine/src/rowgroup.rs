@@ -342,7 +342,9 @@ impl RowGroupIndex {
 
         observe(observer, IndexPhase::RowGroupMetadata);
         cancel.attach(Arc::clone(&conn.interrupt_handle()))?;
-        let scanned = Self::read_metadata(conn, path, covering, id_column, cancel);
+        let scanned = cancel
+            .execute_guarded(|| Self::read_metadata(conn, path, covering, id_column, cancel))
+            .into_result();
         cancel.detach();
         if cancel.is_cancelled() {
             return Err(EngineError::Cancelled);

@@ -334,7 +334,9 @@ impl SpatialIndex {
 
         cancel.attach(Arc::clone(&conn.interrupt_handle()))?;
         observe(observer, IndexPhase::DuckDbScan);
-        let built = Self::scan(conn, &sql, cancel);
+        let built = cancel
+            .execute_guarded(|| Self::scan(conn, &sql, cancel))
+            .into_result();
         cancel.detach();
         if cancel.is_cancelled() {
             return Err(EngineError::Cancelled);

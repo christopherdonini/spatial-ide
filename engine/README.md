@@ -58,6 +58,9 @@ holds the connection's interrupt handle.
 A narrower window than that check alone can close — between the check and the call it guards,
 where DuckDB clears its own interrupt flag on execution's start — is closed by
 `CancelToken::execute_guarded` and its re-interrupter (`engine/CANCEL-BEFORE-EXECUTE-PREREGISTRATION.md`).
+The six other sites that bind a token to a connection — `cancellable` (the four open-path reads), the
+identity scan, the index build's scan, the row-group metadata read and the two `layout.rs` statements —
+run their statement through the same guard; at the last three that routing is not observed by any test.
 
 **4. DuckDB's own GeoParquet conversion is turned off, deliberately.** `SET
 enable_geoparquet_conversion=false` on every connection. With it on, DuckDB interprets the file's
