@@ -676,3 +676,18 @@ resolves to nothing, the subject is what identifies the commit, and re-deriving 
   ruling's content. The pump, its
   `pump_pending_windows_messages` function, its `windows` dependency, and its retry loop are removed
   from this codebase entirely — not merely superseded in this file's prose.
+
+## Corrigendum — 2026-11-01 — Amendment 1 §(c): a full stop its source does not have
+
+*A dated corrigendum, as the Status line provides, owed under round 11, item 1 and appended on
+the human's typed word
+(`state/directives/2026-10-22-242-h-1-round-72-pin-f7-open-items-milestone-4-open-16-b-adr-020-corrigendum-a-1c-adr-036-words-approved-disk-parity-node.md`,
+item 4). Nothing above this heading is changed.*
+
+Amendment 1 §(c) gives the sentence that `DECISIONS-PENDING.md` entry 54 set out for this record,
+in the shape the human's ruling on entry 54 (2026-09-07) pre-approved, as a verbatim blockquote
+ending in a full stop; entry 54's sentence has no full stop, and its words are otherwise the same.
+Entry 54's sentence, verbatim, byte-copied by script from the entry (archived in
+`state/cut-archive/DECISIONS-PENDING-2026-10-20.md`) and marked so:
+
+*"the accepted mechanism is unchanged; this replaces a selector the acceptance never covered"*
