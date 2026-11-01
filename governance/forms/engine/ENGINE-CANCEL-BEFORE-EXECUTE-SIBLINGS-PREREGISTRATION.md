@@ -142,3 +142,13 @@ The gate-1 reviewer's note N4 is at state/consults/gates/2026-09-30-cancel-befor
 - Correction round 1 is one commit, 9e32be4c6c0df025e9dfde81179e7e3e2580b112 (engine/README.md +4/-3, engine/src/dataset.rs +6/-5): gate 1's three Documentation fixes, the replacement words taken by script from the two filed reports. The worker's report is `state/consults/2026-11-01-engine-cancel-before-execute-siblings-correction-1-worker-report.md`.
 - `git diff --numstat origin/main...9e32be4c6c0df025e9dfde81179e7e3e2580b112 -- engine/src engine/README.md` gives 228 changed lines (209 insertions, 19 deletions) over the six Scope files, against §21c's 150. Amendment 1 recorded 216 at 5317510c.
 - Class 6, the short form's budget class, read as Amendment 2 reads Amendment 1: the short form stays, with the reviewer and the architect from dispatch (§36).
+
+### Amendment 5 — 2026-11-01 — class 2, Amendment 3's before (written after this piece's tests and mutations were seen)
+
+- `git diff --name-only 578ec704 e3fb936a -- kernel engine renderer protocol/data-plane protocol/skp Cargo.toml Cargo.lock .github/workflows/product-ci-rust.yml` is empty (rc 0), which covers every path in product-ci-rust.yml's filter that the kernel's dependencies (kernel/Cargo.toml, `[dependencies]`) read; run 41208809578 is the before for both kernel files.
+- The words are the gate-2 architect's E1-r (`state/consults/gates/2026-11-01-engine-cancel-before-execute-siblings-gate2-architect.md`), the custodian's to append, taken as given; the custodian ran the command before appending this row.
+
+### Amendment 6 — 2026-11-01 — class 3, a correction to Amendment 1 (written after this piece's tests and mutations were seen)
+
+- Amendment 1 cites the counting rule by date; its reference is round 5, item 2 (governance/AUTONOMY.md §21c, the human's one-line note).
+- The words are the gate-2 architect's D-a (the same report), the custodian's to append, taken as given.
