@@ -124,3 +124,15 @@ The gate-1 reviewer's note N4 is at state/consults/gates/2026-09-30-cancel-befor
 - `git diff --numstat origin/main...5317510c3f7b06bf647932ae4b3d77bb91fb96e4 -- engine/src engine/README.md` gives 216 changed lines (202 insertions, 14 deletions) over the six Scope files, against §21c's 150 (tests count, by the human's counting note of 2026-09-16). The worker's report is `state/consults/2026-11-01-engine-cancel-before-execute-siblings-worker-report.md`.
 - Class 6, the short form's budget class. The short form stays: the reviewer and the architect gate this piece from dispatch (§36), so §21b's mid-piece clause opens no gate it lacks. The precedent is `subagent-write-audit-script`, gate 1, the reviewer's S1-1 (`state/consults/gates/2026-10-03-subagent-write-audit-script-gate1-reviewer.md`).
 - The cause, from the report: the test-only helper (about 29 lines) and the two 4,000,000-row tests (about 55 lines each after rustfmt). Nothing was trimmed.
+
+### Amendment 2 — 2026-11-01 — class 1, a reading of Amendment 1 (written after this piece's tests and mutations were seen)
+
+- §36's size condition held at dispatch (the Notes' size estimate, about 115 lines); the overrun is §21b's mid-piece size case (round 5, item 2), which keeps the five-line form, and §25 (e) reads the form a piece is dispatched on, so its set-aside under §36 stands.
+- The words are the gate-1 architect's D3 (`state/consults/gates/2026-11-01-engine-cancel-before-execute-siblings-gate1-architect.md`), the custodian's to append, taken as given.
+
+### Amendment 3 — 2026-11-01 — class 2, a deviation recorded after results, with the reason (written after this piece's tests and mutations were seen)
+
+- The Tests+mutation line names three kernel files as unchanged and green before and after. The gate-1 architect's E1 found no run recorded for them.
+- `kernel/tests/skp_filter_cancellation.rs` and `kernel/tests/publish_cancellation.rs`: before, main's Product CI Rust push run 41208809578 at 578ec704 (success; `git diff --name-only 578ec704 e3fb936a -- kernel engine Cargo.lock Cargo.toml` is empty, so its tree is this piece's base for those paths); after, PR #273's runs 41257549617 (push) and 41259750415 (pull_request) at 5317510c, whose `cargo test --workspace` jobs on windows-latest and ubuntu-24.04 pass.
+- **The deviation:** `kernel/tests/indexed_budgets.rs`'s measurement harness is `#[ignore]` (release only). `cargo test --workspace --locked` compiles the file and runs none of that harness, and this piece ran it neither before nor after. For that file, green is reduced to compiled, in the same runs. A run of its cancel ladder would be a new measurement (the architect's N2), which this piece does not make.
+- **The reason:** the cheaper of E1 (b)'s two routes, taken under the human's direction of 2026-10-31 (`state/directives/2026-10-31-away-until-11-04-clicks-from-the-app-270-size-o0-file-open-items-take-recommendation.md`), the cheapest reversible option. The human reviews it on return.
