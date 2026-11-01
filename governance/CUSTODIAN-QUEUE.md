@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `c40a1803a8f0361c359ac489b5ca97f5558396c0db9a1406167c8945a07b99c2`) at `2026-11-01T04:24:52.226Z`.
+Generated from `PLAN.yaml` (sha256 `42d958b54b42ef5583cc8e6ac86496e0f9cc0dfc7a4b4e1b4c2fc1ccb900536d`) at `2026-11-01T04:33:57.356Z`.
 
 ## 1. Next
 
@@ -12,7 +12,6 @@ Generated from `PLAN.yaml` (sha256 `c40a1803a8f0361c359ac489b5ca97f5558396c0db9a
 - **open-dataset-close-serialised-under-the-catalog-lock** — open_dataset's catalog check and mint, in both arms, serialised with close_dataset's forget and removal, and no OpenRecord inserted after a close (the windows the M1 shape leaves) (lane `kernel-protocol`, order null, budget 120 min)
 - **pre-admission-change-detail-braces** — Four kernel P6-placeholder detail strings are wrapped in literal braces, which reach the operator message; the watcher form declares each such string starts with the bracketed placeholder tag (lane `kernel-protocol`, order null, budget 30 min)
 - **windows-case-fold-non-ascii** — The audit case policy on Windows folds non-ASCII letters as NTFS does, so a profile path differing only in non-ASCII case cannot escape the user-home redaction (wave 3's 1c-2 correction, S2, code-path-only) (lane `kernel-protocol`, order null, budget 60 min)
-- **walkthrough-stale-cites-l5-degrees-p1** — Two walkthrough rows cite stale lines: Part L's L5 and the degrees tile grid Part P's P1 (the sitting script's D1 and D2) (lane `shell`, order null, budget 30 min)
 - **governance-f-after-week-rust-ci-figure** — Governance piece F, the after-week Rust CI figure: the form-only Rust CI runs in the 168 h after the merge, recorded as a class 1 row in piece F's form (lane `governance`, order null, budget 30 min)
 - **posix-backslash-in-shared-path-logic** — Shared path logic stops treating a backslash as a separator on POSIX: distinct audit destinations stay distinct, and a viewer asset named with a backslash is refused, not renamed (wave-3 A-1, S2) (lane `platform`, order null, budget 90 min)
 - **publish-bundle-sigterm** — SIGTERM handling in publish-bundle on unix (wave-3 W3-A observation 3) (lane `platform`, order null, budget 90 min)
@@ -52,6 +51,7 @@ Generated from `PLAN.yaml` (sha256 `c40a1803a8f0361c359ac489b5ca97f5558396c0db9a
 - **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **adr-020-appended-note** — ADR-020's appended note, owed by the quote baseline's corrected_by entry (entry 102; the docs lane) — evidence: branch `cut/adr-020-appended-note`
 - **b1-shell-half** — Shell migration, milestone 4 -- B1 shell half: attributes of the inspected feature, colour by category with its legend, and the table — evidence: branch `cut/b1-shell-half-pr-c`
+- **walkthrough-stale-cites-l5-degrees-p1** — Two walkthrough rows cite stale lines: Part L's L5 and the degrees tile grid Part P's P1 (the sitting script's D1 and D2) — evidence: branch `cut/walkthrough-stale-cites-l5-degrees-p1`
 - **verify-cites-reversed-range** — verify-cites checks a reversed range (end below start) by its larger end only — evidence: branch `cut/verify-cites-reversed-range`
 - **port-2-macos-l1-and-app-dirs** — PORT-2 -- macOS L1 for the Cargo workspace: macos-latest in the same matrix, one application-directory boundary replacing the two resolvers, and a case-policy test on a case-insensitive volume — evidence: branch `cut/port-2-macos-l1-and-app-dirs`
 
