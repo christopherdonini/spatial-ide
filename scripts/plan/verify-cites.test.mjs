@@ -715,3 +715,41 @@ test("verify-cites: a moved file's relative cite resolves against its pre-move f
   assert.equal(gated[0].relPath, X_NEW);
   assert.equal(gated[0].reason, 'line 9 exceeds "a/src/lib.rs" (3 lines)');
 });
+
+// --- a range whose end is below its start (node verify-cites-reversed-range) ---------------------------------
+
+// The cites are assembled at run time, so no such range is written in this file (the file is scanned like any other).
+const BACK = (p) => `${p}:${3}-${2}`;
+const BACK_REASON = 'range 3-2 of "engine/src/pool.rs" runs backwards (its end is below its start)';
+
+test('a_reversed_rooted_range_in_a_document_is_gated_by_name', () => {
+  const dir = gitTree({ 'engine/src/pool.rs': 'a\nb\nc\n', 'docs/notes.md': `see ${BACK('engine/src/pool.rs')} here` });
+  try {
+    const { gated, advisory } = runVerifyCites({ repoRoot: dir });
+    assert.equal(gated.length, 1, JSON.stringify(gated));
+    assert.equal(advisory.length, 0, JSON.stringify(advisory));
+    assert.equal(gated[0].reason, BACK_REASON);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('a_reversed_bare_basename_range_is_advice_by_name', () => {
+  const dir = tmpTree({ 'engine/src/pool.rs': 'a\nb\nc\n' });
+  const res = checkCitation({ pathRaw: 'pool.rs', startL: 3, endL: 2, relPath: 'docs/x.md' }, mkIndex(['engine/src/pool.rs']), dir);
+  assert.equal(res.status, 'oob-suffix');
+  assert.match(res.reason, /^range 3-2 of "pool\.rs" runs backwards/);
+});
+
+test('a_pinned_reversed_range_fails_even_where_its_lines_exist_at_the_pin', () => {
+  const gated = pinnedRun((rev) => `see ${BACK('engine/src/pool.rs')} @ ${rev} sha256:00`, 'gated');
+  assert.equal(gated.length, 1, JSON.stringify(gated));
+  assert.equal(gated[0].reason, BACK_REASON);
+});
+
+test('a_range_ending_at_line_0_keeps_the_line_0_reason', () => {
+  const dir = tmpTree({ 'engine/src/pool.rs': 'a\nb\nc\n' });
+  const res = checkCitation({ pathRaw: 'engine/src/pool.rs', startL: 5, endL: 0, relPath: 'docs/x.md' }, mkIndex(['engine/src/pool.rs']), dir);
+  assert.equal(res.status, 'oob-exact');
+  assert.equal(res.reason, 'line 0 does not exist in "engine/src/pool.rs" (lines count from 1)');
+});
