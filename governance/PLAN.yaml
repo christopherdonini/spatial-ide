@@ -6278,17 +6278,17 @@ nodes:
     kind: task
     lane: governance
     phase: prototype
-    status: ready
+    status: in-progress
     order: null
     depends_on: [verify-cites-out-of-range-line-count, governance-f-tidy-repository-in-place]
     needs_human: {kind: none, minutes: 0}
     gate: governance/forms/scripts/VERIFY-CITES-REVERSED-RANGE-PREREGISTRATION.md
-    evidence: null
+    evidence: {branch: cut/verify-cites-reversed-range}
     budget_minutes: 60
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "FORM COMMITTED 2026-11-01 (governance/forms/scripts/VERIFY-CITES-REVERSED-RANGE-PREREGISTRATION.md; 32 pins at ae71bd8a): a reversed range fails by name; OPEN-1 to OPEN-3 (A) taken under the human's direction of 2026-10-31, item 4; the scan at 57ba3f46 found none on main; budget 60. NEXT: a worker on its own checkout; the reviewer alone. Before: FORM DRAFTING 2026-11-01: the architect drafts the five-line form at main ae71bd8a, dispatched at 2026-11-01T00:20:40Z; its OPEN items take its recommendation under the human's direction of 2026-10-31, item 4. NEXT: the form committed at governance/forms/scripts/, then a worker. Before: WAITS ON PIECE F 2026-10-29: its first step commits a form, which lands at its governance path only after #270 merges. Before: RULED 2026-10-23 (state/directives/2026-10-23-weekend-open-items-ruled-verify-cites-pin-covering-case-port-2-session-log-test-feature-v0-2-findings-graded.md), item 7: graded S3; the governance lane after verify-cites-out-of-range-line-count. Before: PROPOSED 2026-10-23 from verify-cites-pin-resolution-and-line-zero's drafting consult (state/consults/2026-10-23-verify-cites-pin-resolution-and-line-zero-architect-draft.md, OPEN-4): a cite whose range runs backwards is checked against its larger end and passes when that line exists. Outside that piece. For the human's grading and placement."
+    summary: "IN PROGRESS 2026-11-01: dispatched at 2026-11-01T00:47:13Z to a worker, branch cut/verify-cites-reversed-range from main 180b1e9f, its own checkout C:/dev/wt/vcrr; three commits (the fix with W1 to W3, the tests T1 to T4, the mutation record). Rule (00) checked at dispatch. NEXT: its report filed; a draft PR; the reviewer alone; the merge the human's click. Before: FORM COMMITTED 2026-11-01 (governance/forms/scripts/VERIFY-CITES-REVERSED-RANGE-PREREGISTRATION.md; 32 pins at ae71bd8a): a reversed range fails by name; OPEN-1 to OPEN-3 (A) taken under the human's direction of 2026-10-31, item 4; the scan at 57ba3f46 found none on main; budget 60. NEXT: a worker on its own checkout; the reviewer alone. Before: FORM DRAFTING 2026-11-01: the architect drafts the five-line form at main ae71bd8a, dispatched at 2026-11-01T00:20:40Z; its OPEN items take its recommendation under the human's direction of 2026-10-31, item 4. NEXT: the form committed at governance/forms/scripts/, then a worker. Before: WAITS ON PIECE F 2026-10-29: its first step commits a form, which lands at its governance path only after #270 merges. Before: RULED 2026-10-23 (state/directives/2026-10-23-weekend-open-items-ruled-verify-cites-pin-covering-case-port-2-session-log-test-feature-v0-2-findings-graded.md), item 7: graded S3; the governance lane after verify-cites-out-of-range-line-count. Before: PROPOSED 2026-10-23 from verify-cites-pin-resolution-and-line-zero's drafting consult (state/consults/2026-10-23-verify-cites-pin-resolution-and-line-zero-architect-draft.md, OPEN-4): a cite whose range runs backwards is checked against its larger end and passes when that line exists. Outside that piece. For the human's grading and placement."
     dates: {opened: 2026-10-23, done: null}
   - id: engine-column-name-case-siblings
     title: "Column names that differ only by letter case beyond the covering: the geometry column matched by byte equality while DuckDB binds identifiers case-insensitively, and the identity, projected and filter columns"
