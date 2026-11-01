@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `f94660b836760b5604ca1183ed8644ea94b9292c513fc63664b2e5cbbf61e8c4`) at `2026-11-01T04:46:42.332Z`.
+Generated from `PLAN.yaml` (sha256 `62f5693e2271478a88cfee385956b517a61285afd64e4263e0d358f9aacd142b`) at `2026-11-01T05:06:56.277Z`.
 
 ## 1. Next
 
@@ -42,6 +42,7 @@ Generated from `PLAN.yaml` (sha256 `f94660b836760b5604ca1183ed8644ea94b9292c513f
 - **signpath-application-draft** — Entry 77 — the SignPath OSS application and disclosure text drafted for the human sight, once a release is CI-built — blocked by: release-v0-2-0
 - **governance-e1-rules-as-records** — Piece E1: rules as records, a rule catalogue under rules/, a selector scripts/plan/rules.mjs, a generated block in each agent definition and a governance-ci check — blocked by: governance-e-readings
 - **shell-owners-index** — An owner's index for the shell (frontends/shell), so that shell-owned KNOWN-LIMITATIONS items and pointers are indexed somewhere — blocked by: skp-line-cites-outside-close-races
+- **verify-quotes-cite-listing-line-count** — verify-quotes cite listing states a line count one too high for a file that ends in a newline and lists the line past the end as blank — blocked by: verify-cites-reversed-range
 - **site-design-v1** — Landing page redesign — DRAFT-4 (status strip, milestone banner, waiting-on-you cards with unblocks counts, the swimlane board) — blocked by: governance-ci-built-site
 - **macos-normalization-roots-uncanonicalized** — On macOS the audit log normalization roots are read uncanonicalized while recorded destinations are canonicalized, so a symlinked temporary-directory root never matches — blocked by: port-2-macos-l1-and-app-dirs
 
@@ -153,4 +154,3 @@ Generated from `PLAN.yaml` (sha256 `f94660b836760b5604ca1183ed8644ea94b9292c513f
 - **mod-worktree-resource-protection** — Worktree and resource protection -- a mod (deferred by the 2026-10-03 mods-roadmap ruling) (phase `prototype`) — ambition, never queued
 - **recorder-write-latency-measure** — Evidence Recorder: a declared write-latency measure with its own sample, so the brief overhead acceptance can be established before the Recorder evaluation ends (Amendment 2 C2-d keeps E5 a lower bound) (phase `prototype`) — ambition, never queued
 - **reuse-round-1-bundle** — Reuse archaeology round 1, the advisor bundle, filed as one docs-and-data piece (not under docs/) (phase `prototype`) — ambition, never queued
-- **verify-quotes-cite-listing-line-count** — verify-quotes cite listing states a line count one too high for a file that ends in a newline and lists the line past the end as blank (phase `prototype`) — ambition, never queued

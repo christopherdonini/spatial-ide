@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-01T04:46:42.332Z",
-  "plan_hash": "f94660b836760b5604ca1183ed8644ea94b9292c513fc63664b2e5cbbf61e8c4",
+  "generated_at": "2026-11-01T05:06:56.277Z",
+  "plan_hash": "62f5693e2271478a88cfee385956b517a61285afd64e4263e0d358f9aacd142b",
   "priorities_approved": true,
   "next": {
     "id": "type-walk-rule2-residual-reasons",
@@ -571,6 +571,28 @@
       "summary": "PLACED 2026-10-21 (state/directives/2026-10-21-placements-redaction-scan-1c-milestone-4-lanes-238-clicked-d-answers-adr-024-heading-kept.md, item 4): the docs lane, 6 of 6, after skp-line-cites-outside-close-races. Before: Recorded 2026-10-07 by geometry-lines-cut's form (engine/GEOMETRY-LINES-PREREGISTRATION.md, section 2, Owner's index, the routed item settled; the points form's Amendment 5, item 13, second bullet): the engine and kernel owner's indexes list module-caused limits only, so the shell-owned KNOWN-LIMITATIONS items (34 to 38 once the lines cut lands) are indexed nowhere, because no shell owner's index exists. Creating one is a governance piece under the product-first freeze, so it waits for the freeze to lift or the human's call.",
       "blocked_by": [
         "skp-line-cites-outside-close-races"
+      ]
+    },
+    {
+      "id": "verify-quotes-cite-listing-line-count",
+      "title": "verify-quotes cite listing states a line count one too high for a file that ends in a newline and lists the line past the end as blank",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": null,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-25",
+        "done": null
+      },
+      "summary": "FORM COMMITTED 2026-11-01 (governance/forms/scripts/VERIFY-QUOTES-CITE-LISTING-LINE-COUNT-PREREGISTRATION.md; 29 pins at b84a2b26), the full form, from the architect's draft (state/consults/2026-11-01-verify-quotes-cite-listing-line-count-five-line-form-architect-draft.md): the five-line form closed by AUTONOMY section 21a, an existing test's asserted figure being the defect; OPEN-1 (A) the full form and both gates, OPEN-2 (A) the count inline, OPEN-3 (A) the P4 run, taken under the human's direction of 2026-10-31, item 4, for the human's review; depends_on verify-cites-reversed-range, the lane's piece before it (VQ last). NEXT: after #272 merges, a governance-lane worker on the form; the architect and the reviewer at gate 1; the merge the human's click. Before: RULED 2026-10-26 (state/directives/2026-10-26-clicks-260-261-244-r2-241-o1-answers-pb-draft-b-6d-260-lines-5b-8a-8b-rulings.md): the fold reversed; its own node, S4, last in the governance lane, no form until its turn. Before: FOLDED 2026-10-26 (state/directives/2026-10-26-resent-2026-10-25-o1-s1-clang-cl-route-a-hugeint-cast-b-five-nodes-placed.md, item 2): S4, the second line of verify-cites-past-end-bound (the same root, counting the pieces of a newline split); not its own node. Before: PROPOSED 2026-10-25 from verify-cites-out-of-range-line-count's drafting consult: the cite listing in verify-quotes (listCiteContents) splits a file on newlines and counts the pieces, so for a file that ends in a newline its out-of-range note states a line count one too high, and the line just past the end is listed as a blank line instead of out of range. The hash check in verify-quotes reads lines by a different slice and is not affected. Outside verify-cites-out-of-range-line-count, which changes verify-cites only. For the human's grading and placement.",
+      "blocked_by": [
+        "verify-cites-reversed-range"
       ]
     },
     {
@@ -2507,25 +2529,6 @@
         "done": null
       },
       "summary": "WITHDRAWN 2026-10-08 by the human (state/directives/2026-10-08-reuse-round-1-private-repository.md): the research lives in the human's private repository, read from a clone outside every repository; nothing is copied into this repository; PR #192 closed unmerged; the form's Amendment 2 closes it. Before: GATE 1 REVIEWER FAIL (443, E1: 366 lines of placed code over the section 21c bound close the single-gate route; Correctness PASS); Amendment 1, class 6, generation 2: both gates apply; the architect gate and a reviewer re-gate on the amendment next; H1 (tilde and temporary folder paths in the notes) to the human. Before: PR #192 OPEN 2026-10-08 at 2ae29e9d: the archive arrived as the human upload (16:36:01Z), sha256 50d87a03 matched; placed byte-identical under reuse/ (139 files) by the custodian; check-index, verify-cites over reuse/** and the default set, the staged profile scan and the governance checkers all exit 0; five-line form at ab44cd2c; the single reviewer gate next. Before: V2 ARCHIVE 2026-10-08 (state/directives/2026-10-08-reuse-round-1-v2.md): spatial-ide-reuse-round-1-v2.zip, sha256 50d87a03eb42148608209edbad2d905bcea0e1c369f1d3330f86fb54d2409526, replaces the first; placed after #190 merges (five citations pinned at 14acee0b resolve only once #190 is in main; the pinned fallback is #191); verify the sha256 first, then tools/check-index.mjs and verify-cites over the placed folder. WAITING ON THE HUMAN (needs_human ruling): this archive did not reach the session either; the human names the route (for example Google Drive through the connector, or a path on this PC). #190 and #191 merged 2026-10-08. Before: PLACED 2026-10-08 by the human (state/directives/2026-10-08-reuse-round-1.md, item 1): slot 2, after #190 has merged and after verify-cites-pinned-citations; no mod, pilot, trial or record rule; not under docs/ (it holds code, and docs/ is CC-BY-4.0). Before the PR: no other project named, no user-profile path, its check-index.mjs and the repository checkers run on it; if verify-cites flags a citation inside it, stop and tell the human (no checker change, no exemption, no edit to the notes); fetch-cache.mjs is not run, and the clone cache is never inside the repo. WAITING: the archive did not reach the session; the human is asked for it and its sha256."
-    },
-    {
-      "id": "verify-quotes-cite-listing-line-count",
-      "title": "verify-quotes cite listing states a line count one too high for a file that ends in a newline and lists the line past the end as blank",
-      "lane": "governance",
-      "phase": "prototype",
-      "status": "unscheduled",
-      "order": null,
-      "budget_minutes": 60,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-10-25",
-        "done": null
-      },
-      "summary": "RULED 2026-10-26 (state/directives/2026-10-26-clicks-260-261-244-r2-241-o1-answers-pb-draft-b-6d-260-lines-5b-8a-8b-rulings.md): the fold reversed; its own node, S4, last in the governance lane, no form until its turn. Before: FOLDED 2026-10-26 (state/directives/2026-10-26-resent-2026-10-25-o1-s1-clang-cl-route-a-hugeint-cast-b-five-nodes-placed.md, item 2): S4, the second line of verify-cites-past-end-bound (the same root, counting the pieces of a newline split); not its own node. Before: PROPOSED 2026-10-25 from verify-cites-out-of-range-line-count's drafting consult: the cite listing in verify-quotes (listCiteContents) splits a file on newlines and counts the pieces, so for a file that ends in a newline its out-of-range note states a line count one too high, and the line just past the end is listed as a blank line instead of out of range. The hash check in verify-quotes reads lines by a different slice and is not affected. Outside verify-cites-out-of-range-line-count, which changes verify-cites only. For the human's grading and placement."
     }
   ]
 }
