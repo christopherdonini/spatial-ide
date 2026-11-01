@@ -2000,11 +2000,12 @@ fn admit_identity(
 
     // **G-A1's structural claim, made assertable.** This is the one place `admit_identity` can
     // issue a whole-column read: the session-ordinal arm above (no native or mapped column) and the
-    // `skip` arm above (a declared, explicitly-unverified mapping) both return before this line, so
-    // neither ever bumps the counter. Counting the call rather than its outcome is deliberate — a
-    // scan that goes on to refuse (a duplicate or negative value) still read the column, and the
-    // property under test is "a read happened", not "identity was admitted". The increment is inside
-    // the guarded closure below, so a scan the guard refuses before it starts is not counted.
+    // `skip` arm above (a declared, explicitly-unverified mapping) both return before the guarded
+    // scan below, so neither ever bumps the counter. Counting the call rather than its outcome is
+    // deliberate — a scan that goes on to refuse (a duplicate or negative value) still read the
+    // column, and the property under test is "a read happened", not "identity was admitted". The
+    // increment is inside the guarded closure below, so a scan the guard refuses before it starts
+    // is not counted.
 
     // Bound to the caller's token before the scan starts, so a cancel arriving mid-scan reaches
     // DuckDB's interrupt rather than waiting for a whole column to be read (principle 7).
