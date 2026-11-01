@@ -722,6 +722,7 @@ test("verify-cites: a moved file's relative cite resolves against its pre-move f
 const BACK = (p) => `${p}:${3}-${2}`;
 const BACK_REASON = 'range 3-2 of "engine/src/pool.rs" runs backwards (its end is below its start)';
 
+// RECORDED MUTATION (M1) at 843e206b119c24af4163b40389135715d2b40276, applied alone and reverted: the backward return's status in checkResolved made oob-suffix whatever the tier -> fails by name, and these two only (the same routing): `a_reversed_rooted_range_in_a_document_is_gated_by_name` and `a_pinned_reversed_range_fails_even_where_its_lines_exist_at_the_pin`.
 test('a_reversed_rooted_range_in_a_document_is_gated_by_name', () => {
   const dir = gitTree({ 'engine/src/pool.rs': 'a\nb\nc\n', 'docs/notes.md': `see ${BACK('engine/src/pool.rs')} here` });
   try {
@@ -734,6 +735,7 @@ test('a_reversed_rooted_range_in_a_document_is_gated_by_name', () => {
   }
 });
 
+// RECORDED MUTATION (M2) at 843e206b119c24af4163b40389135715d2b40276, applied alone and reverted: that status made oob-exact whatever the tier -> fails by name, and only this one: `a_reversed_bare_basename_range_is_advice_by_name`.
 test('a_reversed_bare_basename_range_is_advice_by_name', () => {
   const dir = tmpTree({ 'engine/src/pool.rs': 'a\nb\nc\n' });
   const res = checkCitation({ pathRaw: 'pool.rs', startL: 3, endL: 2, relPath: 'docs/x.md' }, mkIndex(['engine/src/pool.rs']), dir);
@@ -741,12 +743,14 @@ test('a_reversed_bare_basename_range_is_advice_by_name', () => {
   assert.match(res.reason, /^range 3-2 of "pool\.rs" runs backwards/);
 });
 
+// RECORDED MUTATION (M3) at 843e206b119c24af4163b40389135715d2b40276, applied alone and reverted: checkPinned's backward return removed -> fails by name, and only this one: `a_pinned_reversed_range_fails_even_where_its_lines_exist_at_the_pin`.
 test('a_pinned_reversed_range_fails_even_where_its_lines_exist_at_the_pin', () => {
   const gated = pinnedRun((rev) => `see ${BACK('engine/src/pool.rs')} @ ${rev} sha256:00`, 'gated');
   assert.equal(gated.length, 1, JSON.stringify(gated));
   assert.equal(gated[0].reason, BACK_REASON);
 });
 
+// RECORDED MUTATION (M4) at 843e206b119c24af4163b40389135715d2b40276, applied alone and reverted: the backward helper's end-at-line-0 exclusion dropped -> fails by name, and only this one: `a_range_ending_at_line_0_keeps_the_line_0_reason`.
 test('a_range_ending_at_line_0_keeps_the_line_0_reason', () => {
   const dir = tmpTree({ 'engine/src/pool.rs': 'a\nb\nc\n' });
   const res = checkCitation({ pathRaw: 'engine/src/pool.rs', startL: 5, endL: 0, relPath: 'docs/x.md' }, mkIndex(['engine/src/pool.rs']), dir);
