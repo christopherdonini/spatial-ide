@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `9a0dc562c8040eb519f0ab3bfecf4ac072cec443fcee3170917db4228d748dc2`) at `2026-11-01T04:15:48.984Z`.
+Generated from `PLAN.yaml` (sha256 `c40a1803a8f0361c359ac489b5ca97f5558396c0db9a1406167c8945a07b99c2`) at `2026-11-01T04:24:52.226Z`.
 
 ## 1. Next
 
@@ -12,6 +12,7 @@ Generated from `PLAN.yaml` (sha256 `9a0dc562c8040eb519f0ab3bfecf4ac072cec443fcee
 - **open-dataset-close-serialised-under-the-catalog-lock** — open_dataset's catalog check and mint, in both arms, serialised with close_dataset's forget and removal, and no OpenRecord inserted after a close (the windows the M1 shape leaves) (lane `kernel-protocol`, order null, budget 120 min)
 - **pre-admission-change-detail-braces** — Four kernel P6-placeholder detail strings are wrapped in literal braces, which reach the operator message; the watcher form declares each such string starts with the bracketed placeholder tag (lane `kernel-protocol`, order null, budget 30 min)
 - **windows-case-fold-non-ascii** — The audit case policy on Windows folds non-ASCII letters as NTFS does, so a profile path differing only in non-ASCII case cannot escape the user-home redaction (wave 3's 1c-2 correction, S2, code-path-only) (lane `kernel-protocol`, order null, budget 60 min)
+- **walkthrough-stale-cites-l5-degrees-p1** — Two walkthrough rows cite stale lines: Part L's L5 and the degrees tile grid Part P's P1 (the sitting script's D1 and D2) (lane `shell`, order null, budget 30 min)
 - **governance-f-after-week-rust-ci-figure** — Governance piece F, the after-week Rust CI figure: the form-only Rust CI runs in the 168 h after the merge, recorded as a class 1 row in piece F's form (lane `governance`, order null, budget 30 min)
 - **posix-backslash-in-shared-path-logic** — Shared path logic stops treating a backslash as a separator on POSIX: distinct audit destinations stay distinct, and a viewer asset named with a backslash is refused, not renamed (wave-3 A-1, S2) (lane `platform`, order null, budget 90 min)
 - **publish-bundle-sigterm** — SIGTERM handling in publish-bundle on unix (wave-3 W3-A observation 3) (lane `platform`, order null, budget 90 min)
@@ -36,7 +37,6 @@ Generated from `PLAN.yaml` (sha256 `9a0dc562c8040eb519f0ab3bfecf4ac072cec443fcee
 - **session-end-lines-name-coverage-lost-as-source-change** — The hover readout and the Feature tab word every session end as a source change, coverage-lost included, although the engine says coverage-lost is never a source change (milestone 4 PR C gate 1, the architect's C1 note) — blocked by: b1-shell-half
 - **session-log-token-redaction-rests-on-page-code** — The session token never reaching the session log rests on page code: binding_log_session_event appends page-supplied text verbatim, the page holds the token, and the data plane's Session::redact has only a test caller — blocked by: b2-piece-1c-save-and-reopen
 - **sitting-wording-n1-to-n7** — The sitting script's seven wording findings, N1 to N7: each string's clause untrue at main replaced in the architect's words, prepared as pieces for the human's yes at the sitting — blocked by: walkthrough-stale-cites-l5-degrees-p1
-- **walkthrough-stale-cites-l5-degrees-p1** — Two walkthrough rows cite stale lines: Part L's L5 and the degrees tile grid Part P's P1 (the sitting script's D1 and D2) — blocked by: adr-020-appended-note
 - **briefb-b2-save-reopen** — B2 — Save project, Snapshot data, session history, lineage and preferences, in five stages, each with its own form — blocked by: decision-adr-029-scan-progress-route
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer — blocked by: signpath-application-draft
 - **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-2-0
