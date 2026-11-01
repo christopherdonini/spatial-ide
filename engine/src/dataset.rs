@@ -2184,3 +2184,55 @@ pub(crate) fn lease_for_stream(
     cancel.attach(Arc::clone(&lease.connection().interrupt_handle()))?;
     Ok(lease)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::cancel::test_support::cancel_when_executing;
+    use std::sync::atomic::AtomicBool;
+
+    #[test]
+    fn a_cancellable_open_read_runs_inside_the_execute_window() {
+        let conn = Connection::open_in_memory().unwrap();
+        let cancel = CancelToken::new();
+        let inside = cancellable(&conn, &cancel, |_| Ok(cancel.is_executing()));
+        assert!(
+            matches!(inside, Ok(true)),
+            "the open read must run inside the execute window: {inside:?}"
+        );
+    }
+
+    #[test]
+    fn a_cancel_inside_the_identity_scans_execute_window_ends_the_admission_cancelled() {
+        let file = std::env::temp_dir().join(format!(
+            "spatial-engine-ecbs-identity-{}.parquet",
+            std::process::id()
+        ));
+        let path = file.to_str().unwrap();
+        let conn = Connection::open_in_memory().unwrap();
+        conn.execute_batch(&format!(
+            "COPY (SELECT i::UBIGINT AS id FROM range(0, 4000000) t(i)) TO '{}' (FORMAT PARQUET)",
+            path.replace('\'', "''")
+        ))
+        .unwrap();
+        let schema: SchemaRef =
+            Arc::new(Schema::new(vec![Field::new("id", DataType::UInt64, false)]));
+
+        let cancel = CancelToken::new();
+        let done = Arc::new(AtomicBool::new(false));
+        let canceller = cancel_when_executing(&cancel, &done);
+        let admitted = admit_identity(&conn, path, &schema, None, &cancel);
+        done.store(true, Ordering::SeqCst);
+        let saw_window = canceller.join().unwrap();
+        let _ = std::fs::remove_file(&file);
+
+        assert!(
+            saw_window,
+            "the identity scan never ran inside the execute window"
+        );
+        assert!(
+            matches!(admitted, Err(EngineError::Cancelled)),
+            "a cancel inside the scan must end the admission Cancelled: {admitted:?}"
+        );
+    }
+}

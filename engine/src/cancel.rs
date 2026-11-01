@@ -294,6 +294,35 @@ impl CancelToken {
     }
 }
 
+/// Test support for the sites that run a statement inside the execute window (cfg(test) only).
+#[cfg(test)]
+pub(crate) mod test_support {
+    use super::*;
+
+    /// Bounds only how long a failing test runs; never reported as a latency.
+    const TEST_LIVENESS_DEADLINE: Duration = Duration::from_secs(60);
+
+    /// Spins on `token.is_executing()` and cancels the token the moment it is true. Returns whether
+    /// it saw the window; gives up when `done` is set or the deadline passes. Times nothing.
+    pub(crate) fn cancel_when_executing(
+        token: &CancelToken,
+        done: &Arc<AtomicBool>,
+    ) -> std::thread::JoinHandle<bool> {
+        let (token, done) = (token.clone(), Arc::clone(done));
+        std::thread::spawn(move || {
+            let deadline = std::time::Instant::now() + TEST_LIVENESS_DEADLINE;
+            while !done.load(Ordering::SeqCst) && std::time::Instant::now() < deadline {
+                if token.is_executing() {
+                    token.cancel();
+                    return true;
+                }
+                std::thread::sleep(Duration::from_millis(1));
+            }
+            false
+        })
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

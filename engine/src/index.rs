@@ -905,4 +905,59 @@ mod tests {
 
         let _ = std::fs::remove_file(&p);
     }
+
+    #[test]
+    fn a_cancel_inside_the_index_scans_execute_window_ends_the_build_cancelled() {
+        use crate::cancel::test_support::cancel_when_executing;
+        use crate::geoparquet::{CoveringBbox, FieldPath};
+        use std::sync::atomic::{AtomicBool, Ordering};
+
+        let file = std::env::temp_dir().join(format!(
+            "spatial-engine-ecbs-index-{}.parquet",
+            std::process::id()
+        ));
+        let path = file.to_str().unwrap();
+        let conn = Connection::open_in_memory().unwrap();
+        conn.execute_batch(&format!(
+            "COPY (SELECT i::UBIGINT AS id, (i % 2000)::DOUBLE AS xmin, (i // 2000)::DOUBLE AS ymin, \
+             (i % 2000)::DOUBLE + 0.5 AS xmax, (i // 2000)::DOUBLE + 0.5 AS ymax \
+             FROM range(0, 4000000) t(i)) TO '{}' (FORMAT PARQUET)",
+            path.replace('\'', "''")
+        ))
+        .unwrap();
+        let col = |name: &str| FieldPath(vec![name.to_string()]);
+        let covering = CoveringBbox {
+            xmin: col("xmin"),
+            ymin: col("ymin"),
+            xmax: col("xmax"),
+            ymax: col("ymax"),
+        };
+
+        let cancel = CancelToken::new();
+        let done = Arc::new(AtomicBool::new(false));
+        let canceller = cancel_when_executing(&cancel, &done);
+        let built = SpatialIndex::build_observed(
+            &conn,
+            path,
+            &covering,
+            "id",
+            key("ecbs"),
+            None,
+            &cancel,
+            None,
+        );
+        done.store(true, Ordering::SeqCst);
+        let saw_window = canceller.join().unwrap();
+        let _ = std::fs::remove_file(&file);
+
+        assert!(
+            saw_window,
+            "the index scan never ran inside the execute window"
+        );
+        assert!(
+            matches!(built, Err(EngineError::Cancelled)),
+            "a cancel inside the scan must end the build Cancelled: {:?}",
+            built.as_ref().err()
+        );
+    }
 }
