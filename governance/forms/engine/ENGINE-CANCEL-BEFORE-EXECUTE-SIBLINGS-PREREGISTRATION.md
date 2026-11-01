@@ -118,3 +118,9 @@ The gate-1 reviewer's note N4 is at state/consults/gates/2026-09-30-cancel-befor
 - **Rule (00)** was checked at main 2fab14b1 by `git diff --name-only origin/main...<branch>` over the open PRs (none) and the branches in flight (`cut/b2-piece-1c-save-and-reopen`, `cut/port-2-macos-l1-and-app-dirs`, `cut/b1-shell-half-pr-c`): none touches the six Scope files or this form. It is checked again at dispatch.
 
 ## Amendments (opens empty; append-only)
+
+### Amendment 1 — 2026-11-01 — class 6, the size (written after this piece's tests and mutations were seen)
+
+- `git diff --numstat origin/main...5317510c3f7b06bf647932ae4b3d77bb91fb96e4 -- engine/src engine/README.md` gives 216 changed lines (202 insertions, 14 deletions) over the six Scope files, against §21c's 150 (tests count, by the human's counting note of 2026-09-16). The worker's report is `state/consults/2026-11-01-engine-cancel-before-execute-siblings-worker-report.md`.
+- Class 6, the short form's budget class. The short form stays: the reviewer and the architect gate this piece from dispatch (§36), so §21b's mid-piece clause opens no gate it lacks. The precedent is `subagent-write-audit-script`, gate 1, the reviewer's S1-1 (`state/consults/gates/2026-10-03-subagent-write-audit-script-gate1-reviewer.md`).
+- The cause, from the report: the test-only helper (about 29 lines) and the two 4,000,000-row tests (about 55 lines each after rustfmt). Nothing was trimmed.
