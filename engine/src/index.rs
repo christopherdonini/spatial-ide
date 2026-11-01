@@ -906,6 +906,9 @@ mod tests {
         let _ = std::fs::remove_file(&p);
     }
 
+    /// RECORDED MUTATION (observed at `2ccac3d1a8b3def9fa16c861d71623ab2ad1e200`): `Self::scan`
+    /// runs outside the guard. Observed outcome: this test fails by name at its `saw_window`
+    /// assertion ("the index scan never ran inside the execute window").
     #[test]
     fn a_cancel_inside_the_index_scans_execute_window_ends_the_build_cancelled() {
         use crate::cancel::test_support::cancel_when_executing;

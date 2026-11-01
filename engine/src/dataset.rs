@@ -2191,6 +2191,9 @@ mod tests {
     use crate::cancel::test_support::cancel_when_executing;
     use std::sync::atomic::AtomicBool;
 
+    /// RECORDED MUTATION (observed at `2ccac3d1a8b3def9fa16c861d71623ab2ad1e200`): `cancellable`
+    /// calls `run(conn)` outside the guard. Observed outcome: this test fails by name at its
+    /// `matches!(inside, Ok(true))` assertion, with `Ok(false)`.
     #[test]
     fn a_cancellable_open_read_runs_inside_the_execute_window() {
         let conn = Connection::open_in_memory().unwrap();
@@ -2202,6 +2205,9 @@ mod tests {
         );
     }
 
+    /// RECORDED MUTATION (observed at `2ccac3d1a8b3def9fa16c861d71623ab2ad1e200`):
+    /// `run_identity_scan` runs outside the guard. Observed outcome: this test fails by name at its
+    /// `saw_window` assertion ("the identity scan never ran inside the execute window").
     #[test]
     fn a_cancel_inside_the_identity_scans_execute_window_ends_the_admission_cancelled() {
         let file = std::env::temp_dir().join(format!(
