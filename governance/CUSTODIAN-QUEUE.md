@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `8087d8ee914e15b08a10059888636df695286b58346b756b2b27f69d1d94d949`) at `2026-11-03T15:15:05.535Z`.
+Generated from `PLAN.yaml` (sha256 `07ec1f8b88b19d102588165808bc19d84547e1f003ffee3650b25d657404d0a1`) at `2026-11-03T16:16:11.922Z`.
 
 ## 1. Next
 
@@ -18,7 +18,11 @@ Generated from `PLAN.yaml` (sha256 `8087d8ee914e15b08a10059888636df695286b58346b
 - **publish-unix-quota-perm-errors** — EDQUOT and EPERM in publish error classification on unix (wave-3 W3-A observation 1) (lane `platform`, order null, budget 90 min)
 - **redaction-hostname-off-windows** — The redaction scan knows the machine's hostname off Windows, so machine-identifier findings reach an audit record's residual_classes there too (wave-3 A-2, S2, sent to Fable for weighing) (lane `platform`, order null, budget 60 min)
 
-## 3. Waiting on the human (total: 20 min)
+## 3. Waiting on the human (total: 25 min)
+
+### ruling
+
+- **adr-035-close-races-note** — ADR-035 -- an appended, dated note recording what kernel-generation-close-races makes historical (Decision 3's no-session-reference case unreachable; invalidate marks only on a live removal; Decision 2's mint-race arm gone) (5 min)
 
 ### sitting
 
@@ -29,7 +33,6 @@ Generated from `PLAN.yaml` (sha256 `8087d8ee914e15b08a10059888636df695286b58346b
 ## 4. Blocked on dependencies
 
 - **literal-only-float-integer-arithmetic-refused** — Literal-only arithmetic mixing a double literal and an integer literal (1e3 + 5 > 0) is refused as conversion_rounds, although FILTER-BIND section 2.5(a) and ADR-021's Note admit two numeric literals within the bounds in +, - and * (F-A of the type-walk-rule2-residual-reasons draft) — blocked by: type-walk-rule2-residual-reasons
-- **adr-035-close-races-note** — ADR-035 -- an appended, dated note recording what kernel-generation-close-races makes historical (Decision 3's no-session-reference case unreachable; invalidate marks only on a live removal; Decision 2's mint-race arm gone) — blocked by: adr-020-appended-note
 - **lod-tier-identity-binds-file-name** — The LOD tier builder takes the identity name DuckDB bound and looks it up among the file's own footer names, so a renamed identity column reaches a different column there — blocked by: port-2-macos-l1-and-app-dirs
 - **skp-line-cites-outside-close-races** — Stale line cites into kernel/src/skp.rs outside kernel-close-races-followups files -- shell streaming, App.tsx, pool_poll.rs, src-tauri lib.rs, the P4 corpus test and the persisted-artifacts test — blocked by: adr-035-close-races-note
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
@@ -47,12 +50,9 @@ Generated from `PLAN.yaml` (sha256 `8087d8ee914e15b08a10059888636df695286b58346b
 
 ## 5. In progress
 
-- **stream-cancel-returns-left-unmarked** — The producer's cancel returns the flush piece leaves unmarked: a prepare error through classify, the two-read window in classify's marking arms, and the send to a receiver that is gone (is a disconnect an observation) — evidence: branch `cut/stream-cancel-returns-left-unmarked`
 - **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark — evidence: branch `cut/b2-piece-1c-save-and-reopen`
-- **adr-020-appended-note** — ADR-020's appended note, owed by the quote baseline's corrected_by entry (entry 102; the docs lane) — evidence: branch `cut/adr-020-appended-note`
 - **adr-017-note-product-redaction-gate** — An ADR-017 note in the human's typed words: the product publish now runs the redaction scan over every emitted file, except a viewer file whose bytes the viewer's build scanned, and refuses by name on a finding (bundle-redaction-scan-not-in-product-publish); the build-time scan, the reviewed list and the skip; and Corrigendum 4's new uninterruptible term — evidence: branch `cut/adr-017-note-product-redaction-gate`
 - **b1-shell-half** — Shell migration, milestone 4 -- B1 shell half: attributes of the inspected feature, colour by category with its legend, and the table — evidence: branch `cut/b1-shell-half-pr-c`
-- **verify-quotes-cite-listing-line-count** — verify-quotes cite listing states a line count one too high for a file that ends in a newline and lists the line past the end as blank — evidence: branch `cut/verify-quotes-cite-listing-line-count`
 - **port-2-macos-l1-and-app-dirs** — PORT-2 -- macOS L1 for the Cargo workspace: macos-latest in the same matrix, one application-directory boundary replacing the two resolvers, and a case-policy test on a case-insensitive volume — evidence: branch `cut/port-2-macos-l1-and-app-dirs`
 
 ## 6. Proposed / unscheduled
