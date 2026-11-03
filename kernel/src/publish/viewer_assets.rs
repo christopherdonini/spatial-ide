@@ -134,9 +134,7 @@ impl ViewerAssets {
                     .to_string_lossy()
                     // Only what this platform's path syntax calls a separator: on POSIX a `\` is a
                     // byte of the file name and stays one, so `validate_relative_path` refuses it.
-                    .chars()
-                    .map(|c| if std::path::is_separator(c) { '/' } else { c })
-                    .collect::<String>();
+                    .replace('\\', "/");
                 let bytes = std::fs::read(&path).map_err(|e| PublishError::Io {
                     context: format!("read {}", path.display()),
                     raw_os_error: e.raw_os_error(),
