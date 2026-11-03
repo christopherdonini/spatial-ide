@@ -1157,3 +1157,13 @@ notice's wording and route are ADR-009-adjacent and are the human's to rule (DEC
 - **2026-09-07 (appended):** DECISIONS-PENDING entry 49 ruled the Url route: the shell's writer
   (`frontends/shell/src-tauri/src/publish.rs`) now names the public repository; the written-offer
   "not yet public" clause is gone.
+
+## Note 2026-10-28 — the product publish runs §13's scan (bundle-redaction-scan-not-in-product-publish)
+
+*Appended under the human's ruling. The text above is unchanged, the Status block and Corrigendum 4 included.*
+
+1. §13's guarantee is now asserted by the product, not only by the format suite. Every publish through `permission::boundary::execute`, the shell's and the `publish-bundle` tooling's, and every `publish_unguarded` call runs `bundle::redaction::scan` over every staged file as it lies on disk, after the last file is written and before the rename, with the same two declared strings the format suite declares: the viewer's copyright line and its corresponding-source address.
+2. A match that is not operator-declared refuses the publish as `publish.redaction_finding`, audited as `refused` with `error_kind` `RedactionFinding`. The refusal names the file's bundle-relative path, the first match's class and byte offset, and the count of matches in that file, and never the matched text. No bundle exists under the destination name; the staging directory is removed as on every other failure, or reported by `StagingNotRemoved`.
+3. A viewer file is skipped only when its sha256 equals the entry the viewer's build recorded for it in `viewer-asset-hashes.json`, which `scripts/scan-dist.mjs` writes only after the same scan passed over the built viewer against the reviewed rows of `redaction-reviewed.json`, matched by file, class and offset. A viewer file with no matching entry is scanned like any other.
+4. Corrigendum 4's table gains a row: the scan of one staged file is a code-controlled quantity of at most that file's bytes, cancellation being checked before each file; its per-byte cost is unmeasured and not claimed. The window's sentence gains the term: one chunk's write, one `File::create`, one `sync_all`, or one file's read and scan — bounded in bytes exactly, and in time not at all.
+5. `bundle_version` stays 1 and nothing in the format changes. KNOWN-LIMITATIONS item 47 records what the operator sees and what the scan cannot see.
