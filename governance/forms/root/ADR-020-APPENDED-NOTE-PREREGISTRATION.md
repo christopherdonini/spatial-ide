@@ -339,3 +339,12 @@ docs/adr/ADR-020-data-plane-origin-admission-for-an-embedded-consumer.md, the Co
 - **What piece F moved:** P3's `PLAN.yaml` and the generated `CUSTODIAN-QUEUE.*` are now under `governance/`; §5's `RELEASE-0.1.md` is `governance/RELEASE-0.1.md`; and §5's `scripts/plan/VERIFY-QUOTES-PREREGISTRATION.md` is `governance/forms/scripts/VERIFY-QUOTES-PREREGISTRATION.md`, each by `governance/MOVED.tsv`. P1, P4 and `state/cut-archive/DECISIONS-PENDING-2026-10-20.md` did not move. E10's command is governance-ci's as it stands.
 - **§2.5 and §8 item 11 are history:** #241 to #244 have merged, so #244's freeze window is spent. **Rule (00)** was checked at main b8997ef5 by `git diff --name-only origin/main...<branch>` over the open PRs (none) and the branches in flight (`cut/b2-piece-1c-save-and-reopen`, `cut/port-2-macos-l1-and-app-dirs`, `cut/b1-shell-half-pr-c`). None touches P1, P4 or this form. 1c step 1 appends to ADR-022 and ADR-036 only. It is checked again at dispatch.
 - **Gating:** full, from dispatch, the architect and the reviewer (§9). The merge is the human's click, by merge commit.
+
+## Amendments (appended under §10)
+
+### Amendment 1 — 2026-11-03 — class 9, scope addition, by the human's ruling (state/directives/2026-11-03-271-d1-b-reason-field-7b-open-5-a-follow-up-node-entry-10-open-1-c.md, item 1), recorded before its code
+
+- **§2:** P4's entry for ADR-020 line 403 also changes its `reason` value, the whole value, to the gate-1 architect's replacement words, the text between the backticks of state/consults/gates/2026-11-01-adr-020-appended-note-gate1-architect.md:17 @ 13048d4568fa88aa7aca6adab5088d91f21ec1ba sha256:6ec383e1060ff87d3cb221e6057fbb96ff495a1cb1fe70c30a82bf3ad48bd26f, byte for byte, in one commit on the branch by a worker. No other field or entry changes; the disposition stays `owed-correction`.
+- **§4:** E5 as written, its third bullet reading the new `reason`; and, by script at that commit, P4's numstat against B is 2 and 2 and the `reason` value equals the words. No mutation: the value is text that no code branches on (verify-quotes prints it).
+- **§5:** every other byte of P4, and P1, as at 5ff86b13, declared unchanged. A byte of the value differing from the words, or any other change, invalidates: stop and report.
+- **§8 and §9:** the words are tooling text, not the human's, so no re-gate (AUTONOMY §31); the PR body lists them. P4 goes to 4 lines against §7's 2: a class 8 row, with the figure at the commit, follows the commit; §7 is not edited.
