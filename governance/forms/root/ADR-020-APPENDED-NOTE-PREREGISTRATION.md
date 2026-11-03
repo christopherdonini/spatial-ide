@@ -352,3 +352,15 @@ docs/adr/ADR-020-data-plane-origin-admission-for-an-embedded-consumer.md, the Co
 ### Amendment 2 — 2026-11-03 — class 8, written after the words commit was seen
 
 - budget overrun, §7 not edited. P4, `scripts/plan/verify-quotes.baseline.json`: §7 declares 2 lines (1 + 1). The final figure by §7's command, `git diff --numstat B...H` with H the words commit de21212795012d45930d228d5c742e379485cc08, is 4 (2 + 2). The reason is the change Amendment 1 admits, the entry's `reason` value, as its §8 and §9 bullet said. P1 is 15 and 0 at H, within its ceiling; no other file is in the diff.
+
+### Amendment 3 — 2026-11-03 — the closing record (class 1), written after gate 1's reports and the words commit were seen; references and hashes only
+
+- **The final head:** de21212795012d45930d228d5c742e379485cc08, the words commit on the build commit 5ff86b13, from B ae71bd8a.
+- **Build:** `state/consults/2026-11-01-adr-020-appended-note-worker-report.md` (sha256 from line 5 d82d7a455c3dfd727b21efe080e18daec2f84b27d63db9dd2289ec6c60d94d59).
+- **Gate 1:**
+  - `state/consults/gates/2026-11-01-adr-020-appended-note-gate1-architect.md` (sha256 51a96df5be63199c2bd5d612ca0d3633fb3fa39864f4dd898499d20eb57e92f8), gate-log 654, PASS WITH NOTES.
+  - `state/consults/gates/2026-11-01-adr-020-appended-note-gate1-reviewer.md` (sha256 a001bb48f19a48058e9157bcdc0d44a7c522d8a65c715bcfab6c5906b1ef5924), gate-log 657, PASS WITH NOTES.
+- **The words commit** de212127: `state/consults/2026-11-03-adr-020-appended-note-gate1-words-worker-report.md` (sha256 from line 5 3fd6fb705fee00c14e916bc7ed368813cb67d3f8af6d0106824ab829551af979). It carries the architect's D1 under Amendment 1, by the human's ruling of 2026-11-03, item 1, with no re-gate (AUTONOMY §31); the words are tooling text, not the human's.
+- **E11:** CI at the final head, read by gh before this record: 8 of 8 checks pass.
+- **Figures:** Amendment 2.
+- **Merge:** by merge commit (§9).

@@ -176,3 +176,16 @@ Under the human's direction that the brief names (`state/directives/2026-10-31-a
 ### Amendment 1 — 2026-11-03 — class 3, the settlement's cite of 4a's ruling pinned (gate 1, the architect's D2)
 
 - The OPEN-1 bullet's bare line cite: state/directives/2026-10-30-270-readme-r1-r3-d5-open-1-class-1-269-clicked-4a-7a-rulings.md:17 @ 6dff90e9637a6368e695b56916c165f7d1f4b022 sha256:b58d768e47186ebcb2804b539dc8194d5ae6ef53d7a2cfa7cb18e2966cd0f056. No claim changes.
+
+### Amendment 2 — 2026-11-03 — the closing record (class 1), written after gate 1's reports and the words commit were seen; references and hashes only
+
+- **The final head:** 6d6e7b81292b1c479c70683ed80e48f120275844, the words commit on the record commit 48600edc, the test commit c63e5daf and the fix commit 4a82683c, from B 7b311b11.
+- **Build:** `state/consults/2026-11-03-stream-cancel-returns-left-unmarked-worker-report.md` (sha256 from line 5 aaec72aa7971d8f855c673bae8c01de319b39cb11ebe5c325b6a06dc78248354).
+- **Gate 1:**
+  - `state/consults/gates/2026-11-03-stream-cancel-returns-left-unmarked-gate1-architect.md` (sha256 7d3b717f425b4328178537e9b83f8d70eabb2faaecbf75a99746b02a9ab6a7e5), gate-log 666, PASS WITH NOTES.
+  - `state/consults/gates/2026-11-03-stream-cancel-returns-left-unmarked-gate1-reviewer.md` (sha256 19443c72d5da43042d246e9d8db3525462ec743e60d545958268d6c676fd4c42), gate-log 667, PASS WITH NOTES.
+- **The words commit** 6d6e7b81: `state/consults/2026-11-03-stream-cancel-returns-left-unmarked-gate1-words-worker-report.md` (sha256 from line 5 ed47aed2f529f8df671f58f3f773b748373a47874b38bc64a8c8a6297d5737f1). It carries the architect's D1, with no re-gate (AUTONOMY §31); the words are the gate's, not the human's. The architect's D2 is Amendment 1.
+- **CI at the final head,** read by gh before this record: 18 of 18 checks pass.
+- **Figures:** 127 lines over the 2 Scope files by Scope's counting command at 6d6e7b81 (`engine/src/stream.rs` 92/29, `engine/README.md` 3/3), within the declared 150.
+- **Notes with no fix:** the reviewer's operational note, push run 41638434792 at 48600edc, which failed on GitHub 502 and 503 answers and is not a check at the final head.
+- **Merge:** by merge commit.
