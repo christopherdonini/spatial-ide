@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `ef1e50193444baef9b86955989abbaca8b564b566120674cb77a39f7e2ce894b`) at `2026-11-03T12:42:42.629Z`.
+Generated from `PLAN.yaml` (sha256 `6a9a84d7c42dfa054492b41e4a5d74211b476a40cdda71f352f9c09497caff6f`) at `2026-11-03T12:58:33.596Z`.
 
 ## 1. Next
 
@@ -49,6 +49,7 @@ Generated from `PLAN.yaml` (sha256 `ef1e50193444baef9b86955989abbaca8b564b566120
 - **stream-cancel-returns-left-unmarked** — The producer's cancel returns the flush piece leaves unmarked: a prepare error through classify, the two-read window in classify's marking arms, and the send to a receiver that is gone (is a disconnect an observation) — evidence: branch `cut/stream-cancel-returns-left-unmarked`
 - **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **adr-020-appended-note** — ADR-020's appended note, owed by the quote baseline's corrected_by entry (entry 102; the docs lane) — evidence: branch `cut/adr-020-appended-note`
+- **adr-017-note-product-redaction-gate** — An ADR-017 note in the human's typed words: the product publish now runs the redaction scan over every emitted file, except a viewer file whose bytes the viewer's build scanned, and refuses by name on a finding (bundle-redaction-scan-not-in-product-publish); the build-time scan, the reviewed list and the skip; and Corrigendum 4's new uninterruptible term — evidence: branch `cut/adr-017-note-product-redaction-gate`
 - **b1-shell-half** — Shell migration, milestone 4 -- B1 shell half: attributes of the inspected feature, colour by category with its legend, and the table — evidence: branch `cut/b1-shell-half-pr-c`
 - **verify-quotes-cite-listing-line-count** — verify-quotes cite listing states a line count one too high for a file that ends in a newline and lists the line past the end as blank — evidence: branch `cut/verify-quotes-cite-listing-line-count`
 - **port-2-macos-l1-and-app-dirs** — PORT-2 -- macOS L1 for the Cargo workspace: macos-latest in the same matrix, one application-directory boundary replacing the two resolvers, and a case-policy test on a case-insensitive volume — evidence: branch `cut/port-2-macos-l1-and-app-dirs`
@@ -119,7 +120,6 @@ Generated from `PLAN.yaml` (sha256 `ef1e50193444baef9b86955989abbaca8b564b566120
 - **notices-payload-dist-asset** — The raw notice payload, about 3 MB, moves to a fetched dist asset (entry 62) (phase `prototype`) — never queued until placed
 - **pre-1-0-trademark-search** — The trademark register search with counsel before 1.0 (the human's own) (phase `prototype`) — never queued until placed
 - **record-step-style-match-widening** — record_step admits a style.set match value on fillColor, with the step's dependencies naming the match column and its type (milestone 4's OPEN-4 (A′)): a small data-lane piece, or the first commit of piece 1c's step 1 (phase `prototype`) — never queued until placed
-- **adr-017-note-product-redaction-gate** — An ADR-017 note in the human's typed words: the product publish now runs the redaction scan over every emitted file, except a viewer file whose bytes the viewer's build scanned, and refuses by name on a finding (bundle-redaction-scan-not-in-product-publish); the build-time scan, the reviewed list and the skip; and Corrigendum 4's new uninterruptible term (phase `prototype`) — never queued until placed
 - **governance-e3-module-claude-md** — Piece E3: a small generated CLAUDE.md per product module from the rules whose paths match, if reading 3 confirms on-demand loading (phase `prototype`) — never queued until placed
 - **governance-e4-rulebook-into-records** — Piece E4: the rest of AUTONOMY, AI_DEVELOPMENT and PRECEDENTS move into rule records, each rule when it is next touched or cited (phase `prototype`) — never queued until placed
 - **governance-rule-inactivity-list** — A weekly inactivity list of rules whose moment shows no occurrence in four weeks, or unknown, built from existing records only (phase `prototype`) — never queued until placed
