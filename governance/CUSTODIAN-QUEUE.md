@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `7cc02b6797235c7483ac68a69d970140b25c53b6369a3958ecb10858d958b8a6`) at `2026-11-03T17:08:22.842Z`.
+Generated from `PLAN.yaml` (sha256 `9942c8b56ff26cb0ecc7cda5e62d6eb513010c69b966346bd3caeeeb5ae72a57`) at `2026-11-03T17:40:01.906Z`.
 
 ## 1. Next
 
@@ -128,6 +128,15 @@ Generated from `PLAN.yaml` (sha256 `7cc02b6797235c7483ac68a69d970140b25c53b6369a
 - **engine-column-name-case-siblings** — Column names that differ only by letter case beyond the covering: the geometry column matched by byte equality while DuckDB binds identifiers case-insensitively, and the identity, projected and filter columns (phase `prototype`) — never queued until placed
 - **release-v0-2-0** — v0.2.0 release (pre-release): the hero slice with milestone 4, piece 1c and the redaction scan, v0.1.1 folded in; the human schedules it (phase `prototype`) — never queued until placed
 - **questions-mirror-red-line-dotted-lead** — The round-mirror hook's header misses a red-line item whose marker follows a lead holding a full stop (phase `prototype`) — never queued until placed
+- **kl-items-graded-untrue-or-stale** — KNOWN-LIMITATIONS -- on-main notes for the items the cloud truth audit grades untrue (3, 13, 27, 56) or stale (4, 10, 15, 19 and the unnumbered filter paragraph) (phase `prototype`) — never queued until placed
+- **kl-undeclared-behaviours-u1-to-u17** — KNOWN-LIMITATIONS -- the seventeen behaviours the cloud truth audit finds in ordinary use and declared nowhere (U1 to U17) (phase `prototype`) — never queued until placed
+- **publish-session-tier-identity** — Publish and a session-tier identity: KNOWN-LIMITATIONS item 3 says such a file is never saved or published; the cloud audit finds no refusal on the publish path (phase `prototype`) — never queued until placed
+- **narrow-integer-id-unstreamable** — An 8, 16 or 32-bit integer id column is admitted at open but no stream carries it (the cloud audit, U2) (phase `prototype`) — never queued until placed
+- **export-refused-above-row-ceiling-every-scope** — A file over the row ceiling cannot be exported in any scope, the remedy its refusal names included (the cloud audit, U10) (phase `prototype`) — never queued until placed
+- **adr-notes-stale-statements-and-indices** — ADR notes, Status lines and indices stating what has since changed (the cloud ADR audit, A-S1 to A-S8) (phase `prototype`) — never queued until placed
+- **moved-path-mentions-outside-accepted-adrs** — Mentions of the governance paths piece F moved, outside the accepted ADRs: docs/README.md, docs/02, docs/04, docs/14, README.md and the workflow comments (the cloud ADR audit, Task B) (phase `prototype`) — never queued until placed
+- **fixture-determinism-off-windows-record** — kernel/FIXTURES.md on determinism, against the cloud Linux regeneration: G5 and S hash differently off Windows (phase `prototype`) — never queued until placed
+- **redaction-chance-match-in-partitions** — The redaction scan and chance matches in binary content: a drive path in a printable run of exactly the minimum length, in 256 MiB of parquet (the cloud Linux measurement) (phase `prototype`) — never queued until placed
 
 ### Unscheduled
 

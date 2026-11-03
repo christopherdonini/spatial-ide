@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-03T17:08:23.251Z",
-  "plan_hash": "7cc02b6797235c7483ac68a69d970140b25c53b6369a3958ecb10858d958b8a6",
+  "generated_at": "2026-11-03T17:40:02.095Z",
+  "plan_hash": "9942c8b56ff26cb0ecc7cda5e62d6eb513010c69b966346bd3caeeeb5ae72a57",
   "priorities_approved": true,
   "lanes": [
     {
@@ -9822,7 +9822,7 @@
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "WORDS DISPATCHED 2026-11-03: the human's seven clauses (its form's Amendment 1, class 5) applied by a worker at 2026-11-03T16:48:10Z on the PR's branch at ab2ca383, ten edits derived by script; then the gate on the seven only, then out of draft for the click. Before: RULED 2026-11-03 (state/directives/2026-11-03-away-until-11-09-276-open-1-seven-clauses-open-4-c-placed-sitting-wording-leaves-slot-cloud-credit.md, line 8): OPEN-1, the human's words for the seven clauses (1.1, 1.4, 2.2, 3.2, 3.4, 4.4, 4.5), class 5 before the merge; every other clause byte for byte; the gate checks only these. NEXT: the form's class 5 amendment carrying the words byte for byte, a worker applying them on the branch, the gate on the seven, then out of draft for the click. OPEN-4 (c) placed as docs-02-adr-017-entry-current. Before: GATE 1 2026-11-03: the reviewer PASS WITH NOTES (state/consults/gates/2026-11-03-adr-017-note-product-redaction-gate-gate1-reviewer.md), no finding outside the seven clauses, its reading agreeing with each, one span added to 1.1; CI green after a re-run. The merge waits on the human's typed answers on OPEN-1, as the form's section 8 item 3 says. Before: GATE 1 2026-11-03: the architect FAIL as section 5 predicted (state/consults/gates/2026-11-03-adr-017-note-product-redaction-gate-gate1-architect.md): clauses 1.1, 1.4 read alone, 3.4, 4.4 and 4.5 untrue, each among the seven for the human under OPEN-1; no other finding; the reviewer running. The merge waits on the human's answers. Before: BUILT 2026-11-03 at ab2ca383 (state/consults/2026-11-03-adr-017-note-product-redaction-gate-worker-report.md), draft PR #276: the append alone, ADR-017 +10/-0, main's file a byte prefix of the head's; E1 to E6 and E8 to E10 exit 0; verify.mjs online exit 1 on GitHub 502 and 503 answers only, offline exit 0, the PR's CI to settle it. NEXT: gate 1, the architect and the reviewer. The merge waits on OPEN-1, the seven clauses, for the human. Before: IN PROGRESS 2026-11-03: its worker dispatched 2026-11-03T12:56:45Z at main f975d609, branch cut/adr-017-note-product-redaction-gate, the append in the human's words by one Edit (OPEN-2 (A)); node and git only. The merge waits on OPEN-1, the seven clauses, for the human. Before: FORM COMMITTED 2026-11-03 (governance/forms/root/ADR-017-NOTE-PRODUCT-REDACTION-GATE-PREREGISTRATION.md; 142 pins at ca8e44f1), the full form from the architect's draft (state/consults/2026-11-03-adr-017-note-product-redaction-gate-architect-draft.md): 34 clauses checked, 7 for the human (1.1, 1.4, 2.2, 3.2, 3.4, 4.4, 4.5), OPEN-1, a red line, waiting on the human's typed answer before the merge; OPEN-2 (A) dispatch now, OPEN-3 (A), OPEN-4 (a), OPEN-5 (a) and OPEN-6 (a), taken under the human's direction of 2026-10-31, item 4. NEXT: its worker, the append in the human's words by one Edit; the architect and the reviewer from dispatch. Before: DRAFTING 2026-11-03: the architect dispatched 2026-11-03T12:22:33Z at main ca8e44f1, read only, to draft the full form and check the human's words of 2026-10-28 (item G) clause by clause against the code; the docs lane runs it now because sitting-wording waits on the sitting. An untrue clause goes back to the human with its span; the words are not changed. Before: RULED 2026-10-21 (state/directives/2026-10-21-redaction-amendment-3-open-1-to-7-ruled-adr-022-amendment-2-reading-a.md), OPEN-7 of the redaction form's Amendment 3: no ADR text in that piece; this note also carries the build-time scan, the reviewed list and the skip, later, in the human's words. Before: PROPOSED 2026-10-21 by the custodian, under the redaction scan's OPEN-4 (A), ruled by the human (state/directives/2026-10-21-d-s10-go-adr-036-route-i-redaction-open-items-1c-and-milestone-4-ruled-docs-open-1-yes.md): no ADR text in that piece; the custodian proposes a node for an ADR-017 note in the human's typed words, naming the product gate and Corrigendum 4's new term (kernel/BUNDLE-REDACTION-SCAN-PREREGISTRATION.md, OPEN-4). The architect's second revision adds a point (state/consults/2026-10-21-bundle-redaction-scan-not-in-product-publish-architect-revised-form-cites.md, What I could not settle, item 4): Corrigendum 4's table and kernel/CANCELLATION-AND-TRACING.md section 3 do not list the Finalizing window; whether this node also covers that design note is the human's. The human places it.",
+      "summary": "GATE 2 2026-11-03 at c614cc5c, on the seven only: the architect PASS WITH NOTES (state/consults/gates/2026-11-03-adr-017-note-product-redaction-gate-gate2-architect.md), each clause in the human's words holding at B's code, two notes on 4.4 with no words, the 1.4 reading the human's evident intent; the reviewer PASS (state/consults/gates/2026-11-03-adr-017-note-product-redaction-gate-gate2-reviewer.md), the ten spans only, the bytes derived independently, E1 to E11 at H2. The closing record is its form's Amendment 2. Out of draft for the human's click; main holds from the merge to the click. Before: WORDS BUILT 2026-11-03 at c614cc5c (state/consults/2026-11-03-adr-017-note-product-redaction-gate-words-worker-report.md). Before: WORDS DISPATCHED 2026-11-03: the human's seven clauses (its form's Amendment 1, class 5) applied by a worker at 2026-11-03T16:48:10Z on the PR's branch at ab2ca383, ten edits derived by script; then the gate on the seven only, then out of draft for the click. Before: RULED 2026-11-03 (state/directives/2026-11-03-away-until-11-09-276-open-1-seven-clauses-open-4-c-placed-sitting-wording-leaves-slot-cloud-credit.md, line 8): OPEN-1, the human's words for the seven clauses (1.1, 1.4, 2.2, 3.2, 3.4, 4.4, 4.5), class 5 before the merge; every other clause byte for byte; the gate checks only these. NEXT: the form's class 5 amendment carrying the words byte for byte, a worker applying them on the branch, the gate on the seven, then out of draft for the click. OPEN-4 (c) placed as docs-02-adr-017-entry-current. Before: GATE 1 2026-11-03: the reviewer PASS WITH NOTES (state/consults/gates/2026-11-03-adr-017-note-product-redaction-gate-gate1-reviewer.md), no finding outside the seven clauses, its reading agreeing with each, one span added to 1.1; CI green after a re-run. The merge waits on the human's typed answers on OPEN-1, as the form's section 8 item 3 says. Before: GATE 1 2026-11-03: the architect FAIL as section 5 predicted (state/consults/gates/2026-11-03-adr-017-note-product-redaction-gate-gate1-architect.md): clauses 1.1, 1.4 read alone, 3.4, 4.4 and 4.5 untrue, each among the seven for the human under OPEN-1; no other finding; the reviewer running. The merge waits on the human's answers. Before: BUILT 2026-11-03 at ab2ca383 (state/consults/2026-11-03-adr-017-note-product-redaction-gate-worker-report.md), draft PR #276: the append alone, ADR-017 +10/-0, main's file a byte prefix of the head's; E1 to E6 and E8 to E10 exit 0; verify.mjs online exit 1 on GitHub 502 and 503 answers only, offline exit 0, the PR's CI to settle it. NEXT: gate 1, the architect and the reviewer. The merge waits on OPEN-1, the seven clauses, for the human. Before: IN PROGRESS 2026-11-03: its worker dispatched 2026-11-03T12:56:45Z at main f975d609, branch cut/adr-017-note-product-redaction-gate, the append in the human's words by one Edit (OPEN-2 (A)); node and git only. The merge waits on OPEN-1, the seven clauses, for the human. Before: FORM COMMITTED 2026-11-03 (governance/forms/root/ADR-017-NOTE-PRODUCT-REDACTION-GATE-PREREGISTRATION.md; 142 pins at ca8e44f1), the full form from the architect's draft (state/consults/2026-11-03-adr-017-note-product-redaction-gate-architect-draft.md): 34 clauses checked, 7 for the human (1.1, 1.4, 2.2, 3.2, 3.4, 4.4, 4.5), OPEN-1, a red line, waiting on the human's typed answer before the merge; OPEN-2 (A) dispatch now, OPEN-3 (A), OPEN-4 (a), OPEN-5 (a) and OPEN-6 (a), taken under the human's direction of 2026-10-31, item 4. NEXT: its worker, the append in the human's words by one Edit; the architect and the reviewer from dispatch. Before: DRAFTING 2026-11-03: the architect dispatched 2026-11-03T12:22:33Z at main ca8e44f1, read only, to draft the full form and check the human's words of 2026-10-28 (item G) clause by clause against the code; the docs lane runs it now because sitting-wording waits on the sitting. An untrue clause goes back to the human with its span; the words are not changed. Before: RULED 2026-10-21 (state/directives/2026-10-21-redaction-amendment-3-open-1-to-7-ruled-adr-022-amendment-2-reading-a.md), OPEN-7 of the redaction form's Amendment 3: no ADR text in that piece; this note also carries the build-time scan, the reviewed list and the skip, later, in the human's words. Before: PROPOSED 2026-10-21 by the custodian, under the redaction scan's OPEN-4 (A), ruled by the human (state/directives/2026-10-21-d-s10-go-adr-036-route-i-redaction-open-items-1c-and-milestone-4-ruled-docs-open-1-yes.md): no ADR text in that piece; the custodian proposes a node for an ADR-017 note in the human's typed words, naming the product gate and Corrigendum 4's new term (kernel/BUNDLE-REDACTION-SCAN-PREREGISTRATION.md, OPEN-4). The architect's second revision adds a point (state/consults/2026-10-21-bundle-redaction-scan-not-in-product-publish-architect-revised-form-cites.md, What I could not settle, item 4): Corrigendum 4's table and kernel/CANCELLATION-AND-TRACING.md section 3 do not list the Finalizing window; whether this node also covers that design note is the human's. The human places it.",
       "dates": {
         "opened": "2026-10-21",
         "done": null
@@ -10392,6 +10392,231 @@
       "summary": "PROPOSED 2026-10-23 from #245's gate 1 (both gates; state/consults/2026-10-23-questions-mirror-item-count-gate1-words-reconciled-architect.md, item 6): the hook's header reads none for a question whose red-line marker follows a lead holding a full stop (a section number or a file name), because questions-mirror-item-count's lead class excludes the full stop; widen the lead, or keep it and state the limit, under its own form, after questions-mirror-item-count merges. For the human's grading and placement.",
       "dates": {
         "opened": "2026-10-23",
+        "done": null
+      }
+    },
+    {
+      "id": "kl-items-graded-untrue-or-stale",
+      "title": "KNOWN-LIMITATIONS -- on-main notes for the items the cloud truth audit grades untrue (3, 13, 27, 56) or stale (4, 10, 15, 19 and the unnumbered filter paragraph)",
+      "kind": "task",
+      "lane": "release",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "depends_on": [],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "none",
+      "evidence": null,
+      "budget_minutes": 90,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [],
+      "summary": "PROPOSED 2026-11-03 by the custodian, from the cloud KNOWN-LIMITATIONS truth audit (state/consults/2026-11-03-cloud-kl-audit-report.md, (a draft and not Authority)), read as any reading: at 6b67d44, whose product code is main's, it grades a named clause of items 3, 13, 27 and 56 untrue and items 4, 10, 15, 19 and the unnumbered filter paragraph stale on main, none executed. Each clause is re-read against main before any word; the words are the human's at the v0.2 rewrite. The v0.2 draft's findings 1 to 3 meet the same items (state/consults/2026-11-03-cloud-v0-2-drafts-release-0-2-draft.md, section 5). Item 3's clause is also the product question in publish-session-tier-identity. Proposed; placed by the human.",
+      "dates": {
+        "opened": "2026-11-03",
+        "done": null
+      }
+    },
+    {
+      "id": "kl-undeclared-behaviours-u1-to-u17",
+      "title": "KNOWN-LIMITATIONS -- the seventeen behaviours the cloud truth audit finds in ordinary use and declared nowhere (U1 to U17)",
+      "kind": "task",
+      "lane": "release",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "depends_on": [],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "none",
+      "evidence": null,
+      "budget_minutes": 120,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [],
+      "summary": "PROPOSED 2026-11-03 by the custodian, from the cloud KNOWN-LIMITATIONS truth audit (state/consults/2026-11-03-cloud-kl-audit-report.md, its section on behaviour no entry declares; (a draft and not Authority)): seventeen behaviours found by code reading at 6b67d44, each checked against the file by text search, none executed. Each is re-read, then declared or split to a fix node: U1 is publish-session-tier-identity, U2 narrow-integer-id-unstreamable, U10 export-refused-above-row-ceiling-every-scope. U5, U12 and U17 rest on shown strings (the P6 placeholders, the publish dialog's filter sentence, an admission refusal's advice), so their words are the human's. Proposed; placed by the human.",
+      "dates": {
+        "opened": "2026-11-03",
+        "done": null
+      }
+    },
+    {
+      "id": "publish-session-tier-identity",
+      "title": "Publish and a session-tier identity: KNOWN-LIMITATIONS item 3 says such a file is never saved or published; the cloud audit finds no refusal on the publish path",
+      "kind": "task",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "depends_on": [],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "none",
+      "evidence": null,
+      "budget_minutes": 60,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [],
+      "summary": "PROPOSED 2026-11-03 by the custodian, from the cloud KNOWN-LIMITATIONS truth audit (state/consults/2026-11-03-cloud-kl-audit-report.md, item 3 and U1; (a draft and not Authority)): by code reading at 6b67d44, a file with no id column (an ID column included, the lookup being exact) opens on the session tier and exports with file_row_number as the bundle's id, the manifest keeping its caveat that uniqueness was verified at open; no publish-side check refuses the session tier. A reading first, by a test at main; then the refusal item 3 states, or item 3's words, the choice and the words the human's. Proposed; placed by the human.",
+      "dates": {
+        "opened": "2026-11-03",
+        "done": null
+      }
+    },
+    {
+      "id": "narrow-integer-id-unstreamable",
+      "title": "An 8, 16 or 32-bit integer id column is admitted at open but no stream carries it (the cloud audit, U2)",
+      "kind": "task",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "depends_on": [],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "none",
+      "evidence": null,
+      "budget_minutes": 60,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [],
+      "summary": "PROPOSED 2026-11-03 by the custodian, from the cloud KNOWN-LIMITATIONS truth audit (state/consults/2026-11-03-cloud-kl-audit-report.md, U2; (a draft and not Authority)): by code reading at 6b67d44, identity admission accepts a narrow integer id column while every stream decodes id only as UInt64 or Int64 and fails anything else with engine.query, so such a file opens and draws nothing; no test streams one, and the audit assumes DuckDB hands a Parquet INT32 to Arrow as Int32. A reading first, by a test on a narrow-integer file; then a refusal at open or a widening on the stream side. Proposed; placed by the human.",
+      "dates": {
+        "opened": "2026-11-03",
+        "done": null
+      }
+    },
+    {
+      "id": "export-refused-above-row-ceiling-every-scope",
+      "title": "A file over the row ceiling cannot be exported in any scope, the remedy its refusal names included (the cloud audit, U10)",
+      "kind": "task",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "depends_on": [],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "none",
+      "evidence": null,
+      "budget_minutes": 60,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [],
+      "summary": "PROPOSED 2026-11-03 by the custodian, from the cloud KNOWN-LIMITATIONS truth audit (state/consults/2026-11-03-cloud-kl-audit-report.md, U10, with item 5; (a draft and not Authority)): by code reading at 6b67d44, a file over 2,000,000 rows is refused for Current view however small the view, and so is the remedy the refusal suggests. A reading first, by a test at main; then the ceiling read against the scope's rows, or item 5's words, the human's. Proposed; placed by the human.",
+      "dates": {
+        "opened": "2026-11-03",
+        "done": null
+      }
+    },
+    {
+      "id": "adr-notes-stale-statements-and-indices",
+      "title": "ADR notes, Status lines and indices stating what has since changed (the cloud ADR audit, A-S1 to A-S8)",
+      "kind": "task",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "depends_on": [],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "none",
+      "evidence": null,
+      "budget_minutes": 60,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [],
+      "summary": "PROPOSED 2026-11-03 by the custodian, from the cloud ADR notes and docs paths audit (state/consults/2026-11-03-cloud-adr-docs-audit-report.md, Task A; (a draft and not Authority)): ADR-026's note names ADR-032 Proposed (A-S1); ADR-017's Corrigendum 1 names ADR-009 open (A-S2); ADR-026's Status line calls a settled question open (A-S3); ADR-021's note rests on ADR-023's Status words, which no longer fit ADR-023's Decision section (A-S5); ADR-035's note names the close race unsettled after its node merged (A-S7); docs/README.md and docs/02 count three of ADR-017's five corrigenda (A-S8; docs/02's half is docs-02-adr-017-entry-current); PLAN holds ADR-021's note of 2026-09-29 both as accepted and as accepted later (A-S4). Notes, Status lines and amendments are the human's words; the indices and the PLAN text are not. Proposed; placed by the human.",
+      "dates": {
+        "opened": "2026-11-03",
+        "done": null
+      }
+    },
+    {
+      "id": "moved-path-mentions-outside-accepted-adrs",
+      "title": "Mentions of the governance paths piece F moved, outside the accepted ADRs: docs/README.md, docs/02, docs/04, docs/14, README.md and the workflow comments (the cloud ADR audit, Task B)",
+      "kind": "task",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "depends_on": [],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "none",
+      "evidence": null,
+      "budget_minutes": 45,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [],
+      "summary": "PROPOSED 2026-11-03 by the custodian, from the cloud ADR notes and docs paths audit (state/consults/2026-11-03-cloud-adr-docs-audit-report.md, Task B; (a draft and not Authority)): 134 mentions on 119 lines in 35 files name a path governance/MOVED.tsv maps to a new one, 133 failing as written; none is a link or pinned, and every workflow mention is a YAML comment or a step name, which no workflow reads. The accepted ADRs keep theirs (append-only); the mutable docs and the workflow comments can name the new paths. The workflow files are the human's to place, what CI installs being a red line, though these lines are comments and names only. Proposed; placed by the human.",
+      "dates": {
+        "opened": "2026-11-03",
+        "done": null
+      }
+    },
+    {
+      "id": "fixture-determinism-off-windows-record",
+      "title": "kernel/FIXTURES.md on determinism, against the cloud Linux regeneration: G5 and S hash differently off Windows",
+      "kind": "task",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "depends_on": [],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "none",
+      "evidence": null,
+      "budget_minutes": 45,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [],
+      "summary": "PROPOSED 2026-11-03 by the custodian, from the cloud fixture determinism run (state/consults/2026-11-03-cloud-fixtures-linux-report.md, (a draft and not Authority)): at 6b67d44 on one Ubuntu 24.04 host with rustc 1.97.0, G5 regenerates four bytes longer with another sha256 and S at its recorded size with another sha256, each repeating on that host; its libm probe finds glibc sin and cos results one ULP from correctly rounded on angles the generator uses, not shown to be the cause. The piece: the FIXTURES.md line naming that result, and the probe's Windows half (the same program on this machine, its output diffed against the filed hash); any test pinning these hashes off Windows named. Proposed; placed by the human.",
+      "dates": {
+        "opened": "2026-11-03",
+        "done": null
+      }
+    },
+    {
+      "id": "redaction-chance-match-in-partitions",
+      "title": "The redaction scan and chance matches in binary content: a drive path in a printable run of exactly the minimum length, in 256 MiB of parquet (the cloud Linux measurement)",
+      "kind": "task",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "depends_on": [],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "none",
+      "evidence": null,
+      "budget_minutes": 60,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [],
+      "summary": "PROPOSED 2026-11-03 by the custodian, from the cloud Linux measurements (state/consults/2026-11-03-cloud-linux-measurements-report.md, Task B; (a draft and not Authority)): every run of the scan over a 256 MiB source parquet returned one local-filesystem-path finding, the bytes D:/ in a printable run of exactly MIN_PRINTABLE_RUN bytes inside binary data. The product gate scans a bundle's partitions, which are parquet, so a reading first: the chance-match rate over partition-shaped content at the sizes publish admits, whether an ordinary publish can be refused by one, and whether a declared limit covers it (the module's own doc names chance matches; KNOWN-LIMITATIONS does not, by text search). A change to the gate is the security posture, the human's. Proposed; placed by the human.",
+      "dates": {
+        "opened": "2026-11-03",
         "done": null
       }
     }

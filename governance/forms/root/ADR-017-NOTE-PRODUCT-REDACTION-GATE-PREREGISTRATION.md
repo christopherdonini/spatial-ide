@@ -393,3 +393,15 @@ Each row is one line cite in this form, in order: F for the form's own text, C f
 - **The bytes at H2:** ADR-017 sha256 59bb1b2d14bc4e5166ef618eb1f58ce0bff3cafa13f5387dc35a05f8a837d115, 1169 lines, no CR, ending in a line feed; the note, from the line feed before its heading to the end, sha256 63086ced004e234af27f16e60ddb1f92f65709e276609bf7ef2275ec35318832. ADR-017 at H is sha256 06f8ba99c1ce08163e182464261917f7fe6f8540c24a98b504695518f172d732.
 - **What this changes in the checks:** E1 holds as written (at H, `git diff --numstat f975d609...ab2ca383` gives 10 and 0). E4, §1's first may-claim and §8 item 2 read, from this amendment: the bytes after B's length equal the line feed and the directive's lines 29 to 37 with the seven clauses applied as above, that is, the note's sha256 here. §8 item 3 is met by this amendment.
 - **The gate at H2** checks only the seven. The architect reads each clause's words once against the code at B. The reviewer checks that H to H2 changes only those ten spans and that the bytes match, and runs E1 to E11 at H2.
+
+### Amendment 2 — 2026-11-03 — the closing record (class 1), written after gate 2's reports were seen; references and hashes only
+
+- **The final head:** H2, c614cc5c9a446106f61c6a7e9f3d178ee358f28b, one commit on H (ab2ca383389d18a4e2bd3209bd3500de4ae34cba), from B f975d60901472545bbb6dd608c9970bd32e8a165. ADR-017 and the note at H2 have the sha256 values Amendment 1 gives.
+- **The words:** `state/consults/2026-11-03-adr-017-note-product-redaction-gate-words-worker-report.md` @ 84e1ecaf (sha256 from line 5 38356577ac2fc59df0bedd3f1f31517f51e09225b44ed99b16053b4686524c8d).
+- **Gate 1 at H:** gate-log 665 (the architect, FAIL as §5 predicted) and 668 (the reviewer, PASS WITH NOTES).
+- **Gate 2 at H2, the seven only:**
+  - `state/consults/gates/2026-11-03-adr-017-note-product-redaction-gate-gate2-architect.md` (sha256 43d3045ae3d5af6a188d52d15d27d6c70be80fd90326986f56a92ce8b4b4e331), gate-log 669, PASS WITH NOTES.
+  - `state/consults/gates/2026-11-03-adr-017-note-product-redaction-gate-gate2-reviewer.md` (sha256 112d1472f1f5ff26dad374bb22fb94388c4edb3cf3467704bbb11bf2a316fd01), gate-log 670, PASS.
+- **CI at H2,** by the reviewer's check 4: 8 of 8 checks pass.
+- **Notes with no fix, for the click:** the architect's N1 and N2 on 4.4, no words given; its check 2 reads Amendment 1's 1.4 reading as the human's evident intent.
+- **Merge:** the human's click, by merge commit.
