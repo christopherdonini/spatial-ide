@@ -1,0 +1,9 @@
+# The one finding in Task B: parquet-256MiB.parquet (sha256 54ace6ef7ae56df4d891f6757ae0cdb2cc17201118cb2c62b13d16f044978b0a), read by script.
+class (as scan reported it): local-filesystem-path. The bytes `D:/` fit only the drive-letter rule among the scan's shapes; byte_offset 260045185 of 268433653
+matched bytes: b'D:/' (hex 44 3a 2f)
+the printable-ASCII run holding it: offsets 260045176 to 260045188 (exclusive), 12 bytes, b'CA$S:Yav,D:/'
+MIN_PRINTABLE_RUN in kernel/src/bundle/redaction.rs: 12
+bytes on either side of the run: 0xef before, 0x11 after (both outside 0x20..=0x7e)
+hex, 8 bytes either side of the run: 51 2c 25 dd 76 10 31 ef 43 41 24 53 3a 59 61 76 2c 44 3a 2f 11 2f ef 43 41 b2 e9 f0
+The same single finding was returned by all five runs. The 1, 16 and 64 MiB parquet files are separate writes
+(2,657, 43,031 and 172,948 features) and gave no finding; this offset lies beyond their lengths.

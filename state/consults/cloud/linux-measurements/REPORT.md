@@ -97,7 +97,7 @@ The rest of the engine suite was not run.
   `Dataset::open` Ok with Int64 columns.
 - **The runs:** every engine cell ran in both shapes (`all`, and the viewport over the file's extent
   with the limit at rows + 1), twice each, in each of two processes.
-  - The two processes' outputs are identical once the scratch path and times are masked.
+  - The two final processes' outputs are identical apart from their `time` lines.
   - The 24 parquet files each process wrote (the 18 above and their 6 base files) are byte-identical
     across the two (`task-a/probe-fixtures-sha256.txt`).
 - **The terms:**
@@ -178,8 +178,8 @@ counterpart in that record.
 One row differs from what the form's amendments record for the MSVC build: a product whose exact
 value is i64::MIN.
 - **The MSVC record:** Amendment 5 records T-e-ar-n's `a * b > 0` ending in the fixed detail on MSVC,
-  although every product fits. Amendment 8 (A.1) reads that as the MSVC path flagging a product of
-  magnitude exactly 2^63. Its figure is `SELECT a * b` over the row (−2147483648, 4294967296), which raised
+  although every product fits. Amendment 8 records the human's ruling A.1, which reads that as the MSVC
+  path flagging a product of magnitude exactly 2^63. The amendment's figure is `SELECT a * b` over the row (−2147483648, 4294967296), which raised
   `Out of Range Error`.
 - **This host:** both operand orders return −9223372036854775808 exactly in the per-row query: T-e's
   row (−4294967296, 2147483648), and Amendment 8's own row (−2147483648, 4294967296) in the added file
@@ -199,8 +199,122 @@ value is i64::MIN.
 
 ## Task B: the per-byte cost of `bundle::redaction::scan`, Linux only
 
-TASK_B_PLACEHOLDER
+**The statement measured against.** The ADR-017 Note on the product redaction gate states that the
+scan's per-byte cost is unmeasured. The Note's form,
+`governance/forms/root/ADR-017-NOTE-PRODUCT-REDACTION-GATE-PREREGISTRATION.md`, checks that clause as
+row 4.3: "per-byte cost unmeasured and not claimed" — "true: no measurement exists". It rests on
+`governance/forms/kernel/BUNDLE-REDACTION-SCAN-PREREGISTRATION.md` §2.6: "Its per-byte cost is unmeasured
+and not claimed". This section supplies Linux figures only. It edits neither form, and it does not say
+whether those sentences should change.
+
+### What was timed
+
+- **The function:** `spatial_kernel::bundle::redaction::scan(file, bytes, machine)`, called from the
+  kernel crate (`kernel/src/bundle/redaction.rs` at `6b67d44b`, sha256 `1181ab2b…181c`).
+- **The build:** release, with the root workspace's release profile copied: `opt-level=3`, cargo's
+  default codegen units, no LTO, no `target-cpu` flag; rustc 1.97.0.
+- **The span timed:** only the call. Each file was first read whole with `std::fs::read`, the product
+  walk's own read, and that read is outside the timer. So are directory listing, the walk and the
+  cancellation check. The returned findings vector is inside it.
+- **The runs:** 5 calls per file, back to back, in one process, with no warm-up discarded. Every run is
+  in `task-b/bench-run.txt`.
+- **The machine:** no build, test or other workload of this session ran during the timed run. Just
+  before it, `ps` sorted by CPU showed no other busy process. The load average was recorded before and
+  after (`task-b/build-and-run-facts.txt`).
+- **The identifiers:** fixed, so the run does not depend on who runs it. One username (`benchuser`) and
+  one hostname (`BENCH-HOST-01`), the shape a Windows environment yields (`USERNAME`, `COMPUTERNAME`).
+  This container sets neither `USER` nor `HOSTNAME`, so `from_environment()` would scan for no identity
+  here. The two declared strings are the shape the product gate passes (`kernel/src/publish/mod.rs`, the
+  gate): the repository's copyright line and its URL.
+  - By the source, that is 24 passes over every byte: the 19 literal needles, the drive-letter loop,
+    the one username and the one hostname, and the two declared strings.
+  - The figures hold for this identifier set. A set with more strings makes more passes.
+- **The inputs:** written by `redaction-bench gen` before the timed run. Their sha256 values are in
+  `task-b/build-and-run-facts.txt`; the inputs themselves are not committed (1.0 GiB).
+  - **random:** splitmix64 from a fixed seed, exactly 1, 16, 64 and 256 MiB.
+  - **text:** `The quick brown fox jumps over the lazy dog 0123456789.\n` repeated, cut to the same exact
+    sizes. It contains no needle, so every text run returned 0 findings.
+  - **parquet:** one whole file per size from the engine's fixture writer,
+    `spatial_engine::fixture::write_geoparquet` with `FixtureSpec::default()` and only `features`
+    changed. That is polygons in LV95 with a covering bbox, under the writer's default row-group limit
+    of 1,048,576 rows, which is above every file's feature count. The row-group count was not read
+    back.
+    - The feature counts (2,657, 43,031, 172,948 and 703,127) were chosen so each file lands within
+      0.02% of its target. The files are not cut, so each stays a complete parquet file.
+    - These are the fixture writer's GeoParquet files, not a bundle's Arrow IPC partitions. The Arrow IPC
+      partitions are what the product gate scans, and they were not measured.
+
+### Results (Linux, this host only)
+
+Spread is (max − min) / median over the five runs.
+
+| Content | Bytes | Median s | Min s | Max s | Spread | Median ns/byte | Median MiB/s | Findings per run |
+|---|---|---|---|---|---|---|---|---|
+| random | 1,048,576 | 0.047570 | 0.046510 | 0.049581 | 6.46% | 45.37 | 21.02 | 0 |
+| random | 16,777,216 | 0.818250 | 0.787280 | 0.982798 | 23.89% | 48.77 | 19.55 | 0 |
+| random | 67,108,864 | 3.489273 | 3.481670 | 3.667088 | 5.31% | 51.99 | 18.34 | 0 |
+| random | 268,435,456 | 14.120733 | 13.858345 | 14.170930 | 2.21% | 52.60 | 18.13 | 0 |
+| text | 1,048,576 | 0.052544 | 0.044525 | 0.073410 | 54.97% | 50.11 | 19.03 | 0 |
+| text | 16,777,216 | 0.763688 | 0.728101 | 0.900993 | 22.64% | 45.52 | 20.95 | 0 |
+| text | 67,108,864 | 3.272211 | 2.979646 | 3.325376 | 10.57% | 48.76 | 19.56 | 0 |
+| text | 268,435,456 | 13.757998 | 13.503789 | 15.066387 | 11.36% | 51.25 | 18.61 | 0 |
+| parquet | 1,048,373 | 0.052013 | 0.051794 | 0.059168 | 14.18% | 49.61 | 19.22 | 0 |
+| parquet | 16,777,319 | 0.945393 | 0.920282 | 0.973177 | 5.60% | 56.35 | 16.92 | 0 |
+| parquet | 67,108,313 | 3.899079 | 3.526141 | 3.962384 | 11.19% | 58.10 | 16.41 | 0 |
+| parquet | 268,433,653 | 15.060793 | 14.168020 | 15.430326 | 8.38% | 56.11 | 17.00 | 1 |
+
+- **The medians:** from 45.37 to 58.10 ns per byte across the twelve rows. By content: random 45.37 to
+  52.60, text 45.52 to 51.25, parquet 49.61 to 58.10.
+- **Single runs:** from 42.46 ns per byte (text, 1 MiB, run 1) to 70.01 (text, 1 MiB, run 3).
+- **The 256 MiB rows:** median 14.12 s for random, 13.76 s for text and 15.06 s for parquet.
+- **Spread:** the 1 MiB text row's 54.97% comes from two of its five runs, at 70.01 and 68.07 ns per
+  byte, against 42.46 to 50.11 for the other three. No cause was established. This host is a KVM guest
+  whose frequency and co-tenancy cannot be seen from inside.
+
+**The one finding.** Every run over the 256 MiB parquet file returned 1 finding:
+- class `local-filesystem-path`, at byte 260,045,185;
+- the bytes `D:/`, inside the printable run `CA$S:Yav,D:/`;
+- that run is 12 bytes long, exactly `MIN_PRINTABLE_RUN`, with non-printable bytes on either side
+  (0xef before, 0x11 after).
+
+It sits in the file's binary data; `task-b/finding-parquet-256MiB.txt` has the bytes. It is recorded as
+observed, with no reading of what it means for the product gate. The gate scans a bundle's partitions,
+manifest and sidecar, not a source parquet.
+
+### What these figures are not
+
+- **Not Windows figures.** Nothing here is claimed for Windows or for the MSVC target, and nothing for
+  macOS.
+- **Not docs/08 figures.** docs/08 has no row for this cost.
+- **Not a bound.** Five runs on one virtual host are neither a bound nor a p95.
+- **Not the gate's whole cost.** File reads, the directory walk and the viewer-asset skip are outside
+  the timer. So is any `scan_directory` or `first_undeclared_findings` call.
+- **Not content whose long printable runs hold matches.** In such content, each match makes
+  `in_printable_run` walk the run to both of its ends (by the source). The only match here sat in a
+  12-byte run, so that cost was not exercised and is not measured.
+- **Not other identifier sets, other Rust versions, or a different `codegen-units` or LTO setting.**
 
 ## Files in this folder
 
-FILES_PLACEHOLDER
+| Path | What it holds |
+|---|---|
+| `REPORT.md` | this report |
+| `host.txt` | the host facts the tables cite |
+| `harness/Cargo.toml`, `harness/Cargo.lock` | the standalone workspace, with the root's profiles copied and the root's lockfile entries |
+| `harness/o1-probe/src/main.rs` | Task A's probe: the P0 cells against the i128 oracle |
+| `harness/redaction-bench/src/main.rs` | Task B's input generator and timer |
+| `task-a/build-facts.txt` | the dev build: command, exit, compiler, flags, DuckDB version, the multiply guard |
+| `task-a/duckdb-compile-units-dev.txt` | one line per DuckDB compile unit (352), flags without `-I` |
+| `task-a/pinned-tests.txt` | the whole output of each pinned and named test run |
+| `task-a/probe-run1.txt`, `task-a/probe-run2.txt` | the probe's two final processes, every line (identical apart from times) |
+| `task-a/probe-fixtures-sha256.txt` | the sha256 of the 24 parquet files the probe wrote (both processes identical) |
+| `task-b/build-and-run-facts.txt` | the release build, the binary's sha256, the inputs' sha256 and lengths, the machine state around the run |
+| `task-b/bench-run.txt` | the bench's whole output: all 60 runs and the 12 summaries |
+| `task-b/finding-parquet-256MiB.txt` | the bytes of the one finding |
+
+To reproduce:
+1. From `harness/`, run `cargo build -p o1-probe` and `cargo build --release -p redaction-bench`.
+2. Run `o1-probe <dir>`.
+3. Run `redaction-bench gen <dir>`, then `redaction-bench run <dir> 5`.
+
+The pinned tests are run from the repository root with the commands in `task-a/pinned-tests.txt`.

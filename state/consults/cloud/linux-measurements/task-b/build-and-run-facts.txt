@@ -1,0 +1,43 @@
+# Task B build and run facts. Paths under the session scratch directory are written <SCRATCH>.
+
+## Build (from state/consults/cloud/linux-measurements/harness/)
+CARGO_TARGET_DIR=<SCRATCH>/target CC_ENABLE_DEBUG_OUTPUT=1 TMPDIR=<SCRATCH>/tmp CARGO_BUILD_JOBS=4 cargo build --release -p redaction-bench -vv
+started 2026-11-03T16:40:43Z, ended 2026-11-03T16:55:49Z; rc=0
+Finished `release` profile [optimized + debuginfo] target(s) in 15m 06s
+(cargo's own line; not a measurement. Part of it overlapped Task A's test runs, which took no timings.)
+- rustc flags of the two crates that matter, from the -vv Running lines:
+    spatial_kernel: -C debuginfo=2 -C opt-level=3 (no codegen-units, lto or target-cpu flag: cargo's release defaults)
+    redaction_bench: -C debuginfo=2 -C opt-level=3 (no codegen-units, lto or target-cpu flag: cargo's release defaults)
+- bundled DuckDB in this profile (linked, not timed): units: 352, all 'c++ -O3 -ffunction-sections -fdata-sections -fPIC -m64 -w -std=c++11 -w -DDUCKDB_EXTENSION_CORE_FUNCTIONS_LINKED=1 -DDUCKDB_EXTENSION_JSON_LINKED=1 -DDUCKDB_EXTENSION_PARQUET_LINKED=1 -DDUCKDB_EXTENSION_AUTOINSTALL_DEFAULT=1 -DDUCKDB_EXTENSION_AUTOLOAD_DEFAULT=1 -DNDEBUG -c'
+- the binary: <SCRATCH>/target/release/redaction-bench, 49696416 B, sha256 19442e53e71ce94d302d48d704cc48a2319288972897ec5409270f8f07455828
+- the bench source: harness/redaction-bench/src/main.rs, sha256 9a964a03923f422703d126bfcb1cfa79efef2d26c40ec50c308ea75fdddcdeb0
+- the scanned function: kernel/src/bundle/redaction.rs at HEAD 6b67d44bc242dc1cbc9f73efdbd7cd20e4ecd1f4, sha256 1181ab2b510156b5a3b3e1771d9ce9d38d35af9bfc96ae251958bf2f814e181c, called as spatial_kernel::bundle::redaction::scan
+
+## Inputs (redaction-bench gen <SCRATCH>/rb-inputs), untimed
+PARQUET target_mib=1 features=2657 bytes=1048373 vs_target=-0.0194%
+PARQUET target_mib=16 features=43031 bytes=16777319 vs_target=+0.0006%
+PARQUET target_mib=64 features=172948 bytes=67108313 vs_target=-0.0008%
+PARQUET target_mib=256 features=703127 bytes=268433653 vs_target=-0.0007%
+sha256 and length of each input:
+    4474a66d9dae32e9a52718b55c61d2de89fad3ec14c1d7d425613cf650a86c05  16777319  parquet-16MiB.parquet
+    6f939cf9d1f9f37153aa21e8932d259d9010c5feaea655fbd2ccf802fcc0c6c2  1048373  parquet-1MiB.parquet
+    54ace6ef7ae56df4d891f6757ae0cdb2cc17201118cb2c62b13d16f044978b0a  268433653  parquet-256MiB.parquet
+    9d628145d7d73b0dd428a1486069bd768243ad6d56c27eb87eb35a68c9a6062f  67108313  parquet-64MiB.parquet
+    fdba065e6080aa14c439ac4fb783e8617a6ccca2678173d27ff136fce775386d  16777216  random-16MiB.bin
+    dff9e64f1dfe7907ef5dab8b701e0f395e0b16487c75b12b1fd1add300ff1d19  1048576  random-1MiB.bin
+    0e537f079e09db712e44d809bea1246532b39c678dbbdad0a6a276dae7f70c5e  268435456  random-256MiB.bin
+    1ef77cbe14bc6cc4f7202ade23a47156bd0a3ad624b427bee4fe852e12a3dcda  67108864  random-64MiB.bin
+    272fa1a06590fa0efab6ca9e684e201f02d8db96a96f9ea1f354dde4cd38943f  16777216  text-16MiB.txt
+    5949ea5328975823da5b3194ef6fae64ae112738c1e6062db0f8ad427a90995b  1048576  text-1MiB.txt
+    9ec79c9ed9e7c9ae53d184e6714b9aa0d5737f309a65f96b80d2a42149ee6423  268435456  text-256MiB.txt
+    e1bf5c67b43b4a54385b5a033d93e41be189d8194ca1bd90dd89c3e1f4827294  67108864  text-64MiB.txt
+
+## Machine state around the timed run
+# before: 2026-11-03T16:56:32Z  16:56:32 up 32 min,  0 user,  load average: 1.82, 3.35, 3.22
+  PID %CPU COMMAND
+  167  1.5 claude
+    1  0.0 process_api
+   15  0.0 rcu_preempt
+  151  0.0 environment-man
+   12  0.0 kworker/u16:0-iou_exit
+# after: 2026-11-03T17:01:14Z  17:01:14 up 37 min,  0 user,  load average: 1.00, 1.91, 2.63
