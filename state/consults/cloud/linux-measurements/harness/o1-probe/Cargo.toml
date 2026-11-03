@@ -1,0 +1,14 @@
+[package]
+name = "o1-probe"
+version = "0.0.0"
+edition = "2021"
+publish = false
+license.workspace = true
+description = "Linux run of the P0 cells of the admitted-integer-overflow form, against an i128 oracle."
+
+[dependencies]
+spatial-engine = { path = "../../../../../../engine", features = ["fixture"] }
+# The versions and features the engine itself uses, so the bundled DuckDB is the same build.
+duckdb = { version = "1.10505.0", features = ["bundled", "parquet", "json"] }
+arrow = { version = "58", default-features = false, features = ["ipc"] }
+parquet = { version = "58", default-features = false, features = ["arrow", "snap"] }

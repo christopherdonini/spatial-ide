@@ -1,0 +1,12 @@
+[package]
+name = "redaction-bench"
+version = "0.0.0"
+edition = "2021"
+publish = false
+license.workspace = true
+description = "Times spatial_kernel::bundle::redaction::scan over files of fixed sizes and contents."
+
+[dependencies]
+spatial-kernel = { path = "../../../../../../kernel" }
+# Only for the parquet inputs: the engine's own fixture writer.
+spatial-engine = { path = "../../../../../../engine", features = ["fixture"] }

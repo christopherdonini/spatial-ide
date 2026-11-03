@@ -1,0 +1,34 @@
+# Measurement harness for state/consults/cloud/linux-measurements/REPORT.md. Not a workspace member
+# of the repository root, deliberately: it is its own workspace (the empty-member list below), so the
+# root's `cargo test --workspace` never builds it, and it changes no tracked file. Its Cargo.lock was
+# copied from the root's at the commit REPORT.md names; every third-party entry is checked against
+# the root's there.
+[workspace]
+resolver = "2"
+members = ["o1-probe", "redaction-bench"]
+
+[workspace.package]
+license = "AGPL-3.0-or-later"
+
+# The root workspace's profiles, copied byte for byte so the bundled DuckDB builds with the same
+# settings as the root's (dev: opt-level 2, no debug info; release: the cargo defaults).
+[profile.release]
+debug = true
+
+[profile.release.package."*"]
+debug = false
+
+[profile.dev.package."*"]
+debug = false
+
+[profile.dev.package.libduckdb-sys]
+debug = false
+opt-level = 2
+
+# The root's members carry debug info in release (`[profile.release] debug = true` applies to them
+# and not the `"*"` override). Here they are path dependencies, which `"*"` would match, so they are
+# named to keep the root's setting. Debug info does not change the optimisation level.
+[profile.release.package.spatial-kernel]
+debug = true
+[profile.release.package.spatial-engine]
+debug = true
