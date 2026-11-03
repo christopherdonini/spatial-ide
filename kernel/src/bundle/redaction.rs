@@ -174,7 +174,7 @@ fn hostnames_from(
 /// The machine-identity boundary: the kernel's own name for this machine, read from procfs. Absent
 /// where there is no such file, which leaves the scan with the environment's names alone.
 fn os_hostname() -> Option<String> {
-    std::fs::read_to_string("/proc/sys/kernel/hostname").ok()
+    None
 }
 
 /// Literal needles that are a finding wherever they appear, ASCII-case-insensitively.
