@@ -225,10 +225,16 @@ mod tests {
     }
 
     fn norm(p: &str) -> String {
+        // The inputs are spelled with `\`; they are fed in this platform's own separator.
+        let p = p.replace('\\', std::path::MAIN_SEPARATOR_STR);
         normalize_with(&PathBuf::from(p), &roots(), &users())
     }
 
     /// The worked example from the design record, end to end.
+    #[cfg_attr(
+        not(windows),
+        ignore = "boundary: path syntax (std::path::is_separator); the `\\\\?\\` verbatim prefix is Windows-only"
+    )]
     #[test]
     fn a_user_profile_destination_becomes_a_token() {
         assert_eq!(norm(r"C:\Users\someone\out"), "<user-home>/out");
@@ -272,6 +278,10 @@ mod tests {
         assert_eq!(norm(r"D:\someone-maps\out"), "D:/someone-maps/out");
     }
 
+    #[cfg_attr(
+        not(windows),
+        ignore = "boundary: path syntax (std::path::is_separator); the UNC share form is Windows-only"
+    )]
     #[test]
     fn a_unc_path_keeps_its_share_form() {
         assert_eq!(norm(r"\\?\UNC\server\share\out"), "//server/share/out");
@@ -296,12 +306,29 @@ mod tests {
         assert_eq!(n, "D:/данные/bundle");
 
         // …and the matching case still matches, so the guard did not simply disable normalization.
-        let n = normalize_with(&PathBuf::from(r"C:\Users\José\out"), &roots, &users);
+        let n = normalize_with(&PathBuf::from("C:/Users/José/out"), &roots, &users);
         assert_eq!(n, "<user-home>/out");
 
         // A username component that is itself non-ASCII is substituted as any other would be.
-        let n = normalize_with(&PathBuf::from(r"D:\archive\José\out"), &roots, &users);
+        let n = normalize_with(&PathBuf::from("D:/archive/José/out"), &roots, &users);
         assert_eq!(n, "D:/archive/<user>/out");
+    }
+
+    /// **A backslash is a byte of a POSIX file name, and stays one.** `/home/x\b` is one directory
+    /// under `/home`, `/home/x/b` is `b` under `x`: two destinations, so two audit strings, and a
+    /// profile root holding a backslash is read as it is, or it would stop matching its own path.
+    #[cfg_attr(
+        windows,
+        ignore = "boundary: path syntax (std::path::is_separator); on Windows `\\` is a separator, so the rewrite is correct there"
+    )]
+    #[test]
+    fn a_posix_backslash_stays_a_name_byte_in_a_profile_root_and_a_destination() {
+        let roots = roots_from(|key| (key == "HOME").then(|| r"/home/x\b".to_string()));
+        assert_eq!(roots, vec![(r"/home/x\b".to_string(), HOME)]);
+        let n = normalize_with(&PathBuf::from(r"/home/x\b/out"), &roots, &[]);
+        assert_eq!(n, "<user-home>/out");
+        let n = normalize_with(&PathBuf::from("/home/x/b/out"), &roots, &[]);
+        assert_eq!(n, "/home/x/b/out");
     }
 
     /// Two spellings of one destination normalize to one string, which is what makes two records
