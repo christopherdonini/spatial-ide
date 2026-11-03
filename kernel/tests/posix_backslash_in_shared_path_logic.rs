@@ -24,6 +24,14 @@ fn fresh_dir(name: &str) -> PathBuf {
 /// A3-1(b): a POSIX file name containing `\` must reach `validate_relative_path`'s "contains a
 /// backslash" refusal (via `ViewerAssets::from_dir`'s walk and `ViewerAssets::new`), not be turned
 /// into a nested bundle path first. On Windows no file name can contain one.
+///
+/// RECORDED MUTATION M3 (observed at 2618f4b7700fab1f6bcc8c4a18a633a801e5a856: applied alone on
+/// the branch, run 41725054647, its ubuntu-24.04 job 126227537123, reverted by
+/// 3310272109e26041daefb0f04e06c357c9efcf5c): the walk's name back to `.replace('\\', "/")`.
+/// OBSERVED FAILURE: this test's panic, byte-copied from the job's log: the file `a\b.js` was
+/// admitted and renamed; the published paths are ["a/b.js", "index.html"]. In its binary 1 passed
+/// and 1 failed, and cargo stops at the first failing binary, so no test that ran before it failed.
+/// The windows job passed.
 #[cfg_attr(
     windows,
     ignore = "boundary: path syntax (std::path::is_separator); no Windows file name can contain `\\`; the defect is POSIX-only"

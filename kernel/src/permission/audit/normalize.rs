@@ -321,6 +321,20 @@ mod tests {
     /// **A backslash is a byte of a POSIX file name, and stays one.** `/home/x\b` is one directory
     /// under `/home`, `/home/x/b` is `b` under `x`: two destinations, so two audit strings, and a
     /// profile root holding a backslash is read as it is, or it would stop matching its own path.
+    ///
+    /// RECORDED MUTATION M1 (observed at a47d8f72fb5ea7b939dbb417e05d8ca2255977a2: applied alone on
+    /// the branch, run 41719825618, its ubuntu-24.04 job 126209332158, reverted by
+    /// d441774cf05a45bb96d885f68675058de16b216f): step 2 back to `stripped.replace('\\', "/")`.
+    /// OBSERVED FAILURE: this test's second assertion, left `"/home/x/b/out"`, right
+    /// `"<user-home>/out"`; in its binary 162 passed, 1 failed, and cargo stops at the first failing
+    /// binary, so no test that ran before it failed.
+    ///
+    /// RECORDED MUTATION M2 (observed at cd29f057aeb2b98da60f37ff380de7e947fd529e: applied alone on
+    /// the branch, run 41722839219, its ubuntu-24.04 job 126219815352, reverted by
+    /// 761ff2132486b6ab92929d1b9e4f6a0f2a3de900): `roots_from` back to `v.replace('\\', "/")`.
+    /// OBSERVED FAILURE: this test's first assertion, left `[("/home/x/b", "<user-home>")]`, right
+    /// `[("/home/x\\b", "<user-home>")]`; in its binary 162 passed, 1 failed, and cargo stops at the
+    /// first failing binary, so no test that ran before it failed. The windows job passed on both.
     #[cfg_attr(
         windows,
         ignore = "boundary: path syntax (std::path::is_separator); on Windows `\\` is a separator, so the rewrite is correct there"
