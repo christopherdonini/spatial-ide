@@ -3223,10 +3223,11 @@ mod tests {
     }
 
     /// The pre-prepare cancel exit in `produce` stamps `PRODUCER_CANCELLED` and returns before
-    /// `prepare`. The SQL is invalid on purpose, and `classify` now stamps too: deleting only this
-    /// check's mark, its `return` kept so `prepare` and `classify` are never reached, is what this
-    /// test catches. Deleting the whole check would leave `classify`'s mark to supply the stamp,
-    /// and is not a recorded mutation. Mutation: remove the mark from that check.
+    /// `prepare`. Deleting only this check's mark, its `return` kept so `prepare` and `classify`
+    /// are never reached, is what this test catches. The SQL is invalid, as it was before
+    /// `classify` marked; deleting the whole check would leave `classify`'s mark to supply the
+    /// stamp, so that would not be caught, and it is not a recorded mutation. Mutation: remove the
+    /// mark from that check.
     ///
     /// RECORDED MUTATION: M-2, the check's mark deleted with its `return` kept, re-observed alone
     /// at commit c63e5dafdc17ba2ab73f641b3947fbe4bf1bca6e, after `classify` began to mark. This test
