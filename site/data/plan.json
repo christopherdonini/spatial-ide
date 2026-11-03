@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-03T11:20:06.506Z",
-  "plan_hash": "ace3a899c9f18723fa0e902038de375a74feab9c2cf57b37616a957eca6091d1",
+  "generated_at": "2026-11-03T11:36:18.464Z",
+  "plan_hash": "0b6bf0eb9006deae13ff8940aa2bf343129523a61d7cb11962f43bff857be5ea",
   "priorities_approved": true,
   "lanes": [
     {
@@ -9943,7 +9943,7 @@
       "kind": "task",
       "lane": "governance",
       "phase": "prototype",
-      "status": "ready",
+      "status": "in-progress",
       "order": null,
       "depends_on": [
         "verify-cites-reversed-range"
@@ -9953,12 +9953,14 @@
         "minutes": 0
       },
       "gate": "governance/forms/scripts/VERIFY-QUOTES-CITE-LISTING-LINE-COUNT-PREREGISTRATION.md",
-      "evidence": null,
+      "evidence": {
+        "branch": "cut/verify-quotes-cite-listing-line-count"
+      },
       "budget_minutes": 60,
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "READY 2026-11-03: verify-cites-reversed-range done (#272, 355ddae3). NEXT: rule (00) re-checked against the open PRs and branches at dispatch, then its worker on its own checkout; the reviewer and the architect from dispatch (the full form). Before: FORM COMMITTED 2026-11-01 (governance/forms/scripts/VERIFY-QUOTES-CITE-LISTING-LINE-COUNT-PREREGISTRATION.md; 29 pins at b84a2b26), the full form, from the architect's draft (state/consults/2026-11-01-verify-quotes-cite-listing-line-count-five-line-form-architect-draft.md): the five-line form closed by AUTONOMY section 21a, an existing test's asserted figure being the defect; OPEN-1 (A) the full form and both gates, OPEN-2 (A) the count inline, OPEN-3 (A) the P4 run, taken under the human's direction of 2026-10-31, item 4, for the human's review; depends_on verify-cites-reversed-range, the lane's piece before it (VQ last). NEXT: after #272 merges, a governance-lane worker on the form; the architect and the reviewer at gate 1; the merge the human's click. Before: RULED 2026-10-26 (state/directives/2026-10-26-clicks-260-261-244-r2-241-o1-answers-pb-draft-b-6d-260-lines-5b-8a-8b-rulings.md): the fold reversed; its own node, S4, last in the governance lane, no form until its turn. Before: FOLDED 2026-10-26 (state/directives/2026-10-26-resent-2026-10-25-o1-s1-clang-cl-route-a-hugeint-cast-b-five-nodes-placed.md, item 2): S4, the second line of verify-cites-past-end-bound (the same root, counting the pieces of a newline split); not its own node. Before: PROPOSED 2026-10-25 from verify-cites-out-of-range-line-count's drafting consult: the cite listing in verify-quotes (listCiteContents) splits a file on newlines and counts the pieces, so for a file that ends in a newline its out-of-range note states a line count one too high, and the line just past the end is listed as a blank line instead of out of range. The hash check in verify-quotes reads lines by a different slice and is not affected. Outside verify-cites-out-of-range-line-count, which changes verify-cites only. For the human's grading and placement.",
+      "summary": "IN PROGRESS 2026-11-03: the governance-lane worker dispatched 2026-11-03T11:34:38Z at B ab9b52ab (branch cut/verify-quotes-cite-listing-line-count, worktree C:/dev/wt/vq), under the committed full form; rule (00) clear by script at dispatch. NEXT: its report filed, a draft PR, gate 1 (the architect and the reviewer). Before: READY 2026-11-03: verify-cites-reversed-range done (#272, 355ddae3). NEXT: rule (00) re-checked against the open PRs and branches at dispatch, then its worker on its own checkout; the reviewer and the architect from dispatch (the full form). Before: FORM COMMITTED 2026-11-01 (governance/forms/scripts/VERIFY-QUOTES-CITE-LISTING-LINE-COUNT-PREREGISTRATION.md; 29 pins at b84a2b26), the full form, from the architect's draft (state/consults/2026-11-01-verify-quotes-cite-listing-line-count-five-line-form-architect-draft.md): the five-line form closed by AUTONOMY section 21a, an existing test's asserted figure being the defect; OPEN-1 (A) the full form and both gates, OPEN-2 (A) the count inline, OPEN-3 (A) the P4 run, taken under the human's direction of 2026-10-31, item 4, for the human's review; depends_on verify-cites-reversed-range, the lane's piece before it (VQ last). NEXT: after #272 merges, a governance-lane worker on the form; the architect and the reviewer at gate 1; the merge the human's click. Before: RULED 2026-10-26 (state/directives/2026-10-26-clicks-260-261-244-r2-241-o1-answers-pb-draft-b-6d-260-lines-5b-8a-8b-rulings.md): the fold reversed; its own node, S4, last in the governance lane, no form until its turn. Before: FOLDED 2026-10-26 (state/directives/2026-10-26-resent-2026-10-25-o1-s1-clang-cl-route-a-hugeint-cast-b-five-nodes-placed.md, item 2): S4, the second line of verify-cites-past-end-bound (the same root, counting the pieces of a newline split); not its own node. Before: PROPOSED 2026-10-25 from verify-cites-out-of-range-line-count's drafting consult: the cite listing in verify-quotes (listCiteContents) splits a file on newlines and counts the pieces, so for a file that ends in a newline its out-of-range note states a line count one too high, and the line just past the end is listed as a blank line instead of out of range. The hash check in verify-quotes reads lines by a different slice and is not affected. Outside verify-cites-out-of-range-line-count, which changes verify-cites only. For the human's grading and placement.",
       "dates": {
         "opened": "2026-10-25",
         "done": null
