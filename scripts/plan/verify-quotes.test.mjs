@@ -190,6 +190,26 @@ test('a_cite_listing_reports_out_of_range_for_a_line_past_the_files_end', () => 
   assert.equal(cites[0].firstLine, 'out of range (file has 3 lines)', JSON.stringify(cites));
 });
 
+test('a_cite_listing_reports_the_line_just_past_a_newline_ended_files_end_as_out_of_range', () => {
+  const dir = gitTree({
+    'A.md': 'See `other/data.rs:4` for the rule.\n',
+    'other/data.rs': 'one\ntwo\nthree\n',
+  });
+  const cites = listCiteContents({ repoRoot: dir, files: [path.join(dir, 'A.md')] });
+  assert.equal(cites.length, 1);
+  assert.equal(cites[0].firstLine, 'out of range (file has 3 lines)', JSON.stringify(cites));
+});
+
+test('a_cite_listing_reports_line_1_of_an_empty_file_as_out_of_range', () => {
+  const dir = gitTree({
+    'A.md': 'See `other/data.rs:1` for the rule.\n',
+    'other/data.rs': '',
+  });
+  const cites = listCiteContents({ repoRoot: dir, files: [path.join(dir, 'A.md')] });
+  assert.equal(cites.length, 1);
+  assert.equal(cites[0].firstLine, 'out of range (file has 0 lines)', JSON.stringify(cites));
+});
+
 // RECORDED MUTATION (round 10, finding 6): reverting the blank-line branch to
 // `firstLine = raw.slice(0, 100)` unconditionally (scripts/plan/verify-quotes.mjs) makes
 // a_cite_listing_reports_a_genuinely_blank_target_line_as_such FAIL: "AssertionError [ERR_ASSERTION]:
