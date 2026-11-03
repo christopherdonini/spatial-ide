@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `57ec16a16821c32f2a18d6f11c5833827953264a40a8ed89a3ba9a44f13ecd6a`) at `2026-11-03T16:37:29.002Z`.
+Generated from `PLAN.yaml` (sha256 `7cc02b6797235c7483ac68a69d970140b25c53b6369a3958ecb10858d958b8a6`) at `2026-11-03T16:49:14.936Z`.
 
 ## 1. Next
 
@@ -16,7 +16,6 @@ Generated from `PLAN.yaml` (sha256 `57ec16a16821c32f2a18d6f11c5833827953264a40a8
 - **posix-backslash-in-shared-path-logic** — Shared path logic stops treating a backslash as a separator on POSIX: distinct audit destinations stay distinct, and a viewer asset named with a backslash is refused, not renamed (wave-3 A-1, S2) (lane `platform`, order null, budget 90 min)
 - **publish-bundle-sigterm** — SIGTERM handling in publish-bundle on unix (wave-3 W3-A observation 3) (lane `platform`, order null, budget 90 min)
 - **publish-unix-quota-perm-errors** — EDQUOT and EPERM in publish error classification on unix (wave-3 W3-A observation 1) (lane `platform`, order null, budget 90 min)
-- **redaction-hostname-off-windows** — The redaction scan knows the machine's hostname off Windows, so machine-identifier findings reach an audit record's residual_classes there too (wave-3 A-2, S2, sent to Fable for weighing) (lane `platform`, order null, budget 60 min)
 
 ## 3. Waiting on the human (total: 25 min)
 
@@ -54,6 +53,7 @@ Generated from `PLAN.yaml` (sha256 `57ec16a16821c32f2a18d6f11c5833827953264a40a8
 - **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **adr-017-note-product-redaction-gate** — An ADR-017 note in the human's typed words: the product publish now runs the redaction scan over every emitted file, except a viewer file whose bytes the viewer's build scanned, and refuses by name on a finding (bundle-redaction-scan-not-in-product-publish); the build-time scan, the reviewed list and the skip; and Corrigendum 4's new uninterruptible term — evidence: branch `cut/adr-017-note-product-redaction-gate`
 - **b1-shell-half** — Shell migration, milestone 4 -- B1 shell half: attributes of the inspected feature, colour by category with its legend, and the table — evidence: branch `cut/b1-shell-half-pr-c`
+- **redaction-hostname-off-windows** — The redaction scan knows the machine's hostname off Windows, so machine-identifier findings reach an audit record's residual_classes there too (wave-3 A-2, S2, sent to Fable for weighing) — evidence: branch `cut/redaction-hostname-off-windows`
 - **port-2-macos-l1-and-app-dirs** — PORT-2 -- macOS L1 for the Cargo workspace: macos-latest in the same matrix, one application-directory boundary replacing the two resolvers, and a case-policy test on a case-insensitive volume — evidence: branch `cut/port-2-macos-l1-and-app-dirs`
 
 ## 6. Proposed / unscheduled
