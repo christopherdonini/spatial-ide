@@ -2734,6 +2734,9 @@ mod tests {
     /// `read as out of range: IO Error: No files found that match the pattern "x.parquet"`.
     #[test]
     fn only_duckdbs_out_of_range_class_is_read_as_an_evaluation_failure() {
+        let _serial = crate::trace::TEST_LOCK
+            .lock()
+            .unwrap_or_else(|e| e.into_inner());
         assert!(is_out_of_range(
             "Out of Range Error: Overflow in multiplication of INT64 (5221210998874447054 * 2)"
         ));
@@ -2794,6 +2797,9 @@ mod tests {
     /// multiplication of INT64 (3600000000000000000 * 3600000000000000000)!")`, right `None`.
     #[test]
     fn the_fetch_panic_is_read_as_out_of_range_only_by_its_fixed_prefixes_at_the_start() {
+        let _serial = crate::trace::TEST_LOCK
+            .lock()
+            .unwrap_or_else(|e| e.into_inner());
         const WRAPPED: &str = "Failed to fetch Arrow record batch: Invalid Input Error: Attempting to execute an unsuccessful or closed pending query result\nError: Out of Range Error: Overflow in multiplication of INT64 (3600000000000000000 * 3600000000000000000)!";
         const BARE: &str = "Failed to fetch Arrow record batch: Out of Range Error: Overflow in multiplication of INT64 (3600000000000000000 * 3600000000000000000)!";
         const DUCKDB_TEXT: &str = "Out of Range Error: Overflow in multiplication of INT64 (3600000000000000000 * 3600000000000000000)!";
@@ -3216,10 +3222,11 @@ mod tests {
         drop(guard);
     }
 
-    /// The pre-prepare cancel exit in `produce` stamps `PRODUCER_CANCELLED`. The SQL is invalid on
-    /// purpose: without the check, `prepare` would fail and `classify` would return `Cancelled`
-    /// unmarked, so the mark in this test can only come from the pre-prepare check. A later piece
-    /// that marks `classify` must revisit this test. Mutation: remove the mark from that check.
+    /// The pre-prepare cancel exit in `produce` stamps `PRODUCER_CANCELLED` and returns before
+    /// `prepare`. The SQL is invalid on purpose, and `classify` now stamps too: deleting only this
+    /// check's mark, its `return` kept so `prepare` and `classify` are never reached, is what this
+    /// test catches. Deleting the whole check would leave `classify`'s mark to supply the stamp,
+    /// and is not a recorded mutation. Mutation: remove the mark from that check.
     #[test]
     fn the_pre_prepare_cancel_exit_stamps_producer_cancelled() {
         let _serial = crate::trace::TEST_LOCK
@@ -3258,6 +3265,61 @@ mod tests {
                 .first(crate::trace::PRODUCER_CANCELLED)
                 .is_some(),
             "the pre-prepare cancel exit must stamp producer_cancelled"
+        );
+        drop(guard);
+    }
+
+    /// `classify` stamps `PRODUCER_CANCELLED` on the `Cancelled` it returns, from the one read of the
+    /// token that decides it: (i) through `classify` itself, as the prepare and execute sites call
+    /// it, and (ii) through `classify_fetch_panic`, as the fetch site does. Driven directly with a
+    /// token cancelled before the call, so there is no race and no seam. A cancel landing between
+    /// two reads cannot be driven: the single read is what removes that window, by construction.
+    /// Mutation: remove the mark from `classify` -- (i) fails.
+    ///
+    /// Takes the trace lock first because the trace is one process-global slot. It asserts that the
+    /// event is present and no absence or exact list of names: other tests in this crate cancel
+    /// tokens and stamp other names into a live trace.
+    #[test]
+    fn classify_stamps_producer_cancelled_when_it_returns_cancelled() {
+        let _serial = crate::trace::TEST_LOCK
+            .lock()
+            .unwrap_or_else(|e| e.into_inner());
+        let cancelled = CancelToken::new();
+
+        let guard = crate::trace::start(crate::trace::TraceKey::default())
+            .expect("the lock makes this the only trace");
+        cancelled.cancel();
+        assert!(
+            matches!(
+                classify(&cancelled, "prepare", "Binder Error: no such column"),
+                EngineError::Cancelled
+            ),
+            "(i) classify returns Cancelled"
+        );
+        assert!(
+            guard
+                .trace()
+                .first(crate::trace::PRODUCER_CANCELLED)
+                .is_some(),
+            "(i) classify must stamp producer_cancelled when it returns Cancelled"
+        );
+        drop(guard);
+
+        let guard = crate::trace::start(crate::trace::TraceKey::default())
+            .expect("the lock makes this the only trace");
+        assert!(
+            matches!(
+                classify_fetch_panic(&cancelled, "no panic message"),
+                EngineError::Cancelled
+            ),
+            "(ii) classify_fetch_panic returns Cancelled"
+        );
+        assert!(
+            guard
+                .trace()
+                .first(crate::trace::PRODUCER_CANCELLED)
+                .is_some(),
+            "(ii) classify_fetch_panic must stamp producer_cancelled when it returns Cancelled"
         );
         drop(guard);
     }
