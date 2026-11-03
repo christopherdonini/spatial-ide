@@ -1676,13 +1676,17 @@ fn field_path_exists(
 /// (`docs/01` principle 7): attach the connection's interrupt handle before the statement runs,
 /// detach after it, and report a token that was cancelled as `Cancelled` rather than returning a
 /// value read from an interrupted query. Nothing about what runs changes when nothing cancels.
+///
+/// `run` goes through `CancelToken::execute_guarded`, so a cancel that landed between the attach and
+/// DuckDB's own clear of its interrupt either refuses the read before it starts or is re-raised
+/// while it runs.
 fn cancellable<T>(
     conn: &Connection,
     cancel: &CancelToken,
     run: impl FnOnce(&Connection) -> Result<T>,
 ) -> Result<T> {
     cancel.attach(Arc::clone(&conn.interrupt_handle()))?;
-    let outcome = run(conn);
+    let outcome = cancel.execute_guarded(|| run(conn)).into_result();
     cancel.detach();
     if cancel.is_cancelled() {
         return Err(EngineError::Cancelled);
@@ -1996,16 +2000,22 @@ fn admit_identity(
 
     // **G-A1's structural claim, made assertable.** This is the one place `admit_identity` can
     // issue a whole-column read: the session-ordinal arm above (no native or mapped column) and the
-    // `skip` arm above (a declared, explicitly-unverified mapping) both return before this line, so
-    // neither ever bumps the counter. Counting the call rather than its outcome is deliberate — a
-    // scan that goes on to refuse (a duplicate or negative value) still read the column, and the
-    // property under test is "a read happened", not "identity was admitted".
-    IDENTITY_VERIFICATION_SCANS.fetch_add(1, Ordering::SeqCst);
+    // `skip` arm above (a declared, explicitly-unverified mapping) both return before the guarded
+    // scan below, so neither ever bumps the counter. Counting the call rather than its outcome is
+    // deliberate — a scan that goes on to refuse (a duplicate or negative value) still read the
+    // column, and the property under test is "a read happened", not "identity was admitted". The
+    // increment is inside the guarded closure below, so a scan the guard refuses before it starts
+    // is not counted.
 
     // Bound to the caller's token before the scan starts, so a cancel arriving mid-scan reaches
     // DuckDB's interrupt rather than waiting for a whole column to be read (principle 7).
     cancel.attach(std::sync::Arc::clone(&conn.interrupt_handle()))?;
-    let scan = run_identity_scan(conn, &sql);
+    let scan = cancel
+        .execute_guarded(|| {
+            IDENTITY_VERIFICATION_SCANS.fetch_add(1, Ordering::SeqCst);
+            run_identity_scan(conn, &sql)
+        })
+        .into_result();
     cancel.detach();
     if cancel.is_cancelled() {
         return Err(EngineError::Cancelled);
@@ -2174,4 +2184,62 @@ pub(crate) fn lease_for_stream(
     let lease = dataset.pool.acquire(LeaseClass::Stream)?;
     cancel.attach(Arc::clone(&lease.connection().interrupt_handle()))?;
     Ok(lease)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::cancel::test_support::cancel_when_executing;
+    use std::sync::atomic::AtomicBool;
+
+    /// RECORDED MUTATION (observed at `2ccac3d1a8b3def9fa16c861d71623ab2ad1e200`): `cancellable`
+    /// calls `run(conn)` outside the guard. Observed outcome: this test fails by name at its
+    /// `matches!(inside, Ok(true))` assertion, with `Ok(false)`.
+    #[test]
+    fn a_cancellable_open_read_runs_inside_the_execute_window() {
+        let conn = Connection::open_in_memory().unwrap();
+        let cancel = CancelToken::new();
+        let inside = cancellable(&conn, &cancel, |_| Ok(cancel.is_executing()));
+        assert!(
+            matches!(inside, Ok(true)),
+            "the open read must run inside the execute window: {inside:?}"
+        );
+    }
+
+    /// RECORDED MUTATION (observed at `2ccac3d1a8b3def9fa16c861d71623ab2ad1e200`):
+    /// `run_identity_scan` runs outside the guard. Observed outcome: this test fails by name at its
+    /// `saw_window` assertion ("the identity scan never ran inside the execute window").
+    #[test]
+    fn a_cancel_inside_the_identity_scans_execute_window_ends_the_admission_cancelled() {
+        let file = std::env::temp_dir().join(format!(
+            "spatial-engine-ecbs-identity-{}.parquet",
+            std::process::id()
+        ));
+        let path = file.to_str().unwrap();
+        let conn = Connection::open_in_memory().unwrap();
+        conn.execute_batch(&format!(
+            "COPY (SELECT i::UBIGINT AS id FROM range(0, 4000000) t(i)) TO '{}' (FORMAT PARQUET)",
+            path.replace('\'', "''")
+        ))
+        .unwrap();
+        let schema: SchemaRef =
+            Arc::new(Schema::new(vec![Field::new("id", DataType::UInt64, false)]));
+
+        let cancel = CancelToken::new();
+        let done = Arc::new(AtomicBool::new(false));
+        let canceller = cancel_when_executing(&cancel, &done);
+        let admitted = admit_identity(&conn, path, &schema, None, &cancel);
+        done.store(true, Ordering::SeqCst);
+        let saw_window = canceller.join().unwrap();
+        let _ = std::fs::remove_file(&file);
+
+        assert!(
+            saw_window,
+            "the identity scan never ran inside the execute window"
+        );
+        assert!(
+            matches!(admitted, Err(EngineError::Cancelled)),
+            "a cancel inside the scan must end the admission Cancelled: {admitted:?}"
+        );
+    }
 }
