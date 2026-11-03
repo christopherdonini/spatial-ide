@@ -1796,6 +1796,8 @@ fn produce(
         return Err(EngineError::Cancelled);
     }
 
+    // A prepare error read under a cancel ends the stream `Cancelled` through `classify`, which
+    // stamps `PRODUCER_CANCELLED` on that one read of the token.
     let mut stmt = conn
         .prepare(sql)
         .map_err(|e| classify(cancel, "prepare", &e.to_string()))?;
@@ -1846,13 +1848,9 @@ fn produce(
             return Err(EngineError::Cancelled);
         }
         crate::cancel::Guarded::Err(e) => {
-            // **A `PRODUCER_CANCELLED` site found by `cut/sql-filter` P4's own testing** (the
-            // sibling site just below the `catch_unwind` this function's row-fetch loop wraps is
-            // the other one that piece added): an interrupt landing inside `stream_arrow` surfaces
-            // as this call's own `Err`, not a panic on a later `.next()`.
-            if cancel.is_cancelled() {
-                crate::trace::mark(crate::trace::PRODUCER_CANCELLED, 0, 0);
-            }
+            // An interrupt landing inside `stream_arrow` surfaces as this call's own `Err`, not a
+            // panic on a later `.next()`; `classify` stamps `PRODUCER_CANCELLED` when it returns
+            // `Cancelled`.
             return Err(classify(cancel, "execute", &e.to_string()));
         }
         crate::cancel::Guarded::Ok(arrow) => arrow,
@@ -1921,21 +1919,11 @@ fn produce(
                     .map(|s| (*s).to_string())
                     .or_else(|| payload.downcast_ref::<String>().cloned())
                     .unwrap_or_else(|| "no panic message".to_string());
-                // **The other new `PRODUCER_CANCELLED` site this piece adds (`cut/sql-filter` P4's
-                // own testing; see `stream_arrow`'s call site above for the first).** A selective,
-                // late-matching predicate can leave the *entire* non-matching prefix
-                // scanned inside one `arrow.next()` call (DuckDB does not yield a chunk boundary this
-                // producer can check `cancel.is_cancelled()` between, because nothing survives the
-                // filter until near the end) — DuckDB's own interrupt is what actually stops it, and
-                // the interrupted fetch panics rather than returning an error (the comment above the
-                // `catch_unwind` this arm belongs to already says so). Without this mark, a
-                // cancellation observed *only* on this path — which a late-matching filter makes the
-                // common case, not a corner case — left `cancel_observed` permanently unstamped: the
-                // same "an always-absent name reads as did not happen" defect the row-loop check's own
-                // comment (above) already named for a different gap.
-                if cancel.is_cancelled() {
-                    crate::trace::mark(crate::trace::PRODUCER_CANCELLED, 0, 0);
-                }
+                // A selective, late-matching predicate can leave the whole non-matching prefix
+                // scanned inside one `arrow.next()`; DuckDB's interrupt stops it and the fetch
+                // panics. `classify_fetch_panic` stamps `PRODUCER_CANCELLED` when it returns
+                // `Cancelled`, so a cancel seen only on this path is not left without its
+                // `cancel_observed`.
                 return Err(classify_fetch_panic(cancel, &detail));
             }
         };
@@ -2637,11 +2625,15 @@ fn is_out_of_range(message: &str) -> bool {
     message.starts_with("Out of Range Error")
 }
 
-/// A cancellation is returned first; DuckDB's out-of-range class ends with the fixed
-/// `OUT_OF_RANGE_DETAIL`; every other failure keeps `phase` and `message` as passed (DuckDB's text
-/// at prepare and execute; at the fetch site, `classify_fetch_panic`'s choice).
+/// A cancellation is returned first, and `PRODUCER_CANCELLED` is stamped on the same single read of
+/// the token that decides it, so every `Cancelled` this returns carries its `cancel_observed`; every
+/// call is followed at once by a return out of `produce`, so a stream stamps at most once.
+/// DuckDB's out-of-range class ends with the fixed `OUT_OF_RANGE_DETAIL`; every other failure keeps
+/// `phase` and `message` as passed (DuckDB's text at prepare and execute; at the fetch site,
+/// `classify_fetch_panic`'s choice).
 fn classify(cancel: &CancelToken, phase: &str, message: &str) -> EngineError {
     if cancel.is_cancelled() {
+        crate::trace::mark(crate::trace::PRODUCER_CANCELLED, 0, 0);
         EngineError::Cancelled
     } else if is_out_of_range(message) {
         EngineError::Query(OUT_OF_RANGE_DETAIL.to_string())
