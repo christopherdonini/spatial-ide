@@ -3227,6 +3227,10 @@ mod tests {
     /// check's mark, its `return` kept so `prepare` and `classify` are never reached, is what this
     /// test catches. Deleting the whole check would leave `classify`'s mark to supply the stamp,
     /// and is not a recorded mutation. Mutation: remove the mark from that check.
+    ///
+    /// RECORDED MUTATION: M-2, the check's mark deleted with its `return` kept, re-observed alone
+    /// at commit c63e5dafdc17ba2ab73f641b3947fbe4bf1bca6e, after `classify` began to mark. This test
+    /// fails at its presence assertion, `the pre-prepare cancel exit must stamp producer_cancelled`.
     #[test]
     fn the_pre_prepare_cancel_exit_stamps_producer_cancelled() {
         let _serial = crate::trace::TEST_LOCK
@@ -3279,6 +3283,10 @@ mod tests {
     /// Takes the trace lock first because the trace is one process-global slot. It asserts that the
     /// event is present and no absence or exact list of names: other tests in this crate cancel
     /// tokens and stamp other names into a live trace.
+    ///
+    /// RECORDED MUTATION: M-3, the mark in `classify` deleted, applied alone at commit
+    /// c63e5dafdc17ba2ab73f641b3947fbe4bf1bca6e. This test fails at (i), its presence assertion,
+    /// `(i) classify must stamp producer_cancelled when it returns Cancelled`.
     #[test]
     fn classify_stamps_producer_cancelled_when_it_returns_cancelled() {
         let _serial = crate::trace::TEST_LOCK
