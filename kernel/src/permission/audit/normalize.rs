@@ -134,7 +134,7 @@ fn roots_from(lookup: impl Fn(&str) -> Option<String>) -> Vec<(String, &'static 
         ("TMPDIR", TEMP),
     ] {
         if let Some(v) = lookup(key) {
-            let v = to_slashes(&v);
+            let v = v.replace('\\', "/");
             let v = v.trim_end_matches('/').to_string();
             // A root of `/` or `` would match everything and turn normalization into erasure — the
             // same degenerate case `redaction::declared_ranges` guards against with its length
