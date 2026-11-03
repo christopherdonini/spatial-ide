@@ -231,6 +231,10 @@ mod tests {
     }
 
     /// The worked example from the design record, end to end.
+    ///
+    /// RECORDED MUTATION (observed at 724cb1fbd65952d371c575620f51500b8eccb3fe on Windows: applied,
+    /// this test run alone, reverted): `to_slashes` maps only `/`. OBSERVED FAILURE: the first
+    /// assertion, left `"C:\\Users\\someone\\out"`, right `"<user-home>/out"`.
     #[cfg_attr(
         not(windows),
         ignore = "boundary: path syntax (std::path::is_separator); the `\\\\?\\` verbatim prefix is Windows-only"

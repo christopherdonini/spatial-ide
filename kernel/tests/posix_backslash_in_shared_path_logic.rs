@@ -54,6 +54,12 @@ fn a3_1b_a_viewer_asset_named_with_a_backslash_is_refused_not_renamed() {
 /// A nested asset is named with `/` on every platform: the walk's mapping keeps what the platform
 /// calls a separator becoming `/`, so Windows' `assets\app.js` is `assets/app.js` and
 /// `validate_relative_path` admits it.
+///
+/// RECORDED MUTATION (observed at 724cb1fbd65952d371c575620f51500b8eccb3fe on Windows: applied, this
+/// test binary run alone, reverted): the walk's mapping removed (the bare `to_string_lossy()`).
+/// OBSERVED FAILURE: `expect("a nested asset is admitted")` panicked on `ViewerAssetPathRejected`
+/// with path `assets\\app.js` and detail "contains a backslash; bundle paths use forward slashes
+/// only". On POSIX that mutation changes nothing, as declared.
 #[test]
 fn a_nested_viewer_asset_is_named_with_forward_slashes_on_every_platform() {
     let dir = fresh_dir("nested");
