@@ -671,6 +671,8 @@ mod tests {
     /// The OS's name for the machine is a **fallback**, never an extra name: it is taken only when
     /// the environment names none of at least 3 bytes, and the 3-byte floor holds for it too.
     /// `hostnames_from` takes its two sources as arguments, so no variable is set in this process.
+    ///
+    /// RECORDED MUTATION (observed at f7be3a3071ef8822713a9f05693dc6f897d7f69a: applied, this test run alone, reverted): the `hostnames.is_empty()` guard in `hostnames_from` is dropped, so the OS name is always appended. OBSERVED FAILURE: the second assertion, `an environment name is used alone`, with left ["envhost", "oshost"] and right ["envhost"].
     #[test]
     fn the_os_hostname_is_taken_only_when_the_environment_names_none() {
         let no_env = |_: &str| None;
