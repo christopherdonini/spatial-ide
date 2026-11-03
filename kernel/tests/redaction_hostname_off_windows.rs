@@ -85,7 +85,7 @@ fn child(dest: PathBuf) {
 
 /// The audit log names the machine's identifier on Linux with `HOSTNAME` not exported.
 ///
-/// RECORDED MUTATION (M2, observed at 06f54ec004ee090ffdff351becf14647b403121f on the Linux L1 job: run 41686068307, job 126092020662; reverted by 52e65e2888efcd80c324fab8bd211bfa94b55a36): `os_hostname` returns `None`. OBSERVED FAILURE: this test failed on that job and no other test did; the child exited non-zero and the parent reported its stderr, `the record carrying the uname -n name "runnervm48cm3" does not list machine-identifier in residual_classes`.
+/// RECORDED MUTATION (M2, observed at 06f54ec004ee090ffdff351becf14647b403121f on the Linux L1 job: run 41686068307, job 126092020662; reverted by 52e65e2888efcd80c324fab8bd211bfa94b55a36): `os_hostname` returns `None`. OBSERVED FAILURE: this test failed on that job, and no test that ran before it failed; cargo stops at the first failing test binary, so the binaries after this one did not run. The child exited non-zero and the parent reported its stderr, `the record carrying the uname -n name "<the runner's name>" does not list machine-identifier in residual_classes`.
 #[test]
 #[cfg_attr(
     not(target_os = "linux"),
