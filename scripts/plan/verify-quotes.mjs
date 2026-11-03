@@ -1082,10 +1082,12 @@ export function listCiteContents({ repoRoot, files } = {}) {
         firstLine = `ambiguous (${cands.length} candidates)`;
       } else {
         const cand = cands[0];
-        const lines = fs.readFileSync(path.join(root, cand), 'utf8').split('\n');
-        if (c.startL < 1 || c.startL > lines.length) {
+        const candText = fs.readFileSync(path.join(root, cand), 'utf8');
+        const lines = candText.split('\n');
+        const count = lines.length - (candText === '' || candText.endsWith('\n') ? 1 : 0); // verify-cites' countOf
+        if (c.startL < 1 || c.startL > count) {
           target = `${cand}:${c.startL}`;
-          firstLine = `out of range (file has ${lines.length} lines)`;
+          firstLine = `out of range (file has ${count} lines)`;
         } else {
           target = `${cand}:${c.startL}`;
           const raw = (lines[c.startL - 1] ?? '').trim();

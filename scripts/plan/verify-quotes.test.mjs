@@ -175,11 +175,8 @@ test('a_cite_listing_reports_ambiguous_for_multiple_same_basename_candidates', (
   assert.equal(cites[0].firstLine, 'ambiguous (2 candidates)', JSON.stringify(cites));
 });
 
-// RECORDED MUTATION (round 10, finding 6): removing the out-of-range guard in listCiteContents so the
-// else branch always runs (scripts/plan/verify-quotes.mjs) makes
-// a_cite_listing_reports_out_of_range_for_a_line_past_the_files_end FAIL: "AssertionError
-// [ERR_ASSERTION]: Expected values to be strictly equal: + actual - expected + '' - 'out of range (file
-// has 4 lines)'" (a cite past the file's end silently prints an empty string).
+// RECORDED MUTATION (M3) at 0f6800fc0c86066f775c60b8bec113c9403e254f, applied alone and reverted: the out-of-range note prints the split's piece count (`lines.length`) again -> fails by name, with both tests below: a_cite_listing_reports_out_of_range_for_a_line_past_the_files_end, a_cite_listing_reports_the_line_just_past_a_newline_ended_files_end_as_out_of_range, a_cite_listing_reports_line_1_of_an_empty_file_as_out_of_range.
+// RECORDED MUTATION (guard removed) at 0f6800fc0c86066f775c60b8bec113c9403e254f, applied alone and reverted: the out-of-range guard in listCiteContents made never true (`if (false)`) -> fails by name, with both tests below, the same three tests; this test got `(blank line)` where it expected `out of range (file has 3 lines)`.
 test('a_cite_listing_reports_out_of_range_for_a_line_past_the_files_end', () => {
   const dir = gitTree({
     'A.md': 'See `other/data.rs:99` for the rule.\n',
@@ -187,7 +184,29 @@ test('a_cite_listing_reports_out_of_range_for_a_line_past_the_files_end', () => 
   });
   const cites = listCiteContents({ repoRoot: dir, files: [path.join(dir, 'A.md')] });
   assert.equal(cites.length, 1);
-  assert.equal(cites[0].firstLine, 'out of range (file has 4 lines)', JSON.stringify(cites));
+  assert.equal(cites[0].firstLine, 'out of range (file has 3 lines)', JSON.stringify(cites));
+});
+
+// RECORDED MUTATION (M1) at 0f6800fc0c86066f775c60b8bec113c9403e254f, applied alone and reverted: the range comparison reads the split's piece count again (`c.startL > lines.length`) -> fails by name, with a_cite_listing_reports_line_1_of_an_empty_file_as_out_of_range, and only these two.
+test('a_cite_listing_reports_the_line_just_past_a_newline_ended_files_end_as_out_of_range', () => {
+  const dir = gitTree({
+    'A.md': 'See `other/data.rs:4` for the rule.\n',
+    'other/data.rs': 'one\ntwo\nthree\n',
+  });
+  const cites = listCiteContents({ repoRoot: dir, files: [path.join(dir, 'A.md')] });
+  assert.equal(cites.length, 1);
+  assert.equal(cites[0].firstLine, 'out of range (file has 3 lines)', JSON.stringify(cites));
+});
+
+// RECORDED MUTATION (M2) at 0f6800fc0c86066f775c60b8bec113c9403e254f, applied alone and reverted: the count's empty-file term dropped (`candText === ''` removed) -> fails by name, and only this one.
+test('a_cite_listing_reports_line_1_of_an_empty_file_as_out_of_range', () => {
+  const dir = gitTree({
+    'A.md': 'See `other/data.rs:1` for the rule.\n',
+    'other/data.rs': '',
+  });
+  const cites = listCiteContents({ repoRoot: dir, files: [path.join(dir, 'A.md')] });
+  assert.equal(cites.length, 1);
+  assert.equal(cites[0].firstLine, 'out of range (file has 0 lines)', JSON.stringify(cites));
 });
 
 // RECORDED MUTATION (round 10, finding 6): reverting the blank-line branch to
