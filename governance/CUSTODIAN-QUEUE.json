@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-03T18:25:45.055Z",
-  "plan_hash": "2421d35fec896a171d94b54c147c1d11358c5cb23b2944310a5b10167502c801",
+  "generated_at": "2026-11-03T18:41:05.759Z",
+  "plan_hash": "d0a70b4097e351a308617d6f3bd2a21514dfe72e89c45046f12c113509ae5632",
   "priorities_approved": true,
   "next": {
     "id": "type-walk-rule2-residual-reasons",
@@ -522,7 +522,7 @@
         "opened": "2026-10-24",
         "done": null
       },
-      "summary": "CARRIES 2026-10-29 (state/directives/2026-10-29-section-37-for-now-release-step-in-checklist-section-0-5b-runs-on.md, line 8): AUTONOMY.md section 37 becomes a rule record with the rest; the closing checklist, a procedure, goes to scripts/plan/README.md under that rule's id. ADDENDUM 2 2026-10-28 (state/directives/2026-10-28-governance-piece-e-addendum-2-upgrade-clear-compact-window-prompt-audit-e3-path-rules-reviewer-model.md): E1's baseline waits for reading 2's re-run after the upgrade; E1's mapping uses the prompt audit (state/consults/2026-10-04-prompt-audit.md) beside the advisor's audit. Before: RULED 2026-10-24 (state/directives/2026-10-24-governance-piece-e-rules-as-records-readings-e1-repin-fresh-session-practice.md, line 19 onward; its addendum at line 91 withdrawn and replaced by state/directives/2026-10-24-governance-piece-e-addendum-corrected.md, lines 10 and 11): one piece, full form, the architect drafting the records; governance lane after what is queued there, never holding slot 1; each merge the human's click. The human approves the generated definitions and the mapping in the PR, and each row retired as stale by explicit approval. The human's words are the authority for the format and procedures only; each rule keeps its own source. Its measurement: reading 4 again at the merge from a fresh session, and the gate first-pass rate and runs per node over the ten gated pieces before and after, as evidence, not proof of cause.",
+      "summary": "CLOUD DRAFT 2026-11-03 (state/consults/2026-11-03-cloud-e1-rules-report.md; (a draft and not Authority)): input for E1's architect draft, read as any reading: 72 rule records drafted over AUTONOMY.md at 6b67d44, every AUTONOMY section mapped (its section 4), its format choices for the human to confirm (section 2), eleven rules the schema cannot express (section 5) and ten stale facts or conflicts (section 6, F1, F2 and F6 proposed as autonomy-stale-status-sentences); the agent-definition rules, E1's own content, are not drafted, and the advisor's and the prompt audits were not read. Its records stay on cloud/e1-rules at d1e162f4, named in the filing note by hash and not filed. Before: CARRIES 2026-10-29 (state/directives/2026-10-29-section-37-for-now-release-step-in-checklist-section-0-5b-runs-on.md, line 8): AUTONOMY.md section 37 becomes a rule record with the rest; the closing checklist, a procedure, goes to scripts/plan/README.md under that rule's id. ADDENDUM 2 2026-10-28 (state/directives/2026-10-28-governance-piece-e-addendum-2-upgrade-clear-compact-window-prompt-audit-e3-path-rules-reviewer-model.md): E1's baseline waits for reading 2's re-run after the upgrade; E1's mapping uses the prompt audit (state/consults/2026-10-04-prompt-audit.md) beside the advisor's audit. Before: RULED 2026-10-24 (state/directives/2026-10-24-governance-piece-e-rules-as-records-readings-e1-repin-fresh-session-practice.md, line 19 onward; its addendum at line 91 withdrawn and replaced by state/directives/2026-10-24-governance-piece-e-addendum-corrected.md, lines 10 and 11): one piece, full form, the architect drafting the records; governance lane after what is queued there, never holding slot 1; each merge the human's click. The human approves the generated definitions and the mapping in the PR, and each row retired as stale by explicit approval. The human's words are the authority for the format and procedures only; each rule keeps its own source. Its measurement: reading 4 again at the merge from a fresh session, and the gate first-pass rate and runs per node over the ten gated pieces before and after, as evidence, not proof of cause.",
       "blocked_by": [
         "governance-e-readings"
       ]
@@ -2192,6 +2192,44 @@
         "done": null
       },
       "summary": "PROPOSED 2026-11-03 by the custodian, from the cloud Linux measurements (state/consults/2026-11-03-cloud-linux-measurements-report.md, Task B; (a draft and not Authority)): every run of the scan over a 256 MiB source parquet returned one local-filesystem-path finding, the bytes D:/ in a printable run of exactly MIN_PRINTABLE_RUN bytes inside binary data. The product gate scans a bundle's partitions, which are parquet, so a reading first: the chance-match rate over partition-shaped content at the sizes publish admits, whether an ordinary publish can be refused by one, and whether a declared limit covers it (the module's own doc names chance matches; KNOWN-LIMITATIONS does not, by text search). A change to the gate is the security posture, the human's. Proposed; placed by the human."
+    },
+    {
+      "id": "clippy-deny-warnings-workspace",
+      "title": "The workspace clippy diagnostics fixed, so cargo clippy over every target with -D warnings exits 0 (the cloud Linux run lists 48 distinct)",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 120,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-11-03",
+        "done": null
+      },
+      "summary": "PROPOSED 2026-11-03 by the custodian, from the cloud suite and clippy run on Linux (state/consults/2026-11-03-cloud-suite-linux-report.md, section 3; (a draft and not Authority)): at 6b67d44, whose product code is main's, cargo clippy --workspace --all-targets with -D warnings exits 101 after six errors in the engine and renderer libraries, so the kernel and every test target go unchecked; the run without -D lists 48 distinct diagnostics in engine/, kernel/ and renderer/, each with a proposed smallest fix, none applied. Three are Linux-only dead_code on items read only under cfg(windows), and clippy on Linux sees no cfg(windows) code, so a Windows run may list more. Two proposals are cautions: the nine assertions_on_constants guards want a runtime panic form, since clippy's const block would break the debug build, and number 48's suggested indentation is the wrong fix. The ledger noted main failing -D warnings on 2026-10-23. Sliced by module at drafting; a CI step running clippy is what CI runs, the human's. Proposed; placed by the human."
+    },
+    {
+      "id": "autonomy-stale-status-sentences",
+      "title": "AUTONOMY.md sentences no longer true: the mutation rule called automated, the self-checks called not yet on main, reports to files (the cloud E1 draft, F1, F2 and F6)",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 45,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-11-03",
+        "done": null
+      },
+      "summary": "PROPOSED 2026-11-03 by the custodian, from the cloud E1 rule records draft (state/consults/2026-11-03-cloud-e1-rules-report.md, section 6; (a draft and not Authority)), each checked by the custodian on main: section 6a item 4 and section 14 call the mutation-per-new-test rule verified mechanically by verify-test-claims, which contains no occurrence of mutation, and no workflow runs verify-mutation (F1); section 6a says the self-checks are not yet on main, and governance-ci runs verify-cites, verify-quotes and verify-test-claims (F2); section 33 part B item 3 keeps reports to files, while the architect has no Write tool and reports reach files by the custodian filing a final message (F6). AUTONOMY.md takes appends at its end only, so a corrigendum or E1's records carrying current words; which is the human's. Its F3 (pinning a DECISIONS-PENDING passage: AUTONOMY section 34 against round 14 in three agent definitions) and F4, F5 and F7 to F10 are for E1. Proposed; placed by the human."
     }
   ],
   "unscheduled": [

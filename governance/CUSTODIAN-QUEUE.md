@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `2421d35fec896a171d94b54c147c1d11358c5cb23b2944310a5b10167502c801`) at `2026-11-03T18:25:45.055Z`.
+Generated from `PLAN.yaml` (sha256 `d0a70b4097e351a308617d6f3bd2a21514dfe72e89c45046f12c113509ae5632`) at `2026-11-03T18:41:05.759Z`.
 
 ## 1. Next
 
@@ -137,6 +137,8 @@ Generated from `PLAN.yaml` (sha256 `2421d35fec896a171d94b54c147c1d11358c5cb23b29
 - **moved-path-mentions-outside-accepted-adrs** — Mentions of the governance paths piece F moved, outside the accepted ADRs: docs/README.md, docs/02, docs/04, docs/14, README.md and the workflow comments (the cloud ADR audit, Task B) (phase `prototype`) — never queued until placed
 - **fixture-determinism-off-windows-record** — kernel/FIXTURES.md on determinism, against the cloud Linux regeneration: G5 and S hash differently off Windows (phase `prototype`) — never queued until placed
 - **redaction-chance-match-in-partitions** — The redaction scan and chance matches in binary content: a drive path in a printable run of exactly the minimum length, in 256 MiB of parquet (the cloud Linux measurement) (phase `prototype`) — never queued until placed
+- **clippy-deny-warnings-workspace** — The workspace clippy diagnostics fixed, so cargo clippy over every target with -D warnings exits 0 (the cloud Linux run lists 48 distinct) (phase `prototype`) — never queued until placed
+- **autonomy-stale-status-sentences** — AUTONOMY.md sentences no longer true: the mutation rule called automated, the self-checks called not yet on main, reports to files (the cloud E1 draft, F1, F2 and F6) (phase `prototype`) — never queued until placed
 
 ### Unscheduled
 
