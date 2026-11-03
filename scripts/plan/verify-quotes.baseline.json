@@ -21,7 +21,7 @@
       "file": "docs/adr/ADR-020-data-plane-origin-admission-for-an-embedded-consumer.md",
       "line": 403,
       "words": "the accepted mechanism is unchanged; this replaces a selector the acceptance never",
-      "reason": "source DECISIONS-PENDING.md, entry 54, ends '...the acceptance never covered' with no closing period; this blockquote adds one not in the source; an appended ADR-020 note is owed.",
+      "reason": "source DECISIONS-PENDING.md, entry 54, ends '...the acceptance never covered' with no closing period; this blockquote adds one not in the source; its bytes are immutable, and the appended ADR-020 Corrigendum on Amendment 1 §(c) carries the source's sentence.",
       "disposition": "owed-correction",
       "corrected_by": "docs/adr/ADR-020-data-plane-origin-admission-for-an-embedded-consumer.md, the Corrigendum on Amendment 1 §(c) (PLAN node adr-020-appended-note; appended -- the blockquote's own bytes are immutable)",
       "ruling": "round 11, 2026-09-17"
