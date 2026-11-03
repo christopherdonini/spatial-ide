@@ -42,8 +42,10 @@ const USER: &str = "<user>";
 /// 1. Strip Windows verbatim prefixes — `\\?\UNC\` → `\\`, `\\?\` → nothing. `\\?\` is itself one
 ///    of `bundle::redaction`'s `local-filesystem-path` needles, so leaving it would guarantee a
 ///    finding on every Windows record.
-/// 2. `\` → `/`. One spelling, so two records of one destination compare equal and the
-///    drive-letter rule sees a single form.
+/// 2. Each character this platform's path syntax calls a separator → `/` (`std::path::is_separator`:
+///    `\` and `/` on Windows, `/` alone elsewhere, where `\` is a byte of a file name). One
+///    spelling, so two records of one destination compare equal and the drive-letter rule sees a
+///    single form.
 /// 3. **User-profile roots, longest match first**, each to a stable token. Longest-first is
 ///    load-bearing: `LOCALAPPDATA` and `TEMP` live *under* `USERPROFILE`, and matching the shorter
 ///    root first would leave `<user-home>/AppData/Local/Temp` where `<temp>` belongs.
@@ -77,7 +79,7 @@ pub fn normalize_with(
     };
 
     // 2 — one separator.
-    let mut s = stripped.replace('\\', "/");
+    let mut s = to_slashes(&stripped);
 
     // 3 — profile roots, longest first. `roots_from_environment` sorts; a caller supplying its own
     // gets the same treatment here so the ordering property does not depend on the caller.
@@ -114,6 +116,11 @@ pub fn normalize_with(
 /// user's home" in `std`, and a root this cannot read is simply not normalized — a gap in the
 /// normalization, never a silent pass. `residual_classes` is what makes such a gap visible.
 pub fn roots_from_environment() -> Vec<(String, &'static str)> {
+    roots_from(|key| std::env::var(key).ok())
+}
+
+/// The roots a lookup declares: `roots_from_environment` with the environment passed in.
+fn roots_from(lookup: impl Fn(&str) -> Option<String>) -> Vec<(String, &'static str)> {
     let mut out: Vec<(String, &'static str)> = Vec::new();
     for (key, token) in [
         ("USERPROFILE", HOME),
@@ -126,8 +133,8 @@ pub fn roots_from_environment() -> Vec<(String, &'static str)> {
         // meant the one temp root that actually gets used there was normalized by nothing.
         ("TMPDIR", TEMP),
     ] {
-        if let Ok(v) = std::env::var(key) {
-            let v = v.replace('\\', "/");
+        if let Some(v) = lookup(key) {
+            let v = to_slashes(&v);
             let v = v.trim_end_matches('/').to_string();
             // A root of `/` or `` would match everything and turn normalization into erasure — the
             // same degenerate case `redaction::declared_ranges` guards against with its length
@@ -139,6 +146,13 @@ pub fn roots_from_environment() -> Vec<(String, &'static str)> {
     }
     out.sort_by_key(|(p, _)| std::cmp::Reverse(p.len()));
     out
+}
+
+/// `s` with each separator character of this platform's path syntax written as `/`.
+fn to_slashes(s: &str) -> String {
+    s.chars()
+        .map(|c| if std::path::is_separator(c) { '/' } else { c })
+        .collect()
 }
 
 fn usernames_from_environment() -> Vec<String> {
