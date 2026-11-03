@@ -1,0 +1,626 @@
+warning: constant `WATCH_BUFFER_BYTES` is never used
+  --> engine/src/watch.rs:73:18
+   |
+73 | pub(crate) const WATCH_BUFFER_BYTES: usize = 65536;
+   |                  ^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: this function has too many arguments (8/7)
+   --> engine/src/rowgroup.rs:331:5
+    |
+331 | /     pub fn build(
+332 | |         conn: &Connection,
+333 | |         path: &str,
+334 | |         covering: &CoveringBbox,
+...   |
+339 | |         observer: Option<&dyn IndexPhaseObserver>,
+340 | |     ) -> Result<Self> {
+    | |_____________________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.97.0/index.html#too_many_arguments
+    = note: `#[warn(clippy::too_many_arguments)]` on by default
+
+warning: this `if` has identical blocks
+    --> engine/src/stream.rs:2346:73
+     |
+2346 |           } else if col.as_any().downcast_ref::<BooleanArray>().is_some() {
+     |  _________________________________________________________________________^
+2347 | |             1
+2348 | |         } else if col.as_any().downcast_ref::<Int8Array>().is_some()
+     | |_________^
+     |
+note: same as this
+    --> engine/src/stream.rs:2350:9
+     |
+2350 | /         {
+2351 | |             1
+2352 | |         } else if col.as_any().downcast_ref::<Int16Array>().is_some()
+     | |_________^
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.97.0/index.html#if_same_then_else
+     = note: `#[warn(clippy::if_same_then_else)]` on by default
+
+warning: this function has too many arguments (10/7)
+    --> engine/src/stream.rs:2462:1
+     |
+2462 | / fn flush(
+2463 | |     pending: &mut Pending,
+2464 | |     envelope: &BatchEnvelope,
+2465 | |     cancel: &CancelToken,
+...    |
+2472 | |     cut_by: BatchCut,
+2473 | | ) -> Result<()> {
+     | |_______________^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.97.0/index.html#too_many_arguments
+
+warning: `spatial-engine` (lib) generated 4 warnings
+warning: manual `!Range::contains` implementation
+   --> renderer/src/canonical.rs:240:20
+    |
+240 |     if d != 0.0 && (mag < MIN_ABS_DOUBLE || mag >= MAX_ABS_DOUBLE) {
+    |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: use: `!(MIN_ABS_DOUBLE..MAX_ABS_DOUBLE).contains(&mag)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.97.0/index.html#manual_range_contains
+    = note: `#[warn(clippy::manual_range_contains)]` on by default
+
+warning: doc list item without indentation
+  --> renderer/src/style.rs:10:5
+   |
+10 | //! module. This file is the document half; [`crate::compiled`] is the compile half.
+   |     ^
+   |
+   = help: if this is supposed to be its own paragraph, add a blank line
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.97.0/index.html#doc_lazy_continuation
+   = note: `#[warn(clippy::doc_lazy_continuation)]` on by default
+help: indent this line
+   |
+10 | //!   module. This file is the document half; [`crate::compiled`] is the compile half.
+   |     ++
+
+warning: `spatial-renderer` (lib) generated 2 warnings (run `cargo clippy --fix --lib -p spatial-renderer -- ` to apply 1 suggestion)
+warning: writing `&PathBuf` instead of `&Path` involves a new object where a slice will do
+   --> kernel/src/permission/boundary.rs:531:26
+    |
+531 | fn manifest_hash(bundle: &PathBuf) -> Option<String> {
+    |                          ^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.97.0/index.html#ptr_arg
+    = note: `#[warn(clippy::ptr_arg)]` on by default
+help: change this to
+    |
+531 - fn manifest_hash(bundle: &PathBuf) -> Option<String> {
+531 + fn manifest_hash(bundle: &Path) -> Option<String> {
+    |
+
+warning: this expression creates a reference which is immediately dereferenced by the compiler
+   --> kernel/src/publish/mod.rs:812:67
+    |
+812 |         let hash = staging.write_partition(&rel, &payload, index, &watch, progress)?;
+    |                                                                   ^^^^^^ help: change this to: `watch`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.97.0/index.html#needless_borrow
+    = note: `#[warn(clippy::needless_borrow)]` on by default
+
+warning: very complex type used. Consider factoring parts into `type` definitions
+   --> kernel/src/skp.rs:277:10
+    |
+277 |     ) -> Result<(Box<dyn BatchSource>, Arc<dyn SourceCancel>), String> {
+    |          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.97.0/index.html#type_complexity
+    = note: `#[warn(clippy::type_complexity)]` on by default
+
+warning: very complex type used. Consider factoring parts into `type` definitions
+   --> kernel/src/lib.rs:414:10
+    |
+414 |     ) -> Result<(Box<dyn BatchSource>, Arc<dyn SourceCancel>), String> {
+    |          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.97.0/index.html#type_complexity
+
+warning: very complex type used. Consider factoring parts into `type` definitions
+   --> kernel/src/lib.rs:489:10
+    |
+489 |     ) -> Result<(Box<dyn BatchSource>, Arc<dyn SourceCancel>), String> {
+    |          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.97.0/index.html#type_complexity
+
+warning: `spatial-kernel` (lib) generated 5 warnings (run `cargo clippy --fix --lib -p spatial-kernel -- ` to apply 1 suggestion)
+warning: `spatial-kernel` (lib test) generated 5 warnings (5 duplicates)
+warning: field `peak_working_set` is never read
+   --> kernel/tests/indexed_budgets.rs:209:13
+    |
+208 |     pub struct Counters {
+    |                -------- field in this struct
+209 |         pub peak_working_set: usize,
+    |             ^^^^^^^^^^^^^^^^
+    |
+    = note: `Counters` has a derived impl for the trait `Clone`, but this is intentionally ignored during dead code analysis
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: this assertion has a constant value
+   --> kernel/tests/indexed_budgets.rs:569:5
+    |
+569 | /     assert!(
+570 | |         !cfg!(debug_assertions),
+571 | |         "this harness produces measurements, and a debug build invalidates every one of them. \
+572 | |          Run: cargo test --release -p spatial-kernel --test indexed_budgets -- --ignored --nocapture"
+573 | |     );
+    | |_____^
+    |
+    = help: consider moving this into a const block: `const { assert!(..) }`
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.97.0/index.html#assertions_on_constants
+    = note: `#[warn(clippy::assertions_on_constants)]` on by default
+
+warning: `format!` in `format!` args
+    --> kernel/tests/indexed_budgets.rs:1166:15
+     |
+1166 |       let art = format!(
+     |  _______________^
+1167 | |         r#"{{
+1168 | |   "kind": "docs/08 index-in-path measurement — engine cut pieces 1-4a",
+1169 | |   "harness": "kernel/tests/indexed_budgets.rs",
+...    |
+1383 | |         frame_bytes = spatial_data_plane::MAX_FRAME_BYTES,
+1384 | |     );
+     | |_____^
+     |
+     = help: combine the `format!(..)` arguments with the outer `format!(..)` call
+     = help: or consider changing `format!` to `format_args!`
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.97.0/index.html#format_in_format_args
+     = note: `#[warn(clippy::format_in_format_args)]` on by default
+
+warning: `spatial-kernel` (test "indexed_budgets") generated 3 warnings
+warning: manual implementation of `.is_multiple_of()`
+   --> kernel/src/bin/publish-bundle.rs:149:12
+    |
+149 |         if index % 20 == 0 {
+    |            ^^^^^^^^^^^^^^^ help: replace with: `index.is_multiple_of(20)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.97.0/index.html#manual_is_multiple_of
+    = note: `#[warn(clippy::manual_is_multiple_of)]` on by default
+
+warning: field `peak_working_set` is never read
+   --> kernel/tests/slice_budgets.rs:186:13
+    |
+185 |     pub struct Counters {
+    |                -------- field in this struct
+186 |         pub peak_working_set: usize,
+    |             ^^^^^^^^^^^^^^^^
+    |
+    = note: `Counters` has a derived impl for the trait `Clone`, but this is intentionally ignored during dead code analysis
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: this assertion has a constant value
+   --> kernel/tests/slice_budgets.rs:467:5
+    |
+467 | /     assert!(
+468 | |         !cfg!(debug_assertions),
+469 | |         "this harness produces measurements, and a debug build invalidates every one of them. \
+470 | |          Run: cargo test --release -p spatial-kernel --test slice_budgets -- --ignored --nocapture"
+471 | |     );
+    | |_____^
+    |
+    = help: consider moving this into a const block: `const { assert!(..) }`
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.97.0/index.html#assertions_on_constants
+    = note: `#[warn(clippy::assertions_on_constants)]` on by default
+
+warning: this assertion has a constant value
+   --> kernel/tests/support/mod.rs:342:5
+    |
+342 | /     assert!(
+343 | |         !cfg!(debug_assertions),
+344 | |         "{harness} produces measurements, and a debug build invalidates every one of them. A \
+345 | |          number taken on a debug build is not a smaller number, it is not a measurement. Run with \
+346 | |          --release."
+347 | |     );
+    | |_____^
+    |
+    = help: consider moving this into a const block: `const { assert!(..) }`
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.97.0/index.html#assertions_on_constants
+    = note: `#[warn(clippy::assertions_on_constants)]` on by default
+
+warning: `spatial-kernel` (bin "publish-bundle") generated 1 warning (run `cargo clippy --fix --bin "publish-bundle" -p spatial-kernel -- ` to apply 1 suggestion)
+warning: `spatial-kernel` (test "slice_budgets") generated 2 warnings
+warning: `spatial-kernel` (test "regenerate_fixture") generated 1 warning
+warning: `spatial-kernel` (test "query_window_attribution") generated 1 warning (1 duplicate)
+warning: `spatial-kernel` (bin "publish-bundle" test) generated 1 warning (1 duplicate)
+warning: using `contains()` instead of `iter().any()` is more efficient
+    --> kernel/tests/import_layout_factorial.rs:1858:27
+     |
+1858 |       let gate_overall = if [gate1_verdict, gate2_verdict, gate3_verdict]
+     |  ___________________________^
+1859 | |         .iter()
+1860 | |         .any(|v| *v == "UNMEASURED")
+     | |____________________________________^ help: try: `[gate1_verdict, gate2_verdict, gate3_verdict].contains(&"UNMEASURED")`
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.97.0/index.html#manual_contains
+     = note: `#[warn(clippy::manual_contains)]` on by default
+
+warning: `spatial-kernel` (test "import_layout_factorial") generated 2 warnings (1 duplicate) (run `cargo clippy --fix --test "import_layout_factorial" -p spatial-kernel -- ` to apply 1 suggestion)
+warning: `spatial-kernel` (test "regenerate_fixture_s") generated 1 warning (1 duplicate)
+warning: `spatial-kernel` (test "first_batch_factorial") generated 1 warning (1 duplicate)
+warning: `spatial-kernel` (test "cancel_rescore") generated 1 warning (1 duplicate)
+warning: `spatial-kernel` (test "scale_pass_a6") generated 1 warning (1 duplicate)
+warning: `spatial-kernel` (test "import_layout_publish_determinism") generated 1 warning (1 duplicate)
+warning: used `assert_eq!` with a literal bool
+   --> kernel/tests/publish.rs:279:5
+    |
+279 |     assert_eq!(manifest["sidecar"]["hashed"].as_bool().unwrap(), false);
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.97.0/index.html#bool_assert_comparison
+    = note: `#[warn(clippy::bool_assert_comparison)]` on by default
+help: replace it with `assert!(..)`
+    |
+279 -     assert_eq!(manifest["sidecar"]["hashed"].as_bool().unwrap(), false);
+279 +     assert!(!manifest["sidecar"]["hashed"].as_bool().unwrap());
+    |
+
+warning: used `assert_eq!` with a literal bool
+   --> kernel/tests/publish.rs:280:5
+    |
+280 |     assert_eq!(manifest["sidecar"]["verified"].as_bool().unwrap(), false);
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.97.0/index.html#bool_assert_comparison
+help: replace it with `assert!(..)`
+    |
+280 -     assert_eq!(manifest["sidecar"]["verified"].as_bool().unwrap(), false);
+280 +     assert!(!manifest["sidecar"]["verified"].as_bool().unwrap());
+    |
+
+warning: used `assert_eq!` with a literal bool
+   --> kernel/tests/publish.rs:957:5
+    |
+957 |     assert_eq!(m["query_surface"]["available"].as_bool().unwrap(), false);
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.97.0/index.html#bool_assert_comparison
+help: replace it with `assert!(..)`
+    |
+957 -     assert_eq!(m["query_surface"]["available"].as_bool().unwrap(), false);
+957 +     assert!(!m["query_surface"]["available"].as_bool().unwrap());
+    |
+
+warning: `spatial-kernel` (test "publish") generated 3 warnings (run `cargo clippy --fix --test "publish" -p spatial-kernel -- ` to apply 3 suggestions)
+warning: manual implementation of `.is_multiple_of()`
+   --> kernel/tests/scale_pass.rs:191:12
+    |
+191 |         if n % 50 == 0 {
+    |            ^^^^^^^^^^^ help: replace with: `n.is_multiple_of(50)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.97.0/index.html#manual_is_multiple_of
+    = note: `#[warn(clippy::manual_is_multiple_of)]` on by default
+
+warning: this `MutexGuard` is held across an await point
+   --> kernel/tests/wire_bytes_invariant.rs:191:9
+    |
+191 |     let _serial = serial();
+    |         ^^^^^^^
+    |
+    = help: consider using an async-aware `Mutex` type or ensuring the `MutexGuard` is dropped before calling `await`
+note: these are all the await points this lock is held through
+   --> kernel/tests/wire_bytes_invariant.rs:199:42
+    |
+199 |     let untraced = collect_frames(&path).await;
+    |                                          ^^^^^
+...
+209 |     let traced = collect_frames(&path).await;
+    |                                        ^^^^^
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.97.0/index.html#await_holding_lock
+    = note: `#[warn(clippy::await_holding_lock)]` on by default
+
+warning: this `MutexGuard` is held across an await point
+   --> kernel/tests/wire_bytes_invariant.rs:398:9
+    |
+398 |     let _serial = serial();
+    |         ^^^^^^^
+    |
+    = help: consider using an async-aware `Mutex` type or ensuring the `MutexGuard` is dropped before calling `await`
+note: these are all the await points this lock is held through
+   --> kernel/tests/wire_bytes_invariant.rs:405:53
+    |
+405 |     let untraced = collect_frames_via_ticket(&path).await;
+    |                                                     ^^^^^
+...
+415 |     let traced = collect_frames_via_ticket(&path).await;
+    |                                                   ^^^^^
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.97.0/index.html#await_holding_lock
+
+warning: `spatial-kernel` (test "scale_pass") generated 2 warnings (1 duplicate) (run `cargo clippy --fix --test "scale_pass" -p spatial-kernel -- ` to apply 1 suggestion)
+warning: `spatial-kernel` (test "wire_bytes_invariant") generated 2 warnings
+warning: this assertion has a constant value
+   --> engine/tests/lod_tier_measurements.rs:253:5
+    |
+253 | /     assert!(
+254 | |         !cfg!(debug_assertions),
+255 | |         "this test measures build wall time; a debug build's numbers are not measurements, and \
+256 | |          every other pass in this family refuses a debug build on principle. Run with --release."
+257 | |     );
+    | |_____^
+    |
+    = help: consider moving this into a const block: `const { assert!(..) }`
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.97.0/index.html#assertions_on_constants
+    = note: `#[warn(clippy::assertions_on_constants)]` on by default
+
+warning: this assertion has a constant value
+   --> engine/tests/lod_tier_measurements.rs:486:5
+    |
+486 | /     assert!(
+487 | |         !cfg!(debug_assertions),
+488 | |         "this helper is called by both wall-time measurements and an O1-O4 outcomes pass at 5 GB \
+489 | |          scale; a debug build's wall time is not a measurement, and every other pass in this \
+490 | |          family refuses a debug build on principle. Run with --release."
+491 | |     );
+    | |_____^
+    |
+    = help: consider moving this into a const block: `const { assert!(..) }`
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.97.0/index.html#assertions_on_constants
+
+warning: `spatial-engine` (test "lod_tier_measurements") generated 2 warnings
+warning: the borrowed expression implements the required traits
+   --> engine/tests/fixture_generation.rs:126:31
+    |
+126 |     let fa = write_geoparquet(&d.join("fa.parquet"), &base).unwrap();
+    |                               ^^^^^^^^^^^^^^^^^^^^^ help: change this to: `d.join("fa.parquet")`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.97.0/index.html#needless_borrows_for_generic_args
+    = note: `#[warn(clippy::needless_borrows_for_generic_args)]` on by default
+
+warning: the borrowed expression implements the required traits
+   --> engine/tests/fixture_generation.rs:127:31
+    |
+127 |     let fb = write_geoparquet(&d.join("fb.parquet"), &small).unwrap();
+    |                               ^^^^^^^^^^^^^^^^^^^^^ help: change this to: `d.join("fb.parquet")`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.97.0/index.html#needless_borrows_for_generic_args
+
+warning: the borrowed expression implements the required traits
+   --> engine/tests/fixture_generation.rs:143:38
+    |
+143 |         write_geoparquet_cancellable(&d.join("f.parquet"), &spec, &CancelToken::new(), Some(&rec))
+    |                                      ^^^^^^^^^^^^^^^^^^^^ help: change this to: `d.join("f.parquet")`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.97.0/index.html#needless_borrows_for_generic_args
+
+warning: this assertion has a constant value
+   --> engine/tests/import_layout_fixtures.rs:247:5
+    |
+247 | /     assert!(
+248 | |         !cfg!(debug_assertions),
+249 | |         "this phase writes fixtures other phases hash and time; a debug build's numbers (even the \
+250 | |          elapsed-time-only ones reported here) are not measurements. Run with --release."
+251 | |     );
+    | |_____^
+    |
+    = help: consider moving this into a const block: `const { assert!(..) }`
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.97.0/index.html#assertions_on_constants
+    = note: `#[warn(clippy::assertions_on_constants)]` on by default
+
+warning: `spatial-engine` (test "fixture_generation") generated 3 warnings (run `cargo clippy --fix --test "fixture_generation" -p spatial-engine -- ` to apply 3 suggestions)
+warning: `spatial-engine` (test "import_layout_fixtures") generated 1 warning
+warning: unnecessary use of `get("id_js_exact").is_none()`
+   --> engine/tests/identity.rs:321:12
+    |
+321 |         md.get("id_js_exact").is_none(),
+    |         ---^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |         |
+    |         help: replace it with: `!md.contains_key("id_js_exact")`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.97.0/index.html#unnecessary_get_then_check
+    = note: `#[warn(clippy::unnecessary_get_then_check)]` on by default
+
+warning: unnecessary use of `get("id_verified_rows").is_none()`
+   --> engine/tests/identity.rs:324:16
+    |
+324 |     assert!(md.get("id_verified_rows").is_none());
+    |             ---^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |             |
+    |             help: replace it with: `!md.contains_key("id_verified_rows")`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.97.0/index.html#unnecessary_get_then_check
+
+warning: `spatial-engine` (test "identity") generated 2 warnings
+warning: this expression creates a reference which is immediately dereferenced by the compiler
+   --> engine/tests/import_layout_5gb_fixtures.rs:318:17
+    |
+318 |                 &log as &str,
+    |                 ^^^^ help: change this to: `log`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.97.0/index.html#needless_borrow
+    = note: `#[warn(clippy::needless_borrow)]` on by default
+
+warning: this expression creates a reference which is immediately dereferenced by the compiler
+   --> engine/tests/import_layout_5gb_fixtures.rs:326:17
+    |
+326 |                 &log as &str,
+    |                 ^^^^ help: change this to: `log`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.97.0/index.html#needless_borrow
+
+warning: this assertion has a constant value
+   --> engine/tests/import_layout_5gb_fixtures.rs:338:5
+    |
+338 | /     assert!(
+339 | |         !cfg!(debug_assertions),
+340 | |         "this phase writes/verifies fixtures other phases score against; a debug build's numbers \
+341 | |          are not measurements. Run with --release."
+342 | |     );
+    | |_____^
+    |
+    = help: consider moving this into a const block: `const { assert!(..) }`
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.97.0/index.html#assertions_on_constants
+    = note: `#[warn(clippy::assertions_on_constants)]` on by default
+
+warning: `spatial-engine` (test "import_layout_5gb_fixtures") generated 3 warnings (run `cargo clippy --fix --test "import_layout_5gb_fixtures" -p spatial-engine -- ` to apply 2 suggestions)
+warning: this assertion has a constant value
+   --> engine/tests/import_layout_digest.rs:461:5
+    |
+461 | /     assert!(
+462 | |         !cfg!(debug_assertions),
+463 | |         "this phase's digests are compared for exact equality across files; nothing here is a \
+464 | |          timing, but every other pass in this family refuses a debug build on principle. Run with \
+465 | |          --release."
+466 | |     );
+    | |_____^
+    |
+    = help: consider moving this into a const block: `const { assert!(..) }`
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.97.0/index.html#assertions_on_constants
+    = note: `#[warn(clippy::assertions_on_constants)]` on by default
+
+warning: `spatial-engine` (test "import_layout_digest") generated 1 warning
+warning: the loop variable `i` is used to index `union`
+   --> engine/tests/publish_stream.rs:534:14
+    |
+534 |     for i in 0..4 {
+    |              ^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.97.0/index.html#needless_range_loop
+    = note: `#[warn(clippy::needless_range_loop)]` on by default
+help: consider using an iterator and enumerate()
+    |
+534 -     for i in 0..4 {
+534 +     for (i, <item>) in union.iter().enumerate() {
+    |
+
+warning: deref which would be done by auto-deref
+   --> engine/tests/admission_property_campaign.rs:218:5
+    |
+218 |     *r.pick(&[" ", " ", " ", "  ", "\t", "\n", " \n "])
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `r.pick(&[" ", " ", " ", "  ", "\t", "\n", " \n "])`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.97.0/index.html#explicit_auto_deref
+    = note: `#[warn(clippy::explicit_auto_deref)]` on by default
+
+warning: `format!` in `format!` args
+   --> engine/tests/admission_property_campaign.rs:270:15
+    |
+270 |           10 => format!(
+    |  _______________^
+271 | |             "({} {} {}) {} {} {}",
+272 | |             r.pick(NUM_COLS),
+273 | |             r.pick(&["+", "-", "*", "/"]),
+...   |
+277 | |             format!("{} {}", r.pick(&["<", ">", "="]), num_lit(r))
+278 | |         ),
+    | |_________^
+    |
+    = help: combine the `format!(..)` arguments with the outer `format!(..)` call
+    = help: or consider changing `format!` to `format_args!`
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.97.0/index.html#format_in_format_args
+    = note: `#[warn(clippy::format_in_format_args)]` on by default
+
+warning: deref which would be done by auto-deref
+   --> engine/tests/admission_property_campaign.rs:543:31
+    |
+543 |                 let t: &str = *r.pick(SPLICE_TOKENS);
+    |                               ^^^^^^^^^^^^^^^^^^^^^^ help: try: `r.pick(SPLICE_TOKENS)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.97.0/index.html#explicit_auto_deref
+
+warning: called `Iterator::last` on a `DoubleEndedIterator`; this will needlessly iterate the entire iterator
+   --> engine/tests/admission_property_campaign.rs:556:27
+    |
+556 |                   let end = boundaries
+    |  ___________________________^
+557 | |                     .iter()
+558 | |                     .copied()
+559 | |                     .filter(|&b| b <= end)
+560 | |                     .last()
+    | |___________________________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.97.0/index.html#double_ended_iterator_last
+    = note: `#[warn(clippy::double_ended_iterator_last)]` on by default
+help: try
+    |
+560 -                     .last()
+560 +                     .next_back()
+    |
+
+warning: `spatial-engine` (test "publish_stream") generated 1 warning
+warning: `spatial-engine` (test "admission_property_campaign") generated 4 warnings (run `cargo clippy --fix --test "admission_property_campaign" -p spatial-engine -- ` to apply 3 suggestions)
+warning: very complex type used. Consider factoring parts into `type` definitions
+    --> engine/src/stream.rs:3808:24
+     |
+3808 |             let cases: [(Option<AdmittedPredicate>, Option<Bbox>, Option<u64>, String); 8] = [
+     |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.97.0/index.html#type_complexity
+     = note: `#[warn(clippy::type_complexity)]` on by default
+
+warning: deref which would be done by auto-deref
+   --> engine/src/trace.rs:637:18
+    |
+637 |             pair(*five_leg.last().unwrap()).1,
+    |                  ^^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `five_leg.last().unwrap()`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.97.0/index.html#explicit_auto_deref
+    = note: `#[warn(clippy::explicit_auto_deref)]` on by default
+
+warning: deref which would be done by auto-deref
+   --> engine/src/trace.rs:658:18
+    |
+658 |             pair(*three_leg.last().unwrap()).1,
+    |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `three_leg.last().unwrap()`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.97.0/index.html#explicit_auto_deref
+
+warning: `spatial-engine` (lib test) generated 7 warnings (4 duplicates) (run `cargo clippy --fix --lib -p spatial-engine --tests -- ` to apply 2 suggestions)
+warning: redundant pattern matching, consider using `is_some()`
+   --> engine/tests/filter_type_admission.rs:955:16
+    |
+955 |         if let Some(_) = int_info(from) {
+    |         -------^^^^^^^----------------- help: try: `if int_info(from).is_some()`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.97.0/index.html#redundant_pattern_matching
+    = note: `#[warn(clippy::redundant_pattern_matching)]` on by default
+
+warning: `spatial-engine` (test "filter_type_admission") generated 1 warning (run `cargo clippy --fix --test "filter_type_admission" -p spatial-engine -- ` to apply 1 suggestion)
+warning: this assertion has a constant value
+   --> engine/tests/import_layout_5gb_digest.rs:395:5
+    |
+395 | /     assert!(
+396 | |         !cfg!(debug_assertions),
+397 | |         "this phase's digests are compared for exact equality across files. Run with --release."
+398 | |     );
+    | |_____^
+    |
+    = help: consider moving this into a const block: `const { assert!(..) }`
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.97.0/index.html#assertions_on_constants
+    = note: `#[warn(clippy::assertions_on_constants)]` on by default
+
+warning: large size difference between variants
+   --> engine/tests/admission_p4_corpus.rs:363:1
+    |
+363 | /   enum Observed {
+364 | | /     Admitted {
+365 | | |         crs: String,
+366 | | |         crs_provenance: String,
+367 | | |         crs_source: String,
+...   | |
+380 | | |         identity_class: &'static str,
+381 | | |     },
+    | | |_____- the largest variant contains at least 256 bytes
+382 | | /     Refused {
+383 | | |         code: String,
+384 | | |         detail: String,
+385 | | |     },
+    | | |_____- the second-largest variant contains at least 48 bytes
+386 | |   }
+    | |___^ the entire enum is at least 256 bytes
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.97.0/index.html#large_enum_variant
+    = note: `#[warn(clippy::large_enum_variant)]` on by default
+help: consider boxing the large fields or introducing indirection in some other way to reduce the total size of the enum
+    |
+379 -         sanity_reason: String,
+379 +         sanity_reason: Box<String>,
+    |
+
+warning: `spatial-engine` (test "import_layout_5gb_digest") generated 1 warning
+warning: `spatial-engine` (test "admission_p4_corpus") generated 1 warning
+warning: `spatial-renderer` (lib test) generated 2 warnings (2 duplicates)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.17s

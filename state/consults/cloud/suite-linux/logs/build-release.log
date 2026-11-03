@@ -1,0 +1,376 @@
+   Compiling proc-macro2 v1.0.107
+   Compiling unicode-ident v1.0.24
+   Compiling quote v1.0.47
+   Compiling libc v0.2.189
+   Compiling cfg-if v1.0.4
+   Compiling libm v0.2.16
+   Compiling getrandom v0.3.4
+   Compiling autocfg v1.5.1
+   Compiling version_check v0.9.5
+   Compiling syn v2.0.119
+   Compiling num-traits v0.2.19
+   Compiling bytes v1.12.1
+   Compiling zerocopy v0.8.55
+   Compiling syn v3.0.3
+   Compiling memchr v2.8.3
+   Compiling once_cell v1.21.4
+   Compiling itoa v1.0.18
+   Compiling smallvec v1.15.2
+   Compiling zmij v1.0.23
+   Compiling serde_core v1.0.229
+   Compiling generic-array v0.14.7
+   Compiling serde v1.0.229
+   Compiling bitflags v2.13.1
+   Compiling typenum v1.20.1
+   Compiling zerocopy-derive v0.8.55
+   Compiling serde_derive v1.0.229
+   Compiling serde_json v1.0.151
+   Compiling num-integer v0.1.46
+   Compiling num-bigint v0.4.8
+   Compiling crypto-common v0.1.7
+   Compiling block-buffer v0.10.4
+   Compiling ahash v0.8.12
+   Compiling digest v0.10.7
+   Compiling arrow-schema v58.4.0
+   Compiling base64 v0.22.1
+   Compiling half v2.7.1
+   Compiling ryu v1.0.23
+   Compiling arrow-buffer v58.4.0
+   Compiling cpufeatures v0.2.17
+   Compiling iana-time-zone v0.1.65
+   Compiling chrono v0.4.45
+   Compiling arrow-data v58.4.0
+   Compiling num-complex v0.4.6
+   Compiling hashbrown v0.17.1
+   Compiling thiserror v2.0.19
+   Compiling thiserror-impl v2.0.19
+   Compiling log v0.4.33
+   Compiling lexical-util v1.0.7
+   Compiling arrow-array v58.4.0
+   Compiling parking_lot_core v0.9.12
+   Compiling semver v1.0.28
+   Compiling rustc_version v0.4.1
+   Compiling jobserver v0.1.35
+   Compiling shlex v2.0.1
+   Compiling crossbeam-utils v0.8.23
+   Compiling find-msvc-tools v0.1.9
+   Compiling scopeguard v1.2.0
+   Compiling rustix v0.38.44
+   Compiling lock_api v0.4.14
+   Compiling cc v1.4.0
+   Compiling flatbuffers v25.12.19
+   Compiling crossbeam-epoch v0.9.21
+   Compiling equivalent v1.0.2
+   Compiling linux-raw-sys v0.4.15
+   Compiling indexmap v2.14.0
+   Compiling ring v0.17.14
+   Compiling arrow-select v58.4.0
+   Compiling parking_lot v0.12.5
+   Compiling lexical-parse-integer v1.0.6
+   Compiling lexical-write-integer v1.0.6
+   Compiling aho-corasick v1.1.5
+   Compiling crossbeam-deque v0.8.8
+   Compiling regex-syntax v0.8.11
+   Compiling regex-automata v0.4.18
+   Compiling lexical-write-float v1.0.6
+   Compiling lexical-parse-float v1.0.6
+   Compiling crossterm v0.28.1
+   Compiling unicode-segmentation v1.13.3
+   Compiling rayon-core v1.13.0
+   Compiling byteorder v1.5.0
+   Compiling crc32fast v1.5.0
+   Compiling zeroize v1.9.0
+   Compiling unicode-width v0.2.2
+   Compiling rustls-pki-types v1.15.1
+   Compiling comfy-table v7.1.4
+   Compiling arrow-ipc v58.4.0
+   Compiling lexical-core v1.0.6
+   Compiling regex v1.13.1
+   Compiling arrow-ord v58.4.0
+   Compiling getrandom v0.2.17
+   Compiling atoi v2.0.0
+   Compiling simd-adler32 v0.3.10
+   Compiling rustix v1.1.4
+   Compiling httparse v1.10.1
+   Compiling untrusted v0.9.0
+   Compiling arrow-cast v58.4.0
+   Compiling arrow-string v58.4.0
+   Compiling arrow-row v58.4.0
+   Compiling arrow-arith v58.4.0
+   Compiling adler2 v2.0.1
+   Compiling linux-raw-sys v0.12.1
+   Compiling either v1.18.0
+   Compiling rustls v0.23.43
+   Compiling heapless v0.8.0
+   Compiling http v1.5.0
+   Compiling rayon v1.12.0
+   Compiling miniz_oxide v0.8.9
+   Compiling arrow v58.4.0
+   Compiling rustls-webpki v0.103.13
+   Compiling hash32 v0.3.1
+   Compiling zlib-rs v0.6.7
+   Compiling stable_deref_trait v1.2.1
+   Compiling winnow v1.0.4
+   Compiling bumpalo v3.20.3
+   Compiling foldhash v0.2.0
+   Compiling subtle v2.6.1
+   Compiling allocator-api2 v0.2.21
+   Compiling hashbrown v0.16.1
+   Compiling zopfli v0.8.3
+   Compiling toml_parser v1.1.3+spec-1.1.0
+   Compiling ureq-proto v0.6.0
+   Compiling flate2 v1.1.9
+   Compiling xattr v1.6.1
+   Compiling webpki-roots v1.0.9
+   Compiling filetime v0.2.29
+   Compiling sha2 v0.10.9
+   Compiling robust v1.2.0
+   Compiling utf8-zero v0.8.1
+   Compiling toml_datetime v1.1.1+spec-1.1.0
+   Compiling percent-encoding v2.3.2
+   Compiling toml_edit v0.25.15+spec-1.1.0
+   Compiling ureq v3.3.0
+   Compiling spade v2.15.1
+   Compiling tar v0.4.46
+   Compiling zip v6.0.0
+   Compiling rstar v0.12.2
+   Compiling approx v0.5.1
+   Compiling vcpkg v0.2.15
+   Compiling rustversion v1.0.23
+   Compiling pkg-config v0.3.33
+   Compiling geo-types v0.7.20
+   Compiling libduckdb-sys v1.10505.0
+   Compiling proc-macro-crate v3.5.0
+   Compiling i_float v1.16.0
+   Compiling paste v1.0.15
+   Compiling thiserror v1.0.69
+   Compiling foldhash v0.1.5
+   Compiling heck v0.5.0
+   Compiling rand_core v0.10.1
+   Compiling snap v1.1.2
+   Compiling strum_macros v0.27.2
+   Compiling hashbrown v0.15.5
+   Compiling num_enum_derive v0.7.6
+   Compiling i_shape v1.18.0
+   Compiling i_key_sort v0.10.3
+   Compiling thiserror-impl v1.0.69
+   Compiling ordered-float v2.10.1
+   Compiling i_tree v0.18.0
+   Compiling integer-encoding v3.0.4
+   Compiling thrift v0.17.0
+   Compiling i_overlay v4.5.2
+   Compiling num_enum v0.7.6
+   Compiling strum v0.27.2
+   Compiling hashlink v0.10.0
+   Compiling rand v0.10.2
+   Compiling rand_pcg v0.10.2
+   Compiling geo-traits v0.3.0
+   Compiling earcut v0.4.5
+   Compiling geographiclib-rs v0.2.7
+   Compiling cast v0.3.0
+   Compiling sif-itree v0.4.1
+   Compiling seq-macro v0.3.6
+   Compiling fallible-iterator v0.3.0
+   Compiling twox-hash v2.1.3
+   Compiling fallible-streaming-iterator v0.1.9
+   Compiling float_next_after v2.0.0
+   Compiling geo v0.33.1
+   Compiling parquet v58.4.0
+   Compiling wkb v0.9.2
+   Compiling pin-project-lite v0.2.17
+   Compiling futures-core v0.3.33
+   Compiling futures-sink v0.3.33
+   Compiling futures-channel v0.3.33
+   Compiling errno v0.3.14
+   Compiling signal-hook-registry v1.4.8
+   Compiling tokio-macros v2.7.2
+   Compiling futures-macro v0.3.33
+   Compiling mio v1.2.2
+   Compiling socket2 v0.6.5
+   Compiling futures-task v0.3.33
+   Compiling futures-io v0.3.33
+   Compiling slab v0.4.12
+   Compiling tokio v1.53.1
+   Compiling futures-util v0.3.33
+   Compiling http-body v1.1.0
+   Compiling ppv-lite86 v0.2.21
+   Compiling rand_core v0.9.5
+   Compiling hex v0.4.3
+   Compiling rand_chacha v0.9.0
+   Compiling tracing-core v0.1.36
+   Compiling tower-service v0.3.3
+   Compiling tracing v0.1.44
+   Compiling rand v0.9.5
+   Compiling sha1 v0.10.7
+   Compiling httpdate v1.0.3
+   Compiling data-encoding v2.11.1
+   Compiling tower-layer v0.3.3
+   Compiling atomic-waker v1.1.2
+   Compiling sync_wrapper v1.0.2
+   Compiling hyper v1.11.0
+   Compiling form_urlencoded v1.2.2
+   Compiling tungstenite v0.29.0
+   Compiling http-body-util v0.1.4
+   Compiling mime v0.3.17
+   Compiling axum-core v0.5.6
+   Compiling tokio-tungstenite v0.29.0
+   Compiling serde_urlencoded v0.7.1
+   Compiling hyper-util v0.1.20
+   Compiling tower v0.5.3
+   Compiling futures-executor v0.3.33
+   Compiling serde_path_to_error v0.1.20
+   Compiling matchit v0.8.4
+   Compiling axum v0.8.9
+   Compiling futures v0.3.33
+   Compiling spatial-skp v0.0.0 (/home/user/spatial-ide/protocol/skp)
+   Compiling spatial-renderer v0.0.0 (/home/user/spatial-ide/renderer)
+   Compiling spatial-data-plane v0.0.0 (/home/user/spatial-ide/protocol/data-plane)
+   Compiling duckdb v1.10505.0
+   Compiling spatial-engine v0.0.0 (/home/user/spatial-ide/engine)
+warning: constant `WATCH_BUFFER_BYTES` is never used
+  --> engine/src/watch.rs:73:18
+   |
+73 | pub(crate) const WATCH_BUFFER_BYTES: usize = 65536;
+   |                  ^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+   Compiling spatial-kernel v0.0.0 (/home/user/spatial-ide/kernel)
+warning: `spatial-engine` (lib) generated 1 warning
+warning: `spatial-engine` (lib test) generated 1 warning (1 duplicate)
+warning: field `peak_working_set` is never read
+   --> kernel/tests/indexed_budgets.rs:209:13
+    |
+208 |     pub struct Counters {
+    |                -------- field in this struct
+209 |         pub peak_working_set: usize,
+    |             ^^^^^^^^^^^^^^^^
+    |
+    = note: `Counters` has a derived impl for the trait `Clone`, but this is intentionally ignored during dead code analysis
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: field `peak_working_set` is never read
+   --> kernel/tests/slice_budgets.rs:186:13
+    |
+185 |     pub struct Counters {
+    |                -------- field in this struct
+186 |         pub peak_working_set: usize,
+    |             ^^^^^^^^^^^^^^^^
+    |
+    = note: `Counters` has a derived impl for the trait `Clone`, but this is intentionally ignored during dead code analysis
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `spatial-kernel` (test "slice_budgets") generated 1 warning
+warning: `spatial-kernel` (test "indexed_budgets") generated 1 warning
+    Finished `release` profile [optimized + debuginfo] target(s) in 15m 12s
+  Executable unittests src/lib.rs (target/release/deps/spatial_data_plane-2c88df6c42c0564f)
+  Executable tests/candidate_a.rs (target/release/deps/candidate_a-539d2ac39178933c)
+  Executable tests/no_transport_leakage.rs (target/release/deps/no_transport_leakage-4772d9d12751c60b)
+  Executable tests/origin_header_encoding.rs (target/release/deps/origin_header_encoding-7cc884f365cd8893)
+  Executable tests/stream_registry_bound.rs (target/release/deps/stream_registry_bound-074eec929753eb78)
+  Executable unittests src/lib.rs (target/release/deps/spatial_engine-f565fc36c5ffaa46)
+  Executable tests/admission_format_semantics.rs (target/release/deps/admission_format_semantics-d35062048ddeae7f)
+  Executable tests/admission_instruments.rs (target/release/deps/admission_instruments-001ecac2ca85d3ba)
+  Executable tests/admission_p4_corpus.rs (target/release/deps/admission_p4_corpus-0bb5365db3c439b4)
+  Executable tests/admission_property_campaign.rs (target/release/deps/admission_property_campaign-32ffa21c40f3af88)
+  Executable tests/admitted_integer_overflow.rs (target/release/deps/admitted_integer_overflow-cbf8814e3569272f)
+  Executable tests/b1_nul_declared_identity_no_scan.rs (target/release/deps/b1_nul_declared_identity_no_scan-1de72488d13138c6)
+  Executable tests/b1_nul_native_id_scan_once.rs (target/release/deps/b1_nul_native_id_scan_once-b4c002c3f72bc2ef)
+  Executable tests/b1_projection_hostile_covering.rs (target/release/deps/b1_projection_hostile_covering-39cd3d15a738b76c)
+  Executable tests/b1_projection_hostile_names.rs (target/release/deps/b1_projection_hostile_names-3ebdb7c08cde53b6)
+  Executable tests/batch_sizing.rs (target/release/deps/batch_sizing-6112c4d70bec71d4)
+  Executable tests/cancel_execute_window.rs (target/release/deps/cancel_execute_window-9e7ea872ff2f58ec)
+  Executable tests/connection_reuse.rs (target/release/deps/connection_reuse-2435c391f724d9e2)
+  Executable tests/covering_case_collision.rs (target/release/deps/covering_case_collision-f441b89cf4f99900)
+  Executable tests/covering_names_missing_column.rs (target/release/deps/covering_names_missing_column-3773a264c0a5d93c)
+  Executable tests/filter_composition.rs (target/release/deps/filter_composition-8e38b0baafbc599d)
+  Executable tests/filter_type_admission.rs (target/release/deps/filter_type_admission-a2e8fad003ddd1c8)
+  Executable tests/first_batch_and_pruning.rs (target/release/deps/first_batch_and_pruning-a8f567656ff228b0)
+  Executable tests/fixture_generation.rs (target/release/deps/fixture_generation-2742739cff4e6240)
+  Executable tests/geoarrow_batch_fixtures.rs (target/release/deps/geoarrow_batch_fixtures-fe136a5a73d4e04c)
+  Executable tests/geometry_admission.rs (target/release/deps/geometry_admission-5a663c82ac94c119)
+  Executable tests/identity.rs (target/release/deps/identity-326126e5ac0ea25f)
+  Executable tests/import_layout_5gb_digest.rs (target/release/deps/import_layout_5gb_digest-a21890bb0f0518c0)
+  Executable tests/import_layout_5gb_fixtures.rs (target/release/deps/import_layout_5gb_fixtures-11660e8183b7804f)
+  Executable tests/import_layout_digest.rs (target/release/deps/import_layout_digest-8717af4b47dd26ba)
+  Executable tests/import_layout_fixtures.rs (target/release/deps/import_layout_fixtures-52252c53e4726134)
+  Executable tests/index_build_cancellation.rs (target/release/deps/index_build_cancellation-cd7f82d3d70f43fd)
+  Executable tests/line_corpus.rs (target/release/deps/line_corpus-f6ef0027fd78e669)
+  Executable tests/line_stream.rs (target/release/deps/line_stream-07629260b699df6a)
+  Executable tests/live_projection.rs (target/release/deps/live_projection-aa905e622f761ea9)
+  Executable tests/lod_tier_builder.rs (target/release/deps/lod_tier_builder-7b81123e1411f589)
+  Executable tests/lod_tier_cancellation.rs (target/release/deps/lod_tier_cancellation-7540daef1bf0a8ed)
+  Executable tests/lod_tier_measurements.rs (target/release/deps/lod_tier_measurements-e390e01f8d4ad9bb)
+  Executable tests/lod_tier_preflight.rs (target/release/deps/lod_tier_preflight-ff0ee8174553e947)
+  Executable tests/multipolygon_corpus.rs (target/release/deps/multipolygon_corpus-b102774e715d3550)
+  Executable tests/multipolygon_stream.rs (target/release/deps/multipolygon_stream-e0ee660bad8be85a)
+  Executable tests/planner_seam.rs (target/release/deps/planner_seam-3b080a99c5b889f7)
+  Executable tests/point_corpus.rs (target/release/deps/point_corpus-b85646b8fe5c8b21)
+  Executable tests/point_stream.rs (target/release/deps/point_stream-a3390cdead0e7a0b)
+  Executable tests/polygon_wire_golden.rs (target/release/deps/polygon_wire_golden-22130efd65902bb9)
+  Executable tests/predicate_admission.rs (target/release/deps/predicate_admission-fe5941a026e8dfcb)
+  Executable tests/predicate_referenced_columns.rs (target/release/deps/predicate_referenced_columns-de8df633618ebc33)
+  Executable tests/publish_stream.rs (target/release/deps/publish_stream-b446186e4434ca53)
+  Executable tests/row_group_seam.rs (target/release/deps/row_group_seam-e9fc43c56ac8ba69)
+  Executable tests/session_identity.rs (target/release/deps/session_identity-5c71287e4b2ac352)
+  Executable tests/slice.rs (target/release/deps/slice-93e21c161ccad357)
+  Executable tests/source_observation.rs (target/release/deps/source_observation-14d140df7b8d3e29)
+  Executable tests/source_watch_adapter.rs (target/release/deps/source_watch_adapter-c3358cd7e5fbe8ef)
+  Executable tests/spatial_index.rs (target/release/deps/spatial_index-66f83baeffc8de4a)
+  Executable tests/stream_fetch_overflow.rs (target/release/deps/stream_fetch_overflow-b6c7dfcea9a586e8)
+  Executable unittests src/lib.rs (target/release/deps/spatial_kernel-c5aff32df9ef712a)
+  Executable unittests src/bin/publish-bundle.rs (target/release/deps/publish_bundle-2d88f1df826436fd)
+  Executable unittests src/main.rs (target/release/deps/slice_host-460d49588ec35ff8)
+  Executable tests/cancel_rescore.rs (target/release/deps/cancel_rescore-ebd4bbfcc7c7bde9)
+  Executable tests/catalog_replace.rs (target/release/deps/catalog_replace-9df3dc1eb1bbfbf2)
+  Executable tests/concurrency_in_situ.rs (target/release/deps/concurrency_in_situ-adab89d1ee7d1979)
+  Executable tests/dataset_ref.rs (target/release/deps/dataset_ref-461c7824f9f59063)
+  Executable tests/describe_crs_unit.rs (target/release/deps/describe_crs_unit-72833bc9da0da309)
+  Executable tests/end_to_end.rs (target/release/deps/end_to_end-41e030c55cde970d)
+  Executable tests/first_batch_factorial.rs (target/release/deps/first_batch_factorial-4161887f67c86aa6)
+  Executable tests/import_layout_factorial.rs (target/release/deps/import_layout_factorial-fc2f70a253765388)
+  Executable tests/import_layout_publish_determinism.rs (target/release/deps/import_layout_publish_determinism-d5c1f083dea47ec5)
+  Executable tests/indexed_budgets.rs (target/release/deps/indexed_budgets-59dc612a5f76ea8f)
+  Executable tests/manual_walkthrough_fixtures.rs (target/release/deps/manual_walkthrough_fixtures-a2575172dca1dfc5)
+  Executable tests/no_generation_in_persisted_artifacts.rs (target/release/deps/no_generation_in_persisted_artifacts-4ed69f4203718fdd)
+  Executable tests/permission_boundary.rs (target/release/deps/permission_boundary-70b54305d5185a77)
+  Executable tests/post_check_cost_report.rs (target/release/deps/post_check_cost_report-5bb417daa9aecae2)
+  Executable tests/publish.rs (target/release/deps/publish-36b7dc1d72ccee1c)
+  Executable tests/publish_cancellation.rs (target/release/deps/publish_cancellation-a97120246c15fc21)
+  Executable tests/publish_cli.rs (target/release/deps/publish_cli-fcf9d5148e304683)
+  Executable tests/publish_partition_golden.rs (target/release/deps/publish_partition_golden-3b43ae873d1c48b4)
+  Executable tests/query_window_attribution.rs (target/release/deps/query_window_attribution-49842cd689dd6a96)
+  Executable tests/record_step_crs.rs (target/release/deps/record_step_crs-438e85c74529211c)
+  Executable tests/regenerate_fixture.rs (target/release/deps/regenerate_fixture-5c2907c5a5339950)
+  Executable tests/regenerate_fixture_s.rs (target/release/deps/regenerate_fixture_s-2773e90ed9a3150f)
+  Executable tests/scale_pass.rs (target/release/deps/scale_pass-04e29dcd2954470d)
+  Executable tests/scale_pass_a6.rs (target/release/deps/scale_pass_a6-768ceebf6c94572e)
+  Executable tests/session_end_event.rs (target/release/deps/session_end_event-f54500e4df9e89cd)
+  Executable tests/session_generation.rs (target/release/deps/session_generation-5fbd6c5b5b6a91da)
+  Executable tests/session_history.rs (target/release/deps/session_history-0b3807a7c36b821d)
+  Executable tests/session_history_crash.rs (target/release/deps/session_history_crash-cf93e5b1a1a0f99b)
+  Executable tests/session_reference.rs (target/release/deps/session_reference-37f531152016bc85)
+  Executable tests/skp_admission.rs (target/release/deps/skp_admission-d2a3e3e66fa452e3)
+  Executable tests/skp_admission_remediation.rs (target/release/deps/skp_admission_remediation-267a84c65d3600c1)
+  Executable tests/skp_cancel_terminal_without_credit.rs (target/release/deps/skp_cancel_terminal_without_credit-485517674f26796d)
+  Executable tests/skp_filter_cancellation.rs (target/release/deps/skp_filter_cancellation-7f4d7e8e2b146f42)
+  Executable tests/skp_projection.rs (target/release/deps/skp_projection-3479c895c7a2bd6b)
+  Executable tests/slice_budgets.rs (target/release/deps/slice_budgets-b6df502476f4066a)
+  Executable tests/source_watch_ordering.rs (target/release/deps/source_watch_ordering-2ee7fe6ad925d3fc)
+  Executable tests/source_watch_windows.rs (target/release/deps/source_watch_windows-472a180ef2a4ca87)
+  Executable tests/trace_spans.rs (target/release/deps/trace_spans-9fa28ab3cd6a196b)
+  Executable tests/typed_terminal_codes.rs (target/release/deps/typed_terminal_codes-64d6777ed8607515)
+  Executable tests/verify_bundle.rs (target/release/deps/verify_bundle-b7c3baec5b710320)
+  Executable tests/watcher_first_read_windows.rs (target/release/deps/watcher_first_read_windows-62f46c5929294961)
+  Executable tests/wire_bytes_invariant.rs (target/release/deps/wire_bytes_invariant-2ad6e737324e5cf5)
+  Executable unittests src/lib.rs (target/release/deps/spatial_renderer-768fb03d73623874)
+  Executable tests/style_agreement.rs (target/release/deps/style_agreement-9cd557519fcb4918)
+  Executable tests/style_shell_agreement.rs (target/release/deps/style_shell_agreement-15dd17be971388ea)
+  Executable unittests src/lib.rs (target/release/deps/spatial_skp-97c22150e583671d)
+  Executable tests/conformance/main.rs (target/release/deps/conformance-8c68429c220f5390)
+  Executable tests/fixtures.rs (target/release/deps/fixtures-f38f70acaa2ae979)
+
+real	15m12.650s
+user	53m47.057s
+sys	2m48.312s
+exit=0
