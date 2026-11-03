@@ -12,7 +12,11 @@
 // both endpoints) must be within that file, as the bound below defines it. Every reference that does NOT resolve is
 // printed with the citing `file:line` and the bad target; the process exits 1 if any reference is
 // unresolved, 0 if all resolve. A cite starting or ending at line 0 never resolves; where its reason
-// would say a line exceeds a file, it names line 0 instead (lines count from 1). Here and below, a file's
+// would say a line exceeds a file, it names line 0 instead (lines count from 1). A range whose end is below
+// its start, neither end at line 0, never resolves, in the tree or at a pin: once a tracked file matches its
+// path, and wherever its pin is read (before the pinned commit is looked up), its reason says the range runs
+// backwards (the move map's check below still comes first). A range with a line 0 in it keeps the line-0
+// reason. Here and below, a file's
 // line count is its true count (a final newline ends the last line and starts no new one, and an empty file
 // has 0 lines); a line is within a file (and does not exceed it) when it is no higher than that count, in the
 // tree and at a pin, and every reason that prints a line count prints it. LEGACY BOUND (node
@@ -286,8 +290,8 @@ function lineCount(repoRoot, relPath) {
  * Classify one citation against the tree. Returns { status, reason? } where status is:
  *   'ok'         — resolves and the line is in range.
  *   'no-match'   — no tracked file matches the path at all.
- *   'oob-exact'  — an EXACT (confident) file resolves but the cited line exceeds it (a real defect).
- *   'oob-suffix' — only a best-effort basename guess resolves and its line is out of range (advice).
+ *   'oob-exact'  — an EXACT (confident) file resolves but the cited line exceeds it, or the range runs backwards (a real defect).
+ *   'oob-suffix' — only a best-effort basename guess resolves and its line is out of range, or the range runs backwards (advice).
  */
 export function checkCitation(cite, index, repoRoot, map) {
   const { exact, all, mapped } = resolveRefMapped(cite.pathRaw, cite.relPath, index, map);
@@ -295,8 +299,16 @@ export function checkCitation(cite, index, repoRoot, map) {
   return mapped ? { ...res, mapped } : res;
 }
 
+// A range whose end is below its start (neither end at line 0) names no span: a fault in the cite's text, whatever any file holds.
+function backwardReason(cite) {
+  if (!(cite.startL > cite.endL) || cite.endL === 0) return null;
+  return `range ${cite.startL}-${cite.endL} of "${cite.pathRaw.replace(/^\.\//, '')}" runs backwards (its end is below its start)`;
+}
+
 function checkResolved(cite, exact, all, repoRoot) {
   if (all.length === 0) return { status: 'no-match' };
+  const back = backwardReason(cite);
+  if (back) return { status: exact.length ? 'oob-exact' : 'oob-suffix', reason: back };
   const maxL = Math.max(cite.startL, cite.endL);
   const zero = cite.startL === 0 || cite.endL === 0;
   const validStart = cite.startL >= 1 && cite.endL >= 1;
@@ -317,13 +329,15 @@ function checkResolved(cite, exact, all, repoRoot) {
 /**
  * A citation that carries a pin (`path:line[-line] @ <commit>`) is read at that commit: the commit
  * must exist, a path of `paths` (the files to try, in order) must be a file there, and the line (or range
- * end) must be within it. Returns { ok: true } at the first path that holds the line, else the first failure
+ * end) must be within it. A range whose end is below its start fails before the commit is read. Returns { ok: true } at the first path that holds the line, else the first failure
  * that is not a missing file, else { ok: false, reason, missingFile: true } naming the path as written.
  * Git only reads; a commit git cannot find is a failing pin.
  */
 export function checkPinned(cite, repoRoot, paths) {
   const git = (args) =>
     execFileSync('git', args, { cwd: repoRoot, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], maxBuffer: 1 << 28 });
+  const back = backwardReason(cite);
+  if (back) return { ok: false, reason: back };
   try { git(['cat-file', '-e', `${cite.pin}^{commit}`]); } catch { return { ok: false, reason: `pinned commit ${cite.pin} not found` }; }
   const maxL = Math.max(cite.startL, cite.endL);
   let failure = null;
