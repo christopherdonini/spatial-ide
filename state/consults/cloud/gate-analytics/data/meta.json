@@ -1,0 +1,10 @@
+{
+ "rev": "84a90e26087b49eace4dd6fa19a8a9d3215b09df",
+ "generated": "by scripts/extract.mjs; re-run to regenerate",
+ "gateLogRows": 668,
+ "reportsFiled": 435,
+ "reportsReferenced": 430,
+ "findings": 1825,
+ "pieces": 190,
+ "proportionalFrom": "2026-10-05"
+}

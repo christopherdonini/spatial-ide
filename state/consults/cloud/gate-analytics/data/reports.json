@@ -1,0 +1,4352 @@
+[
+ {
+  "report": "2026-09-27-adr-034-gate1-architect.md",
+  "entry": 249,
+  "verdict": "FAIL",
+  "findings": 9,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 7744
+ },
+ {
+  "report": "2026-09-27-adr-034-gate1-reviewer.md",
+  "entry": 250,
+  "verdict": "FAIL",
+  "findings": 5,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 9178
+ },
+ {
+  "report": "2026-09-27-adr-034-gate2-architect.md",
+  "entry": 251,
+  "verdict": "FAIL",
+  "findings": 2,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 9259
+ },
+ {
+  "report": "2026-09-27-adr-034-gate2-reviewer.md",
+  "entry": 252,
+  "verdict": "FAIL",
+  "findings": 5,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 12142
+ },
+ {
+  "report": "2026-09-27-adr-034-gate3-architect.md",
+  "entry": 253,
+  "verdict": "FAIL",
+  "findings": 1,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 5489
+ },
+ {
+  "report": "2026-09-27-adr-034-gate3-reviewer.md",
+  "entry": 254,
+  "verdict": "FAIL",
+  "findings": 4,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 8342
+ },
+ {
+  "report": "2026-09-27-adr-034-gate4-architect.md",
+  "entry": 255,
+  "verdict": "PASS",
+  "findings": 0,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 2264
+ },
+ {
+  "report": "2026-09-27-adr-034-gate4-reviewer.md",
+  "entry": 256,
+  "verdict": "PASS",
+  "findings": 0,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 3358
+ },
+ {
+  "report": "2026-09-27-b1-engine-kernel-half-gate2-architect.md",
+  "entry": 239,
+  "verdict": "FAIL",
+  "findings": 0,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 13910
+ },
+ {
+  "report": "2026-09-27-b1-engine-kernel-half-gate2-reviewer.md",
+  "entry": 240,
+  "verdict": "FAIL",
+  "findings": 7,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 14925
+ },
+ {
+  "report": "2026-09-27-b1-engine-kernel-half-gate3-architect.md",
+  "entry": 243,
+  "verdict": "PASS",
+  "findings": 2,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 13947
+ },
+ {
+  "report": "2026-09-27-b1-engine-kernel-half-gate3-reviewer.md",
+  "entry": 246,
+  "verdict": "PASS",
+  "findings": 9,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 15881
+ },
+ {
+  "report": "2026-09-27-exposure-profile-paths-gate1-architect.md",
+  "entry": 237,
+  "verdict": "FAIL",
+  "findings": 16,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 18893
+ },
+ {
+  "report": "2026-09-27-exposure-profile-paths-gate1-reviewer.md",
+  "entry": 238,
+  "verdict": "FAIL",
+  "findings": 12,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 14108
+ },
+ {
+  "report": "2026-09-27-exposure-profile-paths-gate2-architect.md",
+  "entry": 241,
+  "verdict": "FAIL",
+  "findings": 13,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 15944
+ },
+ {
+  "report": "2026-09-27-exposure-profile-paths-gate2-reviewer.md",
+  "entry": 242,
+  "verdict": "FAIL",
+  "findings": 8,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 13129
+ },
+ {
+  "report": "2026-09-27-exposure-profile-paths-gate3-architect.md",
+  "entry": 244,
+  "verdict": "FAIL",
+  "findings": 7,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 12883
+ },
+ {
+  "report": "2026-09-27-exposure-profile-paths-gate3-reviewer.md",
+  "entry": 245,
+  "verdict": "FAIL",
+  "findings": 6,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 17304
+ },
+ {
+  "report": "2026-09-27-exposure-profile-paths-gate4-reviewer.md",
+  "entry": 247,
+  "verdict": "FAIL",
+  "findings": 6,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": true,
+  "bytes": 11461
+ },
+ {
+  "report": "2026-09-27-exposure-profile-paths-gate5-reviewer.md",
+  "entry": 248,
+  "verdict": "FAIL",
+  "findings": 2,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 5854
+ },
+ {
+  "report": "2026-09-27-kernel-generation-close-races-gate1-architect.md",
+  "entry": 257,
+  "verdict": "FAIL",
+  "findings": 7,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 11775
+ },
+ {
+  "report": "2026-09-27-kernel-generation-close-races-gate1-reviewer.md",
+  "entry": 258,
+  "verdict": "FAIL",
+  "findings": 5,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 11202
+ },
+ {
+  "report": "2026-09-27-kernel-generation-close-races-gate2-architect.md",
+  "entry": 260,
+  "verdict": "FAIL",
+  "findings": 1,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 4783
+ },
+ {
+  "report": "2026-09-27-kernel-generation-close-races-gate2-reviewer.md",
+  "entry": 259,
+  "verdict": "PASS",
+  "findings": 0,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 3127
+ },
+ {
+  "report": "2026-09-27-kernel-generation-close-races-gate3-architect.md",
+  "entry": 261,
+  "verdict": "PASS",
+  "findings": 0,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 2611
+ },
+ {
+  "report": "2026-09-27-kernel-generation-close-races-gate3-reviewer.md",
+  "entry": 262,
+  "verdict": "PASS",
+  "findings": 0,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 3131
+ },
+ {
+  "report": "2026-09-27-test-claims-landedness-gate1-reviewer.md",
+  "entry": 263,
+  "verdict": "FAIL",
+  "findings": 7,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 8252
+ },
+ {
+  "report": "2026-09-27-test-claims-landedness-gate2-reviewer.md",
+  "entry": 264,
+  "verdict": "PASS",
+  "findings": 3,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 5883
+ },
+ {
+  "report": "2026-09-28-suites-beyond-windows-gate1-reviewer.md",
+  "entry": 270,
+  "verdict": "PASS",
+  "findings": 0,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 7461
+ },
+ {
+  "report": "2026-09-28-watcher-first-read-gate1-architect.md",
+  "entry": 266,
+  "verdict": "FAIL",
+  "findings": 7,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 11656
+ },
+ {
+  "report": "2026-09-28-watcher-first-read-gate1-reviewer.md",
+  "entry": 267,
+  "verdict": "PASS",
+  "findings": 7,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 13674
+ },
+ {
+  "report": "2026-09-28-watcher-first-read-gate2-architect.md",
+  "entry": 268,
+  "verdict": "PASS",
+  "findings": 5,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 9965
+ },
+ {
+  "report": "2026-09-28-watcher-first-read-gate2-reviewer.md",
+  "entry": 269,
+  "verdict": "PASS",
+  "findings": 5,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 13464
+ },
+ {
+  "report": "2026-09-28-wave2-b-admission-campaign-merge-gate1-reviewer.md",
+  "entry": 265,
+  "verdict": "PASS",
+  "findings": 0,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 7458
+ },
+ {
+  "report": "2026-09-29-a2-1-adr-texts-gate1-architect.md",
+  "entry": 271,
+  "verdict": "PASS",
+  "findings": 0,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 9156
+ },
+ {
+  "report": "2026-09-29-a2-1-adr-texts-gate1-reviewer.md",
+  "entry": 272,
+  "verdict": "PASS",
+  "findings": 0,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 6081
+ },
+ {
+  "report": "2026-09-29-a2-1-gate1-architect.md",
+  "entry": 273,
+  "verdict": "FAIL",
+  "findings": 13,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 16162
+ },
+ {
+  "report": "2026-09-29-a2-1-gate1-reviewer.md",
+  "entry": 274,
+  "verdict": "FAIL",
+  "findings": 6,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 17269
+ },
+ {
+  "report": "2026-09-29-a2-1-gate2-architect.md",
+  "entry": 275,
+  "verdict": "FAIL",
+  "findings": 9,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 11438
+ },
+ {
+  "report": "2026-09-29-a2-1-gate2-reviewer.md",
+  "entry": 276,
+  "verdict": "FAIL",
+  "findings": 6,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 18315
+ },
+ {
+  "report": "2026-09-29-a2-1-gate3-architect.md",
+  "entry": 277,
+  "verdict": "FAIL",
+  "findings": 3,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 12069
+ },
+ {
+  "report": "2026-09-29-a2-1-gate3-reviewer.md",
+  "entry": 278,
+  "verdict": "FAIL",
+  "findings": 2,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 16419
+ },
+ {
+  "report": "2026-09-29-a2-1-reduction1-architect.md",
+  "entry": 280,
+  "verdict": "FAIL",
+  "findings": 2,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 6043
+ },
+ {
+  "report": "2026-09-29-a2-1-reduction1-reviewer.md",
+  "entry": 279,
+  "verdict": "PASS",
+  "findings": 0,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 6334
+ },
+ {
+  "report": "2026-09-29-a2-1-reduction2-reviewer.md",
+  "entry": 281,
+  "verdict": "PASS",
+  "findings": 0,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 4041
+ },
+ {
+  "report": "2026-09-30-b-1-adr-note-gate1-architect.md",
+  "entry": 282,
+  "verdict": "PASS",
+  "findings": 4,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 6337
+ },
+ {
+  "report": "2026-09-30-b-1-adr-note-gate1-reviewer.md",
+  "entry": 283,
+  "verdict": "PASS",
+  "findings": 0,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 6245
+ },
+ {
+  "report": "2026-09-30-b-1-code-gate1-architect.md",
+  "entry": 284,
+  "verdict": "FAIL",
+  "findings": 13,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 10474
+ },
+ {
+  "report": "2026-09-30-b-1-code-gate1-reviewer.md",
+  "entry": 285,
+  "verdict": "FAIL",
+  "findings": 12,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 13273
+ },
+ {
+  "report": "2026-09-30-b-1-code-gate2-architect.md",
+  "entry": 286,
+  "verdict": "FAIL",
+  "findings": 6,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 7995
+ },
+ {
+  "report": "2026-09-30-b-1-code-gate2-reviewer.md",
+  "entry": 287,
+  "verdict": "PASS",
+  "findings": 3,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 11044
+ },
+ {
+  "report": "2026-09-30-b-1-code-reduction1-architect.md",
+  "entry": 288,
+  "verdict": "PASS",
+  "findings": 0,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 3716
+ },
+ {
+  "report": "2026-09-30-b-1-code-reduction1-reviewer.md",
+  "entry": 289,
+  "verdict": "PASS",
+  "findings": 0,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 3160
+ },
+ {
+  "report": "2026-09-30-cancel-before-execute-gate1-architect.md",
+  "entry": 290,
+  "verdict": "FAIL",
+  "findings": 7,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 9769
+ },
+ {
+  "report": "2026-09-30-cancel-before-execute-gate1-reviewer.md",
+  "entry": 291,
+  "verdict": "FAIL",
+  "findings": 8,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 10690
+ },
+ {
+  "report": "2026-09-30-cancel-before-execute-gate2-architect.md",
+  "entry": 292,
+  "verdict": "PASS",
+  "findings": 6,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 7609
+ },
+ {
+  "report": "2026-09-30-cancel-before-execute-gate2-reviewer.md",
+  "entry": 293,
+  "verdict": "PASS",
+  "findings": 5,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 9393
+ },
+ {
+  "report": "2026-09-30-close-dataset-unknown-gate1-architect.md",
+  "entry": 302,
+  "verdict": "FAIL",
+  "findings": 4,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 7291
+ },
+ {
+  "report": "2026-09-30-close-dataset-unknown-gate1-reviewer.md",
+  "entry": 303,
+  "verdict": "PASS",
+  "findings": 2,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 8681
+ },
+ {
+  "report": "2026-09-30-close-dataset-unknown-gate2-architect.md",
+  "entry": 304,
+  "verdict": "FAIL",
+  "findings": 6,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 5289
+ },
+ {
+  "report": "2026-09-30-close-dataset-unknown-gate2-reviewer.md",
+  "entry": 305,
+  "verdict": "PASS",
+  "findings": 2,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 4118
+ },
+ {
+  "report": "2026-09-30-close-dataset-unknown-gate3-architect.md",
+  "entry": 306,
+  "verdict": "PASS",
+  "findings": 0,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 3181
+ },
+ {
+  "report": "2026-09-30-close-dataset-unknown-gate3-reviewer.md",
+  "entry": 307,
+  "verdict": "PASS",
+  "findings": 1,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 3360
+ },
+ {
+  "report": "2026-09-30-publish-refusal-src-tauri-gate1-architect.md",
+  "entry": 298,
+  "verdict": "PASS",
+  "findings": 4,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 7762
+ },
+ {
+  "report": "2026-09-30-publish-refusal-src-tauri-gate1-reviewer.md",
+  "entry": 299,
+  "verdict": "PASS",
+  "findings": 3,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 9504
+ },
+ {
+  "report": "2026-09-30-raw-path-refusal-code-gate1-architect.md",
+  "entry": 296,
+  "verdict": "PASS",
+  "findings": 3,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 7369
+ },
+ {
+  "report": "2026-09-30-raw-path-refusal-code-gate1-reviewer.md",
+  "entry": 297,
+  "verdict": "PASS",
+  "findings": 2,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 7720
+ },
+ {
+  "report": "2026-09-30-raw-path-refusal-code-gate2-architect.md",
+  "entry": 300,
+  "verdict": "PASS",
+  "findings": 3,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 4257
+ },
+ {
+  "report": "2026-09-30-raw-path-refusal-code-gate2-reviewer.md",
+  "entry": 301,
+  "verdict": "PASS",
+  "findings": 2,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 5061
+ },
+ {
+  "report": "2026-09-30-ticket-liveness-redeem-gate1-architect-confirmation.md",
+  "entry": null,
+  "verdict": null,
+  "findings": 0,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 2659
+ },
+ {
+  "report": "2026-09-30-ticket-liveness-redeem-gate1-architect.md",
+  "entry": 294,
+  "verdict": "PASS",
+  "findings": 5,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 7812
+ },
+ {
+  "report": "2026-09-30-ticket-liveness-redeem-gate1-reviewer.md",
+  "entry": 295,
+  "verdict": "PASS",
+  "findings": 4,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 9520
+ },
+ {
+  "report": "2026-10-01-audit-reader-char-boundary-gate1-architect.md",
+  "entry": 312,
+  "verdict": "FAIL",
+  "findings": 4,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 7638
+ },
+ {
+  "report": "2026-10-01-audit-reader-char-boundary-gate1-reviewer.md",
+  "entry": 313,
+  "verdict": "FAIL",
+  "findings": 3,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 7353
+ },
+ {
+  "report": "2026-10-01-audit-reader-char-boundary-gate2-architect.md",
+  "entry": 314,
+  "verdict": "PASS",
+  "findings": 4,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 3880
+ },
+ {
+  "report": "2026-10-01-audit-reader-char-boundary-gate2-reviewer.md",
+  "entry": 315,
+  "verdict": "PASS",
+  "findings": 4,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 4136
+ },
+ {
+  "report": "2026-10-01-catalog-replace-note-gate1-architect.md",
+  "entry": 308,
+  "verdict": "FAIL",
+  "findings": 6,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 7272
+ },
+ {
+  "report": "2026-10-01-catalog-replace-note-gate1-reviewer.md",
+  "entry": 309,
+  "verdict": "PASS",
+  "findings": 3,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 8366
+ },
+ {
+  "report": "2026-10-01-catalog-replace-note-gate2-architect.md",
+  "entry": 310,
+  "verdict": "PASS",
+  "findings": 7,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 4852
+ },
+ {
+  "report": "2026-10-01-catalog-replace-note-gate2-reviewer.md",
+  "entry": 311,
+  "verdict": "PASS",
+  "findings": 3,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 4748
+ },
+ {
+  "report": "2026-10-02-exposure-scan-ci-backstop-gate1-architect.md",
+  "entry": 316,
+  "verdict": "PASS",
+  "findings": 6,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 10356
+ },
+ {
+  "report": "2026-10-02-exposure-scan-ci-backstop-gate1-reviewer.md",
+  "entry": 317,
+  "verdict": "PASS",
+  "findings": 7,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 11754
+ },
+ {
+  "report": "2026-10-02-exposure-scan-ci-backstop-gate2-architect.md",
+  "entry": 318,
+  "verdict": "FAIL",
+  "findings": 5,
+  "reportUsesClasses": false,
+  "fallbackUsed": true,
+  "verdictLineUsed": false,
+  "bytes": 6923
+ },
+ {
+  "report": "2026-10-02-exposure-scan-ci-backstop-gate2-reviewer.md",
+  "entry": 319,
+  "verdict": "PASS",
+  "findings": 4,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 8015
+ },
+ {
+  "report": "2026-10-02-exposure-scan-ci-backstop-gate3-architect-reduction.md",
+  "entry": 322,
+  "verdict": "PASS",
+  "findings": 0,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 2692
+ },
+ {
+  "report": "2026-10-02-exposure-scan-ci-backstop-gate3-architect.md",
+  "entry": 320,
+  "verdict": "PASS",
+  "findings": 4,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 7778
+ },
+ {
+  "report": "2026-10-02-exposure-scan-ci-backstop-gate3-reviewer.md",
+  "entry": 321,
+  "verdict": "FAIL",
+  "findings": 3,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 8698
+ },
+ {
+  "report": "2026-10-02-publish-panel-rs-regex-layout-gate1-reviewer.md",
+  "entry": 331,
+  "verdict": "PASS",
+  "findings": 0,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 9058
+ },
+ {
+  "report": "2026-10-02-publish-panel-rs-regex-layout-gate2-reviewer.md",
+  "entry": 334,
+  "verdict": "PASS",
+  "findings": 0,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 10035
+ },
+ {
+  "report": "2026-10-02-questions-mirror-t11-copy-glob-gate1-reviewer.md",
+  "entry": 339,
+  "verdict": "PASS",
+  "findings": 4,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 6045
+ },
+ {
+  "report": "2026-10-02-round-mirror-hook-gate1-architect.md",
+  "entry": 323,
+  "verdict": "PASS",
+  "findings": 11,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 12081
+ },
+ {
+  "report": "2026-10-02-round-mirror-hook-gate1-reviewer.md",
+  "entry": 324,
+  "verdict": "FAIL",
+  "findings": 12,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 14059
+ },
+ {
+  "report": "2026-10-02-round-mirror-hook-gate2-architect.md",
+  "entry": 325,
+  "verdict": "PASS",
+  "findings": 4,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 7354
+ },
+ {
+  "report": "2026-10-02-round-mirror-hook-gate2-reviewer.md",
+  "entry": 326,
+  "verdict": "PASS",
+  "findings": 5,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 10355
+ },
+ {
+  "report": "2026-10-02-round-mirror-hook-merge-reviewer.md",
+  "entry": 335,
+  "verdict": "PASS",
+  "findings": 5,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 7760
+ },
+ {
+  "report": "2026-10-02-skp-cancel-state-closed-set-gate1-architect.md",
+  "entry": 340,
+  "verdict": "PASS",
+  "findings": 9,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 11568
+ },
+ {
+  "report": "2026-10-02-skp-cancel-state-closed-set-gate1-reviewer.md",
+  "entry": 341,
+  "verdict": "PASS",
+  "findings": 5,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 10095
+ },
+ {
+  "report": "2026-10-02-skp-cancel-state-closed-set-gate2-architect.md",
+  "entry": 342,
+  "verdict": "PASS",
+  "findings": 6,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 7806
+ },
+ {
+  "report": "2026-10-02-skp-cancel-state-closed-set-gate2-reviewer.md",
+  "entry": 343,
+  "verdict": "PASS",
+  "findings": 4,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 8119
+ },
+ {
+  "report": "2026-10-02-stop-hook-stale-continuity-gate1-architect.md",
+  "entry": 344,
+  "verdict": "PASS",
+  "findings": 10,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 10508
+ },
+ {
+  "report": "2026-10-02-stop-hook-stale-continuity-gate1-reviewer.md",
+  "entry": 345,
+  "verdict": "PASS",
+  "findings": 10,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 12841
+ },
+ {
+  "report": "2026-10-02-stop-hook-stale-continuity-gate2-architect.md",
+  "entry": 346,
+  "verdict": "PASS",
+  "findings": 6,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 9439
+ },
+ {
+  "report": "2026-10-02-stop-hook-stale-continuity-gate2-reviewer.md",
+  "entry": 347,
+  "verdict": "PASS",
+  "findings": 5,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 9061
+ },
+ {
+  "report": "2026-10-02-stop-hook-stale-continuity-i1-architect-ruling.md",
+  "entry": null,
+  "verdict": null,
+  "findings": 0,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 5370
+ },
+ {
+  "report": "2026-10-02-test-claims-same-pr-pin-gate1-architect.md",
+  "entry": 327,
+  "verdict": "FAIL",
+  "findings": 8,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 8935
+ },
+ {
+  "report": "2026-10-02-test-claims-same-pr-pin-gate1-reviewer.md",
+  "entry": 328,
+  "verdict": "FAIL",
+  "findings": 7,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 13149
+ },
+ {
+  "report": "2026-10-02-test-claims-same-pr-pin-gate2-architect.md",
+  "entry": 332,
+  "verdict": "PASS",
+  "findings": 8,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 10959
+ },
+ {
+  "report": "2026-10-02-test-claims-same-pr-pin-gate2-reviewer.md",
+  "entry": 333,
+  "verdict": "PASS",
+  "findings": 5,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 9252
+ },
+ {
+  "report": "2026-10-02-workspace-rustfmt-gate1-architect.md",
+  "entry": 329,
+  "verdict": "PASS",
+  "findings": 6,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 11114
+ },
+ {
+  "report": "2026-10-02-workspace-rustfmt-gate1-reviewer.md",
+  "entry": 330,
+  "verdict": "FAIL",
+  "findings": 9,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 11071
+ },
+ {
+  "report": "2026-10-02-workspace-rustfmt-gate2-architect.md",
+  "entry": 336,
+  "verdict": "FAIL",
+  "findings": 7,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 10057
+ },
+ {
+  "report": "2026-10-02-workspace-rustfmt-gate2-reviewer.md",
+  "entry": 337,
+  "verdict": "FAIL",
+  "findings": 5,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 10470
+ },
+ {
+  "report": "2026-10-02-workspace-rustfmt-gate3-architect.md",
+  "entry": 338,
+  "verdict": "PASS",
+  "findings": 6,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 9777
+ },
+ {
+  "report": "2026-10-02-workspace-rustfmt-i4-architect-ruling.md",
+  "entry": null,
+  "verdict": null,
+  "findings": 0,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 6880
+ },
+ {
+  "report": "2026-10-03-guardian-v0-gate1-architect.md",
+  "entry": 376,
+  "verdict": "PASS",
+  "findings": 0,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 12834
+ },
+ {
+  "report": "2026-10-03-guardian-v0-gate1-reviewer.md",
+  "entry": 377,
+  "verdict": "FAIL",
+  "findings": 11,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 18084
+ },
+ {
+  "report": "2026-10-03-kernel-ticket-drop-followups-gate1-architect.md",
+  "entry": 371,
+  "verdict": "PASS",
+  "findings": 8,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 10075
+ },
+ {
+  "report": "2026-10-03-kernel-ticket-drop-followups-gate1-reviewer.md",
+  "entry": 373,
+  "verdict": "FAIL",
+  "findings": 7,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 13973
+ },
+ {
+  "report": "2026-10-03-kernel-ticket-drop-followups-gate2-architect.md",
+  "entry": 374,
+  "verdict": "PASS",
+  "findings": 6,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 11965
+ },
+ {
+  "report": "2026-10-03-kernel-ticket-drop-followups-gate2-reviewer.md",
+  "entry": 375,
+  "verdict": "PASS",
+  "findings": 5,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 11845
+ },
+ {
+  "report": "2026-10-03-lead-data-pilot-setup-gate1-architect.md",
+  "entry": 360,
+  "verdict": "FAIL",
+  "findings": 10,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 9458
+ },
+ {
+  "report": "2026-10-03-lead-data-pilot-setup-gate1-reviewer.md",
+  "entry": 361,
+  "verdict": "PASS",
+  "findings": 9,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 16875
+ },
+ {
+  "report": "2026-10-03-lead-data-pilot-setup-gate2-architect.md",
+  "entry": 362,
+  "verdict": "PASS",
+  "findings": 8,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 9678
+ },
+ {
+  "report": "2026-10-03-lead-data-pilot-setup-gate2-reviewer.md",
+  "entry": 363,
+  "verdict": "PASS",
+  "findings": 5,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 15178
+ },
+ {
+  "report": "2026-10-03-lead-data-pilot-setup-gate3-architect.md",
+  "entry": 364,
+  "verdict": "PASS",
+  "findings": 2,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 8344
+ },
+ {
+  "report": "2026-10-03-lead-data-pilot-setup-gate3-reviewer.md",
+  "entry": 365,
+  "verdict": "PASS",
+  "findings": 5,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 8347
+ },
+ {
+  "report": "2026-10-03-port-1-linux-l1-gate1-architect.md",
+  "entry": 348,
+  "verdict": "PASS",
+  "findings": 3,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 10859
+ },
+ {
+  "report": "2026-10-03-port-1-linux-l1-gate1-reviewer.md",
+  "entry": 349,
+  "verdict": "PASS",
+  "findings": 4,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 17267
+ },
+ {
+  "report": "2026-10-03-port-1-linux-l1-gate2-architect.md",
+  "entry": 352,
+  "verdict": "PASS",
+  "findings": 6,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 8425
+ },
+ {
+  "report": "2026-10-03-port-1-linux-l1-gate2-reviewer.md",
+  "entry": 353,
+  "verdict": "PASS",
+  "findings": 5,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 11192
+ },
+ {
+  "report": "2026-10-03-publish-attempt-lifecycle-src-tauri-gate1-architect.md",
+  "entry": 350,
+  "verdict": "FAIL",
+  "findings": 2,
+  "reportUsesClasses": false,
+  "fallbackUsed": true,
+  "verdictLineUsed": false,
+  "bytes": 11299
+ },
+ {
+  "report": "2026-10-03-publish-attempt-lifecycle-src-tauri-gate1-reviewer.md",
+  "entry": 351,
+  "verdict": "FAIL",
+  "findings": 11,
+  "reportUsesClasses": false,
+  "fallbackUsed": true,
+  "verdictLineUsed": false,
+  "bytes": 15245
+ },
+ {
+  "report": "2026-10-03-publish-attempt-lifecycle-src-tauri-gate2-architect.md",
+  "entry": 354,
+  "verdict": "PASS",
+  "findings": 11,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 12446
+ },
+ {
+  "report": "2026-10-03-publish-attempt-lifecycle-src-tauri-gate2-reviewer.md",
+  "entry": 355,
+  "verdict": "FAIL",
+  "findings": 5,
+  "reportUsesClasses": false,
+  "fallbackUsed": true,
+  "verdictLineUsed": false,
+  "bytes": 14651
+ },
+ {
+  "report": "2026-10-03-publish-attempt-lifecycle-src-tauri-gate3-architect.md",
+  "entry": 356,
+  "verdict": "FAIL",
+  "findings": 3,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 8924
+ },
+ {
+  "report": "2026-10-03-publish-attempt-lifecycle-src-tauri-gate3-reviewer.md",
+  "entry": 357,
+  "verdict": "FAIL",
+  "findings": 11,
+  "reportUsesClasses": false,
+  "fallbackUsed": true,
+  "verdictLineUsed": false,
+  "bytes": 8973
+ },
+ {
+  "report": "2026-10-03-publish-attempt-lifecycle-src-tauri-gate4-architect.md",
+  "entry": 358,
+  "verdict": "PASS",
+  "findings": 1,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 6509
+ },
+ {
+  "report": "2026-10-03-publish-attempt-lifecycle-src-tauri-gate4-reviewer.md",
+  "entry": 359,
+  "verdict": "PASS",
+  "findings": 2,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 6879
+ },
+ {
+  "report": "2026-10-03-subagent-write-audit-script-gate1-reviewer.md",
+  "entry": 366,
+  "verdict": "FAIL",
+  "findings": 7,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 11636
+ },
+ {
+  "report": "2026-10-03-subagent-write-audit-script-gate2-architect.md",
+  "entry": 367,
+  "verdict": "FAIL",
+  "findings": 8,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 11201
+ },
+ {
+  "report": "2026-10-03-subagent-write-audit-script-gate2-reviewer.md",
+  "entry": 368,
+  "verdict": "FAIL",
+  "findings": 7,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 13520
+ },
+ {
+  "report": "2026-10-03-subagent-write-audit-script-gate3-architect.md",
+  "entry": 369,
+  "verdict": "PASS",
+  "findings": 9,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 12801
+ },
+ {
+  "report": "2026-10-03-subagent-write-audit-script-gate3-reviewer.md",
+  "entry": 370,
+  "verdict": "FAIL",
+  "findings": 6,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 15839
+ },
+ {
+  "report": "2026-10-03-subagent-write-audit-script-scoped-read-c5.md",
+  "entry": 372,
+  "verdict": "PASS",
+  "findings": 0,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 5649
+ },
+ {
+  "report": "2026-10-04-claude-md-stale-facts-gate1-reviewer.md",
+  "entry": 387,
+  "verdict": "PASS",
+  "findings": 6,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 12809
+ },
+ {
+  "report": "2026-10-04-claude-md-stale-facts-gate1b-reviewer.md",
+  "entry": 388,
+  "verdict": "PASS",
+  "findings": 0,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 4901
+ },
+ {
+  "report": "2026-10-04-evidence-recorder-v0-gate1-architect.md",
+  "entry": 389,
+  "verdict": "FAIL",
+  "findings": 10,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 12963
+ },
+ {
+  "report": "2026-10-04-evidence-recorder-v0-gate1-reviewer.md",
+  "entry": 390,
+  "verdict": "FAIL",
+  "findings": 9,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 17030
+ },
+ {
+  "report": "2026-10-04-evidence-recorder-v0-gate2-architect.md",
+  "entry": 391,
+  "verdict": "FAIL",
+  "findings": 2,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 12677
+ },
+ {
+  "report": "2026-10-04-evidence-recorder-v0-gate2-reviewer.md",
+  "entry": 392,
+  "verdict": "PASS",
+  "findings": 0,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 16956
+ },
+ {
+  "report": "2026-10-04-evidence-recorder-v0-gate3-architect.md",
+  "entry": 393,
+  "verdict": "PASS",
+  "findings": 3,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 9811
+ },
+ {
+  "report": "2026-10-04-evidence-recorder-v0-gate3-reviewer.md",
+  "entry": 394,
+  "verdict": "PASS",
+  "findings": 2,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 16458
+ },
+ {
+  "report": "2026-10-04-guardian-v0-gate2-architect.md",
+  "entry": 380,
+  "verdict": "PASS",
+  "findings": 0,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 14886
+ },
+ {
+  "report": "2026-10-04-guardian-v0-gate2-reviewer.md",
+  "entry": 381,
+  "verdict": "FAIL",
+  "findings": 10,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 19763
+ },
+ {
+  "report": "2026-10-04-guardian-v0-gate2b-reviewer.md",
+  "entry": 382,
+  "verdict": "PASS",
+  "findings": 0,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 8376
+ },
+ {
+  "report": "2026-10-04-timing-tests-assert-property-not-budget-gate1-architect.md",
+  "entry": 397,
+  "verdict": "PASS",
+  "findings": 10,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 11218
+ },
+ {
+  "report": "2026-10-04-timing-tests-assert-property-not-budget-gate1-reviewer.md",
+  "entry": 398,
+  "verdict": "PASS",
+  "findings": 8,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 15950
+ },
+ {
+  "report": "2026-10-04-type-walk-null-literal-arithmetic-gate1-architect.md",
+  "entry": 378,
+  "verdict": "PASS",
+  "findings": 4,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 12303
+ },
+ {
+  "report": "2026-10-04-type-walk-null-literal-arithmetic-gate1-reviewer.md",
+  "entry": 379,
+  "verdict": "FAIL",
+  "findings": 7,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 15366
+ },
+ {
+  "report": "2026-10-04-type-walk-null-literal-arithmetic-gate2-architect.md",
+  "entry": 383,
+  "verdict": "PASS",
+  "findings": 4,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 16601
+ },
+ {
+  "report": "2026-10-04-type-walk-null-literal-arithmetic-gate2-reviewer.md",
+  "entry": 384,
+  "verdict": "FAIL",
+  "findings": 6,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 18307
+ },
+ {
+  "report": "2026-10-04-type-walk-null-literal-arithmetic-gate2b-architect.md",
+  "entry": 385,
+  "verdict": "PASS",
+  "findings": 2,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 5396
+ },
+ {
+  "report": "2026-10-04-type-walk-null-literal-arithmetic-gate2b-reviewer.md",
+  "entry": 386,
+  "verdict": "PASS",
+  "findings": 1,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 4061
+ },
+ {
+  "report": "2026-10-04-watch-grandparent-spawn-signal-gate1-architect.md",
+  "entry": 395,
+  "verdict": "PASS",
+  "findings": 3,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 10647
+ },
+ {
+  "report": "2026-10-04-watch-grandparent-spawn-signal-gate1-reviewer.md",
+  "entry": 396,
+  "verdict": "PASS",
+  "findings": 4,
+  "reportUsesClasses": false,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 15467
+ },
+ {
+  "report": "2026-10-05-adr-034-acceptance-words-gate1-architect.md",
+  "entry": 415,
+  "verdict": "PASS",
+  "findings": 2,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 4634
+ },
+ {
+  "report": "2026-10-05-adr-034-acceptance-words-gate1-reviewer.md",
+  "entry": 417,
+  "verdict": "PASS",
+  "findings": 2,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 8029
+ },
+ {
+  "report": "2026-10-05-b1-engine-kernel-half-followups-gate1-architect.md",
+  "entry": 411,
+  "verdict": "FAIL",
+  "findings": 9,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 14502
+ },
+ {
+  "report": "2026-10-05-b1-engine-kernel-half-followups-gate1-reviewer.md",
+  "entry": 412,
+  "verdict": "PASS",
+  "findings": 0,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 21079
+ },
+ {
+  "report": "2026-10-05-b1-engine-kernel-half-followups-gate2-architect.md",
+  "entry": 413,
+  "verdict": "PASS",
+  "findings": 0,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 3926
+ },
+ {
+  "report": "2026-10-05-b1-engine-kernel-half-followups-gate2-reviewer.md",
+  "entry": 414,
+  "verdict": "PASS",
+  "findings": 0,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 5925
+ },
+ {
+  "report": "2026-10-05-compaction-record-and-resume-line-gate1-architect.md",
+  "entry": 419,
+  "verdict": "PASS",
+  "findings": 5,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 8928
+ },
+ {
+  "report": "2026-10-05-compaction-record-and-resume-line-gate1-reviewer.md",
+  "entry": 420,
+  "verdict": "PASS",
+  "findings": 3,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 13368
+ },
+ {
+  "report": "2026-10-05-data-plane-terminal-without-credit-gate1-architect.md",
+  "entry": 401,
+  "verdict": "FAIL",
+  "findings": 36,
+  "reportUsesClasses": true,
+  "fallbackUsed": true,
+  "verdictLineUsed": false,
+  "bytes": 17943
+ },
+ {
+  "report": "2026-10-05-data-plane-terminal-without-credit-gate1-reviewer.md",
+  "entry": 402,
+  "verdict": "FAIL",
+  "findings": 5,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 18016
+ },
+ {
+  "report": "2026-10-05-data-plane-terminal-without-credit-gate2-architect.md",
+  "entry": 404,
+  "verdict": "FAIL",
+  "findings": 8,
+  "reportUsesClasses": true,
+  "fallbackUsed": true,
+  "verdictLineUsed": false,
+  "bytes": 12638
+ },
+ {
+  "report": "2026-10-05-data-plane-terminal-without-credit-gate2-reviewer.md",
+  "entry": 405,
+  "verdict": "FAIL",
+  "findings": 4,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 13630
+ },
+ {
+  "report": "2026-10-05-data-plane-terminal-without-credit-gate3-architect.md",
+  "entry": 407,
+  "verdict": "PASS",
+  "findings": 0,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 6332
+ },
+ {
+  "report": "2026-10-05-data-plane-terminal-without-credit-gate3-reviewer.md",
+  "entry": 408,
+  "verdict": "PASS",
+  "findings": 2,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 7211
+ },
+ {
+  "report": "2026-10-05-evidence-recorder-v0-1-gate1-architect.md",
+  "entry": 403,
+  "verdict": "PASS",
+  "findings": 8,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 18165
+ },
+ {
+  "report": "2026-10-05-evidence-recorder-v0-1-gate1-reviewer.md",
+  "entry": 406,
+  "verdict": "FAIL",
+  "findings": 3,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 18626
+ },
+ {
+  "report": "2026-10-05-evidence-recorder-v0-1-gate2-architect.md",
+  "entry": 409,
+  "verdict": "PASS",
+  "findings": 1,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 6376
+ },
+ {
+  "report": "2026-10-05-evidence-recorder-v0-1-gate2-reviewer.md",
+  "entry": 410,
+  "verdict": "PASS",
+  "findings": 0,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 6202
+ },
+ {
+  "report": "2026-10-05-proportional-gates-gate1-architect.md",
+  "entry": 416,
+  "verdict": "PASS",
+  "findings": 3,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 5444
+ },
+ {
+  "report": "2026-10-05-proportional-gates-gate1-reviewer.md",
+  "entry": 418,
+  "verdict": "PASS",
+  "findings": 3,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 6651
+ },
+ {
+  "report": "2026-10-05-timing-assertions-under-contention-gate1-architect.md",
+  "entry": 399,
+  "verdict": "PASS",
+  "findings": 10,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 11841
+ },
+ {
+  "report": "2026-10-05-timing-assertions-under-contention-gate1-reviewer.md",
+  "entry": 400,
+  "verdict": "PASS",
+  "findings": 3,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 14571
+ },
+ {
+  "report": "2026-10-06-geometry-types-beyond-polygons-gate1-architect.md",
+  "entry": 421,
+  "verdict": "PASS",
+  "findings": 5,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 11521
+ },
+ {
+  "report": "2026-10-06-geometry-types-beyond-polygons-gate1-reviewer.md",
+  "entry": 425,
+  "verdict": "PASS",
+  "findings": 5,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 25904
+ },
+ {
+  "report": "2026-10-06-guardian-n1-before-auto-compaction-gate1-architect.md",
+  "entry": 422,
+  "verdict": "PASS",
+  "findings": 6,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 9707
+ },
+ {
+  "report": "2026-10-06-guardian-n1-before-auto-compaction-gate1-reviewer.md",
+  "entry": 423,
+  "verdict": "PASS",
+  "findings": 2,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 17504
+ },
+ {
+  "report": "2026-10-06-mods-readme-local-scope-gate1-reviewer.md",
+  "entry": 424,
+  "verdict": "PASS",
+  "findings": 1,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 9395
+ },
+ {
+  "report": "2026-10-07-geometry-lines-cut-gate1-architect.md",
+  "entry": 432,
+  "verdict": "PASS",
+  "findings": 5,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 10221
+ },
+ {
+  "report": "2026-10-07-geometry-lines-cut-gate1-reviewer.md",
+  "entry": 433,
+  "verdict": "PASS",
+  "findings": 3,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 22275
+ },
+ {
+  "report": "2026-10-07-geometry-points-cut-gate1-architect.md",
+  "entry": 426,
+  "verdict": "PASS",
+  "findings": 6,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 9694
+ },
+ {
+  "report": "2026-10-07-geometry-points-cut-gate1-reviewer.md",
+  "entry": 427,
+  "verdict": "PASS",
+  "findings": 5,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 22908
+ },
+ {
+  "report": "2026-10-07-kernel-close-races-followups-gate1-architect.md",
+  "entry": 428,
+  "verdict": "PASS",
+  "findings": 3,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 9576
+ },
+ {
+  "report": "2026-10-07-kernel-close-races-followups-gate1-reviewer.md",
+  "entry": 429,
+  "verdict": "PASS",
+  "findings": 2,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 11925
+ },
+ {
+  "report": "2026-10-07-typed-terminal-codes-post-check-race-gate1-architect.md",
+  "entry": 430,
+  "verdict": "PASS",
+  "findings": 6,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 7809
+ },
+ {
+  "report": "2026-10-07-typed-terminal-codes-post-check-race-gate1-reviewer.md",
+  "entry": 431,
+  "verdict": "PASS",
+  "findings": 0,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 12322
+ },
+ {
+  "report": "2026-10-08-adr-032-staleness-docs-gate1-reviewer.md",
+  "entry": 443,
+  "verdict": "PASS",
+  "findings": 0,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 6522
+ },
+ {
+  "report": "2026-10-08-b2-piece-1a-step-record-and-dataset-reference-gate1-architect-attempt-2.md",
+  "entry": 438,
+  "verdict": "PASS",
+  "findings": 8,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 9261
+ },
+ {
+  "report": "2026-10-08-b2-piece-1a-step-record-and-dataset-reference-gate1-architect.md",
+  "entry": 436,
+  "verdict": "FAIL",
+  "findings": 11,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 9005
+ },
+ {
+  "report": "2026-10-08-b2-piece-1a-step-record-and-dataset-reference-gate1-reviewer-attempt-2.md",
+  "entry": 439,
+  "verdict": "PASS",
+  "findings": 4,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 12714
+ },
+ {
+  "report": "2026-10-08-b2-piece-1a-step-record-and-dataset-reference-gate1-reviewer.md",
+  "entry": 437,
+  "verdict": "FAIL",
+  "findings": 5,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 13362
+ },
+ {
+  "report": "2026-10-08-data-plane-crowded-start-detail-spaces-gate1-architect.md",
+  "entry": 434,
+  "verdict": "PASS",
+  "findings": 4,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 6805
+ },
+ {
+  "report": "2026-10-08-data-plane-crowded-start-detail-spaces-gate1-reviewer.md",
+  "entry": 435,
+  "verdict": "PASS",
+  "findings": 5,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 13381
+ },
+ {
+  "report": "2026-10-08-docs-08-public-data-sentence-gate1-reviewer.md",
+  "entry": 444,
+  "verdict": "PASS",
+  "findings": 0,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 5983
+ },
+ {
+  "report": "2026-10-08-reuse-round-1-bundle-gate1-reviewer.md",
+  "entry": 442,
+  "verdict": "FAIL",
+  "findings": 10,
+  "reportUsesClasses": true,
+  "fallbackUsed": true,
+  "verdictLineUsed": false,
+  "bytes": 10718
+ },
+ {
+  "report": "2026-10-08-shell-migration-milestone-1-gate1-architect-attempt-2.md",
+  "entry": 447,
+  "verdict": "PASS",
+  "findings": 0,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 10176
+ },
+ {
+  "report": "2026-10-08-shell-migration-milestone-1-gate1-architect.md",
+  "entry": 445,
+  "verdict": "FAIL",
+  "findings": 15,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 10378
+ },
+ {
+  "report": "2026-10-08-shell-migration-milestone-1-gate1-reviewer-attempt-2.md",
+  "entry": 448,
+  "verdict": "PASS",
+  "findings": 14,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 15429
+ },
+ {
+  "report": "2026-10-08-shell-migration-milestone-1-gate1-reviewer.md",
+  "entry": 446,
+  "verdict": "FAIL",
+  "findings": 21,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 14896
+ },
+ {
+  "report": "2026-10-08-verify-cites-pinned-citations-gate1-reviewer-attempt-2.md",
+  "entry": 441,
+  "verdict": "PASS",
+  "findings": 4,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 14584
+ },
+ {
+  "report": "2026-10-08-verify-cites-pinned-citations-gate1-reviewer.md",
+  "entry": 440,
+  "verdict": "FAIL",
+  "findings": 21,
+  "reportUsesClasses": true,
+  "fallbackUsed": true,
+  "verdictLineUsed": false,
+  "bytes": 12744
+ },
+ {
+  "report": "2026-10-09-covering-names-missing-column-gate1-architect-attempt-2.md",
+  "entry": 452,
+  "verdict": "PASS",
+  "findings": 3,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 4253
+ },
+ {
+  "report": "2026-10-09-covering-names-missing-column-gate1-architect.md",
+  "entry": 451,
+  "verdict": "FAIL",
+  "findings": 3,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 10119
+ },
+ {
+  "report": "2026-10-09-covering-names-missing-column-gate1-reviewer.md",
+  "entry": 454,
+  "verdict": "PASS",
+  "findings": 3,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 15271
+ },
+ {
+  "report": "2026-10-09-e2e-hover-establishing-read-stale-gate1-architect-attempt-2.md",
+  "entry": 453,
+  "verdict": "PASS",
+  "findings": 0,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 6807
+ },
+ {
+  "report": "2026-10-09-e2e-hover-establishing-read-stale-gate1-architect.md",
+  "entry": 449,
+  "verdict": "FAIL",
+  "findings": 3,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 8399
+ },
+ {
+  "report": "2026-10-09-e2e-hover-establishing-read-stale-gate1-reviewer.md",
+  "entry": 450,
+  "verdict": "PASS",
+  "findings": 3,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 11189
+ },
+ {
+  "report": "2026-10-09-skp-drained-stream-helper-post-check-race-gate1-architect.md",
+  "entry": 455,
+  "verdict": "PASS",
+  "findings": 6,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 10218
+ },
+ {
+  "report": "2026-10-09-skp-drained-stream-helper-post-check-race-gate1-reviewer.md",
+  "entry": 456,
+  "verdict": "PASS",
+  "findings": 6,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 14242
+ },
+ {
+  "report": "2026-10-10-e2e-stale-expectations-reaim-gate1-architect.md",
+  "entry": 467,
+  "verdict": "PASS",
+  "findings": 3,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 9934
+ },
+ {
+  "report": "2026-10-10-e2e-stale-expectations-reaim-gate1-reviewer.md",
+  "entry": 468,
+  "verdict": "FAIL",
+  "findings": 6,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 13458
+ },
+ {
+  "report": "2026-10-10-e2e-stale-expectations-reaim-gate2-reviewer.md",
+  "entry": 469,
+  "verdict": "PASS",
+  "findings": 3,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 9858
+ },
+ {
+  "report": "2026-10-10-filter-identity-alias-ambiguous-reached-through-skp-gate1-architect.md",
+  "entry": 462,
+  "verdict": "PASS",
+  "findings": 4,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 8526
+ },
+ {
+  "report": "2026-10-10-filter-identity-alias-ambiguous-reached-through-skp-gate1-reviewer.md",
+  "entry": 463,
+  "verdict": "PASS",
+  "findings": 2,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 11553
+ },
+ {
+  "report": "2026-10-10-known-limitations-item-2-on-main-paragraph-gate1-reviewer.md",
+  "entry": 470,
+  "verdict": "FAIL",
+  "findings": 4,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 6735
+ },
+ {
+  "report": "2026-10-10-known-limitations-item-8-filter-not-published-gate1-reviewer.md",
+  "entry": 459,
+  "verdict": "PASS",
+  "findings": 4,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 8423
+ },
+ {
+  "report": "2026-10-10-shell-stale-frame-and-layout-comments-gate1-architect.md",
+  "entry": 465,
+  "verdict": "PASS",
+  "findings": 3,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 8736
+ },
+ {
+  "report": "2026-10-10-shell-stale-frame-and-layout-comments-gate1-reviewer.md",
+  "entry": 464,
+  "verdict": "FAIL",
+  "findings": 17,
+  "reportUsesClasses": true,
+  "fallbackUsed": true,
+  "verdictLineUsed": false,
+  "bytes": 13818
+ },
+ {
+  "report": "2026-10-10-shell-stale-frame-and-layout-comments-gate2-reviewer.md",
+  "entry": 466,
+  "verdict": "PASS",
+  "findings": 3,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 9517
+ },
+ {
+  "report": "2026-10-10-stream-flush-cancel-exit-marks-producer-cancelled-gate1-architect.md",
+  "entry": 460,
+  "verdict": "PASS",
+  "findings": 4,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 7655
+ },
+ {
+  "report": "2026-10-10-stream-flush-cancel-exit-marks-producer-cancelled-gate1-reviewer.md",
+  "entry": 461,
+  "verdict": "PASS",
+  "findings": 1,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 9675
+ },
+ {
+  "report": "2026-10-10-wire-bytes-invariant-trace-flag-race-gate1-architect.md",
+  "entry": 457,
+  "verdict": "PASS",
+  "findings": 4,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 8259
+ },
+ {
+  "report": "2026-10-10-wire-bytes-invariant-trace-flag-race-gate1-reviewer.md",
+  "entry": 458,
+  "verdict": "PASS",
+  "findings": 1,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 12864
+ },
+ {
+  "report": "2026-10-11-crs-undeclared-message-wording-gate1-architect.md",
+  "entry": 471,
+  "verdict": "FAIL",
+  "findings": 3,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 9489
+ },
+ {
+  "report": "2026-10-11-crs-undeclared-message-wording-gate1-reviewer.md",
+  "entry": 472,
+  "verdict": "PASS",
+  "findings": 1,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 14792
+ },
+ {
+  "report": "2026-10-11-crs-undeclared-message-wording-gate2-architect.md",
+  "entry": 473,
+  "verdict": "PASS",
+  "findings": 0,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 5852
+ },
+ {
+  "report": "2026-10-11-known-limitations-item-2-on-main-paragraph-gate2-reviewer.md",
+  "entry": 479,
+  "verdict": "FAIL",
+  "findings": 2,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 8600
+ },
+ {
+  "report": "2026-10-11-known-limitations-item-2-on-main-paragraph-gate3-reviewer.md",
+  "entry": 481,
+  "verdict": "PASS",
+  "findings": 1,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 10825
+ },
+ {
+  "report": "2026-10-11-module-docs-stale-statements-gate1-architect.md",
+  "entry": 487,
+  "verdict": "FAIL",
+  "findings": 6,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 11344
+ },
+ {
+  "report": "2026-10-11-module-docs-stale-statements-gate1-reviewer.md",
+  "entry": 488,
+  "verdict": "FAIL",
+  "findings": 6,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 15766
+ },
+ {
+  "report": "2026-10-11-module-docs-stale-statements-gate2-architect.md",
+  "entry": 489,
+  "verdict": "PASS",
+  "findings": 2,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 6727
+ },
+ {
+  "report": "2026-10-11-module-docs-stale-statements-gate2-reviewer.md",
+  "entry": 490,
+  "verdict": "PASS",
+  "findings": 2,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 12797
+ },
+ {
+  "report": "2026-10-11-ported-code-notice-route-gate1-architect.md",
+  "entry": 482,
+  "verdict": "FAIL",
+  "findings": 8,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 11224
+ },
+ {
+  "report": "2026-10-11-ported-code-notice-route-gate1-reviewer.md",
+  "entry": 483,
+  "verdict": "FAIL",
+  "findings": 8,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 14136
+ },
+ {
+  "report": "2026-10-11-ported-code-notice-route-gate2-architect.md",
+  "entry": 484,
+  "verdict": "PASS",
+  "findings": 1,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 8448
+ },
+ {
+  "report": "2026-10-11-ported-code-notice-route-gate2-reviewer.md",
+  "entry": 485,
+  "verdict": "PASS",
+  "findings": 0,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 15288
+ },
+ {
+  "report": "2026-10-11-recorder-retired-gate1-reviewer.md",
+  "entry": 498,
+  "verdict": "PASS",
+  "findings": 1,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 5216
+ },
+ {
+  "report": "2026-10-11-shell-map-refill-after-resize-gate1-architect.md",
+  "entry": 474,
+  "verdict": "FAIL",
+  "findings": 4,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 10256
+ },
+ {
+  "report": "2026-10-11-shell-map-refill-after-resize-gate1-reviewer.md",
+  "entry": 475,
+  "verdict": "FAIL",
+  "findings": 7,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 12286
+ },
+ {
+  "report": "2026-10-11-shell-map-refill-after-resize-gate2-architect.md",
+  "entry": 476,
+  "verdict": "PASS",
+  "findings": 5,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 9057
+ },
+ {
+  "report": "2026-10-11-shell-map-refill-after-resize-gate2-reviewer.md",
+  "entry": 477,
+  "verdict": "PASS",
+  "findings": 3,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 13462
+ },
+ {
+  "report": "2026-10-11-shell-map-refill-after-resize-gate3-architect.md",
+  "entry": 478,
+  "verdict": "FAIL",
+  "findings": 2,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 8438
+ },
+ {
+  "report": "2026-10-11-shell-map-refill-after-resize-gate4-architect.md",
+  "entry": 480,
+  "verdict": "FAIL",
+  "findings": 3,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 9350
+ },
+ {
+  "report": "2026-10-11-shell-map-refill-after-resize-gate5-reviewer.md",
+  "entry": 486,
+  "verdict": "PASS",
+  "findings": 1,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 10088
+ },
+ {
+  "report": "2026-10-11-shell-migration-milestone-2-phase-a-gate1-architect.md",
+  "entry": 497,
+  "verdict": "PASS",
+  "findings": 6,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 8282
+ },
+ {
+  "report": "2026-10-11-shell-migration-milestone-2-phase-a-gate1-reviewer.md",
+  "entry": 499,
+  "verdict": "PASS",
+  "findings": 10,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 11845
+ },
+ {
+  "report": "2026-10-11-skp-v0-live-sections-current-area-c-gate1-architect.md",
+  "entry": 491,
+  "verdict": "PASS",
+  "findings": 4,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 12868
+ },
+ {
+  "report": "2026-10-11-skp-v0-live-sections-current-area-c-gate1-reviewer.md",
+  "entry": 492,
+  "verdict": "PASS",
+  "findings": 13,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 14909
+ },
+ {
+  "report": "2026-10-11-skp-v0-live-sections-current-area-c-gate2-reviewer.md",
+  "entry": 493,
+  "verdict": "FAIL",
+  "findings": 3,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 12825
+ },
+ {
+  "report": "2026-10-11-skp-v0-live-sections-current-area-c-gate3-reviewer.md",
+  "entry": 494,
+  "verdict": "PASS",
+  "findings": 0,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 9001
+ },
+ {
+  "report": "2026-10-11-wording-block-rule-gate1-architect.md",
+  "entry": 495,
+  "verdict": "PASS",
+  "findings": 6,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 7796
+ },
+ {
+  "report": "2026-10-11-wording-block-rule-gate1-reviewer.md",
+  "entry": 496,
+  "verdict": "PASS",
+  "findings": 6,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 8640
+ },
+ {
+  "report": "2026-10-12-guardian-v1-gate1-architect.md",
+  "entry": 503,
+  "verdict": "FAIL",
+  "findings": 1,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 11084
+ },
+ {
+  "report": "2026-10-12-guardian-v1-gate1-reviewer.md",
+  "entry": 505,
+  "verdict": "PASS",
+  "findings": 6,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 16349
+ },
+ {
+  "report": "2026-10-12-known-limitations-current-view-stale-box-gate1-reviewer.md",
+  "entry": 504,
+  "verdict": "FAIL",
+  "findings": 3,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 9338
+ },
+ {
+  "report": "2026-10-12-shell-crs-form-for-format-default-contradicted-gate1-architect.md",
+  "entry": 500,
+  "verdict": "PASS",
+  "findings": 3,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 9323
+ },
+ {
+  "report": "2026-10-12-shell-crs-form-for-format-default-contradicted-gate1-reviewer.md",
+  "entry": 501,
+  "verdict": "FAIL",
+  "findings": 5,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 12730
+ },
+ {
+  "report": "2026-10-12-shell-crs-form-for-format-default-contradicted-gate2-reviewer.md",
+  "entry": 502,
+  "verdict": "PASS",
+  "findings": 2,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 8090
+ },
+ {
+  "report": "2026-10-12-shell-migration-milestone-2-phase-b-gate1-architect.md",
+  "entry": 506,
+  "verdict": "FAIL",
+  "findings": 15,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 18618
+ },
+ {
+  "report": "2026-10-12-shell-migration-milestone-2-phase-b-gate1-reviewer.md",
+  "entry": 507,
+  "verdict": "FAIL",
+  "findings": 14,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 16534
+ },
+ {
+  "report": "2026-10-12-shell-migration-milestone-2-phase-b-gate2-architect.md",
+  "entry": 508,
+  "verdict": "FAIL",
+  "findings": 5,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 11324
+ },
+ {
+  "report": "2026-10-12-shell-migration-milestone-2-phase-b-gate2-reviewer.md",
+  "entry": 509,
+  "verdict": "FAIL",
+  "findings": 5,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 13074
+ },
+ {
+  "report": "2026-10-12-shell-migration-milestone-2-phase-b-gate3-architect.md",
+  "entry": 510,
+  "verdict": "PASS",
+  "findings": 0,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 12417
+ },
+ {
+  "report": "2026-10-12-shell-migration-milestone-2-phase-b-gate3-reviewer.md",
+  "entry": 511,
+  "verdict": "FAIL",
+  "findings": 1,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 16307
+ },
+ {
+  "report": "2026-10-13-shell-migration-milestone-2-phase-b-gate4-architect.md",
+  "entry": 512,
+  "verdict": "PASS",
+  "findings": 4,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 14037
+ },
+ {
+  "report": "2026-10-13-shell-migration-milestone-2-phase-b-gate4-reviewer.md",
+  "entry": 513,
+  "verdict": "PASS",
+  "findings": 1,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 18100
+ },
+ {
+  "report": "2026-10-14-export-current-view-after-unreported-fit-gate1-architect.md",
+  "entry": 516,
+  "verdict": "PASS WITH NOTES",
+  "findings": 2,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 12081
+ },
+ {
+  "report": "2026-10-14-export-current-view-after-unreported-fit-gate1-reviewer.md",
+  "entry": 519,
+  "verdict": "PASS WITH NOTES",
+  "findings": 1,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 16024
+ },
+ {
+  "report": "2026-10-14-known-limitations-item-40-source-comment-gate1-reviewer.md",
+  "entry": 520,
+  "verdict": "PASS",
+  "findings": 0,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 6427
+ },
+ {
+  "report": "2026-10-14-shell-status-bar-one-height-gate1-architect.md",
+  "entry": 515,
+  "verdict": "PASS WITH NOTES",
+  "findings": 5,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 9205
+ },
+ {
+  "report": "2026-10-14-shell-status-bar-one-height-gate1-reviewer.md",
+  "entry": 518,
+  "verdict": "PASS WITH NOTES",
+  "findings": 3,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 11311
+ },
+ {
+  "report": "2026-10-14-stale-test-names-and-comments-gate1-architect.md",
+  "entry": 514,
+  "verdict": "FAIL",
+  "findings": 5,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 12856
+ },
+ {
+  "report": "2026-10-14-stale-test-names-and-comments-gate1-reviewer.md",
+  "entry": 517,
+  "verdict": "PASS WITH NOTES",
+  "findings": 3,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 11656
+ },
+ {
+  "report": "2026-10-16-b2-piece-1b-recording-gate1-architect.md",
+  "entry": 521,
+  "verdict": "FAIL",
+  "findings": 24,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 18040
+ },
+ {
+  "report": "2026-10-16-b2-piece-1b-recording-gate1-reviewer.md",
+  "entry": 522,
+  "verdict": "FAIL",
+  "findings": 16,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 21695
+ },
+ {
+  "report": "2026-10-16-b2-piece-1b-recording-gate2-architect-addendum-test-cfg.md",
+  "entry": null,
+  "verdict": null,
+  "findings": 0,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 4811
+ },
+ {
+  "report": "2026-10-16-b2-piece-1b-recording-gate2-architect.md",
+  "entry": 523,
+  "verdict": "FAIL",
+  "findings": 7,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 15402
+ },
+ {
+  "report": "2026-10-16-b2-piece-1b-recording-gate2-reviewer.md",
+  "entry": 524,
+  "verdict": "FAIL",
+  "findings": 10,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 19591
+ },
+ {
+  "report": "2026-10-16-b2-piece-1b-recording-gate3-architect-addendum-group-calls.md",
+  "entry": null,
+  "verdict": null,
+  "findings": 0,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 3405
+ },
+ {
+  "report": "2026-10-16-b2-piece-1b-recording-gate3-architect.md",
+  "entry": 525,
+  "verdict": "PASS WITH NOTES",
+  "findings": 2,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 9321
+ },
+ {
+  "report": "2026-10-16-b2-piece-1b-recording-gate3-reviewer.md",
+  "entry": 526,
+  "verdict": "PASS WITH NOTES",
+  "findings": 0,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 13574
+ },
+ {
+  "report": "2026-10-17-e2e-readme-status-bar-steps-gate1-reviewer.md",
+  "entry": 530,
+  "verdict": "PASS WITH NOTES",
+  "findings": 1,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 8615
+ },
+ {
+  "report": "2026-10-17-engine-clause-composition-properties-gate1-architect.md",
+  "entry": 528,
+  "verdict": "PASS WITH NOTES",
+  "findings": 5,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 10703
+ },
+ {
+  "report": "2026-10-17-engine-clause-composition-properties-gate1-reviewer.md",
+  "entry": 529,
+  "verdict": "PASS WITH NOTES",
+  "findings": 5,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 12982
+ },
+ {
+  "report": "2026-10-17-governance-cut-state-cap-and-rotation-gate1-architect.md",
+  "entry": 537,
+  "verdict": "FAIL",
+  "findings": 13,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 15224
+ },
+ {
+  "report": "2026-10-17-governance-cut-state-cap-and-rotation-gate1-reviewer.md",
+  "entry": 538,
+  "verdict": "FAIL",
+  "findings": 9,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 18436
+ },
+ {
+  "report": "2026-10-17-governance-cut-state-cap-and-rotation-gate2-architect.md",
+  "entry": 540,
+  "verdict": "FAIL",
+  "findings": 2,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 6722
+ },
+ {
+  "report": "2026-10-17-governance-cut-state-cap-and-rotation-gate2-reviewer.md",
+  "entry": 541,
+  "verdict": "FAIL",
+  "findings": 3,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 8907
+ },
+ {
+  "report": "2026-10-17-governance-cut-state-cap-and-rotation-gate3-architect.md",
+  "entry": 542,
+  "verdict": "PASS WITH NOTES",
+  "findings": 3,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 6995
+ },
+ {
+  "report": "2026-10-17-governance-cut-state-cap-and-rotation-gate3-reviewer.md",
+  "entry": 543,
+  "verdict": "PASS WITH NOTES",
+  "findings": 1,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 9137
+ },
+ {
+  "report": "2026-10-17-governance-search-ignore-historical-gate1-architect.md",
+  "entry": 531,
+  "verdict": "PASS WITH NOTES",
+  "findings": 3,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 10598
+ },
+ {
+  "report": "2026-10-17-governance-search-ignore-historical-gate1-reviewer.md",
+  "entry": 532,
+  "verdict": "PASS WITH NOTES",
+  "findings": 4,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 23482
+ },
+ {
+  "report": "2026-10-17-known-limitations-crs-epoch-edges-third-axis-gate1-reviewer.md",
+  "entry": 527,
+  "verdict": "PASS WITH NOTES",
+  "findings": 1,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 11308
+ },
+ {
+  "report": "2026-10-17-known-limitations-item-41-source-comment-gate1-reviewer.md",
+  "entry": 534,
+  "verdict": "PASS",
+  "findings": 0,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 4840
+ },
+ {
+  "report": "2026-10-17-publish-approval-unknown-attempt-step-1-gate1-architect.md",
+  "entry": 535,
+  "verdict": "PASS WITH NOTES",
+  "findings": 5,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 9325
+ },
+ {
+  "report": "2026-10-17-publish-approval-unknown-attempt-step-1-gate1-reviewer.md",
+  "entry": 536,
+  "verdict": "PASS WITH NOTES",
+  "findings": 10,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 13828
+ },
+ {
+  "report": "2026-10-17-source-changed-post-route-s5d-race-step-1-gate1-reviewer.md",
+  "entry": 533,
+  "verdict": "PASS WITH NOTES",
+  "findings": 8,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 12517
+ },
+ {
+  "report": "2026-10-18-known-limitations-item-23-watcher-idle-end-reviewer.md",
+  "entry": 544,
+  "verdict": "PASS",
+  "findings": 0,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 7863
+ },
+ {
+  "report": "2026-10-19-governance-cut-state-cap-and-rotation-closing-scoped-reviewer.md",
+  "entry": 545,
+  "verdict": "PASS",
+  "findings": 0,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 9580
+ },
+ {
+  "report": "2026-10-19-shell-migration-milestone-3-pr-a-gate1-architect.md",
+  "entry": 548,
+  "verdict": "FAIL",
+  "findings": 3,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 14365
+ },
+ {
+  "report": "2026-10-19-shell-migration-milestone-3-pr-a-gate1-reviewer.md",
+  "entry": 549,
+  "verdict": "FAIL",
+  "findings": 2,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 14153
+ },
+ {
+  "report": "2026-10-19-shell-migration-milestone-3-pr-a-gate2-architect.md",
+  "entry": 550,
+  "verdict": "FAIL",
+  "findings": 2,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 12834
+ },
+ {
+  "report": "2026-10-19-shell-migration-milestone-3-pr-a-gate2-reviewer.md",
+  "entry": 551,
+  "verdict": "FAIL",
+  "findings": 4,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 14572
+ },
+ {
+  "report": "2026-10-19-shell-migration-milestone-3-pr-a-gate3-architect.md",
+  "entry": 552,
+  "verdict": "PASS WITH NOTES",
+  "findings": 3,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 12139
+ },
+ {
+  "report": "2026-10-19-shell-migration-milestone-3-pr-a-gate3-reviewer.md",
+  "entry": 553,
+  "verdict": "PASS WITH NOTES",
+  "findings": 3,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 13465
+ },
+ {
+  "report": "2026-10-19-source-changed-post-reopen-routes-watcher-visible-gate1-architect.md",
+  "entry": 546,
+  "verdict": "PASS WITH NOTES",
+  "findings": 7,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 13028
+ },
+ {
+  "report": "2026-10-19-source-changed-post-reopen-routes-watcher-visible-gate1-reviewer.md",
+  "entry": 547,
+  "verdict": "PASS WITH NOTES",
+  "findings": 4,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 12454
+ },
+ {
+  "report": "2026-10-20-governance-decisions-pending-open-and-archive-gate1-architect.md",
+  "entry": 555,
+  "verdict": "PASS WITH NOTES",
+  "findings": 1,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 12122
+ },
+ {
+  "report": "2026-10-20-governance-decisions-pending-open-and-archive-gate1-reviewer.md",
+  "entry": 556,
+  "verdict": "FAIL",
+  "findings": 6,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 11380
+ },
+ {
+  "report": "2026-10-20-governance-decisions-pending-open-and-archive-gate2-architect.md",
+  "entry": 557,
+  "verdict": "PASS WITH NOTES",
+  "findings": 2,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 8426
+ },
+ {
+  "report": "2026-10-20-governance-decisions-pending-open-and-archive-gate2-reviewer.md",
+  "entry": 558,
+  "verdict": "PASS WITH NOTES",
+  "findings": 2,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 9812
+ },
+ {
+  "report": "2026-10-20-publish-approval-ttl-ten-minutes-gate1-architect.md",
+  "entry": 562,
+  "verdict": "FAIL",
+  "findings": 4,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 12198
+ },
+ {
+  "report": "2026-10-20-publish-approval-ttl-ten-minutes-gate1-reviewer.md",
+  "entry": 564,
+  "verdict": "FAIL",
+  "findings": 2,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 16530
+ },
+ {
+  "report": "2026-10-20-shell-migration-milestone-3-pr-b-gate1-architect.md",
+  "entry": 559,
+  "verdict": "PASS WITH NOTES",
+  "findings": 11,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 17075
+ },
+ {
+  "report": "2026-10-20-shell-migration-milestone-3-pr-b-gate1-reviewer.md",
+  "entry": 560,
+  "verdict": "PASS WITH NOTES",
+  "findings": 8,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 16189
+ },
+ {
+  "report": "2026-10-20-source-changed-post-route-s5d-race-step-2-gate1-reviewer.md",
+  "entry": 554,
+  "verdict": "PASS WITH NOTES",
+  "findings": 1,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 12249
+ },
+ {
+  "report": "2026-10-20-source-changed-s5d-inconclusive-gate1-architect.md",
+  "entry": 561,
+  "verdict": "PASS WITH NOTES",
+  "findings": 4,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 14155
+ },
+ {
+  "report": "2026-10-20-source-changed-s5d-inconclusive-gate1-reviewer.md",
+  "entry": 563,
+  "verdict": "PASS WITH NOTES",
+  "findings": 0,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 9683
+ },
+ {
+  "report": "2026-10-21-adr-036-pre-acceptance-block-gate1-architect.md",
+  "entry": 575,
+  "verdict": "FAIL",
+  "findings": 3,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 10253
+ },
+ {
+  "report": "2026-10-21-adr-036-pre-acceptance-block-gate1-reviewer.md",
+  "entry": 576,
+  "verdict": "PASS WITH NOTES",
+  "findings": 2,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 8103
+ },
+ {
+  "report": "2026-10-21-adr-036-pre-acceptance-block-gate2-architect.md",
+  "entry": 577,
+  "verdict": "PASS WITH NOTES",
+  "findings": 1,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 6590
+ },
+ {
+  "report": "2026-10-21-adr-036-pre-acceptance-block-gate2-reviewer.md",
+  "entry": 578,
+  "verdict": "PASS WITH NOTES",
+  "findings": 2,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 7116
+ },
+ {
+  "report": "2026-10-21-adr-036-pre-acceptance-block-round-2-reviewer.md",
+  "entry": 579,
+  "verdict": "PASS WITH NOTES",
+  "findings": 1,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 5474
+ },
+ {
+  "report": "2026-10-21-connection-reuse-recycled-interrupt-flake-gate1-architect.md",
+  "entry": 565,
+  "verdict": "PASS WITH NOTES",
+  "findings": 1,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 11219
+ },
+ {
+  "report": "2026-10-21-connection-reuse-recycled-interrupt-flake-gate1-reviewer.md",
+  "entry": 568,
+  "verdict": "PASS WITH NOTES",
+  "findings": 2,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 12780
+ },
+ {
+  "report": "2026-10-21-governance-plan-summaries-archive-closing-record-reviewer.md",
+  "entry": 574,
+  "verdict": "PASS WITH NOTES",
+  "findings": 1,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 7880
+ },
+ {
+  "report": "2026-10-21-governance-plan-summaries-archive-gate1-architect.md",
+  "entry": 566,
+  "verdict": "FAIL",
+  "findings": 2,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 13020
+ },
+ {
+  "report": "2026-10-21-governance-plan-summaries-archive-gate1-reviewer.md",
+  "entry": 567,
+  "verdict": "FAIL",
+  "findings": 2,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 15646
+ },
+ {
+  "report": "2026-10-21-governance-plan-summaries-archive-gate2-architect.md",
+  "entry": 569,
+  "verdict": "PASS WITH NOTES",
+  "findings": 0,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 11147
+ },
+ {
+  "report": "2026-10-21-governance-plan-summaries-archive-gate2-reviewer.md",
+  "entry": 570,
+  "verdict": "PASS WITH NOTES",
+  "findings": 0,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 11555
+ },
+ {
+  "report": "2026-10-21-governance-plan-summaries-archive-s10-reviewer.md",
+  "entry": 573,
+  "verdict": "PASS WITH NOTES",
+  "findings": 1,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 8334
+ },
+ {
+  "report": "2026-10-21-walkthrough-current-view-rows-g1-n5-gate1-architect.md",
+  "entry": 571,
+  "verdict": "PASS",
+  "findings": 0,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 9224
+ },
+ {
+  "report": "2026-10-21-walkthrough-current-view-rows-g1-n5-gate1-reviewer.md",
+  "entry": 572,
+  "verdict": "PASS",
+  "findings": 0,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 7207
+ },
+ {
+  "report": "2026-10-22-bundle-redaction-scan-not-in-product-publish-gate1-architect.md",
+  "entry": 580,
+  "verdict": "FAIL",
+  "findings": 4,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 14491
+ },
+ {
+  "report": "2026-10-22-bundle-redaction-scan-not-in-product-publish-gate1-reviewer.md",
+  "entry": 581,
+  "verdict": "FAIL",
+  "findings": 4,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 16428
+ },
+ {
+  "report": "2026-10-22-bundle-redaction-scan-not-in-product-publish-gate2-architect.md",
+  "entry": 582,
+  "verdict": "PASS WITH NOTES",
+  "findings": 1,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 8517
+ },
+ {
+  "report": "2026-10-22-bundle-redaction-scan-not-in-product-publish-gate2-reviewer.md",
+  "entry": 583,
+  "verdict": "PASS WITH NOTES",
+  "findings": 3,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 12658
+ },
+ {
+  "report": "2026-10-22-stale-assertion-messages-and-product-comments-gate1-architect.md",
+  "entry": 586,
+  "verdict": "PASS WITH NOTES",
+  "findings": 1,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 9469
+ },
+ {
+  "report": "2026-10-22-stale-assertion-messages-and-product-comments-gate1-reviewer.md",
+  "entry": 587,
+  "verdict": "FAIL",
+  "findings": 3,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 9915
+ },
+ {
+  "report": "2026-10-22-verify-quotes-round-item-cites-gate1-architect.md",
+  "entry": 584,
+  "verdict": "FAIL",
+  "findings": 10,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 15043
+ },
+ {
+  "report": "2026-10-22-verify-quotes-round-item-cites-gate1-reviewer.md",
+  "entry": 585,
+  "verdict": "FAIL",
+  "findings": 1,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 13143
+ },
+ {
+  "report": "2026-10-22-verify-quotes-round-item-cites-gate2-architect.md",
+  "entry": 588,
+  "verdict": "PASS WITH NOTES",
+  "findings": 4,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 9653
+ },
+ {
+  "report": "2026-10-22-verify-quotes-round-item-cites-gate2-reviewer.md",
+  "entry": 589,
+  "verdict": "PASS WITH NOTES",
+  "findings": 0,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 9570
+ },
+ {
+  "report": "2026-10-22-walkthrough-row-f7-cli-refusal-gate1-architect.md",
+  "entry": 590,
+  "verdict": "PASS WITH NOTES",
+  "findings": 3,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 10760
+ },
+ {
+  "report": "2026-10-22-walkthrough-row-f7-cli-refusal-gate1-reviewer.md",
+  "entry": 591,
+  "verdict": "PASS WITH NOTES",
+  "findings": 4,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 9194
+ },
+ {
+  "report": "2026-10-23-b1-shell-half-pr-a-gate1-architect.md",
+  "entry": 596,
+  "verdict": "PASS WITH NOTES",
+  "findings": 12,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 17574
+ },
+ {
+  "report": "2026-10-23-b1-shell-half-pr-a-gate1-reviewer.md",
+  "entry": 597,
+  "verdict": "PASS WITH NOTES",
+  "findings": 4,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 16036
+ },
+ {
+  "report": "2026-10-23-bundle-redaction-scan-not-in-product-publish-e-scoped-reviewer.md",
+  "entry": 602,
+  "verdict": "PASS WITH NOTES",
+  "findings": 1,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 10777
+ },
+ {
+  "report": "2026-10-23-flush-crlf-field-rewrite-gate1-architect.md",
+  "entry": 600,
+  "verdict": "FAIL",
+  "findings": 2,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 10548
+ },
+ {
+  "report": "2026-10-23-flush-crlf-field-rewrite-gate1-reviewer.md",
+  "entry": 601,
+  "verdict": "FAIL",
+  "findings": 2,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 9796
+ },
+ {
+  "report": "2026-10-23-flush-crlf-field-rewrite-gate2-architect.md",
+  "entry": 603,
+  "verdict": "PASS",
+  "findings": 0,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 5119
+ },
+ {
+  "report": "2026-10-23-flush-crlf-field-rewrite-gate2-reviewer.md",
+  "entry": 604,
+  "verdict": "PASS WITH NOTES",
+  "findings": 1,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 7322
+ },
+ {
+  "report": "2026-10-23-questions-mirror-item-count-gate1-architect.md",
+  "entry": 594,
+  "verdict": "FAIL",
+  "findings": 4,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 10987
+ },
+ {
+  "report": "2026-10-23-questions-mirror-item-count-gate1-reviewer.md",
+  "entry": 595,
+  "verdict": "FAIL",
+  "findings": 3,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 10284
+ },
+ {
+  "report": "2026-10-23-verify-cites-pin-resolution-and-line-zero-gate1-architect.md",
+  "entry": 598,
+  "verdict": "FAIL",
+  "findings": 4,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 10336
+ },
+ {
+  "report": "2026-10-23-verify-cites-pin-resolution-and-line-zero-gate1-reviewer.md",
+  "entry": 599,
+  "verdict": "FAIL",
+  "findings": 4,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 12385
+ },
+ {
+  "report": "2026-10-23-walkthrough-row-f7-cli-refusal-gate2-architect.md",
+  "entry": 592,
+  "verdict": "FAIL",
+  "findings": 3,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 8643
+ },
+ {
+  "report": "2026-10-23-walkthrough-row-f7-cli-refusal-gate2-reviewer.md",
+  "entry": 593,
+  "verdict": "FAIL",
+  "findings": 2,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 9718
+ },
+ {
+  "report": "2026-10-24-autonomy-section-36-filler-slot-gate1-reviewer.md",
+  "entry": 611,
+  "verdict": "PASS WITH NOTES",
+  "findings": 2,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 6793
+ },
+ {
+  "report": "2026-10-24-b1-shell-half-pr-c-gate1-architect.md",
+  "entry": 616,
+  "verdict": "FAIL",
+  "findings": 9,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 15821
+ },
+ {
+  "report": "2026-10-24-b1-shell-half-pr-c-gate1-reviewer.md",
+  "entry": 617,
+  "verdict": "FAIL",
+  "findings": 13,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 21333
+ },
+ {
+  "report": "2026-10-24-b1-shell-half-pr-c-gate2-architect.md",
+  "entry": 618,
+  "verdict": "PASS WITH NOTES",
+  "findings": 5,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 11403
+ },
+ {
+  "report": "2026-10-24-b1-shell-half-pr-c-gate2-reviewer.md",
+  "entry": 619,
+  "verdict": "PASS WITH NOTES",
+  "findings": 3,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 11698
+ },
+ {
+  "report": "2026-10-24-covering-case-collision-binds-other-column-gate1-architect.md",
+  "entry": 612,
+  "verdict": "PASS WITH NOTES",
+  "findings": 3,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 14268
+ },
+ {
+  "report": "2026-10-24-covering-case-collision-binds-other-column-gate1-reviewer.md",
+  "entry": 613,
+  "verdict": "PASS WITH NOTES",
+  "findings": 2,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 15898
+ },
+ {
+  "report": "2026-10-24-guardian-parity-git-timeout-under-load-gate1-architect.md",
+  "entry": 608,
+  "verdict": "FAIL",
+  "findings": 4,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 9643
+ },
+ {
+  "report": "2026-10-24-guardian-parity-git-timeout-under-load-gate1-reviewer.md",
+  "entry": 609,
+  "verdict": "PASS WITH NOTES",
+  "findings": 2,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 11895
+ },
+ {
+  "report": "2026-10-24-guardian-parity-git-timeout-under-load-gate2-architect.md",
+  "entry": 610,
+  "verdict": "PASS WITH NOTES",
+  "findings": 2,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 7198
+ },
+ {
+  "report": "2026-10-24-known-limitations-items-51-52-render-numbers-gate1-reviewer.md",
+  "entry": 605,
+  "verdict": "PASS WITH NOTES",
+  "findings": 0,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 7200
+ },
+ {
+  "report": "2026-10-24-publish-sort-window-cancel-not-exercised-on-ci-gate1-architect.md",
+  "entry": 606,
+  "verdict": "PASS WITH NOTES",
+  "findings": 2,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 10366
+ },
+ {
+  "report": "2026-10-24-publish-sort-window-cancel-not-exercised-on-ci-gate1-reviewer.md",
+  "entry": 607,
+  "verdict": "PASS WITH NOTES",
+  "findings": 1,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 10859
+ },
+ {
+  "report": "2026-10-24-stream-evaluation-failure-fixed-detail-gate1-architect.md",
+  "entry": 614,
+  "verdict": "FAIL",
+  "findings": 1,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 11840
+ },
+ {
+  "report": "2026-10-24-stream-evaluation-failure-fixed-detail-gate1-reviewer.md",
+  "entry": 615,
+  "verdict": "FAIL",
+  "findings": 3,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 9749
+ },
+ {
+  "report": "2026-10-25-governance-hash-grammar-shared-gate1-reviewer.md",
+  "entry": 622,
+  "verdict": "PASS WITH NOTES",
+  "findings": 2,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 11066
+ },
+ {
+  "report": "2026-10-25-kernel-close-during-open-admission-gate1-architect.md",
+  "entry": 624,
+  "verdict": "PASS WITH NOTES",
+  "findings": 4,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 12961
+ },
+ {
+  "report": "2026-10-25-kernel-close-during-open-admission-gate1-reviewer.md",
+  "entry": 625,
+  "verdict": "PASS WITH NOTES",
+  "findings": 1,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 12338
+ },
+ {
+  "report": "2026-10-25-session-generation-t1-t3-reobservation-gate1-architect.md",
+  "entry": 626,
+  "verdict": "PASS WITH NOTES",
+  "findings": 0,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 12121
+ },
+ {
+  "report": "2026-10-25-session-generation-t1-t3-reobservation-gate1-reviewer.md",
+  "entry": 627,
+  "verdict": "PASS WITH NOTES",
+  "findings": 2,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 16198
+ },
+ {
+  "report": "2026-10-25-stream-evaluation-failure-fixed-detail-gate2-architect.md",
+  "entry": 620,
+  "verdict": "FAIL",
+  "findings": 3,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 10528
+ },
+ {
+  "report": "2026-10-25-stream-evaluation-failure-fixed-detail-gate2-reviewer.md",
+  "entry": 621,
+  "verdict": "FAIL",
+  "findings": 2,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 12644
+ },
+ {
+  "report": "2026-10-25-verify-cites-out-of-range-line-count-gate1-reviewer.md",
+  "entry": 623,
+  "verdict": "FAIL",
+  "findings": 4,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 12094
+ },
+ {
+  "report": "2026-10-26-session-generation-other-recorded-mutations-name-no-commit-gate1-architect.md",
+  "entry": 630,
+  "verdict": "PASS WITH NOTES",
+  "findings": 0,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 9975
+ },
+ {
+  "report": "2026-10-26-session-generation-other-recorded-mutations-name-no-commit-gate1-reviewer.md",
+  "entry": 631,
+  "verdict": "PASS WITH NOTES",
+  "findings": 2,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 13011
+ },
+ {
+  "report": "2026-10-26-slice-traced-test-cross-stamping-gate1-architect.md",
+  "entry": 628,
+  "verdict": "PASS WITH NOTES",
+  "findings": 2,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 12586
+ },
+ {
+  "report": "2026-10-26-slice-traced-test-cross-stamping-gate1-reviewer.md",
+  "entry": 629,
+  "verdict": "PASS",
+  "findings": 0,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 11250
+ },
+ {
+  "report": "2026-10-27-fixture-s-regeneration-entry-point-gate1-architect.md",
+  "entry": 634,
+  "verdict": "PASS WITH NOTES",
+  "findings": 5,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 11940
+ },
+ {
+  "report": "2026-10-27-fixture-s-regeneration-entry-point-gate1-reviewer.md",
+  "entry": 635,
+  "verdict": "PASS WITH NOTES",
+  "findings": 0,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 10223
+ },
+ {
+  "report": "2026-10-27-verify-cites-past-end-bound-gate1-architect.md",
+  "entry": 632,
+  "verdict": "PASS WITH NOTES",
+  "findings": 5,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 9775
+ },
+ {
+  "report": "2026-10-27-verify-cites-past-end-bound-gate1-reviewer.md",
+  "entry": 633,
+  "verdict": "PASS WITH NOTES",
+  "findings": 2,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 12454
+ },
+ {
+  "report": "2026-10-28-admitted-integer-overflow-silent-wraparound-gate1-architect.md",
+  "entry": 639,
+  "verdict": "PASS WITH NOTES",
+  "findings": 6,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 16675
+ },
+ {
+  "report": "2026-10-28-admitted-integer-overflow-silent-wraparound-gate1-reviewer.md",
+  "entry": 640,
+  "verdict": "FAIL",
+  "findings": 5,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 16088
+ },
+ {
+  "report": "2026-10-28-admitted-integer-overflow-silent-wraparound-gate2-reviewer.md",
+  "entry": 643,
+  "verdict": "FAIL",
+  "findings": 4,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 14718
+ },
+ {
+  "report": "2026-10-28-admitted-integer-overflow-silent-wraparound-gate3-reviewer.md",
+  "entry": 644,
+  "verdict": "PASS WITH NOTES",
+  "findings": 0,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 7597
+ },
+ {
+  "report": "2026-10-28-corpus-line-files-gate1-architect.md",
+  "entry": 641,
+  "verdict": "FAIL",
+  "findings": 12,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 13544
+ },
+ {
+  "report": "2026-10-28-corpus-line-files-gate1-reviewer.md",
+  "entry": 642,
+  "verdict": "PASS WITH NOTES",
+  "findings": 3,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 14171
+ },
+ {
+  "report": "2026-10-28-first-batch-factorial-ignored-trace-tests-gate1-architect.md",
+  "entry": 636,
+  "verdict": "PASS WITH NOTES",
+  "findings": 1,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 10298
+ },
+ {
+  "report": "2026-10-28-first-batch-factorial-ignored-trace-tests-gate1-reviewer.md",
+  "entry": 637,
+  "verdict": "PASS WITH NOTES",
+  "findings": 1,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 10065
+ },
+ {
+  "report": "2026-10-28-governance-hash-ref-leading-dot-path-gate1-reviewer.md",
+  "entry": 638,
+  "verdict": "PASS WITH NOTES",
+  "findings": 1,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 10852
+ },
+ {
+  "report": "2026-10-28-stream-fetch-overflow-fixed-detail-gate1-architect.md",
+  "entry": 645,
+  "verdict": "PASS WITH NOTES",
+  "findings": 3,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 16230
+ },
+ {
+  "report": "2026-10-28-stream-fetch-overflow-fixed-detail-gate1-reviewer.md",
+  "entry": 646,
+  "verdict": "PASS WITH NOTES",
+  "findings": 1,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 14805
+ },
+ {
+  "report": "2026-10-29-governance-f-tidy-repository-in-place-gate1-architect.md",
+  "entry": 649,
+  "verdict": "FAIL",
+  "findings": 5,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 13586
+ },
+ {
+  "report": "2026-10-29-governance-f-tidy-repository-in-place-gate1-reviewer.md",
+  "entry": 650,
+  "verdict": "FAIL",
+  "findings": 9,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 16857
+ },
+ {
+  "report": "2026-10-29-governance-f-tidy-repository-in-place-gate2-reviewer.md",
+  "entry": 651,
+  "verdict": "PASS",
+  "findings": 0,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 8081
+ },
+ {
+  "report": "2026-10-29-open-dataset-refuses-a-name-closed-during-admission-gate1-architect.md",
+  "entry": 647,
+  "verdict": "PASS WITH NOTES",
+  "findings": 0,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 13473
+ },
+ {
+  "report": "2026-10-29-open-dataset-refuses-a-name-closed-during-admission-gate1-reviewer.md",
+  "entry": 648,
+  "verdict": "PASS WITH NOTES",
+  "findings": 1,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 10924
+ },
+ {
+  "report": "2026-10-30-governance-f-tidy-repository-in-place-gate3-reviewer.md",
+  "entry": 652,
+  "verdict": "PASS WITH NOTES",
+  "findings": 3,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 7388
+ },
+ {
+  "report": "2026-11-01-adr-020-appended-note-gate1-architect.md",
+  "entry": 653,
+  "verdict": "PASS WITH NOTES",
+  "findings": 1,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 9211
+ },
+ {
+  "report": "2026-11-01-adr-020-appended-note-gate1-reviewer.md",
+  "entry": 656,
+  "verdict": "PASS WITH NOTES",
+  "findings": 1,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 10726
+ },
+ {
+  "report": "2026-11-01-engine-cancel-before-execute-siblings-gate1-architect.md",
+  "entry": 655,
+  "verdict": "FAIL",
+  "findings": 7,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 14275
+ },
+ {
+  "report": "2026-11-01-engine-cancel-before-execute-siblings-gate1-reviewer.md",
+  "entry": 657,
+  "verdict": "PASS WITH NOTES",
+  "findings": 5,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 12762
+ },
+ {
+  "report": "2026-11-01-engine-cancel-before-execute-siblings-gate2-architect.md",
+  "entry": 658,
+  "verdict": "FAIL",
+  "findings": 3,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 9761
+ },
+ {
+  "report": "2026-11-01-engine-cancel-before-execute-siblings-gate3-architect.md",
+  "entry": 659,
+  "verdict": "PASS WITH NOTES",
+  "findings": 1,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 4383
+ },
+ {
+  "report": "2026-11-01-verify-cites-reversed-range-gate1-reviewer.md",
+  "entry": 654,
+  "verdict": "PASS",
+  "findings": 0,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 7756
+ },
+ {
+  "report": "2026-11-01-walkthrough-stale-cites-l5-degrees-p1-gate1-architect.md",
+  "entry": 660,
+  "verdict": "PASS WITH NOTES",
+  "findings": 2,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 10250
+ },
+ {
+  "report": "2026-11-01-walkthrough-stale-cites-l5-degrees-p1-gate1-reviewer.md",
+  "entry": 661,
+  "verdict": "PASS WITH NOTES",
+  "findings": 2,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 11218
+ },
+ {
+  "report": "2026-11-03-adr-017-note-product-redaction-gate-gate1-architect.md",
+  "entry": 664,
+  "verdict": "FAIL",
+  "findings": 5,
+  "reportUsesClasses": true,
+  "fallbackUsed": true,
+  "verdictLineUsed": false,
+  "bytes": 11484
+ },
+ {
+  "report": "2026-11-03-adr-017-note-product-redaction-gate-gate1-reviewer.md",
+  "entry": 667,
+  "verdict": "PASS WITH NOTES",
+  "findings": 0,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 10963
+ },
+ {
+  "report": "2026-11-03-stream-cancel-returns-left-unmarked-gate1-architect.md",
+  "entry": 665,
+  "verdict": "PASS WITH NOTES",
+  "findings": 0,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 10800
+ },
+ {
+  "report": "2026-11-03-stream-cancel-returns-left-unmarked-gate1-reviewer.md",
+  "entry": 666,
+  "verdict": "PASS WITH NOTES",
+  "findings": 0,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 11472
+ },
+ {
+  "report": "2026-11-03-verify-quotes-cite-listing-line-count-gate1-architect.md",
+  "entry": 662,
+  "verdict": "PASS WITH NOTES",
+  "findings": 1,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 10684
+ },
+ {
+  "report": "2026-11-03-verify-quotes-cite-listing-line-count-gate1-reviewer.md",
+  "entry": 663,
+  "verdict": "PASS WITH NOTES",
+  "findings": 0,
+  "reportUsesClasses": true,
+  "fallbackUsed": false,
+  "verdictLineUsed": false,
+  "bytes": 7839
+ }
+]

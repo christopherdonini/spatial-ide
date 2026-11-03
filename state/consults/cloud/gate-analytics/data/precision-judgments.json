@@ -1,0 +1,895 @@
+{
+ "what": "The session's hand judgments of the rule-match samples drawn by scripts/sample.mjs rules (the first 6 matches, by hash order, of each of the 15 most-matched rules; re-drawn after each change to the matcher, every newly drawn item judged). correct = the finding's statement of the defect describes a breach of that rule. Judged by reading each finding's title and the start of its text in its report.",
+ "judged": "2026-11-03",
+ "judgments": [
+  {
+   "rule": "claims-true-of-code",
+   "how": "explicit",
+   "report": "2026-10-23-flush-crlf-field-rewrite-gate1-architect.md",
+   "label": "C1",
+   "correct": true
+  },
+  {
+   "rule": "claims-true-of-code",
+   "how": "keyword",
+   "report": "2026-10-25-kernel-close-during-open-admission-gate1-architect.md",
+   "label": "D2",
+   "correct": true
+  },
+  {
+   "rule": "claims-true-of-code",
+   "how": "keyword",
+   "report": "2026-09-27-exposure-profile-paths-gate1-architect.md",
+   "label": "D2",
+   "correct": true
+  },
+  {
+   "rule": "claims-true-of-code",
+   "how": "keyword",
+   "report": "2026-10-10-wire-bytes-invariant-trace-flag-race-gate1-reviewer.md",
+   "label": "D-1",
+   "correct": true
+  },
+  {
+   "rule": "claims-true-of-code",
+   "how": "keyword",
+   "report": "2026-10-02-skp-cancel-state-closed-set-gate1-architect.md",
+   "label": "S2-1",
+   "correct": true
+  },
+  {
+   "rule": "claims-true-of-code",
+   "how": "keyword",
+   "report": "2026-10-08-b2-piece-1a-step-record-and-dataset-reference-gate1-reviewer.md",
+   "label": "D1",
+   "correct": true
+  },
+  {
+   "rule": "record-what-happened",
+   "how": "keyword",
+   "report": "2026-10-11-shell-migration-milestone-2-phase-a-gate1-reviewer.md",
+   "label": "D4",
+   "correct": true
+  },
+  {
+   "rule": "record-what-happened",
+   "how": "keyword",
+   "report": "2026-10-04-evidence-recorder-v0-gate1-architect.md",
+   "label": "S2-1",
+   "correct": false
+  },
+  {
+   "rule": "record-what-happened",
+   "how": "keyword",
+   "report": "2026-10-14-stale-test-names-and-comments-gate1-architect.md",
+   "label": "D-4",
+   "correct": true
+  },
+  {
+   "rule": "record-what-happened",
+   "how": "keyword",
+   "report": "2026-10-12-shell-migration-milestone-2-phase-b-gate1-architect.md",
+   "label": "D-8",
+   "correct": true
+  },
+  {
+   "rule": "record-what-happened",
+   "how": "keyword",
+   "report": "2026-10-03-lead-data-pilot-setup-gate1-architect.md",
+   "label": "S2-1",
+   "correct": true
+  },
+  {
+   "rule": "record-what-happened",
+   "how": "keyword",
+   "report": "2026-10-04-watch-grandparent-spawn-signal-gate1-reviewer.md",
+   "label": "S2-1",
+   "correct": true
+  },
+  {
+   "rule": "completion-claim-evidence",
+   "how": "keyword",
+   "report": "2026-10-19-shell-migration-milestone-3-pr-a-gate1-reviewer.md",
+   "label": "D2",
+   "correct": false
+  },
+  {
+   "rule": "completion-claim-evidence",
+   "how": "keyword",
+   "report": "2026-10-08-shell-migration-milestone-1-gate1-reviewer.md",
+   "label": "E1",
+   "correct": true
+  },
+  {
+   "rule": "completion-claim-evidence",
+   "how": "keyword",
+   "report": "2026-10-08-shell-migration-milestone-1-gate1-architect.md",
+   "label": "E1",
+   "correct": true
+  },
+  {
+   "rule": "completion-claim-evidence",
+   "how": "keyword",
+   "report": "2026-10-20-shell-migration-milestone-3-pr-b-gate1-reviewer.md",
+   "label": "D2",
+   "correct": false
+  },
+  {
+   "rule": "completion-claim-evidence",
+   "how": "keyword",
+   "report": "2026-10-12-shell-migration-milestone-2-phase-b-gate3-reviewer.md",
+   "label": "D2",
+   "correct": false
+  },
+  {
+   "rule": "completion-claim-evidence",
+   "how": "keyword",
+   "report": "2026-09-29-a2-1-gate1-architect.md",
+   "label": "B8",
+   "correct": true
+  },
+  {
+   "rule": "hash-ref-at-main-commit",
+   "how": "explicit",
+   "report": "2026-09-29-a2-1-gate2-architect.md",
+   "label": "B9",
+   "correct": true
+  },
+  {
+   "rule": "hash-ref-at-main-commit",
+   "how": "keyword",
+   "report": "2026-10-05-data-plane-terminal-without-credit-gate1-architect.md",
+   "label": "item6",
+   "correct": true
+  },
+  {
+   "rule": "hash-ref-at-main-commit",
+   "how": "explicit",
+   "report": "2026-10-06-guardian-n1-before-auto-compaction-gate1-architect.md",
+   "label": "D-2",
+   "correct": true
+  },
+  {
+   "rule": "hash-ref-at-main-commit",
+   "how": "explicit",
+   "report": "2026-10-08-shell-migration-milestone-1-gate1-architect.md",
+   "label": "D8",
+   "correct": true
+  },
+  {
+   "rule": "hash-ref-at-main-commit",
+   "how": "keyword",
+   "report": "2026-10-12-shell-migration-milestone-2-phase-b-gate2-reviewer.md",
+   "label": "D1",
+   "correct": false
+  },
+  {
+   "rule": "hash-ref-at-main-commit",
+   "how": "explicit",
+   "report": "2026-10-05-data-plane-terminal-without-credit-gate1-architect.md",
+   "label": "S1-2",
+   "correct": true
+  },
+  {
+   "rule": "tests-for-non-spike-code",
+   "how": "keyword",
+   "report": "2026-09-27-exposure-profile-paths-gate1-reviewer.md",
+   "label": "E1",
+   "correct": false
+  },
+  {
+   "rule": "tests-for-non-spike-code",
+   "how": "keyword",
+   "report": "2026-10-03-subagent-write-audit-script-gate3-reviewer.md",
+   "label": "S2-5",
+   "correct": true
+  },
+  {
+   "rule": "tests-for-non-spike-code",
+   "how": "keyword",
+   "report": "2026-10-16-b2-piece-1b-recording-gate2-reviewer.md",
+   "label": "E-1",
+   "correct": true
+  },
+  {
+   "rule": "tests-for-non-spike-code",
+   "how": "keyword",
+   "report": "2026-10-05-evidence-recorder-v0-1-gate1-reviewer.md",
+   "label": "S2-1",
+   "correct": true
+  },
+  {
+   "rule": "tests-for-non-spike-code",
+   "how": "keyword",
+   "report": "2026-09-29-a2-1-gate1-architect.md",
+   "label": "B4",
+   "correct": true
+  },
+  {
+   "rule": "tests-for-non-spike-code",
+   "how": "keyword",
+   "report": "2026-10-02-stop-hook-stale-continuity-gate1-reviewer.md",
+   "label": "S2-4",
+   "correct": true
+  },
+  {
+   "rule": "scope-exactly-the-piece",
+   "how": "keyword",
+   "report": "2026-09-29-a2-1-gate1-reviewer.md",
+   "label": "B5",
+   "correct": true
+  },
+  {
+   "rule": "scope-exactly-the-piece",
+   "how": "keyword",
+   "report": "2026-09-29-a2-1-gate1-architect.md",
+   "label": "B4",
+   "correct": true
+  },
+  {
+   "rule": "scope-exactly-the-piece",
+   "how": "keyword",
+   "report": "2026-10-05-compaction-record-and-resume-line-gate1-architect.md",
+   "label": "D-1",
+   "correct": false
+  },
+  {
+   "rule": "scope-exactly-the-piece",
+   "how": "keyword",
+   "report": "2026-09-27-adr-034-gate1-architect.md",
+   "label": "F3",
+   "correct": false
+  },
+  {
+   "rule": "scope-exactly-the-piece",
+   "how": "keyword",
+   "report": "2026-09-29-a2-1-gate1-architect.md",
+   "label": "B3",
+   "correct": true
+  },
+  {
+   "rule": "scope-exactly-the-piece",
+   "how": "keyword",
+   "report": "2026-10-22-verify-quotes-round-item-cites-gate1-reviewer.md",
+   "label": "D-2",
+   "correct": false
+  },
+  {
+   "rule": "test-reaches-assertion",
+   "how": "keyword",
+   "report": "2026-10-11-shell-map-refill-after-resize-gate1-reviewer.md",
+   "label": "E2",
+   "correct": true
+  },
+  {
+   "rule": "test-reaches-assertion",
+   "how": "explicit",
+   "report": "2026-10-03-subagent-write-audit-script-gate3-architect.md",
+   "label": "S2-1",
+   "correct": false
+  },
+  {
+   "rule": "test-reaches-assertion",
+   "how": "explicit",
+   "report": "2026-10-03-subagent-write-audit-script-gate1-reviewer.md",
+   "label": "S1-2",
+   "correct": true
+  },
+  {
+   "rule": "test-reaches-assertion",
+   "how": "keyword",
+   "report": "2026-09-29-a2-1-gate2-reviewer.md",
+   "label": "B1",
+   "correct": true
+  },
+  {
+   "rule": "test-reaches-assertion",
+   "how": "keyword",
+   "report": "2026-09-27-b1-engine-kernel-half-gate2-reviewer.md",
+   "label": "B1",
+   "correct": true
+  },
+  {
+   "rule": "test-reaches-assertion",
+   "how": "keyword",
+   "report": "2026-10-02-test-claims-same-pr-pin-gate2-reviewer.md",
+   "label": "S2-1",
+   "correct": true
+  },
+  {
+   "rule": "tool-claim-names-commit",
+   "how": "explicit",
+   "report": "2026-10-02-exposure-scan-ci-backstop-gate3-reviewer.md",
+   "label": "S1-1",
+   "correct": true
+  },
+  {
+   "rule": "tool-claim-names-commit",
+   "how": "keyword",
+   "report": "2026-10-11-shell-map-refill-after-resize-gate1-reviewer.md",
+   "label": "D1",
+   "correct": false
+  },
+  {
+   "rule": "tool-claim-names-commit",
+   "how": "explicit",
+   "report": "2026-09-27-exposure-profile-paths-gate1-architect.md",
+   "label": "E4",
+   "correct": true
+  },
+  {
+   "rule": "tool-claim-names-commit",
+   "how": "explicit",
+   "report": "2026-10-11-shell-map-refill-after-resize-gate2-architect.md",
+   "label": "D4",
+   "correct": true
+  },
+  {
+   "rule": "tool-claim-names-commit",
+   "how": "explicit",
+   "report": "2026-10-11-shell-map-refill-after-resize-gate1-architect.md",
+   "label": "E1",
+   "correct": false
+  },
+  {
+   "rule": "tool-claim-names-commit",
+   "how": "explicit",
+   "report": "2026-10-14-shell-status-bar-one-height-gate1-architect.md",
+   "label": "D-5",
+   "correct": true
+  },
+  {
+   "rule": "gating-route-and-size",
+   "how": "explicit",
+   "report": "2026-10-08-reuse-round-1-bundle-gate1-reviewer.md",
+   "label": "item2",
+   "correct": false
+  },
+  {
+   "rule": "gating-route-and-size",
+   "how": "explicit",
+   "report": "2026-10-08-reuse-round-1-bundle-gate1-reviewer.md",
+   "label": "item7",
+   "correct": true
+  },
+  {
+   "rule": "gating-route-and-size",
+   "how": "explicit",
+   "report": "2026-10-03-lead-data-pilot-setup-gate2-architect.md",
+   "label": "S2-1",
+   "correct": false
+  },
+  {
+   "rule": "gating-route-and-size",
+   "how": "explicit",
+   "report": "2026-10-10-known-limitations-item-2-on-main-paragraph-gate1-reviewer.md",
+   "label": "D-1",
+   "correct": false
+  },
+  {
+   "rule": "gating-route-and-size",
+   "how": "explicit",
+   "report": "2026-10-03-lead-data-pilot-setup-gate1-architect.md",
+   "label": "S2-2",
+   "correct": true
+  },
+  {
+   "rule": "gating-route-and-size",
+   "how": "explicit",
+   "report": "2026-10-10-shell-stale-frame-and-layout-comments-gate1-reviewer.md",
+   "label": "item9",
+   "correct": true
+  },
+  {
+   "rule": "caller-rule",
+   "how": "explicit",
+   "report": "2026-10-16-b2-piece-1b-recording-gate1-architect.md",
+   "label": "D-9",
+   "correct": true
+  },
+  {
+   "rule": "caller-rule",
+   "how": "keyword",
+   "report": "2026-10-11-ported-code-notice-route-gate1-architect.md",
+   "label": "C-2",
+   "correct": true
+  },
+  {
+   "rule": "caller-rule",
+   "how": "keyword",
+   "report": "2026-10-05-data-plane-terminal-without-credit-gate1-architect.md",
+   "label": "item25",
+   "correct": true
+  },
+  {
+   "rule": "caller-rule",
+   "how": "keyword",
+   "report": "2026-10-24-b1-shell-half-pr-c-gate1-reviewer.md",
+   "label": "D5",
+   "correct": false
+  },
+  {
+   "rule": "caller-rule",
+   "how": "keyword",
+   "report": "2026-09-28-watcher-first-read-gate1-reviewer.md",
+   "label": "S4",
+   "correct": false
+  },
+  {
+   "rule": "caller-rule",
+   "how": "keyword",
+   "report": "2026-09-27-test-claims-landedness-gate1-reviewer.md",
+   "label": "B2",
+   "correct": true
+  },
+  {
+   "rule": "discharge-claim-resolves",
+   "how": "explicit",
+   "report": "2026-09-29-a2-1-gate2-architect.md",
+   "label": "B4",
+   "correct": true
+  },
+  {
+   "rule": "discharge-claim-resolves",
+   "how": "explicit",
+   "report": "2026-09-27-exposure-profile-paths-gate2-reviewer.md",
+   "label": "D2",
+   "correct": true
+  },
+  {
+   "rule": "discharge-claim-resolves",
+   "how": "explicit",
+   "report": "2026-10-17-governance-cut-state-cap-and-rotation-gate1-architect.md",
+   "label": "D-4",
+   "correct": true
+  },
+  {
+   "rule": "discharge-claim-resolves",
+   "how": "explicit",
+   "report": "2026-09-29-a2-1-gate3-architect.md",
+   "label": "B3",
+   "correct": true
+  },
+  {
+   "rule": "discharge-claim-resolves",
+   "how": "explicit",
+   "report": "2026-09-29-a2-1-gate1-architect.md",
+   "label": "B8",
+   "correct": true
+  },
+  {
+   "rule": "discharge-claim-resolves",
+   "how": "explicit",
+   "report": "2026-09-27-exposure-profile-paths-gate1-architect.md",
+   "label": "E4",
+   "correct": true
+  },
+  {
+   "rule": "self-line-and-pin-as-current",
+   "how": "keyword",
+   "report": "2026-10-11-known-limitations-item-2-on-main-paragraph-gate3-reviewer.md",
+   "label": "D-1",
+   "correct": true
+  },
+  {
+   "rule": "self-line-and-pin-as-current",
+   "how": "explicit",
+   "report": "2026-10-05-compaction-record-and-resume-line-gate1-architect.md",
+   "label": "D-2",
+   "correct": true
+  },
+  {
+   "rule": "self-line-and-pin-as-current",
+   "how": "keyword",
+   "report": "2026-10-10-known-limitations-item-8-filter-not-published-gate1-reviewer.md",
+   "label": "D1",
+   "correct": true
+  },
+  {
+   "rule": "self-line-and-pin-as-current",
+   "how": "explicit",
+   "report": "2026-10-23-questions-mirror-item-count-gate1-architect.md",
+   "label": "D-1",
+   "correct": true
+  },
+  {
+   "rule": "self-line-and-pin-as-current",
+   "how": "keyword",
+   "report": "2026-10-04-timing-tests-assert-property-not-budget-gate1-reviewer.md",
+   "label": "S2-1",
+   "correct": true
+  },
+  {
+   "rule": "self-line-and-pin-as-current",
+   "how": "keyword",
+   "report": "2026-10-25-governance-hash-grammar-shared-gate1-reviewer.md",
+   "label": "D1",
+   "correct": false
+  },
+  {
+   "rule": "superseded-index",
+   "how": "keyword",
+   "report": "2026-10-25-stream-evaluation-failure-fixed-detail-gate2-reviewer.md",
+   "label": "D2",
+   "correct": true
+  },
+  {
+   "rule": "superseded-index",
+   "how": "explicit",
+   "report": "2026-10-19-shell-migration-milestone-3-pr-a-gate3-architect.md",
+   "label": "D3",
+   "correct": true
+  },
+  {
+   "rule": "superseded-index",
+   "how": "keyword",
+   "report": "2026-10-11-skp-v0-live-sections-current-area-c-gate2-reviewer.md",
+   "label": "D1",
+   "correct": true
+  },
+  {
+   "rule": "superseded-index",
+   "how": "keyword",
+   "report": "2026-10-14-shell-status-bar-one-height-gate1-architect.md",
+   "label": "D-3",
+   "correct": true
+  },
+  {
+   "rule": "superseded-index",
+   "how": "keyword",
+   "report": "2026-10-03-subagent-write-audit-script-gate3-reviewer.md",
+   "label": "S1-2",
+   "correct": true
+  },
+  {
+   "rule": "superseded-index",
+   "how": "keyword",
+   "report": "2026-10-12-shell-migration-milestone-2-phase-b-gate3-architect.md",
+   "label": "D-1",
+   "correct": true
+  },
+  {
+   "rule": "test-text-span-unmerged",
+   "how": "keyword",
+   "report": "2026-10-27-fixture-s-regeneration-entry-point-gate1-architect.md",
+   "label": "D3",
+   "correct": true
+  },
+  {
+   "rule": "test-text-span-unmerged",
+   "how": "keyword",
+   "report": "2026-10-09-skp-drained-stream-helper-post-check-race-gate1-architect.md",
+   "label": "D-4",
+   "correct": true
+  },
+  {
+   "rule": "test-text-span-unmerged",
+   "how": "explicit",
+   "report": "2026-10-05-data-plane-terminal-without-credit-gate2-architect.md",
+   "label": "S2-2",
+   "correct": false
+  },
+  {
+   "rule": "test-text-span-unmerged",
+   "how": "explicit",
+   "report": "2026-10-03-subagent-write-audit-script-gate3-reviewer.md",
+   "label": "S1-1",
+   "correct": true
+  },
+  {
+   "rule": "test-text-span-unmerged",
+   "how": "keyword",
+   "report": "2026-10-09-skp-drained-stream-helper-post-check-race-gate1-reviewer.md",
+   "label": "D-3",
+   "correct": true
+  },
+  {
+   "rule": "test-text-span-unmerged",
+   "how": "keyword",
+   "report": "2026-10-24-covering-case-collision-binds-other-column-gate1-architect.md",
+   "label": "D-2",
+   "correct": true
+  },
+  {
+   "rule": "verbatim-quote",
+   "how": "keyword",
+   "report": "2026-10-08-shell-migration-milestone-1-gate1-reviewer.md",
+   "label": "D4",
+   "correct": true
+  },
+  {
+   "rule": "verbatim-quote",
+   "how": "keyword",
+   "report": "2026-10-08-shell-migration-milestone-1-gate1-reviewer.md",
+   "label": "S4",
+   "correct": true
+  },
+  {
+   "rule": "verbatim-quote",
+   "how": "keyword",
+   "report": "2026-10-10-shell-stale-frame-and-layout-comments-gate1-reviewer.md",
+   "label": "D3",
+   "correct": true
+  },
+  {
+   "rule": "verbatim-quote",
+   "how": "explicit",
+   "report": "2026-09-27-exposure-profile-paths-gate2-architect.md",
+   "label": "D3",
+   "correct": true
+  },
+  {
+   "rule": "verbatim-quote",
+   "how": "keyword",
+   "report": "2026-10-20-source-changed-post-route-s5d-race-step-2-gate1-reviewer.md",
+   "label": "D1",
+   "correct": true
+  },
+  {
+   "rule": "verbatim-quote",
+   "how": "keyword",
+   "report": "2026-10-22-verify-quotes-round-item-cites-gate2-architect.md",
+   "label": "D-4",
+   "correct": false
+  },
+  {
+   "rule": "claims-true-of-code",
+   "how": null,
+   "report": "2026-10-12-shell-migration-milestone-2-phase-b-gate1-reviewer.md",
+   "label": "W2",
+   "correct": true
+  },
+  {
+   "rule": "claims-true-of-code",
+   "how": null,
+   "report": "2026-10-12-shell-migration-milestone-2-phase-b-gate1-architect.md",
+   "label": "D-3",
+   "correct": true
+  },
+  {
+   "rule": "completion-claim-evidence",
+   "how": null,
+   "report": "2026-10-02-skp-cancel-state-closed-set-gate1-reviewer.md",
+   "label": "S2-2",
+   "correct": true
+  },
+  {
+   "rule": "completion-claim-evidence",
+   "how": null,
+   "report": "2026-10-19-source-changed-post-reopen-routes-watcher-visible-gate1-architect.md",
+   "label": "D1",
+   "correct": false
+  },
+  {
+   "rule": "hash-ref-at-main-commit",
+   "how": null,
+   "report": "2026-10-12-shell-crs-form-for-format-default-contradicted-gate2-reviewer.md",
+   "label": "D-2",
+   "correct": false
+  },
+  {
+   "rule": "scope-exactly-the-piece",
+   "how": null,
+   "report": "2026-11-01-engine-cancel-before-execute-siblings-gate1-architect.md",
+   "label": "D3",
+   "correct": false
+  },
+  {
+   "rule": "test-reaches-assertion",
+   "how": null,
+   "report": "2026-10-08-verify-cites-pinned-citations-gate1-reviewer.md",
+   "label": "item16",
+   "correct": true
+  },
+  {
+   "rule": "test-reaches-assertion",
+   "how": null,
+   "report": "2026-10-02-publish-panel-rs-regex-layout-gate2-reviewer.md",
+   "label": "s2-item4",
+   "correct": false
+  },
+  {
+   "rule": "superseded-index",
+   "how": null,
+   "report": "2026-10-03-subagent-write-audit-script-gate2-reviewer.md",
+   "label": "S1-1",
+   "correct": true
+  },
+  {
+   "rule": "caller-rule",
+   "how": null,
+   "report": "2026-10-24-b1-shell-half-pr-c-gate1-architect.md",
+   "label": "D3",
+   "correct": false
+  },
+  {
+   "rule": "record-cap",
+   "how": null,
+   "report": "2026-09-27-exposure-profile-paths-gate1-architect.md",
+   "label": "D3",
+   "correct": true
+  },
+  {
+   "rule": "record-cap",
+   "how": null,
+   "report": "2026-09-27-kernel-generation-close-races-gate1-reviewer.md",
+   "label": "D2",
+   "correct": true
+  },
+  {
+   "rule": "record-cap",
+   "how": null,
+   "report": "2026-09-27-exposure-profile-paths-gate5-reviewer.md",
+   "label": "D1",
+   "correct": false
+  },
+  {
+   "rule": "record-cap",
+   "how": null,
+   "report": "2026-10-03-publish-attempt-lifecycle-src-tauri-gate3-reviewer.md",
+   "label": "item4",
+   "correct": false
+  },
+  {
+   "rule": "record-cap",
+   "how": null,
+   "report": "2026-09-27-exposure-profile-paths-gate3-architect.md",
+   "label": "D2",
+   "correct": true
+  },
+  {
+   "rule": "record-cap",
+   "how": null,
+   "report": "2026-10-06-guardian-n1-before-auto-compaction-gate1-reviewer.md",
+   "label": "D-2",
+   "correct": false
+  }
+ ],
+ "unmatched": [
+  {
+   "report": "2026-10-11-shell-migration-milestone-2-phase-a-gate1-reviewer.md",
+   "label": "S5",
+   "judgment": "none",
+   "rule": null
+  },
+  {
+   "report": "2026-10-08-shell-migration-milestone-1-gate1-reviewer-attempt-2.md",
+   "label": "D7",
+   "judgment": "not-a-finding",
+   "rule": null
+  },
+  {
+   "report": "2026-10-10-filter-identity-alias-ambiguous-reached-through-skp-gate1-reviewer.md",
+   "label": "D-2",
+   "judgment": "rule",
+   "rule": "claims-true-of-code"
+  },
+  {
+   "report": "2026-10-07-kernel-close-races-followups-gate1-reviewer.md",
+   "label": "D1",
+   "judgment": "rule",
+   "rule": "claims-true-of-code"
+  },
+  {
+   "report": "2026-10-28-corpus-line-files-gate1-architect.md",
+   "label": "E-4",
+   "judgment": "none",
+   "rule": null
+  },
+  {
+   "report": "2026-10-08-data-plane-crowded-start-detail-spaces-gate1-reviewer.md",
+   "label": "D4",
+   "judgment": "rule",
+   "rule": "claims-true-of-code"
+  },
+  {
+   "report": "2026-10-03-port-1-linux-l1-gate2-architect.md",
+   "label": "S2-1",
+   "judgment": "not-a-finding",
+   "rule": null
+  },
+  {
+   "report": "2026-10-03-publish-attempt-lifecycle-src-tauri-gate3-architect.md",
+   "label": "M4",
+   "judgment": "not-a-finding",
+   "rule": null
+  },
+  {
+   "report": "2026-10-04-type-walk-null-literal-arithmetic-gate1-reviewer.md",
+   "label": "S1-1",
+   "judgment": "none",
+   "rule": null
+  },
+  {
+   "report": "2026-10-08-shell-migration-milestone-1-gate1-reviewer.md",
+   "label": "D1",
+   "judgment": "rule",
+   "rule": "scope-exactly-the-piece"
+  },
+  {
+   "report": "2026-10-14-shell-status-bar-one-height-gate1-architect.md",
+   "label": "D-2",
+   "judgment": "rule",
+   "rule": "claims-true-of-code"
+  },
+  {
+   "report": "2026-10-14-shell-status-bar-one-height-gate1-architect.md",
+   "label": "D-4",
+   "judgment": "rule",
+   "rule": "record-what-happened"
+  },
+  {
+   "report": "2026-10-04-evidence-recorder-v0-gate3-architect.md",
+   "label": "s2-item1",
+   "judgment": "not-a-finding",
+   "rule": null
+  },
+  {
+   "report": "2026-09-28-watcher-first-read-gate1-architect.md",
+   "label": "B1",
+   "judgment": "rule",
+   "rule": "test-reaches-assertion"
+  },
+  {
+   "report": "2026-10-09-e2e-hover-establishing-read-stale-gate1-reviewer.md",
+   "label": "D2",
+   "judgment": "rule",
+   "rule": "claims-true-of-code"
+  },
+  {
+   "report": "2026-10-10-filter-identity-alias-ambiguous-reached-through-skp-gate1-architect.md",
+   "label": "D-3",
+   "judgment": "rule",
+   "rule": "scope-exactly-the-piece"
+  },
+  {
+   "report": "2026-10-24-b1-shell-half-pr-c-gate1-reviewer.md",
+   "label": "S5",
+   "judgment": "none",
+   "rule": null
+  },
+  {
+   "report": "2026-10-04-type-walk-null-literal-arithmetic-gate2-reviewer.md",
+   "label": "S1-1",
+   "judgment": "none",
+   "rule": null
+  },
+  {
+   "report": "2026-10-08-shell-migration-milestone-1-gate1-reviewer-attempt-2.md",
+   "label": "D9",
+   "judgment": "not-a-finding",
+   "rule": null
+  },
+  {
+   "report": "2026-10-21-adr-036-pre-acceptance-block-gate2-reviewer.md",
+   "label": "D1",
+   "judgment": "rule",
+   "rule": "claims-true-of-code"
+  },
+  {
+   "report": "2026-10-05-timing-assertions-under-contention-gate1-architect.md",
+   "label": "D-1",
+   "judgment": "not-a-finding",
+   "rule": null
+  },
+  {
+   "report": "2026-10-17-engine-clause-composition-properties-gate1-reviewer.md",
+   "label": "D2",
+   "judgment": "rule",
+   "rule": "claims-true-of-code"
+  },
+  {
+   "report": "2026-10-11-module-docs-stale-statements-gate2-architect.md",
+   "label": "D-1",
+   "judgment": "none",
+   "rule": null
+  },
+  {
+   "report": "2026-10-11-crs-undeclared-message-wording-gate1-reviewer.md",
+   "label": "D-1",
+   "judgment": "rule",
+   "rule": "claims-true-of-code"
+  }
+ ],
+ "unmatchedWhat": "The session's hand judgments of the 24 items no rule matched, drawn by scripts/sample.mjs unmatched after the last parser change: judgment = rule (the item describes a breach of a catalogued rule the matcher missed; rule names it), none (a defect no catalogued rule covers), or not-a-finding (a status line, check outcome or fix instruction the parser counted as a finding)."
+}
