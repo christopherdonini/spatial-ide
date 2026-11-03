@@ -667,4 +667,27 @@ mod tests {
         );
         assert!(hit.byte_offset > 0);
     }
+
+    /// The OS's name for the machine is a **fallback**, never an extra name: it is taken only when
+    /// the environment names none of at least 3 bytes, and the 3-byte floor holds for it too.
+    /// `hostnames_from` takes its two sources as arguments, so no variable is set in this process.
+    #[test]
+    fn the_os_hostname_is_taken_only_when_the_environment_names_none() {
+        let no_env = |_: &str| None;
+        assert_eq!(
+            hostnames_from(no_env, || Some("wave3-probe-host\n".into())),
+            vec!["wave3-probe-host".to_string()],
+            "no environment name: the OS's, trimmed"
+        );
+        let env = |key: &str| (key == "HOSTNAME").then(|| "envhost".to_string());
+        assert_eq!(
+            hostnames_from(env, || Some("oshost".into())),
+            vec!["envhost".to_string()],
+            "an environment name is used alone"
+        );
+        assert!(
+            hostnames_from(no_env, || Some("vm\n".into())).is_empty(),
+            "an OS name under 3 bytes is not scanned for"
+        );
+    }
 }
