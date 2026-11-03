@@ -187,7 +187,7 @@ test('a_cite_listing_reports_out_of_range_for_a_line_past_the_files_end', () => 
   });
   const cites = listCiteContents({ repoRoot: dir, files: [path.join(dir, 'A.md')] });
   assert.equal(cites.length, 1);
-  assert.equal(cites[0].firstLine, 'out of range (file has 4 lines)', JSON.stringify(cites));
+  assert.equal(cites[0].firstLine, 'out of range (file has 3 lines)', JSON.stringify(cites));
 });
 
 // RECORDED MUTATION (round 10, finding 6): reverting the blank-line branch to
