@@ -79,7 +79,7 @@ pub fn normalize_with(
     };
 
     // 2 — one separator.
-    let mut s = to_slashes(&stripped);
+    let mut s = stripped.replace('\\', "/");
 
     // 3 — profile roots, longest first. `roots_from_environment` sorts; a caller supplying its own
     // gets the same treatment here so the ordering property does not depend on the caller.
