@@ -348,3 +348,7 @@ docs/adr/ADR-020-data-plane-origin-admission-for-an-embedded-consumer.md, the Co
 - **§4:** E5 as written, its third bullet reading the new `reason`; and, by script at that commit, P4's numstat against B is 2 and 2 and the `reason` value equals the words. No mutation: the value is text that no code branches on (verify-quotes prints it).
 - **§5:** every other byte of P4, and P1, as at 5ff86b13, declared unchanged. A byte of the value differing from the words, or any other change, invalidates: stop and report.
 - **§8 and §9:** the words are tooling text, not the human's, so no re-gate (AUTONOMY §31); the PR body lists them. P4 goes to 4 lines against §7's 2: a class 8 row, with the figure at the commit, follows the commit; §7 is not edited.
+
+### Amendment 2 — 2026-11-03 — class 8, written after the words commit was seen
+
+- budget overrun, §7 not edited. P4, `scripts/plan/verify-quotes.baseline.json`: §7 declares 2 lines (1 + 1). The final figure by §7's command, `git diff --numstat B...H` with H the words commit de21212795012d45930d228d5c742e379485cc08, is 4 (2 + 2). The reason is the change Amendment 1 admits, the entry's `reason` value, as its §8 and §9 bullet said. P1 is 15 and 0 at H, within its ceiling; no other file is in the diff.
