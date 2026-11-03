@@ -1,0 +1,31 @@
+# Host facts, recorded 2026-11-03T16:49:14Z from inside the session's container (uname, os-release, lscpu, /proc/cpuinfo, free, cpufreq, toolchain).
+Linux vm 6.18.44-fc-v230 #1 SMP PREEMPT_DYNAMIC @0 x86_64 x86_64 x86_64 GNU/Linux
+PRETTY_NAME="Ubuntu 24.04.5 LTS"
+VERSION_ID="24.04"
+CPU(s):                                  4
+Vendor ID:                               GenuineIntel
+Model name:                              Intel(R) Xeon(R) Processor @ 2.10GHz
+CPU family:                              6
+Model:                                   207
+Thread(s) per core:                      1
+Core(s) per socket:                      4
+Socket(s):                               1
+Stepping:                                2
+Hypervisor vendor:                       KVM
+L1d cache:                               192 KiB (4 instances)
+L2 cache:                                8 MiB (4 instances)
+L3 cache:                                260 MiB (1 instance)
+cpu MHz		: 2100.000
+               total        used        free      shared  buff/cache   available
+Mem:     16872804352  2901086208 12459507712    16465920  1799012352 13971718144
+cat: /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor: No such file or directory
+rustc 1.97.0 (2d8144b78 2026-07-07)
+binary: rustc
+commit-hash: 2d8144b7880597b6e6d3dfd63a9a9efae3f533d3
+commit-date: 2026-07-07
+host: x86_64-unknown-linux-gnu
+release: 1.97.0
+LLVM version: 22.1.6
+cargo 1.97.0 (c980f4866 2026-06-30)
+c++ (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0
+GNU ld (GNU Binutils for Ubuntu) 2.42

@@ -1,0 +1,51 @@
+# Task A build facts (dev profile, the root workspace). Paths under the session scratch directory are written <SCRATCH>; the build's out/ is <OUT>.
+
+## Tree
+HEAD 6b67d44bc242dc1cbc9f73efdbd7cd20e4ecd1f4 (main at session start; the measurement branch adds only files under state/consults/cloud/linux-measurements/)
+
+## Command (from the repository root)
+CARGO_TARGET_DIR=<SCRATCH>/target CC_ENABLE_DEBUG_OUTPUT=1 TMPDIR=<SCRATCH>/tmp CARGO_BUILD_JOBS=4 cargo test -p spatial-engine --locked --lib --test admitted_integer_overflow --test stream_fetch_overflow --test admission_property_campaign --no-run -vv
+started 2026-11-03T16:28:32Z, ended 2026-11-03T16:40:15Z; rc=0
+Finished `test` profile [unoptimized + debuginfo] target(s) in 11m 43s
+(cargo's own line; not a measurement)
+
+## The compiler the build log names
+- DuckDB compile units (running: lines carrying -c): 352, program: 352 c++
+- every unit's flags (identical across all 352): c++ -O2 -ffunction-sections -fdata-sections -fPIC -m64 -w -std=c++11 -w -DDUCKDB_EXTENSION_CORE_FUNCTIONS_LINKED=1 -DDUCKDB_EXTENSION_JSON_LINKED=1 -DDUCKDB_EXTENSION_PARQUET_LINKED=1 -DDUCKDB_EXTENSION_AUTOINSTALL_DEFAULT=1 -DDUCKDB_EXTENSION_AUTOLOAD_DEFAULT=1 -DNDEBUG
+- cc's compiler-family probe, as the log prints it:
+    5 [libduckdb-sys 1.10505.0] #pragma message "gcc" (count, then the line)
+- the other running: lines: 27 (5 'c++ -?' and 5 'c++ -E' probes, 17 'ar' archive steps)
+- the build script's cargo:warning lines (all from cc's '-?' probe, which gcc rejects):
+    5 [libduckdb-sys 1.10505.0] cargo:warning=c++: error: unrecognized command-line option '-?'
+    5 [libduckdb-sys 1.10505.0] cargo:warning=c++: fatal error: no input files
+    5 [libduckdb-sys 1.10505.0] cargo:warning=compilation terminated.
+- c++ resolves to: /usr/bin/c++ -> /etc/alternatives/c++ -> /usr/bin/x86_64-linux-gnu-g++-13
+- c++ --version: c++ (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0
+- c++ -dM -E (empty input):
+    #define __GNUC__ 13
+    #define __GNUC_PATCHLEVEL__ 0
+    #define __GNUC_MINOR__ 3
+    __clang__: 0 definitions
+
+## The DuckDB version the build names
+- cargo: Compiling libduckdb-sys v1.10505.0
+- the vendored source this build compiled, <OUT>/duckdb/src/function/table/version/pragma_version.cpp (sha256 184439378855935ee1f641d268969300df69b67242f341f3ab898b24d6649c82):
+    11:#define DUCKDB_VERSION "v1.5.5"
+    14:#define DUCKDB_SOURCE_ID "d8cdaa33fd"
+- at run time, the probe's SELECT library_version, source_id FROM pragma_version(): ("v1.5.5", "d8cdaa33fd")
+
+## The int64 multiply in this build's source
+<OUT>/duckdb/src/function/scalar/operator/multiply.cpp (sha256 2332e8cc038dcadd22816e2b1e7b26745edf01795c96c0e97a40b192fba1c4da), lines 192-196, byte-copied after a 4-space indent, the line number and a tab:
+    192	bool TryMultiplyOperator::Operation(int64_t left, int64_t right, int64_t &result) {
+    193	#if (__GNUC__ >= 5) || defined(__clang__)
+    194		if (__builtin_mul_overflow(left, right, &result)) {
+    195			return false;
+    196		}
+It reaches the build through <OUT>/duckdb/ub_src_function_scalar_operator.cpp:5 (#include "src/function/scalar/operator/multiply.cpp"), one of the 352 units above, compiled by c++.
+Which branch the preprocessor took is read from the defines above, not observed in the object code.
+
+## Rust warnings in the workspace's own crates
+    warning: constant `WATCH_BUFFER_BYTES` is never used
+      --> engine/src/watch.rs:73:18
+       |
+    73 | pub(crate) const WATCH_BUFFER_BYTES: usize = 65536;

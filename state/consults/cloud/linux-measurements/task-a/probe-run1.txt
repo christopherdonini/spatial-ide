@@ -1,0 +1,829 @@
+VERSIONS pragma_version() = ("v1.5.5", "d8cdaa33fd")
+BASE n=2048 bytes=804485 extent=[2600003.284194039, 1200003.4805360753, 2601836.7976715486, 1201796.3065026524]
+BASE n=4096 bytes=1599129 extent=[2600003.4651592937, 1200003.4805360753, 2602556.4651944395, 1202556.7087932294]
+BASE n=6 bytes=6854 extent=[2600006.2471532924, 1200004.1221463983, 2600114.6588339717, 1200074.8811401066]
+BASE n=5 bytes=6592 extent=[2600006.2471532924, 1200004.1221463983, 2600112.8636992984, 1200074.8811401066]
+BASE n=3 bytes=5760 extent=[2600005.677285292, 1200004.1221463983, 2600075.5748594943, 1200075.6298214737]
+BASE n=2 bytes=5494 extent=[2600006.2471532924, 1200004.1221463983, 2600075.5748594943, 1200035.7227587905]
+FILE A-ar-s writer=ar-s rows=2048 groups=[2048] stats=true layout_ok=true readback_mismatches=0 open=[Ok, Int64] bytes=815802 checks=PASS
+FILE A-ar-n writer=ar-n rows=2048 groups=[2048] stats=false layout_ok=true readback_mismatches=0 open=[Ok, Int64] bytes=815030 checks=PASS
+FILE A-dk writer=dk rows=2048 groups=[2048] stats=true layout_ok=true readback_mismatches=0 open=[Ok, Int64] bytes=800503 checks=PASS
+FILE B-ar-s writer=ar-s rows=2048 groups=[2048] stats=true layout_ok=true readback_mismatches=0 open=[Ok, Int64] bytes=815792 checks=PASS
+FILE B-ar-n writer=ar-n rows=2048 groups=[2048] stats=false layout_ok=true readback_mismatches=0 open=[Ok, Int64] bytes=815020 checks=PASS
+FILE B-dk writer=dk rows=2048 groups=[2048] stats=true layout_ok=true readback_mismatches=0 open=[Ok, Int64] bytes=800493 checks=PASS
+FILE B3-ar-s writer=ar-s rows=4096 groups=[2048, 2048] stats=true layout_ok=true readback_mismatches=0 open=[Ok, Int64] bytes=1621672 checks=PASS
+FILE B3-ar-n writer=ar-n rows=4096 groups=[2048, 2048] stats=false layout_ok=true readback_mismatches=0 open=[Ok, Int64] bytes=1620114 checks=PASS
+FILE B3-dk writer=dk rows=4096 groups=[2048, 2048] stats=true layout_ok=true readback_mismatches=0 open=[Ok, Int64] bytes=1594838 checks=PASS
+FILE S-ar-n writer=ar-n rows=6 groups=[6] stats=false layout_ok=true readback_mismatches=0 open=[Ok, Int64] bytes=6399 checks=PASS
+FILE R-ar-n writer=ar-n rows=3 groups=[3] stats=false layout_ok=true readback_mismatches=0 open=[Ok, Int64] bytes=5279 checks=PASS
+FILE T-c-ar-n writer=ar-n rows=3 groups=[3] stats=false layout_ok=true readback_mismatches=0 open=[Ok, Int64] bytes=5479 checks=PASS
+FILE T-c-ar-s writer=ar-s rows=3 groups=[3] stats=true layout_ok=true readback_mismatches=0 open=[Ok, Int64] bytes=6325 checks=PASS
+FILE T-o-ar-n writer=ar-n rows=2 groups=[2] stats=false layout_ok=true readback_mismatches=0 open=[Ok, Int64] bytes=5202 checks=PASS
+FILE T-o-mirror-ar-n writer=ar-n rows=2 groups=[2] stats=false layout_ok=true readback_mismatches=0 open=[Ok, Int64] bytes=5202 checks=PASS
+FILE T-e-ar-n writer=ar-n rows=5 groups=[5] stats=false layout_ok=true readback_mismatches=0 open=[Ok, Int64] bytes=6321 checks=PASS
+FILE T-m-ar-n writer=ar-n rows=3 groups=[3] stats=false layout_ok=true readback_mismatches=0 open=[Ok, Int64] bytes=5472 checks=PASS
+FILE T-e-swap-ar-n writer=ar-n rows=2 groups=[2] stats=false layout_ok=true readback_mismatches=0 open=[Ok, Int64] bytes=5202 checks=PASS
+CELL form=W file=A-ar-s shape=all rep=1 pred=[v * v > 0] overflow_rows=1024 X=2047 W=1023 outcome=FIXED
+CELL form=W file=A-ar-s shape=view rep=1 pred=[v * v > 0] overflow_rows=1024 X=2047 W=1023 outcome=FIXED
+CELL form=W file=A-ar-s shape=all rep=2 pred=[v * v > 0] overflow_rows=1024 X=2047 W=1023 outcome=FIXED
+CELL form=W file=A-ar-s shape=view rep=2 pred=[v * v > 0] overflow_rows=1024 X=2047 W=1023 outcome=FIXED
+CELL form=W file=A-ar-s shape=all rep=1 pred=[v * v < 0] overflow_rows=1024 X=0 W=1024 outcome=FIXED
+CELL form=W file=A-ar-s shape=view rep=1 pred=[v * v < 0] overflow_rows=1024 X=0 W=1024 outcome=FIXED
+CELL form=W file=A-ar-s shape=all rep=2 pred=[v * v < 0] overflow_rows=1024 X=0 W=1024 outcome=FIXED
+CELL form=W file=A-ar-s shape=view rep=2 pred=[v * v < 0] overflow_rows=1024 X=0 W=1024 outcome=FIXED
+CELL form=P3-exact-control file=A-ar-s shape=all rep=1 pred=[(v * v) IS NOT NULL] overflow_rows=1024 X=2048 W=2048 outcome=COMPLETED n=2048 dup=0 eq_X=true eq_W=true ids={0..=2047}
+CELL form=P3-exact-control file=A-ar-s shape=view rep=1 pred=[(v * v) IS NOT NULL] overflow_rows=1024 X=2048 W=2048 outcome=COMPLETED n=2048 dup=0 eq_X=true eq_W=true ids={0..=2047}
+CELL form=P3-exact-control file=A-ar-s shape=all rep=2 pred=[(v * v) IS NOT NULL] overflow_rows=1024 X=2048 W=2048 outcome=COMPLETED n=2048 dup=0 eq_X=true eq_W=true ids={0..=2047}
+CELL form=P3-exact-control file=A-ar-s shape=view rep=2 pred=[(v * v) IS NOT NULL] overflow_rows=1024 X=2048 W=2048 outcome=COMPLETED n=2048 dup=0 eq_X=true eq_W=true ids={0..=2047}
+CELL form=W file=A-ar-n shape=all rep=1 pred=[v * v > 0] overflow_rows=1024 X=2047 W=1023 outcome=FIXED
+CELL form=W file=A-ar-n shape=view rep=1 pred=[v * v > 0] overflow_rows=1024 X=2047 W=1023 outcome=FIXED
+CELL form=W file=A-ar-n shape=all rep=2 pred=[v * v > 0] overflow_rows=1024 X=2047 W=1023 outcome=FIXED
+CELL form=W file=A-ar-n shape=view rep=2 pred=[v * v > 0] overflow_rows=1024 X=2047 W=1023 outcome=FIXED
+CELL form=W file=A-ar-n shape=all rep=1 pred=[v * v < 0] overflow_rows=1024 X=0 W=1024 outcome=FIXED
+CELL form=W file=A-ar-n shape=view rep=1 pred=[v * v < 0] overflow_rows=1024 X=0 W=1024 outcome=FIXED
+CELL form=W file=A-ar-n shape=all rep=2 pred=[v * v < 0] overflow_rows=1024 X=0 W=1024 outcome=FIXED
+CELL form=W file=A-ar-n shape=view rep=2 pred=[v * v < 0] overflow_rows=1024 X=0 W=1024 outcome=FIXED
+CELL form=P3-exact-control file=A-ar-n shape=all rep=1 pred=[(v * v) IS NOT NULL] overflow_rows=1024 X=2048 W=2048 outcome=FIXED
+CELL form=P3-exact-control file=A-ar-n shape=view rep=1 pred=[(v * v) IS NOT NULL] overflow_rows=1024 X=2048 W=2048 outcome=FIXED
+CELL form=P3-exact-control file=A-ar-n shape=all rep=2 pred=[(v * v) IS NOT NULL] overflow_rows=1024 X=2048 W=2048 outcome=FIXED
+CELL form=P3-exact-control file=A-ar-n shape=view rep=2 pred=[(v * v) IS NOT NULL] overflow_rows=1024 X=2048 W=2048 outcome=FIXED
+CELL form=W file=A-dk shape=all rep=1 pred=[v * v > 0] overflow_rows=1024 X=2047 W=1023 outcome=FIXED
+CELL form=W file=A-dk shape=view rep=1 pred=[v * v > 0] overflow_rows=1024 X=2047 W=1023 outcome=FIXED
+CELL form=W file=A-dk shape=all rep=2 pred=[v * v > 0] overflow_rows=1024 X=2047 W=1023 outcome=FIXED
+CELL form=W file=A-dk shape=view rep=2 pred=[v * v > 0] overflow_rows=1024 X=2047 W=1023 outcome=FIXED
+CELL form=W file=A-dk shape=all rep=1 pred=[v * v < 0] overflow_rows=1024 X=0 W=1024 outcome=FIXED
+CELL form=W file=A-dk shape=view rep=1 pred=[v * v < 0] overflow_rows=1024 X=0 W=1024 outcome=FIXED
+CELL form=W file=A-dk shape=all rep=2 pred=[v * v < 0] overflow_rows=1024 X=0 W=1024 outcome=FIXED
+CELL form=W file=A-dk shape=view rep=2 pred=[v * v < 0] overflow_rows=1024 X=0 W=1024 outcome=FIXED
+CELL form=P3-exact-control file=A-dk shape=all rep=1 pred=[(v * v) IS NOT NULL] overflow_rows=1024 X=2048 W=2048 outcome=COMPLETED n=2048 dup=0 eq_X=true eq_W=true ids={0..=2047}
+CELL form=P3-exact-control file=A-dk shape=view rep=1 pred=[(v * v) IS NOT NULL] overflow_rows=1024 X=2048 W=2048 outcome=COMPLETED n=2048 dup=0 eq_X=true eq_W=true ids={0..=2047}
+CELL form=P3-exact-control file=A-dk shape=all rep=2 pred=[(v * v) IS NOT NULL] overflow_rows=1024 X=2048 W=2048 outcome=COMPLETED n=2048 dup=0 eq_X=true eq_W=true ids={0..=2047}
+CELL form=P3-exact-control file=A-dk shape=view rep=2 pred=[(v * v) IS NOT NULL] overflow_rows=1024 X=2048 W=2048 outcome=COMPLETED n=2048 dup=0 eq_X=true eq_W=true ids={0..=2047}
+CELL form=F file=B-ar-s shape=all rep=1 pred=[v * v > 0] overflow_rows=1 X=2047 W=2046 outcome=FIXED
+CELL form=F file=B-ar-s shape=view rep=1 pred=[v * v > 0] overflow_rows=1 X=2047 W=2046 outcome=FIXED
+CELL form=F file=B-ar-s shape=all rep=2 pred=[v * v > 0] overflow_rows=1 X=2047 W=2046 outcome=FIXED
+CELL form=F file=B-ar-s shape=view rep=2 pred=[v * v > 0] overflow_rows=1 X=2047 W=2046 outcome=FIXED
+CELL form=F file=B-ar-s shape=all rep=1 pred=[v * v < 0] overflow_rows=1 X=0 W=1 outcome=FIXED
+CELL form=F file=B-ar-s shape=view rep=1 pred=[v * v < 0] overflow_rows=1 X=0 W=1 outcome=FIXED
+CELL form=F file=B-ar-s shape=all rep=2 pred=[v * v < 0] overflow_rows=1 X=0 W=1 outcome=FIXED
+CELL form=F file=B-ar-s shape=view rep=2 pred=[v * v < 0] overflow_rows=1 X=0 W=1 outcome=FIXED
+CELL form=P3-exact-control file=B-ar-s shape=all rep=1 pred=[(v * v) IS NOT NULL] overflow_rows=1 X=2048 W=2048 outcome=COMPLETED n=2048 dup=0 eq_X=true eq_W=true ids={0..=2047}
+CELL form=P3-exact-control file=B-ar-s shape=view rep=1 pred=[(v * v) IS NOT NULL] overflow_rows=1 X=2048 W=2048 outcome=COMPLETED n=2048 dup=0 eq_X=true eq_W=true ids={0..=2047}
+CELL form=P3-exact-control file=B-ar-s shape=all rep=2 pred=[(v * v) IS NOT NULL] overflow_rows=1 X=2048 W=2048 outcome=COMPLETED n=2048 dup=0 eq_X=true eq_W=true ids={0..=2047}
+CELL form=P3-exact-control file=B-ar-s shape=view rep=2 pred=[(v * v) IS NOT NULL] overflow_rows=1 X=2048 W=2048 outcome=COMPLETED n=2048 dup=0 eq_X=true eq_W=true ids={0..=2047}
+CELL form=W file=B-ar-n shape=all rep=1 pred=[v * v > 0] overflow_rows=1 X=2047 W=2046 outcome=FIXED
+CELL form=W file=B-ar-n shape=view rep=1 pred=[v * v > 0] overflow_rows=1 X=2047 W=2046 outcome=FIXED
+CELL form=W file=B-ar-n shape=all rep=2 pred=[v * v > 0] overflow_rows=1 X=2047 W=2046 outcome=FIXED
+CELL form=W file=B-ar-n shape=view rep=2 pred=[v * v > 0] overflow_rows=1 X=2047 W=2046 outcome=FIXED
+CELL form=W file=B-ar-n shape=all rep=1 pred=[v * v < 0] overflow_rows=1 X=0 W=1 outcome=FIXED
+CELL form=W file=B-ar-n shape=view rep=1 pred=[v * v < 0] overflow_rows=1 X=0 W=1 outcome=FIXED
+CELL form=W file=B-ar-n shape=all rep=2 pred=[v * v < 0] overflow_rows=1 X=0 W=1 outcome=FIXED
+CELL form=W file=B-ar-n shape=view rep=2 pred=[v * v < 0] overflow_rows=1 X=0 W=1 outcome=FIXED
+CELL form=P3-exact-control file=B-ar-n shape=all rep=1 pred=[(v * v) IS NOT NULL] overflow_rows=1 X=2048 W=2048 outcome=FIXED
+CELL form=P3-exact-control file=B-ar-n shape=view rep=1 pred=[(v * v) IS NOT NULL] overflow_rows=1 X=2048 W=2048 outcome=FIXED
+CELL form=P3-exact-control file=B-ar-n shape=all rep=2 pred=[(v * v) IS NOT NULL] overflow_rows=1 X=2048 W=2048 outcome=FIXED
+CELL form=P3-exact-control file=B-ar-n shape=view rep=2 pred=[(v * v) IS NOT NULL] overflow_rows=1 X=2048 W=2048 outcome=FIXED
+CELL form=F file=B-dk shape=all rep=1 pred=[v * v > 0] overflow_rows=1 X=2047 W=2046 outcome=FIXED
+CELL form=F file=B-dk shape=view rep=1 pred=[v * v > 0] overflow_rows=1 X=2047 W=2046 outcome=FIXED
+CELL form=F file=B-dk shape=all rep=2 pred=[v * v > 0] overflow_rows=1 X=2047 W=2046 outcome=FIXED
+CELL form=F file=B-dk shape=view rep=2 pred=[v * v > 0] overflow_rows=1 X=2047 W=2046 outcome=FIXED
+CELL form=F file=B-dk shape=all rep=1 pred=[v * v < 0] overflow_rows=1 X=0 W=1 outcome=FIXED
+CELL form=F file=B-dk shape=view rep=1 pred=[v * v < 0] overflow_rows=1 X=0 W=1 outcome=FIXED
+CELL form=F file=B-dk shape=all rep=2 pred=[v * v < 0] overflow_rows=1 X=0 W=1 outcome=FIXED
+CELL form=F file=B-dk shape=view rep=2 pred=[v * v < 0] overflow_rows=1 X=0 W=1 outcome=FIXED
+CELL form=P3-exact-control file=B-dk shape=all rep=1 pred=[(v * v) IS NOT NULL] overflow_rows=1 X=2048 W=2048 outcome=COMPLETED n=2048 dup=0 eq_X=true eq_W=true ids={0..=2047}
+CELL form=P3-exact-control file=B-dk shape=view rep=1 pred=[(v * v) IS NOT NULL] overflow_rows=1 X=2048 W=2048 outcome=COMPLETED n=2048 dup=0 eq_X=true eq_W=true ids={0..=2047}
+CELL form=P3-exact-control file=B-dk shape=all rep=2 pred=[(v * v) IS NOT NULL] overflow_rows=1 X=2048 W=2048 outcome=COMPLETED n=2048 dup=0 eq_X=true eq_W=true ids={0..=2047}
+CELL form=P3-exact-control file=B-dk shape=view rep=2 pred=[(v * v) IS NOT NULL] overflow_rows=1 X=2048 W=2048 outcome=COMPLETED n=2048 dup=0 eq_X=true eq_W=true ids={0..=2047}
+CELL form=F-second-row-group file=B3-ar-s shape=all rep=1 pred=[v * v > 0] overflow_rows=1 X=4094 W=4093 outcome=FIXED
+CELL form=F-second-row-group file=B3-ar-s shape=view rep=1 pred=[v * v > 0] overflow_rows=1 X=4094 W=4093 outcome=FIXED
+CELL form=F-second-row-group file=B3-ar-s shape=all rep=2 pred=[v * v > 0] overflow_rows=1 X=4094 W=4093 outcome=FIXED
+CELL form=F-second-row-group file=B3-ar-s shape=view rep=2 pred=[v * v > 0] overflow_rows=1 X=4094 W=4093 outcome=FIXED
+CELL form=F-second-row-group file=B3-ar-s shape=all rep=1 pred=[v * v < 0] overflow_rows=1 X=0 W=1 outcome=FIXED
+CELL form=F-second-row-group file=B3-ar-s shape=view rep=1 pred=[v * v < 0] overflow_rows=1 X=0 W=1 outcome=FIXED
+CELL form=F-second-row-group file=B3-ar-s shape=all rep=2 pred=[v * v < 0] overflow_rows=1 X=0 W=1 outcome=FIXED
+CELL form=F-second-row-group file=B3-ar-s shape=view rep=2 pred=[v * v < 0] overflow_rows=1 X=0 W=1 outcome=FIXED
+CELL form=P3-exact-control file=B3-ar-s shape=all rep=1 pred=[(v * v) IS NOT NULL] overflow_rows=1 X=4096 W=4096 outcome=COMPLETED n=4096 dup=0 eq_X=true eq_W=true ids={0..=4095}
+CELL form=P3-exact-control file=B3-ar-s shape=view rep=1 pred=[(v * v) IS NOT NULL] overflow_rows=1 X=4096 W=4096 outcome=COMPLETED n=4096 dup=0 eq_X=true eq_W=true ids={0..=4095}
+CELL form=P3-exact-control file=B3-ar-s shape=all rep=2 pred=[(v * v) IS NOT NULL] overflow_rows=1 X=4096 W=4096 outcome=COMPLETED n=4096 dup=0 eq_X=true eq_W=true ids={0..=4095}
+CELL form=P3-exact-control file=B3-ar-s shape=view rep=2 pred=[(v * v) IS NOT NULL] overflow_rows=1 X=4096 W=4096 outcome=COMPLETED n=4096 dup=0 eq_X=true eq_W=true ids={0..=4095}
+CELL form=W-second-row-group file=B3-ar-n shape=all rep=1 pred=[v * v > 0] overflow_rows=1 X=4094 W=4093 outcome=FIXED
+CELL form=W-second-row-group file=B3-ar-n shape=view rep=1 pred=[v * v > 0] overflow_rows=1 X=4094 W=4093 outcome=FIXED
+CELL form=W-second-row-group file=B3-ar-n shape=all rep=2 pred=[v * v > 0] overflow_rows=1 X=4094 W=4093 outcome=FIXED
+CELL form=W-second-row-group file=B3-ar-n shape=view rep=2 pred=[v * v > 0] overflow_rows=1 X=4094 W=4093 outcome=FIXED
+CELL form=W-second-row-group file=B3-ar-n shape=all rep=1 pred=[v * v < 0] overflow_rows=1 X=0 W=1 outcome=FIXED
+CELL form=W-second-row-group file=B3-ar-n shape=view rep=1 pred=[v * v < 0] overflow_rows=1 X=0 W=1 outcome=FIXED
+CELL form=W-second-row-group file=B3-ar-n shape=all rep=2 pred=[v * v < 0] overflow_rows=1 X=0 W=1 outcome=FIXED
+CELL form=W-second-row-group file=B3-ar-n shape=view rep=2 pred=[v * v < 0] overflow_rows=1 X=0 W=1 outcome=FIXED
+CELL form=P3-exact-control file=B3-ar-n shape=all rep=1 pred=[(v * v) IS NOT NULL] overflow_rows=1 X=4096 W=4096 outcome=FIXED
+CELL form=P3-exact-control file=B3-ar-n shape=view rep=1 pred=[(v * v) IS NOT NULL] overflow_rows=1 X=4096 W=4096 outcome=FIXED
+CELL form=P3-exact-control file=B3-ar-n shape=all rep=2 pred=[(v * v) IS NOT NULL] overflow_rows=1 X=4096 W=4096 outcome=FIXED
+CELL form=P3-exact-control file=B3-ar-n shape=view rep=2 pred=[(v * v) IS NOT NULL] overflow_rows=1 X=4096 W=4096 outcome=FIXED
+CELL form=F-second-row-group file=B3-dk shape=all rep=1 pred=[v * v > 0] overflow_rows=1 X=4094 W=4093 outcome=FIXED
+CELL form=F-second-row-group file=B3-dk shape=view rep=1 pred=[v * v > 0] overflow_rows=1 X=4094 W=4093 outcome=FIXED
+CELL form=F-second-row-group file=B3-dk shape=all rep=2 pred=[v * v > 0] overflow_rows=1 X=4094 W=4093 outcome=FIXED
+CELL form=F-second-row-group file=B3-dk shape=view rep=2 pred=[v * v > 0] overflow_rows=1 X=4094 W=4093 outcome=FIXED
+CELL form=F-second-row-group file=B3-dk shape=all rep=1 pred=[v * v < 0] overflow_rows=1 X=0 W=1 outcome=FIXED
+CELL form=F-second-row-group file=B3-dk shape=view rep=1 pred=[v * v < 0] overflow_rows=1 X=0 W=1 outcome=FIXED
+CELL form=F-second-row-group file=B3-dk shape=all rep=2 pred=[v * v < 0] overflow_rows=1 X=0 W=1 outcome=FIXED
+CELL form=F-second-row-group file=B3-dk shape=view rep=2 pred=[v * v < 0] overflow_rows=1 X=0 W=1 outcome=FIXED
+CELL form=P3-exact-control file=B3-dk shape=all rep=1 pred=[(v * v) IS NOT NULL] overflow_rows=1 X=4096 W=4096 outcome=COMPLETED n=4096 dup=0 eq_X=true eq_W=true ids={0..=4095}
+CELL form=P3-exact-control file=B3-dk shape=view rep=1 pred=[(v * v) IS NOT NULL] overflow_rows=1 X=4096 W=4096 outcome=COMPLETED n=4096 dup=0 eq_X=true eq_W=true ids={0..=4095}
+CELL form=P3-exact-control file=B3-dk shape=all rep=2 pred=[(v * v) IS NOT NULL] overflow_rows=1 X=4096 W=4096 outcome=COMPLETED n=4096 dup=0 eq_X=true eq_W=true ids={0..=4095}
+CELL form=P3-exact-control file=B3-dk shape=view rep=2 pred=[(v * v) IS NOT NULL] overflow_rows=1 X=4096 W=4096 outcome=COMPLETED n=4096 dup=0 eq_X=true eq_W=true ids={0..=4095}
+CELL form=W file=S-ar-n shape=all rep=1 pred=[v * v > 0] overflow_rows=4 X=6 W=2 outcome=FIXED
+CELL form=W file=S-ar-n shape=view rep=1 pred=[v * v > 0] overflow_rows=4 X=6 W=2 outcome=FIXED
+CELL form=W file=S-ar-n shape=all rep=2 pred=[v * v > 0] overflow_rows=4 X=6 W=2 outcome=FIXED
+CELL form=W file=S-ar-n shape=view rep=2 pred=[v * v > 0] overflow_rows=4 X=6 W=2 outcome=FIXED
+CELL form=W file=S-ar-n shape=all rep=1 pred=[v * v < 0] overflow_rows=4 X=0 W=4 outcome=FIXED
+CELL form=W file=S-ar-n shape=view rep=1 pred=[v * v < 0] overflow_rows=4 X=0 W=4 outcome=FIXED
+CELL form=W file=S-ar-n shape=all rep=2 pred=[v * v < 0] overflow_rows=4 X=0 W=4 outcome=FIXED
+CELL form=W file=S-ar-n shape=view rep=2 pred=[v * v < 0] overflow_rows=4 X=0 W=4 outcome=FIXED
+PERK file=S-ar-n k=0 a=2 b=2 X=4 fits_i64=true W=4 value=4 eq_X=true eq_W=true
+PERK file=S-ar-n k=1 a=3037000499 b=3037000499 X=9223372030926249001 fits_i64=true W=9223372030926249001 value=9223372030926249001 eq_X=true eq_W=true
+PERK file=S-ar-n k=2 a=3037000500 b=3037000500 X=9223372037000250000 fits_i64=false W=-9223372036709301616 error=[Out of Range Error: Overflow in multiplication of INT64 (3037000500 * 3037000500)!]
+PERK file=S-ar-n k=3 a=-3037000500 b=-3037000500 X=9223372037000250000 fits_i64=false W=-9223372036709301616 error=[Out of Range Error: Overflow in multiplication of INT64 (-3037000500 * -3037000500)!]
+PERK file=S-ar-n k=4 a=4000000000 b=4000000000 X=16000000000000000000 fits_i64=false W=-2446744073709551616 error=[Out of Range Error: Overflow in multiplication of INT64 (4000000000 * 4000000000)!]
+PERK file=S-ar-n k=5 a=4294967295 b=4294967295 X=18446744065119617025 fits_i64=false W=-8589934591 error=[Out of Range Error: Overflow in multiplication of INT64 (4294967295 * 4294967295)!]
+CELL form=R-stream file=R-ar-n shape=all rep=1 pred=[v * v > 0] overflow_rows=2 X=3 W=2 outcome=FIXED
+CELL form=R-stream file=R-ar-n shape=view rep=1 pred=[v * v > 0] overflow_rows=2 X=3 W=2 outcome=FIXED
+CELL form=R-stream file=R-ar-n shape=all rep=2 pred=[v * v > 0] overflow_rows=2 X=3 W=2 outcome=FIXED
+CELL form=R-stream file=R-ar-n shape=view rep=2 pred=[v * v > 0] overflow_rows=2 X=3 W=2 outcome=FIXED
+CELL form=R-stream file=R-ar-n shape=all rep=1 pred=[v * v < 0] overflow_rows=2 X=0 W=0 outcome=FIXED
+CELL form=R-stream file=R-ar-n shape=view rep=1 pred=[v * v < 0] overflow_rows=2 X=0 W=0 outcome=FIXED
+CELL form=R-stream file=R-ar-n shape=all rep=2 pred=[v * v < 0] overflow_rows=2 X=0 W=0 outcome=FIXED
+CELL form=R-stream file=R-ar-n shape=view rep=2 pred=[v * v < 0] overflow_rows=2 X=0 W=0 outcome=FIXED
+PERK file=R-ar-n k=0 a=2 b=2 X=4 fits_i64=true W=4 value=4 eq_X=true eq_W=true
+PERK file=R-ar-n k=1 a=4294967296 b=4294967296 X=18446744073709551616 fits_i64=false W=0 error=[Out of Range Error: Overflow in multiplication of INT64 (4294967296 * 4294967296)!]
+PERK file=R-ar-n k=2 a=3600000000003999000 b=3600000000003999000 X=12960000000028792800000015992001000000 fits_i64=false W=967113234518241856 error=[Out of Range Error: Overflow in multiplication of INT64 (3600000000003999000 * 3600000000003999000)!]
+CONTROL C1 file=A-ar-s pred=[v * v] outcome=REFUSED[NotBoolean: refused: the predicate's inferred type is Int64, not BOOLEAN; an implicit conversion to BOOLEAN is not performed (docs/01 principle 8)]
+CONTROL C2 file=A-ar-s pred=[v * 1.5 > 0] outcome=REFUSED[TypeNotAdmitted: refused: `*` over BIGINT and DECIMAL(2,1) literal: a conversion that can fail during the scan (docs/01 principle 8)]
+CONTROL C1 file=B-ar-s pred=[v * v] outcome=REFUSED[NotBoolean: refused: the predicate's inferred type is Int64, not BOOLEAN; an implicit conversion to BOOLEAN is not performed (docs/01 principle 8)]
+CONTROL C2 file=B-ar-s pred=[v * 1.5 > 0] outcome=REFUSED[TypeNotAdmitted: refused: `*` over BIGINT and DECIMAL(2,1) literal: a conversion that can fail during the scan (docs/01 principle 8)]
+CELL form=L1 file=B-ar-s shape=all rep=1 pred=[4000000000 * 4000000000 > 0] overflow_rows=0 X=2048 W=n/a outcome=COMPLETED n=2048 dup=0 eq_X=true eq_W=n/a ids={0..=2047}
+CELL form=L1 file=B-ar-s shape=view rep=1 pred=[4000000000 * 4000000000 > 0] overflow_rows=0 X=2048 W=n/a outcome=COMPLETED n=2048 dup=0 eq_X=true eq_W=n/a ids={0..=2047}
+CELL form=L1 file=B-ar-s shape=all rep=2 pred=[4000000000 * 4000000000 > 0] overflow_rows=0 X=2048 W=n/a outcome=COMPLETED n=2048 dup=0 eq_X=true eq_W=n/a ids={0..=2047}
+CELL form=L1 file=B-ar-s shape=view rep=2 pred=[4000000000 * 4000000000 > 0] overflow_rows=0 X=2048 W=n/a outcome=COMPLETED n=2048 dup=0 eq_X=true eq_W=n/a ids={0..=2047}
+CELL form=L2 file=B-ar-s shape=all rep=1 pred=[4000000000 * 4000000000 < 0] overflow_rows=0 X=0 W=n/a outcome=COMPLETED n=0 dup=0 eq_X=true eq_W=n/a ids={}
+CELL form=L2 file=B-ar-s shape=view rep=1 pred=[4000000000 * 4000000000 < 0] overflow_rows=0 X=0 W=n/a outcome=COMPLETED n=0 dup=0 eq_X=true eq_W=n/a ids={}
+CELL form=L2 file=B-ar-s shape=all rep=2 pred=[4000000000 * 4000000000 < 0] overflow_rows=0 X=0 W=n/a outcome=COMPLETED n=0 dup=0 eq_X=true eq_W=n/a ids={}
+CELL form=L2 file=B-ar-s shape=view rep=2 pred=[4000000000 * 4000000000 < 0] overflow_rows=0 X=0 W=n/a outcome=COMPLETED n=0 dup=0 eq_X=true eq_W=n/a ids={}
+CELL form=L3 file=B-ar-s shape=all rep=1 pred=[4294967296 * 4294967296 > 0] overflow_rows=0 X=2048 W=n/a outcome=COMPLETED n=2048 dup=0 eq_X=true eq_W=n/a ids={0..=2047}
+CELL form=L3 file=B-ar-s shape=view rep=1 pred=[4294967296 * 4294967296 > 0] overflow_rows=0 X=2048 W=n/a outcome=COMPLETED n=2048 dup=0 eq_X=true eq_W=n/a ids={0..=2047}
+CELL form=L3 file=B-ar-s shape=all rep=2 pred=[4294967296 * 4294967296 > 0] overflow_rows=0 X=2048 W=n/a outcome=COMPLETED n=2048 dup=0 eq_X=true eq_W=n/a ids={0..=2047}
+CELL form=L3 file=B-ar-s shape=view rep=2 pred=[4294967296 * 4294967296 > 0] overflow_rows=0 X=2048 W=n/a outcome=COMPLETED n=2048 dup=0 eq_X=true eq_W=n/a ids={0..=2047}
+CELL form=L4-one-sided file=B-ar-s shape=all rep=1 pred=[268435456 * 1152921504606846976 > 0] overflow_rows=0 X=2048 W=n/a outcome=COMPLETED n=2048 dup=0 eq_X=true eq_W=n/a ids={0..=2047}
+CELL form=L4-one-sided file=B-ar-s shape=view rep=1 pred=[268435456 * 1152921504606846976 > 0] overflow_rows=0 X=2048 W=n/a outcome=COMPLETED n=2048 dup=0 eq_X=true eq_W=n/a ids={0..=2047}
+CELL form=L4-one-sided file=B-ar-s shape=all rep=2 pred=[268435456 * 1152921504606846976 > 0] overflow_rows=0 X=2048 W=n/a outcome=COMPLETED n=2048 dup=0 eq_X=true eq_W=n/a ids={0..=2047}
+CELL form=L4-one-sided file=B-ar-s shape=view rep=2 pred=[268435456 * 1152921504606846976 > 0] overflow_rows=0 X=2048 W=n/a outcome=COMPLETED n=2048 dup=0 eq_X=true eq_W=n/a ids={0..=2047}
+LITERAL SELECT 4000000000 * 4000000000 AS p -> error=[Out of Range Error: Overflow in multiplication of INT64 (4000000000 * 4000000000)!]
+LITERAL SELECT 3037000500 * 3037000500 AS p -> error=[Out of Range Error: Overflow in multiplication of INT64 (3037000500 * 3037000500)!]
+LITERAL SELECT 4294967296 * 4294967296 AS p -> error=[Out of Range Error: Overflow in multiplication of INT64 (4294967296 * 4294967296)!]
+LITERAL SELECT 268435456 * 1152921504606846976 AS p -> error=[Out of Range Error: Overflow in multiplication of INT64 (268435456 * 1152921504606846976)!]
+LITERAL SELECT 1152921504606846976 * 268435456 AS p -> error=[Out of Range Error: Overflow in multiplication of INT64 (1152921504606846976 * 268435456)!]
+CELL form=T-c file=T-c-ar-n shape=all rep=1 pred=[a * b > 0] overflow_rows=2 X=2 W=2 outcome=FIXED
+CELL form=T-c file=T-c-ar-n shape=view rep=1 pred=[a * b > 0] overflow_rows=2 X=2 W=2 outcome=FIXED
+CELL form=T-c file=T-c-ar-n shape=all rep=2 pred=[a * b > 0] overflow_rows=2 X=2 W=2 outcome=FIXED
+CELL form=T-c file=T-c-ar-n shape=view rep=2 pred=[a * b > 0] overflow_rows=2 X=2 W=2 outcome=FIXED
+CELL form=T-c file=T-c-ar-n shape=all rep=1 pred=[a * b < 0] overflow_rows=2 X=1 W=1 outcome=FIXED
+CELL form=T-c file=T-c-ar-n shape=view rep=1 pred=[a * b < 0] overflow_rows=2 X=1 W=1 outcome=FIXED
+CELL form=T-c file=T-c-ar-n shape=all rep=2 pred=[a * b < 0] overflow_rows=2 X=1 W=1 outcome=FIXED
+CELL form=T-c file=T-c-ar-n shape=view rep=2 pred=[a * b < 0] overflow_rows=2 X=1 W=1 outcome=FIXED
+CELL form=T-c file=T-c-ar-n shape=all rep=1 pred=[(a * b) IS NOT NULL] overflow_rows=2 X=3 W=3 outcome=FIXED
+CELL form=T-c file=T-c-ar-n shape=view rep=1 pred=[(a * b) IS NOT NULL] overflow_rows=2 X=3 W=3 outcome=FIXED
+CELL form=T-c file=T-c-ar-n shape=all rep=2 pred=[(a * b) IS NOT NULL] overflow_rows=2 X=3 W=3 outcome=FIXED
+CELL form=T-c file=T-c-ar-n shape=view rep=2 pred=[(a * b) IS NOT NULL] overflow_rows=2 X=3 W=3 outcome=FIXED
+PERK file=T-c-ar-n k=0 a=2 b=3 X=6 fits_i64=true W=6 value=6 eq_X=true eq_W=true
+PERK file=T-c-ar-n k=1 a=3037000500 b=4000000000 X=12148002000000000000 fits_i64=false W=-6298742073709551616 error=[Out of Range Error: Overflow in multiplication of INT64 (3037000500 * 4000000000)!]
+PERK file=T-c-ar-n k=2 a=-4000000000 b=4294967295 X=-17179869180000000000 fits_i64=false W=1266874893709551616 error=[Out of Range Error: Overflow in multiplication of INT64 (-4000000000 * 4294967295)!]
+CELL form=T-c file=T-c-ar-s shape=all rep=1 pred=[a * b > 0] overflow_rows=2 X=2 W=2 outcome=FIXED
+CELL form=T-c file=T-c-ar-s shape=view rep=1 pred=[a * b > 0] overflow_rows=2 X=2 W=2 outcome=FIXED
+CELL form=T-c file=T-c-ar-s shape=all rep=2 pred=[a * b > 0] overflow_rows=2 X=2 W=2 outcome=FIXED
+CELL form=T-c file=T-c-ar-s shape=view rep=2 pred=[a * b > 0] overflow_rows=2 X=2 W=2 outcome=FIXED
+CELL form=T-c file=T-c-ar-s shape=all rep=1 pred=[a * b < 0] overflow_rows=2 X=1 W=1 outcome=FIXED
+CELL form=T-c file=T-c-ar-s shape=view rep=1 pred=[a * b < 0] overflow_rows=2 X=1 W=1 outcome=FIXED
+CELL form=T-c file=T-c-ar-s shape=all rep=2 pred=[a * b < 0] overflow_rows=2 X=1 W=1 outcome=FIXED
+CELL form=T-c file=T-c-ar-s shape=view rep=2 pred=[a * b < 0] overflow_rows=2 X=1 W=1 outcome=FIXED
+CELL form=T-c file=T-c-ar-s shape=all rep=1 pred=[(a * b) IS NOT NULL] overflow_rows=2 X=3 W=3 outcome=COMPLETED n=3 dup=0 eq_X=true eq_W=true ids={0..=2}
+CELL form=T-c file=T-c-ar-s shape=view rep=1 pred=[(a * b) IS NOT NULL] overflow_rows=2 X=3 W=3 outcome=COMPLETED n=3 dup=0 eq_X=true eq_W=true ids={0..=2}
+CELL form=T-c file=T-c-ar-s shape=all rep=2 pred=[(a * b) IS NOT NULL] overflow_rows=2 X=3 W=3 outcome=COMPLETED n=3 dup=0 eq_X=true eq_W=true ids={0..=2}
+CELL form=T-c file=T-c-ar-s shape=view rep=2 pred=[(a * b) IS NOT NULL] overflow_rows=2 X=3 W=3 outcome=COMPLETED n=3 dup=0 eq_X=true eq_W=true ids={0..=2}
+PERK file=T-c-ar-s k=0 a=2 b=3 X=6 fits_i64=true W=6 value=6 eq_X=true eq_W=true
+PERK file=T-c-ar-s k=1 a=3037000500 b=4000000000 X=12148002000000000000 fits_i64=false W=-6298742073709551616 error=[Out of Range Error: Overflow in multiplication of INT64 (3037000500 * 4000000000)!]
+PERK file=T-c-ar-s k=2 a=-4000000000 b=4294967295 X=-17179869180000000000 fits_i64=false W=1266874893709551616 error=[Out of Range Error: Overflow in multiplication of INT64 (-4000000000 * 4294967295)!]
+CELL form=T-o file=T-o-ar-n shape=all rep=1 pred=[a * b > 0] overflow_rows=1 X=2 W=1 outcome=FIXED
+CELL form=T-o file=T-o-ar-n shape=view rep=1 pred=[a * b > 0] overflow_rows=1 X=2 W=1 outcome=FIXED
+CELL form=T-o file=T-o-ar-n shape=all rep=2 pred=[a * b > 0] overflow_rows=1 X=2 W=1 outcome=FIXED
+CELL form=T-o file=T-o-ar-n shape=view rep=2 pred=[a * b > 0] overflow_rows=1 X=2 W=1 outcome=FIXED
+CELL form=T-o file=T-o-ar-n shape=all rep=1 pred=[a * b < 0] overflow_rows=1 X=0 W=0 outcome=FIXED
+CELL form=T-o file=T-o-ar-n shape=view rep=1 pred=[a * b < 0] overflow_rows=1 X=0 W=0 outcome=FIXED
+CELL form=T-o file=T-o-ar-n shape=all rep=2 pred=[a * b < 0] overflow_rows=1 X=0 W=0 outcome=FIXED
+CELL form=T-o file=T-o-ar-n shape=view rep=2 pred=[a * b < 0] overflow_rows=1 X=0 W=0 outcome=FIXED
+CELL form=T-o file=T-o-ar-n shape=all rep=1 pred=[(a * b) IS NOT NULL] overflow_rows=1 X=2 W=2 outcome=FIXED
+CELL form=T-o file=T-o-ar-n shape=view rep=1 pred=[(a * b) IS NOT NULL] overflow_rows=1 X=2 W=2 outcome=FIXED
+CELL form=T-o file=T-o-ar-n shape=all rep=2 pred=[(a * b) IS NOT NULL] overflow_rows=1 X=2 W=2 outcome=FIXED
+CELL form=T-o file=T-o-ar-n shape=view rep=2 pred=[(a * b) IS NOT NULL] overflow_rows=1 X=2 W=2 outcome=FIXED
+PERK file=T-o-ar-n k=0 a=2 b=3 X=6 fits_i64=true W=6 value=6 eq_X=true eq_W=true
+PERK file=T-o-ar-n k=1 a=268435456 b=1152921504606846976 X=309485009821345068724781056 fits_i64=false W=0 error=[Out of Range Error: Overflow in multiplication of INT64 (268435456 * 1152921504606846976)!]
+CELL form=T-o-mirror file=T-o-mirror-ar-n shape=all rep=1 pred=[a * b > 0] overflow_rows=1 X=2 W=1 outcome=FIXED
+CELL form=T-o-mirror file=T-o-mirror-ar-n shape=view rep=1 pred=[a * b > 0] overflow_rows=1 X=2 W=1 outcome=FIXED
+CELL form=T-o-mirror file=T-o-mirror-ar-n shape=all rep=2 pred=[a * b > 0] overflow_rows=1 X=2 W=1 outcome=FIXED
+CELL form=T-o-mirror file=T-o-mirror-ar-n shape=view rep=2 pred=[a * b > 0] overflow_rows=1 X=2 W=1 outcome=FIXED
+CELL form=T-o-mirror file=T-o-mirror-ar-n shape=all rep=1 pred=[a * b < 0] overflow_rows=1 X=0 W=0 outcome=FIXED
+CELL form=T-o-mirror file=T-o-mirror-ar-n shape=view rep=1 pred=[a * b < 0] overflow_rows=1 X=0 W=0 outcome=FIXED
+CELL form=T-o-mirror file=T-o-mirror-ar-n shape=all rep=2 pred=[a * b < 0] overflow_rows=1 X=0 W=0 outcome=FIXED
+CELL form=T-o-mirror file=T-o-mirror-ar-n shape=view rep=2 pred=[a * b < 0] overflow_rows=1 X=0 W=0 outcome=FIXED
+CELL form=T-o-mirror file=T-o-mirror-ar-n shape=all rep=1 pred=[(a * b) IS NOT NULL] overflow_rows=1 X=2 W=2 outcome=FIXED
+CELL form=T-o-mirror file=T-o-mirror-ar-n shape=view rep=1 pred=[(a * b) IS NOT NULL] overflow_rows=1 X=2 W=2 outcome=FIXED
+CELL form=T-o-mirror file=T-o-mirror-ar-n shape=all rep=2 pred=[(a * b) IS NOT NULL] overflow_rows=1 X=2 W=2 outcome=FIXED
+CELL form=T-o-mirror file=T-o-mirror-ar-n shape=view rep=2 pred=[(a * b) IS NOT NULL] overflow_rows=1 X=2 W=2 outcome=FIXED
+PERK file=T-o-mirror-ar-n k=0 a=2 b=3 X=6 fits_i64=true W=6 value=6 eq_X=true eq_W=true
+PERK file=T-o-mirror-ar-n k=1 a=1152921504606846976 b=268435456 X=309485009821345068724781056 fits_i64=false W=0 error=[Out of Range Error: Overflow in multiplication of INT64 (1152921504606846976 * 268435456)!]
+CELL form=T-e file=T-e-ar-n shape=all rep=1 pred=[a * b > 0] overflow_rows=0 X=4 W=4 outcome=COMPLETED n=4 dup=0 eq_X=true eq_W=true ids={0..=1,3..=4}
+CELL form=T-e file=T-e-ar-n shape=view rep=1 pred=[a * b > 0] overflow_rows=0 X=4 W=4 outcome=COMPLETED n=4 dup=0 eq_X=true eq_W=true ids={0..=1,3..=4}
+CELL form=T-e file=T-e-ar-n shape=all rep=2 pred=[a * b > 0] overflow_rows=0 X=4 W=4 outcome=COMPLETED n=4 dup=0 eq_X=true eq_W=true ids={0..=1,3..=4}
+CELL form=T-e file=T-e-ar-n shape=view rep=2 pred=[a * b > 0] overflow_rows=0 X=4 W=4 outcome=COMPLETED n=4 dup=0 eq_X=true eq_W=true ids={0..=1,3..=4}
+CELL form=T-e file=T-e-ar-n shape=all rep=1 pred=[a * b < 0] overflow_rows=0 X=1 W=1 outcome=COMPLETED n=1 dup=0 eq_X=true eq_W=true ids={2}
+CELL form=T-e file=T-e-ar-n shape=view rep=1 pred=[a * b < 0] overflow_rows=0 X=1 W=1 outcome=COMPLETED n=1 dup=0 eq_X=true eq_W=true ids={2}
+CELL form=T-e file=T-e-ar-n shape=all rep=2 pred=[a * b < 0] overflow_rows=0 X=1 W=1 outcome=COMPLETED n=1 dup=0 eq_X=true eq_W=true ids={2}
+CELL form=T-e file=T-e-ar-n shape=view rep=2 pred=[a * b < 0] overflow_rows=0 X=1 W=1 outcome=COMPLETED n=1 dup=0 eq_X=true eq_W=true ids={2}
+CELL form=T-e file=T-e-ar-n shape=all rep=1 pred=[(a * b) IS NOT NULL] overflow_rows=0 X=5 W=5 outcome=COMPLETED n=5 dup=0 eq_X=true eq_W=true ids={0..=4}
+CELL form=T-e file=T-e-ar-n shape=view rep=1 pred=[(a * b) IS NOT NULL] overflow_rows=0 X=5 W=5 outcome=COMPLETED n=5 dup=0 eq_X=true eq_W=true ids={0..=4}
+CELL form=T-e file=T-e-ar-n shape=all rep=2 pred=[(a * b) IS NOT NULL] overflow_rows=0 X=5 W=5 outcome=COMPLETED n=5 dup=0 eq_X=true eq_W=true ids={0..=4}
+CELL form=T-e file=T-e-ar-n shape=view rep=2 pred=[(a * b) IS NOT NULL] overflow_rows=0 X=5 W=5 outcome=COMPLETED n=5 dup=0 eq_X=true eq_W=true ids={0..=4}
+PERK file=T-e-ar-n k=0 a=2 b=3 X=6 fits_i64=true W=6 value=6 eq_X=true eq_W=true
+PERK file=T-e-ar-n k=1 a=2147483648 b=2147483648 X=4611686018427387904 fits_i64=true W=4611686018427387904 value=4611686018427387904 eq_X=true eq_W=true
+PERK file=T-e-ar-n k=2 a=-4294967296 b=2147483648 X=-9223372036854775808 fits_i64=true W=-9223372036854775808 value=-9223372036854775808 eq_X=true eq_W=true
+PERK file=T-e-ar-n k=3 a=9223372036854775807 b=1 X=9223372036854775807 fits_i64=true W=9223372036854775807 value=9223372036854775807 eq_X=true eq_W=true
+PERK file=T-e-ar-n k=4 a=3037000499 b=3037000499 X=9223372030926249001 fits_i64=true W=9223372030926249001 value=9223372030926249001 eq_X=true eq_W=true
+CELL form=T-m file=T-m-ar-n shape=all rep=1 pred=[a * b > 0] overflow_rows=2 X=3 W=1 outcome=FIXED
+CELL form=T-m file=T-m-ar-n shape=view rep=1 pred=[a * b > 0] overflow_rows=2 X=3 W=1 outcome=FIXED
+CELL form=T-m file=T-m-ar-n shape=all rep=2 pred=[a * b > 0] overflow_rows=2 X=3 W=1 outcome=FIXED
+CELL form=T-m file=T-m-ar-n shape=view rep=2 pred=[a * b > 0] overflow_rows=2 X=3 W=1 outcome=FIXED
+CELL form=T-m file=T-m-ar-n shape=all rep=1 pred=[a * b < 0] overflow_rows=2 X=0 W=1 outcome=FIXED
+CELL form=T-m file=T-m-ar-n shape=view rep=1 pred=[a * b < 0] overflow_rows=2 X=0 W=1 outcome=FIXED
+CELL form=T-m file=T-m-ar-n shape=all rep=2 pred=[a * b < 0] overflow_rows=2 X=0 W=1 outcome=FIXED
+CELL form=T-m file=T-m-ar-n shape=view rep=2 pred=[a * b < 0] overflow_rows=2 X=0 W=1 outcome=FIXED
+CELL form=T-m file=T-m-ar-n shape=all rep=1 pred=[(a * b) IS NOT NULL] overflow_rows=2 X=3 W=3 outcome=FIXED
+CELL form=T-m file=T-m-ar-n shape=view rep=1 pred=[(a * b) IS NOT NULL] overflow_rows=2 X=3 W=3 outcome=FIXED
+CELL form=T-m file=T-m-ar-n shape=all rep=2 pred=[(a * b) IS NOT NULL] overflow_rows=2 X=3 W=3 outcome=FIXED
+CELL form=T-m file=T-m-ar-n shape=view rep=2 pred=[(a * b) IS NOT NULL] overflow_rows=2 X=3 W=3 outcome=FIXED
+PERK file=T-m-ar-n k=0 a=2 b=3 X=6 fits_i64=true W=6 value=6 eq_X=true eq_W=true
+PERK file=T-m-ar-n k=1 a=4294967296 b=4294967296 X=18446744073709551616 fits_i64=false W=0 error=[Out of Range Error: Overflow in multiplication of INT64 (4294967296 * 4294967296)!]
+PERK file=T-m-ar-n k=2 a=-1 b=-9223372036854775808 X=9223372036854775808 fits_i64=false W=-9223372036854775808 error=[Out of Range Error: Overflow in multiplication of INT64 (-1 * -9223372036854775808)!]
+CELL form=T-e-swap file=T-e-swap-ar-n shape=all rep=1 pred=[a * b > 0] overflow_rows=0 X=1 W=1 outcome=COMPLETED n=1 dup=0 eq_X=true eq_W=true ids={0}
+CELL form=T-e-swap file=T-e-swap-ar-n shape=view rep=1 pred=[a * b > 0] overflow_rows=0 X=1 W=1 outcome=COMPLETED n=1 dup=0 eq_X=true eq_W=true ids={0}
+CELL form=T-e-swap file=T-e-swap-ar-n shape=all rep=2 pred=[a * b > 0] overflow_rows=0 X=1 W=1 outcome=COMPLETED n=1 dup=0 eq_X=true eq_W=true ids={0}
+CELL form=T-e-swap file=T-e-swap-ar-n shape=view rep=2 pred=[a * b > 0] overflow_rows=0 X=1 W=1 outcome=COMPLETED n=1 dup=0 eq_X=true eq_W=true ids={0}
+CELL form=T-e-swap file=T-e-swap-ar-n shape=all rep=1 pred=[a * b < 0] overflow_rows=0 X=1 W=1 outcome=COMPLETED n=1 dup=0 eq_X=true eq_W=true ids={1}
+CELL form=T-e-swap file=T-e-swap-ar-n shape=view rep=1 pred=[a * b < 0] overflow_rows=0 X=1 W=1 outcome=COMPLETED n=1 dup=0 eq_X=true eq_W=true ids={1}
+CELL form=T-e-swap file=T-e-swap-ar-n shape=all rep=2 pred=[a * b < 0] overflow_rows=0 X=1 W=1 outcome=COMPLETED n=1 dup=0 eq_X=true eq_W=true ids={1}
+CELL form=T-e-swap file=T-e-swap-ar-n shape=view rep=2 pred=[a * b < 0] overflow_rows=0 X=1 W=1 outcome=COMPLETED n=1 dup=0 eq_X=true eq_W=true ids={1}
+CELL form=T-e-swap file=T-e-swap-ar-n shape=all rep=1 pred=[(a * b) IS NOT NULL] overflow_rows=0 X=2 W=2 outcome=COMPLETED n=2 dup=0 eq_X=true eq_W=true ids={0..=1}
+CELL form=T-e-swap file=T-e-swap-ar-n shape=view rep=1 pred=[(a * b) IS NOT NULL] overflow_rows=0 X=2 W=2 outcome=COMPLETED n=2 dup=0 eq_X=true eq_W=true ids={0..=1}
+CELL form=T-e-swap file=T-e-swap-ar-n shape=all rep=2 pred=[(a * b) IS NOT NULL] overflow_rows=0 X=2 W=2 outcome=COMPLETED n=2 dup=0 eq_X=true eq_W=true ids={0..=1}
+CELL form=T-e-swap file=T-e-swap-ar-n shape=view rep=2 pred=[(a * b) IS NOT NULL] overflow_rows=0 X=2 W=2 outcome=COMPLETED n=2 dup=0 eq_X=true eq_W=true ids={0..=1}
+PERK file=T-e-swap-ar-n k=0 a=2 b=3 X=6 fits_i64=true W=6 value=6 eq_X=true eq_W=true
+PERK file=T-e-swap-ar-n k=1 a=-2147483648 b=4294967296 X=-9223372036854775808 fits_i64=true W=-9223372036854775808 value=-9223372036854775808 eq_X=true eq_W=true
+EXPLAIN file=B-ar-s pred=[v * v > 0] EMPTY_RESULT=0
+EXPLAIN-PLAN file=B-ar-s | ┌───────────────────────────┐
+EXPLAIN-PLAN file=B-ar-s | │         PROJECTION        │
+EXPLAIN-PLAN file=B-ar-s | │    ────────────────────   │
+EXPLAIN-PLAN file=B-ar-s | │        Expressions:       │
+EXPLAIN-PLAN file=B-ar-s | │        count_star()       │
+EXPLAIN-PLAN file=B-ar-s | └─────────────┬─────────────┘
+EXPLAIN-PLAN file=B-ar-s | ┌─────────────┴─────────────┐
+EXPLAIN-PLAN file=B-ar-s | │         AGGREGATE         │
+EXPLAIN-PLAN file=B-ar-s | │    ────────────────────   │
+EXPLAIN-PLAN file=B-ar-s | │        Expressions:       │
+EXPLAIN-PLAN file=B-ar-s | │        count_star()       │
+EXPLAIN-PLAN file=B-ar-s | └─────────────┬─────────────┘
+EXPLAIN-PLAN file=B-ar-s | ┌─────────────┴─────────────┐
+EXPLAIN-PLAN file=B-ar-s | │           FILTER          │
+EXPLAIN-PLAN file=B-ar-s | │    ────────────────────   │
+EXPLAIN-PLAN file=B-ar-s | │        Expressions:       │
+EXPLAIN-PLAN file=B-ar-s | │    ((v * v) > CAST(0 AS   │
+EXPLAIN-PLAN file=B-ar-s | │          BIGINT))         │
+EXPLAIN-PLAN file=B-ar-s | └─────────────┬─────────────┘
+EXPLAIN-PLAN file=B-ar-s | ┌─────────────┴─────────────┐
+EXPLAIN-PLAN file=B-ar-s | │        READ_PARQUET       │
+EXPLAIN-PLAN file=B-ar-s | │    ────────────────────   │
+EXPLAIN-PLAN file=B-ar-s | └───────────────────────────┘
+EXPLAIN-PLAN file=B-ar-s | 
+EXPLAIN-PLAN file=B-ar-s | ┌───────────────────────────┐
+EXPLAIN-PLAN file=B-ar-s | │         PROJECTION        │
+EXPLAIN-PLAN file=B-ar-s | │    ────────────────────   │
+EXPLAIN-PLAN file=B-ar-s | │        Expressions:       │
+EXPLAIN-PLAN file=B-ar-s | │        count_star()       │
+EXPLAIN-PLAN file=B-ar-s | │                           │
+EXPLAIN-PLAN file=B-ar-s | │           ~1 row          │
+EXPLAIN-PLAN file=B-ar-s | └─────────────┬─────────────┘
+EXPLAIN-PLAN file=B-ar-s | ┌─────────────┴─────────────┐
+EXPLAIN-PLAN file=B-ar-s | │         AGGREGATE         │
+EXPLAIN-PLAN file=B-ar-s | │    ────────────────────   │
+EXPLAIN-PLAN file=B-ar-s | │        Expressions:       │
+EXPLAIN-PLAN file=B-ar-s | │        count_star()       │
+EXPLAIN-PLAN file=B-ar-s | │                           │
+EXPLAIN-PLAN file=B-ar-s | │           ~1 row          │
+EXPLAIN-PLAN file=B-ar-s | └─────────────┬─────────────┘
+EXPLAIN-PLAN file=B-ar-s | ┌─────────────┴─────────────┐
+EXPLAIN-PLAN file=B-ar-s | │        READ_PARQUET       │
+EXPLAIN-PLAN file=B-ar-s | │    ────────────────────   │
+EXPLAIN-PLAN file=B-ar-s | │          Filters:         │
+EXPLAIN-PLAN file=B-ar-s | │       ((v * v) > 0)       │
+EXPLAIN-PLAN file=B-ar-s | │                           │
+EXPLAIN-PLAN file=B-ar-s | │         ~409 rows         │
+EXPLAIN-PLAN file=B-ar-s | └───────────────────────────┘
+EXPLAIN-PLAN file=B-ar-s | 
+EXPLAIN-PLAN file=B-ar-s | ┌───────────────────────────┐
+EXPLAIN-PLAN file=B-ar-s | │    UNGROUPED_AGGREGATE    │
+EXPLAIN-PLAN file=B-ar-s | │    ────────────────────   │
+EXPLAIN-PLAN file=B-ar-s | │        Aggregates:        │
+EXPLAIN-PLAN file=B-ar-s | │        count_star()       │
+EXPLAIN-PLAN file=B-ar-s | └─────────────┬─────────────┘
+EXPLAIN-PLAN file=B-ar-s | ┌─────────────┴─────────────┐
+EXPLAIN-PLAN file=B-ar-s | │        READ_PARQUET       │
+EXPLAIN-PLAN file=B-ar-s | │    ────────────────────   │
+EXPLAIN-PLAN file=B-ar-s | │         Function:         │
+EXPLAIN-PLAN file=B-ar-s | │        READ_PARQUET       │
+EXPLAIN-PLAN file=B-ar-s | │                           │
+EXPLAIN-PLAN file=B-ar-s | │          Filters:         │
+EXPLAIN-PLAN file=B-ar-s | │       ((v * v) > 0)       │
+EXPLAIN-PLAN file=B-ar-s | │                           │
+EXPLAIN-PLAN file=B-ar-s | │         ~409 rows         │
+EXPLAIN-PLAN file=B-ar-s | └───────────────────────────┘
+EXPLAIN file=B-ar-s pred=[v * v < 0] EMPTY_RESULT=0
+EXPLAIN-PLAN file=B-ar-s | ┌───────────────────────────┐
+EXPLAIN-PLAN file=B-ar-s | │         PROJECTION        │
+EXPLAIN-PLAN file=B-ar-s | │    ────────────────────   │
+EXPLAIN-PLAN file=B-ar-s | │        Expressions:       │
+EXPLAIN-PLAN file=B-ar-s | │        count_star()       │
+EXPLAIN-PLAN file=B-ar-s | └─────────────┬─────────────┘
+EXPLAIN-PLAN file=B-ar-s | ┌─────────────┴─────────────┐
+EXPLAIN-PLAN file=B-ar-s | │         AGGREGATE         │
+EXPLAIN-PLAN file=B-ar-s | │    ────────────────────   │
+EXPLAIN-PLAN file=B-ar-s | │        Expressions:       │
+EXPLAIN-PLAN file=B-ar-s | │        count_star()       │
+EXPLAIN-PLAN file=B-ar-s | └─────────────┬─────────────┘
+EXPLAIN-PLAN file=B-ar-s | ┌─────────────┴─────────────┐
+EXPLAIN-PLAN file=B-ar-s | │           FILTER          │
+EXPLAIN-PLAN file=B-ar-s | │    ────────────────────   │
+EXPLAIN-PLAN file=B-ar-s | │        Expressions:       │
+EXPLAIN-PLAN file=B-ar-s | │    ((v * v) < CAST(0 AS   │
+EXPLAIN-PLAN file=B-ar-s | │          BIGINT))         │
+EXPLAIN-PLAN file=B-ar-s | └─────────────┬─────────────┘
+EXPLAIN-PLAN file=B-ar-s | ┌─────────────┴─────────────┐
+EXPLAIN-PLAN file=B-ar-s | │        READ_PARQUET       │
+EXPLAIN-PLAN file=B-ar-s | │    ────────────────────   │
+EXPLAIN-PLAN file=B-ar-s | └───────────────────────────┘
+EXPLAIN-PLAN file=B-ar-s | 
+EXPLAIN-PLAN file=B-ar-s | ┌───────────────────────────┐
+EXPLAIN-PLAN file=B-ar-s | │         PROJECTION        │
+EXPLAIN-PLAN file=B-ar-s | │    ────────────────────   │
+EXPLAIN-PLAN file=B-ar-s | │        Expressions:       │
+EXPLAIN-PLAN file=B-ar-s | │        count_star()       │
+EXPLAIN-PLAN file=B-ar-s | │                           │
+EXPLAIN-PLAN file=B-ar-s | │           ~1 row          │
+EXPLAIN-PLAN file=B-ar-s | └─────────────┬─────────────┘
+EXPLAIN-PLAN file=B-ar-s | ┌─────────────┴─────────────┐
+EXPLAIN-PLAN file=B-ar-s | │         AGGREGATE         │
+EXPLAIN-PLAN file=B-ar-s | │    ────────────────────   │
+EXPLAIN-PLAN file=B-ar-s | │        Expressions:       │
+EXPLAIN-PLAN file=B-ar-s | │        count_star()       │
+EXPLAIN-PLAN file=B-ar-s | │                           │
+EXPLAIN-PLAN file=B-ar-s | │           ~1 row          │
+EXPLAIN-PLAN file=B-ar-s | └─────────────┬─────────────┘
+EXPLAIN-PLAN file=B-ar-s | ┌─────────────┴─────────────┐
+EXPLAIN-PLAN file=B-ar-s | │        READ_PARQUET       │
+EXPLAIN-PLAN file=B-ar-s | │    ────────────────────   │
+EXPLAIN-PLAN file=B-ar-s | │          Filters:         │
+EXPLAIN-PLAN file=B-ar-s | │       ((v * v) < 0)       │
+EXPLAIN-PLAN file=B-ar-s | │                           │
+EXPLAIN-PLAN file=B-ar-s | │         ~409 rows         │
+EXPLAIN-PLAN file=B-ar-s | └───────────────────────────┘
+EXPLAIN-PLAN file=B-ar-s | 
+EXPLAIN-PLAN file=B-ar-s | ┌───────────────────────────┐
+EXPLAIN-PLAN file=B-ar-s | │    UNGROUPED_AGGREGATE    │
+EXPLAIN-PLAN file=B-ar-s | │    ────────────────────   │
+EXPLAIN-PLAN file=B-ar-s | │        Aggregates:        │
+EXPLAIN-PLAN file=B-ar-s | │        count_star()       │
+EXPLAIN-PLAN file=B-ar-s | └─────────────┬─────────────┘
+EXPLAIN-PLAN file=B-ar-s | ┌─────────────┴─────────────┐
+EXPLAIN-PLAN file=B-ar-s | │        READ_PARQUET       │
+EXPLAIN-PLAN file=B-ar-s | │    ────────────────────   │
+EXPLAIN-PLAN file=B-ar-s | │         Function:         │
+EXPLAIN-PLAN file=B-ar-s | │        READ_PARQUET       │
+EXPLAIN-PLAN file=B-ar-s | │                           │
+EXPLAIN-PLAN file=B-ar-s | │          Filters:         │
+EXPLAIN-PLAN file=B-ar-s | │       ((v * v) < 0)       │
+EXPLAIN-PLAN file=B-ar-s | │                           │
+EXPLAIN-PLAN file=B-ar-s | │         ~409 rows         │
+EXPLAIN-PLAN file=B-ar-s | └───────────────────────────┘
+EXPLAIN file=B-dk pred=[v * v > 0] EMPTY_RESULT=0
+EXPLAIN-PLAN file=B-dk | ┌───────────────────────────┐
+EXPLAIN-PLAN file=B-dk | │         PROJECTION        │
+EXPLAIN-PLAN file=B-dk | │    ────────────────────   │
+EXPLAIN-PLAN file=B-dk | │        Expressions:       │
+EXPLAIN-PLAN file=B-dk | │        count_star()       │
+EXPLAIN-PLAN file=B-dk | └─────────────┬─────────────┘
+EXPLAIN-PLAN file=B-dk | ┌─────────────┴─────────────┐
+EXPLAIN-PLAN file=B-dk | │         AGGREGATE         │
+EXPLAIN-PLAN file=B-dk | │    ────────────────────   │
+EXPLAIN-PLAN file=B-dk | │        Expressions:       │
+EXPLAIN-PLAN file=B-dk | │        count_star()       │
+EXPLAIN-PLAN file=B-dk | └─────────────┬─────────────┘
+EXPLAIN-PLAN file=B-dk | ┌─────────────┴─────────────┐
+EXPLAIN-PLAN file=B-dk | │           FILTER          │
+EXPLAIN-PLAN file=B-dk | │    ────────────────────   │
+EXPLAIN-PLAN file=B-dk | │        Expressions:       │
+EXPLAIN-PLAN file=B-dk | │    ((v * v) > CAST(0 AS   │
+EXPLAIN-PLAN file=B-dk | │          BIGINT))         │
+EXPLAIN-PLAN file=B-dk | └─────────────┬─────────────┘
+EXPLAIN-PLAN file=B-dk | ┌─────────────┴─────────────┐
+EXPLAIN-PLAN file=B-dk | │        READ_PARQUET       │
+EXPLAIN-PLAN file=B-dk | │    ────────────────────   │
+EXPLAIN-PLAN file=B-dk | └───────────────────────────┘
+EXPLAIN-PLAN file=B-dk | 
+EXPLAIN-PLAN file=B-dk | ┌───────────────────────────┐
+EXPLAIN-PLAN file=B-dk | │         PROJECTION        │
+EXPLAIN-PLAN file=B-dk | │    ────────────────────   │
+EXPLAIN-PLAN file=B-dk | │        Expressions:       │
+EXPLAIN-PLAN file=B-dk | │        count_star()       │
+EXPLAIN-PLAN file=B-dk | │                           │
+EXPLAIN-PLAN file=B-dk | │           ~1 row          │
+EXPLAIN-PLAN file=B-dk | └─────────────┬─────────────┘
+EXPLAIN-PLAN file=B-dk | ┌─────────────┴─────────────┐
+EXPLAIN-PLAN file=B-dk | │         AGGREGATE         │
+EXPLAIN-PLAN file=B-dk | │    ────────────────────   │
+EXPLAIN-PLAN file=B-dk | │        Expressions:       │
+EXPLAIN-PLAN file=B-dk | │        count_star()       │
+EXPLAIN-PLAN file=B-dk | │                           │
+EXPLAIN-PLAN file=B-dk | │           ~1 row          │
+EXPLAIN-PLAN file=B-dk | └─────────────┬─────────────┘
+EXPLAIN-PLAN file=B-dk | ┌─────────────┴─────────────┐
+EXPLAIN-PLAN file=B-dk | │        READ_PARQUET       │
+EXPLAIN-PLAN file=B-dk | │    ────────────────────   │
+EXPLAIN-PLAN file=B-dk | │          Filters:         │
+EXPLAIN-PLAN file=B-dk | │       ((v * v) > 0)       │
+EXPLAIN-PLAN file=B-dk | │                           │
+EXPLAIN-PLAN file=B-dk | │         ~409 rows         │
+EXPLAIN-PLAN file=B-dk | └───────────────────────────┘
+EXPLAIN-PLAN file=B-dk | 
+EXPLAIN-PLAN file=B-dk | ┌───────────────────────────┐
+EXPLAIN-PLAN file=B-dk | │    UNGROUPED_AGGREGATE    │
+EXPLAIN-PLAN file=B-dk | │    ────────────────────   │
+EXPLAIN-PLAN file=B-dk | │        Aggregates:        │
+EXPLAIN-PLAN file=B-dk | │        count_star()       │
+EXPLAIN-PLAN file=B-dk | └─────────────┬─────────────┘
+EXPLAIN-PLAN file=B-dk | ┌─────────────┴─────────────┐
+EXPLAIN-PLAN file=B-dk | │        READ_PARQUET       │
+EXPLAIN-PLAN file=B-dk | │    ────────────────────   │
+EXPLAIN-PLAN file=B-dk | │         Function:         │
+EXPLAIN-PLAN file=B-dk | │        READ_PARQUET       │
+EXPLAIN-PLAN file=B-dk | │                           │
+EXPLAIN-PLAN file=B-dk | │          Filters:         │
+EXPLAIN-PLAN file=B-dk | │       ((v * v) > 0)       │
+EXPLAIN-PLAN file=B-dk | │                           │
+EXPLAIN-PLAN file=B-dk | │         ~409 rows         │
+EXPLAIN-PLAN file=B-dk | └───────────────────────────┘
+EXPLAIN file=B-dk pred=[v * v < 0] EMPTY_RESULT=0
+EXPLAIN-PLAN file=B-dk | ┌───────────────────────────┐
+EXPLAIN-PLAN file=B-dk | │         PROJECTION        │
+EXPLAIN-PLAN file=B-dk | │    ────────────────────   │
+EXPLAIN-PLAN file=B-dk | │        Expressions:       │
+EXPLAIN-PLAN file=B-dk | │        count_star()       │
+EXPLAIN-PLAN file=B-dk | └─────────────┬─────────────┘
+EXPLAIN-PLAN file=B-dk | ┌─────────────┴─────────────┐
+EXPLAIN-PLAN file=B-dk | │         AGGREGATE         │
+EXPLAIN-PLAN file=B-dk | │    ────────────────────   │
+EXPLAIN-PLAN file=B-dk | │        Expressions:       │
+EXPLAIN-PLAN file=B-dk | │        count_star()       │
+EXPLAIN-PLAN file=B-dk | └─────────────┬─────────────┘
+EXPLAIN-PLAN file=B-dk | ┌─────────────┴─────────────┐
+EXPLAIN-PLAN file=B-dk | │           FILTER          │
+EXPLAIN-PLAN file=B-dk | │    ────────────────────   │
+EXPLAIN-PLAN file=B-dk | │        Expressions:       │
+EXPLAIN-PLAN file=B-dk | │    ((v * v) < CAST(0 AS   │
+EXPLAIN-PLAN file=B-dk | │          BIGINT))         │
+EXPLAIN-PLAN file=B-dk | └─────────────┬─────────────┘
+EXPLAIN-PLAN file=B-dk | ┌─────────────┴─────────────┐
+EXPLAIN-PLAN file=B-dk | │        READ_PARQUET       │
+EXPLAIN-PLAN file=B-dk | │    ────────────────────   │
+EXPLAIN-PLAN file=B-dk | └───────────────────────────┘
+EXPLAIN-PLAN file=B-dk | 
+EXPLAIN-PLAN file=B-dk | ┌───────────────────────────┐
+EXPLAIN-PLAN file=B-dk | │         PROJECTION        │
+EXPLAIN-PLAN file=B-dk | │    ────────────────────   │
+EXPLAIN-PLAN file=B-dk | │        Expressions:       │
+EXPLAIN-PLAN file=B-dk | │        count_star()       │
+EXPLAIN-PLAN file=B-dk | │                           │
+EXPLAIN-PLAN file=B-dk | │           ~1 row          │
+EXPLAIN-PLAN file=B-dk | └─────────────┬─────────────┘
+EXPLAIN-PLAN file=B-dk | ┌─────────────┴─────────────┐
+EXPLAIN-PLAN file=B-dk | │         AGGREGATE         │
+EXPLAIN-PLAN file=B-dk | │    ────────────────────   │
+EXPLAIN-PLAN file=B-dk | │        Expressions:       │
+EXPLAIN-PLAN file=B-dk | │        count_star()       │
+EXPLAIN-PLAN file=B-dk | │                           │
+EXPLAIN-PLAN file=B-dk | │           ~1 row          │
+EXPLAIN-PLAN file=B-dk | └─────────────┬─────────────┘
+EXPLAIN-PLAN file=B-dk | ┌─────────────┴─────────────┐
+EXPLAIN-PLAN file=B-dk | │        READ_PARQUET       │
+EXPLAIN-PLAN file=B-dk | │    ────────────────────   │
+EXPLAIN-PLAN file=B-dk | │          Filters:         │
+EXPLAIN-PLAN file=B-dk | │       ((v * v) < 0)       │
+EXPLAIN-PLAN file=B-dk | │                           │
+EXPLAIN-PLAN file=B-dk | │         ~409 rows         │
+EXPLAIN-PLAN file=B-dk | └───────────────────────────┘
+EXPLAIN-PLAN file=B-dk | 
+EXPLAIN-PLAN file=B-dk | ┌───────────────────────────┐
+EXPLAIN-PLAN file=B-dk | │    UNGROUPED_AGGREGATE    │
+EXPLAIN-PLAN file=B-dk | │    ────────────────────   │
+EXPLAIN-PLAN file=B-dk | │        Aggregates:        │
+EXPLAIN-PLAN file=B-dk | │        count_star()       │
+EXPLAIN-PLAN file=B-dk | └─────────────┬─────────────┘
+EXPLAIN-PLAN file=B-dk | ┌─────────────┴─────────────┐
+EXPLAIN-PLAN file=B-dk | │        READ_PARQUET       │
+EXPLAIN-PLAN file=B-dk | │    ────────────────────   │
+EXPLAIN-PLAN file=B-dk | │         Function:         │
+EXPLAIN-PLAN file=B-dk | │        READ_PARQUET       │
+EXPLAIN-PLAN file=B-dk | │                           │
+EXPLAIN-PLAN file=B-dk | │          Filters:         │
+EXPLAIN-PLAN file=B-dk | │       ((v * v) < 0)       │
+EXPLAIN-PLAN file=B-dk | │                           │
+EXPLAIN-PLAN file=B-dk | │         ~409 rows         │
+EXPLAIN-PLAN file=B-dk | └───────────────────────────┘
+EXPLAIN file=B3-ar-s pred=[v * v > 0] EMPTY_RESULT=0
+EXPLAIN-PLAN file=B3-ar-s | ┌───────────────────────────┐
+EXPLAIN-PLAN file=B3-ar-s | │         PROJECTION        │
+EXPLAIN-PLAN file=B3-ar-s | │    ────────────────────   │
+EXPLAIN-PLAN file=B3-ar-s | │        Expressions:       │
+EXPLAIN-PLAN file=B3-ar-s | │        count_star()       │
+EXPLAIN-PLAN file=B3-ar-s | └─────────────┬─────────────┘
+EXPLAIN-PLAN file=B3-ar-s | ┌─────────────┴─────────────┐
+EXPLAIN-PLAN file=B3-ar-s | │         AGGREGATE         │
+EXPLAIN-PLAN file=B3-ar-s | │    ────────────────────   │
+EXPLAIN-PLAN file=B3-ar-s | │        Expressions:       │
+EXPLAIN-PLAN file=B3-ar-s | │        count_star()       │
+EXPLAIN-PLAN file=B3-ar-s | └─────────────┬─────────────┘
+EXPLAIN-PLAN file=B3-ar-s | ┌─────────────┴─────────────┐
+EXPLAIN-PLAN file=B3-ar-s | │           FILTER          │
+EXPLAIN-PLAN file=B3-ar-s | │    ────────────────────   │
+EXPLAIN-PLAN file=B3-ar-s | │        Expressions:       │
+EXPLAIN-PLAN file=B3-ar-s | │    ((v * v) > CAST(0 AS   │
+EXPLAIN-PLAN file=B3-ar-s | │          BIGINT))         │
+EXPLAIN-PLAN file=B3-ar-s | └─────────────┬─────────────┘
+EXPLAIN-PLAN file=B3-ar-s | ┌─────────────┴─────────────┐
+EXPLAIN-PLAN file=B3-ar-s | │        READ_PARQUET       │
+EXPLAIN-PLAN file=B3-ar-s | │    ────────────────────   │
+EXPLAIN-PLAN file=B3-ar-s | └───────────────────────────┘
+EXPLAIN-PLAN file=B3-ar-s | 
+EXPLAIN-PLAN file=B3-ar-s | ┌───────────────────────────┐
+EXPLAIN-PLAN file=B3-ar-s | │         PROJECTION        │
+EXPLAIN-PLAN file=B3-ar-s | │    ────────────────────   │
+EXPLAIN-PLAN file=B3-ar-s | │        Expressions:       │
+EXPLAIN-PLAN file=B3-ar-s | │        count_star()       │
+EXPLAIN-PLAN file=B3-ar-s | │                           │
+EXPLAIN-PLAN file=B3-ar-s | │           ~1 row          │
+EXPLAIN-PLAN file=B3-ar-s | └─────────────┬─────────────┘
+EXPLAIN-PLAN file=B3-ar-s | ┌─────────────┴─────────────┐
+EXPLAIN-PLAN file=B3-ar-s | │         AGGREGATE         │
+EXPLAIN-PLAN file=B3-ar-s | │    ────────────────────   │
+EXPLAIN-PLAN file=B3-ar-s | │        Expressions:       │
+EXPLAIN-PLAN file=B3-ar-s | │        count_star()       │
+EXPLAIN-PLAN file=B3-ar-s | │                           │
+EXPLAIN-PLAN file=B3-ar-s | │           ~1 row          │
+EXPLAIN-PLAN file=B3-ar-s | └─────────────┬─────────────┘
+EXPLAIN-PLAN file=B3-ar-s | ┌─────────────┴─────────────┐
+EXPLAIN-PLAN file=B3-ar-s | │        READ_PARQUET       │
+EXPLAIN-PLAN file=B3-ar-s | │    ────────────────────   │
+EXPLAIN-PLAN file=B3-ar-s | │          Filters:         │
+EXPLAIN-PLAN file=B3-ar-s | │       ((v * v) > 0)       │
+EXPLAIN-PLAN file=B3-ar-s | │                           │
+EXPLAIN-PLAN file=B3-ar-s | │         ~819 rows         │
+EXPLAIN-PLAN file=B3-ar-s | └───────────────────────────┘
+EXPLAIN-PLAN file=B3-ar-s | 
+EXPLAIN-PLAN file=B3-ar-s | ┌───────────────────────────┐
+EXPLAIN-PLAN file=B3-ar-s | │    UNGROUPED_AGGREGATE    │
+EXPLAIN-PLAN file=B3-ar-s | │    ────────────────────   │
+EXPLAIN-PLAN file=B3-ar-s | │        Aggregates:        │
+EXPLAIN-PLAN file=B3-ar-s | │        count_star()       │
+EXPLAIN-PLAN file=B3-ar-s | └─────────────┬─────────────┘
+EXPLAIN-PLAN file=B3-ar-s | ┌─────────────┴─────────────┐
+EXPLAIN-PLAN file=B3-ar-s | │        READ_PARQUET       │
+EXPLAIN-PLAN file=B3-ar-s | │    ────────────────────   │
+EXPLAIN-PLAN file=B3-ar-s | │         Function:         │
+EXPLAIN-PLAN file=B3-ar-s | │        READ_PARQUET       │
+EXPLAIN-PLAN file=B3-ar-s | │                           │
+EXPLAIN-PLAN file=B3-ar-s | │          Filters:         │
+EXPLAIN-PLAN file=B3-ar-s | │       ((v * v) > 0)       │
+EXPLAIN-PLAN file=B3-ar-s | │                           │
+EXPLAIN-PLAN file=B3-ar-s | │         ~819 rows         │
+EXPLAIN-PLAN file=B3-ar-s | └───────────────────────────┘
+EXPLAIN file=B3-ar-s pred=[v * v < 0] EMPTY_RESULT=0
+EXPLAIN-PLAN file=B3-ar-s | ┌───────────────────────────┐
+EXPLAIN-PLAN file=B3-ar-s | │         PROJECTION        │
+EXPLAIN-PLAN file=B3-ar-s | │    ────────────────────   │
+EXPLAIN-PLAN file=B3-ar-s | │        Expressions:       │
+EXPLAIN-PLAN file=B3-ar-s | │        count_star()       │
+EXPLAIN-PLAN file=B3-ar-s | └─────────────┬─────────────┘
+EXPLAIN-PLAN file=B3-ar-s | ┌─────────────┴─────────────┐
+EXPLAIN-PLAN file=B3-ar-s | │         AGGREGATE         │
+EXPLAIN-PLAN file=B3-ar-s | │    ────────────────────   │
+EXPLAIN-PLAN file=B3-ar-s | │        Expressions:       │
+EXPLAIN-PLAN file=B3-ar-s | │        count_star()       │
+EXPLAIN-PLAN file=B3-ar-s | └─────────────┬─────────────┘
+EXPLAIN-PLAN file=B3-ar-s | ┌─────────────┴─────────────┐
+EXPLAIN-PLAN file=B3-ar-s | │           FILTER          │
+EXPLAIN-PLAN file=B3-ar-s | │    ────────────────────   │
+EXPLAIN-PLAN file=B3-ar-s | │        Expressions:       │
+EXPLAIN-PLAN file=B3-ar-s | │    ((v * v) < CAST(0 AS   │
+EXPLAIN-PLAN file=B3-ar-s | │          BIGINT))         │
+EXPLAIN-PLAN file=B3-ar-s | └─────────────┬─────────────┘
+EXPLAIN-PLAN file=B3-ar-s | ┌─────────────┴─────────────┐
+EXPLAIN-PLAN file=B3-ar-s | │        READ_PARQUET       │
+EXPLAIN-PLAN file=B3-ar-s | │    ────────────────────   │
+EXPLAIN-PLAN file=B3-ar-s | └───────────────────────────┘
+EXPLAIN-PLAN file=B3-ar-s | 
+EXPLAIN-PLAN file=B3-ar-s | ┌───────────────────────────┐
+EXPLAIN-PLAN file=B3-ar-s | │         PROJECTION        │
+EXPLAIN-PLAN file=B3-ar-s | │    ────────────────────   │
+EXPLAIN-PLAN file=B3-ar-s | │        Expressions:       │
+EXPLAIN-PLAN file=B3-ar-s | │        count_star()       │
+EXPLAIN-PLAN file=B3-ar-s | │                           │
+EXPLAIN-PLAN file=B3-ar-s | │           ~1 row          │
+EXPLAIN-PLAN file=B3-ar-s | └─────────────┬─────────────┘
+EXPLAIN-PLAN file=B3-ar-s | ┌─────────────┴─────────────┐
+EXPLAIN-PLAN file=B3-ar-s | │         AGGREGATE         │
+EXPLAIN-PLAN file=B3-ar-s | │    ────────────────────   │
+EXPLAIN-PLAN file=B3-ar-s | │        Expressions:       │
+EXPLAIN-PLAN file=B3-ar-s | │        count_star()       │
+EXPLAIN-PLAN file=B3-ar-s | │                           │
+EXPLAIN-PLAN file=B3-ar-s | │           ~1 row          │
+EXPLAIN-PLAN file=B3-ar-s | └─────────────┬─────────────┘
+EXPLAIN-PLAN file=B3-ar-s | ┌─────────────┴─────────────┐
+EXPLAIN-PLAN file=B3-ar-s | │        READ_PARQUET       │
+EXPLAIN-PLAN file=B3-ar-s | │    ────────────────────   │
+EXPLAIN-PLAN file=B3-ar-s | │          Filters:         │
+EXPLAIN-PLAN file=B3-ar-s | │       ((v * v) < 0)       │
+EXPLAIN-PLAN file=B3-ar-s | │                           │
+EXPLAIN-PLAN file=B3-ar-s | │         ~819 rows         │
+EXPLAIN-PLAN file=B3-ar-s | └───────────────────────────┘
+EXPLAIN-PLAN file=B3-ar-s | 
+EXPLAIN-PLAN file=B3-ar-s | ┌───────────────────────────┐
+EXPLAIN-PLAN file=B3-ar-s | │    UNGROUPED_AGGREGATE    │
+EXPLAIN-PLAN file=B3-ar-s | │    ────────────────────   │
+EXPLAIN-PLAN file=B3-ar-s | │        Aggregates:        │
+EXPLAIN-PLAN file=B3-ar-s | │        count_star()       │
+EXPLAIN-PLAN file=B3-ar-s | └─────────────┬─────────────┘
+EXPLAIN-PLAN file=B3-ar-s | ┌─────────────┴─────────────┐
+EXPLAIN-PLAN file=B3-ar-s | │        READ_PARQUET       │
+EXPLAIN-PLAN file=B3-ar-s | │    ────────────────────   │
+EXPLAIN-PLAN file=B3-ar-s | │         Function:         │
+EXPLAIN-PLAN file=B3-ar-s | │        READ_PARQUET       │
+EXPLAIN-PLAN file=B3-ar-s | │                           │
+EXPLAIN-PLAN file=B3-ar-s | │          Filters:         │
+EXPLAIN-PLAN file=B3-ar-s | │       ((v * v) < 0)       │
+EXPLAIN-PLAN file=B3-ar-s | │                           │
+EXPLAIN-PLAN file=B3-ar-s | │         ~819 rows         │
+EXPLAIN-PLAN file=B3-ar-s | └───────────────────────────┘
+EXPLAIN file=B3-dk pred=[v * v > 0] EMPTY_RESULT=0
+EXPLAIN-PLAN file=B3-dk | ┌───────────────────────────┐
+EXPLAIN-PLAN file=B3-dk | │         PROJECTION        │
+EXPLAIN-PLAN file=B3-dk | │    ────────────────────   │
+EXPLAIN-PLAN file=B3-dk | │        Expressions:       │
+EXPLAIN-PLAN file=B3-dk | │        count_star()       │
+EXPLAIN-PLAN file=B3-dk | └─────────────┬─────────────┘
+EXPLAIN-PLAN file=B3-dk | ┌─────────────┴─────────────┐
+EXPLAIN-PLAN file=B3-dk | │         AGGREGATE         │
+EXPLAIN-PLAN file=B3-dk | │    ────────────────────   │
+EXPLAIN-PLAN file=B3-dk | │        Expressions:       │
+EXPLAIN-PLAN file=B3-dk | │        count_star()       │
+EXPLAIN-PLAN file=B3-dk | └─────────────┬─────────────┘
+EXPLAIN-PLAN file=B3-dk | ┌─────────────┴─────────────┐
+EXPLAIN-PLAN file=B3-dk | │           FILTER          │
+EXPLAIN-PLAN file=B3-dk | │    ────────────────────   │
+EXPLAIN-PLAN file=B3-dk | │        Expressions:       │
+EXPLAIN-PLAN file=B3-dk | │    ((v * v) > CAST(0 AS   │
+EXPLAIN-PLAN file=B3-dk | │          BIGINT))         │
+EXPLAIN-PLAN file=B3-dk | └─────────────┬─────────────┘
+EXPLAIN-PLAN file=B3-dk | ┌─────────────┴─────────────┐
+EXPLAIN-PLAN file=B3-dk | │        READ_PARQUET       │
+EXPLAIN-PLAN file=B3-dk | │    ────────────────────   │
+EXPLAIN-PLAN file=B3-dk | └───────────────────────────┘
+EXPLAIN-PLAN file=B3-dk | 
+EXPLAIN-PLAN file=B3-dk | ┌───────────────────────────┐
+EXPLAIN-PLAN file=B3-dk | │         PROJECTION        │
+EXPLAIN-PLAN file=B3-dk | │    ────────────────────   │
+EXPLAIN-PLAN file=B3-dk | │        Expressions:       │
+EXPLAIN-PLAN file=B3-dk | │        count_star()       │
+EXPLAIN-PLAN file=B3-dk | │                           │
+EXPLAIN-PLAN file=B3-dk | │           ~1 row          │
+EXPLAIN-PLAN file=B3-dk | └─────────────┬─────────────┘
+EXPLAIN-PLAN file=B3-dk | ┌─────────────┴─────────────┐
+EXPLAIN-PLAN file=B3-dk | │         AGGREGATE         │
+EXPLAIN-PLAN file=B3-dk | │    ────────────────────   │
+EXPLAIN-PLAN file=B3-dk | │        Expressions:       │
+EXPLAIN-PLAN file=B3-dk | │        count_star()       │
+EXPLAIN-PLAN file=B3-dk | │                           │
+EXPLAIN-PLAN file=B3-dk | │           ~1 row          │
+EXPLAIN-PLAN file=B3-dk | └─────────────┬─────────────┘
+EXPLAIN-PLAN file=B3-dk | ┌─────────────┴─────────────┐
+EXPLAIN-PLAN file=B3-dk | │        READ_PARQUET       │
+EXPLAIN-PLAN file=B3-dk | │    ────────────────────   │
+EXPLAIN-PLAN file=B3-dk | │          Filters:         │
+EXPLAIN-PLAN file=B3-dk | │       ((v * v) > 0)       │
+EXPLAIN-PLAN file=B3-dk | │                           │
+EXPLAIN-PLAN file=B3-dk | │         ~819 rows         │
+EXPLAIN-PLAN file=B3-dk | └───────────────────────────┘
+EXPLAIN-PLAN file=B3-dk | 
+EXPLAIN-PLAN file=B3-dk | ┌───────────────────────────┐
+EXPLAIN-PLAN file=B3-dk | │    UNGROUPED_AGGREGATE    │
+EXPLAIN-PLAN file=B3-dk | │    ────────────────────   │
+EXPLAIN-PLAN file=B3-dk | │        Aggregates:        │
+EXPLAIN-PLAN file=B3-dk | │        count_star()       │
+EXPLAIN-PLAN file=B3-dk | └─────────────┬─────────────┘
+EXPLAIN-PLAN file=B3-dk | ┌─────────────┴─────────────┐
+EXPLAIN-PLAN file=B3-dk | │        READ_PARQUET       │
+EXPLAIN-PLAN file=B3-dk | │    ────────────────────   │
+EXPLAIN-PLAN file=B3-dk | │         Function:         │
+EXPLAIN-PLAN file=B3-dk | │        READ_PARQUET       │
+EXPLAIN-PLAN file=B3-dk | │                           │
+EXPLAIN-PLAN file=B3-dk | │          Filters:         │
+EXPLAIN-PLAN file=B3-dk | │       ((v * v) > 0)       │
+EXPLAIN-PLAN file=B3-dk | │                           │
+EXPLAIN-PLAN file=B3-dk | │         ~819 rows         │
+EXPLAIN-PLAN file=B3-dk | └───────────────────────────┘
+EXPLAIN file=B3-dk pred=[v * v < 0] EMPTY_RESULT=0
+EXPLAIN-PLAN file=B3-dk | ┌───────────────────────────┐
+EXPLAIN-PLAN file=B3-dk | │         PROJECTION        │
+EXPLAIN-PLAN file=B3-dk | │    ────────────────────   │
+EXPLAIN-PLAN file=B3-dk | │        Expressions:       │
+EXPLAIN-PLAN file=B3-dk | │        count_star()       │
+EXPLAIN-PLAN file=B3-dk | └─────────────┬─────────────┘
+EXPLAIN-PLAN file=B3-dk | ┌─────────────┴─────────────┐
+EXPLAIN-PLAN file=B3-dk | │         AGGREGATE         │
+EXPLAIN-PLAN file=B3-dk | │    ────────────────────   │
+EXPLAIN-PLAN file=B3-dk | │        Expressions:       │
+EXPLAIN-PLAN file=B3-dk | │        count_star()       │
+EXPLAIN-PLAN file=B3-dk | └─────────────┬─────────────┘
+EXPLAIN-PLAN file=B3-dk | ┌─────────────┴─────────────┐
+EXPLAIN-PLAN file=B3-dk | │           FILTER          │
+EXPLAIN-PLAN file=B3-dk | │    ────────────────────   │
+EXPLAIN-PLAN file=B3-dk | │        Expressions:       │
+EXPLAIN-PLAN file=B3-dk | │    ((v * v) < CAST(0 AS   │
+EXPLAIN-PLAN file=B3-dk | │          BIGINT))         │
+EXPLAIN-PLAN file=B3-dk | └─────────────┬─────────────┘
+EXPLAIN-PLAN file=B3-dk | ┌─────────────┴─────────────┐
+EXPLAIN-PLAN file=B3-dk | │        READ_PARQUET       │
+EXPLAIN-PLAN file=B3-dk | │    ────────────────────   │
+EXPLAIN-PLAN file=B3-dk | └───────────────────────────┘
+EXPLAIN-PLAN file=B3-dk | 
+EXPLAIN-PLAN file=B3-dk | ┌───────────────────────────┐
+EXPLAIN-PLAN file=B3-dk | │         PROJECTION        │
+EXPLAIN-PLAN file=B3-dk | │    ────────────────────   │
+EXPLAIN-PLAN file=B3-dk | │        Expressions:       │
+EXPLAIN-PLAN file=B3-dk | │        count_star()       │
+EXPLAIN-PLAN file=B3-dk | │                           │
+EXPLAIN-PLAN file=B3-dk | │           ~1 row          │
+EXPLAIN-PLAN file=B3-dk | └─────────────┬─────────────┘
+EXPLAIN-PLAN file=B3-dk | ┌─────────────┴─────────────┐
+EXPLAIN-PLAN file=B3-dk | │         AGGREGATE         │
+EXPLAIN-PLAN file=B3-dk | │    ────────────────────   │
+EXPLAIN-PLAN file=B3-dk | │        Expressions:       │
+EXPLAIN-PLAN file=B3-dk | │        count_star()       │
+EXPLAIN-PLAN file=B3-dk | │                           │
+EXPLAIN-PLAN file=B3-dk | │           ~1 row          │
+EXPLAIN-PLAN file=B3-dk | └─────────────┬─────────────┘
+EXPLAIN-PLAN file=B3-dk | ┌─────────────┴─────────────┐
+EXPLAIN-PLAN file=B3-dk | │        READ_PARQUET       │
+EXPLAIN-PLAN file=B3-dk | │    ────────────────────   │
+EXPLAIN-PLAN file=B3-dk | │          Filters:         │
+EXPLAIN-PLAN file=B3-dk | │       ((v * v) < 0)       │
+EXPLAIN-PLAN file=B3-dk | │                           │
+EXPLAIN-PLAN file=B3-dk | │         ~819 rows         │
+EXPLAIN-PLAN file=B3-dk | └───────────────────────────┘
+EXPLAIN-PLAN file=B3-dk | 
+EXPLAIN-PLAN file=B3-dk | ┌───────────────────────────┐
+EXPLAIN-PLAN file=B3-dk | │    UNGROUPED_AGGREGATE    │
+EXPLAIN-PLAN file=B3-dk | │    ────────────────────   │
+EXPLAIN-PLAN file=B3-dk | │        Aggregates:        │
+EXPLAIN-PLAN file=B3-dk | │        count_star()       │
+EXPLAIN-PLAN file=B3-dk | └─────────────┬─────────────┘
+EXPLAIN-PLAN file=B3-dk | ┌─────────────┴─────────────┐
+EXPLAIN-PLAN file=B3-dk | │        READ_PARQUET       │
+EXPLAIN-PLAN file=B3-dk | │    ────────────────────   │
+EXPLAIN-PLAN file=B3-dk | │         Function:         │
+EXPLAIN-PLAN file=B3-dk | │        READ_PARQUET       │
+EXPLAIN-PLAN file=B3-dk | │                           │
+EXPLAIN-PLAN file=B3-dk | │          Filters:         │
+EXPLAIN-PLAN file=B3-dk | │       ((v * v) < 0)       │
+EXPLAIN-PLAN file=B3-dk | │                           │
+EXPLAIN-PLAN file=B3-dk | │         ~819 rows         │
+EXPLAIN-PLAN file=B3-dk | └───────────────────────────┘
+TALLY engine_runs_admitted=224 s1_condition_runs(admitted, completed, id set != X)=0 []
+O1 PROBE LINUX DONE
+
+real	0m8.721s
+user	0m5.943s
+sys	0m0.545s

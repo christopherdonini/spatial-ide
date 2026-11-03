@@ -1331,6 +1331,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "o1-probe"
+version = "0.0.0"
+dependencies = [
+ "arrow",
+ "duckdb",
+ "parquet",
+ "spatial-engine",
+]
+
+[[package]]
 name = "once_cell"
 version = "1.21.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1539,6 +1549,14 @@ checksum = "22e18b0f0062d30d4230b2e85ff77fdfe4326feb054b9783a3460d8435c8ab91"
 dependencies = [
  "crossbeam-deque",
  "crossbeam-utils",
+]
+
+[[package]]
+name = "redaction-bench"
+version = "0.0.0"
+dependencies = [
+ "spatial-engine",
+ "spatial-kernel",
 ]
 
 [[package]]
@@ -1873,12 +1891,10 @@ dependencies = [
  "axum",
  "bytes",
  "futures",
- "futures-util",
  "getrandom 0.3.4",
  "hex",
  "subtle",
  "tokio",
- "tokio-tungstenite",
 ]
 
 [[package]]
@@ -1892,7 +1908,6 @@ dependencies = [
  "parquet",
  "serde_json",
  "sha2",
- "spatial-engine",
  "windows-sys 0.61.2",
  "wkb",
 ]
@@ -1902,7 +1917,6 @@ name = "spatial-kernel"
 version = "0.0.0"
 dependencies = [
  "arrow",
- "futures-util",
  "getrandom 0.3.4",
  "serde_json",
  "spatial-data-plane",
@@ -1910,7 +1924,6 @@ dependencies = [
  "spatial-renderer",
  "spatial-skp",
  "tokio",
- "tokio-tungstenite",
 ]
 
 [[package]]

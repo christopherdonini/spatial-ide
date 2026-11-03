@@ -1,0 +1,132 @@
+# The pinned overflow tests and the suites the form's §4 says must stay green, run on this Linux host from the
+# repository root at 6b67d44bc242dc1cbc9f73efdbd7cd20e4ecd1f4, each with the environment CARGO_TARGET_DIR=<SCRATCH>/target CC_ENABLE_DEBUG_OUTPUT=1
+# TMPDIR=<SCRATCH>/tmp CARGO_BUILD_JOBS=4 (so the tests' std::env::temp_dir() fixtures went under <SCRATCH>/tmp).
+# Each command's whole output follows it, unedited apart from <SCRATCH>.
+
+$ cargo test -p spatial-engine --locked --test admitted_integer_overflow
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+warning: constant `WATCH_BUFFER_BYTES` is never used
+  --> engine/src/watch.rs:73:18
+   |
+73 | pub(crate) const WATCH_BUFFER_BYTES: usize = 65536;
+   |                  ^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `spatial-engine` (lib) generated 1 warning
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.78s
+     Running tests/admitted_integer_overflow.rs (<SCRATCH>/target/debug/deps/admitted_integer_overflow-5efb0819e9794b68)
+
+running 5 tests
+test a_bare_product_and_a_decimal_beside_an_integer_are_still_refused ... ok
+test a_literal_only_bigint_product_returns_the_rows_exact_arithmetic_selects ... ok
+test an_admitted_bigint_product_that_fits_returns_exactly_the_rows_exact_arithmetic_selects ... ok
+test an_admitted_bigint_product_that_overflows_ends_the_stream_in_the_fixed_detail ... ok
+test no_admitted_bigint_product_completes_with_rows_exact_arithmetic_does_not_select ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.53s
+
+
+$ cargo test -p spatial-engine --locked --test stream_fetch_overflow
+warning: constant `WATCH_BUFFER_BYTES` is never used
+  --> engine/src/watch.rs:73:18
+   |
+73 | pub(crate) const WATCH_BUFFER_BYTES: usize = 65536;
+   |                  ^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `spatial-engine` (lib) generated 1 warning
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.19s
+     Running tests/stream_fetch_overflow.rs (<SCRATCH>/target/debug/deps/stream_fetch_overflow-86332566dfd55962)
+
+running 1 test
+test an_admitted_integer_overflow_first_raised_during_a_fetch_ends_the_stream_with_the_fixed_detail ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.74s
+
+
+$ cargo test -p spatial-engine --locked --test admission_property_campaign
+warning: constant `WATCH_BUFFER_BYTES` is never used
+  --> engine/src/watch.rs:73:18
+   |
+73 | pub(crate) const WATCH_BUFFER_BYTES: usize = 65536;
+   |                  ^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `spatial-engine` (lib) generated 1 warning
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.15s
+     Running tests/admission_property_campaign.rs (<SCRATCH>/target/debug/deps/admission_property_campaign-f8c924e1d91c90c2)
+
+running 4 tests
+test an_admitted_integer_overflow_ends_the_stream_with_the_fixed_detail ... ok
+test b1_an_implicit_coercion_is_admitted_and_fails_in_the_scan_carrying_file_data ... ok
+test a_join_of_clauses_each_admitted_alone_returns_their_intersection_and_its_subsets_admit ... ok
+test filter_admission_property_campaign ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 32.46s
+
+
+$ cargo test -p spatial-engine --locked --test filter_type_admission the_type_walk_agrees_with_the_binder_over_the_p0_matrix
+warning: constant `WATCH_BUFFER_BYTES` is never used
+  --> engine/src/watch.rs:73:18
+   |
+73 | pub(crate) const WATCH_BUFFER_BYTES: usize = 65536;
+   |                  ^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `spatial-engine` (lib) generated 1 warning
+   Compiling spatial-engine v0.0.0 (/home/user/spatial-ide/engine)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.15s
+     Running tests/filter_type_admission.rs (<SCRATCH>/target/debug/deps/filter_type_admission-41e7250f5333c2fc)
+
+running 1 test
+test the_type_walk_agrees_with_the_binder_over_the_p0_matrix has been running for over 60 seconds
+test the_type_walk_agrees_with_the_binder_over_the_p0_matrix ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 146.93s
+
+
+$ cargo test -p spatial-engine --locked --lib predicate::tests::the_walk_types_every_arithmetic_node_as_the_binder_does
+$ cargo test -p spatial-engine --locked --lib stream::tests::filter_composition::the_where_composition_matrix_matches_the_declared_rule_exactly
+(both outputs, in that order)
+warning: constant `WATCH_BUFFER_BYTES` is never used
+  --> engine/src/watch.rs:73:18
+   |
+73 | pub(crate) const WATCH_BUFFER_BYTES: usize = 65536;
+   |                  ^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `spatial-engine` (lib) generated 1 warning
+warning: `spatial-engine` (lib test) generated 1 warning (1 duplicate)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.20s
+     Running unittests src/lib.rs (<SCRATCH>/target/debug/deps/spatial_engine-36cb0e8ea2ddc1f0)
+
+running 1 test
+test predicate::tests::the_walk_types_every_arithmetic_node_as_the_binder_does ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 206 filtered out; finished in 3.52s
+
+warning: constant `WATCH_BUFFER_BYTES` is never used
+  --> engine/src/watch.rs:73:18
+   |
+73 | pub(crate) const WATCH_BUFFER_BYTES: usize = 65536;
+   |                  ^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `spatial-engine` (lib) generated 1 warning
+warning: `spatial-engine` (lib test) generated 1 warning (1 duplicate)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.24s
+     Running unittests src/lib.rs (<SCRATCH>/target/debug/deps/spatial_engine-36cb0e8ea2ddc1f0)
+
+running 1 test
+test stream::tests::filter_composition::the_where_composition_matrix_matches_the_declared_rule_exactly ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 206 filtered out; finished in 0.06s
+

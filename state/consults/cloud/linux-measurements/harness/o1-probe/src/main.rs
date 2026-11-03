@@ -713,6 +713,14 @@ fn main() {
             vec![(2, 3), (4_294_967_296, 4_294_967_296), (-1, i64::MIN)],
             Writer::ArN,
         ));
+        // Added after the first two runs' results were seen, not a section 3 cell: the operand order
+        // of the form's Amendment 8 figure, (-2^31, 2^32), whose exact product is i64::MIN.
+        s.push((
+            "T-e-swap-ar-n".into(),
+            ab,
+            vec![(2, 3), (-2_147_483_648, 4_294_967_296)],
+            Writer::ArN,
+        ));
         s
     };
 
@@ -808,7 +816,15 @@ fn main() {
         }
     }
     // The two-column files: Q1, Q2, Q3 through the engine; the products per k.
-    for name in ["T-c-ar-n", "T-c-ar-s", "T-o-ar-n", "T-o-mirror-ar-n", "T-e-ar-n", "T-m-ar-n"] {
+    for name in [
+        "T-c-ar-n",
+        "T-c-ar-s",
+        "T-o-ar-n",
+        "T-o-mirror-ar-n",
+        "T-e-ar-n",
+        "T-m-ar-n",
+        "T-e-swap-ar-n",
+    ] {
         let f = get(name);
         let ds = Dataset::open(&f.path).unwrap();
         let form = name.trim_end_matches("-ar-n").trim_end_matches("-ar-s");
