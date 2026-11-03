@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `0e2c06c550f620a111535e3ecba8fd81763e7c1a04a3603dc272a6ac46c96b76`) at `2026-11-03T15:01:57.063Z`.
+Generated from `PLAN.yaml` (sha256 `8087d8ee914e15b08a10059888636df695286b58346b756b2b27f69d1d94d949`) at `2026-11-03T15:15:05.535Z`.
 
 ## 1. Next
 
@@ -43,6 +43,7 @@ Generated from `PLAN.yaml` (sha256 `0e2c06c550f620a111535e3ecba8fd81763e7c1a04a3
 - **shell-owners-index** — An owner's index for the shell (frontends/shell), so that shell-owned KNOWN-LIMITATIONS items and pointers are indexed somewhere — blocked by: skp-line-cites-outside-close-races
 - **site-design-v1** — Landing page redesign — DRAFT-4 (status strip, milestone banner, waiting-on-you cards with unblocks counts, the swimlane board) — blocked by: governance-ci-built-site
 - **macos-normalization-roots-uncanonicalized** — On macOS the audit log normalization roots are read uncanonicalized while recorded destinations are canonicalized, so a symlinked temporary-directory root never matches — blocked by: port-2-macos-l1-and-app-dirs
+- **posix-backslash-is-inside-and-redaction-label** — The audit log's is_inside and the redaction scan's file label stop treating a backslash as a separator on POSIX, the two sites entry 7b leaves (wave-3 A-1, S3) — blocked by: port-2-macos-l1-and-app-dirs, redaction-hostname-off-windows
 
 ## 5. In progress
 
