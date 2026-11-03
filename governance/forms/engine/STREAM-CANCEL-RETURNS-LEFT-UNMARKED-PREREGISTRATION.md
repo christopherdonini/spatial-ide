@@ -172,3 +172,7 @@ Under the human's direction that the brief names (`state/directives/2026-10-31-a
 - **Rule (00)** was checked at main 60334c66 by `git diff --name-only origin/main...<branch>` over the open PRs (#271) and the branches in flight (`cut/b2-piece-1c-save-and-reopen`, `cut/port-2-macos-l1-and-app-dirs`, `cut/b1-shell-half-pr-c`; `cut/verify-quotes-cite-listing-line-count`, its local branch touching 2 files, none of them): none touches `engine/src/stream.rs`, `engine/README.md` or this form. It is checked again at dispatch.
 
 ## Amendments (opens empty; append-only)
+
+### Amendment 1 — 2026-11-03 — class 3, the settlement's cite of 4a's ruling pinned (gate 1, the architect's D2)
+
+- The OPEN-1 bullet's bare line cite: state/directives/2026-10-30-270-readme-r1-r3-d5-open-1-class-1-269-clicked-4a-7a-rulings.md:17 @ 6dff90e9637a6368e695b56916c165f7d1f4b022 sha256:b58d768e47186ebcb2804b539dc8194d5ae6ef53d7a2cfa7cb18e2966cd0f056. No claim changes.
