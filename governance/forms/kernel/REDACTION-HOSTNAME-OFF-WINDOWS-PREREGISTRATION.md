@@ -104,3 +104,8 @@ Out-of-scope: ADR: none (no status line or amendment; ADR-017 §13's gate unchan
 - **Rule (00)** was checked at main 0f6c62a4 by `git diff --name-only origin/main...<branch>` over the open PRs (#273, #272, #271) and the branches in flight (`cut/b2-piece-1c-save-and-reopen`, `cut/port-2-macos-l1-and-app-dirs`, `cut/b1-shell-half-pr-c`, `cut/engine-cancel-before-execute-siblings`): none touches the three Scope files or this form. It is checked again at dispatch, which follows the filler queue's order.
 
 ## Amendments (opens empty; append-only)
+
+### Amendment 1 — 2026-11-03 — class 1, before any code: how M2 is observed
+
+- The Tests+mutation line proves T2 and M2 on the Linux L1 job, and the piece is built on Windows, where T2 is ignored. M2 is observed in the shape 7b's settlement takes for its Linux-only mutations (governance/forms/kernel/POSIX-BACKSLASH-IN-SHARED-PATH-LOGIC-PREREGISTRATION.md:163 @ 652752afa9bedb0172948869c9ab7f0b8ee08dd3 sha256:61b59517a7cd86e9e838c5eb5430ae97aee095fad664a1c1e6293f6706261063): one temporary commit carrying M2 alone on the piece's branch, its ubuntu-24.04 failure recorded by test name, run id and commit, then reverted by a new commit. No history is rewritten. This is the custodian's reading of the form's words, taken under the human's direction of 2026-10-31, item 4, on 2026-11-03. It is not a red line, and the human reviews it on return.
+- **Rule (00),** by `git diff --name-only origin/main...<branch>` at main 652752af: the open PR (#276) and the branches in flight (`cut/b2-piece-1c-save-and-reopen`, `cut/port-2-macos-l1-and-app-dirs`, `cut/b1-shell-half-pr-c`, `cut/adr-017-note-product-redaction-gate`) touch none of the three Scope paths or this form.
