@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `b532ab55900111d9621178635c4fa593d8c8eecdd613a1ace8cb8c4a9b153561`) at `2026-11-03T19:50:55.145Z`.
+Generated from `PLAN.yaml` (sha256 `f586d73ad19bae8e4250b1c3f9583575153ea743ef4578e893530ce0c4a2d566`) at `2026-11-03T20:15:46.049Z`.
 
 ## 1. Next
 
@@ -13,7 +13,6 @@ Generated from `PLAN.yaml` (sha256 `b532ab55900111d9621178635c4fa593d8c8eecdd613
 - **pre-admission-change-detail-braces** — Four kernel P6-placeholder detail strings are wrapped in literal braces, which reach the operator message; the watcher form declares each such string starts with the bracketed placeholder tag (lane `kernel-protocol`, order null, budget 30 min)
 - **windows-case-fold-non-ascii** — The audit case policy on Windows folds non-ASCII letters as NTFS does, so a profile path differing only in non-ASCII case cannot escape the user-home redaction (wave 3's 1c-2 correction, S2, code-path-only) (lane `kernel-protocol`, order null, budget 60 min)
 - **governance-f-after-week-rust-ci-figure** — Governance piece F, the after-week Rust CI figure: the form-only Rust CI runs in the 168 h after the merge, recorded as a class 1 row in piece F's form (lane `governance`, order null, budget 30 min)
-- **posix-backslash-in-shared-path-logic** — Shared path logic stops treating a backslash as a separator on POSIX: distinct audit destinations stay distinct, and a viewer asset named with a backslash is refused, not renamed (wave-3 A-1, S2) (lane `platform`, order null, budget 90 min)
 - **publish-bundle-sigterm** — SIGTERM handling in publish-bundle on unix (wave-3 W3-A observation 3) (lane `platform`, order null, budget 90 min)
 - **publish-unix-quota-perm-errors** — EDQUOT and EPERM in publish error classification on unix (wave-3 W3-A observation 1) (lane `platform`, order null, budget 90 min)
 
@@ -53,6 +52,7 @@ Generated from `PLAN.yaml` (sha256 `b532ab55900111d9621178635c4fa593d8c8eecdd613
 - **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **adr-017-note-product-redaction-gate** — An ADR-017 note in the human's typed words: the product publish now runs the redaction scan over every emitted file, except a viewer file whose bytes the viewer's build scanned, and refuses by name on a finding (bundle-redaction-scan-not-in-product-publish); the build-time scan, the reviewed list and the skip; and Corrigendum 4's new uninterruptible term — evidence: branch `cut/adr-017-note-product-redaction-gate`
 - **b1-shell-half** — Shell migration, milestone 4 -- B1 shell half: attributes of the inspected feature, colour by category with its legend, and the table — evidence: branch `cut/b1-shell-half-pr-c`
+- **posix-backslash-in-shared-path-logic** — Shared path logic stops treating a backslash as a separator on POSIX: distinct audit destinations stay distinct, and a viewer asset named with a backslash is refused, not renamed (wave-3 A-1, S2) — evidence: branch `cut/posix-backslash-in-shared-path-logic`
 - **redaction-hostname-off-windows** — The redaction scan knows the machine's hostname off Windows, so machine-identifier findings reach an audit record's residual_classes there too (wave-3 A-2, S2, sent to Fable for weighing) — evidence: branch `cut/redaction-hostname-off-windows`
 - **port-2-macos-l1-and-app-dirs** — PORT-2 -- macOS L1 for the Cargo workspace: macos-latest in the same matrix, one application-directory boundary replacing the two resolvers, and a case-policy test on a case-insensitive volume — evidence: branch `cut/port-2-macos-l1-and-app-dirs`
 
