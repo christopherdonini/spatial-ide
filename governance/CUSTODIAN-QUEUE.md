@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `07ec1f8b88b19d102588165808bc19d84547e1f003ffee3650b25d657404d0a1`) at `2026-11-03T16:16:11.922Z`.
+Generated from `PLAN.yaml` (sha256 `57ec16a16821c32f2a18d6f11c5833827953264a40a8ed89a3ba9a44f13ecd6a`) at `2026-11-03T16:26:01.398Z`.
 
 ## 1. Next
 
@@ -33,6 +33,7 @@ Generated from `PLAN.yaml` (sha256 `07ec1f8b88b19d102588165808bc19d84547e1f003ff
 ## 4. Blocked on dependencies
 
 - **literal-only-float-integer-arithmetic-refused** — Literal-only arithmetic mixing a double literal and an integer literal (1e3 + 5 > 0) is refused as conversion_rounds, although FILTER-BIND section 2.5(a) and ADR-021's Note admit two numeric literals within the bounds in +, - and * (F-A of the type-walk-rule2-residual-reasons draft) — blocked by: type-walk-rule2-residual-reasons
+- **docs-02-adr-017-entry-current** — docs/02's ADR-017 entry brought current with every appended section (the ADR-017 note's OPEN-4 (c), S4, the docs lane last) — blocked by: sitting-wording-n1-to-n7
 - **lod-tier-identity-binds-file-name** — The LOD tier builder takes the identity name DuckDB bound and looks it up among the file's own footer names, so a renamed identity column reaches a different column there — blocked by: port-2-macos-l1-and-app-dirs
 - **skp-line-cites-outside-close-races** — Stale line cites into kernel/src/skp.rs outside kernel-close-races-followups files -- shell streaming, App.tsx, pool_poll.rs, src-tauri lib.rs, the P4 corpus test and the persisted-artifacts test — blocked by: adr-035-close-races-note
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
