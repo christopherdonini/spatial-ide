@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `83475e21b80a00b03a266c28d9e41ededcab3c7faf71f51e116e5f5ba470495a`) at `2026-11-03T19:14:45.888Z`.
+Generated from `PLAN.yaml` (sha256 `b532ab55900111d9621178635c4fa593d8c8eecdd613a1ace8cb8c4a9b153561`) at `2026-11-03T19:50:55.145Z`.
 
 ## 1. Next
 
@@ -139,6 +139,7 @@ Generated from `PLAN.yaml` (sha256 `83475e21b80a00b03a266c28d9e41ededcab3c7faf71
 - **redaction-chance-match-in-partitions** — The redaction scan and chance matches in binary content: a drive path in a printable run of exactly the minimum length, in 256 MiB of parquet (the cloud Linux measurement) (phase `prototype`) — never queued until placed
 - **clippy-deny-warnings-workspace** — The workspace clippy diagnostics fixed, so cargo clippy over every target with -D warnings exits 0 (the cloud Linux run lists 48 distinct) (phase `prototype`) — never queued until placed
 - **autonomy-stale-status-sentences** — AUTONOMY.md sentences no longer true: the mutation rule called automated, the self-checks called not yet on main, reports to files (the cloud E1 draft, F1, F2 and F6) (phase `prototype`) — never queued until placed
+- **module-readme-moved-form-paths** — The preregistration form paths in kernel/README.md and engine/README.md named where piece F moved them (governance/forms/) (phase `prototype`) — never queued until placed
 
 ### Unscheduled
 
