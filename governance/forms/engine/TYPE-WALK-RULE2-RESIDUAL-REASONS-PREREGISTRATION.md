@@ -167,3 +167,12 @@ Nothing touches protocol/. The path lists are the brief's; I cannot read branche
 - **Rule (00)** was checked at main d84171b0 by `git diff --name-only origin/main...<branch>` over the open PRs (#273, #272, #271) and the branches in flight (`cut/b2-piece-1c-save-and-reopen`, `cut/port-2-macos-l1-and-app-dirs`, `cut/b1-shell-half-pr-c`): none touches the two Scope files or this form. It is checked again at dispatch, which follows the filler queue's order (one filler in flight under §36).
 
 ## Amendments (opens empty; append-only)
+
+### Amendment 1 — 2026-11-04 — the custodian's record (class 1), written after P-0's run was seen; references and hashes only
+
+- **P-0 ran** on the branch `cut/type-walk-rule2-residual-reasons` at main 66fb3d8d2dfb7cf13d46f00e748677bacc172b96, with Cargo.lock's `duckdb` and `libduckdb-sys` entries at 1.10505.0. The worker's report is `state/consults/2026-11-04-type-walk-rule2-residual-reasons-worker-report.md` (its hand-back's sha256 4ba399601fe6363529a582e0628965568cb7e91c6fd96532e54f1368a65a58ce).
+  - `zone + NULL > 0` and `flag + NULL > 0`: `RejectedByBinder`, as predicted.
+  - `'1' + NULL > 0`: `TypeNotAdmitted`, construct `+`, operand types `VARCHAR literal` and `NULL literal`, reason `ConversionRounds`.
+- **The Tests+mutation line's stop is met.** No code was written, and nothing was committed or pushed; the branch stands at its base.
+- **OPEN-5's F-B, the custodian's after P-0** (the human's ruling of 2026-10-26: F-B waits on P-0): proposed as its own node in the filler queue's proposed additions, not joined here as class 9. Joining it would change that shape's wire `reason`, which the Change line excludes: a scope change to an item the human has ruled, a red line.
+- **The piece is held at its stop.** Whether it proceeds, and how, is the human's on return. Entry 8c, placed after 8b, waits with it; the filler slot takes the next filler by the queue order.

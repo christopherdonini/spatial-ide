@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `7170e24107fa4fad12e218b6da140b721624461a4af3fa7731acf492429a09f6`) at `2026-11-04T01:55:54.347Z`.
+Generated from `PLAN.yaml` (sha256 `f83d4fbd7510b6915e55ee4ee883dbed324dab0354ee3dfbc201b46fa9eeb8f3`) at `2026-11-04T02:24:40.781Z`.
 
 ## 1. Next
 
@@ -15,10 +15,11 @@ Generated from `PLAN.yaml` (sha256 `7170e24107fa4fad12e218b6da140b721624461a4af3
 - **publish-bundle-sigterm** — SIGTERM handling in publish-bundle on unix (wave-3 W3-A observation 3) (lane `platform`, order null, budget 90 min)
 - **publish-unix-quota-perm-errors** — EDQUOT and EPERM in publish error classification on unix (wave-3 W3-A observation 1) (lane `platform`, order null, budget 90 min)
 
-## 3. Waiting on the human (total: 25 min)
+## 3. Waiting on the human (total: 35 min)
 
 ### ruling
 
+- **type-walk-rule2-residual-reasons** — Type walk: a rule-2 result over a column or an integer literal, refused by rule 7's bit-width bound, keeps the residual reason although its value is a constant NULL (for example f32 > NULL + 100000) (10 min)
 - **adr-035-close-races-note** — ADR-035 -- an appended, dated note recording what kernel-generation-close-races makes historical (Decision 3's no-session-reference case unreachable; invalidate marks only on a live removal; Decision 2's mint-race arm gone) (5 min)
 
 ### sitting
@@ -48,7 +49,6 @@ Generated from `PLAN.yaml` (sha256 `7170e24107fa4fad12e218b6da140b721624461a4af3
 
 ## 5. In progress
 
-- **type-walk-rule2-residual-reasons** — Type walk: a rule-2 result over a column or an integer literal, refused by rule 7's bit-width bound, keeps the residual reason although its value is a constant NULL (for example f32 > NULL + 100000) — evidence: branch `cut/type-walk-rule2-residual-reasons`
 - **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **b1-shell-half** — Shell migration, milestone 4 -- B1 shell half: attributes of the inspected feature, colour by category with its legend, and the table — evidence: branch `cut/b1-shell-half-pr-c`
 - **port-2-macos-l1-and-app-dirs** — PORT-2 -- macOS L1 for the Cargo workspace: macos-latest in the same matrix, one application-directory boundary replacing the two resolvers, and a case-policy test on a case-insensitive volume — evidence: branch `cut/port-2-macos-l1-and-app-dirs`
