@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `bf256a9360b525b98b74239733919a94f576b30977620909e3e898e43155e211`) at `2026-11-03T23:17:58.160Z`.
+Generated from `PLAN.yaml` (sha256 `5ba2b57e5c5dd252ff862a5ee015e78294249053c15d48d5a9bc0bc2953204a9`) at `2026-11-04T01:46:14.078Z`.
 
 ## 1. Next
 
@@ -45,15 +45,12 @@ Generated from `PLAN.yaml` (sha256 `bf256a9360b525b98b74239733919a94f576b3097762
 - **shell-owners-index** — An owner's index for the shell (frontends/shell), so that shell-owned KNOWN-LIMITATIONS items and pointers are indexed somewhere — blocked by: skp-line-cites-outside-close-races
 - **site-design-v1** — Landing page redesign — DRAFT-4 (status strip, milestone banner, waiting-on-you cards with unblocks counts, the swimlane board) — blocked by: governance-ci-built-site
 - **macos-normalization-roots-uncanonicalized** — On macOS the audit log normalization roots are read uncanonicalized while recorded destinations are canonicalized, so a symlinked temporary-directory root never matches — blocked by: port-2-macos-l1-and-app-dirs
-- **posix-backslash-is-inside-and-redaction-label** — The audit log's is_inside and the redaction scan's file label stop treating a backslash as a separator on POSIX, the two sites entry 7b leaves (wave-3 A-1, S3) — blocked by: port-2-macos-l1-and-app-dirs, redaction-hostname-off-windows
+- **posix-backslash-is-inside-and-redaction-label** — The audit log's is_inside and the redaction scan's file label stop treating a backslash as a separator on POSIX, the two sites entry 7b leaves (wave-3 A-1, S3) — blocked by: port-2-macos-l1-and-app-dirs
 
 ## 5. In progress
 
 - **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark — evidence: branch `cut/b2-piece-1c-save-and-reopen`
-- **adr-017-note-product-redaction-gate** — An ADR-017 note in the human's typed words: the product publish now runs the redaction scan over every emitted file, except a viewer file whose bytes the viewer's build scanned, and refuses by name on a finding (bundle-redaction-scan-not-in-product-publish); the build-time scan, the reviewed list and the skip; and Corrigendum 4's new uninterruptible term — evidence: branch `cut/adr-017-note-product-redaction-gate`
 - **b1-shell-half** — Shell migration, milestone 4 -- B1 shell half: attributes of the inspected feature, colour by category with its legend, and the table — evidence: branch `cut/b1-shell-half-pr-c`
-- **posix-backslash-in-shared-path-logic** — Shared path logic stops treating a backslash as a separator on POSIX: distinct audit destinations stay distinct, and a viewer asset named with a backslash is refused, not renamed (wave-3 A-1, S2) — evidence: branch `cut/posix-backslash-in-shared-path-logic`
-- **redaction-hostname-off-windows** — The redaction scan knows the machine's hostname off Windows, so machine-identifier findings reach an audit record's residual_classes there too (wave-3 A-2, S2, sent to Fable for weighing) — evidence: branch `cut/redaction-hostname-off-windows`
 - **port-2-macos-l1-and-app-dirs** — PORT-2 -- macOS L1 for the Cargo workspace: macos-latest in the same matrix, one application-directory boundary replacing the two resolvers, and a case-policy test on a case-insensitive volume — evidence: branch `cut/port-2-macos-l1-and-app-dirs`
 
 ## 6. Proposed / unscheduled
