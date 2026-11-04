@@ -5067,6 +5067,12 @@ mod ticket_drop_under_lock_regression {
     ///
     /// REGISTERED MUTATION: delete the `watches` removal in `close_dataset`. Applied at `f4fb9ed`,
     /// run and reverted: this test FAILED on `the close removed the record`.
+    ///
+    /// OBSERVED MUTATION (M-T2, not registered): delete step 0's `watches` removal. Applied at
+    /// d95baf4d603a3d8c4c3cca1a60a773b474c22bfe, run and reverted: this test PASSED, so it no
+    /// longer catches the deletion alone, and
+    /// `a_close_whose_catalog_entry_is_already_gone_still_drops_its_watch` FAILED on `the close
+    /// removed the record`. The registered line above holds only at its own commit.
     #[test]
     fn a_close_drops_its_watch_before_it_returns() {
         let path = fixture("close-drops-its-watch");
@@ -5094,6 +5100,10 @@ mod ticket_drop_under_lock_regression {
     /// writes `watches`, a private field, where §4 (iv) of
     /// `kernel/GENERATION-CLOSE-RACES-PREREGISTRATION.md` only reads; the product has no
     /// interposition point there.
+    ///
+    /// RECORDED MUTATION (M1): delete the record removal after step 4. Applied at
+    /// d95baf4d603a3d8c4c3cca1a60a773b474c22bfe, run and reverted: this test FAILED at its
+    /// `the close removed the record inserted during it` assertion.
     #[test]
     fn a_record_inserted_during_a_close_is_removed_before_the_close_returns() {
         let path = fixture("record-inserted-during-close");
