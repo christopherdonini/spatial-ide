@@ -42,8 +42,10 @@ const USER: &str = "<user>";
 /// 1. Strip Windows verbatim prefixes — `\\?\UNC\` → `\\`, `\\?\` → nothing. `\\?\` is itself one
 ///    of `bundle::redaction`'s `local-filesystem-path` needles, so leaving it would guarantee a
 ///    finding on every Windows record.
-/// 2. `\` → `/`. One spelling, so two records of one destination compare equal and the
-///    drive-letter rule sees a single form.
+/// 2. Each character this platform's path syntax calls a separator → `/` (`std::path::is_separator`:
+///    `\` and `/` on Windows, `/` alone elsewhere, where `\` is a byte of a file name). One
+///    spelling, so two records of one destination compare equal and the drive-letter rule sees a
+///    single form.
 /// 3. **User-profile roots, longest match first**, each to a stable token. Longest-first is
 ///    load-bearing: `LOCALAPPDATA` and `TEMP` live *under* `USERPROFILE`, and matching the shorter
 ///    root first would leave `<user-home>/AppData/Local/Temp` where `<temp>` belongs.
@@ -77,7 +79,7 @@ pub fn normalize_with(
     };
 
     // 2 — one separator.
-    let mut s = stripped.replace('\\', "/");
+    let mut s = to_slashes(&stripped);
 
     // 3 — profile roots, longest first. `roots_from_environment` sorts; a caller supplying its own
     // gets the same treatment here so the ordering property does not depend on the caller.
@@ -114,6 +116,11 @@ pub fn normalize_with(
 /// user's home" in `std`, and a root this cannot read is simply not normalized — a gap in the
 /// normalization, never a silent pass. `residual_classes` is what makes such a gap visible.
 pub fn roots_from_environment() -> Vec<(String, &'static str)> {
+    roots_from(|key| std::env::var(key).ok())
+}
+
+/// The roots a lookup declares: `roots_from_environment` with the environment passed in.
+fn roots_from(lookup: impl Fn(&str) -> Option<String>) -> Vec<(String, &'static str)> {
     let mut out: Vec<(String, &'static str)> = Vec::new();
     for (key, token) in [
         ("USERPROFILE", HOME),
@@ -126,8 +133,8 @@ pub fn roots_from_environment() -> Vec<(String, &'static str)> {
         // meant the one temp root that actually gets used there was normalized by nothing.
         ("TMPDIR", TEMP),
     ] {
-        if let Ok(v) = std::env::var(key) {
-            let v = v.replace('\\', "/");
+        if let Some(v) = lookup(key) {
+            let v = to_slashes(&v);
             let v = v.trim_end_matches('/').to_string();
             // A root of `/` or `` would match everything and turn normalization into erasure — the
             // same degenerate case `redaction::declared_ranges` guards against with its length
@@ -139,6 +146,13 @@ pub fn roots_from_environment() -> Vec<(String, &'static str)> {
     }
     out.sort_by_key(|(p, _)| std::cmp::Reverse(p.len()));
     out
+}
+
+/// `s` with each separator character of this platform's path syntax written as `/`.
+fn to_slashes(s: &str) -> String {
+    s.chars()
+        .map(|c| if std::path::is_separator(c) { '/' } else { c })
+        .collect()
 }
 
 fn usernames_from_environment() -> Vec<String> {
@@ -211,10 +225,20 @@ mod tests {
     }
 
     fn norm(p: &str) -> String {
+        // The inputs are spelled with `\`; they are fed in this platform's own separator.
+        let p = p.replace('\\', std::path::MAIN_SEPARATOR_STR);
         normalize_with(&PathBuf::from(p), &roots(), &users())
     }
 
     /// The worked example from the design record, end to end.
+    ///
+    /// RECORDED MUTATION (observed at 724cb1fbd65952d371c575620f51500b8eccb3fe on Windows: applied,
+    /// this test run alone, reverted): `to_slashes` maps only `/`. OBSERVED FAILURE: the first
+    /// assertion, left `"C:\\Users\\someone\\out"`, right `"<user-home>/out"`.
+    #[cfg_attr(
+        not(windows),
+        ignore = "boundary: path syntax (std::path::is_separator); the `\\\\?\\` verbatim prefix is Windows-only"
+    )]
     #[test]
     fn a_user_profile_destination_becomes_a_token() {
         assert_eq!(norm(r"C:\Users\someone\out"), "<user-home>/out");
@@ -258,6 +282,10 @@ mod tests {
         assert_eq!(norm(r"D:\someone-maps\out"), "D:/someone-maps/out");
     }
 
+    #[cfg_attr(
+        not(windows),
+        ignore = "boundary: path syntax (std::path::is_separator); the UNC share form is Windows-only"
+    )]
     #[test]
     fn a_unc_path_keeps_its_share_form() {
         assert_eq!(norm(r"\\?\UNC\server\share\out"), "//server/share/out");
@@ -282,12 +310,43 @@ mod tests {
         assert_eq!(n, "D:/данные/bundle");
 
         // …and the matching case still matches, so the guard did not simply disable normalization.
-        let n = normalize_with(&PathBuf::from(r"C:\Users\José\out"), &roots, &users);
+        let n = normalize_with(&PathBuf::from("C:/Users/José/out"), &roots, &users);
         assert_eq!(n, "<user-home>/out");
 
         // A username component that is itself non-ASCII is substituted as any other would be.
-        let n = normalize_with(&PathBuf::from(r"D:\archive\José\out"), &roots, &users);
+        let n = normalize_with(&PathBuf::from("D:/archive/José/out"), &roots, &users);
         assert_eq!(n, "D:/archive/<user>/out");
+    }
+
+    /// **A backslash is a byte of a POSIX file name, and stays one.** `/home/x\b` is one directory
+    /// under `/home`, `/home/x/b` is `b` under `x`: two destinations, so two audit strings, and a
+    /// profile root holding a backslash is read as it is, or it would stop matching its own path.
+    ///
+    /// RECORDED MUTATION M1 (observed at a47d8f72fb5ea7b939dbb417e05d8ca2255977a2: applied alone on
+    /// the branch, run 41719825618, its ubuntu-24.04 job 126209332158, reverted by
+    /// d441774cf05a45bb96d885f68675058de16b216f): step 2 back to `stripped.replace('\\', "/")`.
+    /// OBSERVED FAILURE: this test's second assertion, left `"/home/x/b/out"`, right
+    /// `"<user-home>/out"`; in its binary 162 passed, 1 failed, and cargo stops at the first failing
+    /// binary, so no test that ran before it failed.
+    ///
+    /// RECORDED MUTATION M2 (observed at cd29f057aeb2b98da60f37ff380de7e947fd529e: applied alone on
+    /// the branch, run 41722839219, its ubuntu-24.04 job 126219815352, reverted by
+    /// 761ff2132486b6ab92929d1b9e4f6a0f2a3de900): `roots_from` back to `v.replace('\\', "/")`.
+    /// OBSERVED FAILURE: this test's first assertion, left `[("/home/x/b", "<user-home>")]`, right
+    /// `[("/home/x\\b", "<user-home>")]`; in its binary 162 passed, 1 failed, and cargo stops at the
+    /// first failing binary, so no test that ran before it failed. The windows job passed on both.
+    #[cfg_attr(
+        windows,
+        ignore = "boundary: path syntax (std::path::is_separator); on Windows `\\` is a separator, so the rewrite is correct there"
+    )]
+    #[test]
+    fn a_posix_backslash_stays_a_name_byte_in_a_profile_root_and_a_destination() {
+        let roots = roots_from(|key| (key == "HOME").then(|| r"/home/x\b".to_string()));
+        assert_eq!(roots, vec![(r"/home/x\b".to_string(), HOME)]);
+        let n = normalize_with(&PathBuf::from(r"/home/x\b/out"), &roots, &[]);
+        assert_eq!(n, "<user-home>/out");
+        let n = normalize_with(&PathBuf::from("/home/x/b/out"), &roots, &[]);
+        assert_eq!(n, "/home/x/b/out");
     }
 
     /// Two spellings of one destination normalize to one string, which is what makes two records
