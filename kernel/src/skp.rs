@@ -1000,12 +1000,16 @@ struct OpenRecord {
 }
 
 /// The per-open latch the sink writes into before admission (§2b's "Open and admission"). Lock
-/// order: latch, then the catalog's read guard, then generations — the admission code below is
-/// the only place that ever holds the latch with either, latch outer; the catalog's read guard
-/// is taken and released inside `Catalog::get`, before the mint, and `Catalog` never reaches the
-/// latch. The sink's own `Admitted` arm always drops the latch guard before it ever reaches into
-/// `generations` (via `SessionInvalidator::end_generation`), so the latch and `generations` are
-/// never held by two different threads in opposite order.
+/// order: latch, then the catalog's read guard, then generations or `watches` — the admission
+/// code in `open_dataset` is the only place that ever holds the latch with any of them, latch
+/// outer. Each arm takes the catalog's read guard after its signal refusal (and, in the Watching
+/// arm, after `resolves_unchanged`), holds it through the mint and the `OpenRecord`'s insert,
+/// and takes no second read guard; `Catalog` never reaches the latch. `close_dataset` takes the
+/// catalog's write guard, then generations, and never the latch. The sink's own `Admitted` arm
+/// always drops the latch guard before it ever reaches into `generations` (via
+/// `SessionInvalidator::end_generation`), so the latch and `generations` are never held by two
+/// different threads in opposite order, and nothing takes the catalog's lock while holding
+/// `generations` or `watches`.
 enum LatchState {
     PreAdmission { recorded: Option<WatchSignal> },
     Admitted,
@@ -1185,9 +1189,13 @@ impl SkpHost {
         }
 
         // Admission, under the latch — the whole decision, including `mint_for_open` on the
-        // success arm, runs inside this one critical section (lock order: latch, then
-        // generations), so the sink's own `Admitted` arm can never race a still-in-progress
-        // admission (it always finds either `PreAdmission` or a fully-admitted generation).
+        // success arm, runs inside this one critical section, so the sink's own `Admitted` arm
+        // can never race a still-in-progress admission (it always finds either `PreAdmission` or
+        // a fully-admitted generation). Past the signal refusal each arm also holds the
+        // catalog's read guard, from its check that the catalog holds the name through the
+        // mint and the record's insert (lock order: latch, then the catalog's read guard, then
+        // generations or `watches`), so a `close_dataset` lands wholly before the check or
+        // wholly after the insert.
         let session = match arm_outcome {
             ArmOutcome::Watching(watch) => {
                 let mut guard = latch.lock().unwrap_or_else(|e| e.into_inner());
@@ -1242,12 +1250,17 @@ impl SkpHost {
                         },
                     }));
                 }
-                // `kernel/OPEN-DATASET-REFUSES-A-NAME-CLOSED-DURING-ADMISSION-PREREGISTRATION.md`:
-                // a close that ran inside `resolves_unchanged` above removed this entry, so the
-                // open refuses before the mint. The guard is dropped first, then the watch (its
+                // `kernel/OPEN-DATASET-REFUSES-A-NAME-CLOSED-DURING-ADMISSION-PREREGISTRATION.md`
+                // and `kernel/OPEN-DATASET-CLOSE-SERIALISED-UNDER-THE-CATALOG-LOCK-PREREGISTRATION.md`:
+                // the catalog's read guard is taken here, after `resolves_unchanged` above (a close
+                // run inside it needs the write guard), and held through the mint and the record's
+                // insert. A close that removed this entry before the check makes the open refuse
+                // before the mint; the guard is dropped, then the latch, then the watch (its
                 // threads call the sink, which takes the latch). Nothing is minted, inserted,
                 // emitted or removed.
-                if self.catalog.get(handle.as_str()).is_none() {
+                let catalog = self.catalog.lock_read();
+                if !catalog.contains_key(handle.as_str()) {
+                    drop(catalog);
                     drop(guard);
                     drop(watch);
                     return Err(SkpError::unknown_dataset(handle.as_str()));
@@ -1268,6 +1281,7 @@ impl SkpHost {
                             coverage: CoverageOutcome::Watching,
                         },
                     );
+                drop(catalog);
                 session
             }
             ArmOutcome::ChecksOnly { reason } => {
@@ -1286,6 +1300,14 @@ impl SkpHost {
                     self.catalog.remove(handle.as_str());
                     return Err(error_of(&engine_error_of_pre_admission_signal(signal)));
                 }
+                // The same check as the Watching arm's, under the same read guard held through the
+                // mint and the record's insert; there is no watch to drop on the refusal.
+                let catalog = self.catalog.lock_read();
+                if !catalog.contains_key(handle.as_str()) {
+                    drop(catalog);
+                    drop(guard);
+                    return Err(SkpError::unknown_dataset(handle.as_str()));
+                }
                 let session = SessionRef::mint();
                 self.generations
                     .mint_for_open(handle.as_str(), session.clone());
@@ -1301,6 +1323,7 @@ impl SkpHost {
                             coverage: CoverageOutcome::ChecksOnly { reason },
                         },
                     );
+                drop(catalog);
                 session
             }
         };
@@ -1572,9 +1595,10 @@ impl SkpHost {
         // `SOURCE-WATCHER-PREREGISTRATION.md` §2b: the `OpenRecord` (and so the watch) is removed
         // under the map guard and dropped only after release — disarming and joining the watch
         // thread(s) before anything below runs, so the watcher can never reach `invalidate` after
-        // `forget_dataset`. This is the first step, ahead of the `unknown_dataset` check, so a
-        // close releases its dataset's watch on every outcome after the SKP version check, the
-        // `unknown_dataset` refusal included
+        // `forget_dataset`, except for a record an admission inserts after this step, which the
+        // removal after step 4 below drops. This is the first step, ahead of the
+        // `unknown_dataset` check, so a close releases its dataset's watch on every outcome after
+        // the SKP version check, the `unknown_dataset` refusal included
         // (`kernel/CLOSE-DATASET-UNKNOWN-KEEPS-OPENRECORD-PREREGISTRATION.md` §2).
         let removed_watch = self
             .watches
@@ -1596,13 +1620,32 @@ impl SkpHost {
         self.generations.begin_close(name);
         // 2. Then cancel every ticket minted before it.
         let cancelled_streams = self.tickets.cancel_all_for_dataset(name);
-        // 3. The generation dies with the open it was minted for; its end mark, its closing mark
-        //    and its ticket attributions go with it, so the mapping does not grow for the life of
-        //    the process. An end reaching `invalidate` after this finds no live generation and
-        //    writes nothing.
-        self.generations.forget_dataset(name);
-        // 4. The name goes last, so a query resolving it before this line still meets steps 1-3.
-        self.catalog.remove(name);
+        // Steps 3 and 4 run under one catalog write guard, taken after step 2 (a racing call at
+        // step 2's drop point takes the catalog's read guard), so an `open_dataset` admission's
+        // check-through-insert lands wholly before it or wholly after it.
+        let removed_dataset = {
+            let mut catalog = self.catalog.lock_write();
+            // 3. The generation dies with the open it was minted for; its end mark, its closing
+            //    mark and its ticket attributions go with it, so the mapping does not grow for
+            //    the life of the process. An end reaching `invalidate` after this finds no live
+            //    generation and writes nothing.
+            self.generations.forget_dataset(name);
+            // 4. The name goes last, so a query resolving it before this line still meets steps
+            //    1-3.
+            catalog.remove(name)
+        };
+        // The removed dataset is dropped after the guard's release, as `Catalog::open`'s note on
+        // replacing a name describes.
+        drop(removed_dataset);
+        // An admission that inserted its record after step 0 (it had passed its check before this
+        // close's write guard) leaves one for a name no longer open: removed here, dropped after
+        // `watches`' guard is released.
+        let late_record = self
+            .watches
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .remove(name);
+        drop(late_record);
         Ok(CloseDatasetResponse { cancelled_streams })
     }
 }
