@@ -1,14 +1,13 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `f83d4fbd7510b6915e55ee4ee883dbed324dab0354ee3dfbc201b46fa9eeb8f3`) at `2026-11-04T02:24:40.781Z`.
+Generated from `PLAN.yaml` (sha256 `e8c256ab10355fc1839696dc4679e9d89c2961a6d907d43545b56e3335d83abc`) at `2026-11-04T02:43:07.688Z`.
 
 ## 1. Next
 
-- **open-dataset-close-serialised-under-the-catalog-lock** — open_dataset's catalog check and mint, in both arms, serialised with close_dataset's forget and removal, and no OpenRecord inserted after a close (the windows the M1 shape leaves) (lane `kernel-protocol`)
+- **pre-admission-change-detail-braces** — Four kernel P6-placeholder detail strings are wrapped in literal braces, which reach the operator message; the watcher form declares each such string starts with the bracketed placeholder tag (lane `kernel-protocol`)
 
 ## 2. Ready
 
-- **open-dataset-close-serialised-under-the-catalog-lock** — open_dataset's catalog check and mint, in both arms, serialised with close_dataset's forget and removal, and no OpenRecord inserted after a close (the windows the M1 shape leaves) (lane `kernel-protocol`, order null, budget 120 min)
 - **pre-admission-change-detail-braces** — Four kernel P6-placeholder detail strings are wrapped in literal braces, which reach the operator message; the watcher form declares each such string starts with the bracketed placeholder tag (lane `kernel-protocol`, order null, budget 30 min)
 - **windows-case-fold-non-ascii** — The audit case policy on Windows folds non-ASCII letters as NTFS does, so a profile path differing only in non-ASCII case cannot escape the user-home redaction (wave 3's 1c-2 correction, S2, code-path-only) (lane `kernel-protocol`, order null, budget 60 min)
 - **governance-f-after-week-rust-ci-figure** — Governance piece F, the after-week Rust CI figure: the form-only Rust CI runs in the 168 h after the merge, recorded as a class 1 row in piece F's form (lane `governance`, order null, budget 30 min)
@@ -49,6 +48,7 @@ Generated from `PLAN.yaml` (sha256 `f83d4fbd7510b6915e55ee4ee883dbed324dab0354ee
 
 ## 5. In progress
 
+- **open-dataset-close-serialised-under-the-catalog-lock** — open_dataset's catalog check and mint, in both arms, serialised with close_dataset's forget and removal, and no OpenRecord inserted after a close (the windows the M1 shape leaves) — evidence: branch `cut/open-dataset-close-serialised-under-the-catalog-lock`
 - **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **b1-shell-half** — Shell migration, milestone 4 -- B1 shell half: attributes of the inspected feature, colour by category with its legend, and the table — evidence: branch `cut/b1-shell-half-pr-c`
 - **port-2-macos-l1-and-app-dirs** — PORT-2 -- macOS L1 for the Cargo workspace: macos-latest in the same matrix, one application-directory boundary replacing the two resolvers, and a case-policy test on a case-insensitive volume — evidence: branch `cut/port-2-macos-l1-and-app-dirs`

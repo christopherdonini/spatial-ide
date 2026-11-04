@@ -1,46 +1,27 @@
 {
-  "generated_at": "2026-11-04T02:24:40.781Z",
-  "plan_hash": "f83d4fbd7510b6915e55ee4ee883dbed324dab0354ee3dfbc201b46fa9eeb8f3",
+  "generated_at": "2026-11-04T02:43:07.688Z",
+  "plan_hash": "e8c256ab10355fc1839696dc4679e9d89c2961a6d907d43545b56e3335d83abc",
   "priorities_approved": true,
   "next": {
-    "id": "open-dataset-close-serialised-under-the-catalog-lock",
-    "title": "open_dataset's catalog check and mint, in both arms, serialised with close_dataset's forget and removal, and no OpenRecord inserted after a close (the windows the M1 shape leaves)",
+    "id": "pre-admission-change-detail-braces",
+    "title": "Four kernel P6-placeholder detail strings are wrapped in literal braces, which reach the operator message; the watcher form declares each such string starts with the bracketed placeholder tag",
     "lane": "kernel-protocol",
     "phase": "prototype",
     "status": "ready",
     "order": null,
-    "budget_minutes": 120,
+    "budget_minutes": 30,
     "needs_human": {
       "kind": "none",
       "minutes": 0
     },
     "evidence": null,
     "dates": {
-      "opened": "2026-10-26",
+      "opened": "2026-10-04",
       "done": null
     },
-    "summary": "FORM COMMITTED 2026-11-03 (governance/forms/kernel/OPEN-DATASET-CLOSE-SERIALISED-UNDER-THE-CATALOG-LOCK-PREREGISTRATION.md; 22 pins at 7591cdad) from lead-data's draft, the human's ruling of 2026-11-03, item 3, in its settlement. NEXT: the filler slot in queue order, a worker on its own checkout and target; the reviewer and the architect from dispatch. Before: RULED 2026-11-03 (state/directives/2026-11-03-271-d1-b-reason-field-7b-open-5-a-follow-up-node-entry-10-open-1-c.md, item 3): OPEN-1 (C), the proof by reading plus the one deterministic test for the close half of W3, (B) if the gates refuse the private-state write from the drop point; OPEN-2 S1, OPEN-3 (a) and OPEN-4 (a) stand, none a red line; the guarantee changes stand under section 36 as the Out-of-scope line declares them. NEXT: the form at its governance path; then the filler slot in queue order. Before: FORM DRAFTED 2026-11-01 by lead-data, read only at 7591cdad (state/consults/2026-11-01-open-dataset-close-serialised-under-the-catalog-lock-five-line-form-lead-data-draft.md); HELD FOR THE HUMAN: its OPEN-1, the evidence route (recommended: a proof by reading plus one deterministic test), is the choice this placed node settles with the human first, so the direction of 2026-10-31, item 4, is not applied to it; OPEN-2 to OPEN-4 and the guarantee readings wait with it. NEXT: the form at its governance path after the human's ruling, then the filler slot in queue order. Before: WAITS ON PIECE F 2026-10-30: 5b merged (#269); its first step commits a form, which lands at its governance path only after #270 merges. Before: PLACED S3 2026-10-26 (state/directives/2026-10-26-clicks-260-261-244-r2-241-o1-answers-pb-draft-b-6d-260-lines-5b-8a-8b-rulings.md): on the filler queue after entry 9. Before: PROPOSED 2026-10-26 by the custodian, as the human's direction for open-dataset-refuses-a-name-closed-during-admission provides (state/directives/2026-10-26-resent-2026-10-25-o1-s1-clang-cl-route-a-hugeint-cast-b-five-nodes-placed.md, item 2: past the five-line budget, the remaining window its own proposed node), from that piece's draft (state/consults/2026-10-26-open-dataset-refuses-a-name-closed-during-admission-five-line-form-architect-draft.md, OPEN-1): the windows the M1 shape leaves open: a close between forget_dataset and the catalog removal, after the open's check; the ChecksOnly arm; and an OpenRecord inserted after a close ran whole between the latch's release and the insert. The shape: the catalog's write guard held across forget_dataset and the removal, or close-races section 2c reordered; the lock order latch, then catalog, then generations. Evidence: no deterministic seam reaches these windows, so its form settles with the human first whether a threaded test with its nondeterminism disclosed, or a proof by reading, is accepted. Unreachable in the shipped app. Proposed and unplaced until the human places it."
+    "summary": "FORM COMMITTED 2026-11-01 (governance/forms/kernel/PRE-ADMISSION-CHANGE-DETAIL-BRACES-PREREGISTRATION.md; 74 pins at 7591cdad) from lead-data's draft (state/consults/2026-11-01-pre-admission-change-detail-braces-five-line-form-lead-data-draft.md), its OPEN-1 to OPEN-7 taken as recommended under the human's direction of 2026-10-31, item 4, for the human's review. NEXT: skipped at dispatch while cut/b2-piece-1c-save-and-reopen edits kernel/src/lib.rs (rule (00)); once 1c step 1 merges, the lib.rs site re-read by an amendment, then a worker; the reviewer and the architect from dispatch. Before: WAITS ON PIECE F 2026-10-29: its first step commits a form, which lands at its governance path only after #270 merges. Before: FILLER QUEUE entry 3 (RULED 2026-10-24: state/directives/2026-10-24-weekend-exception-third-product-slot-placements-forms-ahead-250-click.md, line 11; made the standing filler slot by state/directives/2026-10-24-filler-slot-standing-rule-appended-to-autonomy.md, line 8; state/FILLER-QUEUE.md): placed, graded S3, the braces removed, the words staying placeholders (the node's scope (i)); a five-line form under section 21c's size, the reviewer and the architect from dispatch, section 25 (e) set aside; any string a user sees a P6 placeholder for the sitting, any red-line text to the human. Before: Proposed by PR 173 gate-1 reviewer, N-3 (state/consults/gates/2026-10-04-watch-grandparent-spawn-signal-gate1-reviewer.md); widened by Fable 2026-10-04 advice, item 2 (state/directives/2026-10-04-fable-advice-nodes-trailers-latency.md), checked by the custodian at f3426ba8: four detail literals open with a brace before the P6 placeholder tag and close with a brace, at kernel/src/skp.rs lines 1024 (the pre-admission Change refusal), 1445 and 1521, and kernel/src/lib.rs line 528; two others in skp.rs (1233 and 1329) are unbraced. engine/SOURCE-WATCHER-PREREGISTRATION.md section 7 (its placeholder row) declares that each new operator string starts with the bracketed tag. Two scopes for the human to choose between at placement: (i) braces only, removing the two brace characters from each of the four literals so they match the declared form, with no new wording; (ii) the final wording of the placeholder strings, which is the human ruling P6 reserves. Never queued until the human places it."
   },
   "ready": [
-    {
-      "id": "open-dataset-close-serialised-under-the-catalog-lock",
-      "title": "open_dataset's catalog check and mint, in both arms, serialised with close_dataset's forget and removal, and no OpenRecord inserted after a close (the windows the M1 shape leaves)",
-      "lane": "kernel-protocol",
-      "phase": "prototype",
-      "status": "ready",
-      "order": null,
-      "budget_minutes": 120,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-10-26",
-        "done": null
-      },
-      "summary": "FORM COMMITTED 2026-11-03 (governance/forms/kernel/OPEN-DATASET-CLOSE-SERIALISED-UNDER-THE-CATALOG-LOCK-PREREGISTRATION.md; 22 pins at 7591cdad) from lead-data's draft, the human's ruling of 2026-11-03, item 3, in its settlement. NEXT: the filler slot in queue order, a worker on its own checkout and target; the reviewer and the architect from dispatch. Before: RULED 2026-11-03 (state/directives/2026-11-03-271-d1-b-reason-field-7b-open-5-a-follow-up-node-entry-10-open-1-c.md, item 3): OPEN-1 (C), the proof by reading plus the one deterministic test for the close half of W3, (B) if the gates refuse the private-state write from the drop point; OPEN-2 S1, OPEN-3 (a) and OPEN-4 (a) stand, none a red line; the guarantee changes stand under section 36 as the Out-of-scope line declares them. NEXT: the form at its governance path; then the filler slot in queue order. Before: FORM DRAFTED 2026-11-01 by lead-data, read only at 7591cdad (state/consults/2026-11-01-open-dataset-close-serialised-under-the-catalog-lock-five-line-form-lead-data-draft.md); HELD FOR THE HUMAN: its OPEN-1, the evidence route (recommended: a proof by reading plus one deterministic test), is the choice this placed node settles with the human first, so the direction of 2026-10-31, item 4, is not applied to it; OPEN-2 to OPEN-4 and the guarantee readings wait with it. NEXT: the form at its governance path after the human's ruling, then the filler slot in queue order. Before: WAITS ON PIECE F 2026-10-30: 5b merged (#269); its first step commits a form, which lands at its governance path only after #270 merges. Before: PLACED S3 2026-10-26 (state/directives/2026-10-26-clicks-260-261-244-r2-241-o1-answers-pb-draft-b-6d-260-lines-5b-8a-8b-rulings.md): on the filler queue after entry 9. Before: PROPOSED 2026-10-26 by the custodian, as the human's direction for open-dataset-refuses-a-name-closed-during-admission provides (state/directives/2026-10-26-resent-2026-10-25-o1-s1-clang-cl-route-a-hugeint-cast-b-five-nodes-placed.md, item 2: past the five-line budget, the remaining window its own proposed node), from that piece's draft (state/consults/2026-10-26-open-dataset-refuses-a-name-closed-during-admission-five-line-form-architect-draft.md, OPEN-1): the windows the M1 shape leaves open: a close between forget_dataset and the catalog removal, after the open's check; the ChecksOnly arm; and an OpenRecord inserted after a close ran whole between the latch's release and the insert. The shape: the catalog's write guard held across forget_dataset and the removal, or close-races section 2c reordered; the lock order latch, then catalog, then generations. Evidence: no deterministic seam reaches these windows, so its form settles with the human first whether a threaded test with its nondeterminism disclosed, or a proof by reading, is accepted. Unreachable in the shipped app. Proposed and unplaced until the human places it."
-    },
     {
       "id": "pre-admission-change-detail-braces",
       "title": "Four kernel P6-placeholder detail strings are wrapped in literal braces, which reach the operator message; the watcher form declares each such string starts with the bracketed placeholder tag",
@@ -600,6 +581,28 @@
     }
   ],
   "in_progress": [
+    {
+      "id": "open-dataset-close-serialised-under-the-catalog-lock",
+      "title": "open_dataset's catalog check and mint, in both arms, serialised with close_dataset's forget and removal, and no OpenRecord inserted after a close (the windows the M1 shape leaves)",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": null,
+      "budget_minutes": 120,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "branch": "cut/open-dataset-close-serialised-under-the-catalog-lock"
+      },
+      "dates": {
+        "opened": "2026-10-26",
+        "done": null
+      },
+      "summary": "IN PROGRESS 2026-11-04 in the filler slot: its worker-high dispatched at main 13e6dfbd (the cold build first; S1 under note 3's placement constraints; the new test; M1 and M-T2 observed locally; the SKP-V0 comment in the form's words; each test run under a hard timeout), its brief by file (sha256 063d5aca); rule (00) clear by git, the one protocol/ piece; 7c and 7d still skipped on port-2. Before: FORM COMMITTED 2026-11-03 (governance/forms/kernel/OPEN-DATASET-CLOSE-SERIALISED-UNDER-THE-CATALOG-LOCK-PREREGISTRATION.md; 22 pins at 7591cdad) from lead-data's draft, the human's ruling of 2026-11-03, item 3, in its settlement. NEXT: the filler slot in queue order, a worker on its own checkout and target; the reviewer and the architect from dispatch. Before: RULED 2026-11-03 (state/directives/2026-11-03-271-d1-b-reason-field-7b-open-5-a-follow-up-node-entry-10-open-1-c.md, item 3): OPEN-1 (C), the proof by reading plus the one deterministic test for the close half of W3, (B) if the gates refuse the private-state write from the drop point; OPEN-2 S1, OPEN-3 (a) and OPEN-4 (a) stand, none a red line; the guarantee changes stand under section 36 as the Out-of-scope line declares them. NEXT: the form at its governance path; then the filler slot in queue order. Before: FORM DRAFTED 2026-11-01 by lead-data, read only at 7591cdad (state/consults/2026-11-01-open-dataset-close-serialised-under-the-catalog-lock-five-line-form-lead-data-draft.md); HELD FOR THE HUMAN: its OPEN-1, the evidence route (recommended: a proof by reading plus one deterministic test), is the choice this placed node settles with the human first, so the direction of 2026-10-31, item 4, is not applied to it; OPEN-2 to OPEN-4 and the guarantee readings wait with it. NEXT: the form at its governance path after the human's ruling, then the filler slot in queue order. Before: WAITS ON PIECE F 2026-10-30: 5b merged (#269); its first step commits a form, which lands at its governance path only after #270 merges. Before: PLACED S3 2026-10-26 (state/directives/2026-10-26-clicks-260-261-244-r2-241-o1-answers-pb-draft-b-6d-260-lines-5b-8a-8b-rulings.md): on the filler queue after entry 9. Before: PROPOSED 2026-10-26 by the custodian, as the human's direction for open-dataset-refuses-a-name-closed-during-admission provides (state/directives/2026-10-26-resent-2026-10-25-o1-s1-clang-cl-route-a-hugeint-cast-b-five-nodes-placed.md, item 2: past the five-line budget, the remaining window its own proposed node), from that piece's draft (state/consults/2026-10-26-open-dataset-refuses-a-name-closed-during-admission-five-line-form-architect-draft.md, OPEN-1): the windows the M1 shape leaves open: a close between forget_dataset and the catalog removal, after the open's check; the ChecksOnly arm; and an OpenRecord inserted after a close ran whole between the latch's release and the insert. The shape: the catalog's write guard held across forget_dataset and the removal, or close-races section 2c reordered; the lock order latch, then catalog, then generations. Evidence: no deterministic seam reaches these windows, so its form settles with the human first whether a threaded test with its nondeterminism disclosed, or a proof by reading, is accepted. Unreachable in the shipped app. Proposed and unplaced until the human places it.",
+      "evidence_label": "branch `cut/open-dataset-close-serialised-under-the-catalog-lock`"
+    },
     {
       "id": "b2-piece-1c-save-and-reopen",
       "title": "B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark",
