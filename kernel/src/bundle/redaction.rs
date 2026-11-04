@@ -120,11 +120,12 @@ pub struct MachineIdentifiers {
 }
 
 impl MachineIdentifiers {
-    /// The current machine's, from the environment. Best-effort: an identifier this cannot read is
-    /// simply not scanned for, which is a gap in the scan and not a pass.
+    /// The current machine's, from the environment, and (for the hostname, when neither
+    /// `COMPUTERNAME` nor `HOSTNAME` gives a name of at least 3 bytes) from one file read:
+    /// `/proc/sys/kernel/hostname`. Best-effort: an identifier this cannot read is simply not
+    /// scanned for, which is a gap in the scan and not a pass.
     pub fn from_environment() -> Self {
         let mut usernames = Vec::new();
-        let mut hostnames = Vec::new();
         for key in ["USERNAME", "USER", "LOGNAME"] {
             if let Ok(v) = std::env::var(key) {
                 if v.len() >= 3 && !usernames.contains(&v) {
@@ -132,13 +133,7 @@ impl MachineIdentifiers {
                 }
             }
         }
-        for key in ["COMPUTERNAME", "HOSTNAME"] {
-            if let Ok(v) = std::env::var(key) {
-                if v.len() >= 3 && !hostnames.contains(&v) {
-                    hostnames.push(v);
-                }
-            }
-        }
+        let hostnames = hostnames_from(|key| std::env::var(key).ok(), os_hostname);
         // **Nothing declared**, deliberately: the environment knows what this machine is called and
         // cannot know what the operator meant to publish. A caller that has declarations supplies
         // them (`..MachineIdentifiers::from_environment()`); one that does not gets the strict scan.
@@ -148,6 +143,38 @@ impl MachineIdentifiers {
             declared: Vec::new(),
         }
     }
+}
+
+/// The hostnames to scan for: `COMPUTERNAME` and `HOSTNAME` from `env` when they give a name of at
+/// least 3 bytes; only when neither does, the machine's own name from `os`, trimmed, under the same
+/// floor. The OS name is a fallback and never an extra name, so there are at most two hostnames.
+fn hostnames_from(
+    env: impl Fn(&str) -> Option<String>,
+    os: impl FnOnce() -> Option<String>,
+) -> Vec<String> {
+    let mut hostnames: Vec<String> = Vec::new();
+    for key in ["COMPUTERNAME", "HOSTNAME"] {
+        if let Some(v) = env(key) {
+            if v.len() >= 3 && !hostnames.contains(&v) {
+                hostnames.push(v);
+            }
+        }
+    }
+    if hostnames.is_empty() {
+        if let Some(v) = os() {
+            let v = v.trim().to_string();
+            if v.len() >= 3 {
+                hostnames.push(v);
+            }
+        }
+    }
+    hostnames
+}
+
+/// The machine-identity boundary: the kernel's own name for this machine, read from procfs. Absent
+/// where there is no such file, which leaves the scan with the environment's names alone.
+fn os_hostname() -> Option<String> {
+    std::fs::read_to_string("/proc/sys/kernel/hostname").ok()
 }
 
 /// Literal needles that are a finding wherever they appear, ASCII-case-insensitively.
@@ -639,5 +666,30 @@ mod tests {
             hit.excerpt
         );
         assert!(hit.byte_offset > 0);
+    }
+
+    /// The OS's name for the machine is a **fallback**, never an extra name: it is taken only when
+    /// the environment names none of at least 3 bytes, and the 3-byte floor holds for it too.
+    /// `hostnames_from` takes its two sources as arguments, so no variable is set in this process.
+    ///
+    /// RECORDED MUTATION (observed at f7be3a3071ef8822713a9f05693dc6f897d7f69a: applied, this test run alone, reverted): the `hostnames.is_empty()` guard in `hostnames_from` is dropped, so the OS name is always appended. OBSERVED FAILURE: the second assertion, `an environment name is used alone`, with left ["envhost", "oshost"] and right ["envhost"].
+    #[test]
+    fn the_os_hostname_is_taken_only_when_the_environment_names_none() {
+        let no_env = |_: &str| None;
+        assert_eq!(
+            hostnames_from(no_env, || Some("wave3-probe-host\n".into())),
+            vec!["wave3-probe-host".to_string()],
+            "no environment name: the OS's, trimmed"
+        );
+        let env = |key: &str| (key == "HOSTNAME").then(|| "envhost".to_string());
+        assert_eq!(
+            hostnames_from(env, || Some("oshost".into())),
+            vec!["envhost".to_string()],
+            "an environment name is used alone"
+        );
+        assert!(
+            hostnames_from(no_env, || Some("vm\n".into())).is_empty(),
+            "an OS name under 3 bytes is not scanned for"
+        );
     }
 }
