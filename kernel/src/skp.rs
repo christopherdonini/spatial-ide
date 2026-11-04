@@ -5087,6 +5087,57 @@ mod ticket_drop_under_lock_regression {
         );
     }
 
+    /// An `OpenRecord` inserted after a close's first step is removed before the close returns.
+    /// At close-races' drop point (a retired `Pending` ticket's `RunOnDrop`, after
+    /// `cancel_all_for_dataset` releases its guard) this test inserts a record carrying a
+    /// [`FlagWatch`] for the closing name, as an admission that had passed its check would. That
+    /// writes `watches`, a private field, where §4 (iv) of
+    /// `kernel/GENERATION-CLOSE-RACES-PREREGISTRATION.md` only reads; the product has no
+    /// interposition point there.
+    #[test]
+    fn a_record_inserted_during_a_close_is_removed_before_the_close_returns() {
+        let path = fixture("record-inserted-during-close");
+        let host = Arc::new(SkpHost::new(
+            Arc::new(Catalog::new()),
+            StreamRegistry::new(),
+            no_watch_arm(),
+            discard_session_end_events(),
+        ));
+        let open = open_through(&host, &path, "record-inserted");
+        let name = open.dataset.as_str().to_string();
+        let dropped = Arc::new(AtomicBool::new(false));
+        let racing = RunOnDrop(Some(Box::new({
+            let host = host.clone();
+            let name = name.clone();
+            let flag = dropped.clone();
+            move || {
+                host.watches
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .insert(
+                        name,
+                        OpenRecord {
+                            watch: Some(Box::new(FlagWatch(flag))),
+                            coverage: CoverageOutcome::Watching,
+                        },
+                    );
+            }
+        })));
+        host.tickets()
+            .mint(&name, Box::new(racing), Arc::new(NoopCancel))
+            .expect("mint the drop-point ticket");
+
+        host.close_dataset(close_req(open.dataset)).expect("close");
+        assert!(
+            !holds_a_record(&host, &name),
+            "the close removed the record inserted during it"
+        );
+        assert!(
+            dropped.load(Ordering::SeqCst),
+            "the close dropped that record's watch"
+        );
+    }
+
     // `kernel/KERNEL-CLOSE-DURING-OPEN-ADMISSION-PREREGISTRATION.md` pinned the test that
     // `kernel/OPEN-DATASET-REFUSES-A-NAME-CLOSED-DURING-ADMISSION-PREREGISTRATION.md` replaced with
     // the test below: a real close run from inside `open_dataset`'s admission. No sleep, spawned
@@ -5157,9 +5208,12 @@ mod ticket_drop_under_lock_regression {
     /// the one `kernel/KERNEL-CLOSE-DURING-OPEN-ADMISSION-PREREGISTRATION.md` pinned. The handle is
     /// 16 bytes of OS CSPRNG that only this open returns, and `Catalog::names`, which this test's
     /// watch calls, has no product caller, so nothing in the product can name the entry before the
-    /// open returns. Two windows stay open, both unreachable in the product: a close that removes
-    /// the name after the check, and the ChecksOnly arm. The node placed as filler entry 10,
-    /// `open-dataset-close-serialised-under-the-catalog-lock`, takes them.
+    /// open returns. The two windows this test left open, a close that removes the name after the
+    /// check and the ChecksOnly arm, are closed by
+    /// `kernel/OPEN-DATASET-CLOSE-SERIALISED-UNDER-THE-CATALOG-LOCK-PREREGISTRATION.md`: both arms
+    /// check under the catalog's read guard, held through the mint and the record's insert, and
+    /// `close_dataset` holds the write guard across `forget_dataset` and the removal. No test
+    /// seam reaches those interleavings, so that is shown by reading the code and not by a test.
     ///
     /// RECORDED MUTATION (the fix alone): at 5e38ffae942180fbd1b82d53046568113948bbf8, the product
     /// change before this test existed, the test the earlier form pinned FAILED at its expect on
