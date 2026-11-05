@@ -35,7 +35,9 @@
 // MOVE MAP (governance piece F's form, section 2.3; movedMap.mjs): where governance/MOVED.tsv exists, an UNPINNED
 // cite whose path names a moved file resolves to the new path, read at HEAD, before the exact and suffix tiers, in
 // the tier the path as written has; a moved citing file reads its relative cites from its pre-move folder; and a
-// mapped cite on a line written after the move (git blame) fails by name. A pinned cite takes none of this.
+// mapped cite on a line written after the move (git blame) fails by name. A pinned cite's own path takes none of this (no map,
+// no post-move check); a pinned cite in a moved citing file takes the candidates of its path from the folder the file had
+// before its first move and from its folder now, for the tree resolution and for the pin's path list alike.
 //
 // DEFAULT FILE SET (override with `--files <glob>`):
 //   - every tracked `*.md`               — the WHOLE file is scanned (prose citations count).
@@ -87,7 +89,8 @@
 // hex word right after `@` is read as a pin; a pin is read only at the files the tree now resolves the
 // path to, then at the path as written (the pin's own file list is never searched), so a file gone from
 // the tree is read only if it is the path as written, and the cite can pass at another file the tree
-// now matches; a loose cite matching nothing is not read at its pin. Node's standard library only.
+// now matches (for a moved citing file, from its pre-move folder and from its folder now); a loose cite matching nothing is not
+// read at its pin. Node's standard library only.
 //
 // RELATIONSHIP to frontends/shell/e2e/citationIntegrity.test.mjs (the human's item 2, "extend the
 // citation-integrity scan to all files"): that e2e check is a DIFFERENT defect class — it proves a
@@ -399,6 +402,13 @@ export function legacyListErrors(root) {
   return errors;
 }
 
+// A pinned cite's candidates: resolveRef from the citing file's folder before its first move, then from its folder now. Returns [exact, all].
+function pinnedRefs(pathRaw, citingRel, index, map) {
+  const here = resolveRef(pathRaw, citingRel, index);
+  const before = resolveRef(pathRaw, originPath(map, citingRel), index);
+  return [[...new Set([...before.exact, ...here.exact])], [...new Set([...before.all, ...here.all])]];
+}
+
 /**
  * Runs the scan. Returns { gated, advisory, scanned, listErrors }. Each finding is
  * { relPath, citeLine, target, reason }. `gated` findings drive the exit code; `advisory` findings
@@ -432,8 +442,9 @@ export function runVerifyCites({ repoRoot, filesGlob } = {}) {
       const cls = classifyPath(cite.pathRaw, topDirs);
       if (cls === 'doc-number') continue;
       const at = { relPath, citeLine: cite.citeLine, target: cite.raw };
-      // A pinned cite takes the path it always took: no map, no post-move check (the form's section 2.3).
-      const res = checkCitation(cite, index, root, cite.pin ? undefined : map);
+      // A pinned cite's own path takes no map and no post-move check (the form's section 2.3); a moved citing file's
+      // relative path is resolved from its pre-move folder and from its folder now (pinnedRefs).
+      const res = cite.pin ? checkResolved(cite, ...pinnedRefs(cite.pathRaw, relPath, index, map), root) : checkCitation(cite, index, root, map);
       if (res.mapped && post.writtenAfter(res.mapped.row, relPath, cite.citeLine)) {
         const row = res.mapped.row;
         (res.mapped.exact ? sink : advisory).push({ ...at, reason: `old path "${row.old}" cited after the move at ${row.commit.slice(0, 12)}; cite "${res.mapped.path}"` });
@@ -448,8 +459,8 @@ export function runVerifyCites({ repoRoot, filesGlob } = {}) {
       }
       let pinReason = null;
       if (cite.pin && (res.status !== 'no-match' || cls === 'rooted')) {
-        const rr = resolveRef(cite.pathRaw, relPath, index);
-        const pr = checkPinned(cite, root, [...new Set([...(rr.exact.length ? rr.exact : rr.all), cite.pathRaw.replace(/^\.\//, '')])]);
+        const [rx, ra] = pinnedRefs(cite.pathRaw, relPath, index, map);
+        const pr = checkPinned(cite, root, [...new Set([...(rx.length ? rx : ra), cite.pathRaw.replace(/^\.\//, '')])]);
         if (pr.ok) continue;
         // A pin that only says "not found" does not replace a reason the tree already found a file for.
         if (!(pr.missingFile && res.status !== 'no-match')) pinReason = pr.reason;

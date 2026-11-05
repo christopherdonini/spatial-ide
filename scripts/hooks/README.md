@@ -161,8 +161,9 @@ matchers (the latter so a `--resume`/`/resume` session gets the same reading ord
 §0's own framing: "Reading order after a compaction **or a new session**").
 
 Prints §0's reading order (its steps, in order: the ledger, the generated queue,
-`DECISIONS-PENDING.md`, `state/directives/`, `PRECEDENTS.md`, then `AUTONOMY.md` and
-`AI_DEVELOPMENT.md`), then `state/CUT-STATE.md`'s `## SESSION-CONTINUITY` block **verbatim**
+`governance/DECISIONS-PENDING.md`, `state/directives/`, `governance/PRECEDENTS.md`, then
+`governance/AUTONOMY.md` and `governance/AI_DEVELOPMENT.md`), then `state/CUT-STATE.md`'s
+`## SESSION-CONTINUITY` block **verbatim**
 (heading through the next `#`-heading or end of file) — nothing summarized or reformatted. Never
 throws: a missing or unparseable `state/CUT-STATE.md` still prints the reading order, with a note
 in place of the block.

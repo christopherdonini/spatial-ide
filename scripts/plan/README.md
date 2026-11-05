@@ -54,7 +54,7 @@ document markers, malformed lines, duplicate keys — with the offending line nu
   small shared helpers reused by `queue.mjs`/`site.mjs`/`verify.mjs`.
 
 Run `node scripts/plan/plan.mjs [path]` directly for a one-line sanity check (defaults to
-`PLAN.yaml` at the repo root).
+`governance/PLAN.yaml`, a path read from the working directory, so run it from the repo root).
 
 ## `queue.mjs` — the generated queue (§2)
 
