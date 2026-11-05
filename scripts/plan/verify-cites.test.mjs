@@ -792,6 +792,7 @@ function assertGatedAtPin({ gated, advisory }, relPath, cites) {
   );
 }
 
+// RECORDED MUTATION (M1) at 6f29ce6062b72cef23782d87ccbae207d967187f, applied alone and reverted: pinnedRefs resolved the path from the citing file's current folder only (originPath dropped) -> fails by name, and only this one: `verify-cites: a moved form's relative pinned cites resolve from its pre-move folder at the exact tier`.
 test("verify-cites: a moved form's relative pinned cites resolve from its pre-move folder at the exact tier", (t) => {
   const E = 'EXPORT-CURRENT-VIEW-AFTER-UNREPORTED-FIT-PREREGISTRATION.md';
   const K40 = 'KNOWN-LIMITATIONS-ITEM-40-SOURCE-COMMENT-PREREGISTRATION.md';
@@ -813,6 +814,7 @@ test("verify-cites: a moved form's relative pinned cites resolve from its pre-mo
   assertGatedAtPin({ gated: res.gated, advisory: [] }, `governance/forms/root/${K41}`, k41);
 });
 
+// RECORDED MUTATION (M2) at 6f29ce6062b72cef23782d87ccbae207d967187f, applied alone and reverted: pinnedRefs returned the pre-move folder's candidates only -> fails by name, and only this one: `verify-cites: a pinned cite from a moved file to a file moved beside it stays at the exact tier`.
 test('verify-cites: a pinned cite from a moved file to a file moved beside it stays at the exact tier', (t) => {
   const O = 'KNOWN-LIMITATIONS-OWED-ROWS-PREREGISTRATION.md';
   const prec = pinnedCitesAt('governance/PRECEDENTS.md').filter((c) => c.pathRaw === 'AI_DEVELOPMENT.md');
