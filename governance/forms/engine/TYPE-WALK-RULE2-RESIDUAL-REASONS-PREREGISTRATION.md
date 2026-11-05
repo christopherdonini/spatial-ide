@@ -184,3 +184,12 @@ Nothing touches protocol/. The path lists are the brief's; I cannot read branche
 - **W-1:** by the ruling, "W-1's placeholder sentence is narrowed to the conversions it describes (a float type against an integer or decimal type) and says nothing of text". Note 3's words name only those conversions, so they stand unchanged, and the form's claim for W-1 narrows with them. The text-beside-NULL shape (Amendment 1's `'1' + NULL > 0`) is outside this piece.
 - **F-B:** its own node, `arithmetic-text-literal-beside-null-reason`, S3, filler entry 8d after 8c. It gives that shape a true sentence under the existing reason value and adds no reason value.
 - **8c** (`literal-only-float-integer-arithmetic-refused`) follows this piece.
+
+### Amendment 3 — 2026-11-05 — the custodian's record (class 1) of gate 1 and its words; references only
+
+- **Gate 1:** both gates PASS WITH NOTES: the architect, `state/consults/gates/2026-11-05-type-walk-rule2-residual-reasons-gate1-architect.md` (gate-log row 678), and the reviewer, `state/consults/gates/2026-11-05-type-walk-rule2-residual-reasons-gate1-reviewer.md` (row 679). Their blocking findings were sentences, each with its own replacement words, so under Part 1 item 2 of the human's rulings of 2026-11-05 (`state/directives/2026-11-05-main-architect-gate-rounds-part-1-rulings-review-packet-design-part-3-additions.md`) no gate re-runs for the words.
+- **The words:** one set, the reviewer's replacement words (its Documentation section), which carry the architect's D-1 and D-2 and the reviewer's own D-1 (the form path) and D-2 (the wire clause); and the same wire clause in the reason enum's doc, the reviewer's N-1, a sibling sent back to the worker under Part 1 item 4. Applied, comments only, by commit 341e41470c36b0010879a41b74c57ef02088012c; the worker's report is `state/consults/2026-11-05-type-walk-rule2-residual-reasons-worker-report-3.md`.
+- **D-3, the architect's:** note 3's sentence on the unary, `/` and junction callers is false of `/`, as the architect's report states at its D-3 with its clause check; note 3 is read with that finding.
+- **For the human with W-1:** the architect's shapes (a) to (c) (its section for the human) and the reviewer's probe results (its W-1 section). No replacement words: W-1 is the human's wording.
+- **N-3, the reviewer's:** its probe wrote a fixture outside its brief's write locations and removed it (its note N-3).
+- **Next:** PR #282 out of draft for the human's click.
