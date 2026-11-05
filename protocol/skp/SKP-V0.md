@@ -52,7 +52,7 @@ before it returns a handle. **`open_dataset` is cancellable but not progress-rep
 docs/01 principle-7 shortfall, not a silent gap (§2, C3).
 
 Refusal skp.unknown_dataset: the catalog no longer holds the name at admission. Wire change: an added refusal on open_dataset, the existing code; no message changes shape.
-<!-- The refusal above is made in SkpHost::open_dataset's Watching and ChecksOnly arms, at one check under the catalog's read guard, held through the mint and the OpenRecord's insert; close_dataset holds the catalog's write guard across forget_dataset and the name's removal, so a close lands wholly before the check or wholly after the insert. Neither interleaving is reachable in the shipped app: the handle is minted from the OS CSPRNG and returned only by this open, and Catalog::names has no product caller. -->
+<!-- The refusal above is made in SkpHost::open_dataset's Watching and ChecksOnly arms, at one check under the catalog's read guard, held through the mint and the OpenRecord's insert; close_dataset holds the catalog's write guard across forget_dataset and the name's removal, so those two steps land wholly before the check or wholly after the insert. A close's earlier steps (its OpenRecord removal, its unknown_dataset check, begin_close and the ticket cancel) can run between the check and the insert; the OpenRecord removal after the name's removal drops a record inserted then. None of these interleavings is reachable in the shipped app: the handle is minted from the OS CSPRNG and returned only by this open, and Catalog::names has no product caller. -->
 
 ### `describe`
 

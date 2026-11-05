@@ -1191,11 +1191,12 @@ impl SkpHost {
         // Admission, under the latch — the whole decision, including `mint_for_open` on the
         // success arm, runs inside this one critical section, so the sink's own `Admitted` arm
         // can never race a still-in-progress admission (it always finds either `PreAdmission` or
-        // a fully-admitted generation). Past the signal refusal each arm also holds the
-        // catalog's read guard, from its check that the catalog holds the name through the
-        // mint and the record's insert (lock order: latch, then the catalog's read guard, then
-        // generations or `watches`), so a `close_dataset` lands wholly before the check or
-        // wholly after the insert.
+        // a fully-admitted generation). Past the signal refusal each arm also holds the catalog's
+        // read guard, from its check that the catalog holds the name through the mint and the
+        // record's insert (lock order: latch, then the catalog's read guard, then generations or
+        // `watches`), so `close_dataset`'s `forget_dataset` and removal of the name, under its
+        // write guard, land wholly before the check or wholly after the insert; its earlier steps
+        // can run in between, and its record removal after step 4 drops a record inserted then.
         let session = match arm_outcome {
             ArmOutcome::Watching(watch) => {
                 let mut guard = latch.lock().unwrap_or_else(|e| e.into_inner());
@@ -5068,7 +5069,7 @@ mod ticket_drop_under_lock_regression {
     /// REGISTERED MUTATION: delete the `watches` removal in `close_dataset`. Applied at `f4fb9ed`,
     /// run and reverted: this test FAILED on `the close removed the record`.
     ///
-    /// OBSERVED MUTATION (M-T2, not registered): delete step 0's `watches` removal. Applied at
+    /// RECORDED MUTATION (M-T2, not registered): delete step 0's `watches` removal. Applied at
     /// d95baf4d603a3d8c4c3cca1a60a773b474c22bfe, run and reverted: this test PASSED, so it no
     /// longer catches the deletion alone, and
     /// `a_close_whose_catalog_entry_is_already_gone_still_drops_its_watch` FAILED on `the close
