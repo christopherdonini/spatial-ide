@@ -1,0 +1,7 @@
+# The human's message of 2026-11-05 (mid-turn): Part 3's first item: the build confirmed from the transcript's version field, then reading 2's re-run over the latest three full days on 2.1.312 or later with Part 2's table, the hooks' own tests, the Guardian's live checks under I2 with the build in the ledger, and the SubagentStop counts before and after 2.1.311; E1 then waits on reading 1 alone
+
+*Filed verbatim by the custodian from the session transcript: the human's message, sent while a turn ran, has no user record; its queue enqueue record at 2026-11-05T16:22:01.238Z (UTC) holds it, and its text is byte-copied by script from that record's content, unchanged. Nothing in it names another project or a profile path. The RULED block in governance/DECISIONS-PENDING.md is the custodian's summary; the text below is the ruling.*
+
+---
+
+To the custodian, 2026-11-05. Part 3's first item: your ledger records this transcript on 2.1.314 from 2026-10-30T06:07:30Z. Confirm it from the transcript's version field as you read it today, in one line. If it holds, the upgrade's steps do not wait for a restart: take reading 2's re-run now, over the latest three full days on 2.1.312 or later, with Part 2's table (Part 3, addition 1); run the hooks' own tests; run the Guardian's live checks at this build under I2, the build in the ledger; note the SubagentStop counts before and after 2.1.311 as addendum 2 says. E1 then waits on reading 1 alone, which is mine. If the field shows an older build, say so and the steps wait for my restart.
