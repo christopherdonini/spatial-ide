@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `ecf47d8cb1db5e88567eba4474050be7ebca2a472e0d899aa49f5a664ff42a8d`) at `2026-11-05T19:15:09.182Z`.
+Generated from `PLAN.yaml` (sha256 `d0858fa9c8e90c68edbe99690cdc7a7da599d4dfc5e0e393a5fb4a513d0f2f03`) at `2026-11-05T19:25:00.094Z`.
 
 ## 1. Next
 
@@ -147,6 +147,10 @@ Generated from `PLAN.yaml` (sha256 `ecf47d8cb1db5e88567eba4474050be7ebca2a472e0d
 - **skp-spec-and-protocol-comments-drift-sweep-c** — SKP-V0.md live sections and the protocol and shell doc comments brought current to main (drift sweep area C, findings 2 to 11, and area A, finding 3), after 1c (phase `prototype`) — never queued until placed
 - **module-docs-drift-sweep-area-d** — Kernel and engine module docs: the never-refuses and unreachable claims the Table, record_step and publish have overtaken, the withdrawn cancellation bound, and smaller statements (drift sweep area D, findings 1 to 6) (phase `prototype`) — never queued until placed
 - **shell-comments-drift-sweep-area-a** — Shell product comments stale against main: the candidate arm called dev-only, the e2e surface calling baseline the default, accessors labelled instrument-only, the old status-stack frame and smaller statements (drift sweep area A, less the lines in b1-shell-half PR B files) (phase `prototype`) — never queued until placed
+- **adr-indices-hand-written-current** — The hand-written ADR indices brought current: docs/README.md conventions paragraph and the docs/02 ADR list, where ADR-013 is called proposed though accepted and architect-blockable (the docs audits, A-S3, A-S5 and A-S8 index halves and the platform-only items) (phase `prototype`) — never queued until placed
+- **adr-029-stale-line-cites** — ADR-029 (Proposed, unbuilt): its line cites into the code and the admission form land on other text, so an implementer of the scan-progress route would follow them to the wrong places (the docs audits, Task C rows 56 to 73 and Task B) (phase `prototype`) — never queued until placed
+- **adr-023-stale-cites-before-acceptance** — ADR-023 (Proposed, built in B1): its line cites and six of its sentences are stale against main, misleading a verifier and the human at its acceptance at B1 close (the docs audits, Task C rows 16 to 53) (phase `prototype`) — never queued until placed
+- **comment-line-cites-kin-docs-audit-c** — Product and e2e comments whose line cites point at moved text: origin.rs on AI_DEVELOPMENT.md, engine/src/error.rs and the admission-remediation e2e script on crs.rs (the docs audits, Task C kin) (phase `prototype`) — never queued until placed
 
 ### Unscheduled
 
