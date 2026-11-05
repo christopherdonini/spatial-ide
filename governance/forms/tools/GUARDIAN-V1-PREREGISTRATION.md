@@ -1713,3 +1713,53 @@ Nothing above is edited.
 8. **Superseded index:** Amendment 11 item 2's build bullet → items 1 to 3; Amendment 11 item 5 and Amendment 12 item 2's E15 clause → items 4 to 6.
 
 Nothing above is edited.
+
+### Amendment 14 — the live checks again at build 2.1.314, under I2 as ruled (class 1 and class 2)
+
+*Class 1 rows and a class 2 deviation, recorded by the custodian on main at the human's request of 2026-11-05 (`state/directives/2026-11-05-part-3-first-item-build-2-1-314-confirmed-reading-2-re-run-hooks-tests-guardian-i2-subagentstop.md`), the asking that Amendment 13 item 1 requires before a later build is a new observation. Texts are byte-copied by script from this session's transcript and the log files; folders outside the repository are named in words; no content of the settings file is recorded.*
+
+1. **The build (class 1).** Under Amendment 13 item 1, a live row's build is the engine of the session that ran it, read from the transcript. This session's transcript records version 2.1.314 on each row's call below, E7 to E11 and E15, and on every record from 2026-10-30T06:07:30.904Z. The ledger records the build in the same commit as this amendment, in its entry for these rows (`state/CUT-STATE.md`).
+2. **Preconditions.**
+   - **The mod.** The last commit under `tools/mods/spatial-guardian` is e4955589, the merged head (Amendment 12 item 1). The main checkout was at 3909e2886803aaa1a3d0777da9d262765237c23b for every row, with no uncommitted change under `tools/mods`.
+   - **Deviation (class 2): no reload, and `claude plugin list` not read.** The plugin commands are the human's (`state/directives/2026-10-30-270-readme-r1-r3-d5-open-1-class-1-269-clicked-4a-7a-rulings.md`, its line on the Guardian's tests). The rows' own refusals and log files show the mod live in this session. Which bytes the engine runs is not settled here, as the README states.
+   - **I2's test half.** The human ran `claude plugin test tools/mods/spatial-guardian` at 2.1.314 in the piece F worktree at f6168c99: 76 pass, 0 fail (`state/directives/2026-10-30-guardian-tests-76-pass-0-fail-in-the-f-worktree-at-f6168c99.md`). That run is the human's record and is not repeated here. `validate` has not run at 2.1.314: it is a plugin command, so the question goes to the human.
+3. **The rows (class 1).** Each time is the call's record in the transcript; each text is the tool result's, byte-copied less the engine's error wrapper.
+- **E7.** A main-loop Bash, `gh pr merge --help`, at 2026-11-05T16:50:07.707Z: refused.
+
+  ```text
+  spatial-guardian G7: refused, because a merge is the human's click and an agent never rewrites history.
+  ```
+
+  As §4 predicts (G7's reason). Its log file is `165010349-ca86cabaecb1f2f8.json`.
+- **E8.** A main-loop Bash, `claude plugin install --help`, at 16:50:12.188Z: refused.
+
+  ```text
+  spatial-guardian G8: refused, because installing, enabling or configuring plugins, marketplaces, MCP servers or the user's Claude settings is the human's own act.
+  ```
+
+  As §4 predicts (G8's reason). Its log file is `165012194-cdb57b90331f5ad4.json`.
+- **E9.** A main-loop Bash, `cd C:/dev/spatial-ide && cargo clean --dry-run`, at 16:50:12.707Z: refused.
+
+  ```text
+  spatial-guardian G9: refused, because the main checkout's target holds fixtures and evidence and is never cleaned wholesale.
+  ```
+
+  As §4 predicts (G9's reason). Its log file is `165012716-7c68c1104f9ee14e.json`.
+- **E10.** The refusal-log folder for this checkout (the README's, beside the main checkout), dated 2026-11-05:
+  - **Before E7:** its dated folder did not exist. A script read that at 16:50:10.108Z by its own clock, before E7's file was written (16:50:10.349Z by the file's name).
+  - **After E9, and after the allowed call:** three files, one for each of E7 to E9. **After E11:** still three, read at 16:50:30.690Z. **After E15:** four.
+  - **The check.** For each of the four, a script checked: one JSON line and an LF; the schema `spatial-guardian/v1`; the row's rule; the tool (Bash for E7 to E9, Edit for E15); agent `main`; `target_sha256` equal to the sha256 of the command or file path as the transcript's tool input gives it; `reason` equal to the tool result's text less the engine's error wrapper; the name's 16 hex equal to the line's sha256; and the fields exactly `schema`, `time`, `rule`, `tool`, `agent`, `target_sha256` and `reason`. All hold.
+  - **The allowed call beside them.** A main-loop Bash, `git --no-optional-locks status --porcelain`, at 16:50:16.425Z, ran: its result is not an error.
+- **E11.** A main-loop Write creating a new file in the session scratchpad, at 16:50:24.504Z: it passed, and the tool result reports the file created. The path is not recorded, because it lies under the user's profile. No log file was added.
+- **E15.** A main-loop Edit of the main checkout's `.claude/settings.local.json`, at 16:50:35.768Z: refused. Its `old_string` was fresh text absent from the file, and no Read of the file came before it.
+
+  ```text
+  spatial-guardian G8: refused, because installing, enabling or configuring plugins, marketplaces, MCP servers or the user's Claude settings is the human's own act.
+  ```
+
+  - As Part E predicts: G8's reason. Its log file is `165035822-26c14915af05f0b4.json`.
+  - A script computed the file's sha256 before the call (16:50:30Z) and after it (16:50:44Z), by its own clock. The two are equal. The value is not recorded.
+4. **Outcome:** at 2.1.314, E7 to E11 and E15 come out as §4 and Part E predict, as they did at 2.1.292 (Amendments 11 and 13). No live G1 probe was made.
+5. **Generation:** the node's generation goes up by one. Its status stays done.
+
+Nothing above is edited.

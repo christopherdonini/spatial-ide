@@ -4341,7 +4341,7 @@ nodes:
     merge: merge-commit
     evidence: {pr: 216}
     budget_minutes: 240
-    generation: 13
+    generation: 14
     felt_verdict: false
     entries: []
     summary: "[archived summary] state/cut-archive/PLAN-SUMMARIES-2026-10-21.yaml"
