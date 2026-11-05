@@ -23,7 +23,9 @@ import {
   resolveRef,
   checkCitation,
   runVerifyCites,
+  REPO_ROOT,
 } from './verify-cites.mjs';
+import { addCommit } from './moved-map.mjs';
 import { movedRepo, commitFiles, git, dated, removeAfter, X_OLD, X_NEW } from './movedFixture.mjs';
 
 function mkIndex(paths) {
@@ -756,4 +758,73 @@ test('a_range_ending_at_line_0_keeps_the_line_0_reason', () => {
   const res = checkCitation({ pathRaw: 'engine/src/pool.rs', startL: 5, endL: 0, relPath: 'docs/x.md' }, mkIndex(['engine/src/pool.rs']), dir);
   assert.equal(res.status, 'oob-exact');
   assert.equal(res.reason, 'line 0 does not exist in "engine/src/pool.rs" (lines count from 1)');
+});
+
+// --- a moved citing file's relative pinned cites (node verify-cites-moved-file-relative-pinned-cites) --------------
+
+// The real shape: the cites of three forms and of two sibling files, read from the record at a fixed commit (CI clones the full history).
+const REAL_REV = '8e90c244fbf0cdd1175447a883f40f62d90fadd1';
+const pinnedCitesAt = (rel) =>
+  extractCitations(execFileSync('git', ['show', `${REAL_REV}:${rel}`], { cwd: REPO_ROOT, encoding: 'utf8', maxBuffer: 1 << 26 })).filter((c) => c.pin);
+
+// A repository whose files sit at their old paths (each holds one cite per line), then move to the new paths in a moves-only commit with the map.
+function movedCitesRepo(moves, others) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'moved-pinned-'));
+  git(dir, ['init', '-q', '-b', 'main']);
+  const text = (cites) => (Array.isArray(cites) ? cites.map((c) => `${c.raw} @ ${c.pin}`).join('\n') + '\n' : cites);
+  commitFiles(dir, { ...Object.fromEntries(moves.map(([old, , cites]) => [old, text(cites)])), ...others }, 'before the move', '2026-01-01T00:00:00Z');
+  for (const [old, nu] of moves) {
+    fs.mkdirSync(path.join(dir, path.posix.dirname(nu)), { recursive: true });
+    git(dir, ['mv', '--', old, nu]);
+  }
+  git(dir, ['commit', '-q', '-m', 'moves only'], dated('2026-02-01T00:00:00Z'));
+  addCommit(dir, git(dir, ['rev-parse', 'HEAD']));
+  commitFiles(dir, { 'governance/MOVED.tsv': fs.readFileSync(path.join(dir, 'governance/MOVED.tsv'), 'utf8') }, 'moved map', '2026-02-02T00:00:00Z');
+  return dir;
+}
+
+// Every cite of `cites`, at its line of `relPath`, is gated with the pin's own reason (no pinned commit exists in the fixture); none is advisory.
+function assertGatedAtPin({ gated, advisory }, relPath, cites) {
+  assert.deepEqual(advisory, []);
+  assert.deepEqual(
+    gated.filter((f) => f.relPath === relPath).map((f) => ({ citeLine: f.citeLine, target: f.target, reason: f.reason })),
+    cites.map((c, i) => ({ citeLine: i + 1, target: c.raw, reason: `pinned commit ${c.pin} not found` })),
+  );
+}
+
+test("verify-cites: a moved form's relative pinned cites resolve from its pre-move folder at the exact tier", (t) => {
+  const E = 'EXPORT-CURRENT-VIEW-AFTER-UNREPORTED-FIT-PREREGISTRATION.md';
+  const K40 = 'KNOWN-LIMITATIONS-ITEM-40-SOURCE-COMMENT-PREREGISTRATION.md';
+  const K41 = 'KNOWN-LIMITATIONS-ITEM-41-SOURCE-COMMENT-PREREGISTRATION.md';
+  const exp = pinnedCitesAt(`governance/forms/frontends/${E}`).filter((c) => /^src(-tauri)?\//.test(c.pathRaw));
+  const k40 = pinnedCitesAt(`governance/forms/root/${K40}`).filter((c) => c.pathRaw === 'KNOWN-LIMITATIONS.md');
+  const k41 = pinnedCitesAt(`governance/forms/root/${K41}`).filter((c) => c.pathRaw === 'KNOWN-LIMITATIONS.md');
+  assert.deepEqual([exp.length, k40.length, k41.length], [39, 1, 1]);
+  const targets = Object.fromEntries([...exp.map((c) => [`frontends/shell/${c.pathRaw}`, '']), ['KNOWN-LIMITATIONS.md', '']]);
+  const dir = movedCitesRepo(
+    [[`frontends/shell/${E}`, `governance/forms/frontends/${E}`, exp], [K40, `governance/forms/root/${K40}`, k40], [K41, `governance/forms/root/${K41}`, k41]],
+    targets,
+  );
+  removeAfter(t, dir);
+  const res = runVerifyCites({ repoRoot: dir });
+  assert.equal(res.gated.length, 41, JSON.stringify(res));
+  assertGatedAtPin(res, `governance/forms/frontends/${E}`, exp);
+  assertGatedAtPin({ gated: res.gated, advisory: [] }, `governance/forms/root/${K40}`, k40);
+  assertGatedAtPin({ gated: res.gated, advisory: [] }, `governance/forms/root/${K41}`, k41);
+});
+
+test('verify-cites: a pinned cite from a moved file to a file moved beside it stays at the exact tier', (t) => {
+  const O = 'KNOWN-LIMITATIONS-OWED-ROWS-PREREGISTRATION.md';
+  const prec = pinnedCitesAt('governance/PRECEDENTS.md').filter((c) => c.pathRaw === 'AI_DEVELOPMENT.md');
+  const owed = pinnedCitesAt(`governance/forms/root/${O}`).filter((c) => c.pathRaw === O);
+  assert.deepEqual([prec.length, owed.length], [7, 2]);
+  const dir = movedCitesRepo(
+    [['PRECEDENTS.md', 'governance/PRECEDENTS.md', prec], [O, `governance/forms/root/${O}`, owed], ['AI_DEVELOPMENT.md', 'governance/AI_DEVELOPMENT.md', 'x\n']],
+    {},
+  );
+  removeAfter(t, dir);
+  const res = runVerifyCites({ repoRoot: dir });
+  assert.equal(res.gated.length, 9, JSON.stringify(res));
+  assertGatedAtPin(res, 'governance/PRECEDENTS.md', prec);
+  assertGatedAtPin({ gated: res.gated, advisory: [] }, `governance/forms/root/${O}`, owed);
 });
