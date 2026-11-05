@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `caef171374293273a054c0653ca13407f1449b7d4a156d475b164fc1fba33658`) at `2026-11-05T18:45:48.816Z`.
+Generated from `PLAN.yaml` (sha256 `37ea0f1203bc7abf4001815223ffc4e0527845c064b28d096210580f32c48ad6`) at `2026-11-05T18:56:20.460Z`.
 
 ## 1. Next
 
@@ -141,6 +141,12 @@ Generated from `PLAN.yaml` (sha256 `caef171374293273a054c0653ca13407f1449b7d4a15
 - **module-readme-moved-form-paths** — The preregistration form paths in kernel/README.md and engine/README.md named where piece F moved them (governance/forms/) (phase `prototype`) — never queued until placed
 - **publish-filter-sentence-under-whole-dataset** — The publish dialog shows the filter sentence, which says the viewport extent is published, under Whole dataset too, where the whole file is published (the cloud audit, U12) (phase `prototype`) — never queued until placed
 - **stale-harness-comments-find-prime-and-late-result** — Stale harness and test comments: the FIND step header and its status comment in regression.mjs, and a cite into candidateArmSession.ts in App.lateResult.test.tsx (phase `prototype`) — never queued until placed
+- **walkthrough-rows-stale-against-main-sweep-area-b** — MANUAL-WALKTHROUGH.md rows stale against main, each of which would have the operator record a wrong result at a sitting or a rerun (drift sweep area B, findings 1 to 5 and 7 to 10) (phase `prototype`) — never queued until placed
+- **e2e-readme-security-posture-measure-build** — frontends/shell/e2e/README.md: the security-posture paragraph is untrue for the measure build (the debug port in Rust, the e2e hooks kept in), with the missing E-FLOOR entry and stale lib.rs cites (drift sweep area B, findings 6, 11 and 12) (phase `prototype`) — never queued until placed
+- **skp-filter-dialect-unsupported-ruling** — SKP-V0.md lists skp.filter_dialect_unsupported as a refusal a client receives; no code produces it, a wrong dialect failing at deserialization: the human rules produce or strike (drift sweep area C, finding 1) (phase `prototype`) — never queued until placed
+- **skp-spec-and-protocol-comments-drift-sweep-c** — SKP-V0.md live sections and the protocol and shell doc comments brought current to main (drift sweep area C, findings 2 to 11, and area A, finding 3), after 1c (phase `prototype`) — never queued until placed
+- **module-docs-drift-sweep-area-d** — Kernel and engine module docs: the never-refuses and unreachable claims the Table, record_step and publish have overtaken, the withdrawn cancellation bound, and smaller statements (drift sweep area D, findings 1 to 6) (phase `prototype`) — never queued until placed
+- **shell-comments-drift-sweep-area-a** — Shell product comments stale against main: the candidate arm called dev-only, the e2e surface calling baseline the default, accessors labelled instrument-only, the old status-stack frame and smaller statements (drift sweep area A, less the lines in b1-shell-half PR B files) (phase `prototype`) — never queued until placed
 
 ### Unscheduled
 
