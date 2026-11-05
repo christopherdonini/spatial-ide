@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-05T19:25:00.281Z",
-  "plan_hash": "d0858fa9c8e90c68edbe99690cdc7a7da599d4dfc5e0e393a5fb4a513d0f2f03",
+  "generated_at": "2026-11-05T19:50:15.023Z",
+  "plan_hash": "227f94fb85cd52c3667b0e928ac4ad17f5efdb1819acfd1f38c3bbd9ce09aa8f",
   "priorities_approved": true,
   "lanes": [
     {
@@ -6822,7 +6822,7 @@
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "PLACED S3 2026-10-26 (state/directives/2026-10-26-clicks-260-261-244-r2-241-o1-answers-pb-draft-b-6d-260-lines-5b-8a-8b-rulings.md): on the filler queue after entry 8b. Before: PROPOSED 2026-10-26 by the custodian from type-walk-rule2-residual-reasons's draft (state/consults/2026-10-26-type-walk-rule2-residual-reasons-five-line-form-architect-draft.md, note 4, F-A; its OPEN-5): the walk's arithmetic arm needs a non-literal float for rule 6 and a non-literal integer for rule 5, so 1e3 + 5 > 0 and 0.5 + 1e3 > 0 refuse as conversion_rounds, while FILTER-BIND section 2.5(a) says a double literal with an integer follows rule 5 and ADR-021's Note admits two numeric literals within the bounds inside +, - and *. Read only, never run; B-T1's probe set builds column-op-operand only, so nothing pins it. A fix changes what admission admits: an ADR-021 reading, likely full gating. Proposed and unplaced until the human places it.",
+      "summary": "FORM DRAFTED AHEAD 2026-11-05 (state/consults/2026-11-05-literal-only-float-integer-arithmetic-refused-five-line-form-lead-data-draft.md): lead-data reads the five-line form closed on two grounds, either alone: section 21a, ADR-021's admitted class being a stated guarantee (the last merged type-walk form read its own case so), and section 21c's fourth bound, the shipped app filtering with predicates it now refuses being new user-visible behaviour. Size is not the ground: about 125 changed lines over 3 files. OPEN-1, the route, is the human's, a red line (a scope change to an item the human ruled): (A) recommended, the full form with both gates in the filler slot, entry 9's precedent; (B) a five-line form by the human's word; (C) the refusal left and recorded; (D) off the filler queue. OPEN-2 to OPEN-5 are not red lines and carry recommendations (every integer literal within bounds; a counted rule-2 result stays refused; the owner's-index line; the stale doc rewritten after the code). Nothing is committed as this piece's form until the human rules; its code starts after 8b merges. Before: PLACED S3 2026-10-26 (state/directives/2026-10-26-clicks-260-261-244-r2-241-o1-answers-pb-draft-b-6d-260-lines-5b-8a-8b-rulings.md): on the filler queue after entry 8b. Before: PROPOSED 2026-10-26 by the custodian from type-walk-rule2-residual-reasons's draft (state/consults/2026-10-26-type-walk-rule2-residual-reasons-five-line-form-architect-draft.md, note 4, F-A; its OPEN-5): the walk's arithmetic arm needs a non-literal float for rule 6 and a non-literal integer for rule 5, so 1e3 + 5 > 0 and 0.5 + 1e3 > 0 refuse as conversion_rounds, while FILTER-BIND section 2.5(a) says a double literal with an integer follows rule 5 and ADR-021's Note admits two numeric literals within the bounds inside +, - and *. Read only, never run; B-T1's probe set builds column-op-operand only, so nothing pins it. A fix changes what admission admits: an ADR-021 reading, likely full gating. Proposed and unplaced until the human places it.",
       "dates": {
         "opened": "2026-10-26",
         "done": null
