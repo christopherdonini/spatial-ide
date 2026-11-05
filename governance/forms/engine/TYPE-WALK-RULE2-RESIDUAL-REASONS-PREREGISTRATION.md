@@ -176,3 +176,11 @@ Nothing touches protocol/. The path lists are the brief's; I cannot read branche
 - **The Tests+mutation line's stop is met.** No code was written, and nothing was committed or pushed; the branch stands at its base.
 - **OPEN-5's F-B, the custodian's after P-0** (the human's ruling of 2026-10-26: F-B waits on P-0): proposed as its own node in the filler queue's proposed additions, not joined here as class 9. Joining it would change that shape's wire `reason`, which the Change line excludes: a scope change to an item the human has ruled, a red line.
 - **The piece is held at its stop.** Whether it proceeds, and how, is the human's on return. Entry 8c, placed after 8b, waits with it; the filler slot takes the next filler by the queue order.
+
+### Amendment 2 — 2026-11-05 — the custodian's record (class 1) of the human's ruling on Amendment 1's stop; references only
+
+- **The ruling:** `state/directives/2026-11-05-platform-runs-filed-c1-governance-next-fixtures-kernel-node-8b-route-a-f-b-after-8c.md`, line 10 (item 3; sha256 of that line with its newline 17f4de6d0e9c7105f6c149e4130021d7f8e0183917895c9d59f3342ae9200e6f), and the RULED block of 2026-11-05 in `governance/DECISIONS-PENDING.md`.
+- **Amendment 1's stop is answered:** the piece continues under route (A), as note 2 and the custodian's settlement place it. Nothing else in the Change line or the Tests+mutation line changes.
+- **W-1:** by the ruling, "W-1's placeholder sentence is narrowed to the conversions it describes (a float type against an integer or decimal type) and says nothing of text". Note 3's words name only those conversions, so they stand unchanged, and the form's claim for W-1 narrows with them. The text-beside-NULL shape (Amendment 1's `'1' + NULL > 0`) is outside this piece.
+- **F-B:** its own node, `arithmetic-text-literal-beside-null-reason`, S3, filler entry 8d after 8c. It gives that shape a true sentence under the existing reason value and adds no reason value.
+- **8c** (`literal-only-float-integer-arithmetic-refused`) follows this piece.

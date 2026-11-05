@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-05T14:54:05.515Z",
-  "plan_hash": "47c47866eedf2070b76e2a15dbd428a870ac593a8a203ffefb3a3680ebaab9c7",
+  "generated_at": "2026-11-05T15:08:57.789Z",
+  "plan_hash": "8aa8072256c67679e7e4fd59ad7aa14a519bfbd31c1c2f8f1af3c7bccf56c1c4",
   "priorities_approved": true,
   "lanes": [
     {
@@ -10061,6 +10061,33 @@
       }
     },
     {
+      "id": "verify-cites-moved-file-relative-pinned-cites",
+      "title": "verify-cites resolves a moved citing file relative cites against its pre-move folder through MOVED.tsv (the #270 review C1, with its D1 and D2)",
+      "kind": "task",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "ready",
+      "order": null,
+      "depends_on": [
+        "governance-f-tidy-repository-in-place"
+      ],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "none",
+      "evidence": null,
+      "budget_minutes": 60,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [],
+      "summary": "PLACED 2026-11-05 by the human's ruling (state/directives/2026-11-05-platform-runs-filed-c1-governance-next-fixtures-kernel-node-8b-route-a-f-b-after-8c.md, line 9): C1 of the independent review of merged #270 (state/consults/2026-11-03-platform-independent-review-pr-270.md), S3, the governance lane's next piece, a five-line form. verify-cites resolves a moved citing file's relative cites against its pre-move folder through governance/MOVED.tsv, as piece F's form says, where today a pinned relative cite from a moved form falls from the exact tier to the suffix tier; the test is the 41 cites of governance/forms/frontends/EXPORT-CURRENT-VIEW-AFTER-UNREPORTED-FIT-PREREGISTRATION.md, with a mutation that drops the map; the review's D1 (governance/README.md, the pinned-citation sentence) and D2 (scripts/plan/README.md and scripts/hooks/README.md, root names for moved files) ride in the same piece, words and paths only. NEXT: its five-line form drafted.",
+      "dates": {
+        "opened": "2026-11-05",
+        "done": null
+      }
+    },
+    {
       "id": "governance-e-readings",
       "title": "Piece E readings before E1's form: context loaded in a custodian session; this project's own transcript tally; the installed Claude Code facts; the bytes one worker and one reviewer dispatch receive",
       "kind": "task",
@@ -10162,7 +10189,7 @@
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "CLOUD DRAFT 2026-11-03 (state/consults/2026-11-03-cloud-e1-rules-report.md; (a draft and not Authority)): input for E1's architect draft, read as any reading: 72 rule records drafted over AUTONOMY.md at 6b67d44, every AUTONOMY section mapped (its section 4), its format choices for the human to confirm (section 2), eleven rules the schema cannot express (section 5) and ten stale facts or conflicts (section 6, F1, F2 and F6 proposed as autonomy-stale-status-sentences); the agent-definition rules, E1's own content, are not drafted, and the advisor's and the prompt audits were not read. Its records stay on cloud/e1-rules at d1e162f4, named in the filing note by hash and not filed. Before: CARRIES 2026-10-29 (state/directives/2026-10-29-section-37-for-now-release-step-in-checklist-section-0-5b-runs-on.md, line 8): AUTONOMY.md section 37 becomes a rule record with the rest; the closing checklist, a procedure, goes to scripts/plan/README.md under that rule's id. ADDENDUM 2 2026-10-28 (state/directives/2026-10-28-governance-piece-e-addendum-2-upgrade-clear-compact-window-prompt-audit-e3-path-rules-reviewer-model.md): E1's baseline waits for reading 2's re-run after the upgrade; E1's mapping uses the prompt audit (state/consults/2026-10-04-prompt-audit.md) beside the advisor's audit. Before: RULED 2026-10-24 (state/directives/2026-10-24-governance-piece-e-rules-as-records-readings-e1-repin-fresh-session-practice.md, line 19 onward; its addendum at line 91 withdrawn and replaced by state/directives/2026-10-24-governance-piece-e-addendum-corrected.md, lines 10 and 11): one piece, full form, the architect drafting the records; governance lane after what is queued there, never holding slot 1; each merge the human's click. The human approves the generated definitions and the mapping in the PR, and each row retired as stale by explicit approval. The human's words are the authority for the format and procedures only; each rule keeps its own source. Its measurement: reading 4 again at the merge from a fresh session, and the gate first-pass rate and runs per node over the ten gated pieces before and after, as evidence, not proof of cause.",
+      "summary": "PLATFORM DRAFT FILED 2026-11-05 (state/consults/2026-11-03-platform-e1-rule-records-draft.md and the gate analytics state/consults/2026-11-03-platform-gate-log-analytics.md, each a reading and not Authority, beside the cloud drafts): they wait with E1, by the human's ruling (state/directives/2026-11-05-platform-runs-filed-c1-governance-next-fixtures-kernel-node-8b-route-a-f-b-after-8c.md, line 9). Before: CLOUD DRAFT 2026-11-03 (state/consults/2026-11-03-cloud-e1-rules-report.md; (a draft and not Authority)): input for E1's architect draft, read as any reading: 72 rule records drafted over AUTONOMY.md at 6b67d44, every AUTONOMY section mapped (its section 4), its format choices for the human to confirm (section 2), eleven rules the schema cannot express (section 5) and ten stale facts or conflicts (section 6, F1, F2 and F6 proposed as autonomy-stale-status-sentences); the agent-definition rules, E1's own content, are not drafted, and the advisor's and the prompt audits were not read. Its records stay on cloud/e1-rules at d1e162f4, named in the filing note by hash and not filed. Before: CARRIES 2026-10-29 (state/directives/2026-10-29-section-37-for-now-release-step-in-checklist-section-0-5b-runs-on.md, line 8): AUTONOMY.md section 37 becomes a rule record with the rest; the closing checklist, a procedure, goes to scripts/plan/README.md under that rule's id. ADDENDUM 2 2026-10-28 (state/directives/2026-10-28-governance-piece-e-addendum-2-upgrade-clear-compact-window-prompt-audit-e3-path-rules-reviewer-model.md): E1's baseline waits for reading 2's re-run after the upgrade; E1's mapping uses the prompt audit (state/consults/2026-10-04-prompt-audit.md) beside the advisor's audit. Before: RULED 2026-10-24 (state/directives/2026-10-24-governance-piece-e-rules-as-records-readings-e1-repin-fresh-session-practice.md, line 19 onward; its addendum at line 91 withdrawn and replaced by state/directives/2026-10-24-governance-piece-e-addendum-corrected.md, lines 10 and 11): one piece, full form, the architect drafting the records; governance lane after what is queued there, never holding slot 1; each merge the human's click. The human approves the generated definitions and the mapping in the PR, and each row retired as stale by explicit approval. The human's words are the authority for the format and procedures only; each rule keeps its own source. Its measurement: reading 4 again at the merge from a fresh session, and the gate first-pass rate and runs per node over the ten gated pieces before and after, as evidence, not proof of cause.",
       "dates": {
         "opened": "2026-10-24",
         "done": null
@@ -10605,11 +10632,11 @@
     },
     {
       "id": "fixture-determinism-off-windows-record",
-      "title": "kernel/FIXTURES.md on determinism, against the cloud Linux regeneration: G5 and S hash differently off Windows",
+      "title": "kernel/FIXTURES.md on determinism (byte-identical on one machine, different across platforms, with the Linux sizes and hashes), and the G5 entry point gains the hash check the S entry point has",
       "kind": "task",
-      "lane": "engine",
+      "lane": "kernel-protocol",
       "phase": "prototype",
-      "status": "proposed",
+      "status": "ready",
       "order": null,
       "depends_on": [],
       "needs_human": {
@@ -10622,7 +10649,7 @@
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "PROPOSED 2026-11-03 by the custodian, from the cloud fixture determinism run (state/consults/2026-11-03-cloud-fixtures-linux-report.md, (a draft and not Authority)): at 6b67d44 on one Ubuntu 24.04 host with rustc 1.97.0, G5 regenerates four bytes longer with another sha256 and S at its recorded size with another sha256, each repeating on that host; its libm probe finds glibc sin and cos results one ULP from correctly rounded on angles the generator uses, not shown to be the cause. The piece: the FIXTURES.md line naming that result, and the probe's Windows half (the same program on this machine, its output diffed against the filed hash); any test pinning these hashes off Windows named. Proposed; placed by the human.",
+      "summary": "PLACED 2026-11-05 by the human's ruling (state/directives/2026-11-05-platform-runs-filed-c1-governance-next-fixtures-kernel-node-8b-route-a-f-b-after-8c.md, line 9): a kernel node, S3, the filler queue after 1b (entry 1c): kernel/FIXTURES.md records that regeneration is byte-identical on one machine and differs across platforms, with the Linux sizes and hashes both runs give (the platform run state/consults/2026-11-03-platform-fixture-determinism-linux.md and the cloud run agree byte for byte), and the G5 entry point gains the hash check the S one has. NEXT: its five-line form at its turn. Before: PROPOSED 2026-11-03 by the custodian, from the cloud fixture determinism run (state/consults/2026-11-03-cloud-fixtures-linux-report.md, (a draft and not Authority)): at 6b67d44 on one Ubuntu 24.04 host with rustc 1.97.0, G5 regenerates four bytes longer with another sha256 and S at its recorded size with another sha256, each repeating on that host; its libm probe finds glibc sin and cos results one ULP from correctly rounded on angles the generator uses, not shown to be the cause. The piece: the FIXTURES.md line naming that result, and the probe's Windows half (the same program on this machine, its output diffed against the filed hash); any test pinning these hashes off Windows named. Proposed; placed by the human.",
       "dates": {
         "opened": "2026-11-03",
         "done": null

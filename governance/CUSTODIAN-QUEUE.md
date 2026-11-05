@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `47c47866eedf2070b76e2a15dbd428a870ac593a8a203ffefb3a3680ebaab9c7`) at `2026-11-05T14:54:05.305Z`.
+Generated from `PLAN.yaml` (sha256 `8aa8072256c67679e7e4fd59ad7aa14a519bfbd31c1c2f8f1af3c7bccf56c1c4`) at `2026-11-05T15:08:57.479Z`.
 
 ## 1. Next
 
@@ -9,9 +9,11 @@ Generated from `PLAN.yaml` (sha256 `47c47866eedf2070b76e2a15dbd428a870ac593a8a20
 ## 2. Ready
 
 - **type-walk-rule2-residual-reasons** — Type walk: a rule-2 result over a column or an integer literal, refused by rule 7's bit-width bound, keeps the residual reason although its value is a constant NULL (for example f32 > NULL + 100000) (lane `engine`, order null, budget 60 min)
+- **fixture-determinism-off-windows-record** — kernel/FIXTURES.md on determinism (byte-identical on one machine, different across platforms, with the Linux sizes and hashes), and the G5 entry point gains the hash check the S entry point has (lane `kernel-protocol`, order null, budget 45 min)
 - **pre-admission-change-detail-braces** — Four kernel P6-placeholder detail strings are wrapped in literal braces, which reach the operator message; the watcher form declares each such string starts with the bracketed placeholder tag (lane `kernel-protocol`, order null, budget 30 min)
 - **windows-case-fold-non-ascii** — The audit case policy on Windows folds non-ASCII letters as NTFS does, so a profile path differing only in non-ASCII case cannot escape the user-home redaction (wave 3's 1c-2 correction, S2, code-path-only) (lane `kernel-protocol`, order null, budget 60 min)
 - **governance-f-after-week-rust-ci-figure** — Governance piece F, the after-week Rust CI figure: the form-only Rust CI runs in the 168 h after the merge, recorded as a class 1 row in piece F's form (lane `governance`, order null, budget 30 min)
+- **verify-cites-moved-file-relative-pinned-cites** — verify-cites resolves a moved citing file relative cites against its pre-move folder through MOVED.tsv (the #270 review C1, with its D1 and D2) (lane `governance`, order null, budget 60 min)
 - **publish-bundle-sigterm** — SIGTERM handling in publish-bundle on unix (wave-3 W3-A observation 3) (lane `platform`, order null, budget 90 min)
 - **publish-unix-quota-perm-errors** — EDQUOT and EPERM in publish error classification on unix (wave-3 W3-A observation 1) (lane `platform`, order null, budget 90 min)
 
@@ -133,7 +135,6 @@ Generated from `PLAN.yaml` (sha256 `47c47866eedf2070b76e2a15dbd428a870ac593a8a20
 - **export-refused-above-row-ceiling-every-scope** — A file over the row ceiling cannot be exported in any scope, the remedy its refusal names included (the cloud audit, U10) (phase `prototype`) — never queued until placed
 - **adr-notes-stale-statements-and-indices** — ADR notes, Status lines and indices stating what has since changed (the cloud ADR audit, A-S1 to A-S8) (phase `prototype`) — never queued until placed
 - **moved-path-mentions-outside-accepted-adrs** — Mentions of the governance paths piece F moved, outside the accepted ADRs: docs/README.md, docs/02, docs/04, docs/14, README.md and the workflow comments (the cloud ADR audit, Task B) (phase `prototype`) — never queued until placed
-- **fixture-determinism-off-windows-record** — kernel/FIXTURES.md on determinism, against the cloud Linux regeneration: G5 and S hash differently off Windows (phase `prototype`) — never queued until placed
 - **redaction-chance-match-in-partitions** — The redaction scan and chance matches in binary content: a drive path in a printable run of exactly the minimum length, in 256 MiB of parquet (the cloud Linux measurement) (phase `prototype`) — never queued until placed
 - **clippy-deny-warnings-workspace** — The workspace clippy diagnostics fixed, so cargo clippy over every target with -D warnings exits 0 (the cloud Linux run lists 48 distinct) (phase `prototype`) — never queued until placed
 - **autonomy-stale-status-sentences** — AUTONOMY.md sentences no longer true: the mutation rule called automated, the self-checks called not yet on main, reports to files (the cloud E1 draft, F1, F2 and F6) (phase `prototype`) — never queued until placed

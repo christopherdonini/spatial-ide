@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-05T14:54:05.305Z",
-  "plan_hash": "47c47866eedf2070b76e2a15dbd428a870ac593a8a203ffefb3a3680ebaab9c7",
+  "generated_at": "2026-11-05T15:08:57.479Z",
+  "plan_hash": "8aa8072256c67679e7e4fd59ad7aa14a519bfbd31c1c2f8f1af3c7bccf56c1c4",
   "priorities_approved": true,
   "next": {
     "id": "type-walk-rule2-residual-reasons",
@@ -44,6 +44,25 @@
         "done": null
       },
       "summary": "RULED 2026-11-05 (state/directives/2026-11-05-platform-runs-filed-c1-governance-next-fixtures-kernel-node-8b-route-a-f-b-after-8c.md, line 10): the piece continues under route (A); W-1, the placeholder sentence, is narrowed to the conversions it describes (a float type against an integer or decimal type) and says nothing of text; the text-beside-NULL shape is its own node, arithmetic-text-literal-beside-null-reason (F-B, S3, after 8c); 8c follows 8b. NEXT: the form's Amendment 2 recording the ruling; the worker in the filler slot once 10's PR leaves it. Before: HELD 2026-11-04 AT P-0 (its form Amendment 1; the worker report under state/consults): one of the three shapes, a text literal beside NULL in arithmetic, is refused by type with the residual reason, so the Tests+mutation stop is met; no code, no commit, the branch at its base and not pushed; F-B proposed as its own node; whether and how the piece proceeds is the human ruling on return; 8c waits with it; the filler slot takes the next filler. Before: IN PROGRESS 2026-11-04 in the filler slot: its worker dispatched at main 66fb3d8d (P-0 first; the ConversionRounds sentence and its doc comment as the form gives them; T1 new; M-1 observed locally), its brief by file (sha256 ce98087a); rule (00) clear by git; 7c and 7d still skipped on port-2. Before: FORM COMMITTED 2026-11-01 (governance/forms/engine/TYPE-WALK-RULE2-RESIDUAL-REASONS-PREREGISTRATION.md; 80 pins at fc78efa6), with the human's rulings of 2026-10-26 in its settlement. NEXT: in the filler queue's order (one filler in flight), a worker on its own checkout and target, P-0 first; the reviewer and the architect from dispatch. Before: WAITS ON PIECE F 2026-10-29: ruled 2026-10-26 with its form drafted; the form is committed at its governance path only after #270 merges, as an old-location form before then is piece F's invalidator. Before: RULED 2026-10-26: OPEN-1 (A); OPEN-2 the placeholder lands now, worded at P6; OPEN-3 F-C stays out; OPEN-4 (A); OPEN-5 F-A placed after this piece, F-B after P-0. (state/directives/2026-10-26-clicks-260-261-244-r2-241-o1-answers-pb-draft-b-6d-260-lines-5b-8a-8b-rulings.md) Before: DRAFTED 2026-10-26 (state/consults/2026-10-26-type-walk-rule2-residual-reasons-five-line-form-architect-draft.md): route (A), the recommended one, rewords T-C's fifth sentence so that every conversion_rounds refusal states a conversion refused by type (a P6 placeholder), engine/src/predicate.rs and one new test, about 95 lines, no admission outcome moved; a P-0 probe first. THE HUMAN'S RULING: OPEN-1 the route ((A); (B) a sixth reason, (C) admitting the constant-NULL shapes, each a red-line ADR-021 Note; (D) as it stands); OPEN-2 the sentence's words, now or at the sitting; OPEN-3 F-C kept out. F-A proposed as literal-only-float-integer-arithmetic-refused. Before: NEXT IN THE FILLER SLOT 2026-10-26 (entries 6d, 5b, 5c and 8a held on the human; 7a to 7d skipped by rule (00)): the architect drafts its five-line form (state/consults/2026-10-26-type-walk-rule2-residual-reasons-five-line-form-architect-draft.md). Before: FILLER QUEUE entry 8b (RULED 2026-10-24: state/directives/2026-10-24-weekend-exception-third-product-slot-placements-forms-ahead-250-click.md, line 16; made the standing filler slot by state/directives/2026-10-24-filler-slot-standing-rule-appended-to-autonomy.md, line 8; state/FILLER-QUEUE.md): placed, graded S3; a five-line form under section 21c's size, the reviewer and the architect from dispatch, section 25 (e) set aside; any string a user sees a P6 placeholder for the sitting, any red-line text to the human. Before: Proposed by node 10's architect draft (state/consults/2026-10-03-type-walk-null-literal-arithmetic-architect-draft.md, finding F7 and question Q-3): question round 43, item 1 admits only the decimal-literal shape, so comparisons of a rule-2 result over a column or an integer literal that rule 7's bit-width bound refuses keep the residual conversion_rounds sentence, which is false of a constant NULL. Never queued until the human places it."
+    },
+    {
+      "id": "fixture-determinism-off-windows-record",
+      "title": "kernel/FIXTURES.md on determinism (byte-identical on one machine, different across platforms, with the Linux sizes and hashes), and the G5 entry point gains the hash check the S entry point has",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "ready",
+      "order": null,
+      "budget_minutes": 45,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-11-03",
+        "done": null
+      },
+      "summary": "PLACED 2026-11-05 by the human's ruling (state/directives/2026-11-05-platform-runs-filed-c1-governance-next-fixtures-kernel-node-8b-route-a-f-b-after-8c.md, line 9): a kernel node, S3, the filler queue after 1b (entry 1c): kernel/FIXTURES.md records that regeneration is byte-identical on one machine and differs across platforms, with the Linux sizes and hashes both runs give (the platform run state/consults/2026-11-03-platform-fixture-determinism-linux.md and the cloud run agree byte for byte), and the G5 entry point gains the hash check the S one has. NEXT: its five-line form at its turn. Before: PROPOSED 2026-11-03 by the custodian, from the cloud fixture determinism run (state/consults/2026-11-03-cloud-fixtures-linux-report.md, (a draft and not Authority)): at 6b67d44 on one Ubuntu 24.04 host with rustc 1.97.0, G5 regenerates four bytes longer with another sha256 and S at its recorded size with another sha256, each repeating on that host; its libm probe finds glibc sin and cos results one ULP from correctly rounded on angles the generator uses, not shown to be the cause. The piece: the FIXTURES.md line naming that result, and the probe's Windows half (the same program on this machine, its output diffed against the filed hash); any test pinning these hashes off Windows named. Proposed; placed by the human."
     },
     {
       "id": "pre-admission-change-detail-braces",
@@ -101,6 +120,25 @@
         "done": null
       },
       "summary": "NOT BEFORE 2026-11-07T14:09:18Z, 168 h after piece F's merge commit 578ec704 (committer time 2026-10-31T14:09:18Z): the after window runs from that time to then. The week before X: 52 runs, 39 form-only (the ledger, 2026-10-31). Before: PLACED 2026-10-29 by the human's OPEN-10 (A) (state/directives/2026-10-29-governance-f-mapping-table-approved-open-1-to-open-10-ruled.md): 168 h after piece F's merge, the after-week Rust CI figure (the form's measurement block, item (c)) is recorded as a class 1 row in piece F's form. Blocked on piece F."
+    },
+    {
+      "id": "verify-cites-moved-file-relative-pinned-cites",
+      "title": "verify-cites resolves a moved citing file relative cites against its pre-move folder through MOVED.tsv (the #270 review C1, with its D1 and D2)",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "ready",
+      "order": null,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-11-05",
+        "done": null
+      },
+      "summary": "PLACED 2026-11-05 by the human's ruling (state/directives/2026-11-05-platform-runs-filed-c1-governance-next-fixtures-kernel-node-8b-route-a-f-b-after-8c.md, line 9): C1 of the independent review of merged #270 (state/consults/2026-11-03-platform-independent-review-pr-270.md), S3, the governance lane's next piece, a five-line form. verify-cites resolves a moved citing file's relative cites against its pre-move folder through governance/MOVED.tsv, as piece F's form says, where today a pinned relative cite from a moved form falls from the exact tier to the suffix tier; the test is the 41 cites of governance/forms/frontends/EXPORT-CURRENT-VIEW-AFTER-UNREPORTED-FIT-PREREGISTRATION.md, with a mutation that drops the map; the review's D1 (governance/README.md, the pinned-citation sentence) and D2 (scripts/plan/README.md and scripts/hooks/README.md, root names for moved files) ride in the same piece, words and paths only. NEXT: its five-line form drafted."
     },
     {
       "id": "publish-bundle-sigterm",
@@ -510,7 +548,7 @@
         "opened": "2026-10-24",
         "done": null
       },
-      "summary": "CLOUD DRAFT 2026-11-03 (state/consults/2026-11-03-cloud-e1-rules-report.md; (a draft and not Authority)): input for E1's architect draft, read as any reading: 72 rule records drafted over AUTONOMY.md at 6b67d44, every AUTONOMY section mapped (its section 4), its format choices for the human to confirm (section 2), eleven rules the schema cannot express (section 5) and ten stale facts or conflicts (section 6, F1, F2 and F6 proposed as autonomy-stale-status-sentences); the agent-definition rules, E1's own content, are not drafted, and the advisor's and the prompt audits were not read. Its records stay on cloud/e1-rules at d1e162f4, named in the filing note by hash and not filed. Before: CARRIES 2026-10-29 (state/directives/2026-10-29-section-37-for-now-release-step-in-checklist-section-0-5b-runs-on.md, line 8): AUTONOMY.md section 37 becomes a rule record with the rest; the closing checklist, a procedure, goes to scripts/plan/README.md under that rule's id. ADDENDUM 2 2026-10-28 (state/directives/2026-10-28-governance-piece-e-addendum-2-upgrade-clear-compact-window-prompt-audit-e3-path-rules-reviewer-model.md): E1's baseline waits for reading 2's re-run after the upgrade; E1's mapping uses the prompt audit (state/consults/2026-10-04-prompt-audit.md) beside the advisor's audit. Before: RULED 2026-10-24 (state/directives/2026-10-24-governance-piece-e-rules-as-records-readings-e1-repin-fresh-session-practice.md, line 19 onward; its addendum at line 91 withdrawn and replaced by state/directives/2026-10-24-governance-piece-e-addendum-corrected.md, lines 10 and 11): one piece, full form, the architect drafting the records; governance lane after what is queued there, never holding slot 1; each merge the human's click. The human approves the generated definitions and the mapping in the PR, and each row retired as stale by explicit approval. The human's words are the authority for the format and procedures only; each rule keeps its own source. Its measurement: reading 4 again at the merge from a fresh session, and the gate first-pass rate and runs per node over the ten gated pieces before and after, as evidence, not proof of cause.",
+      "summary": "PLATFORM DRAFT FILED 2026-11-05 (state/consults/2026-11-03-platform-e1-rule-records-draft.md and the gate analytics state/consults/2026-11-03-platform-gate-log-analytics.md, each a reading and not Authority, beside the cloud drafts): they wait with E1, by the human's ruling (state/directives/2026-11-05-platform-runs-filed-c1-governance-next-fixtures-kernel-node-8b-route-a-f-b-after-8c.md, line 9). Before: CLOUD DRAFT 2026-11-03 (state/consults/2026-11-03-cloud-e1-rules-report.md; (a draft and not Authority)): input for E1's architect draft, read as any reading: 72 rule records drafted over AUTONOMY.md at 6b67d44, every AUTONOMY section mapped (its section 4), its format choices for the human to confirm (section 2), eleven rules the schema cannot express (section 5) and ten stale facts or conflicts (section 6, F1, F2 and F6 proposed as autonomy-stale-status-sentences); the agent-definition rules, E1's own content, are not drafted, and the advisor's and the prompt audits were not read. Its records stay on cloud/e1-rules at d1e162f4, named in the filing note by hash and not filed. Before: CARRIES 2026-10-29 (state/directives/2026-10-29-section-37-for-now-release-step-in-checklist-section-0-5b-runs-on.md, line 8): AUTONOMY.md section 37 becomes a rule record with the rest; the closing checklist, a procedure, goes to scripts/plan/README.md under that rule's id. ADDENDUM 2 2026-10-28 (state/directives/2026-10-28-governance-piece-e-addendum-2-upgrade-clear-compact-window-prompt-audit-e3-path-rules-reviewer-model.md): E1's baseline waits for reading 2's re-run after the upgrade; E1's mapping uses the prompt audit (state/consults/2026-10-04-prompt-audit.md) beside the advisor's audit. Before: RULED 2026-10-24 (state/directives/2026-10-24-governance-piece-e-rules-as-records-readings-e1-repin-fresh-session-practice.md, line 19 onward; its addendum at line 91 withdrawn and replaced by state/directives/2026-10-24-governance-piece-e-addendum-corrected.md, lines 10 and 11): one piece, full form, the architect drafting the records; governance lane after what is queued there, never holding slot 1; each merge the human's click. The human approves the generated definitions and the mapping in the PR, and each row retired as stale by explicit approval. The human's words are the authority for the format and procedures only; each rule keeps its own source. Its measurement: reading 4 again at the merge from a fresh session, and the gate first-pass rate and runs per node over the ten gated pieces before and after, as evidence, not proof of cause.",
       "blocked_by": [
         "governance-e-readings"
       ]
@@ -2119,25 +2157,6 @@
         "done": null
       },
       "summary": "PROPOSED 2026-11-03 by the custodian, from the cloud ADR notes and docs paths audit (state/consults/2026-11-03-cloud-adr-docs-audit-report.md, Task B; (a draft and not Authority)): 134 mentions on 119 lines in 35 files name a path governance/MOVED.tsv maps to a new one, 133 failing as written; none is a link or pinned, and every workflow mention is a YAML comment or a step name, which no workflow reads. The accepted ADRs keep theirs (append-only); the mutable docs and the workflow comments can name the new paths. The workflow files are the human's to place, what CI installs being a red line, though these lines are comments and names only. Proposed; placed by the human."
-    },
-    {
-      "id": "fixture-determinism-off-windows-record",
-      "title": "kernel/FIXTURES.md on determinism, against the cloud Linux regeneration: G5 and S hash differently off Windows",
-      "lane": "engine",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 45,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-11-03",
-        "done": null
-      },
-      "summary": "PROPOSED 2026-11-03 by the custodian, from the cloud fixture determinism run (state/consults/2026-11-03-cloud-fixtures-linux-report.md, (a draft and not Authority)): at 6b67d44 on one Ubuntu 24.04 host with rustc 1.97.0, G5 regenerates four bytes longer with another sha256 and S at its recorded size with another sha256, each repeating on that host; its libm probe finds glibc sin and cos results one ULP from correctly rounded on angles the generator uses, not shown to be the cause. The piece: the FIXTURES.md line naming that result, and the probe's Windows half (the same program on this machine, its output diffed against the filed hash); any test pinning these hashes off Windows named. Proposed; placed by the human."
     },
     {
       "id": "redaction-chance-match-in-partitions",
