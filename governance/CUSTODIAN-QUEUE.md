@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `ec4385c7d015735d678ca19c21ead501b50a30d43d35e5a8bba35741f55c4433`) at `2026-11-05T18:22:26.448Z`.
+Generated from `PLAN.yaml` (sha256 `caef171374293273a054c0653ca13407f1449b7d4a156d475b164fc1fba33658`) at `2026-11-05T18:31:54.082Z`.
 
 ## 1. Next
 
@@ -139,6 +139,8 @@ Generated from `PLAN.yaml` (sha256 `ec4385c7d015735d678ca19c21ead501b50a30d43d35
 - **clippy-deny-warnings-workspace** — The workspace clippy diagnostics fixed, so cargo clippy over every target with -D warnings exits 0 (the cloud Linux run lists 48 distinct) (phase `prototype`) — never queued until placed
 - **autonomy-stale-status-sentences** — AUTONOMY.md sentences no longer true: the mutation rule called automated, the self-checks called not yet on main, reports to files (the cloud E1 draft, F1, F2 and F6) (phase `prototype`) — never queued until placed
 - **module-readme-moved-form-paths** — The preregistration form paths in kernel/README.md and engine/README.md named where piece F moved them (governance/forms/) (phase `prototype`) — never queued until placed
+- **publish-filter-sentence-under-whole-dataset** — The publish dialog shows the filter sentence, which says the viewport extent is published, under Whole dataset too, where the whole file is published (the cloud audit, U12) (phase `prototype`) — never queued until placed
+- **stale-harness-comments-find-prime-and-late-result** — Stale harness and test comments: the FIND step header and its status comment in regression.mjs, and a cite into candidateArmSession.ts in App.lateResult.test.tsx (phase `prototype`) — never queued until placed
 
 ### Unscheduled
 

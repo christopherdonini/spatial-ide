@@ -57,3 +57,4 @@ From 2026-10-24. Each wait is entered here with its start and end from `date -u`
 ## The custodian's proposed additions
 
 - `invalidate-generation-clause-observed-by-a-test` (proposed 2026-10-26, from entry 5c's draft, `state/consults/2026-10-26-session-generation-other-recorded-mutations-name-no-commit-five-line-form-architect-draft.md`, OPEN-1 (A)): a test that observes invalidate's generation clause, which no test in kernel/tests/session_generation.rs fails without; the product never reaches it.
+- `stale-harness-comments-find-prime-and-late-result` (proposed 2026-11-05, from the area E triage, `state/consults/2026-11-05-area-e-kl-triage-numbered-items-architect.md`, section 6): comments only, in `frontends/shell/e2e/regression.mjs` (the FIND' step's header and its status comment, which still call the step suspended and its red expected, both halves being built) and `frontends/shell/src/App.lateResult.test.tsx` (one cite repointed and pinned); S3.
