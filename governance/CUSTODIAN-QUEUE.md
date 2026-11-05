@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `227f94fb85cd52c3667b0e928ac4ad17f5efdb1819acfd1f38c3bbd9ce09aa8f`) at `2026-11-05T19:50:14.856Z`.
+Generated from `PLAN.yaml` (sha256 `fc4a89f166506266b5eb3e0f757939c9f5d7994614c47b93f28e22efc13cd691`) at `2026-11-05T22:07:05.190Z`.
 
 ## 1. Next
 
@@ -15,10 +15,11 @@ Generated from `PLAN.yaml` (sha256 `227f94fb85cd52c3667b0e928ac4ad17f5efdb1819ac
 - **publish-bundle-sigterm** — SIGTERM handling in publish-bundle on unix (wave-3 W3-A observation 3) (lane `platform`, order null, budget 90 min)
 - **publish-unix-quota-perm-errors** — EDQUOT and EPERM in publish error classification on unix (wave-3 W3-A observation 1) (lane `platform`, order null, budget 90 min)
 
-## 3. Waiting on the human (total: 25 min)
+## 3. Waiting on the human (total: 30 min)
 
 ### ruling
 
+- **literal-only-float-integer-arithmetic-refused** — Literal-only arithmetic mixing a double literal and an integer literal (1e3 + 5 > 0) is refused as conversion_rounds, although FILTER-BIND section 2.5(a) and ADR-021's Note admit two numeric literals within the bounds in +, - and * (F-A of the type-walk-rule2-residual-reasons draft) (5 min)
 - **adr-035-close-races-note** — ADR-035 -- an appended, dated note recording what kernel-generation-close-races makes historical (Decision 3's no-session-reference case unreachable; invalidate marks only on a live removal; Decision 2's mint-race arm gone) (5 min)
 
 ### sitting
@@ -30,7 +31,6 @@ Generated from `PLAN.yaml` (sha256 `227f94fb85cd52c3667b0e928ac4ad17f5efdb1819ac
 ## 4. Blocked on dependencies
 
 - **arithmetic-text-literal-beside-null-reason** — Type walk: in arithmetic, a text literal beside NULL, refused by type with the reason conversion_rounds, gets a true sentence under that reason value, no reason value added (F-B of entry 8b's form) — blocked by: literal-only-float-integer-arithmetic-refused
-- **literal-only-float-integer-arithmetic-refused** — Literal-only arithmetic mixing a double literal and an integer literal (1e3 + 5 > 0) is refused as conversion_rounds, although FILTER-BIND section 2.5(a) and ADR-021's Note admit two numeric literals within the bounds in +, - and * (F-A of the type-walk-rule2-residual-reasons draft) — blocked by: type-walk-rule2-residual-reasons
 - **docs-02-adr-017-entry-current** — docs/02's ADR-017 entry brought current with every appended section (the ADR-017 note's OPEN-4 (c), S4, the docs lane last) — blocked by: sitting-wording-n1-to-n7
 - **lod-tier-identity-binds-file-name** — The LOD tier builder takes the identity name DuckDB bound and looks it up among the file's own footer names, so a renamed identity column reaches a different column there — blocked by: port-2-macos-l1-and-app-dirs
 - **skp-line-cites-outside-close-races** — Stale line cites into kernel/src/skp.rs outside kernel-close-races-followups files -- shell streaming, App.tsx, pool_poll.rs, src-tauri lib.rs, the P4 corpus test and the persisted-artifacts test — blocked by: adr-035-close-races-note
@@ -49,11 +49,8 @@ Generated from `PLAN.yaml` (sha256 `227f94fb85cd52c3667b0e928ac4ad17f5efdb1819ac
 
 ## 5. In progress
 
-- **type-walk-rule2-residual-reasons** — Type walk: a rule-2 result over a column or an integer literal, refused by rule 7's bit-width bound, keeps the residual reason although its value is a constant NULL (for example f32 > NULL + 100000) — evidence: branch `cut/type-walk-rule2-residual-reasons`
-- **open-dataset-close-serialised-under-the-catalog-lock** — open_dataset's catalog check and mint, in both arms, serialised with close_dataset's forget and removal, and no OpenRecord inserted after a close (the windows the M1 shape leaves) — evidence: branch `cut/open-dataset-close-serialised-under-the-catalog-lock`
 - **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **b1-shell-half** — Shell migration, milestone 4 -- B1 shell half: attributes of the inspected feature, colour by category with its legend, and the table — evidence: branch `cut/b1-shell-half-pr-c`
-- **verify-cites-moved-file-relative-pinned-cites** — verify-cites resolves a moved citing file relative cites against its pre-move folder through MOVED.tsv (the #270 review C1, with its D1 and D2) — evidence: branch `cut/verify-cites-moved-file-relative-pinned-cites`
 - **port-2-macos-l1-and-app-dirs** — PORT-2 -- macOS L1 for the Cargo workspace: macos-latest in the same matrix, one application-directory boundary replacing the two resolvers, and a case-policy test on a case-insensitive volume — evidence: branch `cut/port-2-macos-l1-and-app-dirs`
 
 ## 6. Proposed / unscheduled
