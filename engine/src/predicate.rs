@@ -1395,8 +1395,8 @@ const MAX_DECIMAL_LITERAL_SCALE: u32 = 18;
 
 /// The reason a [`FilterError::TypeNotAdmitted`] refusal names -- five fixed wire values, in the
 /// precedence section 2.6 (as amended by section 10 Amendment 1) states. The sentence lives only
-/// in [`Self::sentence`] / [`FilterError`]'s own `Display`, never on the wire (O-4): a wording
-/// change never changes `reason`'s wire value.
+/// in [`Self::sentence`]; it reaches the wire only inside `message`, as part of [`FilterError`]'s
+/// own `Display`, never as a field (O-4): a wording change never changes `reason`'s wire value.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TypeRefusalReason {
     /// One side is VARCHAR (a column or a string literal) and the other is neither VARCHAR nor
@@ -1427,14 +1427,16 @@ impl TypeRefusalReason {
         }
     }
 
-    /// The `Display` sentence, never sent on the wire. The first four are copied byte for byte from
-    /// `state/directives/B-1-RULINGS-AND-TYPED-TEXTS-2026-09-30.md` T-C by the script that wrote this
-    /// file. The fifth, `ConversionRounds`'s, replaces T-C's under
-    /// `engine/TYPE-WALK-RULE2-RESIDUAL-REASONS-PREREGISTRATION.md` and is a P6 placeholder: T-C's
-    /// named a value read from the file, which is false where the integer or decimal side is a constant
-    /// NULL (`f32 > NULL + 100000`). This one states the type pair alone. It is still false of a double
-    /// literal beside an INTEGER literal in `+`, `-` or `*`, which the walk refuses although no INTEGER
-    /// value rounds in DOUBLE.
+    /// The `Display` sentence. It reaches the wire only inside `message`, as part of
+    /// `FilterError`'s `Display`, never as a field: `reason`'s wire value is `wire_value`'s (O-4).
+    /// The first four are copied byte for byte from
+    /// `state/directives/B-1-RULINGS-AND-TYPED-TEXTS-2026-09-30.md` T-C by the script that wrote
+    /// this file. The fifth, `ConversionRounds`'s, replaces T-C's under
+    /// `governance/forms/engine/TYPE-WALK-RULE2-RESIDUAL-REASONS-PREREGISTRATION.md` and is a P6
+    /// placeholder: T-C's named a value read from the file, which is false where the integer or
+    /// decimal side is a constant NULL (`f32 > NULL + 100000`). This one states the type pair
+    /// alone. It is still false of a double literal beside an INTEGER literal in `+`, `-` or `*`,
+    /// which the walk refuses although no INTEGER value rounds in DOUBLE.
     fn sentence(self) -> &'static str {
         match self {
             Self::TextWithNonText => "a comparison of text with a non-text value",

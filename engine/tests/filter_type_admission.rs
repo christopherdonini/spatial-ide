@@ -554,11 +554,11 @@ fn each_corpus_row_is_admitted_or_refused_with_its_code_reason_and_operand_types
     assert_fixture_unchanged(fx);
 }
 
-/// T1 (`engine/TYPE-WALK-RULE2-RESIDUAL-REASONS-PREREGISTRATION.md`, Tests+mutation and note 1):
-/// each of the eleven predicates is refused `TypeNotAdmitted` with its construct, operand types and
-/// the reason `ConversionRounds`, and its `Display` is the format of `FilterError`'s
-/// `TypeNotAdmitted` arm carrying the type-level sentence (a P6 placeholder) instead of one naming
-/// a value read from the file.
+/// T1 (`governance/forms/engine/TYPE-WALK-RULE2-RESIDUAL-REASONS-PREREGISTRATION.md`,
+/// Tests+mutation and note 1): each of the eleven predicates is refused `TypeNotAdmitted` with its
+/// construct, operand types and the reason `ConversionRounds`, and its `Display` is the format of
+/// `FilterError`'s `TypeNotAdmitted` arm carrying the type-level sentence (a P6 placeholder)
+/// instead of one naming a value read from the file.
 ///
 /// RECORDED MUTATION: the `ConversionRounds` arm of `TypeRefusalReason::sentence`
 /// (`engine/src/predicate.rs`) restored to T-C's sentence, applied in a debug build at commit
