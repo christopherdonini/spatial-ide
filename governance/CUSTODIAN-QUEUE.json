@@ -1,27 +1,46 @@
 {
-  "generated_at": "2026-11-05T22:30:24.805Z",
-  "plan_hash": "02424633fc26cbf795f56a22c1158d31befb2534779d9909ba6844c56a448e60",
+  "generated_at": "2026-11-05T23:04:04.104Z",
+  "plan_hash": "d8e39af6954752186b6e1205279f84bcf36156baaef05b32f7f858325d142478",
   "priorities_approved": true,
   "next": {
-    "id": "pre-admission-change-detail-braces",
-    "title": "Four kernel P6-placeholder detail strings are wrapped in literal braces, which reach the operator message; the watcher form declares each such string starts with the bracketed placeholder tag",
-    "lane": "kernel-protocol",
+    "id": "literal-only-float-integer-arithmetic-refused",
+    "title": "Literal-only arithmetic mixing a double literal and an integer literal (1e3 + 5 > 0) is refused as conversion_rounds, although FILTER-BIND section 2.5(a) and ADR-021's Note admit two numeric literals within the bounds in +, - and * (F-A of the type-walk-rule2-residual-reasons draft)",
+    "lane": "engine",
     "phase": "prototype",
     "status": "ready",
     "order": null,
-    "budget_minutes": 30,
+    "budget_minutes": 120,
     "needs_human": {
       "kind": "none",
       "minutes": 0
     },
     "evidence": null,
     "dates": {
-      "opened": "2026-10-04",
+      "opened": "2026-10-26",
       "done": null
     },
-    "summary": "FORM COMMITTED 2026-11-01 (governance/forms/kernel/PRE-ADMISSION-CHANGE-DETAIL-BRACES-PREREGISTRATION.md; 74 pins at 7591cdad) from lead-data's draft (state/consults/2026-11-01-pre-admission-change-detail-braces-five-line-form-lead-data-draft.md), its OPEN-1 to OPEN-7 taken as recommended under the human's direction of 2026-10-31, item 4, for the human's review. NEXT: skipped at dispatch while cut/b2-piece-1c-save-and-reopen edits kernel/src/lib.rs (rule (00)); once 1c step 1 merges, the lib.rs site re-read by an amendment, then a worker; the reviewer and the architect from dispatch. Before: WAITS ON PIECE F 2026-10-29: its first step commits a form, which lands at its governance path only after #270 merges. Before: FILLER QUEUE entry 3 (RULED 2026-10-24: state/directives/2026-10-24-weekend-exception-third-product-slot-placements-forms-ahead-250-click.md, line 11; made the standing filler slot by state/directives/2026-10-24-filler-slot-standing-rule-appended-to-autonomy.md, line 8; state/FILLER-QUEUE.md): placed, graded S3, the braces removed, the words staying placeholders (the node's scope (i)); a five-line form under section 21c's size, the reviewer and the architect from dispatch, section 25 (e) set aside; any string a user sees a P6 placeholder for the sitting, any red-line text to the human. Before: Proposed by PR 173 gate-1 reviewer, N-3 (state/consults/gates/2026-10-04-watch-grandparent-spawn-signal-gate1-reviewer.md); widened by Fable 2026-10-04 advice, item 2 (state/directives/2026-10-04-fable-advice-nodes-trailers-latency.md), checked by the custodian at f3426ba8: four detail literals open with a brace before the P6 placeholder tag and close with a brace, at kernel/src/skp.rs lines 1024 (the pre-admission Change refusal), 1445 and 1521, and kernel/src/lib.rs line 528; two others in skp.rs (1233 and 1329) are unbraced. engine/SOURCE-WATCHER-PREREGISTRATION.md section 7 (its placeholder row) declares that each new operator string starts with the bracketed tag. Two scopes for the human to choose between at placement: (i) braces only, removing the two brace characters from each of the four literals so they match the declared form, with no new wording; (ii) the final wording of the placeholder strings, which is the human ruling P6 reserves. Never queued until the human places it."
+    "summary": "RULED 2026-11-05 (evening) (state/directives/2026-11-05-8c-full-form-nine-s2-placed-u12-slot-2-u1-reproducer-adr-notes-words-e2e-readme-words-8b-d3.md, item 1): OPEN-1 (A): the full form, both gates, in the filler slot, as entry 9 had; no ADR-021 text, the Note of 2026-09-30 admitting these pairs and the code being what is wrong; it starts after #282, merged. OPEN-2 to OPEN-5 take the draft's recommendations under item 4 of 2026-10-31, recorded 2026-11-05. NEXT: the full form drafted by lead-data from the draft's section 8 outline, committed, then code. Before: HELD 2026-11-05: 8b merged (#282, 540b4afd); 8c waits on the human ruling of its OPEN-1 (the route) alone. Before: FORM DRAFTED AHEAD 2026-11-05 (state/consults/2026-11-05-literal-only-float-integer-arithmetic-refused-five-line-form-lead-data-draft.md): lead-data reads the five-line form closed on two grounds, either alone: section 21a, ADR-021's admitted class being a stated guarantee (the last merged type-walk form read its own case so), and section 21c's fourth bound, the shipped app filtering with predicates it now refuses being new user-visible behaviour. Size is not the ground: about 125 changed lines over 3 files. OPEN-1, the route, is the human's, a red line (a scope change to an item the human ruled): (A) recommended, the full form with both gates in the filler slot, entry 9's precedent; (B) a five-line form by the human's word; (C) the refusal left and recorded; (D) off the filler queue. OPEN-2 to OPEN-5 are not red lines and carry recommendations (every integer literal within bounds; a counted rule-2 result stays refused; the owner's-index line; the stale doc rewritten after the code). Nothing is committed as this piece's form until the human rules; its code starts after 8b merges. Before: PLACED S3 2026-10-26 (state/directives/2026-10-26-clicks-260-261-244-r2-241-o1-answers-pb-draft-b-6d-260-lines-5b-8a-8b-rulings.md): on the filler queue after entry 8b. Before: PROPOSED 2026-10-26 by the custodian from type-walk-rule2-residual-reasons's draft (state/consults/2026-10-26-type-walk-rule2-residual-reasons-five-line-form-architect-draft.md, note 4, F-A; its OPEN-5): the walk's arithmetic arm needs a non-literal float for rule 6 and a non-literal integer for rule 5, so 1e3 + 5 > 0 and 0.5 + 1e3 > 0 refuse as conversion_rounds, while FILTER-BIND section 2.5(a) says a double literal with an integer follows rule 5 and ADR-021's Note admits two numeric literals within the bounds inside +, - and *. Read only, never run; B-T1's probe set builds column-op-operand only, so nothing pins it. A fix changes what admission admits: an ADR-021 reading, likely full gating. Proposed and unplaced until the human places it."
   },
   "ready": [
+    {
+      "id": "literal-only-float-integer-arithmetic-refused",
+      "title": "Literal-only arithmetic mixing a double literal and an integer literal (1e3 + 5 > 0) is refused as conversion_rounds, although FILTER-BIND section 2.5(a) and ADR-021's Note admit two numeric literals within the bounds in +, - and * (F-A of the type-walk-rule2-residual-reasons draft)",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "ready",
+      "order": null,
+      "budget_minutes": 120,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-26",
+        "done": null
+      },
+      "summary": "RULED 2026-11-05 (evening) (state/directives/2026-11-05-8c-full-form-nine-s2-placed-u12-slot-2-u1-reproducer-adr-notes-words-e2e-readme-words-8b-d3.md, item 1): OPEN-1 (A): the full form, both gates, in the filler slot, as entry 9 had; no ADR-021 text, the Note of 2026-09-30 admitting these pairs and the code being what is wrong; it starts after #282, merged. OPEN-2 to OPEN-5 take the draft's recommendations under item 4 of 2026-10-31, recorded 2026-11-05. NEXT: the full form drafted by lead-data from the draft's section 8 outline, committed, then code. Before: HELD 2026-11-05: 8b merged (#282, 540b4afd); 8c waits on the human ruling of its OPEN-1 (the route) alone. Before: FORM DRAFTED AHEAD 2026-11-05 (state/consults/2026-11-05-literal-only-float-integer-arithmetic-refused-five-line-form-lead-data-draft.md): lead-data reads the five-line form closed on two grounds, either alone: section 21a, ADR-021's admitted class being a stated guarantee (the last merged type-walk form read its own case so), and section 21c's fourth bound, the shipped app filtering with predicates it now refuses being new user-visible behaviour. Size is not the ground: about 125 changed lines over 3 files. OPEN-1, the route, is the human's, a red line (a scope change to an item the human ruled): (A) recommended, the full form with both gates in the filler slot, entry 9's precedent; (B) a five-line form by the human's word; (C) the refusal left and recorded; (D) off the filler queue. OPEN-2 to OPEN-5 are not red lines and carry recommendations (every integer literal within bounds; a counted rule-2 result stays refused; the owner's-index line; the stale doc rewritten after the code). Nothing is committed as this piece's form until the human rules; its code starts after 8b merges. Before: PLACED S3 2026-10-26 (state/directives/2026-10-26-clicks-260-261-244-r2-241-o1-answers-pb-draft-b-6d-260-lines-5b-8a-8b-rulings.md): on the filler queue after entry 8b. Before: PROPOSED 2026-10-26 by the custodian from type-walk-rule2-residual-reasons's draft (state/consults/2026-10-26-type-walk-rule2-residual-reasons-five-line-form-architect-draft.md, note 4, F-A; its OPEN-5): the walk's arithmetic arm needs a non-literal float for rule 6 and a non-literal integer for rule 5, so 1e3 + 5 > 0 and 0.5 + 1e3 > 0 refuse as conversion_rounds, while FILTER-BIND section 2.5(a) says a double literal with an integer follows rule 5 and ADR-021's Note admits two numeric literals within the bounds inside +, - and *. Read only, never run; B-T1's probe set builds column-op-operand only, so nothing pins it. A fix changes what admission admits: an ADR-021 reading, likely full gating. Proposed and unplaced until the human places it."
+    },
     {
       "id": "pre-admission-change-detail-braces",
       "title": "Four kernel P6-placeholder detail strings are wrapped in literal braces, which reach the operator message; the watcher form declares each such string starts with the bracketed placeholder tag",
@@ -59,6 +78,63 @@
         "done": null
       },
       "summary": "FORM COMMITTED 2026-11-01 (governance/forms/kernel/WINDOWS-CASE-FOLD-NON-ASCII-PREREGISTRATION.md; 76 pins at b1bdb8ac) from lead-data's draft (state/consults/2026-11-01-windows-case-fold-non-ascii-five-line-form-lead-data-draft.md), its OPEN-1 to OPEN-6 taken as recommended under the human's direction of 2026-10-31, item 4, for the human's review; the guarantee read as ruled for 7a. NEXT: skipped at dispatch while cut/port-2-macos-l1-and-app-dirs edits kernel/src/permission/audit/log.rs (rule (00)); once port-2 merges, log.rs and the pinned cfg-site counts re-read by an amendment, then a worker; the reviewer and the architect from dispatch. Before: WAITS ON PIECE F 2026-10-29: its first step commits a form, which lands at its governance path only after #270 merges. Before: FILLER QUEUE entry 1 (RULED 2026-10-24: state/directives/2026-10-24-weekend-exception-third-product-slot-placements-forms-ahead-250-click.md, line 9; made the standing filler slot by state/directives/2026-10-24-filler-slot-standing-rule-appended-to-autonomy.md, line 8; state/FILLER-QUEUE.md): placed, graded S2; a five-line form under section 21c's size, the reviewer and the architect from dispatch, section 25 (e) set aside; any string a user sees a P6 placeholder for the sitting, any red-line text to the human. NEXT: skipped at dispatch while port-2, in flight, edits kernel/src/permission/audit/log.rs (rule (00)); dispatched when that overlap clears. Before: From wave 3's W3-A (section 1c-2 correction (b)), RECORD S2, code-path-only (state/cloud/wave3/W3-A.md, custodian fields): on Windows, component_eq in kernel/src/permission/audit/normalize.rs uses eq_ignore_ascii_case and is_inside in kernel/src/permission/audit/log.rs uses to_ascii_lowercase, while NTFS also folds non-ASCII letters. Neither the worker nor the custodian observed an escape, and whether the resolved destination already carries the on-disk case is not settled: the form's first step settles it. Windows is the supported platform. Proposed, not placed."
+    },
+    {
+      "id": "publish-filter-sentence-under-whole-dataset",
+      "title": "The publish dialog shows the filter sentence, which says the viewport extent is published, under Whole dataset too, where the whole file is published (the cloud audit, U12)",
+      "lane": "shell",
+      "phase": "prototype",
+      "status": "ready",
+      "order": null,
+      "budget_minutes": 45,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-11-05",
+        "done": null
+      },
+      "summary": "PLACED 2026-11-05 (evening) by the human's ruling (state/directives/2026-11-05-8c-full-form-nine-s2-placed-u12-slot-2-u1-reproducer-adr-notes-words-e2e-readme-words-8b-d3.md, item 2): slot 2, now, a five-line form; S2, not S1: the filter sentence is shown only when the scope is the view, its text a P6 placeholder. NEXT: its five-line form drafted, committed, then code; rule (00) checked against the pieces in flight at dispatch. Before: PROPOSED 2026-11-05 by the custodian, from the area E triage (state/consults/2026-11-05-area-e-kl-triage-undeclared-behaviours-architect.md, U12; the cloud KNOWN-LIMITATIONS truth audit, U12; the custodian read the code on main): the approval payload carries FILTER_SCOPE_SENTENCE whenever a filter is active, whatever the scope (frontends/shell/src-tauri/src/publish.rs, its filter_scope field), and the panel shows it on filterActive alone (frontends/shell/src/publish/PublishPanel.tsx), so under Whole dataset the dialog says the viewport extent is published while its row scope says the whole file is: one of its two statements about what is published is untrue. GRADED S1 CANDIDATE by the custodian (principle 8; the class of the 2026-10-10 finding 8), the reproducer owed (a test on the approval payload, Whole dataset with a filter on). The sentence is copied verbatim from NEXT-CUT.md by its comment, so any word shown under Whole dataset is the human's; a condition that shows it under Current view alone changes no word. KNOWN-LIMITATIONS item 8, the human's words of 2026-10-10, quotes it for both scopes and moves with the fix. Placement the human's."
+    },
+    {
+      "id": "walkthrough-rows-stale-against-main-sweep-area-b",
+      "title": "MANUAL-WALKTHROUGH.md rows stale against main, each of which would have the operator record a wrong result at a sitting or a rerun (drift sweep area B, findings 1 to 5 and 7 to 10)",
+      "lane": "shell",
+      "phase": "prototype",
+      "status": "ready",
+      "order": null,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-11-05",
+        "done": null
+      },
+      "summary": "PLACED 2026-11-05 (evening) by the human's ruling (state/directives/2026-11-05-8c-full-form-nine-s2-placed-u12-slot-2-u1-reproducer-adr-notes-words-e2e-readme-words-8b-d3.md, item 2): the docs lane, 1 of 7, first, before the sitting, B7's L5 step folded in (re-arm, then read the level from window.__SPATIAL_E2E__.getResidencyTileSizeLevel(), as the custodian recommended). The row words are seen by the human at the PR's click. NEXT: its form drafted; F2's row waits while b1-shell-half's PR B, whose records touch Part F, is in flight (rule (00)). Before: PROPOSED 2026-11-05 by the custodian, from the drift-sweep triage of area B (state/consults/2026-11-05-drift-sweep-areas-a-b-triage-architect.md, B1 to B5 and B7 to B10; the platform sweep state/consults/2026-11-03-platform-drift-sweep-area-b.md): confirmed by reading on main: Part B's B3 and the B2'/B3' coverage row still expect the cut-2 remediation note, which is gone (B1); J3 expects a class-C entry for a style edit, and F2's and H5's nothing round-trips clauses are false, each committed style edit being a class-A record_step row (B2); J2's key set omits columns, which the client always sends (B3); H1 and H2 expect the baseline ceiling banner, the candidate arm being the default (B4; a run record of 2026-08-20, before the flip); J1's exactly two class-A entries, the open also issuing an untiled first look (B8); Part N's check that none of the five limitations below appear, KNOWN-LIMITATIONS now holding items 19 to 23 (B9); Part A's A3 list, reused by M4, omits rows the panel shows (B10, minor); the regression and filter-panel coverage tables do not match the steps the scripts run (B5, a doc); Part L's preamble says the arm resets to baseline on every reload, untrue now, while the tile-size level a reload does reset goes unchecked (B7, noted on operator-sitting-queue for the sitting). GRADED S2 by the custodian for B1 to B4 and B7 to B9 (a row that would record a wrong result); B5 and B10 S3, riding (one file). Row words drafted for the human's sight; no result log edited. F2 waits for b1-shell-half PR B, whose records touch Part F; rule (00) counts each Part as its own path. Placement the human's."
+    },
+    {
+      "id": "adr-notes-stale-statements-and-indices",
+      "title": "ADR notes, Status lines and indices stating what has since changed (the cloud ADR audit, A-S1 to A-S8)",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "ready",
+      "order": null,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-11-03",
+        "done": null
+      },
+      "summary": "RULED 2026-11-05 (evening) (state/directives/2026-11-05-8c-full-form-nine-s2-placed-u12-slot-2-u1-reproducer-adr-notes-words-e2e-readme-words-8b-d3.md, item 3): ADR-026, ADR-022 and ADR-013 each take a dated appended note in the human's words; ADR-009 takes no note (the corrigendum of 2026-09-07 is the correction, and the generated index row copies an immutable Status line by design), closed on this node; A-S2 takes no note (ADR-017's later corrigendum discharging ADR-009 item 7 is the correction), closed on this node; ADR-023's Status line at B1's close, with the acceptance note (adr-023-stale-cites-before-acceptance). NEXT: the three notes appended by the custodian, then done. Before: NOTE 2026-11-05 (the custodian's grading of the docs audits on state/consults/2026-11-05-docs-audit-tasks-a-b-triage-architect.md, Task A, and state/consults/2026-11-05-docs-audit-task-c-unpinned-cites-triage-architect.md, rows 1 to 3): confirmed on main and held here, each the human's words, closing only by an appended dated note in the human's typed words (for ADR-023, at its Status change at B1's close): A-S1; A-S2 (the same file already corrects it in a later corrigendum); A-S3's Status line; A-S5's ADR-023 Status line (ADR-021's note itself is still true); and ADR-009's Status line, which docs/README.md's generated row copies (its hand-written paragraph already carries a dated correction). Widened by the custodian, this node being proposed and not ruled: ADR-013 Amendment 1's sentence that Item 6 is not true of the build reads as current and is now only partly so (two constants landed by crs-unit-fact-and-bounds, the rest on crs-zoom-constants-per-unit). Moved out: A-S4 is PLAN text, corrected by a note on entry-79-b1-consult-items; A-S7 is adr-035-close-races-note's; the hand-written index halves of A-S3, A-S5 and A-S8 go to adr-indices-hand-written-current. Graded S3, no node: the dated records of accepted ADRs whose line cites have drifted (Task C rows 4 to 15, 54 to 55 and 74 to 87: ADR-020 Amendment 1, ADR-021's amendment of 2026-09-15, ADR-028 Amendment 4, ADR-032's and ADR-033's bodies) are stale references only; a dated pointer is the human's if wanted. New on main since both audits: ADR-017's note of 2026-10-28 (merged by #276). Before: NOTE 2026-11-05 (state/consults/2026-11-05-drift-sweep-areas-c-d-triage-architect.md, C2): docs/adr/ADR-022-style-v0-as-the-single-style-model.md's amendment text from b2-piece-1b-recording calls ADR-036 Proposed; ADR-036 was accepted 2026-10-22. Accepted ADR text, so any note is the human's. Before: PROPOSED 2026-11-03 by the custodian, from the cloud ADR notes and docs paths audit (state/consults/2026-11-03-cloud-adr-docs-audit-report.md, Task A; (a draft and not Authority)): ADR-026's note names ADR-032 Proposed (A-S1); ADR-017's Corrigendum 1 names ADR-009 open (A-S2); ADR-026's Status line calls a settled question open (A-S3); ADR-021's note rests on ADR-023's Status words, which no longer fit ADR-023's Decision section (A-S5); ADR-035's note names the close race unsettled after its node merged (A-S7); docs/README.md and docs/02 count three of ADR-017's five corrigenda (A-S8; docs/02's half is docs-02-adr-017-entry-current); PLAN holds ADR-021's note of 2026-09-29 both as accepted and as accepted later (A-S4). Notes, Status lines and amendments are the human's words; the indices and the PLAN text are not. Proposed; placed by the human."
     },
     {
       "id": "governance-f-after-week-rust-ci-figure",
@@ -119,30 +195,11 @@
     }
   ],
   "waiting_on_human": {
-    "total_minutes": 30,
+    "total_minutes": 25,
     "by_kind": {
       "click": [],
       "sight": [],
       "ruling": [
-        {
-          "id": "literal-only-float-integer-arithmetic-refused",
-          "title": "Literal-only arithmetic mixing a double literal and an integer literal (1e3 + 5 > 0) is refused as conversion_rounds, although FILTER-BIND section 2.5(a) and ADR-021's Note admit two numeric literals within the bounds in +, - and * (F-A of the type-walk-rule2-residual-reasons draft)",
-          "lane": "engine",
-          "phase": "prototype",
-          "status": "blocked",
-          "order": null,
-          "budget_minutes": 120,
-          "needs_human": {
-            "kind": "ruling",
-            "minutes": 5
-          },
-          "evidence": null,
-          "dates": {
-            "opened": "2026-10-26",
-            "done": null
-          },
-          "summary": "HELD 2026-11-05: 8b merged (#282, 540b4afd); 8c waits on the human ruling of its OPEN-1 (the route) alone. Before: FORM DRAFTED AHEAD 2026-11-05 (state/consults/2026-11-05-literal-only-float-integer-arithmetic-refused-five-line-form-lead-data-draft.md): lead-data reads the five-line form closed on two grounds, either alone: section 21a, ADR-021's admitted class being a stated guarantee (the last merged type-walk form read its own case so), and section 21c's fourth bound, the shipped app filtering with predicates it now refuses being new user-visible behaviour. Size is not the ground: about 125 changed lines over 3 files. OPEN-1, the route, is the human's, a red line (a scope change to an item the human ruled): (A) recommended, the full form with both gates in the filler slot, entry 9's precedent; (B) a five-line form by the human's word; (C) the refusal left and recorded; (D) off the filler queue. OPEN-2 to OPEN-5 are not red lines and carry recommendations (every integer literal within bounds; a counted rule-2 result stays refused; the owner's-index line; the stale doc rewritten after the code). Nothing is committed as this piece's form until the human rules; its code starts after 8b merges. Before: PLACED S3 2026-10-26 (state/directives/2026-10-26-clicks-260-261-244-r2-241-o1-answers-pb-draft-b-6d-260-lines-5b-8a-8b-rulings.md): on the filler queue after entry 8b. Before: PROPOSED 2026-10-26 by the custodian from type-walk-rule2-residual-reasons's draft (state/consults/2026-10-26-type-walk-rule2-residual-reasons-five-line-form-architect-draft.md, note 4, F-A; its OPEN-5): the walk's arithmetic arm needs a non-literal float for rule 6 and a non-literal integer for rule 5, so 1e3 + 5 > 0 and 0.5 + 1e3 > 0 refuse as conversion_rounds, while FILTER-BIND section 2.5(a) says a double literal with an integer follows rule 5 and ADR-021's Note admits two numeric literals within the bounds inside +, - and *. Read only, never run; B-T1's probe set builds column-op-operand only, so nothing pins it. A fix changes what admission admits: an ADR-021 reading, likely full gating. Proposed and unplaced until the human places it."
-        },
         {
           "id": "adr-035-close-races-note",
           "title": "ADR-035 -- an appended, dated note recording what kernel-generation-close-races makes historical (Decision 3's no-session-reference case unreachable; invalidate marks only on a live removal; Decision 2's mint-race arm gone)",
@@ -242,9 +299,75 @@
         "opened": "2026-11-05",
         "done": null
       },
-      "summary": "PLACED 2026-11-05 by the human's ruling (state/directives/2026-11-05-platform-runs-filed-c1-governance-next-fixtures-kernel-node-8b-route-a-f-b-after-8c.md, line 10): F-B of entry 8b's form (its OPEN-5 and Amendment 1, from P-0: state/consults/2026-11-04-type-walk-rule2-residual-reasons-worker-report.md), S3, the filler queue after 8c as entry 8d. In arithmetic a text literal beside NULL ('1' + NULL > 0) passes the binder and is refused by type with the reason conversion_rounds, whose sentence is false of it; this node gives that shape a true sentence under the existing reason value and adds no reason value. NEXT: its five-line form at its turn.",
+      "summary": "RULED 2026-11-05 (evening) (state/directives/2026-11-05-8c-full-form-nine-s2-placed-u12-slot-2-u1-reproducer-adr-notes-words-e2e-readme-words-8b-d3.md, item 5): the shapes (a) to (c) of the architect's gate-1 report for #282 (state/consults/gates/2026-11-05-type-walk-rule2-residual-reasons-gate1-architect.md, its section for the human) come to this node; its form names the division operator and probes them first. W-1 stands, a P6 placeholder worded at the sitting. Before: PLACED 2026-11-05 by the human's ruling (state/directives/2026-11-05-platform-runs-filed-c1-governance-next-fixtures-kernel-node-8b-route-a-f-b-after-8c.md, line 10): F-B of entry 8b's form (its OPEN-5 and Amendment 1, from P-0: state/consults/2026-11-04-type-walk-rule2-residual-reasons-worker-report.md), S3, the filler queue after 8c as entry 8d. In arithmetic a text literal beside NULL ('1' + NULL > 0) passes the binder and is refused by type with the reason conversion_rounds, whose sentence is false of it; this node gives that shape a true sentence under the existing reason value and adds no reason value. NEXT: its five-line form at its turn.",
       "blocked_by": [
         "literal-only-float-integer-arithmetic-refused"
+      ]
+    },
+    {
+      "id": "narrow-integer-id-unstreamable",
+      "title": "An 8, 16 or 32-bit integer id column is admitted at open but no stream carries it (the cloud audit, U2)",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": null,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-11-03",
+        "done": null
+      },
+      "summary": "PLACED 2026-11-05 (evening) by the human's ruling (state/directives/2026-11-05-8c-full-form-nine-s2-placed-u12-slot-2-u1-reproducer-adr-notes-words-e2e-readme-words-8b-d3.md, item 2): the filler queue after single-file-bracket-name-refused-as-partitioned (entry 8g). NEXT: at its turn, a reading first by a test on a narrow-integer file, then its form. Before: TRIAGED 2026-11-05 (state/consults/2026-11-05-area-e-kl-triage-undeclared-behaviours-architect.md, U2): CONFIRMED by reading at d8e52f77; whether DuckDB hands a Parquet INT32 to Arrow as Int32 is not decidable by reading. GRADED S2 by the custodian: the open succeeds and every stream fails with engine.query, with no action offered; the failure is shown, not silent. Placement the human's. Before: PROPOSED 2026-11-03 by the custodian, from the cloud KNOWN-LIMITATIONS truth audit (state/consults/2026-11-03-cloud-kl-audit-report.md, U2; (a draft and not Authority)): by code reading at 6b67d44, identity admission accepts a narrow integer id column while every stream decodes id only as UInt64 or Int64 and fails anything else with engine.query, so such a file opens and draws nothing; no test streams one, and the audit assumes DuckDB hands a Parquet INT32 to Arrow as Int32. A reading first, by a test on a narrow-integer file; then a refusal at open or a widening on the stream side. Proposed; placed by the human.",
+      "blocked_by": [
+        "single-file-bracket-name-refused-as-partitioned"
+      ]
+    },
+    {
+      "id": "single-file-bracket-name-refused-as-partitioned",
+      "title": "A single file whose name holds a bracket or a brace is refused as partitioned across more than one file, and the refusal's advice cannot be followed in the app (the cloud audit, U17)",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": null,
+      "budget_minutes": 120,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-11-05",
+        "done": null
+      },
+      "summary": "PLACED 2026-11-05 (evening) by the human's ruling (state/directives/2026-11-05-8c-full-form-nine-s2-placed-u12-slot-2-u1-reproducer-adr-notes-words-e2e-readme-words-8b-d3.md, item 2): U17 as its own node, the filler queue after skp-filter-dialect-unsupported-ruling (entry 8f): the refusal's advice unusable in the app, the message an engine fact under P6. From the area E triage (state/consults/2026-11-05-area-e-kl-triage-undeclared-behaviours-architect.md, U17, PARTLY): confirmed for a file name holding a bracket or a brace: the gate runs first in open_inner (engine/src/dataset.rs), so no declared identity gets past it, and the panel opens no form for its code; the engine message says the source is partitioned across more than one file, untrue of one file, and its first remedy is what the user already did (engine/src/error.rs). The directory half is unreachable from the app's file picker. KNOWN-LIMITATIONS item 20 declares the refusal, not that its advice cannot be followed. GRADED S2 by the custodian. NEXT: its form at its turn.",
+      "blocked_by": [
+        "skp-filter-dialect-unsupported-ruling"
+      ]
+    },
+    {
+      "id": "adr-029-stale-line-cites",
+      "title": "ADR-029 (Proposed, unbuilt): its line cites into the code and the admission form land on other text, so an implementer of the scan-progress route would follow them to the wrong places (the docs audits, Task C rows 56 to 73 and Task B)",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": null,
+      "budget_minutes": 30,
+      "needs_human": {
+        "kind": "ruling",
+        "minutes": 10
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-11-05",
+        "done": null
+      },
+      "summary": "PLACED 2026-11-05 (evening) by the human's ruling (state/directives/2026-11-05-8c-full-form-nine-s2-placed-u12-slot-2-u1-reproducer-adr-notes-words-e2e-readme-words-8b-d3.md, item 2): the docs lane, 7 of 7, last. The note stays the human's typed words; the custodian's table of current lines at its turn, for the human's sight. Before: PROPOSED 2026-11-05 by the custodian, graded S2, from the docs-audit triage (state/consults/2026-11-05-docs-audit-task-c-unpinned-cites-triage-architect.md, rows 56 to 73, and state/consults/2026-11-05-docs-audit-tasks-a-b-triage-architect.md, Task B): confirmed by reading on main: ADR-029's cites for the mint site, the cancel parser, the ticket state and the no-wildcard rule now land on other code, and its four line cites into the admission form at its old path land on other rules; the custodian's earlier finding (its cite into SKP-V0.md for the cancel states, now at another line) is the same class. When the route is built (decision-adr-029-scan-progress-route, unscheduled) an implementer following them acts on the wrong text. ADR text is the human's: the fix is a dated note in the human's typed words, or the cites restated when the human takes up the decision; the custodian can supply a table of current lines for the human's sight. Placement the human's.",
+      "blocked_by": [
+        "module-docs-drift-sweep-area-d"
       ]
     },
     {
@@ -314,6 +437,51 @@
       ]
     },
     {
+      "id": "module-docs-drift-sweep-area-d",
+      "title": "Kernel and engine module docs: the never-refuses and unreachable claims the Table, record_step and publish have overtaken, the withdrawn cancellation bound, and smaller statements (drift sweep area D, findings 1 to 6)",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": null,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-11-05",
+        "done": null
+      },
+      "summary": "PLACED 2026-11-05 (evening) by the human's ruling (state/directives/2026-11-05-8c-full-form-nine-s2-placed-u12-slot-2-u1-reproducer-adr-notes-words-e2e-readme-words-8b-d3.md, item 2): the docs lane, 6 of 7, still after 1c. Before: PROPOSED 2026-11-05 by the custodian, from the drift-sweep triage of area D (state/consults/2026-11-05-drift-sweep-areas-c-d-triage-architect.md, D1 to D6, and C2's README lines; the platform sweep state/consults/2026-11-03-platform-drift-sweep-area-d.md): confirmed by reading on main: kernel/README.md's admission-class sum, with its claim that in the shipped shell the class never refuses, and engine/src/pool.rs's twin, no longer count the Table's filtered query or record_step's filter admission (D1; pool.rs also cites a paragraph one line off); the stream-lease refusal called unreachable on the natural-completion path in kernel/README.md, engine/README.md and pool.rs, while the kernel's own doc in skp.rs says every pending ticket already holds the lease, and publish leases the same class (D2); engine/README.md restating the uninterruptible-window sentence engine/src/stream.rs withdrew, the publish write being chunked (D3); kernel/src/permission/approval.rs saying a future surface adds a third implementation, which exists, and that the trait has one method (D4); engine/src/lib.rs's measurement scope silent on the clang-cl build of the bundled DuckDB (D5); kernel/src/skp.rs's every Tauri command handler sentence, overbroad (D6); and ADR-036 called Proposed in kernel/README.md's owner's index lines and engine/README.md (C2). Whether the extra admissions overlap in ordinary timing is not decidable by reading; KNOWN-LIMITATIONS tells users the truth. GRADED S2 by the custodian for D1 to D3 (a guarantee or bound a reviewer relies on, stated untrue); D4 to D6 and C2's lines S3, riding. Shares both READMEs with module-readme-moved-form-paths, kernel/README.md with kernel-composed-ceiling-projected-stream and 1c's records, and skp.rs with open-dataset-close-serialised-under-the-catalog-lock and pre-admission-change-detail-braces; one path each under rule (00). Placement the human's.",
+      "blocked_by": [
+        "b2-piece-1c-save-and-reopen",
+        "adr-indices-hand-written-current"
+      ]
+    },
+    {
+      "id": "skp-filter-dialect-unsupported-ruling",
+      "title": "SKP-V0.md lists skp.filter_dialect_unsupported as a refusal a client receives; no code produces it, a wrong dialect failing at deserialization: the human rules produce or strike (drift sweep area C, finding 1)",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": null,
+      "budget_minutes": 30,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-11-05",
+        "done": null
+      },
+      "summary": "RULED 2026-11-05 (evening) (state/directives/2026-11-05-8c-full-form-nine-s2-placed-u12-slot-2-u1-reproducer-adr-notes-words-e2e-readme-words-8b-d3.md, item 2): strike: a wrong dialect fails at deserialization and no host ever produced the code; the variant goes, and SKP-V0 gains the human's dated note (item 3, its words byte for byte: no literal change, skp/0.12 standing, no fixture changes). PLACED: the filler queue after 8c (entry 8e). The stale commands.rs comments and the rest of area C stay with skp-spec-and-protocol-comments-drift-sweep-c unless this piece's Scope takes them. NEXT: its form at its turn. Before: PROPOSED 2026-11-05 by the custodian, from the drift-sweep triage of area C (state/consults/2026-11-05-drift-sweep-areas-c-d-triage-architect.md, C1; the platform sweep state/consults/2026-11-03-platform-drift-sweep-area-c.md, finding 1): confirmed by reading on main: the section 7.5 taxonomy lists the code with its declared field, while Filter::new refuses any other dialect inside Filter's Deserialize (protocol/skp/src/v0/commands.rs), so a wrong dialect never reaches predicate admission and the code is never sent; engine/src/predicate.rs says the variant is not constructible by admit today; the spec's own section 7.2 already says a wrong dialect is refused at deserialization, so the spec contradicts itself. The commands.rs comments calling the allowlist walk a later phase are stale too. GRADED S2 by the custodian (a refusal named under a code the client never receives). The class of skp-unproduced-codes-ruling's three codes, which the human ruled on 2026-10-10; that ruling named only those three, so produce or strike is the human's (first-external-plugin-skp-client holds the produce-or-not question for decode-time refusals). The spec and comment change follows the ruling, in skp-spec-and-protocol-comments-drift-sweep-c. Placement the human's.",
+      "blocked_by": [
+        "literal-only-float-integer-arithmetic-refused"
+      ]
+    },
+    {
       "id": "skp-line-cites-outside-close-races",
       "title": "Stale line cites into kernel/src/skp.rs outside kernel-close-races-followups files -- shell streaming, App.tsx, pool_poll.rs, src-tauri lib.rs, the P4 corpus test and the persisted-artifacts test",
       "lane": "kernel-protocol",
@@ -355,6 +523,29 @@
       "summary": "NOTE 2026-11-05 (the cloud ADR audit's A-S4, confirmed in state/consults/2026-11-05-docs-audit-tasks-a-b-triage-architect.md): the last sentence below conflicts with the human's ruling of 2026-09-29 (state/directives/2026-09-29-a2-1-and-b-1-sightings.md: the ADR-021 Note is accepted as drafted); its together wording came from Fable's relayed item, not from the human's ruling. The custodian reads the Note as accepted on 2026-09-29: what stays for B1's close is ADR-023's Amendment 2026-09-29, and nothing returns to the human for the Note. Before: Entry 79's three items were RULED on 2026-09-11 (the wider named set with projection_empty_list mandatory; hover shows every projected column with the bound at admission; describe carries per-column projectable) and apply at B1's close -- no ruling remains; this node follows the B1 half Items 1 and 3 were delivered by #134 (the named projection refusals with projection_empty_list; describe's per-column projectable). Item 2 (the hover showing every projected column) is B1's shell half, held by the 2026-09-27 session order until the human's shell migration plan, so this node waits on b1-shell-half (2026-09-27). It also depends on b1-close-nul-column-names: A2-1 belongs to B1's contract and lands before B1 closes (the 2026-09-29 A2-1 clarification, state/directives/2026-09-29-a2-1-clarification.md), and this node is the one that closes B1. At B1's close the human accepts ADR-023's Amendment 2026-09-29 and ADR-021's Note 2026-09-29 together, because the Note relies on the amendment's definition of not addressable (Fable, 2026-09-29, item 1, from #142's architect note 4; state/directives/2026-09-29-fable-amendment-12-sighted-and-ruled-backfill.md).",
       "blocked_by": [
         "b1-shell-half"
+      ]
+    },
+    {
+      "id": "e2e-readme-security-posture-measure-build",
+      "title": "frontends/shell/e2e/README.md: the security-posture paragraph is untrue for the measure build (the debug port in Rust, the e2e hooks kept in), with the missing E-FLOOR entry and stale lib.rs cites (drift sweep area B, findings 6, 11 and 12)",
+      "lane": "shell",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": null,
+      "budget_minutes": 30,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-11-05",
+        "done": null
+      },
+      "summary": "PLACED 2026-11-05 (evening) by the human's ruling (state/directives/2026-11-05-8c-full-form-nine-s2-placed-u12-slot-2-u1-reproducer-adr-notes-words-e2e-readme-words-8b-d3.md, item 2): the docs lane, 4 of 7: the security-posture paragraph in the human's words (item 4), applied by the docs-lane piece and checked clause by clause; B11's E-FLOOR entry and B12's lib.rs cites ride (S3, one file). Before: PROPOSED 2026-11-05 by the custodian, from the drift-sweep triage of area B (state/consults/2026-11-05-drift-sweep-areas-a-b-triage-architect.md, B6, B11 and B12; the platform sweep state/consults/2026-11-03-platform-drift-sweep-area-b.md): confirmed by reading on main: the paragraph says the debug port is never a checked-in default, that the e2e overlay is the only place the flag touches disk, that nothing in Rust references the port, and that the e2e hooks are compiled out of production; but under the measure-build feature frontends/shell/src-tauri/src/lib.rs opens the remote-debugging port with a checked-in default, build:measure is a release build with that feature, and the hooks' gate (isInstrumentedBuild.ts) keeps them in when VITE_MEASURE_BUILD is set, so a measure build exposes the port and the hooks together. The shipped installer's property holds (no default feature; the plain build compiles the hooks out); the claim that npm run build proves it is untrue as stated (the dist check runs after it, in CI). The clauses on WebView2's environment variable state a live check and are not decidable by reading. GRADED S2 by the custodian: a security-posture statement untrue for a build the repository makes, not for the shipped one. The paragraph is red-line text (the security posture), so its words are the human's; the README's missing E-FLOOR entry (B11) and its stale lib.rs cites (B12) ride, S3, one file, after the human's words. Placement the human's.",
+      "blocked_by": [
+        "kl-undeclared-behaviours-u1-to-u17",
+        "kl-items-graded-untrue-or-stale"
       ]
     },
     {
@@ -424,6 +615,50 @@
       ]
     },
     {
+      "id": "kl-items-graded-untrue-or-stale",
+      "title": "KNOWN-LIMITATIONS -- on-main notes for the items the cloud truth audit grades untrue (3, 13, 27, 56) or stale (4, 10, 15, 19 and the unnumbered filter paragraph)",
+      "lane": "release",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": null,
+      "budget_minutes": 90,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-11-03",
+        "done": null
+      },
+      "summary": "PLACED 2026-11-05 (evening) by the human's ruling (state/directives/2026-11-05-8c-full-form-nine-s2-placed-u12-slot-2-u1-reproducer-adr-notes-words-e2e-readme-words-8b-d3.md, item 2): the docs lane, 3 of 7, with kl-undeclared-behaviours-u1-to-u17, one piece: their rows written from the code and approved with it under Part 1, item 1 (the human's words). Before: TRIAGED 2026-11-05 (state/consults/2026-11-05-area-e-kl-triage-numbered-items-architect.md, the architect's reading at d8e52f77, under the human's direction of 2026-11-05, item 2): confirmed on main by reading: items 13, 15 and 27 as the audit grades them; item 19 (the degradation is shown, in the describe summary and the status line); item 56 PARTLY (each refused tile query's code is shown in the Activity console; the stream count is understated, up to four); items 4 and 10 stale now, independent of 1c (the style is kept on reopen and written to the session record a crash leaves); item 3 PARTLY, tied to publish-session-tier-identity; the unnumbered paragraph and its comment stale (both fixes built). Added: the pins at KL lines 103 and 124, stale references. Item 43 imprecise only, left with 1c. GRADED S2 by the custodian (a record: KNOWN-LIMITATIONS rows, the words the human's at the v0.2 rewrite), split at drafting as the reading's A1 to A7. Items 4 and 10 stay in this node; if 1c's step reaches them first they fold into that step and leave this node. Placement the human's. Before: PROPOSED 2026-11-03 by the custodian, from the cloud KNOWN-LIMITATIONS truth audit (state/consults/2026-11-03-cloud-kl-audit-report.md, (a draft and not Authority)), read as any reading: at 6b67d44, whose product code is main's, it grades a named clause of items 3, 13, 27 and 56 untrue and items 4, 10, 15, 19 and the unnumbered filter paragraph stale on main, none executed. Each clause is re-read against main before any word; the words are the human's at the v0.2 rewrite. The v0.2 draft's findings 1 to 3 meet the same items (state/consults/2026-11-03-cloud-v0-2-drafts-release-0-2-draft.md, section 5). Item 3's clause is also the product question in publish-session-tier-identity. Proposed; placed by the human.",
+      "blocked_by": [
+        "adr-023-stale-cites-before-acceptance"
+      ]
+    },
+    {
+      "id": "kl-undeclared-behaviours-u1-to-u17",
+      "title": "KNOWN-LIMITATIONS -- the seventeen behaviours the cloud truth audit finds in ordinary use and declared nowhere (U1 to U17)",
+      "lane": "release",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": null,
+      "budget_minutes": 120,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-11-03",
+        "done": null
+      },
+      "summary": "PLACED 2026-11-05 (evening) by the human's ruling (state/directives/2026-11-05-8c-full-form-nine-s2-placed-u12-slot-2-u1-reproducer-adr-notes-words-e2e-readme-words-8b-d3.md, item 2): the docs lane, 3 of 7, with kl-items-graded-untrue-or-stale, one piece: their rows written from the code and approved with it under Part 1, item 1 (the human's words). U1, U2, U10 and U12 have their own nodes; U17 is single-file-bracket-name-refused-as-partitioned (item 2). Before: TRIAGED 2026-11-05 (state/consults/2026-11-05-area-e-kl-triage-undeclared-behaviours-architect.md, the architect's reading at d8e52f77, the direction's item 2): CONFIRMED by reading U1, U2, U3, U4, U7, U8, U9, U11, U12, U13, U14 and U16; PARTLY U6 (the manifests say 0.1.0; the app shows no version), U10 (the unverified routes are not refused at all), U15 (the frameless window only, and the app's status line already says it) and U17 (one file whose name holds a bracket or a brace; the directory half is unreachable from the app's file picker); U5 is the P6 process, operator-sitting-queue's. GRADED by the custodian: the declarations S2 (KNOWN-LIMITATIONS rows grouped by item as the reading proposes, the words the human's; U7 with item 4 in kl-items-graded-untrue-or-stale); U1 and U12 S1 candidates, each in its own node, to the human; U2 and U10 S2 in their nodes; U6 S2, noted on release-v0-2-0; U17 S2, recorded here: for one file whose name holds a bracket or a brace the engine's refusal says the source is partitioned across more than one file, and its advice cannot be followed in the app (engine/src/error.rs, engine/src/dataset.rs; the message an engine fact under P6), proposed to the human as its own node; U3's chunk-local row number in the engine.wkb message S3, recorded here. Placement the human's. Before: PROPOSED 2026-11-03 by the custodian, from the cloud KNOWN-LIMITATIONS truth audit (state/consults/2026-11-03-cloud-kl-audit-report.md, its section on behaviour no entry declares; (a draft and not Authority)): seventeen behaviours found by code reading at 6b67d44, each checked against the file by text search, none executed. Each is re-read, then declared or split to a fix node: U1 is publish-session-tier-identity, U2 narrow-integer-id-unstreamable, U10 export-refused-above-row-ceiling-every-scope. U5, U12 and U17 rest on shown strings (the P6 placeholders, the publish dialog's filter sentence, an admission refusal's advice), so their words are the human's. Proposed; placed by the human.",
+      "blocked_by": [
+        "adr-023-stale-cites-before-acceptance"
+      ]
+    },
+    {
       "id": "entry-77-code-signing",
       "title": "Entry 77 — code signing for the Windows installer",
       "lane": "release",
@@ -487,6 +722,50 @@
       "summary": "RE-TARGETED 2026-10-23 to v0.2 by the human (state/directives/2026-10-23-weekend-open-items-ruled-verify-cites-pin-covering-case-port-2-session-log-test-feature-v0-2-findings-graded.md, item 6, O1): it rides release-v0-2-0 in place of the folded v0.1.1. Before: RULED 2026-09-14 (question set D, D3): draft the application after v0.1.1; nothing is submitted; SignPath Foundation as the named publisher and the required disclosure section per the evaluation note",
       "blocked_by": [
         "release-v0-2-0"
+      ]
+    },
+    {
+      "id": "adr-023-stale-cites-before-acceptance",
+      "title": "ADR-023 (Proposed, built in B1): its line cites and six of its sentences are stale against main, misleading a verifier and the human at its acceptance at B1 close (the docs audits, Task C rows 16 to 53)",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": null,
+      "budget_minutes": 45,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-11-05",
+        "done": null
+      },
+      "summary": "PLACED 2026-11-05 (evening) by the human's ruling (state/directives/2026-11-05-8c-full-form-nine-s2-placed-u12-slot-2-u1-reproducer-adr-notes-words-e2e-readme-words-8b-d3.md, item 2): the docs lane, 2 of 7, so it is done before PR B closes: the custodian's table of ADR-023's current lines and its six stale sentences, for the human's sight. ADR-023's Status line at B1's close, with the acceptance note in the human's words, as the custodian has it (item 3). Before: PROPOSED 2026-11-05 by the custodian, graded S2, from the docs-audit triage (state/consults/2026-11-05-docs-audit-task-c-unpinned-cites-triage-architect.md, rows 16 to 53): confirmed by reading on main: besides stale line cites, six sentences are stale in themselves: the superseded draft code they describe is gone (rows 24 to 26), the arm moved (row 34), the constant was renamed (row 39), the schema shape grew (row 50), and the current literal is no longer skp/0.2 (row 51). A verifier reading ADR-023 at its acceptance, and the human accepting it, would be misled. ADR text is the human's: the Status line's acceptance at B1's close is the natural moment for a dated note in the human's words, the custodian supplying a table of current lines for the human's sight before then. adr-notes-stale-statements-and-indices (A-S5) and adr-023-s2-widenings-adr-021-consult also touch ADR-023, so under rule (00) one at a time, or one note. Placement the human's.",
+      "blocked_by": [
+        "walkthrough-rows-stale-against-main-sweep-area-b"
+      ]
+    },
+    {
+      "id": "adr-indices-hand-written-current",
+      "title": "The hand-written ADR indices brought current: docs/README.md conventions paragraph and the docs/02 ADR list, where ADR-013 is called proposed though accepted and architect-blockable (the docs audits, A-S3, A-S5 and A-S8 index halves and the platform-only items)",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": null,
+      "budget_minutes": 45,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-11-05",
+        "done": null
+      },
+      "summary": "PLACED 2026-11-05 (evening) by the human's ruling (state/directives/2026-11-05-8c-full-form-nine-s2-placed-u12-slot-2-u1-reproducer-adr-notes-words-e2e-readme-words-8b-d3.md, item 2): the docs lane, 5 of 7. docs-02-adr-017-entry-current edits docs/02 too, so the two are never in flight together (rule (00)). Before: PROPOSED 2026-11-05 by the custodian, graded S2, from the docs-audit triage (state/consults/2026-11-05-docs-audit-tasks-a-b-triage-architect.md, Task A and its proposal 1; the audits state/consults/2026-11-03-cloud-adr-docs-audit-report.md and state/drafts/2026-11-03-platform-adr-notes-docs-paths-audit.md): confirmed by reading on main, none of it the human's words: docs/02's list calls ADR-013 proposed, while ADR-013 was accepted 2026-08-09 and is architect-blockable from acceptance, which can lead a reader to treat a blocking ADR as advisory; docs/02 and the docs/README.md paragraph call ADR-026's settled wording open (A-S3) and ADR-023's decision deliberately open or undrafted (A-S5), and both count three of ADR-017's five corrigenda without its note of 2026-10-28 (A-S8); the paragraph puts ADR-016, accepted, inside its Proposed run and calls ADR-029's decision undrafted, drafted on 2026-09-14; ADR-033 to ADR-036 are absent from the paragraph, and ADR-018, ADR-030 and ADR-032 to ADR-036 from docs/02. The generated rows are not this node's. The precedent is adr-032-staleness-docs (done). docs/02 is also docs-02-adr-017-entry-current's file and holds two of moved-path-mentions-outside-accepted-adrs' mentions, so under rule (00) they ride here or follow; the order is the human's. Placement the human's.",
+      "blocked_by": [
+        "e2e-readme-security-posture-measure-build"
       ]
     },
     {
@@ -1962,44 +2241,6 @@
       "summary": "PROPOSED 2026-10-23 from #245's gate 1 (both gates; state/consults/2026-10-23-questions-mirror-item-count-gate1-words-reconciled-architect.md, item 6): the hook's header reads none for a question whose red-line marker follows a lead holding a full stop (a section number or a file name), because questions-mirror-item-count's lead class excludes the full stop; widen the lead, or keep it and state the limit, under its own form, after questions-mirror-item-count merges. For the human's grading and placement."
     },
     {
-      "id": "kl-items-graded-untrue-or-stale",
-      "title": "KNOWN-LIMITATIONS -- on-main notes for the items the cloud truth audit grades untrue (3, 13, 27, 56) or stale (4, 10, 15, 19 and the unnumbered filter paragraph)",
-      "lane": "release",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 90,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-11-03",
-        "done": null
-      },
-      "summary": "TRIAGED 2026-11-05 (state/consults/2026-11-05-area-e-kl-triage-numbered-items-architect.md, the architect's reading at d8e52f77, under the human's direction of 2026-11-05, item 2): confirmed on main by reading: items 13, 15 and 27 as the audit grades them; item 19 (the degradation is shown, in the describe summary and the status line); item 56 PARTLY (each refused tile query's code is shown in the Activity console; the stream count is understated, up to four); items 4 and 10 stale now, independent of 1c (the style is kept on reopen and written to the session record a crash leaves); item 3 PARTLY, tied to publish-session-tier-identity; the unnumbered paragraph and its comment stale (both fixes built). Added: the pins at KL lines 103 and 124, stale references. Item 43 imprecise only, left with 1c. GRADED S2 by the custodian (a record: KNOWN-LIMITATIONS rows, the words the human's at the v0.2 rewrite), split at drafting as the reading's A1 to A7. Items 4 and 10 stay in this node; if 1c's step reaches them first they fold into that step and leave this node. Placement the human's. Before: PROPOSED 2026-11-03 by the custodian, from the cloud KNOWN-LIMITATIONS truth audit (state/consults/2026-11-03-cloud-kl-audit-report.md, (a draft and not Authority)), read as any reading: at 6b67d44, whose product code is main's, it grades a named clause of items 3, 13, 27 and 56 untrue and items 4, 10, 15, 19 and the unnumbered filter paragraph stale on main, none executed. Each clause is re-read against main before any word; the words are the human's at the v0.2 rewrite. The v0.2 draft's findings 1 to 3 meet the same items (state/consults/2026-11-03-cloud-v0-2-drafts-release-0-2-draft.md, section 5). Item 3's clause is also the product question in publish-session-tier-identity. Proposed; placed by the human."
-    },
-    {
-      "id": "kl-undeclared-behaviours-u1-to-u17",
-      "title": "KNOWN-LIMITATIONS -- the seventeen behaviours the cloud truth audit finds in ordinary use and declared nowhere (U1 to U17)",
-      "lane": "release",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 120,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-11-03",
-        "done": null
-      },
-      "summary": "TRIAGED 2026-11-05 (state/consults/2026-11-05-area-e-kl-triage-undeclared-behaviours-architect.md, the architect's reading at d8e52f77, the direction's item 2): CONFIRMED by reading U1, U2, U3, U4, U7, U8, U9, U11, U12, U13, U14 and U16; PARTLY U6 (the manifests say 0.1.0; the app shows no version), U10 (the unverified routes are not refused at all), U15 (the frameless window only, and the app's status line already says it) and U17 (one file whose name holds a bracket or a brace; the directory half is unreachable from the app's file picker); U5 is the P6 process, operator-sitting-queue's. GRADED by the custodian: the declarations S2 (KNOWN-LIMITATIONS rows grouped by item as the reading proposes, the words the human's; U7 with item 4 in kl-items-graded-untrue-or-stale); U1 and U12 S1 candidates, each in its own node, to the human; U2 and U10 S2 in their nodes; U6 S2, noted on release-v0-2-0; U17 S2, recorded here: for one file whose name holds a bracket or a brace the engine's refusal says the source is partitioned across more than one file, and its advice cannot be followed in the app (engine/src/error.rs, engine/src/dataset.rs; the message an engine fact under P6), proposed to the human as its own node; U3's chunk-local row number in the engine.wkb message S3, recorded here. Placement the human's. Before: PROPOSED 2026-11-03 by the custodian, from the cloud KNOWN-LIMITATIONS truth audit (state/consults/2026-11-03-cloud-kl-audit-report.md, its section on behaviour no entry declares; (a draft and not Authority)): seventeen behaviours found by code reading at 6b67d44, each checked against the file by text search, none executed. Each is re-read, then declared or split to a fix node: U1 is publish-session-tier-identity, U2 narrow-integer-id-unstreamable, U10 export-refused-above-row-ceiling-every-scope. U5, U12 and U17 rest on shown strings (the P6 placeholders, the publish dialog's filter sentence, an admission refusal's advice), so their words are the human's. Proposed; placed by the human."
-    },
-    {
       "id": "publish-session-tier-identity",
       "title": "Publish and a session-tier identity: KNOWN-LIMITATIONS item 3 says such a file is never saved or published; the cloud audit finds no refusal on the publish path",
       "lane": "kernel-protocol",
@@ -2016,26 +2257,7 @@
         "opened": "2026-11-03",
         "done": null
       },
-      "summary": "TRIAGED 2026-11-05 (state/consults/2026-11-05-area-e-kl-triage-numbered-items-architect.md, item 3; state/consults/2026-11-05-area-e-kl-triage-undeclared-behaviours-architect.md, U1; the custodian read the manifest's caveat on main): CONFIRMED by reading: no publish-side check refuses the session tier, the ceiling check passes it (its verified rows are none), and the manifest keeps the fixed caveat that uniqueness was verified over this file at open, untrue for that tier; U10's bypass on the unverified routes has the same cause. GRADED S1 CANDIDATE by the custodian (principle 8: a published manifest states a verification that never ran), the reproducer owed (this node's own test at main) before it goes to the human as S1. Placement the human's. Before: PROPOSED 2026-11-03 by the custodian, from the cloud KNOWN-LIMITATIONS truth audit (state/consults/2026-11-03-cloud-kl-audit-report.md, item 3 and U1; (a draft and not Authority)): by code reading at 6b67d44, a file with no id column (an ID column included, the lookup being exact) opens on the session tier and exports with file_row_number as the bundle's id, the manifest keeping its caveat that uniqueness was verified at open; no publish-side check refuses the session tier. A reading first, by a test at main; then the refusal item 3 states, or item 3's words, the choice and the words the human's. Proposed; placed by the human."
-    },
-    {
-      "id": "narrow-integer-id-unstreamable",
-      "title": "An 8, 16 or 32-bit integer id column is admitted at open but no stream carries it (the cloud audit, U2)",
-      "lane": "engine",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 60,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-11-03",
-        "done": null
-      },
-      "summary": "TRIAGED 2026-11-05 (state/consults/2026-11-05-area-e-kl-triage-undeclared-behaviours-architect.md, U2): CONFIRMED by reading at d8e52f77; whether DuckDB hands a Parquet INT32 to Arrow as Int32 is not decidable by reading. GRADED S2 by the custodian: the open succeeds and every stream fails with engine.query, with no action offered; the failure is shown, not silent. Placement the human's. Before: PROPOSED 2026-11-03 by the custodian, from the cloud KNOWN-LIMITATIONS truth audit (state/consults/2026-11-03-cloud-kl-audit-report.md, U2; (a draft and not Authority)): by code reading at 6b67d44, identity admission accepts a narrow integer id column while every stream decodes id only as UInt64 or Int64 and fails anything else with engine.query, so such a file opens and draws nothing; no test streams one, and the audit assumes DuckDB hands a Parquet INT32 to Arrow as Int32. A reading first, by a test on a narrow-integer file; then a refusal at open or a widening on the stream side. Proposed; placed by the human."
+      "summary": "RULED 2026-11-05 (evening) (state/directives/2026-11-05-8c-full-form-nine-s2-placed-u12-slot-2-u1-reproducer-adr-notes-words-e2e-readme-words-8b-d3.md, item 2): the reproducer now, the node's own test at main in a worktree, nothing committed before its form. If it shows a bundle published from the session tier with the manifest's uniqueness caveat, it is S1: slot 1 ahead of order, the full form, and export-refused-above-row-ceiling-every-scope rides with it. If it does not, S2, the custodian's placement. NEXT: the reproducer. Before: TRIAGED 2026-11-05 (state/consults/2026-11-05-area-e-kl-triage-numbered-items-architect.md, item 3; state/consults/2026-11-05-area-e-kl-triage-undeclared-behaviours-architect.md, U1; the custodian read the manifest's caveat on main): CONFIRMED by reading: no publish-side check refuses the session tier, the ceiling check passes it (its verified rows are none), and the manifest keeps the fixed caveat that uniqueness was verified over this file at open, untrue for that tier; U10's bypass on the unverified routes has the same cause. GRADED S1 CANDIDATE by the custodian (principle 8: a published manifest states a verification that never ran), the reproducer owed (this node's own test at main) before it goes to the human as S1. Placement the human's. Before: PROPOSED 2026-11-03 by the custodian, from the cloud KNOWN-LIMITATIONS truth audit (state/consults/2026-11-03-cloud-kl-audit-report.md, item 3 and U1; (a draft and not Authority)): by code reading at 6b67d44, a file with no id column (an ID column included, the lookup being exact) opens on the session tier and exports with file_row_number as the bundle's id, the manifest keeping its caveat that uniqueness was verified at open; no publish-side check refuses the session tier. A reading first, by a test at main; then the refusal item 3 states, or item 3's words, the choice and the words the human's. Proposed; placed by the human."
     },
     {
       "id": "export-refused-above-row-ceiling-every-scope",
@@ -2054,26 +2276,7 @@
         "opened": "2026-11-03",
         "done": null
       },
-      "summary": "TRIAGED 2026-11-05 (state/consults/2026-11-05-area-e-kl-triage-undeclared-behaviours-architect.md, U10): PARTLY: confirmed for a verified identity (the prediction is the whole file's rows in every scope, so the remedy the refusal names is refused too); not for the session tier or a declared but unverified identity, which predict nothing and pass a publish of any size, a bypass whose cause is publish-session-tier-identity's and is best decided with it. GRADED S2 by the custodian. Placement the human's. Before: PROPOSED 2026-11-03 by the custodian, from the cloud KNOWN-LIMITATIONS truth audit (state/consults/2026-11-03-cloud-kl-audit-report.md, U10, with item 5; (a draft and not Authority)): by code reading at 6b67d44, a file over 2,000,000 rows is refused for Current view however small the view, and so is the remedy the refusal suggests. A reading first, by a test at main; then the ceiling read against the scope's rows, or item 5's words, the human's. Proposed; placed by the human."
-    },
-    {
-      "id": "adr-notes-stale-statements-and-indices",
-      "title": "ADR notes, Status lines and indices stating what has since changed (the cloud ADR audit, A-S1 to A-S8)",
-      "lane": "governance",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 60,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-11-03",
-        "done": null
-      },
-      "summary": "NOTE 2026-11-05 (the custodian's grading of the docs audits on state/consults/2026-11-05-docs-audit-tasks-a-b-triage-architect.md, Task A, and state/consults/2026-11-05-docs-audit-task-c-unpinned-cites-triage-architect.md, rows 1 to 3): confirmed on main and held here, each the human's words, closing only by an appended dated note in the human's typed words (for ADR-023, at its Status change at B1's close): A-S1; A-S2 (the same file already corrects it in a later corrigendum); A-S3's Status line; A-S5's ADR-023 Status line (ADR-021's note itself is still true); and ADR-009's Status line, which docs/README.md's generated row copies (its hand-written paragraph already carries a dated correction). Widened by the custodian, this node being proposed and not ruled: ADR-013 Amendment 1's sentence that Item 6 is not true of the build reads as current and is now only partly so (two constants landed by crs-unit-fact-and-bounds, the rest on crs-zoom-constants-per-unit). Moved out: A-S4 is PLAN text, corrected by a note on entry-79-b1-consult-items; A-S7 is adr-035-close-races-note's; the hand-written index halves of A-S3, A-S5 and A-S8 go to adr-indices-hand-written-current. Graded S3, no node: the dated records of accepted ADRs whose line cites have drifted (Task C rows 4 to 15, 54 to 55 and 74 to 87: ADR-020 Amendment 1, ADR-021's amendment of 2026-09-15, ADR-028 Amendment 4, ADR-032's and ADR-033's bodies) are stale references only; a dated pointer is the human's if wanted. New on main since both audits: ADR-017's note of 2026-10-28 (merged by #276). Before: NOTE 2026-11-05 (state/consults/2026-11-05-drift-sweep-areas-c-d-triage-architect.md, C2): docs/adr/ADR-022-style-v0-as-the-single-style-model.md's amendment text from b2-piece-1b-recording calls ADR-036 Proposed; ADR-036 was accepted 2026-10-22. Accepted ADR text, so any note is the human's. Before: PROPOSED 2026-11-03 by the custodian, from the cloud ADR notes and docs paths audit (state/consults/2026-11-03-cloud-adr-docs-audit-report.md, Task A; (a draft and not Authority)): ADR-026's note names ADR-032 Proposed (A-S1); ADR-017's Corrigendum 1 names ADR-009 open (A-S2); ADR-026's Status line calls a settled question open (A-S3); ADR-021's note rests on ADR-023's Status words, which no longer fit ADR-023's Decision section (A-S5); ADR-035's note names the close race unsettled after its node merged (A-S7); docs/README.md and docs/02 count three of ADR-017's five corrigenda (A-S8; docs/02's half is docs-02-adr-017-entry-current); PLAN holds ADR-021's note of 2026-09-29 both as accepted and as accepted later (A-S4). Notes, Status lines and amendments are the human's words; the indices and the PLAN text are not. Proposed; placed by the human."
+      "summary": "RULED 2026-11-05 (evening) (state/directives/2026-11-05-8c-full-form-nine-s2-placed-u12-slot-2-u1-reproducer-adr-notes-words-e2e-readme-words-8b-d3.md, item 2): rides with publish-session-tier-identity if that node's reproducer makes it S1; otherwise it waits for that node's placement. Before: TRIAGED 2026-11-05 (state/consults/2026-11-05-area-e-kl-triage-undeclared-behaviours-architect.md, U10): PARTLY: confirmed for a verified identity (the prediction is the whole file's rows in every scope, so the remedy the refusal names is refused too); not for the session tier or a declared but unverified identity, which predict nothing and pass a publish of any size, a bypass whose cause is publish-session-tier-identity's and is best decided with it. GRADED S2 by the custodian. Placement the human's. Before: PROPOSED 2026-11-03 by the custodian, from the cloud KNOWN-LIMITATIONS truth audit (state/consults/2026-11-03-cloud-kl-audit-report.md, U10, with item 5; (a draft and not Authority)): by code reading at 6b67d44, a file over 2,000,000 rows is refused for Current view however small the view, and so is the remedy the refusal suggests. A reading first, by a test at main; then the ceiling read against the scope's rows, or item 5's words, the human's. Proposed; placed by the human."
     },
     {
       "id": "moved-path-mentions-outside-accepted-adrs",
@@ -2171,25 +2374,6 @@
       "summary": "NOTE 2026-11-05: module-docs-drift-sweep-area-d edits both READMEs too (the drift sweep of area D, state/consults/2026-11-05-drift-sweep-areas-c-d-triage-architect.md); one path each under rule (00), so the two may be placed as one piece. Before: PROPOSED 2026-11-03 by the custodian, from PR #278's gate 1 reviewer note (state/consults/gates/2026-11-03-redaction-hostname-off-windows-gate1-reviewer.md, its notes): at main 012c59db, by the custodian's script, the distinct names ending -PREREGISTRATION.md in kernel/README.md resolve neither from the root nor from kernel/ in 42 of 42 cases, and in engine/README.md in 30 of 32; piece F (#270) moved the forms under governance/forms/, governance/MOVED.tsv mapping old paths to new. The same class as moved-path-mentions-outside-accepted-adrs, which names other files. Module docs only, no code. Proposed; placed by the human."
     },
     {
-      "id": "publish-filter-sentence-under-whole-dataset",
-      "title": "The publish dialog shows the filter sentence, which says the viewport extent is published, under Whole dataset too, where the whole file is published (the cloud audit, U12)",
-      "lane": "shell",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 45,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-11-05",
-        "done": null
-      },
-      "summary": "PROPOSED 2026-11-05 by the custodian, from the area E triage (state/consults/2026-11-05-area-e-kl-triage-undeclared-behaviours-architect.md, U12; the cloud KNOWN-LIMITATIONS truth audit, U12; the custodian read the code on main): the approval payload carries FILTER_SCOPE_SENTENCE whenever a filter is active, whatever the scope (frontends/shell/src-tauri/src/publish.rs, its filter_scope field), and the panel shows it on filterActive alone (frontends/shell/src/publish/PublishPanel.tsx), so under Whole dataset the dialog says the viewport extent is published while its row scope says the whole file is: one of its two statements about what is published is untrue. GRADED S1 CANDIDATE by the custodian (principle 8; the class of the 2026-10-10 finding 8), the reproducer owed (a test on the approval payload, Whole dataset with a filter on). The sentence is copied verbatim from NEXT-CUT.md by its comment, so any word shown under Whole dataset is the human's; a condition that shows it under Current view alone changes no word. KNOWN-LIMITATIONS item 8, the human's words of 2026-10-10, quotes it for both scopes and moves with the fix. Placement the human's."
-    },
-    {
       "id": "stale-harness-comments-find-prime-and-late-result",
       "title": "Stale harness and test comments: the FIND step header and its status comment in regression.mjs, and a cite into candidateArmSession.ts in App.lateResult.test.tsx",
       "lane": "shell",
@@ -2207,63 +2391,6 @@
         "done": null
       },
       "summary": "PROPOSED 2026-11-05 by the custodian, from the area E triage (state/consults/2026-11-05-area-e-kl-triage-numbered-items-architect.md, section 6; the platform drift sweep of area E, findings 2, 3 and 5): in frontends/shell/e2e/regression.mjs the FIND' header says the step is suspended and recorded by name and names filtered per-tile queries dropped silently, and its status comment calls a red expected and honest while the engine half is not built; both halves are built (polish-87-88-89, polish-engine-lease-class) and the step pushes a failure on every branch. In frontends/shell/src/App.lateResult.test.tsx a comment cites candidateArmSession.ts lines that now hold other code. Comments only, no assertion changed, each cite repointed and pinned, so that a FIND' red reads as a regression. GRADED S3 by the custodian; proposed as an addition to the filler queue (state/FILLER-QUEUE.md), which the human orders. regression.mjs is also mp-prime-e2e-covered-fixture's file (another step), one path under rule (00)."
-    },
-    {
-      "id": "walkthrough-rows-stale-against-main-sweep-area-b",
-      "title": "MANUAL-WALKTHROUGH.md rows stale against main, each of which would have the operator record a wrong result at a sitting or a rerun (drift sweep area B, findings 1 to 5 and 7 to 10)",
-      "lane": "shell",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 60,
-      "needs_human": {
-        "kind": "sight",
-        "minutes": 15
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-11-05",
-        "done": null
-      },
-      "summary": "PROPOSED 2026-11-05 by the custodian, from the drift-sweep triage of area B (state/consults/2026-11-05-drift-sweep-areas-a-b-triage-architect.md, B1 to B5 and B7 to B10; the platform sweep state/consults/2026-11-03-platform-drift-sweep-area-b.md): confirmed by reading on main: Part B's B3 and the B2'/B3' coverage row still expect the cut-2 remediation note, which is gone (B1); J3 expects a class-C entry for a style edit, and F2's and H5's nothing round-trips clauses are false, each committed style edit being a class-A record_step row (B2); J2's key set omits columns, which the client always sends (B3); H1 and H2 expect the baseline ceiling banner, the candidate arm being the default (B4; a run record of 2026-08-20, before the flip); J1's exactly two class-A entries, the open also issuing an untiled first look (B8); Part N's check that none of the five limitations below appear, KNOWN-LIMITATIONS now holding items 19 to 23 (B9); Part A's A3 list, reused by M4, omits rows the panel shows (B10, minor); the regression and filter-panel coverage tables do not match the steps the scripts run (B5, a doc); Part L's preamble says the arm resets to baseline on every reload, untrue now, while the tile-size level a reload does reset goes unchecked (B7, noted on operator-sitting-queue for the sitting). GRADED S2 by the custodian for B1 to B4 and B7 to B9 (a row that would record a wrong result); B5 and B10 S3, riding (one file). Row words drafted for the human's sight; no result log edited. F2 waits for b1-shell-half PR B, whose records touch Part F; rule (00) counts each Part as its own path. Placement the human's."
-    },
-    {
-      "id": "e2e-readme-security-posture-measure-build",
-      "title": "frontends/shell/e2e/README.md: the security-posture paragraph is untrue for the measure build (the debug port in Rust, the e2e hooks kept in), with the missing E-FLOOR entry and stale lib.rs cites (drift sweep area B, findings 6, 11 and 12)",
-      "lane": "shell",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 30,
-      "needs_human": {
-        "kind": "ruling",
-        "minutes": 10
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-11-05",
-        "done": null
-      },
-      "summary": "PROPOSED 2026-11-05 by the custodian, from the drift-sweep triage of area B (state/consults/2026-11-05-drift-sweep-areas-a-b-triage-architect.md, B6, B11 and B12; the platform sweep state/consults/2026-11-03-platform-drift-sweep-area-b.md): confirmed by reading on main: the paragraph says the debug port is never a checked-in default, that the e2e overlay is the only place the flag touches disk, that nothing in Rust references the port, and that the e2e hooks are compiled out of production; but under the measure-build feature frontends/shell/src-tauri/src/lib.rs opens the remote-debugging port with a checked-in default, build:measure is a release build with that feature, and the hooks' gate (isInstrumentedBuild.ts) keeps them in when VITE_MEASURE_BUILD is set, so a measure build exposes the port and the hooks together. The shipped installer's property holds (no default feature; the plain build compiles the hooks out); the claim that npm run build proves it is untrue as stated (the dist check runs after it, in CI). The clauses on WebView2's environment variable state a live check and are not decidable by reading. GRADED S2 by the custodian: a security-posture statement untrue for a build the repository makes, not for the shipped one. The paragraph is red-line text (the security posture), so its words are the human's; the README's missing E-FLOOR entry (B11) and its stale lib.rs cites (B12) ride, S3, one file, after the human's words. Placement the human's."
-    },
-    {
-      "id": "skp-filter-dialect-unsupported-ruling",
-      "title": "SKP-V0.md lists skp.filter_dialect_unsupported as a refusal a client receives; no code produces it, a wrong dialect failing at deserialization: the human rules produce or strike (drift sweep area C, finding 1)",
-      "lane": "kernel-protocol",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 30,
-      "needs_human": {
-        "kind": "ruling",
-        "minutes": 5
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-11-05",
-        "done": null
-      },
-      "summary": "PROPOSED 2026-11-05 by the custodian, from the drift-sweep triage of area C (state/consults/2026-11-05-drift-sweep-areas-c-d-triage-architect.md, C1; the platform sweep state/consults/2026-11-03-platform-drift-sweep-area-c.md, finding 1): confirmed by reading on main: the section 7.5 taxonomy lists the code with its declared field, while Filter::new refuses any other dialect inside Filter's Deserialize (protocol/skp/src/v0/commands.rs), so a wrong dialect never reaches predicate admission and the code is never sent; engine/src/predicate.rs says the variant is not constructible by admit today; the spec's own section 7.2 already says a wrong dialect is refused at deserialization, so the spec contradicts itself. The commands.rs comments calling the allowlist walk a later phase are stale too. GRADED S2 by the custodian (a refusal named under a code the client never receives). The class of skp-unproduced-codes-ruling's three codes, which the human ruled on 2026-10-10; that ruling named only those three, so produce or strike is the human's (first-external-plugin-skp-client holds the produce-or-not question for decode-time refusals). The spec and comment change follows the ruling, in skp-spec-and-protocol-comments-drift-sweep-c. Placement the human's."
     },
     {
       "id": "skp-spec-and-protocol-comments-drift-sweep-c",
@@ -2285,25 +2412,6 @@
       "summary": "NOTE 2026-11-05 (state/consults/2026-11-05-docs-audit-task-c-unpinned-cites-triage-architect.md, kin outside docs, item 4): SKP-V0.md's line cite at its line 720 has drifted like ADR-033's row 87; a file this node edits, so the fix rides here. Before: PROPOSED 2026-11-05 by the custodian, from the drift-sweep triage of area C (state/consults/2026-11-05-drift-sweep-areas-c-d-triage-architect.md, C2 to C11) and area A's A3 (state/consults/2026-11-05-drift-sweep-areas-a-b-triage-architect.md): confirmed by reading on main: in protocol/skp/SKP-V0.md, ADR-036 called Proposed at two lines (C2), section 1 calling the admission of crs_assertion, identity and the host-minted attribution P1 work (C4), section 4 item 9 calling cancel's repeat answer an accident (C6; the answer holds for a terminal entry's lifetime, which neither text states), section 3's SessionRef for a generation created any other way, which no path mints (C7), and two host-produced codes the spec never names, skp.malformed_cancel_key on ordinary input and the panicked codes (C11, a judgement at drafting); in doc comments, the omitted filter key called a deserialize failure in frontends/shell/src/skp/client.ts and commands.rs, with fixtures.rs's converse (C3 and A3), DatasetHandle's doc omitting record_step (C8, handles.rs), CancelRequest's doc on a prefix the host does not read (C9), events.ts citing a section 2c that does not exist (C10), and fixtures.test.ts's header calling the fixture discipline two-sided where record_step has no TypeScript reader (C5; the gap is a TypeScript test over the record_step fixtures, a test change). Noted only: section 1's viewport_query block has no pointer to filter and columns. C1's spec half follows skp-filter-dialect-unsupported-ruling. GRADED S3 by the custodian; proposed as a filler addition. After b2-piece-1c-save-and-reopen: its step 1 edits SKP-V0.md, commands.rs, client.ts and the fixture tests, so lines in a file it edits are fixes inside its Scope, and rule (00) allows one piece touching protocol/ at a time. Placement the human's."
     },
     {
-      "id": "module-docs-drift-sweep-area-d",
-      "title": "Kernel and engine module docs: the never-refuses and unreachable claims the Table, record_step and publish have overtaken, the withdrawn cancellation bound, and smaller statements (drift sweep area D, findings 1 to 6)",
-      "lane": "kernel-protocol",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 60,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-11-05",
-        "done": null
-      },
-      "summary": "PROPOSED 2026-11-05 by the custodian, from the drift-sweep triage of area D (state/consults/2026-11-05-drift-sweep-areas-c-d-triage-architect.md, D1 to D6, and C2's README lines; the platform sweep state/consults/2026-11-03-platform-drift-sweep-area-d.md): confirmed by reading on main: kernel/README.md's admission-class sum, with its claim that in the shipped shell the class never refuses, and engine/src/pool.rs's twin, no longer count the Table's filtered query or record_step's filter admission (D1; pool.rs also cites a paragraph one line off); the stream-lease refusal called unreachable on the natural-completion path in kernel/README.md, engine/README.md and pool.rs, while the kernel's own doc in skp.rs says every pending ticket already holds the lease, and publish leases the same class (D2); engine/README.md restating the uninterruptible-window sentence engine/src/stream.rs withdrew, the publish write being chunked (D3); kernel/src/permission/approval.rs saying a future surface adds a third implementation, which exists, and that the trait has one method (D4); engine/src/lib.rs's measurement scope silent on the clang-cl build of the bundled DuckDB (D5); kernel/src/skp.rs's every Tauri command handler sentence, overbroad (D6); and ADR-036 called Proposed in kernel/README.md's owner's index lines and engine/README.md (C2). Whether the extra admissions overlap in ordinary timing is not decidable by reading; KNOWN-LIMITATIONS tells users the truth. GRADED S2 by the custodian for D1 to D3 (a guarantee or bound a reviewer relies on, stated untrue); D4 to D6 and C2's lines S3, riding. Shares both READMEs with module-readme-moved-form-paths, kernel/README.md with kernel-composed-ceiling-projected-stream and 1c's records, and skp.rs with open-dataset-close-serialised-under-the-catalog-lock and pre-admission-change-detail-braces; one path each under rule (00). Placement the human's."
-    },
-    {
       "id": "shell-comments-drift-sweep-area-a",
       "title": "Shell product comments stale against main: the candidate arm called dev-only, the e2e surface calling baseline the default, accessors labelled instrument-only, the old status-stack frame and smaller statements (drift sweep area A, less the lines in b1-shell-half PR B files)",
       "lane": "shell",
@@ -2321,63 +2429,6 @@
         "done": null
       },
       "summary": "PROPOSED 2026-11-05 by the custodian, from the drift-sweep triage of area A (state/consults/2026-11-05-drift-sweep-areas-a-b-triage-architect.md, A1 to A11; the platform sweep state/consults/2026-11-03-platform-drift-sweep-area-a.md): confirmed by reading on main: frontends/shell/src/residency/candidateArmSession.ts calls the module dead code outside DEV and says the dist check covers its entry point, while it is the shipped default path and the identifier left the check (A1); e2e-test-surface.ts calls baseline the default and the only value the suites observe (A2); getResidentCounts labelled DEV-hook-only though the default arm calls it (A4); the residentCounts accessor's caller list (A5); StylePanel.tsx naming a setStyle that does not exist (A6); FilterPanel.tsx saying nothing else consumes a column list (A7); three comments on the old canvas status stack, DescribeSummary.tsx's an untrue guarantee (A8); residencyTileSizeLevel.ts and two others calling every call site DEV-gated (A9); console/recorder.ts's sole-importer sentence and its allow-list doc (A10); unpinned line cites now on other code (A11, PARTLY). GRADED S3 by the custodian; proposed as a filler addition. After b1-shell-half: lines in files PR B's Scope names (App.tsx, WorkingCanvas.tsx, StylePanel.tsx and document.ts among them) are fixes inside PR B's Scope, noted on that node; A11's App.tsx and streaming cites are skp-line-cites-outside-close-races's; WorkingCanvas.tsx is also stale-lines-outside-the-four-files's. A3 rides in skp-spec-and-protocol-comments-drift-sweep-c (client.ts, 1c's file). Placement the human's."
-    },
-    {
-      "id": "adr-indices-hand-written-current",
-      "title": "The hand-written ADR indices brought current: docs/README.md conventions paragraph and the docs/02 ADR list, where ADR-013 is called proposed though accepted and architect-blockable (the docs audits, A-S3, A-S5 and A-S8 index halves and the platform-only items)",
-      "lane": "governance",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 45,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-11-05",
-        "done": null
-      },
-      "summary": "PROPOSED 2026-11-05 by the custodian, graded S2, from the docs-audit triage (state/consults/2026-11-05-docs-audit-tasks-a-b-triage-architect.md, Task A and its proposal 1; the audits state/consults/2026-11-03-cloud-adr-docs-audit-report.md and state/drafts/2026-11-03-platform-adr-notes-docs-paths-audit.md): confirmed by reading on main, none of it the human's words: docs/02's list calls ADR-013 proposed, while ADR-013 was accepted 2026-08-09 and is architect-blockable from acceptance, which can lead a reader to treat a blocking ADR as advisory; docs/02 and the docs/README.md paragraph call ADR-026's settled wording open (A-S3) and ADR-023's decision deliberately open or undrafted (A-S5), and both count three of ADR-017's five corrigenda without its note of 2026-10-28 (A-S8); the paragraph puts ADR-016, accepted, inside its Proposed run and calls ADR-029's decision undrafted, drafted on 2026-09-14; ADR-033 to ADR-036 are absent from the paragraph, and ADR-018, ADR-030 and ADR-032 to ADR-036 from docs/02. The generated rows are not this node's. The precedent is adr-032-staleness-docs (done). docs/02 is also docs-02-adr-017-entry-current's file and holds two of moved-path-mentions-outside-accepted-adrs' mentions, so under rule (00) they ride here or follow; the order is the human's. Placement the human's."
-    },
-    {
-      "id": "adr-029-stale-line-cites",
-      "title": "ADR-029 (Proposed, unbuilt): its line cites into the code and the admission form land on other text, so an implementer of the scan-progress route would follow them to the wrong places (the docs audits, Task C rows 56 to 73 and Task B)",
-      "lane": "kernel-protocol",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 30,
-      "needs_human": {
-        "kind": "ruling",
-        "minutes": 10
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-11-05",
-        "done": null
-      },
-      "summary": "PROPOSED 2026-11-05 by the custodian, graded S2, from the docs-audit triage (state/consults/2026-11-05-docs-audit-task-c-unpinned-cites-triage-architect.md, rows 56 to 73, and state/consults/2026-11-05-docs-audit-tasks-a-b-triage-architect.md, Task B): confirmed by reading on main: ADR-029's cites for the mint site, the cancel parser, the ticket state and the no-wildcard rule now land on other code, and its four line cites into the admission form at its old path land on other rules; the custodian's earlier finding (its cite into SKP-V0.md for the cancel states, now at another line) is the same class. When the route is built (decision-adr-029-scan-progress-route, unscheduled) an implementer following them acts on the wrong text. ADR text is the human's: the fix is a dated note in the human's typed words, or the cites restated when the human takes up the decision; the custodian can supply a table of current lines for the human's sight. Placement the human's."
-    },
-    {
-      "id": "adr-023-stale-cites-before-acceptance",
-      "title": "ADR-023 (Proposed, built in B1): its line cites and six of its sentences are stale against main, misleading a verifier and the human at its acceptance at B1 close (the docs audits, Task C rows 16 to 53)",
-      "lane": "governance",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 45,
-      "needs_human": {
-        "kind": "ruling",
-        "minutes": 15
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-11-05",
-        "done": null
-      },
-      "summary": "PROPOSED 2026-11-05 by the custodian, graded S2, from the docs-audit triage (state/consults/2026-11-05-docs-audit-task-c-unpinned-cites-triage-architect.md, rows 16 to 53): confirmed by reading on main: besides stale line cites, six sentences are stale in themselves: the superseded draft code they describe is gone (rows 24 to 26), the arm moved (row 34), the constant was renamed (row 39), the schema shape grew (row 50), and the current literal is no longer skp/0.2 (row 51). A verifier reading ADR-023 at its acceptance, and the human accepting it, would be misled. ADR text is the human's: the Status line's acceptance at B1's close is the natural moment for a dated note in the human's words, the custodian supplying a table of current lines for the human's sight before then. adr-notes-stale-statements-and-indices (A-S5) and adr-023-s2-widenings-adr-021-consult also touch ADR-023, so under rule (00) one at a time, or one note. Placement the human's."
     },
     {
       "id": "comment-line-cites-kin-docs-audit-c",
