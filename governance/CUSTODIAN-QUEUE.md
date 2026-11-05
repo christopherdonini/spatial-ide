@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `68f92c77914601366e8b7c49b9bb45fb8537707d8ea0100607697642f67aeab9`) at `2026-11-05T23:15:26.334Z`.
+Generated from `PLAN.yaml` (sha256 `7bb532056569d5b40d568a599c02a22f6bf1c65461c47123827fb6641dbf1fd0`) at `2026-11-05T23:36:28.710Z`.
 
 ## 1. Next
 
@@ -10,6 +10,7 @@ Generated from `PLAN.yaml` (sha256 `68f92c77914601366e8b7c49b9bb45fb8537707d8ea0
 
 - **literal-only-float-integer-arithmetic-refused** — Literal-only arithmetic mixing a double literal and an integer literal (1e3 + 5 > 0) is refused as conversion_rounds, although FILTER-BIND section 2.5(a) and ADR-021's Note admit two numeric literals within the bounds in +, - and * (F-A of the type-walk-rule2-residual-reasons draft) (lane `engine`, order null, budget 120 min)
 - **pre-admission-change-detail-braces** — Four kernel P6-placeholder detail strings are wrapped in literal braces, which reach the operator message; the watcher form declares each such string starts with the bracketed placeholder tag (lane `kernel-protocol`, order null, budget 30 min)
+- **publish-session-tier-identity** — Publish and a session-tier identity: KNOWN-LIMITATIONS item 3 says such a file is never saved or published; the cloud audit finds no refusal on the publish path (lane `kernel-protocol`, order null, budget 60 min)
 - **windows-case-fold-non-ascii** — The audit case policy on Windows folds non-ASCII letters as NTFS does, so a profile path differing only in non-ASCII case cannot escape the user-home redaction (wave 3's 1c-2 correction, S2, code-path-only) (lane `kernel-protocol`, order null, budget 60 min)
 - **publish-filter-sentence-under-whole-dataset** — The publish dialog shows the filter sentence, which says the viewport extent is published, under Whole dataset too, where the whole file is published (the cloud audit, U12) (lane `shell`, order null, budget 45 min)
 - **walkthrough-rows-stale-against-main-sweep-area-b** — MANUAL-WALKTHROUGH.md rows stale against main, each of which would have the operator record a wrong result at a sitting or a rerun (drift sweep area B, findings 1 to 5 and 7 to 10) (lane `shell`, order null, budget 60 min)
@@ -36,6 +37,7 @@ Generated from `PLAN.yaml` (sha256 `68f92c77914601366e8b7c49b9bb45fb8537707d8ea0
 - **single-file-bracket-name-refused-as-partitioned** — A single file whose name holds a bracket or a brace is refused as partitioned across more than one file, and the refusal's advice cannot be followed in the app (the cloud audit, U17) — blocked by: skp-filter-dialect-unsupported-ruling
 - **adr-029-stale-line-cites** — ADR-029 (Proposed, unbuilt): its line cites into the code and the admission form land on other text, so an implementer of the scan-progress route would follow them to the wrong places (the docs audits, Task C rows 56 to 73 and Task B) — blocked by: module-docs-drift-sweep-area-d
 - **docs-02-adr-017-entry-current** — docs/02's ADR-017 entry brought current with every appended section (the ADR-017 note's OPEN-4 (c), S4, the docs lane last) — blocked by: sitting-wording-n1-to-n7
+- **export-refused-above-row-ceiling-every-scope** — A file over the row ceiling cannot be exported in any scope, the remedy its refusal names included (the cloud audit, U10) — blocked by: publish-session-tier-identity
 - **fixture-determinism-off-windows-record** — kernel/FIXTURES.md on determinism (byte-identical on one machine, different across platforms, with the Linux sizes and hashes), and the G5 entry point gains the hash check the S entry point has — blocked by: posix-backslash-is-inside-and-redaction-label
 - **lod-tier-identity-binds-file-name** — The LOD tier builder takes the identity name DuckDB bound and looks it up among the file's own footer names, so a renamed identity column reaches a different column there — blocked by: port-2-macos-l1-and-app-dirs
 - **module-docs-drift-sweep-area-d** — Kernel and engine module docs: the never-refuses and unreachable claims the Table, record_step and publish have overtaken, the withdrawn cancellation bound, and smaller statements (drift sweep area D, findings 1 to 6) — blocked by: b2-piece-1c-save-and-reopen, adr-indices-hand-written-current
@@ -138,8 +140,6 @@ Generated from `PLAN.yaml` (sha256 `68f92c77914601366e8b7c49b9bb45fb8537707d8ea0
 - **engine-column-name-case-siblings** — Column names that differ only by letter case beyond the covering: the geometry column matched by byte equality while DuckDB binds identifiers case-insensitively, and the identity, projected and filter columns (phase `prototype`) — never queued until placed
 - **release-v0-2-0** — v0.2.0 release (pre-release): the hero slice with milestone 4, piece 1c and the redaction scan, v0.1.1 folded in; the human schedules it (phase `prototype`) — never queued until placed
 - **questions-mirror-red-line-dotted-lead** — The round-mirror hook's header misses a red-line item whose marker follows a lead holding a full stop (phase `prototype`) — never queued until placed
-- **publish-session-tier-identity** — Publish and a session-tier identity: KNOWN-LIMITATIONS item 3 says such a file is never saved or published; the cloud audit finds no refusal on the publish path (phase `prototype`) — never queued until placed
-- **export-refused-above-row-ceiling-every-scope** — A file over the row ceiling cannot be exported in any scope, the remedy its refusal names included (the cloud audit, U10) (phase `prototype`) — never queued until placed
 - **moved-path-mentions-outside-accepted-adrs** — Mentions of the governance paths piece F moved, outside the accepted ADRs: docs/README.md, docs/02, docs/04, docs/14, README.md and the workflow comments (the cloud ADR audit, Task B) (phase `prototype`) — never queued until placed
 - **redaction-chance-match-in-partitions** — The redaction scan and chance matches in binary content: a drive path in a printable run of exactly the minimum length, in 256 MiB of parquet (the cloud Linux measurement) (phase `prototype`) — never queued until placed
 - **clippy-deny-warnings-workspace** — The workspace clippy diagnostics fixed, so cargo clippy over every target with -D warnings exits 0 (the cloud Linux run lists 48 distinct) (phase `prototype`) — never queued until placed
