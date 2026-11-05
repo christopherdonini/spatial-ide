@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `d8e39af6954752186b6e1205279f84bcf36156baaef05b32f7f858325d142478`) at `2026-11-05T23:04:04.104Z`.
+Generated from `PLAN.yaml` (sha256 `68f92c77914601366e8b7c49b9bb45fb8537707d8ea0100607697642f67aeab9`) at `2026-11-05T23:15:26.334Z`.
 
 ## 1. Next
 
@@ -13,7 +13,6 @@ Generated from `PLAN.yaml` (sha256 `d8e39af6954752186b6e1205279f84bcf36156baaef0
 - **windows-case-fold-non-ascii** — The audit case policy on Windows folds non-ASCII letters as NTFS does, so a profile path differing only in non-ASCII case cannot escape the user-home redaction (wave 3's 1c-2 correction, S2, code-path-only) (lane `kernel-protocol`, order null, budget 60 min)
 - **publish-filter-sentence-under-whole-dataset** — The publish dialog shows the filter sentence, which says the viewport extent is published, under Whole dataset too, where the whole file is published (the cloud audit, U12) (lane `shell`, order null, budget 45 min)
 - **walkthrough-rows-stale-against-main-sweep-area-b** — MANUAL-WALKTHROUGH.md rows stale against main, each of which would have the operator record a wrong result at a sitting or a rerun (drift sweep area B, findings 1 to 5 and 7 to 10) (lane `shell`, order null, budget 60 min)
-- **adr-notes-stale-statements-and-indices** — ADR notes, Status lines and indices stating what has since changed (the cloud ADR audit, A-S1 to A-S8) (lane `governance`, order null, budget 60 min)
 - **governance-f-after-week-rust-ci-figure** — Governance piece F, the after-week Rust CI figure: the form-only Rust CI runs in the 168 h after the merge, recorded as a class 1 row in piece F's form (lane `governance`, order null, budget 30 min)
 - **publish-bundle-sigterm** — SIGTERM handling in publish-bundle on unix (wave-3 W3-A observation 3) (lane `platform`, order null, budget 90 min)
 - **publish-unix-quota-perm-errors** — EDQUOT and EPERM in publish error classification on unix (wave-3 W3-A observation 1) (lane `platform`, order null, budget 90 min)
@@ -54,6 +53,7 @@ Generated from `PLAN.yaml` (sha256 `d8e39af6954752186b6e1205279f84bcf36156baaef0
 - **signpath-application-draft** — Entry 77 — the SignPath OSS application and disclosure text drafted for the human sight, once a release is CI-built — blocked by: release-v0-2-0
 - **adr-023-stale-cites-before-acceptance** — ADR-023 (Proposed, built in B1): its line cites and six of its sentences are stale against main, misleading a verifier and the human at its acceptance at B1 close (the docs audits, Task C rows 16 to 53) — blocked by: walkthrough-rows-stale-against-main-sweep-area-b
 - **adr-indices-hand-written-current** — The hand-written ADR indices brought current: docs/README.md conventions paragraph and the docs/02 ADR list, where ADR-013 is called proposed though accepted and architect-blockable (the docs audits, A-S3, A-S5 and A-S8 index halves and the platform-only items) — blocked by: e2e-readme-security-posture-measure-build
+- **adr-notes-stale-statements-and-indices** — ADR notes, Status lines and indices stating what has since changed (the cloud ADR audit, A-S1 to A-S8) — blocked by: b2-piece-1c-save-and-reopen
 - **governance-e1-rules-as-records** — Piece E1: rules as records, a rule catalogue under rules/, a selector scripts/plan/rules.mjs, a generated block in each agent definition and a governance-ci check — blocked by: governance-e-readings
 - **shell-owners-index** — An owner's index for the shell (frontends/shell), so that shell-owned KNOWN-LIMITATIONS items and pointers are indexed somewhere — blocked by: skp-line-cites-outside-close-races
 - **site-design-v1** — Landing page redesign — DRAFT-4 (status strip, milestone banner, waiting-on-you cards with unblocks counts, the swimlane board) — blocked by: governance-ci-built-site

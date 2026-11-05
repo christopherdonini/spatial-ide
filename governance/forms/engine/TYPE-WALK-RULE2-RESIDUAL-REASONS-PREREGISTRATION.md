@@ -193,3 +193,11 @@ Nothing touches protocol/. The path lists are the brief's; I cannot read branche
 - **For the human with W-1:** the architect's shapes (a) to (c) (its section for the human) and the reviewer's probe results (its W-1 section). No replacement words: W-1 is the human's wording.
 - **N-3, the reviewer's:** its probe wrote a fixture outside its brief's write locations and removed it (its note N-3).
 - **Next:** PR #282 out of draft for the human's click.
+
+### Amendment 4 — 2026-11-05 — the custodian's record (class 1) of the human's ruling on gate 1's items; references and the architect's words only
+
+- **The ruling:** `state/directives/2026-11-05-8c-full-form-nine-s2-placed-u12-slot-2-u1-reproducer-adr-notes-words-e2e-readme-words-8b-d3.md`, item 5. PR #282 merged before it (540b4afd).
+- **W-1** stands as it is, a P6 placeholder worded at the sitting.
+- **The shapes (a) to (c)** of the architect's gate-1 report go to F-B's node, `arithmetic-text-literal-beside-null-reason`, whose form names `/` and probes them first.
+- **D-3, applied as the architect proposed:** its suggested words, byte-copied from the architect's gate-1 report (`state/consults/gates/2026-11-05-type-walk-rule2-residual-reasons-gate1-architect.md`, D-3, its Closure line), verbatim: "Note 3's sentence on the unary, `/` and junction callers is false of `/`: `type_of_division` refuses VARCHAR or BOOLEAN beside a NULL literal or beside its own type, and `determine_reason` returns `ConversionRounds` for those pairs, as the binary arithmetic arm does when no rule admits the same pairs; whether the binder lets any of them reach the walk is unprobed. The architect's gate-1 report for PR #282 carries the shapes to the human."
+- **N-3** recorded (Amendment 3, its N-3 line).
