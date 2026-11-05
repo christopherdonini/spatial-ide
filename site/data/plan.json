@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-05T22:07:05.439Z",
-  "plan_hash": "fc4a89f166506266b5eb3e0f757939c9f5d7994614c47b93f28e22efc13cd691",
+  "generated_at": "2026-11-05T22:30:25.025Z",
+  "plan_hash": "02424633fc26cbf795f56a22c1158d31befb2534779d9909ba6844c56a448e60",
   "priorities_approved": true,
   "lanes": [
     {
@@ -10638,9 +10638,11 @@
       "kind": "task",
       "lane": "kernel-protocol",
       "phase": "prototype",
-      "status": "ready",
+      "status": "blocked",
       "order": null,
-      "depends_on": [],
+      "depends_on": [
+        "posix-backslash-is-inside-and-redaction-label"
+      ],
       "needs_human": {
         "kind": "none",
         "minutes": 0
@@ -10651,7 +10653,7 @@
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "PLACED 2026-11-05 by the human's ruling (state/directives/2026-11-05-platform-runs-filed-c1-governance-next-fixtures-kernel-node-8b-route-a-f-b-after-8c.md, line 9): a kernel node, S3, the filler queue after 1b (entry 1c): kernel/FIXTURES.md records that regeneration is byte-identical on one machine and differs across platforms, with the Linux sizes and hashes both runs give (the platform run state/consults/2026-11-03-platform-fixture-determinism-linux.md and the cloud run agree byte for byte), and the G5 entry point gains the hash check the S one has. NEXT: its five-line form at its turn. Before: PROPOSED 2026-11-03 by the custodian, from the cloud fixture determinism run (state/consults/2026-11-03-cloud-fixtures-linux-report.md, (a draft and not Authority)): at 6b67d44 on one Ubuntu 24.04 host with rustc 1.97.0, G5 regenerates four bytes longer with another sha256 and S at its recorded size with another sha256, each repeating on that host; its libm probe finds glibc sin and cos results one ULP from correctly rounded on angles the generator uses, not shown to be the cause. The piece: the FIXTURES.md line naming that result, and the probe's Windows half (the same program on this machine, its output diffed against the filed hash); any test pinning these hashes off Windows named. Proposed; placed by the human.",
+      "summary": "NOTE 2026-11-05: depends_on now names 1b's node, encoding the human's placement after 1b (it had no dependency and so headed the generated queue); 1b waits on port-2. Not dispatched at the filler check of 2026-11-05. Before: PLACED 2026-11-05 by the human's ruling (state/directives/2026-11-05-platform-runs-filed-c1-governance-next-fixtures-kernel-node-8b-route-a-f-b-after-8c.md, line 9): a kernel node, S3, the filler queue after 1b (entry 1c): kernel/FIXTURES.md records that regeneration is byte-identical on one machine and differs across platforms, with the Linux sizes and hashes both runs give (the platform run state/consults/2026-11-03-platform-fixture-determinism-linux.md and the cloud run agree byte for byte), and the G5 entry point gains the hash check the S one has. NEXT: its five-line form at its turn. Before: PROPOSED 2026-11-03 by the custodian, from the cloud fixture determinism run (state/consults/2026-11-03-cloud-fixtures-linux-report.md, (a draft and not Authority)): at 6b67d44 on one Ubuntu 24.04 host with rustc 1.97.0, G5 regenerates four bytes longer with another sha256 and S at its recorded size with another sha256, each repeating on that host; its libm probe finds glibc sin and cos results one ULP from correctly rounded on angles the generator uses, not shown to be the cause. The piece: the FIXTURES.md line naming that result, and the probe's Windows half (the same program on this machine, its output diffed against the filed hash); any test pinning these hashes off Windows named. Proposed; placed by the human.",
       "dates": {
         "opened": "2026-11-03",
         "done": null

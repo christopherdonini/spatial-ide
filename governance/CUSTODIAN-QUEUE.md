@@ -1,14 +1,13 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `fc4a89f166506266b5eb3e0f757939c9f5d7994614c47b93f28e22efc13cd691`) at `2026-11-05T22:07:05.190Z`.
+Generated from `PLAN.yaml` (sha256 `02424633fc26cbf795f56a22c1158d31befb2534779d9909ba6844c56a448e60`) at `2026-11-05T22:30:24.805Z`.
 
 ## 1. Next
 
-- **fixture-determinism-off-windows-record** — kernel/FIXTURES.md on determinism (byte-identical on one machine, different across platforms, with the Linux sizes and hashes), and the G5 entry point gains the hash check the S entry point has (lane `kernel-protocol`)
+- **pre-admission-change-detail-braces** — Four kernel P6-placeholder detail strings are wrapped in literal braces, which reach the operator message; the watcher form declares each such string starts with the bracketed placeholder tag (lane `kernel-protocol`)
 
 ## 2. Ready
 
-- **fixture-determinism-off-windows-record** — kernel/FIXTURES.md on determinism (byte-identical on one machine, different across platforms, with the Linux sizes and hashes), and the G5 entry point gains the hash check the S entry point has (lane `kernel-protocol`, order null, budget 45 min)
 - **pre-admission-change-detail-braces** — Four kernel P6-placeholder detail strings are wrapped in literal braces, which reach the operator message; the watcher form declares each such string starts with the bracketed placeholder tag (lane `kernel-protocol`, order null, budget 30 min)
 - **windows-case-fold-non-ascii** — The audit case policy on Windows folds non-ASCII letters as NTFS does, so a profile path differing only in non-ASCII case cannot escape the user-home redaction (wave 3's 1c-2 correction, S2, code-path-only) (lane `kernel-protocol`, order null, budget 60 min)
 - **governance-f-after-week-rust-ci-figure** — Governance piece F, the after-week Rust CI figure: the form-only Rust CI runs in the 168 h after the merge, recorded as a class 1 row in piece F's form (lane `governance`, order null, budget 30 min)
@@ -32,6 +31,7 @@ Generated from `PLAN.yaml` (sha256 `fc4a89f166506266b5eb3e0f757939c9f5d7994614c4
 
 - **arithmetic-text-literal-beside-null-reason** — Type walk: in arithmetic, a text literal beside NULL, refused by type with the reason conversion_rounds, gets a true sentence under that reason value, no reason value added (F-B of entry 8b's form) — blocked by: literal-only-float-integer-arithmetic-refused
 - **docs-02-adr-017-entry-current** — docs/02's ADR-017 entry brought current with every appended section (the ADR-017 note's OPEN-4 (c), S4, the docs lane last) — blocked by: sitting-wording-n1-to-n7
+- **fixture-determinism-off-windows-record** — kernel/FIXTURES.md on determinism (byte-identical on one machine, different across platforms, with the Linux sizes and hashes), and the G5 entry point gains the hash check the S entry point has — blocked by: posix-backslash-is-inside-and-redaction-label
 - **lod-tier-identity-binds-file-name** — The LOD tier builder takes the identity name DuckDB bound and looks it up among the file's own footer names, so a renamed identity column reaches a different column there — blocked by: port-2-macos-l1-and-app-dirs
 - **skp-line-cites-outside-close-races** — Stale line cites into kernel/src/skp.rs outside kernel-close-races-followups files -- shell streaming, App.tsx, pool_poll.rs, src-tauri lib.rs, the P4 corpus test and the persisted-artifacts test — blocked by: adr-035-close-races-note
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
