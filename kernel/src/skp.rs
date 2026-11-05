@@ -1000,12 +1000,16 @@ struct OpenRecord {
 }
 
 /// The per-open latch the sink writes into before admission (§2b's "Open and admission"). Lock
-/// order: latch, then the catalog's read guard, then generations — the admission code below is
-/// the only place that ever holds the latch with either, latch outer; the catalog's read guard
-/// is taken and released inside `Catalog::get`, before the mint, and `Catalog` never reaches the
-/// latch. The sink's own `Admitted` arm always drops the latch guard before it ever reaches into
-/// `generations` (via `SessionInvalidator::end_generation`), so the latch and `generations` are
-/// never held by two different threads in opposite order.
+/// order: latch, then the catalog's read guard, then generations or `watches` — the admission
+/// code in `open_dataset` is the only place that ever holds the latch with any of them, latch
+/// outer. Each arm takes the catalog's read guard after its signal refusal (and, in the Watching
+/// arm, after `resolves_unchanged`), holds it through the mint and the `OpenRecord`'s insert,
+/// and takes no second read guard; `Catalog` never reaches the latch. `close_dataset` takes the
+/// catalog's write guard, then generations, and never the latch. The sink's own `Admitted` arm
+/// always drops the latch guard before it ever reaches into `generations` (via
+/// `SessionInvalidator::end_generation`), so the latch and `generations` are never held by two
+/// different threads in opposite order, and nothing takes the catalog's lock while holding
+/// `generations` or `watches`.
 enum LatchState {
     PreAdmission { recorded: Option<WatchSignal> },
     Admitted,
@@ -1185,9 +1189,14 @@ impl SkpHost {
         }
 
         // Admission, under the latch — the whole decision, including `mint_for_open` on the
-        // success arm, runs inside this one critical section (lock order: latch, then
-        // generations), so the sink's own `Admitted` arm can never race a still-in-progress
-        // admission (it always finds either `PreAdmission` or a fully-admitted generation).
+        // success arm, runs inside this one critical section, so the sink's own `Admitted` arm
+        // can never race a still-in-progress admission (it always finds either `PreAdmission` or
+        // a fully-admitted generation). Past the signal refusal each arm also holds the catalog's
+        // read guard, from its check that the catalog holds the name through the mint and the
+        // record's insert (lock order: latch, then the catalog's read guard, then generations or
+        // `watches`), so `close_dataset`'s `forget_dataset` and removal of the name, under its
+        // write guard, land wholly before the check or wholly after the insert; its earlier steps
+        // can run in between, and its record removal after step 4 drops a record inserted then.
         let session = match arm_outcome {
             ArmOutcome::Watching(watch) => {
                 let mut guard = latch.lock().unwrap_or_else(|e| e.into_inner());
@@ -1242,12 +1251,17 @@ impl SkpHost {
                         },
                     }));
                 }
-                // `kernel/OPEN-DATASET-REFUSES-A-NAME-CLOSED-DURING-ADMISSION-PREREGISTRATION.md`:
-                // a close that ran inside `resolves_unchanged` above removed this entry, so the
-                // open refuses before the mint. The guard is dropped first, then the watch (its
+                // `kernel/OPEN-DATASET-REFUSES-A-NAME-CLOSED-DURING-ADMISSION-PREREGISTRATION.md`
+                // and `kernel/OPEN-DATASET-CLOSE-SERIALISED-UNDER-THE-CATALOG-LOCK-PREREGISTRATION.md`:
+                // the catalog's read guard is taken here, after `resolves_unchanged` above (a close
+                // run inside it needs the write guard), and held through the mint and the record's
+                // insert. A close that removed this entry before the check makes the open refuse
+                // before the mint; the guard is dropped, then the latch, then the watch (its
                 // threads call the sink, which takes the latch). Nothing is minted, inserted,
                 // emitted or removed.
-                if self.catalog.get(handle.as_str()).is_none() {
+                let catalog = self.catalog.lock_read();
+                if !catalog.contains_key(handle.as_str()) {
+                    drop(catalog);
                     drop(guard);
                     drop(watch);
                     return Err(SkpError::unknown_dataset(handle.as_str()));
@@ -1268,6 +1282,7 @@ impl SkpHost {
                             coverage: CoverageOutcome::Watching,
                         },
                     );
+                drop(catalog);
                 session
             }
             ArmOutcome::ChecksOnly { reason } => {
@@ -1286,6 +1301,14 @@ impl SkpHost {
                     self.catalog.remove(handle.as_str());
                     return Err(error_of(&engine_error_of_pre_admission_signal(signal)));
                 }
+                // The same check as the Watching arm's, under the same read guard held through the
+                // mint and the record's insert; there is no watch to drop on the refusal.
+                let catalog = self.catalog.lock_read();
+                if !catalog.contains_key(handle.as_str()) {
+                    drop(catalog);
+                    drop(guard);
+                    return Err(SkpError::unknown_dataset(handle.as_str()));
+                }
                 let session = SessionRef::mint();
                 self.generations
                     .mint_for_open(handle.as_str(), session.clone());
@@ -1301,6 +1324,7 @@ impl SkpHost {
                             coverage: CoverageOutcome::ChecksOnly { reason },
                         },
                     );
+                drop(catalog);
                 session
             }
         };
@@ -1572,9 +1596,10 @@ impl SkpHost {
         // `SOURCE-WATCHER-PREREGISTRATION.md` §2b: the `OpenRecord` (and so the watch) is removed
         // under the map guard and dropped only after release — disarming and joining the watch
         // thread(s) before anything below runs, so the watcher can never reach `invalidate` after
-        // `forget_dataset`. This is the first step, ahead of the `unknown_dataset` check, so a
-        // close releases its dataset's watch on every outcome after the SKP version check, the
-        // `unknown_dataset` refusal included
+        // `forget_dataset`, except for a record an admission inserts after this step, which the
+        // removal after step 4 below drops. This is the first step, ahead of the
+        // `unknown_dataset` check, so a close releases its dataset's watch on every outcome after
+        // the SKP version check, the `unknown_dataset` refusal included
         // (`kernel/CLOSE-DATASET-UNKNOWN-KEEPS-OPENRECORD-PREREGISTRATION.md` §2).
         let removed_watch = self
             .watches
@@ -1596,13 +1621,32 @@ impl SkpHost {
         self.generations.begin_close(name);
         // 2. Then cancel every ticket minted before it.
         let cancelled_streams = self.tickets.cancel_all_for_dataset(name);
-        // 3. The generation dies with the open it was minted for; its end mark, its closing mark
-        //    and its ticket attributions go with it, so the mapping does not grow for the life of
-        //    the process. An end reaching `invalidate` after this finds no live generation and
-        //    writes nothing.
-        self.generations.forget_dataset(name);
-        // 4. The name goes last, so a query resolving it before this line still meets steps 1-3.
-        self.catalog.remove(name);
+        // Steps 3 and 4 run under one catalog write guard, taken after step 2 (a racing call at
+        // step 2's drop point takes the catalog's read guard), so an `open_dataset` admission's
+        // check-through-insert lands wholly before it or wholly after it.
+        let removed_dataset = {
+            let mut catalog = self.catalog.lock_write();
+            // 3. The generation dies with the open it was minted for; its end mark, its closing
+            //    mark and its ticket attributions go with it, so the mapping does not grow for
+            //    the life of the process. An end reaching `invalidate` after this finds no live
+            //    generation and writes nothing.
+            self.generations.forget_dataset(name);
+            // 4. The name goes last, so a query resolving it before this line still meets steps
+            //    1-3.
+            catalog.remove(name)
+        };
+        // The removed dataset is dropped after the guard's release, as `Catalog::open`'s note on
+        // replacing a name describes.
+        drop(removed_dataset);
+        // An admission that inserted its record after step 0 (it had passed its check before this
+        // close's write guard) leaves one for a name no longer open: removed here, dropped after
+        // `watches`' guard is released.
+        let late_record = self
+            .watches
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .remove(name);
+        drop(late_record);
         Ok(CloseDatasetResponse { cancelled_streams })
     }
 }
@@ -5024,6 +5068,12 @@ mod ticket_drop_under_lock_regression {
     ///
     /// REGISTERED MUTATION: delete the `watches` removal in `close_dataset`. Applied at `f4fb9ed`,
     /// run and reverted: this test FAILED on `the close removed the record`.
+    ///
+    /// RECORDED MUTATION (M-T2, not registered): delete step 0's `watches` removal. Applied at
+    /// d95baf4d603a3d8c4c3cca1a60a773b474c22bfe, run and reverted: this test PASSED, so it no
+    /// longer catches the deletion alone, and
+    /// `a_close_whose_catalog_entry_is_already_gone_still_drops_its_watch` FAILED on `the close
+    /// removed the record`. The registered line above holds only at its own commit.
     #[test]
     fn a_close_drops_its_watch_before_it_returns() {
         let path = fixture("close-drops-its-watch");
@@ -5041,6 +5091,61 @@ mod ticket_drop_under_lock_regression {
         assert!(
             dropped.load(Ordering::SeqCst),
             "the close dropped the watch"
+        );
+    }
+
+    /// An `OpenRecord` inserted after a close's first step is removed before the close returns.
+    /// At close-races' drop point (a retired `Pending` ticket's `RunOnDrop`, after
+    /// `cancel_all_for_dataset` releases its guard) this test inserts a record carrying a
+    /// [`FlagWatch`] for the closing name, as an admission that had passed its check would. That
+    /// writes `watches`, a private field, where §4 (iv) of
+    /// `kernel/GENERATION-CLOSE-RACES-PREREGISTRATION.md` only reads; the product has no
+    /// interposition point there.
+    ///
+    /// RECORDED MUTATION (M1): delete the record removal after step 4. Applied at
+    /// d95baf4d603a3d8c4c3cca1a60a773b474c22bfe, run and reverted: this test FAILED at its
+    /// `the close removed the record inserted during it` assertion.
+    #[test]
+    fn a_record_inserted_during_a_close_is_removed_before_the_close_returns() {
+        let path = fixture("record-inserted-during-close");
+        let host = Arc::new(SkpHost::new(
+            Arc::new(Catalog::new()),
+            StreamRegistry::new(),
+            no_watch_arm(),
+            discard_session_end_events(),
+        ));
+        let open = open_through(&host, &path, "record-inserted");
+        let name = open.dataset.as_str().to_string();
+        let dropped = Arc::new(AtomicBool::new(false));
+        let racing = RunOnDrop(Some(Box::new({
+            let host = host.clone();
+            let name = name.clone();
+            let flag = dropped.clone();
+            move || {
+                host.watches
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .insert(
+                        name,
+                        OpenRecord {
+                            watch: Some(Box::new(FlagWatch(flag))),
+                            coverage: CoverageOutcome::Watching,
+                        },
+                    );
+            }
+        })));
+        host.tickets()
+            .mint(&name, Box::new(racing), Arc::new(NoopCancel))
+            .expect("mint the drop-point ticket");
+
+        host.close_dataset(close_req(open.dataset)).expect("close");
+        assert!(
+            !holds_a_record(&host, &name),
+            "the close removed the record inserted during it"
+        );
+        assert!(
+            dropped.load(Ordering::SeqCst),
+            "the close dropped that record's watch"
         );
     }
 
@@ -5114,9 +5219,12 @@ mod ticket_drop_under_lock_regression {
     /// the one `kernel/KERNEL-CLOSE-DURING-OPEN-ADMISSION-PREREGISTRATION.md` pinned. The handle is
     /// 16 bytes of OS CSPRNG that only this open returns, and `Catalog::names`, which this test's
     /// watch calls, has no product caller, so nothing in the product can name the entry before the
-    /// open returns. Two windows stay open, both unreachable in the product: a close that removes
-    /// the name after the check, and the ChecksOnly arm. The node placed as filler entry 10,
-    /// `open-dataset-close-serialised-under-the-catalog-lock`, takes them.
+    /// open returns. The two windows this test left open, a close that removes the name after the
+    /// check and the ChecksOnly arm, are closed by
+    /// `kernel/OPEN-DATASET-CLOSE-SERIALISED-UNDER-THE-CATALOG-LOCK-PREREGISTRATION.md`: both arms
+    /// check under the catalog's read guard, held through the mint and the record's insert, and
+    /// `close_dataset` holds the write guard across `forget_dataset` and the removal. No test
+    /// seam reaches those interleavings, so that is shown by reading the code and not by a test.
     ///
     /// RECORDED MUTATION (the fix alone): at 5e38ffae942180fbd1b82d53046568113948bbf8, the product
     /// change before this test existed, the test the earlier form pinned FAILED at its expect on
