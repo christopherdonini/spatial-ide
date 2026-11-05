@@ -554,6 +554,81 @@ fn each_corpus_row_is_admitted_or_refused_with_its_code_reason_and_operand_types
     assert_fixture_unchanged(fx);
 }
 
+/// T1 (`governance/forms/engine/TYPE-WALK-RULE2-RESIDUAL-REASONS-PREREGISTRATION.md`,
+/// Tests+mutation and note 1): each of the eleven predicates is refused `TypeNotAdmitted` with its
+/// construct, operand types and the reason `ConversionRounds`, and its `Display` is the format of
+/// `FilterError`'s `TypeNotAdmitted` arm carrying the type-level sentence (a P6 placeholder)
+/// instead of one naming a value read from the file.
+///
+/// RECORDED MUTATION: the `ConversionRounds` arm of `TypeRefusalReason::sentence`
+/// (`engine/src/predicate.rs`) restored to T-C's sentence, applied in a debug build at commit
+/// 853b5da6ff574f48e913e07e14e66c982738e07b and reverted. Observed: the whole
+/// `filter_type_admission` binary ran, and this test failed by name at its `Display` assertion on
+/// `f32 > NULL + 100000` while the other three tests passed.
+#[test]
+fn every_conversion_rounds_refusal_states_a_conversion_refused_by_type() {
+    let fx = fixture();
+    let ds = dataset();
+    let sentence = "[P6 placeholder] a conversion between a float type and an integer or decimal \
+                    type, refused by type: values of the integer or decimal type can round in the \
+                    float type";
+
+    let rows: [(&str, &str, [&str; 2]); 11] = [
+        ("f32 > NULL + 100000", ">", ["REAL", "INTEGER expression"]),
+        ("f32 > NULL + i32", ">", ["REAL", "INTEGER expression"]),
+        ("f64 > NULL + i64", ">", ["DOUBLE", "BIGINT expression"]),
+        (
+            "1e3 > NULL + i64",
+            ">",
+            ["DOUBLE literal", "BIGINT expression"],
+        ),
+        ("f32 > NULL * NULL", ">", ["REAL", "BIGINT expression"]),
+        ("f64 > -NULL", ">", ["DOUBLE", "BIGINT expression"]),
+        ("f32 + -NULL > 0", "+", ["REAL", "BIGINT expression"]),
+        (
+            "(NULL - 0.5) + f32 > 0",
+            "+",
+            ["DECIMAL(2,1) expression", "REAL"],
+        ),
+        ("i32 = f32", "=", ["INTEGER", "REAL"]),
+        ("i64 = 1e3", "=", ["BIGINT", "DOUBLE literal"]),
+        ("i32 + f32 > 0", "+", ["INTEGER", "REAL"]),
+    ];
+
+    for (predicate, construct, operand_types) in rows {
+        let e = match AdmittedPredicate::admit(predicate, &ds) {
+            Err(e) => e,
+            Ok(_) => panic!("{predicate:?}: expected TypeNotAdmitted, got admitted"),
+        };
+        match &e {
+            PredicateAdmitError::Filter(FilterError::TypeNotAdmitted {
+                construct: c,
+                operand_types: ot,
+                reason,
+            }) => {
+                assert_eq!(c, construct, "{predicate:?}: construct");
+                assert_eq!(ot, &operand_types.to_vec(), "{predicate:?}: operand_types");
+                assert_eq!(
+                    *reason,
+                    TypeRefusalReason::ConversionRounds,
+                    "{predicate:?}: reason"
+                );
+            }
+            other => panic!("{predicate:?}: expected TypeNotAdmitted, got {other:?}"),
+        }
+        assert_eq!(
+            e.to_string(),
+            format!(
+                "refused: `{construct}` over {}: {sentence} (docs/01 principle 8)",
+                operand_types.join(" and ")
+            ),
+            "{predicate:?}: Display"
+        );
+    }
+
+    assert_fixture_unchanged(fx);
+}
+
 /// The named `skp.filter_*` code a refusal maps to (SKP-V0 section 7.5) -- the same independent,
 /// exhaustive, no-wildcard mapping `admission_property_campaign.rs`'s own `code_of` keeps, kept
 /// separately here so B-T3 does not depend on that file.
