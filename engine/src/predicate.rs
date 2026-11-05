@@ -1427,9 +1427,14 @@ impl TypeRefusalReason {
         }
     }
 
-    /// The `Display` sentence (T-C), never sent on the wire. Copied byte for byte from
-    /// `state/directives/B-1-RULINGS-AND-TYPED-TEXTS-2026-09-30.md` T-C by the script that wrote
-    /// this file.
+    /// The `Display` sentence, never sent on the wire. The first four are copied byte for byte from
+    /// `state/directives/B-1-RULINGS-AND-TYPED-TEXTS-2026-09-30.md` T-C by the script that wrote this
+    /// file. The fifth, `ConversionRounds`'s, replaces T-C's under
+    /// `engine/TYPE-WALK-RULE2-RESIDUAL-REASONS-PREREGISTRATION.md` and is a P6 placeholder: T-C's
+    /// named a value read from the file, which is false where the integer or decimal side is a constant
+    /// NULL (`f32 > NULL + 100000`). This one states the type pair alone. It is still false of a double
+    /// literal beside an INTEGER literal in `+`, `-` or `*`, which the walk refuses although no INTEGER
+    /// value rounds in DOUBLE.
     fn sentence(self) -> &'static str {
         match self {
             Self::TextWithNonText => "a comparison of text with a non-text value",
@@ -1439,7 +1444,8 @@ impl TypeRefusalReason {
             }
             Self::ConversionCanFail => "a conversion that can fail during the scan",
             Self::ConversionRounds => {
-                "a conversion that can round a value read from the file before it is compared"
+                "[P6 placeholder] a conversion between a float type and an integer or decimal type, \
+                 refused by type: values of the integer or decimal type can round in the float type"
             }
         }
     }
