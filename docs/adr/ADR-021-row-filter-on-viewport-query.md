@@ -276,6 +276,6 @@ item 2).
 
 ## Note 2026-11-06
 
-*Appended on the human's typed words (`state/directives/2026-11-06-8e-open-1-words-open-4-a-e2e-readme-c9-c14-c19-heading-open-6-a-filler-order-docs-02-adr-022-kl-178.md`); the note below is theirs, byte for byte. Nothing above this heading is changed.*
+*Appended on the human's typed words (`state/directives/2026-11-06-8e-open-1-words-open-4-a-e2e-readme-c9-c14-c19-heading-open-6-a-filler-order-docs-02-adr-022-kl-178.md`; one clause as reworded in `state/directives/2026-11-06-8e-words-replaced-u1-h1-h2-class-8-m10-kl-c1-c3-draft-marks-u12-mark-n1-n3-slot-2-order-clippy-placed-288-clicked.md`); the note below is theirs, byte for byte. Nothing above this heading is changed.*
 
-Note 2026-11-06 — `skp.filter_dialect_unsupported` is struck (SKP-V0's note of this date; the piece skp-filter-dialect-unsupported-ruling): no host produced it, since a dialect other than the one literal fails at deserialization. Decision 8's list and the Notes' count of twelve read with that code removed, eleven, and Decision 8's exhaustive mapping stands over the eleven. Nothing else changes.
+Note 2026-11-06 — `skp.filter_dialect_unsupported` is struck (SKP-V0's note of 2026-11-05; the piece skp-filter-dialect-unsupported-ruling): no host produced it, since a dialect other than the one literal fails at deserialization. Decision 8's list and the Notes' count of twelve read with that code removed, eleven, and Decision 8's exhaustive mapping stands over the eleven. Nothing else changes.

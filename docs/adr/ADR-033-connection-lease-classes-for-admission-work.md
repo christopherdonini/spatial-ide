@@ -42,6 +42,6 @@ On the human's word, after the polish piece's engine half lands with its tests (
 
 ## Note 2026-11-06
 
-*Appended on the human's typed words (`state/directives/2026-11-06-8e-open-1-words-open-4-a-e2e-readme-c9-c14-c19-heading-open-6-a-filler-order-docs-02-adr-022-kl-178.md`); the note below is theirs, byte for byte. Nothing above this heading is changed.*
+*Appended on the human's typed words (`state/directives/2026-11-06-8e-words-replaced-u1-h1-h2-class-8-m10-kl-c1-c3-draft-marks-u12-mark-n1-n3-slot-2-order-clippy-placed-288-clicked.md`); the note below is theirs, byte for byte. Nothing above this heading is changed.*
 
-Note 2026-11-06 — this ADR's two counts of the filter refusal codes include `skp.filter_dialect_unsupported`, struck by skp-filter-dialect-unsupported-ruling (ADR-021's note of this date); each reads one lower. Nothing else changes.
+Note 2026-11-06 — this ADR's three counts of eleven were written on 2026-09-14, before `skp.filter_type_not_admitted` joined (ADR-021's Note of 2026-09-30, twelve) and before `skp.filter_dialect_unsupported` was struck (skp-filter-dialect-unsupported-ruling, eleven again). The number stands; the set it counts has changed by one in and one out. Nothing else changes.
