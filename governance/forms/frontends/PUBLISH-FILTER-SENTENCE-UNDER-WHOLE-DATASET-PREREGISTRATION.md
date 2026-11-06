@@ -178,3 +178,11 @@ No prior art recorded for "export scope whole dataset viewport". Research it bef
 - **The sitting (the draft's note 7):** the custodian records on `sitting-wording-n1-to-n7`'s node that this piece overtakes its N1 ground, its item 8 and its G8 once merged.
 
 ## Amendments (opens empty; append-only)
+
+**Amendment 1 (2026-11-06, the closing record, written after PR #285's merge; what both gate-1 reports asked of it).**
+
+- **Size, class 6:** 200 changed lines against the declared 150 over the eight Scope files (`state/consults/gates/2026-11-06-publish-filter-sentence-under-whole-dataset-gate1-reviewer.md`, Files and size); the Scope line is not edited.
+- **The mutation record:** the change was observed only through M-1 in the unit test, never in the e2e (`state/consults/gates/2026-11-06-publish-filter-sentence-under-whole-dataset-gate1-architect.md`, its closing items).
+- **The e2e** ran on the port-5400 harness under the human's approval of 2026-10-11, item 1 (`state/consults/2026-11-06-publish-filter-sentence-under-whole-dataset-e2e-worker-report.md`).
+- **The removed test (the reviewer's D-3):** governance/forms/frontends/PUBLISH-FILTER-SENTENCE-UNDER-WHOLE-DATASET-PREREGISTRATION.md:11 @ 0f9edda8fc047dfae9a1b56ccd9cb67c43065292 sha256:ebb1bbd99a0ff2511dbab312f37b5caa0d0ca31b7c40c7bdc3a92e60ea3dd3aa is superseded: the test it names as replaced left with this piece, and its replacement is `the_whole_dataset_scope_carries_no_filter_scope_sentence_with_or_without_a_filter`.
+- **The merge:** the human merged #285 at 2026-11-06T11:07:51Z (02b5a4a6), before a typed answer to item 8's words and revision note, the mark, N-1 to N-3 and E-note 1; each goes to the human again.

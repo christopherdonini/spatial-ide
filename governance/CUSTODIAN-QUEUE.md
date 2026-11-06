@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `f4a4a5a91668fdc238c25f5fce30903574a2031e40791f6890ce8194cc2bdb26`) at `2026-11-06T10:45:52.564Z`.
+Generated from `PLAN.yaml` (sha256 `b9c15374117e3f886998acf5f82d00206e4ddb11c4a51c899241dce7a60b0f55`) at `2026-11-06T11:22:19.054Z`.
 
 ## 1. Next
 
@@ -33,14 +33,14 @@ Generated from `PLAN.yaml` (sha256 `f4a4a5a91668fdc238c25f5fce30903574a2031e4079
 - **narrow-integer-id-unstreamable** — An 8, 16 or 32-bit integer id column is admitted at open but no stream carries it (the cloud audit, U2) — blocked by: single-file-bracket-name-refused-as-partitioned
 - **single-file-bracket-name-refused-as-partitioned** — A single file whose name holds a bracket or a brace is refused as partitioned across more than one file, and the refusal's advice cannot be followed in the app (the cloud audit, U17) — blocked by: skp-filter-dialect-unsupported-ruling
 - **adr-029-stale-line-cites** — ADR-029 (Proposed, unbuilt): its line cites into the code and the admission form land on other text, so an implementer of the scan-progress route would follow them to the wrong places (the docs audits, Task C rows 56 to 73 and Task B) — blocked by: module-docs-drift-sweep-area-d
-- **docs-02-adr-017-entry-current** — docs/02's ADR-017 entry brought current with every appended section (the ADR-017 note's OPEN-4 (c), S4, the docs lane last) — blocked by: sitting-wording-n1-to-n7
+- **docs-02-adr-017-entry-current** — docs/02's ADR-017 entry brought current with every appended section (the ADR-017 note's OPEN-4 (c), S4, the docs lane last) — blocked by: sitting-wording-n1-to-n7, adr-029-stale-line-cites
 - **export-refused-above-row-ceiling-every-scope** — A file over the row ceiling cannot be exported in any scope, the remedy its refusal names included (the cloud audit, U10) — blocked by: publish-session-tier-identity
 - **fixture-determinism-off-windows-record** — kernel/FIXTURES.md on determinism (byte-identical on one machine, different across platforms, with the Linux sizes and hashes), and the G5 entry point gains the hash check the S entry point has — blocked by: posix-backslash-is-inside-and-redaction-label
 - **lod-tier-identity-binds-file-name** — The LOD tier builder takes the identity name DuckDB bound and looks it up among the file's own footer names, so a renamed identity column reaches a different column there — blocked by: port-2-macos-l1-and-app-dirs
 - **module-docs-drift-sweep-area-d** — Kernel and engine module docs: the never-refuses and unreachable claims the Table, record_step and publish have overtaken, the withdrawn cancellation bound, and smaller statements (drift sweep area D, findings 1 to 6) — blocked by: b2-piece-1c-save-and-reopen, adr-indices-hand-written-current
 - **skp-line-cites-outside-close-races** — Stale line cites into kernel/src/skp.rs outside kernel-close-races-followups files -- shell streaming, App.tsx, pool_poll.rs, src-tauri lib.rs, the P4 corpus test and the persisted-artifacts test — blocked by: adr-035-close-races-note
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
-- **e2e-readme-security-posture-measure-build** — frontends/shell/e2e/README.md: the security-posture paragraph is untrue for the measure build (the debug port in Rust, the e2e hooks kept in), with the missing E-FLOOR entry and stale lib.rs cites (drift sweep area B, findings 6, 11 and 12) — blocked by: kl-undeclared-behaviours-u1-to-u17, kl-items-graded-untrue-or-stale
+- **e2e-readme-security-posture-measure-build** — frontends/shell/e2e/README.md: the security-posture paragraph is untrue for the measure build (the debug port in Rust, the e2e hooks kept in), with the missing E-FLOOR entry and stale lib.rs cites (drift sweep area B, findings 6, 11 and 12) — blocked by: kl-items-graded-untrue-or-stale
 - **session-end-lines-name-coverage-lost-as-source-change** — The hover readout and the Feature tab word every session end as a source change, coverage-lost included, although the engine says coverage-lost is never a source change (milestone 4 PR C gate 1, the architect's C1 note) — blocked by: b1-shell-half
 - **session-log-token-redaction-rests-on-page-code** — The session token never reaching the session log rests on page code: binding_log_session_event appends page-supplied text verbatim, the page holds the token, and the data plane's Session::redact has only a test caller — blocked by: b2-piece-1c-save-and-reopen
 - **briefb-b2-save-reopen** — B2 — Save project, Snapshot data, session history, lineage and preferences, in five stages, each with its own form — blocked by: decision-adr-029-scan-progress-route
@@ -57,13 +57,10 @@ Generated from `PLAN.yaml` (sha256 `f4a4a5a91668fdc238c25f5fce30903574a2031e4079
 
 ## 5. In progress
 
-- **arithmetic-text-literal-beside-null-reason** — Type walk: in arithmetic, a text literal beside NULL, refused by type with the reason conversion_rounds, gets a true sentence under that reason value, no reason value added (F-B of entry 8b's form) — evidence: branch `cut/arithmetic-text-literal-beside-null-reason`
 - **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **publish-session-tier-identity** — Publish and a session-tier identity: KNOWN-LIMITATIONS item 3 says such a file is never saved or published; the cloud audit finds no refusal on the publish path — evidence: branch `cut/publish-session-tier-identity`
 - **b1-shell-half** — Shell migration, milestone 4 -- B1 shell half: attributes of the inspected feature, colour by category with its legend, and the table — evidence: branch `cut/b1-shell-half-pr-c`
-- **publish-filter-sentence-under-whole-dataset** — The publish dialog shows the filter sentence, which says the viewport extent is published, under Whole dataset too, where the whole file is published (the cloud audit, U12) — evidence: branch `cut/publish-filter-sentence-under-whole-dataset`
-- **kl-items-graded-untrue-or-stale** — KNOWN-LIMITATIONS -- on-main notes for the items the cloud truth audit grades untrue (3, 13, 27, 56) or stale (4, 10, 15, 19 and the unnumbered filter paragraph) — evidence: branch `cut/kl-undeclared-behaviours-and-graded-items`
-- **kl-undeclared-behaviours-u1-to-u17** — KNOWN-LIMITATIONS -- the seventeen behaviours the cloud truth audit finds in ordinary use and declared nowhere (U1 to U17) — evidence: branch `cut/kl-undeclared-behaviours-and-graded-items`
+- **kl-items-graded-untrue-or-stale** — KNOWN-LIMITATIONS -- on-main notes for the items the cloud truth audit grades untrue (3, 13, 27, 56) or stale (4, 10, 15, 19 and the unnumbered filter paragraph) — evidence: branch `cut/kl-items-graded-item-16-cite`
 - **port-2-macos-l1-and-app-dirs** — PORT-2 -- macOS L1 for the Cargo workspace: macos-latest in the same matrix, one application-directory boundary replacing the two resolvers, and a case-policy test on a case-insensitive volume — evidence: branch `cut/port-2-macos-l1-and-app-dirs`
 
 ## 6. Proposed / unscheduled
