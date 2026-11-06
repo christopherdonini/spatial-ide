@@ -39,3 +39,9 @@ On the human's word, after the polish piece's engine half lands with its tests (
 **Gate history, in one sentence.** Gate 1 failed on both arms — reviewer and architect, on the single finding that a residual admission-lease exhaustion still reached the wire as `skp.filter_rejected_by_binder` (the kernel arm), closed by the closing commit recorded in the Decision above; the **reviewer gate 2 returned PASS** (on `6bd45ab`); the **architect gates 2 and 3 affirmed the design in full** and failed only on stale declared-ceiling figures in `engine/README.md` and `kernel/README.md` (the `MAX_PHYSICAL_CONNECTIONS` 5 → 9 remainder passages, one of them spelled out as a word), closed under `AI_DEVELOPMENT.md` Amendment 1 §A's one bounded closing commit, `b2c9aac`.
 
 **The merge.** PR #59 was merged by the human as `c3d258f` (2026-09-14) — before the FIND′ run, so this Status change rides the follow-on documentation PR rather than #59 itself, per the ruling's own words about where the change goes.
+
+## Note 2026-11-06
+
+*Appended on the human's typed words (`state/directives/2026-11-06-8e-open-1-words-open-4-a-e2e-readme-c9-c14-c19-heading-open-6-a-filler-order-docs-02-adr-022-kl-178.md`); the note below is theirs, byte for byte. Nothing above this heading is changed.*
+
+Note 2026-11-06 — this ADR's two counts of the filter refusal codes include `skp.filter_dialect_unsupported`, struck by skp-filter-dialect-unsupported-ruling (ADR-021's note of this date); each reads one lower. Nothing else changes.

@@ -495,7 +495,6 @@ applied to predicate admission.
 
 | Code | Fields |
 |---|---|
-| `skp.filter_dialect_unsupported` | `declared` |
 | `skp.filter_unparsable` | `detail` |
 | `skp.filter_not_a_single_expression` | `statements` |
 | `skp.filter_construct_not_admitted` | `construct` |
@@ -520,6 +519,8 @@ admission-remediation cut (`skp/0.2`) threaded `open_dataset`'s `identity` into 
 > row, `skp.filter_type_not_admitted` | `construct`, `operand_types`, `reason`, followed by the
 > five `reason` values: `text_with_non_text`, `boolean_conversion`, `literal_out_of_bounds`,
 > `conversion_can_fail`, `conversion_rounds`. The heading above stays as it is.
+
+> Note 2026-11-05 (no literal change): `skp.filter_dialect_unsupported` is struck from §7's refusals. No host produced it: a dialect other than the one literal fails at deserialization as a shape error, before any code of this kind is chosen. skp/0.12 stands; no fixture changes.
 
 ### 7.6 Three-stage admission, pre-lease and pre-mint
 

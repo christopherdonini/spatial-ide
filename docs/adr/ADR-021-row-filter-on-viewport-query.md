@@ -273,3 +273,9 @@ item 2).
 1. A `+`, `-` or `*` whose operands are a NULL literal and a decimal literal within the bounds has a NULL value. Wherever it is compared, it counts as that decimal literal under the Note 2026-09-30, item 2, third, sixth and seventh bullets. So do its negation by unary `-`, and a `+`, `-` or `*` of a NULL literal with such a result.
 2. It does not count as a NULL literal. Against text, against BOOLEAN, or against an integer the third bullet does not admit, it is refused as that decimal literal would be. Inside `+`, `-` and `*`, nothing changes.
 3. No code, field or reason value changes. Decision 8's twelve codes stand.
+
+## Note 2026-11-06
+
+*Appended on the human's typed words (`state/directives/2026-11-06-8e-open-1-words-open-4-a-e2e-readme-c9-c14-c19-heading-open-6-a-filler-order-docs-02-adr-022-kl-178.md`); the note below is theirs, byte for byte. Nothing above this heading is changed.*
+
+Note 2026-11-06 — `skp.filter_dialect_unsupported` is struck (SKP-V0's note of this date; the piece skp-filter-dialect-unsupported-ruling): no host produced it, since a dialect other than the one literal fails at deserialization. Decision 8's list and the Notes' count of twelve read with that code removed, eleven, and Decision 8's exhaustive mapping stands over the eleven. Nothing else changes.
