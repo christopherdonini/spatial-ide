@@ -314,3 +314,15 @@ The rule is AUTONOMY.md:609 @ b5b5f97ad58282d141494674fe469e43072ec026 sha256:db
 ## §10. Amendments
 
 *(Opens empty; append-only. Classes 1 to 9.)*
+
+**Amendment 1 (2026-11-06, class 5: the human's ruling of 2026-11-06 (11:10Z), `state/directives/2026-11-06-8e-open-1-words-open-4-a-e2e-readme-c9-c14-c19-heading-open-6-a-filler-order-docs-02-adr-022-kl-178.md`; before any worker).**
+
+- **OPEN-2 and OPEN-3, the human's words.** The paragraph is the directive of 2026-11-05's line 25 words (section 2.1) with three spans replaced by the human's words from `state/directives/2026-11-06-8e-open-1-words-open-4-a-e2e-readme-c9-c14-c19-heading-open-6-a-filler-order-docs-02-adr-022-kl-178.md`, each new span from its line's first `"` to its last `"`:
+  - C9: the span from "and `isInstrumentedBuild.ts`" to "`VITE_MEASURE_BUILD` is set." (sha256 93919145e5e7b1e65573be1a2f5de344df130ce1df38cd7083ebfbb14718e453) becomes the line 15 span (sha256 6bb4f99ef44851ebe713d03994fe461c7a292af171a04e2206f8f3aed5afb439);
+  - C14: the span from "`check:dist-clean`, run in CI" to "not the build succeeding." (sha256 6394ce14b021670033b6158769ae73ff71eeb21fc9d9be8fe2c410adec4f8d23), C13's words with it as the human's restate them, becomes the line 16 span (sha256 1c08251c37fd9c18fc417cf2dfb40bf6ce7580db7a982ec75118ed07719b2f1c);
+  - C19: "setting it replaces wry's defaults rather than appending" (sha256 4f70de4b60cf13ea0f5b30f6b39c3449ba742e874ac5dda3f3a54e4259a69543) becomes the line 17 span (sha256 1eec9471809ed8cb93ea1549eab9d6965defab17f55a7b4137b02f13eb5f167b), which answers note 3.
+  - Each old span occurs once in the words. The boundaries are the custodian's reading of the human's "replacing the two clauses" and C19, shown to the human at the click. The new paragraph's `sha256(words + "\n")` is a9a7d8c3d4fbd9df91af98b0ef72188e59849681aaa4cd8866e01d57f9f90db5. Section 2.1's script builds it this way; the reviewer re-runs it.
+- **The heading** `## Security posture (docs/09, binding)` becomes `## Security posture`, by the human's words; section 1's and section 5's "the heading" read with that change, and note 2 is answered.
+- **OPEN-6: (A), the human's.** `frontends/shell/e2e/lib.mjs` and `frontends/shell/src/e2e-test-surface.ts` join at section 7's places and ceilings (3 files, at most 70 changed lines), with `npm run test:citation-integrity` added to section D. The two comments take the paragraph's words at the click.
+- **OPEN-4 (B)'s result** (`state/consults/2026-11-06-e2e-readme-security-posture-measure-build-open-4b-live-check-tester-report.md`): with the variable set and with it absent, no WebView2 command line held the flag and nothing answered on the port, one pair of runs. Section 5's falsification is not met; C1 and C17 stand and do not go back to the human.
+- **OPEN-8 (A):** the human has answered OPEN-2, OPEN-3 and OPEN-6. The worker waits only on `depends_on`: `kl-items-graded-untrue-or-stale`, open for KL:178's follow-up.

@@ -1136,3 +1136,10 @@ Nothing above is edited.
    - Step 1 is the one piece on `protocol/`, and PR C touches none.
 
 Nothing above is edited.
+
+## Amendment 4 — 8e before P2 and ADR-022's note with step 1's PR, the human's ruling of 2026-11-06 (11:10Z) (class 5)
+
+- **P2 waits for `skp-filter-dialect-unsupported-ruling`'s merge** (that form's OPEN-4 (A), the human's, `state/directives/2026-11-06-8e-open-1-words-open-4-a-e2e-readme-c9-c14-c19-heading-open-6-a-filler-order-docs-02-adr-022-kl-178.md`), an exception to this form's reservation of `protocol/` for step 1; skp/0.12 stands until then. At 2869813b step 1's branch has no path under `protocol/`.
+- **ADR-022's note** in the human's words (`state/directives/2026-11-05-8c-full-form-nine-s2-placed-u12-slot-2-u1-reproducer-adr-notes-words-e2e-readme-words-8b-d3.md`, item 3) lands with step 1's PR, appended after ADR-022's Amendment 2 at the file's end in the pattern of ADR-026's Note 2026-11-05; `adr-notes-stale-statements-and-indices` is done with that merge.
+
+Nothing above is edited.
