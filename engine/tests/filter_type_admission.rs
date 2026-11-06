@@ -636,6 +636,13 @@ fn every_conversion_rounds_refusal_states_a_conversion_refused_by_type() {
 /// `drain_ids` succeeds and equals the predicted set; `i64 = (<a>)` is refused in its real
 /// `TypeNotAdmitted` shape with operand types BIGINT and DOUBLE expression, which pins the walk's
 /// type for the arithmetic node `<a>` as DOUBLE; and the binder's `typeof(<a>)` is DOUBLE.
+///
+/// RECORDED MUTATION: the new double-literal clause in `admitted_arithmetic_result`
+/// (`engine/src/predicate.rs`) removed, applied in a debug build at commit
+/// f2955007b11985f72e10c77712694149fd82f137 and reverted. Observed: the whole
+/// `filter_type_admission` binary ran, and this test failed by name at row 1's admission
+/// (`1e3 + 5 > 0`: expected admitted, got refused `+` over DOUBLE literal and INTEGER literal)
+/// while the other five tests passed.
 #[test]
 fn literal_only_arithmetic_with_a_double_literal_is_admitted_typed_double_and_streams() {
     let fx = fixture();
@@ -702,6 +709,13 @@ fn literal_only_arithmetic_with_a_double_literal_is_admitted_typed_double_and_st
 /// A literal beyond the bounds keeps `LiteralOutOfBounds`; a DOUBLE literal beside a BIGINT column
 /// keeps `ConversionRounds`; so does one beside a rule-2 result that counts as a decimal literal;
 /// a decimal literal beside an integer literal keeps `ConversionCanFail`.
+///
+/// RECORDED MUTATION: the new clause's partner test also accepting an operand that counts as a
+/// decimal literal (`|| r.counts_as_decimal_literal` and `|| l.counts_as_decimal_literal`),
+/// applied in a debug build at commit f2955007b11985f72e10c77712694149fd82f137 and reverted.
+/// Observed: the whole `filter_type_admission` binary ran, and this test failed by name at row 4
+/// (`1e3 + (NULL + 0.5) > 0`: expected TypeNotAdmitted, got admitted) while the other five tests
+/// passed.
 #[test]
 fn literal_only_arithmetic_outside_the_double_literal_pairs_keeps_its_refusal() {
     let fx = fixture();
