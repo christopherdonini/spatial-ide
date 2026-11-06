@@ -60,13 +60,6 @@ const REGEN_COMMAND =
 // exactly this many rows, filter active or not (FILTERED' is what proves "or not").
 const FIXTURE_FILTER_FEATURES = 2000;
 
-// Verbatim from `publish.rs::FILTER_SCOPE_SENTENCE` / `types.ts::FILTER_SCOPE_SENTENCE` -- the
-// conditional block's own sentence (NEXT-CUT.md), pinned equal to both by
-// `PublishPanel.test.ts` already; this suite adds the third, end-to-end pin.
-const FILTER_SCOPE_SENTENCE =
-  "this bundle format cannot record a row predicate (ADR-017 §8, bundle_version 1); publishing " +
-  "publishes the viewport extent, not your filter";
-
 // A representative subset of `kernel/src/bundle/redaction.rs::CREDENTIAL_NEEDLES` -- not the
 // authoritative scan (that already runs host-side, unconditionally, and refuses to WRITE a record
 // containing one; a credential-bearing record cannot reach this script's read-back at all). This
@@ -480,9 +473,9 @@ async function stepFiltered(page) {
     throw new Error(`FILTERED': prepare returned ${JSON.stringify(prepareOutcome)}, expected {status:"prompt"}`);
   }
   const { prompt } = prepareOutcome;
-  if (prompt.filter_scope !== FILTER_SCOPE_SENTENCE) {
+  if (prompt.filter_scope !== null) {
     throw new Error(
-      `FILTERED': filter_scope mismatch.\nExpected: ${FILTER_SCOPE_SENTENCE}\nActual:   ${JSON.stringify(prompt.filter_scope)}`
+      `FILTERED': filter_scope is ${JSON.stringify(prompt.filter_scope)}, expected null under the whole-file scope with the filter on`
     );
   }
 
@@ -525,7 +518,7 @@ async function stepFiltered(page) {
   }
 
   return (
-    `filter-scope sentence present verbatim; manifest.operation.filter={"kind":"whole-file"}; ` +
+    `filter_scope null under whole-file with the filter on; manifest.operation.filter={"kind":"whole-file"}; ` +
     `bundle rows=${manifest.data.rows} == full dataset (${FIXTURE_FILTER_FEATURES}) both by the ` +
     `manifest's own claim and the reader's independent decode -- the filter did not leak`
   );

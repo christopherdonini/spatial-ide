@@ -2053,6 +2053,31 @@ mod tests {
         );
     }
 
+    #[test]
+    fn the_current_view_scope_carries_the_filter_scope_sentence_only_with_a_filter_active() {
+        let d = workspace("filter-scope-current-view");
+        let ds = fixture(&d, 20);
+        let current_view = || PublishScope::ViewportBbox {
+            bbox: JsBbox {
+                xmin: 2_000_000.0,
+                ymin: 1_000_000.0,
+                xmax: 3_000_000.0,
+                ymax: 1_500_000.0,
+            },
+        };
+
+        assert_eq!(
+            filter_scope_of(&d, &ds, current_view(), false, "no-filter"),
+            None,
+            "no active filter must mean no sentence"
+        );
+        assert_eq!(
+            filter_scope_of(&d, &ds, current_view(), true, "with-filter").as_deref(),
+            Some(FILTER_SCOPE_SENTENCE),
+            "under Current view an active filter carries the sentence"
+        );
+    }
+
     // ---------------------------------------------------------------------------------------
     // ADR-017's Exposure review, 2026-08-17, condition 1 -- the plain-outcome sentence
     // ---------------------------------------------------------------------------------------
