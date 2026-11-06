@@ -310,3 +310,18 @@ Nothing touches `protocol/`. I cannot read branches; the path lists are the brie
 - **Rule (00)** was checked at main d3391d4b by `git diff --name-only origin/main...<branch>` over the branches in flight (`cut/port-2-macos-l1-and-app-dirs`, `cut/b2-piece-1c-save-and-reopen`, `cut/b1-shell-half-pr-c`): none touches the three Scope files; no PR is open. It is checked again at dispatch.
 
 ## §10 Amendments (opens empty; append-only)
+
+### Amendment 1 — 2026-11-06 — the closing record (class 1), with the class 2 and class 8 records, written after gate 1's reports, the words commit, the custodian's alone run and the head's CI were seen; references and hashes only
+
+- **The final head:** 7d8a7b059880574affb1590c79067b6cddd5b345, four commits on 2c72923e9046daa373d112e8e8d2f0f5a73e4fb1 (ad223091, f2955007, 2c5627a2, 7d8a7b05); the three Scope files and 175 changed lines (`git diff --numstat 2c72923e...7d8a7b05`: `engine/README.md` 2/2, `engine/src/predicate.rs` 26/5, `engine/tests/filter_type_admission.rs` 140/0).
+- **Class 8:** 175 changed lines against section 7's 150 (170 at 2c5627a2, gate 1's reviewed head); section 7's line is not edited.
+- **P-0:** its record is in `state/consults/2026-11-06-literal-only-float-integer-arithmetic-refused-worker-report.md` (sha256 6cf1f3e350249479f92dcb23f0ee9bd6a34cfd835af10db0937077ffcd7b7aa3), with no stop; no class 1 amendment was required (section 9, item 3).
+- **Class 2:** T2 row 2's operand type at P-0 is DECIMAL(20,19) literal, where section 3 left its width a hypothesis; T2 asserts the recorded type (section 4); the prediction is not edited.
+- **Gate 1 at 2c5627a2:**
+  - `state/consults/gates/2026-11-06-literal-only-float-integer-arithmetic-refused-gate1-architect.md` (sha256 e610a5bde9cea3f86ca14065ba4bc99d807181d0da076622e3328317535bfe0b), gate-log 682, PASS WITH NOTES, WORDS-ONLY.
+  - `state/consults/gates/2026-11-06-literal-only-float-integer-arithmetic-refused-gate1-reviewer.md` (sha256 0fbf346b74795c89d2e590c6efd1409bd18c6b49694c5d759e981ae36813cb40), gate-log 683, PASS WITH NOTES, WORDS-ONLY.
+- **The words:** the architect's C-1, D-1 and D-2 and the reviewer's D-1 (wrapped by the custodian, whitespace only), taken for the reasons gate-log 683's note gives; the reviewer's D-2 and D-3 (the spans of the architect's C-1 and D-1) and the architect's N-1 not applied. Applied at 7d8a7b05 by a worker, `state/consults/2026-11-06-literal-only-float-integer-arithmetic-refused-gate1-words-worker-report.md` (sha256 55b97ce209378b7a1a4c0654c6838d5676a39249cd434a5a547bd031f230fe16); the two files' sha256 at the head, 357723edb09d6f8e09aacc47aa1395ab92536899e9b11570224cfbe8740fd3b1 and 5bc4a811d243e09b00be9bea138cc8a308dd58a744861ac36f7e3d48f36a9668, equal to the brief's, checked by git.
+- **The reviewer's shared-run failure:** `cargo test -p spatial-engine --locked --test lod_tier_builder` at 7d8a7b05, run by the custodian in a shared hold with no other SpatialIDE cargo run in its window: rc 0, 17 passed, 0 failed, 2 ignored.
+- **Notes:** each gate's notes, recorded in its report, not applied.
+- **CI at 7d8a7b05:** Product CI — shell 42157514625 and 42157520672, Product CI — Rust workspace 42157514658 and 42157520633, Rust fmt 42157514672 and 42157520634, Ported notices 42157514678 and 42157520896, Governance CI — plan, queue, site 42157514700 and 42157520762, Exposure scan 42157520642, DCO sign-off 42157520664, each success.
+- **Merge:** the human's click, by merge commit.
