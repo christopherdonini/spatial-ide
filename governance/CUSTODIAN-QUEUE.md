@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `ca65c7111fdfccba24265308c4a6062af2a3de9eb5a67b0ff5d89ca1f9765142`) at `2026-11-06T00:06:56.546Z`.
+Generated from `PLAN.yaml` (sha256 `1e4777a35fe8a6811ed68a1d810b7692cc0f3a5f56d8b2ca58fbcf29c1fb28fd`) at `2026-11-06T01:09:50.830Z`.
 
 ## 1. Next
 
@@ -9,7 +9,6 @@ Generated from `PLAN.yaml` (sha256 `ca65c7111fdfccba24265308c4a6062af2a3de9eb5a6
 ## 2. Ready
 
 - **pre-admission-change-detail-braces** — Four kernel P6-placeholder detail strings are wrapped in literal braces, which reach the operator message; the watcher form declares each such string starts with the bracketed placeholder tag (lane `kernel-protocol`, order null, budget 30 min)
-- **publish-session-tier-identity** — Publish and a session-tier identity: KNOWN-LIMITATIONS item 3 says such a file is never saved or published; the cloud audit finds no refusal on the publish path (lane `kernel-protocol`, order null, budget 240 min)
 - **windows-case-fold-non-ascii** — The audit case policy on Windows folds non-ASCII letters as NTFS does, so a profile path differing only in non-ASCII case cannot escape the user-home redaction (wave 3's 1c-2 correction, S2, code-path-only) (lane `kernel-protocol`, order null, budget 60 min)
 - **governance-f-after-week-rust-ci-figure** — Governance piece F, the after-week Rust CI figure: the form-only Rust CI runs in the 168 h after the merge, recorded as a class 1 row in piece F's form (lane `governance`, order null, budget 30 min)
 - **publish-bundle-sigterm** — SIGTERM handling in publish-bundle on unix (wave-3 W3-A observation 3) (lane `platform`, order null, budget 90 min)
@@ -63,6 +62,7 @@ Generated from `PLAN.yaml` (sha256 `ca65c7111fdfccba24265308c4a6062af2a3de9eb5a6
 
 - **literal-only-float-integer-arithmetic-refused** — Literal-only arithmetic mixing a double literal and an integer literal (1e3 + 5 > 0) is refused as conversion_rounds, although FILTER-BIND section 2.5(a) and ADR-021's Note admit two numeric literals within the bounds in +, - and * (F-A of the type-walk-rule2-residual-reasons draft) — evidence: branch `cut/literal-only-float-integer-arithmetic-refused`
 - **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark — evidence: branch `cut/b2-piece-1c-save-and-reopen`
+- **publish-session-tier-identity** — Publish and a session-tier identity: KNOWN-LIMITATIONS item 3 says such a file is never saved or published; the cloud audit finds no refusal on the publish path — evidence: branch `cut/publish-session-tier-identity`
 - **b1-shell-half** — Shell migration, milestone 4 -- B1 shell half: attributes of the inspected feature, colour by category with its legend, and the table — evidence: branch `cut/b1-shell-half-pr-c`
 - **publish-filter-sentence-under-whole-dataset** — The publish dialog shows the filter sentence, which says the viewport extent is published, under Whole dataset too, where the whole file is published (the cloud audit, U12) — evidence: branch `cut/publish-filter-sentence-under-whole-dataset`
 - **walkthrough-rows-stale-against-main-sweep-area-b** — MANUAL-WALKTHROUGH.md rows stale against main, each of which would have the operator record a wrong result at a sitting or a rerun (drift sweep area B, findings 1 to 5 and 7 to 10) — evidence: branch `cut/walkthrough-rows-stale-against-main-sweep-area-b`
