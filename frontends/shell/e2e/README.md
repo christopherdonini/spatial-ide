@@ -215,7 +215,7 @@ env/test-shortenable knob, and the property is already unit-tested
 (`publish.rs::tests::a_pending_attempt_past_its_ttl_is_treated_as_unknown`) without sleeping out the whole TTL.
 `FILTERED'` applies `zone = 'residential'` through `queryWithFilter` (the same seam a real
 `FilterPanel` Apply click uses), asserts the prompt's `filter_scope` is `null` under the whole-file
-scope with the filter on (the sentence is carried only under the current view; no step of this suite
+scope with the filter on (the sentence is carried only under the current view with a filter active; no step of this suite
 prepares that case), then publishes whole-file and asserts the manifest's `operation.filter` says
 `{"kind":"whole-file"}` and the bundle's row count is the FULL fixture's 2 000 rows -- both by the
 manifest's own claim and by the reader's independent decode -- proving the active filter never

@@ -287,7 +287,8 @@ pub struct PublishPromptData {
     pub row_scope: String,
     /// NEW: the [`FILTER_SCOPE_SENTENCE`] when a filter is active and the scope is the current view
     /// (`ViewportBbox`); `None` otherwise, including under the whole file with a filter active, where
-    /// `row_scope` is what states every row. The filter is in no published row under either scope.
+    /// `row_scope` is what states every row. No filter is applied to the published rows under
+    /// either scope: `PublishScope::to_query` sets `filter: None` in both arms.
     pub filter_scope: Option<String>,
     /// **ADR-017's Exposure review, 2026-08-17, condition 1** — the human's own words, verbatim:
     /// *"the approval dialog must state the plain outcome — what will be written, where, and
