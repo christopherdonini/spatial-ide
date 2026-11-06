@@ -106,12 +106,13 @@ impl AdmittedPredicate {
     /// MAX_ADMISSION_CONNECTIONS`), so a burst of filter admissions cannot bypass the pool's
     /// declared connection ceiling by minting ad-hoc connections per call.
     ///
-    /// **Returns [`PredicateAdmitError`], not a bare [`FilterError`].** Eleven of its twelve admission
-    /// refusals (every stage this module implements) still arrive wrapped in
-    /// [`PredicateAdmitError::Filter`], unchanged; the thirteenth possibility, a residual admission-
-    /// lease exhaustion, is a fact about this pool's capacity, never about the predicate, and is
-    /// therefore a sibling variant rather than a thirteenth `FilterError`/`skp.filter_*` case (ADR-021
-    /// item 8 stays untouched — see [`PredicateAdmitError`]'s own doc).
+    /// **Returns [`PredicateAdmitError`], not a bare [`FilterError`].** `FilterError` has eleven
+    /// variants and `admit` can return each of them (every stage this module implements constructs
+    /// at least one); they arrive wrapped in [`PredicateAdmitError::Filter`], unchanged. The one
+    /// other possibility, a residual admission-lease exhaustion, is a fact about this pool's
+    /// capacity, never about the predicate, and is therefore the sibling variant
+    /// [`PredicateAdmitError::ConnectionsExhausted`], not a twelfth `FilterError` (see
+    /// [`PredicateAdmitError`]'s own doc).
     pub fn admit(text: impl Into<String>, dataset: &Dataset) -> Result<Self, PredicateAdmitError> {
         let text = text.into();
 
@@ -246,11 +247,14 @@ impl AdmittedPredicate {
 
 /// Every refusal [`AdmittedPredicate::admit`] can produce.
 ///
-/// **A deliberate 1:1 correspondence with `NEXT-CUT.md` design essential 5's twelve `skp.filter_*`
-/// wire codes, field for field — not a coincidence.** P4 maps each variant to its SKP code by name;
-/// a thirteenth variant here would be inventing wire taxonomy this crate does not own (correction
-/// round 2, W10; architect B7, reviewer B7). Every match on
-/// this enum in this module is exhaustive, with no wildcard arm, for the same reason.
+/// **Eleven variants, a deliberate 1:1 correspondence with SKP-V0 §7.5's `skp.filter_*` codes,
+/// field for field — not a coincidence.** §7.5 lists them as ten table rows plus the
+/// `skp.filter_type_not_admitted` row of its `skp/0.8` dated note, and records the struck
+/// `skp.filter_dialect_unsupported` in its note of 2026-11-05. `kernel/src/skp.rs`'s
+/// `filter_error_of` maps each variant to its code by name; a twelfth variant here would be
+/// inventing wire taxonomy this crate does not own (correction round 2, W10; architect B7,
+/// reviewer B7). Every match on this enum in this module is exhaustive, with no wildcard arm, for
+/// the same reason.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum FilterError {
     /// DuckDB's own parser rejected the wrapped text.
@@ -379,21 +383,22 @@ impl fmt::Display for FilterError {
 
 /// Every way [`AdmittedPredicate::admit`] can fail.
 ///
-/// **Why this is not a bare [`FilterError`].** `FilterError`'s twelve variants are a deliberate,
+/// **Why this is not a bare [`FilterError`].** `FilterError`'s eleven variants are a deliberate,
 /// closed, 1:1 correspondence with the wire's `skp.filter_*` taxonomy (this module's own doc,
 /// above) — every one of them is a claim about the *predicate's own text*. An admission-lease
 /// capacity failure (DECISIONS-PENDING entry 91 (a); ADR-033 (accepted 2026-09-14)) is not that kind of claim
 /// at all: it is a fact about this dataset's connection pool, true or false independent of what
 /// the caller wrote. Folding it into `FilterError::RejectedByBinder` — the only shape available
 /// before this type existed — was exactly the defect entry 87 diagnosed: a typed refusal naming
-/// the wrong cause. Giving it a twelfth `FilterError` arm was rejected in the same review that
-/// added this type, for the same reason `FilterError`'s own doc gives for staying at twelve: it
-/// would be inventing wire taxonomy this crate does not own (no new `skp.filter_*` code, ADR-021
-/// item 8) merely to carry information that was never about the wire's filter taxonomy to begin
-/// with. This type carries both without conflating them.
+/// the wrong cause. Giving it a `FilterError` arm was rejected in the same review that added this
+/// type, for the same reason `FilterError`'s own doc gives for keeping its variant set closed: it
+/// would be inventing wire taxonomy this crate does not own (no new `skp.filter_*` code) merely
+/// to carry information that was never about the wire's filter taxonomy to begin with. (History:
+/// `FilterError` had twelve variants until the dialect variant was removed.) This type carries
+/// both without conflating them.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum PredicateAdmitError {
-    /// One of [`FilterError`]'s twelve admission-content refusals, unchanged.
+    /// One of [`FilterError`]'s eleven admission-content refusals, unchanged.
     Filter(FilterError),
     /// [`crate::pool::LeaseClass::Admission`] had no free lease when this call needed one.
     ///

@@ -373,9 +373,10 @@ pub struct Bbox {
 
 /// The single dialect `skp/0.1` admits for [`Filter::predicate`] (design note item 2: `skp/1` is
 /// RESERVED and would be where a second dialect, if ever added, gets its own version string — not
-/// this one). Named `skp.filter_dialect_unsupported` in the refusal taxonomy (design note item 5),
-/// but that taxonomy is wired at the kernel admission boundary (a later phase); this crate only
-/// enforces the one value it documents, at construction and at deserialization.
+/// this one). It is the only value [`Filter::new`] accepts for `dialect`. Any other value is
+/// refused at construction and, through the same constructor, at deserialization, as a serde error
+/// before any host code runs. No `skp.filter_*` code is produced for a wrong dialect (SKP-V0
+/// §7.5's note of 2026-11-05).
 pub const FILTER_DIALECT_DUCKDB_EXPR_0: &str = "duckdb-expr/0";
 
 /// A row filter carried on `viewport_query` (design note item 1): a boolean expression in the
@@ -890,6 +891,15 @@ mod tests {
     /// `record_step`, with `Filter::new`'s own message. The requests are built through
     /// `Filter::new` and serialized; only `filter.dialect` is then replaced in the JSON value.
     /// Rows: V0/R0 decode `Ok`; V1/R1 decode `Err` whose message holds `Filter::new`'s.
+    ///
+    /// RECORDED MUTATION: `Filter`'s Deserialize maps `Filter::new`'s Err to the fixed message
+    /// "unsupported filter dialect", applied on top of 6444682c51783c02102fad3f33bf007483e592df;
+    /// `cargo test -p spatial-skp --locked --no-fail-fast` failed this test alone, at V1's message
+    /// assertion.
+    ///
+    /// RECORDED MUTATION: `Filter::new`'s Err message emptied (`String::new()`), applied on top of
+    /// 6444682c51783c02102fad3f33bf007483e592df; the same command failed this test alone, at check
+    /// (iii)'s first assertion.
     #[test]
     fn a_wrong_dialect_fails_at_decode_in_viewport_query_and_record_step_with_filter_news_message()
     {
