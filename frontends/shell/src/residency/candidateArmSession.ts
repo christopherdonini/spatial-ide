@@ -39,10 +39,13 @@ import type { RequestOutcome } from "../streaming/viewportStreamManager";
  * selects BETWEEN this and the baseline `ViewportStreamManager` construction (a single `if`, entered
  * only when `getResidencyArm() === "candidate"`, that returns before a single line of the baseline
  * construction ever runs) -- the piece's own bit-identity requirement is structural: nothing here is
- * reachable unless that check passes, and this whole module's own top-level import in `App.tsx` is
- * dead code once `import.meta.env.DEV` is `false` (Vite's own literal-`false` replacement), same as
- * `residencyArm.ts`'s own DEV-only symbols (`check:dist-clean`'s own extended identifier list covers
- * this module's own entry point, `startCandidateArmSession`).
+ * reachable unless that check passes. The check is `shouldConstructCandidateSession()`
+ * (`residencyArm.ts`), which compares `getResidencyArm()` with `"candidate"`; the arm defaults to
+ * `"candidate"` (`DEFAULT_RESIDENCY_ARM`) and `App.tsx` makes that check with no
+ * `isInstrumentedBuild()` operand, so this module's own top-level import in `App.tsx` is live code
+ * and `startCandidateArmSession` runs by default. Selecting `"baseline"` is a `setResidencyArm` call
+ * (`residencyArm.ts`), which the e2e harness makes through its hook. `startCandidateArmSession` is not
+ * on `check:dist-clean`'s forbidden list.
  *
  * **The tile grid's own anchor problem, and how this module resolves it.** `tileGrid.ts`'s own top
  * doc comment: there is no dataset extent to anchor a fixed grid to before the first byte of data
@@ -143,11 +146,12 @@ export interface CandidateArmSessionDeps {
   applyScanEvent?: (event: { kind: "issued"; streamHandle: string } | { kind: "reset" }) => void;
   /**
    * Viewport-residency cut P7: the tile grid level this session's own `TileViewportStreamManager`
-   * constructs against -- `App.tsx`'s own dev-gated read of `residencyTileSizeLevel.ts`'s
-   * `getResidencyTileSizeLevel()`, passed through as a plain value rather than this module importing
-   * that DEV-only selector itself (the same "the caller reads DEV-gated state, this module only
-   * consumes a value" separation `App.tsx`'s own arm check/`startCandidateArmSession` boundary already
-   * establishes for `getResidencyArm()` -- this module has never imported `residencyArm.ts` either).
+   * constructs against -- `App.tsx`'s own read of `residencyTileSizeLevel.ts`'s
+   * `getResidencyTileSizeLevel()` (an ungated call, made where the session is constructed), passed
+   * through as a plain value rather than this module importing that selector itself (the same "the
+   * caller reads the selector, this module only consumes a value" separation `App.tsx`'s own arm
+   * check/`startCandidateArmSession` boundary already establishes for
+   * `getResidencyArm()` -- this module has never imported `residencyArm.ts` either).
    * `undefined` or `null` (the selector's own "unset" value, `residencyTileSizeLevel.ts`'s own top doc
    * comment) both reach `TileViewportStreamManager`'s constructor as `level: undefined`, which resolves
    * to `DEFAULT_TILE_GRID_LEVEL` there -- EXACTLY today's implicit default, unchanged: before this
