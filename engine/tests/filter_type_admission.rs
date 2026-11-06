@@ -629,6 +629,131 @@ fn every_conversion_rounds_refusal_states_a_conversion_refused_by_type() {
     assert_fixture_unchanged(fx);
 }
 
+/// T1 (`governance/forms/engine/LITERAL-ONLY-FLOAT-INTEGER-ARITHMETIC-REFUSED-PREREGISTRATION.md`,
+/// section 4): in `+`, `-` and `*`, a DOUBLE literal beside an integer or decimal literal within
+/// the bounds is admitted, in either operand order, and its stream delivers the ids DuckDB's own
+/// result over FX-1 predicts. Each of the eight rows asserts four things: `admit` returns `Ok`;
+/// `drain_ids` succeeds and equals the predicted set; `i64 = (<a>)` is refused in its real
+/// `TypeNotAdmitted` shape with operand types BIGINT and DOUBLE expression, which pins the walk's
+/// type for the arithmetic node `<a>` as DOUBLE; and the binder's `typeof(<a>)` is DOUBLE.
+#[test]
+fn literal_only_arithmetic_with_a_double_literal_is_admitted_typed_double_and_streams() {
+    let fx = fixture();
+    let ds = dataset();
+    let conn = configured_connection().expect("oracle connection");
+    let all: std::collections::BTreeSet<u64> = (0..FX1_FEATURES as u64).collect();
+    let none = std::collections::BTreeSet::new();
+
+    let rows: [(&str, &str, &std::collections::BTreeSet<u64>); 8] = [
+        ("1e3 + 5", "1e3 + 5 > 0", &all),
+        ("1e3 - 5", "1e3 - 5 < 0", &none),
+        ("5 * 1e3", "5 * 1e3 > 0", &all),
+        ("1e3 + 3000000000", "1e3 + 3000000000 > 0", &all),
+        (
+            "1e3 - 99999999999999999999",
+            "1e3 - 99999999999999999999 < 0",
+            &all,
+        ),
+        ("0.5 + 1e3", "0.5 + 1e3 > 0", &all),
+        (
+            "1e3 * 0.000000000000000001",
+            "1e3 * 0.000000000000000001 < 0",
+            &none,
+        ),
+        ("1e3 + 1e3", "1e3 + 1e3 > 0", &all),
+    ];
+
+    for (node, predicate, expected) in rows {
+        let admitted = AdmittedPredicate::admit(predicate, &ds)
+            .unwrap_or_else(|e| panic!("{predicate:?}: expected admitted, got {e}"));
+        let ids = drain_ids(&ds, &admitted)
+            .unwrap_or_else(|e| panic!("{predicate:?}: expected the stream to succeed, got {e}"));
+        assert_eq!(&ids, expected, "{predicate:?}: delivered ids");
+
+        let typed = format!("i64 = ({node})");
+        match AdmittedPredicate::admit(typed.as_str(), &ds) {
+            Err(PredicateAdmitError::Filter(FilterError::TypeNotAdmitted {
+                construct,
+                operand_types,
+                reason,
+            })) => {
+                assert_eq!(construct, "=", "{typed:?}: construct");
+                assert_eq!(
+                    operand_types,
+                    vec!["BIGINT", "DOUBLE expression"],
+                    "{typed:?}: operand_types"
+                );
+                assert_eq!(reason, TypeRefusalReason::ConversionRounds, "{typed:?}");
+            }
+            other => panic!("{typed:?}: expected TypeNotAdmitted, got {other:?}"),
+        }
+
+        let binder_type: String = conn
+            .query_row(&format!("SELECT typeof({node})"), [], |r| r.get(0))
+            .unwrap_or_else(|e| panic!("typeof({node}): {e}"));
+        assert_eq!(binder_type, "DOUBLE", "typeof({node})");
+    }
+
+    assert_fixture_unchanged(fx);
+}
+
+/// T2 (same form, section 4): the pairs next to T1's keep their refusal, each through the real
+/// `admit` and in the real `TypeNotAdmitted` shape with its construct, reason and operand types.
+/// A literal beyond the bounds keeps `LiteralOutOfBounds`; a DOUBLE literal beside a BIGINT column
+/// keeps `ConversionRounds`; so does one beside a rule-2 result that counts as a decimal literal;
+/// a decimal literal beside an integer literal keeps `ConversionCanFail`.
+#[test]
+fn literal_only_arithmetic_outside_the_double_literal_pairs_keeps_its_refusal() {
+    let fx = fixture();
+    let ds = dataset();
+    use TypeRefusalReason::{ConversionCanFail, ConversionRounds, LiteralOutOfBounds};
+
+    let rows: [(&str, [&str; 2], TypeRefusalReason); 5] = [
+        (
+            "1e3 + 100000000000000000000 > 0",
+            ["DOUBLE literal", "HUGEINT literal"],
+            LiteralOutOfBounds,
+        ),
+        (
+            "1e3 + 0.0000000000000000001 > 0",
+            ["DOUBLE literal", "DECIMAL(20,19) literal"],
+            LiteralOutOfBounds,
+        ),
+        (
+            "1e3 + i64 > 0",
+            ["DOUBLE literal", "BIGINT"],
+            ConversionRounds,
+        ),
+        (
+            "1e3 + (NULL + 0.5) > 0",
+            ["DOUBLE literal", "DECIMAL(2,1) expression"],
+            ConversionRounds,
+        ),
+        (
+            "0.5 + 5 > 0",
+            ["DECIMAL(2,1) literal", "INTEGER literal"],
+            ConversionCanFail,
+        ),
+    ];
+
+    for (predicate, operand_types, expected_reason) in rows {
+        match AdmittedPredicate::admit(predicate, &ds) {
+            Err(PredicateAdmitError::Filter(FilterError::TypeNotAdmitted {
+                construct,
+                operand_types: ot,
+                reason,
+            })) => {
+                assert_eq!(construct, "+", "{predicate:?}: construct");
+                assert_eq!(ot, operand_types.to_vec(), "{predicate:?}: operand_types");
+                assert_eq!(reason, expected_reason, "{predicate:?}: reason");
+            }
+            other => panic!("{predicate:?}: expected TypeNotAdmitted, got {other:?}"),
+        }
+    }
+
+    assert_fixture_unchanged(fx);
+}
+
 /// The named `skp.filter_*` code a refusal maps to (SKP-V0 section 7.5) -- the same independent,
 /// exhaustive, no-wildcard mapping `admission_property_campaign.rs`'s own `code_of` keeps, kept
 /// separately here so B-T3 does not depend on that file.
