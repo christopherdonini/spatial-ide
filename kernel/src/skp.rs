@@ -2287,11 +2287,6 @@ pub fn error_of(e: &EngineError) -> SkpError {
 pub fn filter_error_of(e: &FilterError) -> SkpError {
     let message = e.to_string();
     match e {
-        FilterError::DialectUnsupported { declared } => SkpError::protocol_with_fields(
-            "filter_dialect_unsupported",
-            message,
-            [("declared", declared.clone())],
-        ),
         FilterError::Unparsable { detail } => SkpError::protocol_with_fields(
             "filter_unparsable",
             message,
@@ -2800,18 +2795,6 @@ mod tests {
     // discipline `error_of` uses above), and unlike `every_engine_error_variant_maps_to_a_distinct_
     // engine_dot_code`'s three-of-twenty sample, every one of `FilterError`'s twelve variants gets
     // its own test below — code AND every field key asserted, never a bare `is_err`.
-
-    #[test]
-    fn filter_dialect_unsupported_maps_to_its_code_and_field() {
-        let e = filter_error_of(&FilterError::DialectUnsupported {
-            declared: "sql/legacy".into(),
-        });
-        assert_eq!(e.code, "skp.filter_dialect_unsupported");
-        assert_eq!(
-            e.fields.get("declared").map(String::as_str),
-            Some("sql/legacy")
-        );
-    }
 
     #[test]
     fn filter_unparsable_maps_to_its_code_and_field() {

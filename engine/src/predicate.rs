@@ -253,15 +253,6 @@ impl AdmittedPredicate {
 /// this enum in this module is exhaustive, with no wildcard arm, for the same reason.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum FilterError {
-    /// The predicate declared a dialect other than the one this engine admits.
-    ///
-    /// **Not constructible by [`AdmittedPredicate::admit`] today.** `protocol/skp`'s `Filter::new`
-    /// already refuses any dialect but `duckdb-expr/0` at the wire boundary, before predicate text
-    /// ever reaches this crate (`CUT-STATE.md` P1). This variant exists only so `FilterError`'s
-    /// twelve arms match the SKP taxonomy exactly, so a later exhaustive match never needs a
-    /// wildcard arm to compile.
-    DialectUnsupported { declared: String },
-
     /// DuckDB's own parser rejected the wrapped text.
     ///
     /// Two distinct sources fold into this one variant, deliberately: the JSON payload's own
@@ -335,9 +326,6 @@ pub enum FilterError {
 impl fmt::Display for FilterError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::DialectUnsupported { declared } => {
-                write!(f, "refused: dialect `{declared}` is not admitted; only `duckdb-expr/0` is")
-            }
             Self::Unparsable { detail } => write!(f, "refused: the predicate did not parse ({detail})"),
             Self::NotASingleExpression { statements } => write!(
                 f,
