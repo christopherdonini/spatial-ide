@@ -237,6 +237,7 @@ fn error_kind(e: &BoundaryError) -> &'static str {
             PublishError::RowFilterNotRecordable => "RowFilterNotRecordable",
             PublishError::GeographicCrsNotPublishable { .. } => "GeographicCrsNotPublishable",
             PublishError::GeometryEncodingNotPublishable { .. } => "GeometryEncodingNotPublishable",
+            PublishError::SessionIdentityNotPublishable => "SessionIdentityNotPublishable",
             PublishError::RedactionFinding { .. } => "RedactionFinding",
             PublishError::CeilingExceeded { .. } => "CeilingExceeded",
             PublishError::ReaderCeilingExceeded { .. } => "ReaderCeilingExceeded",
@@ -299,6 +300,7 @@ fn publish_outcome(e: &PublishError) -> Outcome {
         // Likewise the gate working: the dataset is a valid open the format cannot yet carry
         // (ADR-034 Decision 10), and the engine did not fail.
         | PublishError::GeometryEncodingNotPublishable { .. }
+        | PublishError::SessionIdentityNotPublishable
         // The redaction scan (ADR-017 §13) working, not a broken machine.
         | PublishError::RedactionFinding { .. }
         | PublishError::CeilingExceeded { .. }

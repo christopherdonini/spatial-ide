@@ -29,6 +29,7 @@
 use std::sync::OnceLock;
 
 use serde_json::Value;
+use spatial_engine::ViewportQuery;
 
 use super::error::PublishError;
 
@@ -151,6 +152,29 @@ pub(crate) fn check_reader_ceilings(
             limit: ceilings.max_attribute_columns,
             predicted: projected_attribute_columns,
             alternative: VIEWPORT_BBOX_ALTERNATIVE,
+        });
+    }
+    Ok(())
+}
+
+pub(crate) fn predicted_features(verified_rows: Option<u64>, query: &ViewportQuery) -> Option<u64> {
+    if query.bbox.is_some() {
+        return None;
+    }
+    verified_rows.map(|rows| query.limit.map_or(rows, |limit| rows.min(limit)))
+}
+
+pub(crate) fn check_streamed_features(
+    rows_written: u64,
+    batch_rows: u64,
+    ceilings: &ReaderCeilings,
+) -> Result<(), PublishError> {
+    let saw = rows_written.saturating_add(batch_rows);
+    if saw > ceilings.max_features {
+        return Err(PublishError::CeilingExceeded {
+            ceiling: "MAX_FEATURES",
+            limit: ceilings.max_features,
+            saw,
         });
     }
     Ok(())

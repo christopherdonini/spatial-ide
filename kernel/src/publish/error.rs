@@ -183,6 +183,8 @@ pub enum PublishError {
         carried: String,
     },
 
+    SessionIdentityNotPublishable,
+
     /// The redaction scan (ADR-017 §13; `bundle::redaction`) found, in one staged file, a match that
     /// is not operator-declared. Raised after every staged file is written and before the rename, so
     /// no bundle exists under the destination name. The staging directory is then removed as on every
@@ -280,6 +282,7 @@ impl PublishError {
             Self::GeometryEncodingNotPublishable { .. } => {
                 "publish.geometry_encoding_not_publishable"
             }
+            Self::SessionIdentityNotPublishable => "publish.session_identity_not_publishable",
             Self::RedactionFinding { .. } => "publish.redaction_finding",
             Self::CeilingExceeded { .. } => "publish.ceiling_exceeded",
             Self::ReaderCeilingExceeded { .. } => "publish.reader_ceiling_exceeded",
@@ -417,6 +420,13 @@ impl std::fmt::Display for PublishError {
                 f,
                 "[P6 placeholder] refused: a version-1 bundle carries the {carried} encoding only, \
                  and this dataset's encoding is {encoding}"
+            ),
+            // A P6 placeholder: the wording is the human's.
+            Self::SessionIdentityNotPublishable => write!(
+                f,
+                "[P6 placeholder] refused: this dataset's features are identified by their \
+                 position in the file, for this open only, and a published bundle carries its \
+                 feature ids beyond this open"
             ),
             // A P6 placeholder: the wording is the human's.
             Self::RedactionFinding { file, class, byte_offset, count } => write!(

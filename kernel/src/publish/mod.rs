@@ -69,7 +69,7 @@
 use std::io::Write as _;
 use std::path::{Path, PathBuf};
 
-use spatial_engine::{CancelToken, Dataset, ViewportQuery};
+use spatial_engine::{CancelToken, Dataset, IdUniqueness, ViewportQuery};
 use spatial_renderer::canonical;
 use spatial_renderer::CompiledStyle;
 
@@ -502,6 +502,9 @@ fn preflight_pinless_parts(req: &PublishRequest<'_>) -> Result<PreflightPinless,
             carried: format.geometry_encoding,
         });
     }
+    if ds.identity().source().is_session_ordinal() {
+        return Err(PublishError::SessionIdentityNotPublishable);
+    }
     let logical_uri = dataset_logical_uri(req.dataset_name)?;
 
     // ---- license, before any work is spent on a bundle that may not be publishable -------------
@@ -551,7 +554,7 @@ fn preflight_pinless_parts(req: &PublishRequest<'_>) -> Result<PreflightPinless,
     // function's checks touch the pin at all, so there was never a real reason for the ceiling
     // check to wait on it; only textual position did.
     ceilings::check_reader_ceilings(
-        ds.identity().verified_rows(),
+        ceilings::predicted_features(ds.identity().verified_rows(), &req.query),
         published_names.len() as u64,
         &ceilings::reader_ceilings(),
     )?;
@@ -754,6 +757,7 @@ fn run_inner(
     // "writing partitions" for seconds while nothing was being written.
     let mut reported_query_running = false;
     let mut reported_writing = false;
+    let reader_ceilings = ceilings::reader_ceilings();
     loop {
         watch.check()?;
         let info = loop {
@@ -808,6 +812,7 @@ fn run_inner(
                 saw: index as u64 + 1,
             });
         }
+        ceilings::check_streamed_features(rows_total, info.rows as u64, &reader_ceilings)?;
         let rel = bundle::partition_path(index);
         let hash = staging.write_partition(&rel, &payload, index, &watch, progress)?;
         partitions.push(Asset {
@@ -1441,11 +1446,7 @@ fn build_manifest(
         id_uniqueness: identity.uniqueness().as_str().to_string(),
         id_verified_rows: identity.verified_rows(),
         id_js_exact: identity.js_exact(),
-        identity_caveat: "uniqueness was verified over this file at open. Stability across reopen \
-                          is NOT established: nothing here pins a source revision, so two files \
-                          could present identical identities. The source content hash above is the \
-                          only thing tying this identity space to a byte sequence"
-            .to_string(),
+        identity_caveat: identity_caveat(identity.uniqueness()),
         schema: columns(fields),
         bounds,
         bounds_basis: "computed-over-published-rows",
@@ -1461,6 +1462,24 @@ fn build_manifest(
                               heuristic is not a content hash"
             .to_string(),
     }
+}
+
+fn identity_caveat(uniqueness: IdUniqueness) -> String {
+    let lead = match uniqueness {
+        IdUniqueness::VerifiedAtOpenFullFile => "uniqueness was verified over this file at open.",
+        IdUniqueness::DeclaredNotVerified => {
+            "uniqueness was declared by the caller and was not verified over this file."
+        }
+        IdUniqueness::ByConstructionWithinGeneration => {
+            "uniqueness was not verified over this file: the ids are row positions within one \
+             open of it."
+        }
+    };
+    format!(
+        "{lead} Stability across reopen is NOT established: nothing here pins a source revision, \
+         so two files could present identical identities. The source content hash above is the \
+         only thing tying this identity space to a byte sequence"
+    )
 }
 
 /// The staging directory, and the single rename that finalizes it.
