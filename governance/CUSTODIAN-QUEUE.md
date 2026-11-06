@@ -1,17 +1,20 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `3997170137c7b47ca1ea9b3e8b9394ab774d7c27746d96e3f9452e09dadf8483`) at `2026-11-06T16:07:22.632Z`.
+Generated from `PLAN.yaml` (sha256 `f905376da4932b9a545e42a71425722c0422ce661d5b46bd64704d3953a2935d`) at `2026-11-06T16:43:38.992Z`.
 
 ## 1. Next
 
-- **lod-tier-tests-own-tier-folder** — Each engine test run takes its own tier folder, the machine-wide tier folder kept for the product only: two suites sharing one machine cleared each other's tiers, failing lod_tier_builder in #284's gate 1 (the human's ruling of 2026-11-06, item 2) (lane `engine`)
+- **clippy-deny-warnings-workspace** — The workspace clippy diagnostics fixed, so cargo clippy over every target with -D warnings exits 0 (the cloud Linux run lists 48 distinct) (lane `engine`)
 
 ## 2. Ready
 
+- **clippy-deny-warnings-workspace** — The workspace clippy diagnostics fixed, so cargo clippy over every target with -D warnings exits 0 (the cloud Linux run lists 48 distinct) (lane `engine`, order null, budget 120 min)
 - **lod-tier-tests-own-tier-folder** — Each engine test run takes its own tier folder, the machine-wide tier folder kept for the product only: two suites sharing one machine cleared each other's tiers, failing lod_tier_builder in #284's gate 1 (the human's ruling of 2026-11-06, item 2) (lane `engine`, order null, budget 60 min)
 - **pre-admission-change-detail-braces** — Four kernel P6-placeholder detail strings are wrapped in literal braces, which reach the operator message; the watcher form declares each such string starts with the bracketed placeholder tag (lane `kernel-protocol`, order null, budget 30 min)
 - **windows-case-fold-non-ascii** — The audit case policy on Windows folds non-ASCII letters as NTFS does, so a profile path differing only in non-ASCII case cannot escape the user-home redaction (wave 3's 1c-2 correction, S2, code-path-only) (lane `kernel-protocol`, order null, budget 60 min)
 - **e2e-readme-security-posture-measure-build** — frontends/shell/e2e/README.md: the security-posture paragraph is untrue for the measure build (the debug port in Rust, the e2e hooks kept in), with the missing E-FLOOR entry and stale lib.rs cites (drift sweep area B, findings 6, 11 and 12) (lane `shell`, order null, budget 30 min)
+- **shell-comments-drift-sweep-area-a** — Shell product comments stale against main: the candidate arm called dev-only, the e2e surface calling baseline the default, accessors labelled instrument-only, the old status-stack frame and smaller statements (drift sweep area A, less the lines in b1-shell-half PR B files) (lane `shell`, order null, budget 45 min)
+- **kl-pair-human-answers-c1-c3-and-draft-marks** — KNOWN-LIMITATIONS.md: C-1 to C-3 in the reviewer's words and the KL form's sixteen DRAFT openings made the human's wording (the KL form's Amendment 2) (lane `release`, order null, budget 30 min)
 - **governance-f-after-week-rust-ci-figure** — Governance piece F, the after-week Rust CI figure: the form-only Rust CI runs in the 168 h after the merge, recorded as a class 1 row in piece F's form (lane `governance`, order null, budget 30 min)
 - **publish-bundle-sigterm** — SIGTERM handling in publish-bundle on unix (wave-3 W3-A observation 3) (lane `platform`, order null, budget 90 min)
 - **publish-unix-quota-perm-errors** — EDQUOT and EPERM in publish error classification on unix (wave-3 W3-A observation 1) (lane `platform`, order null, budget 90 min)
@@ -40,8 +43,12 @@ Generated from `PLAN.yaml` (sha256 `3997170137c7b47ca1ea9b3e8b9394ab774d7c27746d
 - **module-docs-drift-sweep-area-d** — Kernel and engine module docs: the never-refuses and unreachable claims the Table, record_step and publish have overtaken, the withdrawn cancellation bound, and smaller statements (drift sweep area D, findings 1 to 6) — blocked by: b2-piece-1c-save-and-reopen, adr-indices-hand-written-current
 - **skp-line-cites-outside-close-races** — Stale line cites into kernel/src/skp.rs outside kernel-close-races-followups files -- shell streaming, App.tsx, pool_poll.rs, src-tauri lib.rs, the P4 corpus test and the persisted-artifacts test — blocked by: adr-035-close-races-note
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
+- **publish-filter-sentence-e2e-shown-case** — The case where the filter sentence is shown, proved end to end: EV2 expects filter_scope null and EV4 the sentence, in frontends/shell/e2e/export-view.mjs (U12's OPEN-3 (A), the architect's N-1) — blocked by: shell-comments-drift-sweep-area-a
+- **publish-filter-sentence-mark-comment-and-adr-024-note** — The mark's source comment in the human's words in publish.rs and types.ts, and ADR-024's dated note in the human's words (U12's N-3 and N-2) — blocked by: publish-session-tier-identity
 - **session-end-lines-name-coverage-lost-as-source-change** — The hover readout and the Feature tab word every session end as a source change, coverage-lost included, although the engine says coverage-lost is never a source change (milestone 4 PR C gate 1, the architect's C1 note) — blocked by: b1-shell-half
 - **session-log-token-redaction-rests-on-page-code** — The session token never reaching the session log rests on page code: binding_log_session_event appends page-supplied text verbatim, the page holds the token, and the data plane's Session::redact has only a test caller — blocked by: b2-piece-1c-save-and-reopen
+- **stale-harness-comments-find-prime-and-late-result** — Stale harness and test comments: the FIND step header and its status comment in regression.mjs, and a cite into candidateArmSession.ts in App.lateResult.test.tsx — blocked by: publish-filter-sentence-e2e-shown-case
+- **walkthrough-row-m10-declared-not-verified-write-time-guard** — MANUAL-WALKTHROUGH.md M10: its sentence that only the bundled viewer's load-time check catches a DeclaredNotVerified dataset over ceiling, untrue once publish-session-tier-identity's write-time guard merges (U1's gate 1 reviewer, N-1) — blocked by: publish-session-tier-identity
 - **briefb-b2-save-reopen** — B2 — Save project, Snapshot data, session history, lineage and preferences, in five stages, each with its own form — blocked by: decision-adr-029-scan-progress-route
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer — blocked by: signpath-application-draft
 - **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-2-0
@@ -136,12 +143,9 @@ Generated from `PLAN.yaml` (sha256 `3997170137c7b47ca1ea9b3e8b9394ab774d7c27746d
 - **questions-mirror-red-line-dotted-lead** — The round-mirror hook's header misses a red-line item whose marker follows a lead holding a full stop (phase `prototype`) — never queued until placed
 - **moved-path-mentions-outside-accepted-adrs** — Mentions of the governance paths piece F moved, outside the accepted ADRs: docs/README.md, docs/02, docs/04, docs/14, README.md and the workflow comments (the cloud ADR audit, Task B) (phase `prototype`) — never queued until placed
 - **redaction-chance-match-in-partitions** — The redaction scan and chance matches in binary content: a drive path in a printable run of exactly the minimum length, in 256 MiB of parquet (the cloud Linux measurement) (phase `prototype`) — never queued until placed
-- **clippy-deny-warnings-workspace** — The workspace clippy diagnostics fixed, so cargo clippy over every target with -D warnings exits 0 (the cloud Linux run lists 48 distinct) (phase `prototype`) — never queued until placed
 - **autonomy-stale-status-sentences** — AUTONOMY.md sentences no longer true: the mutation rule called automated, the self-checks called not yet on main, reports to files (the cloud E1 draft, F1, F2 and F6) (phase `prototype`) — never queued until placed
 - **module-readme-moved-form-paths** — The preregistration form paths in kernel/README.md and engine/README.md named where piece F moved them (governance/forms/) (phase `prototype`) — never queued until placed
-- **stale-harness-comments-find-prime-and-late-result** — Stale harness and test comments: the FIND step header and its status comment in regression.mjs, and a cite into candidateArmSession.ts in App.lateResult.test.tsx (phase `prototype`) — never queued until placed
 - **skp-spec-and-protocol-comments-drift-sweep-c** — SKP-V0.md live sections and the protocol and shell doc comments brought current to main (drift sweep area C, findings 2 to 11, and area A, finding 3), after 1c (phase `prototype`) — never queued until placed
-- **shell-comments-drift-sweep-area-a** — Shell product comments stale against main: the candidate arm called dev-only, the e2e surface calling baseline the default, accessors labelled instrument-only, the old status-stack frame and smaller statements (drift sweep area A, less the lines in b1-shell-half PR B files) (phase `prototype`) — never queued until placed
 - **comment-line-cites-kin-docs-audit-c** — Product and e2e comments whose line cites point at moved text: origin.rs on AI_DEVELOPMENT.md, engine/src/error.rs and the admission-remediation e2e script on crs.rs (the docs audits, Task C kin) (phase `prototype`) — never queued until placed
 
 ### Unscheduled

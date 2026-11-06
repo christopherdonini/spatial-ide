@@ -388,3 +388,13 @@ Every quantity is an assertion: a typed outcome, a code prefix, a row count, a b
 - **The worker** starts from the reproducer's untracked test in `C:/dev/wt/u1r` (Evidence, not Authority) and checks the disk floor before each FX-BIG run.
 
 ## §10 Amendments (opens empty; append-only)
+
+**Amendment 1 (2026-11-06, class 5: the human's ruling of 2026-11-06 (15:59Z), `state/directives/2026-11-06-8e-words-replaced-u1-h1-h2-class-8-m10-kl-c1-c3-draft-marks-u12-mark-n1-n3-slot-2-order-clippy-placed-288-clicked.md`, line 14; written after gate 1's words were built).**
+
+- **Gate 1's words** (the architect's W-1 to W-4 and the reviewer's D-3, WORDS-ONLY, gate-log 689 and 691) were built at 7e203d66fd65a75e183cd5ddfbb6f399a118ef65 by a words worker, with no re-gate (`state/consults/2026-11-06-publish-session-tier-identity-gate1-words-worker-report.md`).
+- **H-1 and H-2: yes, as proposed** (`state/consults/gates/2026-11-06-publish-session-tier-identity-gate1-architect.md`, "For the human"). A words worker applies them in `KNOWN-LIMITATIONS.md`, byte-copied by script from that report, with no re-gate:
+  - H-1's proposed words become item 5's bold lead sentence, in place of the head's two lines;
+  - H-2's proposed comment text joins item 5's source comment as its last sentence: a full stop closes the comment's last clause, then a space and H-2's words, before ` -->`.
+- **The size: class 8, accepted** at 985 changed lines against the declared 700. Gate 1's words bring it to 1010 (963 added, 47 deleted over the nine Scope paths; `git diff --numstat 0f9edda8...7e203d66`), and H-1 and H-2 add to that. The size at the final head goes to the human at the click. The §7 line is not edited.
+- **M10 (the reviewer's N-1).** The human placed MANUAL-WALKTHROUGH M10 in `walkthrough-rows-stale-against-main-sweep-area-b`, the docs lane's first piece. That node is done: PR #283 merged at 2026-11-06T04:45:08Z, before the ruling. The custodian's reading: M10 takes a node of its own in that place, `walkthrough-row-m10-declared-not-verified-write-time-guard`. It is first in the docs lane once this PR merges, because the fact it corrects is this PR's guard. To the human in the closing message.
+- **Per the reviewer's D-1,** no record or PR body cites place 2 as done at 8f1c768e.
