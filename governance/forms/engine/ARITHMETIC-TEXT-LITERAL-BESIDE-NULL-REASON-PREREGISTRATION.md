@@ -277,3 +277,21 @@ Because §36 already lands P6 placeholders, (a) needs no ruling to proceed. The 
 5. Outside this piece, for the human: shape (c) of the architect's shapes (a BOOLEAN literal beside NULL; the evening ruling of 2026-11-05, item 5) never reaches `conversion_rounds`. It is refused as the construct `CAST`, a word the predicate as written does not contain. Whether that refusal's sentence is true of it, and whether a BOOLEAN literal elsewhere is refused the same way, are not this piece's questions and were not probed; this piece's sentence does not reach it.
 
 Nothing else in the form changes: Scope, the budget, M-1 (still predicted to fail T1 at row K1) and M-2 stand.
+
+**Amendment 2 (2026-11-06, the closing record, written on main before PR #286 leaves draft, as D-1 of both gate-1 reports asks).**
+
+1. **Size.** `git diff --numstat 0c84b816...29f13158`:
+   - `engine/src/predicate.rs`: 39 insertions, 10 deletions;
+   - `engine/tests/filter_type_admission.rs`: 98 insertions, 0 deletions.
+
+   That is 147 changed lines against the declared 140: class 6, recorded here. The Scope line is not edited.
+2. **P-0's record** is the worker's stop report, `state/consults/2026-11-06-arithmetic-text-literal-beside-null-reason-worker-report.md`. The build that followed is in its continuation report, `state/consults/2026-11-06-arithmetic-text-literal-beside-null-reason-worker-report-2.md`.
+3. **M-1 and M-2.**
+   - M-1 was applied by making the new arm's guard never true, not by removing the selector. The effect is the same: every `ConversionRounds` refusal carries W-1. As predicted, it failed T1 at row K1.
+   - The worker observed M-1 and M-2 at ce5afff5, a commit carrying both the code and T1.
+   - The reviewer observed both again on an export of 29f13158, each failing as section 5 predicts.
+4. **Gate 1:** both PASS WITH NOTES, gate-log rows 686 and 687. The reports are `state/consults/gates/2026-11-06-arithmetic-text-literal-beside-null-reason-gate1-architect.md` and `state/consults/gates/2026-11-06-arithmetic-text-literal-beside-null-reason-gate1-reviewer.md`. Their notes are recorded there and not applied.
+5. **For the human:**
+   - The new sentence is a `[P6 placeholder]`, worded at the sitting (the human's message of 2026-11-06, item 1).
+   - Shape (c) stays as Amendment 1, item 5, records it.
+   - Both gates name a possible false case for W-1: a unary minus over a decimal literal, beside an integer. Both read it as unreachable, and neither probed it. It is W-1's domain, not this piece's.
