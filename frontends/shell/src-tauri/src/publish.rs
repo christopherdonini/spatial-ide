@@ -68,8 +68,11 @@ use tokio::sync::watch;
 /// 20-minute ceiling; the approval dialog states the expiry (`PublishDialog.tsx`).
 pub const PENDING_ATTEMPT_TTL: Duration = Duration::from_secs(600);
 
-/// The filter-scope sentence, from `NEXT-CUT.md`'s conditional block item 3 — **verbatim**, never
-/// silently dropped when the shell's active SQL filter would have applied to this publish.
+/// The filter-scope sentence, a P6 placeholder (the human's ruling of 2026-11-05, evening, item 2):
+/// the visible `[P6 placeholder] ` prefix is the mark, and every byte after it is unchanged. It
+/// reaches the approval payload only under [`PublishScope::filter_scope_sentence`]'s condition: a
+/// filter active and the current view. `src/publish/types.ts` holds the panel's copy; the pin test
+/// in `PublishPanel.test.ts` keeps the two equal.
 pub const FILTER_SCOPE_SENTENCE: &str =
     "[P6 placeholder] this bundle format cannot record a row predicate (ADR-017 \
      §8, bundle_version 1); publishing publishes the viewport extent, not your filter";
@@ -122,6 +125,10 @@ impl PublishScope {
         }
     }
 
+    /// The payload's `filter_scope`: the sentence for the current view with a filter active, and
+    /// `None` for every other case. Decided here, beside [`Self::row_scope_sentence`], so one payload's
+    /// two scope sentences come from one `PublishScope`. It changes what is shown, not what is
+    /// published: [`Self::to_query`] sends no filter under either scope.
     fn filter_scope_sentence(&self, filter_active: bool) -> Option<String> {
         match self {
             Self::ViewportBbox { .. } if filter_active => Some(FILTER_SCOPE_SENTENCE.to_string()),
@@ -278,8 +285,9 @@ pub struct PublishPromptData {
     pub grant_remaining_s: u64,
     /// NEW relative to `ApprovalPrompt::render`'s field set: whole-file or viewport-bbox, in words.
     pub row_scope: String,
-    /// NEW: present only when the shell's active filter would have applied to this publish — the
-    /// [`FILTER_SCOPE_SENTENCE`], never silently dropped.
+    /// NEW: the [`FILTER_SCOPE_SENTENCE`] when a filter is active and the scope is the current view
+    /// (`ViewportBbox`); `None` otherwise, including under the whole file with a filter active, where
+    /// `row_scope` is what states every row. The filter is in no published row under either scope.
     pub filter_scope: Option<String>,
     /// **ADR-017's Exposure review, 2026-08-17, condition 1** — the human's own words, verbatim:
     /// *"the approval dialog must state the plain outcome — what will be written, where, and
@@ -2036,6 +2044,8 @@ mod tests {
         prompt.filter_scope
     }
 
+    /// RECORDED MUTATION: `filter_scope_sentence`'s condition back to the filter flag alone (`_ if filter_active`).
+    /// Observed at ec847095ccbebcfc7ebdec78b23a572e00b219de: this test FAILED by name at its filter-on `assert_eq!` (left: Some("[P6 placeholder] this bundle format ..."), right: None). Reverted.
     #[test]
     fn the_whole_dataset_scope_carries_no_filter_scope_sentence_with_or_without_a_filter() {
         let d = workspace("filter-scope-whole-dataset");
@@ -2053,6 +2063,8 @@ mod tests {
         );
     }
 
+    /// RECORDED MUTATION: `filter_scope_sentence`'s scope arm matching `WholeFile` instead of `ViewportBbox`.
+    /// Observed at ec847095ccbebcfc7ebdec78b23a572e00b219de: this test FAILED by name at its filter-on `assert_eq!` (left: None, right: Some("[P6 placeholder] this bundle format ...")). Reverted.
     #[test]
     fn the_current_view_scope_carries_the_filter_scope_sentence_only_with_a_filter_active() {
         let d = workspace("filter-scope-current-view");

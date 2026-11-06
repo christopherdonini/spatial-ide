@@ -450,8 +450,9 @@ async function stepRefused(page) {
 
 /**
  * FILTERED': apply a filter through `queryWithFilter` (the same seam the real FilterPanel's Apply
- * button calls) -> prepare (whole-file scope) -> assert the prompt's `filter_scope` is the
- * verbatim conditional-block sentence -> execute -> assert the manifest's `operation.filter` says
+ * button calls) -> prepare (whole-file scope) -> assert the prompt's `filter_scope` is `null`
+ * (the sentence is carried only under the current view with a filter active; this suite never
+ * prepares that case) -> execute -> assert the manifest's `operation.filter` says
  * `whole-file` AND the bundle's row count equals the FULL dataset (the filter did not leak into
  * the published stream -- P0's guarantee, exercised end to end through the real boundary).
  */

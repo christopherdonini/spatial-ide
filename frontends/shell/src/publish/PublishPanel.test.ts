@@ -430,12 +430,14 @@ describe("the rendered publish controls (MF3)", () => {
     expect(render({ kind: "idle" })).not.toContain("publish-scope-disabled-reason");
   });
 
+  // RECORDED MUTATION: the panel's condition back to `filterActive` alone. Observed at ec847095ccbebcfc7ebdec78b23a572e00b219de: this test FAILED by name at its first `expect` (`expected ... not to contain 'publish-filter-scope-sentence'`). Reverted.
   it("Whole dataset with a filter on shows no filter sentence (U12)", () => {
     const html = render({ kind: "idle" }, { scope: "whole", filterActive: true });
     expect(html).not.toContain("publish-filter-scope-sentence");
     expect(html).not.toContain(FILTER_SCOPE_SENTENCE);
   });
 
+  // RECORDED MUTATION: the panel's condition without `filterActive`. Observed at ec847095ccbebcfc7ebdec78b23a572e00b219de: this test FAILED by name at its filter-off case (`expected ... not to contain 'publish-filter-scope-sentence'`). Reverted.
   it("Current view shows the filter sentence with a filter on and not with it off", () => {
     const on = render({ kind: "idle" }, { scope: "current", filterActive: true });
     expect(on).toContain("publish-filter-scope-sentence");
