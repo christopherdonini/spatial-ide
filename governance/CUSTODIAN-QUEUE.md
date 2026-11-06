@@ -1,15 +1,19 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `3d0d0abdb8b47c53817ac39e2d4c4dda1747a070224715589e2a8beb8cca16ff`) at `2026-11-06T04:08:20.495Z`.
+Generated from `PLAN.yaml` (sha256 `0fa80b400bbcd6a88643ce89135732269b7cb9f9794c961c9a2f1f6aeaf69afa`) at `2026-11-06T05:04:28.573Z`.
 
 ## 1. Next
 
-- **pre-admission-change-detail-braces** — Four kernel P6-placeholder detail strings are wrapped in literal braces, which reach the operator message; the watcher form declares each such string starts with the bracketed placeholder tag (lane `kernel-protocol`)
+- **arithmetic-text-literal-beside-null-reason** — Type walk: in arithmetic, a text literal beside NULL, refused by type with the reason conversion_rounds, gets a true sentence under that reason value, no reason value added (F-B of entry 8b's form) (lane `engine`)
 
 ## 2. Ready
 
+- **arithmetic-text-literal-beside-null-reason** — Type walk: in arithmetic, a text literal beside NULL, refused by type with the reason conversion_rounds, gets a true sentence under that reason value, no reason value added (F-B of entry 8b's form) (lane `engine`, order null, budget 60 min)
+- **lod-tier-tests-own-tier-folder** — Each engine test run takes its own tier folder, the machine-wide tier folder kept for the product only: two suites sharing one machine cleared each other's tiers, failing lod_tier_builder in #284's gate 1 (the human's ruling of 2026-11-06, item 2) (lane `engine`, order null, budget 60 min)
 - **pre-admission-change-detail-braces** — Four kernel P6-placeholder detail strings are wrapped in literal braces, which reach the operator message; the watcher form declares each such string starts with the bracketed placeholder tag (lane `kernel-protocol`, order null, budget 30 min)
+- **skp-filter-dialect-unsupported-ruling** — SKP-V0.md lists skp.filter_dialect_unsupported as a refusal a client receives; no code produces it, a wrong dialect failing at deserialization: the human rules produce or strike (drift sweep area C, finding 1) (lane `kernel-protocol`, order null, budget 30 min)
 - **windows-case-fold-non-ascii** — The audit case policy on Windows folds non-ASCII letters as NTFS does, so a profile path differing only in non-ASCII case cannot escape the user-home redaction (wave 3's 1c-2 correction, S2, code-path-only) (lane `kernel-protocol`, order null, budget 60 min)
+- **adr-023-stale-cites-before-acceptance** — ADR-023 (Proposed, built in B1): its line cites and six of its sentences are stale against main, misleading a verifier and the human at its acceptance at B1 close (the docs audits, Task C rows 16 to 53) (lane `governance`, order null, budget 45 min)
 - **governance-f-after-week-rust-ci-figure** — Governance piece F, the after-week Rust CI figure: the form-only Rust CI runs in the 168 h after the merge, recorded as a class 1 row in piece F's form (lane `governance`, order null, budget 30 min)
 - **publish-bundle-sigterm** — SIGTERM handling in publish-bundle on unix (wave-3 W3-A observation 3) (lane `platform`, order null, budget 90 min)
 - **publish-unix-quota-perm-errors** — EDQUOT and EPERM in publish error classification on unix (wave-3 W3-A observation 1) (lane `platform`, order null, budget 90 min)
@@ -28,7 +32,6 @@ Generated from `PLAN.yaml` (sha256 `3d0d0abdb8b47c53817ac39e2d4c4dda1747a0702247
 
 ## 4. Blocked on dependencies
 
-- **arithmetic-text-literal-beside-null-reason** — Type walk: in arithmetic, a text literal beside NULL, refused by type with the reason conversion_rounds, gets a true sentence under that reason value, no reason value added (F-B of entry 8b's form) — blocked by: literal-only-float-integer-arithmetic-refused
 - **narrow-integer-id-unstreamable** — An 8, 16 or 32-bit integer id column is admitted at open but no stream carries it (the cloud audit, U2) — blocked by: single-file-bracket-name-refused-as-partitioned
 - **single-file-bracket-name-refused-as-partitioned** — A single file whose name holds a bracket or a brace is refused as partitioned across more than one file, and the refusal's advice cannot be followed in the app (the cloud audit, U17) — blocked by: skp-filter-dialect-unsupported-ruling
 - **adr-029-stale-line-cites** — ADR-029 (Proposed, unbuilt): its line cites into the code and the admission form land on other text, so an implementer of the scan-progress route would follow them to the wrong places (the docs audits, Task C rows 56 to 73 and Task B) — blocked by: module-docs-drift-sweep-area-d
@@ -37,7 +40,6 @@ Generated from `PLAN.yaml` (sha256 `3d0d0abdb8b47c53817ac39e2d4c4dda1747a0702247
 - **fixture-determinism-off-windows-record** — kernel/FIXTURES.md on determinism (byte-identical on one machine, different across platforms, with the Linux sizes and hashes), and the G5 entry point gains the hash check the S entry point has — blocked by: posix-backslash-is-inside-and-redaction-label
 - **lod-tier-identity-binds-file-name** — The LOD tier builder takes the identity name DuckDB bound and looks it up among the file's own footer names, so a renamed identity column reaches a different column there — blocked by: port-2-macos-l1-and-app-dirs
 - **module-docs-drift-sweep-area-d** — Kernel and engine module docs: the never-refuses and unreachable claims the Table, record_step and publish have overtaken, the withdrawn cancellation bound, and smaller statements (drift sweep area D, findings 1 to 6) — blocked by: b2-piece-1c-save-and-reopen, adr-indices-hand-written-current
-- **skp-filter-dialect-unsupported-ruling** — SKP-V0.md lists skp.filter_dialect_unsupported as a refusal a client receives; no code produces it, a wrong dialect failing at deserialization: the human rules produce or strike (drift sweep area C, finding 1) — blocked by: literal-only-float-integer-arithmetic-refused
 - **skp-line-cites-outside-close-races** — Stale line cites into kernel/src/skp.rs outside kernel-close-races-followups files -- shell streaming, App.tsx, pool_poll.rs, src-tauri lib.rs, the P4 corpus test and the persisted-artifacts test — blocked by: adr-035-close-races-note
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
 - **e2e-readme-security-posture-measure-build** — frontends/shell/e2e/README.md: the security-posture paragraph is untrue for the measure build (the debug port in Rust, the e2e hooks kept in), with the missing E-FLOOR entry and stale lib.rs cites (drift sweep area B, findings 6, 11 and 12) — blocked by: kl-undeclared-behaviours-u1-to-u17, kl-items-graded-untrue-or-stale
@@ -49,7 +51,6 @@ Generated from `PLAN.yaml` (sha256 `3d0d0abdb8b47c53817ac39e2d4c4dda1747a0702247
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer — blocked by: signpath-application-draft
 - **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-2-0
 - **signpath-application-draft** — Entry 77 — the SignPath OSS application and disclosure text drafted for the human sight, once a release is CI-built — blocked by: release-v0-2-0
-- **adr-023-stale-cites-before-acceptance** — ADR-023 (Proposed, built in B1): its line cites and six of its sentences are stale against main, misleading a verifier and the human at its acceptance at B1 close (the docs audits, Task C rows 16 to 53) — blocked by: walkthrough-rows-stale-against-main-sweep-area-b
 - **adr-indices-hand-written-current** — The hand-written ADR indices brought current: docs/README.md conventions paragraph and the docs/02 ADR list, where ADR-013 is called proposed though accepted and architect-blockable (the docs audits, A-S3, A-S5 and A-S8 index halves and the platform-only items) — blocked by: e2e-readme-security-posture-measure-build
 - **adr-notes-stale-statements-and-indices** — ADR notes, Status lines and indices stating what has since changed (the cloud ADR audit, A-S1 to A-S8) — blocked by: b2-piece-1c-save-and-reopen
 - **governance-e1-rules-as-records** — Piece E1: rules as records, a rule catalogue under rules/, a selector scripts/plan/rules.mjs, a generated block in each agent definition and a governance-ci check — blocked by: governance-e-readings
@@ -60,12 +61,10 @@ Generated from `PLAN.yaml` (sha256 `3d0d0abdb8b47c53817ac39e2d4c4dda1747a0702247
 
 ## 5. In progress
 
-- **literal-only-float-integer-arithmetic-refused** — Literal-only arithmetic mixing a double literal and an integer literal (1e3 + 5 > 0) is refused as conversion_rounds, although FILTER-BIND section 2.5(a) and ADR-021's Note admit two numeric literals within the bounds in +, - and * (F-A of the type-walk-rule2-residual-reasons draft) — evidence: branch `cut/literal-only-float-integer-arithmetic-refused`
 - **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **publish-session-tier-identity** — Publish and a session-tier identity: KNOWN-LIMITATIONS item 3 says such a file is never saved or published; the cloud audit finds no refusal on the publish path — evidence: branch `cut/publish-session-tier-identity`
 - **b1-shell-half** — Shell migration, milestone 4 -- B1 shell half: attributes of the inspected feature, colour by category with its legend, and the table — evidence: branch `cut/b1-shell-half-pr-c`
 - **publish-filter-sentence-under-whole-dataset** — The publish dialog shows the filter sentence, which says the viewport extent is published, under Whole dataset too, where the whole file is published (the cloud audit, U12) — evidence: branch `cut/publish-filter-sentence-under-whole-dataset`
-- **walkthrough-rows-stale-against-main-sweep-area-b** — MANUAL-WALKTHROUGH.md rows stale against main, each of which would have the operator record a wrong result at a sitting or a rerun (drift sweep area B, findings 1 to 5 and 7 to 10) — evidence: branch `cut/walkthrough-rows-stale-against-main-sweep-area-b`
 - **port-2-macos-l1-and-app-dirs** — PORT-2 -- macOS L1 for the Cargo workspace: macos-latest in the same matrix, one application-directory boundary replacing the two resolvers, and a case-policy test on a case-insensitive volume — evidence: branch `cut/port-2-macos-l1-and-app-dirs`
 
 ## 6. Proposed / unscheduled
