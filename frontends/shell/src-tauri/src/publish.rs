@@ -2934,6 +2934,105 @@ mod tests {
         );
     }
 
+    /// **S-U1 (`governance/forms/kernel/PUBLISH-SESSION-TIER-IDENTITY-PREREGISTRATION.md` section
+    /// 4, row R3).** FX-S, the form's 200-feature file with a foreign-key column and no `id`
+    /// column, opened with no CRS assertion and no declared identity, so the open admits the
+    /// session tier (`kernel/tests/publish_identity_tier.rs`, K-U1, opens the same file the same
+    /// way through `Catalog::open_cancellable`). Through this crate's `prepare_with_progress`, in
+    /// both scopes, a dataset on the session tier is a pin-free refusal that carries its typed code
+    /// (`publish.session_identity_not_publishable`, the `refusal_detail` form the shell parses for
+    /// every other publish refusal), never takes a pin as a side effect, stashes no pending attempt
+    /// and leaves no destination. The refusal is the kernel's own preflight, reached through the
+    /// shell's real prepare path with an unpinned dataset and no grant or approval of the test's
+    /// making, so the shell proves the code arrives at the shell boundary and not only inside the
+    /// kernel.
+    ///
+    /// RECORDED MUTATION: in `kernel/src/publish/mod.rs`, move the session-tier check out of
+    /// `preflight_pinless_parts` and into the pinned `preflight`, after the content pin is
+    /// required. `prepare_with_progress` then takes the pin before refusing, and this test fails by
+    /// name at the no-pin assertion.
+    #[test]
+    fn a_session_tier_dataset_reaches_prepare_refused_with_its_typed_code_before_any_pin_is_taken_in_both_scopes(
+    ) {
+        use spatial_engine::fixture::{E_LO, N_LO};
+
+        let scopes = [
+            ("whole-file", PublishScope::WholeFile),
+            (
+                "current-view",
+                PublishScope::ViewportBbox {
+                    bbox: JsBbox {
+                        xmin: E_LO,
+                        ymin: N_LO,
+                        xmax: E_LO + 160.0,
+                        ymax: N_LO + 160.0,
+                    },
+                },
+            ),
+        ];
+        for (label, scope) in scopes {
+            let d = workspace(&format!("session-tier-refusal-before-pin-{label}"));
+            let path = d.join("fx-s.parquet");
+            write_geoparquet(
+                &path,
+                &FixtureSpec {
+                    features: 200,
+                    attributes: AttributeMode::CategoricalZone,
+                    crs_mode: CrsMode::DeclaredLv95,
+                    identity: IdentityMode::ForeignKeyColumn,
+                    ..Default::default()
+                },
+            )
+            .unwrap();
+            let ds = Arc::new(Dataset::open(&path).unwrap()); // deliberately NOT pinned
+            assert!(
+                ds.identity().source().is_session_ordinal(),
+                "{label}: FX-S must be on the session tier for this test to prove anything"
+            );
+            assert!(ds.content_pin().is_none());
+
+            let grants = Mutex::new(GrantSet::new());
+            let store = PendingAttempts::new();
+            let outcome = prepare_with_progress(
+                &grants,
+                &store,
+                ds.clone(),
+                "parcels".into(),
+                STYLE.into(),
+                scope,
+                false,
+                viewer(),
+                viewer_license(),
+                d.join("out"),
+                "2026-11-06T10:00:00Z".into(),
+                &CancelToken::new(),
+                None,
+            );
+            match outcome {
+                PrepareOutcome::Refused { message } => {
+                    assert!(
+                        message.starts_with("publish.session_identity_not_publishable: "),
+                        "{label}: {message}"
+                    );
+                }
+                other => panic!("{label}: expected the session-tier refusal, got {other:?}"),
+            }
+            assert!(
+                ds.content_pin().is_none(),
+                "{label}: a pin-free refusal must never take a pin as a side effect"
+            );
+            assert_eq!(
+                store.len(),
+                0,
+                "{label}: no pending attempt may be stashed for a refused prepare"
+            );
+            assert!(
+                !d.join("out").exists(),
+                "{label}: a refused prepare leaves no destination"
+            );
+        }
+    }
+
     #[test]
     fn an_execute_time_publish_refusal_carries_its_typed_code_and_a_permission_refusal_does_not() {
         let _guard = env_lock();
