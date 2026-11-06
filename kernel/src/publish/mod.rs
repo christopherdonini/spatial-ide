@@ -598,9 +598,9 @@ fn preflight_pinless_parts(req: &PublishRequest<'_>) -> Result<PreflightPinless,
 /// puts admission before expense; this makes it true of the destination check too.
 ///
 /// **RELEASE-0.1 item 10**: everything above this point that does not need the pin now runs via
-/// [`preflight_pinless`] (see that function's own doc comment for the reordering and its one named
-/// residual); this function's own remaining, pin-specific step is reading it. A caller that wants
-/// to refuse an over-ceiling source before paying for a whole-file hash should call
+/// [`preflight_pinless`] (see that function's own doc comment for the reordering and the two cases
+/// it cannot help); this function's own remaining, pin-specific step is reading it. A caller
+/// that wants to refuse an over-ceiling source before paying for a whole-file hash should call
 /// [`preflight_pinless`] first — this function still requires the pin to already exist, unchanged.
 pub fn preflight(req: &PublishRequest<'_>) -> Result<PublishPreflight, PublishError> {
     let PreflightPinless {
@@ -1491,6 +1491,11 @@ fn build_manifest(
 /// `VerifiedAtOpenFullFile`; for the other two it says the uniqueness was not verified over this
 /// file. The rest is the same for every tier. The function is total: the session tier is refused at
 /// preflight, so no publish reaches it, but it still returns a sentence true of that tier.
+/// The bundled viewer shows this caveat (`renderer/bundle-viewer/src/main.ts`, its
+/// `identity-caveat` text). Neither first sentence written for the unverified tiers is reached in
+/// ordinary use: the wire carries no skip field and `IdentityDeclaration::new` sets
+/// `skip_uniqueness_check` false, so no product route opens a dataset `DeclaredNotVerified`, and
+/// the session tier is refused at preflight.
 fn identity_caveat(uniqueness: IdUniqueness) -> String {
     let lead = match uniqueness {
         IdUniqueness::VerifiedAtOpenFullFile => "uniqueness was verified over this file at open.",

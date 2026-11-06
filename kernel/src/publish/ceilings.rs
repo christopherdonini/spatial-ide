@@ -121,7 +121,8 @@ pub(crate) const VIEWPORT_BBOX_ALTERNATIVE: &str =
 /// `skip_uniqueness_check` route), which verifies no row count. A `None` is not a pass: for both
 /// of those the same ceiling is enforced at write time by [`check_streamed_features`], which
 /// refuses a stream that would carry more than `MAX_FEATURES` rows with
-/// `PublishError::CeilingExceeded`, so those routes are refused later and not at preflight.
+/// `PublishError::CeilingExceeded`, so on those routes a publish above the ceiling is refused
+/// later, at write time, and not at preflight.
 ///
 /// **The `MAX_ATTRIBUTE_COLUMNS` branch below is correctly implemented but unreachable end to end
 /// in the real `preflight()` flow** (RELEASE-0.1 Amendment 5, item 2, and this module's own

@@ -219,11 +219,14 @@ pub enum PublishError {
     /// **ADR-025's Decision** (accepted 2026-09-07, the human's ruling): when the publish preflight
     /// can predict the artifact will exceed the bundled viewer's declared ceilings, the publish
     /// surface refuses, typed, at preflight, naming the current-viewport-bbox publish as the
-    /// alternative. Distinct from [`Self::CeilingExceeded`], which is *this operation's own*
-    /// declared limit (`MAX_PUBLISH_PARTITIONS`), reached only at write time because it is not
-    /// predictable before the stream runs — this variant is the *reader's* limit
-    /// (`renderer/bundle-viewer/ceilings.json`, read via [`crate::publish::ceilings::reader_ceilings`]),
-    /// checked in `preflight` wherever it is predictable there. **Reopens when a second reader
+    /// alternative. Distinct from [`Self::CeilingExceeded`], which is raised when a limit is reached,
+    /// never from a prediction: among others, this operation's own `MAX_PUBLISH_PARTITIONS` at write
+    /// time, and the reader's `MAX_FEATURES` at write time when preflight predicted no row count for the
+    /// scope (a bbox scope, or a `DeclaredNotVerified` identity) and the rows written would cross it
+    /// (`ceilings::check_streamed_features`). This variant is the reader's limit as predicted at
+    /// preflight (`renderer/bundle-viewer/ceilings.json`, read via
+    /// [`crate::publish::ceilings::reader_ceilings`]), checked in `preflight` wherever it is
+    /// predictable there. **Reopens when a second reader
     /// exists** (ADR-025's own reopen condition) — until then the writer is deliberately welded to
     /// this one shipped reader's ceilings.
     ReaderCeilingExceeded {

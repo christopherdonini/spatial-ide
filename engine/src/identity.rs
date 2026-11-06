@@ -98,9 +98,9 @@ impl IdSource {
     }
 
     /// Whether this identity is the session tier. Asked by the sites that must behave differently
-    /// for it (the identity scan that does not run, the statement `describe` carries, and the
-    /// publish preflight, which refuses a dataset of this tier), so that none of them has to
-    /// re-derive the class from a string.
+    /// for it — the statement `describe` carries (`kernel/src/skp.rs`) and the publish preflight,
+    /// which refuses a dataset of this tier — so that neither has to re-derive the class from a
+    /// string.
     pub fn is_session_ordinal(&self) -> bool {
         matches!(self, Self::SessionOrdinal)
     }
