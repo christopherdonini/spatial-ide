@@ -398,9 +398,23 @@ pub enum ExecuteOutcome {
 /// intermediate result through as a second source of truth that could drift from it. No claim is
 /// made here about what that re-check costs: nothing in this tree has measured it.
 ///
-/// **The one case this ordering cannot help: `DeclaredNotVerified` identity** — see
-/// [`publish::preflight_pinless`]'s own doc comment; the same residual applies here since this
-/// function calls exactly that.
+/// **The two cases this ordering cannot help, because the scope's feature count is not
+/// predictable without reading the source.** This function calls [`publish::preflight_pinless`]
+/// first, so what that function passes un-refused at the `MAX_FEATURES` check passes here too (see
+/// its own doc comment for the same two cases).
+/// - **`DeclaredNotVerified` identity.** It carries no verified row count, so nothing is predicted
+///   for it, in either scope.
+/// - **A `ViewportBbox` scope.** `PublishScope::to_query` gives it a bbox query, and a bbox query is
+///   given no prediction whatever the file's row count, so a file above the ceiling is not refused
+///   here for it.
+///
+/// In both, the pin phase runs, and [`prepare_with_query`]'s own [`publish::preflight`] makes the
+/// same empty prediction, so neither refuses on the row count and the attempt can reach the
+/// approval prompt. The ceiling is then enforced when the attempt is executed, while the rows are
+/// written: [`execute_with_progress`] returns [`ExecuteOutcome::Refused`] with a message prefixed
+/// `publish.ceiling_exceeded: `, and not `publish.reader_ceiling_exceeded: `. A session-tier
+/// identity is not a case of its own: it also has no verified row count, but the pin-free
+/// preflight refuses it first, in either scope.
 #[allow(clippy::too_many_arguments)]
 pub fn prepare_with_progress(
     grants: &Mutex<GrantSet>,
@@ -2951,6 +2965,11 @@ mod tests {
     /// `preflight_pinless_parts` and into the pinned `preflight`, after the content pin is
     /// required. `prepare_with_progress` then takes the pin before refusing, and this test fails by
     /// name at the no-pin assertion.
+    ///
+    /// OBSERVED at e5a96db74b634ec51777c9e359213720bd6ca88c, with the mutation applied alone:
+    /// `a_session_tier_dataset_reaches_prepare_refused_with_its_typed_code_before_any_pin_is_taken_in_both_scopes`
+    /// FAILED by name at the no-pin assertion, with the message
+    /// `whole-file: a pin-free refusal must never take a pin as a side effect`, then reverted.
     #[test]
     fn a_session_tier_dataset_reaches_prepare_refused_with_its_typed_code_before_any_pin_is_taken_in_both_scopes(
     ) {
