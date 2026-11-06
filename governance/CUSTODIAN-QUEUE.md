@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `15b8fc908fb3c531c56a86a42423bdd01d49df52682aa2c362aefa1cea824758`) at `2026-11-05T23:49:56.980Z`.
+Generated from `PLAN.yaml` (sha256 `ca65c7111fdfccba24265308c4a6062af2a3de9eb5a67b0ff5d89ca1f9765142`) at `2026-11-06T00:06:56.546Z`.
 
 ## 1. Next
 
@@ -9,7 +9,7 @@ Generated from `PLAN.yaml` (sha256 `15b8fc908fb3c531c56a86a42423bdd01d49df52682a
 ## 2. Ready
 
 - **pre-admission-change-detail-braces** — Four kernel P6-placeholder detail strings are wrapped in literal braces, which reach the operator message; the watcher form declares each such string starts with the bracketed placeholder tag (lane `kernel-protocol`, order null, budget 30 min)
-- **publish-session-tier-identity** — Publish and a session-tier identity: KNOWN-LIMITATIONS item 3 says such a file is never saved or published; the cloud audit finds no refusal on the publish path (lane `kernel-protocol`, order null, budget 60 min)
+- **publish-session-tier-identity** — Publish and a session-tier identity: KNOWN-LIMITATIONS item 3 says such a file is never saved or published; the cloud audit finds no refusal on the publish path (lane `kernel-protocol`, order null, budget 240 min)
 - **windows-case-fold-non-ascii** — The audit case policy on Windows folds non-ASCII letters as NTFS does, so a profile path differing only in non-ASCII case cannot escape the user-home redaction (wave 3's 1c-2 correction, S2, code-path-only) (lane `kernel-protocol`, order null, budget 60 min)
 - **governance-f-after-week-rust-ci-figure** — Governance piece F, the after-week Rust CI figure: the form-only Rust CI runs in the 168 h after the merge, recorded as a class 1 row in piece F's form (lane `governance`, order null, budget 30 min)
 - **publish-bundle-sigterm** — SIGTERM handling in publish-bundle on unix (wave-3 W3-A observation 3) (lane `platform`, order null, budget 90 min)
