@@ -383,7 +383,7 @@ impl fmt::Display for FilterError {
                 f,
                 "refused: `{construct}` over {}: {} (docs/01 principle 8)",
                 operand_types.join(" and "),
-                reason.sentence(),
+                reason.sentence(operand_types),
             ),
         }
     }
@@ -1431,15 +1431,17 @@ impl TypeRefusalReason {
     /// `FilterError`'s `Display`, never as a field: `reason`'s wire value is `wire_value`'s (O-4).
     /// The first four are copied byte for byte from
     /// `state/directives/B-1-RULINGS-AND-TYPED-TEXTS-2026-09-30.md` T-C by the script that wrote
-    /// this file. The fifth, `ConversionRounds`'s, replaces T-C's under
-    /// `governance/forms/engine/TYPE-WALK-RULE2-RESIDUAL-REASONS-PREREGISTRATION.md` and is a P6
-    /// placeholder: T-C's named a value read from the file, which is false where the integer or
-    /// decimal side is a constant NULL (`f32 > NULL + 100000`). This one states the type pair
-    /// alone. It is still false of a text literal beside a NULL literal in `+` or `-`
-    /// (`'1' + NULL > 0`), which reaches this reason because the text reason excludes a NULL
-    /// partner; at DuckDB v1.5.5 the binder refuses the `*` form (`'1' * NULL > 0`) before the walk
-    /// runs.
-    fn sentence(self) -> &'static str {
+    /// this file. The fifth, `ConversionRounds`'s, has two sentences, both P6 placeholders.
+    /// `governance/forms/engine/TYPE-WALK-RULE2-RESIDUAL-REASONS-PREREGISTRATION.md` replaced
+    /// T-C's, which named a value read from the file, with the float sentence: a conversion
+    /// between a float type and an integer or decimal type, by type. When `operand_types` has an
+    /// entry whose leading type name is VARCHAR or BOOLEAN (`names_text_or_boolean`), the refusal
+    /// is not that conversion, and
+    /// `governance/forms/engine/ARITHMETIC-TEXT-LITERAL-BESIDE-NULL-REASON-PREREGISTRATION.md`
+    /// gives it the second sentence, which names the text or BOOLEAN operand and says the refusal
+    /// is by type. Neither sentence is known to be false of a refusal that gets it: the float
+    /// sentence goes to every `ConversionRounds` refusal with no VARCHAR or BOOLEAN entry.
+    fn sentence(self, operand_types: &[String]) -> &'static str {
         match self {
             Self::TextWithNonText => "a comparison of text with a non-text value",
             Self::BooleanConversion => "a conversion to or from BOOLEAN",
@@ -1447,12 +1449,39 @@ impl TypeRefusalReason {
                 "a numeric literal beyond the declared bounds (20 integer digits; decimal scale 18)"
             }
             Self::ConversionCanFail => "a conversion that can fail during the scan",
+            Self::ConversionRounds if names_text_or_boolean(operand_types) => {
+                "[P6 placeholder] an operand of text or BOOLEAN type beside NULL or beside an \
+                 operand of its own type, refused by type"
+            }
             Self::ConversionRounds => {
                 "[P6 placeholder] a conversion between a float type and an integer or decimal type, \
                  refused by type: values of the integer or decimal type can round in the float type"
             }
         }
     }
+}
+
+/// Whether a `ConversionRounds` refusal's `operand_types` has an entry whose leading type name
+/// (the token before the first space) is exactly `VARCHAR` or `BOOLEAN`; it selects between
+/// `TypeRefusalReason::sentence`'s two `ConversionRounds` sentences. It reads each entry, as
+/// `Typed::render` wrote it, because no field of `FilterError::TypeNotAdmitted` carries the
+/// choice and the kernel builds that variant by struct literal, so a field would change a
+/// contract across modules. The names are a closed set and neither begins another, so the token
+/// is compared for equality, never by prefix.
+///
+/// It routes a text or BOOLEAN operand beside NULL or beside its own type, in `+`, `-`, `*` and
+/// `/`, in either order. At the DuckDB this build locks (`duckdb` and `libduckdb-sys` 1.10505.0
+/// in Cargo.lock), of the pairs probed only a text literal beside a NULL literal reaches the
+/// walk: `'1' + NULL`, `'1' - NULL`, `NULL + '1'` and `NULL / '1'`. The binder refuses before the
+/// walk `'1' * NULL`, `'1' / NULL`, `zone / NULL`, text beside text (`'1'` and `zone`, all four
+/// operators), BOOLEAN column beside BOOLEAN column (all four) and `flag / NULL`. A BOOLEAN
+/// literal is refused before the walk as `ConstructNotAdmitted` with construct `CAST` (`TRUE`
+/// beside `FALSE` or beside NULL, all four operators), which is a different refusal. So no
+/// probed predicate brings a BOOLEAN operand to the walk here; the BOOLEAN arm is by reading.
+fn names_text_or_boolean(operand_types: &[String]) -> bool {
+    operand_types
+        .iter()
+        .any(|t| matches!(t.split(' ').next(), Some("VARCHAR" | "BOOLEAN")))
 }
 
 /// Whether an operand is a column reference, a literal, or an arithmetic result -- `operand_types`

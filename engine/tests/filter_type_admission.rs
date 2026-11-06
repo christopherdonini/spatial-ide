@@ -629,6 +629,104 @@ fn every_conversion_rounds_refusal_states_a_conversion_refused_by_type() {
     assert_fixture_unchanged(fx);
 }
 
+/// T1 (`governance/forms/engine/ARITHMETIC-TEXT-LITERAL-BESIDE-NULL-REASON-PREREGISTRATION.md`,
+/// Tests+mutation and section 5): each `ConversionRounds` refusal over a text operand that P-0
+/// found reaching the type walk (`'1' + NULL`, `'1' - NULL`, `NULL + '1'`, `NULL / '1'`) is
+/// refused `TypeNotAdmitted` with its construct, operand types and reason, and its `Display` is
+/// the format of `FilterError`'s `TypeNotAdmitted` arm carrying the text-or-BOOLEAN sentence (a
+/// P6 placeholder); the two float controls keep the float sentence.
+///
+/// RECORDED MUTATION (M-1): the `ConversionRounds` arm that chooses the text-or-BOOLEAN sentence
+/// made never to match (`if false && names_text_or_boolean(operand_types)`, so every refusal
+/// carries the float sentence), applied in a debug build at commit
+/// ce5afff5d863d088741050c270afa0c10ff617aa and reverted. Observed: the whole
+/// `filter_type_admission` binary ran, and this test failed by name at its `Display` assertion on
+/// `'1' + NULL > 0` while the other six tests passed.
+///
+/// RECORDED MUTATION (M-2): the same arm made to match always (`if true ||
+/// names_text_or_boolean(operand_types)`), applied in a debug build at commit
+/// ce5afff5d863d088741050c270afa0c10ff617aa and reverted. Observed: the whole
+/// `filter_type_admission` binary ran, and this test and
+/// `every_conversion_rounds_refusal_states_a_conversion_refused_by_type` failed by name, each at
+/// its `Display` assertion on `f32 > NULL + 100000`, while the other five tests passed.
+#[test]
+fn every_conversion_rounds_refusal_over_a_text_or_boolean_operand_carries_its_own_sentence() {
+    let fx = fixture();
+    let ds = dataset();
+    let text_sentence = "[P6 placeholder] an operand of text or BOOLEAN type beside NULL or \
+                         beside an operand of its own type, refused by type";
+    let float_sentence = "[P6 placeholder] a conversion between a float type and an integer or \
+                          decimal type, refused by type: values of the integer or decimal type \
+                          can round in the float type";
+
+    let rows: [(&str, &str, [&str; 2], &str); 6] = [
+        (
+            "'1' + NULL > 0",
+            "+",
+            ["VARCHAR literal", "NULL literal"],
+            text_sentence,
+        ),
+        (
+            "'1' - NULL > 0",
+            "-",
+            ["VARCHAR literal", "NULL literal"],
+            text_sentence,
+        ),
+        (
+            "NULL + '1' > 0",
+            "+",
+            ["NULL literal", "VARCHAR literal"],
+            text_sentence,
+        ),
+        (
+            "NULL / '1' > 0",
+            "/",
+            ["NULL literal", "VARCHAR literal"],
+            text_sentence,
+        ),
+        (
+            "f32 > NULL + 100000",
+            ">",
+            ["REAL", "INTEGER expression"],
+            float_sentence,
+        ),
+        ("i32 + f32 > 0", "+", ["INTEGER", "REAL"], float_sentence),
+    ];
+
+    for (predicate, construct, operand_types, sentence) in rows {
+        let e = match AdmittedPredicate::admit(predicate, &ds) {
+            Err(e) => e,
+            Ok(_) => panic!("{predicate:?}: expected TypeNotAdmitted, got admitted"),
+        };
+        match &e {
+            PredicateAdmitError::Filter(FilterError::TypeNotAdmitted {
+                construct: c,
+                operand_types: ot,
+                reason,
+            }) => {
+                assert_eq!(c, construct, "{predicate:?}: construct");
+                assert_eq!(ot, &operand_types.to_vec(), "{predicate:?}: operand_types");
+                assert_eq!(
+                    *reason,
+                    TypeRefusalReason::ConversionRounds,
+                    "{predicate:?}: reason"
+                );
+            }
+            other => panic!("{predicate:?}: expected TypeNotAdmitted, got {other:?}"),
+        }
+        assert_eq!(
+            e.to_string(),
+            format!(
+                "refused: `{construct}` over {}: {sentence} (docs/01 principle 8)",
+                operand_types.join(" and ")
+            ),
+            "{predicate:?}: Display"
+        );
+    }
+
+    assert_fixture_unchanged(fx);
+}
+
 /// T1 (`governance/forms/engine/LITERAL-ONLY-FLOAT-INTEGER-ARITHMETIC-REFUSED-PREREGISTRATION.md`,
 /// section 4): in `+`, `-` and `*`, a DOUBLE literal beside an integer or decimal literal within
 /// the bounds is admitted, in either operand order (rows 1 to 7), as two DOUBLE literals already
