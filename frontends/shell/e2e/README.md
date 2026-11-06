@@ -4,19 +4,9 @@ Drives the shell's own dev-mode WebView2 with `playwright-core` over the Chrome 
 Playwright-managed browser, no browser download. `lib.mjs` attaches to (or launches) the real `tauri dev` app;
 `debug-session.mjs` admits a fixture through the real admission path and reads the rendered frame's pixels back.
 
-## Security posture (docs/09, binding)
+## Security posture
 
-The WebView2 remote-debugging port is **never** a shipped or checked-in default. `attachOrLaunch` generates a Tauri
-config overlay at `e2e/out/tauri.e2e.conf.json` (gitignored), setting the window's `additionalBrowserArgs` to wry's
-own default args plus `--remote-debugging-port=<port>`, then runs `tauri dev --config <that path>` -- the only place
-the flag touches disk, regenerated fresh per launch. `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS` is **not** used: wry
-always sets `additionalBrowserArgs` itself, so WebView2 ignores that env var (verified live against
-`msedgewebview2.exe`; root cause in `wry-0.55.1/src/webview2/mod.rs`). Setting it *replaces* wry's defaults rather
-than appending (`spikes/adr-003-crs-rendering/README.md`'s "Remote debugging" note), so the overlay repeats them
-verbatim. Nothing in `tauri.conf.json`, Vite config, or Rust ever references the port; a packaged `tauri build`
-never sees the overlay. The in-page hooks (`src/e2e-test-surface.ts`, registered in
-`AdmissionPanel.tsx`/`WorkingCanvas.tsx`) are gated on `import.meta.env.DEV` and compiled out of production -- `npm
-run build` succeeding proves that, not this paragraph.
+The shipped build never opens the WebView2 remote-debugging port and carries no e2e hook. Two builds this repository makes do, by design, and neither is shipped: the e2e launch, where `attachOrLaunch` writes a Tauri config overlay at `e2e/out/tauri.e2e.conf.json` (gitignored) setting the window's `additionalBrowserArgs` to wry's own defaults plus `--remote-debugging-port=<port>` and runs `tauri dev --config <that path>`, regenerated per launch; and the measure build (`build:measure`, a release build with the `measure-build` feature), in which `src-tauri/src/lib.rs` opens the port with a checked-in default and `isInstrumentedBuild.ts` keeps the in-page hooks (`src/e2e-test-surface.ts`) in when `VITE_MEASURE_BUILD` is set, App.tsx's among them; the registrations gated on `import.meta.env.DEV` alone, in WorkingCanvas.tsx and PublishPanel.tsx, are out of it. The plain build has no default feature, references no port and compiles the hooks out; `check:dist-clean`, run in CI after `npm run build`, greps the built dist/ for a fixed list of hook and port identifiers: a hit fails the job, and a miss is a check, not a proof; the release artifact's own job runs no dist check. `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS` is not used: wry always sets `additionalBrowserArgs` itself, so WebView2 ignores that variable (verified live against `msedgewebview2.exe`; root cause in `wry-0.55.1/src/webview2/mod.rs`), and setting `additionalBrowserArgs` replaces wry's defaults rather than appending (`spikes/adr-003-crs-rendering/README.md`'s "Remote debugging" note), so the overlay repeats them verbatim.
 
 ## Running it
 
