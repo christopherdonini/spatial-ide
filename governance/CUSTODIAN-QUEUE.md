@@ -1,14 +1,13 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `13a758e8187a575d9848f99f573dcf4267eb2565c13c72fd7d445f6055acf365`) at `2026-11-06T05:18:54.080Z`.
+Generated from `PLAN.yaml` (sha256 `de8c9ac6e94b1278062938a314e90a43e6cac63e761d9d332648127b07ae7183`) at `2026-11-06T05:39:42.461Z`.
 
 ## 1. Next
 
-- **arithmetic-text-literal-beside-null-reason** — Type walk: in arithmetic, a text literal beside NULL, refused by type with the reason conversion_rounds, gets a true sentence under that reason value, no reason value added (F-B of entry 8b's form) (lane `engine`)
+- **lod-tier-tests-own-tier-folder** — Each engine test run takes its own tier folder, the machine-wide tier folder kept for the product only: two suites sharing one machine cleared each other's tiers, failing lod_tier_builder in #284's gate 1 (the human's ruling of 2026-11-06, item 2) (lane `engine`)
 
 ## 2. Ready
 
-- **arithmetic-text-literal-beside-null-reason** — Type walk: in arithmetic, a text literal beside NULL, refused by type with the reason conversion_rounds, gets a true sentence under that reason value, no reason value added (F-B of entry 8b's form) (lane `engine`, order null, budget 60 min)
 - **lod-tier-tests-own-tier-folder** — Each engine test run takes its own tier folder, the machine-wide tier folder kept for the product only: two suites sharing one machine cleared each other's tiers, failing lod_tier_builder in #284's gate 1 (the human's ruling of 2026-11-06, item 2) (lane `engine`, order null, budget 60 min)
 - **pre-admission-change-detail-braces** — Four kernel P6-placeholder detail strings are wrapped in literal braces, which reach the operator message; the watcher form declares each such string starts with the bracketed placeholder tag (lane `kernel-protocol`, order null, budget 30 min)
 - **skp-filter-dialect-unsupported-ruling** — SKP-V0.md lists skp.filter_dialect_unsupported as a refusal a client receives; no code produces it, a wrong dialect failing at deserialization: the human rules produce or strike (drift sweep area C, finding 1) (lane `kernel-protocol`, order null, budget 30 min)
@@ -61,6 +60,7 @@ Generated from `PLAN.yaml` (sha256 `13a758e8187a575d9848f99f573dcf4267eb2565c13c
 
 ## 5. In progress
 
+- **arithmetic-text-literal-beside-null-reason** — Type walk: in arithmetic, a text literal beside NULL, refused by type with the reason conversion_rounds, gets a true sentence under that reason value, no reason value added (F-B of entry 8b's form) — evidence: branch `cut/arithmetic-text-literal-beside-null-reason`
 - **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **publish-session-tier-identity** — Publish and a session-tier identity: KNOWN-LIMITATIONS item 3 says such a file is never saved or published; the cloud audit finds no refusal on the publish path — evidence: branch `cut/publish-session-tier-identity`
 - **b1-shell-half** — Shell migration, milestone 4 -- B1 shell half: attributes of the inspected feature, colour by category with its legend, and the table — evidence: branch `cut/b1-shell-half-pr-c`
