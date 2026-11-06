@@ -56,6 +56,9 @@
 //!   **`GeometryEncodingNotPublishable`** (MP-1, ADR-034 Decision 10 — it runs third in
 //!   `preflight_pinless_parts`, directly after the degrees check and before the destination is
 //!   resolved, so no record can carry this kind and the audit reader gains no arm for it),
+//!   **`SessionIdentityNotPublishable`** (ADR-016 Amendment 1, item 1 — it runs fourth in
+//!   `preflight_pinless_parts`, directly after the geometry-encoding check and before the
+//!   destination is resolved, so no record can carry this kind either),
 //!   `SourceNotPinned`, `LicenseDeclaredTwice`, `LicenseNotCarryable`, `OperatorLicenseEmpty`, the
 //!   three `ViewerLicense*` refusals, `CorrespondingSourceNotDurable`, `DatasetNameRejected`, and
 //!   any `Style` or `Engine` error — **including `ReaderCeilingExceeded`** (RELEASE-0.1 item 3e,

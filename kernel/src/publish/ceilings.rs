@@ -112,12 +112,16 @@ pub(crate) const VIEWPORT_BBOX_ALTERNATIVE: &str =
 /// (`run_inner`, this module's parent) stands for partitions. **`MAX_RESIDENT_BYTES` is checked at
 /// NO stage, ever** (RELEASE-0.1 Amendment 5, item 2) — a bundle under `MAX_FEATURES` but over the
 /// 512 MiB resident ceiling still publishes unwarned and the viewer refuses it at load, exactly
-/// Part H8b's shape, undischarged for this ceiling. `predicted_features` is itself `None` when the
+/// Part H8b's shape, undischarged for this ceiling.
+///
+/// **What it is given for `MAX_FEATURES`** is [`predicted_features`]'s answer, not the file's row
+/// count: the verified row count for a scope with no bbox (capped by its limit), and `None` for a
+/// bbox scope, whose own row count nothing before the stream knows. It is also `None` when the
 /// dataset's identity was opened `DeclaredNotVerified` (`engine/src/identity.rs`, the
-/// `skip_uniqueness_check` route) — a real gap this function states rather than hides: such a
-/// dataset's feature count is not predictable at preflight either, and a publish above
-/// `MAX_FEATURES` on that route is refused only by the viewer, exactly the gap ADR-025 was filed
-/// to close, left open for this one identity route.
+/// `skip_uniqueness_check` route), which verifies no row count. A `None` is not a pass: for both
+/// of those the same ceiling is enforced at write time by [`check_streamed_features`], which
+/// refuses a stream that would carry more than `MAX_FEATURES` rows with
+/// `PublishError::CeilingExceeded`, so those routes are refused later and not at preflight.
 ///
 /// **The `MAX_ATTRIBUTE_COLUMNS` branch below is correctly implemented but unreachable end to end
 /// in the real `preflight()` flow** (RELEASE-0.1 Amendment 5, item 2, and this module's own
@@ -157,6 +161,13 @@ pub(crate) fn check_reader_ceilings(
     Ok(())
 }
 
+/// The `MAX_FEATURES` prediction for one scope: what [`check_reader_ceilings`] is given.
+///
+/// `Some(min(verified_rows, limit))` when the query has no bbox (with no limit, the verified row
+/// count itself), and `None` when it has a bbox or `verified_rows` is `None`. A bbox scope is not
+/// predicted from the whole file, because a bundle of that scope carries the rows inside the box,
+/// not the file's. The row filter never reaches this point: it is refused earlier in preflight.
+/// Pure: it reads no dataset and no ceilings.
 pub(crate) fn predicted_features(verified_rows: Option<u64>, query: &ViewportQuery) -> Option<u64> {
     if query.bbox.is_some() {
         return None;
@@ -164,6 +175,14 @@ pub(crate) fn predicted_features(verified_rows: Option<u64>, query: &ViewportQue
     verified_rows.map(|rows| query.limit.map_or(rows, |limit| rows.min(limit)))
 }
 
+/// The write-time `MAX_FEATURES` guard: refuses a partition that would bring the rows written to
+/// more than the ceiling.
+///
+/// `rows_written` is the rows already in written partitions and `batch_rows` the rows of the one
+/// about to be written. The refusal is `PublishError::CeilingExceeded` (ceiling `MAX_FEATURES`,
+/// limit the ceiling, `saw` the total including this batch). The comparison is `>`, as the viewer's
+/// own is, so a bundle of exactly `MAX_FEATURES` rows is not refused. Pure: the partition loop in
+/// `run_inner` supplies the numbers and acts on the result.
 pub(crate) fn check_streamed_features(
     rows_written: u64,
     batch_rows: u64,
@@ -300,6 +319,9 @@ mod tests {
 
     /// **U-PRED, with a bbox:** the file's row count says nothing about the rows a bbox encloses, so
     /// a bbox scope predicts nothing, whatever the count and whatever the limit.
+    ///
+    /// RECORDED MUTATION: delete the `query.bbox.is_some()` early return from `predicted_features`.
+    /// OBSERVED at 435be20a3b54a4a9580def1960c6f1d13070c9c0: this test fails by name, `left: Some(3300000)`, `right: None`.
     #[test]
     fn a_bbox_scope_predicts_nothing_over_a_verified_file() {
         let viewport = ViewportQuery::viewport(a_bbox(), "EPSG:2056");
@@ -328,6 +350,9 @@ mod tests {
 
     /// **U-GUARD, at the ceiling:** a batch that brings the total exactly to `MAX_FEATURES` is not
     /// refused. The viewer refuses above its ceiling, not at it.
+    ///
+    /// RECORDED MUTATION: change `>` to `>=` in `check_streamed_features`. OBSERVED at 435be20a3b54a4a9580def1960c6f1d13070c9c0: this
+    /// test fails by name, at `check_streamed_features(0, c.max_features, &c).is_ok()`.
     #[test]
     fn a_batch_that_brings_the_total_to_the_ceiling_is_not_refused() {
         let c = reader_ceilings();

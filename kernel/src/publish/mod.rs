@@ -44,16 +44,19 @@
 //! ## The order of operations, and why it is that order
 //!
 //! 1. **Preflight, which creates nothing.** These refusals all come before the staging directory
-//!    exists: the row-filter gate, the degrees and geometry-encoding refusals, the dataset name,
-//!    the licenses, the projection with the bundle-format restriction, the style compiled against
-//!    it, and the reader ceilings. Then the source pin is read.
+//!    exists: the row-filter gate, the degrees and geometry-encoding refusals, the refusal of a
+//!    session-tier identity, the dataset name, the licenses, the projection with the
+//!    bundle-format restriction, the style compiled against it, and the reader ceilings. Then the
+//!    source pin is read.
 //! 2. **Check the destination, then create the staging directory** — before the
 //!    query, before the hash. An unwritable destination is then refused in milliseconds rather than
 //!    after a whole-file read.
 //! 3. **Verify the source pin.** The pin was taken by an explicit earlier call; this re-hashes and
 //!    compares. The brief says "between open and publish"; what is actually checked is **between
 //!    pin and publish**, which is a faithful substitution and is recorded as what it is.
-//! 4. **Stream, ordered, writing one partition per batch**, hashing and bounding as it goes.
+//! 4. **Stream, ordered, writing one partition per batch**, hashing and bounding as it goes: a
+//!    partition that would bring the rows written above the reader's `MAX_FEATURES` is refused
+//!    before it is written, by the same failure path as any other error here.
 //! 5. **Write the style, the viewer and the manifest.**
 //! 6. **Re-check the source with the fail-closed heuristic**, write the sidecar, **scan every
 //!    staged file for the `docs/09` classes** (`bundle::redaction`; a match that is not
@@ -404,15 +407,20 @@ struct PreflightPinless {
 /// checks, reordered so that is no longer true: a caller may run this BEFORE taking the pin, and an
 /// over-ceiling source is refused before any byte is read.
 ///
-/// **The one case this ordering cannot help: `DeclaredNotVerified` identity.**
-/// `ds.identity().verified_rows()` is `None` for a dataset admitted via the skip-uniqueness-check
-/// route — its feature count is not knowable without a scan this function does not perform, so the
-/// ADR-025 check below passes it through un-refused, exactly as `ceilings::check_reader_ceilings`'s
-/// own doc comment already states. Such a source's pin still runs (there is nothing here to stop
-/// it), and its own feature count stays unpredictable at preflight either way — caught only by the
-/// bundled viewer's own load-time check, the same residual `ceilings::check_reader_ceilings` names.
-/// Named here again because this is the function whose whole point is "refuse before the pin", and
-/// this is the one case where it structurally cannot.
+/// **The two cases this ordering cannot help, because the feature count is not predictable
+/// without reading the source.**
+/// - **`DeclaredNotVerified` identity.** `ds.identity().verified_rows()` is `None` for a dataset
+///   admitted via the skip-uniqueness-check route — its feature count is not knowable without a
+///   scan this function does not perform, so the ADR-025 check below passes it un-refused.
+/// - **A scope with a bbox.** `ceilings::predicted_features` gives it no prediction, because the
+///   rows inside the box are not the file's rows and nothing here counts them.
+///
+/// In both, the source's pin still runs (there is nothing here to stop it), and the `MAX_FEATURES`
+/// ceiling is enforced later, at write time, by `ceilings::check_streamed_features` in
+/// `run_inner`'s partition loop: a stream that would carry more than the ceiling is refused with
+/// `CeilingExceeded` after the pin and the staging directory, and not at preflight. Named here
+/// again because this is the function whose whole point is "refuse before the pin", and these are
+/// the cases where it structurally cannot.
 pub fn preflight_pinless(req: &PublishRequest<'_>) -> Result<(), PublishError> {
     preflight_pinless_parts(req).map(|_| ())
 }
@@ -502,6 +510,11 @@ fn preflight_pinless_parts(req: &PublishRequest<'_>) -> Result<PreflightPinless,
             carried: format.geometry_encoding,
         });
     }
+    // **The session tier is never published** (ADR-016 Amendment 1, item 1). Its ids are row
+    // positions within one open of one file, so a bundle carrying them would present them as ids
+    // beyond that open. Fourth in this function: one field read off the identity record admitted
+    // at open, no IO, and — like the checks above — one whose refusal no change to the rest of the
+    // request can fix. It never reads the query, so it refuses both scopes alike.
     if ds.identity().source().is_session_ordinal() {
         return Err(PublishError::SessionIdentityNotPublishable);
     }
@@ -545,6 +558,11 @@ fn preflight_pinless_parts(req: &PublishRequest<'_>) -> Result<PreflightPinless,
     // `kernel/src/skp.rs` — predicts nothing rather than inventing a number; such a dataset's
     // feature count stays unpredictable here, a named residual documented on
     // [`ceilings::check_reader_ceilings`], not a silent gap.
+    //
+    // **The prediction is the scope's, not the file's** (`ceilings::predicted_features`): the
+    // verified count, capped by the query's limit, for a scope with no bbox, and none for a bbox
+    // scope, which publishes the rows inside its box. For a scope given no prediction, the ceiling
+    // is checked at write time by `ceilings::check_streamed_features`.
     //
     // **Attribute column count** is `published_names.len()`, already resolved above — exactly
     // what a reader will receive, not a proxy for it.
@@ -812,6 +830,10 @@ fn run_inner(
                 saw: index as u64 + 1,
             });
         }
+        // The reader's `MAX_FEATURES`, checked on the rows actually being written: preflight
+        // predicted nothing for a bbox scope or an unverified identity, and a prediction is not a
+        // count. Before `write_partition`, so the refused partition is not written; the failure
+        // path then removes the staging directory.
         ceilings::check_streamed_features(rows_total, info.rows as u64, &reader_ceilings)?;
         let rel = bundle::partition_path(index);
         let hash = staging.write_partition(&rel, &payload, index, &watch, progress)?;
@@ -1464,6 +1486,11 @@ fn build_manifest(
     }
 }
 
+/// The manifest's `identity_caveat`: what the uniqueness check on this identity was, then what is
+/// not established. The first sentence follows the tier and claims a verification only for
+/// `VerifiedAtOpenFullFile`; for the other two it says the uniqueness was not verified over this
+/// file. The rest is the same for every tier. The function is total: the session tier is refused at
+/// preflight, so no publish reaches it, but it still returns a sentence true of that tier.
 fn identity_caveat(uniqueness: IdUniqueness) -> String {
     let lead = match uniqueness {
         IdUniqueness::VerifiedAtOpenFullFile => "uniqueness was verified over this file at open.",

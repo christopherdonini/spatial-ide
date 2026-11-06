@@ -183,6 +183,14 @@ pub enum PublishError {
         carried: String,
     },
 
+    /// The dataset's identity is the session tier, whose ids are row positions that mean something
+    /// only within the open that minted them (ADR-016 Amendment 1, item 1: the session tier is never
+    /// published).
+    ///
+    /// Raised in `preflight_pinless_parts` right after the geometry-encoding check and before the
+    /// dataset name, from the admitted identity record alone, for both scopes (the check never reads
+    /// the query). Like the checks before it, it runs before the pin or any write, so it takes the
+    /// same no-audit-record shape (`permission::boundary`'s module doc).
     SessionIdentityNotPublishable,
 
     /// The redaction scan (ADR-017 §13; `bundle::redaction`) found, in one staged file, a match that

@@ -239,6 +239,10 @@ fn scopes() -> [(&'static str, ViewportQuery); 2] {
 /// dataset and destination and an approval carrying the destination's name, `boundary::execute`
 /// returns the same code, creates no destination and no staging directory, and writes no audit
 /// record.
+///
+/// RECORDED MUTATION: remove the `is_session_ordinal()` check from `preflight_pinless_parts`
+/// (`kernel/src/publish/mod.rs`). OBSERVED at 435be20a3b54a4a9580def1960c6f1d13070c9c0: this test fails by name at its
+/// R1 assertion, "R1 current-view: preflight_pinless admitted a session-tier dataset".
 #[test]
 fn a_session_tier_dataset_is_refused_before_the_pin_and_at_the_boundary_in_both_scopes() {
     let d = workspace("k-u1");
@@ -352,6 +356,10 @@ fn published_identity(
 /// publisher wrote before this piece. R5: the same file opened with a declared mapping onto `id` and
 /// `skip_uniqueness_check` true is `declared-not-verified`, and its caveat is not the verified one:
 /// it contains no claim that a verification ran, and it keeps the stability sentence.
+///
+/// RECORDED MUTATION: make `identity_caveat` (`kernel/src/publish/mod.rs`) choose its first
+/// sentence as if the tier were always `VerifiedAtOpenFullFile`. OBSERVED at 435be20a3b54a4a9580def1960c6f1d13070c9c0: this test
+/// fails by name at its R5 assertion, "R5: the caveat claims a verification that never ran".
 #[test]
 fn the_manifest_caveat_claims_a_verification_only_for_the_tier_that_had_one() {
     let d = workspace("k-cav");
@@ -440,6 +448,11 @@ fn fx_big_bbox() -> ViewportQuery {
 /// `#[ignore]`d and release-only, for the reason of the ADR-025 tests in `publish.rs`: the property
 /// needs a source above MAX_FEATURES scanned rows. Run by hand: `cargo test -p spatial-kernel
 /// --release --test publish_identity_tier -- --ignored`. Not run in CI.
+///
+/// RECORDED MUTATION: pass `ds.identity().verified_rows()` to `check_reader_ceilings` in
+/// `preflight_pinless_parts` for every scope, in place of `ceilings::predicted_features`. OBSERVED
+/// at 435be20a3b54a4a9580def1960c6f1d13070c9c0, in release with `--ignored`: this test fails by name at its R6 assertion, with
+/// `ReaderCeilingExceeded` for `MAX_FEATURES`, limit 2000000, predicted 2000001.
 #[test]
 #[ignore = "release-only: needs a source above MAX_FEATURES rows; run by hand with --release -- --ignored"]
 fn a_current_view_publish_over_a_verified_file_above_the_ceiling_publishes_its_own_rows() {
@@ -493,6 +506,11 @@ fn a_current_view_publish_over_a_verified_file_above_the_ceiling_publishes_its_o
 ///
 /// `#[ignore]`d and release-only, for the reason K-U10a is. Run by hand: `cargo test -p
 /// spatial-kernel --release --test publish_identity_tier -- --ignored`. Not run in CI.
+///
+/// RECORDED MUTATION: remove the `ceilings::check_streamed_features` call from `run_inner`'s
+/// partition loop (`kernel/src/publish/mod.rs`). OBSERVED at 435be20a3b54a4a9580def1960c6f1d13070c9c0, in release with
+/// `--ignored`: this test fails by name at its R8 assertion, "R8: expected CeilingExceeded for
+/// MAX_FEATURES", because the publish completes with 2000001 rows.
 #[test]
 #[ignore = "release-only: needs a source above MAX_FEATURES rows; run by hand with --release -- --ignored"]
 fn an_unverified_file_above_the_ceiling_is_refused_by_the_write_time_guard_and_leaves_nothing() {
