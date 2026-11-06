@@ -1,19 +1,16 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `7bb532056569d5b40d568a599c02a22f6bf1c65461c47123827fb6641dbf1fd0`) at `2026-11-05T23:36:28.710Z`.
+Generated from `PLAN.yaml` (sha256 `15b8fc908fb3c531c56a86a42423bdd01d49df52682aa2c362aefa1cea824758`) at `2026-11-05T23:49:56.980Z`.
 
 ## 1. Next
 
-- **literal-only-float-integer-arithmetic-refused** — Literal-only arithmetic mixing a double literal and an integer literal (1e3 + 5 > 0) is refused as conversion_rounds, although FILTER-BIND section 2.5(a) and ADR-021's Note admit two numeric literals within the bounds in +, - and * (F-A of the type-walk-rule2-residual-reasons draft) (lane `engine`)
+- **pre-admission-change-detail-braces** — Four kernel P6-placeholder detail strings are wrapped in literal braces, which reach the operator message; the watcher form declares each such string starts with the bracketed placeholder tag (lane `kernel-protocol`)
 
 ## 2. Ready
 
-- **literal-only-float-integer-arithmetic-refused** — Literal-only arithmetic mixing a double literal and an integer literal (1e3 + 5 > 0) is refused as conversion_rounds, although FILTER-BIND section 2.5(a) and ADR-021's Note admit two numeric literals within the bounds in +, - and * (F-A of the type-walk-rule2-residual-reasons draft) (lane `engine`, order null, budget 120 min)
 - **pre-admission-change-detail-braces** — Four kernel P6-placeholder detail strings are wrapped in literal braces, which reach the operator message; the watcher form declares each such string starts with the bracketed placeholder tag (lane `kernel-protocol`, order null, budget 30 min)
 - **publish-session-tier-identity** — Publish and a session-tier identity: KNOWN-LIMITATIONS item 3 says such a file is never saved or published; the cloud audit finds no refusal on the publish path (lane `kernel-protocol`, order null, budget 60 min)
 - **windows-case-fold-non-ascii** — The audit case policy on Windows folds non-ASCII letters as NTFS does, so a profile path differing only in non-ASCII case cannot escape the user-home redaction (wave 3's 1c-2 correction, S2, code-path-only) (lane `kernel-protocol`, order null, budget 60 min)
-- **publish-filter-sentence-under-whole-dataset** — The publish dialog shows the filter sentence, which says the viewport extent is published, under Whole dataset too, where the whole file is published (the cloud audit, U12) (lane `shell`, order null, budget 45 min)
-- **walkthrough-rows-stale-against-main-sweep-area-b** — MANUAL-WALKTHROUGH.md rows stale against main, each of which would have the operator record a wrong result at a sitting or a rerun (drift sweep area B, findings 1 to 5 and 7 to 10) (lane `shell`, order null, budget 60 min)
 - **governance-f-after-week-rust-ci-figure** — Governance piece F, the after-week Rust CI figure: the form-only Rust CI runs in the 168 h after the merge, recorded as a class 1 row in piece F's form (lane `governance`, order null, budget 30 min)
 - **publish-bundle-sigterm** — SIGTERM handling in publish-bundle on unix (wave-3 W3-A observation 3) (lane `platform`, order null, budget 90 min)
 - **publish-unix-quota-perm-errors** — EDQUOT and EPERM in publish error classification on unix (wave-3 W3-A observation 1) (lane `platform`, order null, budget 90 min)
@@ -64,8 +61,11 @@ Generated from `PLAN.yaml` (sha256 `7bb532056569d5b40d568a599c02a22f6bf1c65461c4
 
 ## 5. In progress
 
+- **literal-only-float-integer-arithmetic-refused** — Literal-only arithmetic mixing a double literal and an integer literal (1e3 + 5 > 0) is refused as conversion_rounds, although FILTER-BIND section 2.5(a) and ADR-021's Note admit two numeric literals within the bounds in +, - and * (F-A of the type-walk-rule2-residual-reasons draft) — evidence: branch `cut/literal-only-float-integer-arithmetic-refused`
 - **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **b1-shell-half** — Shell migration, milestone 4 -- B1 shell half: attributes of the inspected feature, colour by category with its legend, and the table — evidence: branch `cut/b1-shell-half-pr-c`
+- **publish-filter-sentence-under-whole-dataset** — The publish dialog shows the filter sentence, which says the viewport extent is published, under Whole dataset too, where the whole file is published (the cloud audit, U12) — evidence: branch `cut/publish-filter-sentence-under-whole-dataset`
+- **walkthrough-rows-stale-against-main-sweep-area-b** — MANUAL-WALKTHROUGH.md rows stale against main, each of which would have the operator record a wrong result at a sitting or a rerun (drift sweep area B, findings 1 to 5 and 7 to 10) — evidence: branch `cut/walkthrough-rows-stale-against-main-sweep-area-b`
 - **port-2-macos-l1-and-app-dirs** — PORT-2 -- macOS L1 for the Cargo workspace: macos-latest in the same matrix, one application-directory boundary replacing the two resolvers, and a case-policy test on a case-insensitive volume — evidence: branch `cut/port-2-macos-l1-and-app-dirs`
 
 ## 6. Proposed / unscheduled
