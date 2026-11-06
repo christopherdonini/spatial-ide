@@ -68,10 +68,13 @@ use tokio::sync::watch;
 /// 20-minute ceiling; the approval dialog states the expiry (`PublishDialog.tsx`).
 pub const PENDING_ATTEMPT_TTL: Duration = Duration::from_secs(600);
 
-/// The filter-scope sentence, from `NEXT-CUT.md`'s conditional block item 3 — **verbatim**, never
-/// silently dropped when the shell's active SQL filter would have applied to this publish.
+/// The filter-scope sentence, a P6 placeholder (the human's ruling of 2026-11-05, evening, item 2):
+/// the visible `[P6 placeholder] ` prefix is the mark, and every byte after it is unchanged. It
+/// reaches the approval payload only under [`PublishScope::filter_scope_sentence`]'s condition: a
+/// filter active and the current view. `src/publish/types.ts` holds the panel's copy; the pin test
+/// in `PublishPanel.test.ts` keeps the two equal.
 pub const FILTER_SCOPE_SENTENCE: &str =
-    "this bundle format cannot record a row predicate (ADR-017 \
+    "[P6 placeholder] this bundle format cannot record a row predicate (ADR-017 \
      §8, bundle_version 1); publishing publishes the viewport extent, not your filter";
 
 // -------------------------------------------------------------------------------------------
@@ -119,6 +122,17 @@ impl PublishScope {
                 // predicate-carrying query outright; this scope has no shape that could carry one.
                 filter: None,
             },
+        }
+    }
+
+    /// The payload's `filter_scope`: the sentence for the current view with a filter active, and
+    /// `None` for every other case. Decided here, beside [`Self::row_scope_sentence`], so one payload's
+    /// two scope sentences come from one `PublishScope`. It changes what is shown, not what is
+    /// published: [`Self::to_query`] sends no filter under either scope.
+    fn filter_scope_sentence(&self, filter_active: bool) -> Option<String> {
+        match self {
+            Self::ViewportBbox { .. } if filter_active => Some(FILTER_SCOPE_SENTENCE.to_string()),
+            _ => None,
         }
     }
 
@@ -271,8 +285,10 @@ pub struct PublishPromptData {
     pub grant_remaining_s: u64,
     /// NEW relative to `ApprovalPrompt::render`'s field set: whole-file or viewport-bbox, in words.
     pub row_scope: String,
-    /// NEW: present only when the shell's active filter would have applied to this publish — the
-    /// [`FILTER_SCOPE_SENTENCE`], never silently dropped.
+    /// NEW: the [`FILTER_SCOPE_SENTENCE`] when a filter is active and the scope is the current view
+    /// (`ViewportBbox`); `None` otherwise, including under the whole file with a filter active, where
+    /// `row_scope` is what states every row. No filter is applied to the published rows under
+    /// either scope: `PublishScope::to_query` sets `filter: None` in both arms.
     pub filter_scope: Option<String>,
     /// **ADR-017's Exposure review, 2026-08-17, condition 1** — the human's own words, verbatim:
     /// *"the approval dialog must state the plain outcome — what will be written, where, and
@@ -403,6 +419,7 @@ pub fn prepare_with_progress(
 ) -> PrepareOutcome {
     let query = scope.to_query();
     let row_scope = scope.row_scope_sentence();
+    let filter_scope = scope.filter_scope_sentence(filter_active);
     let attributes = style_attributes(&style_source);
 
     let request = PublishRequest {
@@ -448,7 +465,7 @@ pub fn prepare_with_progress(
         style_source,
         query,
         row_scope,
-        filter_active,
+        filter_scope,
         viewer,
         viewer_license,
         destination,
@@ -523,7 +540,7 @@ fn prepare_with_query(
     style_source: String,
     query: ViewportQuery,
     row_scope: String,
-    filter_active: bool,
+    filter_scope: Option<String>,
     viewer: ViewerAssets,
     viewer_license: ViewerLicenseInput,
     destination: PathBuf,
@@ -632,7 +649,7 @@ fn prepare_with_query(
         grantor: format!("{} {}", principal.kind.as_str(), principal.id),
         grant_remaining_s,
         row_scope,
-        filter_scope: filter_active.then(|| FILTER_SCOPE_SENTENCE.to_string()),
+        filter_scope,
         outcome_summary: compose_outcome_summary(&resolved_destination),
     };
 
@@ -1978,7 +1995,7 @@ mod tests {
             STYLE.into(),
             query,
             "row scope: the whole file".into(),
-            false,
+            None,
             viewer(),
             viewer_license(),
             d.join("out"),
@@ -1998,51 +2015,80 @@ mod tests {
         );
     }
 
-    #[test]
-    fn the_filter_scope_sentence_is_present_only_when_filter_active_is_true() {
-        let d = workspace("filter-scope-sentence");
-        let ds = fixture(&d, 20);
+    /// Runs `prepare` (which delegates to the shipped `prepare_with_progress`) over `ds` with the given
+    /// scope and filter flag, and returns the approval payload's `filter_scope`.
+    fn filter_scope_of(
+        d: &Path,
+        ds: &Arc<Dataset>,
+        scope: PublishScope,
+        filter_active: bool,
+        name: &str,
+    ) -> Option<String> {
         let grants = Mutex::new(GrantSet::new());
         let store = PendingAttempts::new();
-
-        let without = prepare(
+        let outcome = prepare(
             &grants,
             &store,
             ds.clone(),
             "parcels".into(),
             STYLE.into(),
-            PublishScope::WholeFile,
-            false,
+            scope,
+            filter_active,
             viewer(),
             viewer_license(),
-            d.join("out-no-filter"),
+            d.join(format!("out-{name}")),
             "2026-08-16T10:00:00Z".into(),
         );
-        let PrepareOutcome::Prompt { prompt, .. } = without else {
-            panic!("expected a prompt")
+        let PrepareOutcome::Prompt { prompt, .. } = outcome else {
+            panic!("expected a prompt, got {outcome:?}")
         };
-        assert!(
-            prompt.filter_scope.is_none(),
+        prompt.filter_scope
+    }
+
+    /// RECORDED MUTATION: `filter_scope_sentence`'s condition back to the filter flag alone (`_ if filter_active`).
+    /// Observed at ec847095ccbebcfc7ebdec78b23a572e00b219de: this test FAILED by name at its filter-on `assert_eq!` (left: Some("[P6 placeholder] this bundle format ..."), right: None). Reverted.
+    #[test]
+    fn the_whole_dataset_scope_carries_no_filter_scope_sentence_with_or_without_a_filter() {
+        let d = workspace("filter-scope-whole-dataset");
+        let ds = fixture(&d, 20);
+
+        assert_eq!(
+            filter_scope_of(&d, &ds, PublishScope::WholeFile, false, "no-filter"),
+            None,
             "no active filter must mean no sentence"
         );
-
-        let with = prepare(
-            &grants,
-            &store,
-            ds,
-            "parcels".into(),
-            STYLE.into(),
-            PublishScope::WholeFile,
-            true,
-            viewer(),
-            viewer_license(),
-            d.join("out-with-filter"),
-            "2026-08-16T10:00:00Z".into(),
+        assert_eq!(
+            filter_scope_of(&d, &ds, PublishScope::WholeFile, true, "with-filter"),
+            None,
+            "under Whole dataset the sentence is not carried even with a filter active"
         );
-        let PrepareOutcome::Prompt { prompt, .. } = with else {
-            panic!("expected a prompt")
+    }
+
+    /// RECORDED MUTATION: `filter_scope_sentence`'s scope arm matching `WholeFile` instead of `ViewportBbox`.
+    /// Observed at ec847095ccbebcfc7ebdec78b23a572e00b219de: this test FAILED by name at its filter-on `assert_eq!` (left: None, right: Some("[P6 placeholder] this bundle format ...")). Reverted.
+    #[test]
+    fn the_current_view_scope_carries_the_filter_scope_sentence_only_with_a_filter_active() {
+        let d = workspace("filter-scope-current-view");
+        let ds = fixture(&d, 20);
+        let current_view = || PublishScope::ViewportBbox {
+            bbox: JsBbox {
+                xmin: 2_000_000.0,
+                ymin: 1_000_000.0,
+                xmax: 3_000_000.0,
+                ymax: 1_500_000.0,
+            },
         };
-        assert_eq!(prompt.filter_scope.as_deref(), Some(FILTER_SCOPE_SENTENCE));
+
+        assert_eq!(
+            filter_scope_of(&d, &ds, current_view(), false, "no-filter"),
+            None,
+            "no active filter must mean no sentence"
+        );
+        assert_eq!(
+            filter_scope_of(&d, &ds, current_view(), true, "with-filter").as_deref(),
+            Some(FILTER_SCOPE_SENTENCE),
+            "under Current view an active filter carries the sentence"
+        );
     }
 
     // ---------------------------------------------------------------------------------------
@@ -2307,7 +2353,7 @@ mod tests {
             STYLE.into(),
             PublishScope::WholeFile.to_query(),
             PublishScope::WholeFile.row_scope_sentence(),
-            false,
+            None,
             viewer(),
             viewer_license(),
             d.join("out-pinless"),
