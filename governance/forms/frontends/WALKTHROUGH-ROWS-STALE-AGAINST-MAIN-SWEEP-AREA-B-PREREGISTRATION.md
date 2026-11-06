@@ -424,3 +424,15 @@ I cannot run `git log -L`.
 - **Rule (00)** was checked at main d3391d4b by `git diff --name-only origin/main...<branch>` over the branches in flight (`cut/port-2-macos-l1-and-app-dirs`, `cut/b2-piece-1c-save-and-reopen`, `cut/b1-shell-half-pr-c`): none touches `frontends/shell/MANUAL-WALKTHROUGH.md`. publish-filter-sentence-under-whole-dataset, in slot 2, edits Part G and the e2e/publish.mjs coverage table, which this piece does not touch; no PR is open. It is checked again at dispatch.
 
 ## Amendments (opens empty; append-only)
+
+### Amendment 1 — 2026-11-06 — the closing record (class 1), written after gate 1's reports, the words commit and its CI were seen; references and hashes only
+
+- **The final head:** 5920dee5c5ceb2f1fa45494113b27c3034c61599, one commit on 6c6d4564b9bcb33382dbf4ccb3c516d554277f79; the one Scope file and 32 lines (`git diff --numstat 2c72923e...5920dee5`: `frontends/shell/MANUAL-WALKTHROUGH.md` 16/16), within section 7's 90.
+- **Gate 1 at 6c6d4564:**
+  - `state/consults/gates/2026-11-06-walkthrough-rows-stale-against-main-sweep-area-b-gate1-architect.md` (sha256 54cf01b4ce93aa42c5ee2ddc44c16224046374d4c8db8cdccf468a0d90e92e0e), gate-log 680, PASS WITH NOTES, WORDS-ONLY.
+  - `state/consults/gates/2026-11-06-walkthrough-rows-stale-against-main-sweep-area-b-gate1-reviewer.md` (sha256 0d25f4bd18f8c54d5cce0665f9d673343ae52ffe1c3a03f04a3c6fc690609d42), gate-log 681, PASS WITH NOTES, WORDS-ONLY.
+- **The words:** the architect's C-1 (J1's span, whole) and D-1 (the Part H pointer), taken for the reasons gate-log 681's note gives; the reviewer's C-1 words not taken. Applied at 5920dee5 by a worker, `state/consults/2026-11-06-walkthrough-rows-stale-against-main-sweep-area-b-gate1-words-worker-report.md` (from its hand-back, sha256 b2a0dc14ccacb0b5cc1f9dd6ac340324092cde0f46165be9c83258123916b248); the file's sha256 at the head, 83e419bc4557b87c0e8149679640608befd66050d373fa54dea8c63685a21bbb, equal to the brief's, checked by git. Section 2.1's B8 words and the B4 pointer's clause are superseded at those two spans by gate 1's words.
+- **D-2:** the four dates reading 2026-11-05 carry the date of the edit at 6c6d4564, not the merge date, by gate 1's architect report, D-2's second closure; the PR body records it.
+- **Notes:** each gate's N-1 to N-3, recorded in its report, not applied.
+- **CI at 5920dee5:** Product CI — shell 42144625462 and 42144632512, Ported notices 42144625434 and 42144632516, Exposure scan 42144632532 and DCO sign-off 42144632720, each success.
+- **Merge:** the human's click, by merge commit.
