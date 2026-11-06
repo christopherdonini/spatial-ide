@@ -885,4 +885,52 @@ mod tests {
         )));
         assert!(!refused(record_step_doc(v)));
     }
+
+    /// A dialect other than `duckdb-expr/0` fails at decode, in `viewport_query` and in
+    /// `record_step`, with `Filter::new`'s own message. The requests are built through
+    /// `Filter::new` and serialized; only `filter.dialect` is then replaced in the JSON value.
+    /// Rows: V0/R0 decode `Ok`; V1/R1 decode `Err` whose message holds `Filter::new`'s.
+    #[test]
+    fn a_wrong_dialect_fails_at_decode_in_viewport_query_and_record_step_with_filter_news_message()
+    {
+        let predicate = "zone = 3";
+        let wrong = "sql/ansi";
+        let expected = Filter::new(predicate, wrong).unwrap_err();
+        // (iii) the message names both the declared dialect and the one admitted.
+        assert!(expected.contains(wrong), "{expected}");
+        assert!(
+            expected.contains(FILTER_DIALECT_DUCKDB_EXPR_0),
+            "{expected}"
+        );
+
+        let viewport = ViewportQueryRequest {
+            skp: SKP_VERSION.into(),
+            dataset: "ds_00112233445566778899aabbccddeeff".parse().unwrap(),
+            bbox: None,
+            bbox_crs: None,
+            limit: None,
+            filter: Some(Filter::new(predicate, FILTER_DIALECT_DUCKDB_EXPR_0).unwrap()),
+            columns: None,
+        };
+        let v0 = serde_json::to_value(&viewport).unwrap();
+        serde_json::from_value::<ViewportQueryRequest>(v0.clone()).expect("V0 decodes");
+        let mut v1 = v0;
+        v1["filter"]["dialect"] = serde_json::Value::String(wrong.into());
+        let e = serde_json::from_value::<ViewportQueryRequest>(v1).unwrap_err();
+        assert!(e.to_string().contains(&expected), "V1: {e}");
+
+        let step = RecordStepRequest {
+            skp: SKP_VERSION.into(),
+            dataset: "ds_00112233445566778899aabbccddeeff".parse().unwrap(),
+            intent: StepIntent::FilterApply(FilterApplyParams {
+                filter: Some(Filter::new(predicate, FILTER_DIALECT_DUCKDB_EXPR_0).unwrap()),
+            }),
+        };
+        let r0 = serde_json::to_value(&step).unwrap();
+        serde_json::from_value::<RecordStepRequest>(r0.clone()).expect("R0 decodes");
+        let mut r1 = r0;
+        r1["intent"]["params"]["filter"]["dialect"] = serde_json::Value::String(wrong.into());
+        let e = serde_json::from_value::<RecordStepRequest>(r1).unwrap_err();
+        assert!(e.to_string().contains(&expected), "R1: {e}");
+    }
 }
