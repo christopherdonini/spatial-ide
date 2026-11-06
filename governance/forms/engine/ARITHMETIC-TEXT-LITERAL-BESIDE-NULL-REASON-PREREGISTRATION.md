@@ -268,3 +268,12 @@ Because §36 already lands P6 placeholders, (a) needs no ruling to proceed. The 
 - **Not settled by the draft, and proven by the piece's own runs:** P-0's outcomes and the rows T1 takes from them, M-1, M-2, the placeholder's clause check and the size. The base is main after #284's merge; the worker's checkout starts at the main commit it is dispatched at.
 
 ## Amendments (opens empty; append-only)
+
+**Amendment 1 (2026-11-06, class 1, before any code; written after P-0's run was seen).** P-0 ran at 0c84b816416bc1611649cf91415d9fc69f3693a6 (the worker's report, `state/consults/2026-11-06-arithmetic-text-literal-beside-null-reason-worker-report.md`; `duckdb` and `libduckdb-sys` 1.10505.0 by Cargo.lock) and met S-5: B9 to B12 and C1 to C4, a BOOLEAN literal beside a BOOLEAN literal or beside NULL, are refused before the walk as `ConstructNotAdmitted { construct: "CAST" }`. S-1 to S-4 were not met. The custodian settles the stop:
+1. An outcome `ConstructNotAdmitted` is recorded and gets no T1 row, as a binder refusal does (section 1, "Not stops"). Every other outcome stays S-5.
+2. T1's rows are the four P-0 predicates refused `TypeNotAdmitted` with `ConversionRounds`, in the table's order: K1, K2, K3 and A2; then the two controls. K4, A1, A3, B1 to B8, B13 to B16 and C5 are binder refusals and get no row.
+3. OPEN-1 (a) stands: the selector routes a refusal one of whose entries has the leading type name VARCHAR or BOOLEAN. At this DuckDB no predicate of the 28 brings a BOOLEAN operand to the walk. The selector's comment (section 4, item 2) says so, naming the binder-refused rows and the CAST-refused rows apart, with the version; the new sentence stays true of every pair the selector routes to it (section 4, item 3).
+4. Section 4, item 2's "DuckDB v1.5.5" reads as the version Cargo.lock names, 1.10505.0.
+5. Outside this piece, for the human: shape (c) of the architect's shapes (a BOOLEAN literal beside NULL; the evening ruling of 2026-11-05, item 5) never reaches `conversion_rounds`. It is refused as the construct `CAST`, a word the predicate as written does not contain. Whether that refusal's sentence is true of it, and whether a BOOLEAN literal elsewhere is refused the same way, are not this piece's questions and were not probed; this piece's sentence does not reach it.
+
+Nothing else in the form changes: Scope, the budget, M-1 (still predicted to fail T1 at row K1) and M-2 stand.
