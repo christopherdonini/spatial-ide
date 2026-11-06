@@ -631,11 +631,12 @@ fn every_conversion_rounds_refusal_states_a_conversion_refused_by_type() {
 
 /// T1 (`governance/forms/engine/LITERAL-ONLY-FLOAT-INTEGER-ARITHMETIC-REFUSED-PREREGISTRATION.md`,
 /// section 4): in `+`, `-` and `*`, a DOUBLE literal beside an integer or decimal literal within
-/// the bounds is admitted, in either operand order, and its stream delivers the ids DuckDB's own
-/// result over FX-1 predicts. Each of the eight rows asserts four things: `admit` returns `Ok`;
-/// `drain_ids` succeeds and equals the predicted set; `i64 = (<a>)` is refused in its real
-/// `TypeNotAdmitted` shape with operand types BIGINT and DOUBLE expression, which pins the walk's
-/// type for the arithmetic node `<a>` as DOUBLE; and the binder's `typeof(<a>)` is DOUBLE.
+/// the bounds is admitted, in either operand order (rows 1 to 7), as two DOUBLE literals already
+/// were (row 8). Each of the eight rows asserts four things: `admit` returns `Ok`; `drain_ids`
+/// succeeds and equals the row's expected set, every id or none, written here from the form's
+/// section 3; `i64 = (<a>)` is refused in its real `TypeNotAdmitted` shape with operand types
+/// BIGINT and DOUBLE expression, which pins the walk's type for the arithmetic node `<a>` as
+/// DOUBLE; and the binder's `typeof(<a>)` on `configured_connection()` is DOUBLE.
 ///
 /// RECORDED MUTATION: the new double-literal clause in `admitted_arithmetic_result`
 /// (`engine/src/predicate.rs`) removed, applied in a debug build at commit
