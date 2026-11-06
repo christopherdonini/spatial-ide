@@ -124,5 +124,5 @@ export interface PublishProgressEvent {
  * edit to either side cannot drift silently.
  */
 export const FILTER_SCOPE_SENTENCE =
-  "this bundle format cannot record a row predicate (ADR-017 §8, bundle_version 1); publishing " +
+  "[P6 placeholder] this bundle format cannot record a row predicate (ADR-017 §8, bundle_version 1); publishing " +
   "publishes the viewport extent, not your filter";
