@@ -263,4 +263,96 @@ mod tests {
         let c = reader_ceilings();
         assert!(check_reader_ceilings(Some(0), c.max_attribute_columns, &c).is_ok());
     }
+
+    // ---- U-PRED: the prediction is the scope's own row count, or nothing ---------------------------
+
+    fn a_bbox() -> spatial_engine::Bbox {
+        spatial_engine::Bbox {
+            xmin: 0.0,
+            ymin: 0.0,
+            xmax: 1.0,
+            ymax: 1.0,
+        }
+    }
+
+    /// **U-PRED, whole file:** the prediction is the file's verified row count.
+    #[test]
+    fn a_whole_file_scope_predicts_the_verified_row_count() {
+        assert_eq!(
+            predicted_features(Some(300), &ViewportQuery::all()),
+            Some(300)
+        );
+    }
+
+    /// **U-PRED, with a limit:** a limit below the count caps the prediction, and one above it
+    /// leaves it unchanged.
+    #[test]
+    fn a_limit_caps_the_prediction_and_never_raises_it() {
+        assert_eq!(
+            predicted_features(Some(300), &ViewportQuery::all().with_limit(100)),
+            Some(100)
+        );
+        assert_eq!(
+            predicted_features(Some(300), &ViewportQuery::all().with_limit(1_000)),
+            Some(300)
+        );
+    }
+
+    /// **U-PRED, with a bbox:** the file's row count says nothing about the rows a bbox encloses, so
+    /// a bbox scope predicts nothing, whatever the count and whatever the limit.
+    #[test]
+    fn a_bbox_scope_predicts_nothing_over_a_verified_file() {
+        let viewport = ViewportQuery::viewport(a_bbox(), "EPSG:2056");
+        assert_eq!(predicted_features(Some(3_300_000), &viewport), None);
+        assert_eq!(
+            predicted_features(Some(3_300_000), &viewport.with_limit(10)),
+            None
+        );
+    }
+
+    /// **U-PRED, with `None`:** an unverified row count predicts nothing in any scope.
+    #[test]
+    fn an_unverified_row_count_predicts_nothing_in_any_scope() {
+        assert_eq!(predicted_features(None, &ViewportQuery::all()), None);
+        assert_eq!(
+            predicted_features(None, &ViewportQuery::all().with_limit(5)),
+            None
+        );
+        assert_eq!(
+            predicted_features(None, &ViewportQuery::viewport(a_bbox(), "EPSG:2056")),
+            None
+        );
+    }
+
+    // ---- U-GUARD: the write-time guard refuses the batch that crosses the ceiling -------------------
+
+    /// **U-GUARD, at the ceiling:** a batch that brings the total exactly to `MAX_FEATURES` is not
+    /// refused. The viewer refuses above its ceiling, not at it.
+    #[test]
+    fn a_batch_that_brings_the_total_to_the_ceiling_is_not_refused() {
+        let c = reader_ceilings();
+        assert!(check_streamed_features(0, c.max_features, &c).is_ok());
+        assert!(check_streamed_features(c.max_features - 10, 10, &c).is_ok());
+    }
+
+    /// **U-GUARD, above the ceiling:** a batch that would bring the total one row above it is
+    /// refused with `CeilingExceeded`, carrying the limit and the total the batch would have made.
+    #[test]
+    fn a_batch_that_would_cross_the_ceiling_is_refused_with_the_total_it_would_make() {
+        let c = reader_ceilings();
+        for (written, batch) in [(c.max_features - 10, 11), (c.max_features, 1)] {
+            match check_streamed_features(written, batch, &c) {
+                Err(PublishError::CeilingExceeded {
+                    ceiling,
+                    limit,
+                    saw,
+                }) => {
+                    assert_eq!(ceiling, "MAX_FEATURES");
+                    assert_eq!(limit, c.max_features);
+                    assert_eq!(saw, c.max_features + 1);
+                }
+                other => panic!("expected CeilingExceeded for ({written}, {batch}), got {other:?}"),
+            }
+        }
+    }
 }
