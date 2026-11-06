@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `cc575a9d2bf0c57990373d944d8889bda57840520c541da0236a059b58b859d9`) at `2026-11-06T17:16:48.940Z`.
+Generated from `PLAN.yaml` (sha256 `1fbcda25033104088c91b5860f11b1246953ae6fb406d845675b30821fde8103`) at `2026-11-06T17:31:41.565Z`.
 
 ## 1. Next
 
@@ -12,7 +12,6 @@ Generated from `PLAN.yaml` (sha256 `cc575a9d2bf0c57990373d944d8889bda57840520c54
 - **lod-tier-tests-own-tier-folder** — Each engine test run takes its own tier folder, the machine-wide tier folder kept for the product only: two suites sharing one machine cleared each other's tiers, failing lod_tier_builder in #284's gate 1 (the human's ruling of 2026-11-06, item 2) (lane `engine`, order null, budget 60 min)
 - **pre-admission-change-detail-braces** — Four kernel P6-placeholder detail strings are wrapped in literal braces, which reach the operator message; the watcher form declares each such string starts with the bracketed placeholder tag (lane `kernel-protocol`, order null, budget 30 min)
 - **windows-case-fold-non-ascii** — The audit case policy on Windows folds non-ASCII letters as NTFS does, so a profile path differing only in non-ASCII case cannot escape the user-home redaction (wave 3's 1c-2 correction, S2, code-path-only) (lane `kernel-protocol`, order null, budget 60 min)
-- **e2e-readme-security-posture-measure-build** — frontends/shell/e2e/README.md: the security-posture paragraph is untrue for the measure build (the debug port in Rust, the e2e hooks kept in), with the missing E-FLOOR entry and stale lib.rs cites (drift sweep area B, findings 6, 11 and 12) (lane `shell`, order null, budget 30 min)
 - **shell-comments-drift-sweep-area-a** — Shell product comments stale against main: the candidate arm called dev-only, the e2e surface calling baseline the default, accessors labelled instrument-only, the old status-stack frame and smaller statements (drift sweep area A, less the lines in b1-shell-half PR B files) (lane `shell`, order null, budget 45 min)
 - **kl-pair-human-answers-c1-c3-and-draft-marks** — KNOWN-LIMITATIONS.md: C-1 to C-3 in the reviewer's words and the KL form's sixteen DRAFT openings made the human's wording (the KL form's Amendment 2) (lane `release`, order null, budget 30 min)
 - **governance-f-after-week-rust-ci-figure** — Governance piece F, the after-week Rust CI figure: the form-only Rust CI runs in the 168 h after the merge, recorded as a class 1 row in piece F's form (lane `governance`, order null, budget 30 min)
@@ -67,6 +66,7 @@ Generated from `PLAN.yaml` (sha256 `cc575a9d2bf0c57990373d944d8889bda57840520c54
 - **publish-session-tier-identity** — Publish and a session-tier identity: KNOWN-LIMITATIONS item 3 says such a file is never saved or published; the cloud audit finds no refusal on the publish path — evidence: branch `cut/publish-session-tier-identity`
 - **skp-filter-dialect-unsupported-ruling** — SKP-V0.md lists skp.filter_dialect_unsupported as a refusal a client receives; no code produces it, a wrong dialect failing at deserialization: the human rules produce or strike (drift sweep area C, finding 1) — evidence: branch `cut/skp-filter-dialect-unsupported-ruling`
 - **b1-shell-half** — Shell migration, milestone 4 -- B1 shell half: attributes of the inspected feature, colour by category with its legend, and the table — evidence: branch `cut/b1-shell-half-pr-c`
+- **e2e-readme-security-posture-measure-build** — frontends/shell/e2e/README.md: the security-posture paragraph is untrue for the measure build (the debug port in Rust, the e2e hooks kept in), with the missing E-FLOOR entry and stale lib.rs cites (drift sweep area B, findings 6, 11 and 12) — evidence: branch `cut/e2e-readme-security-posture-measure-build`
 - **port-2-macos-l1-and-app-dirs** — PORT-2 -- macOS L1 for the Cargo workspace: macos-latest in the same matrix, one application-directory boundary replacing the two resolvers, and a case-policy test on a case-insensitive volume — evidence: branch `cut/port-2-macos-l1-and-app-dirs`
 
 ## 6. Proposed / unscheduled
