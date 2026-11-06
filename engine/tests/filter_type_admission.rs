@@ -635,6 +635,20 @@ fn every_conversion_rounds_refusal_states_a_conversion_refused_by_type() {
 /// refused `TypeNotAdmitted` with its construct, operand types and reason, and its `Display` is
 /// the format of `FilterError`'s `TypeNotAdmitted` arm carrying the text-or-BOOLEAN sentence (a
 /// P6 placeholder); the two float controls keep the float sentence.
+///
+/// RECORDED MUTATION (M-1): the `ConversionRounds` arm that chooses the text-or-BOOLEAN sentence
+/// made never to match (`if false && names_text_or_boolean(operand_types)`, so every refusal
+/// carries the float sentence), applied in a debug build at commit
+/// ce5afff5d863d088741050c270afa0c10ff617aa and reverted. Observed: the whole
+/// `filter_type_admission` binary ran, and this test failed by name at its `Display` assertion on
+/// `'1' + NULL > 0` while the other six tests passed.
+///
+/// RECORDED MUTATION (M-2): the same arm made to match always (`if true ||
+/// names_text_or_boolean(operand_types)`), applied in a debug build at commit
+/// ce5afff5d863d088741050c270afa0c10ff617aa and reverted. Observed: the whole
+/// `filter_type_admission` binary ran, and this test and
+/// `every_conversion_rounds_refusal_states_a_conversion_refused_by_type` failed by name, each at
+/// its `Display` assertion on `f32 > NULL + 100000`, while the other five tests passed.
 #[test]
 fn every_conversion_rounds_refusal_over_a_text_or_boolean_operand_carries_its_own_sentence() {
     let fx = fixture();
