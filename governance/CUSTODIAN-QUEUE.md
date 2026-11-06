@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `c2e2475d40e3a2eaf38eab8b8d87ba07721b4c2db2cbb1bc0d6c5d58089e9f41`) at `2026-11-06T06:32:59.658Z`.
+Generated from `PLAN.yaml` (sha256 `9f0aee0eea7b3b806a8f0fc264bc50d59ac5651c759d9ffec302d132dcff4628`) at `2026-11-06T06:56:45.307Z`.
 
 ## 1. Next
 
@@ -12,7 +12,8 @@ Generated from `PLAN.yaml` (sha256 `c2e2475d40e3a2eaf38eab8b8d87ba07721b4c2db2cb
 - **pre-admission-change-detail-braces** — Four kernel P6-placeholder detail strings are wrapped in literal braces, which reach the operator message; the watcher form declares each such string starts with the bracketed placeholder tag (lane `kernel-protocol`, order null, budget 30 min)
 - **skp-filter-dialect-unsupported-ruling** — SKP-V0.md lists skp.filter_dialect_unsupported as a refusal a client receives; no code produces it, a wrong dialect failing at deserialization: the human rules produce or strike (drift sweep area C, finding 1) (lane `kernel-protocol`, order null, budget 30 min)
 - **windows-case-fold-non-ascii** — The audit case policy on Windows folds non-ASCII letters as NTFS does, so a profile path differing only in non-ASCII case cannot escape the user-home redaction (wave 3's 1c-2 correction, S2, code-path-only) (lane `kernel-protocol`, order null, budget 60 min)
-- **adr-023-stale-cites-before-acceptance** — ADR-023 (Proposed, built in B1): its line cites and six of its sentences are stale against main, misleading a verifier and the human at its acceptance at B1 close (the docs audits, Task C rows 16 to 53) (lane `governance`, order null, budget 45 min)
+- **kl-items-graded-untrue-or-stale** — KNOWN-LIMITATIONS -- on-main notes for the items the cloud truth audit grades untrue (3, 13, 27, 56) or stale (4, 10, 15, 19 and the unnumbered filter paragraph) (lane `release`, order null, budget 90 min)
+- **kl-undeclared-behaviours-u1-to-u17** — KNOWN-LIMITATIONS -- the seventeen behaviours the cloud truth audit finds in ordinary use and declared nowhere (U1 to U17) (lane `release`, order null, budget 120 min)
 - **governance-f-after-week-rust-ci-figure** — Governance piece F, the after-week Rust CI figure: the form-only Rust CI runs in the 168 h after the merge, recorded as a class 1 row in piece F's form (lane `governance`, order null, budget 30 min)
 - **publish-bundle-sigterm** — SIGTERM handling in publish-bundle on unix (wave-3 W3-A observation 3) (lane `platform`, order null, budget 90 min)
 - **publish-unix-quota-perm-errors** — EDQUOT and EPERM in publish error classification on unix (wave-3 W3-A observation 1) (lane `platform`, order null, budget 90 min)
@@ -45,8 +46,6 @@ Generated from `PLAN.yaml` (sha256 `c2e2475d40e3a2eaf38eab8b8d87ba07721b4c2db2cb
 - **session-end-lines-name-coverage-lost-as-source-change** — The hover readout and the Feature tab word every session end as a source change, coverage-lost included, although the engine says coverage-lost is never a source change (milestone 4 PR C gate 1, the architect's C1 note) — blocked by: b1-shell-half
 - **session-log-token-redaction-rests-on-page-code** — The session token never reaching the session log rests on page code: binding_log_session_event appends page-supplied text verbatim, the page holds the token, and the data plane's Session::redact has only a test caller — blocked by: b2-piece-1c-save-and-reopen
 - **briefb-b2-save-reopen** — B2 — Save project, Snapshot data, session history, lineage and preferences, in five stages, each with its own form — blocked by: decision-adr-029-scan-progress-route
-- **kl-items-graded-untrue-or-stale** — KNOWN-LIMITATIONS -- on-main notes for the items the cloud truth audit grades untrue (3, 13, 27, 56) or stale (4, 10, 15, 19 and the unnumbered filter paragraph) — blocked by: adr-023-stale-cites-before-acceptance
-- **kl-undeclared-behaviours-u1-to-u17** — KNOWN-LIMITATIONS -- the seventeen behaviours the cloud truth audit finds in ordinary use and declared nowhere (U1 to U17) — blocked by: adr-023-stale-cites-before-acceptance
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer — blocked by: signpath-application-draft
 - **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-2-0
 - **signpath-application-draft** — Entry 77 — the SignPath OSS application and disclosure text drafted for the human sight, once a release is CI-built — blocked by: release-v0-2-0

@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-06T06:32:59.658Z",
-  "plan_hash": "c2e2475d40e3a2eaf38eab8b8d87ba07721b4c2db2cbb1bc0d6c5d58089e9f41",
+  "generated_at": "2026-11-06T06:56:45.307Z",
+  "plan_hash": "9f0aee0eea7b3b806a8f0fc264bc50d59ac5651c759d9ffec302d132dcff4628",
   "priorities_approved": true,
   "next": {
     "id": "lod-tier-tests-own-tier-folder",
@@ -99,23 +99,42 @@
       "summary": "FORM COMMITTED 2026-11-01 (governance/forms/kernel/WINDOWS-CASE-FOLD-NON-ASCII-PREREGISTRATION.md; 76 pins at b1bdb8ac) from lead-data's draft (state/consults/2026-11-01-windows-case-fold-non-ascii-five-line-form-lead-data-draft.md), its OPEN-1 to OPEN-6 taken as recommended under the human's direction of 2026-10-31, item 4, for the human's review; the guarantee read as ruled for 7a. NEXT: skipped at dispatch while cut/port-2-macos-l1-and-app-dirs edits kernel/src/permission/audit/log.rs (rule (00)); once port-2 merges, log.rs and the pinned cfg-site counts re-read by an amendment, then a worker; the reviewer and the architect from dispatch. Before: WAITS ON PIECE F 2026-10-29: its first step commits a form, which lands at its governance path only after #270 merges. Before: FILLER QUEUE entry 1 (RULED 2026-10-24: state/directives/2026-10-24-weekend-exception-third-product-slot-placements-forms-ahead-250-click.md, line 9; made the standing filler slot by state/directives/2026-10-24-filler-slot-standing-rule-appended-to-autonomy.md, line 8; state/FILLER-QUEUE.md): placed, graded S2; a five-line form under section 21c's size, the reviewer and the architect from dispatch, section 25 (e) set aside; any string a user sees a P6 placeholder for the sitting, any red-line text to the human. NEXT: skipped at dispatch while port-2, in flight, edits kernel/src/permission/audit/log.rs (rule (00)); dispatched when that overlap clears. Before: From wave 3's W3-A (section 1c-2 correction (b)), RECORD S2, code-path-only (state/cloud/wave3/W3-A.md, custodian fields): on Windows, component_eq in kernel/src/permission/audit/normalize.rs uses eq_ignore_ascii_case and is_inside in kernel/src/permission/audit/log.rs uses to_ascii_lowercase, while NTFS also folds non-ASCII letters. Neither the worker nor the custodian observed an escape, and whether the resolved destination already carries the on-disk case is not settled: the form's first step settles it. Windows is the supported platform. Proposed, not placed."
     },
     {
-      "id": "adr-023-stale-cites-before-acceptance",
-      "title": "ADR-023 (Proposed, built in B1): its line cites and six of its sentences are stale against main, misleading a verifier and the human at its acceptance at B1 close (the docs audits, Task C rows 16 to 53)",
-      "lane": "governance",
+      "id": "kl-items-graded-untrue-or-stale",
+      "title": "KNOWN-LIMITATIONS -- on-main notes for the items the cloud truth audit grades untrue (3, 13, 27, 56) or stale (4, 10, 15, 19 and the unnumbered filter paragraph)",
+      "lane": "release",
       "phase": "prototype",
       "status": "ready",
       "order": null,
-      "budget_minutes": 45,
+      "budget_minutes": 90,
       "needs_human": {
         "kind": "none",
         "minutes": 0
       },
       "evidence": null,
       "dates": {
-        "opened": "2026-11-05",
+        "opened": "2026-11-03",
         "done": null
       },
-      "summary": "READY 2026-11-06: #283 merged (5f242919); the docs lane, 2 of 7, next: the custodian's table of ADR-023's current lines and its six stale sentences, recomputed at main, for the human's sight. Before: PLACED 2026-11-05 (evening) by the human's ruling (state/directives/2026-11-05-8c-full-form-nine-s2-placed-u12-slot-2-u1-reproducer-adr-notes-words-e2e-readme-words-8b-d3.md, item 2): the docs lane, 2 of 7, so it is done before PR B closes: the custodian's table of ADR-023's current lines and its six stale sentences, for the human's sight. ADR-023's Status line at B1's close, with the acceptance note in the human's words, as the custodian has it (item 3). Before: PROPOSED 2026-11-05 by the custodian, graded S2, from the docs-audit triage (state/consults/2026-11-05-docs-audit-task-c-unpinned-cites-triage-architect.md, rows 16 to 53): confirmed by reading on main: besides stale line cites, six sentences are stale in themselves: the superseded draft code they describe is gone (rows 24 to 26), the arm moved (row 34), the constant was renamed (row 39), the schema shape grew (row 50), and the current literal is no longer skp/0.2 (row 51). A verifier reading ADR-023 at its acceptance, and the human accepting it, would be misled. ADR text is the human's: the Status line's acceptance at B1's close is the natural moment for a dated note in the human's words, the custodian supplying a table of current lines for the human's sight before then. adr-notes-stale-statements-and-indices (A-S5) and adr-023-s2-widenings-adr-021-consult also touch ADR-023, so under rule (00) one at a time, or one note. Placement the human's."
+      "summary": "READY 2026-11-06: adr-023-stale-cites-before-acceptance done (its table filed); the docs lane, 3 of 7, with kl-undeclared-behaviours-u1-to-u17, one piece: its form drafted by the architect next, rule (00) against U1 (items 5 and 6), U12 (item 8) and port-2 (the platforms paragraph and item 43). Before: PLACED 2026-11-05 (evening) by the human's ruling (state/directives/2026-11-05-8c-full-form-nine-s2-placed-u12-slot-2-u1-reproducer-adr-notes-words-e2e-readme-words-8b-d3.md, item 2): the docs lane, 3 of 7, with kl-undeclared-behaviours-u1-to-u17, one piece: their rows written from the code and approved with it under Part 1, item 1 (the human's words). Before: TRIAGED 2026-11-05 (state/consults/2026-11-05-area-e-kl-triage-numbered-items-architect.md, the architect's reading at d8e52f77, under the human's direction of 2026-11-05, item 2): confirmed on main by reading: items 13, 15 and 27 as the audit grades them; item 19 (the degradation is shown, in the describe summary and the status line); item 56 PARTLY (each refused tile query's code is shown in the Activity console; the stream count is understated, up to four); items 4 and 10 stale now, independent of 1c (the style is kept on reopen and written to the session record a crash leaves); item 3 PARTLY, tied to publish-session-tier-identity; the unnumbered paragraph and its comment stale (both fixes built). Added: the pins at KL lines 103 and 124, stale references. Item 43 imprecise only, left with 1c. GRADED S2 by the custodian (a record: KNOWN-LIMITATIONS rows, the words the human's at the v0.2 rewrite), split at drafting as the reading's A1 to A7. Items 4 and 10 stay in this node; if 1c's step reaches them first they fold into that step and leave this node. Placement the human's. Before: PROPOSED 2026-11-03 by the custodian, from the cloud KNOWN-LIMITATIONS truth audit (state/consults/2026-11-03-cloud-kl-audit-report.md, (a draft and not Authority)), read as any reading: at 6b67d44, whose product code is main's, it grades a named clause of items 3, 13, 27 and 56 untrue and items 4, 10, 15, 19 and the unnumbered filter paragraph stale on main, none executed. Each clause is re-read against main before any word; the words are the human's at the v0.2 rewrite. The v0.2 draft's findings 1 to 3 meet the same items (state/consults/2026-11-03-cloud-v0-2-drafts-release-0-2-draft.md, section 5). Item 3's clause is also the product question in publish-session-tier-identity. Proposed; placed by the human."
+    },
+    {
+      "id": "kl-undeclared-behaviours-u1-to-u17",
+      "title": "KNOWN-LIMITATIONS -- the seventeen behaviours the cloud truth audit finds in ordinary use and declared nowhere (U1 to U17)",
+      "lane": "release",
+      "phase": "prototype",
+      "status": "ready",
+      "order": null,
+      "budget_minutes": 120,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-11-03",
+        "done": null
+      },
+      "summary": "READY 2026-11-06: adr-023-stale-cites-before-acceptance done (its table filed); the docs lane, 3 of 7, with kl-items-graded-untrue-or-stale, one piece: its form drafted by the architect next, rule (00) against U1 (items 5 and 6), U12 (item 8) and port-2 (the platforms paragraph and item 43). Before: PLACED 2026-11-05 (evening) by the human's ruling (state/directives/2026-11-05-8c-full-form-nine-s2-placed-u12-slot-2-u1-reproducer-adr-notes-words-e2e-readme-words-8b-d3.md, item 2): the docs lane, 3 of 7, with kl-items-graded-untrue-or-stale, one piece: their rows written from the code and approved with it under Part 1, item 1 (the human's words). U1, U2, U10 and U12 have their own nodes; U17 is single-file-bracket-name-refused-as-partitioned (item 2). Before: TRIAGED 2026-11-05 (state/consults/2026-11-05-area-e-kl-triage-undeclared-behaviours-architect.md, the architect's reading at d8e52f77, the direction's item 2): CONFIRMED by reading U1, U2, U3, U4, U7, U8, U9, U11, U12, U13, U14 and U16; PARTLY U6 (the manifests say 0.1.0; the app shows no version), U10 (the unverified routes are not refused at all), U15 (the frameless window only, and the app's status line already says it) and U17 (one file whose name holds a bracket or a brace; the directory half is unreachable from the app's file picker); U5 is the P6 process, operator-sitting-queue's. GRADED by the custodian: the declarations S2 (KNOWN-LIMITATIONS rows grouped by item as the reading proposes, the words the human's; U7 with item 4 in kl-items-graded-untrue-or-stale); U1 and U12 S1 candidates, each in its own node, to the human; U2 and U10 S2 in their nodes; U6 S2, noted on release-v0-2-0; U17 S2, recorded here: for one file whose name holds a bracket or a brace the engine's refusal says the source is partitioned across more than one file, and its advice cannot be followed in the app (engine/src/error.rs, engine/src/dataset.rs; the message an engine fact under P6), proposed to the human as its own node; U3's chunk-local row number in the engine.wkb message S3, recorded here. Placement the human's. Before: PROPOSED 2026-11-03 by the custodian, from the cloud KNOWN-LIMITATIONS truth audit (state/consults/2026-11-03-cloud-kl-audit-report.md, its section on behaviour no entry declares; (a draft and not Authority)): seventeen behaviours found by code reading at 6b67d44, each checked against the file by text search, none executed. Each is re-read, then declared or split to a fix node: U1 is publish-session-tier-identity, U2 narrow-integer-id-unstreamable, U10 export-refused-above-row-ceiling-every-scope. U5, U12 and U17 rest on shown strings (the P6 placeholders, the publish dialog's filter sentence, an admission refusal's advice), so their words are the human's. Proposed; placed by the human."
     },
     {
       "id": "governance-f-after-week-rust-ci-figure",
@@ -571,50 +590,6 @@
       "summary": "RE-DESCRIBED 2026-10-07 (evening) to cite state/directives/B2-BRIEF-2026-10-07.md, which replaces the migration plan's section 10 as the brief for B2's forms (state/directives/2026-10-07-b2-brief-and-evening-rulings.md); the rest of the plan stands. Stage 1 runs as pieces 1a, 1b and 1c (the nodes b2-piece-1a-step-record-and-dataset-reference, b2-piece-1b-recording and b2-piece-1c-save-and-reopen), and stage 3 as 3a and 3b, per the brief's section 9; piece 1a's form is stage 1's form. Stages 2 to 5 stay in this node for now. The evening rulings: the session history is on the machine, found by the project's identity, with crash recovery offered at the next open; the docs/07 note lands with stage 1 or just before it, typed by the human; no kept branches, the parent field stays; steps left behind after a save leave the lineage at the next Save project, an export keeps its own copy of its steps, and the session history has a saved-here mark; an incomplete lineage keeps the data's grade with a recipe-incomplete marker, no ADR-005 amendment, the format ADR defining the marker. Its dependencies stand. Before: RE-DESCRIBED 2026-10-07 per the migration plan's section 10 (state/directives/2026-10-07-migration-plan-v2-ruled.md; state/directives/SHELL-MIGRATION-PLAN-2026-10-07.md, section 10), which is the brief for B2's preregistration. Five stages, each with its own form (section 10.8; the human's answer to question 4): 1 Save project (linked) and reopen, with the lasting dataset reference, the kernel step commands and the session history with its crash safety; 2 the lineage file, compaction at Save project and the step record; 3 Snapshot data and the freeze-a-snapshot choice; 4 the views and restore (Data lineage, Map recipe, Sources); 5 sharing levels, tracking settings and the two-layer preferences. The human's answers: question 1, the session history is kept on the machine, keyed to the project, not in the project folder; question 2, one dated note in docs/07 in B2's pull request, typed by the human then; question 3, keeping a branch stays out of B2; questions 5 to 11 come to the human as open items in B2's forms. Its dependencies stand, the ADR-029 scan-progress ruling among them. Before: PLACED 2026-10-05 (the product-first direction 8.d): after the points and lines cuts; its dependencies stand, the ADR-029 scan-progress ruling among them. Before: Shell direction item (b), RULED 2026-09-23 (late): B2's screens wait for the new shell structure (shell-redesign-map-studio). They are also held by the 2026-09-27 session order until the human says otherwise (state/directives/2026-09-27-session-order.md, its last paragraph): they wait for the shell migration plan. The human, 2026-09-22: reference Save/reopen, then verified Prepare, as separately reviewable pieces; Save performs no whole-file scan; Prepare explicitly acquires or selects an eligible immutable revision (explicit operator intent; reuse without recopying; never silently rebind a mutable preview); verified operations read that artifact; rebinding creates a fresh generation; saved-work inputs have retention distinct from the rendering cache; missing/cancelled/failed/mismatched never display success; a single-dataset recipe, not a multi-layer project; one focused Save/Prepare design exercise resolves interaction choices before coding: a clickable prototype on synthetic data with a state/transition table, keyboard and accessibility behaviour, the failure states, and explicit selection of an eligible immutable revision; no whole-app redesign. the typed spatial-recipe schema, its atomic save and its preview/verified/mismatch state machine, once B1 closes PORTABILITY section 4 (Prepare's coherent-acquisition guarantee, defined without the OS) binds B2's preregistration when B2 starts (state/directives/2026-09-30-portability-and-handoff.md, item 1). Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33), item 10: the coherent-acquisition guarantee lives in a short Proposed ADR, drafted with B2's preregistration; its acceptance stays the human's.",
       "blocked_by": [
         "decision-adr-029-scan-progress-route"
-      ]
-    },
-    {
-      "id": "kl-items-graded-untrue-or-stale",
-      "title": "KNOWN-LIMITATIONS -- on-main notes for the items the cloud truth audit grades untrue (3, 13, 27, 56) or stale (4, 10, 15, 19 and the unnumbered filter paragraph)",
-      "lane": "release",
-      "phase": "prototype",
-      "status": "blocked",
-      "order": null,
-      "budget_minutes": 90,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-11-03",
-        "done": null
-      },
-      "summary": "PLACED 2026-11-05 (evening) by the human's ruling (state/directives/2026-11-05-8c-full-form-nine-s2-placed-u12-slot-2-u1-reproducer-adr-notes-words-e2e-readme-words-8b-d3.md, item 2): the docs lane, 3 of 7, with kl-undeclared-behaviours-u1-to-u17, one piece: their rows written from the code and approved with it under Part 1, item 1 (the human's words). Before: TRIAGED 2026-11-05 (state/consults/2026-11-05-area-e-kl-triage-numbered-items-architect.md, the architect's reading at d8e52f77, under the human's direction of 2026-11-05, item 2): confirmed on main by reading: items 13, 15 and 27 as the audit grades them; item 19 (the degradation is shown, in the describe summary and the status line); item 56 PARTLY (each refused tile query's code is shown in the Activity console; the stream count is understated, up to four); items 4 and 10 stale now, independent of 1c (the style is kept on reopen and written to the session record a crash leaves); item 3 PARTLY, tied to publish-session-tier-identity; the unnumbered paragraph and its comment stale (both fixes built). Added: the pins at KL lines 103 and 124, stale references. Item 43 imprecise only, left with 1c. GRADED S2 by the custodian (a record: KNOWN-LIMITATIONS rows, the words the human's at the v0.2 rewrite), split at drafting as the reading's A1 to A7. Items 4 and 10 stay in this node; if 1c's step reaches them first they fold into that step and leave this node. Placement the human's. Before: PROPOSED 2026-11-03 by the custodian, from the cloud KNOWN-LIMITATIONS truth audit (state/consults/2026-11-03-cloud-kl-audit-report.md, (a draft and not Authority)), read as any reading: at 6b67d44, whose product code is main's, it grades a named clause of items 3, 13, 27 and 56 untrue and items 4, 10, 15, 19 and the unnumbered filter paragraph stale on main, none executed. Each clause is re-read against main before any word; the words are the human's at the v0.2 rewrite. The v0.2 draft's findings 1 to 3 meet the same items (state/consults/2026-11-03-cloud-v0-2-drafts-release-0-2-draft.md, section 5). Item 3's clause is also the product question in publish-session-tier-identity. Proposed; placed by the human.",
-      "blocked_by": [
-        "adr-023-stale-cites-before-acceptance"
-      ]
-    },
-    {
-      "id": "kl-undeclared-behaviours-u1-to-u17",
-      "title": "KNOWN-LIMITATIONS -- the seventeen behaviours the cloud truth audit finds in ordinary use and declared nowhere (U1 to U17)",
-      "lane": "release",
-      "phase": "prototype",
-      "status": "blocked",
-      "order": null,
-      "budget_minutes": 120,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-11-03",
-        "done": null
-      },
-      "summary": "PLACED 2026-11-05 (evening) by the human's ruling (state/directives/2026-11-05-8c-full-form-nine-s2-placed-u12-slot-2-u1-reproducer-adr-notes-words-e2e-readme-words-8b-d3.md, item 2): the docs lane, 3 of 7, with kl-items-graded-untrue-or-stale, one piece: their rows written from the code and approved with it under Part 1, item 1 (the human's words). U1, U2, U10 and U12 have their own nodes; U17 is single-file-bracket-name-refused-as-partitioned (item 2). Before: TRIAGED 2026-11-05 (state/consults/2026-11-05-area-e-kl-triage-undeclared-behaviours-architect.md, the architect's reading at d8e52f77, the direction's item 2): CONFIRMED by reading U1, U2, U3, U4, U7, U8, U9, U11, U12, U13, U14 and U16; PARTLY U6 (the manifests say 0.1.0; the app shows no version), U10 (the unverified routes are not refused at all), U15 (the frameless window only, and the app's status line already says it) and U17 (one file whose name holds a bracket or a brace; the directory half is unreachable from the app's file picker); U5 is the P6 process, operator-sitting-queue's. GRADED by the custodian: the declarations S2 (KNOWN-LIMITATIONS rows grouped by item as the reading proposes, the words the human's; U7 with item 4 in kl-items-graded-untrue-or-stale); U1 and U12 S1 candidates, each in its own node, to the human; U2 and U10 S2 in their nodes; U6 S2, noted on release-v0-2-0; U17 S2, recorded here: for one file whose name holds a bracket or a brace the engine's refusal says the source is partitioned across more than one file, and its advice cannot be followed in the app (engine/src/error.rs, engine/src/dataset.rs; the message an engine fact under P6), proposed to the human as its own node; U3's chunk-local row number in the engine.wkb message S3, recorded here. Placement the human's. Before: PROPOSED 2026-11-03 by the custodian, from the cloud KNOWN-LIMITATIONS truth audit (state/consults/2026-11-03-cloud-kl-audit-report.md, its section on behaviour no entry declares; (a draft and not Authority)): seventeen behaviours found by code reading at 6b67d44, each checked against the file by text search, none executed. Each is re-read, then declared or split to a fix node: U1 is publish-session-tier-identity, U2 narrow-integer-id-unstreamable, U10 export-refused-above-row-ceiling-every-scope. U5, U12 and U17 rest on shown strings (the P6 placeholders, the publish dialog's filter sentence, an admission refusal's advice), so their words are the human's. Proposed; placed by the human.",
-      "blocked_by": [
-        "adr-023-stale-cites-before-acceptance"
       ]
     },
     {
