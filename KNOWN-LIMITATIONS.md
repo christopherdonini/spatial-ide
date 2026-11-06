@@ -79,8 +79,9 @@ no performance claim at all (`docs/08_Testing.md`).*
 
    **On `main` (not the v0.1.0 artifact above).** Opening a file also clears the filter cards, not the filter alone. Each filter you apply and each style change you commit is written to the session record item 43 describes, and nothing reads that record back. Nothing you can save exists yet: no project file and no saved style.
 
-5. **The published bundle has declared ceilings, and a whole-file publish above one of them is
-   refused before anything is written.** The viewer's ceilings are `MAX_FEATURES` 2000000, `MAX_PARTITIONS` 100000,
+5. **The published bundle has declared ceilings, and a whole-file publish predicted above
+   `MAX_FEATURES` is refused before anything is written (item 6 names the ceilings no prediction
+   covers).** The viewer's ceilings are `MAX_FEATURES` 2000000, `MAX_PARTITIONS` 100000,
    `MAX_RESIDENT_BYTES` 536870912, `MAX_ATTRIBUTE_COLUMNS` 32, `MAX_ATTRIBUTE_DISPLAY_CHARS` 512 —
    declared limits, not measurements. A whole-file publish of a source predicted above `MAX_FEATURES`
    is refused at preflight: *"refused: this publish is predicted to exceed the bundled viewer's declared ceiling
@@ -91,7 +92,7 @@ no performance claim at all (`docs/08_Testing.md`).*
    predicted from the whole file: it is refused only if its own rows exceed `MAX_FEATURES`, and that
    refusal comes while the rows are being written, after the approval, with nothing left at the
    destination.
-   <!-- renderer/bundle-viewer/ceilings.json (the five values); kernel/src/publish/error.rs:450-456 (ReaderCeilingExceeded Display); MANUAL-WALKTHROUGH.md M10 (the refusal verbatim, on a 3,300,000-row source); RELEASE-0.1.md Amendment 15 ("M10 is fine"); revised 2026-11-06 by publish-session-tier-identity (kernel/src/publish/ceilings.rs `predicted_features` and `check_streamed_features`: the scope's prediction and the write-time check) -->
+   <!-- renderer/bundle-viewer/ceilings.json (the five values); kernel/src/publish/error.rs:450-456 (ReaderCeilingExceeded Display); MANUAL-WALKTHROUGH.md M10 (the refusal verbatim, on a 3,300,000-row source); RELEASE-0.1.md Amendment 15 ("M10 is fine"); revised 2026-11-06 by publish-session-tier-identity (kernel/src/publish/ceilings.rs `predicted_features` and `check_streamed_features`: the scope's prediction and the write-time check). Not reached in ordinary use: a `DeclaredNotVerified` identity (engine API only) is not predicted in either scope and is refused while its rows are written; a staging directory that cannot be removed turns the refusal into `publish.staging_not_removed`, with that directory left beside the destination. -->
 
 6. **That prediction does not cover every ceiling.** `MAX_RESIDENT_BYTES` is checked at **no** stage:
    a bundle under `MAX_FEATURES` but over the 512 MiB resident ceiling still publishes unwarned, and
