@@ -1435,8 +1435,10 @@ impl TypeRefusalReason {
     /// `governance/forms/engine/TYPE-WALK-RULE2-RESIDUAL-REASONS-PREREGISTRATION.md` and is a P6
     /// placeholder: T-C's named a value read from the file, which is false where the integer or
     /// decimal side is a constant NULL (`f32 > NULL + 100000`). This one states the type pair
-    /// alone. It is still false of a double literal beside an INTEGER literal in `+`, `-` or `*`,
-    /// which the walk refuses although no INTEGER value rounds in DOUBLE.
+    /// alone. It is still false of a text literal beside a NULL literal in `+` or `-`
+    /// (`'1' + NULL > 0`), which reaches this reason because the text reason excludes a NULL
+    /// partner; at DuckDB v1.5.5 the binder refuses the `*` form (`'1' * NULL > 0`) before the walk
+    /// runs.
     fn sentence(self) -> &'static str {
         match self {
             Self::TextWithNonText => "a comparison of text with a non-text value",
@@ -2034,9 +2036,13 @@ fn type_of_arithmetic(
 }
 
 /// Does `+`/`-`/`*` admit this pair (section 2.5(a), applying section 2.3's rules pairwise), and
-/// if so, its result type? `None` covers both "refused" and "not this arm's job" uniformly -- a
-/// decimal literal beside an integer or a decimal is refused outright (O-5) and never reaches any
-/// branch below, because none of them ever classifies a `Decimal` operand as admitted.
+/// if so, its result type? `None` covers both "refused" and "not this arm's job" uniformly. A
+/// decimal literal beside an integer or a decimal is refused outright (O-5): no branch below admits
+/// it. A `Decimal` operand is admitted by three rules only, each in both operand orders: a NULL
+/// literal beside a numeric operand (rule 2); a REAL or DOUBLE operand that is not a literal (a
+/// column or an arithmetic result) beside a within-bounds decimal literal (rule 6); and a
+/// within-bounds decimal literal beside a double literal (the last clause). Any other pair with a
+/// `Decimal` operand falls through to `None`.
 fn admitted_arithmetic_result(l: &Typed, r: &Typed) -> Option<EngineType> {
     let is_int = |t: &Typed| int_bits_signed(&t.ty).is_some() && t.within_bounds;
     let is_float_col = |t: &Typed| {
@@ -2135,6 +2141,21 @@ fn admitted_arithmetic_result(l: &Typed, r: &Typed) -> Option<EngineType> {
         return Some(EngineType::Double);
     }
     if is_double_lit(r) && int_le(l, 32) {
+        return Some(EngineType::Double);
+    }
+    // a double literal beside an integer or decimal literal within the bounds, in either order: the
+    // result is DOUBLE, because the only conversion is literal to DOUBLE
+    // (`docs/adr/ADR-021-row-filter-on-viewport-query.md`, Note 2026-09-30, item 2;
+    // `governance/forms/engine/FILTER-BIND-COERCIONS-PREREGISTRATION.md` section 2.3, rule 6's
+    // second clause, applied pairwise by section 2.5(a)). `is_numeric_lit` tests the partner's kind
+    // is literal and its within-bounds flag, so a partner beyond the bounds keeps
+    // `literal_out_of_bounds`. A rule-2 result that counts as a decimal literal has the expression
+    // kind, so it is not admitted here (`docs/adr/ADR-021-row-filter-on-viewport-query.md`, Note
+    // 2026-10-03, item 2); neither is a non-literal partner.
+    if is_double_lit(l) && is_numeric_lit(r) {
+        return Some(EngineType::Double);
+    }
+    if is_double_lit(r) && is_numeric_lit(l) {
         return Some(EngineType::Double);
     }
     None
