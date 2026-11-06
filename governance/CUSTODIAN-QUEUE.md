@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `02df27bb118c55fb941d24140f3be5d3e37e05cc2316b3805d321f1c111af1e4`) at `2026-11-06T15:33:20.356Z`.
+Generated from `PLAN.yaml` (sha256 `3997170137c7b47ca1ea9b3e8b9394ab774d7c27746d96e3f9452e09dadf8483`) at `2026-11-06T16:07:22.632Z`.
 
 ## 1. Next
 
@@ -11,6 +11,7 @@ Generated from `PLAN.yaml` (sha256 `02df27bb118c55fb941d24140f3be5d3e37e05cc2316
 - **lod-tier-tests-own-tier-folder** — Each engine test run takes its own tier folder, the machine-wide tier folder kept for the product only: two suites sharing one machine cleared each other's tiers, failing lod_tier_builder in #284's gate 1 (the human's ruling of 2026-11-06, item 2) (lane `engine`, order null, budget 60 min)
 - **pre-admission-change-detail-braces** — Four kernel P6-placeholder detail strings are wrapped in literal braces, which reach the operator message; the watcher form declares each such string starts with the bracketed placeholder tag (lane `kernel-protocol`, order null, budget 30 min)
 - **windows-case-fold-non-ascii** — The audit case policy on Windows folds non-ASCII letters as NTFS does, so a profile path differing only in non-ASCII case cannot escape the user-home redaction (wave 3's 1c-2 correction, S2, code-path-only) (lane `kernel-protocol`, order null, budget 60 min)
+- **e2e-readme-security-posture-measure-build** — frontends/shell/e2e/README.md: the security-posture paragraph is untrue for the measure build (the debug port in Rust, the e2e hooks kept in), with the missing E-FLOOR entry and stale lib.rs cites (drift sweep area B, findings 6, 11 and 12) (lane `shell`, order null, budget 30 min)
 - **governance-f-after-week-rust-ci-figure** — Governance piece F, the after-week Rust CI figure: the form-only Rust CI runs in the 168 h after the merge, recorded as a class 1 row in piece F's form (lane `governance`, order null, budget 30 min)
 - **publish-bundle-sigterm** — SIGTERM handling in publish-bundle on unix (wave-3 W3-A observation 3) (lane `platform`, order null, budget 90 min)
 - **publish-unix-quota-perm-errors** — EDQUOT and EPERM in publish error classification on unix (wave-3 W3-A observation 1) (lane `platform`, order null, budget 90 min)
@@ -39,7 +40,6 @@ Generated from `PLAN.yaml` (sha256 `02df27bb118c55fb941d24140f3be5d3e37e05cc2316
 - **module-docs-drift-sweep-area-d** — Kernel and engine module docs: the never-refuses and unreachable claims the Table, record_step and publish have overtaken, the withdrawn cancellation bound, and smaller statements (drift sweep area D, findings 1 to 6) — blocked by: b2-piece-1c-save-and-reopen, adr-indices-hand-written-current
 - **skp-line-cites-outside-close-races** — Stale line cites into kernel/src/skp.rs outside kernel-close-races-followups files -- shell streaming, App.tsx, pool_poll.rs, src-tauri lib.rs, the P4 corpus test and the persisted-artifacts test — blocked by: adr-035-close-races-note
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
-- **e2e-readme-security-posture-measure-build** — frontends/shell/e2e/README.md: the security-posture paragraph is untrue for the measure build (the debug port in Rust, the e2e hooks kept in), with the missing E-FLOOR entry and stale lib.rs cites (drift sweep area B, findings 6, 11 and 12) — blocked by: kl-items-graded-untrue-or-stale
 - **session-end-lines-name-coverage-lost-as-source-change** — The hover readout and the Feature tab word every session end as a source change, coverage-lost included, although the engine says coverage-lost is never a source change (milestone 4 PR C gate 1, the architect's C1 note) — blocked by: b1-shell-half
 - **session-log-token-redaction-rests-on-page-code** — The session token never reaching the session log rests on page code: binding_log_session_event appends page-supplied text verbatim, the page holds the token, and the data plane's Session::redact has only a test caller — blocked by: b2-piece-1c-save-and-reopen
 - **briefb-b2-save-reopen** — B2 — Save project, Snapshot data, session history, lineage and preferences, in five stages, each with its own form — blocked by: decision-adr-029-scan-progress-route
@@ -60,7 +60,6 @@ Generated from `PLAN.yaml` (sha256 `02df27bb118c55fb941d24140f3be5d3e37e05cc2316
 - **publish-session-tier-identity** — Publish and a session-tier identity: KNOWN-LIMITATIONS item 3 says such a file is never saved or published; the cloud audit finds no refusal on the publish path — evidence: branch `cut/publish-session-tier-identity`
 - **skp-filter-dialect-unsupported-ruling** — SKP-V0.md lists skp.filter_dialect_unsupported as a refusal a client receives; no code produces it, a wrong dialect failing at deserialization: the human rules produce or strike (drift sweep area C, finding 1) — evidence: branch `cut/skp-filter-dialect-unsupported-ruling`
 - **b1-shell-half** — Shell migration, milestone 4 -- B1 shell half: attributes of the inspected feature, colour by category with its legend, and the table — evidence: branch `cut/b1-shell-half-pr-c`
-- **kl-items-graded-untrue-or-stale** — KNOWN-LIMITATIONS -- on-main notes for the items the cloud truth audit grades untrue (3, 13, 27, 56) or stale (4, 10, 15, 19 and the unnumbered filter paragraph) — evidence: branch `cut/kl-items-graded-item-16-cite`
 - **port-2-macos-l1-and-app-dirs** — PORT-2 -- macOS L1 for the Cargo workspace: macos-latest in the same matrix, one application-directory boundary replacing the two resolvers, and a case-policy test on a case-insensitive volume — evidence: branch `cut/port-2-macos-l1-and-app-dirs`
 
 ## 6. Proposed / unscheduled
