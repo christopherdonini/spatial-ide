@@ -210,7 +210,10 @@ export interface E2eTestSurface {
    * - `frontends/shell/e2e/export-view.mjs`: that at least one feature is resident after
    *   `queryWithFilter` applies a predicate, read as `totalResidentFeatures`, before the driver
    *   settles and prepares the Current view.
-   * The reason below is P3b's, written for source-changed.mjs.
+   * The reason below is P3b's, written for source-changed.mjs. It holds unchanged for
+   * source-watch-idle.mjs, whose W2 and F2 check the same owner-side consequence, reached by the
+   * watcher's event instead of the next query. export-view.mjs reads the count as a precondition of
+   * its steps, not as the property it proves; no reason is claimed for it here.
    *
    * **Why the property must be proven about the real app.** P3b's whole subject is an owner-side
    * consequence -- that a detected source change empties the resident geometry an operator is
@@ -323,8 +326,8 @@ export interface E2eTestSurface {
    * `e2e/filter-panel.mjs` and `e2e/console.mjs` set nothing and assert the readback is
    * `"candidate"`. */
   setResidencyArm?: (arm: ResidencyArm) => Promise<SetResidencyArmResult>;
-  /** Reads the current arm back -- `"candidate"` (`DEFAULT_RESIDENCY_ARM`) unless a prior
-   * `setResidencyArm("baseline")` call on this same session succeeded. */
+  /** Reads the current arm back -- the arm the last successful `setResidencyArm` call selected
+   * since the page loaded, or `"candidate"` (`DEFAULT_RESIDENCY_ARM`) if none has succeeded. */
   getResidencyArm?: () => Promise<ResidencyArm>;
   /** **DEV-ONLY E2E TEST SEAM** (viewport-residency cut P7, "the tile-size sweep selector -- the
    * campaign's last missing wire"). Selects one of the three LOCKED grid resolutions
