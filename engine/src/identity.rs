@@ -358,7 +358,16 @@ mod tests {
 
     #[test]
     fn only_value_preserving_integer_types_are_admitted() {
-        for ty in [D::UInt64, D::Int64, D::UInt32, D::Int32, D::Int16, D::UInt8] {
+        for ty in [
+            D::UInt64,
+            D::Int64,
+            D::UInt32,
+            D::Int32,
+            D::Int16,
+            D::UInt8,
+            D::Int8,
+            D::UInt16,
+        ] {
             let schema = schema_with("k", ty.clone());
             assert!(
                 admit_column_type("k", &ty, &schema).is_ok(),
