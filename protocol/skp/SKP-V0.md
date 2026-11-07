@@ -29,8 +29,11 @@ directions, so schema evolution is impossible without a new version string.
 ```
 
 `path` is UTF-8, absolute, and comes from the OS file picker. The host passes it to the engine's
-open as received, without canonicalizing it. A directory, or a path carrying a glob metacharacter, is refused first, as
-`engine.identity_ordinal_partitioned_unsupported`; any other path that is not a file is refused as
+open as received, without canonicalizing it. A directory, a path carrying `*` or `?`, or a path
+carrying `[`, `]`, `{` or `}` at which no file exists, is refused first, as
+`engine.identity_ordinal_partitioned_unsupported`; a path carrying `[`, `]`, `{` or `}` at which a
+file exists is opened as that one file (observed on Windows; `KNOWN-LIMITATIONS.md` item 20 names
+what is not claimed); any other path that is not a file is refused as
 `engine.source`, with `EngineError::Source`'s own text. **Cut 1 offered no `crs_assertion` and no
 `identity` field** — the remediation flows that use them were cut-2 UI work, and the fields arrived
 with the UI that exercises them, not before. **`skp/0.2` (§8) adds both fields to the wire**,
