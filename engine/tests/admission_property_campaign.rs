@@ -623,7 +623,6 @@ fn gen_ceiling(r: &mut Rng) -> String {
 /// wildcard arm: a new variant is a compile error here, exactly the discipline the product keeps.
 fn code_of(e: &FilterError) -> &'static str {
     match e {
-        FilterError::DialectUnsupported { .. } => "skp.filter_dialect_unsupported",
         FilterError::Unparsable { .. } => "skp.filter_unparsable",
         FilterError::NotASingleExpression { .. } => "skp.filter_not_a_single_expression",
         FilterError::ConstructNotAdmitted { .. } => "skp.filter_construct_not_admitted",

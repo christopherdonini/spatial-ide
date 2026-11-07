@@ -1450,10 +1450,10 @@ impl SkpHost {
         // extra IO beyond DuckDB's own parse/bind against what is already open) but strictly
         // *before* `open_engine_stream` below ever leases a `Class::Stream` connection and *before*
         // `self.tickets.mint` ever runs. A refused predicate returns here, synchronously, as one of
-        // the twelve typed `skp.filter_*` codes (`filter_error_of`) — never as a data-plane terminal
+        // the eleven typed `skp.filter_*` codes (`filter_error_of`) — never as a data-plane terminal
         // frame arriving after a round trip, and never after a ticket a client would have to redeem
         // just to learn it was refused (SKP-V0 §1, ADR-019 §1). A residual admission-*lease*
-        // exhaustion is not one of those twelve: it routes through `engine.connections_exhausted`
+        // exhaustion is not one of those eleven: it routes through `engine.connections_exhausted`
         // instead — see [`predicate_admit_error_of`].
         // **A ticket is refused under an invalidated generation, before anything is built** (§13 D;
         // boundary 4's "new tickets refused under G"). The kernel side is authoritative: this
@@ -1776,8 +1776,9 @@ fn viewport_query_build_error_of(e: ViewportQueryBuildError) -> SkpError {
 /// `EngineError::ConnectionsExhausted` arm to `engine.connections_exhausted` (SKP-V0.md §5's
 /// `code` rule: `engine.` + variant-name) — the ruling of 2026-09-13 (DECISIONS-PENDING entry 91 (a)):
 /// residual exhaustion surfaces as the typed `engine.connections_exhausted`, **never** as a false
-/// binder refusal. ADR-021 item 8's twelve-code `skp.filter_*` list is untouched: this function
-/// mints no code either side of the match does not already mint.
+/// binder refusal. This function mints no code that either side of the match does not already
+/// mint: the `skp.filter_*` codes of [`filter_error_of`] (whose match has no wildcard arm, the
+/// discipline of ADR-021 item 8) and `engine.connections_exhausted`.
 pub(crate) fn predicate_admit_error_of(e: PredicateAdmitError) -> SkpError {
     match e {
         PredicateAdmitError::Filter(fe) => filter_error_of(&fe),
@@ -2279,19 +2280,14 @@ pub fn error_of(e: &EngineError) -> SkpError {
 }
 
 /// Maps every `FilterError` variant (`engine::predicate`, P3's admission) to its declared
-/// `skp.filter_*` wire code and named fields — `NEXT-CUT.md` design essential 5's taxonomy,
-/// field for field. **No wildcard arm**: a thirteenth `FilterError` variant fails this build until
-/// it is mapped here (correction round 2, W10; architect B7, reviewer B7), the same discipline
-/// [`error_of`] applies to `EngineError` above. `message` is
-/// `FilterError`'s own `Display` output, unedited, exactly [`error_of`]'s own convention.
+/// `skp.filter_*` wire code and named fields — SKP-V0 §7.5's taxonomy, field for field. **No
+/// wildcard arm**: a twelfth `FilterError` variant fails this build until it is mapped here
+/// (correction round 2, W10; architect B7, reviewer B7), the same discipline [`error_of`] applies
+/// to `EngineError` above. `message` is `FilterError`'s own `Display` output, unedited, exactly
+/// [`error_of`]'s own convention.
 pub fn filter_error_of(e: &FilterError) -> SkpError {
     let message = e.to_string();
     match e {
-        FilterError::DialectUnsupported { declared } => SkpError::protocol_with_fields(
-            "filter_dialect_unsupported",
-            message,
-            [("declared", declared.clone())],
-        ),
         FilterError::Unparsable { detail } => SkpError::protocol_with_fields(
             "filter_unparsable",
             message,
@@ -2793,25 +2789,13 @@ mod tests {
         assert_eq!(e.fields.get("saw").map(String::as_str), Some("70000"));
     }
 
-    // ---- `filter_error_of` — one test per `skp.filter_*` code (`NEXT-CUT.md` design essential 5,
-    // brief evidence item B) ------------------------------------------------------------------
+    // ---- `filter_error_of` — one test per `skp.filter_*` code (SKP-V0 §7.5; brief
+    // evidence item B) -------------------------------------------------------------------------
     //
     // `filter_error_of`'s match has no wildcard arm (a compile-time exhaustiveness property, same
     // discipline `error_of` uses above), and unlike `every_engine_error_variant_maps_to_a_distinct_
-    // engine_dot_code`'s three-of-twenty sample, every one of `FilterError`'s twelve variants gets
+    // engine_dot_code`'s three-of-twenty sample, every one of `FilterError`'s eleven variants gets
     // its own test below — code AND every field key asserted, never a bare `is_err`.
-
-    #[test]
-    fn filter_dialect_unsupported_maps_to_its_code_and_field() {
-        let e = filter_error_of(&FilterError::DialectUnsupported {
-            declared: "sql/legacy".into(),
-        });
-        assert_eq!(e.code, "skp.filter_dialect_unsupported");
-        assert_eq!(
-            e.fields.get("declared").map(String::as_str),
-            Some("sql/legacy")
-        );
-    }
 
     #[test]
     fn filter_unparsable_maps_to_its_code_and_field() {
@@ -2968,7 +2952,7 @@ mod tests {
         assert_eq!(e.fields.get("capacity").map(String::as_str), Some("4"));
 
         // The other half of the same match, in the same test: an admission-*content* refusal still
-        // takes `filter_error_of`'s twelve-code route, unchanged (ADR-021 item 8) — including the
+        // takes `filter_error_of`'s eleven-code route, unchanged — including the
         // genuine binder rejection, whose code the arm above must not be allowed to steal.
         let e =
             predicate_admit_error_of(PredicateAdmitError::Filter(FilterError::RejectedByBinder {

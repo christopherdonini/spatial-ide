@@ -373,9 +373,10 @@ pub struct Bbox {
 
 /// The single dialect `skp/0.1` admits for [`Filter::predicate`] (design note item 2: `skp/1` is
 /// RESERVED and would be where a second dialect, if ever added, gets its own version string — not
-/// this one). Named `skp.filter_dialect_unsupported` in the refusal taxonomy (design note item 5),
-/// but that taxonomy is wired at the kernel admission boundary (a later phase); this crate only
-/// enforces the one value it documents, at construction and at deserialization.
+/// this one). It is the only value [`Filter::new`] accepts for `dialect`. Any other value is
+/// refused at construction and, through the same constructor, at deserialization, as a serde error
+/// before any host code runs. No `skp.filter_*` code is produced for a wrong dialect (SKP-V0
+/// §7.5's note of 2026-11-05).
 pub const FILTER_DIALECT_DUCKDB_EXPR_0: &str = "duckdb-expr/0";
 
 /// A row filter carried on `viewport_query` (design note item 1): a boolean expression in the
@@ -884,5 +885,62 @@ mod tests {
             serde_json::json!({"action": "filter.apply", "params": {}})
         )));
         assert!(!refused(record_step_doc(v)));
+    }
+
+    /// A dialect other than `duckdb-expr/0` fails at decode, in `viewport_query` and in
+    /// `record_step`, with `Filter::new`'s own message. The requests are built through
+    /// `Filter::new` and serialized; only `filter.dialect` is then replaced in the JSON value.
+    /// Rows: V0/R0 decode `Ok`; V1/R1 decode `Err` whose message holds `Filter::new`'s.
+    ///
+    /// RECORDED MUTATION: `Filter`'s Deserialize maps `Filter::new`'s Err to the fixed message
+    /// "unsupported filter dialect", applied on top of 6444682c51783c02102fad3f33bf007483e592df;
+    /// `cargo test -p spatial-skp --locked --no-fail-fast` failed this test alone, at V1's message
+    /// assertion.
+    ///
+    /// RECORDED MUTATION: `Filter::new`'s Err message emptied (`String::new()`), applied on top of
+    /// 6444682c51783c02102fad3f33bf007483e592df; the same command failed this test alone, at check
+    /// (iii)'s first assertion.
+    #[test]
+    fn a_wrong_dialect_fails_at_decode_in_viewport_query_and_record_step_with_filter_news_message()
+    {
+        let predicate = "zone = 3";
+        let wrong = "sql/ansi";
+        let expected = Filter::new(predicate, wrong).unwrap_err();
+        // (iii) the message names both the declared dialect and the one admitted.
+        assert!(expected.contains(wrong), "{expected}");
+        assert!(
+            expected.contains(FILTER_DIALECT_DUCKDB_EXPR_0),
+            "{expected}"
+        );
+
+        let viewport = ViewportQueryRequest {
+            skp: SKP_VERSION.into(),
+            dataset: "ds_00112233445566778899aabbccddeeff".parse().unwrap(),
+            bbox: None,
+            bbox_crs: None,
+            limit: None,
+            filter: Some(Filter::new(predicate, FILTER_DIALECT_DUCKDB_EXPR_0).unwrap()),
+            columns: None,
+        };
+        let v0 = serde_json::to_value(&viewport).unwrap();
+        serde_json::from_value::<ViewportQueryRequest>(v0.clone()).expect("V0 decodes");
+        let mut v1 = v0;
+        v1["filter"]["dialect"] = serde_json::Value::String(wrong.into());
+        let e = serde_json::from_value::<ViewportQueryRequest>(v1).unwrap_err();
+        assert!(e.to_string().contains(&expected), "V1: {e}");
+
+        let step = RecordStepRequest {
+            skp: SKP_VERSION.into(),
+            dataset: "ds_00112233445566778899aabbccddeeff".parse().unwrap(),
+            intent: StepIntent::FilterApply(FilterApplyParams {
+                filter: Some(Filter::new(predicate, FILTER_DIALECT_DUCKDB_EXPR_0).unwrap()),
+            }),
+        };
+        let r0 = serde_json::to_value(&step).unwrap();
+        serde_json::from_value::<RecordStepRequest>(r0.clone()).expect("R0 decodes");
+        let mut r1 = r0;
+        r1["intent"]["params"]["filter"]["dialect"] = serde_json::Value::String(wrong.into());
+        let e = serde_json::from_value::<RecordStepRequest>(r1).unwrap_err();
+        assert!(e.to_string().contains(&expected), "R1: {e}");
     }
 }
