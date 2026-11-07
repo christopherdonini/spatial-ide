@@ -196,12 +196,21 @@ export interface E2eTestSurface {
    * **An instrument accessor, in the declared category** (the human's ruling of 2026-09-16, round 5
    * item 4): read-only over state the shipped build already maintains -- the same `ResidentSet`
    * `pushBatch`/`clearStream`/`clearAllTiles` keep, read through
-   * `WorkingCanvasHandle.getResidentCounts()` (`canvas/WorkingCanvas.tsx:160`). It computes
+   * `WorkingCanvasHandle.getResidentCounts()` (`canvas/WorkingCanvas.tsx`). It computes
    * nothing, records nothing, and changes nothing.
    *
-   * **Its only caller is the E2E driver `frontends/shell/e2e/source-changed.mjs`**, named here so
-   * the caller-grep can verify this exemption instead of trusting the words "test-only". No product
-   * module reads it.
+   * **Its callers are three E2E drivers**, named here so the caller-grep can verify this exemption
+   * instead of trusting the words "test-only". No product module reads it (`App.tsx` only registers
+   * it). Each driver reads the counts to prove:
+   * - `frontends/shell/e2e/source-changed.mjs`: that resident vertices are above 0 before a source
+   *   change (S2) and exactly 0 after the owner has handled it (S5b), and that residency repopulates
+   *   after a reopen (R2);
+   * - `frontends/shell/e2e/source-watch-idle.mjs`: the same before and after pair for a change the
+   *   OS-level watch notices while the canvas is idle (W2, F2);
+   * - `frontends/shell/e2e/export-view.mjs`: that at least one feature is resident after
+   *   `queryWithFilter` applies a predicate, read as `totalResidentFeatures`, before the driver
+   *   settles and prepares the Current view.
+   * The reason below is P3b's, written for source-changed.mjs.
    *
    * **Why the property must be proven about the real app.** P3b's whole subject is an owner-side
    * consequence -- that a detected source change empties the resident geometry an operator is
@@ -303,15 +312,19 @@ export interface E2eTestSurface {
    * instance's own last mount," restated at its own call site (`residency-harness.mjs`). */
   e2eSetViewStateCallCount?: () => Promise<number>;
   /** **DEV-ONLY E2E TEST SEAM** (viewport-residency cut P3, `NEXT-CUT.md`'s own "THE ARM SWITCH").
-   * Selects `"baseline"` (the default, and the ONLY value the full vitest/E2E regression suites
-   * ever observe) or `"candidate"` for the NEXT dataset session -- refused (a typed
+   * Selects `"baseline"` or `"candidate"` for the NEXT dataset session. The default is
+   * `"candidate"` (`DEFAULT_RESIDENCY_ARM`, `residency/residencyArm.ts`). Refused (a typed
    * `SetResidencyArmResult`, never a thrown exception) while a dataset is currently open
-   * (`residency/residencyArm.ts`'s own doc comment has the full contract). The harness itself does
-   * not yet drive this (`--arm=candidate` is a LATER piece's own addition); this hook exists now so
-   * a driver -- or a manual dev-console call -- can already flip it. */
+   * (`residency/residencyArm.ts`'s own doc comment has the full contract). Drivers that set it:
+   * `e2e/residency-harness.mjs` calls `setResidencyArm(cellArgs.arm)` in `main()` before its first
+   * `openFixture` (`cellArgs.arm` is `"baseline"` unless `--arm candidate` is given) and reads
+   * `getResidencyArm()` back; `e2e/refusal-contract-baseline.mjs` sets `"baseline"` and reads it back.
+   * Those two are the e2e drivers that run on `"baseline"`; `e2e/regression.mjs`,
+   * `e2e/filter-panel.mjs` and `e2e/console.mjs` set nothing and assert the readback is
+   * `"candidate"`. */
   setResidencyArm?: (arm: ResidencyArm) => Promise<SetResidencyArmResult>;
-  /** Reads the current arm back -- `"baseline"` unless a prior `setResidencyArm("candidate")` call
-   * on this same session succeeded. */
+  /** Reads the current arm back -- `"candidate"` (`DEFAULT_RESIDENCY_ARM`) unless a prior
+   * `setResidencyArm("baseline")` call on this same session succeeded. */
   getResidencyArm?: () => Promise<ResidencyArm>;
   /** **DEV-ONLY E2E TEST SEAM** (viewport-residency cut P7, "the tile-size sweep selector -- the
    * campaign's last missing wire"). Selects one of the three LOCKED grid resolutions
