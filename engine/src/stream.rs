@@ -1225,11 +1225,11 @@ impl Dataset {
         // `lease_acquired` rather than folding it into any scored segment; see docs/07's scope
         // bound in `trace.rs`).
         crate::trace::mark(crate::trace::SQL_BUILT, 0, 0);
-        let path = self
-            .path()
-            .to_str()
-            .ok_or_else(|| EngineError::Source("path is not valid UTF-8".into()))?
-            .to_string();
+        let path = crate::dataset::duckdb_literal_path(
+            self.path()
+                .to_str()
+                .ok_or_else(|| EngineError::Source("path is not valid UTF-8".into()))?,
+        );
 
         let lease = lease_for_stream(self, &cancel)?;
         let connection = ConnectionFacts {

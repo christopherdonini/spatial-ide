@@ -329,7 +329,7 @@ impl SpatialIndex {
             ymin = covering.ymin.to_sql(),
             xmax = covering.xmax.to_sql(),
             ymax = covering.ymax.to_sql(),
-            p = path.replace('\'', "''"),
+            p = crate::dataset::duckdb_literal_path(path).replace('\'', "''"),
         );
 
         cancel.attach(Arc::clone(&conn.interrupt_handle()))?;
