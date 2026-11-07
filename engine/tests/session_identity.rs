@@ -680,7 +680,7 @@ fn a_source_deleted_mid_session_refuses_as_source_changed_not_as_an_unreadable_f
 /// them present on disk; each is refused as the partitioned-source error, with a detail naming a
 /// glob metacharacter.
 ///
-/// What is decided for such a path at which a file does exist is in
+/// What is decided for a path holding `[`, `]`, `{` or `}` at which a file does exist is in
 /// `engine/tests/single_file_bracket_name.rs`; this test writes no file.
 ///
 /// Mutation recorded in-source: narrowing `GLOB_METACHARACTERS` back to `['*', '?']` fails the

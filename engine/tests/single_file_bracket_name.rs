@@ -149,7 +149,8 @@ fn drain_ids(ds: &Dataset) -> Vec<u64> {
 /// the rows; the sha256 of every file is the same after as before.
 ///
 /// Where the sum is 500, K2 and K3, the sum comparison is skipped and the distinct-id assertion is
-/// what tells the literal from the pair, because the fixture numbers every file's ids from 0.
+/// what tells the literal from the pair, because every file's ids start again from 0: the fixture's
+/// `id` column on the native rows, and the row's position within its file on the keyless rows.
 ///
 /// RECORDED MUTATION (observed at `4f0d50cee15f0e48abd582053677b55f62af077d`): the `path.is_file()`
 /// return removed from `partitioned_source_detail`, so every path holding one of the four is
@@ -211,8 +212,9 @@ fn an_existing_single_file_whose_name_holds_a_bracket_or_a_brace_opens_and_strea
                 assert_ne!(ids.len(), decoy_sum, "{row}: assertion 2, the decoys' sum");
             }
 
-            // Assertion 3: the ids are distinct and as many as the rows. The fixture numbers every
-            // file from 0, so a read of two files repeats them.
+            // Assertion 3: the ids are distinct and as many as the rows. Every file's ids start
+            // again from 0 (the fixture's `id` on the native rows, the row's position in its file
+            // on the keyless rows), so a read of two files repeats them.
             let distinct: HashSet<u64> = ids.iter().copied().collect();
             assert_eq!(
                 distinct.len(),

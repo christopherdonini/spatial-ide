@@ -321,9 +321,9 @@ impl Dataset {
         // different facts and a caller cannot act on the second one: a directory of parquet parts
         // is a real dataset this engine will not admit *for a stated reason*, while a mistyped path
         // is not a dataset at all. Detected structurally and narrowly —
-        // [`partitioned_source_detail`] — never by opening anything: it asks the filesystem a stat
-        // and no more, and a path holding `[`, `]`, `{` or `}` that is an existing file is not
-        // refused here.
+        // [`partitioned_source_detail`] — never by opening anything: it asks the filesystem only
+        // whether the path is a directory and, for a path holding `[`, `]`, `{` or `}`, whether it
+        // is a file; a path holding one of those four that is an existing file is not refused here.
         if let Some(detail) = partitioned_source_detail(path) {
             return Err(EngineError::IdentityOrdinalPartitionedUnsupported { detail });
         }
@@ -1841,8 +1841,9 @@ fn covering_sample(
 
 /// Whether this source is **partitioned** — more than one file — and why, or `None`.
 ///
-/// **Structural and narrow, and it reads no file.** The only thing it asks the filesystem is a
-/// stat. In this order:
+/// **Structural and narrow, and it reads no file.** It asks the filesystem nothing but stats:
+/// whether the path is a directory and, when the text holds `[`, `]`, `{` or `}` and neither `*`
+/// nor `?`, whether it is a file. In this order:
 ///
 /// 1. A directory is refused.
 /// 2. A path text holding `*` or `?` (after the Windows extended-length prefix is set aside) is
@@ -1860,13 +1861,15 @@ fn covering_sample(
 /// **What step 0 observed, and the route each class takes** (the form's Amendment 1,
 /// `governance/forms/engine/SINGLE-FILE-BRACKET-NAME-REFUSED-AS-PARTITIONED-PREREGISTRATION.md`;
 /// DuckDB 1.5.5 in `duckdb` 1.10505.0, on Windows, with the build of record's compiler). Given a
-/// file name holding a well-formed `[`…`]` pair, DuckDB's `glob`, `read_parquet` and its
-/// footer-metadata functions read a decoy file beside it and never the file itself; given a lone
-/// `[` or a lone `]` they read the file. Given `{` and `}`, `{a,b}` among them, they read the file
-/// and none of its decoys, and read no file at all when the file was absent.
-/// - `[` and `]` therefore take the **escaped** route: [`duckdb_literal_path`] rewrites them at every
-///   DuckDB file-reading call, and step 0 observed the rewritten form read the file when it was
-///   present and no file when it was absent.
+/// file name holding a well-formed `[`…`]` pair, with a file beside it whose name the pair matches
+/// (as in every pair case step 0 ran), DuckDB's `glob`, `read_parquet` and its footer-metadata
+/// functions read that other file and never the file itself; given a lone `[` or a lone `]` they
+/// read the file. Given `{` and `}`, `{a,b}` among them, they read the file and none of its decoys;
+/// with `zones{a,b}.parquet` absent, the one brace case step 0 ran that way, they read no file at
+/// all.
+/// - `[` and `]` therefore take the **escaped** route: [`duckdb_literal_path`] rewrites them at
+///   every DuckDB file-reading call outside the fixture-only `layout.rs`, and step 0 observed the
+///   rewritten form read the file when it was present and no file when it was absent.
 /// - `{` and `}` take the **raw** route: the path reaches DuckDB as it is written.
 ///
 /// **Not claimed.** What is read if the file is removed between this stat and the DuckDB call, for
@@ -2313,7 +2316,8 @@ mod tests {
     }
 
     /// The last path component and row count of every file `read_parquet` reads for `pattern`, or
-    /// DuckDB's error text when it reads none.
+    /// the error's text when the statement fails (step 0 observed `read_parquet` fail when it reads
+    /// no file).
     fn files_read(
         conn: &Connection,
         pattern: &str,
@@ -2352,7 +2356,9 @@ mod tests {
     /// `duckdb_literal_path` returning its input unchanged. Observed outcome: this test fails by
     /// name at the absent-pair row, where `glob` lists the decoy. A second, it leaving `[`
     /// unescaped and rewriting only `]`: this test fails by name at the present-pair row, where
-    /// `glob` lists nothing.
+    /// `glob` lists nothing. Dropping `]` instead was not run: the form's Amendment 1 (b) records
+    /// it as an equivalent mutant on this DuckDB, a reading of DuckDB's source and not an
+    /// observation.
     #[test]
     fn the_reader_path_matches_only_the_literal_file_and_nothing_once_it_is_gone() {
         use crate::fixture::{configured_connection, write_geoparquet, FixtureSpec};
