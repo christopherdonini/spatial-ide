@@ -34,6 +34,17 @@ fn spec(features: usize, seed: Option<u64>) -> FixtureSpec {
     spec
 }
 
+/// `SkpHost::open_dataset` on a 500-row native-unique file named `zones[1].parquet`, with a
+/// 300-row decoy `zones1.parquet` beside it: the open is admitted; `describe` reports 500 rows,
+/// not 300, on the basis `identity-uniqueness-scan-full-file`, and its extent is `None`; the
+/// dataset taken from the host's catalog then streams 500 ids, each once.
+///
+/// RECORDED MUTATION (observed at `4f0d50cee15f0e48abd582053677b55f62af077d`): the `path.is_file()`
+/// return removed from `partitioned_source_detail`. Observed outcome: this test fails by name at
+/// the open, with the code `engine.identity_ordinal_partitioned_unsupported`. A second,
+/// `duckdb_literal_path` returning its input unchanged: this test fails at the row-count
+/// assertion, `Some(300)` against `Some(500)`. A third, it leaving `[` unescaped and rewriting
+/// only `]`: this test fails at the open, with the code `engine.source` and DuckDB's no-match text.
 #[test]
 fn open_dataset_admits_an_existing_bracket_named_file_and_describe_reports_only_its_rows() {
     let dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"))

@@ -321,7 +321,9 @@ impl Dataset {
         // different facts and a caller cannot act on the second one: a directory of parquet parts
         // is a real dataset this engine will not admit *for a stated reason*, while a mistyped path
         // is not a dataset at all. Detected structurally and narrowly —
-        // [`partitioned_source_detail`] — never by opening anything.
+        // [`partitioned_source_detail`] — never by opening anything: it asks the filesystem a stat
+        // and no more, and a path holding `[`, `]`, `{` or `}` that is an existing file is not
+        // refused here.
         if let Some(detail) = partitioned_source_detail(path) {
             return Err(EngineError::IdentityOrdinalPartitionedUnsupported { detail });
         }
@@ -1839,11 +1841,39 @@ fn covering_sample(
 
 /// Whether this source is **partitioned** — more than one file — and why, or `None`.
 ///
-/// **Structural and narrow, and it opens nothing.** Two shapes count, because they are the two a
-/// caller reaches a partition set through: a directory, and a path carrying a glob metacharacter.
-/// Anything else — a missing path, a path that is not parquet — keeps the refusal it already had
-/// (`EngineError::Source`), because calling a typo a partition set would be this engine inventing a
-/// diagnosis (`docs/01` principle 8).
+/// **Structural and narrow, and it reads no file.** The only thing it asks the filesystem is a
+/// stat. In this order:
+///
+/// 1. A directory is refused.
+/// 2. A path text holding `*` or `?` (after the Windows extended-length prefix is set aside) is
+///    refused, whatever is on disk.
+/// 3. A path text holding `[`, `]`, `{` or `}` is refused if no file is at that path.
+/// 4. A path text holding one of those four characters, with an existing file at that path, is
+///    `None`: it is one file and the open goes on.
+/// 5. Any other path is `None`. A missing path, or a path that is not parquet, keeps the refusal it
+///    already had (`EngineError::Source`), because calling a typo a partition set would be this
+///    engine inventing a diagnosis (`docs/01` principle 8).
+///
+/// The refusals of steps 1 to 3 are one variant, and the detail of each is the text it had before
+/// step 4 existed.
+///
+/// **What step 0 observed, and the route each class takes** (the form's Amendment 1,
+/// `governance/forms/engine/SINGLE-FILE-BRACKET-NAME-REFUSED-AS-PARTITIONED-PREREGISTRATION.md`;
+/// DuckDB 1.5.5 in `duckdb` 1.10505.0, on Windows, with the build of record's compiler). Given a
+/// file name holding a well-formed `[`…`]` pair, DuckDB's `glob`, `read_parquet` and its
+/// footer-metadata functions read a decoy file beside it and never the file itself; given a lone
+/// `[` or a lone `]` they read the file. Given `{` and `}`, `{a,b}` among them, they read the file
+/// and none of its decoys, and read no file at all when the file was absent.
+/// - `[` and `]` therefore take the **escaped** route: [`duckdb_literal_path`] rewrites them at every
+///   DuckDB file-reading call, and step 0 observed the rewritten form read the file when it was
+///   present and no file when it was absent.
+/// - `{` and `}` take the **raw** route: the path reaches DuckDB as it is written.
+///
+/// **Not claimed.** What is read if the file is removed between this stat and the DuckDB call, for
+/// either route; it needs timing inside one request and step 0 observed the file absent from the
+/// start, not removed in between. And, not observed: on Linux, a bracket in the first component of
+/// an absolute path; on Windows, a path whose letter case differs from the directory listing's in a
+/// component that holds a bracket. Only Windows was run in step 0.
 ///
 /// **It is not a file-list or packing contract** (A5). It decides one thing: whether R-I4's named
 /// refusal is the honest answer instead of "not a readable file". Nothing here enumerates parts,
@@ -1861,25 +1891,15 @@ fn partitioned_source_detail(path: &Path) -> Option<String> {
         .strip_prefix(r"\\?\UNC\")
         .or_else(|| text.strip_prefix(r"\\?\"))
         .unwrap_or(text);
-    // **Every metacharacter DuckDB's own `read_parquet` expands**, not a subset of them: `*` and
-    // `?` wildcards, `[...]` character classes, and `{a,b}` brace alternation. An earlier revision
-    // scanned for `*` and `?` only, on the reasoning that a bracket in a real directory name is
-    // ordinary — which is true, and is the wrong trade to make here.
+    // **`*` and `?` are decided by the text alone** (step 2): they are refused whatever is on disk,
+    // so a file whose own name holds one is still refused. `[`, `]`, `{` and `}` are the four the
+    // text cannot settle, because a name holding them can be one file; for those, one stat decides
+    // (steps 3 and 4), and an existing file goes on to the open. The list is scanned in this order,
+    // so a text holding `*` or `?` along with a bracket or a brace is reported for the `*` or `?`.
     //
-    // **The trade-off, weighed and stated.** A literal file whose name contains `[`, `]`, `{` or
-    // `}` is legal on every filesystem this runs on, and this function now refuses it by name even
-    // though it is one file. That is the safe direction and the false positive is *visible*: the
-    // operator is told, in the refusal, that the path was read as naming more than one file, which
-    // is a sentence they can act on (quote the path, rename the file). The alternative is the
-    // invisible failure: DuckDB expands the class, the source silently becomes a multi-file scan,
-    // and `file_row_number` becomes a per-file ordinal reused across files — the session tier's
-    // identity silently colliding, which is exactly what R-I4 exists to prevent (A5, boundary 7).
-    // A refusal an operator can read beats an identity that is wrong and says nothing.
-    //
-    // Deliberately **not** stat-ing the path first to see whether such a literal file exists: that
-    // would make the refusal depend on what happens to be on disk, so the same path would be
-    // admitted or refused for reasons the operator cannot see, and a file appearing later would
-    // change the answer. The rule is a property of the path text alone.
+    // The same text is refused or admitted according to what is at the path, so a file appearing
+    // later changes the answer; with no file at the path the refusal and its detail are the ones
+    // this function gave for these four characters before the stat existed.
     const GLOB_METACHARACTERS: [char; 6] = ['*', '?', '[', ']', '{', '}'];
     if let Some(found) = GLOB_METACHARACTERS.iter().find(|c| scanned.contains(**c)) {
         if !matches!(found, '*' | '?') && path.is_file() {
@@ -1893,6 +1913,17 @@ fn partitioned_source_detail(path: &Path) -> Option<String> {
     None
 }
 
+/// The path text as DuckDB's file-reading functions are handed it, so that a `[` or a `]` in a file
+/// name is read as that character and not as part of a character class.
+///
+/// In one pass over the original text, `[` becomes `[[]` and `]` becomes `[]]`; every other
+/// character, `{` and `}` included, is copied as it is (step 0 observed `{` and `}` read the file
+/// raw; see [`partitioned_source_detail`]). The result is for DuckDB only: [`Dataset::path`] and
+/// every consumer that is not DuckDB keep the raw path.
+///
+/// Applied, before any quote doubling, at the DuckDB calls in this file, in `stream.rs`
+/// (`stream`), `index.rs` (`build_observed`) and `rowgroup.rs` (`read_metadata`). The calls in
+/// `layout.rs` take their path text as they did and are not rewritten here.
 pub(crate) fn duckdb_literal_path(path: &str) -> String {
     let mut out = String::with_capacity(path.len());
     for c in path.chars() {
@@ -2260,6 +2291,7 @@ mod tests {
         );
     }
 
+    /// The last path component of every file DuckDB's `glob` lists for `pattern`, sorted.
     fn names_listed_by_glob(conn: &Connection, pattern: &str) -> Vec<String> {
         let mut stmt = conn
             .prepare("SELECT file FROM glob(?)")
@@ -2280,6 +2312,8 @@ mod tests {
         names
     }
 
+    /// The last path component and row count of every file `read_parquet` reads for `pattern`, or
+    /// DuckDB's error text when it reads none.
     fn files_read(
         conn: &Connection,
         pattern: &str,
@@ -2306,6 +2340,19 @@ mod tests {
             .collect())
     }
 
+    /// [`duckdb_literal_path`]'s output, handed to DuckDB's `glob` and `read_parquet` on a
+    /// configured connection, matches the literal file when it is present and no file when it is
+    /// not. A decoy, `zones1.parquet`, sits beside every row. The rows, in order: a bracket pair
+    /// with the literal absent and the decoy present, the same pair with the literal present, a
+    /// lone `[` and a lone `]`, each present. For the absent
+    /// row, `read_parquet`'s error is compared with the one DuckDB gives for a plain absent path in
+    /// the same directory, observed in the test and not written here, with the path text replaced.
+    ///
+    /// RECORDED MUTATION (observed at `4f0d50cee15f0e48abd582053677b55f62af077d`):
+    /// `duckdb_literal_path` returning its input unchanged. Observed outcome: this test fails by
+    /// name at the absent-pair row, where `glob` lists the decoy. A second, it leaving `[`
+    /// unescaped and rewriting only `]`: this test fails by name at the present-pair row, where
+    /// `glob` lists nothing.
     #[test]
     fn the_reader_path_matches_only_the_literal_file_and_nothing_once_it_is_gone() {
         use crate::fixture::{configured_connection, write_geoparquet, FixtureSpec};

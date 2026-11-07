@@ -142,6 +142,22 @@ fn drain_ids(ds: &Dataset) -> Vec<u64> {
     ids
 }
 
+/// For each shape in `SHAPES`, once keyless and once with a native unique id: the literal file is
+/// written beside its decoys, opened through `Dataset::open_cancellable`, and its stream drained.
+/// Four assertions per row: it is admitted; it streams the literal file's 500 rows, not a decoy's
+/// count and, where that differs from 500, not the decoys' sum; the ids are distinct and as many as
+/// the rows; the sha256 of every file is the same after as before.
+///
+/// Where the sum is 500, K2 and K3, the sum comparison is skipped and the distinct-id assertion is
+/// what tells the literal from the pair, because the fixture numbers every file's ids from 0.
+///
+/// RECORDED MUTATION (observed at `4f0d50cee15f0e48abd582053677b55f62af077d`): the `path.is_file()`
+/// return removed from `partitioned_source_detail`, so every path holding one of the four is
+/// refused. Observed outcome: this test fails by name at assertion 1 on the K1 keyless row, with
+/// the refusal. A second mutation, `duckdb_literal_path` returning its input unchanged: this test
+/// fails at assertion 2 on the K1 keyless row, 300 rows streamed against 500. A third, it leaving
+/// `[` unescaped and rewriting only `]`: this test fails at assertion 1 on the K1 keyless row with
+/// DuckDB's no-match error.
 #[test]
 fn an_existing_single_file_whose_name_holds_a_bracket_or_a_brace_opens_and_streams_only_its_own_rows(
 ) {
