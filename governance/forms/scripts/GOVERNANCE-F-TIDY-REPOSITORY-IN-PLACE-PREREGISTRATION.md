@@ -669,3 +669,10 @@ The human's ruling is `state/directives/2026-10-29-governance-f-mapping-table-ap
 - **CI:** no pull_request run at 4d28aac3 (gate 3's N1, the conflict with main); the checks and CI at the final head are read before the PR leaves draft.
 - **Merge:** by merge commit (section 9), so that M's renames stay reachable and `git log --follow` crosses them (section 1).
 - **After the merge** (the settlement's OPEN-9 and OPEN-10): the G3 observation on a moved filed form, on main, and the figures at the merge commit, in the ledger; the node `governance-f-after-week-rust-ci-figure` 168 h after it.
+
+### Amendment 8 (2026-11-07), class 1: the after-week Rust CI figure (OPEN-10 (A)), written after it was seen. References and hashes only.
+
+- **Taken** by section 8's measurement (c), read only, at 2026-11-07T14:10:04.682Z at main da0f899217ffeb433c3694e2cba3e481a457ca7a, by a script whose sha256 is 031badc5d1d9d773341eb9f9f913cbba65941b29e9bd0c6c7c84608c3ecdad4e. The window: from X (578ec704db0922a61df56735e7c9dae14ae29193, committer time 2026-10-31T14:09:18Z) to 2026-11-07T14:09:18Z. The workflow's filter lines at 79476279 are unchanged at main.
+- **The figure:** in the 168 h after X, 11 Rust CI push runs on main, 0 of them form-only. Section 5's prediction, 0, holds. The week before X: 52 runs, 39 form-only (the ledger's entry of 2026-10-31T23:22Z).
+- **Ranges:** 6 from their PushEvent. 5 from the head's first-parent diff, their events not in the events list (300 events, the oldest 2026-10-27T18:00:32Z): 41625319748 at 8d933d2605f567626c76f7f4e38c7dfa05b19758, 41755206740 at 901195d008876ef8884ce832d15682aa982e6f0d, 41755227969 at f848b8c191a2edd496600f203085200329e069d1, 42362504178 at 3295bf374938f3c316ce96fb917b25410135f184, 42362520862 at 2c958508837b978f08d0129e0c787e21977bbb77. One run's range matches no path in the filter: 41208809578 at 578ec704db0922a61df56735e7c9dae14ae29193, X's own push. It is counted, and it is not form-only.
+- **The run table** (sha256 e40f9555f552b08b334a3012a84c8c0fb7a39e73725c9cf7e2280391bc8642db) and the script are kept in the local evidence folder under `2026-11-07/governance-f-after-week/`.

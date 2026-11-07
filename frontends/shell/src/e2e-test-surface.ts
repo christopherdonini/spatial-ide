@@ -7,8 +7,9 @@
  * file's own gate from bare `import.meta.env.DEV`). Never present in a PLAIN production bundle:
  * every export here is a no-op unless `isInstrumentedBuild()`, which reduces to a Vite-replaced
  * literal `false` for `npm run build` (`vite build`, no mode), letting esbuild's minifier
- * dead-code-eliminate the guarded branches (`npm run verify`'s production build succeeding is what
- * proves this, not a claim in this comment) -- a measure build (`vite build --mode measure`)
+ * dead-code-eliminate the guarded branches.
+ * `check:dist-clean`, run in CI after `npm run build`, greps the built dist/ for a fixed list of residency-instrument and e2e-hook identifiers, none of them for the debugging port
+ * (`e2e/checkDistClean.mjs`): a hit fails the job, and a miss is a check, not a proof -- a measure build (`vite build --mode measure`)
  * deliberately keeps the same branches compiled in, on top of the same release optimizations.
  *
  * Referenced by `frontends/shell/e2e/README.md`. Exists for exactly one reason: a Playwright

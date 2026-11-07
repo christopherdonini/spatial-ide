@@ -393,7 +393,7 @@ impl RowGroupIndex {
             .prepare(sql)
             .map_err(|e| EngineError::Query(format!("row-group metadata prepare: {e}")))?;
         let mut rows = stmt
-            .query([path])
+            .query([crate::dataset::duckdb_literal_path(path)])
             .map_err(|e| EngineError::Query(format!("row-group metadata: {e}")))?;
 
         let want_id = id_column.to_string();

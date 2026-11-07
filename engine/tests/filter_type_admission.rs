@@ -872,7 +872,6 @@ fn literal_only_arithmetic_outside_the_double_literal_pairs_keeps_its_refusal() 
 /// separately here so B-T3 does not depend on that file.
 fn campaign_code_of(e: &FilterError) -> &'static str {
     match e {
-        FilterError::DialectUnsupported { .. } => "skp.filter_dialect_unsupported",
         FilterError::Unparsable { .. } => "skp.filter_unparsable",
         FilterError::NotASingleExpression { .. } => "skp.filter_not_a_single_expression",
         FilterError::ConstructNotAdmitted { .. } => "skp.filter_construct_not_admitted",

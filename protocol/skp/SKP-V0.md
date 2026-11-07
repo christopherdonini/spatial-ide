@@ -29,8 +29,11 @@ directions, so schema evolution is impossible without a new version string.
 ```
 
 `path` is UTF-8, absolute, and comes from the OS file picker. The host passes it to the engine's
-open as received, without canonicalizing it. A directory, or a path carrying a glob metacharacter, is refused first, as
-`engine.identity_ordinal_partitioned_unsupported`; any other path that is not a file is refused as
+open as received, without canonicalizing it. A directory, a path carrying `*` or `?`, or a path
+carrying `[`, `]`, `{` or `}` at which no file exists, is refused first, as
+`engine.identity_ordinal_partitioned_unsupported`; a path carrying `[`, `]`, `{` or `}` at which a
+file exists is opened as that one file (observed on Windows; `KNOWN-LIMITATIONS.md` item 20 names
+what is not claimed); any other path that is not a file is refused as
 `engine.source`, with `EngineError::Source`'s own text. **Cut 1 offered no `crs_assertion` and no
 `identity` field** — the remediation flows that use them were cut-2 UI work, and the fields arrived
 with the UI that exercises them, not before. **`skp/0.2` (§8) adds both fields to the wire**,
@@ -495,7 +498,6 @@ applied to predicate admission.
 
 | Code | Fields |
 |---|---|
-| `skp.filter_dialect_unsupported` | `declared` |
 | `skp.filter_unparsable` | `detail` |
 | `skp.filter_not_a_single_expression` | `statements` |
 | `skp.filter_construct_not_admitted` | `construct` |
@@ -520,6 +522,8 @@ admission-remediation cut (`skp/0.2`) threaded `open_dataset`'s `identity` into 
 > row, `skp.filter_type_not_admitted` | `construct`, `operand_types`, `reason`, followed by the
 > five `reason` values: `text_with_non_text`, `boolean_conversion`, `literal_out_of_bounds`,
 > `conversion_can_fail`, `conversion_rounds`. The heading above stays as it is.
+
+> Note 2026-11-05 (no literal change): `skp.filter_dialect_unsupported` is struck from §7's refusals. No host produced it: a dialect other than the one literal fails at deserialization as a shape error, before any code of this kind is chosen. skp/0.12 stands; no fixture changes.
 
 ### 7.6 Three-stage admission, pre-lease and pre-mint
 
