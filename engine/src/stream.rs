@@ -2685,6 +2685,40 @@ fn column_u64(chunk: &arrow::array::RecordBatch, name: &str) -> Result<Vec<u64>>
             })
             .collect();
     }
+    use arrow::array::{Int16Array, Int32Array, Int8Array, UInt16Array, UInt32Array, UInt8Array};
+    fn negative(name: &str, v: impl std::fmt::Display) -> EngineError {
+        EngineError::Query(format!("`{name}` holds a negative value: {v}"))
+    }
+    if let Some(a) = col.as_any().downcast_ref::<UInt32Array>() {
+        return Ok(a.values().iter().map(|v| u64::from(*v)).collect());
+    }
+    if let Some(a) = col.as_any().downcast_ref::<UInt16Array>() {
+        return Ok(a.values().iter().map(|v| u64::from(*v)).collect());
+    }
+    if let Some(a) = col.as_any().downcast_ref::<UInt8Array>() {
+        return Ok(a.values().iter().map(|v| u64::from(*v)).collect());
+    }
+    if let Some(a) = col.as_any().downcast_ref::<Int32Array>() {
+        return a
+            .values()
+            .iter()
+            .map(|v| u64::try_from(*v).map_err(|_| negative(name, v)))
+            .collect();
+    }
+    if let Some(a) = col.as_any().downcast_ref::<Int16Array>() {
+        return a
+            .values()
+            .iter()
+            .map(|v| u64::try_from(*v).map_err(|_| negative(name, v)))
+            .collect();
+    }
+    if let Some(a) = col.as_any().downcast_ref::<Int8Array>() {
+        return a
+            .values()
+            .iter()
+            .map(|v| u64::try_from(*v).map_err(|_| negative(name, v)))
+            .collect();
+    }
     Err(EngineError::Query(format!(
         "`{name}` is {}; expected a 64-bit integer",
         col.data_type()
