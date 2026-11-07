@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `76e2f0de520b9dd4808db134971a26fd3dcdb6fdac1332f19071d5d4891d4239`) at `2026-11-07T22:37:14.280Z`.
+Generated from `PLAN.yaml` (sha256 `585e8f2e1378c6d6bc8caaa24b2b991865110edc5dd63162c174f23c58b7dbab`) at `2026-11-07T22:54:17.125Z`.
 
 ## 1. Next
 
@@ -14,7 +14,6 @@ Generated from `PLAN.yaml` (sha256 `76e2f0de520b9dd4808db134971a26fd3dcdb6fdac13
 - **pre-admission-change-detail-braces** — Four kernel P6-placeholder detail strings are wrapped in literal braces, which reach the operator message; the watcher form declares each such string starts with the bracketed placeholder tag (lane `kernel-protocol`, order null, budget 30 min)
 - **windows-case-fold-non-ascii** — The audit case policy on Windows folds non-ASCII letters as NTFS does, so a profile path differing only in non-ASCII case cannot escape the user-home redaction (wave 3's 1c-2 correction, S2, code-path-only) (lane `kernel-protocol`, order null, budget 60 min)
 - **publish-filter-sentence-mark-comment-and-adr-024-note** — The mark's source comment in the human's words in publish.rs and types.ts, and ADR-024's dated note in the human's words (U12's N-3 and N-2) (lane `shell`, order null, budget 20 min)
-- **adr-indices-hand-written-current** — The hand-written ADR indices brought current: docs/README.md conventions paragraph and the docs/02 ADR list, where ADR-013 is called proposed though accepted and architect-blockable (the docs audits, A-S3, A-S5 and A-S8 index halves and the platform-only items) (lane `governance`, order null, budget 45 min)
 - **publish-bundle-sigterm** — SIGTERM handling in publish-bundle on unix (wave-3 W3-A observation 3) (lane `platform`, order null, budget 90 min)
 - **publish-unix-quota-perm-errors** — EDQUOT and EPERM in publish error classification on unix (wave-3 W3-A observation 1) (lane `platform`, order null, budget 90 min)
 
@@ -60,6 +59,7 @@ Generated from `PLAN.yaml` (sha256 `76e2f0de520b9dd4808db134971a26fd3dcdb6fdac13
 - **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **b1-shell-half** — Shell migration, milestone 4 -- B1 shell half: attributes of the inspected feature, colour by category with its legend, and the table — evidence: branch `cut/b1-shell-half-pr-c`
 - **shell-comments-drift-sweep-area-a** — Shell product comments stale against main: the candidate arm called dev-only, the e2e surface calling baseline the default, accessors labelled instrument-only, the old status-stack frame and smaller statements (drift sweep area A, less the lines in b1-shell-half PR B files) — evidence: branch `cut/shell-comments-drift-sweep-area-a`
+- **adr-indices-hand-written-current** — The hand-written ADR indices brought current: docs/README.md conventions paragraph and the docs/02 ADR list, where ADR-013 is called proposed though accepted and architect-blockable (the docs audits, A-S3, A-S5 and A-S8 index halves and the platform-only items) — evidence: branch `cut/adr-indices-hand-written-current`
 - **port-2-macos-l1-and-app-dirs** — PORT-2 -- macOS L1 for the Cargo workspace: macos-latest in the same matrix, one application-directory boundary replacing the two resolvers, and a case-policy test on a case-insensitive volume — evidence: branch `cut/port-2-macos-l1-and-app-dirs`
 
 ## 6. Proposed / unscheduled
