@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `53ab39d8d7ba7160ff18453ce9c7aa9c9c6e681f7957bde9202779ae4517f5eb`) at `2026-11-07T10:57:56.674Z`.
+Generated from `PLAN.yaml` (sha256 `71666e836bc4306efac6e414365756d5dcfba070ce515f86a11401464c126cdb`) at `2026-11-07T11:27:02.393Z`.
 
 ## 1. Next
 
@@ -14,7 +14,6 @@ Generated from `PLAN.yaml` (sha256 `53ab39d8d7ba7160ff18453ce9c7aa9c9c6e681f7957
 - **pre-admission-change-detail-braces** — Four kernel P6-placeholder detail strings are wrapped in literal braces, which reach the operator message; the watcher form declares each such string starts with the bracketed placeholder tag (lane `kernel-protocol`, order null, budget 30 min)
 - **windows-case-fold-non-ascii** — The audit case policy on Windows folds non-ASCII letters as NTFS does, so a profile path differing only in non-ASCII case cannot escape the user-home redaction (wave 3's 1c-2 correction, S2, code-path-only) (lane `kernel-protocol`, order null, budget 60 min)
 - **publish-filter-sentence-mark-comment-and-adr-024-note** — The mark's source comment in the human's words in publish.rs and types.ts, and ADR-024's dated note in the human's words (U12's N-3 and N-2) (lane `shell`, order null, budget 20 min)
-- **walkthrough-row-m10-declared-not-verified-write-time-guard** — MANUAL-WALKTHROUGH.md M10: its sentence that only the bundled viewer's load-time check catches a DeclaredNotVerified dataset over ceiling, untrue once publish-session-tier-identity's write-time guard merges (U1's gate 1 reviewer, N-1) (lane `shell`, order null, budget 30 min)
 - **governance-f-after-week-rust-ci-figure** — Governance piece F, the after-week Rust CI figure: the form-only Rust CI runs in the 168 h after the merge, recorded as a class 1 row in piece F's form (lane `governance`, order null, budget 30 min)
 - **publish-bundle-sigterm** — SIGTERM handling in publish-bundle on unix (wave-3 W3-A observation 3) (lane `platform`, order null, budget 90 min)
 - **publish-unix-quota-perm-errors** — EDQUOT and EPERM in publish error classification on unix (wave-3 W3-A observation 1) (lane `platform`, order null, budget 90 min)
@@ -61,6 +60,7 @@ Generated from `PLAN.yaml` (sha256 `53ab39d8d7ba7160ff18453ce9c7aa9c9c6e681f7957
 
 - **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **b1-shell-half** — Shell migration, milestone 4 -- B1 shell half: attributes of the inspected feature, colour by category with its legend, and the table — evidence: branch `cut/b1-shell-half-pr-c`
+- **walkthrough-row-m10-declared-not-verified-write-time-guard** — MANUAL-WALKTHROUGH.md M10: its sentence that only the bundled viewer's load-time check catches a DeclaredNotVerified dataset over ceiling, untrue once publish-session-tier-identity's write-time guard merges (U1's gate 1 reviewer, N-1) — evidence: branch `cut/walkthrough-row-m10-declared-not-verified-write-time-guard`
 - **e2e-readme-security-posture-measure-build** — frontends/shell/e2e/README.md: the security-posture paragraph is untrue for the measure build (the debug port in Rust, the e2e hooks kept in), with the missing E-FLOOR entry and stale lib.rs cites (drift sweep area B, findings 6, 11 and 12) — evidence: branch `cut/e2e-readme-security-posture-measure-build`
 - **shell-comments-drift-sweep-area-a** — Shell product comments stale against main: the candidate arm called dev-only, the e2e surface calling baseline the default, accessors labelled instrument-only, the old status-stack frame and smaller statements (drift sweep area A, less the lines in b1-shell-half PR B files) — evidence: branch `cut/shell-comments-drift-sweep-area-a`
 - **port-2-macos-l1-and-app-dirs** — PORT-2 -- macOS L1 for the Cargo workspace: macos-latest in the same matrix, one application-directory boundary replacing the two resolvers, and a case-policy test on a case-insensitive volume — evidence: branch `cut/port-2-macos-l1-and-app-dirs`
