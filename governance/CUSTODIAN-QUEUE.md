@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `71d37f0040629545303724bf2b62adf79c0e66034071045fde0aed021a43ba3c`) at `2026-11-07T21:06:23.938Z`.
+Generated from `PLAN.yaml` (sha256 `1c752251f3cc15e0e386cb684e1f859a863e9608d8b1f2b53da7ee6aa407570c`) at `2026-11-07T21:21:05.205Z`.
 
 ## 1. Next
 
@@ -11,7 +11,6 @@ Generated from `PLAN.yaml` (sha256 `71d37f0040629545303724bf2b62adf79c0e66034071
 - **clippy-deny-warnings-workspace** — The workspace clippy diagnostics fixed, so cargo clippy over every target with -D warnings exits 0 (the cloud Linux run lists 48 distinct) (lane `engine`, order null, budget 120 min)
 - **duckdb-literal-path-index-and-rowgroup-tests** — The escaped DuckDB path at the spatial-index and row-group-index sites is reached by no test: each site gets a test with its mutation (8f, gate 1 reviewer, EV-1) (lane `engine`, order null, budget 60 min)
 - **lod-tier-tests-own-tier-folder** — Each engine test run takes its own tier folder, the machine-wide tier folder kept for the product only: two suites sharing one machine cleared each other's tiers, failing lod_tier_builder in #284's gate 1 (the human's ruling of 2026-11-06, item 2) (lane `engine`, order null, budget 60 min)
-- **narrow-integer-id-unstreamable** — An 8, 16 or 32-bit integer id column is admitted at open but no stream carries it (the cloud audit, U2) (lane `engine`, order null, budget 60 min)
 - **pre-admission-change-detail-braces** — Four kernel P6-placeholder detail strings are wrapped in literal braces, which reach the operator message; the watcher form declares each such string starts with the bracketed placeholder tag (lane `kernel-protocol`, order null, budget 30 min)
 - **windows-case-fold-non-ascii** — The audit case policy on Windows folds non-ASCII letters as NTFS does, so a profile path differing only in non-ASCII case cannot escape the user-home redaction (wave 3's 1c-2 correction, S2, code-path-only) (lane `kernel-protocol`, order null, budget 60 min)
 - **publish-filter-sentence-mark-comment-and-adr-024-note** — The mark's source comment in the human's words in publish.rs and types.ts, and ADR-024's dated note in the human's words (U12's N-3 and N-2) (lane `shell`, order null, budget 20 min)
@@ -57,6 +56,7 @@ Generated from `PLAN.yaml` (sha256 `71d37f0040629545303724bf2b62adf79c0e66034071
 
 ## 5. In progress
 
+- **narrow-integer-id-unstreamable** — An 8, 16 or 32-bit integer id column is admitted at open but no stream carries it (the cloud audit, U2) — evidence: branch `cut/narrow-integer-id-unstreamable`
 - **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **b1-shell-half** — Shell migration, milestone 4 -- B1 shell half: attributes of the inspected feature, colour by category with its legend, and the table — evidence: branch `cut/b1-shell-half-pr-c`
 - **shell-comments-drift-sweep-area-a** — Shell product comments stale against main: the candidate arm called dev-only, the e2e surface calling baseline the default, accessors labelled instrument-only, the old status-stack frame and smaller statements (drift sweep area A, less the lines in b1-shell-half PR B files) — evidence: branch `cut/shell-comments-drift-sweep-area-a`
