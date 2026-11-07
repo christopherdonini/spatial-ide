@@ -2259,4 +2259,127 @@ mod tests {
             "a cancel inside the scan must end the admission Cancelled: {admitted:?}"
         );
     }
+
+    fn names_listed_by_glob(conn: &Connection, pattern: &str) -> Vec<String> {
+        let mut stmt = conn
+            .prepare("SELECT file FROM glob(?)")
+            .expect("prepare glob");
+        let mut names: Vec<String> = stmt
+            .query_map([pattern], |row| row.get::<_, String>(0))
+            .expect("glob")
+            .map(|listed| {
+                let listed = listed.expect("a glob row");
+                listed
+                    .rsplit(['/', '\\'])
+                    .next()
+                    .expect("a listed path has a last component")
+                    .to_string()
+            })
+            .collect();
+        names.sort();
+        names
+    }
+
+    fn files_read(
+        conn: &Connection,
+        pattern: &str,
+    ) -> std::result::Result<Vec<(String, i64)>, String> {
+        let mut stmt = conn
+            .prepare(
+                "SELECT filename, count(*) FROM read_parquet(?, filename=true) \
+                 GROUP BY filename ORDER BY filename",
+            )
+            .map_err(|e| e.to_string())?;
+        let rows = stmt
+            .query_map([pattern], |row| {
+                Ok((row.get::<_, String>(0)?, row.get::<_, i64>(1)?))
+            })
+            .map_err(|e| e.to_string())?
+            .collect::<std::result::Result<Vec<_>, _>>()
+            .map_err(|e| e.to_string())?;
+        Ok(rows
+            .into_iter()
+            .map(|(file, n)| {
+                let name = file.rsplit(['/', '\\']).next().unwrap_or(&file).to_string();
+                (name, n)
+            })
+            .collect())
+    }
+
+    #[test]
+    fn the_reader_path_matches_only_the_literal_file_and_nothing_once_it_is_gone() {
+        use crate::fixture::{configured_connection, write_geoparquet, FixtureSpec};
+
+        const LITERAL_ROWS: usize = 20;
+        const DECOY_ROWS: usize = 7;
+        // (row, literal name, whether the literal is written). The decoy `zones1.parquet` is
+        // written beside every row.
+        let rows = [
+            ("a bracket pair, literal absent", "zones[1].parquet", false),
+            ("a bracket pair, literal present", "zones[1].parquet", true),
+            (
+                "a lone opening bracket, literal present",
+                "zones[.parquet",
+                true,
+            ),
+            (
+                "a lone closing bracket, literal present",
+                "zones].parquet",
+                true,
+            ),
+        ];
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .expect("the engine crate sits in the workspace")
+            .join("target/fixtures/reader-path-literal");
+        let conn = configured_connection().expect("configured connection");
+
+        for (i, (row, literal_name, literal_present)) in rows.iter().enumerate() {
+            let dir = root.join(format!("row-{i}"));
+            let _ = std::fs::remove_dir_all(&dir);
+            std::fs::create_dir_all(&dir).expect("fixture directory");
+            let spec = |features| FixtureSpec {
+                features,
+                avg_vertices: 12,
+                ..Default::default()
+            };
+            write_geoparquet(dir.join("zones1.parquet"), &spec(DECOY_ROWS)).expect("decoy");
+            if *literal_present {
+                write_geoparquet(dir.join(literal_name), &spec(LITERAL_ROWS)).expect("literal");
+            }
+
+            let literal_text = dir.join(literal_name).to_str().unwrap().to_string();
+            let escaped = duckdb_literal_path(&literal_text);
+            let listed = names_listed_by_glob(&conn, &escaped);
+            let read = files_read(&conn, &escaped);
+
+            if *literal_present {
+                assert_eq!(
+                    listed,
+                    vec![literal_name.to_string()],
+                    "{row}: glob lists only the literal file"
+                );
+                assert_eq!(
+                    read,
+                    Ok(vec![(literal_name.to_string(), LITERAL_ROWS as i64)]),
+                    "{row}: read_parquet reads only the literal file"
+                );
+            } else {
+                assert!(
+                    listed.is_empty(),
+                    "{row}: glob lists no file once the literal is gone, got {listed:?}"
+                );
+                // DuckDB's own error for a path that matches nothing, observed from DuckDB on a
+                // plain absent path in the same directory, with the path text swapped out.
+                let absent = dir.join("absent.parquet").to_str().unwrap().to_string();
+                let expected = files_read(&conn, &absent)
+                    .expect_err("a plain absent path is an error")
+                    .replace(&absent, "<path>");
+                let got = read
+                    .expect_err(&format!("{row}: read_parquet reads no file"))
+                    .replace(&escaped, "<path>");
+                assert_eq!(got, expected, "{row}: the error is DuckDB's no-match error");
+            }
+        }
+    }
 }
