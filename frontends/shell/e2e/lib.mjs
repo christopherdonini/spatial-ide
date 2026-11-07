@@ -10,7 +10,7 @@
 // --config <path>` only when *it* spawns the app: nothing here turns the port on by default, and a
 // packaged `tauri build` never sees this file, since it never exists until a launch generates it.
 // The app itself opens the port in one other build, by design:
-// the measure build (`build:measure`, a release build with the `measure-build` feature), in which `src-tauri/src/lib.rs` opens the port with a checked-in default and `isInstrumentedBuild.ts` keeps the in-page hooks (`src/e2e-test-surface.ts`) in when `VITE_MEASURE_BUILD` is set
+// the measure build (`build:measure`, a release build with the `measure-build` feature), in which `src-tauri/src/lib.rs` opens the port with a checked-in default and `isInstrumentedBuild.ts` keeps the in-page hooks (`src/e2e-test-surface.ts`) in when `VITE_MEASURE_BUILD` is set, App.tsx's among them; the registrations gated on `import.meta.env.DEV` alone, in WorkingCanvas.tsx and PublishPanel.tsx, are out of it.
 // (the paragraph under "Security posture" in e2e/README.md has the whole posture).
 //
 // `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS` is deliberately NOT used -- it is documented-ineffective
@@ -89,11 +89,9 @@ async function findAppPage(browser, urlPrefix = APP_URL_PREFIX) {
 }
 
 /**
- * Generates `e2e/out/tauri.e2e.conf.json`, merged over the real config via `tauri dev --config
- * <path>` -- the only generated file that holds the debug-port flag, and only for the lifetime of
- * one launch (regenerated fresh every call, gitignored, never referenced by `tauri.conf.json`
- * itself); the measure build carries the flag in checked-in Rust (`src-tauri/src/lib.rs`), not in
- * an overlay. Copies `app.windows[0]` from the real config rather than inventing a window object, so
+ * Writes the Tauri config overlay at e2e/out/tauri.e2e.conf.json (gitignored), the one file this harness writes the debug-port flag to.
+ * The file stays until the next launch overwrites it, and Tauri compiles the merged config into the dev binary it builds, so that binary carries the flag as well (tauri-build's TAURI_CONFIG merge, as writeMeasureConfigOverlay.mjs:17-19 says); neither is shipped.
+ * Copies `app.windows[0]` from the real config rather than inventing a window object, so
  * title/width/height stay whatever the base config says instead of drifting out of sync with it.
  */
 function writeConfigOverlay() {
