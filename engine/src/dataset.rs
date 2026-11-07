@@ -1088,7 +1088,7 @@ fn read_kv_metadata(conn: &Connection, path: &str) -> Result<Vec<(String, Vec<u8
     // unrelated failure two calls later, which is exactly the kind of thing that is cheap to avoid
     // and expensive to diagnose.
     let pairs: Vec<(Vec<u8>, Vec<u8>)> = stmt
-        .query_map([path], |row| {
+        .query_map([duckdb_literal_path(path)], |row| {
             let k: Vec<u8> = row.get(0)?;
             let v: Vec<u8> = row.get(1)?;
             Ok((k, v))
@@ -1115,7 +1115,7 @@ fn probe_schema(conn: &Connection, path: &str) -> Result<SchemaRef> {
         .prepare("SELECT * FROM read_parquet(?) LIMIT 0")
         .map_err(|e| EngineError::Source(format!("prepare schema probe: {e}")))?;
     let arrow = stmt
-        .query_arrow([path])
+        .query_arrow([duckdb_literal_path(path)])
         .map_err(|e| EngineError::Source(format!("schema probe: {e}")))?;
     let exported = arrow.get_schema();
     // **§10 Amendment 12, 12.1(a); the architect gate's B7.** Drained in full before the next
@@ -1128,7 +1128,7 @@ fn probe_schema(conn: &Connection, path: &str) -> Result<SchemaRef> {
         .prepare("DESCRIBE SELECT * FROM read_parquet(?) LIMIT 0")
         .map_err(|e| EngineError::Source(format!("prepare schema describe: {e}")))?;
     let bound_names: Vec<String> = describe_stmt
-        .query_map([path], |row| row.get::<_, String>(0))
+        .query_map([duckdb_literal_path(path)], |row| row.get::<_, String>(0))
         .map_err(|e| EngineError::Source(format!("schema describe: {e}")))?
         .collect::<std::result::Result<Vec<_>, _>>()
         .map_err(|e| EngineError::Source(format!("schema describe row: {e}")))?;
@@ -1434,7 +1434,9 @@ fn read_file_names(conn: &Connection, path: &str, cancel: &CancelToken) -> Resul
             .prepare("SELECT name, num_children FROM parquet_schema(?)")
             .map_err(|e| EngineError::Source(format!("prepare parquet schema: {e}")))?;
         let rows: Vec<(String, Option<i64>)> = stmt
-            .query_map([path], |row| Ok((row.get(0)?, row.get(1)?)))
+            .query_map([duckdb_literal_path(path)], |row| {
+                Ok((row.get(0)?, row.get(1)?))
+            })
             .map_err(|e| EngineError::Source(format!("read parquet schema: {e}")))?
             .collect::<std::result::Result<Vec<_>, _>>()
             .map_err(|e| EngineError::Source(format!("parquet schema row: {e}")))?;
@@ -1712,7 +1714,7 @@ fn first_row_group_rows(
             )
             .map_err(|e| EngineError::Source(format!("prepare row group metadata: {e}")))?;
         let mut rows = stmt
-            .query([path])
+            .query([duckdb_literal_path(path)])
             .map_err(|e| EngineError::Source(format!("read row group metadata: {e}")))?;
         let Some(row) = rows
             .next()
@@ -1741,7 +1743,7 @@ fn covering_statistics(
                 "SELECT path_in_schema, stats_min_value, stats_max_value FROM parquet_metadata(?)",
             )
             .map_err(|e| EngineError::Source(format!("prepare parquet metadata: {e}")))?;
-        stmt.query_map([path], |row| {
+        stmt.query_map([duckdb_literal_path(path)], |row| {
             Ok((
                 row.get::<_, String>(0)?,
                 row.get::<_, Option<String>>(1)?,
@@ -1808,7 +1810,7 @@ fn covering_sample(
         ymin = covering.ymin.to_sql(),
         xmax = covering.xmax.to_sql(),
         ymax = covering.ymax.to_sql(),
-        p = path.replace('\'', "''"),
+        p = duckdb_literal_path(path).replace('\'', "''"),
         n = limit,
     );
     cancellable(conn, cancel, |conn| {
@@ -1880,12 +1882,27 @@ fn partitioned_source_detail(path: &Path) -> Option<String> {
     // change the answer. The rule is a property of the path text alone.
     const GLOB_METACHARACTERS: [char; 6] = ['*', '?', '[', ']', '{', '}'];
     if let Some(found) = GLOB_METACHARACTERS.iter().find(|c| scanned.contains(**c)) {
+        if !matches!(found, '*' | '?') && path.is_file() {
+            return None;
+        }
         return Some(format!(
             "{text} carries the glob metacharacter `{found}`, so it names a pattern rather than one \
              file"
         ));
     }
     None
+}
+
+pub(crate) fn duckdb_literal_path(path: &str) -> String {
+    let mut out = String::with_capacity(path.len());
+    for c in path.chars() {
+        match c {
+            '[' => out.push_str("[[]"),
+            ']' => out.push_str("[]]"),
+            other => out.push(other),
+        }
+    }
+    out
 }
 
 /// Admit the dataset's feature identity — **ADR-016 §3–§6**.
@@ -1995,7 +2012,7 @@ fn admit_identity(
         "SELECT count(*), count(DISTINCT \"{c}\"), min(\"{c}\"), max(\"{c}\") \
          FROM read_parquet('{p}')",
         c = column.replace('"', "\"\""),
-        p = path.replace('\'', "''")
+        p = duckdb_literal_path(path).replace('\'', "''")
     );
 
     // **G-A1's structural claim, made assertable.** This is the one place `admit_identity` can
