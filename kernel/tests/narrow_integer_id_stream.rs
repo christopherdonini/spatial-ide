@@ -19,6 +19,16 @@ use spatial_skp::v0::{DatasetHandle, ViewportQueryRequest, SKP_VERSION};
 
 const FEATURES: usize = 100;
 
+/// An Int32 `id` file (100 rows, written by the fixture's `NarrowInteger` mode at top of range)
+/// is opened in the host's catalog. `SkpHost::viewport_query` mints the ticket, and
+/// `EngineSourceFactory::ticket_only` redeems it into the source the data plane drains. The test
+/// drains that source's `next_into` and asserts that no item is an error, that each buffer decodes
+/// as an Arrow IPC stream whose `id` column is `UInt64`, and that the 100 ids are the written set.
+///
+/// RECORDED MUTATION (observed at `8cce80cade922cfbec62d8de6064f76fd1cab488`, on the uncommitted
+/// tree): the Int32 arm removed from the engine's `column_u64`. Observed outcome: this test fails
+/// by name at the terminal-error panic, with the detail ``engine.query: query: `id` is Int32;
+/// expected a 64-bit integer``.
 #[test]
 fn a_narrow_integer_id_file_opened_through_the_kernel_streams_to_the_data_plane_without_a_terminal_error(
 ) {

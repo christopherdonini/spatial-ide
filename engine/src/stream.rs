@@ -2685,6 +2685,21 @@ fn column_u64(chunk: &arrow::array::RecordBatch, name: &str) -> Result<Vec<u64>>
             })
             .collect();
     }
+    // **The narrow integer widths, widened into the same `Vec<u64>`.** UInt8, UInt16 and UInt32
+    // widen with `u64::from`, which cannot change a value. Int8, Int16 and Int32 go through
+    // `u64::try_from` per value, as the Int64 arm above does, and a negative value is refused with
+    // the same detail as there (`negative` builds that text). None of the arms uses `as`, which
+    // would wrap a negative value into a large id.
+    //
+    // **The per-value check is not redundant.** Admission scans for a negative value at open
+    // (`admit_identity` in `engine/src/dataset.rs`), but it returns before that scan for a declared
+    // mapping with `skip_uniqueness_check`, so on that route this is the only place a negative
+    // value is caught. The SKP wire has no field for that option, so the route is reachable through
+    // the engine API alone.
+    //
+    // **Every type `admit_column_type` (`engine/src/identity.rs`) admits reaches a `u64` here:**
+    // UInt64, UInt32, UInt16, UInt8, Int64, Int32, Int16 and Int8 each have an arm. Any other
+    // Arrow type keeps the type error below.
     use arrow::array::{Int16Array, Int32Array, Int8Array, UInt16Array, UInt32Array, UInt8Array};
     fn negative(name: &str, v: impl std::fmt::Display) -> EngineError {
         EngineError::Query(format!("`{name}` holds a negative value: {v}"))

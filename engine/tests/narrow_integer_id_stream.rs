@@ -97,6 +97,30 @@ fn top_of_range(max: u64) -> BTreeSet<u64> {
     (0..FEATURES as u64).map(|i| max - i).collect()
 }
 
+/// Each of the six narrow widths as a native `id`, and an Int32 `parcel_key` declared as the
+/// identity, is written by the fixture's `NarrowInteger` mode at the width's top of range (100
+/// rows), opened, and streamed with `ViewportQuery::all()`. A UInt64 `NativeUnique` file is the
+/// control. For each file the test asserts, in order: the column type read back from the written
+/// file's footer is the intended width, so the file is not a UInt64 file standing in for a narrow
+/// one; the identity's source (`file:id`, or `mapped:parcel_key`), its uniqueness
+/// (`VerifiedAtOpenFullFile`), its `verified_rows` (100) and its `max_value` (the width's maximum,
+/// and 99 for the control); then the drain, which downcasts every batch's `id` to `UInt64Array`,
+/// ends with no error, and the ids it delivered are the written set, 100 of them.
+///
+/// RECORDED MUTATION (observed at `8cce80cade922cfbec62d8de6064f76fd1cab488`, on the uncommitted
+/// tree): the Int32 arm removed from `column_u64`. Observed outcome: this test fails by name at the
+/// no-error assertion for row n3, with the stream's error ``Query("`id` is Int32; expected a
+/// 64-bit integer")``.
+///
+/// RECORDED MUTATION (observed at `8cce80cade922cfbec62d8de6064f76fd1cab488`, on the uncommitted
+/// tree): the UInt32 arm of `column_u64` reading through `i32` (`*v as i32 as u64`). Observed
+/// outcome: this test fails by name at the id-set assertion for row n6 (`n6: ids`), the delivered
+/// ids being 18446744073709551516 and up where 4294967196 and up were written.
+///
+/// RECORDED MUTATION (observed at `8cce80cade922cfbec62d8de6064f76fd1cab488`, on the uncommitted
+/// tree): the fixture's narrow mode writing UInt64 (`NarrowWidth::data_type` and `narrow_array`).
+/// Observed outcome: this test fails by name at the written-type assertion for row n1 (`n1:
+/// written type`, left `UInt64`, right `Int8`).
 #[test]
 fn a_narrow_integer_identity_column_streams_every_row_with_its_source_value_widened_to_u64() {
     let rows = [
@@ -182,6 +206,18 @@ fn a_narrow_integer_identity_column_streams_every_row_with_its_source_value_wide
     assert_eq!(ids.len(), FEATURES, "c0: row count");
 }
 
+/// Int8, Int16 and Int32 `id` files holding negative values (-1, -2, ...) are written by the
+/// fixture's `NarrowInteger` mode. Opened plainly, each is refused with `IdentityUnusable` whose
+/// detail contains "negative", because admission's scan reads the column's minimum (rows g1 to
+/// g3). Declared as `id` with `skip_uniqueness_check`, so that the scan does not run, each is
+/// admitted as `DeclaredNotVerified`, and its stream ends in `EngineError::Query` with "negative"
+/// in the detail before any row is delivered (rows s1 to s3). Row s0 is the control on that same
+/// route: an Int16 file at top of range streams its 100 rows, the ids being the written set.
+///
+/// RECORDED MUTATION (observed at `8cce80cade922cfbec62d8de6064f76fd1cab488`, on the uncommitted
+/// tree): the Int16 arm of `column_u64` mapping with `*v as u64` in place of `u64::try_from`.
+/// Observed outcome: this test fails by name at the no-rows-before-the-refusal assertion for row
+/// s2 (`s2: rows before the refusal: 100`).
 #[test]
 fn a_negative_value_in_a_signed_narrow_identity_is_refused_at_open_and_at_stream_on_the_unverified_route(
 ) {

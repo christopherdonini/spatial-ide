@@ -546,6 +546,19 @@ pub enum IdentityMode {
     /// A string `id` column (`key-{n}`, as `StringIds`) **beside** a unique `parcel_key` `UInt64`
     /// (`n`) — a file that still refuses on its `id` and offers a column to declare.
     StringIdsBesideParcelKey,
+    /// An identity column written natively at an 8, 16 or 32-bit integer width, through the same
+    /// writer as every other mode: the file is what a producer writes, not a UInt64 file cast
+    /// afterwards.
+    ///
+    /// `width` is the column's Arrow type. `column` is `id`, or `parcel_key` with **no `id` column**
+    /// in the file (as [`Self::ForeignKeyColumn`]). `values` is what each row holds. The row index
+    /// seeds the geometry exactly as it does for [`Self::NativeUnique`], so a narrow file's rows
+    /// differ from that mode's only in the identity column.
+    ///
+    /// **It refuses, and never wraps.** `generate` returns `EngineError::Source` before the first
+    /// row when `features` exceeds what `width` can hold (its maximum plus one) or when `values` is
+    /// `Negative` and `width` is unsigned, and `write_geoparquet_cancellable` then removes the
+    /// partial file. A value that does not fit its width is an error in `narrow_array` as well.
     NarrowInteger {
         width: NarrowWidth,
         column: NarrowColumn,
@@ -553,6 +566,8 @@ pub enum IdentityMode {
     },
 }
 
+/// The Arrow type of an [`IdentityMode::NarrowInteger`] column: the three signed and the three
+/// unsigned integer widths narrower than 64 bits.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum NarrowWidth {
     Int8,
@@ -563,19 +578,27 @@ pub enum NarrowWidth {
     UInt32,
 }
 
+/// The column an [`IdentityMode::NarrowInteger`] file writes its identity into.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum NarrowColumn {
+    /// The native `id`.
     Id,
+    /// `parcel_key`, with no `id` column in the file.
     ParcelKey,
 }
 
+/// The values an [`IdentityMode::NarrowInteger`] column holds.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum NarrowValues {
+    /// The width's maximum minus the row index: the first row holds the maximum, and the values
+    /// are unique and non-negative.
     TopOfRange,
+    /// Minus the row index, minus one (-1, -2, ...). A signed width only.
     Negative,
 }
 
 impl NarrowWidth {
+    /// The Arrow type the column is written as.
     fn data_type(self) -> DataType {
         match self {
             Self::Int8 => DataType::Int8,
@@ -587,6 +610,7 @@ impl NarrowWidth {
         }
     }
 
+    /// The width's maximum value, as an `i64`: every one of the six widths' ranges fits one.
     fn max(self) -> i64 {
         match self {
             Self::Int8 => i64::from(i8::MAX),
@@ -603,6 +627,7 @@ impl NarrowWidth {
     }
 }
 
+/// The value row `row` holds under `values`, as an `i64`.
 fn narrow_value(width: NarrowWidth, values: NarrowValues, row: u64) -> i64 {
     match values {
         NarrowValues::TopOfRange => width.max() - row as i64,
@@ -610,6 +635,9 @@ fn narrow_value(width: NarrowWidth, values: NarrowValues, row: u64) -> i64 {
     }
 }
 
+/// The refusals made before a narrow identity is written: negative values on an unsigned width,
+/// and a `features` count above the width's maximum plus one. That is the number of distinct
+/// values from the maximum down to zero, and from -1 down to a signed width's minimum.
 fn narrow_refusal(width: NarrowWidth, values: NarrowValues, features: usize) -> Result<()> {
     if values == NarrowValues::Negative && !width.is_signed() {
         return Err(EngineError::Source(format!(
@@ -625,6 +653,8 @@ fn narrow_refusal(width: NarrowWidth, values: NarrowValues, features: usize) -> 
     Ok(())
 }
 
+/// The column's array at `width`. A value that does not fit the width is an error here too, never a
+/// wrapped value.
 fn narrow_array(width: NarrowWidth, values: &[i64]) -> Result<ArrayRef> {
     fn narrowed<T: TryFrom<i64>>(values: &[i64]) -> Result<Vec<T>> {
         values

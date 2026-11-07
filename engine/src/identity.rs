@@ -356,6 +356,12 @@ mod tests {
         ]))
     }
 
+    /// All eight integer widths are admitted, and four types that would need a transform to reach a
+    /// `u64` are refused.
+    ///
+    /// RECORDED MUTATION (observed at `8cce80cade922cfbec62d8de6064f76fd1cab488`, on the uncommitted
+    /// tree): `D::Int8` removed from the admitting arm of `admit_column_type`. Observed outcome:
+    /// this test fails by name at the admitted-list assertion (`Int8 should widen exactly`).
     #[test]
     fn only_value_preserving_integer_types_are_admitted() {
         for ty in [
