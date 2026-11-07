@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `407b0866bbf06b9cd63d54de7742aed622bf18f3f5b97c41e995dd0b1b5f1eec`) at `2026-11-07T13:24:13.724Z`.
+Generated from `PLAN.yaml` (sha256 `8f559935538d21a5ca8e02427d5450f8f358b633d37703b3b4c7c0f64dff7886`) at `2026-11-07T14:11:32.750Z`.
 
 ## 1. Next
 
@@ -14,7 +14,6 @@ Generated from `PLAN.yaml` (sha256 `407b0866bbf06b9cd63d54de7742aed622bf18f3f5b9
 - **pre-admission-change-detail-braces** — Four kernel P6-placeholder detail strings are wrapped in literal braces, which reach the operator message; the watcher form declares each such string starts with the bracketed placeholder tag (lane `kernel-protocol`, order null, budget 30 min)
 - **windows-case-fold-non-ascii** — The audit case policy on Windows folds non-ASCII letters as NTFS does, so a profile path differing only in non-ASCII case cannot escape the user-home redaction (wave 3's 1c-2 correction, S2, code-path-only) (lane `kernel-protocol`, order null, budget 60 min)
 - **publish-filter-sentence-mark-comment-and-adr-024-note** — The mark's source comment in the human's words in publish.rs and types.ts, and ADR-024's dated note in the human's words (U12's N-3 and N-2) (lane `shell`, order null, budget 20 min)
-- **governance-f-after-week-rust-ci-figure** — Governance piece F, the after-week Rust CI figure: the form-only Rust CI runs in the 168 h after the merge, recorded as a class 1 row in piece F's form (lane `governance`, order null, budget 30 min)
 - **publish-bundle-sigterm** — SIGTERM handling in publish-bundle on unix (wave-3 W3-A observation 3) (lane `platform`, order null, budget 90 min)
 - **publish-unix-quota-perm-errors** — EDQUOT and EPERM in publish error classification on unix (wave-3 W3-A observation 1) (lane `platform`, order null, budget 90 min)
 

@@ -6274,18 +6274,18 @@ nodes:
     kind: task
     lane: governance
     phase: prototype
-    status: ready
+    status: done
     order: null
     depends_on: [governance-f-tidy-repository-in-place]
     needs_human: {kind: none, minutes: 0}
     gate: none
-    evidence: null
+    evidence: {path: "governance/forms/scripts/GOVERNANCE-F-TIDY-REPOSITORY-IN-PLACE-PREREGISTRATION.md"}
     budget_minutes: 30
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "NOT BEFORE 2026-11-07T14:09:18Z, 168 h after piece F's merge commit 578ec704 (committer time 2026-10-31T14:09:18Z): the after window runs from that time to then. The week before X: 52 runs, 39 form-only (the ledger, 2026-10-31). Before: PLACED 2026-10-29 by the human's OPEN-10 (A) (state/directives/2026-10-29-governance-f-mapping-table-approved-open-1-to-open-10-ruled.md): 168 h after piece F's merge, the after-week Rust CI figure (the form's measurement block, item (c)) is recorded as a class 1 row in piece F's form. Blocked on piece F."
-    dates: {opened: 2026-10-29, done: null}
+    summary: "DONE 2026-11-07: Amendment 8 of piece F's form (class 1): the after week, 11 Rust CI push runs on main, 0 form-only, as section 5 predicted; the week before, 52 and 39. Before: NOT BEFORE 2026-11-07T14:09:18Z, 168 h after piece F's merge commit 578ec704 (committer time 2026-10-31T14:09:18Z): the after window runs from that time to then. The week before X: 52 runs, 39 form-only (the ledger, 2026-10-31). Before: PLACED 2026-10-29 by the human's OPEN-10 (A) (state/directives/2026-10-29-governance-f-mapping-table-approved-open-1-to-open-10-ruled.md): 168 h after piece F's merge, the after-week Rust CI figure (the form's measurement block, item (c)) is recorded as a class 1 row in piece F's form. Blocked on piece F."
+    dates: {opened: 2026-10-29, done: 2026-11-07}
 
   - id: governance-e1-rules-as-records
     title: "Piece E1: rules as records, a rule catalogue under rules/, a selector scripts/plan/rules.mjs, a generated block in each agent definition and a governance-ci check"

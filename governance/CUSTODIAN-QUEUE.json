@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-07T13:24:13.724Z",
-  "plan_hash": "407b0866bbf06b9cd63d54de7742aed622bf18f3f5b97c41e995dd0b1b5f1eec",
+  "generated_at": "2026-11-07T14:11:32.750Z",
+  "plan_hash": "8f559935538d21a5ca8e02427d5450f8f358b633d37703b3b4c7c0f64dff7886",
   "priorities_approved": true,
   "next": {
     "id": "clippy-deny-warnings-workspace",
@@ -135,25 +135,6 @@
         "done": null
       },
       "summary": "SKIPPED AT DISPATCH 2026-11-07: shell-comments-drift-sweep-area-a's branch edits frontends/shell/src/publish/types.ts, which holds the mark's copy (rule (00)); it waits for area A's merge. Before: READY 2026-11-07: U1 merged (#289, 3295bf37); the follow-up under U12's form, words only, rule (00) checked at dispatch. Before: RULED 2026-11-06, 15:59Z (state/directives/2026-11-06-8e-words-replaced-u1-h1-h2-class-8-m10-kl-c1-c3-draft-marks-u12-mark-n1-n3-slot-2-order-clippy-placed-288-clicked.md), line 18: N-3's comment and N-2's ADR-024 note in the human's words (governance/forms/frontends/PUBLISH-FILTER-SENTENCE-UNDER-WHOLE-DATASET-PREREGISTRATION.md, Amendment 2). The ruling gives the words, not the place: the custodian's reading is one follow-up under U12's form, words only, applied by script, no re-gate, after U1's PR #289 merges, since it edits frontends/shell/src-tauri/src/publish.rs (rule (00)). To the human in the closing message. GRADED S3 by the custodian."
-    },
-    {
-      "id": "governance-f-after-week-rust-ci-figure",
-      "title": "Governance piece F, the after-week Rust CI figure: the form-only Rust CI runs in the 168 h after the merge, recorded as a class 1 row in piece F's form",
-      "lane": "governance",
-      "phase": "prototype",
-      "status": "ready",
-      "order": null,
-      "budget_minutes": 30,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-10-29",
-        "done": null
-      },
-      "summary": "NOT BEFORE 2026-11-07T14:09:18Z, 168 h after piece F's merge commit 578ec704 (committer time 2026-10-31T14:09:18Z): the after window runs from that time to then. The week before X: 52 runs, 39 form-only (the ledger, 2026-10-31). Before: PLACED 2026-10-29 by the human's OPEN-10 (A) (state/directives/2026-10-29-governance-f-mapping-table-approved-open-1-to-open-10-ruled.md): 168 h after piece F's merge, the after-week Rust CI figure (the form's measurement block, item (c)) is recorded as a class 1 row in piece F's form. Blocked on piece F."
     },
     {
       "id": "publish-bundle-sigterm",
