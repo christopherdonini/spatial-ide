@@ -487,3 +487,10 @@ No prior art recorded for "file name glob metacharacter escape". Research it bef
 - **Declared** (§7's ESCAPED row): 480 over the ten files, estimated at about 390. **At 0307fdfb2106eb2030bcef2f04235e8c5989dbf1**, by §7's counting command (the merge base with origin/main is d37112d8ae70fd03606ea47327b679b5e2d38a7d): 677 changed lines, 618 added and 59 deleted, over the ten: `KNOWN-LIMITATIONS.md` 14/9, `engine/README.md` 3/3, `engine/src/dataset.rs` 219/32, `engine/src/index.rs` 1/1, `engine/src/rowgroup.rs` 1/1, `engine/src/stream.rs` 5/5, `engine/tests/session_identity.rs` 7/6, `engine/tests/single_file_bracket_name.rs` 228/0, `kernel/tests/single_file_bracket_name_open.rs` 135/0, `protocol/skp/SKP-V0.md` 5/2.
 - **Where the lines are:** 502 of the 618 added lines are the three tests, E1's and K1's new files and T2's hunk in `engine/src/dataset.rs`'s test module (139). Nothing was trimmed to fit.
 - **The report:** `state/consults/2026-11-07-single-file-bracket-name-refused-as-partitioned-build-worker-report.md` (its hand-back's sha256 3debb3bcd8a0f9a082d9f6ad2d4b1ed6b431129b5d714aa46179206f5dd8219c).
+
+### Amendment 3 (2026-11-07), class 8: the closing record at the merge, §7 not edited. Written after the merge. References and hashes only.
+
+- **Merged:** PR #294, by the human, by merge commit 95e89c102ecb9acd1273019b16f2c612709f375b, at a435bcd9e8ab3ecb2c1485807995d3161514b33a.
+- **Size** by §7's counting command against the merge base d37112d8ae70fd03606ea47327b679b5e2d38a7d: 685 changed lines, 626 added and 59 deleted (Amendment 2's 677 at 0307fdfb2106eb2030bcef2f04235e8c5989dbf1, and the gate 1 words' 8).
+- **E-D's name**, at `governance/forms/engine/SINGLE-FILE-BRACKET-NAME-REFUSED-AS-PARTITIONED-PREREGISTRATION.md:220` @ 95e89c102ecb9acd1273019b16f2c612709f375b sha256:8f171310f148fd0aa427e34b1635e71f5aeb6693e6d12fc1ff011067a67833ac, is superseded by Amendment 1's shape: step 0 recorded no class as REFUSED, so §4's E-D was not built.
+- **The records:** KNOWN-LIMITATIONS item 20 and SKP-V0 §1's sentence merged as drafted at a435bcd9e8ab3ecb2c1485807995d3161514b33a.
