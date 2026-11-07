@@ -321,7 +321,9 @@ impl Dataset {
         // different facts and a caller cannot act on the second one: a directory of parquet parts
         // is a real dataset this engine will not admit *for a stated reason*, while a mistyped path
         // is not a dataset at all. Detected structurally and narrowly —
-        // [`partitioned_source_detail`] — never by opening anything.
+        // [`partitioned_source_detail`] — never by opening anything: it asks the filesystem only
+        // whether the path is a directory and, for a path holding `[`, `]`, `{` or `}`, whether it
+        // is a file; a path holding one of those four that is an existing file is not refused here.
         if let Some(detail) = partitioned_source_detail(path) {
             return Err(EngineError::IdentityOrdinalPartitionedUnsupported { detail });
         }
@@ -1088,7 +1090,7 @@ fn read_kv_metadata(conn: &Connection, path: &str) -> Result<Vec<(String, Vec<u8
     // unrelated failure two calls later, which is exactly the kind of thing that is cheap to avoid
     // and expensive to diagnose.
     let pairs: Vec<(Vec<u8>, Vec<u8>)> = stmt
-        .query_map([path], |row| {
+        .query_map([duckdb_literal_path(path)], |row| {
             let k: Vec<u8> = row.get(0)?;
             let v: Vec<u8> = row.get(1)?;
             Ok((k, v))
@@ -1115,7 +1117,7 @@ fn probe_schema(conn: &Connection, path: &str) -> Result<SchemaRef> {
         .prepare("SELECT * FROM read_parquet(?) LIMIT 0")
         .map_err(|e| EngineError::Source(format!("prepare schema probe: {e}")))?;
     let arrow = stmt
-        .query_arrow([path])
+        .query_arrow([duckdb_literal_path(path)])
         .map_err(|e| EngineError::Source(format!("schema probe: {e}")))?;
     let exported = arrow.get_schema();
     // **§10 Amendment 12, 12.1(a); the architect gate's B7.** Drained in full before the next
@@ -1128,7 +1130,7 @@ fn probe_schema(conn: &Connection, path: &str) -> Result<SchemaRef> {
         .prepare("DESCRIBE SELECT * FROM read_parquet(?) LIMIT 0")
         .map_err(|e| EngineError::Source(format!("prepare schema describe: {e}")))?;
     let bound_names: Vec<String> = describe_stmt
-        .query_map([path], |row| row.get::<_, String>(0))
+        .query_map([duckdb_literal_path(path)], |row| row.get::<_, String>(0))
         .map_err(|e| EngineError::Source(format!("schema describe: {e}")))?
         .collect::<std::result::Result<Vec<_>, _>>()
         .map_err(|e| EngineError::Source(format!("schema describe row: {e}")))?;
@@ -1434,7 +1436,9 @@ fn read_file_names(conn: &Connection, path: &str, cancel: &CancelToken) -> Resul
             .prepare("SELECT name, num_children FROM parquet_schema(?)")
             .map_err(|e| EngineError::Source(format!("prepare parquet schema: {e}")))?;
         let rows: Vec<(String, Option<i64>)> = stmt
-            .query_map([path], |row| Ok((row.get(0)?, row.get(1)?)))
+            .query_map([duckdb_literal_path(path)], |row| {
+                Ok((row.get(0)?, row.get(1)?))
+            })
             .map_err(|e| EngineError::Source(format!("read parquet schema: {e}")))?
             .collect::<std::result::Result<Vec<_>, _>>()
             .map_err(|e| EngineError::Source(format!("parquet schema row: {e}")))?;
@@ -1712,7 +1716,7 @@ fn first_row_group_rows(
             )
             .map_err(|e| EngineError::Source(format!("prepare row group metadata: {e}")))?;
         let mut rows = stmt
-            .query([path])
+            .query([duckdb_literal_path(path)])
             .map_err(|e| EngineError::Source(format!("read row group metadata: {e}")))?;
         let Some(row) = rows
             .next()
@@ -1741,7 +1745,7 @@ fn covering_statistics(
                 "SELECT path_in_schema, stats_min_value, stats_max_value FROM parquet_metadata(?)",
             )
             .map_err(|e| EngineError::Source(format!("prepare parquet metadata: {e}")))?;
-        stmt.query_map([path], |row| {
+        stmt.query_map([duckdb_literal_path(path)], |row| {
             Ok((
                 row.get::<_, String>(0)?,
                 row.get::<_, Option<String>>(1)?,
@@ -1808,7 +1812,7 @@ fn covering_sample(
         ymin = covering.ymin.to_sql(),
         xmax = covering.xmax.to_sql(),
         ymax = covering.ymax.to_sql(),
-        p = path.replace('\'', "''"),
+        p = duckdb_literal_path(path).replace('\'', "''"),
         n = limit,
     );
     cancellable(conn, cancel, |conn| {
@@ -1837,11 +1841,42 @@ fn covering_sample(
 
 /// Whether this source is **partitioned** — more than one file — and why, or `None`.
 ///
-/// **Structural and narrow, and it opens nothing.** Two shapes count, because they are the two a
-/// caller reaches a partition set through: a directory, and a path carrying a glob metacharacter.
-/// Anything else — a missing path, a path that is not parquet — keeps the refusal it already had
-/// (`EngineError::Source`), because calling a typo a partition set would be this engine inventing a
-/// diagnosis (`docs/01` principle 8).
+/// **Structural and narrow, and it reads no file.** It asks the filesystem nothing but stats:
+/// whether the path is a directory and, when the text holds `[`, `]`, `{` or `}` and neither `*`
+/// nor `?`, whether it is a file. In this order:
+///
+/// 1. A directory is refused.
+/// 2. A path text holding `*` or `?` (after the Windows extended-length prefix is set aside) is
+///    refused, whatever is on disk.
+/// 3. A path text holding `[`, `]`, `{` or `}` is refused if no file is at that path.
+/// 4. A path text holding one of those four characters, with an existing file at that path, is
+///    `None`: it is one file and the open goes on.
+/// 5. Any other path is `None`. A missing path, or a path that is not parquet, keeps the refusal it
+///    already had (`EngineError::Source`), because calling a typo a partition set would be this
+///    engine inventing a diagnosis (`docs/01` principle 8).
+///
+/// The refusals of steps 1 to 3 are one variant, and the detail of each is the text it had before
+/// step 4 existed.
+///
+/// **What step 0 observed, and the route each class takes** (the form's Amendment 1,
+/// `governance/forms/engine/SINGLE-FILE-BRACKET-NAME-REFUSED-AS-PARTITIONED-PREREGISTRATION.md`;
+/// DuckDB 1.5.5 in `duckdb` 1.10505.0, on Windows, with the build of record's compiler). Given a
+/// file name holding a well-formed `[`…`]` pair, with a file beside it whose name the pair matches
+/// (as in every pair case step 0 ran), DuckDB's `glob`, `read_parquet` and its footer-metadata
+/// functions read that other file and never the file itself; given a lone `[` or a lone `]` they
+/// read the file. Given `{` and `}`, `{a,b}` among them, they read the file and none of its decoys;
+/// with `zones{a,b}.parquet` absent, the one brace case step 0 ran that way, they read no file at
+/// all.
+/// - `[` and `]` therefore take the **escaped** route: [`duckdb_literal_path`] rewrites them at
+///   every DuckDB file-reading call outside the fixture-only `layout.rs`, and step 0 observed the
+///   rewritten form read the file when it was present and no file when it was absent.
+/// - `{` and `}` take the **raw** route: the path reaches DuckDB as it is written.
+///
+/// **Not claimed.** What is read if the file is removed between this stat and the DuckDB call, for
+/// either route; it needs timing inside one request and step 0 observed the file absent from the
+/// start, not removed in between. And, not observed: on Linux, a bracket in the first component of
+/// an absolute path; on Windows, a path whose letter case differs from the directory listing's in a
+/// component that holds a bracket. Only Windows was run in step 0.
 ///
 /// **It is not a file-list or packing contract** (A5). It decides one thing: whether R-I4's named
 /// refusal is the honest answer instead of "not a readable file". Nothing here enumerates parts,
@@ -1859,33 +1894,49 @@ fn partitioned_source_detail(path: &Path) -> Option<String> {
         .strip_prefix(r"\\?\UNC\")
         .or_else(|| text.strip_prefix(r"\\?\"))
         .unwrap_or(text);
-    // **Every metacharacter DuckDB's own `read_parquet` expands**, not a subset of them: `*` and
-    // `?` wildcards, `[...]` character classes, and `{a,b}` brace alternation. An earlier revision
-    // scanned for `*` and `?` only, on the reasoning that a bracket in a real directory name is
-    // ordinary — which is true, and is the wrong trade to make here.
+    // **`*` and `?` are decided by the text alone** (step 2): they are refused whatever is on disk,
+    // so a file whose own name holds one is still refused. `[`, `]`, `{` and `}` are the four the
+    // text cannot settle, because a name holding them can be one file; for those, one stat decides
+    // (steps 3 and 4), and an existing file goes on to the open. The list is scanned in this order,
+    // so a text holding `*` or `?` along with a bracket or a brace is reported for the `*` or `?`.
     //
-    // **The trade-off, weighed and stated.** A literal file whose name contains `[`, `]`, `{` or
-    // `}` is legal on every filesystem this runs on, and this function now refuses it by name even
-    // though it is one file. That is the safe direction and the false positive is *visible*: the
-    // operator is told, in the refusal, that the path was read as naming more than one file, which
-    // is a sentence they can act on (quote the path, rename the file). The alternative is the
-    // invisible failure: DuckDB expands the class, the source silently becomes a multi-file scan,
-    // and `file_row_number` becomes a per-file ordinal reused across files — the session tier's
-    // identity silently colliding, which is exactly what R-I4 exists to prevent (A5, boundary 7).
-    // A refusal an operator can read beats an identity that is wrong and says nothing.
-    //
-    // Deliberately **not** stat-ing the path first to see whether such a literal file exists: that
-    // would make the refusal depend on what happens to be on disk, so the same path would be
-    // admitted or refused for reasons the operator cannot see, and a file appearing later would
-    // change the answer. The rule is a property of the path text alone.
+    // The same text is refused or admitted according to what is at the path, so a file appearing
+    // later changes the answer; with no file at the path the refusal and its detail are the ones
+    // this function gave for these four characters before the stat existed.
     const GLOB_METACHARACTERS: [char; 6] = ['*', '?', '[', ']', '{', '}'];
     if let Some(found) = GLOB_METACHARACTERS.iter().find(|c| scanned.contains(**c)) {
+        if !matches!(found, '*' | '?') && path.is_file() {
+            return None;
+        }
         return Some(format!(
             "{text} carries the glob metacharacter `{found}`, so it names a pattern rather than one \
              file"
         ));
     }
     None
+}
+
+/// The path text as DuckDB's file-reading functions are handed it, so that a `[` or a `]` in a file
+/// name is read as that character and not as part of a character class.
+///
+/// In one pass over the original text, `[` becomes `[[]` and `]` becomes `[]]`; every other
+/// character, `{` and `}` included, is copied as it is (step 0 observed `{` and `}` read the file
+/// raw; see [`partitioned_source_detail`]). The result is for DuckDB only: [`Dataset::path`] and
+/// every consumer that is not DuckDB keep the raw path.
+///
+/// Applied, before any quote doubling, at the DuckDB calls in this file, in `stream.rs`
+/// (`stream`), `index.rs` (`build_observed`) and `rowgroup.rs` (`read_metadata`). The calls in
+/// `layout.rs` take their path text as they did and are not rewritten here.
+pub(crate) fn duckdb_literal_path(path: &str) -> String {
+    let mut out = String::with_capacity(path.len());
+    for c in path.chars() {
+        match c {
+            '[' => out.push_str("[[]"),
+            ']' => out.push_str("[]]"),
+            other => out.push(other),
+        }
+    }
+    out
 }
 
 /// Admit the dataset's feature identity — **ADR-016 §3–§6**.
@@ -1995,7 +2046,7 @@ fn admit_identity(
         "SELECT count(*), count(DISTINCT \"{c}\"), min(\"{c}\"), max(\"{c}\") \
          FROM read_parquet('{p}')",
         c = column.replace('"', "\"\""),
-        p = path.replace('\'', "''")
+        p = duckdb_literal_path(path).replace('\'', "''")
     );
 
     // **G-A1's structural claim, made assertable.** This is the one place `admit_identity` can
@@ -2241,5 +2292,147 @@ mod tests {
             matches!(admitted, Err(EngineError::Cancelled)),
             "a cancel inside the scan must end the admission Cancelled: {admitted:?}"
         );
+    }
+
+    /// The last path component of every file DuckDB's `glob` lists for `pattern`, sorted.
+    fn names_listed_by_glob(conn: &Connection, pattern: &str) -> Vec<String> {
+        let mut stmt = conn
+            .prepare("SELECT file FROM glob(?)")
+            .expect("prepare glob");
+        let mut names: Vec<String> = stmt
+            .query_map([pattern], |row| row.get::<_, String>(0))
+            .expect("glob")
+            .map(|listed| {
+                let listed = listed.expect("a glob row");
+                listed
+                    .rsplit(['/', '\\'])
+                    .next()
+                    .expect("a listed path has a last component")
+                    .to_string()
+            })
+            .collect();
+        names.sort();
+        names
+    }
+
+    /// The last path component and row count of every file `read_parquet` reads for `pattern`, or
+    /// the error's text when the statement fails (step 0 observed `read_parquet` fail when it reads
+    /// no file).
+    fn files_read(
+        conn: &Connection,
+        pattern: &str,
+    ) -> std::result::Result<Vec<(String, i64)>, String> {
+        let mut stmt = conn
+            .prepare(
+                "SELECT filename, count(*) FROM read_parquet(?, filename=true) \
+                 GROUP BY filename ORDER BY filename",
+            )
+            .map_err(|e| e.to_string())?;
+        let rows = stmt
+            .query_map([pattern], |row| {
+                Ok((row.get::<_, String>(0)?, row.get::<_, i64>(1)?))
+            })
+            .map_err(|e| e.to_string())?
+            .collect::<std::result::Result<Vec<_>, _>>()
+            .map_err(|e| e.to_string())?;
+        Ok(rows
+            .into_iter()
+            .map(|(file, n)| {
+                let name = file.rsplit(['/', '\\']).next().unwrap_or(&file).to_string();
+                (name, n)
+            })
+            .collect())
+    }
+
+    /// [`duckdb_literal_path`]'s output, handed to DuckDB's `glob` and `read_parquet` on a
+    /// configured connection, matches the literal file when it is present and no file when it is
+    /// not. A decoy, `zones1.parquet`, sits beside every row. The rows, in order: a bracket pair
+    /// with the literal absent and the decoy present, the same pair with the literal present, a
+    /// lone `[` and a lone `]`, each present. For the absent
+    /// row, `read_parquet`'s error is compared with the one DuckDB gives for a plain absent path in
+    /// the same directory, observed in the test and not written here, with the path text replaced.
+    ///
+    /// RECORDED MUTATION (observed at `4f0d50cee15f0e48abd582053677b55f62af077d`):
+    /// `duckdb_literal_path` returning its input unchanged. Observed outcome: this test fails by
+    /// name at the absent-pair row, where `glob` lists the decoy. A second, it leaving `[`
+    /// unescaped and rewriting only `]`: this test fails by name at the present-pair row, where
+    /// `glob` lists nothing. Dropping `]` instead was not run: the form's Amendment 1 (b) records
+    /// it as an equivalent mutant on this DuckDB, a reading of DuckDB's source and not an
+    /// observation.
+    #[test]
+    fn the_reader_path_matches_only_the_literal_file_and_nothing_once_it_is_gone() {
+        use crate::fixture::{configured_connection, write_geoparquet, FixtureSpec};
+
+        const LITERAL_ROWS: usize = 20;
+        const DECOY_ROWS: usize = 7;
+        // (row, literal name, whether the literal is written). The decoy `zones1.parquet` is
+        // written beside every row.
+        let rows = [
+            ("a bracket pair, literal absent", "zones[1].parquet", false),
+            ("a bracket pair, literal present", "zones[1].parquet", true),
+            (
+                "a lone opening bracket, literal present",
+                "zones[.parquet",
+                true,
+            ),
+            (
+                "a lone closing bracket, literal present",
+                "zones].parquet",
+                true,
+            ),
+        ];
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .expect("the engine crate sits in the workspace")
+            .join("target/fixtures/reader-path-literal");
+        let conn = configured_connection().expect("configured connection");
+
+        for (i, (row, literal_name, literal_present)) in rows.iter().enumerate() {
+            let dir = root.join(format!("row-{i}"));
+            let _ = std::fs::remove_dir_all(&dir);
+            std::fs::create_dir_all(&dir).expect("fixture directory");
+            let spec = |features| FixtureSpec {
+                features,
+                avg_vertices: 12,
+                ..Default::default()
+            };
+            write_geoparquet(dir.join("zones1.parquet"), &spec(DECOY_ROWS)).expect("decoy");
+            if *literal_present {
+                write_geoparquet(dir.join(literal_name), &spec(LITERAL_ROWS)).expect("literal");
+            }
+
+            let literal_text = dir.join(literal_name).to_str().unwrap().to_string();
+            let escaped = duckdb_literal_path(&literal_text);
+            let listed = names_listed_by_glob(&conn, &escaped);
+            let read = files_read(&conn, &escaped);
+
+            if *literal_present {
+                assert_eq!(
+                    listed,
+                    vec![literal_name.to_string()],
+                    "{row}: glob lists only the literal file"
+                );
+                assert_eq!(
+                    read,
+                    Ok(vec![(literal_name.to_string(), LITERAL_ROWS as i64)]),
+                    "{row}: read_parquet reads only the literal file"
+                );
+            } else {
+                assert!(
+                    listed.is_empty(),
+                    "{row}: glob lists no file once the literal is gone, got {listed:?}"
+                );
+                // DuckDB's own error for a path that matches nothing, observed from DuckDB on a
+                // plain absent path in the same directory, with the path text swapped out.
+                let absent = dir.join("absent.parquet").to_str().unwrap().to_string();
+                let expected = files_read(&conn, &absent)
+                    .expect_err("a plain absent path is an error")
+                    .replace(&absent, "<path>");
+                let got = read
+                    .expect_err(&format!("{row}: read_parquet reads no file"))
+                    .replace(&escaped, "<path>");
+                assert_eq!(got, expected, "{row}: the error is DuckDB's no-match error");
+            }
+        }
     }
 }
