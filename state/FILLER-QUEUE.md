@@ -36,6 +36,7 @@
 
 ## Fillers merged
 
+- 2026-11-06: entry 8d, `arithmetic-text-literal-beside-null-reason`, PR #286 (3d4bd714), S3.
 - 2026-11-06: entry 8c, `literal-only-float-integer-arithmetic-refused`, PR #284 (6a63710d), S3.
 - 2026-11-05: entry 8b, `type-walk-rule2-residual-reasons`, PR #282 (540b4afd), S3.
 - 2026-11-05: entry 10, `open-dataset-close-serialised-under-the-catalog-lock`, PR #280 (6972d43c), S3.
@@ -61,6 +62,8 @@ From 2026-10-24. Each wait is entered here with its start and end from `date -u`
 - **Slot 1,** from 2026-10-24T20:07:10Z (#253 out of draft for the click, commit f520f798), open: milestone 4's PR B follows 1c step 1's merge (OPEN-18 (b)), and 1c step 1 waits on O0's file, the human's (Monday).
 - **Slot 2,** from 2026-10-24T14:01:54Z (the rule's message, by the transcript; the wait began before it, when 1c step 1's N1 to N7 were built on 2026-10-23), open: 1c step 1's O1 waits on O0's file, the human's (Monday); #252 waits for the click after #241's R2.
 - **Slot 1, corrected 2026-10-31** (`state/drafts/weekly-window-2026-10-30.md`): the wait above ended at 2026-10-26T00:46Z, the ledger's minute for the ruling that put O1 in slot 1 ahead of order, and a new wait opened at 2026-10-28T19:05:24Z (#266 merged, by `gh`), open: PR B follows 1c step 1, which waits on O0's file (the human's direction of 2026-10-31, item 3).
+- **Slot 1, 2026-11-05 and 2026-11-06** (`state/drafts/weekly-window-2026-11-06.md`): the wait open from 2026-10-28T19:05:24Z ended at 2026-11-05T23:36Z, the ledger's minute for U1's entry to slot 1 ahead of order; a new wait from 2026-11-06T17:29:19Z (#289, U1, out of draft for the click, by `gh`), open.
+- **Slot 2, 2026-11-05 and 2026-11-06** (the same report): the wait open from 2026-10-24T14:01:54Z ended at 2026-11-05T22:43:52Z, the human's message placing U12 in slot 2 (its user record); a wait from 2026-11-06T07:46:39Z (#285, U12, out of draft, by `gh`) to 2026-11-06T15:59:38Z, the human's message placing area A in slot 2; a wait from 2026-11-06T18:48Z, the ledger's minute for area A's phase 1 built (phase 2 waits for #292's merge), open.
 
 ## The custodian's proposed additions
 
