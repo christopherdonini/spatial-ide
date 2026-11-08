@@ -300,3 +300,9 @@ The pin phase named in the Consequences list above (`:253-263` at this appending
 ## Appended note, 2026-10-20
 
 Amendment (publish-approval-ttl-ten-minutes): PENDING_ATTEMPT_TTL is 600 s (10 minutes), not the 120 s that the Decision's binding_publish_prepare bullet states, because 120 s is short for a person reading the approval dialog, whose only sign of the limit was a remaining-seconds figure read once when it opened. The grant minted beside the pending attempt takes the same lifetime, which stays under MAX_GRANT_LIFETIME (20 minutes). The approval dialog states the expiry in one sentence and adds no countdown. Nothing else in this ADR changes, and it stays Proposed.
+
+## Appended note, 2026-11-06
+
+*Appended on the human's typed words (`state/directives/2026-11-06-8e-words-replaced-u1-h1-h2-class-8-m10-kl-c1-c3-draft-marks-u12-mark-n1-n3-slot-2-order-clippy-placed-288-clicked.md`); the note below is theirs, byte for byte. Nothing above this heading is changed.*
+
+Note 2026-11-06 — the two passages describing the filter sentence under Whole dataset describe the dialog before publish-filter-sentence-under-whole-dataset (#285); the sentence now appears only under Current view with a filter on. Nothing else changes, and this ADR stays Proposed.
