@@ -4,8 +4,10 @@
 /**
  * The action console's recorder (NEXT-CUT.md P0). A bounded in-memory log of every request the
  * shell actually sent, captured at the ONE choke point `skp/client.ts::call()` (I1) -- see that
- * file's `record`/resolve calls, which are the only site permitted to import this module outside
- * this directory and its own tests (enforced by `soleCaptureSite.test.ts`).
+ * file's `record`/resolve calls, which are the only site outside this directory and the tests
+ * permitted to import `consoleRecorder`. `recordNamed`, the name-only API below, is imported outside
+ * this directory by the modules in `soleCaptureSite.test.ts`'s `RECORD_NAMED_ALLOWLIST`; that
+ * test enforces the two allowlists as two scans, one per exported name.
  *
  * `record()` takes the EXACT object reference `call()` hands to `invoke` -- no clone, no
  * structured-clone round trip, no `JSON.parse(JSON.stringify(...))`. That reference is I2: a
@@ -350,11 +352,15 @@ export const consoleRecorder = new ConsoleRecorder();
  *
  * A second, narrower choke point than `consoleRecorder.record()`: every binding-command call site
  * (`streaming/dataPlaneClient.ts`, `diagnostics/log.ts`, `skp/dialog.ts`, `skp/crsCatalog.ts`,
- * `publish/client.ts`) and every class-C handler module (`App.tsx`, `style/StylePanel.tsx`,
- * `ErrorBanner.tsx`, `publish/PublishPanel.tsx`, `console/ConsolePanel.tsx`) import THIS function,
- * never `consoleRecorder` itself -- `soleCaptureSite.test.ts` enforces both allowlists as two
- * separate scans, one per exported name, so a module that has no business reaching the full
- * `record(request)` API cannot reach it merely by importing this module for `recordNamed`.
+ * `publish/client.ts`) and every class-C handler module outside `console/` (`App.tsx`,
+ * `style/StylePanel.tsx`, `ErrorBanner.tsx`, `publish/PublishPanel.tsx`,
+ * `notices/NoticesPanel.tsx`, `layout/StudioLayout.tsx`) import THIS function and never
+ * `consoleRecorder` itself. `console/ConsolePanel.tsx` imports both names: it reads
+ * `consoleRecorder` to render the log and calls `recordNamed` for its own two toggles, which the
+ * scan allows as a self-reference from inside `console/`. `soleCaptureSite.test.ts` enforces both
+ * allowlists as two separate scans, one per exported name, so a module that has no business
+ * reaching the full `record(request)` API cannot reach it merely by importing this module for
+ * `recordNamed`.
  */
 export function recordNamed(kind: "binding-command", name: RecordableName): BindingCommandHandle;
 export function recordNamed(kind: "gui-action", name: RecordableName): void;

@@ -76,10 +76,11 @@ export default function DescribeSummary({ describe }: { describe: DescribeRespon
           </>
         )}
 
-        {/* `engine/SOURCE-WATCHER-PREREGISTRATION.md` §2d: two conditional rows, placeholders and
-            migration-inventory items. Neither is added to `.canvas-status-stack` or placed over the
-            map -- both render only within this existing component, the `sessionStatementLine`
-            precedent immediately above. */}
+        {/* `governance/forms/engine/SOURCE-WATCHER-PREREGISTRATION.md` §2d: two conditional rows,
+            placeholders and migration-inventory items. Neither is placed over the map; both render in
+            this existing component, the `sessionStatementLine` precedent immediately above. The same
+            two facts also render in the status bar, as the `WatcherStatusItem` text
+            (`layout/statusItems.ts`'s `watcherStatusText`), where `App.tsx` places it. */}
         {checksOnlyStatusLine(describe.coverage) !== null && (
           <>
             {/* Reviewer gate-1 B5: the label itself is a new operator string too, distinct from
