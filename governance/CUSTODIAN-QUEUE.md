@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `1b5d816fd50c746f9d64dd4328006b1c1dc626b621697f047a3c98f78a9a9e0d`) at `2026-11-08T02:32:04.834Z`.
+Generated from `PLAN.yaml` (sha256 `90d65dd39bc8b7f1202eeb904b53ba4df1fb01e935d0a9aeeac1295f058c815c`) at `2026-11-08T09:23:31.880Z`.
 
 ## 1. Next
 
@@ -13,6 +13,7 @@ Generated from `PLAN.yaml` (sha256 `1b5d816fd50c746f9d64dd4328006b1c1dc626b62169
 - **lod-tier-tests-own-tier-folder** — Each engine test run takes its own tier folder, the machine-wide tier folder kept for the product only: two suites sharing one machine cleared each other's tiers, failing lod_tier_builder in #284's gate 1 (the human's ruling of 2026-11-06, item 2) (lane `engine`, order null, budget 60 min)
 - **pre-admission-change-detail-braces** — Four kernel P6-placeholder detail strings are wrapped in literal braces, which reach the operator message; the watcher form declares each such string starts with the bracketed placeholder tag (lane `kernel-protocol`, order null, budget 30 min)
 - **windows-case-fold-non-ascii** — The audit case policy on Windows folds non-ASCII letters as NTFS does, so a profile path differing only in non-ASCII case cannot escape the user-home redaction (wave 3's 1c-2 correction, S2, code-path-only) (lane `kernel-protocol`, order null, budget 60 min)
+- **publish-filter-sentence-e2e-shown-case** — The case where the filter sentence is shown, proved end to end: EV2 expects filter_scope null and EV4 the sentence, in frontends/shell/e2e/export-view.mjs (U12's OPEN-3 (A), the architect's N-1) (lane `shell`, order null, budget 45 min)
 - **publish-filter-sentence-mark-comment-and-adr-024-note** — The mark's source comment in the human's words in publish.rs and types.ts, and ADR-024's dated note in the human's words (U12's N-3 and N-2) (lane `shell`, order null, budget 20 min)
 - **publish-bundle-sigterm** — SIGTERM handling in publish-bundle on unix (wave-3 W3-A observation 3) (lane `platform`, order null, budget 90 min)
 - **publish-unix-quota-perm-errors** — EDQUOT and EPERM in publish error classification on unix (wave-3 W3-A observation 1) (lane `platform`, order null, budget 90 min)
@@ -35,10 +36,9 @@ Generated from `PLAN.yaml` (sha256 `1b5d816fd50c746f9d64dd4328006b1c1dc626b62169
 - **docs-02-adr-017-entry-current** — docs/02's ADR-017 entry brought current with every appended section (the ADR-017 note's OPEN-4 (c), S4, the docs lane last) — blocked by: sitting-wording-n1-to-n7, adr-029-stale-line-cites
 - **fixture-determinism-off-windows-record** — kernel/FIXTURES.md on determinism (byte-identical on one machine, different across platforms, with the Linux sizes and hashes), and the G5 entry point gains the hash check the S entry point has — blocked by: posix-backslash-is-inside-and-redaction-label
 - **lod-tier-identity-binds-file-name** — The LOD tier builder takes the identity name DuckDB bound and looks it up among the file's own footer names, so a renamed identity column reaches a different column there — blocked by: port-2-macos-l1-and-app-dirs
-- **module-docs-drift-sweep-area-d** — Kernel and engine module docs: the never-refuses and unreachable claims the Table, record_step and publish have overtaken, the withdrawn cancellation bound, and smaller statements (drift sweep area D, findings 1 to 6) — blocked by: b2-piece-1c-save-and-reopen, adr-indices-hand-written-current
+- **module-docs-drift-sweep-area-d** — Kernel and engine module docs: the never-refuses and unreachable claims the Table, record_step and publish have overtaken, the withdrawn cancellation bound, and smaller statements (drift sweep area D, findings 1 to 6) — blocked by: b2-piece-1c-save-and-reopen
 - **skp-line-cites-outside-close-races** — Stale line cites into kernel/src/skp.rs outside kernel-close-races-followups files -- shell streaming, App.tsx, pool_poll.rs, src-tauri lib.rs, the P4 corpus test and the persisted-artifacts test — blocked by: adr-035-close-races-note
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
-- **publish-filter-sentence-e2e-shown-case** — The case where the filter sentence is shown, proved end to end: EV2 expects filter_scope null and EV4 the sentence, in frontends/shell/e2e/export-view.mjs (U12's OPEN-3 (A), the architect's N-1) — blocked by: shell-comments-drift-sweep-area-a
 - **session-end-lines-name-coverage-lost-as-source-change** — The hover readout and the Feature tab word every session end as a source change, coverage-lost included, although the engine says coverage-lost is never a source change (milestone 4 PR C gate 1, the architect's C1 note) — blocked by: b1-shell-half
 - **session-log-token-redaction-rests-on-page-code** — The session token never reaching the session log rests on page code: binding_log_session_event appends page-supplied text verbatim, the page holds the token, and the data plane's Session::redact has only a test caller — blocked by: b2-piece-1c-save-and-reopen
 - **stale-harness-comments-find-prime-and-late-result** — Stale harness and test comments: the FIND step header and its status comment in regression.mjs, and a cite into candidateArmSession.ts in App.lateResult.test.tsx — blocked by: publish-filter-sentence-e2e-shown-case
@@ -55,11 +55,8 @@ Generated from `PLAN.yaml` (sha256 `1b5d816fd50c746f9d64dd4328006b1c1dc626b62169
 
 ## 5. In progress
 
-- **narrow-integer-id-unstreamable** — An 8, 16 or 32-bit integer id column is admitted at open but no stream carries it (the cloud audit, U2) — evidence: branch `cut/narrow-integer-id-unstreamable`
 - **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **b1-shell-half** — Shell migration, milestone 4 -- B1 shell half: attributes of the inspected feature, colour by category with its legend, and the table — evidence: branch `cut/b1-shell-half-pr-c`
-- **shell-comments-drift-sweep-area-a** — Shell product comments stale against main: the candidate arm called dev-only, the e2e surface calling baseline the default, accessors labelled instrument-only, the old status-stack frame and smaller statements (drift sweep area A, less the lines in b1-shell-half PR B files) — evidence: branch `cut/shell-comments-drift-sweep-area-a`
-- **adr-indices-hand-written-current** — The hand-written ADR indices brought current: docs/README.md conventions paragraph and the docs/02 ADR list, where ADR-013 is called proposed though accepted and architect-blockable (the docs audits, A-S3, A-S5 and A-S8 index halves and the platform-only items) — evidence: branch `cut/adr-indices-hand-written-current`
 - **port-2-macos-l1-and-app-dirs** — PORT-2 -- macOS L1 for the Cargo workspace: macos-latest in the same matrix, one application-directory boundary replacing the two resolvers, and a case-policy test on a case-insensitive volume — evidence: branch `cut/port-2-macos-l1-and-app-dirs`
 
 ## 6. Proposed / unscheduled
