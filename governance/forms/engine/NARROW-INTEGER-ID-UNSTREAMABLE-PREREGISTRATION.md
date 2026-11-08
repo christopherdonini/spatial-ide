@@ -466,3 +466,9 @@ Whose words:
 - **Declared** (§7's (B) row, OPEN-1 (B)): 480 over the seven files, estimated at about 390. **At f82adfc519a98f0b5160e1fd0625c471a466a1b2**, by §7's counting command (the merge base with origin/main is 47da4d0555d0392543cd87c5c8c51952012dcd12): 635 changed lines, 629 added and 6 deleted, over the seven: `docs/adr/ADR-016-stable-feature-identity-admission.md` 6/0, `engine/README.md` 3/3, `engine/src/fixture.rs` 146/2, `engine/src/identity.rs` 16/1, `engine/src/stream.rs` 49/0, `engine/tests/narrow_integer_id_stream.rs` 293/0, `kernel/tests/narrow_integer_id_stream.rs` 116/0.
 - **Where the lines are:** 409 of the 629 added lines are the two new test files (E1 and E2's, K1's). Nothing was trimmed to fit. The worker's reason: rustfmt expanded the two test files past its estimate, and commit 3 added the comments.
 - **The report:** `state/consults/2026-11-07-narrow-integer-id-unstreamable-worker-report.md` (its hand-back's sha256 1ced73b90bb0c1ff996b24e6ccca2abfe57b0d16409195361f1d6a3065c0c94a).
+
+### Amendment 2 (2026-11-08), class 8: budget overrun, §7 not edited. The size at the words head; written after the build was seen. References and hashes only.
+
+- **At 990402ab62a097dd9bfdfa4c3e366fcb1e5b98d2**, by §7's counting command (the merge base 47da4d0555d0392543cd87c5c8c51952012dcd12): 637 changed lines, 631 added and 6 deleted, over the seven. Against Amendment 1's figure at f82adfc5, `engine/src/fixture.rs` moves from 146/2 to 148/2.
+- **Why:** the reviewer's D1 replacement words in the fixture doc, applied with no re-gate (Part 1, item 2); gate-log 703, its report `state/consults/gates/2026-11-08-narrow-integer-id-unstreamable-gate1-reviewer.md`.
+- **The report:** `state/consults/2026-11-08-narrow-integer-id-unstreamable-gate1-words-worker-report.md` (its hand-back's sha256 193699e6a232a0fb0b4cf7dfae294848f1d435e1fa8f1e16a970af769e32ac0b).
