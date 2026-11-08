@@ -69,10 +69,12 @@ use tokio::sync::watch;
 pub const PENDING_ATTEMPT_TTL: Duration = Duration::from_secs(600);
 
 /// The filter-scope sentence, a P6 placeholder (the human's ruling of 2026-11-05, evening, item 2):
-/// the visible `[P6 placeholder] ` prefix is the mark, and every byte after it is unchanged. It
-/// reaches the approval payload only under [`PublishScope::filter_scope_sentence`]'s condition: a
-/// filter active and the current view. `src/publish/types.ts` holds the panel's copy; the pin test
-/// in `PublishPanel.test.ts` keeps the two equal.
+/// the visible `[P6 placeholder] ` prefix is the mark (the custodian's reading of the human's
+/// ruling of 2026-11-05, evening, item 2, confirmed by the human on 2026-11-06), and every byte
+/// after it is unchanged. It reaches the approval payload only under
+/// [`PublishScope::filter_scope_sentence`]'s condition: a filter active and the current view.
+/// `src/publish/types.ts` holds the panel's copy; the pin test in `PublishPanel.test.ts` keeps the
+/// two equal.
 pub const FILTER_SCOPE_SENTENCE: &str =
     "[P6 placeholder] this bundle format cannot record a row predicate (ADR-017 \
      §8, bundle_version 1); publishing publishes the viewport extent, not your filter";

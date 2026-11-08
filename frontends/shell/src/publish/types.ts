@@ -115,9 +115,10 @@ export interface PublishProgressEvent {
 
 /**
  * The filter-scope sentence, a P6 placeholder (the human's ruling of 2026-11-05, evening, item 2):
- * the visible `[P6 placeholder] ` prefix is the mark, and every byte after it is unchanged.
- * Restated here for `PublishPanel.tsx`'s own echo, shown BEFORE any host round-trip only when a
- * filter is active and the scope choice is "current" (the host's own copy,
+ * the visible `[P6 placeholder] ` prefix is the mark (the custodian's reading of the human's ruling
+ * of 2026-11-05, evening, item 2, confirmed by the human on 2026-11-06), and every byte after it is
+ * unchanged. Restated here for `PublishPanel.tsx`'s own echo, shown BEFORE any host round-trip only
+ * when a filter is active and the scope choice is "current" (the host's own copy,
  * `publish.rs::FILTER_SCOPE_SENTENCE`, reaches `PublishPromptData.filter_scope` under the same
  * condition and is what `PublishDialog.tsx` renders; under Whole dataset neither shows it).
  * Duplicated by necessity -- the panel has no host round-trip to source it from before Publish is
