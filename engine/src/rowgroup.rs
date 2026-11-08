@@ -328,6 +328,7 @@ impl RowGroupIndex {
     ///
     /// One metadata query, cancellable: the query itself through the connection's interrupt handle,
     /// the reduction below through the token, at [`CANCEL_POLL_INTERVAL`].
+    #[allow(clippy::too_many_arguments)]
     pub fn build(
         conn: &Connection,
         path: &str,
