@@ -215,7 +215,7 @@ fn kw(r: &mut Rng, k: &str) -> String {
 }
 
 fn ws(r: &mut Rng) -> &'static str {
-    *r.pick(&[" ", " ", " ", "  ", "\t", "\n", " \n "])
+    r.pick(&[" ", " ", " ", "  ", "\t", "\n", " \n "])
 }
 
 fn leaf(r: &mut Rng) -> String {
@@ -268,13 +268,14 @@ fn leaf(r: &mut Rng) -> String {
             format!("{c} {op} {a} {and} {b}")
         }
         10 => format!(
-            "({} {} {}) {} {} {}",
+            "({} {} {}) {} {} {} {}",
             r.pick(NUM_COLS),
             r.pick(&["+", "-", "*", "/"]),
             num_lit(r),
             r.pick(&["*", "+"]),
             r.below(5) + 1,
-            format!("{} {}", r.pick(&["<", ">", "="]), num_lit(r))
+            r.pick(&["<", ">", "="]),
+            num_lit(r)
         ),
         11 => format!("-{} < {}", r.pick(NUM_COLS), num_lit(r)),
         12 => format!("{} {} {}", r.pick(NUM_COLS), r.pick(CMP), r.pick(NUM_COLS)),
@@ -540,7 +541,7 @@ fn splice(r: &mut Rng, base: &str) -> String {
         let at = *r.pick(&boundaries);
         match r.below(4) {
             0 | 1 => {
-                let t: &str = *r.pick(SPLICE_TOKENS);
+                let t: &str = r.pick(SPLICE_TOKENS);
                 s.insert_str(at, t)
             }
             2 if at < s.len() => {
@@ -556,8 +557,7 @@ fn splice(r: &mut Rng, base: &str) -> String {
                 let end = boundaries
                     .iter()
                     .copied()
-                    .filter(|&b| b <= end)
-                    .last()
+                    .rfind(|&b| b <= end)
                     .unwrap_or(at);
                 let dup = s[at..end].to_string();
                 s.insert_str(at, &dup);
