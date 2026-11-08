@@ -75,3 +75,7 @@ Built: clippy-deny-warnings-workspace 12a at 1b71dd6c2a966dab864337fed33d58883be
 **Model.** The harness reports Sonnet 5.5 (claude-sonnet-5-5). No override and no context handoff.
 
 **Note.** The distinct total was 26 at both fbc905ec and this base. Scratch files are under `c12a-` names in the scratch folder.
+
+---
+
+*Custodian's note (2026-11-08), appended after gate 1 (the reviewer's D2, gate-log 706); the bytes above stay as filed. The M12 line in the Mutations item, which that item calls byte-copied from the run's output, leaves out the thread id. Line 51 of the worker's run output, `c12a-m12.out` in its scratch folder, reads `thread 'the_type_walk_agrees_with_the_binder_over_the_p0_matrix' (68176) panicked at engine\tests\filter_type_admission.rs:1667:5:`. The panic site and the message are the same, and the reviewer's own M12 run at the head shows them.*
