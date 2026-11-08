@@ -1263,12 +1263,8 @@ fn is_declared_cast(kind: &str, from: &str, to: &str, in_division: bool) -> bool
     if kind == "constant" && is_numeric_name(from) && is_numeric_name(to) {
         return true;
     }
-    if in_division {
-        if let Some(_) = int_info(from) {
-            if to == "FLOAT" || to == "DOUBLE" {
-                return true;
-            }
-        }
+    if in_division && int_info(from).is_some() && (to == "FLOAT" || to == "DOUBLE") {
+        return true;
     }
     if let Some((fb, fs)) = int_info(from) {
         if to == "HUGEINT" {

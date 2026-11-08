@@ -531,8 +531,8 @@ fn a_batch_reports_the_bounds_of_the_rows_it_actually_carries() {
     }
     assert!(seen > 0);
     // The published union equals the fixture's own recorded extent, to the bit.
-    for i in 0..4 {
-        assert_eq!(union[i].to_bits(), facts.extent[i].to_bits(), "bound {i}");
+    for (i, bound) in union.iter().enumerate() {
+        assert_eq!(bound.to_bits(), facts.extent[i].to_bits(), "bound {i}");
     }
 }
 

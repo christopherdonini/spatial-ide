@@ -2320,6 +2320,7 @@ fn decode_dictionary_chunk_column(col: &ArrayRef, declared: &DataType) -> Result
     }
 }
 
+#[allow(clippy::if_same_then_else)]
 fn attr_row_bytes(chunk_attrs: &[ArrayRef], row: usize) -> usize {
     use arrow::array::{
         BooleanArray, Float32Array, Float64Array, Int16Array, Int32Array, Int64Array, Int8Array,
@@ -2459,6 +2460,7 @@ fn compact_attribute_slice(array: &ArrayRef) -> ArrayRef {
     make_array(mutable.freeze())
 }
 
+#[allow(clippy::too_many_arguments)]
 fn flush(
     pending: &mut Pending,
     envelope: &BatchEnvelope,
@@ -3851,10 +3853,11 @@ mod tests {
             const PROJECTED_PREFIX: &str =
                 "SELECT \"id\" AS \"id\", \"geometry\", \"zone\" FROM read_parquet(?)";
 
+            type Case = (Option<AdmittedPredicate>, Option<Bbox>, Option<u64>, String);
             // Eight `(filter, bbox, limit)` cells, carried as the WHERE/LIMIT *suffix* alone — the
             // prefix is supplied separately below, once per projection state, so the same suffix
             // string is asserted against both prefixes without being written out twice.
-            let cases: [(Option<AdmittedPredicate>, Option<Bbox>, Option<u64>, String); 8] = [
+            let cases: [Case; 8] = [
                 (None, None, None, String::new()),
                 (None, None, Some(7), " LIMIT 7".to_string()),
                 (None, Some(bbox), None, format!(" WHERE {BBOX_COND}")),
