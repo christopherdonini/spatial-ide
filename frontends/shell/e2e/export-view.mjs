@@ -21,6 +21,10 @@
 //   E-CV-OPEN    src/App.tsx, the PublishPanel element: availability from the old `hasSettledView` signal (a state set by `onViewportChanged` only; `getViewBox={() => (hasSettledView ? viewBox.get() : null)}`).
 //                Expected: E-CV-OPEN fails, the Current view radio disabled after the first pixels.
 //                Observed: E-CV-OPEN failed, the radio disabled after the first pixels: E-CV-OPEN: the Current view radio is disabled after the first pixels, before any input
+//   E-CV EV2     src/App.tsx, the PublishPanel element: `filterActive={activeFilter !== null}` set to `filterActive={true}`. Expected: E-CV fails at the EV2 filter_scope assertion, the prompt carrying the sentence, expected null; E-CV-OPEN and FIXTURES pass.
+//                Observed at 5b1911103884b575e05c0cb20cb48d0f8b65b075: [E-CV] FAIL (2951ms): E-CV EV2: before any filter, Current view's prompt carried filter_scope "[P6 placeholder] this bundle format cannot record a row predicate (ADR-017 §8, bundle_version 1); publishing publishes the viewport extent, not your filter", expected null
+//   E-CV EV4     src/App.tsx, the same line set to `filterActive={false}`. Expected: E-CV fails at the EV4 filter_scope assertion, the prompt carrying null, expected the sentence; E-CV-OPEN and FIXTURES pass.
+//                Observed at 5b1911103884b575e05c0cb20cb48d0f8b65b075: [E-CV] FAIL (5313ms): E-CV EV4: after the Apply, Current view's prompt carried filter_scope null, expected "[P6 placeholder] this bundle format cannot record a row predicate (ADR-017 §8, bundle_version 1); publishing publishes the viewport extent, not your filter"
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
