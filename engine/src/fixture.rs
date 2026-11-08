@@ -556,9 +556,11 @@ pub enum IdentityMode {
     /// differ from that mode's only in the identity column.
     ///
     /// **It refuses, and never wraps.** `generate` returns `EngineError::Source` before the first
-    /// row when `features` exceeds what `width` can hold (its maximum plus one) or when `values` is
-    /// `Negative` and `width` is unsigned, and `write_geoparquet_cancellable` then removes the
-    /// partial file. A value that does not fit its width is an error in `narrow_array` as well.
+    /// row when the row count (`features`, or the number of explicit rows under
+    /// `GeometryMode::Rows` and `GeometryMode::RowsWithBounds`) exceeds what `width` can hold (its
+    /// maximum plus one), or when `values` is `Negative` and `width` is unsigned, and
+    /// `write_geoparquet_cancellable` then removes the partial file. A value that does not fit its
+    /// width is an error in `narrow_array` as well.
     NarrowInteger {
         width: NarrowWidth,
         column: NarrowColumn,
