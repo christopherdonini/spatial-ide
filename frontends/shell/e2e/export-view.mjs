@@ -6,8 +6,9 @@
 // real host prompt. Fixture: `filter-zoned.parquet` (2,000 polygons, `zone`); its sha256 is recorded before and after the run. Asserted, each as a named step:
 //   E-CV-OPEN    EV0 open, first pixels; EV1 before any input, `input[value=current]` is not disabled.
 //   E-CV         EV2 a corner view through `e2eSetViewState`, then prepare Current view through `publishPrepareWithDestination`: box A is parsed from the prompt's `row_scope`
-//                (the human's sentence, matched whole) and the dialog is abandoned. EV3 Apply `zone = 'residential'` through the `queryWithFilter` seam (applied), then wait until the
-//                resident count is above 0 after it. EV4 prepare Current view gives F, and F differs from A. EV5 click Zoom to layer, prepare, Z; whether Z equals F is RECORDED, never asserted (H3).
+//                (the human's sentence, matched whole) and the dialog is abandoned; A's `filter_scope` is null (no filter yet). EV3 Apply `zone = 'residential'` through the `queryWithFilter`
+//                seam (applied), then wait until the resident count is above 0 after it. EV4 prepare Current view gives F, F differs from A, and F's `filter_scope` equals publish.rs's
+//                FILTER_SCOPE_SENTENCE (read at the run's start). EV5 click Zoom to layer, prepare, Z; whether Z equals F is RECORDED, never asserted (H3).
 //   E-CV-RESIZE  EV6 Clear through the same seam and wait for the refit; prepare gives F'. Shrink the map (`page.setViewportSize`, as layout.mjs does); prepare gives R, and R differs from F'.
 // Nothing here is a measurement or a performance claim: the millisecond figures bound waiting. The prepare never executes; no bundle is written.
 //
@@ -44,6 +45,14 @@ const DIFFERS_FRACTION = 1e-3; // two boxes differ when a side moves by more tha
 const FLOOR = { width: 1024, height: 640 }; // layout/layoutConstants.ts's VIEWPORT_FLOOR, restated: the smallest window the layout keeps a usable map in
 // The human's Row scope sentence (Amendment 1 item 2 of the form), with its four numbers: xmin, ymin, xmax, ymax.
 const ROW_SCOPE = /^row scope: the map's extent when Export interactive map… was clicked \(xmin (\S+), ymin (\S+), xmax (\S+), ymax (\S+)\) — not the whole file$/u;
+const PUBLISH_RS = join(HERE, "..", "src-tauri", "src", "publish.rs");
+
+/** FILTER_SCOPE_SENTENCE's text from publish.rs, the Rust line continuation collapsed as PublishPanel.test.ts's pin test does; a literal it cannot read is a harness failure. */
+function readFilterScopeSentence() {
+  const m = /FILTER_SCOPE_SENTENCE\s*:\s*&str\s*=\s*"([\s\S]*?)"\s*;/.exec(readFileSync(PUBLISH_RS, "utf8"));
+  if (m === null) throw new Error("export-view: harness failure: the FILTER_SCOPE_SENTENCE literal of src-tauri/src/publish.rs cannot be read");
+  return m[1].replace(/\\\r?\n[ \t]*/g, "");
+}
 
 async function pollUntil(read, predicate, timeoutMs, pollMs = 250) {
   const start = Date.now();
@@ -78,7 +87,7 @@ async function prepareCurrent(page, label) {
   await page.evaluate(() => document.querySelector(".publish-dialog-cancel")?.click());
   const [xmin, ymin, xmax, ymax] = m.slice(1).map(Number);
   expect([xmin, ymin, xmax, ymax].every(Number.isFinite) && xmax > xmin && ymax > ymin, `${label}: the box ${m[0]} is not a box`);
-  return { xmin, ymin, xmax, ymax };
+  return { xmin, ymin, xmax, ymax, filterScope: prepared.prompt.filter_scope };
 }
 
 /** Applies `predicate` (empty clears) through the `queryWithFilter` seam, then waits for the first batch to be resident, and for the render to settle. */
@@ -105,7 +114,7 @@ async function stepOpen(page, consoleHandle) {
 }
 
 /** EV2 to EV5. */
-async function stepCv(page, consoleHandle) {
+async function stepCv(page, consoleHandle, filterScopeSentence) {
   const fit = await prepareCurrent(page, "ev1-fit");
   const rect = await canvasRect(page);
   // A corner view: centred on the fit box's lower-left corner, one zoom level in (2^zoom CSS px per world unit, as computeAuthoritativeViewportBbox reads it).
@@ -114,9 +123,11 @@ async function stepCv(page, consoleHandle) {
   await waitForSettle(() => consoleHandle.renderTrace(), SETTLE);
   const a = await prepareCurrent(page, "ev2-corner");
   expect(differs(a, fit), `E-CV: the corner view ${fmt(a)} equals the fit ${fmt(fit)}; the seam moved the view by nothing`);
+  expect(a.filterScope === null, `E-CV EV2: before any filter, Current view's prompt carried filter_scope ${JSON.stringify(a.filterScope)}, expected null`);
   await applyAndRefit(page, consoleHandle, "zone = 'residential'", "E-CV EV3");
   const f = await prepareCurrent(page, "ev4-fit");
   expect(differs(f, a), `E-CV: after the Apply and its fit, Current view still sends the earlier box: F ${fmt(f)} equals A ${fmt(a)}`);
+  expect(f.filterScope === filterScopeSentence, `E-CV EV4: after the Apply, Current view's prompt carried filter_scope ${JSON.stringify(f.filterScope)}, expected ${JSON.stringify(filterScopeSentence)}`);
   const zoomed = await page.evaluate(() => { const b = [...document.querySelectorAll("button")].find((x) => x.textContent?.includes("Zoom to layer")); b?.click(); return b !== undefined; });
   expect(zoomed, 'E-CV: the "Zoom to layer" button was not found');
   await waitForSettle(() => consoleHandle.renderTrace(), SETTLE);
@@ -150,6 +161,14 @@ async function main() {
     process.exitCode = 1;
     return;
   }
+  let filterScopeSentence;
+  try {
+    filterScopeSentence = readFilterScopeSentence();
+  } catch (e) {
+    console.error(e.message);
+    process.exitCode = 1;
+    return;
+  }
   const hashBefore = sha256(FIXTURE);
   const { browser, page } = await attachOrLaunch();
   const consoleHandle = attachConsole(page);
@@ -173,7 +192,7 @@ async function main() {
     const ready = await pollUntil(() => page.evaluate(() => typeof window.__SPATIAL_E2E__?.openPath === "function").catch(() => false), (ok) => ok === true, READY_TIMEOUT_MS, 300);
     expect(ready.ok, "export-view: window.__SPATIAL_E2E__.openPath never appeared");
     await runStep("E-CV-OPEN", 180_000, () => stepOpen(page, consoleHandle));
-    await runStep("E-CV", 300_000, () => stepCv(page, consoleHandle));
+    await runStep("E-CV", 300_000, () => stepCv(page, consoleHandle, filterScopeSentence));
     await runStep("E-CV-RESIZE", 300_000, () => stepResize(page, consoleHandle));
     const hashAfter = sha256(FIXTURE);
     results.push({ id: "FIXTURES", status: hashBefore === hashAfter ? "PASS" : "FAIL", note: `filter-zoned.parquet sha256 ${hashBefore} -> ${hashAfter}` });
