@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `d5a80bd14cc4288f09d690267b8cab33c1eeb01b24768118eabaa2f1ff93b401`) at `2026-11-08T18:03:47.368Z`.
+Generated from `PLAN.yaml` (sha256 `3b472a8dc3e94614c070aeb0276b5e3b32b12d9a5e73cbb58d71cad56e1c52e4`) at `2026-11-08T18:17:06.928Z`.
 
 ## 1. Next
 
@@ -12,7 +12,6 @@ Generated from `PLAN.yaml` (sha256 `d5a80bd14cc4288f09d690267b8cab33c1eeb01b2476
 - **lod-tier-tests-own-tier-folder** — Each engine test run takes its own tier folder, the machine-wide tier folder kept for the product only: two suites sharing one machine cleared each other's tiers, failing lod_tier_builder in #284's gate 1 (the human's ruling of 2026-11-06, item 2) (lane `engine`, order null, budget 60 min)
 - **pre-admission-change-detail-braces** — Four kernel P6-placeholder detail strings are wrapped in literal braces, which reach the operator message; the watcher form declares each such string starts with the bracketed placeholder tag (lane `kernel-protocol`, order null, budget 30 min)
 - **windows-case-fold-non-ascii** — The audit case policy on Windows folds non-ASCII letters as NTFS does, so a profile path differing only in non-ASCII case cannot escape the user-home redaction (wave 3's 1c-2 correction, S2, code-path-only) (lane `kernel-protocol`, order null, budget 60 min)
-- **stale-harness-comments-find-prime-and-late-result** — Stale harness and test comments: the FIND step header and its status comment in regression.mjs, and a cite into candidateArmSession.ts in App.lateResult.test.tsx (lane `shell`, order null, budget 30 min)
 - **publish-bundle-sigterm** — SIGTERM handling in publish-bundle on unix (wave-3 W3-A observation 3) (lane `platform`, order null, budget 90 min)
 - **publish-unix-quota-perm-errors** — EDQUOT and EPERM in publish error classification on unix (wave-3 W3-A observation 1) (lane `platform`, order null, budget 90 min)
 
@@ -52,9 +51,10 @@ Generated from `PLAN.yaml` (sha256 `d5a80bd14cc4288f09d690267b8cab33c1eeb01b2476
 
 ## 5. In progress
 
-- **clippy-deny-warnings-workspace** — The workspace clippy diagnostics fixed, so cargo clippy over every target with -D warnings exits 0 (the cloud Linux run lists 48 distinct) — evidence: branch `cut/clippy-deny-warnings-workspace-12a`
+- **clippy-deny-warnings-workspace** — The workspace clippy diagnostics fixed, so cargo clippy over every target with -D warnings exits 0 (the cloud Linux run lists 48 distinct) — evidence: branch `cut/clippy-deny-warnings-workspace-12b`
 - **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **b1-shell-half** — Shell migration, milestone 4 -- B1 shell half: attributes of the inspected feature, colour by category with its legend, and the table — evidence: branch `cut/b1-shell-half-pr-c`
+- **stale-harness-comments-find-prime-and-late-result** — Stale harness and test comments: the FIND step header and its status comment in regression.mjs, and a cite into candidateArmSession.ts in App.lateResult.test.tsx — evidence: branch `cut/stale-harness-comments-find-prime-and-late-result`
 - **port-2-macos-l1-and-app-dirs** — PORT-2 -- macOS L1 for the Cargo workspace: macos-latest in the same matrix, one application-directory boundary replacing the two resolvers, and a case-policy test on a case-insensitive volume — evidence: branch `cut/port-2-macos-l1-and-app-dirs`
 
 ## 6. Proposed / unscheduled
