@@ -1927,7 +1927,7 @@ async function stepCursor(page) {
 }
 
 // ---------------------------------------------------------------------------------------
-// FIND' (entries 84 and 85, `frontends/shell/FILTER-84-85-PREREGISTRATION.md` §2.4 item 3 and §3.4
+// FIND' (entries 84 and 85, `governance/forms/frontends/FILTER-84-85-PREREGISTRATION.md` §2.4 item 3 and §3.4
 // item 4; the human's ruling of 2026-09-13: "Both through preregistration and gates with the
 // regression step that would have caught them -- 85 extends FIND' to zoom-to-layer-after-filter on
 // the candidate arm; 84 asserts the zero-row terminal marks the tile resident").
@@ -1943,11 +1943,11 @@ async function stepCursor(page) {
 //     hold no matching row at all; before the fix their streams reached a clean `Completed`
 //     terminal having delivered no batch and were therefore never marked resident, so
 //     `isFillComplete()` read `false` forever and the operator was told areas had not loaded when
-//     nothing was missing. **SUSPENDED, and recorded by name rather than failed** (preregistration
-//     §6 Amendment 1 (b), 2026-09-13): a second cause -- filtered per-tile queries dropped silently
-//     before any stream is issued, DECISIONS-PENDING entry 87 -- leaves covering tiles that reach no
-//     terminal at all, and while any exist this assertion cannot discriminate entry 84's fix. It
-//     reinstates itself, unchanged, on the first run where none exist.
+//     nothing was missing. `stepFind`'s step 4 pushes a named failure when the covering set was
+//     truncated, when the status settled to the settled-partial sentence, and when it never
+//     settled to the within-budget one. No branch of the step reads `unminted`, the settled
+//     unminted-tile reading, which only the step's observed summary uses, and the step throws
+//     every collected failure at its end.
 //
 //   FIND'/zoom-to-layer-after-filter (entry 85) -- the second "Zoom to layer" click must put the
 //     camera back on the fit. Under a filter the fit anchor stops growing after the filtered first
@@ -2085,8 +2085,8 @@ function tileMintOutcomesSince(sessionLogPath, sinceMs) {
  * the window has since recovered (fully drained), and otherwise returns the LAST reading once the
  * bound elapses. Called AFTER the render trace has gone quiet and after `.residency-status` has
  * settled, so a reading surviving all of that is a tile that genuinely never minted, never one
- * still mid-retry -- the false PREMISE-BROKEN reading an eager read could produce would silently
- * skip the pre-committed assertion, which is the one outcome this step must not allow.
+ * still mid-retry. `stepFind` reads the result only in its `observed` summary, never in a branch
+ * condition.
  * `K7_STATUS_SETTLE_TIMEOUT_MS` is the same bound K7's own status re-read uses; a bound, not a
  * timing claim (ADR-018). A `null` reading (session log unreachable) settles immediately -- there
  * is nothing to poll for. */
@@ -2249,7 +2249,8 @@ async function stepFind(page, consoleHandle) {
   // step says so rather than attributing one cause to the other.
   // Both readings are taken AFTER the status has settled (architect should-fix, 2026-09-13): taken
   // before it, a query whose stream had simply not minted yet would read as one that never minted,
-  // and a false PREMISE BROKEN record would silently skip the pre-committed assertion below.
+  // so `unminted` is read after the settled status. The branches below test `truncated` and the
+  // settled status only; `unminted` appears in the `observed` summary.
   const statusAfterZoomOut = await settledResidencyStatus(page);
   const truncated = coveringTruncatedSince(consoleHandle, beforeZoomOut);
   const unminted = await settledUnmintedTilesSince(sessionLogPath, sessionLogMarkMs);
@@ -2257,12 +2258,17 @@ async function stepFind(page, consoleHandle) {
   // status assertion below is a HARD, UNCONDITIONAL `failures.push` -- FILTER-84-85-PREREGISTRATION
   // .md §6 Amendment 1 (b)'s suspension (a carve-out that RECORDED "PREMISE BROKEN" via
   // `records.push` instead of failing) is gone, not merely bypassed: there is no branch left
-  // anywhere in this function that reads `unminted` and chooses not to fail. This step FAILS on
-  // this build whenever the covering set was not truncated and the status still reads
-  // settled-partial (or never reaches within-budget) -- expected and honest while the engine half
-  // (entry 91 (a), ADR-033) is not built: the shell-side bounded requeue (§2.3(iii)) only
-  // mitigates the lease contention, it does not resolve it. `unminted` itself is read ONLY in the
-  // `observed` summary below (informational), never in a branch condition here.
+  // anywhere in this function that reads `unminted` and chooses not to fail. This step FAILS
+  // whenever the covering set was not truncated and the status still reads settled-partial (or
+  // never reaches within-budget). Predicate admission leases its own engine class,
+  // `LeaseClass::Admission` (entry 91 (a), ADR-033), at
+  // engine/src/predicate.rs:145-147 @ 058244086f9914525ea8e4761c7baa07ea4f6e62 sha256:6fb6d5337ed84e3dbf2e42ba4aad862f6458de1852709449684c04fa41015829; its
+  // ceiling, `MAX_ADMISSION_CONNECTIONS = 4`, at
+  // engine/src/pool.rs:132 @ 058244086f9914525ea8e4761c7baa07ea4f6e62 sha256:c52c432c132cb973fdbb7c15c2a9db03a87d9b2ebb2c5d4d0bb464238e560293, is declared as
+  // the shell's three in-flight tile streams plus one baseline (non-tiled) viewport query, at
+  // engine/src/pool.rs:111-115 @ 058244086f9914525ea8e4761c7baa07ea4f6e62 sha256:0214aec62dcd00491725da20f12cb8d45a63915f92f8a995a4407a31cbfa979f.
+  // `unminted` itself is read ONLY in the `observed` summary below (informational), never in a
+  // branch condition here.
   if (truncated.length > 0) {
     failures.push(
       `FIND'/settled-partial-under-filter: PREMISE BROKEN -- the covering set was TRUNCATED during the zoom-out ` +
