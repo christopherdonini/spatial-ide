@@ -1,20 +1,17 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `940cab4eb759eda057d519d6bb88a4ddb83ad41443418f7d5397e670b64fcf32`) at `2026-11-08T10:24:04.526Z`.
+Generated from `PLAN.yaml` (sha256 `7b045d18fe1aaf5297accac2754062e458116700afc73f150309cf0e3dfc3cf8`) at `2026-11-08T11:30:07.028Z`.
 
 ## 1. Next
 
-- **clippy-deny-warnings-workspace** — The workspace clippy diagnostics fixed, so cargo clippy over every target with -D warnings exits 0 (the cloud Linux run lists 48 distinct) (lane `engine`)
+- **duckdb-literal-path-index-and-rowgroup-tests** — The escaped DuckDB path at the spatial-index and row-group-index sites is reached by no test: each site gets a test with its mutation (8f, gate 1 reviewer, EV-1) (lane `engine`)
 
 ## 2. Ready
 
-- **clippy-deny-warnings-workspace** — The workspace clippy diagnostics fixed, so cargo clippy over every target with -D warnings exits 0 (the cloud Linux run lists 48 distinct) (lane `engine`, order null, budget 120 min)
 - **duckdb-literal-path-index-and-rowgroup-tests** — The escaped DuckDB path at the spatial-index and row-group-index sites is reached by no test: each site gets a test with its mutation (8f, gate 1 reviewer, EV-1) (lane `engine`, order null, budget 60 min)
 - **lod-tier-tests-own-tier-folder** — Each engine test run takes its own tier folder, the machine-wide tier folder kept for the product only: two suites sharing one machine cleared each other's tiers, failing lod_tier_builder in #284's gate 1 (the human's ruling of 2026-11-06, item 2) (lane `engine`, order null, budget 60 min)
 - **pre-admission-change-detail-braces** — Four kernel P6-placeholder detail strings are wrapped in literal braces, which reach the operator message; the watcher form declares each such string starts with the bracketed placeholder tag (lane `kernel-protocol`, order null, budget 30 min)
 - **windows-case-fold-non-ascii** — The audit case policy on Windows folds non-ASCII letters as NTFS does, so a profile path differing only in non-ASCII case cannot escape the user-home redaction (wave 3's 1c-2 correction, S2, code-path-only) (lane `kernel-protocol`, order null, budget 60 min)
-- **publish-filter-sentence-e2e-shown-case** — The case where the filter sentence is shown, proved end to end: EV2 expects filter_scope null and EV4 the sentence, in frontends/shell/e2e/export-view.mjs (U12's OPEN-3 (A), the architect's N-1) (lane `shell`, order null, budget 45 min)
-- **publish-filter-sentence-mark-comment-and-adr-024-note** — The mark's source comment in the human's words in publish.rs and types.ts, and ADR-024's dated note in the human's words (U12's N-3 and N-2) (lane `shell`, order null, budget 20 min)
 - **publish-bundle-sigterm** — SIGTERM handling in publish-bundle on unix (wave-3 W3-A observation 3) (lane `platform`, order null, budget 90 min)
 - **publish-unix-quota-perm-errors** — EDQUOT and EPERM in publish error classification on unix (wave-3 W3-A observation 1) (lane `platform`, order null, budget 90 min)
 
@@ -55,8 +52,11 @@ Generated from `PLAN.yaml` (sha256 `940cab4eb759eda057d519d6bb88a4ddb83ad4144341
 
 ## 5. In progress
 
+- **clippy-deny-warnings-workspace** — The workspace clippy diagnostics fixed, so cargo clippy over every target with -D warnings exits 0 (the cloud Linux run lists 48 distinct) — evidence: branch `cut/clippy-deny-warnings-workspace-12a`
 - **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **b1-shell-half** — Shell migration, milestone 4 -- B1 shell half: attributes of the inspected feature, colour by category with its legend, and the table — evidence: branch `cut/b1-shell-half-pr-c`
+- **publish-filter-sentence-e2e-shown-case** — The case where the filter sentence is shown, proved end to end: EV2 expects filter_scope null and EV4 the sentence, in frontends/shell/e2e/export-view.mjs (U12's OPEN-3 (A), the architect's N-1) — evidence: branch `cut/publish-filter-sentence-e2e-shown-case`
+- **publish-filter-sentence-mark-comment-and-adr-024-note** — The mark's source comment in the human's words in publish.rs and types.ts, and ADR-024's dated note in the human's words (U12's N-3 and N-2) — evidence: branch `cut/publish-filter-sentence-mark-comment-and-adr-024-note`
 - **port-2-macos-l1-and-app-dirs** — PORT-2 -- macOS L1 for the Cargo workspace: macos-latest in the same matrix, one application-directory boundary replacing the two resolvers, and a case-policy test on a case-insensitive volume — evidence: branch `cut/port-2-macos-l1-and-app-dirs`
 
 ## 6. Proposed / unscheduled
