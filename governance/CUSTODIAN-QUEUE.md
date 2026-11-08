@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `8479c3c8675c1bc4d3caf7803bcba13e986cc12a6f7e4ad560598a89a314635a`) at `2026-11-08T13:41:15.894Z`.
+Generated from `PLAN.yaml` (sha256 `0a31cbd7d9cb2ab3665f66473fe9ffe72720a55e10a631ca51bc616b2df28783`) at `2026-11-08T17:50:35.613Z`.
 
 ## 1. Next
 
@@ -12,6 +12,7 @@ Generated from `PLAN.yaml` (sha256 `8479c3c8675c1bc4d3caf7803bcba13e986cc12a6f7e
 - **lod-tier-tests-own-tier-folder** — Each engine test run takes its own tier folder, the machine-wide tier folder kept for the product only: two suites sharing one machine cleared each other's tiers, failing lod_tier_builder in #284's gate 1 (the human's ruling of 2026-11-06, item 2) (lane `engine`, order null, budget 60 min)
 - **pre-admission-change-detail-braces** — Four kernel P6-placeholder detail strings are wrapped in literal braces, which reach the operator message; the watcher form declares each such string starts with the bracketed placeholder tag (lane `kernel-protocol`, order null, budget 30 min)
 - **windows-case-fold-non-ascii** — The audit case policy on Windows folds non-ASCII letters as NTFS does, so a profile path differing only in non-ASCII case cannot escape the user-home redaction (wave 3's 1c-2 correction, S2, code-path-only) (lane `kernel-protocol`, order null, budget 60 min)
+- **stale-harness-comments-find-prime-and-late-result** — Stale harness and test comments: the FIND step header and its status comment in regression.mjs, and a cite into candidateArmSession.ts in App.lateResult.test.tsx (lane `shell`, order null, budget 30 min)
 - **publish-bundle-sigterm** — SIGTERM handling in publish-bundle on unix (wave-3 W3-A observation 3) (lane `platform`, order null, budget 90 min)
 - **publish-unix-quota-perm-errors** — EDQUOT and EPERM in publish error classification on unix (wave-3 W3-A observation 1) (lane `platform`, order null, budget 90 min)
 
@@ -38,7 +39,6 @@ Generated from `PLAN.yaml` (sha256 `8479c3c8675c1bc4d3caf7803bcba13e986cc12a6f7e
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
 - **session-end-lines-name-coverage-lost-as-source-change** — The hover readout and the Feature tab word every session end as a source change, coverage-lost included, although the engine says coverage-lost is never a source change (milestone 4 PR C gate 1, the architect's C1 note) — blocked by: b1-shell-half
 - **session-log-token-redaction-rests-on-page-code** — The session token never reaching the session log rests on page code: binding_log_session_event appends page-supplied text verbatim, the page holds the token, and the data plane's Session::redact has only a test caller — blocked by: b2-piece-1c-save-and-reopen
-- **stale-harness-comments-find-prime-and-late-result** — Stale harness and test comments: the FIND step header and its status comment in regression.mjs, and a cite into candidateArmSession.ts in App.lateResult.test.tsx — blocked by: publish-filter-sentence-e2e-shown-case
 - **briefb-b2-save-reopen** — B2 — Save project, Snapshot data, session history, lineage and preferences, in five stages, each with its own form — blocked by: decision-adr-029-scan-progress-route
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer — blocked by: signpath-application-draft
 - **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-2-0
@@ -55,8 +55,6 @@ Generated from `PLAN.yaml` (sha256 `8479c3c8675c1bc4d3caf7803bcba13e986cc12a6f7e
 - **clippy-deny-warnings-workspace** — The workspace clippy diagnostics fixed, so cargo clippy over every target with -D warnings exits 0 (the cloud Linux run lists 48 distinct) — evidence: branch `cut/clippy-deny-warnings-workspace-12a`
 - **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **b1-shell-half** — Shell migration, milestone 4 -- B1 shell half: attributes of the inspected feature, colour by category with its legend, and the table — evidence: branch `cut/b1-shell-half-pr-c`
-- **publish-filter-sentence-e2e-shown-case** — The case where the filter sentence is shown, proved end to end: EV2 expects filter_scope null and EV4 the sentence, in frontends/shell/e2e/export-view.mjs (U12's OPEN-3 (A), the architect's N-1) — evidence: branch `cut/publish-filter-sentence-e2e-shown-case`
-- **publish-filter-sentence-mark-comment-and-adr-024-note** — The mark's source comment in the human's words in publish.rs and types.ts, and ADR-024's dated note in the human's words (U12's N-3 and N-2) — evidence: branch `cut/publish-filter-sentence-mark-comment-and-adr-024-note`
 - **port-2-macos-l1-and-app-dirs** — PORT-2 -- macOS L1 for the Cargo workspace: macos-latest in the same matrix, one application-directory boundary replacing the two resolvers, and a case-policy test on a case-insensitive volume — evidence: branch `cut/port-2-macos-l1-and-app-dirs`
 
 ## 6. Proposed / unscheduled
