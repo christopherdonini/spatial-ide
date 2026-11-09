@@ -315,7 +315,7 @@ fn ensure(
         Ok(_) => {
             std::fs::write(
                 evidence_dir().join("import-layout-5gb-fixtures.log"),
-                &log as &str,
+                log.as_str(),
             )
             .ok();
             panic!("{id}: watchdog at {REWRITE_CEILING:?} (fired={fired}), not retried within this run");
@@ -323,7 +323,7 @@ fn ensure(
         Err(e) => {
             std::fs::write(
                 evidence_dir().join("import-layout-5gb-fixtures.log"),
-                &log as &str,
+                log.as_str(),
             )
             .ok();
             panic!("{id}: rewrite refused or failed: {e}. A refusal stops this phase (F3).");
@@ -334,6 +334,7 @@ fn ensure(
 #[test]
 #[ignore = "writes up to one ~5 GB file and re-hashes up to three; run explicitly with --release, \
             --features fixture; kernel/IMPORT-LAYOUT-PREREGISTRATION.md phase 5"]
+#[allow(clippy::assertions_on_constants)]
 fn generate_the_5gb_fixture_set() {
     assert!(
         !cfg!(debug_assertions),
