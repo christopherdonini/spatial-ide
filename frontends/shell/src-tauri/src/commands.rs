@@ -317,8 +317,8 @@ pub async fn binding_publish_prepare(
     // RELEASE-0.1 item 3: the packaged resource directory first, the dev-tree checkout path as a
     // fallback — `resolve_viewer_dir`'s own doc comment has the order and why an `AppHandle`
     // itself never crosses into `publish.rs`. `.ok()` rather than `?`: a `resource_dir()` failure
-    // (e.g. under `tauri dev`, where nothing is packaged) is not this command's own error — it
-    // just means `bundled_viewer` falls through to the dev-tree path, same as `None` would.
+    // is not this command's own error — it just means `bundled_viewer` gets `None` and tries the
+    // dev-tree path only.
     let (viewer, viewer_license) =
         match publish::bundled_viewer(app.path().resource_dir().ok().as_deref()) {
             Ok(v) => v,
