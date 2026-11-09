@@ -89,3 +89,7 @@ Built: clippy-deny-warnings-workspace 12c at 1889a28a69698be2f87e519668d634c2e52
   - User-facing messages: none were added or changed.
   - Required tests: each reached its intended assertion. The panic lines above show the guards and the three rewritten asserts firing.
 - Model: Sonnet 5.5 (claude-sonnet-5-5) as the harness reports it. No override and no context handoff.
+
+---
+
+*Custodian's correction (2026-11-09), appended after #303's gate 1 architect's D1 (`state/consults/gates/2026-11-09-clippy-deny-warnings-workspace-12c-gate1-architect.md`): the filing note at the top of this file is untrue in one clause, quoted from it: "the guard runs' and the mutations' exit codes are in its output files". The worker's six output files for those runs (`c12c-g34.txt`, `c12c-g40.txt`, `c12c-g41.txt`, `c12c-m36.txt`, `c12c-m37.txt`, `c12c-m38.txt`) print no exit code. In its place, quoted from the architect's D1: "the guard runs' and the mutations' output files hold each run's panic line, its message and cargo's `error: test failed` line; they print no exit code, which the report states." The exit codes are in the worker's transcript, whose tool results print `g34_rc=101`, `g40_rc=101`, `g41_rc=101`, `m36_rc=101`, `m37_rc=101` and `m38_rc=101`, read by the custodian's script. The rest of the note stands.*
