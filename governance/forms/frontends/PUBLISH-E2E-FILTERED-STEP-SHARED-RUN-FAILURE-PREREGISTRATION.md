@@ -212,3 +212,17 @@ No prior art recorded for "e2e flaky race filter prepare". Research it before pl
 - **Rule (00)** at main ac1d1004, `git diff --name-only origin/main...<branch>` against the Scope file, `frontends/shell/src/App.tsx` (M-FLAG's, never committed), `frontends/shell/e2e/README.md` (OPEN-2's) and protocol/: #304 (`cut/shell-resource-dir-dev-comments`): none; port-2 (`cut/port-2-macos-l1-and-app-dirs`): none; 1c (`cut/b2-piece-1c-save-and-reopen`): none; B1 shell half C (`cut/b1-shell-half-pr-c`): none; #303 (`cut/clippy-deny-warnings-workspace-12c`): none. It is checked again at dispatch.
 
 ## Amendments (opens empty; append-only)
+
+### Amendment 1 — 2026-11-09 — OPEN-2 (A) and OPEN-5, ruled by the human (class 5), recorded before any code
+
+- **The ruling:** the human's message of 2026-11-09, its user record at 2026-11-09T21:07:46.337Z (`state/directives/2026-11-09-304-open-b-a-widened-303-clicked-pef-open-2-a-open-5-listen-test-then-5180.md`, lines 11 to 13).
+- **OPEN-2: (A).** The human's words, quoted verbatim: "OPEN-2: (A). e2e/README.md is not edited; the wait is described in publish.mjs's own header."
+  - Scope stays the one file, `frontends/shell/e2e/publish.mjs`.
+  - The wait is described in that file's header: the sentences note 3 asks for (what the wait waits on and why that is the state the prepare reads; the timeout and what its failure names; that the wait is a precondition and not a property) are written there, beside M-FLAG's `RECORDED MUTATION` entry. They count in the declared 40 lines.
+- **OPEN-5.** The human's words, quoted verbatim: "OPEN-5: when I tell you 5180 is free, confirm it by a listen test on 5180, not by the excluded-range list: that list will still show 5180 with an asterisk, which is the reservation I add myself so Windows does not take the port again. From a passing listen test on, every piece's e2e runs use 5180, the suites' own default, and the port-5400 harness and its approval of 2026-10-11 end. A run already started on 5400 finishes there. If the listen test fails, 5400 continues and you tell me. Until my word, 5400 as now."
+  - Until the human says port 5180 is free, this piece's runs use the port-5400 harness, as note 4 and the settlement state.
+  - When the human says it, the custodian runs a listen test on port 5180 before any further e2e run starts. The excluded-range list is not the test.
+  - From a passing listen test on, this piece's runs use port 5180, the suites' own default, with no TAURI_CONFIG overlay and no Vite on 5400. Note 4's harness bullets then read so, and the approval of 2026-10-11 ends. A run already started on 5400 finishes there.
+  - If the listen test fails, the runs stay on 5400 and the custodian tells the human.
+  - The ruling covers every piece's e2e runs, not this piece's alone. The ledger's standing judgments carry it.
+- **Unchanged:** every other line of this form, the settlement's other items included.
