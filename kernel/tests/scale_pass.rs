@@ -188,7 +188,7 @@ impl FixtureProgress for GenProgress<'_> {
     fn chunk_written(&self, _i: usize, written: usize, total: usize, bytes: u64) {
         self.dog.beat();
         let n = self.chunks.fetch_add(1, Ordering::Relaxed);
-        if n % 50 == 0 {
+        if n.is_multiple_of(50) {
             println!("  [generate] {written}/{total} features, {bytes} B");
         }
     }
