@@ -64,3 +64,5 @@ Commit 165e07f2b902ce4a1537db012be3f05c16f63f7b, subject: `docs: shell-resource-
 **Background shells left:** none. I started none.
 
 **Model:** Sonnet 5.5 (claude-sonnet-5-5), no override, no handoff. Scratch files are under the scratchpad folder, named `srdc2-*`.
+
+*Custodian's correction (2026-11-09), closing D1 and D2 of the reviewer's OPEN-B (a) scoped check (`state/consults/gates/2026-11-09-shell-resource-dir-dev-comments-openb-a-scoped-check-reviewer.md`), the report above unchanged: at 165e07f2, the comment in `resolve_viewer_dir` saying `commands.rs` passes `None` only when its `resource_dir()` call returned an error is at publish.rs lines 1523 to 1527 (its clause on 1526 and 1527); lines 1528 to 1531 are code. The test's string assertion is at lines 1605 to 1608, and its negated `reinstall Spatial IDE` assertion at line 1609.*

@@ -1,14 +1,13 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `1a6ac18bd35c9a0a0db0981fbfeb33f02aae8509833362647bd6801bda85a684`) at `2026-11-09T22:06:56.644Z`.
+Generated from `PLAN.yaml` (sha256 `b0f0dd8d08793917cd02a3adc48091a70d716685dbd5c8290052246fd669e651`) at `2026-11-09T22:59:16.932Z`.
 
 ## 1. Next
 
-- **duckdb-literal-path-index-and-rowgroup-tests** — The escaped DuckDB path at the spatial-index and row-group-index sites is reached by no test: each site gets a test with its mutation (8f, gate 1 reviewer, EV-1) (lane `engine`)
+- **lod-tier-tests-own-tier-folder** — Each engine test run takes its own tier folder, the machine-wide tier folder kept for the product only: two suites sharing one machine cleared each other's tiers, failing lod_tier_builder in #284's gate 1 (the human's ruling of 2026-11-06, item 2) (lane `engine`)
 
 ## 2. Ready
 
-- **duckdb-literal-path-index-and-rowgroup-tests** — The escaped DuckDB path at the spatial-index and row-group-index sites is reached by no test: each site gets a test with its mutation (8f, gate 1 reviewer, EV-1) (lane `engine`, order null, budget 60 min)
 - **lod-tier-tests-own-tier-folder** — Each engine test run takes its own tier folder, the machine-wide tier folder kept for the product only: two suites sharing one machine cleared each other's tiers, failing lod_tier_builder in #284's gate 1 (the human's ruling of 2026-11-06, item 2) (lane `engine`, order null, budget 60 min)
 - **pre-admission-change-detail-braces** — Four kernel P6-placeholder detail strings are wrapped in literal braces, which reach the operator message; the watcher form declares each such string starts with the bracketed placeholder tag (lane `kernel-protocol`, order null, budget 30 min)
 - **windows-case-fold-non-ascii** — The audit case policy on Windows folds non-ASCII letters as NTFS does, so a profile path differing only in non-ASCII case cannot escape the user-home redaction (wave 3's 1c-2 correction, S2, code-path-only) (lane `kernel-protocol`, order null, budget 60 min)
@@ -54,6 +53,7 @@ Generated from `PLAN.yaml` (sha256 `1a6ac18bd35c9a0a0db0981fbfeb33f02aae85098333
 ## 5. In progress
 
 - **clippy-deny-warnings-workspace** — The workspace clippy diagnostics fixed, so cargo clippy over every target with -D warnings exits 0 (the cloud Linux run lists 48 distinct) — evidence: branch `cut/clippy-deny-warnings-workspace-12c`
+- **duckdb-literal-path-index-and-rowgroup-tests** — The escaped DuckDB path at the spatial-index and row-group-index sites is reached by no test: each site gets a test with its mutation (8f, gate 1 reviewer, EV-1) — evidence: branch `cut/duckdb-literal-path-index-and-rowgroup-tests`
 - **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **b1-shell-half** — Shell migration, milestone 4 -- B1 shell half: attributes of the inspected feature, colour by category with its legend, and the table — evidence: branch `cut/b1-shell-half-pr-c`
 - **shell-resource-dir-dev-comments** — Shell comments on resource_dir under tauri dev read as untrue on Windows: bundled_viewer, resolve_viewer_dir (twice), commands.rs and two resolver tests say a dev run supplies no resource directory — evidence: branch `cut/shell-resource-dir-dev-comments`
