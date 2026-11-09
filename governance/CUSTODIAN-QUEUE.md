@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `f25ae7405507ad5b94e899f5dd9cd0953f5d22526934b90309792bec4a60555f`) at `2026-11-08T20:43:05.946Z`.
+Generated from `PLAN.yaml` (sha256 `60355cbbed5f577199863ffad8492784bf20b809364341cefc70d5f7e421b878`) at `2026-11-09T13:38:32.669Z`.
 
 ## 1. Next
 
@@ -54,7 +54,6 @@ Generated from `PLAN.yaml` (sha256 `f25ae7405507ad5b94e899f5dd9cd0953f5d22526934
 - **clippy-deny-warnings-workspace** — The workspace clippy diagnostics fixed, so cargo clippy over every target with -D warnings exits 0 (the cloud Linux run lists 48 distinct) — evidence: branch `cut/clippy-deny-warnings-workspace-12b`
 - **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **b1-shell-half** — Shell migration, milestone 4 -- B1 shell half: attributes of the inspected feature, colour by category with its legend, and the table — evidence: branch `cut/b1-shell-half-pr-c`
-- **stale-harness-comments-find-prime-and-late-result** — Stale harness and test comments: the FIND step header and its status comment in regression.mjs, and a cite into candidateArmSession.ts in App.lateResult.test.tsx — evidence: branch `cut/stale-harness-comments-find-prime-and-late-result`
 - **port-2-macos-l1-and-app-dirs** — PORT-2 -- macOS L1 for the Cargo workspace: macos-latest in the same matrix, one application-directory boundary replacing the two resolvers, and a case-policy test on a case-insensitive volume — evidence: branch `cut/port-2-macos-l1-and-app-dirs`
 
 ## 6. Proposed / unscheduled
