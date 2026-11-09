@@ -258,8 +258,9 @@ fn write_k1_pair(directory: &str, rows_per_group: Option<usize>) -> PathBuf {
 /// indexed through `Dataset::build_index`, is indexed from its own rows: the build is admitted and
 /// its report holds 500 indexed features and 500 scanned rows, not the decoy's 300.
 ///
-/// RECORDED MUTATION (observed at `<T>`): in `SpatialIndex::build_observed` the `read_parquet` path
-/// left unescaped. Observed outcome: this test fails at the `indexed_features` assertion.
+/// RECORDED MUTATION (observed at `a096ebbb7358539664f46cb669d2c7856b86e175`):
+/// in `SpatialIndex::build_observed` the `read_parquet` path left unescaped. Observed outcome:
+/// this test fails at the `indexed_features` assertion, 300 against 500.
 #[test]
 fn an_index_built_over_an_existing_bracket_named_file_holds_only_that_files_features() {
     let literal = write_k1_pair("index-k1", None);
@@ -290,8 +291,9 @@ fn an_index_built_over_an_existing_bracket_named_file_holds_only_that_files_feat
 /// written at 100 rows per row group, has its row-group index built from its own footer: the
 /// report holds 5 row groups, not the decoy's 3.
 ///
-/// RECORDED MUTATION (observed at `<T>`): in `RowGroupIndex::read_metadata` the bound path left
-/// unescaped. Observed outcome: this test fails at the `row_groups` assertion.
+/// RECORDED MUTATION (observed at `a096ebbb7358539664f46cb669d2c7856b86e175`):
+/// in `RowGroupIndex::read_metadata` the bound path left unescaped. Observed outcome: this test
+/// fails at the `row_groups` assertion, 3 against 5.
 #[test]
 fn a_row_group_index_built_over_an_existing_bracket_named_file_reads_only_that_files_footer() {
     const ROWS_PER_GROUP: usize = 100;
