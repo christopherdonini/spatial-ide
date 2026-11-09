@@ -1397,9 +1397,10 @@ pub fn dataset_name_for(ds: &Dataset) -> String {
 /// fallback — RELEASE-0.1 item 3 closes the packaged-build gap this doc comment used to record as
 /// owed, dated 2026-09-07.** `tauri.conf.json`'s `bundle.resources` now maps
 /// `renderer/bundle-viewer/dist` onto a `bundle-viewer/` resource directory the packaged app
-/// carries beside its executable, so a `tauri build` artifact can serve it — a plain `tauri dev`
-/// run still resolves nothing under a resource directory (there isn't one), and falls through to
-/// the dev-tree path exactly as before. Both paths are named in the refusal when neither holds.
+/// carries beside its executable, so a `tauri build` artifact can serve it. The order keys only on
+/// what the caller passes, not on how the app was built: `bundle-viewer/` under the resource
+/// directory the caller passes is tried first, and the dev-tree path when that is not a directory
+/// or no resource directory is passed. Both paths are named in the refusal when neither holds.
 ///
 /// **The `dist/*` resource glob is FLAT, not recursive** (release-cut fix batch nit): it copies
 /// `dist/`'s immediate files (`index.html`, `app.js`, `NOTICE.txt` today) into `bundle-viewer/`,
@@ -1505,8 +1506,8 @@ fn resolve_viewer_dir(
     // built the installer. The CANDIDATE is still named (both labels stay in the string, in
     // candidate order — `resolver_tests::the_packaged_labels_index_precedes_the_dev_tree_labels_
     // index_in_the_refusal_string` pins this), only its specific path value is replaced.
-    // `resource_dir` being `Some` is exactly the packaged-build signal — a plain `tauri dev` run
-    // never supplies one (`commands.rs`'s own call sites).
+    // The suppression keys on `resource_dir` being `Some`, which `commands.rs` passes whenever
+    // `app.path().resource_dir()` returns `Ok` (its `.ok()`), however the app was built.
     let tried = candidates
         .iter()
         .map(|(label, dir)| {
@@ -1520,10 +1521,9 @@ fn resolve_viewer_dir(
         .join(", or ");
     // **The remedy is packaged-context when a resource dir was supplied, developer-context only
     // when it was not (release-cut fix batch, reviewer nit).** `run \`npm run build\`` tells an
-    // end user to run a build step nothing about their installed app can act on; `resource_dir`
-    // being `Some` is the same packaged-build signal the dev-tree-value suppression above already
-    // keys on. When `resource_dir` is `None` this is a `tauri dev` run from a checkout, where the
-    // developer remedy is exactly the right one.
+    // end user to run a build step nothing about their installed app can act on. The choice keys on
+    // `resource_dir` alone, the same `Some` the suppression above keys on; `commands.rs` passes
+    // `None` only when its `app.path().resource_dir()` call returned an error.
     let remedy = if resource_dir.is_some() {
         "the viewer resources are missing from the installed application — reinstall Spatial IDE, \
          or the install is incomplete"
@@ -1559,8 +1559,8 @@ mod resolver_tests {
 
     #[test]
     fn no_resource_directory_at_all_tries_only_the_dev_tree_path() {
-        // `tauri dev`: `app.path().resource_dir()` has nothing packaged-resource-shaped to
-        // resolve, and the caller passes `None` rather than a directory that was never packaged.
+        // `None`, as `commands.rs` passes when `app.path().resource_dir()` returns an error: the
+        // dev-tree path is the only candidate.
         let dev_tree = dev_tree_viewer_dir();
         let (label, dir) = resolve_viewer_dir(None, |p| p == dev_tree).unwrap();
         assert_eq!(label, "the dev-tree checkout path");
@@ -1595,9 +1595,10 @@ mod resolver_tests {
 
     #[test]
     fn no_resource_directory_at_all_and_no_dev_tree_path_gets_the_developer_remedy() {
-        // The mirror of the test above: `resource_dir` is `None` (a `tauri dev` run from a
-        // checkout where the dev-tree path itself does not hold either) — the remedy stays
-        // developer-context, since there is no installed app to tell an end user to reinstall.
+        // The mirror of the test above: `resource_dir` is `None` (as `commands.rs` passes when
+        // `app.path().resource_dir()` returns an error, and the dev-tree path does not hold the
+        // viewer either) — the remedy stays developer-context, since there is no installed app to
+        // tell an end user to reinstall.
         let err = resolve_viewer_dir(None, |_| false).unwrap_err();
         assert!(err.contains("the dev-tree checkout path"), "{err}");
         assert!(!err.contains("the packaged resource directory"), "{err}");
