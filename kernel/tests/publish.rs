@@ -276,8 +276,8 @@ fn a_published_bundle_has_the_declared_layout_and_lists_every_asset_it_contains(
         manifest["sidecar"]["path"].as_str().unwrap(),
         bundle::BUILD_INFO_PATH
     );
-    assert_eq!(manifest["sidecar"]["hashed"].as_bool().unwrap(), false);
-    assert_eq!(manifest["sidecar"]["verified"].as_bool().unwrap(), false);
+    assert!(!manifest["sidecar"]["hashed"].as_bool().unwrap());
+    assert!(!manifest["sidecar"]["verified"].as_bool().unwrap());
 }
 
 #[test]
@@ -954,7 +954,7 @@ fn the_manifest_carries_the_docs_11_resource_refs_the_grade_and_the_transform_fa
 
     // The reservations exist in v1 so filling them later is not a format change.
     assert!(m["derived_caches"].as_array().unwrap().is_empty());
-    assert_eq!(m["query_surface"]["available"].as_bool().unwrap(), false);
+    assert!(!m["query_surface"]["available"].as_bool().unwrap());
 
     // The format is declared normatively enough for an independent writer.
     let f = &m["data"]["format"];
