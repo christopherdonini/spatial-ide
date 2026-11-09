@@ -281,8 +281,9 @@ vi.mock("./streaming/viewportStreamManager", () => {
 // The candidate-arm session boundary. `reissueUnrestricted`'s own "first look" deferred mirrors
 // `viewportMockState` above; `stop()` honours THIS producer's own real, DIFFERENT contract, the same
 // success-only asymmetry as the baseline mock above -- `issueUntiledQuery`'s own `stopped` checks
-// resolve `{kind:"stopped"}` once stopped, never `"superseded"` (`candidateArmSession.ts:1262-1264`,
-// `:1267-1269`), but only on a SUCCESSFUL delivery: its own `await viewportQuery(...)` (`:1261`) has
+// resolve `{kind:"stopped"}` once stopped, never `"superseded"` (its `stopped` returns, in
+// frontends/shell/src/residency/candidateArmSession.ts:1271-1291 @ 058244086f9914525ea8e4761c7baa07ea4f6e62 sha256:d7a738bdeadb33822b2f192848485dbc2ef2506d1fd5950371e758d1616a325e),
+// but only on a SUCCESSFUL delivery: its own `await viewportQuery(...)` (in that same span) has
 // no `catch` either, so a rejection propagates unconverted regardless of `stopped`.
 vi.mock("./residency/candidateArmSession", () => {
   return {
@@ -1212,7 +1213,8 @@ describe("App: a late old-generation viewport outcome, after a reopen, through t
 
     // A's session is already stopped by this point (the reopen above already flushed it) -- the
     // mock's own `stop()` contract converts this delivery to `{kind:"stopped"}` regardless of what
-    // is delivered here (`candidateArmSession.ts:1262-1269`).
+    // is delivered here (`issueUntiledQuery`'s `stopped` returns, in
+    // frontends/shell/src/residency/candidateArmSession.ts:1271-1291 @ 058244086f9914525ea8e4761c7baa07ea4f6e62 sha256:d7a738bdeadb33822b2f192848485dbc2ef2506d1fd5950371e758d1616a325e).
     await settleFirstReissue(handleA, { kind: "issued", streamHandle: "candidate-a-late" });
 
     expect(container.querySelector(".canvas-refusal .admission-refusal-code")?.textContent).toBe("engine.no_covering_bbox");
@@ -1244,7 +1246,9 @@ describe("App: a late old-generation viewport outcome, after a reopen, through t
   //   AssertionError: expected <div class="residency-status" …(1)></div> to be null
   //   Reverted after observing. Note: in the product this half would not stand on B -- the real
   //   reissueUnrestricted emits B's own query-issued status on B's first reissue
-  //   (candidateArmSession.ts:1674-1675), which the mock does not; mutation (2)'s scan-state half is a
+  //   (the `query-issued` dispatch at
+  //   frontends/shell/src/residency/candidateArmSession.ts:1705 @ 058244086f9914525ea8e4761c7baa07ea4f6e62 sha256:6f0216ea7346caf5812b860a33d01cedac1ff8a4c4f0e7f6bf17d297b3b073b8),
+  //   which the mock does not; mutation (2)'s scan-state half is a
   //   standing contamination in the product too.
   // (2) remove the `applyScanEvent` guard (same construction branch). Expected failure: A's late `{kind:"issued"}` scan event
   //     reaches `applyScanEvent` unconditionally, so `.filter-cancel` renders on B.
@@ -1320,7 +1324,8 @@ describe("App: a late old-generation viewport outcome, after a reopen, through t
     // directly through B's own captured `deps`, the same pattern this file's own "A's late
     // onResidencyStatusChange/applyScanEvent callbacks" test above already uses. `.scan-liveness`
     // itself is not asserted here: `CandidateArmSessionDeps.applyScanEvent`'s own narrower type
-    // (`candidateArmSession.ts:136`) accepts only `"issued"`/`"reset"`, never `"streamOpened"`/
+    // (frontends/shell/src/residency/candidateArmSession.ts:146 @ 058244086f9914525ea8e4761c7baa07ea4f6e62 sha256:92127b132d6915fa036d21ebe5f35b6e06cc782c9abe442b2a7c67528fa84286)
+    // accepts only `"issued"`/`"reset"`, never `"streamOpened"`/
     // `"batch"` -- this arm's own scan state never advances past "issuing", the one `scanLivenessText`
     // state that reads `null` (its own doc comment), so `.scan-liveness` never renders for this arm.
     act(() => {
@@ -1346,7 +1351,9 @@ describe("App: a late old-generation viewport outcome, after a reopen, through t
   // own full-sequence test above (its doc comment has the full ruling/reasoning). A ends here through
   // its own owner route -- `depsA.onSessionEnded`, fired by `endCandidateSession` via
   // `TileViewportStreamManager.endSession`'s own `onSessionEnded` callback
-  // (`residency/candidateArmSession.ts:1046, :1076-1082`), NOT by `session.stop()` -- with A's first
+  // (frontends/shell/src/residency/candidateArmSession.ts:1061 @ 058244086f9914525ea8e4761c7baa07ea4f6e62 sha256:c9d079cc3a43a76aea43b9696b1bf27123998bdd63aa9a123125636c2e9aa1b1, the
+  // manager's callback, and frontends/shell/src/residency/candidateArmSession.ts:1089-1103 @ 058244086f9914525ea8e4761c7baa07ea4f6e62 sha256:0128ef1fe80f0a3eee871c0a9219943659ec57cc6577f397f3cbfd2127a342dc,
+  // `endCandidateSession`), NOT by `session.stop()` -- with A's first
   // reissue still pending.
   //
   // RECORDED MUTATION for "the human's full ended -> reopen -> old SUCCESS sequence through reportViewportOutcome does not clear B's standing refusal (candidate arm)":
