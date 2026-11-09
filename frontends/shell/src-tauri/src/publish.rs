@@ -1400,7 +1400,8 @@ pub fn dataset_name_for(ds: &Dataset) -> String {
 /// carries beside its executable, so a `tauri build` artifact can serve it. The order keys only on
 /// what the caller passes, not on how the app was built: `bundle-viewer/` under the resource
 /// directory the caller passes is tried first, and the dev-tree path when that is not a directory
-/// or no resource directory is passed. Both paths are named in the refusal when neither holds.
+/// or no resource directory is passed. Every candidate tried is named in the refusal when none
+/// holds.
 ///
 /// **The `dist/*` resource glob is FLAT, not recursive** (release-cut fix batch nit): it copies
 /// `dist/`'s immediate files (`index.html`, `app.js`, `NOTICE.txt` today) into `bundle-viewer/`,
@@ -1596,9 +1597,8 @@ mod resolver_tests {
     #[test]
     fn no_resource_directory_at_all_and_no_dev_tree_path_gets_the_developer_remedy() {
         // The mirror of the test above: `resource_dir` is `None` (as `commands.rs` passes when
-        // `app.path().resource_dir()` returns an error, and the dev-tree path does not hold the
-        // viewer either) — the remedy stays developer-context, since there is no installed app to
-        // tell an end user to reinstall.
+        // `app.path().resource_dir()` returns an error) and the dev-tree path does not hold the
+        // viewer either — the remedy is the developer one, the `else` arm.
         let err = resolve_viewer_dir(None, |_| false).unwrap_err();
         assert!(err.contains("the dev-tree checkout path"), "{err}");
         assert!(!err.contains("the packaged resource directory"), "{err}");
