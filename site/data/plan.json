@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-09T14:12:54.976Z",
-  "plan_hash": "38959a49881e10e1fca559da9e3c17ffe56e8236917b396c7db1c44c4fde0325",
+  "generated_at": "2026-11-09T14:52:09.579Z",
+  "plan_hash": "89f6e2425f0c2e3f64825503045884ce44ec0f39c5b0d489becb724f53951606",
   "priorities_approved": true,
   "lanes": [
     {
@@ -9405,13 +9405,13 @@
         "kind": "none",
         "minutes": 0
       },
-      "gate": "none",
+      "gate": "governance/forms/frontends/SHELL-RESOURCE-DIR-DEV-COMMENTS-PREREGISTRATION.md",
       "evidence": null,
       "budget_minutes": 30,
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "FORM DRAFT DISPATCHED 2026-11-09 at 14:11:40Z by its transcript to the architect, read only at main f703b720. NEXT: the draft filed, then the form committed before any code. Before: PLACED 2026-11-09 by the human (state/directives/2026-11-09-item-4-to-11-16-12c-open-a-d-taken-slot-2-order-pr-b-slot-1-availability-monday-list.md, line 11): slot 2, first after stale-harness, a five-line form; publish-filter-sentence-e2e-shown-case, the order's first if it had not run, is done (PR #299). Its dependency is done. NEXT: its form drafted, then committed before any code. Before: Routed 2026-10-23 by kernel/BUNDLE-REDACTION-SCAN-PREREGISTRATION.md, Amendment 9 item 3: the architect's item 4 (a) to (d) and (f) in state/consults/2026-10-23-walkthrough-row-f7-cli-refusal-gate2-words-reconciled-architect.md, comments on main before #241 that read as untrue on Windows, where resource_dir() is the executable's directory; the architect's replacement words are drafts, not the human's. Comments only, no behaviour; commands.rs among the files.",
+      "summary": "FORM COMMITTED 2026-11-09 (governance/forms/frontends/SHELL-RESOURCE-DIR-DEV-COMMENTS-PREREGISTRATION.md; 30 pins at f703b720), from the architect's filed draft (state/consults/2026-11-09-shell-resource-dir-dev-comments-form-architect-draft.md): 2 files, comment lines only, declared budget 60 lines; OPEN-A, OPEN-C and OPEN-D taken as recommended under item 4 of 2026-10-31, held to 2026-11-16; OPEN-B, two sibling clauses, a red line by the draft's reading, put to the human, the ruled Scope standing until the human's word; the single reviewer. Rule (00): none. NEXT: its worker, in a new worktree from main. Before: FORM DRAFT DISPATCHED 2026-11-09 at 14:11:40Z by its transcript to the architect, read only at main f703b720. NEXT: the draft filed, then the form committed before any code. Before: PLACED 2026-11-09 by the human (state/directives/2026-11-09-item-4-to-11-16-12c-open-a-d-taken-slot-2-order-pr-b-slot-1-availability-monday-list.md, line 11): slot 2, first after stale-harness, a five-line form; publish-filter-sentence-e2e-shown-case, the order's first if it had not run, is done (PR #299). Its dependency is done. NEXT: its form drafted, then committed before any code. Before: Routed 2026-10-23 by kernel/BUNDLE-REDACTION-SCAN-PREREGISTRATION.md, Amendment 9 item 3: the architect's item 4 (a) to (d) and (f) in state/consults/2026-10-23-walkthrough-row-f7-cli-refusal-gate2-words-reconciled-architect.md, comments on main before #241 that read as untrue on Windows, where resource_dir() is the executable's directory; the architect's replacement words are drafts, not the human's. Comments only, no behaviour; commands.rs among the files.",
       "dates": {
         "opened": "2026-10-23",
         "done": null
