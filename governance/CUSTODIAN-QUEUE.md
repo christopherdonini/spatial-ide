@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `f4c0f8df3d1b7967aeffd2884c04348fab98c3871b00bf89c1556cbc1ca441f3`) at `2026-11-09T13:58:19.909Z`.
+Generated from `PLAN.yaml` (sha256 `38959a49881e10e1fca559da9e3c17ffe56e8236917b396c7db1c44c4fde0325`) at `2026-11-09T14:12:54.532Z`.
 
 ## 1. Next
 
@@ -54,7 +54,7 @@ Generated from `PLAN.yaml` (sha256 `f4c0f8df3d1b7967aeffd2884c04348fab98c3871b00
 
 ## 5. In progress
 
-- **clippy-deny-warnings-workspace** — The workspace clippy diagnostics fixed, so cargo clippy over every target with -D warnings exits 0 (the cloud Linux run lists 48 distinct) — evidence: branch `cut/clippy-deny-warnings-workspace-12b`
+- **clippy-deny-warnings-workspace** — The workspace clippy diagnostics fixed, so cargo clippy over every target with -D warnings exits 0 (the cloud Linux run lists 48 distinct) — evidence: branch `cut/clippy-deny-warnings-workspace-12c`
 - **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **b1-shell-half** — Shell migration, milestone 4 -- B1 shell half: attributes of the inspected feature, colour by category with its legend, and the table — evidence: branch `cut/b1-shell-half-pr-c`
 - **port-2-macos-l1-and-app-dirs** — PORT-2 -- macOS L1 for the Cargo workspace: macos-latest in the same matrix, one application-directory boundary replacing the two resolvers, and a case-policy test on a case-insensitive volume — evidence: branch `cut/port-2-macos-l1-and-app-dirs`
