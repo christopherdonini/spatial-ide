@@ -37,10 +37,15 @@
 //
 // ## FILTERED''s wait, a precondition
 //
-// After the Apply, FILTERED' waits until `window.__SPATIAL_E2E__.publishPrepareWithDestination` is not the function it held before the Apply. PublishPanel re-registers that hook in an effect
-// that re-runs only after the commit of the render in which `filterActive` became true, and the same render assigned the `workspaceRef` that `stageScope` reads, so a prepare sent after
-// the replacement holds the post-Apply closure and stages the post-Apply scope. The wait polls once a second, for at most 20000ms; if the hook is not replaced the step fails naming
-// FILTERED', the wait and the 20000ms. The wait is a precondition on when the prepare is sent, not a property: no assertion of FILTERED' concerns timing.
+// After the Apply, FILTERED' waits until `window.__SPATIAL_E2E__.publishPrepareWithDestination` is not the function it held before the Apply.
+// PublishPanel re-registers that hook in an effect keyed on `datasetHandle`, `style`, `filterActive` and `scope`; of these an Apply changes
+// `filterActive` alone, so after the Apply the hook is replaced once the render in which `filterActive` became true has committed. That same
+// render assigned the `workspaceRef` that `stageScope` reads, so a prepare sent after the replacement holds the post-Apply closure and stages
+// the post-Apply scope. The wait checks the hook when the Apply resolves and again after each one-second sleep, while less than 20000ms have
+// passed since then; if no check sees the hook replaced, the step fails naming FILTERED', the wait and the 20000ms, so a failing wait lasts at
+// least 20000ms and ends with the one-second sleep that crosses that mark. The wait is a precondition on when the prepare is sent, not a property
+// under test: FILTERED''s assertions on the prompt, the manifest and the bundle are unchanged, and the wait's own failure says only that the hook
+// was not seen replaced within its bound.
 //
 // RECORDED MUTATION, applied alone, the suite run, the failing step recorded by name with the commit, then reverted.
 //   M-FLAG   src/App.tsx, the PublishPanel element: `filterActive={activeFilter !== null}` set to `filterActive={false}`.
