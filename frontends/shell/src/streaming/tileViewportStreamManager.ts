@@ -73,12 +73,15 @@ export interface TileViewportStreamManagerOptions {
    * P6's own sweep is across SEPARATE sessions, never a mid-session change. Defaults to
    * `DEFAULT_TILE_GRID_LEVEL`. */
   level?: TileGridLevel;
+  /** The open's projection set (`attributes/projection.ts`'s `projectionFor`), passed as the `columns` of every `viewport_query` this manager sends -- `null` when no
+   * column is projectable. REQUIRED, with no default: a defaulted `null` would be a manager that silently asks for no attributes (milestone 4 PR A, section 2.2 (b)). */
+  columns: string[] | null;
   residency: TileResidencyAccessor;
   /** A batch arrived for `tileKey`'s currently active stream -- raw wire bytes, exactly like
    * `ViewportStreamManager.onBatch`'s own payload; decoding and residency bookkeeping are the
    * caller's job (item C). Never called for a tile whose stream has since been superseded (the same
    * D3.7 criterion `ViewportStreamManager` already enforces, checked per-tile here). */
-  onBatch: (tileKey: string, streamHandle: string, batchSeq: number, payload: Uint8Array) => void;
+  onBatch: (tileKey: string, streamHandle: string, batchSeq: number, payload: Uint8Array, filter: Filter | null) => void;
   /** `tileKey`'s stream was superseded (no longer covered by the current viewport, or a filter/
    * dataset-change wholesale clear) -- the caller should drop whatever residency it holds for this
    * tile. `streamHandle` is the in-flight stream's own handle, or `null` when this fires for an
@@ -309,7 +312,9 @@ function logMintRecovered(tileKey: string, streamHandle: string): void {
  * `LeaseClass::Admission` (`engine/src/predicate.rs`) and a residual capacity failure surfaces as
  * that typed code, never as `skp.filter_rejected_by_binder` (`engine/src/pool.rs`'s
  * `MAX_ADMISSION_CONNECTIONS`, sized to this module's own `MAX_IN_FLIGHT_TILE_STREAMS` plus the
- * baseline query, so this class is composition-unreachable for this shell in ordinary operation).
+ * baseline query, so the tiles and that query alone cannot reach this class). The table (milestone 4 PR C, `table/tableSource.ts`)
+ * adds one admission and one stream, so three tiles plus the table plus an export can reach it: the single retry below is the
+ * shell's only answer to it, and what remains is KNOWN-LIMITATIONS item 56.
  * `skp.filter_rejected_by_binder` is therefore never retried here any more -- it now means what its
  * name says, a genuine DuckDB binder refusal, and retrying a genuinely invalid predicate would just
  * spin on a refusal that will never change. */
@@ -936,9 +941,11 @@ export class TileViewportStreamManager {
     // per-tile query attempt, the tiled analogue of baseline's per-viewport-change attempt.
     traceViewportQuery(this.opts.dataset, wireBbox, null);
 
+    // The filter this tile's stream is issued with, kept for its batches' `ResidentBatch.filter` (milestone 4 PR C, section 2.4 (c)).
+    const filter = this.currentFilter;
     let ticket: { stream: string };
     try {
-      ticket = await viewportQuery(this.opts.dataset, wireBbox, null, null, this.currentFilter);
+      ticket = await viewportQuery(this.opts.dataset, wireBbox, null, null, filter, this.opts.columns);
     } catch (err) {
       // Entry 87 §2.3(i), unconditional: named before anything below decides what to do about it.
       logMintRefused(tileKey, err);
@@ -1058,7 +1065,7 @@ export class TileViewportStreamManager {
         }
         const seq = this.nextBatchSeqByStream.get(streamHandleAtStart) ?? 0;
         this.nextBatchSeqByStream.set(streamHandleAtStart, seq + 1);
-        this.opts.onBatch(tileKey, streamHandleAtStart, seq, payload);
+        this.opts.onBatch(tileKey, streamHandleAtStart, seq, payload, filter);
       },
       onProgress: () => {},
       onTerminal: (terminal) => {

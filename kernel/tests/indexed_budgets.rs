@@ -206,7 +206,6 @@ mod procmem {
 mod procmem {
     #[derive(Default, Clone, Copy)]
     pub struct Counters {
-        pub peak_working_set: usize,
         pub working_set: usize,
         pub private_usage: usize,
     }
@@ -565,6 +564,7 @@ fn free_bytes_on_c() -> Option<u64> {
     String::from_utf8_lossy(&out.stdout).trim().parse().ok()
 }
 
+#[allow(clippy::assertions_on_constants)]
 fn refuse_debug() {
     assert!(
         !cfg!(debug_assertions),
@@ -1163,6 +1163,7 @@ async fn measure_the_indexed_slice_against_docs_08() {
         ));
     }
 
+    #[allow(clippy::format_in_format_args)]
     let art = format!(
         r#"{{
   "kind": "docs/08 index-in-path measurement — engine cut pieces 1-4a",

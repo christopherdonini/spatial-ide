@@ -161,8 +161,9 @@ matchers (the latter so a `--resume`/`/resume` session gets the same reading ord
 §0's own framing: "Reading order after a compaction **or a new session**").
 
 Prints §0's reading order (its steps, in order: the ledger, the generated queue,
-`DECISIONS-PENDING.md`, `state/directives/`, `PRECEDENTS.md`, then `AUTONOMY.md` and
-`AI_DEVELOPMENT.md`), then `state/CUT-STATE.md`'s `## SESSION-CONTINUITY` block **verbatim**
+`governance/DECISIONS-PENDING.md`, `state/directives/`, `governance/PRECEDENTS.md`, then
+`governance/AUTONOMY.md` and `governance/AI_DEVELOPMENT.md`), then `state/CUT-STATE.md`'s
+`## SESSION-CONTINUITY` block **verbatim**
 (heading through the next `#`-heading or end of file) — nothing summarized or reformatted. Never
 throws: a missing or unparseable `state/CUT-STATE.md` still prints the reading order, with a note
 in place of the block.
@@ -251,7 +252,9 @@ order the prompts will ask**.
 **The 4096 fallback:** the boundary is measured on the message text as `[...text].length` (Unicode
 code points, matching Telegram's own "characters" limit). `≤ 4096` → one plain-text `sendMessage`
 of the file contents. `> 4096` → a short summary message
-(`Question round <n> — <k> items; full text attached (copy-paste ready)`) **then** `sendDocument`
+(`Question round <n> — <k> items; full text attached (copy-paste ready)`; `<k>` counts the numbered
+items that open a paragraph, in order from `1. `; a count of one gives `1 item;`, and a count of 0 is
+left out) **then** `sendDocument`
 of the round file with that same summary as the caption. The CLI exits `0` on success and `1` (with
 a stderr line) on a missing file, missing token/chat-id env, or an API error. The pure-ish core
 `mirrorRound({ file, sendMessage, sendDocument, readFile })` takes its dependencies injected, so

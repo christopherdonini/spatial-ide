@@ -215,7 +215,7 @@ fn kw(r: &mut Rng, k: &str) -> String {
 }
 
 fn ws(r: &mut Rng) -> &'static str {
-    *r.pick(&[" ", " ", " ", "  ", "\t", "\n", " \n "])
+    r.pick(&[" ", " ", " ", "  ", "\t", "\n", " \n "])
 }
 
 fn leaf(r: &mut Rng) -> String {
@@ -268,13 +268,14 @@ fn leaf(r: &mut Rng) -> String {
             format!("{c} {op} {a} {and} {b}")
         }
         10 => format!(
-            "({} {} {}) {} {} {}",
+            "({} {} {}) {} {} {} {}",
             r.pick(NUM_COLS),
             r.pick(&["+", "-", "*", "/"]),
             num_lit(r),
             r.pick(&["*", "+"]),
             r.below(5) + 1,
-            format!("{} {}", r.pick(&["<", ">", "="]), num_lit(r))
+            r.pick(&["<", ">", "="]),
+            num_lit(r)
         ),
         11 => format!("-{} < {}", r.pick(NUM_COLS), num_lit(r)),
         12 => format!("{} {} {}", r.pick(NUM_COLS), r.pick(CMP), r.pick(NUM_COLS)),
@@ -540,7 +541,7 @@ fn splice(r: &mut Rng, base: &str) -> String {
         let at = *r.pick(&boundaries);
         match r.below(4) {
             0 | 1 => {
-                let t: &str = *r.pick(SPLICE_TOKENS);
+                let t: &str = r.pick(SPLICE_TOKENS);
                 s.insert_str(at, t)
             }
             2 if at < s.len() => {
@@ -556,8 +557,7 @@ fn splice(r: &mut Rng, base: &str) -> String {
                 let end = boundaries
                     .iter()
                     .copied()
-                    .filter(|&b| b <= end)
-                    .last()
+                    .rfind(|&b| b <= end)
                     .unwrap_or(at);
                 let dup = s[at..end].to_string();
                 s.insert_str(at, &dup);
@@ -623,7 +623,6 @@ fn gen_ceiling(r: &mut Rng) -> String {
 /// wildcard arm: a new variant is a compile error here, exactly the discipline the product keeps.
 fn code_of(e: &FilterError) -> &'static str {
     match e {
-        FilterError::DialectUnsupported { .. } => "skp.filter_dialect_unsupported",
         FilterError::Unparsable { .. } => "skp.filter_unparsable",
         FilterError::NotASingleExpression { .. } => "skp.filter_not_a_single_expression",
         FilterError::ConstructNotAdmitted { .. } => "skp.filter_construct_not_admitted",
@@ -1013,15 +1012,24 @@ struct Counterexample {
     detail: String,
 }
 
+/// The terminal text of that class: `query: ` and the engine's fixed detail, byte for byte (the
+/// engine's constant is private, so its text is written here once).
+const OVERFLOW_TERMINAL: &str = "query: [P6 placeholder] a value computed while this query ran was out of range for its type; the row values and the query text are withheld";
+
 /// The campaign's one declared exclusion (section 2.5(d); section 2.10): overflow in admitted
 /// integer arithmetic (`+`, `-`, `*`, unary `-`), whose operand conversions are all lossless
-/// widenings -- out of scope for this piece, and routed to node
-/// `stream-evaluation-failure-fixed-detail`. Identified by both of these: the predicate's typed
-/// class, integer arithmetic (this fixture's own integer-typed operands, `i64` and `id`, and any
-/// integer literal, joined by `+`, `-` or `*`), and a terminal text containing `Overflow`. Removed
-/// when node `stream-evaluation-failure-fixed-detail` lands.
+/// widenings. Such a stream ends in error by direction (B-1 point 4), and node
+/// `stream-evaluation-failure-fixed-detail` makes its terminal text the fixed detail alone when the
+/// error is raised at the prepare or execute site, and node `stream-fetch-overflow-fixed-detail`
+/// does the same for an overflow first raised during a fetch, in the payload shapes the engine
+/// accepts; an overflow that keeps DuckDB's text, in any other shape, is not accepted by this check,
+/// so it is a counterexample at both call sites.
+/// Identified by both of these: the predicate's typed class, integer arithmetic (this fixture's own
+/// integer-typed operands, `i64` and `id`, and any integer literal, joined by `+`, `-` or `*`;
+/// keyed on `i64` or `id` written beside ` + `, ` - ` or ` * `), and a terminal text equal to
+/// `OVERFLOW_TERMINAL`. DuckDB's own text is no longer read.
 fn is_declared_integer_arithmetic_overflow(predicate: &str, terminal_error: &str) -> bool {
-    if !terminal_error.contains("Overflow") {
+    if terminal_error != OVERFLOW_TERMINAL {
         return false;
     }
     ["i64", "id"].iter().any(|c| {
@@ -1441,4 +1449,38 @@ fn a_join_of_clauses_each_admitted_alone_returns_their_intersection_and_its_subs
         separates,
         "the witness no longer separates a bare join from a bracketed one"
     );
+}
+
+/// An admitted predicate whose integer arithmetic overflows on the fixture (`i64` spans the 64-bit
+/// range, and `i64 * i64` was observed ending in this error; a comparison of `i64 * C` with a
+/// constant was observed completing, so it is not used) ends the stream in error whose whole text
+/// is `OVERFLOW_TERMINAL`: no file value and no SQL.
+///
+/// RECORDED MUTATION: M1, the out-of-range arm of `classify` in `engine/src/stream.rs` deleted,
+/// applied alone at commit 86612bdd3bf5d2d8c193e9eea70c7265b14afe47. T1 fails at
+/// `assert_eq!(text, OVERFLOW_TERMINAL)`, the text being DuckDB's `Out of Range Error: Overflow in
+/// multiplication of INT64`. Same run: `the_type_walk_agrees_with_the_binder_over_the_p0_matrix`
+/// fails on 135 counterexamples (B-T1: 4564 admitted, 5164 refused, 135 failures);
+/// `a_join_of_clauses_each_admitted_alone_returns_their_intersection_and_its_subsets_admit` fails on
+/// 4 candidates (excluded 0, 4 unmutated); `filter_admission_property_campaign` still passes (its
+/// seeds reach no stream error); `only_duckdbs_out_of_range_class_is_read_as_an_evaluation_failure`
+/// fails.
+#[test]
+fn an_admitted_integer_overflow_ends_the_stream_with_the_fixed_detail() {
+    let fx = fixture();
+    let ds = Dataset::open(&fx.path).expect("open");
+    let predicate = "i64 * i64 > 0";
+    assert!(
+        matches!(admit(&ds, predicate), Outcome::Admitted(_)),
+        "the predicate is not admitted, so nothing below would be about the stream"
+    );
+    let (ended_in_error, text) = completed_ids(&ds, fx.facts.extent, predicate)
+        .expect_err("the stream must end in error, not complete");
+    assert!(ended_in_error, "no terminal error from the stream: {text}");
+    assert_eq!(text, OVERFLOW_TERMINAL);
+    assert!(
+        leaked(&file_tokens(), predicate, &text).is_empty(),
+        "file data in: {text}"
+    );
+    assert!(!text.contains("read_parquet("), "SQL in: {text}");
 }

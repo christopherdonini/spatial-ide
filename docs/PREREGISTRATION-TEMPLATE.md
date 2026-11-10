@@ -2,14 +2,14 @@
 
 *A reusable skeleton for a preregistered piece. It pre-declares the discipline every campaign has
 converged on and the **amendment classes** the last two campaigns actually used
-(`frontends/shell/POLISH-87-88-89-PREREGISTRATION.md`, `engine/ADMISSION-PREREGISTRATION.md`), so a
+(`governance/forms/frontends/POLISH-87-88-89-PREREGISTRATION.md`, `governance/forms/engine/ADMISSION-PREREGISTRATION.md`), so a
 worker who needs one of those classes has a named, pre-authorised shape to record it in rather than
 inventing one after results are in. Copy the relevant form, fill the placeholders, delete the
-guidance italics. Authorised by the human's third directive (`AUTONOMY.md` Appendix A3, the
+guidance italics. Authorised by the human's third directive (`governance/AUTONOMY.md` Appendix A3, the
 speed-work part: "A preregistration template pre-declaring the amendment classes the last two
 campaigns needed").*
 
-**Which form to use is a proportionate-gating question (`AUTONOMY.md` §21).** A change that touches
+**Which form to use is a proportionate-gating question (`governance/AUTONOMY.md` §21).** A change that touches
 an ADR, security posture, the data plane / wire, or a stated guarantee — or that exceeds the
 declared size threshold (§21c) — takes the **full form** below and full two-agent gating. A docs,
 tests, or polish change that touches none of those and stays under the threshold may use the
@@ -21,12 +21,12 @@ tests, or polish change that touches none of those and stays under the threshold
 
 ### Header (before §0)
 
-- Title, and the authority it decomposes (a node id, a ruling in `DECISIONS-PENDING.md`, a brief).
+- Title, and the authority it decomposes (a node id, a ruling in `governance/DECISIONS-PENDING.md`, a brief).
 - **Drafted by** whom (architect agent on the custodian's brief, or the custodian), from which
   inputs, read at which `main` commit.
 - **Committed before any code** — the same discipline both campaigns kept; note it explicitly.
 - **Append-only once committed. An amendment made after any outcome has been seen MUST say so in its
-  first line** (the ADMISSION rule, `engine/ADMISSION-PREREGISTRATION.md:5`) and states what work it
+  first line** (the ADMISSION rule, `governance/forms/engine/ADMISSION-PREREGISTRATION.md:5`) and states what work it
   touches or invalidates.
 
 ### §0. Disclosure
@@ -35,7 +35,7 @@ tests, or polish change that touches none of those and stays under the threshold
 or already-collected corpus. Every `file:line` is a read of `main` at a named commit; a worker
 re-derives every cite it touches. A hypothesis is labelled as one and carries its discriminator.*
 
-**Fixture-drive confound (standing, `AUTONOMY.md` §15a).** If this piece **measures** against the
+**Fixture-drive confound (standing, `governance/AUTONOMY.md` §15a).** If this piece **measures** against the
 5 GB hero-slice fixture, state **which drive it was read from (C: or D:)** here, as a confound: a
 different physical disk has different read characteristics and the number cannot be compared across
 drives.
@@ -61,7 +61,7 @@ and after the run.*
 ### §4. Tests, and the mutation per new test
 
 *Each test named. For every new test, **one mutation that makes it fail by name**, recorded
-(`AUTONOMY.md` §14; verified mechanically as a pre-gate self-check, §6a).*
+(`governance/AUTONOMY.md` §14; verified mechanically as a pre-gate self-check, §6a).*
 
 ### §5. Registered predictions · declared unchanged · invalidators · falsification
 
@@ -143,7 +143,7 @@ the gate cannot resolve fails the gate.
 
 ---
 
-## The five-line short form (`AUTONOMY.md` §21d)
+## The five-line short form (`governance/AUTONOMY.md` §21d)
 
 *For a single-gate piece (docs / tests / polish under the §21c threshold). Committed before code.*
 

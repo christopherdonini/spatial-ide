@@ -80,6 +80,18 @@ pub(crate) enum Guarded<T, E> {
     Cancelled,
 }
 
+impl<T> Guarded<T, crate::error::EngineError> {
+    /// The `Result` a caller returning `EngineError` wants: `Cancelled` becomes
+    /// `EngineError::Cancelled`; the closure's own `Ok` and `Err` pass through unchanged.
+    pub(crate) fn into_result(self) -> crate::error::Result<T> {
+        match self {
+            Guarded::Ok(v) => Ok(v),
+            Guarded::Err(e) => Err(e),
+            Guarded::Cancelled => Err(crate::error::EngineError::Cancelled),
+        }
+    }
+}
+
 impl CancelToken {
     pub fn new() -> Self {
         Self::default()
@@ -203,11 +215,16 @@ impl CancelToken {
     /// Whether an [`execute_guarded`](Self::execute_guarded) closure is currently running.
     ///
     /// **Instrument accessor (the human, 2026-09-16, round 5 item 4): a read-only view over state
-    /// the shipped build already maintains.** Its only caller is the test suite —
+    /// the shipped build already maintains.** Its only callers are the test suite —
     /// `a_cancel_inside_the_producers_execute_window_ends_the_stream_cancelled`
-    /// (`engine/tests/cancel_execute_window.rs`) — because whether `stream::produce` actually
-    /// routes `stmt.stream_arrow(..)` through this guard, in the shipped build and not just in a
-    /// unit test inside this module, is exactly the fact that test exists to prove.
+    /// (`engine/tests/cancel_execute_window.rs`);
+    /// `a_cancellable_open_read_runs_inside_the_execute_window` (`dataset.rs`); and, through
+    /// `test_support::cancel_when_executing`,
+    /// `a_cancel_inside_the_identity_scans_execute_window_ends_the_admission_cancelled`
+    /// (`dataset.rs`) and `a_cancel_inside_the_index_scans_execute_window_ends_the_build_cancelled`
+    /// (`index.rs`) — because whether `stream::produce`, `cancellable`, the identity scan and the
+    /// index scan actually route their statement through this guard, in the shipped build and not
+    /// just in a unit test inside this module, is exactly the fact those tests exist to prove.
     pub fn is_executing(&self) -> bool {
         self.inner.in_execute.load(Ordering::SeqCst)
     }
@@ -274,6 +291,35 @@ impl CancelToken {
             .lock()
             .unwrap_or_else(|e| e.into_inner())
             .is_some()
+    }
+}
+
+/// Test support for the sites that run a statement inside the execute window (cfg(test) only).
+#[cfg(test)]
+pub(crate) mod test_support {
+    use super::*;
+
+    /// Bounds only how long a failing test runs; never reported as a latency.
+    const TEST_LIVENESS_DEADLINE: Duration = Duration::from_secs(60);
+
+    /// Spins on `token.is_executing()` and cancels the token the moment it is true. Returns whether
+    /// it saw the window; gives up when `done` is set or the deadline passes. Times nothing.
+    pub(crate) fn cancel_when_executing(
+        token: &CancelToken,
+        done: &Arc<AtomicBool>,
+    ) -> std::thread::JoinHandle<bool> {
+        let (token, done) = (token.clone(), Arc::clone(done));
+        std::thread::spawn(move || {
+            let deadline = std::time::Instant::now() + TEST_LIVENESS_DEADLINE;
+            while !done.load(Ordering::SeqCst) && std::time::Instant::now() < deadline {
+                if token.is_executing() {
+                    token.cancel();
+                    return true;
+                }
+                std::thread::sleep(Duration::from_millis(1));
+            }
+            false
+        })
     }
 }
 

@@ -9,11 +9,35 @@
 // WHAT THIS SCRIPT DOES: it scans a set of tracked text files for `path:line` and `path:line-line`
 // references (e.g. `engine/src/pool.rs:99`, `WorkingCanvas.tsx:805`, `foo.ts:158-167`) and resolves
 // EACH against the working tree: the referenced file must exist AND the cited line (or, for a range,
-// both endpoints) must be within that file's line count. Every reference that does NOT resolve is
+// both endpoints) must be within that file, as the bound below defines it. Every reference that does NOT resolve is
 // printed with the citing `file:line` and the bad target; the process exits 1 if any reference is
-// unresolved, 0 if all resolve. PINNED FALLBACK: a cite that does not resolve in the tree but is directly
-// followed by `@ <commit>` (7-40 hex digits) is read at that commit instead: the commit must exist, the
-// path must be a file there, and the line must be within it.
+// unresolved, 0 if all resolve. A cite starting or ending at line 0 never resolves; where its reason
+// would say a line exceeds a file, it names line 0 instead (lines count from 1). A range whose end is below
+// its start, neither end at line 0, never resolves, in the tree or at a pin: once a tracked file matches its
+// path, and wherever its pin is read (before the pinned commit is looked up), its reason says the range runs
+// backwards (the move map's check below still comes first). A range with a line 0 in it keeps the line-0
+// reason. Here and below, a file's
+// line count is its true count (a final newline ends the last line and starts no new one, and an empty file
+// has 0 lines); a line is within a file (and does not exceed it) when it is no higher than that count, in the
+// tree and at a pin, and every reason that prints a line count prints it. LEGACY BOUND (node
+// verify-cites-past-end-bound): a cite that scripts/plan/verify-cites-legacy-bound.json lists by its citing
+// file and its token as written is also within a file when its line is no higher than the number of pieces
+// the file's text splits into at newlines, one more than the line count for a file that ends in a newline or
+// is empty, in the tree and at its pin. The list holds cites inside filed records, which are not edited. The
+// scan fails when the list, at a commit on HEAD's first-parent history that changes it, holds an entry its
+// first parent's list does not (an absent list holds none), the oldest such commit excepted, and it fails in
+// a shallow clone, where that history cannot be read.
+// PINNED FALLBACK: a cite
+// that does not resolve in the tree but is directly followed by `@ <commit>` (7-40 hex digits) is read
+// at that commit instead: the commit must exist, a path must be a file there, and the line must be
+// within it. The paths tried, in order, are the files the tree resolves the path to (the exact set if
+// any, else the suffix set), then the path as written; the cite passes at the first holding the line.
+// MOVE MAP (governance piece F's form, section 2.3; movedMap.mjs): where governance/MOVED.tsv exists, an UNPINNED
+// cite whose path names a moved file resolves to the new path, read at HEAD, before the exact and suffix tiers, in
+// the tier the path as written has; a moved citing file reads its relative cites from its pre-move folder; and a
+// mapped cite on a line written after the move (git blame) fails by name. A pinned cite's own path takes none of this (no map,
+// no post-move check); a pinned cite in a moved citing file takes the candidates of its path from the folder the file had
+// before its first move and from its folder now, for the tree resolution and for the pin's path list alike.
 //
 // DEFAULT FILE SET (override with `--files <glob>`):
 //   - every tracked `*.md`               — the WHOLE file is scanned (prose citations count).
@@ -55,12 +79,18 @@
 //
 // WHAT THIS DOES NOT CATCH (disclosed): a cited line that moved but stayed in range (this checks
 // existence and bounds, not that line N still says what the citation implies); a citation with the
-// right line count but the wrong file among same-basename siblings; and, by the tiering above, a
+// right line count but the wrong file among same-basename siblings; a listed cite (the legacy bound above) to the line just past the end of a file that ends in a newline,
+// or to line 1 of an empty file; a list entry no longer needed is not reported; a change to the list is
+// checked against its history only once committed; and that history is read along first parents, so a commit
+// reached only through a merge's second parent is checked as part of the merge, not alone; and, by the
+// tiering above, a
 // stale LOOSE reference (it is surfaced as advice, never gated). Of the pin: one after a closing
 // backtick or after two spaces is not read; one on a cite that resolves in the tree is not checked; a
-// hex word right after `@` is read as a pin; a pin is read at the path as written, from the repo
-// root, so a relative, `.md`-fallback or basename cite keeps the tree's verdict. Node's standard
-// library only.
+// hex word right after `@` is read as a pin; a pin is read only at the files the tree now resolves the
+// path to, then at the path as written (the pin's own file list is never searched), so a file gone from
+// the tree is read only if it is the path as written, and the cite can pass at another file the tree
+// now matches (for a moved citing file, from its pre-move folder and from its folder now); a loose cite matching nothing is not
+// read at its pin. Node's standard library only.
 //
 // RELATIONSHIP to frontends/shell/e2e/citationIntegrity.test.mjs (the human's item 2, "extend the
 // citation-integrity scan to all files"): that e2e check is a DIFFERENT defect class — it proves a
@@ -75,6 +105,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { loadMovedMap, resolveMoved, originPath, currentPath, postMoveChecker } from './movedMap.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 export const REPO_ROOT = path.resolve(here, '..', '..');
@@ -90,8 +121,10 @@ export const CODE_EXTS = new Set(['rs', 'ts', 'tsx', 'js', 'jsx', 'mjs', 'cjs'])
 
 const ARCHIVED_PREFIXES = ['state/drafts/', 'state/consults/gates/'];
 
-// The two rotating ledgers: an unpinned line cite past the end of either is advisory, from any citing folder.
-const ROTATING_LEDGERS = new Set(['state/CUT-STATE.md', 'DECISIONS-PENDING.md']);
+// The two rotating ledgers: an unpinned line cite into either that does not resolve is advisory, from any citing folder.
+const ROTATING_LEDGERS = new Set(['state/CUT-STATE.md', 'DECISIONS-PENDING.md', 'governance/DECISIONS-PENDING.md']);
+// ROTATING_LEDGERS compares the path after the move map: a ledger cited by its old or its new path is the same ledger.
+const isRotatingLedger = (map, written) => [...ROTATING_LEDGERS].some((l) => currentPath(map, l) === currentPath(map, written));
 
 // path:line[-line]. The path token starts with an identifier char (never `/` or `:`) so a match can
 // never begin inside a `://` scheme; it may contain `/ . _ + -` thereafter. The `:` is immediately
@@ -208,6 +241,19 @@ export function resolveRef(pathRaw, citingRel, index) {
   return { exact: [...exact], all: [...all] };
 }
 
+/**
+ * resolveRef through the move map (movedMap.mjs; the form's section 2.3): a path that names a moved file
+ * resolves to its new path, before the exact and suffix tiers; any other path resolves as resolveRef does,
+ * from the folder the citing file had before it moved. With an empty map this is resolveRef. The result
+ * carries `mapped` (the movedMap hit) when the map resolved the path.
+ */
+export function resolveRefMapped(pathRaw, citingRel, index, map) {
+  if (!map || map.rows.length === 0) return resolveRef(pathRaw, citingRel, index);
+  const hit = resolveMoved(map, pathRaw, citingRel);
+  if (hit && index.set.has(hit.path)) return { exact: hit.exact ? [hit.path] : [], all: [hit.path], mapped: hit };
+  return resolveRef(pathRaw, originPath(map, citingRel), index);
+}
+
 export function topDirsOf(index) {
   const dirs = new Set();
   for (const f of index.files) {
@@ -225,15 +271,21 @@ export function classifyPath(pathRaw, topDirs) {
   return 'loose';
 }
 
+// `lines`, the true count, is the check's bound and the count every reason prints; `pieces`, the split's piece count, is the bound only for a cite on the legacy-bound list (see the header).
+const LEGACY_LIST = 'scripts/plan/verify-cites-legacy-bound.json';
+function legacyKeys(text) {
+  const keys = new Set();
+  for (const e of JSON.parse(text).entries) if (typeof e?.path === 'string' && typeof e.cite === 'string') keys.add(JSON.stringify([e.path, e.cite]));
+  return keys;
+}
+function countOf(text) {
+  const pieces = text.split('\n').length;
+  return { pieces, lines: pieces - (text === '' || text.endsWith('\n') ? 1 : 0) };
+}
 const lineCountCache = new Map();
 function lineCount(repoRoot, relPath) {
   const key = repoRoot + '\0' + relPath;
-  if (!lineCountCache.has(key)) {
-    const text = fs.readFileSync(path.join(repoRoot, relPath), 'utf8');
-    // split('\n').length is line count, lenient by 1 for a trailing newline — leniency here can
-    // only fail to flag a just-past-the-end cite, never wrongly flag a real one.
-    lineCountCache.set(key, text.split('\n').length);
-  }
+  if (!lineCountCache.has(key)) lineCountCache.set(key, countOf(fs.readFileSync(path.join(repoRoot, relPath), 'utf8')));
   return lineCountCache.get(key);
 }
 
@@ -241,49 +293,73 @@ function lineCount(repoRoot, relPath) {
  * Classify one citation against the tree. Returns { status, reason? } where status is:
  *   'ok'         — resolves and the line is in range.
  *   'no-match'   — no tracked file matches the path at all.
- *   'oob-exact'  — an EXACT (confident) file resolves but the cited line exceeds it (a real defect).
- *   'oob-suffix' — only a best-effort basename guess resolves and its line is out of range (advice).
+ *   'oob-exact'  — an EXACT (confident) file resolves but the cited line exceeds it, or the range runs backwards (a real defect).
+ *   'oob-suffix' — only a best-effort basename guess resolves and its line is out of range, or the range runs backwards (advice).
  */
-export function checkCitation(cite, index, repoRoot) {
-  const { exact, all } = resolveRef(cite.pathRaw, cite.relPath, index);
+export function checkCitation(cite, index, repoRoot, map) {
+  const { exact, all, mapped } = resolveRefMapped(cite.pathRaw, cite.relPath, index, map);
+  const res = checkResolved(cite, exact, all, repoRoot);
+  return mapped ? { ...res, mapped } : res;
+}
+
+// A range whose end is below its start (neither end at line 0) names no span: a fault in the cite's text, whatever any file holds.
+function backwardReason(cite) {
+  if (!(cite.startL > cite.endL) || cite.endL === 0) return null;
+  return `range ${cite.startL}-${cite.endL} of "${cite.pathRaw.replace(/^\.\//, '')}" runs backwards (its end is below its start)`;
+}
+
+function checkResolved(cite, exact, all, repoRoot) {
   if (all.length === 0) return { status: 'no-match' };
+  const back = backwardReason(cite);
+  if (back) return { status: exact.length ? 'oob-exact' : 'oob-suffix', reason: back };
   const maxL = Math.max(cite.startL, cite.endL);
+  const zero = cite.startL === 0 || cite.endL === 0;
   const validStart = cite.startL >= 1 && cite.endL >= 1;
-  const inRange = (cands) => validStart && cands.some((c) => maxL <= lineCount(repoRoot, c));
+  const inRange = (cands) => validStart && cands.some((c) => { const n = lineCount(repoRoot, c); return maxL <= n.lines || (cite.oldBound === true && maxL <= n.pieces); });
   if (exact.length) {
     if (inRange(exact)) return { status: 'ok' };
-    const lc = Math.max(...exact.map((c) => lineCount(repoRoot, c)));
+    if (zero) return { status: 'oob-exact', reason: `line 0 does not exist in "${exact[0]}" (lines count from 1)` };
+    const lc = Math.max(...exact.map((c) => lineCount(repoRoot, c).lines));
     return { status: 'oob-exact', reason: `line ${maxL} exceeds "${exact[0]}" (${lc} lines)` };
   }
   if (inRange(all)) return { status: 'ok' };
-  const lc = Math.max(...all.map((c) => lineCount(repoRoot, c)));
   const which = all.length === 1 ? all[0] : `${all.length} same-basename candidates`;
+  if (zero) return { status: 'oob-suffix', reason: `line 0 does not exist in ${which} (lines count from 1)` };
+  const lc = Math.max(...all.map((c) => lineCount(repoRoot, c).lines));
   return { status: 'oob-suffix', reason: `line ${maxL} exceeds ${which} (${lc} lines)` };
 }
 
 /**
  * A citation that carries a pin (`path:line[-line] @ <commit>`) is read at that commit: the commit
- * must exist, the file must exist there, and the line (or range end) must be within it. Returns
- * { ok: true } or { ok: false, reason, missingFile? } (missingFile: nothing at that path there). Git only reads; a commit git cannot find is a failing pin.
+ * must exist, a path of `paths` (the files to try, in order) must be a file there, and the line (or range
+ * end) must be within it. A range whose end is below its start fails before the commit is read. Returns { ok: true } at the first path that holds the line, else the first failure
+ * that is not a missing file, else { ok: false, reason, missingFile: true } naming the path as written.
+ * Git only reads; a commit git cannot find is a failing pin.
  */
-export function checkPinned(cite, repoRoot) {
+export function checkPinned(cite, repoRoot, paths) {
   const git = (args) =>
     execFileSync('git', args, { cwd: repoRoot, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], maxBuffer: 1 << 28 });
+  const back = backwardReason(cite);
+  if (back) return { ok: false, reason: back };
   try { git(['cat-file', '-e', `${cite.pin}^{commit}`]); } catch { return { ok: false, reason: `pinned commit ${cite.pin} not found` }; }
-  const p = cite.pathRaw.replace(/^\.\//, '');
-  let text;
-  try { text = git(['cat-file', 'blob', `${cite.pin}:${p}`]); } catch {
-    let kind = '';
-    try { kind = git(['cat-file', '-t', `${cite.pin}:${p}`]).trim(); } catch { /* absent */ }
-    if (kind === 'tree') return { ok: false, reason: `"${p}" is a directory at pinned commit ${cite.pin}` };
-    return { ok: false, missingFile: true, reason: `"${p}" not found at pinned commit ${cite.pin}` };
-  }
   const maxL = Math.max(cite.startL, cite.endL);
-  const lc = text.split('\n').length;
-  if (cite.startL < 1 || cite.endL < 1 || maxL > lc) {
-    return { ok: false, reason: `line ${maxL} exceeds "${p}" at pinned commit ${cite.pin} (${lc} lines)` };
+  let failure = null;
+  for (const p of paths) {
+    let text;
+    try { text = git(['cat-file', 'blob', `${cite.pin}:${p}`]); } catch {
+      let kind = '';
+      try { kind = git(['cat-file', '-t', `${cite.pin}:${p}`]).trim(); } catch { /* absent */ }
+      if (kind === 'tree') failure ??= { ok: false, reason: `"${p}" is a directory at pinned commit ${cite.pin}` };
+      continue;
+    }
+    const lc = countOf(text);
+    if (cite.startL === 0 || cite.endL === 0) {
+      failure ??= { ok: false, reason: `line 0 does not exist in "${p}" at pinned commit ${cite.pin} (lines count from 1)` };
+    } else if (maxL > lc.lines && !(cite.oldBound === true && maxL <= lc.pieces)) {
+      failure ??= { ok: false, reason: `line ${maxL} exceeds "${p}" at pinned commit ${cite.pin} (${lc.lines} lines)` };
+    } else return { ok: true };
   }
-  return { ok: true };
+  return failure ?? { ok: false, missingFile: true, reason: `"${cite.pathRaw.replace(/^\.\//, '')}" not found at pinned commit ${cite.pin}` };
 }
 
 function globToRegExp(glob) {
@@ -311,7 +387,30 @@ export function selectFiles(index, filesGlob) {
 }
 
 /**
- * Runs the scan. Returns { gated, advisory, scanned }. Each finding is
+ * The legacy-bound list's history along HEAD's first parents: every commit after the oldest that changes it
+ * must hold only entries its first parent's list holds (an absent list holds none); a shallow clone fails.
+ */
+export function legacyListErrors(root) {
+  const git = (args) => execFileSync('git', args, { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], maxBuffer: 1 << 28 });
+  if (git(['rev-parse', '--is-shallow-repository']).trim() === 'true') return ["shallow clone: the legacy-bound list's history cannot be read"];
+  const keysAt = (rev) => { try { return legacyKeys(git(['show', `${rev}:${LEGACY_LIST}`])); } catch (e) { if (e instanceof SyntaxError || e instanceof TypeError) throw e; return new Set(); } };
+  const errors = [];
+  for (const c of git(['log', '--first-parent', '--reverse', '--format=%H', '--', LEGACY_LIST]).split('\n').filter(Boolean).slice(1)) {
+    const before = keysAt(`${c}^1`);
+    for (const k of keysAt(c)) if (!before.has(k)) errors.push(`legacy-bound list gained an entry at ${c.slice(0, 12)}: ${k}`);
+  }
+  return errors;
+}
+
+// A pinned cite's candidates: resolveRef from the citing file's folder before its first move, then from its folder now. Returns [exact, all].
+function pinnedRefs(pathRaw, citingRel, index, map) {
+  const here = resolveRef(pathRaw, citingRel, index);
+  const before = resolveRef(pathRaw, originPath(map, citingRel), index);
+  return [[...new Set([...before.exact, ...here.exact])], [...new Set([...before.all, ...here.all])]];
+}
+
+/**
+ * Runs the scan. Returns { gated, advisory, scanned, listErrors }. Each finding is
  * { relPath, citeLine, target, reason }. `gated` findings drive the exit code; `advisory` findings
  * are printed for information only (see the two-tier note at the top of this file).
  */
@@ -322,6 +421,10 @@ export function runVerifyCites({ repoRoot, filesGlob } = {}) {
   const files = selectFiles(index, filesGlob);
   const gated = [];
   const advisory = [];
+  const listPath = path.join(root, LEGACY_LIST);
+  const legacy = fs.existsSync(listPath) ? legacyKeys(fs.readFileSync(listPath, 'utf8')) : new Set();
+  const map = loadMovedMap(root);
+  const post = map.rows.length ? postMoveChecker(root) : null;
   for (const relPath of files) {
     const ext = extOf(relPath);
     const text = fs.readFileSync(path.join(root, relPath), 'utf8');
@@ -335,20 +438,29 @@ export function runVerifyCites({ repoRoot, filesGlob } = {}) {
     const sink = archived ? advisory : gated;
     for (const cite of cites) {
       cite.relPath = relPath;
+      cite.oldBound = legacy.has(JSON.stringify([relPath, cite.raw]));
       const cls = classifyPath(cite.pathRaw, topDirs);
       if (cls === 'doc-number') continue;
       const at = { relPath, citeLine: cite.citeLine, target: cite.raw };
-      const res = checkCitation(cite, index, root);
+      // A pinned cite's own path takes no map and no post-move check (the form's section 2.3); a moved citing file's
+      // relative path is resolved from its pre-move folder and from its folder now (pinnedRefs).
+      const res = cite.pin ? checkResolved(cite, ...pinnedRefs(cite.pathRaw, relPath, index, map), root) : checkCitation(cite, index, root, map);
+      if (res.mapped && post.writtenAfter(res.mapped.row, relPath, cite.citeLine)) {
+        const row = res.mapped.row;
+        (res.mapped.exact ? sink : advisory).push({ ...at, reason: `old path "${row.old}" cited after the move at ${row.commit.slice(0, 12)}; cite "${res.mapped.path}"` });
+        continue;
+      }
       if (res.status === 'ok') continue;
       // OPEN-1 (B): the ledgers rotate, so an unpinned line cite into either is advisory wherever it sits;
       // a pinned one is not caught here and stays gated at its pin.
-      if (!cite.pin && ROTATING_LEDGERS.has(cite.pathRaw.replace(/^\.\//, ''))) {
+      if (!cite.pin && isRotatingLedger(map, cite.pathRaw.replace(/^\.\//, ''))) {
         advisory.push({ ...at, reason: res.reason ?? `no tracked file matches "${cite.pathRaw}"` });
         continue;
       }
       let pinReason = null;
       if (cite.pin && (res.status !== 'no-match' || cls === 'rooted')) {
-        const pr = checkPinned(cite, root);
+        const [rx, ra] = pinnedRefs(cite.pathRaw, relPath, index, map);
+        const pr = checkPinned(cite, root, [...new Set([...(rx.length ? rx : ra), cite.pathRaw.replace(/^\.\//, '')])]);
         if (pr.ok) continue;
         // A pin that only says "not found" does not replace a reason the tree already found a file for.
         if (!(pr.missingFile && res.status !== 'no-match')) pinReason = pr.reason;
@@ -365,7 +477,7 @@ export function runVerifyCites({ repoRoot, filesGlob } = {}) {
       }
     }
   }
-  return { gated, advisory, scanned: files.length };
+  return { gated, advisory, scanned: files.length, listErrors: legacyListErrors(root) };
 }
 
 function parseArgs(argv) {
@@ -386,15 +498,20 @@ function line(f) {
 
 function main() {
   const args = parseArgs(process.argv.slice(2));
-  const { gated, advisory, scanned } = runVerifyCites({ repoRoot: REPO_ROOT, filesGlob: args.files });
+  const { gated, advisory, scanned, listErrors } = runVerifyCites({ repoRoot: REPO_ROOT, filesGlob: args.files });
   const failing = args.strict ? [...gated, ...advisory] : gated;
 
   if (!args.quiet && advisory.length && !args.strict) {
     console.error(`verify:cites — ${advisory.length} advisory (loose/ambiguous, not gated):`);
     for (const f of advisory) console.error(line(f));
   }
+  if (listErrors.length) {
+    console.error(`verify:cites FAIL — ${listErrors.length} legacy-bound list error(s):`);
+    for (const e of listErrors) console.error(`  - ${e}`);
+    process.exitCode = 1;
+  }
   if (failing.length === 0) {
-    console.log(
+    if (!listErrors.length) console.log(
       `verify:cites PASS — every rooted (in-tree) path:line reference across ${scanned} file(s) resolves.` +
         (advisory.length ? ` (${advisory.length} loose reference(s) advised above.)` : ''),
     );

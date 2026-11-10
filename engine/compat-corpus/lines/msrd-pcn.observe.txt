@@ -1,0 +1,111 @@
+===== lines/msrd-pcn.parquet
+{
+  "bytes": 5545,
+  "sha256": "ea32059406b8ae19d839e3bb9f7c808fbb2d858fbdea555063ae2c6fd3fcc24d",
+  "tail_magic_present": true,
+  "footer_length_field": 3081,
+  "head_magic_present": true,
+  "observed": {
+    "parquet_open_error": null,
+    "geo_metadata_key_present": true,
+    "parquet_footer_created_by": "parquet-cpp-arrow version 21.0.0",
+    "row_count": 12,
+    "row_group_count": 1,
+    "geo_metadata_parses_as_json": true,
+    "geo_version": "1.1.0",
+    "geo_creator_key_present": false,
+    "geo_creator": null,
+    "geo_top_level_keys": [
+      "columns",
+      "primary_column",
+      "version"
+    ],
+    "primary_geometry_column": "geometry",
+    "geometry_columns_listed": [
+      "geometry"
+    ],
+    "geometry_encoding": "WKB",
+    "geometry_types": [
+      "LineString"
+    ],
+    "crs_key_present": false,
+    "crs_shape": "absent-key",
+    "crs_projjson_name": null,
+    "crs_projjson_id": null,
+    "crs_axis_names": null,
+    "crs_axis_directions": null,
+    "covering_present": true,
+    "covering": {
+      "bbox": {
+        "xmin": [
+          "bbox",
+          "xmin"
+        ],
+        "ymin": [
+          "bbox",
+          "ymin"
+        ],
+        "xmax": [
+          "bbox",
+          "xmax"
+        ],
+        "ymax": [
+          "bbox",
+          "ymax"
+        ]
+      }
+    },
+    "bbox_present_in_column_metadata": true,
+    "bbox": [
+      -130.738645792007,
+      -25.0744726064379,
+      -130.096664428711,
+      -23.9252873199134
+    ],
+    "edges": null,
+    "geometry_column_metadata_keys": [
+      "bbox",
+      "covering",
+      "encoding",
+      "geometry_types"
+    ],
+    "columns": [
+      {
+        "name": "country",
+        "arrow_type": "string",
+        "nullable": true
+      },
+      {
+        "name": "width_meters",
+        "arrow_type": "double",
+        "nullable": true
+      },
+      {
+        "name": "geometry_type",
+        "arrow_type": "string",
+        "nullable": true
+      },
+      {
+        "name": "geometry",
+        "arrow_type": "binary",
+        "nullable": true
+      },
+      {
+        "name": "bbox",
+        "arrow_type": "struct<xmin: double, ymin: double, xmax: double, ymax: double>",
+        "nullable": true
+      }
+    ],
+    "integer_typed_columns": [],
+    "string_typed_columns": [
+      {
+        "name": "country",
+        "arrow_type": "string"
+      },
+      {
+        "name": "geometry_type",
+        "arrow_type": "string"
+      }
+    ]
+  }
+}

@@ -25,7 +25,7 @@ const DAY = 86400000;
 const PAST = new Date(Date.now() - 40 * DAY).toISOString(); // before this month's first, whatever today is
 const today = () => new Date().toISOString().slice(0, 10);
 const dirs = [];
-const HEADER = "# Done nodes' summaries moved out of PLAN.yaml by scripts/plan/rotate-plan-summaries.mjs (AUTONOMY.md §35). Never edited.";
+const HEADER = "# Done nodes' summaries moved out of governance/PLAN.yaml by scripts/plan/rotate-plan-summaries.mjs (governance/AUTONOMY.md §35). Never edited.";
 
 function sh(dir, args, env = {}) {
   return execFileSync('git', args, { cwd: dir, encoding: 'utf8', env: { ...process.env, ...env } }).replace(/\r?\n$/, '');
@@ -96,7 +96,7 @@ const MOVED = ['n-d301', 'n-wide', 'n-comment'];
 const PLAN = planOf(FIX);
 const lineOf = (text, id) => { const l = text.split('\n'); return l[l.findIndex((x, i) => i > l.indexOf(`  - id: ${id}`) && x.startsWith('    summary: '))]; };
 const rot = (dir, ...args) => spawnSync(process.execPath, [ROTATE, ...args], { cwd: dir, encoding: 'utf8' });
-const snapshot = (dir) => JSON.stringify([sh(dir, ['rev-parse', 'HEAD']), sh(dir, ['status', '--porcelain']), fs.readFileSync(path.join(dir, 'PLAN.yaml'), 'utf8'), fs.existsSync(path.join(dir, 'state', 'cut-archive')) && fs.readdirSync(path.join(dir, 'state', 'cut-archive'))]);
+const snapshot = (dir) => JSON.stringify([sh(dir, ['rev-parse', 'HEAD']), sh(dir, ['status', '--porcelain']), fs.readFileSync(path.join(dir, 'governance/PLAN.yaml'), 'utf8'), fs.existsSync(path.join(dir, 'state', 'cut-archive')) && fs.readdirSync(path.join(dir, 'state', 'cut-archive'))]);
 const staged = (dir) => sh(dir, ['diff', '--cached', '--name-status', '--no-renames']).split('\n').filter(Boolean).sort();
 /** A refused run: exit 2, `re` on stderr, and nothing written. */
 function refused(dir, re, ...args) {
@@ -109,13 +109,13 @@ function refused(dir, re, ...args) {
 }
 /** A due run of the fixture plan: P, the archive's name and text, and the new PLAN.yaml's text. */
 function ran(plan = PLAN, files = {}) {
-  const dir = mkRepo({ 'PLAN.yaml': plan, ...files });
+  const dir = mkRepo({ 'governance/PLAN.yaml': plan, ...files });
   const P = sh(dir, ['rev-parse', 'origin/main']);
   const r = rot(dir);
   assert.equal(r.status, 0, r.stdout + r.stderr);
   const added = staged(dir).filter((l) => l.startsWith('A\t')).map((l) => l.slice(2).replace('state/cut-archive/', ''));
   assert.equal(added.length, 1, 'one archive added');
-  return { dir, P, name: added[0], archive: fs.readFileSync(path.join(dir, 'state', 'cut-archive', added[0]), 'utf8'), text: fs.readFileSync(path.join(dir, 'PLAN.yaml'), 'utf8') };
+  return { dir, P, name: added[0], archive: fs.readFileSync(path.join(dir, 'state', 'cut-archive', added[0]), 'utf8'), text: fs.readFileSync(path.join(dir, 'governance/PLAN.yaml'), 'utf8') };
 }
 const nodesOf = (text) => parseYamlSubset(text).nodes;
 const moveOf = (text = PLAN) => { const nodes = nodesOf(text); return { text, move: buildMove({ text, nodes, candidates: nodes.filter((n) => MOVED.includes(n.id)), name: 'PLAN-SUMMARIES-2020-01-01.yaml', commit: 'abc' }) }; };
@@ -123,16 +123,16 @@ const moveOf = (text = PLAN) => { const nodes = nodesOf(text); return { text, mo
 test('rotate-plan-summaries: a due run writes a new archive whose summary lines are byte-identical to the PLAN.yaml lines they replace, keyed by node id in PLAN.yaml order', () => {
   const { dir, P, name, archive } = ran();
   assert.equal(name, `PLAN-SUMMARIES-${today()}.yaml`);
-  assert.equal(archive, [HEADER, `source: {path: PLAN.yaml, commit: "${P}"}`, 'summaries:', ...MOVED.flatMap((id) => [`  - id: ${id}`, lineOf(PLAN, id)]), ''].join('\n'));
-  assert.deepEqual(staged(dir), [`A\tstate/cut-archive/${name}`, 'M\tPLAN.yaml']);
+  assert.equal(archive, [HEADER, `source: {path: governance/PLAN.yaml, commit: "${P}"}`, 'summaries:', ...MOVED.flatMap((id) => [`  - id: ${id}`, lineOf(PLAN, id)]), ''].join('\n'));
+  assert.deepEqual(staged(dir), [`A\tstate/cut-archive/${name}`, 'M\tgovernance/PLAN.yaml']);
   assert.equal(sh(dir, ['rev-parse', `:state/cut-archive/${name}`]), sh(dir, ['hash-object', `state/cut-archive/${name}`]));
-  assert.equal(sh(dir, ['rev-parse', ':PLAN.yaml']), sh(dir, ['hash-object', 'PLAN.yaml']));
+  assert.equal(sh(dir, ['rev-parse', ':governance/PLAN.yaml']), sh(dir, ['hash-object', 'governance/PLAN.yaml']));
 });
 
 test('rotate-plan-summaries: each archived string, once parsed by yamlSubset, equals the summary it replaced', () => {
   const { archive } = ran();
   const parsed = parseYamlSubset(archive);
-  assert.equal(parsed.source.path, 'PLAN.yaml');
+  assert.equal(parsed.source.path, 'governance/PLAN.yaml');
   assert.deepEqual(parsed.summaries.map((s) => s.id), MOVED);
   for (const s of parsed.summaries) assert.equal(s.summary, nodesOf(PLAN).find((n) => n.id === s.id).summary, s.id);
   assert.ok(parsed.summaries[0].summary.includes('"q" é a #b c: d'), 'both escapes decoded');
@@ -189,7 +189,7 @@ test('rotate-plan-summaries: a round-trip mismatch refuses the whole run and wri
   // the CLI: a done node written as a bare `-` item (the locator cannot find its id line) refuses the run, whole
   const [head, ...rest] = node('n-bare', 'done', bytes(400));
   const bare = PLAN.replace('nodes:\n', `nodes:\n  -\n${[head.replace('  - ', '    '), ...rest].join('\n')}\n`);
-  refused(mkRepo({ 'PLAN.yaml': bare }), /PLAN\.yaml has 10 "  - " items under nodes: but 11 nodes were parsed/);
+  refused(mkRepo({ 'governance/PLAN.yaml': bare }), /PLAN\.yaml has 10 "  - " items under nodes: but 11 nodes were parsed/);
 });
 
 test('rotate-plan-summaries: a duplicate id refuses the whole run and writes nothing', () => {
@@ -197,7 +197,7 @@ test('rotate-plan-summaries: a duplicate id refuses the whole run and writes not
   const twice = move.archive + move.archive.split('\n').slice(3, 5).join('\n') + '\n';
   const bad = verifyMove({ oldText: text, newText: move.text, archiveText: twice, moved: move.moved });
   assert.ok(bad.some((p) => p.startsWith('ids: ')), bad.join('\n'));
-  refused(mkRepo({ 'PLAN.yaml': planOf([...FIX, node('n-d301', 'done', '"dup"')]) }), /duplicate node id "n-d301"/);
+  refused(mkRepo({ 'governance/PLAN.yaml': planOf([...FIX, node('n-d301', 'done', '"dup"')]) }), /duplicate node id "n-d301"/);
 });
 
 test('rotate-plan-summaries: an id missing from PLAN.yaml refuses the whole run and writes nothing', () => {
@@ -205,35 +205,35 @@ test('rotate-plan-summaries: an id missing from PLAN.yaml refuses the whole run 
   const ghost = `${move.archive}  - id: n-ghost\n${move.moved[0].oldLine}\n`;
   const bad = verifyMove({ oldText: text, newText: move.text, archiveText: ghost, moved: move.moved });
   assert.ok(bad.some((p) => p.startsWith('ids outside PLAN.yaml: ')), bad.join('\n'));
-  const dir = mkRepo({ 'PLAN.yaml': PLAN });
+  const dir = mkRepo({ 'governance/PLAN.yaml': PLAN });
   for (const id of ['n-ghost', 'n-d300', 'n-ready', 'n-d301,n-ghost']) refused(dir, /--keep n-(ghost|d300|ready): not a candidate/, '--keep', id);
 });
 
 test('rotate-plan-summaries: a summary written as a block scalar refuses the run with its line number and writes nothing', () => {
   const plan = PLAN.replace(`    summary: ${bytes(400)} # a trailing comment`, '    summary: |\n      a block scalar\n      over two lines');
   const at = plan.split('\n').findIndex((l) => l === '    summary: |') + 1;
-  refused(mkRepo({ 'PLAN.yaml': plan }), new RegExp(`line ${at}: multi-line block scalars`));
+  refused(mkRepo({ 'governance/PLAN.yaml': plan }), new RegExp(`line ${at}: multi-line block scalars`));
 });
 
 test('rotate-plan-summaries: a summary that begins with the marker but is not a generated pointer refuses, and a pointer whose archive does not hold its id refuses', () => {
-  const dir = mkRepo({ 'PLAN.yaml': planOf([...FIX, node('n-hand', 'done', '"[archived summary] written by hand"')]) });
+  const dir = mkRepo({ 'governance/PLAN.yaml': planOf([...FIX, node('n-hand', 'done', '"[archived summary] written by hand"')]) });
   refused(dir, /n-hand: the summary begins with "\[archived summary\]" but is not a generated pointer/);
   const ptr = `"${pointerFor('PLAN-SUMMARIES-2020-01-01.yaml')}"`;
   const plan = planOf([...FIX, node('n-ptr', 'done', ptr)]);
-  refused(mkRepo({ 'PLAN.yaml': plan }), /n-ptr: its pointer names an archive that is not tracked at HEAD or does not hold that id/);
+  refused(mkRepo({ 'governance/PLAN.yaml': plan }), /n-ptr: its pointer names an archive that is not tracked at HEAD or does not hold that id/);
   const other = 'summaries:\n  - id: n-other\n    summary: "x"\n';
-  refused(mkRepo({ 'PLAN.yaml': plan, 'state/cut-archive/PLAN-SUMMARIES-2020-01-01.yaml': other }), /n-ptr: its pointer names an archive/);
+  refused(mkRepo({ 'governance/PLAN.yaml': plan, 'state/cut-archive/PLAN-SUMMARIES-2020-01-01.yaml': other }), /n-ptr: its pointer names an archive/);
   const held = ran(plan, { 'state/cut-archive/PLAN-SUMMARIES-2020-01-01.yaml': `${other}  - id: n-ptr\n    summary: "x"\n` });
   assert.deepEqual(parseYamlSubset(held.archive).summaries.map((s) => s.id), MOVED, 'a pointer is never a candidate; the others move');
 });
 
 test('rotate-plan-summaries: --keep leaves the named summaries in place and the rest move', () => {
-  const dir = mkRepo({ 'PLAN.yaml': PLAN });
+  const dir = mkRepo({ 'governance/PLAN.yaml': PLAN });
   const r = rot(dir, '--keep', 'n-d301,n-comment');
   assert.equal(r.status, 0, r.stderr);
   const name = staged(dir).find((l) => l.startsWith('A\t')).slice(2);
   assert.deepEqual(parseYamlSubset(fs.readFileSync(path.join(dir, name), 'utf8')).summaries.map((s) => s.id), ['n-wide']);
-  const text = fs.readFileSync(path.join(dir, 'PLAN.yaml'), 'utf8');
+  const text = fs.readFileSync(path.join(dir, 'governance/PLAN.yaml'), 'utf8');
   for (const id of ['n-d301', 'n-comment']) assert.ok(text.includes(lineOf(PLAN, id)), `${id} stays`);
   assert.ok(!text.includes(lineOf(PLAN, 'n-wide')));
 });
@@ -249,7 +249,7 @@ test('rotate-plan-summaries: a second run changes nothing: not due in the same m
   assert.equal(again.stdout.trim().split('\n').length, 1);
   assert.equal(snapshot(dir), before);
   assert.equal(staged(dir).length, 0);
-  const none = mkRepo({ 'PLAN.yaml': planOf([node('n-short', 'done', '"short"'), node('n-in-progress', 'in-progress', bytes(400))]) });
+  const none = mkRepo({ 'governance/PLAN.yaml': planOf([node('n-short', 'done', '"short"'), node('n-in-progress', 'in-progress', bytes(400))]) });
   const was = snapshot(none);
   const r = rot(none);
   assert.equal(r.status, 0, r.stderr);
@@ -260,24 +260,24 @@ test('rotate-plan-summaries: a second run changes nothing: not due in the same m
 });
 
 test("rotate-plan-summaries: refuses with exit 2 and writes nothing on a modified tracked file, HEAD not equal to its upstream, a PLAN.yaml blob that differs from origin/main's, or a carriage return in PLAN.yaml", () => {
-  const dirty = mkRepo({ 'PLAN.yaml': PLAN, 'README.md': 'one\n' });
+  const dirty = mkRepo({ 'governance/PLAN.yaml': PLAN, 'README.md': 'one\n' });
   fs.writeFileSync(path.join(dirty, 'README.md'), 'two\n');
   refused(dirty, /git status --porcelain shows a tracked change/);
-  const ahead = mkRepo({ 'PLAN.yaml': PLAN });
+  const ahead = mkRepo({ 'governance/PLAN.yaml': PLAN });
   commit(ahead, { 'README.md': 'unpushed\n' }, 'local only');
   refused(ahead, /HEAD is not equal to its upstream/);
-  const differs = mkRepo({ 'PLAN.yaml': PLAN });
+  const differs = mkRepo({ 'governance/PLAN.yaml': PLAN });
   sh(differs, ['checkout', '-q', '-b', 'work']);
-  commit(differs, { 'PLAN.yaml': `${PLAN}# changed on the branch\n` }, 'change the plan');
+  commit(differs, { 'governance/PLAN.yaml': `${PLAN}# changed on the branch\n` }, 'change the plan');
   sh(differs, ['push', '-q', '-u', 'origin', 'work']);
   refused(differs, /PLAN\.yaml at HEAD is not the blob on origin\/main/);
-  refused(mkRepo({ 'PLAN.yaml': PLAN.replaceAll('\n', '\r\n') }), /PLAN\.yaml at HEAD holds a carriage return/);
+  refused(mkRepo({ 'governance/PLAN.yaml': PLAN.replaceAll('\n', '\r\n') }), /PLAN\.yaml at HEAD holds a carriage return/);
 });
 
 test("rotate-plan-summaries: due when no PLAN-SUMMARIES archive was ever added or the newest was added before the month's first at 00:00Z, and a DECISIONS-PENDING archive does not count", () => {
   const month = Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), 1);
   const wasDue = (files, date) => {
-    const r = rot(mkRepo({ 'PLAN.yaml': PLAN, ...files }, date));
+    const r = rot(mkRepo({ 'governance/PLAN.yaml': PLAN, ...files }, date));
     assert.equal(r.status, 0, r.stderr);
     return !/not due/.test(r.stdout);
   };
@@ -294,8 +294,8 @@ test('rotate-plan-summaries: --dry-run writes nothing and lists one obligation r
   const pad = 'z'.repeat(300);
   const a = `Landed. Still waiting on n-in-progress until the next run; n-ready is owed (entries 3 and 7, KNOWN-LIMITATIONS items 2 and 5). ${pad} Before: this was held and queued.`;
   const files = {
-    'PLAN.yaml': planOf([node('n-a', 'done', JSON.stringify(a)), node('n-b', 'done', JSON.stringify(`Landed cleanly. ${pad}`)), node('n-in-progress', 'in-progress', '"x"'), node('n-ready', 'ready', '"y"')]),
-    'DECISIONS-PENDING.md': '# Decisions pending the human\n\n## Pending\n\n7. **An open entry**\ntext\n\n3. **[RESOLVED 2026-01-01]** a marked entry.\n',
+    'governance/PLAN.yaml': planOf([node('n-a', 'done', JSON.stringify(a)), node('n-b', 'done', JSON.stringify(`Landed cleanly. ${pad}`)), node('n-in-progress', 'in-progress', '"x"'), node('n-ready', 'ready', '"y"')]),
+    'governance/DECISIONS-PENDING.md': '# Decisions pending the human\n\n## Pending\n\n7. **An open entry**\ntext\n\n3. **[RESOLVED 2026-01-01]** a marked entry.\n',
     'KNOWN-LIMITATIONS.md': '# Known limitations\n\n1. **First** text\n\n2. **Second** text\n',
   };
   const dir = mkRepo(files);
@@ -314,7 +314,7 @@ test('rotate-plan-summaries: --dry-run writes nothing and lists one obligation r
   const bytesOf = /moved bytes: (\d+);/.exec(r.stdout)[1];
   const real = rot(dir);
   assert.equal(real.status, 0, real.stderr);
-  assert.equal(sh(dir, ['rev-parse', ':PLAN.yaml']), blob, 'the dry run named the blob the real run staged');
+  assert.equal(sh(dir, ['rev-parse', ':governance/PLAN.yaml']), blob, 'the dry run named the blob the real run staged');
   assert.match(real.stdout, new RegExp(`moved 2 summaries, ${bytesOf} bytes`));
 });
 
@@ -339,7 +339,7 @@ test('rotate-plan-summaries: no hook in .claude/settings.json runs the script', 
 });
 
 test("rotate-plan-summaries: from the real PLAN.yaml, after a run the queue differs only in plan_hash, the site's plan.json only in plan_hash and the moved summaries, and both drift checks pass after regeneration", () => {
-  const real = fs.readFileSync(path.join(REPO_ROOT, 'PLAN.yaml'), 'utf8');
+  const real = fs.readFileSync(path.join(REPO_ROOT, 'governance/PLAN.yaml'), 'utf8');
   assert.ok(!real.includes('\r'), 'LF, as CI checks out');
   const head = parseYamlSubset(real);
   const fit = (lines) => lines.map((l) => l.replace('lane: shell', `lane: ${head.lanes[0].id}`).replace('phase: prototype', `phase: ${head.phases[0].id}`));
@@ -347,8 +347,8 @@ test("rotate-plan-summaries: from the real PLAN.yaml, after a run the queue diff
   // and a real archive named for today makes the run take the next free suffix): once PLAN.yaml holds pointers, the script refuses a pointer whose archive is not tracked at HEAD
   const archives = sh(REPO_ROOT, ['ls-files', '--', ':(glob)state/cut-archive/PLAN-SUMMARIES-*.yaml']).split('\n').filter(Boolean);
   const held = Object.fromEntries(archives.map((rel) => [rel, fs.readFileSync(path.join(REPO_ROOT, rel))]));
-  const dir = mkRepo({ 'PLAN.yaml': `${real}${[...fit(node('synthetic-long-done', 'done', bytes(400))), ...fit(node('synthetic-long-ready', 'ready', bytes(400)))].join('\n')}\n`, ...held });
-  const planPath = path.join(dir, 'PLAN.yaml');
+  const dir = mkRepo({ 'governance/PLAN.yaml': `${real}${[...fit(node('synthetic-long-done', 'done', bytes(400))), ...fit(node('synthetic-long-ready', 'ready', bytes(400)))].join('\n')}\n`, ...held });
+  const planPath = path.join(dir, 'governance/PLAN.yaml');
   const GEN = new Date(0).toISOString();
   const gen = () => {
     const plan = loadPlan(planPath);

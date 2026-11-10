@@ -26,8 +26,8 @@ use std::path::Path;
 use std::sync::Arc;
 
 use arrow::array::{
-    ArrayRef, BinaryBuilder, Float64Array, Float64Builder, Int64Builder, StringBuilder,
-    StructArray, UInt64Builder,
+    ArrayRef, BinaryBuilder, Float64Array, Float64Builder, Int16Array, Int32Array, Int64Builder,
+    Int8Array, StringBuilder, StructArray, UInt16Array, UInt32Array, UInt64Builder, UInt8Array,
 };
 use arrow::datatypes::{DataType, Field, Fields, Schema};
 use arrow::record_batch::RecordBatch;
@@ -546,6 +546,136 @@ pub enum IdentityMode {
     /// A string `id` column (`key-{n}`, as `StringIds`) **beside** a unique `parcel_key` `UInt64`
     /// (`n`) — a file that still refuses on its `id` and offers a column to declare.
     StringIdsBesideParcelKey,
+    /// An identity column written natively at an 8, 16 or 32-bit integer width, through the same
+    /// writer as every other mode: the file is what a producer writes, not a UInt64 file cast
+    /// afterwards.
+    ///
+    /// `width` is the column's Arrow type. `column` is `id`, or `parcel_key` with **no `id` column**
+    /// in the file (as [`Self::ForeignKeyColumn`]). `values` is what each row holds. The row index
+    /// seeds the geometry exactly as it does for [`Self::NativeUnique`], so a narrow file's rows
+    /// differ from that mode's only in the identity column.
+    ///
+    /// **It refuses, and never wraps.** `generate` returns `EngineError::Source` before the first
+    /// row when the row count (`features`, or the number of explicit rows under
+    /// `GeometryMode::Rows` and `GeometryMode::RowsWithBounds`) exceeds what `width` can hold (its
+    /// maximum plus one), or when `values` is `Negative` and `width` is unsigned, and
+    /// `write_geoparquet_cancellable` then removes the partial file. A value that does not fit its
+    /// width is an error in `narrow_array` as well.
+    NarrowInteger {
+        width: NarrowWidth,
+        column: NarrowColumn,
+        values: NarrowValues,
+    },
+}
+
+/// The Arrow type of an [`IdentityMode::NarrowInteger`] column: the three signed and the three
+/// unsigned integer widths narrower than 64 bits.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum NarrowWidth {
+    Int8,
+    Int16,
+    Int32,
+    UInt8,
+    UInt16,
+    UInt32,
+}
+
+/// The column an [`IdentityMode::NarrowInteger`] file writes its identity into.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum NarrowColumn {
+    /// The native `id`.
+    Id,
+    /// `parcel_key`, with no `id` column in the file.
+    ParcelKey,
+}
+
+/// The values an [`IdentityMode::NarrowInteger`] column holds.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum NarrowValues {
+    /// The width's maximum minus the row index: the first row holds the maximum, and the values
+    /// are unique and non-negative.
+    TopOfRange,
+    /// Minus the row index, minus one (-1, -2, ...). A signed width only.
+    Negative,
+}
+
+impl NarrowWidth {
+    /// The Arrow type the column is written as.
+    fn data_type(self) -> DataType {
+        match self {
+            Self::Int8 => DataType::Int8,
+            Self::Int16 => DataType::Int16,
+            Self::Int32 => DataType::Int32,
+            Self::UInt8 => DataType::UInt8,
+            Self::UInt16 => DataType::UInt16,
+            Self::UInt32 => DataType::UInt32,
+        }
+    }
+
+    /// The width's maximum value, as an `i64`: every one of the six widths' ranges fits one.
+    fn max(self) -> i64 {
+        match self {
+            Self::Int8 => i64::from(i8::MAX),
+            Self::Int16 => i64::from(i16::MAX),
+            Self::Int32 => i64::from(i32::MAX),
+            Self::UInt8 => i64::from(u8::MAX),
+            Self::UInt16 => i64::from(u16::MAX),
+            Self::UInt32 => i64::from(u32::MAX),
+        }
+    }
+
+    fn is_signed(self) -> bool {
+        matches!(self, Self::Int8 | Self::Int16 | Self::Int32)
+    }
+}
+
+/// The value row `row` holds under `values`, as an `i64`.
+fn narrow_value(width: NarrowWidth, values: NarrowValues, row: u64) -> i64 {
+    match values {
+        NarrowValues::TopOfRange => width.max() - row as i64,
+        NarrowValues::Negative => -(row as i64) - 1,
+    }
+}
+
+/// The refusals made before a narrow identity is written: negative values on an unsigned width,
+/// and a `features` count above the width's maximum plus one. That is the number of distinct
+/// values from the maximum down to zero, and from -1 down to a signed width's minimum.
+fn narrow_refusal(width: NarrowWidth, values: NarrowValues, features: usize) -> Result<()> {
+    if values == NarrowValues::Negative && !width.is_signed() {
+        return Err(EngineError::Source(format!(
+            "a narrow identity of negative values needs a signed width; {width:?} is unsigned"
+        )));
+    }
+    let capacity = width.max() as u64 + 1;
+    if features as u64 > capacity {
+        return Err(EngineError::Source(format!(
+            "{features} features do not fit {width:?} identity values ({capacity} at most)"
+        )));
+    }
+    Ok(())
+}
+
+/// The column's array at `width`. A value that does not fit the width is an error here too, never a
+/// wrapped value.
+fn narrow_array(width: NarrowWidth, values: &[i64]) -> Result<ArrayRef> {
+    fn narrowed<T: TryFrom<i64>>(values: &[i64]) -> Result<Vec<T>> {
+        values
+            .iter()
+            .map(|v| {
+                T::try_from(*v).map_err(|_| {
+                    EngineError::Source(format!("identity value {v} does not fit its width"))
+                })
+            })
+            .collect()
+    }
+    Ok(match width {
+        NarrowWidth::Int8 => Arc::new(Int8Array::from(narrowed::<i8>(values)?)) as ArrayRef,
+        NarrowWidth::Int16 => Arc::new(Int16Array::from(narrowed::<i16>(values)?)),
+        NarrowWidth::Int32 => Arc::new(Int32Array::from(narrowed::<i32>(values)?)),
+        NarrowWidth::UInt8 => Arc::new(UInt8Array::from(narrowed::<u8>(values)?)),
+        NarrowWidth::UInt16 => Arc::new(UInt16Array::from(narrowed::<u16>(values)?)),
+        NarrowWidth::UInt32 => Arc::new(UInt32Array::from(narrowed::<u32>(values)?)),
+    })
 }
 
 impl Default for FixtureSpec {
@@ -628,6 +758,14 @@ fn schema(with_bbox: bool, identity: IdentityMode, attributes: AttributeMode) ->
             Field::new("id", DataType::Utf8, false)
         }
         IdentityMode::NegativeIds => Field::new("id", DataType::Int64, false),
+        IdentityMode::NarrowInteger { width, column, .. } => Field::new(
+            match column {
+                NarrowColumn::Id => "id",
+                NarrowColumn::ParcelKey => "parcel_key",
+            },
+            width.data_type(),
+            false,
+        ),
         _ => Field::new("id", DataType::UInt64, false),
     };
     let mut fields = vec![Arc::new(id_field)];
@@ -1010,6 +1148,9 @@ fn generate(
         GeometryMode::Rows(rows) => rows.len(),
         GeometryMode::RowsWithBounds(rows) => rows.len(),
     };
+    if let IdentityMode::NarrowInteger { width, values, .. } = spec.identity {
+        narrow_refusal(width, values, total)?;
+    }
     let mut written = 0usize;
     let mut chunk_index = 0usize;
     while written < total {
@@ -1022,6 +1163,7 @@ fn generate(
         let mut ids = UInt64Builder::with_capacity(n);
         let mut signed_ids = arrow::array::Int64Builder::with_capacity(n);
         let mut string_ids = arrow::array::StringBuilder::new();
+        let mut narrow_ids: Vec<i64> = Vec::with_capacity(n);
         let mut geoms = BinaryBuilder::new();
         let mut zones = arrow::array::StringBuilder::new();
         let mut areas = Float64Builder::with_capacity(n);
@@ -1102,6 +1244,9 @@ fn generate(
                     string_ids.append_value(format!("key-{id}"));
                     ids.append_value(id);
                 }
+                IdentityMode::NarrowInteger { width, values, .. } => {
+                    narrow_ids.push(narrow_value(width, values, id))
+                }
                 _ => ids.append_value(id),
             }
             if spec.attributes == AttributeMode::CategoricalZone
@@ -1169,6 +1314,7 @@ fn generate(
             IdentityMode::StringIds | IdentityMode::StringIdsBesideParcelKey => {
                 Arc::new(string_ids.finish()) as ArrayRef
             }
+            IdentityMode::NarrowInteger { width, .. } => narrow_array(width, &narrow_ids)?,
             _ => Arc::new(ids.finish()) as ArrayRef,
         }];
         if spec.identity == IdentityMode::StringIdsBesideParcelKey {
@@ -1675,6 +1821,51 @@ fn write_hostile_batch(
         .build();
     let f = File::create(path).unwrap();
     let mut w = ArrowWriter::try_new(f, schema, Some(props)).unwrap();
+    w.write(&batch).unwrap();
+    w.close().unwrap();
+}
+
+/// Write a GeoParquet file with one Polygon feature per value of `zones`: `id` (`UInt64`, from 0),
+/// `geometry` (WKB, a unit square in LV95) and `zone` (`Utf8`, the given text as it is). The
+/// redaction scan's tests publish a source whose styled column holds a path. GeoParquet metadata
+/// as in [`write_hostile_names`].
+pub fn write_zone_texts(path: &Path, zones: &[&str]) {
+    let (mut ids, mut geoms, mut texts) = (
+        UInt64Builder::new(),
+        BinaryBuilder::new(),
+        StringBuilder::new(),
+    );
+    for (i, zone) in zones.iter().enumerate() {
+        let (e, n) = (2_600_000.0 + 2.0 * i as f64, 1_200_000.0);
+        ids.append_value(i as u64);
+        geoms.append_value(encode_polygon(&[vec![
+            [e, n],
+            [e + 1.0, n],
+            [e + 1.0, n + 1.0],
+            [e, n + 1.0],
+            [e, n],
+        ]]));
+        texts.append_value(zone);
+    }
+    let schema = Arc::new(Schema::new(vec![
+        Field::new("id", DataType::UInt64, false),
+        Field::new("geometry", DataType::Binary, false),
+        Field::new("zone", DataType::Utf8, false),
+    ]));
+    let columns: Vec<ArrayRef> = vec![
+        Arc::new(ids.finish()),
+        Arc::new(geoms.finish()),
+        Arc::new(texts.finish()),
+    ];
+    let batch = RecordBatch::try_new(schema.clone(), columns).unwrap();
+    let geo = format!(
+        "{{\"version\":\"1.1.0\",\"primary_column\":\"geometry\",\"columns\":{{\"geometry\":{{\
+          \"encoding\":\"WKB\",\"geometry_types\":[\"Polygon\"],\"crs\":{LV95_PROJJSON}}}}}}}"
+    );
+    let props = WriterProperties::builder()
+        .set_key_value_metadata(Some(vec![KeyValue::new("geo".to_string(), geo)]))
+        .build();
+    let mut w = ArrowWriter::try_new(File::create(path).unwrap(), schema, Some(props)).unwrap();
     w.write(&batch).unwrap();
     w.close().unwrap();
 }

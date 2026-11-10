@@ -71,7 +71,7 @@ function resolveProjectRoot(input) {
 }
 
 function resolvePlanPath(projectRoot) {
-  return process.env.CUSTODIAN_PLAN_PATH || path.join(projectRoot, 'PLAN.yaml');
+  return process.env.CUSTODIAN_PLAN_PATH || path.join(projectRoot, 'governance/PLAN.yaml');
 }
 
 function tryGit(args, cwd, opts = {}) {
@@ -381,7 +381,7 @@ export async function decide(input, { projectRoot, now = new Date(), notify = no
   const next = orderedReady[0];
   let reason =
     `next: ${next.id} — ${next.title} (lane ${next.lane}, budget ${next.budget_minutes} min). ` +
-    `Regenerate CUSTODIAN-QUEUE.md if PLAN.yaml changed; ledger before ending.`;
+    `Regenerate governance/CUSTODIAN-QUEUE.md if governance/PLAN.yaml changed; ledger before ending.`;
   if (nearCap) {
     reason += ' near the daily cap: prefer small nodes; defer spikes';
   }

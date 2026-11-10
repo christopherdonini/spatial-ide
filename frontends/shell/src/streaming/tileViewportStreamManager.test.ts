@@ -60,6 +60,7 @@ function makeManager(overrides: Partial<TileViewportStreamManagerOptions> = {}) 
   const onTerminal = vi.fn();
   const manager = new TileViewportStreamManager({
     dataset: "ds_x",
+    columns: null,
     residency: fakeResidency(),
     onBatch,
     onTileSuperseded,
@@ -253,6 +254,32 @@ describe("TileViewportStreamManager", () => {
     });
   });
 
+  // RECORDED MUTATION for "PA-U7" (this manager): pass `null` in place of `this.opts.columns` at the `viewportQuery` call. Expected failure: a sixth argument below is null.
+  it("PA-U7: every tile's viewport_query passes the columns option", () => {
+    const columns = ["area", "zone"];
+    const { manager } = makeManager({ columns });
+    manager.establishGridFrame(ANCHOR, "metre");
+    viewportQueryMock.mockReturnValue(new Promise(() => {}));
+    manager.onCameraChange(ANCHOR);
+
+    expect(viewportQueryMock.mock.calls.length).toBeGreaterThan(0);
+    expect(viewportQueryMock.mock.calls.map((call) => call[5])).toEqual(viewportQueryMock.mock.calls.map(() => columns));
+  });
+
+  // RECORDED MUTATION for "PC-U12" (this manager): pass `null` in place of `filter` in the `this.opts.onBatch(...)` call. Expected failure: the fifth argument is null where the filter object was expected.
+  it("PC-U12: every tile's onBatch carries the filter its stream was issued with, as the same object", async () => {
+    const { manager, onBatch } = makeManager();
+    manager.establishGridFrame(ANCHOR, "metre");
+    viewportQueryMock.mockResolvedValueOnce({ stream: "sh_1", expires_in_ms: 30_000 });
+    const filter = { predicate: "zone = 'residential'", dialect: "duckdb-expr/0" };
+    manager.onCameraChange(ANCHOR, filter);
+    await flushMicrotasks();
+
+    (startStreamMock.mock.calls[0][0].sink as StreamSink).onBatch(new Uint8Array([1]), true);
+
+    expect(onBatch.mock.calls[0][4]).toBe(filter);
+  });
+
   describe("batch delivery and per-tile supersede discipline (D3.7, per-tile)", () => {
     it("a batch for the active tile stream is admitted with an ascending per-stream sequence", async () => {
       const { manager, onBatch } = makeManager();
@@ -270,8 +297,8 @@ describe("TileViewportStreamManager", () => {
       sink.onBatch(p1, true);
       sink.onBatch(p2, true);
 
-      expect(onBatch).toHaveBeenNthCalledWith(1, "0:0", "sh_1", 0, p1);
-      expect(onBatch).toHaveBeenNthCalledWith(2, "0:0", "sh_1", 1, p2);
+      expect(onBatch).toHaveBeenNthCalledWith(1, "0:0", "sh_1", 0, p1, null);
+      expect(onBatch).toHaveBeenNthCalledWith(2, "0:0", "sh_1", 1, p2, null);
     });
 
     it("a tile no longer covered by a new camera change is cancelled and reported superseded; resident tiles are untouched", async () => {

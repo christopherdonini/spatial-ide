@@ -1225,11 +1225,11 @@ impl Dataset {
         // `lease_acquired` rather than folding it into any scored segment; see docs/07's scope
         // bound in `trace.rs`).
         crate::trace::mark(crate::trace::SQL_BUILT, 0, 0);
-        let path = self
-            .path()
-            .to_str()
-            .ok_or_else(|| EngineError::Source("path is not valid UTF-8".into()))?
-            .to_string();
+        let path = crate::dataset::duckdb_literal_path(
+            self.path()
+                .to_str()
+                .ok_or_else(|| EngineError::Source("path is not valid UTF-8".into()))?,
+        );
 
         let lease = lease_for_stream(self, &cancel)?;
         let connection = ConnectionFacts {
@@ -1796,9 +1796,11 @@ fn produce(
         return Err(EngineError::Cancelled);
     }
 
+    // A prepare error read under a cancel ends the stream `Cancelled` through `classify`, which
+    // stamps `PRODUCER_CANCELLED` on that one read of the token.
     let mut stmt = conn
         .prepare(sql)
-        .map_err(|e| classify(cancel, format!("prepare: {e}")))?;
+        .map_err(|e| classify(cancel, "prepare", &e.to_string()))?;
     // **This is not "planning" in the query-planner sense.** The file path is a bound parameter
     // (`FROM read_parquet(?)`), so DuckDB cannot open the file, read its footer, or plan the scan
     // yet — it does not know which file. What this call costs is settled by `SPAN_STATEMENT_PREPARE`
@@ -1846,14 +1848,10 @@ fn produce(
             return Err(EngineError::Cancelled);
         }
         crate::cancel::Guarded::Err(e) => {
-            // **A `PRODUCER_CANCELLED` site found by `cut/sql-filter` P4's own testing** (the
-            // sibling site just below the `catch_unwind` this function's row-fetch loop wraps is
-            // the other one that piece added): an interrupt landing inside `stream_arrow` surfaces
-            // as this call's own `Err`, not a panic on a later `.next()`.
-            if cancel.is_cancelled() {
-                crate::trace::mark(crate::trace::PRODUCER_CANCELLED, 0, 0);
-            }
-            return Err(classify(cancel, format!("execute: {e}")));
+            // An interrupt landing inside `stream_arrow` surfaces as this call's own `Err`, not a
+            // panic on a later `.next()`; `classify` stamps `PRODUCER_CANCELLED` when it returns
+            // `Cancelled`.
+            return Err(classify(cancel, "execute", &e.to_string()));
         }
         crate::cancel::Guarded::Ok(arrow) => arrow,
     };
@@ -1912,28 +1910,21 @@ fn produce(
             Ok(None) => break,
             Err(payload) => {
                 // Keep what the panic actually said. ADR-010 rule 7 asks for a *surfaced* error, and
-                // "duckdb fetch failed" surfaces the phase without the reason.
+                // "duckdb fetch failed" surfaces the phase without the reason. The one exception is
+                // DuckDB's out-of-range class in the shapes `fetch_panic_duckdb_text` accepts: its
+                // text names operands read from the file, so it ends the stream with the fixed
+                // detail, as at the prepare and execute sites.
                 let detail = payload
                     .downcast_ref::<&str>()
                     .map(|s| (*s).to_string())
                     .or_else(|| payload.downcast_ref::<String>().cloned())
                     .unwrap_or_else(|| "no panic message".to_string());
-                // **The other new `PRODUCER_CANCELLED` site this piece adds (`cut/sql-filter` P4's
-                // own testing; see `stream_arrow`'s call site above for the first).** A selective,
-                // late-matching predicate can leave the *entire* non-matching prefix
-                // scanned inside one `arrow.next()` call (DuckDB does not yield a chunk boundary this
-                // producer can check `cancel.is_cancelled()` between, because nothing survives the
-                // filter until near the end) — DuckDB's own interrupt is what actually stops it, and
-                // the interrupted fetch panics rather than returning an error (the comment above the
-                // `catch_unwind` this arm belongs to already says so). Without this mark, a
-                // cancellation observed *only* on this path — which a late-matching filter makes the
-                // common case, not a corner case — left `cancel_observed` permanently unstamped: the
-                // same "an always-absent name reads as did not happen" defect the row-loop check's own
-                // comment (above) already named for a different gap.
-                if cancel.is_cancelled() {
-                    crate::trace::mark(crate::trace::PRODUCER_CANCELLED, 0, 0);
-                }
-                return Err(classify(cancel, format!("duckdb fetch panicked: {detail}")));
+                // A selective, late-matching predicate can leave the whole non-matching prefix
+                // scanned inside one `arrow.next()`; DuckDB's interrupt stops it and the fetch
+                // panics. `classify_fetch_panic` stamps `PRODUCER_CANCELLED` when it returns
+                // `Cancelled`, so a cancel seen only on this path is not left without its
+                // `cancel_observed`.
+                return Err(classify_fetch_panic(cancel, &detail));
             }
         };
 
@@ -2329,6 +2320,7 @@ fn decode_dictionary_chunk_column(col: &ArrayRef, declared: &DataType) -> Result
     }
 }
 
+#[allow(clippy::if_same_then_else)]
 fn attr_row_bytes(chunk_attrs: &[ArrayRef], row: usize) -> usize {
     use arrow::array::{
         BooleanArray, Float32Array, Float64Array, Int16Array, Int32Array, Int64Array, Int8Array,
@@ -2468,6 +2460,7 @@ fn compact_attribute_slice(array: &ArrayRef) -> ArrayRef {
     make_array(mutable.freeze())
 }
 
+#[allow(clippy::too_many_arguments)]
 fn flush(
     pending: &mut Pending,
     envelope: &BatchEnvelope,
@@ -2588,12 +2581,80 @@ fn flush(
     .map_err(|_| EngineError::Cancelled)
 }
 
-fn classify(cancel: &CancelToken, detail: String) -> EngineError {
-    if cancel.is_cancelled() {
-        EngineError::Cancelled
-    } else {
-        EngineError::Query(detail)
+/// The whole terminal detail when a stream that was not cancelled fails with DuckDB's text
+/// beginning with its out-of-range class label (`is_out_of_range`), as the prepare and execute
+/// sites pass DuckDB's text and as the fetch site passes it once `fetch_panic_duckdb_text` has
+/// read it out of the `duckdb` crate's panic payload (the accepted shapes only); on the product
+/// path the known source is an admitted predicate's integer `+`, `-`, `*` or unary `-` overflowing.
+/// DuckDB's own message for this class names operands read from the file, so at these sites it is
+/// withheld. Proven at the execute site by `an_admitted_integer_overflow_ends_the_stream_with_the_fixed_detail`
+/// and B-T1, and at the fetch site by
+/// `an_admitted_integer_overflow_first_raised_during_a_fetch_ends_the_stream_with_the_fixed_detail`
+/// (an INT64 `*` only; the wrapped payload shape, observed; the bare shape by a unit sample only);
+/// no test starts from the prepare site. `[P6 placeholder]`: the words are the engine's own facts,
+/// with no consequence sentence; the human's wording is owed at P6.
+const OUT_OF_RANGE_DETAIL: &str = "[P6 placeholder] a value computed while this query ran was out of range for its type; the row values and the query text are withheld";
+
+/// The `duckdb` crate's own words in front of DuckDB's text in its fetch panic: the bytes before
+/// `{err}` at line 46 of `src/arrow_batch.rs` in duckdb 1.10505.0 (`Arrow::next`), byte-copied by script.
+const FETCH_PANIC_PREFIX: &str = "Failed to fetch Arrow record batch: ";
+
+/// DuckDB's wrapper when its streaming result is already closed, up to and including the `Error: `
+/// after the LF, byte-copied by script from step 0's recorded terminal, bytes 66 to 163 (the step-0
+/// report the form's Amendment 1 names). DuckDB v1.5.5 (libduckdb-sys 1.10505.0) composes it: the
+/// type name `Invalid Input` at line 146 of `src/common/exception.cpp`, then
+/// `src/common/error_data.cpp` lines 65 and 67, then the message of
+/// `src/main/stream_query_result.cpp` line 181 and the format of its line 183.
+const PENDING_RESULT_WRAPPER: &str = "Invalid Input Error: Attempting to execute an unsuccessful or closed pending query result\nError: ";
+
+/// DuckDB's text read out of the `duckdb` crate's fetch panic payload, by anchored prefix strips
+/// only: `FETCH_PANIC_PREFIX` at the start; then DuckDB's text itself (the bare shape) or the text
+/// after `PENDING_RESULT_WRAPPER` at its start (the wrapped shape); then `is_out_of_range`. Any
+/// other payload, a doubly wrapped one included, is `None`. Nothing is searched for.
+fn fetch_panic_duckdb_text(payload: &str) -> Option<&str> {
+    let rest = payload.strip_prefix(FETCH_PANIC_PREFIX)?;
+    match rest.strip_prefix(PENDING_RESULT_WRAPPER) {
+        Some(inner) => is_out_of_range(inner).then_some(inner),
+        None => is_out_of_range(rest).then_some(rest),
     }
+}
+
+/// DuckDB's out-of-range class, read from `message` (DuckDB's own text, without the engine's phase
+/// prefix: as the prepare and execute sites pass it, and as `fetch_panic_duckdb_text` returns it
+/// from the fetch site's panic payload) by its label at the very start and nowhere else, so a file
+/// value that happens to carry the words is not misread.
+fn is_out_of_range(message: &str) -> bool {
+    message.starts_with("Out of Range Error")
+}
+
+/// A cancellation is returned first, and `PRODUCER_CANCELLED` is stamped on the same single read of
+/// the token that decides it, so every `Cancelled` this returns carries its `cancel_observed`; every
+/// call is followed at once by a return out of `produce`, so a stream stamps at most once.
+/// DuckDB's out-of-range class ends with the fixed `OUT_OF_RANGE_DETAIL`; every other failure keeps
+/// `phase` and `message` as passed (DuckDB's text at prepare and execute; at the fetch site,
+/// `classify_fetch_panic`'s choice).
+fn classify(cancel: &CancelToken, phase: &str, message: &str) -> EngineError {
+    if cancel.is_cancelled() {
+        crate::trace::mark(crate::trace::PRODUCER_CANCELLED, 0, 0);
+        EngineError::Cancelled
+    } else if is_out_of_range(message) {
+        EngineError::Query(OUT_OF_RANGE_DETAIL.to_string())
+    } else {
+        EngineError::Query(format!("{phase}: {message}"))
+    }
+}
+
+/// `classify` for the fetch site, a cancellation first: DuckDB's text when
+/// `fetch_panic_duckdb_text` reads it out of the payload, else the payload whole, so every other
+/// payload renders as `duckdb fetch panicked: <payload>` (a payload that itself begins with the
+/// label, which the crate's fetch panic never does, still reads as out of range, as before this
+/// piece).
+fn classify_fetch_panic(cancel: &CancelToken, payload: &str) -> EngineError {
+    classify(
+        cancel,
+        "duckdb fetch panicked",
+        fetch_panic_duckdb_text(payload).unwrap_or(payload),
+    )
 }
 
 fn column_u64(chunk: &arrow::array::RecordBatch, name: &str) -> Result<Vec<u64>> {
@@ -2624,6 +2685,55 @@ fn column_u64(chunk: &arrow::array::RecordBatch, name: &str) -> Result<Vec<u64>>
                     EngineError::Query(format!("`{name}` holds a negative value: {v}"))
                 })
             })
+            .collect();
+    }
+    // **The narrow integer widths, widened into the same `Vec<u64>`.** UInt8, UInt16 and UInt32
+    // widen with `u64::from`, which cannot change a value. Int8, Int16 and Int32 go through
+    // `u64::try_from` per value, as the Int64 arm above does, and a negative value is refused with
+    // the same detail as there (`negative` builds that text). None of the arms uses `as`, which
+    // would wrap a negative value into a large id.
+    //
+    // **The per-value check is not redundant.** Admission scans for a negative value at open
+    // (`admit_identity` in `engine/src/dataset.rs`), but it returns before that scan for a declared
+    // mapping with `skip_uniqueness_check`, so on that route this is the only place a negative
+    // value is caught. The SKP wire has no field for that option, so the route is reachable through
+    // the engine API alone.
+    //
+    // **Every type `admit_column_type` (`engine/src/identity.rs`) admits reaches a `u64` here:**
+    // UInt64, UInt32, UInt16, UInt8, Int64, Int32, Int16 and Int8 each have an arm. Any other
+    // Arrow type keeps the type error below.
+    use arrow::array::{Int16Array, Int32Array, Int8Array, UInt16Array, UInt32Array, UInt8Array};
+    fn negative(name: &str, v: impl std::fmt::Display) -> EngineError {
+        EngineError::Query(format!("`{name}` holds a negative value: {v}"))
+    }
+    if let Some(a) = col.as_any().downcast_ref::<UInt32Array>() {
+        return Ok(a.values().iter().map(|v| u64::from(*v)).collect());
+    }
+    if let Some(a) = col.as_any().downcast_ref::<UInt16Array>() {
+        return Ok(a.values().iter().map(|v| u64::from(*v)).collect());
+    }
+    if let Some(a) = col.as_any().downcast_ref::<UInt8Array>() {
+        return Ok(a.values().iter().map(|v| u64::from(*v)).collect());
+    }
+    if let Some(a) = col.as_any().downcast_ref::<Int32Array>() {
+        return a
+            .values()
+            .iter()
+            .map(|v| u64::try_from(*v).map_err(|_| negative(name, v)))
+            .collect();
+    }
+    if let Some(a) = col.as_any().downcast_ref::<Int16Array>() {
+        return a
+            .values()
+            .iter()
+            .map(|v| u64::try_from(*v).map_err(|_| negative(name, v)))
+            .collect();
+    }
+    if let Some(a) = col.as_any().downcast_ref::<Int8Array>() {
+        return a
+            .values()
+            .iter()
+            .map(|v| u64::try_from(*v).map_err(|_| negative(name, v)))
             .collect();
     }
     Err(EngineError::Query(format!(
@@ -2663,6 +2773,142 @@ mod tests {
         assert!(estimate_bytes(MAX_ROWS_PER_BATCH, 0) < MAX_BATCH_BYTES);
         // A geometry-free batch of the maximum row count leaves room for real geometry.
         assert!(estimate_bytes(MAX_ROWS_PER_BATCH, 0) * 4 < MAX_BATCH_BYTES);
+    }
+
+    /// `only_duckdbs_out_of_range_class_is_read_as_an_evaluation_failure`: the class label is read at
+    /// the start of DuckDB's message and nowhere else, and `classify` keeps every other message and
+    /// still returns a cancellation first. The literals are unit inputs only; the real shapes are
+    /// proven by `an_admitted_integer_overflow_ends_the_stream_with_the_fixed_detail` and B-T1.
+    ///
+    /// RECORDED MUTATION: M2, `is_out_of_range` returning true for every message, applied alone at
+    /// commit 86612bdd3bf5d2d8c193e9eea70c7265b14afe47. This test fails at its first non-range sample,
+    /// `read as out of range: IO Error: No files found that match the pattern "x.parquet"`.
+    #[test]
+    fn only_duckdbs_out_of_range_class_is_read_as_an_evaluation_failure() {
+        let _serial = crate::trace::TEST_LOCK
+            .lock()
+            .unwrap_or_else(|e| e.into_inner());
+        assert!(is_out_of_range(
+            "Out of Range Error: Overflow in multiplication of INT64 (5221210998874447054 * 2)"
+        ));
+        for other in [
+            "IO Error: No files found that match the pattern \"x.parquet\"",
+            "Conversion Error: Could not convert string 'abc' to INT64",
+            "Binder Error: Referenced column \"nope\" not found in FROM clause!",
+            "IO Error: a value reading Out of Range Error: Overflow in multiplication of INT64",
+            " Out of Range Error: preceded by a space",
+        ] {
+            assert!(!is_out_of_range(other), "read as out of range: {other}");
+        }
+        let live = CancelToken::new();
+        assert!(matches!(
+            classify(&live, "execute", "Out of Range Error: Overflow in addition of INT64"),
+            EngineError::Query(d) if d == OUT_OF_RANGE_DETAIL
+        ));
+        assert!(matches!(
+            classify(&live, "prepare", "Binder Error: no such column"),
+            EngineError::Query(d) if d == "prepare: Binder Error: no such column"
+        ));
+        let cancelled = CancelToken::new();
+        cancelled.cancel();
+        assert!(matches!(
+            classify(
+                &cancelled,
+                "execute",
+                "Out of Range Error: Overflow in addition of INT64"
+            ),
+            EngineError::Cancelled
+        ));
+    }
+
+    /// `the_fetch_panic_is_read_as_out_of_range_only_by_its_fixed_prefixes_at_the_start`: the fetch
+    /// arm's payload is DuckDB's out-of-range text only when the crate's fixed prefix is at its start
+    /// and DuckDB's text, or DuckDB's fixed wrapper then its text, follows with the label at its
+    /// start; every other payload keeps `duckdb fetch panicked: <payload>` byte for byte, and a
+    /// cancellation is returned first. The literals are unit inputs only; the wrapped shape is
+    /// proven end to end by `an_admitted_integer_overflow_first_raised_during_a_fetch_ends_the_stream_with_the_fixed_detail`.
+    ///
+    /// The wrapped sample is the payload as step 0 recorded it (in the step-0 report the form's
+    /// Amendment 1 names: the terminal's bytes after `query: duckdb fetch panicked: `, 233 bytes,
+    /// identical on all 16 runs), byte-copied by script. The bare sample was never observed through
+    /// the engine: it is the crate's prefix followed by the text DuckDB v1.5.5 (libduckdb-sys
+    /// 1.10505.0) composes for an INT64 multiplication overflow: the format at line 77 of
+    /// `src/include/duckdb/common/operator/multiply.hpp`, under the type name `Out of Range` at
+    /// line 116 of `src/common/exception.cpp` and `src/common/error_data.cpp` lines 65 and 67.
+    ///
+    /// RECORDED MUTATION: M2, after the wrapper strip `fetch_panic_duckdb_text` accepting any inner
+    /// text (`Some(inner) => Some(inner)`), applied alone at commit
+    /// e967da3344bd7c2e2e7ea1be1e3e425bd0e28b48. This test fails at its first negative sample, the
+    /// wrapper with an IO Error inside: left `Some("IO Error: No files found that match the pattern
+    /// \"x.parquet\"")`, right `None`.
+    /// RECORDED MUTATION: M3, the anchored strips replaced by a search for the label after the crate
+    /// prefix (`rest.find("Out of Range Error").map(|at| &rest[at..])`), applied alone at commit
+    /// e967da3344bd7c2e2e7ea1be1e3e425bd0e28b48. This test fails at the label-later sample, the label
+    /// later in the text after the crate prefix: left `Some("Out of Range Error: Overflow in
+    /// multiplication of INT64 (3600000000000000000 * 3600000000000000000)!")`, right `None`.
+    #[test]
+    fn the_fetch_panic_is_read_as_out_of_range_only_by_its_fixed_prefixes_at_the_start() {
+        let _serial = crate::trace::TEST_LOCK
+            .lock()
+            .unwrap_or_else(|e| e.into_inner());
+        const WRAPPED: &str = "Failed to fetch Arrow record batch: Invalid Input Error: Attempting to execute an unsuccessful or closed pending query result\nError: Out of Range Error: Overflow in multiplication of INT64 (3600000000000000000 * 3600000000000000000)!";
+        const BARE: &str = "Failed to fetch Arrow record batch: Out of Range Error: Overflow in multiplication of INT64 (3600000000000000000 * 3600000000000000000)!";
+        const DUCKDB_TEXT: &str = "Out of Range Error: Overflow in multiplication of INT64 (3600000000000000000 * 3600000000000000000)!";
+        let crate_prefix = &BARE[..BARE.len() - DUCKDB_TEXT.len()];
+        let wrapped_head = &WRAPPED[..WRAPPED.len() - DUCKDB_TEXT.len()];
+        let io = "IO Error: No files found that match the pattern \"x.parquet\"";
+
+        let live = CancelToken::new();
+        for (name, payload) in [("wrapped", WRAPPED), ("bare", BARE)] {
+            assert_eq!(
+                fetch_panic_duckdb_text(payload),
+                Some(DUCKDB_TEXT),
+                "{name}"
+            );
+            assert!(
+                matches!(classify_fetch_panic(&live, payload), EngineError::Query(d) if d == OUT_OF_RANGE_DETAIL),
+                "{name} sample is not the fixed detail"
+            );
+        }
+
+        let wrapper_io = format!("{wrapped_head}{io}");
+        let crate_io = format!("{crate_prefix}{io}");
+        let label_later = format!("{crate_prefix}IO Error: a value reading {DUCKDB_TEXT}");
+        let no_crate_prefix = WRAPPED[crate_prefix.len()..].to_string();
+        let leading_space = format!(" {WRAPPED}");
+        let doubly_wrapped = format!("{wrapped_head}{wrapped_head}{DUCKDB_TEXT}");
+        let negatives = [
+            ("the wrapper with an IO Error inside", wrapper_io),
+            ("the crate prefix with an IO Error", crate_io),
+            (
+                "the label later in the text after the crate prefix",
+                label_later,
+            ),
+            ("the wrapper without the crate prefix", no_crate_prefix),
+            ("a leading space", leading_space),
+            ("a doubly wrapped payload", doubly_wrapped),
+        ];
+        for (name, payload) in &negatives {
+            assert_eq!(fetch_panic_duckdb_text(payload), None, "{name}");
+            match classify_fetch_panic(&live, payload) {
+                EngineError::Query(d) => {
+                    assert_eq!(d, format!("duckdb fetch panicked: {payload}"), "{name}")
+                }
+                other => panic!("{name}: not a query error: {other:?}"),
+            }
+        }
+
+        let cancelled = CancelToken::new();
+        cancelled.cancel();
+        for payload in [WRAPPED, BARE, io] {
+            assert!(
+                matches!(
+                    classify_fetch_panic(&cancelled, payload),
+                    EngineError::Cancelled
+                ),
+                "a cancelled token is returned first: {payload}"
+            );
+        }
     }
 
     /// E-11: `float32_costs_four_bytes_in_the_estimate`. Mutation: remove the arm (falls through to
@@ -3027,10 +3273,16 @@ mod tests {
         drop(guard);
     }
 
-    /// The pre-prepare cancel exit in `produce` stamps `PRODUCER_CANCELLED`. The SQL is invalid on
-    /// purpose: without the check, `prepare` would fail and `classify` would return `Cancelled`
-    /// unmarked, so the mark in this test can only come from the pre-prepare check. A later piece
-    /// that marks `classify` must revisit this test. Mutation: remove the mark from that check.
+    /// The pre-prepare cancel exit in `produce` stamps `PRODUCER_CANCELLED` and returns before
+    /// `prepare`. Deleting only this check's mark, its `return` kept so `prepare` and `classify`
+    /// are never reached, is what this test catches. The SQL is invalid, as it was before
+    /// `classify` marked; deleting the whole check would leave `classify`'s mark to supply the
+    /// stamp, so that would not be caught, and it is not a recorded mutation. Mutation: remove the
+    /// mark from that check.
+    ///
+    /// RECORDED MUTATION: M-2, the check's mark deleted with its `return` kept, re-observed alone
+    /// at commit c63e5dafdc17ba2ab73f641b3947fbe4bf1bca6e, after `classify` began to mark. This test
+    /// fails at its presence assertion, `the pre-prepare cancel exit must stamp producer_cancelled`.
     #[test]
     fn the_pre_prepare_cancel_exit_stamps_producer_cancelled() {
         let _serial = crate::trace::TEST_LOCK
@@ -3069,6 +3321,65 @@ mod tests {
                 .first(crate::trace::PRODUCER_CANCELLED)
                 .is_some(),
             "the pre-prepare cancel exit must stamp producer_cancelled"
+        );
+        drop(guard);
+    }
+
+    /// `classify` stamps `PRODUCER_CANCELLED` on the `Cancelled` it returns, from the one read of the
+    /// token that decides it: (i) through `classify` itself, as the prepare and execute sites call
+    /// it, and (ii) through `classify_fetch_panic`, as the fetch site does. Driven directly with a
+    /// token cancelled before the call, so there is no race and no seam. A cancel landing between
+    /// two reads cannot be driven: the single read is what removes that window, by construction.
+    /// Mutation: remove the mark from `classify` -- (i) fails.
+    ///
+    /// Takes the trace lock first because the trace is one process-global slot. It asserts that the
+    /// event is present and no absence or exact list of names: other tests in this crate cancel
+    /// tokens and stamp other names into a live trace.
+    ///
+    /// RECORDED MUTATION: M-3, the mark in `classify` deleted, applied alone at commit
+    /// c63e5dafdc17ba2ab73f641b3947fbe4bf1bca6e. This test fails at (i), its presence assertion,
+    /// `(i) classify must stamp producer_cancelled when it returns Cancelled`.
+    #[test]
+    fn classify_stamps_producer_cancelled_when_it_returns_cancelled() {
+        let _serial = crate::trace::TEST_LOCK
+            .lock()
+            .unwrap_or_else(|e| e.into_inner());
+        let cancelled = CancelToken::new();
+
+        let guard = crate::trace::start(crate::trace::TraceKey::default())
+            .expect("the lock makes this the only trace");
+        cancelled.cancel();
+        assert!(
+            matches!(
+                classify(&cancelled, "prepare", "Binder Error: no such column"),
+                EngineError::Cancelled
+            ),
+            "(i) classify returns Cancelled"
+        );
+        assert!(
+            guard
+                .trace()
+                .first(crate::trace::PRODUCER_CANCELLED)
+                .is_some(),
+            "(i) classify must stamp producer_cancelled when it returns Cancelled"
+        );
+        drop(guard);
+
+        let guard = crate::trace::start(crate::trace::TraceKey::default())
+            .expect("the lock makes this the only trace");
+        assert!(
+            matches!(
+                classify_fetch_panic(&cancelled, "no panic message"),
+                EngineError::Cancelled
+            ),
+            "(ii) classify_fetch_panic returns Cancelled"
+        );
+        assert!(
+            guard
+                .trace()
+                .first(crate::trace::PRODUCER_CANCELLED)
+                .is_some(),
+            "(ii) classify_fetch_panic must stamp producer_cancelled when it returns Cancelled"
         );
         drop(guard);
     }
@@ -3542,10 +3853,11 @@ mod tests {
             const PROJECTED_PREFIX: &str =
                 "SELECT \"id\" AS \"id\", \"geometry\", \"zone\" FROM read_parquet(?)";
 
+            type Case = (Option<AdmittedPredicate>, Option<Bbox>, Option<u64>, String);
             // Eight `(filter, bbox, limit)` cells, carried as the WHERE/LIMIT *suffix* alone — the
             // prefix is supplied separately below, once per projection state, so the same suffix
             // string is asserted against both prefixes without being written out twice.
-            let cases: [(Option<AdmittedPredicate>, Option<Bbox>, Option<u64>, String); 8] = [
+            let cases: [Case; 8] = [
                 (None, None, None, String::new()),
                 (None, None, Some(7), " LIMIT 7".to_string()),
                 (None, Some(bbox), None, format!(" WHERE {BBOX_COND}")),

@@ -328,6 +328,7 @@ impl RowGroupIndex {
     ///
     /// One metadata query, cancellable: the query itself through the connection's interrupt handle,
     /// the reduction below through the token, at [`CANCEL_POLL_INTERVAL`].
+    #[allow(clippy::too_many_arguments)]
     pub fn build(
         conn: &Connection,
         path: &str,
@@ -342,7 +343,9 @@ impl RowGroupIndex {
 
         observe(observer, IndexPhase::RowGroupMetadata);
         cancel.attach(Arc::clone(&conn.interrupt_handle()))?;
-        let scanned = Self::read_metadata(conn, path, covering, id_column, cancel);
+        let scanned = cancel
+            .execute_guarded(|| Self::read_metadata(conn, path, covering, id_column, cancel))
+            .into_result();
         cancel.detach();
         if cancel.is_cancelled() {
             return Err(EngineError::Cancelled);
@@ -391,7 +394,7 @@ impl RowGroupIndex {
             .prepare(sql)
             .map_err(|e| EngineError::Query(format!("row-group metadata prepare: {e}")))?;
         let mut rows = stmt
-            .query([path])
+            .query([crate::dataset::duckdb_literal_path(path)])
             .map_err(|e| EngineError::Query(format!("row-group metadata: {e}")))?;
 
         let want_id = id_column.to_string();

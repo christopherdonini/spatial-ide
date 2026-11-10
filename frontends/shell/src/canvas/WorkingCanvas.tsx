@@ -6,7 +6,7 @@ import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 
 import { registerE2eHook, unregisterE2eHook } from "../e2e-test-surface";
 import type { PixelColorCount, PixelRegion, PixelRegionSummary, PixelSamplePoint, PixelSummary } from "../e2e-test-surface";
-import type { CrsUnit } from "../skp/types";
+import type { CrsUnit, Filter } from "../skp/types";
 import { logSessionEvent } from "../diagnostics/log";
 import {
   recordResidencyBatch,
@@ -42,7 +42,9 @@ import {
   DECKGL_PICK_INDEX_CEILING,
   MAX_RESIDENT_VERTICES,
   PickCeilingExceeded,
+  residentAttributeBytes,
   ResidentVertexCeilingExceeded,
+  withinAttributeCeiling,
 } from "./limits";
 import { buildHighlightLayers, createDrawnEmitter } from "./highlightLayers";
 import type { Highlight } from "./highlightLayers";
@@ -118,7 +120,7 @@ export interface WorkingCanvasHandle {
    * success, `0` on a declared-ceiling refusal (nothing was added) -- so the caller (`App.tsx`'s
    * `makeManagerCallbacks`, NEXT-CUT.md P4) can accumulate a cumulative row count for the
    * scan-liveness indicator without decoding the batch a second time itself. */
-  pushBatch(streamHandle: string, batchSeq: number, ipcBytes: Uint8Array): number;
+  pushBatch(streamHandle: string, batchSeq: number, ipcBytes: Uint8Array, filter: Filter | null): number;
   /** Drops every resident batch belonging to a superseded or closed stream. */
   clearStream(streamHandle: string): void;
   /** Re-fit the camera ("zoom to layer") to the layer's best-known extent -- the dataset-lifetime
@@ -173,6 +175,9 @@ export interface WorkingCanvasHandle {
    * counting logic, a read-only accessor. Reached only from the DEV-only `residencyEndStep` E2E hook
    * (`App.tsx`), never from product code. */
   getResidentCounts(): ResidentCounts;
+  /** Milestone 4 PR C (section 2.4 (c)): the ids of the resident batches whose `ResidentBatch.filter` `streamedUnder` accepts, read off the arm's resident set; it changes nothing.
+   * REQUIRED, with no `?`: its product caller is `table/TableTab.tsx`, through App's `residentIdsStreamedUnder` callback, and `table/tableScope.ts`'s `secondScope` reads the set it returns (the second scope's "an id in a resident batch streamed under the view's filter"). */
+  residentIdsStreamedUnder(streamedUnder: (filter: Filter | null) => boolean): ReadonlySet<bigint>;
   /** M1/M3/M7/S7 (viewport-residency cut P1b): arms a PERSISTENT `onAfterRender` render-tick hook on
    * THIS instance's `deck`, feeding `recordResidencyRenderTick` on every render observed while armed
    * -- see this file's own doc comment on `firstPixelArmedRef` for why this is exposed as a METHOD
@@ -204,7 +209,7 @@ export interface WorkingCanvasHandle {
    * only maintains via `TileViewportStreamManager.setOverBudget`, applied by the caller from this
    * method's own return value).
    */
-  pushTileBatch(tileKey: string, streamHandle: string, batchSeq: number, ipcBytes: Uint8Array): TileBatchIngestOutcome;
+  pushTileBatch(tileKey: string, streamHandle: string, batchSeq: number, ipcBytes: Uint8Array, filter: Filter | null): TileBatchIngestOutcome;
   /** Drops one tile's residency -- per-tile supersede-on-pan, or an explicit eviction. Mirrors
    * `clearStream` above, tile-keyed instead of stream-keyed. */
   clearTile(tileKey: string): void;
@@ -519,6 +524,9 @@ export interface WorkingCanvasProps {
    * anything else rather than walking it at a guessed nesting depth. REQUIRED, with no default: a
    * defaulted expectation would be exactly the silent assumption the check exists to remove. */
   geometryEncoding: string;
+  /** This open's projection set (`attributes/projection.ts`'s `projectionFor`): the attribute columns every batch of this dataset must carry, in order, or `null` for none.
+   * `decodeBatch` refuses a batch whose columns are anything else. REQUIRED, with no default, for the reason `geometryEncoding` is (milestone 4 PR A, section 2.2 (c)). */
+  projection: readonly string[] | null;
   /** `skp/0.4`, crs-unit-fact-and-bounds: this dataset's own `describe.crs.unit` fact -- REQUIRED,
    * with no default (this piece's preregistration §8 item 2 names a defaulted unit block-on-sight).
    * Selects `RECENTER_MAX_DRIFT[crsUnit]` at this component's four `recenterThresholdForBudget`
@@ -568,6 +576,8 @@ export interface WorkingCanvasProps {
   /** The box the map shows, reported where the camera moved or the canvas changed size and nothing was asked for: the auto-fit,
    * and a change of size while no area is last asked for (Amendment 3). It issues no query and is not the area last asked for. */
   onViewShown?: (bbox: AuthoritativeBbox) => void;
+  /** A decoded batch would have passed `RESIDENT_ATTRIBUTE_MAX_BYTES` and was kept with its geometry and no attributes (`limits.ts`). A report only; App shows the status item. */
+  onAttributesNotHeld: () => void;
 }
 
 const INITIAL_ZOOM = 0;
@@ -847,7 +857,7 @@ export function createHoverRepickScheduler(deps: HoverRepickDeps): HoverRepickSc
 }
 
 const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(function WorkingCanvas(
-  { dataset, geometryColumn, geometryEncoding, crsUnit, onHover, onCanvasRefusal, onResidentCeilingExceeded, onViewportChanged, onViewportWithinLastQuery, style, tool = "navigate", onClickPick, highlight = NO_HIGHLIGHT, onSelectionDrawnChange, onViewShown },
+  { dataset, geometryColumn, geometryEncoding, projection, crsUnit, onHover, onCanvasRefusal, onResidentCeilingExceeded, onViewportChanged, onViewportWithinLastQuery, style, tool = "navigate", onClickPick, highlight = NO_HIGHLIGHT, onSelectionDrawnChange, onViewShown, onAttributesNotHeld },
   ref
 ) {
   const canvasElRef = useRef<HTMLCanvasElement | null>(null);
@@ -1047,6 +1057,16 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
   onSelectionDrawnChangeRef.current = onSelectionDrawnChange;
   const onViewShownRef = useRef(onViewShown);
   onViewShownRef.current = onViewShown;
+  const onAttributesNotHeldRef = useRef(onAttributesNotHeld);
+  onAttributesNotHeldRef.current = onAttributesNotHeld;
+  const projectionRef = useRef(projection);
+  projectionRef.current = projection;
+  /** Marks `decoded` not-held when its attributes would pass the ceiling together with those of `held`, the batches resident now, and says so once (section 2.2 (d)). */
+  function withinAttributes(decoded: ResidentBatch, held: readonly ResidentBatch[]): ResidentBatch {
+    const kept = withinAttributeCeiling(decoded, residentAttributeBytes(held));
+    if (kept !== decoded) onAttributesNotHeldRef.current?.();
+    return kept;
+  }
   /** The one place the drawn set leaves this component: `render()` passes every pass's set, only a changed one is emitted. */
   const emitDrawnRef = useRef<((drawn: ReadonlySet<bigint>) => void) | null>(null);
   if (emitDrawnRef.current === null) emitDrawnRef.current = createDrawnEmitter((drawn) => onSelectionDrawnChangeRef.current?.(drawn));
@@ -1436,11 +1456,11 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
   useImperativeHandle(
     ref,
     () => ({
-      pushBatch(streamHandle, batchSeq, ipcBytes) {
+      pushBatch(streamHandle, batchSeq, ipcBytes, filter) {
         begin("frame-decode");
         let batch: ReturnType<typeof decodeBatch>;
         try {
-          batch = decodeBatch(streamHandle, batchSeq, ipcBytes, geometryColumn, geometryEncoding);
+          batch = withinAttributes(decodeBatch(streamHandle, batchSeq, ipcBytes, geometryColumn, geometryEncoding, projectionRef.current, filter), residentRef.current.getBatches());
         } finally {
           end("frame-decode");
         }
@@ -1592,6 +1612,14 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
         lastQueriedRef.current = null;
       },
 
+      residentIdsStreamedUnder(streamedUnder) {
+        const ids = new Set<bigint>();
+        for (const batch of activeBatches()) {
+          if (streamedUnder(batch.filter)) for (const id of batch.ids) ids.add(id);
+        }
+        return ids;
+      },
+
       getResidentCounts() {
         // Candidate arm (P3w): reads `tileResidentRef`'s own totals instead -- see `render()`'s
         // identical `armRef.current` ternary; for baseline this is byte-identical to before.
@@ -1658,11 +1686,11 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
       // "extract the pure decision, keep the imperative handle thin" split `pushBatch` above already
       // could not follow (no WebGL-free way to test it) but this NEW logic can, and does
       // (`tileIngest.test.ts`).
-      pushTileBatch(tileKey, streamHandle, batchSeq, ipcBytes) {
+      pushTileBatch(tileKey, streamHandle, batchSeq, ipcBytes, filter) {
         begin("frame-decode");
         let batch: ReturnType<typeof decodeBatch>;
         try {
-          batch = decodeBatch(streamHandle, batchSeq, ipcBytes, geometryColumn, geometryEncoding);
+          batch = withinAttributes(decodeBatch(streamHandle, batchSeq, ipcBytes, geometryColumn, geometryEncoding, projectionRef.current, filter), tileResidentRef.current.getBatches());
         } finally {
           end("frame-decode");
         }

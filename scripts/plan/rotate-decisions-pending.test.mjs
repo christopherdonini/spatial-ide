@@ -22,7 +22,7 @@ import { runVerifyCites } from './verify-cites.mjs';
 const here = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(here, '..', '..');
 const ROTATE = path.join(here, 'rotate-decisions-pending.mjs');
-const DP = 'DECISIONS-PENDING.md';
+const DP = 'governance/DECISIONS-PENDING.md';
 const DAY = 86400000;
 const sha = (s) => crypto.createHash('sha256').update(Buffer.from(s, 'utf8')).digest('hex');
 const today = () => new Date().toISOString().slice(0, 10);
@@ -203,7 +203,7 @@ test('rotate-decisions-pending: when the open entries alone make the new file ov
   const before = snapshot(dir);
   const r = rot(dir);
   assert.equal(r.status, 3, r.stdout + r.stderr);
-  assert.match(r.stderr, /^rotate-decisions-pending: not rotating — the open entries alone make DECISIONS-PENDING\.md \d+ bytes, over 153600; tell the human\.$/m);
+  assert.match(r.stderr, /^rotate-decisions-pending: not rotating — the open entries alone make governance\/DECISIONS-PENDING\.md \d+ bytes, over 153600; tell the human\.$/m);
   assert.equal(snapshot(dir), before);
   assert.equal(staged(dir).length, 0);
   const dry = rot(dir, '--dry-run');
@@ -238,7 +238,7 @@ test("rotate-decisions-pending: refuses with exit 2 and writes nothing on a modi
 });
 
 test('rotate-decisions-pending: --dry-run writes nothing and lists the kept units, the archived units and one obligation row per archived unit', () => {
-  const dir = mkRepo({ [DP]: ledger(), 'PLAN.yaml': fs.readFileSync(path.join(here, 'fixtures', 'valid-plan.yaml'), 'utf8') });
+  const dir = mkRepo({ [DP]: ledger(), 'governance/PLAN.yaml': fs.readFileSync(path.join(here, 'fixtures', 'valid-plan.yaml'), 'utf8') });
   const before = snapshot(dir);
   const r = rot(dir, '--dry-run');
   assert.equal(r.status, 0, r.stderr);
@@ -275,13 +275,13 @@ test('rotate-decisions-pending: after a rotation commit the readers find the mov
   const row = `- withdrawn-test: \`X-PREREGISTRATION.md:3\` @ ${v1} sha256:${sha(`${V1.split('\n')[2]}\n`)}; ruling: round 2, item 1; carrier: entry 8\n`;
   commit(dir, { 'X-PREREGISTRATION.md': `${V1}\n${row}`, 'NOTES.md': `see ${DP}:900\n` }, 'a withdrawn-test row and an unpinned cite');
   sh(dir, ['push', '-q', 'origin', 'main']);
-  assert.equal(verdictCiteExists(dir, `${DP} ${FELT}`).ok, true, 'in the live file before');
+  assert.equal(verdictCiteExists(dir, `DECISIONS-PENDING.md ${FELT}`).ok, true, 'in the live file before');
   const r = rot(dir);
   assert.equal(r.status, 0, r.stderr);
   commit(dir, {}, 'rotate the ledger');
   sh(dir, ['push', '-q', 'origin', 'main']);
   assert.equal(fs.readFileSync(path.join(dir, DP), 'utf8').includes(FELT), false, 'it moved');
-  assert.equal(verdictCiteExists(dir, `${DP} ${FELT}`).ok, true, 'a felt-verdict cite');
+  assert.equal(verdictCiteExists(dir, `DECISIONS-PENDING.md ${FELT}`).ok, true, 'a felt-verdict cite');
   const claims = runVerifyTestClaims({ repoRoot: dir });
   assert.equal(claims.findings.length, 0, JSON.stringify(claims.findings));
   assert.equal(claims.withdrawn.length, 1, 'a withdrawn-test ruling and carrier');

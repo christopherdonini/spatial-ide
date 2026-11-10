@@ -183,7 +183,6 @@ mod procmem {
 mod procmem {
     #[derive(Default, Clone, Copy)]
     pub struct Counters {
-        pub peak_working_set: usize,
         pub working_set: usize,
         pub private_usage: usize,
     }
@@ -463,6 +462,7 @@ fn free_bytes_on_c() -> Option<u64> {
 // ---------------------------------------------------------------------------------------------
 
 /// Refuses to produce a number on a build whose figures would not mean anything.
+#[allow(clippy::assertions_on_constants)]
 fn refuse_debug() {
     assert!(
         !cfg!(debug_assertions),

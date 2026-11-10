@@ -197,16 +197,16 @@ function resolveAdrFile(threeDigits) {
 }
 
 function resolveTargetFile(citation) {
-  if (citation.text.includes("RESIDENCY-PREREGISTRATION")) return join(SHELL_DIR, "RESIDENCY-PREREGISTRATION.md");
+  if (citation.text.includes("RESIDENCY-PREREGISTRATION")) return join(REPO_ROOT, "governance", "forms", "frontends", "RESIDENCY-PREREGISTRATION.md");
   if (citation.text.includes("CLAUDE.md")) return join(REPO_ROOT, "CLAUDE.md");
-  if (citation.text.includes("AI_DEVELOPMENT")) return join(REPO_ROOT, "AI_DEVELOPMENT.md");
+  if (citation.text.includes("AI_DEVELOPMENT")) return join(REPO_ROOT, "governance", "AI_DEVELOPMENT.md");
   if (citation.text.includes("SKP-V0")) return join(REPO_ROOT, "protocol", "skp", "SKP-V0.md");
   if (citation.docsGroup) return resolveDocsFile(citation.docsGroup);
   if (citation.adrGroup) return resolveAdrFile(citation.adrGroup);
   // A bare `§N`, no document name attached in the same citation match: this script's own disclosed
   // default (see this file's own top comment) -- every file it scans is written exclusively against
   // RESIDENCY-PREREGISTRATION.md's own section numbering.
-  if (citation.text.includes("§")) return join(SHELL_DIR, "RESIDENCY-PREREGISTRATION.md");
+  if (citation.text.includes("§")) return join(REPO_ROOT, "governance", "forms", "frontends", "RESIDENCY-PREREGISTRATION.md");
   return null;
 }
 

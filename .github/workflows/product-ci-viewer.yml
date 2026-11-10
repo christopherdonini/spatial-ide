@@ -47,6 +47,12 @@ name: Product CI — bundle viewer
 # the record of this workflow's own first green run is here. Said plainly so a reader looking for a
 # caveat to check does not conclude one was quietly removed.
 
+# **The redaction scan (the redaction form's Amendment 3).** npm run build ends with
+# scripts/scan-dist.mjs, which compiles kernel/src/bundle/redaction.rs with rustc and scans every
+# file in dist/ with it, for the path and credential classes. A finding not listed in
+# redaction-reviewed.json, by file, class and offset, fails the build, and no hash record is
+# written. That is why redaction.rs is watched below and a Rust toolchain is installed.
+
 on:
   push:
     paths:
@@ -55,6 +61,7 @@ on:
       - "renderer/tests/data/**"
       - "renderer/bundle-viewer/portedNotices.mjs"
       - "LICENSES/third-party/ported/**"
+      - "kernel/src/bundle/redaction.rs"
       - ".github/workflows/product-ci-viewer.yml"
   pull_request:
     paths:
@@ -63,6 +70,7 @@ on:
       - "renderer/tests/data/**"
       - "renderer/bundle-viewer/portedNotices.mjs"
       - "LICENSES/third-party/ported/**"
+      - "kernel/src/bundle/redaction.rs"
       - ".github/workflows/product-ci-viewer.yml"
   workflow_dispatch:
 
@@ -90,6 +98,8 @@ jobs:
           node-version: "24"
           cache: "npm"
           cache-dependency-path: renderer/bundle-viewer/package-lock.json
+
+      - uses: dtolnay/rust-toolchain@stable
 
       - name: Install (locked)
         run: npm ci

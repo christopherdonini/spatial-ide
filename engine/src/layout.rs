@@ -347,12 +347,17 @@ fn rewrite(
         rg = spec.row_group_rows,
     );
     cancel.attach(std::sync::Arc::clone(&conn.interrupt_handle()))?;
-    let copied = conn.execute_batch(&copy);
+    let copied = cancel
+        .execute_guarded(|| {
+            conn.execute_batch(&copy)
+                .map_err(|e| EngineError::Query(format!("clustered COPY: {e}")))
+        })
+        .into_result();
     cancel.detach();
     if cancel.is_cancelled() {
         return Err(EngineError::Cancelled);
     }
-    copied.map_err(|e| EngineError::Query(format!("clustered COPY: {e}")))?;
+    copied?;
 
     // ---- the confound guard, checked rather than hoped -----------------------------------------
     //
@@ -445,11 +450,16 @@ fn curve_keys(
         .prepare(&sql)
         .map_err(|e| EngineError::Query(format!("curve-key prepare: {e}")))?;
     cancel.attach(std::sync::Arc::clone(&conn.interrupt_handle()))?;
-    let scanned = stmt.query_arrow([]);
+    let scanned = cancel
+        .execute_guarded(|| {
+            stmt.query_arrow([])
+                .map_err(|e| EngineError::Query(format!("curve-key scan: {e}")))
+        })
+        .into_result();
     let mut out = Vec::new();
     let mut clamped = 0u64;
     let result = (|| -> Result<()> {
-        let arrow = scanned.map_err(|e| EngineError::Query(format!("curve-key scan: {e}")))?;
+        let arrow = scanned?;
         for chunk in arrow {
             if cancel.is_cancelled() {
                 return Err(EngineError::Cancelled);

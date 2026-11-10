@@ -190,9 +190,8 @@ fn a_single_file_keyless_source_admits_on_the_session_tier_and_records_its_basis
     assert_eq!(
         ds.identity().uniqueness().as_str(),
         "by-construction-within-generation",
-        "the third what-was-checked value, naming the basis. It is the PROPOSED ADR-016 \
-         Amendment 1's, not the accepted ADR's — ADR-016 §6 as accepted lists two, and nothing \
-         here treats the amendment as binding"
+        "the third what-was-checked value, naming the basis. ADR-016 Amendment 1 item 1 \
+         (Accepted) adds it to the two §6 values settled at the ADR's acceptance"
     );
     // Nothing counted, so nothing is claimed. `js_exact` in particular must stay unknown rather
     // than default to true (ADR-016 §7).
@@ -676,17 +675,18 @@ fn a_source_deleted_mid_session_refuses_as_source_changed_not_as_an_unreadable_f
 
 // ---- R-I4's glob metacharacters -----------------------------------------------------------------
 
-/// Every metacharacter DuckDB's `read_parquet` expands is detected — not just `*` and `?`.
+/// A path holding any of `*`, `?`, `[`, `]`, `{` or `}`, with no file written at it, is refused by
+/// name. The four paths here are a `*`, a `?`, a bracket class and a brace alternation, none of
+/// them present on disk; each is refused as the partitioned-source error, with a detail naming a
+/// glob metacharacter.
 ///
-/// The trade-off this encodes is stated at the detection site: a literal file whose name contains
-/// one of these is refused by name even though it is one file, because the alternative is a silent
-/// multi-file scan in which `file_row_number` is a per-file ordinal reused across files — the
-/// session tier's identity colliding with nothing said.
+/// What is decided for a path holding `[`, `]`, `{` or `}` at which a file does exist is in
+/// `engine/tests/single_file_bracket_name.rs`; this test writes no file.
 ///
 /// Mutation recorded in-source: narrowing `GLOB_METACHARACTERS` back to `['*', '?']` fails the
 /// bracket and brace cases.
 #[test]
-fn every_glob_metacharacter_read_parquet_expands_is_refused_by_name() {
+fn a_path_holding_any_glob_metacharacter_where_no_file_exists_is_refused_by_name() {
     for name in [
         "parts-*.parquet",
         "parts-?.parquet",

@@ -183,6 +183,29 @@ pub enum PublishError {
         carried: String,
     },
 
+    /// The dataset's identity is the session tier, whose ids are row positions that mean something
+    /// only within the open that minted them (ADR-016 Amendment 1, item 1: the session tier is never
+    /// published).
+    ///
+    /// Raised in `preflight_pinless_parts` right after the geometry-encoding check and before the
+    /// dataset name, from the admitted identity record alone, for both scopes (the check never reads
+    /// the query). Like the checks before it, it runs before the pin or any write, so it takes the
+    /// same no-audit-record shape (`permission::boundary`'s module doc).
+    SessionIdentityNotPublishable,
+
+    /// The redaction scan (ADR-017 §13; `bundle::redaction`) found, in one staged file, a match that
+    /// is not operator-declared. Raised after every staged file is written and before the rename, so
+    /// no bundle exists under the destination name. The staging directory is then removed as on every
+    /// other failure, or reported by `StagingNotRemoved`. Carries that file's bundle-relative path,
+    /// the first match's class and byte offset, and the number of such matches in that file. Never
+    /// the matched text: a credential match would carry the credential (`docs/09`).
+    RedactionFinding {
+        file: String,
+        class: &'static str,
+        byte_offset: usize,
+        count: usize,
+    },
+
     /// A declared ceiling was reached (ADR-010 rule 6).
     CeilingExceeded {
         ceiling: &'static str,
@@ -196,11 +219,14 @@ pub enum PublishError {
     /// **ADR-025's Decision** (accepted 2026-09-07, the human's ruling): when the publish preflight
     /// can predict the artifact will exceed the bundled viewer's declared ceilings, the publish
     /// surface refuses, typed, at preflight, naming the current-viewport-bbox publish as the
-    /// alternative. Distinct from [`Self::CeilingExceeded`], which is *this operation's own*
-    /// declared limit (`MAX_PUBLISH_PARTITIONS`), reached only at write time because it is not
-    /// predictable before the stream runs — this variant is the *reader's* limit
-    /// (`renderer/bundle-viewer/ceilings.json`, read via [`crate::publish::ceilings::reader_ceilings`]),
-    /// checked in `preflight` wherever it is predictable there. **Reopens when a second reader
+    /// alternative. Distinct from [`Self::CeilingExceeded`], which is raised when a limit is reached,
+    /// never from a prediction: among others, this operation's own `MAX_PUBLISH_PARTITIONS` at write
+    /// time, and the reader's `MAX_FEATURES` at write time when preflight predicted no row count for the
+    /// scope (a bbox scope, or a `DeclaredNotVerified` identity) and the rows written would cross it
+    /// (`ceilings::check_streamed_features`). This variant is the reader's limit as predicted at
+    /// preflight (`renderer/bundle-viewer/ceilings.json`, read via
+    /// [`crate::publish::ceilings::reader_ceilings`]), checked in `preflight` wherever it is
+    /// predictable there. **Reopens when a second reader
     /// exists** (ADR-025's own reopen condition) — until then the writer is deliberately welded to
     /// this one shipped reader's ceilings.
     ReaderCeilingExceeded {
@@ -267,6 +293,8 @@ impl PublishError {
             Self::GeometryEncodingNotPublishable { .. } => {
                 "publish.geometry_encoding_not_publishable"
             }
+            Self::SessionIdentityNotPublishable => "publish.session_identity_not_publishable",
+            Self::RedactionFinding { .. } => "publish.redaction_finding",
             Self::CeilingExceeded { .. } => "publish.ceiling_exceeded",
             Self::ReaderCeilingExceeded { .. } => "publish.reader_ceiling_exceeded",
             Self::Cancelled => "publish.cancelled",
@@ -403,6 +431,20 @@ impl std::fmt::Display for PublishError {
                 f,
                 "[P6 placeholder] refused: a version-1 bundle carries the {carried} encoding only, \
                  and this dataset's encoding is {encoding}"
+            ),
+            // A P6 placeholder: the wording is the human's.
+            Self::SessionIdentityNotPublishable => write!(
+                f,
+                "[P6 placeholder] refused: this dataset's features are identified by their \
+                 position in the file, for this open only, and a published bundle carries its \
+                 feature ids beyond this open"
+            ),
+            // A P6 placeholder: the wording is the human's.
+            Self::RedactionFinding { file, class, byte_offset, count } => write!(
+                f,
+                "[P6 placeholder] refused: the redaction scan (ADR-017 §13) found {count} \
+                 match(es) in `{file}` that are not operator-declared, the first of class `{class}` \
+                 at byte {byte_offset}; no bundle was created at the destination"
             ),
             Self::CeilingExceeded { ceiling, limit, saw } => write!(
                 f,

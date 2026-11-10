@@ -32,9 +32,10 @@ export interface PublishPromptData {
   /** Whole-file or viewport-bbox, in words -- NEW relative to `ApprovalPrompt::render`'s own field
    * set (`publish.rs`'s own doc comment on `PublishPromptData`). */
   row_scope: string;
-  /** Present only when the shell's active filter would have applied to this publish -- the
-   * NEXT-CUT.md conditional block's own verbatim sentence, never silently dropped. `null`, not
-   * omitted (`publish.rs`'s `Option<String>` crosses as `null` when `None`, never an absent key). */
+  /** The host's `FILTER_SCOPE_SENTENCE` when a filter is active and the scope is the current view;
+   * `null` otherwise, including under the whole file with a filter active (`row_scope` states every
+   * row then). `null`, not omitted (`publish.rs`'s `Option<String>` crosses as `null` when `None`,
+   * never an absent key). */
   filter_scope: string | null;
   /** **ADR-017's Exposure review, 2026-08-17, condition 1** -- one host-composed plain-language
    * sentence stating the concrete outcome of this publish (what folder, where, roughly what it
@@ -113,16 +114,17 @@ export interface PublishProgressEvent {
 }
 
 /**
- * The conditional block's own verbatim sentence (NEXT-CUT.md, binding), restated here for
- * `PublishPanel.tsx`'s own informational display -- shown as soon as the shell's active filter
- * would apply, BEFORE any host round-trip (the host's own copy, `publish.rs::FILTER_SCOPE_SENTENCE`,
- * is what actually reaches `PublishPromptData.filter_scope` and is what `PublishDialog.tsx` renders
- * verbatim from host data; this constant is the panel-level echo NEXT-CUT.md's P3 item 2 asks for,
- * duplicated by necessity -- the panel has no host round-trip to source it from before Publish is
- * even clicked). Kept as a single named constant, not inlined at each use site, and the two copies
- * are pinned equal by `PublishPanel.test.ts` reading `publish.rs`'s own source text, so a future
- * edit to either side cannot drift silently.
+ * The filter-scope sentence, a P6 placeholder (the human's ruling of 2026-11-05, evening, item 2):
+ * the visible `[P6 placeholder] ` prefix is the mark (the custodian's reading of the human's ruling
+ * of 2026-11-05, evening, item 2, confirmed by the human on 2026-11-06), and every byte after it is
+ * unchanged. Restated here for `PublishPanel.tsx`'s own echo, shown BEFORE any host round-trip only
+ * when a filter is active and the scope choice is "current" (the host's own copy,
+ * `publish.rs::FILTER_SCOPE_SENTENCE`, reaches `PublishPromptData.filter_scope` under the same
+ * condition and is what `PublishDialog.tsx` renders; under Whole dataset neither shows it).
+ * Duplicated by necessity -- the panel has no host round-trip to source it from before Publish is
+ * clicked. The two copies are pinned equal by `PublishPanel.test.ts` reading `publish.rs`'s own
+ * source text, so a future edit to either side cannot drift silently.
  */
 export const FILTER_SCOPE_SENTENCE =
-  "this bundle format cannot record a row predicate (ADR-017 §8, bundle_version 1); publishing " +
+  "[P6 placeholder] this bundle format cannot record a row predicate (ADR-017 §8, bundle_version 1); publishing " +
   "publishes the viewport extent, not your filter";

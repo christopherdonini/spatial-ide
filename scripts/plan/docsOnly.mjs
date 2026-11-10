@@ -45,7 +45,7 @@ const LOCKFILE_NAMES = new Set([
   'pnpm-lock.yaml',
   'yarn.lock',
 ]);
-const NAMED_EXCEPTIONS = new Set(['PLAN.yaml', 'CUSTODIAN-QUEUE.json']);
+const NAMED_EXCEPTIONS = new Set(['governance/PLAN.yaml', 'governance/CUSTODIAN-QUEUE.json']);
 const STATUS_LINE_RE = /^(?:\*\*Status:\*\*|Status:)(.*)$/m;
 // AUTONOMY §9: "docs/** non-ADR" -- accepted ADRs are immutable (append amendments, never
 // rewrite), so no ADR file is docs-only-eligible regardless of what changed in it. docs/01 is
@@ -81,8 +81,8 @@ function isDocumentationPath(p) {
   if (p.endsWith('.md')) return true;
   if (p.startsWith('docs/')) return true;
   if (p.startsWith('site/')) return true; // generated
-  if (p === 'CUSTODIAN-QUEUE.md' || p === 'CUSTODIAN-QUEUE.json') return true;
-  if (p === 'PLAN.yaml') return true; // subject to its own extra check below
+  if (p === 'governance/CUSTODIAN-QUEUE.md' || p === 'governance/CUSTODIAN-QUEUE.json') return true;
+  if (p === 'governance/PLAN.yaml') return true; // subject to its own extra check below
   return false;
 }
 
@@ -135,18 +135,18 @@ export function checkDocsOnly(repoRoot, base, head) {
   }
 
   // PLAN.yaml: no lane priority change, no felt_verdict node's status change.
-  if (changed.includes('PLAN.yaml')) {
-    const baseText = gitShow(repoRoot, mergeBase, 'PLAN.yaml');
-    const headText = gitShow(repoRoot, head, 'PLAN.yaml');
+  if (changed.includes('governance/PLAN.yaml')) {
+    const baseText = gitShow(repoRoot, mergeBase, 'governance/PLAN.yaml');
+    const headText = gitShow(repoRoot, head, 'governance/PLAN.yaml');
     if (baseText === null || headText === null) {
-      offending.push('PLAN.yaml: added or deleted — not a mechanical docs-only change');
+      offending.push('governance/PLAN.yaml: added or deleted — not a mechanical docs-only change');
     } else {
       try {
-        const basePlan = parseYamlSubset(baseText, `${base}:PLAN.yaml`);
-        const headPlan = parseYamlSubset(headText, `${head}:PLAN.yaml`);
+        const basePlan = parseYamlSubset(baseText, `${base}:governance/PLAN.yaml`);
+        const headPlan = parseYamlSubset(headText, `${head}:governance/PLAN.yaml`);
         offending.push(...diffPlanForDelegationLimits(basePlan, headPlan));
       } catch (e) {
-        offending.push(`PLAN.yaml: could not be parsed for the delegation check (${e.message})`);
+        offending.push(`governance/PLAN.yaml: could not be parsed for the delegation check (${e.message})`);
       }
     }
   }
@@ -161,7 +161,7 @@ function diffPlanForDelegationLimits(basePlan, headPlan) {
     const before = baseLanes.get(lane.id);
     if (before && before.priority !== lane.priority) {
       offending.push(
-        `PLAN.yaml: lane "${lane.id}" priority changed (${before.priority} -> ${lane.priority}) — only the human changes lane priorities`,
+        `governance/PLAN.yaml: lane "${lane.id}" priority changed (${before.priority} -> ${lane.priority}) — only the human changes lane priorities`,
       );
     }
   }
@@ -172,7 +172,7 @@ function diffPlanForDelegationLimits(basePlan, headPlan) {
     const feltEither = before.felt_verdict === true || node.felt_verdict === true;
     if (feltEither && before.status !== node.status) {
       offending.push(
-        `PLAN.yaml: node "${node.id}" (felt_verdict) status changed (${before.status} -> ${node.status}) — only the human marks a felt-verdict node done`,
+        `governance/PLAN.yaml: node "${node.id}" (felt_verdict) status changed (${before.status} -> ${node.status}) — only the human marks a felt-verdict node done`,
       );
     }
   }

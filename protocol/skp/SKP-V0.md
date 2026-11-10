@@ -29,8 +29,11 @@ directions, so schema evolution is impossible without a new version string.
 ```
 
 `path` is UTF-8, absolute, and comes from the OS file picker. The host passes it to the engine's
-open as received, without canonicalizing it. A directory, or a path carrying a glob metacharacter, is refused first, as
-`engine.identity_ordinal_partitioned_unsupported`; any other path that is not a file is refused as
+open as received, without canonicalizing it. A directory, a path carrying `*` or `?`, or a path
+carrying `[`, `]`, `{` or `}` at which no file exists, is refused first, as
+`engine.identity_ordinal_partitioned_unsupported`; a path carrying `[`, `]`, `{` or `}` at which a
+file exists is opened as that one file (observed on Windows; `KNOWN-LIMITATIONS.md` item 20 names
+what is not claimed); any other path that is not a file is refused as
 `engine.source`, with `EngineError::Source`'s own text. **Cut 1 offered no `crs_assertion` and no
 `identity` field** — the remediation flows that use them were cut-2 UI work, and the fields arrived
 with the UI that exercises them, not before. **`skp/0.2` (§8) adds both fields to the wire**,
@@ -50,6 +53,9 @@ anything.
 `cancel_key` is a client-minted string (see §3) naming this specific open so `cancel` can stop it
 before it returns a handle. **`open_dataset` is cancellable but not progress-reporting** — a named
 docs/01 principle-7 shortfall, not a silent gap (§2, C3).
+
+Refusal skp.unknown_dataset: the catalog no longer holds the name at admission. Wire change: an added refusal on open_dataset, the existing code; no message changes shape.
+<!-- The refusal above is made in SkpHost::open_dataset's Watching and ChecksOnly arms, at one check under the catalog's read guard, held through the mint and the OpenRecord's insert; close_dataset holds the catalog's write guard across forget_dataset and the name's removal, so those two steps land wholly before the check or wholly after the insert. A close's earlier steps (its OpenRecord removal, its unknown_dataset check, begin_close and the ticket cancel) can run between the check and the insert; the OpenRecord removal after the name's removal drops a record inserted then. None of these interleavings is reachable in the shipped app: the handle is minted from the OS CSPRNG and returned only by this open, and Catalog::names has no product caller. -->
 
 ### `describe`
 
@@ -492,7 +498,6 @@ applied to predicate admission.
 
 | Code | Fields |
 |---|---|
-| `skp.filter_dialect_unsupported` | `declared` |
 | `skp.filter_unparsable` | `detail` |
 | `skp.filter_not_a_single_expression` | `statements` |
 | `skp.filter_construct_not_admitted` | `construct` |
@@ -517,6 +522,8 @@ admission-remediation cut (`skp/0.2`) threaded `open_dataset`'s `identity` into 
 > row, `skp.filter_type_not_admitted` | `construct`, `operand_types`, `reason`, followed by the
 > five `reason` values: `text_with_non_text`, `boolean_conversion`, `literal_out_of_bounds`,
 > `conversion_can_fail`, `conversion_rounds`. The heading above stays as it is.
+
+> Note 2026-11-05 (no literal change): `skp.filter_dialect_unsupported` is struck from §7's refusals. No host produced it: a dialect other than the one literal fails at deserialization as a shape error, before any code of this kind is chosen. skp/0.12 stands; no fixture changes.
 
 ### 7.6 Three-stage admission, pre-lease and pre-mint
 
@@ -1125,6 +1132,10 @@ comparison retained; `deny_unknown_fields` kept both directions. `skp/1` stays R
 - **Five new `skp.*` codes:** `skp.session_history_unwritable` (`detail`), `skp.session_history_full` (`limit`), `skp.session_history_stopped`, `skp.step_line_over_ceiling` (`saw`, `limit`) and `skp.style_value_not_admitted` (`property`, `detail`). §10.4 lists the codes it reuses.
 
 §1 and §4 are updated in place to count six commands; §5 is unchanged; `protocol/data-plane/` has an empty diff. Mechanics: the literal `"skp/0.11"` → `"skp/0.12"` is bumped in one commit with its fixtures (`protocol/skp/tests/data/*.json`, the conformance fixtures, `protocol/skp/tests/fixtures.rs`) and the shell's TypeScript literal and the two shell tests that carry it, together with `record_step`'s types and wire fixtures. The version-refusal fixture that named `skp/0.12` as an unsupported future version is renumbered to name `skp/0.13`. Plain `==` retained; `deny_unknown_fields` kept both directions; `skp/1` stays RESERVED. The kernel's `StepRecorder` hosts the command, so `SkpHost::new` is unchanged.
+
+### Note: open_dataset refuses a name closed during its admission (2026-10-26; no literal change)
+
+**skp/0.12 stands; no literal is bumped and no fixture changes.** §1's open_dataset section gains one paragraph in place: open_dataset may refuse as skp.unknown_dataset, the existing code, with its existing message and handle field. No key, value or command is added or removed; protocol/data-plane/ has an empty diff.
 
 ## 9. Attribute projection on `viewport_query`
 

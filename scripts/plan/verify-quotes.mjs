@@ -74,7 +74,7 @@
 // recomputed over `git show <rev>:<path>` lines a..b (each line with its LF) and failed by name on a
 // mismatch or an unresolvable rev, path or range; `@ <rev>` defaults to HEAD when absent. The reference
 // itself may be split across two physical lines by a rustfmt-wrapped `//` comment continuation (see
-// GAP); a reference broken across three or more lines is not recognized. A `byte-copied
+// hashRefGrammar.mjs's GAP); a reference broken across three or more lines is not recognized. A `byte-copied
 // from ` prefix additionally requires a reproduction near it -- same line after the marker, the next
 // non-blank line, or same line before the marker (see reproducedTextNear) -- to be a byte-exact
 // substring of those lines (or, for the same-line-before shape, to CONTAIN those lines byte-exact; see
@@ -100,15 +100,45 @@
 // FIRST candidate it finds, in the fixed order same-line-after / next-line / same-line-before -- a
 // reproduction split across more than one of those, or sitting more than one blank line down, is not
 // found and fails by name for lack of a resolvable reproduction rather than being silently accepted.
+//
+// ROUND + ITEM CITES (VERIFY-QUOTES-ROUND-ITEM-CITES-PREREGISTRATION.md §2.1 to §2.4; GATED, citeFindings):
+// a `round N, item M` / `round N item M` cite (optionally preceded by `question `, case-insensitive; also
+// `items M, K and L` and `items M to K`, whose endpoints are each resolved; a trailing `(x)` is read, not
+// resolved) in a scanned file must resolve against the ruling set -- the live DECISIONS-PENDING.md and each
+// tracked state/cut-archive/DECISIONS-PENDING-*.md (rulingFiles) -- by resolveRoundItem (rulingSet.mjs, shared
+// with verify-test-claims), ONE FILE AT A TIME, nothing joined across files. A RULED block header names the
+// round (`rounds N and M` counts for both); the block runs to the next line starting `**` or `## `; a block
+// with item lines (`- *Item M` / `- **Item M`) resolves M when it is among them, and a block with none
+// resolves M when the tracked state/questions/round-N.md has a line starting `M. `. M must be followed by a
+// byte that is not a letter or digit (so a directive item such as `item 2e` is out). Not read: inside an
+// inline backtick span; inside a straight or curly double-quoted span on the same line (straight `"` marks
+// pair left to right on their line, so an unpaired `"`, such as an inch mark, hides any cite up to the next
+// `"`); or on a line whose first non-blank character is `>`; fenced blocks are read. Each line is read on
+// its own: a cite broken across a line break is not read, and a list is read only up to the break. A list
+// reads each `, K`, `, and K`, `and K` or `to K` that directly follows it on the line, so a number after
+// a list (`items 1 and 2, 15 tests` reads item 15) is resolved as an item. The scan set is the quote
+// pass's own (claimFiles, or exactly the explicit files).
+// A failure prints `FAIL — ruling cite: <file>:<line> — <cite> — <reason>` and exits 1; no baseline route
+// exists for it. DISCLOSED GAPS: a sub-clause letter (the `(b)` of `item 2(b)`, whose item 2 is checked),
+// an entry cite, a clause cite, a directive item (`…, item 2e`), a bare round, a `rounds N and M, items …`
+// list, and a cite in a file outside the scan set are not checked; and the check proves EXISTENCE of the
+// item -- in its block, or, for a block with no item lines, as a line starting `M. ` in the tracked
+// state/questions/round-N.md -- not that the cite means what its sentence says. THE ONE UNREAD BLOCK: the
+// RULED header for question round 72, in the 2026-10-20 archive, names its round outside the header grammar
+// (in a trailing parenthesis, after the PR), so no cite to it resolves -- a cite to round 72 by item is
+// refused by name, and a record cites that ruling by a hash pin instead, at the round's tracked
+// state/questions/round-72.md (the form's Amendment 3, item 1).
 
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { buildTrackedIndex, extractCitations, resolveRef, classifyPath, topDirsOf, CODE_EXTS } from './verify-cites.mjs';
+import { buildTrackedIndex, extractCitations, resolveRefMapped, classifyPath, topDirsOf, CODE_EXTS } from './verify-cites.mjs';
+import { loadMovedMap, currentPath, pathAtRev } from './movedMap.mjs';
 import { claimFiles } from './verify-test-claims.mjs';
-import { rulingSetPaths, LIVE_RULINGS } from './rulingSet.mjs';
+import { hashRefRegExp } from './hashRefGrammar.mjs';
+import { rulingSetPaths, LIVE_RULINGS, resolveRoundItem } from './rulingSet.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 export const REPO_ROOT = path.resolve(here, '..', '..');
@@ -395,7 +425,7 @@ function defaultScanFiles(root, index) {
 // the preregistration/ADR set PLUS these four named files/globs, PLUS every `.claude/agents/*.md`
 // (the custodian's dispatch brief, 2026-09-17, this round's item (d)). Hash references are checked here ONLY -- no quote
 // passage in any of these extra files is extracted or verified; they never join the quote haystack.
-const EXTRA_HASH_SCAN_FILES = ['AI_DEVELOPMENT.md', 'docs/PREREGISTRATION-TEMPLATE.md'];
+const EXTRA_HASH_SCAN_FILES = ['governance/AI_DEVELOPMENT.md', 'docs/PREREGISTRATION-TEMPLATE.md'];
 
 // The ruling set's tracked files (rulingSet.mjs), absolute: the live DECISIONS-PENDING.md, then its archives.
 // The whole set is hash-scanned, so a moved ruling's hash references are still checked.
@@ -403,10 +433,11 @@ function rulingFiles(root, index) {
   return rulingSetPaths(index.files).filter((rel) => index.set.has(rel)).map((rel) => path.join(root, rel));
 }
 
-function defaultHashScanFiles(root, index) {
+function defaultHashScanFiles(root, index, map) {
   const files = new Set(defaultScanFiles(root, index));
   for (const abs of rulingFiles(root, index)) files.add(abs);
-  for (const rel of EXTRA_HASH_SCAN_FILES) {
+  for (const written of EXTRA_HASH_SCAN_FILES) {
+    const rel = currentPath(map, written);
     if (index.set.has(rel)) files.add(path.join(root, rel));
   }
   for (const rel of index.files) {
@@ -483,10 +514,10 @@ function validateBaselineEntries(entries) {
 // (file, line, words-as-a-normalized-PREFIX-of-the-passage): a stale entry whose line shifted, or whose
 // recorded words no longer prefix what is actually there today, matches nothing -- it does not silently
 // waive a different bad quote that happens to land on the same line.
-function matchBaseline(entries, used, relPath, line, normalizedPassage) {
+function matchBaseline(entries, used, relPath, line, normalizedPassage, map) {
   for (let i = 0; i < entries.length; i++) {
     const e = entries[i];
-    if (used.has(i) || e.file !== relPath || e.line !== line) continue;
+    if (used.has(i) || currentPath(map, e.file) !== relPath || e.line !== line) continue;
     const wordsNorm = normalizeText(e.words ?? '');
     if (wordsNorm && normalizedPassage.startsWith(wordsNorm)) {
       used.add(i);
@@ -501,10 +532,10 @@ function matchBaseline(entries, used, relPath, line, normalizedPassage) {
 // (a fixed diagnostic string `checkHashRef`/`findUnboundHashTokens` produce, not quoted prose): a
 // finding whose reason no longer starts with what the entry recorded -- the reference moved to a
 // DIFFERENT failure at the same line -- does not silently waive it.
-function matchHashBaseline(entries, used, relPath, line, reason) {
+function matchHashBaseline(entries, used, relPath, line, reason, map) {
   for (let i = 0; i < entries.length; i++) {
     const e = entries[i];
-    if (used.has(i) || e.file !== relPath || e.line !== line) continue;
+    if (used.has(i) || currentPath(map, e.file) !== relPath || e.line !== line) continue;
     if (typeof e.reason === 'string' && e.reason && reason.startsWith(e.reason)) {
       used.add(i);
       return e;
@@ -525,7 +556,7 @@ function matchHashBaseline(entries, used, relPath, line, reason) {
 // placement, with or without backticks) bound to the nearest preceding path:line CITATION in the same
 // paragraph (nearestPathInParagraph, above --
 // the shell and LOD lines above both use this shape too, for a second/third reference to a path already
-// named earlier in the same sentence or bullet). The grammar below treats the leading and trailing
+// named earlier in the same sentence or bullet). The grammar (hashRefGrammar.mjs) treats the leading and trailing
 // backtick as INDEPENDENTLY optional rather than modelling the two placements as separate alternatives:
 // a lone `` ` `` opportunistically consumed wherever one sits (right after the line range for the
 // OUTSIDE shape, right after the hash for the INSIDE shape, absent for a fully bare reference) covers
@@ -550,7 +581,7 @@ function matchHashBaseline(entries, used, relPath, line, reason) {
 // as owed, not fixed in place (engine/LOD-PREREGISTRATION.md's Amendment 14, the row on
 // `engine/tests/lod_tier_builder.rs:190-191`): `` `engine/tests/common/mod.rs:55` @ 43a3039a3a4d ``,
 // rustfmt-wrapped, continues onto the NEXT `//`-commented line before `sha256:...` -- the two lines,
-// stripped of their own individual `// ` comment markers, form one contiguous reference. `GAP` (below)
+// stripped of their own individual `// ` comment markers, form one contiguous reference. `GAP` (hashRefGrammar.mjs)
 // matches ordinary horizontal whitespace OR exactly one such continuation (a newline, then a `//`
 // comment marker with its own optional leading/trailing horizontal whitespace) wherever the grammar
 // would otherwise only accept `\s*` -- deliberately not `\s` generally (which already matches `\n` on
@@ -558,12 +589,7 @@ function matchHashBaseline(entries, used, relPath, line, reason) {
 // only ONE continuation, not several (the real case splits at exactly one point; a reference broken
 // across three or more physical lines is not a shape this grammar was built against and is left
 // unrecognized rather than guessed at).
-const GAP = '[ \\t]*(?:\\n[ \\t]*//[ \\t]?)?[ \\t]*';
-const HASH_REF_RE = new RegExp(
-  '(byte-copied from\\s+)?`?(?:([A-Za-z0-9_][A-Za-z0-9_./+-]*))?:(\\d+)(?:-(\\d+))?`?' +
-    `(?:${GAP}@${GAP}([^\\s\`]+))?${GAP}sha256:([0-9a-f]{64})\`?`,
-  'g',
-);
+const HASH_REF_RE = hashRefRegExp({ pathRequired: false });
 
 // Every raw `sha256:<64 hex>` token, regardless of what (if anything) precedes it -- used to find one
 // the grammar above did NOT bind into any reference at all (round-12 fix round item (b): "never
@@ -738,8 +764,10 @@ function reproducedTextNear(text, ref) {
  * sibling branch's own file (e.g. engine/LOD-PREREGISTRATION.md line 531's `engine/tests/common/mod.rs`,
  * tracked on `engine/lod-tier-builder` but not on this branch) from the branch actually doing the
  * citing. A path neither in the current index nor resolvable at the cited rev still fails by name.
+ * A path that names a moved file (`map`, movedMap.mjs) resolves to its new path, and is read at a rev
+ * that precedes the move under its old path (governance piece F's form, section 2.3).
  */
-function checkHashRef(root, index, relPath, text, ref, topDirs) {
+function checkHashRef(root, index, relPath, text, ref, topDirs, map) {
   let pathRaw = ref.pathRaw;
   if (!pathRaw) {
     const bound = nearestPathInParagraph(text, ref.start, topDirs);
@@ -748,12 +776,13 @@ function checkHashRef(root, index, relPath, text, ref, topDirs) {
     }
     pathRaw = bound.pathRaw;
   }
-  const { exact, all } = resolveRef(pathRaw, relPath, index);
+  const { exact, all, mapped } = resolveRefMapped(pathRaw, relPath, index, map);
   const named = exact.length ? exact : all;
   let resolvedPath;
   let content;
   if (named.length === 1) {
-    resolvedPath = named[0];
+    // A moved file's old path is read at a rev from before the move (the form's section 2.3).
+    resolvedPath = mapped ? pathAtRev(root, mapped, ref.rev) : named[0];
     content = gitShowFile(root, ref.rev, resolvedPath);
     if (content === null) {
       return { ok: false, reason: `unresolvable rev "${ref.rev}" for "${resolvedPath}" -- git show failed` };
@@ -804,25 +833,56 @@ function checkHashRef(root, index, relPath, text, ref, topDirs) {
   return { ok: true, resolvedPath, slice };
 }
 
+// --- Round + item cites (VERIFY-QUOTES-ROUND-ITEM-CITES-PREREGISTRATION.md §2.1 to §2.5). Constants declared at their site. ---
+// A line whose first non-blank character is `>` is not read.
+const CITE_BLOCKQUOTE_LINE_RE = /^\s*>/;
+// Spans masked before reading: an inline backtick span, and a straight or curly double-quoted span on the same line.
+const CITE_SKIP_SPAN_RES = [/(`+)[^\n]*?\1/g, /"[^"\n]*"/g, /“[^”\n]*”/g];
+// `round N, item M` / `round N item M` / `round N, items M ...`, case-insensitive; M followed by no letter or digit (`item 2e` is out).
+const CITE_HEAD_RE = /\bround\s+(\d+),?\s+(items?)\s+(\d+)(?![0-9A-Za-z])/gi;
+// After a plural head only: `, K`, `and K`, `, and K`, or `to K` (a range names its two endpoints).
+const CITE_TAIL_RE = /(?:,\s*(?:and\s+)?|\s+and\s+)(\d+)(?![0-9A-Za-z])|\s+to\s+(\d+)(?![0-9A-Za-z])/y;
+
+/** Every round + item cite of `text` as [{ line, round, item }], one per named item; the span kinds above are skipped. */
+function extractRoundItemCites(text) {
+  const out = [];
+  text.split('\n').forEach((raw, i) => {
+    if (CITE_BLOCKQUOTE_LINE_RE.test(raw)) return;
+    let line = raw;
+    for (const re of CITE_SKIP_SPAN_RES) line = line.replace(re, (m) => ' '.repeat(m.length));
+    for (const m of line.matchAll(CITE_HEAD_RE)) {
+      const round = Number(m[1]);
+      out.push({ line: i + 1, round, item: Number(m[3]) });
+      if (m[2].toLowerCase() !== 'items') continue;
+      CITE_TAIL_RE.lastIndex = m.index + m[0].length;
+      for (let t = CITE_TAIL_RE.exec(line); t; t = CITE_TAIL_RE.exec(line)) out.push({ line: i + 1, round, item: Number(t[1] ?? t[2]) });
+    }
+  });
+  return out;
+}
+
 /**
  * Scans `files` (default: every tracked `*PREREGISTRATION*.md` and `docs/adr/*.md`; explicit paths
  * need not be tracked -- a scratch copy of another branch's file is scannable) for verbatim-introduced
  * quotes and checks each against the tracked tree, excluding every extracted quotation (including the
  * baseline file itself) from the searchable text. Returns
  * { findings, advisories, baselined, checked, scanned, unmatchedBaseline, baselineErrors, hashFindings,
- * hashBaselined, unmatchedHashBaseline, hashBaselineErrors }.
+ * hashBaselined, unmatchedHashBaseline, hashBaselineErrors, citeFindings: [{ relPath, line, cite, reason }],
+ * citesChecked }. citeFindings is the round + item pass: each cite resolved against the ruling set by
+ * resolveRoundItem (rulingSet.mjs), one file at a time.
  */
 export function runVerifyQuotes({ repoRoot, files } = {}) {
   const root = repoRoot ?? REPO_ROOT;
   const index = buildTrackedIndex(root);
   const topDirs = topDirsOf(index);
+  const map = loadMovedMap(root);
   const scanAbs = (files && files.length ? files : defaultScanFiles(root, index)).map((f) => path.resolve(f));
   // Hash references are scanned wider than quote passages, for hash checking only, with no quote
   // haystack (round-12 fix round item (d)): an explicit `files` override scans exactly those files for
   // both; the default run additionally hash-checks DECISIONS-PENDING.md, AI_DEVELOPMENT.md,
   // docs/PREREGISTRATION-TEMPLATE.md and every .claude/agents/*.md, none of which ever enters quote
   // extraction or the quote-verification haystack.
-  const hashScanAbs = files && files.length ? scanAbs : defaultHashScanFiles(root, index).map((f) => path.resolve(f));
+  const hashScanAbs = files && files.length ? scanAbs : defaultHashScanFiles(root, index, map).map((f) => path.resolve(f));
   const baselineEntries = loadBaseline(root);
   const baselineErrors = validateBaselineEntries(baselineEntries);
   const usedBaseline = new Set();
@@ -866,7 +926,7 @@ export function runVerifyQuotes({ repoRoot, files } = {}) {
     const text = fs.readFileSync(absPath, 'utf8');
     const refs = extractHashRefs(text);
     const recordHashResult = (line, reason) => {
-      const known = matchHashBaseline(hashBaselineEntries, usedHashBaseline, relPath, line, reason);
+      const known = matchHashBaseline(hashBaselineEntries, usedHashBaseline, relPath, line, reason, map);
       if (known) {
         hashBaselined.push({ relPath, line, reason });
         return;
@@ -880,7 +940,7 @@ export function runVerifyQuotes({ repoRoot, files } = {}) {
       );
     }
     for (const ref of refs) {
-      const res = checkHashRef(root, index, relPath, text, ref, topDirs);
+      const res = checkHashRef(root, index, relPath, text, ref, topDirs, map);
       if (!res.ok) recordHashResult(ref.line, res.reason);
     }
   }
@@ -900,14 +960,14 @@ export function runVerifyQuotes({ repoRoot, files } = {}) {
       const pathCite = nearestPathIntro(text, p.introEnd, topDirs);
 
       if (pathCite) {
-        const { exact, all } = resolveRef(pathCite.pathRaw, relPath, index);
+        const { exact, all } = resolveRefMapped(pathCite.pathRaw, relPath, index, map);
         const named = (exact.length ? exact : all).map((f) => path.join(root, f));
         if (named.length === 1) {
           if (norm(named[0]).includes(p.normalized)) continue; // PASS: found in the one named file
           // The named file is the live ruling file: a passage that moved to an archive passes when ONE file of the
           // ruling set holds it, each file normalized on its own (nothing is joined across files).
           if (named[0] === path.join(root, LIVE_RULINGS) && rulingFiles(root, index).some((abs) => norm(abs).includes(p.normalized))) continue;
-          const known = matchBaseline(baselineEntries, usedBaseline, relPath, p.startLine, p.normalized);
+          const known = matchBaseline(baselineEntries, usedBaseline, relPath, p.startLine, p.normalized, map);
           if (known) {
             baselined.push({ relPath, line: p.startLine, snippet, reason: known.reason });
             continue;
@@ -936,12 +996,33 @@ export function runVerifyQuotes({ repoRoot, files } = {}) {
       }
       if (found) continue;
 
-      const known = matchBaseline(baselineEntries, usedBaseline, relPath, p.startLine, p.normalized);
+      const known = matchBaseline(baselineEntries, usedBaseline, relPath, p.startLine, p.normalized, map);
       if (known) {
         baselined.push({ relPath, line: p.startLine, snippet, reason: known.reason });
         continue;
       }
       findings.push({ relPath, line: p.startLine, snippet });
+    }
+  }
+  // Round + item cites: the ruling set's texts are read once, and only when a scanned file carries a cite.
+  const citeFindings = [];
+  let citesChecked = 0;
+  let rulingTexts = null;
+  const roundFileCache = new Map();
+  const roundFileText = (round) => {
+    if (!roundFileCache.has(round)) {
+      const rel = `state/questions/round-${round}.md`;
+      roundFileCache.set(round, index.set.has(rel) ? fs.readFileSync(path.join(root, rel), 'utf8') : null);
+    }
+    return roundFileCache.get(round);
+  };
+  for (const absPath of scanAbs) {
+    const relPath = path.relative(root, absPath).split(path.sep).join('/');
+    for (const c of extractRoundItemCites(fs.readFileSync(absPath, 'utf8'))) {
+      citesChecked++;
+      rulingTexts ??= rulingFiles(root, index).map((abs) => fs.readFileSync(abs, 'utf8'));
+      const res = resolveRoundItem(rulingTexts, c.round, c.item, roundFileText(c.round));
+      if (!res.ok) citeFindings.push({ relPath, line: c.line, cite: `round ${c.round}, item ${c.item}`, reason: res.reason });
     }
   }
   const unmatchedBaseline = baselineEntries.filter((_, i) => !usedBaseline.has(i));
@@ -958,6 +1039,8 @@ export function runVerifyQuotes({ repoRoot, files } = {}) {
     hashBaselined,
     unmatchedHashBaseline,
     hashBaselineErrors,
+    citeFindings,
+    citesChecked,
   };
 }
 
@@ -973,6 +1056,7 @@ export function listCiteContents({ repoRoot, files } = {}) {
   const root = repoRoot ?? REPO_ROOT;
   const index = buildTrackedIndex(root);
   const topDirs = topDirsOf(index);
+  const map = loadMovedMap(root);
   const scanAbs = (files && files.length ? files : defaultScanFiles(root, index)).map((f) => path.resolve(f));
   const out = [];
   for (const absPath of scanAbs) {
@@ -981,13 +1065,13 @@ export function listCiteContents({ repoRoot, files } = {}) {
     const text = fs.readFileSync(absPath, 'utf8');
     const hashByKey = new Map();
     for (const ref of extractHashRefs(text)) {
-      const res = checkHashRef(root, index, relPath, text, ref, topDirs);
+      const res = checkHashRef(root, index, relPath, text, ref, topDirs, map);
       const key = `${ref.line}:${ref.pathRaw}:${ref.startLine}`;
       hashByKey.set(key, res.ok ? 'hash: PASS' : `hash: FAIL — ${res.reason}`);
     }
     for (const c of extractCitations(text, { commentsOnly: CODE_EXTS.has(ext) })) {
       if (classifyPath(c.pathRaw, topDirs) === 'doc-number') continue;
-      const { exact, all } = resolveRef(c.pathRaw, relPath, index);
+      const { exact, all } = resolveRefMapped(c.pathRaw, relPath, index, map);
       const cands = exact.length ? exact : all;
       let target, firstLine;
       if (cands.length === 0) {
@@ -998,10 +1082,12 @@ export function listCiteContents({ repoRoot, files } = {}) {
         firstLine = `ambiguous (${cands.length} candidates)`;
       } else {
         const cand = cands[0];
-        const lines = fs.readFileSync(path.join(root, cand), 'utf8').split('\n');
-        if (c.startL < 1 || c.startL > lines.length) {
+        const candText = fs.readFileSync(path.join(root, cand), 'utf8');
+        const lines = candText.split('\n');
+        const count = lines.length - (candText === '' || candText.endsWith('\n') ? 1 : 0); // verify-cites' countOf
+        if (c.startL < 1 || c.startL > count) {
           target = `${cand}:${c.startL}`;
-          firstLine = `out of range (file has ${lines.length} lines)`;
+          firstLine = `out of range (file has ${count} lines)`;
         } else {
           target = `${cand}:${c.startL}`;
           const raw = (lines[c.startL - 1] ?? '').trim();
@@ -1048,6 +1134,8 @@ function main() {
     hashBaselined,
     unmatchedHashBaseline,
     hashBaselineErrors,
+    citeFindings,
+    citesChecked,
   } = runVerifyQuotes(opts);
 
   console.log(
@@ -1107,17 +1195,18 @@ function main() {
 
   const verified = checked - baselined.length - advisories.length - findings.length;
   const noHashErrors = hashFindings.length === 0 && hashBaselineErrors.length === 0;
-  if (findings.length === 0 && baselineErrors.length === 0 && noHashErrors) {
+  if (findings.length === 0 && baselineErrors.length === 0 && noHashErrors && citeFindings.length === 0) {
     console.log(
-      `verify:quotes PASS — ${checked} checked, ${verified} verified, ${baselined.length} baselined, ${advisories.length} advisory, 0 baseline entry errors, 0 hash-reference errors (${hashBaselined.length} hash-baselined), 0 hash-baseline entry errors.`,
+      `verify:quotes PASS — ${checked} checked, ${verified} verified, ${baselined.length} baselined, ${advisories.length} advisory, 0 baseline entry errors, 0 hash-reference errors (${hashBaselined.length} hash-baselined), 0 hash-baseline entry errors, ${citesChecked - citeFindings.length} ruling cites resolved, 0 ruling-cite errors.`,
     );
     return;
   }
   console.error(
-    `verify:quotes FAIL — ${findings.length} not found, ${baselineErrors.length} baseline entry error(s), ${hashFindings.length} hash-reference error(s), ${hashBaselineErrors.length} hash-baseline entry error(s):`,
+    `verify:quotes FAIL — ${findings.length} not found, ${baselineErrors.length} baseline entry error(s), ${hashFindings.length} hash-reference error(s), ${hashBaselineErrors.length} hash-baseline entry error(s), ${citeFindings.length} ruling-cite error(s):`,
   );
   for (const f of findings) console.error(`  FAIL — quote not found: ${f.relPath}:${f.line} "${f.snippet}…"`);
   for (const h of hashFindings) console.error(`  FAIL — hash reference: ${h.relPath}:${h.line} — ${h.reason}`);
+  for (const c of citeFindings) console.error(`  FAIL — ruling cite: ${c.relPath}:${c.line} — ${c.cite} — ${c.reason}`);
   process.exitCode = 1;
 }
 

@@ -1855,6 +1855,7 @@ fn the_5gb_scored_cells() {
     say!("prediction 1, 5 GB half (R5 >= 95% at every viewport): {pred1_verdict}");
 
     // ---- THE GATE's overall verdict -------------------------------------------------------------------
+    #[allow(clippy::manual_contains)]
     let gate_overall = if [gate1_verdict, gate2_verdict, gate3_verdict]
         .iter()
         .any(|v| *v == "UNMEASURED")

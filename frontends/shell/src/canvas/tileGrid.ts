@@ -300,10 +300,9 @@ function materialiseCells(rowStart: number, rowEnd: number, colStart: number, co
  * 10's preregistration).
  *
  * **What the bound fixes.** `tilesCoveringBbox` (this function, then unbounded) was called on every
- * debounced camera settle (`TileViewportStreamManager.onCameraChange`, then
- * `streaming/tileViewportStreamManager.ts:314`, now `:383` and through `tileCoverForBbox`), and
- * `MAX_QUEUED_TILES` truncated only AFTERWARDS (the same block either side of the fix: then
- * `:361-379` there, now `:458-480`) -- so an
+ * debounced camera settle (`TileViewportStreamManager.onCameraChange`, which now goes through
+ * `tileCoverForBbox`), and `MAX_QUEUED_TILES` truncated only AFTERWARDS (`onCameraChange`'s capacity
+ * truncation, in the same method either side of the fix) -- so an
  * ordinary wheel gesture far enough out made this nested loop's own
  * iteration count a function of the camera alone, with nothing in front of it: the canvas's single
  * JS thread sat in this loop, which is docs/01's "Never block the canvas." (principle 7) broken on
@@ -315,7 +314,8 @@ function materialiseCells(rowStart: number, rowEnd: number, colStart: number, co
  * (intersected with the real cover, so a cover overrunning the bound on one axis only keeps the
  * other axis whole) and reports `"truncated"`. Nearest-to-the-view-centre-kept /
  * farthest-dropped is the policy `onCameraChange` itself already applies to its own candidate list
- * (`tileViewportStreamManager.ts:468-480`); this is that same policy, moved in front of the
+ * (`onCameraChange`'s capacity truncation in `streaming/tileViewportStreamManager.ts`); this is that
+ * same policy, moved in front of the
  * allocation. It does NOT introduce a
  * zoom floor, a `minZoom` clamp, or any new operator-visible state -- entry 60 records the clamp as
  * an optional follow-up (recorded in the custodian's own next-cut brief, which is untracked and not
@@ -391,8 +391,8 @@ export interface TileKeyMembership {
 
 /** `tileKeyToString`'s inverse, TOTAL: `null` -- never a throw -- for any string that is not exactly
  * two finite-numeric colon-separated parts (the same acceptance rule the two throwing parsers use,
- * answered rather than thrown). `tileIngest.ts:43-51` and `WorkingCanvas.tsx:367-375` each carry
- * their own `parseTileKey` that THROWS on such a key, deliberately (their own doc comments have the
+ * answered rather than thrown). `tileIngest.ts:43-51` and `WorkingCanvas.tsx`'s `parseTileKey`
+ * each carry their own `parseTileKey` that THROWS on such a key, deliberately (their own doc comments have the
  * account: a malformed key reaching an eviction-ORDER comparator must fail loudly rather than
  * silently produce a `NaN` distance) -- which is exactly why neither may be reused here. A
  * membership test is asked about EVERY resident or tracked key there is, including the candidate

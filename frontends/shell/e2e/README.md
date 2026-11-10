@@ -4,19 +4,9 @@ Drives the shell's own dev-mode WebView2 with `playwright-core` over the Chrome 
 Playwright-managed browser, no browser download. `lib.mjs` attaches to (or launches) the real `tauri dev` app;
 `debug-session.mjs` admits a fixture through the real admission path and reads the rendered frame's pixels back.
 
-## Security posture (docs/09, binding)
+## Security posture
 
-The WebView2 remote-debugging port is **never** a shipped or checked-in default. `attachOrLaunch` generates a Tauri
-config overlay at `e2e/out/tauri.e2e.conf.json` (gitignored), setting the window's `additionalBrowserArgs` to wry's
-own default args plus `--remote-debugging-port=<port>`, then runs `tauri dev --config <that path>` -- the only place
-the flag touches disk, regenerated fresh per launch. `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS` is **not** used: wry
-always sets `additionalBrowserArgs` itself, so WebView2 ignores that env var (verified live against
-`msedgewebview2.exe`; root cause in `wry-0.55.1/src/webview2/mod.rs`). Setting it *replaces* wry's defaults rather
-than appending (`spikes/adr-003-crs-rendering/README.md`'s "Remote debugging" note), so the overlay repeats them
-verbatim. Nothing in `tauri.conf.json`, Vite config, or Rust ever references the port; a packaged `tauri build`
-never sees the overlay. The in-page hooks (`src/e2e-test-surface.ts`, registered in
-`AdmissionPanel.tsx`/`WorkingCanvas.tsx`) are gated on `import.meta.env.DEV` and compiled out of production -- `npm
-run build` succeeding proves that, not this paragraph.
+The shipped build never opens the WebView2 remote-debugging port and carries no e2e hook. Two builds this repository makes do, by design, and neither is shipped: the e2e launch, where `attachOrLaunch` writes a Tauri config overlay at `e2e/out/tauri.e2e.conf.json` (gitignored) setting the window's `additionalBrowserArgs` to wry's own defaults plus `--remote-debugging-port=<port>` and runs `tauri dev --config <that path>`, regenerated per launch; and the measure build (`build:measure`, a release build with the `measure-build` feature), in which `src-tauri/src/lib.rs` opens the port with a checked-in default and `isInstrumentedBuild.ts` keeps the in-page hooks (`src/e2e-test-surface.ts`) in when `VITE_MEASURE_BUILD` is set, App.tsx's among them; the registrations gated on `import.meta.env.DEV` alone, in WorkingCanvas.tsx and PublishPanel.tsx, are out of it. The plain build has no default feature, references no debugging port and compiles the hooks out; `check:dist-clean`, run in CI after `npm run build`, greps the built dist/ for a fixed list of residency-instrument and e2e-hook identifiers, none of them for the debugging port: a hit fails the job, and a miss is a check, not a proof; the release artifact's own job runs no dist check. `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS` is not used: wry always sets `additionalBrowserArgs` itself, so WebView2 ignores that variable (verified live against `msedgewebview2.exe`; root cause in `wry-0.55.1/src/webview2/mod.rs`), and setting `additionalBrowserArgs` replaces wry's defaults rather than appending (`spikes/adr-003-crs-rendering/README.md`'s "Remote debugging" note), so the overlay repeats them verbatim.
 
 ## Running it
 
@@ -214,8 +204,9 @@ SKIPPED with a stated reason (`publish.mjs`'s own comment): `PENDING_ATTEMPT_TTL
 env/test-shortenable knob, and the property is already unit-tested
 (`publish.rs::tests::a_pending_attempt_past_its_ttl_is_treated_as_unknown`) without sleeping out the whole TTL.
 `FILTERED'` applies `zone = 'residential'` through `queryWithFilter` (the same seam a real
-`FilterPanel` Apply click uses), asserts the prompt's `filter_scope` is the conditional block's own
-sentence verbatim, then publishes whole-file and asserts the manifest's `operation.filter` says
+`FilterPanel` Apply click uses), asserts the prompt's `filter_scope` is `null` under the whole-file
+scope with the filter on (the sentence is carried only under the current view with a filter active; no step of this suite
+prepares that case), then publishes whole-file and asserts the manifest's `operation.filter` says
 `{"kind":"whole-file"}` and the bundle's row count is the FULL fixture's 2 000 rows -- both by the
 manifest's own claim and by the reader's independent decode -- proving the active filter never
 leaked into the published stream (P0's own guarantee, exercised end to end through the real
@@ -558,7 +549,7 @@ PRIMARY source changed by **entry-40 pass, PASS-PREREGISTRATION.md Amendment 2**
 not quoted -- `spikes/entry40-producer-hang-diagnosis/PASS-PREREGISTRATION.md` is outside this
 suite's own citation-integrity scan): the running shell process's own session-log path is now
 resolved PRIMARILY from **the app's own log directory** --
-`%LOCALAPPDATA%\dev.spatialide.shell\logs` (Tauri's own `app_log_dir()`, `lib.rs:96-98`; the
+`%LOCALAPPDATA%\dev.spatialide.shell\logs` (Tauri's own `app_log_dir()`, called in `lib.rs`'s `setup()`; the
 identifier is `src-tauri/tauri.conf.json`'s own `"identifier"` field, verified there as
 `"dev.spatialide.shell"`) -- listed with `fs.readdirSync`/`fs.statSync` and narrowed, by
 `residencyTrace.mjs`'s pure `newestSessionLogSinceLaunch`, to the newest `session-<epoch>.log`
@@ -599,10 +590,10 @@ at the pre-flight's own later checkpoint (which now re-attempts the app-log-dir 
 ffb688f).** `newestSessionLogSinceLaunch`'s own threshold only accepts a session log whose embedded
 epoch is at or after this instant (minus the 5s tolerance) -- an earlier version of this harness
 captured it AFTER `attachOrLaunch(Exe)` resolved, which is always LATER than the real session-log
-creation instant on the measure-build route (`SessionLog::open`, `lib.rs:100`, runs before that
-route's own webview-window build that opens the CDP port, `lib.rs:148-172` -- and
+creation instant on the measure-build route (`SessionLog::open`, in `lib.rs`'s `setup()`, runs before that
+route's own webview-window build that opens the CDP port, the `#[cfg(feature = "measure-build")]` block in the same `setup()` -- and
 `attachOrLaunch(Exe)` only resolves once that port is up and a matching page is found, both
-open-ended waits, `lib.mjs:57-64`/`:74-87`) and a RACE on plain `tauri dev`. A too-late instant could
+open-ended waits, `lib.mjs`'s `waitForCdpUp` and `findAppPage`) and a RACE on plain `tauri dev`. A too-late instant could
 reject the correct, just-created file twice (the attach-time read, then the pre-flight's own retry
 reusing the same instant), ending the whole pass on a false "could not be evaluated" invalidation.
 Captured pre-spawn instead, the real session log's epoch is always at or after this instant by
@@ -744,7 +735,7 @@ array of dated attempts, oldest first, none ever deleted), each with its own `_h
 npm run e2e:layout
 ```
 
-`e2e/layout.mjs` drives the Map Studio frame on real WebView2 with `filter-zoned.parquet`, and `100k-happy-path.parquet` for the reopen and `FILL` steps, and records each fixture's sha256 before and after. Asserted: `E-KEYS` (each of Ctrl+B, Ctrl+I and Ctrl+J, pressed twice, flips only its own region's `hidden`; the stored `.working-canvas` node stays connected and identical; `.canvas-container` is at least 480 x 320), `E-FIELD` (the filter text survives Ctrl+I twice, and focus is on the map while the Inspector is hidden), `E-LANDMARKS` (the landmark roles and names, from the DOM and, where the connection allows, the accessibility tree), `E-FOCUS` (a Tab walk visits the top bar, Layers, map, Inspector and Activity in that order), `E-FIT` (with every region open: no page scrollbar and the map at least 480 x 320, natively and at 1366 x 768 by `page.setViewportSize`; the exact pixels are recorded) and `E-REOPEN` (a second fixture replaces the canvas node and the layout is unchanged). `RESIZEQ` and `FILL` are asserted too. `RESIZEQ`, on `filter-zoned.parquet`: after a real Zoom to layer click and a settled trace, closing the Inspector gives at least one new `viewport_query` line within 3 s, the trace settles, and reopening it gives none; the number of newly covered cells it predicts from the grid frame, the last view-state line and the DOM sizes is recorded beside the observed count, and a prediction below one stops the step. `FILL`, on the 100k fixture, after one declared wheel notch at the canvas centre (the session's first reported view): once the status is the complete within-budget sentence and at least one grid cell inside the fixture's declared parcel area is covered by the grown map and by no view-state line since the mark (counted before the toggle and confirmed at the size measured after it, both recorded; below one stops the step), closing the Inspector issues at least one stream and at least one `batch` line with rows on those streams within 10 s, and the trace settles. `BURST` is recorded and never asserted: the times of the `viewport_query` lines during a continuous drag of the map | Inspector splitter, relative to the first move, the last move and the release.
+`e2e/layout.mjs` drives the Map Studio frame on real WebView2 with `filter-zoned.parquet`, and `100k-happy-path.parquet` for the reopen and `FILL` steps, and records each fixture's sha256 before and after. Asserted: `E-KEYS` (each of Ctrl+B, Ctrl+I and Ctrl+J, pressed twice, flips only its own region's `hidden`; the stored `.working-canvas` node stays connected and identical; `.canvas-container` is at least 480 x 320), `E-FIELD` (the filter text survives Ctrl+I twice, and focus is on the map while the Inspector is hidden), `E-LANDMARKS` (the landmark roles and names, from the DOM and, where the connection allows, the accessibility tree), `E-FOCUS` (a Tab walk visits the top bar, Layers, map, Inspector and Activity in that order), `E-FIT` (with every region open: no page scrollbar and the map at least 480 x 320, natively and at 1366 x 768 by `page.setViewportSize`; the exact pixels are recorded), `E-FLOOR` (at 1024 x 640, set by `page.setViewportSize`, with Activity open and both the attention strip and the status bar filled past their caps by 40 probe rows each that the step adds, un-hiding the strip, because the product has no path that fills them: the map region is visible, `.working-canvas` is the same connected node, and `.canvas-container` is at least 480 x 320; the step fails if the viewport cannot be set to that size or the inner size differs, and the probe rows and the strip's `hidden` flag are put back afterwards) and `E-REOPEN` (a second fixture replaces the canvas node and the layout is unchanged). `RESIZEQ` and `FILL` are asserted too. `RESIZEQ`, on `filter-zoned.parquet`: after a real Zoom to layer click and a settled trace, closing the Inspector gives at least one new `viewport_query` line within 3 s, the trace settles, and reopening it gives none; the number of newly covered cells it predicts from the grid frame, the last view-state line and the DOM sizes is recorded beside the observed count, and a prediction below one stops the step. `FILL`, on the 100k fixture, after one declared wheel notch at the canvas centre (the session's first reported view): once the status is the complete within-budget sentence and at least one grid cell inside the fixture's declared parcel area is covered by the grown map and by no view-state line since the mark (counted before the toggle and confirmed at the size measured after it, both recorded; below one stops the step), closing the Inspector issues at least one stream and at least one `batch` line with rows on those streams within 10 s, and the trace settles. `BURST` is recorded and never asserted: the times of the `viewport_query` lines during a continuous drag of the map | Inspector splitter, relative to the first move, the last move and the release.
 
 **What CDP key injection proves.** `page.keyboard.press` reaches the page's own `keydown` listener. It does not cross WebView2's accelerator-key layer, so this suite cannot say that real keys do. That is row U3 of the walkthrough's Part U (the form's H2).
 
@@ -807,3 +798,27 @@ npm run e2e:command-bar
 **What CDP key injection proves.** `page.keyboard.press` reaches the page's own `keydown` listener. It does not cross WebView2's accelerator-key layer, so this suite cannot say that a real Ctrl+K, or a `/` that needs Shift on some layouts, does. Row AB1 of the walkthrough's Part AB is the real-key check for Ctrl+K (H2); no row checks a real `/`.
 
 **The layout is session state.** The suite closes what it opens (Layers, the Inspector, Activity, the Export disclosure); it leaves the Inspector open on its Layer tab and the Console expanded. Each mutation is in the file's header, with the exact text it replaces and the step it fails; the custodian ran all eight of PR A's alone at 2fa7c8d0, and each failed that step (state/consults/2026-10-19-shell-migration-milestone-3-pr-a-round-2-e2e-custodian-runs.md). The header also states that the E-REVEAL mutation fails E-SLASH as well. PR B's eight mutations are in the header the same way. The custodian ran each alone, seven at 4b9f7c89 and E-SEL at 95bd9747, and each failed the step its entry names; E-REFUSE's also failed E-TOOLONG (state/consults/2026-10-20-shell-migration-milestone-3-pr-b-e2e-custodian-runs.md).
+
+## Attributes spec (shell-migration-milestone-4, PR A)
+
+```
+npm run e2e:attributes
+```
+
+*Draft for the human's sight (the form's section 9 and Amendment 2 item 3): the entry follows `SHELL-MIGRATION-MILESTONE-4-PREREGISTRATION.md` section 4 (PA-E1, PA-E3) and its sentences are not the human's wording.*
+
+`e2e/attributes.mjs` drives the Feature tab's Attributes section on real WebView2 with two fixtures, and records each fixture's sha256 before and after. `attributes-multitype.parquet` and its oracle `attributes-multitype.oracle.json` come from `cargo test -p spatial-kernel --test manual_walkthrough_fixtures generate_the_attributes_multitype_fixture -- --ignored --nocapture` (500 polygons, seven columns; the oracle holds five ids at the middle of the grid, read out of the file through DuckDB); `filter-zoned.parquet` is the filter suite's. Asserted, each as a named step: `PA-E1` (a Navigate click at a point whose id `hoverIdAfterBarrier` took, on an oracle id, shows `zone`, `area`, `f32`, `i64`, `flag` and `text` in that order with the oracle's text for each, `i64` to the last digit; a NULL `zone` shows the marker; the not-projected line names `d32`; at least two oracle ids are reached, one with a NULL zone) and `PA-E3` (six features clicked unfiltered show at least two different zones; each of them, clicked again at the same point under the filter `id = N`, shows the same id and zone; under `zone = 'residential'` three features clicked all show `residential`).
+
+**What it proves not.** It takes no timing and makes no performance claim. It reaches the oracle ids by finding features first (`capturePixels` pixels, each confirmed through `hoverIdAfterBarrier`), fitting the screen position of a grid cell from them, aiming at the oracle cells' predicted centres and confirming each id before the click, zooming in a notch at a time if nothing answers; a camera that puts the oracle cells off the canvas, or below the pick resolution, can still fail `PA-E1` for want of a hit, which the step's message says with each camera's fit. It does not reach the resident attribute limit (`RESIDENT_ATTRIBUTE_MAX_BYTES` is 268,435,456 bytes; PA-U6 proves the limit at unit level). Each step's recorded mutation is in the file's header.
+
+## Table spec (shell-migration-milestone-4, PR C)
+
+```
+npm run e2e:table
+```
+
+*Draft for the human's sight (the form's section 9 and Amendment 7 item 6): the entry follows `SHELL-MIGRATION-MILESTONE-4-PREREGISTRATION.md` section 4 (PC-E1 to PC-E4) and its sentences are not the human's wording.*
+
+`e2e/table.mjs` drives the Table tab in Activity on real WebView2 with three fixtures, and records each fixture's sha256 before and after: `filter-zoned.parquet`, `100k-happy-path.parquet` and `slow-filter-scan.parquet`, all from the manual-walkthrough fixtures the other suites use. `PC-E1` needs the oracle count: run `cargo test -p spatial-kernel --test manual_walkthrough_fixtures generate_the_filter_fixture -- --ignored --nocapture` into your own folder, check that its `filter-zoned.parquet` has the same sha256 as the shared copy, and give the printed `zone_counts` array as `SPATIAL_E2E_FILTER_ZONE_COUNTS` (for example `[517, 498, 480, 505]`, `residential` first); without it `PC-E1` fails and says why. Asserted, each as a named step: `PC-E1` (under `zone = 'residential'` the first scope's line says all N, with N the oracle's count; the grid has N rows; every row, read by scrolling the windowed grid through its whole height, shows `residential`, with N distinct ids), `PC-E2` (O-07 step 6: three features selected with the Select tool, the third scope lists the three; the filter `id <> <the third id>` hides one; the second scope lists the other two and its line names 2 of 3 selected features; the third scope still lists three), `PC-E3` (on `100k-happy-path.parquet` the first scope reaches the limit: its line names the first 1,000 features returned, in no declared order, and says more may be there; the grid has 1,000 rows) and `PC-E4` (on `slow-filter-scan.parquet` with `id > 3999900`, the liveness line shows with Cancel; the table's handle is the one the `stream-issued` render-trace line names after the table's class-A `viewport_query` row (bbox null, limit "1000"); after Cancel a class-A `cancel` row with that handle shows with outcome ok; the liveness line and Cancel are gone, and no further table `viewport_query` row appears within three seconds).
+
+**What it proves not.** It takes no timing and makes no performance claim. It does not show the engine releasing the stream after the cancel: no SKP reply or operator surface shows that, so `PC-E4` shows only that the table's one stream was cancelled through the client, that the kernel accepted the cancel, and that the table issued no other. It does not reach the first scope's held-bytes ceiling (`TABLE_MAX_ATTRIBUTE_BYTES` is 67,108,864 bytes; PC-U13 proves the stop at unit level from real decoded batches), and a stopped line in any step is a prediction miss. It reads the Console's rows from the rendered panel, which it expands once and leaves expanded. Each step's recorded mutation is in the file's header.

@@ -13,6 +13,7 @@ import {
   verifyNotDoneEvidenceNotMerged,
   adrStatusAccepted,
   verdictCiteExists,
+  verifyEvidence,
   commitOnMain,
 } from './verify.mjs';
 
@@ -72,7 +73,8 @@ test('verdictCiteExists requires the "DECISIONS-PENDING.md " prefix', () => {
 test('verdictCiteExists checks the cited text is actually present', () => {
   const dir = makeTempDir('verdict-cite-');
   execFileSync('git', ['init', '-q'], { cwd: dir }); // the ruling set is listed through git
-  fs.writeFileSync(path.join(dir, 'DECISIONS-PENDING.md'), '## RULED 2026-09-13\n\nsome ruling text\n');
+  fs.mkdirSync(path.join(dir, 'governance'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'governance/DECISIONS-PENDING.md'), '## RULED 2026-09-13\n\nsome ruling text\n');
   const hit = verdictCiteExists(dir, 'DECISIONS-PENDING.md RULED 2026-09-13');
   assert.equal(hit.ok, true);
   const miss = verdictCiteExists(dir, 'DECISIONS-PENDING.md RULED 2099-01-01');
@@ -94,14 +96,14 @@ const ARCHIVE = 'state/cut-archive/DECISIONS-PENDING-2026-01-01.md';
 
 // RECORDED MUTATION (MT1a) at 8dd1e7af87cc, applied alone and reverted: verdictCiteExists reads the live file alone -> fails by name: `verify: a felt-verdict cite found only in an archived DECISIONS-PENDING file resolves` (and, incidentally, the other two).
 test('verify: a felt-verdict cite found only in an archived DECISIONS-PENDING file resolves', () => {
-  const dir = ledgerRepo({ 'DECISIONS-PENDING.md': '# Decisions pending the human é\n', [ARCHIVE]: '**RULED 2026-09-13 (question set 1 →)** the ruling\n' });
+  const dir = ledgerRepo({ 'governance/DECISIONS-PENDING.md': '# Decisions pending the human é\n', [ARCHIVE]: '**RULED 2026-09-13 (question set 1 →)** the ruling\n' });
   const hit = verdictCiteExists(dir, 'DECISIONS-PENDING.md RULED 2026-09-13 (question set 1 →)');
   assert.deepEqual(hit, { ok: true, reason: null });
 });
 
 // RECORDED MUTATION (MT2a) at 8dd1e7af87cc, applied alone and reverted: an archive's presence counted as a hit -> fails by name: `verify: a felt-verdict cite in no file of the ruling set still fails` (and, incidentally, the split-cite test).
 test('verify: a felt-verdict cite in no file of the ruling set still fails', () => {
-  const dir = ledgerRepo({ 'DECISIONS-PENDING.md': 'live é\n', [ARCHIVE]: 'archived →\n' });
+  const dir = ledgerRepo({ 'governance/DECISIONS-PENDING.md': 'live é\n', [ARCHIVE]: 'archived →\n' });
   const miss = verdictCiteExists(dir, 'DECISIONS-PENDING.md RULED 2099-01-01');
   assert.equal(miss.ok, false);
   assert.ok(miss.reason.includes(ARCHIVE) && miss.reason.includes('RULED 2099-01-01'), miss.reason);
@@ -109,7 +111,7 @@ test('verify: a felt-verdict cite in no file of the ruling set still fails', () 
 
 // RECORDED MUTATION (MT3b) at 8dd1e7af87cc, applied alone and reverted: the set's texts joined with no separator before the search -> fails by name, and only this one: `verify: a cite split across the end of the live file and the start of an archive does not resolve`.
 test('verify: a cite split across the end of the live file and the start of an archive does not resolve', () => {
-  const dir = ledgerRepo({ 'DECISIONS-PENDING.md': 'live é … RULED 2026-09-13 (question', [ARCHIVE]: ' set 1 →) the ruling\n' });
+  const dir = ledgerRepo({ 'governance/DECISIONS-PENDING.md': 'live é … RULED 2026-09-13 (question', [ARCHIVE]: ' set 1 →) the ruling\n' });
   assert.equal(verdictCiteExists(dir, 'DECISIONS-PENDING.md RULED 2026-09-13 (question set 1').ok, false);
   assert.equal(verdictCiteExists(dir, 'DECISIONS-PENDING.md RULED 2026-09-13 (question').ok, true, 'each half alone is found');
   assert.equal(verdictCiteExists(dir, 'DECISIONS-PENDING.md set 1 →)').ok, true);
@@ -329,4 +331,22 @@ test("verifyNotDoneEvidenceNotMerged passes when an in-progress node's evidence 
     const failures = verifyNotDoneEvidenceNotMerged(node, { prResults });
     assert.deepEqual(failures, [], `expected no failure for ${detail}, got: ${JSON.stringify(failures)}`);
   }
+});
+
+// --- governance piece F: the move map (the form's sections 2.2, OPEN-6 and 4; test T13) ------------------------
+
+// RECORDED MUTATION at e91bcf30807a (phase 1's commit, on the branch wip/governance-f-scripts; this branch carries the test from it by patch and does not contain the commit), applied alone and reverted: path.join(repoRoot, rel[1]) for the release record, and, separately, the evidence path used as written; each fails the test alone -> fails by name: `verify: a RELEASE verdict cite and an evidence path resolve through the move map`.
+test('verify: a RELEASE verdict cite and an evidence path resolve through the move map', () => {
+  const commit = 'a'.repeat(40);
+  const dir = ledgerRepo({
+    'governance/MOVED.tsv': `old\tnew\tcommit\nDECISIONS-PENDING.md\tgovernance/DECISIONS-PENDING.md\t${commit}\nRELEASE-0.1.md\tgovernance/RELEASE-0.1.md\t${commit}\n`,
+    'governance/RELEASE-0.1.md': '## Amendment 3\n\nthe sitting results\n',
+    'governance/DECISIONS-PENDING.md': '# Decisions pending\n',
+  });
+  assert.deepEqual(verdictCiteExists(dir, 'RELEASE-0.1.md Amendment 3'), { ok: true, reason: null });
+  const missing = verdictCiteExists(dir, 'RELEASE-0.1.md Amendment 4');
+  assert.equal(missing.ok, false);
+  assert.match(missing.reason, /Amendment 4 not found in governance\/RELEASE-0\.1\.md/);
+  const node = { id: 'n', evidence: { path: 'DECISIONS-PENDING.md#open' } };
+  assert.deepEqual(verifyEvidence(node, { repoRoot: dir, offline: true }), []);
 });

@@ -634,7 +634,7 @@ mod tests {
             "the five-leg chain must open where lease_to_first_row opens"
         );
         assert_eq!(
-            pair(*five_leg.last().unwrap()).1,
+            pair(five_leg.last().unwrap()).1,
             pair(SPAN_LEASE_TO_FIRST_ROW).1,
             "the five-leg chain must close where lease_to_first_row closes"
         );
@@ -655,7 +655,7 @@ mod tests {
             "the three-leg chain must open where query opens"
         );
         assert_eq!(
-            pair(*three_leg.last().unwrap()).1,
+            pair(three_leg.last().unwrap()).1,
             pair(SPAN_QUERY).1,
             "the three-leg chain must close where query closes"
         );

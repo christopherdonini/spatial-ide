@@ -106,12 +106,13 @@ impl AdmittedPredicate {
     /// MAX_ADMISSION_CONNECTIONS`), so a burst of filter admissions cannot bypass the pool's
     /// declared connection ceiling by minting ad-hoc connections per call.
     ///
-    /// **Returns [`PredicateAdmitError`], not a bare [`FilterError`].** Eleven of its twelve admission
-    /// refusals (every stage this module implements) still arrive wrapped in
-    /// [`PredicateAdmitError::Filter`], unchanged; the thirteenth possibility, a residual admission-
-    /// lease exhaustion, is a fact about this pool's capacity, never about the predicate, and is
-    /// therefore a sibling variant rather than a thirteenth `FilterError`/`skp.filter_*` case (ADR-021
-    /// item 8 stays untouched — see [`PredicateAdmitError`]'s own doc).
+    /// **Returns [`PredicateAdmitError`], not a bare [`FilterError`].** `FilterError` has eleven
+    /// variants and `admit` can return each of them (every stage this module implements constructs
+    /// at least one); they arrive wrapped in [`PredicateAdmitError::Filter`], unchanged. The one
+    /// other possibility, a residual admission-lease exhaustion, is a fact about this pool's
+    /// capacity, never about the predicate, and is therefore the sibling variant
+    /// [`PredicateAdmitError::ConnectionsExhausted`], not a twelfth `FilterError` (see
+    /// [`PredicateAdmitError`]'s own doc).
     pub fn admit(text: impl Into<String>, dataset: &Dataset) -> Result<Self, PredicateAdmitError> {
         let text = text.into();
 
@@ -246,22 +247,16 @@ impl AdmittedPredicate {
 
 /// Every refusal [`AdmittedPredicate::admit`] can produce.
 ///
-/// **A deliberate 1:1 correspondence with `NEXT-CUT.md` design essential 5's twelve `skp.filter_*`
-/// wire codes, field for field — not a coincidence.** P4 maps each variant to its SKP code by name;
-/// a thirteenth variant here would be inventing wire taxonomy this crate does not own (correction
-/// round 2, W10; architect B7, reviewer B7). Every match on
-/// this enum in this module is exhaustive, with no wildcard arm, for the same reason.
+/// **Eleven variants, a deliberate 1:1 correspondence with SKP-V0 §7.5's `skp.filter_*` codes,
+/// field for field — not a coincidence.** §7.5 lists them as ten table rows plus the
+/// `skp.filter_type_not_admitted` row of its `skp/0.8` dated note, and records the struck
+/// `skp.filter_dialect_unsupported` in its note of 2026-11-05. `kernel/src/skp.rs`'s
+/// `filter_error_of` maps each variant to its code by name; a twelfth variant here would be
+/// inventing wire taxonomy this crate does not own (correction round 2, W10; architect B7,
+/// reviewer B7). Every match on this enum in this module is exhaustive, with no wildcard arm, for
+/// the same reason.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum FilterError {
-    /// The predicate declared a dialect other than the one this engine admits.
-    ///
-    /// **Not constructible by [`AdmittedPredicate::admit`] today.** `protocol/skp`'s `Filter::new`
-    /// already refuses any dialect but `duckdb-expr/0` at the wire boundary, before predicate text
-    /// ever reaches this crate (`CUT-STATE.md` P1). This variant exists only so `FilterError`'s
-    /// twelve arms match the SKP taxonomy exactly, so a later exhaustive match never needs a
-    /// wildcard arm to compile.
-    DialectUnsupported { declared: String },
-
     /// DuckDB's own parser rejected the wrapped text.
     ///
     /// Two distinct sources fold into this one variant, deliberately: the JSON payload's own
@@ -335,9 +330,6 @@ pub enum FilterError {
 impl fmt::Display for FilterError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::DialectUnsupported { declared } => {
-                write!(f, "refused: dialect `{declared}` is not admitted; only `duckdb-expr/0` is")
-            }
             Self::Unparsable { detail } => write!(f, "refused: the predicate did not parse ({detail})"),
             Self::NotASingleExpression { statements } => write!(
                 f,
@@ -383,7 +375,7 @@ impl fmt::Display for FilterError {
                 f,
                 "refused: `{construct}` over {}: {} (docs/01 principle 8)",
                 operand_types.join(" and "),
-                reason.sentence(),
+                reason.sentence(operand_types),
             ),
         }
     }
@@ -391,21 +383,22 @@ impl fmt::Display for FilterError {
 
 /// Every way [`AdmittedPredicate::admit`] can fail.
 ///
-/// **Why this is not a bare [`FilterError`].** `FilterError`'s twelve variants are a deliberate,
+/// **Why this is not a bare [`FilterError`].** `FilterError`'s eleven variants are a deliberate,
 /// closed, 1:1 correspondence with the wire's `skp.filter_*` taxonomy (this module's own doc,
 /// above) — every one of them is a claim about the *predicate's own text*. An admission-lease
 /// capacity failure (DECISIONS-PENDING entry 91 (a); ADR-033 (accepted 2026-09-14)) is not that kind of claim
 /// at all: it is a fact about this dataset's connection pool, true or false independent of what
 /// the caller wrote. Folding it into `FilterError::RejectedByBinder` — the only shape available
 /// before this type existed — was exactly the defect entry 87 diagnosed: a typed refusal naming
-/// the wrong cause. Giving it a twelfth `FilterError` arm was rejected in the same review that
-/// added this type, for the same reason `FilterError`'s own doc gives for staying at twelve: it
-/// would be inventing wire taxonomy this crate does not own (no new `skp.filter_*` code, ADR-021
-/// item 8) merely to carry information that was never about the wire's filter taxonomy to begin
-/// with. This type carries both without conflating them.
+/// the wrong cause. Giving it a `FilterError` arm was rejected in the same review that added this
+/// type, for the same reason `FilterError`'s own doc gives for keeping its variant set closed: it
+/// would be inventing wire taxonomy this crate does not own (no new `skp.filter_*` code) merely
+/// to carry information that was never about the wire's filter taxonomy to begin with. (History:
+/// `FilterError` had twelve variants until the dialect variant was removed.) This type carries
+/// both without conflating them.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum PredicateAdmitError {
-    /// One of [`FilterError`]'s twelve admission-content refusals, unchanged.
+    /// One of [`FilterError`]'s eleven admission-content refusals, unchanged.
     Filter(FilterError),
     /// [`crate::pool::LeaseClass::Admission`] had no free lease when this call needed one.
     ///
@@ -1395,8 +1388,8 @@ const MAX_DECIMAL_LITERAL_SCALE: u32 = 18;
 
 /// The reason a [`FilterError::TypeNotAdmitted`] refusal names -- five fixed wire values, in the
 /// precedence section 2.6 (as amended by section 10 Amendment 1) states. The sentence lives only
-/// in [`Self::sentence`] / [`FilterError`]'s own `Display`, never on the wire (O-4): a wording
-/// change never changes `reason`'s wire value.
+/// in [`Self::sentence`]; it reaches the wire only inside `message`, as part of [`FilterError`]'s
+/// own `Display`, never as a field (O-4): a wording change never changes `reason`'s wire value.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TypeRefusalReason {
     /// One side is VARCHAR (a column or a string literal) and the other is neither VARCHAR nor
@@ -1427,10 +1420,21 @@ impl TypeRefusalReason {
         }
     }
 
-    /// The `Display` sentence (T-C), never sent on the wire. Copied byte for byte from
+    /// The `Display` sentence. It reaches the wire only inside `message`, as part of
+    /// `FilterError`'s `Display`, never as a field: `reason`'s wire value is `wire_value`'s (O-4).
+    /// The first four are copied byte for byte from
     /// `state/directives/B-1-RULINGS-AND-TYPED-TEXTS-2026-09-30.md` T-C by the script that wrote
-    /// this file.
-    fn sentence(self) -> &'static str {
+    /// this file. The fifth, `ConversionRounds`'s, has two sentences, both P6 placeholders.
+    /// `governance/forms/engine/TYPE-WALK-RULE2-RESIDUAL-REASONS-PREREGISTRATION.md` replaced
+    /// T-C's, which named a value read from the file, with the float sentence: a conversion
+    /// between a float type and an integer or decimal type, by type. When `operand_types` has an
+    /// entry whose leading type name is VARCHAR or BOOLEAN (`names_text_or_boolean`), the refusal
+    /// is not that conversion, and
+    /// `governance/forms/engine/ARITHMETIC-TEXT-LITERAL-BESIDE-NULL-REASON-PREREGISTRATION.md`
+    /// gives it the second sentence, which names the text or BOOLEAN operand and says the refusal
+    /// is by type. Neither sentence is known to be false of a refusal that gets it: the float
+    /// sentence goes to every `ConversionRounds` refusal with no VARCHAR or BOOLEAN entry.
+    fn sentence(self, operand_types: &[String]) -> &'static str {
         match self {
             Self::TextWithNonText => "a comparison of text with a non-text value",
             Self::BooleanConversion => "a conversion to or from BOOLEAN",
@@ -1438,11 +1442,39 @@ impl TypeRefusalReason {
                 "a numeric literal beyond the declared bounds (20 integer digits; decimal scale 18)"
             }
             Self::ConversionCanFail => "a conversion that can fail during the scan",
+            Self::ConversionRounds if names_text_or_boolean(operand_types) => {
+                "[P6 placeholder] an operand of text or BOOLEAN type beside NULL or beside an \
+                 operand of its own type, refused by type"
+            }
             Self::ConversionRounds => {
-                "a conversion that can round a value read from the file before it is compared"
+                "[P6 placeholder] a conversion between a float type and an integer or decimal type, \
+                 refused by type: values of the integer or decimal type can round in the float type"
             }
         }
     }
+}
+
+/// Whether a `ConversionRounds` refusal's `operand_types` has an entry whose leading type name
+/// (the token before the first space) is exactly `VARCHAR` or `BOOLEAN`; it selects between
+/// `TypeRefusalReason::sentence`'s two `ConversionRounds` sentences. It reads each entry, as
+/// `Typed::render` wrote it, because no field of `FilterError::TypeNotAdmitted` carries the
+/// choice and the kernel builds that variant by struct literal, so a field would change a
+/// contract across modules. The names are a closed set and neither begins another, so the token
+/// is compared for equality, never by prefix.
+///
+/// It routes a text or BOOLEAN operand beside NULL or beside its own type, in `+`, `-`, `*` and
+/// `/`, in either order. At the DuckDB this build locks (`duckdb` and `libduckdb-sys` 1.10505.0
+/// in Cargo.lock), of the pairs probed only a text literal beside a NULL literal reaches the
+/// walk: `'1' + NULL`, `'1' - NULL`, `NULL + '1'` and `NULL / '1'`. The binder refuses before the
+/// walk `'1' * NULL`, `'1' / NULL`, `zone / NULL`, text beside text (`'1'` and `zone`, all four
+/// operators), BOOLEAN column beside BOOLEAN column (all four) and `flag / NULL`. A BOOLEAN
+/// literal is refused before the walk as `ConstructNotAdmitted` with construct `CAST` (`TRUE`
+/// beside `FALSE` or beside NULL, all four operators), which is a different refusal. So no
+/// probed predicate brings a BOOLEAN operand to the walk here; the BOOLEAN arm is by reading.
+fn names_text_or_boolean(operand_types: &[String]) -> bool {
+    operand_types
+        .iter()
+        .any(|t| matches!(t.split(' ').next(), Some("VARCHAR" | "BOOLEAN")))
 }
 
 /// Whether an operand is a column reference, a literal, or an arithmetic result -- `operand_types`
@@ -2026,9 +2058,13 @@ fn type_of_arithmetic(
 }
 
 /// Does `+`/`-`/`*` admit this pair (section 2.5(a), applying section 2.3's rules pairwise), and
-/// if so, its result type? `None` covers both "refused" and "not this arm's job" uniformly -- a
-/// decimal literal beside an integer or a decimal is refused outright (O-5) and never reaches any
-/// branch below, because none of them ever classifies a `Decimal` operand as admitted.
+/// if so, its result type? `None` covers both "refused" and "not this arm's job" uniformly. A
+/// decimal literal beside an integer or a decimal is refused outright (O-5): no branch below admits
+/// it. A `Decimal` operand is admitted by three rules only, each in both operand orders: a NULL
+/// literal beside a numeric operand (rule 2); a REAL or DOUBLE operand that is not a literal (a
+/// column or an arithmetic result) beside a within-bounds decimal literal (rule 6); and a
+/// within-bounds decimal literal beside a double literal (the last clause). Any other pair with a
+/// `Decimal` operand falls through to `None`.
 fn admitted_arithmetic_result(l: &Typed, r: &Typed) -> Option<EngineType> {
     let is_int = |t: &Typed| int_bits_signed(&t.ty).is_some() && t.within_bounds;
     let is_float_col = |t: &Typed| {
@@ -2127,6 +2163,21 @@ fn admitted_arithmetic_result(l: &Typed, r: &Typed) -> Option<EngineType> {
         return Some(EngineType::Double);
     }
     if is_double_lit(r) && int_le(l, 32) {
+        return Some(EngineType::Double);
+    }
+    // a double literal beside an integer or decimal literal within the bounds, in either order: the
+    // result is DOUBLE, because the only conversion is literal to DOUBLE
+    // (`docs/adr/ADR-021-row-filter-on-viewport-query.md`, Note 2026-09-30, item 2;
+    // `governance/forms/engine/FILTER-BIND-COERCIONS-PREREGISTRATION.md` section 2.3, rule 6's
+    // second clause, applied pairwise by section 2.5(a)). `is_numeric_lit` tests the partner's kind
+    // is literal and its within-bounds flag, so a partner beyond the bounds keeps
+    // `literal_out_of_bounds`. A rule-2 result that counts as a decimal literal has the expression
+    // kind, so it is not admitted here (`docs/adr/ADR-021-row-filter-on-viewport-query.md`, Note
+    // 2026-10-03, item 2); neither is a non-literal partner.
+    if is_double_lit(l) && is_numeric_lit(r) {
+        return Some(EngineType::Double);
+    }
+    if is_double_lit(r) && is_numeric_lit(l) {
         return Some(EngineType::Double);
     }
     None

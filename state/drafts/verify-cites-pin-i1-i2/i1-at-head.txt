@@ -1,0 +1,8 @@
+== gated: A=0 B=0
+differences(gated) = 0
+== advisory: A=110 B=110
+CHANGED(advisory reason) class=C3
+   A: state/consults/gates/2026-10-08-verify-cites-pinned-citations-gate1-reviewer-attempt-2.md	54	engine/src/pool.rs:0-2	line 2 exceeds "engine/src/pool.rs" (1014 lines)
+   B: state/consults/gates/2026-10-08-verify-cites-pinned-citations-gate1-reviewer-attempt-2.md	54	engine/src/pool.rs:0-2	line 0 does not exist in "engine/src/pool.rs" (lines count from 1)
+differences(advisory) = 1
+wall A=6673ms B=6669ms scanned A=2242 B=2242

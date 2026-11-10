@@ -17,6 +17,7 @@
 
 use std::path::PathBuf;
 
+use arrow::array::Array;
 use spatial_engine::fixture::{
     write_geoparquet, AttributeMode, CrsMode, FixtureSpec, IdentityMode,
 };
@@ -743,5 +744,86 @@ fn generate_the_slow_filter_fixture() {
         "slow-filter fixture must exceed the shell's 2_000_000 MAX_RESIDENT_VERTICES ceiling on its \
          unfiltered first look, per this fixture's own declared precondition (got {} vertices)",
         facts.vertices
+    );
+}
+
+/// Milestone 4 PR A (`frontends/shell/SHELL-MIGRATION-MILESTONE-4-PREREGISTRATION.md` section 3): `attributes-multitype.parquet`, 500 polygons with
+/// `AttributeMode::MultiType` (`zone`, `area`, `f32`, `i64`, `flag`, `d32`, `text`), and `attributes-multitype.oracle.json`, the values of five ids as an
+/// independent DuckDB read of the file gives them: every value cast to text by DuckDB, a NULL as `null`. The five sit at the middle of the 23 x 22 grid
+/// (`parcel()` places `id` at column `id % 23` and row `id / 23`), so a camera fitted to the layer has them near its centre. `e2e/attributes.mjs` clicks one
+/// of them, takes its id from `hoverIdAfterBarrier`, and compares what the Feature tab shows with this file; the oracle names `d32` nowhere because the
+/// shell does not project it.
+#[test]
+#[ignore = "generates a real file for the E2E attributes spec; not part of the default suite"]
+fn generate_the_attributes_multitype_fixture() {
+    const ORACLE_IDS: [u64; 5] = [240, 241, 242, 263, 264];
+    const COLUMNS: [&str; 7] = ["id", "zone", "area", "f32", "i64", "flag", "text"];
+    let path = dir().join("attributes-multitype.parquet");
+    let facts = write_geoparquet(
+        &path,
+        &FixtureSpec {
+            features: 500,
+            avg_vertices: 12,
+            hole_every: 0,
+            attributes: AttributeMode::MultiType,
+            ..Default::default()
+        },
+    )
+    .expect("write the attributes fixture");
+    assert_eq!(facts.features, 500);
+
+    let casts: Vec<String> = COLUMNS
+        .iter()
+        .map(|c| format!("CAST({c} AS VARCHAR)"))
+        .collect();
+    let ids: Vec<String> = ORACLE_IDS.iter().map(u64::to_string).collect();
+    let sql = format!(
+        "SELECT {} FROM read_parquet(?) WHERE id IN ({}) ORDER BY id",
+        casts.join(", "),
+        ids.join(", ")
+    );
+    let conn = spatial_engine::fixture::configured_connection().expect("connection");
+    let path_str = path.to_string_lossy().to_string();
+    let mut stmt = conn.prepare(&sql).expect("prepare");
+    let mut rows = Vec::new();
+    for batch in stmt.query_arrow([path_str.as_str()]).expect("query") {
+        for r in 0..batch.num_rows() {
+            let mut row = serde_json::Map::new();
+            for (i, name) in COLUMNS.iter().enumerate() {
+                let col = batch
+                    .column(i)
+                    .as_any()
+                    .downcast_ref::<arrow::array::StringArray>()
+                    .expect("DuckDB gives a cast to VARCHAR as Utf8");
+                let value = if col.is_null(r) {
+                    serde_json::Value::Null
+                } else {
+                    serde_json::Value::String(col.value(r).to_string())
+                };
+                row.insert((*name).to_string(), value);
+            }
+            rows.push(serde_json::Value::Object(row));
+        }
+    }
+    // Guards against a vacuous oracle: all five ids read back, a NULL `zone` and a text one both present, and a 64-bit value past 2^53 (the case a
+    // `Number` narrowing gets wrong).
+    assert_eq!(rows.len(), ORACLE_IDS.len());
+    assert!(rows.iter().any(|r| r["zone"].is_null()));
+    assert!(rows.iter().any(|r| r["zone"].is_string()));
+    assert!(rows.iter().any(|r| r["i64"]
+        .as_str()
+        .and_then(|t| t.parse::<i64>().ok())
+        .is_some_and(|v| v.unsigned_abs() > (1u64 << 53))));
+    let oracle = dir().join("attributes-multitype.oracle.json");
+    std::fs::write(
+        &oracle,
+        serde_json::to_string_pretty(&serde_json::Value::Array(rows)).expect("json"),
+    )
+    .expect("write the oracle");
+    println!(
+        "wrote {} ({} features) and {}",
+        path.display(),
+        facts.features,
+        oracle.display()
     );
 }

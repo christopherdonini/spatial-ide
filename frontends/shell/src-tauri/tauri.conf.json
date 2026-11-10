@@ -39,6 +39,7 @@
     },
     "resources": {
       "../../../renderer/bundle-viewer/dist/*": "bundle-viewer/",
+      "../../../renderer/bundle-viewer/viewer-asset-hashes.json": "viewer-asset-hashes.json",
       "../src/generated/NOTICE.txt": "NOTICE.txt"
     }
   }

@@ -47,7 +47,7 @@ const figures = (stderr) => Object.fromEntries([...stderr.toString().matchAll(/(
 // before the ledger heading). Observed at M0 fbbffe89 with the S1 files staged on this branch.
 test('measure-reads: the routine block is the bytes session-resume.mjs prints for the real ledger', (t) => {
   const real = fs.readFileSync(REAL_CUT_STATE, 'utf8');
-  const dir = makeRepo(t, { 'state/CUT-STATE.md': real, 'DECISIONS-PENDING.md': PENDING });
+  const dir = makeRepo(t, { 'state/CUT-STATE.md': real, 'governance/DECISIONS-PENDING.md': PENDING });
   const env = { ...process.env, CLAUDE_PROJECT_DIR: dir, GIT_CEILING_DIRECTORIES: path.dirname(dir) };
   delete env.CLAUDE_CODE_REMOTE;
   const hook = spawnSync(process.execPath, [HOOK], { input: '{}', env });
@@ -74,7 +74,7 @@ test('measure-reads: the ledger part keeps the entries dated within 168 hours be
   const edge = '- 2026-10-03T12:00Z - boundary é';
   const before = '- 2026-10-03T11:59Z - one minute before →';
   const after = '- 2026-10-10T13:00Z - after the flush';
-  const dir = makeRepo(t, { 'state/CUT-STATE.md': cutState([before, edge, after]), 'DECISIONS-PENDING.md': PENDING });
+  const dir = makeRepo(t, { 'state/CUT-STATE.md': cutState([before, edge, after]), 'governance/DECISIONS-PENDING.md': PENDING });
   const r = run(dir, ['routine', 'HEAD']);
   assert.equal(r.status, 0, r.stderr.toString());
   const out = r.stdout.toString();
@@ -99,7 +99,7 @@ test('measure-reads: an undated top-level bullet and indented lines belong to th
     '- undated bullet under the kept entry →',
     '  indented under the kept entry',
   ];
-  const dir = makeRepo(t, { 'state/CUT-STATE.md': cutState(ledger), 'DECISIONS-PENDING.md': PENDING });
+  const dir = makeRepo(t, { 'state/CUT-STATE.md': cutState(ledger), 'governance/DECISIONS-PENDING.md': PENDING });
   const r = run(dir, ['routine', 'HEAD']);
   assert.equal(r.status, 0, r.stderr.toString());
   const out = r.stdout.toString();
@@ -112,7 +112,7 @@ test('measure-reads: an undated top-level bullet and indented lines belong to th
 // fails, first failing assertion: stdout does not end with the whole pending section (it stops at the deeper heading). Observed at M0
 // fbbffe89 with the S1 files staged on this branch.
 test('measure-reads: the pending part runs from ## Pending to the next level-2 heading and keeps deeper headings', (t) => {
-  const dir = makeRepo(t, { 'state/CUT-STATE.md': cutState(['- 2026-10-09T00:00Z - e']), 'DECISIONS-PENDING.md': PENDING });
+  const dir = makeRepo(t, { 'state/CUT-STATE.md': cutState(['- 2026-10-09T00:00Z - e']), 'governance/DECISIONS-PENDING.md': PENDING });
   const r = run(dir, ['routine', 'HEAD']);
   assert.equal(r.status, 0, r.stderr.toString());
   const out = r.stdout.toString();
@@ -126,10 +126,10 @@ test('measure-reads: the pending part runs from ## Pending to the next level-2 h
 // run with no ledger heading is 0, not 2. Observed at M0 fbbffe89 with the S1 files staged on this branch.
 test('measure-reads: a missing part refuses with exit 2 and an empty stdout', (t) => {
   const ledger = ['- 2026-10-09T00:00Z - e'];
-  const good = { 'DECISIONS-PENDING.md': PENDING };
+  const good = { 'governance/DECISIONS-PENDING.md': PENDING };
   const cases = [
     ['no ledger heading', { ...good, 'state/CUT-STATE.md': cutState(ledger, { ledgerHeading: '' }) }, 'HEAD'],
-    ['no pending heading', { 'DECISIONS-PENDING.md': '# DECISIONS\n\n## Resolved\n', 'state/CUT-STATE.md': cutState(ledger) }, 'HEAD'],
+    ['no pending heading', { 'governance/DECISIONS-PENDING.md': '# DECISIONS\n\n## Resolved\n', 'state/CUT-STATE.md': cutState(ledger) }, 'HEAD'],
     ['no flushed_at', { ...good, 'state/CUT-STATE.md': cutState(ledger, { flushed: '' }) }, 'HEAD'],
     ['unparseable flushed_at', { ...good, 'state/CUT-STATE.md': cutState(ledger, { flushed: 'not a time' }) }, 'HEAD'],
     ['no block', { ...good, 'state/CUT-STATE.md': '# CUT-STATE\n\n## Ledger\n\n- 2026-10-09T00:00Z - e\n' }, 'HEAD'],
@@ -147,7 +147,7 @@ test('measure-reads: a missing part refuses with exit 2 and an empty stdout', (t
 // fails, first failing assertion: the total figure against the byte length of stdout. Observed at
 // M0 fbbffe89 with the S1 files staged on this branch.
 test('measure-reads: the routine total is UTF-8 bytes, not characters', (t) => {
-  const dir = makeRepo(t, { 'state/CUT-STATE.md': cutState(['- 2026-10-09T00:00Z - é → é']), 'DECISIONS-PENDING.md': PENDING });
+  const dir = makeRepo(t, { 'state/CUT-STATE.md': cutState(['- 2026-10-09T00:00Z - é → é']), 'governance/DECISIONS-PENDING.md': PENDING });
   const r = run(dir, ['routine', 'HEAD']);
   assert.equal(r.status, 0, r.stderr.toString());
   const f = figures(r.stderr);

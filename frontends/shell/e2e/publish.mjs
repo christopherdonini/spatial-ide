@@ -35,6 +35,23 @@
 // environment IT had, not this process's. `main()` below refuses to proceed if `attachOrLaunch`
 // attached rather than launched, rather than silently reading from an indeterminate log.
 //
+// ## FILTERED''s wait, a precondition
+//
+// After the Apply, FILTERED' waits until `window.__SPATIAL_E2E__.publishPrepareWithDestination` is not the function it held before the Apply.
+// PublishPanel re-registers that hook in an effect keyed on `datasetHandle`, `style`, `filterActive` and `scope`; of these an Apply changes
+// `filterActive` alone, so after the Apply the hook is replaced once the render in which `filterActive` became true has committed. That same
+// render assigned the `workspaceRef` that `stageScope` reads, so a prepare sent after the replacement holds the post-Apply closure and stages
+// the post-Apply scope. The wait checks the hook when the Apply resolves and again after each one-second sleep, while less than 20000ms have
+// passed since then; if no check sees the hook replaced, the step fails naming FILTERED', the wait and the 20000ms, so a failing wait lasts at
+// least 20000ms and ends with the one-second sleep that crosses that mark. The wait is a precondition on when the prepare is sent, not a property
+// under test: FILTERED''s assertions on the prompt, the manifest and the bundle are unchanged, and the wait's own failure says only that the hook
+// was not seen replaced within its bound.
+//
+// RECORDED MUTATION, applied alone, the suite run, the failing step recorded by name with the commit, then reverted.
+//   M-FLAG   src/App.tsx, the PublishPanel element: `filterActive={activeFilter !== null}` set to `filterActive={false}`.
+//             Expected: FILTERED' fails at the wait's timeout message; OPEN, APPROVED' and REFUSED' pass; EXPIRED' is skipped.
+//             Observed at d532cf7d240314e178182263bf935c86fa08acf9: [FILTERED'] FAIL (20101ms): FILTERED': the wait for the prepare hook to be replaced after the Apply did not end within 20000ms
+//
 // `waitForMountReady`/`waitForHook`/`withTimeout` are duplicated from filter.mjs rather than
 // imported -- this workspace's own established convention for sibling test files.
 
@@ -59,13 +76,6 @@ const REGEN_COMMAND =
 // bbox/limit anywhere in this suite) -- so a whole-file publish over this fixture must carry
 // exactly this many rows, filter active or not (FILTERED' is what proves "or not").
 const FIXTURE_FILTER_FEATURES = 2000;
-
-// Verbatim from `publish.rs::FILTER_SCOPE_SENTENCE` / `types.ts::FILTER_SCOPE_SENTENCE` -- the
-// conditional block's own sentence (NEXT-CUT.md), pinned equal to both by
-// `PublishPanel.test.ts` already; this suite adds the third, end-to-end pin.
-const FILTER_SCOPE_SENTENCE =
-  "this bundle format cannot record a row predicate (ADR-017 §8, bundle_version 1); publishing " +
-  "publishes the viewport extent, not your filter";
 
 // A representative subset of `kernel/src/bundle/redaction.rs::CREDENTIAL_NEEDLES` -- not the
 // authoritative scan (that already runs host-side, unconditionally, and refuses to WRITE a record
@@ -457,18 +467,28 @@ async function stepRefused(page) {
 
 /**
  * FILTERED': apply a filter through `queryWithFilter` (the same seam the real FilterPanel's Apply
- * button calls) -> prepare (whole-file scope) -> assert the prompt's `filter_scope` is the
- * verbatim conditional-block sentence -> execute -> assert the manifest's `operation.filter` says
+ * button calls) -> wait until the prepare hook is replaced -> prepare (whole-file scope) -> assert the prompt's `filter_scope` is `null`
+ * (the sentence is carried only under the current view with a filter active; this suite never
+ * prepares that case) -> execute -> assert the manifest's `operation.filter` says
  * `whole-file` AND the bundle's row count equals the FULL dataset (the filter did not leak into
  * the published stream -- P0's guarantee, exercised end to end through the real boundary).
  */
 async function stepFiltered(page) {
-  const filterOutcome = await page.evaluate(
-    (predicate) => window.__SPATIAL_E2E__.queryWithFilter(predicate),
-    "zone = 'residential'"
-  );
+  const { filterOutcome, replaced } = await page.evaluate(async (predicate) => {
+    const before = window.__SPATIAL_E2E__.publishPrepareWithDestination;
+    const filterOutcome = await window.__SPATIAL_E2E__.queryWithFilter(predicate);
+    let replaced = false;
+    for (const deadline = Date.now() + 20_000; filterOutcome.kind === "applied" && Date.now() < deadline && !replaced; ) {
+      replaced = window.__SPATIAL_E2E__.publishPrepareWithDestination !== before;
+      if (!replaced) await new Promise((resolve) => setTimeout(resolve, 1_000));
+    }
+    return { filterOutcome, replaced };
+  }, "zone = 'residential'");
   if (filterOutcome.kind !== "applied") {
     throw new Error(`FILTERED': queryWithFilter("zone = 'residential'") returned ${JSON.stringify(filterOutcome)}, expected {kind:"applied"}`);
+  }
+  if (!replaced) {
+    throw new Error("FILTERED': the wait for the prepare hook to be replaced after the Apply did not end within 20000ms");
   }
 
   const destination = freshDestination("filtered");
@@ -480,9 +500,9 @@ async function stepFiltered(page) {
     throw new Error(`FILTERED': prepare returned ${JSON.stringify(prepareOutcome)}, expected {status:"prompt"}`);
   }
   const { prompt } = prepareOutcome;
-  if (prompt.filter_scope !== FILTER_SCOPE_SENTENCE) {
+  if (prompt.filter_scope !== null) {
     throw new Error(
-      `FILTERED': filter_scope mismatch.\nExpected: ${FILTER_SCOPE_SENTENCE}\nActual:   ${JSON.stringify(prompt.filter_scope)}`
+      `FILTERED': filter_scope is ${JSON.stringify(prompt.filter_scope)}, expected null under the whole-file scope with the filter on`
     );
   }
 
@@ -525,7 +545,7 @@ async function stepFiltered(page) {
   }
 
   return (
-    `filter-scope sentence present verbatim; manifest.operation.filter={"kind":"whole-file"}; ` +
+    `filter_scope null under whole-file with the filter on; manifest.operation.filter={"kind":"whole-file"}; ` +
     `bundle rows=${manifest.data.rows} == full dataset (${FIXTURE_FILTER_FEATURES}) both by the ` +
     `manifest's own claim and the reader's independent decode -- the filter did not leak`
   );

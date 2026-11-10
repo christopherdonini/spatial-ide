@@ -119,9 +119,10 @@ test('checkDocsOnly: PLAN.yaml lane priority change is offending', () => {
       'nodes: []',
       '',
     ].join('\n');
-  fs.writeFileSync(path.join(dir, 'PLAN.yaml'), plan(1));
+  fs.mkdirSync(path.join(dir, 'governance'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'governance/PLAN.yaml'), plan(1));
   const base = commitAll(dir, 'init');
-  fs.writeFileSync(path.join(dir, 'PLAN.yaml'), plan(2));
+  fs.writeFileSync(path.join(dir, 'governance/PLAN.yaml'), plan(2));
   const head = commitAll(dir, 'reprioritize');
   const offending = checkDocsOnly(dir, base, head);
   assert.equal(offending.length, 1);
@@ -157,9 +158,10 @@ test('checkDocsOnly: PLAN.yaml felt_verdict node status change is offending', ()
       '    dates: {opened: 2026-09-13, done: null}',
       '',
     ].join('\n');
-  fs.writeFileSync(path.join(dir, 'PLAN.yaml'), plan('blocked'));
+  fs.mkdirSync(path.join(dir, 'governance'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'governance/PLAN.yaml'), plan('blocked'));
   const base = commitAll(dir, 'init');
-  fs.writeFileSync(path.join(dir, 'PLAN.yaml'), plan('done'));
+  fs.writeFileSync(path.join(dir, 'governance/PLAN.yaml'), plan('done'));
   const head = commitAll(dir, 'mark done');
   const offending = checkDocsOnly(dir, base, head);
   assert.equal(offending.length, 1);
@@ -195,9 +197,10 @@ test('checkDocsOnly: a non-priority, non-felt-verdict PLAN.yaml edit is eligible
       '    dates: {opened: 2026-09-13, done: null}',
       '',
     ].join('\n');
-  fs.writeFileSync(path.join(dir, 'PLAN.yaml'), plan('Original title'));
+  fs.mkdirSync(path.join(dir, 'governance'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'governance/PLAN.yaml'), plan('Original title'));
   const base = commitAll(dir, 'init');
-  fs.writeFileSync(path.join(dir, 'PLAN.yaml'), plan('Retitled'));
+  fs.writeFileSync(path.join(dir, 'governance/PLAN.yaml'), plan('Retitled'));
   const head = commitAll(dir, 'append a proposed node title edit');
   assert.deepEqual(checkDocsOnly(dir, base, head), []);
 });

@@ -54,7 +54,7 @@ document markers, malformed lines, duplicate keys — with the offending line nu
   small shared helpers reused by `queue.mjs`/`site.mjs`/`verify.mjs`.
 
 Run `node scripts/plan/plan.mjs [path]` directly for a one-line sanity check (defaults to
-`PLAN.yaml` at the repo root).
+`governance/PLAN.yaml`, a path read from the working directory, so run it from the repo root).
 
 ## `queue.mjs` — the generated queue (§2)
 
@@ -132,9 +132,8 @@ a claimed test name and confirms a test of that name exists (see the module's ow
 the recognizer and the PLANNED/BINDING split). **SUPERSEDED** (`TEST-CLAIMS-SUPERSEDED-PREREGISTRATION.md`;
 the human, round 14 item 2): a claim at line L of file F that does not exist in the current tree is
 reported advisory, never a binding finding, when F's own text carries a matching row that (a) pins a
-hash reference to `F:L` (or a range containing L) — `` `path:a[-b]` @ <rev> sha256:<hex> ``, DERIVED
-FROM the reference grammar `verify-quotes.mjs`'s `HASH_REF_RE` uses (round 12, item 1's quote-by-
-reference mechanism) as it stands on `governance/verify-quotes` @ 1254cddd4c3b47c9431375874ad327754ef038e9 (round 15(c): a tool claim names the tool's commit); only an
+hash reference to `F:L` (or a range containing L) — `` `path:a[-b]` @ <rev> sha256:<hex> ``, the
+reference grammar `hashRefGrammar.mjs` defines, shared with `verify-quotes.mjs`; only an
 explicit path equal to F's own repo-relative path is recognized, not a bare `:line`, and `<rev>` must
 RESOLVE to a real commit, not merely look like one (§2.4: a hex-named branch or tag — a ref whose own
 name happens to be a run of hex digits — is refused the same way a non-commit `<rev>` is; see
@@ -375,3 +374,7 @@ a node's summary states its current state and what is owed. When a node is done,
 `node scripts/plan/rotate-plan-summaries.mjs [--dry-run] [--keep <id,...>]` is run by the custodian at session start, after `rotate-cut-state.mjs` and `rotate-decisions-pending.mjs`; no hook runs it. Exit codes: 0 (it staged the move, was not due, had nothing to move, or printed a dry run) and 2 (it refused, or failed on an unexpected error, before writing anything; or STOP, when anything failed from the first write on, with nothing rolled back).
 
 When it is due, has something to move and is not a dry run, it stages two files and nothing else: `PLAN.yaml` with each moved summary line replaced by one generated pointer, and a new `state/cut-archive/PLAN-SUMMARIES-<date>.yaml` holding each moved node's id and its summary line byte for byte. It never commits, pushes or fetches. `--dry-run` writes nothing and lists the candidates and one obligation row each; `--keep` leaves the named candidates in place. The custodian's procedure, and what a row must be resolved to, are in Part B of AUTONOMY.md §35.
+
+## `verify-quotes.mjs` — round + item cites
+
+`verify-quotes.mjs` also resolves each `round N, item M` cite it reads in the files it scans against the ruling set (the live `DECISIONS-PENDING.md` and each tracked `state/cut-archive/DECISIONS-PENDING-*.md`), one file at a time, and fails by name (`FAIL — ruling cite: <file>:<line> — <cite> — <reason>`) on one that does not resolve. The resolver is `resolveRoundItem(texts, round, item, roundFileText)` in `scripts/plan/rulingSet.mjs`, shared with `verify-test-claims.mjs`' `ledgerRoundItemResolves`. A cite inside a backtick span or a double-quoted span (straight `"` marks pair left to right on their line, so an unpaired `"` hides any cite up to the next one), or on a line whose first non-blank character is `>`, is not read; each line is read on its own, so a cite broken across a line break is not read, and a list is read only up to the break. Not checked: sub-clause letters (the item before one is checked), entries, clause cites, directive items, `rounds N and M, items …` lists, files outside the scan set; it proves the item exists (in its block, or, for a block with no item lines, in the round's tracked question file), not what the cite means. One block is unread: the RULED header for question round 72 (2026-10-20 archive) names its round outside the header grammar, so a cite to it by item is refused by name, and a record cites that ruling by a hash pin, at the round's tracked state/questions/round-72.md. The header of `verify-quotes.mjs` carries the full grammar.

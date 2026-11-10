@@ -487,3 +487,37 @@ fn a_geometry_encoding_refusal_detail_begins_with_its_typed_code() {
     let text = e.to_string();
     assert!(text.contains("geoarrow.polygon") && text.contains("geoarrow.multipolygon"));
 }
+
+/// The redaction scan's refusal (the redaction form's T3) crosses the Tauri boundary as
+/// `"<code>: <display>"` like every other publish refusal, with its P6 placeholder text.
+/// Mutation M4: change the code's string; this test fails at the code assertion.
+#[test]
+fn a_redaction_refusal_detail_begins_with_its_typed_code() {
+    let e = PublishError::RedactionFinding {
+        file: "data/part-00000.arrows".to_string(),
+        class: "local-filesystem-path",
+        byte_offset: 412,
+        count: 3,
+    };
+    assert_eq!(e.code(), "publish.redaction_finding");
+    let detail = e.refusal_detail();
+    assert!(
+        detail.starts_with("publish.redaction_finding: "),
+        "{detail}"
+    );
+    assert!(
+        detail.ends_with(&e.to_string()),
+        "the refusal's own text is carried verbatim"
+    );
+    assert!(
+        e.to_string().starts_with("[P6 placeholder] "),
+        "a new operator string is a placeholder: {e}"
+    );
+    // The file, the class, the byte offset and the count, and never the matched text.
+    assert_eq!(
+        e.to_string(),
+        "[P6 placeholder] refused: the redaction scan (ADR-017 §13) found 3 match(es) in \
+         `data/part-00000.arrows` that are not operator-declared, the first of class \
+         `local-filesystem-path` at byte 412; no bundle was created at the destination"
+    );
+}

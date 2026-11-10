@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const invokeMock = vi.hoisted(() => vi.fn());
@@ -22,7 +24,7 @@ describe("viewportQuery request shape", () => {
   });
 
   it("sends filter: null when no filter is given (the bbox_crs discipline -- never omitted)", async () => {
-    await viewportQuery("ds_x", null, null, null);
+    await viewportQuery("ds_x", null, null, null, null, null);
 
     expect(invokeMock).toHaveBeenCalledWith("viewport_query", {
       request: {
@@ -40,19 +42,30 @@ describe("viewportQuery request shape", () => {
   /** S-2: `columns` is sent as an explicit `null`, never omitted -- the `skp/0.6` discipline
    * `bbox_crs`/`filter` already follow. Mutation: omit the key from `client.ts::viewportQuery`.
    * Expected failure: this test fails by name -- the object equality check no longer matches. */
-  it("sends columns: null, never omitted -- this shell requests no projection", async () => {
-    await viewportQuery("ds_x", null, null, null);
+  it("sends columns: null as an explicit null when the caller passes null, never omitted", async () => {
+    await viewportQuery("ds_x", null, null, null, null, null);
 
     const call = invokeMock.mock.calls[0][1] as { request: Record<string, unknown> };
     expect(call.request).toHaveProperty("columns");
     expect(call.request.columns).toBeNull();
   });
 
+  // RECORDED MUTATION for "PA-U2": omit the `columns` key when it is `null` (`...(columns === null ? {} : { columns })`). Expected failure: the key
+  // set below no longer equals the committed fixture's.
+  it("PA-U2: sends the caller's columns as given, and its key set equals the committed request fixture with columns", async () => {
+    const fixture = JSON.parse(readFileSync(join(__dirname, "../../../../protocol/skp/tests/data/v0-viewport_query-request-with-columns.json"), "utf8"));
+    await viewportQuery("ds_x", null, null, null, null, ["area", "zone"]);
+    await viewportQuery("ds_x", null, null, null, null, null);
+
+    const [given, none] = invokeMock.mock.calls.map((c) => (c[1] as { request: Record<string, unknown> }).request);
+    expect(given.columns).toEqual(["area", "zone"]);
+    expect(none).toHaveProperty("columns", null);
+    expect(Object.keys(given).sort()).toEqual(Object.keys(fixture).sort());
+    expect(Object.keys(none).sort()).toEqual(Object.keys(fixture).sort());
+  });
+
   it("sends the caller's filter verbatim -- predicate text untouched, dialect carried through", async () => {
-    await viewportQuery("ds_x", null, null, null, {
-      predicate: "zone = 'residential'",
-      dialect: FILTER_DIALECT_DUCKDB_EXPR_0,
-    });
+    await viewportQuery("ds_x", null, null, null, { predicate: "zone = 'residential'", dialect: FILTER_DIALECT_DUCKDB_EXPR_0 }, null);
 
     expect(invokeMock).toHaveBeenCalledWith("viewport_query", {
       request: {
@@ -114,7 +127,7 @@ describe("call() records every SKP request at the console's one capture site", (
     invokeMock.mockResolvedValueOnce({ stream: "sh_0", expires_in_ms: 30_000 });
     const before = consoleRecorder.entries().length;
 
-    await viewportQuery("ds_x", null, null, null);
+    await viewportQuery("ds_x", null, null, null, null, null);
 
     const entry = consoleRecorder.entries()[before]!;
     expect(entry.kind).toBe("skp-request");
@@ -127,7 +140,7 @@ describe("call() records every SKP request at the console's one capture site", (
     invokeMock.mockResolvedValueOnce({ stream: "sh_0", expires_in_ms: 30_000 });
     const before = consoleRecorder.entries().length;
 
-    await viewportQuery("ds_x", null, null, null);
+    await viewportQuery("ds_x", null, null, null, null, null);
 
     const entry = consoleRecorder.entries()[before]!;
     if (!isSkpRequestEntry(entry)) throw new Error("expected skp-request entry");
@@ -138,7 +151,7 @@ describe("call() records every SKP request at the console's one capture site", (
     invokeMock.mockResolvedValueOnce({ stream: "sh_0", expires_in_ms: 30_000 });
     const before = consoleRecorder.entries().length;
 
-    await viewportQuery("ds_x", null, null, null);
+    await viewportQuery("ds_x", null, null, null, null, null);
 
     const entry = consoleRecorder.entries()[before]!;
     if (!isSkpRequestEntry(entry)) throw new Error("expected skp-request entry");
@@ -150,7 +163,7 @@ describe("call() records every SKP request at the console's one capture site", (
     invokeMock.mockRejectedValueOnce(skpError);
     const before = consoleRecorder.entries().length;
 
-    await expect(viewportQuery("ds_x", null, null, null)).rejects.toBeInstanceOf(SkpCallError);
+    await expect(viewportQuery("ds_x", null, null, null, null, null)).rejects.toBeInstanceOf(SkpCallError);
 
     const entry = consoleRecorder.entries()[before]!;
     if (!isSkpRequestEntry(entry)) throw new Error("expected skp-request entry");
@@ -164,7 +177,7 @@ describe("call() records every SKP request at the console's one capture site", (
     invokeMock.mockRejectedValueOnce(transportError);
     const before = consoleRecorder.entries().length;
 
-    await expect(viewportQuery("ds_x", null, null, null)).rejects.toBe(transportError);
+    await expect(viewportQuery("ds_x", null, null, null, null, null)).rejects.toBe(transportError);
 
     const entry = consoleRecorder.entries()[before]!;
     if (!isSkpRequestEntry(entry)) throw new Error("expected skp-request entry");

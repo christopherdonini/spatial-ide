@@ -15,6 +15,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
+import { pathToFileURL } from 'node:url';
 import {
   isPathShaped,
   extractCitations,
@@ -22,7 +23,10 @@ import {
   resolveRef,
   checkCitation,
   runVerifyCites,
+  REPO_ROOT,
 } from './verify-cites.mjs';
+import { addCommit } from './moved-map.mjs';
+import { movedRepo, commitFiles, git, dated, removeAfter, X_OLD, X_NEW } from './movedFixture.mjs';
 
 function mkIndex(paths) {
   const set = new Set(paths);
@@ -319,11 +323,113 @@ test('a_pinned_cite_whose_line_is_past_the_file_end_at_that_commit_fails_by_name
   assert.match(gated[0].reason, /exceeds "engine\/src\/pool\.rs" at pinned commit/);
 });
 
-// A pin that only says "not found" does not replace the reason of a cite the tree found a file for.
+// A pin cited when `late.rs` did not exist yet: every path is missing at the pin, so the tree's reason stays.
+// RECORDED MUTATION (C2, fixture changed) at eb499a8910b8, applied alone and reverted: the reason choice made unconditional (the
+// `pr.missingFile` condition removed, so a pin that only says "not found" replaces the tree's reason) -> fails by name, and only this one:
+// `a_pinned_loose_cite_keeps_the_trees_reason_when_the_pin_path_is_not_found` (the reason did not match the tree's wording).
 test('a_pinned_loose_cite_keeps_the_trees_reason_when_the_pin_path_is_not_found', () => {
+  const { dir } = pinnedRepo((rev) => `see late.rs:9 @ ${rev} sha256:00`);
+  try {
+    fs.writeFileSync(path.join(dir, 'engine/src/late.rs'), 'a\nb\n');
+    execFileSync('git', ['add', '-A'], { cwd: dir });
+    execFileSync('git', ['commit', '-q', '-m', 'late'], { cwd: dir });
+    const { advisory } = runVerifyCites({ repoRoot: dir });
+    assert.equal(advisory.length, 1, JSON.stringify(advisory));
+    assert.match(advisory[0].reason, /^line 9 exceeds engine\/src\/late\.rs \(/);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+// Line 0 does not exist (lines count from 1); the cites are assembled at run time, so no line-0 cite is written in this file.
+const AT0 = (p, to = '') => `${p}:${0}${to}`;
+// RECORDED MUTATION (M-C3a) at eb499a8910b8, applied alone and reverted: both line-0 returns in checkCitation removed -> fails by
+// name, and only this one: `a_cite_starting_at_line_0_is_reported_at_line_0_in_the_tree` (the exact-tier reason did not match).
+test('a_cite_starting_at_line_0_is_reported_at_line_0_in_the_tree', () => {
+  const dir = gitTree({ 'engine/src/pool.rs': 'a\nb\nc\n', 'docs-notes.md': `see ${AT0('engine/src/pool.rs', '-2')} and ${AT0('pool.rs')}` });
+  try {
+    const { gated, advisory } = runVerifyCites({ repoRoot: dir });
+    assert.equal(gated.length, 1, JSON.stringify(gated));
+    assert.match(gated[0].reason, /^line 0 does not exist in "engine\/src\/pool\.rs" \(lines count from 1\)$/);
+    assert.equal(advisory.length, 1, JSON.stringify(advisory));
+    assert.match(advisory[0].reason, /^line 0 does not exist in engine\/src\/pool\.rs \(lines count from 1\)$/);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+// RECORDED MUTATION (M-C3b) at eb499a8910b8, applied alone and reverted: the line-0 branch in checkPinned disabled (its condition
+// made false) -> fails by name, and only this one: `a_pinned_cite_starting_at_line_0_is_reported_at_line_0_at_its_pin` (gated was empty).
+test('a_pinned_cite_starting_at_line_0_is_reported_at_line_0_at_its_pin', () => {
+  const gated = pinnedRun((rev) => `see ${AT0('engine/src/pool.rs', '-2')} @ ${rev} sha256:00`, 'gated');
+  assert.equal(gated.length, 1, JSON.stringify(gated));
+  assert.match(gated[0].reason, /^line 0 does not exist in "engine\/src\/pool\.rs" at pinned commit [0-9a-f]+ \(lines count from 1\)$/);
+});
+
+// A repo at `before`, then `after` applied (null deletes) plus `noteRel` citing the first commit.
+function pinnedAfter(before, after, noteRel, doc) {
+  const dir = gitTree(before);
+  const rev = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: dir, encoding: 'utf8' }).trim();
+  for (const [rel, content] of Object.entries({ ...after, [noteRel]: doc(rev) })) {
+    const abs = path.join(dir, rel);
+    if (content === null) { fs.rmSync(abs); continue; }
+    fs.mkdirSync(path.dirname(abs), { recursive: true });
+    fs.writeFileSync(abs, content);
+  }
+  execFileSync('git', ['add', '-A'], { cwd: dir });
+  execFileSync('git', ['commit', '-q', '-m', 'after'], { cwd: dir });
+  return dir;
+}
+
+// RECORDED MUTATION (M-D4a) at eb499a8910b8, applied alone and reverted: the pin read at the path as written only -> fails by name:
+// this test, `a_pinned_basename_cite_is_read_at_its_suffix_match` and `a_pinned_basename_cite_past_its_resolved_files_end_gives_the_pins_reason`.
+test('a_pinned_relative_or_md_fallback_cite_is_read_at_the_file_the_tree_resolves', () => {
+  const five = 'a\nb\nc\nd\ne\n';
+  const dir = pinnedAfter(
+    { 'frontends/shell/src/App.tsx': five, 'docs/README.md': five },
+    { 'frontends/shell/src/App.tsx': 'a\nb\n', 'docs/README.md': 'a\nb\n' },
+    'frontends/shell/NOTE.md',
+    (rev) => `see src/App.tsx:4 @ ${rev} sha256:00 and docs/README:4 @ ${rev} sha256:00`,
+  );
+  try {
+    const { gated } = runVerifyCites({ repoRoot: dir });
+    assert.equal(gated.length, 0, JSON.stringify(gated));
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+// RECORDED MUTATION (M-D4b) at eb499a8910b8, applied alone and reverted: the list built from the exact set only -> fails by name:
+// this test and `a_pinned_basename_cite_past_its_resolved_files_end_gives_the_pins_reason` (both read the basename cite at its suffix match).
+test('a_pinned_basename_cite_is_read_at_its_suffix_match', () => {
+  const advisory = pinnedRun((rev) => `see pool.rs:4 @ ${rev} sha256:00`, 'advisory');
+  assert.equal(advisory.length, 0, JSON.stringify(advisory));
+});
+
+// RECORDED MUTATION (M-D4c) at eb499a8910b8, applied alone and reverted: the failure kept only from the read of the path as written
+// instead of the first path found -> fails by name, and only this one: `a_pinned_basename_cite_past_its_resolved_files_end_gives_the_pins_reason`.
+test('a_pinned_basename_cite_past_its_resolved_files_end_gives_the_pins_reason', () => {
   const advisory = pinnedRun((rev) => `see pool.rs:9 @ ${rev} sha256:00`, 'advisory');
   assert.equal(advisory.length, 1, JSON.stringify(advisory));
-  assert.match(advisory[0].reason, /^line 9 exceeds engine\/src\/pool\.rs \(/);
+  assert.match(advisory[0].reason, /exceeds "engine\/src\/pool\.rs" at pinned commit/);
+});
+
+// RECORDED MUTATION (M-D4d) at eb499a8910b8, applied alone and reverted: the path as written dropped from the list -> fails by name:
+// this test and `a_pinned_cite_whose_path_is_a_directory_at_that_commit_fails_by_name` (the list is then empty for a rooted cite with no match).
+// Narrowed to drop the path as written only when the tree has candidates, it fails this test and no other.
+test('a_pinned_cite_still_passes_at_the_path_as_written_when_the_tree_resolves_elsewhere', () => {
+  const dir = pinnedAfter(
+    { 'scripts/x.mjs': 'a\nb\nc\nd\ne\n', 'renderer/v/scripts/x.mjs': 'a\nb\n' },
+    { 'scripts/x.mjs': null },
+    'renderer/v/NOTE.md',
+    (rev) => `see scripts/x.mjs:4 @ ${rev} sha256:00`,
+  );
+  try {
+    const { gated } = runVerifyCites({ repoRoot: dir });
+    assert.equal(gated.length, 0, JSON.stringify(gated));
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
 });
 
 // The ledger rotates (piece B, OPEN-1 (B)): an unpinned line cite into state/CUT-STATE.md is advisory
@@ -405,4 +511,322 @@ test('verify-cites: a pinned DECISIONS-PENDING.md line cite whose pin fails stay
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }
+});
+
+// RECORDED MUTATION (M1) at 4ec98d9f9e90e3f437073507fd0e1ad6b60c9629, applied alone and reverted: the exact tier's figure taken from `pieces` -> fails by name: `an_exact_out_of_range_reason_counts_the_lines_of_a_newline_ended_file` and `an_out_of_range_reason_for_an_empty_file_counts_0_lines`
+test('an_exact_out_of_range_reason_counts_the_lines_of_a_newline_ended_file', () => {
+  const dir = tmpTree({ 'engine/src/pool.rs': 'a\nb\nc\n' });
+  const res = checkCitation({ pathRaw: 'engine/src/pool.rs', startL: 9, endL: 9, relPath: 'docs/x.md' }, mkIndex(['engine/src/pool.rs']), dir);
+  assert.equal(res.status, 'oob-exact');
+  assert.match(res.reason, /^line 9 exceeds "engine\/src\/pool\.rs" \(3 lines\)$/);
+});
+
+// RECORDED MUTATION (M2) at 4ec98d9f9e90e3f437073507fd0e1ad6b60c9629, applied alone and reverted: the suffix tier's figure taken from `pieces` -> fails by name, and only this one: `a_suffix_out_of_range_reason_counts_the_lines_of_a_newline_ended_file`
+test('a_suffix_out_of_range_reason_counts_the_lines_of_a_newline_ended_file', () => {
+  const dir = tmpTree({ 'engine/src/pool.rs': 'a\nb\nc\n' });
+  const res = checkCitation({ pathRaw: 'pool.rs', startL: 9, endL: 9, relPath: 'docs/x.md' }, mkIndex(['engine/src/pool.rs']), dir);
+  assert.equal(res.status, 'oob-suffix');
+  assert.match(res.reason, /\(3 lines\)$/);
+});
+
+// RECORDED MUTATION (M3) at 4ec98d9f9e90e3f437073507fd0e1ad6b60c9629, applied alone and reverted: checkPinned's figure taken from `pieces` -> fails by name, and only this one: `a_pinned_out_of_range_reason_counts_the_lines_of_a_newline_ended_file`
+test('a_pinned_out_of_range_reason_counts_the_lines_of_a_newline_ended_file', () => {
+  const gated = pinnedRun((rev) => `see engine/src/pool.rs:9 @ ${rev} sha256:00`, 'gated');
+  assert.equal(gated.length, 1, JSON.stringify(gated));
+  assert.match(gated[0].reason, /at pinned commit [0-9a-f]+ \(5 lines\)$/);
+});
+
+// RECORDED MUTATION (M4) at 4ec98d9f9e90e3f437073507fd0e1ad6b60c9629, applied alone and reverted: the helper's empty-file term dropped (the reason prints 1) -> fails by name, and only this one: `an_out_of_range_reason_for_an_empty_file_counts_0_lines`
+test('an_out_of_range_reason_for_an_empty_file_counts_0_lines', () => {
+  const dir = tmpTree({ 'engine/src/pool.rs': '' });
+  const res = checkCitation({ pathRaw: 'engine/src/pool.rs', startL: 2, endL: 2, relPath: 'docs/x.md' }, mkIndex(['engine/src/pool.rs']), dir);
+  assert.equal(res.status, 'oob-exact');
+  assert.match(res.reason, /\(0 lines\)$/);
+});
+
+// The bound is the file's true line count; a cite on the legacy-bound list (by citing file and token) keeps the old, split-piece bound.
+const LB = 'scripts/plan/verify-cites-legacy-bound.json';
+const lbJson = (...entries) => JSON.stringify({ $doc: 'test', entries }) + '\n';
+const gitIn = (dir, ...a) => execFileSync('git', a, { cwd: dir, encoding: 'utf8' }).trim();
+function commitList(dir, ...entries) {
+  fs.mkdirSync(path.dirname(path.join(dir, LB)), { recursive: true });
+  fs.writeFileSync(path.join(dir, LB), lbJson(...entries));
+  gitIn(dir, 'add', '-A');
+  gitIn(dir, 'commit', '-q', '-m', 'list');
+}
+
+// RECORDED MUTATION (M1) at 7df4983f7dae524a85a468fabe98f75222e3aa1d, applied alone and reverted: checkCitation's bound read from `pieces` again -> fails by name: `a_cite_to_the_line_just_past_the_end_of_a_newline_ended_file_fails`, and two other tests: `a_cite_to_line_1_of_an_empty_file_fails` and `a_cite_on_the_legacy_bound_list_passes_under_the_old_bound_only_from_its_listed_file`.
+test('a_cite_to_the_line_just_past_the_end_of_a_newline_ended_file_fails', () => {
+  const dir = tmpTree({ 'engine/src/pool.rs': 'a\nb\nc\n' });
+  const res = checkCitation({ pathRaw: 'engine/src/pool.rs', startL: 4, endL: 4, relPath: 'docs/x.md' }, mkIndex(['engine/src/pool.rs']), dir);
+  assert.equal(res.status, 'oob-exact');
+  assert.match(res.reason, /^line 4 exceeds "engine\/src\/pool\.rs" \(3 lines\)$/);
+});
+
+// RECORDED MUTATION (M2) at 7df4983f7dae524a85a468fabe98f75222e3aa1d, applied alone and reverted: the empty-file term in countOf dropped -> fails by name: `a_cite_to_line_1_of_an_empty_file_fails`, and `an_out_of_range_reason_for_an_empty_file_counts_0_lines`.
+test('a_cite_to_line_1_of_an_empty_file_fails', () => {
+  const dir = tmpTree({ 'engine/src/pool.rs': '' });
+  const res = checkCitation({ pathRaw: 'engine/src/pool.rs', startL: 1, endL: 1, relPath: 'docs/x.md' }, mkIndex(['engine/src/pool.rs']), dir);
+  assert.equal(res.status, 'oob-exact');
+  assert.match(res.reason, /^line 1 exceeds "engine\/src\/pool\.rs" \(0 lines\)$/);
+});
+
+// RECORDED MUTATION (M3) at 7df4983f7dae524a85a468fabe98f75222e3aa1d, applied alone and reverted: checkPinned's bound read from `pieces` again -> fails by name: `a_pinned_cite_to_the_line_just_past_the_end_at_its_commit_fails`, and only this one.
+test('a_pinned_cite_to_the_line_just_past_the_end_at_its_commit_fails', () => {
+  const gated = pinnedRun((rev) => `see engine/src/pool.rs:6 @ ${rev} sha256:00`, 'gated');
+  assert.equal(gated.length, 1, JSON.stringify(gated));
+  assert.match(gated[0].reason, /^line 6 exceeds "engine\/src\/pool\.rs" at pinned commit [0-9a-f]+ \(5 lines\)$/);
+});
+
+// RECORDED MUTATION (M4) at 7df4983f7dae524a85a468fabe98f75222e3aa1d, applied alone and reverted: the list lookup keyed by the cite alone, without its citing file -> fails by name: `a_cite_on_the_legacy_bound_list_passes_under_the_old_bound_only_from_its_listed_file`, and only this one.
+test('a_cite_on_the_legacy_bound_list_passes_under_the_old_bound_only_from_its_listed_file', () => {
+  const dir = gitTree({ 'engine/src/pool.rs': 'a\nb\nc\n', 'docs/a.md': 'see engine/src/pool.rs:4', 'docs/b.md': 'see engine/src/pool.rs:4' });
+  try {
+    commitList(dir, { path: 'docs/a.md', cite: 'engine/src/pool.rs:4' });
+    const { gated, listErrors } = runVerifyCites({ repoRoot: dir });
+    assert.deepEqual(gated.map((f) => f.relPath), ['docs/b.md'], JSON.stringify(gated));
+    assert.deepEqual(listErrors, []);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+// RECORDED MUTATION (M5) at 7df4983f7dae524a85a468fabe98f75222e3aa1d, applied alone and reverted: checkPinned's old-bound term removed -> fails by name: `a_pinned_cite_on_the_legacy_bound_list_passes_under_the_old_bound_at_its_pin`, and only this one.
+test('a_pinned_cite_on_the_legacy_bound_list_passes_under_the_old_bound_at_its_pin', () => {
+  const dir = pinnedAfter({ 'engine/src/pool.rs': 'a\nb\nc\nd\ne\n' }, { 'engine/src/pool.rs': 'a\n', [LB]: lbJson({ path: 'docs-notes.md', cite: 'engine/src/pool.rs:6' }) }, 'docs-notes.md', (rev) => `see engine/src/pool.rs:6 @ ${rev} sha256:00`);
+  try {
+    const { gated, listErrors } = runVerifyCites({ repoRoot: dir });
+    assert.deepEqual([gated, listErrors], [[], []], JSON.stringify(gated));
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+// RECORDED MUTATION (M6) at 7df4983f7dae524a85a468fabe98f75222e3aa1d, applied alone and reverted: the subset check replaced by a count comparison -> fails by name: `the_legacy_bound_list_may_shrink_but_a_gained_entry_fails_by_name_even_at_the_same_count`, and only this one.
+test('the_legacy_bound_list_may_shrink_but_a_gained_entry_fails_by_name_even_at_the_same_count', () => {
+  const [A, B, C] = ['a.md', 'b.md', 'c.md'].map((p) => ({ path: p, cite: 'engine/src/pool.rs:4' }));
+  const dir = gitTree({ 'engine/src/pool.rs': 'a\n' });
+  try {
+    commitList(dir, A, B); // the oldest commit that changes the list is excepted
+    commitList(dir, A); // a shrink
+    assert.deepEqual(runVerifyCites({ repoRoot: dir }).listErrors, []);
+    commitList(dir, C); // one entry for one, the same count: C is gained
+    const { listErrors } = runVerifyCites({ repoRoot: dir });
+    assert.equal(listErrors.length, 1, JSON.stringify(listErrors));
+    assert.ok(listErrors[0].includes(gitIn(dir, 'rev-parse', '--short=12', 'HEAD')) && listErrors[0].includes('c.md'), listErrors[0]);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+// RECORDED MUTATION (M7) at 7df4983f7dae524a85a468fabe98f75222e3aa1d, applied alone and reverted: the shallow-clone check removed -> fails by name: `the_legacy_bound_list_check_fails_by_name_in_a_shallow_clone`, and only this one.
+test('the_legacy_bound_list_check_fails_by_name_in_a_shallow_clone', () => {
+  const src = gitTree({ 'a.md': 'x\n' });
+  const out = fs.mkdtempSync(path.join(os.tmpdir(), 'verify-cites-shallow-'));
+  try {
+    commitList(src);
+    gitIn(src, 'commit', '-q', '--allow-empty', '-m', 'second');
+    const clone = path.join(out, 'c');
+    gitIn(out, 'clone', '-q', '--depth', '1', pathToFileURL(src).href, clone);
+    assert.equal(gitIn(clone, 'rev-parse', '--is-shallow-repository'), 'true');
+    const { listErrors } = runVerifyCites({ repoRoot: clone });
+    assert.equal(listErrors.length, 1, JSON.stringify(listErrors));
+    assert.match(listErrors[0], /^shallow clone: /);
+  } finally {
+    fs.rmSync(src, { recursive: true, force: true });
+    fs.rmSync(out, { recursive: true, force: true });
+  }
+});
+
+// --- governance piece F: the move map (the form's sections 2.3 and 4; tests T1 to T7) -----------------------
+
+const REC = 'rec.md';
+const CITES_X = (line, pin = '') => `The record cites a/X-PREREGISTRATION.md:${line}${pin} here.\n`;
+
+// RECORDED MUTATION at e91bcf30807a (phase 1's commit, on the branch wip/governance-f-scripts; this branch carries the test from it by patch and does not contain the commit), applied alone and reverted: the line count of a mapped cite read at the move commit's parent, not at HEAD -> fails by name: `verify-cites: an unpinned old-path cite written before the move resolves to the new path at HEAD`.
+test('verify-cites: an unpinned old-path cite written before the move resolves to the new path at HEAD', (t) => {
+  const { dir } = movedRepo({ [REC]: CITES_X(4) });
+  removeAfter(t, dir);
+  commitFiles(dir, { [X_NEW]: 'one\ntwo\nthree\nfour\n' }, 'an amendment after the move', '2026-03-01T00:00:00Z');
+  const { gated, advisory } = runVerifyCites({ repoRoot: dir });
+  assert.deepEqual(gated, []);
+  assert.deepEqual(advisory, []);
+});
+
+// RECORDED MUTATION at e91bcf30807a (phase 1's commit, on the branch wip/governance-f-scripts; this branch carries the test from it by patch and does not contain the commit), applied alone and reverted: the map lookup dropped (resolveMoved returns null), so the suffix tier answers and the finding is advisory -> fails by name: `verify-cites: an old-path cite past the end of the moved file fails by name, naming the new path`.
+test('verify-cites: an old-path cite past the end of the moved file fails by name, naming the new path', (t) => {
+  const { dir } = movedRepo({ [REC]: CITES_X(9) });
+  removeAfter(t, dir);
+  const { gated } = runVerifyCites({ repoRoot: dir });
+  assert.equal(gated.length, 1, JSON.stringify(gated));
+  assert.equal(gated[0].relPath, REC);
+  assert.equal(gated[0].reason, `line 9 exceeds "${X_NEW}" (3 lines)`);
+});
+
+// RECORDED MUTATION at e91bcf30807a (phase 1's commit, on the branch wip/governance-f-scripts; this branch carries the test from it by patch and does not contain the commit), applied alone and reverted: the post-move check skipped -> fails by name: `verify-cites: an old-path cite written after the move fails by name`.
+test('verify-cites: an old-path cite written after the move fails by name', (t) => {
+  const { dir, move } = movedRepo();
+  removeAfter(t, dir);
+  commitFiles(dir, { [REC]: CITES_X(1) }, 'a record written after the move', '2026-03-01T00:00:00Z');
+  const { gated } = runVerifyCites({ repoRoot: dir });
+  assert.equal(gated.length, 1, JSON.stringify(gated));
+  assert.equal(gated[0].reason, `old path "${X_OLD}" cited after the move at ${move.slice(0, 12)}; cite "${X_NEW}"`);
+});
+
+// RECORDED MUTATION at e91bcf30807a (phase 1's commit, on the branch wip/governance-f-scripts; this branch carries the test from it by patch and does not contain the commit), applied alone and reverted: blame's uncommitted sentinel treated as written before the move -> fails by name: `verify-cites: an uncommitted old-path cite fails as written after the move`.
+test('verify-cites: an uncommitted old-path cite fails as written after the move', (t) => {
+  const { dir, move } = movedRepo({ [REC]: 'a clean record\n' });
+  removeAfter(t, dir);
+  fs.writeFileSync(path.join(dir, REC), 'a clean record\n' + CITES_X(1));
+  const { gated } = runVerifyCites({ repoRoot: dir });
+  assert.equal(gated.length, 1, JSON.stringify(gated));
+  assert.equal(gated[0].citeLine, 2);
+  assert.equal(gated[0].reason, `old path "${X_OLD}" cited after the move at ${move.slice(0, 12)}; cite "${X_NEW}"`);
+});
+
+// RECORDED MUTATION at e91bcf30807a (phase 1's commit, on the branch wip/governance-f-scripts; this branch carries the test from it by patch and does not contain the commit), applied alone and reverted: committer dates compared instead of ancestry -> fails by name: `verify-cites: an old-path cite from a branch forked before the move passes after the merge`.
+test('verify-cites: an old-path cite from a branch forked before the move passes after the merge', (t) => {
+  const { dir, before } = movedRepo();
+  removeAfter(t, dir);
+  git(dir, ['checkout', '-q', '-b', 'side', before]);
+  commitFiles(dir, { [REC]: CITES_X(1) }, 'a record written on the branch, committed after the move by the clock', '2026-06-01T00:00:00Z');
+  git(dir, ['checkout', '-q', 'main']);
+  git(dir, ['merge', '-q', '--no-ff', '--no-edit', 'side'], dated('2026-06-02T00:00:00Z'));
+  const { gated, advisory } = runVerifyCites({ repoRoot: dir });
+  assert.deepEqual(gated, []);
+  assert.deepEqual(advisory, []);
+});
+
+// RECORDED MUTATION at e91bcf30807a (phase 1's commit, on the branch wip/governance-f-scripts; this branch carries the test from it by patch and does not contain the commit), applied alone and reverted: pinned cites routed through the map and the post-move check -> fails by name: `verify-cites: a pinned old-path cite written after the move is read at its pin, unchanged`.
+test('verify-cites: a pinned old-path cite written after the move is read at its pin, unchanged', (t) => {
+  const { dir, before } = movedRepo();
+  removeAfter(t, dir);
+  commitFiles(dir, { [X_NEW]: 'one\ntwo\n' }, 'the moved file shrinks', '2026-03-01T00:00:00Z');
+  commitFiles(dir, { [REC]: CITES_X(3, ` @ ${before}`) }, 'a pinned record written after the move', '2026-03-02T00:00:00Z');
+  const { gated, advisory } = runVerifyCites({ repoRoot: dir });
+  assert.deepEqual(gated, []);
+  assert.deepEqual(advisory, []);
+});
+
+// RECORDED MUTATION at e91bcf30807a (phase 1's commit, on the branch wip/governance-f-scripts; this branch carries the test from it by patch and does not contain the commit), applied alone and reverted: the citing file's current folder used, in both resolveRefMapped and resolveMoved -> fails by name: `verify-cites: a moved file's relative cite resolves against its pre-move folder`.
+test("verify-cites: a moved file's relative cite resolves against its pre-move folder", (t) => {
+  const { dir } = movedRepo({}, 'one\ntwo\nsee src/lib.rs:9 here\n');
+  removeAfter(t, dir);
+  const { gated } = runVerifyCites({ repoRoot: dir });
+  assert.equal(gated.length, 1, JSON.stringify(gated));
+  assert.equal(gated[0].relPath, X_NEW);
+  assert.equal(gated[0].reason, 'line 9 exceeds "a/src/lib.rs" (3 lines)');
+});
+
+// --- a range whose end is below its start (node verify-cites-reversed-range) ---------------------------------
+
+// The cites are assembled at run time, so no such range is written in this file (the file is scanned like any other).
+const BACK = (p) => `${p}:${3}-${2}`;
+const BACK_REASON = 'range 3-2 of "engine/src/pool.rs" runs backwards (its end is below its start)';
+
+// RECORDED MUTATION (M1) at 843e206b119c24af4163b40389135715d2b40276, applied alone and reverted: the backward return's status in checkResolved made oob-suffix whatever the tier -> fails by name, and these two only (the same routing): `a_reversed_rooted_range_in_a_document_is_gated_by_name` and `a_pinned_reversed_range_fails_even_where_its_lines_exist_at_the_pin`.
+test('a_reversed_rooted_range_in_a_document_is_gated_by_name', () => {
+  const dir = gitTree({ 'engine/src/pool.rs': 'a\nb\nc\n', 'docs/notes.md': `see ${BACK('engine/src/pool.rs')} here` });
+  try {
+    const { gated, advisory } = runVerifyCites({ repoRoot: dir });
+    assert.equal(gated.length, 1, JSON.stringify(gated));
+    assert.equal(advisory.length, 0, JSON.stringify(advisory));
+    assert.equal(gated[0].reason, BACK_REASON);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+// RECORDED MUTATION (M2) at 843e206b119c24af4163b40389135715d2b40276, applied alone and reverted: that status made oob-exact whatever the tier -> fails by name, and only this one: `a_reversed_bare_basename_range_is_advice_by_name`.
+test('a_reversed_bare_basename_range_is_advice_by_name', () => {
+  const dir = tmpTree({ 'engine/src/pool.rs': 'a\nb\nc\n' });
+  const res = checkCitation({ pathRaw: 'pool.rs', startL: 3, endL: 2, relPath: 'docs/x.md' }, mkIndex(['engine/src/pool.rs']), dir);
+  assert.equal(res.status, 'oob-suffix');
+  assert.match(res.reason, /^range 3-2 of "pool\.rs" runs backwards/);
+});
+
+// RECORDED MUTATION (M3) at 843e206b119c24af4163b40389135715d2b40276, applied alone and reverted: checkPinned's backward return removed -> fails by name, and only this one: `a_pinned_reversed_range_fails_even_where_its_lines_exist_at_the_pin`.
+test('a_pinned_reversed_range_fails_even_where_its_lines_exist_at_the_pin', () => {
+  const gated = pinnedRun((rev) => `see ${BACK('engine/src/pool.rs')} @ ${rev} sha256:00`, 'gated');
+  assert.equal(gated.length, 1, JSON.stringify(gated));
+  assert.equal(gated[0].reason, BACK_REASON);
+});
+
+// RECORDED MUTATION (M4) at 843e206b119c24af4163b40389135715d2b40276, applied alone and reverted: the backward helper's end-at-line-0 exclusion dropped -> fails by name, and only this one: `a_range_ending_at_line_0_keeps_the_line_0_reason`.
+test('a_range_ending_at_line_0_keeps_the_line_0_reason', () => {
+  const dir = tmpTree({ 'engine/src/pool.rs': 'a\nb\nc\n' });
+  const res = checkCitation({ pathRaw: 'engine/src/pool.rs', startL: 5, endL: 0, relPath: 'docs/x.md' }, mkIndex(['engine/src/pool.rs']), dir);
+  assert.equal(res.status, 'oob-exact');
+  assert.equal(res.reason, 'line 0 does not exist in "engine/src/pool.rs" (lines count from 1)');
+});
+
+// --- a moved citing file's relative pinned cites (node verify-cites-moved-file-relative-pinned-cites) --------------
+
+// The real shape: the cites of three forms and of two sibling files, read from the record at a fixed commit (CI clones the full history).
+const REAL_REV = '8e90c244fbf0cdd1175447a883f40f62d90fadd1';
+const pinnedCitesAt = (rel) =>
+  extractCitations(execFileSync('git', ['show', `${REAL_REV}:${rel}`], { cwd: REPO_ROOT, encoding: 'utf8', maxBuffer: 1 << 26 })).filter((c) => c.pin);
+
+// A repository whose files sit at their old paths (each holds one cite per line), then move to the new paths in a moves-only commit with the map.
+function movedCitesRepo(moves, others) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'moved-pinned-'));
+  git(dir, ['init', '-q', '-b', 'main']);
+  const text = (cites) => (Array.isArray(cites) ? cites.map((c) => `${c.raw} @ ${c.pin}`).join('\n') + '\n' : cites);
+  commitFiles(dir, { ...Object.fromEntries(moves.map(([old, , cites]) => [old, text(cites)])), ...others }, 'before the move', '2026-01-01T00:00:00Z');
+  for (const [old, nu] of moves) {
+    fs.mkdirSync(path.join(dir, path.posix.dirname(nu)), { recursive: true });
+    git(dir, ['mv', '--', old, nu]);
+  }
+  git(dir, ['commit', '-q', '-m', 'moves only'], dated('2026-02-01T00:00:00Z'));
+  addCommit(dir, git(dir, ['rev-parse', 'HEAD']));
+  commitFiles(dir, { 'governance/MOVED.tsv': fs.readFileSync(path.join(dir, 'governance/MOVED.tsv'), 'utf8') }, 'moved map', '2026-02-02T00:00:00Z');
+  return dir;
+}
+
+// Every cite of `cites`, at its line of `relPath`, is gated with the pin's own reason (no pinned commit exists in the fixture); none is advisory.
+function assertGatedAtPin({ gated, advisory }, relPath, cites) {
+  assert.deepEqual(advisory, []);
+  assert.deepEqual(
+    gated.filter((f) => f.relPath === relPath).map((f) => ({ citeLine: f.citeLine, target: f.target, reason: f.reason })),
+    cites.map((c, i) => ({ citeLine: i + 1, target: c.raw, reason: `pinned commit ${c.pin} not found` })),
+  );
+}
+
+// RECORDED MUTATION (M1) at 6f29ce6062b72cef23782d87ccbae207d967187f, applied alone and reverted: pinnedRefs resolved the path from the citing file's current folder only (originPath dropped) -> fails by name, and only this one: `verify-cites: a moved form's relative pinned cites resolve from its pre-move folder at the exact tier`.
+test("verify-cites: a moved form's relative pinned cites resolve from its pre-move folder at the exact tier", (t) => {
+  const E = 'EXPORT-CURRENT-VIEW-AFTER-UNREPORTED-FIT-PREREGISTRATION.md';
+  const K40 = 'KNOWN-LIMITATIONS-ITEM-40-SOURCE-COMMENT-PREREGISTRATION.md';
+  const K41 = 'KNOWN-LIMITATIONS-ITEM-41-SOURCE-COMMENT-PREREGISTRATION.md';
+  const exp = pinnedCitesAt(`governance/forms/frontends/${E}`).filter((c) => /^src(-tauri)?\//.test(c.pathRaw));
+  const k40 = pinnedCitesAt(`governance/forms/root/${K40}`).filter((c) => c.pathRaw === 'KNOWN-LIMITATIONS.md');
+  const k41 = pinnedCitesAt(`governance/forms/root/${K41}`).filter((c) => c.pathRaw === 'KNOWN-LIMITATIONS.md');
+  assert.deepEqual([exp.length, k40.length, k41.length], [39, 1, 1]);
+  const targets = Object.fromEntries([...exp.map((c) => [`frontends/shell/${c.pathRaw}`, '']), ['KNOWN-LIMITATIONS.md', '']]);
+  const dir = movedCitesRepo(
+    [[`frontends/shell/${E}`, `governance/forms/frontends/${E}`, exp], [K40, `governance/forms/root/${K40}`, k40], [K41, `governance/forms/root/${K41}`, k41]],
+    targets,
+  );
+  removeAfter(t, dir);
+  const res = runVerifyCites({ repoRoot: dir });
+  assert.equal(res.gated.length, 41, JSON.stringify(res));
+  assertGatedAtPin(res, `governance/forms/frontends/${E}`, exp);
+  assertGatedAtPin({ gated: res.gated, advisory: [] }, `governance/forms/root/${K40}`, k40);
+  assertGatedAtPin({ gated: res.gated, advisory: [] }, `governance/forms/root/${K41}`, k41);
+});
+
+// RECORDED MUTATION (M2) at 6f29ce6062b72cef23782d87ccbae207d967187f, applied alone and reverted: pinnedRefs returned the pre-move folder's candidates only -> fails by name, and only this one: `verify-cites: a pinned cite from a moved file to a file moved beside it stays at the exact tier`.
+test('verify-cites: a pinned cite from a moved file to a file moved beside it stays at the exact tier', (t) => {
+  const O = 'KNOWN-LIMITATIONS-OWED-ROWS-PREREGISTRATION.md';
+  const prec = pinnedCitesAt('governance/PRECEDENTS.md').filter((c) => c.pathRaw === 'AI_DEVELOPMENT.md');
+  const owed = pinnedCitesAt(`governance/forms/root/${O}`).filter((c) => c.pathRaw === O);
+  assert.deepEqual([prec.length, owed.length], [7, 2]);
+  const dir = movedCitesRepo(
+    [['PRECEDENTS.md', 'governance/PRECEDENTS.md', prec], [O, `governance/forms/root/${O}`, owed], ['AI_DEVELOPMENT.md', 'governance/AI_DEVELOPMENT.md', 'x\n']],
+    {},
+  );
+  removeAfter(t, dir);
+  const res = runVerifyCites({ repoRoot: dir });
+  assert.equal(res.gated.length, 9, JSON.stringify(res));
+  assertGatedAtPin(res, 'governance/PRECEDENTS.md', prec);
+  assertGatedAtPin({ gated: res.gated, advisory: [] }, `governance/forms/root/${O}`, owed);
 });

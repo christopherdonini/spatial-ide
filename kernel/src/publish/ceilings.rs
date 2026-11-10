@@ -29,6 +29,7 @@
 use std::sync::OnceLock;
 
 use serde_json::Value;
+use spatial_engine::ViewportQuery;
 
 use super::error::PublishError;
 
@@ -111,12 +112,17 @@ pub(crate) const VIEWPORT_BBOX_ALTERNATIVE: &str =
 /// (`run_inner`, this module's parent) stands for partitions. **`MAX_RESIDENT_BYTES` is checked at
 /// NO stage, ever** (RELEASE-0.1 Amendment 5, item 2) — a bundle under `MAX_FEATURES` but over the
 /// 512 MiB resident ceiling still publishes unwarned and the viewer refuses it at load, exactly
-/// Part H8b's shape, undischarged for this ceiling. `predicted_features` is itself `None` when the
+/// Part H8b's shape, undischarged for this ceiling.
+///
+/// **What it is given for `MAX_FEATURES`** is [`predicted_features`]'s answer, not the file's row
+/// count: the verified row count for a scope with no bbox (capped by its limit), and `None` for a
+/// bbox scope, whose own row count nothing before the stream knows. It is also `None` when the
 /// dataset's identity was opened `DeclaredNotVerified` (`engine/src/identity.rs`, the
-/// `skip_uniqueness_check` route) — a real gap this function states rather than hides: such a
-/// dataset's feature count is not predictable at preflight either, and a publish above
-/// `MAX_FEATURES` on that route is refused only by the viewer, exactly the gap ADR-025 was filed
-/// to close, left open for this one identity route.
+/// `skip_uniqueness_check` route), which verifies no row count. A `None` is not a pass: for both
+/// of those the same ceiling is enforced at write time by [`check_streamed_features`], which
+/// refuses a stream that would carry more than `MAX_FEATURES` rows with
+/// `PublishError::CeilingExceeded`, so on those routes a publish above the ceiling is refused
+/// later, at write time, and not at preflight.
 ///
 /// **The `MAX_ATTRIBUTE_COLUMNS` branch below is correctly implemented but unreachable end to end
 /// in the real `preflight()` flow** (RELEASE-0.1 Amendment 5, item 2, and this module's own
@@ -151,6 +157,44 @@ pub(crate) fn check_reader_ceilings(
             limit: ceilings.max_attribute_columns,
             predicted: projected_attribute_columns,
             alternative: VIEWPORT_BBOX_ALTERNATIVE,
+        });
+    }
+    Ok(())
+}
+
+/// The `MAX_FEATURES` prediction for one scope: what [`check_reader_ceilings`] is given.
+///
+/// `Some(min(verified_rows, limit))` when the query has no bbox (with no limit, the verified row
+/// count itself), and `None` when it has a bbox or `verified_rows` is `None`. A bbox scope is not
+/// predicted from the whole file, because a bundle of that scope carries the rows inside the box,
+/// not the file's. The row filter never reaches this point: it is refused earlier in preflight.
+/// Pure: it reads no dataset and no ceilings.
+pub(crate) fn predicted_features(verified_rows: Option<u64>, query: &ViewportQuery) -> Option<u64> {
+    if query.bbox.is_some() {
+        return None;
+    }
+    verified_rows.map(|rows| query.limit.map_or(rows, |limit| rows.min(limit)))
+}
+
+/// The write-time `MAX_FEATURES` guard: refuses a partition that would bring the rows written to
+/// more than the ceiling.
+///
+/// `rows_written` is the rows already in written partitions and `batch_rows` the rows of the one
+/// about to be written. The refusal is `PublishError::CeilingExceeded` (ceiling `MAX_FEATURES`,
+/// limit the ceiling, `saw` the total including this batch). The comparison is `>`, as the viewer's
+/// own is, so a bundle of exactly `MAX_FEATURES` rows is not refused. Pure: the partition loop in
+/// `run_inner` supplies the numbers and acts on the result.
+pub(crate) fn check_streamed_features(
+    rows_written: u64,
+    batch_rows: u64,
+    ceilings: &ReaderCeilings,
+) -> Result<(), PublishError> {
+    let saw = rows_written.saturating_add(batch_rows);
+    if saw > ceilings.max_features {
+        return Err(PublishError::CeilingExceeded {
+            ceiling: "MAX_FEATURES",
+            limit: ceilings.max_features,
+            saw,
         });
     }
     Ok(())
@@ -238,5 +282,103 @@ mod tests {
     fn an_attribute_column_count_at_the_ceiling_is_not_refused() {
         let c = reader_ceilings();
         assert!(check_reader_ceilings(Some(0), c.max_attribute_columns, &c).is_ok());
+    }
+
+    // ---- U-PRED: the prediction is the scope's own row count, or nothing ---------------------------
+
+    fn a_bbox() -> spatial_engine::Bbox {
+        spatial_engine::Bbox {
+            xmin: 0.0,
+            ymin: 0.0,
+            xmax: 1.0,
+            ymax: 1.0,
+        }
+    }
+
+    /// **U-PRED, whole file:** the prediction is the file's verified row count.
+    #[test]
+    fn a_whole_file_scope_predicts_the_verified_row_count() {
+        assert_eq!(
+            predicted_features(Some(300), &ViewportQuery::all()),
+            Some(300)
+        );
+    }
+
+    /// **U-PRED, with a limit:** a limit below the count caps the prediction, and one above it
+    /// leaves it unchanged.
+    #[test]
+    fn a_limit_caps_the_prediction_and_never_raises_it() {
+        assert_eq!(
+            predicted_features(Some(300), &ViewportQuery::all().with_limit(100)),
+            Some(100)
+        );
+        assert_eq!(
+            predicted_features(Some(300), &ViewportQuery::all().with_limit(1_000)),
+            Some(300)
+        );
+    }
+
+    /// **U-PRED, with a bbox:** the file's row count says nothing about the rows a bbox encloses, so
+    /// a bbox scope predicts nothing, whatever the count and whatever the limit.
+    ///
+    /// RECORDED MUTATION: delete the `query.bbox.is_some()` early return from `predicted_features`.
+    /// OBSERVED at 435be20a3b54a4a9580def1960c6f1d13070c9c0: this test fails by name, `left: Some(3300000)`, `right: None`.
+    #[test]
+    fn a_bbox_scope_predicts_nothing_over_a_verified_file() {
+        let viewport = ViewportQuery::viewport(a_bbox(), "EPSG:2056");
+        assert_eq!(predicted_features(Some(3_300_000), &viewport), None);
+        assert_eq!(
+            predicted_features(Some(3_300_000), &viewport.with_limit(10)),
+            None
+        );
+    }
+
+    /// **U-PRED, with `None`:** an unverified row count predicts nothing in any scope.
+    #[test]
+    fn an_unverified_row_count_predicts_nothing_in_any_scope() {
+        assert_eq!(predicted_features(None, &ViewportQuery::all()), None);
+        assert_eq!(
+            predicted_features(None, &ViewportQuery::all().with_limit(5)),
+            None
+        );
+        assert_eq!(
+            predicted_features(None, &ViewportQuery::viewport(a_bbox(), "EPSG:2056")),
+            None
+        );
+    }
+
+    // ---- U-GUARD: the write-time guard refuses the batch that crosses the ceiling -------------------
+
+    /// **U-GUARD, at the ceiling:** a batch that brings the total exactly to `MAX_FEATURES` is not
+    /// refused. The viewer refuses above its ceiling, not at it.
+    ///
+    /// RECORDED MUTATION: change `>` to `>=` in `check_streamed_features`. OBSERVED at 435be20a3b54a4a9580def1960c6f1d13070c9c0: this
+    /// test fails by name, at `check_streamed_features(0, c.max_features, &c).is_ok()`.
+    #[test]
+    fn a_batch_that_brings_the_total_to_the_ceiling_is_not_refused() {
+        let c = reader_ceilings();
+        assert!(check_streamed_features(0, c.max_features, &c).is_ok());
+        assert!(check_streamed_features(c.max_features - 10, 10, &c).is_ok());
+    }
+
+    /// **U-GUARD, above the ceiling:** a batch that would bring the total one row above it is
+    /// refused with `CeilingExceeded`, carrying the limit and the total the batch would have made.
+    #[test]
+    fn a_batch_that_would_cross_the_ceiling_is_refused_with_the_total_it_would_make() {
+        let c = reader_ceilings();
+        for (written, batch) in [(c.max_features - 10, 11), (c.max_features, 1)] {
+            match check_streamed_features(written, batch, &c) {
+                Err(PublishError::CeilingExceeded {
+                    ceiling,
+                    limit,
+                    saw,
+                }) => {
+                    assert_eq!(ceiling, "MAX_FEATURES");
+                    assert_eq!(limit, c.max_features);
+                    assert_eq!(saw, c.max_features + 1);
+                }
+                other => panic!("expected CeilingExceeded for ({written}, {batch}), got {other:?}"),
+            }
+        }
     }
 }

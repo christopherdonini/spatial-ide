@@ -113,6 +113,7 @@ vi.mock("./canvas/WorkingCanvas", () => {
         pushTileBatch: () => ({ rowsAdmitted: 0, duplicatesDropped: 0, evictedTileKeys: [], overBudget: false, fitAnchor: null, batchExtent: null }),
         clearTile: () => {},
         clearAllTiles: () => {},
+        residentIdsStreamedUnder: () => new Set<bigint>(),
         isTileResidentInCandidateSet: () => false,
         isTileCompleteInCandidateSet: () => false,
         markTilePartial: () => {},
