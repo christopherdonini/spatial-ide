@@ -2,8 +2,8 @@
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
 //! An existing single file whose path holds `[`, `]`, `{` or `}` opens, and streams only its own
-//! rows. The file also covers the spatial-index and row-group-index builds over such a file, one
-//! test each.
+//! rows. The file also covers the spatial-index and row-group-index builds over one such file,
+//! `zones[1].parquet` beside a decoy `zones1.parquet`, one test each.
 
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
