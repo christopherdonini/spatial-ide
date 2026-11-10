@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `b0f0dd8d08793917cd02a3adc48091a70d716685dbd5c8290052246fd669e651`) at `2026-11-09T22:59:16.932Z`.
+Generated from `PLAN.yaml` (sha256 `0fb07c256979f71d83db6974fea58842fb20fd283ed076a789609af02147ea90`) at `2026-11-09T23:39:51.066Z`.
 
 ## 1. Next
 
@@ -36,7 +36,6 @@ Generated from `PLAN.yaml` (sha256 `b0f0dd8d08793917cd02a3adc48091a70d716685dbd5
 - **skp-line-cites-outside-close-races** — Stale line cites into kernel/src/skp.rs outside kernel-close-races-followups files -- shell streaming, App.tsx, pool_poll.rs, src-tauri lib.rs, the P4 corpus test and the persisted-artifacts test — blocked by: adr-035-close-races-note
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
 - **pan-anchor-setcam-waits-for-its-own-reset** — e2e/pan-anchor.mjs: setCam waits for the view-state line its own reset produces, never a late line from the previous gesture (test only) — blocked by: publish-e2e-filtered-step-shared-run-failure
-- **publish-e2e-filtered-step-shared-run-failure** — The publish e2e suite's FILTERED' step failed once in a shared run: the prompt carried no filter_scope sentence after a filter was applied (at 147ef82c), not reproduced at the next head — blocked by: shell-resource-dir-dev-comments
 - **session-end-lines-name-coverage-lost-as-source-change** — The hover readout and the Feature tab word every session end as a source change, coverage-lost included, although the engine says coverage-lost is never a source change (milestone 4 PR C gate 1, the architect's C1 note) — blocked by: b1-shell-half
 - **session-log-token-redaction-rests-on-page-code** — The session token never reaching the session log rests on page code: binding_log_session_event appends page-supplied text verbatim, the page holds the token, and the data plane's Session::redact has only a test caller — blocked by: b2-piece-1c-save-and-reopen
 - **briefb-b2-save-reopen** — B2 — Save project, Snapshot data, session history, lineage and preferences, in five stages, each with its own form — blocked by: decision-adr-029-scan-progress-route
@@ -56,7 +55,7 @@ Generated from `PLAN.yaml` (sha256 `b0f0dd8d08793917cd02a3adc48091a70d716685dbd5
 - **duckdb-literal-path-index-and-rowgroup-tests** — The escaped DuckDB path at the spatial-index and row-group-index sites is reached by no test: each site gets a test with its mutation (8f, gate 1 reviewer, EV-1) — evidence: branch `cut/duckdb-literal-path-index-and-rowgroup-tests`
 - **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **b1-shell-half** — Shell migration, milestone 4 -- B1 shell half: attributes of the inspected feature, colour by category with its legend, and the table — evidence: branch `cut/b1-shell-half-pr-c`
-- **shell-resource-dir-dev-comments** — Shell comments on resource_dir under tauri dev read as untrue on Windows: bundled_viewer, resolve_viewer_dir (twice), commands.rs and two resolver tests say a dev run supplies no resource directory — evidence: branch `cut/shell-resource-dir-dev-comments`
+- **publish-e2e-filtered-step-shared-run-failure** — The publish e2e suite's FILTERED' step failed once in a shared run: the prompt carried no filter_scope sentence after a filter was applied (at 147ef82c), not reproduced at the next head — evidence: branch `cut/publish-e2e-filtered-step-shared-run-failure`
 - **port-2-macos-l1-and-app-dirs** — PORT-2 -- macOS L1 for the Cargo workspace: macos-latest in the same matrix, one application-directory boundary replacing the two resolvers, and a case-policy test on a case-insensitive volume — evidence: branch `cut/port-2-macos-l1-and-app-dirs`
 
 ## 6. Proposed / unscheduled
