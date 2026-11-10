@@ -35,6 +35,13 @@
 // environment IT had, not this process's. `main()` below refuses to proceed if `attachOrLaunch`
 // attached rather than launched, rather than silently reading from an indeterminate log.
 //
+// ## FILTERED''s wait, a precondition
+//
+// After the Apply, FILTERED' waits until `window.__SPATIAL_E2E__.publishPrepareWithDestination` is not the function it held before the Apply. PublishPanel re-registers that hook in an effect
+// that re-runs only after the commit of the render in which `filterActive` became true, and the same render assigned the `workspaceRef` that `stageScope` reads, so a prepare sent after
+// the replacement holds the post-Apply closure and stages the post-Apply scope. The wait polls once a second, for at most 20000ms; if the hook is not replaced the step fails naming
+// FILTERED', the wait and the 20000ms. The wait is a precondition on when the prepare is sent, not a property: no assertion of FILTERED' concerns timing.
+//
 // `waitForMountReady`/`waitForHook`/`withTimeout` are duplicated from filter.mjs rather than
 // imported -- this workspace's own established convention for sibling test files.
 
@@ -450,19 +457,28 @@ async function stepRefused(page) {
 
 /**
  * FILTERED': apply a filter through `queryWithFilter` (the same seam the real FilterPanel's Apply
- * button calls) -> prepare (whole-file scope) -> assert the prompt's `filter_scope` is `null`
+ * button calls) -> wait until the prepare hook is replaced -> prepare (whole-file scope) -> assert the prompt's `filter_scope` is `null`
  * (the sentence is carried only under the current view with a filter active; this suite never
  * prepares that case) -> execute -> assert the manifest's `operation.filter` says
  * `whole-file` AND the bundle's row count equals the FULL dataset (the filter did not leak into
  * the published stream -- P0's guarantee, exercised end to end through the real boundary).
  */
 async function stepFiltered(page) {
-  const filterOutcome = await page.evaluate(
-    (predicate) => window.__SPATIAL_E2E__.queryWithFilter(predicate),
-    "zone = 'residential'"
-  );
+  const { filterOutcome, replaced } = await page.evaluate(async (predicate) => {
+    const before = window.__SPATIAL_E2E__.publishPrepareWithDestination;
+    const filterOutcome = await window.__SPATIAL_E2E__.queryWithFilter(predicate);
+    let replaced = false;
+    for (const deadline = Date.now() + 20_000; filterOutcome.kind === "applied" && Date.now() < deadline && !replaced; ) {
+      replaced = window.__SPATIAL_E2E__.publishPrepareWithDestination !== before;
+      if (!replaced) await new Promise((resolve) => setTimeout(resolve, 1_000));
+    }
+    return { filterOutcome, replaced };
+  }, "zone = 'residential'");
   if (filterOutcome.kind !== "applied") {
     throw new Error(`FILTERED': queryWithFilter("zone = 'residential'") returned ${JSON.stringify(filterOutcome)}, expected {kind:"applied"}`);
+  }
+  if (!replaced) {
+    throw new Error("FILTERED': the wait for the prepare hook to be replaced after the Apply did not end within 20000ms");
   }
 
   const destination = freshDestination("filtered");
