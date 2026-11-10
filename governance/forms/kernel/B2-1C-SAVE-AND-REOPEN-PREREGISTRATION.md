@@ -1156,3 +1156,21 @@ Nothing above is edited.
 6. **The O0 file after the run.** It is downloaded and no longer online-only; OP1 to OP3 at the sitting need an online-only file again.
 
 Nothing above is edited.
+
+## Amendment 6 — O1 built (class 1); the kernel product group further over its ceiling (class 8); O1's departures and additions disclosed for the gates (class 1); what waits for Amendment 7 (class 1); written after the result was seen
+
+*Written by the custodian. References only: `state/consults/2026-11-10-b2-piece-1c-save-and-reopen-o1-worker-report.md`, which holds the worker's first-attempt report and its final report.*
+
+1. **Built.** O1 is at e36e951167fcad90e8ee07f1a4bfd3be12cd0e56 and 4761ded8df7fd3206cec84b21ceaec4fc8ce9338 on `cut/b2-piece-1c-save-and-reopen`, on N7 (7109aeb2431d9ca9379cb15b0d027dba78a20217) with no merge, and pushed; nothing past O1. It holds the tests K-S1 to K-S5, K-S8 to K-S13 and G3, and two tests §4 does not name. Each test's mutation was observed failing alone at 4761ded8, fourteen in all. The custodian recounted from the worker's logs: 979 passed, 0 failed and 57 ignored at e36e9511; 993, 0 and 57 at 4761ded8.
+2. **Class 8.** By §2.11's command over `43a39222...4761ded8`, the kernel product group counts 2,758 lines against 1,350 (Amendment 2 item 2 counted 2,099 at N7). The kernel tests group counts 983 of 1,000. §7 is not edited.
+3. **Departures, for the gates (class 1).**
+   - The first-save move locks the new record before its rename, where §2.3 orders it written, synced, renamed, then locked. K-S9 passed with the lock first on this machine.
+   - The mutations for K-S4, K-S5, K-S8 and G3 are not §4's words; the report gives each with its reason.
+4. **Disclosed for the gates.** The items the report lists as not named in this form, in `kernel/src/dataset_ref.rs`, `kernel/src/session_history.rs`, `kernel/src/project/mod.rs` and `kernel/src/project/resolver.rs`; the behaviours §2.3 does not state, which the report lists; the two unnamed tests; the `pub` items whose product caller is P3's handler.
+5. **What waits for Amendment 7 (class 1).**
+   - A first save whose request carries no `folder` is refused by the kernel at e36e9511, and §2.2's code list has no code for it.
+   - The human's ruling of 2026-10-23 (`state/directives/2026-10-23-clicks-245-246-247-sort-window-fix-before-port-2-covering-case-route-1-244-c1-milestone-4-and-1c-open-items-ruled.md`: OPEN-A2 (b) under piece 1c, the same ruling as milestone 4's OPEN-18 (b)) places the `record_step` widening in step 1, by class 9 to this form. No amendment recorded it, and N1 to O1 were built without it.
+   - Amendment 7 declares both before P2. P1 proceeds now.
+6. **Next.** P1 now. Then P2 and P3 after Amendment 7, then P4 to P6 and R1. Their other waits are met: PR A merged as #246 and PR C as #253 (Amendment 3), 8e as #290 (Amendment 4), and #241 on 2026-10-26.
+
+Nothing above is edited.
