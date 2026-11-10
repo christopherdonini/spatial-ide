@@ -90,18 +90,25 @@ async function readBox(page) {
 }
 
 let jit = 0;
+const SETCAM_BOUND_MS = 5500; // the 500 ms minimum plus five polls of 1000 ms
 async function setCam(page, vs, tx, ty, z) {
   // Jitter the zoom so deck's uncontrolled `initialViewState` deep-equal guard (this file's own
   // WorkingCanvas header, entry 85) never drops a repeated identical reset.
   jit += 1;
+  const zoom = z + jit * 1e-5;
   vs.length = 0;
-  await page.evaluate((a) => window.__SPATIAL_E2E__.e2eSetViewState(a[0], a[1], a[2]), [tx, ty, z + jit * 1e-5]);
+  await page.evaluate((a) => window.__SPATIAL_E2E__.e2eSetViewState(a[0], a[1], a[2]), [tx, ty, zoom]);
   await sleep(500);
-  // Two of the first three runs of the re-aimed file died here with `undefined.targetX`: on a loaded machine the view-state
-  // line for the reset had not been logged 500 ms after the call. Wait for the line itself (a bound, not a claim about how
-  // long one takes); the 500 ms above stays as the minimum it always was.
-  for (let i = 0; i < 20 && vs.length === 0; i++) await sleep(250);
-  return vs[vs.length - 1];
+  // Returns the first line in `vs` whose zoom is exactly the `zoom` just passed: the seam logs one line, carrying that
+  // argument, and a pan keeps the zoom, so a line of the previous gesture (which can land after the clear above, the listener
+  // pushing one CDP round trip late) never carries it. Such a late line stays in `vs` and is not read. A precondition on
+  // which line is s0, not a property under test; `s1` (`last(vs)` after `drag`) is not covered by it. The wait is bounded
+  // by SETCAM_BOUND_MS after the call; on no match the Error names setCam, the zoom, the bound and the other lines that arrived.
+  const own = () => vs.find((l) => l.zoom === zoom);
+  for (let i = 0; i < 5 && !own(); i++) await sleep(1000);
+  const line = own();
+  if (!line) throw new Error(`setCam: no view-state line with zoom ${zoom} within ${SETCAM_BOUND_MS} ms of the call; ${vs.length} other lines arrived`);
+  return line;
 }
 const last = (vs) => vs[vs.length - 1];
 
