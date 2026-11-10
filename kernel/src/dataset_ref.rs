@@ -232,6 +232,22 @@ impl DatasetRef {
         })
     }
 
+    /// This reference with a `project-relative` locator after its existing ones, for the
+    /// resolver's judgment at save ([`crate::project::resolver::judge`]). `at` is refused unless it
+    /// is within the string ceiling and in canonical form: the two rules the reader holds, so a
+    /// locator built here is one the reader accepts. That `at` leads inside the project folder is
+    /// the resolver's to judge, and is not checked here.
+    pub(crate) fn with_project_relative(&self, at: &str) -> Result<DatasetRef, RefParseError> {
+        let path = format!("$.resource.locators[{}].at", self.locators.len());
+        if at.len() > MAX_REF_STRING_BYTES {
+            return Err(over(&path, MAX_REF_STRING_BYTES as u64));
+        }
+        in_canonical_form(at, &path)?;
+        let mut with = self.clone();
+        with.locators.push(Locator::ProjectRelative(at.to_string()));
+        Ok(with)
+    }
+
     pub fn uri(&self) -> &DatasetUri {
         &self.uri
     }

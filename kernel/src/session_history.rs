@@ -19,7 +19,7 @@
 //! `b2-piece-1c-save-and-reopen`'s recovery offer (the human's round 8 exemption).
 
 use std::fs::{File, OpenOptions};
-use std::io::{Read, Write};
+use std::io::{Read, Seek, SeekFrom, Write};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 
@@ -38,6 +38,7 @@ use crate::dataset_ref::{
 };
 use crate::permission::audit::{log::data_dir, rfc3339_utc_now};
 use crate::project::strict_json::{self, Layout, Limits, StrictError};
+use crate::project::ProjectUri;
 use crate::skp::{check_version, predicate_admit_error_of, require_live, SkpHost};
 
 /// Declared ceilings (ADR-010 rule 6; ADR-036 §9), checked before any write: a step's line, the
@@ -126,6 +127,55 @@ struct Record {
     admission: Admission,
     history: History<File>,
     last_step: Option<String>,
+    /// The project this record belongs to, once a save has moved it there ([`StepRecorder::adopt_project`]).
+    project: Option<ProjectUri>,
+    reached: Reached,
+}
+
+/// What the steps recorded for one opened file reach: the last value each one set. A save compares
+/// the workspace it is given with this (ADR-036 §6's saved-here mark; piece 1c's OPEN-9 (A)).
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct Reached {
+    /// The last `filter.apply`: the outer `None` is no such step, and the inner `None` is a step
+    /// that cleared the filter.
+    pub filter: Option<Option<String>>,
+    pub fill_color: Option<String>,
+    pub outline_color: Option<String>,
+    pub fill_opacity: Option<f64>,
+    pub outline_width: Option<f64>,
+}
+
+impl Reached {
+    fn note(&mut self, intent: &StepIntent) {
+        match intent {
+            StepIntent::FilterApply(p) => {
+                self.filter = Some(p.filter.as_ref().map(|f| f.predicate.clone()));
+            }
+            StepIntent::StyleSet(StyleSetParams::FillColor { value }) => {
+                self.fill_color = Some(value.clone());
+            }
+            StepIntent::StyleSet(StyleSetParams::OutlineColor { value }) => {
+                self.outline_color = Some(value.clone());
+            }
+            StepIntent::StyleSet(StyleSetParams::FillOpacity { value }) => {
+                self.fill_opacity = Some(*value);
+            }
+            StepIntent::StyleSet(StyleSetParams::OutlineWidth { value }) => {
+                self.outline_width = Some(value.value);
+            }
+        }
+    }
+}
+
+/// What [`StepRecorder::mark_saved_here`] did.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum SavedHere {
+    /// One `saved-here` line was written after the last step.
+    Written,
+    /// The history holds no step for this file, so there is nothing for a mark to follow.
+    NoStep,
+    /// The workspace differs from what the steps reach, in the member named; no mark was written.
+    Differs(&'static str),
 }
 
 /// Records committed steps. Built once by the shell's binding with the store root and the host it
@@ -196,7 +246,69 @@ impl StepRecorder {
         reader_accepts(&line, false)?;
         rec.history.append(&line, false)?;
         rec.last_step = Some(id);
+        rec.reached.note(&req.intent);
         Ok(RecordStepResponse {})
+    }
+
+    /// A save's first move (piece 1c; ADR-036 Amendment 1, item 5). The record of the file `ds` was
+    /// opened over, if it has one and no project holds it yet, becomes the project's record:
+    /// `<store root>/<project hex>/`. The kept lines are copied under a header whose `project` is
+    /// the project's URI, with one write and one sync, into a new file that is locked before it is
+    /// renamed into place, so it is never visible unlocked. The `unsaved-` record is removed last,
+    /// after this record holds the new file. Later steps continue the moved record. Nothing happens
+    /// when there is no record or a project already holds it.
+    pub fn adopt_project(&self, ds: &Dataset, project: &ProjectUri) -> Result<(), SkpError> {
+        let mut records = self.records.lock().unwrap_or_else(|e| e.into_inner());
+        let Some(at) = find(&records, ds) else {
+            return Ok(());
+        };
+        let rec = &mut records[at];
+        if rec.project.is_some() {
+            return Ok(());
+        }
+        let dir = self.root.join(project.hex());
+        let (file, length) = copy_under(rec, &dir, project)?;
+        let moved = std::mem::replace(&mut rec.dir, dir);
+        let mut history = History::new(file, |f| f.sync_all());
+        history.bytes = length;
+        // The old handle is dropped here, which frees the old file's lock before it is removed.
+        rec.history = history;
+        rec.project = Some(project.clone());
+        let _ = std::fs::remove_file(moved.join(HISTORY));
+        let _ = std::fs::remove_file(moved.join(LOCATIONS));
+        let _ = std::fs::remove_dir(&moved);
+        Ok(())
+    }
+
+    /// A save's second move: one `{"mark":{"kind":"saved-here","after":<last step>,"at":…}}` line
+    /// through the same append path as a step (one write, one flush), for the file `ds` was opened
+    /// over. `differs` is given what the steps reach, under the same lock the line is written
+    /// under, and names a member of the workspace that the steps do not reach; then nothing is
+    /// written. The line is checked against the reader's own rules before it is written.
+    pub fn mark_saved_here(
+        &self,
+        ds: &Dataset,
+        differs: impl FnOnce(&Reached) -> Option<&'static str>,
+    ) -> Result<SavedHere, SkpError> {
+        let mut records = self.records.lock().unwrap_or_else(|e| e.into_inner());
+        let Some(rec) = find(&records, ds).map(|at| &mut records[at]) else {
+            return Ok(SavedHere::NoStep);
+        };
+        let Some(after) = rec.last_step.clone() else {
+            return Ok(SavedHere::NoStep);
+        };
+        if let Some(member) = differs(&rec.reached) {
+            return Ok(SavedHere::Differs(member));
+        }
+        let mark = Json::obj([
+            ("kind", Json::str("saved-here")),
+            ("after", Json::str(&after)),
+            ("at", Json::str(rfc3339_utc_now())),
+        ]);
+        let line = canonical(&Json::obj([("mark", mark)]))?;
+        mark_accepted(&line)?;
+        rec.history.append(&line, false)?;
+        Ok(SavedHere::Written)
     }
 
     /// Normal end of the application: delete this run's records, their files and folders, and
@@ -275,10 +387,89 @@ impl StepRecorder {
             admission: reference.admission().clone(),
             history: History::new(file, |f| f.sync_all()),
             last_step: None,
+            project: None,
+            reached: Reached::default(),
         };
         rec.history.append(header, true)?;
         Ok(rec)
     }
+}
+
+/// The record of the file `ds` was opened over: the one `record_step` continues for it.
+fn find(records: &[Record], ds: &Dataset) -> Option<usize> {
+    let reference = DatasetRef::linked(DatasetUri::mint(), ds).ok()?;
+    let same = |r: &Record| r.path == ds.path() && same_claims(&r.admission, reference.admission());
+    records.iter().position(same)
+}
+
+/// The record `rec` holds, copied into `dir` (a new folder) under a header whose `project` is
+/// `project`: the new file, locked and holding the copy, and its length. A failure removes `dir`.
+fn copy_under(rec: &mut Record, dir: &Path, project: &ProjectUri) -> Result<(File, u64), SkpError> {
+    let file = &mut rec.history.out;
+    let mut kept = Vec::new();
+    file.seek(SeekFrom::Start(0))
+        .and_then(|_| Read::take(&*file, MAX_SESSION_HISTORY_BYTES + 1).read_to_end(&mut kept))
+        .and_then(|_| file.seek(SeekFrom::End(0)))
+        .map_err(|e| unwritable(HISTORY, &e))?;
+    let copy = with_project(&kept, project)?;
+    let own = |what: &str| {
+        let what = what.to_string();
+        move |e: std::io::Error| unwritable(&what, &e)
+    };
+    std::fs::create_dir(dir).map_err(own("the project's record folder"))?;
+    let made: Result<File, SkpError> = (|| {
+        std::fs::copy(rec.dir.join(LOCATIONS), dir.join(LOCATIONS)).map_err(own(LOCATIONS))?;
+        let temp = dir.join(format!("{HISTORY}.tmp-{}", hex32()));
+        let mut options = OpenOptions::new();
+        let file = options.read(true).write(true).create_new(true).open(&temp);
+        let mut file = file.map_err(own(HISTORY))?;
+        file.try_lock()
+            .map_err(|e| unwritable("the history lock", &e))?;
+        file.write_all(&copy)
+            .and_then(|()| file.sync_all())
+            .and_then(|()| std::fs::rename(&temp, dir.join(HISTORY)))
+            .map_err(own(HISTORY))?;
+        Ok(file)
+    })();
+    match made {
+        Ok(file) => Ok((file, copy.len() as u64)),
+        Err(e) => {
+            drop(std::fs::remove_dir_all(dir));
+            Err(e)
+        }
+    }
+}
+
+/// The bytes of a history with its header's `project` member replaced by the project's URI, the
+/// header checked against the reader's rules, and every line after it as it was written.
+fn with_project(kept: &[u8], project: &ProjectUri) -> Result<Vec<u8>, SkpError> {
+    let refuse = |what: &str| unwritable("the record to move", &what);
+    let end = kept.iter().position(|b| *b == b'\n');
+    let end = end.ok_or_else(|| refuse("it holds no header line"))?;
+    let parsed = strict_json::parse(&kept[..end], &LINE_LIMITS);
+    let Json::Obj(mut members) = parsed.map_err(|e| refuse(&e.to_string()))? else {
+        return Err(refuse("its header is not an object"));
+    };
+    let slot = members.iter_mut().find(|(k, _)| k == "project");
+    slot.ok_or_else(|| refuse("its header has no `project`"))?.1 = Json::str(project.as_str());
+    let header = canonical(&Json::Obj(members))?;
+    reader_accepts(&header, true)?;
+    Ok([header.as_bytes(), &kept[end..]].concat())
+}
+
+/// A `saved-here` line, checked against the reader's own rules before it is written.
+fn mark_accepted(line: &str) -> Result<(), SkpError> {
+    let refuse = |rule: String| {
+        SkpError::session_history_unwritable(&format!(
+            "the mark line breaks a rule the reader holds, so it is not written: {rule}"
+        ))
+    };
+    let parsed = strict_json::parse(line.as_bytes(), &LINE_LIMITS)
+        .map_err(|e: StrictError| refuse(format!("not JSON: {e}")))?;
+    let v = strict_json::to_value(&parsed);
+    check(&v["mark"], "$.mark", &MARK)
+        .and_then(|()| in_writers_form(&parsed, line, false))
+        .map_err(|e| refuse(e.to_string()))
 }
 
 /// A filesystem call failed while a record was being made.
