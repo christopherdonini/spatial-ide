@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `3a6e4888ce05001212438ac91fb7a46f4517b782967419374a874a9f17603281`) at `2026-11-10T02:57:35.091Z`.
+Generated from `PLAN.yaml` (sha256 `50731388b1d9535e3c2e85e89b47e7a62f4c29058fefe06e33f7bc60e3488737`) at `2026-11-10T08:32:54.111Z`.
 
 ## 1. Next
 
@@ -52,7 +52,6 @@ Generated from `PLAN.yaml` (sha256 `3a6e4888ce05001212438ac91fb7a46f4517b7829674
 ## 5. In progress
 
 - **clippy-deny-warnings-workspace** — The workspace clippy diagnostics fixed, so cargo clippy over every target with -D warnings exits 0 (the cloud Linux run lists 48 distinct) — evidence: branch `cut/clippy-deny-warnings-workspace-12c`
-- **duckdb-literal-path-index-and-rowgroup-tests** — The escaped DuckDB path at the spatial-index and row-group-index sites is reached by no test: each site gets a test with its mutation (8f, gate 1 reviewer, EV-1) — evidence: branch `cut/duckdb-literal-path-index-and-rowgroup-tests`
 - **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **b1-shell-half** — Shell migration, milestone 4 -- B1 shell half: attributes of the inspected feature, colour by category with its legend, and the table — evidence: branch `cut/b1-shell-half-pr-c`
 - **publish-e2e-filtered-step-shared-run-failure** — The publish e2e suite's FILTERED' step failed once in a shared run: the prompt carried no filter_scope sentence after a filter was applied (at 147ef82c), not reproduced at the next head — evidence: branch `cut/publish-e2e-filtered-step-shared-run-failure`
