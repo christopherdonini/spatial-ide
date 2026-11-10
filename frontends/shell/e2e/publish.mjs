@@ -42,6 +42,11 @@
 // the replacement holds the post-Apply closure and stages the post-Apply scope. The wait polls once a second, for at most 20000ms; if the hook is not replaced the step fails naming
 // FILTERED', the wait and the 20000ms. The wait is a precondition on when the prepare is sent, not a property: no assertion of FILTERED' concerns timing.
 //
+// RECORDED MUTATION, applied alone, the suite run, the failing step recorded by name with the commit, then reverted.
+//   M-FLAG   src/App.tsx, the PublishPanel element: `filterActive={activeFilter !== null}` set to `filterActive={false}`.
+//             Expected: FILTERED' fails at the wait's timeout message; OPEN, APPROVED' and REFUSED' pass; EXPIRED' is skipped.
+//             Observed at d532cf7d240314e178182263bf935c86fa08acf9: [FILTERED'] FAIL (20101ms): FILTERED': the wait for the prepare hook to be replaced after the Apply did not end within 20000ms
+//
 // `waitForMountReady`/`waitForHook`/`withTimeout` are duplicated from filter.mjs rather than
 // imported -- this workspace's own established convention for sibling test files.
 
