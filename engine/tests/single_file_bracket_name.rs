@@ -2,7 +2,8 @@
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
 //! An existing single file whose path holds `[`, `]`, `{` or `}` opens, and streams only its own
-//! rows.
+//! rows. The file also covers the spatial-index and row-group-index builds over one such file,
+//! `zones[1].parquet` beside a decoy `zones1.parquet`, one test each.
 
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
@@ -227,4 +228,92 @@ fn an_existing_single_file_whose_name_holds_a_bracket_or_a_brace_opens_and_strea
             assert_eq!(before, after, "{row}: assertion 4, every file is unchanged");
         }
     }
+}
+
+/// Writes the K1 shape, `zones[1].parquet` of 500 features beside `zones1.parquet` of 300, in a
+/// directory of the calling test's own, each with a native unique id and `row_group_rows` and
+/// `chunk` as given. Returns the literal file's path.
+fn write_k1_pair(directory: &str, rows_per_group: Option<usize>) -> PathBuf {
+    let dir = fixture_root().join(directory);
+    let _ = std::fs::remove_dir_all(&dir);
+    let mut literal_spec = spec(LITERAL_FEATURES, None, IdentityMode::NativeUnique);
+    let mut decoy_spec = spec(
+        DECOY_A_FEATURES,
+        Some(DECOY_A_SEED),
+        IdentityMode::NativeUnique,
+    );
+    if let Some(rows) = rows_per_group {
+        for s in [&mut literal_spec, &mut decoy_spec] {
+            s.row_group_rows = rows;
+            s.chunk = rows;
+        }
+    }
+    let literal = dir.join("zones[1].parquet");
+    write_file(&literal, &literal_spec);
+    write_file(&dir.join("zones1.parquet"), &decoy_spec);
+    literal
+}
+
+/// An existing `zones[1].parquet` of 500 features, opened beside a `zones1.parquet` of 300 and
+/// indexed through `Dataset::build_index`, is indexed from its own rows: the build is admitted and
+/// its report holds 500 indexed features and 500 scanned rows, not the decoy's 300.
+///
+/// RECORDED MUTATION (observed at `a096ebbb7358539664f46cb669d2c7856b86e175`):
+/// in `SpatialIndex::build_observed` the `read_parquet` path left unescaped. Observed outcome:
+/// this test fails at the `indexed_features` assertion, 300 against 500.
+#[test]
+fn an_index_built_over_an_existing_bracket_named_file_holds_only_that_files_features() {
+    let literal = write_k1_pair("index-k1", None);
+    let ds = Dataset::open_cancellable(
+        &literal,
+        None,
+        None,
+        &CancelToken::new(),
+        PoolConfig::default(),
+    )
+    .expect("the file is admitted");
+
+    let report = ds
+        .build_index(&CancelToken::new())
+        .expect("the index build over the literal file is admitted");
+
+    assert_eq!(
+        report.indexed_features, LITERAL_FEATURES,
+        "indexed_features is the literal file's count, not the decoy's"
+    );
+    assert_eq!(
+        report.scanned_rows, LITERAL_FEATURES as u64,
+        "scanned_rows is the literal file's count, not the decoy's"
+    );
+}
+
+/// An existing `zones[1].parquet` of 500 features, opened beside a `zones1.parquet` of 300, both
+/// written at 100 rows per row group, has its row-group index built from its own footer: the
+/// report holds 5 row groups, not the decoy's 3.
+///
+/// RECORDED MUTATION (observed at `a096ebbb7358539664f46cb669d2c7856b86e175`):
+/// in `RowGroupIndex::read_metadata` the bound path left unescaped. Observed outcome: this test
+/// fails at the `row_groups` assertion, 3 against 5.
+#[test]
+fn a_row_group_index_built_over_an_existing_bracket_named_file_reads_only_that_files_footer() {
+    const ROWS_PER_GROUP: usize = 100;
+    let literal = write_k1_pair("row-group-k1", Some(ROWS_PER_GROUP));
+    let ds = Dataset::open_cancellable(
+        &literal,
+        None,
+        None,
+        &CancelToken::new(),
+        PoolConfig::default(),
+    )
+    .expect("the file is admitted");
+
+    let report = ds
+        .build_row_group_index(&CancelToken::new())
+        .expect("the row-group index build over the literal file is admitted");
+
+    assert_eq!(
+        report.row_groups,
+        LITERAL_FEATURES.div_ceil(ROWS_PER_GROUP),
+        "row_groups is the literal file's footer's count, not the decoy's"
+    );
 }
