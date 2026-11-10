@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `50731388b1d9535e3c2e85e89b47e7a62f4c29058fefe06e33f7bc60e3488737`) at `2026-11-10T08:32:54.111Z`.
+Generated from `PLAN.yaml` (sha256 `c3c59d1e9f9b35447adbcd6c41208dfaf4db336e29a8b47c7b54037781c9926f`) at `2026-11-10T17:22:55.983Z`.
 
 ## 1. Next
 
@@ -36,6 +36,7 @@ Generated from `PLAN.yaml` (sha256 `50731388b1d9535e3c2e85e89b47e7a62f4c29058fef
 - **skp-line-cites-outside-close-races** — Stale line cites into kernel/src/skp.rs outside kernel-close-races-followups files -- shell streaming, App.tsx, pool_poll.rs, src-tauri lib.rs, the P4 corpus test and the persisted-artifacts test — blocked by: adr-035-close-races-note
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
 - **pan-anchor-setcam-waits-for-its-own-reset** — e2e/pan-anchor.mjs: setCam waits for the view-state line its own reset produces, never a late line from the previous gesture (test only) — blocked by: publish-e2e-filtered-step-shared-run-failure
+- **pan-anchor-there-and-back-residual-diagnostic** — e2e/pan-anchor.mjs: the s1 lag and the there-and-back residual, a diagnostic first (emission and arrival times, the view state at each read, s0 and s1), graded on its reading — blocked by: pan-anchor-setcam-waits-for-its-own-reset
 - **session-end-lines-name-coverage-lost-as-source-change** — The hover readout and the Feature tab word every session end as a source change, coverage-lost included, although the engine says coverage-lost is never a source change (milestone 4 PR C gate 1, the architect's C1 note) — blocked by: b1-shell-half
 - **session-log-token-redaction-rests-on-page-code** — The session token never reaching the session log rests on page code: binding_log_session_event appends page-supplied text verbatim, the page holds the token, and the data plane's Session::redact has only a test caller — blocked by: b2-piece-1c-save-and-reopen
 - **briefb-b2-save-reopen** — B2 — Save project, Snapshot data, session history, lineage and preferences, in five stages, each with its own form — blocked by: decision-adr-029-scan-progress-route

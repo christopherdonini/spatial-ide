@@ -308,3 +308,13 @@ No prior art recorded for "deck.gl view state pan drag test". Research it before
 - **Rule (00)** at main 96970544, `git diff --name-only origin/main...<branch>` against the Scope file, `frontends/shell/src/canvas/WorkingCanvas.tsx` (M-TRACE's, never committed), `frontends/shell/e2e/README.md` and protocol/: `cut/b1-shell-half-pr-c` (in progress): none; `cut/port-2-macos-l1-and-app-dirs` (in progress): none; `cut/b2-piece-1c-save-and-reopen` (in progress): none; `cut/publish-e2e-filtered-step-shared-run-failure` (PR #306): none; `cut/clippy-deny-warnings-workspace-12c` (in progress): none. It is checked again at dispatch.
 
 ## Amendments (opens empty; append-only)
+
+## Amendment 1 — OPEN-1 (A), the human's ruling of 2026-11-10 (16:40Z), and the diagnostic node placed after this piece (class 5)
+
+*Written by the custodian. References only: the human's message `state/directives/2026-11-10-o0-run-now-1c-step-1-slot-1-then-pr-b-306-clicked-pan-anchor-open-1-a-diagnostic-node-closing-message-leads-with-slots.md`, item 4.*
+
+1. **OPEN-1 (A), the human's.** The settlement put OPEN-1 to the human as a red line, and the human answered (A). This piece's scope stands as committed: s0 only, in its one file.
+2. **The node.** The node this form's draft proposed is placed by the human in slot 2, right after this piece: `pan-anchor-there-and-back-residual-diagnostic`, the diagnostic first, nothing fixed before it is read, graded on its result as item 4 says. In PLAN it depends on this piece; its form is drafted after this piece's worker.
+3. **Unchanged:** this form's change, probes, mutation, runs and gate.
+
+Nothing above is edited.

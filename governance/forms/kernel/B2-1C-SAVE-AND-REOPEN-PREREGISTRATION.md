@@ -1143,3 +1143,16 @@ Nothing above is edited.
 - **ADR-022's note** in the human's words (`state/directives/2026-11-05-8c-full-form-nine-s2-placed-u12-slot-2-u1-reproducer-adr-notes-words-e2e-readme-words-8b-d3.md`, item 3) lands with step 1's PR, appended after ADR-022's Amendment 2 at the file's end in the pattern of ADR-026's Note 2026-11-05; `adr-notes-stale-statements-and-indices` is done with that merge.
 
 Nothing above is edited.
+
+## Amendment 5 — O0 ran, and H1 is observed as far as the probe observes it (class 1); the resolver, `judge`, the save orchestration and their tests proceed, and step 1 takes slot 1, by the human's ruling of 2026-11-10 (16:40Z) (class 5)
+
+*Written by the custodian after O0's result was seen, before any resolver code: the amendment of its own that Amendment 1 item 2 names. References only: O0's run record `state/consults/2026-11-10-b2-piece-1c-save-and-reopen-o0-custodian-run.md` and the human's message `state/directives/2026-11-10-o0-run-now-1c-step-1-slot-1-then-pr-b-306-clicked-pan-anchor-open-1-a-diagnostic-node-closing-message-leads-with-slots.md`, cited by item.*
+
+1. **O0 ran (class 1).** The custodian ran the probe, `spikes/b2-1c-onedrive-probe/` at a88d01863f65eb1290f762f8a3f03db4b9e43a0c on `cut/b2-piece-1c-save-and-reopen` (named by its commit, with no hash pinned there), on the human's online-only file, inside a shared hold, on 2026-11-10, with exit 0. The file was checked to be a placeholder before it was opened. The probe's output, the file's size and sha256 and the attributes read outside the probe are in the run's record.
+2. **H1 (class 1).** Observed by the probe: the placeholder is reported as not a symlink and as a regular file; `symlink_metadata` and the walk leave it online-only; an open by path downloads it and the read completes; a junction is reported as a link. Not observed by the probe: that the placeholder is a reparse point, and its tag; in the probe's process the reparse-point and offline bits were not shown, and the custodian's reads outside the probe showed the reparse-point bit. By item 1 of the human's message, H1 passes: it is observed as far as the probe observes it, and that is how this form's H1 reads from this amendment on.
+3. **H5 (class 1).** The probe observes only that the open and the read completed. The liveness line and Cancel during a download stay for OP1 to OP3 at the sitting (item 1).
+4. **What proceeds (class 5).** By item 1, what Amendment 1 item 2 lists as waiting for O0 (H1) proceeds now for step 1: `judge` (§2.5), the save orchestration in `kernel/src/project/mod.rs` with everything item 2 lists for it, and the tests K-S1 to K-S5, K-S8 to K-S13 and G3. That is O1 of Amendment 1 item 6. `check_inside` at reopen stays step 2's. P1 to P6 and R1 keep their orders (Amendments 1, 3 and 4).
+5. **Placement (class 5).** By item 2, step 1 takes slot 1 now, and milestone 4's PR B follows it in slot 1; port-2 follows step 1's merge, as ruled.
+6. **The O0 file after the run.** It is downloaded and no longer online-only; OP1 to OP3 at the sitting need an online-only file again.
+
+Nothing above is edited.
