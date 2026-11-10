@@ -318,3 +318,18 @@ No prior art recorded for "deck.gl view state pan drag test". Research it before
 3. **Unchanged:** this form's change, probes, mutation, runs and gate.
 
 Nothing above is edited.
+
+## Amendment 2 — P1 departed from its prediction at commit 1 (class 1, written after the result was seen); one instrumented observation at commit 1, and nothing fixed before it is read (class 1)
+
+1. **P1 at commit 1** (624b2e6893a39fc967eada2cc028875d3c7d767c) exited 2 where note 4 predicted 0. Seven small-window checks passed; the eighth case's `setCam`, the seventh call, threw: `pan-anchor.mjs fatal: Error: setCam: no view-state line with zoom -6.99993 within 5500 ms of the call; 1 other lines arrived`. The worker stopped by the stop rules: nothing fixed, no retry, no push. Its report: `state/consults/2026-11-10-pan-anchor-setcam-waits-for-its-own-reset-build-worker-report.md` (sha256 2e5558bf93aa8045f0c0f45efbd2fb963c9af54d1dd62d4bfccb4e84b36af1bc). P0 at the base ran as predicted.
+2. **What the run did not record:** page-side times, page errors, the listener's push times. The app's session log shows tile work from 18:10:46Z to 18:10:48Z and none after. The custodian reads that as fitting a reset that ran about 2 s after the seventh call while its line did not reach `vs`. That is a reading, not an observation.
+3. **P1-D, one observation at commit 1.** It uses P1's wrapper, extended, as a worktree edit of pan-anchor.mjs that is reverted and never committed. The harness, the hold, the fixture's hashes and the copies are as note 4 gives them. Per `setCam` call, it records:
+   - page side, by `Date.now()`: the wrapper's call; the timer's firing; the real seam's return, or its exception's text; each `view-state` `console.debug` emission and its zoom (console.debug wrapped, passing through); `document.visibilityState` at the call and at the firing;
+   - node side, by `Date.now()`: each console event's receipt, each push into `vs` with its zoom, any `pageerror`, and any console line of type `error`.
+   - The records are written as JSON to a scratch file at exit, on every path, the throw included.
+   - Nothing is predicted: it is an observation, not a retry of P1. Its exit code and fatal line are recorded as they come.
+4. **The route after the reading.**
+   - (a) The seam ran and its line was emitted on the page, but it reached `vs` late or never: the harness's. The fix comes in this piece, under a further amendment written from the reading.
+   - (b) The seam threw, its timer never fired, or it emitted no line: the product's e2e seam. It goes to the human before any fix.
+   - (c) Anything else is reported as it is, and nothing is fixed.
+5. **Unchanged:** Scope, the Change line, M-TRACE, R1, readiness and the claim limit. P1 stays owed at the head that the route leaves.
