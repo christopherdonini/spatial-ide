@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `cca6d25fe85a0e569edd43f558fd96e5f22ff5454b4e736244432617fd153e28`) at `2026-11-11T22:00:58.080Z`.
+Generated from `PLAN.yaml` (sha256 `215c269dc568806ce8e258cf67deef62fae983f91811745a6f955ce1debb19ae`) at `2026-11-11T22:36:07.150Z`.
 
 ## 1. Next
 
@@ -9,7 +9,7 @@ Generated from `PLAN.yaml` (sha256 `cca6d25fe85a0e569edd43f558fd96e5f22ff5454b4e
 ## 2. Ready
 
 - **lod-tier-tests-own-tier-folder** — Each engine test run takes its own tier folder, the machine-wide tier folder kept for the product only: two suites sharing one machine cleared each other's tiers, failing lod_tier_builder in #284's gate 1 (the human's ruling of 2026-11-06, item 2) (lane `engine`, order null, budget 60 min)
-- **adr-035-close-races-note** — ADR-035 -- an appended, dated note recording what kernel-generation-close-races makes historical (Decision 3's no-session-reference case unreachable; invalidate marks only on a live removal; Decision 2's mint-race arm gone) (lane `kernel-protocol`, order null, budget 45 min)
+- **adr-035-close-races-note** — ADR-035 -- an appended, dated note recording what kernel-generation-close-races makes historical (Decision 3's no-session-reference case unreachable; invalidate marks only on a live removal; Decision 2's mint-race arm standing) (lane `kernel-protocol`, order null, budget 45 min)
 - **pre-admission-change-detail-braces** — Four kernel P6-placeholder detail strings are wrapped in literal braces, which reach the operator message; the watcher form declares each such string starts with the bracketed placeholder tag (lane `kernel-protocol`, order null, budget 30 min)
 - **second-open-history-before-1c-step-3** — What a second open's history is: a second open of a file whose session record another project of this run holds; placed before 1c's step 3, whose recovery offer reads the record; it carries ADR-036's note in the human's words (lane `kernel-protocol`, order null, budget 0 min)
 - **windows-case-fold-non-ascii** — The audit case policy on Windows folds non-ASCII letters as NTFS does, so a profile path differing only in non-ASCII case cannot escape the user-home redaction (wave 3's 1c-2 correction, S2, code-path-only) (lane `kernel-protocol`, order null, budget 60 min)
