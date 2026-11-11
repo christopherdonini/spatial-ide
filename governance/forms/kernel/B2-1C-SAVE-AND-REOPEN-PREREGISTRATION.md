@@ -1249,3 +1249,20 @@ Nothing above is edited.
 - **Next:** P2 now, then P3; then P4 to P6 and R1, as Amendment 1 item 6 orders them.
 
 Nothing above is edited.
+
+## Amendment 9 — P2 and P3 built (class 1); four groups and the step's total over their ceilings (class 8); P2's and P3's departures and additions disclosed for the gates (class 1); written after the result was seen
+
+*Written by the custodian. References only: `state/consults/2026-11-11-b2-piece-1c-save-and-reopen-p2-p3-worker-report.md`.*
+
+1. **Built.** P2 is at ffc039d1c171a803af5f9c6451457595c28ed93a and P3 at 41c32190b81eff94afeff54ba18c184789b23092 on `cut/b2-piece-1c-save-and-reopen`, on P1's 7eb5aa71de4891718af82fffb8e7bbd2e90e0984 with no merge, and pushed; nothing past P3. P2 is one commit, under `skp/0.13`: the literal, `save_project`'s wire and codes, `skp.project_folder_not_given` and the whole `record_step` widening (Amendment 8). Each new test's mutation was observed failing alone at 41c32190, thirteen in all. The custodian recounted from the worker's logs: 1,065 passed, 0 failed and 66 ignored on P2's full run; 1,070, 0 and 66 at 41c32190. P2's full run was on a tree that differed from its commit by test-only edits to `protocol/skp/tests/fixtures.rs` and two data files since removed; that crate's tests were run again on the commit's tree, and 41c32190's full run covers both commits.
+2. **Class 8.** By §2.11's command at H = 41c32190 with B = e57d75e191ea35fe44c3a26887d73b82f4b53262, P1's main parent and the branch's merge-base with main (over `43a39222...41c32190` the command also counts main's own changes merged at P1, 1,001 files), the step counts 51 files and 6,029 lines against ≤ 77 files and ≤ 4,790 lines. Over their ceilings: protocol product 407 of 320; fixtures and protocol tests 467 of 260; kernel product 3,206 of 1,350 (Amendment 6 item 2 counted 2,758 at O1, over the earlier base); kernel tests 1,547 of 1,000, accepted by Amendment 8. Which of the 28 protocol test, fixture and shell literal files count in the fixtures group and which in the version literal group is the worker's split, since §2.11 does not make it: 467 lines in 14 files, and 90 lines in 14 files against 130 lines and 30 files (25 changed files name a `skp/0.1x` literal). The others hold: the probe 144 of 150, ADR text 45 of 80, the renderer 123 of 200. §7 is not edited.
+3. **Departures, for the gates (class 1).**
+   - `StyleSetParams` keeps `FillColor` with its string value and adds a `FillColorMatch` variant, through a private wire enum that admits the match on `fillColor` only. Widening `FillColor` itself would have edited two existing kernel test files outside P2's list.
+   - The wire `view` carries `centre` and `zoom` only; the kernel writes `crs` from the dataset's admission, and a conformance row refuses a wire `crs`.
+   - `save_project`'s two request fixtures are held inline in `protocol/skp/tests/fixtures.rs` and as two conformance rows, not as files under `protocol/skp/tests/data/`: the shell's `src/console/renderTruth.test.ts` reads every request file there, has no key set for `save_project`, and is outside P2's list. P5, which brings `save_project` to the shell, finds this item here.
+   - `key_present` takes any `Option<T>`, so `folder` and the workspace's `filter` are required keys whose value may be null.
+   - `kernel/tests/project_save_skp.rs` (new, 265 lines, P3's three seam tests) is not in §2.11's kernel tests list; it counts in that group by path.
+4. **Disclosed for the gates.** The additions the report lists beyond this form's: the five error fixtures and the response fixture under `protocol/skp/tests/data/`, six conformance rows, a `Prepared` struct, `Bind` mapped to `skp.project_file_refused` at `$.datasets[0]`, a `pub(crate)` `StepRecorder::host`; the seven tests §4 does not name, each with its mutation observed; the literal sites left as history, which the report lists.
+5. **Next.** P4 to P6 and R1, as Amendment 1 item 6 orders them, after slot 2's quiet run ends, with no other heavy run of this project beside it.
+
+Nothing above is edited.
