@@ -1500,3 +1500,36 @@ Nothing above is edited.
 4. **Next.** Step 1's PR, by §9, with its gates.
 
 Nothing above is edited.
+
+## Amendment 18 — gate 1's findings: the correction round R2, declared before its code (class 1; class 9 for the picker's record and its test); two findings to the human (class 5 when ruled); rule (00) at R2's dispatch (class 1)
+
+*Written by the custodian. References only: `state/consults/gates/2026-11-11-b2-piece-1c-save-and-reopen-gate1-architect.md` and `state/consults/gates/2026-11-11-b2-piece-1c-save-and-reopen-gate1-reviewer.md` (gate-log 718 and 719), both FAIL at 791e7e9edb52328b7c430012c9a3a5e1105de8a2.*
+
+1. **R2, on the branch, after this amendment and before any other code.** Each change names the finding it closes, and its words are the reports' own, which carry their clause checks; none is the human's wording.
+   - **ADR-022's note** (architect C-1; Amendment 4 item 2). `## Note 2026-11-05` is appended at the file's end, after Amendment 2, in ADR-026's shape: the heading, the italic line naming the human's typed words (`state/directives/2026-11-05-8c-full-form-nine-s2-placed-u12-slot-2-u1-reproducer-adr-notes-words-e2e-readme-words-8b-d3.md`, item 3), then the note, byte-copied by script from that item's ADR-022 bullet, inside its quotation marks. Nothing above the heading changes. `adr-notes-stale-statements-and-indices` is done with step 1's merge, as Amendment 4 says.
+   - **`store::OPEN_LOCK` removed** (architect C-3, reviewer C2). Step 2 adds it with the lock that uses it (§2.7).
+   - **The folder picker recorded** (architect C-4, reviewer D2). `pickProjectFolder` moves into `frontends/shell/src/skp/dialog.ts` beside `pickFile`, and records `binding_pick_project_folder` by `recordNamed("binding-command", …)`, resolved on success and on a throw as `pickFile` is. `project/saveProject.ts` imports it from there. `skp/dialog.test.ts` gains one test with two cases, success and a throw, each asserting the row's name and outcome in the recorder. With the move, `console/recorder.ts`'s "every binding-command call site" sentence is true again, and it is not edited.
+   - **Words:**
+     - item 62: the architect's W1 for the sentence that begins "Both files are written before", and W6 for its comment's last clause (architect C-5 and D-6, reviewer D6);
+     - `HistoryMarkState`'s doc and SKP-V0 §11.2's `history_mark` line: the architect's W2 and W3 (architect D-1, reviewer D1);
+     - `SaveFailure::MachineRecordRefused`'s doc: the architect's W4 (D-2);
+     - the counts: the architect's W5, test names included, a class 3 edit by named exception (architect D-4, reviewer D4);
+     - `e2e-test-surface.ts`'s `"not-asked"` doc: the reviewer's D3;
+     - `kernel/README.md`'s list of preregistrations gains this form (architect D-5).
+   - **Not changed in R2:**
+     - `skp.project_file_refused`'s message (architect D-3) reaches the operator inside S4, so it stays under P6 for the sitting, with the architect's suggestion on record there;
+     - the reports' notes, none blocking.
+2. **To the human, not in R2.** Each one changes what a ruling or ADR-036's text settles, so it waits for the human's typed words. R2 does not wait for them.
+   - **Architect C-2:** §2.2 gives `save_project`'s reply no member for the judgment that §2.3, §2.8 and §2.12 (S18) show at save. The custodian recommends a member under `skp/0.13` before merge, with S18 and one end-to-end test.
+   - **Reviewer C1:** a second open of one file saves its mark into the first project's record and replies `written`. The custodian recommends withholding the mark with a named reason, and one kernel test that the first record is unchanged.
+   - Each ruling's code follows by its own amendment, declared before that code.
+3. **Reviewer H1.** `KnownFolders::from_bytes`'s pre-commitment stays as Amendment 16 item 1 records it. The architect's check 1 reads the 2026-10-23 directive as leaving it to the custodian. Its consumer, step 2's reopen under M1, and its gate, K-O10, are named in the PR body and in the node's PLAN summary at the next filing (architect D-7, reviewer D5).
+4. **Superseded.** Amendment 17 item 3's second clause of item 62's words is the overstatement that architect C-5 corrects. It stays as written, append-only, and is superseded by item 1 here.
+5. **Rule (00) at R2's dispatch.**
+   - Slot 2 commits nothing; pan-anchor's branch is held.
+   - Port-2's branch, built and not merged, touches `KNOWN-LIMITATIONS.md` in its portability levels and item 43, not item 62, and `kernel/src/permission/audit/log.rs`, which R2 does not edit. Neither touches `protocol/`.
+   - The docs lane is blocked, and the filler is idle.
+6. **Size.** R2's lines count in their groups, class 8 when counted.
+7. **Next.** R2's report; then gate 1 again, attempt 2, scoped to these findings; then the suites at R2's head, alone on the machine.
+
+Nothing above is edited.
