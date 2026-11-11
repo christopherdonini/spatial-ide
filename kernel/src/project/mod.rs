@@ -327,8 +327,9 @@ impl Projects {
 
 /// The member of `workspace` that the recorded steps do not reach, if any (OPEN-9 (A)). The filter
 /// is compared always: a workspace with a filter that no step applied differs. A style property is
-/// compared only if a step set it, as a literal; one no step set carries the document the session
-/// started from, which the history does not hold.
+/// compared only if a step set it, as a literal or, for the fill colour, as a match (compared case
+/// by case, in order); one no step set carries the document the session started from, which the
+/// history does not hold.
 fn differs(reached: &Reached, workspace: &Workspace) -> Option<&'static str> {
     let applied = reached.filter.clone().flatten();
     if applied != workspace.filter {
@@ -342,7 +343,11 @@ fn differs(reached: &Reached, workspace: &Workspace) -> Option<&'static str> {
     let number = |set: Option<f64>, held: &Value<f64>| {
         set.is_none_or(|v| matches!(held, Value::Literal(x) if *x == v))
     };
-    let reaches = colour(&reached.fill_color, &style.fill_color)
+    let fill = reached
+        .fill_color
+        .as_ref()
+        .is_none_or(|set| *set == style.fill_color);
+    let reaches = fill
         && colour(&reached.outline_color, &style.outline_color)
         && number(reached.fill_opacity, &style.fill_opacity)
         && number(reached.outline_width, &style.outline_width);

@@ -601,6 +601,89 @@ fn a_workspace_the_steps_do_not_reach_is_saved_and_the_mark_is_withheld() {
     );
 }
 
+/// A style document whose fill colour is a match on `zone`: `cases` are `(when, then)` pairs, and
+/// the other three properties are [`STYLE`]'s.
+fn match_style(cases: &[(&str, &str)]) -> style::StyleDocument {
+    let cases: Vec<Value> = cases
+        .iter()
+        .map(|(when, then)| serde_json::json!({ "when": when, "then": then }))
+        .collect();
+    let fill = serde_json::json!({"match": {"column": "zone", "cases": cases,
+        "on_null": "#cccccc", "on_unmatched": "#999999"}});
+    let mut document: Value = serde_json::from_str(STYLE).expect("STYLE is JSON");
+    document["layer"]["fill_color"] = fill;
+    style::parse(&document.to_string()).expect("a style document with a match")
+}
+
+/// **K-W3** (Amendment 7 item 2 (b)): a save after a recorded `fillColor` match marks the history
+/// only if the saved workspace holds that match. The same match is `Written`; one case's colour
+/// changed, or the cases in another order, is `Withheld` for the style; and a literal recorded after
+/// the match, held by the saved workspace, is `Written`.
+///
+/// RECORDED MUTATION: `Reached` does not note a match (the `FillColorMatch` arm of `note` is
+/// removed). Expected failure: the match is not compared, so the changed case colour is saved with
+/// its mark written, and this test fails at the first `Withheld` assertion.
+#[test]
+fn a_save_after_a_recorded_match_marks_only_a_workspace_holding_that_match() {
+    let rig = rig("kw3");
+    let (handle, ds) = rig.open_inside("data/parcels.parquet");
+    let recorded = [("civic", "#ff0000"), ("park", "#00aa00")];
+    let wire = serde_json::json!({
+        "skp": SKP_VERSION, "dataset": handle.as_str(),
+        "intent": {"action": "style.set", "params": {"property": "fillColor", "value": {
+            "match": {"column": "zone",
+                "cases": [{"when": "civic", "then": "#ff0000"}, {"when": "park", "then": "#00aa00"}],
+                "on_null": "#cccccc", "on_unmatched": "#999999"}}}}
+    });
+    let req: RecordStepRequest = serde_json::from_value(wire).expect("decodes as the request");
+    rig.recorder
+        .record_step(req)
+        .expect("the match is recorded");
+    let with = |cases: &[(&str, &str)]| Workspace {
+        style: match_style(cases),
+        ..workspace(&ds, None, -4.5)
+    };
+
+    let same = rig
+        .projects
+        .save(handle.as_str(), &ds, Some(&rig.folder), with(&recorded))
+        .expect("saved");
+    assert_eq!(same.history_mark, HistoryMark::Written);
+    let differs = Some(HistoryMark::Withheld(Withheld::WorkspaceDiffers("style")));
+    let changed = [("civic", "#ff0000"), ("park", "#00ab00")];
+    let swapped = [("park", "#00aa00"), ("civic", "#ff0000")];
+    for held in [&changed[..], &swapped[..]] {
+        let saved = rig
+            .projects
+            .save(handle.as_str(), &ds, None, with(held))
+            .expect("saved");
+        assert_eq!(Some(saved.history_mark), differs, "{held:?}");
+    }
+
+    rig.step(
+        &handle,
+        StepIntent::StyleSet(StyleSetParams::FillColor {
+            value: "#4285f4".to_string(),
+        }),
+    );
+    let literal = rig
+        .projects
+        .save(handle.as_str(), &ds, None, workspace(&ds, None, -4.5))
+        .expect("saved");
+    assert_eq!(literal.history_mark, HistoryMark::Written);
+    let record = rig.sessions.join(same.project.hex());
+    drop(rig.projects);
+    drop(rig.recorder);
+    let marks = history(&record)
+        .iter()
+        .filter(|l| l.get("mark").is_some())
+        .count();
+    assert_eq!(
+        marks, 2,
+        "a mark for each of the two saves that held the steps"
+    );
+}
+
 // ---------------------------------------------------------------------------------------------
 // K-S10 to K-S13: refusals, and the folders record
 // ---------------------------------------------------------------------------------------------

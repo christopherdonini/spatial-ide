@@ -435,6 +435,127 @@ fn record_step_fixtures_round_trip() {
     }
 }
 
+/// **W-F1** (`kernel/B2-1C-SAVE-AND-REOPEN-PREREGISTRATION.md` Amendment 7, item 2 (b)), `skp/0.13`:
+/// the `record_step` request that sets `fillColor` to a categorical match is read from the file's
+/// own bytes and written back as the same bytes, the serializer's pretty form and one LF. The
+/// match's cases keep their order.
+///
+/// Mutation: `on_unmatched` serialized under another name (`rename(serialize = "unmatched")` on
+/// `ColourMatchSpec::on_unmatched`). Expected failure: this test fails at the byte comparison.
+#[test]
+fn the_record_step_fill_match_fixture_decodes_and_re_encodes_byte_for_byte() {
+    let name = "v0-record_step-request-style-set-fill-match";
+    let path = format!("{}/tests/data/{name}.json", env!("CARGO_MANIFEST_DIR"));
+    let raw = std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("{path}: {e}"));
+    let req: RecordStepRequest =
+        serde_json::from_str(&raw).unwrap_or_else(|e| panic!("{name}: does not decode: {e}"));
+    assert_eq!(req.skp, SKP_VERSION, "{name}: the crate's own version");
+    let StepIntent::StyleSet(StyleSetParams::FillColorMatch { value }) = &req.intent else {
+        panic!("{name}: a match on fillColor decodes as the match variant");
+    };
+    let whens: Vec<&str> = value.spec.cases.iter().map(|c| c.when.as_str()).collect();
+    assert_eq!(
+        whens,
+        ["civic", "park"],
+        "{name}: the cases keep their order"
+    );
+    let again = serde_json::to_string_pretty(&req).unwrap() + "\n";
+    assert_eq!(again, raw, "{name}: re-encoding changed the bytes");
+}
+
+/// `skp/0.13`, `save_project`: the two requests below and the response fixture round trip, a
+/// request without `folder` or without the workspace's `filter` is refused (`null` is "none",
+/// never an absent key), and each of the five new `skp.*` error fixtures is what the matching
+/// `SkpError` constructor produces, so the text a client reads and the file cannot drift apart.
+///
+/// The requests are held here and not under `tests/data/`: the shell's `renderTruth.test.ts` reads
+/// every `v0-<command>-request*.json` there and has no entry for this command yet.
+///
+/// Mutation: `#[serde(rename = "dataset_handle")]` on `SaveProjectRequest::dataset`. Expected
+/// failure: this test fails by name, at the first request.
+#[test]
+fn save_project_requests_and_response_round_trip_and_its_codes_are_what_the_constructors_build() {
+    let style = serde_json::json!({
+        "style_version": 1,
+        "layer": {
+            "geometry": "polygon", "fill_color": {"literal": "#4285f4"},
+            "fill_opacity": {"literal": 0.35}, "outline_color": {"literal": "#000000"},
+            "outline_width": {"literal": 1.5}
+        }
+    });
+    let view = serde_json::json!({
+        "centre": ["4143d62040000000", "41324f8040000000"], "zoom": "c012000000000000"
+    });
+    let request =
+        |folder: serde_json::Value, filter: serde_json::Value, clauses: serde_json::Value| {
+            serde_json::json!({
+                "skp": "skp/0.13", "dataset": "ds_00112233445566778899aabbccddeeff",
+                "folder": folder,
+                "workspace": {"filter": filter, "clauses": clauses, "style": style, "view": view}
+            })
+        };
+    let filter = serde_json::json!({"predicate": "zone = 'civic'", "dialect": "duckdb-expr/0"});
+    let clauses = serde_json::json!([{"text": "zone = 'civic'", "enabled": true}]);
+    let first = request(serde_json::json!("C:/Projects/parcels"), filter, clauses);
+    let later = request(
+        serde_json::Value::Null,
+        serde_json::Value::Null,
+        serde_json::json!([]),
+    );
+    for (what, wire) in [("a first save", &first), ("a save with no folder", &later)] {
+        let parsed: SaveProjectRequest = serde_json::from_value(wire.clone())
+            .unwrap_or_else(|e| panic!("{what}: does not deserialize: {e}"));
+        assert_eq!(&serde_json::to_value(&parsed).unwrap(), wire, "{what}");
+        assert_eq!(parsed.skp, SKP_VERSION, "{what}");
+    }
+    round_trip::<SaveProjectResponse>("v0-save_project-response");
+
+    let mut no_folder = first.clone();
+    no_folder.as_object_mut().unwrap().remove("folder");
+    assert!(serde_json::from_value::<SaveProjectRequest>(no_folder).is_err());
+    let mut no_filter = first.clone();
+    no_filter["workspace"]
+        .as_object_mut()
+        .unwrap()
+        .remove("filter");
+    assert!(serde_json::from_value::<SaveProjectRequest>(no_filter).is_err());
+
+    for (name, built) in [
+        (
+            "v0-error-project_folder_not_given",
+            SkpError::project_folder_not_given(),
+        ),
+        (
+            "v0-error-project_folder_holds_project",
+            SkpError::project_folder_holds_project("C:/Projects/parcels"),
+        ),
+        (
+            "v0-error-project_file_unwritable",
+            SkpError::project_file_unwritable(
+                "the rename over project.spatial failed 5 times; the last error was: Access is denied.",
+            ),
+        ),
+        (
+            "v0-error-project_file_refused",
+            SkpError::project_file_refused(
+                "$.workspace.filter",
+                "the filter is not what the enabled clauses combine to",
+            ),
+        ),
+        (
+            "v0-error-project_lineage_not_kept_by_this_version",
+            SkpError::project_lineage_not_kept_by_this_version(),
+        ),
+    ] {
+        round_trip::<SkpError>(name);
+        assert_eq!(
+            serde_json::to_value(&built).unwrap(),
+            fixture(name),
+            "{name}: the constructor and the fixture differ"
+        );
+    }
+}
+
 /// `skp/0.2`: `engine.identity_unusable` gains a `candidate_columns` field (NEXT-CUT.md P0) — the
 /// file's 64-bit integer columns, schema order, comma-joined (`SkpError::fields` has no list shape
 /// on the wire — `kernel/src/skp.rs::error_of`). `message` stays whatever `EngineError::Display`
@@ -510,13 +631,13 @@ fn crs_unit_serializes_to_its_four_declared_strings_and_refuses_any_other() {
     }
 }
 
-/// `skp/0.12` (`record_step`, B2 piece 1b, `kernel/B2-1B-RECORDING-PREREGISTRATION.md`; this test
-/// was `skp_version_is_skp_0_11` before that piece, and `skp_version_is_skp_0_10` before the lines
-/// cut, PL-5).
-/// Mutation: the literal back to `"skp/0.11"`. Expected failure: this test fails by name.
+/// `skp/0.13` (`save_project`, B2 piece 1c, `kernel/B2-1C-SAVE-AND-REOPEN-PREREGISTRATION.md`; this
+/// test was `skp_version_is_skp_0_12` before that piece, `skp_version_is_skp_0_11` before piece 1b
+/// and `skp_version_is_skp_0_10` before the lines cut, PL-5).
+/// Mutation: the literal back to `"skp/0.12"`. Expected failure: this test fails by name.
 #[test]
-fn skp_version_is_skp_0_12() {
-    assert_eq!(SKP_VERSION, "skp/0.12");
+fn skp_version_is_skp_0_13() {
+    assert_eq!(SKP_VERSION, "skp/0.13");
 }
 
 /// **MP-1, `skp/0.9`, ADR-034 Decision 3 (`engine/MULTIPOLYGON-MP1-PREREGISTRATION.md` §4, row

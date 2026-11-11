@@ -164,6 +164,57 @@ impl SkpError {
             ],
         )
     }
+
+    /// `save_project` (`skp/0.13`): the request's `folder` is `null` and no save of this open has
+    /// chosen a folder, so the kernel has no project to save to. The message is the kernel's own
+    /// text for this fact (`kernel/src/project/mod.rs`, `SaveFailure::FolderRequired`).
+    pub fn project_folder_not_given() -> Self {
+        Self::protocol(
+            "project_folder_not_given",
+            "no folder was given, and this open of the dataset has no project to save to",
+        )
+    }
+
+    /// `save_project`: a first save into a folder that already holds `project.spatial`. Nothing
+    /// was written.
+    pub fn project_folder_holds_project(folder: &str) -> Self {
+        Self::protocol_with_fields(
+            "project_folder_holds_project",
+            format!("{folder} already holds project.spatial"),
+            [("folder", folder.to_string())],
+        )
+    }
+
+    /// `save_project`: the project folder or a file of the save could not be read or written;
+    /// `detail` says which and why. The project file is replaced whole or not at all, so a
+    /// refusal leaves the previous one in place.
+    pub fn project_file_unwritable(detail: &str) -> Self {
+        Self::protocol_with_fields(
+            "project_file_unwritable",
+            format!("the project could not be written: {detail}"),
+            [("detail", detail.to_string())],
+        )
+    }
+
+    /// `save_project`: a member of the project file, or of a file the save keeps for it, breaks a
+    /// rule its reader holds, so the save is not made. `path` names the member and `rule` the
+    /// rule.
+    pub fn project_file_refused(path: &str, rule: &str) -> Self {
+        Self::protocol_with_fields(
+            "project_file_refused",
+            format!("the project file would break a rule its reader holds: {path}: {rule}"),
+            [("path", path.to_string()), ("rule", rule.to_string())],
+        )
+    }
+
+    /// `save_project`: the project file there now records a lineage, which this version does not
+    /// keep, and replacing it would break that lineage.
+    pub fn project_lineage_not_kept_by_this_version() -> Self {
+        Self::protocol(
+            "project_lineage_not_kept_by_this_version",
+            "project.spatial records a lineage, which this version of the application does not keep",
+        )
+    }
 }
 
 impl std::fmt::Display for SkpError {

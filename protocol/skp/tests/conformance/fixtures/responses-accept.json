@@ -109,5 +109,16 @@
   "expect": "accept",
   "roundtrip": true,
   "document": {}
+ },
+ {
+  "id": "resp-save-project",
+  "spec": "\u00a711.2 save_project response",
+  "wire_type": "save_project.response",
+  "expect": "accept",
+  "roundtrip": true,
+  "document": {
+   "project": "spatial://project/0123456789abcdef0123456789abcdef",
+   "history_mark": "withheld"
+  }
  }
 ]

@@ -27,9 +27,9 @@ use serde_json::Value;
 use spatial_engine::crs::MAX_CRS_DEFINITION_BYTES;
 use spatial_engine::{AdmittedPredicate, Dataset, MAX_PREDICATE_BYTES};
 use spatial_renderer::canonical::{sha256_hex, to_canonical_string, Json};
-use spatial_renderer::style::{self, MAX_OUTLINE_WIDTH};
+use spatial_renderer::style::{self, Rgb, MAX_MATCH_CASES, MAX_OUTLINE_WIDTH};
 use spatial_skp::v0::{
-    RecordStepRequest, RecordStepResponse, SkpError, StepIntent, StyleSetParams,
+    ColourMatch, RecordStepRequest, RecordStepResponse, SkpError, StepIntent, StyleSetParams,
 };
 
 use crate::dataset_ref::{
@@ -139,20 +139,25 @@ pub struct Reached {
     /// The last `filter.apply`: the outer `None` is no such step, and the inner `None` is a step
     /// that cleared the filter.
     pub filter: Option<Option<String>>,
-    pub fill_color: Option<String>,
+    /// The last `fillColor` a step set: a colour, or the match, as the renderer holds it.
+    pub fill_color: Option<style::Value<Rgb>>,
     pub outline_color: Option<String>,
     pub fill_opacity: Option<f64>,
     pub outline_width: Option<f64>,
 }
 
 impl Reached {
-    fn note(&mut self, intent: &StepIntent) {
+    /// `fill_color` is what `prepare` read from a `fillColor` step, and is not looked at for any
+    /// other intent.
+    fn note(&mut self, intent: &StepIntent, fill_color: Option<style::Value<Rgb>>) {
         match intent {
             StepIntent::FilterApply(p) => {
                 self.filter = Some(p.filter.as_ref().map(|f| f.predicate.clone()));
             }
-            StepIntent::StyleSet(StyleSetParams::FillColor { value }) => {
-                self.fill_color = Some(value.clone());
+            StepIntent::StyleSet(
+                StyleSetParams::FillColor { .. } | StyleSetParams::FillColorMatch { .. },
+            ) => {
+                self.fill_color = fill_color;
             }
             StepIntent::StyleSet(StyleSetParams::OutlineColor { value }) => {
                 self.outline_color = Some(value.clone());
@@ -214,9 +219,12 @@ impl StepRecorder {
             .get(name)
             .ok_or_else(|| SkpError::unknown_dataset(name))?;
         require_live(&self.host.generations(), name)?;
-        let (action, kind, params, referenced) = prepare(&ds, &req.intent)?;
-        let intent = Json::obj([("action", Json::str(action)), ("params", params)]);
-        let dependencies = dependencies_json(&ds, &referenced)?;
+        let prepared = prepare(&ds, &req.intent)?;
+        let intent = Json::obj([
+            ("action", Json::str(prepared.action)),
+            ("params", prepared.params),
+        ]);
+        let dependencies = dependencies_json(&ds, &prepared.referenced)?;
         let observed = Json::obj([("observed", observed_json(&ds.descriptor().observation()))]);
         // Unreachable through `SkpHost::open_dataset`, which gives every assertion a definition.
         let reference = DatasetRef::linked(DatasetUri::mint(), &ds).map_err(|e| {
@@ -241,12 +249,12 @@ impl StepRecorder {
         ]);
         let parent = rec.last_step.as_deref();
         let at = rfc3339_utc_now();
-        let step = step_object(&id, parent, &at, kind, intent, dependencies, data);
+        let step = step_object(&id, parent, &at, prepared.kind, intent, dependencies, data);
         let line = canonical(&Json::obj([("step", step)]))?;
         reader_accepts(&line, false)?;
         rec.history.append(&line, false)?;
         rec.last_step = Some(id);
-        rec.reached.note(&req.intent);
+        rec.reached.note(&req.intent, prepared.fill_color);
         Ok(RecordStepResponse {})
     }
 
@@ -542,23 +550,34 @@ fn same_claims(a: &Admission, b: &Admission) -> bool {
     crs(a) == crs(b) && id(a) == id(b)
 }
 
-/// The action's name, registry `kind` and `params`, and the columns a filter names. A filter is
+/// What `record_step` takes from an intent before anything is written.
+struct Prepared {
+    action: &'static str,
+    /// The registry's `kind`.
+    kind: &'static str,
+    params: Json,
+    /// The file columns the step names: a filter's, or a fill colour match's column.
+    referenced: Vec<String>,
+    /// What a `fillColor` step sets, as the renderer holds it; `None` for every other intent.
+    fill_color: Option<style::Value<Rgb>>,
+}
+
+/// The action, its registry `kind` and `params`, and the columns the step names. A filter is
 /// admitted as `viewport_query` admits it; a style value as the style model admits it.
-fn prepare(
-    ds: &Dataset,
-    intent: &StepIntent,
-) -> Result<(&'static str, &'static str, Json, Vec<String>), SkpError> {
+fn prepare(ds: &Dataset, intent: &StepIntent) -> Result<Prepared, SkpError> {
     let p = match intent {
-        StepIntent::StyleSet(p) => return Ok(("style.set", "style", style_params(p)?, Vec::new())),
+        StepIntent::StyleSet(p) => return style_params(ds, p),
         StepIntent::FilterApply(p) => p,
     };
+    let filter_step = |filter: Json, referenced: Vec<String>| Prepared {
+        action: "filter.apply",
+        kind: "data",
+        params: Json::obj([("filter", filter)]),
+        referenced,
+        fill_color: None,
+    };
     let Some(f) = &p.filter else {
-        return Ok((
-            "filter.apply",
-            "data",
-            Json::obj([("filter", Json::Null)]),
-            Vec::new(),
-        ));
+        return Ok(filter_step(Json::Null, Vec::new()));
     };
     let admitted =
         AdmittedPredicate::admit(f.predicate.clone(), ds).map_err(predicate_admit_error_of)?;
@@ -566,34 +585,37 @@ fn prepare(
         ("predicate", Json::str(&f.predicate)),
         ("dialect", Json::str(&f.dialect)),
     ]);
-    let columns = admitted.referenced_columns().to_vec();
-    Ok((
-        "filter.apply",
-        "data",
-        Json::obj([("filter", filter)]),
-        columns,
-    ))
+    Ok(filter_step(filter, admitted.referenced_columns().to_vec()))
 }
 
 /// A style value is checked by wrapping it in a whole style document and calling the renderer's
 /// `parse` (ADR-022 decision 2: the one Rust implementation), plus the kernel's own rules: a colour
-/// is lowercase, and the value has a canonical spelling.
-fn style_params(p: &StyleSetParams) -> Result<Json, SkpError> {
-    let colour = |v: &String| (Value::from(v.clone()), Json::str(v));
-    let (property, key, (wire, value)) = match p {
+/// is lowercase, and the value has a canonical spelling. A match is also compiled by the renderer
+/// against the open's own columns, with its column as the published projection, so the renderer's
+/// rules for a match column (it exists, and it is a text column) are the only ones applied and none
+/// is written here. A match names that column as the step's one dependency.
+fn style_params(ds: &Dataset, p: &StyleSetParams) -> Result<Prepared, SkpError> {
+    let literal = |wire: Value| serde_json::json!({ "literal": wire });
+    let colour = |v: &String| (literal(Value::from(v.clone())), Json::str(v));
+    let (property, key, (leaf, value)) = match p {
         StyleSetParams::FillColor { value } => ("fillColor", "fill_color", colour(value)),
+        StyleSetParams::FillColorMatch { value } => (
+            "fillColor",
+            "fill_color",
+            (match_wire(value), match_json(value)),
+        ),
         StyleSetParams::OutlineColor { value } => ("outlineColor", "outline_color", colour(value)),
         StyleSetParams::FillOpacity { value: v } => (
             "fillOpacity",
             "fill_opacity",
-            (Value::from(*v), Json::Double(*v)),
+            (literal(Value::from(*v)), Json::Double(*v)),
         ),
         StyleSetParams::OutlineWidth { value: w } => {
             let width = Json::obj([("value", Json::Double(w.value)), ("unit", Json::str("px"))]);
             (
                 "outlineWidth",
                 "outline_width",
-                (Value::from(w.value), width),
+                (literal(Value::from(w.value)), width),
             )
         }
     };
@@ -603,17 +625,77 @@ fn style_params(p: &StyleSetParams) -> Result<Json, SkpError> {
         "fill_opacity": {"literal": 1.0}, "outline_color": {"literal": "#000000"},
         "outline_width": {"literal": 0.0}
     });
-    layer[key] = serde_json::json!({ "literal": wire });
-    let document = serde_json::json!({ "style_version": 1, "layer": layer });
-    style::parse(&document.to_string()).map_err(|e| refuse(e.to_string()))?;
-    if matches!(&value, Json::Str(s) if *s != s.to_ascii_lowercase()) {
+    layer[key] = leaf;
+    let document = serde_json::json!({ "style_version": 1, "layer": layer }).to_string();
+    let parsed = style::parse(&document).map_err(|e| refuse(e.to_string()))?;
+    let mut referenced = Vec::new();
+    if let StyleSetParams::FillColorMatch { value } = p {
+        let schema: Vec<(String, _)> = ds
+            .file_schema()
+            .fields()
+            .iter()
+            .map(|f| (f.name().clone(), f.data_type().clone()))
+            .collect();
+        referenced.push(value.spec.column.clone());
+        spatial_renderer::compile(&document, &schema, &referenced)
+            .map_err(|e| refuse(e.to_string()))?;
+    }
+    let colours: Vec<&String> = match p {
+        StyleSetParams::FillColor { value } | StyleSetParams::OutlineColor { value } => {
+            vec![value]
+        }
+        StyleSetParams::FillColorMatch { value } => {
+            let spec = &value.spec;
+            let then = spec.cases.iter().map(|c| &c.then);
+            then.chain([&spec.on_null, &spec.on_unmatched]).collect()
+        }
+        StyleSetParams::FillOpacity { .. } | StyleSetParams::OutlineWidth { .. } => Vec::new(),
+    };
+    if colours.iter().any(|c| **c != c.to_ascii_lowercase()) {
         return Err(refuse("a colour is `#rrggbb` in lowercase".into()));
     }
     to_canonical_string(&value).map_err(|e| refuse(e.to_string()))?;
-    Ok(Json::obj([
-        ("property", Json::str(property)),
-        ("value", value),
-    ]))
+    let sets_fill = matches!(
+        p,
+        StyleSetParams::FillColor { .. } | StyleSetParams::FillColorMatch { .. }
+    );
+    Ok(Prepared {
+        action: "style.set",
+        kind: "style",
+        params: Json::obj([("property", Json::str(property)), ("value", value)]),
+        referenced,
+        fill_color: sets_fill.then_some(parsed.fill_color),
+    })
+}
+
+/// A match as the style document spells it: the value of `fill_color` in a layer.
+fn match_wire(m: &ColourMatch) -> Value {
+    let spec = &m.spec;
+    let case =
+        |c: &spatial_skp::v0::ColourCase| serde_json::json!({"when": c.when, "then": c.then});
+    serde_json::json!({ "match": {
+        "column": spec.column,
+        "cases": spec.cases.iter().map(case).collect::<Vec<_>>(),
+        "on_null": spec.on_null,
+        "on_unmatched": spec.on_unmatched,
+    }})
+}
+
+/// The same match as the step line holds it, its members in the order the reader's shape declares.
+fn match_json(m: &ColourMatch) -> Json {
+    let spec = &m.spec;
+    let case = |c: &spatial_skp::v0::ColourCase| {
+        Json::obj([("when", Json::str(&c.when)), ("then", Json::str(&c.then))])
+    };
+    Json::obj([(
+        "match",
+        Json::obj([
+            ("column", Json::str(&spec.column)),
+            ("cases", Json::Arr(spec.cases.iter().map(case).collect())),
+            ("on_null", Json::str(&spec.on_null)),
+            ("on_unmatched", Json::str(&spec.on_unmatched)),
+        ]),
+    )])
 }
 
 /// ADR-036 §6's `dependencies`, from the open's own accessors: no file is read.
@@ -737,6 +819,23 @@ const TEXT: S = S::Text(MAX_TEXT);
 const ID: S = S::Hex("step_", 32);
 const HASH: S = S::Hex("sha256:", 64);
 const COLOUR: S = S::Hex("#", 6);
+/// ADR-017 §5a's categorical match for a colour, `fillColor`'s other value (ADR-036 §6).
+const MATCH: S = S::Obj(&[(
+    "match",
+    S::Obj(&[
+        ("column", TEXT),
+        (
+            "cases",
+            S::List(
+                &S::Obj(&[("when", TEXT), ("then", COLOUR)]),
+                MAX_MATCH_CASES,
+            ),
+        ),
+        ("on_null", COLOUR),
+        ("on_unmatched", COLOUR),
+    ]),
+)]);
+const FILL_COLOUR: S = S::Or(&COLOUR, &MATCH);
 const WIDTH: S = S::Obj(&[
     ("value", S::Num(MAX_OUTLINE_WIDTH)),
     ("unit", S::Word(&["px"])),
@@ -760,7 +859,7 @@ const REGISTRY: [(&str, &str, S); ACTIONS as usize] = [
         S::Tagged(
             "property",
             &[
-                ("fillColor", &[("value", COLOUR)]),
+                ("fillColor", &[("value", FILL_COLOUR)]),
                 ("outlineColor", &[("value", COLOUR)]),
                 ("fillOpacity", &[("value", S::Num(1.0))]),
                 ("outlineWidth", &[("value", WIDTH)]),
@@ -1794,5 +1893,54 @@ mod tests {
         assert_eq!(failure(&history(opaque.clone())), None);
         let spaced = opaque.replacen(r#""parent":"#, r#""parent": "#, 1);
         assert_eq!(failure(&history(spaced)).map(|f| f.0), Some(3));
+    }
+
+    const FILL_MATCH: &str = r##"{"action":"style.set","params":{"property":"fillColor","value":{"match":{"column":"zone","cases":[{"when":"civic","then":"#4285f4"},{"when":"park","then":"#0f9d58"}],"on_null":"#cccccc","on_unmatched":"#999999"}}}}"##;
+
+    /// U-W1. Mutation: the registry admits the match on every `style.set` property. Expected
+    /// failure: this test fails at the first property other than `fillColor`, which is kept.
+    #[test]
+    fn the_history_reader_admits_a_fill_color_match_and_refuses_one_on_another_property() {
+        let one = |intent: &str| vec![header(2), step(1, None, "style", intent, &sound())];
+        assert_eq!(failure(&one(FILL_MATCH)), None);
+        for property in ["outlineColor", "fillOpacity", "outlineWidth"] {
+            let swapped = FILL_MATCH.replacen("fillColor", property, 1);
+            let got = failure(&one(&swapped));
+            let (at, rule) = got.unwrap_or_else(|| panic!("{property} is given a match"));
+            assert_eq!(at, 2, "{property}: {rule}");
+        }
+        // What is inside a match is held as strictly as the rest of the line.
+        let cases = r##"[{"when":"civic","then":"#4285f4"},{"when":"park","then":"#0f9d58"}]"##;
+        let many: Vec<String> = (0..=MAX_MATCH_CASES)
+            .map(|i| format!(r##"{{"when":"w{i}","then":"#4285f4"}}"##))
+            .collect();
+        let too_many = format!("[{}]", many.join(","));
+        let faults = [
+            ("an uppercase colour", "#0f9d58", "#0F9D58"),
+            (
+                "a member the shape lacks",
+                r#""on_null""#,
+                r#""x":1,"on_null""#,
+            ),
+            ("a missing member", r##""on_null":"#cccccc","##, ""),
+            ("a case with no `then`", r##","then":"#0f9d58""##, ""),
+            (
+                "a name that is not text",
+                r#""column":"zone""#,
+                r#""column":7"#,
+            ),
+            ("a colour that is not a colour", "#999999", "grey"),
+            ("one case too many", cases, too_many.as_str()),
+        ];
+        for (what, from, to) in faults {
+            assert!(FILL_MATCH.contains(from), "{what}: the fault applies");
+            let broken = FILL_MATCH.replacen(from, to, 1);
+            let (at, rule) = failure(&one(&broken)).unwrap_or_else(|| panic!("{what} is kept"));
+            assert_eq!(at, 2, "{what}: {rule}");
+        }
+        // The largest match the shape admits is kept.
+        let full: Vec<String> = many[..MAX_MATCH_CASES].to_vec();
+        let at_ceiling = FILL_MATCH.replacen(cases, &format!("[{}]", full.join(",")), 1);
+        assert_eq!(failure(&one(&at_ceiling)), None);
     }
 }

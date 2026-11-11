@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
-//! The six SKP v0 commands: `open_dataset`, `describe`, `viewport_query`, `cancel`,
-//! `close_dataset` and, from `skp/0.12`, `record_step`. Nothing else — see `../../SKP-V0.md` §4's
-//! named-deferral list.
+//! The seven SKP v0 commands: `open_dataset`, `describe`, `viewport_query`, `cancel`,
+//! `close_dataset`, from `skp/0.12` `record_step` and from `skp/0.13` `save_project`. Nothing else
+//! — see `../../SKP-V0.md` §4's named-deferral list.
 //!
 //! Every struct here is `#[serde(deny_unknown_fields)]` in both directions: adding, removing or
 //! retyping a field is a new `skp` version string, never a tolerant reader (SKP-V0.md §4 item 13).
@@ -511,7 +511,7 @@ pub struct CloseDatasetResponse {
 // record_step
 // ---------------------------------------------------------------------------------------------
 
-/// **`skp/0.12`.** Records, in the kernel's session history (ADR-036 §12, Proposed), one change a
+/// **`skp/0.12`.** Records, in the kernel's session history (ADR-036 §12, Accepted 2026-10-22), one change a
 /// client has already committed. The kernel mints the step's id and `at` and takes `actor` and
 /// `effect` itself, so none of the four crosses the wire (ADR-004 Amendment 4), and neither does a
 /// space or a coordinate. It applies nothing.
@@ -544,23 +544,110 @@ pub struct FilterApplyParams {
     pub filter: Option<Filter>,
 }
 
-fn key_present<'de, D: serde::Deserializer<'de>>(d: D) -> Result<Option<Filter>, D::Error> {
-    Option::<Filter>::deserialize(d)
+/// An `Option` member that the wire must carry: `null` is "none", and an absent key is refused.
+fn key_present<'de, D, T>(d: D) -> Result<Option<T>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+    T: Deserialize<'de>,
+{
+    Option::<T>::deserialize(d)
 }
 
 /// One of the four properties the style panel commits, with the value type it has. A colour is
 /// text here; the kernel checks its spelling.
+///
+/// On the wire the four properties are `{"property": …, "value": …}`, and `fillColor`'s value is
+/// a colour or, from `skp/0.13`, a categorical match ([`ColourMatch`]). Here those two are two
+/// variants, `FillColor` and `FillColorMatch`, and `StyleSetWire` is the one wire shape for all
+/// five, closed in both directions: a match on any other property, an unknown key or a mistyped
+/// value is refused at deserialize.
 #[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(tag = "property", deny_unknown_fields)]
+#[serde(from = "StyleSetWire", into = "StyleSetWire")]
 pub enum StyleSetParams {
-    #[serde(rename = "fillColor")]
     FillColor { value: String },
+    FillColorMatch { value: ColourMatch },
+    FillOpacity { value: f64 },
+    OutlineColor { value: String },
+    OutlineWidth { value: OutlineWidthValue },
+}
+
+#[derive(Clone, Serialize, Deserialize)]
+#[serde(tag = "property", deny_unknown_fields)]
+enum StyleSetWire {
+    #[serde(rename = "fillColor")]
+    FillColor { value: FillColorWire },
     #[serde(rename = "fillOpacity")]
     FillOpacity { value: f64 },
     #[serde(rename = "outlineColor")]
     OutlineColor { value: String },
     #[serde(rename = "outlineWidth")]
     OutlineWidth { value: OutlineWidthValue },
+}
+
+#[derive(Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+enum FillColorWire {
+    Colour(String),
+    Match(ColourMatch),
+}
+
+impl From<StyleSetWire> for StyleSetParams {
+    fn from(wire: StyleSetWire) -> Self {
+        match wire {
+            StyleSetWire::FillColor {
+                value: FillColorWire::Colour(value),
+            } => Self::FillColor { value },
+            StyleSetWire::FillColor {
+                value: FillColorWire::Match(value),
+            } => Self::FillColorMatch { value },
+            StyleSetWire::FillOpacity { value } => Self::FillOpacity { value },
+            StyleSetWire::OutlineColor { value } => Self::OutlineColor { value },
+            StyleSetWire::OutlineWidth { value } => Self::OutlineWidth { value },
+        }
+    }
+}
+
+impl From<StyleSetParams> for StyleSetWire {
+    fn from(params: StyleSetParams) -> Self {
+        match params {
+            StyleSetParams::FillColor { value } => Self::FillColor {
+                value: FillColorWire::Colour(value),
+            },
+            StyleSetParams::FillColorMatch { value } => Self::FillColor {
+                value: FillColorWire::Match(value),
+            },
+            StyleSetParams::FillOpacity { value } => Self::FillOpacity { value },
+            StyleSetParams::OutlineColor { value } => Self::OutlineColor { value },
+            StyleSetParams::OutlineWidth { value } => Self::OutlineWidth { value },
+        }
+    }
+}
+
+/// **`skp/0.13`.** ADR-017 §5a's categorical match, as `fillColor`'s value:
+/// `{"match": {"column", "cases": [{"when", "then"}, …], "on_null", "on_unmatched"}}`. Every colour
+/// is `#rrggbb` text and every member is required. This crate checks the shape only; the kernel
+/// checks the rest, against the style model and the open's own columns.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ColourMatch {
+    #[serde(rename = "match")]
+    pub spec: ColourMatchSpec,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ColourMatchSpec {
+    pub column: String,
+    pub cases: Vec<ColourCase>,
+    pub on_null: String,
+    pub on_unmatched: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ColourCase {
+    pub when: String,
+    pub then: String,
 }
 
 /// A quantity with a unit (ADR-036 §6); the only unit is pixels.
@@ -581,6 +668,86 @@ pub enum PxUnit {
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct RecordStepResponse {}
+
+// ---------------------------------------------------------------------------------------------
+// save_project
+// ---------------------------------------------------------------------------------------------
+
+/// **`skp/0.13`.** Saves the workspace as the project of an open dataset: the kernel writes
+/// `project.spatial` in the project folder, whole or not at all (ADR-036 §1 and §4; ADR-006
+/// class 2), and replies with the project's identity (SKP-V0.md §11).
+///
+/// `folder` is the project folder, an absolute UTF-8 path from the shell's folder picker. It is
+/// present only at the first save of an open: a later save of the same open goes to the folder the
+/// first one used and ignores it. `null` means no folder, and the key is always present.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct SaveProjectRequest {
+    pub skp: String,
+    pub dataset: DatasetHandle,
+    #[serde(deserialize_with = "key_present")]
+    pub folder: Option<String>,
+    pub workspace: ProjectWorkspace,
+}
+
+/// The `workspace` member of ADR-036's project file (Amendment 1, item 1), as the shell holds it.
+/// It has the file's four members in the file's order, except that `view` carries no `crs`: the
+/// kernel writes the space the open was admitted in, and the shell holds no definition hash to
+/// name it with. A selection made by clicking has no member.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ProjectWorkspace {
+    /// The filter applied at the save, or `null` where none is. Always present, as in
+    /// [`FilterApplyParams`].
+    #[serde(deserialize_with = "key_present")]
+    pub filter: Option<Filter>,
+    /// The filter clauses in their order. `filter` is what the enabled ones combine to; the
+    /// kernel refuses a workspace for which it is not.
+    pub clauses: Vec<FilterClause>,
+    /// ADR-017 §5a's style document, as a JSON object. This crate does not depend on the
+    /// renderer, so the kernel parses it with the renderer's own `parse`.
+    pub style: serde_json::Value,
+    pub view: ProjectView,
+}
+
+/// One filter clause: its text as typed, and whether it is enabled. It carries no id.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct FilterClause {
+    pub text: String,
+    pub enabled: bool,
+}
+
+/// The map view: the point at the middle of the canvas, x then y, in the dataset's own space, and
+/// the base-2 logarithm of the CSS pixels that one unit of that space spans. Each number crosses
+/// as [`HexF64`], the bit-critical scalar codec, so no save is refused for a value the JSON number
+/// grammar cannot keep exactly.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ProjectView {
+    pub centre: [HexF64; 2],
+    pub zoom: HexF64,
+}
+
+/// `project` is the project's identity, `spatial://project/` and 32 lowercase hex characters
+/// (ADR-036 §4).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct SaveProjectResponse {
+    pub project: String,
+    pub history_mark: HistoryMarkState,
+}
+
+/// Whether the session history took the `saved-here` mark. The project file was written in both
+/// cases; `withheld` says only that the recorded steps do not reach the saved workspace, or that
+/// the history could not take the line.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub enum HistoryMarkState {
+    #[serde(rename = "written")]
+    Written,
+    #[serde(rename = "withheld")]
+    Withheld,
+}
 
 #[cfg(test)]
 mod tests {
@@ -885,6 +1052,72 @@ mod tests {
             serde_json::json!({"action": "filter.apply", "params": {}})
         )));
         assert!(!refused(record_step_doc(v)));
+    }
+
+    /// W-P1 (`kernel/B2-1C-SAVE-AND-REOPEN-PREREGISTRATION.md` Amendment 7, item 2): `fillColor`'s
+    /// value is a colour or a categorical match, and the match round trips; no other property
+    /// admits one; the match is closed, with each of its members required.
+    ///
+    /// Mutation: the match admitted on all four properties. Expected failure: this test fails at
+    /// the first of the three other properties.
+    #[test]
+    fn record_step_admits_a_match_on_fill_color_only() {
+        let matched = serde_json::json!({"match": {
+            "column": "zone",
+            "cases": [{"when": "civic", "then": "#ff0000"}, {"when": "park", "then": "#00aa00"}],
+            "on_null": "#cccccc",
+            "on_unmatched": "#999999"
+        }});
+        let style = |property: &str, value: serde_json::Value| {
+            let params = serde_json::json!({"property": property, "value": value});
+            record_step_doc(serde_json::json!({"action": "style.set", "params": params}))
+        };
+
+        let doc = style("fillColor", matched.clone());
+        let req: RecordStepRequest = serde_json::from_value(doc.clone()).expect("a match decodes");
+        let StepIntent::StyleSet(StyleSetParams::FillColorMatch { value }) = &req.intent else {
+            panic!("a match on fillColor decodes as the match variant");
+        };
+        assert_eq!(value.spec.column, "zone");
+        assert_eq!(value.spec.cases.len(), 2);
+        assert_eq!(serde_json::to_value(&req).unwrap(), doc);
+        let literal: RecordStepRequest =
+            serde_json::from_value(style("fillColor", "#4285f4".into())).unwrap();
+        assert!(matches!(
+            literal.intent,
+            StepIntent::StyleSet(StyleSetParams::FillColor { .. })
+        ));
+
+        for property in ["fillOpacity", "outlineColor", "outlineWidth"] {
+            let doc = style(property, matched.clone());
+            assert!(refused(doc), "a match on `{property}` must be refused");
+        }
+
+        let one = serde_json::Value::from(1);
+        let edits = [
+            ("an unknown key beside `match`", "", "extra", Some(&one)),
+            ("an unknown key in the match", "/match", "extra", Some(&one)),
+            ("a missing `on_null`", "/match", "on_null", None),
+            ("a missing `on_unmatched`", "/match", "on_unmatched", None),
+            ("a missing `cases`", "/match", "cases", None),
+            ("a missing `column`", "/match", "column", None),
+        ];
+        for (what, at, key, set) in edits {
+            let mut doc = style("fillColor", matched.clone());
+            let target = format!("/intent/params/value{at}");
+            let object = doc.pointer_mut(&target).unwrap().as_object_mut().unwrap();
+            match set {
+                Some(v) => object.insert(key.into(), v.clone()),
+                None => object.remove(key),
+            };
+            assert!(refused(doc), "{what} must be refused");
+        }
+        let mut case = style("fillColor", matched.clone());
+        case["intent"]["params"]["value"]["match"]["cases"][0]
+            .as_object_mut()
+            .unwrap()
+            .remove("then");
+        assert!(refused(case), "a case without `then` must be refused");
     }
 
     /// A dialect other than `duckdb-expr/0` fails at decode, in `viewport_query` and in
