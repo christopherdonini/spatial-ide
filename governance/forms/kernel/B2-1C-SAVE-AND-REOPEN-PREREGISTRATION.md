@@ -1241,3 +1241,11 @@ Nothing above is edited.
 - Amendment 6 item 5: declared by items 1 and 2.
 
 Nothing above is edited.
+
+## Amendment 8 — OPEN-7-1 ruled (a), the human's message of 2026-11-11 (05:38Z) (class 5)
+
+- **OPEN-7-1 (a)** (`state/directives/2026-11-11-1c-open-7-1-a-p2-now-pan-anchor-route-b-diagnostic-now-stall-record-two-runs.md`, item 1; the file's sha256 1bad1bbe9e354e98313996976b23f7599956ec879b7299f54ba5793d11ea8b6e): Amendment 7 item 2's widening lands inside P2's one commit, under P2's version. OPEN-18 (b)'s first commit reads as OPEN-A2 (b), since that commit predates the ruling. Amendment 7 item 1's code, `skp.project_folder_not_given`, rides the same bump.
+- **The kernel tests group past its 1,000 lines** for the widening's tests (Amendment 7 item 2 (b)): accepted by the same item, recorded as class 8 when counted. §7 is not edited.
+- **Next:** P2 now, then P3; then P4 to P6 and R1, as Amendment 1 item 6 orders them.
+
+Nothing above is edited.

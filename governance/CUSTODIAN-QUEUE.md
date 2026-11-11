@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `de8ee3f19b7c7bfa71ceac2e23c8ff4ddff3af407e0454a2e9400ef777df0dbd`) at `2026-11-10T21:16:53.441Z`.
+Generated from `PLAN.yaml` (sha256 `99f41350a5b07067fda792a047b4f01223e25fb440a5d1dfa979e41e3dae7cbd`) at `2026-11-11T05:42:49.637Z`.
 
 ## 1. Next
 
@@ -11,6 +11,7 @@ Generated from `PLAN.yaml` (sha256 `de8ee3f19b7c7bfa71ceac2e23c8ff4ddff3af407e04
 - **lod-tier-tests-own-tier-folder** — Each engine test run takes its own tier folder, the machine-wide tier folder kept for the product only: two suites sharing one machine cleared each other's tiers, failing lod_tier_builder in #284's gate 1 (the human's ruling of 2026-11-06, item 2) (lane `engine`, order null, budget 60 min)
 - **pre-admission-change-detail-braces** — Four kernel P6-placeholder detail strings are wrapped in literal braces, which reach the operator message; the watcher form declares each such string starts with the bracketed placeholder tag (lane `kernel-protocol`, order null, budget 30 min)
 - **windows-case-fold-non-ascii** — The audit case policy on Windows folds non-ASCII letters as NTFS does, so a profile path differing only in non-ASCII case cannot escape the user-home redaction (wave 3's 1c-2 correction, S2, code-path-only) (lane `kernel-protocol`, order null, budget 60 min)
+- **pan-anchor-there-and-back-residual-diagnostic** — e2e/pan-anchor.mjs: the s1 lag and the there-and-back residual, a diagnostic first (emission and arrival times, the view state at each read, s0 and s1), graded on its reading (lane `shell`, order null, budget 0 min)
 - **publish-bundle-sigterm** — SIGTERM handling in publish-bundle on unix (wave-3 W3-A observation 3) (lane `platform`, order null, budget 90 min)
 - **publish-unix-quota-perm-errors** — EDQUOT and EPERM in publish error classification on unix (wave-3 W3-A observation 1) (lane `platform`, order null, budget 90 min)
 
@@ -35,7 +36,7 @@ Generated from `PLAN.yaml` (sha256 `de8ee3f19b7c7bfa71ceac2e23c8ff4ddff3af407e04
 - **module-docs-drift-sweep-area-d** — Kernel and engine module docs: the never-refuses and unreachable claims the Table, record_step and publish have overtaken, the withdrawn cancellation bound, and smaller statements (drift sweep area D, findings 1 to 6) — blocked by: b2-piece-1c-save-and-reopen
 - **skp-line-cites-outside-close-races** — Stale line cites into kernel/src/skp.rs outside kernel-close-races-followups files -- shell streaming, App.tsx, pool_poll.rs, src-tauri lib.rs, the P4 corpus test and the persisted-artifacts test — blocked by: adr-035-close-races-note
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
-- **pan-anchor-there-and-back-residual-diagnostic** — e2e/pan-anchor.mjs: the s1 lag and the there-and-back residual, a diagnostic first (emission and arrival times, the view state at each read, s0 and s1), graded on its reading — blocked by: pan-anchor-setcam-waits-for-its-own-reset
+- **pan-anchor-setcam-waits-for-its-own-reset** — e2e/pan-anchor.mjs: setCam waits for the view-state line its own reset produces, never a late line from the previous gesture (test only) — blocked by: pan-anchor-there-and-back-residual-diagnostic
 - **session-end-lines-name-coverage-lost-as-source-change** — The hover readout and the Feature tab word every session end as a source change, coverage-lost included, although the engine says coverage-lost is never a source change (milestone 4 PR C gate 1, the architect's C1 note) — blocked by: b1-shell-half
 - **session-log-token-redaction-rests-on-page-code** — The session token never reaching the session log rests on page code: binding_log_session_event appends page-supplied text verbatim, the page holds the token, and the data plane's Session::redact has only a test caller — blocked by: b2-piece-1c-save-and-reopen
 - **briefb-b2-save-reopen** — B2 — Save project, Snapshot data, session history, lineage and preferences, in five stages, each with its own form — blocked by: decision-adr-029-scan-progress-route
@@ -55,7 +56,6 @@ Generated from `PLAN.yaml` (sha256 `de8ee3f19b7c7bfa71ceac2e23c8ff4ddff3af407e04
 - **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **record-step-style-match-widening** — record_step admits a style.set match value on fillColor, with the step's dependencies naming the match column and its type (milestone 4's OPEN-4 (A′)), carried in piece 1c's step 1 by class 9 (the 1c form's Amendment 7) — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **b1-shell-half** — Shell migration, milestone 4 -- B1 shell half: attributes of the inspected feature, colour by category with its legend, and the table — evidence: branch `cut/b1-shell-half-pr-c`
-- **pan-anchor-setcam-waits-for-its-own-reset** — e2e/pan-anchor.mjs: setCam waits for the view-state line its own reset produces, never a late line from the previous gesture (test only) — evidence: branch `cut/pan-anchor-setcam-waits-for-its-own-reset`
 - **port-2-macos-l1-and-app-dirs** — PORT-2 -- macOS L1 for the Cargo workspace: macos-latest in the same matrix, one application-directory boundary replacing the two resolvers, and a case-policy test on a case-insensitive volume — evidence: branch `cut/port-2-macos-l1-and-app-dirs`
 
 ## 6. Proposed / unscheduled

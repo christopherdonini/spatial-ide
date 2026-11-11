@@ -333,3 +333,11 @@ Nothing above is edited.
    - (b) The seam threw, its timer never fired, or it emitted no line: the product's e2e seam. It goes to the human before any fix.
    - (c) Anything else is reported as it is, and nothing is fixed.
 5. **Unchanged:** Scope, the Change line, M-TRACE, R1, readiness and the claim limit. P1 stays owed at the head that the route leaves.
+
+## Amendment 3 — P1-D's route: (B), the human's message of 2026-11-11 (05:38Z) (class 5)
+
+- **Route (B)** (`state/directives/2026-11-11-1c-open-7-1-a-p2-now-pan-anchor-route-b-diagnostic-now-stall-record-two-runs.md`, item 2; the file's sha256 1bad1bbe9e354e98313996976b23f7599956ec879b7299f54ba5793d11ea8b6e): `pan-anchor-there-and-back-residual-diagnostic` runs now in slot 2, ahead of any fix. This piece is held on its reading and leaves the slot. Nothing is fixed before it is read.
+- **After the reading** (the same item): stalls of a second or more only beside the build are the harness's, S3, fixed in this piece under a further amendment, the custodian proposing which of the item's two fixes; the item's other routes go as it gives them.
+- **Unchanged:** Amendment 2 item 5.
+
+Nothing above is edited.
