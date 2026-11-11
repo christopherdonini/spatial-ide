@@ -1266,3 +1266,14 @@ Nothing above is edited.
 5. **Next.** P4 to P6 and R1, as Amendment 1 item 6 orders them, after slot 2's quiet run ends, with no other heavy run of this project beside it.
 
 Nothing above is edited.
+
+## Amendment 10 — `binding_pick_project_folder` moves from P4 to P5 (class 1); step 1's project state in the binding (class 1); written at P4's stop, before any P4 code is committed
+
+*Written by the custodian. References only: `state/consults/2026-11-11-b2-piece-1c-save-and-reopen-p4-stop-worker-report.md`.*
+
+1. **What stopped P4.** The shell's completeness test, `frontends/shell/src/console/surfaceCompleteness.test.ts`, last changed at 426609d9bbd9ce9496108ac5ccd4765be99269ee and not changed on the branch, checks class-B rows both ways: a row for each `binding_*` entry in the handler list in `lib.rs`, and an `invoke(` literal under `frontends/shell/src/` for each row. Amendment 3's P4 row names the first check only. With the handler entry and its row alone, the second check failed. The worker reverted both and committed nothing (the report above). The only call site is in a P5 file.
+2. **The move (class 1).** In Amendment 1 item 6's list, `binding_pick_project_folder` (its function in `commands.rs` and its entry in the handler list in `lib.rs`) and its class-B row in `console/surfaceRegistry.ts` land in P5's commit, beside the shell's call site. P4 is the `save_project` command on `spawn_blocking` and the state of item 3. The step's files, groups, ceilings and tests are unchanged. What OPEN-17 (b) ruled is unchanged: P4 and P5 both wait for PR C, and PR C (0c3d54c43044d5d1fa69560911c9abf638851e03) is in the branch.
+3. **Step 1's project state (class 1).** The lock that §2.7's third bullet holds is step 2's (§2.4, item 3). In step 1, the binding holds the kernel's `Projects`, built from `store::projects_root` and the step recorder, in its managed state, as it holds the step recorder. `close_dataset` is unchanged in step 1: `Projects` has no call that forgets a dataset, and P4 edits no kernel file. A closed dataset's entry is not matched again, since `open_dataset` mints a new handle, which is the catalog name, at each open. Step 2's lock and its drop at `close_dataset` are unchanged (§2.4, item 3; §2.7).
+4. **Next.** P4 by this amendment; then P5 to P6 and R1, as Amendment 1 item 6 orders them.
+
+Nothing above is edited.
