@@ -14,6 +14,8 @@
 //! - [`Projects::save`]: the save, in order: the checks that can refuse it, the judgment, the
 //!   document, the machine store's files, the atomic replace of `project.spatial`, and last the
 //!   history's two moves (the first save's record move and the `saved-here` mark).
+//! - [`Projects::save_project`]: the same save as an SKP command (SKP-V0 §11): the request's checks,
+//!   the workspace built from its wire form, and each [`SaveFailure`] as its one SKP code.
 //!
 //! Nothing here holds a handle. The only file written in a project folder is `project.spatial`, and
 //! only through [`store`]'s atomic replace.
@@ -30,14 +32,18 @@ use std::str::FromStr;
 use std::sync::{Arc, Mutex};
 
 use spatial_engine::Dataset;
-use spatial_renderer::canonical::{to_canonical_string, Json};
-use spatial_renderer::style::Value;
+use spatial_renderer::canonical::{sha256_hex, to_canonical_string, Json};
+use spatial_renderer::style::{self, Value};
+use spatial_skp::v0::{
+    HistoryMarkState, ProjectWorkspace, SaveProjectRequest, SaveProjectResponse, SkpError,
+};
 
 use crate::dataset_ref::{DatasetRef, DatasetUri, RefBuildError};
 use crate::session_history::{Reached, SavedHere, StepRecorder};
+use crate::skp::{check_version, require_live};
 use file::{
-    read_project, write_project, Lineage, ProjectFile, ProjectFileRefused, Workspace,
-    MAX_PROJECT_FILE_BYTES,
+    read_project, write_project, Clause, Lineage, ProjectFile, ProjectFileRefused, Space, View,
+    Workspace, MAX_PROJECT_FILE_BYTES,
 };
 use resolver::{judge, Carried};
 use store::{mint_identity, record_dir, replace, KnownFolders, MachineRecordRefused, SaveError};
@@ -175,7 +181,10 @@ pub enum SaveFailure {
 impl fmt::Display for SaveFailure {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::FolderRequired => write!(f, "the dataset has not been saved and no folder was given"),
+            Self::FolderRequired => write!(
+                f,
+                "no folder was given, and this open of the dataset has no project to save to"
+            ),
             Self::FolderUnusable(e) => write!(f, "the project folder cannot be read: {e}"),
             Self::FolderHoldsProject(p) => {
                 write!(f, "{} already holds {PROJECT_FILE_NAME}", p.display())
@@ -302,6 +311,35 @@ impl Projects {
         })
     }
 
+    /// `save_project` (SKP-V0 §11), the checks in order: the version, the catalog entry of the
+    /// handle, the live check, the workspace as the project file would hold it, then
+    /// [`Projects::save`], whose refusals are each mapped to their SKP code by [`skp_error_of`].
+    /// A refusal writes no project file. The reply carries the identity and whether the history
+    /// took the mark, and no path.
+    pub fn save_project(&self, req: SaveProjectRequest) -> Result<SaveProjectResponse, SkpError> {
+        check_version(&req.skp)?;
+        let name = req.dataset.as_str();
+        let host = self.recorder.host();
+        let ds = host
+            .catalog()
+            .get(name)
+            .ok_or_else(|| SkpError::unknown_dataset(name))?;
+        require_live(&host.generations(), name)?;
+        let workspace = workspace_of(&ds, req.workspace)?;
+        let folder = req.folder.as_deref().map(Path::new);
+        let saved = self
+            .save(name, &ds, folder, workspace)
+            .map_err(skp_error_of)?;
+        let history_mark = match saved.history_mark {
+            HistoryMark::Written => HistoryMarkState::Written,
+            HistoryMark::Withheld(_) => HistoryMarkState::Withheld,
+        };
+        Ok(SaveProjectResponse {
+            project: saved.project.as_str().to_string(),
+            history_mark,
+        })
+    }
+
     /// The history's moves after a save: the record moves under the project if it has not, and
     /// the mark is written if the steps reach the workspace.
     fn history(&self, ds: &Dataset, project: &ProjectUri, workspace: &Workspace) -> HistoryMark {
@@ -322,6 +360,72 @@ impl Projects {
             }
             Err(e) => unwritable(e),
         }
+    }
+}
+
+/// The space a dataset was admitted in, in `dependencies.crs`'s form, which a project's view names.
+/// `None` for an open without an admission, which `open_dataset` never produces.
+fn space_of(ds: &Dataset) -> Option<Space> {
+    let crs = ds.crs();
+    let admission = ds.admission()?;
+    Some(Space {
+        identifier: crs.identifier().to_string(),
+        provenance: admission.crs_provenance.as_str().to_string(),
+        definition: crs.definition_json().map(|d| sha256_hex(d.as_bytes())),
+    })
+}
+
+/// The request's workspace as the project file holds it. The wire view has no `crs`: the space is
+/// the one the dataset was admitted in. A style document the renderer's `parse` refuses is refused
+/// by name; the reader's other rules (the filter against its clauses, the number grammar) are
+/// applied when the document is built, by [`Projects::save`].
+fn workspace_of(ds: &Dataset, w: ProjectWorkspace) -> Result<Workspace, SkpError> {
+    let refused = |path: &str, rule: &str| SkpError::project_file_refused(path, rule);
+    let style = style::parse(&w.style.to_string())
+        .map_err(|e| refused("$.workspace.style", &e.to_string()))?;
+    let crs = space_of(ds).ok_or_else(|| {
+        refused(
+            "$.workspace.view.crs",
+            "the dataset has no admission to name a space from",
+        )
+    })?;
+    let [x, y] = w.view.centre;
+    Ok(Workspace {
+        filter: w.filter.map(|f| f.predicate),
+        clauses: w
+            .clauses
+            .into_iter()
+            .map(|c| Clause {
+                text: c.text,
+                enabled: c.enabled,
+            })
+            .collect(),
+        style,
+        view: View {
+            crs,
+            centre: [x.0, y.0],
+            zoom: w.view.zoom.0,
+        },
+    })
+}
+
+/// Each way a save is refused, as its SKP code (SKP-V0 §11.4). One exhaustive `match` with no
+/// wildcard arm: a new `SaveFailure` is a compile error here until it has a code. Where the kernel
+/// and the protocol state the same fact, the message is the same text.
+fn skp_error_of(e: SaveFailure) -> SkpError {
+    let detail = e.to_string();
+    match e {
+        SaveFailure::FolderRequired => SkpError::project_folder_not_given(),
+        SaveFailure::FolderUnusable(_) => SkpError::project_file_unwritable(&detail),
+        SaveFailure::FolderHoldsProject(folder) => {
+            SkpError::project_folder_holds_project(&folder.display().to_string())
+        }
+        SaveFailure::Bind(_) => SkpError::project_file_refused("$.datasets[0]", &detail),
+        SaveFailure::FileRefused(r) => SkpError::project_file_refused(&r.path, &r.rule),
+        SaveFailure::LineageNotKept => SkpError::project_lineage_not_kept_by_this_version(),
+        SaveFailure::ProjectFileUnwritable(_) => SkpError::project_file_unwritable(&detail),
+        SaveFailure::MachineStore { .. } => SkpError::project_file_unwritable(&detail),
+        SaveFailure::MachineRecordRefused(r) => SkpError::project_file_refused(r.file, &r.rule),
     }
 }
 
@@ -413,4 +517,109 @@ fn write_machine_file(dir: &Path, name: &str, bytes: &[u8]) -> std::io::Result<(
     written
         .and_then(|()| std::fs::rename(&temp, dir.join(name)))
         .inspect_err(|_| drop(std::fs::remove_file(&temp)))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn io() -> std::io::Error {
+        std::io::Error::other("the disk said no")
+    }
+
+    /// U-P1 (a P3 test the form does not name). Every `SaveFailure` has its own SKP code, the
+    /// message is the kernel's own text where the two state one fact, and the named fields are the
+    /// variant's own values.
+    ///
+    /// Mutation: `FolderUnusable` is mapped to `project_folder_holds_project`. Expected failure: this
+    /// test fails at the code of the second case.
+    #[test]
+    fn each_save_failure_maps_to_its_own_code_with_the_kernels_text() {
+        let cases: Vec<(SaveFailure, &str)> = vec![
+            (SaveFailure::FolderRequired, "skp.project_folder_not_given"),
+            (
+                SaveFailure::FolderUnusable(io()),
+                "skp.project_file_unwritable",
+            ),
+            (
+                SaveFailure::FolderHoldsProject(PathBuf::from("C:/Projects/parcels")),
+                "skp.project_folder_holds_project",
+            ),
+            (
+                SaveFailure::Bind(RefBuildError::AssertionWithoutDefinition),
+                "skp.project_file_refused",
+            ),
+            (
+                SaveFailure::FileRefused(ProjectFileRefused {
+                    path: "$.workspace.filter".to_string(),
+                    rule: "a rule".to_string(),
+                }),
+                "skp.project_file_refused",
+            ),
+            (
+                SaveFailure::LineageNotKept,
+                "skp.project_lineage_not_kept_by_this_version",
+            ),
+            (
+                SaveFailure::ProjectFileUnwritable(SaveError::Unwritable {
+                    what: "the temp file",
+                    source: io(),
+                }),
+                "skp.project_file_unwritable",
+            ),
+            (
+                SaveFailure::MachineStore {
+                    what: "locations.json",
+                    source: io(),
+                },
+                "skp.project_file_unwritable",
+            ),
+            (
+                SaveFailure::MachineRecordRefused(MachineRecordRefused {
+                    file: "folders.json",
+                    rule: "a rule".to_string(),
+                }),
+                "skp.project_file_refused",
+            ),
+        ];
+        for (failure, code) in cases {
+            let text = failure.to_string();
+            let wording = matches!(
+                failure,
+                SaveFailure::FolderRequired
+                    | SaveFailure::FolderHoldsProject(_)
+                    | SaveFailure::LineageNotKept
+            );
+            let got = skp_error_of(failure);
+            assert_eq!(got.code, code, "{text}");
+            if wording {
+                assert_eq!(
+                    got.message, text,
+                    "the kernel and the protocol say it alike"
+                );
+            } else {
+                assert!(got.message.ends_with(&text), "{text}: {}", got.message);
+            }
+        }
+        let refused = skp_error_of(SaveFailure::MachineRecordRefused(MachineRecordRefused {
+            file: "folders.json",
+            rule: "a rule".to_string(),
+        }));
+        assert_eq!(refused.fields["path"], "folders.json");
+        assert_eq!(refused.fields["rule"], "a rule");
+        let holds = skp_error_of(SaveFailure::FolderHoldsProject(PathBuf::from("C:/p")));
+        assert_eq!(holds.fields["folder"], "C:/p");
+    }
+
+    /// U-P2 (not named by the form): `FolderRequired`'s text is the one the protocol gives its code.
+    ///
+    /// Mutation: the old text, `the dataset has not been saved and no folder was given`. Expected
+    /// failure: this test fails at its only assertion.
+    #[test]
+    fn the_folder_required_text_is_what_a_client_is_shown_for_it() {
+        assert_eq!(
+            SaveFailure::FolderRequired.to_string(),
+            "no folder was given, and this open of the dataset has no project to save to"
+        );
+    }
 }

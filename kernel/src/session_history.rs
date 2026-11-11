@@ -206,6 +206,12 @@ impl StepRecorder {
         }
     }
 
+    /// The host this recorder reads the catalog and the generations from, for the save, which
+    /// makes the same checks of a handle that `record_step` does.
+    pub(crate) fn host(&self) -> &Arc<SkpHost> {
+        &self.host
+    }
+
     /// `record_step` (SKP-V0 §10.3), the checks in order: the version, the catalog entry, the live
     /// check (the one point it linearizes at), the action and its admission, then the record
     /// (created at the first step for an opened file), the line, its bounds and its members
