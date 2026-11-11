@@ -1769,3 +1769,30 @@ Nothing above is edited.
 9. **Superseded index:** §2.2's Response line, by Amendment 20 item 1. Nothing else is superseded; §2.3 is qualified by Amendment 21 item 1.
 
 Nothing above is edited.
+
+## Amendment 23 — R3-1 and R3-3 built, R3-2 not yet (class 1, by Amendment 22 item 1); six groups and the step over their ceilings (class 8); written after R3's report was seen, before R3-2
+
+*Written by the custodian. References only: `state/consults/2026-11-11-b2-piece-1c-save-and-reopen-r3-worker-report.md` (sha256 c7b29b543a784a7ad64f3292aa39502aad972f003cc08567e1c364fa9864993e).*
+
+1. **R3-1 and R3-3 built** on 1e4a7b6fca29bc59866182719edcc67461ec7553, both pushed:
+   - c57f090be2559aed8b1765d5f7dfe693514d48c5, Amendment 20;
+   - 190c6c80788eff296d8ddb998db43c5055d6e820, the attempt-2 words of Amendment 22 item 1.
+   - The two commits touch 15 files, each named in Amendment 22 item 2.
+   - The report gives four of Amendment 22 item 4's mutations as observed at their assertions: m-s18, K-S14's, P-U3's and SH-9's. K-S15's belongs to R3-2.
+2. **The order (class 1).** OPEN-21-1 was not answered at R3's dispatch, so the worker stopped before R3-2, as Amendment 22 item 1 provides. R3-2 is built after the human's answer is recorded as class 5 on main.
+3. **Size (class 8).** At B = e3fb4a97ebef726f77a5e2609b8fada32a6b1208 the step stands at 75 files and 7,635 lines. The files are within their 77, and nothing is trimmed. The groups past their ceilings:
+
+   | Group | Lines | Ceiling |
+   |---|---|---|
+   | protocol product | 478 | 320 |
+   | fixtures, protocol tests and literal | 541 | 390 |
+   | kernel product | 3,222 | 1,350 |
+   | kernel tests | 1,650 | 1,000 |
+   | shell tests | 458 | 380 |
+   | e2e | 505 | 320 |
+   | **Step** | **7,635** | **4,790** |
+
+4. **For the gates.** The report's disclosures, and the departures its transcript holds, are in the consult above: its filing note and the report's own list.
+5. **Next.** R3-2 on the answer to OPEN-21-1; then gate 1's second attempt by Amendment 22 item 5.
+
+Nothing above is edited.
