@@ -79,3 +79,9 @@ From piece `b2-piece-1b-recording`, a committed style edit is persisted as a `st
 
 ## Amendment 2 — style persistence granted for the project file (2026-10-22, the human)
 Amendment 2 (b2-piece-1c-save-and-reopen): from piece 1c, the §5a style document is persisted in the project file, in the workspace member ADR-036 defines. The save is ADR-006 class 2 and atomic. docs/11's obligations are met by the project URI, ADR-036 for the schema, and save and reopen for the lifecycle. Provenance does not yet travel with the project file. The lineage member stays a named state until a later piece writes it; the saved-here mark says only that the saved style is the one the session's recorded steps reach, and those steps are kept in the session history on this machine while it lasts. Consequence (a) stands, and the lineage is not granted by this amendment.
+
+## Note 2026-11-05
+
+*Appended on the human's typed words (`state/directives/2026-11-05-8c-full-form-nine-s2-placed-u12-slot-2-u1-reproducer-adr-notes-words-e2e-readme-words-8b-d3.md`, item 3); the note below is theirs, byte for byte. Nothing above this heading is changed.*
+
+Note 2026-11-05 — the amendment from b2-piece-1b-recording calls ADR-036 Proposed. ADR-036 was accepted on 2026-10-22, after #240. Nothing else changes.
