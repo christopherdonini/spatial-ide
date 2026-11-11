@@ -31,6 +31,8 @@ use std::sync::{Arc, Mutex};
 
 use spatial_data_plane::{serve, DataPlaneConfig};
 use spatial_kernel::permission::GrantSet;
+use spatial_kernel::project::store::projects_root;
+use spatial_kernel::project::Projects;
 use spatial_kernel::session_history::{default_root, StepRecorder};
 use spatial_kernel::skp::SkpHost;
 use spatial_kernel::{Catalog, EngineSourceFactory};
@@ -448,7 +450,17 @@ pub fn run() {
             // B2 piece 1b: the session history's recorder, built where `SkpHost` is, over the same
             // `Arc`. `None` when no per-user data directory resolves; `record_step` then refuses by
             // name. `end_session` runs on the normal exit event (`run`, below).
-            app.manage(default_root().map(|root| Arc::new(StepRecorder::new(root, host.clone()))));
+            let recorder =
+                default_root().map(|root| Arc::new(StepRecorder::new(root, host.clone())));
+            // B2 piece 1c: the kernel's `Projects`, over that same recorder and the machine store's
+            // `projects` folder. `None` when either is absent; `save_project` then refuses by name.
+            app.manage(
+                recorder
+                    .clone()
+                    .zip(projects_root())
+                    .map(|(recorder, root)| Arc::new(Projects::new(root, recorder))),
+            );
+            app.manage(recorder);
             app.manage(host);
             app.manage(data_plane_handle);
             app.manage(session_log);
@@ -542,6 +554,7 @@ pub fn run() {
             commands::cancel,
             commands::close_dataset,
             commands::record_step,
+            commands::save_project,
             commands::binding_data_plane_attach,
             commands::binding_log_session_event,
             commands::binding_pick_file,
