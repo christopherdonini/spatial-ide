@@ -869,7 +869,20 @@ export default function App() {
   // `handleSaveProject`; the saver (`project/saveProject.ts`) asks for the folder at an open's first save and sends it once. Its notices
   // are for the dataset they were made on and end with it, as `recordNotice` does.
   const [saveNotices, setSaveNotices] = useState<{ dataset: string; texts: readonly string[] } | null>(null);
-  const [projectSaver] = useState(() => createProjectSaver({ pickFolder: pickProjectFolder, save: (dataset, folder, workspace) => saveProject(dataset, folder, workspace) }));
+  /** The one-shot slot of the DEV-only `e2eSaveProjectToFolder` hook (`e2e-test-surface.ts`): a folder it supplies for the save it starts. Always `null` in a plain build. */
+  const e2eSaveFolderRef = useRef<string | null>(null);
+  const [projectSaver] = useState(() =>
+    createProjectSaver({
+      // In an instrumented build only, a folder in the hook's slot is the picker's answer, taken once. Otherwise this is `pickProjectFolder`, as in every other build.
+      pickFolder: () => {
+        const supplied = isInstrumentedBuild() ? e2eSaveFolderRef.current : null;
+        if (supplied === null) return pickProjectFolder();
+        e2eSaveFolderRef.current = null;
+        return Promise.resolve(supplied);
+      },
+      save: (dataset, folder, workspace) => saveProject(dataset, folder, workspace),
+    })
+  );
   const activeFilter = view === null ? null : view.filter;
   // Milestone 2, phase B (SHELL-MIGRATION-MILESTONE-2-PREREGISTRATION.md sections 2.2 and 2.3): the view's tool, mode, selection and
   // inspection, read through the readers that give the defaults.
@@ -1359,6 +1372,23 @@ export default function App() {
       unregisterE2eHook("setResidencyTileSizeLevel");
       unregisterE2eHook("getResidencyTileSizeLevel");
     };
+  }, []);
+
+  // B2 piece 1c (B2-1C-SAVE-AND-REOPEN-PREREGISTRATION.md Amendment 14): the DEV-only hook that supplies the folder for E2E-SAVE's save
+  // (`e2e-test-surface.ts` states what it may and may not do, and its only caller). It runs `handleSaveProject`, the save the control and the bar
+  // call, which reads only refs, the saver and a setter, all stable for the component's life, so no render-scoped value is closed over here.
+  useEffect(() => {
+    if (!isInstrumentedBuild()) return;
+    registerE2eHook("e2eSaveProjectToFolder", async (folder: string) => {
+      e2eSaveFolderRef.current = folder;
+      try {
+        await handleSaveProject();
+        return e2eSaveFolderRef.current === null ? "asked" : "not-asked";
+      } finally {
+        e2eSaveFolderRef.current = null;
+      }
+    });
+    return () => unregisterE2eHook("e2eSaveProjectToFolder");
   }, []);
 
   /**

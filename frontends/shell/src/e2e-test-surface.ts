@@ -172,6 +172,21 @@ export interface E2eTestSurface {
     destination: string,
     scope?: "whole" | "current"
   ) => Promise<PrepareOutcome>;
+  /** **DEV-ONLY E2E TEST SEAM** (B2 piece 1c, `B2-1C-SAVE-AND-REOPEN-PREREGISTRATION.md` Amendment 14).
+   * Supplies one folder, in place of the native folder picker's answer, to the save that App's own
+   * `handleSaveProject` runs: the SAME function the Save control and the command bar's entry call. It
+   * puts `folder` in a one-shot slot, awaits `handleSaveProject`, then empties the slot. App's
+   * `pickFolder` dependency answers the slot's folder when it holds one, and `pickProjectFolder`
+   * otherwise, so the saver, its input and its `save_project` call are the ordinary ones. It builds no
+   * save input, calls neither `save_project` nor `saveProject`, makes no saver, marks no dataset
+   * saved, passes no in-flight guard, adds no notice, and returns nothing but its two-word answer; a
+   * driver reads the project file from disk.
+   * - `"asked"`: the saver took the folder from the slot (the open's first save).
+   * - `"not-asked"`: the slot was still full after the save, so the saver never asked for a folder
+   *   (the open had a confirmed save, a save was in flight, or no dataset was drawn).
+   * Its only caller is `e2e/project.mjs`. **A run through this hook does not exercise the native
+   * folder picker: only the operator's walkthrough does (the form's section 9, OP1).** */
+  e2eSaveProjectToFolder?: (folder: string) => Promise<"asked" | "not-asked">;
   /** **DEV-ONLY E2E TEST SEAM** (viewport-residency cut P1, `RESIDENCY-PREREGISTRATION.md`).
    * Flips `instrument/residencyInstrument.ts`'s runtime `enabled` flag -- OFF by default, so a
    * driver run that never calls this exercises the exact same code paths (and, per §8's
