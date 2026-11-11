@@ -1277,3 +1277,14 @@ Nothing above is edited.
 4. **Next.** P4 by this amendment; then P5 to P6 and R1, as Amendment 1 item 6 orders them.
 
 Nothing above is edited.
+
+## Amendment 11 — P4 built (class 1); the completeness test's list of class-A commands gains `save_project` in P5 (class 1); written before P5's code
+
+*Written by the custodian. References only: `state/consults/2026-11-11-b2-piece-1c-save-and-reopen-p4-worker-report.md`.*
+
+1. **P4 built** by Amendment 10 at 2dcbd3bc953454278eef919b2f0e9bba51a4b4e5: `commands.rs` and `lib.rs` only, 43 lines; no new test, and so no mutation. The step stands at 53 files and 6,072 lines at B = e57d75e191ea35fe44c3a26887d73b82f4b53262, the src-tauri group at 43 of its 100; the groups over their ceilings are those of Amendment 9, unchanged by P4 (class 8 as recorded there).
+2. **What P5 meets.** Besides the check that Amendment 3's P5 row cites, the shell's completeness test holds a fixed list of the class-A commands, and it asserts that the call sites in `skp/client.ts` equal that list. The test's own comment asks for a new command to update the list and the registry's class-A rows together. A seventh call in `skp/client.ts` fails that check until the list holds it. Amendment 3's P5 row names the registry only.
+3. **The edit (class 1).** P5 adds `save_project` to that list, in the same commit as its call site and its class-A row, and the edit counts in the shell tests group. It is the one edit of an existing test that P5 makes outside §4's table, and it is not I3. P5 does not edit the test's names or its other checks. Their wording that counts six commands stays as it is, and is disclosed for R1.
+4. **Next.** P5, by Amendment 10 item 2 and this amendment; then P6 and R1.
+
+Nothing above is edited.
