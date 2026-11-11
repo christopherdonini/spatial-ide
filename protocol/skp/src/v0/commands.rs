@@ -742,6 +742,7 @@ pub struct SaveProjectResponse {
 
 /// Whether the session history took the `saved-here` mark. The project file was written in both
 /// cases; `withheld` says that the history holds no recorded step for the dataset, that the
+/// history's record for the dataset's file belongs to another project this run has saved, that the
 /// recorded steps do not reach the saved workspace, or that the history could not take the record
 /// move or the line.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]

@@ -13,7 +13,8 @@
 //! - [`resolver`]: [`resolver::judge`], which decides at save which locators the file carries.
 //! - [`Projects::save`]: the save, in order: the checks that can refuse it, the judgment, the
 //!   document, the machine store's files, the atomic replace of `project.spatial`, and last the
-//!   history's two moves (the first save's record move and the `saved-here` mark).
+//!   history's two moves (the first save's record move and the `saved-here` mark), neither of which
+//!   touches a record that another project of this run holds.
 //! - [`Projects::save_project`]: the same save as an SKP command (SKP-V0 §11): the request's checks,
 //!   the workspace built from its wire form, and each [`SaveFailure`] as its one SKP code.
 //!
@@ -149,6 +150,9 @@ pub enum Withheld {
     NoStepRecorded,
     /// The workspace differs from what the recorded steps reach, in the member named.
     WorkspaceDiffers(&'static str),
+    /// The history's record for the dataset's file belongs to another project this run has saved,
+    /// so none of this project's saves of this open writes a mark there.
+    RecordHeldByAnotherProject,
     /// The history could not take the move or the line; the history's own message.
     HistoryUnwritable(String),
 }
@@ -226,9 +230,10 @@ impl Projects {
     ///   reader refuses, since either could hold what a rewrite would lose.
     /// - **Every save** writes `locations.json`, judges the locators ([`resolver::judge`]), checks
     ///   the document against the reader's rules, and replaces `project.spatial` whole or not at all.
-    ///   Only then does the history take its moves: the first save's record move, and a `saved-here`
-    ///   mark when the steps reach the workspace. A history that cannot take them does not undo the
-    ///   save; the result says so.
+    ///   Only then does the history take its moves: the first save's record move, unless another
+    ///   project of this run holds the record, and a `saved-here` mark when the steps reach the
+    ///   workspace and no other project holds the record. A history that cannot take them does not
+    ///   undo the save; the result says so.
     pub fn save(
         &self,
         name: &str,
@@ -343,8 +348,9 @@ impl Projects {
         })
     }
 
-    /// The history's moves after a save: the record moves under the project if it has not, and
-    /// the mark is written if the steps reach the workspace.
+    /// The history's moves after a save: the record moves under the project if it has not and no
+    /// project holds it, and the mark is written if the steps reach the workspace and no other
+    /// project holds the record.
     fn history(&self, ds: &Dataset, project: &ProjectUri, workspace: &Workspace) -> HistoryMark {
         let unwritable = |e: spatial_skp::v0::SkpError| {
             HistoryMark::Withheld(Withheld::HistoryUnwritable(e.message))
@@ -354,12 +360,15 @@ impl Projects {
         }
         match self
             .recorder
-            .mark_saved_here(ds, |reached| differs(reached, workspace))
+            .mark_saved_here(ds, project, |reached| differs(reached, workspace))
         {
             Ok(SavedHere::Written) => HistoryMark::Written,
             Ok(SavedHere::NoStep) => HistoryMark::Withheld(Withheld::NoStepRecorded),
             Ok(SavedHere::Differs(member)) => {
                 HistoryMark::Withheld(Withheld::WorkspaceDiffers(member))
+            }
+            Ok(SavedHere::HeldByAnotherProject) => {
+                HistoryMark::Withheld(Withheld::RecordHeldByAnotherProject)
             }
             Err(e) => unwritable(e),
         }

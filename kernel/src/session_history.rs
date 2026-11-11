@@ -181,6 +181,9 @@ pub enum SavedHere {
     NoStep,
     /// The workspace differs from what the steps reach, in the member named; no mark was written.
     Differs(&'static str),
+    /// The record of this file belongs to another project than the one saving; nothing was
+    /// written to it.
+    HeldByAnotherProject,
 }
 
 /// Records committed steps. Built once by the shell's binding with the store root and the host it
@@ -296,18 +299,25 @@ impl StepRecorder {
 
     /// A save's second move: one `{"mark":{"kind":"saved-here","after":<last step>,"at":…}}` line
     /// through the same append path as a step (one write, one flush), for the file `ds` was opened
-    /// over. `differs` is given what the steps reach, under the same lock the line is written
-    /// under, and names a member of the workspace that the steps do not reach; then nothing is
-    /// written. The line is checked against the reader's own rules before it is written.
+    /// over, for the project `project` that is saving. When the record `ds` finds is held by a
+    /// project other than `project`, nothing is written to it, at this save and at every later one
+    /// of the same open ([`SavedHere::HeldByAnotherProject`]). `differs` is given what the steps
+    /// reach, under the same lock the line is written under, and names a member of the workspace
+    /// that the steps do not reach; then nothing is written. The line is checked against the
+    /// reader's own rules before it is written.
     pub fn mark_saved_here(
         &self,
         ds: &Dataset,
+        project: &ProjectUri,
         differs: impl FnOnce(&Reached) -> Option<&'static str>,
     ) -> Result<SavedHere, SkpError> {
         let mut records = self.records.lock().unwrap_or_else(|e| e.into_inner());
         let Some(rec) = find(&records, ds).map(|at| &mut records[at]) else {
             return Ok(SavedHere::NoStep);
         };
+        if rec.project.as_ref().is_some_and(|held| held != project) {
+            return Ok(SavedHere::HeldByAnotherProject);
+        }
         let Some(after) = rec.last_step.clone() else {
             return Ok(SavedHere::NoStep);
         };

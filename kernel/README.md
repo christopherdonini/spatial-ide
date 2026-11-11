@@ -392,7 +392,7 @@ was itself (bake-off README §21 Q1 / §22.1).
   - kernel halves of pieces filed elsewhere: `engine/SOURCE-WATCHER-PREREGISTRATION.md` (§2b), `engine/ADMISSION-PREREGISTRATION.md`, `engine/B1-PROJECTION-PREREGISTRATION.md`, `engine/B1-FOLLOWUPS-PREREGISTRATION.md`, `engine/FILTER-BIND-COERCIONS-PREREGISTRATION.md`, `engine/GEOMETRY-LINES-PREREGISTRATION.md`, `engine/GEOMETRY-POINTS-PREREGISTRATION.md`, `engine/WATCHER-FIRST-READ-PREREGISTRATION.md`, `engine/MULTIPOLYGON-MP1-PREREGISTRATION.md`, `engine/COVERING-NAMES-MISSING-COLUMN-PREREGISTRATION.md`, `frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md`, `protocol/skp/CANCEL-STATE-CLOSED-SET-PREREGISTRATION.md`, `protocol/skp/SKP-V0-LIVE-SECTIONS-AREA-C-PREREGISTRATION.md`, `protocol/data-plane/TERMINAL-WITHOUT-CREDIT-PREREGISTRATION.md`
   - design notes: `kernel/CANCELLATION-AND-TRACING.md`
 - **Proposed ADRs, binding nothing:** ADR-012, ADR-019, ADR-023, ADR-024
-- **Declared limits:** KNOWN-LIMITATIONS 5, 6, 8, 12, 16, 21, 28, 30, 32, 43, 47, 62
+- **Declared limits:** KNOWN-LIMITATIONS 5, 6, 8, 12, 16, 21, 28, 30, 32, 43, 47, 62, 63
 - **Ceilings:**
   - `TICKET_TTL`, `MAX_PENDING_TICKETS`, `TERMINAL_ENTRY_MAX_AGE`, `SESSION_END_EVENT_QUEUE_BOUND` (`kernel/src/skp.rs`)
   - `MAX_VIEWER_ASSETS`, `MAX_VIEWER_ASSET_BYTES` (`kernel/src/publish/viewer_assets.rs`) · `PUBLISH_WRITE_CHUNK_BYTES` (`kernel/src/publish/mod.rs`) · the reader's ceilings, `spatial_kernel::publish::ceilings::reader_ceilings` (`kernel/src/publish/ceilings.rs`)

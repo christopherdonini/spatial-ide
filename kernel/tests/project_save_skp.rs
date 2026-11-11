@@ -17,12 +17,13 @@ use serde_json::{json, Value};
 use spatial_engine::fixture::{write_geoparquet, AttributeMode, FixtureSpec};
 use spatial_kernel::project::file::read_project;
 use spatial_kernel::project::{Projects, PROJECT_FILE_NAME};
-use spatial_kernel::session_history::StepRecorder;
+use spatial_kernel::session_history::{recover, StepRecorder};
 use spatial_kernel::skp::{session_end_channel, SkpHost, StreamRegistry};
 use spatial_kernel::Catalog;
 use spatial_skp::v0::{
-    DatasetHandle, HexF64, OpenDatasetRequest, ProjectRelativeLocator, RecordStepRequest,
-    SaveProjectRequest, SkpError, StepIntent, StyleSetParams, SKP_VERSION,
+    CloseDatasetRequest, DatasetHandle, HexF64, HistoryMarkState, OpenDatasetRequest,
+    ProjectRelativeLocator, RecordStepRequest, SaveProjectRequest, SkpError, StepIntent,
+    StyleSetParams, SKP_VERSION,
 };
 
 const STYLE: &str = r##"{"style_version":1,"layer":{"geometry":"polygon","fill_color":{"literal":"#4285f4"},"fill_opacity":{"literal":0.35},"outline_color":{"literal":"#000000"},"outline_width":{"literal":1.5}}}"##;
@@ -365,4 +366,92 @@ fn the_save_reply_names_the_resolvers_judgment_carried_outside_no_canonical_spel
         rig.save_opened_at(&data, &spelled),
         ProjectRelativeLocator::NoCanonicalSpelling
     );
+}
+
+/// **K-S15** (the seam: `SkpHost::open_dataset`, `record_step` and `Projects::save_project`). F is
+/// opened, a step is recorded, and the open is saved to folder 1 (project A). F is closed and
+/// opened again, and a step is recorded on the second open. The save of the second open to folder 2
+/// (project B) replies `withheld`, B's identity is not A's, and A's record is unchanged by it; so is
+/// it by a second save of B, with `folder` null. A live history is locked, so the record's length is
+/// read from its metadata at each point, and once the recorder is dropped the record is read back
+/// and holds one mark.
+///
+/// Mutation: the project check in `mark_saved_here` removed. Expected failure: this test fails at
+/// B's reply, which reads `written`.
+#[test]
+fn a_second_open_of_one_file_saved_to_another_folder_withholds_its_mark_and_leaves_the_first_record_unchanged(
+) {
+    let rig = rig("second-open");
+    rig.record_opacity(0.35);
+    let a = rig
+        .save(rig.wire(Some(&rig.folder), [1.0, 2.0], 0.0))
+        .expect("A saved");
+    assert_eq!(a.history_mark, HistoryMarkState::Written);
+
+    let close = CloseDatasetRequest {
+        skp: SKP_VERSION.to_string(),
+        dataset: rig.handle.clone(),
+    };
+    rig.host.close_dataset(close).expect("closed");
+    let data = rig.dir.join("data").join("parcels.parquet");
+    let reopen = OpenDatasetRequest {
+        skp: SKP_VERSION.to_string(),
+        path: data.display().to_string(),
+        cancel_key: "k2".to_string(),
+        crs_assertion: None,
+        identity: None,
+    };
+    let second = rig.host.open_dataset(reopen).expect("opened again").dataset;
+    let step = RecordStepRequest {
+        skp: SKP_VERSION.to_string(),
+        dataset: second.clone(),
+        intent: StepIntent::StyleSet(StyleSetParams::FillOpacity { value: 0.35 }),
+    };
+    rig.recorder
+        .record_step(step)
+        .expect("recorded on the second open");
+
+    let hex = a
+        .project
+        .strip_prefix("spatial://project/")
+        .expect("a project identity");
+    let record = rig.dir.join("sessions").join(hex).join("history.jsonl");
+    let length = || std::fs::metadata(&record).expect("A's record").len();
+    let before = length();
+
+    let folder2 = rig.dir.join("project2");
+    std::fs::create_dir_all(&folder2).expect("folder 2");
+    let mut wire = rig.wire(Some(&folder2), [1.0, 2.0], 0.0);
+    wire["dataset"] = json!(second.as_str());
+    let b = rig.save(wire.clone()).expect("B saved");
+    assert_eq!(b.history_mark, HistoryMarkState::Withheld, "B's reply");
+    assert_ne!(b.project, a.project, "B's identity is not A's");
+    assert_eq!(length(), before, "A's record, after B's save");
+
+    wire["folder"] = Value::Null;
+    let again = rig.save(wire).expect("B saved again");
+    assert_eq!(again.project, b.project);
+    assert_eq!(
+        again.history_mark,
+        HistoryMarkState::Withheld,
+        "B's second reply"
+    );
+    assert_eq!(length(), before, "A's record, after B's second save");
+
+    let record_dir = record.parent().expect("the record's folder").to_path_buf();
+    drop(rig.projects);
+    drop(rig.recorder);
+    let kept = recover(&record_dir);
+    assert!(
+        kept.failure.is_none(),
+        "A's record chains: {:?}",
+        kept.failure
+    );
+    let lines: Vec<Value> = kept
+        .lines
+        .iter()
+        .map(|l| serde_json::from_str(l).expect("a JSON line"))
+        .collect();
+    let marks = lines.iter().filter(|l| l.get("mark").is_some()).count();
+    assert_eq!(marks, 1, "A's mark is the only one");
 }
