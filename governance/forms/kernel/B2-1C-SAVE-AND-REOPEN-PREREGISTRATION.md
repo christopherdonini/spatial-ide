@@ -1475,3 +1475,28 @@ Nothing above is edited.
 8. **Next.** R1, then step 1's PR.
 
 Nothing above is edited.
+
+## Amendment 17 — R1 built (class 1); the step's lines over their ceiling (class 8); written after R1's report was seen, before step 1's PR
+
+*Written by the custodian. References only: `state/consults/2026-11-11-b2-piece-1c-save-and-reopen-r1-worker-report.md`.*
+
+1. **R1 built,** by Amendment 16.
+   - Main at e3fb4a97ebef726f77a5e2609b8fada32a6b1208 is merged into the branch at 88a35355c42e46a19e57836edb684a32d5871fa7, with no conflict. The merge brings only `governance/`, `site/` and `state/`.
+   - The records commit, 791e7e9edb52328b7c430012c9a3a5e1105de8a2, holds the three files Amendment 16 names: `kernel/README.md`, item 62 and Part AD. It is pushed.
+2. **Size (class 8).** B for step 1's PR is e3fb4a97ebef726f77a5e2609b8fada32a6b1208, the main commit merged. At that B the step stands at 73 files and 7,249 lines.
+   - The files are within their 77.
+   - The lines stay over their 4,790, and nothing is trimmed.
+   - The records group is at 49 of its 120.
+3. **For the gates.**
+   - Item 62's words go past K-4's placeholder by three clauses, each taken from the code at the head as the report gives it:
+     - the store's path;
+     - that a save failing at the replace leaves the two machine files, and the next save makes another identity;
+     - that a dataset opened and saved again makes a new identity.
+     The words carry the DRAFT mark.
+   - Item 62's comment names the code by path and line span, in words, at the merge commit with no hash. It says that pins follow on main after the merge. No piece is placed for that, and the reviewer grades it.
+   - Two edits to tracked files were made by shell: a `sed -i` on two of item 62's line spans, and Part AD's text appended from a scratch file. The transcript holds both.
+   - The kernel README's list of preregistrations does not gain this piece's form.
+   - The transcript holds no errored call, no Guardian refusal and no heavy command.
+4. **Next.** Step 1's PR, by §9, with its gates.
+
+Nothing above is edited.
