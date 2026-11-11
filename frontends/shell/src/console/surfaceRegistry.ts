@@ -73,7 +73,7 @@ const BINDING_LOCAL_CITATION =
   "ADR-024); not callable by a script, plugin, notebook, CLI, or AI client.";
 
 /** The seven SKP commands (`skp/client.ts`'s own `call("...", ...)` sites) -- kept here as the
- * class-A half of the registry. A seventh command changes `skp/client.ts`, this list, and
+ * class-A half of the registry. An eighth command changes `skp/client.ts`, this list, and
  * `surfaceCompleteness.test.ts`'s derived-set assertion together, or the completeness scan fails
  * the build (NEXT-CUT.md P2's own anti-debt-accrual mechanism). `record_step` (`skp/0.12`) is the
  * sixth, and it is what every committed filter and style edit shows here (B2 piece 1b); `save_project`

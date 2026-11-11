@@ -53,7 +53,7 @@ async function call<Res>(command: string, request: Record<string, unknown>): Pro
   // never changes what is returned or thrown, only observes it.
   // `command` is captured on the entry too (NEXT-CUT.md P3): `DescribeRequest` and
   // `CloseDatasetRequest` are both exactly `{skp, dataset}` on the wire, so the request object
-  // alone cannot tell the console's panel which of the six commands this was.
+  // alone cannot tell the console's panel which of the seven commands this was.
   const entry = consoleRecorder.record(request, command);
   try {
     const result = await invoke<Res>(command, { request });
