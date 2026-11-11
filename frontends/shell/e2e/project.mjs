@@ -24,6 +24,22 @@
 // bound below is a harness bound, never a claim about how long anything takes (ADR-018).
 //
 // RECORDED MUTATIONS, each applied alone and reverted, each failing at the step it names. Entries are added by the commit that observes them.
+//
+// m-filter: the save made before the filter. In `main`, the SAVE step moved to run between OPEN and CLAUSES (two lines of this file).
+//   Expected: a non-zero exit, failing at READBACK-FILTER, the file's clauses empty.
+//   Observed (run m-filter at 1c807fc6e8e931dfa4d8a356bb4914b4d9fa29f4, exit 1):
+//   [READBACK-FILTER] FAIL (0ms): READBACK-FILTER: the file's clauses read [], expected [{"text":"\"zone\" = 'residential'","enabled":true},{"text":"\"zone\" <> 'residential'","enabled":false},{"text":"\"zone\" IS NOT NULL","enabled":true}]
+//
+// m-view: the view's centre without the origin. In `canvas/WorkingCanvas.tsx`'s `currentView`, `centre` returned as `[camera.targetX, camera.targetY]`.
+//   Expected: a non-zero exit, failing at READBACK-VIEW, the file's centre not the pose's patterns.
+//   Observed (run m-view at 1c807fc6e8e931dfa4d8a356bb4914b4d9fa29f4, exit 1):
+//   [READBACK-VIEW] FAIL (1ms): READBACK-VIEW: the file's view reads {"centre":["0000000000000000","0000000000000000"],"zoom":"bfeb6db6db6db6dc"}, expected the pose's HexF64 patterns {"centre":["4143d7e22aaaaaab","4132530449249249"],"zoom":"bfeb6db6db6db6dc"}
+//
+// m-hook: the hook's save made through a saver of its own. In `App.tsx`, the hook body builds a `createProjectSaver` whose `pickFolder` answers the supplied folder and saves
+//   through it, in place of `await handleSaveProject()`.
+//   Expected: a non-zero exit, failing at SAVE, the answer not "asked".
+//   Observed (run m-hook at 1c807fc6e8e931dfa4d8a356bb4914b4d9fa29f4, exit 1):
+//   [SAVE] FAIL (29ms): SAVE: the first e2eSaveProjectToFolder answered "not-asked", expected "asked"
 
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
