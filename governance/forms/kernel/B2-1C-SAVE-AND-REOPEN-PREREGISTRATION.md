@@ -1363,3 +1363,14 @@ Nothing above is edited.
 - §8 and §9's seam list: added to by items 1 and 2.
 
 Nothing above is edited.
+
+## Amendment 13 — P5 built (class 1); the step's lines further over their ceiling (class 8); a Guardian refusal the report omits, disclosed for the gates; written after P5's report was seen, before P6's code
+
+*Written by the custodian. References only: `state/consults/2026-11-11-b2-piece-1c-save-and-reopen-p5-worker-report.md`.*
+
+1. **P5 built** by Amendments 10 to 12 at a3a1ba4ea550c75fe85b1bf0bbd1ad7398670060, one commit of 15 files. It holds §4's three shell tests, Amendment 12's two App-level tests and V-C1, each with its mutation observed at that commit, and one further mutation observed on the completeness-test edit. The only edits of existing tests are the two that Amendments 11 and 12 permit.
+2. **Size (class 8).** At B = e57d75e191ea35fe44c3a26887d73b82f4b53262 the step stands at 65 files and 6,711 lines. The files are within their 77. The lines stay over their 4,790, as Amendment 9 recorded, and nothing is trimmed. P5's groups are within their ceilings: src-tauri 66 of 100, shell product 262 of 380, shell tests 356 of 380.
+3. **For the gates.** The additions the report lists as not named by the form stand as it gives them, and so do its two departures: one commit, and App's lazy `save` arrow. The report omits one event that its transcript holds. The spatial-guardian refused the first write of `project/saveProject.ts`, because the file's folder did not yet exist. The worker then made the folder and wrote the file again, and the Guardian allowed that write. The brief made any Guardian refusal a stop. The bytes are the commit's, and they are gated as such.
+4. **Next.** P6, by Amendment 1 item 6, with E-SAVE's added assertion from Amendment 12 item 2; then R1.
+
+Nothing above is edited.
