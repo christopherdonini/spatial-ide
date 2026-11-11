@@ -76,7 +76,8 @@ const BINDING_LOCAL_CITATION =
  * class-A half of the registry. A seventh command changes `skp/client.ts`, this list, and
  * `surfaceCompleteness.test.ts`'s derived-set assertion together, or the completeness scan fails
  * the build (NEXT-CUT.md P2's own anti-debt-accrual mechanism). `record_step` (`skp/0.12`) is the
- * sixth, and it is what every committed filter and style edit shows here (B2 piece 1b). */
+ * sixth, and it is what every committed filter and style edit shows here (B2 piece 1b); `save_project`
+ * (`skp/0.13`) is the seventh, and it is what a save shows (B2 piece 1c). */
 const CLASS_A_ROWS: readonly ClassARow[] = [
   { class: "A", command: "open_dataset" },
   { class: "A", command: "describe" },
@@ -84,6 +85,7 @@ const CLASS_A_ROWS: readonly ClassARow[] = [
   { class: "A", command: "cancel" },
   { class: "A", command: "close_dataset" },
   { class: "A", command: "record_step" },
+  { class: "A", command: "save_project" },
 ];
 
 /** The seven binding-local commands plus the dev-only E2E destination seam (NEXT-CUT.md's
@@ -124,6 +126,14 @@ const CLASS_B_ROWS = [
     effect:
       "opens the native OS file picker so the operator can choose a dataset path before " +
       "open_dataset is called; the picker's own answer supplies the path, never a script's.",
+    citation: BINDING_LOCAL_CITATION,
+  },
+  {
+    class: "B",
+    command: "binding_pick_project_folder",
+    effect:
+      "opens the native OS folder picker so the operator can choose the project folder at an open's first " +
+      "save, before save_project is called; the picker's own answer supplies the folder, never a script's.",
     citation: BINDING_LOCAL_CITATION,
   },
   {

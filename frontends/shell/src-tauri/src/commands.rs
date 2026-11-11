@@ -269,6 +269,28 @@ pub async fn binding_pick_file(app: tauri::AppHandle) -> Result<Option<String>, 
     Ok(picked.map(|p| p.to_string()))
 }
 
+/// The title of the native project-folder picker: S2, a placeholder.
+const PROJECT_FOLDER_PICKER_TITLE: &str = "[P6 placeholder] Choose the project folder";
+
+/// The OS folder picker for `save_project`'s first save. **Not SKP**, for the same reason as
+/// [`binding_pick_file`]: `save_project` takes a folder already chosen, and how the caller got one
+/// is UI. The path never comes from the page: the dialog is native, and `None` means the operator
+/// cancelled.
+#[tauri::command]
+pub async fn binding_pick_project_folder(app: tauri::AppHandle) -> Result<Option<String>, String> {
+    let (tx, rx) = tokio::sync::oneshot::channel();
+    app.dialog()
+        .file()
+        .set_title(PROJECT_FOLDER_PICKER_TITLE)
+        .pick_folder(move |picked| {
+            let _ = tx.send(picked);
+        });
+    let picked = rx
+        .await
+        .map_err(|e| format!("folder picker channel closed: {e}"))?;
+    Ok(picked.map(|p| p.to_string()))
+}
+
 // -------------------------------------------------------------------------------------------
 // The publish seam (`NEXT-CUT.md` P1) — binding-local, never SKP; see `crate::publish`'s module
 // docs for the design this pair implements.

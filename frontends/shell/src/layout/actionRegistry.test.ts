@@ -139,6 +139,7 @@ describe("U5: the registry's ids and shortcuts are unique", () => {
       "layout.toggleActivity",
       "layout.toggleInspector",
       "layout.toggleLayers",
+      "project.save",
       "selection.clear",
       "selection.zoomTo",
       "tool.navigate",

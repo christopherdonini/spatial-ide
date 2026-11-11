@@ -200,7 +200,7 @@ describe("console/surfaceRegistry completeness scan (NEXT-CUT.md P2)", () => {
     // Hard backstop, per NEXT-CUT.md P2: if this ever disagrees with `derived` above, a seventh
     // command has been added to skp/client.ts without updating this list -- update BOTH this
     // array and console/surfaceRegistry.ts's CLASS_A_ROWS together.
-    const expectedSix = ["cancel", "close_dataset", "describe", "open_dataset", "record_step", "viewport_query"];
+    const expectedSix = ["cancel", "close_dataset", "describe", "open_dataset", "record_step", "save_project", "viewport_query"];
 
     it("skp/client.ts's own call(\"<name>\", ...) sites are exactly the six named commands", () => {
       expect(derived).toEqual(expectedSix);
