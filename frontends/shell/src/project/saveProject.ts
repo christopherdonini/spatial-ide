@@ -26,6 +26,9 @@ export { pickProjectFolder } from "../skp/dialog";
 export const SAVED_NOTICE = "[P6 placeholder] The project was saved.";
 /** S5: the project file was written and the session history took no `saved-here` mark (`history_mark: "withheld"`). */
 export const MARK_WITHHELD_NOTICE = "[P6 placeholder] The session history holds no saved-here mark for this save.";
+/** S18: the data is inside the project folder, and its path has no canonical spelling on this machine (`project_relative: "no-canonical-spelling"`); the project will not find that file on another machine. */
+export const NO_CANONICAL_SPELLING_NOTICE =
+  "[P6 placeholder] The data is inside the project folder, but its path has no canonical spelling on this machine. The project will not find that file on another machine.";
 /** S6: the selection notice at save. */
 export const SELECTION_NOTICE = "[P6 placeholder] A selection made by clicking is not saved.";
 /** S7: the first save went to a folder that already holds a project. */
@@ -104,7 +107,12 @@ export function createProjectSaver(deps: ProjectSaverDeps): ProjectSaver {
         try {
           const response = await deps.save(input.dataset, folder, workspaceOf(input, input.view));
           saved.add(input.dataset);
-          return [SAVED_NOTICE, ...(response.history_mark === "withheld" ? [MARK_WITHHELD_NOTICE] : []), ...afterwards];
+          return [
+            SAVED_NOTICE,
+            ...(response.history_mark === "withheld" ? [MARK_WITHHELD_NOTICE] : []),
+            ...(response.project_relative === "no-canonical-spelling" ? [NO_CANONICAL_SPELLING_NOTICE] : []),
+            ...afterwards,
+          ];
         } catch (error) {
           const failure = failureOf(error);
           return [failure.code === FOLDER_HOLDS_PROJECT_CODE ? FOLDER_HOLDS_PROJECT_NOTICE : notSavedNotice(failure.message), ...afterwards];

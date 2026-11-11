@@ -118,7 +118,8 @@
   "roundtrip": true,
   "document": {
    "project": "spatial://project/0123456789abcdef0123456789abcdef",
-   "history_mark": "withheld"
+   "history_mark": "withheld",
+   "project_relative": "no-canonical-spelling"
   }
  }
 ]

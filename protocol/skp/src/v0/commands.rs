@@ -730,12 +730,14 @@ pub struct ProjectView {
 }
 
 /// `project` is the project's identity, `spatial://project/` and 32 lowercase hex characters
-/// (ADR-036 §4).
+/// (ADR-036 §4). `project_relative` is the resolver's judgment at this save
+/// ([`ProjectRelativeLocator`]).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct SaveProjectResponse {
     pub project: String,
     pub history_mark: HistoryMarkState,
+    pub project_relative: ProjectRelativeLocator,
 }
 
 /// Whether the session history took the `saved-here` mark. The project file was written in both
@@ -748,6 +750,23 @@ pub enum HistoryMarkState {
     Written,
     #[serde(rename = "withheld")]
     Withheld,
+}
+
+/// What the project file carries for the data beside its `machine-recorded` locator, as the kernel
+/// judged it at this save (ADR-036 §5; SKP-V0.md §11.2). `carried`: a `project-relative` locator
+/// too. `outside`: the data or the folder could not be resolved at the save, or the data is not
+/// under the folder. `no-canonical-spelling`: the data is inside the folder, and its path has no
+/// canonical spelling on this machine. `through-link`: the data is inside the folder, and the path
+/// it was opened by does not reach it from the folder without a link. In each of the last three the
+/// file carries the `machine-recorded` locator only. Closed, kebab-case, no fallback; no path
+/// crosses.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum ProjectRelativeLocator {
+    Carried,
+    Outside,
+    NoCanonicalSpelling,
+    ThroughLink,
 }
 
 #[cfg(test)]
@@ -791,6 +810,54 @@ mod tests {
                 "{bad:?} must be refused at deserialize"
             );
         }
+    }
+
+    /// **P-U3.** `save_project`'s `project_relative` is one of four closed kebab-case strings: each
+    /// serializes as its string and round-trips, a fifth string is refused, and a reply without the
+    /// member is refused.
+    ///
+    /// Mutation: `rename_all = "snake_case"` on the enum. Expected failure: this test fails at
+    /// `no-canonical-spelling` (left `no_canonical_spelling`).
+    #[test]
+    fn the_project_relative_member_is_one_of_four_closed_values_and_is_required() {
+        for (state, wire) in [
+            (ProjectRelativeLocator::Carried, "carried"),
+            (ProjectRelativeLocator::Outside, "outside"),
+            (
+                ProjectRelativeLocator::NoCanonicalSpelling,
+                "no-canonical-spelling",
+            ),
+            (ProjectRelativeLocator::ThroughLink, "through-link"),
+        ] {
+            let reply = SaveProjectResponse {
+                project: "spatial://project/00000000000000000000000000000001".into(),
+                history_mark: HistoryMarkState::Written,
+                project_relative: state,
+            };
+            let json = serde_json::to_value(&reply).unwrap();
+            assert_eq!(json["project_relative"], wire);
+            let back: SaveProjectResponse = serde_json::from_value(json).unwrap();
+            assert_eq!(back.project_relative, state);
+        }
+
+        let reply = |member: Option<&str>| {
+            let mut v = serde_json::json!({
+                "project": "spatial://project/00000000000000000000000000000001",
+                "history_mark": "written",
+            });
+            if let Some(m) = member {
+                v["project_relative"] = serde_json::json!(m);
+            }
+            serde_json::from_value::<SaveProjectResponse>(v)
+        };
+        assert!(reply(Some("carried")).is_ok());
+        for bad in ["Carried", "no_canonical_spelling", "unknown", ""] {
+            assert!(reply(Some(bad)).is_err(), "{bad:?} must be refused");
+        }
+        assert!(
+            reply(None).is_err(),
+            "a reply without the member must be refused"
+        );
     }
 
     #[test]

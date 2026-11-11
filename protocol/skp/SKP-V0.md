@@ -1137,11 +1137,11 @@ comparison retained; `deny_unknown_fields` kept both directions. `skp/1` stays R
 
 **The version's FULL field set, as §8's own discipline requires:** one command and its types, five codes, and one widened value; no change to the other five commands.
 
-- **A seventh command, `save_project`:** request `{skp, dataset, folder, workspace}`, response `{project, history_mark}`; §11.2 gives both. `folder` is `string | null`, always present. `workspace` has four members, `filter`, `clauses`, `style` and `view`, each a closed shape, and `view` is `{centre, zoom}` with `HexF64` numbers (§3).
+- **A seventh command, `save_project`:** request `{skp, dataset, folder, workspace}`, response `{project, history_mark, project_relative}`; §11.2 gives both. `folder` is `string | null`, always present. `workspace` has four members, `filter`, `clauses`, `style` and `view`, each a closed shape, and `view` is `{centre, zoom}` with `HexF64` numbers (§3).
 - **Five new `skp.*` codes:** `skp.project_folder_not_given`, `skp.project_folder_holds_project` (`folder`), `skp.project_file_unwritable` (`detail`), `skp.project_file_refused` (`path`, `rule`) and `skp.project_lineage_not_kept_by_this_version`. §11.4 lists them.
 - **`record_step`'s `style.set` for `fillColor`** takes `"#rrggbb"` or a categorical match, `{match: {column, cases: [{when, then}, …], on_null, on_unmatched}}`, a closed shape with every member required (§10.2). The other three properties are unchanged, and `actions` stays 2. §10.3's check (6) and §10.4's `skp.style_value_not_admitted` row gain the match's cases.
 
-§1 and §4 are updated in place to count seven commands; §5 is unchanged; `protocol/data-plane/` has an empty diff. Mechanics: the literal `"skp/0.12"` → `"skp/0.13"` is bumped in one commit with its fixtures (`protocol/skp/tests/data/*.json`, the conformance fixtures, `protocol/skp/tests/fixtures.rs`), the shell's TypeScript literal and the two shell tests that carry it, and the types above. The version-refusal fixture that named `skp/0.13` as an unsupported future version is renumbered to name `skp/0.14`. Plain `==` retained; `deny_unknown_fields` kept both directions; `skp/1` stays RESERVED.
+§1 and §4 are updated in place to count seven commands; §5 is unchanged; `protocol/data-plane/` has an empty diff. Mechanics: the literal `"skp/0.12"` → `"skp/0.13"` is bumped in one commit with its fixtures (`protocol/skp/tests/data/*.json`, the conformance fixtures, `protocol/skp/tests/fixtures.rs`), the shell's TypeScript literal and the two shell tests that carry it, and the types above; `project_relative` joined the response in a second commit on the branch, under the same literal, before the version reached main (this amendment). The version-refusal fixture that named `skp/0.13` as an unsupported future version is renumbered to name `skp/0.14`. Plain `==` retained; `deny_unknown_fields` kept both directions; `skp/1` stays RESERVED.
 
 ### Note: open_dataset refuses a name closed during its admission (2026-10-26; no literal change)
 
@@ -1321,7 +1321,7 @@ Five new codes, all minted by the host:
 ### 11.2 The wire shape
 
 ```
-{ skp, dataset: DatasetHandle, folder: string | null, workspace }  →  { project, history_mark }
+{ skp, dataset: DatasetHandle, folder: string | null, workspace }  →  { project, history_mark, project_relative }
 
 workspace = { filter: Filter | null,
               clauses: [ { text: <text>, enabled: <bool> }, … ],
@@ -1329,6 +1329,8 @@ workspace = { filter: Filter | null,
               view: { centre: [HexF64, HexF64], zoom: HexF64 } }
 
 history_mark = "written" | "withheld"
+
+project_relative = "carried" | "outside" | "no-canonical-spelling" | "through-link"
 ```
 
 - **`folder`** is the project folder, an absolute UTF-8 path from the shell's folder picker. It is present only at the first save of an open; a later save of the same open goes to the folder the first one used and ignores it. `null` is "no folder", and the key is always present.
@@ -1336,6 +1338,7 @@ history_mark = "written" | "withheld"
 - **`view`** is the point at the middle of the canvas, x then y, in the dataset's space, and the base-2 logarithm of the CSS pixels that one unit of that space spans. Each number is a `HexF64` (§3), so a value the JSON number grammar cannot keep exactly is still saved exactly. `view` carries no `crs`: the kernel writes the space the dataset was admitted in, because the shell holds no hash of its definition to name it with.
 - **`project`** is the project's identity, `spatial://project/` and 32 lowercase hex characters (ADR-036 §4). No path crosses in the response.
 - **`history_mark`** says whether the session history took the `saved-here` mark. The project file was written in both cases. `withheld` means the history holds no recorded step for the dataset, the recorded steps do not reach the saved workspace, or the history could not take the record move or the line.
+- **`project_relative`** says what the project file carries for the data beside its `machine-recorded` locator, as the kernel judged it at this save (ADR-036 §5). `carried`: a `project-relative` locator too. `outside`: the data or the folder could not be resolved at the save, or the data is not under the folder. `no-canonical-spelling`: the data is inside the folder, and its path has no canonical spelling on this machine. `through-link`: the data is inside the folder, and the path it was opened by does not reach it from the folder without a link. In each of the last three the file carries the `machine-recorded` locator only. The save is not refused, and no path crosses.
 
 ### 11.3 The contract
 

@@ -21,8 +21,8 @@ use spatial_kernel::session_history::StepRecorder;
 use spatial_kernel::skp::{session_end_channel, SkpHost, StreamRegistry};
 use spatial_kernel::Catalog;
 use spatial_skp::v0::{
-    DatasetHandle, HexF64, OpenDatasetRequest, RecordStepRequest, SaveProjectRequest, SkpError,
-    StepIntent, StyleSetParams, SKP_VERSION,
+    DatasetHandle, HexF64, OpenDatasetRequest, ProjectRelativeLocator, RecordStepRequest,
+    SaveProjectRequest, SkpError, StepIntent, StyleSetParams, SKP_VERSION,
 };
 
 const STYLE: &str = r##"{"style_version":1,"layer":{"geometry":"polygon","fill_color":{"literal":"#4285f4"},"fill_opacity":{"literal":0.35},"outline_color":{"literal":"#000000"},"outline_width":{"literal":1.5}}}"##;
@@ -129,10 +129,10 @@ impl Rig {
     }
 }
 
-/// **P-S1.** A request decoded from its wire JSON saves the project, and the reply is the identity
-/// and the mark and nothing else. The file reads back with that identity and with the view's numbers
-/// bit for bit; the space is the one the dataset was admitted in; a later save with `folder` null
-/// goes to the same folder under the same identity.
+/// **P-S1.** A request decoded from its wire JSON saves the project, and the reply is the identity,
+/// the mark and the resolver's judgment, and nothing else. The file reads back with that identity
+/// and with the view's numbers bit for bit; the space is the one the dataset was admitted in; a
+/// later save with `folder` null goes to the same folder under the same identity.
 ///
 /// Mutation: the view's centre is read in the order y, x. Expected failure: this test fails at the
 /// centre assertion on the first save.
@@ -146,7 +146,7 @@ fn a_save_project_request_saves_and_the_reply_names_the_identity_and_the_mark() 
         .expect("saved");
     assert_eq!(
         serde_json::to_value(&first).expect("serializes"),
-        json!({"project": first.project, "history_mark": "written"})
+        json!({"project": first.project, "history_mark": "written", "project_relative": "outside"})
     );
     assert!(
         first.project.starts_with("spatial://project/"),
@@ -262,4 +262,107 @@ fn a_save_on_a_dataset_whose_generation_ended_is_refused_with_the_ends_code() {
     assert_eq!(e.code, "engine.source_changed");
     assert_eq!(Rig::names(&rig.folder), Vec::<String>::new());
     assert_eq!(Rig::names(&rig.machine), Vec::<String>::new());
+}
+
+/// F1: 500 polygons, declared LV95, a `zone` text column, written at `path`.
+fn write_f1(path: &Path) {
+    std::fs::create_dir_all(path.parent().expect("a parent")).expect("the data folder");
+    let spec = FixtureSpec {
+        features: 500,
+        avg_vertices: 12,
+        seed: 1,
+        attributes: AttributeMode::CategoricalZone,
+        ..Default::default()
+    };
+    write_geoparquet(path, &spec).expect("fixture");
+}
+
+/// A link at `link` to the folder `target`: a junction on Windows, which needs no privilege, and a
+/// symlink elsewhere.
+fn make_link(link: &Path, target: &Path) {
+    #[cfg(windows)]
+    {
+        // `cmd` reads a `/` in a path as a switch, so both paths are given with `\`.
+        let back = |p: &Path| p.display().to_string().replace('/', "\\");
+        let made = std::process::Command::new("cmd")
+            .args(["/C", "mklink", "/J"])
+            .arg(back(link))
+            .arg(back(target))
+            .output()
+            .expect("cmd");
+        assert!(made.status.success(), "mklink /J: {made:?}");
+    }
+    #[cfg(not(windows))]
+    std::os::unix::fs::symlink(target, link).expect("symlink");
+}
+
+impl Rig {
+    /// F1 written at `data` and opened through the host, then saved into `folder` with the wire
+    /// request of [`Rig::wire`] naming that open; the reply's `project_relative`.
+    fn save_opened_at(&self, data: &Path, folder: &Path) -> ProjectRelativeLocator {
+        let req = OpenDatasetRequest {
+            skp: SKP_VERSION.to_string(),
+            path: data.display().to_string(),
+            cancel_key: "k".to_string(),
+            crs_assertion: None,
+            identity: None,
+        };
+        let handle = self.host.open_dataset(req).expect("open").dataset;
+        let mut wire = self.wire(Some(folder), [1.0, 2.0], 0.0);
+        wire["dataset"] = json!(handle.as_str());
+        self.save(wire).expect("saved").project_relative
+    }
+}
+
+/// **K-S14** (the seam: `SkpHost::open_dataset` through `Projects::save_project`). The reply names
+/// the resolver's judgment, case by case: F1 inside the folder, F2 outside it, F1 reached through a
+/// junction (Windows) or a symlink (Linux) below the folder, and F1 inside the folder under a name
+/// that holds U+007F. The file kept for each is not read here; the reply is what the shell sees.
+///
+/// Mutation: `ThroughLink` is mapped to `Outside` in the kernel's map. Expected failure: this test
+/// fails at the through-link case (left `Outside`, right `ThroughLink`).
+#[test]
+fn the_save_reply_names_the_resolvers_judgment_carried_outside_no_canonical_spelling_or_through_link(
+) {
+    let rig = rig("judgment");
+    let case = |name: &str| {
+        let folder = rig.dir.join(name);
+        std::fs::create_dir_all(&folder).expect("a project folder");
+        folder
+    };
+
+    let inside = case("inside");
+    let data = inside.join("data").join("parcels.parquet");
+    write_f1(&data);
+    assert_eq!(
+        rig.save_opened_at(&data, &inside),
+        ProjectRelativeLocator::Carried
+    );
+
+    let outside = case("outside");
+    let data = rig.dir.join("elsewhere").join("parcels.parquet");
+    write_f1(&data);
+    assert_eq!(
+        rig.save_opened_at(&data, &outside),
+        ProjectRelativeLocator::Outside
+    );
+
+    let linked = case("linked");
+    write_f1(&linked.join("data/real/parcels.parquet"));
+    let alias = linked.join("data/alias");
+    make_link(&alias, &linked.join("data/real"));
+    let through = rig.save_opened_at(&alias.join("parcels.parquet"), &linked);
+    // A junction is removed with `remove_dir`, a symlink with `remove_file`; neither follows it.
+    std::fs::remove_dir(&alias)
+        .or_else(|_| std::fs::remove_file(&alias))
+        .expect("link removed");
+    assert_eq!(through, ProjectRelativeLocator::ThroughLink);
+
+    let spelled = case("spelled");
+    let data = spelled.join("data").join("par\u{7f}cels.parquet");
+    write_f1(&data);
+    assert_eq!(
+        rig.save_opened_at(&data, &spelled),
+        ProjectRelativeLocator::NoCanonicalSpelling
+    );
 }

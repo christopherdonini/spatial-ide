@@ -35,7 +35,8 @@ use spatial_engine::Dataset;
 use spatial_renderer::canonical::{sha256_hex, to_canonical_string, Json};
 use spatial_renderer::style::{self, Value};
 use spatial_skp::v0::{
-    HistoryMarkState, ProjectWorkspace, SaveProjectRequest, SaveProjectResponse, SkpError,
+    HistoryMarkState, ProjectRelativeLocator, ProjectWorkspace, SaveProjectRequest,
+    SaveProjectResponse, SkpError,
 };
 
 use crate::dataset_ref::{DatasetRef, DatasetUri, RefBuildError};
@@ -45,7 +46,7 @@ use file::{
     read_project, write_project, Clause, Lineage, ProjectFile, ProjectFileRefused, Space, View,
     Workspace, MAX_PROJECT_FILE_BYTES,
 };
-use resolver::{judge, Carried};
+use resolver::{judge, Carried, Why};
 use store::{mint_identity, record_dir, replace, KnownFolders, MachineRecordRefused, SaveError};
 
 /// The project file's name: one fixed name in the project folder (ADR-036 §1).
@@ -338,6 +339,7 @@ impl Projects {
         Ok(SaveProjectResponse {
             project: saved.project.as_str().to_string(),
             history_mark,
+            project_relative: project_relative_of(&saved.carried),
         })
     }
 
@@ -361,6 +363,20 @@ impl Projects {
             }
             Err(e) => unwritable(e),
         }
+    }
+}
+
+/// The resolver's judgment as the reply's closed value; the path of `Carried::ProjectRelative` is
+/// dropped. One exhaustive `match` with no wildcard arm: a new [`Why`] is a compile error here
+/// until it is mapped.
+fn project_relative_of(carried: &Carried) -> ProjectRelativeLocator {
+    match carried {
+        Carried::ProjectRelative(_) => ProjectRelativeLocator::Carried,
+        Carried::MachineRecordedOnly(Why::Outside) => ProjectRelativeLocator::Outside,
+        Carried::MachineRecordedOnly(Why::NoCanonicalSpelling) => {
+            ProjectRelativeLocator::NoCanonicalSpelling
+        }
+        Carried::MachineRecordedOnly(Why::ThroughLink) => ProjectRelativeLocator::ThroughLink,
     }
 }
 

@@ -348,10 +348,16 @@ export interface SaveProjectRequest {
 /** `skp/0.13`: whether the session history took the `saved-here` mark. The project file was written in both cases. */
 export type HistoryMarkState = "written" | "withheld";
 
-/** `skp/0.13`. `project` is the project's identity (`spatial://project/` and 32 hex characters); no path crosses. */
+/** `skp/0.13`: what the project file carries for the data beside its `machine-recorded` locator, as the kernel judged it at this
+ * save. `carried`: a `project-relative` locator too. In each of the other three the file carries the `machine-recorded` locator only. */
+export type ProjectRelativeLocator = "carried" | "outside" | "no-canonical-spelling" | "through-link";
+
+/** `skp/0.13`. `project` is the project's identity (`spatial://project/` and 32 hex characters); no path crosses.
+ * `project_relative` is the resolver's judgment at this save, always present. */
 export interface SaveProjectResponse {
   project: string;
   history_mark: HistoryMarkState;
+  project_relative: ProjectRelativeLocator;
 }
 
 /** `skp/0.5`, the advisory source-change watcher (ADR-035 D4). The one named exception to "no

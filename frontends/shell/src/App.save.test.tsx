@@ -61,7 +61,7 @@ vi.mock("./skp/client", () => {
     recordStep: async (): Promise<Record<string, never>> => ({}),
     saveProject: async (dataset: string, folder: string | null, workspace: unknown): Promise<import("./skp/types").SaveProjectResponse> => {
       mocks.saves.push({ dataset, folder, workspace });
-      return { project: "spatial://project/00000000000000000000000000000001", history_mark: "written" };
+      return { project: "spatial://project/00000000000000000000000000000001", history_mark: "written", project_relative: "carried" };
     },
   };
 });

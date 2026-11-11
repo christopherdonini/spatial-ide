@@ -15,7 +15,17 @@ vi.mock("@tauri-apps/api/core", () => ({ invoke: invokeMock }));
 import { encodeHexF64 } from "../skp/codec";
 import { saveProject } from "../skp/client";
 import { DEFAULT_STYLE_STATE, toStyleDocument } from "../style/document";
-import { createProjectSaver, FOLDER_HOLDS_PROJECT_NOTICE, notSavedNotice, pickProjectFolder, SAVED_NOTICE, SELECTION_NOTICE, type SaveInput } from "./saveProject";
+import {
+  createProjectSaver,
+  FOLDER_HOLDS_PROJECT_NOTICE,
+  MARK_WITHHELD_NOTICE,
+  NO_CANONICAL_SPELLING_NOTICE,
+  notSavedNotice,
+  pickProjectFolder,
+  SAVED_NOTICE,
+  SELECTION_NOTICE,
+  type SaveInput,
+} from "./saveProject";
 
 const FOLDER = "C:/projects/parcels";
 const FILTER = { predicate: "area > 100", dialect: "duckdb-expr/0" };
@@ -42,7 +52,7 @@ const sent = (): { command: string; request: Record<string, unknown> | undefined
 beforeEach(() => {
   invokeMock.mockReset().mockImplementation(async (command: string) => {
     if (command === "binding_pick_project_folder") return FOLDER;
-    return { project: "spatial://project/00000000000000000000000000000001", history_mark: "written" };
+    return { project: "spatial://project/00000000000000000000000000000001", history_mark: "written", project_relative: "carried" };
   });
 });
 
@@ -85,6 +95,31 @@ describe("Save project: what the shell sends (B2 piece 1c, section 2.8)", () => 
     expect(await saver.save(input({ selectionCount: 0 })), "none standing, none shown").toEqual([SAVED_NOTICE]);
     const request = sent().find((c) => c.command === "save_project")?.request;
     expect(JSON.stringify(request), "the selection is not in the file").not.toContain("selection");
+  });
+
+  // RECORDED MUTATION for SH-9: in `createProjectSaver` (project/saveProject.ts) S18's condition becomes `!== "carried"`. Expected failure: the
+  // `outside` reply shows S18 after the saved notice.
+  it("a reply naming no canonical spelling shows S18 after the saved notice, and no other judgment shows it", async () => {
+    const replyWith = (history_mark: string, project_relative: string) =>
+      invokeMock.mockImplementation(async (command: string) => {
+        if (command === "binding_pick_project_folder") return FOLDER;
+        return { project: "spatial://project/00000000000000000000000000000001", history_mark, project_relative };
+      });
+    const saver = newSaver();
+
+    replyWith("written", "no-canonical-spelling");
+    expect(await saver.save(input())).toEqual([SAVED_NOTICE, NO_CANONICAL_SPELLING_NOTICE]);
+    replyWith("withheld", "no-canonical-spelling");
+    expect(await saver.save(input({ selectionCount: 2 })), "after S5, before S6").toEqual([
+      SAVED_NOTICE,
+      MARK_WITHHELD_NOTICE,
+      NO_CANONICAL_SPELLING_NOTICE,
+      SELECTION_NOTICE,
+    ]);
+    for (const judgment of ["carried", "outside", "through-link"]) {
+      replyWith("written", judgment);
+      expect(await saver.save(input()), `${judgment} shows no S18`).toEqual([SAVED_NOTICE]);
+    }
   });
 
   // RECORDED MUTATION for "refused save": in `createProjectSaver` return `[SAVED_NOTICE]` from the catch arm of the save. Expected failure: the refusal is swallowed.

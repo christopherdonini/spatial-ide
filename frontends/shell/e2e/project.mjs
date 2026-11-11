@@ -13,12 +13,16 @@
 // `project.spatial` from disk and lists the folder; nothing but the hook's two-word answer crosses CDP.
 //
 // **The store is a scratch folder.** As `recording.mjs` does, the suite sets `LOCALAPPDATA` to a fresh folder before it launches the app, so the machine store
-// (the session record, the project's folder under `projects/`) lands there. It launches its own app and refuses one already listening. The two project folders
-// are made with `mkdtempSync` under the OS temp folder. All three are removed at the end, a failing run included; a folder the operating system will not free
+// (the session record, the project's folder under `projects/`) lands there. It launches its own app and refuses one already listening. The three project folders
+// are made with `mkdtempSync` under the OS temp folder. All four are removed at the end, a failing run included; a folder the operating system will not free
 // while the app still runs is named in the output.
 //
 // **The pose.** Before the save, `e2eSetViewState` puts the camera at three numbers with no short decimal spelling. The file's `view` must hold their HexF64
 // patterns (ADR-036 Amendment 1 item 1): the seam's end-to-end proof from the real shape, canvas -> App -> `save_project` -> the file.
+//
+// **The judgment, from the real shape.** After SECOND-SAVE the suite copies its fixture into the third folder under a name that holds U+007F (ADR-036 section 5's
+// canonical form refuses it, and Windows allows it), opens that copy, and saves into the folder it sits in: the kernel's `judge` finds the data inside the folder with no
+// canonical spelling, the reply names it, and the page shows S18 (INSIDE-OPEN, INSIDE-SAVE, NOTICE-S18; Amendment 20 item 5). No mock stands anywhere on that path.
 //
 // **Not proved here:** the native folder picker (OP1); reopen; that the machine store holds what the form says (the kernel's tests do); and any timing. Every
 // bound below is a harness bound, never a claim about how long anything takes (ADR-018).
@@ -42,7 +46,7 @@
 //   [SAVE] FAIL (29ms): SAVE: the first e2eSaveProjectToFolder answered "not-asked", expected "asked"
 
 import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -52,11 +56,15 @@ const TEMP_BASE = realpathSync.native(tmpdir());
 const SCRATCH = mkdtempSync(join(TEMP_BASE, "spatial-project-"));
 const FOLDER_ONE = mkdtempSync(join(TEMP_BASE, "spatial-project-first-"));
 const FOLDER_TWO = mkdtempSync(join(TEMP_BASE, "spatial-project-second-"));
+const FOLDER_THREE = mkdtempSync(join(TEMP_BASE, "spatial-project-third-"));
 process.env.LOCALAPPDATA = SCRATCH;
 
 const { attachOrLaunch, attachConsole, waitForSettle, CDP_PORT } = await import("./lib.mjs");
 
 const OUT_DIR = join(dirname(fileURLToPath(import.meta.url)), "out");
+const SAVE_PROJECT_SOURCE = join(dirname(fileURLToPath(import.meta.url)), "..", "src", "project", "saveProject.ts");
+// ADR-036 section 5's canonical form refuses U+007F, and Windows file names allow it.
+const SPELLED_NAME = "par\u007fcels.parquet";
 const FIXTURE = "C:\\dev\\spatial-ide\\target\\fixtures\\manual-walkthrough\\filter-zoned.parquet";
 const REGEN_COMMAND =
   "cargo test -p spatial-kernel --test manual_walkthrough_fixtures generate_the_filter_fixture -- --ignored --nocapture";
@@ -78,7 +86,7 @@ const sha256 = (path) => createHash("sha256").update(readFileSync(path)).digest(
 
 /** The folders and the scratch store go at the end of every run; a folder the app still holds open is named, not hidden. */
 function dropFolders() {
-  for (const path of [FOLDER_ONE, FOLDER_TWO, SCRATCH]) {
+  for (const path of [FOLDER_ONE, FOLDER_TWO, FOLDER_THREE, SCRATCH]) {
     try {
       rmSync(path, { recursive: true, force: true, maxRetries: 10, retryDelay: 500 });
     } catch (e) {
@@ -317,6 +325,56 @@ async function stepSecondSave(page, ctx) {
   return 'answered "not-asked"; the second folder stays empty; the first folder\'s project.spatial still reads back';
 }
 
+/** INSIDE-OPEN: the suite's fixture copied into the third folder under a name that holds U+007F, and opened by `openPath`. */
+async function stepInsideOpen(page, consoleHandle, ctx) {
+  ctx.insideData = join(FOLDER_THREE, SPELLED_NAME);
+  copyFileSync(FIXTURE, ctx.insideData);
+  const outcome = await page.evaluate((p) => window.__SPATIAL_E2E__.openPath(p), ctx.insideData);
+  if (outcome.kind !== "admitted") throw new Error(`openPath(the copy under ${JSON.stringify(SPELLED_NAME)}) returned ${JSON.stringify(outcome)}, expected {kind:"admitted"}`);
+  await waitFor(
+    "the first pixels of the copy (capturePixels reporting a non-background pixel)",
+    () => page.evaluate(async () => (await window.__SPATIAL_E2E__.capturePixels([])).nonBackgroundCount),
+    (n) => n > 0,
+    60_000,
+    500
+  );
+  await settle(consoleHandle, "after the copy's first look");
+  return `the copy under ${JSON.stringify(SPELLED_NAME)} in the third folder was admitted`;
+}
+
+/** INSIDE-SAVE: the first save of that open, into the folder the copy sits in. */
+async function stepInsideSave(page, ctx) {
+  const answer = await hookSave(page, FOLDER_THREE);
+  if (answer !== "asked") throw new Error(`the third e2eSaveProjectToFolder answered ${JSON.stringify(answer)}, expected "asked"`);
+  ctx.third = await readFolder(page, FOLDER_THREE);
+  const expected = ["project.spatial", SPELLED_NAME].sort();
+  if (JSON.stringify([...ctx.third.names].sort()) !== JSON.stringify(expected)) {
+    throw new Error(`the third folder lists ${JSON.stringify(ctx.third.names)}, expected ${JSON.stringify(expected)}`);
+  }
+  return `answered "asked"; the third folder holds project.spatial and the copy; ${ctx.third.json.project}`;
+}
+
+/** S18's text, read from the exported constant's own source by its name. */
+function s18Text() {
+  const source = readFileSync(SAVE_PROJECT_SOURCE, "utf8");
+  const found = /export const NO_CANONICAL_SPELLING_NOTICE =\s*("(?:[^"\\]|\\.)*");/.exec(source);
+  if (found === null) throw new Error(`${SAVE_PROJECT_SOURCE} holds no exported NO_CANONICAL_SPELLING_NOTICE constant`);
+  return JSON.parse(found[1]);
+}
+
+/** NOTICE-S18: the page's save notices hold S18's text once, and the file's dataset entry holds the `machine-recorded` locator only. */
+async function stepNoticeS18(page, ctx) {
+  const text = s18Text();
+  const readNotices = () => page.evaluate(() => [...document.querySelectorAll(".save-notice")].map((e) => e.textContent));
+  const notices = await waitFor("S18's text among the save notices", readNotices, (all) => all.includes(text), 10_000);
+  const count = notices.filter((n) => n === text).length;
+  if (count !== 1) throw new Error(`the page's save notices ${JSON.stringify(notices)} hold S18's text ${count} times, expected once`);
+  const locators = ctx.third.json.datasets?.[0]?.resource?.locators;
+  const kinds = Array.isArray(locators) ? locators.map((l) => l.kind).join() : null;
+  if (kinds !== "machine-recorded") throw new Error(`the file's dataset entry holds the locators ${JSON.stringify(locators)}, expected the machine-recorded one alone`);
+  return `the save notices hold S18's text once; the dataset entry's locators read ${kinds}`;
+}
+
 async function main() {
   const DEADLINE_MS = Number(process.env.SPATIAL_E2E_DEADLINE_MS ?? 900_000);
   const watchdog = setTimeout(() => {
@@ -332,7 +390,7 @@ async function main() {
     return;
   }
   const hashBefore = sha256(FIXTURE);
-  console.log(`project: fixture sha256 ${hashBefore}; the store for this run is ${SCRATCH}; the folders are ${FOLDER_ONE} and ${FOLDER_TWO}`);
+  console.log(`project: fixture sha256 ${hashBefore}; the store for this run is ${SCRATCH}; the folders are ${FOLDER_ONE}, ${FOLDER_TWO} and ${FOLDER_THREE}`);
   let session;
   try {
     session = await attachOrLaunch();
@@ -391,7 +449,10 @@ async function main() {
       (await runStep("READBACK-FILTER", 20_000, () => stepReadbackFilter(ctx))) &&
       (await runStep("READBACK-STYLE", 20_000, () => stepReadbackStyle(ctx))) &&
       (await runStep("READBACK-VIEW", 20_000, () => stepReadbackView(ctx))) &&
-      (await runStep("SECOND-SAVE", 120_000, () => stepSecondSave(page, ctx)));
+      (await runStep("SECOND-SAVE", 120_000, () => stepSecondSave(page, ctx))) &&
+      (await runStep("INSIDE-OPEN", 180_000, () => stepInsideOpen(page, consoleHandle, ctx))) &&
+      (await runStep("INSIDE-SAVE", 120_000, () => stepInsideSave(page, ctx))) &&
+      (await runStep("NOTICE-S18", 30_000, () => stepNoticeS18(page, ctx)));
 
     const hashAfter = sha256(FIXTURE);
     console.log(`project: fixture sha256 after ${hashAfter}${hashAfter === hashBefore ? " (unchanged)" : " (CHANGED)"}`);
