@@ -1796,3 +1796,14 @@ Nothing above is edited.
 5. **Next.** R3-2 on the answer to OPEN-21-1; then gate 1's second attempt by Amendment 22 item 5.
 
 Nothing above is edited.
+
+## Amendment 24 — OPEN-20-1 (a), OPEN-21-1 (b) and OPEN-21-3 (a), the human's message of 2026-11-11 (21:49Z) (class 5); R3-2 now
+
+*Written by the custodian. References only: `state/directives/2026-11-11-adr-035-item-2-arm-stands-1c-open-20-1-a-21-1-b-21-3-a-diagnostic-graded-pan-anchor-released-s1-candidate-origin-move-reproducer.md` (the file's sha256 1511353c54cbe39c67e37331caa4ed8e3b384f26951491e9ae7f8ce414e7ae68), items 2 to 4. Nothing below is a quotation.*
+
+1. **OPEN-20-1 (a)** (item 2). R3-1 as built at c57f090be2559aed8b1765d5f7dfe693514d48c5 stands: S18 for `no-canonical-spelling` only in step 1, and nothing shown for `outside`. A notice for `through-link` is an OPEN item of step 2's form, where the link's handling at reopen is built, and it goes on the sitting's list.
+2. **OPEN-21-1 (b)** (item 3). Every save of an open whose session record another project of this run holds withholds the mark. R3-2 is built under Amendment 21's option (b), K-S15's second save included, and starts now.
+3. **OPEN-21-3 (a)** (item 4). No ADR-036 text in step 1. The node for a second open's history, `second-open-history-before-1c-step-3`, is placed before step 3, which depends on it because step 3's recovery offer reads the record. That node decides what a second open's history is and carries ADR-036's note, in the human's words then.
+4. Nothing else changes. Amendment 22's R3-2 and gate 1's second attempt stand as declared.
+
+Nothing above is edited.

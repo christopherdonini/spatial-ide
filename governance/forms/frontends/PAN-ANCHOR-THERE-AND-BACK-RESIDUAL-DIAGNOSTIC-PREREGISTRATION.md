@@ -220,3 +220,12 @@ Runs are not re-observed.
 The wait for the quiet condition is not budget time. It is stamped and reported separately.
 
 Nothing above is edited.
+
+## Amendment 2 — the human's grade, in two parts (class 5); the node closes on its records
+
+*Written by the custodian. References only: `state/directives/2026-11-11-adr-035-item-2-arm-stands-1c-open-20-1-a-21-1-b-21-3-a-diagnostic-graded-pan-anchor-released-s1-candidate-origin-move-reproducer.md` (the file's sha256 1511353c54cbe39c67e37331caa4ed8e3b384f26951491e9ae7f8ce414e7ae68), item 5. Nothing below is a quotation.*
+
+1. **Part (a).** The stalls are not the product's: on the measure build, five crossings and no gap over 200 ms; the dev build's stalls sit in DEV-only work, the architect's H3. S3, the harness's. Pan-anchor is released and takes route 1's fix under its own amendment, the custodian proposing which of the two. This node closes on its records; it committed nothing (OPEN-1 (A)).
+2. **Part (b)** is a new node, `recentre-crossing-view-displaced-by-origin-move`, an S1 candidate, in slot 2 ahead of pan-anchor. Its evidence so far is two readings, not findings: the measure run's off-script lines and the architect's H1.
+
+Nothing above is edited.

@@ -341,3 +341,13 @@ Nothing above is edited.
 - **Unchanged:** Amendment 2 item 5.
 
 Nothing above is edited.
+
+## Amendment 4 — released on the diagnostic's grade (class 5); route 1's fix, the custodian's proposal of which; behind the new S1-candidate node in slot 2
+
+*Written by the custodian. References only: `state/directives/2026-11-11-adr-035-item-2-arm-stands-1c-open-20-1-a-21-1-b-21-3-a-diagnostic-graded-pan-anchor-released-s1-candidate-origin-move-reproducer.md` (the file's sha256 1511353c54cbe39c67e37331caa4ed8e3b384f26951491e9ae7f8ce414e7ae68), item 5; `state/consults/2026-11-11-pan-anchor-there-and-back-residual-diagnostic-run-quiet-worker-report.md` (sha256 fc806d9a29a5957d708865afeeb099bf961f80d1dbb5277e3980ba17cc54b2a8), its route lines. Nothing below is a quotation.*
+
+1. **Released** (item 5 (a)). The stalls are graded S3, the harness's, and this piece takes route 1's fix under this form.
+2. **The custodian's proposal: the first of the two fixes,** that the suite waits on its own lines with no wall-clock bound that load can break. The quiet run kept 7 long stalls with the quiet condition shown, so a suite that does not start beside a build would still meet them; only the first fix removes the failure they cause. The fix's shape is drafted by amendment before code.
+3. **Order.** The new node `recentre-crossing-view-displaced-by-origin-move` takes slot 2 first (item 5 (b)); this piece follows it.
+
+Nothing above is edited.
