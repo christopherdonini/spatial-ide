@@ -15,17 +15,12 @@
  * - **Every string here is a P6 placeholder**, marked as the shell marks them. None is the human's wording.
  */
 
-import { invoke } from "@tauri-apps/api/core";
-
 import { encodeHexF64 } from "../skp/codec";
 import type { Filter, ProjectWorkspace, SaveProjectResponse } from "../skp/types";
 import { toStyleDocument } from "../style/document";
 import type { StyleState } from "../style/document";
 
-/** The OS folder picker for the first save. **Not SKP**: `save_project` takes a folder already chosen. `null` means the operator cancelled. */
-export function pickProjectFolder(): Promise<string | null> {
-  return invoke<string | null>("binding_pick_project_folder");
-}
+export { pickProjectFolder } from "../skp/dialog";
 
 /** S3: the saved notice. */
 export const SAVED_NOTICE = "[P6 placeholder] The project was saved.";

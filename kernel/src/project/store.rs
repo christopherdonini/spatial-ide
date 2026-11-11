@@ -38,7 +38,6 @@ const TEMP_HEX_LEN: usize = 16;
 /// The files of one project's folder in the machine store.
 pub const LOCATIONS: &str = "locations.json";
 pub const FOLDERS: &str = "folders.json";
-pub const OPEN_LOCK: &str = "open.lock";
 
 const FOLDERS_LIMITS: Limits = Limits {
     max_bytes: 2_097_152,

@@ -20,7 +20,7 @@ import { classARows, classBRows, classCRows } from "./surfaceRegistry";
  *
  * `skp/client.ts::call()` is the ONE place `invoke` is ever called with a non-literal command name
  * (I1: the console's sole capture choke point, `command` is a parameter, not a string) -- every
- * other `invoke(`/`invoke<` call site in the tree must pass a string literal. The six SKP command
+ * other `invoke(`/`invoke<` call site in the tree must pass a string literal. The seven SKP command
  * names are therefore not read off *that* call -- they are derived from `call("<name>", ...)`'s own
  * literal call sites inside `skp/client.ts`, which is the mechanically-derivable form NEXT-CUT.md
  * P2 asks for.
@@ -108,8 +108,8 @@ function allInvokeSites(): InvokeSite[] {
   return out;
 }
 
-/** The six SKP command names, derived from `skp/client.ts`'s own `call("<name>", ...)` literal
- * call sites -- the mechanically-derivable form. If a seventh command is ever added, this set
+/** The seven SKP command names, derived from `skp/client.ts`'s own `call("<name>", ...)` literal
+ * call sites -- the mechanically-derivable form. If an eighth command is ever added, this set
  * changes automatically; `skp/client.ts` and `console/surfaceRegistry.ts` must both be updated to
  * match, or the assertions below fail the build. */
 function deriveSkpCommandSetFromClient(): string[] {
@@ -195,14 +195,14 @@ describe("console/surfaceRegistry completeness scan (NEXT-CUT.md P2)", () => {
     });
   });
 
-  describe("class A: the six SKP commands", () => {
+  describe("class A: the seven SKP commands", () => {
     const derived = deriveSkpCommandSetFromClient();
-    // Hard backstop, per NEXT-CUT.md P2: if this ever disagrees with `derived` above, a seventh
+    // Hard backstop, per NEXT-CUT.md P2: if this ever disagrees with `derived` above, an eighth
     // command has been added to skp/client.ts without updating this list -- update BOTH this
     // array and console/surfaceRegistry.ts's CLASS_A_ROWS together.
     const expectedSix = ["cancel", "close_dataset", "describe", "open_dataset", "record_step", "save_project", "viewport_query"];
 
-    it("skp/client.ts's own call(\"<name>\", ...) sites are exactly the six named commands", () => {
+    it("skp/client.ts's own call(\"<name>\", ...) sites are exactly the seven named commands", () => {
       expect(derived).toEqual(expectedSix);
     });
 

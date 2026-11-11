@@ -1335,7 +1335,7 @@ history_mark = "written" | "withheld"
 - **`workspace`** has the four members of ADR-036's project file in the file's order, apart from the `crs` of `view`. `filter` is §7.2's `Filter`, always present, `null` for none. `clauses` are the filter clauses in their order, each text as typed; `filter` is what the enabled ones combine to (none: `null`; one: its text; several: each text in brackets, joined by ` AND `, in order). `style` is a JSON object, ADR-017 §5a's style document; this crate does not depend on the renderer, and the kernel reads the object with the renderer's own `parse`. A click selection has no member.
 - **`view`** is the point at the middle of the canvas, x then y, in the dataset's space, and the base-2 logarithm of the CSS pixels that one unit of that space spans. Each number is a `HexF64` (§3), so a value the JSON number grammar cannot keep exactly is still saved exactly. `view` carries no `crs`: the kernel writes the space the dataset was admitted in, because the shell holds no hash of its definition to name it with.
 - **`project`** is the project's identity, `spatial://project/` and 32 lowercase hex characters (ADR-036 §4). No path crosses in the response.
-- **`history_mark`** says whether the session history took the `saved-here` mark. The project file was written in both cases. `withheld` means the recorded steps do not reach the saved workspace, or the history could not take the line.
+- **`history_mark`** says whether the session history took the `saved-here` mark. The project file was written in both cases. `withheld` means the history holds no recorded step for the dataset, the recorded steps do not reach the saved workspace, or the history could not take the record move or the line.
 
 ### 11.3 The contract
 

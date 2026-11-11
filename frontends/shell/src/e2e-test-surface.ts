@@ -183,7 +183,7 @@ export interface E2eTestSurface {
    * driver reads the project file from disk.
    * - `"asked"`: the saver took the folder from the slot (the open's first save).
    * - `"not-asked"`: the slot was still full after the save, so the saver never asked for a folder
-   *   (the open had a confirmed save, a save was in flight, or no dataset was drawn).
+   *   (the open had a confirmed save, a save was in flight, the canvas had no view, or no dataset was drawn).
    * Its only caller is `e2e/project.mjs`. **A run through this hook does not exercise the native
    * folder picker: only the operator's walkthrough does (the form's section 9, OP1).** */
   e2eSaveProjectToFolder?: (folder: string) => Promise<"asked" | "not-asked">;

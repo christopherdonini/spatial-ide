@@ -174,7 +174,8 @@ pub enum SaveFailure {
         what: &'static str,
         source: std::io::Error,
     },
-    /// `folders.json` could not be written in its format.
+    /// `locations.json` or `folders.json` could not be written in its format; the refusal names
+    /// the file.
     MachineRecordRefused(MachineRecordRefused),
 }
 

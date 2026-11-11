@@ -129,7 +129,7 @@ describe("U5: the registry's ids and shortcuts are unique", () => {
   // RECORDED MUTATION for "UC8 (the twelve ids)": delete the `filter.addClause` entry from `ACTIONS` (actionRegistry.ts). Expected failure: the sorted ids lack "filter.addClause".
   // OBSERVED AT ca98a85d8dc2d86d4751fe90d6b7e0a166226e84: FAILED -- "holds exactly the twelve ids: the eight of milestone 2 and, for milestone 3, command.focus, dataset.open, layer.revealExport and filter.addClause (question round 66, item 2; SHELL-MIGRATION-MILESTONE-3-PREREGISTRATION.md section 4, UC8)":
   //   AssertionError: expected [ 'command.focus', …(10) ] to deeply equal [ 'command.focus', …(11) ]. Reverted after observing.
-  it("holds exactly the twelve ids: the eight of milestone 2 and, for milestone 3, command.focus, dataset.open, layer.revealExport and filter.addClause (question round 66, item 2; SHELL-MIGRATION-MILESTONE-3-PREREGISTRATION.md section 4, UC8)", () => {
+  it("holds exactly the thirteen ids: the eight of milestone 2; for milestone 3, command.focus, dataset.open, layer.revealExport and filter.addClause (question round 66, item 2; SHELL-MIGRATION-MILESTONE-3-PREREGISTRATION.md section 4, UC8); and project.save (B2-1C-SAVE-AND-REOPEN-PREREGISTRATION.md Amendment 12 item 1)", () => {
     expect(ACTIONS.map((entry) => entry.id).sort()).toEqual([
       "command.focus",
       "dataset.open",

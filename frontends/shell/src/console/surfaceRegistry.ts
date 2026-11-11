@@ -9,7 +9,7 @@
  * display classes it falls into and, for classes B/C, the fixed prose that accounts for it.
  *
  * NEXT-CUT.md's three-class table:
- *   A -- one of the six SKP commands: exact serialized request, copyable. Display text is never
+ *   A -- one of the seven SKP commands: exact serialized request, copyable. Display text is never
  *        owned here (I3: "the console owns no command shapes").
  *   B -- a binding-local Tauri command: prose + the command NAME only, never the argument object
  *        (ADR-024's fence), never a copy affordance, never the string "SKP" (I6).
@@ -25,11 +25,11 @@
 
 export type SurfaceClass = "A" | "B" | "C";
 
-/** A class-A row names one of the six SKP commands. No display field: `console/recorder.ts` +
+/** A class-A row names one of the seven SKP commands. No display field: `console/recorder.ts` +
  * `console/render.ts` own the actual rendered text, sourced from the captured request itself. */
 export interface ClassARow {
   readonly class: "A";
-  /** One of the six SKP command names, e.g. `"open_dataset"` -- the same string
+  /** One of the seven SKP command names, e.g. `"open_dataset"` -- the same string
    * `skp/client.ts`'s `call()` passes to `invoke` as its first argument. */
   readonly command: string;
 }
@@ -67,12 +67,12 @@ export type SurfaceRow = ClassARow | ClassBRow | ClassCRow;
 
 /** Shared citation text for every class-B row: names the SKP-V0 §4 items that exclude
  * binding-local commands from the control-plane catalog, and ADR-024, the fence's own filing.
- * A single constant, not eight independent strings, so the wording cannot drift row to row. */
+ * A single constant, not nine independent strings, so the wording cannot drift row to row. */
 const BINDING_LOCAL_CITATION =
   "host-local, not part of the API; excluded from the SKP catalog (SKP-V0 §4 items 1/3/11/13; " +
   "ADR-024); not callable by a script, plugin, notebook, CLI, or AI client.";
 
-/** The six SKP commands (`skp/client.ts`'s own `call("...", ...)` sites) -- kept here as the
+/** The seven SKP commands (`skp/client.ts`'s own `call("...", ...)` sites) -- kept here as the
  * class-A half of the registry. A seventh command changes `skp/client.ts`, this list, and
  * `surfaceCompleteness.test.ts`'s derived-set assertion together, or the completeness scan fails
  * the build (NEXT-CUT.md P2's own anti-debt-accrual mechanism). `record_step` (`skp/0.12`) is the
@@ -88,7 +88,7 @@ const CLASS_A_ROWS: readonly ClassARow[] = [
   { class: "A", command: "save_project" },
 ];
 
-/** The seven binding-local commands plus the dev-only E2E destination seam (NEXT-CUT.md's
+/** The eight binding-local commands plus the dev-only E2E destination seam (NEXT-CUT.md's
  * "7 + dev seam"). `as const satisfies readonly ClassBRow[]` (reviewer gate S3, action-console P7
  * fixes) rather than a plain `: readonly ClassBRow[]` annotation: the annotation form would widen
  * every `command` field to `string` at the type level, discarding the literal names this file's
