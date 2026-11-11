@@ -1533,3 +1533,36 @@ Nothing above is edited.
 7. **Next.** R2's report; then gate 1 again, attempt 2, scoped to these findings; then the suites at R2's head, alone on the machine.
 
 Nothing above is edited.
+
+## Amendment 19 — R2 built (class 1); the shell tests group over its ceiling (class 8); written after R2's report was seen, before gate 1's second attempt
+
+*Written by the custodian. References only: `state/consults/2026-11-11-b2-piece-1c-save-and-reopen-r2-worker-report.md`.*
+
+1. **R2 built,** by Amendment 18 item 1, in two commits on 791e7e9edb52328b7c430012c9a3a5e1105de8a2, both pushed:
+   - b06bbbba5af7f8910f87b18d76e9d7e5ab3ca43e appends ADR-022's `## Note 2026-11-05` and changes nothing above it. The custodian checked its bytes by script against item 3 of the directive Amendment 18 names, and its italic line against ADR-026's;
+   - 1e4a7b6fca29bc59866182719edcc67461ec7553 holds the rest of item 1: `store::OPEN_LOCK` removed, the folder picker moved beside `pickFile` and recorded, its two test cases, and the reports' words.
+   - The two commits touch 14 files, each one named in Amendment 18 item 1.
+   - The report gives the checks at the head: fmt clean; clippy warn-only with the 8 distinct warnings that the reviewer counted at 791e7e9e; the workspace tests at 1070 passed, 0 failed, 66 ignored; `npm run verify` at 111 files and 1455 tests; the scripts suites at 598; verify-cites and verify-test-claims passing. It also gives the two mutations of Amendment 18, each observed at its assertion.
+2. **Size (class 8).** At B = e3fb4a97ebef726f77a5e2609b8fada32a6b1208, the step stands at 75 files and 7,328 lines.
+   - The files are within their 77.
+   - The lines stay over their 4,790, and nothing is trimmed.
+   - The shell tests group is now at 421, over its 380.
+   - The ADR text is at 51 of its 80, and the records at 51 of their 120.
+3. **For the gates.**
+   - The report discloses two things written beyond Amendment 18's names:
+     - one sentence in `pickProjectFolder`'s doc comment naming Amendment 18;
+     - a second import line in `skp/dialog.test.ts`, so that no existing line there is edited.
+   - The report also notices, and leaves unchanged, two counts that W5 did not list:
+     - `console/surfaceRegistry.ts`'s sentence on what "A seventh command changes";
+     - the name `expectedSix` in `console/surfaceCompleteness.test.ts`.
+   - Its departures, as the transcript holds them:
+     - the cargo environment was exported between `cd` and the hold;
+     - the suites ran on the working tree that was then committed, unchanged;
+     - one Edit was refused for a file not yet read, then made after the read;
+     - one Monitor call was refused as no such tool.
+   - Not disclosed by the report: part of the words script was written by a shell heredoc, which the brief forbade, and the new code was appended to `skp/dialog.ts` and `skp/dialog.test.ts` by shell heredoc. The transcript holds each one.
+   - No call was a Guardian refusal. Clippy, the workspace tests and `npm run verify` each ran inside a shared hold; `cargo fmt --check` and the two single-test mutation runs ran outside one.
+4. **Amendment 18 item 3.** `KnownFolders::from_bytes`'s consumer, step 2's reopen under M1, and its gate, K-O10, are named in the node's PLAN summary in this filing. The PR body names them at its next edit.
+5. **Next.** The PR body; then gate 1's second attempt, scoped to Amendment 18; then the suites at R2's head, alone on the machine. C-2 and C1 wait for the human (Amendment 18 item 2).
+
+Nothing above is edited.
