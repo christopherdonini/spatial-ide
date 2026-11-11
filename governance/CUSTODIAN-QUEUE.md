@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `215c269dc568806ce8e258cf67deef62fae983f91811745a6f955ce1debb19ae`) at `2026-11-11T23:04:02.243Z`.
+Generated from `PLAN.yaml` (sha256 `11f7c601e747c0389db28ade7bcf564f0e8ef9d5f7062b0087f9a1a173b6eb64`) at `2026-11-11T23:27:03.058Z`.
 
 ## 1. Next
 
@@ -9,11 +9,9 @@ Generated from `PLAN.yaml` (sha256 `215c269dc568806ce8e258cf67deef62fae983f91811
 ## 2. Ready
 
 - **lod-tier-tests-own-tier-folder** — Each engine test run takes its own tier folder, the machine-wide tier folder kept for the product only: two suites sharing one machine cleared each other's tiers, failing lod_tier_builder in #284's gate 1 (the human's ruling of 2026-11-06, item 2) (lane `engine`, order null, budget 60 min)
-- **adr-035-close-races-note** — ADR-035 -- an appended, dated note recording what kernel-generation-close-races makes historical (Decision 3's no-session-reference case unreachable; invalidate marks only on a live removal; Decision 2's mint-race arm standing) (lane `kernel-protocol`, order null, budget 45 min)
 - **pre-admission-change-detail-braces** — Four kernel P6-placeholder detail strings are wrapped in literal braces, which reach the operator message; the watcher form declares each such string starts with the bracketed placeholder tag (lane `kernel-protocol`, order null, budget 30 min)
 - **second-open-history-before-1c-step-3** — What a second open's history is: a second open of a file whose session record another project of this run holds; placed before 1c's step 3, whose recovery offer reads the record; it carries ADR-036's note in the human's words (lane `kernel-protocol`, order null, budget 0 min)
 - **windows-case-fold-non-ascii** — The audit case policy on Windows folds non-ASCII letters as NTFS does, so a profile path differing only in non-ASCII case cannot escape the user-home redaction (wave 3's 1c-2 correction, S2, code-path-only) (lane `kernel-protocol`, order null, budget 60 min)
-- **recentre-crossing-view-displaced-by-origin-move** — After a pan crosses the re-centring bound, the view is displaced by the origin's move: an S1 candidate, its reproducer on the measure build first (there and back from the fit view; target plus origin, the origin's changes, two CDP screenshots) (lane `shell`, order null, budget 60 min)
 - **site-waiting-on-you-lists-open-questions** — The site's Waiting on you also lists an in-progress node carrying an open question for the human, set by the custodian when a running piece stops for the human's ruling and cleared when the human answers (lane `governance`, order null, budget 45 min)
 - **publish-bundle-sigterm** — SIGTERM handling in publish-bundle on unix (wave-3 W3-A observation 3) (lane `platform`, order null, budget 90 min)
 - **publish-unix-quota-perm-errors** — EDQUOT and EPERM in publish error classification on unix (wave-3 W3-A observation 1) (lane `platform`, order null, budget 90 min)
@@ -52,9 +50,11 @@ Generated from `PLAN.yaml` (sha256 `215c269dc568806ce8e258cf67deef62fae983f91811
 ## 5. In progress
 
 - **clippy-deny-warnings-workspace** — The workspace clippy diagnostics fixed, so cargo clippy over every target with -D warnings exits 0 (the cloud Linux run lists 48 distinct) — evidence: branch `cut/clippy-deny-warnings-workspace-12c`
+- **adr-035-close-races-note** — ADR-035 -- an appended, dated note recording what kernel-generation-close-races makes historical (Decision 3's no-session-reference case unreachable; invalidate marks only on a live removal; Decision 2's mint-race arm standing) — evidence: branch `cut/adr-035-close-races-note`
 - **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **record-step-style-match-widening** — record_step admits a style.set match value on fillColor, with the step's dependencies naming the match column and its type (milestone 4's OPEN-4 (A′)), carried in piece 1c's step 1 by class 9 (the 1c form's Amendment 7) — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **b1-shell-half** — Shell migration, milestone 4 -- B1 shell half: attributes of the inspected feature, colour by category with its legend, and the table — evidence: branch `cut/b1-shell-half-pr-c`
+- **recentre-crossing-view-displaced-by-origin-move** — After a pan crosses the re-centring bound, the view is displaced by the origin's move: an S1 candidate, its reproducer on the measure build first (there and back from the fit view; target plus origin, the origin's changes, two CDP screenshots) — evidence: branch `cut/recentre-crossing-view-displaced-by-origin-move`
 - **port-2-macos-l1-and-app-dirs** — PORT-2 -- macOS L1 for the Cargo workspace: macos-latest in the same matrix, one application-directory boundary replacing the two resolvers, and a case-policy test on a case-insensitive volume — evidence: branch `cut/port-2-macos-l1-and-app-dirs`
 
 ## 6. Proposed / unscheduled

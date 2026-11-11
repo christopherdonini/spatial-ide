@@ -1807,3 +1807,14 @@ Nothing above is edited.
 4. Nothing else changes. Amendment 22's R3-2 and gate 1's second attempt stand as declared.
 
 Nothing above is edited.
+
+## Amendment 25 — R3-2 built (class 1, by Amendment 22 item 1 and Amendment 24 item 2); the step and three groups over their ceilings, where R3-2 added (class 8); written after R3-2's report was seen, before gate 1's second attempt is completed
+
+*Written by the custodian. References only: `state/consults/2026-11-11-b2-piece-1c-save-and-reopen-r3-2-worker-report.md` (sha256 92266fffa764842640fa795069bda644f7567245956b7679e7ae980e69519fd9).*
+
+1. **R3-2 built** on 190c6c80788eff296d8ddb998db43c5055d6e820 and pushed: 9e0d4b08f17ef07033af4ea35b4f512fc7c5a4f6, Amendment 21 under option (b). The commit touches 7 files, each named in Amendment 22 item 2. The report gives K-S15's mutation as observed at its assertion.
+2. **Size (class 8).** At B = e3fb4a97ebef726f77a5e2609b8fada32a6b1208 the step stands at 75 files and 7,748 lines, by §2.11's command, recomputed by the custodian. The files are within their 77, and nothing is trimmed. The groups past their ceilings where R3-2 added, by the report's grouping: protocol product 479 (320); kernel product 3,241 (1,350); kernel tests 1,739 (1,000). The other groups Amendment 23 names past their ceilings are unchanged. The step: 7,748 (4,790).
+3. **For the gates.** The report's departures, its list, and its reading on Amendment 21 item 5 are in the consult above.
+4. **Next.** Gate 1's second attempt, completed, by Amendment 22 item 5, over `git diff 791e7e9edb52328b7c430012c9a3a5e1105de8a2...9e0d4b08f17ef07033af4ea35b4f512fc7c5a4f6`.
+
+Nothing above is edited.
