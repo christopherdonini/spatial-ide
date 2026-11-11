@@ -1436,3 +1436,15 @@ Nothing above is edited.
 - §9's seam list: added to by item 5 (E-SAVE → the hook → `handleSaveProject` → `save_project` → the file).
 
 Nothing above is edited.
+
+## Amendment 15 — P6 built (class 1); a verify run re-run alone by THE MACHINE paragraph (class 1); the e2e group and the step's lines over their ceilings (class 8); written after P6's report was seen, before R1
+
+*Written by the custodian. References only: `state/consults/2026-11-11-b2-piece-1c-save-and-reopen-p6-stop-worker-report.md`.*
+
+1. **P6 built** by Amendment 14 at 9d55f1f5e45f8468b95b6c52cd1042b5d1ec7983. C1, 1c807fc6e8e931dfa4d8a356bb4914b4d9fa29f4, holds the six files Amendment 14 item 7 names. The second commit records E-SAVE's three mutations in the suite's header. E-SAVE passed at C1 and at the head. Its three mutations, §4's, Amendment 12 item 2's and Amendment 14 item 5's, each failed at its predicted step, observed at C1.
+2. **The verify run.** `npm run verify` passed at C1. At the head it failed on one existing test, which ran out its fixed timeout while cargo waited on a lock. That run was shared, with light checks beside it, and the worker stopped as its brief ordered. By THE MACHINE paragraph that failure is not recorded as a failure. The custodian re-ran it alone at the head, and 111 files and 1,453 tests passed. The head differs from C1 only in the suite's header.
+3. **Size (class 8).** At B = e57d75e191ea35fe44c3a26887d73b82f4b53262 the step stands at 70 files and 7,200 lines. The files are within their 77. The lines stay over their 4,790, and nothing is trimmed. The e2e group is at 444 of its 320.
+4. **For the gates.** The report's one departure stands as it gives it: light checks were run beside the head's verify run. Its transcript holds three errored calls: one edit of a file not yet read, and two foreground sleeps that the harness blocked. It holds no Guardian refusal.
+5. **Next.** The branch is pushed by the custodian. Then R1, by Amendment 1 item 6.
+
+Nothing above is edited.
