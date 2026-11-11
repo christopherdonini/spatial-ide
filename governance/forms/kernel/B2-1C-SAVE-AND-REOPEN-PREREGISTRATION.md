@@ -1174,3 +1174,304 @@ Nothing above is edited.
 6. **Next.** P1 now. Then P2 and P3 after Amendment 7, then P4 to P6 and R1. Their other waits are met: PR A merged as #246 and PR C as #253 (Amendment 3), 8e as #290 (Amendment 4), and #241 on 2026-10-26.
 
 Nothing above is edited.
+
+## Amendment 7 — written after O1's result was seen, before P2's code: a code for a first save with no folder (class 9); the `record_step` widening, placed by the human's ruling of 2026-10-23 and declared before any of its code (class 9); its commit place, for the human (OPEN-7-1, a red line); the superseded index
+
+*Drafted by the architect, read only, at main e57d75e191ea35fe44c3a26887d73b82f4b53262. References only. Self-references are by section, amendment and item. Branch code is named by path, item and commit, with no line and no hash (round 15 (e)). The reuse index's two phrase queries missed, in the custodian's runs at 89bbac3738dbb46d47988e55a7c0f0d4f9fe4c5c on 2026-11-10. The misses are noted and do not block. Every new test's mutation is observed under §4's rule. §7 is not edited, and an overrun is class 8.*
+
+1. **A first save with no folder (class 9; Amendment 6 item 5, first bullet).**
+   - *The behaviour, as built.* `Projects::save` in `kernel/src/project/mod.rs` at e36e951167fcad90e8ee07f1a4bfd3be12cd0e56 refuses a save whose open has no project in this process and whose `folder` is `None`, as `SaveFailure::FolderRequired`, before any file is read or written (`state/consults/2026-11-10-b2-piece-1c-save-and-reopen-o1-worker-report.md:130` @ e57d75e191ea35fe44c3a26887d73b82f4b53262 sha256:319b1c431a60f16cfd6f9521d7d65b9d6f91528de553d90eb7bbd1c05228fc7e).
+   - *§2.2.* The new codes list gains `skp.project_folder_not_given`, with no fields. It states a kernel fact: the request's `folder` is `null`, and no save of this open has chosen a folder.
+   - *Where it lands.*
+     - P2: the constructor in `protocol/skp/src/v0/error.rs`. The row in the refusal table of `save_project`'s new SKP-V0 section is: code `skp.project_folder_not_given`; fields none; when the request's `folder` is `null` and no save of this open has chosen a folder. The skp version entry's field set counts it.
+     - P3: the handler maps `FolderRequired` to it, in one exhaustive `match` with no wildcard arm. This follows SKP-V0's mapping rule (`protocol/skp/SKP-V0.md:359` @ e57d75e191ea35fe44c3a26887d73b82f4b53262 sha256:8e4ae7e1c2afc053d31af4bca948c7f8b482a4aaff865b565e2c83a250ecdadc).
+   - *§2.12.* Its kernel message is one of §2.12's kernel messages and a P6 placeholder: `no folder was given, and this open of the dataset has no project to save to`. It replaces the `Display` arm of `FolderRequired` at P3. That arm states that the dataset has not been saved, which the kernel does not know: `Projects` keys its saves by the catalog name of this open.
+   - *The shell.* It has no owner string for this code. At a first save the shell sends `folder` from the picker (§2.2), and §4's first step 1 shell test asserts that it does. A refusal that arrives anyway is shown as S4 with the kernel's `{message}` (§4's third step 1 shell test). S4 and the message are P6 placeholders, a red line (§2.12). Whether ordinary use of the shipped shell can reach this code is for P5's gate to show.
+   - *§4, step 1.* The test is `a_first_save_without_a_folder_is_refused_and_writes_nothing` (`kernel/tests/project_save.rs` at 4761ded8df7fd3206cec84b21ceaec4fc8ce9338), with its mutation as observed: the folder defaults to the data's own folder, and the test fails at that commit (`state/consults/2026-11-10-b2-piece-1c-save-and-reopen-o1-worker-report.md:110` @ e57d75e191ea35fe44c3a26887d73b82f4b53262 sha256:ea978836230933cfe69983cd9568da16db55950b369f7a01110df72642e9e653; the procedure at `state/consults/2026-11-10-b2-piece-1c-save-and-reopen-o1-worker-report.md:97` @ e57d75e191ea35fe44c3a26887d73b82f4b53262 sha256:13e18c19d85da9935c21071d2192353db1ae62a7b43fd5db5398905136f5156b). The test proves the kernel's refusal. P2's error fixture proves the code's spelling. No test named in §4 asserts the P3 mapping.
+   - *§8 item 12, second clause, for the gates.* The refusal, its variant and its test landed at e36e9511 and 4761ded8, before this amendment.
+
+2. **The `record_step` widening (class 9).** It is placed in step 1, by class 9 to this form, by the human's ruling of 2026-10-23: the Milestone 4 line, OPEN-18 (b), and the Piece 1c line, OPEN-A2 (b) (`state/directives/2026-10-23-clicks-245-246-247-sort-window-fix-before-port-2-covering-case-route-1-244-c1-milestone-4-and-1c-open-items-ruled.md:18` @ e57d75e191ea35fe44c3a26887d73b82f4b53262 sha256:7604c2433b2df11d804dc904439dec44a5c16d5e8e39913410ffe253762a0f45; `state/directives/2026-10-23-clicks-245-246-247-sort-window-fix-before-port-2-covering-case-route-1-244-c1-milestone-4-and-1c-open-items-ruled.md:20` @ e57d75e191ea35fe44c3a26887d73b82f4b53262 sha256:61b89605bdee3fdbe56961adda906f209282e7abdb7575748306c3fd2d5403f2). The option texts are `state/consults/2026-10-22-b1-shell-half-pr-c-and-pr-b-ahead-architect-draft.md:228` @ e57d75e191ea35fe44c3a26887d73b82f4b53262 sha256:5daee8b7ba186ea202333c6a539bdbc44ac2a371edb009b774fc524cf26ba28b and `state/consults/2026-10-22-b2-piece-1c-save-and-reopen-amendment-1-architect-draft.md:313` @ e57d75e191ea35fe44c3a26887d73b82f4b53262 sha256:67015f9a4b73027bde722191c286f9ff6680006707b62a38db5d3d8ff1e2cecb. The node's option is (A′), at `state/consults/2026-10-21-b1-shell-half-milestone-4-architect-draft.md:631` @ e57d75e191ea35fe44c3a26887d73b82f4b53262 sha256:22788dca68e22dab169c2997ec84b157b3406feb50f6333ba410c75d049fdadc. No code of it has landed.
+   - **(a) What `record_step` admits.** This is ADR-036 §6 row 2 and the sentence below it, as accepted (`docs/adr/ADR-036-project-folder-step-record-and-dataset-reference.md:175` @ e57d75e191ea35fe44c3a26887d73b82f4b53262 sha256:323cc8b75aed898d6e96f4684421e94b4d506d77ba6f0e4069e4231d62293271; `docs/adr/ADR-036-project-folder-step-record-and-dataset-reference.md:177` @ e57d75e191ea35fe44c3a26887d73b82f4b53262 sha256:a73580f5dbc536d095028cae3529608708b2cc709ab11b7cf7c05c94dbe58f50). No ADR text changes. The action stays `style.set`, and `actions` stays 2.
+     - *The wire.* For `fillColor` only, `value` is `#rrggbb` text or §5a's match, `{match:{column, cases:[{when, then}…], on_null, on_unmatched}}`. It is closed, with `deny_unknown_fields`. `StyleSetParams::FillColor`'s value type widens. The other three properties are unchanged (`protocol/skp/src/v0/commands.rs:551-564` @ e57d75e191ea35fe44c3a26887d73b82f4b53262 sha256:85b93b975f6854f4136507c27af73c65e083c2b95556a1b0f8b3c1934d40552a). SKP-V0 §10.2's `fillColor` line (`protocol/skp/SKP-V0.md:1262` @ e57d75e191ea35fe44c3a26887d73b82f4b53262 sha256:7f6c8d10587dfed437a55975b9acfd102ecd91eb803cceed4fd9ea69ab3991be) and §10.3's check (6) (`protocol/skp/SKP-V0.md:1272` @ e57d75e191ea35fe44c3a26887d73b82f4b53262 sha256:eacacd13b277ec89094efa3c19dae129bbb18c40e0c1d250d3d3be323835264f) are updated in place. The version is P2's, because any field change is a new version string (`protocol/skp/SKP-V0.md:305-306` @ e57d75e191ea35fe44c3a26887d73b82f4b53262 sha256:cfd868052f8626a1cefad41a65b1878172fbfbc1c978a438c1163025b5306c20). The shell's step value type is not widened here. Milestone 4's PR B adds it under its §2.3 (h)'s second case (`governance/forms/frontends/SHELL-MIGRATION-MILESTONE-4-PREREGISTRATION.md:266` @ e57d75e191ea35fe44c3a26887d73b82f4b53262 sha256:b8324739813675a65ad88d22a69251baaf699c79844e86be2026916c7b946c28).
+     - *The kernel's check, at §10.3's (6), so a refusal writes nothing.*
+       - The match is parsed by `style::parse`, as `style_params` parses a literal today (`kernel/src/session_history.rs:377-413` @ e57d75e191ea35fe44c3a26887d73b82f4b53262 sha256:4763b20c9471a37538037c14543259ea32054c0cb8026be071859d03206a869c).
+       - Then it is compiled by `spatial_renderer::compile` against the open's `file_schema()` names and Arrow types, with the match column alone as `published`, so that call's publish check passes by construction (`renderer/src/compiled.rs:166-188` @ e57d75e191ea35fe44c3a26887d73b82f4b53262 sha256:f2f1d995c4ce7285b9b7b79ec63c1696fdf2c6d73f280ec9b9482395b9adcb04; the text-only key rule at `renderer/src/compiled.rs:231-239` @ e57d75e191ea35fe44c3a26887d73b82f4b53262 sha256:574559bdf6a593abce5a4d22a5140c6d252cbbcba2631e66f7c8342828460d9e).
+       - Every colour in the match must be lowercase.
+       - The match must have a canonical spelling through `spatial_renderer::canonical`.
+       - No type rule is written in the kernel.
+     - *Its dependencies.* `dependencies.fields` is exactly one entry: the match column, with its type as the open's file schema spells it, through `dependencies_json`'s `referenced` (`kernel/src/session_history.rs:416` @ e57d75e191ea35fe44c3a26887d73b82f4b53262 sha256:a8fa6d29babb95c49da6bd4367df56c3e3a24cae06351161bedc7d6d8d948ba4). Today `prepare` returns no columns for `style.set` (`kernel/src/session_history.rs:348` @ e57d75e191ea35fe44c3a26887d73b82f4b53262 sha256:070aed58d1bbc93d861297d632f7c2adaf7a974d83e01717e4d81f5579072235). A literal `style.set` still names none. `crs` and `geometry_types` are as for every step.
+     - *The reader.* The registry's `fillColor` value becomes a colour or the match shape. Its strings are bounded as every text is, and its cases at 64. No other property admits the match (`kernel/src/session_history.rs:557` @ e57d75e191ea35fe44c3a26887d73b82f4b53262 sha256:751cbdcc8ca87d49187aa7e6e793452a12adb2a59de646732fb9f3de9a5c5787). The line format, the lock and `recover` are unchanged.
+     - *Refused, by name, with no new code.*
+       - A match on `fillOpacity`, `outlineColor` or `outlineWidth`, an unknown key, or a missing `on_null` or `on_unmatched` is refused at deserialize, as §10.2's other shapes are.
+       - A column the open's file lacks, a column whose type §5a's match does not admit, zero or more than 64 cases (`renderer/src/style.rs:56` @ e57d75e191ea35fe44c3a26887d73b82f4b53262 sha256:2deb86604289de1d061c4776d3f92368f2a5f6ceb9abdb7f7f57c4e129733baf), a duplicate `when`, or an uppercase colour gets `skp.style_value_not_admitted` (`property` `fillColor`, `detail` the renderer's or the kernel's rule). §10.4's row gains these cases (`protocol/skp/SKP-V0.md:1291` @ e57d75e191ea35fe44c3a26887d73b82f4b53262 sha256:d1e8ea8a1fa5cb842667233450f07a78b1ad81f495851c3673a5fb74dbfadef1).
+       - A line over its ceiling gets `skp.step_line_over_ceiling`, and a member past a bound the reader holds gets `skp.session_history_unwritable`, as today.
+     - *O1's comparison (OPEN-9 (A)).* `Reached`'s fill colour holds the last value a step set, a literal or the match, as the renderer's `Value<Rgb>`. A literal after a match replaces it, and a match after a literal replaces the literal. `differs` in `kernel/src/project/mod.rs` at 4761ded8df7fd3206cec84b21ceaec4fc8ce9338 compares it with the workspace's `style.fill_color` by that type's own equality, member for member, with the cases in order (`renderer/src/style.rs:113-128` @ e57d75e191ea35fe44c3a26887d73b82f4b53262 sha256:fc7bc3a17b1cc6418c3f5112751f8422172aebba654cd701d053aeaec92de5a2). No kernel-written bytes are compared. These stay unchanged: the filter is always compared; a style property is compared only if a step set it; and the withheld member is named `style`.
+     - *Round 8.* The widened path has no product caller until milestone 4's PR B. The human pre-committed it (the ruling above). Its consumer is named: PR B's step recorder (`governance/forms/frontends/SHELL-MIGRATION-MILESTONE-4-PREREGISTRATION.md:264` @ e57d75e191ea35fe44c3a26887d73b82f4b53262 sha256:6dcaf9e89d388ecebaf9c1941f0e1f293a471d99063a9bffbdc38f23a9e45598). Its consumer is gated: PR B's merge waits for it on main (`governance/forms/frontends/SHELL-MIGRATION-MILESTONE-4-PREREGISTRATION.md:265` @ e57d75e191ea35fe44c3a26887d73b82f4b53262 sha256:0e67db33b7bb07ab8d679ad6d705fb6cdf886032f9b50a28b0cd229ed5aca4dd), and PB-R2 checks it (`governance/forms/frontends/SHELL-MIGRATION-MILESTONE-4-PREREGISTRATION.md:524` @ e57d75e191ea35fe44c3a26887d73b82f4b53262 sha256:feddd958a466274f6696e2b5156bdb2f638b32735b86f29209bb7940ff29670b). Step 1's PR body and the PLAN node name that consumer and its gate.
+   - **(b) Tests, §4 step 1.**
+
+     | Test | Mutation |
+     |---|---|
+     | W-P1 `record_step_admits_a_match_on_fill_color_only` (`protocol/skp/src/v0/commands.rs`, `mod tests`) | the match admitted on all four properties |
+     | W-F1 `the_record_step_fill_match_fixture_decodes_and_re_encodes_byte_for_byte` (`protocol/skp/tests/fixtures.rs`; new `protocol/skp/tests/data/v0-record_step-request-style-set-fill-match.json`) | `on_unmatched` serialized under another name |
+     | U-W1 `the_history_reader_admits_a_fill_color_match_and_refuses_one_on_another_property` (`kernel/src/session_history.rs`, `mod tests`) | the reader's registry admits the match on every `style.set` property |
+     | K-W1 `a_recorded_fill_color_match_names_its_column_and_type_and_recover_chains` (new `kernel/tests/record_step_match.rs`; a real `open_dataset` of a file with a text column, and the request decoded from W-F1's fixture with the open's handle) | the match column left out of `dependencies.fields` |
+     | K-W2 `a_match_the_style_model_refuses_against_the_open_is_refused_by_name_and_writes_nothing` (same file; cases: a column the file lacks, a non-text column, 65 cases, a duplicate `when`, an uppercase colour; the code and the history's unchanged bytes) | the match checked by `style::parse` alone, never compiled against the open's schema |
+     | K-W3 `a_save_after_a_recorded_match_marks_only_a_workspace_holding_that_match` (`kernel/tests/project_save.rs`; the same match gives `Written`, one case's colour changed gives `Withheld(WorkspaceDiffers("style"))`, and a literal after the match with that literal held gives `Written`) | `Reached` does not note a match |
+
+     - *§2.11 groups.* W-P1 and the SKP-V0 text count in protocol product. W-F1 and its fixture count in fixtures and protocol tests. U-W1 and the edits to `session_history.rs` and `project/mod.rs` count in kernel product, which is already over its ceiling (Amendment 6 item 2). K-W1 to K-W3 count in kernel tests, whose file list gains `kernel/tests/record_step_match.rs`. That group stands at 983 of 1,000, so an overrun is predicted; it is recorded as class 8 when counted, and nothing is trimmed. No shell, src-tauri or e2e file is edited. A `record_step` binding that needs an edit is I1.
+     - *§9, the seams.* ADR-036 row 2's shape → `record_step` → the file → `recover` is K-W1. The kernel → `spatial_renderer::compile` is K-W2. The shell → `record_step` with the match is PR B's (PB-R2).
+     - *§8.* Item 21: a match recorded on a property other than `fillColor`; a match step whose `dependencies.fields` is not its column alone; or a match column type rule written outside the renderer.
+     - *Rule (00).* Step 1 is the one piece on `protocol/`. Of the in-flight branches, only port-2 touches `kernel/`, and its four paths are disjoint from these. `session_history.rs` reads `data_dir` from `kernel/src/permission/audit/log.rs`, a port-2 path, so a changed `data_dir` at P1's base is I1.
+   - **(c) Commit place.** It is carried by P2's version bump, in P2's one commit, under OPEN-7-1 (a). P2 then also holds the kernel side, because `StyleSetParams`' exhaustive matches in `session_history.rs` do not compile without it (Amendment 1 item 6: each commit passes `cargo test`). P3 to P6 and R1 keep their order.
+   - **(d)** OPEN-7-1 below.
+   - **(e) The PLAN node.** It becomes as below once this amendment is on main, and is done with step 1's merge, with `{pr}` set in that done commit only.
+
+3. **OPEN-7-1 (a red line: the human's typed ruling). The widening's commit place in step 1.** OPEN-18 (b) names step 1's first commit, and OPEN-A2 (b), ruled as the same ruling, names P2's version bump. Step 1's first commit (N0, Amendment 1 item 2) and N2 (Amendment 2 item 1) were committed on 2026-10-22, before the ruling. Any commit before P2 that widens `record_step` needs its own version (SKP-V0's schema-evolution item, item 2 (a)).
+   - **(a)** In P2's one commit, under P2's version.
+   - **(b)** Its own commit straight after P2, under P2's version, before P3.
+   - **(c)** Its own piece after step 1's merge (OPEN-18 (a)). PR B then waits for it as well.
+   - **Recommend (a).** It is OPEN-A2 (b)'s text. It keeps the whole field set of P2's version in one commit, as `skp/0.12`'s bump carried `record_step`'s types and fixtures (`protocol/skp/SKP-V0.md:1134` @ e57d75e191ea35fe44c3a26887d73b82f4b53262 sha256:71e0db70c66ad671cb39e408f39750905a330fc5c642c2df9ffd4d5f3c51168d). It keeps OPEN-18 (b)'s one fewer version step.
+
+**Superseded index:**
+- §2.2's new codes list: added to by item 1.
+- §2.2's first Not-changed bullet and §5's six commands' shapes, for `record_step`: by item 2 (a).
+- §2.14's `record-step-style-match-widening` bullet, and Amendment 1 item 7's last bullet: by item 2.
+- Amendment 1 item 6's P2 contents: by item 2 (c), under OPEN-7-1.
+- §2.11's kernel tests file list, §4's step 1 table, §8 and §9's seam list: added to by items 1 and 2.
+- Amendment 6 item 5: declared by items 1 and 2.
+
+Nothing above is edited.
+
+## Amendment 8 — OPEN-7-1 ruled (a), the human's message of 2026-11-11 (05:38Z) (class 5)
+
+- **OPEN-7-1 (a)** (`state/directives/2026-11-11-1c-open-7-1-a-p2-now-pan-anchor-route-b-diagnostic-now-stall-record-two-runs.md`, item 1; the file's sha256 1bad1bbe9e354e98313996976b23f7599956ec879b7299f54ba5793d11ea8b6e): Amendment 7 item 2's widening lands inside P2's one commit, under P2's version. OPEN-18 (b)'s first commit reads as OPEN-A2 (b), since that commit predates the ruling. Amendment 7 item 1's code, `skp.project_folder_not_given`, rides the same bump.
+- **The kernel tests group past its 1,000 lines** for the widening's tests (Amendment 7 item 2 (b)): accepted by the same item, recorded as class 8 when counted. §7 is not edited.
+- **Next:** P2 now, then P3; then P4 to P6 and R1, as Amendment 1 item 6 orders them.
+
+Nothing above is edited.
+
+## Amendment 9 — P2 and P3 built (class 1); four groups and the step's total over their ceilings (class 8); P2's and P3's departures and additions disclosed for the gates (class 1); written after the result was seen
+
+*Written by the custodian. References only: `state/consults/2026-11-11-b2-piece-1c-save-and-reopen-p2-p3-worker-report.md`.*
+
+1. **Built.** P2 is at ffc039d1c171a803af5f9c6451457595c28ed93a and P3 at 41c32190b81eff94afeff54ba18c184789b23092 on `cut/b2-piece-1c-save-and-reopen`, on P1's 7eb5aa71de4891718af82fffb8e7bbd2e90e0984 with no merge, and pushed; nothing past P3. P2 is one commit, under `skp/0.13`: the literal, `save_project`'s wire and codes, `skp.project_folder_not_given` and the whole `record_step` widening (Amendment 8). Each new test's mutation was observed failing alone at 41c32190, thirteen in all. The custodian recounted from the worker's logs: 1,065 passed, 0 failed and 66 ignored on P2's full run; 1,070, 0 and 66 at 41c32190. P2's full run was on a tree that differed from its commit by test-only edits to `protocol/skp/tests/fixtures.rs` and two data files since removed; that crate's tests were run again on the commit's tree, and 41c32190's full run covers both commits.
+2. **Class 8.** By §2.11's command at H = 41c32190 with B = e57d75e191ea35fe44c3a26887d73b82f4b53262, P1's main parent and the branch's merge-base with main (over `43a39222...41c32190` the command also counts main's own changes merged at P1, 1,001 files), the step counts 51 files and 6,029 lines against ≤ 77 files and ≤ 4,790 lines. Over their ceilings: protocol product 407 of 320; fixtures and protocol tests 467 of 260; kernel product 3,206 of 1,350 (Amendment 6 item 2 counted 2,758 at O1, over the earlier base); kernel tests 1,547 of 1,000, accepted by Amendment 8. Which of the 28 protocol test, fixture and shell literal files count in the fixtures group and which in the version literal group is the worker's split, since §2.11 does not make it: 467 lines in 14 files, and 90 lines in 14 files against 130 lines and 30 files (25 changed files name a `skp/0.1x` literal). The others hold: the probe 144 of 150, ADR text 45 of 80, the renderer 123 of 200. §7 is not edited.
+3. **Departures, for the gates (class 1).**
+   - `StyleSetParams` keeps `FillColor` with its string value and adds a `FillColorMatch` variant, through a private wire enum that admits the match on `fillColor` only. Widening `FillColor` itself would have edited two existing kernel test files outside P2's list.
+   - The wire `view` carries `centre` and `zoom` only; the kernel writes `crs` from the dataset's admission, and a conformance row refuses a wire `crs`.
+   - `save_project`'s two request fixtures are held inline in `protocol/skp/tests/fixtures.rs` and as two conformance rows, not as files under `protocol/skp/tests/data/`: the shell's `src/console/renderTruth.test.ts` reads every request file there, has no key set for `save_project`, and is outside P2's list. P5, which brings `save_project` to the shell, finds this item here.
+   - `key_present` takes any `Option<T>`, so `folder` and the workspace's `filter` are required keys whose value may be null.
+   - `kernel/tests/project_save_skp.rs` (new, 265 lines, P3's three seam tests) is not in §2.11's kernel tests list; it counts in that group by path.
+4. **Disclosed for the gates.** The additions the report lists beyond this form's: the five error fixtures and the response fixture under `protocol/skp/tests/data/`, six conformance rows, a `Prepared` struct, `Bind` mapped to `skp.project_file_refused` at `$.datasets[0]`, a `pub(crate)` `StepRecorder::host`; the seven tests §4 does not name, each with its mutation observed; the literal sites left as history, which the report lists.
+5. **Next.** P4 to P6 and R1, as Amendment 1 item 6 orders them, after slot 2's quiet run ends, with no other heavy run of this project beside it.
+
+Nothing above is edited.
+
+## Amendment 10 — `binding_pick_project_folder` moves from P4 to P5 (class 1); step 1's project state in the binding (class 1); written at P4's stop, before any P4 code is committed
+
+*Written by the custodian. References only: `state/consults/2026-11-11-b2-piece-1c-save-and-reopen-p4-stop-worker-report.md`.*
+
+1. **What stopped P4.** The shell's completeness test, `frontends/shell/src/console/surfaceCompleteness.test.ts`, last changed at 426609d9bbd9ce9496108ac5ccd4765be99269ee and not changed on the branch, checks class-B rows both ways: a row for each `binding_*` entry in the handler list in `lib.rs`, and an `invoke(` literal under `frontends/shell/src/` for each row. Amendment 3's P4 row names the first check only. With the handler entry and its row alone, the second check failed. The worker reverted both and committed nothing (the report above). The only call site is in a P5 file.
+2. **The move (class 1).** In Amendment 1 item 6's list, `binding_pick_project_folder` (its function in `commands.rs` and its entry in the handler list in `lib.rs`) and its class-B row in `console/surfaceRegistry.ts` land in P5's commit, beside the shell's call site. P4 is the `save_project` command on `spawn_blocking` and the state of item 3. The step's files, groups, ceilings and tests are unchanged. What OPEN-17 (b) ruled is unchanged: P4 and P5 both wait for PR C, and PR C (0c3d54c43044d5d1fa69560911c9abf638851e03) is in the branch.
+3. **Step 1's project state (class 1).** The lock that §2.7's third bullet holds is step 2's (§2.4, item 3). In step 1, the binding holds the kernel's `Projects`, built from `store::projects_root` and the step recorder, in its managed state, as it holds the step recorder. `close_dataset` is unchanged in step 1: `Projects` has no call that forgets a dataset, and P4 edits no kernel file. A closed dataset's entry is not matched again, since `open_dataset` mints a new handle, which is the catalog name, at each open. Step 2's lock and its drop at `close_dataset` are unchanged (§2.4, item 3; §2.7).
+4. **Next.** P4 by this amendment; then P5 to P6 and R1, as Amendment 1 item 6 orders them.
+
+Nothing above is edited.
+
+## Amendment 11 — P4 built (class 1); the completeness test's list of class-A commands gains `save_project` in P5 (class 1); written before P5's code
+
+*Written by the custodian. References only: `state/consults/2026-11-11-b2-piece-1c-save-and-reopen-p4-worker-report.md`.*
+
+1. **P4 built** by Amendment 10 at 2dcbd3bc953454278eef919b2f0e9bba51a4b4e5: `commands.rs` and `lib.rs` only, 43 lines; no new test, and so no mutation. The step stands at 53 files and 6,072 lines at B = e57d75e191ea35fe44c3a26887d73b82f4b53262, the src-tauri group at 43 of its 100; the groups over their ceilings are those of Amendment 9, unchanged by P4 (class 8 as recorded there).
+2. **What P5 meets.** Besides the check that Amendment 3's P5 row cites, the shell's completeness test holds a fixed list of the class-A commands, and it asserts that the call sites in `skp/client.ts` equal that list. The test's own comment asks for a new command to update the list and the registry's class-A rows together. A seventh call in `skp/client.ts` fails that check until the list holds it. Amendment 3's P5 row names the registry only.
+3. **The edit (class 1).** P5 adds `save_project` to that list, in the same commit as its call site and its class-A row, and the edit counts in the shell tests group. It is the one edit of an existing test that P5 makes outside §4's table, and it is not I3. P5 does not edit the test's names or its other checks. Their wording that counts six commands stays as it is, and is disclosed for R1.
+4. **Next.** P5, by Amendment 10 item 2 and this amendment; then P6 and R1.
+
+Nothing above is edited.
+
+## Amendment 12 — the command bar's route to Save project: two files and one pinned-id test edit in P5 (class 1); the view read from the canvas's camera: one file, its accessor and its tests (class 1); the groups the added files count in (class 8 when counted); written at P5's stop, before any P5 code
+
+*Drafted by the architect, read only, from P5's stop report (`state/consults/2026-11-11-b2-piece-1c-save-and-reopen-p5-stop-worker-report.md`) and `cut/b2-piece-1c-save-and-reopen` at 2dcbd3bc953454278eef919b2f0e9bba51a4b4e5, at which P5 made no edit. References only; nothing below is a quotation. Self-references are by section, amendment and item. Line pins are at B = e57d75e191ea35fe44c3a26887d73b82f4b53262, a commit on main, at which each pinned file is the file read at 2dcbd3bc; code that exists only on the branch is named by path, item and commit, with no line and no hash (round 15 (e)). The reuse index's two queries missed, in the custodian's runs at 89bbac3738dbb46d47988e55a7c0f0d4f9fe4c5c on 2026-11-11; the misses are noted and do not block. Each new test's mutation, and the edited test's, is observed under §4's rule. §7 is not edited, and an overrun is class 8.*
+
+1. **The command-bar route (class 1).**
+   - *Reading.* §2.8 makes Save project available from the command bar and from a control. The bar lists the registry's entries (`frontends/shell/src/layout/StudioLayout.tsx:326` @ e57d75e191ea35fe44c3a26887d73b82f4b53262 sha256:4ba54a98217c7043360e772db3dc478d5fc34c6d37da2f35683c527a6ba8c14a). An entry needs an id in the closed union (`frontends/shell/src/layout/actionRegistry.ts:24-35` @ e57d75e191ea35fe44c3a26887d73b82f4b53262 sha256:3047b54db9834cf9c47a2990e0effc30ab5c4c9e4226fa6f3974f7f35d94382e) and a row in the list (`frontends/shell/src/layout/actionRegistry.ts:60-73` @ e57d75e191ea35fe44c3a26887d73b82f4b53262 sha256:853aa349fde4c034a1de08f398ff7c0eae3351b4f151dc443df78d0ee4fe4426). The bar's availability and dispatch are StudioLayout's (`frontends/shell/src/layout/StudioLayout.tsx:195-217` @ e57d75e191ea35fe44c3a26887d73b82f4b53262 sha256:02e3de52e74efb9e0595e9f18d8004cc621ca3f697cfb84717f2a0937895dd73; `frontends/shell/src/layout/StudioLayout.tsx:227-249` @ e57d75e191ea35fe44c3a26887d73b82f4b53262 sha256:cfc61d14b8d54b34d384dfc9e9bdc649b13ffbbb87890b4c1ff613b204f25191). §2.11's step 1 shell product list names neither file. This item corrects the file list and the commit plan only; §2.8 is unchanged. The stop report's choices 2 and 3 would narrow §2.8, which the human approved with this form, and neither is taken.
+   - *Files added to P5.* Shell product: `layout/actionRegistry.ts` and `layout/StudioLayout.tsx`. Shell tests: `layout/actionRegistry.test.ts`, for the one edit below.
+   - *The action.*
+     - Its id is `project.save`. It is the thirteenth member of `ActionId` and the thirteenth entry of `ACTIONS`, appended after `filter.addClause`, so every other entry keeps its place in registry order.
+     - Its entry: `label` is S1; `command` is S22; `takes` is `"nothing"`; `chord`, `bareKey` and `scopeWords` are `null`. No chord or key is assigned.
+     - Region: none. `TOGGLE_REGION` gains nothing, so StudioLayout draws no top-bar button for it (`frontends/shell/src/layout/StudioLayout.tsx:329-331` @ e57d75e191ea35fe44c3a26887d73b82f4b53262 sha256:edc2f667f5317e28a82134f0f0c3c7a47f18c71614a24c421ff3d0e404c92a74).
+     - Available when a dataset is on the map (`layersRow` not `null`) and `onSaveProject` is given. `available()` gains that case, because its default arm answers available.
+     - Run: `runAction` gains the arm `project.save`, which calls `onSaveProject` and returns `"done"`.
+   - *How StudioLayout reaches App's save.* `StudioLayoutProps` gains the optional `onSaveProject?: () => void`. This follows `onOpenDataset` and `onRevealExport`, where an absent prop leaves its entry unavailable (`frontends/shell/src/layout/StudioLayout.tsx:132-138` @ e57d75e191ea35fe44c3a26887d73b82f4b53262 sha256:c9a58242aa3a60d12b837a52089ebb99c220073fbf5ebc6bc443db28405302d0). Its product caller is App, which passes its one save handler. StudioLayout imports nothing new and calls no SKP command itself.
+   - *The one control.* A button in App's own JSX, in the `region.layers` slot after `AdmissionPanel`, rendered only while a dataset is admitted. It takes its label from the entry, as the tool switch takes its labels (`frontends/shell/src/layout/actionRegistry.ts:16-19` @ e57d75e191ea35fe44c3a26887d73b82f4b53262 sha256:80eae9fa4036d366c535be356ba7780f365d53dc227315e54db35665eca6eda0), and its click calls the same handler as the entry. P6 settles its place together with S1.
+   - *Existing tests.*
+     - `commandDraft.test.ts`'s comparisons at `frontends/shell/src/command/commandDraft.test.ts:47` @ e57d75e191ea35fe44c3a26887d73b82f4b53262 sha256:81bc615cbd2db97046112cc581adcbd4b19c8f1d4fb2be8cbf15cc219608eee4 and `frontends/shell/src/command/commandDraft.test.ts:54` @ e57d75e191ea35fe44c3a26887d73b82f4b53262 sha256:3768b196a40ce59598dda1c619cbf931f3161183e5f59ee77e21ced9774660ea derive both sides from `ACTIONS`. Help lists every entry in registry order (`frontends/shell/src/command/commandDraft.ts:45` @ e57d75e191ea35fe44c3a26887d73b82f4b53262 sha256:dc21974d6bcbdb96336a9000feca0fc1060345cc8f05a99c16f55799b2232173), so a thirteenth entry enters both sides alike and neither result changes. They are not edited.
+     - Its other expectations name fixed ids for fixed drafts (`frontends/shell/src/command/commandDraft.test.ts:28-49` @ e57d75e191ea35fe44c3a26887d73b82f4b53262 sha256:5151055279460f2f14a888ec4215eaf44f50132cd85ee021c26f82a97ff7e206; `frontends/shell/src/command/commandDraft.test.ts:65` @ e57d75e191ea35fe44c3a26887d73b82f4b53262 sha256:d063ea55310351c159a0c869a8e38642a1bca4bb6c1f6ed6f3ec860c7201bd18; `frontends/shell/src/command/commandDraft.test.ts:141-142` @ e57d75e191ea35fe44c3a26887d73b82f4b53262 sha256:cd77a40f75a2f64740ed5ec82381b4100e27a7443a91c4d728692435ea20ce47), and so does one App search (`frontends/shell/src/App.command.test.tsx:478-479` @ e57d75e191ea35fe44c3a26887d73b82f4b53262 sha256:090fe3f088228aecc077562601e4a30c3d3f199a0b3d9fb9ec1dc26739794056). They hold unchanged if all of these hold: S1 and S22 contain none of `zoom`, `inspector`, `selection`, `m-to` or `bar`, in any case; S22 begins with none of `lay`, `zoom` or `filter`; and S22 is no other entry's word. A placeholder that breaks one of them is I3: stop.
+     - The pinned-id test (`frontends/shell/src/layout/actionRegistry.test.ts:132-147` @ e57d75e191ea35fe44c3a26887d73b82f4b53262 sha256:2e490d9bccda52d440cec0d35f9c3195a3d4a1ab3394afb66732515c2a084220): its expected list gains `"project.save"` in sorted place, after `"layout.toggleLayers"`. That is its one edit. Its name, its other checks and its recorded-mutation comments stay. The name's count of twelve stays as it is and is disclosed for R1, as Amendment 11 item 3 left its count of six.
+     - *I3.* I3 fired at P5's stop, and P5 stopped as §5 orders. This amendment is written before any P5 code and enters the edit in §4's step 1 table below. The edit adds one id to a list that pins the registry, and it weakens no check. Class 1, as for Amendment 11 item 3.
+   - *§4, step 1, rows added.*
+
+     | Test | Mutation |
+     |---|---|
+     | the pinned-id test, edited as above (`layout/actionRegistry.test.ts`) | the `project.save` entry deleted from `ACTIONS` |
+     | Shell: `the save word in the command bar and the save control each send save_project once, and with no dataset the entry is not available` (in P5's App-level suite for step 1) | the `project.save` arm removed from `runAction` |
+
+   - *§9, the seams.* Command bar → `runAction` → App's save → `save_project`: the second row above, through the real `StudioLayout` and `CommandBar`. Control → App's save → the file: E-SAVE.
+   - *Rule (00).* The paths P5 adds are `layout/actionRegistry.ts`, `layout/StudioLayout.tsx`, `layout/actionRegistry.test.ts`, `canvas/WorkingCanvas.tsx` and `canvas/WorkingCanvas.wiring.test.tsx`. On 2026-11-11 the custodian checked every remote branch, and none touches `layout/`, `canvas/`, `command/` or `App.tsx`. Before P5's dispatch, the custodian also confirms that no in-progress piece's form names one of these paths, the pan-anchor diagnostic's form included. Step 1 stays the one piece on `protocol/`.
+
+2. **The view source (class 1): a read accessor on the canvas handle.**
+   - *Why not a view derived in App.*
+     - App's last viewport box is reset at each open (`frontends/shell/src/App.tsx:232-236` @ e57d75e191ea35fe44c3a26887d73b82f4b53262 sha256:b938923dc147548a6590e2d5aa2b1f0db1ffd5ceb0ac94f4ae22bffc531a78a0), and the auto-fit does not write it (`frontends/shell/src/App.tsx:2206-2207` @ e57d75e191ea35fe44c3a26887d73b82f4b53262 sha256:9bbd3c6670bc57643d05ce4a6a50b2b6395f06b94b4fca7a410ea2982ad096c1). E-SAVE's own sequence reaches this: a save straight after an open would carry no box, and a save after a filter's re-fit would carry a box for a view no longer shown.
+     - Where a box exists, a centre taken as its midpoint and a zoom taken as log2 of a measured width over its span are reconstructed from the box, not the values the camera holds. A reopen would then not restore the camera that was saved, bit for bit.
+   - *The accessor.* `WorkingCanvasHandle` gains `currentView?(): { centre: [number, number]; zoom: number } | null`.
+     - It reads the camera the canvas last wrote (`frontends/shell/src/canvas/WorkingCanvas.tsx:1074-1076` @ e57d75e191ea35fe44c3a26887d73b82f4b53262 sha256:ca7869ef2c53551856fa653ed0730703627e77cd27c4f14aa75c27090b1af830) and changes nothing.
+     - `centre` is the camera's local target plus the offset frame's origin, member by member. That is the same dataset-space point the gesture handler forms from them (`frontends/shell/src/canvas/WorkingCanvas.tsx:2107-2111` @ e57d75e191ea35fe44c3a26887d73b82f4b53262 sha256:1f8fade2019c1f79c8d14309ef01f43f29791388e819ae1b97ea4941eda8e04a). Only that sum leaves the module; the local target and the origin do not (ADR-010 rule 1, as `frontends/shell/src/canvas/WorkingCanvas.tsx:2103-2106` @ e57d75e191ea35fe44c3a26887d73b82f4b53262 sha256:4c515e5282f7fcc48169d76bf8e532bd8e33ad16b57b7d5e9f0bd790cfa09396 applies it).
+     - `zoom` is the camera's held zoom, returned unchanged. It is already Amendment 1's measure: the canvas fits with log2 of the CSS pixels one unit spans (`frontends/shell/src/canvas/extent.ts:141-145` @ e57d75e191ea35fe44c3a26887d73b82f4b53262 sha256:a01f9e84900ab9a931d74459594f34a76d80ab47a8d5b588cf14a7ce252d3757).
+     - It answers `null` before the canvas's first camera write.
+     - It is optional in the type only, so the stand-in handles that predate it still satisfy the interface; the component always provides it. This is `fitToBbox`'s precedent (`frontends/shell/src/canvas/WorkingCanvas.tsx:138-142` @ e57d75e191ea35fe44c3a26887d73b82f4b53262 sha256:b20d4b86484afb015faecdafca267839ab109035bdb723b672073e8edd1462a8). A required member would have to be added to every stand-in typed as the handle (one of them: `frontends/shell/src/App.lateResult.test.tsx:322-356` @ e57d75e191ea35fe44c3a26887d73b82f4b53262 sha256:06b6ccf46a60223b46d7dbd40913835282d06465286e5430398b5fa17805b464), which is I3 in each file.
+     - Its doc comment names its product caller, App's save.
+   - *App's save.* It reads the accessor and encodes the three numbers with `encodeHexF64`, as the wire box does (`frontends/shell/src/App.tsx:138-145` @ e57d75e191ea35fe44c3a26887d73b82f4b53262 sha256:2661fda2e17ce431a62a0f5ff8d0b9678075c63498adbe51c559bffbaa982423), into the request's `view`: `ProjectView` in `protocol/skp/src/v0/commands.rs` at 2dcbd3bc953454278eef919b2f0e9bba51a4b4e5, P2's item. When the accessor answers `null`, or the handle lacks it, App sends no `save_project` and shows S23.
+   - *§2.11.* `canvas/WorkingCanvas.tsx` joins the shell product group. `canvas/WorkingCanvas.wiring.test.tsx` joins the shell tests group.
+   - *§4, step 1, rows added.*
+
+     | Test | Mutation |
+     |---|---|
+     | V-C1 `the canvas's current view is its camera's target plus the frame origin and its held zoom, bit for bit, and null before any camera write` (`canvas/WorkingCanvas.wiring.test.tsx`, a new `describe`, through the real `WorkingCanvas` with deck's `Deck` class replaced, as the file's other tests run; no existing test or helper there is edited, and one that needs an edit is I3). Cases: `null` at mount; after a gesture tick, each member `Object.is` the tick's target plus the origin, and its zoom; after the origin moves at a settled tick, a tick at local target (0, 0) still answers the dataset-space point. | `centre` returned as the local target without the origin |
+     | Shell: `with no view from the canvas a save sends nothing and shows the not-saved notice` (P5's App-level suite) | the save sent with a centre and zoom of 0 |
+
+   - *E-SAVE (P6) gains one assertion.* Before the save, the camera is set through the DEV-only `e2eSetViewState` hook (`frontends/shell/src/canvas/WorkingCanvas.tsx:2324-2351` @ e57d75e191ea35fe44c3a26887d73b82f4b53262 sha256:d2a8fde77ba254d0b1c0d6c3037c2dc0d0c3dfae77f4be5c90395bf65925f96f) to a pose whose three numbers have no short decimal spelling. The saved file's `view.centre` and `view.zoom` must hold those numbers' HexF64 patterns. This is the seam's end-to-end proof from the real shape: canvas → App → `save_project` → the file. Mutation: as V-C1's.
+   - *§8.* Item 22: a `view` sent that was not read from the canvas's held camera, or a local-frame value leaving the canvas.
+   - *§9, the seams.* Canvas `currentView` → App's save → `save_project`'s `view` → the file: V-C1 and E-SAVE.
+   - *Step 2.* Its reopen applies a saved view to the camera, and its shell list does not name `canvas/WorkingCanvas.tsx`. That write path is step 2's to declare before its code; nothing here declares it.
+
+3. **Size (class 8 when counted).** The added files count as follows:
+   - shell product: `layout/actionRegistry.ts`, `layout/StudioLayout.tsx` and `canvas/WorkingCanvas.tsx`;
+   - shell tests: `layout/actionRegistry.test.ts`, `canvas/WorkingCanvas.wiring.test.tsx` and the two new App-level tests;
+   - e2e: E-SAVE's assertion, in `e2e/project.mjs`.
+
+   `command/commandDraft.test.ts` is not edited. The step stands as Amendment 11 item 1 records it, and the groups over their ceilings are those of Amendment 9. Any further overrun of a group, of the step's lines or of its 77 files is recorded as class 8 when §2.11's command counts it, and nothing is trimmed. No figure is predicted.
+
+**Strings (§2.12; P6 placeholders, none the human's).** S1 also labels the bar's entry. S22 is the bar's save word: it is typed after the slash and carries no marker, and the comment at its site names it S22. S23 is the not-saved notice for a save with no view from the canvas, and it states only the consequence. Shown text carries the shell's `[P6 placeholder] ` marking.
+
+**Superseded index:**
+- §2.11's step 1 shell product and shell tests lists: added to by items 1 and 2.
+- §2.12's owner placeholders: added to by item 1 (S22) and item 2 (S23).
+- §4's step 1 table and E-SAVE: added to by items 1 and 2.
+- §4's closing sentence, for P5: by item 1, beside Amendment 11 item 3.
+- Amendment 11 item 3's statement that the completeness-test edit is P5's one edit of an existing test: by item 1.
+- Amendment 3's P5 row and Amendment 1 item 6's P5 contents: files added by items 1 and 2.
+- §8 and §9's seam list: added to by items 1 and 2.
+
+Nothing above is edited.
+
+## Amendment 13 — P5 built (class 1); the step's lines further over their ceiling (class 8); a Guardian refusal the report omits, disclosed for the gates; written after P5's report was seen, before P6's code
+
+*Written by the custodian. References only: `state/consults/2026-11-11-b2-piece-1c-save-and-reopen-p5-worker-report.md`.*
+
+1. **P5 built** by Amendments 10 to 12 at a3a1ba4ea550c75fe85b1bf0bbd1ad7398670060, one commit of 15 files. It holds §4's three shell tests, Amendment 12's two App-level tests and V-C1, each with its mutation observed at that commit, and one further mutation observed on the completeness-test edit. The only edits of existing tests are the two that Amendments 11 and 12 permit.
+2. **Size (class 8).** At B = e57d75e191ea35fe44c3a26887d73b82f4b53262 the step stands at 65 files and 6,711 lines. The files are within their 77. The lines stay over their 4,790, as Amendment 9 recorded, and nothing is trimmed. P5's groups are within their ceilings: src-tauri 66 of 100, shell product 262 of 380, shell tests 356 of 380.
+3. **For the gates.** The additions the report lists as not named by the form stand as it gives them, and so do its two departures: one commit, and App's lazy `save` arrow. The report omits one event that its transcript holds. The spatial-guardian refused the first write of `project/saveProject.ts`, because the file's folder did not yet exist. The worker then made the folder and wrote the file again, and the Guardian allowed that write. The brief made any Guardian refusal a stop. The bytes are the commit's, and they are gated as such.
+4. **Next.** P6, by Amendment 1 item 6, with E-SAVE's added assertion from Amendment 12 item 2; then R1.
+
+Nothing above is edited.
+
+## Amendment 14 — E-SAVE's route past the native folder picker: a DEV-only hook that supplies the folder to the control's own save (class 9, declared before any of its code); the files it adds to P6 (class 8 when counted); written before P6's code
+
+*Drafted by the architect, read only, from `cut/b2-piece-1c-save-and-reopen` at a3a1ba4ea550c75fe85b1bf0bbd1ad7398670060 (P5). References only; nothing below is a quotation. Self-references are by section, amendment and item. Line pins are at e57d75e191ea35fe44c3a26887d73b82f4b53262, a commit on main, at which each pinned file is the file read at a3a1ba4e. Code that exists only on the branch is named by path, item and commit, with no line and no hash (round 15 (e)). The reuse index's two queries missed, in the custodian's runs at 89bbac3738dbb46d47988e55a7c0f0d4f9fe4c5c on 2026-11-11; the misses are noted and do not block. §7 is not edited, and an overrun is class 8.*
+
+1. **What E-SAVE meets.** Under §2.8, the first save opens the folder picker. E-SAVE (§4; Amendment 1 item 5; Amendment 12 item 2) saves through the control. The picker is `binding_pick_project_folder` (`frontends/shell/src-tauri/src/commands.rs` at a3a1ba4e, Amendment 10 item 2's item), a native dialog that no CDP driver reaches (`frontends/shell/e2e/README.md:25-30` @ e57d75e191ea35fe44c3a26887d73b82f4b53262 sha256:14f8548822412e0084f3139d698ef8055706abecef688c107b03f992b6817aa2). The form names no route past it, and Amendment 1 item 6's P6 list holds no product file.
+
+2. **The route (class 9).**
+   - *Reading.* The picker is its own binding. `save_project` takes the folder as a request field that the page sends (`frontends/shell/src/project/saveProject.ts` at a3a1ba4e: `pickProjectFolder`, and the saver's `pickFolder` and `save` dependencies; `save_project` in `commands.rs` at a3a1ba4e). This is admission's shape: there, `openPath` supplies the path the picker would have given and runs the code a click runs (`frontends/shell/src/admission/AdmissionPanel.tsx:307-313` @ e57d75e191ea35fe44c3a26887d73b82f4b53262 sha256:03e18920860c94be49a0b6d145827aedc02ead71394f884ce594a64ac825d416; `frontends/shell/src/admission/AdmissionPanel.tsx:324-347` @ e57d75e191ea35fe44c3a26887d73b82f4b53262 sha256:63229ee7704802c7f12fddf0e2f7d7993b832e07e68d23c81fa3d0b5d76b3486). It is not publish's shape, where the picker sits inside the command and a host seam was needed (`binding_publish_prepare_e2e_destination` in `commands.rs` at e57d75e191ea35fe44c3a26887d73b82f4b53262; `frontends/shell/e2e/publish.mjs:11-27` @ e57d75e191ea35fe44c3a26887d73b82f4b53262 sha256:173eaf3ac6501d75df80f2758217f4768f7c61ebac1eee9f30a700cb7e29fc05). So the route is in the page only. It adds no host code and no Tauri command, and it does not edit `commands.rs`, `lib.rs` or `project/saveProject.ts`.
+   - *Where the folder is chosen.* In the save, the pick happens inside the saver. So, unlike admission, no existing function begins after the pick. The one place the folder is chosen is the `pickFolder` dependency that App gives `createProjectSaver` (`frontends/shell/src/App.tsx` at a3a1ba4e).
+   - *The hook.* `e2eSaveProjectToFolder(folder: string): Promise<"asked" | "not-asked">` becomes a member of `E2eTestSurface` (`frontends/shell/src/e2e-test-surface.ts`). App registers it through `registerE2eHook` in a top-level effect of its own, gated as item 4 says, and unregisters it in that effect's cleanup.
+     - It puts `folder` in a one-shot slot that App holds, then awaits `handleSaveProject` (App at a3a1ba4e), which is the function App's control and the bar's entry both call (Amendment 12 item 1). Then it empties the slot. If `handleSaveProject` reads a render-scoped value, the hook reaches it through a ref that the render assigns, so the hook never runs a stale closure.
+     - In an instrumented build only, App's `pickFolder` dependency answers the slot's folder and empties the slot when it holds one. Otherwise it calls `pickProjectFolder` as it does now.
+     - The hook answers `"asked"` when the saver took the folder from the slot. It answers `"not-asked"` when the slot was still full after the save: the open had a confirmed save, a save was in flight, or no dataset was drawn.
+   - *Files added to P6.* Shell product: `frontends/shell/src/App.tsx` and `frontends/shell/src/e2e-test-surface.ts`. e2e: `frontends/shell/e2e/checkDistClean.mjs` (item 4), which counts in the e2e group by path.
+
+3. **What the hook may and may not do.**
+   - *It may* supply one folder in place of the native picker's answer, for the save it starts.
+   - *It may not:*
+     - build a save input of its own;
+     - call `save_project` or `saveProject` itself;
+     - construct a saver of its own;
+     - mark a dataset saved;
+     - pass the saver's in-flight guard;
+     - add, drop or change a notice;
+     - return anything over CDP beyond its two-word answer. The driver reads the file from disk.
+   - *Its doc comment* names its only caller, `e2e/project.mjs`. It also says that a run through the hook does not exercise the native folder picker, which only the operator's Part does (§9, OP1), as publish's seam says of its own picker.
+   - *§8.* Item 23: an e2e hook on the save that does more than supply the folder, or a save the hook starts that is not `handleSaveProject`'s.
+
+4. **Its gate.**
+   - *The predicate.* `isInstrumentedBuild()`, the gate that `openPath` and App's top-level registrations use. Outside it, `registerE2eHook` does nothing (`frontends/shell/src/e2e-test-surface.ts:360-368` @ e57d75e191ea35fe44c3a26887d73b82f4b53262 sha256:fb08c9186b54bf8d8102e929c67481e1cd05a0b65ad24f952ca705284d4727c4). The slot's branch in `pickFolder` sits behind the same predicate, so in a plain build `pickFolder` only calls `pickProjectFolder`. The hook is present in a measure build, as `openPath` is, and no measured cell calls it.
+   - *The dist check.* `INSTRUMENT_IDENTIFIERS` (`frontends/shell/e2e/checkDistClean.mjs:55-125` @ e57d75e191ea35fe44c3a26887d73b82f4b53262 sha256:4346998bfe75f5091a84d3d46c0d84b0613f208a3c8835bbf6d8612f79ce0b97) gains `e2eSaveProjectToFolder`, with a comment that names this item. The name is a string argument to the registration, which no minifier renames, so a hit is real signal. A miss is a floor, as the file's own top comment says. The proof is check:dist-clean's PASS inside `npm run verify` at P6's commit.
+
+5. **Its test (§4, step 1, row added).** E-SAVE is the hook's only caller, and it carries the hook's seam end to end from the real shape. E-SAVE's save goes through the hook, and E-SAVE gains these steps:
+   - the first save answers `"asked"`, and that folder holds `project.spatial` (E-SAVE's existing assertion);
+   - a second hook save, given a second empty scratch folder, answers `"not-asked"`. The second folder stays empty, and the first folder's `project.spatial` still reads back.
+
+   | Test | Mutation |
+   |---|---|
+   | E-SAVE's hook steps (`e2e/project.mjs`) | the hook's save made through a saver of its own, whose `pickFolder` answers the supplied folder (expected: the first step fails at `"asked"`) |
+
+   No shell test is added. The click and bar paths keep their own tests (§4; Amendment 12 item 1). The mutation is observed under §4's rule.
+
+6. **Security posture (docs/09).** This is the established pattern applied to one more dialog, with no new exposure:
+   - the posture (`docs/09_Security_and_Privacy.md:3-5` @ e57d75e191ea35fe44c3a26887d73b82f4b53262 sha256:7d8a0c55b960eabc0f6cabacf37839716afa2441eabbb9dbd82066f60db101fa) and the local sockets section (`docs/09_Security_and_Privacy.md:30-43` @ e57d75e191ea35fe44c3a26887d73b82f4b53262 sha256:342fe389548fffcdcbc8f2e96ff858e1f441e25862ef3849fe1efdc30fe04e38) are untouched: there is no new command, capability, grant, port, network access or credential;
+   - in every build, the page can already send `save_project` any folder (item 2, the reading). The native picker is UI, not a grant or containment boundary, and the kernel's refusals apply to whatever folder arrives. Publish's picker is different: its destination never crosses from the page, and the host mints the grant from it;
+   - the save stays the same `save_project` call, so its class-A console row is unchanged;
+   - nothing crosses CDP except the answer (`frontends/shell/src/e2e-test-surface.ts:24-26` @ e57d75e191ea35fe44c3a26887d73b82f4b53262 sha256:f38924a07ed9fde4d00d2451dec86ab9eecca2363eb06bb15bb264dfbc60f39f).
+
+7. **Rule (00).** P6's paths are `frontends/shell/e2e/project.mjs`, `frontends/shell/package.json` and `frontends/shell/e2e/README.md`, plus the three paths item 2 adds: `frontends/shell/src/App.tsx`, `frontends/shell/src/e2e-test-surface.ts` and `frontends/shell/e2e/checkDistClean.mjs`. The custodian's 2026-11-11 check covered `App.tsx`. Before dispatch, the custodian checks the other two against every remote branch and every in-progress piece's form, the pan-anchor diagnostic's included. A shared path is I7. Step 1 stays the one piece on `protocol/`.
+
+8. **Size (class 8 when counted).** `App.tsx` and `e2e-test-surface.ts` count in the shell product group. `checkDistClean.mjs` and E-SAVE's added steps count in the e2e group. The step stands as Amendment 13 item 2 records it. Any further overrun is recorded as class 8 when §2.11's command counts it, and nothing is trimmed. No figure is predicted.
+
+**Strings (§2.12).** None is added. The hook shows nothing, and S1 to S23 are unchanged.
+
+**Superseded index:**
+- Amendment 1 item 6's P6 contents, and §2.11's step 1 shell product and e2e lists: added to by item 2.
+- §4's step 1 table and E-SAVE: added to by item 5.
+- §8: added to by item 3.
+- §9's seam list: added to by item 5 (E-SAVE → the hook → `handleSaveProject` → `save_project` → the file).
+
+Nothing above is edited.
+
+## Amendment 15 — P6 built (class 1); a verify run re-run alone by THE MACHINE paragraph (class 1); the e2e group and the step's lines over their ceilings (class 8); written after P6's report was seen, before R1
+
+*Written by the custodian. References only: `state/consults/2026-11-11-b2-piece-1c-save-and-reopen-p6-stop-worker-report.md`.*
+
+1. **P6 built** by Amendment 14 at 9d55f1f5e45f8468b95b6c52cd1042b5d1ec7983. C1, 1c807fc6e8e931dfa4d8a356bb4914b4d9fa29f4, holds the six files Amendment 14 item 7 names. The second commit records E-SAVE's three mutations in the suite's header. E-SAVE passed at C1 and at the head. Its three mutations, §4's, Amendment 12 item 2's and Amendment 14 item 5's, each failed at its predicted step, observed at C1.
+2. **The verify run.** `npm run verify` passed at C1. At the head it failed on one existing test, which ran out its fixed timeout while cargo waited on a lock. That run was shared, with light checks beside it, and the worker stopped as its brief ordered. By THE MACHINE paragraph that failure is not recorded as a failure. The custodian re-ran it alone at the head, and 111 files and 1,453 tests passed. The head differs from C1 only in the suite's header.
+3. **Size (class 8).** At B = e57d75e191ea35fe44c3a26887d73b82f4b53262 the step stands at 70 files and 7,200 lines. The files are within their 77. The lines stay over their 4,790, and nothing is trimmed. The e2e group is at 444 of its 320.
+4. **For the gates.** The report's one departure stands as it gives it: light checks were run beside the head's verify run. Its transcript holds three errored calls: one edit of a file not yet read, and two foreground sleeps that the harness blocked. It holds no Guardian refusal.
+5. **Next.** The branch is pushed by the custodian. Then R1, by Amendment 1 item 6.
+
+Nothing above is edited.
+
+## Amendment 16 — before R1: `KnownFolders::from_bytes` lands in step 1, with its product caller pre-committed to step 2 (class 1); R1's KNOWN-LIMITATIONS item is K-4 alone, and its Part carries P0 and OP1 (class 1); `kernel/README.md`'s edits named (class 1); rule (00) at R1's dispatch (class 1); written before R1
+
+*Written by the custodian. References only, and nothing below is a quotation. Self-references are by section and item. The sources are this form's §2.11, §2.12 and §9, its Amendment 1 items 5 and 6, its Amendment 3 items 1 and 2, and `state/consults/2026-11-11-b2-piece-1c-save-and-reopen-p5-worker-report.md`.*
+
+1. **`KnownFolders::from_bytes`.** The reader of `folders.json` lands in step 1, by N7 (Amendment 1 item 6). Its one caller in step 1 is K-S13, `the_first_save_records_its_folder_as_first_in_folders_json`, which reads back what the first save writes. Its product caller is step 2's reopen, which reads `folders.json` under M1 (Amendment 1 item 5). So step 1's PR carries a `pub` reader whose only caller is a test. This item is the pre-commitment that names it. It is the one exception to Amendment 1 item 6's rule that a `pub` item used only by tests gets its product caller later in the same PR. Nothing is silenced.
+2. **R1's KNOWN-LIMITATIONS item.** §2.11's records row and Amendment 1 item 6's records row give step 1 one item.
+   - Of §2.12's placeholders, K-4 is step 1's: the machine store is written at a save (N7, and the save's `folders.json`), and nothing removes it.
+   - K-2 describes the containment check when a project opens its data, and K-3 a Cancel during a download at that open. Both are step 2's, and they go with step 2's records. K-1 stays withdrawn.
+   - The item takes the next free number at R1's base: 62 at main 9e99b132e2e59da936907d8b5788b8b953950d45.
+   - Its words are an owner placeholder (§2.12). It carries the DRAFT mark that the file uses for words that are not the human's, and it states only what step 1's code does at R1's head.
+   - Amendment 3 item 2 numbered R1's items 48 to 50 beside PR C. Amendment 3 item 1 bounds that amendment to the time beside PR C, which has merged.
+3. **R1's Part.** The new Part takes AD, the next letter after main's last Part, AC. It carries §9's P0 and OP1, with a blank log. OP2 to OP6 need steps 2 and 3, and they join this Part with those steps.
+4. **`kernel/README.md`.** R1 brings the file current with step 1 at R1's base:
+   - ADR-036's status, Accepted 2026-10-22, wherever the file states it as Proposed: the session-history paragraph under its section on what is deliberately absent, the owner's-index rows for the session history and the lasting dataset reference, and the owner's-index list of Proposed ADRs, with ADR-036 joining the accepted ADRs it lists;
+   - what the file says the SKP host carries, where step 1 adds `save_project`;
+   - the owner's-index pointers that step 1 adds: the project module and its save, the machine store and its ceiling; item 62 among the declared limits; the last-verified line at R1's head.
+   The engine README's ADR-036 line is not this piece's.
+5. **For the gates.** P5's report discloses that the console recorder does not record the invoke of `binding_pick_project_folder`: `soleCaptureSite.test.ts` limits the recording sites, and `project/saveProject.ts` is not among them. R1 does not change this, and the reviewer grades it.
+6. **Rule (00) at R1's dispatch.**
+   - Main's 17 commits since B = e57d75e191ea35fe44c3a26887d73b82f4b53262 change only `state/`, `governance/` and the generated `site/`, and `git merge-tree` merges main into the branch's 9d55f1f5e45f8468b95b6c52cd1042b5d1ec7983 with no conflict.
+   - Port-2, built and waiting on this step's merge, edits `KNOWN-LIMITATIONS.md`'s platform header and item 43. Those are paths separate from item 62. It touches neither a walkthrough Part nor `kernel/README.md`.
+   - Pan-anchor, which is held, edits only `frontends/shell/e2e/pan-anchor.mjs`. Its diagnostic commits no file. No PR is open. Step 1 is the one piece on `protocol/`.
+7. **Heavy runs.** The merge brings only records, and R1 edits three Markdown files. So R1 runs no build, no test suite and no e2e suite. §9's suites run at the PR's gates, by THE MACHINE paragraph.
+8. **Next.** R1, then step 1's PR.
+
+Nothing above is edited.
