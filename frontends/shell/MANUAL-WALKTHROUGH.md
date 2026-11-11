@@ -2003,3 +2003,24 @@ Fill in after running the rows above (the milestone-4 Part AC).
 - **AC9 (expected attributes on hover or not):**
 - **AC10 (the strings; the eight refusal messages):**
 - **AC11 (slower or not; felt):**
+
+## Part AD — save a project into a folder under OneDrive: Save project, the folder picker, the saved line and the file that is written (b2-piece-1c-save-and-reopen, step 1)
+
+This Part is the Operator gate of `governance/forms/kernel/B2-1C-SAVE-AND-REOPEN-PREREGISTRATION.md` §9, for step 1, run only on a build with step 1 merged, with a blank result log. Its rows are §9's P0 and OP1. **No duration appears in any row or expected outcome** (`docs/08_Testing.md`; ADR-018). Every sentence in it is a draft for the human's sight (P6) and none is the human's wording. OP2 to OP6 join this Part with steps 2 and 3.
+
+**Before AD1:** fixture `filter-zoned.parquet`, no new fixture (Part E's table; regenerate with `cargo test -p spatial-kernel --test manual_walkthrough_fixtures generate_the_filter_fixture -- --ignored --nocapture`, which is the fixture `frontends/shell/e2e/project.mjs` opens); an empty folder that you make inside your OneDrive folder, for the project; the app started with no dataset open, so that AD1 opens one.
+
+| # | Step | Expected outcome |
+|---|---|---|
+| AD0 | P0. Read the form's §10, the last amendment first. | Record the number of the last amendment you read. |
+| AD1 | OP1. Click **Open GeoParquet…** and select `filter-zoned.parquet`. In the Inspector's Filter section (Layer tab), type `"zone" = 'residential'` into the input and click Apply. Then click the control labelled Save project in the Layers region (its label begins with the mark `[P6 placeholder]`; it shows only while a dataset is open), or press Ctrl+K, type `/save` and press Enter. When the folder picker opens, choose the empty folder you made inside OneDrive. Then click Save project a second time. | The first save opens the native folder picker once, titled `[P6 placeholder] Choose the project folder`. After you choose the folder, a line in the strip above the map reads `[P6 placeholder] The project was saved.` When the session history took no saved-here mark for the save, a second line reads `[P6 placeholder] The session history holds no saved-here mark for this save.`; record whether it appeared. If the save is refused, a line reads `[P6 placeholder] The project was not saved: ` followed by the kernel's message; record the message. The folder you chose holds one file, `project.spatial`, and no other file. Opened in a text editor, the file is laid out in lines, and its members are `format`, `version`, `project`, `datasets`, `lineage` and `workspace`, in that order; the clause you applied and the filter built from it are under `workspace`. The second click opens no picker, shows the saved line again, and leaves the folder holding only `project.spatial`. **Felt:** did OneDrive show the file syncing; did either save seem to wait; is it clear what each line means? **Strings for sight (P6):** the control's label, the picker's title, the saved line, the saved-here line and the not-saved line. |
+
+## Result log
+
+Fill in after running the rows above (the b2-piece-1c-save-and-reopen Part AD, step 1).
+
+- **Date run:**
+- **Run by:**
+- **Build/commit:**
+- **Last amendment read (its number):**
+- **AD1 (the picker opened once; the saved line; whether the saved-here line appeared; the folder's files; the second Save project; what OneDrive showed; felt):**
