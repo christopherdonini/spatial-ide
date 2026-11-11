@@ -1448,3 +1448,30 @@ Nothing above is edited.
 5. **Next.** The branch is pushed by the custodian. Then R1, by Amendment 1 item 6.
 
 Nothing above is edited.
+
+## Amendment 16 — before R1: `KnownFolders::from_bytes` lands in step 1, with its product caller pre-committed to step 2 (class 1); R1's KNOWN-LIMITATIONS item is K-4 alone, and its Part carries P0 and OP1 (class 1); `kernel/README.md`'s edits named (class 1); rule (00) at R1's dispatch (class 1); written before R1
+
+*Written by the custodian. References only, and nothing below is a quotation. Self-references are by section and item. The sources are this form's §2.11, §2.12 and §9, its Amendment 1 items 5 and 6, its Amendment 3 items 1 and 2, and `state/consults/2026-11-11-b2-piece-1c-save-and-reopen-p5-worker-report.md`.*
+
+1. **`KnownFolders::from_bytes`.** The reader of `folders.json` lands in step 1, by N7 (Amendment 1 item 6). Its one caller in step 1 is K-S13, `the_first_save_records_its_folder_as_first_in_folders_json`, which reads back what the first save writes. Its product caller is step 2's reopen, which reads `folders.json` under M1 (Amendment 1 item 5). So step 1's PR carries a `pub` reader whose only caller is a test. This item is the pre-commitment that names it. It is the one exception to Amendment 1 item 6's rule that a `pub` item used only by tests gets its product caller later in the same PR. Nothing is silenced.
+2. **R1's KNOWN-LIMITATIONS item.** §2.11's records row and Amendment 1 item 6's records row give step 1 one item.
+   - Of §2.12's placeholders, K-4 is step 1's: the machine store is written at a save (N7, and the save's `folders.json`), and nothing removes it.
+   - K-2 describes the containment check when a project opens its data, and K-3 a Cancel during a download at that open. Both are step 2's, and they go with step 2's records. K-1 stays withdrawn.
+   - The item takes the next free number at R1's base: 62 at main 9e99b132e2e59da936907d8b5788b8b953950d45.
+   - Its words are an owner placeholder (§2.12). It carries the DRAFT mark that the file uses for words that are not the human's, and it states only what step 1's code does at R1's head.
+   - Amendment 3 item 2 numbered R1's items 48 to 50 beside PR C. Amendment 3 item 1 bounds that amendment to the time beside PR C, which has merged.
+3. **R1's Part.** The new Part takes AD, the next letter after main's last Part, AC. It carries §9's P0 and OP1, with a blank log. OP2 to OP6 need steps 2 and 3, and they join this Part with those steps.
+4. **`kernel/README.md`.** R1 brings the file current with step 1 at R1's base:
+   - ADR-036's status, Accepted 2026-10-22, wherever the file states it as Proposed: the session-history paragraph under its section on what is deliberately absent, the owner's-index rows for the session history and the lasting dataset reference, and the owner's-index list of Proposed ADRs, with ADR-036 joining the accepted ADRs it lists;
+   - what the file says the SKP host carries, where step 1 adds `save_project`;
+   - the owner's-index pointers that step 1 adds: the project module and its save, the machine store and its ceiling; item 62 among the declared limits; the last-verified line at R1's head.
+   The engine README's ADR-036 line is not this piece's.
+5. **For the gates.** P5's report discloses that the console recorder does not record the invoke of `binding_pick_project_folder`: `soleCaptureSite.test.ts` limits the recording sites, and `project/saveProject.ts` is not among them. R1 does not change this, and the reviewer grades it.
+6. **Rule (00) at R1's dispatch.**
+   - Main's 17 commits since B = e57d75e191ea35fe44c3a26887d73b82f4b53262 change only `state/`, `governance/` and the generated `site/`, and `git merge-tree` merges main into the branch's 9d55f1f5e45f8468b95b6c52cd1042b5d1ec7983 with no conflict.
+   - Port-2, built and waiting on this step's merge, edits `KNOWN-LIMITATIONS.md`'s platform header and item 43. Those are paths separate from item 62. It touches neither a walkthrough Part nor `kernel/README.md`.
+   - Pan-anchor, which is held, edits only `frontends/shell/e2e/pan-anchor.mjs`. Its diagnostic commits no file. No PR is open. Step 1 is the one piece on `protocol/`.
+7. **Heavy runs.** The merge brings only records, and R1 edits three Markdown files. So R1 runs no build, no test suite and no e2e suite. §9's suites run at the PR's gates, by THE MACHINE paragraph.
+8. **Next.** R1, then step 1's PR.
+
+Nothing above is edited.
