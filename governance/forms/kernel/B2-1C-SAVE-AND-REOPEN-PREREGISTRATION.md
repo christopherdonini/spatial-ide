@@ -1818,3 +1818,35 @@ Nothing above is edited.
 4. **Next.** Gate 1's second attempt, completed, by Amendment 22 item 5, over `git diff 791e7e9edb52328b7c430012c9a3a5e1105de8a2...9e0d4b08f17ef07033af4ea35b4f512fc7c5a4f6`.
 
 Nothing above is edited.
+
+## Amendment 26 — R4, the words round (class 1): gate 1's attempt-2-completed words, in one commit; D-17's records (class 1); the code defect D-16 names, carried to step 2's form (class 1); five items for the human; the suites at the final head and the PR body; declared before its code
+
+*Written by the custodian. References only. Nothing below is a quotation: each change's words are the report's own, byte-copied by the worker from the filed report this amendment names. The sources: `state/consults/gates/2026-11-11-b2-piece-1c-save-and-reopen-gate1-architect-attempt-2-completed.md` (sha256 e566a98a5af9a4591320cd6bc78264668baca98d02eeb1502252c2ceffc17cb0) and `state/consults/gates/2026-11-12-b2-piece-1c-save-and-reopen-gate1-reviewer-attempt-2-completed.md` (sha256 68e501ace77909a393a3688fce54255aea791727ef5ed1fb7fe276c10f050871), gate-log rows 723 and 727, both PASS WITH NOTES (WORDS-ONLY) at 9e0d4b08f17ef07033af4ea35b4f512fc7c5a4f6.*
+
+1. **R4, one commit on 9e0d4b08f17ef07033af4ea35b4f512fc7c5a4f6, after this amendment is on main.** None of its words is the human's, so no re-gate follows, and the PR body lists them (Amendment 22 item 7's rule).
+   - **`KNOWN-LIMITATIONS.md`, item 63** (a DRAFT for the human's sight):
+     - its headline and its body's first two sentences: the reviewer's C-1 words, which are the architect's C-6 words with one clause added;
+     - its body's Not-covered sentence: the reviewer's DOC-C words;
+     - its source comment: `StepRecorder::record_step` added to its list of code, and the case C-6 names for that comment (a failed record move), in the architect's two sentences, with their line cite replaced by the function's name, `history` in `kernel/src/project/mod.rs`, since the comment names its code in words with no hash.
+   - **`kernel/src/project/mod.rs`:** D-10's words at its two places in this file; D-11's; D-14's; D-15's.
+   - **`protocol/skp/SKP-V0.md`:** D-10's words in §11.3; DOC-A's; D-16's comment after the §11.3 bullet.
+   - **`protocol/skp/src/v0/error.rs`:** D-16's comment, at the place D-16 names.
+   - **`kernel/tests/no_generation_in_persisted_artifacts.rs`** (test text, class 3 by named exception): the reviewer's E-1 words for its header; D-13's words for its two places.
+   - **`frontends/shell/e2e/README.md`:** D-12's words.
+   - **`frontends/shell/e2e/project.mjs`** (test text, class 3 by named exception): DOC-B's m-s18 entry, in its header.
+   - No other file. All seven are already in the step's diff, so the files stay at 75 of 77.
+   - Each place is found by the report's own words for the text it replaces, read at 9e0d4b08; a report's line number is a locator only. A place whose text is not found as the report gives it is a stop, reported alone.
+2. **D-17, the records (class 1).** Amendment 21 item 5 asked whether a second open's steps are appended to the first project's record. Both gates answer that they are: the architect by reading (its check 6), the reviewer by observation (its check 5). The node that item asks for is `second-open-history-before-1c-step-3`, placed by the human's message of 2026-11-11 (21:49Z), item 4 (Amendment 24 item 3); no other node is proposed. Item 63's DOC-C sentence states the answer for the human's sight.
+3. **The code defect D-16 names (class 1).** It needs a POSIX folder flush that fails after the rename, so it cannot happen in the shipped Windows app; it is not step 1's on Windows. It is carried to step 2's form, which builds the store's lock (§2.7), as a named item with D-16's suggested fix, and it is listed for the human. Item 1's comments name it at the code. No node is placed by this amendment.
+4. **For the human, not in R4** (the reviewer's H-1 to H-4; the architect's three):
+   - K-S15's shape: the test compares the first record's length, not its bytes, because Windows refuses a read of the record while the recorder holds it (the reviewer's check 5). Whether that meets the ruling is the human's.
+   - Item 63, with item 1's words applied, at the click.
+   - The independent review's C2 (a save made before any step): ADR-036's text on it is the human's. The architect proposes that it join `second-open-history-before-1c-step-3` or step 3's form; that node's scope is the human's ruling, so the choice waits for the human.
+   - D-16's placement, carried by item 3 until the human says otherwise.
+   - Amendment 21 item 5 named its node as settled before lineage is written or recovery is offered; the human placed it before step 3. If step 2 writes lineage, whether the node also goes before step 2 is the human's.
+5. **Size.** R4's lines count in their groups by §2.11's command; each group past its ceiling gets a class 8 row in the closing amendment. Nothing is trimmed.
+6. **Next.** In R4's dispatch, after its commit: the suites at R4's head, by Amendment 22 item 5: §9's suites and every e2e suite, E-SAVE included, by THE MACHINE paragraph, e2e on port 5400 (the ruling of 2026-11-09 holds until the human's word frees 5180). Then R4's report and its closing amendment; green CI; the PR body by the reviewer's DOC-D, R4's words listed; and the PR out of draft, for the human's click.
+7. **Rule (00) at R4's dispatch,** over item 1's paths: PR #308 touches ADR-035 only; port-2's branch, built and not merged, touches `KNOWN-LIMITATIONS.md` in its portability levels and item 43, not item 63, and no other file item 1 names; pan-anchor's branch is held and touches `frontends/shell/e2e/pan-anchor.mjs` only; `recentre-crossing-view-displaced-fix` has no code; the reproducer's local branch is done. None touches `protocol/` but R4.
+8. **Superseded index:** Amendment 21 item 2's words for §11.3's last sentence, by D-10 (item 1). Nothing else is superseded; item 63's draft is in `KNOWN-LIMITATIONS.md`, not in this form (Amendment 21 item 4 drafted no wording).
+
+Nothing above is edited.
