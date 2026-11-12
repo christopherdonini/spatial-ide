@@ -4763,7 +4763,9 @@ mod ticket_drop_under_lock_regression {
     ///
     /// RECORDED MUTATION: restore the two braces at the `CoverageLost` arm of
     /// `viewport_query_attribute`. Applied at `74fd4f1de5e4400f0d0472a0d5c522e2468a08c7`, run and
-    /// reverted: this test FAILED on its `fields.detail` equality (T2: the refusal's
+    /// reverted:
+    /// `a_coverage_loss_between_mint_and_attribution_refuses_with_its_own_code_and_placeholder_detail`
+    /// FAILED on its `fields.detail` equality (T2: the refusal's
     /// `fields.detail` against the brace-free attribute-step literal), `left:
     /// Some("{[P6 placeholder] this dataset's session ended while this query was being
     /// prepared}")`, `right: Some("[P6 placeholder] this dataset's session ended while this query
