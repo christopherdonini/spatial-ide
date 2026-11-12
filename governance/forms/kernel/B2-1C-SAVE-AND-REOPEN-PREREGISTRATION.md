@@ -1850,3 +1850,19 @@ Nothing above is edited.
 8. **Superseded index:** Amendment 21 item 2's words for §11.3's last sentence, by D-10 (item 1). Nothing else is superseded; item 63's draft is in `KNOWN-LIMITATIONS.md`, not in this form (Amendment 21 item 4 drafted no wording).
 
 Nothing above is edited.
+
+## Amendment 27 — R4 built (class 1, by Amendment 26 item 1); the suites at R4's head, two run again and five drivers run after, by the custodian's briefs (class 1); the step and three groups over their ceilings, where R4 added (class 8); written after R4's and the two suites runs' reports were seen, before the PR leaves draft
+
+*Written by the custodian. References only: `state/consults/2026-11-12-b2-piece-1c-save-and-reopen-r4-worker-report.md` (sha256 a23836a4035e6d548708bb1f6cf9e6afbf7398a146f028a82cb2e0ed5c37702d), `state/consults/2026-11-12-b2-piece-1c-save-and-reopen-r4-suites-rerun-tester-report.md` (sha256 5966ae00cc251ddfe422143155b62a864b7e3c4635430fafc7b067680628673f) and `state/consults/2026-11-12-b2-piece-1c-save-and-reopen-r4-drivers-tester-report.md` (sha256 af653776f077f823e97a4c2c9e4700909400176147ab07a7aa7aadf5ba2b3ce8).*
+
+1. **R4 built** on 9e0d4b08f17ef07033af4ea35b4f512fc7c5a4f6 and pushed: 708a3d5c38d57c772c66b82e16a4b501e6aca563. The commit touches 7 files, each named in Amendment 26 item 1, and no other. No re-gate follows (Amendment 26 item 1).
+2. **The suites at 708a3d5c (Amendment 26 item 6).**
+   - In R4's run, the workspace, the src-tauri tests, `npm run verify`, the node tests, 14 of the README's 16 e2e suites (E-SAVE among them) and `source-changed`'s default route pass.
+   - `recording` and `table` failed in R4's run because the custodian's brief left out two settings: the waiting shim (the record of 2026-10-24, its finding 5) and `table`'s oracle value (the README's Table spec). Both pass in the second report's run, with those settings, against the fixture whose sha256 the value was taken with.
+   - The brief also named only the README's npm scripts, while §9 asks for every e2e suite. The third report runs the five drivers left out: the residency harness exits 0 (read by its exit code only); `source-watch-idle` and `source-changed`'s reopen route pass; `source-changed`'s post route passes with S5d PASS, an outcome the README allows (PR A's record read INCONCLUSIVE there); `pan-anchor.mjs` fails one case, `large: recenter-crossing-A dx=-1200`, with the line the record has held byte for byte since 2026-10-14 (the third report's filing note names the file). #307's one change to `WorkingCanvas.tsx` is the read-only `currentView`. By the brief, that result is recorded as it is and is not a stop.
+   - CI is green at the head, verify:plan and verify:quotes among it.
+3. **Size (class 8).** At B = e3fb4a97ebef726f77a5e2609b8fada32a6b1208 the step stands at 75 files and 7,785 lines, by §2.11's command, recomputed by the custodian. The files are within their 77, and nothing is trimmed. The groups past their ceilings where R4 added, by the report's grouping: protocol product 484 (320); kernel tests 1,766 (1,000); e2e 510 (320). The other groups Amendments 23 and 25 name past their ceilings are unchanged. The step: 7,785 (4,790).
+4. **For the human, at the click:** item 63 with R4's words, and Amendment 26 item 4's five items.
+5. **Next.** The PR body by the reviewer's DOC-D, R4's words listed; the PR out of draft, for the human's click.
+
+Nothing above is edited.
