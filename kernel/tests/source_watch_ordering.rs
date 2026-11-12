@@ -349,6 +349,11 @@ fn a_signal_between_arming_and_admission_refuses_the_open() {
         .open_dataset(open_req(&path, "k6"))
         .expect_err("refused before admission");
     assert_eq!(refused.code, "engine.source_changed", "{}", refused.message);
+    assert_eq!(
+        refused.fields.get("detail").map(String::as_str),
+        Some("[P6 placeholder] a notification arrived for this source before admission"),
+        "K6: the refusal's fields.detail against the brace-free pre-admission literal"
+    );
 
     // No event for an open that never admitted (case (e)): no generation ever existed to end.
     assert!(

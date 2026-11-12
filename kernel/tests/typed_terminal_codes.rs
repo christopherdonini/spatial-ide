@@ -363,8 +363,8 @@ fn a_coverage_lost_pre_check_refusal_carries_its_typed_code_and_exact_text() {
     assert_eq!(
         detail,
         "engine.source_coverage_lost: [P6 placeholder] refused: the advisory watch on this source \
-         lost coverage ({[P6 placeholder] this dataset's session ended when the advisory watch on \
-         its source lost coverage}). This is not a statement that the file changed — the OS \
+         lost coverage ([P6 placeholder] this dataset's session ended when the advisory watch on \
+         its source lost coverage). This is not a statement that the file changed — the OS \
          notification stream this session was relying on stopped reporting, and this check cannot \
          see whether the file changed while it was not"
     );
