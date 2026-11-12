@@ -1,0 +1,514 @@
+# shell: after a pan crosses the re-centring bound, the view stays where it was — the re-centre's camera move is returned from deck's view-state callback instead of written by `setProps` inside it; full form, both gates
+
+*File: `governance/forms/frontends/RECENTRE-CROSSING-VIEW-DISPLACED-FIX-PREREGISTRATION.md`. PLAN node `recentre-crossing-view-displaced-fix` (C1), slot 2, S1.*
+*Drafted by the architect (claude-opus-5-5) on 2026-11-12 for the custodian. The custodian commits it before any code.*
+*Append-only once committed. Self-references are by section, amendment and item, never by line.*
+*Form: full, with both gates from dispatch. The human ordered this in their message of 2026-11-11 (21:49Z), item 5 (b), last paragraph (C6).*
+*Code starts when OPEN-1 is settled (§14).*
+
+## §0 Disclosure
+
+**0.1 Authority.**
+- The human's message of 2026-11-11 (21:49Z), item 5 (b) (C5; its last paragraph, C6).
+  - The candidate, its readings and the reproducer's outcomes bind this form.
+  - S1, the full form, both gates and slot 2 at once.
+  - The architect proposes the fix's shape.
+  - Slot 1 keeps PR #307.
+  - v0.2 does not tag with this defect on main.
+
+**0.2 Evidence, not Authority.**
+- The reproducer's form, `governance/forms/frontends/RECENTRE-CROSSING-VIEW-DISPLACED-BY-ORIGIN-MOVE-PREREGISTRATION.md`, cited by note: note 3 (the drags), note 4 (the records), note 5 (the outcomes and the image rule), note 8 (the deck.gl fact and the frozen suite's blind spot) and note 10 (what it hands on).
+- Run rc's report (C7–C11).
+- Its single reviewer's PASS: `state/consults/gates/2026-11-12-recentre-crossing-view-displaced-by-origin-move-gate-rc-reviewer.md`, filed sha256 ff082b51eea36f271782cdeaedce8a20d8a36383cf8bcc084ecff351e7fb6acf, cited whole.
+- The diagnostic consult's H1 and H2 (C12, C13).
+- deck's installed source, D1–D20. It is untracked and read for what it does; it is not Authority.
+
+**0.3 The reuse index.** Byte-copied from the custodian's brief and marked so. The custodian ran it in the read-only private clone at 89bbac3738dbb46d47988e55a7c0f0d4f9fe4c5c on 2026-11-12.
+
+```
+$ node tools/reuse.mjs deck view state callback overwrite recentre snap origin   (exit 1)
+No prior art recorded for "deck view state callback overwrite recentre snap origin". Research it before planning an implementation.
+$ node tools/reuse.mjs view state controlled deck onViewStateChange snap
+No prior art recorded for "view state controlled deck onviewstatechange snap". Research it before planning an implementation.
+(exit 1)
+$ node tools/reuse.mjs world origin rebase precision float32 pan
+No prior art recorded for "world origin rebase precision float32 pan". Research it before planning an implementation.
+(exit 1)
+```
+
+Misses: all three searches found no prior art. The research behind §1 and §2 is a reading of deck 9.3.9's own source (D1–D20).
+
+**0.4 Cites.**
+
+Tracked cites are all at main, `@ 7d7261a7ccfe3ffe605499b460338d0dd10e3055`. The custodian computes each `<H>` as sha256 over the cited whole lines, LF bytes.
+
+PLAN and the human's message:
+- C1 `governance/PLAN.yaml:5571-5587` @ 7d7261a7ccfe3ffe605499b460338d0dd10e3055 sha256:10951b541db1893af659e0e982e55bb55b5c049f0069ee8160061e1ae7dbe918
+- C2 `governance/PLAN.yaml:5520-5536` @ 7d7261a7ccfe3ffe605499b460338d0dd10e3055 sha256:aa44d88395a8669f1a8d2090f156e3a2a136b0cdabb89b41d77b9aeb2be7ddbf
+- C3 `governance/PLAN.yaml:5554-5570` @ 7d7261a7ccfe3ffe605499b460338d0dd10e3055 sha256:691a5fbab16c65cb38e61336f5e522f77aa78805b6655b0ae093eabde95bff3b
+- C4 `governance/PLAN.yaml:5741-5757` @ 7d7261a7ccfe3ffe605499b460338d0dd10e3055 sha256:e059260fa5b5c74bd2c7ac9ff2a0381ef9700e01f60a911f475ea3e52b1dffcd
+- C5 `state/directives/2026-11-11-adr-035-item-2-arm-stands-1c-open-20-1-a-21-1-b-21-3-a-diagnostic-graded-pan-anchor-released-s1-candidate-origin-move-reproducer.md:20-23` @ 7d7261a7ccfe3ffe605499b460338d0dd10e3055 sha256:6a2380ae52ae36c75c7fd8f2c46b0fef5826ac7d9fdff5e8f56a0b4f6600ffb2
+- C6 `state/directives/2026-11-11-adr-035-item-2-arm-stands-1c-open-20-1-a-21-1-b-21-3-a-diagnostic-graded-pan-anchor-released-s1-candidate-origin-move-reproducer.md:23` @ 7d7261a7ccfe3ffe605499b460338d0dd10e3055 sha256:14d12430bf2bd4c8b8dc9e2bb9cb8d4221df092f702f3763c00e99f873b22f56
+
+Run rc's report:
+- C7 `state/consults/2026-11-11-recentre-crossing-view-displaced-by-origin-move-run-worker-report.md:73-74` @ 7d7261a7ccfe3ffe605499b460338d0dd10e3055 sha256:0924ca40677132750db18607578e71bac1bf72737e56b8150b1fadd7c982b145
+- C8 `state/consults/2026-11-11-recentre-crossing-view-displaced-by-origin-move-run-worker-report.md:75-76` @ 7d7261a7ccfe3ffe605499b460338d0dd10e3055 sha256:6f7731105d5502ed7e712ce79d2e11459d606636d341bffdb42008bea38e3a28
+- C9 `state/consults/2026-11-11-recentre-crossing-view-displaced-by-origin-move-run-worker-report.md:78-81` @ 7d7261a7ccfe3ffe605499b460338d0dd10e3055 sha256:c3c8af207ad950bd2446cf2036f9dfbb15e8f6a80e9f3c674a00ba820391f34c
+- C10 `state/consults/2026-11-11-recentre-crossing-view-displaced-by-origin-move-run-worker-report.md:82-86` @ 7d7261a7ccfe3ffe605499b460338d0dd10e3055 sha256:afe0a33ce2bf121cc7d9a29c5bc1991025b99c34d5eea71183f9a605fa3f06d7
+- C11 `state/consults/2026-11-11-recentre-crossing-view-displaced-by-origin-move-run-worker-report.md:88` @ 7d7261a7ccfe3ffe605499b460338d0dd10e3055 sha256:36ae2b71ef74f9d7f71468226839714618d8551011cee356c1c270c82adbb030
+
+The diagnostic consult:
+- C12 `state/consults/2026-11-11-pan-anchor-there-and-back-residual-diagnostic-main-thread-consult-architect.md:231-239` @ 7d7261a7ccfe3ffe605499b460338d0dd10e3055 sha256:3d706e201262d078007647c5e5f0527cab24941cb46f01b0209ace9259c86918
+- C13 `state/consults/2026-11-11-pan-anchor-there-and-back-residual-diagnostic-main-thread-consult-architect.md:240-243` @ 7d7261a7ccfe3ffe605499b460338d0dd10e3055 sha256:464274555150e4d5b179aa7e9ed0e24050b14b98a910b50f85fe59c6e3a68579
+
+`WorkingCanvas.tsx`:
+- C14 `frontends/shell/src/canvas/WorkingCanvas.tsx:95-111` @ 7d7261a7ccfe3ffe605499b460338d0dd10e3055 sha256:b3da62e9e8218bad21a8d89bb25c51078e49f20b39323852b49a2c96d40a0e09
+- C15 `frontends/shell/src/canvas/WorkingCanvas.tsx:443-484` @ 7d7261a7ccfe3ffe605499b460338d0dd10e3055 sha256:4da82977381737dc3e32966cc3de3abb483d41f9ce22945759148ccf03aedaa3
+- C16 `frontends/shell/src/canvas/WorkingCanvas.tsx:586-592` @ 7d7261a7ccfe3ffe605499b460338d0dd10e3055 sha256:7db079f62472bd145439421123a3d5eca1b7e56d624cf13a2c20c8917ace76e4
+- C17 `frontends/shell/src/canvas/WorkingCanvas.tsx:1408-1417` @ 7d7261a7ccfe3ffe605499b460338d0dd10e3055 sha256:2424d76eb22f0e503268344dbd6852c738457b067621760c65df4f96ba8035fd
+- C18 `frontends/shell/src/canvas/WorkingCanvas.tsx:2035-2041` @ 7d7261a7ccfe3ffe605499b460338d0dd10e3055 sha256:60a799d2d9fdd9386b6a1783ef1d603a987ec05527becb4608e20ac4f66e00b8
+- C19 `frontends/shell/src/canvas/WorkingCanvas.tsx:2077-2147` @ 7d7261a7ccfe3ffe605499b460338d0dd10e3055 sha256:068d4f65874eff32db56fe0c776d81136915a4a0a1884988bfa53a4f754cdef5
+- C20 `frontends/shell/src/canvas/WorkingCanvas.tsx:2083-2091` @ 7d7261a7ccfe3ffe605499b460338d0dd10e3055 sha256:e11c719c9c09b831d8bd8b32388d707e389d5c1cf09c66cb60d1f70e83049b16
+- C21 `frontends/shell/src/canvas/WorkingCanvas.tsx:2101` @ 7d7261a7ccfe3ffe605499b460338d0dd10e3055 sha256:7e7f3ffdefbb340eb20817fe87b8123a7adbe1b9f25c2ff93bffe68215186ec4
+- C22 `frontends/shell/src/canvas/WorkingCanvas.tsx:2103-2111` @ 7d7261a7ccfe3ffe605499b460338d0dd10e3055 sha256:4e3b82667a32c189b1d63e965209c5980f8f8abeb79e241242ff7dab95caf201
+- C23 `frontends/shell/src/canvas/WorkingCanvas.tsx:2113-2126` @ 7d7261a7ccfe3ffe605499b460338d0dd10e3055 sha256:f5f257d2285861e670b1224ce4f53b134a239575c85125f41f2f10f29414d4a4
+- C24 `frontends/shell/src/canvas/WorkingCanvas.tsx:2127-2134` @ 7d7261a7ccfe3ffe605499b460338d0dd10e3055 sha256:f15c8865a6517c6bebf1535de9d4944fe3c1f0148fc69b0bc8b62fb2dfae66f7
+- C25 `frontends/shell/src/canvas/WorkingCanvas.tsx:2136-2146` @ 7d7261a7ccfe3ffe605499b460338d0dd10e3055 sha256:56e1173c56a20266ab6ec306e3e028bf077d7c50903820974c3af04c65193ba2
+- C26 `frontends/shell/src/canvas/WorkingCanvas.tsx:2229-2230` @ 7d7261a7ccfe3ffe605499b460338d0dd10e3055 sha256:97d002afb24a4b4e81be8776d7183df4d9e0ee8427509622625d6e3ed31cefce
+- C27 `frontends/shell/src/canvas/WorkingCanvas.tsx:2319-2357` @ 7d7261a7ccfe3ffe605499b460338d0dd10e3055 sha256:06f0c6307c0e81f73ff654b651bf6dc745c1b22829a647bc8227c872fdcfe61c
+
+`offsetFrame.ts` and `renderTrace.ts`:
+- C28 `frontends/shell/src/canvas/offsetFrame.ts:38` @ 7d7261a7ccfe3ffe605499b460338d0dd10e3055 sha256:35cd05fac57a9937e57abb9bee2a69590332061ed6d197c3e78c3a4c873207de
+- C29 `frontends/shell/src/canvas/offsetFrame.ts:64-69` @ 7d7261a7ccfe3ffe605499b460338d0dd10e3055 sha256:914c70ee30f1a5d5787af7b1be6daf1f76e9865f7a11afe5d5f46abe415f0682
+- C30 `frontends/shell/src/canvas/offsetFrame.ts:84-91` @ 7d7261a7ccfe3ffe605499b460338d0dd10e3055 sha256:1b84765adb721dc6c3c2678e75e1c5195464edabf4a4690ef5e513b4355296af
+- C31 `frontends/shell/src/canvas/offsetFrame.ts:128-130` @ 7d7261a7ccfe3ffe605499b460338d0dd10e3055 sha256:e840e20e876f9c52666fc4d30eadb2cf5413d5be1a88c531048624216a111109
+- C32 `frontends/shell/src/canvas/offsetFrame.ts:166-173` @ 7d7261a7ccfe3ffe605499b460338d0dd10e3055 sha256:86df76cb9480d0e7c2f71e4e1aa70ef7e3c68047b44fc16189b9b63f0c9e7c50
+- C33 `frontends/shell/src/canvas/offsetFrame.ts:187-193` @ 7d7261a7ccfe3ffe605499b460338d0dd10e3055 sha256:865ba3daa7c3afc1e66f413a937f0fa210db478a06d5e65e1a1ff2fc7075d5b9
+- C34 `frontends/shell/src/canvas/offsetFrame.ts:196-198` @ 7d7261a7ccfe3ffe605499b460338d0dd10e3055 sha256:49fdf6bff202bedd76a55aa3c866ff929a7a3baf85f353eadd26e8b9674a374b
+- C35 `frontends/shell/src/diagnostics/renderTrace.ts:52-53` @ 7d7261a7ccfe3ffe605499b460338d0dd10e3055 sha256:8850456b01e6c9328a7ad04241fd5c80da88f7b9207119459b7a9f1e95382a02
+
+The e2e files:
+- C36 `frontends/shell/e2e/pan-anchor.mjs:27-34` @ 7d7261a7ccfe3ffe605499b460338d0dd10e3055 sha256:37335ec5bf25dcd3be502b2d2c34de0689ed368903daebfc3ddd5916e6418437
+- C37 `frontends/shell/e2e/pan-anchor.mjs:38-45` @ 7d7261a7ccfe3ffe605499b460338d0dd10e3055 sha256:7392b161f817b6d222ae5313a79cc12edea4426687f74d3136070399fcf714a8
+- C38 `frontends/shell/e2e/pan-anchor.mjs:47` @ 7d7261a7ccfe3ffe605499b460338d0dd10e3055 sha256:f80b62fd5d680a146f1f9dd0b7ac744f2bee71c1ffdc0ba21e20b3cb2b70e2be
+- C39 `frontends/shell/e2e/pan-anchor.mjs:57-74` @ 7d7261a7ccfe3ffe605499b460338d0dd10e3055 sha256:434b01ed90762242b6e6bb2d096f680ad85ddec506aef3289be68f353a378b03
+- C40 `frontends/shell/e2e/pan-anchor.mjs:108-117` @ 7d7261a7ccfe3ffe605499b460338d0dd10e3055 sha256:92acefeaf4591735ad85038aed5d746bf52fcbc540f92798d362953ea8250527
+- C41 `frontends/shell/e2e/pan-anchor.mjs:256-265` @ 7d7261a7ccfe3ffe605499b460338d0dd10e3055 sha256:fdd87d3fed41eaa09a6655a78ddf3fd8e0566e5d000e3ae7825e393855ef8a40
+- C42 `frontends/shell/e2e/pan-anchor.mjs:266-277` @ 7d7261a7ccfe3ffe605499b460338d0dd10e3055 sha256:46f5573427f570cbc25e7dcbfcb9a69e73c8ba12ace32ad29e97c4d535e36f54
+- C43 `frontends/shell/e2e/lib.mjs:254-303` @ 7d7261a7ccfe3ffe605499b460338d0dd10e3055 sha256:c1b8ca33e0378abfe8f754517fc8fc066cea2b953348b2e93ff8dc0b8fa7e86e
+- C44 `frontends/shell/e2e/lib.mjs:319-341` @ 7d7261a7ccfe3ffe605499b460338d0dd10e3055 sha256:0d2bc00ab585c0f56d1a740cff7ba8df476d46524e70961f7a3df144b27a0a32
+- C45 `frontends/shell/e2e/lib.mjs:348-369` @ 7d7261a7ccfe3ffe605499b460338d0dd10e3055 sha256:b8de0367e9d6ac10206551d7093797d650c401b30412c76e40fdfdd739afa1af
+
+Tests and forms:
+- C46 `frontends/shell/src/canvas/WorkingCanvas.test.ts:745-832` @ 7d7261a7ccfe3ffe605499b460338d0dd10e3055 sha256:b8bd6e1c302f5fd7ae27374ced18634616aaa0cc7aef0edb017ae44e2166dd48
+- C47 `governance/forms/frontends/PAN-ANCHOR-PREREGISTRATION.md:121-137` @ 7d7261a7ccfe3ffe605499b460338d0dd10e3055 sha256:9ff4e88e4e8104e28a211dd0140264e20c71d189b1e6cb9a466f3c681cd30f4b
+
+ADR-010:
+- C48 `docs/adr/ADR-010-render-frames-origins-boundaries.md:17-29` @ 7d7261a7ccfe3ffe605499b460338d0dd10e3055 sha256:7c2b22ba978cad8e12f9a9c5444e1ff810fa482144312307dd572ba2c450b760
+- C49 `docs/adr/ADR-010-render-frames-origins-boundaries.md:49-53` @ 7d7261a7ccfe3ffe605499b460338d0dd10e3055 sha256:aa32d272aeff8e0922fdb8ecfeb7a4d64f847ee161950d261cc1f8e0b3fdbbe5
+- C50 `docs/adr/ADR-010-render-frames-origins-boundaries.md:60` @ 7d7261a7ccfe3ffe605499b460338d0dd10e3055 sha256:be277293dba27e8bd51413fe584d5e941909cbc752f00ce685251271cebb68bc
+- C51 `docs/adr/ADR-010-render-frames-origins-boundaries.md:62-68` @ 7d7261a7ccfe3ffe605499b460338d0dd10e3055 sha256:7d1c18cb9638deee9306da75fabdafad70229a951e0ec2bbdd21fa560be750bb
+- C52 `docs/adr/ADR-010-render-frames-origins-boundaries.md:70-74` @ 7d7261a7ccfe3ffe605499b460338d0dd10e3055 sha256:fd39e8cc8ee350a3357220995afcf14d40665313174eb4424ce44c1e57514843
+- C53 `docs/adr/ADR-010-render-frames-origins-boundaries.md:76-87` @ 7d7261a7ccfe3ffe605499b460338d0dd10e3055 sha256:cd36626523e0ba9fd4ecf243e40a51af38bc83bef3e6e33517cfaf371defbe85
+
+AUTONOMY:
+- C54 `governance/AUTONOMY.md:315-332` @ 7d7261a7ccfe3ffe605499b460338d0dd10e3055 sha256:211fe30919ba9ee55447ac9f66874374382d972ab58269c8f074a79fd4693cb3
+- C55 `governance/AUTONOMY.md:347-357` @ 7d7261a7ccfe3ffe605499b460338d0dd10e3055 sha256:87932677b77260bd12a21590a4611707aec57b89f69124ca0465a4d058bfeb31
+- C56 `governance/AUTONOMY.md:377-391` @ 7d7261a7ccfe3ffe605499b460338d0dd10e3055 sha256:4a1d62ba32834af517cb2664487a4647b992ef6cf4aabf218c401fbaa50cc3e2
+- C57 `governance/AUTONOMY.md:482` @ 7d7261a7ccfe3ffe605499b460338d0dd10e3055 sha256:4f388e9f3fe7a1d68117edb03f7c2520ce771901a96feff1752f426befe4c669
+
+Records and the rest:
+- C58 `frontends/shell/MANUAL-WALKTHROUGH.md:164-166` @ 7d7261a7ccfe3ffe605499b460338d0dd10e3055 sha256:d70c7f6022abded71add3930a17d8218311b0971697ae71382748f004176f79a
+- C59 `KNOWN-LIMITATIONS.md:230-246` @ 7d7261a7ccfe3ffe605499b460338d0dd10e3055 sha256:6e910433f890cc242908485e735806c4162a56c0d9b61dba68b6b74a4b476eec
+- C60 `frontends/shell/e2e/README.md:760-768` @ 7d7261a7ccfe3ffe605499b460338d0dd10e3055 sha256:9595a3020d26b94e97007200a36418dcc60930af32bb9c06f3bef38fd6ff9f34
+- C61 `state/directives/2026-10-06-machine-script-adopted.md:12-22` @ 7d7261a7ccfe3ffe605499b460338d0dd10e3055 sha256:7350977156bed7c94b0da4e8db806ba34c25c6678e65c46447a62d791ba9e8e1
+- C62 `frontends/shell/package.json:25-48` @ 7d7261a7ccfe3ffe605499b460338d0dd10e3055 sha256:b77136d5455323ba5f557d6b57376671d766052d6aa0571c34790456ab3808cc
+
+The deck cites are package-relative into `@deck.gl/core` 9.3.9, as installed under `frontends/shell/node_modules/` (its `package.json`, version field). They are untracked and carry no hash.
+
+`dist/lib/`:
+- D1 `deck.js:323-328`: the `initialViewState` deep-equal overwrite.
+- D2 `deck.js:831-833`: `_getViewState`.
+- D3 `deck.js:1044-1057`: `_onViewStateChange`.
+- D4 `deck.d.ts:153`: the callback's return type.
+- D5 `view-manager.js:93-98`: `getViewState`, per-view entry first.
+- D6 `view-manager.js:182-194`: `_setViewState`.
+- D7 `view-manager.js:212-235`: `_updateController`.
+
+`dist/views/`:
+- D8 `view.js:51-58`: `getViewStateId`.
+
+`dist/controllers/`:
+- D9 `controller.js:77-119`: `handleEvent` and the `controllerState` getter.
+- D10 `controller.js:158-168`: `setProps` into `processViewStateChange`.
+- D11 `controller.js:169-170`: inertia.
+- D12 `controller.js:226-240`: `updateViewport`.
+- D13 `controller.js:294-320`: `_onPanMoveEnd`.
+- D14 `controller.js:528-544`: `_onDoubleClick`.
+- D15 `controller.js:615-629`: `_getTransitionProps`.
+- D16 `orthographic-controller.js:312-321`: a 300 ms `LinearInterpolator`.
+- D17 `transition-manager.js:16-31`: a transition frame calls `onViewStateChange`.
+- D18 `transition-manager.js:47-75`: `processViewStateChange`, which cancels a transition.
+- D19 `transition-manager.js:80-84`: `_isTransitionEnabled`.
+- D20 `transition-manager.js:92-106`: `_shouldIgnoreViewportChange`.
+
+## §1 The defect, from the records
+
+**1.1 What run rc showed.** These are the report's own fields; no new numbers are added here.
+- The plan and the canvas box (C7).
+- The start line and the end line (C8).
+- Five origin changes. Each has dTarget (0, 0), and each ΔO equals the previous line's target (C9).
+- S, E, |E − S| ≤ d, and the screenshot pair differs (C10).
+- Real's three conditions hold (C11).
+- Its single reviewer recomputed every field equal and gave PASS (§0.2).
+
+**1.2 H1 (C12) is confirmed by deck 9.3.9's source, read against those records.**
+1. The re-centre's camera move is a `setProps({ initialViewState })` call inside `onViewStateChange` (C24). The handler returns nothing (C19).
+2. deck takes the new value into its own view state when it is not deep-equal to the last one (D1).
+3. When the callback returns, deck stores the callback's return value under the view's id. If the callback returns nothing, deck stores the tick's own view state there (D3). The view's id is `working` (C18, D8).
+4. deck's lookup takes that per-view entry before the root (D5). So the tick's old-frame target shadows the move, while the frame's origin has moved to the view point (C33).
+5. The camera that is drawn is therefore the old target against the new origin, and W moves by ΔO. That is what the report shows at every change (C9).
+
+**1.3 A second mechanism compounds H1.**
+- The origin moves to the view point (C33), so `toLocal` gives (0, 0) (C34). Every re-centre at one zoom therefore writes the same value.
+- deck drops a repeated value (D1; entry 85, C14's last sentence). So at one zoom, every move after the first is dropped before H1 acts.
+- The first change in run rc isolates H1. Its move follows the fit's write, which carries a write id (C15, C17). So deck accepts the move, and the target still did not rebase (C9).
+
+**1.4 Consequence.** While the target stays beyond T, each settled tick re-crosses. Run rc shows five changes (C9); a working re-centre would make one per leg (§5).
+
+**1.5 What else could explain the records, and why it does not.**
+- (a) A trace artefact. The line is logged before the re-centre (C21 before C24). Excluded: the changes show on the next lines, with the new origin and the target not rebased, and the end image has no data where the start image had some (C10).
+- (b) The controller's stale pan state (C23's account). Excluded for these changes, which land on settled ticks. deck rebuilds its controller state from its props on every event (D9), and those props are the per-view entry H1 names (D7).
+- (c) The reading itself. The reviewer recomputed it equal (§0.2).
+- (d) The drags' own asymmetry. It is bounded by |E − S| ≤ d (C10). It explains the end target (C8), not S.
+- Not separated: after the first change, H1 and the deep-equal drop give the same records. No run separates them, so the fix must defeat both.
+
+**1.6 Reach.** Any tick that is not dragging and finds the target beyond T re-centres (C24, C32).
+- That covers a drag's end, a wheel tick, and the frames and start tick of deck's 300 ms double-click and keyboard transitions (D14–D17).
+- Only drags were run.
+
+**1.7 Why the frozen suite could not see it.** See the reproducer's note 8.
+- Its crossing case reads its last line before the gesture-end re-centre (C42).
+- Its there-and-back runs at zoom −1, far inside T (C41).
+
+## §2 The fix
+
+### 2.1 Shape A (recommended): the callback returns the re-centred view state
+
+**Where.** `frontends/shell/src/canvas/WorkingCanvas.tsx`, in the handler (C19) and its comments, plus the top doc comment (§2.4). No other product file changes.
+- On a re-centring tick, the handler returns `{ ...viewState, target: [localX, localY, vs.target[2] ?? 0] }`.
+- The `setProps({ initialViewState })` call in C24 is removed. `render()` stays where it is.
+- On every other tick the handler returns nothing, as it does now.
+
+**The guard.** It keeps `!isDragging` and gains two conditions. There is no re-centre:
+- (i) on a tick whose `interactionState.inTransition` is true; or
+- (ii) on a tick whose view state carries a transition, by deck's own test (D19).
+
+Why the guard is needed:
+- A view state returned during a transition is not the transition's own update. deck cancels the transition (D18, reached through D7 and D10), so a double-click zoom would stop short.
+- A view state returned on a transition's start tick makes deck animate from the old frame's start to the new frame's end (D18).
+- With the guard, the re-centre lands on the next tick that is neither dragging nor in a transition. That is the same deferral the drag already takes (C23).
+
+**The contract.** deck types the callback's return value as a view state (D4) and uses it in place of the tick's own (D3).
+- The entry deck stores is the rebased one, so H1 is defeated.
+- No `initialViewState` is written, so the deep-equal drop is defeated.
+- The rebased state reaches deck's controller as its props (D7, D10). With no transition in progress and none enabled, the transition manager ignores it (D20). The next event builds its state from those props (D9).
+
+**Under ADR-010:**
+- Rule 1 (C48):
+  - The handler still combines `vs.target` only with the origin it captured before the re-centre (C22). The trace line (C21) and `reportViewport` (C25) keep that pair.
+  - The returned value is renderer-local in the new frame. It stays inside the renderer, and it is the frame in which `render()` rebuilt the layers.
+  - The defect is this rule's hazard in effect (an old-frame target drawn against the new origin), and Shape A removes it.
+  - deck's `info.coordinate` stays unread.
+- Rule 3 (C49): unchanged. `toLocal` is f64 subtraction (C34), and the layers' offsets are unchanged.
+- Rule 4's sentence on whole-buffer rebase (C50): what a re-centre does is unchanged (C13). No claim is made.
+- Rule 5 (C51): `render()` and the returned state land in one deck call (D3), before the next draw. Under the defect, new-frame layers were drawn with an old-frame camera; Shape A closes that window. Not claimed per frame: §4 reads the trace and images, not every frame.
+- Rules 6 and 7 (C52, C53): untouched.
+- docs/01 principle 8: each re-centre is still recorded in `offsetFrame.events` (C31).
+
+**The settled tick.** Shape A still depends on it, because the drag deferral is kept.
+- Read in 9.3.9: inertia is 0 under `controller: true` (C18, D11), and a pan's end calls `updateViewport` with `isDragging: false` (D12, D13).
+- Seen on 9.3.9 in run rc: the five changes each land at a drag's settled tick (C9).
+- Not read and not run: a gesture ended by `pointercancel`. The code note keeps it as a condition.
+
+**Guarantee or property under test (§21a's fourth category, C54): yes.**
+- The property "the view does not move when the frame re-centres" goes from broken at low zoom to held, for a drag's end, a wheel tick and a transition's end. That property is the walkthrough's A5 and A6 (C58) and the top doc comment (C14).
+- The deferral on transition frames is a declared change (§3).
+- The full form is already ordered (§0.1). §25 (e) (C57) adds nothing here.
+
+### 2.2 Shape B: a deferred `setProps` with a re-centre write id
+
+**Where.** The same handler. The move leaves the callback (a microtask or the next frame) and carries an id from a sequence like the fit's (C15).
+
+**Trade-offs.**
+- It works through the route the fit uses (D1, outside the callback).
+- Between the return and the deferred write, deck can draw new-frame layers with the old-frame camera (rule 5's window). Avoiding that means deferring `render()` too, which takes the frame pairing out of the tick (rule 1).
+- An event in that gap is handled in the old frame.
+- It has the same transition hazard and the same settled-tick dependence as A, and changes the same property.
+- It needs more code.
+- Not recommended.
+
+### 2.3 Shape C: controlled mode (a `viewState` prop owned by the canvas)
+
+**Where.** `WorkingCanvas.tsx`, every camera write: the constructor (C18), the fit (C17), the DEV seam (C27) and the handler. The top doc comment's load-bearing rule (C14) is reversed.
+
+**Trade-offs.**
+- It removes both mechanisms for every write.
+- It rewrites the camera model that entry 85's tests (C46) and pan-anchor's seam lines rest on, and every camera path needs proof again.
+- The settled-tick dependence is unchanged.
+- Not now.
+
+**Rejected outright:** a second trace line after the move. It would change the line stream that pan-anchor's route 1 waits on (§8).
+
+### 2.4 Recommendation, and the words it changes
+
+**Recommendation: Shape A.**
+- It is the smallest change, in one file.
+- It uses deck's typed contract and defeats both mechanisms.
+- It opens no new stale window and leaves the line stream unchanged.
+
+**Words.** These are worker-drafted code comments, not the human's words. They are applied with the fix and checked clause by clause at the gate.
+- C14, the sentence beginning "A later programmatic jump": it states that the re-centre's jump works uncontrolled, which D3 and D5 contradict. Draft replacement: *A programmatic jump made outside deck's view-state callback (the fit, and the DEV-only test seam) works uncontrolled: `setProps` re-syncs deck's own view state from `initialViewState` whenever the new value is not deep-equal to the last one (`@deck.gl/core@9.3.9` `dist/lib/deck.js`, `setProps`). Inside the callback it does not: deck then stores the callback's view state under the view's id, which its view lookup prefers, so the re-centre's camera move is the callback's return value instead (see `onViewStateChange` below).*
+  - Clause check: the fit and the seam are outside the callback (C17, C27). The re-sync rule is D1. The per-view store is D3. The lookup is D5. The return value is §2.1.
+- C14, the version label: 9.3.7 becomes 9.3.9. The claim was read again in D2 and D3.
+- C20: restate the note on 9.3.9 evidence (§2.1 The settled tick).
+  - Name the guards: `e2e/recentre-crossing.mjs` and `e2e/pan-anchor.mjs`, both operator-run and not in CI.
+  - Name `WorkingCanvas.recentre.test.tsx` too, and say that it models deck's rules and so cannot see a change in deck.
+  - The sentence about re-running after any `@deck.gl/*` bump names both suites.
+- C23 and the comment inside C24: the description of the move becomes the return value. Add the transition clauses with their reason (§2.1 The guard).
+- C26: not on the fix's path, and left as it is (OPEN-9).
+
+### 2.5 Boundaries
+
+**May edit:** the files in §7.
+
+**Not edited:**
+- `frontends/shell/e2e/pan-anchor.mjs` and its tolerance.
+- `offsetFrame.ts`, `lib.mjs`, `e2e-test-surface.ts`, `renderTrace.ts`.
+- `WorkingCanvas.wiring.test.tsx`, `WorkingCanvas.test.ts`.
+- The e2e `project.mjs` and `checkDistClean.mjs`.
+- `package-lock.json`, any dependency, and deck's version. Changing a dependency or deck's version is a red line.
+- Anything under `kernel/`, `engine/`, `protocol/`, `renderer/` or `src-tauri`.
+- No new export, option or `pub` item. If the worker extracts a helper, its only product caller is the handler.
+
+### 2.6 Portability
+
+The fix is page code, and deck's source is the same on every platform. E1 runs on Windows/WebView2 only. Nothing is claimed for macOS or Linux.
+
+## §3 What may and may not be claimed
+
+**May be claimed, on the head's measure build:**
+- A drag that crosses the bound re-centres without moving the view (E1 case 1).
+- A double-click near the bound does not re-centre until its transition has ended, and the zoom completes (E1 case 2).
+- U1 and U2 hold against deck 9.3.9's rules as the test models them.
+
+**May not be claimed:**
+- Any docs/08 measurement or performance effect.
+- Anything about `pointercancel`.
+- macOS or Linux.
+- That no frame shows the re-centre (only the trace and two images are read).
+- That the deferral on transitions is harmless at every zoom. Until the next qualifying tick, the frame's offset may exceed the bound (offsetFrame.ts, C28–C30). Not measured.
+- That deck's trailing tick is an invariant.
+- Anything about v0.1.0 until §10's check is made.
+
+## §4 Tests (outcomes declared in §5 before any run)
+
+| ID | Kind and file | Asserts | Mutation and expected failure |
+|---|---|---|---|
+| U1 | vitest, new `frontends/shell/src/canvas/WorkingCanvas.recentre.test.tsx` (see the note below) | After the one-shot fit (driven by pushing a batch, as the wiring test does), drag ticks then a settled tick take the target past T. The next traced line's W (C35) equals the line before the change, within 1e-6 world units, and the origin has changed. A second crossing at the same zoom gives the same. | M-U1: restore the in-callback `setProps({ initialViewState })` move and return nothing. U1 fails at the first crossing: W jumps by ΔO. |
+| U2 | the same file | No origin change on (a) a settled tick past T with `interactionState.inTransition` true, or (b) one whose view state carries `transitionDuration: 300` with an interpolator. (c) The next tick with no transition re-centres, and W is continuous. | M-U2: remove the guard's transition clauses. U2 fails at (a): the origin changes. |
+| E1 | new `frontends/shell/e2e/recentre-crossing.mjs` with npm script `e2e:recentre-crossing`; head measure build; the 100k fixture (C38) | **Precondition** (else exit 2, VOID, not PASS): the fit line arrives, and case 1 has at least one origin change in each leg. **Case 1** (from the fit, with no DEV hook): n1 drags of +L, n1 of −L, then a closing pair. STEPS = 30, L = 30·floor(min(300, floor(cw/2) − 8)/30), d = (L − L/STEPS)·2^−z_fit, n1 = floor(T/d) + 3. (a) Across each origin change, consecutive lines' \|ΔW\|·2^z·(bw/cw) ≤ 4.0 buffer px per axis. (b) \|W_end − W_start\| ≤ d per axis. (c) Start and end images, by the reproducer's note 5 rule, carried in code. **Case 2** (after case 1, from the fit again, reached by its own reload): drag out until the target is within half of a 300 px double-click shift below T, then double-click 300 px off centre, settle, one wheel notch out, settle, one wheel notch in, settle. (i) No origin change among the lines from the double-click to its settle. (ii) The zoom after that settle is the zoom before plus 1, within 1e-6. (iii) Across the origin change at the wheel tick, \|ΔW\| as in (a). Exit 0 if all pass, 1 on any failure. | M-E1: the fix reverted. It is observed by E1's run on the base build (§7 step S3), whose product tree is the base by construction. That record is named a run at the base. Expected: case 1 (a), (b) and (c) fail, and case 2 (i) fails. |
+
+- **The fake.** U1 and U2 run the real `WorkingCanvas` with `@deck.gl/core` mocked by a fake that applies D1, D3 and D5 as written, each rule's comment citing its D-file and line at 9.3.9. Why a new file: the wiring test file is #307's path.
+- **E1's methods.** Its own drag helper is pan-anchor's shape (C40), down, move and up, with its own STEPS. Its settle is `waitForSettle` (C45) over the `view-state` lines read as C39 reads them. It launches through `attachOrLaunchExe` (C43). It captures with CDP `Page.captureScreenshot`, clipped to the canvas box. PNGs are decoded with `node:zlib` (no dependency).
+- **E1's tolerance.** E1's own constant is 4.0 buffer px, on the basis of C47, restated in its comment (OPEN-2).
+- **Observing mutations.** Each mutation is applied by hand, the named test run and its failure recorded, then reverted. A verify-mutation run, if one is made, is recorded as a check of the mutation's text, never as its observation. A test-text span on the branch is named with its commit id and never pinned by hash at a branch commit.
+
+## §5 Predictions, unchanged items, invalidators
+
+**Predictions.**
+- P-U-base: at the base, with the test file added (§7 step S2), U1 fails at the first crossing, and U2 fails at (a). The base re-centres on any non-dragging tick (C24).
+- P-E1-base: at the base build, the precondition is met. Case 1 (a), (b) and (c) fail, as run rc shows (C9–C11). Case 2 (i) fails and (ii) passes.
+- P-head: U1, U2 and E1 all pass. Case 1 gives exactly two origin changes, one per leg: the out leg crosses at drag floor(T/d)+1 and the back leg at its drag n1. This is my derivation, recorded and not asserted.
+
+**Declared unchanged:**
+- Every existing vitest test.
+- pan-anchor's checks: no trace line is added or removed per tick, and its crossing case reads before the re-centre (C42).
+- Every other e2e suite.
+
+**Invalidators.** Each one stops the piece and returns it to the architect by amendment; nothing is adjusted.
+- I1: U1 or U2 passes at the base. The fake does not model deck.
+- I2: E1's precondition is unmet at the base or at the head. The result is VOID.
+- I3: E1 case 1 passes at the base. The suite cannot see the defect.
+- I4: a failure seen in a shared run that depends on timing is recorded as such, run again in a later hold, and not counted.
+
+**Falsification.** A failure of U1, U2 or E1 at the head is the fix failing. It is recorded as seen.
+
+## §6 The instrument
+
+The reproducer's instrument was a reverted worktree edit to `pan-anchor.mjs` (rc.patch, sha256 cef12e83bc880f9cd0afdbed601ddbed9607653a2fb485c89d4dba2ddc5eb512, in scratch). It does not land as a patch.
+
+**What lands, rewritten as E1's own committed code:**
+- the drag plan's formulas (the reproducer's note 3, with the STEPS change in §4);
+- the `view-state` line reading and W;
+- the CDP capture written with flag `wx`;
+- the note 5 image rule.
+
+**What does not land:**
+- the page `console.debug` wrapper;
+- the node-side jsonl dumps;
+- the clock checks;
+- the stall heartbeat;
+- any edit to `pan-anchor.mjs`.
+
+## §7 Steps, files, ceilings, budget
+
+**Steps** (S1 is the custodian's; S2–S8 are the worker's):
+- S1: this form is committed on main.
+- S2: a branch from the base (the main commit named in the report; §14 OPEN-1). Commit the U1/U2 file, run vitest, and record P-U-base with the commit id.
+- S3: commit E1 and its npm script. Build the measure exe at that commit (its product tree is the base). Run E1 and record P-E1-base.
+- S4: the fix commit (`WorkingCanvas.tsx`: the handler, the guard, the §2.4 words).
+- S5: vitest at the head; observe M-U1 and M-U2.
+- S6: build the measure exe at the head, run E1, and record P-head.
+- S7: the e2e README entry (shaped like C60), and the walkthrough row (OPEN-4).
+- S8: the report, then both gates.
+- Nothing after S4 is committed before S2's and S3's records exist.
+
+**Files and ceilings.** Insertions plus deletions, comments counted, by `git diff --numstat <base>...HEAD -- frontends/shell`:
+
+| Group | File | Ceiling |
+|---|---|---|
+| product | `frontends/shell/src/canvas/WorkingCanvas.tsx` | 70 |
+| unit | `frontends/shell/src/canvas/WorkingCanvas.recentre.test.tsx` (new) | 300 |
+| e2e | `frontends/shell/e2e/recentre-crossing.mjs` (new) | 450 |
+| e2e | `frontends/shell/package.json` (one script line) | 2 |
+| docs | `frontends/shell/e2e/README.md` (a new suite entry) | 45 |
+| docs | `frontends/shell/MANUAL-WALKTHROUGH.md` (one Part A row, OPEN-4) | 4 |
+
+- An overrun is class 8 (`docs/PREREGISTRATION-TEMPLATE.md`, Round 25 additions), and §7 is not edited to match.
+- A file outside this table is class 9, declared by amendment before any of its code.
+
+**Budget:** 290 minutes of work, my estimate and not a measurement:
+
+| Work | Minutes |
+|---|---|
+| fix | 30 |
+| U1/U2 | 60 |
+| E1 | 130 |
+| docs | 20 |
+| runs and mutations | 20 |
+| report | 30 |
+
+- The wall time of the two measure builds and of the waits for a hold is stamped and reported separately, not counted against the budget.
+- PLAN's `budget_minutes` (C1) is the custodian's to set.
+
+## §8 The order with pan-anchor
+
+`pan-anchor-setcam-waits-for-its-own-reset` (C2) is blocked behind this node.
+
+**What this fix leaves alone.** It adds no trace line and moves none (C21; C17's line at 1410; the seam's line in C27). It changes no seam, and E1 is a separate file. So pan-anchor's checks and its route 1 (waiting on its own lines) are unaffected in substance.
+
+**Its pins.** The fix inserts lines above the seam in `WorkingCanvas.tsx`. pan-anchor's form pins at 544c8971 into that seam's span therefore become historical, not current. Its M-TRACE is named by content and still resolves.
+
+**Its form.** No separate amendment (OPEN-8). Its owed route-1 amendment (its Amendment 4) names this piece's merge commit as its base and M-TRACE by content.
+
+**What the reviewer runs.** pan-anchor at the head (§12) confirms the unchanged predictions.
+
+## §9 Measurements and strings
+
+**Measurements.**
+- Per tick, the added work is one extra boolean read. A re-centring tick adds one object spread.
+- What `render()` does on a re-centre is unchanged (C13).
+- docs/08's frame budget (at most the vsync interval) applies to the canvas and is not claimed: there is no measurement.
+- Fewer re-centres in run rc's shape is a prediction (§5), not a claim.
+
+**Strings.** None that the app shows. E1's console output is a harness's. The walkthrough row is operator documentation, not an app string.
+
+## §10 Records
+
+- **v0.1.0.** Tagged at b391e43 (2026-09-13), before the drag deferral. If its callback carried the same in-callback move (unverified), it carries this defect. Mid-drag, entry 95's runaway was consistent with H1 (C42's comment: many origin jumps in one drag). The custodian checks b391e43's handler, and the release record's words go to OPEN-5, a red line.
+- **KNOWN-LIMITATIONS.** No item (OPEN-6). The defect is fixed on main by this piece. Item 17 (C59) is not touched.
+- **Walkthrough.** One Part A row after A7 (C58), with the words in OPEN-4, for the human's sight before the merge.
+- **v0.2.** v0.2 does not tag with this defect on main (C6). The custodian records it by making this node a dependency of v0.2's tag node in PLAN, applying the ruling (OPEN-7). The tag and its release notes are the human's.
+
+## §11 Block on sight
+
+1. Any edit to `pan-anchor.mjs`, its tolerance, or the bound in `offsetFrame.ts`.
+2. A dependency, lockfile or deck version change (red line).
+3. A trace line added, removed or reordered.
+4. A `viewState` prop, or any `setProps({ initialViewState })` inside the callback.
+5. A new export, option or code path with no product caller.
+6. A read of deck's `info.coordinate`.
+7. E1 calling a DEV-only hook, or E1 run on a dev build.
+8. A tolerance or prediction changed after a run has been seen.
+9. A string the app shows, added or changed.
+10. A record that calls a verify-mutation run an observation, or a test-text span on the branch pinned by hash at a branch commit or named without its commit id.
+11. The fix commit before the records of §7 steps S2 and S3.
+12. Code in `WorkingCanvas.tsx` before OPEN-1 is settled.
+
+## §12 Gates
+
+**Architect and reviewer from dispatch** (C54, C56). Verdicts follow §22. A Documentation finding is must-fix before the merge.
+
+**The reviewer, at the final head:**
+- Recomputes the counts in §7.
+- Runs the shell's fresh-worktree setup and `npm run verify` in `frontends/shell`, the repository's CI `node --test` scripts suite, and the cite, quote and plan checks.
+- Runs every e2e suite in `frontends/shell/package.json` (C62), plus `e2e/pan-anchor.mjs`, on the dev build on port 5400.
+- Runs E1 on the head measure build, and recomputes E1's verdicts from its records the way rc's reviewer did.
+- Runs each heavy command in a shared hold (§13).
+- Records a failure that depends on timing in a shared run as such, not as a failure (§5 I4).
+
+**The operator Part:** X0 is read §15, the last amendment first.
+
+## §13 Heavy runs
+
+Builds, vitest and every e2e suite each run inside a shared hold of the machine script. The machine paragraph (C61) goes into the worker's and the reviewer's briefs as written. Nothing filed names another project.
+
+## §14 Open items
+
+| OPEN | Subject | Red line | Recommendation |
+|---|---|---|---|
+| 1 | the overlap with #307 | (B) only | (C) |
+| 2 | E1's tolerance and location | no | (A) |
+| 3 | the transition guard | no | (A) |
+| 4 | the walkthrough row | no | (A) |
+| 5 | v0.1.0's release record | yes | (A) |
+| 6 | KNOWN-LIMITATIONS | no | (A) |
+| 7 | the v0.2 tag dependency | no; the tag is the human's | (A) |
+| 8 | pan-anchor's form | no | (A) |
+| 9 | the 9.3.7 label at C26 | no | (A) |
+
+The options and reasons are in the architect's draft report (`state/consults/2026-11-12-recentre-crossing-view-displaced-fix-form-architect-draft.md`). The custodian records each settlement here by amendment.
+
+## §15 Amendments (opens empty; append-only)
+
+### Amendment 1 — the custodian's settlement of §14 at the form's commit (class 1, before any code)
+
+*Written by the custodian on 2026-11-12 at this form's commit, before any code.*
+
+1. **The carried text.** Everything above this amendment is the architect's draft (`state/consults/2026-11-12-recentre-crossing-view-displaced-fix-form-architect-draft.md`, read only at main 7d7261a7; its fenced block's sha256 9f12734592e25948261a7dac9aa105c2aff4646b33055d1427b3102a9c21892a), carried byte for byte, with one change, the custodian's: each `sha256:<H>` pin is filled by script with the sha256 of the cited whole lines, each with its LF, at 7d7261a7 (62 pins, 62 distinct ranges). §0.4's sentence naming `<H>` stays as written. The draft's OPEN items, gate findings, reading list and packet gaps stay in the filed draft.
+
+2. **OPEN-1 (C), with one change that rule (00) requires.**
+   - Checked by script at this commit, over the shell files of §7's table and the canvas folder: `git diff --name-only origin/main...origin/cut/b2-piece-1c-save-and-reopen` (PR #307) names `frontends/shell/MANUAL-WALKTHROUGH.md`, `frontends/shell/e2e/README.md`, `frontends/shell/package.json`, `frontends/shell/src/canvas/WorkingCanvas.tsx` and `frontends/shell/src/canvas/WorkingCanvas.wiring.test.tsx`. The same command names none of them for `cut/adr-035-close-races-note` (PR #308) or for `cut/port-2-macos-l1-and-app-dirs`.
+   - The draft did not know whether `frontends/shell/package.json` is #307's path (its packet gaps). It is: #307 adds one script line there. So the code that starts now is S2's test file and S3's E1 file, and no other. E1's npm script line waits, with the base build, the run at the base and the fix commit, for #307's merge; until then E1 is run as `node e2e/recentre-crossing.mjs` in `frontends/shell`.
+   - The walkthrough row is in Part A, and #307's is a new Part AD; the README's suite entry is this piece's own. Each is a separate path under rule (00a), and both are S7's, after the fix commit.
+   - After #307 merges, main is merged into this piece's branch (a merge, never a rebase), and the base of S3's build and run is that merge commit, whose product tree is main's.
+   - Taken on 2026-11-12 at this form's commit under the human's direction of 2026-10-31, item 4 (`state/directives/2026-10-31-away-until-11-04-clicks-from-the-app-270-size-o0-file-open-items-take-recommendation.md`), held to 2026-11-16 (`state/directives/2026-11-09-item-4-to-11-16-12c-open-a-d-taken-slot-2-order-pr-b-slot-1-availability-monday-list.md`). The change to (C) is the custodian's and goes to the human with the rest.
+
+3. **OPEN-5, a red line: the custodian's check, made by script at this commit, for the human.**
+   - At b391e43 (v0.1.0) the view-state handler (`frontends/shell/src/canvas/WorkingCanvas.tsx:1730-1771` @ b391e43622056324c56d35cc33065305140a8415 sha256:bdf6a971bc8c086e78d1599c8a6aad04adf3b6ebc5d184ec87ca539230241578) has no `return` statement and no drag guard. On any tick whose target passes the bound, it makes the re-centre's move inside deck's callback with `setProps({ initialViewState })` (`frontends/shell/src/canvas/WorkingCanvas.tsx:1751-1758` @ b391e43622056324c56d35cc33065305140a8415 sha256:5bcddc0a25f02be522cafe9a69899ad99dd5ccd0e333c58df7b6bf6291caeb5e).
+   - The lockfile at b391e43 holds `@deck.gl/core` 9.3.9 (`frontends/shell/package-lock.json:452-454` @ b391e43622056324c56d35cc33065305140a8415 sha256:4a67a78a4641e3fb3ad70bdeb3c65fa90d1cbac536bf58646e5f8d4cd9ecbf72), as main's does.
+   - So, by §1.2's reading of 9.3.9, v0.1.0 carries the mechanism. No run was made on v0.1.0.
+   - Whether `governance/RELEASE-0.1.md` gets a known-issue line, and its words, are the human's, typed. Nothing is written until then, and nothing in this piece waits on it.
+
+4. **OPEN-2 (A), OPEN-3 (A), OPEN-4 (A), OPEN-6 (A), OPEN-7 (A), OPEN-8 (A) and OPEN-9 (A)**, none a red line, are the draft's recommendations, taken on 2026-11-12 at this form's commit under the same direction, held to 2026-11-16.
+   - OPEN-4's draft words, the architect's, are put before the human before the merge, with F5.
+   - OPEN-7 is applied at this commit: PLAN node `release-v0-2-0` gains this node in its `depends_on`. The tag and its notes stay the human's.
+
+5. **The draft's packet gaps**, answered where the custodian can: v0.1.0's handler, item 3; v0.2's tag node, `release-v0-2-0`; `package.json` and walkthrough Part A, item 2. The 100k fixture's path from a worktree and how the measure-build suites take the exe path are for the worker's brief. The rest stand as the draft lists them.
+
+6. **The draft's gate findings.** F1 to F3 are this piece's words (§2.4). F5 goes to the human with OPEN-4. F6 is answered by item 3. F7 goes to pan-anchor's owed route-1 amendment (OPEN-8). F4 is a reading, recorded.
+
+7. **PLAN.** The node's gate is this form from this commit. Its status is in-progress, and its budget is the draft's 290 minutes, an estimate and not a measurement. The worker for S2's and S3's code is dispatched after this commit is on main. Slot 1's R4 worker runs in its own worktree, and every heavy call of either runs in a shared hold.
+
+Nothing above is edited.

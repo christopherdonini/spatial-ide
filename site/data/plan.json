@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-12T01:12:59.373Z",
-  "plan_hash": "887b9b0eb6d9e32151d09e88689bd4b101f638326854c0a52e276f814d1de199",
+  "generated_at": "2026-11-12T02:07:08.492Z",
+  "plan_hash": "ee535bb0af20d0600c155f9fa7e3f9d2954c13593a23209ad62193b909724417",
   "priorities_approved": true,
   "lanes": [
     {
@@ -9024,7 +9024,7 @@
       "kind": "task",
       "lane": "shell",
       "phase": "prototype",
-      "status": "ready",
+      "status": "in-progress",
       "order": null,
       "depends_on": [
         "recentre-crossing-view-displaced-by-origin-move"
@@ -9033,13 +9033,15 @@
         "kind": "none",
         "minutes": 0
       },
-      "gate": "none",
-      "evidence": null,
-      "budget_minutes": 0,
+      "gate": "governance/forms/frontends/RECENTRE-CROSSING-VIEW-DISPLACED-FIX-PREREGISTRATION.md",
+      "evidence": {
+        "branch": "cut/recentre-crossing-view-displaced-fix"
+      },
+      "budget_minutes": 290,
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "PLACED 2026-11-12 by the human's message of 2026-11-11 (21:49Z) (state/directives/2026-11-11-adr-035-item-2-arm-stands-1c-open-20-1-a-21-1-b-21-3-a-diagnostic-graded-pan-anchor-released-s1-candidate-origin-move-reproducer.md), item 5 (b), its condition met: the reproducer reproduced the displacement and its single reviewer confirmed it (state/consults/gates/2026-11-12-recentre-crossing-view-displaced-by-origin-move-gate-rc-reviewer.md). S1: the full form, both gates, in slot 2 at once, the architect proposing the fix's shape (its evidence so far: the measure run's lines and the architect's H1, the deck writing the callback's view state over the snap); slot 1 keeps #307; v0.2 does not tag with it on main. NEXT: the architect's draft of the full form; the code waits for PR #307's merge under the slot-overlap rule, both touching the canvas component, unless the human rules otherwise.",
+      "summary": "FORM COMMITTED 2026-11-12 (governance/forms/frontends/RECENTRE-CROSSING-VIEW-DISPLACED-FIX-PREREGISTRATION.md; 62 pins at 7d7261a7) from the architect's draft (state/consults/2026-11-12-recentre-crossing-view-displaced-fix-form-architect-draft.md): the full form, both gates from dispatch; Shape A, the re-centred view state returned from deck's view-state callback in place of the in-callback setProps, with a transition guard; U1 and U2 in a new test file with a deck fake; E1 a new measure-build suite. Amendment 1: OPEN-1 (C), changed by rule (00), since #307's branch touches package.json: E1's npm script line waits with the base build, the run at the base and the fix commit for #307's merge; OPEN-5, a red line, to the human with the custodian's check (v0.1.0 makes the same move inside the callback); the rest taken as recommended, held to 2026-11-16; OPEN-7 applied to release-v0-2-0. NEXT: the worker for the code of steps S2 and S3. Before: PLACED 2026-11-12 by the human's message of 2026-11-11 (21:49Z) (state/directives/2026-11-11-adr-035-item-2-arm-stands-1c-open-20-1-a-21-1-b-21-3-a-diagnostic-graded-pan-anchor-released-s1-candidate-origin-move-reproducer.md), item 5 (b), its condition met: the reproducer reproduced the displacement and its single reviewer confirmed it (state/consults/gates/2026-11-12-recentre-crossing-view-displaced-by-origin-move-gate-rc-reviewer.md). S1: the full form, both gates, in slot 2 at once, the architect proposing the fix's shape (its evidence so far: the measure run's lines and the architect's H1, the deck writing the callback's view state over the snap); slot 1 keeps #307; v0.2 does not tag with it on main. NEXT: the architect's draft of the full form; the code waits for PR #307's merge under the slot-overlap rule, both touching the canvas component, unless the human rules otherwise.",
       "dates": {
         "opened": "2026-11-12",
         "done": null
@@ -10566,7 +10568,8 @@
         "entry-79-b1-consult-items",
         "adr-017-note-product-redaction-gate",
         "operator-sitting-queue",
-        "sitting-wording-n1-to-n7"
+        "sitting-wording-n1-to-n7",
+        "recentre-crossing-view-displaced-fix"
       ],
       "needs_human": {
         "kind": "none",
@@ -10580,7 +10583,7 @@
       "entries": [
         137
       ],
-      "summary": "NOTED 2026-11-05 (state/consults/2026-11-05-area-e-kl-triage-undeclared-behaviours-architect.md, U6; graded S2 by the custodian): the shell's three manifests (tauri.conf.json, its Cargo.toml and package.json) say 0.1.0 on main, so a build from main and its installer's name cannot be told from the v0.1.0 artifact; the version field moves at the tag, a release step. Before: Governance piece F OPEN-8 (A), the human's (state/directives/2026-10-29-governance-f-mapping-table-approved-open-1-to-open-10-ruled.md): the README's statement of what works today, the last release's operator-verified behaviour, is updated at each tag as a release step; v0.2's release notes carry it next. O1's release-note line, the human's words: state/directives/2026-10-28-rulings-by-lane-o1-filler-order-8a-governance-slots-docs-adr-017-note.md, A.7, verbatim when v0.2's notes are written (O1 in v0.2's scope, A.6; the clang-cl installer first exercised at v0.2's artifact walk, entry 137, OPEN-1 (a)). Before: PROPOSED 2026-10-23 by the human's ruling (state/directives/2026-10-23-weekend-open-items-ruled-verify-cites-pin-covering-case-port-2-session-log-test-feature-v0-2-findings-graded.md, item 6) on decision entry 137, the v0.2 scope proposal (state/consults/2026-10-23-v0-2-scope-proposal-architect.md): O1 fold (v0.1.1 folded into this node; m13-bracketed-values and signpath-application-draft re-targeted here; AUTONOMY section 11's from v0.1.1 read as from the next release); O2 piece 1c whole; O3 milestone 4 whole; O4 both newly graded fixes; O5 ADR-023's acceptance at B1's close and the ADR-017 note before the tag; O6 as recommended. OPEN-1 (a), the CI artifact of a walked candidate, with the artifact rows re-run on the tag's build; OPEN-2 (a) for the hero path and every 1c and milestone 4 string, (b) for the rest by the human's list at the sitting; OPEN-3 a release/0.2.0 branch; OPEN-4 v0.2.0, marked pre-release; OPEN-5 a fresh local account, no VM. The release notes and the tag message are the human's typed words. No date: the human schedules the release; until then nothing is scheduled.",
+      "summary": "HELD 2026-11-12 behind recentre-crossing-view-displaced-fix, by item 5 (b) of the human's message of 2026-11-11 (21:49Z), applied by that node's form, Amendment 1 item 4; the tag and its notes stay the human's. Before: NOTED 2026-11-05 (state/consults/2026-11-05-area-e-kl-triage-undeclared-behaviours-architect.md, U6; graded S2 by the custodian): the shell's three manifests (tauri.conf.json, its Cargo.toml and package.json) say 0.1.0 on main, so a build from main and its installer's name cannot be told from the v0.1.0 artifact; the version field moves at the tag, a release step. Before: Governance piece F OPEN-8 (A), the human's (state/directives/2026-10-29-governance-f-mapping-table-approved-open-1-to-open-10-ruled.md): the README's statement of what works today, the last release's operator-verified behaviour, is updated at each tag as a release step; v0.2's release notes carry it next. O1's release-note line, the human's words: state/directives/2026-10-28-rulings-by-lane-o1-filler-order-8a-governance-slots-docs-adr-017-note.md, A.7, verbatim when v0.2's notes are written (O1 in v0.2's scope, A.6; the clang-cl installer first exercised at v0.2's artifact walk, entry 137, OPEN-1 (a)). Before: PROPOSED 2026-10-23 by the human's ruling (state/directives/2026-10-23-weekend-open-items-ruled-verify-cites-pin-covering-case-port-2-session-log-test-feature-v0-2-findings-graded.md, item 6) on decision entry 137, the v0.2 scope proposal (state/consults/2026-10-23-v0-2-scope-proposal-architect.md): O1 fold (v0.1.1 folded into this node; m13-bracketed-values and signpath-application-draft re-targeted here; AUTONOMY section 11's from v0.1.1 read as from the next release); O2 piece 1c whole; O3 milestone 4 whole; O4 both newly graded fixes; O5 ADR-023's acceptance at B1's close and the ADR-017 note before the tag; O6 as recommended. OPEN-1 (a), the CI artifact of a walked candidate, with the artifact rows re-run on the tag's build; OPEN-2 (a) for the hero path and every 1c and milestone 4 string, (b) for the rest by the human's list at the sitting; OPEN-3 a release/0.2.0 branch; OPEN-4 v0.2.0, marked pre-release; OPEN-5 a fresh local account, no VM. The release notes and the tag message are the human's typed words. No date: the human schedules the release; until then nothing is scheduled.",
       "dates": {
         "opened": "2026-10-23",
         "done": null
