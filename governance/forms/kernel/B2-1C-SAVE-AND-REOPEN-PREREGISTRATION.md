@@ -1866,3 +1866,16 @@ Nothing above is edited.
 5. **Next.** The PR body by the reviewer's DOC-D, R4's words listed; the PR out of draft, for the human's click.
 
 Nothing above is edited.
+
+## Amendment 28 — the second-open node's rulings, the human's third message of 2026-11-12 (21:15Z), item 5 (class 5); nothing in step 1 changes
+
+*Written by the custodian on 2026-11-12. References only: `state/directives/2026-11-12-third-message-open-3-a-gates-now-typed-check-reading-rule-first-look-s1-publish-approval-s2-second-open-rulings-308-restore-item-47-floor-order.md` (the file's sha256 a664aa4dd54b5479c47423bf78ce3c4c704d7149140a9510f676eb81bde41314), item 5, the file's lines 25 to 29; and the options draft `state/consults/2026-11-12-second-open-history-before-1c-step-3-options-architect-draft.md` (sha256 77e5785aa9e544d09088720f5667bf12b14884c5ce768e806c66bd31d0f964fe). Nothing below is a quotation.*
+
+1. **The rulings (item 5 (a)).** OPEN-N1: O-2, a record per open until a save binds the open to a project, then the project's record. OPEN-N2: (i), the first step after a save made before any step creates the project's record. OPEN-N3: I-b, one dataset identity per open, built with O-2. OPEN-N4: (a), a same-run reopen of a project whose record this run holds is bound at the reopen and continues that record. OPEN-N6: yes, the order in item 5 below.
+2. **What they replace (item 5 (b)), class 5.** When `second-open-history-before-1c-step-3` is built, its rulings replace OPEN-21-1 (b) (Amendment 24 item 2) and K-S15's shape (Amendment 21; Amendment 26 item 4, its first bullet). Until then step 1 stands on main as merged. K5's edit is declared in that node's form before its code, as the options draft says.
+3. **A save into a project whose record this run already holds (item 5 (c)).** That node's form says what happens. If OPEN-N4 (a) does not cover it, the options go to the human.
+4. **OPEN-N5 and ADR-036's note (item 5 (d)).** They are the human's words, written after the code: the worker drafts them from the built code at that node's records commit, and they go to the human clause-checked.
+5. **Where it is built (item 5 (e)).** One kernel PR, in slot 2 after the publish approval piece (`publish-approval-columns-line`), before step 2's lineage reader and its protocol bump.
+6. **Nothing else changes** in this form's steps, ceilings or gates.
+
+Nothing above is edited.

@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `5c515a5bf191a5825a0446dc9ba826537640224e40cb6ac6ed08040c6d09ad7b`) at `2026-11-12T22:08:51.098Z`.
+Generated from `PLAN.yaml` (sha256 `75d4093f28c9a9f980003929b7e42a861553feb1b6e9d8664dc797eca02d5cda`) at `2026-11-12T22:35:08.414Z`.
 
 ## 1. Next
 
@@ -15,11 +15,10 @@ Generated from `PLAN.yaml` (sha256 `5c515a5bf191a5825a0446dc9ba826537640224e40cb
 - **publish-bundle-sigterm** — SIGTERM handling in publish-bundle on unix (wave-3 W3-A observation 3) (lane `platform`, order null, budget 90 min)
 - **publish-unix-quota-perm-errors** — EDQUOT and EPERM in publish error classification on unix (wave-3 W3-A observation 1) (lane `platform`, order null, budget 90 min)
 
-## 3. Waiting on the human (total: 37 min)
+## 3. Waiting on the human (total: 22 min)
 
 ### ruling
 
-- **second-open-history-before-1c-step-3** — Which record a step belongs to: a second open's steps, and steps recorded after a save made before any step (the independent review's C2), with the review's note on two dataset identities; settled before 1c step 2's lineage reader (L1 to L4), so before step 3; ADR-036's text on both is the human's (15 min)
 - **verify-bundle-example-path-build-dir-layout** — The kernel tests that run a built example find it under the toolchain build-dir layout of rustc 1.100.0: verify_bundle, red on main since #309 merge, and scale_pass helper (S3; its slot waits for the human) (2 min)
 
 ### sitting
@@ -35,13 +34,20 @@ Generated from `PLAN.yaml` (sha256 `5c515a5bf191a5825a0446dc9ba826537640224e40cb
 - **fixture-determinism-off-windows-record** — kernel/FIXTURES.md on determinism (byte-identical on one machine, different across platforms, with the Linux sizes and hashes), and the G5 entry point gains the hash check the S entry point has — blocked by: posix-backslash-is-inside-and-redaction-label
 - **lod-tier-identity-binds-file-name** — The LOD tier builder takes the identity name DuckDB bound and looks it up among the file's own footer names, so a renamed identity column reaches a different column there — blocked by: port-2-macos-l1-and-app-dirs
 - **module-docs-drift-sweep-area-d** — Kernel and engine module docs: the never-refuses and unreachable claims the Table, record_step and publish have overtaken, the withdrawn cancellation bound, and smaller statements (drift sweep area D, findings 1 to 6) — blocked by: b2-piece-1c-save-and-reopen
+- **publish-approval-kernel-parity** — Kernel parity for the publish approval's column line: the kernel's approval prompt carries the column list and prints it, and the shell mirrors it, so the CLI and the shell show the same facts (option (E); S3, not for v0.2) — blocked by: publish-approval-columns-line
+- **second-open-history-before-1c-step-3** — Which record a step belongs to: a second open's steps, and steps recorded after a save made before any step (the independent review's C2), with the review's note on two dataset identities; settled before 1c step 2's lineage reader (L1 to L4), so before step 3; ADR-036's text on both is the human's — blocked by: publish-approval-columns-line
 - **skp-line-cites-outside-close-races** — Stale line cites into kernel/src/skp.rs outside kernel-close-races-followups files -- shell streaming, App.tsx, pool_poll.rs, src-tauri lib.rs, the P4 corpus test and the persisted-artifacts test — blocked by: adr-035-close-races-note
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
+- **open-first-look-fills-fit-view** — After an open the view is partial and nothing says so, on every file over 10,000 rows: the open plans the tiles of the view the fit shows, so the view fills without a pan and the status line speaks (S1, the human's grade) — blocked by: b1-shell-half
 - **pan-anchor-setcam-waits-for-its-own-reset** — e2e/pan-anchor.mjs: setCam waits for the view-state line its own reset produces, never a late line from the previous gesture (test only) — blocked by: recentre-crossing-view-displaced-fix
+- **publish-approval-columns-line** — The publish approval names the columns a bundle publishes: a host-composed line in the approval, its own piece outside PR B (S2, the human's grade; v0.2's tag waits for it) — blocked by: recentre-crossing-view-displaced-fix
+- **publish-approval-consult-gate-findings** — The publish approval consult's four gate findings: ADR-024's stale approval lifetime, the approval dialog's pointer to a report with no path, walkthrough G3's question the dialog cannot answer, and PR B's form naming no line for the approval; the docs lane — blocked by: known-limitations-item-47-name-floor-sentence
 - **recentre-stall-three-observations** — The re-centring stall report's three proposed observations (a timer around the layer build, deck's attribute-update counters, the render-trace layers line against the gap's edges), as one node behind the S1 fix (S3) — blocked by: recentre-crossing-view-displaced-fix
 - **session-end-lines-name-coverage-lost-as-source-change** — The hover readout and the Feature tab word every session end as a source change, coverage-lost included, although the engine says coverage-lost is never a source change (milestone 4 PR C gate 1, the architect's C1 note) — blocked by: b1-shell-half
 - **session-log-token-redaction-rests-on-page-code** — The session token never reaching the session log rests on page code: binding_log_session_event appends page-supplied text verbatim, the page holds the token, and the data plane's Session::redact has only a test caller — blocked by: b2-piece-1c-save-and-reopen
 - **briefb-b2-save-reopen** — B2 — Save project, Snapshot data, session history, lineage and preferences, in five stages, each with its own form — blocked by: decision-adr-029-scan-progress-route
+- **known-limitations-first-look-partial-view** — KNOWN-LIMITATIONS: a new item, its number the next free on main, the human's words by approval (item 3 (b) of 2026-11-12, third message): after a file opens, until the first pan or zoom, the map shows at most the first 10,000 rows the file returns and the status line says nothing; withdrawn by open-first-look-fills-fit-view when it merges — blocked by: adr-035-close-races-note
+- **known-limitations-item-47-name-floor-sentence** — KNOWN-LIMITATIONS item 47: the redaction search's 3-byte name floor, one sentence added to the item's end, the human's words by approval ((A) of the custodian's draft; item 7 of 2026-11-12, third message) — blocked by: known-limitations-first-look-partial-view
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer — blocked by: signpath-application-draft
 - **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-2-0
 - **signpath-application-draft** — Entry 77 — the SignPath OSS application and disclosure text drafted for the human sight, once a release is CI-built — blocked by: release-v0-2-0
