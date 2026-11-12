@@ -143,3 +143,46 @@ No item is marked as a red line.
 - **Not settled by the draft, and proven by the piece's own runs:** T2's route to the attribute step's coverage-lost arm (read, never run), and whether a macOS job runs the kernel suite at dispatch, as its last section says.
 
 ## Amendments (opens empty; append-only)
+
+### Amendment 1 — the custodian's re-read at main after 1c step 1's merge (class 3, before any code)
+
+*Written by the custodian on 2026-11-12, before any code.*
+
+1. **Released.** 1c step 1 merged as PR #307 (merge commit 9398efc6e3db7474cc9b1346ea9e1a5f1d5c7832, 2026-11-12, the human's click), so the skip of OPEN-6 (A) ends and this piece runs on this form unchanged, with its pins as item 2 gives them.
+2. **The re-read, by script at main a8125f81bb4982e4f7545c5e21697e26ec2cb86b**, as the settlement's bullet on the read commit and main requires. Each distinct pin's whole lines at 7591cdad, each with its LF, hash to the pin. Each pin's bytes were then looked for whole at main. Of 61 pins, 30 are Same, 29 Moved and 2 Changed.
+   - **Moved (class 3, the tree authoritative):** the bytes are unchanged and are found once at main, at the lines below. The `EndedByCoverageLoss` arm of kernel/src/lib.rs is among them, with its literal.
+     - kernel/src/skp.rs:1031 @ a8125f81bb4982e4f7545c5e21697e26ec2cb86b sha256:3723c2bb5cc6de9fbb3c53e4226305481a77d8e7058299597e176532c678cd5d (was 1027)
+     - kernel/src/skp.rs:1543-1544 @ a8125f81bb4982e4f7545c5e21697e26ec2cb86b sha256:62ecb06ad1930e85ce1e1c1a1eb27038fdd517ef97ad7e92d13820c010f2fc34 (was 1519-1520)
+     - kernel/src/skp.rs:1682-1683 @ a8125f81bb4982e4f7545c5e21697e26ec2cb86b sha256:03a9552a6ec103b133008628c901d74dc9e78ba505b98bc53a81047d0724ed7c (was 1638-1639)
+     - kernel/src/lib.rs:546-547 @ a8125f81bb4982e4f7545c5e21697e26ec2cb86b sha256:653f3e2e9fc4d40d0adc7a2d16b551e0ce577d13f1a2da34e15c17988e33d267 (was 545-546)
+     - protocol/skp/SKP-V0.md:889-891 @ a8125f81bb4982e4f7545c5e21697e26ec2cb86b sha256:659dc74bdbb2449eb6564bf94de6ef87136efb7160ab866aadc673746879338f (was 885-887)
+     - kernel/src/skp.rs:1028-1036 @ a8125f81bb4982e4f7545c5e21697e26ec2cb86b sha256:e6533e6e0ea3d31169ab39bbc0e34935ade0c7449eac95c2c6bc358bd40eecd9 (was 1024-1032)
+     - kernel/src/skp.rs:1240 @ a8125f81bb4982e4f7545c5e21697e26ec2cb86b sha256:bb61ccf51107a21259870ea5b549c0e2a9e652cc9be131616c535099dc7d3037 (was 1231)
+     - kernel/src/skp.rs:1302 @ a8125f81bb4982e4f7545c5e21697e26ec2cb86b sha256:67f8d19b16f9f200a37c4f11404c2f35f1863020075898cc60c1cf18e72e766c (was 1287)
+     - kernel/src/skp.rs:1537-1547 @ a8125f81bb4982e4f7545c5e21697e26ec2cb86b sha256:39def6e05ace9d95a2350d4ac0aeb7731648b36aa3acd774cc376d9878a85d7a (was 1513-1523)
+     - kernel/src/skp.rs:1675-1686 @ a8125f81bb4982e4f7545c5e21697e26ec2cb86b sha256:943655f1e8a079168e14de133885dc086437110274e87a12ebfc6025a132e8e2 (was 1631-1642)
+     - kernel/src/skp.rs:1472 @ a8125f81bb4982e4f7545c5e21697e26ec2cb86b sha256:8a3283c12d21190899182ea9cb8d0a1318ef878ed1df250f3a6a72eb269eb7d5 (was 1448)
+     - kernel/src/session_history.rs:230 @ a8125f81bb4982e4f7545c5e21697e26ec2cb86b sha256:36b236db1287a85c185d75bdbd5ccd0a7b26a204a32456291594b4d1a341aed2 (was 157)
+     - kernel/src/lib.rs:544-550 @ a8125f81bb4982e4f7545c5e21697e26ec2cb86b sha256:04be351ba449592b0f72c8212479a61edc3bd2f5db0b1653f28491a2b4deb6a4 (was 543-549)
+     - kernel/src/skp.rs:1247-1249 @ a8125f81bb4982e4f7545c5e21697e26ec2cb86b sha256:5d4c9c4181557e1f85dbb96a6673dae10645cf67fbea9a3bd3a3648d4a3dbf01 (was 1238-1240)
+     - kernel/src/skp.rs:1368 @ a8125f81bb4982e4f7545c5e21697e26ec2cb86b sha256:8e053a208eeb51a6746482ba0b6c5d68cd2b7146ccb503daa1cd156790d65f49 (was 1344)
+     - kernel/src/skp.rs:2114-2116 @ a8125f81bb4982e4f7545c5e21697e26ec2cb86b sha256:852956796fb3afd2583871cf5addfc4f94b56ffeff72e967fc2fea826cd2c5bc (was 2069-2071)
+     - kernel/src/skp.rs:2163 @ a8125f81bb4982e4f7545c5e21697e26ec2cb86b sha256:a9bf764e549b77beff09343186bf79278537e20f2ec6673f38f3714414bd47a7 (was 2118)
+     - kernel/src/skp.rs:2256 @ a8125f81bb4982e4f7545c5e21697e26ec2cb86b sha256:9f30897f9b0451df0d7f955e594058afec7f6dbd97742c65403d4e572187071b (was 2211)
+     - kernel/src/skp.rs:2107-2109 @ a8125f81bb4982e4f7545c5e21697e26ec2cb86b sha256:7b791429f3ee7ca8baa5d1f3052d48d773a1b2be91cc8157345514e1de0339ca (was 2062-2064)
+     - kernel/src/skp.rs:4396-4400 @ a8125f81bb4982e4f7545c5e21697e26ec2cb86b sha256:b1196922c83999c402cc688a42d04f2c34b46baa801701cd875cffcf91eaf8da (was 4368-4372)
+     - kernel/src/skp.rs:4927-4931 @ a8125f81bb4982e4f7545c5e21697e26ec2cb86b sha256:77835e19243cd630a619bd25d9901ef0a4b74c57644fb1dc2067865d4772327c (was 4899-4903)
+     - kernel/src/skp.rs:1543 @ a8125f81bb4982e4f7545c5e21697e26ec2cb86b sha256:d12464d53f914e968c340b8bcf6ab28b092511f4d09d9e98b0643e27cd5e8e6d (was 1519)
+     - kernel/src/skp.rs:4725-4738 @ a8125f81bb4982e4f7545c5e21697e26ec2cb86b sha256:55e8ee39e433f835dfc2941b2f391e28b5742dc7752a8fdcf187072f97b6bed7 (was 4697-4710)
+     - kernel/src/skp.rs:4363-4368 @ a8125f81bb4982e4f7545c5e21697e26ec2cb86b sha256:3aafacb309fb8235f9b229e7af1146561f4acacfea13836757cec430dacbde06 (was 4335-4340)
+     - kernel/src/skp.rs:1539 @ a8125f81bb4982e4f7545c5e21697e26ec2cb86b sha256:e5930e3f461a3902e3c65e8134cbfc61ae8ab4e054a92d7d4d316a34280a517c (was 1515)
+     - kernel/src/skp.rs:1677-1678 @ a8125f81bb4982e4f7545c5e21697e26ec2cb86b sha256:37fb86bd45b39cea14a4d24df7675f5cc67b65f6c7856a9c00b118597cece2d2 (was 1633-1634)
+     - kernel/src/lib.rs:534-535 @ a8125f81bb4982e4f7545c5e21697e26ec2cb86b sha256:b19b46875f543f4c47c29f711fb74cce8ce2627f7c1c0ab048260a493ceb295a (was 533-534)
+     - kernel/src/lib.rs:525-526 @ a8125f81bb4982e4f7545c5e21697e26ec2cb86b sha256:b6923756f8a1e068262b78676a3f76d13da0fe9f2ff7735aac9f5ea2fd2f0fac (was 524-525)
+     - protocol/skp/SKP-V0.md:727-730 @ a8125f81bb4982e4f7545c5e21697e26ec2cb86b sha256:e6f15aa6b94164c2e579a8f95df2dd34795df3e0af4053adfa933316c734e1b1 (was 723-726)
+   - **Changed:** governance/PLAN.yaml:4192-4208 and state/FILLER-QUEUE.md:9 at 7591cdad. They are records, this node's text and its skip line, rewritten since. Neither is a Scope file or a line the piece changes or tests.
+   - **Same:** the other 30, at their pinned lines.
+3. **Scope at main.** Since 7591cdad, kernel/README.md, kernel/src/lib.rs, kernel/src/skp.rs changed (by git diff --name-only). The four braced sites and their literals did not change, by item 2.
+4. **Rule (00) at main a8125f81bb4982e4f7545c5e21697e26ec2cb86b**, by `git diff --name-only origin/main...<branch>`. None of the following touches a Scope file or anything under protocol/: the branches of PR #308, port-2 and the S1 fix, and the two held local branches.
+
+Nothing above is edited.
