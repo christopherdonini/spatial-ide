@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-12T14:54:53.444Z",
-  "plan_hash": "7ae6f3ed136012e0746f03c75cd2c0ba8fa8c09b725c88a60200d2d83f62ddec",
+  "generated_at": "2026-11-12T16:26:22.041Z",
+  "plan_hash": "d6bbd9e7196f83b6fc14d6ab09f7c90b2843c974f9f06eaf50ab036797cad30c",
   "priorities_approved": true,
   "lanes": [
     {
@@ -11494,7 +11494,7 @@
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "PLACED 2026-11-12 by the human's message of 2026-11-12 (13:07Z), item 2 (b), third in the docs lane's order (item 6): line 80 becomes three spaces and the human's words, byte for byte; the five-line form committed before any change. #308's words, second in that order, wait for the human's word on a restore of ADR-035 on its branch (G3). NEXT: the worker on the branch; the single combined reviewer gate.",
+      "summary": "GATE PASS 2026-11-12 (state/consults/gates/2026-11-12-known-limitations-item-4-on-main-paragraph-gate-reviewer.md): the single combined reviewer gate at f56d6efe, no blocking finding; each of the four sentences reads as holding at the head; no clause for the human. The worker's report: state/consults/2026-11-12-known-limitations-item-4-on-main-paragraph-worker-report.md. Draft PR #310. NEXT: its body and ready; the human's click. Before: PLACED 2026-11-12 by the human's message of 2026-11-12 (13:07Z), item 2 (b), third in the docs lane's order (item 6): line 80 becomes three spaces and the human's words, byte for byte; the five-line form committed before any change. #308's words, second in that order, wait for the human's word on a restore of ADR-035 on its branch (G3). NEXT: the worker on the branch; the single combined reviewer gate.",
       "dates": {
         "opened": "2026-11-12",
         "done": null
