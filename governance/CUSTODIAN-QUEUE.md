@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `51f2569798ad5d14caad26bdf992ad6b513305233227cde208065b9056413e45`) at `2026-11-12T04:25:06.871Z`.
+Generated from `PLAN.yaml` (sha256 `bedf3c954832c93be9e3a2ed977ff9a73721d0d7c99a42053af2580b41d9104f`) at `2026-11-12T06:17:56.031Z`.
 
 ## 1. Next
 
@@ -40,7 +40,6 @@ Generated from `PLAN.yaml` (sha256 `51f2569798ad5d14caad26bdf992ad6b513305233227
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer — blocked by: signpath-application-draft
 - **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-2-0
 - **signpath-application-draft** — Entry 77 — the SignPath OSS application and disclosure text drafted for the human sight, once a release is CI-built — blocked by: release-v0-2-0
-- **adr-notes-stale-statements-and-indices** — ADR notes, Status lines and indices stating what has since changed (the cloud ADR audit, A-S1 to A-S8) — blocked by: b2-piece-1c-save-and-reopen
 - **governance-e1-rules-as-records** — Piece E1: rules as records, a rule catalogue under rules/, a selector scripts/plan/rules.mjs, a generated block in each agent definition and a governance-ci check — blocked by: governance-e-readings
 - **shell-owners-index** — An owner's index for the shell (frontends/shell), so that shell-owned KNOWN-LIMITATIONS items and pointers are indexed somewhere — blocked by: skp-line-cites-outside-close-races
 - **site-design-v1** — Landing page redesign — DRAFT-4 (status strip, milestone banner, waiting-on-you cards with unblocks counts, the swimlane board) — blocked by: governance-ci-built-site
