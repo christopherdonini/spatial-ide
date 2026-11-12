@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `de3bde61bbb71bb10dc41ab175c8aa250f309a85c88808426b54d45feb17a924`) at `2026-11-12T14:15:00.516Z`.
+Generated from `PLAN.yaml` (sha256 `7ae6f3ed136012e0746f03c75cd2c0ba8fa8c09b725c88a60200d2d83f62ddec`) at `2026-11-12T14:54:53.191Z`.
 
 ## 1. Next
 
@@ -54,6 +54,7 @@ Generated from `PLAN.yaml` (sha256 `de3bde61bbb71bb10dc41ab175c8aa250f309a85c888
 - **record-step-style-match-widening** — record_step admits a style.set match value on fillColor, with the step's dependencies naming the match column and its type (milestone 4's OPEN-4 (A′)), carried in piece 1c's step 1 by class 9 (the 1c form's Amendment 7) — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **b1-shell-half** — Shell migration, milestone 4 -- B1 shell half: attributes of the inspected feature, colour by category with its legend, and the table — evidence: branch `cut/b1-shell-half-pr-c`
 - **recentre-crossing-view-displaced-fix** — After a pan crosses the re-centring bound, the view is displaced by the origin's move: the fix (S1), under the full form and both gates, the architect proposing its shape — evidence: branch `cut/recentre-crossing-view-displaced-fix`
+- **known-limitations-item-4-on-main-paragraph** — KNOWN-LIMITATIONS item 4's On-main paragraph, untrue on main since #307, becomes the human's words of 2026-11-12 (item 2 (b)), in its own small PR — evidence: branch `cut/known-limitations-item-4-on-main-paragraph`
 - **port-2-macos-l1-and-app-dirs** — PORT-2 -- macOS L1 for the Cargo workspace: macos-latest in the same matrix, one application-directory boundary replacing the two resolvers, and a case-policy test on a case-insensitive volume — evidence: branch `cut/port-2-macos-l1-and-app-dirs`
 
 ## 6. Proposed / unscheduled

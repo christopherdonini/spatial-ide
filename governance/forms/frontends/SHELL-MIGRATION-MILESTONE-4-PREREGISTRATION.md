@@ -1817,3 +1817,50 @@ Nothing above is edited.
 5. **The order.** PR B's code waits for the S1 fix's merge (rule (00): `WorkingCanvas.tsx` and the shell's `package.json`). At M′: Amendment 13 (item 10), then the base series (item 11), then code.
 
 Nothing above is edited.
+
+## Amendment 12, continued: PR B's session-end phase starts now, on a branch from main (the human's ruling of 2026-11-12, item 2 (d)). The ruling joins by reference (class 5); the rest is class 1. Written by the custodian at its commit, before the phase's base series and any PR B code.
+
+*This is not Amendment 13: item 10 and the ruling keep that number for the re-read at M′, after the S1 fix's merge. References only: nothing below is a quotation.*
+
+1. **The ruling, by reference (class 5; paraphrased).** `state/directives/2026-11-12-s1-fix-open-a-c-s6b-now-pr-b-class-9-now-1c-five-308-c1-words-platform-reports-order-no-git-stash.md:28` @ ad22478f sha256:d2fcdcb214c566c8305bee98393abfc3673ddb660e6350146c9f77c621a538a2:
+   - PR B's session-end class 9 phase does not wait for the S1 fix. It starts now on PR B's branch, cut from main, and the base series runs at that commit.
+   - What touches `frontends/shell/src/canvas/WorkingCanvas.tsx` or `frontends/shell/package.json` waits for the fix's merge. Main is then merged into the branch, the series runs again, and Amendment 13 records any difference.
+   - A pin or prediction of Amendment 12 that depends on the fix's lines waits alone; item 4 records which.
+   - Settlement item 5's order is replaced for the phase only. For the rest of PR B it stands.
+
+2. **The phase (class 1).** It is the session-end draft's change as item 3 carries it, under OPEN-1 (a), OPEN-2 (a) and OPEN-3 (a), with items 12 and 13.
+   - Product: `frontends/shell/src/canvas/pick.ts`, `frontends/shell/src/canvas/HoverReadoutView.tsx`, `frontends/shell/src/feature/FeatureTab.tsx`, `frontends/shell/src/feature/clickEffect.ts` and `frontends/shell/src/workspace/selection.ts`, then `frontends/shell/src/workspace/workspaceState.ts` and `frontends/shell/src/App.tsx`.
+   - Tests: the session-end draft's nine test files, and `frontends/shell/src/App.lateResult.test.tsx` for SE-R1 (item 12). SE-U1 to SE-U5 and SE-R1, each with its mutation.
+   - Ceilings: item 13's session-end row and its SE-R1 row.
+   - Its `App.tsx` lines are the session-end change only, with the comments of the draft's §3 item 7. Item 9's comment rewrites are not in the phase: they come with the rest of PR B, from the code at M′.
+   - The phase adds no KNOWN-LIMITATIONS item and no walkthrough row. Its two coverage-lost sentences are P6 placeholders, sighted with PR B's Part AC rows.
+
+3. **Its base, M″ (class 1; item 10, read at M″).** M″ is the main commit that first carries this record. PR B's branch `cut/b1-shell-half-pr-b` is cut there.
+   - By script at ad22478f2b85a3cae85550bb99999e91b7fa2ff9, the main commit before this record: `git diff --name-only b7b721eb9347695ba3badb85f3c1917e9d40c0fc ad22478f` lists 26 paths, none outside `governance/`, `state/` and `site/`. So none is on PR B's list, and none holds a code pin. This record's own commit changes files under those three folders only.
+   - All 64 distinct ranges this amendment pins at b7b721eb hash the same at ad22478f. Nothing moved: no class 3, no I4.
+   - Rule (00) over the phase's files, by script at ad22478f: #309 (`frontends/shell/src/testUtils/terminalShapes.ts`, `kernel/README.md`, `kernel/src/lib.rs`, `kernel/src/skp.rs`, `kernel/tests/source_watch_ordering.rs`, `kernel/tests/typed_terminal_codes.rs`), #308 (`docs/adr/ADR-035-dataset-session-ended-control-plane-event.md`) and the fix's branch at b7ba9f77 (`frontends/shell/MANUAL-WALKTHROUGH.md`, `frontends/shell/e2e/README.md`, `frontends/shell/e2e/recentre-crossing.mjs`, `frontends/shell/package.json`, `frontends/shell/src/canvas/WorkingCanvas.recentre.test.tsx`, `frontends/shell/src/canvas/WorkingCanvas.tsx`) name none of them.
+   - Item 7's numbers are not used by the phase. They are read at M′.
+
+4. **What waits for the fix's merge (the ruling's last sentence).**
+   - Item 9's first stale comment, at `WorkingCanvas.tsx` lines 181 and 182 at b7b721eb: the fix edits that file. It is rewritten with the rest of PR B, from the code at M′.
+   - Item 11's run of `e2e:recentre-crossing`: at ad22478f, `frontends/shell/package.json` has no such script; the fix adds it. The series at M″ runs without it, and the run at M′ includes it.
+   - Every other part of PR B that touches either file waits, as the ruling says.
+   - No prediction of the phase depends on the fix's lines. By script at b7ba9f77, the fix changes neither `WorkingCanvasProps` nor `WorkingCanvasHandle`, and the phase's two App harnesses mock the canvas module. If the fix's merged head changes either, the harnesses are re-read at M′ and Amendment 13 records it.
+
+5. **The series at M″ (class 1; item 11 as written, with item 4's one exception).**
+   - It runs on the port the human's standing ruling names at the run. Today that is 5400, because 5180 has not been freed (the ruling of 2026-11-09).
+   - It runs only while no E1 run is in progress. E1 and the measure build's suites use the same debugging port, and E1 refuses an app already listening there. The fix's own E1 runs ended with S6e, before this record, and the fix's gates run no E1 while the series runs.
+   - The phase's code waits for the series, as item 11 says. An I3 stops it.
+
+6. **After the fix's merge.** Main is merged into PR B's branch (a merge commit, never a rebase). Then, in order:
+   - item 10's re-read at M′, over PR B's whole amended list;
+   - the series again, with `e2e:recentre-crossing`;
+   - Amendment 13, recording the re-read and any difference between the two series;
+   - the rest of PR B's code.
+   - PR B stays one PR (OPEN-D (a)), gated at its head.
+
+7. **Worker briefs** for PR B forbid `git stash` (`state/directives/2026-11-12-s1-fix-open-a-c-s6b-now-pr-b-class-9-now-1c-five-308-c1-words-platform-reports-order-no-git-stash.md:53` @ ad22478f sha256:172da72c0dd9c115f2a3bfc1019e310b7b384ee0b4e3f3b992da5af88526870f).
+
+Read the last amendment first.
+
+Nothing above is edited.
