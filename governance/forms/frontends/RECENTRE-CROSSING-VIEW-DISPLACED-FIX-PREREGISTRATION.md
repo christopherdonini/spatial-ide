@@ -684,3 +684,87 @@ Nothing above is edited.
 5. **The gate findings.** F1 to F3 land only with OPEN-A's (C), in the (d) commit. F4 to F6 are readings, recorded.
 
 Nothing above is edited.
+
+### Amendment 3 — the human's rulings of 2026-11-12 on Amendment 2, and the gate's edge check, declared before the fresh runs (class 1, before any code of S6b)
+
+*Written by the custodian on 2026-11-12, at this commit, from the human's message of 2026-11-12 (13:07Z), filed verbatim at `state/directives/2026-11-12-s1-fix-open-a-c-s6b-now-pr-b-class-9-now-1c-five-308-c1-words-platform-reports-order-no-git-stash.md` (main 9d8cff10). Its item 1 is the ruling. The words below are the custodian's record of it, not a quotation, except the one passage marked byte-copied.*
+
+1. **OPEN-A: (C), the human's typed word (item 1 (a)).**
+   - Rule (d) is asserted as Amendment 2, item 4 declares it.
+   - (c) is kept with F1. It is reported and does not count in the exit code.
+   - The record of (c) as failed at 3df3e57c stays (Amendment 2, item 1).
+   - I5 and I6 stand as Amendment 2, item 5 declares them.
+   - OPEN-B (A) and the gate findings F1 to F3 of Amendment 2's filed draft (`state/consults/2026-11-12-recentre-crossing-view-displaced-fix-e1-image-rule-amendment-architect-draft.md`) land in S6b's commit. F2's and F3's replacement words are applied byte for byte from that draft.
+   - Amendment 2, settlement item 3's hold is lifted: S6b to S8 start from this commit, in the order of item 8 below.
+
+2. **The gate's edge check (item 1 (b)), declared here before the fresh runs.**
+   - The check is the human's item 1 (b), byte-copied (verbatim) from `state/directives/2026-11-12-s1-fix-open-a-c-s6b-now-pr-b-class-9-now-1c-five-308-c1-words-platform-reports-order-no-git-stash.md:11` @ 9d8cff10a76337ad7037f6a72df7fa4dd3da9823 sha256:87eb48d637c37fc06ae283131bb594ce99c46dd154a7568c997fa6d53e0b7298:
+
+     > (b) One addition for the gate, declared before the fresh runs. The reviewer computes, from the head run's end line (target, origin, zoom), the canvas box and the fixture's own extent, where the fixture's edges fall on the canvas, and reports them beside the end image's box. An edge in K that falls more than the drawn point radius plus 4.0 buffer px from the image's edge is a Correctness finding. From the same projection the reviewer says whether the fixture reaches the canvas's top and right edges at that view. If it does, the start image is the partial one. If it does not, the end image shows data where the fixture has none, and that stops the piece.
+
+   - The custodian's notes below only name where each input is read. They add nothing to what is checked.
+     - **The head run** is S6d's run, the fresh run at the head exe.
+     - **The end line** is case 1's last `view-state` line, the line case 1 (b) reads as W_end. S6d's log carries it in item 3's REPORT line.
+     - **The canvas box** is the canvas and buffer sizes on E1's case 1 header line, and the images' size.
+     - **The fixture's own extent** is computed by the reviewer from the fixture file, read only, by its own script, which it shows.
+     - **The projection from world units to canvas pixels** and **the drawn point radius** are read from the shell's code at the head. Each is cited by path and line; a branch line is named by branch and commit and never pinned. The reviewer shows its arithmetic.
+     - **The edges** compared are those in K of rule (d) on S6d's image pair. The finding's tolerance is the drawn point radius in buffer px, plus 4.0 buffer px.
+   - It joins the reviewer's list in Amendment 2, item 8. If it stops the piece, the stop goes to the human, and nothing merges.
+
+3. **One REPORT line for item 2's input (the custodian's, declared before any code).**
+   - S6b's commit adds one line to case 1, printed after the end capture. It gives the start line's and the end line's target, origin and zoom, each at full precision. These are the `view-state` lines case 1 (b) already reads.
+   - It is marked REPORT. It counts in no verdict and changes none.
+   - It is inside S6b's one commit to `recentre-crossing.mjs` and that file's ceiling of 450 (§7).
+
+4. **OPEN-C (item 1 (c)).**
+   - The human's ruling replaces OPEN-C (A) of Amendment 2's settlement, item 4: the residency observation does not go on the Monday list.
+   - A read-only architect consult starts now, in the docs lane. It answers what is drawn at the start of case 1 and what at its end, by which query each, and whether anything on screen tells the user that the start is partial.
+   - It goes to the human for a grade. If reading cannot name the mechanism, it proposes one observation with its form.
+   - This amendment places no node. The fix's steps do not wait for the consult.
+
+5. **Item 1 (d), recorded.**
+   - The reproducer showed the defect and its reviewer recomputed it: S1, as placed.
+   - Run rc's OPEN-5 (B), as run, stands. It is recorded on the reproducer's form, by its Amendment 1, at this commit.
+   - OPEN-1 (C) with the custodian's change (Amendment 1, item 2) is confirmed by the human.
+
+6. **OPEN-5 (item 1 (e)): v0.1.0's record.**
+   - At this piece's closing record, the custodian appends an amendment to `governance/RELEASE-0.1.md`.
+   - It holds the human's words between the quotation marks of item 1 (e) (`state/directives/2026-11-12-s1-fix-open-a-c-s6b-now-pr-b-class-9-now-1c-five-308-c1-words-platform-reports-order-no-git-stash.md:16` @ 9d8cff10a76337ad7037f6a72df7fa4dd3da9823 sha256:9d87d34c3ac42fd4f83d90233a5071efcab5037757de38ee30acc33923e5fe78), byte for byte, with `<PR>` and `<merge commit>` filled with this piece's PR number and merge commit. Nothing else is added.
+   - Those words, without their quotation marks, are 650 bytes, sha256 d67097b074f7ad50e4c095fb5d4a53bf9c463b897edb97bd5694dd7377ab9d8d.
+   - v0.1.0's release page is not touched (item 1 (e)).
+   - This answers Amendment 1, item 3's "Nothing is written until then".
+
+7. **OPEN-4 and F5 (item 1 (f)): row A7a.**
+   - **The expected outcome** is the draft's, approved as drafted: the italic words of the draft expected outcome under OPEN-4 (A) in `state/consults/2026-11-12-recentre-crossing-view-displaced-fix-form-architect-draft.md`. The worker byte-copies it from there.
+   - **The step** is the human's words of item 1 (f), between its quotation marks (`state/directives/2026-11-12-s1-fix-open-a-c-s6b-now-pr-b-class-9-now-1c-five-308-c1-words-platform-reports-order-no-git-stash.md:19` @ 9d8cff10a76337ad7037f6a72df7fa4dd3da9823 sha256:a65be751af8483e7af81ef6481d8519ce206fbc23dec05bc6911553e137197ea), byte for byte, with N filled. Those words are 181 bytes, sha256 4572484e070310452792f8e5170c1dee5f69dbe626557fc7ec0155128fa3bb17.
+   - **N** is S6e's result (item 8). If N is over 20, the row is not added, the README's E1 entry is the guard, and the closing record says so.
+   - **A5 and A6** keep their words. The closing record says that sittings before this fix did not pan past the bound at low zoom.
+
+8. **The steps from here.** These are Amendment 2, item 7's steps, with this amendment's additions. Every heavy call runs in a shared hold.
+   - **S6b.** One worker commit, to `recentre-crossing.mjs` only. It holds:
+     - (d);
+     - F1;
+     - (c)'s line marked REPORT and taken out of the exit code;
+     - F2's and F3's words;
+     - item 3's REPORT line.
+   - **S6b's checks.** `node --check` passes. The scratch check of (d) on the four stored images is made as Amendment 2, item 7 gives it, as a check of the code and not an observation.
+   - **S6c and S6d.** As Amendment 2, item 7: each runs once, at its own exe, with that exe's sha256 checked first.
+   - **S6e (new): N's run.** It runs only if S6d meets P-head under (d). It runs once, in a shared hold, at the head exe, using a scratch copy of `recentre-crossing.mjs` at S6b's commit. The copy is not committed, and only its plan is changed:
+     - From the fit, wheel notches out, one at a time, each with E1's settle and a capture. It stops at the first notch at which the drawn data's box, by rule (d)'s marking, is at most a tenth of the image's width.
+     - Then drags of floor(cw/3) CSS px to the left, by E1's drag and settle, one at a time, until the first origin change or 25 drags.
+     - k is the drag whose settled tick moved the origin (E1's rule). N = k + 2.
+     - The report gives the copy's diff against S6b's file, each notch's zoom and box width, k and N.
+     - The row waits for the human, and the run is reported as it stands, in any of three cases: the zoom limit stops the notches first; the first box at or under a tenth is under a twentieth of the width; or no origin change comes in 25 drags.
+   - **S7.** The README entry as prepared at S6 (`<S>/rcf-s47-readme-entry.txt`), changed for (c) reported and (d) asserted, within its ceiling of 45. Row A7a by item 7, within its ceiling of 4.
+   - **S8.** The report, then both gates, with item 2's check added to the reviewer's list.
+
+9. **Rule (00), checked by script at this commit.**
+   - `git diff --name-only origin/main...origin/<branch>` names, for each PR open at this commit:
+     - #309 (`cut/pre-admission-change-detail-braces`): `frontends/shell/src/testUtils/terminalShapes.ts`, `kernel/README.md`, `kernel/src/lib.rs`, `kernel/src/skp.rs`, `kernel/tests/source_watch_ordering.rs`, `kernel/tests/typed_terminal_codes.rs`;
+     - #308 (`cut/adr-035-close-races-note`): `docs/adr/ADR-035-dataset-session-ended-control-plane-event.md`.
+   - Neither names a path in §7's table, which is this piece's.
+   - PR B's session-end phase (slot 1, item 2 (d) of the same message) names none of §7's files.
+
+10. **PLAN.** The node stays in progress, and its budget is unchanged.
+
+Nothing above is edited.

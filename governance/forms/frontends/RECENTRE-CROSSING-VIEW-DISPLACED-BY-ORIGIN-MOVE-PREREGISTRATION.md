@@ -309,3 +309,13 @@ OPEN-5 (B) variant: if the human's typed answer has not come by the time the qui
 **The budget.** It stays at 60 minutes. The two drags fewer take about 3.6 s, by the measure run's rows.
 
 ## Amendments (opens empty; append-only)
+
+### Amendment 1 — the human's rulings of 2026-11-12 on this form's outcome and its OPEN-5 (class 1, after the run)
+
+*Written by the custodian on 2026-11-12 from the human's message of 2026-11-12 (13:07Z), filed verbatim at `state/directives/2026-11-12-s1-fix-open-a-c-s6b-now-pr-b-class-9-now-1c-five-308-c1-words-platform-reports-order-no-git-stash.md` (main 9d8cff10), item 1 (d). The words below are the custodian's record of it, not a quotation.*
+
+1. **The outcome.** The reproducer showed the defect and its reviewer recomputed it. The fix, `recentre-crossing-view-displaced-fix`, is S1, as placed.
+2. **OPEN-5.** Run rc's OPEN-5 (B), as run, stands. The run took the human's ruled shape under the OPEN-5 (B) variant above, and that record is not reopened.
+3. **Where else this is recorded.** The fix's form records both items in its Amendment 3, item 5.
+
+Nothing above is edited.
