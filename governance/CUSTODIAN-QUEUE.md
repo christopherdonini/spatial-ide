@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `01956fcd2c5e1af40e71970f228a41c462a97df28bdc66295e50e6d1c6c9757d`) at `2026-11-12T17:58:20.705Z`.
+Generated from `PLAN.yaml` (sha256 `9d6bfc0af24250bae81204adb8c88b6c2cf493a2bce132e69324a6a5f2db6cb0`) at `2026-11-12T21:26:40.774Z`.
 
 ## 1. Next
 
@@ -54,12 +54,10 @@ Generated from `PLAN.yaml` (sha256 `01956fcd2c5e1af40e71970f228a41c462a97df28bdc
 
 - **clippy-deny-warnings-workspace** — The workspace clippy diagnostics fixed, so cargo clippy over every target with -D warnings exits 0 (the cloud Linux run lists 48 distinct) — evidence: branch `cut/clippy-deny-warnings-workspace-12c`
 - **adr-035-close-races-note** — ADR-035 -- an appended, dated note recording what kernel-generation-close-races makes historical (Decision 3's no-session-reference case unreachable; invalidate marks only on a live removal; Decision 2's mint-race arm standing) — evidence: branch `cut/adr-035-close-races-note`
-- **pre-admission-change-detail-braces** — Four kernel P6-placeholder detail strings are wrapped in literal braces, which reach the operator message; the watcher form declares each such string starts with the bracketed placeholder tag — evidence: branch `cut/pre-admission-change-detail-braces`
 - **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **record-step-style-match-widening** — record_step admits a style.set match value on fillColor, with the step's dependencies naming the match column and its type (milestone 4's OPEN-4 (A′)), carried in piece 1c's step 1 by class 9 (the 1c form's Amendment 7) — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **b1-shell-half** — Shell migration, milestone 4 -- B1 shell half: attributes of the inspected feature, colour by category with its legend, and the table — evidence: branch `cut/b1-shell-half-pr-c`
 - **recentre-crossing-view-displaced-fix** — After a pan crosses the re-centring bound, the view is displaced by the origin's move: the fix (S1), under the full form and both gates, the architect proposing its shape — evidence: branch `cut/recentre-crossing-view-displaced-fix`
-- **known-limitations-item-4-on-main-paragraph** — KNOWN-LIMITATIONS item 4's On-main paragraph, untrue on main since #307, becomes the human's words of 2026-11-12 (item 2 (b)), in its own small PR — evidence: branch `cut/known-limitations-item-4-on-main-paragraph`
 - **port-2-macos-l1-and-app-dirs** — PORT-2 -- macOS L1 for the Cargo workspace: macos-latest in the same matrix, one application-directory boundary replacing the two resolvers, and a case-policy test on a case-insensitive volume — evidence: branch `cut/port-2-macos-l1-and-app-dirs`
 
 ## 6. Proposed / unscheduled

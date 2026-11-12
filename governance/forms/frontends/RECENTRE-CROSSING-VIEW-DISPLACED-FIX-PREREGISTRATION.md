@@ -768,3 +768,33 @@ Nothing above is edited.
 10. **PLAN.** The node stays in progress, and its budget is unchanged.
 
 Nothing above is edited.
+
+### Amendment 4 — the human's OPEN-3 (A) of 2026-11-12: the edge check's tolerance on this polygon fixture, and the gates (class 1, before either gate)
+
+*Written by the custodian on 2026-11-12, at this commit, from the human's message of 2026-11-12 (21:15Z), filed verbatim at `state/directives/2026-11-12-third-message-open-3-a-gates-now-typed-check-reading-rule-first-look-s1-publish-approval-s2-second-open-rulings-308-restore-item-47-floor-order.md` in this commit. Its items 1 and 2 are the ruling. The words below are the custodian's record of them, not a quotation.*
+
+1. **OPEN-3: (A), the human's typed word (item 1, the file's line 9).**
+   - OPEN-3 is the third open item of the OPEN-C consult (`state/consults/2026-11-12-recentre-crossing-start-partial-draw-open-c-architect-consult.md`). It asked how Amendment 3, item 2's tolerance reads its drawn point radius on this fixture, whose features are parcel polygons.
+   - In that tolerance the reviewer uses, in place of the drawn point radius, the parcel polygon's drawn half-extent at the end line's zoom plus the layer's outline width. Each is read from code at the head and cited as Amendment 3, item 2 cites the projection. The report says that it used them. The 4.0 buffer px are added as before.
+   - Nothing else in Amendment 3, item 2 changes.
+
+2. **The human's standing rule (item 2, the file's line 11), as it bears on these gates.** A question about how to read or apply a check the human typed for a gate or a run takes the architect's recommended reading, recorded with its date, and the human reviews it at the click. It never changes what the check is for. If a gate raises such a question about Amendment 3, item 2 or item 1 above, that reading is taken and recorded with the gate's filing.
+
+3. **The gates start now (item 1).** This is Amendment 3, item 8's S8, at the branch head b7ba9f77 (the S6b to S7 report, `state/consults/2026-11-12-recentre-crossing-view-displaced-fix-s6b-s7-worker-report.md`):
+   - the reviewer, with §12's list, Amendment 2, item 8's list, and Amendment 3, item 2's check as item 1 above reads it;
+   - the architect, as §12 gives it.
+   - Both are dispatched after this commit is on main.
+
+4. **The OPEN-C consult's other rulings (item 3), as they bear on this piece.**
+   - Item 3 (a) grades the consult's OPEN-1 (B) S1. It places a node for the open's first look, built after PR B merges.
+   - G2's comment words (the capture comment in `recentre-crossing.mjs` on this branch) go to that node. This piece does not add them.
+   - OPEN-2's item goes to the docs lane, and OPEN-4 to the next P6 sight.
+   - None of them changes this piece's steps or ceilings.
+
+5. **Rule (00), checked by script at this commit.**
+   - #308 (`cut/adr-035-close-races-note`) is the one PR open at this commit. `git diff --name-only origin/main...origin/cut/adr-035-close-races-note` names `docs/adr/ADR-035-dataset-session-ended-control-plane-event.md` only.
+   - PR B's branch (`cut/b1-shell-half-pr-b`, slot 1, at b8127685) names none of the paths this piece's branch changes.
+
+6. **PLAN.** The node stays in progress, and its budget is unchanged.
+
+Nothing above is edited.
