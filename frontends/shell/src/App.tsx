@@ -83,7 +83,9 @@ import type { Terminal } from "./streaming/transport";
 import type { TileViewportStreamManager } from "./streaming/tileViewportStreamManager";
 import ErrorBanner from "./ErrorBanner";
 import { decodeHexF64, encodeHexF64 } from "./skp/codec";
-import { closeDataset, recordStep, SkpCallError } from "./skp/client";
+import { actionEntry } from "./layout/actionRegistry";
+import { closeDataset, recordStep, saveProject, SkpCallError } from "./skp/client";
+import { createProjectSaver, pickProjectFolder } from "./project/saveProject";
 import { listenDatasetSessionEnded } from "./skp/events";
 import type { Bbox, DatasetSessionEnded, EndReason, Filter } from "./skp/types";
 import TableTab from "./table/TableTab";
@@ -863,6 +865,24 @@ export default function App() {
     })
   );
   const lastCommittedStyle = useRef<StyleState>(DEFAULT_STYLE_STATE);
+  // B2 piece 1c (B2-1C-SAVE-AND-REOPEN-PREREGISTRATION.md section 2.8): the one save. The bar's `/save` and App's own control both call
+  // `handleSaveProject`; the saver (`project/saveProject.ts`) asks for the folder at an open's first save and sends it once. Its notices
+  // are for the dataset they were made on and end with it, as `recordNotice` does.
+  const [saveNotices, setSaveNotices] = useState<{ dataset: string; texts: readonly string[] } | null>(null);
+  /** The one-shot slot of the DEV-only `e2eSaveProjectToFolder` hook (`e2e-test-surface.ts`): a folder it supplies for the save it starts. Always `null` in a plain build. */
+  const e2eSaveFolderRef = useRef<string | null>(null);
+  const [projectSaver] = useState(() =>
+    createProjectSaver({
+      // In an instrumented build only, a folder in the hook's slot is the picker's answer, taken once. Otherwise this is `pickProjectFolder`, as in every other build.
+      pickFolder: () => {
+        const supplied = isInstrumentedBuild() ? e2eSaveFolderRef.current : null;
+        if (supplied === null) return pickProjectFolder();
+        e2eSaveFolderRef.current = null;
+        return Promise.resolve(supplied);
+      },
+      save: (dataset, folder, workspace) => saveProject(dataset, folder, workspace),
+    })
+  );
   const activeFilter = view === null ? null : view.filter;
   // Milestone 2, phase B (SHELL-MIGRATION-MILESTONE-2-PREREGISTRATION.md sections 2.2 and 2.3): the view's tool, mode, selection and
   // inspection, read through the readers that give the defaults.
@@ -873,6 +893,7 @@ export default function App() {
   const pinned = view !== null && viewPinned(view);
   const notice = view === null ? null : viewSelectionNotice(view);
   const shownRecordNotice = admitted !== null && recordNotice?.dataset === admitted.dataset ? recordNotice.text : null;
+  const shownSaveNotices = admitted !== null && saveNotices?.dataset === admitted.dataset ? saveNotices.texts : [];
   // `highlightLayers` caches on the Set's identity, and the reducer keeps the same Map while the selection is unchanged, so the Set
   // is rebuilt only when the selection is. The canvas's effect is keyed on `selected` and `inspected`, not on this wrapper.
   const selectedIds = useMemo(() => new Set(selection.keys()), [selection]);
@@ -1351,6 +1372,23 @@ export default function App() {
       unregisterE2eHook("setResidencyTileSizeLevel");
       unregisterE2eHook("getResidencyTileSizeLevel");
     };
+  }, []);
+
+  // B2 piece 1c (B2-1C-SAVE-AND-REOPEN-PREREGISTRATION.md Amendment 14): the DEV-only hook that supplies the folder for E2E-SAVE's save
+  // (`e2e-test-surface.ts` states what it may and may not do, and its only caller). It runs `handleSaveProject`, the save the control and the bar
+  // call, which reads only refs, the saver and a setter, all stable for the component's life, so no render-scoped value is closed over here.
+  useEffect(() => {
+    if (!isInstrumentedBuild()) return;
+    registerE2eHook("e2eSaveProjectToFolder", async (folder: string) => {
+      e2eSaveFolderRef.current = folder;
+      try {
+        await handleSaveProject();
+        return e2eSaveFolderRef.current === null ? "asked" : "not-asked";
+      } finally {
+        e2eSaveFolderRef.current = null;
+      }
+    });
+    return () => unregisterE2eHook("e2eSaveProjectToFolder");
   }, []);
 
   /**
@@ -2021,6 +2059,26 @@ export default function App() {
     }
   }
 
+  /**
+   * The save (section 2.8): the view's filter, clauses and style from the workspace as of now, the view from the canvas's held camera
+   * (`currentView`; never derived from a viewport box), and the click selection only as a count, for its notice. The saver answers the
+   * notices to show; a second click while a save is in flight is dropped.
+   */
+  async function handleSaveProject(): Promise<void> {
+    const current = selectDrawnViews(workspaceRef.current)[0] ?? null;
+    const held = current === null ? null : selectAdmitted(workspaceRef.current, current.id);
+    if (current === null || held === null) return;
+    const texts = await projectSaver.save({
+      dataset: held.dataset,
+      filter: current.filter,
+      clauses: viewClauses(current),
+      style: current.style,
+      view: canvasRef.current?.currentView?.() ?? null,
+      selectionCount: viewSelection(current).size,
+    });
+    if (texts !== null) setSaveNotices({ dataset: held.dataset, texts });
+  }
+
   return (
     <StudioLayout
       overlays={<ErrorBanner />}
@@ -2032,6 +2090,7 @@ export default function App() {
       selectionAvailable={selection.size > 0}
       onOpenDataset={() => admissionRef.current?.requestPick() ?? "busy"}
       onRevealExport={() => publishRef.current?.reveal()}
+      onSaveProject={() => void handleSaveProject()}
       onAddClause={(condition) => changeClauses({ kind: "add", text: condition })}
       clausePending={clausePending}
       filterFields={admitted ? { schema: admitted.describe.schema, geometryColumn: admitted.describe.geometry.column } : null}
@@ -2045,6 +2104,12 @@ export default function App() {
         "region.layers": (
           <>
             <AdmissionPanel ref={admissionRef} onAdmitted={handleAdmitted} confirmOpen={confirmOpen} />
+            {/* B2 piece 1c: App's own control for the one save, with the entry's label; shown only while a dataset is admitted. */}
+            {admitted && (
+              <button type="button" className="save-project" onClick={() => void handleSaveProject()}>
+                {actionEntry("project.save").label}
+              </button>
+            )}
             {asking && <OpenDuringExportAsk onKeep={() => answerOpenAsk(false)} onCancelAndGo={() => answerOpenAsk(true)} />}
             {lateCancel.map((outcome, index) => (
               <LateCancelStatement key={index} outcome={outcome} />
@@ -2291,7 +2356,7 @@ export default function App() {
             <RefusalBlock refusal={sessionEnded} />
           </div>
         ),
-        "attention.canvasRefusal": admitted && (canvasRefusal || shownRecordNotice) && (
+        "attention.canvasRefusal": admitted && (canvasRefusal || shownRecordNotice || shownSaveNotices.length > 0) && (
           <>
             {canvasRefusal && (
               <div className="canvas-refusal" role="alert">
@@ -2317,6 +2382,12 @@ export default function App() {
                 {shownRecordNotice}
               </div>
             )}
+            {/* B2 piece 1c: the notices of the last save (section 2.8), one line each; they end with the dataset they name. */}
+            {shownSaveNotices.map((text, index) => (
+              <div key={index} className="canvas-refusal save-notice" role="alert">
+                {text}
+              </div>
+            ))}
           </>
         ),
         /* P3b: suppressed once the session-ended block is standing. The pre-check route sets BOTH (section 2b

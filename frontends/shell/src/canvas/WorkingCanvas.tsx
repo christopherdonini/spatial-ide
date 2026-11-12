@@ -140,6 +140,12 @@ export interface WorkingCanvasHandle {
    * query any fit issues. Optional in the type only, so that the stand-in handles of suites that predate it still satisfy
    * this interface; the component always provides it. */
   fitToBbox?(bbox: AuthoritativeBbox): void;
+  /** The camera the canvas last wrote, as a project file's `view` holds it (B2 piece 1c, Save project): `centre` is the camera's local
+   * target plus the offset frame's origin it was written against, member by member -- the dataset-space point, the only form of it that
+   * leaves this module (ADR-010 rule 1) -- and `zoom` is the held zoom unchanged, the base-2 log of the CSS pixels one unit spans. `null`
+   * before the canvas's first camera write. It changes nothing. Its product caller is `App.tsx`'s save. Optional in the type only, as
+   * `fitToBbox` is; the component always provides it. */
+  currentView?(): { centre: [number, number]; zoom: number } | null;
   /**
    * Clears BOTH the fit anchor (`fitAnchorRef`) and the one-shot auto-fit flag (`hasAutoFitRef`) --
    * called, on both arms, after an issued outcome (`App.tsx`'s `applyFilter`); on the candidate
@@ -1604,6 +1610,12 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
 
       fitToBbox(bbox) {
         fitToExtent(bbox, true); // Amendment 2 item 3: it notifies, as `fitToBounds` does
+      },
+
+      currentView() {
+        const camera = cameraRef.current;
+        if (camera === null) return null;
+        return { centre: [camera.targetX + camera.originX, camera.targetY + camera.originY], zoom: camera.zoom };
       },
 
       resetFitForNewGeneration() {

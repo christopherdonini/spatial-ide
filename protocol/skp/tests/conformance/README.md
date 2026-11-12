@@ -67,3 +67,10 @@ fixture that named `skp/0.12` as an unsupported future version was renumbered to
 instead. The same update adds `record_step`'s accept and refuse rows, and `main.rs` maps its two
 wire types. The existing rows' `spec` citations name the literal they were written under and are not
 rewritten.
+
+This directory's fixtures were updated again in place, to the `skp/0.13` literal of PLAN node
+`b2-piece-1c-save-and-reopen` (`kernel/B2-1C-SAVE-AND-REOPEN-PREREGISTRATION.md` Amendment 1 item 6);
+the version-refusal fixture that named `skp/0.13` as an unsupported future version was renumbered to
+name `skp/0.14` instead. The same update adds `save_project`'s accept and refuse rows and `record_step`'s
+categorical-match rows, and `main.rs` maps `save_project`'s two wire types. The existing rows' `spec`
+citations name the literal they were written under and are not rewritten.

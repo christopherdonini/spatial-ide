@@ -1,0 +1,8 @@
+{
+  "code": "skp.project_file_refused",
+  "message": "the project file would break a rule its reader holds: $.workspace.filter: the filter is not what the enabled clauses combine to",
+  "fields": {
+    "path": "$.workspace.filter",
+    "rule": "the filter is not what the enabled clauses combine to"
+  }
+}

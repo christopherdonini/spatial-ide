@@ -12,7 +12,7 @@ import type { DecU64, HexF64 } from "./codec";
  * See `protocol/skp/SKP-V0.md` for the design note and the mandatory named-deferral list this
  * client must not silently exceed (no capability discovery, no idempotency, no subscriptions, …).
  */
-export const SKP_VERSION = "skp/0.12";
+export const SKP_VERSION = "skp/0.13";
 
 /** The single dialect `skp/0.1` admits for `Filter.predicate` (see `Filter` below). `skp/1` is
  * RESERVED (docs/07's 1.0 freeze); a second dialect, if one is ever added, gets its own version
@@ -310,6 +310,55 @@ export interface RecordStepRequest {
 }
 /** An empty closed object: nothing reads a step id at this version. */
 export type RecordStepResponse = Record<string, never>;
+
+/** `skp/0.13`, `save_project`: one filter clause as the project file holds it -- its text as typed and
+ * whether it is on. It carries no id (`protocol/skp/src/v0/commands.rs`'s `FilterClause`). */
+export interface ProjectFilterClause {
+  text: string;
+  enabled: boolean;
+}
+
+/** `skp/0.13`: the map view as the project file holds it -- the point at the middle of the canvas, x then
+ * y, in the dataset's own space, and the base-2 log of the CSS pixels one unit of that space spans. Each
+ * number is a `HexF64`. It carries no `crs`: the kernel writes the space the open was admitted in. */
+export interface ProjectView {
+  centre: [HexF64, HexF64];
+  zoom: HexF64;
+}
+
+/** `skp/0.13`: the `workspace` member of a project file as the shell holds it, in the file's order.
+ * `filter` is always present, `null` for no filter. `style` is ADR-017 section 5a's style document as a
+ * JSON object; the kernel parses it. A selection made by clicking has no member. */
+export interface ProjectWorkspace {
+  filter: Filter | null;
+  clauses: ProjectFilterClause[];
+  style: Record<string, unknown>;
+  view: ProjectView;
+}
+
+/** `skp/0.13`. `folder` is the project folder from the native picker, present only at the first save of an
+ * open and `null` at every later one; the key is always present. */
+export interface SaveProjectRequest {
+  skp: string;
+  dataset: string;
+  folder: string | null;
+  workspace: ProjectWorkspace;
+}
+
+/** `skp/0.13`: whether the session history took the `saved-here` mark. The project file was written in both cases. */
+export type HistoryMarkState = "written" | "withheld";
+
+/** `skp/0.13`: what the project file carries for the data beside its `machine-recorded` locator, as the kernel judged it at this
+ * save. `carried`: a `project-relative` locator too. In each of the other three the file carries the `machine-recorded` locator only. */
+export type ProjectRelativeLocator = "carried" | "outside" | "no-canonical-spelling" | "through-link";
+
+/** `skp/0.13`. `project` is the project's identity (`spatial://project/` and 32 hex characters); no path crosses.
+ * `project_relative` is the resolver's judgment at this save, always present. */
+export interface SaveProjectResponse {
+  project: string;
+  history_mark: HistoryMarkState;
+  project_relative: ProjectRelativeLocator;
+}
 
 /** `skp/0.5`, the advisory source-change watcher (ADR-035 D4). The one named exception to "no
  * server-to-client push" -- a Tauri event, never a websocket frame. `skp/events.ts`'s

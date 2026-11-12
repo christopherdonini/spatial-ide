@@ -5,7 +5,7 @@
 //! them apart at a glance:
 //!
 //! - **SKP v0** (`open_dataset`, `describe`, `viewport_query`, `cancel`, `close_dataset` and, from
-//!   `skp/0.12`, `record_step`) — each takes the exact request struct `protocol/skp` defines and returns the exact response or
+//!   `skp/0.12`, `record_step` and, from `skp/0.13`, `save_project`) — each takes the exact request struct `protocol/skp` defines and returns the exact response or
 //!   `SkpError`. No renaming, no remapping: the same type is the fixture-verified wire shape and
 //!   the Tauri command's own argument/return type, so there is nothing here to drift.
 //! - **Binding-local** (`binding_*`) — named so they cannot be mistaken for SKP, excluded from the
@@ -20,12 +20,14 @@ use std::sync::{Arc, Mutex};
 
 use spatial_engine::CancelToken;
 use spatial_kernel::permission::GrantSet;
+use spatial_kernel::project::Projects;
 use spatial_kernel::session_history::StepRecorder;
 use spatial_kernel::skp::SkpHost;
 use spatial_skp::v0::{
     CancelRequest, CancelResponse, CloseDatasetRequest, CloseDatasetResponse, DescribeRequest,
     DescribeResponse, OpenDatasetRequest, OpenDatasetResponse, RecordStepRequest,
-    RecordStepResponse, SkpError, ViewportQueryRequest, ViewportQueryResponse,
+    RecordStepResponse, SaveProjectRequest, SaveProjectResponse, SkpError, ViewportQueryRequest,
+    ViewportQueryResponse,
 };
 use tauri::{Emitter, Manager, State};
 // Entry-40 pass: `AppHandle::try_state` (used by `open_dataset`/`close_dataset` below) is a
@@ -149,6 +151,28 @@ pub async fn record_step(
         .unwrap_or_else(|e| Err(SkpError::protocol("record_step_panicked", e.to_string())))
 }
 
+/// **Runs on `spawn_blocking`.** One save: the whole project file is written, the machine store's
+/// files are written, and the session history takes its moves (`kernel/src/project/mod.rs`) — real
+/// IO that no task on the async runtime or the UI thread may wait on. `Projects` is `None` when
+/// the per-user data directory could not be resolved at startup; the save is then refused by name,
+/// never dropped. `close_dataset` does not touch it: `Projects` has no call that forgets a dataset,
+/// and `open_dataset` mints a new handle at each open, so a closed dataset's entry is never matched
+/// again.
+#[tauri::command]
+pub async fn save_project(
+    state: State<'_, Option<Arc<Projects>>>,
+    request: SaveProjectRequest,
+) -> Result<SaveProjectResponse, SkpError> {
+    let Some(projects) = state.inner().clone() else {
+        return Err(SkpError::project_file_unwritable(
+            "no per-user data directory is available",
+        ));
+    };
+    tokio::task::spawn_blocking(move || projects.save_project(request))
+        .await
+        .unwrap_or_else(|e| Err(SkpError::protocol("save_project_panicked", e.to_string())))
+}
+
 // -------------------------------------------------------------------------------------------
 // Binding-local commands — not SKP (SKP-V0.md §4 item 1; ADR-012 H6; ADR-019)
 // -------------------------------------------------------------------------------------------
@@ -242,6 +266,28 @@ pub async fn binding_pick_file(app: tauri::AppHandle) -> Result<Option<String>, 
     let picked = rx
         .await
         .map_err(|e| format!("file picker channel closed: {e}"))?;
+    Ok(picked.map(|p| p.to_string()))
+}
+
+/// The title of the native project-folder picker: S2, a placeholder.
+const PROJECT_FOLDER_PICKER_TITLE: &str = "[P6 placeholder] Choose the project folder";
+
+/// The OS folder picker for `save_project`'s first save. **Not SKP**, for the same reason as
+/// [`binding_pick_file`]: `save_project` takes a folder already chosen, and how the caller got one
+/// is UI. The path never comes from the page: the dialog is native, and `None` means the operator
+/// cancelled.
+#[tauri::command]
+pub async fn binding_pick_project_folder(app: tauri::AppHandle) -> Result<Option<String>, String> {
+    let (tx, rx) = tokio::sync::oneshot::channel();
+    app.dialog()
+        .file()
+        .set_title(PROJECT_FOLDER_PICKER_TITLE)
+        .pick_folder(move |picked| {
+            let _ = tx.send(picked);
+        });
+    let picked = rx
+        .await
+        .map_err(|e| format!("folder picker channel closed: {e}"))?;
     Ok(picked.map(|p| p.to_string()))
 }
 
