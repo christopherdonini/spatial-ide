@@ -15,7 +15,7 @@
 // are not in the measure build, and are not used). Input is Playwright's mouse; images come from the devtools method `Page.captureScreenshot`.
 //
 // Case 1: from the fit, with no camera hook: n1 drags of +L, n1 of -L, then a closing pair (+L, -L). (a) across each origin change the jump of W is
-//   within TOLERANCE_BUFFER_PX per axis; (b) |W_end - W_start| <= d per axis; (c) the start and end images do not differ by the rule below.
+//   within TOLERANCE_BUFFER_PX per axis; (b) |W_end - W_start| <= d per axis; (c) the start and end images by the reproducer's note 5 rule, reported and not counted in the exit code; (d) the drawn data's edges that lie inside both images move by at most TOLERANCE_BUFFER_PX (Amendment 2).
 // Case 2: from the fit again (its own reload): drag out until the target is within half of a double-click's shift below the bound, double-click
 //   off centre by that shift, settle, one wheel notch out, settle, one wheel notch in, settle. (i) no origin change among the lines from the
 //   double-click to its settle; (ii) the zoom after that settle is the zoom before plus 1; (iii) across the origin change at the wheel tick the jump
@@ -180,22 +180,28 @@ function decodePng(buf) {
   }
   return { width, height, bpp, px };
 }
-// B: the most frequent exact RGB on the outermost one-pixel ring. Marked: any channel differs from B by more than 8. N: the marked count.
-// C: the marked pixels' mean position, scaled to buffer px by bw/cw (x) and bh/ch (y).
-function analyze(img, box) {
-  const { width: w, height: h, bpp, px } = img;
-  const rgb = (x, y) => { const o = (y * w + x) * bpp; return [px[o], px[o + 1], px[o + 2]]; };
+const rgbAt = ({ width: w, bpp, px }, x, y) => { const o = (y * w + x) * bpp; return [px[o], px[o + 1], px[o + 2]]; };
+// B: the most frequent exact RGB on the START image's outermost one-pixel ring; both images are marked against that one B.
+function ringB(img) {
+  const { width: w, height: h } = img;
   const ring = new Map();
-  const bump = (x, y) => { const k = rgb(x, y).join(","); ring.set(k, (ring.get(k) ?? 0) + 1); };
+  const bump = (x, y) => { const k = rgbAt(img, x, y).join(","); ring.set(k, (ring.get(k) ?? 0) + 1); };
   for (let x = 0; x < w; x++) { bump(x, 0); if (h > 1) bump(x, h - 1); }
   for (let y = 1; y < h - 1; y++) { bump(0, y); if (w > 1) bump(w - 1, y); }
-  const bg = [...ring.entries()].sort((a, b) => b[1] - a[1])[0][0].split(",").map(Number);
-  let n = 0, sx = 0, sy = 0;
+  return [...ring.entries()].sort((a, b) => b[1] - a[1])[0][0].split(",").map(Number);
+}
+// Marked: any channel differs from B by more than 8. N: the marked count. C: the marked pixels' mean position, scaled to buffer px by bw/cw (x)
+// and bh/ch (y). edge: the marked pixels' bounding box (left, right, top, bottom), for rule (d).
+function analyze(img, box, bg) {
+  const { width: w, height: h } = img;
+  let n = 0, sx = 0, sy = 0, left = w, right = -1, top = h, bottom = -1;
   for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
-    const c = rgb(x, y);
-    if (Math.abs(c[0] - bg[0]) > 8 || Math.abs(c[1] - bg[1]) > 8 || Math.abs(c[2] - bg[2]) > 8) { n++; sx += x; sy += y; }
+    const c = rgbAt(img, x, y);
+    if (Math.abs(c[0] - bg[0]) > 8 || Math.abs(c[1] - bg[1]) > 8 || Math.abs(c[2] - bg[2]) > 8) {
+      n++; sx += x; sy += y; left = Math.min(left, x); right = Math.max(right, x); top = Math.min(top, y); bottom = Math.max(bottom, y);
+    }
   }
-  return { w, h, n, cx: n ? (sx / n) * (box.bw / box.cw) : null, cy: n ? (sy / n) * (box.bh / box.ch) : null };
+  return { w, h, n, cx: n ? (sx / n) * (box.bw / box.cw) : null, cy: n ? (sy / n) * (box.bh / box.ch) : null, edge: n ? { left, right, top, bottom } : null };
 }
 function pairVerdict(s, e) {
   if (!s || !e) return { readable: false, why: "a capture failed" };
@@ -205,10 +211,28 @@ function pairVerdict(s, e) {
   const differs = dn > 0.10 * Math.max(s.n, e.n) || shift > TOLERANCE_BUFFER_PX;
   return { readable: true, differs, why: `N ${s.n} -> ${e.n}, C shift ${shift.toFixed(2)} buffer px` };
 }
+// Rule (d) (Amendment 2, item 4): an edge is inner when it is not on the image's outermost ring; K is the edges inner in both images. Unreadable: unequal
+// dimensions, N_start 0 or every pixel, or N_end > 0 with K empty. The pair differs when N_end is 0, or when an edge in K moves by more than
+// TOLERANCE_BUFFER_PX (scaled by bw/cw on x, bh/ch on y). (d) passes when the pair is readable and does not differ.
+function edgeVerdict(s, e, box) {
+  if (!s || !e) return { readable: false, why: "a capture failed" };
+  if (s.w !== e.w || s.h !== e.h) return { readable: false, why: `unequal dimensions ${s.w}x${s.h} vs ${e.w}x${e.h}` };
+  if (s.n === 0 || s.n === s.w * s.h) return { readable: false, why: `N_start ${s.n} of ${s.w * s.h}` };
+  const fmt = (g) => (g.edge ? `[left ${g.edge.left}, right ${g.edge.right}, top ${g.edge.top}, bottom ${g.edge.bottom}]` : "none");
+  const boxes = `start box ${fmt(s)}, end box ${fmt(e)}`;
+  if (e.n === 0) return { readable: true, differs: true, why: `${boxes}; N_end 0, K n/a, no move to read` };
+  const inner = (g) => ({ left: g.edge.left > 0, right: g.edge.right < g.w - 1, top: g.edge.top > 0, bottom: g.edge.bottom < g.h - 1 });
+  const [si, ei] = [inner(s), inner(e)];
+  const K = ["left", "right", "top", "bottom"].filter((k) => si[k] && ei[k]);
+  if (!K.length) return { readable: false, why: `${boxes}; K is empty` };
+  const moves = K.map((k) => [k, Math.abs(e.edge[k] - s.edge[k]) * (k === "left" || k === "right" ? box.bw / box.cw : box.bh / box.ch)]);
+  const differs = moves.some(([, m]) => m > TOLERANCE_BUFFER_PX);
+  return { readable: true, differs, why: `${boxes}; K {${K.join(", ")}}; moves ${moves.map(([k, m]) => `${k} ${m.toFixed(2)}`).join(", ")} buffer px (tol ${TOLERANCE_BUFFER_PX})` };
+}
 async function capture(ctx, box, label) {
   let cdp = null;
   try {
-    // The data must be in before an image means anything: wait for every render-trace line to go quiet (the reproducer's settle).
+    // Wait for every render-trace line to go quiet (the reproducer's settle) before the capture. Quiet lines do not prove the data is all drawn: at 3df3e57c the start image held less of the fixture than the end image at the same view (Amendment 2 of the fix's form), so case 1 (d) compares only the drawn data's edges that lie inside both images.
     await waitForSettle(() => ctx.trace.renderTrace(), { quietMs: 3000, timeoutMs: 45_000 });
     cdp = await ctx.page.context().newCDPSession(ctx.page);
     const { data } = await cdp.send("Page.captureScreenshot", { format: "png", clip: { x: box.left, y: box.top, width: box.cw, height: box.ch, scale: 1 } });
@@ -217,7 +241,7 @@ async function capture(ctx, box, label) {
     const file = join(OUT_DIR, `recentre-crossing-${TAG}-${label}.png`);
     writeFileSync(file, png, { flag: "wx" }); // never overwrites
     console.log(`  image ${label}: ${file} ${png.length} bytes sha256 ${createHash("sha256").update(png).digest("hex")}`);
-    return analyze(decodePng(png), box);
+    return decodePng(png);
   } catch (e) {
     console.log(`  image ${label}: capture failed, not retried: ${e?.message ?? e}`);
     return null;
@@ -231,7 +255,7 @@ async function case1(ctx) {
   const box = await readBox(ctx.page);
   const { L, T, d, n1 } = dragPlan(fit.zoom, box);
   console.log(`\n--- case 1: z_fit ${fit.zoom}, canvas ${box.cw}x${box.ch} (buffer ${box.bw}x${box.bh}), L ${L}, T ${T}, d ${d.toFixed(3)}, n1 ${n1}, ${2 * n1 + 2} drags ---`);
-  const startImage = await capture(ctx, box, "case1-start");
+  const startPng = await capture(ctx, box, "case1-start");
   const plan = [...Array(n1).fill(L), ...Array(n1).fill(-L), L, -L];
   const starts = [], unsettled = [];
   for (const dx of plan) {
@@ -241,7 +265,11 @@ async function case1(ctx) {
   }
   const lines = ctx.vs.slice();
   if (unsettled.length) console.log(`  drags that did not settle in the bound (read as they stand): ${unsettled.join(", ")}`);
-  const endImage = await capture(ctx, box, "case1-end");
+  const endPng = await capture(ctx, box, "case1-end");
+  const [ls, le] = [lines[0], lines.at(-1)];
+  console.log(`  REPORT  case 1 view-state lines, as (b) reads them: start target (${ls.targetX}, ${ls.targetY}) origin (${ls.originX}, ${ls.originY}) zoom ${ls.zoom}; end target (${le.targetX}, ${le.targetY}) origin (${le.originX}, ${le.originY}) zoom ${le.zoom}`);
+  const bg = startPng ? ringB(startPng) : null;
+  const [startImage, endImage] = [startPng, endPng].map((p) => (p && bg ? analyze(p, box, bg) : null));
   const ownerOf = (i) => starts.filter((s) => s <= i).length - 1; // the drag whose lines include line i (-1: before the first drag)
   const at = originChanges(lines);
   const inLeg = (lo, hi) => at.filter((j) => ownerOf(j - 1) >= lo && ownerOf(j - 1) < hi).length;
@@ -254,7 +282,9 @@ async function case1(ctx) {
   const [ex, ey] = [Math.abs(we[0] - ws[0]), Math.abs(we[1] - ws[1])];
   record("case 1 (b): |W_end - W_start| <= d per axis", ex <= d && ey <= d, `|E| (${ex.toFixed(3)}, ${ey.toFixed(3)}) vs d ${d.toFixed(3)}`);
   const v = pairVerdict(startImage, endImage);
-  record("case 1 (c): the start and end images do not differ", v.readable && !v.differs, v.readable ? `${v.differs ? "differ" : "do not differ"}: ${v.why}` : `unreadable: ${v.why}`);
+  console.log(`REPORT  case 1 (c): the start and end images do not differ  ::  ${v.readable ? `${v.differs ? "differ" : "do not differ"}: ${v.why}` : `unreadable: ${v.why}`}`);
+  const ev = edgeVerdict(startImage, endImage, box);
+  record("case 1 (d): the drawn data's inner edges do not move", ev.readable && !ev.differs, ev.readable ? `${ev.differs ? "differ" : "do not differ"}: ${ev.why}` : `unreadable: ${ev.why}`);
 }
 
 async function case2(ctx) {
