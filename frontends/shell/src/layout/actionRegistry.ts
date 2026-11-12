@@ -13,6 +13,9 @@
  * (question round 66, item 2), each entry's slash word (`command`, P6) and `matchCommandOpener`, the bare `/`. The command bar lists and runs entries. PR B adds
  * `filter.addClause`, the one entry that takes a condition after its word (`/filter`); its caller is the bar.
  *
+ * B2 piece 1c (Save project) adds `project.save`: no chord, no bare key, no scope words, no top-bar toggle. Its callers are the bar (`/save`) and App's own control, which
+ * takes its label from the entry; `StudioLayout` runs it through `onSaveProject`.
+ *
  * Callers: `StudioLayout`'s one `keydown` listener on `window` (via `matchChord`, `matchToolKey` and `matchCommandOpener`), the three
  * toggle buttons in the top bar and the Layers row's button (each by id); the tool switch's two buttons and the
  * Feature tab's two buttons take their labels (and the tools' keys, and Zoom to selection's scope words) from
@@ -32,7 +35,8 @@ export type ActionId =
   | "command.focus"
   | "dataset.open"
   | "layer.revealExport"
-  | "filter.addClause";
+  | "filter.addClause"
+  | "project.save";
 
 /** A chord is the modifier (Mod) plus one letter. `letter` is the Latin letter matched on
  * `event.key`; `code` is the physical key matched instead when `event.key` is not a Latin letter (a
@@ -70,6 +74,8 @@ export const ACTIONS: readonly ActionEntry[] = [
   { id: "dataset.open", label: "Open dataset", chord: null, bareKey: null, scopeWords: null, command: "open", takes: "nothing" },
   { id: "layer.revealExport", label: "Export", chord: null, bareKey: null, scopeWords: null, command: "export", takes: "nothing" },
   { id: "filter.addClause", label: "Add filter", chord: null, bareKey: null, scopeWords: null, command: "filter", takes: "condition" },
+  // S1 is the label (a P6 placeholder, so marked) and S22 the word: the bar's `/save`, which carries no marker.
+  { id: "project.save", label: "[P6 placeholder] Save project", chord: null, bareKey: null, scopeWords: null, command: "save", takes: "nothing" },
 ];
 
 /** The registry's entry for `id`. Every id has one. */

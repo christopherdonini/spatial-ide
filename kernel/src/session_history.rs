@@ -2,9 +2,9 @@
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
 //! **The session history**: the kernel's command log for workspace mutations (ADR-006 class 2),
-//! written by `record_step` (`protocol/skp/SKP-V0.md` §10) in ADR-036's step format (Proposed, §6
-//! and §9; `kernel/B2-1B-RECORDING-PREREGISTRATION.md` §2.3). It replays nothing and holds no
-//! workspace state beyond the last step's id.
+//! written by `record_step` (`protocol/skp/SKP-V0.md` §10) in ADR-036's step format (Accepted
+//! 2026-10-22, §6 and §9; `kernel/B2-1B-RECORDING-PREREGISTRATION.md` §2.3). It replays nothing
+//! and holds no workspace state beyond the last step's id.
 //!
 //! - **Crash safety.** One `write_all` and one `sync_all` per line, no buffer in the process, and
 //!   the file locked exclusively while the session lives (the operating system frees the lock when
@@ -19,16 +19,17 @@
 //! `b2-piece-1c-save-and-reopen`'s recovery offer (the human's round 8 exemption).
 
 use std::fs::{File, OpenOptions};
-use std::io::{Read, Write};
+use std::io::{Read, Seek, SeekFrom, Write};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 
 use serde_json::Value;
+use spatial_engine::crs::MAX_CRS_DEFINITION_BYTES;
 use spatial_engine::{AdmittedPredicate, Dataset, MAX_PREDICATE_BYTES};
 use spatial_renderer::canonical::{sha256_hex, to_canonical_string, Json};
-use spatial_renderer::style::{self, MAX_OUTLINE_WIDTH};
+use spatial_renderer::style::{self, Rgb, MAX_MATCH_CASES, MAX_OUTLINE_WIDTH};
 use spatial_skp::v0::{
-    RecordStepRequest, RecordStepResponse, SkpError, StepIntent, StyleSetParams,
+    ColourMatch, RecordStepRequest, RecordStepResponse, SkpError, StepIntent, StyleSetParams,
 };
 
 use crate::dataset_ref::{
@@ -36,6 +37,8 @@ use crate::dataset_ref::{
     DatasetRef, DatasetUri, RefParseError,
 };
 use crate::permission::audit::{log::data_dir, rfc3339_utc_now};
+use crate::project::strict_json::{self, Layout, Limits, StrictError};
+use crate::project::ProjectUri;
 use crate::skp::{check_version, predicate_admit_error_of, require_live, SkpHost};
 
 /// Declared ceilings (ADR-010 rule 6; ADR-036 §9), checked before any write: a step's line, the
@@ -45,6 +48,13 @@ const MAX_HEADER_LINE_BYTES: usize = 1_048_576;
 const MAX_SESSION_HISTORY_BYTES: u64 = 33_554_432;
 /// The action vocabulary this kernel registers (ADR-036 §3, §6): a header's `actions`.
 const ACTIONS: u64 = 2;
+/// What the strict reader bounds in one line (ADR-036 §2). The line's own ceiling is checked by
+/// the caller, before the reader sees it.
+const LINE_LIMITS: Limits = Limits {
+    max_bytes: usize::MAX,
+    max_depth: 32,
+    max_string_bytes: MAX_CRS_DEFINITION_BYTES,
+};
 const HISTORY: &str = "history.jsonl";
 const LOCATIONS: &str = "locations.json";
 
@@ -117,6 +127,63 @@ struct Record {
     admission: Admission,
     history: History<File>,
     last_step: Option<String>,
+    /// The project this record belongs to, once a save has moved it there ([`StepRecorder::adopt_project`]).
+    project: Option<ProjectUri>,
+    reached: Reached,
+}
+
+/// What the steps recorded for one opened file reach: the last value each one set. A save compares
+/// the workspace it is given with this (ADR-036 §6's saved-here mark; piece 1c's OPEN-9 (A)).
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct Reached {
+    /// The last `filter.apply`: the outer `None` is no such step, and the inner `None` is a step
+    /// that cleared the filter.
+    pub filter: Option<Option<String>>,
+    /// The last `fillColor` a step set: a colour, or the match, as the renderer holds it.
+    pub fill_color: Option<style::Value<Rgb>>,
+    pub outline_color: Option<String>,
+    pub fill_opacity: Option<f64>,
+    pub outline_width: Option<f64>,
+}
+
+impl Reached {
+    /// `fill_color` is what `prepare` read from a `fillColor` step, and is not looked at for any
+    /// other intent.
+    fn note(&mut self, intent: &StepIntent, fill_color: Option<style::Value<Rgb>>) {
+        match intent {
+            StepIntent::FilterApply(p) => {
+                self.filter = Some(p.filter.as_ref().map(|f| f.predicate.clone()));
+            }
+            StepIntent::StyleSet(
+                StyleSetParams::FillColor { .. } | StyleSetParams::FillColorMatch { .. },
+            ) => {
+                self.fill_color = fill_color;
+            }
+            StepIntent::StyleSet(StyleSetParams::OutlineColor { value }) => {
+                self.outline_color = Some(value.clone());
+            }
+            StepIntent::StyleSet(StyleSetParams::FillOpacity { value }) => {
+                self.fill_opacity = Some(*value);
+            }
+            StepIntent::StyleSet(StyleSetParams::OutlineWidth { value }) => {
+                self.outline_width = Some(value.value);
+            }
+        }
+    }
+}
+
+/// What [`StepRecorder::mark_saved_here`] did.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum SavedHere {
+    /// One `saved-here` line was written after the last step.
+    Written,
+    /// The history holds no step for this file, so there is nothing for a mark to follow.
+    NoStep,
+    /// The workspace differs from what the steps reach, in the member named; no mark was written.
+    Differs(&'static str),
+    /// The record of this file belongs to another project than the one saving; nothing was
+    /// written to it.
+    HeldByAnotherProject,
 }
 
 /// Records committed steps. Built once by the shell's binding with the store root and the host it
@@ -142,6 +209,12 @@ impl StepRecorder {
         }
     }
 
+    /// The host this recorder reads the catalog and the generations from, for the save, which
+    /// makes the same checks of a handle that `record_step` does.
+    pub(crate) fn host(&self) -> &Arc<SkpHost> {
+        &self.host
+    }
+
     /// `record_step` (SKP-V0 §10.3), the checks in order: the version, the catalog entry, the live
     /// check (the one point it linearizes at), the action and its admission, then the record
     /// (created at the first step for an opened file), the line, its bounds and its members
@@ -155,9 +228,12 @@ impl StepRecorder {
             .get(name)
             .ok_or_else(|| SkpError::unknown_dataset(name))?;
         require_live(&self.host.generations(), name)?;
-        let (action, kind, params, referenced) = prepare(&ds, &req.intent)?;
-        let intent = Json::obj([("action", Json::str(action)), ("params", params)]);
-        let dependencies = dependencies_json(&ds, &referenced)?;
+        let prepared = prepare(&ds, &req.intent)?;
+        let intent = Json::obj([
+            ("action", Json::str(prepared.action)),
+            ("params", prepared.params),
+        ]);
+        let dependencies = dependencies_json(&ds, &prepared.referenced)?;
         let observed = Json::obj([("observed", observed_json(&ds.descriptor().observation()))]);
         // Unreachable through `SkpHost::open_dataset`, which gives every assertion a definition.
         let reference = DatasetRef::linked(DatasetUri::mint(), &ds).map_err(|e| {
@@ -182,12 +258,81 @@ impl StepRecorder {
         ]);
         let parent = rec.last_step.as_deref();
         let at = rfc3339_utc_now();
-        let step = step_object(&id, parent, &at, kind, intent, dependencies, data);
+        let step = step_object(&id, parent, &at, prepared.kind, intent, dependencies, data);
         let line = canonical(&Json::obj([("step", step)]))?;
         reader_accepts(&line, false)?;
         rec.history.append(&line, false)?;
         rec.last_step = Some(id);
+        rec.reached.note(&req.intent, prepared.fill_color);
         Ok(RecordStepResponse {})
+    }
+
+    /// A save's first move (piece 1c; ADR-036 Amendment 1, item 5). The record of the file `ds` was
+    /// opened over, if it has one and no project holds it yet, becomes the project's record:
+    /// `<store root>/<project hex>/`. The kept lines are copied under a header whose `project` is
+    /// the project's URI, with one write and one sync, into a new file that is locked before it is
+    /// renamed into place, so it is never visible unlocked. The `unsaved-` record is removed last,
+    /// after this record holds the new file. Later steps continue the moved record. Nothing happens
+    /// when there is no record or a project already holds it.
+    pub fn adopt_project(&self, ds: &Dataset, project: &ProjectUri) -> Result<(), SkpError> {
+        let mut records = self.records.lock().unwrap_or_else(|e| e.into_inner());
+        let Some(at) = find(&records, ds) else {
+            return Ok(());
+        };
+        let rec = &mut records[at];
+        if rec.project.is_some() {
+            return Ok(());
+        }
+        let dir = self.root.join(project.hex());
+        let (file, length) = copy_under(rec, &dir, project)?;
+        let moved = std::mem::replace(&mut rec.dir, dir);
+        let mut history = History::new(file, |f| f.sync_all());
+        history.bytes = length;
+        // The old handle is dropped here, which frees the old file's lock before it is removed.
+        rec.history = history;
+        rec.project = Some(project.clone());
+        let _ = std::fs::remove_file(moved.join(HISTORY));
+        let _ = std::fs::remove_file(moved.join(LOCATIONS));
+        let _ = std::fs::remove_dir(&moved);
+        Ok(())
+    }
+
+    /// A save's second move: one `{"mark":{"kind":"saved-here","after":<last step>,"at":…}}` line
+    /// through the same append path as a step (one write, one flush), for the file `ds` was opened
+    /// over, for the project `project` that is saving. When the record `ds` finds is held by a
+    /// project other than `project`, nothing is written to it, at this save and at every later one
+    /// of the same open ([`SavedHere::HeldByAnotherProject`]). `differs` is given what the steps
+    /// reach, under the same lock the line is written under, and names a member of the workspace
+    /// that the steps do not reach; then nothing is written. The line is checked against the
+    /// reader's own rules before it is written.
+    pub fn mark_saved_here(
+        &self,
+        ds: &Dataset,
+        project: &ProjectUri,
+        differs: impl FnOnce(&Reached) -> Option<&'static str>,
+    ) -> Result<SavedHere, SkpError> {
+        let mut records = self.records.lock().unwrap_or_else(|e| e.into_inner());
+        let Some(rec) = find(&records, ds).map(|at| &mut records[at]) else {
+            return Ok(SavedHere::NoStep);
+        };
+        if rec.project.as_ref().is_some_and(|held| held != project) {
+            return Ok(SavedHere::HeldByAnotherProject);
+        }
+        let Some(after) = rec.last_step.clone() else {
+            return Ok(SavedHere::NoStep);
+        };
+        if let Some(member) = differs(&rec.reached) {
+            return Ok(SavedHere::Differs(member));
+        }
+        let mark = Json::obj([
+            ("kind", Json::str("saved-here")),
+            ("after", Json::str(&after)),
+            ("at", Json::str(rfc3339_utc_now())),
+        ]);
+        let line = canonical(&Json::obj([("mark", mark)]))?;
+        mark_accepted(&line)?;
+        rec.history.append(&line, false)?;
+        Ok(SavedHere::Written)
     }
 
     /// Normal end of the application: delete this run's records, their files and folders, and
@@ -266,10 +411,89 @@ impl StepRecorder {
             admission: reference.admission().clone(),
             history: History::new(file, |f| f.sync_all()),
             last_step: None,
+            project: None,
+            reached: Reached::default(),
         };
         rec.history.append(header, true)?;
         Ok(rec)
     }
+}
+
+/// The record of the file `ds` was opened over: the one `record_step` continues for it.
+fn find(records: &[Record], ds: &Dataset) -> Option<usize> {
+    let reference = DatasetRef::linked(DatasetUri::mint(), ds).ok()?;
+    let same = |r: &Record| r.path == ds.path() && same_claims(&r.admission, reference.admission());
+    records.iter().position(same)
+}
+
+/// The record `rec` holds, copied into `dir` (a new folder) under a header whose `project` is
+/// `project`: the new file, locked and holding the copy, and its length. A failure removes `dir`.
+fn copy_under(rec: &mut Record, dir: &Path, project: &ProjectUri) -> Result<(File, u64), SkpError> {
+    let file = &mut rec.history.out;
+    let mut kept = Vec::new();
+    file.seek(SeekFrom::Start(0))
+        .and_then(|_| Read::take(&*file, MAX_SESSION_HISTORY_BYTES + 1).read_to_end(&mut kept))
+        .and_then(|_| file.seek(SeekFrom::End(0)))
+        .map_err(|e| unwritable(HISTORY, &e))?;
+    let copy = with_project(&kept, project)?;
+    let own = |what: &str| {
+        let what = what.to_string();
+        move |e: std::io::Error| unwritable(&what, &e)
+    };
+    std::fs::create_dir(dir).map_err(own("the project's record folder"))?;
+    let made: Result<File, SkpError> = (|| {
+        std::fs::copy(rec.dir.join(LOCATIONS), dir.join(LOCATIONS)).map_err(own(LOCATIONS))?;
+        let temp = dir.join(format!("{HISTORY}.tmp-{}", hex32()));
+        let mut options = OpenOptions::new();
+        let file = options.read(true).write(true).create_new(true).open(&temp);
+        let mut file = file.map_err(own(HISTORY))?;
+        file.try_lock()
+            .map_err(|e| unwritable("the history lock", &e))?;
+        file.write_all(&copy)
+            .and_then(|()| file.sync_all())
+            .and_then(|()| std::fs::rename(&temp, dir.join(HISTORY)))
+            .map_err(own(HISTORY))?;
+        Ok(file)
+    })();
+    match made {
+        Ok(file) => Ok((file, copy.len() as u64)),
+        Err(e) => {
+            drop(std::fs::remove_dir_all(dir));
+            Err(e)
+        }
+    }
+}
+
+/// The bytes of a history with its header's `project` member replaced by the project's URI, the
+/// header checked against the reader's rules, and every line after it as it was written.
+fn with_project(kept: &[u8], project: &ProjectUri) -> Result<Vec<u8>, SkpError> {
+    let refuse = |what: &str| unwritable("the record to move", &what);
+    let end = kept.iter().position(|b| *b == b'\n');
+    let end = end.ok_or_else(|| refuse("it holds no header line"))?;
+    let parsed = strict_json::parse(&kept[..end], &LINE_LIMITS);
+    let Json::Obj(mut members) = parsed.map_err(|e| refuse(&e.to_string()))? else {
+        return Err(refuse("its header is not an object"));
+    };
+    let slot = members.iter_mut().find(|(k, _)| k == "project");
+    slot.ok_or_else(|| refuse("its header has no `project`"))?.1 = Json::str(project.as_str());
+    let header = canonical(&Json::Obj(members))?;
+    reader_accepts(&header, true)?;
+    Ok([header.as_bytes(), &kept[end..]].concat())
+}
+
+/// A `saved-here` line, checked against the reader's own rules before it is written.
+fn mark_accepted(line: &str) -> Result<(), SkpError> {
+    let refuse = |rule: String| {
+        SkpError::session_history_unwritable(&format!(
+            "the mark line breaks a rule the reader holds, so it is not written: {rule}"
+        ))
+    };
+    let parsed = strict_json::parse(line.as_bytes(), &LINE_LIMITS)
+        .map_err(|e: StrictError| refuse(format!("not JSON: {e}")))?;
+    let v = strict_json::to_value(&parsed);
+    check(&v["mark"], "$.mark", &MARK)
+        .and_then(|()| in_writers_form(&parsed, line, false))
+        .map_err(|e| refuse(e.to_string()))
 }
 
 /// A filesystem call failed while a record was being made.
@@ -292,13 +516,17 @@ fn reader_accepts(line: &str, header: bool) -> Result<(), SkpError> {
             "{which} breaks a rule the reader holds, so it is not written: {rule}"
         ))
     };
-    let v: Value = serde_json::from_str(line).map_err(|e| refuse(format!("not JSON: {e}")))?;
+    let parsed = strict_json::parse(line.as_bytes(), &LINE_LIMITS)
+        .map_err(|e: StrictError| refuse(format!("not JSON: {e}")))?;
+    let v = strict_json::to_value(&parsed);
     let found = if header {
         check_header(&v).map(drop)
     } else {
         check_step(&v["step"], ACTIONS)
     };
-    found.map_err(|e| refuse(e.to_string()))
+    found
+        .and_then(|()| in_writers_form(&parsed, line, header))
+        .map_err(|e| refuse(e.to_string()))
 }
 
 /// ADR-036 §6's header for a session history that has not saved a project.
@@ -338,23 +566,34 @@ fn same_claims(a: &Admission, b: &Admission) -> bool {
     crs(a) == crs(b) && id(a) == id(b)
 }
 
-/// The action's name, registry `kind` and `params`, and the columns a filter names. A filter is
+/// What `record_step` takes from an intent before anything is written.
+struct Prepared {
+    action: &'static str,
+    /// The registry's `kind`.
+    kind: &'static str,
+    params: Json,
+    /// The file columns the step names: a filter's, or a fill colour match's column.
+    referenced: Vec<String>,
+    /// What a `fillColor` step sets, as the renderer holds it; `None` for every other intent.
+    fill_color: Option<style::Value<Rgb>>,
+}
+
+/// The action, its registry `kind` and `params`, and the columns the step names. A filter is
 /// admitted as `viewport_query` admits it; a style value as the style model admits it.
-fn prepare(
-    ds: &Dataset,
-    intent: &StepIntent,
-) -> Result<(&'static str, &'static str, Json, Vec<String>), SkpError> {
+fn prepare(ds: &Dataset, intent: &StepIntent) -> Result<Prepared, SkpError> {
     let p = match intent {
-        StepIntent::StyleSet(p) => return Ok(("style.set", "style", style_params(p)?, Vec::new())),
+        StepIntent::StyleSet(p) => return style_params(ds, p),
         StepIntent::FilterApply(p) => p,
     };
+    let filter_step = |filter: Json, referenced: Vec<String>| Prepared {
+        action: "filter.apply",
+        kind: "data",
+        params: Json::obj([("filter", filter)]),
+        referenced,
+        fill_color: None,
+    };
     let Some(f) = &p.filter else {
-        return Ok((
-            "filter.apply",
-            "data",
-            Json::obj([("filter", Json::Null)]),
-            Vec::new(),
-        ));
+        return Ok(filter_step(Json::Null, Vec::new()));
     };
     let admitted =
         AdmittedPredicate::admit(f.predicate.clone(), ds).map_err(predicate_admit_error_of)?;
@@ -362,34 +601,37 @@ fn prepare(
         ("predicate", Json::str(&f.predicate)),
         ("dialect", Json::str(&f.dialect)),
     ]);
-    let columns = admitted.referenced_columns().to_vec();
-    Ok((
-        "filter.apply",
-        "data",
-        Json::obj([("filter", filter)]),
-        columns,
-    ))
+    Ok(filter_step(filter, admitted.referenced_columns().to_vec()))
 }
 
 /// A style value is checked by wrapping it in a whole style document and calling the renderer's
 /// `parse` (ADR-022 decision 2: the one Rust implementation), plus the kernel's own rules: a colour
-/// is lowercase, and the value has a canonical spelling.
-fn style_params(p: &StyleSetParams) -> Result<Json, SkpError> {
-    let colour = |v: &String| (Value::from(v.clone()), Json::str(v));
-    let (property, key, (wire, value)) = match p {
+/// is lowercase, and the value has a canonical spelling. A match is also compiled by the renderer
+/// against the open's own columns, with its column as the published projection, so the renderer's
+/// rules for a match column (it exists, and it is a text column) are the only ones applied and none
+/// is written here. A match names that column as the step's one dependency.
+fn style_params(ds: &Dataset, p: &StyleSetParams) -> Result<Prepared, SkpError> {
+    let literal = |wire: Value| serde_json::json!({ "literal": wire });
+    let colour = |v: &String| (literal(Value::from(v.clone())), Json::str(v));
+    let (property, key, (leaf, value)) = match p {
         StyleSetParams::FillColor { value } => ("fillColor", "fill_color", colour(value)),
+        StyleSetParams::FillColorMatch { value } => (
+            "fillColor",
+            "fill_color",
+            (match_wire(value), match_json(value)),
+        ),
         StyleSetParams::OutlineColor { value } => ("outlineColor", "outline_color", colour(value)),
         StyleSetParams::FillOpacity { value: v } => (
             "fillOpacity",
             "fill_opacity",
-            (Value::from(*v), Json::Double(*v)),
+            (literal(Value::from(*v)), Json::Double(*v)),
         ),
         StyleSetParams::OutlineWidth { value: w } => {
             let width = Json::obj([("value", Json::Double(w.value)), ("unit", Json::str("px"))]);
             (
                 "outlineWidth",
                 "outline_width",
-                (Value::from(w.value), width),
+                (literal(Value::from(w.value)), width),
             )
         }
     };
@@ -399,17 +641,77 @@ fn style_params(p: &StyleSetParams) -> Result<Json, SkpError> {
         "fill_opacity": {"literal": 1.0}, "outline_color": {"literal": "#000000"},
         "outline_width": {"literal": 0.0}
     });
-    layer[key] = serde_json::json!({ "literal": wire });
-    let document = serde_json::json!({ "style_version": 1, "layer": layer });
-    style::parse(&document.to_string()).map_err(|e| refuse(e.to_string()))?;
-    if matches!(&value, Json::Str(s) if *s != s.to_ascii_lowercase()) {
+    layer[key] = leaf;
+    let document = serde_json::json!({ "style_version": 1, "layer": layer }).to_string();
+    let parsed = style::parse(&document).map_err(|e| refuse(e.to_string()))?;
+    let mut referenced = Vec::new();
+    if let StyleSetParams::FillColorMatch { value } = p {
+        let schema: Vec<(String, _)> = ds
+            .file_schema()
+            .fields()
+            .iter()
+            .map(|f| (f.name().clone(), f.data_type().clone()))
+            .collect();
+        referenced.push(value.spec.column.clone());
+        spatial_renderer::compile(&document, &schema, &referenced)
+            .map_err(|e| refuse(e.to_string()))?;
+    }
+    let colours: Vec<&String> = match p {
+        StyleSetParams::FillColor { value } | StyleSetParams::OutlineColor { value } => {
+            vec![value]
+        }
+        StyleSetParams::FillColorMatch { value } => {
+            let spec = &value.spec;
+            let then = spec.cases.iter().map(|c| &c.then);
+            then.chain([&spec.on_null, &spec.on_unmatched]).collect()
+        }
+        StyleSetParams::FillOpacity { .. } | StyleSetParams::OutlineWidth { .. } => Vec::new(),
+    };
+    if colours.iter().any(|c| **c != c.to_ascii_lowercase()) {
         return Err(refuse("a colour is `#rrggbb` in lowercase".into()));
     }
     to_canonical_string(&value).map_err(|e| refuse(e.to_string()))?;
-    Ok(Json::obj([
-        ("property", Json::str(property)),
-        ("value", value),
-    ]))
+    let sets_fill = matches!(
+        p,
+        StyleSetParams::FillColor { .. } | StyleSetParams::FillColorMatch { .. }
+    );
+    Ok(Prepared {
+        action: "style.set",
+        kind: "style",
+        params: Json::obj([("property", Json::str(property)), ("value", value)]),
+        referenced,
+        fill_color: sets_fill.then_some(parsed.fill_color),
+    })
+}
+
+/// A match as the style document spells it: the value of `fill_color` in a layer.
+fn match_wire(m: &ColourMatch) -> Value {
+    let spec = &m.spec;
+    let case =
+        |c: &spatial_skp::v0::ColourCase| serde_json::json!({"when": c.when, "then": c.then});
+    serde_json::json!({ "match": {
+        "column": spec.column,
+        "cases": spec.cases.iter().map(case).collect::<Vec<_>>(),
+        "on_null": spec.on_null,
+        "on_unmatched": spec.on_unmatched,
+    }})
+}
+
+/// The same match as the step line holds it, its members in the order the reader's shape declares.
+fn match_json(m: &ColourMatch) -> Json {
+    let spec = &m.spec;
+    let case = |c: &spatial_skp::v0::ColourCase| {
+        Json::obj([("when", Json::str(&c.when)), ("then", Json::str(&c.then))])
+    };
+    Json::obj([(
+        "match",
+        Json::obj([
+            ("column", Json::str(&spec.column)),
+            ("cases", Json::Arr(spec.cases.iter().map(case).collect())),
+            ("on_null", Json::str(&spec.on_null)),
+            ("on_unmatched", Json::str(&spec.on_unmatched)),
+        ]),
+    )])
 }
 
 /// ADR-036 §6's `dependencies`, from the open's own accessors: no file is read.
@@ -511,6 +813,8 @@ enum S {
     /// `YYYY-MM-DDTHH:MM:SSZ`: RFC 3339, UTC, whole seconds (the shape only).
     At,
     Observed,
+    /// A dataset entry: read by `DatasetRef::parse`.
+    Entry,
     Word(&'static [&'static str]),
     Int(u64, u64),
     Num(f64),
@@ -531,6 +835,23 @@ const TEXT: S = S::Text(MAX_TEXT);
 const ID: S = S::Hex("step_", 32);
 const HASH: S = S::Hex("sha256:", 64);
 const COLOUR: S = S::Hex("#", 6);
+/// ADR-017 §5a's categorical match for a colour, `fillColor`'s other value (ADR-036 §6).
+const MATCH: S = S::Obj(&[(
+    "match",
+    S::Obj(&[
+        ("column", TEXT),
+        (
+            "cases",
+            S::List(
+                &S::Obj(&[("when", TEXT), ("then", COLOUR)]),
+                MAX_MATCH_CASES,
+            ),
+        ),
+        ("on_null", COLOUR),
+        ("on_unmatched", COLOUR),
+    ]),
+)]);
+const FILL_COLOUR: S = S::Or(&COLOUR, &MATCH);
 const WIDTH: S = S::Obj(&[
     ("value", S::Num(MAX_OUTLINE_WIDTH)),
     ("unit", S::Word(&["px"])),
@@ -554,7 +875,7 @@ const REGISTRY: [(&str, &str, S); ACTIONS as usize] = [
         S::Tagged(
             "property",
             &[
-                ("fillColor", &[("value", COLOUR)]),
+                ("fillColor", &[("value", FILL_COLOUR)]),
                 ("outlineColor", &[("value", COLOUR)]),
                 ("fillOpacity", &[("value", S::Num(1.0))]),
                 ("outlineWidth", &[("value", WIDTH)]),
@@ -574,7 +895,7 @@ const HEADER: S = S::Obj(&[
         ),
     ),
     ("actions", S::Int(1, 1_000_000)),
-    ("datasets", S::List(&S::Any, 8)),
+    ("datasets", S::List(&S::Entry, 8)),
     ("lineage", S::Null),
 ]);
 const REVERSIBILITY: S = S::Word(&["reversible", "compensatable", "irreversible"]);
@@ -660,6 +981,8 @@ const STEP: S = S::Obj(&[
     ("scope", S::Obj(&[("kind", S::Word(&["layer"]))])),
     ("links", S::List(&LINK, 16)),
 ]);
+const STEP_LINE: S = S::Obj(&[("step", STEP)]);
+const MARK_LINE: S = S::Obj(&[("mark", MARK)]);
 const MARK: S = S::Tagged(
     "kind",
     &[
@@ -706,6 +1029,7 @@ fn check(v: &Value, path: &str, shape: &S) -> Res<()> {
             }
         }
         S::Observed => parse_observed(v, path).map(drop),
+        S::Entry => Ok(()),
         S::Word(words) => {
             let w = text(MAX_TEXT)?;
             if words.contains(&w) {
@@ -859,14 +1183,8 @@ fn read_line(
         return Err(malformed("$", "the line holds a NUL"));
     }
     let text = std::str::from_utf8(body).map_err(|_| malformed("$", "the line is not UTF-8"))?;
-    let v: Value =
-        serde_json::from_str(text).map_err(|e| malformed("$", format!("not JSON: {e}")))?;
-    if has_duplicate_key(text) {
-        return Err(malformed(
-            "$",
-            "an object holds a duplicate key (ADR-036 §2)",
-        ));
-    }
+    let parsed = strict_json::parse(body, &LINE_LIMITS).map_err(|e| malformed(&e.path, e.rule))?;
+    let v = strict_json::to_value(&parsed);
     let text_of = |v: &Value| v.as_str().map(str::to_string);
     let key = v
         .as_object()
@@ -918,7 +1236,176 @@ fn read_line(
             ))
         }
     }
+    in_writers_form(&parsed, text, first)?;
     Ok(text.to_string())
+}
+
+/// What a line must also be (ADR-036 §2), checked after its member rules: its members in the
+/// order its shape declares, and its text in the writer's own spelling. The reader checks a line
+/// with this, and so does the writer before it writes one.
+fn in_writers_form(parsed: &Json, text: &str, header: bool) -> Res<()> {
+    let is_key = |k: &str| matches!(parsed, Json::Obj(ms) if ms.first().is_some_and(|m| m.0 == k));
+    let line = if header {
+        &HEADER
+    } else if is_key("step") {
+        &STEP_LINE
+    } else {
+        &MARK_LINE
+    };
+    in_order(parsed, "$", line)?;
+    let registered = step_member(parsed, "intent").and_then(|intent| {
+        let Json::Str(action) = obj_get(intent, "action")? else {
+            return None;
+        };
+        let (_, _, shape) = REGISTRY.iter().find(|r| r.0 == action.as_str())?;
+        Some((obj_get(intent, "params")?, shape))
+    });
+    if let Some((params, shape)) = registered {
+        in_order(params, "$.step.intent.params", shape)?;
+    }
+    spelled(parsed, text)
+}
+
+fn obj_get<'a>(j: &'a Json, key: &str) -> Option<&'a Json> {
+    match j {
+        Json::Obj(ms) => ms.iter().find(|(k, _)| k == key).map(|(_, v)| v),
+        _ => None,
+    }
+}
+
+fn step_member<'a>(line: &'a Json, key: &str) -> Option<&'a Json> {
+    obj_get(obj_get(line, "step")?, key)
+}
+
+/// `Err` when an object lists exactly the members its shape declares, in another order. Whether
+/// the members are the right ones is `check`'s: this is lenient about every other difference.
+fn in_order(j: &Json, path: &str, shape: &S) -> Res<()> {
+    let sorted = |keys: &[&str], ms: &[(String, Json)]| {
+        let listed: Vec<&str> = ms.iter().map(|(k, _)| k.as_str()).collect();
+        let same_set = listed.len() == keys.len() && keys.iter().all(|k| listed.contains(k));
+        if same_set && listed != keys {
+            let rule = format!(
+                "the members are out of the declared order, which is {}",
+                keys.join(", ")
+            );
+            return Err(malformed(path, rule));
+        }
+        Ok(())
+    };
+    let each = |ms: &[(String, Json)], members: &[(&str, S)]| {
+        let child = |(k, sub): &(&str, S)| {
+            let found = ms.iter().find(|(m, _)| m == k);
+            found.map_or(Ok(()), |(_, v)| in_order(v, &join(path, k), sub))
+        };
+        members.iter().try_for_each(child)
+    };
+    match (shape, j) {
+        (S::Obj(members), Json::Obj(ms)) => {
+            let keys: Vec<&str> = members.iter().map(|m| m.0).collect();
+            sorted(&keys, ms)?;
+            each(ms, members)
+        }
+        (S::Tagged(tag, variants), Json::Obj(ms)) => {
+            let word = obj_get(j, tag).and_then(|w| match w {
+                Json::Str(w) => Some(w.as_str()),
+                _ => None,
+            });
+            let Some((_, members)) = variants.iter().find(|(name, _)| Some(*name) == word) else {
+                return Ok(());
+            };
+            let keys: Vec<&str> = std::iter::once(*tag)
+                .chain(members.iter().map(|m| m.0))
+                .collect();
+            sorted(&keys, ms)?;
+            each(ms, members)
+        }
+        (S::State(_), Json::Obj(ms)) => sorted(&["state", "basis"], ms),
+        (S::List(item, _), Json::Arr(items)) => items
+            .iter()
+            .enumerate()
+            .try_for_each(|(i, x)| in_order(x, &format!("{path}[{i}]"), item)),
+        (S::Or(a, b), _) => in_order(j, path, a).and_then(|()| in_order(j, path, b)),
+        (S::StateOr(inner), _) => {
+            in_order(j, path, &S::State(&[])).and_then(|()| in_order(j, path, inner))
+        }
+        // Their writers are `observed_json` and `DatasetRef::to_json`: the same members, in the
+        // same order, and a named state's basis is free text.
+        (S::Observed, _) => {
+            let written =
+                parse_observed(&strict_json::to_value(j), path).map(|o| observed_json(&o));
+            same_members(j, path, written.ok())
+        }
+        (S::Entry, _) => {
+            let written = DatasetRef::parse(&strict_json::to_value(j)).map(|r| r.to_json());
+            same_members(j, path, written.ok())
+        }
+        _ => Ok(()),
+    }
+}
+
+fn same_members(read: &Json, path: &str, written: Option<Json>) -> Res<()> {
+    let Some(at) = written.and_then(|w| strict_json::member_order_difference(read, &w)) else {
+        return Ok(());
+    };
+    let at = format!("{path}{}", at.trim_start_matches('$'));
+    Err(malformed(&at, "the members are out of the declared order"))
+}
+
+/// The line is the writer's spelling of what it holds. The one opaque slot (ADR-036 §3), the
+/// `params` of an action this reader has not registered, is kept as written: the bytes around it
+/// are the writer's spelling, and the slot is whatever valid JSON the line holds there.
+fn spelled(parsed: &Json, text: &str) -> Res<()> {
+    let refuse = |e: StrictError| malformed("$", e.rule);
+    let mut plain = parsed.clone();
+    let slot = opaque_params(&mut plain);
+    let Some(slot) = slot else {
+        return strict_json::check_spelling(parsed, text.as_bytes(), Layout::Compact)
+            .map_err(refuse);
+    };
+    let marker = "\u{1}opaque\u{1}";
+    *slot = Json::str(marker);
+    let spelled = strict_json::spelling(&plain, Layout::Compact).map_err(refuse)?;
+    let token = to_canonical_string(&Json::str(marker)).unwrap_or_default();
+    let (head, tail) = match spelled.split_once(&token) {
+        Some(parts) if spelled.matches(&token).count() == 1 => parts,
+        _ => {
+            return Err(malformed(
+                "$",
+                "the line cannot be checked around its opaque slot",
+            ))
+        }
+    };
+    let around =
+        text.len() >= head.len() + tail.len() && text.starts_with(head) && text.ends_with(tail);
+    if around {
+        Ok(())
+    } else {
+        Err(malformed(
+            "$",
+            "the bytes around the opaque slot are not the writer's spelling",
+        ))
+    }
+}
+
+/// The `params` of a step whose action this reader has not registered.
+fn opaque_params(line: &mut Json) -> Option<&mut Json> {
+    let Json::Obj(top) = line else { return None };
+    let Json::Obj(step) = &mut top.iter_mut().find(|(k, _)| k == "step")?.1 else {
+        return None;
+    };
+    let Json::Obj(intent) = &mut step.iter_mut().find(|(k, _)| k == "intent")?.1 else {
+        return None;
+    };
+    let known = intent.iter().any(|(k, v)| {
+        k == "action" && matches!(v, Json::Str(a) if REGISTRY.iter().any(|r| r.0 == a))
+    });
+    if known {
+        return None;
+    }
+    intent
+        .iter_mut()
+        .find(|(k, _)| k == "params")
+        .map(|(_, v)| v)
 }
 
 /// The header's member rules (ADR-036 §6): the closed shape, then each dataset entry as
@@ -957,38 +1444,6 @@ fn check_intent(intent: &Value, kind: &str, actions: u64) -> Res<()> {
             format!("`{action}` is not registered, and `actions` {actions} is not greater than {ACTIONS}"),
         )),
     }
-}
-
-/// Whether any object in `text` (already valid JSON) holds two keys that decode equal.
-fn has_duplicate_key(text: &str) -> bool {
-    let bytes = text.as_bytes();
-    let mut stack: Vec<Option<Vec<String>>> = Vec::new();
-    let mut i = 0;
-    while i < bytes.len() {
-        match bytes[i] {
-            b'{' => stack.push(Some(Vec::new())),
-            b'[' => stack.push(None),
-            b'}' | b']' => drop(stack.pop()),
-            b'"' => {
-                let start = i;
-                i += 1;
-                while bytes[i] != b'"' {
-                    i += if bytes[i] == b'\\' { 2 } else { 1 };
-                }
-                let is_key = text[i + 1..].trim_start().starts_with(':');
-                if let (Some(Some(keys)), true) = (stack.last_mut(), is_key) {
-                    let key = serde_json::from_str::<String>(&text[start..=i]).unwrap_or_default();
-                    if keys.contains(&key) {
-                        return true;
-                    }
-                    keys.push(key);
-                }
-            }
-            _ => {}
-        }
-        i += 1;
-    }
-    false
 }
 
 #[cfg(test)]
@@ -1392,5 +1847,116 @@ mod tests {
                 "{bad}: {rule}"
             );
         }
+    }
+
+    /// OPEN-19 (A): a line is read by the strict reader. Its members must be in the order its shape
+    /// declares and its text in the writer's own spelling, but for the one opaque slot, which is
+    /// kept as written (ADR-036 §2, §3). Mutation: the call of `in_writers_form` in `read_line`
+    /// removed. Expected failure: this test fails at the first fault, which is kept.
+    #[test]
+    fn recover_refuses_a_line_out_of_declared_order_or_off_canonical_spelling() {
+        let lines = h1();
+        let faults = [
+            (
+                "a header member out of order",
+                0,
+                r#""version":1,"purpose":"session-history""#,
+                r#""purpose":"session-history","version":1"#,
+            ),
+            (
+                "a dataset entry out of order",
+                0,
+                r#""cache_status":"linked","portability_policy":"linked-live-file""#,
+                r#""portability_policy":"linked-live-file","cache_status":"linked""#,
+            ),
+            (
+                "a step member out of order",
+                1,
+                r#""at":"2026-10-14T10:00:00Z","kind":"data""#,
+                r#""kind":"data","at":"2026-10-14T10:00:00Z""#,
+            ),
+            (
+                "a registered action's params out of order",
+                1,
+                r#""predicate":"zone = 'civic'","dialect":"duckdb-expr/0""#,
+                r#""dialect":"duckdb-expr/0","predicate":"zone = 'civic'""#,
+            ),
+            (
+                "a space after a colon",
+                1,
+                r#""parent":null"#,
+                r#""parent": null"#,
+            ),
+            (
+                "a number not in canonical spelling",
+                2,
+                r#""value":0.5"#,
+                r#""value":0.50"#,
+            ),
+        ];
+        for (what, at, from, to) in faults {
+            assert!(lines[at].contains(from), "{what}: the fault applies");
+            let mut broken = lines.clone();
+            broken[at] = lines[at].replacen(from, to, 1);
+            let (line, rule) = failure(&broken).unwrap_or_else(|| panic!("{what} is kept"));
+            assert_eq!(line, at + 1, "{what}: {rule}");
+        }
+
+        // The opaque slot is kept as written, and what surrounds it is checked.
+        let intent = r#"{"action":"layer.reorder","params":{ "order" : [2, 1.50] }}"#;
+        let opaque = step(2, Some(1), "data", intent, &sound());
+        let history = |line: String| vec![header(3), lines[1].clone(), line];
+        assert_eq!(failure(&history(opaque.clone())), None);
+        let spaced = opaque.replacen(r#""parent":"#, r#""parent": "#, 1);
+        assert_eq!(failure(&history(spaced)).map(|f| f.0), Some(3));
+    }
+
+    const FILL_MATCH: &str = r##"{"action":"style.set","params":{"property":"fillColor","value":{"match":{"column":"zone","cases":[{"when":"civic","then":"#4285f4"},{"when":"park","then":"#0f9d58"}],"on_null":"#cccccc","on_unmatched":"#999999"}}}}"##;
+
+    /// U-W1. Mutation: the registry admits the match on every `style.set` property. Expected
+    /// failure: this test fails at the first property other than `fillColor`, which is kept.
+    #[test]
+    fn the_history_reader_admits_a_fill_color_match_and_refuses_one_on_another_property() {
+        let one = |intent: &str| vec![header(2), step(1, None, "style", intent, &sound())];
+        assert_eq!(failure(&one(FILL_MATCH)), None);
+        for property in ["outlineColor", "fillOpacity", "outlineWidth"] {
+            let swapped = FILL_MATCH.replacen("fillColor", property, 1);
+            let got = failure(&one(&swapped));
+            let (at, rule) = got.unwrap_or_else(|| panic!("{property} is given a match"));
+            assert_eq!(at, 2, "{property}: {rule}");
+        }
+        // What is inside a match is held as strictly as the rest of the line.
+        let cases = r##"[{"when":"civic","then":"#4285f4"},{"when":"park","then":"#0f9d58"}]"##;
+        let many: Vec<String> = (0..=MAX_MATCH_CASES)
+            .map(|i| format!(r##"{{"when":"w{i}","then":"#4285f4"}}"##))
+            .collect();
+        let too_many = format!("[{}]", many.join(","));
+        let faults = [
+            ("an uppercase colour", "#0f9d58", "#0F9D58"),
+            (
+                "a member the shape lacks",
+                r#""on_null""#,
+                r#""x":1,"on_null""#,
+            ),
+            ("a missing member", r##""on_null":"#cccccc","##, ""),
+            ("a case with no `then`", r##","then":"#0f9d58""##, ""),
+            (
+                "a name that is not text",
+                r#""column":"zone""#,
+                r#""column":7"#,
+            ),
+            ("a colour that is not a colour", "#999999", "grey"),
+            ("one case too many", cases, too_many.as_str()),
+        ];
+        for (what, from, to) in faults {
+            assert!(FILL_MATCH.contains(from), "{what}: the fault applies");
+            let broken = FILL_MATCH.replacen(from, to, 1);
+            let (at, rule) = failure(&one(&broken)).unwrap_or_else(|| panic!("{what} is kept"));
+            assert_eq!(at, 2, "{what}: {rule}");
+        }
+        // The largest match the shape admits is kept.
+        let full: Vec<String> = many[..MAX_MATCH_CASES].to_vec();
+        let at_ceiling = FILL_MATCH.replacen(cases, &format!("[{}]", full.join(",")), 1);
+        assert_eq!(failure(&one(&at_ceiling)), None);
     }
 }

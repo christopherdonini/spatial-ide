@@ -387,3 +387,35 @@ describe("PC-U7: the filter a stream was issued with is on the resident batch (m
     expect(tiled.ref.current!.residentIdsStreamedUnder(streamedUnder).size).toBeGreaterThan(0);
   });
 });
+
+describe("V-C1: the canvas's current view (B2 piece 1c, Amendment 12 item 2)", () => {
+  const tick = (target: [number, number], zoom: number, isDragging: boolean): void => {
+    act(() => {
+      theDeck().props.onViewStateChange({ viewState: { target: [target[0], target[1], 0], zoom }, interactionState: { isDragging } });
+    });
+  };
+
+  // RECORDED MUTATION for "V-C1": in `currentView` (WorkingCanvas.tsx) return `camera.targetX` and `camera.targetY` as the centre, without the origin.
+  // Expected failure: after a gesture tick the centre is the local target and not the dataset-space point.
+  it("the canvas's current view is its camera's target plus the frame origin and its held zoom, bit for bit, and null before any camera write", () => {
+    const { ref } = mount();
+    expect(ref.current!.currentView!(), "nothing written to the camera yet").toBeNull();
+
+    // The fit puts the frame origin at the box's midpoint, (2_600_050, 1_200_050).
+    act(() => ref.current!.fitToBbox!({ xmin: 2_600_000, ymin: 1_200_000, xmax: 2_600_100, ymax: 1_200_100 }));
+    const target: [number, number] = [123.45678901234567, -67.89012345678901];
+    const zoom = 7.123456789012345;
+    tick(target, zoom, true);
+    const held = ref.current!.currentView!()!;
+    expect(Object.is(held.centre[0], target[0] + 2_600_050), "centre x is the local target plus the origin").toBe(true);
+    expect(Object.is(held.centre[1], target[1] + 1_200_050), "centre y is the local target plus the origin").toBe(true);
+    expect(Object.is(held.zoom, zoom), "the held zoom, unchanged").toBe(true);
+
+    // A settled tick far from the origin moves the origin to that world point; a tick at the local target (0, 0) then answers that point.
+    tick([1_000_000, -500_000.25], zoom, false);
+    tick([0, 0], zoom, true);
+    const moved = ref.current!.currentView!()!;
+    expect(Object.is(moved.centre[0], 1_000_000 + 2_600_050), "x is the dataset-space point after the origin moved").toBe(true);
+    expect(Object.is(moved.centre[1], -500_000.25 + 1_200_050), "y is the dataset-space point after the origin moved").toBe(true);
+  });
+});
