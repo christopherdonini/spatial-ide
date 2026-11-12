@@ -592,6 +592,9 @@ describe("App: a late old-generation viewport outcome, after a reopen, through t
     expect(container.querySelector(".hover-readout-session-ended")).not.toBeNull();
   });
 
+  // RECORDED MUTATION for "SE-R1": `endSession`'s dispatch (App.tsx) passes `reason: "source-changed"`. Expected failure: at the notice.
+  // OBSERVED AT 0b247f2903d580c55b7c037b8728e7edb4e22730: FAILED -- "a session ended by the real dataset_session_ended route for coverage-lost names coverage-lost in the hover readout, the notice, the status bar item and the last click":
+  //   AssertionError: the notice names the lost watch: expected '[P6 placeholder] The selection ended:…' to contain 'lost coverage'. Reverted after observing.
   it("a session ended by the real dataset_session_ended route for coverage-lost names coverage-lost in the hover readout, the notice, the status bar item and the last click", async () => {
     const handle = await openPathAndCaptureHandle();
     const canvas = () => workingCanvasMockState.propsByDataset.get(handle)!;

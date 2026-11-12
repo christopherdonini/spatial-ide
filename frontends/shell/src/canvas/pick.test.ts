@@ -252,6 +252,9 @@ describe("latchedHoverReadout (boundary 4: picks refused until reopen)", () => {
     expect(isPickSessionEnded({ kind: "session-ended", reason: "source-changed" })).toBe(true);
   });
 
+  // RECORDED MUTATION for "SE-U5": `latchedHoverReadout` (pick.ts) always sets `"source-changed"`. Expected failure: the readout latched for coverage-lost names source-changed.
+  // OBSERVED AT 0b247f2903d580c55b7c037b8728e7edb4e22730: FAILED -- "the latch carries the reason it is given":
+  //   AssertionError: the latched readout for coverage-lost: expected { kind: 'session-ended', …(1) } to deeply equal { kind: 'session-ended', …(1) }. Reverted after observing.
   it("the latch carries the reason it is given", () => {
     for (const reason of ["source-changed", "coverage-lost"] as const) {
       expect(latchedHoverReadout(resolvePick(batch(), 0), reason), `the latched readout for ${reason}`).toEqual({ kind: "session-ended", reason });

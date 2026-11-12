@@ -215,6 +215,9 @@ describe("FeatureTab", () => {
     expect(q(".feature-notice")?.getAttribute("role")).toBe("status");
   });
 
+  // RECORDED MUTATION for "SE-U3": `noticeText` (FeatureTab.tsx) maps every reason except `"reopened"` to "the source file changed", which is main's code. Expected failure: the coverage-lost notice reads as a source change.
+  // OBSERVED AT 0b247f2903d580c55b7c037b8728e7edb4e22730: FAILED -- "the notice and the last-click line name each end reason in their own words":
+  //   AssertionError: the coverage-lost notice: expected '[P6 placeholder] The selection ended:…' to be '[P6 placeholder] The selection ended:…' // Object.is equality. Reverted after observing.
   it("the notice and the last-click line name each end reason in their own words", () => {
     mount({ notice: { kind: "ended", reason: "coverage-lost", dropped: 2 }, lastClick: { kind: "session-ended", reason: "coverage-lost" } });
     expect(text(".feature-notice"), "the coverage-lost notice").toBe(

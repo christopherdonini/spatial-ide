@@ -207,6 +207,9 @@ describe("UB4: the end of a generation ends the selection", () => {
     expect(run(ended, { type: "resource.generationEnded", resource: "ds_a", reason: "source-changed" }), "a second end changes nothing").toBe(ended);
   });
 
+  // RECORDED MUTATION for "SE-U4": `endGeneration` (workspaceState.ts) passes `"source-changed"` whatever the action's reason. Expected failure: the notice a coverage-lost end leaves names source-changed.
+  // OBSERVED AT 0b247f2903d580c55b7c037b8728e7edb4e22730: FAILED -- "a generation ended by coverage-lost ends the selection with the reason coverage-lost":
+  //   AssertionError: the notice a coverage-lost end leaves: expected { kind: 'ended', …(2) } to deeply equal { kind: 'ended', …(2) }. Reverted after observing.
   it("a generation ended by coverage-lost ends the selection with the reason coverage-lost", () => {
     const ended = run(standing(), { type: "resource.generationEnded", resource: "ds_a", reason: "coverage-lost" });
     expect(viewSelectionNotice(ended.views["view-1"]), "the notice a coverage-lost end leaves").toEqual({ kind: "ended", reason: "coverage-lost", dropped: 2 });

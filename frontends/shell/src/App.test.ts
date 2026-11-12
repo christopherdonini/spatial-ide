@@ -1165,6 +1165,9 @@ describe("handleSessionEnded (boundary 4's owner-side consequence)", () => {
     expect(hover).toEqual({ kind: "session-ended", reason: "source-changed" });
   });
 
+  // RECORDED MUTATION for "SE-U1": `sessionEndReasonOf` (App.tsx) returns `"source-changed"` for every code. Expected failure: the first real coverage-lost detail (and SH7, in viewportStreamManager.test.ts, whose hover now names coverage-lost).
+  // OBSERVED AT 0b247f2903d580c55b7c037b8728e7edb4e22730: FAILED -- "handleSessionEnded names coverage-lost from the kernel's real coverage-lost details, and source-changed only from its exact code":
+  //   AssertionError: setSessionEnded's reason for a real coverage-lost detail: expected 'source-changed' to be 'coverage-lost' // Object.is equality. Reverted after observing.
   it("handleSessionEnded names coverage-lost from the kernel's real coverage-lost details, and source-changed only from its exact code", () => {
     const endedBy = (detail: string) => {
       const seen: { reason: SessionEndReason | null; hover: HoverReadout } = { reason: null, hover: null };

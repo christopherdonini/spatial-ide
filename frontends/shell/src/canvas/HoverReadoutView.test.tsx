@@ -172,6 +172,9 @@ describe("HoverReadoutView, boundary 4's session-ended refusal", () => {
     expect(container.textContent).not.toContain("6430");
   });
 
+  // RECORDED MUTATION for "SE-U2": `sessionEndedText` (HoverReadoutView.tsx) ignores its reason and returns the source-changed text. Expected failure: the coverage-lost readout carries the source-changed sentence.
+  // OBSERVED AT 0b247f2903d580c55b7c037b8728e7edb4e22730: FAILED -- "a session-ended readout names its reason: coverage-lost and source-changed each their own sentence, no id in either":
+  //   AssertionError: the coverage-lost readout names the lost watch: expected 'The source file changed while it was …' to contain 'lost coverage'. Reverted after observing.
   it("a session-ended readout names its reason: coverage-lost and source-changed each their own sentence, no id in either", () => {
     const sentence = (reason: PickSessionEnded["reason"]) => {
       render({ kind: "session-ended", reason });
