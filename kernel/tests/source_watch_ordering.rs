@@ -320,6 +320,14 @@ fn a_signal_free_rearm_does_not_restore_an_ended_generation() {
 /// `open_dataset` below no longer refuses — it admits a source this test already told the kernel
 /// had changed before admission ever ran.
 ///
+/// SECOND RECORDED MUTATION: restore the two braces at the pre-admission `Change` detail in
+/// `engine_error_of_pre_admission_signal` (`kernel/src/skp.rs`). Applied at `74fd4f1de5e4400f0d0472a0d5c522e2468a08c7`,
+/// run and reverted: this test FAILED on its `fields.detail` equality (K6: the refusal's
+/// `fields.detail` against the brace-free pre-admission literal), `left` being `right` with a
+/// `{` prepended and a `}` appended, `right: Some("[P6 placeholder] a notification arrived for
+/// this source before admission")` — 1 failed; the other three tests of
+/// `governance/forms/kernel/PRE-ADMISSION-CHANGE-DETAIL-BRACES-PREREGISTRATION.md` passed.
+///
 /// **Corrected comment (phase 2 delta 7).** The earlier revision of this comment claimed a
 /// signal-free retry "would not be true if the first attempt had left anything behind" — false: a
 /// refused open returns no handle, and the retry runs under a fresh, OS-CSPRNG `DatasetHandle` key
@@ -349,6 +357,11 @@ fn a_signal_between_arming_and_admission_refuses_the_open() {
         .open_dataset(open_req(&path, "k6"))
         .expect_err("refused before admission");
     assert_eq!(refused.code, "engine.source_changed", "{}", refused.message);
+    assert_eq!(
+        refused.fields.get("detail").map(String::as_str),
+        Some("[P6 placeholder] a notification arrived for this source before admission"),
+        "K6: the refusal's fields.detail against the brace-free pre-admission literal"
+    );
 
     // No event for an open that never admitted (case (e)): no generation ever existed to end.
     assert!(
