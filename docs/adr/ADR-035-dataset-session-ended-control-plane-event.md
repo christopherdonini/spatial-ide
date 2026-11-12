@@ -156,11 +156,3 @@ Round 21 item 1's riders (a) and (b), which are not round 17 item 2's riders of 
 2. **Read with this note:** Decision 3's bullet on a generation with no session reference, whose open payload form the ruling settles; the matching item of "What this ADR does not decide"; and Decision 5's drop on a mismatch, which the ruling makes a logged drop.
 3. **Not settled here:** the close race that mints such a generation (Decision 3's bullet names it). The same item places it at PLAN node `kernel-generation-close-races`. Nor is it settled here whether Decision 4's reading of `skp/0.3`'s rule, confirmed for a per-open reference, covers a reference no client holds (`protocol/skp/SKP-V0.md` §8, the note to the `skp/0.3` entry); that is the human's.
 4. The watcher piece (PLAN node `engine-source-change-watcher`) implements this note with Decision 4.
-
-## Note 2026-11-11 — what kernel-generation-close-races makes historical
-
-*Appended on the human's ruling. The text above is unchanged, the Status line, the Acceptance section and the Note of 2026-09-25 included.*
-
-1. The close race that the Note of 2026-09-25, item 3, left unsettled is closed by kernel-generation-close-races (#136, merged 2026-09-28). Since that merge only `open_dataset` creates a live generation, through `mint_for_open`. A `viewport_query` racing `close_dataset` no longer mints one: it is refused, as `skp.unknown_dataset`, or by the end's reason if the generation had already ended.
-2. Two passages above describe the kernel before that merge and are historical: Decision 3's bullet "A generation with no session reference still emits", since no such generation can now exist and the case the Note of 2026-09-25 gave an unheld reference for no longer arises; and Decision 3's sentence that `invalidate` marks the dataset before it looks for a live generation, since it now writes a mark only when it removes a live generation. Decision 2's mint-race arm is not historical: it stands, in `SkpHost::viewport_query_attribute`, where a ticket that cannot be attributed to the live generation is cancelled and the call refused, by the end's reason, or as `skp.unknown_dataset` when no end is recorded.
-3. Nothing else changes. Every end still emits at most once, and an end recorded during a close still emits. No wire change.
