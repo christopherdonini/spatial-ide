@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-12T21:26:40.968Z",
-  "plan_hash": "9d6bfc0af24250bae81204adb8c88b6c2cf493a2bce132e69324a6a5f2db6cb0",
+  "generated_at": "2026-11-12T22:08:51.305Z",
+  "plan_hash": "5c515a5bf191a5825a0446dc9ba826537640224e40cb6ac6ed08040c6d09ad7b",
   "priorities_approved": true,
   "lanes": [
     {
@@ -11520,6 +11520,31 @@
       "felt_verdict": false,
       "entries": [],
       "summary": "PLACED 2026-11-12 by the human's message of 2026-11-12 (13:07Z), item 4 (state/directives/2026-11-12-s1-fix-open-a-c-s6b-now-pr-b-class-9-now-1c-five-308-c1-words-platform-reports-order-no-git-stash.md, line 41): the three untested places named by #308's gates (state/consults/gates/2026-11-12-adr-035-close-races-note-gate-architect.md and state/consults/gates/2026-11-12-adr-035-close-races-note-gate-reviewer.md) are one kernel test node, S3, in the filler queue. Tests only; no change to the kernel's behaviour. NEXT: the filler queue; its short form committed before any code.",
+      "dates": {
+        "opened": "2026-11-12",
+        "done": null
+      }
+    },
+    {
+      "id": "verify-bundle-example-path-build-dir-layout",
+      "title": "The kernel tests that run a built example find it under the toolchain build-dir layout of rustc 1.100.0: verify_bundle, red on main since #309 merge, and scale_pass helper (S3; its slot waits for the human)",
+      "kind": "task",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": null,
+      "depends_on": [],
+      "needs_human": {
+        "kind": "ruling",
+        "minutes": 2
+      },
+      "gate": "none",
+      "evidence": null,
+      "budget_minutes": 60,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [],
+      "summary": "PLACED 2026-11-12 by the custodian, graded S3: main Rust CI failed at 5560c7d5 on rustc 1.100.0 (2026-11-09), where #309 own run at dd90df96 passed on 1.99.1. The three tests of kernel/tests/verify_bundle.rs walk up from their own binary to find the verify-bundle example and stop at the assertion that it was built there, on both suite jobs; the new layout puts test binaries under target/<profile>/build/<package>/<hash>/out/. cargo test stops at the first failing binary, so the 8 binaries after it in the ordinary suite did not run on main. kernel/tests/scale_pass.rs example_beside_me walks the same way (ignored, run by hand). Tests only; no product code. BLOCKED on the human: its slot (the filler queue proposed additions); lead-data five-line draft read only meanwhile.",
       "dates": {
         "opened": "2026-11-12",
         "done": null

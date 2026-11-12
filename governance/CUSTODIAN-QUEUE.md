@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `9d6bfc0af24250bae81204adb8c88b6c2cf493a2bce132e69324a6a5f2db6cb0`) at `2026-11-12T21:26:40.774Z`.
+Generated from `PLAN.yaml` (sha256 `5c515a5bf191a5825a0446dc9ba826537640224e40cb6ac6ed08040c6d09ad7b`) at `2026-11-12T22:08:51.098Z`.
 
 ## 1. Next
 
@@ -15,11 +15,12 @@ Generated from `PLAN.yaml` (sha256 `9d6bfc0af24250bae81204adb8c88b6c2cf493a2bce1
 - **publish-bundle-sigterm** — SIGTERM handling in publish-bundle on unix (wave-3 W3-A observation 3) (lane `platform`, order null, budget 90 min)
 - **publish-unix-quota-perm-errors** — EDQUOT and EPERM in publish error classification on unix (wave-3 W3-A observation 1) (lane `platform`, order null, budget 90 min)
 
-## 3. Waiting on the human (total: 35 min)
+## 3. Waiting on the human (total: 37 min)
 
 ### ruling
 
 - **second-open-history-before-1c-step-3** — Which record a step belongs to: a second open's steps, and steps recorded after a save made before any step (the independent review's C2), with the review's note on two dataset identities; settled before 1c step 2's lineage reader (L1 to L4), so before step 3; ADR-036's text on both is the human's (15 min)
+- **verify-bundle-example-path-build-dir-layout** — The kernel tests that run a built example find it under the toolchain build-dir layout of rustc 1.100.0: verify_bundle, red on main since #309 merge, and scale_pass helper (S3; its slot waits for the human) (2 min)
 
 ### sitting
 

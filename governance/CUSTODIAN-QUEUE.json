@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-12T21:26:40.774Z",
-  "plan_hash": "9d6bfc0af24250bae81204adb8c88b6c2cf493a2bce132e69324a6a5f2db6cb0",
+  "generated_at": "2026-11-12T22:08:51.098Z",
+  "plan_hash": "5c515a5bf191a5825a0446dc9ba826537640224e40cb6ac6ed08040c6d09ad7b",
   "priorities_approved": true,
   "next": {
     "id": "lod-tier-tests-own-tier-folder",
@@ -138,7 +138,7 @@
     }
   ],
   "waiting_on_human": {
-    "total_minutes": 35,
+    "total_minutes": 37,
     "by_kind": {
       "click": [],
       "sight": [],
@@ -161,6 +161,25 @@
             "done": null
           },
           "summary": "OPTIONS DRAFT FILED 2026-11-12 (state/consults/2026-11-12-second-open-history-before-1c-step-3-options-architect-draft.md): by the human's item 3 (c) of 2026-11-12 the subject is now which record a step belongs to, a second open's steps and steps after a save made before any step (the review's C2), with the two dataset identities; by item 3 (e) it is settled before step 2's lineage reader, and step 2's resolver, store and lock do not wait. The draft recommends O-2 (a record per open until a save binds it to the project), C2 by its sub-choice (i), and identity I-b, as one kernel PR ahead of step 2's lineage reader and protocol bump. OPEN-N1 to OPEN-N5 are red lines; ADR-036's text is the human's. NEXT: the human's ruling. Before: PLACED 2026-11-11 by the human's message of 2026-11-11 (21:49Z) (state/directives/2026-11-11-adr-035-item-2-arm-stands-1c-open-20-1-a-21-1-b-21-3-a-diagnostic-graded-pan-anchor-released-s1-candidate-origin-move-reproducer.md), item 4: 1c's OPEN-21-3 (a), no ADR-036 text in step 1; this node is placed before 1c's step 3, which depends on it since step 3's recovery offer reads the record; it decides what a second open's history is and carries the ADR-036 note, in the human's words then (1c's form, Amendment 24). NEXT: its form, before 1c's step 3."
+        },
+        {
+          "id": "verify-bundle-example-path-build-dir-layout",
+          "title": "The kernel tests that run a built example find it under the toolchain build-dir layout of rustc 1.100.0: verify_bundle, red on main since #309 merge, and scale_pass helper (S3; its slot waits for the human)",
+          "lane": "kernel-protocol",
+          "phase": "prototype",
+          "status": "blocked",
+          "order": null,
+          "budget_minutes": 60,
+          "needs_human": {
+            "kind": "ruling",
+            "minutes": 2
+          },
+          "evidence": null,
+          "dates": {
+            "opened": "2026-11-12",
+            "done": null
+          },
+          "summary": "PLACED 2026-11-12 by the custodian, graded S3: main Rust CI failed at 5560c7d5 on rustc 1.100.0 (2026-11-09), where #309 own run at dd90df96 passed on 1.99.1. The three tests of kernel/tests/verify_bundle.rs walk up from their own binary to find the verify-bundle example and stop at the assertion that it was built there, on both suite jobs; the new layout puts test binaries under target/<profile>/build/<package>/<hash>/out/. cargo test stops at the first failing binary, so the 8 binaries after it in the ordinary suite did not run on main. kernel/tests/scale_pass.rs example_beside_me walks the same way (ignored, run by hand). Tests only; no product code. BLOCKED on the human: its slot (the filler queue proposed additions); lead-data five-line draft read only meanwhile."
         }
       ],
       "sitting": [
