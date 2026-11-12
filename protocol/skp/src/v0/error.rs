@@ -185,6 +185,10 @@ impl SkpError {
         )
     }
 
+    // Not on Windows: on POSIX, a failure to flush the folder after the rename
+    // (kernel/src/project/store.rs, Staged::commit and sync_folder) is refused with this code after
+    // project.spatial was replaced. The shipped app is Windows-only, where a folder is not opened
+    // to be flushed.
     /// `save_project`: the project folder or a file of the save could not be read or written;
     /// `detail` says which and why. The project file is replaced whole or not at all, so a
     /// refusal leaves the previous one in place.

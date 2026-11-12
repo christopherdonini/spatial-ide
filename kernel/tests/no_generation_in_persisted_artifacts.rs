@@ -9,7 +9,9 @@
 //! (`GenerationRegistry`) and client-mirrored state (`liveTicketSet.ts`'s live-ticket set) only —
 //! §13 D's ruled design, "no generation value crosses the wire" (boundary 9, A2/A3). This file
 //! enumerates, from the code rather than from memory, every artifact this tree can write to disk or
-//! hand to an operator to read later, and proves each carries neither the word nor a value.
+//! hand to an operator to read later, and proves each family below carries neither the word nor a
+//! value; the machine store's `locations.json` and `folders.json`, which `Projects::save` writes,
+//! are named below and are not scanned.
 //!
 //! ## What this tree can produce, enumerated by its own writers
 //!
@@ -52,11 +54,14 @@
 //! same reasoning `docs/01` principle 8 gives a fixture (a stand-in for a real file, not a claim
 //! about one) applies to what it writes. Not scanned.
 //!
-//! **No standalone project-file or recipe-file format exists in this tree at this commit** —
-//! grepped, not assumed, against the same four-path scope above (`protocol/skp/src`, not the whole
-//! `protocol/*` tree: `protocol/transport-bakeoff/src/main.rs:302,566` write outside
-//! `#[cfg(test)]`, but the workspace root `Cargo.toml`'s `exclude` list names that crate); nothing
-//! outside the four families and the one exclusion resolves.
+//! **The project file is this tree's one standalone project-file format** (item 5's second writer),
+//! and no recipe-file format exists — grepped, not assumed, against the same four-path scope above
+//! (`protocol/skp/src`, not the whole `protocol/*` tree:
+//! `protocol/transport-bakeoff/src/main.rs:302,566` write outside `#[cfg(test)]`, but the workspace
+//! root `Cargo.toml`'s `exclude` list names that crate). Three more writers are outside the
+//! families above: the session record's `locations.json` (`kernel/src/session_history.rs`), which
+//! `G2` reads, and the machine store's `locations.json` and `folders.json`
+//! (`kernel/src/project/mod.rs`'s `write_machine_file`), which no test here scans.
 
 mod watch_support;
 
@@ -792,11 +797,11 @@ fn a_dataset_reference_carries_no_generation_session_reference_handle_path_or_as
 use spatial_kernel::session_history::{recover, StepRecorder};
 use spatial_skp::v0::{Filter, FilterApplyParams, RecordStepRequest, StepIntent, StyleSetParams};
 
-/// **The session history's half of G-A4** (`kernel/B2-1B-RECORDING-PREREGISTRATION.md` §4, G2; a
-/// sixth family): a history written by `record_step` over a real open carries no key and no byte
-/// naming a generation, and none of: the minted session reference, the dataset handle, the
-/// fixture's path and its directory, the OS user name. `locations.json` beside it is the one file
-/// that holds the path, and the scan says so. Each scan fires on a planted positive control.
+/// **The session history's half of G-A4** (`kernel/B2-1B-RECORDING-PREREGISTRATION.md` §4, G2; the
+/// fifth family's first writer): a history written by `record_step` over a real open carries no key
+/// and no byte naming a generation, and none of: the minted session reference, the dataset handle,
+/// the fixture's path and its directory, the OS user name. `locations.json` beside it is the one
+/// file that holds the path, and the scan says so. Each scan fires on a planted positive control.
 ///
 /// RECORDED MUTATION: `DatasetRef::linked` records a project-relative locator holding `ds.path()` in
 /// place of the machine-recorded one, so the header's locator `at` carries the path. Expected

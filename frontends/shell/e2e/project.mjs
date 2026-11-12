@@ -44,6 +44,11 @@
 //   Expected: a non-zero exit, failing at SAVE, the answer not "asked".
 //   Observed (run m-hook at 1c807fc6e8e931dfa4d8a356bb4914b4d9fa29f4, exit 1):
 //   [SAVE] FAIL (29ms): SAVE: the first e2eSaveProjectToFolder answered "not-asked", expected "asked"
+//
+// m-s18: the judgment mapped wrong. In `kernel/src/project/mod.rs`'s `project_relative_of`, `NoCanonicalSpelling` mapped to `Outside`.
+//   Expected: a non-zero exit, failing at NOTICE-S18, S18 not among the save notices.
+//   Observed (run g1c-m-s18 at 9e0d4b08f17ef07033af4ea35b4f512fc7c5a4f6, exit 1):
+//   [NOTICE-S18] FAIL (10013ms): NOTICE-S18: waited 10000ms for S18's text among the save notices; the last reading was [...]
 
 import { createHash } from "node:crypto";
 import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
