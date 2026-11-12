@@ -315,9 +315,9 @@ fn a_coverage_lost_terminal_detail_carries_its_typed_code_and_exact_text() {
 ///
 /// RECORDED MUTATION: restore the two braces at the `CoverageLost` arm of `require_live`
 /// (`kernel/src/skp.rs`). Applied at `74fd4f1de5e4400f0d0472a0d5c522e2468a08c7`, run and reverted: this test FAILED on
-/// its `assert_eq` on the whole message, `left` carrying `({[P6 placeholder] this dataset's
-/// session ended when the advisory watch on its source lost coverage})` and `right` the same
-/// text without the two braces — 1 failed.
+/// its `assert_eq` on the whole message, `left` carrying a `{` after the `(` that opens the
+/// detail and a `}` before the `)` that closes it, `right` the same text without those two
+/// braces — 1 failed.
 #[test]
 fn a_coverage_lost_pre_check_refusal_carries_its_typed_code_and_exact_text() {
     let path = fixture("coverage-lost-pre-check");

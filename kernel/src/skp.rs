@@ -4766,10 +4766,9 @@ mod ticket_drop_under_lock_regression {
     /// reverted:
     /// `a_coverage_loss_between_mint_and_attribution_refuses_with_its_own_code_and_placeholder_detail`
     /// FAILED on its `fields.detail` equality (T2: the refusal's
-    /// `fields.detail` against the brace-free attribute-step literal), `left:
-    /// Some("{[P6 placeholder] this dataset's session ended while this query was being
-    /// prepared}")`, `right: Some("[P6 placeholder] this dataset's session ended while this query
-    /// was being prepared")` — 1 failed.
+    /// `fields.detail` against the brace-free attribute-step literal), `left` being `right` with
+    /// a `{` prepended and a `}` appended, `right: Some("[P6 placeholder] this dataset's session
+    /// ended while this query was being prepared")` — 1 failed.
     #[test]
     fn a_coverage_loss_between_mint_and_attribution_refuses_with_its_own_code_and_placeholder_detail(
     ) {
@@ -4974,9 +4973,9 @@ mod ticket_drop_under_lock_regression {
     /// RECORDED MUTATION: restore the two braces at the `EndedByCoverageLoss` terminal in
     /// `kernel/src/lib.rs`. Applied at `74fd4f1de5e4400f0d0472a0d5c522e2468a08c7`, run and reverted:
     /// this test FAILED on its whole-terminal equality (R3: the redeem step's refusal against the
-    /// whole brace-free coverage-lost terminal), `left` carrying `({[P6 placeholder] this
-    /// dataset's session ended when the advisory watch on its source lost coverage})` and `right`
-    /// the same text without the two braces — 1 failed.
+    /// whole brace-free coverage-lost terminal), `left` carrying a `{` after the `(` that opens
+    /// the detail and a `}` before the `)` that closes it, `right` the same text without those
+    /// two braces — 1 failed.
     #[test]
     fn a_coverage_loss_between_liveness_and_redeem_keeps_its_own_code() {
         let (host, _path, open, ticket) = a_ticket_past_the_liveness_step("r3-coverage-lost");
