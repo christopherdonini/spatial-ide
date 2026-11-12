@@ -4760,6 +4760,14 @@ mod ticket_drop_under_lock_regression {
     /// T2. A ticket minted while the generation is live and attributed after a coverage loss ended
     /// it: the attribute step refuses with `engine.source_coverage_lost`, never
     /// `engine.source_changed`, and its `detail` is the brace-free placeholder sentence.
+    ///
+    /// RECORDED MUTATION: restore the two braces at the `CoverageLost` arm of
+    /// `viewport_query_attribute`. Applied at `74fd4f1de5e4400f0d0472a0d5c522e2468a08c7`, run and
+    /// reverted: this test FAILED on its `fields.detail` equality (T2: the refusal's
+    /// `fields.detail` against the brace-free attribute-step literal), `left:
+    /// Some("{[P6 placeholder] this dataset's session ended while this query was being
+    /// prepared}")`, `right: Some("[P6 placeholder] this dataset's session ended while this query
+    /// was being prepared")` — 1 failed.
     #[test]
     fn a_coverage_loss_between_mint_and_attribution_refuses_with_its_own_code_and_placeholder_detail(
     ) {
@@ -4960,6 +4968,13 @@ mod ticket_drop_under_lock_regression {
     ///
     /// REGISTERED MUTATION: in `liveness_refusal`, map `EndedByCoverageLoss` to the source-changed
     /// refusal.
+    ///
+    /// RECORDED MUTATION: restore the two braces at the `EndedByCoverageLoss` terminal in
+    /// `kernel/src/lib.rs`. Applied at `74fd4f1de5e4400f0d0472a0d5c522e2468a08c7`, run and reverted:
+    /// this test FAILED on its whole-terminal equality (R3: the redeem step's refusal against the
+    /// whole brace-free coverage-lost terminal), `left` carrying `({[P6 placeholder] this
+    /// dataset's session ended when the advisory watch on its source lost coverage})` and `right`
+    /// the same text without the two braces — 1 failed.
     #[test]
     fn a_coverage_loss_between_liveness_and_redeem_keeps_its_own_code() {
         let (host, _path, open, ticket) = a_ticket_past_the_liveness_step("r3-coverage-lost");
