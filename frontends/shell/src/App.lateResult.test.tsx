@@ -47,6 +47,10 @@
  * HANDLE (`admittedDatasetRef.current`), not on A's own `sessionEnded`/`stopped` flag.
  */
 
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+
 import { act, forwardRef, useImperativeHandle } from "react";
 import { createRoot, Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -85,7 +89,10 @@ const viewportMockState = vi.hoisted(() => {
   const onSessionEndedByDataset = new Map<string, (detail: string) => void>();
   const onStreamOpenedByDataset = new Map<string, (streamHandle: string) => void>();
   const onBatchByDataset = new Map<string, (streamHandle: string, batchSeq: number, payload: unknown, filter: unknown) => void>();
+  // The listener App registered with `listenDatasetSessionEnded`, captured by the `./skp/events` mock below.
+  const sessionEnded = { listener: null as ((event: import("./skp/types").DatasetSessionEnded) => void) | null };
   return {
+    sessionEnded,
     firstRequestDeferreds,
     secondRequestDeferreds,
     onTerminalByDataset,
@@ -215,11 +222,13 @@ vi.mock("./skp/client", () => {
 // `engine/SOURCE-WATCHER-PREREGISTRATION.md` §2d: `App`'s own `[]`-effect now registers the real
 // `dataset_session_ended` listener (`skp/events.ts::listenDatasetSessionEnded`), which reaches
 // `@tauri-apps/api/event`'s `listen` -- unavailable in this jsdom suite, which has no Tauri IPC
-// shim. Mocked at the module boundary, the same discipline `./skp/client` gets above: a no-op
-// listener that resolves to an unlisten function and never calls back, since no test in this file
-// exercises the event route itself.
+// shim. Mocked at the module boundary, the same discipline `./skp/client` gets above: it keeps the
+// listener (for the one test that drives the event route) and resolves to an unlisten function.
 vi.mock("./skp/events", () => ({
-  listenDatasetSessionEnded: async () => () => {},
+  listenDatasetSessionEnded: async (listener: (event: import("./skp/types").DatasetSessionEnded) => void) => {
+    viewportMockState.sessionEnded.listener = listener;
+    return () => {};
+  },
 }));
 
 // The baseline stream-manager boundary. Every `RequestOutcome` promise this suite drives is a
@@ -269,6 +278,10 @@ vi.mock("./streaming/viewportStreamManager", () => {
       const wrapped = deferred.promise.then((value) => (this.stoppedFlag ? { kind: "superseded" } : value));
       registry.set(this.dataset, { ...deferred, promise: wrapped });
       return wrapped;
+    }
+    /** As the real manager's `endSession`: the owner's `onSessionEnded`, which `dispatchSessionEndedToOwner` reaches for an event. */
+    notifySessionEnded(detail: string): void {
+      viewportMockState.onSessionEndedByDataset.get(this.dataset)?.(detail);
     }
     async cancelStream(): Promise<void> {}
     async stop(): Promise<void> {
@@ -365,6 +378,8 @@ import type { RequestOutcome } from "./streaming/viewportStreamManager";
 import type { CandidateArmSessionDeps } from "./residency/candidateArmSession";
 import { SkpCallError } from "./skp/client";
 import App, { SCAN_LIVENESS_DELAY_MS } from "./App";
+import { sessionEndedText } from "./canvas/HoverReadoutView";
+import type { DatasetSessionEnded } from "./skp/types";
 import { __resetResidencyArmForTests, setResidencyArm } from "./residency/residencyArm";
 
 // React 18.3's own `act` (not `react-dom/test-utils`'s deprecated re-export) requires this flag,
@@ -575,6 +590,33 @@ describe("App: a late old-generation viewport outcome, after a reopen, through t
       "engine.source_coverage_lost"
     );
     expect(container.querySelector(".hover-readout-session-ended")).not.toBeNull();
+  });
+
+  it("a session ended by the real dataset_session_ended route for coverage-lost names coverage-lost in the hover readout, the notice, the status bar item and the last click", async () => {
+    const handle = await openPathAndCaptureHandle();
+    const canvas = () => workingCanvasMockState.propsByDataset.get(handle)!;
+    const text = (selector: string) => container.querySelector(selector)?.textContent ?? `(no element matches ${selector})`;
+    const pick = (id: bigint) => ({ streamHandle: "st_1", batchSeq: 0, id, anchor: null });
+    const click = (id: bigint) =>
+      act(async () => canvas().onClickPick!({ kind: "feature", pick: pick(id), bounds: { xmin: 0, ymin: 0, xmax: 10, ymax: 10 }, row: null, filter: null }));
+    act(() => ([...container.querySelectorAll(".tool-switch-button")].find((b) => b.textContent === "Select") as HTMLElement).click());
+    await click(1n);
+    expect(text(".feature-selected"), "one feature is selected before the end").toBe("Selected, ignoring filter: 1");
+
+    const file = join(dirname(fileURLToPath(import.meta.url)), "../../../protocol/skp/tests/data/v0-dataset_session_ended-event.json");
+    // The file's session names no open of this suite and its reason is the other one: those two members are set, and nothing else.
+    const event: DatasetSessionEnded = { ...(JSON.parse(readFileSync(file, "utf8")) as { payload: DatasetSessionEnded }).payload, session: handle.replace("ds_", "sr_"), reason: "coverage-lost" };
+    await act(async () => viewportMockState.sessionEnded.listener!(event));
+
+    expect(text(".canvas-session-ended .admission-refusal-code"), "the strip's code").toBe("engine.source_coverage_lost");
+    expect(text(".hover-readout-session-ended"), "the hover readout against sessionEndedText for coverage-lost").toBe(sessionEndedText("coverage-lost"));
+    await act(async () => canvas().onHover!(pick(1n)));
+    expect(text(".hover-readout-session-ended"), "a pick through the latch against sessionEndedText for coverage-lost").toBe(sessionEndedText("coverage-lost"));
+    expect(text(".feature-notice"), "the notice names the lost watch").toContain("lost coverage");
+    expect(text(".feature-notice"), "the notice does not say the file changed").not.toContain("the source file changed");
+    expect(text(".selection-ended"), "the status bar item against the notice").toBe(text(".feature-notice"));
+    await click(2n);
+    expect(text(".feature-last-click-session-ended"), "the last-click line against sessionEndedText for coverage-lost").toBe(sessionEndedText("coverage-lost"));
   });
 
   // RECORDED MUTATION for "a genuine A ISSUED arriving in the real pre-cleanup window -- before A's own effect cleanup runs -- does not write B's scan/residency state":

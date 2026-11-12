@@ -12,7 +12,7 @@ import RefusalBlock from "./admission/RefusalBlock";
 import { projectionFor, projectionSummary } from "./attributes/projection";
 import type { AuthoritativeBbox } from "./canvas/viewportBbox";
 import WorkingCanvas, { WorkingCanvasHandle } from "./canvas/WorkingCanvas";
-import { latchedHoverReadout, type HoverReadout } from "./canvas/pick";
+import { latchedHoverReadout, type HoverReadout, type SessionEndReason } from "./canvas/pick";
 import { HoverReadoutView } from "./canvas/HoverReadoutView";
 import ConsolePanel from "./console/ConsolePanel";
 import { recordNamed } from "./console/recorder";
@@ -669,9 +669,17 @@ export function handleCanvasCeilingRefusal(
 }
 
 /**
+ * The reason a session ended, from the refusal's code: `"source-changed"` only for exactly `engine.source_changed`, and
+ * `"coverage-lost"` for any other code (the routes into `endSession` admit that one and `engine.source_coverage_lost`).
+ */
+export function sessionEndReasonOf(code: string): SessionEndReason {
+  return code === "engine.source_changed" ? "source-changed" : "coverage-lost";
+}
+
+/**
  * **The owner's half of Brief A boundary 4** (P3b §2a(ii)): this dataset's session ended because its
- * source was observed to have changed, and this is the one place the App states what that means for
- * the operator.
+ * source was observed to have changed, or the watch on it lost coverage, and this is the one place
+ * the App states what that means for the operator.
  *
  * **Both arms reach this same function.** The baseline manager's `onSessionEnded`, the candidate
  * session's `onSessionEnded`, and `reportViewportOutcome`'s pre-check catch all call it, so an
@@ -701,13 +709,15 @@ export function handleSessionEnded(
   deps: {
     /** `sessionEndedRef.current` -- read synchronously by the hover latch. */
     isAlreadyEnded: () => boolean;
-    setSessionEnded: (refusal: FormattedRefusal) => void;
+    setSessionEnded: (refusal: FormattedRefusal, reason: SessionEndReason) => void;
     setHover: (value: HoverReadout) => void;
   }
 ): void {
   if (deps.isAlreadyEnded()) return;
-  deps.setSessionEnded(formatTerminalRefusal(detail));
-  deps.setHover({ kind: "session-ended" });
+  const refusal = formatTerminalRefusal(detail);
+  const reason = sessionEndReasonOf(refusal.code);
+  deps.setSessionEnded(refusal, reason);
+  deps.setHover({ kind: "session-ended", reason });
 }
 
 /** N8 fix: `App`'s own `endSession` generation guard, extracted so a unit test drives the SAME
@@ -724,7 +734,7 @@ export function endSessionForDataset(
   deps: {
     getCurrentDataset: () => string | null;
     isAlreadyEnded: () => boolean;
-    setSessionEnded: (refusal: FormattedRefusal) => void;
+    setSessionEnded: (refusal: FormattedRefusal, reason: SessionEndReason) => void;
     setHover: (value: HoverReadout) => void;
   }
 ): void {
@@ -917,7 +927,7 @@ export default function App() {
   const [canvasRefusal, setCanvasRefusal] = useState<string | null>(null);
   const [viewportRefusal, setViewportRefusal] = useState<FormattedRefusal | null>(null);
   /**
-   * **Brief A boundary 4 (P3b §2a): this dataset's session ended because its source changed.**
+   * **Brief A boundary 4 (P3b §2a): this dataset's session ended because its source changed, or its watch lost coverage.**
    * `null` until it does. Set once, by `handleSessionEnded`, from whichever of the four routes
    * (baseline terminal, tile terminal, untiled first-look terminal, either arm's pre-check refusal)
    * gets there first.
@@ -929,10 +939,10 @@ export default function App() {
    * `admitAndResetStaleUiState` call below.
    */
   const [sessionEnded, setSessionEnded] = useState<FormattedRefusal | null>(null);
-  /** The same fact, readable synchronously. `onHover` fires from deck.gl's own render path and must
+  /** The same fact, readable synchronously, with the reason the session ended (`null` while it is live). `onHover` fires from deck.gl's own render path and must
    * be able to refuse a pick in the tick the session ended, before React has re-rendered anything --
    * the identical "ref mirrors state" discipline `WorkingCanvas.tsx`'s own `onHoverRef` uses. */
-  const sessionEndedRef = useRef(false);
+  const sessionEndedRef = useRef<SessionEndReason | null>(null);
   /** N8 fix: the CURRENT admitted generation, written by `handleAdmitted` -- `endSessionForDataset`
    * compares a late callback's own captured `forDataset` against this ref to spot a stale one. */
   const admittedDatasetRef = useRef<string | null>(null);
@@ -1162,7 +1172,7 @@ export default function App() {
         },
         setScanState: commitScanState,
         setSessionEnded: (value) => {
-          sessionEndedRef.current = value !== null;
+          sessionEndedRef.current = value === null ? null : sessionEndReasonOf(value.code);
           setSessionEnded(value);
         },
         setAdmitted: (value) => dispatch({ type: "resource.admitted", admitted: value }),
@@ -1401,12 +1411,12 @@ export default function App() {
   const endSession = useCallback((detail: string, forDataset: string) => {
     endSessionForDataset(detail, forDataset, {
       getCurrentDataset: () => admittedDatasetRef.current,
-      isAlreadyEnded: () => sessionEndedRef.current,
-      setSessionEnded: (refusal) => {
-        sessionEndedRef.current = true;
+      isAlreadyEnded: () => sessionEndedRef.current !== null,
+      setSessionEnded: (refusal, reason) => {
+        sessionEndedRef.current = reason;
         setSessionEnded(refusal);
-        // The workspace records that this resource's generation ended (the first call wins, as above).
-        dispatch({ type: "resource.generationEnded", resource: forDataset });
+        // The workspace records that this resource's generation ended, and why (the first call wins, as above).
+        dispatch({ type: "resource.generationEnded", resource: forDataset, reason });
       },
       setHover,
     });

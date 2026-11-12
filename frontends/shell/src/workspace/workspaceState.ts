@@ -16,9 +16,9 @@
  * and only once (`selectClosable`, then `resource.closed`). No action adds a second view or reorders `drawOrder`: no
  * product needs either yet (plan section 2 rule 9).
  *
- * `generationEnded` is written where `endSession` already runs. Its reader is the selection's end (section 2.3):
- * the reducer ends the selection and the inspection of every view bound to the resource, once. A rebind ends them
- * the same way, with the other reason.
+ * `generationEnded` is written where `endSession` already runs, with the reason the session ended (the source changed, or
+ * the watch on it lost coverage). Its reader is the selection's end (section 2.3): the reducer ends the selection and the
+ * inspection of every view bound to the resource, once, with that reason. A rebind ends them the same way, with `reopened`.
  *
  * Hover, refusals, residency, scan state and the session latch stay in `App`. They are not transitions.
  */
@@ -30,7 +30,7 @@ import type { Filter } from "../skp/types";
 import { DEFAULT_STYLE_STATE } from "../style/document";
 import type { StyleState } from "../style/document";
 import type { FilterClause } from "./filterClauses";
-import type { SelectionMembers, SelectionMode, SelectionNotice } from "./selection";
+import type { GenerationEndReason, SelectionMembers, SelectionMode, SelectionNotice } from "./selection";
 import { applyViewTransition, endViewGeneration } from "./viewTransitions";
 import type { ViewTransition } from "./viewTransitions";
 
@@ -108,7 +108,7 @@ export type WorkspaceAction =
   /** Mints the one view on the first admission and rebinds it on every later one: the view's filter is
    * reset and its style kept, the view joins the new resource's consumers and leaves the old one's. */
   | { type: "resource.admitted"; admitted: Admitted }
-  | { type: "resource.generationEnded"; resource: ResourceKey }
+  | { type: "resource.generationEnded"; resource: ResourceKey; reason: GenerationEndReason }
   /** Idempotent (Amendment 7 item 4): a consumer already present leaves the state unchanged. */
   | { type: "consumer.acquired"; resource: ResourceKey; consumer: ConsumerId }
   | { type: "consumer.released"; resource: ResourceKey; consumer: ConsumerId }
@@ -158,13 +158,13 @@ function admit(state: WorkspaceState, admitted: Admitted): WorkspaceState {
   };
 }
 
-/** The source changed under `key`: the generation ends once, and with it every selection and inspection bound to it. */
-function endGeneration(state: WorkspaceState, key: ResourceKey): WorkspaceState {
+/** The generation under `key` ended, because the source changed or its watch lost coverage: it ends once, and with it every selection and inspection bound to it. */
+function endGeneration(state: WorkspaceState, key: ResourceKey, reason: GenerationEndReason): WorkspaceState {
   const entry = state.resources[key];
   if (entry === undefined || entry.generationEnded) return state;
   const views: Record<ViewId, ViewState> = { ...state.views };
   for (const id of Object.keys(views) as ViewId[]) {
-    if (views[id].resource === key) views[id] = endViewGeneration(views[id], "source-changed");
+    if (views[id].resource === key) views[id] = endViewGeneration(views[id], reason);
   }
   return { ...state, views, resources: { ...state.resources, [key]: { ...entry, generationEnded: true } } };
 }
@@ -185,7 +185,7 @@ export function workspaceReducer(state: WorkspaceState, action: WorkspaceAction)
     case "resource.admitted":
       return admit(state, action.admitted);
     case "resource.generationEnded":
-      return endGeneration(state, action.resource);
+      return endGeneration(state, action.resource, action.reason);
     case "consumer.acquired":
       return withResource(state, action.resource, (e) =>
         e.consumers.includes(action.consumer) ? e : { ...e, consumers: [...e.consumers, action.consumer] }

@@ -23,7 +23,7 @@ describe("clickEffect: the inspected feature's attributes (SHELL-MIGRATION-MILES
     const view: ViewState = { id: "view-1", resource: "ds_x", filter: null, style: DEFAULT_STYLE_STATE };
     const pick = { streamHandle: "sh_c", batchSeq: 0, id: 2n, anchor: null };
     const bounds = { xmin: 10, ymin: 0, xmax: 11, ymax: 1 };
-    const effect = clickEffect(view, { kind: "feature", pick, bounds, row, filter: null }, false);
+    const effect = clickEffect(view, { kind: "feature", pick, bounds, row, filter: null }, null);
 
     expect(effect.transitions).toEqual([{ action: "inspect.set", params: { pick, bounds, row } }]);
     expect(effect.row).toBe("feature.inspect");
@@ -39,7 +39,7 @@ describe("clickEffect: the inspected feature's attributes (SHELL-MIGRATION-MILES
     const view: ViewState = { id: "view-1", resource: "ds_x", filter, style: DEFAULT_STYLE_STATE, tool: "select" };
     const pick = { streamHandle: "sh_c", batchSeq: 0, id: 2n, anchor: null };
     const bounds = { xmin: 10, ymin: 0, xmax: 11, ymax: 1 };
-    const effect = clickEffect(view, { kind: "feature", pick, bounds, row, filter: batch.filter }, false);
+    const effect = clickEffect(view, { kind: "feature", pick, bounds, row, filter: batch.filter }, null);
 
     expect(effect.transitions).toEqual([{ action: "selection.apply", params: { mode: "toggle", id: 2n, bounds, row, filter } }]);
     const member = viewSelection(applyViewTransition(view, effect.transitions[0])).get(2n);

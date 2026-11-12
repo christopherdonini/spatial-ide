@@ -5,7 +5,7 @@ import { act } from "react";
 import { createRoot, Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { HoverReadoutView, HOVER_CONFIRMING_MARKER_TEXT } from "./HoverReadoutView";
+import { HoverReadoutView, HOVER_CONFIRMING_MARKER_TEXT, sessionEndedText } from "./HoverReadoutView";
 import { confirmingReadout, type PickResult, type PickSessionEnded } from "./pick";
 
 // React 18.3's own `act` (not `react-dom/test-utils`'s deprecated re-export), exactly as
@@ -144,7 +144,7 @@ describe("HoverReadoutView, boundary 4's session-ended refusal", () => {
   // OBSERVED: FAILED -- `TypeError: Cannot read properties of undefined (reading 'toString')`, i.e.
   // the id line reaching for an id that does not exist.
   it("renders the refusal in the hover slot, and never a bare or standing id", () => {
-    render({ kind: "session-ended" });
+    render({ kind: "session-ended", reason: "source-changed" });
 
     const el = container.querySelector(".hover-readout");
     expect(el).not.toBeNull();
@@ -167,9 +167,22 @@ describe("HoverReadoutView, boundary 4's session-ended refusal", () => {
     render(confirmingReadout(ID_WITH_ANCHOR));
     expect(container.textContent).toContain("id 6430");
 
-    render({ kind: "session-ended" });
+    render({ kind: "session-ended", reason: "source-changed" });
     expect(container.querySelectorAll(".hover-readout")).toHaveLength(1);
     expect(container.textContent).not.toContain("6430");
+  });
+
+  it("a session-ended readout names its reason: coverage-lost and source-changed each their own sentence, no id in either", () => {
+    const sentence = (reason: PickSessionEnded["reason"]) => {
+      render({ kind: "session-ended", reason });
+      return container.querySelector(".hover-readout-session-ended")?.textContent ?? "(no session-ended readout)";
+    };
+    expect(sentence("coverage-lost"), "the coverage-lost readout against its own sentence").toBe(sessionEndedText("coverage-lost"));
+    expect(sentence("coverage-lost"), "the coverage-lost readout names the lost watch").toContain("lost coverage");
+    expect(sentence("source-changed"), "the source-changed readout against its own sentence").toBe(sessionEndedText("source-changed"));
+    expect(sentence("source-changed"), "the source-changed readout names the changed file").toContain("The source file changed");
+    expect(sessionEndedText("coverage-lost"), "the two sentences differ").not.toBe(sessionEndedText("source-changed"));
+    expect(container.textContent, "no id in the readout").not.toMatch(/\bid \d/);
   });
 
   // RECORDED MUTATION naming its test:
@@ -185,7 +198,7 @@ describe("HoverReadoutView, boundary 4's session-ended refusal", () => {
   it("the type carries no identity for a render path to reach", () => {
     // Typed as the variant itself, not as a literal, so the two directives below are assertions
     // about `PickSessionEnded` and fail when that type gains a field.
-    const refused: PickSessionEnded = { kind: "session-ended" };
+    const refused: PickSessionEnded = { kind: "session-ended", reason: "source-changed" };
     // @ts-expect-error -- `PickSessionEnded` has no `id`; there is nothing to render as one.
     expect(refused.id).toBeUndefined();
     // @ts-expect-error -- and no `standing` either, unlike the labelled state.

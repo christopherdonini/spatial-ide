@@ -46,10 +46,14 @@ export interface PickConfirming {
   standing: PickResult;
 }
 
+/** Why a session ended, as the hover and the click state it: the file changed, or the watch on it lost coverage. */
+export type SessionEndReason = "source-changed" | "coverage-lost";
+
 /**
  * **Brief A boundary 4, P3b §2a(iv): picks are refused because the session ended** -- the source
- * this dataset was opened against was observed to have changed, so the residency behind every pick
- * was cleared and the identities it handed out no longer refer to anything this client can resolve.
+ * this dataset was opened against was observed to have changed, or the watch on it lost coverage,
+ * so the residency behind every pick was cleared and the identities it handed out no longer refer
+ * to anything this client can resolve.
  *
  * **Why this is a state and not silence.** With residency cleared, `onHover` resolves no layer and
  * emits `null` (`WorkingCanvas.tsx`'s `onHover` handler, its `emitHoverReadout(null)` branches), and
@@ -57,12 +61,12 @@ export interface PickConfirming {
  * which is a different, and false, statement. ADR-010 rule 5 (`:68`, *"Staleness is signalled,
  * never silently served"*) forbids exactly that reading, so the refusal is named.
  *
- * `kind` is the only field, for the reason `PickBelowResolution` above has only `kind`: there is no
- * feature identity to report, by construction. Built by `latchedHoverReadout` below, which is the
- * one place it is constructed.
+ * `kind` and `reason` are the only fields: there is no feature identity to report, by construction.
+ * Built by `latchedHoverReadout` below, which is the one place it is constructed.
  */
 export interface PickSessionEnded {
   kind: "session-ended";
+  reason: SessionEndReason;
 }
 
 /** `WorkingCanvasProps.onHover`'s own full result type -- `null` (nothing under the cursor),
@@ -96,14 +100,14 @@ export function isPickSessionEnded(value: HoverReadout): value is PickSessionEnd
  * boundary 4's own "until reopen" (`state/NEXT-CUT.md:58-59`), and §7's declared lifetime: no
  * timeout, because a timeout would resurrect exactly what the never-resurrect rule prevents.
  * **N8 correction (2026-09-22):** the latch is App-owned `sessionEndedRef.current` (`App.tsx`, this
- * function's `sessionEnded` argument), not something a `WorkingCanvas` remount clears -- a reopen
+ * function's `endedBy` argument: the reason the session ended, or `null` while it is live), not something a `WorkingCanvas` remount clears -- a reopen
  * clears it because `handleAdmitted`'s own `admitAndResetStaleUiState` call resets it, the same
  * clear App's session-ended status block relies on (`App.tsx`'s own doc comment on
  * `sessionEnded` has the full account); App's `useEffect([admitted])` rebuilds the managers and the
  * keyed `WorkingCanvas` remount discards canvas-side refs, both separate from this latch's reset.
  */
-export function latchedHoverReadout(readout: HoverReadout, sessionEnded: boolean): HoverReadout {
-  return sessionEnded ? { kind: "session-ended" } : readout;
+export function latchedHoverReadout(readout: HoverReadout, endedBy: SessionEndReason | null): HoverReadout {
+  return endedBy !== null ? { kind: "session-ended", reason: endedBy } : readout;
 }
 
 export function isPickConfirming(value: HoverReadout): value is PickConfirming {

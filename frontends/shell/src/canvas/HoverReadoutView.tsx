@@ -7,6 +7,7 @@ import {
   isPickSessionEnded,
   type HoverReadout,
   type PickResult,
+  type SessionEndReason,
 } from "./pick";
 
 /**
@@ -34,11 +35,18 @@ export function idLine(pick: PickResult): string {
   return `id ${pick.id.toString()}${pick.anchor ? ` @ (${pick.anchor[0].toFixed(3)}, ${pick.anchor[1].toFixed(3)})` : ""}`;
 }
 
-/** The two refusals' texts, exported for the Feature tab (milestone 2, Amendment 2 item 7). Each equals the text this
- * component has always rendered: its JSX lines trimmed and joined by one space. The wording is the human's at P6. */
-export const HOVER_SESSION_ENDED_TEXT =
+/** The refusals' texts. The Feature tab reads the below-resolution one as exported, and the session-ended ones through `sessionEndedText` (milestone 2, Amendment 2 item 7). The
+ * source-changed text equals the text this component has always rendered: its JSX lines trimmed and joined by one space. Its wording is the human's at P6; the coverage-lost one is a placeholder. */
+const HOVER_SESSION_ENDED_TEXT =
   "The source file changed while it was open, so what was on the canvas was cleared and features here can no longer be identified — reopen the dataset to continue.";
+const HOVER_SESSION_COVERAGE_LOST_TEXT =
+  "[P6 placeholder] The source watch lost coverage of the file while it was open, so what was on the canvas was cleared and features here can no longer be identified — reopen the dataset to continue.";
 export const HOVER_BELOW_RESOLUTION_TEXT = "Features here are below pick resolution — zoom in to inspect them.";
+
+/** The session-ended refusal's text for the reason the session ended: the hover readout renders it, and so does the Feature tab's last-click line. */
+export function sessionEndedText(reason: SessionEndReason): string {
+  return reason === "coverage-lost" ? HOVER_SESSION_COVERAGE_LOST_TEXT : HOVER_SESSION_ENDED_TEXT;
+}
 
 /**
  * The hover readout, all four of its states, in one place -- extracted verbatim from `App.tsx`'s
@@ -69,10 +77,10 @@ export function HoverReadoutView({ readout }: { readout: HoverReadout }): JSX.El
   //
   // **The wording is the human's at P6** (§9: the two strings P3b adds join the P6 sight list). No
   // test asserts it verbatim; `HoverReadoutView.test.tsx` asserts the structural property -- that
-  // the refusal renders and no id does.
+  // the refusal renders and no id does -- and that each reason has its own sentence.
   if (isPickSessionEnded(readout)) {
     return (
-      <div className="hover-readout hover-readout-session-ended">{HOVER_SESSION_ENDED_TEXT}</div>
+      <div className="hover-readout hover-readout-session-ended">{sessionEndedText(readout.reason)}</div>
     );
   }
 

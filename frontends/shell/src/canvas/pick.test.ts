@@ -212,13 +212,13 @@ describe("latchedHoverReadout (boundary 4: picks refused until reopen)", () => {
       confirmingReadout(pick),
     ];
     for (const state of states) {
-      expect(latchedHoverReadout(state, true)).toEqual({ kind: "session-ended" });
+      expect(latchedHoverReadout(state, "source-changed")).toEqual({ kind: "session-ended", reason: "source-changed" });
     }
     // In particular: nothing carrying an id survives the latch. Asserted structurally rather than
     // by inspecting text, because the type is what makes it true -- `PickSessionEnded` has no `id`
     // and no `standing`, so no render path can reach one.
     for (const state of states) {
-      const latched = latchedHoverReadout(state, true);
+      const latched = latchedHoverReadout(state, "source-changed");
       expect(JSON.stringify(latched)).not.toContain("100");
       expect(isPickSessionEnded(latched)).toBe(true);
     }
@@ -231,9 +231,9 @@ describe("latchedHoverReadout (boundary 4: picks refused until reopen)", () => {
   // { streamHandle: 'sh_test', …(3) }`.
   it("passes every readout through untouched while the session is live", () => {
     const pick = resolvePick(batch(), 0)!;
-    expect(latchedHoverReadout(pick, false)).toBe(pick);
-    expect(latchedHoverReadout(null, false)).toBeNull();
-    expect(latchedHoverReadout({ kind: "below-pick-resolution" }, false)).toEqual({
+    expect(latchedHoverReadout(pick, null)).toBe(pick);
+    expect(latchedHoverReadout(null, null)).toBeNull();
+    expect(latchedHoverReadout({ kind: "below-pick-resolution" }, null)).toEqual({
       kind: "below-pick-resolution",
     });
   });
@@ -249,6 +249,12 @@ describe("latchedHoverReadout (boundary 4: picks refused until reopen)", () => {
     expect(isPickSessionEnded(resolvePick(batch(), 0))).toBe(false);
     expect(isPickSessionEnded({ kind: "below-pick-resolution" })).toBe(false);
     expect(isPickSessionEnded(confirmingReadout(resolvePick(batch(), 0)!))).toBe(false);
-    expect(isPickSessionEnded({ kind: "session-ended" })).toBe(true);
+    expect(isPickSessionEnded({ kind: "session-ended", reason: "source-changed" })).toBe(true);
+  });
+
+  it("the latch carries the reason it is given", () => {
+    for (const reason of ["source-changed", "coverage-lost"] as const) {
+      expect(latchedHoverReadout(resolvePick(batch(), 0), reason), `the latched readout for ${reason}`).toEqual({ kind: "session-ended", reason });
+    }
   });
 });

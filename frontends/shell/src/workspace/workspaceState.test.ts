@@ -104,7 +104,7 @@ describe("UA2: a resource is closable only when its consumer set is empty, and i
     state = workspaceReducer(state, { type: "consumer.released", resource: "ds_a", consumer: "view-1" });
     expect(selectClosable(state)).toEqual(["ds_a"]);
     expect(workspaceReducer(state, { type: "consumer.released", resource: "ds_a", consumer: "view-1" })).toBe(state);
-    expect(workspaceReducer(state, { type: "resource.generationEnded", resource: "ds_a" }).resources.ds_a.generationEnded).toBe(true);
+    expect(workspaceReducer(state, { type: "resource.generationEnded", resource: "ds_a", reason: "source-changed" }).resources.ds_a.generationEnded).toBe(true);
   });
 });
 

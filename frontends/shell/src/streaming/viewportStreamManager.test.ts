@@ -922,7 +922,7 @@ describe("ViewportStreamManager on a source-changed terminal (boundary 4)", () =
     expect(onSuperseded).toHaveBeenCalledTimes(1);
     expect(onSuperseded).toHaveBeenCalledWith("sh_a");
     expect(setSessionEnded).toHaveBeenCalledTimes(1);
-    expect(setHover).toHaveBeenCalledWith({ kind: "session-ended" });
+    expect(setHover).toHaveBeenCalledWith({ kind: "session-ended", reason: "coverage-lost" });
     expect(endSessionDirectly).not.toHaveBeenCalled();
 
     // Refused until reopen, same as the direct-call test above.

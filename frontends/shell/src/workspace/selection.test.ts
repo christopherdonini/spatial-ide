@@ -197,14 +197,19 @@ describe("UB4: the end of a generation ends the selection", () => {
   // OBSERVED AT feaa43d329e6d900b6ae672547569f1b591e3052: FAILED -- "a source change ends the selection with the count dropped and the reason, clears and unpins the inspected feature, once":
   //   AssertionError: expected 2 to be +0 // Object.is equality. Reverted after observing.
   it("a source change ends the selection with the count dropped and the reason, clears and unpins the inspected feature, once", () => {
-    const ended = run(standing(), { type: "resource.generationEnded", resource: "ds_a" });
+    const ended = run(standing(), { type: "resource.generationEnded", resource: "ds_a", reason: "source-changed" });
     const view = ended.views["view-1"];
     expect(viewSelection(view).size).toBe(0);
     expect(viewSelectionNotice(view)).toEqual({ kind: "ended", reason: "source-changed", dropped: 2 });
     expect(viewInspected(view)).toBeNull();
     expect(viewPinned(view)).toBe(false);
     expect(ended.resources.ds_a.generationEnded).toBe(true);
-    expect(run(ended, { type: "resource.generationEnded", resource: "ds_a" }), "a second end changes nothing").toBe(ended);
+    expect(run(ended, { type: "resource.generationEnded", resource: "ds_a", reason: "source-changed" }), "a second end changes nothing").toBe(ended);
+  });
+
+  it("a generation ended by coverage-lost ends the selection with the reason coverage-lost", () => {
+    const ended = run(standing(), { type: "resource.generationEnded", resource: "ds_a", reason: "coverage-lost" });
+    expect(viewSelectionNotice(ended.views["view-1"]), "the notice a coverage-lost end leaves").toEqual({ kind: "ended", reason: "coverage-lost", dropped: 2 });
   });
 
   // RECORDED MUTATION for "UB4" (rebind): in `admit` (workspaceState.ts) carry the members across the rebind
@@ -228,11 +233,11 @@ describe("UB4: the end of a generation ends the selection", () => {
   //   AssertionError: expected { kind: 'ended', …(2) } to be null. Reverted after observing.
   it("with nothing selected there is no notice, and a reopen clears the notice a source change left", () => {
     const empty = run(initialWorkspaceState, { type: "resource.admitted", admitted: admittedOf("a") });
-    const sourceChanged = run(empty, { type: "resource.generationEnded", resource: "ds_a" });
+    const sourceChanged = run(empty, { type: "resource.generationEnded", resource: "ds_a", reason: "source-changed" });
     expect(viewSelectionNotice(sourceChanged.views["view-1"])).toBeNull();
     expect(sourceChanged.views["view-1"], "nothing to end: the view is the same object").toBe(empty.views["view-1"]);
 
-    const withNotice = run(standing(), { type: "resource.generationEnded", resource: "ds_a" });
+    const withNotice = run(standing(), { type: "resource.generationEnded", resource: "ds_a", reason: "source-changed" });
     expect(viewSelectionNotice(withNotice.views["view-1"])).not.toBeNull();
     const reopened = run(withNotice, { type: "resource.admitted", admitted: admittedOf("b") });
     expect(viewSelectionNotice(reopened.views["view-1"])).toBeNull();
@@ -305,6 +310,6 @@ describe("PC-U3: a member keeps the click's row and filter, cuts a long row with
     const apply: WorkspaceAction = { type: "view.transition", view: "view-1", transition: { action: "selection.apply", params: { mode: "add", id: 1n, bounds: unit, row, filter } } };
     const held = [{ type: "resource.admitted", admitted } as WorkspaceAction, apply].reduce(workspaceReducer, initialWorkspaceState);
     expect(viewSelection(held.views["view-1"]).get(1n)).toEqual({ bounds: unit, row, filter });
-    expect(viewSelection(workspaceReducer(held, { type: "resource.generationEnded", resource: "ds_a" }).views["view-1"]).size).toBe(0);
+    expect(viewSelection(workspaceReducer(held, { type: "resource.generationEnded", resource: "ds_a", reason: "source-changed" }).views["view-1"]).size).toBe(0);
   });
 });

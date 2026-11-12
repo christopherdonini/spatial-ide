@@ -15,7 +15,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { ProjectionSummary } from "../attributes/projection";
 import { ATTRIBUTE_NULL_MARKER, readRow } from "../attributes/values";
 import { decodeBatch } from "../canvas/decodeBatch";
-import { HOVER_BELOW_RESOLUTION_TEXT, HOVER_SESSION_ENDED_TEXT, idLine } from "../canvas/HoverReadoutView";
+import { HOVER_BELOW_RESOLUTION_TEXT, idLine, sessionEndedText } from "../canvas/HoverReadoutView";
 import { attributeBatchIpc } from "../testUtils/attributeBatchIpc";
 import type { SelectionCounts, SelectionNotice } from "../workspace/selection";
 import type { InspectedFeature } from "../workspace/workspaceState";
@@ -133,7 +133,7 @@ describe("FeatureTab", () => {
     );
     expect(line({ kind: "nothing" })).toBe("[P6 placeholder] Last click: no feature there.");
     expect(line({ kind: "below-pick-resolution" })).toBe(HOVER_BELOW_RESOLUTION_TEXT);
-    expect(line({ kind: "session-ended" })).toBe(HOVER_SESSION_ENDED_TEXT);
+    expect(line({ kind: "session-ended", reason: "source-changed" })).toBe(sessionEndedText("source-changed"));
   });
 
   // RECORDED MUTATION for "no hover-readout": in FeatureTab.tsx give the id line the class `hover-readout`. Expected failure: an element with that class is
@@ -145,7 +145,7 @@ describe("FeatureTab", () => {
       {},
       { inspected: INSPECTED_A, pinned: true, inspectedStatus: "drawn", counts: COUNTS_FIVE },
       { lastClick: { kind: "below-pick-resolution" } },
-      { lastClick: { kind: "session-ended" } },
+      { lastClick: { kind: "session-ended", reason: "source-changed" } },
       { notice: { kind: "ended", reason: "reopened", dropped: 3 } },
     ];
     states.forEach((state, index) => {
@@ -213,6 +213,17 @@ describe("FeatureTab", () => {
     );
     mount({ notice: { kind: "ended", reason: "reopened", dropped: 1 } });
     expect(q(".feature-notice")?.getAttribute("role")).toBe("status");
+  });
+
+  it("the notice and the last-click line name each end reason in their own words", () => {
+    mount({ notice: { kind: "ended", reason: "coverage-lost", dropped: 2 }, lastClick: { kind: "session-ended", reason: "coverage-lost" } });
+    expect(text(".feature-notice"), "the coverage-lost notice").toBe(
+      "[P6 placeholder] The selection ended: 2 selected features were dropped, because the source watch lost coverage of the file."
+    );
+    expect(text(".feature-last-click-session-ended"), "the coverage-lost last-click line against sessionEndedText").toBe(sessionEndedText("coverage-lost"));
+    expect(text(".feature-last-click-session-ended"), "the coverage-lost last-click line names the lost watch").toContain("lost coverage");
+    mount({ lastClick: { kind: "session-ended", reason: "source-changed" } });
+    expect(text(".feature-last-click-session-ended"), "the source-changed last-click line").toContain("The source file changed");
   });
 
   // RECORDED MUTATION for "PA-R1": in `attributesSection` skip the cells whose value is a NULL (`row.filter((cell) => cell.value.kind !== "null").map(...)`). Expected failure:

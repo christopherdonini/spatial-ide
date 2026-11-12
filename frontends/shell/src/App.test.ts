@@ -9,7 +9,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import type { Admitted } from "./admission/admitDataset";
 import type { FormattedRefusal } from "./admission/formatRefusal";
-import type { HoverReadout, PickResult } from "./canvas/pick";
+import type { HoverReadout, PickResult, SessionEndReason } from "./canvas/pick";
 import type { AuthoritativeBbox } from "./canvas/viewportBbox";
 import type { WorkingCanvasHandle } from "./canvas/WorkingCanvas";
 import {
@@ -30,6 +30,7 @@ import {
   requestViewportWithSingleRetry,
   ResidencyStatus,
   routeDatasetSessionEndedEvent,
+  sessionEndReasonOf,
   ScanEvent,
   ScanState,
   scanLivenessText,
@@ -45,6 +46,11 @@ import { VIEWPORT_QUERY_MIN_INTERVAL_MS } from "./streaming/viewportStreamManage
 import type { RequestOutcome } from "./streaming/viewportStreamManager";
 import { debounce } from "./streaming/debounce";
 import type { Terminal } from "./streaming/transport";
+import {
+  REAL_SOURCE_CHANGED_TERMINAL_DETAIL,
+  REAL_SOURCE_COVERAGE_LOST_PRE_CHECK_REFUSAL_DETAIL,
+  REAL_SOURCE_COVERAGE_LOST_TERMINAL_DETAIL,
+} from "./testUtils/terminalShapes";
 
 // D4 (custodian forensic run, evidence: 2,012,436 = 1,961,249 + 51,187): a refusal from one
 // dataset survived, verbatim, into every later step's UI because nothing ever reset `canvasRefusal`
@@ -1156,7 +1162,32 @@ describe("handleSessionEnded (boundary 4's owner-side consequence)", () => {
     expect(ended!.message).not.toContain("engine.source_changed");
     expect(ended!.message).toContain("the source file changed while it was open");
     // Picks are refused immediately, not only at the next pointer move.
-    expect(hover).toEqual({ kind: "session-ended" });
+    expect(hover).toEqual({ kind: "session-ended", reason: "source-changed" });
+  });
+
+  it("handleSessionEnded names coverage-lost from the kernel's real coverage-lost details, and source-changed only from its exact code", () => {
+    const endedBy = (detail: string) => {
+      const seen: { reason: SessionEndReason | null; hover: HoverReadout } = { reason: null, hover: null };
+      handleSessionEnded(detail, {
+        isAlreadyEnded: () => false,
+        setSessionEnded: (_refusal, reason) => {
+          seen.reason = reason;
+        },
+        setHover: (h) => {
+          seen.hover = h;
+        },
+      });
+      return seen;
+    };
+    for (const detail of [REAL_SOURCE_COVERAGE_LOST_TERMINAL_DETAIL, REAL_SOURCE_COVERAGE_LOST_PRE_CHECK_REFUSAL_DETAIL]) {
+      const seen = endedBy(detail);
+      expect(seen.reason, "setSessionEnded's reason for a real coverage-lost detail").toBe("coverage-lost");
+      expect(seen.hover, "the hover readout for a real coverage-lost detail").toEqual({ kind: "session-ended", reason: "coverage-lost" });
+    }
+    const changed = endedBy(REAL_SOURCE_CHANGED_TERMINAL_DETAIL);
+    expect(changed.reason, "setSessionEnded's reason for the real source-changed detail").toBe("source-changed");
+    expect(changed.hover, "the hover readout for the real source-changed detail").toEqual({ kind: "session-ended", reason: "source-changed" });
+    expect(sessionEndReasonOf("engine.source_changed_later"), "a code that only begins with engine.source_changed").toBe("coverage-lost");
   });
 
   // RECORDED MUTATION for "is idempotent -- the first route to notice wins": drop the
@@ -1291,7 +1322,7 @@ describe("endSessionForDataset (N8: a late callback from an ended generation mus
     endSessionForDataset(DETAIL, "ds_a", d);
     expect(calls.setSessionEnded).toHaveLength(1);
     expect(calls.setSessionEnded[0].code).toBe("engine.source_changed");
-    expect(calls.setHover).toEqual([{ kind: "session-ended" }]);
+    expect(calls.setHover).toEqual([{ kind: "session-ended", reason: "source-changed" }]);
     expect(ended.current).toBe(true);
   });
 });
