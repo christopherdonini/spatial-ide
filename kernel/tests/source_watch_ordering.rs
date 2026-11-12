@@ -325,8 +325,8 @@ fn a_signal_free_rearm_does_not_restore_an_ended_generation() {
 /// run and reverted: this test FAILED on its `fields.detail` equality (K6: the refusal's
 /// `fields.detail` against the brace-free pre-admission literal), `left` being `right` with a
 /// `{` prepended and a `}` appended, `right: Some("[P6 placeholder] a notification arrived for
-/// this source before admission")` — 1 failed,
-/// the other three tests of that piece passing.
+/// this source before admission")` — 1 failed; the other three tests of
+/// `governance/forms/kernel/PRE-ADMISSION-CHANGE-DETAIL-BRACES-PREREGISTRATION.md` passed.
 ///
 /// **Corrected comment (phase 2 delta 7).** The earlier revision of this comment claimed a
 /// signal-free retry "would not be true if the first attempt had left anything behind" — false: a
