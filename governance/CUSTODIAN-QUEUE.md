@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `7ae6f3ed136012e0746f03c75cd2c0ba8fa8c09b725c88a60200d2d83f62ddec`) at `2026-11-12T14:54:53.191Z`.
+Generated from `PLAN.yaml` (sha256 `97f74ce2509a563750193f7cf4eb3f908fb63ab7a2e59305c21c167cc9db4625`) at `2026-11-13T04:02:28.026Z`.
 
 ## 1. Next
 
@@ -9,13 +9,17 @@ Generated from `PLAN.yaml` (sha256 `7ae6f3ed136012e0746f03c75cd2c0ba8fa8c09b725c
 ## 2. Ready
 
 - **lod-tier-tests-own-tier-folder** — Each engine test run takes its own tier folder, the machine-wide tier folder kept for the product only: two suites sharing one machine cleared each other's tiers, failing lod_tier_builder in #284's gate 1 (the human's ruling of 2026-11-06, item 2) (lane `engine`, order null, budget 60 min)
-- **second-open-history-before-1c-step-3** — What a second open's history is: a second open of a file whose session record another project of this run holds; placed before 1c's step 3, whose recovery offer reads the record; it carries ADR-036's note in the human's words (lane `kernel-protocol`, order null, budget 0 min)
+- **close-races-three-untested-kernel-tests** — Kernel tests for the three places #308's two gates found untested: the cancel at a failed attribution, the end's reason branch of the arm, and the ended-then-closed race at SkpHost level (S3, the filler queue) (lane `kernel-protocol`, order null, budget 60 min)
 - **windows-case-fold-non-ascii** — The audit case policy on Windows folds non-ASCII letters as NTFS does, so a profile path differing only in non-ASCII case cannot escape the user-home redaction (wave 3's 1c-2 correction, S2, code-path-only) (lane `kernel-protocol`, order null, budget 60 min)
 - **site-waiting-on-you-lists-open-questions** — The site's Waiting on you also lists an in-progress node carrying an open question for the human, set by the custodian when a running piece stops for the human's ruling and cleared when the human answers (lane `governance`, order null, budget 45 min)
 - **publish-bundle-sigterm** — SIGTERM handling in publish-bundle on unix (wave-3 W3-A observation 3) (lane `platform`, order null, budget 90 min)
 - **publish-unix-quota-perm-errors** — EDQUOT and EPERM in publish error classification on unix (wave-3 W3-A observation 1) (lane `platform`, order null, budget 90 min)
 
-## 3. Waiting on the human (total: 20 min)
+## 3. Waiting on the human (total: 22 min)
+
+### ruling
+
+- **verify-bundle-example-path-build-dir-layout** — The kernel tests that run a built example find it under the toolchain build-dir layout of rustc 1.100.0: verify_bundle, red on main since #309 merge, and scale_pass helper (S3; its slot waits for the human) (2 min)
 
 ### sitting
 
@@ -30,12 +34,20 @@ Generated from `PLAN.yaml` (sha256 `7ae6f3ed136012e0746f03c75cd2c0ba8fa8c09b725c
 - **fixture-determinism-off-windows-record** — kernel/FIXTURES.md on determinism (byte-identical on one machine, different across platforms, with the Linux sizes and hashes), and the G5 entry point gains the hash check the S entry point has — blocked by: posix-backslash-is-inside-and-redaction-label
 - **lod-tier-identity-binds-file-name** — The LOD tier builder takes the identity name DuckDB bound and looks it up among the file's own footer names, so a renamed identity column reaches a different column there — blocked by: port-2-macos-l1-and-app-dirs
 - **module-docs-drift-sweep-area-d** — Kernel and engine module docs: the never-refuses and unreachable claims the Table, record_step and publish have overtaken, the withdrawn cancellation bound, and smaller statements (drift sweep area D, findings 1 to 6) — blocked by: b2-piece-1c-save-and-reopen
+- **publish-approval-kernel-parity** — Kernel parity for the publish approval's column line: the kernel's approval prompt carries the column list and prints it, and the shell mirrors it, so the CLI and the shell show the same facts (option (E); S3, not for v0.2) — blocked by: publish-approval-columns-line
+- **second-open-history-before-1c-step-3** — Which record a step belongs to: a second open's steps, and steps recorded after a save made before any step (the independent review's C2), with the review's note on two dataset identities; settled before 1c step 2's lineage reader (L1 to L4), so before step 3; ADR-036's text on both is the human's — blocked by: publish-approval-columns-line
 - **skp-line-cites-outside-close-races** — Stale line cites into kernel/src/skp.rs outside kernel-close-races-followups files -- shell streaming, App.tsx, pool_poll.rs, src-tauri lib.rs, the P4 corpus test and the persisted-artifacts test — blocked by: adr-035-close-races-note
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
+- **open-first-look-fills-fit-view** — After an open the view is partial and nothing says so, on every file over 10,000 rows: the open plans the tiles of the view the fit shows, so the view fills without a pan and the status line speaks (S1, the human's grade) — blocked by: b1-shell-half
 - **pan-anchor-setcam-waits-for-its-own-reset** — e2e/pan-anchor.mjs: setCam waits for the view-state line its own reset produces, never a late line from the previous gesture (test only) — blocked by: recentre-crossing-view-displaced-fix
+- **publish-approval-columns-line** — The publish approval names the columns a bundle publishes: a host-composed line in the approval, its own piece outside PR B (S2, the human's grade; v0.2's tag waits for it) — blocked by: recentre-crossing-view-displaced-fix
+- **publish-approval-consult-gate-findings** — The publish approval consult's four gate findings: ADR-024's stale approval lifetime, the approval dialog's pointer to a report with no path, walkthrough G3's question the dialog cannot answer, and PR B's form naming no line for the approval; the docs lane — blocked by: known-limitations-item-47-name-floor-sentence
+- **recentre-stall-three-observations** — The re-centring stall report's three proposed observations (a timer around the layer build, deck's attribute-update counters, the render-trace layers line against the gap's edges), as one node behind the S1 fix (S3) — blocked by: recentre-crossing-view-displaced-fix
 - **session-end-lines-name-coverage-lost-as-source-change** — The hover readout and the Feature tab word every session end as a source change, coverage-lost included, although the engine says coverage-lost is never a source change (milestone 4 PR C gate 1, the architect's C1 note) — blocked by: b1-shell-half
 - **session-log-token-redaction-rests-on-page-code** — The session token never reaching the session log rests on page code: binding_log_session_event appends page-supplied text verbatim, the page holds the token, and the data plane's Session::redact has only a test caller — blocked by: b2-piece-1c-save-and-reopen
 - **briefb-b2-save-reopen** — B2 — Save project, Snapshot data, session history, lineage and preferences, in five stages, each with its own form — blocked by: decision-adr-029-scan-progress-route
+- **known-limitations-first-look-partial-view** — KNOWN-LIMITATIONS: a new item, its number the next free on main, the human's words by approval (item 3 (b) of 2026-11-12, third message): after a file opens, until the first pan or zoom, the map shows at most the first 10,000 rows the file returns and the status line says nothing; withdrawn by open-first-look-fills-fit-view when it merges — blocked by: adr-035-close-races-note
+- **known-limitations-item-47-name-floor-sentence** — KNOWN-LIMITATIONS item 47: the redaction search's 3-byte name floor, one sentence added to the item's end, the human's words by approval ((A) of the custodian's draft; item 7 of 2026-11-12, third message) — blocked by: known-limitations-first-look-partial-view
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer — blocked by: signpath-application-draft
 - **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-2-0
 - **signpath-application-draft** — Entry 77 — the SignPath OSS application and disclosure text drafted for the human sight, once a release is CI-built — blocked by: release-v0-2-0
@@ -49,12 +61,10 @@ Generated from `PLAN.yaml` (sha256 `7ae6f3ed136012e0746f03c75cd2c0ba8fa8c09b725c
 
 - **clippy-deny-warnings-workspace** — The workspace clippy diagnostics fixed, so cargo clippy over every target with -D warnings exits 0 (the cloud Linux run lists 48 distinct) — evidence: branch `cut/clippy-deny-warnings-workspace-12c`
 - **adr-035-close-races-note** — ADR-035 -- an appended, dated note recording what kernel-generation-close-races makes historical (Decision 3's no-session-reference case unreachable; invalidate marks only on a live removal; Decision 2's mint-race arm standing) — evidence: branch `cut/adr-035-close-races-note`
-- **pre-admission-change-detail-braces** — Four kernel P6-placeholder detail strings are wrapped in literal braces, which reach the operator message; the watcher form declares each such string starts with the bracketed placeholder tag — evidence: branch `cut/pre-admission-change-detail-braces`
 - **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **record-step-style-match-widening** — record_step admits a style.set match value on fillColor, with the step's dependencies naming the match column and its type (milestone 4's OPEN-4 (A′)), carried in piece 1c's step 1 by class 9 (the 1c form's Amendment 7) — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **b1-shell-half** — Shell migration, milestone 4 -- B1 shell half: attributes of the inspected feature, colour by category with its legend, and the table — evidence: branch `cut/b1-shell-half-pr-c`
 - **recentre-crossing-view-displaced-fix** — After a pan crosses the re-centring bound, the view is displaced by the origin's move: the fix (S1), under the full form and both gates, the architect proposing its shape — evidence: branch `cut/recentre-crossing-view-displaced-fix`
-- **known-limitations-item-4-on-main-paragraph** — KNOWN-LIMITATIONS item 4's On-main paragraph, untrue on main since #307, becomes the human's words of 2026-11-12 (item 2 (b)), in its own small PR — evidence: branch `cut/known-limitations-item-4-on-main-paragraph`
 - **port-2-macos-l1-and-app-dirs** — PORT-2 -- macOS L1 for the Cargo workspace: macos-latest in the same matrix, one application-directory boundary replacing the two resolvers, and a case-policy test on a case-insensitive volume — evidence: branch `cut/port-2-macos-l1-and-app-dirs`
 
 ## 6. Proposed / unscheduled

@@ -219,3 +219,21 @@ Opens empty and is append-only, with classes 1 to 9. The human's answers on clau
 - **OPEN-1** is answered in the human's typed words (`state/directives/2026-11-11-adr-035-item-2-arm-stands-1c-open-20-1-a-21-1-b-21-3-a-diagnostic-graded-pan-anchor-released-s1-candidate-origin-move-reproducer.md`, item 1). **OPEN-2** (governance/forms/root/) was taken at the draft's recommendation on 2026-11-11, as the draft's filing note records.
 - **The PLAN node.** Its gate is this form from this commit. Its title's last clause is reworded by the custodian to agree with the ruling: Decision 2's mint-race arm standing, where it said gone. Its budget stays the node's, an estimate and not a measurement.
 - **Rule (00)** at main 8e09470c, `git diff --name-only origin/main...<branch>`: none of `cut/b1-shell-half-pr-c` (in progress), `cut/port-2-macos-l1-and-app-dirs` (in progress), `cut/b2-piece-1c-save-and-reopen` (PR #307), `cut/clippy-deny-warnings-workspace-12c` (in progress), `cut/pan-anchor-there-and-back-residual-diagnostic` (local worktree), `cut/pan-anchor-setcam-waits-for-its-own-reset` (local worktree) touches ADR-035. It is checked again at dispatch.
+
+## Amendments (appended under §10)
+
+### Amendment 1 — 2026-11-12 — class 5, the human's answer on C1 in their own words, and the architect's one check of them; with class 8, P1's appended bytes, §7 not edited
+
+- **C1**, the one finding of both gates at 1700ac8c: `state/consults/gates/2026-11-12-adr-035-close-races-note-gate-architect.md` (sha256 861311496aae89122011c3b5c6dca2609a7cb2512d8fa7a4ed3183d0e241d5bc), gate-log 725, FAIL; `state/consults/gates/2026-11-12-adr-035-close-races-note-gate-reviewer.md` (sha256 6761ed57cc3fbda3d1e95db7260c37e38811f1d4bb3364b7a699191d481376db), gate-log 726, FAIL.
+- **The human's answer**, their own words under §9: `state/directives/2026-11-12-s1-fix-open-a-c-s6b-now-pr-b-class-9-now-1c-five-308-c1-words-platform-reports-order-no-git-stash.md:37-41 @ 6e041829 sha256:398504369b35caf0da576117059031caec455ad22ff92d8a4f9873af2ed7b447`. Item 1 of the note is replaced whole by their line; items 2 and 3 stand.
+- **The restore and the append**, by `state/directives/2026-11-12-third-message-open-3-a-gates-now-typed-check-reading-rule-first-look-s1-publish-approval-s2-second-open-rulings-308-restore-item-47-floor-order.md:31 @ 6e041829 sha256:9789df13131570a59859252eded95fae9b652971a9d9b1740fdc698204793c93`: 9ece7e13 restores ADR-035 to main's bytes with git; a9455d48 appends the note with the human's item 1; no rebase and no force-push. The worker's report: `state/consults/2026-11-12-adr-035-close-races-note-restore-worker-report.md` (sha256 9c3519de83202d76d835a0c6628c71cf8f411287340b6c3dc7ee2e8a1bc5f9c3).
+- **The architect's one check of the human's words:** `state/consults/gates/2026-11-12-adr-035-close-races-note-gate-architect-item-1.md` (sha256 aca054fc45d624f9d31ef1b47ae5b981e843911dad21d21d69fe04d297b69514), gate-log 732, PASS, no finding. C1 no longer blocks (§9).
+- **P1's appended bytes (class 8):** 1650, where §7 declares N = 1450. The one line that differs from §2.1's output is item 1, the human's words, by the restore report. §5's second falsifier reads against that output with item 1 as the human's answer. P1's lines hold: `git diff --numstat 7693001e...a9455d48` gives 8 insertions and 0 deletions. ADR-035 at B is a byte prefix of ADR-035 at the final head, by the custodian's script at this record.
+
+### Amendment 2 — 2026-11-12 — the closing record (class 1), references and hashes only
+
+- **The final head:** a9455d48c0d7332327c4674eafc50a9f5058e720, the append commit on the restore commit 9ece7e13, on the build commit 1700ac8c, from B 7693001e126b526d1c98f2ce79c529c5e058f0d7.
+- **Build:** `state/consults/2026-11-11-adr-035-close-races-note-worker-report.md` (sha256 c9c89c5fb1208bfeb73b973b8ce762c395aae7cefc278e155bcfd67a45c7e5f7).
+- **Gates:** Amendment 1.
+- **E11:** this PR's CI at the final head, read by gh at 23:31:01Z: 8 of 8 checks pass.
+- **Merge:** the human's click, by merge commit (§9).

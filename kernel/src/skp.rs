@@ -1028,7 +1028,7 @@ fn reason_of_signal(signal: &WatchSignal) -> SessionEndReason {
 fn engine_error_of_pre_admission_signal(signal: WatchSignal) -> EngineError {
     match signal {
         WatchSignal::Change { .. } => EngineError::SourceChanged {
-            detail: "{[P6 placeholder] a notification arrived for this source before admission}"
+            detail: "[P6 placeholder] a notification arrived for this source before admission"
                 .to_string(),
         },
         WatchSignal::CoverageLost { cause } => EngineError::SourceCoverageLost { detail: cause },
@@ -1540,8 +1540,8 @@ impl SkpHost {
                         .to_string(),
                 },
                 SessionEndReason::CoverageLost => EngineError::SourceCoverageLost {
-                    detail: "{[P6 placeholder] this dataset's session ended while this query was \
-                             being prepared}"
+                    detail: "[P6 placeholder] this dataset's session ended while this query was \
+                             being prepared"
                         .to_string(),
                 },
             }));
@@ -1679,8 +1679,8 @@ pub(crate) fn require_live(
                     .to_string(),
             },
             SessionEndReason::CoverageLost => EngineError::SourceCoverageLost {
-                detail: "{[P6 placeholder] this dataset's session ended when the advisory \
-                         watch on its source lost coverage}"
+                detail: "[P6 placeholder] this dataset's session ended when the advisory \
+                         watch on its source lost coverage"
                     .to_string(),
             },
         }));
@@ -4757,6 +4757,60 @@ mod ticket_drop_under_lock_regression {
         );
     }
 
+    /// T2. A ticket minted while the generation is live and attributed after a coverage loss ended
+    /// it: the attribute step refuses with `engine.source_coverage_lost`, never
+    /// `engine.source_changed`, and its `detail` is the brace-free placeholder sentence.
+    ///
+    /// RECORDED MUTATION: restore the two braces at the `CoverageLost` arm of
+    /// `viewport_query_attribute`. Applied at `74fd4f1de5e4400f0d0472a0d5c522e2468a08c7`, run and
+    /// reverted:
+    /// `a_coverage_loss_between_mint_and_attribution_refuses_with_its_own_code_and_placeholder_detail`
+    /// FAILED on its `fields.detail` equality (T2: the refusal's
+    /// `fields.detail` against the brace-free attribute-step literal), `left` being `right` with
+    /// a `{` prepended and a `}` appended, `right: Some("[P6 placeholder] this dataset's session
+    /// ended while this query was being prepared")` — 1 failed.
+    #[test]
+    fn a_coverage_loss_between_mint_and_attribution_refuses_with_its_own_code_and_placeholder_detail(
+    ) {
+        let path = fixture("t2-coverage-loss-before-attribution");
+        let (tx, _rx) = super::session_end_channel();
+        let host = SkpHost::new(
+            Arc::new(Catalog::new()),
+            StreamRegistry::new(),
+            no_watch_arm(),
+            tx,
+        );
+        let open = open_through(&host, &path, "t2");
+
+        let req = unrestricted_query(open.dataset.clone());
+        let (name, ds) = host
+            .viewport_query_resolve(&req)
+            .expect("the dataset resolves while it is open");
+        let handle = host
+            .viewport_query_mint(&name, &ds, &req)
+            .expect("the dataset mints while it is open");
+
+        host.invalidator
+            .end_generation(open.dataset.as_str(), SessionEndReason::CoverageLost);
+
+        let refused = host
+            .viewport_query_attribute(handle, &name)
+            .expect_err("an attribution after the coverage loss refuses");
+        assert_eq!(
+            refused.code, "engine.source_coverage_lost",
+            "T2: the refusal's code against the coverage-lost code: {}",
+            refused.message
+        );
+        assert_eq!(
+            refused.fields.get("detail").map(String::as_str),
+            Some(
+                "[P6 placeholder] this dataset's session ended while this query was being \
+                 prepared"
+            ),
+            "T2: the refusal's fields.detail against the brace-free attribute-step literal"
+        );
+    }
+
     /// R2 (S5). The registry alone: while a dataset is closing, a new attribution refuses and the
     /// live check answers `NotOpen`, but an end recorded during the close still finds the live
     /// generation and carries its reference (ADR-035 Decision 3's close-time routes); after
@@ -4915,6 +4969,13 @@ mod ticket_drop_under_lock_regression {
     ///
     /// REGISTERED MUTATION: in `liveness_refusal`, map `EndedByCoverageLoss` to the source-changed
     /// refusal.
+    ///
+    /// RECORDED MUTATION: restore the two braces at the `EndedByCoverageLoss` terminal in
+    /// `kernel/src/lib.rs`. Applied at `74fd4f1de5e4400f0d0472a0d5c522e2468a08c7`, run and reverted:
+    /// this test FAILED on its whole-terminal equality (R3: the redeem step's refusal against the
+    /// whole brace-free coverage-lost terminal), `left` carrying a `{` after the `(` that opens
+    /// the detail and a `}` before the `)` that closes it, `right` the same text without those
+    /// two braces — 1 failed.
     #[test]
     fn a_coverage_loss_between_liveness_and_redeem_keeps_its_own_code() {
         let (host, _path, open, ticket) = a_ticket_past_the_liveness_step("r3-coverage-lost");
@@ -4929,6 +4990,15 @@ mod ticket_drop_under_lock_regression {
             "{detail}"
         );
         assert!(!detail.starts_with("engine.source_changed"), "{detail}");
+        assert_eq!(
+            detail,
+            "engine.source_coverage_lost: [P6 placeholder] refused: the advisory watch on this \
+             source lost coverage ([P6 placeholder] this dataset's session ended when the advisory \
+             watch on its source lost coverage). This is not a statement that the file changed — \
+             the OS notification stream this session was relying on stopped reporting, and this \
+             check cannot see whether the file changed while it was not",
+            "R3: the redeem step's refusal against the whole brace-free coverage-lost terminal"
+        );
     }
 
     /// R4 (S4). A client cancel ends no generation: the generation stays live, the ticket is

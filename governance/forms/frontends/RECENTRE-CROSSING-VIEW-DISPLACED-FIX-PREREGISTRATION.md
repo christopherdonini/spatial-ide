@@ -768,3 +768,50 @@ Nothing above is edited.
 10. **PLAN.** The node stays in progress, and its budget is unchanged.
 
 Nothing above is edited.
+
+### Amendment 4 — the human's OPEN-3 (A) of 2026-11-12: the edge check's tolerance on this polygon fixture, and the gates (class 1, before either gate)
+
+*Written by the custodian on 2026-11-12, at this commit, from the human's message of 2026-11-12 (21:15Z), filed verbatim at `state/directives/2026-11-12-third-message-open-3-a-gates-now-typed-check-reading-rule-first-look-s1-publish-approval-s2-second-open-rulings-308-restore-item-47-floor-order.md` in this commit. Its items 1 and 2 are the ruling. The words below are the custodian's record of them, not a quotation.*
+
+1. **OPEN-3: (A), the human's typed word (item 1, the file's line 9).**
+   - OPEN-3 is the third open item of the OPEN-C consult (`state/consults/2026-11-12-recentre-crossing-start-partial-draw-open-c-architect-consult.md`). It asked how Amendment 3, item 2's tolerance reads its drawn point radius on this fixture, whose features are parcel polygons.
+   - In that tolerance the reviewer uses, in place of the drawn point radius, the parcel polygon's drawn half-extent at the end line's zoom plus the layer's outline width. Each is read from code at the head and cited as Amendment 3, item 2 cites the projection. The report says that it used them. The 4.0 buffer px are added as before.
+   - Nothing else in Amendment 3, item 2 changes.
+
+2. **The human's standing rule (item 2, the file's line 11), as it bears on these gates.** A question about how to read or apply a check the human typed for a gate or a run takes the architect's recommended reading, recorded with its date, and the human reviews it at the click. It never changes what the check is for. If a gate raises such a question about Amendment 3, item 2 or item 1 above, that reading is taken and recorded with the gate's filing.
+
+3. **The gates start now (item 1).** This is Amendment 3, item 8's S8, at the branch head b7ba9f77 (the S6b to S7 report, `state/consults/2026-11-12-recentre-crossing-view-displaced-fix-s6b-s7-worker-report.md`):
+   - the reviewer, with §12's list, Amendment 2, item 8's list, and Amendment 3, item 2's check as item 1 above reads it;
+   - the architect, as §12 gives it.
+   - Both are dispatched after this commit is on main.
+
+4. **The OPEN-C consult's other rulings (item 3), as they bear on this piece.**
+   - Item 3 (a) grades the consult's OPEN-1 (B) S1. It places a node for the open's first look, built after PR B merges.
+   - G2's comment words (the capture comment in `recentre-crossing.mjs` on this branch) go to that node. This piece does not add them.
+   - OPEN-2's item goes to the docs lane, and OPEN-4 to the next P6 sight.
+   - None of them changes this piece's steps or ceilings.
+
+5. **Rule (00), checked by script at this commit.**
+   - #308 (`cut/adr-035-close-races-note`) is the one PR open at this commit. `git diff --name-only origin/main...origin/cut/adr-035-close-races-note` names `docs/adr/ADR-035-dataset-session-ended-control-plane-event.md` only.
+   - PR B's branch (`cut/b1-shell-half-pr-b`, slot 1, at b8127685) names none of the paths this piece's branch changes.
+
+6. **PLAN.** The node stays in progress, and its budget is unchanged.
+
+Nothing above is edited.
+
+### Amendment 5 — 2026-11-13 — the closing record (class 1), references and hashes only
+
+- **The final head:** e0ed07e2ee7e6cec43d14695f031def016edbec6, correction 2's words commit, on eb63a3f8 (correction 1's words), on 01534494 (E-1's test commit), on b7ba9f77 (the build), from B 9398efc6e3db7474cc9b1346ea9e1a5f1d5c7832.
+- **Build:** `state/consults/2026-11-12-recentre-crossing-view-displaced-fix-s6b-s7-worker-report.md` (sha256 16e8bc20150bf09bcb49b93b6bc075ce179333cb4b3d54b9a4b519080fdb9ab9). A7a's N is 5 there (k = 3), so the row is in (Amendment 3, item 7).
+- **Corrections:** `state/consults/2026-11-13-recentre-crossing-view-displaced-fix-correction-1-worker-report.md` (sha256 4cc5341ee159e3e4c1d1e02c53393bede2466da273c61ef02ef0b36797b4bb93); its mutation run, `state/consults/2026-11-13-recentre-crossing-view-displaced-fix-correction-1-mutations-worker-report.md` (sha256 dbddcaeed0c669c52fd97bc58ca295d2469d4dd4dcc3b9cf2990669ceabac7f5); `state/consults/2026-11-13-recentre-crossing-view-displaced-fix-correction-2-worker-report.md` (sha256 7d35888be23ea0fe4d68d4091a3f83f3012d6042250e62e680a4b065612f1806).
+- **Gates:**
+  - the architect: attempt 1, FAIL, `state/consults/gates/2026-11-12-recentre-crossing-view-displaced-fix-gate-architect.md` (sha256 1a9dc64a6fa93c0300eb8a0cf6d346033c34b3be79f64592cecf80a855d8c8a5), gate-log 731; attempt 2, PASS WITH NOTES, `state/consults/gates/2026-11-13-recentre-crossing-view-displaced-fix-gate-architect-attempt-2.md` (sha256 d391b2fe9ffa5a829ee6126ac629ef27b6dbd20a828dfe910fe1405365fc9c36), gate-log 734;
+  - the reviewer: attempt 1, PASS WITH NOTES, `state/consults/gates/2026-11-12-recentre-crossing-view-displaced-fix-gate-reviewer.md` (sha256 a17033a0fb52f7b8da0eff6e24884b5d46b452994236750878331941e89c8ab1), gate-log 733; attempt 2, PASS WITH NOTES, `state/consults/gates/2026-11-13-recentre-crossing-view-displaced-fix-gate-reviewer-attempt-2.md` (sha256 94bd2acd6f6138e524cfedb55aff18f367cde2cdb1170e8887d4cadaa9449b13), gate-log 735.
+  - Attempt 2's D-4 and D-5 are in at the final head. Its D-A is the PR body, rewritten at the final head with the words applied that are not the human's.
+- **§12's runs at the final head:** the reviewer's attempt 1 runs at b7ba9f77 stand by its attempt 2's finding that every product line changed since b7ba9f77 is a comment. Correction 2 changes comment lines and the README entry only, by the custodian's script named in its filing note. This is the custodian's reading, for the human at the click.
+- **Size:** `git diff --numstat 9398efc6...e0ed07e2 -- frontends/shell`: `MANUAL-WALKTHROUGH.md` 1 of 4, `e2e/README.md` 12 of 45, `e2e/recentre-crossing.mjs` 347 of 450, `package.json` 1 of 2, `src/canvas/WorkingCanvas.recentre.test.tsx` 222 of 300, `src/canvas/WorkingCanvas.tsx` 69 of 70. Each is within §7.
+- **A5 and A6** keep their words. As Amendment 3, item 7 has it, sittings before this fix did not pan past the bound at low zoom.
+- **CI:** this PR's checks at the final head, read by gh at 01:52:27Z: 8 of 8 pass.
+- **For the human at the click:** the architect's READING lines (2026-11-12, (a) to (d); 2026-11-13) under Amendment 4, item 2; its H-1 to H-4; the §12 line above.
+- **After the merge:** the amendment to `governance/RELEASE-0.1.md` of Amendment 3, item 6, with this PR's number and merge commit.
+- **Merge:** the human's click, by merge commit.
