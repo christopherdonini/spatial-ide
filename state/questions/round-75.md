@@ -55,3 +55,7 @@ My brief named a new file in a new folder and did not say that a Write needs its
 ---
 
 Not for you, for the record: the draft's six Documentation findings and its packet gaps are the custodian's. Finding 2 is met: ADV-2026-11-13-08 has been on main since cb590bd9. Findings 4 to 6 are met in Amendment 5's commit, and the gaps in the worker's brief. Finding 1 is an error in my brief (it asked for hash pins at an unpushed branch commit) and goes in round 76's list.
+
+---
+
+**Answers recorded** by the custodian on 2026-11-13. The advisor's ruling ADV-2026-11-13-09 (`state/directives/2026-11-13-advisor-ruling-adv-2026-11-13-09-round-75-313-to-its-gates-as-built-briefs-make-the-folder-first-pan-anchor-open-a-b-open-b-a-two-conditions.md`), filed as the advisor's under the human's delegation of 2026-11-13, answers all three items: item 1, (A), with the departure named in the PR body and in both gate packets; item 2 (OPEN-A), (B), with a node for drag's wait proposed to the filler queue; item 3 (a) (OPEN-B), (A), with two conditions; item 3 (b), (i), a reading for this suite's wait only. Its item 2 sets a standing rule for briefs, and its item 6 orders Amendment 5's commit before the worker. No answer of the human's has come. Nothing above is changed.

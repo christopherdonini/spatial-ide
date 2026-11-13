@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `574211d1a4fea25a68f7375ff4f9314e3e31a69e3ffff89902fe96203c569b30`) at `2026-11-13T10:30:20.713Z`.
+Generated from `PLAN.yaml` (sha256 `0d48c7d289941fd5d72656af3e56da10020bcda3fb0bf5d9eec0f7e73b9d282d`) at `2026-11-13T11:07:11.333Z`.
 
 ## 1. Next
 
@@ -137,6 +137,7 @@ Generated from `PLAN.yaml` (sha256 `574211d1a4fea25a68f7375ff4f9314e3e31a69e3fff
 - **module-readme-moved-form-paths** — The preregistration form paths in kernel/README.md and engine/README.md named where piece F moved them (governance/forms/) (phase `prototype`) — never queued until placed
 - **skp-spec-and-protocol-comments-drift-sweep-c** — SKP-V0.md live sections and the protocol and shell doc comments brought current to main (drift sweep area C, findings 2 to 11, and area A, finding 3), after 1c (phase `prototype`) — never queued until placed
 - **comment-line-cites-kin-docs-audit-c** — Product and e2e comments whose line cites point at moved text: origin.rs on AI_DEVELOPMENT.md, engine/src/error.rs and the admission-remediation e2e script on crs.rs (the docs audits, Task C kin) (phase `prototype`) — never queued until placed
+- **pan-anchor-drag-waits-for-its-own-lines** — e2e/pan-anchor.mjs: drag waits for the view-state lines its own gesture produces, not a wall-clock quiet period (test only) (phase `prototype`) — never queued until placed
 
 ### Unscheduled
 
