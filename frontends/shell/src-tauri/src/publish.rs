@@ -317,6 +317,8 @@ pub struct PublishPromptData {
 /// form. Otherwise the names follow `and `, in the order given and joined by `, `, with no sorting,
 /// deduplication, quoting or cap here (the kernel refuses duplicates, `id` and more than 32 names
 /// before any prompt exists). Many names are reached only by the unit tests, not by ordinary use.
+/// A name is inserted as it is (OPEN-2 (a)), so a column whose own name contains `, ` reads as
+/// more than one name in the line; the shipped build reaches that only through a style whose match column has such a name.
 fn compose_published_columns(attributes: &[String]) -> String {
     if attributes.is_empty() {
         "Columns published: id and the geometry only.".to_string()
@@ -1903,7 +1905,7 @@ mod tests {
         );
     }
 
-    /// As [`prepared_with`] over the caller's style source, returning the prompt as well.
+    /// As [`prepared`] over the caller's style source, returning the prompt in place of the phrase.
     fn prepared_prompt(
         d: &Path,
         name: &str,
