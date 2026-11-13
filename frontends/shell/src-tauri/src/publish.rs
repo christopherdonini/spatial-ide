@@ -1930,6 +1930,7 @@ mod tests {
         (grants, store, attempt_id, prompt)
     }
 
+    // RECORDED MUTATION: M-U1, compose_published_columns returns the no-attributes line unconditionally (`if attributes.is_empty()` set to `if true`), applied alone at 08ac45cca949b2b321fcb5136b890549282539f7: this test failed by name (publish::tests::the_published_columns_line_names_the_request_attributes_the_bundle_publishes) at its first assert_eq!, left "Columns published: id and the geometry only.", right "Columns published: id, the geometry, and zone."; reverted.
     #[test]
     fn the_published_columns_line_names_the_request_attributes_the_bundle_publishes() {
         let _guard = env_lock();
@@ -1967,6 +1968,7 @@ mod tests {
         assert_eq!(prompt.published_columns, compose_published_columns(&names));
     }
 
+    // RECORDED MUTATION: M-U2, the empty arm of compose_published_columns removed (`if attributes.is_empty()` set to `if false`), applied alone at 08ac45cca949b2b321fcb5136b890549282539f7: this test failed by name (publish::tests::the_published_columns_line_is_the_no_attributes_form_for_a_literal_style) at its assert_eq!, left "Columns published: id, the geometry, and .", right "Columns published: id and the geometry only."; reverted.
     #[test]
     fn the_published_columns_line_is_the_no_attributes_form_for_a_literal_style() {
         let _guard = env_lock();
@@ -1992,6 +1994,7 @@ mod tests {
         );
     }
 
+    // RECORDED MUTATION: M-U3, the names sorted before the join in compose_published_columns, applied alone at 08ac45cca949b2b321fcb5136b890549282539f7: this test failed by name (publish::tests::the_published_columns_line_keeps_the_declared_order_and_the_separator) at its assert_eq!, left "Columns published: id, the geometry, and a, b, c.", right "Columns published: id, the geometry, and b, a, c."; reverted.
     #[test]
     fn the_published_columns_line_keeps_the_declared_order_and_the_separator() {
         let names: Vec<String> = ["b", "a", "c"].iter().map(|s| s.to_string()).collect();

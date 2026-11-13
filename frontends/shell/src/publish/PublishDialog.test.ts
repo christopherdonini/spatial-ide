@@ -217,6 +217,7 @@ describe(
       expect(html.indexOf(sentence)).toBeGreaterThan(instructionAt);
     });
 
+    // RECORDED MUTATION: M-D3, the published_columns <dd> deleted from PublishDialog.tsx, applied alone at 08ac45cca949b2b321fcb5136b890549282539f7: this test failed by name (D3 renders the host-composed published_columns line verbatim, after Row scope and before the irreversible warning) at its first toBeGreaterThan, "AssertionError: expected -1 to be greater than 887"; reverted.
     it("D3 renders the host-composed published_columns line verbatim, after Row scope and before the irreversible warning", () => {
       const html = renderedHtml();
       const columnsAt = html.indexOf(PROMPT.published_columns);
