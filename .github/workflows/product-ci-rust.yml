@@ -202,7 +202,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec
+        with:
+          toolchain: "1.100.0"
 
       # Keyed on the lockfile: the vendored C++ tree is rebuilt only when a dependency moves, which
       # is the whole cost this workflow has to manage.
