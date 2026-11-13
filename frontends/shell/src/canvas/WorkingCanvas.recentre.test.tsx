@@ -18,6 +18,7 @@
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { DeckProps, InteractionState, ViewStateChangeParameters } from "@deck.gl/core";
 
 const decks = vi.hoisted(() => [] as unknown[]);
 const rules = vi.hoisted(() => {
@@ -52,15 +53,15 @@ const rules = vi.hoisted(() => {
 vi.mock("@deck.gl/core", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@deck.gl/core")>();
   class FakeDeck {
-    props: Record<string, any>;
+    props: Partial<DeckProps>;
     viewState: any;
-    constructor(props: Record<string, any>) {
+    constructor(props: Partial<DeckProps>) {
       this.props = { ...props };
       // `@deck.gl/core` 9.3.9, `dist/lib/deck.js`, line 251: the constructor takes `initialViewState` as deck's own view state.
       this.viewState = this.props.initialViewState;
       decks.push(this);
     }
-    setProps(props: Record<string, any>): void {
+    setProps(props: Partial<DeckProps>): void {
       // D1. `@deck.gl/core` 9.3.9, `dist/lib/deck.js`, lines 323 to 328: a new `initialViewState` that is not deep-equal (depth 3) to the last one
       // overwrites deck's own view state.
       if (props.initialViewState && !rules.deepEqual(this.props.initialViewState, props.initialViewState, 3)) this.viewState = props.initialViewState;
@@ -69,14 +70,17 @@ vi.mock("@deck.gl/core", async (importOriginal) => {
     /** D5. `@deck.gl/core` 9.3.9, `dist/lib/view-manager.js`, lines 93 to 98: the per-view entry first, the root view state after it. The view's id
      * is the view's own (`dist/views/view.js`, lines 51 to 58). */
     camera(): { target: [number, number, number]; zoom: number } {
-      return this.viewState[this.props.views.id] || this.viewState;
+      return this.viewState[this.viewId()] || this.viewState;
     }
     /** D3. `@deck.gl/core` 9.3.9, `dist/lib/deck.js`, lines 1044 to 1057: the callback's return value, or the tick's own view state when it returns
      * nothing, is stored under the view's id. */
-    tick(viewState: Record<string, unknown>, interactionState: { isDragging: boolean; inTransition: boolean }): void {
-      const params = { viewState, interactionState, viewId: this.props.views.id };
-      const returned = this.props.onViewStateChange(params) || params.viewState;
+    tick(viewState: Record<string, unknown>, interactionState: InteractionState): void {
+      const params: ViewStateChangeParameters = { viewState, interactionState, viewId: this.viewId() };
+      const returned = this.props.onViewStateChange!(params) || params.viewState;
       if (this.viewState) this.viewState = { ...this.viewState, [params.viewId]: returned };
+    }
+    private viewId(): string {
+      return (this.props.views as unknown as { id: string }).id;
     }
     pickObject(): unknown {
       return null;
@@ -98,7 +102,7 @@ import type { WorkingCanvasHandle, WorkingCanvasProps } from "./WorkingCanvas";
 
 interface FakeDeckLike {
   camera(): { target: [number, number, number]; zoom: number };
-  tick(viewState: Record<string, unknown>, interactionState: { isDragging: boolean; inTransition: boolean }): void;
+  tick(viewState: Record<string, unknown>, interactionState: InteractionState): void;
 }
 interface ViewLine {
   targetX: number;
@@ -157,7 +161,7 @@ function reachTheFit(): { zoom: number; bound: number } {
 
 /** One tick: the camera deck holds, moved by (dx, dy) local units, plus any fields the tick itself carries. Only target and zoom come from the camera:
  * a transition's fields belong to the event that started it. */
-function tick(dx: number, dy: number, interactionState: typeof DRAGGING, extra: Record<string, unknown> = {}): void {
+function tick(dx: number, dy: number, interactionState: InteractionState, extra: Record<string, unknown> = {}): void {
   const cam = theDeck().camera();
   act(() => theDeck().tick({ target: [cam.target[0] + dx, cam.target[1] + dy, 0], zoom: cam.zoom, ...extra }, interactionState));
 }
