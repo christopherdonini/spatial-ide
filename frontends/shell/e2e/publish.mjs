@@ -363,6 +363,7 @@ async function stepApproved(page) {
   // E1: the columns line the host composed (`publish.rs::compose_published_columns`). The shell's
   // own style on main carries no match, so no attribute column is published and the no-attributes
   // form is the one the host sends.
+  // RECORDED MUTATION: M-E1, compose_published_columns's empty arm removed (`if attributes.is_empty()` set to `if false`) in a dev build, applied alone at 1d45189bd0e4e68dcb1416fc8e553f49bfe76b6e and observed in this e2e itself (publish run tag me1): step APPROVED' failed by name, its line reading: APPROVED': published_columns is "Columns published: id, the geometry, and .", expected the no-attributes line; reverted.
   if (prompt.published_columns !== "Columns published: id and the geometry only.") {
     throw new Error(`APPROVED': published_columns is ${JSON.stringify(prompt.published_columns)}, expected the no-attributes line`);
   }
