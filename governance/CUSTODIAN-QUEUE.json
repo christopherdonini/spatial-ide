@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-13T02:11:57.079Z",
-  "plan_hash": "fb3cbea02b33983dc487df18e6c35004081f355bc4ccdf8dace3a1076927f481",
+  "generated_at": "2026-11-13T02:49:18.446Z",
+  "plan_hash": "a8ca18f8a4799c33d75e7fee0aa53733317b62757087e277ef91be12a90c0fe0",
   "priorities_approved": true,
   "next": {
     "id": "lod-tier-tests-own-tier-folder",
@@ -487,7 +487,7 @@
         "opened": "2026-11-12",
         "done": null
       },
-      "summary": "PLACED 2026-11-12 by the human's third message of 2026-11-12 (21:15Z) (state/directives/2026-11-12-third-message-open-3-a-gates-now-typed-check-reading-rule-first-look-s1-publish-approval-s2-second-open-rulings-308-restore-item-47-floor-order.md), item 4 (lines 19 to 21), on the publish approval consult (state/consults/2026-11-12-b1-shell-half-pr-b-publish-approval-colour-by-column-architect-consult.md): OPEN-P1 (A), its own piece outside PR B; OPEN-P3, S2, slot 2, straight after the S1 fix merges; it merges before PR B if rule (00) allows, and before v0.2's tag in any case. The line's words are the human's by approval (OPEN-P2, line 20), with attribute columns and with none, and go on the sitting's list. On main without PR B its e2e step asserts the line with no attributes; PR B's PB-E2 and operator row 5 then assert that the line names the column; item 59's text is re-read against it at PR B's records commit. The consult's option (E) is publish-approval-kernel-parity. NEXT: its form, when slot 2 reaches it.",
+      "summary": "FORM DRAFT IN 2026-11-13: the architect's full form, both gates from dispatch, filed at state/consults/2026-11-13-publish-approval-columns-line-form-architect-draft.md. Its OPEN-1 to OPEN-6 are red lines (the separator, names with punctuation, the many-name grammar, the P6 mark, the dialog's placement, ADR-024's note) and its G-7 asks about the human's exposure review: all for the human. OPEN-7 to OPEN-9 take its recommendations under ruling 24. NEXT: the human's words, then the form committed; code after 311 merges. Before: PLACED 2026-11-12 by the human's third message of 2026-11-12 (21:15Z) (state/directives/2026-11-12-third-message-open-3-a-gates-now-typed-check-reading-rule-first-look-s1-publish-approval-s2-second-open-rulings-308-restore-item-47-floor-order.md), item 4 (lines 19 to 21), on the publish approval consult (state/consults/2026-11-12-b1-shell-half-pr-b-publish-approval-colour-by-column-architect-consult.md): OPEN-P1 (A), its own piece outside PR B; OPEN-P3, S2, slot 2, straight after the S1 fix merges; it merges before PR B if rule (00) allows, and before v0.2's tag in any case. The line's words are the human's by approval (OPEN-P2, line 20), with attribute columns and with none, and go on the sitting's list. On main without PR B its e2e step asserts the line with no attributes; PR B's PB-E2 and operator row 5 then assert that the line names the column; item 59's text is re-read against it at PR B's records commit. The consult's option (E) is publish-approval-kernel-parity. NEXT: its form, when slot 2 reaches it.",
       "blocked_by": [
         "recentre-crossing-view-displaced-fix"
       ]
