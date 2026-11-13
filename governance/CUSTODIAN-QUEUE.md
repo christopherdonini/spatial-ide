@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `335cf7824ad4dfebb0c646e793c7ae962397cd4d0dd508191204b713619b94fc`) at `2026-11-13T06:12:37.113Z`.
+Generated from `PLAN.yaml` (sha256 `1c36335a1ce8fb8ea79de5245039ac7e37f8917c5fb73a407739d2ce8287108d`) at `2026-11-13T06:33:55.557Z`.
 
 ## 1. Next
 
@@ -15,7 +15,6 @@ Generated from `PLAN.yaml` (sha256 `335cf7824ad4dfebb0c646e793c7ae962397cd4d0dd5
 - **pan-anchor-setcam-waits-for-its-own-reset** — e2e/pan-anchor.mjs: setCam waits for the view-state line its own reset produces, never a late line from the previous gesture (test only) (lane `shell`, order null, budget 60 min)
 - **publish-approval-columns-line** — The publish approval names the columns a bundle publishes: a host-composed line in the approval, its own piece outside PR B (S2, the human's grade; v0.2's tag waits for it) (lane `shell`, order null, budget 0 min)
 - **recentre-stall-three-observations** — The re-centring stall report's three proposed observations (a timer around the layer build, deck's attribute-update counters, the render-trace layers line against the gap's edges), as one node behind the S1 fix (S3) (lane `shell`, order null, budget 90 min)
-- **known-limitations-first-look-partial-view** — KNOWN-LIMITATIONS: a new item, its number the next free on main, the human's words by approval (item 3 (b) of 2026-11-12, third message): after a file opens, until the first pan or zoom, the map shows at most the first 10,000 rows the file returns and the status line says nothing; withdrawn by open-first-look-fills-fit-view when it merges (lane `release`, order null, budget 30 min)
 - **site-waiting-on-you-lists-open-questions** — The site's Waiting on you also lists an in-progress node carrying an open question for the human, set by the custodian when a running piece stops for the human's ruling and cleared when the human answers (lane `governance`, order null, budget 45 min)
 - **publish-bundle-sigterm** — SIGTERM handling in publish-bundle on unix (wave-3 W3-A observation 3) (lane `platform`, order null, budget 90 min)
 - **publish-unix-quota-perm-errors** — EDQUOT and EPERM in publish error classification on unix (wave-3 W3-A observation 1) (lane `platform`, order null, budget 90 min)
@@ -63,6 +62,7 @@ Generated from `PLAN.yaml` (sha256 `335cf7824ad4dfebb0c646e793c7ae962397cd4d0dd5
 - **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **record-step-style-match-widening** — record_step admits a style.set match value on fillColor, with the step's dependencies naming the match column and its type (milestone 4's OPEN-4 (A′)), carried in piece 1c's step 1 by class 9 (the 1c form's Amendment 7) — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **b1-shell-half** — Shell migration, milestone 4 -- B1 shell half: attributes of the inspected feature, colour by category with its legend, and the table — evidence: branch `cut/b1-shell-half-pr-c`
+- **known-limitations-first-look-partial-view** — KNOWN-LIMITATIONS: a new item, its number the next free on main, the human's words by approval (item 3 (b) of 2026-11-12, third message): after a file opens, until the first pan or zoom, the map shows at most the first 10,000 rows the file returns and the status line says nothing; withdrawn by open-first-look-fills-fit-view when it merges — evidence: branch `cut/known-limitations-first-look-partial-view`
 - **port-2-macos-l1-and-app-dirs** — PORT-2 -- macOS L1 for the Cargo workspace: macos-latest in the same matrix, one application-directory boundary replacing the two resolvers, and a case-policy test on a case-insensitive volume — evidence: branch `cut/port-2-macos-l1-and-app-dirs`
 
 ## 6. Proposed / unscheduled
