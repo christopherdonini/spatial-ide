@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `1c36335a1ce8fb8ea79de5245039ac7e37f8917c5fb73a407739d2ce8287108d`) at `2026-11-13T06:33:55.557Z`.
+Generated from `PLAN.yaml` (sha256 `7a815278bb3e09809d2dd7aa0f95934ce11496dd498bb8576913301cb9915364`) at `2026-11-13T07:25:03.965Z`.
 
 ## 1. Next
 
@@ -11,19 +11,17 @@ Generated from `PLAN.yaml` (sha256 `1c36335a1ce8fb8ea79de5245039ac7e37f8917c5fb7
 - **lod-tier-tests-own-tier-folder** — Each engine test run takes its own tier folder, the machine-wide tier folder kept for the product only: two suites sharing one machine cleared each other's tiers, failing lod_tier_builder in #284's gate 1 (the human's ruling of 2026-11-06, item 2) (lane `engine`, order null, budget 60 min)
 - **close-races-three-untested-kernel-tests** — Kernel tests for the three places #308's two gates found untested: the cancel at a failed attribution, the end's reason branch of the arm, and the ended-then-closed race at SkpHost level (S3, the filler queue) (lane `kernel-protocol`, order null, budget 60 min)
 - **skp-line-cites-outside-close-races** — Stale line cites into kernel/src/skp.rs outside kernel-close-races-followups files -- shell streaming, App.tsx, pool_poll.rs, src-tauri lib.rs, the P4 corpus test and the persisted-artifacts test (lane `kernel-protocol`, order null, budget 0 min)
+- **verify-bundle-example-path-build-dir-layout** — The kernel tests that run a built example find it under the toolchain build-dir layout of rustc 1.100.0: verify_bundle, red on main since #309 merge, and scale_pass helper (S3; filler entry 15, ahead of every entry, by the human of 2026-11-13) (lane `kernel-protocol`, order null, budget 60 min)
 - **windows-case-fold-non-ascii** — The audit case policy on Windows folds non-ASCII letters as NTFS does, so a profile path differing only in non-ASCII case cannot escape the user-home redaction (wave 3's 1c-2 correction, S2, code-path-only) (lane `kernel-protocol`, order null, budget 60 min)
 - **pan-anchor-setcam-waits-for-its-own-reset** — e2e/pan-anchor.mjs: setCam waits for the view-state line its own reset produces, never a late line from the previous gesture (test only) (lane `shell`, order null, budget 60 min)
 - **publish-approval-columns-line** — The publish approval names the columns a bundle publishes: a host-composed line in the approval, its own piece outside PR B (S2, the human's grade; v0.2's tag waits for it) (lane `shell`, order null, budget 0 min)
 - **recentre-stall-three-observations** — The re-centring stall report's three proposed observations (a timer around the layer build, deck's attribute-update counters, the render-trace layers line against the gap's edges), as one node behind the S1 fix (S3) (lane `shell`, order null, budget 90 min)
+- **advisor-session-merges-under-the-humans-rule** — The advisor session merges the custodian PRs that pass their gates, under the human rule of 2026-11-13, from their message advisor live: the merge request, the advisor merge check and verdict, the verdict filed as a consult, the revert PR after a red main, the two-hour fallback to the human; AUTONOMY section 9 and ruling 25 poll changed with it (the governance lane; S3 by the custodian) (lane `governance`, order null, budget 60 min)
 - **site-waiting-on-you-lists-open-questions** — The site's Waiting on you also lists an in-progress node carrying an open question for the human, set by the custodian when a running piece stops for the human's ruling and cleared when the human answers (lane `governance`, order null, budget 45 min)
 - **publish-bundle-sigterm** — SIGTERM handling in publish-bundle on unix (wave-3 W3-A observation 3) (lane `platform`, order null, budget 90 min)
 - **publish-unix-quota-perm-errors** — EDQUOT and EPERM in publish error classification on unix (wave-3 W3-A observation 1) (lane `platform`, order null, budget 90 min)
 
-## 3. Waiting on the human (total: 22 min)
-
-### ruling
-
-- **verify-bundle-example-path-build-dir-layout** — The kernel tests that run a built example find it under the toolchain build-dir layout of rustc 1.100.0: verify_bundle, red on main since #309 merge, and scale_pass helper (S3; its slot waits for the human) (2 min)
+## 3. Waiting on the human (total: 20 min)
 
 ### sitting
 
@@ -50,6 +48,7 @@ Generated from `PLAN.yaml` (sha256 `1c36335a1ce8fb8ea79de5245039ac7e37f8917c5fb7
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer — blocked by: signpath-application-draft
 - **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-2-0
 - **signpath-application-draft** — Entry 77 — the SignPath OSS application and disclosure text drafted for the human sight, once a release is CI-built — blocked by: release-v0-2-0
+- **advisor-questions-and-telegram-three-alarms** — From the human message advisor live, the custodian questions go to the advisor and Telegram keeps three alarms: the AskUserQuestion mirror hook removed from the project settings, the Notification hook keeps only the two quota matchers, the Stop hook waiting-list message goes and its halt message stays, and AUTONOMY section 16 and Appendix A3 Telegram part replaced by the rule (the governance lane; S3 by the custodian) — blocked by: advisor-session-merges-under-the-humans-rule
 - **governance-e1-rules-as-records** — Piece E1: rules as records, a rule catalogue under rules/, a selector scripts/plan/rules.mjs, a generated block in each agent definition and a governance-ci check — blocked by: governance-e-readings
 - **shell-owners-index** — An owner's index for the shell (frontends/shell), so that shell-owned KNOWN-LIMITATIONS items and pointers are indexed somewhere — blocked by: skp-line-cites-outside-close-races
 - **site-design-v1** — Landing page redesign — DRAFT-4 (status strip, milestone banner, waiting-on-you cards with unblocks counts, the swimlane board) — blocked by: governance-ci-built-site

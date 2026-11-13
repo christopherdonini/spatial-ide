@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-13T06:33:55.557Z",
-  "plan_hash": "1c36335a1ce8fb8ea79de5245039ac7e37f8917c5fb73a407739d2ce8287108d",
+  "generated_at": "2026-11-13T07:25:03.965Z",
+  "plan_hash": "7a815278bb3e09809d2dd7aa0f95934ce11496dd498bb8576913301cb9915364",
   "priorities_approved": true,
   "next": {
     "id": "lod-tier-tests-own-tier-folder",
@@ -80,6 +80,25 @@
       "summary": "NOTE 2026-11-05 (state/consults/2026-11-05-docs-audit-task-c-unpinned-cites-triage-architect.md, kin outside docs, item 1): frontends/shell/src-tauri/src/lib.rs carries two comments citing AI_DEVELOPMENT.md line 147 for a mechanic now at line 209; a file this node edits, so the fix rides here. Before: NOTE 2026-11-05 (state/consults/2026-11-05-drift-sweep-areas-a-b-triage-architect.md, A11): confirmed off target on main in this node's files: App.tsx's unpinned cite into candidateArmSession.ts and streaming/liveTicketSet.ts's cite into tileViewportStreamManager.ts; pick.ts's and e2e-test-surface.ts's ride in shell-comments-drift-sweep-area-a. Before: PLACED 2026-10-21 (state/directives/2026-10-21-placements-redaction-scan-1c-milestone-4-lanes-238-clicked-d-answers-adr-024-heading-kept.md, item 4): the docs lane, 5 of 6, after adr-035-close-races-note. Before: PROPOSED 2026-10-05, routed by question round 59 item 1 (kernel-close-races-followups OPEN-1 (B); the form Amendment 1, item 1): the stale skp.rs line cites in the files its draft OPEN-1 lists, other than liveTicketSet.ts, repointed by item. MP-1 moves skp.rs lines again, so after MP-1."
     },
     {
+      "id": "verify-bundle-example-path-build-dir-layout",
+      "title": "The kernel tests that run a built example find it under the toolchain build-dir layout of rustc 1.100.0: verify_bundle, red on main since #309 merge, and scale_pass helper (S3; filler entry 15, ahead of every entry, by the human of 2026-11-13)",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "ready",
+      "order": null,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-11-12",
+        "done": null
+      },
+      "summary": "PLACED 2026-11-13 by the human's message of 2026-11-13 (06:43Z) (state/directives/2026-11-13-advisor-session-from-advisor-live-human-clicks-until-then-publish-approval-answers-rust-ci-fix-filler-now-toolchain-consult.md), item 8 (line 33): it takes the filler slot now, ahead of every entry, as filler entry 15; a red CI on main that is not GitHub's outage is fixed first, its fix taking the filler slot at once, the human told after. FORM COMMITTED 2026-11-13 (governance/forms/kernel/VERIFY-BUNDLE-EXAMPLE-PATH-BUILD-DIR-LAYOUT-PREREGISTRATION.md) from lead-data's draft: OPEN-6 (A), the reviewer and the architect from dispatch under AUTONOMY §36; OPEN-1 (C), OPEN-2 (A), OPEN-3 (A), OPEN-4 (A), OPEN-5 (A) and OPEN-7 (A) taken as recommended under ruling 24. Nothing about the toolchain changes until the human answers the read-only consult of the same item. NEXT: its worker, under a shared hold; then its draft PR and its PR's own CI run on the new layout; then the two gates. Before: DRAFT FILED 2026-11-12 (state/consults/2026-11-12-verify-bundle-example-path-build-dir-layout-five-line-form-lead-data-draft.md): lead-data's five-line draft recommends (C), one shared test helper that takes the nearest ancestor named for the build's profile, in a new kernel/tests/built_targets/mod.rs, serving verify_bundle and both scale_pass helpers; 4 files, a line budget of 120; one mutation observed on this machine's rustc 1.97.1; the new layout observed only by the PR's own CI run, recorded by run id. OPEN-1 to OPEN-7, none a red line; OPEN-6, its slot and gate, is the human's. NEXT: the human's placement. Before: PLACED 2026-11-12 by the custodian, graded S3: main Rust CI failed at 5560c7d5 on rustc 1.100.0 (2026-11-09), where #309 own run at dd90df96 passed on 1.99.1. The three tests of kernel/tests/verify_bundle.rs walk up from their own binary to find the verify-bundle example and stop at the assertion that it was built there, on both suite jobs; the new layout puts test binaries under target/<profile>/build/<package>/<hash>/out/. cargo test stops at the first failing binary, so the 8 binaries after it in the ordinary suite did not run on main. kernel/tests/scale_pass.rs example_beside_me walks the same way (ignored, run by hand). Tests only; no product code. BLOCKED on the human: its slot (the filler queue proposed additions); lead-data five-line draft read only meanwhile."
+    },
+    {
       "id": "windows-case-fold-non-ascii",
       "title": "The audit case policy on Windows folds non-ASCII letters as NTFS does, so a profile path differing only in non-ASCII case cannot escape the user-home redaction (wave 3's 1c-2 correction, S2, code-path-only)",
       "lane": "kernel-protocol",
@@ -136,7 +155,7 @@
         "opened": "2026-11-12",
         "done": null
       },
-      "summary": "FORM DRAFT IN 2026-11-13: the architect's full form, both gates from dispatch, filed at state/consults/2026-11-13-publish-approval-columns-line-form-architect-draft.md. Its OPEN-1 to OPEN-6 are red lines (the separator, names with punctuation, the many-name grammar, the P6 mark, the dialog's placement, ADR-024's note) and its G-7 asks about the human's exposure review: all for the human. OPEN-7 to OPEN-9 take its recommendations under ruling 24. NEXT: the human's words, then the form committed; code after 311 merges. Before: PLACED 2026-11-12 by the human's third message of 2026-11-12 (21:15Z) (state/directives/2026-11-12-third-message-open-3-a-gates-now-typed-check-reading-rule-first-look-s1-publish-approval-s2-second-open-rulings-308-restore-item-47-floor-order.md), item 4 (lines 19 to 21), on the publish approval consult (state/consults/2026-11-12-b1-shell-half-pr-b-publish-approval-colour-by-column-architect-consult.md): OPEN-P1 (A), its own piece outside PR B; OPEN-P3, S2, slot 2, straight after the S1 fix merges; it merges before PR B if rule (00) allows, and before v0.2's tag in any case. The line's words are the human's by approval (OPEN-P2, line 20), with attribute columns and with none, and go on the sitting's list. On main without PR B its e2e step asserts the line with no attributes; PR B's PB-E2 and operator row 5 then assert that the line names the column; item 59's text is re-read against it at PR B's records commit. The consult's option (E) is publish-approval-kernel-parity. NEXT: its form, when slot 2 reaches it."
+      "summary": "ANSWERED 2026-11-13 by the human's message of 2026-11-13 (06:43Z) (state/directives/2026-11-13-advisor-session-from-advisor-live-human-clicks-until-then-publish-approval-answers-rust-ci-fix-filler-now-toolchain-consult.md), item 7 (line 31): OPEN-1 (a); OPEN-2 (a) now, and (b) or (c) comes to the human at PR B's records commit; OPEN-3 (a); OPEN-4 (a); OPEN-5 (a); OPEN-6 (A), the architect's draft note the human's words by approval with the date filled in, clause-checked at the PR's head, an untrue clause going back to the human; G-7, the added line tells the operator more and takes nothing away, so the human's exposure review stands and the line is sighted at the next sitting; OPEN-7 and OPEN-8 take the recommendation. NEXT: the form committed with these answers, then its code worker. Before: FORM DRAFT IN 2026-11-13: the architect's full form, both gates from dispatch, filed at state/consults/2026-11-13-publish-approval-columns-line-form-architect-draft.md. Its OPEN-1 to OPEN-6 are red lines (the separator, names with punctuation, the many-name grammar, the P6 mark, the dialog's placement, ADR-024's note) and its G-7 asks about the human's exposure review: all for the human. OPEN-7 to OPEN-9 take its recommendations under ruling 24. NEXT: the human's words, then the form committed; code after 311 merges. Before: PLACED 2026-11-12 by the human's third message of 2026-11-12 (21:15Z) (state/directives/2026-11-12-third-message-open-3-a-gates-now-typed-check-reading-rule-first-look-s1-publish-approval-s2-second-open-rulings-308-restore-item-47-floor-order.md), item 4 (lines 19 to 21), on the publish approval consult (state/consults/2026-11-12-b1-shell-half-pr-b-publish-approval-colour-by-column-architect-consult.md): OPEN-P1 (A), its own piece outside PR B; OPEN-P3, S2, slot 2, straight after the S1 fix merges; it merges before PR B if rule (00) allows, and before v0.2's tag in any case. The line's words are the human's by approval (OPEN-P2, line 20), with attribute columns and with none, and go on the sitting's list. On main without PR B its e2e step asserts the line with no attributes; PR B's PB-E2 and operator row 5 then assert that the line names the column; item 59's text is re-read against it at PR B's records commit. The consult's option (E) is publish-approval-kernel-parity. NEXT: its form, when slot 2 reaches it."
     },
     {
       "id": "recentre-stall-three-observations",
@@ -156,6 +175,25 @@
         "done": null
       },
       "summary": "PLACED 2026-11-12 by the human's message of 2026-11-12 (13:07Z), item 5 (e) (state/directives/2026-11-12-s1-fix-open-a-c-s6b-now-pr-b-class-9-now-1c-five-308-c1-words-platform-reports-order-no-git-stash.md, line 48): the stall report (state/consults/2026-11-11-platform-recentre-stall-read-and-profile.md, a reading and not Authority) stays beside the architect's read, and the stalls stay S3; its three proposed observations are one S3 node behind the fix. NEXT: after the fix's merge, its form."
+    },
+    {
+      "id": "advisor-session-merges-under-the-humans-rule",
+      "title": "The advisor session merges the custodian PRs that pass their gates, under the human rule of 2026-11-13, from their message advisor live: the merge request, the advisor merge check and verdict, the verdict filed as a consult, the revert PR after a red main, the two-hour fallback to the human; AUTONOMY section 9 and ruling 25 poll changed with it (the governance lane; S3 by the custodian)",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "ready",
+      "order": null,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-11-13",
+        "done": null
+      },
+      "summary": "PLACED 2026-11-13 by the human's message of 2026-11-13 (06:43Z) (state/directives/2026-11-13-advisor-session-from-advisor-live-human-clicks-until-then-publish-approval-answers-rust-ci-fix-filler-now-toolchain-consult.md), item 6 (line 29): a governance-lane piece recording items 1 to 5 of that message, AUTONOMY section 9 and ruling 25's poll changing with it; the hourly read of the advisory folder stops at advisor live, and the custodian reads MERGE-CHECKS/ and any report there when the advisor says it is there. Item 5 (line 27): until the human types advisor live, everything stays as today and the human clicks. Graded S3 by the custodian; the human may regrade it. Rule (00): it and advisor-questions-and-telegram-three-alarms both edit governance/AUTONOMY.md, so one runs at a time, this one first by the custodian's order (the earlier message). NEXT: its form, drafted read only by the architect, in the docs lane after the items the human ordered there on 2026-11-12."
     },
     {
       "id": "site-waiting-on-you-lists-open-questions",
@@ -216,31 +254,11 @@
     }
   ],
   "waiting_on_human": {
-    "total_minutes": 22,
+    "total_minutes": 20,
     "by_kind": {
       "click": [],
       "sight": [],
-      "ruling": [
-        {
-          "id": "verify-bundle-example-path-build-dir-layout",
-          "title": "The kernel tests that run a built example find it under the toolchain build-dir layout of rustc 1.100.0: verify_bundle, red on main since #309 merge, and scale_pass helper (S3; its slot waits for the human)",
-          "lane": "kernel-protocol",
-          "phase": "prototype",
-          "status": "blocked",
-          "order": null,
-          "budget_minutes": 60,
-          "needs_human": {
-            "kind": "ruling",
-            "minutes": 2
-          },
-          "evidence": null,
-          "dates": {
-            "opened": "2026-11-12",
-            "done": null
-          },
-          "summary": "DRAFT FILED 2026-11-12 (state/consults/2026-11-12-verify-bundle-example-path-build-dir-layout-five-line-form-lead-data-draft.md): lead-data's five-line draft recommends (C), one shared test helper that takes the nearest ancestor named for the build's profile, in a new kernel/tests/built_targets/mod.rs, serving verify_bundle and both scale_pass helpers; 4 files, a line budget of 120; one mutation observed on this machine's rustc 1.97.1; the new layout observed only by the PR's own CI run, recorded by run id. OPEN-1 to OPEN-7, none a red line; OPEN-6, its slot and gate, is the human's. NEXT: the human's placement. Before: PLACED 2026-11-12 by the custodian, graded S3: main Rust CI failed at 5560c7d5 on rustc 1.100.0 (2026-11-09), where #309 own run at dd90df96 passed on 1.99.1. The three tests of kernel/tests/verify_bundle.rs walk up from their own binary to find the verify-bundle example and stop at the assertion that it was built there, on both suite jobs; the new layout puts test binaries under target/<profile>/build/<package>/<hash>/out/. cargo test stops at the first failing binary, so the 8 binaries after it in the ordinary suite did not run on main. kernel/tests/scale_pass.rs example_beside_me walks the same way (ignored, run by hand). Tests only; no product code. BLOCKED on the human: its slot (the filler queue proposed additions); lead-data five-line draft read only meanwhile."
-        }
-      ],
+      "ruling": [],
       "sitting": [
         {
           "id": "operator-sitting-queue",
@@ -676,6 +694,28 @@
       "summary": "RE-TARGETED 2026-10-23 to v0.2 by the human (state/directives/2026-10-23-weekend-open-items-ruled-verify-cites-pin-covering-case-port-2-session-log-test-feature-v0-2-findings-graded.md, item 6, O1): it rides release-v0-2-0 in place of the folded v0.1.1. Before: RULED 2026-09-14 (question set D, D3): draft the application after v0.1.1; nothing is submitted; SignPath Foundation as the named publisher and the required disclosure section per the evaluation note",
       "blocked_by": [
         "release-v0-2-0"
+      ]
+    },
+    {
+      "id": "advisor-questions-and-telegram-three-alarms",
+      "title": "From the human message advisor live, the custodian questions go to the advisor and Telegram keeps three alarms: the AskUserQuestion mirror hook removed from the project settings, the Notification hook keeps only the two quota matchers, the Stop hook waiting-list message goes and its halt message stays, and AUTONOMY section 16 and Appendix A3 Telegram part replaced by the rule (the governance lane; S3 by the custodian)",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": null,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-11-13",
+        "done": null
+      },
+      "summary": "PLACED 2026-11-13 by the human's message of 2026-11-13 (06:57Z), on notifications (state/directives/2026-11-13-on-notifications-questions-to-the-advisor-telegram-three-alarms-hooks-piece-no-askuserquestion-until-it-merges.md), item 4 (line 15): a governance-lane piece makes items 1 to 3 of that message so. Until it merges, the custodian does not call AskUserQuestion (the same line, in force from that message). Its change to .claude/settings.json is the security posture, a red line by the custodian's reading, so its click waits for the human's typed word on that file; asked in the closing message. Graded S3 by the custodian; the human may regrade it. Rule (00): after advisor-session-merges-under-the-humans-rule, since both edit governance/AUTONOMY.md. NEXT: its form, drafted read only by the architect, after advisor-session-merges-under-the-humans-rule's.",
+      "blocked_by": [
+        "advisor-session-merges-under-the-humans-rule"
       ]
     },
     {
