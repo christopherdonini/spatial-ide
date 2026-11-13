@@ -175,3 +175,10 @@ At 8f6d8639 the tree holds exactly seven `@stable` lines and no other `stable` o
 6. **OPEN-1 (A) as built.** release-artifacts.yml is not in the diff and was not dispatched (both gates).
 7. **The worker.** Its report is `state/consults/2026-11-13-ci-rust-toolchain-pin-worker-report.md`; the departure it states (the form read in part) left the diff within every part of the form, by both gates.
 8. **N6.** The pin's merge commit does not exist at this amendment; the node's done commit appends it as Amendment 2.
+
+### Amendment 2 — 2026-11-13 — N6's merge commit (written after the merge; it invalidates nothing)
+
+*References only, under the record cap. Nothing below is a quotation.*
+
+1. **The merge (N6).** PR #315 merged by the advisor by merge commit 8c693657801fd4168b078a601724bdacd9f479b8, at 2026-11-13T21:43:01Z by GitHub, on its verdict MERGE (`state/consults/2026-11-13-ci-rust-toolchain-pin-merge-check-merge.md`). Port-2's record resolves its macOS entry's rustc line against N3 at or after this commit.
+2. **Main's CI at the merge**, read by commit at 2026-11-13T22:13:25Z: all 9 runs success. By the custodian's read at 2026-11-13T22:13:38Z, the Rust jobs of product-ci-rust, product-ci-shell, product-ci-viewer, rust-fmt, adr-003-spike-ci-linux, adr-003-spike-ci-macos at the merge each log N3's rustc line; run/job: product-ci-rust 43513160207/132188246228; product-ci-rust 43513160207/132188246638; product-ci-shell 43513160558/132188248222; product-ci-shell 43513160558/132188248715; product-ci-viewer 43513159980/132188246140; rust-fmt 43513160328/132188246838; adr-003-spike-ci-linux 43513160003/132188245427; adr-003-spike-ci-macos 43513160041/132188245694.

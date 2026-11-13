@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `a94f9f5579f9d3674b75d4ca37c83de900217c2eab51059c03f30610330c012f`) at `2026-11-13T21:16:39.941Z`.
+Generated from `PLAN.yaml` (sha256 `e390d5efad073fb288454f3baccd059ad096855b4b96c61bf9644d95b0bbc80a`) at `2026-11-13T22:14:39.144Z`.
 
 ## 1. Next
 
@@ -60,7 +60,6 @@ Generated from `PLAN.yaml` (sha256 `a94f9f5579f9d3674b75d4ca37c83de900217c2eab51
 - **record-step-style-match-widening** — record_step admits a style.set match value on fillColor, with the step's dependencies naming the match column and its type (milestone 4's OPEN-4 (A′)), carried in piece 1c's step 1 by class 9 (the 1c form's Amendment 7) — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **b1-shell-half** — Shell migration, milestone 4 -- B1 shell half: attributes of the inspected feature, colour by category with its legend, and the table — evidence: branch `cut/b1-shell-half-pr-c`
 - **port-2-macos-l1-and-app-dirs** — PORT-2 -- macOS L1 for the Cargo workspace: macos-latest in the same matrix, one application-directory boundary replacing the two resolvers, and a case-policy test on a case-insensitive volume — evidence: branch `cut/port-2-macos-l1-and-app-dirs`
-- **ci-rust-toolchain-pin** — CI installs one exact Rust version: the seven install steps under .github/workflows/ name the version that main logs in its first green Rust run after entry 15 merges, and the toolchain action is pinned by commit (the human approval of ADV-2026-11-13-05) — evidence: branch `cut/ci-rust-toolchain-pin`
 
 ## 6. Proposed / unscheduled
 
