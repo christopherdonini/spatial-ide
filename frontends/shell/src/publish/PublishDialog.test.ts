@@ -51,6 +51,7 @@ const PROMPT: PublishPromptData = {
   outcome_summary:
     'This will create a folder named "my-bundle" at C:\\out, containing the selected rows as one ' +
     "or more data partitions, the interactive viewer page, and a manifest.",
+  published_columns: "Columns published: id, the geometry, and zone.",
 };
 
 describe("nextPublishDialogState -- the approval surface's own lifecycle (NEXT-CUT.md P2)", () => {
@@ -214,6 +215,13 @@ describe(
       const instructionAt = html.indexOf("Type the destination's final path component to confirm.");
       expect(instructionAt).toBeGreaterThan(-1);
       expect(html.indexOf(sentence)).toBeGreaterThan(instructionAt);
+    });
+
+    it("D3 renders the host-composed published_columns line verbatim, after Row scope and before the irreversible warning", () => {
+      const html = renderedHtml();
+      const columnsAt = html.indexOf(PROMPT.published_columns);
+      expect(columnsAt).toBeGreaterThan(html.indexOf(PROMPT.row_scope));
+      expect(columnsAt).toBeLessThan(html.indexOf("This cannot be undone"));
     });
 
     // RECORDED MUTATION: M4, publish.rs's 600 set to 300 alone, applied alone at 42e6fc141044: this test failed by name (D2 the expiry sentence's minutes are PENDING_ATTEMPT_TTL's, read from publish.rs; expected 600 to be 300); reverted.

@@ -260,6 +260,8 @@ export default function PublishDialog({
         </dd>
         <dt>Row scope</dt>
         <dd className="publish-dialog-row-scope">{prompt.row_scope}</dd>
+        {/* The host-composed columns line, verbatim (no label word of its own). */}
+        <dd className="publish-dialog-columns">{prompt.published_columns}</dd>
       </dl>
       {prompt.filter_scope && (
         <div className="publish-dialog-filter-scope" role="alert">

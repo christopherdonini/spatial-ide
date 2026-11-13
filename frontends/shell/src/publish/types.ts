@@ -45,6 +45,10 @@ export interface PublishPromptData {
    * an unmeasured claim (ADR-018/docs/08). This ADDS clarity to the surface; it replaces no other
    * field. */
   outcome_summary: string;
+  /** One host-composed line naming `id`, the geometry and each attribute column the attempt
+   * publishes, in the request's declared order. Composed in `publish.rs::compose_published_columns`;
+   * `PublishDialog.tsx` renders it verbatim, after Row scope. */
+  published_columns: string;
 }
 
 /** `PrepareOutcome` (`publish.rs`, `#[serde(tag = "status", rename_all = "kebab-case")]` --
