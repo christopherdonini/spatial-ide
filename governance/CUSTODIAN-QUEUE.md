@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `107a64a7841411f32725fccd340c50a2afcb3091db2e2b626f3b782d08e226d9`) at `2026-11-13T11:37:24.372Z`.
+Generated from `PLAN.yaml` (sha256 `fbeb5e75c319c47fee23e2b917688fdbdf3ec08ab6aab3d942786f871784d60c`) at `2026-11-13T12:07:44.559Z`.
 
 ## 1. Next
 
@@ -138,6 +138,7 @@ Generated from `PLAN.yaml` (sha256 `107a64a7841411f32725fccd340c50a2afcb3091db2e
 - **skp-spec-and-protocol-comments-drift-sweep-c** — SKP-V0.md live sections and the protocol and shell doc comments brought current to main (drift sweep area C, findings 2 to 11, and area A, finding 3), after 1c (phase `prototype`) — never queued until placed
 - **comment-line-cites-kin-docs-audit-c** — Product and e2e comments whose line cites point at moved text: origin.rs on AI_DEVELOPMENT.md, engine/src/error.rs and the admission-remediation e2e script on crs.rs (the docs audits, Task C kin) (phase `prototype`) — never queued until placed
 - **pan-anchor-drag-waits-for-its-own-lines** — e2e/pan-anchor.mjs: drag waits for the view-state lines its own gesture produces, not a wall-clock quiet period (test only) (phase `prototype`) — never queued until placed
+- **ci-rust-toolchain-pin** — CI installs one exact Rust version: the seven install steps under .github/workflows/ name the version that main logs in its first green Rust run after entry 15 merges, and the toolchain action is pinned by commit (the human approval of ADV-2026-11-13-05) (phase `prototype`) — never queued until placed
 
 ### Unscheduled
 
