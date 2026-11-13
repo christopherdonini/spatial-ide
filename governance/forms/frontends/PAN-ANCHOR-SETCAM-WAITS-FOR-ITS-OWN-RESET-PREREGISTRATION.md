@@ -351,3 +351,102 @@ Nothing above is edited.
 3. **Order.** The new node `recentre-crossing-view-displaced-by-origin-move` takes slot 2 first (item 5 (b)); this piece follows it.
 
 Nothing above is edited.
+
+## Amendment 5 — the fix's shape: setCam waits for its own line with no wall-clock bound (the advisor's ruling ADV-2026-11-13-08, item 1); main merged first; the probes, a loaded run and the gate (class 1, written after results were seen); the advisor's rulings on OPEN-A and OPEN-B (ADV-2026-11-13-09, class 5)
+
+*Written after the results of P1 at commit 1 (Amendment 2 item 1), of P1-D (Amendment 2 item 3) and of the diagnostic's three runs were seen. Drafted by the architect, read only. References only. Commit 1's lines are named in words at 624b2e6893a39fc967eada2cc028875d3c7d767c, with no hash, because that commit is not on main (round 15 (e); `docs/PREREGISTRATION-TEMPLATE.md`, Round 25 additions, item 2 (d)). The fix is the first of the two the human named (`state/directives/2026-11-11-1c-open-7-1-a-p2-now-pan-anchor-route-b-diagnostic-now-stall-record-two-runs.md:20` @ 428cbe91d269f059027cea6cffaaf6f0aa5cc009 sha256:d2efcda201e586ff1eabcfc49d7afaa8bec1be280c69a3513a0fbce5a654d6e2, a sub-line span carrying its line's hash), as Amendment 4 item 2 proposed. Reuse index (the custodian's run of 2026-11-13 at 89bbac3738dbb46d47988e55a7c0f0d4f9fe4c5c): no prior art for either search (e2e test wait console log line predicate; test harness timeout under load event wait). That miss is noted here. Nothing above is edited.*
+
+*Carried by the custodian on 2026-11-13 from the architect's draft (`state/consults/2026-11-13-pan-anchor-setcam-waits-for-its-own-reset-amendment-5-architect-draft.md`, its fenced block), byte for byte with these changes, all the custodian's: the heading's last clause; this note; the 7 pins that named their file in words or by line alone, written as full path cites and filled by script at 428cbe91d269f059027cea6cffaaf6f0aa5cc009 (the run-build report's :335-336 and :342-343 as two pins); and items 8 and 9, which record the advisor's rulings on this amendment's OPEN-A and OPEN-B and the claims above that it supersedes. The draft's OPEN items, findings and gaps stay in the consult. Nothing else is changed.*
+
+1. **The shape of the wait.**
+   - **setCam** waits for the first line in `vs` whose `zoom` exactly equals the zoom of its own call. This is commit 1's match, and it is kept. The wait has no wall-clock bound, and it ends in one of three ways:
+     - (i) the line is in `vs`, and setCam returns it;
+     - (ii) the seam resolves to anything other than `true`, and setCam throws at once with an Error that names setCam and the value. The seam resolves `false` and logs nothing when no canvas or deck is mounted (`frontends/shell/src/canvas/WorkingCanvas.tsx:2357` @ 428cbe91d269f059027cea6cffaaf6f0aa5cc009 sha256:affdb01a6703c3f32973feba0842d69015594c0ffd9d345ec67fbf12389b02f3; `frontends/shell/src/e2e-test-surface.ts:319-320` @ 428cbe91d269f059027cea6cffaaf6f0aa5cc009 sha256:d6349bc1e57a46510d5f96dfa708b670a90109c35e5fc174e0ebbe43f475cd95). Without this throw, that case would wait for a line that can never come;
+     - (iii) in every other case, the hard `timeout` that the harness's run-suite step puts around the run ends the process. A run ended this way has no check result. It is recorded as ended by the timeout, never as a PASS or a FAIL, and the custodian re-runs it alone.
+   - While it waits, setCam prints one progress line for every 30 s of waiting. The line names setCam, the zoom, the seconds waited and how many other lines have arrived. It contains none of `PASS`, `FAIL` or `====`, and it ends nothing.
+   - **Why load cannot break it.** No check's outcome depends on how long the wait takes. A stall makes the run longer; it cannot turn a check into a FAIL. The only bound left is the run's own, and when that bound is broken the result is no result, not a failure. The sizes this rests on:
+     - the longest kept page stall, 35874 ms (`state/consults/2026-11-11-pan-anchor-there-and-back-residual-diagnostic-run-build-worker-report.md:297` @ 428cbe91d269f059027cea6cffaaf6f0aa5cc009 sha256:c4f43af6b3a9cc3b83b06ed058b88a833e1a906159b1d970a1fbfaaecdf3e673);
+     - the longest gap from receipt to push, 22068 ms (the same report, `state/consults/2026-11-11-pan-anchor-there-and-back-residual-diagnostic-run-build-worker-report.md:305` @ 428cbe91d269f059027cea6cffaaf6f0aa5cc009 sha256:e5495e1cb0753ef75c2196eebbac3e654a77a73bd8e48e7be1b55126e6e34628);
+     - the longest setCam interval, 18729 ms (`state/consults/2026-11-11-pan-anchor-there-and-back-residual-diagnostic-run-quiet-worker-report.md:262` @ 428cbe91d269f059027cea6cffaaf6f0aa5cc009 sha256:6a32bbe3bbd911b2172d490ba4784d3e8175bb733d356871eee3c36e8367fc15);
+     - call 7's push 2.6 s after its receipt, and call 14's timer still unfired at the bound (`state/consults/2026-11-10-pan-anchor-setcam-waits-for-its-own-reset-p1d-worker-report.md:65-66` @ 428cbe91d269f059027cea6cffaaf6f0aa5cc009 sha256:688fa22a7b986d79f249bc2afe7267d0b0d3c407edee2d883a0f926ef947be5a);
+     - P1's throw at commit 1, on the bound (`state/consults/2026-11-10-pan-anchor-setcam-waits-for-its-own-reset-build-worker-report.md:44` @ 428cbe91d269f059027cea6cffaaf6f0aa5cc009 sha256:047093b272258ee3c962132e98302a6b50876c9e55789c141af260501f738692);
+     - whole loaded runs of 8 min 48 s (run-build report, `state/consults/2026-11-11-pan-anchor-there-and-back-residual-diagnostic-run-build-worker-report.md:61-62` @ 428cbe91d269f059027cea6cffaaf6f0aa5cc009 sha256:e7babd5502316170aa546dc99d77551717b7b729f9e0c109e0b94ef03422afe0) and 7 min 2 s (`state/consults/2026-11-13-b1-shell-half-pr-b-series-at-m-prime-tester-report.md:84` @ 428cbe91d269f059027cea6cffaaf6f0aa5cc009 sha256:58b292e56e6adee586327c684adebf06679dd2079c2d84b5c0fe812edfa9f8ce);
+     - the harness's hard timeout of 1500 s, which was not reached (run-build report, `state/consults/2026-11-11-pan-anchor-there-and-back-residual-diagnostic-run-build-worker-report.md:81` @ 428cbe91d269f059027cea6cffaaf6f0aa5cc009 sha256:39abb40cff8c11960b6da2a14886cac39f587093b30d9d49c9b18281b3aa02c4).
+   - **drag** waits until the pushes go quiet (`frontends/shell/e2e/pan-anchor.mjs:114` @ 428cbe91d269f059027cea6cffaaf6f0aa5cc009 sha256:01b240a37b62195a180284d3309274315a5a972e1e3e760ea61a814112cde058; `frontends/shell/e2e/lib.mjs:348-369` @ 428cbe91d269f059027cea6cffaaf6f0aa5cc009 sha256:b8de0367e9d6ac10206551d7093797d650c401b30412c76e40fdfdd739afa1af). That is a wall-clock wait that load can break: s1 was read one line behind in four recenter-crossing drags (run-build report, `state/consults/2026-11-11-pan-anchor-there-and-back-residual-diagnostic-run-build-worker-report.md:335-336` @ 428cbe91d269f059027cea6cffaaf6f0aa5cc009 sha256:b942de57adeaf0282d03d89919859d282f65a96428548d60c16f277afa61389a and `state/consults/2026-11-11-pan-anchor-there-and-back-residual-diagnostic-run-build-worker-report.md:342-343` @ 428cbe91d269f059027cea6cffaaf6f0aa5cc009 sha256:9bed6fd605631c933c5770081a9bd11e74900c78e5869c00fb8497dfc5f5e5af). It is not part of this piece, because OPEN-1 (A) (Amendment 1 item 1) keeps the scope to s0. This amendment's OPEN-A puts it to the advisor. No other wait in the file depends on a view-state line.
+
+2. **What commit 1 keeps.** These are lines of `frontends/shell/e2e/pan-anchor.mjs` at 624b2e6893a39fc967eada2cc028875d3c7d767c, as the worker's next commit treats them:
+   - line 93 (`SETCAM_BOUND_MS`): deleted;
+   - lines 98-99 (the zoom computed once, and the clear): kept;
+   - line 100 (the seam call): kept. Its resolved value is now read, and any value other than `true` throws, as in 1 (ii);
+   - line 101 (the 500 ms minimum): kept;
+   - lines 102-106 (the comment): rewritten from the built code under Part 1, item 1. It must cover:
+     - what the wait matches, and why that line is the reset's;
+     - that the wait has no bound, what ends it (1 (i) to (iii)), and the progress line;
+     - that the wait is a precondition, not a property;
+     - that a late line from the previous gesture stays in `vs` and is not read;
+     - that `s1` is not covered;
+   - line 107 (`own`): kept;
+   - line 108 (five turns of 1000 ms): replaced by a loop with no turn limit. Each turn still sleeps 1000 ms (OPEN-3 (B)'s cadence is kept), and every 30th turn prints the progress line;
+   - lines 109-110 (the throw when nothing matches): deleted;
+   - line 111: returns the matched line;
+   - commit 3 adds one `RECORDED MUTATION` entry for M-TRACE to the file's header.
+   - Superseded here, and not edited: the Change line's hard-bound clause; the M-TRACE prediction in the Tests+mutation line (exit 2 with the bound's message); note 2's paragraph on the bound; and OPEN-4 (A) as it applied to the bound. OPEN-4 (A)'s throw still stands, for 1 (ii).
+
+3. **The base.**
+   - Before commit 2, main is merged into the branch by a merge commit, never a rebase. B′ is the merge's main parent, named by its id at dispatch (main is 428cbe91d269f059027cea6cffaaf6f0aa5cc009 at this draft).
+   - Why: `WorkingCanvas.tsx` changed on main, so the probes must run against the product this piece merges onto. `pan-anchor.mjs` and `lib.mjs` are unchanged from 1cc69e44 to 428cbe91, so the Scope file comes through the merge exactly as commit 1 left it.
+   - Pins: every pin here is at 428cbe91. If B′ is a different commit and a cited file under frontends/ has changed, the custodian re-pins that cite at B′ before dispatch.
+   - M-TRACE's line at this base is `frontends/shell/src/canvas/WorkingCanvas.tsx:2369` @ 428cbe91d269f059027cea6cffaaf6f0aa5cc009 sha256:07b16e9017f1af73a5f49ecd61bd4d5830c365928433dcab347e6f56b2d78ea7. It sits in the seam at `frontends/shell/src/canvas/WorkingCanvas.tsx:2353-2378` @ 428cbe91d269f059027cea6cffaaf6f0aa5cc009 sha256:18388468b6ce61983a802302122d985b5cfd784e4d86ed613306c5db6c0b9455, which logs it before resolving `true` at :2377.
+   - A new debug exe is built only if src-tauri changed between 1cc69e44 and B′ (note 4's rule).
+
+4. **The probes.** Each is one Bash call inside `hold shared -Project SpatialIDE`, under note 4's shared conditions. Each run's record names the run-suite file, its sha256 and the timeout the run was given, because that step is untracked (round 15 (c)).
+   - **P0 at B′**, the reviewer's re-observation (OPEN-5 (A)): note 4's wrapper. Predicted as note 4 has it: exit 1, both `pixel-spaces-coincide` checks PASS and the other 14 FAIL by name. Its STOP rule is unchanged.
+   - **P1 at the head**, with the same wrapper: predicted exit 0, `==== 16/16 PASS ====`, and no `pan-anchor.mjs fatal:` line. Any progress lines are recorded as observed.
+   - **M-TRACE at the head**: the zoom argument on line :2369 becomes `zoom + 1e-6`, as a worktree edit that is reverted afterwards. This probe alone gets a hard timeout of 600 s. Predicted: `PASS  small: pixel-spaces-coincide`, then no further check line, then at least one progress line naming the first call's zoom (-1 + 1e-5, printed the way JS prints it), until the timeout ends the run. A check line after the first one, or no progress line at all, is a STOP. The failure is recorded by name in the header's `RECORDED MUTATION` entry, with the 40-hex id of the commit it was observed at (commit 2), in commit 3. A verify-mutation run is not an observation.
+   - **R1 at the head**, unmutated: exit 0, `==== 16/16 PASS ====`.
+   - **L1 at the final head, under load**, in a single shared hold:
+     - a cargo build of the worktree into a scratch target starts before the suite;
+     - the process lists show the build alive at the suite's start and at its end;
+     - the build is killed afterwards and its target removed. This is the diagnostic's run-build shape (run-build report, `state/consults/2026-11-11-pan-anchor-there-and-back-residual-diagnostic-run-build-worker-report.md:53-81` @ 428cbe91d269f059027cea6cffaaf6f0aa5cc009 sha256:1e3f334c3a9d5b737fb394479fa47fee06b96c366d2c999aafee73ea1e9a9ef7).
+     - Predicted: exit 0, `==== 16/16 PASS ====`, no fatal line.
+     - Any departure is a STOP, recorded as a class 2 deviation with its failing lines. It is not re-run to get a pass, and it goes to the advisor.
+   - **P1-D's wrapper is not reused.** The question it asked was answered by the diagnostic's grade (Amendment 4 item 1).
+   - **The port.** Runs use the port-5400 harness, as the series of 2026-11-13 did (series report, `state/consults/2026-11-13-b1-shell-half-pr-b-series-at-m-prime-tester-report.md:5` @ 428cbe91d269f059027cea6cffaaf6f0aa5cc009 sha256:1c7166a88e005a78a568e9cb67aae79d7ee1931fbea3ebf8cd8a188c10209c2b), under the human's ruling (`state/directives/2026-11-09-304-open-b-a-widened-303-clicked-pef-open-2-a-open-5-listen-test-then-5180.md:13` @ 428cbe91d269f059027cea6cffaaf6f0aa5cc009 sha256:ce7039173e17b0d97e79271ec8a978ad62fc1dfa29cdd071fd2cf74f6be8bd18). They move to 5180 once the human gives the word and a listen test passes. A run already begun on 5400 finishes there. The custodian names the port at dispatch.
+   - **Claim limit**, extending note 4's: setCam's wait has no wall-clock bound. The file's other waits keep theirs: drag's, waitForFill's 20 s, settleCanvasSize's 20 × 200 ms, resizeWindow's 700 ms and setup's 1500 ms. No record says the suite has no wall-clock bound.
+
+5. **Scope and size.**
+   - One file: `frontends/shell/e2e/pan-anchor.mjs`. The e2e README has no pan-anchor entry at 428cbe91 and is not changed.
+   - The budget stays at 40, as the Scope line declares. Commit 1 is 19 (13 insertions, 6 deletions).
+   - The estimate for the final diff, with the header entry, is 20 to 28. It is counted at the final head by `git diff --numstat <B′> <head> -- frontends/shell/e2e/pan-anchor.mjs`.
+   - An overrun is recorded as class 6 before the commit that causes it. The Scope line is never edited.
+   - §21a: none of the four categories is touched. The Out-of-scope line stands, and no check, residual formula or tolerance changes.
+
+6. **The gate.** A single reviewer (OPEN-6 (A)). At the final head, the reviewer:
+   - checks the Out-of-scope reading first;
+   - reads the diff against 2;
+   - runs P0 at B′, then P1, M-TRACE and L1, each in its own Bash call inside `hold shared -Project SpatialIDE` (L1's hold also holds its load build);
+   - reads R1, and reads the worker's runs as the fallback;
+   - runs the readiness checks as note 4 has them: `node --check`, `npm run verify` in a shared hold, the scripts' `node --test`, `verify:plan`, `verify:cites` and `verify:quotes`.
+
+7. **PR B's record.** Nothing changes. PR B's Amendment 13 reads the alone re-run of pan-anchor using the suite at PR B's own head (ADV-2026-11-13-08, item 3). No run of this piece counts as evidence for PR B, and that re-run names the commit of the suite it ran.
+
+8. **The advisor's rulings** (ADV-2026-11-13-09, items 3 to 5, `state/directives/2026-11-13-advisor-ruling-adv-2026-11-13-09-round-75-313-to-its-gates-as-built-briefs-make-the-folder-first-pan-anchor-open-a-b-open-b-a-two-conditions.md`, filed as the advisor's under the human's delegation of 2026-11-13, not the human's words; recorded by the custodian, class 5):
+   - **OPEN-A: (B).** drag's wait and s1 stay out of this piece. The claim covers setCam's wait only, and the claim limit (item 4) names drag's wall-clock wait. A node for drag's wait, `pan-anchor-drag-waits-for-its-own-lines`, is proposed to the filler queue; the advisor places it if a loaded series fails on s1 after this piece merges.
+   - **OPEN-B: (A),** as item 1 (iii) has it, with two conditions:
+     - (a) Every run of this suite is made under a hard timeout, and the run's record names it. The claim limit says so.
+     - (b) A run the timeout ends in a shared hold has no result and is re-run alone, as item 1 (iii) says. A run the timeout ends when it ran alone, in an exclusive hold, is a failure of setCam's precondition: it is recorded with its progress lines and goes to the advisor.
+   - **The reading of AUTONOMY §37: (i).** §37's hard-timeout clause is read as met for setCam's loop by the run's own hard timeout. This is a reading for this suite's wait only; it does not change §37 for agents' briefs.
+
+9. **Superseded, and not edited** (the draft's finding 4; class 1). Items 1, 2, 4 and 8 supersede these claims above:
+   - the Change line's hard-bound clause, `governance/forms/frontends/PAN-ANCHOR-SETCAM-WAITS-FOR-ITS-OWN-RESET-PREREGISTRATION.md:26` @ 8ab0e754126cf9eeb833dd869f69f60d2fa00a73 sha256:3fc298e92ca04eb4f7e8296e3f4c57a1c7ce8bf3802ef304fb66c858ab01bdfe;
+   - the Tests+mutation line's M-TRACE prediction (exit 2, with setCam's bound message), `governance/forms/frontends/PAN-ANCHOR-SETCAM-WAITS-FOR-ITS-OWN-RESET-PREREGISTRATION.md:27` @ 8ab0e754126cf9eeb833dd869f69f60d2fa00a73 sha256:76a228df4209b86f991f4084d4f2cdf6f65c787f629b634464941fb6639fd81f;
+   - the notes' throw when no line matches within the bound, `governance/forms/frontends/PAN-ANCHOR-SETCAM-WAITS-FOR-ITS-OWN-RESET-PREREGISTRATION.md:123` @ 8ab0e754126cf9eeb833dd869f69f60d2fa00a73 sha256:7cf0232890c1147f037d92459bc62086a69247c25d64e3e2480d729c2f23d0e2, and their bound, `governance/forms/frontends/PAN-ANCHOR-SETCAM-WAITS-FOR-ITS-OWN-RESET-PREREGISTRATION.md:132-134` @ 8ab0e754126cf9eeb833dd869f69f60d2fa00a73 sha256:f52cfee59f343d692debd7384fd49168fd624ba0dc1d45b3ee4f03f422239681;
+   - the sentence list's item on the bound, `governance/forms/frontends/PAN-ANCHOR-SETCAM-WAITS-FOR-ITS-OWN-RESET-PREREGISTRATION.md:138` @ 8ab0e754126cf9eeb833dd869f69f60d2fa00a73 sha256:b371b0f21a0550a26e0f14037f6e4e479d2a5bcd2e7265410ee0e499a3b3a912;
+   - P1's clause that each call returns inside the 5.5 s bound, `governance/forms/frontends/PAN-ANCHOR-SETCAM-WAITS-FOR-ITS-OWN-RESET-PREREGISTRATION.md:188` @ 8ab0e754126cf9eeb833dd869f69f60d2fa00a73 sha256:0e403af6a4fc57426b9f3cb67835af6e368972adc438fde62a60b340ea1fc84a;
+   - M-TRACE's expected exit 2, `governance/forms/frontends/PAN-ANCHOR-SETCAM-WAITS-FOR-ITS-OWN-RESET-PREREGISTRATION.md:193` @ 8ab0e754126cf9eeb833dd869f69f60d2fa00a73 sha256:31cc0affad262976297e6f1041d93714c92f471580ded9c3be44572284f75b88;
+   - the docs/08 line's 5.5 s bound, `governance/forms/frontends/PAN-ANCHOR-SETCAM-WAITS-FOR-ITS-OWN-RESET-PREREGISTRATION.md:227` @ 8ab0e754126cf9eeb833dd869f69f60d2fa00a73 sha256:093aa9631730c9abaa5a752af4a059c95a0814d91ee0ad0e194512b89bc619e9;
+   - OPEN-4 (A) as it applied to the bound, `governance/forms/frontends/PAN-ANCHOR-SETCAM-WAITS-FOR-ITS-OWN-RESET-PREREGISTRATION.md:251-252` @ 8ab0e754126cf9eeb833dd869f69f60d2fa00a73 sha256:89f4817a11ef0eaa441be91041198dcdc700510a9368c024ee8ae2acb5d375c2. Its throw still stands, for item 1 (ii).
+
+- **Order:** the merge commit; commit 2 (setCam); M-TRACE observed at commit 2; commit 3 (the header entry); the runs at the final head. The PR body names commit 1 and asks for a merge that keeps it reachable from main, never a squash.
+- **Rule (00):** this piece touches pan-anchor.mjs alone. That is disjoint from PR B (no path under e2e/ or protocol/) and from the publish approval draft (`e2e/publish.mjs` and the README's Publish entry). No protocol/ path. It is checked again at dispatch.
+- **Unchanged:** Scope, Out-of-scope, the tolerance, every check, note 5's list, and the s1 sentence in note 4's claim limit.
