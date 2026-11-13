@@ -43,7 +43,9 @@ jobs:
           cache: "npm"
           cache-dependency-path: frontends/shell/package-lock.json
 
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec
+        with:
+          toolchain: "1.100.0"
 
       - uses: Swatinem/rust-cache@v2
         with:
