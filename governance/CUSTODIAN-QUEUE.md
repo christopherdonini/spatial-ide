@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `2b49b5e1dc1e5d243233abdda045a7e21130d321082fe0a1f2b28f66af22a911`) at `2026-11-13T20:27:00.640Z`.
+Generated from `PLAN.yaml` (sha256 `a94f9f5579f9d3674b75d4ca37c83de900217c2eab51059c03f30610330c012f`) at `2026-11-13T21:16:39.941Z`.
 
 ## 1. Next
 
@@ -10,6 +10,8 @@ Generated from `PLAN.yaml` (sha256 `2b49b5e1dc1e5d243233abdda045a7e21130d321082f
 
 - **lod-tier-tests-own-tier-folder** — Each engine test run takes its own tier folder, the machine-wide tier folder kept for the product only: two suites sharing one machine cleared each other's tiers, failing lod_tier_builder in #284's gate 1 (the human's ruling of 2026-11-06, item 2) (lane `engine`, order null, budget 60 min)
 - **close-races-three-untested-kernel-tests** — Kernel tests for the three places #308's two gates found untested: the cancel at a failed attribution, the end's reason branch of the arm, and the ended-then-closed race at SkpHost level (S3, the filler queue) (lane `kernel-protocol`, order null, budget 60 min)
+- **publish-approval-kernel-parity** — Kernel parity for the publish approval's column line: the kernel's approval prompt carries the column list and prints it, and the shell mirrors it, so the CLI and the shell show the same facts (option (E); S3, not for v0.2) (lane `kernel-protocol`, order null, budget 0 min)
+- **second-open-history-before-1c-step-3** — Which record a step belongs to: a second open's steps, and steps recorded after a save made before any step (the independent review's C2), with the review's note on two dataset identities; settled before 1c step 2's lineage reader (L1 to L4), so before step 3; ADR-036's text on both is the human's (lane `kernel-protocol`, order null, budget 0 min)
 - **skp-line-cites-outside-close-races** — Stale line cites into kernel/src/skp.rs outside kernel-close-races-followups files -- shell streaming, App.tsx, pool_poll.rs, src-tauri lib.rs, the P4 corpus test and the persisted-artifacts test (lane `kernel-protocol`, order null, budget 0 min)
 - **windows-case-fold-non-ascii** — The audit case policy on Windows folds non-ASCII letters as NTFS does, so a profile path differing only in non-ASCII case cannot escape the user-home redaction (wave 3's 1c-2 correction, S2, code-path-only) (lane `kernel-protocol`, order null, budget 60 min)
 - **pan-anchor-setcam-waits-for-its-own-reset** — e2e/pan-anchor.mjs: setCam waits for the view-state line its own reset produces, never a late line from the previous gesture (test only) (lane `shell`, order null, budget 60 min)
@@ -35,8 +37,6 @@ Generated from `PLAN.yaml` (sha256 `2b49b5e1dc1e5d243233abdda045a7e21130d321082f
 - **fixture-determinism-off-windows-record** — kernel/FIXTURES.md on determinism (byte-identical on one machine, different across platforms, with the Linux sizes and hashes), and the G5 entry point gains the hash check the S entry point has — blocked by: posix-backslash-is-inside-and-redaction-label
 - **lod-tier-identity-binds-file-name** — The LOD tier builder takes the identity name DuckDB bound and looks it up among the file's own footer names, so a renamed identity column reaches a different column there — blocked by: port-2-macos-l1-and-app-dirs
 - **module-docs-drift-sweep-area-d** — Kernel and engine module docs: the never-refuses and unreachable claims the Table, record_step and publish have overtaken, the withdrawn cancellation bound, and smaller statements (drift sweep area D, findings 1 to 6) — blocked by: b2-piece-1c-save-and-reopen
-- **publish-approval-kernel-parity** — Kernel parity for the publish approval's column line: the kernel's approval prompt carries the column list and prints it, and the shell mirrors it, so the CLI and the shell show the same facts (option (E); S3, not for v0.2) — blocked by: publish-approval-columns-line
-- **second-open-history-before-1c-step-3** — Which record a step belongs to: a second open's steps, and steps recorded after a save made before any step (the independent review's C2), with the review's note on two dataset identities; settled before 1c step 2's lineage reader (L1 to L4), so before step 3; ADR-036's text on both is the human's — blocked by: publish-approval-columns-line
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
 - **open-first-look-fills-fit-view** — After an open the view is partial and nothing says so, on every file over 10,000 rows: the open plans the tiles of the view the fit shows, so the view fills without a pan and the status line speaks (S1, the human's grade) — blocked by: b1-shell-half
 - **publish-approval-consult-gate-findings** — The publish approval consult's four gate findings: ADR-024's stale approval lifetime, the approval dialog's pointer to a report with no path, walkthrough G3's question the dialog cannot answer, and PR B's form naming no line for the approval; the docs lane — blocked by: known-limitations-item-47-name-floor-sentence
@@ -59,7 +59,6 @@ Generated from `PLAN.yaml` (sha256 `2b49b5e1dc1e5d243233abdda045a7e21130d321082f
 - **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **record-step-style-match-widening** — record_step admits a style.set match value on fillColor, with the step's dependencies naming the match column and its type (milestone 4's OPEN-4 (A′)), carried in piece 1c's step 1 by class 9 (the 1c form's Amendment 7) — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **b1-shell-half** — Shell migration, milestone 4 -- B1 shell half: attributes of the inspected feature, colour by category with its legend, and the table — evidence: branch `cut/b1-shell-half-pr-c`
-- **publish-approval-columns-line** — The publish approval names the columns a bundle publishes: a host-composed line in the approval, its own piece outside PR B (S2, the human's grade; v0.2's tag waits for it) — evidence: branch `cut/publish-approval-columns-line`
 - **port-2-macos-l1-and-app-dirs** — PORT-2 -- macOS L1 for the Cargo workspace: macos-latest in the same matrix, one application-directory boundary replacing the two resolvers, and a case-policy test on a case-insensitive volume — evidence: branch `cut/port-2-macos-l1-and-app-dirs`
 - **ci-rust-toolchain-pin** — CI installs one exact Rust version: the seven install steps under .github/workflows/ name the version that main logs in its first green Rust run after entry 15 merges, and the toolchain action is pinned by commit (the human approval of ADV-2026-11-13-05) — evidence: branch `cut/ci-rust-toolchain-pin`
 

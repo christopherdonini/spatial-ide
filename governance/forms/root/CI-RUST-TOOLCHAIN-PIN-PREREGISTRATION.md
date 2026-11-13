@@ -162,3 +162,16 @@ At 8f6d8639 the tree holds exactly seven `@stable` lines and no other `stable` o
 - **The PLAN node:** its gate names this form.
 
 ## Amendments (opens empty; append-only)
+
+### Amendment 1 — 2026-11-13 — the closing (written after this piece's PR runs were seen; it invalidates nothing)
+
+*References only, under the record cap. Nothing below is a quotation.*
+
+1. **The gates (N7).** Both from dispatch at 4541c8208a70f38280355f97e7e5893ee0f7c862, both PASS with no finding: the architect (`state/consults/gates/2026-11-13-ci-rust-toolchain-pin-gate-architect.md`, gate-log row 742) and the reviewer (`state/consults/gates/2026-11-13-ci-rust-toolchain-pin-gate-reviewer.md`, gate-log row 743).
+2. **The evidence (Tests+mutation, N3).** The eight jobs of N3's table, in the pull_request runs at the head 4541c8208a70f38280355f97e7e5893ee0f7c862, each concluded success, logged N3's rustc line, downloaded the action at its commit and showed the rustup default sub-step's outcome success, read by the custodian at 20:44:37Z and by the reviewer from the logs, 8 of 8. Run/job: 43500536046/132144826427 (Product CI — bundle viewer); 43500536155/132144825940 (ADR-003 spike CI (macOS)); 43500536158/132144825494 (ADR-003 spike CI (Linux)); 43500536227/132144827152 (Product CI — shell); 43500536227/132144827576 (Product CI — shell); 43500536277/132144826666 (Product CI — Rust workspace); 43500536277/132144827148 (Product CI — Rust workspace); 43500536296/132144827085 (Rust fmt).
+3. **rustfmt (N3).** rust-fmt's job 132144827085 logs rustfmt with the commit prefix 0ef1bc3860, ten characters whose first nine are N3's; the same commit, as both gates read it, so N3's stop does not fire.
+4. **S1 (N5), before the PR opened.** Read at 20:18:54Z: no main run in the window for any of the seven workflows, as the PR body lists them, so no run id is cited.
+5. **S3 (OPEN-3 (A)), repeated for the merge-check request.** Read at 2026-11-13T21:01:05Z: two main runs in the window, both at 204c1762 (#314's merge), product-ci-shell 43505810170 and rust-fmt 43505809481, whose three jobs (132163054681, 132163055265, 132163052114) each log N3's rustc line; no main run for the other five. The advisor reads it again at the check.
+6. **OPEN-1 (A) as built.** release-artifacts.yml is not in the diff and was not dispatched (both gates).
+7. **The worker.** Its report is `state/consults/2026-11-13-ci-rust-toolchain-pin-worker-report.md`; the departure it states (the form read in part) left the diff within every part of the form, by both gates.
+8. **N6.** The pin's merge commit does not exist at this amendment; the node's done commit appends it as Amendment 2.
