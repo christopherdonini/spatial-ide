@@ -4,15 +4,17 @@
 //! **Where a kernel test finds the targets cargo built beside it.**
 //!
 //! A test binary sits in `<profile>/deps/` on one cargo layout and under
-//! `<profile>/build/<package>/<hash>/out/` on another, while the examples and binaries a test
-//! runs sit under `<profile>/` on both. So the profile directory is the nearest ancestor of the
-//! test binary named for the build's profile, not a fixed number of parents up. Test-only: this
-//! module has no test target of its own.
+//! `<profile>/build/<package>/<hash>/out/` on another. The examples and binaries a test runs
+//! are looked for under `<profile>/`, and each helper that finds one fails loudly unless it is
+//! there. So the profile directory is the nearest ancestor of the test binary named for the
+//! build's profile, not a fixed number of parents up. Test-only: this module has no test target
+//! of its own.
 
 use std::path::PathBuf;
 
-/// The profile directory (`target/debug` or `target/release`) holding the built examples and
-/// binaries: the nearest ancestor of the running test binary named for the build's profile.
+/// The profile directory (`debug` or `release` under cargo's target directory) under which the
+/// helpers look for the built examples and binaries: the nearest ancestor of the running test
+/// binary named for the build's profile.
 ///
 /// RECORDED MUTATION: at f740eeef26fe54f77c4a96f752b9647d13d0802e, with the profile name replaced
 /// by `deps`, `cargo test --locked -p spatial-kernel --test verify_bundle` on rustc 1.97.1 failed
