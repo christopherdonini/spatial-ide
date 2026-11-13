@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-13T02:49:18.660Z",
-  "plan_hash": "a8ca18f8a4799c33d75e7fee0aa53733317b62757087e277ef91be12a90c0fe0",
+  "generated_at": "2026-11-13T03:10:13.321Z",
+  "plan_hash": "97f74ce2509a563750193f7cf4eb3f908fb63ab7a2e59305c21c167cc9db4625",
   "priorities_approved": true,
   "lanes": [
     {
@@ -11623,13 +11623,13 @@
         "kind": "none",
         "minutes": 0
       },
-      "gate": "none",
+      "gate": "governance/forms/root/KNOWN-LIMITATIONS-FIRST-LOOK-PARTIAL-VIEW-PREREGISTRATION.md",
       "evidence": null,
       "budget_minutes": 30,
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "PLACED 2026-11-12 by the human's third message of 2026-11-12 (21:15Z) (state/directives/2026-11-12-third-message-open-3-a-gates-now-typed-check-reading-rule-first-look-s1-publish-approval-s2-second-open-rulings-308-restore-item-47-floor-order.md), item 3 (b) (line 15): OPEN-2 of the OPEN-C consult (state/consults/2026-11-12-recentre-crossing-start-partial-draw-open-c-architect-consult.md). The item's words are the human's by approval, byte for byte from that line; its number is the next free on main when it is built. A small PR under a five-line form, the docs lane's second piece after #308 (item 8). PR B's references to its own new item are re-read at PR B's records commit. The item is withdrawn by open-first-look-fills-fit-view when that node merges. NEXT: its five-line form, after #308.",
+      "summary": "FORM COMMITTED 2026-11-13 (governance/forms/root/KNOWN-LIMITATIONS-FIRST-LOOK-PARTIAL-VIEW-PREREGISTRATION.md): the five-line form, drafted by the custodian ahead of 308's merge; the human's words byte for byte in bold, the number the next free at the base, one source comment in the custodian's words with eight pins found at the base by content. NEXT: after 308 merges, its worker, then the single reviewer gate; the comment listed in the PR body (AUTONOMY section 31(d)). Before: PLACED 2026-11-12 by the human's third message of 2026-11-12 (21:15Z) (state/directives/2026-11-12-third-message-open-3-a-gates-now-typed-check-reading-rule-first-look-s1-publish-approval-s2-second-open-rulings-308-restore-item-47-floor-order.md), item 3 (b) (line 15): OPEN-2 of the OPEN-C consult (state/consults/2026-11-12-recentre-crossing-start-partial-draw-open-c-architect-consult.md). The item's words are the human's by approval, byte for byte from that line; its number is the next free on main when it is built. A small PR under a five-line form, the docs lane's second piece after #308 (item 8). PR B's references to its own new item are re-read at PR B's records commit. The item is withdrawn by open-first-look-fills-fit-view when that node merges. NEXT: its five-line form, after #308.",
       "dates": {
         "opened": "2026-11-12",
         "done": null
