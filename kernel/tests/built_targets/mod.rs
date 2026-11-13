@@ -14,7 +14,11 @@ use std::path::PathBuf;
 /// The profile directory (`target/debug` or `target/release`) holding the built examples and
 /// binaries: the nearest ancestor of the running test binary named for the build's profile.
 ///
-/// RECORDED MUTATION: (pending)
+/// RECORDED MUTATION: at f740eeef26fe54f77c4a96f752b9647d13d0802e, with the profile name replaced
+/// by `deps`, `cargo test --locked -p spatial-kernel --test verify_bundle` on rustc 1.97.1 failed
+/// `a_real_bundle_verifies`, `every_corruption_class_is_caught_with_its_declared_state` and
+/// `a_missing_or_unparseable_manifest_is_refused_by_name` (exit 101, 0 passed, 3 failed) at the
+/// post-build existence assertion; reverted.
 ///
 /// Panics, naming the test binary's path, when no ancestor has that name.
 pub fn profile_dir() -> PathBuf {
