@@ -1864,3 +1864,16 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 13: the re-read at M′ (Amendment 12's item 10) filed, and `App.selection.test.tsx`'s session-end allowance recorded as unused for the publish approval piece's OPEN-8 (a). Written by the custodian at the publish approval form's commit (class 1)
+
+*References only. Nothing below is a quotation.*
+
+1. **The re-read at M′.** The worker-high's read-only re-read at 6649a443 is filed at `state/consults/2026-11-13-b1-shell-half-pr-b-re-read-at-m-prime-worker-report.md`. It found no invalidator and no I4. It names three of Amendment 12's pins as Changed, none of them a signature: KNOWN-LIMITATIONS item 4's On-main paragraph, rewritten by f56d6efe; `pick.ts` lines 50 to 62, changed by the session-end phase's commit 0b247f29; and item 7's number 64, which the first-look item now holds. Each is class 3, and Amendment 14 settles them.
+2. **The order.** Amendment 12's settlement, item 5, put this amendment before the base series at M′. The series ran first (`state/consults/2026-11-13-b1-shell-half-pr-b-series-at-m-prime-tester-report.md`). The departure is the custodian's, and question round 77 discloses it.
+3. **`frontends/shell/src/App.selection.test.tsx`.** The session-end class 9 table gives it 45 lines (`state/consults/2026-10-25-b1-shell-half-pr-b-session-end-class-9-ahead-architect-draft.md:103` @ 6f4a89e5c1e8ddc68f24ffdac5513f31411d5510 sha256:607c5232efd762991ba8d757ee00f732b547bf29dfd1dec4b8b1814ea30b5882). The phase's report records that allowance as unused (`state/consults/2026-11-12-b1-shell-half-pr-b-session-end-phase-worker-report.md:97` @ 6f4a89e5c1e8ddc68f24ffdac5513f31411d5510 sha256:50d753337e9977891364ff5fa5670c29c50555ce7d2b1f09a813a990e5d0e232). At 6649a443 the branch leaves the file untouched. The publish approval piece edits it (3 lines at most), and that form's OPEN-8 (a) rests on this record.
+4. **Next: Amendment 14.** It covers the series at M′, read with pan-anchor's run alone; the phase's class 8 (six per-file ceilings passed, every group within), which the ledger placed at Amendment 13; item 2 (a) of the human's message of 2026-11-12 (13:07Z), on OPEN-A and OPEN-B; and the settlement of item 1's three pins.
+
+Read the last amendment first.
+
+Nothing above is edited.

@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `f298bb8b599a901345f8b7279b1cb71382fc3bdb5afbc528cd047e7e5a04eff6`) at `2026-11-13T12:41:09.829Z`.
+Generated from `PLAN.yaml` (sha256 `c47d1225f039645c0644b9a447d23f6d0483fa4ead41309bf5f9f73e87046341`) at `2026-11-13T13:26:53.915Z`.
 
 ## 1. Next
 
@@ -13,7 +13,7 @@ Generated from `PLAN.yaml` (sha256 `f298bb8b599a901345f8b7279b1cb71382fc3bdb5afb
 - **skp-line-cites-outside-close-races** — Stale line cites into kernel/src/skp.rs outside kernel-close-races-followups files -- shell streaming, App.tsx, pool_poll.rs, src-tauri lib.rs, the P4 corpus test and the persisted-artifacts test (lane `kernel-protocol`, order null, budget 0 min)
 - **windows-case-fold-non-ascii** — The audit case policy on Windows folds non-ASCII letters as NTFS does, so a profile path differing only in non-ASCII case cannot escape the user-home redaction (wave 3's 1c-2 correction, S2, code-path-only) (lane `kernel-protocol`, order null, budget 60 min)
 - **pan-anchor-setcam-waits-for-its-own-reset** — e2e/pan-anchor.mjs: setCam waits for the view-state line its own reset produces, never a late line from the previous gesture (test only) (lane `shell`, order null, budget 60 min)
-- **publish-approval-columns-line** — The publish approval names the columns a bundle publishes: a host-composed line in the approval, its own piece outside PR B (S2, the human's grade; v0.2's tag waits for it) (lane `shell`, order null, budget 0 min)
+- **publish-approval-columns-line** — The publish approval names the columns a bundle publishes: a host-composed line in the approval, its own piece outside PR B (S2, the human's grade; v0.2's tag waits for it) (lane `shell`, order null, budget 210 min)
 - **recentre-stall-three-observations** — The re-centring stall report's three proposed observations (a timer around the layer build, deck's attribute-update counters, the render-trace layers line against the gap's edges), as one node behind the S1 fix (S3) (lane `shell`, order null, budget 90 min)
 - **known-limitations-item-47-name-floor-sentence** — KNOWN-LIMITATIONS item 47: the redaction search's 3-byte name floor, one sentence added to the item's end, the human's words by approval ((A) of the custodian's draft; item 7 of 2026-11-12, third message) (lane `release`, order null, budget 30 min)
 - **advisor-session-merges-under-the-humans-rule** — The advisor session merges the custodian PRs that pass their gates, under the human rule of 2026-11-13, from their message advisor live: the merge request, the advisor merge check and verdict, the verdict filed as a consult, the revert PR after a red main, the two-hour fallback to the human; AUTONOMY section 9 and ruling 25 poll changed with it (the governance lane; S3 by the custodian) (lane `governance`, order null, budget 60 min)
