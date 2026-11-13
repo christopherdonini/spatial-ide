@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `9aedb3bbeaf54d8b611406f2935f90cac47d4c510b5a6b31c7a122ebb2b6f3ce`) at `2026-11-13T19:51:14.151Z`.
+Generated from `PLAN.yaml` (sha256 `2b49b5e1dc1e5d243233abdda045a7e21130d321082fe0a1f2b28f66af22a911`) at `2026-11-13T20:27:00.640Z`.
 
 ## 1. Next
 
@@ -17,7 +17,6 @@ Generated from `PLAN.yaml` (sha256 `9aedb3bbeaf54d8b611406f2935f90cac47d4c510b5a
 - **known-limitations-item-47-name-floor-sentence** — KNOWN-LIMITATIONS item 47: the redaction search's 3-byte name floor, one sentence added to the item's end, the human's words by approval ((A) of the custodian's draft; item 7 of 2026-11-12, third message) (lane `release`, order null, budget 30 min)
 - **advisor-session-merges-under-the-humans-rule** — The advisor session merges the custodian PRs that pass their gates, under the human rule of 2026-11-13, from their message advisor live: the merge request, the advisor merge check and verdict, the verdict filed as a consult, the revert PR after a red main, the two-hour fallback to the human; AUTONOMY section 9 and ruling 25 poll changed with it (the governance lane; S3 by the custodian) (lane `governance`, order null, budget 60 min)
 - **site-waiting-on-you-lists-open-questions** — The site's Waiting on you also lists an in-progress node carrying an open question for the human, set by the custodian when a running piece stops for the human's ruling and cleared when the human answers (lane `governance`, order null, budget 45 min)
-- **ci-rust-toolchain-pin** — CI installs one exact Rust version: the seven install steps under .github/workflows/ name the version that main logs in its first green Rust run after entry 15 merges, and the toolchain action is pinned by commit (the human approval of ADV-2026-11-13-05) (lane `platform`, order null, budget 60 min)
 - **publish-bundle-sigterm** — SIGTERM handling in publish-bundle on unix (wave-3 W3-A observation 3) (lane `platform`, order null, budget 90 min)
 - **publish-unix-quota-perm-errors** — EDQUOT and EPERM in publish error classification on unix (wave-3 W3-A observation 1) (lane `platform`, order null, budget 90 min)
 
@@ -62,6 +61,7 @@ Generated from `PLAN.yaml` (sha256 `9aedb3bbeaf54d8b611406f2935f90cac47d4c510b5a
 - **b1-shell-half** — Shell migration, milestone 4 -- B1 shell half: attributes of the inspected feature, colour by category with its legend, and the table — evidence: branch `cut/b1-shell-half-pr-c`
 - **publish-approval-columns-line** — The publish approval names the columns a bundle publishes: a host-composed line in the approval, its own piece outside PR B (S2, the human's grade; v0.2's tag waits for it) — evidence: branch `cut/publish-approval-columns-line`
 - **port-2-macos-l1-and-app-dirs** — PORT-2 -- macOS L1 for the Cargo workspace: macos-latest in the same matrix, one application-directory boundary replacing the two resolvers, and a case-policy test on a case-insensitive volume — evidence: branch `cut/port-2-macos-l1-and-app-dirs`
+- **ci-rust-toolchain-pin** — CI installs one exact Rust version: the seven install steps under .github/workflows/ name the version that main logs in its first green Rust run after entry 15 merges, and the toolchain action is pinned by commit (the human approval of ADV-2026-11-13-05) — evidence: branch `cut/ci-rust-toolchain-pin`
 
 ## 6. Proposed / unscheduled
 
