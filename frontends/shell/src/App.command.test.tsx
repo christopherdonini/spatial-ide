@@ -89,7 +89,7 @@ vi.mock("./publish/client", async (importOriginal) => ({
   subscribePublishProgress: () => () => {},
   publishPrepare: async (): Promise<import("./publish/types").PrepareOutcome> => {
     mocks.prepares += 1;
-    if (mocks.promptOnPrepare) return { status: "prompt", attempt_id: "at_1", prompt: { operation: "publish", class: 3, reversibility: "irreversible", source_name: "parcels.parquet", source_content_hash: "sha256:abc", style_hash: "sha256:def", destination_display: "C:/out/bundle", grantor: "operator", grant_remaining_s: 300, row_scope: "the whole file", filter_scope: null, outcome_summary: "a folder" } };
+    if (mocks.promptOnPrepare) return { status: "prompt", attempt_id: "at_1", prompt: { operation: "publish", class: 3, reversibility: "irreversible", source_name: "parcels.parquet", source_content_hash: "sha256:abc", style_hash: "sha256:def", destination_display: "C:/out/bundle", grantor: "operator", grant_remaining_s: 300, row_scope: "the whole file", filter_scope: null, outcome_summary: "a folder", published_columns: "Columns published: id and the geometry only." } };
     return mocks.pendingPrepare ?? { status: "picker-cancelled" };
   },
   publishExecute: async (): Promise<import("./publish/types").ExecuteOutcome> => {

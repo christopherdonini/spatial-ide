@@ -107,7 +107,7 @@ function success(path: string): import("./publish/types").ExecuteOutcome {
 function promptFixture(): import("./publish/types").PublishPromptData {
   return {
     operation: "publish", class: 3, reversibility: "irreversible", source_name: "parcels.parquet", source_content_hash: "sha256:abc", style_hash: "sha256:def",
-    destination_display: "C:/out/bundle", grantor: "operator", grant_remaining_s: 300, row_scope: "the whole file", filter_scope: null, outcome_summary: "a folder",
+    destination_display: "C:/out/bundle", grantor: "operator", grant_remaining_s: 300, row_scope: "the whole file", filter_scope: null, outcome_summary: "a folder", published_columns: "Columns published: id and the geometry only.",
   };
 }
 

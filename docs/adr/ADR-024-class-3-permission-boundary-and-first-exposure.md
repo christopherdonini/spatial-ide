@@ -306,3 +306,7 @@ Amendment (publish-approval-ttl-ten-minutes): PENDING_ATTEMPT_TTL is 600 s (10 m
 *Appended on the human's typed words (`state/directives/2026-11-06-8e-words-replaced-u1-h1-h2-class-8-m10-kl-c1-c3-draft-marks-u12-mark-n1-n3-slot-2-order-clippy-placed-288-clicked.md`); the note below is theirs, byte for byte. Nothing above this heading is changed.*
 
 Note 2026-11-06 — the two passages describing the filter sentence under Whole dataset describe the dialog before publish-filter-sentence-under-whole-dataset (#285); the sentence now appears only under Current view with a filter on. Nothing else changes, and this ADR stays Proposed.
+
+## Appended note, 2026-11-13
+
+Note 2026-11-13 — the approval dialog also renders `published_columns`, one host-composed line naming id, the geometry and each attribute column the pending attempt publishes, in the request's declared order, beside `row_scope` in the field list (publish-approval-columns-line). Nothing else changes, and this ADR stays Proposed.
