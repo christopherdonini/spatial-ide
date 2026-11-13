@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `b73bd2951292717d7b8be152f25d24bae107577bb0e0b533522a4ed116d6f808`) at `2026-11-13T16:54:09.962Z`.
+Generated from `PLAN.yaml` (sha256 `450a96bf4b93683be4846a6d91b37aaa8495bea6a9b2ceeb4b90559598075fdc`) at `2026-11-13T18:15:37.619Z`.
 
 ## 1. Next
 
@@ -17,6 +17,7 @@ Generated from `PLAN.yaml` (sha256 `b73bd2951292717d7b8be152f25d24bae107577bb0e0
 - **known-limitations-item-47-name-floor-sentence** — KNOWN-LIMITATIONS item 47: the redaction search's 3-byte name floor, one sentence added to the item's end, the human's words by approval ((A) of the custodian's draft; item 7 of 2026-11-12, third message) (lane `release`, order null, budget 30 min)
 - **advisor-session-merges-under-the-humans-rule** — The advisor session merges the custodian PRs that pass their gates, under the human rule of 2026-11-13, from their message advisor live: the merge request, the advisor merge check and verdict, the verdict filed as a consult, the revert PR after a red main, the two-hour fallback to the human; AUTONOMY section 9 and ruling 25 poll changed with it (the governance lane; S3 by the custodian) (lane `governance`, order null, budget 60 min)
 - **site-waiting-on-you-lists-open-questions** — The site's Waiting on you also lists an in-progress node carrying an open question for the human, set by the custodian when a running piece stops for the human's ruling and cleared when the human answers (lane `governance`, order null, budget 45 min)
+- **ci-rust-toolchain-pin** — CI installs one exact Rust version: the seven install steps under .github/workflows/ name the version that main logs in its first green Rust run after entry 15 merges, and the toolchain action is pinned by commit (the human approval of ADV-2026-11-13-05) (lane `platform`, order null, budget 60 min)
 - **publish-bundle-sigterm** — SIGTERM handling in publish-bundle on unix (wave-3 W3-A observation 3) (lane `platform`, order null, budget 90 min)
 - **publish-unix-quota-perm-errors** — EDQUOT and EPERM in publish error classification on unix (wave-3 W3-A observation 1) (lane `platform`, order null, budget 90 min)
 
@@ -50,7 +51,6 @@ Generated from `PLAN.yaml` (sha256 `b73bd2951292717d7b8be152f25d24bae107577bb0e0
 - **governance-e1-rules-as-records** — Piece E1: rules as records, a rule catalogue under rules/, a selector scripts/plan/rules.mjs, a generated block in each agent definition and a governance-ci check — blocked by: governance-e-readings
 - **shell-owners-index** — An owner's index for the shell (frontends/shell), so that shell-owned KNOWN-LIMITATIONS items and pointers are indexed somewhere — blocked by: skp-line-cites-outside-close-races
 - **site-design-v1** — Landing page redesign — DRAFT-4 (status strip, milestone banner, waiting-on-you cards with unblocks counts, the swimlane board) — blocked by: governance-ci-built-site
-- **ci-rust-toolchain-pin** — CI installs one exact Rust version: the seven install steps under .github/workflows/ name the version that main logs in its first green Rust run after entry 15 merges, and the toolchain action is pinned by commit (the human approval of ADV-2026-11-13-05) — blocked by: verify-bundle-example-path-build-dir-layout
 - **macos-normalization-roots-uncanonicalized** — On macOS the audit log normalization roots are read uncanonicalized while recorded destinations are canonicalized, so a symlinked temporary-directory root never matches — blocked by: port-2-macos-l1-and-app-dirs
 - **posix-backslash-is-inside-and-redaction-label** — The audit log's is_inside and the redaction scan's file label stop treating a backslash as a separator on POSIX, the two sites entry 7b leaves (wave-3 A-1, S3) — blocked by: port-2-macos-l1-and-app-dirs
 
@@ -59,7 +59,6 @@ Generated from `PLAN.yaml` (sha256 `b73bd2951292717d7b8be152f25d24bae107577bb0e0
 - **clippy-deny-warnings-workspace** — The workspace clippy diagnostics fixed, so cargo clippy over every target with -D warnings exits 0 (the cloud Linux run lists 48 distinct) — evidence: branch `cut/clippy-deny-warnings-workspace-12c`
 - **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **record-step-style-match-widening** — record_step admits a style.set match value on fillColor, with the step's dependencies naming the match column and its type (milestone 4's OPEN-4 (A′)), carried in piece 1c's step 1 by class 9 (the 1c form's Amendment 7) — evidence: branch `cut/b2-piece-1c-save-and-reopen`
-- **verify-bundle-example-path-build-dir-layout** — The kernel tests that run a built example find it under the toolchain build-dir layout of rustc 1.100.0: verify_bundle, red on main since #309 merge, and scale_pass helper (S3; filler entry 15, ahead of every entry, by the human of 2026-11-13) — evidence: branch `cut/verify-bundle-example-path-build-dir-layout`
 - **b1-shell-half** — Shell migration, milestone 4 -- B1 shell half: attributes of the inspected feature, colour by category with its legend, and the table — evidence: branch `cut/b1-shell-half-pr-c`
 - **publish-approval-columns-line** — The publish approval names the columns a bundle publishes: a host-composed line in the approval, its own piece outside PR B (S2, the human's grade; v0.2's tag waits for it) — evidence: branch `cut/publish-approval-columns-line`
 - **port-2-macos-l1-and-app-dirs** — PORT-2 -- macOS L1 for the Cargo workspace: macos-latest in the same matrix, one application-directory boundary replacing the two resolvers, and a case-policy test on a case-insensitive volume — evidence: branch `cut/port-2-macos-l1-and-app-dirs`
