@@ -33,6 +33,7 @@
 //!   the same `row_group_rows`, and it is the only thing the 5 GB memory figure may be compared
 //!   with.
 
+mod built_targets;
 mod support;
 
 use std::path::{Path, PathBuf};
@@ -1268,32 +1269,16 @@ fn compare_partitions(a: &Path, b: &Path) -> (usize, bool, Option<String>) {
 /// harness that silently measures a stale binary, which is the failure `pin-tree.mjs --binaries`
 /// exists to catch one level up.
 fn binary_beside_me(name: &str) -> PathBuf {
-    let me = std::env::current_exe().expect("the test binary knows where it is");
-    let profile = me
-        .parent()
-        .and_then(|d| d.parent())
-        .expect("target/<profile>/deps/<test>");
-    let exe = if cfg!(windows) {
-        format!("{name}.exe")
-    } else {
-        name.to_string()
-    };
+    let profile = built_targets::profile_dir();
+    let exe = built_targets::exe_name(name);
     let path = profile.join(&exe);
     assert!(path.exists(), "{name} is not built at {}", path.display());
     path
 }
 
 fn example_beside_me(name: &str) -> PathBuf {
-    let me = std::env::current_exe().expect("the test binary knows where it is");
-    let profile = me
-        .parent()
-        .and_then(|d| d.parent())
-        .expect("target/<profile>/deps/<test>");
-    let exe = if cfg!(windows) {
-        format!("{name}.exe")
-    } else {
-        name.to_string()
-    };
+    let profile = built_targets::profile_dir();
+    let exe = built_targets::exe_name(name);
     let path = profile.join("examples").join(&exe);
     assert!(
         path.exists(),
