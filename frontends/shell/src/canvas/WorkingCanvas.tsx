@@ -2100,8 +2100,10 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
         // `controller: true`, and a pan's end calls `updateViewport` with `isDragging: false`), NOT a
         // documented invariant. A deck upgrade that stops emitting that tick -- or a gesture ended by
         // `pointercancel` with no `panend`, neither read nor run -- would leave the origin where it is
-        // until the next tick the guard below lets through, and the frame's offset may exceed the
-        // re-centring bound until then; that is not measured, and there is no in-code fallback. The guards are `e2e/recentre-crossing.mjs`
+        // until the next tick the guard below lets through or the next fit (`fitToExtent`, which
+        // re-centres by `forceRecenter`; in a dev build also the E2E view-state seam), and the frame's
+        // offset may exceed the re-centring bound until then; that is not measured, and there is no
+        // in-code fallback. The guards are `e2e/recentre-crossing.mjs`
         // and `e2e/pan-anchor.mjs`, both operator-run and not in CI, and
         // `WorkingCanvas.recentre.test.tsx`, which models deck's rules and so cannot see a change in
         // deck. Re-run both E2E suites after any `@deck.gl/*` bump.
