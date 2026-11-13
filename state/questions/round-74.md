@@ -34,3 +34,7 @@ Nothing below is a quotation unless it is marked as one.
   (b) It starts before this piece.
 
 The form is committed with (a) unless you answer otherwise before its commit.
+
+---
+
+**Answers recorded** by the custodian on 2026-11-13. The advisor's ruling ADV-2026-11-13-08 (`state/directives/2026-11-13-advisor-ruling-adv-2026-11-13-08-round-74-pan-anchor-waits-on-its-own-lines-filler-slot-after-entry-15-findings-node-after-publish-approval.md`), filed as the advisor's under the human's delegation of 2026-11-13, answers both items: item 1 (a), (A); item 1 (b), (i); item 2, (a). Its item 3 adds that the alone re-run of pan-anchor for PR B still happens. No answer of the human's has come. Nothing above is changed.
