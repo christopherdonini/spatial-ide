@@ -5,7 +5,7 @@
 // E2E TEST SURFACE (e2e/README.md) -- E1 of RECENTRE-CROSSING-VIEW-DISPLACED-FIX-PREREGISTRATION.md section 4.
 // Standalone, operator-run, on the MEASURE BUILD only. **NOT wired into `npm run verify` / CI**, its npm script is `e2e:recentre-crossing`, run as `npm run e2e:recentre-crossing -- --measure-build <path>`.
 // Run it from frontends/shell:   node e2e/recentre-crossing.mjs --measure-build <path to the measure build's exe>
-// With no such argument it says why and exits 2. It launches the exe itself (`attachOrLaunchExe`) and refuses an app that was already running;
+// With no such argument it says why and exits 2. It launches the exe itself (`attachOrLaunchExe`) and refuses an app already listening on the CDP port;
 // it never attaches to a dev server and is not meant for a dev build.
 //
 // What it checks: after a pan crosses the re-centring bound the frame's origin moves and the VIEW MUST NOT. The view is read only from the shipped

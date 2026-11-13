@@ -2099,9 +2099,9 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
         // lands. Read on `@deck.gl/core@9.3.9` (`controllers/controller.js`: inertia is 0 under
         // `controller: true`, and a pan's end calls `updateViewport` with `isDragging: false`), NOT a
         // documented invariant. A deck upgrade that stops emitting that tick -- or a gesture ended by
-        // `pointercancel` with no `panend`, neither read nor run -- would silently defer the origin
-        // advance by one gesture; harmless within `RECENTER_MAX_DRIFT`'s own headroom
-        // (`offsetFrame.ts`), but there is no in-code fallback. The guards are `e2e/recentre-crossing.mjs`
+        // `pointercancel` with no `panend`, neither read nor run -- would leave the origin where it is
+        // until the next tick the guard below lets through, and the frame's offset may exceed the
+        // re-centring bound until then; that is not measured, and there is no in-code fallback. The guards are `e2e/recentre-crossing.mjs`
         // and `e2e/pan-anchor.mjs`, both operator-run and not in CI, and
         // `WorkingCanvas.recentre.test.tsx`, which models deck's rules and so cannot see a change in
         // deck. Re-run both E2E suites after any `@deck.gl/*` bump.
@@ -2334,9 +2334,10 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
   // asserts that restriction itself via `e2eSetViewStateCallCount` below, never merely by
   // convention.
   //
-  // Reuses the EXACT primitives `fitToExtent`/the real interactive `onViewStateChange` handler
-  // already use -- `OffsetFrame.forceRecenter`, deck's own uncontrolled `initialViewState` (this
-  // file's own top doc comment on why `initialViewState`, never `viewState`), and
+  // Reuses the EXACT primitives `fitToExtent` already uses -- `OffsetFrame.forceRecenter` and
+  // deck's own uncontrolled `initialViewState`, written here outside deck's view-state callback
+  // (this file's own top doc comment on why `initialViewState`, never `viewState`, works there
+  // and not inside the callback) -- and
   // `onViewportChangedRef` (the SAME choke point a real pan/zoom or "zoom to layer" click reaches,
   // `App.tsx`'s `onViewportChanged` -> debounced `requestViewport`) -- there is no second, parallel
   // query-issuing path here, only a different way of producing the camera pose that feeds the SAME
