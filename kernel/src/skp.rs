@@ -4817,6 +4817,11 @@ mod ticket_drop_under_lock_regression {
     /// closed name through the real `StreamRegistry::mint`, standing in for the mint step's last
     /// line (as in CR2, no claim that product code mints at that moment); the attribute step finds
     /// no live generation, cancels the ticket and refuses as the close's answer.
+    ///
+    /// REGISTERED MUTATION: delete the attribute step's `self.tickets.cancel(handle.as_str())`.
+    /// Applied at `b7133d0a`, run and reverted:
+    /// `a_ticket_minted_after_the_close_is_cancelled_by_its_failed_attribution` FAILED on
+    /// `the ticket is CancelledBeforeRedeem before the redeem step runs`.
     #[test]
     fn a_ticket_minted_after_the_close_is_cancelled_by_its_failed_attribution() {
         let path = fixture("u1-mint-after-close");
@@ -4850,6 +4855,11 @@ mod ticket_drop_under_lock_regression {
     /// attributed; the attribute step finds no live generation, cancels the ticket and refuses with
     /// `engine.source_changed` and the arm's own braced `detail`, which is not the sentence
     /// `require_live` words for the same reason.
+    ///
+    /// REGISTERED MUTATION: give the arm's `ObservedChange` branch the `CoverageLost` branch's body.
+    /// Applied at `b7133d0a`, run and reverted:
+    /// `an_observed_change_between_mint_and_attribution_refuses_with_the_arms_own_detail` FAILED on
+    /// its code assertion (`left: "engine.source_coverage_lost"`).
     #[test]
     fn an_observed_change_between_mint_and_attribution_refuses_with_the_arms_own_detail() {
         let path = fixture("u2-observed-change-before-attribution");
@@ -4900,6 +4910,11 @@ mod ticket_drop_under_lock_regression {
     /// completes and its `forget_dataset` removes the mark; the mint step's live check finds the
     /// name not open and refuses as `skp.unknown_dataset` before anything is built or minted, so
     /// the attribute step after it is not reached.
+    ///
+    /// REGISTERED MUTATION: delete `forget_dataset`'s `st.invalidated.remove(dataset)`. Applied at
+    /// `b7133d0a`, run and reverted:
+    /// `an_ended_then_closed_query_checking_after_the_close_refuses_as_unknown_dataset` FAILED on
+    /// its code assertion (`left: "engine.source_changed"`).
     #[test]
     fn an_ended_then_closed_query_checking_after_the_close_refuses_as_unknown_dataset() {
         let path = fixture("u3-ended-then-closed");
