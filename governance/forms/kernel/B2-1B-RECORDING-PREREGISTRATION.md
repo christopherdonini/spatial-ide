@@ -969,3 +969,7 @@ Nothing above is edited.
 8. **PLAN:** the node is done, with `{pr: 222}`, in this commit only.
 
 Nothing above is edited.
+
+### Amendment 14 — K5 renamed by second-open-history-before-1c-step-3 (class 1, a reference and its hash only)
+
+1. governance/forms/kernel/B2-1B-RECORDING-PREREGISTRATION.md:533 @ 8c693657801fd4168b078a601724bdacd9f479b8 sha256:ab5709148d067caf0e4bad9aadf9c5a39af03bee2cf3ecdb14f508acffd51c81 is superseded: the test it names was renamed by second-open-history-before-1c-step-3 to `an_unbound_reopen_of_the_same_file_starts_its_own_record_and_another_file_its_own`, in kernel/tests/session_history.rs.
