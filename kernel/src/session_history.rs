@@ -1838,8 +1838,11 @@ mod tests {
         let mut entry: Value = serde_json::from_str(&header(2)).unwrap();
         entry = entry["datasets"][0].clone();
         entry["admission"] = claims;
-        let header =
-            canonical(&header_object(DatasetRef::parse(&entry).unwrap().to_json())).unwrap();
+        let header = canonical(&header_object(
+            DatasetRef::parse(&entry).unwrap().to_json(),
+            None,
+        ))
+        .unwrap();
         assert!(
             header.len() <= MAX_HEADER_LINE_BYTES,
             "a header line of {} bytes",
