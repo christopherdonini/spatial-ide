@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `1ff28816af7c3aad60cff746b7a3e2bf7a1499fec54cadc0b162c02548e36a2b`) at `2026-11-14T22:36:30.573Z`.
+Generated from `PLAN.yaml` (sha256 `334f58eebe33b7d6224f2e18c6c3f4a9c892febe8b515505866d4eef4e935595`) at `2026-11-14T23:34:18.533Z`.
 
 ## 1. Next
 
@@ -10,11 +10,10 @@ Generated from `PLAN.yaml` (sha256 `1ff28816af7c3aad60cff746b7a3e2bf7a1499fec54c
 
 - **lod-tier-tests-own-tier-folder** — Each engine test run takes its own tier folder, the machine-wide tier folder kept for the product only: two suites sharing one machine cleared each other's tiers, failing lod_tier_builder in #284's gate 1 (the human's ruling of 2026-11-06, item 2) (lane `engine`, order null, budget 60 min)
 - **publish-approval-kernel-parity** — Kernel parity for the publish approval's column line: the kernel's approval prompt carries the column list and prints it, and the shell mirrors it, so the CLI and the shell show the same facts (option (E); S3, not for v0.2) (lane `kernel-protocol`, order null, budget 0 min)
-- **second-open-history-before-1c-step-3** — Which record a step belongs to: a second open's steps, and steps recorded after a save made before any step (the independent review's C2), with the review's note on two dataset identities; settled before 1c step 2's lineage reader (L1 to L4), so before step 3; ADR-036's text on both is the human's (lane `kernel-protocol`, order null, budget 0 min)
 - **skp-line-cites-outside-close-races** — Stale line cites into kernel/src/skp.rs outside kernel-close-races-followups files -- shell streaming, App.tsx, pool_poll.rs, src-tauri lib.rs, the P4 corpus test and the persisted-artifacts test (lane `kernel-protocol`, order null, budget 0 min)
 - **windows-case-fold-non-ascii** — The audit case policy on Windows folds non-ASCII letters as NTFS does, so a profile path differing only in non-ASCII case cannot escape the user-home redaction (wave 3's 1c-2 correction, S2, code-path-only) (lane `kernel-protocol`, order null, budget 60 min)
 - **recentre-stall-three-observations** — The re-centring stall report's three proposed observations (a timer around the layer build, deck's attribute-update counters, the render-trace layers line against the gap's edges), as one node behind the S1 fix (S3) (lane `shell`, order null, budget 90 min)
-- **advisor-questions-and-telegram-three-alarms** — From the human message advisor live, the custodian questions go to the advisor and Telegram keeps three alarms: the AskUserQuestion mirror hook removed from the project settings, the Notification hook keeps only the two quota matchers, the Stop hook waiting-list message goes and its halt message stays, and AUTONOMY section 16 and Appendix A3 Telegram part replaced by the rule (the governance lane; S3 by the custodian) (lane `governance`, order null, budget 60 min)
+- **advisor-questions-and-telegram-three-alarms** — From the human message advisor live, the custodian questions go to the advisor and Telegram keeps three alarms: the AskUserQuestion mirror hook removed from the project settings, the Notification hook keeps only the two quota matchers, the Stop hook waiting-list message goes and its halt message stays, and AUTONOMY section 16 and Appendix A3 Telegram part replaced by the rule (the governance lane; S3 by the custodian) (lane `governance`, order null, budget 180 min)
 - **site-waiting-on-you-lists-open-questions** — The site's Waiting on you also lists an in-progress node carrying an open question for the human, set by the custodian when a running piece stops for the human's ruling and cleared when the human answers (lane `governance`, order null, budget 45 min)
 - **publish-bundle-sigterm** — SIGTERM handling in publish-bundle on unix (wave-3 W3-A observation 3) (lane `platform`, order null, budget 90 min)
 - **publish-unix-quota-perm-errors** — EDQUOT and EPERM in publish error classification on unix (wave-3 W3-A observation 1) (lane `platform`, order null, budget 90 min)
@@ -132,6 +131,7 @@ Generated from `PLAN.yaml` (sha256 `1ff28816af7c3aad60cff746b7a3e2bf7a1499fec54c
 - **module-readme-moved-form-paths** — The preregistration form paths in kernel/README.md and engine/README.md named where piece F moved them (governance/forms/) (phase `prototype`) — never queued until placed
 - **skp-spec-and-protocol-comments-drift-sweep-c** — SKP-V0.md live sections and the protocol and shell doc comments brought current to main (drift sweep area C, findings 2 to 11, and area A, finding 3), after 1c (phase `prototype`) — never queued until placed
 - **comment-line-cites-kin-docs-audit-c** — Product and e2e comments whose line cites point at moved text: origin.rs on AI_DEVELOPMENT.md, engine/src/error.rs and the admission-remediation e2e script on crs.rs (the docs audits, Task C kin) (phase `prototype`) — never queued until placed
+- **advisor-silence-two-hour-alarm** — Telegram's third alarm: one message when the advisor has not answered the custodian for two hours (the human's item 3 of 2026-11-13, 06:57Z); split from advisor-questions-and-telegram-three-alarms by ADV-2026-11-14-23 item 3 (d) and ADV-2026-11-14-24 item 4 (phase `prototype`) — never queued until placed
 - **pan-anchor-drag-waits-for-its-own-lines** — e2e/pan-anchor.mjs: drag waits for the view-state lines its own gesture produces, not a wall-clock quiet period (test only) (phase `prototype`) — never queued until placed
 
 ### Unscheduled
