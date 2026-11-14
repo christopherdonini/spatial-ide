@@ -450,3 +450,25 @@ Nothing above is edited.
 - **Order:** the merge commit; commit 2 (setCam); M-TRACE observed at commit 2; commit 3 (the header entry); the runs at the final head. The PR body names commit 1 and asks for a merge that keeps it reachable from main, never a squash.
 - **Rule (00):** this piece touches pan-anchor.mjs alone. That is disjoint from PR B (no path under e2e/ or protocol/) and from the publish approval draft (`e2e/publish.mjs` and the README's Publish entry). No protocol/ path. It is checked again at dispatch.
 - **Unchanged:** Scope, Out-of-scope, the tolerance, every check, note 5's list, and the s1 sentence in note 4's claim limit.
+
+## Amendment 6 — P0's first run at B′ ended in setup with no check result; the claim limit names setup's page reload (the advisor's ruling ADV-2026-11-14-03; class 1, written after the result was seen)
+
+*Written by the custodian after the run below was seen. References only. The worker's report: `state/consults/2026-11-14-pan-anchor-setcam-waits-for-its-own-reset-amendment-5-p0-stopped-in-setup-worker-report.md`. The ruling: `state/directives/2026-11-14-advisor-ruling-adv-2026-11-14-03-pan-anchor-p0-ended-in-setup-no-check-result-plan-stands-claim-limit-gains-setups-reload.md`.*
+
+1. **The run, tag a5-p0.**
+   - What ran: P0 at B′ (695e1303794ed390d305d07fca592694f33f589e), with Amendment 5 item 4's wrapper, in a shared hold.
+   - Where: the worktree at the local merge commit 1427596d5c9edae8b9248b13d8b3525b4c43c55c, whose parents are 624b2e68 and 695e1303. `frontends/shell/e2e/pan-anchor.mjs` was at B′'s bytes, with `pa-p0.patch` applied (901 bytes, sha256 250581c780d209a2321545a788f954fd43d33a5fd4022d44bf6fbfdb64f51f39).
+   - The run-suite file: `pa-e2e-run-suite.sh`, 1556 bytes, sha256 1f79a7d3288106d3aaf9d64b2d3e1fd572ae29f401c2ca5959fa3396a98ae609. The run's timeout was 1500 s.
+   - Times and exit: started 2026-11-14T00:41:34Z, ended 00:42:25Z, exit 2.
+   - Output: no check line and no progress line was printed.
+   - What timed out: `page.reload` in `setup` (`frontends/shell/e2e/pan-anchor.mjs:64` @ 695e1303794ed390d305d07fca592694f33f589e sha256:4aae8de406c31b3eb926b6adc2fca10e807804f43ca38b94ad7a380404ac3414). Its message: `page.reload: Timeout 30000ms exceeded.`
+
+2. **What else ran.**
+   - By this project's own knowledge: slot 2's worker was running `cargo test --workspace --locked` through the whole of the run's window, compiling on its own target. It ran in a shared hold, from a call made at 2026-11-14T00:33:49Z by that worker's transcript; its log was still being written at 00:49:00Z.
+   - The script's status in the window was not read. The worker's report elides the `also=` field of its hold line.
+
+3. **What it is.** A run with no check result (the ruling, item 1). It is not a PASS or a FAIL. It is not P0's STOP, and it is not a departure from P0's prediction.
+   - P0 runs again under a new tag, after PR B's run alone has been tried (item 2).
+   - If that second run also ends in setup, it goes to the advisor with its lines, and there is no third try (items 2 and 5).
+
+4. **The claim limit** (Amendment 5, item 4) gains one wait: setup's `page.reload`, bounded at 30000 ms, as the run's own message gives it. The file is not changed for it (item 4).
