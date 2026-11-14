@@ -4811,6 +4811,141 @@ mod ticket_drop_under_lock_regression {
         );
     }
 
+    /// U1. The cancel at a failed attribution, for a ticket minted after the close: the close cancels
+    /// only the tickets minted before its step 2, so this one is cancelled by the attribute step's
+    /// own `tickets.cancel`. Steps, in order: open; the close completes; a ticket is minted for the
+    /// closed name through the real `StreamRegistry::mint`, standing in for the mint step's last
+    /// line (as in CR2, no claim that product code mints at that moment); the attribute step finds
+    /// no live generation, cancels the ticket and refuses as the close's answer.
+    #[test]
+    fn a_ticket_minted_after_the_close_is_cancelled_by_its_failed_attribution() {
+        let path = fixture("u1-mint-after-close");
+        let host = SkpHost::new(
+            Arc::new(Catalog::new()),
+            StreamRegistry::new(),
+            no_watch_arm(),
+            discard_session_end_events(),
+        );
+        let open = open_through(&host, &path, "u1");
+        let name = open.dataset.as_str().to_string();
+
+        close(&host, open.dataset);
+
+        let handle = host
+            .tickets()
+            .mint(&name, Box::new(RunOnDrop(None)), Arc::new(NoopCancel))
+            .expect("mint after the close");
+        let ticket = handle.as_str().to_string();
+
+        let refused = host
+            .viewport_query_attribute(handle, &name)
+            .expect_err("an attribution after the close refuses");
+        assert_eq!(refused.code, "skp.unknown_dataset", "{}", refused.message);
+        assert_cancelled_before_redeem(&host, &ticket);
+    }
+
+    /// U2. The attribute step's `ObservedChange` branch: a ticket minted while the generation is
+    /// live and attributed after an `ObservedChange` end. Steps, in order: open; resolve and mint;
+    /// the end is recorded and reports 0 cancelled tickets, because the ticket is not yet
+    /// attributed; the attribute step finds no live generation, cancels the ticket and refuses with
+    /// `engine.source_changed` and the arm's own braced `detail`, which is not the sentence
+    /// `require_live` words for the same reason.
+    #[test]
+    fn an_observed_change_between_mint_and_attribution_refuses_with_the_arms_own_detail() {
+        let path = fixture("u2-observed-change-before-attribution");
+        let (tx, _rx) = super::session_end_channel();
+        let host = SkpHost::new(
+            Arc::new(Catalog::new()),
+            StreamRegistry::new(),
+            no_watch_arm(),
+            tx,
+        );
+        let open = open_through(&host, &path, "u2");
+
+        let req = unrestricted_query(open.dataset.clone());
+        let (name, ds) = host
+            .viewport_query_resolve(&req)
+            .expect("the dataset resolves while it is open");
+        let handle = host
+            .viewport_query_mint(&name, &ds, &req)
+            .expect("the dataset mints while it is open");
+        let ticket = handle.as_str().to_string();
+
+        assert_eq!(
+            host.invalidator
+                .end_generation(&name, SessionEndReason::ObservedChange),
+            0,
+            "the ticket is not attributed yet, so the end cancels none"
+        );
+
+        let refused = host
+            .viewport_query_attribute(handle, &name)
+            .expect_err("an attribution after the end refuses");
+        assert_eq!(
+            refused.code, "engine.source_changed",
+            "U2: the refusal's code: {}",
+            refused.message
+        );
+        assert_eq!(
+            refused.fields.get("detail").map(String::as_str),
+            Some("{this dataset's session ended while this query was being prepared}"),
+            "U2: the refusal's fields.detail against the ObservedChange arm's literal"
+        );
+        assert_cancelled_before_redeem(&host, &ticket);
+    }
+
+    /// U3. The ended-then-closed race at host level: a query resolved while the dataset was ended
+    /// but not yet closed, whose live check runs after the close. Steps, in order: open; the end is
+    /// recorded; the end's mark is what the live check answers; the query resolves; the close
+    /// completes and its `forget_dataset` removes the mark; the mint step's live check finds the
+    /// name not open and refuses as `skp.unknown_dataset` before anything is built or minted, so
+    /// the attribute step after it is not reached.
+    #[test]
+    fn an_ended_then_closed_query_checking_after_the_close_refuses_as_unknown_dataset() {
+        let path = fixture("u3-ended-then-closed");
+        let (tx, rx) = super::session_end_channel();
+        let host = SkpHost::new(
+            Arc::new(Catalog::new()),
+            StreamRegistry::new(),
+            no_watch_arm(),
+            tx,
+        );
+        let open = open_through(&host, &path, "u3");
+        let name = open.dataset.as_str().to_string();
+
+        host.invalidator
+            .end_generation(&name, SessionEndReason::ObservedChange);
+        assert_eq!(
+            host.generations().live_generation(&name),
+            Err(NotLive::Ended(SessionEndReason::ObservedChange)),
+            "the end's mark is what a live check answers before the close"
+        );
+        let req = unrestricted_query(open.dataset.clone());
+        let (name, ds) = host
+            .viewport_query_resolve(&req)
+            .expect("an ended dataset still resolves");
+
+        close(&host, open.dataset);
+
+        let refused = host
+            .viewport_query_mint(&name, &ds, &req)
+            .expect_err("a live check after the close refuses");
+        assert_eq!(refused.code, "skp.unknown_dataset", "{}", refused.message);
+        {
+            let map = host
+                .tickets
+                .tickets
+                .lock()
+                .unwrap_or_else(|e| e.into_inner());
+            assert!(map.is_empty(), "the refused query minted no ticket");
+        }
+        assert!(rx.try_recv().is_ok(), "the end emitted one event");
+        assert!(
+            matches!(rx.try_recv(), Err(mpsc::TryRecvError::Empty)),
+            "nothing is emitted after the end"
+        );
+    }
+
     /// R2 (S5). The registry alone: while a dataset is closing, a new attribution refuses and the
     /// live check answers `NotOpen`, but an end recorded during the close still finds the live
     /// generation and carries its reference (ADR-035 Decision 3's close-time routes); after
