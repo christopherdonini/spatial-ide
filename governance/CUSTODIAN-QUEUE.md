@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `ff450958768abd837bf501f861b84a51f94a51a8dbcc694645f51b1c830f2515`) at `2026-11-14T08:42:19.136Z`.
+Generated from `PLAN.yaml` (sha256 `7347cf068e8dbb7c8c9766e95b624a7d5dc375cad2a36a023e322670d57c53c4`) at `2026-11-14T09:28:14.779Z`.
 
 ## 1. Next
 
@@ -14,7 +14,6 @@ Generated from `PLAN.yaml` (sha256 `ff450958768abd837bf501f861b84a51f94a51a8dbcc
 - **second-open-history-before-1c-step-3** — Which record a step belongs to: a second open's steps, and steps recorded after a save made before any step (the independent review's C2), with the review's note on two dataset identities; settled before 1c step 2's lineage reader (L1 to L4), so before step 3; ADR-036's text on both is the human's (lane `kernel-protocol`, order null, budget 0 min)
 - **skp-line-cites-outside-close-races** — Stale line cites into kernel/src/skp.rs outside kernel-close-races-followups files -- shell streaming, App.tsx, pool_poll.rs, src-tauri lib.rs, the P4 corpus test and the persisted-artifacts test (lane `kernel-protocol`, order null, budget 0 min)
 - **windows-case-fold-non-ascii** — The audit case policy on Windows folds non-ASCII letters as NTFS does, so a profile path differing only in non-ASCII case cannot escape the user-home redaction (wave 3's 1c-2 correction, S2, code-path-only) (lane `kernel-protocol`, order null, budget 60 min)
-- **pan-anchor-setcam-waits-for-its-own-reset** — e2e/pan-anchor.mjs: setCam waits for the view-state line its own reset produces, never a late line from the previous gesture (test only) (lane `shell`, order null, budget 60 min)
 - **publish-approval-consult-gate-findings** — The publish approval consult's four gate findings: ADR-024's stale approval lifetime, the approval dialog's pointer to a report with no path, walkthrough G3's question the dialog cannot answer, and PR B's form naming no line for the approval; the docs lane (lane `shell`, order null, budget 30 min)
 - **recentre-stall-three-observations** — The re-centring stall report's three proposed observations (a timer around the layer build, deck's attribute-update counters, the render-trace layers line against the gap's edges), as one node behind the S1 fix (S3) (lane `shell`, order null, budget 90 min)
 - **advisor-session-merges-under-the-humans-rule** — The advisor session merges the custodian PRs that pass their gates, under the human rule of 2026-11-13, from their message advisor live: the merge request, the advisor merge check and verdict, the verdict filed as a consult, the revert PR after a red main, the two-hour fallback to the human; AUTONOMY section 9 and ruling 25 poll changed with it (the governance lane; S3 by the custodian) (lane `governance`, order null, budget 60 min)

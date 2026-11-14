@@ -1986,3 +1986,145 @@ No prior art recorded for "operator row expected outcome approval". Research it 
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 15: main merged into PR B's branch at 5b309b78 (class 1); the 23 moved ranges and KL-3's number taken up at the merge (class 3); the session-end phase's class 8, item 2 (a) of the human's message of 2026-11-12 (13:07Z) with item 4's pin, and the rest of the series at M′, all moved here by Amendment 14 item 6. The pan-anchor fix merged after the merge, and its suite's blob is recorded under the advisor's ruling ADV-2026-11-14-14. Written by the custodian at the merge, before the colour-by phase's code.
+
+*Drafted read only by the architect at main 08ce993532d483f87ca0c50c2ee4e64f5863f020, with PR B's branch read at 5b309b78e14bb40109656cb4e0d7ee62abf79156 (`state/consults/2026-11-14-b1-shell-half-pr-b-amendment-15-the-merge-of-main-architect-draft.md`). The custodian's script fills each `sha256:<H>` with the sha256 of the cited whole lines, each with its LF, at 08ce9935. It fills each `<C>` with what the named command prints. A sub-line span carries its line's hash and says so. Branch commits are named in words and never hashed (round 25, item 2). References only: nothing below is a quotation. §7 is not edited.*
+
+*Carried by the custodian on 2026-11-14 from that draft's fenced block, byte for byte with these changes, all the custodian's: the heading's sentence on the pan-anchor fix; each pin's hash at 08ce9935 and the three counts in item 1, filled by script, which also found each of the 23 Moved ranges equal to its old range's hash at its own pinned commit and §7's count equal to the prediction; in item 1, 12c's line (its branch head is on main); in item 3 (b), two sentences read under the delegation of 2026-11-13; item 4's bullets on #317, rewritten after its merge under the advisor's ruling ADV-2026-11-14-14; in item 6, the bullet on what comes before the gates; and item 7, the draft's OPEN item. Nothing else is changed.*
+
+1. **The merge (class 1; Amendment 14 item 4, step (3)).**
+   - The merge commit is 5b309b78e14bb40109656cb4e0d7ee62abf79156 on `cut/b1-shell-half-pr-b`. It is a merge commit, never a rebase. Its parents are 6649a443 (the branch) and 08ce993532d483f87ca0c50c2ee4e64f5863f020 (main), and its message names 08ce9935. The branch's remote head is 5b309b78.
+   - Steps (1) and (2) came before it. Amendment 14 is on main at 08ce9935. The re-read's condition is read below.
+   - **§7's count.** This is a named merge of main. From here `<base>` is 08ce9935, the main commit the merge names.
+     - Never the merge commit itself: that would drop the session-end phase's lines.
+     - Never an older base: that would count main's changes.
+     - §7's command at 5b309b78 with that base prints 16 files, 235 insertions and 76 deletions. Predicted: the phase's 16 files, 235 insertions and 76 deletions (item 3 (a)), because main has changed no phase file since M″. A difference stops before code; there is none.
+   - **Path-disjoint.** `git diff --name-only bb8835c6 08ce9935` lists 121 paths. The branch's own paths since bb8835c6 are the 16 phase files (`state/consults/2026-11-14-b1-shell-half-pr-b-re-read-before-amendment-14-worker-report.md:41-43 @ 08ce9935 sha256:47c80772afd55e8aec265ab306d8d1e36e9b1388634bbf426a7d894e7d8697c6`). The two lists share no path.
+   - **The seam on the branch.** PB-E2's interface (Amendment 14 item 1) is now on the branch. `published_columns` is at `frontends/shell/src/publish/types.ts` lines 48-51 and `frontends/shell/src/publish/PublishDialog.tsx` lines 261-264 at 5b309b78, read by the architect, the same lines as Amendment 14's pins at 54ee3522.
+   - **Rule (00) at the merge (§2.9).** By `git diff --name-only origin/main...<head>` at 08ce9935:
+     - port-2 at 83d2ecef, second-open at 5e6b79bc and the findings branch at 9fb3aff1. These are the heads the re-read's Step 5 read, and its table stands (`state/consults/2026-11-14-b1-shell-half-pr-b-re-read-before-amendment-14-worker-report.md:149-158 @ 08ce9935 sha256:a4af8fa815ee2a9e046a03340c2b4bb357b9e3d96555b1c439917b24ec32e115`).
+     - The pan-anchor fix (#317) at 3bb1d065: `frontends/shell/e2e/pan-anchor.mjs` only.
+     - 12c's branch at 1889a28a: its head is reachable from main (#303, merged 2026-11-09), so it changes no path; its Scope was `kernel/tests` only (`governance/forms/kernel/CLIPPY-DENY-WARNINGS-WORKSPACE-12C-PREREGISTRATION.md:16 @ 08ce9935 sha256:63b3b840d4697c3fd764a8047e5b3dc3c48c333aea31904c9544225c64404b56`).
+     - 1c's branch: no 1c step dispatches while a milestone 4 PR is in progress (§2.9).
+     - None of them shares a path on PR B's list, apart from the records the re-read names, which are separate items, rows and entries. The merge adds no path to PR B's list.
+   - **Amendment 14 item 4's re-read condition.** `git diff --name-only 57451bb3 08ce9935` lists 14 paths, none outside governance/, state/ and site/. The condition is not met. The re-read at 57451bb3 is the re-read for this merge and is not made again.
+   - **OPEN-2's condition (Amendment 14 item 8).** `git diff b6924acea0ee757f679551442d09d1353b595d3b 08ce9935 -- frontends/shell/e2e frontends/shell/package.json` prints nothing, and #317 is not merged. The condition names no suite, so nothing runs at the merge before code.
+
+2. **The moved ranges and KL-3's number (class 3, the tree authoritative; Amendment 14 item 4).**
+   - **The 23 ranges.** They are the re-read's Moved ranges (`state/consults/2026-11-14-b1-shell-half-pr-b-re-read-before-amendment-14-worker-report.md:58-81 @ 08ce9935 sha256:30100775673482d5b2d589c507896f194e1eb630d99bb0a5c1b0bbd4f44842f8`), with bytes unchanged.
+     - Each `<H>` must equal the hash the range carries at its own pinned commit. A range whose hash differs is not a move, and it stops this amendment.
+     - There are 21 distinct ranges: publish.rs 1286-1307 and MANUAL-WALKTHROUGH.md 1930 each stand for one pin of each group.
+   - **§0.2, from 4b26d279:**
+     - SKP-V0.md 1149-1171 → `protocol/skp/SKP-V0.md:1170-1192 @ 08ce9935 sha256:57e1e7603e71559af966300e181774cb3c82a0917dcf8f687ee58b511b4a24b0`
+     - SKP-V0.md 1179-1181 → `protocol/skp/SKP-V0.md:1200-1202 @ 08ce9935 sha256:a33e93147d4db680f4d0655418fb05097d40f5cd5d1c38f6f456f199cc8cc98b`
+     - SKP-V0.md 1196-1211 → `protocol/skp/SKP-V0.md:1217-1232 @ 08ce9935 sha256:ebc8805c6615112ee7323314fcf814a4ec662d19c37339a4879617b12962c5f2`
+     - SKP-V0.md 83 → `protocol/skp/SKP-V0.md:89 @ 08ce9935 sha256:b926385c1e43c27c3d06c2f97581817f46166793a0a3b5d7362a018dba112628`
+     - App.tsx 1561 → `frontends/shell/src/App.tsx:1650 @ 08ce9935 sha256:c77be16dd32042de9f436ced9bd47fac86df582e29af2e63334a0adb0c5a91b4`
+     - App.tsx 1674 → `frontends/shell/src/App.tsx:1765 @ 08ce9935 sha256:1031b6daac969a0c34923d9dcdec4338b4be87cd4d90a0caad4cdac607a17f82`
+     - engine/README.md 325-336 → `engine/README.md:329-340 @ 08ce9935 sha256:f0cd7d4356f80eca2d9725c8d4d53fe4248061f9e6f8127f7a4fae5b3c1fba20`
+     - pick.ts 134 → `frontends/shell/src/canvas/pick.ts:135 @ 08ce9935 sha256:d9b7f5515d27b8d0d7108708490f1e42ca9c571d0007e90dd69f965cfc729cef`
+     - workspaceState.ts 68-86 → `frontends/shell/src/workspace/workspaceState.ts:72-90 @ 08ce9935 sha256:62574d11dfbcb107a6a78caafebd573879358ff20f7deaabab0c3dcec5f27965`
+     - viewTransitions.ts 34-38 → `frontends/shell/src/workspace/viewTransitions.ts:35-39 @ 08ce9935 sha256:7f8721714f06a12192ae682792154ea7b8f53a3b768cb92c4d21bcfca66a0615`
+     - viewTransitions.ts 157 → `frontends/shell/src/workspace/viewTransitions.ts:158 @ 08ce9935 sha256:64e4293bb5b3c6de614d99d06044196fd6abd634f06b1d604a3b791e129e1cef`
+     - document.ts 56-61 → `frontends/shell/src/style/document.ts:55-60 @ 08ce9935 sha256:6d08b5648c954bd6564a9e4ae8531a259b95da59a658a49da5b1a2cd034675b0`
+     - document.ts 109-118 → `frontends/shell/src/style/document.ts:108-117 @ 08ce9935 sha256:f4017650ff734303b5cb2ceb04195557bb50eb179be1ab5844f04cd1ac922e19`
+     - publish.rs 1225-1246 → `frontends/shell/src-tauri/src/publish.rs:1286-1307 @ 08ce9935 sha256:6b3ed47b0b5a5452ddde99a178b4cc25f720849bbf661bfa53d544754f88f2ea`
+     - fixture.rs 860 → `engine/src/fixture.rs:998 @ 08ce9935 sha256:f22e41488f84cf23c6a005a9f6ad11460e3ed3a6609ab55a6ae247aa979cb7d6`
+     - MANUAL-WALKTHROUGH.md 1927 → `frontends/shell/MANUAL-WALKTHROUGH.md:1930 @ 08ce9935 sha256:4917a05ad91af5f3bcba369d513f01f305aa06eb7d1042ae5a0931cb2ee1a3d5`
+   - **Amendment 12, from b7b721eb:**
+     - publish.rs 1258-1279 → 1286-1307 (above)
+     - MANUAL-WALKTHROUGH.md 1929 → 1930 (above)
+     - KNOWN-LIMITATIONS.md 506 → `KNOWN-LIMITATIONS.md:507 @ 08ce9935 sha256:bb5ea652d19b36a3a9067f3668f811d9869aa8dc47a8c441cf498767d18bd053`
+     - WorkingCanvas.tsx 181-182 → `frontends/shell/src/canvas/WorkingCanvas.tsx:183-184 @ 08ce9935 sha256:0bcb53bf9985705e2c5c7ad0218dc0d2f31dc896c569b0f8240c23c925830654`
+     - MANUAL-WALKTHROUGH.md 273, 277 and 469 → `frontends/shell/MANUAL-WALKTHROUGH.md:274 @ 08ce9935 sha256:843c1d3ecc8eea455d0759ef716f0ac726b8093e8c9dbe00dccaf7dd7923e140`, `frontends/shell/MANUAL-WALKTHROUGH.md:278 @ 08ce9935 sha256:fc1b56b2c955c4208beadec805224d3e1777831eeba363655e5efba51b145282` and `frontends/shell/MANUAL-WALKTHROUGH.md:470 @ 08ce9935 sha256:6b47c10f48754fdb1a924736d4c997f3b1cbf503878f49eefe0387f6510814af`
+   - **The same ranges on the branch at 5b309b78** (named in words, no hash).
+     - 20 of the 23 hold at the lines above. Nineteen are in files the branch never changed. The twentieth is workspaceState.ts 72-90, which the architect read at 5b309b78.
+     - The other three sit where the M′ re-read put them, moved by the phase's commit 0b247f29: App.tsx 1650 is at 1660, App.tsx 1765 at 1775, and pick.ts 135 at 139.
+   - **Moved on the branch only, Same on main** (the re-read's reading against M′, at lines 83-86 of the same report). These are Amendment 12's App.tsx and pick.ts pins, as the M′ re-read records them (`state/consults/2026-11-13-b1-shell-half-pr-b-re-read-at-m-prime-worker-report.md:63-70 @ 08ce9935 sha256:950189cdba9897be76be957ee81f730fd47661865bcbdc94d57e314545173b3a`):
+     - pin 9: 1650 → 1660;
+     - pin 10: 1765 → 1775;
+     - pin 19: pick.ts 135 → 139;
+     - pin 46: 1193-1211 → 1203-1221, with 1196 → 1206;
+     - item 6's pin: 1382 → 1392;
+     - item 9's pins: 1282 → 1292, 686 → 694, 1656 → 1666 and 1540 → 1550.
+     - For PR B's code, the branch's lines are authoritative in those two files. The architect read 1660, 1775, 139, 1206, 1392 and 694 at 5b309b78. These are reads, not hashes.
+   - **KL-3's number is 65.**
+     - The highest item at 08ce9935 is 64, the first-look item (`KNOWN-LIMITATIONS.md:511 @ 08ce9935 sha256:9a531c887ff1405b9ec45cfb2b609801258cbb89c553f465736e66c78c451338`; the re-read's Step 6, `state/consults/2026-11-14-b1-shell-half-pr-b-re-read-before-amendment-14-worker-report.md:168 @ 08ce9935 sha256:79ee93423b5d3f625f1bae3d1d8e6c6311ad54ca4b7ca999465da0fb8968855e`).
+     - Numbers are not reused, so 65 stays KL-3's when the first-look node withdraws 64.
+     - Amendment 12 item 7's other numbers are unchanged.
+
+3. **Amendment 14 item 6's moved items.**
+   - (a) **The session-end phase's class 8.**
+     - How it was counted: insertions plus deletions per file, from M″ c85788f1 to the phase's head b8127685, all 16 files inside §7's pathspec (`state/consults/2026-11-12-b1-shell-half-pr-b-session-end-phase-worker-report.md:71-99 @ 08ce9935 sha256:65b5cf193fa06655d6b8366e840637a02b3901e4e79640834021e9fd6067d5dc`).
+     - The ceilings: Amendment 12 item 13's session-end row and SE-R1 row. Their per-file values are the session-end draft's table (`state/consults/2026-10-25-b1-shell-half-pr-b-session-end-class-9-ahead-architect-draft.md:99-103 @ 08ce9935 sha256:854f6cd8905cd8e14016640b7b7ec506d80a63e2b536e0e5f2341630749d3aab`).
+     - **Over** (class 8, none trimmed): FeatureTab.tsx 17 of 15; selection.ts 7 of 6; workspaceState.ts 18 of 15; App.test.ts 40 of 35; pick.test.ts 21 of 20; App.lateResult.test.tsx 53 of 40, SE-R1's row. pick.ts is at its ceiling, 20 of 20.
+     - **Within:**
+       - the five new-to-list product files: 67 of 71;
+       - App.tsx and workspaceState.ts: 60 of 60;
+       - the nine test files: 131 of 204, with App.selection.test.tsx unused;
+       - §7 as amended: B-P 127 of 1,736, B-T 184 of 2,124, B-E 0 of 590.
+       - The report's 184-of-204 line puts App.lateResult.test.tsx's 53 among the nine. That file is SE-R1's own row (the architect's reading, from the report's own figures).
+     - **At the phase's code commit 0b247f29.** The record commit b8127685 added three comment lines above each of SE-U1 to SE-R1 (`state/consults/2026-11-12-b1-shell-half-pr-b-session-end-phase-worker-report.md:21-26 @ 08ce9935 sha256:96f620b58c042eb773fd890421f5082c21b4fc76fe953289f31fa74f30ba8ddb`). So at 0b247f29 pick.test.ts was 18 of 20 and five files were over. The sixth overrun is those comment lines. This is derived from the report; `git diff --numstat c85788f1 0b247f29` confirms it before the commit.
+     - **Forward.** At PR B's head, App.tsx counts against App 165 and workspaceState.ts against workspaceState 25 (Amendment 12 item 13). The phase leaves 123 and 7 for the colour-by work, whose §7 rows are 120 and 10. Past that is class 8 at the head. The other phase files are not on the colour-by list (§2.6).
+   - (b) **Item 2 (a) of the human's message of 2026-11-12 (13:07Z), with item 4's pin.**
+     - The ruling, by reference (paraphrased):
+       - Item 2 (a): `state/directives/2026-11-12-s1-fix-open-a-c-s6b-now-pr-b-class-9-now-1c-five-308-c1-words-platform-reports-order-no-git-stash.md:22 @ 08ce9935 sha256:a4cab1ad2974a97dc5a4ba88648d85d46e9ec3ab718e6639e94fafcd5c8619e3`. OPEN-A's and OPEN-B's starting texts become the human's words by approval once the worker's re-check and the gate's clause check pass at PR B's head. An untrue clause goes back to the human; since the delegation of 2026-11-13 it goes to the advisor, which decides what needs the human (`state/directives/2026-11-13-the-grant-approved-the-advisors-authority-its-rulings-the-humans-except-item-4-the-advisor-merges.md`, item 1).
+       - Item 2 (b): `state/directives/2026-11-12-s1-fix-open-a-c-s6b-now-pr-b-class-9-now-1c-five-308-c1-words-platform-reports-order-no-git-stash.md:23 @ 08ce9935 sha256:f6ccf4950c3ebeb3d3b8a1f1a7cd9da920f8b064776746ebe5622c901cef056f`. The On-main paragraph becomes the human's own words through the docs lane, and PR B's records commit then adds its Colour by sentence.
+     - **The pin** (class 3, the tree authoritative):
+       - Item 4 is `KNOWN-LIMITATIONS.md:72-81 @ 08ce9935 sha256:9bc904c4826c423ade9bbfea22fb4e702b246156c3f316b6f85ca574566b3d2a`.
+       - Its On-main paragraph, `KNOWN-LIMITATIONS.md:80 @ 08ce9935 sha256:ff6dbce9bb743e1e67f40757a1cdff873f710cfc90120317389ae31343a0dc59`, is item 2 (b)'s text, written by f56d6efe.
+       - The R-4 comment, `KNOWN-LIMITATIONS.md:78 @ 08ce9935 sha256:d84a2af457acb27d4af839f71ed87affc61543f0edabfe5f71966ebfbd297ac6`, is Same as Amendment 12 item 1's.
+       - Amendment 12 item 1's pins on lines 72-81 and 80 at b7b721eb are historical.
+     - **Reading** (class 1, the architect's):
+       - Four of OPEN-A's five sentences are the paragraph now on main.
+       - Under item 2 (a), PR B's records commit adds the one that remains, OPEN-A's second sentence (`state/consults/2026-11-12-b1-shell-half-pr-b-re-sweep-amendment-architect-draft.md:262 @ 08ce9935 sha256:d87c436afad0378a3eace6923bc98ff8871287585ee1402781c750bdf8df0ee6`, a sub-line span carrying its line's hash), into that paragraph, as item 2 (b) places it.
+       - PR B does not rewrite the paragraph. Its source comment gains the base's pins for that sentence only (Amendment 12 item 1).
+     - **The item number in both texts.** That sentence, and OPEN-B's text (`state/consults/2026-11-12-b1-shell-half-pr-b-re-sweep-amendment-architect-draft.md:272 @ 08ce9935 sha256:b14ed5da78c4459c95e6a31a0f6299158f16fda96cd9bebcea4d1d741922d18d`), call KL-3 item 64. KL-3 is 65 (item 2).
+       - Both references are re-read at the records commit under item 3 (b) of the human's third message of 2026-11-12 (`state/directives/2026-11-12-third-message-open-3-a-gates-now-typed-check-reading-rule-first-look-s1-publish-approval-s2-second-open-rulings-308-restore-item-47-floor-order.md:15 @ 08ce9935 sha256:9ba7e478438eb7a5af67e716a49f5e232bbd4629165bfb111b87c512c298a9b8`).
+       - Item 59's text is re-read against the columns line under that message's item 4 (c) (`state/directives/2026-11-12-third-message-open-3-a-gates-now-typed-check-reading-rule-first-look-s1-publish-approval-s2-second-open-rulings-308-restore-item-47-floor-order.md:21 @ 08ce9935 sha256:70932e1712f73c4e0defe23359d0f8eff4d87312033dbee4ac2147a866fda166`).
+     - Both texts stay the human's words as approved. Nothing here writes their words. A change to them is a ruling for the advisor under the delegation of 2026-11-13 (that grant, item 2), no longer a red line.
+   - (c) **The rest of the series at M′.** The runs are at `state/consults/2026-11-13-b1-shell-half-pr-b-series-at-m-prime-tester-report.md:62-89 @ 08ce9935 sha256:8ee0ffe51e98854af545fe1581a8a61d89b49bb4c8fd445c80bff95e118ff2bb`, against M″'s series in `state/consults/2026-11-12-b1-shell-half-pr-b-base-series-tester-report.md`. Every run ended rc 0 in both series except these:
+     - console ended rc 1 once (the nested regression's K7) and rc 0 when re-run alone. residency-harness ended rc 2 once (watchdog) and rc 0 when re-run (`state/consults/2026-11-13-b1-shell-half-pr-b-series-at-m-prime-tester-report.md:125-133 @ 08ce9935 sha256:21efa980342815793538f18bb75f7c320fc8e16041729f622468e5b4d75cd6d1`).
+       - Each failure was seen once in a shared run and did not reproduce, so it is not I3 under Amendment 12 item 11. Both runs of each are recorded for the gate.
+     - source-changed-post: S5d INCONCLUSIVE (rc 3) at M″, PASS (rc 0) at M′ (`state/consults/2026-11-13-b1-shell-half-pr-b-series-at-m-prime-tester-report.md:146 @ 08ce9935 sha256:3df77b3f99e2f4badb31ead8213abe5855c64dae9bf43a43e8bb76d28dc5b560`). Not I3, under item 11's inconclusive clause.
+     - `e2e:recentre-crossing`: 6/6 on the measure build, first run at M′ (Amendment 12, continued, item 4).
+     - pan-anchor: see Amendment 14 item 5.
+     - These are the differences between the two series that Amendment 12, continued, item 6 asks to be recorded.
+   - (d) **Amendment 13 item 1's three pins are settled.** Amendment 14 item 6 settles pick.ts's pin and the number 64. Item 4's pin is settled in (b) above.
+
+4. **What the merge does not change.**
+   - PR B's gates wait as Amendment 14 item 5 records them, in that item's list of what follows, bullets two to four.
+   - 08ce9935 does not carry #317, so this merge is not the one those bullets name.
+   - #317 merged after it. The advisor merged it at 2026-11-14T09:12:08Z by the merge commit 83e7b8016a4526054d1efd96607938ef20874fe1, on its verdict MERGE at the head 3bb1d065 (`state/consults/2026-11-14-pan-anchor-setcam-waits-for-its-own-reset-merge-check-merge.md`). So one more merge of main into PR B's branch, of a main that holds 83e7b801, is owed before PR B's gates, by a merge commit (ADV-2026-11-14-14 item 3 (a)).
+   - **The merged suite** (the advisor's ruling ADV-2026-11-14-14, `state/directives/2026-11-14-advisor-ruling-adv-2026-11-14-14-the-notice-is-enough-no-further-run-at-m-prime-one-more-merge-of-main-into-pr-b-before-its-gates-amendment-15-records-the-blob.md`, item 4). `frontends/shell/e2e/pan-anchor.mjs` at 83e7b801 is blob 370fe1494cd4389f4c5679c46d1ccf390501110a, not the 7642086bcc702c9f4c3ff45045c02ae1ef65d810 (the file at 08bed11c) that the run tagged fx12-pan-anchor used (Amendment 14 item 5). The difference is the fix's gate's D1 words in setCam's comment, applied at 3bb1d065 under AUTONOMY §31 (d); no statement differs. The custodian told the advisor under ADV-2026-11-14-12 item 4 (d) (the draft's finding E1), and under ADV-2026-11-14-14 no further run at M′ was made.
+     - The runs at PR B's head (Amendment 14 item 5) each name the suite's blob, 370fe149 unless main changes the file again. A change to it on main before those runs goes to the advisor (ADV-2026-11-14-14 items 3 (b) and 5).
+   - No condition is added.
+
+5. **Second-open's SKP-V0.md hunk.**
+   - At 5e6b79bc it adds 8 lines above §0.2's three SKP-V0.md ranges and Amendment 12's pin 39 (`state/consults/2026-11-14-b1-shell-half-pr-b-re-read-before-amendment-14-worker-report.md:156-158 @ 08ce9935 sha256:b8e3b56c40d35ecdb4d4ef47300e9caf9d019a4ebeaef318d4657afab35dd0fc`).
+   - Nothing is owed now:
+     - the branch is unmerged;
+     - `protocol/` is not on PR B's list (§2.6);
+     - its form keeps the version (`governance/forms/kernel/SECOND-OPEN-HISTORY-BEFORE-1C-STEP-3-PREREGISTRATION.md:22 @ 08ce9935 sha256:d609b7f39878d4ab773429ef304b85659e3419edda1ea351bb3592a4b1e83847`), so `types.ts`'s literal is untouched.
+   - If it merges first, its move is class 3 (bytes unchanged, not I4). It is taken up at the next named merge of main into PR B's branch, in the amendment written there (OPEN-1, recommendation (a)).
+   - Pin 39 is the wire that the `types.ts` member is written against (Amendment 12 item 5).
+
+6. **Next.**
+   - The colour-by phase's code, at 5b309b78, with Amendment 14 item 1's assertion in PB-E2 and its mutation M-PB-E2c (never committed; OPEN-3 (a)).
+   - Row 5's prediction (Amendment 14 item 2) for the records commit.
+   - The code is counted from 08ce9935 (item 1), against Amendment 12 item 13's and Amendment 14 item 1's ceilings, with the two remainders in item 3 (a).
+   - Before PR B's gates: the merge of main that item 4 names, with item 7's re-read and the amendment written there; then pan-anchor's runs at PR B's head (Amendment 14 item 5).
+
+7. **The draft's OPEN item**, taken as the drafter's recommendation on 2026-11-14 (not a red line).
+   - OPEN-1: (a). At the next named merge of main into PR B's branch, the one item 4 names, the scripted re-read Amendment 14 item 4 made is made again: `git diff --name-only 08ce9935 <that main>` against PR B's list and the pinned paths, hashing Amendment 14 item 1's 19 interface pins and pin 39. It is recorded in the amendment written at that merge, before the gates.
+
+**Superseded for PR B:**
+- Amendment 14 item 6's list of what moves to Amendment 15 (item 3 (a) to (c)).
+- Amendment 12 item 1's KNOWN-LIMITATIONS pins at b7b721eb read as current, and its reading that PR B rewrites the paragraph (item 3 (b)).
+- The re-read before Amendment 14's ranges in App.tsx and pick.ts read as the branch's (item 2).
+- The session-end phase report's group figure for the nine test files (item 3 (a)).
+
+Read the last amendment first.
+
+Nothing above is edited.
