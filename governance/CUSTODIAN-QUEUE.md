@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `aadb461a48b5e4fb6934eb00c7f198f2d524e88f8f9c3a1b3a89ba4b0885ae8b`) at `2026-11-14T12:32:33.491Z`.
+Generated from `PLAN.yaml` (sha256 `2ecbc4c57f0ab27de185bb2633ef6e93f37712c543df772936692b30f40928c0`) at `2026-11-14T13:22:20.115Z`.
 
 ## 1. Next
 
@@ -14,7 +14,6 @@ Generated from `PLAN.yaml` (sha256 `aadb461a48b5e4fb6934eb00c7f198f2d524e88f8f9c
 - **second-open-history-before-1c-step-3** — Which record a step belongs to: a second open's steps, and steps recorded after a save made before any step (the independent review's C2), with the review's note on two dataset identities; settled before 1c step 2's lineage reader (L1 to L4), so before step 3; ADR-036's text on both is the human's (lane `kernel-protocol`, order null, budget 0 min)
 - **skp-line-cites-outside-close-races** — Stale line cites into kernel/src/skp.rs outside kernel-close-races-followups files -- shell streaming, App.tsx, pool_poll.rs, src-tauri lib.rs, the P4 corpus test and the persisted-artifacts test (lane `kernel-protocol`, order null, budget 0 min)
 - **windows-case-fold-non-ascii** — The audit case policy on Windows folds non-ASCII letters as NTFS does, so a profile path differing only in non-ASCII case cannot escape the user-home redaction (wave 3's 1c-2 correction, S2, code-path-only) (lane `kernel-protocol`, order null, budget 60 min)
-- **publish-approval-consult-gate-findings** — The publish approval consult's four gate findings: ADR-024's stale approval lifetime, the approval dialog's pointer to a report with no path, walkthrough G3's question the dialog cannot answer, and PR B's form naming no line for the approval; the docs lane (lane `shell`, order null, budget 30 min)
 - **recentre-stall-three-observations** — The re-centring stall report's three proposed observations (a timer around the layer build, deck's attribute-update counters, the render-trace layers line against the gap's edges), as one node behind the S1 fix (S3) (lane `shell`, order null, budget 90 min)
 - **advisor-session-merges-under-the-humans-rule** — The advisor session merges the custodian PRs that pass their gates, under the human rule of 2026-11-13, from their message advisor live: the merge request, the advisor merge check and verdict, the verdict filed as a consult, the revert PR after a red main, the two-hour fallback to the human; AUTONOMY section 9 and ruling 25 poll changed with it (the governance lane; S3 by the custodian) (lane `governance`, order null, budget 60 min)
 - **site-waiting-on-you-lists-open-questions** — The site's Waiting on you also lists an in-progress node carrying an open question for the human, set by the custodian when a running piece stops for the human's ruling and cleared when the human answers (lane `governance`, order null, budget 45 min)
