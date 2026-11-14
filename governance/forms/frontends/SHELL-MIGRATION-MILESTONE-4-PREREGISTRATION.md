@@ -2128,3 +2128,123 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 16: scope addition (class 9), written after the worker's I1 stop at the colour-by phase's fill probe was seen, and before any colour-by code. `frontends/shell/src/canvas/decodeBatch.ts` and `frontends/shell/src/canvas/WorkingCanvas.test.ts` join PR B's list. `fillMatch` is required (class 1). The not-held shape keeps the existing literal and adds one required member to the attribute block (class 1). PB-U10 is split, and PB-U11 is added (class 9). The order is: this amendment, the probe again, then code (class 1).
+
+*Drafted read only by the architect, with main read at 0e31e371 and PR B's branch read at 5b309b78e14bb40109656cb4e0d7ee62abf79156 (`state/consults/2026-11-14-b1-shell-half-pr-b-amendment-16-colour-by-fill-probe-class-9-architect-draft.md`). The custodian's script fills each `sha256:<H>` with the sha256 of the cited whole lines, each with its LF, at 08ce9935. Every file pinned here is unchanged by PR B's branch. A line in a file the branch changed is named in words, with its line at 5b309b78, and is never hashed (round 25, item 2). `state/consults/2026-11-14-b1-shell-half-pr-b-colour-by-part-1-fill-probe-stop-worker-report.md` is the filed path of the worker's stop report, filled by the custodian. That report is evidence, not Authority. The addition rests on the cross-module seam rule (round 4) and on §2.6's last paragraph (round 25, item 2 (a)). References only: nothing below is a quotation. §7 is not edited.*
+
+*Carried by the custodian on 2026-11-14 from that draft's fenced block, byte for byte with these changes, all the custodian's: each pin's hash at 08ce9935, filled by script, which also found every pinned file the same at 08ce9935, at main 0e31e371 and at PR B's branch head 5b309b78, and none of them among the branch's 16 changed files; the stop report's filed path in place of each placeholder for it; and item 7, the draft's OPEN items. The standing reuse step (`state/directives/2026-10-09-slot-orders-pilot-and-reuse-standing-step.md`, item 5) is for the drafting brief of a new piece; this amendment is not one, so its brief carried no reuse output. Nothing else is changed.*
+
+1. **`fillMatch` is required (class 1, the architect's reading of §2.3 (a)).**
+   - The choice: `StyleState.fillMatch` is required, typed `… | null`. "Defaulting to `null`" is read as `DEFAULT_STYLE_STATE`'s value (`frontends/shell/src/style/document.ts:75-80 @ 08ce9935 sha256:2c956c802755407774db61ad4dad9cf839bfdf8cca5a13505f08199dba947425`), not as an optional member. This follows Amendment 3 item 5 and Amendment 4 item 2.
+   - Why:
+     - Every product site except the default carries the member by spread.
+     - A future writer of a whole `StyleState` must then set it. That includes 1c step 2's recovery, which is written against `StyleState` at its own base (Amendment 12 item 6).
+     - An optional member would compile with the member dropped, and the category style would then be lost silently.
+     - Two states (`undefined` and `null`) for one fact would also be a code path with no product caller (§8 item 13).
+   - The sites this choice alone adds, from the probe's list in `state/consults/2026-11-14-b1-shell-half-pr-b-colour-by-part-1-fill-probe-stop-worker-report.md`:
+     - off the list: `frontends/shell/src/canvas/WorkingCanvas.test.ts:151 @ 08ce9935 sha256:e9e7c72a3cdcd764fc5b69f595d8f81d34242479e901b67db76ee0a38e420e11`, one `fillMatch: null` fill;
+     - on the list: `document.test.ts` (TS2741, at 128) and `viewTransitions.test.ts` (at 29).
+   - Optional would remove those three sites and add none.
+
+2. **The not-held shape (class 1, the architect's reading of §2.2 (d) and OPEN-20 (a)).**
+   - **The shape.** `ResidentBatch.attributes` keeps its type (`frontends/shell/src/canvas/decodeBatch.ts:178-181 @ 08ce9935 sha256:ff4e8209deaeafec77ffc0f07cfadf15ac90f05fc58436c22a3edb7f0c489bc3`).
+     - `BatchAttributes` (`frontends/shell/src/canvas/decodeBatch.ts:99-104 @ 08ce9935 sha256:cb778364096e313670d9833c0ebee512aafd950b194cfd2d9d9f8e869ad15d4a`) gains the required `kept: "projection" | "match"`.
+     - `copyAttributes` writes `"projection"` (`frontends/shell/src/canvas/decodeBatch.ts:130 @ 08ce9935 sha256:9529b952a48dded74189a36afd3473fbd8fc035c360737961c4a71d7e74cdfc6`). This is a type fill: no behaviour changes.
+     - A batch past the ceiling while a match column is current keeps a block with `kept: "match"`. Its `names` is that one column, its `data` is a copy of that column alone, made in `values.ts`, and its `bytes` is that copy's length.
+     - With no current match column, the batch is `"not-held"`, as it is today.
+   - **What each reader needs:**
+     - **The duplicate drop** (`frontends/shell/src/canvas/tileResidentSet.ts:235-242 @ 08ce9935 sha256:69e91329fee5b06d548d4c4f0fb15ffa95e4b0a872147ee596e046c5ecfd1c36`, `frontends/shell/src/canvas/tileResidentSet.ts:262 @ 08ce9935 sha256:85c771f324b2849d718b1b61e1a10e3709517ad29e8d25b276058bbb70e2c3ee`): no edit. The rebuild maps every object block, so a match block gets its row map in the same loop, and the spread carries `kept`. The guard holds, because the ceiling runs on the decoded batch before ingest (the next bullet), so `rows` is null on arrival.
+     - **The ceiling path** (`frontends/shell/src/canvas/WorkingCanvas.tsx:1072-1077 @ 08ce9935 sha256:7b57d19975b2a3f62c30af072e907733ccfc23cddd3265db2320ce8eb6deafab`, `frontends/shell/src/canvas/WorkingCanvas.tsx:1471 @ 08ce9935 sha256:02d058826fbcfda1df960655935175c43cfa993ab069519dc662790bf7fde613`, `frontends/shell/src/canvas/WorkingCanvas.tsx:1707 @ 08ce9935 sha256:d4c8609954f3f0b1695b7c9f93db9647d8e5cfaa9998dc9c0cd4e910c043658a`): a real edit inside WorkingCanvas 70. `withinAttributes` passes the current `style.fillMatch` column.
+     - **`limits.ts`** (`frontends/shell/src/canvas/limits.ts:81-91 @ 08ce9935 sha256:4440b13c56b3afb578dec86b9bc81ee78d30c95a1a70a2b2cc2d696481b94258`): a real edit inside limits 25.
+       - `withinAttributeCeiling` gains a required third parameter, the match column or null, with no default (§8 item 13).
+       - Past the ceiling it returns the match block, or `"not-held"`. A block already `"match"` is returned unchanged.
+       - `residentAttributeBytes` is unchanged: it already sums every object block's `bytes`, so the match column is counted in the sum.
+     - **`values.ts`** (`frontends/shell/src/attributes/values.ts:54-69 @ 08ce9935 sha256:68851a05274f59d5b8a5543feb9f55ca6124612ccc08212a81d84e8a6c06c138`): a real edit inside values 40, in three parts.
+       - `readRow` returns `"not-held"` for a `"match"` block, so its return type and its consumers are unchanged.
+       - The match block's one-column copy is made here, so `data` is parsed nowhere else (§8 item 4).
+       - The column reader (the ahead draft's column-reader paragraph) reads the key column from either kind of block, and gives null for a block that does not hold that column.
+     - **`tableSource.ts`** (`frontends/shell/src/table/tableSource.ts:216-219 @ 08ce9935 sha256:9669c1d02b0234380c652d8571fe60f2cc32de9651d84bdc0949a6a060eddfc8`, `frontends/shell/src/table/tableSource.ts:229 @ 08ce9935 sha256:d0fe11100452581b98c3be2d77b4241700132854ac9af5a1f910368c5e0c8543`): no edit. Its own decode never yields `"not-held"`, and the literal's type is unchanged. Amendment 12 item 4's condition stays unmet.
+     - **The re-issue on a new column:** in App.tsx, inside App 165. A Colour-by whose column differs from the previous `fillMatch` column, or from none, while App's attributes-not-held state stands for the open, re-issues through App's existing `issueQueryRef` seam.
+       - The seam: lines 1038-1040 and 1102-1109 of `frontends/shell/src/App.tsx` at 5b309b78. The candidate arm's binding is at line 1715 and the baseline's at line 1870. The state is at line 856.
+       - The re-issue uses the active filter and the admitted-generation guard, and records no step.
+       - The candidate arm's re-issue clears every tile and starts a fresh generation (`frontends/shell/src/residency/candidateArmSession.ts:1660-1667 @ 08ce9935 sha256:5e60a6f54f7c10e41d53a0b2e15e2bcbf800de5a3478b6d19c48619cde1f9dc9`), so the map refills. See OPEN-4.
+     - Copy (ADR-004): one named copy of one column, made only for a batch past the ceiling. It is unmeasured, and nothing claims a number (§6; docs/08).
+   - **The worker's shape**, which replaces `"not-held"` with an object (`state/consults/2026-11-14-b1-shell-half-pr-b-colour-by-part-1-fill-probe-stop-worker-report.md`), is not taken. It breaks every `=== "not-held"` test. It needs a real edit in `tileResidentSet.ts`, with a test, and a narrowing in `tableSource.ts`, which triggers `tableSource.test.ts`.
+
+3. **Files joining PR B's list (class 9), and the tests (class 9).**
+   - `frontends/shell/src/canvas/decodeBatch.ts`: item 2's member, the literal's value, and the two doc comments that item 2 makes false. This is a type fill: it carries no §4 test.
+   - `frontends/shell/src/canvas/WorkingCanvas.test.ts`: item 1's one null fill.
+   - No other file joins. Before code, the custodian re-runs the probe (item 6) to confirm this.
+   - The tests, each observed as §4 says (a `verify-mutation` run is not an observation):
+
+     | ID | File | Asserts | Mutation; expected failure |
+     |---|---|---|---|
+     | PB-U10a | `limits.test.ts` | Built from the real `decodeBatch` over `testUtils/attributeBatchIpc.ts`. With the match column `tag` and the held bytes one under the ceiling, the batch comes back as a block with names `["tag"]`, `kept` `"match"` and `rows` null. `residentAttributeBytes` counts it. `readRow` gives `"not-held"`. The column reader gives the decode's `tag` values in order. The same batch, added through a real `TileResidentSet` with one duplicate, reads each kept row's own value. With the column null, the batch is `"not-held"`. | `withinAttributeCeiling` ignores the match column; fails at the names |
+     | PB-U10b | `matchGroups.test.ts` | A match block gives the same per-row groups as the full block of the same decode. A block without that column, and `"not-held"`, give every row the group OPEN-3 settles. | the groups read only `"projection"` blocks; fails |
+     | PB-U11 | `App.colour.test.tsx` | With the not-held state standing, a Colour-by on a new column issues one re-issue under the active filter, beside the cases query. With the same column, or with no not-held state, it issues none. Counted at the harness's stand-in, which is read as the transport boundary (Amendment 4 item 8). | skip the re-issue; the first case fails |
+
+   - These replace the ahead draft's PB-U10. Each counts inside its file's existing ceiling.
+
+4. **Ceilings (class 9; §7 not edited; counted by §7's command from 08ce993532d483f87ca0c50c2ee4e64f5863f020, Amendment 15 item 1).**
+
+   | Addition | B-P | B-T |
+   |---|---|---|
+   | `frontends/shell/src/canvas/decodeBatch.ts` (item 2) | 16 | |
+   | `frontends/shell/src/canvas/WorkingCanvas.test.ts` (item 1) | | 4 |
+
+   - New totals:
+     - B-P 1,752;
+     - B-T 2,128, or 2,208 with Amendment 12 item 13's conditional entry;
+     - B-E 590 (Amendment 14 item 1);
+     - **PR B 4,470, or 4,550 with that entry.**
+   - limits 25, values 40, WorkingCanvas 70, App's remainder (Amendment 15 item 3 (a)) and the three test files' ceilings are not raised. An overrun is class 8.
+
+5. **What the stop makes untrue, read (class 1 unless named).**
+   - Amendment 12 item 13's OPEN-20 (a) row is not the whole file set the ruling needs. Item 3 completes it.
+   - The ahead draft's PB-U10 had no file and no defined mutation. Item 3 replaces it.
+   - Amendment 3 item 9's §8 item 4 case "re-copies its attributes" names the trim and the duplicate drop. The ceiling's match block is the one named copy that OPEN-20 (a) requires, and it is not a rebuild.
+   - Amendment 3 item 3's "No second map" still holds: a match block arrives at the drop with `rows` null.
+   - The doc comments that item 2 makes false, in `decodeBatch.ts`, `limits.ts` and `values.ts`, are rewritten from the code inside Scope (class 3).
+   - Item 51's words stay owed at the records commit (Amendment 12 item 7). They must state, from the code:
+     - that the colour column is kept;
+     - OPEN-2's bound;
+     - OPEN-3's interim colour;
+     - OPEN-4's camera.
+   - Amendment 14 item 4 step (4) and Amendment 15 item 6's first bullet stay true: item 6 comes before them.
+
+6. **The order (class 1).**
+   - (1) This amendment on main, with its pins filled by script.
+   - (2) The probe again at 5b309b78:
+     - the type changes are §2.3 (a) and (b), Amendment 12 item 5's member, and item 2's `kept` with the literal filled;
+     - then `npm run typecheck`;
+     - a named file off the amended list is I1;
+     - predicted sites: `document.test.ts`, `viewTransitions.test.ts` and `WorkingCanvas.test.ts` only.
+   - (3) Rule (00) at dispatch, over `decodeBatch.ts` and `WorkingCanvas.test.ts`, against every branch then in progress or awaiting merge.
+   - (4) Part 1's code. Before it, OPEN-2, OPEN-3 and OPEN-4 of the draft are settled (§8 item 20).
+   - §5 for the addition:
+     - **Declared unchanged:**
+       - `tileResidentSet.ts`, `tileIngest.ts`, `tableSource.ts` and `decodeBatch.test.ts` are not edited;
+       - every existing assertion in their tests, and in `values.test.ts`;
+       - PA-U6's assertions, whose calls gain `null`;
+       - `readRow`'s type;
+       - the status item.
+     - **Invalidators:** I1 is unchanged and covers the refill: a needed edit under `residency/` or `streaming/` is I1. I8 is unchanged.
+   - §8 item 17's rebuild seam gains the match block, proven from the real decode by PB-U10a.
+   - The reviewer adds:
+     - the re-probe's list;
+     - `decodeBatch.ts`'s diff holds item 2's edits alone, and `WorkingCanvas.test.ts`'s diff holds the one fill;
+     - PB-U10a, PB-U10b and PB-U11's mutations, applied again.
+   - The architect adds: item 2's block against §8 item 4 and ADR-004.
+
+7. **The draft's OPEN items** (the draft is filed at `state/consults/2026-11-14-b1-shell-half-pr-b-amendment-16-colour-by-fill-probe-class-9-architect-draft.md`).
+   - OPEN-1: (a), OPEN-2: (a) and OPEN-3: (a), each taken as the drafter's recommendation on 2026-11-14 (none a red line).
+   - OPEN-4, the camera on a refill, goes to the advisor under the delegation of 2026-11-13 (`state/directives/2026-11-13-the-grant-approved-the-advisors-authority-its-rulings-the-humans-except-item-4-the-advisor-merges.md`, item 1), as the draft asks. Part 1's code waits for its ruling (item 6 (4)). The ruling is filed under `state/directives/` and named in the next amendment.
+
+**Superseded for PR B:**
+- the ahead draft's PB-U10 (item 3);
+- Amendment 12 item 13's OPEN-20 (a) row, read as the whole file set (item 5).
+
+Read the last amendment first.
+
+Nothing above is edited.
