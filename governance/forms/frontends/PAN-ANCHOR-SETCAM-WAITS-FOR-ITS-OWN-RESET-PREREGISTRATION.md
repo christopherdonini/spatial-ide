@@ -450,3 +450,71 @@ Nothing above is edited.
 - **Order:** the merge commit; commit 2 (setCam); M-TRACE observed at commit 2; commit 3 (the header entry); the runs at the final head. The PR body names commit 1 and asks for a merge that keeps it reachable from main, never a squash.
 - **Rule (00):** this piece touches pan-anchor.mjs alone. That is disjoint from PR B (no path under e2e/ or protocol/) and from the publish approval draft (`e2e/publish.mjs` and the README's Publish entry). No protocol/ path. It is checked again at dispatch.
 - **Unchanged:** Scope, Out-of-scope, the tolerance, every check, note 5's list, and the s1 sentence in note 4's claim limit.
+
+## Amendment 6 — P0's first run at B′ ended in setup with no check result; the claim limit names setup's page reload (the advisor's ruling ADV-2026-11-14-03; class 1, written after the result was seen)
+
+*Written by the custodian after the run below was seen. References only. The worker's report: `state/consults/2026-11-14-pan-anchor-setcam-waits-for-its-own-reset-amendment-5-p0-stopped-in-setup-worker-report.md`. The ruling: `state/directives/2026-11-14-advisor-ruling-adv-2026-11-14-03-pan-anchor-p0-ended-in-setup-no-check-result-plan-stands-claim-limit-gains-setups-reload.md`.*
+
+1. **The run, tag a5-p0.**
+   - What ran: P0 at B′ (695e1303794ed390d305d07fca592694f33f589e), with Amendment 5 item 4's wrapper, in a shared hold.
+   - Where: the worktree at the local merge commit 1427596d5c9edae8b9248b13d8b3525b4c43c55c, whose parents are 624b2e68 and 695e1303. `frontends/shell/e2e/pan-anchor.mjs` was at B′'s bytes, with `pa-p0.patch` applied (901 bytes, sha256 250581c780d209a2321545a788f954fd43d33a5fd4022d44bf6fbfdb64f51f39).
+   - The run-suite file: `pa-e2e-run-suite.sh`, 1556 bytes, sha256 1f79a7d3288106d3aaf9d64b2d3e1fd572ae29f401c2ca5959fa3396a98ae609. The run's timeout was 1500 s.
+   - Times and exit: started 2026-11-14T00:41:34Z, ended 00:42:25Z, exit 2.
+   - Output: no check line and no progress line was printed.
+   - What timed out: `page.reload` in `setup` (`frontends/shell/e2e/pan-anchor.mjs:64` @ 695e1303794ed390d305d07fca592694f33f589e sha256:4aae8de406c31b3eb926b6adc2fca10e807804f43ca38b94ad7a380404ac3414). Its message: `page.reload: Timeout 30000ms exceeded.`
+
+2. **What else ran.**
+   - By this project's own knowledge: slot 2's worker was running `cargo test --workspace --locked` through the whole of the run's window, compiling on its own target. It ran in a shared hold, from a call made at 2026-11-14T00:33:49Z by that worker's transcript; its log was still being written at 00:49:00Z.
+   - The script's status in the window was not read. The worker's report elides the `also=` field of its hold line.
+
+3. **What it is.** A run with no check result (the ruling, item 1). It is not a PASS or a FAIL. It is not P0's STOP, and it is not a departure from P0's prediction.
+   - P0 runs again under a new tag, after PR B's run alone has been tried (item 2).
+   - If that second run also ends in setup, it goes to the advisor with its lines, and there is no third try (items 2 and 5).
+
+4. **The claim limit** (Amendment 5, item 4) gains one wait: setup's `page.reload`, bounded at 30000 ms, as the run's own message gives it. The file is not changed for it (item 4).
+
+## Amendment 7 — P0 at B′ reached its checks; commits 2 and 3; M-TRACE, P1, R1 and L1 as predicted; the gate next (class 1, written after the results were seen)
+
+*Written by the custodian after the runs below were seen. References only. The worker's report: `state/consults/2026-11-14-pan-anchor-setcam-waits-for-its-own-reset-p0-to-l1-built-worker-report.md`. The dispatch: the advisor's rulings ADV-2026-11-14-07, item 4 (b) (`state/directives/2026-11-14-advisor-ruling-adv-2026-11-14-07-no-further-booking-pr-b-run-alone-owed-on-a-quiet-machine-nothing-else-waits-for-it-p0-now-three-refusals-recorded.md`), and ADV-2026-11-14-03, item 2 (Amendment 6). Nothing above is edited.*
+
+1. **P0 again, tag a6-p0.** At B′ (695e1303794ed390d305d07fca592694f33f589e) with Amendment 5 item 4's wrapper, in the worktree at the merge 1427596d5c9edae8b9248b13d8b3525b4c43c55c, in a shared hold. It reached its checks: exit 1, both `pixel-spaces-coincide` checks PASS and the other 14 FAIL by name, `==== 2/16 PASS ====`, as predicted. Amendment 6 item 3's second run did not end in setup.
+2. **The commits**, on the branch after the merge:
+   - commit 2, 39d724fc67958dd199ccb2ac140334e6c298bc66: setCam as Amendment 5 items 1 and 2 shape it;
+   - commit 3, 08bed11cd25066976a116cc6e2dbfb9aa8d647ac: the header's `RECORDED MUTATION` entry for M-TRACE, naming commit 2.
+   - The branch is pushed at 08bed11c. No PR yet.
+3. **M-TRACE at commit 2, tag a6-mtrace**, under its 600 s timeout: `PASS  small: pixel-spaces-coincide`, then no further check line, then progress lines naming the first call's zoom, until the timeout ended the run (rc 124). As predicted.
+4. **At the final head 08bed11c**, each exit 0 and `==== 16/16 PASS ====`, with no fatal line:
+   - P1 (a6-p1), which printed two progress lines, recorded as observed in the report;
+   - R1 (a6-r1);
+   - L1 (a6-l1), under load. Its load build was alive at the suite's start and at its end; its kill ended the tree, but one process of it refused termination, so the run script's rc was 255; afterwards no process of the build remained and its target was removed.
+5. **The runs' conditions.**
+   - The run-suite file was `pa-e2e-run-suite.sh`, 1556 bytes, sha256 1f79a7d3288106d3aaf9d64b2d3e1fd572ae29f401c2ca5959fa3396a98ae609, in every run.
+   - Each run's timeout was 1500 s, except M-TRACE's 600 s.
+   - Each ran in its own shared hold, on the port-5400 harness. Before each, the machine's status was not quiet: another project's shared heavy run was on the machine, at averages from 37.1 to 77.2%.
+6. **Size.** `git diff --numstat` from B′ to 08bed11c over `frontends/shell/e2e/pan-anchor.mjs`: 20 insertions and 6 deletions, 26 lines, inside the estimate of 20 to 28 and the budget of 40 (Amendment 5 item 5). No other file changed. No overrun.
+7. **The worker's departures**, as its report gives them: an edit script was written and removed unused; foreground wait loops were moved to the background by the harness; the rc 255 in item 4. One Edit before a Read errored and was redone.
+8. **Next:** a draft PR, then the single reviewer gate at 08bed11c as Amendment 5 item 6 has it.
+- **Unchanged:** everything else.
+
+## Amendment 8 — the single reviewer gate at 08bed11c: PASS WITH NOTES; its D1 words applied under AUTONOMY §31 (d) at 3bb1d065, with no re-gate; the closing record (class 1, written after the results were seen)
+
+*Written by the custodian after the gate's report, the D1 commit and CI at the final head were seen. References only. The gate's report: `state/consults/gates/2026-11-14-pan-anchor-setcam-waits-for-its-own-reset-gate-reviewer.md`. The D1 worker's report: `state/consults/2026-11-14-pan-anchor-setcam-waits-for-its-own-reset-d1-words-worker-report.md`. Nothing above is edited.*
+
+1. **The gate**, as Amendment 5 item 6 has it: the single reviewer at 08bed11cd25066976a116cc6e2dbfb9aa8d647ac, PR #317, PASS WITH NOTES. No Correctness or Evidence finding.
+   - Its four runs, each in its own shared hold on the port-5400 harness, through the run-suite file `pa-e2e-run-suite.sh` (1556 bytes, sha256 1f79a7d3288106d3aaf9d64b2d3e1fd572ae29f401c2ca5959fa3396a98ae609), each as predicted:
+     - P0 at B′ with note 4's wrapper (tag gr-p0): exit 1, `==== 2/16 PASS ====`, both `pixel-spaces-coincide` checks PASS and the other 14 FAIL by name;
+     - P1 at the head with the wrapper (gr-p1): exit 0, `==== 16/16 PASS ====`;
+     - M-TRACE at the head (gr-mtrace), under its 600 s timeout: `PASS  small: pixel-spaces-coincide`, then no further check line, then 19 progress lines naming the first call's zoom, until the timeout ended the run (rc 124);
+     - L1 at the head under load (gr-l1): exit 0, `==== 16/16 PASS ====`, no fatal line, its load build alive at the suite's start and at its end, and its target removed after.
+   - Each other run's timeout was 1500 s. Before each run the machine's status was not quiet, at averages from 26.1 to 43.6%.
+   - Its readiness at 08bed11c: `node --check` of the file, `npm run verify` in frontends/shell, `node --test` over plan, hooks and evidence, verify:plan, verify:cites and verify:quotes, each rc 0; `gh pr checks 317` read at 2026-11-14T08:02:46Z, all 16 rows passing.
+   - It read the worker's runs against Amendment 7, and they match items 1, 3 and 4; item 6's numstat matches its diff.
+   - The custodian compared the runs it claims with its transcript: each has a call behind it, and each run's log on disk gives the counts and exits above.
+2. **D1 (Documentation, must fix before the merge, not blocking).** setCam's comment said the wait ends when "the run's hard timeout kills the process", but the timeout is the harness's run-suite step's, and the file's own run instruction has none. The report gives replacement words with each clause checked against the code. The sentence is a worker's comment, not the human's wording, so under AUTONOMY §31 (d) the words are applied as given, with no re-gate, and the PR body lists them.
+   - Applied by a worker at 3bb1d0658381258c60e9a6ff34a80854e4d49224, the one commit on the branch after the gated head: the span replaced by the report's words byte for byte, the comment's lines rewrapped, every other line of the file unchanged. The worker's script and the custodian's own check each joined the comment's lines and compared them. `git diff --numstat 08bed11c 3bb1d065`: 5 insertions and 4 deletions, in `frontends/shell/e2e/pan-anchor.mjs` only.
+   - The human's message of 2026-11-13 on the advisor's merge check (`state/directives/2026-11-13-adv-04-and-05-approved-settings-two-places-ci-toolchain-pinned-merge-check-wording-only-fail-closed-under-31.md`) names three things for a gate closed under §31 with no re-gate. Read for this gate, which ended PASS WITH NOTES: the report's only finding to fix is D1, which is wording; its words are applied exactly, with nothing else changed after the gated head; and this amendment records the closing.
+3. **Size.** `git diff --numstat` from B′ (695e1303) to 3bb1d065 over `frontends/shell/e2e/pan-anchor.mjs`: 21 insertions and 6 deletions, 27 lines, inside the budget of 40 (Amendment 5 item 5). No other file changed. No overrun.
+4. **CI at the final head 3bb1d065.** The runs for that commit, read at 2026-11-14T08:36:27Z: DCO sign-off, Exposure scan, Ported notices (two) and Product CI — shell (two), each completed with success. `gh pr checks 317`, read at 2026-11-14T08:36:44Z: all 8 rows pass (every commit is signed off; no profile path in the range; ported-notices, two; tauri build, two; typecheck · build · vitest · cargo test, two). Workflows whose paths the commit does not touch did not run at it; their rows at 08bed11c are item 1's.
+5. **Out of draft.** The PR body was set to list D1's words under §31 (d) and read back equal, and in the same chain the PR was marked ready, at 2026-11-14T08:37:41Z. The body still asks for a merge that keeps commit 1 (624b2e68) reachable from main, never a squash.
+6. **The time taken** (the settlement's budget line: 60 minutes, set as an estimate, not a measurement). The subagent runs of this piece by their transcripts, as their filed reports give them: the build worker, 2026-11-10 17:39:48Z to 18:12:07Z; P1-D's worker, 19:04:19Z to 19:12:55Z; the P0 worker that stopped in setup, 2026-11-14 00:30:21Z to 00:44:31Z; the P0-to-L1 worker, 04:44:18Z to 05:52:38Z; the gate, 07:06:21Z to 08:05:57Z; D1's worker, 08:29:12Z to 08:30:52Z. That is 184 minutes and 41 seconds in all, over the budget; most of it is suite runs in shared holds and the gate's four runs. The architect's drafts are not counted.
+- **Unchanged:** everything else.
