@@ -143,3 +143,14 @@ Out-of-scope: ADR: none (ADR-035's Note 2026-11-11 items 1 and 2 are checked by 
 - **The PLAN node:** its gate names this form from this commit; its status stays ready until the code's dispatch, when it goes in progress naming the code's branch; its summary and filler row 14 record the form.
 
 ## Amendments (opens empty; append-only)
+
+### Amendment 1 (2026-11-14), class 6: budget deviation, Scope not edited. Written after the build, its base run and its three mutation runs were seen.
+
+- **Declared:** 150 lines by §21c's counting rule over the Scope line's two files, about 125 estimated (N4, which counts `kernel/README.md`'s 4 lines in).
+- **Final** at fd101297612bbafbd15a1819f44b47335240b425, by `git diff --numstat origin/main...HEAD` (merge base a9c884bac1e9f675784bdc31f285d1e7a981051a): 154. That is `kernel/src/skp.rs` 150 (150 insertions, no deletion: U1 to U3, 135 lines, and their three `REGISTERED MUTATION:` paragraphs, 15) and `kernel/README.md` 4 (2 insertions, 2 deletions).
+- **The reason:** the three tests came to 135 lines against N4's about 121, and nothing was trimmed to fit (`state/consults/2026-11-14-close-races-three-untested-kernel-tests-built-worker-report.md`, departure 5).
+- **The route:** both gates, the reviewer and the architect, from dispatch (§36; N3); the five-line form stays.
+- **Disclosed for the gates**, the worker's own readings, not settled here:
+  - U3 calls `viewport_query_resolve`, the close, then `viewport_query_mint`, which refuses; it does not reach `viewport_query_attribute`, where the Tests+mutation line has the resolved query continue through both. The worker's reason: the product chains the steps, so the mint step's live check refuses first (the report, departure 1). Its base run and M3 ran as predicted.
+  - U2 carries one `REGISTERED MUTATION:` paragraph, M2's. M1's effect on U2, a recorded extra on the Tests+mutation line, is in the report and not in a doc paragraph (departure 4).
+  - The `kernel/README.md` clause naming this piece is the worker's wording (departure 6).
