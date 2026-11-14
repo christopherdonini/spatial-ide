@@ -4,7 +4,15 @@
 import { useEffect, useRef, useState } from "react";
 import type { ChangeEvent } from "react";
 
+import { admitsMatchKeyType } from "../../../../renderer/style-ts/src/style";
 import { recordNamed } from "../console/recorder";
+import type { Filter } from "../skp/types";
+import { sameFilter } from "../table/tableScope";
+import type { TableSource } from "../table/tableSource";
+import { buildCategoryCases, waitForFirstScope } from "./categoryCases";
+import type { FirstScopeWait } from "./categoryCases";
+import Legend from "./Legend";
+import { CATEGORY_NULL_COLOR, CATEGORY_OTHER_COLOR } from "./styleConstants";
 import {
   DEFAULT_STYLE_STATE,
   MAX_OPACITY,
@@ -16,21 +24,42 @@ import {
 import type { StyleState } from "./document";
 
 interface StylePanelProps {
-  /** App-owned style state (NEXT-CUT.md P3) -- this panel never holds a second copy of it, only the
-   * local `expanded` disclosure flag below. `document.ts`'s `toStyleDocument` is the one function
+  /** The view's style state (held in the workspace by `App.tsx`) -- this panel never holds a second copy of it, only the
+   * local `expanded` disclosure flag, the chosen column and the Colour by line below. `document.ts`'s `toStyleDocument` is the one function
    * anywhere in this tree that turns this into a §5a document (binding note 2/5); this panel calls
    * it for display, never re-derives the document's shape itself. */
   style: StyleState;
-  /** Every control below calls this with a FRESH `StyleState` object -- `App.tsx`'s own `setStyle`,
-   * a plain `useState` setter with no viewport/manager/network parameter anywhere in its own
-   * signature (binding note 7: a style change issues no query). */
+  /** Every control below calls this with a FRESH `StyleState` object -- `App.tsx`'s `handleStyleChange`,
+   * which dispatches one `style.set` transition per changed property and has no viewport/manager/network
+   * parameter anywhere in its own signature (binding note 7: a style change issues no query of its own). */
   onChange: (next: StyleState) => void;
   /** B2-1B-RECORDING-PREREGISTRATION.md section 2.5: called once per COMMITTED edit with the whole next
    * `StyleState` -- the native `change` event of each of the four controls (release of a range, close of a
    * colour picker, one keyboard step) and Reset -- never per drag tick, which only `onChange` sees. A Reset says so
    * in `source`: the owner shows a Reset that changes nothing in the console, where no step is recorded. */
   onCommit: (next: StyleState, source?: "reset") => void;
+  /** The open's projected columns with their Arrow types (`projectionFor` over `describe`). The Colour by chooser lists those whose type `renderer/style-ts` admits as a match key; this panel writes no type rule. */
+  columns: readonly { readonly name: string; readonly arrowType: string }[];
+  /** The table's first scope for this open, where the cases are read from (`categoryCases.ts`); `null` before one exists. */
+  source: TableSource | null;
+  /** The view's filter, the first scope's. */
+  filter: Filter | null;
+  /** An export holds the dataset: the apply issues nothing (a table stream is not issued while a consumer is held). */
+  exportHeld: boolean;
 }
+
+/** The Colour by lines (P6 placeholders). */
+const LINE_WAITING = "[P6 placeholder] Reading the first features to find the values.";
+const LINE_EXPORT_HELD = "[P6 placeholder] Colour by is not available while an export is in progress.";
+const LINE_NO_COLUMN = "[P6 placeholder] No column of this file can colour the map.";
+const LINE_NOT_APPLIED: Record<"cancelled" | "refused" | "ended" | "abandoned" | "filter" | "none", string> = {
+  cancelled: "[P6 placeholder] Cancelled. Nothing was applied.",
+  abandoned: "[P6 placeholder] Cancelled. Nothing was applied.",
+  refused: "[P6 placeholder] The values could not be read, so nothing was applied.",
+  ended: "[P6 placeholder] The dataset's session ended, so nothing was applied.",
+  filter: "[P6 placeholder] The filter changed while the values were read, so nothing was applied.",
+  none: "[P6 placeholder] The column holds no value among the features read, so nothing was applied.",
+};
 
 /**
  * The style panel (NEXT-CUT.md style-panel cut P4). Adopts ADR-017 §5a exactly (ADR-022) -- see
@@ -50,18 +79,29 @@ interface StylePanelProps {
  * (`document.ts`'s `DEFAULT_STYLE_STATE` doc comment: "no outline is drawn today"), so a freshly
  * opened dataset shows no outline until the operator raises this control above zero.
  *
- * **Live style is ephemeral** (binding note 4): `style` lives in the workspace; nothing here persists it
- * (no project file, no `localStorage`). A COMMITTED edit is recorded by `onCommit` as a `style.set` step in
- * the kernel's session history (ADR-022 Amendment 1; ADR-036, Proposed), which restores nothing and is not
- * undo. "Reset to default" below is a FRESH EDIT setting `DEFAULT_STYLE_STATE` -- never undo-flavoured
+ * **Where the style lives** (binding note 4): `style` is the view's member of the workspace state; this panel
+ * holds none of it and writes no file (a project save writes it, `project/saveProject.ts`). A COMMITTED edit is
+ * recorded by `onCommit` as a `style.set` step in the kernel's session history (ADR-022 Amendment 1; ADR-036,
+ * Accepted 2026-10-22), which restores nothing and is not undo. "Reset to default" below is a FRESH EDIT setting `DEFAULT_STYLE_STATE` -- never undo-flavoured
  * language or machinery.
  *
  * **No Save, no publish affordance** (D1 standing recommendation; binding note 8): the document
  * text is read-only, selectable, and copyable -- the hero round-trip is "copy this text, paste it
  * at `publish-bundle --style`," never a button anywhere in this tree.
  */
-export default function StylePanel({ style, onChange, onCommit }: StylePanelProps) {
+export default function StylePanel({ style, onChange, onCommit, columns, source, filter, exportHeld }: StylePanelProps) {
   const [expanded, setExpanded] = useState(false);
+  const candidates = columns.filter((c) => admitsMatchKeyType(c.arrowType));
+  const [column, setColumn] = useState(style.fillMatch?.column ?? "");
+  const [line, setLine] = useState<string | null>(null);
+  const [waiting, setWaiting] = useState(false);
+  const waitRef = useRef<FirstScopeWait | null>(null);
+  const filterRef = useRef(filter);
+  filterRef.current = filter;
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
+  // The wait ends with the panel (a dataset change keys a new one): it cancels a stream it issued and leaves a joined one running.
+  useEffect(() => () => waitRef.current?.abandon(), []);
   const fillColorRef = useRef<HTMLInputElement>(null);
   const fillOpacityRef = useRef<HTMLInputElement>(null);
   const outlineColorRef = useRef<HTMLInputElement>(null);
@@ -94,7 +134,7 @@ export default function StylePanel({ style, onChange, onCommit }: StylePanelProp
   useEffect(() => {
     if (!expanded) return;
     const controls: Array<[HTMLInputElement | null, (value: string) => StyleState]> = [
-      [fillColorRef.current, (v) => ({ ...styleRef.current, fillColor: v.toLowerCase() })],
+      [fillColorRef.current, (v) => ({ ...styleRef.current, fillColor: v.toLowerCase(), fillMatch: null })],
       [fillOpacityRef.current, (v) => ({ ...styleRef.current, fillOpacity: Number(v) })],
       [outlineColorRef.current, (v) => ({ ...styleRef.current, outlineColor: v.toLowerCase() })],
       [outlineWidthRef.current, (v) => ({ ...styleRef.current, outlineWidth: Number(v) })],
@@ -118,7 +158,7 @@ export default function StylePanel({ style, onChange, onCommit }: StylePanelProp
     // (never trust a boundary even when the spec already guarantees it); `toStyleDocument`
     // normalizes a second time regardless when the document is built, so this is
     // belt-and-suspenders, not the only guard against a malformed literal (binding note 5).
-    onChange({ ...style, fillColor: e.target.value.toLowerCase() });
+    onChange({ ...style, fillColor: e.target.value.toLowerCase(), fillMatch: null });
   }
 
   function handleFillOpacity(e: ChangeEvent<HTMLInputElement>): void {
@@ -136,6 +176,42 @@ export default function StylePanel({ style, onChange, onCommit }: StylePanelProp
     // S2: see handleFillOpacity's own comment above -- the record moved to the `change`-event
     // effect; this handler is the live style update only.
     onChange({ ...style, outlineWidth: Number(e.target.value) });
+  }
+
+  /** Colour by (section 2.3 (d)): waits for the first scope, builds the cases, and applies them as one edit and one commit. Anything but rows applies nothing. */
+  async function applyColourBy(): Promise<void> {
+    if (source === null || column === "" || exportHeld || waitRef.current !== null) return;
+    const wait = waitForFirstScope(source, filter);
+    waitRef.current = wait;
+    setWaiting(true);
+    setLine(LINE_WAITING);
+    const outcome = await wait.result;
+    if (waitRef.current !== wait) return;
+    waitRef.current = null;
+    setWaiting(false);
+    if (outcome.kind === "not-applied") return setLine(LINE_NOT_APPLIED[outcome.reason]);
+    if (!sameFilter(outcome.snapshot.filter, filterRef.current)) return setLine(LINE_NOT_APPLIED.filter);
+    const { cases, found, other } = buildCategoryCases(outcome.snapshot, column);
+    if (cases.length === 0) return setLine(LINE_NOT_APPLIED.none);
+    const next: StyleState = { ...styleRef.current, fillMatch: { column, cases, onNull: CATEGORY_NULL_COLOR, onUnmatched: CATEGORY_OTHER_COLOR } };
+    onChangeRef.current(next);
+    onCommitRef.current(next);
+    setLine(`[P6 placeholder] Coloured by ${column}: ${found} distinct values found among the first ${outcome.snapshot.count} features read, ${other} of them drawn as Other. A value not among those features also draws as Other.`);
+  }
+
+  function handleCancelColourBy(): void {
+    const wait = waitRef.current;
+    waitRef.current = null;
+    wait?.abandon();
+    setWaiting(false);
+    setLine(LINE_NOT_APPLIED.abandoned);
+  }
+
+  function handleOneColour(): void {
+    const next = { ...style, fillMatch: null };
+    onChange(next);
+    onCommit(next);
+    setLine(null);
   }
 
   function handleReset(): void {
@@ -221,6 +297,34 @@ export default function StylePanel({ style, onChange, onCommit }: StylePanelProp
           <pre className="style-document">{JSON.stringify(toStyleDocument(style), null, 2)}</pre>
         </div>
       )}
+      <div className="style-colour-by">
+        <label>
+          [P6 placeholder] Colour by
+          <select className="style-colour-column" value={column} onChange={(e) => setColumn(e.target.value)}>
+            <option value="">[P6 placeholder] Choose a column</option>
+            {candidates.map((c) => (
+              <option key={c.name} value={c.name}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <button type="button" className="style-colour-apply" disabled={source === null || column === "" || exportHeld || waiting} onClick={() => void applyColourBy()}>
+          [P6 placeholder] Apply
+        </button>
+        {waiting && (
+          <button type="button" className="style-colour-cancel" onClick={handleCancelColourBy}>
+            [P6 placeholder] Cancel
+          </button>
+        )}
+        <button type="button" className="style-one-colour" disabled={style.fillMatch === null} onClick={handleOneColour}>
+          [P6 placeholder] One colour
+        </button>
+        <p className="style-colour-line" role="status">
+          {exportHeld ? LINE_EXPORT_HELD : candidates.length === 0 ? LINE_NO_COLUMN : line}
+        </p>
+        <Legend style={style} />
+      </div>
     </div>
   );
 }

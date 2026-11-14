@@ -13,6 +13,9 @@
  * (question round 66, item 2), each entry's slash word (`command`, P6) and `matchCommandOpener`, the bare `/`. The command bar lists and runs entries. PR B adds
  * `filter.addClause`, the one entry that takes a condition after its word (`/filter`); its caller is the bar.
  *
+ * Milestone 4 PR B (section 2.3 (j)) adds `layer.revealStyle` and `layer.revealTable`, reveal entries only: each opens its tab (the Inspector's Style tab, Activity's Table tab) and
+ * has no chord, bare key or scope words. Their caller is the bar (`/colour`, `/table`); `StudioLayout` runs them itself.
+ *
  * B2 piece 1c (Save project) adds `project.save`: no chord, no bare key, no scope words, no top-bar toggle. Its callers are the bar (`/save`) and App's own control, which
  * takes its label from the entry; `StudioLayout` runs it through `onSaveProject`.
  *
@@ -36,7 +39,9 @@ export type ActionId =
   | "dataset.open"
   | "layer.revealExport"
   | "filter.addClause"
-  | "project.save";
+  | "project.save"
+  | "layer.revealStyle"
+  | "layer.revealTable";
 
 /** A chord is the modifier (Mod) plus one letter. `letter` is the Latin letter matched on
  * `event.key`; `code` is the physical key matched instead when `event.key` is not a Latin letter (a
@@ -76,6 +81,9 @@ export const ACTIONS: readonly ActionEntry[] = [
   { id: "filter.addClause", label: "Add filter", chord: null, bareKey: null, scopeWords: null, command: "filter", takes: "condition" },
   // S1 is the label (a P6 placeholder, so marked) and S22 the word: the bar's `/save`, which carries no marker.
   { id: "project.save", label: "[P6 placeholder] Save project", chord: null, bareKey: null, scopeWords: null, command: "save", takes: "nothing" },
+  // The labels are P6 placeholders, so marked; the words are the bar's `/colour` and `/table`.
+  { id: "layer.revealStyle", label: "[P6 placeholder] Colour by", chord: null, bareKey: null, scopeWords: null, command: "colour", takes: "nothing" },
+  { id: "layer.revealTable", label: "[P6 placeholder] Table", chord: null, bareKey: null, scopeWords: null, command: "table", takes: "nothing" },
 ];
 
 /** The registry's entry for `id`. Every id has one. */

@@ -233,3 +233,64 @@ describe("StudioLayout: the status bar keeps one height (SHELL-STATUS-BAR-ONE-HE
     expect(statusH()).toBe(absent);
   });
 });
+
+describe("StudioLayout: the reveal entries (milestone 4 PR B, section 2.3 (j))", () => {
+  let container: HTMLDivElement;
+  let root: Root;
+
+  beforeEach(() => {
+    container = document.createElement("div");
+    document.body.appendChild(container);
+    root = createRoot(container);
+  });
+
+  afterEach(() => {
+    act(() => {
+      root.unmount();
+    });
+    container.remove();
+  });
+
+  function mount(dataset: boolean): void {
+    act(() => {
+      root.render(<StudioLayout overlays={null} slots={{ ...NO_SLOTS, "inspector.style": <span>the style panel</span>, "activity.table": <span>the table</span> }} layersRow={dataset ? { pathDisplay: "C:/data/a.parquet" } : null} onZoomToLayer={() => {}} />);
+    });
+  }
+
+  const q = <T extends Element = HTMLElement>(selector: string): T => container.querySelector<T>(selector)!;
+  const shown = (selector: string) => !q(selector).hasAttribute("hidden");
+
+  /** Types `draft` into the command bar and presses Enter on it, as a person would. */
+  function runBar(draft: string): void {
+    const input = q<HTMLInputElement>(".command-input");
+    act(() => input.focus());
+    act(() => {
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(input, draft);
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    act(() => {
+      input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", code: "Enter", bubbles: true, cancelable: true }));
+    });
+  }
+
+  it("/colour opens the Inspector if it is closed and selects its Style tab, with a dataset open and not without one", () => {
+    mount(false);
+    runBar("/colour");
+    expect(shown("#inspector-panel-layer"), "with no dataset the entry is not offered, so the Layer tab stays").toBe(true);
+
+    mount(true);
+    act(() => {
+      window.dispatchEvent(new KeyboardEvent("keydown", { key: "i", code: "KeyI", ctrlKey: true, bubbles: true, cancelable: true }));
+    });
+    expect(shown("#region-inspector"), "the Inspector after its chord").toBe(false);
+    runBar("/colour");
+    expect([shown("#region-inspector"), shown("#inspector-panel-style"), shown("#inspector-panel-layer")], "the Inspector, its Style panel and its Layer panel").toEqual([true, true, false]);
+  });
+
+  it("/table opens Activity if it is closed and selects its Table tab", () => {
+    mount(true);
+    expect(shown("#region-activity"), "Activity at the first layout").toBe(false);
+    runBar("/table");
+    expect([shown("#region-activity"), shown("#activity-panel-table"), shown("#activity-panel-console")], "Activity, its Table panel and its Console panel").toEqual([true, true, false]);
+  });
+});

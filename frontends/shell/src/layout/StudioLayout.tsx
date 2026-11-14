@@ -216,6 +216,9 @@ export default function StudioLayout({
         return dataset && onAddClause !== undefined;
       case "project.save":
         return dataset && onSaveProject !== undefined;
+      case "layer.revealStyle":
+      case "layer.revealTable":
+        return dataset;
       default:
         return true;
     }
@@ -241,7 +244,15 @@ export default function StudioLayout({
     else if (id === "selection.zoomTo") onZoomToSelection?.();
     else if (id === "selection.clear") onClearSelection?.();
     else if (id === "project.save") onSaveProject?.();
-    else if (id === "command.focus") {
+    else if (id === "layer.revealStyle") {
+      if (!state.inspector.open) apply({ kind: "toggle", region: "inspector" });
+      if (state.inspector.tab !== "style") apply({ kind: "selectTab", region: "inspector", tab: "style" });
+      return "moved-focus";
+    } else if (id === "layer.revealTable") {
+      if (!state.activity.open) apply({ kind: "toggle", region: "activity" });
+      if (state.activity.tab !== "table") apply({ kind: "selectTab", region: "activity", tab: "table" });
+      return "moved-focus";
+    } else if (id === "command.focus") {
       barRef.current?.take();
       return "moved-focus";
     } else if (id === "dataset.open") return onOpenDataset?.() === "busy" ? "busy" : "done";

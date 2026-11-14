@@ -18,6 +18,9 @@ import {
 import type { ResolvedDrawParams } from "./buildLayers";
 import { decodeBatch, ENCODING_LINESTRING, ENCODING_MULTILINESTRING, ENCODING_POINT } from "./decodeBatch";
 import type { ResidentBatch } from "./decodeBatch";
+import { DEFAULT_STYLE_STATE, parseStyleState, resolveDrawParameters } from "../style/document";
+import type { StyleState } from "../style/document";
+import { attributeBatchIpc } from "../testUtils/attributeBatchIpc";
 import {
   lineL1Positions,
   loadBatchFixture,
@@ -583,5 +586,84 @@ describe("toResolvedDrawParams (DrawParameters -> deck.gl's 0-255 RGBA accessor 
     const result = toResolvedDrawParams({ fillColor: "#000000", fillOpacity: 0, outlineColor: "#112233", outlineWidth: 5 });
     expect(result.outlineColor).toEqual([17, 34, 51, 255]);
     expect(result.outlineWidth).toBe(5);
+  });
+});
+
+describe("buildLayers -- a fill by category (milestone 4 PR B, section 2.3 (c))", () => {
+  const FILL_MATCH = { column: "tag", cases: [{ when: "a", then: "#aa0000" }, { when: "b", then: "#0000bb" }], onNull: "#888888", onUnmatched: "#cccccc" };
+  const state: StyleState = { ...DEFAULT_STYLE_STATE, fillOpacity: 0.5, fillMatch: FILL_MATCH };
+  const style = parseStyleState(state);
+  const drawOf = () => toResolvedDrawParams(resolveDrawParameters(state), style);
+  /** What one value must draw as: the resolver's own answer for it, converted by the same function the product uses. */
+  const colourOf = (value: string | null) => toResolvedDrawParams(style.resolve(value)).fillColor;
+  const accessor = (layer: { props: { getFillColor?: unknown; getColor?: unknown } }, name: "getFillColor" | "getColor") =>
+    layer.props[name] as (d: unknown, info: { index: number }) => number[];
+  /** `base` with the attribute block of a decoded batch of `tags` as its tag column (the real decode over the helper's IPC). */
+  function tagged(base: ResidentBatch, tags: Array<string | null>): ResidentBatch {
+    const { ipc, encoding } = attributeBatchIpc(tags.map((_, i) => BigInt(i)), [{ name: "tag", kind: "utf8", values: tags }]);
+    return { ...base, attributes: decodeBatch("sh_t", 0, ipc, "geometry", encoding, ["tag"], null).attributes };
+  }
+  const frame = () => {
+    const f = new OffsetFrame(100);
+    f.maybeRecenter(2_600_000, 1_200_000);
+    return f;
+  };
+  const polygons = (): ResidentBatch => ({
+    streamHandle: "sh_m",
+    batchSeq: 0,
+    ids: BigUint64Array.from([10n, 20n, 30n, 40n]),
+    ...partsOfFeatures([
+      [[[[2_600_000, 1_200_000], [2_600_004, 1_200_000], [2_600_004, 1_200_004], [2_600_000, 1_200_000]]], [[[2_600_100, 1_200_100], [2_600_101, 1_200_100], [2_600_101, 1_200_101], [2_600_100, 1_200_100]]]],
+      [[[[2_600_200, 1_200_200], [2_600_201, 1_200_200], [2_600_201, 1_200_201], [2_600_200, 1_200_200]]]],
+      [[[[2_600_300, 1_200_300], [2_600_301, 1_200_300], [2_600_301, 1_200_301], [2_600_300, 1_200_300]]]],
+      [[[[2_600_400, 1_200_400], [2_600_401, 1_200_400], [2_600_401, 1_200_401], [2_600_400, 1_200_400]]]],
+    ]),
+    totalVertices: 20,
+    attributes: null,
+    filter: null,
+  });
+
+  it("PB-U3: each datum draws as Style.resolve gives its row's value, for polygons (a part reads its feature's row), points and lines; NULL is No value and an unlisted value is Other", () => {
+    const rows = ["a", null, "zzz", "b"];
+    const draw = drawOf();
+    const polygon = buildLayers([tagged(polygons(), rows)], frame(), draw, "polygonal")[0];
+    const partRows = [0, 0, 1, 2, 3];
+    partRows.forEach((row, datum) => expect(accessor(polygon, "getFillColor")(undefined, { index: datum }), `polygon datum ${datum} (row ${row}, ${String(rows[row])})`).toEqual(colourOf(rows[row])));
+
+    const pointBase = decodeBatch("sh_p", 0, loadBatchFixture("lv95-point-batch"), "geometry", ENCODING_POINT, null, null);
+    const lineBase = decodeBatch("sh_l", 0, loadBatchFixture("lv95-linestring-batch"), "geometry", ENCODING_LINESTRING, null, null);
+    const cycle = ["a", "b", null, "zzz"];
+    for (const [base, kind, name] of [[pointBase, "point", "getFillColor"], [lineBase, "line", "getColor"]] as const) {
+      const values = Array.from({ length: base.ids.length }, (_, i) => cycle[i % cycle.length]);
+      const layer = buildLayers([tagged(base, values)], frame(), draw, kind)[0];
+      for (let datum = 0; datum < base.partCount; datum++) {
+        expect(accessor(layer, name)(undefined, { index: datum }), `${kind} datum ${datum} (${String(values[base.partToRow[datum]])})`).toEqual(colourOf(values[base.partToRow[datum]]));
+      }
+    }
+    expect([colourOf(null), colourOf("zzz")], "No value and Other are not any case's colour").toEqual([[136, 136, 136, 128], [204, 204, 204, 128]]);
+    for (const attributes of [null, "not-held"] as const) {
+      const bare = buildLayers([{ ...polygons(), attributes }], frame(), draw, "polygonal")[0];
+      expect(accessor(bare, "getFillColor")(undefined, { index: 0 }), `a batch with attributes ${String(attributes)} draws as Other`).toEqual(colourOf("zzz"));
+    }
+  });
+
+  it("PB-U5: ten pans evaluate no accessor and leave every layer's update trigger as it was; a new style is a new trigger", () => {
+    const draw = drawOf();
+    let reads = 0;
+    const counted = new Proxy(draw.match!.colours, { get: (target, key, receiver) => { if (typeof key === "string" && /^\d+$/.test(key)) reads += 1; return Reflect.get(target, key, receiver); } });
+    const counting = { ...draw, match: { ...draw.match!, colours: counted } };
+    const f = frame();
+    const batches = [tagged(polygons(), ["a", null, "zzz", "b"])];
+    const triggers: unknown[] = [];
+    for (let pan = 0; pan < 10; pan++) {
+      f.maybeRecenter(2_600_000 + pan * 500, 1_200_000);
+      const layer = buildLayers(batches, f, counting, "polygonal")[0];
+      triggers.push(layer.props.updateTriggers);
+    }
+    expect(reads, "colour reads made while building ten renders").toBe(0);
+    expect(triggers[9], "the trigger after ten pans").toEqual({ getFillColor: [draw.match!.revision] });
+    expect(new Set(triggers.map((t) => JSON.stringify(t))).size, "distinct triggers across the ten renders").toBe(1);
+    expect(drawOf().match!.revision, "a style resolved again").not.toBe(draw.match!.revision);
+    expect(buildLayers(batches, f, FIXED_DRAW, "polygonal")[0].props.updateTriggers, "a one-colour fill").toEqual({});
   });
 });

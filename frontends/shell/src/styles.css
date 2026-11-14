@@ -770,6 +770,44 @@ body,
   overflow-wrap: anywhere;
 }
 
+/* Colour by (milestone 4 PR B): the chooser, its line and the legend, in `.style-panel` outside the collapsed disclosure.
+   The legend scrolls inside its own cap, so a 64-entry style cannot push `.canvas-container` toward its floor. */
+.style-colour-by {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.style-colour-line {
+  flex-basis: 100%;
+  margin: 0;
+}
+
+.style-legend {
+  flex-basis: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-height: 8rem;
+  overflow-y: auto;
+}
+
+.style-legend-entry {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.style-legend-swatch {
+  width: 0.9rem;
+  height: 0.9rem;
+  border-radius: 2px;
+  border: 1px solid rgba(128, 128, 128, 0.6);
+}
+
 /* HISTORY (milestone 1): measured or reasoned on the stacked layout that milestone 1 retired; it is not a description of the current layout. */
 /* NEXT-CUT.md (publish cut) P3: in `.app-main`'s flex column, BELOW `.canvas-container`
    (`App.tsx`'s own placement, same S4 reasoning `.style-panel`'s own comment states) -- collapsed

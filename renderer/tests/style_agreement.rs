@@ -121,3 +121,34 @@ fn rust_agrees_with_the_shared_vector_that_typescript_also_reads() {
         v["expected_legend_rows"].as_u64().unwrap() as usize
     );
 }
+
+/// The match-key rule over the vector's typed rows: Rust admits a column as a match key exactly when
+/// the row says `admitted`. The TypeScript reader of the same rows is `matchKeyRule.test.ts` in the
+/// shell. The Arrow type is built here from its display string, which each row is checked to equal.
+#[test]
+fn the_match_key_rule_admits_exactly_the_vectors_admitted_rows() {
+    let v: serde_json::Value = serde_json::from_str(VECTOR).expect("agreement vector is JSON");
+    let rows = v["match_key_rows"].as_array().unwrap();
+    assert!(!rows.is_empty(), "the vector declares no match_key_rows, so this test would assert nothing");
+    for row in rows {
+        let spelled = row["arrow_type"].as_str().unwrap();
+        let ty = match spelled {
+            "Utf8" => DataType::Utf8,
+            "LargeUtf8" => DataType::LargeUtf8,
+            "Utf8View" => DataType::Utf8View,
+            "UInt64" => DataType::UInt64,
+            "Int32" => DataType::Int32,
+            "Float64" => DataType::Float64,
+            "Boolean" => DataType::Boolean,
+            "Binary" => DataType::Binary,
+            "Date32" => DataType::Date32,
+            "Dictionary(Int32, Utf8)" => DataType::Dictionary(Box::new(DataType::Int32), Box::new(DataType::Utf8)),
+            other => panic!("the vector names an unhandled type `{other}`"),
+        };
+        assert_eq!(ty.to_string(), spelled, "the row's spelling is Arrow's display of the type");
+        let style_src = serde_json::to_string(&v["style"]).unwrap().replace("\"zone\"", "\"key\"");
+        let schema = vec![("key".to_string(), ty)];
+        let admitted = compile(&style_src, &schema, &["key".to_string()]).is_ok();
+        assert_eq!(admitted, row["admitted"].as_bool().unwrap(), "admission of {spelled}");
+    }
+}

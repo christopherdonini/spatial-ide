@@ -35,5 +35,17 @@
     {"key": "agricultural", "fill_color": "#cccccc", "fill_opacity": 0.8, "outline_color": "#202020", "outline_width": 1.0},
     {"key": "civic",        "fill_color": "#cccccc", "fill_opacity": 0.8, "outline_color": "#202020", "outline_width": 1.0},
     {"key": null,           "fill_color": "#888888", "fill_opacity": 0.8, "outline_color": "#202020", "outline_width": 1.0}
+  ],
+  "match_key_rows": [
+    {"arrow_type": "Utf8", "admitted": true},
+    {"arrow_type": "LargeUtf8", "admitted": true},
+    {"arrow_type": "Utf8View", "admitted": true},
+    {"arrow_type": "UInt64", "admitted": false},
+    {"arrow_type": "Int32", "admitted": false},
+    {"arrow_type": "Float64", "admitted": false},
+    {"arrow_type": "Boolean", "admitted": false},
+    {"arrow_type": "Binary", "admitted": false},
+    {"arrow_type": "Date32", "admitted": false},
+    {"arrow_type": "Dictionary(Int32, Utf8)", "admitted": false}
   ]
 }

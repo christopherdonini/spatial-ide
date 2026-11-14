@@ -287,11 +287,19 @@ export interface CloseDatasetResponse {
   cancelled_streams: number;
 }
 
+/** `skp/0.13`, `record_step`: `fillColor`'s categorical value, ADR-017 section 5a's `Match` with its members spelled as the
+ * wire spells them (`protocol/skp/tests/data/v0-record_step-request-style-set-fill-match.json`). Closed, and admitted on `fillColor` only. */
+export interface StyleMatchValue {
+  match: { column: string; cases: { when: string; then: string }[]; on_null: string; on_unmatched: string };
+}
+
 /** `skp/0.12`, `record_step`: the value one `style.set` step sets, one member per property, as
- * `protocol/skp/src/v0/commands.rs`'s `StyleSetParams` has them. A colour is `#rrggbb` in lowercase;
- * the kernel checks the spelling and the range, this client does not. */
+ * `protocol/skp/src/v0/commands.rs`'s `StyleSetParams` has them; `fillColor` also takes a match since `skp/0.13`
+ * (`protocol/skp/SKP-V0.md` section 10.2). A colour is `#rrggbb` in lowercase; the kernel checks the spelling and the
+ * range, this client does not. */
 export type StyleSetParams =
   | { property: "fillColor"; value: string }
+  | { property: "fillColor"; value: StyleMatchValue }
   | { property: "fillOpacity"; value: number }
   | { property: "outlineColor"; value: string }
   | { property: "outlineWidth"; value: { value: number; unit: "px" } };

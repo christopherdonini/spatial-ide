@@ -237,7 +237,7 @@ export function admitAndResetStaleUiState(
      * refs); a fresh dataset starts with no "current viewport" of its own yet. */
     setLastViewportBbox: (value: Bbox | null) => void;
     /** NEXT-CUT.md P4: the scan-liveness machine is App-owned (rendered in both `FilterPanel` and
-     * the canvas status stack's `.scan-incomplete`), so it needs the identical D4-class reset every
+     * the `status.scanIncomplete` slot's `.scan-incomplete`), so it needs the identical D4-class reset every
      * other piece of per-dataset UI state already gets here -- a `.scan-incomplete` naming one
      * dataset's cancelled scan must not survive into the next dataset's UI. */
     setScanState: (value: ScanState) => void;
@@ -691,7 +691,7 @@ export function sessionEndReasonOf(code: string): SessionEndReason {
  * publish parser does.
  *
  * **What it sets, and what each is for:**
- * - the typed status (`sessionEnded`), rendered through `RefusalBlock` in the canvas status stack --
+ * - the typed status (`sessionEnded`), rendered through `RefusalBlock` in the `attention.sessionEnded` slot --
  *   which is what makes `refusalGuidance("engine.source_changed")` (`formatRefusal.ts:70-83`)
  *   actually reach an eye, since `RefusalBlock.tsx:25` is the only product dispatcher of it;
  * - the ref the hover latch reads (`latchedHoverReadout`, `pick.ts`), set synchronously rather than
@@ -852,6 +852,11 @@ export default function App() {
   const admitted = view === null ? null : selectAdmitted(workspace, view.id);
   // Milestone 4 PR A: the open's projection set, fixed for the open (`attributes/projection.ts`): what the canvas's decode expects of every batch.
   const projection = useMemo(() => (admitted === null ? null : projectionFor(admitted.describe)), [admitted]);
+  // The projected columns with their Arrow types: the Colour by chooser's candidates, before `renderer/style-ts` admits or refuses each as a key.
+  const colourColumns = useMemo(
+    () => (admitted === null || projection === null ? [] : admitted.describe.schema.filter((f) => projection.includes(f.name)).map((f) => ({ name: f.name, arrowType: f.arrow_type }))),
+    [admitted, projection]
+  );
   // The dataset whose batches the canvas has kept without attributes (`limits.ts`'s ceiling), for the status item; a new open is a new dataset, so it clears itself.
   const [attributesNotHeld, setAttributesNotHeld] = useState<string | null>(null);
   // NEXT-CUT.md (style-panel cut) P3: App-owned, ephemeral live state (ADR-022's consequences -- no undo; binding note 4;
@@ -1289,7 +1294,8 @@ export default function App() {
     });
     // N4 (P1b, the G6 instrument): merges the pure step snapshot with the CURRENT resident
     // vertex/feature totals read off `WorkingCanvas` at the same moment (`getResidentCounts`) --
-    // read-only, reached only from this DEV-only hook, never from product code. `canvasRef.current`
+    // read-only. This hook is DEV-only, but `getResidentCounts` is not: the candidate session also calls it
+    // (`candidateArmSession.ts`). `canvasRef.current`
     // is `null` whenever no dataset is admitted (e.g. a step measured before the first `openPath`
     // resolves), in which case `residentAtEndStep` is honestly `null`, never a fabricated zero.
     registerE2eHook("residencyEndStep", async () => {
@@ -1547,7 +1553,7 @@ export default function App() {
           // **P3b §2b: and, for this one code, additionally ends the session.** This is the catch
           // both arms' untiled issues land in -- baseline's `issueViewportQuery`, and the candidate
           // session's `reissueUnrestricted`, which rejects with the real `SkpCallError`
-          // (`candidateArmSession.ts:282-284`). Matched on `.skpError.code`, never on prose --
+          // (`candidateArmSession.ts:311`, the `startCandidateArmSession` comment). Matched on `.skpError.code`, never on prose --
           // `isSessionEndedRefusal` (renamed §2d) now also matches a coverage-lost pre-check refusal.
           if (isSessionEndedRefusal(e)) endSession(refusalDetailOf(e), forDataset);
           return;
@@ -1663,7 +1669,7 @@ export default function App() {
         // Milestone 4 PR A: the open's projection set, on the first look and on every tile's query (fixed for the open, `attributes/projection.ts`).
         columns: projectionFor(admitted.describe),
         canvas,
-        // P7: the tile-size sweep selector's own dev-gated read, at the exact point the candidate
+        // P7: the tile-size sweep selector's read, not gated by a build flag, at the exact point the candidate
         // session is constructed -- `getResidencyTileSizeLevel()` returns `null` (unset) unless a
         // driver's own `setResidencyTileSizeLevel` call (before this dataset opened) succeeded, in
         // which case `session`'s own `manager` fixes on it for its whole lifetime (see
@@ -2041,6 +2047,19 @@ export default function App() {
     if (dataset === null) return;
     for (const transition of transitions) stepQueue.enqueue(dataset, transition);
   }
+
+  // Milestone 4 PR B (section 2.3 (h)): a Colour-by on a column other than the last, while the status bar says attributes were not held, issues
+  // the first look again under the active filter; `withinAttributeCeiling` then keeps that column. No step is recorded: the filter did not change.
+  const previousColourColumn = useRef<string | null>(null);
+  const colourColumn = view?.style.fillMatch?.column ?? null;
+  useEffect(() => {
+    const previous = previousColourColumn.current;
+    previousColourColumn.current = colourColumn;
+    const dataset = admittedDatasetRef.current;
+    if (colourColumn === null || colourColumn === previous || dataset === null || attributesNotHeld !== dataset) return;
+    const attempt = () => (dataset === admittedDatasetRef.current && issueQueryRef.current !== null ? issueQueryRef.current(null, null, activeFilterRef.current) : Promise.resolve<RequestOutcome>({ kind: "stopped" }));
+    reportViewportOutcome(requestViewportWithSingleRetry(attempt), dataset);
+  }, [colourColumn]);
 
   /**
    * A card or bar change (milestone 3 section 2.5): `proposeClauseChange` computes the cards and the one combined filter, and an accepted one goes to the kernel through `applyFilterWith` exactly as an Apply does,
@@ -2481,7 +2500,7 @@ export default function App() {
           * **Key prefixed, not the bare `admitted.dataset` string (reviewer gate, style-panel cut
           * P7 fixes).** `FilterPanel` above uses the identical dataset value as its own key -- see
           * its own comment for the duplicate-sibling-key finding this fixes on both ends. */
-        "inspector.style": admitted && <StylePanel key={`style-${admitted.dataset}`} style={style} onChange={handleStyleChange} onCommit={handleStyleCommit} />,
+        "inspector.style": admitted && <StylePanel key={`style-${admitted.dataset}`} style={style} onChange={handleStyleChange} onCommit={handleStyleCommit} columns={colourColumns} source={tableSource} filter={activeFilter} exportHeld={exportHeld} />,
         /* Milestone 2's slots (SHELL-MIGRATION-MILESTONE-2-PREREGISTRATION.md §2.2, §2.6): the tool switch in the top bar (never over the
          * map) and the Feature tab, whose summary subscribes to the view box. The ended-selection notice is also a status bar item
          * (§2.3); the ceiling's refusal shows in the Feature tab only. */

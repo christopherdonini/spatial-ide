@@ -26,7 +26,7 @@ const deepFreeze = <T extends object>(value: T): T => {
   for (const inner of Object.values(value)) if (typeof inner === "object" && inner !== null) deepFreeze(inner);
   return Object.freeze(value);
 };
-const edited: StyleState = { fillColor: "#112233", fillOpacity: 0.5, outlineColor: "#ffffff", outlineWidth: 4 };
+const edited: StyleState = { fillColor: "#112233", fillOpacity: 0.5, outlineColor: "#ffffff", outlineWidth: 4, fillMatch: null };
 const box = (xmin: number, ymin: number, xmax: number, ymax: number) => ({ xmin, ymin, xmax, ymax });
 const pickOf = (id: bigint) => ({ streamHandle: "stream-1", batchSeq: 0, id, anchor: [0, 0] as [number, number] });
 
@@ -94,6 +94,32 @@ describe("UA4: transitions are pure and typed, and a style edit is one transitio
   it("applying a style edit's transitions in order yields the next style", () => {
     const result = styleTransitions(DEFAULT_STYLE_STATE, edited).reduce(applyViewTransition, view);
     expect(result.style).toEqual(edited);
+  });
+});
+
+describe("PB-U6: a fill by category is one style.set on fillColor, and a literal ends it", () => {
+  const byZone: StyleState = { ...edited, fillMatch: { column: "zone", cases: [{ when: "a", then: "#aa0000" }], onNull: "#888888", onUnmatched: "#cccccc" } };
+  const matchSet: ViewTransition = {
+    action: "style.set",
+    params: { property: "fillColor", value: { match: { column: "zone", cases: [{ when: "a", then: "#aa0000" }], on_null: "#888888", on_unmatched: "#cccccc" } } },
+  };
+
+  it("PB-U6: a match sets fillMatch from the wire's names, a literal clears it, and the transition does not write the view", () => {
+    const frozen = deepFreeze(structuredClone(view));
+    const matched = applyViewTransition(frozen, matchSet);
+    expect(matched.style.fillMatch, "the member a match sets").toEqual(byZone.fillMatch);
+    expect(matched.style.fillColor, "the literal colour a match leaves").toBe(DEFAULT_STYLE_STATE.fillColor);
+    expect(frozen.style.fillMatch, "the view the transition read").toBeNull();
+    const literal = applyViewTransition(matched, { action: "style.set", params: { property: "fillColor", value: "#112233" } });
+    expect([literal.style.fillColor, literal.style.fillMatch], "a literal fill").toEqual(["#112233", null]);
+  });
+
+  it("styleTransitions emits one match transition for a new match, a literal when the match ends, and nothing for equal states", () => {
+    expect(styleTransitions(edited, byZone), "a match over the same other properties").toEqual([matchSet]);
+    expect(styleTransitions(byZone, { ...byZone, fillMatch: { ...byZone.fillMatch!, onNull: "#000001" } }).length, "a changed No value colour").toBe(1);
+    expect(styleTransitions(byZone, structuredClone(byZone)), "an equal match").toEqual([]);
+    expect(styleTransitions(byZone, edited).map((t) => t.params.value), "the match ending at the same fillColor").toEqual(["#112233"]);
+    expect(styleTransitions(edited, byZone).reduce(applyViewTransition, { ...view, style: edited }).style, "applying the edit").toEqual(byZone);
   });
 });
 

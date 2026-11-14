@@ -15,10 +15,12 @@
  * builds a style document, and every one of the refusals `renderer/src/style.rs::parse` enforces is
  * closed here at construction, not validated afterward:
  *
- * - **Literal-only.** `StyleDocumentV0`'s type has no `match` variant at all -- there is no field to
- *   set that would produce one. So categorical/match styling is still unavailable live. The wire
- *   does not prevent it: the shell's `viewport_query` calls carry the open's projection set
- *   (`projectionFor`; `null` when no column is projectable). There is no wider model here.
+ * - **One `match`, on `fill_color` only.** `StyleDocumentV0`'s type admits a `match` on `fill_color` and
+ *   a literal everywhere else, so a second `match`, or one on another property, has no field to be set
+ *   through. The match is written only when `StyleState.fillMatch` is set and survives the closure
+ *   below: 1 to 64 cases with distinct `when` values, `on_null` and `on_unmatched` always present, the
+ *   colours normalised. Otherwise the fill is the literal. Which column and which cases are not this
+ *   module's decision: the Colour by apply builds them (`categoryCases.ts`).
  * - **`#rrggbb`, lowercase.** `normalizeColor` lowercases and validates against the exact grammar
  *   `renderer/src/style.rs::Rgb::parse` accepts; anything else (a caller bug, not a control a real
  *   panel would ever produce) falls back to `#000000` rather than reaching the document malformed.
@@ -30,12 +32,12 @@
  *   literals, never assembled by spreading arbitrary state -- there is no code path that could add
  *   an extra key.
  *
- * ## Ephemeral only
+ * ## Where the state lives
  *
- * `StyleState` is plain in-memory React state, exactly like the camera. Nothing here persists it
- * (no project file, no `localStorage`, no session-recoverable state) -- NEXT-CUT.md binding note 4 /
- * ADR-022's consequences: persisting a style anywhere owes ADR-006 class-2 machinery and docs/11
- * obligations this cut does not take on.
+ * `StyleState` is the `style` member of the view in the workspace state (`workspaceState.ts`), changed
+ * only through `style.set` transitions (`viewTransitions.ts`). Saving a project writes this module's
+ * document as the workspace's `style` (`project/saveProject.ts`); nothing here writes a file itself,
+ * and no `localStorage` or session-recoverable copy of it exists.
  */
 
 import { Style } from "../../../../renderer/style-ts/src/style";
@@ -50,13 +52,23 @@ export const MAX_OPACITY = 1;
 export const MIN_OUTLINE_WIDTH = 0;
 export const MAX_OUTLINE_WIDTH = 64;
 
-/** The panel's editable state (NEXT-CUT.md's model section, verbatim field set). Held in React
- * state by `App.tsx`; nothing else in the shell may hold a second copy of it. */
+/** A fill by category: the match column, its cases in order, and the colours of a NULL and of a value no
+ * case names. Plain data; `toStyleDocument` is what closes it into a document. */
+export interface FillMatch {
+  readonly column: string;
+  readonly cases: readonly { readonly when: string; readonly then: string }[];
+  readonly onNull: string;
+  readonly onUnmatched: string;
+}
+
+/** The panel's editable state (NEXT-CUT.md's model section) as a view's `style` member; see this file's
+ * top comment for where it lives. `fillMatch` is null for a one-colour fill. */
 export interface StyleState {
   fillColor: string;
   fillOpacity: number;
   outlineColor: string;
   outlineWidth: number;
+  fillMatch: FillMatch | null;
 }
 
 /**
@@ -77,6 +89,7 @@ export const DEFAULT_STYLE_STATE: StyleState = {
   fillOpacity: 180 / 255,
   outlineColor: "#000000",
   outlineWidth: 0,
+  fillMatch: null,
 };
 
 const HEX_COLOR_RE = /^#[0-9a-f]{6}$/;
@@ -95,25 +108,52 @@ function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
 }
 
-/** One property's value in the §5a document -- deliberately the ONLY shape this module's document
- * type admits (never `{"match": ...}`; see this file's own top doc comment). */
+/** One property's value in the §5a document: a literal. */
 export interface LiteralValue<T> {
   literal: T;
 }
 
-/** The §5a document (ADR-017), restricted to what a literal-only style can express. This is a
- * strict subset of the full schema `renderer/src/style.rs`/`renderer/style-ts/src/style.ts` parse
- * (both admit `match` too) -- narrower on purpose, so the TYPE ITSELF is one more thing that makes a
- * `match` unreachable from this module, not only the runtime code that happens to never write one. */
+/** `fill_color`'s other shape: §5a's `match`, with the field names the document spells. */
+export interface MatchValue {
+  match: { column: string; cases: { when: string; then: string }[]; on_null: string; on_unmatched: string };
+}
+
+/** The §5a document (ADR-017), restricted to a `match` on `fill_color` only. This is a strict subset of
+ * the full schema `renderer/src/style.rs`/`renderer/style-ts/src/style.ts` parse (both admit `match` on
+ * any property) -- narrower on purpose, so the type itself keeps a second match unreachable. */
 export interface StyleDocumentV0 {
   style_version: 1;
   layer: {
     geometry: "polygon";
-    fill_color: LiteralValue<string>;
+    fill_color: LiteralValue<string> | MatchValue;
     fill_opacity: LiteralValue<number>;
     outline_color: LiteralValue<string>;
     outline_width: LiteralValue<number>;
   };
+}
+
+/** The most cases `renderer/src/style.rs` admits in one match. */
+const MAX_MATCH_CASES = 64;
+
+/** `fill_color`: the match when `fillMatch` is set and closes to at least one case, else the literal.
+ * The closure keeps the first of two cases with the same `when` and the first 64, and normalises every
+ * colour; a match left with no case falls back to the literal rather than reaching the document empty. */
+function fillColorValue(state: StyleState): LiteralValue<string> | MatchValue {
+  const match = state.fillMatch;
+  if (match !== null && match.column !== "") {
+    const seen = new Set<string>();
+    const cases: { when: string; then: string }[] = [];
+    for (const c of match.cases) {
+      if (cases.length === MAX_MATCH_CASES) break;
+      if (seen.has(c.when)) continue;
+      seen.add(c.when);
+      cases.push({ when: c.when, then: normalizeColor(c.then) });
+    }
+    if (cases.length > 0) {
+      return { match: { column: match.column, cases, on_null: normalizeColor(match.onNull), on_unmatched: normalizeColor(match.onUnmatched) } };
+    }
+  }
+  return { literal: normalizeColor(state.fillColor) };
 }
 
 /** The document producer: `StyleState` -> the §5a document. The only function in this tree that
@@ -124,7 +164,7 @@ export function toStyleDocument(state: StyleState): StyleDocumentV0 {
     style_version: 1,
     layer: {
       geometry: "polygon",
-      fill_color: { literal: normalizeColor(state.fillColor) },
+      fill_color: fillColorValue(state),
       fill_opacity: { literal: clamp(state.fillOpacity, MIN_OPACITY, MAX_OPACITY) },
       outline_color: { literal: normalizeColor(state.outlineColor) },
       outline_width: { literal: clamp(state.outlineWidth, MIN_OUTLINE_WIDTH, MAX_OUTLINE_WIDTH) },
@@ -140,12 +180,16 @@ export function toStyleDocument(state: StyleState): StyleDocumentV0 {
  * actually accepts; and the resolved value the panel would display (P4) or hand to the canvas (P3)
  * came from the resolver, not from `state` directly.
  *
- * `style.resolve(null)` always: a shell-produced document is always literal-only (never a `match` --
- * see `StyleDocumentV0`), so every branch (`null`/a value/`unmatched`) `resolve` could take returns
- * the identical draw parameters; `null` is as good a key as any to ask for them with.
+ * `style.resolve(null)` always: the draw parameters this returns are the panel's one-colour values,
+ * and for a style with a `match` they are the `on_null` branch's. The per-feature colours of a match
+ * come from `canvas/matchGroups.ts` through the same resolver, never from here.
  */
 export function resolveDrawParameters(state: StyleState): DrawParameters {
-  const doc = toStyleDocument(state);
-  const style = Style.parse(JSON.stringify(doc), "shell-style");
-  return style.resolve(null);
+  return parseStyleState(state).resolve(null);
+}
+
+/** `state` as the imported resolver holds it: the document `toStyleDocument` produced, parsed by the same `Style.parse` the bundle viewer
+ * uses. Its `groupFor`, `groups` and `legend` are what the canvas colours by and the Style tab shows (`canvas/matchGroups.ts`, `Legend.tsx`). */
+export function parseStyleState(state: StyleState): Style {
+  return Style.parse(JSON.stringify(toStyleDocument(state)), "shell-style");
 }

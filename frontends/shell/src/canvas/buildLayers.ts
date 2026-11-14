@@ -4,9 +4,10 @@
 import { COORDINATE_SYSTEM, Position } from "@deck.gl/core";
 import { PathLayer, ScatterplotLayer, SolidPolygonLayer } from "@deck.gl/layers";
 
-import type { DrawParameters } from "../../../../renderer/style-ts/src/style";
+import type { DrawParameters, Style } from "../../../../renderer/style-ts/src/style";
 import type { GeometryKind, ResidentBatch } from "./decodeBatch";
 import { checkPickCeiling } from "./limits";
+import { rowGroups } from "./matchGroups";
 import type { OffsetFrame } from "./offsetFrame";
 
 /** `layerId -> batch`, never index-range arithmetic -- the other half of the declared sharding
@@ -23,17 +24,35 @@ export function batchForLayerId(
 }
 
 /**
- * The subset of a resolved style's draw parameters this fill-only layer actually consumes, already
+ * The fill by category (section 2.3 (c)): the parsed `Style` that resolves it, one RGBA per `style.groups` entry in the same order
+ * (so `colours[g]` is group `g`'s `fillColor` with the style's `fillOpacity`), and the revision that names this style. `revision` is what
+ * a layer's `updateTriggers` carries: it changes when a style is resolved again and at no other time, so a pan, a recenter or a
+ * render leaves every layer's colours as they were.
+ */
+export interface MatchFill {
+  readonly style: Style;
+  readonly colours: readonly (readonly [number, number, number, number])[];
+  readonly revision: number;
+}
+
+let matchFillRevision = 0;
+
+/**
+ * The subset of a resolved style's draw parameters the layers below actually consume, already
  * mapped onto deck.gl's own accessor convention (NEXT-CUT.md P2; ADR-022 point 4: "frontends supply
  * rendering plumbing only ... mapping resolved draw parameters onto deck.gl layer props is client
  * work"). `fillColor` is 0-255 RGBA -- `@deck.gl/layers/solid-polygon-layer`'s own `DEFAULT_COLOR`
  * convention for `getFillColor` -- never the style document's own units (`#rrggbb` + a separate
- * `0..1` opacity). The shell's style documents are literal-only (`style/document.ts`'s
- * `StyleDocumentV0` has no `match` variant), so this is exactly ONE colour for a whole style, not
- * a per-feature table -- a plain array, deck.gl's own "constant attribute" shape, is what this
- * type carries and what `buildLayers` below passes straight through unchanged. */
+ * `0..1` opacity). A one-colour style is exactly ONE colour, a plain array, deck.gl's own "constant
+ * attribute" shape, passed straight through unchanged. A style with a match on its fill also carries
+ * `match`: each layer then takes a colour accessor that reads the datum's group
+ * (`canvas/matchGroups.ts`) and indexes `match.colours`, and `updateTriggers` names the style's revision.
+ */
 export interface ResolvedDrawParams {
   fillColor: [number, number, number, number];
+  /** Present only while the style has a match on its fill; `fillColor` is then the No value colour, and the layers colour each datum by
+   * `match` instead. Absent for a one-colour fill, which every layer draws exactly as before. */
+  match?: MatchFill;
   /** RGBA, alpha always 255 -- style v0 (ADR-017 §5a) has no separate outline-opacity field, only
    * `fill_opacity`; an outline is drawn fully opaque or not at all (`outlineWidth === 0`). */
   outlineColor: [number, number, number, number];
@@ -58,17 +77,38 @@ const HEX_TRIPLET_RE = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/;
  * render path's own declared recovery policy (ADR-010 rule 7) is never "throw from inside a style
  * conversion nobody asked to validate."
  */
-export function toResolvedDrawParams(draw: DrawParameters): ResolvedDrawParams {
+export function toResolvedDrawParams(draw: DrawParameters, style?: Style): ResolvedDrawParams {
   const channel = (hex: string | undefined): number => (hex ? parseInt(hex, 16) : 0);
-  const fillMatch = HEX_TRIPLET_RE.exec(draw.fillColor.toLowerCase());
-  const alpha = Math.round(Math.min(1, Math.max(0, draw.fillOpacity)) * 255);
+  const rgba = (colour: string, opacity: number): [number, number, number, number] => {
+    const m = HEX_TRIPLET_RE.exec(colour.toLowerCase());
+    return [channel(m?.[1]), channel(m?.[2]), channel(m?.[3]), Math.round(Math.min(1, Math.max(0, opacity)) * 255)];
+  };
   const outlineMatch = HEX_TRIPLET_RE.exec(draw.outlineColor.toLowerCase());
-  return {
-    fillColor: [channel(fillMatch?.[1]), channel(fillMatch?.[2]), channel(fillMatch?.[3]), alpha],
+  const resolved: ResolvedDrawParams = {
+    fillColor: rgba(draw.fillColor, draw.fillOpacity),
     outlineColor: [channel(outlineMatch?.[1]), channel(outlineMatch?.[2]), channel(outlineMatch?.[3]), 255],
     outlineWidth: draw.outlineWidth,
   };
+  if (style !== undefined && style.matchColumn !== null) {
+    resolved.match = { style, colours: style.groups.map((g) => rgba(g.fillColor, g.fillOpacity)), revision: ++matchFillRevision };
+  }
+  return resolved;
 }
+
+/** The fill props of one batch's layer: today's constant colour, or, under a match, a colour per datum (the datum's row through
+ * `partToRow`, its group from `rowGroups`) with the style revision as the only trigger that re-evaluates it. */
+function fillProps(batch: ResidentBatch, draw: ResolvedDrawParams) {
+  const match = draw.match;
+  if (match === undefined) return { color: draw.fillColor, revision: undefined };
+  const groups = rowGroups(batch, match.style);
+  const toRow = batch.partToRow;
+  const color = (_datum: unknown, info: { index: number }) => match.colours[groups[toRow[info.index]]];
+  return { color, revision: match.revision };
+}
+
+/** `updateTriggers` for the accessor `name`: the style revision under a match, and no key at all for a constant colour. */
+const triggersOf = (name: string, fill: { revision: number | undefined }): { updateTriggers?: Record<string, unknown[]> } =>
+  fill.revision === undefined ? {} : { updateTriggers: { [name]: [fill.revision] } };
 
 /**
  * Per-batch offset-relative geometry, cached by `ResidentBatch` object identity and the frame
@@ -349,6 +389,12 @@ export type LineLayer = PathLayer<Position[]>;
  * so `dataChanged` reads `false` for the (typically large) majority of a pan or zoom step's resident
  * batches -- unlike `getFillColor`, `data`'s reference stability WAS load-bearing all along; this
  * file simply had not yet supplied it.
+ *
+ * **Under a match (milestone 4 PR B), the colour is a function of the datum.** The accessor reads the part's row (`partToRow`), that
+ * row's group (`matchGroups.ts`, which asks the imported resolver) and `draw.match.colours` at that group. A function reads as
+ * equal to any other function in `compareProps` (the `accessor` type's `equal`, above), so what makes deck.gl evaluate it again is
+ * `updateTriggers`, which each such layer sets to `draw.match.revision`. That number changes when a style is resolved again and
+ * never on a pan, a zoom or a recentre, so those evaluate no accessor.
  */
 export function buildLayers(
   batches: readonly ResidentBatch[],
@@ -383,6 +429,7 @@ export function buildLayers(
   const layers: (PolygonalLayer | ScatterplotLayer<Position>)[] = [];
   for (const batch of batches) {
     checkPickCeiling(batch.partCount);
+    const fill = fillProps(batch, draw);
     if (kind === "line") {
       // The lines cut (SH-L2): one pickable `PathLayer` per batch, never a `SolidPolygonLayer`. The
       // style's fill and outline are mapped onto the symbol as rendering plumbing (ADR-022 Decision 4,
@@ -419,7 +466,8 @@ export function buildLayers(
           coordinateSystem: COORDINATE_SYSTEM.CARTESIAN,
           pickable: true,
           widthUnits: "pixels",
-          getColor: draw.fillColor,
+          getColor: fill.color,
+          ...triggersOf("getColor", fill),
           getWidth: LINE_WIDTH_PX,
           jointRounded: true,
           capRounded: true,
@@ -444,7 +492,8 @@ export function buildLayers(
           filled: true,
           radiusUnits: "pixels",
           getRadius: POINT_RADIUS_PX,
-          getFillColor: draw.fillColor,
+          getFillColor: fill.color,
+          ...triggersOf("getFillColor", fill),
           stroked: draw.outlineWidth > 0,
           lineWidthUnits: "pixels",
           getLineColor: draw.outlineColor,
@@ -467,7 +516,8 @@ export function buildLayers(
         coordinateSystem: COORDINATE_SYSTEM.CARTESIAN,
         pickable: true,
         filled: true,
-        getFillColor: draw.fillColor,
+        getFillColor: fill.color,
+        ...triggersOf("getFillColor", fill),
       })
     );
 

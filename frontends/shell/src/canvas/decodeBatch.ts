@@ -91,16 +91,19 @@ export class UnexpectedProjectionError extends Error {
 }
 
 /**
- * The projected columns of one batch, held as one named copy out of the IPC message (ADR-004: the message buffer is released
- * with the message). `data` is an Arrow IPC stream of those columns alone, in the declared order, whose row `i` is the row `i` of
- * `ids`; `attributes/values.ts`'s `readRow` is the only reader. `rows` is `null` as decoded; a duplicate drop sets it to the source
- * row of each kept row (`tileResidentSet.ts`). `bytes` is `data.byteLength`, the figure `RESIDENT_ATTRIBUTE_MAX_BYTES` sums.
+ * The attribute columns of one batch, held as one named copy out of the IPC message (ADR-004: the message buffer is released
+ * with the message). `data` is an Arrow IPC stream of those columns alone, whose row `i` is the row `i` of `ids`; `attributes/values.ts`
+ * reads it and nothing else does. `kept` says which columns: `"projection"` is every column of the open, in the declared order, as
+ * decoded; `"match"` is the one Colour-by column alone, which a batch past the attribute ceiling keeps (`limits.ts`), and `readRow`
+ * gives such a batch as not-held. `rows` is `null` as decoded; a duplicate drop sets it to the source row of each kept row
+ * (`tileResidentSet.ts`). `bytes` is `data.byteLength`, the figure `RESIDENT_ATTRIBUTE_MAX_BYTES` sums.
  */
 export interface BatchAttributes {
   readonly names: readonly string[];
   readonly data: Uint8Array;
   readonly bytes: number;
   readonly rows: Int32Array | null;
+  readonly kept: "projection" | "match";
 }
 
 const sameNames = (a: readonly string[] | null, b: readonly string[]): boolean => a !== null && a.length === b.length && a.every((n, i) => n === b[i]);
@@ -127,7 +130,7 @@ function copyAttributes(table: Table, geometryColumn: string, projection: readon
     }
   }
   const data = tableToIPC(table.select([...projection]), "stream");
-  return { names: [...projection], data, bytes: data.byteLength, rows: null };
+  return { names: [...projection], data, bytes: data.byteLength, rows: null, kept: "projection" };
 }
 
 /** One ring: its `[x, y]` vertices in the dataset's own CRS, f64. */
@@ -176,8 +179,8 @@ export interface ResidentBatch {
   partCount: number;
   totalVertices: number;
   /** The projected attribute columns, co-indexed with `ids` from the same decode pass (ADR-010 rule 2): the block `copyAttributes`
-   * made, `null` when the open projects no column, or `"not-held"` when the block would pass `RESIDENT_ATTRIBUTE_MAX_BYTES`
-   * (`limits.ts`; the geometry stays). REQUIRED: every site that rebuilds a batch must carry it (milestone 4 PR A, Amendment 3 item 5). */
+   * made, `null` when the open projects no column, or, when the block would pass `RESIDENT_ATTRIBUTE_MAX_BYTES` (`limits.ts`;
+   * the geometry stays), the match column's block while a Colour-by column is current and `"not-held"` otherwise. REQUIRED: every site that rebuilds a batch must carry it (milestone 4 PR A, Amendment 3 item 5). */
   attributes: BatchAttributes | "not-held" | null;
   /** The filter the stream that delivered this batch was issued with (milestone 4 PR C, section 2.4 (c)): set in the decode call from the manager's `onBatch`, carried as the same object by
    * every rebuild, and read by the table's second scope and by the click's captured member. `null` when the stream was issued with none. REQUIRED, so every site that rebuilds a batch carries it. */
