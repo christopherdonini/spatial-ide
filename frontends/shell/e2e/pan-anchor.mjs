@@ -160,6 +160,10 @@ const EDGE_MARGIN_PX = 2 * TOLERANCE_BUFFER_PX;
 //  - there-and-back-net has no honest product mutation (a trace scale cancels in a net). Its control is on the input: a copy of
 //    this file kept outside the repository, with the return drag 60 px shorter than the outward one, run against the unmodified
 //    product, failed both sizes with "net residual -58.00 buffer px (tol 4)" and passed every other check.
+//  - M-TRACE, OBSERVED AT 39d724fc67958dd199ccb2ac140334e6c298bc66, reverted, the worktree clean before and after: `traceViewState` in
+//    src/canvas/WorkingCanvas.tsx (the e2e seam) given `zoom + 1e-6`. Expected: `PASS  small: pixel-spaces-coincide`, no further check
+//    line, progress lines naming the first call's zoom until the 600 s timeout ends the run (exit 124). Observed: that PASS line, then
+//    19 progress lines to "setCam: still waiting for the view-state line with zoom -0.99999: 570 s after the 500 ms minimum, 1 other lines arrived", then rc=124.
 const FILL_STABLE_READS = 3;
 const FILL_READ_GAP_MS = 300;
 const FILL_BOUND_MS = 20_000;
