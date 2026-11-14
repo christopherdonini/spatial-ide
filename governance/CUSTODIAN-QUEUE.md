@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `44c852fae54b284e0cf24c5d873d2a70b7220094d874958ae1b0761c1d9b46fa`) at `2026-11-14T15:11:07.346Z`.
+Generated from `PLAN.yaml` (sha256 `1d7d80f3d1c5c78c28780d0b7c35d95f32a945b97a994def2e0583bea5265aaf`) at `2026-11-14T16:01:53.292Z`.
 
 ## 1. Next
 
@@ -36,6 +36,7 @@ Generated from `PLAN.yaml` (sha256 `44c852fae54b284e0cf24c5d873d2a70b7220094d874
 - **lod-tier-identity-binds-file-name** — The LOD tier builder takes the identity name DuckDB bound and looks it up among the file's own footer names, so a renamed identity column reaches a different column there — blocked by: port-2-macos-l1-and-app-dirs
 - **module-docs-drift-sweep-area-d** — Kernel and engine module docs: the never-refuses and unreachable claims the Table, record_step and publish have overtaken, the withdrawn cancellation bound, and smaller statements (drift sweep area D, findings 1 to 6) — blocked by: b2-piece-1c-save-and-reopen
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
+- **colour-by-refill-keeps-the-view** — A Colour-by on a new column while attributes are not held refills the map without fitting the camera again (its form decides the shape and may edit residency/) — blocked by: b1-shell-half, open-first-look-fills-fit-view
 - **open-first-look-fills-fit-view** — After an open the view is partial and nothing says so, on every file over 10,000 rows: the open plans the tiles of the view the fit shows, so the view fills without a pan and the status line speaks (S1, the human's grade) — blocked by: b1-shell-half
 - **session-end-lines-name-coverage-lost-as-source-change** — The hover readout and the Feature tab word every session end as a source change, coverage-lost included, although the engine says coverage-lost is never a source change (milestone 4 PR C gate 1, the architect's C1 note) — blocked by: b1-shell-half
 - **session-log-token-redaction-rests-on-page-code** — The session token never reaching the session log rests on page code: binding_log_session_event appends page-supplied text verbatim, the page holds the token, and the data plane's Session::redact has only a test caller — blocked by: b2-piece-1c-save-and-reopen
@@ -133,7 +134,6 @@ Generated from `PLAN.yaml` (sha256 `44c852fae54b284e0cf24c5d873d2a70b7220094d874
 - **skp-spec-and-protocol-comments-drift-sweep-c** — SKP-V0.md live sections and the protocol and shell doc comments brought current to main (drift sweep area C, findings 2 to 11, and area A, finding 3), after 1c (phase `prototype`) — never queued until placed
 - **comment-line-cites-kin-docs-audit-c** — Product and e2e comments whose line cites point at moved text: origin.rs on AI_DEVELOPMENT.md, engine/src/error.rs and the admission-remediation e2e script on crs.rs (the docs audits, Task C kin) (phase `prototype`) — never queued until placed
 - **pan-anchor-drag-waits-for-its-own-lines** — e2e/pan-anchor.mjs: drag waits for the view-state lines its own gesture produces, not a wall-clock quiet period (test only) (phase `prototype`) — never queued until placed
-- **colour-by-refill-keeps-the-view** — A Colour-by on a new column while attributes are not held refills the map without fitting the camera again (its form decides the shape and may edit residency/) (phase `prototype`) — never queued until placed
 
 ### Unscheduled
 
