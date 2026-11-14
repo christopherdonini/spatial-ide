@@ -413,3 +413,41 @@ Assertions in the named tests only. No timing, no benchmark and no docs/08 numbe
    - waits on processes found by a command-line pattern, one of which may not have been this project's; it was only waited on, never stopped.
 7. **Next.** A draft PR, then both gates, one packet (§9), when no other heavy run of this project is on the machine: one heavy run at a time. At this writing the pan-anchor fix's gate is running. Then the words of §2.6 to the advisor, then C3.
 - **Unchanged:** everything else.
+
+### Amendment 3 — budget overrun, §7 not edited (class 8); both gates closed at c8f8bdca; item 63 withdrawn; out of draft; the closing record (with class 1, written after the results were seen)
+
+*Written by the custodian after both gates' last reports and CI at the final head were seen. References and hashes only. The rulings, each filed under `state/directives/`: the advisor's ADV-2026-11-14-16 item 6, ADV-2026-11-14-17 items 5, 7, 8, 9 and 10, ADV-2026-11-14-19 items 5 (f) and 6, and ADV-2026-11-14-20 items 9 and 11, under the human's delegation of 2026-11-13. Nothing above is edited.*
+
+1. **Budget overrun, §7 not edited** (class 8, ADV-2026-11-14-16 item 6).
+   - Declared: §7, about 530 changed lines over 7 code and test files, `protocol/skp/SKP-V0.md` among them.
+   - Final, at the last head C4 (c8f8bdca9bd8b43b7ab4be59d9f3078d6dd2f6a6), by §21c's counting rule, since §7 names no command: `git diff --numstat 695e1303794ed390d305d07fca592694f33f589e c8f8bdca9bd8b43b7ab4be59d9f3078d6dd2f6a6`, insertions plus deletions over the non-generated code and tests, 710 over 6 files: `kernel/src/session_history.rs` 264, `kernel/src/project/mod.rs` 42, `protocol/skp/src/v0/commands.rs` 7, `kernel/tests/project_save.rs` 124, `kernel/tests/project_save_skp.rs` 208, `kernel/tests/session_history.rs` 65. §7's seventh file, `protocol/skp/SKP-V0.md`, is doc text, 12 lines. The whole diff is 751 lines over 11 files.
+   - The reason: the rule in `kernel/src/session_history.rs` and the three test files each came out above §7's estimate for it (Amendment 1 item 3). Nothing was trimmed.
+   - Amendments 1 (item 3) and 2 (item 3) recorded the size as class 1 under ADV-2026-11-14-04; ADV-2026-11-14-16 item 6 names the class. They are not edited. This opens no gate route.
+
+2. **The gates** (§9; the re-gates of ADV-2026-11-14-17 item 10 (b) and ADV-2026-11-14-20 items 8 and 9), gate-log rows 747 to 751, the reports under `state/consults/gates/`:
+   - at C2 (5e6b79bc): the architect, PASS WITH NOTES (`2026-11-14-second-open-history-before-1c-step-3-gate-architect.md`); the reviewer, PASS WITH NOTES, in two parts (`2026-11-14-second-open-history-before-1c-step-3-gate-reviewer-attempt-1-stop.md`, `2026-11-14-second-open-history-before-1c-step-3-gate-reviewer.md`);
+   - at C3 (dc0bd937): the reviewer, FAIL on Amendment 2's wording (`2026-11-14-second-open-history-before-1c-step-3-c3-gate-reviewer.md`); it stays FAIL;
+   - at C3 and C4: the architect, one attempt in two parts, PASS WITH NOTES (`2026-11-14-second-open-history-before-1c-step-3-c3-gate-architect.md`, `2026-11-14-second-open-history-before-1c-step-3-c3-gate-architect-part-2.md`);
+   - at C4: the reviewer, PASS (`2026-11-14-second-open-history-before-1c-step-3-c4-gate-reviewer-attempt-3.md`), the verdict that closes the C3 FAIL (ADV-2026-11-14-20 item 9 (e)).
+   - No Correctness or Evidence finding is open.
+
+3. **Item 63 withdrawn** (ADV-2026-11-14-17 item 5). The withdrawal is that ruling's. At C3 the item's three lines and one blank line went; the number is not reused. The sitting's list (the PLAN node `operator-sitting-queue`) held no line for item 63's sight, so no line is added for it (item 5 (c)).
+
+4. **ADR-036's Amendment 2** is ADV-2026-11-14-17 item 7 as changed by ADV-2026-11-14-19 and ADV-2026-11-14-20 (ADV-2026-11-14-19 item 5 (f); ADV-2026-11-14-20 item 11). The text the merge check compares is ADV-2026-11-14-20 item 5's fence. At C4 the ADR from its `## Amendment 2 — ` line to its end equals that fence (3894 bytes, sha256 1d22039774296690174d9b5eb18d497b768f2c2f16c8bd6d84ac7f62ec45cdc4), and the ADR at C4 is main's ADR, one blank line, then that fence.
+
+5. **The pins** (ADV-2026-11-14-17 item 9). Item 43's second comment pins ten ranges of `kernel/src/session_history.rs` at C1 (a2fbab2ca5ddda114ca18cd94392198b30dd94c1). Each range is byte-equal at C4, by the custodian's script: C3 and C4 change only `KNOWN-LIMITATIONS.md` and ADR-036, and commit 1 (8fb839e9) changes none of the pinned lines. None is re-pinned.
+
+6. **D-1** (ADV-2026-11-14-19 item 6). `kernel/README.md` is not edited in this PR. Lead-data's update after the merge replaces its "Declared limits" line, `kernel/README.md:395` on main at eedcbcef, with the architect's replacement line (the C3 report, D-1), which drops 63 and changes no other number: `- **Declared limits:** KNOWN-LIMITATIONS 5, 6, 8, 12, 16, 21, 28, 30, 32, 43, 47, 62`. Its commit is named in the node's closing record.
+
+7. **W10, the P6 sight line for S5** (§2.6; ADV-2026-11-14-17 item 8 (e)): the reviewer's D7 words (`2026-11-14-second-open-history-before-1c-step-3-gate-reviewer-attempt-1-stop.md`, D7), the custodian's line on the sitting's list after the merge:
+   - "S5 (frontends/shell/src/project/saveProject.ts:27-28): no longer shown when a second open of one file, whose recorded changes the saved workspace holds, is saved to another folder, which now replies written (second-open-history-before-1c-step-3; ADV-2026-11-13-20 item 2); the string is unchanged."
+   - The cite, checked against main at eedcbcef: lines 27 and 28 of that file are S5's doc comment and its constant `MARK_WITHHELD_NOTICE` (sha256 c546c086e02028e8f06581ecb8f7cb596a7effde9cf413613863c592f03596e5 over the two lines).
+
+8. **The words in the diff** and what holds them, for the merge check: item 43's clause and three sentences, ADV-2026-11-14-17 item 3; its two comments, item 4, with ADV-2026-11-14-20 item 6 (b)'s span in the second; under item 4 (e) the worker changed the "no line bounds" claim to the records half; item 63, item 5 (b); Amendment 2, item 4 above. W5, W6, W8 and W9 at 8fb839e9 are doc text applied under AUTONOMY §31 (d) with no re-gate (ADV-2026-11-14-17 item 8 (a) to (d)), and the PR body lists them. No DRAFT or unruled wording reaches main (§8).
+
+9. **CI at the final head C4.** `gh pr checks 318`, read at 2026-11-14T19:18:51Z, before the move out of draft: all 13 rows pass. The runs for c8f8bdca, each completed with success: 43626310965 (Rust fmt, pull_request), 43626310990 (DCO sign-off, pull_request), 43626310957 (Ported notices, pull_request), 43626310938 (Exposure scan, pull_request), 43626310956 (Governance CI — plan, queue, site, pull_request), 43626310966 (Product CI — Rust workspace, pull_request), 43626311065 (Product CI — shell, pull_request), 43626306150 (Ported notices, push), 43626306158 (Governance CI — plan, queue, site, push).
+
+10. **Out of draft.** The PR body was set to the final text and read back equal, and in the same chain the PR was marked ready, at 2026-11-14T19:19:15Z. The body asks for a merge by a merge commit that keeps C1 reachable from main, never a squash (Amendment 1 item 2).
+
+11. **For round 77**, as the ledger entries of 2026-11-14 give them: the custodian's C1 brief order (Amendment 1 item 1) and its C4 brief's once-check; the C4 worker's verify-quotes run over two files; the advisor's own two untrue clauses (ADV-2026-11-14-19 item 8; ADV-2026-11-14-20 item 13); the reviewer's line 295 for 293 (ADV-2026-11-14-20 item 12); the architect's Grep count.
+- **Unchanged:** everything else.
