@@ -90,25 +90,28 @@ async function readBox(page) {
 }
 
 let jit = 0;
-const SETCAM_BOUND_MS = 5500; // the 500 ms minimum plus five polls of 1000 ms
 async function setCam(page, vs, tx, ty, z) {
   // Jitter the zoom so deck's uncontrolled `initialViewState` deep-equal guard (this file's own
   // WorkingCanvas header, entry 85) never drops a repeated identical reset.
   jit += 1;
   const zoom = z + jit * 1e-5;
   vs.length = 0;
-  await page.evaluate((a) => window.__SPATIAL_E2E__.e2eSetViewState(a[0], a[1], a[2]), [tx, ty, zoom]);
+  const seam = await page.evaluate((a) => window.__SPATIAL_E2E__.e2eSetViewState(a[0], a[1], a[2]), [tx, ty, zoom]);
+  if (seam !== true) throw new Error(`setCam: the seam resolved ${String(seam)}, not true, for zoom ${zoom}`);
   await sleep(500);
   // Returns the first line in `vs` whose zoom is exactly the `zoom` just passed: the seam logs one line, carrying that
   // argument, and a pan keeps the zoom, so a line of the previous gesture (which can land after the clear above, the listener
-  // pushing one CDP round trip late) never carries it. Such a late line stays in `vs` and is not read. A precondition on
-  // which line is s0, not a property under test; `s1` (`last(vs)` after `drag`) is not covered by it. The wait is bounded
-  // by SETCAM_BOUND_MS after the call; on no match the Error names setCam, the zoom, the bound and the other lines that arrived.
+  // pushing one CDP round trip late) never carries it. Such a late line stays in `vs` and is not read. The wait has no
+  // wall-clock bound: it ends when that line is in `vs`, when the seam resolves anything but `true` (thrown above), or when
+  // the run's hard timeout kills the process, which leaves no result. Every 30th turn of 1000 ms it prints a progress line
+  // (no verdict words) and ends nothing. A precondition on which line is s0, not a property under test; `s1` (`last(vs)`
+  // after `drag`) is not covered by it.
   const own = () => vs.find((l) => l.zoom === zoom);
-  for (let i = 0; i < 5 && !own(); i++) await sleep(1000);
-  const line = own();
-  if (!line) throw new Error(`setCam: no view-state line with zoom ${zoom} within ${SETCAM_BOUND_MS} ms of the call; ${vs.length} other lines arrived`);
-  return line;
+  for (let turn = 1; !own(); turn++) {
+    await sleep(1000);
+    if (!own() && turn % 30 === 0) console.log(`setCam: still waiting for the view-state line with zoom ${zoom}: ${turn} s after the 500 ms minimum, ${vs.length} other lines arrived`);
+  }
+  return own();
 }
 const last = (vs) => vs[vs.length - 1];
 
