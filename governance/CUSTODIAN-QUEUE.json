@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-14T16:01:53.292Z",
-  "plan_hash": "1d7d80f3d1c5c78c28780d0b7c35d95f32a945b97a994def2e0583bea5265aaf",
+  "generated_at": "2026-11-14T16:50:33.627Z",
+  "plan_hash": "564b707e8bb089663aa283273674bcb26ad26a3744c96ba2e129fb51ade77f36",
   "priorities_approved": true,
   "next": {
     "id": "lod-tier-tests-own-tier-folder",
@@ -58,7 +58,7 @@
         "opened": "2026-11-12",
         "done": null
       },
-      "summary": "STARTED 2026-11-14 under ADV-2026-11-14-17 item 13 (state/directives/2026-11-14-advisor-ruling-adv-2026-11-14-17-318-words-item-43-three-sentences-item-63-withdrawn-adr-036-amendment-2-clause-checked-at-c3-entry-14-starts.md): lead-data drafting its five-line form, dispatched at 2026-11-14T15:53:33Z by its transcript; its code only after the form is committed; rule (00) at the code's dispatch against #318's and PR B's paths; shared holds only, yielding to slots 1 and 2; port-2 keeps its place. Before: PLACED 2026-11-12 by the human's message of 2026-11-12 (13:07Z), item 4 (state/directives/2026-11-12-s1-fix-open-a-c-s6b-now-pr-b-class-9-now-1c-five-308-c1-words-platform-reports-order-no-git-stash.md, line 41): the three untested places named by #308's gates (state/consults/gates/2026-11-12-adr-035-close-races-note-gate-architect.md and state/consults/gates/2026-11-12-adr-035-close-races-note-gate-reviewer.md) are one kernel test node, S3, in the filler queue. Tests only; no change to the kernel's behaviour. NEXT: the filler queue; its short form committed before any code."
+      "summary": "FORM COMMITTED 2026-11-14 (governance/forms/kernel/CLOSE-RACES-THREE-UNTESTED-KERNEL-TESTS-PREREGISTRATION.md): lead-data's draft filed (state/consults/2026-11-14-close-races-three-untested-kernel-tests-five-line-form-lead-data-draft.md), handed back 2026-11-14T16:02:38Z; OPEN-1 to OPEN-4 taken (A) under item 4 of 2026-10-31, held to 2026-11-16; OPEN-3's condition and rule (00) held by git at main ddb38739; the reviewer and the architect from dispatch (section 36); the status ready until the code's dispatch, then in progress naming its branch. NEXT: the code worker in a new worktree, its cargo target on D:, shared holds only, yielding to slots 1 and 2. Before: STARTED 2026-11-14 under ADV-2026-11-14-17 item 13 (state/directives/2026-11-14-advisor-ruling-adv-2026-11-14-17-318-words-item-43-three-sentences-item-63-withdrawn-adr-036-amendment-2-clause-checked-at-c3-entry-14-starts.md): lead-data drafting its five-line form, dispatched at 2026-11-14T15:53:33Z by its transcript; its code only after the form is committed; rule (00) at the code's dispatch against #318's and PR B's paths; shared holds only, yielding to slots 1 and 2; port-2 keeps its place. Before: PLACED 2026-11-12 by the human's message of 2026-11-12 (13:07Z), item 4 (state/directives/2026-11-12-s1-fix-open-a-c-s6b-now-pr-b-class-9-now-1c-five-308-c1-words-platform-reports-order-no-git-stash.md, line 41): the three untested places named by #308's gates (state/consults/gates/2026-11-12-adr-035-close-races-note-gate-architect.md and state/consults/gates/2026-11-12-adr-035-close-races-note-gate-reviewer.md) are one kernel test node, S3, in the filler queue. Tests only; no change to the kernel's behaviour. NEXT: the filler queue; its short form committed before any code."
     },
     {
       "id": "publish-approval-kernel-parity",
