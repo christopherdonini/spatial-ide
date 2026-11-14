@@ -13,8 +13,8 @@
 //! - [`resolver`]: [`resolver::judge`], which decides at save which locators the file carries.
 //! - [`Projects::save`]: the save, in order: the checks that can refuse it, the judgment, the
 //!   document, the machine store's files, the atomic replace of `project.spatial`, and last the
-//!   history's two moves (the record move, when no project holds the file's record yet, and the
-//!   `saved-here` mark), neither of which touches a record that another project of this run holds.
+//!   history's two moves (binding the open to the project, which moves the open's own record under
+//!   the project if it has one, and the `saved-here` mark in the project's record).
 //! - [`Projects::save_project`]: the same save as an SKP command (SKP-V0 §11): the request's checks,
 //!   the workspace built from its wire form, and each [`SaveFailure`] as its one SKP code.
 //!
@@ -146,13 +146,10 @@ pub enum HistoryMark {
 /// Why no `saved-here` mark was written. The project file was written in each case.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Withheld {
-    /// The history holds no step for this dataset.
+    /// The history holds no step for this open of the dataset.
     NoStepRecorded,
     /// The workspace differs from what the recorded steps reach, in the member named.
     WorkspaceDiffers(&'static str),
-    /// The history's record for the dataset's file belongs to another project this run has saved,
-    /// so none of this project's saves of this open writes a mark there.
-    RecordHeldByAnotherProject,
     /// The history could not take the move or the line; the history's own message.
     HistoryUnwritable(String),
 }
@@ -230,10 +227,11 @@ impl Projects {
     ///   reader refuses, since either could hold what a rewrite would lose.
     /// - **Every save** writes `locations.json`, judges the locators ([`resolver::judge`]), checks
     ///   the document against the reader's rules, and replaces `project.spatial` whole or not at all.
-    ///   Only then does the history take its moves: the record move, when the history holds a
-    ///   record for the file and no project holds it yet, and a `saved-here` mark when the steps
-    ///   reach the workspace and no other project holds the record. A history that cannot take them
-    ///   does not undo the save; the result says so.
+    ///   Only then does the history take its moves: the open is bound to the project, which moves
+    ///   the open's own record under the project's identity if the open has one, and a `saved-here`
+    ///   mark is written in the project's record when the steps reach the workspace. A second open
+    ///   of the same file is another open, with its own record until its own first save. A history
+    ///   that cannot take the moves does not undo the save; the result says so.
     pub fn save(
         &self,
         name: &str,
@@ -248,7 +246,11 @@ impl Projects {
             Some(k) => (k.project, k.folder, k.uri),
             None => {
                 let folder = folder.ok_or(SaveFailure::FolderRequired)?;
-                (mint_identity(), folder.to_path_buf(), DatasetUri::mint())
+                (
+                    mint_identity(),
+                    folder.to_path_buf(),
+                    self.recorder.dataset_uri(name),
+                )
             }
         };
         let target = folder.join(PROJECT_FILE_NAME);
@@ -310,7 +312,7 @@ impl Projects {
             });
         }
 
-        let history_mark = self.history(ds, &project, &workspace);
+        let history_mark = self.history(name, &project, &workspace);
         Ok(Saved {
             project,
             history_mark,
@@ -348,27 +350,24 @@ impl Projects {
         })
     }
 
-    /// The history's moves after a save: the record moves under the project if it has not and no
-    /// project holds it, and the mark is written if the steps reach the workspace and no other
-    /// project holds the record.
-    fn history(&self, ds: &Dataset, project: &ProjectUri, workspace: &Workspace) -> HistoryMark {
+    /// The history's moves after a save: the open the catalog names `name` is bound to the project
+    /// (its own record, if it has one, moves under the project), and the mark is written in the
+    /// project's record if the steps reach the workspace.
+    fn history(&self, name: &str, project: &ProjectUri, workspace: &Workspace) -> HistoryMark {
         let unwritable = |e: spatial_skp::v0::SkpError| {
             HistoryMark::Withheld(Withheld::HistoryUnwritable(e.message))
         };
-        if let Err(e) = self.recorder.adopt_project(ds, project) {
+        if let Err(e) = self.recorder.adopt_project(name, project) {
             return unwritable(e);
         }
         match self
             .recorder
-            .mark_saved_here(ds, project, |reached| differs(reached, workspace))
+            .mark_saved_here(project, |reached| differs(reached, workspace))
         {
             Ok(SavedHere::Written) => HistoryMark::Written,
             Ok(SavedHere::NoStep) => HistoryMark::Withheld(Withheld::NoStepRecorded),
             Ok(SavedHere::Differs(member)) => {
                 HistoryMark::Withheld(Withheld::WorkspaceDiffers(member))
-            }
-            Ok(SavedHere::HeldByAnotherProject) => {
-                HistoryMark::Withheld(Withheld::RecordHeldByAnotherProject)
             }
             Err(e) => unwritable(e),
         }

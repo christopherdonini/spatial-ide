@@ -33,8 +33,8 @@ use spatial_skp::v0::{
 };
 
 use crate::dataset_ref::{
-    bounded, closed, join, malformed, observed_json, parse_observed, state_json, Admission,
-    DatasetRef, DatasetUri, RefParseError,
+    bounded, closed, join, malformed, observed_json, parse_observed, state_json, DatasetRef,
+    DatasetUri, RefParseError,
 };
 use crate::permission::audit::{log::data_dir, rfc3339_utc_now};
 use crate::project::strict_json::{self, Layout, Limits, StrictError};
@@ -119,17 +119,68 @@ impl<W: Write> History<W> {
     }
 }
 
-/// One record: one opened file's history, from its first step.
+/// What holds a record: one open (by its catalog name) until a save binds that open to a project,
+/// then that project. The name is held in memory only and is never written to disk.
+#[derive(Clone, Debug, PartialEq, Eq)]
+enum Holder {
+    Open(String),
+    Project(ProjectUri),
+}
+
+/// One open dataset as the recorder knows it, from the first time the recorder is asked about it.
+struct Open {
+    /// The catalog name the commands carry. Memory only.
+    name: String,
+    /// The open's one dataset identity: minted once, and carried by the history's header, by every
+    /// step's `data.dataset` and by the project file's dataset entry.
+    uri: DatasetUri,
+    /// The project a save has bound this open to ([`StepRecorder::adopt_project`]).
+    bound: Option<ProjectUri>,
+}
+
+impl Open {
+    /// The holder of this open's record: the project once bound, the open until then.
+    fn holder(&self) -> Holder {
+        match &self.bound {
+            Some(project) => Holder::Project(project.clone()),
+            None => Holder::Open(self.name.clone()),
+        }
+    }
+}
+
+/// One record: the history of the steps of one holder, from the holder's first step. An open has a
+/// record of its own until a save binds it to a project, and from then on its steps go to the
+/// project's record. A second open of the same file is another open and has its own record.
 struct Record {
     dir: PathBuf,
-    uri: DatasetUri,
-    path: PathBuf,
-    admission: Admission,
+    holder: Holder,
     history: History<File>,
     last_step: Option<String>,
-    /// The project this record belongs to, once a save has moved it there ([`StepRecorder::adopt_project`]).
-    project: Option<ProjectUri>,
     reached: Reached,
+}
+
+/// What the recorder holds in memory: the opens it has been asked about and the records it made.
+struct State {
+    opens: Vec<Open>,
+    records: Vec<Record>,
+}
+
+impl State {
+    /// The open named `name`; the first mention adds it, with a dataset identity minted then.
+    fn open(&mut self, name: &str) -> &mut Open {
+        let at = match self.opens.iter().position(|o| o.name == name) {
+            Some(at) => at,
+            None => {
+                self.opens.push(Open {
+                    name: name.to_string(),
+                    uri: DatasetUri::mint(),
+                    bound: None,
+                });
+                self.opens.len() - 1
+            }
+        };
+        &mut self.opens[at]
+    }
 }
 
 /// What the steps recorded for one opened file reach: the last value each one set. A save compares
@@ -177,13 +228,11 @@ impl Reached {
 pub enum SavedHere {
     /// One `saved-here` line was written after the last step.
     Written,
-    /// The history holds no step for this file, so there is nothing for a mark to follow.
+    /// The project's record holds no step, or no record is held by the project, so there is
+    /// nothing for a mark to follow.
     NoStep,
     /// The workspace differs from what the steps reach, in the member named; no mark was written.
     Differs(&'static str),
-    /// The record of this file belongs to another project than the one saving; nothing was
-    /// written to it.
-    HeldByAnotherProject,
 }
 
 /// Records committed steps. Built once by the shell's binding with the store root and the host it
@@ -191,7 +240,7 @@ pub enum SavedHere {
 pub struct StepRecorder {
     host: Arc<SkpHost>,
     root: PathBuf,
-    records: Mutex<Vec<Record>>,
+    state: Mutex<State>,
 }
 
 /// The default store root, `<per-user data directory>/spatial-ide/sessions`, from the one resolver
@@ -205,7 +254,10 @@ impl StepRecorder {
         Self {
             host,
             root,
-            records: Mutex::new(Vec::new()),
+            state: Mutex::new(State {
+                opens: Vec::new(),
+                records: Vec::new(),
+            }),
         }
     }
 
@@ -215,10 +267,20 @@ impl StepRecorder {
         &self.host
     }
 
+    /// The dataset identity of the open the catalog names `open`: the one `record_step` writes in
+    /// the history, minted here if neither it nor a save has asked for it yet. A first save gives
+    /// the project file's dataset entry this same identity, whether the save comes before or after
+    /// the open's first step.
+    pub(crate) fn dataset_uri(&self, open: &str) -> DatasetUri {
+        let mut state = self.state.lock().unwrap_or_else(|e| e.into_inner());
+        state.open(open).uri.clone()
+    }
+
     /// `record_step` (SKP-V0 §10.3), the checks in order: the version, the catalog entry, the live
-    /// check (the one point it linearizes at), the action and its admission, then the record
-    /// (created at the first step for an opened file), the line, its bounds and its members
-    /// against the reader's rules, one write and one flush, and the reply.
+    /// check (the one point it linearizes at), the action and its admission, then the record (the
+    /// one held by the open the handle names, or by the project the open is bound to; created at
+    /// that holder's first step), the line, its bounds and its members against the reader's rules,
+    /// one write and one flush, and the reply.
     pub fn record_step(&self, req: RecordStepRequest) -> Result<RecordStepResponse, SkpError> {
         check_version(&req.skp)?;
         let name = req.dataset.as_str();
@@ -235,25 +297,27 @@ impl StepRecorder {
         ]);
         let dependencies = dependencies_json(&ds, &prepared.referenced)?;
         let observed = Json::obj([("observed", observed_json(&ds.descriptor().observation()))]);
+        let mut state = self.state.lock().unwrap_or_else(|e| e.into_inner());
+        let open = state.open(name);
+        let (uri, holder) = (open.uri.clone(), open.holder());
         // Unreachable through `SkpHost::open_dataset`, which gives every assertion a definition.
-        let reference = DatasetRef::linked(DatasetUri::mint(), &ds).map_err(|e| {
+        let reference = DatasetRef::linked(uri, &ds).map_err(|e| {
             SkpError::session_history_unwritable(&format!("no reference can be built: {e}"))
         })?;
 
-        let mut records = self.records.lock().unwrap_or_else(|e| e.into_inner());
-        let same =
-            |r: &Record| r.path == ds.path() && same_claims(&r.admission, reference.admission());
+        let records = &mut state.records;
+        let same = |r: &Record| r.holder == holder;
         let at = match records.iter().position(same) {
             Some(i) => i,
             None => {
-                records.push(self.create(&reference, &ds)?);
+                records.push(self.create(&reference, &ds, holder)?);
                 records.len() - 1
             }
         };
         let rec = &mut records[at];
         let id = format!("step_{}", hex32());
         let data = Json::obj([
-            ("dataset", Json::str(rec.uri.as_str())),
+            ("dataset", Json::str(reference.uri().as_str())),
             ("identity", observed),
         ]);
         let parent = rec.last_step.as_deref();
@@ -267,57 +331,56 @@ impl StepRecorder {
         Ok(RecordStepResponse {})
     }
 
-    /// A save's first move (piece 1c; ADR-036 Amendment 1, item 5). The record of the file `ds` was
-    /// opened over, if it has one and no project holds it yet, becomes the project's record:
-    /// `<store root>/<project hex>/`. The kept lines are copied under a header whose `project` is
+    /// A save's first move (piece 1c; ADR-036 Amendment 1, item 5): the open named `open` is bound
+    /// to `project`. If the open has a record of its own, that record becomes the project's record,
+    /// `<store root>/<project hex>/`: the kept lines are copied under a header whose `project` is
     /// the project's URI, with one write and one sync, into a new file that is locked before it is
     /// renamed into place, so it is never visible unlocked. The `unsaved-` record is removed last,
-    /// after this record holds the new file. Later steps continue the moved record. Nothing happens
-    /// when there is no record or a project already holds it.
-    pub fn adopt_project(&self, ds: &Dataset, project: &ProjectUri) -> Result<(), SkpError> {
-        let mut records = self.records.lock().unwrap_or_else(|e| e.into_inner());
-        let Some(at) = find(&records, ds) else {
-            return Ok(());
-        };
-        let rec = &mut records[at];
-        if rec.project.is_some() {
+    /// after this record holds the new file. If the open has no record, none is made here: its
+    /// first step creates the project's record. Later steps continue the project's record. Nothing
+    /// happens when the open is already bound. When the move fails the open stays unbound and the
+    /// error is returned, so the next save tries again.
+    pub fn adopt_project(&self, open: &str, project: &ProjectUri) -> Result<(), SkpError> {
+        let mut state = self.state.lock().unwrap_or_else(|e| e.into_inner());
+        if state.open(open).bound.is_some() {
             return Ok(());
         }
-        let dir = self.root.join(project.hex());
-        let (file, length) = copy_under(rec, &dir, project)?;
-        let moved = std::mem::replace(&mut rec.dir, dir);
-        let mut history = History::new(file, |f| f.sync_all());
-        history.bytes = length;
-        // The old handle is dropped here, which frees the old file's lock before it is removed.
-        rec.history = history;
-        rec.project = Some(project.clone());
-        let _ = std::fs::remove_file(moved.join(HISTORY));
-        let _ = std::fs::remove_file(moved.join(LOCATIONS));
-        let _ = std::fs::remove_dir(&moved);
+        let own = Holder::Open(open.to_string());
+        if let Some(at) = state.records.iter().position(|r| r.holder == own) {
+            let rec = &mut state.records[at];
+            let dir = self.root.join(project.hex());
+            let (file, length) = copy_under(rec, &dir, project)?;
+            let moved = std::mem::replace(&mut rec.dir, dir);
+            let mut history = History::new(file, |f| f.sync_all());
+            history.bytes = length;
+            // The old handle is dropped here, which frees the old file's lock before it is removed.
+            rec.history = history;
+            rec.holder = Holder::Project(project.clone());
+            let _ = std::fs::remove_file(moved.join(HISTORY));
+            let _ = std::fs::remove_file(moved.join(LOCATIONS));
+            let _ = std::fs::remove_dir(&moved);
+        }
+        state.open(open).bound = Some(project.clone());
         Ok(())
     }
 
     /// A save's second move: one `{"mark":{"kind":"saved-here","after":<last step>,"at":…}}` line
-    /// through the same append path as a step (one write, one flush), for the file `ds` was opened
-    /// over, for the project `project` that is saving. When the record `ds` finds is held by a
-    /// project other than `project`, nothing is written to it, at this save and at every later one
-    /// of the same open ([`SavedHere::HeldByAnotherProject`]). `differs` is given what the steps
-    /// reach, under the same lock the line is written under, and names a member of the workspace
-    /// that the steps do not reach; then nothing is written. The line is checked against the
-    /// reader's own rules before it is written.
+    /// through the same append path as a step (one write, one flush), in the record the project
+    /// `project` that is saving holds. When the project holds no record, or its record has no
+    /// step, nothing is written ([`SavedHere::NoStep`]). `differs` is given what the steps reach,
+    /// under the same lock the line is written under, and names a member of the workspace that the
+    /// steps do not reach; then nothing is written. The line is checked against the reader's own
+    /// rules before it is written.
     pub fn mark_saved_here(
         &self,
-        ds: &Dataset,
         project: &ProjectUri,
         differs: impl FnOnce(&Reached) -> Option<&'static str>,
     ) -> Result<SavedHere, SkpError> {
-        let mut records = self.records.lock().unwrap_or_else(|e| e.into_inner());
-        let Some(rec) = find(&records, ds).map(|at| &mut records[at]) else {
+        let mut state = self.state.lock().unwrap_or_else(|e| e.into_inner());
+        let held = Holder::Project(project.clone());
+        let Some(rec) = state.records.iter_mut().find(|r| r.holder == held) else {
             return Ok(SavedHere::NoStep);
         };
-        if rec.project.as_ref().is_some_and(|held| held != project) {
-            return Ok(SavedHere::HeldByAnotherProject);
-        }
         let Some(after) = rec.last_step.clone() else {
             return Ok(SavedHere::NoStep);
         };
@@ -338,7 +401,8 @@ impl StepRecorder {
     /// Normal end of the application: delete this run's records, their files and folders, and
     /// nothing else. A record another run left is never touched.
     pub fn end_session(&self) {
-        let records = std::mem::take(&mut *self.records.lock().unwrap_or_else(|e| e.into_inner()));
+        let records =
+            std::mem::take(&mut self.state.lock().unwrap_or_else(|e| e.into_inner()).records);
         for Record { dir, history, .. } in records {
             drop(history);
             let _ = std::fs::remove_file(dir.join(HISTORY));
@@ -347,10 +411,14 @@ impl StepRecorder {
         }
     }
 
-    /// A new record: its folder, `locations.json`, and the locked history with its header. The
-    /// header is checked against the reader's rules before anything is made, and a failure after
-    /// the folder exists removes what was written before it is returned, so a refusal leaves no
-    /// record that no run owns (`end_session` clears only the records in `records`).
+    /// A new record for `holder`: its folder, `locations.json`, and the locked history with its
+    /// header. A record held by an open is `unsaved-<hex>/` and its header says the session has not
+    /// saved a project; a record held by a project is `<project hex>/` and its header names the
+    /// project, as a moved record's does. `create_dir` refuses a folder that exists, so a folder
+    /// another run left is never written into or removed. The header is checked against the
+    /// reader's rules before anything is made, and a failure after this call made the folder
+    /// removes what was written before it is returned, so a refusal leaves no record that no run
+    /// owns (`end_session` clears only the records in `state.records`).
     ///
     /// The removal is driven by the test named below, in `kernel/tests/session_history.rs`, through
     /// `StepRecorder::new` and `record_step` alone:
@@ -361,16 +429,29 @@ impl StepRecorder {
     /// ACL, so an inheritable deny-write ACE on the root lets the `create_dir` below succeed and
     /// makes the write of `locations.json` fail, and the folder must then be gone. The test
     /// returns at once on any other operating system.
-    fn create(&self, reference: &DatasetRef, ds: &Dataset) -> Result<Record, SkpError> {
-        let header = canonical(&header_object(reference.to_json()))?;
+    fn create(
+        &self,
+        reference: &DatasetRef,
+        ds: &Dataset,
+        holder: Holder,
+    ) -> Result<Record, SkpError> {
+        let project = match &holder {
+            Holder::Project(project) => Some(project),
+            Holder::Open(_) => None,
+        };
+        let header = canonical(&header_object(reference.to_json(), project))?;
         reader_accepts(&header, true)?;
-        let dir = self.root.join(format!("unsaved-{}", hex32()));
+        let folder = match project {
+            Some(project) => project.hex().to_string(),
+            None => format!("unsaved-{}", hex32()),
+        };
+        let dir = self.root.join(folder);
         std::fs::create_dir_all(&self.root)
             .and_then(|()| std::fs::create_dir(&dir))
             .map_err(|e| unwritable("the record folder", &e))?;
         // Every handle `write_record` opened is closed when it returns an error, so the removal
         // below meets no open file.
-        self.write_record(&dir, reference, ds, &header)
+        self.write_record(&dir, reference, ds, &header, holder)
             .inspect_err(|_| drop(std::fs::remove_dir_all(&dir)))
     }
 
@@ -381,6 +462,7 @@ impl StepRecorder {
         reference: &DatasetRef,
         ds: &Dataset,
         header: &str,
+        holder: Holder,
     ) -> Result<Record, SkpError> {
         let entry = Json::obj([
             ("dataset", Json::str(reference.uri().as_str())),
@@ -406,24 +488,14 @@ impl StepRecorder {
             .map_err(|e| unwritable("the history lock", &e))?;
         let mut rec = Record {
             dir: dir.to_path_buf(),
-            uri: reference.uri().clone(),
-            path: ds.path().to_path_buf(),
-            admission: reference.admission().clone(),
+            holder,
             history: History::new(file, |f| f.sync_all()),
             last_step: None,
-            project: None,
             reached: Reached::default(),
         };
         rec.history.append(header, true)?;
         Ok(rec)
     }
-}
-
-/// The record of the file `ds` was opened over: the one `record_step` continues for it.
-fn find(records: &[Record], ds: &Dataset) -> Option<usize> {
-    let reference = DatasetRef::linked(DatasetUri::mint(), ds).ok()?;
-    let same = |r: &Record| r.path == ds.path() && same_claims(&r.admission, reference.admission());
-    records.iter().position(same)
 }
 
 /// The record `rec` holds, copied into `dir` (a new folder) under a header whose `project` is
@@ -529,14 +601,19 @@ fn reader_accepts(line: &str, header: bool) -> Result<(), SkpError> {
         .map_err(|e| refuse(e.to_string()))
 }
 
-/// ADR-036 §6's header for a session history that has not saved a project.
-fn header_object(dataset_entry: Json) -> Json {
-    let not_saved = state_json(("not-yet-saved", "this session has not saved a project"));
+/// ADR-036 §6's header for a session history: its `project` is the project the record belongs to,
+/// and, for a record that no save has bound to a project, the state that this session has not saved
+/// one.
+fn header_object(dataset_entry: Json, project: Option<&ProjectUri>) -> Json {
+    let project = match project {
+        Some(project) => Json::str(project.as_str()),
+        None => state_json(("not-yet-saved", "this session has not saved a project")),
+    };
     Json::obj([
         ("format", Json::str("spatial-steps")),
         ("version", Json::Int(1)),
         ("purpose", Json::str("session-history")),
-        ("project", not_saved),
+        ("project", project),
         ("actions", Json::UInt(ACTIONS)),
         ("datasets", Json::Arr(vec![dataset_entry])),
         ("lineage", Json::Null),
@@ -552,18 +629,6 @@ fn hex32() -> String {
     let mut bytes = [0u8; 16];
     getrandom::fill(&mut bytes).expect("OS CSPRNG unavailable");
     bytes.iter().map(|b| format!("{b:02x}")).collect()
-}
-
-/// Two opens continue one record when one path was admitted under the same claims.
-fn same_claims(a: &Admission, b: &Admission) -> bool {
-    fn crs(x: &Admission) -> Option<(&str, &str)> {
-        let c = x.crs_assertion.as_ref();
-        c.map(|c| (c.identifier.as_str(), c.definition_json.as_str()))
-    }
-    fn id(x: &Admission) -> Option<&str> {
-        x.identity.as_ref().map(|i| i.column.as_str())
-    }
-    crs(a) == crs(b) && id(a) == id(b)
 }
 
 /// What `record_step` takes from an intent before anything is written.
