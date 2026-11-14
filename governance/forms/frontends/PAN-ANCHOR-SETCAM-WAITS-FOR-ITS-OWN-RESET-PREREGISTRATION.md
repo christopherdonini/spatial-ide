@@ -472,3 +472,26 @@ Nothing above is edited.
    - If that second run also ends in setup, it goes to the advisor with its lines, and there is no third try (items 2 and 5).
 
 4. **The claim limit** (Amendment 5, item 4) gains one wait: setup's `page.reload`, bounded at 30000 ms, as the run's own message gives it. The file is not changed for it (item 4).
+
+## Amendment 7 — P0 at B′ reached its checks; commits 2 and 3; M-TRACE, P1, R1 and L1 as predicted; the gate next (class 1, written after the results were seen)
+
+*Written by the custodian after the runs below were seen. References only. The worker's report: `state/consults/2026-11-14-pan-anchor-setcam-waits-for-its-own-reset-p0-to-l1-built-worker-report.md`. The dispatch: the advisor's rulings ADV-2026-11-14-07, item 4 (b) (`state/directives/2026-11-14-advisor-ruling-adv-2026-11-14-07-no-further-booking-pr-b-run-alone-owed-on-a-quiet-machine-nothing-else-waits-for-it-p0-now-three-refusals-recorded.md`), and ADV-2026-11-14-03, item 2 (Amendment 6). Nothing above is edited.*
+
+1. **P0 again, tag a6-p0.** At B′ (695e1303794ed390d305d07fca592694f33f589e) with Amendment 5 item 4's wrapper, in the worktree at the merge 1427596d5c9edae8b9248b13d8b3525b4c43c55c, in a shared hold. It reached its checks: exit 1, both `pixel-spaces-coincide` checks PASS and the other 14 FAIL by name, `==== 2/16 PASS ====`, as predicted. Amendment 6 item 3's second run did not end in setup.
+2. **The commits**, on the branch after the merge:
+   - commit 2, 39d724fc67958dd199ccb2ac140334e6c298bc66: setCam as Amendment 5 items 1 and 2 shape it;
+   - commit 3, 08bed11cd25066976a116cc6e2dbfb9aa8d647ac: the header's `RECORDED MUTATION` entry for M-TRACE, naming commit 2.
+   - The branch is pushed at 08bed11c. No PR yet.
+3. **M-TRACE at commit 2, tag a6-mtrace**, under its 600 s timeout: `PASS  small: pixel-spaces-coincide`, then no further check line, then progress lines naming the first call's zoom, until the timeout ended the run (rc 124). As predicted.
+4. **At the final head 08bed11c**, each exit 0 and `==== 16/16 PASS ====`, with no fatal line:
+   - P1 (a6-p1), which printed two progress lines, recorded as observed in the report;
+   - R1 (a6-r1);
+   - L1 (a6-l1), under load. Its load build was alive at the suite's start and at its end; its kill ended the tree, but one process of it refused termination, so the run script's rc was 255; afterwards no process of the build remained and its target was removed.
+5. **The runs' conditions.**
+   - The run-suite file was `pa-e2e-run-suite.sh`, 1556 bytes, sha256 1f79a7d3288106d3aaf9d64b2d3e1fd572ae29f401c2ca5959fa3396a98ae609, in every run.
+   - Each run's timeout was 1500 s, except M-TRACE's 600 s.
+   - Each ran in its own shared hold, on the port-5400 harness. Before each, the machine's status was not quiet: another project's shared heavy run was on the machine, at averages from 37.1 to 77.2%.
+6. **Size.** `git diff --numstat` from B′ to 08bed11c over `frontends/shell/e2e/pan-anchor.mjs`: 20 insertions and 6 deletions, 26 lines, inside the estimate of 20 to 28 and the budget of 40 (Amendment 5 item 5). No other file changed. No overrun.
+7. **The worker's departures**, as its report gives them: an edit script was written and removed unused; foreground wait loops were moved to the background by the harness; the rc 255 in item 4. One Edit before a Read errored and was redone.
+8. **Next:** a draft PR, then the single reviewer gate at 08bed11c as Amendment 5 item 6 has it.
+- **Unchanged:** everything else.
