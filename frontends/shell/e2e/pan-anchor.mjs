@@ -102,10 +102,11 @@ async function setCam(page, vs, tx, ty, z) {
   // Returns the first line in `vs` whose zoom is exactly the `zoom` just passed: the seam logs one line, carrying that
   // argument, and a pan keeps the zoom, so a line of the previous gesture (which can land after the clear above, the listener
   // pushing one CDP round trip late) never carries it. Such a late line stays in `vs` and is not read. The wait has no
-  // wall-clock bound: it ends when that line is in `vs`, when the seam resolves anything but `true` (thrown above), or when
-  // the run's hard timeout kills the process, which leaves no result. Every 30th turn of 1000 ms it prints a progress line
-  // (no verdict words) and ends nothing. A precondition on which line is s0, not a property under test; `s1` (`last(vs)`
-  // after `drag`) is not covered by it.
+  // wall-clock bound: it ends when that line is in `vs`, or when the process is ended from outside. A run is to be made under
+  // a hard timeout (the harness's run-suite step gives one), and a run that timeout ends leaves no result. A run without one
+  // (this header's `node e2e/pan-anchor.mjs`) waits until it is stopped. A seam resolving anything but `true` has already
+  // thrown above, before the wait. Every 30th turn of 1000 ms it prints a progress line (no verdict words) and ends nothing.
+  // A precondition on which line is s0, not a property under test; `s1` (`last(vs)` after `drag`) is not covered by it.
   const own = () => vs.find((l) => l.zoom === zoom);
   for (let turn = 1; !own(); turn++) {
     await sleep(1000);
