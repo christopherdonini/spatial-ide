@@ -230,8 +230,9 @@ impl Projects {
     ///   Only then does the history take its moves: the open is bound to the project, which moves
     ///   the open's own record under the project's identity if the open has one, and a `saved-here`
     ///   mark is written in the project's record when the steps reach the workspace. A second open
-    ///   of the same file is another open, with its own record until its own first save. A history
-    ///   that cannot take the moves does not undo the save; the result says so.
+    ///   of the same file is another open: its steps never go to the first open's record, and its
+    ///   own first save binds it to a project of its own. A history that cannot take the moves does
+    ///   not undo the save; the result says so.
     pub fn save(
         &self,
         name: &str,

@@ -183,7 +183,7 @@ impl State {
     }
 }
 
-/// What the steps recorded for one opened file reach: the last value each one set. A save compares
+/// What the steps recorded in one record reach: the last value each one set. A save compares
 /// the workspace it is given with this (ADR-036 §6's saved-here mark; piece 1c's OPEN-9 (A)).
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Reached {
