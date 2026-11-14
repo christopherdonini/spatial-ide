@@ -451,3 +451,19 @@ Assertions in the named tests only. No timing, no benchmark and no docs/08 numbe
 
 11. **For round 77**, as the ledger entries of 2026-11-14 give them: the custodian's C1 brief order (Amendment 1 item 1) and its C4 brief's once-check; the C4 worker's verify-quotes run over two files; the advisor's own two untrue clauses (ADV-2026-11-14-19 item 8; ADV-2026-11-14-20 item 13); the reviewer's line 295 for 293 (ADV-2026-11-14-20 item 12); the architect's Grep count.
 - **Unchanged:** everything else.
+
+### Amendment 4 — the advisor's HOLD at c8f8bdca; main N merged into the branch at M; both gates at M; CI at M (class 1, written after the results were seen)
+
+*Written by the custodian after both gates' reports at M and CI at M were seen. References and hashes only. The ruling, filed under `state/directives/`: the advisor's ADV-2026-11-14-21, items 2 to 5, under the human's delegation of 2026-11-13. Amendment 3 and everything above are not edited (item 5 (a)).*
+
+1. **The hold.** The advisor's merge check of PR #318 at C4 (c8f8bdca9bd8b43b7ab4be59d9f3078d6dd2f6a6) was HOLD (`state/consults/2026-11-14-second-open-history-before-1c-step-3-merge-check-hold.md`): `KNOWN-LIMITATIONS.md`, one of the PR's files, changed on main after the branch's merge base 695e1303794ed390d305d07fca592694f33f589e, and the branch had not taken main in.
+2. **N and M** (item 2). N is main at f47a2ad90f69dfa02f63636887d0402862c03edd. M is 63d66887049e8ddafaef7c6183f09138e7893480: one merge commit of N into C4, signed off, git's clean merge with no conflict and no hand edit. Its parents are C4 and N, in that order. C1 (a2fbab2ca5ddda114ca18cd94392198b30dd94c1) is an ancestor of M.
+3. **Item 3 at M.** The custodian's read-only script, `check-318-merge.mjs` (4770 bytes, sha256 0e3bdc150378e8352e6f095824e91ff0e27ae9f87298b6a938eff0314ab47d6f), checks item 3 (a) to (d), and its output at M is ALL-PASS (1645 bytes, sha256 68bc7cf858d88f7581978f72badadff2f59d8dd1bbed9927ebc1109f60ed7373). Item 3 (e)'s four verify scripts exit 0 at M (output 947 bytes, sha256 e051bf6bca8dd5fc5b5a3846e268402098f044d258feb559f456e1c263abeef7). The reviewer ran the script again at M, and its output is equal by cmp.
+4. **The gates at M** (item 4), gate-log rows 754 and 755, with the reports under `state/consults/gates/`:
+   - the architect, attempt 3, PASS (`2026-11-14-second-open-history-before-1c-step-3-merge-head-gate-architect-attempt-3.md`);
+   - the reviewer, attempt 4, PASS (`2026-11-14-second-open-history-before-1c-step-3-merge-head-gate-reviewer-attempt-4.md`).
+   - Neither has a finding. Rows 747 to 751 and the reports Amendment 3 item 2 names stand.
+5. **CI at M.** Read by the custodian at 2026-11-14T22:36:25Z: 12 runs for 63d66887049e8ddafaef7c6183f09138e7893480, each completed with success at attempt 1: 43644208783 (Product CI — Rust workspace, push), 43644208799 (Governance CI — plan, queue, site, push), 43644208862 (Ported notices, push), 43644208869 (Product CI — shell, push), 43644209077 (Rust fmt, push), 43644212404 (Governance CI — plan, queue, site, pull_request), 43644212451 (Rust fmt, pull_request), 43644212458 (Exposure scan, pull_request), 43644212466 (Product CI — Rust workspace, pull_request), 43644212491 (Ported notices, pull_request), 43644212506 (DCO sign-off, pull_request), 43644212534 (Product CI — shell, pull_request). The reviewer read `gh pr checks 318` at M at 2026-11-14T22:02:46Z, all rows passing.
+6. **The PR's paths on main since N** (item 6 (b)): none of the PR's 11 files changed between N and main at d12265554c1d8ca81a06fc2410f2cb0cac26aa99.
+7. **For round 77**: the advisor's own item 7; the custodian's first merge call, which took git's `-s` for the sign-off and failed with nothing merged.
+- **Unchanged:** everything else.
