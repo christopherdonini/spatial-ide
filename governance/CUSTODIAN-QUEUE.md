@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `06a9fc124dfdde90f36088794914109cb51d88c3028741f3c65b56159d9943d7`) at `2026-11-14T12:01:01.770Z`.
+Generated from `PLAN.yaml` (sha256 `aadb461a48b5e4fb6934eb00c7f198f2d524e88f8f9c3a1b3a89ba4b0885ae8b`) at `2026-11-14T12:32:33.491Z`.
 
 ## 1. Next
 
@@ -134,6 +134,7 @@ Generated from `PLAN.yaml` (sha256 `06a9fc124dfdde90f36088794914109cb51d88c30287
 - **skp-spec-and-protocol-comments-drift-sweep-c** — SKP-V0.md live sections and the protocol and shell doc comments brought current to main (drift sweep area C, findings 2 to 11, and area A, finding 3), after 1c (phase `prototype`) — never queued until placed
 - **comment-line-cites-kin-docs-audit-c** — Product and e2e comments whose line cites point at moved text: origin.rs on AI_DEVELOPMENT.md, engine/src/error.rs and the admission-remediation e2e script on crs.rs (the docs audits, Task C kin) (phase `prototype`) — never queued until placed
 - **pan-anchor-drag-waits-for-its-own-lines** — e2e/pan-anchor.mjs: drag waits for the view-state lines its own gesture produces, not a wall-clock quiet period (test only) (phase `prototype`) — never queued until placed
+- **colour-by-refill-keeps-the-view** — A Colour-by on a new column while attributes are not held refills the map without fitting the camera again (its form decides the shape and may edit residency/) (phase `prototype`) — never queued until placed
 
 ### Unscheduled
 

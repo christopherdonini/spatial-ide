@@ -2248,3 +2248,40 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 17: the advisor's ruling ADV-2026-11-14-15 on Amendment 16's OPEN-4 joins by reference (class 5). The re-issue stays in PR B and nothing under `residency/` is edited. Part 1's worker reads each arm's re-issue path before code, and item 51's words state what an operator can see of it, for the advisor to rule. Item 64 is not edited. Written by the custodian at the ruling's filing, before part 1's code.
+
+*Written by the custodian on 2026-11-14, in the commit that files the ruling. There is no architect draft: this amendment records a ruling and the steps it orders, by reference. The ruling is the advisor's under the human's delegation of 2026-11-13 (`state/directives/2026-11-13-the-grant-approved-the-advisors-authority-its-rulings-the-humans-except-item-4-the-advisor-merges.md`, items 2 and 3), not the human's, and the human may overturn it (the ruling's item 9). Where an item below gives the ruling's content in other words, the words are the custodian's; the ruling's file is the text.*
+
+1. **The ruling (class 5).** `state/directives/2026-11-14-advisor-ruling-adv-2026-11-14-15-pr-b-open-4-a-the-re-issue-stays-residency-not-edited-the-move-stated-in-item-51-a-read-before-code-a-refill-node.md`: the advisor's file, 4,965 bytes, sha256 37733447bf0a387a81038d4c412a3e7e05ce3d826c291a00df8555df2ec8aeed, filed byte for byte below its title and the custodian's note.
+   - OPEN-4 (Amendment 16 item 7) is (a), the ruling's item 1. OPEN-20 (a)'s Colour-by re-issue stays in PR B, and PR B edits nothing under `residency/`. The move of the view on a refill is accepted for PR B and stated in item 51's words. I1, as Amendment 16 item 6 states it for the refill, is unchanged.
+   - OPEN-1 to OPEN-3 stand as Amendment 16 item 7 took them (the ruling's item 7).
+   - PB-U11 stands as Amendment 16 item 3 gives it. No test of PR B asserts where the camera is after a refill (the ruling's item 8).
+   - The ruling's item 3 is the advisor's read at 5b309b78, not a finding of this form, and the advisor did not read it to its end: beyond moving the view, the refill may leave the map on the untiled first look until a pan or zoom.
+
+2. **The read before code (class 1).** Before part 1's code, its worker reads, for each arm, from the code at 5b309b78, the four things of the ruling's item 4:
+   - (a) whether the map is cleared before the refill;
+   - (b) whether the camera is fitted again on the first batch;
+   - (c) whether, after the refill, the view's tiles are planned without a pan or zoom, or the map shows only the untiled first look under its row limit until one;
+   - (d) what the status line says meanwhile.
+   - Each answer gives its file and line at the branch. The report goes to the advisor. Part 1's code does not wait for its answer, and item 1's (a) stands whatever it finds.
+   - If (c) finds the first look, the custodian carries the ruling's item 6 (b) to the form of `open-first-look-fills-fit-view`.
+
+3. **Item 51's words (class 5, records).**
+   - At the records commit, item 51's draft states, from the built code, each of item 2's (a) to (d) that an operator can see, beside Amendment 16 item 5's four points. It also names what bounds the kept column's bytes, or says that nothing does (the ruling's item 7). Both gates clause-check it (the ruling's item 5 (a)).
+   - It then goes to the advisor to rule. Records and the source comment call the ruled text the advisor's wording, under the delegation of 2026-11-13, never the human's. For item 51 this replaces Amendment 12 item 7's "It is a draft for the human's sight." (the ruling's item 5 (b)).
+   - Item 64 is not edited by PR B, and its words stay the human's (the ruling's item 5 (c)).
+   - PR B's Part AC gains one line for the sitting, naming the occasion: a Colour-by on a new column while the status bar says some features' attributes were not held (the ruling's item 5 (d)). Its row number is read at the records commit.
+
+4. **Gate 1's architect (class 1).** Beside Amendment 16 item 6's additions, gate 1's architect reads OPEN-2 (a) against ADR-010 rule 6, and its record names what bounds the kept column's bytes, or says that nothing does. If it finds rule 6 not met, the finding goes to the advisor before the merge; the code does not wait for it (the ruling's item 7).
+
+5. **The node (records).** `colour-by-refill-keeps-the-view` is proposed in `governance/PLAN.yaml` and not placed, under the ruling's item 6 (a): a Colour-by refill that keeps the view, whose own form decides the shape and may edit `residency/`. The advisor places it after item 2's report. It is not PR B's.
+
+6. **The order (class 1).** Amendment 16 item 6's step (4) has its settlement: OPEN-2 to OPEN-4 are settled. Its steps (2) and (3) come first, then item 2's read, then part 1's code.
+
+**Superseded for PR B:**
+- Amendment 12 item 7's draft for the human's sight, for item 51 only (item 3).
+
+Read the last amendment first.
+
+Nothing above is edited.
