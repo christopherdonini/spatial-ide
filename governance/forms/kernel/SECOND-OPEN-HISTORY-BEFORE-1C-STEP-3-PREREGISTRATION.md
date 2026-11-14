@@ -363,3 +363,33 @@ Assertions in the named tests only. No timing, no benchmark and no docs/08 numbe
 ## §10 Amendments
 
 (empty)
+
+### Amendment 1 — C1 does not build under the workspace test; a fix commit C1b on C1 (the advisor's ruling ADV-2026-11-14-04; class 1, written after the result was seen)
+
+*Written by the custodian after the worker's stop. References only. The worker's report: `state/consults/2026-11-14-second-open-history-before-1c-step-3-c1-stopped-workspace-compile-worker-report.md`. The ruling: `state/directives/2026-11-14-advisor-ruling-adv-2026-11-14-04-second-open-c1-repaired-by-a-fix-commit-c1b-the-workspace-run-before-its-commit.md`.*
+
+1. **C1b, a commit §2.6's order does not name** (the ruling, items 1, 2 and 4 (a)).
+   - It sits on C1 (a2fbab2ca5ddda114ca18cd94392198b30dd94c1). It holds `None` as the second argument of `header_object` in U7 (`the_worst_case_header_and_step_lines_fit_their_ceilings`, in the tests module of `kernel/src/session_history.rs`). It may hold the same kind of change in another in-lib test of a §2.5 file, each named in the report. No assertion, test name or product line changes.
+   - Its cause: C1 was committed before the workspace run, and the three targeted test files build no in-lib unit test.
+   - That order was the custodian's brief's, not the worker's departure. The brief (16988 bytes, sha256 85be16bba6a5b64c3309418ffdb73780c8d496ca79e3b32cce5e18bf37f68407) is kept in the custodian's scratch as `<S>/brief-soc1.md` and is not filed. Its Order item 2 opens "**C1, one commit**", and the heavy runs follow under "Then, at C1, each heavy run in a hold:". It is for round 77.
+   - The order now (item 3): the edit; then `cargo test --workspace --locked` on the working tree; C1b is committed only after that run exits 0. Then C1's unrun checks at C1b, then M1-M6 at C1b, then C2. Item 43's point stays the C2 commit.
+
+2. **C1 alone does not build under `cargo test --workspace --locked`** (item 4 (b)).
+   - At C1 the run exits 101 with E0061 at U7's call.
+   - The branch merges by a merge commit, so C1 stays reachable from main.
+   - The PR body says so. Both gates' packets name C1b, or a later commit, as the first head at which the workspace suite can pass.
+
+3. **C1's size** (item 4 (c)). It is 712 changed lines over 7 files, against §7's estimate of about 530. Added plus deleted, by `git diff --numstat 695e1303 a2fbab2c`:
+   - `kernel/src/session_history.rs` 255 (estimate about 150);
+   - `kernel/src/project/mod.rs` 41 (about 35);
+   - `protocol/skp/SKP-V0.md` 12 and `protocol/skp/src/v0/commands.rs` 7 (about 15 together);
+   - the three test files 397 (about 330): `kernel/tests/project_save.rs` 124, `kernel/tests/project_save_skp.rs` 208, `kernel/tests/session_history.rs` 65.
+   - §7 is an estimate, and this is not a stop. The gates read `kernel/src/session_history.rs` with its overrun in mind, and the architect says whether anything in it is outside §2.1.
+
+4. **The worker's other departures** (item 4 (d)), for round 77:
+   - a `--no-run` build of the three targeted files before C1, its own addition;
+   - its S1 script, first written by heredoc rather than the Write tool;
+   - the resource stop passed over. `frontends/shell/src/generated/NOTICE.txt` was absent after the installs and the viewer build, which is where the brief's stop sits. The shell's `npm run verify` generates it, and it existed after that run (3506979 bytes, gitignored). The brief placed the check before the step that makes the file. The next brief repeats the stop at the same point; in this worktree the file exists;
+   - two errored calls: an Edit with no change (2026-11-14T00:48:06Z) and a Write before a Read (2026-11-14T01:32:39Z).
+
+5. **Unchanged** (item 6): the claims, Scope, §2.5, the tests and mutations, §9's gates and suites, and item 43's turn rule (ADV-2026-11-13-20 item 5).
