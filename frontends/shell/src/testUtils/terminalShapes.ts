@@ -55,7 +55,7 @@ export const REAL_SOURCE_COVERAGE_LOST_TERMINAL_DETAIL =
  */
 export const REAL_SOURCE_COVERAGE_LOST_PRE_CHECK_REFUSAL_DETAIL =
   "engine.source_coverage_lost: [P6 placeholder] refused: the advisory watch on this source lost " +
-  "coverage ({[P6 placeholder] this dataset's session ended when the advisory watch on its " +
-  "source lost coverage}). This is not a statement that the file changed — the OS notification " +
+  "coverage ([P6 placeholder] this dataset's session ended when the advisory watch on its " +
+  "source lost coverage). This is not a statement that the file changed — the OS notification " +
   "stream this session was relying on stopped reporting, and this check cannot see whether the " +
   "file changed while it was not";

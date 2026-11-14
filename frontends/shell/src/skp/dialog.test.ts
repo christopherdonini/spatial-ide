@@ -8,6 +8,7 @@ vi.mock("@tauri-apps/api/core", () => ({ invoke: invokeMock }));
 
 import { consoleRecorder, isBindingCommandEntry } from "../console/recorder";
 import { pickFile } from "./dialog";
+import { pickProjectFolder } from "./dialog";
 
 /** NEXT-CUT.md P3 item B: `binding_pick_file` records name-only, pre-invoke, resolves
  * post-invoke, rethrows unchanged. */
@@ -55,5 +56,39 @@ describe("pickFile records binding_pick_file (NEXT-CUT.md P3)", () => {
     // error text -- the original `Error` above is still rethrown to `pickFile`'s own caller
     // unchanged, only never stored on this entry.
     expect("error" in entry).toBe(false);
+  });
+});
+
+/** B2-1C-SAVE-AND-REOPEN-PREREGISTRATION.md Amendment 18 item 1: `pickProjectFolder` records
+ * `binding_pick_project_folder` as `pickFile` records `binding_pick_file`. */
+describe("pickProjectFolder records binding_pick_project_folder (B2-1C Amendment 18)", () => {
+  beforeEach(() => {
+    invokeMock.mockReset();
+  });
+
+  it("records the command name and outcome ok, and returns the chosen folder unchanged", async () => {
+    invokeMock.mockResolvedValueOnce("/projects/first");
+    const before = consoleRecorder.entries().length;
+
+    const result = await pickProjectFolder();
+
+    expect(result).toBe("/projects/first");
+    const entry = consoleRecorder.entries()[before]!;
+    if (!isBindingCommandEntry(entry)) throw new Error("expected binding-command entry");
+    expect(entry.command).toBe("binding_pick_project_folder");
+    expect(entry.outcome).toBe("ok");
+  });
+
+  it("records the command name and outcome threw, and rethrows the original error unchanged", async () => {
+    const transportError = new Error("ipc failure");
+    invokeMock.mockRejectedValueOnce(transportError);
+    const before = consoleRecorder.entries().length;
+
+    await expect(pickProjectFolder()).rejects.toBe(transportError);
+
+    const entry = consoleRecorder.entries()[before]!;
+    if (!isBindingCommandEntry(entry)) throw new Error("expected binding-command entry");
+    expect(entry.command).toBe("binding_pick_project_folder");
+    expect(entry.outcome).toBe("threw");
   });
 });

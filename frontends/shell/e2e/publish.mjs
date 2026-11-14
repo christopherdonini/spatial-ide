@@ -360,6 +360,13 @@ async function stepApproved(page) {
       `APPROVED': filter_scope must be null before any filter is applied this run, got ${JSON.stringify(prompt.filter_scope)}`
     );
   }
+  // E1: the columns line the host composed (`publish.rs::compose_published_columns`). The shell's
+  // own style on main carries no match, so no attribute column is published and the no-attributes
+  // form is the one the host sends.
+  // RECORDED MUTATION: M-E1, compose_published_columns's empty arm removed (`if attributes.is_empty()` set to `if false`) in a dev build, applied alone at 1d45189bd0e4e68dcb1416fc8e553f49bfe76b6e and observed in this e2e itself (publish run tag me1): step APPROVED' failed by name, its line reading: APPROVED': published_columns is "Columns published: id, the geometry, and .", expected the no-attributes line; reverted.
+  if (prompt.published_columns !== "Columns published: id and the geometry only.") {
+    throw new Error(`APPROVED': published_columns is ${JSON.stringify(prompt.published_columns)}, expected the no-attributes line`);
+  }
 
   await waitForHook(page, "publishExecute");
   const executeOutcome = await pairEvaluate(page, "execute",
@@ -368,6 +375,11 @@ async function stepApproved(page) {
   );
   if (executeOutcome.status !== "success") {
     throw new Error(`APPROVED': execute with the correct phrase returned ${JSON.stringify(executeOutcome)}, expected {status:"success"}`);
+  }
+  // E1, the other half: the manifest the kernel wrote publishes exactly `id` and the geometry.
+  const approvedManifest = JSON.parse(readFileSync(join(executeOutcome.bundle_path, "manifest.json"), "utf8"));
+  if (!Array.isArray(approvedManifest.schema) || approvedManifest.schema.length !== 2 || approvedManifest.schema[0].name !== "id") {
+    throw new Error(`APPROVED': manifest schema is ${JSON.stringify(approvedManifest.schema)}, expected exactly two entries, the first named "id"`);
   }
 
   const jsonOut = join(OUT_DIR, `verify-approved-${Date.now()}.json`);

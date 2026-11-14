@@ -28,7 +28,7 @@ describe("viewportQuery request shape", () => {
 
     expect(invokeMock).toHaveBeenCalledWith("viewport_query", {
       request: {
-        skp: "skp/0.12",
+        skp: "skp/0.13",
         dataset: "ds_x",
         bbox: null,
         bbox_crs: null,
@@ -69,7 +69,7 @@ describe("viewportQuery request shape", () => {
 
     expect(invokeMock).toHaveBeenCalledWith("viewport_query", {
       request: {
-        skp: "skp/0.12",
+        skp: "skp/0.13",
         dataset: "ds_x",
         bbox: null,
         bbox_crs: null,
@@ -96,12 +96,12 @@ describe("recordStep request shape", () => {
     await recordStep("ds_x", { action: "style.set", params: { property: "outlineWidth", value: { value: 2, unit: "px" } } });
 
     expect(invokeMock.mock.calls).toEqual([
-      ["record_step", { request: { skp: "skp/0.12", dataset: "ds_x", intent: { action: "filter.apply", params: { filter: null } } } }],
+      ["record_step", { request: { skp: "skp/0.13", dataset: "ds_x", intent: { action: "filter.apply", params: { filter: null } } } }],
       [
         "record_step",
         {
           request: {
-            skp: "skp/0.12",
+            skp: "skp/0.13",
             dataset: "ds_x",
             intent: { action: "style.set", params: { property: "outlineWidth", value: { value: 2, unit: "px" } } },
           },

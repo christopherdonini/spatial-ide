@@ -301,6 +301,33 @@ pub struct PublishPromptData {
     /// provenance `<dl>` — this field ADDS clarity; nothing else on this struct changes meaning or
     /// is removed.
     pub outcome_summary: String,
+    /// One line naming `id`, the geometry and each attribute column the pending attempt publishes,
+    /// in the request's declared order. Composed in `prepare_with_query` by
+    /// [`compose_published_columns`] from the same `attributes` vector that goes into the request,
+    /// passes preflight and is sent at execute. The shipped build derives at most one attribute
+    /// name (`style_attributes`), so the many-name case is reached only by the unit test
+    /// `the_published_columns_line_keeps_the_declared_order_and_the_separator`, never by ordinary use.
+    pub published_columns: String,
+}
+
+/// The line [`PublishPromptData::published_columns`] carries. The two forms are the human's words,
+/// byte for byte, from item 4 (b) of the directive at
+/// `state/directives/2026-11-12-third-message-open-3-a-gates-now-typed-check-reading-rule-first-look-s1-publish-approval-s2-second-open-rulings-308-restore-item-47-floor-order.md:20 @ c3b4899c4c4a1cf1b0823a7b0e4a1be20f96ec5c sha256:2e05b7610c5865dc8798c45bec193cfa13b0de5bcb6cf46c913f23da802445e6`
+/// (the hash is of the whole line; the words are a span inside it). No names: the no-attributes
+/// form. Otherwise the names follow `and `, in the order given and joined by `, `, with no sorting,
+/// deduplication, quoting or cap here (the kernel refuses duplicates, `id` and more than 32 names
+/// before any prompt exists). Many names are reached only by the unit tests, not by ordinary use.
+/// A name is inserted as it is (OPEN-2 (a)), so a column whose own name contains `, ` reads as
+/// more than one name in the line; the shipped build reaches that only through a style whose match column has such a name.
+fn compose_published_columns(attributes: &[String]) -> String {
+    if attributes.is_empty() {
+        "Columns published: id and the geometry only.".to_string()
+    } else {
+        format!(
+            "Columns published: id, the geometry, and {}.",
+            attributes.join(", ")
+        )
+    }
 }
 
 /// The plain-outcome sentence [`PublishPromptData::outcome_summary`] carries — composed from facts
@@ -667,6 +694,7 @@ fn prepare_with_query(
         row_scope,
         filter_scope,
         outcome_summary: compose_outcome_summary(&resolved_destination),
+        published_columns: compose_published_columns(&attributes),
     };
 
     let attempt_id = match mint_attempt_id() {
@@ -1877,6 +1905,107 @@ mod tests {
         );
     }
 
+    /// As [`prepared`] over the caller's style source, returning the prompt in place of the phrase.
+    fn prepared_prompt(
+        d: &Path,
+        name: &str,
+        style: &str,
+    ) -> (Mutex<GrantSet>, PendingAttempts, String, PublishPromptData) {
+        let grants = Mutex::new(GrantSet::new());
+        let store = PendingAttempts::new();
+        let outcome = prepare(
+            &grants,
+            &store,
+            fixture(d, 50),
+            "parcels".into(),
+            style.into(),
+            PublishScope::WholeFile,
+            false,
+            viewer(),
+            viewer_license(),
+            d.join(format!("out-{name}")),
+            "2026-08-16T10:00:00Z".into(),
+        );
+        let PrepareOutcome::Prompt { attempt_id, prompt } = outcome else {
+            panic!("expected a prompt, got {outcome:?}")
+        };
+        (grants, store, attempt_id, prompt)
+    }
+
+    // RECORDED MUTATION: M-U1, compose_published_columns returns the no-attributes line unconditionally (`if attributes.is_empty()` set to `if true`), applied alone at 08ac45cca949b2b321fcb5136b890549282539f7: this test failed by name (publish::tests::the_published_columns_line_names_the_request_attributes_the_bundle_publishes) at its first assert_eq!, left "Columns published: id and the geometry only.", right "Columns published: id, the geometry, and zone."; reverted.
+    #[test]
+    fn the_published_columns_line_names_the_request_attributes_the_bundle_publishes() {
+        let _guard = env_lock();
+        let d = workspace("published-columns-zone");
+        std::env::set_var(
+            spatial_kernel::permission::AUDIT_LOG_ENV,
+            d.join("audit.jsonl"),
+        );
+        let (grants, store, attempt_id, prompt) = prepared_prompt(&d, "zone", STYLE);
+        assert_eq!(
+            prompt.published_columns,
+            "Columns published: id, the geometry, and zone."
+        );
+
+        let phrase = Path::new(&prompt.destination_display)
+            .file_name()
+            .expect("destination_display names a real final component")
+            .to_string_lossy()
+            .to_string();
+        let outcome = execute(&grants, &store, &attempt_id, &phrase);
+        let ExecuteOutcome::Success { bundle_path, .. } = outcome else {
+            panic!("got {outcome:?}")
+        };
+        let raw = std::fs::read_to_string(Path::new(&bundle_path).join("manifest.json")).unwrap();
+        let manifest: serde_json::Value = serde_json::from_str(&raw).unwrap();
+        // The bundle's schema is `id`, the geometry, then the declared projection (ADR-017).
+        let names: Vec<String> = manifest["schema"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .skip(2)
+            .map(|c| c["name"].as_str().unwrap().to_string())
+            .collect();
+        assert_eq!(names, vec!["zone".to_string()]);
+        assert_eq!(prompt.published_columns, compose_published_columns(&names));
+    }
+
+    // RECORDED MUTATION: M-U2, the empty arm of compose_published_columns removed (`if attributes.is_empty()` set to `if false`), applied alone at 08ac45cca949b2b321fcb5136b890549282539f7: this test failed by name (publish::tests::the_published_columns_line_is_the_no_attributes_form_for_a_literal_style) at its assert_eq!, left "Columns published: id, the geometry, and .", right "Columns published: id and the geometry only."; reverted.
+    #[test]
+    fn the_published_columns_line_is_the_no_attributes_form_for_a_literal_style() {
+        let _guard = env_lock();
+        let d = workspace("published-columns-literal");
+        std::env::set_var(
+            spatial_kernel::permission::AUDIT_LOG_ENV,
+            d.join("audit.jsonl"),
+        );
+        let literal_style = r##"{
+          "style_version": 1,
+          "layer": {
+            "geometry": "polygon",
+            "fill_color": {"literal": "#aa3333"},
+            "fill_opacity": {"literal": 0.8},
+            "outline_color": {"literal": "#202020"},
+            "outline_width": {"literal": 1.0}
+          }
+        }"##;
+        let (_grants, _store, _attempt_id, prompt) = prepared_prompt(&d, "literal", literal_style);
+        assert_eq!(
+            prompt.published_columns,
+            "Columns published: id and the geometry only."
+        );
+    }
+
+    // RECORDED MUTATION: M-U3, the names sorted before the join in compose_published_columns, applied alone at 08ac45cca949b2b321fcb5136b890549282539f7: this test failed by name (publish::tests::the_published_columns_line_keeps_the_declared_order_and_the_separator) at its assert_eq!, left "Columns published: id, the geometry, and a, b, c.", right "Columns published: id, the geometry, and b, a, c."; reverted.
+    #[test]
+    fn the_published_columns_line_keeps_the_declared_order_and_the_separator() {
+        let names: Vec<String> = ["b", "a", "c"].iter().map(|s| s.to_string()).collect();
+        assert_eq!(
+            compose_published_columns(&names),
+            "Columns published: id, the geometry, and b, a, c."
+        );
+    }
+
     #[test]
     fn a_pending_attempt_past_its_ttl_is_treated_as_unknown() {
         let d = workspace("ttl");
@@ -2641,6 +2770,7 @@ mod tests {
             row_scope: "row scope: the whole file".into(),
             filter_scope: None,
             outcome_summary: "a stub".into(),
+            published_columns: "a stub".into(),
         }
     }
 

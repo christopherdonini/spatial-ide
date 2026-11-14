@@ -14,7 +14,9 @@ import {
   Filter,
   IdentityDeclaration,
   OpenDatasetResponse,
+  ProjectWorkspace,
   RecordStepResponse,
+  SaveProjectResponse,
   SkpError,
   SKP_VERSION,
   StepIntent,
@@ -51,7 +53,7 @@ async function call<Res>(command: string, request: Record<string, unknown>): Pro
   // never changes what is returned or thrown, only observes it.
   // `command` is captured on the entry too (NEXT-CUT.md P3): `DescribeRequest` and
   // `CloseDatasetRequest` are both exactly `{skp, dataset}` on the wire, so the request object
-  // alone cannot tell the console's panel which of the six commands this was.
+  // alone cannot tell the console's panel which of the seven commands this was.
   const entry = consoleRecorder.record(request, command);
   try {
     const result = await invoke<Res>(command, { request });
@@ -140,4 +142,14 @@ export function closeDataset(dataset: string): Promise<CloseDatasetResponse> {
  */
 export function recordStep(dataset: string, intent: StepIntent): Promise<RecordStepResponse> {
   return call("record_step", { skp: SKP_VERSION, dataset, intent });
+}
+
+/**
+ * `skp/0.13`: saves the workspace as the project of an open dataset. Client only: this function checks
+ * nothing; the kernel does, and may refuse the save. `folder` is the folder the native picker gave, at
+ * the first save of an open, and `null` at every later one -- sent as `null`, never omitted, as the
+ * request's other optional members are (`key_present` on the Rust side).
+ */
+export function saveProject(dataset: string, folder: string | null, workspace: ProjectWorkspace): Promise<SaveProjectResponse> {
+  return call("save_project", { skp: SKP_VERSION, dataset, folder, workspace });
 }

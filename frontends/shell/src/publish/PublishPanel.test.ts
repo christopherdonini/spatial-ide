@@ -53,6 +53,7 @@ const PROMPT: PublishPromptData = {
   outcome_summary:
     'This will create a folder named "bundle" at C:\\out, containing the selected rows as one or ' +
     "more data partitions, the interactive viewer page, and a manifest.",
+  published_columns: "Columns published: id and the geometry only.",
 };
 
 // RECORDED MUTATION for "UPP1" (export-current-view-after-unreported-fit): `currentViewOptionDisabled` returns false whatever it is given. Expected failure: the first case, "disabled while the map has no view box".

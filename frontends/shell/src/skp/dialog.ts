@@ -21,3 +21,17 @@ export async function pickFile(): Promise<string | null> {
     throw e;
   }
 }
+
+/** The OS folder picker for the first save. **Not SKP**: `save_project` takes a folder already chosen. `null` means the operator cancelled.
+ * B2-1C-SAVE-AND-REOPEN-PREREGISTRATION.md Amendment 18 item 1: recorded as `pickFile` is -- name-only, pre-invoke; resolved post-invoke, rethrown unchanged. */
+export async function pickProjectFolder(): Promise<string | null> {
+  const entry = recordNamed("binding-command", "binding_pick_project_folder");
+  try {
+    const result = await invoke<string | null>("binding_pick_project_folder");
+    entry.resolveOk();
+    return result;
+  } catch (e) {
+    entry.resolveThrew();
+    throw e;
+  }
+}

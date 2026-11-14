@@ -1547,3 +1547,333 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 12: PR B's re-sweep at B′ b7b721eb, written after the re-sweep was seen and before the base series and any PR B code. No invalidator. Pin 55 is a records pin, and every other moved or changed pin is a moved cite or a declared change (class 3). The human's six rulings join by reference (class 5). The session-end change, OPEN-20 (a)'s files, the reveal entries' files, a save proof, an SE-R1 home and one release item join PR B (class 9). PB-U9 is redrawn against the table source as it is, `types.ts` becomes unconditional, and I10, the numbers, the stale comments, the base and the base series are read (class 1).
+
+*Drafted read-only by the architect at main a06a70dc6225573618f3c5d848eac6f849d6b8ed (`state/consults/2026-11-12-b1-shell-half-pr-b-re-sweep-amendment-architect-draft.md`). The re-sweep is `state/consults/2026-11-12-b1-shell-half-pr-b-re-sweep.md` (its sha256 from line 5 73daf59015df8af5e18017fbead580d5388dc6921baded067d54eec4c51a5a01), at B′ = b7b721eb9347695ba3badb85f3c1917e9d40c0fc. It is cited by row and step. The PR B ahead draft is `state/consults/2026-10-22-b1-shell-half-pr-c-and-pr-b-ahead-architect-draft.md`, section PR B: draft amendment. The session-end ahead draft is `state/consults/2026-10-25-b1-shell-half-pr-b-session-end-class-9-ahead-architect-draft.md`. Both are cited by section. Every pin at 4b26d279, and every fact of either draft at its own commit, is historical (§0.3). For this amendment the tree at B′ is authoritative; for PR B's code, the tree at PR B's base is (item 10). References only: nothing below is a quotation except the reuse index in item 14, which is byte-copied and marked so. The KNOWN-LIMITATIONS starting text for items 4 and 59 is the architect's, given after this block for the human's sight. It is not the human's wording. §7 is not edited.*
+
+1. **Pin 55 (class 3, the tree authoritative; not I4).**
+   - Reading (class 1): §0.2 pins two kinds of thing. Interfaces are what PR B's code is written against, the seams of §8 item 17. Records are named so that a PR's record edit starts from known text. I4 reads the first kind only. KNOWN-LIMITATIONS item 4 is a release record that no code consumes, so pin 55 is of the second kind. That c5842d35 is a docs-lane commit this form does not declare changes nothing: for a record, the only question is whether PR B's edit starts from the tree, and it does.
+   - Item 4 at B′ is `KNOWN-LIMITATIONS.md:72-81` @ b7b721eb sha256:cffbf571cdfbeca5c624a7983a7a2c1f0b16ce2ea13814a81dbd581ed63a708d.
+     - Its v0.1.0 lines and the dated correction (:72-77) stay. They describe the artifact.
+     - Its On-main paragraph already exists (`KNOWN-LIMITATIONS.md:80` @ b7b721eb sha256:1d1ac5a0ed176bd4524fb26303c89c3af2c87f3d26663ab16897b1abc6341e7b). So §2.3 (k)'s first bullet is superseded: PR B rewrites that paragraph rather than adding one.
+   - Two sentences of that paragraph are untrue since #307:
+     - The last sentence, because saving a project now writes a project file (`frontends/shell/src/project/saveProject.ts:76-84` @ b7b721eb sha256:2694216117db824e78a088adb975c37ac94d57992c7e337c1e669dd43150d4e7).
+     - The clause saying nothing reads the session record back, read literally, because a save reads it to judge its mark (`kernel/src/project/mod.rs:354-375` @ b7b721eb sha256:21e5e42b8254e993ddfbc28082392c446a88fa376b72e66ced50e149e9bfa104).
+   - PR B rewrites the paragraph in its records commit, from the built code (the human's rulings of 2026-11-05, Part 1, item 1). The architect's starting text is OPEN-A.
+     - It is the human's wording (R-4, named in its source comment, `KNOWN-LIMITATIONS.md:78` @ b7b721eb sha256:d84a2af457acb27d4af839f71ed87affc61543f0edabfe5f71966ebfbd297ac6), so it comes to the human with the code under §31. **Red line.**
+     - The source comment gains the base's pins for each new clause.
+
+2. **The other pins (class 3, the tree authoritative).** The new ranges are from the re-sweep's Step 3, and the custodian's script pins each one.
+   - **Moved (16), bytes unchanged:**
+     - 1 `protocol/skp/SKP-V0.md:1170-1192` @ b7b721eb sha256:57e1e7603e71559af966300e181774cb3c82a0917dcf8f687ee58b511b4a24b0
+     - 2 `protocol/skp/SKP-V0.md:1200-1202` @ b7b721eb sha256:a33e93147d4db680f4d0655418fb05097d40f5cd5d1c38f6f456f199cc8cc98b
+     - 3 `protocol/skp/SKP-V0.md:1217-1232` @ b7b721eb sha256:ebc8805c6615112ee7323314fcf814a4ec662d19c37339a4879617b12962c5f2
+     - 4 `protocol/skp/SKP-V0.md:89` @ b7b721eb sha256:b926385c1e43c27c3d06c2f97581817f46166793a0a3b5d7362a018dba112628
+     - 9 `frontends/shell/src/App.tsx:1650` @ b7b721eb sha256:c77be16dd32042de9f436ced9bd47fac86df582e29af2e63334a0adb0c5a91b4
+     - 10 `frontends/shell/src/App.tsx:1765` @ b7b721eb sha256:1031b6daac969a0c34923d9dcdec4338b4be87cd4d90a0caad4cdac607a17f82
+     - 15 `engine/README.md:329-340` @ b7b721eb sha256:f0cd7d4356f80eca2d9725c8d4d53fe4248061f9e6f8127f7a4fae5b3c1fba20
+     - 19 `frontends/shell/src/canvas/pick.ts:135` @ b7b721eb sha256:d9b7f5515d27b8d0d7108708490f1e42ca9c571d0007e90dd69f965cfc729cef
+     - 22 `frontends/shell/src/workspace/workspaceState.ts:72-90` @ b7b721eb sha256:62574d11dfbcb107a6a78caafebd573879358ff20f7deaabab0c3dcec5f27965
+     - 26 `frontends/shell/src/workspace/viewTransitions.ts:35-39` @ b7b721eb sha256:7f8721714f06a12192ae682792154ea7b8f53a3b768cb92c4d21bcfca66a0615
+     - 27 `frontends/shell/src/workspace/viewTransitions.ts:158` @ b7b721eb sha256:64e4293bb5b3c6de614d99d06044196fd6abd634f06b1d604a3b791e129e1cef
+     - 28 `frontends/shell/src/style/document.ts:55-60` @ b7b721eb sha256:6d08b5648c954bd6564a9e4ae8531a259b95da59a658a49da5b1a2cd034675b0
+     - 29 `frontends/shell/src/style/document.ts:108-117` @ b7b721eb sha256:f4017650ff734303b5cb2ceb04195557bb50eb179be1ab5844f04cd1ac922e19
+     - 45 `frontends/shell/src-tauri/src/publish.rs:1258-1279` @ b7b721eb sha256:6b3ed47b0b5a5452ddde99a178b4cc25f720849bbf661bfa53d544754f88f2ea
+     - 53 `engine/src/fixture.rs:998` @ b7b721eb sha256:f22e41488f84cf23c6a005a9f6ad11460e3ed3a6609ab55a6ae247aa979cb7d6
+     - 54 `frontends/shell/MANUAL-WALKTHROUGH.md:1929` @ b7b721eb sha256:4917a05ad91af5f3bcba369d513f01f305aa06eb7d1042ae5a0931cb2ee1a3d5. Its fact (the last Part is AB) is historical; see item 7.
+   - **Changed, each by a change this form declares (16):** by PR A, pins 5, 6, 7, 8, 17, 18, 20, 21, 30 and 51; by PR C, pins 16, 24, 46, 49 and 50; by #307, the widening §2.3 (h) names, pin 39.
+     - Amendment 7 item 1's reading applies: each is the base's interface, not I4. The re-sweep's Step 1, rows 1 to 9, reads the interfaces that result.
+     - Where they are at B′:
+       - 5 `frontends/shell/src/skp/client.ts:109` @ b7b721eb sha256:a1281fb40ec587d21ebacf0ab27468820216bfd36062d372b1b7c4fcf84483fd
+       - 17 `frontends/shell/src/canvas/decodeBatch.ts:160` @ b7b721eb sha256:14f3cc24d6e45f4288c7fcf33c7e529239866680d7f7a438e26f22a0fc39acac
+       - 18 `frontends/shell/src/canvas/decodeBatch.ts:195-203` @ b7b721eb sha256:307a47971e713aa7d214e5a15051bc515b724e221523ee6b7e7bc97cc35c5e93
+       - 20 `frontends/shell/src/canvas/clickPick.ts:45` @ b7b721eb sha256:491136398852bdb5241109b0e324a4382eecb74e182aee7e071a5e639ea32b29
+       - 21 `frontends/shell/src/workspace/workspaceState.ts:50` @ b7b721eb sha256:92f7f884f2c53de2a8a78edc98380f1877b6579e1bd00d4a62b53605b343e057 and `frontends/shell/src/workspace/workspaceState.ts:57` @ b7b721eb sha256:f2f2c6d31662f3e0b95a6c34d24f0125d1da20062938f4ab528c0d5c07646329
+       - 24 `frontends/shell/src/workspace/selection.ts:48` @ b7b721eb sha256:4f7d23ebb4e0653d5abf1b257d06d75b01ed75e72ccd0cc7b296c77ba2e3f3f3
+       - 30 `frontends/shell/src/style/document.ts:18-21` @ b7b721eb sha256:8f44be03c9c715dde6a93f4475145790fe91051f42010ddb3bf529471c00944a
+       - 39 `protocol/skp/SKP-V0.md:1272-1280` @ b7b721eb sha256:3e1f3b29b637b9dae37855a81179c6ba58ec24e63639f7bba779f08c4d817017
+       - 46 `frontends/shell/src/App.tsx:1193-1211` @ b7b721eb sha256:7f1e753aff66980e6400121990893ad3535b53b46638a2b597da4e1f7112f29c, with the Table's cancel at `frontends/shell/src/App.tsx:1196` @ b7b721eb sha256:32072a4bc0d32ae772ffa625d39a5d236ebd9a65ae298709f4a59ad2a828c3e9
+       - 49 `frontends/shell/src/layout/contributions.ts:40` @ b7b721eb sha256:c684223ee21706e127705f9a22615c9c07d74a273a29e620569f1a94c0436de9
+       - 6, 7, 8, 16, 50 and 51 are named by their content. The worker locates them at the base.
+   - **The session-end draft's cites** (re-sweep Step 2): the moved cites are class 3 at the lines Step 2 gives. That includes `candidateArmSession.ts` at 319, not 318.
+     - The one Changed cite, `frontends/shell/src/canvas/pick.ts:50-62` @ b7b721eb sha256:d9cc50727125963839a1315d76437fdea20b49427595e29fcbadc9fe0a47b96f, is a comment that 809127d3 extended by a line (class 3).
+     - The 1c form now lives at `governance/forms/kernel/B2-1C-SAVE-AND-REOPEN-PREREGISTRATION.md` (class 3).
+     - The draft's cite into `App.lateResult.test.tsx` is not unique at B′. The worker names that assertion by its test title (class 3).
+
+3. **The human's rulings, by reference (class 5; paraphrased).**
+   - `state/directives/2026-10-23-clicks-245-246-247-sort-window-fix-before-port-2-covering-case-route-1-244-c1-milestone-4-and-1c-open-items-ruled.md:18` @ b7b721eb sha256:7604c2433b2df11d804dc904439dec44a5c16d5e8e39913410ffe253762a0f45:
+     - OPEN-18 (b): the widening is 1c step 1's first commit, and PR B follows step 1's merge. Both are met at B′ (re-sweep row 6).
+     - OPEN-19: yes to the ahead draft's KL-3 words, in place of the human's line.
+     - OPEN-20 (a).
+   - `state/directives/2026-10-25-filler-entry-5-open-1-a-pr-b-open-1-2-3-a-o1-probe-lead-data-designs-tester-high-runs.md:10` @ b7b721eb sha256:225c10ca3851d7787661704c425d42c9dd61cc9e01b79b5f1862672a3a73b0ff, the session-end draft's open items:
+     - OPEN-1 (a): L1, L2 and L3 change, and §2.1's hover entry is read as narrowed to OPEN-3 (a). The Table's line stays as Amendment 10 left it.
+     - OPEN-2 (a).
+     - OPEN-3 (a).
+   - Here is what this amendment carries from the ahead draft's PR B section:
+     - Its rows are replaced by the re-sweep at B′.
+     - PB-U8, PB-R3 and PB-U10, and its readings of §3's filter-zoned row and of §8 item 11, stand as that section gives them.
+     - PB-U9 is redrawn (item 4).
+     - Its records line is replaced by item 7.
+     - Its ceilings are replaced by item 13.
+   - The session-end draft's change, its class 9 table, SE-U1 to SE-U5 and SE-R1 stand as that draft gives them, under the rulings above, with items 12 and 13 below. This is the placement that the PLAN node `session-end-lines-name-coverage-lost-as-source-change` names.
+
+4. **Row 1: the table source as it is (class 1; one conditional class 9 entry).**
+   - At B′, `TableSource` offers `subscribe`, `getSnapshot`, `start`, `cancel`, `end` and `dispose`:
+     - `frontends/shell/src/table/tableSource.ts:40-48` @ b7b721eb sha256:ecc2247b3c0395ad2e0dc933f6348e91a021dc13ea9bcf105f3a96461c0e82a8
+     - `frontends/shell/src/table/tableSource.ts:116` @ b7b721eb sha256:0ce7b6c1b9badbd4d2a9f18d80334878682c40f5261e17d6286a34bdb488ec27
+     - `frontends/shell/src/table/tableSource.ts:167` @ b7b721eb sha256:3dc7243b8ed48abcd49f217ff361dce813e98a702539e02fbdbdac421c6f913c
+   - It does no reuse, no join and no export check. The export condition belongs to App and the Table tab (`frontends/shell/src/table/TableTab.tsx:63-67` @ b7b721eb sha256:810ea19862f6071977fa6c0a78dccf1bc0b4e7d88196a96caba93fe660b96df8).
+   - Withdrawn: the ahead draft's PB-U9, and its bullet saying a hide does not cancel. A hide, a scope change, a filter change, an export start and a session end all reach the same `cancel()`. A consumer count would therefore also undo the export's cancel.
+   - **The wait.** One function in `frontends/shell/src/style/categoryCases.ts` uses only `TableSource`'s public members and `sameFilter` (`frontends/shell/src/table/tableScope.ts:22` @ b7b721eb sha256:045a2199a64a6367e7724685b5ed9bf15531948d8b7a0dbc488c4da8c73338a6):
+     - it reuses a completed or stopped snapshot under the same filter;
+     - otherwise it joins a loading stream under the same filter, subscribing until a terminal phase;
+     - otherwise it calls `start(filter)` once.
+     - It resolves with the snapshot, or with a not-applied outcome: cancelled, refused or ended.
+     - It lives in `categoryCases.ts` and not in `tableSource.ts`, because `tableScope.ts` imports `tableSource.ts` (`frontends/shell/src/table/tableScope.ts:6` @ b7b721eb sha256:b8b980f3825de7c032d969cbadf24bee901095cc7bfb751e1a30f528fac31072).
+     - Its lines count against categoryCases 120. Amendment 5's `tableSource.ts` 30 stays a ceiling for any change the wait proves to need; `tableSource.ts` need not be edited.
+   - **The not-applied outcomes:**
+     - A cancel that reaches the source while the wait stands ends the apply with nothing applied, and the Style tab's line says so. That line is a P6 placeholder.
+     - The apply is not offered while App's `exportHeld` stands.
+     - A filter that changes while the apply waits on a stream it issued itself ends the apply the same way: the result's filter is compared with the view's at resolution.
+     - A null `rowAt` row is skipped when the cases are built.
+     - The Style tab's Cancel follows OPEN-C.
+   - **PB-U9** is in `frontends/shell/src/style/categoryCases.test.ts` (listed; B-T categoryCases 180). It uses a real `TableSource`, mocks the transport as `tableSource.test.ts` does, and builds its batches with `testUtils/attributeBatchIpc.ts`. It asserts:
+     - (i) a held, completed result under the same filter is reused, with no `viewport_query`;
+     - (ii) a loading stream under the same filter is joined, with one `viewport_query` in all;
+     - (iii) in any other state, exactly one `viewport_query` is issued;
+     - (iv) a `cancel()` during the wait resolves as not applied.
+     - Mutation: the function always calls `start`. (i) and (ii) fail on the count.
+   - **PB-R4 (new)** is in `frontends/shell/src/App.colour.test.tsx` (listed; B-T App.colour 350), with the real `TableTab` and `TableSource`:
+     - hiding Activity while the apply waits on the Table's stream applies no style and shows the line;
+     - with `exportHeld`, the apply issues no `viewport_query`.
+     - Mutation: the function treats cancelled as completed and resolves from the rows it kept. The test fails.
+     - This is the seam's one test from the real shape (round 4).
+   - `frontends/shell/src/table/tableSource.test.ts` (198 lines, PR C's) is not edited unless `tableSource.ts` is. If it is, it joins PR B's list as a new entry (class 9, 80 lines, item 13). The ahead draft's unconditional entry for it becomes this conditional one.
+   - Reading of §8 item 10 (class 1): the cases query is issued by the operator's apply, a user action, which OPEN-16 (b) requires to go through the table source. It is not a Table stream issued while the Table is hidden.
+   - An overrun is class 8.
+
+5. **Row 6: `frontends/shell/src/skp/types.ts` (class 1).**
+   - §2.3 (h)'s second case holds. `StyleSetParams` is unwidened at `frontends/shell/src/skp/types.ts:290-297` @ b7b721eb sha256:2d17faa6a73547e83ad4d7b30531c221e8432c5fa11abd06166e14bee48d6b9c. The wire admits the match (`protocol/skp/SKP-V0.md:1272-1280` @ b7b721eb sha256:3e1f3b29b637b9dae37855a81179c6ba58ec24e63639f7bba779f08c4d817017) at the version the shell already sends (`frontends/shell/src/skp/types.ts:15` @ b7b721eb sha256:f62704f1d4dc03fc7935977ada8e0192ee84181452fd84dc9e2d6cb1919065f3). So PR B makes no version change.
+   - `types.ts` is unconditional on PR B's list, and B-P's types.ts 30 is its ceiling. `tableSource.ts` stays conditional (item 4).
+   - Superseded:
+     - §2.6's and §7's conditional reading of `types.ts`;
+     - the ahead draft's row 6;
+     - the ahead draft's sentence on OPEN-18 (b) dropping the conditional;
+     - its rule (00) bullet saying the widening shares `types.ts`.
+   - The member is written against `protocol/skp/tests/data/v0-record_step-request-style-set-fill-match.json`, which uses snake-case `on_null` and `on_unmatched`. PB-R2's input is that fixture's bytes (the human's rulings of 2026-11-05, Part 1, item 7). The type's `skp/0.12` comment is corrected inside Scope (class 3).
+   - §2.3 (h)'s merge wait is met: ffc039d1 is an ancestor of B′. The widening node's status is its own record.
+
+6. **Row 7: I10 (class 1, with one test by class 9 as I10 itself says).**
+   - **General clause: not met.** By the re-sweep's rows 3, 4 and 7:
+     - `StyleState` and `ViewState` are as the form reads them, moved only;
+     - App gained the Save wiring, which is a new consumer of `toStyleDocument`, not a change to it.
+   - **Particular clause: met.** The saved `style` member is on main (`frontends/shell/src/project/saveProject.ts:76-84` @ b7b721eb sha256:2694216117db824e78a088adb975c37ac94d57992c7e337c1e669dd43150d4e7).
+   - **PB-E5 (new)** is a step of `frontends/shell/e2e/colour.mjs`, run after the colour-by-zone step. It counts against colour.mjs 510 and the B-E margin 60.
+     - It sets a scratch `LOCALAPPDATA` and makes a fresh temporary folder, as `e2e/project.mjs` does.
+     - It saves through the DEV-only hook `e2eSaveProjectToFolder` (`frontends/shell/src/App.tsx:1382` @ b7b721eb sha256:4c78095a65339d8977f23c0001a225e8b6639551f8155a2707d77b34bcb1c18e) in the build that suite uses.
+     - It reads `project.spatial` from disk and asserts that the workspace style's fill colour is the match: column `zone`, the applied cases in order, `on_null` and `on_unmatched`. The member names are as the file holds them.
+     - Mutation: `workspaceOf` saves the style with `fillMatch` set to null. PB-E5 fails at its step.
+   - **And reopens.** No open path exists at B′ (re-sweep row 7). PR B does not claim it.
+     - It is carried by 1c step 2, whose recovery is written against `StyleState` at its own base (`governance/forms/kernel/B2-1C-SAVE-AND-REOPEN-PREREGISTRATION.md:577` @ b7b721eb sha256:c88234f8520785f1c25184caa4ca3f7bb31a95b1953decaabbb4b40cffbf4cba). That base will hold `fillMatch`.
+     - The custodian names a reopen of a category style in step 2's drafting brief.
+     - This is not an OPEN item. Steps 2 and 3 do not dispatch while PR B is in flight (`governance/forms/kernel/B2-1C-SAVE-AND-REOPEN-PREREGISTRATION.md:1130` @ b7b721eb sha256:740fb4ee466073fe8656269352ab2dd40c4dd421c7cc527f6e138725e3156744), so PR B cannot wait for them.
+
+7. **The numbers (class 1).**
+   - KL-3 is item 64; the highest item at B′ is `KNOWN-LIMITATIONS.md:506` @ b7b721eb sha256:bb5ea652d19b36a3a9067f3668f811d9869aa8dc47a8c441cf498767d18bd053.
+     - Items 54 to 56 are PR C's.
+     - The numbers are read again at PR B's KNOWN-LIMITATIONS commit. A change there is class 3.
+     - KL-3's words are the human's by approval (OPEN-19). Under the 2026-11-05 ruling, Part 1, item 1, they come back to the human with the code, clause-checked.
+   - Item 51 is reworded under OPEN-20 (a), from the code. It is a draft for the human's sight.
+   - Items 54 and 56 are re-read against the built apply. A sentence there that the apply makes untrue is redrafted the same way (class 9, records).
+   - Item 59 is edited (class 9, records): its claim that the app's style matches on no column becomes untrue with PR B. The starting text is OPEN-B. It is the human's wording (R-59). **Red line.**
+   - PR B's rows go in Part AC, the one new Part of §2.6's records: AC3 to AC5 for §9's operator rows 3 to 5. There is no Part AE. Part AC's heading, opening sentence and result log are edited to name PR B. The last Part at B′ is AD.
+   - All of these numbers are distinct from the pieces in flight (re-sweep Steps 4 and 5). They are read again at the base (item 10).
+
+8. **The reveal entries (class 9).**
+   - They are needed. §2.3 (j) carries OPEN-10 (a), the human's ruling, and Amendment 8 item 2 places it in PR B. Dropping the entries would be a scope change.
+   - `frontends/shell/src/layout/actionRegistry.ts` is listed (B-P 25). Two other files join:
+     - `frontends/shell/src/layout/actionRegistry.test.ts`, whose exact-id test pins thirteen ids (`frontends/shell/src/layout/actionRegistry.test.ts:132-147` @ b7b721eb sha256:f90d523f8d8234dd650049175fc1a8c3a6c45851afc6f291994abee9c25a8dcc), so two entries edit it;
+     - `frontends/shell/src/layout/StudioLayout.tsx`, the only handler of each id (`frontends/shell/src/layout/StudioLayout.tsx:205-254` @ b7b721eb sha256:76d1f265acab5b3fde088d20bdcbdffd5a1168a1a6b25f65763d647cc690c725). It gains two availability arms and two run arms: one opens the inspector on the Style tab, the other opens Activity on the Table tab.
+   - Their test file, `frontends/shell/src/layout/StudioLayout.test.tsx`, also joins, with one test per entry.
+   - Mutation: an arm skips its tab select, and that entry's test fails.
+   - The entry labels are P6 placeholders.
+
+9. **The stale comments (class 3 inside Scope) and Part F (class 9, records).**
+   - The re-sweep's Step 6 A rows are all in PR B files. The worker rewrites each one from the code at the base:
+     - `frontends/shell/src/canvas/WorkingCanvas.tsx:181-182` @ b7b721eb sha256:0bcb53bf9985705e2c5c7ad0218dc0d2f31dc896c569b0f8240c23c925830654
+     - `frontends/shell/src/App.tsx:1282` @ b7b721eb sha256:750ca586f7fb48e4a7760ea7f577a0445864f39495d1e74ef1ef92c554e26ce5
+     - `frontends/shell/src/App.tsx:240` @ b7b721eb sha256:450d9bb692ece8cb9f1aefb8c79acf5f81fe669edf687ff8ec9b96e24a483f28
+     - `frontends/shell/src/App.tsx:686` @ b7b721eb sha256:0c226e0d71231cb3d1cbe834b7bab57abd2bfd177eb060e56fe56fcd9bb57e61
+     - `frontends/shell/src/App.tsx:1656` @ b7b721eb sha256:0ead8ab6d21e8cdf86c32debe209a0ece6c8548f80362c53de7271a862933c15
+     - `frontends/shell/src/App.tsx:1540` @ b7b721eb sha256:299e267c22576e3b31612fc15f71738ad5f66302f8a049623714556920fb4f9e, whose cite should name the reject at `frontends/shell/src/residency/candidateArmSession.ts:311` @ b7b721eb sha256:20928bdd932cc5520ac291cee2e30ce3aabd576bc0aacf65cc982b6a9f767386
+     - `frontends/shell/src/style/StylePanel.tsx:24-25` @ b7b721eb sha256:40a2b16e7d3d78a1e9c6332c221fd894bb9682cfb144166fc390cdfb65fd8da5
+     - `frontends/shell/src/style/StylePanel.tsx:55` @ b7b721eb sha256:d70064da808b2124b27f9bea67f30094afebff4fc5772f49ea514fef7cc98eac, which is §2.3 (b)
+     - `frontends/shell/src/style/document.ts:33-38` @ b7b721eb sha256:af7466a3d45ac09e677f61208e92538945461e513ddc349f472383755f44be95
+     - also `frontends/shell/src/style/document.ts:53-54` @ b7b721eb sha256:0f1ece551c15e022766c01165429aa9be0eed03cf5dee6f804f9998158005b45 (the architect's reading): the style is held in the workspace state now, and is saved since #307.
+   - PR B's body lists each rewrite. The lines count against each file's ceiling. The lines move with the fix and are re-read at the base (item 10).
+   - **Part F:**
+     - F1's list of controls gains Colour by and One colour (a location word, §2.6's Part F rule).
+     - A dated pointer after Part F's rows names what no longer holds of F2 (`frontends/shell/MANUAL-WALKTHROUGH.md:273` @ b7b721eb sha256:843c1d3ecc8eea455d0759ef716f0ac726b8093e8c9dbe00dccaf7dd7923e140) and F6 (`frontends/shell/MANUAL-WALKTHROUGH.md:277` @ b7b721eb sha256:fc1b56b2c955c4208beadec805224d3e1777831eeba363655e5efba51b145282). It follows the form of Part H's pointer (`frontends/shell/MANUAL-WALKTHROUGH.md:469` @ b7b721eb sha256:6b47c10f48754fdb1a924736d4c997f3b1cbf503878f49eefe0387f6510814af). The rows stay as run.
+
+10. **The base (class 1; OPEN-E, (A)).**
+    - Under (A), PR B's base is M′, the main commit at which PR B's branch is cut: the fix's merge commit M, or a later one.
+    - At M′ the custodian lists, by script, `git diff --name-only b7b721eb9347695ba3badb85f3c1917e9d40c0fc <M′>`. For each listed path that is in PR B's list as amended here, or that holds a §0.2 pin, the custodian:
+      - re-reads it;
+      - re-reads rule (00) over PR B's whole amended list;
+      - re-reads the numbers of item 7.
+    - The result goes in Amendment 13, before code.
+      - A move is class 3.
+      - A change to a signature PR B calls is I4. These are `pushBatch`, `pushTileBatch`, `currentView`, `TableSource`'s members and `StyleState`.
+    - No PR B code lands before Amendment 13 (§0.3).
+
+11. **The base e2e series (class 1).** It runs at M′, after item 10's re-read and before code.
+    - What runs:
+      - every `e2e:` script in `frontends/shell/package.json` at M′ except `e2e:debug`, with `e2e:recentre-crossing` among them;
+      - the drivers that have no script line: `e2e/pan-anchor.mjs`, `e2e/source-watch-idle.mjs` and `e2e/source-changed.mjs`;
+      - the viewer build's scan (§2.9).
+    - How it runs:
+      - on the port the human's standing ruling names at the run;
+      - inside shared holds, with Amendment 2 item 4's harness corrections;
+      - with each fixture's sha256 taken before and after;
+      - with each run's app stderr, report and session log kept.
+    - What counts as I3: a failure that reproduces in a re-run inside its own hold, with no harness cause in the launcher's or the build's output. It stops code.
+    - What is not I3:
+      - a failure seen once in a shared run that does not reproduce. Both runs are recorded for the gate, as in Amendment 9.
+      - an outcome that a suite's own README entry names inconclusive.
+
+12. **The prebuild review (class 1).** These findings, as the re-sweep's second table carries them, are adopted as the architect's own, in the words of the items named:
+    - B2 → item 4;
+    - B3 and B4 → item 5;
+    - 2(b) → item 4;
+    - 2(c) → PB-R4, PB-E5, and PB-U10's batches through `attributeBatchIpc`;
+    - C2 and C6 → item 2;
+    - C5 → items 1 and 7.
+    - From 3(b): the Table's last-click harness does not render the hover slot, but `App.lateResult.test.tsx`'s harness does. **SE-R1 therefore lives in `frontends/shell/src/App.lateResult.test.tsx`** (class 9, item 13), which meets the session-end draft's condition on SE-R1.
+    - From 3(c): SE-R1's event comes from `protocol/skp/tests/data/v0-dataset_session_ended-event.json` (ruling 7 of 2026-11-05).
+    - The other rows are read as the re-sweep reads them.
+
+13. **Ceilings (class 9 unless named; counted by §7's command).** §7 is not edited. The two correction rounds and the per-file overrun rule (class 8) stand.
+
+    | Addition | B-P | B-T |
+    |---|---|---|
+    | `tableSource.ts` (Amendment 5; existing) | 30 | |
+    | `tableSource.test.ts`, only if `tableSource.ts` is edited (item 4) | | 80 |
+    | OPEN-20 (a): `frontends/shell/src/canvas/limits.ts` 25, `frontends/shell/src/attributes/values.ts` 40; `limits.test.ts` 60, `values.test.ts` 60 | 65 | 120 |
+    | Session-end draft's class 9 table: new-to-list files 71; App.tsx +45 (App 165); workspaceState.ts +15 (workspaceState 25); its tests 204 | 131 | 204 |
+    | SE-R1: `App.lateResult.test.tsx` (item 12) | | 40 |
+    | Reveal entries: `StudioLayout.tsx` 30; `actionRegistry.test.ts` 20, `StudioLayout.test.tsx` 60 | 30 | 80 |
+
+    - Totals: B-P 1,736; B-T 2,124, or 2,204 with the conditional entry; B-E 570, unchanged. **PR B: 4,430, or 4,510 with it.**
+    - A fill site that tsc names at code time for a widened type stops the worker (I1). It joins by a class 9 amendment before that code, as Amendment 8 did.
+    - Records outside the count are held to §7's outside-the-count line:
+      - KNOWN-LIMITATIONS items 4, 51, 59 and 64, and 54 and 56 if item 7 applies;
+      - Part AC's rows, and the Part F rows and pointer;
+      - one e2e README entry for `colour.mjs`.
+
+14. **The reuse index**, byte-copied from the custodian's brief. It is the custodian's run in the private clone at 89bbac3738dbb46d47988e55a7c0f0d4f9fe4c5c on 2026-11-12. All three are misses: no prior art is recorded, and this amendment rests on the tree at B′ alone.
+
+```
+$ node tools/reuse.mjs categorical style match colour legend
+No prior art recorded for "categorical style match colour legend". Research it before planning an implementation.
+(exit 1)
+$ node tools/reuse.mjs style document save project reopen
+No prior art recorded for "style document save project reopen". Research it before planning an implementation.
+(exit 1)
+$ node tools/reuse.mjs re-sweep pin moved interface amendment
+No prior art recorded for "re-sweep pin moved interface amendment". Research it before planning an implementation.
+(exit 1)
+```
+
+**Superseded for PR B:**
+- §2.3 (k)'s first bullet (item 1);
+- the conditional reading of `types.ts` in §2.6 and §7 (item 5);
+- the ahead draft's rows 1 to 12, its PB-U9 with its hide bullet, its unconditional `tableSource.test.ts` entry, its records line and its ceilings (items 3, 4, 7 and 13);
+- pins 54 and 55 read as current (items 1, 2 and 7).
+
+Read the last amendment first.
+
+Nothing above is edited.
+
+*The custodian's settlement of this amendment's OPEN items, written at its commit on 2026-11-12, before the base series and any PR B code (class 1).*
+
+1. **The carried text.** Everything in this amendment above this settlement is the architect's draft (`state/consults/2026-11-12-b1-shell-half-pr-b-re-sweep-amendment-architect-draft.md`, read only at main a06a70dc; its fenced block's sha256 73cddc95f29633cacf6d15a504a17daf9a0c358b72c856a7d65af4e52196ed15), carried byte for byte with two changes, the custodian's:
+   - each `sha256:<H>` pin is filled by script with the sha256 of the cited whole lines, each with its LF, at b7b721eb9347695ba3badb85f3c1917e9d40c0fc (66 pins, 64 distinct ranges);
+   - the preamble's other `<H>` (the draft's packet gap) is filled with the sha256 of the re-sweep consult's bytes from its line 5 to its end, at main a06a70dc6225573618f3c5d848eac6f849d6b8ed: the worker's report below the filing note's rule.
+   The draft's OPEN items, gate findings, reading list and packet gaps stay in the filed draft.
+
+2. **OPEN-C (b), OPEN-D (a) and OPEN-E (A)**, none a red line, are the draft's recommendations, taken on 2026-11-12 at this commit under the human's direction of 2026-10-31, item 4 (`state/directives/2026-10-31-away-until-11-04-clicks-from-the-app-270-size-o0-file-open-items-take-recommendation.md`), held to 2026-11-16 (`state/directives/2026-11-09-item-4-to-11-16-12c-open-a-d-taken-slot-2-order-pr-b-slot-1-availability-monday-list.md`), for the human's review on return.
+   - OPEN-C (b): the Style tab's Cancel cancels only a stream the apply issued itself, and on a joined stream it abandons the wait. PB-U9 gains the draft's case (v) with its mutation, inside categoryCases 120 and B-T categoryCases 180 (item 13).
+   - OPEN-D (a): PR B stays one PR. The draft names the stacked-PR trial the human's; taking (a) does not use it.
+   - OPEN-E (A): item 10 as written. Amendment 13 is the re-read at M′.
+
+3. **OPEN-A and OPEN-B are red lines:** the words of KNOWN-LIMITATIONS items 4 and 59. The architect's starting texts are in the filed draft, after its block, for the human's sight. Neither item is written until the human's typed words. PR B's records commit waits for them; nothing before that commit does.
+
+4. **The draft's gate findings,** recorded in the filed draft:
+   - Findings 2, 3 and 6 are met by items 9 and 1.
+   - Finding 1's second half (item 10's claim) and finding 7 are not PR B's. They go to the human with the docs lane's list.
+   - Findings 4 and 5 stand as Documentation findings on this form; §2.6 and §7 are not edited.
+
+5. **The order.** PR B's code waits for the S1 fix's merge (rule (00): `WorkingCanvas.tsx` and the shell's `package.json`). At M′: Amendment 13 (item 10), then the base series (item 11), then code.
+
+Nothing above is edited.
+
+## Amendment 12, continued: PR B's session-end phase starts now, on a branch from main (the human's ruling of 2026-11-12, item 2 (d)). The ruling joins by reference (class 5); the rest is class 1. Written by the custodian at its commit, before the phase's base series and any PR B code.
+
+*This is not Amendment 13: item 10 and the ruling keep that number for the re-read at M′, after the S1 fix's merge. References only: nothing below is a quotation.*
+
+1. **The ruling, by reference (class 5; paraphrased).** `state/directives/2026-11-12-s1-fix-open-a-c-s6b-now-pr-b-class-9-now-1c-five-308-c1-words-platform-reports-order-no-git-stash.md:28` @ ad22478f sha256:d2fcdcb214c566c8305bee98393abfc3673ddb660e6350146c9f77c621a538a2:
+   - PR B's session-end class 9 phase does not wait for the S1 fix. It starts now on PR B's branch, cut from main, and the base series runs at that commit.
+   - What touches `frontends/shell/src/canvas/WorkingCanvas.tsx` or `frontends/shell/package.json` waits for the fix's merge. Main is then merged into the branch, the series runs again, and Amendment 13 records any difference.
+   - A pin or prediction of Amendment 12 that depends on the fix's lines waits alone; item 4 records which.
+   - Settlement item 5's order is replaced for the phase only. For the rest of PR B it stands.
+
+2. **The phase (class 1).** It is the session-end draft's change as item 3 carries it, under OPEN-1 (a), OPEN-2 (a) and OPEN-3 (a), with items 12 and 13.
+   - Product: `frontends/shell/src/canvas/pick.ts`, `frontends/shell/src/canvas/HoverReadoutView.tsx`, `frontends/shell/src/feature/FeatureTab.tsx`, `frontends/shell/src/feature/clickEffect.ts` and `frontends/shell/src/workspace/selection.ts`, then `frontends/shell/src/workspace/workspaceState.ts` and `frontends/shell/src/App.tsx`.
+   - Tests: the session-end draft's nine test files, and `frontends/shell/src/App.lateResult.test.tsx` for SE-R1 (item 12). SE-U1 to SE-U5 and SE-R1, each with its mutation.
+   - Ceilings: item 13's session-end row and its SE-R1 row.
+   - Its `App.tsx` lines are the session-end change only, with the comments of the draft's §3 item 7. Item 9's comment rewrites are not in the phase: they come with the rest of PR B, from the code at M′.
+   - The phase adds no KNOWN-LIMITATIONS item and no walkthrough row. Its two coverage-lost sentences are P6 placeholders, sighted with PR B's Part AC rows.
+
+3. **Its base, M″ (class 1; item 10, read at M″).** M″ is the main commit that first carries this record. PR B's branch `cut/b1-shell-half-pr-b` is cut there.
+   - By script at ad22478f2b85a3cae85550bb99999e91b7fa2ff9, the main commit before this record: `git diff --name-only b7b721eb9347695ba3badb85f3c1917e9d40c0fc ad22478f` lists 26 paths, none outside `governance/`, `state/` and `site/`. So none is on PR B's list, and none holds a code pin. This record's own commit changes files under those three folders only.
+   - All 64 distinct ranges this amendment pins at b7b721eb hash the same at ad22478f. Nothing moved: no class 3, no I4.
+   - Rule (00) over the phase's files, by script at ad22478f: #309 (`frontends/shell/src/testUtils/terminalShapes.ts`, `kernel/README.md`, `kernel/src/lib.rs`, `kernel/src/skp.rs`, `kernel/tests/source_watch_ordering.rs`, `kernel/tests/typed_terminal_codes.rs`), #308 (`docs/adr/ADR-035-dataset-session-ended-control-plane-event.md`) and the fix's branch at b7ba9f77 (`frontends/shell/MANUAL-WALKTHROUGH.md`, `frontends/shell/e2e/README.md`, `frontends/shell/e2e/recentre-crossing.mjs`, `frontends/shell/package.json`, `frontends/shell/src/canvas/WorkingCanvas.recentre.test.tsx`, `frontends/shell/src/canvas/WorkingCanvas.tsx`) name none of them.
+   - Item 7's numbers are not used by the phase. They are read at M′.
+
+4. **What waits for the fix's merge (the ruling's last sentence).**
+   - Item 9's first stale comment, at `WorkingCanvas.tsx` lines 181 and 182 at b7b721eb: the fix edits that file. It is rewritten with the rest of PR B, from the code at M′.
+   - Item 11's run of `e2e:recentre-crossing`: at ad22478f, `frontends/shell/package.json` has no such script; the fix adds it. The series at M″ runs without it, and the run at M′ includes it.
+   - Every other part of PR B that touches either file waits, as the ruling says.
+   - No prediction of the phase depends on the fix's lines. By script at b7ba9f77, the fix changes neither `WorkingCanvasProps` nor `WorkingCanvasHandle`, and the phase's two App harnesses mock the canvas module. If the fix's merged head changes either, the harnesses are re-read at M′ and Amendment 13 records it.
+
+5. **The series at M″ (class 1; item 11 as written, with item 4's one exception).**
+   - It runs on the port the human's standing ruling names at the run. Today that is 5400, because 5180 has not been freed (the ruling of 2026-11-09).
+   - It runs only while no E1 run is in progress. E1 and the measure build's suites use the same debugging port, and E1 refuses an app already listening there. The fix's own E1 runs ended with S6e, before this record, and the fix's gates run no E1 while the series runs.
+   - The phase's code waits for the series, as item 11 says. An I3 stops it.
+
+6. **After the fix's merge.** Main is merged into PR B's branch (a merge commit, never a rebase). Then, in order:
+   - item 10's re-read at M′, over PR B's whole amended list;
+   - the series again, with `e2e:recentre-crossing`;
+   - Amendment 13, recording the re-read and any difference between the two series;
+   - the rest of PR B's code.
+   - PR B stays one PR (OPEN-D (a)), gated at its head.
+
+7. **Worker briefs** for PR B forbid `git stash` (`state/directives/2026-11-12-s1-fix-open-a-c-s6b-now-pr-b-class-9-now-1c-five-308-c1-words-platform-reports-order-no-git-stash.md:53` @ ad22478f sha256:172da72c0dd9c115f2a3bfc1019e310b7b384ee0b4e3f3b992da5af88526870f).
+
+Read the last amendment first.
+
+Nothing above is edited.
+
+## Amendment 13: the re-read at M′ (Amendment 12's item 10) filed, and `App.selection.test.tsx`'s session-end allowance recorded as unused for the publish approval piece's OPEN-8 (a). Written by the custodian at the publish approval form's commit (class 1)
+
+*References only. Nothing below is a quotation.*
+
+1. **The re-read at M′.** The worker-high's read-only re-read at 6649a443 is filed at `state/consults/2026-11-13-b1-shell-half-pr-b-re-read-at-m-prime-worker-report.md`. It found no invalidator and no I4. It names three of Amendment 12's pins as Changed, none of them a signature: KNOWN-LIMITATIONS item 4's On-main paragraph, rewritten by f56d6efe; `pick.ts` lines 50 to 62, changed by the session-end phase's commit 0b247f29; and item 7's number 64, which the first-look item now holds. Each is class 3, and Amendment 14 settles them.
+2. **The order.** Amendment 12's settlement, item 5, put this amendment before the base series at M′. The series ran first (`state/consults/2026-11-13-b1-shell-half-pr-b-series-at-m-prime-tester-report.md`). The departure is the custodian's, and question round 77 discloses it.
+3. **`frontends/shell/src/App.selection.test.tsx`.** The session-end class 9 table gives it 45 lines (`state/consults/2026-10-25-b1-shell-half-pr-b-session-end-class-9-ahead-architect-draft.md:103` @ 6f4a89e5c1e8ddc68f24ffdac5513f31411d5510 sha256:607c5232efd762991ba8d757ee00f732b547bf29dfd1dec4b8b1814ea30b5882). The phase's report records that allowance as unused (`state/consults/2026-11-12-b1-shell-half-pr-b-session-end-phase-worker-report.md:97` @ 6f4a89e5c1e8ddc68f24ffdac5513f31411d5510 sha256:50d753337e9977891364ff5fa5670c29c50555ce7d2b1f09a813a990e5d0e232). At 6649a443 the branch leaves the file untouched. The publish approval piece edits it (3 lines at most), and that form's OPEN-8 (a) rests on this record.
+4. **Next: Amendment 14.** It covers the series at M′, read with pan-anchor's run alone; the phase's class 8 (six per-file ceilings passed, every group within), which the ledger placed at Amendment 13; item 2 (a) of the human's message of 2026-11-12 (13:07Z), on OPEN-A and OPEN-B; and the settlement of item 1's three pins.
+
+Read the last amendment first.
+
+Nothing above is edited.

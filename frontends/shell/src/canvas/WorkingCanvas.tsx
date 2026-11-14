@@ -97,14 +97,16 @@ import type { ViewportCamera } from "./viewportBbox";
  * `_getViewState()` always prefers `this.props.viewState` over deck's own internally-tracked state
  * — so with `controller: true` and a `viewState` prop that this component never updates, every
  * pan/zoom gesture fires `onViewStateChange` while the rendered view never moves (verified against
- * `@deck.gl/core@9.3.7`'s `deck.js`: `_getViewState()` returns `this.props.viewState ||
+ * `@deck.gl/core@9.3.9`'s `deck.js`: `_getViewState()` returns `this.props.viewState ||
  * this.viewState`, and `_onViewStateChange` only writes back into `this.viewState`, which
  * `_getViewState` never reaches once `props.viewState` is set). Staying uncontrolled
  * (`initialViewState` only) lets deck.gl own `this.viewState` and update it on every gesture. A
- * later programmatic jump (recentering the camera after an origin move) still works uncontrolled:
- * `setProps` re-syncs `this.viewState` from `initialViewState` whenever the *new* value is not
- * deep-equal to the previous one (`deck.js`'s `setProps`), which is exactly "jump to a new place"
- * without ever setting `viewState` and flipping the instance into controlled mode. **That
+ * programmatic jump made outside deck's view-state callback (the fit, and the DEV-only test seam)
+ * works uncontrolled: `setProps` re-syncs deck's own view state from `initialViewState` whenever
+ * the new value is not deep-equal to the last one (`@deck.gl/core@9.3.9` `dist/lib/deck.js`,
+ * `setProps`). Inside the callback it does not: deck then stores the callback's view state under
+ * the view's id, which its view lookup prefers, so the re-centre's camera move is the callback's
+ * return value instead (see `onViewStateChange` below). **That
  * deep-equal is a condition, not a formality** (entry 85): a programmatic camera write whose value
  * repeats the previous one exactly is dropped, and the camera keeps whatever a gesture last left in
  * `this.viewState` -- see `createFitCameraWriteSequence` below for the fit's own answer to it.
@@ -140,6 +142,12 @@ export interface WorkingCanvasHandle {
    * query any fit issues. Optional in the type only, so that the stand-in handles of suites that predate it still satisfy
    * this interface; the component always provides it. */
   fitToBbox?(bbox: AuthoritativeBbox): void;
+  /** The camera the canvas last wrote, as a project file's `view` holds it (B2 piece 1c, Save project): `centre` is the camera's local
+   * target plus the offset frame's origin it was written against, member by member -- the dataset-space point, the only form of it that
+   * leaves this module (ADR-010 rule 1) -- and `zoom` is the held zoom unchanged, the base-2 log of the CSS pixels one unit spans. `null`
+   * before the canvas's first camera write. It changes nothing. Its product caller is `App.tsx`'s save. Optional in the type only, as
+   * `fitToBbox` is; the component always provides it. */
+  currentView?(): { centre: [number, number]; zoom: number } | null;
   /**
    * Clears BOTH the fit anchor (`fitAnchorRef`) and the one-shot auto-fit flag (`hasAutoFitRef`) --
    * called, on both arms, after an issued outcome (`App.tsx`'s `applyFilter`); on the candidate
@@ -1606,6 +1614,12 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
         fitToExtent(bbox, true); // Amendment 2 item 3: it notifies, as `fitToBounds` does
       },
 
+      currentView() {
+        const camera = cameraRef.current;
+        if (camera === null) return null;
+        return { centre: [camera.targetX + camera.originX, camera.targetY + camera.originY], zoom: camera.zoom };
+      },
+
       resetFitForNewGeneration() {
         fitAnchorRef.current = null;
         hasAutoFitRef.current = false;
@@ -2080,16 +2094,25 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
         // live drag gesture, as deck's own controller reports it. The recenter below is deferred out
         // of the live drag on the strength of it (see the `if (!isDragging …)` note).
         //
-        // DEPENDS ON deck 9.3.7's trailing settled tick: a drag fires a run of `isDragging: true`
-        // ticks and then ONE `isDragging: false` tick at gesture end (`panend`), where the deferred
-        // recenter lands. This is deck's *observed* behaviour on `@deck.gl/core@9.3.7` (`package.json`
-        // allows `^9.3.7`; the lockfile installs 9.3.9; no re-check on 9.3.9 is claimed here), NOT
-        // a documented invariant. A future deck upgrade that stops emitting that trailing settled
-        // tick — or ends a gesture on `pointercancel` with no `panend` — would silently defer the
-        // origin advance by one gesture; harmless within `RECENTER_MAX_DRIFT`'s own headroom
-        // (`offsetFrame.ts`), but there is no in-code fallback and the only guard is the operator-run
-        // `e2e/pan-anchor.mjs` (not in CI). Re-run that E2E after any `@deck.gl/*` bump.
+        // DEPENDS ON deck's trailing settled tick: a drag fires a run of `isDragging: true` ticks and
+        // then ONE `isDragging: false` tick at gesture end (`panend`), where the deferred recenter
+        // lands. Read on `@deck.gl/core@9.3.9` (`controllers/controller.js`: inertia is 0 under
+        // `controller: true`, and a pan's end calls `updateViewport` with `isDragging: false`), NOT a
+        // documented invariant. A deck upgrade that stops emitting that tick -- or a gesture ended by
+        // `pointercancel` with no `panend`, neither read nor run -- would leave the origin where it is
+        // until the next tick the guard below lets through or the next fit (`fitToExtent`, which
+        // re-centres by `forceRecenter`; in a dev build also the E2E view-state seam), and the frame's
+        // offset may exceed the re-centring bound until then; that is not measured, and there is no
+        // in-code fallback. The guards are `e2e/recentre-crossing.mjs`
+        // and `e2e/pan-anchor.mjs`, both operator-run and not in CI, and
+        // `WorkingCanvas.recentre.test.tsx`, which models deck's rules and so cannot see a change in
+        // deck. Re-run both E2E suites after any `@deck.gl/*` bump.
         const isDragging = Boolean((interactionState as { isDragging?: boolean } | undefined)?.isDragging);
+        // Two more ticks the recenter skips (see the note below): one inside a transition, and one whose view state
+        // starts one, by deck's own test (`transition-manager.js`, `_isTransitionEnabled`, 9.3.9).
+        const inTransition = Boolean((interactionState as { inTransition?: boolean } | undefined)?.inTransition);
+        const { transitionDuration, transitionInterpolator } = vs as { transitionDuration?: number | "auto"; transitionInterpolator?: unknown };
+        const startsTransition = ((transitionDuration as number) > 0 || transitionDuration === "auto") && Boolean(transitionInterpolator);
         // Entry 47, D1/D6(a): both read BEFORE the new zoom is written -- see `scheduleHoverRepick`.
         const zoomChanged = vs.zoom !== currentZoomRef.current;
         const readoutWasStanding = lastHoverReadoutRef.current !== null;
@@ -2111,9 +2134,9 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
         const worldY = vs.target[1] + originYBeforeRecenter;
 
         // Entry 95 (PAN-ANCHOR-PREREGISTRATION.md §3, candidate 3 -- measured cause of the drag
-        // anchor drift). The recenter below re-frames deck's uncontrolled view state mid-gesture
-        // (`setProps({ initialViewState })`), but deck's controller still holds the pan-start it
-        // recorded in the OLD frame, so every remaining pointermove pans against a now-shifted target
+        // anchor drift). A recenter that re-frames deck's view state mid-gesture (then by
+        // `setProps({ initialViewState })`; now the return value below) leaves deck's controller
+        // holding the pan-start it recorded in the OLD frame, so every remaining pointermove pans against a now-shifted target
         // and the grabbed point slides. Measured pre-fix: at a zoomed-out camera whose pan crosses
         // the recenter threshold, the grab-point invariant broke by thousands of drawing-buffer px
         // (a runaway -- each recenter desynchronizes the next tick into re-crossing), versus a
@@ -2122,14 +2145,18 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
         // Fix: defer the recenter to the settled (non-dragging) tick deck fires at gesture end. The
         // origin still advances -- so the offset-relative precision `maybeRecenter` exists to keep
         // (ADR-010 rule 3, per offsetFrame.ts's own doc comment) is preserved -- but it advances when
-        // there is no live pan-start to desynchronize. Stays in deck's uncontrolled model
-        // (`initialViewState`, never `viewState`; this file's top doc comment on why).
-        if (!isDragging && frame.maybeRecenter(worldX, worldY)) {
+        // there is no live pan-start to desynchronize. The camera move is this callback's return
+        // value, never a `setProps` inside it, and `viewState` stays unset (top doc comment on why).
+        // A tick inside a transition, or one that starts one, defers too: a view state returned
+        // then is not the transition's own, so deck cancels the transition or animates from the old
+        // frame to the new (`transition-manager.js`, `processViewStateChange`, 9.3.9). The recenter
+        // lands on the next tick with neither.
+        let rebased: typeof viewState | undefined;
+        if (!isDragging && !inTransition && !startsTransition && frame.maybeRecenter(worldX, worldY)) {
           // The origin moved. Keep the camera visually anchored on the same authoritative point by
-          // re-expressing it in the new local frame and snapping deck's own uncontrolled view state
-          // to it (see this file's top doc comment for why `initialViewState` is what does that).
+          // re-expressing it in the new local frame, and hand deck that view state back.
           const [localX, localY] = frame.toLocal(worldX, worldY);
-          deckRef.current?.setProps({ initialViewState: { target: [localX, localY, 0], zoom: vs.zoom } });
+          rebased = { ...viewState, target: [localX, localY, vs.target[2] ?? 0] };
           render();
         }
 
@@ -2144,6 +2171,7 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
             originY: originYBeforeRecenter,
           })
         );
+        return rebased;
       },
       onHover: (info: PickingInfo) => {
         // rule 1: deck.gl's own unprojected pick coordinate is never read, here or anywhere else.
@@ -2308,9 +2336,10 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
   // asserts that restriction itself via `e2eSetViewStateCallCount` below, never merely by
   // convention.
   //
-  // Reuses the EXACT primitives `fitToExtent`/the real interactive `onViewStateChange` handler
-  // already use -- `OffsetFrame.forceRecenter`, deck's own uncontrolled `initialViewState` (this
-  // file's own top doc comment on why `initialViewState`, never `viewState`), and
+  // Reuses the EXACT primitives `fitToExtent` already uses -- `OffsetFrame.forceRecenter` and
+  // deck's own uncontrolled `initialViewState`, written here outside deck's view-state callback
+  // (this file's own top doc comment on why `initialViewState`, never `viewState`, works there
+  // and not inside the callback) -- and
   // `onViewportChangedRef` (the SAME choke point a real pan/zoom or "zoom to layer" click reaches,
   // `App.tsx`'s `onViewportChanged` -> debounced `requestViewport`) -- there is no second, parallel
   // query-issuing path here, only a different way of producing the camera pose that feeds the SAME
