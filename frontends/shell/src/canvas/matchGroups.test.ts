@@ -26,6 +26,9 @@ function decoded() {
 
 describe("the per-row groups of a fill by category (section 2.3 (c), OPEN-3 (a))", () => {
   // The legend order is the cases, then No value, then Other: groups 0 and 1 are a and b, 2 is No value and 3 is Other.
+  // RECORDED MUTATION for PB-U10b, applied alone: in `readColumn` (attributes/values.ts) read only a block whose `kept` is "projection".
+  // Expected failure: a match block reads as no column, and every row draws as Other.
+  // OBSERVED AT 572bb917d93dd759196be47ddd218762abae1810: FAILED -- "PB-U10b: a match block gives the same groups as the full block of the same decode, and a block without the column, not-held and no block give every row Other": AssertionError: the groups of the match block: expected [ 3, 3, 3, 3, 3 ] to deeply equal [ +0, 2, 3, 1, +0 ]. Reverted after observing.
   it("PB-U10b: a match block gives the same groups as the full block of the same decode, and a block without the column, not-held and no block give every row Other", () => {
     const style = parseStyleState(state("tag"));
     const full = decoded();

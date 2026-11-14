@@ -90,6 +90,11 @@ const FILL_MATCH = {
 };
 
 describe("a fill by category (milestone 4 PR B, section 2.3 (a))", () => {
+  // RECORDED MUTATION for PB-U1, applied alone: in `fillColorValue` (style/document.ts) drop `on_null` from the emitted match.
+  // Expected failure: the written fill_color lacks `on_null`.
+  // OBSERVED AT 572bb917d93dd759196be47ddd218762abae1810: FAILED -- "PB-U1: emits section 5a's match, which Style.parse accepts, and no fillMatch gives byte-identical literal output": AssertionError: the fill_color a fillMatch writes: expected { match: { column: 'zone', …(2) } } to deeply equal { match: { column: 'zone', …(3) } }. Reverted after observing.
+  // The same mutation also failed, in this file: OBSERVED AT 572bb917d93dd759196be47ddd218762abae1810: FAILED -- "the match is closed at construction: the first of two equal values, at most 64 cases, colours lowercased, and a match with no case is the literal": AssertionError: equal values keep the first: expected { match: { column: 'zone', …(2) } } to deeply equal { match: { column: 'zone', …(3) } }. Reverted after observing.
+  // The same mutation also failed, in this file: OBSERVED AT 572bb917d93dd759196be47ddd218762abae1810: FAILED -- "PB-U4: the document equals the vector's style, each probe's key resolves to the probe's colours, and a key keeps its case": AssertionError: the document the shell writes for the vector's style: expected { style_version: 1, layer: { …(5) } } to deeply equal { style_version: 1, layer: { …(5) } }. Reverted after observing.
   it("PB-U1: emits section 5a's match, which Style.parse accepts, and no fillMatch gives byte-identical literal output", () => {
     const state: StyleState = { ...DEFAULT_STYLE_STATE, fillMatch: FILL_MATCH };
     expect(toStyleDocument(state).layer.fill_color, "the fill_color a fillMatch writes").toEqual({
@@ -179,6 +184,9 @@ describe("the shared style-agreement vector, joined as a third reader (renderer/
 describe("the vector's match rows through the shell's path (PB-U4)", () => {
   const vector = JSON.parse(readFileSync("../../renderer/tests/data/style-agreement.json", "utf8")) as { style: unknown; probes: AgreementProbe[] };
 
+  // RECORDED MUTATION for PB-U4, applied alone: in `fillColorValue` (style/document.ts) write each case's `when` lowercased.
+  // Expected failure: a key no longer keeps its case.
+  // OBSERVED AT 572bb917d93dd759196be47ddd218762abae1810: FAILED -- "PB-U4: the document equals the vector's style, each probe's key resolves to the probe's colours, and a key keeps its case": AssertionError: a case keeps its case: expected '#cccccc' to be '#123456' // Object.is equality. Reverted after observing.
   it("PB-U4: the document equals the vector's style, each probe's key resolves to the probe's colours, and a key keeps its case", () => {
     const state: StyleState = { ...DEFAULT_STYLE_STATE, fillOpacity: 0.8, outlineColor: "#202020", outlineWidth: 1, fillMatch: FILL_MATCH };
     expect(toStyleDocument(state), "the document the shell writes for the vector's style").toEqual(vector.style);

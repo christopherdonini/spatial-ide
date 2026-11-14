@@ -39,6 +39,9 @@ describe("the legend of a fill by category (section 2.3 (f))", () => {
     swatch: (li.querySelector(".style-legend-swatch") as HTMLElement).style.backgroundColor,
   }));
 
+  // RECORDED MUTATION for PB-R1 (the legend), applied alone: in `Legend` (style/Legend.tsx) list the entries sorted by their label in place of the resolver's legend order.
+  // Expected failure: the order of the labels.
+  // OBSERVED AT 572bb917d93dd759196be47ddd218762abae1810: FAILED -- "PB-R1: lists the style's cases in declared order, then No value, then Other, each with the swatch the resolver drew": AssertionError: labels in the resolver's legend order: expected [ …(5) ] to deeply equal [ 'park', 'civic', …(3) ]. Reverted after observing.
   it("PB-R1: lists the style's cases in declared order, then No value, then Other, each with the swatch the resolver drew", () => {
     const style: StyleState = { ...DEFAULT_STYLE_STATE, fillMatch: { column: "zone", cases: [{ when: "park", then: "#00aa00" }, { when: "civic", then: "#ff0000" }, { when: "", then: "#0000ff" }], onNull: "#cccccc", onUnmatched: "#999999" } };
     render(style);

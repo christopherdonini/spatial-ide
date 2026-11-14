@@ -93,6 +93,9 @@ describe("the Colour by block of the Style tab", () => {
     });
   };
 
+  // RECORDED MUTATION for PB-R1 (the chooser), applied alone: in `StylePanel` (style/StylePanel.tsx) let `candidates` be every column, with no filter by `admitsMatchKeyType`.
+  // Expected failure: the chooser lists every column.
+  // OBSERVED AT 572bb917d93dd759196be47ddd218762abae1810: FAILED -- "PB-R1: the chooser lists exactly the columns whose type the style rule admits as a key, and Apply waits for a choice": AssertionError: the chooser's options, the empty choice first: expected [ '', 'tag', 'area', 'day', …(3) ] to deeply equal [ '', 'tag', 'wide', 'view' ]. Reverted after observing.
   it("PB-R1: the chooser lists exactly the columns whose type the style rule admits as a key, and Apply waits for a choice", () => {
     mount(source());
     const options = [...container.querySelectorAll<HTMLOptionElement>(".style-colour-column option")];
@@ -104,6 +107,9 @@ describe("the Colour by block of the Style tab", () => {
     expect(q<HTMLButtonElement>(".style-colour-apply")!.disabled, "Apply with no table source").toBe(true);
   });
 
+  // RECORDED MUTATION for PB-U8, applied alone: in `StylePanel` (style/StylePanel.tsx) call `waitForFirstScope(source, null)`, with no filter.
+  // Expected failure: the viewport_query call carries no filter.
+  // OBSERVED AT 572bb917d93dd759196be47ddd218762abae1810: FAILED -- "PB-U8: the apply asks the table source for one first scope under the view's filter and builds its cases from those rows alone, as one edit and one commit": AssertionError: viewport_query calls: dataset, bbox, bbox CRS, limit, filter, projection: expected [ Array(1) ] to deeply equal [ Array(1) ]. Reverted after observing.
   it("PB-U8: the apply asks the table source for one first scope under the view's filter and builds its cases from those rows alone, as one edit and one commit", async () => {
     mount(source());
     choose("tag");
@@ -118,6 +124,9 @@ describe("the Colour by block of the Style tab", () => {
     expect(line(), "the owner line names the column and the counts").toContain("2 distinct values found among the first 4 features read");
   });
 
+  // RECORDED MUTATION for PB-R3, applied alone: in `handleCancelColourBy` (style/StylePanel.tsx) do not call `abandon()`.
+  // Expected failure: the stream the apply issued is not cancelled.
+  // OBSERVED AT 572bb917d93dd759196be47ddd218762abae1810: FAILED -- "PB-R3: while the cases query runs a line and Cancel are shown, and Cancel ends the stream and applies nothing": AssertionError: the stream the apply issued: expected "vi.fn()" to be called with arguments: [ 'sh_1' ]. Reverted after observing.
   it("PB-R3: while the cases query runs a line and Cancel are shown, and Cancel ends the stream and applies nothing", async () => {
     mount(source());
     choose("tag");

@@ -54,6 +54,9 @@ beforeEach(() => {
 });
 
 describe("the cases of a Colour by (section 2.3 (d))", () => {
+  // RECORDED MUTATION for PB-U2, applied alone: in `buildCategoryCases` (style/categoryCases.ts) sort the values with `localeCompare` in place of the code-point comparison.
+  // Expected failure: the order of 'B', 'a', 'b', the full-width tilde and the astral character.
+  // OBSERVED AT 572bb917d93dd759196be47ddd218762abae1810: FAILED -- "PB-U2: distinct non-null values in code-point order, the first twelve with their palette colours, and the counts left out": AssertionError: the distinct non-null values, by code point (an astral character after U+FF5E): expected [ '', '～', '😀', 'a', 'b', 'B' ] to deeply equal [ '', 'B', 'a', 'b', '～', '😀' ]. Reverted after observing.
   it("PB-U2: distinct non-null values in code-point order, the first twelve with their palette colours, and the counts left out", async () => {
     const small = buildCategoryCases((await completed(["b", "a", null, "B", "a", "", "～", "\u{1F600}"])).getSnapshot(), "tag");
     expect(small.cases.map((c) => c.when), "the distinct non-null values, by code point (an astral character after U+FF5E)").toEqual(["", "B", "a", "b", "～", "\u{1F600}"]);
@@ -69,6 +72,11 @@ describe("the cases of a Colour by (section 2.3 (d))", () => {
 });
 
 describe("the wait for the first scope (Amendment 12 item 4)", () => {
+  // RECORDED MUTATION for PB-U9 (i) and (ii), applied alone: in `waitForFirstScope` (style/categoryCases.ts) let `issuedHere` be `true`, so that every wait issues its own stream.
+  // Expected failure: (i) a start for a completed result under the same filter; (ii) a second viewport_query for a loading stream.
+  // OBSERVED AT 572bb917d93dd759196be47ddd218762abae1810: FAILED -- "PB-U9 (i): a completed result under the same filter is reused, with no viewport_query": Error: Test timed out in 5000ms. Reverted after observing.
+  // (ii) OBSERVED AT 572bb917d93dd759196be47ddd218762abae1810: FAILED -- "PB-U9 (ii): a loading stream under the same filter is joined, with one viewport_query in all": AssertionError: viewport_query calls with the stream joined: expected "vi.fn()" to be called 1 times, but got 2 times. Reverted after observing.
+  // (v), the same mutation: OBSERVED AT 572bb917d93dd759196be47ddd218762abae1810: FAILED -- "PB-U9 (v): abandoning cancels a stream the wait issued itself and leaves a joined stream running": AssertionError: cancel calls for a joined stream: expected "vi.fn()" to not be called at all, but actually been called 1 times. Reverted after observing.
   it("PB-U9 (i): a completed result under the same filter is reused, with no viewport_query", async () => {
     const a = filterOf("zone = 'a'");
     const source = await completed(["x", "y"], a);
@@ -114,6 +122,9 @@ describe("the wait for the first scope (Amendment 12 item 4)", () => {
     expect(await wait.result, "the outcome of a source cancelled mid-wait").toEqual({ kind: "not-applied", reason: "cancelled" });
   });
 
+  // RECORDED MUTATION for PB-U9 (v), applied alone: in `abandon` (style/categoryCases.ts) call `source.cancel()` unconditionally, not only when the wait issued the stream.
+  // Expected failure: a cancel for a joined stream.
+  // OBSERVED AT 572bb917d93dd759196be47ddd218762abae1810: FAILED -- "PB-U9 (v): abandoning cancels a stream the wait issued itself and leaves a joined stream running": AssertionError: cancel calls for a joined stream: expected "vi.fn()" to not be called at all, but actually been called 1 times. Reverted after observing.
   it("PB-U9 (v): abandoning cancels a stream the wait issued itself and leaves a joined stream running", async () => {
     const issued = newSource();
     const own = waitForFirstScope(issued, null);

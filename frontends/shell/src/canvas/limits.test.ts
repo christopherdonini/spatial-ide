@@ -86,6 +86,9 @@ describe("the resident attribute ceiling (SHELL-MIGRATION-MILESTONE-4-PREREGISTR
   };
 
   // The match column's block (section 2.2 (d), OPEN-20 (a)): what a batch past the ceiling keeps while the style colours by `tag`.
+  // RECORDED MUTATION for PB-U10a, applied alone: in `withinAttributeCeiling` (canvas/limits.ts) never keep the match column (`kept` is always null).
+  // Expected failure: the kept block is not a match block of the column.
+  // OBSERVED AT 572bb917d93dd759196be47ddd218762abae1810: FAILED -- "PB-U10a: past the ceiling a batch keeps the match column alone, which the sum counts, readRow calls not-held and the column reader reads, also after a duplicate drop": AssertionError: the kept block: expected [ undefined, undefined, undefined ] to deeply equal [ [ 'tag' ], 'match', null ]. Reverted after observing.
   it("PB-U10a: past the ceiling a batch keeps the match column alone, which the sum counts, readRow calls not-held and the column reader reads, also after a duplicate drop", () => {
     const decoded = twoColumns("sh_a", [1n, 2n, 3n]);
     const full = (decoded.attributes as BatchAttributes).bytes;

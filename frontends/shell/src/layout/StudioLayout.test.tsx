@@ -273,6 +273,9 @@ describe("StudioLayout: the reveal entries (milestone 4 PR B, section 2.3 (j))",
     });
   }
 
+  // RECORDED MUTATION for the /colour entry, applied alone: in `StudioLayout` (layout/StudioLayout.tsx) `layer.revealStyle` selects the Inspector's Layer tab in place of its Style tab.
+  // Expected failure: the Style panel is not shown.
+  // OBSERVED AT 572bb917d93dd759196be47ddd218762abae1810: FAILED -- "/colour opens the Inspector if it is closed and selects its Style tab, with a dataset open and not without one": AssertionError: the Inspector, its Style panel and its Layer panel: expected [ true, false, true ] to deeply equal [ true, true, false ]. Reverted after observing.
   it("/colour opens the Inspector if it is closed and selects its Style tab, with a dataset open and not without one", () => {
     mount(false);
     runBar("/colour");
@@ -287,6 +290,9 @@ describe("StudioLayout: the reveal entries (milestone 4 PR B, section 2.3 (j))",
     expect([shown("#region-inspector"), shown("#inspector-panel-style"), shown("#inspector-panel-layer")], "the Inspector, its Style panel and its Layer panel").toEqual([true, true, false]);
   });
 
+  // RECORDED MUTATION for the /table entry, applied alone: in `StudioLayout` (layout/StudioLayout.tsx) `layer.revealTable` selects Activity's Console tab in place of its Table tab.
+  // Expected failure: the Table panel is not shown.
+  // OBSERVED AT 572bb917d93dd759196be47ddd218762abae1810: FAILED -- "/table opens Activity if it is closed and selects its Table tab": AssertionError: Activity, its Table panel and its Console panel: expected [ true, false, true ] to deeply equal [ true, true, false ]. Reverted after observing.
   it("/table opens Activity if it is closed and selects its Table tab", () => {
     mount(true);
     expect(shown("#region-activity"), "Activity at the first layout").toBe(false);

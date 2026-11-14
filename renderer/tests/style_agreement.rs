@@ -125,6 +125,9 @@ fn rust_agrees_with_the_shared_vector_that_typescript_also_reads() {
 /// The match-key rule over the vector's typed rows: Rust admits a column as a match key exactly when
 /// the row says `admitted`. The TypeScript reader of the same rows is `matchKeyRule.test.ts` in the
 /// shell. The Arrow type is built here from its display string, which each row is checked to equal.
+// RECORDED MUTATION for PB-U7 (the Rust side), applied alone: in renderer/tests/data/style-agreement.json set the Dictionary(Int32, Utf8) row's `admitted` to true.
+// Expected failure: this test, at the Dictionary row.
+// OBSERVED AT 572bb917d93dd759196be47ddd218762abae1810: FAILED -- `cargo test -p spatial-renderer --test style_agreement`, "the_match_key_rule_admits_exactly_the_vectors_admitted_rows": assertion `left == right` failed: admission of Dictionary(Int32, Utf8) (left: false, right: true). Reverted after observing.
 #[test]
 fn the_match_key_rule_admits_exactly_the_vectors_admitted_rows() {
     let v: serde_json::Value = serde_json::from_str(VECTOR).expect("agreement vector is JSON");

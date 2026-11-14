@@ -623,6 +623,10 @@ describe("buildLayers -- a fill by category (milestone 4 PR B, section 2.3 (c))"
     filter: null,
   });
 
+  // RECORDED MUTATION for PB-U3, applied alone: in `rowGroups` (canvas/matchGroups.ts) a non-null value that `Style.groupFor` gives as the Other group takes group 0, the first case.
+  // Expected failure: the datum of an unlisted value (row 2, 'zzz') draws as the first case, not as Other.
+  // OBSERVED AT 572bb917d93dd759196be47ddd218762abae1810: FAILED -- "PB-U3: each datum draws as Style.resolve gives its row's value, for polygons (a part reads its feature's row), points and lines; NULL is No value and an unlisted value is Other": AssertionError: polygon datum 3 (row 2, zzz): expected [ 170, +0, +0, 128 ] to deeply equal [ 204, 204, 204, 128 ]. Reverted after observing.
+  // The same mutation also failed, in canvas/matchGroups.test.ts: OBSERVED AT 572bb917d93dd759196be47ddd218762abae1810: FAILED -- "PB-U10b: a match block gives the same groups as the full block of the same decode, and a block without the column, not-held and no block give every row Other": AssertionError: the groups of the full block: expected [ +0, 2, +0, 1, +0 ] to deeply equal [ +0, 2, 3, 1, +0 ]. Reverted after observing.
   it("PB-U3: each datum draws as Style.resolve gives its row's value, for polygons (a part reads its feature's row), points and lines; NULL is No value and an unlisted value is Other", () => {
     const rows = ["a", null, "zzz", "b"];
     const draw = drawOf();
@@ -647,6 +651,9 @@ describe("buildLayers -- a fill by category (milestone 4 PR B, section 2.3 (c))"
     }
   });
 
+  // RECORDED MUTATION for PB-U5, applied alone: in `fillProps` (canvas/buildLayers.ts) take the trigger as `++matchFillRevision` in place of `match.revision`.
+  // Expected failure: a rebuild after ten pans carries a new trigger.
+  // OBSERVED AT 572bb917d93dd759196be47ddd218762abae1810: FAILED -- "PB-U5: ten pans evaluate no accessor and leave every layer's update trigger as it was; a new style is a new trigger": AssertionError: the trigger after ten pans: expected { getFillColor: [ 17 ] } to deeply equal { getFillColor: [ 7 ] }. Reverted after observing.
   it("PB-U5: ten pans evaluate no accessor and leave every layer's update trigger as it was; a new style is a new trigger", () => {
     const draw = drawOf();
     let reads = 0;

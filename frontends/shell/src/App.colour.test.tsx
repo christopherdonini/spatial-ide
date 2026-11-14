@@ -204,6 +204,11 @@ describe("App: Colour by (milestone 4 PR B), through the real App", () => {
     });
   }
 
+  // RECORDED MUTATION for PB-R2, applied alone: in `styleTransitions` (workspace/viewTransitions.ts) a match emits the literal `next.fillColor` in place of the match.
+  // Expected failure: the recorded intent is the literal.
+  // OBSERVED AT 572bb917d93dd759196be47ddd218762abae1810: FAILED -- "PB-R2: the apply records one style.set whose intent is the wire fixture's, with the product's colours": AssertionError: the intent, in the wire fixture's shape and order: expected { action: 'style.set', …(1) } to deeply equal { action: 'style.set', …(1) }. Reverted after observing.
+  // The same mutation also failed, in this file: OBSERVED AT 572bb917d93dd759196be47ddd218762abae1810: FAILED -- "PB-U11: with the not-held state standing, a Colour by on a new column issues one re-issue under the active filter beside the cases query, and the same column issues none": AssertionError: one re-issue of the first look beside one cases query: expected [ 1, 1 ] to deeply equal [ 2, 1 ]. Reverted after observing.
+  // The same mutation also failed, in this file: OBSERVED AT 572bb917d93dd759196be47ddd218762abae1810: FAILED -- "PB-U11: with no not-held state, a Colour by issues its cases query and no re-issue": AssertionError: the style was applied: expected undefined to be 'zone' // Object.is equality. Reverted after observing.
   it("PB-R2: the apply records one style.set whose intent is the wire fixture's, with the product's colours", async () => {
     await open("C:/data/a.parquet");
     await colourBy("zone");
@@ -223,6 +228,9 @@ describe("App: Colour by (milestone 4 PR B), through the real App", () => {
     expect([...container.querySelectorAll(".style-legend-label")].length, "two cases, No value and Other in the legend").toBe(4);
   });
 
+  // RECORDED MUTATION for PB-R4, applied alone: in `waitForFirstScope` (style/categoryCases.ts) read the phase `cancelled` as a completed result, with the rows.
+  // Expected failure: the apply is made after the cancel, and the line does not say that nothing was applied.
+  // OBSERVED AT 572bb917d93dd759196be47ddd218762abae1810: FAILED -- "PB-R4: hiding Activity while the apply waits on the Table's stream applies no style and says so, and with an export held no viewport_query is issued": AssertionError: the line after the cancel: expected '[P6 placeholder] Coloured by zone: 2 …' to contain 'Nothing was applied'. Reverted after observing.
   it("PB-R4: hiding Activity while the apply waits on the Table's stream applies no style and says so, and with an export held no viewport_query is issued", async () => {
     await open("C:/data/a.parquet");
     click(q('.top-bar-toggle[aria-controls="region-activity"]'));
@@ -247,6 +255,9 @@ describe("App: Colour by (milestone 4 PR B), through the real App", () => {
     expect(line(), "the line while the export holds the dataset").toContain("export");
   });
 
+  // RECORDED MUTATION for PB-U11, applied alone: in the Colour-by effect (App.tsx) skip the re-issue (`reportViewportOutcome(requestViewportWithSingleRetry(attempt), dataset)` is not called).
+  // Expected failure: no re-issue of the first look.
+  // OBSERVED AT 572bb917d93dd759196be47ddd218762abae1810: FAILED -- "PB-U11: with the not-held state standing, a Colour by on a new column issues one re-issue under the active filter beside the cases query, and the same column issues none": AssertionError: one re-issue of the first look beside one cases query: expected [ 1, 1 ] to deeply equal [ 2, 1 ]. Reverted after observing.
   it("PB-U11: with the not-held state standing, a Colour by on a new column issues one re-issue under the active filter beside the cases query, and the same column issues none", async () => {
     await open("C:/data/a.parquet");
     await flush();
