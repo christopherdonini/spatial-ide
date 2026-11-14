@@ -2285,3 +2285,37 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 18: colour-by part 1's class 8, read by git at its head 31cf0e22 (three files and one group over their ceilings, none trimmed); the advisor's ruling ADV-2026-11-14-18 on the Step 1 read joins by reference (class 5); part 1's machine departure (class 1). Written by the custodian before part 2's code.
+
+*Written by the custodian on 2026-11-14, before part 2's dispatch. There is no architect draft: this amendment records counts read by git and a ruling, by reference. The ruling is the advisor's under the human's delegation of 2026-11-13 (`state/directives/2026-11-13-the-grant-approved-the-advisors-authority-its-rulings-the-humans-except-item-4-the-advisor-merges.md`, items 2 and 3), not the human's, and the human may overturn it. Where an item below gives the ruling's content in other words, the words are the custodian's; the ruling's file is the text.*
+
+1. **Part 1's class 8: budget overrun, §7 not edited.** None is trimmed.
+   - **How it was counted.** By §7's command, insertions plus deletions per file, to part 1's head 31cf0e22713e7e3264ed843425ef3686775d7e47. Every file below has the same count from 5b309b78 (Amendment 15 item 1's merge) as from 08ce9935 (Amendment 16 item 4's base). The worker's report gives the same three overruns (`state/consults/2026-11-14-b1-shell-half-pr-b-colour-by-part-1-again-built-worker-report.md:209-213 @ ddb38739 sha256:338d67e837bdf76806e1909912a55764f9006b53efae94faaf6c41789b297dc5`).
+   - **Over:**
+     - `frontends/shell/src/attributes/values.ts`: 47 + 9 = 56, against 40 (Amendment 12 item 13's OPEN-20 (a) row, kept by Amendment 16 item 4).
+     - OPEN-20 (a)'s B-P group: `limits.ts` 13 + 5 = 18 and `values.ts` 56, together 74, against 65.
+     - `frontends/shell/src/canvas/decodeBatch.ts`: 10 + 7 = 17, against 16 (Amendment 16 item 4's table). §7's count takes deletions, so it is over.
+     - `frontends/shell/src/layout/StudioLayout.test.tsx`: 67 + 0 = 67, against 60 (Amendment 12 item 13's reveal-entries row). The code commit 572bb917 had 61. The record commit 31cf0e22 added 6 comment lines.
+   - **Within:**
+     - the reveal-entries row's B-P, `StudioLayout.tsx` 13 of 30;
+     - its B-T, 74 of 80 (`StudioLayout.test.tsx` 67, `actionRegistry.test.ts` 7);
+     - OPEN-20 (a)'s B-T, 62 of 120 (`limits.test.ts` 46, `values.test.ts` 16);
+     - `actionRegistry.ts` 10 of 25.
+   - **`workspaceState.ts`.** The report counts it as 18 against 10, from 08ce9935 only (`state/consults/2026-11-14-b1-shell-half-pr-b-colour-by-part-1-again-built-worker-report.md:213 @ ddb38739 sha256:817660921eb53309225c219d72b85906ab51d5fe5abedff2f1034e7a77da5156`). Part 1 adds no line to it: from 5b309b78 it is 0. Its 9 + 9 from 08ce9935 are earlier phases' lines. They are within its cumulative ceiling, 25 (Amendment 15 item 3 (a), Forward). It is not an overrun. (This is the custodian's reading, from git.)
+   - **Forward.** `values.ts`, `decodeBatch.ts`, `StudioLayout.test.tsx` and OPEN-20 (a)'s B-P group have no room left. Any further line in them is class 8 again, recorded at PR B's closing record, where PR B's totals are read.
+
+2. **The ruling (class 5).** `state/directives/2026-11-14-advisor-ruling-adv-2026-11-14-18-the-step-1-read-stands-colour-by-refill-keeps-the-view-placed-after-the-first-look-node-s3-filler-queue.md`: the advisor's file, 4,228 bytes, sha256 28ba17b986b20c7fc30e0fcae9889faf4b96c953d32cef82eaaa8662dc0883f4, filed byte for byte below its title and the custodian's note.
+   - Item 1: the Step 1 read stands for the candidate arm. The refill clears the map and the tiles, fits the view again, and shows the untiled first look under its row limit until a pan or zoom. Part 1 edited nothing under `residency/`.
+   - Item 2: `colour-by-refill-keeps-the-view` is built after `open-first-look-fills-fit-view` merges, graded S3, in the filler queue. It is not PR B's.
+   - Item 4: item 51's words are as ADV-2026-11-14-15 item 5 ruled them. The draft states (a) to (d) of the ruling's item 4 for the arm the operator runs. An arm an operator cannot reach in the shipped app is named in the source comment, not in the item, and the gates say which arm that is.
+   - Item 5: the report gives no file and line for its Step 1 answers, and its filing note says so. The gates' clause check of item 51 supplies them (Amendment 17 item 2).
+   - Item 6: part 2 is unchanged.
+
+3. **Part 1's machine departure (class 1, for round 77).** The worker started one shared hold in the same call as its status check while another of this project's holds showed (`state/consults/2026-11-14-b1-shell-half-pr-b-colour-by-part-1-again-built-worker-report.md:250 @ ddb38739 sha256:533524c08f3939085f69ca2ef20ccf208049d860dccc182f875b16bf8e23e78b`). No hold was refused. Part 2's brief keeps the status check in a call of its own before each hold.
+
+4. **Next (class 1).** Part 2, as Amendments 16 and 17 give it, with item 2's item 4 for item 51's draft.
+
+Read the last amendment first.
+
+Nothing above is edited.
