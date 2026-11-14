@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `1273427e5068465e81a847065bc86fa1bcb59fa453eff8c00de490e77fa6d7c1`) at `2026-11-14T20:06:44.079Z`.
+Generated from `PLAN.yaml` (sha256 `143a3d042f2acc20df0e91debc1b17636c86726863a89c2f280fbd3ca28806ca`) at `2026-11-14T21:12:57.851Z`.
 
 ## 1. Next
 
@@ -55,7 +55,6 @@ Generated from `PLAN.yaml` (sha256 `1273427e5068465e81a847065bc86fa1bcb59fa453ef
 - **clippy-deny-warnings-workspace** — The workspace clippy diagnostics fixed, so cargo clippy over every target with -D warnings exits 0 (the cloud Linux run lists 48 distinct) — evidence: branch `cut/clippy-deny-warnings-workspace-12c`
 - **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **record-step-style-match-widening** — record_step admits a style.set match value on fillColor, with the step's dependencies naming the match column and its type (milestone 4's OPEN-4 (A′)), carried in piece 1c's step 1 by class 9 (the 1c form's Amendment 7) — evidence: branch `cut/b2-piece-1c-save-and-reopen`
-- **close-races-three-untested-kernel-tests** — Kernel tests for the three places #308's two gates found untested: the cancel at a failed attribution, the end's reason branch of the arm, and the ended-then-closed race at SkpHost level (S3, the filler queue) — evidence: branch `cut/close-races-three-untested-kernel-tests`
 - **b1-shell-half** — Shell migration, milestone 4 -- B1 shell half: attributes of the inspected feature, colour by category with its legend, and the table — evidence: branch `cut/b1-shell-half-pr-c`
 - **port-2-macos-l1-and-app-dirs** — PORT-2 -- macOS L1 for the Cargo workspace: macos-latest in the same matrix, one application-directory boundary replacing the two resolvers, and a case-policy test on a case-insensitive volume — evidence: branch `cut/port-2-macos-l1-and-app-dirs`
 
