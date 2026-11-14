@@ -43,3 +43,19 @@ At this form's commit (a747986103f82faa8f85b6b6ae2ea90881f1739e) each is found o
 ### Amendments
 
 *(Opens empty; append-only.)*
+
+### Amendment 1 — the closing, written after the single gate's result and the reviewer's one check were seen (class 1): C1 closed under §31, two sentences added to the source comment by ruling
+
+*Written by the custodian on 2026-11-13, after the gate's result and the check's were seen. References only: the advisor's rulings under the human's delegation of 2026-11-13: ADV-2026-11-13-03 (`state/directives/2026-11-13-advisor-ruling-adv-2026-11-13-03-312-timing-case-sentence-in-item-64s-comment-reviewer-checks-it-once.md`), item 4; ADV-2026-11-13-06 (`state/directives/2026-11-13-advisor-ruling-adv-2026-11-13-06-312-c1-closed-by-the-reviewers-words-the-forms-amendment-records-the-closing.md`), item 2 (a) to (c); ADV-2026-11-13-07 (`state/directives/2026-11-13-advisor-ruling-adv-2026-11-13-07-312-debounce-case-the-reviewers-sentence-in-item-64s-comment-no-further-check.md`), item 3, which replaces item 2 (d). Nothing below is a quotation but the one word marked verbatim.*
+
+1. **The single gate** (`state/consults/gates/2026-11-13-known-limitations-first-look-partial-view-gate-reviewer.md`), attempt 1 at 9826c1c9129f0d243e57ae9bea84534e09b33656, ended FAIL on C1 alone, a wording finding. Its Evidence and Documentation sections each read `None.` (verbatim).
+2. **C1 is closed under AUTONOMY §31** by the reviewer's replacement words, applied in 013d8c9bd24dce2a610f996821bd4cd0a33cee18, under ADV-2026-11-13-06, item 1.
+3. **The timing case's sentence** of ADV-2026-11-13-03, item 1, was added in b71de27086e3b75f41265915116f72ad70e1482a. The reviewer's one check of it at that head (`state/consults/gates/2026-11-13-known-limitations-first-look-partial-view-gate-reviewer-sentence-check.md`) found PASS WITH NOTES: each clause true, both pins equal. Its note is one case named under §31 (c), the viewport debounce.
+4. **After the gated head 9826c1c9 nothing changed** but three wordings in item 64's source comment, each with its commit and its ruling:
+   - the reviewer's C1 words: 013d8c9b, ADV-2026-11-13-06, item 1;
+   - the timing case's sentence: b71de270, ADV-2026-11-13-03, item 1;
+   - the debounce sentence, the reviewer's words: 880391f6dd9640bdd498159f2bba66a5a616489c, ADV-2026-11-13-07, item 1.
+   `git diff --numstat 9826c1c9 880391f6` names `KNOWN-LIMITATIONS.md` alone, one line in and one out.
+5. **Against §B and Scope** (ADV-2026-11-13-03, item 4): the comment now differs from §B by those three wordings, and the PR touches one file where Scope names two.
+
+Nothing above is edited.
