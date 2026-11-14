@@ -10,11 +10,10 @@
 
 mod watch_support;
 
-use std::fs::{File, OpenOptions};
+use std::fs::OpenOptions;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::Arc;
-use std::time::{Duration, SystemTime};
 
 use serde_json::Value;
 use spatial_engine::fixture::{
@@ -336,14 +335,18 @@ fn steps_chain_in_the_order_the_kernel_received_them() {
     assert_eq!(steps[1]["intent"]["params"]["value"], 0.35);
 }
 
-/// **K5.** A reopen of the same file, admitted under the same claims, continues its record, and
-/// another file starts its own. The reopened file here was rewritten with a modification time 60 s
-/// later, so the later step's observation differs.
+/// **K5.** Each open has its own record until a save binds it to a project: a reopen of the same
+/// file, unchanged and admitted under the same claims as the first open, starts its own record, and
+/// another file starts its own. Three opens, each recorded once, leave three records, each with one
+/// step whose parent is null, and the reopen's step names a dataset identity that differs from the
+/// first open's. The file is not rewritten between the opens, so the open alone, and not a changed
+/// observation, is what separates the records.
 ///
-/// RECORDED MUTATION: records are keyed by handle. Expected failure: the reopen starts a second
-/// record.
+/// RECORDED MUTATION: the lookup in `record_step` also matches a record that another unbound open
+/// holds. Expected failure: the reopen's step continues the first open's record, and this test fails
+/// at its count of two records after the reopen.
 #[test]
-fn a_reopen_of_the_same_file_continues_its_record_and_another_file_starts_its_own() {
+fn an_unbound_reopen_of_the_same_file_starts_its_own_record_and_another_file_its_own() {
     let dir = scratch("k5");
     let store = dir.join("store");
     let (a, b) = (dir.join("a.parquet"), dir.join("b.parquet"));
@@ -359,23 +362,18 @@ fn a_reopen_of_the_same_file_continues_its_record_and_another_file_starts_its_ow
     };
     host.close_dataset(close).unwrap();
 
-    write_geoparquet(&a, &f1(1)).unwrap();
-    let later = SystemTime::now() + Duration::from_secs(60);
-    File::options()
-        .write(true)
-        .open(&a)
-        .unwrap()
-        .set_modified(later)
-        .unwrap();
     let again = open(&host, &a);
     recorder.record_step(opacity(&again, 0.6)).unwrap();
-    assert_eq!(records(&store).len(), 1, "the reopen continues the record");
+    assert_eq!(
+        records(&store).len(),
+        2,
+        "the unbound reopen starts its own record"
+    );
     let other = open(&host, &b);
     recorder.record_step(opacity(&other, 0.7)).unwrap();
-    assert_eq!(records(&store).len(), 2, "another file starts its own");
+    assert_eq!(records(&store).len(), 3, "another file starts its own");
     drop(recorder);
 
-    let dirs = records(&store);
     let steps = |d: &PathBuf| -> Vec<Value> {
         recover(d)
             .lines
@@ -384,24 +382,23 @@ fn a_reopen_of_the_same_file_continues_its_record_and_another_file_starts_its_ow
             .map(|l| serde_json::from_str(l).unwrap())
             .collect()
     };
-    let (one, two) = (steps(&dirs[0]), steps(&dirs[1]));
-    let (long, short) = if one.len() == 2 {
-        (one, two)
-    } else {
-        (two, one)
+    let all: Vec<Vec<Value>> = records(&store).iter().map(steps).collect();
+    for held in &all {
+        assert_eq!(held.len(), 1, "each record holds one step");
+        assert_eq!(held[0]["step"]["parent"], Value::Null);
+    }
+    // The three steps set three different opacities, which tells the records apart.
+    let with = |value: f64| -> Value {
+        let found = all
+            .iter()
+            .find(|held| held[0]["step"]["intent"]["params"]["value"] == value);
+        found.expect("a record holds the step")[0]["step"]["data"]["dataset"].clone()
     };
-    assert_eq!((long.len(), short.len()), (2, 1));
-    let observed = |s: &Value| s["step"]["data"]["identity"]["observed"].clone();
     assert_ne!(
-        observed(&long[0]),
-        observed(&long[1]),
-        "the later step's observation differs"
+        with(0.5),
+        with(0.6),
+        "the reopen's step names its own dataset identity"
     );
-    assert_eq!(
-        long[0]["step"]["data"]["dataset"],
-        long[1]["step"]["data"]["dataset"]
-    );
-    assert_eq!(long[1]["step"]["parent"], long[0]["step"]["id"]);
 }
 
 /// **K6.** `end_session` clears this run's records, their files and folders, and nothing else: a
