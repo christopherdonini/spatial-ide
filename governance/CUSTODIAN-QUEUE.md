@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `564b707e8bb089663aa283273674bcb26ad26a3744c96ba2e129fb51ade77f36`) at `2026-11-14T16:50:33.627Z`.
+Generated from `PLAN.yaml` (sha256 `394e20ea157f2f6302a5935afb95556bbf3d7d9a7b36d66eb3341bd17d22490f`) at `2026-11-14T17:31:19.071Z`.
 
 ## 1. Next
 
@@ -9,7 +9,6 @@ Generated from `PLAN.yaml` (sha256 `564b707e8bb089663aa283273674bcb26ad26a3744c9
 ## 2. Ready
 
 - **lod-tier-tests-own-tier-folder** — Each engine test run takes its own tier folder, the machine-wide tier folder kept for the product only: two suites sharing one machine cleared each other's tiers, failing lod_tier_builder in #284's gate 1 (the human's ruling of 2026-11-06, item 2) (lane `engine`, order null, budget 60 min)
-- **close-races-three-untested-kernel-tests** — Kernel tests for the three places #308's two gates found untested: the cancel at a failed attribution, the end's reason branch of the arm, and the ended-then-closed race at SkpHost level (S3, the filler queue) (lane `kernel-protocol`, order null, budget 60 min)
 - **publish-approval-kernel-parity** — Kernel parity for the publish approval's column line: the kernel's approval prompt carries the column list and prints it, and the shell mirrors it, so the CLI and the shell show the same facts (option (E); S3, not for v0.2) (lane `kernel-protocol`, order null, budget 0 min)
 - **second-open-history-before-1c-step-3** — Which record a step belongs to: a second open's steps, and steps recorded after a save made before any step (the independent review's C2), with the review's note on two dataset identities; settled before 1c step 2's lineage reader (L1 to L4), so before step 3; ADR-036's text on both is the human's (lane `kernel-protocol`, order null, budget 0 min)
 - **skp-line-cites-outside-close-races** — Stale line cites into kernel/src/skp.rs outside kernel-close-races-followups files -- shell streaming, App.tsx, pool_poll.rs, src-tauri lib.rs, the P4 corpus test and the persisted-artifacts test (lane `kernel-protocol`, order null, budget 0 min)
@@ -56,6 +55,7 @@ Generated from `PLAN.yaml` (sha256 `564b707e8bb089663aa283273674bcb26ad26a3744c9
 - **clippy-deny-warnings-workspace** — The workspace clippy diagnostics fixed, so cargo clippy over every target with -D warnings exits 0 (the cloud Linux run lists 48 distinct) — evidence: branch `cut/clippy-deny-warnings-workspace-12c`
 - **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **record-step-style-match-widening** — record_step admits a style.set match value on fillColor, with the step's dependencies naming the match column and its type (milestone 4's OPEN-4 (A′)), carried in piece 1c's step 1 by class 9 (the 1c form's Amendment 7) — evidence: branch `cut/b2-piece-1c-save-and-reopen`
+- **close-races-three-untested-kernel-tests** — Kernel tests for the three places #308's two gates found untested: the cancel at a failed attribution, the end's reason branch of the arm, and the ended-then-closed race at SkpHost level (S3, the filler queue) — evidence: branch `cut/close-races-three-untested-kernel-tests`
 - **b1-shell-half** — Shell migration, milestone 4 -- B1 shell half: attributes of the inspected feature, colour by category with its legend, and the table — evidence: branch `cut/b1-shell-half-pr-c`
 - **port-2-macos-l1-and-app-dirs** — PORT-2 -- macOS L1 for the Cargo workspace: macos-latest in the same matrix, one application-directory boundary replacing the two resolvers, and a case-policy test on a case-insensitive volume — evidence: branch `cut/port-2-macos-l1-and-app-dirs`
 
