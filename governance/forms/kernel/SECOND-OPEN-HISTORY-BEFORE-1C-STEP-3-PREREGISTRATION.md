@@ -393,3 +393,23 @@ Assertions in the named tests only. No timing, no benchmark and no docs/08 numbe
    - two errored calls: an Edit with no change (2026-11-14T00:48:06Z) and a Write before a Read (2026-11-14T01:32:39Z).
 
 5. **Unchanged** (item 6): the claims, Scope, §2.5, the tests and mutations, §9's gates and suites, and item 43's turn rule (ADV-2026-11-13-20 item 5).
+
+### Amendment 2 — C1b and C2 built and pushed; the size over §7's estimate; item 43 held from C2; the gates next (class 1, written after the results were seen)
+
+*Written by the custodian after the worker's report. References only. The worker's report: `state/consults/2026-11-14-second-open-history-before-1c-step-3-c1b-c2-built-worker-report.md`. The ruling it worked under: the advisor's ruling ADV-2026-11-14-04 (Amendment 1). Nothing above is edited.*
+
+1. **The commits**, on `cut/second-open-history-before-1c-step-3`, pushed at C2:
+   - C1b, 882450cf5a17ba13ecc4a59f9a22b1e76856c726, committed after `cargo test --workspace --locked` exited 0 on its tree, as Amendment 1 item 1 orders;
+   - C2, 5e6b79bc0d0f423293b312140788044fab1de106, the records commit of §2.6, committed 2026-11-14T06:10:35Z.
+   - No PR yet. C3 is not made.
+2. **The runs**, as the report gives them: the workspace suite exited 0 at C1b's and at C2's tree; C1's unrun checks exited 0 at C1b, except verify-test-claims, which found the 1b form's renamed test that C2's row covers; M1 to M6 were each killed as §4 predicts and reverted to an empty diff; at C2, verify-test-claims, verify-cites, verify-quotes and verify.mjs exited 0.
+3. **The size.** `git diff --numstat 695e1303794ed390d305d07fca592694f33f589e 5e6b79bc0d0f423293b312140788044fab1de106`: 736 changed lines over 10 files. The 7 code, test and protocol files make 719, against §7's estimate of about 530: C1's 712 and C1b's 7. As Amendment 1 item 3 has it, §7 is an estimate and this is not a stop. Nothing was trimmed.
+4. **Item 43's turn** (§2.6). This piece reached its point at C2. Port-2 had not dispatched its gates: the gate log holds no row for it. This piece holds item 43 until it merges, and port-2 does not dispatch its gates before then.
+5. **The pins.** Item 43's and item 63's DRAFT comments pin lines at C1 (a2fbab2ca5ddda114ca18cd94392198b30dd94c1). C1 reaches main only with the merge, by a merge commit (Amendment 1 item 2). The gates say whether they accept pins at C1 or ask for pins at a later head.
+6. **The worker's departures**, as its report gives them, for round 77:
+   - a hold taken in a foreground call by mistake, with no command under it, and released at once;
+   - two background hold calls with the worker's own reads ahead of the hold;
+   - the scripts suite run outside a hold, as a light run under §9;
+   - waits on processes found by a command-line pattern, one of which may not have been this project's; it was only waited on, never stopped.
+7. **Next.** A draft PR, then both gates, one packet (§9), when no other heavy run of this project is on the machine: one heavy run at a time. At this writing the pan-anchor fix's gate is running. Then the words of §2.6 to the advisor, then C3.
+- **Unchanged:** everything else.

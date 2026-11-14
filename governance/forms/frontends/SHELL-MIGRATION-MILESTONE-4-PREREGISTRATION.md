@@ -1877,3 +1877,112 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 14: the publish approval consult's finding 4. PB-E2 gains the columns-line assertion and operator row 5 gains its expected outcome (class 9), each declared before any code of it. Main is merged into PR B's branch before that code. Pan-anchor's four runs at M′ and their reading (ADV-2026-11-14-12 and ADV-2026-11-14-13). Written by the custodian before any code of PB-E2 or row 5.
+
+*Drafted read only by the architect at main 54ee3522bfd2865637575802d267ca6746d2fd59, with PR B's branch read at 6649a443a38763759339c7813e3fdbe9eca09be0 (`state/consults/2026-11-14-b1-shell-half-pr-b-amendment-14-finding-4-class-9-architect-draft.md`). The custodian's script fills each `sha256:<H>` with the sha256 of the cited whole lines, each with its LF, at 54ee3522. References only. The one quotation is the reuse index in item 7, byte-copied from the custodian's brief and marked so. The string in items 1 and 2 is the composer's output, copied from the host unit test's assertion at the pin in item 1 (i); it is not a quotation of the human. §7 is not edited.*
+
+*Carried by the custodian on 2026-11-14 from that draft's fenced block, byte for byte with these changes, all the custodian's: the heading's clause after the merge; in the note above, the source the string is copied from; each pin's hash at 54ee3522, filled by script; in item 1 (i), the pin's description (the re-read in item 4 found those lines to be the host's unit test; the composer's literal is at the composer's pin in item 1); in item 4, the re-read's record; item 5, rewritten under the advisor's rulings ADV-2026-11-14-12 and ADV-2026-11-14-13, the run alone being no longer owed; in item 6, KL-3's number and where the series and the two moved items go; and item 8, the draft's OPEN items. Nothing else is changed.*
+
+1. **PB-E2's added assertion (class 9).**
+   - Authority: item 4 (c) of the human's third message of 2026-11-12, `state/directives/2026-11-12-third-message-open-3-a-gates-now-typed-check-reading-rule-first-look-s1-publish-approval-s2-second-open-rulings-308-restore-item-47-floor-order.md:21` @ 54ee3522 sha256:70932e1712f73c4e0defe23359d0f8eff4d87312033dbee4ac2147a866fda166. Placed here by ADV-2026-11-14-06, item 5 (b) (`state/directives/2026-11-14-advisor-ruling-adv-2026-11-14-06-findings-node-open-1-b-the-g3-style-hash-clause-the-judge-sentence-unchanged.md`). The class is read as in `governance/forms/frontends/PUBLISH-APPROVAL-CONSULT-GATE-FINDINGS-PREREGISTRATION.md:95-98` @ 54ee3522 sha256:efc571aa940de4e6eda8d6b0e0957d8a56a70fdfc934fe05d2e435b5aba37b33.
+   - Where: PB-E2's step in `frontends/shell/e2e/colour.mjs` (new; already on §2.6's PR B list), with `filter-zoned.parquet` coloured by `zone`.
+   - What it asserts:
+     - (i) The prompt that the dev seam `publishPrepareWithDestination` returns has `published_columns` equal to `Columns published: id, the geometry, and zone.`, the string the host's unit test asserts at `frontends/shell/src-tauri/src/publish.rs:1945-1948` @ 54ee3522 sha256:a730cce356262e39540af492c5503593540d9fb01d3a6c33ce9ce67ca35c74a7, made by the composer (pin below).
+     - (ii) The open dialog's `.publish-dialog-columns` element has the same string as its textContent. The suite waits for the element the way it waits for its other DOM reads.
+     - (iii) After execute, the names in the manifest's `schema` after its first two entries are exactly `["zone"]` (`docs/adr/ADR-017-static-bundle-format-and-publish-semantics.md:228-229` @ 54ee3522 sha256:03fc6e307dfbb439aa33be8dc577bbab00b2b9f9eaf247e85046f73c5f9a942a).
+   - The code on main that it is written against:
+     - The seam: `frontends/shell/src/publish/PublishPanel.tsx:472-474` @ 54ee3522 sha256:dffbed942193bd13de497fb36f77c2677f101045ae1723c0ed41765b8f138a4e, `frontends/shell/src/publish/client.ts:132` @ 54ee3522 sha256:11a8da8ca0c22d4ab1ce4a8e2f43ca4d2b452e20b321d98eb764ce056ae0e6d8 and `frontends/shell/src-tauri/src/commands.rs:581-583` @ 54ee3522 sha256:b707770e03f61c03cd0d3539363139651f308ed47c3cf7b56bff094777ae2c41 (debug builds only).
+     - The attributes vector, which goes into the request and into the stash: `frontends/shell/src-tauri/src/publish.rs:592-597` @ 54ee3522 sha256:712bcb590dab5e42914c1ae07265a4c8f0189ad070748a11f1410e8ec65a0291 and `frontends/shell/src-tauri/src/publish.rs:711` @ 54ee3522 sha256:cc44d11d3e3893d12d34dbee530f0137a392236d017b5c21c82207b800d48c95.
+     - The composer and its one call: `frontends/shell/src-tauri/src/publish.rs:322-331` @ 54ee3522 sha256:d0d43e272259716976b5637962c28460307e495c67c07755d46748adbe6e8f7d and `frontends/shell/src-tauri/src/publish.rs:697` @ 54ee3522 sha256:f41b0f38fc7e9e3090b6f33fd24b21e13f3dfd670c003e871b73ba92285f9925.
+     - The member: `frontends/shell/src/publish/types.ts:48-51` @ 54ee3522 sha256:eea5882f7818c583b08e4f9b72d3e9e903ac215e30641ce54ad72825103712b5.
+     - The render: `frontends/shell/src/publish/PublishDialog.tsx:261-264` @ 54ee3522 sha256:2ce420473a0755af86d9814378c10ca3d266d4b23e52e8a97cf25ff54d3c3198.
+     - The precedent, E1 of APPROVED': `frontends/shell/e2e/publish.mjs:363-369` @ 54ee3522 sha256:2e44a4ce9e071bc8434b3eccace0cce6298df71eced42dd6053ad6ee1ccb5b2d and `frontends/shell/e2e/publish.mjs:379-383` @ 54ee3522 sha256:a8b3a1ab6df292a01a1ebb7b857904e9575cd72895f503094744df79c642974d.
+   - Mutation M-PB-E2c:
+     - The change: in `publish.rs`, the argument of the composer call (pin above, line 697) goes from `&attributes` to `&[]`. It is applied alone in the working tree, the debug exe is rebuilt, and `colour.mjs` is run.
+     - Predicted: PB-E2 fails at (i) with the no-attributes line. Its other assertions pass: `style.json` carries the match, `zone` is published, (iii) holds and the viewer draws the same colour. They pass because the request and the stash still carry the vector.
+     - Observed as §4 says, then reverted. It is never committed: `git diff origin/main...HEAD -- frontends/shell/src-tauri` stays empty (§8 item 1). Its RECORDED MUTATION line sits above the assertion. The closing record names that line with its branch commit id and pins no hash at a branch commit (round 25, item 2). A `verify-mutation` run is not an observation.
+   - Reading of §4's existing PB-E2 mutation (class 1): its text says to send the literal document to `publishPrepare`. It is read as applied to the seam's document (PublishPanel pin above), which is the path `colour.mjs` drives. A mutation at the dialog-free `publishPrepare` path would not reach PB-E2.
+   - Lines and ceiling (class 9; §7 not edited; counted by §7's command):
+
+     | Addition | B-E |
+     |---|---|
+     | PB-E2's columns-line assertion and its RECORDED MUTATION line: `colour.mjs` +20 | 20 |
+
+     - New totals: B-E 590, and PR B 4,450, or 4,530 with Amendment 12 item 13's conditional entry. An overrun is class 8.
+   - The seam (round 4): this is the approval seam's end-to-end test from the real shape. It reads the payload the shipped `prepare` serializes, the dialog the shipped component renders and the manifest the kernel writes. §8 item 17's export seam stays PB-E2.
+
+2. **Row 5's added expected outcome (class 9, records).**
+   - §9's operator row 5 gains this prediction: with `filter-zoned.parquet` coloured by `zone`, after Export, the approval dialog's field list shows `Columns published: id, the geometry, and zone.` directly after Row scope, before the irreversible warning (render pin in item 1). A wrong prediction is class 2 (§5).
+   - Words: AC5's walkthrough words are written from the built code with Part AC's rows at PR B's records commit (Amendment 12 item 7). They are the advisor's wording, under the delegation of 2026-11-13 (the grant, items 2 and 3, `state/directives/2026-11-13-the-grant-approved-the-advisors-authority-its-rulings-the-humans-except-item-4-the-advisor-merges.md`). Both gates check each clause.
+   - Count: outside the count, within §7's MANUAL-WALKTHROUGH.md 160. The row goes to the sitting with Part AC when PR B merges (§9, Operator).
+
+3. **The consult, and what the change means for the approval.**
+   - The consult: `state/consults/2026-11-12-b1-shell-half-pr-b-publish-approval-colour-by-column-architect-consult.md`. Finding 4 is at `state/consults/2026-11-12-b1-shell-half-pr-b-publish-approval-colour-by-column-architect-consult.md:145` @ 54ee3522 sha256:4e13069a1dd7c2728b81c729b6bca7f03b07854c20981ddb3a9f38f4317c6ab6. It is a reading, not Authority.
+   - What it means (the architect's paraphrase):
+     - With PR B, a Colour by makes the shell's document carry a match on `fill_color` (§2.3 (a) and (b); PR B's code, not on main). The host derives that one match column (`frontends/shell/src-tauri/src/publish.rs:1299-1307` @ 54ee3522 sha256:344ffb2c470af3efcb1b1b3f1bbf31992c7278d33ae7706e14cd2ea073530c4d) into the request the kernel publishes from (pin in item 1). Every partition then holds that column's values (`docs/adr/ADR-017-static-bundle-format-and-publish-semantics.md:118` @ 54ee3522 sha256:7ac62cbdb54cccdd582018da7bcf437efa97330f7f996d09eaea7732c6372afe).
+     - The approval's columns line is composed from that same vector and rendered as it is in the dialog (item 1's pins). So the operator sees the column's name before typing the phrase. The class-3 approval, its grant, phrase and audit are unchanged, because §2.1 keeps PublishDialog, PublishPanel and `publish.rs` unedited.
+   - Left open: a column name is shown as it is, so a name containing `, ` reads as more than one name (`frontends/shell/src-tauri/src/publish.rs:320-321` @ 54ee3522 sha256:deb6dac6293a370787c51a6497be93b51dd843d4d5e6a1dcde747671c19feb7d). The choice between that form's OPEN-2 (b) and (c) (`governance/forms/frontends/PUBLISH-APPROVAL-COLUMNS-LINE-PREREGISTRATION.md`, Amendment 1 item 2) is the advisor's at PR B's records commit. Item 59's re-read (item 4 (c)) happens at the same commit.
+
+4. **What happens first: main is merged into the branch (class 1).**
+   - Why: the branch at 6649a443 is older than #314's merge, and no file of it under `frontends/shell` names `published_columns`. Item 1 is written against main's interface.
+   - How and when: main is merged into PR B's branch by a merge commit, never a rebase. This comes before any code of PB-E2, and before the colour-by phase's first code commit, so that the phase's code is written at one base.
+   - The order:
+     - (1) this amendment on main;
+     - (2) Amendment 12 item 10's re-read over PR B's whole amended list, by script, at the main commit the merge brings in, recorded where OPEN-1 places it;
+     - (3) the merge commit, which names that main commit and is a named merge of main for §7's count;
+     - (4) the colour-by phase's code, with item 1 in PB-E2.
+   - Rule (00) is checked again at the merge. Item 1's mutation is never committed, so it adds no path.
+   - The re-read of step (2) (OPEN-1 (a), item 8): made by script at main 57451bb3ea644e01882cb086fbd436e3d2047cef over PR B's whole amended list (`state/consults/2026-11-14-b1-shell-half-pr-b-re-read-before-amendment-14-worker-report.md`). Main's one commit between it and this amendment, 60a60379b7a7bfde23ca730cbb179dd8c5b4bb30, changes paths under governance/, state/ and site/ only. No invalidator and no I4. No pin differs in anything but a move, a change already declared or a record; the two record pins Changed are the KNOWN-LIMITATIONS ones that were Changed at the re-read at M′. None of item 10's five signatures differs from b7b721eb. Its class 3 items (23 Moved ranges, and KL-3's number in item 6) are taken up at the merge, which is path-disjoint (that report, Step 1). The re-read is made again if a path outside governance/, state/ and site/ changes on main before the merge.
+
+5. **Pan-anchor at M′: the four runs and their reading.** Under the advisor's rulings ADV-2026-11-14-12, items 3 to 5 (`state/directives/2026-11-14-advisor-ruling-adv-2026-11-14-12-pr-b-code-stays-stopped-the-fixed-pan-anchor-suite-run-against-pr-b-at-m-prime-16-of-16-not-i3-provisional.md`), and ADV-2026-11-14-13, items 2 and 3 (`state/directives/2026-11-14-advisor-ruling-adv-2026-11-14-13-the-fixed-suite-pass-holds-pr-b-code-goes-ahead-a-pass-under-load-before-pr-b-gates-the-sweep-closed.md`). Both are filed as the advisor's under the delegation of 2026-11-13.
+   - Each run is `frontends/shell/e2e/pan-anchor.mjs` against PR B's debug exe at M′ 6649a443a38763759339c7813e3fdbe9eca09be0 (sha256 bb4bee07557c7c26df31d5c17cc585f78a00cb1165fce24059b50666b498f41b), on the port-5400 harness, each in a shared hold. The loads are the harness's three-sample readings, taken just before the run and, for the last two, just after it.
+
+     | Run | Suite blob | Loads | Result | Record |
+     |---|---|---|---|---|
+     | mp-pan-anchor | ed20f8aec2827c12659b05bbc926cd6e51faaf62, at M′ | 99,99,100 | 15/16: recenter-crossing-A dx=-1200 failed in the large window | `state/consults/2026-11-13-b1-shell-half-pr-b-series-at-m-prime-tester-report.md` |
+     | mp-pan-anchor-2 | the same | 100,93,100 | 15/16: the same check failed in the small window | the same report |
+     | a10-pan-anchor | the same | 60,69,59, then 60,70,76 | 14/16: the same check failed in both windows | `state/consults/2026-11-14-b1-shell-half-pr-b-pan-anchor-re-run-at-m-prime-tester-report.md` |
+     | fx12-pan-anchor | 7642086bcc702c9f4c3ff45045c02ae1ef65d810, the file at the fix's head 08bed11cd25066976a116cc6e2dbfb9aa8d647ac, put in PR B's worktree in place of ed20f8ae as an uncommitted edit and reverted afterwards, the worktree clean before and after; nothing rebuilt; run-suite's hard timeout of 1500 s | 41,19,34, then 15,13,16 | 16/16, no fatal line | `state/consults/2026-11-14-b1-shell-half-pr-b-fixed-pan-anchor-suite-at-m-prime-tester-report.md` |
+
+   - Of the run tagged fx12-pan-anchor: every load reading was under 50.
+   - **The reading** (ADV-2026-11-14-12 item 3 (a)): the three failures at M′ are read under Amendment 2 item 4 of this form. Their recorded cause is the harness, the one the fix's form states and its probes show (setCam can return the previous gesture's late line), and the suite passes at the same commit on the corrected harness. So they are not I3, and the stop is lifted on that ruling's item 4. The reading is provisional until the corrected harness is on main: it rests on a suite not yet gated, the pan-anchor fix's (PR #317; `governance/forms/frontends/PAN-ANCHOR-SETCAM-WAITS-FOR-ITS-OWN-RESET-PREREGISTRATION.md`).
+   - **What follows:**
+     - PR B's code goes ahead: the merge of main first (item 4), then the colour-by phase.
+     - PR B goes to no gate until the fix has merged, PR B's branch has taken that main in, and pan-anchor has passed 16/16 at PR B's head with the suite as merged. That run is recorded for both gates.
+     - Of those passes, at least one is under load: its readings are 50 or more, or it is made in the shape of the fix's L1 (that form's Amendment 5 item 4), with a build beside the suite in the same hold. It is recorded with its loads for both gates. A failure of the same check under load there is evidence for I3: PR B stops, and the lines go to the advisor (ADV-2026-11-14-13 item 2).
+     - If the fix's gate changes the suite, or the fix does not merge, the advisor is told, and the reading is made again on the suite that does merge.
+   - The run alone is no longer owed. ADV-2026-11-14-07 item 3 (`state/directives/2026-11-14-advisor-ruling-adv-2026-11-14-07-no-further-booking-pr-b-run-alone-owed-on-a-quiet-machine-nothing-else-waits-for-it-p0-now-three-refusals-recorded.md`) no longer applies (ADV-2026-11-14-12 item 5 (a)).
+   - The lines the draft named here as possibly making the code wait (Amendment 12 item 11's I3 sentence, §5's I3, Amendment 12, continued, item 6, and Amendment 13 item 4) are answered by this reading: the failures they turn on are not I3, the series' difference at M′ is recorded in the table above, and the run alone they were read to wait on is no longer owed.
+
+6. **Amendment 13 item 4's list.** Amendment 13 is not edited.
+   - Carried here (class 3, the tree authoritative):
+     - `pick.ts`'s comment pin, Changed by PR B's own commit 0b247f29, which is named by its id and not pinned.
+     - Item 7's number 64. Whichever of KL-3 and the first-look item merges first takes it. PR B's references are re-read at its records commit (the human's third message of 2026-11-12, item 3 (b)).
+     - At 57451bb3 the first-look item holds 64 (merged by #312), so KL-3 takes 65 (the re-read in item 4, its Step 6).
+   - The series at M′: its pan-anchor rows are read in item 5. The rest of it moves with the two below.
+   - Moved to Amendment 15, written at the merge of main (item 4, step (3)) and before the phase's code:
+     - the session-end phase's class 8;
+     - item 2 (a) of the human's message of 2026-11-12 (13:07Z), together with the KNOWN-LIMITATIONS item 4 pin. f56d6efe has already rewritten that item's On-main paragraph (`state/consults/2026-11-13-b1-shell-half-pr-b-re-read-at-m-prime-worker-report.md`, Step 2).
+
+7. **The reuse index**, byte-copied from the custodian's brief. It is the custodian's run in the read-only clone at 89bbac3738dbb46d47988e55a7c0f0d4f9fe4c5c on 2026-11-14. All three are misses, and this amendment rests on the tree at 54ee3522 alone.
+
+```text
+$ node tools/reuse.mjs approval columns line e2e assertion   (exit 1)
+No prior art recorded for "approval columns line e2e assertion". Research it before planning an implementation.
+$ node tools/reuse.mjs publish bundle category column approval   (exit 1)
+No prior art recorded for "publish bundle category column approval". Research it before planning an implementation.
+$ node tools/reuse.mjs operator row expected outcome approval   (exit 1)
+No prior art recorded for "operator row expected outcome approval". Research it before planning an implementation.
+```
+
+8. **The draft's OPEN items**, each taken as the drafter's recommendation on 2026-11-14. The advisor's ruling ADV-2026-11-14-10, item 6 (`state/directives/2026-11-14-advisor-ruling-adv-2026-11-14-10-pr-b-code-waits-pan-anchor-re-run-at-m-prime-in-a-shared-hold-first-amendment-14-to-main-meanwhile.md`), has no objection to them.
+   - OPEN-1: (a). The re-read is recorded in item 4.
+   - OPEN-2: (a). Nothing runs at the merge before code. #314's reviewer gate ran all 19 e2e suites at its head b6924acea0ee757f679551442d09d1353b595d3b (`state/consults/gates/2026-11-13-publish-approval-columns-line-gate-reviewer.md`). At 57451bb3, `frontends/shell/package.json` names the same 19 `e2e:` entries, and `frontends/shell/e2e/` is unchanged from b6924ace. ADV-2026-11-14-10 item 6 adds one condition: a suite that the merge of main shows and #314's gate did not run at its head runs before the phase's code. At 57451bb3 that condition names no suite (ADV-2026-11-14-13 item 1). It is checked again at the merge, where a pan-anchor suite changed by the fix, if the fix has merged, is such a suite.
+   - OPEN-3: (a). M-PB-E2c is observed in the e2e, on a rebuilt debug exe, in a shared hold.
+
+**Superseded for PR B:** Amendment 13 item 4, read as the whole content of Amendment 14 (item 6).
+
+Read the last amendment first.
+
+Nothing above is edited.
