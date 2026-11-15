@@ -209,3 +209,39 @@ node -e "const {execFileSync:x}=require('child_process');const o={maxBuffer:1<<2
 - **Operator:** none before the merge. At the merge check, the advisor compares the settings file's two places with ADV-2026-11-13-04, and §38 with item 5's fence, by script (ADV-2026-11-14-24 items 5 (d) and 10 (d)). After the merge (ADV-2026-11-14-23 item 6), the custodian restarts nothing and changes no setting. It reports that the main checkout holds the merged file, with the time, and whether its session showed any notice about changed hooks or settings. The human's Telegram over the following day is H1's discriminator.
 
 ### §10. Amendments — opens empty, append-only
+
+### Amendment 1 — the advisor's ruling ADV-2026-11-15-05 on the two gates' wording joins by reference (class 5); section 38's file rebuilt from its new fence (class 5); T7's record (class 1); the failed-write case (class 1); each finding's closing (class 1)
+
+*Written by the custodian on 2026-11-15, in the commit that files the ruling, before the correction commit. There is no architect draft: this amendment records a ruling and the steps it orders, by reference. The ruling is the advisor's under the human's delegation of 2026-11-13 (`state/directives/2026-11-13-the-grant-approved-the-advisors-authority-its-rulings-the-humans-except-item-4-the-advisor-merges.md`, items 2 and 3), not the human's. Where an item below gives the ruling's content in other words, the words are the custodian's; the ruling's file is the text.*
+
+1. **The ruling (class 5).** `state/directives/2026-11-15-advisor-ruling-adv-2026-11-15-05-323-the-reviewers-line-21-the-architects-halt-comment-t7-record-section-38-three-sentences-one-correction-commit.md`: the advisor's file, 9,869 bytes, sha256 e026e3a5e20371c942b111ef6433dd1b0f5ff4a904b52c04e96989645fa636d1, filed byte for byte below its title and the custodian's note. It replaces the fence of ADV-2026-11-14-24 item 5 as section 38's text, in three sentences of Part B, and nothing else of that ruling.
+
+2. **Section 38's file (class 5).** The custodian's script rebuilt it from the ruling's item 6 fence, with the same two fills as §2.6's file: the pin and the byte copy, read out of that file and not retyped. The new file is 4,498 bytes, sha256 bbb5a3c0512141fbc151a22214e0c6b743322f86dd152e35782443eeab0a4c6d, 24 lines. It differs from §2.6's file (4,377 bytes, sha256 fa5aaa81e820fa6a74e9e5408442b15c38904f4be895aba3a8f613a1bc15d759) in three lines: the last sentence of Part B (iv), the last sentence of (v), and the first sentence of (vii). From the correction commit on, it is the section file that C3 (§9) and the merge check compare with.
+
+3. **T7's record (class 1).** The ruling's item 3, byte-copied from it:
+
+```text
+T7's mutation was applied to the worktree's `.claude/settings.json`, the file the test reads, not to a scratch copy as §4's T7 row says; it was reverted, and `git diff` was 0 bytes after it (the worker's report, Mutations).
+```
+
+   In the custodian's words: §4's T7 row, as written, could not make T7 fail, because T7 reads the tracked settings file. Both gates say so (the architect's D3, the reviewer's O-1). By the reviewer's check, the main checkout's settings file was not touched.
+
+4. **The failed-write case (class 1).** In the custodian's words, from the ruling's item 1 (d) and the reviewer's C-1: when the write of the dedupe file itself fails, no key is recorded, so a repeat within the window is sent. That needs a failed disk write, outside ordinary use, and it does not block (§31 (c)). Line 21's comment cannot hold it, and a second line would move the cited lines 76 to 79. So it is recorded here and in the PR body, in place of the source comment.
+
+5. **Each finding and how it closed (class 1).**
+   - The architect's D1 and the reviewer's C-1: line 21 of `scripts/hooks/notify-telegram.mjs` becomes the reviewer's line (the ruling's item 1).
+   - D2, with the reviewer's O-6: the comment above `notifyHalt` in `scripts/hooks/stop-queue.mjs` becomes the architect's line (item 2).
+   - D3, with the reviewer's O-1: item 3 above.
+   - D4: Part B (vii)'s first sentence becomes the architect's proposed words (item 4).
+   - The reviewer's O-5: the last sentences of Part B (iv) and (v) are scoped to the project root (item 5).
+   - The architect's O1 to O8 and the reviewer's O-2, O-3, O-4 and O-7 stand as observations (item 11).
+   - The gate reports: `state/consults/gates/2026-11-15-advisor-questions-and-telegram-three-alarms-gate-architect.md` and `state/consults/gates/2026-11-15-advisor-questions-and-telegram-three-alarms-gate-reviewer.md`.
+
+6. **What follows (class 1).**
+   - One signed-off correction commit, C, on the branch, made by script: the two comment lines and section 38's three lines, and nothing else. Each of the three files keeps its line count (the ruling's item 7).
+   - Each gate then gives a short second part of its report at C, with no new attempt and no new verdict (item 8).
+   - The PR body lists the changed words; then the merge check (items 9 and 10).
+
+Read the last amendment first.
+
+Nothing above is edited.
