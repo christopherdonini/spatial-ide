@@ -204,3 +204,44 @@ test('checkDocsOnly: a non-priority, non-felt-verdict PLAN.yaml edit is eligible
   const head = commitAll(dir, 'append a proposed node title edit');
   assert.deepEqual(checkDocsOnly(dir, base, head), []);
 });
+
+// RECORDED MUTATION at e46167d52fee, applied alone and reverted: `maxBuffer: 1 << 28` removed from the options of gitShow in scripts/plan/docsOnly.mjs -> fails by name: `a_plan_yaml_over_one_mebibyte_is_classed_by_its_content`.
+test('a_plan_yaml_over_one_mebibyte_is_classed_by_its_content', (t) => {
+  const dir = makeRepo();
+  t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+  const padding = ('# ' + 'x'.repeat(76) + '\n').repeat(14000);
+  const plan = (title) =>
+    [
+      'version: 1',
+      'lanes:',
+      '  - {id: shell, title: "Shell", priority: 1}',
+      'phases:',
+      '  - {id: prototype, title: "Prototype", cite: "docs/07_Roadmap.md ## Prototype"}',
+      'nodes:',
+      '  - id: a-node',
+      `    title: "${title}"`,
+      '    kind: task',
+      '    lane: shell',
+      '    phase: prototype',
+      '    status: proposed',
+      '    order: 0',
+      '    depends_on: []',
+      '    needs_human: {kind: none, minutes: 0}',
+      '    gate: none',
+      '    evidence: null',
+      '    budget_minutes: 30',
+      '    generation: 1',
+      '    felt_verdict: false',
+      '    entries: []',
+      '    summary: "fixture"',
+      '    dates: {opened: 2026-09-13, done: null}',
+      '',
+    ].join('\n') + padding;
+  fs.mkdirSync(path.join(dir, 'governance'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'governance/PLAN.yaml'), plan('Original title'));
+  const base = commitAll(dir, 'init');
+  fs.writeFileSync(path.join(dir, 'governance/PLAN.yaml'), plan('Retitled'));
+  const head = commitAll(dir, 'retitle the proposed node');
+  assert.ok(fs.statSync(path.join(dir, 'governance/PLAN.yaml')).size > 1024 * 1024);
+  assert.deepEqual(checkDocsOnly(dir, base, head), []);
+});

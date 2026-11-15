@@ -654,7 +654,7 @@ function findUnboundHashTokens(text, refs) {
 
 function gitShowFile(root, rev, relPath) {
   try {
-    return execFileSync('git', ['show', `${rev}:${relPath}`], { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+    return execFileSync('git', ['show', `${rev}:${relPath}`], { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], maxBuffer: 1 << 28 });
   } catch {
     return null;
   }
