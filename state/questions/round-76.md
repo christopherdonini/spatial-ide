@@ -60,3 +60,7 @@ My recommendation: (B). The reviewer checked each of its clauses against a run, 
   - then the PR, and its gates.
 
 **The question.** Where it goes: (A) after `ci-rust-toolchain-pin` merges, in the filler slot; (B) in another slot or order, yours. My recommendation: (A), since item 2 (d) of your ruling needs the pin's version first.
+
+---
+
+**Answers recorded** by the custodian on 2026-11-15, late: they were due on 2026-11-13, when the ruling was filed, and the architect's draft of `advisor-silence-two-hour-alarm` found them missing (its section 0). The advisor's ruling ADV-2026-11-13-11 (`state/directives/2026-11-13-advisor-ruling-adv-2026-11-13-11-round-76-313-d1-the-architects-words-port-2-filler-17-after-the-pin.md`), filed as the advisor's under the human's delegation of 2026-11-13, answers both items: its item 1 answers item 1 with (A), the architect's words for #313's D1, under AUTONOMY section 31 (b) for both gates; its item 3 answers item 2 with (A), port-2 in the filler slot as entry 17, right after `ci-rust-toolchain-pin` merges, with its full form and both gates. No answer of the human's has come. Nothing above is changed.
