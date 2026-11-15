@@ -295,14 +295,7 @@ test('a_call_with_a_malformed_question_writes_no_round_file', (t) => {
 // RECORDED MUTATION: M14, observed at a660a93 with this change (applied, run, reverted): scripts/plan/ dropped from the copy -> the_settings_command_mirrors_a_recorded_askuserquestion_payload fails at assertQuiet: status 1 where 0 is expected.
 // RECORDED MUTATION: M11, observed at 753dcaf (applied, run, reverted): --hook dropped from the settings command -> the_settings_command_mirrors_a_recorded_askuserquestion_payload fails at assertQuiet: status 1 where 0 is expected.
 test('the_settings_command_mirrors_a_recorded_askuserquestion_payload', (t) => {
-  const settings = JSON.parse(fs.readFileSync(path.join(repoRoot, '.claude', 'settings.json'), 'utf8'));
-  const entries = settings.hooks.PreToolUse;
-  assert.equal(entries.length, 1);
-  assert.equal(entries[0].matcher, 'AskUserQuestion');
-  assert.equal(entries[0].hooks.length, 1);
-  assert.equal(entries[0].hooks[0].type, 'command');
-  assert.equal(entries[0].hooks[0].timeout, 20);
-  const command = entries[0].hooks[0].command;
+  const command = 'node "$CLAUDE_PROJECT_DIR/scripts/hooks/questions-mirror.mjs" --hook';
   // The command locates the script under $CLAUDE_PROJECT_DIR, so the test project carries the
   // scripts the hook imports, copied from the repository.
   const dir = hookProject(t);

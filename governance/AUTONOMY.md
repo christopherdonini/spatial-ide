@@ -709,3 +709,28 @@ Standing, for every agent's briefs: a wait loop sleeps at least one second per t
 - **In briefs:** every agent's brief carries the rule's first clause, and asks the agent to report the background shells it leaves: none, or each one killed by its own PID.
 
 *Pointer, 2026-10-29 (governance piece F; the human's OPEN-7 (C) of that date): this file and the other governance files now sit in `governance/`, with the preregistration forms in `governance/forms/`. The old path of every moved file resolves through `governance/MOVED.tsv`.*
+
+## §38. Questions go to the advisor, and Telegram keeps three alarms (the human, 2026-11-13; `state/directives/2026-11-13-on-notifications-questions-to-the-advisor-telegram-three-alarms-hooks-piece-no-askuserquestion-until-it-merges.md`, items 1 to 4; appended after §37 so that no line a record cites above it moves)
+
+### Part A. The rule
+
+The rule is the human's, items 1 to 3 of that message. It is byte-copied by script from `state/directives/2026-11-13-on-notifications-questions-to-the-advisor-telegram-three-alarms-hooks-piece-no-askuserquestion-until-it-merges.md:9-13 @ 3fe9f97d066f49168170f63c23b4c14c0bc843ae sha256:21a0a580b45670e600d34357a6890593d5f308d8d09d27721fa612d85f53010b`, and nothing in it is changed. Item 4 orders the piece that adds this section; it is referenced and not reproduced.
+
+```text
+1. From "advisor live" you stop asking me directly: no AskUserQuestion rounds to me, and no Telegram message except those of item 3. Your questions go to the advisor. It answers what is not a red line and brings me the red lines. I answer those in your session by my own message, as today.
+
+2. A round you would have asked me is still written to state/questions/round-<n>.md, and you send the advisor its path. The advisor's answers, and mine when they come, are recorded against that file. When only human-blocked nodes remain, tell the advisor what waits and for how long, in place of the Telegram list and of the list in your closing message.
+
+3. Telegram stays for three alarms only, one message each: the advisor has not answered you for two hours; your session is stopped by a usage limit (the two quota notifications); the halt switch.
+```
+
+### Part B. The instantiation (the advisor's wording, under the delegation of 2026-11-13; not a quotation)
+
+- **(i) What this section replaces.** From the merge of the piece that adds this section, §16 and Appendix A3's part on the Telegram mirror of question rounds no longer govern. Neither is edited. Both stay as the record of what was ruled then.
+- **(ii) What is read under this section.** §3's steps 2 and 4, where they name a Telegram message; §4, where it has the custodian ask the human through `AskUserQuestion` and mirror the round to Telegram; §24's clause on the human-blocked Telegram notice; §28; and `governance/AI_DEVELOPMENT.md` §L. Where one of them differs from this section, this section governs. None of them is edited here.
+- **(iii) The transport is unchanged.** `scripts/hooks/telegram.mjs` sends with Node's `https` module only. The bot token and the chat id come from the environment variables `CUSTODIAN_TELEGRAM_BOT_TOKEN` and `CUSTODIAN_TELEGRAM_CHAT_ID` only. They are never read from a file and never logged. When either is unset, nothing is sent.
+- **(iv) The usage-limit alarm.** The `Notification` entry of `.claude/settings.json` has the matcher `quota_auto_resume_stale|quota_auto_resume_disabled`, which names the two quota notification types and no other type. It runs `scripts/hooks/notify-telegram.mjs`, which sends the notification as one message. A repeat with the same type and the same first 80 characters of its message within ten minutes is not sent.
+- **(v) The halt alarm.** At a stop where the Stop hook (`scripts/hooks/stop-queue.mjs`) finds the halt switch (§18), it sends `HALT: <the file's first line>`, or `HALT: stop-hook halted` when that line is empty. It sends this whether or not a node waits on the human, and the message lists nothing. A repeat of the same text within ten minutes is not sent.
+- **(vi) The advisor's two hours of silence.** Nothing sends this alarm yet. PLAN node `advisor-silence-two-hour-alarm` builds its sender. Until that node merges, no text says that it is sent.
+- **(vii) Nothing else is sent.** The Stop hook sends no message when only human-blocked nodes remain. `.claude/settings.json` has no `PreToolUse` entry: no entry in it writes a question round or mirrors one to Telegram. `scripts/hooks/questions-mirror.mjs` stays in the tree with its test and its fixture. No settings entry runs it, and under item 1 the custodian does not run it.
+- **(viii) The custodian's part.** It does not call `AskUserQuestion` (item 1). It writes each round file itself and sends the advisor its path by session message (item 2). When only human-blocked nodes remain, it tells the advisor what waits and for how long (item 2).
