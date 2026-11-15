@@ -489,3 +489,13 @@ Nothing above is edited.
 8. **Next:** the draft PR from C, then both gates, which read item 43 whole (Amendment 6 item 4). For them, by the advisor's ruling ADV-2026-11-15-09: the comment above item 43 says the item was approved as drafted by the human, so it must also say whose words the changed data-folder clause is; that wording goes to the advisor with item 43 after both gates' clause check.
 
 Nothing above is edited.
+
+## §10 Amendment 8 — Amendment 7 item 8's source corrected: the advisor's session message, not its ruling (class 1)
+
+*Written by the custodian after Amendment 7, before either gate is dispatched. References only.*
+
+1. **The correction.** Amendment 7 item 8 gives its note on item 43's comment as the advisor's ruling ADV-2026-11-15-09. The note is not in that ruling's file (`state/directives/2026-11-15-advisor-ruling-adv-2026-11-15-09-verify-quotes-and-the-docs-only-tool-read-files-over-one-mebibyte-a-node-in-the-docs-slot-now-s3-budget-60.md`). It is in the advisor's session message that announced the ruling, received at 2026-11-15T06:18:19Z by the custodian's transcript. A ruling reaches the custodian only as a file (the delegation of 2026-11-13, item 3), so the note is the advisor's request, not a ruling. The error is the custodian's.
+2. **Unchanged:** both gates read item 43 whole. The custodian follows the request: the comment above item 43 says the item was approved as drafted by the human, so it must also say whose words the changed data-folder clause is, and that wording goes to the advisor with item 43 after both gates' clause check.
+3. **The PR:** #324, a draft from C, opened at 2026-11-15T08:33:42Z.
+
+Nothing above is edited.

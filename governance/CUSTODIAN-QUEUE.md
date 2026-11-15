@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `ab48907c94be48dc244edd6b848e9e328dd2576a9a746b5c30adb58fe6d0a28b`) at `2026-11-15T08:06:32.369Z`.
+Generated from `PLAN.yaml` (sha256 `3e8d5e10246dae50be82a3f98014ad2354d318d9668cc5707ab90328a4f6d77b`) at `2026-11-15T08:43:12.303Z`.
 
 ## 1. Next
 
@@ -15,7 +15,6 @@ Generated from `PLAN.yaml` (sha256 `ab48907c94be48dc244edd6b848e9e328dd2576a9a74
 - **recentre-stall-three-observations** — The re-centring stall report's three proposed observations (a timer around the layer build, deck's attribute-update counters, the render-trace layers line against the gap's edges), as one node behind the S1 fix (S3) (lane `shell`, order null, budget 90 min)
 - **advisor-session-merges-under-the-humans-rule** — The advisor session merges the custodian PRs that pass their gates, under the human rule of 2026-11-13, from their message advisor live: the merge request, the advisor merge check and verdict, the verdict filed as a consult, the revert PR after a red main, the two-hour fallback to the human; AUTONOMY section 9 and ruling 25 poll changed with it (the governance lane; S3 by the custodian) (lane `governance`, order null, budget 120 min)
 - **site-waiting-on-you-lists-open-questions** — The site's Waiting on you also lists an in-progress node carrying an open question for the human, set by the custodian when a running piece stops for the human's ruling and cleared when the human answers (lane `governance`, order null, budget 45 min)
-- **verify-quotes-and-docsonly-read-files-over-one-mebibyte** — verify-quotes and the docs-only tool read a file over one mebibyte through git: the buffer option verify-cites uses given to the git read of each, with a test for each by a fixture the test makes (the advisor finding of 2026-11-15) (lane `governance`, order null, budget 60 min)
 - **publish-bundle-sigterm** — SIGTERM handling in publish-bundle on unix (wave-3 W3-A observation 3) (lane `platform`, order null, budget 90 min)
 - **publish-unix-quota-perm-errors** — EDQUOT and EPERM in publish error classification on unix (wave-3 W3-A observation 1) (lane `platform`, order null, budget 90 min)
 
@@ -56,6 +55,7 @@ Generated from `PLAN.yaml` (sha256 `ab48907c94be48dc244edd6b848e9e328dd2576a9a74
 - **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **record-step-style-match-widening** — record_step admits a style.set match value on fillColor, with the step's dependencies naming the match column and its type (milestone 4's OPEN-4 (A′)), carried in piece 1c's step 1 by class 9 (the 1c form's Amendment 7) — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **b1-shell-half** — Shell migration, milestone 4 -- B1 shell half: attributes of the inspected feature, colour by category with its legend, and the table — evidence: branch `cut/b1-shell-half-pr-c`
+- **verify-quotes-and-docsonly-read-files-over-one-mebibyte** — verify-quotes and the docs-only tool read a file over one mebibyte through git: the buffer option verify-cites uses given to the git read of each, with a test for each by a fixture the test makes (the advisor finding of 2026-11-15) — evidence: branch `cut/verify-quotes-and-docsonly-read-files-over-one-mebibyte`
 - **port-2-macos-l1-and-app-dirs** — PORT-2 -- macOS L1 for the Cargo workspace: macos-latest in the same matrix, one application-directory boundary replacing the two resolvers, and a case-policy test on a case-insensitive volume — evidence: branch `cut/port-2-macos-l1-and-app-dirs`
 
 ## 6. Proposed / unscheduled
