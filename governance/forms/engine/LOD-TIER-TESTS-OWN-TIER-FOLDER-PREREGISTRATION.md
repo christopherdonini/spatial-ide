@@ -54,3 +54,57 @@ Since PR 324, on Windows the one variable `LOCALAPPDATA` decides both the tier r
 ### Amendments
 
 *(Opens empty; append-only.)*
+
+### Amendment 1 — the worker's stop at P-0 (b), the check read by what it is for under the advisor's ruling ADV-2026-11-15-18 (class 5); the size over the 260-line note before the last commit (class 6, Scope not edited); the overlap of ADV-2026-11-15-17 in the piece's first hold, and its later holds checked (class 1); a departure (class 1). Written by the custodian after the worker's stop and the ruling, before the worker resumes
+
+*Written by the custodian on 2026-11-15. The worker's report is filed at `state/consults/2026-11-15-lod-tier-tests-own-tier-folder-stop-worker-report.md`, and the rulings at `state/directives/2026-11-15-advisor-ruling-adv-2026-11-15-18-lod-tier-p-0-b-read-by-its-purpose-size-over-the-note-under-term-a-the-same-worker-resumes.md` and `state/directives/2026-11-15-advisor-ruling-adv-2026-11-15-17-two-heavy-runs-overlapped-beside-a-hold-of-the-other-project-class-1-records-status-re-read-after-each-hold-dispatch-goes-ahead.md`.*
+
+1. **The stop (class 5).**
+   - The worker made two commits on d2008810 in its worktree, not pushed:
+     - fb51f0ac4c34d68ad9d444daf3126e9fe104a2c9: the change, in 6 files: the helper with its wrapper and sweep, the tier-path sites and floors through it, the preflight, and the kernel test's own folder;
+     - 36c12ff285280f0549b792f0f98420a5bdae9aa6: T-A, T-B and T-B's second-process half, in `lod_tier_builder.rs` alone.
+   - P-0 (a), (c) and (d) held, by its report. Its run 1 at the second commit passed, 19 tests, with 3 ignored. The machine-wide tier folder's list was the same after each run.
+   - It stopped at P-0 (b). The draft's wording has only the common module name the engine's `build_tiers` among the engine tests. But `lod_tier_root.rs` imports it, and this form's Scope line keeps that file unchanged. A doc line of the measurements file names it too.
+   - The ruling reads the check by what it is for (its item 1). P-0 (b) now reads as below, in the advisor's wording under the delegation of 2026-11-13 (its item 2), and both gates check it at the head:
+
+```
+P-0 (b), as ruled by ADV-2026-11-15-18: after the edits, in the four suites that build into the tier root (engine/tests/lod_tier_builder.rs, engine/tests/lod_tier_cancellation.rs, engine/tests/lod_tier_measurements.rs and engine/tests/lod_tier_preflight.rs), no use line and no call names the engine's own build_tiers; each takes build_tiers from common. The wrapper in engine/tests/common/mod.rs is the one place under engine/tests, outside lod_tier_root.rs, that calls the engine's function. engine/tests/lod_tier_root.rs keeps its own import and is unchanged: it is its own test binary, it gives the build a tier root that cannot resolve, and the build is refused before anything is written. A doc comment that names the engine's function is not a call. No other file under engine/tests names build_tiers.
+```
+
+   - The advisor's own check of it at the second commit is its item 2 (a). The measurements doc line stays (2 (b)). The kernel test is outside P-0 (b) (2 (c)).
+
+2. **The size (class 6; ADV-2026-11-15-14's term (a), as ADV-2026-11-15-18 item 3 applies it).**
+   - Declared: 260 lines, the advisor's note; the draft's N6 estimated about 240.
+   - At the second commit, from d2008810, by git's numstat: 409 lines (345 added, 64 removed) over 6 files, before the third commit. The README's owner's index is not yet written.
+   - The piece keeps this form, the Scope line is not edited and nothing is trimmed. It does not move to the full form (item 3 (d)). The final count goes to the advisor before the gates are dispatched.
+   - By file, against N6. Every file is over its estimate; the last column is the custodian's reading of the diff, with the counts by git.
+
+| File | N6 | At the second commit | The extra lines |
+|---|---|---|---|
+| `common/mod.rs` | about 65 | 122 | The lock and the sweep are a function of their own with its doc, 41 lines against about 20. The per-process state, kept once in a static cell, and the folder's helper with its doc are 41 against about 25. The imports, the module doc's list of the four suites and the doc lines brought current are 20, which the estimate did not count. The accessor (7, its allow among them), the wrapper (11) and the other 2 allows are about as estimated. |
+| `lod_tier_builder.rs` | about 125 | 192 | T-B with its two constants is 66 lines against about 35: four assertions, and the second process's output read back. A section comment and a source helper that T-A and T-B share are 22, which the estimate did not count. The two floors' function, renamed and documented, reads the run's volume, and the formatter broke its lines: 20 against about 8. The import lines are 7 against about 3. T-A is 28 against about 25 and the child half 15 against about 20; the path sites (24), the doc of the drop helper (4) and the comment (6) are about as estimated. |
+| `lod_tier_cancellation.rs` | about 12 | 16 | The doc paragraph on sharing a folder is rewritten whole, 8 lines; the imports 4 and the path site 4. |
+| `lod_tier_measurements.rs` | about 14 | 31 | The floor's function, as in the builder file, with its five calls renamed, is 21 lines; the imports 6 and the path site 4. |
+| `lod_tier_preflight.rs` | about 6 | 13 | The module doc 3 lines; the imports with `mod common;` 7; the helper's call with its comment 3. |
+| `kernel no_generation_in_persisted_artifacts.rs` | about 16 | 35 | A guard type that sets the variable, puts it back when dropped and removes the folder, with its doc, is 30 lines, where the draft had the set and the restore inline; its use with its comment 5. |
+
+   - Both gates are asked one question on it (item 3 (c)): is every changed line inside what the Scope line names for its file. A line that is not goes to the advisor.
+
+3. **The time.** The worker's run took 73 minutes by its transcript, against the node's 60, and the piece is not finished. The measured time goes in the closing amendment (§D; item 4).
+
+4. **The holds (class 1; ADV-2026-11-15-17 item 3 (b)).**
+   - The worker's first status read, at 2026-11-15T17:06:32Z, showed a hold of this project, and it waited. Its read at 2026-11-15T17:08:55Z showed none, and it held from 17:09:05Z to 17:35:14Z, for P-0 (d)'s cold build, by the transcripts.
+   - PR B's correction worker had taken a hold at 17:08:57Z, after its own read showed none. From 17:09:05Z to 17:31:09Z, each of PR B's holds ran beside this one, five of them after reads that showed it; PR B's Amendment 21, item 5 (a), gives them.
+   - Every read in that window showed one hold of the other project. So the overlap departs from the human's standing machine rule (ADV-2026-11-15-17, item 2). No value of the other project is recorded.
+   - This worker kept its brief after that first hold. It took no other hold in the window. Its four later holds, 17:41:07Z to 17:55:13Z (after its read at 17:41:03Z), 17:56:42Z to 17:57:19Z (after its read at 17:56:38Z), 17:59:42Z to 18:00:02Z (after its read at 17:59:38Z), 18:01:39Z to 18:14:10Z (after its read at 18:01:33Z), each followed a read that showed no hold of this project, and none was live: the custodian checked each against the read before it (ADV-2026-11-15-17, item 4 (d)).
+   - The rule of that item 4 reached it at 2026-11-15T18:07:39Z, after its last hold had begun; it took none after.
+   - The runs stand (ADV-2026-11-15-17, item 3 (d)). Both gates are told of the window in their packets.
+
+5. **A departure (class 1).** P-0 (d)'s hold ran its two cargo calls inside a parenthesised group, against the brief. Each later hold ran one command. The report's other disclosures stand by reference.
+
+6. **What follows.**
+   - The same worker resumes on the same branch for M1 and M2, the third commit, runs 2 to 6, the light checks and the push (ADV-2026-11-15-18, item 6).
+   - Its brief carries ADV-2026-11-15-17 item 4 and names it as the one that yields. When PR B's records worker runs beside it, that brief says so too.
+   - Then the final count to the advisor, and both gates from dispatch, with item 2's question and the window in their packets.
+
+Nothing above is edited.
