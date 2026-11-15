@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `8213751cd103716998b9abdc41ecf4997dfc9a101bfa24342094d0a3ce859c80`) at `2026-11-15T10:48:30.329Z`.
+Generated from `PLAN.yaml` (sha256 `9851703348b840c967c1343b38dab5d245968f3723ff88e7c4728093ea2f7b9e`) at `2026-11-15T11:17:16.076Z`.
 
 ## 1. Next
 
@@ -55,7 +55,6 @@ Generated from `PLAN.yaml` (sha256 `8213751cd103716998b9abdc41ecf4997dfc9a101bfa
 - **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **record-step-style-match-widening** — record_step admits a style.set match value on fillColor, with the step's dependencies naming the match column and its type (milestone 4's OPEN-4 (A′)), carried in piece 1c's step 1 by class 9 (the 1c form's Amendment 7) — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **b1-shell-half** — Shell migration, milestone 4 -- B1 shell half: attributes of the inspected feature, colour by category with its legend, and the table — evidence: branch `cut/b1-shell-half-pr-c`
-- **verify-quotes-and-docsonly-read-files-over-one-mebibyte** — verify-quotes and the docs-only tool read a file over one mebibyte through git: the buffer option verify-cites uses given to the git read of each, with a test for each by a fixture the test makes (the advisor finding of 2026-11-15) — evidence: branch `cut/verify-quotes-and-docsonly-read-files-over-one-mebibyte`
 - **port-2-macos-l1-and-app-dirs** — PORT-2 -- macOS L1 for the Cargo workspace: macos-latest in the same matrix, one application-directory boundary replacing the two resolvers, and a case-policy test on a case-insensitive volume — evidence: branch `cut/port-2-macos-l1-and-app-dirs`
 
 ## 6. Proposed / unscheduled

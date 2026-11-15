@@ -232,3 +232,13 @@ Assertions only. No measurement and no `docs/08` row.
 7. **The changed-paths list** (ADV-2026-11-14-21 item 6): the PR's paths changed on main since the merge base, by script against main at 9c18c4aa85ce700837e7d14fd6f0c185cdf7d8e7: none. It was none before the gates were dispatched too.
 8. **For the advisor, not this piece:** the architect's O1 on the last words of ADV-2026-11-15-09 item 9, which §1's first May-not-claim bullet already keeps out of every record of this piece.
 9. **Next:** the PR out of draft, then the advisor's merge check.
+
+## §10 Amendment 3 — merged by the advisor at cacf3592 on its verdict MERGE; main's CI green there; the commit from which both tools read past 1 MiB (class 1)
+
+*Written by the custodian after the merge, in the node's done commit. References only.*
+
+1. **The merge.** PR #325 merged by the advisor by merge commit cacf3592d1ad98df46f5e840b8983b8571641c49 at 2026-11-15T10:42:24Z by GitHub, on its verdict MERGE at the head 536e664dfc5b6296148e951896025516b71648bb, filed as `state/consults/2026-11-15-verify-quotes-and-docsonly-read-files-over-one-mebibyte-merge-check-merge.md`.
+2. **From which commit** (ADV-2026-11-15-10 item 3 (a)): verify-quotes and the docs-only tool read a file past 1 MiB through git from cacf3592d1ad98df46f5e840b8983b8571641c49 on main, each of the two reads bounded by its buffer option of `1 << 28` bytes.
+3. **Main's CI at the merge commit:** 4 runs (43705373190, 43705373191, 43705373198, 43705373271), each completed with success, read at 2026-11-15T11:17:05Z by the custodian.
+4. **The architect's O1** is the advisor's, on its own list, as its verdict says; no record of this piece carries the clause it names.
+5. **The worktree** `C:/dev/wt/vqd` and its local branch were removed before this commit, clean, pushed and merged; it had no target on D:.
