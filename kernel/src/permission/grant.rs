@@ -205,7 +205,7 @@ pub fn resolve_destination(destination: &Path) -> Result<PathBuf, PermissionErro
     } else {
         parent
     };
-    let parent =
+    let _canonical =
         std::fs::canonicalize(parent).map_err(|e| PermissionError::DestinationUnresolvable {
             path: destination.display().to_string(),
             detail: format!("its parent directory could not be resolved: {e}"),
