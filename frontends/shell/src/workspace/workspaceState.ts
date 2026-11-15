@@ -24,6 +24,7 @@
  */
 
 import type { Admitted } from "../admission/admitDataset";
+import type { AttributeRow } from "../attributes/values";
 import type { AuthoritativeBbox } from "../canvas/viewportBbox";
 import type { Filter } from "../skp/types";
 import { DEFAULT_STYLE_STATE } from "../style/document";
@@ -56,6 +57,9 @@ export interface InspectedPick {
 export interface InspectedFeature {
   readonly pick: InspectedPick;
   readonly bounds: AuthoritativeBbox;
+  /** The feature's projected values, copied at the click from the batch that held them (milestone 4 PR A, section 2.2 (e)): kept for the generation (ADR-010 rule 5), so
+   * a pinned feature keeps them when its batch is gone. `null` when the open projects no column; `"not-held"` when the batch passed the attribute ceiling. */
+  readonly row: AttributeRow | "not-held" | null;
 }
 
 /**

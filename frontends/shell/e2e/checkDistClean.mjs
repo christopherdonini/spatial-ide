@@ -122,6 +122,9 @@ const INSTRUMENT_IDENTIFIERS = [
   "setResidencyTileSizeLevel",
   "notifyResidencyTileSizeLevelDatasetOpened",
   "notifyResidencyTileSizeLevelDatasetClosed",
+  // B2 piece 1c (B2-1C-SAVE-AND-REOPEN-PREREGISTRATION.md Amendment 14 item 4): the DEV-only save hook's name. It is the string argument of
+  // `App.tsx`'s `registerE2eHook` call, which no minifier renames, so a hit in a plain build is real signal; a miss is a floor.
+  "e2eSaveProjectToFolder",
 ];
 
 // P1d B6c: three `WorkingCanvas.tsx` imperative-handle METHOD NAMES (product code, never

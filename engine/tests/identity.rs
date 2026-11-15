@@ -318,10 +318,10 @@ fn skipping_the_uniqueness_check_is_recorded_rather_than_hidden() {
     assert_eq!(md.get("id_uniqueness").unwrap(), "declared-not-verified");
     // Unknown, and reported as unknown rather than defaulted to the reassuring answer.
     assert!(
-        md.get("id_js_exact").is_none(),
+        !md.contains_key("id_js_exact"),
         "unverified width must not read as exact"
     );
-    assert!(md.get("id_verified_rows").is_none());
+    assert!(!md.contains_key("id_verified_rows"));
 }
 
 #[test]

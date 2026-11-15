@@ -1,0 +1,4 @@
+# Bundled DuckDB on Windows: see engine/Cargo.toml, above the `duckdb` dependency.
+[env]
+"CXX_x86_64-pc-windows-msvc" = "clang-cl"
+"CXXFLAGS_x86_64-pc-windows-msvc" = "-DDUCKDB_STATIC_BUILD"

@@ -52,7 +52,8 @@ export interface PickConfirming {
  * was cleared and the identities it handed out no longer refer to anything this client can resolve.
  *
  * **Why this is a state and not silence.** With residency cleared, `onHover` resolves no layer and
- * emits `null` (`WorkingCanvas.tsx:1968-1972`), and `null` means *"nothing under the cursor"* --
+ * emits `null` (`WorkingCanvas.tsx`'s `onHover` handler, its `emitHoverReadout(null)` branches), and
+ * `null` means *"nothing under the cursor"* --
  * which is a different, and false, statement. ADR-010 rule 5 (`:68`, *"Staleness is signalled,
  * never silently served"*) forbids exactly that reading, so the refusal is named.
  *

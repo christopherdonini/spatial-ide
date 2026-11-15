@@ -338,6 +338,7 @@ impl Watchdog {
 // Machine facts and small helpers
 // ---------------------------------------------------------------------------------------------
 
+#[allow(clippy::assertions_on_constants)]
 pub fn refuse_debug(harness: &str) {
     assert!(
         !cfg!(debug_assertions),

@@ -259,7 +259,7 @@ export function checkQueueDrift({ planPath, outDir }) {
 
 function main() {
   const args = parseArgs(process.argv.slice(2));
-  const planPath = args.plan ?? path.join(REPO_ROOT, 'PLAN.yaml');
+  const planPath = args.plan ?? path.join(REPO_ROOT, 'governance/PLAN.yaml');
   const outDir = args.outDir ?? path.dirname(planPath);
   const mdPath = path.join(outDir, 'CUSTODIAN-QUEUE.md');
   const jsonPath = path.join(outDir, 'CUSTODIAN-QUEUE.json');

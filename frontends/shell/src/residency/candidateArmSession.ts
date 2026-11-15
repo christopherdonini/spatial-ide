@@ -39,10 +39,13 @@ import type { RequestOutcome } from "../streaming/viewportStreamManager";
  * selects BETWEEN this and the baseline `ViewportStreamManager` construction (a single `if`, entered
  * only when `getResidencyArm() === "candidate"`, that returns before a single line of the baseline
  * construction ever runs) -- the piece's own bit-identity requirement is structural: nothing here is
- * reachable unless that check passes, and this whole module's own top-level import in `App.tsx` is
- * dead code once `import.meta.env.DEV` is `false` (Vite's own literal-`false` replacement), same as
- * `residencyArm.ts`'s own DEV-only symbols (`check:dist-clean`'s own extended identifier list covers
- * this module's own entry point, `startCandidateArmSession`).
+ * reachable unless that check passes. The check is `shouldConstructCandidateSession()`
+ * (`residencyArm.ts`), which compares `getResidencyArm()` with `"candidate"`; the arm defaults to
+ * `"candidate"` (`DEFAULT_RESIDENCY_ARM`) and `App.tsx` makes that check with no
+ * `isInstrumentedBuild()` operand, so this module's own top-level import in `App.tsx` is live code
+ * and `startCandidateArmSession` runs by default. Selecting `"baseline"` is a `setResidencyArm` call
+ * (`residencyArm.ts`), which the e2e harness makes through its hook. `startCandidateArmSession` is not
+ * on `check:dist-clean`'s forbidden list.
  *
  * **The tile grid's own anchor problem, and how this module resolves it.** `tileGrid.ts`'s own top
  * doc comment: there is no dataset extent to anchor a fixed grid to before the first byte of data
@@ -143,17 +146,21 @@ export interface CandidateArmSessionDeps {
   applyScanEvent?: (event: { kind: "issued"; streamHandle: string } | { kind: "reset" }) => void;
   /**
    * Viewport-residency cut P7: the tile grid level this session's own `TileViewportStreamManager`
-   * constructs against -- `App.tsx`'s own dev-gated read of `residencyTileSizeLevel.ts`'s
-   * `getResidencyTileSizeLevel()`, passed through as a plain value rather than this module importing
-   * that DEV-only selector itself (the same "the caller reads DEV-gated state, this module only
-   * consumes a value" separation `App.tsx`'s own arm check/`startCandidateArmSession` boundary already
-   * establishes for `getResidencyArm()` -- this module has never imported `residencyArm.ts` either).
+   * constructs against -- `App.tsx`'s own read of `residencyTileSizeLevel.ts`'s
+   * `getResidencyTileSizeLevel()` (an ungated call, made where the session is constructed), passed
+   * through as a plain value rather than this module importing that selector itself (the same "the
+   * caller reads the selector, this module only consumes a value" separation `App.tsx`'s own arm
+   * check/`startCandidateArmSession` boundary already establishes for
+   * `getResidencyArm()` -- this module has never imported `residencyArm.ts` either).
    * `undefined` or `null` (the selector's own "unset" value, `residencyTileSizeLevel.ts`'s own top doc
    * comment) both reach `TileViewportStreamManager`'s constructor as `level: undefined`, which resolves
    * to `DEFAULT_TILE_GRID_LEVEL` there -- EXACTLY today's implicit default, unchanged: before this
    * piece, the `TileViewportStreamManager` construction below passed no `level` option at all. Optional
    * so every pre-existing test/call site of this function keeps compiling and behaving unchanged. */
   tileGridLevel?: TileGridLevel | null;
+  /** The open's projection set (`attributes/projection.ts`'s `projectionFor`), passed as the `columns` of the first look and of every tile's `viewport_query`; `null`
+   * when no column is projectable. REQUIRED, with no default, as the tile manager's option is: a defaulted `null` would be a session that silently asks for no attributes (milestone 4 PR A, section 2.2 (b)). */
+  columns: string[] | null;
   /**
    * **This dataset's session ended: the source was observed to have changed** (P3b §2a(iii); Brief A
    * boundary 4). Fired **exactly once** per session, after this session has cleared the tile
@@ -919,6 +926,7 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
     // `opts.level ?? DEFAULT_TILE_GRID_LEVEL` fallback already handles -- see `tileGridLevel`'s own
     // doc comment above for why that reproduces this session's pre-P7 behavior exactly when unset.
     level: deps.tileGridLevel ?? undefined,
+    columns: deps.columns,
     residency: {
       // Defect A: "planning treats partial as non-resident" -- `isTileCompleteInCandidateSet`, not
       // the older, weaker `isTileResidentInCandidateSet` (which stays `true` for a partial tile; that
@@ -941,9 +949,9 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
       // needing to track a second, tile-specific "was this a wasted re-fetch" history of its own.
       hasHeadroom,
     },
-    onBatch: (tileKey, streamHandle, batchSeq, payload) => {
+    onBatch: (tileKey, streamHandle, batchSeq, payload, filter) => {
       countTileStreamIssuedOnce(tileKey); // catches a queued-then-issued tile never seen in `issued`
-      ingestAndMaybeEstablishFrame(tileKey, streamHandle, batchSeq, payload);
+      ingestAndMaybeEstablishFrame(tileKey, streamHandle, batchSeq, payload, filter);
     },
     onTileSuperseded: (tileKey) => {
       countTileStreamEndedOnce(tileKey);
@@ -1098,10 +1106,11 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
     tileKey: string,
     streamHandle: string,
     _batchSeq: number,
-    payload: Uint8Array
+    payload: Uint8Array,
+    filter: Filter | null
   ): void {
     if (!canvas) return;
-    const outcome = canvas.pushTileBatch(tileKey, streamHandle, _batchSeq, payload);
+    const outcome = canvas.pushTileBatch(tileKey, streamHandle, _batchSeq, payload, filter);
     // Item C/D evidence (this piece's own smoke-validation criterion): dedupe/eviction counters are
     // console-visible via `WorkingCanvas.tsx`'s own `traceTileIngest` call, right where `pushTileBatch`
     // computes `outcome` -- `diagnostics/renderTrace.ts` is this codebase's own "console-only
@@ -1271,7 +1280,7 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
     // established from the first batch alone -- see `establishFrameFromExtent`'s own doc comment and
     // `tileGrid.ts`'s top doc comment for the full account of why this changed. Propagates a refusal
     // (`SkpCallError`) unchanged -- see this module's own doc comment.
-    const { stream } = await viewportQuery(dataset, bbox, null, encodeDecU64(BigInt(UNTILED_FIRST_LOOK_ROW_LIMIT)), filter);
+    const { stream } = await viewportQuery(dataset, bbox, null, encodeDecU64(BigInt(UNTILED_FIRST_LOOK_ROW_LIMIT)), filter, deps.columns);
     if (stopped) {
       await skpCancel(stream).catch(() => {});
       return { kind: "stopped" };
@@ -1313,7 +1322,7 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
         // `establishFrameFromExtent` can anchor the grid frame on the WHOLE stream's own union, not
         // this one batch alone -- see `onTerminal` below, and `tileGrid.ts`'s top doc comment for the
         // full account of why the anchor must be the complete union.
-        ingestAndMaybeEstablishFrame(INITIAL_TILE_KEY, stream, seq, batchPayload);
+        ingestAndMaybeEstablishFrame(INITIAL_TILE_KEY, stream, seq, batchPayload, filter);
       },
       onProgress: () => {},
       onTerminal: (terminal) => {

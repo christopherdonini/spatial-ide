@@ -1,0 +1,5 @@
+{
+  "code": "skp.project_lineage_not_kept_by_this_version",
+  "message": "project.spatial records a lineage, which this version of the application does not keep",
+  "fields": {}
+}

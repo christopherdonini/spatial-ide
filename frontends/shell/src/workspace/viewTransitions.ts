@@ -3,8 +3,8 @@
 
 /**
  * SHELL-MIGRATION-MILESTONE-2-PREREGISTRATION.md section 2.4 (seam 3): the typed, pure transitions of a view. A
- * transition is an `{action, params}` object, the shape of ADR-036 section 6's `intent` member (Proposed, so it
- * binds nothing), applied by the pure `applyViewTransition`. The union is closed and is exactly the section's names:
+ * transition is an `{action, params}` object, the shape of ADR-036 section 6's `intent` member (Accepted
+ * 2026-10-22), applied by the pure `applyViewTransition`. The union is closed and is exactly the section's names:
  * `filter.apply` and `style.set` (phase A), then `tool.set`, `mode.set`, `selection.apply`, `selection.clear`,
  * `selection.end`, `inspect.set` and `inspect.pin`, and, from milestone 3 (SHELL-MIGRATION-MILESTONE-3-PREREGISTRATION.md section 2.5),
  * `filter.clauses.set`. Keystrokes, hover, navigation and layout are not transitions.
@@ -13,6 +13,7 @@
  * A view's phase B members are optional (see `ViewState`); the readers below give their section 7 defaults.
  */
 
+import type { AttributeRow } from "../attributes/values";
 import type { AuthoritativeBbox } from "../canvas/viewportBbox";
 import type { Filter } from "../skp/types";
 import type { StyleState } from "../style/document";
@@ -41,7 +42,7 @@ export type ToolSetTransition = { action: "tool.set"; params: { tool: Tool } };
 export type ModeSetTransition = { action: "mode.set"; params: { mode: SelectionMode } };
 export type SelectionApplyTransition = {
   action: "selection.apply";
-  params: { mode: SelectionMode; id: bigint; bounds: AuthoritativeBbox };
+  params: { mode: SelectionMode; id: bigint; bounds: AuthoritativeBbox; row: AttributeRow | "not-held" | null; filter: Filter | null };
 };
 export type SelectionClearTransition = { action: "selection.clear"; params: Record<string, never> };
 export type SelectionEndTransition = {
@@ -50,7 +51,7 @@ export type SelectionEndTransition = {
 };
 export type InspectSetTransition = {
   action: "inspect.set";
-  params: { pick: InspectedPick; bounds: AuthoritativeBbox } | null;
+  params: { pick: InspectedPick; bounds: AuthoritativeBbox; row: AttributeRow | "not-held" | null } | null;
 };
 /** Pinning needs something inspected: with nothing inspected, `pinned: true` leaves the view unpinned. */
 export type InspectPinTransition = { action: "inspect.pin"; params: { pinned: boolean } };
@@ -95,7 +96,7 @@ function applyStyleSet(style: StyleState, transition: StyleSetTransition): Style
 
 function applySelection(view: ViewState, params: SelectionApplyTransition["params"]): ViewState {
   const members = viewSelection(view);
-  const outcome = applySelectionMode(members, params.mode, params.id, params.bounds);
+  const outcome = applySelectionMode(members, params.mode, params.id, { bounds: params.bounds, row: params.row, filter: params.filter });
   if (outcome.kind === "refused") return { ...view, selectionNotice: { kind: "refused", refusal: outcome.refusal } };
   if (outcome.members === members && view.selectionNotice === undefined) return view;
   return { ...view, selection: outcome.members, selectionNotice: undefined };
@@ -143,7 +144,7 @@ export function applyViewTransition(view: ViewState, transition: ViewTransition)
       if (params === null) {
         return viewInspected(view) === null && !viewPinned(view) ? view : { ...view, inspected: null, pinned: false };
       }
-      return { ...view, inspected: { pick: params.pick, bounds: params.bounds } };
+      return { ...view, inspected: { pick: params.pick, bounds: params.bounds, row: params.row } };
     }
     case "inspect.pin": {
       const pinned = transition.params.pinned && viewInspected(view) !== null;

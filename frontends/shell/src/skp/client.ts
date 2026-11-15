@@ -14,7 +14,9 @@ import {
   Filter,
   IdentityDeclaration,
   OpenDatasetResponse,
+  ProjectWorkspace,
   RecordStepResponse,
+  SaveProjectResponse,
   SkpError,
   SKP_VERSION,
   StepIntent,
@@ -51,7 +53,7 @@ async function call<Res>(command: string, request: Record<string, unknown>): Pro
   // never changes what is returned or thrown, only observes it.
   // `command` is captured on the entry too (NEXT-CUT.md P3): `DescribeRequest` and
   // `CloseDatasetRequest` are both exactly `{skp, dataset}` on the wire, so the request object
-  // alone cannot tell the console's panel which of the six commands this was.
+  // alone cannot tell the console's panel which of the seven commands this was.
   const entry = consoleRecorder.record(request, command);
   try {
     const result = await invoke<Res>(command, { request });
@@ -95,22 +97,22 @@ export function describe(dataset: string): Promise<DescribeResponse> {
 }
 
 /**
- * `filter` is `Filter | null`, defaulting to `null` -- every existing call site (viewport-driven
- * streaming with no predicate) is unaffected, and it is the ONE function both a future filter panel
+ * `filter` is `Filter | null`, required -- it is the ONE function both `FilterPanel`'s Apply
  * and the dev-only E2E hook (`e2e-test-surface.ts`'s `queryWithFilter`, wired through
  * `ViewportStreamManager.requestViewport`) call to actually send one (NEXT-CUT.md P5: "client only,
  * no logic" -- this function does not parse, admit, or otherwise inspect `filter.predicate`; only
  * the kernel does, and it may refuse it). `filter: null` is sent explicitly, never omitted, matching
  * the `bbox_crs` discipline (SKP-V0.md "v0.1" section): `ViewportQueryRequest.filter` is
  * `Option<Filter>` with no `#[serde(default)]` on the Rust side, so an absent key is a deserialize
- * failure, not a tolerated omission.
+ * failure, not a tolerated omission. `columns` is required for the same reason and sent the same way.
  */
 export function viewportQuery(
   dataset: string,
   bbox: Bbox | null,
   bboxCrs: string | null,
   limit: DecU64 | null,
-  filter: Filter | null = null
+  filter: Filter | null,
+  columns: string[] | null
 ): Promise<ViewportQueryResponse> {
   return call("viewport_query", {
     skp: SKP_VERSION,
@@ -119,9 +121,9 @@ export function viewportQuery(
     bbox_crs: bboxCrs,
     limit,
     filter,
-    // `skp/0.6`: this shell requests no projection (condition (1); the wire can carry one, this
-    // half of B1 does not send one -- the consumer is the shell half, per the caller rule).
-    columns: null,
+    // `skp/0.6`: the caller's projection set, sent as given (`projectionFor`'s list, or `null`
+    // when no column is projectable); `null` is sent as `null`, never omitted.
+    columns,
   });
 }
 
@@ -140,4 +142,14 @@ export function closeDataset(dataset: string): Promise<CloseDatasetResponse> {
  */
 export function recordStep(dataset: string, intent: StepIntent): Promise<RecordStepResponse> {
   return call("record_step", { skp: SKP_VERSION, dataset, intent });
+}
+
+/**
+ * `skp/0.13`: saves the workspace as the project of an open dataset. Client only: this function checks
+ * nothing; the kernel does, and may refuse the save. `folder` is the folder the native picker gave, at
+ * the first save of an open, and `null` at every later one -- sent as `null`, never omitted, as the
+ * request's other optional members are (`key_present` on the Rust side).
+ */
+export function saveProject(dataset: string, folder: string | null, workspace: ProjectWorkspace): Promise<SaveProjectResponse> {
+  return call("save_project", { skp: SKP_VERSION, dataset, folder, workspace });
 }

@@ -72,11 +72,9 @@
 // bare `origin` remote, testing the REFUSED branch instead). A `<rev>` that merely LOOKS like a commit
 // id (`COMMIT_ID_RE`) but does not RESOLVE to one -- a hex-named branch or tag -- is refused the same
 // way as a non-commit `<rev>` (§2.4, TEST-CLAIMS-FOLLOWUPS-PREREGISTRATION.md; see
-// `revResolvesToCommit`). Recognized by `HASH_REF_RE`, DERIVED FROM `verify-quotes.mjs`'s
-// own reference grammar (round 12, item 1's quote-by-reference mechanism) as it stands on
-// `governance/verify-quotes` @ 1254cddd4c3b47c9431375874ad327754ef038e9 (round 15(c): a record
-// statement about a tool's behaviour names the tool's commit) -- see that constant's own comment for
-// the one grammar-level divergence this tool keeps (the path group is REQUIRED) and the policy layer
+// `revResolvesToCommit`). Recognized by `HASH_REF_RE`, the reference grammar of hashRefGrammar.mjs
+// (shared with `verify-quotes.mjs`) -- see that constant's own comment for the one grammar-level
+// difference this tool keeps (the path group is REQUIRED) and the policy layer
 // this tool adds on top of a grammar it otherwise matches exactly: the refused HEAD default, the
 // refused non-commit `<rev>`, and condition (e)'s ancestor-of-main requirement. See
 // `supersededSpans`/`findSupersededSpan`.
@@ -98,6 +96,8 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { loadPlan } from './plan.mjs';
 import { readRulingSet, resolveRoundItem } from './rulingSet.mjs';
+import { hashRefRegExp } from './hashRefGrammar.mjs';
+import { loadMovedMap, currentPath, chainFrom, originPath, pathAtRev } from './movedMap.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 export const REPO_ROOT = path.resolve(here, '..', '..');
@@ -155,32 +155,16 @@ export function extractClaimedTests(text) {
   return out;
 }
 
-// `HASH_REF_RE`, DERIVED FROM `verify-quotes.mjs`'s own `HASH_REF_RE` as it stands on
-// `governance/verify-quotes` @ 1254cddd4c3b47c9431375874ad327754ef038e9 (its `GAP`/`HASH_REF_RE`
-// constants, lines 554 and 555 at that commit -- round 19 item 2's correction (attempt-2 reviewer
-// gate, `state/gate-log.json` index 87): the earlier text read 553/554, one line short of each
-// constant's own opening line -- not written as a `path:line` token here: that file is tracked as of
-// 6191a7c, but `verify-cites.mjs` (as it stands on `main` @ 7104cd3a2f961e6e1fa0073c1df77f9d3dea2f7f,
-// round 15(c): a tool claim names the tool's commit) resolves every such token against the CURRENT
-// tree, not the pinned historical commit, gate S4/N4's own disclosed limit). `GAP` is that source's own
-// name and definition, standing in for a plain `\s*` so a reference rustfmt (or, here, a table cell)
-// has wrapped across exactly one `//`-comment continuation still binds, exactly as the source binds
-// it. ONE necessary grammar-level divergence, and the only one kept: group 2 (path) is REQUIRED --
-// the source leaves it optional to support a bare `:line` bound to the nearest preceding path:line
-// citation (`nearestPathInParagraph`), which this tool does not implement; the round-14 root-cause
-// rule already requires a real self-referencing pin to spell the file's own path in full, so nothing
-// this tool needs to recognize is lost by requiring it. `<rev>` (group 5) is matched at the GRAMMAR
-// level exactly as the source matches it (any non-whitespace, non-backtick run, optional) -- this
-// tool's stricter POLICY (no HEAD default, no non-commit `<rev>`) is enforced in `supersededSpans` and
-// `computeWithdrawnRows` below, not in the shared pattern, because that policy is this tool's own
-// exemption to refuse, not a property of the reference shape itself (round 15(e); architect/reviewer
-// gate, attempt 1, B1/B2).
-const GAP = '[ \\t]*(?:\\n[ \\t]*//[ \\t]?)?[ \\t]*';
-const HASH_REF_RE = new RegExp(
-  '(byte-copied from\\s+)?`?([A-Za-z0-9_][A-Za-z0-9_./+-]*):(\\d+)(?:-(\\d+))?`?' +
-    `(?:${GAP}@${GAP}([^\\s\`]+))?${GAP}sha256:([0-9a-f]{64})\`?`,
-  'g',
-);
+// `HASH_REF_RE`: the reference grammar `verify-quotes.mjs` also uses, imported from hashRefGrammar.mjs
+// (`GAP` and `hashRefRegExp` live there; each importer gets its own RegExp instance). ONE grammar-level
+// difference, and the only one: group 2 (path) is REQUIRED here (`pathRequired: true`) -- verify-quotes
+// leaves it optional to bind a bare `:line` to the nearest preceding path:line citation, which this tool does
+// not implement; a self-referencing pin must spell the file's own path in full (round 14, root-cause rule),
+// and a bare `:line` must keep reading "no pinned reference" in `computeWithdrawnRows`. `<rev>` (group 5) is
+// matched at the grammar level as verify-quotes matches it (any non-whitespace, non-backtick run,
+// optional); this tool's stricter POLICY (no HEAD default, no non-commit `<rev>`) is enforced in
+// `supersededSpans` and `computeWithdrawnRows` below, not in the pattern.
+const HASH_REF_RE = hashRefRegExp({ pathRequired: true });
 
 // A commit id this tool will act on: 7-40 lowercase hex digits (a full or abbreviated SHA), never a
 // ref name -- round 15(e)'s "never a branch commit" read literally: a rev spelled as a branch or tag
@@ -267,12 +251,12 @@ function containsWithdrawnTestOutsideBackticks(lineText) {
  * property to inherit from the source. Returns
  * `[{ startLine, endLine, rev, hash, reference, lineText }]`.
  */
-function markedSpans(relPath, text, containsMarker) {
+function markedSpans(root, relPath, text, containsMarker) {
   const out = [];
   HASH_REF_RE.lastIndex = 0;
   let m;
   while ((m = HASH_REF_RE.exec(text))) {
-    if (m[2] !== relPath) continue;
+    if (!samePinnedPath(root, m[2], relPath)) continue;
     const rev = m[5];
     if (!rev || !COMMIT_ID_RE.test(rev)) continue;
     const refLine = lineOf(text, m.index);
@@ -288,8 +272,9 @@ function markedSpans(relPath, text, containsMarker) {
 /** SUPERSEDED's own spans (round 14 item 2). Excludes any line also marked `withdrawn-test`
  * (the consult's Row-grammar precedence: a withdrawn row that fails its own riders must not fall
  * back to exempting as superseded). */
-function supersededSpans(relPath, text) {
+function supersededSpans(root, relPath, text) {
   return markedSpans(
+    root,
     relPath,
     text,
     (lineText) => containsSupersededOutsideBackticks(lineText) && !containsWithdrawnTestOutsideBackticks(lineText),
@@ -300,12 +285,35 @@ function supersededSpans(relPath, text) {
 // `findSupersededSpan` below may re-ask the same (rev, path) pair once per span per claim -- attempt-1
 // reviewer S5, measured at ~21 ms/spawn on that box.
 const gitShowCache = new Map();
+// Governance piece F's move map (scripts/plan/movedMap.mjs, governance/MOVED.tsv), loaded once per
+// run for a root; with no MOVED.tsv the map is empty and both helpers below return their input.
+const movedMaps = new Map();
+function movedMapOf(root) {
+  if (!movedMaps.has(root)) movedMaps.set(root, loadMovedMap(root));
+  return movedMaps.get(root);
+}
+// A pinned reference's path names the citing form when both are the same file after the map: a row
+// written before the move pins the form by its old path.
+function samePinnedPath(root, pinnedPath, relPath) {
+  if (pinnedPath === relPath) return true;
+  const map = movedMapOf(root);
+  return currentPath(map, pinnedPath) === currentPath(map, relPath);
+}
+// The path the form had at `rev`: the newest row whose move commit is an ancestor of rev, else the
+// path before its first move.
+function pathAtPinnedRev(root, relPath, rev) {
+  const map = movedMapOf(root);
+  const chain = chainFrom(map, originPath(map, relPath));
+  if (chain.length === 0) return relPath;
+  return pathAtRev(root, { chain, path: chain[chain.length - 1].new }, rev);
+}
 function gitShowFile(root, rev, relPath) {
-  const key = `${root}\u0000${rev}\u0000${relPath}`;
+  const shownPath = pathAtPinnedRev(root, relPath, rev);
+  const key = `${root}\u0000${rev}\u0000${shownPath}`;
   if (gitShowCache.has(key)) return gitShowCache.get(key);
   let out;
   try {
-    out = execFileSync('git', ['show', `${rev}:${relPath}`], { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+    out = execFileSync('git', ['show', `${rev}:${shownPath}`], { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
   } catch {
     out = null;
   }
@@ -662,7 +670,7 @@ function computeWithdrawnRows(root, relPath, text) {
     let grammarAccepted = false;
     if (!ref) {
       reason = 'refused: no pinned reference';
-    } else if (ref.path !== relPath) {
+    } else if (!samePinnedPath(root, ref.path, relPath)) {
       reason = "refused: another file's path";
     } else if (!ref.rev || !COMMIT_ID_RE.test(ref.rev)) {
       reason = 'refused: no commit-id rev';
@@ -825,6 +833,7 @@ export function mergeCommitGateFiles(plan) {
  */
 export function runVerifyTestClaims({ repoRoot, plannedGates, mergeCommitGates } = {}) {
   const root = repoRoot ?? REPO_ROOT;
+  movedMaps.delete(root); // a MOVED.tsv written since the last run is read afresh
   const exempt = plannedGates ?? new Set();
   const samePrGates = mergeCommitGates ?? new Set();
   const files = gitList(root);
@@ -848,7 +857,7 @@ export function runVerifyTestClaims({ repoRoot, plannedGates, mergeCommitGates }
     } = computeWithdrawnRows(root, rel, text);
     if (rowMainUnchecked) withdrawnMainUnchecked = true;
     findings.push(...rowFindings);
-    const spans = supersededSpans(rel, text);
+    const spans = supersededSpans(root, rel, text);
 
     for (const c of extractClaimedTests(text)) {
       claims++;
@@ -885,7 +894,7 @@ function main() {
   let notes = new Map();
   let mergeCommitGates = new Set();
   try {
-    const plan = loadPlan(path.join(REPO_ROOT, 'PLAN.yaml'));
+    const plan = loadPlan(path.join(REPO_ROOT, 'governance/PLAN.yaml'));
     notes = plannedGateNotes(plan);
     plannedGates = plannedGateFiles(plan);
     mergeCommitGates = mergeCommitGateFiles(plan);

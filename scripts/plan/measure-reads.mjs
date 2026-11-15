@@ -60,7 +60,7 @@ function dropTrailingEmpty(lines) {
 
 function routine(rev) {
   const cutState = toLines(git(['show', `${rev}:state/CUT-STATE.md`])).join('\n');
-  const pending = toLines(git(['show', `${rev}:DECISIONS-PENDING.md`])).join('\n');
+  const pending = toLines(git(['show', `${rev}:governance/DECISIONS-PENDING.md`])).join('\n');
 
   const p1 = must(extractSessionContinuityBlock(cutState), 'SESSION-CONTINUITY block');
   const flushed = Date.parse(must(parseSessionContinuity(cutState)?.flushedAt, 'flushed_at'));

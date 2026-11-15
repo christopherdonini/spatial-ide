@@ -1,0 +1,5 @@
+== gated: A=0 B=0
+differences(gated) = 0
+== advisory: A=110 B=110
+differences(advisory) = 0
+wall A=6488ms B=6484ms scanned A=2242 B=2242

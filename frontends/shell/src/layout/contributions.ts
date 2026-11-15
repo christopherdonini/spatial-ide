@@ -10,7 +10,7 @@ import type { ReactNode } from "react";
  *
  * The labels of REGIONS, INSPECTOR_TABS, LAYER_SECTIONS and ACTIVITY_TABS are the eleven headings the
  * human sighted (question round 66, item 4): Layers, Map, Inspector, Layer, Style, Source, Filter,
- * Export, Activity, Console, Notices.
+ * Export, Activity, Console, Notices. The Table tab's label is a P6 placeholder and not one of them (milestone 4 PR C, section 2.4 (a)).
  */
 
 /** The regions the layout names. The map is a region and has a slot, but no toggle (§2.1: it cannot
@@ -40,6 +40,7 @@ export const LAYER_SECTIONS = [
 export const ACTIVITY_TABS = [
   { id: "console", label: "Console" },
   { id: "notices", label: "Notices" },
+  { id: "table", label: "[P6 placeholder] Table" },
 ] as const;
 
 /** In §2.5 order. */

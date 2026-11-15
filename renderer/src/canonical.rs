@@ -39,6 +39,16 @@
 //!
 //! The domain restriction is the part worth reading twice: it is what lets the grammar promise "no
 //! exponent" without that promise quietly depending on the magnitudes anyone happens to pass.
+//!
+//! ## The line-oriented layout
+//!
+//! [`to_line_oriented_string`] writes the same document in a second, layout-only form. ADR-036 §2
+//! defines it for the project file, so that a diff between two saves shows each member that
+//! changed. Its keys, strings and numbers are this grammar's, written by the writers below, so the
+//! two forms differ in whitespace alone: one member or element per line, [`LAYOUT_INDENT`] for
+//! each object or array that encloses the line, and [`LAYOUT_KEY_SEPARATOR`] after a key. It is
+//! the one place the layout is written (ADR-022 decision 3). It writes no closing newline, as the
+//! compact form writes none; the project file's writer adds the file's one LF.
 
 use std::fmt::Write as _;
 
@@ -155,6 +165,59 @@ pub fn sha256_hex(bytes: &[u8]) -> String {
     let mut h = Sha256::new();
     h.update(bytes);
     format!("sha256:{:x}", h.finalize())
+}
+
+/// The layout's indent: two spaces for each object or array that encloses a line (ADR-036 §2).
+pub const LAYOUT_INDENT: &str = "  ";
+/// What follows a key in the layout: `:` and one space (ADR-036 §2).
+pub const LAYOUT_KEY_SEPARATOR: &str = ": ";
+
+/// Serialize to the line-oriented layout of ADR-036 §2: the document of [`to_canonical_string`],
+/// one member or element to a line. An empty object is `{}` and an empty array is `[]`. There is
+/// no trailing whitespace, no blank line and no closing newline.
+pub fn to_line_oriented_string(v: &Json) -> Result<String, CanonicalError> {
+    let mut out = String::new();
+    write_layout(&mut out, v, "$", 0)?;
+    Ok(out)
+}
+
+fn write_layout(out: &mut String, v: &Json, at: &str, depth: usize) -> Result<(), CanonicalError> {
+    let indent = |out: &mut String, depth: usize| out.push_str(&LAYOUT_INDENT.repeat(depth));
+    match v {
+        Json::Arr(items) if !items.is_empty() => {
+            out.push_str("[\n");
+            for (i, item) in items.iter().enumerate() {
+                indent(out, depth + 1);
+                write_layout(out, item, &format!("{at}[{i}]"), depth + 1)?;
+                out.push_str(if i + 1 < items.len() { ",\n" } else { "\n" });
+            }
+            indent(out, depth);
+            out.push(']');
+        }
+        Json::Obj(members) if !members.is_empty() => {
+            let mut seen: Vec<&str> = Vec::with_capacity(members.len());
+            out.push_str("{\n");
+            for (i, (k, val)) in members.iter().enumerate() {
+                if seen.contains(&k.as_str()) {
+                    return Err(CanonicalError::DuplicateKey {
+                        at: at.to_string(),
+                        key: k.clone(),
+                    });
+                }
+                seen.push(k);
+                indent(out, depth + 1);
+                write_string(out, k);
+                out.push_str(LAYOUT_KEY_SEPARATOR);
+                write_layout(out, val, &format!("{at}.{k}"), depth + 1)?;
+                out.push_str(if i + 1 < members.len() { ",\n" } else { "\n" });
+            }
+            indent(out, depth);
+            out.push('}');
+        }
+        // A scalar, or an empty object or array, is spelled as the compact form spells it.
+        other => write_value(out, other, at)?,
+    }
+    Ok(())
 }
 
 fn write_value(out: &mut String, v: &Json, at: &str) -> Result<(), CanonicalError> {
@@ -397,5 +460,65 @@ mod tests {
         assert_eq!(s, r#"{"a":1}"#);
         assert_eq!(h, sha256_hex(s.as_bytes()));
         assert!(h.starts_with("sha256:"));
+    }
+
+    #[test]
+    fn the_line_oriented_layout_writes_adr_036s_example_byte_for_byte() {
+        // ADR-036 §2's example, `{"a":1,"b":[],"c":{"d":"x"}}`, laid out one member to a line.
+        let example = Json::obj([
+            ("a", Json::Int(1)),
+            ("b", Json::Arr(vec![])),
+            ("c", Json::obj([("d", Json::str("x"))])),
+        ]);
+        let laid_out = "{\n  \"a\": 1,\n  \"b\": [],\n  \"c\": {\n    \"d\": \"x\"\n  }\n}";
+        assert_eq!(to_line_oriented_string(&example).unwrap(), laid_out);
+
+        // The two forms differ in whitespace alone: the same writers spell every key, string and
+        // number, and the same rules refuse what the compact form refuses.
+        let doc = Json::obj([
+            ("s", Json::str("a b\n\"c\"\u{1} é")),
+            (
+                "n",
+                Json::Arr(vec![
+                    Json::Int(-1),
+                    Json::UInt(u64::MAX),
+                    Json::Double(0.000001),
+                    Json::Double(-0.0),
+                ]),
+            ),
+            (
+                "o",
+                Json::Arr(vec![
+                    Json::obj([("k", Json::Null)]),
+                    Json::Arr(vec![]),
+                    Json::Obj(vec![]),
+                ]),
+            ),
+            ("b", Json::Bool(true)),
+        ]);
+        let layout = to_line_oriented_string(&doc).unwrap();
+        let (mut bare, mut in_string, mut escaped) = (String::new(), false, false);
+        for c in layout.chars() {
+            if in_string {
+                (escaped, in_string) = (!escaped && c == '\\', escaped || c != '"');
+            } else if c == '"' {
+                in_string = true;
+            } else if matches!(c, ' ' | '\n') {
+                continue;
+            }
+            bare.push(c);
+        }
+        assert_eq!(bare, to_canonical_string(&doc).unwrap());
+        assert!(layout.lines().all(|l| !l.is_empty() && l == l.trim_end()));
+        let far = Json::obj([("a", Json::Arr(vec![Json::Double(1e20)]))]);
+        assert!(matches!(
+            to_line_oriented_string(&far),
+            Err(CanonicalError::OutOfDomain { at, .. }) if at == "$.a[0]"
+        ));
+        let twice = Json::Obj(vec![("a".into(), Json::Int(1)), ("a".into(), Json::Int(2))]);
+        assert!(matches!(
+            to_line_oriented_string(&twice),
+            Err(CanonicalError::DuplicateKey { .. })
+        ));
     }
 }

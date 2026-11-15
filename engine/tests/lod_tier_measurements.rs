@@ -249,6 +249,7 @@ fn one_sample(source: &Dataset, directory: &Path, workers: usize, label: &str) -
 #[ignore = "measurement harness, the tester's: cargo test --release -p spatial-engine --test \
             lod_tier_measurements -- --ignored --exact \
             wall_time_arm_s_and_arm_p_over_polygons_100k --nocapture"]
+#[allow(clippy::assertions_on_constants)]
 fn wall_time_arm_s_and_arm_p_over_polygons_100k() {
     assert!(
         !cfg!(debug_assertions),
@@ -482,6 +483,7 @@ fn the_row_order_check_fires_on_a_permutation() {
     );
 }
 
+#[allow(clippy::assertions_on_constants)]
 fn five_gb_build(workers: usize, label: &str, verify: bool) {
     assert!(
         !cfg!(debug_assertions),

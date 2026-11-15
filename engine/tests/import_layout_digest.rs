@@ -457,6 +457,7 @@ const CEIL_STREAM_SILENCE: Duration = Duration::from_secs(120);
 #[test]
 #[ignore = "correctness pass; run explicitly with --release, --features fixture; \
             kernel/IMPORT-LAYOUT-PREREGISTRATION.md phase 3"]
+#[allow(clippy::assertions_on_constants)]
 fn the_cross_file_digest_correctness_pass() {
     assert!(
         !cfg!(debug_assertions),

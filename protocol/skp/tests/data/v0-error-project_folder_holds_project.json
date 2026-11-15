@@ -1,0 +1,7 @@
+{
+  "code": "skp.project_folder_holds_project",
+  "message": "C:/Projects/parcels already holds project.spatial",
+  "fields": {
+    "folder": "C:/Projects/parcels"
+  }
+}

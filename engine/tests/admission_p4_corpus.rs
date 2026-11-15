@@ -360,6 +360,7 @@ fn mutation_rows() -> Vec<RowSpec> {
 
 // ---- What actually happened -----------------------------------------------------------------
 
+#[allow(clippy::large_enum_variant)]
 enum Observed {
     Admitted {
         crs: String,

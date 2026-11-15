@@ -141,6 +141,10 @@ export interface StudioLayoutProps {
   onAddClause?: (condition: string) => Promise<ClauseResult>;
   clausePending?: boolean;
   filterFields?: FieldSource | null;
+  /** B2 piece 1c: `project.save` is App's one save handler, which the bar's `/save` and App's own control both call. An absent prop leaves the entry unavailable. */
+  onSaveProject?: () => void;
+  /** Milestone 4 PR C (section 2.4 (b)): called with whether the Table tab is shown (Activity open and the Table tab selected), on mount and on each change. Consumer: App, which hands it to the Table tab so the first scope issues only while shown. */
+  onTableShownChange?: (shown: boolean) => void;
 }
 
 export default function StudioLayout({
@@ -157,8 +161,12 @@ export default function StudioLayout({
   onAddClause,
   clausePending,
   filterFields,
+  onSaveProject,
+  onTableShownChange,
 }: StudioLayoutProps) {
   const [state, dispatch] = useReducer(layoutReducer, undefined, initialLayoutState);
+  const tableShown = state.activity.open && state.activity.tab === "table";
+  useEffect(() => onTableShownChange?.(tableShown), [onTableShownChange, tableShown]);
   const viewport = useViewport();
   const platform = currentPlatform();
   const sizes = effectiveSizes(state, viewport);
@@ -206,6 +214,8 @@ export default function StudioLayout({
         return dataset && onRevealExport !== undefined;
       case "filter.addClause":
         return dataset && onAddClause !== undefined;
+      case "project.save":
+        return dataset && onSaveProject !== undefined;
       default:
         return true;
     }
@@ -230,6 +240,7 @@ export default function StudioLayout({
     else if (id === "tool.navigate" || id === "tool.select") onSelectTool?.(TOOL_OF_ACTION[id]);
     else if (id === "selection.zoomTo") onZoomToSelection?.();
     else if (id === "selection.clear") onClearSelection?.();
+    else if (id === "project.save") onSaveProject?.();
     else if (id === "command.focus") {
       barRef.current?.take();
       return "moved-focus";

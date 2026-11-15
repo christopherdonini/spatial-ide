@@ -187,6 +187,7 @@ fn serial() -> std::sync::MutexGuard<'static, ()> {
 }
 
 #[tokio::test(flavor = "multi_thread")]
+#[allow(clippy::await_holding_lock)]
 async fn tracing_changes_no_byte_on_the_wire() {
     let _serial = serial();
     let path = fixture();
@@ -394,6 +395,7 @@ async fn collect_frames_via_ticket(path: &std::path::Path) -> Vec<Frame> {
 // way". Re-observed at 99f4c437e81ad3286a9f388ea466e3f76d322556: mutation applied, this test run
 // alone by name, failure recorded, mutation reverted.
 #[tokio::test(flavor = "multi_thread")]
+#[allow(clippy::await_holding_lock)]
 async fn wire_bytes_invariant_holds_for_the_projected_ticket_path_case_too() {
     let _serial = serial();
     let path = projected_fixture();

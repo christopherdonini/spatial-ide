@@ -68,10 +68,15 @@ use tokio::sync::watch;
 /// 20-minute ceiling; the approval dialog states the expiry (`PublishDialog.tsx`).
 pub const PENDING_ATTEMPT_TTL: Duration = Duration::from_secs(600);
 
-/// The filter-scope sentence, from `NEXT-CUT.md`'s conditional block item 3 — **verbatim**, never
-/// silently dropped when the shell's active SQL filter would have applied to this publish.
+/// The filter-scope sentence, a P6 placeholder (the human's ruling of 2026-11-05, evening, item 2):
+/// the visible `[P6 placeholder] ` prefix is the mark (the custodian's reading of the human's
+/// ruling of 2026-11-05, evening, item 2, confirmed by the human on 2026-11-06), and every byte
+/// after it is unchanged. It reaches the approval payload only under
+/// [`PublishScope::filter_scope_sentence`]'s condition: a filter active and the current view.
+/// `src/publish/types.ts` holds the panel's copy; the pin test in `PublishPanel.test.ts` keeps the
+/// two equal.
 pub const FILTER_SCOPE_SENTENCE: &str =
-    "this bundle format cannot record a row predicate (ADR-017 \
+    "[P6 placeholder] this bundle format cannot record a row predicate (ADR-017 \
      §8, bundle_version 1); publishing publishes the viewport extent, not your filter";
 
 // -------------------------------------------------------------------------------------------
@@ -119,6 +124,17 @@ impl PublishScope {
                 // predicate-carrying query outright; this scope has no shape that could carry one.
                 filter: None,
             },
+        }
+    }
+
+    /// The payload's `filter_scope`: the sentence for the current view with a filter active, and
+    /// `None` for every other case. Decided here, beside [`Self::row_scope_sentence`], so one payload's
+    /// two scope sentences come from one `PublishScope`. It changes what is shown, not what is
+    /// published: [`Self::to_query`] sends no filter under either scope.
+    fn filter_scope_sentence(&self, filter_active: bool) -> Option<String> {
+        match self {
+            Self::ViewportBbox { .. } if filter_active => Some(FILTER_SCOPE_SENTENCE.to_string()),
+            _ => None,
         }
     }
 
@@ -271,8 +287,10 @@ pub struct PublishPromptData {
     pub grant_remaining_s: u64,
     /// NEW relative to `ApprovalPrompt::render`'s field set: whole-file or viewport-bbox, in words.
     pub row_scope: String,
-    /// NEW: present only when the shell's active filter would have applied to this publish — the
-    /// [`FILTER_SCOPE_SENTENCE`], never silently dropped.
+    /// NEW: the [`FILTER_SCOPE_SENTENCE`] when a filter is active and the scope is the current view
+    /// (`ViewportBbox`); `None` otherwise, including under the whole file with a filter active, where
+    /// `row_scope` is what states every row. No filter is applied to the published rows under
+    /// either scope: `PublishScope::to_query` sets `filter: None` in both arms.
     pub filter_scope: Option<String>,
     /// **ADR-017's Exposure review, 2026-08-17, condition 1** — the human's own words, verbatim:
     /// *"the approval dialog must state the plain outcome — what will be written, where, and
@@ -283,6 +301,33 @@ pub struct PublishPromptData {
     /// provenance `<dl>` — this field ADDS clarity; nothing else on this struct changes meaning or
     /// is removed.
     pub outcome_summary: String,
+    /// One line naming `id`, the geometry and each attribute column the pending attempt publishes,
+    /// in the request's declared order. Composed in `prepare_with_query` by
+    /// [`compose_published_columns`] from the same `attributes` vector that goes into the request,
+    /// passes preflight and is sent at execute. The shipped build derives at most one attribute
+    /// name (`style_attributes`), so the many-name case is reached only by the unit test
+    /// `the_published_columns_line_keeps_the_declared_order_and_the_separator`, never by ordinary use.
+    pub published_columns: String,
+}
+
+/// The line [`PublishPromptData::published_columns`] carries. The two forms are the human's words,
+/// byte for byte, from item 4 (b) of the directive at
+/// `state/directives/2026-11-12-third-message-open-3-a-gates-now-typed-check-reading-rule-first-look-s1-publish-approval-s2-second-open-rulings-308-restore-item-47-floor-order.md:20 @ c3b4899c4c4a1cf1b0823a7b0e4a1be20f96ec5c sha256:2e05b7610c5865dc8798c45bec193cfa13b0de5bcb6cf46c913f23da802445e6`
+/// (the hash is of the whole line; the words are a span inside it). No names: the no-attributes
+/// form. Otherwise the names follow `and `, in the order given and joined by `, `, with no sorting,
+/// deduplication, quoting or cap here (the kernel refuses duplicates, `id` and more than 32 names
+/// before any prompt exists). Many names are reached only by the unit tests, not by ordinary use.
+/// A name is inserted as it is (OPEN-2 (a)), so a column whose own name contains `, ` reads as
+/// more than one name in the line; the shipped build reaches that only through a style whose match column has such a name.
+fn compose_published_columns(attributes: &[String]) -> String {
+    if attributes.is_empty() {
+        "Columns published: id and the geometry only.".to_string()
+    } else {
+        format!(
+            "Columns published: id, the geometry, and {}.",
+            attributes.join(", ")
+        )
+    }
 }
 
 /// The plain-outcome sentence [`PublishPromptData::outcome_summary`] carries — composed from facts
@@ -382,9 +427,23 @@ pub enum ExecuteOutcome {
 /// intermediate result through as a second source of truth that could drift from it. No claim is
 /// made here about what that re-check costs: nothing in this tree has measured it.
 ///
-/// **The one case this ordering cannot help: `DeclaredNotVerified` identity** — see
-/// [`publish::preflight_pinless`]'s own doc comment; the same residual applies here since this
-/// function calls exactly that.
+/// **The two cases this ordering cannot help, because the scope's feature count is not
+/// predictable without reading the source.** This function calls [`publish::preflight_pinless`]
+/// first, so what that function passes un-refused at the `MAX_FEATURES` check passes here too (see
+/// its own doc comment for the same two cases).
+/// - **`DeclaredNotVerified` identity.** It carries no verified row count, so nothing is predicted
+///   for it, in either scope.
+/// - **A `ViewportBbox` scope.** `PublishScope::to_query` gives it a bbox query, and a bbox query is
+///   given no prediction whatever the file's row count, so a file above the ceiling is not refused
+///   here for it.
+///
+/// In both, the pin phase runs, and [`prepare_with_query`]'s own [`publish::preflight`] makes the
+/// same empty prediction, so neither refuses on the row count and the attempt can reach the
+/// approval prompt. The ceiling is then enforced when the attempt is executed, while the rows are
+/// written: [`execute_with_progress`] returns [`ExecuteOutcome::Refused`] with a message prefixed
+/// `publish.ceiling_exceeded: `, and not `publish.reader_ceiling_exceeded: `. A session-tier
+/// identity is not a case of its own: it also has no verified row count, but the pin-free
+/// preflight refuses it first, in either scope.
 #[allow(clippy::too_many_arguments)]
 pub fn prepare_with_progress(
     grants: &Mutex<GrantSet>,
@@ -403,6 +462,7 @@ pub fn prepare_with_progress(
 ) -> PrepareOutcome {
     let query = scope.to_query();
     let row_scope = scope.row_scope_sentence();
+    let filter_scope = scope.filter_scope_sentence(filter_active);
     let attributes = style_attributes(&style_source);
 
     let request = PublishRequest {
@@ -448,7 +508,7 @@ pub fn prepare_with_progress(
         style_source,
         query,
         row_scope,
-        filter_active,
+        filter_scope,
         viewer,
         viewer_license,
         destination,
@@ -523,7 +583,7 @@ fn prepare_with_query(
     style_source: String,
     query: ViewportQuery,
     row_scope: String,
-    filter_active: bool,
+    filter_scope: Option<String>,
     viewer: ViewerAssets,
     viewer_license: ViewerLicenseInput,
     destination: PathBuf,
@@ -632,8 +692,9 @@ fn prepare_with_query(
         grantor: format!("{} {}", principal.kind.as_str(), principal.id),
         grant_remaining_s,
         row_scope,
-        filter_scope: filter_active.then(|| FILTER_SCOPE_SENTENCE.to_string()),
+        filter_scope,
         outcome_summary: compose_outcome_summary(&resolved_destination),
+        published_columns: compose_published_columns(&attributes),
     };
 
     let attempt_id = match mint_attempt_id() {
@@ -1364,9 +1425,11 @@ pub fn dataset_name_for(ds: &Dataset) -> String {
 /// fallback — RELEASE-0.1 item 3 closes the packaged-build gap this doc comment used to record as
 /// owed, dated 2026-09-07.** `tauri.conf.json`'s `bundle.resources` now maps
 /// `renderer/bundle-viewer/dist` onto a `bundle-viewer/` resource directory the packaged app
-/// carries beside its executable, so a `tauri build` artifact can serve it — a plain `tauri dev`
-/// run still resolves nothing under a resource directory (there isn't one), and falls through to
-/// the dev-tree path exactly as before. Both paths are named in the refusal when neither holds.
+/// carries beside its executable, so a `tauri build` artifact can serve it. The order keys only on
+/// what the caller passes, not on how the app was built: `bundle-viewer/` under the resource
+/// directory the caller passes is tried first, and the dev-tree path when that is not a directory
+/// or no resource directory is passed. Every candidate tried is named in the refusal when none
+/// holds.
 ///
 /// **The `dist/*` resource glob is FLAT, not recursive** (release-cut fix batch nit): it copies
 /// `dist/`'s immediate files (`index.html`, `app.js`, `NOTICE.txt` today) into `bundle-viewer/`,
@@ -1391,7 +1454,49 @@ pub fn bundled_viewer(
             dir.display()
         )
     })?;
-    Ok((viewer, bundled_viewer_license()))
+    let record = read_build_record(&dir, resource_dir.is_some())?;
+    Ok((viewer.with_build_record(record), bundled_viewer_license()))
+}
+
+/// The file `scripts/scan-dist.mjs` writes and `tauri.conf.json` ships beside the viewer directory.
+const VIEWER_BUILD_RECORD: &str = "viewer-asset-hashes.json";
+
+/// The viewer build's record, in the viewer directory's parent: the resource directory when one
+/// resolved (a packaged build, or on Windows a `tauri dev` run's cargo output directory),
+/// `renderer/bundle-viewer` when the dev-tree path was taken. A file that is missing, unreadable,
+/// not JSON, of a `version` other than 1 or with a member beyond `version` and `assets` stops the
+/// publish.
+fn read_build_record(
+    dir: &std::path::Path,
+    packaged: bool,
+) -> Result<std::collections::BTreeMap<String, String>, String> {
+    #[derive(serde::Deserialize)]
+    #[serde(deny_unknown_fields)]
+    struct Record {
+        version: u32,
+        assets: std::collections::BTreeMap<String, String>,
+    }
+    let path = dir.parent().unwrap_or(dir).join(VIEWER_BUILD_RECORD);
+    std::fs::read_to_string(&path)
+        .map_err(|e| e.to_string())
+        .and_then(|text| serde_json::from_str::<Record>(&text).map_err(|e| e.to_string()))
+        .and_then(|r| match r.version {
+            1 => Ok(r.assets),
+            v => Err(format!("version {v} is not 1")),
+        })
+        .map_err(|detail| {
+            let remedy = if packaged {
+                "the viewer resources are missing from the installed application — reinstall Spatial IDE, \
+                 or the install is incomplete"
+            } else {
+                "run `npm run build` in renderer/bundle-viewer first"
+            };
+            format!(
+                "[P6 placeholder] the reference bundle viewer's build record could not be read at {} \
+                 ({detail}) — {remedy}",
+                path.display()
+            )
+        })
 }
 
 /// The dev-tree checkout path: `CARGO_MANIFEST_DIR` points at `frontends/shell/src-tauri` at
@@ -1430,8 +1535,8 @@ fn resolve_viewer_dir(
     // built the installer. The CANDIDATE is still named (both labels stay in the string, in
     // candidate order — `resolver_tests::the_packaged_labels_index_precedes_the_dev_tree_labels_
     // index_in_the_refusal_string` pins this), only its specific path value is replaced.
-    // `resource_dir` being `Some` is exactly the packaged-build signal — a plain `tauri dev` run
-    // never supplies one (`commands.rs`'s own call sites).
+    // The suppression keys on `resource_dir` being `Some`, which `commands.rs` passes whenever
+    // `app.path().resource_dir()` returns `Ok` (its `.ok()`), however the app was built.
     let tried = candidates
         .iter()
         .map(|(label, dir)| {
@@ -1445,10 +1550,9 @@ fn resolve_viewer_dir(
         .join(", or ");
     // **The remedy is packaged-context when a resource dir was supplied, developer-context only
     // when it was not (release-cut fix batch, reviewer nit).** `run \`npm run build\`` tells an
-    // end user to run a build step nothing about their installed app can act on; `resource_dir`
-    // being `Some` is the same packaged-build signal the dev-tree-value suppression above already
-    // keys on. When `resource_dir` is `None` this is a `tauri dev` run from a checkout, where the
-    // developer remedy is exactly the right one.
+    // end user to run a build step nothing about their installed app can act on. The choice keys on
+    // `resource_dir` alone, the same `Some` the suppression above keys on; `commands.rs` passes
+    // `None` only when its `app.path().resource_dir()` call returned an error.
     let remedy = if resource_dir.is_some() {
         "the viewer resources are missing from the installed application — reinstall Spatial IDE, \
          or the install is incomplete"
@@ -1484,8 +1588,8 @@ mod resolver_tests {
 
     #[test]
     fn no_resource_directory_at_all_tries_only_the_dev_tree_path() {
-        // `tauri dev`: `app.path().resource_dir()` has nothing packaged-resource-shaped to
-        // resolve, and the caller passes `None` rather than a directory that was never packaged.
+        // `None`, as `commands.rs` passes when `app.path().resource_dir()` returns an error: the
+        // dev-tree path is the only candidate.
         let dev_tree = dev_tree_viewer_dir();
         let (label, dir) = resolve_viewer_dir(None, |p| p == dev_tree).unwrap();
         assert_eq!(label, "the dev-tree checkout path");
@@ -1520,9 +1624,9 @@ mod resolver_tests {
 
     #[test]
     fn no_resource_directory_at_all_and_no_dev_tree_path_gets_the_developer_remedy() {
-        // The mirror of the test above: `resource_dir` is `None` (a `tauri dev` run from a
-        // checkout where the dev-tree path itself does not hold either) — the remedy stays
-        // developer-context, since there is no installed app to tell an end user to reinstall.
+        // The mirror of the test above: `resource_dir` is `None` (as `commands.rs` passes when
+        // `app.path().resource_dir()` returns an error) and the dev-tree path does not hold the
+        // viewer either — the remedy is the developer one, the `else` arm.
         let err = resolve_viewer_dir(None, |_| false).unwrap_err();
         assert!(err.contains("the dev-tree checkout path"), "{err}");
         assert!(!err.contains("the packaged resource directory"), "{err}");
@@ -1734,7 +1838,17 @@ mod tests {
     /// Runs `prepare` end to end and unwraps the prompt, panicking with the outcome otherwise — most
     /// tests below want a granted, prompted attempt as their starting point.
     fn prepared(d: &Path, name: &str) -> (Mutex<GrantSet>, PendingAttempts, String, String) {
-        let ds = fixture(d, 50);
+        prepared_with(d, name, fixture(d, 50), viewer(), viewer_license())
+    }
+
+    /// As [`prepared`], over the caller's dataset, viewer and viewer licence.
+    fn prepared_with(
+        d: &Path,
+        name: &str,
+        ds: Arc<Dataset>,
+        viewer: ViewerAssets,
+        viewer_license: ViewerLicenseInput,
+    ) -> (Mutex<GrantSet>, PendingAttempts, String, String) {
         let dest = d.join(format!("out-{name}"));
         let grants = Mutex::new(GrantSet::new());
         let store = PendingAttempts::new();
@@ -1746,8 +1860,8 @@ mod tests {
             STYLE.into(),
             PublishScope::WholeFile,
             false,
-            viewer(),
-            viewer_license(),
+            viewer,
+            viewer_license,
             dest,
             "2026-08-16T10:00:00Z".into(),
         );
@@ -1788,6 +1902,107 @@ mod tests {
         assert!(
             matches!(second, ExecuteOutcome::UnknownAttempt),
             "got {second:?}"
+        );
+    }
+
+    /// As [`prepared`] over the caller's style source, returning the prompt in place of the phrase.
+    fn prepared_prompt(
+        d: &Path,
+        name: &str,
+        style: &str,
+    ) -> (Mutex<GrantSet>, PendingAttempts, String, PublishPromptData) {
+        let grants = Mutex::new(GrantSet::new());
+        let store = PendingAttempts::new();
+        let outcome = prepare(
+            &grants,
+            &store,
+            fixture(d, 50),
+            "parcels".into(),
+            style.into(),
+            PublishScope::WholeFile,
+            false,
+            viewer(),
+            viewer_license(),
+            d.join(format!("out-{name}")),
+            "2026-08-16T10:00:00Z".into(),
+        );
+        let PrepareOutcome::Prompt { attempt_id, prompt } = outcome else {
+            panic!("expected a prompt, got {outcome:?}")
+        };
+        (grants, store, attempt_id, prompt)
+    }
+
+    // RECORDED MUTATION: M-U1, compose_published_columns returns the no-attributes line unconditionally (`if attributes.is_empty()` set to `if true`), applied alone at 08ac45cca949b2b321fcb5136b890549282539f7: this test failed by name (publish::tests::the_published_columns_line_names_the_request_attributes_the_bundle_publishes) at its first assert_eq!, left "Columns published: id and the geometry only.", right "Columns published: id, the geometry, and zone."; reverted.
+    #[test]
+    fn the_published_columns_line_names_the_request_attributes_the_bundle_publishes() {
+        let _guard = env_lock();
+        let d = workspace("published-columns-zone");
+        std::env::set_var(
+            spatial_kernel::permission::AUDIT_LOG_ENV,
+            d.join("audit.jsonl"),
+        );
+        let (grants, store, attempt_id, prompt) = prepared_prompt(&d, "zone", STYLE);
+        assert_eq!(
+            prompt.published_columns,
+            "Columns published: id, the geometry, and zone."
+        );
+
+        let phrase = Path::new(&prompt.destination_display)
+            .file_name()
+            .expect("destination_display names a real final component")
+            .to_string_lossy()
+            .to_string();
+        let outcome = execute(&grants, &store, &attempt_id, &phrase);
+        let ExecuteOutcome::Success { bundle_path, .. } = outcome else {
+            panic!("got {outcome:?}")
+        };
+        let raw = std::fs::read_to_string(Path::new(&bundle_path).join("manifest.json")).unwrap();
+        let manifest: serde_json::Value = serde_json::from_str(&raw).unwrap();
+        // The bundle's schema is `id`, the geometry, then the declared projection (ADR-017).
+        let names: Vec<String> = manifest["schema"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .skip(2)
+            .map(|c| c["name"].as_str().unwrap().to_string())
+            .collect();
+        assert_eq!(names, vec!["zone".to_string()]);
+        assert_eq!(prompt.published_columns, compose_published_columns(&names));
+    }
+
+    // RECORDED MUTATION: M-U2, the empty arm of compose_published_columns removed (`if attributes.is_empty()` set to `if false`), applied alone at 08ac45cca949b2b321fcb5136b890549282539f7: this test failed by name (publish::tests::the_published_columns_line_is_the_no_attributes_form_for_a_literal_style) at its assert_eq!, left "Columns published: id, the geometry, and .", right "Columns published: id and the geometry only."; reverted.
+    #[test]
+    fn the_published_columns_line_is_the_no_attributes_form_for_a_literal_style() {
+        let _guard = env_lock();
+        let d = workspace("published-columns-literal");
+        std::env::set_var(
+            spatial_kernel::permission::AUDIT_LOG_ENV,
+            d.join("audit.jsonl"),
+        );
+        let literal_style = r##"{
+          "style_version": 1,
+          "layer": {
+            "geometry": "polygon",
+            "fill_color": {"literal": "#aa3333"},
+            "fill_opacity": {"literal": 0.8},
+            "outline_color": {"literal": "#202020"},
+            "outline_width": {"literal": 1.0}
+          }
+        }"##;
+        let (_grants, _store, _attempt_id, prompt) = prepared_prompt(&d, "literal", literal_style);
+        assert_eq!(
+            prompt.published_columns,
+            "Columns published: id and the geometry only."
+        );
+    }
+
+    // RECORDED MUTATION: M-U3, the names sorted before the join in compose_published_columns, applied alone at 08ac45cca949b2b321fcb5136b890549282539f7: this test failed by name (publish::tests::the_published_columns_line_keeps_the_declared_order_and_the_separator) at its assert_eq!, left "Columns published: id, the geometry, and a, b, c.", right "Columns published: id, the geometry, and b, a, c."; reverted.
+    #[test]
+    fn the_published_columns_line_keeps_the_declared_order_and_the_separator() {
+        let names: Vec<String> = ["b", "a", "c"].iter().map(|s| s.to_string()).collect();
+        assert_eq!(
+            compose_published_columns(&names),
+            "Columns published: id, the geometry, and b, a, c."
         );
     }
 
@@ -1926,7 +2141,7 @@ mod tests {
             STYLE.into(),
             query,
             "row scope: the whole file".into(),
-            false,
+            None,
             viewer(),
             viewer_license(),
             d.join("out"),
@@ -1946,51 +2161,80 @@ mod tests {
         );
     }
 
-    #[test]
-    fn the_filter_scope_sentence_is_present_only_when_filter_active_is_true() {
-        let d = workspace("filter-scope-sentence");
-        let ds = fixture(&d, 20);
+    /// Runs `prepare` (which delegates to the shipped `prepare_with_progress`) over `ds` with the given
+    /// scope and filter flag, and returns the approval payload's `filter_scope`.
+    fn filter_scope_of(
+        d: &Path,
+        ds: &Arc<Dataset>,
+        scope: PublishScope,
+        filter_active: bool,
+        name: &str,
+    ) -> Option<String> {
         let grants = Mutex::new(GrantSet::new());
         let store = PendingAttempts::new();
-
-        let without = prepare(
+        let outcome = prepare(
             &grants,
             &store,
             ds.clone(),
             "parcels".into(),
             STYLE.into(),
-            PublishScope::WholeFile,
-            false,
+            scope,
+            filter_active,
             viewer(),
             viewer_license(),
-            d.join("out-no-filter"),
+            d.join(format!("out-{name}")),
             "2026-08-16T10:00:00Z".into(),
         );
-        let PrepareOutcome::Prompt { prompt, .. } = without else {
-            panic!("expected a prompt")
+        let PrepareOutcome::Prompt { prompt, .. } = outcome else {
+            panic!("expected a prompt, got {outcome:?}")
         };
-        assert!(
-            prompt.filter_scope.is_none(),
+        prompt.filter_scope
+    }
+
+    /// RECORDED MUTATION: `filter_scope_sentence`'s condition back to the filter flag alone (`_ if filter_active`).
+    /// Observed at ec847095ccbebcfc7ebdec78b23a572e00b219de: this test FAILED by name at its filter-on `assert_eq!` (left: Some("[P6 placeholder] this bundle format ..."), right: None). Reverted.
+    #[test]
+    fn the_whole_dataset_scope_carries_no_filter_scope_sentence_with_or_without_a_filter() {
+        let d = workspace("filter-scope-whole-dataset");
+        let ds = fixture(&d, 20);
+
+        assert_eq!(
+            filter_scope_of(&d, &ds, PublishScope::WholeFile, false, "no-filter"),
+            None,
             "no active filter must mean no sentence"
         );
-
-        let with = prepare(
-            &grants,
-            &store,
-            ds,
-            "parcels".into(),
-            STYLE.into(),
-            PublishScope::WholeFile,
-            true,
-            viewer(),
-            viewer_license(),
-            d.join("out-with-filter"),
-            "2026-08-16T10:00:00Z".into(),
+        assert_eq!(
+            filter_scope_of(&d, &ds, PublishScope::WholeFile, true, "with-filter"),
+            None,
+            "under Whole dataset the sentence is not carried even with a filter active"
         );
-        let PrepareOutcome::Prompt { prompt, .. } = with else {
-            panic!("expected a prompt")
+    }
+
+    /// RECORDED MUTATION: `filter_scope_sentence`'s scope arm matching `WholeFile` instead of `ViewportBbox`.
+    /// Observed at ec847095ccbebcfc7ebdec78b23a572e00b219de: this test FAILED by name at its filter-on `assert_eq!` (left: None, right: Some("[P6 placeholder] this bundle format ...")). Reverted.
+    #[test]
+    fn the_current_view_scope_carries_the_filter_scope_sentence_only_with_a_filter_active() {
+        let d = workspace("filter-scope-current-view");
+        let ds = fixture(&d, 20);
+        let current_view = || PublishScope::ViewportBbox {
+            bbox: JsBbox {
+                xmin: 2_000_000.0,
+                ymin: 1_000_000.0,
+                xmax: 3_000_000.0,
+                ymax: 1_500_000.0,
+            },
         };
-        assert_eq!(prompt.filter_scope.as_deref(), Some(FILTER_SCOPE_SENTENCE));
+
+        assert_eq!(
+            filter_scope_of(&d, &ds, current_view(), false, "no-filter"),
+            None,
+            "no active filter must mean no sentence"
+        );
+        assert_eq!(
+            filter_scope_of(&d, &ds, current_view(), true, "with-filter").as_deref(),
+            Some(FILTER_SCOPE_SENTENCE),
+            "under Current view an active filter carries the sentence"
+        );
     }
 
     // ---------------------------------------------------------------------------------------
@@ -2255,7 +2499,7 @@ mod tests {
             STYLE.into(),
             PublishScope::WholeFile.to_query(),
             PublishScope::WholeFile.row_scope_sentence(),
-            false,
+            None,
             viewer(),
             viewer_license(),
             d.join("out-pinless"),
@@ -2526,6 +2770,7 @@ mod tests {
             row_scope: "row scope: the whole file".into(),
             filter_scope: None,
             outcome_summary: "a stub".into(),
+            published_columns: "a stub".into(),
         }
     }
 
@@ -2834,6 +3079,110 @@ mod tests {
             !d.join("out").exists(),
             "a refused prepare leaves no destination"
         );
+    }
+
+    /// **S-U1 (`governance/forms/kernel/PUBLISH-SESSION-TIER-IDENTITY-PREREGISTRATION.md` section
+    /// 4, row R3).** FX-S, the form's 200-feature file with a foreign-key column and no `id`
+    /// column, opened with no CRS assertion and no declared identity, so the open admits the
+    /// session tier (`kernel/tests/publish_identity_tier.rs`, K-U1, opens the same file the same
+    /// way through `Catalog::open_cancellable`). Through this crate's `prepare_with_progress`, in
+    /// both scopes, a dataset on the session tier is a pin-free refusal that carries its typed code
+    /// (`publish.session_identity_not_publishable`, the `refusal_detail` form the shell parses for
+    /// every other publish refusal), never takes a pin as a side effect, stashes no pending attempt
+    /// and leaves no destination. The refusal is the kernel's own preflight, reached through the
+    /// shell's real prepare path with an unpinned dataset and no grant or approval of the test's
+    /// making, so the shell proves the code arrives at the shell boundary and not only inside the
+    /// kernel.
+    ///
+    /// RECORDED MUTATION: in `kernel/src/publish/mod.rs`, move the session-tier check out of
+    /// `preflight_pinless_parts` and into the pinned `preflight`, after the content pin is
+    /// required. `prepare_with_progress` then takes the pin before refusing, and this test fails by
+    /// name at the no-pin assertion.
+    ///
+    /// OBSERVED at e5a96db74b634ec51777c9e359213720bd6ca88c, with the mutation applied alone:
+    /// `a_session_tier_dataset_reaches_prepare_refused_with_its_typed_code_before_any_pin_is_taken_in_both_scopes`
+    /// FAILED by name at the no-pin assertion, with the message
+    /// `whole-file: a pin-free refusal must never take a pin as a side effect`, then reverted.
+    #[test]
+    fn a_session_tier_dataset_reaches_prepare_refused_with_its_typed_code_before_any_pin_is_taken_in_both_scopes(
+    ) {
+        use spatial_engine::fixture::{E_LO, N_LO};
+
+        let scopes = [
+            ("whole-file", PublishScope::WholeFile),
+            (
+                "current-view",
+                PublishScope::ViewportBbox {
+                    bbox: JsBbox {
+                        xmin: E_LO,
+                        ymin: N_LO,
+                        xmax: E_LO + 160.0,
+                        ymax: N_LO + 160.0,
+                    },
+                },
+            ),
+        ];
+        for (label, scope) in scopes {
+            let d = workspace(&format!("session-tier-refusal-before-pin-{label}"));
+            let path = d.join("fx-s.parquet");
+            write_geoparquet(
+                &path,
+                &FixtureSpec {
+                    features: 200,
+                    attributes: AttributeMode::CategoricalZone,
+                    crs_mode: CrsMode::DeclaredLv95,
+                    identity: IdentityMode::ForeignKeyColumn,
+                    ..Default::default()
+                },
+            )
+            .unwrap();
+            let ds = Arc::new(Dataset::open(&path).unwrap()); // deliberately NOT pinned
+            assert!(
+                ds.identity().source().is_session_ordinal(),
+                "{label}: FX-S must be on the session tier for this test to prove anything"
+            );
+            assert!(ds.content_pin().is_none());
+
+            let grants = Mutex::new(GrantSet::new());
+            let store = PendingAttempts::new();
+            let outcome = prepare_with_progress(
+                &grants,
+                &store,
+                ds.clone(),
+                "parcels".into(),
+                STYLE.into(),
+                scope,
+                false,
+                viewer(),
+                viewer_license(),
+                d.join("out"),
+                "2026-11-06T10:00:00Z".into(),
+                &CancelToken::new(),
+                None,
+            );
+            match outcome {
+                PrepareOutcome::Refused { message } => {
+                    assert!(
+                        message.starts_with("publish.session_identity_not_publishable: "),
+                        "{label}: {message}"
+                    );
+                }
+                other => panic!("{label}: expected the session-tier refusal, got {other:?}"),
+            }
+            assert!(
+                ds.content_pin().is_none(),
+                "{label}: a pin-free refusal must never take a pin as a side effect"
+            );
+            assert_eq!(
+                store.len(),
+                0,
+                "{label}: no pending attempt may be stashed for a refused prepare"
+            );
+            assert!(
+                !d.join("out").exists(),
+                "{label}: a refused prepare leaves no destination"
+            );
+        }
     }
 
     #[test]
@@ -3157,6 +3506,107 @@ mod tests {
             message.starts_with("publish.destination_exists: "),
             "C's grant must have survived A's consumption: {message}"
         );
+    }
+
+    /// The redaction form's T1, from the real shape: `prepare`, `execute`, `boundary::execute`,
+    /// `publish_prepared`. A path in the styled column reaches the data partition, the gate refuses,
+    /// and the shell's `Refused` carries the typed code, the file and the class.
+    #[test]
+    fn a_publish_whose_styled_column_holds_a_path_is_refused_by_the_redaction_scan_and_nothing_reaches_the_destination(
+    ) {
+        let _guard = env_lock();
+        let d = workspace("redaction-path-in-data");
+        let log = d.join("audit.jsonl");
+        std::env::set_var(spatial_kernel::permission::AUDIT_LOG_ENV, &log);
+        let source = d.join("parcels.parquet");
+        let mut zones = vec!["residential"; 10];
+        zones[3] = r"C:\Users\someone\AppData\Local\Temp\leak.parquet";
+        spatial_engine::fixture::write_zone_texts(&source, &zones);
+        let ds = Dataset::open(&source).unwrap();
+        ds.pin_content(&CancelToken::new()).unwrap();
+
+        let (grants, store, id, phrase) =
+            prepared_with(&d, "path", Arc::new(ds), viewer(), viewer_license());
+        let outcome = execute(&grants, &store, &id, &phrase);
+        let ExecuteOutcome::Refused { message } = outcome else {
+            panic!("got {outcome:?}")
+        };
+        assert!(
+            message.starts_with("publish.redaction_finding: "),
+            "{message}"
+        );
+        assert!(message.contains("data/part-00000.arrows"), "{message}");
+        assert!(message.contains("local-filesystem-path"), "{message}");
+        assert!(!d.join("out-path").exists(), "no bundle at the destination");
+        assert_eq!(staging_entries(&d, "out-path"), 0);
+        let raw = std::fs::read_to_string(&log).unwrap();
+        assert_eq!(raw.lines().count(), 2, "{raw}");
+        let outcome_line: serde_json::Value =
+            serde_json::from_str(raw.lines().last().unwrap()).unwrap();
+        assert_eq!(outcome_line["outcome"], "refused");
+        assert_eq!(outcome_line["error_kind"], "RedactionFinding");
+    }
+
+    /// The redaction form's T8: `bundled_viewer` reads the build record beside the viewer directory
+    /// and hands it to the kernel, so a viewer file matching it is published; without the record the
+    /// viewer is not handed over at all.
+    #[test]
+    fn bundled_viewer_reads_the_build_record_beside_the_viewer_directory_and_refuses_without_it() {
+        let _guard = env_lock();
+        let d = workspace("build-record");
+        let log = d.join("audit.jsonl");
+        std::env::set_var(spatial_kernel::permission::AUDIT_LOG_ENV, &log);
+        let resources = d.join("resources");
+        let viewer_dir = resources.join("bundle-viewer");
+        std::fs::create_dir_all(&viewer_dir).unwrap();
+        let notice = b"notice text: the word password appears here\n";
+        std::fs::write(
+            viewer_dir.join("index.html"),
+            b"<!doctype html><title>t</title>",
+        )
+        .unwrap();
+        std::fs::write(viewer_dir.join("NOTICE.txt"), notice).unwrap();
+        let record = resources.join(VIEWER_BUILD_RECORD);
+        let hash = spatial_renderer::canonical::sha256_hex(notice);
+        let hash = hash.strip_prefix("sha256:").unwrap();
+        // The serialization `scan-dist.mjs` writes: `JSON.stringify({version, assets})` and `\n`.
+        std::fs::write(
+            &record,
+            format!("{{\"version\":1,\"assets\":{{\"NOTICE.txt\":\"{hash}\"}}}}\n"),
+        )
+        .unwrap();
+
+        let (viewer, license) = bundled_viewer(Some(&resources)).unwrap();
+        let (grants, store, id, phrase) =
+            prepared_with(&d, "record", fixture(&d, 50), viewer, license);
+        let outcome = execute(&grants, &store, &id, &phrase);
+        assert!(
+            matches!(outcome, ExecuteOutcome::Success { .. }),
+            "got {outcome:?}"
+        );
+        assert!(d
+            .join("out-record")
+            .join("viewer")
+            .join("NOTICE.txt")
+            .exists());
+
+        std::fs::remove_file(&record).unwrap();
+        let message = bundled_viewer(Some(&resources)).unwrap_err();
+        assert!(message.starts_with("[P6 placeholder] "), "{message}");
+        // The remedy is the one the viewer directory's own refusal gives.
+        let missing = resolve_viewer_dir(Some(&resources), |_| false).unwrap_err();
+        let remedy = missing.split_once(" — ").unwrap().1;
+        assert!(message.ends_with(remedy), "{message} / {remedy}");
+    }
+
+    /// The redaction form's T9: the packaged resources carry the record at the name `bundled_viewer`
+    /// joins onto the resource directory.
+    #[test]
+    fn the_packaged_resources_carry_the_build_record_at_the_path_bundled_viewer_reads() {
+        let conf: serde_json::Value =
+            serde_json::from_str(include_str!("../tauri.conf.json")).unwrap();
+        let key = "../../../renderer/bundle-viewer/viewer-asset-hashes.json";
+        assert_eq!(conf["bundle"]["resources"][key], VIEWER_BUILD_RECORD);
     }
 
     /// The `.<name>.staging-<hex>` entries the kernel has created beside `dest_name` in `parent`.

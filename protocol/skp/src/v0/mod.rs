@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
-//! SKP v0 — six commands, no more. See `../../SKP-V0.md`.
+//! SKP v0 — seven commands, no more. See `../../SKP-V0.md`.
 
 pub mod codec;
 pub mod commands;
@@ -112,4 +112,12 @@ pub use handles::{CancelKey, DatasetHandle, SessionRef, StreamHandle};
 /// `skp.*` refusal codes. The five other commands are unchanged; `protocol/data-plane/` has an
 /// empty diff. Same discipline again: `deny_unknown_fields` both directions, `==` unchanged, the
 /// fixtures updated in the same commit as the literal bump (`SKP-V0.md` §8's `skp/0.12` entry).
-pub const SKP_VERSION: &str = "skp/0.12";
+///
+/// `skp/0.13` (B2 piece 1c, step 1, `kernel/B2-1C-SAVE-AND-REOPEN-PREREGISTRATION.md`): a seventh
+/// command, `save_project` (`SKP-V0.md` §11), its request and response types, and five `skp.*`
+/// refusal codes. `record_step`'s `style.set` for `fillColor` also admits a categorical match
+/// (`ColourMatch`, `SKP-V0.md` §10.2). The other five commands are unchanged;
+/// `protocol/data-plane/` has an empty diff. Same discipline again: `deny_unknown_fields` both
+/// directions, `==` unchanged, the fixtures updated in the same commit as the literal bump
+/// (`SKP-V0.md` §8's `skp/0.13` entry).
+pub const SKP_VERSION: &str = "skp/0.13";

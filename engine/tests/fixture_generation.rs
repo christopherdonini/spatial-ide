@@ -123,8 +123,8 @@ fn changing_the_row_group_size_changes_the_file_and_is_therefore_part_of_the_spe
          needs it to do"
     );
     // …and the geometry is unchanged, so the difference is layout rather than content.
-    let fa = write_geoparquet(&d.join("fa.parquet"), &base).unwrap();
-    let fb = write_geoparquet(&d.join("fb.parquet"), &small).unwrap();
+    let fa = write_geoparquet(d.join("fa.parquet"), &base).unwrap();
+    let fb = write_geoparquet(d.join("fb.parquet"), &small).unwrap();
     assert_eq!(fa.coord_bits_xor, fb.coord_bits_xor);
     assert_eq!(fa.vertices, fb.vertices);
 }
@@ -140,7 +140,7 @@ fn generation_reports_progress_once_per_chunk_with_monotonic_counts() {
     };
     let rec = Recorder::default();
     let facts =
-        write_geoparquet_cancellable(&d.join("f.parquet"), &spec, &CancelToken::new(), Some(&rec))
+        write_geoparquet_cancellable(d.join("f.parquet"), &spec, &CancelToken::new(), Some(&rec))
             .unwrap();
 
     assert_eq!(

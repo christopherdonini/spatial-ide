@@ -63,6 +63,8 @@ fn run(wire_type: &str, doc: &serde_json::Value, expect: &str, roundtrip: bool) 
         "close_dataset.response" => check::<CloseDatasetResponse>(doc, expect, roundtrip),
         "record_step.request" => check::<RecordStepRequest>(doc, expect, roundtrip),
         "record_step.response" => check::<RecordStepResponse>(doc, expect, roundtrip),
+        "save_project.request" => check::<SaveProjectRequest>(doc, expect, roundtrip),
+        "save_project.response" => check::<SaveProjectResponse>(doc, expect, roundtrip),
         "error" => check::<SkpError>(doc, expect, roundtrip),
         other => panic!("fixture names unknown wire_type {other:?}"),
     }

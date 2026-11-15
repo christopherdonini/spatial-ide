@@ -19,15 +19,55 @@
  * no query, and no reason without its fact (plan section 6.3).
  */
 
+import type { AttributeCell, AttributeRow } from "../attributes/values";
 import type { AuthoritativeBbox } from "../canvas/viewportBbox";
+import type { Filter } from "../skp/types";
+import { CAPTURED_ROW_MAX_BYTES } from "../table/tableConstants";
 import { SELECTION_MAX_FEATURES } from "./selectionConstants";
 
 export type SelectionMode = "toggle" | "replace" | "add" | "remove";
 
-/** The members of one selection: id -> the authoritative bbox the click kept. Never mutated in place. */
-export type SelectionMembers = ReadonlyMap<bigint, AuthoritativeBbox>;
+/** What a member kept of its row (milestone 4 PR C, section 2.4 (c)): the click's row as `resolveClickPick` read it, or, for a row past `CAPTURED_ROW_MAX_BYTES`, its leading cells and the number cut. */
+export type CapturedRow = AttributeRow | "not-held" | null | { readonly cut: AttributeRow; readonly omitted: number };
 
-export const NO_MEMBERS: SelectionMembers = new Map<bigint, AuthoritativeBbox>();
+/** One member of a selection: the authoritative bbox the click kept, its row, and the filter of the stream its batch came from (`ResidentBatch.filter`). */
+export interface SelectionMember {
+  readonly bounds: AuthoritativeBbox;
+  readonly row: CapturedRow;
+  readonly filter: Filter | null;
+}
+
+/** What one click offers a selection: the member before its row is cut. */
+export interface SelectionInput {
+  readonly bounds: AuthoritativeBbox;
+  readonly row: AttributeRow | "not-held" | null;
+  readonly filter: Filter | null;
+}
+
+/** The members of one selection: id -> what the click kept. Never mutated in place. */
+export type SelectionMembers = ReadonlyMap<bigint, SelectionMember>;
+
+export const NO_MEMBERS: SelectionMembers = new Map<bigint, SelectionMember>();
+
+/** The counted bytes of one cell: its name and, for text, its text, each at 3 per UTF-16 unit (an upper bound on UTF-8); an integer its decimal digits, a float 8, a boolean 1, a NULL 0. A declared count, not a measurement. */
+function cellBytes(cell: AttributeCell): number {
+  const v = cell.value;
+  const own = v.kind === "text" ? v.text.length * 3 : v.kind === "integer" ? v.integer.toString().length : v.kind === "float32" || v.kind === "float64" ? 8 : v.kind === "boolean" ? 1 : 0;
+  return cell.name.length * 3 + own;
+}
+
+/** The row a member keeps: as given while its cells' counted bytes stay within `CAPTURED_ROW_MAX_BYTES`; else its cells before the first that would pass it, with the number cut (pure; the cut is a marker, never a silent drop). */
+function capturedRow(row: AttributeRow | "not-held" | null): CapturedRow {
+  if (row === null || row === "not-held") return row;
+  let total = 0;
+  for (let i = 0; i < row.length; i++) {
+    total += cellBytes(row[i]);
+    if (total > CAPTURED_ROW_MAX_BYTES) return { cut: row.slice(0, i), omitted: row.length - i };
+  }
+  return row;
+}
+
+const memberOf = (input: SelectionInput): SelectionMember => ({ bounds: input.bounds, row: capturedRow(input.row), filter: input.filter });
 
 /** The refusal an add past SELECTION_MAX_FEATURES gets. `code` is its name; the operator-facing words are the
  * Feature tab's (the owner states the consequence). */
@@ -52,12 +92,12 @@ export type SelectionNotice =
   | { readonly kind: "ended"; readonly reason: SelectionEndReason; readonly dropped: number }
   | { readonly kind: "refused"; readonly refusal: SelectionRefusal };
 
-function withMember(members: SelectionMembers, id: bigint, bounds: AuthoritativeBbox): SelectionOutcome {
+function withMember(members: SelectionMembers, id: bigint, input: SelectionInput): SelectionOutcome {
   if (members.size + 1 > SELECTION_MAX_FEATURES) {
     return { kind: "refused", members, refusal: { code: "selection.ceiling", max: SELECTION_MAX_FEATURES, attempted: members.size + 1 } };
   }
   const next = new Map(members);
-  next.set(id, bounds);
+  next.set(id, memberOf(input));
   return { kind: "changed", members: next };
 }
 
@@ -71,24 +111,24 @@ function withoutMember(members: SelectionMembers, id: bigint): SelectionOutcome 
  * One click's change to a selection, by the mode (section 2.3): toggle adds an absent id and removes a present one;
  * replace makes the set this id alone; add only adds; remove only removes. Returns a new map and never writes to
  * `members`. A change that would take the set past SELECTION_MAX_FEATURES is refused and the set is returned as it
- * was. A present member keeps the bounds it was first selected with.
+ * was. A present member keeps what it was first selected with: its bounds, its row and its filter.
  */
 export function applySelectionMode(
   members: SelectionMembers,
   mode: SelectionMode,
   id: bigint,
-  bounds: AuthoritativeBbox
+  input: SelectionInput
 ): SelectionOutcome {
   const present = members.has(id);
   switch (mode) {
     case "toggle":
-      return present ? withoutMember(members, id) : withMember(members, id, bounds);
+      return present ? withoutMember(members, id) : withMember(members, id, input);
     case "replace":
       return present && members.size === 1
         ? { kind: "unchanged", members }
-        : { kind: "changed", members: new Map([[id, bounds]]) };
+        : { kind: "changed", members: new Map([[id, memberOf(input)]]) };
     case "add":
-      return present ? { kind: "unchanged", members } : withMember(members, id, bounds);
+      return present ? { kind: "unchanged", members } : withMember(members, id, input);
     case "remove":
       return present ? withoutMember(members, id) : { kind: "unchanged", members };
   }
@@ -102,7 +142,7 @@ export function bboxesMeet(a: AuthoritativeBbox, b: AuthoritativeBbox): boolean 
 /** The smallest box over every member's kept bounds (Zoom to selection's fit, section 2.5), or null for no members. */
 export function unionOfBounds(members: SelectionMembers): AuthoritativeBbox | null {
   let union: AuthoritativeBbox | null = null;
-  for (const b of members.values()) {
+  for (const { bounds: b } of members.values()) {
     union =
       union === null
         ? { ...b }
@@ -149,7 +189,7 @@ export function countSelection(
   if (viewBox === null) return { selected: members.size, outsideView: null, inViewNotDrawn: null, reason: null };
   let outsideView = 0;
   let inViewNotDrawn = 0;
-  for (const [id, bounds] of members) {
+  for (const [id, { bounds }] of members) {
     if (!bboxesMeet(bounds, viewBox)) outsideView += 1;
     else if (!drawn.has(id)) inViewNotDrawn += 1;
   }

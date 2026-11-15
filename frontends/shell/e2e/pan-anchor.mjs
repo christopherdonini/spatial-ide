@@ -94,14 +94,25 @@ async function setCam(page, vs, tx, ty, z) {
   // Jitter the zoom so deck's uncontrolled `initialViewState` deep-equal guard (this file's own
   // WorkingCanvas header, entry 85) never drops a repeated identical reset.
   jit += 1;
+  const zoom = z + jit * 1e-5;
   vs.length = 0;
-  await page.evaluate((a) => window.__SPATIAL_E2E__.e2eSetViewState(a[0], a[1], a[2]), [tx, ty, z + jit * 1e-5]);
+  const seam = await page.evaluate((a) => window.__SPATIAL_E2E__.e2eSetViewState(a[0], a[1], a[2]), [tx, ty, zoom]);
+  if (seam !== true) throw new Error(`setCam: the seam resolved ${String(seam)}, not true, for zoom ${zoom}`);
   await sleep(500);
-  // Two of the first three runs of the re-aimed file died here with `undefined.targetX`: on a loaded machine the view-state
-  // line for the reset had not been logged 500 ms after the call. Wait for the line itself (a bound, not a claim about how
-  // long one takes); the 500 ms above stays as the minimum it always was.
-  for (let i = 0; i < 20 && vs.length === 0; i++) await sleep(250);
-  return vs[vs.length - 1];
+  // Returns the first line in `vs` whose zoom is exactly the `zoom` just passed: the seam logs one line, carrying that
+  // argument, and a pan keeps the zoom, so a line of the previous gesture (which can land after the clear above, the listener
+  // pushing one CDP round trip late) never carries it. Such a late line stays in `vs` and is not read. The wait has no
+  // wall-clock bound: it ends when that line is in `vs`, or when the process is ended from outside. A run is to be made under
+  // a hard timeout (the harness's run-suite step gives one), and a run that timeout ends leaves no result. A run without one
+  // (this header's `node e2e/pan-anchor.mjs`) waits until it is stopped. A seam resolving anything but `true` has already
+  // thrown above, before the wait. Every 30th turn of 1000 ms it prints a progress line (no verdict words) and ends nothing.
+  // A precondition on which line is s0, not a property under test; `s1` (`last(vs)` after `drag`) is not covered by it.
+  const own = () => vs.find((l) => l.zoom === zoom);
+  for (let turn = 1; !own(); turn++) {
+    await sleep(1000);
+    if (!own() && turn % 30 === 0) console.log(`setCam: still waiting for the view-state line with zoom ${zoom}: ${turn} s after the 500 ms minimum, ${vs.length} other lines arrived`);
+  }
+  return own();
 }
 const last = (vs) => vs[vs.length - 1];
 
@@ -150,6 +161,10 @@ const EDGE_MARGIN_PX = 2 * TOLERANCE_BUFFER_PX;
 //  - there-and-back-net has no honest product mutation (a trace scale cancels in a net). Its control is on the input: a copy of
 //    this file kept outside the repository, with the return drag 60 px shorter than the outward one, run against the unmodified
 //    product, failed both sizes with "net residual -58.00 buffer px (tol 4)" and passed every other check.
+//  - M-TRACE, OBSERVED AT 39d724fc67958dd199ccb2ac140334e6c298bc66, reverted, the worktree clean before and after: `traceViewState` in
+//    src/canvas/WorkingCanvas.tsx (the e2e seam) given `zoom + 1e-6`. Expected: `PASS  small: pixel-spaces-coincide`, no further check
+//    line, progress lines naming the first call's zoom until the 600 s timeout ends the run (exit 124). Observed: that PASS line, then
+//    19 progress lines to "setCam: still waiting for the view-state line with zoom -0.99999: 570 s after the 500 ms minimum, 1 other lines arrived", then rc=124.
 const FILL_STABLE_READS = 3;
 const FILL_READ_GAP_MS = 300;
 const FILL_BOUND_MS = 20_000;

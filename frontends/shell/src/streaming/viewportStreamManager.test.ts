@@ -55,12 +55,12 @@ describe("ViewportStreamManager (supersede-on-pan, D3.7)", () => {
     mockStream("sh_a");
     const onBatch = vi.fn();
     const onSuperseded = vi.fn();
-    const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch, onSuperseded });
+    const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch, onSuperseded, columns: null });
 
     await manager.requestViewport(null, null, 1_000);
 
     expect(cancelMock).not.toHaveBeenCalled();
-    expect(viewportQueryMock).toHaveBeenCalledWith("ds_x", null, null, null, null);
+    expect(viewportQueryMock).toHaveBeenCalledWith("ds_x", null, null, null, null, null);
     expect(startStreamMock).toHaveBeenCalledTimes(1);
     expect(startStreamMock.mock.calls[0][0].ticketHandle).toBe("sh_a");
     expect(manager.activeStreamHandle).toBe("sh_a");
@@ -68,18 +68,42 @@ describe("ViewportStreamManager (supersede-on-pan, D3.7)", () => {
 
   it("a filter passed to requestViewport rides through to viewportQuery verbatim (P5)", async () => {
     mockStream("sh_a");
-    const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch: vi.fn(), onSuperseded: vi.fn() });
+    const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch: vi.fn(), onSuperseded: vi.fn(), columns: null });
     const filter = { predicate: "zone = 'residential'", dialect: "duckdb-expr/0" };
 
     await manager.requestViewport(null, null, 1_000, filter);
 
-    expect(viewportQueryMock).toHaveBeenCalledWith("ds_x", null, null, null, filter);
+    expect(viewportQueryMock).toHaveBeenCalledWith("ds_x", null, null, null, filter, null);
+  });
+
+  // RECORDED MUTATION for "PA-U7" (this manager): pass `null` in place of `this.opts.columns`. Expected failure: the sixth argument below is null.
+  it("PA-U7: the manager passes its columns option on every viewport_query call", async () => {
+    const columns = ["area", "zone"];
+    mockStream("sh_a");
+    const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch: vi.fn(), onSuperseded: vi.fn(), columns });
+
+    await manager.requestViewport(null, null, 1_000);
+
+    expect(viewportQueryMock.mock.calls.map((call) => call[5])).toEqual([columns]);
+  });
+
+  // RECORDED MUTATION for "PC-U12" (this manager): pass `null` in place of `filter` in the `this.opts.onBatch(...)` call. Expected failure: the fourth argument is null where the filter object was expected.
+  it("PC-U12: onBatch carries the filter its stream was issued with, as the same object", async () => {
+    mockStream("sh_a");
+    const onBatch = vi.fn();
+    const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch, onSuperseded: vi.fn(), columns: null });
+    const filter = { predicate: "zone = 'residential'", dialect: "duckdb-expr/0" };
+    await manager.requestViewport(null, null, 1_000, filter);
+
+    sinkFor(0).onBatch(new Uint8Array([1]), true);
+
+    expect(onBatch.mock.calls[0][3]).toBe(filter);
   });
 
   it("a batch for the active stream is admitted with an ascending sequence number", async () => {
     mockStream("sh_a");
     const onBatch = vi.fn();
-    const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch, onSuperseded: vi.fn() });
+    const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch, onSuperseded: vi.fn(), columns: null });
     await manager.requestViewport(null, null, 1_000);
 
     const sink = sinkFor(0);
@@ -88,14 +112,14 @@ describe("ViewportStreamManager (supersede-on-pan, D3.7)", () => {
     sink.onBatch(p1, true);
     sink.onBatch(p2, true);
 
-    expect(onBatch).toHaveBeenNthCalledWith(1, "sh_a", 0, p1);
-    expect(onBatch).toHaveBeenNthCalledWith(2, "sh_a", 1, p2);
+    expect(onBatch).toHaveBeenNthCalledWith(1, "sh_a", 0, p1, null);
+    expect(onBatch).toHaveBeenNthCalledWith(2, "sh_a", 1, p2, null);
   });
 
   it("supersede: cancels the previous stream before minting the next ticket, in that order", async () => {
     mockStream("sh_a");
     const onSuperseded = vi.fn();
-    const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch: vi.fn(), onSuperseded });
+    const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch: vi.fn(), onSuperseded, columns: null });
     await manager.requestViewport(null, null, 1_000);
 
     mockStream("sh_b");
@@ -113,7 +137,7 @@ describe("ViewportStreamManager (supersede-on-pan, D3.7)", () => {
   it("a batch arriving late from a superseded stream is dropped, never rendered (D3.7)", async () => {
     mockStream("sh_a");
     const onBatch = vi.fn();
-    const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch, onSuperseded: vi.fn() });
+    const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch, onSuperseded: vi.fn(), columns: null });
     await manager.requestViewport(null, null, 1_000);
     const staleSink = sinkFor(0);
 
@@ -130,7 +154,7 @@ describe("ViewportStreamManager (supersede-on-pan, D3.7)", () => {
 
   it("throttles: a second call inside VIEWPORT_QUERY_MIN_INTERVAL_MS is a silent no-op", async () => {
     mockStream("sh_a");
-    const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch: vi.fn(), onSuperseded: vi.fn() });
+    const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch: vi.fn(), onSuperseded: vi.fn(), columns: null });
     await manager.requestViewport(null, null, 1_000);
     await manager.requestViewport(null, null, 1_000 + VIEWPORT_QUERY_MIN_INTERVAL_MS - 1);
 
@@ -140,7 +164,7 @@ describe("ViewportStreamManager (supersede-on-pan, D3.7)", () => {
 
   it("a terminal outcome clears the active stream handle", async () => {
     mockStream("sh_a");
-    const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch: vi.fn(), onSuperseded: vi.fn() });
+    const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch: vi.fn(), onSuperseded: vi.fn(), columns: null });
     await manager.requestViewport(null, null, 1_000);
     const sink = sinkFor(0);
 
@@ -152,7 +176,7 @@ describe("ViewportStreamManager (supersede-on-pan, D3.7)", () => {
   it("stop() cancels the active stream and clears it", async () => {
     mockStream("sh_a");
     const onSuperseded = vi.fn();
-    const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch: vi.fn(), onSuperseded });
+    const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch: vi.fn(), onSuperseded, columns: null });
     await manager.requestViewport(null, null, 1_000);
 
     await manager.stop();
@@ -169,7 +193,7 @@ describe("ViewportStreamManager (supersede-on-pan, D3.7)", () => {
     const first = deferred<{ stream: string; expires_in_ms: number }>();
     viewportQueryMock.mockReturnValueOnce(first.promise);
     const onSuperseded = vi.fn();
-    const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch: vi.fn(), onSuperseded });
+    const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch: vi.fn(), onSuperseded, columns: null });
 
     const call1 = manager.requestViewport(null, null, 1_000);
     // Let call1 run past its own `supersedeCurrent()` await and reach `viewportQuery`, where it
@@ -198,7 +222,7 @@ describe("ViewportStreamManager (supersede-on-pan, D3.7)", () => {
   it("stop() invalidates an in-flight requestViewport call, which abandons its ticket instead of becoming active", async () => {
     const pending = deferred<{ stream: string; expires_in_ms: number }>();
     viewportQueryMock.mockReturnValueOnce(pending.promise);
-    const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch: vi.fn(), onSuperseded: vi.fn() });
+    const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch: vi.fn(), onSuperseded: vi.fn(), columns: null });
 
     const call = manager.requestViewport(null, null, 1_000);
     await new Promise((r) => setTimeout(r, 0));
@@ -221,7 +245,7 @@ describe("ViewportStreamManager (supersede-on-pan, D3.7)", () => {
 
   it("cancelStream cancels a named stream even when a newer one is now active", async () => {
     mockStream("sh_a");
-    const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch: vi.fn(), onSuperseded: vi.fn() });
+    const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch: vi.fn(), onSuperseded: vi.fn(), columns: null });
     await manager.requestViewport(null, null, 1_000);
 
     mockStream("sh_b");
@@ -237,7 +261,7 @@ describe("ViewportStreamManager (supersede-on-pan, D3.7)", () => {
 
   it("cancelStream on the active stream clears it", async () => {
     mockStream("sh_a");
-    const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch: vi.fn(), onSuperseded: vi.fn() });
+    const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch: vi.fn(), onSuperseded: vi.fn(), columns: null });
     await manager.requestViewport(null, null, 1_000);
 
     await manager.cancelStream("sh_a");
@@ -248,7 +272,7 @@ describe("ViewportStreamManager (supersede-on-pan, D3.7)", () => {
   it("a rejected cancel call does not prevent superseding client-side", async () => {
     mockStream("sh_a");
     const onSuperseded = vi.fn();
-    const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch: vi.fn(), onSuperseded });
+    const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch: vi.fn(), onSuperseded, columns: null });
     await manager.requestViewport(null, null, 1_000);
 
     cancelMock.mockRejectedValueOnce(new Error("transport hiccup"));
@@ -263,7 +287,7 @@ describe("ViewportStreamManager (supersede-on-pan, D3.7)", () => {
     it("a terminal for a stream this manager superseded is suppressed -- never reaches onTerminal, whatever its kind", async () => {
       mockStream("sh_a");
       const onTerminal = vi.fn();
-      const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch: vi.fn(), onSuperseded: vi.fn(), onTerminal });
+      const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch: vi.fn(), onSuperseded: vi.fn(), onTerminal, columns: null });
       await manager.requestViewport(null, null, 1_000);
       const staleSink = sinkFor(0);
 
@@ -281,7 +305,7 @@ describe("ViewportStreamManager (supersede-on-pan, D3.7)", () => {
     it("a terminal for a stream this manager explicitly cancelled (cancelStream) is suppressed too", async () => {
       mockStream("sh_a");
       const onTerminal = vi.fn();
-      const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch: vi.fn(), onSuperseded: vi.fn(), onTerminal });
+      const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch: vi.fn(), onSuperseded: vi.fn(), onTerminal, columns: null });
       await manager.requestViewport(null, null, 1_000);
       const sink = sinkFor(0);
 
@@ -294,7 +318,7 @@ describe("ViewportStreamManager (supersede-on-pan, D3.7)", () => {
     it("a ProducerFailed on a stream this manager did NOT cancel still reaches onTerminal as a failure", async () => {
       mockStream("sh_a");
       const onTerminal = vi.fn();
-      const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch: vi.fn(), onSuperseded: vi.fn(), onTerminal });
+      const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch: vi.fn(), onSuperseded: vi.fn(), onTerminal, columns: null });
       await manager.requestViewport(null, null, 1_000);
       const sink = sinkFor(0);
 
@@ -308,7 +332,7 @@ describe("ViewportStreamManager (supersede-on-pan, D3.7)", () => {
     it("a stream's own natural Completed still reaches onTerminal (App.tsx's own whitelist treats it as benign)", async () => {
       mockStream("sh_a");
       const onTerminal = vi.fn();
-      const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch: vi.fn(), onSuperseded: vi.fn(), onTerminal });
+      const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch: vi.fn(), onSuperseded: vi.fn(), onTerminal, columns: null });
       await manager.requestViewport(null, null, 1_000);
       const sink = sinkFor(0);
 
@@ -336,7 +360,7 @@ describe("ViewportStreamManager (supersede-on-pan, D3.7)", () => {
     it("a stream that completes naturally before the next requestViewport is still cleared before the new stream's first batch (the actual root cause: a natural terminal nulls currentStreamHandle, not residency)", async () => {
       mockStream("sh_a");
       const { resident, onBatch, onSuperseded } = fakeResidentTracker();
-      const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch, onSuperseded });
+      const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch, onSuperseded, columns: null });
       await manager.requestViewport(null, null, 1_000);
       const sinkA = sinkFor(0);
 
@@ -373,7 +397,7 @@ describe("ViewportStreamManager (supersede-on-pan, D3.7)", () => {
     it("a stream still actively streaming when superseded is also cleared before the new stream's first batch", async () => {
       mockStream("sh_a");
       const { resident, onBatch, onSuperseded } = fakeResidentTracker();
-      const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch, onSuperseded });
+      const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch, onSuperseded, columns: null });
       await manager.requestViewport(null, null, 1_000);
       const sinkA = sinkFor(0);
       sinkA.onBatch(new Uint8Array(500), true);
@@ -431,7 +455,7 @@ describe("ViewportStreamManager (supersede-on-pan, D3.7)", () => {
 
     it("a continuous multi-second drag with no pauses (walkthrough A7) issues at most one query, not one per throttle tick", async () => {
       const counts = trackedViewportQueryMock();
-      const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch: vi.fn(), onSuperseded: vi.fn() });
+      const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch: vi.fn(), onSuperseded: vi.fn(), columns: null });
       const debounced = debounce((bbox: null, bboxCrs: null) => {
         void manager.requestViewport(bbox, bboxCrs);
       }, VIEWPORT_QUERY_MIN_INTERVAL_MS);
@@ -457,7 +481,7 @@ describe("ViewportStreamManager (supersede-on-pan, D3.7)", () => {
 
     it("a drag with brief pauses (settle, resume, settle again) keeps concurrently in-flight queries far under MAX_PENDING_TICKETS", async () => {
       const counts = trackedViewportQueryMock();
-      const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch: vi.fn(), onSuperseded: vi.fn() });
+      const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch: vi.fn(), onSuperseded: vi.fn(), columns: null });
       const debounced = debounce((bbox: null, bboxCrs: null) => {
         void manager.requestViewport(bbox, bboxCrs);
       }, VIEWPORT_QUERY_MIN_INTERVAL_MS);
@@ -490,7 +514,7 @@ describe("ViewportStreamManager (supersede-on-pan, D3.7)", () => {
   describe("requestViewport's returned RequestOutcome (P1: reporting seam, no behavior change)", () => {
     it("a successful mint resolves {kind:'issued', streamHandle} with the real handle", async () => {
       mockStream("sh_a");
-      const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch: vi.fn(), onSuperseded: vi.fn() });
+      const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch: vi.fn(), onSuperseded: vi.fn(), columns: null });
 
       const outcome = await manager.requestViewport(null, null, 1_000);
 
@@ -499,7 +523,7 @@ describe("ViewportStreamManager (supersede-on-pan, D3.7)", () => {
 
     it("a call inside the throttle window resolves {kind:'throttled'} -- the existing silent no-op, now reported", async () => {
       mockStream("sh_a");
-      const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch: vi.fn(), onSuperseded: vi.fn() });
+      const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch: vi.fn(), onSuperseded: vi.fn(), columns: null });
       await manager.requestViewport(null, null, 1_000);
 
       const outcome = await manager.requestViewport(null, null, 1_000 + VIEWPORT_QUERY_MIN_INTERVAL_MS - 1);
@@ -509,7 +533,7 @@ describe("ViewportStreamManager (supersede-on-pan, D3.7)", () => {
     });
 
     it("a call after stop() resolves {kind:'stopped'} -- the existing refused-forever behavior, now reported", async () => {
-      const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch: vi.fn(), onSuperseded: vi.fn() });
+      const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch: vi.fn(), onSuperseded: vi.fn(), columns: null });
       await manager.stop();
 
       const outcome = await manager.requestViewport(null, null, 1_000);
@@ -521,7 +545,7 @@ describe("ViewportStreamManager (supersede-on-pan, D3.7)", () => {
     it("a call that loses the generation race (re-entrancy, mirrors the suite's own re-entrancy test above) resolves {kind:'superseded'}", async () => {
       const first = deferred<{ stream: string; expires_in_ms: number }>();
       viewportQueryMock.mockReturnValueOnce(first.promise);
-      const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch: vi.fn(), onSuperseded: vi.fn() });
+      const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch: vi.fn(), onSuperseded: vi.fn(), columns: null });
 
       const call1 = manager.requestViewport(null, null, 1_000);
       await new Promise((r) => setTimeout(r, 0));
@@ -556,6 +580,7 @@ describe("ViewportStreamManager (supersede-on-pan, D3.7)", () => {
         onBatch: vi.fn(),
         onSuperseded: vi.fn(),
         onStreamOpened,
+        columns: null,
       });
       await manager.requestViewport(null, null, 1_000);
       const sink = sinkFor(0);
@@ -574,6 +599,7 @@ describe("ViewportStreamManager (supersede-on-pan, D3.7)", () => {
         onBatch: vi.fn(),
         onSuperseded: vi.fn(),
         onStreamOpened,
+        columns: null,
       });
       await manager.requestViewport(null, null, 1_000);
       const staleSink = sinkFor(0);
@@ -597,6 +623,7 @@ describe("ViewportStreamManager (supersede-on-pan, D3.7)", () => {
         onBatch: vi.fn(),
         onSuperseded: vi.fn(),
         onStreamOpened,
+        columns: null,
       });
       await manager.requestViewport(null, null, 1_000);
 
@@ -646,7 +673,7 @@ describe("ViewportStreamManager on a source-changed terminal (boundary 4)", () =
     mockStream("sh_a");
     const onBatch = vi.fn();
     const onSuperseded = vi.fn();
-    const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch, onSuperseded });
+    const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch, onSuperseded, columns: null });
     await manager.requestViewport(null, null, 1_000);
 
     const terminal = sourceChangedTerminal();
@@ -676,7 +703,7 @@ describe("ViewportStreamManager on a source-changed terminal (boundary 4)", () =
   it("drops a batch that arrives after the session ended", async () => {
     mockStream("sh_a");
     const onBatch = vi.fn();
-    const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch, onSuperseded: vi.fn() });
+    const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch, onSuperseded: vi.fn(), columns: null });
     await manager.requestViewport(null, null, 1_000);
 
     const sink = sinkFor(0);
@@ -701,6 +728,7 @@ describe("ViewportStreamManager on a source-changed terminal (boundary 4)", () =
       dataset: "ds_x",
       onBatch: vi.fn(),
       onSuperseded: vi.fn(),
+      columns: null,
     });
     await manager.requestViewport(null, null, 1_000);
 
@@ -743,6 +771,7 @@ describe("ViewportStreamManager on a source-changed terminal (boundary 4)", () =
       onBatch,
       onSuperseded,
       onSessionEnded,
+      columns: null,
     });
     await manager.requestViewport(null, null, 1_000);
 
@@ -776,6 +805,7 @@ describe("ViewportStreamManager on a source-changed terminal (boundary 4)", () =
       onBatch: vi.fn(),
       onSuperseded: vi.fn(),
       onSessionEnded,
+      columns: null,
     });
     await manager.requestViewport(null, null, 1_000);
 
@@ -811,6 +841,7 @@ describe("ViewportStreamManager on a source-changed terminal (boundary 4)", () =
       onBatch: vi.fn(),
       onSuperseded,
       onSessionEnded,
+      columns: null,
     });
     await manager.requestViewport(null, null, 1_000);
     sinkFor(0).onBatch(new Uint8Array([1, 2, 3]), true);
@@ -868,6 +899,7 @@ describe("ViewportStreamManager on a source-changed terminal (boundary 4)", () =
           },
           setHover,
         }),
+      columns: null,
     });
     await manager.requestViewport(null, null, 1_000);
     sinkFor(0).onBatch(new Uint8Array([1, 2, 3]), true);
@@ -912,7 +944,7 @@ describe("ViewportStreamManager on a source-changed terminal (boundary 4)", () =
   it("after an event-ended session, a batch on a retired ticket is dropped (SH10)", async () => {
     mockStream("sh_a");
     const onBatch = vi.fn();
-    const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch, onSuperseded: vi.fn() });
+    const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch, onSuperseded: vi.fn(), columns: null });
     await manager.requestViewport(null, null, 1_000);
 
     const sink = sinkFor(0);
@@ -944,7 +976,7 @@ describe("ViewportStreamManager on a source-changed terminal (boundary 4)", () =
    */
   it("SH12: a viewportQuery pending when another stream's terminal ends the session resolves session-ended", async () => {
     mockStream("sh_a");
-    const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch: vi.fn(), onSuperseded: vi.fn() });
+    const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch: vi.fn(), onSuperseded: vi.fn(), columns: null });
     await manager.requestViewport(null, null, 1_000);
     const firstSink = sinkFor(0);
 
@@ -990,7 +1022,7 @@ describe("ViewportStreamManager on a source-changed terminal (boundary 4)", () =
   // Mutation: see RECORDED MUTATION (SH13, registered) above.
   it("SH13: the same window, ended by the event route (notifySessionEnded)", async () => {
     mockStream("sh_a");
-    const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch: vi.fn(), onSuperseded: vi.fn() });
+    const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch: vi.fn(), onSuperseded: vi.fn(), columns: null });
     await manager.requestViewport(null, null, 1_000);
 
     const pending = deferred<{ stream: string; expires_in_ms: number }>();
@@ -1026,7 +1058,7 @@ describe("ViewportStreamManager on a source-changed terminal (boundary 4)", () =
   // Mutation: see RECORDED MUTATION (SH14, registered) above.
   it("SH14: the end lands while dataPlaneAttach is pending", async () => {
     mockStream("sh_late");
-    const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch: vi.fn(), onSuperseded: vi.fn() });
+    const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch: vi.fn(), onSuperseded: vi.fn(), columns: null });
 
     const pendingAttach = deferred<{ url: string; subprotocols: string[] }>();
     dataPlaneAttachMock.mockReset().mockReturnValueOnce(pendingAttach.promise);
@@ -1069,7 +1101,7 @@ describe("ViewportStreamManager on a source-changed terminal (boundary 4)", () =
   it("every issue supersedes the previous stream's residency, so at most one stream is ever resident", async () => {
     mockStream("sh_a");
     const onSuperseded = vi.fn();
-    const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch: vi.fn(), onSuperseded });
+    const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch: vi.fn(), onSuperseded, columns: null });
     await manager.requestViewport(null, null, 1_000);
 
     mockStream("sh_b");
@@ -1105,6 +1137,7 @@ describe("ViewportStreamManager on a source-changed terminal (boundary 4)", () =
       onBatch: vi.fn(),
       onSuperseded: vi.fn(),
       onSessionEnded,
+      columns: null,
     });
     await manager.requestViewport(null, null, 1_000);
 

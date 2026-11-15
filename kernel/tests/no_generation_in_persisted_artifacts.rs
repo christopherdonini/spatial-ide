@@ -9,13 +9,15 @@
 //! (`GenerationRegistry`) and client-mirrored state (`liveTicketSet.ts`'s live-ticket set) only —
 //! §13 D's ruled design, "no generation value crosses the wire" (boundary 9, A2/A3). This file
 //! enumerates, from the code rather than from memory, every artifact this tree can write to disk or
-//! hand to an operator to read later, and proves each carries neither the word nor a value.
+//! hand to an operator to read later, and proves each family below carries neither the word nor a
+//! value; the machine store's `locations.json` and `folders.json`, which `Projects::save` writes,
+//! are named below and are not scanned.
 //!
 //! ## What this tree can produce, enumerated by its own writers
 //!
 //! Grepped over `engine/src`, `kernel/src`, `protocol/skp/src` and `frontends/shell/src-tauri/src`
 //! for `std::fs::write`/`File::create`/`OpenOptions::new()` outside `#[cfg(test)]`, and reconciled
-//! against gate-log record 85, finding B-1. Four families, and a fifth (5.) that has no writer yet:
+//! against gate-log record 85, finding B-1. Four families, and a fifth (5.), whose writers are the session history and the project file:
 //!
 //! 1. **The published bundle** — `kernel/src/publish/mod.rs` (`Staging::write`, `kernel/src/publish/mod.rs:1355`)
 //!    and `kernel/src/bundle/mod.rs`'s path constants: `manifest.json`, `style.json`, the viewer
@@ -39,9 +41,11 @@
 //!    probe, `AuditLog::open_for`) and `:215-221` (`AuditLog::append`, the actual record line).
 //!    Scanned below, over one `IntentRecord`, the same `AuditLog::open_for`/`append_intent` shape
 //!    `kernel/tests/permission_boundary.rs` already uses.
-//! 5. **The dataset reference's canonical text** — `kernel/src/dataset_ref.rs` (ADR-036 §5, Proposed).
-//!    No writer exists in this tree yet: the project file and lineage file that will persist it are
-//!    piece 1c's. It is scanned as the text a later writer will write, by `G1` at the end of this file.
+//! 5. **The dataset reference's canonical text** — `kernel/src/dataset_ref.rs` (ADR-036 §5, Accepted
+//!    2026-10-22). Two writers persist it: the session history's header (`kernel/src/session_history.rs`)
+//!    and the project file (`Projects::save`, `kernel/src/project/mod.rs`). `G1` at the end of this
+//!    file scans the text itself, `G2` the history, and `G3` the project file that `Projects::save`
+//!    writes. No lineage file writer exists in this tree.
 //!
 //! **Excluded, with reason: `engine/src/fixture.rs:627`.** `File::create` inside
 //! `write_geoparquet`'s `generate` — this writes the GeoParquet **fixtures** every test and
@@ -50,11 +54,14 @@
 //! same reasoning `docs/01` principle 8 gives a fixture (a stand-in for a real file, not a claim
 //! about one) applies to what it writes. Not scanned.
 //!
-//! **No standalone project-file or recipe-file format exists in this tree at this commit** —
-//! grepped, not assumed, against the same four-path scope above (`protocol/skp/src`, not the whole
-//! `protocol/*` tree: `protocol/transport-bakeoff/src/main.rs:302,566` write outside
-//! `#[cfg(test)]`, but the workspace root `Cargo.toml`'s `exclude` list names that crate); nothing
-//! outside the four families and the one exclusion resolves.
+//! **The project file is this tree's one standalone project-file format** (item 5's second writer),
+//! and no recipe-file format exists — grepped, not assumed, against the same four-path scope above
+//! (`protocol/skp/src`, not the whole `protocol/*` tree:
+//! `protocol/transport-bakeoff/src/main.rs:302,566` write outside `#[cfg(test)]`, but the workspace
+//! root `Cargo.toml`'s `exclude` list names that crate). Three more writers are outside the
+//! families above: the session record's `locations.json` (`kernel/src/session_history.rs`), which
+//! `G2` reads, and the machine store's `locations.json` and `folders.json`
+//! (`kernel/src/project/mod.rs`'s `write_machine_file`), which no test here scans.
 
 mod watch_support;
 
@@ -790,11 +797,11 @@ fn a_dataset_reference_carries_no_generation_session_reference_handle_path_or_as
 use spatial_kernel::session_history::{recover, StepRecorder};
 use spatial_skp::v0::{Filter, FilterApplyParams, RecordStepRequest, StepIntent, StyleSetParams};
 
-/// **The session history's half of G-A4** (`kernel/B2-1B-RECORDING-PREREGISTRATION.md` §4, G2; a
-/// sixth family): a history written by `record_step` over a real open carries no key and no byte
-/// naming a generation, and none of: the minted session reference, the dataset handle, the
-/// fixture's path and its directory, the OS user name. `locations.json` beside it is the one file
-/// that holds the path, and the scan says so. Each scan fires on a planted positive control.
+/// **The session history's half of G-A4** (`kernel/B2-1B-RECORDING-PREREGISTRATION.md` §4, G2; the
+/// fifth family's first writer): a history written by `record_step` over a real open carries no key
+/// and no byte naming a generation, and none of: the minted session reference, the dataset handle,
+/// the fixture's path and its directory, the OS user name. `locations.json` beside it is the one
+/// file that holds the path, and the scan says so. Each scan fires on a planted positive control.
 ///
 /// RECORDED MUTATION: `DatasetRef::linked` records a project-relative locator holding `ds.path()` in
 /// place of the machine-recorded one, so the header's locator `at` carries the path. Expected
@@ -890,6 +897,118 @@ fn a_session_history_carries_no_generation_session_reference_handle_path_or_user
         "locations.json holds the path"
     );
     assert!(!names(&locations, open.session.as_str()) && !names(&locations, open.dataset.as_str()));
+
+    // The positive controls: each scan fires on what it guards.
+    walk_keys(&serde_json::json!({"a": {"generation": 1}}), "$", &mut keys);
+    assert_eq!(keys, ["$.a.generation"]);
+    assert!(contains_ascii_ci(b"names a Generation", b"generation"));
+    assert!(contains_a_session_reference_shape(
+        open.session.as_str().as_bytes()
+    ));
+    for (label, needle) in &needles {
+        let planted = serde_json::json!({ "planted": needle }).to_string();
+        assert!(names(&planted, needle), "the scan cannot detect {label}");
+    }
+}
+
+use spatial_kernel::project::file::{Clause, Space, View, Workspace};
+use spatial_kernel::project::{Projects, PROJECT_FILE_NAME};
+
+/// **The project file's half of G-A4** (`kernel/B2-1C-SAVE-AND-REOPEN-PREREGISTRATION.md` §4, G3; the
+/// fifth family's second writer): the `project.spatial` that `Projects::save` writes for a real open
+/// of data inside the project folder carries no key and no byte naming a generation, and none of: the
+/// minted session reference, the dataset handle, the data's path and its directory, the OS user
+/// name. The project-relative locator is the one place the data is named, by its path from the
+/// folder, so the scan looks for the absolute spelling. Each scan fires on a planted positive control.
+///
+/// RECORDED MUTATION: `Projects::save` adds a disabled clause holding `ds.path()` to the workspace it
+/// writes, which the reader accepts. Expected failure: `the project file names the data's path`.
+#[test]
+fn a_project_file_carries_no_generation_handle_session_reference_absolute_path_or_user_name() {
+    let d = workspace("project-file");
+    let folder = d.join("project");
+    let path = folder.join("data").join("parcels.parquet");
+    std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+    let spec = FixtureSpec {
+        features: 40,
+        avg_vertices: 6,
+        hole_every: 0,
+        attributes: AttributeMode::CategoricalZone,
+        ..Default::default()
+    };
+    write_geoparquet(&path, &spec).unwrap();
+    let host = Arc::new(SkpHost::new(
+        Arc::new(Catalog::new()),
+        StreamRegistry::new(),
+        watch_support::no_watch_arm(),
+        session_end_channel().0,
+    ));
+    let open = host
+        .open_dataset(OpenDatasetRequest {
+            skp: SKP_VERSION.to_string(),
+            path: path.display().to_string(),
+            cancel_key: "g3".to_string(),
+            crs_assertion: None,
+            identity: None,
+        })
+        .expect("open");
+    let ds = host.catalog().get(open.dataset.as_str()).expect("catalog");
+    let recorder = Arc::new(StepRecorder::new(d.join("store"), host.clone()));
+    let projects = Projects::new(d.join("machine"), recorder);
+    let crs = ds.crs();
+    let space = Space {
+        identifier: crs.identifier().to_string(),
+        provenance: ds.admission().unwrap().crs_provenance.as_str().to_string(),
+        definition: None,
+    };
+    let sent = Workspace {
+        filter: Some("zone = 'civic'".to_string()),
+        clauses: vec![Clause {
+            text: "zone = 'civic'".to_string(),
+            enabled: true,
+        }],
+        style: spatial_renderer::style::parse(STYLE).unwrap(),
+        view: View {
+            crs: space,
+            centre: [2_600_000.5, 1_200_000.25],
+            zoom: -4.5,
+        },
+    };
+    projects
+        .save(open.dataset.as_str(), &ds, Some(&folder), sent)
+        .expect("saved");
+    let file = std::fs::read_to_string(folder.join(PROJECT_FILE_NAME)).unwrap();
+    assert!(
+        file.contains("data/parcels.parquet"),
+        "the data is named by its path from the folder"
+    );
+
+    let user = std::env::var("USERNAME")
+        .or_else(|_| std::env::var("USER"))
+        .unwrap_or_default();
+    let needles = [
+        ("the session reference", open.session.as_str().to_string()),
+        ("the dataset handle", open.dataset.as_str().to_string()),
+        ("the data's path", path.display().to_string()),
+        (
+            "the data's directory",
+            path.parent().unwrap().display().to_string(),
+        ),
+        ("the project folder", folder.display().to_string()),
+        ("the OS user name", user),
+    ];
+    let value: serde_json::Value = serde_json::from_str(&file).unwrap();
+    let mut keys = Vec::new();
+    walk_keys(&value, "$", &mut keys);
+    assert!(
+        keys.is_empty(),
+        "the project file carries a key naming a generation: {keys:?}"
+    );
+    assert!(!contains_ascii_ci(file.as_bytes(), b"generation"));
+    assert!(!contains_a_session_reference_shape(file.as_bytes()));
+    for (label, needle) in needles.iter().filter(|(_, n)| n.len() >= 4) {
+        assert!(!names(&file, needle), "the project file names {label}");
+    }
 
     // The positive controls: each scan fires on what it guards.
     walk_keys(&serde_json::json!({"a": {"generation": 1}}), "$", &mut keys);

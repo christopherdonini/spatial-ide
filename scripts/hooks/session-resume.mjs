@@ -25,13 +25,13 @@ import { pathToFileURL } from 'node:url';
 import { isCloudSession } from './cloud.mjs';
 import { parseSessionContinuity } from './precompact-flush.mjs';
 
-export const READING_ORDER = `Reading order after a compaction or a new session (AUTONOMY.md §0):
-1. state/CUT-STATE.md — the continuity block, then the live ledger, plus any unfinished matter it names explicitly. The standing items: AUTONOMY.md §33 part B and PRECEDENTS.md P-035 and P-036.
-2. CUSTODIAN-QUEUE.md — the generated ready set and the waiting-on-human list.
-3. DECISIONS-PENDING.md — the open entries and recent rulings; search older rulings by date, round or entry in DECISIONS-PENDING.md and state/cut-archive/DECISIONS-PENDING-*.md, never read them whole.
+export const READING_ORDER = `Reading order after a compaction or a new session (governance/AUTONOMY.md §0):
+1. state/CUT-STATE.md — the continuity block, then the live ledger, plus any unfinished matter it names explicitly. The standing items: governance/AUTONOMY.md §33 part B and governance/PRECEDENTS.md P-035 and P-036.
+2. governance/CUSTODIAN-QUEUE.md — the generated ready set and the waiting-on-human list.
+3. governance/DECISIONS-PENDING.md — the open entries and recent rulings; search older rulings by date, round or entry in DECISIONS-PENDING.md and state/cut-archive/DECISIONS-PENDING-*.md, never read them whole.
 4. state/directives/ — the human's instructions, recorded verbatim, newest first.
-5. PRECEDENTS.md — before raising any question.
-6. AUTONOMY.md for the mechanics; AI_DEVELOPMENT.md for the role, the red lines and the accumulated lessons.`;
+5. governance/PRECEDENTS.md — before raising any question.
+6. governance/AUTONOMY.md for the mechanics; governance/AI_DEVELOPMENT.md for the role, the red lines and the accumulated lessons.`;
 
 function resolveProjectRoot(input) {
   return process.env.CLAUDE_PROJECT_DIR || input?.cwd || process.cwd();

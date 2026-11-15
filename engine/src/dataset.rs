@@ -11,7 +11,7 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 
-use arrow::datatypes::{DataType, Field, Schema, SchemaRef};
+use arrow::datatypes::{DataType, Field, FieldRef, Schema, SchemaRef};
 use duckdb::Connection;
 
 use crate::addressability::{not_addressable, not_addressable_for_field, render_visible_escape};
@@ -321,7 +321,9 @@ impl Dataset {
         // different facts and a caller cannot act on the second one: a directory of parquet parts
         // is a real dataset this engine will not admit *for a stated reason*, while a mistyped path
         // is not a dataset at all. Detected structurally and narrowly —
-        // [`partitioned_source_detail`] — never by opening anything.
+        // [`partitioned_source_detail`] — never by opening anything: it asks the filesystem only
+        // whether the path is a directory and, for a path holding `[`, `]`, `{` or `}`, whether it
+        // is a file; a path holding one of those four that is an existing file is not refused here.
         if let Some(detail) = partitioned_source_detail(path) {
             return Err(EngineError::IdentityOrdinalPartitionedUnsupported { detail });
         }
@@ -344,7 +346,8 @@ impl Dataset {
         // identity scan — so instead of dropping it at the end of open, it is *returned* to the
         // pool. Nothing new is created and no new statement runs in the prelude; the first stream
         // then finds a configured connection already there. If open fails, the lease is dropped and
-        // the connection discarded, because a `Dataset` that does not exist owns nothing.
+        // the connection discarded, because a `Dataset` that does not exist owns nothing. The
+        // connection also serves the file's name tree (`read_file_names`).
         let pool = ConnectionPool::new(connections);
         let lease = pool.acquire(LeaseClass::Maintenance)?;
         let conn = lease.connection();
@@ -426,14 +429,18 @@ impl Dataset {
         }
 
         let file_schema = probe_schema(conn, &path_str)?;
-        check_geometry_column(&file_schema, &geo.primary_column)?;
+        // The file's own names (the covering-case form, §2.1): a second input to the two checks
+        // below, never a replacement for a resident field.
+        let file_names = read_file_names(conn, &path_str, cancel)?;
+        check_names_align(&file_names, &file_schema)?;
+        check_geometry_column(&file_schema, &file_names, &geo.primary_column)?;
 
         // **The one place a declared covering is judged usable** (the covering-names-missing-column
         // form, §2a). It runs once, here, ahead of both of `sanity_check`'s early returns, so a
         // file that declares its own CRS is judged too; `sanity_check` takes the result as a
-        // parameter and decides nothing of its own. No SQL: the declared paths and the resident
-        // schema are all it reads.
-        let covering_finding = judge_covering(geo.covering.as_ref(), &file_schema);
+        // parameter and decides nothing of its own. No SQL: the declared paths, the resident
+        // schema and the file's name tree are all it reads.
+        let covering_finding = judge_covering(geo.covering.as_ref(), &file_schema, &file_names)?;
 
         // The provenance of what was just admitted. A caller's assertion is its own class and is
         // decided here, because `format_semantics` is not told about assertions: the format governs
@@ -1083,7 +1090,7 @@ fn read_kv_metadata(conn: &Connection, path: &str) -> Result<Vec<(String, Vec<u8
     // unrelated failure two calls later, which is exactly the kind of thing that is cheap to avoid
     // and expensive to diagnose.
     let pairs: Vec<(Vec<u8>, Vec<u8>)> = stmt
-        .query_map([path], |row| {
+        .query_map([duckdb_literal_path(path)], |row| {
             let k: Vec<u8> = row.get(0)?;
             let v: Vec<u8> = row.get(1)?;
             Ok((k, v))
@@ -1110,7 +1117,7 @@ fn probe_schema(conn: &Connection, path: &str) -> Result<SchemaRef> {
         .prepare("SELECT * FROM read_parquet(?) LIMIT 0")
         .map_err(|e| EngineError::Source(format!("prepare schema probe: {e}")))?;
     let arrow = stmt
-        .query_arrow([path])
+        .query_arrow([duckdb_literal_path(path)])
         .map_err(|e| EngineError::Source(format!("schema probe: {e}")))?;
     let exported = arrow.get_schema();
     // **§10 Amendment 12, 12.1(a); the architect gate's B7.** Drained in full before the next
@@ -1123,7 +1130,7 @@ fn probe_schema(conn: &Connection, path: &str) -> Result<SchemaRef> {
         .prepare("DESCRIBE SELECT * FROM read_parquet(?) LIMIT 0")
         .map_err(|e| EngineError::Source(format!("prepare schema describe: {e}")))?;
     let bound_names: Vec<String> = describe_stmt
-        .query_map([path], |row| row.get::<_, String>(0))
+        .query_map([duckdb_literal_path(path)], |row| row.get::<_, String>(0))
         .map_err(|e| EngineError::Source(format!("schema describe: {e}")))?
         .collect::<std::result::Result<Vec<_>, _>>()
         .map_err(|e| EngineError::Source(format!("schema describe row: {e}")))?;
@@ -1412,63 +1419,259 @@ impl CoveringFinding {
     }
 }
 
-/// The one decision on whether a declared covering is usable (the covering-names-missing-column
-/// form, §2a), taken once at open, from the declared paths and the resident schema alone.
-/// **It takes no `Connection` and issues no statement.**
-///
-/// A U+0000 path is checked first, unchanged; otherwise the first of the four paths that the
-/// schema walk does not resolve; otherwise `None` (no declared covering, or a usable one).
-fn judge_covering(covering: Option<&CoveringBbox>, schema: &SchemaRef) -> Option<CoveringFinding> {
-    let covering = covering?;
-    if let Some(reason) = covering_not_addressable_reason(covering) {
-        return Some(CoveringFinding::NotAddressable { reason });
+/// One node of the file's own schema tree, as `parquet_schema` lists it: the name the file writes,
+/// never the one DuckDB binds (the covering-case form, §2.1). Private to the open path.
+struct NameNode {
+    name: String,
+    children: Vec<NameNode>,
+}
+
+/// The file's own names: one statement, `parquet_schema`, drained in full inside [`cancellable`]
+/// (unlike `read_kv_metadata` and `probe_schema`, it is bound to the open's cancel token) and
+/// rebuilt in pre-order by `num_children`. The first row is the writer's root, which is not a
+/// column. Rows that do not form exactly one tree are refused.
+fn read_file_names(conn: &Connection, path: &str, cancel: &CancelToken) -> Result<NameNode> {
+    let rows: Vec<(String, Option<i64>)> = cancellable(conn, cancel, |conn| {
+        let mut stmt = conn
+            .prepare("SELECT name, num_children FROM parquet_schema(?)")
+            .map_err(|e| EngineError::Source(format!("prepare parquet schema: {e}")))?;
+        let rows: Vec<(String, Option<i64>)> = stmt
+            .query_map([duckdb_literal_path(path)], |row| {
+                Ok((row.get(0)?, row.get(1)?))
+            })
+            .map_err(|e| EngineError::Source(format!("read parquet schema: {e}")))?
+            .collect::<std::result::Result<Vec<_>, _>>()
+            .map_err(|e| EngineError::Source(format!("parquet schema row: {e}")))?;
+        Ok(rows)
+    })?;
+    let not_a_tree = || EngineError::InternalInconsistency {
+        detail: "the rows of parquet_schema do not form one schema tree; which column each name \
+                 reads could not be decided"
+            .into(),
+    };
+    let mut open: Vec<(NameNode, i64)> = Vec::new();
+    let mut root = None;
+    for (name, count) in rows {
+        let left = count.unwrap_or(0);
+        if root.is_some() || left < 0 {
+            return Err(not_a_tree());
+        }
+        open.push((
+            NameNode {
+                name,
+                children: Vec::new(),
+            },
+            left,
+        ));
+        while open.last().is_some_and(|(_, left)| *left == 0) {
+            let (node, _) = open.pop().ok_or_else(not_a_tree)?;
+            match open.last_mut() {
+                Some((parent, left)) => {
+                    parent.children.push(node);
+                    *left -= 1;
+                }
+                None => root = Some(node),
+            }
+        }
     }
-    [
+    if open.is_empty() {
+        root.ok_or_else(not_a_tree)
+    } else {
+        Err(not_a_tree())
+    }
+}
+
+/// The file's n columns line up with the first n resident fields; trailing resident fields are
+/// names the file does not hold, such as a `k=v` folder's key (covering-case form, §2.2, K2).
+fn check_names_align(file: &NameNode, schema: &SchemaRef) -> Result<()> {
+    let (n, m) = (file.children.len(), schema.fields().len());
+    if m < n {
+        return Err(EngineError::InternalInconsistency {
+            detail: format!(
+                "the file's footer lists {n} top-level column(s) but the schema probe reported \
+                 {m}; which column each name reads could not be decided"
+            ),
+        });
+    }
+    Ok(())
+}
+
+/// The nodes whose name matches `name` ignoring ASCII case: a byte-equal name is one of them, and
+/// two byte-equal nodes are two. The one counting site of clause (a).
+fn case_matches(nodes: &[NameNode], name: &str) -> Vec<usize> {
+    nodes
+        .iter()
+        .enumerate()
+        .filter(|(_, n)| n.name.eq_ignore_ascii_case(name))
+        .map(|(i, _)| i)
+        .collect()
+}
+
+/// Rendered names, each in backticks.
+fn ticked(names: &[String]) -> String {
+    names
+        .iter()
+        .map(|n| format!("`{n}`"))
+        .collect::<Vec<_>>()
+        .join(", ")
+}
+
+/// A name path for a message.
+fn joined(segments: &[&str]) -> String {
+    render_visible_escape(&segments.join("."))
+}
+
+/// What [`field_path_exists`] found along one declared covering path. Paths are rendered.
+enum PathWalk {
+    Resolves,
+    /// A segment matches none of the file's names at its level.
+    Absent,
+    /// A segment matches more than one of the file's names (clause (a)).
+    Ambiguous {
+        matches: Vec<String>,
+    },
+    /// A segment matches one file name, but the resident field at that position is read under a
+    /// name that does not match it (clause (b)).
+    Misbound {
+        file_path: String,
+        resident_path: String,
+    },
+    /// A struct's field count differs between the file and the resident schema.
+    Inconsistent {
+        file_path: String,
+        file_count: usize,
+        resident_count: usize,
+    },
+}
+
+/// The one decision on whether a declared covering is usable (the covering-names-missing-column
+/// form, §2a; the covering-case form, §2.4), taken once at open, from the declared paths, the
+/// resident schema and the file's name tree alone. **It takes no `Connection` and issues no
+/// statement.**
+///
+/// A U+0000 path is checked first, unchanged. Then the first ambiguous, misbound or inconsistent
+/// walk, in path order, refuses the open even if another path is absent; else the first absent path.
+fn judge_covering(
+    covering: Option<&CoveringBbox>,
+    schema: &SchemaRef,
+    file: &NameNode,
+) -> Result<Option<CoveringFinding>> {
+    let Some(covering) = covering else {
+        return Ok(None);
+    };
+    if let Some(reason) = covering_not_addressable_reason(covering) {
+        return Ok(Some(CoveringFinding::NotAddressable { reason }));
+    }
+    let mut absent = None;
+    for p in [
         &covering.xmin,
         &covering.ymin,
         &covering.xmax,
         &covering.ymax,
-    ]
-    .into_iter()
-    .find(|p| !field_path_exists(schema, p))
-    .map(|p| CoveringFinding::Absent {
-        path: p.0.join("."),
-    })
+    ] {
+        let declared = render_visible_escape(&p.0.join("."));
+        match field_path_exists(file, schema, p) {
+            PathWalk::Resolves => {}
+            PathWalk::Absent => {
+                absent.get_or_insert_with(|| p.0.join("."));
+            }
+            PathWalk::Ambiguous { matches } => {
+                return Err(EngineError::GeoMetadata(format!(
+                    "the covering names `{declared}`, which matches more than one name in the \
+                     file's schema when ASCII letter case is ignored: {}",
+                    ticked(&matches)
+                )));
+            }
+            PathWalk::Misbound {
+                file_path,
+                resident_path,
+            } => {
+                return Err(EngineError::GeoMetadata(format!(
+                    "the covering names `{declared}`, which the file's schema holds as \
+                     `{file_path}`, but that column is read under the name `{resident_path}`, so \
+                     the declared name does not read it"
+                )));
+            }
+            PathWalk::Inconsistent {
+                file_path,
+                file_count,
+                resident_count,
+            } => {
+                return Err(EngineError::InternalInconsistency {
+                    detail: format!(
+                        "the file's footer lists {file_count} field(s) inside `{file_path}` but \
+                         the schema probe reported {resident_count}; which field each name reads \
+                         could not be decided"
+                    ),
+                });
+            }
+        }
+    }
+    Ok(absent.map(|path| CoveringFinding::Absent { path }))
 }
 
-/// Whether a covering path resolves to a real field, walking struct children.
+/// Walks one covering path through the file's names, aligned by position with the resident
+/// fields.
 ///
 /// Each segment is compared with **ASCII case-insensitive equality**, at the top level and at
 /// every child: that is the rule the P0 showed the pinned DuckDB binder applying (the
 /// covering-names-missing-column form, Amendment 1, item 4). The P0 showed a top-level name
 /// differing by a non-ASCII letter's case not binding; a non-ASCII child name is outside what
 /// this piece claims. It is DuckDB's rule, never a filesystem's or an OS's.
-fn field_path_exists(schema: &SchemaRef, path: &crate::geoparquet::FieldPath) -> bool {
-    let mut segments = path.0.iter();
-    let Some(first) = segments.next() else {
-        return false;
-    };
-    let Some(field) = schema
-        .fields()
-        .iter()
-        .find(|f| f.name().eq_ignore_ascii_case(first))
-    else {
-        return false;
-    };
-    let mut current = field.clone();
-    for segment in segments {
-        let DataType::Struct(children) = current.data_type() else {
-            return false;
+///
+/// At each level: no file name matches (absent); more than one does (clause (a)); one does, but
+/// the resident field there is read under a name that does not match (clause (b)); then, if a
+/// segment follows, the resident field must be a struct with the file's field count.
+fn field_path_exists(
+    file: &NameNode,
+    schema: &SchemaRef,
+    path: &crate::geoparquet::FieldPath,
+) -> PathWalk {
+    let mut file_level: &[NameNode] = &file.children;
+    let mut resident_level: &[FieldRef] = schema.fields();
+    let (mut file_path, mut resident_path): (Vec<&str>, Vec<&str>) = (Vec::new(), Vec::new());
+    for (depth, segment) in path.0.iter().enumerate() {
+        let j = match case_matches(file_level, segment).as_slice() {
+            [] => return PathWalk::Absent,
+            [j] => *j,
+            many => {
+                let matches = many
+                    .iter()
+                    .map(|&i| {
+                        let mut at = file_path.clone();
+                        at.push(&file_level[i].name);
+                        joined(&at)
+                    })
+                    .collect();
+                return PathWalk::Ambiguous { matches };
+            }
         };
-        match children
-            .iter()
-            .find(|f| f.name().eq_ignore_ascii_case(segment))
-        {
-            Some(child) => current = child.clone(),
-            None => return false,
+        let (node, field) = (&file_level[j], &resident_level[j]);
+        file_path.push(&node.name);
+        resident_path.push(field.name());
+        if !field.name().eq_ignore_ascii_case(segment) {
+            return PathWalk::Misbound {
+                file_path: joined(&file_path),
+                resident_path: joined(&resident_path),
+            };
         }
+        if depth + 1 == path.0.len() {
+            break;
+        }
+        let DataType::Struct(children) = field.data_type() else {
+            return PathWalk::Absent;
+        };
+        if children.len() != node.children.len() {
+            return PathWalk::Inconsistent {
+                file_path: joined(&file_path),
+                file_count: node.children.len(),
+                resident_count: children.len(),
+            };
+        }
+        file_level = &node.children;
+        resident_level = children;
     }
-    true
+    PathWalk::Resolves
 }
 
 /// Run one open-path query bound to the caller's cancellation token.
@@ -1477,13 +1680,17 @@ fn field_path_exists(schema: &SchemaRef, path: &crate::geoparquet::FieldPath) ->
 /// (`docs/01` principle 7): attach the connection's interrupt handle before the statement runs,
 /// detach after it, and report a token that was cancelled as `Cancelled` rather than returning a
 /// value read from an interrupted query. Nothing about what runs changes when nothing cancels.
+///
+/// `run` goes through `CancelToken::execute_guarded`, so a cancel that landed between the attach and
+/// DuckDB's own clear of its interrupt either refuses the read before it starts or is re-raised
+/// while it runs.
 fn cancellable<T>(
     conn: &Connection,
     cancel: &CancelToken,
     run: impl FnOnce(&Connection) -> Result<T>,
 ) -> Result<T> {
     cancel.attach(Arc::clone(&conn.interrupt_handle()))?;
-    let outcome = run(conn);
+    let outcome = cancel.execute_guarded(|| run(conn)).into_result();
     cancel.detach();
     if cancel.is_cancelled() {
         return Err(EngineError::Cancelled);
@@ -1509,7 +1716,7 @@ fn first_row_group_rows(
             )
             .map_err(|e| EngineError::Source(format!("prepare row group metadata: {e}")))?;
         let mut rows = stmt
-            .query([path])
+            .query([duckdb_literal_path(path)])
             .map_err(|e| EngineError::Source(format!("read row group metadata: {e}")))?;
         let Some(row) = rows
             .next()
@@ -1538,7 +1745,7 @@ fn covering_statistics(
                 "SELECT path_in_schema, stats_min_value, stats_max_value FROM parquet_metadata(?)",
             )
             .map_err(|e| EngineError::Source(format!("prepare parquet metadata: {e}")))?;
-        stmt.query_map([path], |row| {
+        stmt.query_map([duckdb_literal_path(path)], |row| {
             Ok((
                 row.get::<_, String>(0)?,
                 row.get::<_, Option<String>>(1)?,
@@ -1605,7 +1812,7 @@ fn covering_sample(
         ymin = covering.ymin.to_sql(),
         xmax = covering.xmax.to_sql(),
         ymax = covering.ymax.to_sql(),
-        p = path.replace('\'', "''"),
+        p = duckdb_literal_path(path).replace('\'', "''"),
         n = limit,
     );
     cancellable(conn, cancel, |conn| {
@@ -1634,11 +1841,42 @@ fn covering_sample(
 
 /// Whether this source is **partitioned** — more than one file — and why, or `None`.
 ///
-/// **Structural and narrow, and it opens nothing.** Two shapes count, because they are the two a
-/// caller reaches a partition set through: a directory, and a path carrying a glob metacharacter.
-/// Anything else — a missing path, a path that is not parquet — keeps the refusal it already had
-/// (`EngineError::Source`), because calling a typo a partition set would be this engine inventing a
-/// diagnosis (`docs/01` principle 8).
+/// **Structural and narrow, and it reads no file.** It asks the filesystem nothing but stats:
+/// whether the path is a directory and, when the text holds `[`, `]`, `{` or `}` and neither `*`
+/// nor `?`, whether it is a file. In this order:
+///
+/// 1. A directory is refused.
+/// 2. A path text holding `*` or `?` (after the Windows extended-length prefix is set aside) is
+///    refused, whatever is on disk.
+/// 3. A path text holding `[`, `]`, `{` or `}` is refused if no file is at that path.
+/// 4. A path text holding one of those four characters, with an existing file at that path, is
+///    `None`: it is one file and the open goes on.
+/// 5. Any other path is `None`. A missing path, or a path that is not parquet, keeps the refusal it
+///    already had (`EngineError::Source`), because calling a typo a partition set would be this
+///    engine inventing a diagnosis (`docs/01` principle 8).
+///
+/// The refusals of steps 1 to 3 are one variant, and the detail of each is the text it had before
+/// step 4 existed.
+///
+/// **What step 0 observed, and the route each class takes** (the form's Amendment 1,
+/// `governance/forms/engine/SINGLE-FILE-BRACKET-NAME-REFUSED-AS-PARTITIONED-PREREGISTRATION.md`;
+/// DuckDB 1.5.5 in `duckdb` 1.10505.0, on Windows, with the build of record's compiler). Given a
+/// file name holding a well-formed `[`…`]` pair, with a file beside it whose name the pair matches
+/// (as in every pair case step 0 ran), DuckDB's `glob`, `read_parquet` and its footer-metadata
+/// functions read that other file and never the file itself; given a lone `[` or a lone `]` they
+/// read the file. Given `{` and `}`, `{a,b}` among them, they read the file and none of its decoys;
+/// with `zones{a,b}.parquet` absent, the one brace case step 0 ran that way, they read no file at
+/// all.
+/// - `[` and `]` therefore take the **escaped** route: [`duckdb_literal_path`] rewrites them at
+///   every DuckDB file-reading call outside the fixture-only `layout.rs`, and step 0 observed the
+///   rewritten form read the file when it was present and no file when it was absent.
+/// - `{` and `}` take the **raw** route: the path reaches DuckDB as it is written.
+///
+/// **Not claimed.** What is read if the file is removed between this stat and the DuckDB call, for
+/// either route; it needs timing inside one request and step 0 observed the file absent from the
+/// start, not removed in between. And, not observed: on Linux, a bracket in the first component of
+/// an absolute path; on Windows, a path whose letter case differs from the directory listing's in a
+/// component that holds a bracket. Only Windows was run in step 0.
 ///
 /// **It is not a file-list or packing contract** (A5). It decides one thing: whether R-I4's named
 /// refusal is the honest answer instead of "not a readable file". Nothing here enumerates parts,
@@ -1656,33 +1894,49 @@ fn partitioned_source_detail(path: &Path) -> Option<String> {
         .strip_prefix(r"\\?\UNC\")
         .or_else(|| text.strip_prefix(r"\\?\"))
         .unwrap_or(text);
-    // **Every metacharacter DuckDB's own `read_parquet` expands**, not a subset of them: `*` and
-    // `?` wildcards, `[...]` character classes, and `{a,b}` brace alternation. An earlier revision
-    // scanned for `*` and `?` only, on the reasoning that a bracket in a real directory name is
-    // ordinary — which is true, and is the wrong trade to make here.
+    // **`*` and `?` are decided by the text alone** (step 2): they are refused whatever is on disk,
+    // so a file whose own name holds one is still refused. `[`, `]`, `{` and `}` are the four the
+    // text cannot settle, because a name holding them can be one file; for those, one stat decides
+    // (steps 3 and 4), and an existing file goes on to the open. The list is scanned in this order,
+    // so a text holding `*` or `?` along with a bracket or a brace is reported for the `*` or `?`.
     //
-    // **The trade-off, weighed and stated.** A literal file whose name contains `[`, `]`, `{` or
-    // `}` is legal on every filesystem this runs on, and this function now refuses it by name even
-    // though it is one file. That is the safe direction and the false positive is *visible*: the
-    // operator is told, in the refusal, that the path was read as naming more than one file, which
-    // is a sentence they can act on (quote the path, rename the file). The alternative is the
-    // invisible failure: DuckDB expands the class, the source silently becomes a multi-file scan,
-    // and `file_row_number` becomes a per-file ordinal reused across files — the session tier's
-    // identity silently colliding, which is exactly what R-I4 exists to prevent (A5, boundary 7).
-    // A refusal an operator can read beats an identity that is wrong and says nothing.
-    //
-    // Deliberately **not** stat-ing the path first to see whether such a literal file exists: that
-    // would make the refusal depend on what happens to be on disk, so the same path would be
-    // admitted or refused for reasons the operator cannot see, and a file appearing later would
-    // change the answer. The rule is a property of the path text alone.
+    // The same text is refused or admitted according to what is at the path, so a file appearing
+    // later changes the answer; with no file at the path the refusal and its detail are the ones
+    // this function gave for these four characters before the stat existed.
     const GLOB_METACHARACTERS: [char; 6] = ['*', '?', '[', ']', '{', '}'];
     if let Some(found) = GLOB_METACHARACTERS.iter().find(|c| scanned.contains(**c)) {
+        if !matches!(found, '*' | '?') && path.is_file() {
+            return None;
+        }
         return Some(format!(
             "{text} carries the glob metacharacter `{found}`, so it names a pattern rather than one \
              file"
         ));
     }
     None
+}
+
+/// The path text as DuckDB's file-reading functions are handed it, so that a `[` or a `]` in a file
+/// name is read as that character and not as part of a character class.
+///
+/// In one pass over the original text, `[` becomes `[[]` and `]` becomes `[]]`; every other
+/// character, `{` and `}` included, is copied as it is (step 0 observed `{` and `}` read the file
+/// raw; see [`partitioned_source_detail`]). The result is for DuckDB only: [`Dataset::path`] and
+/// every consumer that is not DuckDB keep the raw path.
+///
+/// Applied, before any quote doubling, at the DuckDB calls in this file, in `stream.rs`
+/// (`stream`), `index.rs` (`build_observed`) and `rowgroup.rs` (`read_metadata`). The calls in
+/// `layout.rs` take their path text as they did and are not rewritten here.
+pub(crate) fn duckdb_literal_path(path: &str) -> String {
+    let mut out = String::with_capacity(path.len());
+    for c in path.chars() {
+        match c {
+            '[' => out.push_str("[[]"),
+            ']' => out.push_str("[]]"),
+            other => out.push(other),
+        }
+    }
+    out
 }
 
 /// Admit the dataset's feature identity — **ADR-016 §3–§6**.
@@ -1792,21 +2046,27 @@ fn admit_identity(
         "SELECT count(*), count(DISTINCT \"{c}\"), min(\"{c}\"), max(\"{c}\") \
          FROM read_parquet('{p}')",
         c = column.replace('"', "\"\""),
-        p = path.replace('\'', "''")
+        p = duckdb_literal_path(path).replace('\'', "''")
     );
 
     // **G-A1's structural claim, made assertable.** This is the one place `admit_identity` can
     // issue a whole-column read: the session-ordinal arm above (no native or mapped column) and the
-    // `skip` arm above (a declared, explicitly-unverified mapping) both return before this line, so
-    // neither ever bumps the counter. Counting the call rather than its outcome is deliberate — a
-    // scan that goes on to refuse (a duplicate or negative value) still read the column, and the
-    // property under test is "a read happened", not "identity was admitted".
-    IDENTITY_VERIFICATION_SCANS.fetch_add(1, Ordering::SeqCst);
+    // `skip` arm above (a declared, explicitly-unverified mapping) both return before the guarded
+    // scan below, so neither ever bumps the counter. Counting the call rather than its outcome is
+    // deliberate — a scan that goes on to refuse (a duplicate or negative value) still read the
+    // column, and the property under test is "a read happened", not "identity was admitted". The
+    // increment is inside the guarded closure below, so a scan the guard refuses before it starts
+    // is not counted.
 
     // Bound to the caller's token before the scan starts, so a cancel arriving mid-scan reaches
     // DuckDB's interrupt rather than waiting for a whole column to be read (principle 7).
     cancel.attach(std::sync::Arc::clone(&conn.interrupt_handle()))?;
-    let scan = run_identity_scan(conn, &sql);
+    let scan = cancel
+        .execute_guarded(|| {
+            IDENTITY_VERIFICATION_SCANS.fetch_add(1, Ordering::SeqCst);
+            run_identity_scan(conn, &sql)
+        })
+        .into_result();
     cancel.detach();
     if cancel.is_cancelled() {
         return Err(EngineError::Cancelled);
@@ -1889,24 +2149,52 @@ fn run_identity_scan(
 }
 
 /// The geometry column, checked at open so a stream cannot fail halfway for a reason that was
-/// knowable up front.
+/// knowable up front, **judged against the file's own names** (the covering-case form, §2.3).
+///
+/// In this order: (1) a `geo.primary_column` that matches more than one of the file's top-level
+/// names ignoring ASCII case, a byte-equal one included, is refused as
+/// [`EngineError::GeoMetadata`] (clause (a)); (2) one that matches no name byte for byte keeps the
+/// existing [`EngineError::Source`] refusal, so a name spelled like a name DuckDB generated is
+/// refused too; (3) one whose resident field, at the file column's position, is read under another
+/// name is refused as `GeoMetadata`; (4) the U+0000 and type checks run on that resident field.
 ///
 /// **12.1(d)'s geometry row.** `schema` already carries DESCRIBE's own bound name at this position
 /// (`probe_schema`), so a declared name that does not round-trip is found here exactly as it is
 /// declared — and is refused as [`EngineError::GeoMetadata`], naming the U+0000 fact, never as
 /// "the file does not contain" (which is false: the file does contain it, under a name nothing can
 /// address). Test N-8.
-fn check_geometry_column(schema: &SchemaRef, geometry_column: &str) -> Result<()> {
-    let geom = schema
-        .fields()
+fn check_geometry_column(schema: &SchemaRef, file: &NameNode, geometry_column: &str) -> Result<()> {
+    let declared = render_visible_escape(geometry_column);
+    let matches = case_matches(&file.children, geometry_column);
+    if matches.len() > 1 {
+        let names: Vec<String> = matches
+            .iter()
+            .map(|&i| render_visible_escape(&file.children[i].name))
+            .collect();
+        return Err(EngineError::GeoMetadata(format!(
+            "`geo.primary_column` names `{declared}`, which matches more than one name in the \
+             file's schema when ASCII letter case is ignored: {}",
+            ticked(&names)
+        )));
+    }
+    let j = file
+        .children
         .iter()
-        .find(|f| f.name() == geometry_column)
+        .position(|n| n.name == geometry_column)
         .ok_or_else(|| {
             EngineError::Source(format!(
                 "`geo.primary_column` names `{}`, which the file does not contain",
                 render_visible_escape(geometry_column)
             ))
         })?;
+    let geom = &schema.fields()[j];
+    if geom.name() != geometry_column {
+        return Err(EngineError::GeoMetadata(format!(
+            "`geo.primary_column` names `{declared}`, which the file contains, but that column is \
+             read under the name `{}`, so the declared name does not read it",
+            render_visible_escape(geom.name())
+        )));
+    }
     if let Some(fact) = not_addressable_for_field(geom) {
         return Err(EngineError::GeoMetadata(format!(
             "`geo.primary_column` names the geometry column, but {}",
@@ -1947,4 +2235,204 @@ pub(crate) fn lease_for_stream(
     let lease = dataset.pool.acquire(LeaseClass::Stream)?;
     cancel.attach(Arc::clone(&lease.connection().interrupt_handle()))?;
     Ok(lease)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::cancel::test_support::cancel_when_executing;
+    use std::sync::atomic::AtomicBool;
+
+    /// RECORDED MUTATION (observed at `2ccac3d1a8b3def9fa16c861d71623ab2ad1e200`): `cancellable`
+    /// calls `run(conn)` outside the guard. Observed outcome: this test fails by name at its
+    /// `matches!(inside, Ok(true))` assertion, with `Ok(false)`.
+    #[test]
+    fn a_cancellable_open_read_runs_inside_the_execute_window() {
+        let conn = Connection::open_in_memory().unwrap();
+        let cancel = CancelToken::new();
+        let inside = cancellable(&conn, &cancel, |_| Ok(cancel.is_executing()));
+        assert!(
+            matches!(inside, Ok(true)),
+            "the open read must run inside the execute window: {inside:?}"
+        );
+    }
+
+    /// RECORDED MUTATION (observed at `2ccac3d1a8b3def9fa16c861d71623ab2ad1e200`):
+    /// `run_identity_scan` runs outside the guard. Observed outcome: this test fails by name at its
+    /// `saw_window` assertion ("the identity scan never ran inside the execute window").
+    #[test]
+    fn a_cancel_inside_the_identity_scans_execute_window_ends_the_admission_cancelled() {
+        let file = std::env::temp_dir().join(format!(
+            "spatial-engine-ecbs-identity-{}.parquet",
+            std::process::id()
+        ));
+        let path = file.to_str().unwrap();
+        let conn = Connection::open_in_memory().unwrap();
+        conn.execute_batch(&format!(
+            "COPY (SELECT i::UBIGINT AS id FROM range(0, 4000000) t(i)) TO '{}' (FORMAT PARQUET)",
+            path.replace('\'', "''")
+        ))
+        .unwrap();
+        let schema: SchemaRef =
+            Arc::new(Schema::new(vec![Field::new("id", DataType::UInt64, false)]));
+
+        let cancel = CancelToken::new();
+        let done = Arc::new(AtomicBool::new(false));
+        let canceller = cancel_when_executing(&cancel, &done);
+        let admitted = admit_identity(&conn, path, &schema, None, &cancel);
+        done.store(true, Ordering::SeqCst);
+        let saw_window = canceller.join().unwrap();
+        let _ = std::fs::remove_file(&file);
+
+        assert!(
+            saw_window,
+            "the identity scan never ran inside the execute window"
+        );
+        assert!(
+            matches!(admitted, Err(EngineError::Cancelled)),
+            "a cancel inside the scan must end the admission Cancelled: {admitted:?}"
+        );
+    }
+
+    /// The last path component of every file DuckDB's `glob` lists for `pattern`, sorted.
+    fn names_listed_by_glob(conn: &Connection, pattern: &str) -> Vec<String> {
+        let mut stmt = conn
+            .prepare("SELECT file FROM glob(?)")
+            .expect("prepare glob");
+        let mut names: Vec<String> = stmt
+            .query_map([pattern], |row| row.get::<_, String>(0))
+            .expect("glob")
+            .map(|listed| {
+                let listed = listed.expect("a glob row");
+                listed
+                    .rsplit(['/', '\\'])
+                    .next()
+                    .expect("a listed path has a last component")
+                    .to_string()
+            })
+            .collect();
+        names.sort();
+        names
+    }
+
+    /// The last path component and row count of every file `read_parquet` reads for `pattern`, or
+    /// the error's text when the statement fails (step 0 observed `read_parquet` fail when it reads
+    /// no file).
+    fn files_read(
+        conn: &Connection,
+        pattern: &str,
+    ) -> std::result::Result<Vec<(String, i64)>, String> {
+        let mut stmt = conn
+            .prepare(
+                "SELECT filename, count(*) FROM read_parquet(?, filename=true) \
+                 GROUP BY filename ORDER BY filename",
+            )
+            .map_err(|e| e.to_string())?;
+        let rows = stmt
+            .query_map([pattern], |row| {
+                Ok((row.get::<_, String>(0)?, row.get::<_, i64>(1)?))
+            })
+            .map_err(|e| e.to_string())?
+            .collect::<std::result::Result<Vec<_>, _>>()
+            .map_err(|e| e.to_string())?;
+        Ok(rows
+            .into_iter()
+            .map(|(file, n)| {
+                let name = file.rsplit(['/', '\\']).next().unwrap_or(&file).to_string();
+                (name, n)
+            })
+            .collect())
+    }
+
+    /// [`duckdb_literal_path`]'s output, handed to DuckDB's `glob` and `read_parquet` on a
+    /// configured connection, matches the literal file when it is present and no file when it is
+    /// not. A decoy, `zones1.parquet`, sits beside every row. The rows, in order: a bracket pair
+    /// with the literal absent and the decoy present, the same pair with the literal present, a
+    /// lone `[` and a lone `]`, each present. For the absent
+    /// row, `read_parquet`'s error is compared with the one DuckDB gives for a plain absent path in
+    /// the same directory, observed in the test and not written here, with the path text replaced.
+    ///
+    /// RECORDED MUTATION (observed at `4f0d50cee15f0e48abd582053677b55f62af077d`):
+    /// `duckdb_literal_path` returning its input unchanged. Observed outcome: this test fails by
+    /// name at the absent-pair row, where `glob` lists the decoy. A second, it leaving `[`
+    /// unescaped and rewriting only `]`: this test fails by name at the present-pair row, where
+    /// `glob` lists nothing. Dropping `]` instead was not run: the form's Amendment 1 (b) records
+    /// it as an equivalent mutant on this DuckDB, a reading of DuckDB's source and not an
+    /// observation.
+    #[test]
+    fn the_reader_path_matches_only_the_literal_file_and_nothing_once_it_is_gone() {
+        use crate::fixture::{configured_connection, write_geoparquet, FixtureSpec};
+
+        const LITERAL_ROWS: usize = 20;
+        const DECOY_ROWS: usize = 7;
+        // (row, literal name, whether the literal is written). The decoy `zones1.parquet` is
+        // written beside every row.
+        let rows = [
+            ("a bracket pair, literal absent", "zones[1].parquet", false),
+            ("a bracket pair, literal present", "zones[1].parquet", true),
+            (
+                "a lone opening bracket, literal present",
+                "zones[.parquet",
+                true,
+            ),
+            (
+                "a lone closing bracket, literal present",
+                "zones].parquet",
+                true,
+            ),
+        ];
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .expect("the engine crate sits in the workspace")
+            .join("target/fixtures/reader-path-literal");
+        let conn = configured_connection().expect("configured connection");
+
+        for (i, (row, literal_name, literal_present)) in rows.iter().enumerate() {
+            let dir = root.join(format!("row-{i}"));
+            let _ = std::fs::remove_dir_all(&dir);
+            std::fs::create_dir_all(&dir).expect("fixture directory");
+            let spec = |features| FixtureSpec {
+                features,
+                avg_vertices: 12,
+                ..Default::default()
+            };
+            write_geoparquet(dir.join("zones1.parquet"), &spec(DECOY_ROWS)).expect("decoy");
+            if *literal_present {
+                write_geoparquet(dir.join(literal_name), &spec(LITERAL_ROWS)).expect("literal");
+            }
+
+            let literal_text = dir.join(literal_name).to_str().unwrap().to_string();
+            let escaped = duckdb_literal_path(&literal_text);
+            let listed = names_listed_by_glob(&conn, &escaped);
+            let read = files_read(&conn, &escaped);
+
+            if *literal_present {
+                assert_eq!(
+                    listed,
+                    vec![literal_name.to_string()],
+                    "{row}: glob lists only the literal file"
+                );
+                assert_eq!(
+                    read,
+                    Ok(vec![(literal_name.to_string(), LITERAL_ROWS as i64)]),
+                    "{row}: read_parquet reads only the literal file"
+                );
+            } else {
+                assert!(
+                    listed.is_empty(),
+                    "{row}: glob lists no file once the literal is gone, got {listed:?}"
+                );
+                // DuckDB's own error for a path that matches nothing, observed from DuckDB on a
+                // plain absent path in the same directory, with the path text swapped out.
+                let absent = dir.join("absent.parquet").to_str().unwrap().to_string();
+                let expected = files_read(&conn, &absent)
+                    .expect_err("a plain absent path is an error")
+                    .replace(&absent, "<path>");
+                let got = read
+                    .expect_err(&format!("{row}: read_parquet reads no file"))
+                    .replace(&escaped, "<path>");
+                assert_eq!(got, expected, "{row}: the error is DuckDB's no-match error");
+            }
+        }
+    }
 }

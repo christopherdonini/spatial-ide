@@ -382,35 +382,116 @@ test('stop-queue: block reason names the lane and budget', async () => {
     const result = await decide(input, { projectRoot });
     assert.equal(result.decision, 'block');
     assert.match(result.reason, /lane shell, budget 50 min/);
-    assert.match(result.reason, /Regenerate CUSTODIAN-QUEUE\.md if PLAN\.yaml changed; ledger before ending\./);
+    assert.match(result.reason, /Regenerate governance\/CUSTODIAN-QUEUE\.md if governance\/PLAN\.yaml changed; ledger before ending\./);
   } finally {
     delete process.env.CUSTODIAN_PLAN_PATH;
   }
 });
 
-test('stop-queue: notifies on the human-blocked-only allow, deduped on the waiting set', async () => {
-  const projectRoot = makeTempDir('stop-notify-dedupe-');
+async function captureStderr(fn) {
+  const lines = [];
+  const original = console.error;
+  console.error = (...a) => {
+    lines.push(a.join(' '));
+  };
+  try {
+    await fn();
+  } finally {
+    console.error = original;
+  }
+  return lines;
+}
+
+const DRY = '[telegram dry-run]';
+
+function writeHalt(projectRoot, text) {
+  fs.mkdirSync(path.join(projectRoot, 'state'), { recursive: true });
+  fs.writeFileSync(path.join(projectRoot, 'state', 'CUSTODIAN-HALT'), text);
+}
+
+// RECORDED MUTATION, observed at bcc20bba (applied, run, reverted): the step-6 send restored in stop-queue.mjs -> this test fails at assert.deepEqual(..., [], 'no send was made'): the actual list holds '[telegram dry-run] would send: Only human-blocked nodes remain.'.
+test('stop-queue: the human-blocked-only allow sends no Telegram message', async () => {
+  const projectRoot = makeTempDir('stop-no-notify-');
   process.env.CUSTODIAN_PLAN_PATH = twoNodesHumanOnlyPlan;
   try {
     const input = baseStopInput();
     writeHeldLease(projectRoot, input.session_id);
-    await decide(input, { projectRoot });
-    const dedupePath = path.join(projectRoot, '.claude', 'state', 'telegram-sent.json');
-    assert.ok(fs.existsSync(dedupePath), 'expected a dedupe record to be written');
-    const before = JSON.parse(fs.readFileSync(dedupePath, 'utf8'));
-    assert.equal(Object.keys(before).length, 1);
-
-    // A second allow for the same waiting set, moments later, from a DIFFERENT session (its own
-    // held lease) -- the dedupe key is on the waiting set, not the session, so this must still
-    // not add a second key.
-    const secondInput = baseStopInput();
-    writeHeldLease(projectRoot, secondInput.session_id);
-    await decide(secondInput, { projectRoot });
-    const after = JSON.parse(fs.readFileSync(dedupePath, 'utf8'));
-    assert.deepEqual(before, after);
+    let result;
+    const lines = await captureStderr(async () => {
+      result = await decide(input, { projectRoot });
+    });
+    assert.equal(result.decision, 'allow');
+    assert.match(result.stderr, /waiting on human/);
+    assert.deepEqual(lines.filter((l) => l.startsWith(DRY)), [], 'no send was made');
+    assert.equal(fs.existsSync(path.join(projectRoot, '.claude', 'state', 'telegram-sent.json')), false, 'no dedupe record was written');
   } finally {
     delete process.env.CUSTODIAN_PLAN_PATH;
   }
+});
+
+// RECORDED MUTATION, observed at bcc20bba (applied, run, reverted): the halt send put back behind a waitingOnHuman.length guard, as at main -> this test fails at assert.deepEqual(calls, ...): [] where [[projectRoot, 'HALT: drill halt']] is expected.
+test('stop-queue: a halt sends the HALT line once when nothing waits on the human', async () => {
+  const projectRoot = makeTempDir('stop-halt-send-');
+  writeHalt(projectRoot, 'drill halt\n');
+  const calls = [];
+  const notify = async (...a) => {
+    calls.push(a);
+  };
+  const result = await decide(baseStopInput(), { projectRoot, notify }); // no plan exists under this root; none is read
+  assert.equal(result.decision, 'allow');
+  assert.equal(result.stderr, 'HALT: drill halt');
+  assert.deepEqual(calls, [[projectRoot, 'HALT: drill halt']]);
+});
+
+// RECORDED MUTATION, observed at bcc20bba (applied, run, reverted): the waiting list appended to the halt text -> this test fails at the dry-run assert.deepEqual: 'HALT: drill halt\nWaiting on you (1 item(s), 10 min total)' where 'HALT: drill halt' is expected.
+test('stop-queue: a halt with human-blocked nodes sends the HALT line without the waiting list', async () => {
+  const projectRoot = makeTempDir('stop-halt-waiting-');
+  writeHalt(projectRoot, 'drill halt\n');
+  process.env.CUSTODIAN_PLAN_PATH = twoNodesHumanOnlyPlan;
+  try {
+    let result;
+    const lines = await captureStderr(async () => {
+      result = await decide(baseStopInput(), { projectRoot });
+    });
+    assert.equal(result.decision, 'allow');
+    assert.deepEqual(lines.filter((l) => l.startsWith(DRY)), [`${DRY} would send: HALT: drill halt`]);
+    assert.equal(lines.some((l) => l.includes('Waiting on you')), false, 'no waiting list in the message');
+  } finally {
+    delete process.env.CUSTODIAN_PLAN_PATH;
+  }
+});
+
+// The shipped entry: stop-queue.mjs as a child process on stdin JSON, the real dry-run send inside it.
+function runStopCli(projectRoot, input, plan) {
+  const env = { ...process.env, CLAUDE_PROJECT_DIR: projectRoot, CUSTODIAN_TELEGRAM_DRY_RUN: '1' };
+  delete env.CUSTODIAN_STOP_HOOK;
+  delete env.CUSTODIAN_PLAN_PATH;
+  if (plan) env.CUSTODIAN_PLAN_PATH = plan;
+  return spawnSync(process.execPath, [path.join(here, 'stop-queue.mjs')], { input: JSON.stringify(input), encoding: 'utf8', env });
+}
+
+// RECORDED MUTATION, observed at bcc20bba (applied, run, reverted): the halt send removed from stop-queue.mjs -> this test fails at the dry-run assert.deepEqual: [] where ['[telegram dry-run] would send: HALT: drill halt'] is expected.
+test('stop-queue CLI: a halt sends one HALT message through the shipped entry', () => {
+  const projectRoot = makeTempDir('stop-cli-halt-');
+  writeHalt(projectRoot, 'drill halt\n');
+  const result = runStopCli(projectRoot, baseStopInput());
+  assert.equal(result.status, 0);
+  assert.equal(result.stdout, '');
+  const lines = result.stderr.split('\n').filter((l) => l !== '');
+  assert.deepEqual(lines.filter((l) => l.startsWith(DRY)), [`${DRY} would send: HALT: drill halt`]);
+  assert.ok(lines.includes('HALT: drill halt'), result.stderr);
+});
+
+// RECORDED MUTATION, observed at bcc20bba (applied, run, reverted): the step-6 send restored through sendTelegramDeduped -> this test fails at the last assert.equal(result.stderr.includes(DRY), false, ...): the message is the stderr, which holds '[telegram dry-run] would send: Only human-blocked nodes remain.'.
+test('stop-queue CLI: the human-blocked-only allow sends nothing through the shipped entry', () => {
+  const projectRoot = makeTempDir('stop-cli-human-only-');
+  const input = baseStopInput();
+  writeHeldLease(projectRoot, input.session_id);
+  const result = runStopCli(projectRoot, input, twoNodesHumanOnlyPlan);
+  assert.equal(result.status, 0);
+  assert.equal(result.stdout, '');
+  assert.match(result.stderr, /waiting on human/);
+  assert.equal(result.stderr.includes(DRY), false, result.stderr);
 });
 
 test('stop-queue CLI: piping stdin JSON blocks on the two-node fixture', () => {
@@ -1316,12 +1397,12 @@ test('session-resume: the reading order names state/directives/ after DECISIONS-
   const at = (needle) => lines.findIndex((l) => l.includes(needle));
   const pending = at('DECISIONS-PENDING.md');
   const directives = at('state/directives/');
-  const precedents = lines.findIndex((l) => l.startsWith('5. PRECEDENTS.md')); // item 1 now names PRECEDENTS.md too (piece B)
+  const precedents = lines.findIndex((l) => l.startsWith('5. governance/PRECEDENTS.md')); // item 1 now names PRECEDENTS.md too (piece B)
   assert.ok(pending >= 0 && precedents >= 0, 'the neighbouring steps exist');
   assert.equal(directives, pending + 1, 'directly after DECISIONS-PENDING.md');
   assert.equal(precedents, directives + 1, 'directly before PRECEDENTS.md');
   assert.equal(lines[directives], "4. state/directives/ — the human's instructions, recorded verbatim, newest first.");
-  assert.match(lines[precedents], /^5\. PRECEDENTS\.md/);
+  assert.match(lines[precedents], /^5\. governance\/PRECEDENTS\.md/);
 });
 
 // ---------------------------------------------------------------------------
@@ -1341,6 +1422,45 @@ test('notify-telegram: builds "<type>: <title/message> (<cwd basename>)"', () =>
 test('notify-telegram: falls back to message alone when there is no title', () => {
   const msg = buildMessage({ notification_type: 'idle_prompt', message: 'idle', cwd: '/tmp/spatial-ide' });
   assert.equal(msg, 'idle_prompt: idle (spatial-ide)');
+});
+
+const repoRoot = path.resolve(here, '..', '..');
+const readSettings = () => JSON.parse(fs.readFileSync(path.join(repoRoot, '.claude', 'settings.json'), 'utf8'));
+
+// RECORDED MUTATION, observed at bcc20bba (applied, run, reverted, each alone): idle_prompt restored in the matcher -> this test fails at the matcher assert.equal: 'idle_prompt|quota_auto_resume_stale|quota_auto_resume_disabled' where 'quota_auto_resume_stale|quota_auto_resume_disabled' is expected; the PreToolUse entry restored (the merge base's file) -> it fails at the keys assert.deepEqual: 'PreToolUse' is the extra first key.
+test('the_notification_hook_matches_only_the_two_quota_types', () => {
+  const settings = readSettings();
+  assert.deepEqual(Object.keys(settings.hooks), ['Stop', 'PreCompact', 'SessionStart', 'Notification']);
+  const entries = settings.hooks.Notification;
+  assert.equal(entries.length, 1);
+  assert.equal(entries[0].matcher, 'quota_auto_resume_stale|quota_auto_resume_disabled');
+  assert.deepEqual(entries[0].hooks, [
+    { type: 'command', command: 'node "$CLAUDE_PROJECT_DIR/scripts/hooks/notify-telegram.mjs"', timeout: 15 },
+  ]);
+  assert.equal(JSON.stringify(settings).includes('questions-mirror.mjs'), false, 'no command names the mirror');
+});
+
+// RECORDED MUTATION, observed at bcc20bba (applied, run, reverted): the command's script path altered to notify-telegramx.mjs in the settings file -> this test fails at assert.equal(r.status, 0, r.stderr): the stderr reads 'Cannot find module' for scripts/hooks/notify-telegramx.mjs.
+test('the_notification_settings_command_forwards_a_quota_notification_once', (t) => {
+  const command = readSettings().hooks.Notification[0].hooks[0].command;
+  // A temporary project holds copies of the hook scripts, so nothing is written under the real .claude/state/.
+  const dir = makeTempDir('notify-settings-command-');
+  t.after(() => fs.rmSync(dir, { recursive: true, force: true, maxRetries: 3 }));
+  fs.mkdirSync(path.join(dir, 'scripts', 'hooks'), { recursive: true });
+  for (const f of fs.readdirSync(here).filter((n) => n.endsWith('.mjs'))) fs.copyFileSync(path.join(here, f), path.join(dir, 'scripts', 'hooks', f));
+  const shell = process.platform === 'win32'
+    ? path.resolve(execFileSync('git', ['--exec-path'], { encoding: 'utf8' }).trim(), '..', '..', '..', 'bin', 'bash.exe')
+    : '/bin/sh';
+  const r = spawnSync(shell, ['-c', command], {
+    input: JSON.stringify({ notification_type: 'quota_auto_resume_stale', message: 'quota test text' }),
+    encoding: 'utf8',
+    cwd: dir,
+    env: { ...process.env, CLAUDE_PROJECT_DIR: dir, CUSTODIAN_TELEGRAM_DRY_RUN: '1' },
+  });
+  assert.equal(r.status, 0, r.stderr);
+  const sends = r.stderr.split('\n').filter((l) => l.startsWith(DRY));
+  assert.equal(sends.length, 1, r.stderr);
+  assert.match(sends[0], /^\[telegram dry-run\] would send: quota_auto_resume_stale: quota test text \(/);
 });
 
 test('telegram: dry run writes the message to stderr and never sends', async () => {
@@ -1388,12 +1508,12 @@ test("session-resume: reading-order item 1 is the continuity block, the live led
     lines[1].startsWith('1. state/CUT-STATE.md — the continuity block, then the live ledger, plus any unfinished matter it names explicitly. '),
     lines[1],
   );
-  assert.match(lines[1], /The standing items: AUTONOMY\.md §33 part B and PRECEDENTS\.md P-035 and P-036\.$/);
+  assert.match(lines[1], /The standing items: governance\/AUTONOMY\.md §33 part B and governance\/PRECEDENTS\.md P-035 and P-036\.$/);
   assert.equal(lines[1].includes('SESSION-CONTINUITY block first'), false, 'the old item 1 is gone');
   // The sections it names exist: AUTONOMY.md section 33 (with its part B) and the two PRECEDENTS.md entries.
   const repo = path.resolve(here, '..', '..');
-  const autonomy = fs.readFileSync(path.join(repo, 'AUTONOMY.md'), 'utf8');
-  const precedents = fs.readFileSync(path.join(repo, 'PRECEDENTS.md'), 'utf8');
+  const autonomy = fs.readFileSync(path.join(repo, 'governance/AUTONOMY.md'), 'utf8');
+  const precedents = fs.readFileSync(path.join(repo, 'governance/PRECEDENTS.md'), 'utf8');
   assert.match(autonomy, /^## §33\. [^\n]*standing items/m);
   assert.match(autonomy, /^### Part B\. The standing items$/m);
   assert.match(precedents, /^### P-035 — /m);
@@ -1409,7 +1529,46 @@ test('session-resume: reading-order item 3 is the open entries and recent ruling
   const source = directive.split('\n').find((l) => l.includes("session-resume.mjs's reading order, item 3:"));
   const words = source.slice(source.indexOf('"') + 1, source.lastIndexOf('"'));
   assert.ok(words.startsWith('the open entries and recent rulings; search older rulings by date, round or entry'), words);
-  assert.equal(lines[3], `3. DECISIONS-PENDING.md — ${words}`);
+  assert.equal(lines[3], `3. governance/DECISIONS-PENDING.md — ${words}`);
   assert.equal(lines[3].includes('RULED blocks (newest first)'), false, 'the old item 3 is gone');
   assert.equal(/state\/directives\/|PRECEDENTS\.md/.test(lines[3]), false, 'it names neither, so the first-occurrence search above still finds it');
+});
+
+// --- governance piece F: the reading order names paths that exist (the form's section 4; test T15) ---
+
+// RECORDED MUTATION at e91bcf30807a (phase 1's commit, on the branch wip/governance-f-scripts; this branch carries the test from it by patch and does not contain the commit), applied alone and reverted: one name in the reading order changed to a path HEAD does not hold (item 5, PRECEDENTS.md to governance/PRECEDENTS.md) -> fails by name: `session-resume: every path the reading order names exists at HEAD`.
+// RECORDED MUTATION, re-observed for the paths commit's change to this test (it now leaves out the one stale mention inside the human's words), on the working tree over the moves-only commit a8ae51d9d0a7 before the paths commit was made, applied alone and reverted (session-resume.mjs sha256 prefix a7806948f33d1ec8 before and after): item 5 set back to the root name PRECEDENTS.md -> fails by name: `session-resume: every path the reading order names exists at HEAD` ("names \"PRECEDENTS.md\", which HEAD does not hold").
+test('session-resume: every path the reading order names exists at HEAD', () => {
+  const repoRoot = path.resolve(here, '..', '..');
+  const tracked = execFileSync('git', ['ls-tree', '-r', '--name-only', 'HEAD'], { cwd: repoRoot, encoding: 'utf8', maxBuffer: 1 << 28 }).split('\n').filter(Boolean);
+  // Item 3 carries the human's own words, byte for byte (the item 3 test pins them to the directive). They still name the ledger by its old root path; that one mention resolves through governance/MOVED.tsv and is left out here, and every other name in the line stays checked.
+  const checked = READING_ORDER.replace('entry in DECISIONS-PENDING.md and', 'entry and');
+  const named = checked.match(/(?:[A-Za-z0-9_.-]+\/)*[A-Za-z0-9_*.-]+\.(?:md|json|yaml)|(?:[A-Za-z0-9_.-]+\/)+(?![A-Za-z0-9_*.-])/g) ?? [];
+  assert.ok(named.length >= 8, `the reading order names paths: ${JSON.stringify(named)}`);
+  for (const p of new Set(named)) {
+    const re = p.includes('*') ? new RegExp('^' + p.split('*').map((s) => s.replace(/[.+?^${}()|[\]\\]/g, '\\$&')).join('[^/]*') + '$') : null;
+    const found = p.endsWith('/') ? tracked.some((f) => f.startsWith(p)) : re ? tracked.some((f) => re.test(f)) : tracked.includes(p);
+    assert.ok(found, `the reading order names "${p}", which HEAD does not hold`);
+  }
+});
+
+// --- governance piece F: the Stop hook's default plan path (the form's section 4; test T14) ---
+
+// RECORDED MUTATION, observed on the working tree over the moves-only commit a8ae51d9d0a7 before the paths commit was made, applied alone and reverted (the file's sha256 prefix 58c8ad94165e6af0 before and after): the default plan path in stop-queue.mjs set back to the root PLAN.yaml -> fails by name: `stop-queue: the default plan path is governance/PLAN.yaml` ("the hook did not reach the plan", the allow that says there is no plan).
+test('stop-queue: the default plan path is governance/PLAN.yaml', async () => {
+  const projectRoot = makeTempDir('stop-default-plan-');
+  const saved = process.env.CUSTODIAN_PLAN_PATH;
+  delete process.env.CUSTODIAN_PLAN_PATH;
+  try {
+    fs.mkdirSync(path.join(projectRoot, 'governance'), { recursive: true });
+    fs.copyFileSync(path.join(fixturesDir, 'valid-plan.yaml'), path.join(projectRoot, 'governance', 'PLAN.yaml'));
+    const input = baseStopInput();
+    writeHeldLease(projectRoot, input.session_id);
+    const result = await decide(input, { projectRoot });
+    // Step 5 read the plan: a block that names the plan's next node, not the allow that says there is no plan.
+    assert.equal(result.decision, 'block', `the hook did not reach the plan: ${result.stderr}`);
+    assert.match(result.reason, /lane shell, budget 50 min/);
+  } finally {
+    if (saved !== undefined) process.env.CUSTODIAN_PLAN_PATH = saved;
+  }
 });

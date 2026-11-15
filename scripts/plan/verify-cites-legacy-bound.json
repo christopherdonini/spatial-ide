@@ -1,0 +1,18 @@
+{
+  "$doc": "Legacy bound for node verify-cites-past-end-bound (the human directive state/directives/2026-10-26-resent-2026-10-25-o1-s1-clang-cl-route-a-hugeint-cast-b-five-nodes-placed.md, item 2): the cites inside filed records that the true line-count bound newly fails at the branch base, checked under the old bound; the list may shrink and never gain an entry.",
+  "entries": [
+    {"path":"state/consults/2026-10-03-type-walk-null-literal-arithmetic-architect-draft.md","cite":"state/consults/2026-10-03-type-walk-null-literal-arithmetic-lead-data-draft.md:5-332"},
+    {"path":"state/consults/2026-10-11-export-current-view-after-unreported-fit-read.md","cite":"frontends/shell/src/publish/types.ts:127-129"},
+    {"path":"state/consults/2026-10-11-shell-migration-milestone-2-phase0-re-sweep.md","cite":"publish/types.ts:127-129"},
+    {"path":"state/consults/2026-10-21-adr-036-acceptance-architect-consult.md","cite":"state/consults/2026-10-08-adr-036-reuse-round-1-findings-architect.md:100-177"},
+    {"path":"state/consults/2026-10-24-adr-023-acceptance-notes-architect-draft.md","cite":"docs/adr/ADR-023-attribute-projection-on-viewport-query.md:163-184"},
+    {"path":"state/consults/2026-10-24-adr-023-acceptance-notes-architect-draft.md","cite":"docs/adr/ADR-023-attribute-projection-on-viewport-query.md:184"},
+    {"path":"state/consults/gates/2026-10-10-known-limitations-item-8-filter-not-published-gate1-reviewer.md","cite":"frontends/shell/src/publish/types.ts:128-129"},
+    {"path":"state/consults/gates/2026-10-11-module-docs-stale-statements-gate1-architect.md","cite":"kernel/CANCELLATION-AND-TRACING.md:155-269"},
+    {"path":"state/consults/gates/2026-10-11-module-docs-stale-statements-gate1-architect.md","cite":"state/consults/2026-10-10-drift-sweep-area-d-custodian-check.md:124-133"},
+    {"path":"state/consults/gates/2026-10-11-module-docs-stale-statements-gate2-architect.md","cite":"kernel/MODULE-DOCS-STALE-STATEMENTS-PREREGISTRATION.md:440-495"},
+    {"path":"state/consults/gates/2026-10-22-verify-quotes-round-item-cites-gate1-architect.md","cite":"scripts/plan/README.md:381"},
+    {"path":"state/consults/gates/2026-10-22-verify-quotes-round-item-cites-gate1-reviewer.md","cite":"scripts/plan/README.md:381"},
+    {"path":"state/consults/gates/2026-10-22-verify-quotes-round-item-cites-gate2-architect.md","cite":"scripts/plan/README.md:381"}
+  ]
+}

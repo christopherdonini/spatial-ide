@@ -95,4 +95,21 @@ By regeneration means the procedure `RECORD.md` records for each entry, as its p
 - `retired/test_geoparquet_1_1.parquet`
 - `retired/test_with_fid_and_geometry_bbox.parquet`
 
-Sighted by the human: RULED 2026-09-26 — question round 27, items 1, 2 and 3.
+## Lines set (LF-1)
+
+| id | path | licence as the source names it | primary source (URL, pinned) | retrieved (UTC) | sha256 of the fetched bytes | set |
+|---|---|---|---|---|---|---|
+| LF-1 | `lines/msrd-pcn.parquet` | ODbL-1.0 (Open Data Commons Open Database License), as the rights holder states; the mirror's catalogue names the same licence and page. | https://raw.githubusercontent.com/microsoft/RoadDetections/c1a8d6995ebcfcf248a764f6b67b13e2b3356f06/LICENSE (the rights holder's repository at the head of its default branch on the retrieval date; byte-stable) | 2026-10-28T16:13:36Z | 1e4162322549351e6ce131d66c3c6c6cb56755db58e0475138e3f41cd94c4b3c | local-only — fetch-only, never redistributed (RULED 2026-10-26, corpus-line-files, OPEN-1 (A)) |
+
+Other sources consulted for LF-1, fetched twice, byte-stable:
+
+| # | URL | retrieved (UTC) | sha256 | byte-stable | what it names for the material |
+|---|---|---|---|---|---|
+| S8 | https://raw.githubusercontent.com/microsoft/RoadDetections/c1a8d6995ebcfcf248a764f6b67b13e2b3356f06/README.md | 2026-10-28T16:13:41Z | b42c3e8272e22f552bcf0c294508f5add2ef8ff5d8f681e51ddb6f082c82576f | yes | ODbL, with a link to https://opendatacommons.org/licenses/odbl/ |
+| S9 | https://data.source.coop/nlebovits/microsoft-ml-road-detections/road-detections/collection.json (the mirror's catalogue) | 2026-10-28T16:13:54Z | 87750e290b96d0396996007fe85c30aa7a14f5b8188fb4a838038a897692c311 | yes | `ODbL-1.0`, with a licence link to the same page; a processor's statement, not the licence pin |
+
+Local-only set, lines (1):
+
+- `lines/msrd-pcn.parquet` — fetch-only, never redistributed
+
+Sighted by the human: RULED 2026-09-26 — question round 27, items 1, 2 and 3; RULED 2026-10-28 — LF-1 (`state/directives/2026-10-28-8a-lf1-sighted-the-licence-row-and-the-record-entry-at-f3962416.md`).

@@ -32,12 +32,13 @@
 //!   `publish_cli.rs` has no such concern: it passes the variable per child through
 //!   `Command::env`, which never touches this process's environment.
 
+use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::sync::{Mutex, MutexGuard, OnceLock};
 use std::time::Duration;
 
 use spatial_engine::fixture::{
-    write_geoparquet, AttributeMode, CrsMode, FixtureSpec, IdentityMode,
+    write_geoparquet, write_zone_texts, AttributeMode, CrsMode, FixtureSpec, IdentityMode,
 };
 use spatial_engine::{CancelToken, Dataset, ViewportQuery};
 use spatial_kernel::permission::{
@@ -1101,4 +1102,125 @@ fn an_adr_025_reader_ceiling_refusal_at_preflight_produces_no_audit_record() {
     // Disk hygiene (this fix batch's own correction): a multi-million-row parquet fixture must not
     // linger under `%TEMP%` after the test that needed it has finished with it.
     let _ = std::fs::remove_dir_all(&d);
+}
+
+// ---- 10. the redaction scan in the publish ---------------------------------------------------------
+
+/// A source whose styled column holds a path at index 3: the redaction form's F1, ten values.
+fn path_in_the_styled_column(dir: &Path) -> PathBuf {
+    let path = dir.join("parcels.parquet");
+    let mut zones = vec!["residential"; 10];
+    zones[3] = r"C:\Users\someone\AppData\Local\Temp\leak.parquet";
+    write_zone_texts(&path, &zones);
+    path
+}
+
+/// The redaction form's T5, from the real shape: the grant, the approval, `boundary::execute` and
+/// `publish_prepared`. A path in the styled column reaches `data/part-00000.arrows`, the gate
+/// refuses before the rename, and the log reads `refused` / `RedactionFinding`.
+#[test]
+fn the_boundary_refuses_a_bundle_whose_data_holds_a_path_before_the_rename_and_audits_it_as_refused(
+) {
+    let d = workspace("redaction-path-in-data");
+    let ds = pinned(&path_in_the_styled_column(&d));
+    let v = viewer();
+    let dest = d.join("out");
+    let log = d.join("audit.jsonl");
+    let grants = grant_for(&ds, &dest, Duration::from_secs(60));
+
+    let e = run_attempt(
+        &log,
+        &request(&ds, &v, dest.clone()),
+        &grants,
+        &PreNamedApproval("out".into()),
+        &CancelToken::new(),
+        None,
+    )
+    .unwrap_err();
+
+    match &e {
+        BoundaryError::Publish(PublishError::RedactionFinding {
+            file, class, count, ..
+        }) => {
+            assert_eq!(file, "data/part-00000.arrows");
+            assert_eq!(*class, "local-filesystem-path");
+            assert!(*count >= 1, "{count}");
+        }
+        other => panic!("expected RedactionFinding, got {other:?}"),
+    }
+    no_side_effect(&d, &dest);
+    let (_, outcome) = Log::read(&log).intent_and_outcome();
+    assert_eq!(outcome["outcome"], "refused");
+    assert_eq!(outcome["error_kind"], "RedactionFinding");
+}
+
+/// The redaction form's T6: a viewer file is passed over only when its staged bytes hash to the
+/// build record's entry for its own path. The same `NOTICE.txt`, one byte changed, is scanned and
+/// refused for the `password` it holds.
+#[test]
+fn a_viewer_asset_matching_its_build_record_is_published_and_the_same_asset_one_byte_changed_is_refused(
+) {
+    let d = workspace("redaction-build-record");
+    let ds = pinned(&fixture(&d));
+    let recorded = b"notice text: the word password appears here\n".to_vec();
+    let mut changed = recorded.clone();
+    changed[0] = b'N';
+    let hex = spatial_renderer::canonical::sha256_hex(&recorded)
+        .strip_prefix("sha256:")
+        .unwrap()
+        .to_string();
+    let record = BTreeMap::from([("NOTICE.txt".to_string(), hex)]);
+    let viewer_with = |notice: Vec<u8>| {
+        ViewerAssets::new(vec![
+            ViewerAsset {
+                path: "index.html".into(),
+                bytes: b"<!doctype html><title>t</title>".to_vec(),
+            },
+            ViewerAsset {
+                path: "NOTICE.txt".into(),
+                bytes: notice,
+            },
+        ])
+        .unwrap()
+        .with_build_record(record.clone())
+    };
+
+    let dest = d.join("out-matching");
+    let log = d.join("audit-matching.jsonl");
+    let v = viewer_with(recorded);
+    run_attempt(
+        &log,
+        &request(&ds, &v, dest.clone()),
+        &grant_for(&ds, &dest, Duration::from_secs(60)),
+        &PreNamedApproval("out-matching".into()),
+        &CancelToken::new(),
+        None,
+    )
+    .expect("a viewer file matching its build record is not scanned again");
+    let (_, outcome) = Log::read(&log).intent_and_outcome();
+    assert_eq!(outcome["outcome"], "success");
+
+    let dest = d.join("out-changed");
+    let log = d.join("audit-changed.jsonl");
+    let v = viewer_with(changed);
+    let e = run_attempt(
+        &log,
+        &request(&ds, &v, dest.clone()),
+        &grant_for(&ds, &dest, Duration::from_secs(60)),
+        &PreNamedApproval("out-changed".into()),
+        &CancelToken::new(),
+        None,
+    )
+    .unwrap_err();
+    match &e {
+        BoundaryError::Publish(PublishError::RedactionFinding { file, class, .. }) => {
+            assert_eq!(file, "viewer/NOTICE.txt");
+            assert_eq!(*class, "credential");
+        }
+        other => panic!("expected RedactionFinding, got {other:?}"),
+    }
+    no_side_effect(&d, &dest);
+    let (_, outcome) = Log::read(&log).intent_and_outcome();
+    assert_eq!(outcome["outcome"], "refused");
+    assert_eq!(outcome["error_kind"], "RedactionFinding");
 }

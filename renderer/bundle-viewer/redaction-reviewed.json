@@ -1,0 +1,8 @@
+{
+  "reviewed_at": "ed2024c2401500c26d7a2bf2944f995dd43f04e8",
+  "rows": [
+    { "file": "NOTICE.txt", "class": "credential", "offset": 19092 },
+    { "file": "NOTICE.txt", "class": "local-filesystem-path", "offset": 111337 },
+    { "file": "app.js", "class": "local-filesystem-path", "offset": 7291 }
+  ]
+}

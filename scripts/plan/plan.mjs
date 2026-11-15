@@ -292,7 +292,7 @@ export function prioritiesApproved(plan) {
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const path = process.argv[2] ?? 'PLAN.yaml';
+  const path = process.argv[2] ?? 'governance/PLAN.yaml';
   try {
     const plan = loadPlan(path);
     const { ready, waitingOnHuman, blockedOnDeps } = deriveStates(plan);

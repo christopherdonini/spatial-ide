@@ -690,7 +690,7 @@ export function PublishControls({
         )}
       </fieldset>
 
-      {filterActive && <p className="publish-filter-scope-sentence">{FILTER_SCOPE_SENTENCE}</p>}
+      {filterActive && scope === "current" && <p className="publish-filter-scope-sentence">{FILTER_SCOPE_SENTENCE}</p>}
 
       <p className="publish-selection-sentence">{EXPORT_SELECTION_SENTENCE}</p>
 

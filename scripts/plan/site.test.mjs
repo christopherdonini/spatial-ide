@@ -6,6 +6,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { loadPlan } from './plan.mjs';
 import { renderSite, checkSiteDrift, shippedRecently, readHealth, readBuildHealth, readVerifyQuotesBaselineCount, REPO_ROOT } from './site.mjs';
@@ -620,4 +621,34 @@ test('bug 5: release evidence is labelled like tag evidence', () => {
   plan.nodes.find((n) => n.id === 'landed-by-pr').evidence = { release: 'v0.1.0' };
   const { html } = renderSite(plan, null, { repoSlug: REPO });
   assert.ok(html.includes('evidence dated 2026-09-12'));
+});
+
+// --- governance piece F: the site folder is the repository's, not the plan's (the form's H3 and section 4; test T16) ---
+
+// The three command-line entry points are run from a copy of scripts/plan/ in a temporary repository root, with
+// the plan in a folder of its own: each must name <root>/site, never <plan folder>/site.
+// RECORDED MUTATION at e91bcf30807a (phase 1's commit, on the branch wip/governance-f-scripts; this branch carries the test from it by patch and does not contain the commit), applied alone and reverted: the default out-dir taken from the plan's folder, in site.mjs, health.mjs and verify.mjs, each alone -> fails by name: `site: the default output folder is the repository's site/ whatever the plan path`.
+test("site: the default output folder is the repository's site/ whatever the plan path", (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'site-default-'));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const planDir = path.join(root, 'elsewhere');
+  fs.mkdirSync(path.join(root, 'scripts', 'plan'), { recursive: true });
+  fs.mkdirSync(planDir);
+  for (const f of fs.readdirSync(here)) if (f.endsWith('.mjs') && !f.endsWith('.test.mjs')) fs.copyFileSync(path.join(here, f), path.join(root, 'scripts', 'plan', f));
+  fs.copyFileSync(path.join(here, 'fixtures', 'valid-plan.yaml'), path.join(planDir, 'PLAN.yaml'));
+  const run = (script, ...args) => {
+    const r = spawnSync(process.execPath, [path.join(root, 'scripts', 'plan', script), '--plan', path.join(planDir, 'PLAN.yaml'), ...args], { encoding: 'utf8' });
+    return r.stdout + r.stderr;
+  };
+  const want = path.join(root, 'site');
+  const wrong = path.join(planDir, 'site');
+  const outputs = {
+    'site.mjs --check': run('site.mjs', '--check'),
+    'health.mjs': run('health.mjs'),
+    'verify.mjs': run('verify.mjs', '--offline'),
+  };
+  for (const [name, out] of Object.entries(outputs)) {
+    assert.ok(out.includes(want), `${name} names ${want}: ${out}`);
+    assert.ok(!out.includes(wrong), `${name} does not name ${wrong}: ${out}`);
+  }
 });

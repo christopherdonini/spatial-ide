@@ -107,7 +107,7 @@ function success(path: string): import("./publish/types").ExecuteOutcome {
 function promptFixture(): import("./publish/types").PublishPromptData {
   return {
     operation: "publish", class: 3, reversibility: "irreversible", source_name: "parcels.parquet", source_content_hash: "sha256:abc", style_hash: "sha256:def",
-    destination_display: "C:/out/bundle", grantor: "operator", grant_remaining_s: 300, row_scope: "the whole file", filter_scope: null, outcome_summary: "a folder",
+    destination_display: "C:/out/bundle", grantor: "operator", grant_remaining_s: 300, row_scope: "the whole file", filter_scope: null, outcome_summary: "a folder", published_columns: "Columns published: id and the geometry only.",
   };
 }
 
@@ -194,6 +194,7 @@ vi.mock("./canvas/WorkingCanvas", () => {
         pushTileBatch: () => ({ rowsAdmitted: 0, duplicatesDropped: 0, evictedTileKeys: [], overBudget: false, fitAnchor: null, batchExtent: null }),
         clearTile: () => {},
         clearAllTiles: () => {},
+        residentIdsStreamedUnder: () => new Set<bigint>(),
         isTileResidentInCandidateSet: () => false,
         isTileCompleteInCandidateSet: () => false,
         markTilePartial: () => {},
@@ -306,7 +307,7 @@ describe("App: tools, the click, the selection and the inspection (milestone 2, 
   const pressed = (element: Element | null) => element?.getAttribute("aria-pressed");
 
   const clickFeature = (id: bigint, bounds = box(0, 0, 10, 10)) =>
-    act(() => props().onClickPick!({ kind: "feature", pick: pick(id), bounds }));
+    act(() => props().onClickPick!({ kind: "feature", pick: pick(id), bounds, row: null, filter: null }));
   const clickNothing = () => act(() => props().onClickPick!({ kind: "nothing" }));
   const selected = () => [...props().highlight!.selected].sort();
   const selectedCount = () => text(".feature-selected");

@@ -1,0 +1,27 @@
+{
+  "skp": "skp/0.13",
+  "dataset": "ds_00112233445566778899aabbccddeeff",
+  "intent": {
+    "action": "style.set",
+    "params": {
+      "property": "fillColor",
+      "value": {
+        "match": {
+          "column": "zone",
+          "cases": [
+            {
+              "when": "civic",
+              "then": "#ff0000"
+            },
+            {
+              "when": "park",
+              "then": "#00aa00"
+            }
+          ],
+          "on_null": "#cccccc",
+          "on_unmatched": "#999999"
+        }
+      }
+    }
+  }
+}

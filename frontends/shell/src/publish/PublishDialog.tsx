@@ -166,9 +166,10 @@ function usePublishPhase(
 }
 
 /**
- * The approval surface (`NEXT-CUT.md` P2). Every `PublishPromptData` field the host sent is
- * rendered verbatim, in the order this component declares below -- see this piece's own report for
- * the full enumeration.
+ * The approval surface: P2 of the publish cut's brief, which that cut's final docs commit
+ * deleted (ADR-024's Related list); ADR-024's Decision section records this surface. Every
+ * `PublishPromptData` field (`types.ts`) is rendered verbatim, in the order the JSX below
+ * declares it, and `filter_scope` only when the host sends one.
  *
  * **Never pre-filled** (the phrase input starts at `""`, `nextPublishDialogState`'s own initial
  * state below -- there is no `prompt`-sourced value it even COULD be pre-filled from: no
@@ -260,6 +261,8 @@ export default function PublishDialog({
         </dd>
         <dt>Row scope</dt>
         <dd className="publish-dialog-row-scope">{prompt.row_scope}</dd>
+        {/* The host-composed columns line, verbatim (no label word of its own). */}
+        <dd className="publish-dialog-columns">{prompt.published_columns}</dd>
       </dl>
       {prompt.filter_scope && (
         <div className="publish-dialog-filter-scope" role="alert">

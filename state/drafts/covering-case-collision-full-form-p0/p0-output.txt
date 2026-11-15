@@ -1,0 +1,246 @@
+   Compiling spatial-engine v0.0.0 (C:\dev\wt\ccc\engine)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 43.60s
+     Running tests\p0_full_ccc.rs (D:/wt-targets/ccc\debug\deps\p0_full_ccc-cd314cc8524d0acf.exe)
+
+running 1 test
+test ccc_p0_full ... s1 writer: wrote the file
+=== s1 (declared primary="geometry") ===
+s1 parquet_schema[0]: name="arrow_schema" type=None repetition_type=None num_children=Some(4)
+s1 parquet_schema[1]: name="id" type=Some("INT64") repetition_type=Some("REQUIRED") num_children=None
+s1 parquet_schema[2]: name="geometry" type=Some("BYTE_ARRAY") repetition_type=Some("REQUIRED") num_children=None
+s1 parquet_schema[3]: name="BBOX" type=None repetition_type=Some("REQUIRED") num_children=Some(4)
+s1 parquet_schema[4]: name="xmin" type=Some("DOUBLE") repetition_type=Some("REQUIRED") num_children=None
+s1 parquet_schema[5]: name="ymin" type=Some("DOUBLE") repetition_type=Some("REQUIRED") num_children=None
+s1 parquet_schema[6]: name="xmax" type=Some("DOUBLE") repetition_type=Some("REQUIRED") num_children=None
+s1 parquet_schema[7]: name="ymax" type=Some("DOUBLE") repetition_type=Some("REQUIRED") num_children=None
+s1 parquet_schema[8]: name="bbox" type=None repetition_type=Some("REQUIRED") num_children=Some(4)
+s1 parquet_schema[9]: name="xmin" type=Some("DOUBLE") repetition_type=Some("REQUIRED") num_children=None
+s1 parquet_schema[10]: name="ymin" type=Some("DOUBLE") repetition_type=Some("REQUIRED") num_children=None
+s1 parquet_schema[11]: name="xmax" type=Some("DOUBLE") repetition_type=Some("REQUIRED") num_children=None
+s1 parquet_schema[12]: name="ymax" type=Some("DOUBLE") repetition_type=Some("REQUIRED") num_children=None
+s1 DESCRIBE names: ["id", "geometry", "BBOX", "bbox_1"]
+s1 DESCRIBE types: ["UBIGINT", "BLOB", "STRUCT(xmin DOUBLE, ymin DOUBLE, xmax DOUBLE, ymax DOUBLE)", "STRUCT(xmin DOUBLE, ymin DOUBLE, xmax DOUBLE, ymax DOUBLE)"]
+s1 Arrow export names: ["id:UInt64", "geometry:Binary", "BBOX:struct[xmin,ymin,xmax,ymax]", "bbox_1:struct[xmin,ymin,xmax,ymax]"]
+s1 open: Ok
+s1 resident names: ["id", "geometry", "BBOX", "bbox_1"]
+s1 covering().is_some(): true
+s1 stream rows: 0
+s2 writer: wrote the file
+=== s2 (declared primary="geometry") ===
+s2 parquet_schema[0]: name="arrow_schema" type=None repetition_type=None num_children=Some(3)
+s2 parquet_schema[1]: name="id" type=Some("INT64") repetition_type=Some("REQUIRED") num_children=None
+s2 parquet_schema[2]: name="geometry" type=Some("BYTE_ARRAY") repetition_type=Some("REQUIRED") num_children=None
+s2 parquet_schema[3]: name="bbox" type=None repetition_type=Some("REQUIRED") num_children=Some(5)
+s2 parquet_schema[4]: name="xmin" type=Some("DOUBLE") repetition_type=Some("REQUIRED") num_children=None
+s2 parquet_schema[5]: name="XMIN" type=Some("DOUBLE") repetition_type=Some("REQUIRED") num_children=None
+s2 parquet_schema[6]: name="ymin" type=Some("DOUBLE") repetition_type=Some("REQUIRED") num_children=None
+s2 parquet_schema[7]: name="xmax" type=Some("DOUBLE") repetition_type=Some("REQUIRED") num_children=None
+s2 parquet_schema[8]: name="ymax" type=Some("DOUBLE") repetition_type=Some("REQUIRED") num_children=None
+s2 DESCRIBE names: ["id", "geometry", "bbox"]
+s2 DESCRIBE types: ["UBIGINT", "BLOB", "STRUCT(xmin DOUBLE, XMIN_1 DOUBLE, ymin DOUBLE, xmax DOUBLE, ymax DOUBLE)"]
+s2 Arrow export names: ["id:UInt64", "geometry:Binary", "bbox:struct[xmin,XMIN_1,ymin,xmax,ymax]"]
+s2 open: Ok
+s2 resident names: ["id", "geometry", "bbox"]
+s2 covering().is_some(): true
+s2 stream rows: 10
+s3 writer: wrote the file
+=== s3 (declared primary="geometry") ===
+s3 parquet_schema[0]: name="arrow_schema" type=None repetition_type=None num_children=Some(3)
+s3 parquet_schema[1]: name="id" type=Some("INT64") repetition_type=Some("REQUIRED") num_children=None
+s3 parquet_schema[2]: name="geometry" type=Some("BYTE_ARRAY") repetition_type=Some("REQUIRED") num_children=None
+s3 parquet_schema[3]: name="bbox" type=None repetition_type=Some("REQUIRED") num_children=Some(6)
+s3 parquet_schema[4]: name="xmin" type=Some("DOUBLE") repetition_type=Some("REQUIRED") num_children=None
+s3 parquet_schema[5]: name="XMIN" type=Some("DOUBLE") repetition_type=Some("REQUIRED") num_children=None
+s3 parquet_schema[6]: name="XMIN_1" type=Some("DOUBLE") repetition_type=Some("REQUIRED") num_children=None
+s3 parquet_schema[7]: name="ymin" type=Some("DOUBLE") repetition_type=Some("REQUIRED") num_children=None
+s3 parquet_schema[8]: name="xmax" type=Some("DOUBLE") repetition_type=Some("REQUIRED") num_children=None
+s3 parquet_schema[9]: name="ymax" type=Some("DOUBLE") repetition_type=Some("REQUIRED") num_children=None
+s3 DESCRIBE names: ["id", "geometry", "bbox"]
+s3 DESCRIBE types: ["UBIGINT", "BLOB", "STRUCT(xmin DOUBLE, XMIN_1 DOUBLE, XMIN_1_1 DOUBLE, ymin DOUBLE, xmax DOUBLE, ymax DOUBLE)"]
+s3 Arrow export names: ["id:UInt64", "geometry:Binary", "bbox:struct[xmin,XMIN_1,XMIN_1_1,ymin,xmax,ymax]"]
+s3 open: Ok
+s3 resident names: ["id", "geometry", "bbox"]
+s3 covering().is_some(): true
+s3 stream rows: 0
+s4 writer: wrote the file
+=== s4 (declared primary="geometry") ===
+s4 parquet_schema[0]: name="arrow_schema" type=None repetition_type=None num_children=Some(4)
+s4 parquet_schema[1]: name="id" type=Some("INT64") repetition_type=Some("REQUIRED") num_children=None
+s4 parquet_schema[2]: name="geometry" type=Some("BYTE_ARRAY") repetition_type=Some("REQUIRED") num_children=None
+s4 parquet_schema[3]: name="bbox" type=None repetition_type=Some("REQUIRED") num_children=Some(4)
+s4 parquet_schema[4]: name="xmin" type=Some("DOUBLE") repetition_type=Some("REQUIRED") num_children=None
+s4 parquet_schema[5]: name="ymin" type=Some("DOUBLE") repetition_type=Some("REQUIRED") num_children=None
+s4 parquet_schema[6]: name="xmax" type=Some("DOUBLE") repetition_type=Some("REQUIRED") num_children=None
+s4 parquet_schema[7]: name="ymax" type=Some("DOUBLE") repetition_type=Some("REQUIRED") num_children=None
+s4 parquet_schema[8]: name="bbox" type=None repetition_type=Some("REQUIRED") num_children=Some(4)
+s4 parquet_schema[9]: name="xmin" type=Some("DOUBLE") repetition_type=Some("REQUIRED") num_children=None
+s4 parquet_schema[10]: name="ymin" type=Some("DOUBLE") repetition_type=Some("REQUIRED") num_children=None
+s4 parquet_schema[11]: name="xmax" type=Some("DOUBLE") repetition_type=Some("REQUIRED") num_children=None
+s4 parquet_schema[12]: name="ymax" type=Some("DOUBLE") repetition_type=Some("REQUIRED") num_children=None
+s4 DESCRIBE names: ["id", "geometry", "bbox", "bbox_1"]
+s4 DESCRIBE types: ["UBIGINT", "BLOB", "STRUCT(xmin DOUBLE, ymin DOUBLE, xmax DOUBLE, ymax DOUBLE)", "STRUCT(xmin DOUBLE, ymin DOUBLE, xmax DOUBLE, ymax DOUBLE)"]
+s4 Arrow export names: ["id:UInt64", "geometry:Binary", "bbox:struct[xmin,ymin,xmax,ymax]", "bbox_1:struct[xmin,ymin,xmax,ymax]"]
+s4 open: Ok
+s4 resident names: ["id", "geometry", "bbox", "bbox_1"]
+s4 covering().is_some(): true
+s4 stream rows: 10
+g1 writer: wrote the file
+=== g1 (declared primary="geometry") ===
+g1 parquet_schema[0]: name="arrow_schema" type=None repetition_type=None num_children=Some(5)
+g1 parquet_schema[1]: name="id" type=Some("INT64") repetition_type=Some("REQUIRED") num_children=None
+g1 parquet_schema[2]: name="geometry" type=Some("BYTE_ARRAY") repetition_type=Some("REQUIRED") num_children=None
+g1 parquet_schema[3]: name="bbox" type=None repetition_type=Some("REQUIRED") num_children=Some(4)
+g1 parquet_schema[4]: name="xmin" type=Some("DOUBLE") repetition_type=Some("REQUIRED") num_children=None
+g1 parquet_schema[5]: name="ymin" type=Some("DOUBLE") repetition_type=Some("REQUIRED") num_children=None
+g1 parquet_schema[6]: name="xmax" type=Some("DOUBLE") repetition_type=Some("REQUIRED") num_children=None
+g1 parquet_schema[7]: name="ymax" type=Some("DOUBLE") repetition_type=Some("REQUIRED") num_children=None
+g1 parquet_schema[8]: name="BBOX" type=None repetition_type=Some("REQUIRED") num_children=Some(4)
+g1 parquet_schema[9]: name="xmin" type=Some("DOUBLE") repetition_type=Some("REQUIRED") num_children=None
+g1 parquet_schema[10]: name="ymin" type=Some("DOUBLE") repetition_type=Some("REQUIRED") num_children=None
+g1 parquet_schema[11]: name="xmax" type=Some("DOUBLE") repetition_type=Some("REQUIRED") num_children=None
+g1 parquet_schema[12]: name="ymax" type=Some("DOUBLE") repetition_type=Some("REQUIRED") num_children=None
+g1 parquet_schema[13]: name="BBOX_1" type=None repetition_type=Some("REQUIRED") num_children=Some(4)
+g1 parquet_schema[14]: name="xmin" type=Some("DOUBLE") repetition_type=Some("REQUIRED") num_children=None
+g1 parquet_schema[15]: name="ymin" type=Some("DOUBLE") repetition_type=Some("REQUIRED") num_children=None
+g1 parquet_schema[16]: name="xmax" type=Some("DOUBLE") repetition_type=Some("REQUIRED") num_children=None
+g1 parquet_schema[17]: name="ymax" type=Some("DOUBLE") repetition_type=Some("REQUIRED") num_children=None
+g1 DESCRIBE names: ["id", "geometry", "bbox", "BBOX_1", "BBOX_1_1"]
+g1 DESCRIBE types: ["UBIGINT", "BLOB", "STRUCT(xmin DOUBLE, ymin DOUBLE, xmax DOUBLE, ymax DOUBLE)", "STRUCT(xmin DOUBLE, ymin DOUBLE, xmax DOUBLE, ymax DOUBLE)", "STRUCT(xmin DOUBLE, ymin DOUBLE, xmax DOUBLE, ymax DOUBLE)"]
+g1 Arrow export names: ["id:UInt64", "geometry:Binary", "bbox:struct[xmin,ymin,xmax,ymax]", "BBOX_1:struct[xmin,ymin,xmax,ymax]", "BBOX_1_1:struct[xmin,ymin,xmax,ymax]"]
+g1 open: Ok
+g1 resident names: ["id", "geometry", "bbox", "BBOX_1", "BBOX_1_1"]
+g1 covering().is_some(): true
+g1 stream rows: 0
+g4 writer: wrote the file
+=== g4 (declared primary="geometry") ===
+g4 parquet_schema[0]: name="arrow_schema" type=None repetition_type=None num_children=Some(4)
+g4 parquet_schema[1]: name="id" type=Some("INT64") repetition_type=Some("REQUIRED") num_children=None
+g4 parquet_schema[2]: name="geometry" type=Some("BYTE_ARRAY") repetition_type=Some("REQUIRED") num_children=None
+g4 parquet_schema[3]: name="bbox" type=None repetition_type=Some("REQUIRED") num_children=Some(4)
+g4 parquet_schema[4]: name="xmin" type=Some("DOUBLE") repetition_type=Some("REQUIRED") num_children=None
+g4 parquet_schema[5]: name="ymin" type=Some("DOUBLE") repetition_type=Some("REQUIRED") num_children=None
+g4 parquet_schema[6]: name="xmax" type=Some("DOUBLE") repetition_type=Some("REQUIRED") num_children=None
+g4 parquet_schema[7]: name="ymax" type=Some("DOUBLE") repetition_type=Some("REQUIRED") num_children=None
+g4 parquet_schema[8]: name="BBOX" type=None repetition_type=Some("REQUIRED") num_children=Some(4)
+g4 parquet_schema[9]: name="xmin" type=Some("DOUBLE") repetition_type=Some("REQUIRED") num_children=None
+g4 parquet_schema[10]: name="ymin" type=Some("DOUBLE") repetition_type=Some("REQUIRED") num_children=None
+g4 parquet_schema[11]: name="xmax" type=Some("DOUBLE") repetition_type=Some("REQUIRED") num_children=None
+g4 parquet_schema[12]: name="ymax" type=Some("DOUBLE") repetition_type=Some("REQUIRED") num_children=None
+g4 DESCRIBE names: ["id", "geometry", "bbox", "BBOX_1"]
+g4 DESCRIBE types: ["UBIGINT", "BLOB", "STRUCT(xmin DOUBLE, ymin DOUBLE, xmax DOUBLE, ymax DOUBLE)", "STRUCT(xmin DOUBLE, ymin DOUBLE, xmax DOUBLE, ymax DOUBLE)"]
+g4 Arrow export names: ["id:UInt64", "geometry:Binary", "bbox:struct[xmin,ymin,xmax,ymax]", "BBOX_1:struct[xmin,ymin,xmax,ymax]"]
+g4 open: Ok
+g4 resident names: ["id", "geometry", "bbox", "BBOX_1"]
+g4 covering().is_some(): true
+g4 stream rows: 0
+g2 writer: wrote the file
+=== g2 (declared primary="GEOM_1") ===
+g2 parquet_schema[0]: name="arrow_schema" type=None repetition_type=None num_children=Some(4)
+g2 parquet_schema[1]: name="id" type=Some("INT64") repetition_type=Some("REQUIRED") num_children=None
+g2 parquet_schema[2]: name="geom" type=Some("BYTE_ARRAY") repetition_type=Some("REQUIRED") num_children=None
+g2 parquet_schema[3]: name="GEOM" type=Some("BYTE_ARRAY") repetition_type=Some("REQUIRED") num_children=None
+g2 parquet_schema[4]: name="GEOM_1" type=Some("BYTE_ARRAY") repetition_type=Some("REQUIRED") num_children=None
+g2 DESCRIBE names: ["id", "geom", "GEOM_1", "GEOM_1_1"]
+g2 DESCRIBE types: ["UBIGINT", "BLOB", "BLOB", "BLOB"]
+g2 Arrow export names: ["id:UInt64", "geom:Binary", "GEOM_1:Binary", "GEOM_1_1:Binary"]
+g2 open: Ok
+g2 resident names: ["id", "geom", "GEOM_1", "GEOM_1_1"]
+g2 covering().is_some(): false
+g2 stream rows: 10
+g2 first-batch geometry x range (values >= 2e6): min=2610000 max=2610010 (A=2600000..2600010, B=+10000, C=+20000)
+g3 writer: wrote the file
+=== g3 (declared primary="GEOMETRY") ===
+g3 parquet_schema[0]: name="arrow_schema" type=None repetition_type=None num_children=Some(3)
+g3 parquet_schema[1]: name="id" type=Some("INT64") repetition_type=Some("REQUIRED") num_children=None
+g3 parquet_schema[2]: name="geometry" type=Some("BYTE_ARRAY") repetition_type=Some("REQUIRED") num_children=None
+g3 parquet_schema[3]: name="GEOMETRY" type=Some("BYTE_ARRAY") repetition_type=Some("REQUIRED") num_children=None
+g3 DESCRIBE names: ["id", "geometry", "GEOMETRY_1"]
+g3 DESCRIBE types: ["UBIGINT", "BLOB", "BLOB"]
+g3 Arrow export names: ["id:UInt64", "geometry:Binary", "GEOMETRY_1:Binary"]
+g3 open: Err(source: `geo.primary_column` names `GEOMETRY`, which the file does not contain)
+g5 writer: wrote the file
+=== g5 (declared primary="GEOMETRY_1") ===
+g5 parquet_schema[0]: name="arrow_schema" type=None repetition_type=None num_children=Some(3)
+g5 parquet_schema[1]: name="id" type=Some("INT64") repetition_type=Some("REQUIRED") num_children=None
+g5 parquet_schema[2]: name="geometry" type=Some("BYTE_ARRAY") repetition_type=Some("REQUIRED") num_children=None
+g5 parquet_schema[3]: name="GEOMETRY" type=Some("BYTE_ARRAY") repetition_type=Some("REQUIRED") num_children=None
+g5 DESCRIBE names: ["id", "geometry", "GEOMETRY_1"]
+g5 DESCRIBE types: ["UBIGINT", "BLOB", "BLOB"]
+g5 Arrow export names: ["id:UInt64", "geometry:Binary", "GEOMETRY_1:Binary"]
+g5 open: Ok
+g5 resident names: ["id", "geometry", "GEOMETRY_1"]
+g5 covering().is_some(): false
+g5 stream rows: 10
+g5 first-batch geometry x range (values >= 2e6): min=2610000 max=2610010 (A=2600000..2600010, B=+10000, C=+20000)
+g6 writer: wrote the file
+=== g6 (declared primary="geometry") ===
+g6 parquet_schema[0]: name="arrow_schema" type=None repetition_type=None num_children=Some(3)
+g6 parquet_schema[1]: name="id" type=Some("INT64") repetition_type=Some("REQUIRED") num_children=None
+g6 parquet_schema[2]: name="geometry" type=Some("BYTE_ARRAY") repetition_type=Some("REQUIRED") num_children=None
+g6 parquet_schema[3]: name="geometry" type=Some("BYTE_ARRAY") repetition_type=Some("REQUIRED") num_children=None
+g6 DESCRIBE names: ["id", "geometry", "geometry_1"]
+g6 DESCRIBE types: ["UBIGINT", "BLOB", "BLOB"]
+g6 Arrow export names: ["id:UInt64", "geometry:Binary", "geometry_1:Binary"]
+g6 open: Ok
+g6 resident names: ["id", "geometry", "geometry_1"]
+g6 covering().is_some(): false
+g6 stream rows: 10
+g6 first-batch geometry x range (values >= 2e6): min=2600000 max=2600010 (A=2600000..2600010, B=+10000, C=+20000)
+g7 writer: wrote the file
+=== g7 (declared primary="Geometry") ===
+g7 parquet_schema[0]: name="arrow_schema" type=None repetition_type=None num_children=Some(3)
+g7 parquet_schema[1]: name="id" type=Some("INT64") repetition_type=Some("REQUIRED") num_children=None
+g7 parquet_schema[2]: name="geometry" type=Some("BYTE_ARRAY") repetition_type=Some("REQUIRED") num_children=None
+g7 parquet_schema[3]: name="GEOMETRY" type=Some("BYTE_ARRAY") repetition_type=Some("REQUIRED") num_children=None
+g7 DESCRIBE names: ["id", "geometry", "GEOMETRY_1"]
+g7 DESCRIBE types: ["UBIGINT", "BLOB", "BLOB"]
+g7 Arrow export names: ["id:UInt64", "geometry:Binary", "GEOMETRY_1:Binary"]
+g7 open: Err(source: `geo.primary_column` names `Geometry`, which the file does not contain)
+g8 writer: wrote the file
+=== g8 (declared primary="geo\0m") ===
+g8 parquet_schema[0]: name="arrow_schema" type=None repetition_type=None num_children=Some(3)
+g8 parquet_schema[1]: name="id" type=Some("INT64") repetition_type=Some("REQUIRED") num_children=None
+g8 parquet_schema[2]: name="geo\0m" type=Some("BYTE_ARRAY") repetition_type=Some("REQUIRED") num_children=None
+g8 parquet_schema[3]: name="a" type=Some("BYTE_ARRAY") repetition_type=Some("OPTIONAL") num_children=None
+g8 DESCRIBE names: ["id", "geo\0m", "a"]
+g8 DESCRIBE types: ["UBIGINT", "BLOB", "VARCHAR"]
+g8 Arrow export names: ["id:UInt64", "geo:Binary", "a:Utf8"]
+g8 open: Err(geo metadata: `geo.primary_column` names the geometry column, but the resident name `geo\u0000m` is not addressable: DuckDB's Arrow export reports this position as `geo`, a different name than the one DESCRIBE binds it by, so no SELECT list built from either name can be trusted to reach it)
+k1 writer: wrote the file at .../year=2024/f.parquet
+=== k1 (declared primary="geometry") ===
+k1 parquet_schema[0]: name="arrow_schema" type=None repetition_type=None num_children=Some(3)
+k1 parquet_schema[1]: name="id" type=Some("INT64") repetition_type=Some("REQUIRED") num_children=None
+k1 parquet_schema[2]: name="geometry" type=Some("BYTE_ARRAY") repetition_type=Some("REQUIRED") num_children=None
+k1 parquet_schema[3]: name="bbox" type=None repetition_type=Some("REQUIRED") num_children=Some(4)
+k1 parquet_schema[4]: name="xmin" type=Some("DOUBLE") repetition_type=Some("REQUIRED") num_children=None
+k1 parquet_schema[5]: name="ymin" type=Some("DOUBLE") repetition_type=Some("REQUIRED") num_children=None
+k1 parquet_schema[6]: name="xmax" type=Some("DOUBLE") repetition_type=Some("REQUIRED") num_children=None
+k1 parquet_schema[7]: name="ymax" type=Some("DOUBLE") repetition_type=Some("REQUIRED") num_children=None
+k1 DESCRIBE names: ["id", "geometry", "bbox", "year"]
+k1 DESCRIBE types: ["UBIGINT", "BLOB", "STRUCT(xmin DOUBLE, ymin DOUBLE, xmax DOUBLE, ymax DOUBLE)", "BIGINT"]
+k1 Arrow export names: ["id:UInt64", "geometry:Binary", "bbox:struct[xmin,ymin,xmax,ymax]", "year:Int64"]
+k1 open: Ok
+k1 resident names: ["id", "geometry", "bbox", "year"]
+k1 covering().is_some(): true
+k1 stream rows: 10
+k0 writer: wrote the file
+=== k0 (declared primary="geometry") ===
+k0 parquet_schema[0]: name="arrow_schema" type=None repetition_type=None num_children=Some(3)
+k0 parquet_schema[1]: name="id" type=Some("INT64") repetition_type=Some("REQUIRED") num_children=None
+k0 parquet_schema[2]: name="geometry" type=Some("BYTE_ARRAY") repetition_type=Some("REQUIRED") num_children=None
+k0 parquet_schema[3]: name="bbox" type=None repetition_type=Some("REQUIRED") num_children=Some(4)
+k0 parquet_schema[4]: name="xmin" type=Some("DOUBLE") repetition_type=Some("REQUIRED") num_children=None
+k0 parquet_schema[5]: name="ymin" type=Some("DOUBLE") repetition_type=Some("REQUIRED") num_children=None
+k0 parquet_schema[6]: name="xmax" type=Some("DOUBLE") repetition_type=Some("REQUIRED") num_children=None
+k0 parquet_schema[7]: name="ymax" type=Some("DOUBLE") repetition_type=Some("REQUIRED") num_children=None
+k0 DESCRIBE names: ["id", "geometry", "bbox"]
+k0 DESCRIBE types: ["UBIGINT", "BLOB", "STRUCT(xmin DOUBLE, ymin DOUBLE, xmax DOUBLE, ymax DOUBLE)"]
+k0 Arrow export names: ["id:UInt64", "geometry:Binary", "bbox:struct[xmin,ymin,xmax,ymax]"]
+k0 open: Ok
+k0 resident names: ["id", "geometry", "bbox"]
+k0 covering().is_some(): true
+k0 stream rows: 10
+ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.72s
+

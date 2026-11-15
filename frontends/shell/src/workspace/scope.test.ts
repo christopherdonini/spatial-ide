@@ -17,7 +17,7 @@ const run = (state: WorkspaceState, ...actions: WorkspaceAction[]): WorkspaceSta
 const act = (t: ViewTransition, view: ViewId = "view-1"): WorkspaceAction => ({ type: "view.transition", view, transition: t });
 const filterOf = (predicate: string) => ({ predicate, dialect: FILTER_DIALECT_DUCKDB_EXPR_0 });
 const unit = { xmin: 0, ymin: 0, xmax: 1, ymax: 1 };
-const select = (id: bigint): WorkspaceAction => act({ action: "selection.apply", params: { mode: "add", id, bounds: unit } });
+const select = (id: bigint): WorkspaceAction => act({ action: "selection.apply", params: { mode: "add", id, bounds: unit, row: null, filter: null } });
 const USES: ScopeUses = { selection: true };
 const opened = run(initialWorkspaceState, { type: "resource.admitted", admitted: admittedOf("a") });
 const scopeOf = (state: WorkspaceState, uses: ScopeUses = USES): ResolvedScope => {
@@ -65,7 +65,7 @@ describe("UB6: checkScope names each of the five changes", () => {
       act({ action: "style.set", params: { property: "fillColor", value: "#abcdef" } }),
       act({ action: "tool.set", params: { tool: "select" } }),
       act({ action: "mode.set", params: { mode: "replace" } }),
-      act({ action: "inspect.set", params: { pick: { streamHandle: "s", batchSeq: 0, id: 1n, anchor: null }, bounds: unit } })
+      act({ action: "inspect.set", params: { pick: { streamHandle: "s", batchSeq: 0, id: 1n, anchor: null }, bounds: unit, row: null } })
     );
     expect(checkScope(staged, scopeOf(looked))).toEqual({ ok: true });
   });

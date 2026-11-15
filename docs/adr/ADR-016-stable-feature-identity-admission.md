@@ -238,3 +238,9 @@ tests stay green unmodified.
 **Acceptance (2026-09-23).** Amendment 1 is accepted on the human's word, with this dated note naming item 2's degradation display as owed: `DECISIONS-PENDING.md`, the RULED 2026-09-23 (late) block, entry 119 item (3). Its text above is appended verbatim from the Proposed text block of `docs/adr/PROPOSED-amendment-to-ADR-016-identity-tier-model.md` as it stood at 433413a, which this commit deletes: the blockquote markers are removed and the heading's date is filled; nothing else changes. Evidence: `frontends/shell/MANUAL-WALKTHROUGH.md` Part N rows N3 and N6-N8, operator-verified in its Part N run section.
 
 **Owed at acceptance.** Item 2's display of the descriptor's degradation is not met by the build (`engine/ADMISSION-PREREGISTRATION.md` Amendment 4 (ii)). It is delivered by the source-change watcher piece's `checks` fact on describe (`full` | `degraded{components}`), which is independent of its `coverage` fact; no separate wire field carries degradation alone (entry 119 item (3), as corrected by the human's watcher sight of 2026-09-24, `DECISIONS-PENDING.md`, the RULED 2026-09-24 block; PLAN node `engine-source-change-watcher`).
+
+## Note 2026-11-09
+
+*Appended on the human's typed words (`state/directives/2026-11-07-8g-open-1-b-adr-016-note-open-6-a-294-not-held-index-sites-narrowed-entry-13-x2-into-item-20.md`, line 8; received 2026-11-07T20:25Z, in a message headed 2026-11-09); the note below is theirs, byte for byte. Nothing above this heading is changed.*
+
+Note 2026-11-09 — §2's 'a 64-bit integer column named id' also counts an 8-, 16- or 32-bit integer column named id: its values widen to the 64-bit integer the stream carries without change, signed to signed and unsigned to unsigned, so the identity is the same number. Before narrow-integer-id-unstreamable such a file opened and no stream carried it; from that piece every width streams. Nothing else changes.

@@ -161,7 +161,7 @@ function main(argv) {
 
   if (args.dryRun) {
     let nodes = [];
-    try { nodes = loadPlan(path.join(root, 'PLAN.yaml')).nodes; } catch (e) { if (!(e instanceof PlanFileMissingError)) throw new Refusal(`PLAN.yaml could not be loaded (${String(e.message).split('\n')[0]})`); }
+    try { nodes = loadPlan(path.join(root, 'governance/PLAN.yaml')).nodes; } catch (e) { if (!(e instanceof PlanFileMissingError)) throw new Refusal(`governance/PLAN.yaml could not be loaded (${String(e.message).split('\n')[0]})`); }
     console.log(`rotate-decisions-pending: dry run — due: ${due.reason}. The archive would be ${ARCHIVE_DIR}/${archiveName}; P is ${P}.`);
     console.log(`kept (${kept.length}):`);
     for (const u of kept) console.log(`  ${u.number}  ${u.head.slice(0, 160)}  | Archived copy: line ${u.line}`);

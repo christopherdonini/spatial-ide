@@ -26,8 +26,8 @@
 //   4. background_tasks non-empty -> allow (paused for background work, not done).
 //   5. Derive the ready set live from PLAN.yaml (never trust the committed queue file).
 //   6. Ready set empty, or only human-blocked nodes remain -> allow; stderr names the
-//      waiting-on-human count; (item 16b) sends one Telegram message listing the waiting items,
-//      deduped on a hash of the waiting set.
+//      waiting-on-human count. No Telegram message is sent here (AUTONOMY.md §38 (vii)); the
+//      only message this hook sends is the halt alarm of step 1.
 //   7. Continuation accounting, shared with step 3: consecutive resets to 0 when progress is
 //      observed (HEAD changed since the last block; on the queue path, or the plan hash); session
 //      cap 6 consecutive (under Claude Code's own 8); daily cap 40 across sessions. At either cap
@@ -40,7 +40,6 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import crypto from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
 import { isCloudSession } from './cloud.mjs';
@@ -54,7 +53,7 @@ export const DAILY_CONTINUATION_CAP = 40; // "daily cap DAILY_CONTINUATION_CAP =
 export const NEAR_DAILY_CAP_RATIO = 0.75; // "past 75% of the daily cap: prefer small nodes; defer spikes"
 export const HALT_FETCH_TIMEOUT_MS = 5000; // "run git fetch --quiet origin main with a 5-second timeout"
 export const HALT_CACHE_TTL_MS = 60 * 1000; // reviewer finding 17: cache the origin/main probe so every stop does not fetch
-export const TELEGRAM_DEDUPE_WINDOW_MS = 10 * 60 * 1000; // "deduped on a hash of the waiting set" within 10 minutes
+export const TELEGRAM_DEDUPE_WINDOW_MS = 10 * 60 * 1000; // bounds the repeat of one halt line: the same text is not sent again within 10 minutes
 
 // The continuity step's declared values (the stale-continuity form's section 7). Module-local.
 const CONTINUITY_GIT_TIMEOUT_MS = 2000; // per git call; the stale path makes four (the log, two shows, the rev-parse): 4 x 2 s plus HALT's 5 s fetch is 13 s, under the Stop entry's 20 s
@@ -71,7 +70,7 @@ function resolveProjectRoot(input) {
 }
 
 function resolvePlanPath(projectRoot) {
-  return process.env.CUSTODIAN_PLAN_PATH || path.join(projectRoot, 'PLAN.yaml');
+  return process.env.CUSTODIAN_PLAN_PATH || path.join(projectRoot, 'governance/PLAN.yaml');
 }
 
 function tryGit(args, cwd, opts = {}) {
@@ -165,29 +164,10 @@ export function leaseHeldBy(projectRoot, sessionId) {
   return { held: true };
 }
 
-function waitingSummary(waitingOnHuman) {
-  const total = waitingOnHuman.reduce((sum, n) => sum + (n.needs_human.minutes ?? 0), 0);
-  const lines = waitingOnHuman.map(
-    (n) => `${n.id} (${n.needs_human.kind}, ${n.needs_human.minutes} min)`,
-  );
-  return { total, lines };
-}
-
-function waitingSetKey(waitingOnHuman) {
-  const canonical = waitingOnHuman
-    .map((n) => `${n.id}:${n.needs_human.kind}:${n.needs_human.minutes}`)
-    .sort()
-    .join('|');
-  return crypto.createHash('sha256').update(canonical).digest('hex');
-}
-
-async function notifyWaiting(projectRoot, waitingOnHuman, headline) {
-  if (waitingOnHuman.length === 0) return;
-  const { total, lines } = waitingSummary(waitingOnHuman);
-  const text = `${headline}\nWaiting on you (${waitingOnHuman.length} item(s), ${total} min total):\n${lines.join('\n')}`;
-  const key = `waiting:${waitingSetKey(waitingOnHuman)}`;
+// The halt alarm: the HALT headline alone, deduped on its own text (one key in .claude/state/telegram-sent.json).
+async function notifyHalt(projectRoot, text) {
   try {
-    await sendTelegramDeduped(key, text, { projectRoot, windowMs: TELEGRAM_DEDUPE_WINDOW_MS });
+    await sendTelegramDeduped(`halt:${text}`, text, { projectRoot, windowMs: TELEGRAM_DEDUPE_WINDOW_MS });
   } catch (e) {
     console.error(`stop-queue: telegram notify failed (${e.message}); the hook's decision is unaffected.`);
   }
@@ -290,7 +270,7 @@ function accountContinuation(projectRoot, input, now, { planHash, gitOpts = {} }
  * The decision core, injectable for tests. `deps` lets tests substitute git/telegram/clock
  * without touching the real environment.
  */
-export async function decide(input, { projectRoot, now = new Date(), notify = notifyWaiting } = {}) {
+export async function decide(input, { projectRoot, now = new Date(), notify = notifyHalt } = {}) {
   const stderrLines = [];
   const allow = (reason) => {
     if (reason) stderrLines.push(reason);
@@ -305,14 +285,8 @@ export async function decide(input, { projectRoot, now = new Date(), notify = no
   const halt = checkHalt(projectRoot, { now: now.getTime() });
   if (halt.halted) {
     stderrLines.push(`HALT: ${halt.message || '(state/CUSTODIAN-HALT present, no message)'}`);
-    // Best-effort: still tell the human what is waiting, if the plan loads.
-    try {
-      const plan = loadPlan(resolvePlanPath(projectRoot));
-      const { waitingOnHuman } = deriveStates(plan);
-      await notify(projectRoot, waitingOnHuman, `HALT: ${halt.message || 'stop-hook halted'}`);
-    } catch {
-      // plan unavailable — halt still allows the stop.
-    }
+    // The halt alarm: the headline alone, at every stop that finds the switch; no plan is read.
+    await notify(projectRoot, `HALT: ${halt.message || 'stop-hook halted'}`);
     // The HALT line is already on stderrLines (pushed above) -- allow() with no argument avoids
     // pushing (and printing) the same joined text a second time (reviewer finding 6).
     return allow();
@@ -361,7 +335,6 @@ export async function decide(input, { projectRoot, now = new Date(), notify = no
   // 6. Ready set empty, or only human-blocked nodes remain -> allow.
   if (ready.length === 0) {
     stderrLines.push(`allow: no unblocked node is ready; ${waitingOnHuman.length} waiting on human.`);
-    await notify(projectRoot, waitingOnHuman, 'Only human-blocked nodes remain.');
     // Already pushed above -- see the HALT branch's own note (reviewer finding 6).
     return allow();
   }
@@ -381,7 +354,7 @@ export async function decide(input, { projectRoot, now = new Date(), notify = no
   const next = orderedReady[0];
   let reason =
     `next: ${next.id} — ${next.title} (lane ${next.lane}, budget ${next.budget_minutes} min). ` +
-    `Regenerate CUSTODIAN-QUEUE.md if PLAN.yaml changed; ledger before ending.`;
+    `Regenerate governance/CUSTODIAN-QUEUE.md if governance/PLAN.yaml changed; ledger before ending.`;
   if (nearCap) {
     reason += ' near the daily cap: prefer small nodes; defer spikes';
   }

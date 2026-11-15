@@ -1,0 +1,7 @@
+{
+  "code": "skp.project_file_unwritable",
+  "message": "the project could not be written: the rename over project.spatial failed 5 times; the last error was: Access is denied.",
+  "fields": {
+    "detail": "the rename over project.spatial failed 5 times; the last error was: Access is denied."
+  }
+}

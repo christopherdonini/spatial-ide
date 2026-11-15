@@ -10,9 +10,9 @@ it is not a promise about v1.
 architect-first workflow rule. Three premises in the cut brief were corrected in that review and the
 corrections are recorded here rather than smoothed over (§2).
 
-## 1. The six commands
+## 1. The seven commands
 
-This section describes the original five; the sixth, `record_step` (`skp/0.12`), is §10's.
+This section describes the original five; the sixth, `record_step` (`skp/0.12`), is §10's, and the seventh, `save_project` (`skp/0.13`), is §11's.
 
 Every request carries the version literal stated in §4 item 3 (`skp/0` at v0). The host compares it with `==` and refuses anything else
 (`skp.version_unsupported`) — see §4 for why nothing richer exists yet. Every response is
@@ -29,8 +29,11 @@ directions, so schema evolution is impossible without a new version string.
 ```
 
 `path` is UTF-8, absolute, and comes from the OS file picker. The host passes it to the engine's
-open as received, without canonicalizing it. A directory, or a path carrying a glob metacharacter, is refused first, as
-`engine.identity_ordinal_partitioned_unsupported`; any other path that is not a file is refused as
+open as received, without canonicalizing it. A directory, a path carrying `*` or `?`, or a path
+carrying `[`, `]`, `{` or `}` at which no file exists, is refused first, as
+`engine.identity_ordinal_partitioned_unsupported`; a path carrying `[`, `]`, `{` or `}` at which a
+file exists is opened as that one file (observed on Windows; `KNOWN-LIMITATIONS.md` item 20 names
+what is not claimed); any other path that is not a file is refused as
 `engine.source`, with `EngineError::Source`'s own text. **Cut 1 offered no `crs_assertion` and no
 `identity` field** — the remediation flows that use them were cut-2 UI work, and the fields arrived
 with the UI that exercises them, not before. **`skp/0.2` (§8) adds both fields to the wire**,
@@ -50,6 +53,9 @@ anything.
 `cancel_key` is a client-minted string (see §3) naming this specific open so `cancel` can stop it
 before it returns a handle. **`open_dataset` is cancellable but not progress-reporting** — a named
 docs/01 principle-7 shortfall, not a silent gap (§2, C3).
+
+Refusal skp.unknown_dataset: the catalog no longer holds the name at admission. Wire change: an added refusal on open_dataset, the existing code; no message changes shape.
+<!-- The refusal above is made in SkpHost::open_dataset's Watching and ChecksOnly arms, at one check under the catalog's read guard, held through the mint and the OpenRecord's insert; close_dataset holds the catalog's write guard across forget_dataset and the name's removal, so those two steps land wholly before the check or wholly after the insert. A close's earlier steps (its OpenRecord removal, its unknown_dataset check, begin_close and the ticket cancel) can run between the check and the insert; the OpenRecord removal after the name's removal drops a record inserted then. None of these interleavings is reachable in the shipped app: the handle is minted from the OS CSPRNG and returned only by this open, and Catalog::names has no product caller. -->
 
 ### `describe`
 
@@ -220,8 +226,8 @@ absent — a v0 that goes silent on an item is not a smaller spec, it is an unst
    parameter; `sql` stays absent, named absent by ADR-021's own "what this ADR does not decide."
    **`skp/0.6` (§9) adds no command either** — `viewport_query` gains an optional attribute
    projection parameter, on the same shape row-filter's own addition took.
-   **`skp/0.12` (§10) adds a sixth command, `record_step`**: it records, in the kernel's session history (ADR-036, Proposed), a filter or style change that a client has committed, and applies nothing. A command that sets a style stays absent.
-2. **Transport bindings** — one: Tauri invoke, for the six commands. **`skp/0.5` adds exactly one
+   **`skp/0.12` (§10) adds a sixth command, `record_step`**: it records, in the kernel's session history (ADR-036, Accepted 2026-10-22), a filter or style change that a client has committed, and applies nothing. A command that sets a style stays absent. **`skp/0.13` (§11) adds a seventh command, `save_project`**: it saves the workspace as the project of an open dataset (ADR-036; ADR-006 class 2) and applies nothing either.
+2. **Transport bindings** — one: Tauri invoke, for the seven commands. **`skp/0.5` adds exactly one
    more binding for exactly one payload**: a Tauri event, `dataset_session_ended`, is the sole
    server-to-client push this spec ever defines (item 7 below). Still no control-plane websocket, no
    stdio, no MCP adapter. **`skp/0.6` (§9) adds no binding** — the projection rides the existing
@@ -235,9 +241,9 @@ absent — a v0 that goes silent on an item is not a smaller spec, it is an unst
    unchanged** — still no ranges, min/max, capability set, or handshake. A `skp/0.1` client and a
    `skp/0.2` host fail on the first call. **`skp/0.3` and `skp/0.4` each bumped the compared
    literal again**, and `==` is unchanged. **`skp/0.5` and `skp/0.6` (§9) each bumped the literal
-   again in turn, `==` still unchanged**. `skp/0.7` to `skp/0.12` each bumped the literal again in turn
-   (§8), `==` unchanged, and the literal the host compares today is `skp/0.12`.
-4. **Capability discovery** — none. No `capabilities` command. The client hardcodes v0's six
+   again in turn, `==` still unchanged**. `skp/0.7` to `skp/0.13` each bumped the literal again in turn
+   (§8), `==` unchanged, and the literal the host compares today is `skp/0.13`.
+4. **Capability discovery** — none. No `capabilities` command. The client hardcodes v0's seven
    commands and cannot adapt to a future kernel.
 5. **Cancellation and progress** — cancellation: yes, for streams and for `open_dataset` (§2, C3).
    Progress: data-plane batches only. `open_dataset` is cancellable but not progress-reporting.
@@ -269,7 +275,7 @@ absent — a v0 that goes silent on an item is not a smaller spec, it is an unst
 7. **Subscriptions and events** — **one named exception, `skp/0.5`**: `dataset_session_ended`, a
    Tauri event carrying `{session, reason}`, emitted at most once per ended dataset-session
    generation (ADR-035 D4). It is not a subscription — there is no way to ask for it and no way to
-   turn it off, and no request or response on any of the six commands mentions it. No other
+   turn it off, and no request or response on any of the seven commands mentions it. No other
    server-to-client push exists on the control plane in any other form.
 8. **Error taxonomy** — §5. The existing `engine::EngineError` taxonomy, surfaced verbatim; no new
    error invented, none flattened to a string. **v0.1 (§7) adds eleven `skp.filter_*` codes** to this
@@ -492,7 +498,6 @@ applied to predicate admission.
 
 | Code | Fields |
 |---|---|
-| `skp.filter_dialect_unsupported` | `declared` |
 | `skp.filter_unparsable` | `detail` |
 | `skp.filter_not_a_single_expression` | `statements` |
 | `skp.filter_construct_not_admitted` | `construct` |
@@ -517,6 +522,8 @@ admission-remediation cut (`skp/0.2`) threaded `open_dataset`'s `identity` into 
 > row, `skp.filter_type_not_admitted` | `construct`, `operand_types`, `reason`, followed by the
 > five `reason` values: `text_with_non_text`, `boolean_conversion`, `literal_out_of_bounds`,
 > `conversion_can_fail`, `conversion_rounds`. The heading above stays as it is.
+
+> Note 2026-11-05 (no literal change): `skp.filter_dialect_unsupported` is struck from §7's refusals. No host produced it: a dialect other than the one literal fails at deserialization as a shape error, before any code of this kind is chosen. skp/0.12 stands; no fixture changes.
 
 ### 7.6 Three-stage admission, pre-lease and pre-mint
 
@@ -1126,6 +1133,28 @@ comparison retained; `deny_unknown_fields` kept both directions. `skp/1` stays R
 
 §1 and §4 are updated in place to count six commands; §5 is unchanged; `protocol/data-plane/` has an empty diff. Mechanics: the literal `"skp/0.11"` → `"skp/0.12"` is bumped in one commit with its fixtures (`protocol/skp/tests/data/*.json`, the conformance fixtures, `protocol/skp/tests/fixtures.rs`) and the shell's TypeScript literal and the two shell tests that carry it, together with `record_step`'s types and wire fixtures. The version-refusal fixture that named `skp/0.12` as an unsupported future version is renumbered to name `skp/0.13`. Plain `==` retained; `deny_unknown_fields` kept both directions; `skp/1` stays RESERVED. The kernel's `StepRecorder` hosts the command, so `SkpHost::new` is unchanged.
 
+### skp/0.13 — `save_project`, and a categorical match on `record_step`'s `fillColor` (B2 piece 1c, step 1, `kernel/B2-1C-SAVE-AND-REOPEN-PREREGISTRATION.md`, ADR-036)
+
+**The version's FULL field set, as §8's own discipline requires:** one command and its types, five codes, and one widened value; no change to the other five commands.
+
+- **A seventh command, `save_project`:** request `{skp, dataset, folder, workspace}`, response `{project, history_mark, project_relative}`; §11.2 gives both. `folder` is `string | null`, always present. `workspace` has four members, `filter`, `clauses`, `style` and `view`, each a closed shape, and `view` is `{centre, zoom}` with `HexF64` numbers (§3).
+- **Five new `skp.*` codes:** `skp.project_folder_not_given`, `skp.project_folder_holds_project` (`folder`), `skp.project_file_unwritable` (`detail`), `skp.project_file_refused` (`path`, `rule`) and `skp.project_lineage_not_kept_by_this_version`. §11.4 lists them.
+- **`record_step`'s `style.set` for `fillColor`** takes `"#rrggbb"` or a categorical match, `{match: {column, cases: [{when, then}, …], on_null, on_unmatched}}`, a closed shape with every member required (§10.2). The other three properties are unchanged, and `actions` stays 2. §10.3's check (6) and §10.4's `skp.style_value_not_admitted` row gain the match's cases.
+
+§1 and §4 are updated in place to count seven commands; §5 is unchanged; `protocol/data-plane/` has an empty diff. Mechanics: the literal `"skp/0.12"` → `"skp/0.13"` is bumped in one commit with its fixtures (`protocol/skp/tests/data/*.json`, the conformance fixtures, `protocol/skp/tests/fixtures.rs`), the shell's TypeScript literal and the two shell tests that carry it, and the types above; `project_relative` joined the response in a second commit on the branch, under the same literal, before the version reached main (the piece's form, `governance/forms/kernel/B2-1C-SAVE-AND-REOPEN-PREREGISTRATION.md`, Amendment 20). The version-refusal fixture that named `skp/0.13` as an unsupported future version is renumbered to name `skp/0.14`. Plain `==` retained; `deny_unknown_fields` kept both directions; `skp/1` stays RESERVED.
+
+### Note: open_dataset refuses a name closed during its admission (2026-10-26; no literal change)
+
+**skp/0.12 stands; no literal is bumped and no fixture changes.** §1's open_dataset section gains one paragraph in place: open_dataset may refuse as skp.unknown_dataset, the existing code, with its existing message and handle field. No key, value or command is added or removed; protocol/data-plane/ has an empty diff.
+
+### Note: each open of one file keeps its own session record (2026-11-14; no literal change)
+
+**`skp/0.13` stands; no literal is bumped and no fixture changes.** §11's `save_project` reply now follows the record of the open saved, and no key, value or command is added or removed.
+
+- **The change.** Each open of a dataset has a session record of its own, from its first recorded step, until a save binds it to a project; before, opens of one path admitted under the same claims shared one record. So, in one run, when a file is opened, a step is recorded and the open is saved, and the same file is opened again under the same claims and the second open is saved to another folder: every save of the second open replied `history_mark: "withheld"` before, because the first project held the shared record, and now replies `"written"` when the second open's recorded steps reach the saved workspace, as for any save, and `"withheld"` while the second open has no recorded step. Where the first open was not saved, the second open's save moved and could mark the shared record before; it now binds and marks only the second open's own record.
+- **What did not change.** The values `written` and `withheld` and the reply shape are as before. `protocol/data-plane/` has an empty diff.
+- **Where the sentences are.** §11.2's `history_mark` paragraph and §11.3's "Every save" bullet are brought current in place.
+
 ## 9. Attribute projection on `viewport_query`
 
 **Brief B stage B1** (`engine/B1-PROJECTION-PREREGISTRATION.md`), following ADR-023 Decision §§1–5
@@ -1236,11 +1265,11 @@ Full design and consequences: `docs/adr/ADR-023-attribute-projection-on-viewport
 
 ## 10. `record_step`
 
-**B2 piece 1b** (`kernel/B2-1B-RECORDING-PREREGISTRATION.md` §2.2), following ADR-036 §12 (Proposed, binding nothing until accepted) and ADR-006's class 2. Laid out as §9 is.
+**B2 piece 1b** (`kernel/B2-1B-RECORDING-PREREGISTRATION.md` §2.2), following ADR-036 §12 (Accepted 2026-10-22) and ADR-006's class 2. Laid out as §9 is.
 
 ### 10.1 Version
 
-`skp` is now compared against `"skp/0.12"`, still `==` (§4 item 3); `deny_unknown_fields` stays on every derived struct in both directions (§8's `skp/0.12` entry).
+`skp` is now compared against `"skp/0.13"`, still `==` (§4 item 3); `deny_unknown_fields` stays on every derived struct in both directions (§8's `skp/0.12` and `skp/0.13` entries).
 
 ### 10.2 The wire shape
 
@@ -1248,17 +1277,23 @@ Full design and consequences: `docs/adr/ADR-023-attribute-projection-on-viewport
 { skp, dataset: DatasetHandle, intent }  →  {}
 
 intent = { action: "filter.apply", params: { filter: Filter | null } }
-       | { action: "style.set", params: { property: "fillColor" | "outlineColor", value: "#rrggbb" } }
+       | { action: "style.set", params: { property: "fillColor", value: "#rrggbb" | Match } }
+       | { action: "style.set", params: { property: "outlineColor", value: "#rrggbb" } }
        | { action: "style.set", params: { property: "fillOpacity", value: <number> } }
        | { action: "style.set", params: { property: "outlineWidth", value: { value: <number>, unit: "px" } } }
+
+Match = { match: { column: <text>, cases: [ { when: <text>, then: "#rrggbb" }, … ], on_null: "#rrggbb", on_unmatched: "#rrggbb" } }
 ```
+
+`Match` is ADR-017 §5a's categorical match for a colour (`skp/0.13`). It is closed, every member is required, and no other property admits it: a match on `fillOpacity`, `outlineColor` or `outlineWidth` is refused at deserialize.
 
 `Filter` is §7.2's. `filter` is always present, `null` for no filter, and a `params` without it is refused at deserialize, never read as "clear the filter". Any other action, property, unit or value type, and any unknown key, is refused at deserialize. `intent` has the shape of ADR-036 §6's `intent` member. No `actor`, `at`, id or effect crosses the wire: the kernel mints the first three and takes the effect from its action registry. No space or coordinate crosses it either, and `dataset` is the only handle. The response is an empty closed object; no step id is returned, because nothing reads one at this version.
 
 ### 10.3 The contract
 
 - **Record only.** The client commits the change in its own state first. The kernel validates the intent, mints the step's `id` and `at`, takes `actor` (`user`) and `effect`, appends one line to the session history, flushes it, and replies. It applies nothing and holds no workspace state; nothing in SKP restores, undoes or replays a step.
-- **The order of checks:** (1) the version; (2) the catalog entry of the handle; (3) the live check `viewport_query` uses, so a dataset whose session has ended is refused with the end's code; (4) the action; (5) for a `filter.apply` that carries a filter, admission as §7.6 admits it; (6) for `style.set`, the value as the style model admits it; (7) the history's record for the open file, created at its first step; (8) the line's bounds, and its members against the rules the reader holds (ADR-036 §9); (9) one write of the whole line; (10) one flush; (11) the reply. A refusal at (1) to (6) writes nothing. At the first step for an open file, (7) creates the record: its folder, `locations.json` and the history's header line; a refusal at (8) leaves that record and writes no step. A failure at (7) removes what (7) wrote, as far as the operating system allows.
+- **The order of checks:** (1) the version; (2) the catalog entry of the handle; (3) the live check `viewport_query` uses, so a dataset whose session has ended is refused with the end's code; (4) the action; (5) for a `filter.apply` that carries a filter, admission as §7.6 admits it; (6) for `style.set`, the value as the style model admits it, and for a match also compiled against the open's own columns, whose type rule is the renderer's: the column must exist and be a text column; (7) the history's record for the open file, created at its first step; (8) the line's bounds, and its members against the rules the reader holds (ADR-036 §9); (9) one write of the whole line; (10) one flush; (11) the reply. A refusal at (1) to (6) writes nothing. At the first step for an open file, (7) creates the record: its folder, `locations.json` and the history's header line; a refusal at (8) leaves that record and writes no step. A failure at (7) removes what (7) wrote, as far as the operating system allows.
+- **A match records its column.** A `fillColor` step that sets a match carries the match in its `intent` as sent, and one `dependencies.fields` entry: the match column, with its type as the open's file schema spells it. A step that sets a colour names no column.
 - **The live check is the one ordering point.** A `close_dataset` or a session end that lands after it does not stop the write: the line is true of the open it names. `record_step` takes no lock a close waits on.
 - **Not cancellable, no progress, not idempotent:** one write and one flush, no stream or ticket, and each success appends one new step.
 - **The flush** asks the operating system to write the line to storage before the reply, as the audit log does. A crash of the application after the reply does not lose the step; a power loss is not claimed to preserve it. Where the history is kept, how it is recovered and when it is cleared are ADR-036 §9's.
@@ -1277,8 +1312,65 @@ Five new codes, all minted by the host:
 | `skp.session_history_full` | `limit` | the whole history would pass its ceiling |
 | `skp.session_history_stopped` | *(none)* | an earlier write to this history failed |
 | `skp.step_line_over_ceiling` | `saw`, `limit` | the step's line would pass its ceiling |
-| `skp.style_value_not_admitted` | `property`, `detail` | the value is not one the style model admits, is not lowercase `#rrggbb`, or has no canonical spelling |
+| `skp.style_value_not_admitted` | `property`, `detail` | the value is not one the style model admits, is not lowercase `#rrggbb`, or has no canonical spelling; for a match also: its column is not in the open's file or is not a text column, it has no case or more than 64, two cases share a `when`, or a colour in it is not lowercase |
 
 ### 10.5 Data plane
 
 **Unchanged, empty diff.** `record_step` opens no stream and mints no ticket.
+
+## 11. `save_project`
+
+**B2 piece 1c, step 1** (`kernel/B2-1C-SAVE-AND-REOPEN-PREREGISTRATION.md` §2.2), following ADR-036 §1 and §4, its Amendment 1, and ADR-006's class 2. Laid out as §10 is.
+
+### 11.1 Version
+
+`skp` is compared against `"skp/0.13"`, still `==` (§4 item 3); `deny_unknown_fields` stays on every derived struct in both directions (§8's `skp/0.13` entry).
+
+### 11.2 The wire shape
+
+```
+{ skp, dataset: DatasetHandle, folder: string | null, workspace }  →  { project, history_mark, project_relative }
+
+workspace = { filter: Filter | null,
+              clauses: [ { text: <text>, enabled: <bool> }, … ],
+              style: <ADR-017 §5a style document>,
+              view: { centre: [HexF64, HexF64], zoom: HexF64 } }
+
+history_mark = "written" | "withheld"
+
+project_relative = "carried" | "outside" | "no-canonical-spelling" | "through-link"
+```
+
+- **`folder`** is the project folder, an absolute UTF-8 path from the shell's folder picker. It is present only at the first save of an open; a later save of the same open goes to the folder the first one used and ignores it. `null` is "no folder", and the key is always present.
+- **`workspace`** has the four members of ADR-036's project file in the file's order, apart from the `crs` of `view`. `filter` is §7.2's `Filter`, always present, `null` for none. `clauses` are the filter clauses in their order, each text as typed; `filter` is what the enabled ones combine to (none: `null`; one: its text; several: each text in brackets, joined by ` AND `, in order). `style` is a JSON object, ADR-017 §5a's style document; this crate does not depend on the renderer, and the kernel reads the object with the renderer's own `parse`. A click selection has no member.
+- **`view`** is the point at the middle of the canvas, x then y, in the dataset's space, and the base-2 logarithm of the CSS pixels that one unit of that space spans. Each number is a `HexF64` (§3), so a value the JSON number grammar cannot keep exactly is still saved exactly. `view` carries no `crs`: the kernel writes the space the dataset was admitted in, because the shell holds no hash of its definition to name it with.
+- **`project`** is the project's identity, `spatial://project/` and 32 lowercase hex characters (ADR-036 §4). No path crosses in the response.
+- **`history_mark`** says whether the session history took the `saved-here` mark. The project file was written in both cases. `withheld` means the history holds no recorded step for this open of the dataset, the recorded steps do not reach the saved workspace, or the history could not take the record move or the line.
+- **`project_relative`** says what the project file carries for the data beside its `machine-recorded` locator, as the kernel judged it at this save (ADR-036 §5). `carried`: a `project-relative` locator too. `outside`: the data or the folder could not be resolved at the save, or the data is not under the folder. `no-canonical-spelling`: the data is inside the folder, and its path has no canonical spelling on this machine. `through-link`: the data is inside the folder, and the path it was opened by does not reach it from the folder without a link. In each of the last three the file carries the `machine-recorded` locator only. The save is not refused, and no path crosses.
+
+### 11.3 The contract
+
+- **A first save** needs `folder`, mints the project's identity, and is refused if the folder already holds `project.spatial`. **A later save** of the same open keeps the identity and goes to the same folder; it is refused if the project file there records a lineage, which this version does not keep, or if the reader refuses that file.
+- **Every save** judges which locators the file carries for the data, checks the document against the rules the project-file reader holds, and replaces `project.spatial` whole or not at all: a temp file in the project folder, synced, then renamed over the name, with a declared bound on the attempts. A refusal leaves the previous file in place. Only then does the history take its moves: the open is bound to the project, and the record the open already has, if it has one, moves under the project's identity; then a `saved-here` mark is written in the project's record when the recorded steps reach the workspace. Each open of a dataset has a record of its own, from its first recorded step, until a save binds it to a project, so a second open of one file that is saved to another folder is bound to its own project, and the mark, when one is written, goes in that project's record.
+<!-- Not on Windows: on POSIX, a failure to flush the folder after the rename (kernel/src/project/store.rs, Staged::commit and sync_folder) is refused with this code after project.spatial was replaced. The shipped app is Windows-only, where a folder is not opened to be flushed. -->
+- **The history does not undo a save.** If the history cannot take its moves the save stands and the reply says `withheld`.
+- **The order of checks:** (1) the version; (2) the catalog entry of the handle; (3) the live check `viewport_query` uses; (4) the workspace as the project file would hold it; (5) the save, in the order above. A refusal writes no project file.
+- **Not cancellable, no progress, no stream or ticket.**
+
+### 11.4 Refusal taxonomy
+
+Reused: `skp.version_unsupported`; `skp.unknown_dataset`; `engine.source_changed` and `engine.source_coverage_lost`, exactly as §10.4 gives them.
+
+Five new codes, all minted by the host:
+
+| Code | Fields | When |
+|---|---|---|
+| `skp.project_folder_not_given` | *(none)* | `folder` is `null` and no save of this open has chosen a folder |
+| `skp.project_folder_holds_project` | `folder` | a first save into a folder that already holds `project.spatial`; nothing was written |
+| `skp.project_file_unwritable` | `detail` | the project folder cannot be read, or a file of the save (the project file or a file of the project's machine store) could not be read or written |
+| `skp.project_file_refused` | `path`, `rule` | a member of the workspace, of the project file built from it or of a machine store file breaks a rule its reader holds, or the project file there is one the reader refuses, or no reference can be bound to the open; `path` names the member |
+| `skp.project_lineage_not_kept_by_this_version` | *(none)* | the project file there records a lineage, which this version does not keep |
+
+### 11.5 Data plane
+
+**Unchanged, empty diff.** `save_project` opens no stream and mints no ticket.

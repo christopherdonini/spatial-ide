@@ -243,6 +243,7 @@ impl RewriteWatchdog {
 
 #[test]
 #[ignore = "writes ~1.5 GB of 145 MB-class fixtures; run explicitly with --release, --features fixture"]
+#[allow(clippy::assertions_on_constants)]
 fn generate_the_145mb_fixture_matrix() {
     assert!(
         !cfg!(debug_assertions),

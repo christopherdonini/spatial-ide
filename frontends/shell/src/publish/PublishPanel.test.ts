@@ -53,6 +53,7 @@ const PROMPT: PublishPromptData = {
   outcome_summary:
     'This will create a folder named "bundle" at C:\\out, containing the selected rows as one or ' +
     "more data partitions, the interactive viewer page, and a manifest.",
+  published_columns: "Columns published: id and the geometry only.",
 };
 
 // RECORDED MUTATION for "UPP1" (export-current-view-after-unreported-fit): `currentViewOptionDisabled` returns false whatever it is given. Expected failure: the first case, "disabled while the map has no view box".
@@ -428,6 +429,23 @@ describe("the rendered publish controls (MF3)", () => {
     expect(CURRENT_VIEW_DISABLED_REASON).toBe("Not available yet — the map has not drawn this file's data. Pan or zoom the map, or choose Whole dataset.");
     expect(render({ kind: "idle" }, { currentViewAvailable: false })).toContain(CURRENT_VIEW_DISABLED_REASON);
     expect(render({ kind: "idle" })).not.toContain("publish-scope-disabled-reason");
+  });
+
+  // RECORDED MUTATION: the panel's condition back to `filterActive` alone. Observed at ec847095ccbebcfc7ebdec78b23a572e00b219de: this test FAILED by name at its first `expect` (`expected ... not to contain 'publish-filter-scope-sentence'`). Reverted.
+  it("Whole dataset with a filter on shows no filter sentence (U12)", () => {
+    const html = render({ kind: "idle" }, { scope: "whole", filterActive: true });
+    expect(html).not.toContain("publish-filter-scope-sentence");
+    expect(html).not.toContain(FILTER_SCOPE_SENTENCE);
+  });
+
+  // RECORDED MUTATION: the panel's condition without `filterActive`. Observed at ec847095ccbebcfc7ebdec78b23a572e00b219de: this test FAILED by name at its filter-off case (`expected ... not to contain 'publish-filter-scope-sentence'`). Reverted.
+  it("Current view shows the filter sentence with a filter on and not with it off", () => {
+    const on = render({ kind: "idle" }, { scope: "current", filterActive: true });
+    expect(on).toContain("publish-filter-scope-sentence");
+    expect(on).toContain(FILTER_SCOPE_SENTENCE);
+    const off = render({ kind: "idle" }, { scope: "current", filterActive: false });
+    expect(off).not.toContain("publish-filter-scope-sentence");
+    expect(off).not.toContain(FILTER_SCOPE_SENTENCE);
   });
 
   it("preparing, before any phase event: the placeholder label, no byte readout, and NO Cancel button (MF1)", () => {

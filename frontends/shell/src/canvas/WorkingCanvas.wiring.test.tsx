@@ -55,6 +55,7 @@ vi.mock("@deck.gl/core", async (importOriginal) => {
 });
 
 import { __resetResidencyArmForTests, setResidencyArm } from "../residency/residencyArm";
+import { FILTER_DIALECT_DUCKDB_EXPR_0 } from "../skp/types";
 import { DEFAULT_STYLE_STATE } from "../style/document";
 import { loadBatchFixture } from "../testUtils/batchFixtures";
 import { decodeBatch, ENCODING_POLYGON } from "./decodeBatch";
@@ -96,6 +97,7 @@ function mount(extra: Partial<WorkingCanvasProps> = {}) {
     dataset: "d1",
     geometryColumn: "geometry",
     geometryEncoding: ENCODING_POLYGON,
+    projection: null,
     crsUnit: "metre",
     onHover: vi.fn(),
     onCanvasRefusal: vi.fn(),
@@ -110,7 +112,7 @@ function mount(extra: Partial<WorkingCanvasProps> = {}) {
   render({});
   const push = (): void => {
     act(() => {
-      ref.current!.pushBatch("sh_a", 0, loadBatchFixture("lv95-polygon-batch"));
+      ref.current!.pushBatch("sh_a", 0, loadBatchFixture("lv95-polygon-batch"), null);
     });
   };
   return { ref, base, render, push };
@@ -293,7 +295,7 @@ describe("the tap (UB7's wiring, OPEN-1 (A))", () => {
     const onClickPick = vi.fn();
     const { ref } = mount({ onClickPick, geometryEncoding: "geoarrow.linestring" });
     act(() => {
-      ref.current!.pushBatch("sh_l", 0, loadBatchFixture("lv95-linestring-batch"));
+      ref.current!.pushBatch("sh_l", 0, loadBatchFixture("lv95-linestring-batch"), null);
     });
     theDeck().props.onClick({}, { type: "click", srcEvent: { clientX: 3, clientY: 4 } });
     expect(theDeck().pickCalls.at(-1)).toMatchObject({ x: 3, y: 4 });
@@ -303,7 +305,7 @@ describe("the tap (UB7's wiring, OPEN-1 (A))", () => {
 
 describe("the highlight prop (section 2.2)", () => {
   const firstId = (): bigint =>
-    decodeBatch("sh_a", 0, loadBatchFixture("lv95-polygon-batch"), "geometry", ENCODING_POLYGON).ids[0];
+    decodeBatch("sh_a", 0, loadBatchFixture("lv95-polygon-batch"), "geometry", ENCODING_POLYGON, null, null).ids[0];
 
   // RECORDED MUTATION for "the highlight" (order): in `render()` (WorkingCanvas.tsx) put the highlight layers before the data layers
   // (`[...highlightResult.layers, ...layers]`). Expected failure: the last layer is the data layer.
@@ -359,5 +361,61 @@ describe("the highlight prop (section 2.2)", () => {
     await frames(2);
     expect(onSelectionDrawnChange).toHaveBeenCalledTimes(2);
     expect(onSelectionDrawnChange.mock.calls[1][0].size).toBe(0);
+  });
+});
+
+describe("PC-U7: the filter a stream was issued with is on the resident batch (milestone 4 PR C, section 2.4 (c))", () => {
+  // RECORDED MUTATION for "PC-U7": in `pushBatch` pass `null` to `decodeBatch` in place of `filter`. Expected failure: no resident batch was streamed under the filter object.
+  it("PC-U7: a batch pushed through pushBatch, and one through pushTileBatch, under filter F is resident with filter F", () => {
+    const filter = { predicate: "zone = 'residential'", dialect: FILTER_DIALECT_DUCKDB_EXPR_0 };
+    const streamedUnder = (f: unknown): boolean => f === filter;
+    const { ref } = mount();
+    act(() => {
+      ref.current!.pushBatch("sh_a", 0, loadBatchFixture("lv95-polygon-batch"), filter);
+    });
+    expect(ref.current!.residentIdsStreamedUnder(streamedUnder).size).toBeGreaterThan(0);
+    expect(ref.current!.residentIdsStreamedUnder((f) => f === null).size).toBe(0);
+
+    act(() => root.unmount());
+    root = createRoot(container);
+    __resetResidencyArmForTests();
+    setResidencyArm("candidate");
+    const tiled = mount();
+    act(() => {
+      tiled.ref.current!.pushTileBatch("0:0", "sh_t", 0, loadBatchFixture("lv95-polygon-batch"), filter);
+    });
+    expect(tiled.ref.current!.residentIdsStreamedUnder(streamedUnder).size).toBeGreaterThan(0);
+  });
+});
+
+describe("V-C1: the canvas's current view (B2 piece 1c, Amendment 12 item 2)", () => {
+  const tick = (target: [number, number], zoom: number, isDragging: boolean): void => {
+    act(() => {
+      theDeck().props.onViewStateChange({ viewState: { target: [target[0], target[1], 0], zoom }, interactionState: { isDragging } });
+    });
+  };
+
+  // RECORDED MUTATION for "V-C1": in `currentView` (WorkingCanvas.tsx) return `camera.targetX` and `camera.targetY` as the centre, without the origin.
+  // Expected failure: after a gesture tick the centre is the local target and not the dataset-space point.
+  it("the canvas's current view is its camera's target plus the frame origin and its held zoom, bit for bit, and null before any camera write", () => {
+    const { ref } = mount();
+    expect(ref.current!.currentView!(), "nothing written to the camera yet").toBeNull();
+
+    // The fit puts the frame origin at the box's midpoint, (2_600_050, 1_200_050).
+    act(() => ref.current!.fitToBbox!({ xmin: 2_600_000, ymin: 1_200_000, xmax: 2_600_100, ymax: 1_200_100 }));
+    const target: [number, number] = [123.45678901234567, -67.89012345678901];
+    const zoom = 7.123456789012345;
+    tick(target, zoom, true);
+    const held = ref.current!.currentView!()!;
+    expect(Object.is(held.centre[0], target[0] + 2_600_050), "centre x is the local target plus the origin").toBe(true);
+    expect(Object.is(held.centre[1], target[1] + 1_200_050), "centre y is the local target plus the origin").toBe(true);
+    expect(Object.is(held.zoom, zoom), "the held zoom, unchanged").toBe(true);
+
+    // A settled tick far from the origin moves the origin to that world point; a tick at the local target (0, 0) then answers that point.
+    tick([1_000_000, -500_000.25], zoom, false);
+    tick([0, 0], zoom, true);
+    const moved = ref.current!.currentView!()!;
+    expect(Object.is(moved.centre[0], 1_000_000 + 2_600_050), "x is the dataset-space point after the origin moved").toBe(true);
+    expect(Object.is(moved.centre[1], -500_000.25 + 1_200_050), "y is the dataset-space point after the origin moved").toBe(true);
   });
 });

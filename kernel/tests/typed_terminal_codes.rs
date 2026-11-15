@@ -312,6 +312,12 @@ fn a_coverage_lost_terminal_detail_carries_its_typed_code_and_exact_text() {
 /// own violation). Applied, run and reverted on this branch: `assertion `left == right` failed:
 /// refused: the source file changed while it was open (...)`, `left: "engine.source_changed"`,
 /// `right: "engine.source_coverage_lost"` — 1 failed.
+///
+/// RECORDED MUTATION: restore the two braces at the `CoverageLost` arm of `require_live`
+/// (`kernel/src/skp.rs`). Applied at `74fd4f1de5e4400f0d0472a0d5c522e2468a08c7`, run and reverted: this test FAILED on
+/// its `assert_eq` on the whole message, `left` carrying a `{` after the `(` that opens the
+/// detail and a `}` before the `)` that closes it, `right` the same text without those two
+/// braces — 1 failed.
 #[test]
 fn a_coverage_lost_pre_check_refusal_carries_its_typed_code_and_exact_text() {
     let path = fixture("coverage-lost-pre-check");
@@ -363,8 +369,8 @@ fn a_coverage_lost_pre_check_refusal_carries_its_typed_code_and_exact_text() {
     assert_eq!(
         detail,
         "engine.source_coverage_lost: [P6 placeholder] refused: the advisory watch on this source \
-         lost coverage ({[P6 placeholder] this dataset's session ended when the advisory watch on \
-         its source lost coverage}). This is not a statement that the file changed — the OS \
+         lost coverage ([P6 placeholder] this dataset's session ended when the advisory watch on \
+         its source lost coverage). This is not a statement that the file changed — the OS \
          notification stream this session was relying on stopped reporting, and this check cannot \
          see whether the file changed while it was not"
     );
@@ -486,4 +492,38 @@ fn a_geometry_encoding_refusal_detail_begins_with_its_typed_code() {
     // It states the format fact and both encodings, and no consequence.
     let text = e.to_string();
     assert!(text.contains("geoarrow.polygon") && text.contains("geoarrow.multipolygon"));
+}
+
+/// The redaction scan's refusal (the redaction form's T3) crosses the Tauri boundary as
+/// `"<code>: <display>"` like every other publish refusal, with its P6 placeholder text.
+/// Mutation M4: change the code's string; this test fails at the code assertion.
+#[test]
+fn a_redaction_refusal_detail_begins_with_its_typed_code() {
+    let e = PublishError::RedactionFinding {
+        file: "data/part-00000.arrows".to_string(),
+        class: "local-filesystem-path",
+        byte_offset: 412,
+        count: 3,
+    };
+    assert_eq!(e.code(), "publish.redaction_finding");
+    let detail = e.refusal_detail();
+    assert!(
+        detail.starts_with("publish.redaction_finding: "),
+        "{detail}"
+    );
+    assert!(
+        detail.ends_with(&e.to_string()),
+        "the refusal's own text is carried verbatim"
+    );
+    assert!(
+        e.to_string().starts_with("[P6 placeholder] "),
+        "a new operator string is a placeholder: {e}"
+    );
+    // The file, the class, the byte offset and the count, and never the matched text.
+    assert_eq!(
+        e.to_string(),
+        "[P6 placeholder] refused: the redaction scan (ADR-017 §13) found 3 match(es) in \
+         `data/part-00000.arrows` that are not operator-declared, the first of class \
+         `local-filesystem-path` at byte 412; no bundle was created at the destination"
+    );
 }

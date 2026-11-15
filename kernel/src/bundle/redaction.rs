@@ -45,6 +45,14 @@
 //! honest statement is therefore **"a printable run of at least [`MIN_PRINTABLE_RUN`] bytes
 //! containing one of the named shapes"**, not "any path". The scan is a necessary condition, never
 //! a sufficient one, and these are two of the places that is true.
+//!
+//! ## Where the product runs it
+//!
+//! `publish` runs `scan` over every staged file before the rename, except a `viewer/` file whose
+//! bytes match the viewer build's record, and refuses on the first file holding a match that is not
+//! operator-declared; the viewer's build compiles this file on its own and runs `scan_directory`
+//! over its `dist/` (`renderer/bundle-viewer/scripts/scan-dist.rs`), so this file names nothing
+//! outside `std`; `scan_directory` stays the tests' whole-bundle report.
 
 /// One thing the scan found, with enough context to act on it.
 #[derive(Clone, Debug, PartialEq)]
@@ -112,11 +120,12 @@ pub struct MachineIdentifiers {
 }
 
 impl MachineIdentifiers {
-    /// The current machine's, from the environment. Best-effort: an identifier this cannot read is
-    /// simply not scanned for, which is a gap in the scan and not a pass.
+    /// The current machine's, from the environment, and (for the hostname, when neither
+    /// `COMPUTERNAME` nor `HOSTNAME` gives a name of at least 3 bytes) from one file read:
+    /// `/proc/sys/kernel/hostname`. Best-effort: an identifier this cannot read is simply not
+    /// scanned for, which is a gap in the scan and not a pass.
     pub fn from_environment() -> Self {
         let mut usernames = Vec::new();
-        let mut hostnames = Vec::new();
         for key in ["USERNAME", "USER", "LOGNAME"] {
             if let Ok(v) = std::env::var(key) {
                 if v.len() >= 3 && !usernames.contains(&v) {
@@ -124,13 +133,7 @@ impl MachineIdentifiers {
                 }
             }
         }
-        for key in ["COMPUTERNAME", "HOSTNAME"] {
-            if let Ok(v) = std::env::var(key) {
-                if v.len() >= 3 && !hostnames.contains(&v) {
-                    hostnames.push(v);
-                }
-            }
-        }
+        let hostnames = hostnames_from(|key| std::env::var(key).ok(), os_hostname);
         // **Nothing declared**, deliberately: the environment knows what this machine is called and
         // cannot know what the operator meant to publish. A caller that has declarations supplies
         // them (`..MachineIdentifiers::from_environment()`); one that does not gets the strict scan.
@@ -140,6 +143,38 @@ impl MachineIdentifiers {
             declared: Vec::new(),
         }
     }
+}
+
+/// The hostnames to scan for: `COMPUTERNAME` and `HOSTNAME` from `env` when they give a name of at
+/// least 3 bytes; only when neither does, the machine's own name from `os`, trimmed, under the same
+/// floor. The OS name is a fallback and never an extra name, so there are at most two hostnames.
+fn hostnames_from(
+    env: impl Fn(&str) -> Option<String>,
+    os: impl FnOnce() -> Option<String>,
+) -> Vec<String> {
+    let mut hostnames: Vec<String> = Vec::new();
+    for key in ["COMPUTERNAME", "HOSTNAME"] {
+        if let Some(v) = env(key) {
+            if v.len() >= 3 && !hostnames.contains(&v) {
+                hostnames.push(v);
+            }
+        }
+    }
+    if hostnames.is_empty() {
+        if let Some(v) = os() {
+            let v = v.trim().to_string();
+            if v.len() >= 3 {
+                hostnames.push(v);
+            }
+        }
+    }
+    hostnames
+}
+
+/// The machine-identity boundary: the kernel's own name for this machine, read from procfs. Absent
+/// where there is no such file, which leaves the scan with the environment's names alone.
+fn os_hostname() -> Option<String> {
+    std::fs::read_to_string("/proc/sys/kernel/hostname").ok()
 }
 
 /// Literal needles that are a finding wherever they appear, ASCII-case-insensitively.
@@ -339,10 +374,46 @@ pub fn scan_directory(
     root: &std::path::Path,
     machine: &MachineIdentifiers,
 ) -> std::io::Result<Vec<Finding>> {
+    let mut findings = walk(root, machine, &mut || Ok(()), &|_, _| false, &|e| e, false)?;
+    findings.sort_by(|a, b| (&a.file, a.byte_offset).cmp(&(&b.file, b.byte_offset)));
+    Ok(findings)
+}
+
+/// The first file holding a finding that is not [`OPERATOR_DECLARED`]: its relative name and its
+/// findings, sorted by offset. `None` when every file is clean or declared. The product publish's
+/// gate; `before_each_file` is its cancellation check, and `io_error` makes a failed listing or
+/// read the caller's error rather than a pass.
+pub(crate) fn first_undeclared_findings<E>(
+    root: &std::path::Path,
+    machine: &MachineIdentifiers,
+    mut before_each_file: impl FnMut() -> Result<(), E>,
+    skip: impl Fn(&str, &[u8]) -> bool,
+    io_error: impl Fn(std::io::Error) -> E,
+) -> Result<Option<(String, Vec<Finding>)>, E> {
+    let mut f = walk(root, machine, &mut before_each_file, &skip, &io_error, true)?;
+    f.retain(|x| x.class != OPERATOR_DECLARED);
+    f.sort_by_key(|x| x.byte_offset);
+    Ok((!f.is_empty()).then(|| (f[0].file.clone(), f)))
+}
+
+/// The one walk: depth-first, entries sorted, each file read whole. `skip` sees the bytes read and
+/// may pass the file over. With `first_only` it stops after the first file holding a finding that
+/// is not [`OPERATOR_DECLARED`] and returns that file's findings alone: an earlier file's are
+/// dropped before the next file is read.
+fn walk<E>(
+    root: &std::path::Path,
+    machine: &MachineIdentifiers,
+    before_each_file: &mut dyn FnMut() -> Result<(), E>,
+    skip: &dyn Fn(&str, &[u8]) -> bool,
+    io_error: &dyn Fn(std::io::Error) -> E,
+    first_only: bool,
+) -> Result<Vec<Finding>, E> {
     let mut findings = Vec::new();
     let mut stack = vec![root.to_path_buf()];
     while let Some(dir) = stack.pop() {
-        let mut entries: Vec<_> = std::fs::read_dir(&dir)?.collect::<std::io::Result<Vec<_>>>()?;
+        let mut entries: Vec<_> = std::fs::read_dir(&dir)
+            .and_then(|rd| rd.collect())
+            .map_err(io_error)?;
         // Deterministic order, so two runs of the scan report findings in the same sequence.
         entries.sort_by_key(|e| e.path());
         for entry in entries {
@@ -351,16 +422,26 @@ pub fn scan_directory(
                 stack.push(path);
                 continue;
             }
+            before_each_file()?;
             let rel = path
                 .strip_prefix(root)
                 .unwrap_or(&path)
                 .to_string_lossy()
                 .replace('\\', "/");
-            let bytes = std::fs::read(&path)?;
-            findings.extend(scan(&rel, &bytes, machine));
+            let bytes = std::fs::read(&path).map_err(io_error)?;
+            if skip(&rel, &bytes) {
+                continue;
+            }
+            let found = scan(&rel, &bytes, machine);
+            if first_only {
+                if found.iter().any(|f| f.class != OPERATOR_DECLARED) {
+                    return Ok(found);
+                }
+            } else {
+                findings.extend(found);
+            }
         }
     }
-    findings.sort_by(|a, b| (&a.file, a.byte_offset).cmp(&(&b.file, b.byte_offset)));
     Ok(findings)
 }
 
@@ -585,5 +666,30 @@ mod tests {
             hit.excerpt
         );
         assert!(hit.byte_offset > 0);
+    }
+
+    /// The OS's name for the machine is a **fallback**, never an extra name: it is taken only when
+    /// the environment names none of at least 3 bytes, and the 3-byte floor holds for it too.
+    /// `hostnames_from` takes its two sources as arguments, so no variable is set in this process.
+    ///
+    /// RECORDED MUTATION (observed at f7be3a3071ef8822713a9f05693dc6f897d7f69a: applied, this test run alone, reverted): the `hostnames.is_empty()` guard in `hostnames_from` is dropped, so the OS name is always appended. OBSERVED FAILURE: the second assertion, `an environment name is used alone`, with left ["envhost", "oshost"] and right ["envhost"].
+    #[test]
+    fn the_os_hostname_is_taken_only_when_the_environment_names_none() {
+        let no_env = |_: &str| None;
+        assert_eq!(
+            hostnames_from(no_env, || Some("wave3-probe-host\n".into())),
+            vec!["wave3-probe-host".to_string()],
+            "no environment name: the OS's, trimmed"
+        );
+        let env = |key: &str| (key == "HOSTNAME").then(|| "envhost".to_string());
+        assert_eq!(
+            hostnames_from(env, || Some("oshost".into())),
+            vec!["envhost".to_string()],
+            "an environment name is used alone"
+        );
+        assert!(
+            hostnames_from(no_env, || Some("vm\n".into())).is_empty(),
+            "an OS name under 3 bytes is not scanned for"
+        );
     }
 }

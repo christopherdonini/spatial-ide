@@ -1,0 +1,308 @@
+// scratch P0 (full form section 3), not to be committed
+use std::sync::Arc;
+
+use arrow::array::{Array, ArrayRef, BinaryBuilder, Float64Array, StructArray, UInt64Builder};
+use arrow::datatypes::{DataType, Field, Fields, Schema};
+use arrow::record_batch::RecordBatch;
+use parquet::arrow::ArrowWriter;
+use parquet::file::metadata::KeyValue;
+use parquet::file::properties::WriterProperties;
+
+use spatial_engine::{CancelToken, Dataset, ViewportQuery};
+
+const N: u64 = 10;
+const OFFSET: f64 = 1_000_000.0;
+
+type Child = (&'static str, usize, bool);
+type St = (&'static str, Vec<Child>);
+
+struct Spec<'a> {
+    geoms: Vec<(&'a str, f64)>,
+    structs: Vec<St>,
+    primary: &'a str,
+    covering: Option<[Vec<&'a str>; 4]>,
+}
+
+fn write(path: &std::path::Path, sp: &Spec) -> Result<(), String> {
+    let mut ids = UInt64Builder::new();
+    for i in 0..N {
+        ids.append_value(i);
+    }
+    let mut vals: [Vec<f64>; 4] = [vec![], vec![], vec![], vec![]];
+    for i in 0..N {
+        let e = 2_600_000.0 + i as f64;
+        let n = 1_200_000.0 + i as f64;
+        vals[0].push(e);
+        vals[1].push(n);
+        vals[2].push(e + 1.0);
+        vals[3].push(n + 1.0);
+    }
+    let mut fields = vec![Field::new("id", DataType::UInt64, false)];
+    let mut arrays: Vec<ArrayRef> = vec![Arc::new(ids.finish())];
+    for (gname, goff) in &sp.geoms {
+        let mut geoms = BinaryBuilder::new();
+        for i in 0..N {
+            let e = 2_600_000.0 + i as f64 + goff;
+            let n = 1_200_000.0 + i as f64;
+            geoms.append_value(spatial_engine::wkb::encode_polygon(&[vec![
+                [e, n],
+                [e + 1.0, n],
+                [e + 1.0, n + 1.0],
+                [e, n],
+            ]]));
+        }
+        fields.push(Field::new(*gname, DataType::Binary, false));
+        arrays.push(Arc::new(geoms.finish()));
+    }
+    for (sname, children) in &sp.structs {
+        let cf: Vec<Field> = children
+            .iter()
+            .map(|(n, _, _)| Field::new(*n, DataType::Float64, false))
+            .collect();
+        let ca: Vec<ArrayRef> = children
+            .iter()
+            .map(|(_, role, off)| {
+                let v: Vec<f64> = vals[*role]
+                    .iter()
+                    .map(|x| if *off && *role % 2 == 0 { x + OFFSET } else { *x })
+                    .collect();
+                Arc::new(Float64Array::from(v)) as ArrayRef
+            })
+            .collect();
+        let st = StructArray::new(Fields::from(cf.clone()), ca, None);
+        fields.push(Field::new(*sname, DataType::Struct(Fields::from(cf)), false));
+        arrays.push(Arc::new(st));
+    }
+    let schema = Arc::new(Schema::new(fields));
+    let batch = RecordBatch::try_new(schema.clone(), arrays).map_err(|e| format!("batch: {e}"))?;
+    let j = |p: &[&str]| serde_json::to_string(p).unwrap();
+    let covering = match &sp.covering {
+        Some(d) => format!(
+            ",\"covering\":{{\"bbox\":{{\"xmin\":{},\"ymin\":{},\"xmax\":{},\"ymax\":{}}}}}",
+            j(&d[0]),
+            j(&d[1]),
+            j(&d[2]),
+            j(&d[3])
+        ),
+        None => String::new(),
+    };
+    let pj = serde_json::to_string(sp.primary).unwrap();
+    let geo = format!(
+        "{{\"version\":\"1.1.0\",\"primary_column\":{pj},\"columns\":{{{pj}:{{\
+          \"encoding\":\"WKB\",\"geometry_types\":[\"Polygon\"]{covering},\"crs\":{}}}}}}}",
+        spatial_engine::fixture::LV95_PROJJSON
+    );
+    let props = WriterProperties::builder()
+        .set_key_value_metadata(Some(vec![KeyValue::new("geo".to_string(), geo)]))
+        .build();
+    let f = std::fs::File::create(path).map_err(|e| format!("create: {e}"))?;
+    let mut w = ArrowWriter::try_new(f, schema, Some(props)).map_err(|e| format!("try_new: {e}"))?;
+    w.write(&batch).map_err(|e| format!("write: {e}"))?;
+    w.close().map_err(|e| format!("close: {e}"))?;
+    Ok(())
+}
+
+fn full(s: &'static str) -> St {
+    (s, vec![("xmin", 0, false), ("ymin", 1, false), ("xmax", 2, false), ("ymax", 3, false)])
+}
+fn off(s: &'static str) -> St {
+    (s, vec![("xmin", 0, true), ("ymin", 1, false), ("xmax", 2, true), ("ymax", 3, false)])
+}
+
+fn names_of(dt: &DataType) -> String {
+    match dt {
+        DataType::Struct(fs) => format!(
+            "struct[{}]",
+            fs.iter().map(|f| f.name().clone()).collect::<Vec<_>>().join(",")
+        ),
+        o => format!("{o:?}"),
+    }
+}
+
+fn leaf_f64(d: &arrow::array::ArrayData, out: &mut Vec<f64>) {
+    if *d.data_type() == DataType::Float64 {
+        let a = Float64Array::from(d.clone());
+        for i in 0..a.len() {
+            out.push(a.value(i));
+        }
+    }
+    for c in d.child_data() {
+        leaf_f64(c, out);
+    }
+}
+
+fn report(tag: &str, path: &std::path::Path, primary_decl: &str, is_bbox_row: bool) {
+    println!("=== {tag} (declared primary={primary_decl:?}) ===");
+    let p = path.to_string_lossy().to_string();
+    {
+        let conn = spatial_engine::fixture::configured_connection().expect("conn");
+        let r = (|| -> Result<(), String> {
+            let mut stmt = conn
+                .prepare("SELECT name, type, repetition_type, num_children FROM parquet_schema(?)")
+                .map_err(|e| e.to_string())?;
+            let rows: Vec<(String, Option<String>, Option<String>, Option<i64>)> = stmt
+                .query_map([p.as_str()], |r| {
+                    Ok((r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?))
+                })
+                .map_err(|e| e.to_string())?
+                .map(|x| x.map_err(|e| e.to_string()))
+                .collect::<Result<_, _>>()?;
+            for (i, r) in rows.iter().enumerate() {
+                println!("{tag} parquet_schema[{i}]: name={:?} type={:?} repetition_type={:?} num_children={:?}", r.0, r.1, r.2, r.3);
+            }
+            Ok(())
+        })();
+        if let Err(e) = r {
+            println!("{tag} parquet_schema: Err({e})");
+        }
+        let r = (|| -> Result<(), String> {
+            let mut stmt = conn
+                .prepare("DESCRIBE SELECT * FROM read_parquet(?)")
+                .map_err(|e| e.to_string())?;
+            let rows: Vec<(String, String)> = stmt
+                .query_map([p.as_str()], |r| Ok((r.get::<_, String>(0)?, r.get::<_, String>(1)?)))
+                .map_err(|e| e.to_string())?
+                .map(|x| x.map_err(|e| e.to_string()))
+                .collect::<Result<_, _>>()?;
+            println!("{tag} DESCRIBE names: {:?}", rows.iter().map(|r| r.0.clone()).collect::<Vec<_>>());
+            println!("{tag} DESCRIBE types: {:?}", rows.iter().map(|r| r.1.clone()).collect::<Vec<_>>());
+            let mut stmt = conn.prepare("SELECT * FROM read_parquet(?)").map_err(|e| e.to_string())?;
+            let it = stmt.query_arrow([p.as_str()]).map_err(|e| e.to_string())?;
+            let sch = it.get_schema();
+            println!(
+                "{tag} Arrow export names: {:?}",
+                sch.fields().iter().map(|f| format!("{}:{}", f.name(), names_of(f.data_type()))).collect::<Vec<_>>()
+            );
+            Ok(())
+        })();
+        if let Err(e) = r {
+            println!("{tag} DESCRIBE/export: Err({e})");
+        }
+    }
+    match Dataset::open(path) {
+        Err(e) => println!("{tag} open: Err({e})"),
+        Ok(ds) => {
+            println!("{tag} open: Ok");
+            println!("{tag} resident names: {:?}", ds.file_schema().fields().iter().map(|f| f.name().clone()).collect::<Vec<_>>());
+            println!("{tag} covering().is_some(): {}", ds.covering().is_some());
+            let mut q = ViewportQuery::all();
+            if is_bbox_row {
+                q.bbox = Some(spatial_engine::Bbox {
+                    xmin: 2_599_999.0,
+                    ymin: 1_199_999.0,
+                    xmax: 2_600_011.0,
+                    ymax: 1_200_011.0,
+                });
+                q.bbox_crs = Some("EPSG:2056".to_string());
+            }
+            match ds.stream_with_cancel(&q, CancelToken::new()) {
+                Err(e) => println!("{tag} stream: Err({e})"),
+                Ok(mut s) => {
+                    let mut buf = Vec::new();
+                    let mut total = 0usize;
+                    let mut err = None;
+                    let mut xs: Vec<f64> = Vec::new();
+                    while let Some(info) = s.next_into(&mut buf) {
+                        match info {
+                            Ok(b) => total += b.rows,
+                            Err(e) => {
+                                err = Some(e.to_string());
+                                break;
+                            }
+                        }
+                        if !is_bbox_row && xs.is_empty() {
+                            let rd = arrow::ipc::reader::StreamReader::try_new(std::io::Cursor::new(&buf), None).unwrap();
+                            for b in rd {
+                                let b = b.unwrap();
+                                for (i, f) in b.schema().fields().iter().enumerate() {
+                                    if f.name() != "id" {
+                                        let mut v = Vec::new();
+                                        leaf_f64(&b.column(i).to_data(), &mut v);
+                                        xs.extend(v.into_iter().filter(|x| *x >= 2_000_000.0));
+                                    }
+                                }
+                            }
+                        }
+                        buf.clear();
+                    }
+                    match err {
+                        Some(e) => println!("{tag} stream: Err({e}) after {total} rows"),
+                        None => println!("{tag} stream rows: {total}"),
+                    }
+                    if !is_bbox_row {
+                        let mn = xs.iter().cloned().fold(f64::INFINITY, f64::min);
+                        let mx = xs.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
+                        println!("{tag} first-batch geometry x range (values >= 2e6): min={mn} max={mx} (A=2600000..2600010, B=+10000, C=+20000)");
+                    }
+                }
+            }
+        }
+    }
+}
+
+fn run(tag: &str, dir: &std::path::Path, sp: Spec, is_bbox_row: bool) {
+    let path = dir.join(format!("{tag}.parquet"));
+    let primary = sp.primary.to_string();
+    let w = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| write(&path, &sp)));
+    match w {
+        Ok(Ok(())) => println!("{tag} writer: wrote the file"),
+        Ok(Err(e)) => {
+            println!("{tag} writer: Err({e})");
+            return;
+        }
+        Err(_) => {
+            println!("{tag} writer: PANIC");
+            return;
+        }
+    }
+    let r = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| report(tag, &path, &primary, is_bbox_row)));
+    if r.is_err() {
+        println!("{tag} report: PANIC");
+    }
+}
+
+fn bb<'a>(sname: &'a str, xmin_child: &'a str) -> [Vec<&'a str>; 4] {
+    [vec![sname, xmin_child], vec![sname, "ymin"], vec![sname, "xmax"], vec![sname, "ymax"]]
+}
+
+#[test]
+fn ccc_p0_full() {
+    let dir = std::env::temp_dir().join("ccc-p0f-scratch");
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).unwrap();
+    let g = |n| vec![(n, 0.0)];
+    run("s1", &dir, Spec { geoms: g("geometry"), structs: vec![off("BBOX"), full("bbox")], primary: "geometry", covering: Some(bb("bbox", "xmin")) }, true);
+    run("s2", &dir, Spec { geoms: g("geometry"), structs: vec![("bbox", vec![("xmin", 0, false), ("XMIN", 0, true), ("ymin", 1, false), ("xmax", 2, false), ("ymax", 3, false)])], primary: "geometry", covering: Some(bb("bbox", "xmin")) }, true);
+    run("s3", &dir, Spec { geoms: g("geometry"), structs: vec![("bbox", vec![("xmin", 0, true), ("XMIN", 0, true), ("XMIN_1", 0, false), ("ymin", 1, false), ("xmax", 2, false), ("ymax", 3, false)])], primary: "geometry", covering: Some(bb("bbox", "XMIN_1")) }, true);
+    run("s4", &dir, Spec { geoms: g("geometry"), structs: vec![full("bbox"), off("bbox")], primary: "geometry", covering: Some(bb("bbox", "xmin")) }, true);
+    run("g1", &dir, Spec { geoms: g("geometry"), structs: vec![full("bbox"), off("BBOX"), full("BBOX_1")], primary: "geometry", covering: Some(bb("BBOX_1", "xmin")) }, true);
+    run("g4", &dir, Spec { geoms: g("geometry"), structs: vec![full("bbox"), off("BBOX")], primary: "geometry", covering: Some(bb("BBOX_1", "xmin")) }, true);
+    run("g2", &dir, Spec { geoms: vec![("geom", 0.0), ("GEOM", 10000.0), ("GEOM_1", 20000.0)], structs: vec![], primary: "GEOM_1", covering: None }, false);
+    run("g3", &dir, Spec { geoms: vec![("geometry", 0.0), ("GEOMETRY", 10000.0)], structs: vec![], primary: "GEOMETRY", covering: None }, false);
+    run("g5", &dir, Spec { geoms: vec![("geometry", 0.0), ("GEOMETRY", 10000.0)], structs: vec![], primary: "GEOMETRY_1", covering: None }, false);
+    run("g6", &dir, Spec { geoms: vec![("geometry", 0.0), ("geometry", 10000.0)], structs: vec![], primary: "geometry", covering: None }, false);
+    run("g7", &dir, Spec { geoms: vec![("geometry", 0.0), ("GEOMETRY", 10000.0)], structs: vec![], primary: "Geometry", covering: None }, false);
+    {
+        let path = dir.join("g8.parquet");
+        spatial_engine::fixture::write_hostile_geometry_name(
+            &path,
+            "geo\0m",
+            &[spatial_engine::fixture::HostileColumn { name: "a", int: false }],
+        );
+        println!("g8 writer: wrote the file");
+        report("g8", &path, "geo\0m", false);
+    }
+    {
+        let kd = dir.join("kdir").join("year=2024");
+        std::fs::create_dir_all(&kd).unwrap();
+        let sp = || Spec { geoms: vec![("geometry", 0.0)], structs: vec![full("bbox")], primary: "geometry", covering: Some(bb("bbox", "xmin")) };
+        let p = kd.join("f.parquet");
+        write(&p, &sp()).unwrap();
+        println!("k1 writer: wrote the file at .../year=2024/f.parquet");
+        report("k1", &p, "geometry", true);
+        let p0 = dir.join("k0.parquet");
+        write(&p0, &sp()).unwrap();
+        println!("k0 writer: wrote the file");
+        report("k0", &p0, "geometry", true);
+    }
+}

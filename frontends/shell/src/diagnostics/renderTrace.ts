@@ -145,8 +145,8 @@ export function traceCandidateResidencyStatus(
  * beyond `MAX_QUEUED_TILES`'s own issuing/queueing capacity, farthest-from-view-centre-first
  * (`TileViewportStreamManager.onCameraChange`'s own `coveringTruncated`/`truncatedCount`,
  * `tileViewportStreamManager.ts`). Unconditional, never gated behind `isInstrumentedBuild()` --
- * mirrors this file's own always-on precedent (`traceViewportQuery`'s own call site,
- * `tileViewportStreamManager.ts:574`, "always-on render-trace (never instrument-gated)" per that
+ * mirrors this file's own always-on precedent (`traceViewportQuery`'s own call site in
+ * `tileViewportStreamManager.ts`, "always-on render-trace (never instrument-gated)" per that
  * call site's own comment), unlike `traceTileIngest`/`traceCandidateResidencyStatus` above, which
  * the CALL SITE gates. **This is test/console OBSERVABILITY only, never the operator disclosure** --
  * entry 43's own operator-facing fix is the settled-partial status line itself

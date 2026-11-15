@@ -31,6 +31,7 @@ const NO_SLOTS: Slots = {
   "inspector.feature": null,
   "activity.console": null,
   "activity.notices": null,
+  "activity.table": null,
   "attention.sessionEnded": null,
   "attention.canvasRefusal": null,
   "attention.viewportRefusal": null,

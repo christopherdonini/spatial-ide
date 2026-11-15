@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
+import type { AttributeRow } from "../attributes/values";
 import type { AuthoritativeBbox } from "../canvas/viewportBbox";
+import type { Filter } from "../skp/types";
 import { applySelectionMode } from "../workspace/selection";
 import {
   viewInspected,
@@ -29,7 +31,7 @@ import type { LastClick } from "./FeatureTab";
  *   is kept and the last-click line names the clicked one and says so (A5).
  */
 export type ClickInput =
-  | { readonly kind: "feature"; readonly pick: InspectedPick; readonly bounds: AuthoritativeBbox }
+  | { readonly kind: "feature"; readonly pick: InspectedPick; readonly bounds: AuthoritativeBbox; readonly row: AttributeRow | "not-held" | null; readonly filter: Filter | null }
   | { readonly kind: "below-pick-resolution" }
   | { readonly kind: "nothing" };
 
@@ -52,13 +54,13 @@ export function clickEffect(view: ViewState, click: ClickInput, sessionEnded: bo
       row: clears ? "feature.inspect" : null,
     };
   }
-  const { pick, bounds } = click;
+  const { pick, bounds, row, filter } = click;
   if (!navigate) {
     const mode = viewSelectionMode(view);
-    const changed = applySelectionMode(viewSelection(view), mode, pick.id, bounds).kind === "changed";
+    const changed = applySelectionMode(viewSelection(view), mode, pick.id, { bounds, row, filter }).kind === "changed";
     return {
       lastClick: { kind: "feature", pick, keptPinned: null },
-      transitions: [{ action: "selection.apply", params: { mode, id: pick.id, bounds } }],
+      transitions: [{ action: "selection.apply", params: { mode, id: pick.id, bounds, row, filter } }],
       row: changed ? "selection.change" : null,
     };
   }
@@ -66,7 +68,7 @@ export function clickEffect(view: ViewState, click: ClickInput, sessionEnded: bo
   if (kept !== null) return { lastClick: { kind: "feature", pick, keptPinned: kept }, transitions: [], row: null };
   return {
     lastClick: { kind: "feature", pick, keptPinned: null },
-    transitions: [{ action: "inspect.set", params: { pick, bounds } }],
+    transitions: [{ action: "inspect.set", params: { pick, bounds, row } }],
     row: "feature.inspect",
   };
 }

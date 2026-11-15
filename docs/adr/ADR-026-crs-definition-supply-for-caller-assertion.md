@@ -147,3 +147,8 @@ section leaves in place — the question is ADR-032 (Proposed, decision open). T
 entry (`epsg-2056`) reuses …" above is superseded in fact by this note; it stands as the record of
 2026-08-18.
 
+## Note 2026-11-05
+
+*Appended on the human's typed words (`state/directives/2026-11-05-8c-full-form-nine-s2-placed-u12-slot-2-u1-reproducer-adr-notes-words-e2e-readme-words-8b-d3.md`, item 3); the note below is theirs, byte for byte. Nothing above this heading is changed.*
+
+Note 2026-11-05 — the Status line's Rule-7 note calls the `pasted` wording question still open, and the architect note of 2026-08-18 calls ADR-032 Proposed with its decision open. Both are dated: the `pasted` wording was settled on 2026-09-03 (the appended section below, DECISIONS-PENDING entry 25: `pasted` retained), and ADR-032 was accepted on 2026-09-23. The Status line and the note stand as written.

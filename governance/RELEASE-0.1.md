@@ -1,0 +1,1306 @@
+# RELEASE-0.1 — the release-engineering cut (v0.1.0): brief and preregistration record
+
+*Tracked. Dated, append-only past its architect consult: later changes are appended as amendments,
+never edited in. The custodian loop applies (AI_DEVELOPMENT.md): preregistration before code,
+reviewer/architect gates to affirmative PASS, PRs the human clicks, red lines queued in
+`DECISIONS-PENDING.md`. Ledger: `CUT-STATE.md` (untracked; archives at close).*
+
+## 0. The dispatch (the human, 2026-09-07, verbatim)
+
+> "Dispatch release engineering as the next cut, architect consult first per workflow. Named items,
+> from NEXT-CUT and the queue: (1) the ADR-020 owed defect — tauri build --debug origin mismatch,
+> fail-closed, must be fixed before any packaged build is claimed; (2) the packaged-app notice
+> channel from entry 51 — the compiled EPSG definition needs a notice surface in a packaged build;
+> (3) the first packaged build, installed on a clean profile, with its own walkthrough part — the app
+> has only ever run under tauri dev; (4) tag v0.1.0 with a KNOWN-LIMITATIONS declaration in the
+> house voice: Windows-only (macOS/Linux gates open by name), viewer ceilings, the declared partial
+> view at overview zoom until LOD, scan progress as named debt (ADR-029), WS transport
+> experimental-default (ADR-012 undecided), no editing/notebooks/MCP (Alpha per docs/07), and the
+> ADR-011 debts (47, pan-west, zoom-to-layer window) by name; (5) an outsider-facing README — the
+> current one is the constitution index, accurate and entirely inward — plus repo description/topics;
+> (6) a first-five-minutes quickstart for a stranger with a GeoParquet. No perf claims anywhere in
+> release text — "no numbers, no claim" applies to release notes too."
+
+## 1. What "release" means here, and what it does not
+
+v0.1.0 is the **Prototype hero slice** (docs/07: open a GeoParquet → filter in SQL → style it →
+publish a static interactive bundle) shipped as **the first packaged Windows build**, with every
+limit declared by name. It is not a claim of readiness beyond that sentence. The constitution's
+rule that binds every word of release text: **docs/01 — perf claims require measurements against
+docs/08; no numbers, no claim** — so release notes, README, quickstart and KNOWN-LIMITATIONS carry
+no timings, no throughput, no "fast", no "handles N GB" (the 5 GB fixture may be *named* as the
+slice's target dataset class only where the record already does so, never as a performance
+statement). "House voice", as this brief reads it from the record: declared, never inferred; limits
+stated by name with their home ADR; no marketing register; a stranger can verify every sentence
+against a file in the tree. **The architect consult is asked to confirm or correct this reading
+against docs/00–01 (question Q6 below).**
+
+## 2. The six items, scoped from the record
+
+### Item 1 — the ADR-020 owed defect (blocks every packaged claim)
+
+**The defect, in ADR-020's own words** (Status paragraph, Accepted 2026-08-13): the `tauri build
+--debug` origin mismatch is *"a **fail-closed implementation defect, owed before any packaged-debug
+support is claimed**"*. Mechanism (ADR-020 Decision, verbatim): *"`frontends/shell/src-tauri/src/lib.rs`
+supplies `http://localhost:5180` under `cfg!(debug_assertions)` (matching `tauri dev`) and
+`http://tauri.localhost` otherwise (a packaged build) — a compile-time distinction, not a runtime
+guess. That distinction is **not** "is this `tauri dev`": `tauri build --debug` produces a
+*packaged* build with `debug_assertions` on — webview at `http://tauri.localhost`, data plane
+expecting `http://localhost:5180`, every upgrade 403'd."* The selector is `lib.rs:71`
+(`if cfg!(debug_assertions) { "http://localhost:5180" … }`). ADR-020 also names, without adopting,
+the alternative: *"derive the expected origin from the webview's *actual* URL at startup (Tauri 2
+exposes the window's `url()`; verify the exact API before adopting) — still host-supplied, never
+page script, no wildcard, no drift, no `--debug` mismatch."* And it records that `5180` *"now lives
+in three places with no mechanical link (`vite.config.ts`, `tauri.conf.json`'s `devUrl`,
+`lib.rs`)."*
+
+**Scope of the piece (proposed; architect-blockable — this is origin admission, docs/09 and
+ADR-012 H4 territory):** replace the compile-time selector with a host-derived expected origin
+that is correct for `tauri dev`, `tauri build`, and `tauri build --debug` alike, keeping ADR-020's
+accepted mechanism intact (host-declared **exact-match** origin; never page script; no wildcard).
+Candidate designs for the architect to rank: (a) ADR-020's own named alternative — read the
+webview window's actual URL at startup (verify the Tauri 2 API by name and version in the piece,
+not from memory); (b) a single declared source of truth for the dev origin (read `devUrl` from the
+Tauri config at build time via `tauri-build`/env, with `debug_assertions` no longer the selector);
+(c) keep the selector but make `tauri build --debug` refuse to start with a named error (fail-closed
+*and* self-describing) — the minimum that makes the defect honest rather than fixed. **Tests,
+pre-committed:** a unit test per build mode's expected origin; an E2E/packaged check that the data
+plane admits the webview in a real `tauri build --debug` artifact (item 3 supplies the artifact).
+**Record:** ADR-020 gets a dated corrigendum/amendment stating the defect's resolution — **appended
+only on the human's word** (red line). The ADR-020 E2E harness dev gate (`import.meta.env.DEV`)
+stays independent and is named in the corrigendum, as the ADR already notes they disagree exactly
+under `--debug`.
+
+### Item 2 — the packaged-app EPSG/IOGP notice channel (entry 51; `DEPENDENCY-LICENSES.md`, "third channel is OWED")
+
+A packaged shell app ships the `spatial-engine` binary with `engine/src/crs-catalog.json` compiled
+in (`include_str!`), so the EPSG:2056 definition travels with every install, and the app has no
+notice surface today. The terms quoted in `DEPENDENCY-LICENSES.md` require IOGP's ownership to be
+acknowledged *"in any publication or transmission (by whatever means)"* and recipients to be
+informed of the Terms of Use. **Scope:** a notice surface in the packaged app carrying the same
+section `renderer/bundle-viewer/notice.mjs` emits for bundles — ideally generated from that ONE
+source so the two cannot drift (a build step writes a `NOTICE.txt` into the packaged app's
+resources and an About/Notices view in the shell shows it), plus the AGPL notice the packaged app
+owes anyway (ADR-009 item 7: the distributed code's notice and corresponding-source route — the same
+`Url` route F-3 just shipped for bundles). **Test, pre-committed:** the notice text in the packaged
+artifact contains the IOGP acknowledgement, the terms URL, and the corresponding-source URL
+(asserted against the built artifact in item 3's check). Architect question Q2: is a shell About
+surface a docs/03 concern with an existing design, or new UI that needs its own naming?
+
+### Item 3 — the first packaged build, on a clean profile, with its own walkthrough part
+
+The app has only ever run under `tauri dev`; CI's shell workflow states *"`tauri build` was run"*
+is **not** among what green means — bundling/installer/signing is unexercised
+(`.github/workflows/product-ci-shell.yml:27`). `tauri.conf.json`: `productName "Spatial IDE"`,
+`version "0.1.0"`, `identifier dev.spatialide.shell`, `beforeBuildCommand npm run build`,
+`frontendDist ../dist`, `bundle.active true`, `targets "all"`. **Known gap the packaged build must
+close:** `publish.rs:786-794` records that the bundle viewer is located dev-tree-relative
+(`CARGO_MANIFEST_DIR` + `../../..`) and *"does not hold for a packaged build: nothing here wires the
+viewer into `tauri.conf.json`'s `bundle.resources`"* — so a packaged v0.1 cannot publish until the
+viewer's `dist/` is shipped as a resource and resolved via Tauri's resource path. **Scope:** (a)
+`bundle.resources` for the viewer dist + a resource-relative lookup with the dev-tree lookup kept
+for `tauri dev`; (b) `tauri build` producing a Windows installer (which target: the architect/human
+choose — NSIS vs MSI; both are Tauri defaults; signing is OUT of v0.1 and declared so); (c) a CI
+job that runs `tauri build` on the Windows runner and uploads the artifact (build only — no
+signing, no release publishing from CI); (d) **Part M of `frontends/shell/MANUAL-WALKTHROUGH.md`**
+(new): install on a **clean Windows user profile** (a fresh local account on the reference machine,
+or a clean VM — the human's choice), first launch, the notice surface (item 2), open a GeoParquet,
+filter, style, publish a bundle, open the bundle in a browser — every expected outcome quoted from
+the shipped strings; run by the human, batched (rule 11). No perf steps. Architect question Q3:
+does packaging touch docs/09's local-listening-sockets posture (the kernel's loopback data plane
+and the token) in a way that needs a corrigendum, or does ADR-020's existing packaged-origin text
+already cover it?
+
+### Item 4 — tag v0.1.0 with a KNOWN-LIMITATIONS declaration
+
+A `KNOWN-LIMITATIONS.md` at the repo root (linked from the README and the release notes), each
+entry naming its home decision, in the dispatch's order:
+1. **Windows-only.** Validated on the reference profile (CLAUDE.md: Windows 10 Pro 22H2 / MSVC /
+   WebView2). macOS and Linux gates are **open by name**: docs/07's follow-up "macOS/Linux
+   hardware validation" of the ADR-003 renderer/CRS gate; `MACOS-BRINGUP.md`'s paused bring-up;
+   ADR-012's scope line (*"Nothing here says anything about macOS/WKWebView or Linux/WebKitGTK"*).
+2. **Viewer ceilings** — the published bundle viewer refuses above its declared ceilings
+   (`renderer/bundle-viewer/src/render.ts:50-55`: `MAX_FEATURES = 2_000_000`, `MAX_PARTITIONS =
+   100_000`, `MAX_RESIDENT_BYTES = 512 MiB`, `MAX_ATTRIBUTE_COLUMNS = 32`, `MAX_ATTRIBUTE_DISPLAY_CHARS
+   = 512` — quoted from the constants, they are declared limits, not measurements), and the shell
+   can publish a bundle the viewer will refuse — **ADR-025, decision deliberately open** (Part H8b).
+3. **The declared partial view at overview zoom** — under the viewport-residency candidate arm,
+   zooming out past the render budget shows "the first look plus whatever tiles fit", says so
+   (the over-budget sentence and its suffix), and pauses filling until the next pan or zoom;
+   ADR-028 Amendment 3 and the human's flip-first ruling name this the v0.1 limitation until the
+   LOD cut (ADR-011 line).
+4. **Scan progress is named debt** — ADR-029 (Proposed, *"decision deliberately undrafted"*): the
+   true scan-progress carrier quantity is not on the wire; liveness is shown, progress is not.
+5. **WS transport is the experimental default** — ADR-012 Proposed, *"awaiting human approval. Not
+   accepted"*, withheld twice; the data-plane transport decision is open.
+6. **No editing, notebooks, MCP** — docs/07 Alpha items (notebooks record/replay; MCP server with
+   the permission model; data doctor; problems panel; first external plugin; the action console's
+   Alpha half) and ADR-002's phased editing scope (*basic digitizing in 1.0 as a plugin*).
+7. **The ADR-011 debts, by name:** entry 47 (the hover readout clears on any camera change; re-pick
+   on camera settle is the next cut's named piece, criterion in the human's words); **pan-west's
+   large-batch re-admission spike** and **zoom-to-layer's sustained new-tile admission window**
+   (ADR-028's gate-8 written answer, recorded as binding debt on the ADR-011 tiling/LOD line —
+   the ADR-021-condition pattern). *Proposed addition for the human's sight, not in the dispatch:*
+   entry 42 (under the candidate arm "Zoom to layer" fits what has rendered, not the layer's
+   extent) sits on the same line and is operator-visible in the first five minutes; omitting it
+   would make the declaration read as complete when it is not.
+Then **`v0.1.0` is tagged** — a release act: **the human tags, or explicitly authorizes the tag**
+(red line: outward-facing, hard to reverse). Release notes = the KNOWN-LIMITATIONS text plus the
+hero-slice sentence and the install pointer; nothing else. No numbers.
+
+### Item 5 — an outsider-facing root README, plus repo description/topics
+
+**Fact:** the repository has **no root `README.md`**; `docs/README.md` is the constitution index
+(inward, accurate). Item 5 creates the root README from nothing: what Spatial IDE is (docs/00's
+one-paragraph statement, in its words), what v0.1.0 does (the hero slice), what it deliberately is
+not (KNOWN-LIMITATIONS link), how to install (item 3's artifact), the quickstart link (item 6),
+the license layers (`LICENSES/README.md`), how to contribute (CONTRIBUTING.md, DCO), where the
+constitution lives (`docs/README.md`). Repo description and topics: drafted in the PR body for the
+human's sight; applied to GitHub settings only after that sight (an outward-facing change).
+
+### Item 6 — a first-five-minutes quickstart for a stranger with a GeoParquet
+
+`QUICKSTART.md` (root, linked from the README): install from the v0.1.0 artifact → launch → open
+your GeoParquet → what the app requires of the file and what it says when it refuses (Part B: no
+CRS; Part C: missing identity — quoted from the shipped refusal strings) → filter in SQL → style →
+publish → open the bundle. Written for someone who has never seen the constitution; every sentence
+verifiable against a shipped string or a file. No fixture generation, no dev toolchain, no numbers.
+
+## 3. Sequencing (proposed)
+
+Item 1 first (nothing packaged may be claimed before it). Items 2 + 3 together as the "packaged
+build" piece (the notice channel and the viewer resources are both "what a packaged build must be
+true about"), with Part M drafted alongside and run by the human on the artifact. Items 5 + 6
+drafted in parallel once the install path is known (they cite it). Item 4 last: the declaration is
+written against what actually shipped, then the human tags. Each piece: preregistered here (dated
+amendment), worker, reviewer gate (architect where blockable), PR.
+
+## 4. Questions for the architect consult (first step, per workflow)
+
+- **Q1.** Item 1's design: rank (a)/(b)/(c); name what each does to ADR-020's accepted exact-match
+  mechanism and to docs/09 / ADR-012 H4; name the corrigendum/amendment shape for the human.
+- **Q2.** Item 2's notice surface: existing docs/03 design or new UI; the one-source constraint.
+- **Q3.** Item 3: packaging's effect on docs/09 (loopback data plane, token) and ADR-020's
+  packaged-origin text; the installer target; whether a CI `tauri build` job is in scope.
+- **Q4.** Item 4: is the KNOWN-LIMITATIONS list complete against the constitution's open gates and
+  the Proposed/undecided ADRs (ADR-011 gates 1–7 unmeasured; ADR-023; ADR-025; ADR-029; ADR-012;
+  ADR-026's own limits)? Which of these must be named for the declaration to be honest, beyond the
+  dispatch's list? Is the entry-42 addition warranted?
+- **Q5.** Items 5/6: anything in docs/00–14 that binds the outsider-facing text (the `docs/14`
+  trademark stub, ADR-009's license layers, docs/09's posture statements)?
+- **Q6.** The "house voice" reading in §1: confirm or correct against docs/00–01.
+- **Q7.** Anything this brief scopes that the constitution says a Prototype release may not claim.
+
+## 5. Out of scope, declared
+
+Code signing and notarization; auto-update; macOS/Linux artifacts; any performance statement; any
+change to the residency/LOD behaviour (LOD is the cut after this one, flip-first); ADR status changes
+other than the ADR-020 record of the fix (the human's word); the entry-40 producer question (closed
+as a null result 2026-09-07).
+
+---
+
+## Amendment 1 — the architect consult's verdict: **FAIL — block** (2026-09-07, appended; §§0–5 above are retained unedited as the reviewed draft)
+
+**Three blocking findings, each verified by the custodian on the cited lines before recording:**
+
+- **B1 — KNOWN-LIMITATIONS entry 3 (and the proposed entry-42 addition) describe an arm the packaged
+  build does not ship.** `frontends/shell/src/residency/residencyArm.ts:26`: `DEFAULT_RESIDENCY_ARM =
+  "baseline"`; its doc (`:18-21`): *"The candidate default flips only if the human accepts ADR-028 --
+  never in this module, never in this piece."* The only site that moves a session off baseline is
+  DEV-gated (`App.tsx:945-949`: *"`residency/residencyArm.ts` never runs, or is even referenced, in a
+  production build"*). ADR-028 IS Accepted (2026-09-02); the flip was never built. A plain `tauri
+  build` therefore ships the **baseline** arm: past `MAX_RESIDENT_VERTICES = 2_000_000` the stream is
+  cancelled with a typed refusal (`limits.ts:25-28`) — ADR-011 gate 8's interim, under which *"docs/07's
+  5 GB hero dataset never fits client-side at all"* (ADR-011:63). Entry 3 as drafted is false for
+  the artifact; §5's "no change to residency behaviour" forbids the only change that would make it
+  true. **The human decides** (DECISIONS-PENDING entry 52): flip the default (a scoped piece + Part M
+  on the flipped build), ship baseline and rewrite entries 3/42 to the ceiling-refusal contract, or
+  defer v0.1 until the flip has its own cut. Items 3, 4 and 6 are blocked on that ruling.
+- **B2 — publish shipped to strangers while ADR-017's acceptance condition stands undischarged.**
+  ADR-017:4-7 (Status): *"before publish is exposed through SKP, any shipped CLI/UI, MCP, plugin,
+  notebook or AI surface — and no later than Prototype exit — the kernel must enforce a scoped
+  publish grant, explicit approval, and a redacted audit record … Until then `publish-bundle` remains
+  developer/test tooling only."* The human's F-10 ruling in the same file: the condition *"does not
+  lapse"*; exposure through a shipped UI *"additionally requires that the exposure surface itself pass
+  review"*; ADR-024 and docs/02:89 say filing ADR-024 does not discharge it. A distributed installer
+  whose walkthrough, quickstart and release notes say "publish" IS a shipped UI. **Either the human's
+  exposure review runs inside this cut, or publish is removed from Part M, QUICKSTART, README and the
+  release notes for v0.1** (entry 53).
+- **B3 — §2 drops two items the human's own 2026-09-07 ruling placed in this track.**
+  DECISIONS-PENDING (LOD scheduling ruling, verbatim): *"the flip track (ADR-025 reading, the exposure
+  review, the 12–15 go/no-go) becomes the live queue."* The 12–15 go/no-go is overtaken (public since
+  2026-08-03). The ADR-025 reading and the exposure review are not — surfaced as a proposed
+  descoping for the human's word, not absorbed (entry 53).
+
+**Corrections to §§1–2, each against the file cited (the custodian's slips, named):**
+1. §1 attributes *"perf claims require measurements against docs/08; no numbers, no claim"* to
+   docs/01. docs/01 contains neither sentence; the rule's homes are `CLAUDE.md`'s non-negotiables
+   digest and `docs/08_Testing.md:62` (*"no numbers, no claim"*); docs/01 supplies principle 3
+   (*"Nothing claims a grade it cannot honor"*) and derived rule 1 (budgets enforced in CI, 08).
+2. §2 item 2 cites ADR-009 item 7 for the packaged app's AGPL notice; item 7 is bundle-scoped
+   (*"Published bundles distribute the AGPL viewer"*). An installer distributes the core — ADR-009
+   item 1's set — and the obligation is AGPL §4/§5's. The `Url` corresponding-source route (entry 49
+   F-3) is the vehicle.
+3. §2 item 1 calls the ADR-020 piece "architect-blockable". It is not (ADR-020 is not in the
+   architect-blockable set named by docs/README:27 / docs/02:83). It IS gated: ADR-020:21-24 records
+   the 2026-08-12 review as *"human-directed (security-posture red line)"* — the human's word is
+   needed for the piece (entry 54), not the architect's block.
+4. §2 item 3(b) says "NSIS vs MSI; both are Tauri defaults" as a choice; `tauri.conf.json:27` is
+   `"targets": "all"` — as configured BOTH are produced; pinning one is a config change to scope and
+   the human's word (recommendation NSIS: per-user, no elevation, so the clean-profile test needs no
+   admin).
+5. §2 item 4 entry 3 cites "ADR-028 Amendment 3" — its heading still reads "Proposed until the
+   human's word" with clause 5 recording the ruling that appended it; cite clause 5 with it.
+6. §1's "house voice": **the constitution states no writing register** (docs/00 and docs/01 read in
+   full by the architect; a grep of docs/ for voice/register/tone/marketing returns nothing
+   normative). What binds: principle 3, principle 8 (*"No black boxes"*), the derived rule *"Users are
+   never told something is undoable when it isn't"*, docs/08:62. "Declared, never inferred" and
+   "limits named with their home ADR" are corpus practice (ADR-010 rule 6; ADR-028's contract), not
+   constitutional text; "no marketing register" has no source and is a house preference, labelled so;
+   "a stranger can verify every sentence against a file in the tree" is adopted as **this release's
+   own declared standard**.
+7. "flip-first" in §1/§2 conflates two flips: the ruling's "flip track" is the public-release track
+   (ADR-025 reading, exposure review, 12–15), NOT the residency arm. Disambiguated here; B1 is the
+   arm question.
+8. Sequencing (§3): item 4 last is right, but the ARM decision precedes item 3 (Part M runs on an
+   artifact whose arm must be decided), not item 4.
+
+**Q1 — ADR-020 fix, ranked: (a) primary with (b) folded in; (c) fallback only.** (a) read the
+webview window's actual URL once inside `setup()` before any page script can run, normalise to
+scheme+host+port, pin for the process, refuse to start if absent/unparseable (fail closed); keeps
+host-supplied, exact-match, no wildcard; `Origin: null` still rejected; the `sec-fetch-site`
+fallback unchanged; docs/09 and ADR-012 H4 untouched (removing the `5180` drift strengthens
+exact-match). Verified available in the pinned crate: `tauri 2.11.5`, `Webview::url()` at
+`src/webview/mod.rs:1679-1680` (*"Returns the current url of the webview."* /
+`pub fn url(&self) -> crate::Result<Url>`). (b) alone does not fix the defect (the selector is still
+"which mode am I"); adopt it WITH (a) as the dev-origin single source. (c) discharges the sentence by
+ceasing to claim `--debug` support; it would strike this brief's own packaged-`--debug` admission
+test. **Tests that carry the claim** (must survive): the port-derived default is not admitted;
+admitted origin + wrong token is refused (`kernel/tests/skp_admission.rs`, ADR-020:118-122); plus the
+new packaged-`--debug` E2E admission check (item 3's artifact). **Record: an appended, dated ADR-020
+Amendment 1, not a corrigendum** (the ADR's text is not wrong; acceptance excluded the selector) —
+contents: the Status sentence discharged quoted verbatim; the new selector with API + version; the
+one-sentence *"the accepted mechanism is unchanged; this replaces a selector the acceptance never
+covered"*; the E2E `import.meta.env.DEV` gate's status under `--debug`; a reopen condition; and
+same-commit updates to `docs/02:83` and `docs/README.md:27`, which still say the defect is owed.
+Appended only on the human's word (entry 54).
+
+**Q2 — the notice surface: new UI; no docs/03 design exists** (docs/03 read in full by the
+architect). Binding: ADR-027 decision 4 taxes any new Tauri command (unclassified → build fails) —
+cheapest constitutional route: ship `NOTICE.txt` as a bundled resource, render it from the frontend
+with NO new command; one-source must be a TEST (packaged `NOTICE.txt` generated from
+`renderer/bundle-viewer/notice.mjs`'s `notice()` at build time and asserted byte-identical in the
+artifact), not a convention; add `renderer/bundle-viewer/notice.mjs` to the shell workflow's path
+filters (`product-ci-shell.yml:66-84`, the same gap its lines 50-56 record for `renderer/style-ts/**`);
+ADR-009's Caveat (counsel) is not triggered by a release — say so.
+
+**Q3 — packaging vs docs/09:** no corrigendum owed (docs/09 is *Evolves*; its Local-listening-sockets
+section already names `http://tauri.localhost` packaged); packaging changes no mechanism. What
+packaging newly makes real: `"csp": null` (`tauri.conf.json:21-23`) ships to end users — ADR-020:111-113's
+*"with no CSP, any script that reaches the shell's page inherits the admitted origin"* changes
+audience, not mechanism → one sentence owed in docs/09 + a KNOWN-LIMITATIONS line; it also makes
+ADR-024's DOM-approval limitation live for end users. Installer target: pin one (NSIS recommended).
+CI `tauri build` job: in scope, build-only, and it inherits `product-ci-shell.yml:58-62`'s rule —
+until a run has gone green end to end and its run id/commit/trigger/duration are recorded, nothing
+may cite it as a gate; no release text cites CI as evidence.
+
+**Q4 — KNOWN-LIMITATIONS is NOT complete; eight additions required** (operator-visibility order):
+(1) the residency arm actually shipped (B1); (2) **ADR-023 — mandatory**: *"the working canvas
+styles by literal only; the hover panel shows `id` only; and the hero slice's 'colour by attribute'
+moment lives in the published bundle rather than in the shell. Each of those is a named limit, never
+presented as a product choice"* (ADR-023:35-37) — the quickstart's "style" must say style-by-literal;
+(3) ADR-026/ADR-015 — the CRS surface: `engine/src/crs-catalog.json` holds ONE entry (EPSG:2056);
+pinned, never fetched, no matching, no defaults — for a stranger with any other CRS this is the
+largest first-five-minutes limit; (4) ADR-016 — what identity does not establish (dataset-wide
+uniqueness, stability across reopen; composite/non-integer keys open); (5) ADR-017's condition /
+publish as class-3 approval-gated (B2); (6) ADR-027 — principle 4 *"partially discharged … made
+legible but not satisfied for style and publish"* — no "everything is scriptable"; (7) the local
+listening socket + `csp: null`; (8) ADR-011 gates 1–7 open, gate 8 alone met, and the citation rule
+(*"Nobody may cite this ADR … as a settled design"*) — the debts ride the ADR-011 line without a tiling
+plan existing. Lower priority, one line each: ADR-019 Proposed / ADR-014 reserved; docs/08:20-21
+(budgets "owed, not operating") if any text mentions budgets or CI. Check, don't assume: entry 43's
+status against shipped code. **Entry-42 addition: warranted in principle, wrong as drafted** — it is
+arm-conditional (inherits B1) and must cite DECISIONS-PENDING entry 42 as open and unruled, never an
+ADR.
+
+**Q5 — what binds the outsider-facing text:** docs/14:19 trademark stub ("Spatial IDE" is a working
+title, *"weak as a defensible mark"*: no ™/®, one-line trademark note; ADR-009 item 8); docs/14:14-16
+(SKP spec and formats open permanently; proprietary plugins permitted) — safe; ADR-009:22-26 layer
+table for the licence section, ADR-009:48-53 ("what AGPL does not provide") not softened; NEVER
+repeat the "not public until the checklist lands" framing — and **docs/02:81 was stale** (*"ADR-009 is
+open … before any public code"*), corrected dated in this cut; docs/09:3-5 Posture ("Local-first. No
+network access without an explicit grant.") is fully backed — state it; docs/14:27 attribution rides
+only if sample data ships — keep "the stranger brings their own file"; **hard prohibition: quote
+docs/00:9-11 ("What we are building"), never docs/00:35 (the North Star names 10 GB, natural
+language, notebooks, six-months reproduction — none of which v0.1 delivers).**
+
+**Q7 — twelve prohibitions on release text:** no performance statement (docs/08:62; docs/08:20-21;
+ADR-012:232 *"No throughput-based claim may cite this ADR"*); "5 GB" nameable only as the slice's
+target dataset class, never as a capability, and never without the ceiling beside it (ADR-011:63);
+no macOS/Linux support claim; never "zero-copy" (ADR-004); no principle-4 "everything is scriptable"
+(ADR-027:61-63); no "reproducible" without a declared grade (principle 3, ADR-005); no "undo"/
+"undoable" (derived rule; ADR-022 style is ephemeral; publish is class-3); no AI/MCP/notebook language
+(docs/07 Alpha); no presentation of ADR-011/012/023/024/025/029 as settled; no "publish" as a user
+feature until B2 clears; no CI-as-evidence (`product-ci-shell.yml:58-62`); no spatial-indexing or
+import-layout claim (docs/07:22 — the preregistered import-layout gate FAILED).
+
+**Stale statements found on the way (fix-forward, dated, this cut):** `docs/02:81` (ADR-009 "is
+open"); `docs/09:43` (ADR-021 "Proposed" — Accepted 2026-08-13); `frontends/shell/src/canvas/limits.ts:28`
+(ADR-028 "Proposed, not accepted" — Accepted 2026-09-02); `docs/02:83` + `docs/README.md:27`
+(ADR-020's defect "owed" — updated by the Amendment 1 commit, not before).
+
+**Consequences for sequencing.** Item 1 (ADR-020) may proceed on the human's word under the
+security-posture red line (entry 54) — it is independent of B1/B2. Items 3/4/6 wait on entry 52 (the
+arm); publish's presence in any v0.1 text waits on entry 53. Items 2 and 5 can be drafted, with
+publish and the arm left as bracketed slots until ruled.
+
+---
+
+## Amendment 2 — the human's rulings on entries 52/53/54 and B3; the ruled item list; preregistration of items 1 and 7 (2026-09-07, appended BEFORE any code)
+
+**The human, verbatim:** *"52 = (a): flip the default to candidate; arm switch stays dev-gated for the
+harness; the piece audits and re-aims/arm-pins every test encoding the refusal contract (Part D
+banner, OVERCEIL′); Part M on the flipped build. 53 = run the ADR-017 exposure review inside this cut,
+bundled with Part M on the packaged artifact; pre-declared fallback: if F-10 fails, publish descopes
+by name and the hero slice ends at style. B3: include ADR-025 and the review by name; ADR-025 reading
+= refuse-at-preflight, typed, naming the viewport-bbox alternative, reopen when a second reader
+exists. Installer = NSIS only, per-user, no elevation. 54 = authorized with five conditions [as
+above]; ADR-020 Amendment 1 pre-approved in that shape. Recommended addition, rule at brief sight:
+extend the CRS catalog with EPSG:4326 and 3857 under the entry-51 verification protocol. The
+consult's eight KNOWN-LIMITATIONS additions and twelve prohibitions adopted as written."*
+
+**"[as above]" read as the consult's five conditions on design (a)** (Amendment 1, Q1): (1) read the
+webview URL once inside `setup()` before any page script can run; (2) normalise to scheme+host+port;
+(3) pin the value for the process; (4) refuse to start on an empty/unparseable origin — fail closed;
+(5) name the Tauri 2 API and crate version verified, in the piece, not from memory. Correctable at
+the human's word.
+
+### The ruled item list (supersedes §2's numbering where it differs)
+
+- **Item 7 (NEW, runs first with item 1) — flip the default residency arm to candidate.** Ruling
+  52 (a). Preregistration below.
+- **Item 1 — ADR-020 fix**, design (a)+(b), five conditions, ADR-020 Amendment 1 pre-approved in the
+  Amendment-1 (Q1) shape. Preregistration below.
+- **Item 2 — packaged notice channel**, per Q2: `NOTICE.txt` as a bundled resource rendered from the
+  frontend with NO new Tauri command (ADR-027 tax avoided); generated at build time from
+  `renderer/bundle-viewer/notice.mjs`'s `notice()` and asserted byte-identical in the artifact; the
+  AGPL notice + `Url` corresponding-source route for the installer (ADR-009 item 1 + AGPL §4/§5, not
+  item 7); `notice.mjs` added to the shell workflow's path filters.
+- **Item 3 — the packaged build**: **NSIS only, per-user, no elevation** (`tauri.conf.json` targets
+  pinned from `"all"`); the bundle viewer shipped as a resource and resolved via the resource dir
+  (`PathResolver::resource_dir`, tauri 2.11.5 `src/path/desktop.rs:230`) with the dev-tree lookup
+  kept for `tauri dev`; a CI `tauri build` job (build-only; carries `product-ci-shell.yml:58-62`'s
+  never-cite-until-green rule and its run record); **Part M** on the FLIPPED build on a clean profile,
+  **bundled with the ADR-017 exposure review** (the human reviews the publish surface against
+  ADR-017 §15/§18 with an evidence pack the custodian prepares: the approval dialog, the grant
+  scope, the audit record, the redaction, the ADR-025 preflight refusal); **pre-declared fallback:
+  if F-10 fails, publish descopes by name and the hero slice ends at "style"**, stated in
+  KNOWN-LIMITATIONS, README, QUICKSTART and the release notes alike.
+- **Item 3e (NEW, part of the publish surface) — ADR-025 decided: refuse at preflight, typed.** The
+  publish preflight predicts the artifact against the bundled viewer's declared ceilings (read from
+  the viewer's own constants, never a second copy — ADR-025's own constraint) and refuses with a
+  typed error naming the viewport-bbox publish as the alternative; **reopen condition: when a second
+  reader exists.** ADR-025's decision section carries the human's words; status Accepted 2026-09-07
+  on that word.
+- **Item 4 — KNOWN-LIMITATIONS + tag**, with the consult's **eight additions adopted as written**
+  (the shipped arm = candidate, stated; ADR-023 style-by-literal/hover-id-only; ADR-026 single-entry
+  CRS catalog — or the extended one if item 8 is ruled in; ADR-016 identity limits; ADR-017 /
+  publish class-3 approval-gated (or descoped, per the fallback); ADR-027 principle 4 partial; the
+  loopback socket + `csp: null`; ADR-011 gates 1–7 open, gate 8 alone met, the citation rule) and the
+  **twelve prohibitions adopted as written** (Amendment 1, Q7). Entry 42 added, cited to the open
+  entry, arm-conditional wording now resolved by ruling 52. The human tags.
+- **Item 5 — root README + description/topics** (Q5 binding: docs/00:9-11 never :35; docs/14
+  trademark note; ADR-009 layer table; docs/09 posture; no "not public until" framing).
+- **Item 6 — QUICKSTART**, style-by-literal stated; CRS requirement stated (EPSG:2056 only, or the
+  extended catalog); publish per the ruling/fallback.
+- **Item 8 (PROPOSED by the human, to be ruled at the brief's sight; not started) — extend the CRS
+  catalog with EPSG:4326 and EPSG:3857** under the entry-51 verification protocol: each definition's
+  PROJJSON compared leaf-by-leaf, keyed by EPSG code, against PROJ 9.6.2's rendering (EPSG v12.013),
+  recorded in `spikes/entry51-epsg2056-equivalence/`'s successor; attribution beside each entry; the
+  pinned-hash test extended consciously; ADR-026's "pinned in-tree, never fetched, no matching, no
+  defaults" unchanged. Its consequence for a stranger: a WGS84 or Web-Mercator GeoParquet opens.
+
+### Sequencing (ruled form)
+
+Items 1 and 7 in parallel first (disjoint files: `src-tauri` vs the frontend). Then items 2 + 3 (+3e)
+as the packaged-build piece; Part M + the exposure review on that artifact (human, batched). Items
+5 + 6 drafted once the install path and the publish ruling are known. Item 4 last; the human tags.
+Item 8 only if ruled in at sight, before item 4's text is final.
+
+### Preregistration — item 1 (ADR-020 fix)
+
+Design (a)+(b). Code: `frontends/shell/src-tauri/src/lib.rs` — the `cfg!(debug_assertions)` origin
+selector (`:71`) is replaced by an origin read from the webview window's actual URL inside `setup()`
+before any page script runs (`Webview::url()`, tauri 2.11.5, `src/webview/mod.rs:1679-1680`,
+`pub fn url(&self) -> crate::Result<Url>`), normalised to scheme+host+port, pinned for the process,
+and refused at startup — a named, logged, fail-closed error — if absent or unparseable; the dev
+origin's single declared source replaces the three-place `5180` (`vite.config.ts`, `tauri.conf.json`
+`devUrl`, `lib.rs`) — the piece names which one is the source and how the others read it.
+`DataPlaneConfig::expected_origin` / `Session::with_origin` (the accepted mechanism) unchanged: host-
+supplied, exact-match, never page script, never a wildcard; `Origin: null` still rejected; the
+`sec-fetch-site: same-origin` fallback unchanged. **Tests (pre-committed):** the claim-carrying kernel
+tests survive unmodified (`kernel/tests/skp_admission.rs`: the port-derived default is not admitted;
+admitted origin + wrong token is refused — cite ADR-020:118-122); a unit test that the normalisation
+yields exactly `http://localhost:5180` for the dev URL and `http://tauri.localhost` for the packaged
+URL and refuses `""`/garbage; the packaged-`--debug` admission check is DECLARED here and executed on
+item 3's artifact (Part M step). **Record, in the same commit:** ADR-020 Amendment 1 appended in the
+pre-approved shape (Status sentence discharged quoted verbatim; the new selector with API + version;
+*"the accepted mechanism is unchanged; this replaces a selector the acceptance never covered"*; the
+E2E `import.meta.env.DEV` gate's status under `--debug`; a reopen condition: any build mode whose
+webview origin is not readable at startup reopens this amendment rather than reintroducing a
+compile-time selector); `docs/02:83` and `docs/README.md:27` updated (they say the defect is owed).
+Gate: reviewer, plus an architect re-check of the origin code against the five conditions before the
+reviewer's affirmative PASS. Human-directed security red line honoured by ruling 54.
+
+### Preregistration — item 7 (flip the default arm to candidate)
+
+Facts (read): `residencyArm.ts:26` `DEFAULT_RESIDENCY_ARM = "baseline"`; the candidate SESSION is
+itself DEV-gated — `App.tsx:988` `if (isInstrumentedBuild() && getResidencyArm() === "candidate")` —
+so today no production build can run candidate code at all; `check:dist-clean`
+(`e2e/checkDistClean.mjs`) asserts an extended identifier list is absent from the production dist;
+`residencyArm.test.ts:20-22` pins "defaults to baseline"; the refusal contract is encoded in
+`e2e/regression.mjs`'s OVERCEIL′ step (over-ceiling fixture → *"N of M features rendered — declared
+ceiling reached (MAX_RESIDENT_VERTICES)"*), `e2e/filter-panel.mjs`'s SLOW′/CANCEL′ steps (the same
+pattern on the slow fixture), `e2e/admission-remediation.mjs:80`'s literal, and MANUAL-WALKTHROUGH
+**Part D** ("deliberate ceiling refusal"). **The piece:** (1) `DEFAULT_RESIDENCY_ARM = "candidate"`;
+(2) the candidate session runs in production — the `isInstrumentedBuild()` half of `App.tsx:988` is
+removed for the session, while the SWITCH (`setResidencyArm`/`getResidencyArm` E2E hook registration
+and the arm/tile-size bookkeeping) stays dev-gated exactly as now; (3) `check:dist-clean`'s list
+updated so the candidate session's identifiers are expected in dist and only the switch/hook
+identifiers stay forbidden — with the list change explained line by line; (4) `residencyArm.test.ts`
+re-pinned to "defaults to candidate", plus a test that `setResidencyArm("baseline")` still works in
+dev; (5) **every refusal-contract test audited**: OVERCEIL′, SLOW′/CANCEL′, admission-remediation's
+literal, Part D — each either **re-aimed** to the candidate contract (the declared partial-view
+strings 1–6 per `residencyStatus.ts`, verbatim) or **arm-pinned** to baseline via the dev switch
+before the step, with the choice stated per test; baseline keeps its tests (the baseline arm remains
+selectable in dev and its refusal contract remains ADR-011 gate 8's recorded interim); (6) `limits.ts`
+doc and `residencyArm.ts` doc updated to the new default; (7) MANUAL-WALKTHROUGH Part D rewritten
+as an arm-pinned dev step or re-aimed, dated; Part M runs on the flipped build. **Tests
+(pre-committed):** the whole vitest suite green with the flipped default; `check:dist-clean` green
+with candidate identifiers present and hook identifiers absent; the E2E regression + filter-panel +
+admission-remediation runs green on the re-aimed/pinned steps (executed, not just written — the
+harness recipe in AI_DEVELOPMENT.md); a new unit test that a production-mode render (no instrumented
+build) constructs the candidate session. **No ADR change:** this applies ADR-028 as accepted; ADR-028
+Amendment 3's contract becomes the shipped one. Gate: reviewer (ADR-010 rule 5 — nothing becomes
+silent — re-checked on the re-aimed steps).
+
+---
+
+## Amendment 3 — B2's premise corrected on the record; preregistration of items 2, 3 and 3e (2026-09-07, appended BEFORE any code on those items)
+
+**B2 correction (custodian, on reading ADR-017 in full).** ADR-017 §"Exposure review — 2026-08-17,
+human decision — the UI surface passes, with two binding conditions" and §"Exposure review completion
+— 2026-08-17": *"the acceptance condition is discharged for the shell's UI surface"* (conditions 1 and
+2 landed in `cd3cf1c`, `29005d4`; `publish-bundle` remains dev/test tooling as a CLI; SKP, MCP,
+plugin, notebook and AI exposure each still require their own review). Amendment 1's B2 statement
+that the review "has not happened" is therefore wrong for the UI surface — the consult read the Status
+block and the F-10 clarification, not the two later sections. **What stays open, exactly:** (i) the
+discharged UI surface has never run from a packaged artifact — Part M re-confirms it there; (ii) the
+ADR-025 preflight refusal (item 3e) is new behaviour on that surface, sighted at Part M. The human's
+entry-53 ruling was made on the consult's premise; its reduced form is put back to the human in
+DECISIONS-PENDING (the pre-declared fallback stands either way). No v0.1 text about publish is
+written until that word.
+
+### Preregistration — item 2 (packaged notice channel) + item 3 (the packaged build) as ONE piece
+
+Facts read for this preregistration: `tauri.conf.json` `bundle.targets: "all"`, `bundle.active: true`,
+no `resources`, `app.security.csp: null`; tauri-utils 2.9.3 `config.rs`: `NSISInstallerMode::CurrentUser`
+(*"Install the app by default in a directory that doesn't require Administrator access … metadata under
+HKCU"*, the default), `NsisConfig.install_mode` (`installMode`), `BundleResources` = list of paths or a
+source→target map, bundle target name `"nsis"`; `publish.rs:795-804` locates the viewer dev-tree-
+relative (`CARGO_MANIFEST_DIR/../../../renderer/bundle-viewer/dist`) and its doc (`:786-794`) records
+that this does not hold packaged; tauri 2.11.5 `PathResolver::resource_dir` (`src/path/desktop.rs:230`).
+
+**The piece:**
+1. **Installer:** `bundle.targets: ["nsis"]`, `bundle.windows.nsis.installMode: "currentUser"` (per-
+   user, no elevation — the human's ruling); MSI not produced. Signing OUT (declared).
+2. **Viewer as a resource:** `bundle.resources` maps `../../renderer/bundle-viewer/dist` → a named
+   resource directory; `publish.rs`'s viewer lookup resolves the resource dir first
+   (`app.path().resource_dir()` joined with that name) and falls back to the dev-tree path under
+   `tauri dev`; both paths are named in the error string when neither holds. The CI shell workflow
+   builds the viewer before the shell (its lines ~119 already say `dist/` is consumed as
+   `frontendDist`) — the bundle-viewer build must also precede `tauri build`.
+3. **Notice channel (Q2 shape):** a prebuild step in `frontends/shell` writes `NOTICE.txt` from
+   `renderer/bundle-viewer/notice.mjs`'s `notice()` (the ONE source) into a generated location the
+   frontend imports (`?raw`) and renders in a "Notices" view reachable from the shell (no new Tauri
+   command — ADR-027's tax avoided; state where in the UI, quoting docs/03 only for what exists);
+   the same text is ALSO placed in `bundle.resources` as `NOTICE.txt` beside the executable, so the
+   install directory carries it as a file. The AGPL notice + the `Url` corresponding-source route for
+   the INSTALLER (ADR-009 item 1 + AGPL §4/§5; entry 49's route) are part of that text. **Test:** the
+   generated `NOTICE.txt` is byte-identical to `notice()`'s output (a unit test), and the built
+   frontend `dist/` contains the IOGP acknowledgement, the terms URL and the corresponding-source URL
+   (a dist check beside `check:dist-clean`). `renderer/bundle-viewer/notice.mjs` added to
+   `product-ci-shell.yml`'s path filters.
+4. **CI:** a `tauri build` job on `windows-latest` in `product-ci-shell.yml` (build only; uploads the
+   NSIS artifact; no signing, no release publishing); the job carries the workflow's standing rule
+   (`:58-62`) — nothing cites it as a gate until a run has gone green end to end and its run id,
+   commit, trigger and duration are recorded in the file.
+5. **docs/09:** one sentence in "Local listening sockets" stating that the packaged app ships with
+   `csp: null` and what ADR-020:111-113 says follows (audience change, not mechanism); KNOWN-
+   LIMITATIONS line 7 cites it.
+6. **The first `tauri build` on the reference machine** downloads NSIS into the Tauri CLI's cache
+   (`%LOCALAPPDATA%\tauri`, absent today) — a dev-machine download, named here before it happens.
+7. **Part M (new walkthrough part):** install the NSIS artifact on a clean Windows user profile
+   (the human's pick — a fresh local account is cleanest); first launch; the Notices view and the
+   `NOTICE.txt` beside the executable (item 2's strings, verbatim); open a GeoParquet (the CRS
+   catalog's admitted CRS only — EPSG:2056, or the extended set if item 8 is ruled in); filter;
+   style (by literal — ADR-023); the residency behaviour on the flipped arm at an over-budget zoom
+   (the declared partial view, strings verbatim); **publish per the reduced entry-53 form** — the
+   approval dialog's plain-outcome sentence and the audit record's `--audit-show` legibility
+   (the 2026-08-17 conditions, re-confirmed on the artifact), the ADR-025 refusal on an artifact
+   predicted above the reader's ceilings (item 3e), and the bundle opened in a browser; the
+   `tauri build --debug` artifact's data-plane admission (item 1's declared check). Run by the human,
+   batched. No perf steps; every expected outcome quoted from shipped strings.
+8. **Tests, pre-committed:** the config asserts (`targets` = `["nsis"]`, `installMode` =
+   `currentUser`, resources include the viewer and `NOTICE.txt`) as a unit test over
+   `tauri.conf.json`; the viewer-lookup fallback order unit-tested; the notice byte-identity and
+   dist-content checks; the CI job green once (recorded); Part M by the human.
+
+### Preregistration — item 3e (ADR-025: refuse, typed, at preflight)
+
+Facts: `kernel/src/publish/mod.rs:388` `pub fn preflight(req) -> Result<PublishPreflight, PublishError>`
+already refuses typed (`RowFilterNotRecordable`, license, projection) before any work; the write path
+refuses `MAX_PUBLISH_PARTITIONS` at `:614-619` with `PublishError::CeilingExceeded { ceiling, limit,
+saw }`; the READER's ceilings live only in `renderer/bundle-viewer/src/render.ts:50-55` (`MAX_FEATURES
+2_000_000`, `MAX_PARTITIONS 100_000`, `MAX_RESIDENT_BYTES 512 MiB`, `MAX_ATTRIBUTE_COLUMNS 32`,
+`MAX_ATTRIBUTE_DISPLAY_CHARS 512`) — the kernel knows none of them.
+
+**The piece:** (1) ONE source for the reader's ceilings: a `renderer/bundle-viewer/ceilings.json`
+that `render.ts` imports (the TS constants become re-exports of it) and the kernel `include_str!`s
+(parsed once, pinned-hash tested like the CRS catalog) — never a second copy, per ADR-025's own
+constraint. (2) `preflight` predicts what is predictable before any write — feature count (the
+dataset's row count) against `MAX_FEATURES`, projected attribute columns against
+`MAX_ATTRIBUTE_COLUMNS` — and refuses with a typed error (`PublishError::ReaderCeilingExceeded {
+ceiling, limit, predicted }` or the existing variant with a reader tag, the piece decides and says
+why) whose message **names the current-viewport-bbox publish as the alternative** (the human's
+ruling); partitions and resident bytes are refused at write time as today if not predictable at
+preflight — the piece states which ceilings preflight can and cannot predict, and the shell surfaces
+the refusal through the existing typed-refusal path (the approval dialog never opens for a refused
+preflight). (3) Tests: a preflight over a source whose row count exceeds `MAX_FEATURES` refuses
+before any write with the alternative named; a within-ceiling preflight is unchanged; the
+ceilings.json hash pinned; the viewer's own tests still read the same values. (4) Record: ADR-025's
+appended Decision already carries the ruling; the piece cites it; `docs/02`'s ADR-025 line gets a
+dated status correction. Reopen condition (ADR-025): when a second reader exists.
+
+Gates: items 2/3/3e as one reviewer-gated piece (architect re-check on the docs/09 sentence and the
+ADR-027 command-tax claim), then PR; Part M after merge on the built artifact.
+
+---
+
+## Amendment 4 — item 1 reaches rule 7 (two failed gates); the origin-selector DESIGN goes to the human (2026-09-07, appended)
+
+**Where item 1 stands.** `cut/release-adr020-origin` @ `5d22d7a`. Gate 1 (architect re-check + reviewer, on
+`df0650f`): FAIL — the amendment's `pool_poll` sentence false; the refusal an unlogged panic; the drift
+check foolable by a comment; no runtime execution. Fix batch `5d22d7a`: the runtime step **found that
+`df0650f` refused to start in every mode** (`WebviewWindow::url()` is `about:blank` at the `setup()`
+read; a sleep-only retry cannot fix it — WebView2 delivers navigation completion only via posted Win32
+messages, `webview2-com` 0.38.2's own doc) and remedied it with a **Win32 message pump** inside `setup()`
+(retry 250×20 ms), adding `windows` 0.61.3 as a direct target dependency and the crate's only `unsafe`.
+Re-reviews: the reviewer FAILS on one mechanical cite (`lib.rs:314` → `:421-422`) with everything
+substantive verified against persisted session logs (§(f)'s three observations, the drift mutation, the
+refusal path, 33/33, 9/9); the architect FAILS on design and text. Two failed gates → **rule 7: stop;
+no third pass without the human's word.**
+
+**The architect's findings on the pump, verified on tao 0.35.3 / tauri-runtime-wry 2.11.4 / wry 0.55.1
+/ webview2-com 0.38.2 (Amendment-4 record, not paraphrase of a belief):**
+- tao is built to tolerate a nested Win32 loop inside its own handler: `runner.rs:208-228` `send_event`
+  buffers when the handler is taken (re-entrant — `setup()` runs inside it, `app.rs:1422-1426`); the two
+  `WM_PAINT` bypasses carry their own guards (`event_loop.rs:1087-1091`, `:2331-2341`). **No tao/tauri
+  window event reaches the handler during the pump.**
+- **WebView2 COM callbacks are NOT behind that guard**: wry's IPC (`add_WebMessageReceived`,
+  `wry/src/webview2/mod.rs:877-891`) → `tauri-runtime-wry` `create_ipc_handler` (`:5385-5395`) → tauri
+  `ipc::protocol::message_handler` — delivered by `PostMessage`, i.e. the queue the pump drains. **Page
+  script CAN dispatch a command before `setup()` returns and before `app.manage(...)`.** Bound: every
+  `State<'_, T>` command fails cleanly (`state.rs:60-69`, `InvokeError`, no bypass); two commands take no
+  managed state and WOULD run — `binding_crs_catalog()` (pure) and **`binding_pick_file(app)`
+  (`commands.rs:206`): a native OS file picker before the app has finished starting** — an ADR-006
+  external-effect-class action reachable in the window. Not new capability (`serve()` has not run; no
+  token/endpoint exists), and the page able to do it is the host-configured page, which ADR-020's
+  Consequences already class as whole-shell compromise — but the amendment's condition-1 argument
+  (*"the ONLY navigation ever issued to this webview before this read is the single, host-configured
+  one"*) was airtight BECAUSE nothing pumped; with a 5 s pump it is a **timing** property written as a
+  **structural** one. `lib.rs:206-214` ("regardless of what the message loop pumps during webview
+  construction") is false as written (the pump is after construction, in a loop); `lib.rs:141-145`
+  contradicts itself in one paragraph.
+- Condition 4: `refuse_to_start` calls `blocking_show()` on the MAIN thread — `tauri-plugin-dialog`
+  2.7.2 says it *"should NOT be used when running on the main thread context"* / *"will freeze your
+  application"*; it works only because `tauri-runtime-wry` services a main-thread call inline
+  (`:239-248`) — an undocumented reliance; **no packaged refusal has been observed** (the observed one
+  was under `tauri dev`). Log-first ordering is correct and survives regardless.
+- Reviewer's own additions: the pump **swallows `WM_QUIT`** (PeekMessage PM_REMOVE + unconditional
+  Dispatch — closing the window during the ≤5 s startup is ignored); the non-Windows fallback is
+  sleep-only, which §(f) proved cannot work (fail-closed refusal, correct direction, unstated); the
+  `SessionLog::open` failure still panics invisibly in release; the retry loop is untested.
+
+**The alternative, (B), verified on the sources:** `frontends/shell/src-tauri/build.rs:5` calls
+`tauri_build::build()`; `tauri-build 2.6.3` `is_dev()` = `DEP_TAURI_DEV == "true"` (`:425-429`),
+`cfg_alias("dev", …)` (`:519`) → the shell crate gets `cfg(dev)`; `tauri 2.11.5/build.rs:255-261`: `let
+dev = !has_feature("custom-protocol"); alias("dev", dev); println!("cargo:dev={dev}")` — **one
+emission, two consumers**: tauri's own `#[cfg(dev)]` in `manager::get_app_url` (`manager/mod.rs:353-367`:
+dev → `config.build.dev_url`; production → `frontend_dist` if a URL, else `tauri_protocol_url` — `http(s)://
+tauri.localhost` on Windows/Android, `tauri://localhost` elsewhere, `https` per the window's
+`useHttpsScheme`) and the shell's `cfg(dev)`/`tauri::is_dev()` (`lib.rs:308-310`, public) are the same bit
+by construction. This repo's own build outputs show the bit: `target/release/build/tauri-*/output` has
+`rustc-cfg=custom_protocol` and the shell's release build has NO `rustc-cfg=dev`; the debug builds have
+`rustc-cfg=dev`. The CLI changelog (PR #8937): *"To check if running on production, use
+`#[cfg(not(dev))]`."* **Consequence: the mirror cannot disagree with Tauri's choice however `tauri build
+--debug` falls** — exactly what `cfg!(debug_assertions)` lacked (a profile fact standing in for Tauri's
+fact). Costs: it re-implements `pub(crate)` upstream logic (four branches + `use_https_scheme` +
+`PROXY_DEV_SERVER`) with no compile-time link — silent drift on a tauri minor, failing by 403ing every
+upgrade; and it **reintroduces the compile-time-selector class Amendment 1 §(e)'s reopen condition
+names** (so §(e) must be amended by appended note if (B) is chosen). Correction to a fact the custodian
+sent the architect: `manager/mod.rs:787`/`:795` are tauri's own test assertions, not the resolution path
+(`:353-367` is) — not to be cited.
+
+**The architect's ranking (verbatim in substance):** adopt (B) **if and only if** paired with a Part M
+assertion on the item-3 artifact that the pinned origin equals the webview's actual `url()` origin
+under each of `tauri dev`, `tauri build --debug`, `tauri build` — with that check (B) strictly dominates
+(deletes the IPC window, the dependency, the `unsafe`, the platform fork, up to 5 s of startup); without
+it, (B) trades a disclosed runtime hazard for an undisclosed compile-time modelling risk. Third option,
+ranked below (B)+test and above the pump as shipped: keep the runtime read with the config-derived value
+as the loop's termination predicate (fixes the stopping condition; keeps the pump and its hazards).
+
+**Red line regardless of design:** `windows` 0.61.3 is a new direct edge that CHANGES `Cargo.lock` (one
+line; `Cargo.lock:3965`) — unlike the tokio/macros precedent, whose justification was a byte-identical
+lock. Not named in item 1's preregistration → the human's word. Design (B) removes the need.
+
+**Queued as DECISIONS-PENDING entry 55** with the architect's ADR skeleton (a deliberately-open decision
+of the ADR-023 pattern) for the human to accept, reject, or fold into ADR-020 Amendment 1. Nothing on
+item 1 moves until the word. Text corrections owed under EITHER design before merge (the amendment is
+append-only after): the reviewer's M-1 cite; §(f) "byte-identical" → "identical body"; §(e) line span;
+§(d) `commands.rs:400-402`; the two false `lib.rs` sentences; the `blocking_show` reliance stated.
+
+---
+
+## Amendment 5 — facts from the packaged-build gates that bind later items (2026-09-08, appended; the piece's own fix batch is in progress under rule 7's first gate)
+
+1. **Correction to Amendment 1, correction 2, and to §2 item 2's derivative text:** the installer's
+   corresponding-source obligation under AGPL-3.0 is **§6 (conveying non-source forms)** — §4 is
+   verbatim source copies, §5 modified source — with a bare repository URL relying on **§6(d)**
+   (access from a network server). The "§4/§5" wording originated in the consult and was inherited by
+   the notice text; the architect corrected it at the packaged-build re-check. Every release text
+   (notice, README, QUICKSTART, KNOWN-LIMITATIONS) cites §6.
+2. **KNOWN-LIMITATIONS entry 2/6 must say:** the ADR-025 preflight refusal predicts only the feature
+   count (when identity was verified) and — in practice never reached, because the engine's
+   `MAX_PUBLISHED_ATTRIBUTES = 32` refuses first without naming the alternative — the attribute-column
+   count; **`MAX_RESIDENT_BYTES` is checked at no stage**, so a bundle under 2,000,000 features but
+   over 512 MiB resident still publishes unwarned and the viewer refuses it (Part H8b's shape);
+   `MAX_PARTITIONS` is refused only at write time. ADR-025's decision is scoped to "when preflight can
+   predict", so the code is faithful; the declaration carries the residual.
+3. **The installed program's notice set is incomplete by name:** the beside-the-executable
+   `NOTICE.txt` and the Notices view carry the viewer's third-party notices (once the fix batch resolves
+   them from the viewer's own tree), the EPSG/IOGP acknowledgement, and the installer's AGPL §6 route —
+   but NOT the Rust crate notices that travel with the binary (`DEPENDENCY-LICENSES.md`'s crate
+   tables; MIT/Apache-2.0 §4(d) notices). Named as OWED in the notice text itself and here; a later
+   piece generates them from the lockfile. Entry 51's "packaged-app channel" is discharged for the
+   EPSG/IOGP obligation, not for the whole notice set.
+4. **ADR-025's parenthetical path** (`renderer/bundle-viewer/src/render.ts`) is superseded by
+   `renderer/bundle-viewer/ceilings.json` (the single authored statement; `render.ts` re-exports it) —
+   an **appended note on ADR-025 is owed on the human's word**; nothing in the ADR is edited.
+5. **Recorded, not inferred:** a per-user NSIS install places the bundle viewer — whose hash enters
+   every published bundle — in a user-writable directory (docs/09 already disclaims local-process
+   boundaries; no claim is falsified); the shipped binary's viewer-lookup refusal string named the
+   build machine's `CARGO_MANIFEST_DIR` path (suppressed by the fix batch when a resource dir exists);
+   `renderer/bundle-viewer/ceilings.json` is the tree's first cross-module compile-time file
+   dependency (kernel `include_str!`), so both CI workflows must watch it.
+6. **Machine fact:** during the gates the reference machine's C: fell to 3.3 GB free (`os error 112`
+   on a cargo test); the reviewer deleted `target/debug/incremental` in the main tree and the worktree
+   (~12 GB, pure cache) and the 2,000,001-row temporary fixture the `#[ignore]`d ADR-025 test leaves
+   under `%TEMP%`. Release builds plus stacked worktrees are disk-heavy; every build step checks free
+   space first.
+
+**Correction to Amendment 5, item 1 (2026-09-08, appended — the reviewer's re-review nit 7):** its last
+sentence, *"Every release text (notice, README, QUICKSTART, KNOWN-LIMITATIONS) cites §6"*, was written
+in the present tense for three texts that do not yet exist (items 4/5/6). Read it as a requirement —
+"must cite §6" — in the form item 2 of the same amendment already uses; only the notice cites §6 today.
+The custodian's own false-sentence, of the class the packaged-build gates were convened to remove.
+
+---
+
+## Amendment 6 — the human's rulings of 2026-09-08 on entries 53/55/56/57 and item 8; the ruled item list v3; preregistrations for item 1 (b), the K6 re-aim, items 8, 9 and 10 (2026-09-08, appended BEFORE any code on those items)
+
+**The human, verbatim:** *"55 = (b): config mirror via tauri::is_dev(); Part M equivalence assertion
+under dev / build --debug / build; post-load logged self-check of pinned vs actual origin with a typed
+mismatch state (assertion, never selection, no pump); windows edge + unsafe removed; conditions (4)/(5)
+retained, (1)–(3) superseded; recorded as ADR-020 Amendment 1's content; new mechanic: never block or
+pump inside setup(). 56 = (b) now — stepK6 encodes both cases explicitly (continuous→refusal,
+discrete→clear, no stale id); 47 = next cut's first piece; A9′ flakiness gets its own entry. 57 = (b)
+to unblock + item 9 (both generators) BEFORE the tag + ADR-030 filed Proposed with (a) as decision on
+item 9's landing; LOD → ADR-031; the ensure_pinned finding is entry 7's ruled pre-fix, never built —
+add it to this cut as a small piece, KNOWN-LIMITATIONS only if it slips. 53 reduced = (a). Item 8 =
+yes, 4326 + 3857 under the entry-51 protocol. #30: clicking. Sweep authorized in full."* (#30 merged
+@ `fdb7c87`; PR #31 rebased onto it and retargeted to `main`.)
+
+### The ruled item list, v3
+
+1. **Item 1 (b)** — the config mirror (preregistration below). Re-opens `cut/release-adr020-origin`.
+2. **Item 2/3/3e** — PR #31: the authorized sweep (list below), then the human's click.
+3. **Item 7** — MERGED (#30). **K6 re-aim** — a small piece off main (preregistration below).
+4. **Item 8** — CRS catalog + EPSG:4326 + EPSG:3857 under the entry-51 protocol (preregistration below).
+5. **Item 9** — both notice generators (the shell's Vite npm set; the Rust crates from the lockfile)
+   into the one-source `NOTICE.txt`, BEFORE the tag (preregistration below). **ADR-030** filed
+   Proposed now with candidate (a) as the decision to be accepted on item 9's landing.
+6. **Item 10** — entry 7's ruled pre-fix, never built: the cancellable, progress-reported pin phase
+   before publish (preregistration below). KNOWN-LIMITATIONS carries it only if it slips.
+7. **Item 4/5/6** — KNOWN-LIMITATIONS, README, QUICKSTART: drafted (job tmp), written against what
+   ships once 1/8/9/10 land; item 4 last; the human tags.
+8. **ADR-031** is the LOD slice's home of record (NEXT-CUT.md renumbered); **entry 58** (A9′
+   flakiness) filed; **entry 47** = the next cut's first piece, with entry 58 beside it.
+
+### The authorized sweep on PR #31 (one commit, no gate re-run beyond CI green)
+
+The notice header names BOTH owed gaps (the packaged frontend's own npm set — React, react-dom,
+`@deck.gl/core`+`layers` 9.3.7, the shell's `apache-arrow` 21.2.0 — and the Rust crates); the same in
+`DEPENDENCY-LICENSES.md`'s dated block; Part M M3 re-quoted; `.gitattributes` gains
+`renderer/bundle-viewer/ceilings.json text eol=lf` (the CRLF-checkout hash failure on
+`windows-latest`, run 34190120091); the `tauri-build` job's record slot filled with its first green
+run (run 34190120055, job 101946288669, commit `34a1896`, `pull_request`, 27m19s); the reviewer's two
+should-fixes (the undated "Dated correction" in `product-ci-shell.yml:28`; M3's tense) and nits
+(`docs/02:91`'s stale ADR-025 clause; the boundary "first line" wording; `notice.mjs:140`'s AGPL path
+stated as repo-anchored; M10's trailing period; the shipped refusal's developer-only remedy sentence
+replaced by a packaged-context one; the `#[ignore]`d boundary test stated as not-in-CI). Then CI green
+(all four workflows) → the human's click.
+
+### Preregistration — item 1 (b): the config mirror (supersedes Amendment 2's item-1 conditions (1)–(3))
+
+**Design.** `expected_origin` is derived from configuration the host already holds, mirroring Tauri's
+own `WebviewUrl::App` resolution (`tauri-2.11.5/src/manager/mod.rs:353-367`), which descends from the
+same single `cargo:dev=` emission the shell crate receives (`tauri-2.11.5/build.rs:255-261`;
+`tauri-build-2.6.3/src/lib.rs:425-429,519`; `tauri::is_dev()` public at `src/lib.rs:308-310`):
+`if tauri::is_dev() { origin_of(app.config().build.dev_url) — refuse to start if None }` else
+`{ if let FrontendDist::Url(u) = frontend_dist { origin_of(u) } else { tauri_protocol_origin(https) } }`
+where `tauri_protocol_origin` is `http(s)://tauri.localhost` on Windows/Android and
+`tauri://localhost` elsewhere, `https` from the main window's `useHttpsScheme` (default false);
+`PROXY_DEV_SERVER` (`cfg!(all(dev, mobile))`) noted as inert on desktop. Normalised by the existing
+pure `expected_origin_from_url`. **No runtime read in `setup()`, no retry, no pump, no `windows`
+dependency, no `unsafe`** — the pump, its retry loop and the `windows` target dependency are REMOVED
+(`Cargo.lock` returns to main's edge set). Condition (4) retained: a missing/unparseable configured
+URL refuses to start — logged first (`SessionLog::open` stays before the selection), a blocking
+dialog, `exit(1)`. Condition (5) retained: the API and crate version named in code and record.
+**The post-load self-check (assertion, never selection):** on the main window's page-load event
+(Tauri 2's `on_page_load` / `PageLoadEvent::Finished` — verify the exact API by name and version in
+the piece), read `Webview::url()`, normalise, compare to the pinned origin; log the result to the
+session log (`origin-self-check ok` / `origin-self-check MISMATCH pinned=… actual=…`); on mismatch
+emit a typed event to the frontend (`app.emit`, no new command — ADR-027 decision 4 untouched) which
+renders a typed, non-dismissible state naming the mismatch and that the data plane will refuse; the
+pinned value is NEVER changed by the check. **Tests:** unit tests for the mirror over every branch
+(dev+dev_url; dev without dev_url → refusal; production + `FrontendDist::Url`; production default →
+`http://tauri.localhost`; `useHttpsScheme` → `https://tauri.localhost`; the non-Windows arm →
+`tauri://localhost`); the kernel admission tests unmodified and green; `check:dev-origin` stays (now
+load-bearing for both Tauri and the shell). **Part M equivalence assertion (row M12):** under each of
+`tauri dev`, `tauri build --debug`, `tauri build`, the session log's pinned-origin line and its
+self-check line agree (`ok`), and the data plane admits one upgrade — executed at Part M on the
+artifacts; the `--debug` artifact is built for that row (build only, not installed). **Record:**
+ADR-020 Amendment 1 REWRITTEN on the branch (unmerged text) to this design: the Status sentence
+discharged quoted verbatim; the mirror with API + version; *"the accepted mechanism is unchanged; this
+replaces a selector the acceptance never covered"*; the self-check as assertion-not-selection; §(d)'s
+truthful DEV-gate paragraph kept; §(e) reopen condition amended to: any future build mode whose origin
+Tauri does not resolve from `cfg(dev)` + config reopens this amendment; §(f) replaced by the
+executed-once record of the mirror + self-check on `tauri dev` (the pump's runtime record moves to the
+amendment's history paragraph, dated, as the disproved design). `docs/02:83`, `docs/README.md:27`
+updates kept. Gate: reviewer + architect re-check (the mirror's four branches against `get_app_url`;
+the self-check's page-load hook; the removed dependency; the record). Human-directed security red
+line honoured by ruling 55.
+
+### Preregistration — the K6 re-aim (entry 56 = (b))
+
+`e2e/regression.mjs` `stepK6` encodes both cases of the CURRENT contract explicitly: (i) a single
+continuous zoom-out crossing the pick threshold (one coalesced camera change, as the walkthrough's
+L7 gesture — realised with one wheel event of sufficient delta, or the camera set directly through
+the E2E surface if the harness offers it) → the readout shows the refusal text *"Features here are
+below pick resolution — zoom in to inspect them."* (verbatim, `App.tsx`); (ii) discrete notches
+(≥ 8 wheel events as today) → the readout CLEARS on the first notch and **no stale id survives** (the
+`.hover-readout` never shows the pre-zoom id after any notch). Both assertions are named in the step's
+comment as the contract entry 47 will replace (re-pick on settle, next cut's first piece); no product
+code changes. Tests: the step green on main's default (candidate) on a quiet machine; a unit test in
+`pickResolution.test.ts` pinning the two paths of `reevaluateStandingHoverOnCameraChange` if not
+already present. Gate: reviewer.
+
+### Preregistration — item 8: EPSG:4326 and EPSG:3857 in the catalog (the entry-51 protocol)
+
+Facts binding the design: ADR-026 Accepted — pinned in-tree, content-hashed, never fetched, no
+matching, no defaults; the catalog's one entry embeds a PROJJSON at schema v0.5; `crs_catalog::tests`
+pins the entry count, ids and the EPSG:2056 hash as literals; the engine admits a CRS assertion only if
+the definition establishes axis order (`crs::tests::an_assertion_that_establishes_no_axis_order_is_refused`).
+**The piece:** (1) generate `EPSG:4326` and `EPSG:3857` as PROJJSON with the same pinned tool as
+entry 51's check (`projinfo -o PROJJSON`, PROJ 9.6.2, EPSG v12.013 — versions recorded); (2) verify
+each under the entry-51 protocol — a leaf-by-leaf comparison keyed by EPSG code between the catalog
+entry and a SECOND rendering (`projinfo -o WKT2:2019` parsed, or the human's epsg.org lookup pasted)
+— recorded in `spikes/entry51-epsg2056-equivalence/`'s successor directory with the verbatim output;
+(3) two new catalog entries with `attribution` (source, terms URL, `verified` naming v12.013), the
+pinned literals (count, ids, hashes) updated consciously; (4) the engine's PROJJSON reader verified on
+schema v0.7 and on a GEOGRAPHIC CRS (4326's axes are Lat/Lon, north/east, degrees) — tests: admission
+of a 4326-declared file establishes axis order and renders in degrees as a planar frame with NO
+reprojection (ADR-003/docs/01: no silent conversion — plate carrée is the honest rendering; a
+KNOWN-LIMITATIONS entry says so: geographic CRS render unprojected in v0.1); 3857's metres render as
+today; (5) `DEPENDENCY-LICENSES.md`'s EPSG block gains the two entries' verification lines (the
+custodian appends after the piece lands, to avoid colliding with the #31 sweep). Gate: reviewer +
+architect re-check (ADR-026 fidelity; axis-order handling; the no-reprojection rendering statement).
+
+### Preregistration — item 9: both notice generators (before the tag)
+
+(1) The shell's Vite build: a Rollup/Vite-produced manifest (`build.rollupOptions` / the `manifest`
+option — verify the exact mechanism) enumerating every npm package compiled into
+`frontends/shell/dist`, fed to the SAME `notice()` (extended to accept a second package set with its
+own base dir) so the installed `NOTICE.txt` carries the packaged frontend's third-party notices
+(React, react-dom, deck.gl, apache-arrow 21.2.0 …) with their retained NOTICE files; (2) the Rust
+crates from `frontends/shell/src-tauri/Cargo.lock` (+ the workspace lock for the kernel/engine crates
+statically linked): name, version, declared license, and each crate's `LICENSE*`/`NOTICE*` text from
+the cargo registry, generated at build time into the same `NOTICE.txt` — no new crate dependency (a
+node script reading the lockfile and the registry directory; if an existing tool such as `cargo about`
+would be needed, STOP and report — dependency red line); (3) the installed copy then enumerates every
+third-party work it carries and the "owed" sentences are REMOVED; the bundle's `viewer/NOTICE.txt`
+keeps its viewer-only scope (unchanged bytes for the viewer section); (4) tests: byte-identity of the
+generated file with the generator's output; a dist check that every package in the Vite manifest and
+every crate in the lockfile appears by name; the reviewer diffs a sample of embedded license texts
+against the registry files. **ADR-030** (filed Proposed now) is accepted with candidate (a) — *every
+conveyed artifact enumerates every third-party work it actually carries, generated from that
+artifact's own build manifest; no artifact ships with a named gap* — on this piece's landing, the
+human's word. Gate: reviewer + architect (ADR-009/AGPL notice completeness; ADR-030 (a) satisfied).
+
+### Preregistration — item 10: entry 7's ruled pre-fix (the cancellable, progress-reported pin)
+
+Entry 7 (ruled 2026-09-02, verbatim): *"thread the `CancelToken` + a phase label into
+`publish-prepare`"* — never built. Facts: `publish.rs` `ensure_pinned(dataset, cancel)` runs the
+whole-file SHA-256 under `spawn_blocking` with `CancelToken::new()` (no UI affordance) and no progress
+during `binding_publish_prepare`'s "Preparing…" state; ADR-025's refusal now sits behind it. **The
+piece:** the pin phase reports progress (bytes hashed / total, as a phase label + fraction through the
+existing publish-progress channel — `PublishPhase`/`progress.phase`, verify) and honours a cancel
+from the panel (the same `CancelToken` the publish itself uses — a Cancel during "Preparing…" aborts
+the pin with a typed outcome, nothing written, the dialog never opens); the ADR-025 ceiling check runs
+BEFORE the pin where it can (feature count from the verified identity — no pin needed), so an
+over-ceiling source is refused in milliseconds; Part M M10 rewritten accordingly. Tests: a
+cancel-during-pin unit test (typed outcome, no side effect); a progress-reported pin test on a fixture;
+the reordered preflight refusing before any hash. Gate: reviewer (docs/01 principle 7's
+progress/cancel clause is the criterion; ADR-006: the pin is not a side effect). Slips → a
+KNOWN-LIMITATIONS entry, by the human's ruling.
+
+## Amendment 7 — item 8's architect consult: BLOCK on the EPSG:4326 half, PASS with notes on EPSG:3857; corrections to the item-8 preregistration; the 3857 piece as dispatched (2026-09-08, appended BEFORE any code on item 8)
+
+**Why a consult before dispatch.** Reading the code to write the item-8 brief, the custodian found that
+the engine refuses a latitude-first declaration by design (`engine/src/dataset.rs:303-307`,
+`EngineError::AxisOrderUnsupported`; `engine/src/crs.rs:120-124` "refused rather than reinterpreted";
+`engine/tests/slice.rs:310-324`; docs/05:26 "the EPSG:4326 lat/lon trap"), so the preregistration's
+item (4) — "admission of a 4326-declared file establishes axis order and renders in degrees" — names
+the refused behaviour. Both `projinfo` renderings (PROJ 9.6.2, EPSG v12.013, the same `proj.db` as
+entry 51 by hash) and the GeoParquet 1.1.0 axis-order passages are pinned verbatim in
+`spikes/item8-crs-catalog-extension/README.md` before anything cites them.
+
+**The architect's verdict (2026-09-08), in its own words where quoted:** *"BLOCK — item 8's EPSG:4326
+half, as preregistered … The EPSG:3857 half is pass with notes and can proceed this cut."* Violations
+named (the architect's cites; the custodian re-read the engine, slice-test and `partition.ts` lines):
+(1) ADR-015 §5, Accepted and architect-blockable, refuses a non-x-first source rather than
+reinterpreting it (the architect quotes `ADR-015:56-60`); (2) ADR-026 declines the question
+(`ADR-026:61`, under "What this ADR does not decide"); (3) NEW — the bundle viewer refuses any order
+but `easting,northing` (`renderer/bundle-viewer/src/partition.ts:29`, checked per partition at
+`:115-121` → the ADR-017 §14 state `envelope-axis-order-mismatch`), so a 4326 bundle would be a dead
+artifact of the shape ADR-025 was accepted to refuse at preflight; a second such reader at
+`frontends/canvas-probe/src/geoarrow.ts:90-92`; (4) NEW — `engine/src/geoarrow.rs:97-103` embeds the
+definition verbatim in the GeoArrow field, so under an override an external reader would receive a
+lat-first CRS over an x-first buffer (docs/05:26's trap exported across a boundary, ADR-010 rule 1);
+(5) the spec text was unpinned — now pinned (above). On the merits the architect calls the
+recorded-override admission *"defensible — arguably more honest than today"* (today's refusal reports
+`established: "latitude,longitude"` about a file whose WKB is x-first, and `engine/src/error.rs:72-76`
+calls that "the EPSG:4326 trap `docs/05` names, in its GeoParquet form" when the format's form of the
+trap is the opposite) but *"a substantive re-reading of an accepted architect-blockable ADR, so it is
+not the custodian's to make"*: it may live only in `engine/src/geoparquet.rs` (the format reader),
+never in `crs.rs`'s `is_x_first`; `axis_normalization` must stay `none-performed` (nothing is
+normalized) and the data-order basis is a NEW fact whose envelope/manifest key would hit ADR-017's
+spent schema lever (`ADR-017:855-859`, per the architect) → `bundle_version` 2; a producer violating
+the spec transposes silently, so only a falsification check (|latitude| > 90 → refuse) is possible,
+never a conformance proof. Ranking: **(a) EPSG:3857 only this cut** (no ADR change; works end to end;
+one precommitted test); (b) 3857 + 4326 under the recorded override = a cut of its own (ADR-015
+amendment, ADR-017 §14 reader change, possible `bundle_version` 2, a degrees fixture); (c) 3857 +
+OGC:CRS84 — admitted today with zero code change (its PROJJSON declares Longitude/east first), but
+`crs::admit` admits an assertion only when the file declares nothing (`engine/src/crs.rs:218-240`), so
+it does not open a stranger's 4326-declared file, and its OGC authority escapes the EPSG attribution
+guard (`crs_catalog.rs:247-273`) while its values are EPSG-derived — a conscious, recorded decision if
+taken. The human's calls: the amendment; the scope change to ruled item 8; whether v0.1 tags with the
+4326 refusal declared. Queued as DECISIONS-PENDING entry 59 with the architect's entry text verbatim.
+
+**Corrections to Amendment 6's item-8 preregistration (the architect's §5, verified where the
+custodian read the lines):**
+1. Item (4)'s premise is the refused behaviour (above).
+2. "The engine's PROJJSON reader verified on schema v0.7" is a non-event: the reader touches only `id`
+   and `coordinate_system.axis` (`engine/src/geoparquet.rs:139-189`); nothing in `engine/`, `kernel/`
+   or `protocol/` reads `$schema` or `datum`. What is real: the pinned 2056 entry is `$schema` v0.5
+   with `datum` (`engine/tests/data/epsg2056.projjson:2`); the new renderings are v0.7 with
+   `datum_ensemble` — the catalog mixes schema versions and must say so PER ENTRY, not claim a reader
+   verification. The 64 KiB definition ceiling (`crs.rs:36`) is not near.
+3. The pinned-literal sites are `crs_catalog.rs:275-281` (ids AND count in one assertion) and
+   `:234-240` (the per-entry hash pin); three sites the preregistration missed also encode the count:
+   `frontends/shell/e2e/admission-remediation.mjs:219-224` (`catalog.length !== 1`, id equality),
+   `frontends/shell/MANUAL-WALKTHROUGH.md:599` ("one entry, `epsg-2056`"), `LICENSES/README.md:122`
+   ("One CRS definition in this repository").
+4. Attribution is already enforced for every EPSG-authority entry by
+   `crs_catalog.rs:247-273` (`every_epsg_authority_entry_carries_attribution_with_the_terms_url`) —
+   the guard, not new discipline.
+5. `CrsMode::DeclaredLatLonFirst` (`engine/src/fixture.rs:309-314`) is a metadata trap over LV95-metre
+   coordinates, not a degrees dataset; any real 4326/CRS84 test needs a new degree-domain fixture mode
+   (unscoped).
+6. `EXPECTED_AXIS_ORDER` (violation 3). The shell's own canvas does not gate on axis order, so a
+   non-x-first refusal surfaces only at publish/view — late and loud.
+7. `RELEASE-0.1.md:422` ("a WGS84 or Web-Mercator GeoParquet opens") overstates: admission is WKB-only
+   and polygon-only (`dataset.rs:269-282`), needs an integer identity column or a declared mapping,
+   and viewport queries need `covering.bbox`. The QUICKSTART must not promise "opens".
+8. If any geographic CRS ever renders, metre-named records become false: `offsetFrame.ts:34-37`
+   (`LocalFrameM`, `RECENTER_MAX_DRIFT_M = 131_072`) and `tileGrid.ts:68-73` ("one metre for a
+   projected CRS …"); and the rendering claim must read "no coordinate value is transformed; the
+   display convention is equirectangular" — "NO reprojection … plate carrée" contradicts itself
+   (docs/01:21 permits display reprojection only through an explicit, visible transform); an appended
+   dated note on ADR-003's `crs_transform: "none — rendered in source CRS"` string
+   (`kernel/src/publish/mod.rs:1187`) would be owed, the human's word. No precision or perf claim may
+   attach: ADR-003's and ADR-010 rule 3's evidence is EPSG:2056 magnitudes only (docs/08:62).
+9. `error.rs:74-75`'s "in its GeoParquet form" is a false record if the pinned spec text holds — a
+   docs-only fix-forward candidate, left to entry 59's ruling because it describes the 4326 refusal.
+
+**The ADR-032 skeleton the architect drafted (recorded here; FILED only on the human's word, as
+ADR-030 was; 031 is the LOD slice's):** *"ADR-032 — Axis order for a GeoParquet source whose CRS
+definition declares a non-x-first order. Proposed, decision deliberately open. Context: ADR-015 §5
+establishes axis order from the CRS definition and refuses a non-x-first source rather than
+reinterpreting it, resolving a docs/05 conflict lower-number-wins; its OPEN block reserves the
+normalize-later question; ADR-026:61 restates the refusal. GeoParquet 1.1.0 states that WKB
+coordinates are always (x, y) and that this 'explicitly overrides the coordinate axis order in the
+crs'. If that holds, EPSG:4326-declared GeoParquet — the commonest file a stranger brings — is refused
+with a message that misdescribes the file, and no catalog entry can fix it: the assertion path reads
+axis order through the same function. Three readers pin easting,northing (partition.ts:29,
+canvas-probe/src/geoarrow.ts:90, envelope.rs:87). Decision: OPEN. Candidates: (A) hold the refusal;
+admit only definitions whose declared order is x-first (OGC:CRS84), stating the limitation. (B)
+establish the data's order from the format specification in engine/src/geoparquet.rs, record both
+facts (declared order; data order + the rule and spec version), leave axis_normalization =
+none-performed, widen the x-first reader set, and add a falsification-only |latitude| ≤ 90 guard. (C)
+normalize on ingest per docs/05:64-67 — out of scope for a slice with no transform. Consequences of
+B: ADR-015 amendment; ADR-017 §14 reader contract and digest row 11 restated, bundle_version 2 if any
+key is added; an SKP value-domain statement; a degrees fixture; the GeoArrow field's
+declared-vs-buffer contradiction resolved against the GeoArrow metadata spec, pinned; ADR-026:61
+dated-stale. Of A: the hero slice refuses the commonest CRS in the wild, declared in
+KNOWN-LIMITATIONS. Neither licenses reprojection."*
+
+### Preregistration — the EPSG:3857 piece (the half of ruled item 8 that stands; supersedes Amendment 6's item-8 items (3)–(4) for this entry)
+
+Branch `cut/release-crs-3857` off main. (1) The catalog gains `epsg-3857` with the definition being
+the pinned rendering's bytes verbatim (`spikes/item8-crs-catalog-extension/epsg3857-projinfo-9.6.2.projjson`,
+sha256 `e14b8ded…` of the LF bytes), an `attribution` block in the 2056 entry's shape (source, terms URL,
+`verified` naming EPSG v12.013 and the projinfo route), and a per-entry `schema` statement
+(v0.7 here, v0.5 for 2056) if the catalog's shape admits one — else the schema versions are stated in
+`crs_catalog.rs`'s module doc; (2) the entry-51 protocol's leaf-by-leaf comparison, keyed by EPSG code,
+between the catalog entry and the WKT2:2019 rendering parsed (`epsg3857-projinfo-9.6.2.wkt2`) — the
+comparison script and its VERBATIM output recorded in `spikes/item8-crs-catalog-extension/` (the
+human's epsg.org lookup remains the stronger confirmation, available at sight); (3) pinned literals
+updated consciously: `crs_catalog.rs:275-281` (ids + count), a new `EPSG_3857_HASH` pin beside
+`:234-240`, plus the three count sites in correction 3 (E2E, walkthrough, `LICENSES/README.md`);
+(4) the precommitted test: `axis_order_from_projjson(<the 3857 entry>) == AxisOrder::EastingNorthing`
+— the guard against PROJ ever naming those axes "longitude"/"latitude", which would flip the reader
+to `LongitudeLatitude` and the viewer to refusal; (5) `DEPENDENCY-LICENSES.md`'s EPSG block gains the
+3857 verification line (the custodian appends after landing, to avoid colliding with the #31 sweep);
+(6) the shell's CRS assertion form shows two catalog entries (no code change expected —
+`CrsAssertionForm` lists the catalog; verify) and the admission-remediation E2E asserts the new count
+and both ids. No engine admission code changes; `dataset.rs:303`, `slice.rs:310`, the envelope,
+`EXPECTED_AXIS_ORDER`, publish, ADR-015/017/026 untouched. Gate: reviewer + architect re-check
+(ADR-026 fidelity: pinned in-tree, content-hashed, never fetched, no matching, no defaults; the
+attribution guard; the comparison record).
+
+## Amendment 8 — landings and corrections of 2026-09-08: PR #31 merged; the EPSG:3857 piece (PR #32) and the K6 re-aim gated PASS with recorded deviations; item 1 (b) at rule 7 on the reviewer side (entry 61); two new findings (entries 59, 60); record corrections (2026-09-08, appended)
+
+**PR #31 merged by the human @ `d5a247d`** (items 2/3/3e + the authorized sweep, one commit `d09e292` after the rebase onto main; CI every check green incl. `cargo test --workspace` on windows-latest — the `eol=lf` pin proven — and the `tauri-build` job). Correction to Amendment 6's sweep list: the packaged frontend's deck.gl version is **9.3.9** as resolved in `frontends/shell/package-lock.json`; "9.3.7" was the `package.json` caret range. Correction to Amendment 4 / the branch history: the commit SHAs `df0650f` and `5d22d7a` cited there (and at line 593 above) are pre-rebase objects reachable from no branch since `cut/release-adr020-origin` was rebased onto main; their rebased copies are `24edb94` and `c9b8e23`. Items 9 and 10 dispatched on the merged main (`cut/release-notice-generators`, `cut/release-publish-pin`) from the preregistrations in Amendment 6.
+
+**The EPSG:3857 piece — PR #32, gates PASS.** Preregistered in Amendment 7. Landed `67e3084` → fix batch `bbbfb5e` → post-PASS sweep `9ee7970`. Architect re-check FAIL (two record sentences) and reviewer gate FAIL (two record defects; five mutations verified; the comparison script non-vacuous by mutation) → one combined fix batch → architect re-review PASS, reviewer re-review PASS with no must-fix → the E2E `admission-remediation.mjs` from the worktree (`launched: true`, PID 61504, `session-1788863731.log`): all 11 steps PASS, catalog 2 entries, both ids in file order. **Two deviations from Amendment 7's preregistration, recorded:** (i) `engine/tests/data/epsg3857.projjson` + an ungated byte-identity test (`crs_catalog.rs:286`) were added — not in items (1)–(6); taken for the architect's advisory 2 / the reviewer's S-1 (2056 has the same binding; no engine→spikes build dependency); (ii) the per-entry `schema` field was done BOTH ways item (1) offered as alternatives (the field on both entries AND the module-doc statement), with a guard test binding each entry's `schema` to its definition's own `$schema` version. Correction 3's cites moved with the batch: the ids+count assertion is now `crs_catalog.rs:377-383`, the hash pins `:291-297`. **The comparison's honest reading** (the architect's B1, now in the spike README §3 and the entry's `verified` string): numeric equivalence to EPSG v12.013 *as PROJ imports it* holds by construction — the entry is the `projinfo` rendering byte for byte — the PROJJSON-vs-WKT2 comparison is a cross-format consistency check of the same `proj.db` rows, not an independent confirmation; PROJ's import versus the registry remains unverified; the human's epsg.org lookup is the stronger confirmation. Records owed after #32 lands (the custodian): `DEPENDENCY-LICENSES.md` (:102-113 two definitions in four places incl. the engine fixture and the spike renderings, "not recorded in the repository" scoped to 2056; a Verification (3b) paragraph; the stale cites → `crs-catalog.json:9-13`, `crs_catalog.rs:51/:87/:316`, `LICENSES/README.md:113-138`); ADR-026's implementation note line 76 → an appended dated note on the human's word (entry 59); KNOWN-LIMITATIONS entry 2 with item 4.
+
+**The K6 re-aim — gate PASS (0 must-fix), post-PASS sweep in progress, then its PR.** Landed `891d848`. **Deviation from Amendment 6's preregistration, recorded with the measured reason:** case (i) — "a single continuous zoom-out crossing the pick threshold (one coalesced camera change …) realised with one wheel event of sufficient delta, or the camera set directly through the E2E surface" — was realised with the product's own "Zoom to layer" action. The reviewer measured why one wheel event cannot do it in this harness: deck.gl maps each wheel event individually (`@deck.gl/core/dist/controllers/controller.js:363-378`, `scale = 2/(1+e^(−|delta·speed|))`, `speed` 0.01 → a hard cap of 1.0 zoom level per event; one notch at deltaY 300 = 0.9299 levels from the run's ledger), while the crossings needed 1.3×–3.6× that. "Zoom to layer" reaches the refusal through the SAME function as the wheel path — `reevaluateHoverForZoom` (`WorkingCanvas.tsx:722-731`) is the only wrapper of `reevaluateStandingHoverOnCameraChange`, called identically from the wheel path (`:1317-1320`), `fitToExtent` (`:793-799`) and the E2E seam (`:1530`) — so the step encodes the contract entry 47 replaces. The "one coalesced camera change = a human's gesture" sentence is entry 56's diagnosis, not a verified mechanism (deck.gl coalesces nothing; if coalescing happens it is the browser's input pipeline, unverified here). Case (ii) verified sound (per-notch poll; the actual pre-zoom id; cleared = no readout rendered). One E2E run from the worktree on the shipped default: every step PASS incl. A8′/A9′ (one observation; entry 58 stands); K6 PASS 73.1 s under a 240 s bound. The reviewer's should-fix 4 widens (ii)'s notch-1 acceptance to "cleared OR the refusal" (conforming behaviour under the ruled contract); the green run stands as evidence.
+
+**Two findings, queued:** **entry 59** (item 8's EPSG:4326 half cannot be built as ruled — Amendment 7; 3857 proceeds; ADR-032 skeleton recorded there). **Entry 60** — a canvas HANG reachable by ordinary wheel zoom-out in the SHIPPED default: `tilesCoveringBbox` (`frontends/shell/src/canvas/tileGrid.ts:170-181`) materialises the whole cover before `MAX_QUEUED_TILES` truncates (`tileViewportStreamManager.ts:314`, `:361-379`); no zoom floor (`WorkingCanvas.tsx:1314` bare `controller: true`; deck.gl OrthographicController `minZoom = -Infinity`); ~12 notches past the fit ≈ 3×10⁸ `TileKey` allocations (derived from code plus one measured fit zoom; the only measured repro is the K6 worker's `e2eSetViewState(0,0,−64)` wedge). docs/01 principle 7 class. Options put to the human: (a) a small preregistered fix in this cut (bound the cover before allocation; recommended); (b) also a `minZoom` clamp; (c) declare it in KNOWN-LIMITATIONS. Also recorded in `NEXT-CUT.md`.
+
+**Item 1 (b) — rule 7 reached on the reviewer side; entry 61.** Landed `eb46429`/`cf44aaa` → architect re-check PASS with four record must-fixes, reviewer gate FAIL record-only (every code/test/build/mutation/runtime criterion passed) → one combined fix batch `c20365e`/`b7e729d` → architect re-review FAIL on two mechanical items (a claimed three-variant unit test for the new `WebviewUrl::App` guard that does not exist; a cite moved by the batch's own insertions), reviewer re-review FAIL on the same two plus one (the event payload's `kind` discriminant unpinned across Rust/TS — a drift would render the mismatch text for an unverifiable read). Both gates: the DESIGN passes. **New evidence this round:** the refusal path executed live under `tauri dev --config` with an external main-window URL — the session log's single `error` line, the dialog "Spatial IDE could not start", exit 1 — log-first proven, `blocking_show()` on the main thread did not hang the dev build; the session-log-open failure path executed (`refuse_to_start_before_log`, dialog, exit 1, no panic); the self-check `ok` under both `tauri dev` and the `--debug --no-bundle` executable. Residual stated in the record: never observed on a packaged artifact, where a freeze would be silent — a Part M row beside M12 is owed for a deliberate refusal on the artifact (the architect's advisory 5), and M12 must still show one admitted data-plane upgrade in all three modes (not yet observed in any). The closing commit's authorization is the human's (entry 61: (a) one closing commit + the custodian's mechanical check + CI, no third gate — recommended; (b) plus a third look; (c) stop).
+
+**Custodian slips, named:** two worktree `target/` directories (`release-crs-3857`, `release-packaged-build`, ~1.6 GB) were removed as build caches; they held regenerated fixtures and slice-test evidence outputs — regenerable, cited by no record, but the inspection ran in the same command as the removal (a mechanic candidate: list before you remove, in its own step). The earlier "the reviewer's figure of deck.gl 9.3.7" and "byte-identical" claims are corrected above and in the K6/#31 records.
+
+## Amendment 9 — items 9 and 10 gated; three pieces at rule 7 awaiting one closing commit each (entries 61, 64, 65); new findings (entries 62, 63); the ADR-030 acceptance note as drafted; install-time network fact (2026-09-08, appended)
+
+**Item 9 (both notice generators), `cut/release-notice-generators` @ `7f2e2fa` (three signed commits on main 87c3d08).** Landed `1a28fbf`: the shell's own npm set from an inline Rollup `generateBundle` plugin writing an esbuild-shaped manifest (26 packages, deck.gl's transitive tree; `@tauri-apps/plugin-*` verified not compiled in); the Rust set from the shell crate's own `Cargo.lock` via `cargo metadata --locked` ∩ `cargo tree -e normal --target x86_64-pc-windows-msvc` (310 pairs / 296 names; first-party excluded by `source == null`; proc-macro over-inclusion stated); `notice()` extended with an additional-sets argument, the two-argument path byte-identical. Gate FAIL both sides: (architect) the viewer's own NOTICE header — shipped inside the installer as `bundle-viewer\NOTICE.txt` and in every bundle — still said the two further sets were "OWED, not yet done" (ADR-030's own failure shape); the 12 crates with no registry license file received ANOTHER crate's copyright line; (reviewer) a THIRD set no generator can see — DuckDB's amalgamation (`bundled`) embeds 26 `third_party/` C/C++ works whose tarball carries zero license files (brotli, concurrentqueue, fast_float, fastpforlib, fmt, fsst, httplib, hyperloglog, jaro_winkler, libpg_query, lz4, mbedtls, miniz, parquet, pcg, pdqsort, re2, ska_sort, skiplist, snappy, tdigest, thrift, utf8proc, vergesort, yyjson, zstd) — a new, unnamed gap under a header claiming "every third-party work" → **entry 62** (how that set is enumerated decides what ADR-030 (a) can say). Combined fix batch `e844540` + follow-up `7f2e2fa` (the first worker was killed mid-batch by an API error — HTTP 403, the organisation's subscription access refused for the worker model — and resumed by another): the viewer header true in both landing places; `LICENSES/MIT.txt`, `BSD-3-Clause.txt` (plain variant; spdx.org serves only the template variant for BSD, the plain text taken from SPDX's `license-list-data`), `MPL-2.0.txt` as notice-generation inputs (not layers), hash-pinned, with each gap crate's own `authors`/`repository`; the generator refuses to build when a template is missing; the installed header narrowed to what is true and the 26 directories NAMED as the one remaining gap; the bootstrap-pass sentinel and degraded lines fail closed; anchored line-shape checks with cardinality 3/26/310 (the substring checks had been near-vacuous: 296/296 and 26/26 names survived deletion); the first-`node_modules` slice; the stale-build pairing invariant in its EQUIVALENT form (the literal "metafile older than dist" is impossible — `generateBundle` writes before dist); the five `unic-*` and eight top-level deps corrected on the record. **Re-reviews: reviewer PASS (no must-fix; twelve mutations reproduce; the 26 names diff-empty against the tarball listing; the viewer section byte-identical to base); architect FAIL on ONE textual clause** — the shared section says every embedded text's README entry records "the URL it was fetched from, the date" — false for `LICENSES/Apache-2.0.txt`, which was copied from a crate's registry source. **Rule 7 on the architect step → entry 65** (one closing commit: the clause + both gates' should-fixes — a test guarding the nested-package fix, a swallowed `readdirSync` that fabricates "no LICENSE ships", a duplicated tokeniser under a false sharing comment, moved cites, the 26-name paragraph stating its non-manifest source, wording). Deviations from Amendment 6's item-9 preregistration, recorded: the third set found and named; four `LICENSES/*.txt` template files added as inputs; the two-pass `npm run build`; the `?raw` payload now ~3 MB (3,073,324 B) parsed at every launch — DECLARED for v0.1 and observed at Part M M3, the fetched-asset design recorded in `NEXT-CUT.md`.
+
+**The ADR-030 acceptance note, as the architect drafted it for the human (recorded here; appended to the ADR only on the human's word — a departure from ADR-030:48-50, which says candidate (b) "expires with item 9"):** (a) accepted as the rule with three scope statements and one recorded exception — (1) the Rust source is the shell crate's lockfile alone (it resolves the first-party path crates and DuckDB; the workspace lockfile is a different resolution, deliberately not read); (2) one target triple, `x86_64-pc-windows-msvc`, named in the notice; a macOS/Linux artifact reopens; (3) one named exception, candidate (b) for one set only: DuckDB's amalgamation's 26 works enumerated by name, texts not carried, entry 62 the due decision and milestone, not precedent; (4) reopen on entry 62's ruling and on any further set no build manifest reports — the first unchecked candidate being the NSIS installer executable's own stub code. What M3 must show: three notice files (beside the exe; `bundle-viewer\`; the Notices view), the narrowed scope paragraph, the 26-name heading, both new sections, IOGP + §6/§6(d), no bootstrap sentinel, the disclosure paints (byte count only). `docs/README.md:27`'s ADR-030 clause needs a dated correction in the same commit as the acceptance.
+
+**Item 10 (the cancellable, progress-reported pin), `cut/release-publish-pin` @ `15b41ac` (two signed commits on main 9d1dfb0).** Landed `1fb47ec` (rebased `7ba8cf6`): engine `content_hash_observed` (per-chunk callback; cancellation unchanged), kernel `preflight_pinless` running the ADR-025 and other pin-free checks FIRST — proven live on the 2,000,001-row fixture (refused before any hash), the prepare-phase cancel token registered before the blocking call via the existing cancel command (no new command), the panel's "preparing" state with phase and bytes. Gate FAIL (four must-fixes): Cancel rendered during the native save dialog before any token existed and a click there latched "Cancelling" for the whole pin; per-MiB emits unbounded (~5,471 for the 5 GB fixture); the render surface untested; **ADR-024:253-262 records the gap as open quoting the deleted doc sentence → entry 63** (an appended note, the human's). Fix batch `15b41ac`: Cancel renders only once the first progress event proves the token is registered (the render-side criterion: no command can dismiss an OS dialog; event ⇒ registered is the sound direction); host-side emits bounded with the final event guaranteed; `PublishControls` extracted and render-tested (the cancelled sentence "Preparing stopped — nothing was written." pinned verbatim); `prepare` delegates to the shipped path (tests strengthened); the unconditional removal tested; a dated pointer under Part H's H6. **Re-review FAIL on ONE must-fix:** `publishCancel` RETHROWS on IPC failure and the panel has no catch — the latch wedges by a different trigger (proved by a probe test); plus two one-line bound cases (a source growing past its open-time total; no Cancel before the first 64 MiB). **Rule 7 on the reviewer step → entry 64.**
+
+**Item 1 (b) → entry 61** (Amendment 8). The three closing-commit authorizations (61, 64, 65) share one shape: one commit each, the custodian's mechanical check plus CI, no further gate — as the #31 sweep was authorized.
+
+**Install-time network fact (for items 4/5/6):** `tauri.conf.json` sets no `bundle.windows.webviewInstallMode`; tauri-utils 2.9.3's default (`config.rs:998-1001`) is `DownloadBootstrapper { silent: true }` — the NSIS installer downloads Microsoft's WebView2 bootstrapper only when the runtime is absent; the application itself makes no network request (docs/09). Added to the KNOWN-LIMITATIONS and README drafts.
+
+**Records owed on the landings (the custodian, after the human's word and the merges):** DEPENDENCY-LICENSES (the 3857 items from Amendment 8; item 9's provenance scope); `LICENSES/README.md` (the BSD negative claim narrowed; the CRS count after #32); ADR-026:76 note (entry 59), ADR-024 note (entry 63), ADR-030 note + status (entry 62/65) — each on the human's word; `docs/README.md:27`; Part M M8/M9 brackets (entry 53 (a)) after item 10 merges; KNOWN-LIMITATIONS entries 2, 5, 13b, 13c with item 4; `NEXT-CUT.md`'s entry-7 line once item 10 lands.
+
+## Amendment 10 — the human's rulings of 2026-09-08 (evening) on entries 59–65 and #32/#33; the three closing commits authorized; preregistrations for the entry-60 bound-before-allocate fix and the entry-62 amalgamation enumeration; the ADR filings and notes they license (2026-09-08, appended BEFORE any code on the two new pieces)
+
+**The human, verbatim:** *"59 = (a): 3857 only; ADR-032 filed Proposed (4326 via the GeoParquet x,y override, decision open); ADR-026 appended implementation note approved; equirectangular wording binding for future geographic entries; QUICKSTART never claims WGS 84 opens; KNOWN-LIMITATIONS states the 4326 refusal prominently — most public GeoParquet is WGS 84. 60 = (a): bound-before-allocate fix in this cut, unit test + 15-notch E2E step; minZoom clamp recorded as optional follow-up. 61 = (a), 64 = (a), 65 = (a): one closing commit each, custodian-verified mechanically + CI, no further gate; 61 adds Part M M12 + the deliberate-refusal row; 64's probe scenario ships as a mutated test. 62 = (a): the amalgamation's 26 works enumerated from the upstream tree at the pinned version, hash-pinned in-tree, own notice section, before the tag; ADR-030 accepted with the appended enumeration-source note. 63 = yes, as drafted. #32 and #33: clicking. Sequencing note for the post-release call, not decided now: ADR-032 (4326 admission) likely outranks LOD."*
+
+### The ruled item list, v4
+
+1. **Items 1 (b), 9, 10** — one closing commit each (the briefs in the custodian's job directory: the three must-fixes + advisories + M12/M13 for 1 (b); the probe-as-mutated-test + two bound cases for 10; the provenance clause + both gates' should-fixes for 9), verified by the custodian mechanically (each named test run and mutated; every cite re-grepped; every check line) and by CI; **no further gate** (the #31-sweep shape). Then their PRs.
+2. **Entry 60 fix** — a new small piece in this cut (preregistration below).
+3. **Entry 62 piece** — the amalgamation enumeration, before the tag (preregistration below), stacked on item 9's branch or off main after its merge.
+4. **Item 8** — PR #32 (3857) being clicked; the landing records follow the merge (Amendment 8's list) including the **ADR-026 appended implementation note (approved)**; **ADR-032 filed Proposed, decision open** — this amendment's filing; the **equirectangular wording** ("no coordinate value is transformed; the display convention is equirectangular") binding on any future geographic entry.
+5. **K6** — PR #33 being clicked.
+6. **ADR notes on the human's word:** ADR-024's appended note (entry 63, as drafted) at item 10's landing; ADR-030 **Accepted** with the appended enumeration-source note at the entry-62 piece's landing; the ADR-026 note at #32's landing.
+7. **Items 4/5/6** — the drafts: KNOWN-LIMITATIONS states the 4326 refusal PROMINENTLY (its own top-level entry, first among the limits a stranger meets: most public GeoParquet is WGS 84); QUICKSTART never claims WGS 84 "opens"; the amalgamation entry (13c) drops when the entry-62 piece lands; the wheel-zoom entry (13b) drops when the entry-60 fix lands; the minZoom clamp recorded in `NEXT-CUT.md` as an optional follow-up. Then item 4 last; the human tags.
+8. **Post-release sequencing note (not decided):** ADR-032 (4326 admission) likely outranks LOD — recorded in `NEXT-CUT.md` beside the LOD companion note.
+
+### Preregistration — the entry-60 fix: bound the tile cover BEFORE allocation
+
+Facts (the K6 gate's, verified on the tree): `frontends/shell/src/canvas/tileGrid.ts:170-181` `tilesCoveringBbox` materialises the whole cover with a plain nested loop; `frontends/shell/src/streaming/tileViewportStreamManager.ts:314` calls it unclamped on every debounced camera settle; `MAX_QUEUED_TILES` (512, `tileGridConstants.ts:54`) truncates only afterwards (`tileViewportStreamManager.ts:361-379`); no zoom floor (`WorkingCanvas.tsx:1314` bare `controller: true`; deck.gl `OrthographicController` `minZoom = -Infinity`). **The piece:** (1) a pure pre-check in `tileGrid.ts` computing the cover's row×col count from the span BEFORE any allocation; when it exceeds a declared bound (the existing `MAX_QUEUED_TILES`, or a declared multiple of it — declared, not discovered, ADR-010 rule 6) the function returns the truncation/partial-view outcome the stream manager already handles without materialising the list (the truncation behaviour exists, so no design change; the declared partial-view status stays what the candidate arm shows today); (2) a unit test on the pure function with an astronomically large bbox (the K6 worker's zoom −64 shape) asserting no allocation beyond the bound and the typed truncated outcome; (3) one E2E step in `regression.mjs` zooming **15 notches** past "Zoom to layer" on the shipped default: the canvas stays responsive (the readout/hover still answers; the declared partial-view status shows), no hang, bounded by the suite's existing timeouts (a bound, not a timing claim — ADR-018); (4) no product behaviour otherwise changes; no perf language. Branch off main; gate: reviewer (docs/01 principle 7 is the criterion; ADR-010 rule 6 for the declared bound). Optional follow-up (not this piece): a computed `minZoom` clamp — recorded in `NEXT-CUT.md`.
+
+### Preregistration — the entry-62 piece: DuckDB's amalgamation third-party set, enumerated from the upstream tree
+
+Facts: `engine/Cargo.toml:32` `duckdb 1.10505.0` with `bundled`; `libduckdb-sys 1.10505.0`'s `duckdb.tar.gz` carries 26 `third_party/` directories (brotli, concurrentqueue, fast_float, fastpforlib, fmt, fsst, httplib, hyperloglog, jaro_winkler, libpg_query, lz4, mbedtls, miniz, parquet, pcg, pdqsort, re2, ska_sort, skiplist, snappy, tdigest, thrift, utf8proc, vergesort, yyjson, zstd) and no license files; item 9's notice names them as the one remaining gap. **The piece:** (1) determine the DuckDB upstream version the crate pins (the `libduckdb-sys` build script / its `duckdb.tar.gz` metadata — read it; state the version and the upstream tag); (2) from DuckDB's source tree at that tag (github.com/duckdb/duckdb — fetched once with curl, the entry-51 discipline: URL, retrieval date, sha256 of every fetched file), collect each of the 26 directories' license/notice files (`third_party/<lib>/LICENSE*`, `COPYING*`, `NOTICE*`, or the license header where a library ships none — state which); pin them in-tree under `LICENSES/third-party/duckdb-<version>/<lib>/` with a `MANIFEST.json` (lib, upstream path, sha256, license id as declared upstream) and a README recording the method; (3) `rustCrateNotices.mjs` (or a sibling generator) gains a fourth set from that pinned manifest — its OWN notice section "DUCKDB'S BUNDLED THIRD-PARTY SOURCES" enumerating the 26 with their texts, generated from the pinned manifest (a manifest of a kind: the upstream tree's listing at the pinned version, not a build manifest — the notice says so); the item-9 gap paragraph is REPLACED; the header's scope sentence widened to the fourth set; (4) tests: byte identity generated-vs-dist; cardinality 26 in the fourth section; the manifest's hashes verified against the pinned files at generation time (fail closed on any mismatch); the tarball's `third_party/` listing compared against the manifest (fail closed if the crate's tarball gains or loses a directory — the drift guard); (5) records: `DEPENDENCY-LICENSES.md` (the gap CLOSED; the fourth set's source and method); `LICENSES/README.md` (the new directory as notice-generation inputs); Part M M3 (the fourth section); KNOWN-LIMITATIONS 13c dropped; **ADR-030 accepted on landing with the appended enumeration-source note** (the architect's drafted text amended: the amalgamation set enumerated from the upstream tree's listing at the pinned crate version, hash-pinned in-tree, not from a build manifest; the shell-lockfile-only Rust source; one target triple; the reopen condition incl. the NSIS installer stub's own code as the first unchecked candidate) and `docs/README.md:27` corrected in the same commit. No new dependency (curl once, at pin time, by the worker; the build reads only the pinned files). Gate: reviewer + architect (ADR-009/AGPL §6 completeness; ADR-030 (a) satisfied for both artifacts; the pinned-manifest discipline).
+
+### ADR-032 filed Proposed (decision open) — this amendment's filing, on the human's word
+
+`docs/adr/ADR-032-geoparquet-source-declaring-a-non-x-first-axis-order.md`, from the architect's skeleton recorded in Amendment 7: Context (ADR-015 §5's refusal; ADR-026:61; the GeoParquet 1.1.0 override text pinned in `spikes/item8-crs-catalog-extension/README.md` §2; the three readers pinning easting,northing); Decision OPEN with candidates (A) hold the refusal / admit only x-first declarations (OGC:CRS84), (B) establish the data's order from the format specification in the reader, record both facts, `axis_normalization` stays none-performed, widen the x-first reader set, a falsification-only |latitude| ≤ 90 guard, (C) normalize on ingest — out of scope; Consequences of B and of A; the human's post-release note that this likely outranks LOD (not decided). `docs/README.md:27` gains the ADR-032 line.
+
+## Amendment 11 — the entry-62 piece through both gates to PR #37; the entry-60 piece at rule 7; the line-ending incident on main and its remedy; CI green on the re-based heads of #35 and #36; corrections to this record (2026-09-09, appended with four PRs open and none yet merged — the landings will be recorded when the human's clicks happen)
+
+### The entry-62 piece (Amendment 10's preregistration), as landed on its branch
+
+`cut/release-amalgamation-notices`, stacked on item 9's branch (PR #35), five signed commits, **PR #37 open @ `a12f87f`** (base `main`; merge #35 first).
+
+1. **The piece, `3638162`** (rebased from the worker's `3b7e4d6`). DuckDB 1.5.5 = tag `v1.5.5` = commit `d8cdaa33fda8df955cc76ef58a280f68f4cd43fa`; the crate tarball's own `DUCKDB_SOURCE_ID "d8cdaa33fd"` is that commit's short form. Upstream `third_party/` holds 30 directories at the tag; the amalgamation carries 26 (`catch`, `imdb`, `jemalloc`, `snowball` upstream-only — not conveyed, not pinned). Every one of the 26 ships its own upstream `LICENSE`; `tdigest` also a `NOTICES` — 27 files fetched once on 2026-09-08 (URL, date, sha256, byte count per file in `LICENSES/third-party/duckdb-1.5.5/MANIFEST.json`), each file's git blob SHA-1 recomputed and matched against the tag's own tree, 27 of 27. A fourth notice section, "DUCKDB'S BUNDLED THIRD-PARTY SOURCES", built from the pinned manifest by `frontends/shell/scripts/duckdbAmalgamationNotices.mjs` with every sha256 re-verified, and a dependency-free tar walker (`node:zlib` + the 512-byte header) comparing the crate tarball's own `third_party/` listing to the manifest in both directions. The item-9 gap paragraph gone; the header's scope sentence names four sources. **Deviations from the preregistration, named at the landing:** `.gitattributes` marks the 27 pinned files `-text` rather than `text eol=lf` — `miniz/LICENSE` is CRLF in DuckDB's tree and hash-pinned as such; normalising it would rewrite a conveyed text and break both its pinned hashes (proven through the index and a simulated `autocrlf=true` checkout, 27/27); DuckDB declares no SPDX identifiers for these works, so every `license_id` carries a `license_id_basis` (`self-declared` / `read-from-body`) and the pinned text is the authority; `re2/AUTHORS` not pinned (outside the preregistered filename classes; BSD-3-Clause's reproduce requirement is met by the LICENSE).
+2. **Gates on `3b7e4d6`.** Architect: **PASS with one must-fix** — B1, the drift guard resolved `libduckdb-sys` by name only and compared directory-name sets only, so a version bump keeping the same 26 directories passed every check while the notice printed tag `v1.5.5` about a tree no longer compiled (ADR-030's own failure shape inside the set filed to close it); B2, the ADR-030 acceptance texts (status line, appended note, `docs/README.md:27` correction) delivered as final for the human's word. Reviewer: **FAIL** — M1 (= B1, sharpened: a mutation falsifying `crate.version`, `crate_tarball.sha256`, `third_party_dir_count` and the tree sha together passed the generator, `check:dist-notice` and every test but one, and that one for the wrong reason), M2 (Part M M3's row placed its two new headings after the END line — the row could not be followed), S1 in effect a must (the diff re-added the `#!/usr/bin/env node` shebang `c6693bd` had removed from `rustCrateNotices.mjs`, and the new module had one too — a CRLF checkout breaks Vitest's transform on it, PR #35's first CI run).
+3. **One combined fix batch, `ab42381`** (landed `e533dbb`, rebased onto #35's re-based head — see the incident below): `assertCrateVersionMatchesManifest` — the linked crate's name and version against the manifest's, the pinned directory's name against `duckdb_version`, the tarball's own sha256 and directory count — from build, check and the standalone generator; `upstream_third_party_tree_sha` demoted to recorded provenance with its derivation stated (not re-verifiable offline; a 40-hex presence test only); M3 in file order; both shebangs removed, both suites re-run under a forced CRLF conversion, the negative control reproducing the SyntaxError; `.gitattributes` narrowed from `LICENSES/third-party/**` to the 27 licence files; the viewer-only header's pointer sentence widened to name the fourth set, asserted by name in `notice.test.mjs` (the anchor gap measured at 207 characters; the 240 bound left as it was); the UTF-8 round-trip assertion; the stale "gap paragraph" comment; the tar walker refusing PAX `g` headers and base-256 sizes.
+4. **ADR-030 accepted on the human's word, `f3d5fa5`** — Amendment 10's item 6, applied: status `Accepted 2026-09-09`; the appended note (the Rust set from the shell crate's lockfile alone; one target triple; the DuckDB set enumerated from the upstream tree's own listing at the pinned crate version, not a build manifest, hash-pinned with a drift guard; how (a)'s "own build manifest" clause is read; the guards' reach; licence identification where upstream declares none; Reopen — the NSIS installer stub's own code the first unchecked candidate; what M3 must show); `docs/README.md:27` corrected with a dated note, the ADR-032 sentence intact. Recorded as a departure from ADR-030:48-50 ("expires with item 9") in Amendment 9; the departure stands, on the human's ruling of entry 62.
+5. **Re-reviews on `f3d5fa5`: architect PASS (no blocking item); reviewer PASS (no must-fix).** Four guard mutations — the manifest's crate version, its tarball sha256, a renamed pinned directory, and the gate's mutation E with every recorded field falsified — each fail the generator, `check:dist-notice` and vitest naming both values; the tree-sha-alone control correctly passes, as disclosed. Both re-reviews' should-fixes landed as two record commits, notice bytes unchanged: **`d0baa51`** (the ADR-030 note's "Two checks" → three, enumerated — a transcription correction to a note not yet merged; the pinned README's verification table scoped to each cadence; `LICENSES/README.md` and `DEPENDENCY-LICENSES.md` propagate the fix batch — declared revision plus directory-set match, not byte-identity; three guards, each with its falsification; re2's `AUTHORS` reasoned from BSD-3-Clause's requirement first; M3 gains the must-not-appear bootstrap sentinel; `LICENSES/third-party/*/*/COPYING* -text` listed before it can match anything) and **`a12f87f`** (a guard's throw in `generateNotice.mjs` becomes the named `generateNotice: FAIL --` line `checkDistNotice.mjs` already prints, mutation-tested; the verified-fields enumeration names `bytes`/`git_blob_sha1` as vitest-verified; two stale "both guards" comments; `docs/README.md:27` keeps ADR-030:33's own words and attributes the widened reading to the note; a historical 133 → 134 in a test comment, bisected; the `.gitattributes` comment reconciles its "fourth instance" with `AI_DEVELOPMENT.md`'s fifth eol-class member).
+6. **The custodian's check on `a12f87f`:** `npm run verify` exit 0 — `check:dist-clean` PASS; `check:dist-notice` PASS (3 required strings, 26 Vite package names, 296 linked crate names; anchored entry-line counts viewer 3 / frontend 26 / Rust crates 310 / DuckDB amalgamation 26; every pinned sha256 re-verified; the linked `libduckdb-sys 1.10505.0` is the pinned version; the tarball's sha256 and 26 directories match); vitest 64 files / 824 tests; residency-trace 76; citation-integrity 29; viewer `npm test` 61; `src/generated/NOTICE.txt` 3,186,905 bytes, sha256 `6eb80fd3…cee6` — the same bytes the reviewer reproduced on `f3d5fa5`; lockfiles unchanged against #35's head; every touched file `i/lf w/lf`.
+7. **What is not claimed.** The guard is version- and directory-name-level; it does not prove the tarball's sources byte-identical to the tag's tree. The tree sha is recorded, not re-verified. The NSIS installer's own stub code is unchecked (not gapped) — a cheap pre-tag check is recorded in `NEXT-CUT.md`. **The `?raw` payload is 3,186,905 B** (Amendment 9's 3,073,324 B and the ledger's 3,186,855 B were earlier heads) — declared for v0.1, observed at Part M M3. Notice wording the re-reviews flagged in conveyed bytes (the ADR's status phrased repository-internally at `notice.mjs:391`; the guard sentence at `:721-723` naming two of three; an orphan short line at `:431-437`) is deferred to the next notice regeneration in `NEXT-CUT.md`, not fixed here.
+8. **KNOWN-LIMITATIONS 13c will never be written.** Amendment 10 item 7 said the amalgamation entry "drops when the entry-62 piece lands"; the piece lands before item 4 is written into the repository, so the shipped KNOWN-LIMITATIONS never carries it. The draft's bracket is resolved on #37's merge.
+
+### The entry-60 piece (Amendment 10's preregistration) — at rule 7 on the reviewer step
+
+`cut/release-tilecover-bound`: the piece landed @ `aed2d90` (the declared bound 65,536 = 128 × `MAX_QUEUED_TILES`, the pure pre-check `coveringCellCount` with no allocation past it, at-bound / one-axis / astronomical unit tests, the K7 15-notch E2E step — K6 and K7 both PASS in the gate's run). Reviewer gate **FAIL** (three must-fix, one of them the ADR-028 question: past the bound the protection rule of ADR-028 Amendment 3 is punctured — evictable and blanked in-view tiles about six notches past the fit — queued as **entry 66**, the architect's text verbatim, the custodian recommending (d)); fix batch `7b658de` (the puncture DISCLOSED at both paths with ADR-028 quoted verbatim, the 65,536 pinned in the harness and the unit tests, cites re-derived); re-review **FAIL on three record items, no behaviour defect** (a step comment describing the fixed hang as live; one moved cite; a paraphrase in quotes in the commit message) → **rule 7 → entry 67** (the closing commit in the 61/64/65 shape, to be ruled with 66). The closing brief is ready in the custodian's job directory; nothing moves on the piece until the word. KNOWN-LIMITATIONS 13b (the wheel-zoom hang) stays bracketed on entry 67; a 13b′ (the ADR-028 exception declared for v0.1.0) is drafted on entry 66.
+
+### The line-ending incident on main, and its remedy
+
+PR #35's rebase onto main conflicted on **every line** of `DEPENDENCY-LICENSES.md`. Root cause: the custodian's landing-record scripts wrote files with Python text-mode `open(path, "w")`, which on Windows translates `\n` to `\r\n` — seven files on main had become CRLF with no visible diff of their own (`DEPENDENCY-LICENSES.md`, `LICENSES/README.md`, ADR-026, `docs/README.md`, `AI_DEVELOPMENT.md`, the item-8 spike README, `PRE-PUBLIC-CHECKLIST.md`; this file mixed). Remedy on main: the seven restored to LF, content byte-identical (`git diff --ignore-space-at-eol` empty) — `f8bddf6`, `a9143af`; an over-broad filter in the second commit also normalised the accepted `ADR-012`, whose mixed endings predate this cut — **reverted the same hour** (`4d7b0f1`; an Accepted ADR's bytes are not the custodian's to change). PR #35 reset to its remote and re-rebased cleanly (`44d61b3`); the amalgamation branch rebased onto it; PR #36 rebased with `-X ignore-space-at-eol` and its one CRLF blob restored (`74e12da`). **CI green on both re-based heads.** Mechanics recorded in `AI_DEVELOPMENT.md`: a script that rewrites a repo text file writes LF (`newline="\n"`), and `git ls-files --eol` before committing a script-edited file; and, from the entry-62 piece, the eol class's fifth member — a hash-pinned upstream corpus keeps its own bytes (`-text` scoped to the pinned files, never `text eol=lf`; a repository-wide text rule must precede the `-text` lines). The 21 pre-existing CRLF files and 23 mixed files outside the custodian's blast radius are **entry 68** (a `* text=auto eol=lf` policy with one normalising commit after the open PRs merge, or leave them) — a hygiene decision, not a tag blocker.
+
+### Corrections to this record and to the custodian's briefs
+
+- Amendment 9 named item 9's `?raw` payload as 3,073,324 B and the ledger later 3,186,855 B; at PR #37's head it is 3,186,905 B (the four-source header). Byte counts only; no timing is claimed anywhere.
+- The custodian's records-sweep brief cited `duckdbAmalgamationNotices.mjs:475-478` for the "two guards" comment; the string lives at `checkDistNotice.mjs:475`. The same brief cited the pinned-directory assert at `:120-136`; it is at `:151-161` (`:114-121` is the exactly-one-directory check). Both caught by the workers, both corrected in the ledger.
+- "Two checks" / "both guards" appeared in the ADR-030 note as drafted, in two code comments and in `LICENSES/README.md` / `DEPENDENCY-LICENSES.md` after the fix batch added the third; all say three at `a12f87f`. In the ADR the change is a transcription correction to text not yet merged, not an amendment to an accepted ADR.
+
+### State at this amendment
+
+Open for the human's clicks, CI green: **#34** (item 10, `21cc2e2`), **#35** (item 9, `44d61b3`), **#36** (item 1 (b), `74e12da`), **#37** (entry 62, `a12f87f`, after #35). Pending the human's word: entries **66**, **67**, **68**. Owed at the merges: ADR-024's appended note (entry 63 = yes, at #34's); Part M M8/M9 brackets (entry 53 (a), at #34's); `NEXT-CUT.md`'s entry-7 line (at #34's); the KNOWN-LIMITATIONS 13c bracket (at #37's). Then the installer build for Part M, items 4/5/6 from the drafts (item 4 last), and the tag.
+
+## Amendment 12 — the four landings; the human's rulings of 2026-09-09 on entries 66, 67 and 68; the entry-60 closing commit authorized; preregistrations for the entry-68 line-ending commit and for the post-tag geometric-protection piece (2026-09-09, appended BEFORE the closing commit is dispatched)
+
+### The landings
+
+**Merged by the human, merge commits, in this order:** **#34** (item 10, the cancellable progress-reported pin — `79a9a3b`), **#35** (item 9, both notice generators — `aa5a8cf`), **#36** (item 1 (b), the ADR-020 config mirror — `3c3fd62`), **#37** (the entry-62 piece, the DuckDB amalgamation notice set and ADR-030 accepted — `9c2594d`).
+
+**#37 was rebased once more before its merge.** After #36 merged, GitHub reported #37 conflicting on `docs/README.md`: #36's ADR-020 dated correction and #37's ADR-030 clause both edit the index's one long ADR line. Rebased onto the new main (#35's five commits dropped as already merged; three stops, each on that line), resolved mechanically — main's line with the branch's `**ADR-030** (…)` clause spliced in, the bytes outside the clause asserted identical to main's, the ADR-032 sentence asserted present, LF. `git range-diff` against the pre-rebase commits: the two code commits identical, the three record commits differing only in `docs/README.md`; pushed `a12f87f` → `6135947` with `--force-with-lease` (the accepted shape for an unmerged cut branch); CI green again on the new head (eight checks, the Rust workflow included this time).
+
+**Records applied at the landings, on main:**
+
+- At #34's: **ADR-024's appended note** (entry 63 = "yes, as drafted"; `dc8f3a4`) — the pin phase its Consequences named "uncancellable and unreported … Not built or closed by this ADR" (`:253-263`) was built by item 10; the quoted phrases re-read against the ADR before appending, every named function confirmed present on main; `docs/README.md`'s ADR-024 line repeats no gap. Part M's **M8/M9 brackets** swept (`ba9a88e`; entry 53 = (a), the row headers in M10/M11's form). `NEXT-CUT.md`'s entry-7 line closed (not a next-cut item). The KNOWN-LIMITATIONS draft's entry 5 resolved: landed; the cancel-failure caveat dropped because the panel un-latches the control on a miss and logs it.
+- At #35's and #36's: nothing further owed — item 9's `DEPENDENCY-LICENSES.md` / `LICENSES/README.md` blocks and item 1 (b)'s `docs/02:81` / `docs/README.md` corrections and M12/M13 rows travelled on their branches. No tracked document still speaks of these PRs as open (grepped).
+- At #37's: the KNOWN-LIMITATIONS draft's **13c is never written** (Amendment 11 item 8); `docs/README.md:27` carries both #36's and #37's clauses on one line, as merged.
+
+**Line endings after the merges:** no file main gained from the four merges is `i/crlf` or `i/mixed` except the 27 pinned licence files, which are `-text` by design.
+
+### The human's rulings, verbatim (2026-09-09)
+
+*"66 = (d): ADR-028 appended note now (trigger, both paths incl. in-flight blanking, the fits/over-budget-latch second deviation, reopen condition); comment repairs in the batch; KNOWN-LIMITATIONS line concrete — "at extreme zoom-out, more than ~6 wheel notches beyond Zoom to layer, tiles already drawn may vanish while still on screen; the status continues to report the view as partial"; (b) preregistered as the first post-tag piece beside ADR-032/LOD, half-open index ranges. 67 = (a): one closing commit incl. the four sites' one-clause qualifications; custodian-verified + CI, no further gate. 68 = (a), after all open PRs merge and before the tag: text=auto line before the -text corpora lines; ignore-eol diff empty as proof; all hash pins + CI green; Accepted ADRs included, content-immutability stated in the message. #37: clicking."*
+
+### The ruled item list, v5
+
+1. **Entry 66 = (d).** The ADR-028 appended note carries four elements — the trigger; both consequence paths, eviction protection and the supersede keep-set including in-flight blanking; the second deviation, the `fits`/over-budget latch reading the windowed cover; the reopen condition — appended by the custodian on the entry-60 branch after the closing commit, so note and code land together (the ADR-030 shape). The comment repairs ride the closing batch. KNOWN-LIMITATIONS carries the line in the human's words (the draft's 13b; 13b′ and 13c retired). Option (b), the geometric predicate, is preregistered below as the first post-tag piece, beside ADR-032 and LOD in the post-release sequencing — the order among those three is not decided here.
+2. **Entry 67 = (a).** One closing commit on `cut/release-tilecover-bound`: the re-review's three must-fix record items, its five should-fixes and nits, and the four absolute-rule sites' one-clause qualifications (`tileResidentSet.ts`, `WorkingCanvas.tsx`, `candidateArmSession.ts`, the residency harness's claim). Custodian-verified — every cite re-grepped after the rebase; the regression suite run once so K7's re-read status assertion executes (it had never run); `npm run verify` — plus CI; no further gate; then its PR. The branch rebases onto the merged main first.
+3. **Entry 68 = (a).** Preregistered below; executed after the entry-60 PR merges and before the tag.
+4. **Items 4/5/6 then the tag** — unchanged from Amendment 10 item 7, with the draft's 13b now the human's line and 13c gone.
+
+### Preregistration — entry 68 (a): the repository line-ending policy commit
+
+- **Change:** `.gitattributes` gains `* text=auto eol=lf` as its FIRST rule — before every `-text` line for the pinned corpora, because a later line overrides an earlier one and the 27 pinned licence files must stay `-text` (the eol class's fifth member, `AI_DEVELOPMENT.md`). One commit renormalising the index (`git add --renormalize .`) covering the 21 `i/crlf` and 23 `i/mixed` files entry 68 lists — spike app files, two ADR-003 workflows, `product-ci-rust.yml`, `kernel/src/main.rs`, `kernel/RESULTS.md`, `frontends/shell/e2e/residency-harness.mjs`, `engine/src/geoarrow.rs`, `engine/src/wkb.rs`, `kernel/src/params.rs`, the data-plane and transport-bakeoff sources, and `docs/adr/ADR-012-data-plane-transport.md`, an Accepted ADR, included on the human's word with content-immutability stated in the commit message.
+- **Expected, each a condition:** `git diff --ignore-space-at-eol` between the parent and the commit is EMPTY (the proof of content immutability); `git ls-files --eol` afterwards shows no `i/crlf` or `i/mixed` outside `attr/-text`; no `attr/-text` file changes; every hash pin holds — `renderer/bundle-viewer/ceilings.json` and the `.projjson` fixtures (kernel and engine tests), `LICENSES/*.txt` (`noticeByteIdentity.test.ts`), the 27 pinned amalgamation files' sha256 and git blob SHA-1 (`duckdbAmalgamation.test.ts`, `check:dist-notice`) — via `npm run verify` in `frontends/shell`, the viewer's tests and the kernel/engine `cargo test`; CI green on its PR.
+- **Falsification:** any non-empty ignore-eol diff, any hash pin failing, any `-text` file in the diff — the commit does not go in and the entry reopens.
+- **Order:** after the entry-60 PR merges; before the tag; a PR the human clicks.
+
+### Preregistration — entry 66 (b): restore ADR-028's geometric protection at every zoom without enumeration (the first post-tag piece)
+
+- **Design (the architect's consult of 2026-09-08, recorded in `NEXT-CUT.md`):** protect a resident tile iff its (row, col) lies inside the cover's half-open index ranges — `coveringIndexRanges`, the same predicate `tilesCoveringBbox` materialises, unmaterialised; NOT a closed-bbox intersection, which would protect one extra ring on boundary-exact viewports — and apply the same predicate to the supersede keep-set, so an in-flight in-view tile is not blanked past the bound. About six source files: widen `viewportTileKeys`/`protectedTileKeys` to a `{ has(key) }` shape, thread the bbox to `WorkingCanvas`'s handle and `tileIngest`'s admit-time eviction, close the stream manager's supersede path.
+- **Tests, pre-committed:** (1) a resident tile outside the window but inside the viewport survives eviction; (2) an out-of-viewport tile is evicted; (3) predicate/cover agreement, including a boundary-exact `xmax`; (4) a plan of more than 65,536 cells protects a tile the window omits; (5) an in-flight in-view tile is not superseded.
+- **Expected outcome:** ADR-028 Amendment 3's rule holds at every zoom; the appended note's exception is closed by a further appended note on the human's word; the KNOWN-LIMITATIONS line leaves with the release that carries the piece. **Falsification:** any of the five tests failing, or a visible in-viewport hole at the window regime in the operator walkthrough. **Gate:** its own architect and reviewer gates; its own preregistration is this one. **Sequencing:** the first post-tag piece, beside ADR-032 (4326 admission) and the LOD slice (ADR-031); the order among the three is the post-release call, not decided here.
+
+### What remains before the tag
+
+The entry-60 closing commit and its PR (the human's click); the entry-68 commit and its PR; the installer build for Part M (the human's walkthrough incl. M12/M13 and M3's three notice files — byte counts only); items 4/5/6 written into the repository from the drafts, item 4 last; then the tag. The NSIS-stub notice check (ADR-030's note, statement 4) stays a cheap pre-tag candidate in `NEXT-CUT.md`, not a condition.
+
+## Amendment 13 — the human's sequence adjustment for the close: entry 68, items 5/6 as drafts, the installer build and Part M, then items 4/5/6 from what M showed, then the tag (2026-09-09)
+
+**The human, verbatim:** *"#38: clicking. Sequence adjustment: the entry-68 line-ending commit proceeds as staged; items 5/6 land as drafts with bracketed slots for anything installer-facing; the installer build and my Part M come next; then items 4/5/6 finalized from what M actually showed — item 4 last — then the tag. A document describing an artifact is written after running it, not before."*
+
+### The ruled item list, v6
+
+1. **PR #38** (the entry-60 piece: the closing commit and ADR-028's declared exception) — the human's click; at its landing the KNOWN-LIMITATIONS draft's 13b bracket resolves (the fix landed; the human's line stands).
+2. **Entry 68 = (a)** — the line-ending commit exactly as preregistered in Amendment 12, run once #38 is in (no other release PR stays open); its PR, CI green, the human's click.
+3. **Items 5 and 6 land as drafts** — `README.md` and `QUICKSTART.md` committed with every installer-facing statement in brackets (what the installer is named, what setup does about WebView2, what the installed app shows — Notices, the Preparing…/Cancel panel, the refusal texts as they render in the packaged build). Repository-facing statements (licences, layout, the local-first posture, the CRS refusal by decision) stand unbracketed.
+4. **The installer build and the human's Part M** — the packaged build from main at that point; the walkthrough incl. M12/M13 and M3's three notice files (byte counts only).
+5. **Items 4/5/6 finalized from what M actually showed** — the brackets in 5/6 resolved against M's record; **item 4 (`KNOWN-LIMITATIONS.md`) written last**, from the draft and M's record.
+6. **The tag.**
+
+The principle the human states governs every remaining record: *a document describing an artifact is written after running it, not before.* Nothing in items 4/5/6 may describe the installed application from the draft alone.
+
+## Amendment 14 — the v0.1.0 candidate build (build-only), the away-window instructions verbatim, and what was prepared for Part M and the tag (2026-09-09, appended during the human's ~8 h absence; session locked, no GUI)
+
+**The human, verbatim (2026-09-09, on leaving):** *"While the human is away (~8 h, session locked — no headed work; the guard's pre-arm check will refuse anything GUI, don't fight it): After #39 merges: the entry-68 line-ending commit + PR as preregistered; then pull main and run the packaged build — installer produced, SHA-256 recorded, path staged. Build-only; do not launch. Part M prep pack: the M1–M13 rows finalized; a clean-profile procedure for me to execute at the sitting (the exact commands to create a throwaway local Windows account, what a stranger's machine lacks that this one has — WebView2 runtime presence, VC++ redistributable, any DuckDB extension cache — and what M1 must observe about each); the M3 notice byte counts pre-filled. Release text: items 5/6 as drafts with bracketed installer-facing slots; the v0.1.0 tag message and GitHub release body drafted to the "every sentence verifiable against a file in the tree" standard — installer + SHA-256 + a KNOWN-LIMITATIONS link above the fold; finalized only after M. Post-tag preregistrations drafted, not filed: entry 66 (b) geometry protection (half-open index ranges); ADR-032's problem statement with the GeoParquet-1.1.0 x,y-override analysis and its ADR-015/ADR-017 touch points; entry 47's re-pick piece brief; the LOD brief revised with the companion note folded in. All for my sight later — no code. Hygiene: ADR-030's acceptance note and docs/README:27 if not yet landed; a repo-level "release day" checklist (description/topics/About set, README top, release page contents) so the tag moment is a checklist, not improvisation. Report in ≤20 lines when done; anything needing a ruling goes to the queue, nothing decided inline."*
+
+### The candidate build
+
+| | |
+|---|---|
+| Source | `main` @ `998be05` — the #39 merge (entry 68); every release PR (#34–#39) in |
+| Command | `npm run tauri build` in `frontends/shell`, 2026-09-09T09:03:44Z; exit 0; **never launched** |
+| Artifact | `frontends/shell/src-tauri/target/release/bundle/nsis/Spatial IDE_0.1.0_x64-setup.exe` |
+| Size | 10,559,184 bytes |
+| SHA-256 | `712b30632e2c27078686f13defd1fe5462e723dbd4d9124fc010d6958b6aa45a` (`sha256sum` and `Get-FileHash` agree) |
+| Signature | `NotSigned` |
+| Executable | `spatial-ide-shell.exe`, 44,363,776 bytes; per-user install (`RequestExecutionLevel user`; `$INSTDIR = $LOCALAPPDATA\Spatial IDE`, `installer.nsi:104`, `:504`) |
+| Packaged | the executable, `spatial_ide_shell_lib.dll`, `NOTICE.txt`, `bundle-viewer\` (the viewer's `dist/`, its `NOTICE.txt` included), the WebView2 bootstrapper stubs, the uninstaller. No `publish-bundle.exe`, no `slice-host.exe` (M9's "the installer ships no CLI" holds) |
+| Notices | beside the executable 3,186,905 B / 62,081 lines, byte-identical to the in-app `src/generated/NOTICE.txt` and to the bytes the entry-62 reviewer reproduced (sha256 `6eb80fd3…`) — M3's anchors hold unchanged (23 / 721 / 743 / 751 / 3,338 / 5,000 / 59,854 / 62,081; 26 entry lines; 0 forbidden strings); `bundle-viewer\NOTICE.txt` 163,998 B / 3,325 lines |
+| Imports (`dumpbin /DEPENDENTS`) | Windows system DLLs, the `api-ms-win-crt-*` UCRT forwarders, and **`MSVCP140.dll`** — the Visual C++ 2015–2022 redistributable, which the installer does not bundle → **DECISIONS-PENDING entry 69** (declare / static CRT / bundle; not decided here) |
+
+### Prepared, for the human's sight (no code)
+
+- `state/drafts/part-m-prep-pack.md` (untracked, repository root): the artifact table; M3 pre-filled; the machine-vs-stranger table (WebView2 152.0.4191.66 present machine-wide; the VC++ 14.50 runtime present; no DuckDB extension use — `bundled`+`parquet`+`json` static, no autoload setting anywhere; the per-user paths a clean profile starts without) with what M1/M2 can and cannot observe; the clean-profile PowerShell procedure (create a standard user, stage the fixtures readably, remove account + profile after); row reminders.
+- Part M rows corrected on `main`: M1 (the artifact's name, hash, size), M3 (install root `%LOCALAPPDATA%\Spatial IDE` from the generated script — the earlier `spatial-ide-shell` guess was wrong), M4 (two admitted entries since #32).
+- `state/drafts/tag-message-v0.1.0.md` and `github-release-body-v0.1.0.md`: installer + SHA-256 + the KNOWN-LIMITATIONS link above the fold; every sentence points at a file; placeholders left for Part M's date and entry 69's ruling.
+- `RELEASE-DAY-CHECKLIST.md` (tracked): preconditions, the artifact re-hash, repository metadata (the human's), the README top, the tag, the release, after the tag, never-on-release-day.
+- `state/drafts/post-tag/`: the ADR-032 problem statement (architect draft: the pinned GeoParquet 1.1.0 override text, today's refusal at `dataset.rs:302-307` and `error.rs:213-217`, candidates A/B/C with their ADR-015 §5 / ADR-017 / ADR-026 / ADR-013 touch points, the equirectangular display question, nine open questions, the fixtures a B preregistration must pre-commit); the LOD brief revised with the companion note folded in (architect draft: block-on-sight L8–L10 added, the "refuses identity by name" reading drafted for approval, eight open questions, what the brief still lacks — the accumulate-into-image fallback has **no description anywhere in the record**, carried by name and caveat only); the entry-47 re-pick brief and the entry-66 (b) geometry-protection brief (Plan drafts) — filed as they return.
+- Items 5/6 (`README.md`, `QUICKSTART.md`) landed as bracketed drafts earlier this day (`64fa957`).
+
+### Records owed at the sitting
+
+Part M's verdicts verbatim in the walkthrough; entry 69's ruling into KNOWN-LIMITATIONS' install entry and QUICKSTART's install section; the brackets in items 5/6 resolved from M; item 4 written last; the two tag/release drafts finalized; then the tag by the checklist. A stale cite noticed by the architect: `RELEASE-0.1.md` (Amendment 7's 3857 consult) cites `kernel/src/publish/mod.rs:1187` for the `crs_transform` string, which sits at `:1259` on `main` today — a dated correction, recorded here rather than by editing the earlier amendment.
+
+## Amendment 15 — Part M, sitting 2 (M5–M13), the human's report of 2026-09-13, verbatim; the custodian's reading follows
+
+*Recorded by the custodian on 2026-09-13 from the human's message. The human ran the v0.1.0 candidate (built from 998be05) on the clean profile and the dev checkout as the prep pack's §4b says. Nothing here is a verdict of the custodian's; the human's words are the record.*
+
+> M1 to M4 work fine. M5, if i filter for example id < 100, if i zoom to layer it works perfectly, but when i zoom out it is saying "filling has finished for this view - some areas were not loaded etc... " Also we still have to fix the hover to show id, zoom once back and even if i still hover the same feature cuase the mouse has not moved and the cursor is completely inside the feature, the id text disappear. That's a breaking rule for me, we need to fix it, and we need it now. No discussion. Also after applying the filter, the zoom to layer doesn't work anymore till you clear the filtering.
+> Also m6, the styling works fine.
+> M7 when presssing zoom to layer it says "filling has finished for thos view etc... ' when i zoom out it says "showing 19100 features - the fartest etc... " No banner refusal appears.
+> M8 is good, it is saying though"this bundle format cannot record a row predicate adr 017 etc... "
+> M9 is fine showing the audit through my account says this ([audit log: C:\Users\sidewalk\AppData\Local\spatial-ide\audit\publish.jsonl]
+> 2026-09-13 12:24 — publish to C:/Users/Public/spatial-ide-fixtures/100k-happy-path — APPROVED via shell dialog and SUCCEEDED (84 rows, 1 partition)
+> 2026-09-13 12:28 — publish to C:/Users/Public/spatial-ide-fixtures/100k-happy-path-2 — APPROVED via shell dialog and SUCCEEDED (100000 rows, 38 partitions)) I did publish it 2 times, a current view and a whole dataset. M10 is fine.
+> M11 works fine, just the zoom is strange, when i zoom in, the map pan by itself to north-west, and when i zoom out it goes the other side, bottom left corner, sud-est.
+> M12 Mode 3 works fine, mode 2 also, mode 1 also. All of them show in the log what was expected.
+> [Mode 2 console output: the first `npx tauri build --debug --no-bundle` failed with `error: failed to remove file …\target\debug\spatial-ide-shell.exe — Access is denied. (os error 5)`; the second succeeded (`Finished dev profile`, `Built application at: …\target\debug\spatial-ide-shell.exe`); the exe then printed the session-log path and `data-plane expected origin (config mirror): http://tauri.localhost`.]
+> M13: `npx tauri build --no-bundle --config e2e\out\m13-overlay.json` → `error: invalid value 'e2e\out\m13-overlay.json' for '--config <CONFIG>': failed to read configuration file e2e\out\m13-overlay.json: The system cannot find the file specified. (os error 2)`; then `& ".\src-tauri\target\release\spatial-ide-shell.exe"; $LASTEXITCODE` → `2`; the newest session log: `info data-plane expected origin (config mirror): http://tauri.localhost` / `policy recovery policy: none -- fail visibly and terminate the canvas with a surfaced error` / `info origin-self-check ok pinned=http://tauri.localhost`.
+
+**The custodian's reading (2026-09-13), row by row — findings, not verdicts:**
+
+- **M1–M4, M6, M8, M9, M10, M12 (all three modes):** as the rows expect, in the human's words. M8's sentence is ADR-017's declared refusal of a row predicate in the bundle (publish under a filter is refused by name) — expected, and the human calls the row good.
+- **M5 — three findings.** (a) The hover id disappears after one zoom-out with the pointer stationary inside the same feature: the pre-entry-47 K6 contract (the id is cleared on zoom-out). **The human's order: fix now, no discussion.** The fix is entry 47's piece, built and gated on `cut/hover-repick-settle` (PR #47, taken out of draft on 2026-09-13; entry 75's switch stays at its built default `true` until the human says otherwise). (b) After "Zoom to layer" under a filter, zooming out shows the settled-partial sentence ("Filling has finished for this view — some areas were not loaded…") for a ~100-feature filtered view — whether that is ADR-028's declared over-budget/partial status misfiring under a filter or a true partial fill is not decided here; queued for investigation (entry 84). (c) After applying a filter, "Zoom to layer" stops working until the filter is cleared — a defect not in any row's expectation; queued (entry 85).
+- **M7 — a PASS as the row is written.** The row (`MANUAL-WALKTHROUGH.md:875`) says either shape passes — the within-budget sentence or the over-budget one — and that "what matters is that **no red-bordered ceiling-refusal banner appears at all**"; the human saw the settled-partial sentence at the fit, then the over-budget sentence ("Showing 19100 features — the farthest areas of this view are not drawn, to stay within the render budget. Zoom in to see more detail.") on zooming out, and no banner. That is the declared-partial-view contract on the shipped default, exactly as the row expects. Recorded as the row's exact sentence sighted.
+- **M11 — the bundle viewer's zoom is not anchored:** zooming in pans the map to the north-west, zooming out to the south-east. The bundle otherwise works. Queued as a reference-viewer defect (entry 86).
+- **M12 mode 2 — a mechanic, not a defect:** the first rebuild failed because the debug executable was still running (`Access is denied`); the second, after the app was closed, succeeded. The pack gains one line: close the app before rebuilding.
+- **M13 — not executed yet: step (a) was skipped.** The row (`:881`) has the operator WRITE the overlay first — "(a) write a config overlay setting `app.windows[0].url` to `https://example.test/` … writing it under `e2e/out/` (gitignored)" — then (b) build with `--config <that file>`, then (c) run the release executable. The pack's condensed command named the file without its step (a), so the file did not exist; the release build ran with the ordinary config, the executable's self-check passed (`origin-self-check ok`), and the deliberate refusal was never attempted (exit code 2 observed on that ordinary run is unexplained and moot). The custodian wrote the overlay on 2026-09-13 at `frontends/shell/e2e/out/m13-overlay.json` (gitignored) so the row can be re-run: (b) `npx tauri build --no-bundle --config e2e/out/m13-overlay.json` from `frontends/shell`, then (c) run `src-tauri/target/release/spatial-ide-shell.exe` directly and read `$LASTEXITCODE` and the newest session log. The expected outcome is the row's: the "Spatial IDE could not start" dialog, exit code 1, one `error` line naming `WebviewUrl::App`; a hang is the finding.
+
+## Amendment 16 — the human's rulings of 2026-09-13 (entry 83 = the release branch; entries 84/85 = now; RC2; entry 86), and M13's result verbatim
+
+*Recorded by the custodian on 2026-09-13. The ruling is quoted verbatim at the top of `DECISIONS-PENDING.md`'s Pending section under "RULED 2026-09-13"; the operative parts for this record:*
+
+- **The tag target.** `release/0.1.0` is branched from 998be05 (the commit the candidate installer was built from). The three shell fixes — entry 47 (the re-pick on camera settle), entry 84 (the settled-partial status under a filter) and entry 85 (Zoom to layer under a filter) — land on that branch; none may depend on #44's engine changes, and no Brief A engine code goes on the release branch. The installer is rebuilt from the branch head = **RC2**, hashed. Part M's finalized docs land on the branch as docs-only commits; **v0.1.0 tags the branch head**; the release body states the build commit and that the tagged tree differs from it by documentation only, with the `git diff --stat` line as proof; the branch merges back to main after the tag. The freeze restated: nothing merges to main before the tag except docs.
+- **Part M under RC2.** Every row is classified by whether RC2's diff from 998be05 touches its code path: touched rows re-run on RC2 (M1's hash, M2, M5 plus zoom-to-layer, M7, the hover row, M12 mode 3, and the new rows for 84/85); untouched rows stand from 998be05 with the diff-stat cited. The classification and the sitting-3 pack follow in Amendment 17 with RC2's hash.
+- **KNOWN-LIMITATIONS.** The drag-release inert-re-pick line (entry 47's Amendment 4: focus lost mid-drag leaves the re-pick inert for the session) belongs to the release that ships 47 — this one. Entry 86 (the bundle viewer's zoom drift) is post-tag, in KNOWN-LIMITATIONS if reproducible.
+- **Brief A.** The #44 merge is not the human's sight; a phone-readable digest (preregistration §2, the corpus manifest, each ADR draft's Decision paragraph) is sent; P3 stays held until the human rules. Rule-7 accounting on 47: the custodian's reading stands.
+
+**M13, the human's result, verbatim (2026-09-13):** *"M13 result: the release-built executable showed the "Spatial IDE could not start — ADR-020 Amendment 1 …" dialog (screenshot recorded); no silent hang — the residual did not come true. Exit code after dismiss: [not observed — the human, 2026-09-14 (question set A, verbatim): "Not observed" — left bracketed; re-tested at v0.1.1's release build]; newest session log: [given by the human on 2026-09-14, verbatim: "1789337271564 error ADR-020 Amendment 1: the main window's configured url (External(Url { scheme: "https", cannot_be_a_base: false, username: "", password: None, host: Some(Domain("example.test")), port: None, path: "/", query: None, fragment: None })) is not WebviewUrl::App -- this mirror reproduces AppManager::get_app_url's App-window resolution only (tauri-2.11.5/src/manager/webview.rs:443-461); refusing to start rather than pin an origin the webview might not actually navigate to"]. Record verbatim in the Part M log."* The two bracketed values are as the human typed them and are the human's to fill (the row expects exit code 1 and one `error` line naming `WebviewUrl::App`). The row's finding — a silent hang — did not occur.
+
+## Amendment 17 — RC2 built from `release/0.1.0` (2026-09-13), and the Part M row classification for sitting 3
+
+*Recorded by the custodian on 2026-09-13 under the human's ruling of the same day (Amendment 16). Build-only; nothing was launched by the custodian.*
+
+**RC2.** Built from `release/0.1.0` at **13471a9** (= 998be05 + entry 47 + entries 84/85; the merge of PR #48). Artifact: `C:/dev/spatial-ide/.claude/worktrees/release-0.1.0/frontends/shell/src-tauri/target/release/bundle/nsis/Spatial IDE_0.1.0_x64-setup.exe`, **10,559,893 B**, SHA-256 `c3f483209341409333971b8a1695b60116763f976217d5b50264c7edd16bfb1f`, Authenticode **NotSigned**. NOTICE beside the executable: 3,186,905 B, SHA-256 `6eb80fd3bb4bdf02300fa72a51eb77f6f92ca2637e26b27e4061ce5a4bcdcee6`, byte-equal to `src/generated/NOTICE.txt`; bundle-viewer NOTICE 163,998 B. Built with the candidate's own command (Amendment 14). Build log: `rc2-build-20260913T160258Z.log` (scratchpad). The release branch's head at this writing is 2810b81 — above the build commit by documentation only (Part M rows M14/M15); the tag will point at the branch's final head, and the release body states the build commit and carries `git diff --stat 13471a9 <tag>` as the proof that the difference is documentation.
+
+**RC2's diff from the candidate's build commit** (the proof line for every "stands" row):
+
+```
+git diff --stat 998be05 13471a9
+ frontends/shell/FILTER-84-85-PREREGISTRATION.md    |  58 ++
+ frontends/shell/HOVER-REPICK-PREREGISTRATION.md    | 159 ++++
+ frontends/shell/MANUAL-WALKTHROUGH.md              |   9 +-
+ frontends/shell/RESIDENCY-DEBT-1B.md               |   4 +
+ frontends/shell/e2e/checkDistClean.mjs             |   2 +-
+ frontends/shell/e2e/regression.mjs                 | 948 ++++++++++++++++++---
+ frontends/shell/e2e/residency-harness.mjs          |   4 +-
+ frontends/shell/src/App.test.ts                    |   2 +
+ frontends/shell/src/canvas/WorkingCanvas.test.ts   | 387 ++++++++-
+ frontends/shell/src/canvas/WorkingCanvas.tsx       | 443 +++++++++-
+ frontends/shell/src/canvas/hoverRepickConstants.ts |  53 ++
+ frontends/shell/src/canvas/pickResolution.test.ts  | 167 +++-
+ frontends/shell/src/canvas/pickResolution.ts       | 187 +++-
+ frontends/shell/src/canvas/tileResidentSet.test.ts |  84 ++
+ frontends/shell/src/diagnostics/renderTrace.ts     |  23 +
+ .../src/residency/candidateArmSession.test.ts      | 187 ++++
+ .../shell/src/residency/candidateArmSession.ts     |  19 +
+ 17 files changed, 2559 insertions(+), 177 deletions(-)
+```
+
+Every path is under `frontends/shell/`. No engine, kernel, protocol or bundle-viewer file changed. The release branch carries no Brief A code (the human's rule); the three fixes were verified against 998be05's engine and kernel by the build itself.
+
+**Part M rows, classified by the ruling's criterion (does RC2's diff touch the row's code path):**
+
+- **Re-run on RC2:** M1 (the artifact's hash), M2 (install), **M3 and M4** (the first open fits the view through `fitToExtent`, whose camera write entry 85 changed — the criterion adds them; the human's list omitted them), M5 plus zoom-to-layer, M7 (the residency status path, touched by entry 84's terminal marking), the hover row (Part L's L7/L8 as entry 47 rewrote them), M12 mode 3 (the packaged executable), and the new rows M14 and M15.
+- **Stand from 998be05, the diff-stat cited:** M6 (style), M8, M9, M10, M11 (publish, audit, the bundle viewer), M12 modes 1–2 (the dev checkout's own build), M13 (the ADR-020 refusal path in `src-tauri`). The human's M13 result of 2026-09-13 stands with its two bracketed values still the human's to fill.
+
+**Open at this writing:** entry 87 (the filtered per-tile queries dropped before any stream is issued — the settled-partial sentence may still appear under a filter on RC2; M15 records it); entry 86 (post-tag). The sitting-3 pack is `state/drafts/part-m-prep-pack.md` §6.
+
+## Amendment 18 — Part M, sitting 3 on RC2 (2026-09-13), the human's report verbatim; the custodian's reading follows
+
+*The first pass of sitting 3 was run on the candidate by mistake (the main checkout's bundle folder still held it; the pack's §2 copy line was sitting 1's) and is recorded in `CUT-STATE.md`; the pack gained §6d (the executable check) and §6e (rows M14/M15 in full), and RC2 was copied to the shared folder by the custodian. The human then installed RC2 and reported:*
+
+> M1 to M4 are ok, M5 after i filter the zoom to layer now works perfectly as intended, M7 after i press zoom to layer says "Showing all 17752 features in view", by zooming out we get a "Showing 19100 features - the farthest areas etc ...". Now the id hover works, eventhougnh through every zomming step the id text briefly disappear and appears back again. I'd cut the text way before, cause i really zoom out a lot before it tells me "Features here below pick resolution... " also cause the pointer is the panning hand, not the pointy cursor, so even less precise. But overall we're getting there. M14 I've already done it in M5, M15 when you zoom out the text changes from showing all 100 features in view to "filling has finished for this view - some areas etc ... ". M12 mode 3 i've got the session log in the user/public/spatil-ide-fixtures folder, name "session-1789320462"
+
+**The custodian's reading, row by row:**
+
+- **M1–M4:** pass on RC2 (the installed executable is RC2's; the candidate's first pass is superseded).
+- **M5 / M14 (entry 85):** pass — "Zoom to layer" under a filter works on every click, as the fix intended and the regression step asserts.
+- **M7:** pass as the row is written — the within-budget sentence at the fit ("Showing all `<N>` features in view"), the over-budget sentence on zooming out ("Showing `<N>` features — the farthest areas…"), and no banner.
+- **The hover row (entry 47):** pass — the id stays across a zoom-out with the pointer still. Two observations recorded as new findings, not as defects of the piece as preregistered: (a) *through every zooming step the id text briefly disappears and reappears* — that is the declared shape (the mid-gesture rule clears at the camera change; the settle re-pick restores it), felt as a blink per notch; whether the readout should stay standing until the settle decides is a design question → DECISIONS-PENDING entry 88. (b) *the refusal ("Features here are below pick resolution — zoom in to inspect them.") should come much earlier when zooming out, and the pointer is the panning hand rather than a precise cursor* — the pick-resolution threshold is a declared constant and the cursor shape a UI choice, both user-visible → entry 89.
+- **M15 (entries 84 and 87):** recorded, as the row says: "Showing all 100 features in view" at the fit, then the settled-partial sentence on zooming out — entry 87's finding, exactly as predicted; entry 84's fix stands at the unit level. Entry 87 still awaits the human's word (RC2 ships with a KNOWN-LIMITATIONS line, or waits for the fix).
+- **M12 mode 3:** pass on RC2; the session log `session-1789320462.log` is in `C:\Users\Public\spatial-ide-fixtures\`.
+- **Standing from 998be05 with the diff-stat cited (Amendment 17):** M6, M8, M9, M10, M11, M12 modes 1–2, M13 (the human's M13 result of 2026-09-13, its two bracketed values still the human's to fill).
+
+**What follows:** the release docs (items 4, 5, 6) finalized onto `release/0.1.0` as docs-only commits for the human's sight; the tag on the branch head; the merge back to main.
+
+**Entry 87, the mechanism (added 2026-09-13 after the human's time-boxed diagnosis — the human's ruling: "Record the mechanism in entry 87 and Amendment 18 either way"):** M15's zoom-out sentence is **neither** truncation-driven nor a second zero-row terminal path. Under a row filter, a share of the per-tile `viewport_query`s are refused by the kernel with the typed code `skp.filter_rejected_by_binder` (63 refusals across 51 tiles in the diagnostic run; nondeterministic for the same predicate), and the shell's minting code discards the refusal silently; those tiles never become streams, their areas are never read, matching features there are not drawn, and the status sentence is true of them. The likely sub-cause is kernel-side (the binder check's maintenance-connection lease failing under concurrent per-tile checks and being reported as a binder rejection — unverified). The full evidence is in DECISIONS-PENDING entry 87. Consequences for this release: RC2 ships; the KNOWN-LIMITATIONS line is worded for the mechanism found and sighted by the human in the docs PR; the fix — shell-side mitigation at least, kernel-side if the sub-cause holds — goes post-tag with its regression step (the suspended FIND′ assertion of the 84/85 preregistration is its acceptance test). The earlier hypothesis (`engine.connections_exhausted`) is refuted and recorded as such.
+
+## Amendment 19 — the tag, and the release cut's close (2026-09-13)
+
+*The checklist's §6 closing record, written by the custodian after the human's tag.*
+
+- **The tag.** `v0.1.0` is an annotated tag (object `fbba9ae8cfd825e837dc71c0df596dc14ff3b2c5`) on **b391e43** — `release/0.1.0`'s head after the release docs and the entry-87 resolution. Its message is `state/drafts/tag-message-v0.1.0.md` as finalized (RC2's hash; the file-fact CRS statement; the 13b line; the drag-release and filter lines).
+- **The artifact.** RC2, built from **13471a9** on the same branch: `Spatial IDE_0.1.0_x64-setup.exe`, 10,559,893 B, SHA-256 `c3f483209341409333971b8a1695b60116763f976217d5b50264c7edd16bfb1f`, NotSigned (Amendment 17). The tagged tree differs from the build commit by documentation only — `git diff --stat 13471a9 b391e43`: `KNOWN-LIMITATIONS.md`, `QUICKSTART.md`, `README.md`, `frontends/shell/MANUAL-WALKTHROUGH.md`; 4 files, +285/−56 — the proof line the release body carries.
+- **The GitHub release.** https://github.com/christopherdonini/spatial-ide/releases/tag/v0.1.0 — a **pre-release**, `draft: false`, one asset `Spatial.IDE_0.1.0_x64-setup.exe` (GitHub renders the filename's space as a dot), 10,559,893 B. The first attempt left a draft (the asset upload had failed — the API listed no release and `/releases/latest` was 404 while the tag existed); the human re-created it on 2026-09-13. Verified logged out by the custodian: the tag's release page answers HTTP 200 without a token, the unauthenticated API lists the asset, and the asset downloaded by its public URL hashes to `c3f483209341409333971b8a1695b60116763f976217d5b50264c7edd16bfb1f` — RC2. The lesson is in `RELEASE-DAY-CHECKLIST.md` §5 in the human's words.
+- **Part M.** Sittings recorded in Amendments 15 (M5–M13 and M1–M4 on the candidate), 17 (the row classification) and 18 (M1–M5, M7, M12 mode 3, M14, M15 and the hover row on RC2; M13's two bracketed values still the human's). Verdicts as the human reported them; the walkthrough's "Part M run" section remains the template on both branches — the record is these amendments.
+- **CI on the tag.** Green on b391e43: Product CI — Rust workspace, Product CI — shell, Product CI — bundle viewer, ADR-003 spike CI (macOS) all `success` (recorded 2026-09-13, after the tag push).
+- **The merge-back.** PR #50 (`merge/release-0.1.0-into-main`) merged by the human on 2026-09-13 (main at e9900a3; `git describe --tags` on main prints `v0.1.0`) — opened as a PR from `merge/release-0.1.0-into-main` (one conflict in `WorkingCanvas.test.ts`, resolved to the release side, a superset; the shell suite green on the merge result). On its merge the cut closes: `CUT-STATE.md` archived (rule 10), and the post-tag queue presented for the human's sequencing — entry 87's fix (the suspended FIND′ assertion as its test), entry 66 (b) (#45), entry 86 if reproducible, entries 88/89, Brief A P3 on the human's word (#46 holds its entries 80/81).
+
+## Amendment 20 — v0.1.0 evidence archive attached (2026-09-14)
+
+The human ruled (question set A, A3) that the custodian prepares and verifies the evidence archive and the human attaches it — a published release page is the human's to change. Done 2026-09-14:
+
+- **Archive:** `evidence-v0-1-0-2026-09-14.zip`, 81,993,512 bytes, 409 files — every file under `frontends/shell/e2e/out/` dated at or before the tag (`v0.1.0`, 2026-09-13T20:28:44+02:00); the one later file (today's marker-branch harness log) excluded by date, so the archive carries only v0.1.0's own Part M and regression evidence. Built by `node scripts/evidence/archive.mjs` with a per-file SHA-256 manifest.
+- **Attached to the release** by the human with `gh release upload v0.1.0`; it sits beside `Spatial.IDE_0.1.0_x64-setup.exe`.
+- **Citation (AUTONOMY §12):** `Evidence: https://github.com/christopherdonini/spatial-ide/releases/download/v0.1.0/evidence-v0-1-0-2026-09-14.zip (SHA-256 56660e9570c82a0de56eaf43a59d9818670dca86d8a774ded77dd5462de6186a)`
+
+## Amendment 21 — a correction of Amendment 15's reading of M8 (2026-10-10)
+
+### Corrections to this record
+
+- Amendment 15's reading took the M8 dialog's sentence for the refusal ADR-017 declares. It is not a refusal: the app never sends the filter (frontends/shell/src-tauri/src/publish.rs:117-119 @ 8e093734b17a87dfe7bf02d69dde4eb3753ffdc6 sha256:73d3f7ef00209f37995058f2442931ec4b6e2f01acd430e918c302168eb94527, the viewport arm's query built with filter: None; at the tag frontends/shell/src-tauri/src/publish.rs:108-110 @ b391e43622056324c56d35cc33065305140a8415 sha256:73d3f7ef00209f37995058f2442931ec4b6e2f01acd430e918c302168eb94527; the whole-file arm, ViewportQuery::all() with filter: None, engine/src/stream.rs:263 @ 8e093734b17a87dfe7bf02d69dde4eb3753ffdc6 sha256:47d2ff7fc5c4ec574c199531f8df51c7947b8c176d322ad586ae5508f3f77724, at the tag engine/src/stream.rs:216 @ b391e43622056324c56d35cc33065305140a8415 sha256:ead692032117f0562deeb43fac6fcfdc7ea554cd4c84526b43efb17d002bfea9), so a filtered publish completes as an unfiltered export of the current view or the whole file, with the filter-scope sentence in the dialog (frontends/shell/src-tauri/src/publish.rs:72-74 @ 8e093734b17a87dfe7bf02d69dde4eb3753ffdc6 sha256:70b4333df10d75d8f8fe5dd0ec6d45084b622433426c7911585801aacb54287f; frontends/shell/src-tauri/src/publish.rs:634 @ 8e093734b17a87dfe7bf02d69dde4eb3753ffdc6 sha256:0774363204fc4eb201bfb896109fe5ba17748b1c506a6c5e6afed96fd67b30a8; frontends/shell/src/publish/PublishDialog.tsx:254-257 @ 8e093734b17a87dfe7bf02d69dde4eb3753ffdc6 sha256:e85249fc5eeb04f98d23c322ad29bca5c3428178be5e32ffec4f7922711b88aa).
+- `KNOWN-LIMITATIONS.md` item 8 is corrected by the human's text, and row M8's sentence by the instruction's line 20, in this change (state/directives/2026-10-10-drift-sweep-area-e-instructions.md:16-20 @ a7935e18cd6faebe486debbbec9049cdbfade36c sha256:26e295fe07482acaf34d68c1cd73faa0b0e00df7bab5a4e5eeca8a8f6392bf67).
+
+## Amendment 22 (2026-11-13)
+
+Known issue, found 2026-11-11 by reading; no run was made on v0.1.0. v0.1.0's canvas moves its camera inside deck.gl's view-state callback when the view passes the re-centring bound, with the same deck.gl 9.3.9 as main. On main that move does not take effect: after a pan at low zoom carries the view past the bound, the map is drawn displaced by the frame's move, and the data can leave the canvas until Zoom to layer is used. The run that showed this was made on main. v0.1.0 has no drag guard, so by reading the same can happen there during a drag as well as at its end. No data is changed by it. Fixed on main by #311 (bb8835c6701826f38030c51a095a8f83e7a3c52a), for v0.2.

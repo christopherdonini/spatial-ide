@@ -391,6 +391,7 @@ function fakeCanvasHandle(): WorkingCanvasHandle {
     })),
     clearTile: vi.fn(),
     clearAllTiles: vi.fn(),
+    residentIdsStreamedUnder: vi.fn(() => new Set<bigint>()),
     isTileResidentInCandidateSet: vi.fn(() => false),
     isTileCompleteInCandidateSet: vi.fn(() => false),
     markTilePartial: vi.fn(),
@@ -425,10 +426,10 @@ describe("makeManagerCallbacks (rider 3: manager callbacks must hit the instance
     });
     ref.current = newCanvas; // the remount
 
-    callbacks.onBatch("sh_old", 0, new Uint8Array([9]));
+    callbacks.onBatch("sh_old", 0, new Uint8Array([9]), null);
     callbacks.onSuperseded("sh_old");
 
-    expect(oldCanvas.pushBatch).toHaveBeenCalledWith("sh_old", 0, new Uint8Array([9]));
+    expect(oldCanvas.pushBatch).toHaveBeenCalledWith("sh_old", 0, new Uint8Array([9]), null);
     expect(oldCanvas.clearStream).toHaveBeenCalledWith("sh_old");
     expect(newCanvas.pushBatch).not.toHaveBeenCalled();
     expect(newCanvas.clearStream).not.toHaveBeenCalled();
@@ -436,8 +437,19 @@ describe("makeManagerCallbacks (rider 3: manager callbacks must hit the instance
 
   it("tolerates a null canvas at construction (the same defensive optional-chaining the old canvasRef.current?.… call sites had)", () => {
     const callbacks = makeManagerCallbacks(null, { onFailureTerminal: vi.fn(), onDeliveryCompleted: vi.fn() });
-    expect(() => callbacks.onBatch("sh_a", 0, new Uint8Array())).not.toThrow();
+    expect(() => callbacks.onBatch("sh_a", 0, new Uint8Array(), null)).not.toThrow();
     expect(() => callbacks.onSuperseded("sh_a")).not.toThrow();
+  });
+
+  // RECORDED MUTATION for "PC-U15": in `makeManagerCallbacks` (App.tsx) pass `null` to `pushBatch` in place of `filter`. Expected failure: the fourth argument is null where the filter object was expected.
+  it("PC-U15: onBatch passes its stream's filter to pushBatch as the same object", () => {
+    const canvas = fakeCanvasHandle();
+    const filter = { predicate: "zone = 'residential'", dialect: "duckdb-expr/0" };
+    const callbacks = makeManagerCallbacks(canvas, { onFailureTerminal: vi.fn(), onDeliveryCompleted: vi.fn() });
+
+    callbacks.onBatch("sh_a", 0, new Uint8Array([1]), filter);
+
+    expect((canvas.pushBatch as ReturnType<typeof vi.fn>).mock.calls[0][3]).toBe(filter);
   });
 
   it("onTerminal: a Completed terminal calls onDeliveryCompleted, never onFailureTerminal", () => {
@@ -496,6 +508,7 @@ describe("makeManagerCallbacks (rider 3: manager callbacks must hit the instance
     })),
     clearTile: vi.fn(),
     clearAllTiles: vi.fn(),
+    residentIdsStreamedUnder: vi.fn(() => new Set<bigint>()),
     isTileResidentInCandidateSet: vi.fn(() => false),
     isTileCompleteInCandidateSet: vi.fn(() => false),
     markTilePartial: vi.fn(),
@@ -507,7 +520,7 @@ describe("makeManagerCallbacks (rider 3: manager callbacks must hit the instance
     const onBatchRows = vi.fn();
     const callbacks = makeManagerCallbacks(canvas, { onFailureTerminal: vi.fn(), onDeliveryCompleted: vi.fn(), onBatchRows });
 
-    callbacks.onBatch("sh_a", 0, new Uint8Array([1]));
+    callbacks.onBatch("sh_a", 0, new Uint8Array([1]), null);
 
     expect(onBatchRows).toHaveBeenCalledWith("sh_a", 37);
   });
@@ -516,14 +529,14 @@ describe("makeManagerCallbacks (rider 3: manager callbacks must hit the instance
     const canvas = fakeCanvasHandle();
     const callbacks = makeManagerCallbacks(canvas, { onFailureTerminal: vi.fn(), onDeliveryCompleted: vi.fn() });
 
-    expect(() => callbacks.onBatch("sh_a", 0, new Uint8Array())).not.toThrow();
+    expect(() => callbacks.onBatch("sh_a", 0, new Uint8Array(), null)).not.toThrow();
   });
 
   it("a null canvas reports 0 rows to onBatchRows rather than throwing (nothing was actually pushed)", () => {
     const onBatchRows = vi.fn();
     const callbacks = makeManagerCallbacks(null, { onFailureTerminal: vi.fn(), onDeliveryCompleted: vi.fn(), onBatchRows });
 
-    callbacks.onBatch("sh_a", 0, new Uint8Array());
+    callbacks.onBatch("sh_a", 0, new Uint8Array(), null);
 
     expect(onBatchRows).toHaveBeenCalledWith("sh_a", 0);
   });

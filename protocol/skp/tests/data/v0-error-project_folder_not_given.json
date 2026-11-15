@@ -1,0 +1,5 @@
+{
+  "code": "skp.project_folder_not_given",
+  "message": "no folder was given, and this open of the dataset has no project to save to",
+  "fields": {}
+}

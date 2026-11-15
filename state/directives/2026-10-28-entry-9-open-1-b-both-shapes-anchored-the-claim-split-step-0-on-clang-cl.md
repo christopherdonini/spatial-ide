@@ -1,0 +1,6 @@
+# The human's message of 2026-10-28: filler entry 9's OPEN-1, (B), both payload shapes anchored at the start, the form's claim split; OPEN-2 and OPEN-3 as settled; step 0 on the clang-cl build
+
+*Filed verbatim by the custodian from the session transcript (received 2026-10-28T21:00:56.671Z), its text unchanged; nothing in it names another project. It answers the OPEN items of `state/consults/2026-10-28-stream-fetch-overflow-fixed-detail-form-architect-draft.md`. #266 merged before it was received (fa720a7f), so step 0 runs on main's clang-cl build. The RULED block in DECISIONS-PENDING.md is the custodian's summary; the text below is the ruling.*
+
+---
+To the custodian, 2026-10-28. Entry 9, OPEN-1: (B). Both shapes, anchored at the start: the crate's fixed prefix, then DuckDB's overflow text, nothing looser. The form's claim is split and says so: the wrapped shape observed through the engine; the bare shape recognised by the mapping and proven by a unit test fed the exact text DuckDB's source composes, cited to the source line, and never observed through the engine. If step 0 observes the bare shape, the claim upgrades to observed in the record. OPEN-2 and OPEN-3 as you settled them. Step 0 runs on the clang-cl build, after #266 merges; a run on the MSVC build would observe nothing and counts for nothing.

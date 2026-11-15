@@ -29,10 +29,9 @@ export function batchForLayerId(
  * work"). `fillColor` is 0-255 RGBA -- `@deck.gl/layers/solid-polygon-layer`'s own `DEFAULT_COLOR`
  * convention for `getFillColor` -- never the style document's own units (`#rrggbb` + a separate
  * `0..1` opacity). The shell's style documents are literal-only (`style/document.ts`'s
- * `StyleDocumentV0` has no `match` variant; `viewport_query` has carried a declared attribute
- * projection since `skp/0.6`, and the shell requests none), so this is exactly ONE colour for a
- * whole style, not a per-feature table -- a plain array, deck.gl's own "constant attribute" shape,
- * is what this type carries and what `buildLayers` below passes straight through unchanged. */
+ * `StyleDocumentV0` has no `match` variant), so this is exactly ONE colour for a whole style, not
+ * a per-feature table -- a plain array, deck.gl's own "constant attribute" shape, is what this
+ * type carries and what `buildLayers` below passes straight through unchanged. */
 export interface ResolvedDrawParams {
   fillColor: [number, number, number, number];
   /** RGBA, alpha always 255 -- style v0 (ADR-017 §5a) has no separate outline-opacity field, only

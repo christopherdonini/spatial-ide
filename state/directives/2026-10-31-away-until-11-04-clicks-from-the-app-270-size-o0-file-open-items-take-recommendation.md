@@ -1,0 +1,20 @@
+# The human's message of 2026-10-31: away until Wednesday 2026-11-04, reading from the phone; clicks from the GitHub app once or twice a day; #270's size settled by script, an overrun accepted as class 8; O0's file placed in the human's OneDrive; OPEN items that are not red lines take the drafting agent's recommendation; the order after #270; the upgrade at the human's next session start
+
+*Filed verbatim by the custodian from the session transcript: the human's typed message, its user record (origin human) at 12:29:31Z on 2026-10-31. Its text is byte-copied by script from that record, from line 6, with one change: by the message's own item 3 ("The path is a profile path: it stays in the local evidence folder"), its two spans naming that path are written as <the O0 file's path in the human's OneDrive> and <the O0 file's path on this machine>. The message as typed is kept in the local evidence folder, outside the repository (sha256 6bd03f69b0b915c8a8f39ecd82a20269465ac63acedaf5274c03992395bd00ea). Nothing else is changed; nothing in it names another project. The RULED block in DECISIONS-PENDING.md is the custodian's summary; the text below is the ruling.*
+
+---
+To the custodian, 2026-10-31. I am away until Wednesday 2026-11-04 and reading only from my phone. These directions hold until then.
+
+1. Clicks. When a PR is out of draft with CI green, say so in your message; I merge it from the GitHub app, by merge commit, once or twice a day. Nothing waits on a click beyond that: while a PR awaits mine, you work on everything else, as the filler rule already says.
+
+2. #270's size. Settle it by script and record the figure. If it is over §7's 48 files or 1,600 lines, that is a class 8 overrun, accepted now: its causes are known (the OPEN-1 correction, the README words and the restored ADR-index rows), the gates read all of it, no split. The closing record proceeds either way; then main merged in, the checks, out of draft, my click.
+
+3. O0, for 1c step 1. I am placing one small file in my OneDrive from my phone, in a new folder, as <the O0 file's path in the human's OneDrive>. On this machine it is <the O0 file's path on this machine>. You may read that one file and nothing else under my profile: check first that it is an online-only placeholder (attrib shows the O attribute, or the reparse tag the probe reads); if it is already downloaded, say so and O0 waits. The path is a profile path: it stays in the local evidence folder and the record calls it "the O0 file", with its size and sha256 only. If the file is not there by Monday 2026-11-02, O0 waits for my return.
+
+4. OPEN items while I am away. An OPEN item that is not a red line takes the drafting agent's recommendation, and the form records it as taken under this direction, with the date; I review every such item on return and may reverse it, and a reversal is recorded, not edited. Red lines wait for me as always: ADR status lines, notes and amendments; dependencies and what CI installs; licences; the security posture, mods and credentials; history and public exposure; scope changes to items I have ruled; release notes and P6 strings; placements of new S1 or S2 nodes. A piece held on a red line leaves its slot and the next piece runs, as the rule says.
+
+5. The order. After #270 merges: the seven forms at their governance paths; the filler queue as ruled, entry 9 first with its size check; the docs lane (adr-020-appended-note, walkthrough-stale-cites, sitting-wording, the ADR-017 note with my words); VQ in the governance lane; E1 waits on reading 1, which is mine on return. 1c step 1 as soon as O0 is in; then PR B. The weekly window report is filed on Friday as the rule has it, this week's included if it is not yet.
+
+6. The upgrade. The disk binary is 2.1.314 and this session is 2.1.311; the new build is taken at the next session start, which is mine. Then the hooks' tests, the Guardian's live checks under I2, and reading 2's three days.
+
+Nothing stops for me until Wednesday. Where a question has no recommendation and no red line, take the cheapest reversible option and record it the same way.

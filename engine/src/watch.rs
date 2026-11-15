@@ -68,10 +68,6 @@ pub trait SourceWatchArm: Send + Sync {
     fn arm(&self, path: &Path, sink: WatchSink) -> ArmOutcome;
 }
 
-/// The declared buffer size for each handle's `ReadDirectoryChangesW` call (§7), DWORD-aligned.
-/// Overflow past it is [`WatchSignal::CoverageLost`], never silently dropped.
-pub(crate) const WATCH_BUFFER_BYTES: usize = 65536;
-
 /// The product [`SourceWatchArm`]. Off Windows, [`SourceWatchArm::arm`] always returns
 /// `ArmOutcome::ChecksOnly` naming the platform, and never `Watching` (§2a).
 #[derive(Default)]
@@ -104,7 +100,7 @@ impl SourceWatchArm for PlatformWatch {
 
 #[cfg(windows)]
 mod windows_watch {
-    use super::{ArmOutcome, ArmedWatch, WatchSignal, WatchSink, WATCH_BUFFER_BYTES};
+    use super::{ArmOutcome, ArmedWatch, WatchSignal, WatchSink};
 
     use std::fs::OpenOptions;
     use std::os::windows::ffi::OsStrExt;
@@ -124,6 +120,10 @@ mod windows_watch {
         FILE_NOTIFY_CHANGE_SIZE, FILE_SHARE_DELETE, FILE_SHARE_READ, FILE_SHARE_WRITE,
     };
     use windows_sys::Win32::System::IO::{CancelIoEx, GetOverlappedResult, OVERLAPPED};
+
+    /// The declared buffer size for each handle's `ReadDirectoryChangesW` call (§7), DWORD-aligned.
+    /// Overflow past it is [`WatchSignal::CoverageLost`], never silently dropped.
+    pub(crate) const WATCH_BUFFER_BYTES: usize = 65536;
 
     /// Which directory a handle is watching, for the mapping table (§2a).
     #[derive(Clone, Copy, PartialEq, Eq)]

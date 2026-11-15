@@ -1278,6 +1278,34 @@ fn the_5gb_clustered_cell() {
     );
 }
 
+/// **The trace flag and slot are process-global, and the two cancellation cells below start their
+/// traces in this process.**
+///
+/// `spatial_engine::trace` holds one flag and one slot, and `trace::start` refuses a second trace
+/// rather than replacing the first: the declared one-traced-stream limit. The factorial cells start
+/// theirs in a child process each (`night_trial_child`), but
+/// `cancellation_holds_with_pruning_in_the_path` and
+/// `cancellation_holds_with_pruning_in_the_path_on_h5` start one per trial in this process and
+/// `expect` it, so an invocation that runs both can have one refused by the other. Each takes this
+/// lock as its first statement and holds it to the end of its body, so the two take turns; the
+/// refusal is kept. Locals drop in reverse order, on a panic too, so a live `TraceGuard` has
+/// stopped its trace before the lock is released. The lock orders these two tests only: the other
+/// ignored passes run unserialised beside them under a bare `--ignored`, and `kernel/RESULTS.md`'s
+/// commands run each of these two alone with `--exact`.
+///
+/// RECORDED MUTATION: M-1, inserted in `serial()` after the lock is taken and before it returns:
+/// `std::mem::forget(spatial_engine::trace::start(spatial_engine::trace::TraceKey::default()));`
+/// Observed on an export of code commit 3c8e91f634246b620e8346b2d34acca597a6385e, release build,
+/// `--ignored --exact`, each run alone. Unmutated, `cancellation_holds_with_pruning_in_the_path`
+/// passed; under M-1 it failed at its start's expect, `no other trace is running`.
+/// `cancellation_holds_with_pruning_in_the_path_on_h5` was not run (its fixture H5 was absent), so
+/// its M-1 is a reading, not an observation.
+static TRACE_SERIAL: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
+fn serial() -> std::sync::MutexGuard<'static, ()> {
+    TRACE_SERIAL.lock().unwrap_or_else(|e| e.into_inner())
+}
+
 /// **Cancellation, re-asserted with row-group pruning in the path.**
 ///
 /// `NIGHT-CUT.md` requires it; `kernel/FIRST-BATCH-AND-PRUNING-PREREGISTRATION.md` does not declare
@@ -1299,6 +1327,7 @@ fn the_5gb_clustered_cell() {
 #[test]
 #[ignore = "measurement pass; run explicitly with --release"]
 fn cancellation_holds_with_pruning_in_the_path() {
+    let _serial = serial();
     refuse_debug("first_batch_factorial::cancel");
     let out_dir = evidence_dir();
     let path = FileId::S.path();
@@ -1433,6 +1462,7 @@ fn cancellation_holds_with_pruning_in_the_path() {
 #[test]
 #[ignore = "measurement pass; run explicitly with --release"]
 fn cancellation_holds_with_pruning_in_the_path_on_h5() {
+    let _serial = serial();
     refuse_debug("first_batch_factorial::cancel_h5");
     let out_dir = import_layout_evidence_dir();
     let path = FileId::H5.path();

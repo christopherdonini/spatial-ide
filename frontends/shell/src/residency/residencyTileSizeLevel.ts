@@ -5,18 +5,20 @@ import type { TileGridLevel } from "../canvas/tileGridConstants";
 
 /**
  * Viewport-residency cut P7: the tile-size sweep selector -- the campaign's last missing wire. This
- * module is the DEV-only counterpart to `residencyArm.ts`'s "THE ARM SWITCH" for the ONE remaining
+ * module is the counterpart to `residencyArm.ts`'s "THE ARM SWITCH" for the ONE remaining
  * knob P6's own tester runs need to sweep: which of the three LOCKED grid resolutions
  * (`tileGridConstants.ts`'s own `TILE_GRID_LEVELS`, Amendment 11) a candidate-arm session's
  * `TileViewportStreamManager` constructs against. Mirrors `residencyArm.ts`'s own module-scoped
  * singleton, typed-refusal, and test-reset discipline exactly -- see that module's own top doc
  * comment for the full rationale, restated only where this module's own contract differs.
  *
- * **DEV-only by convention, not by a check inside this module itself** -- same discipline
- * `residencyArm.ts` documents: every call site (`App.tsx`'s `__SPATIAL_E2E__` hook registrations, and
- * the `notifyResidencyTileSizeLevelDataset{Opened,Closed}` bookkeeping calls) is what is DEV-gated
- * (`isInstrumentedBuild()`), never this module's own exports. Kept plain, synchronous, and trivially
- * unit-testable with no `import.meta.env` mocking, exactly like `residencyArm.ts`.
+ * **Gated by its callers, not by a check inside this module itself** -- same discipline
+ * `residencyArm.ts` documents: the callers that `App.tsx` puts behind `isInstrumentedBuild()` are
+ * the `__SPATIAL_E2E__` hook registrations (the setter and the getter) and the
+ * `notifyResidencyTileSizeLevelDataset{Opened,Closed}` bookkeeping calls; `App.tsx` also calls
+ * `getResidencyTileSizeLevel()` with no such gate, where it constructs the candidate session. No
+ * export of this module checks a build flag. Kept plain, synchronous, and trivially unit-testable
+ * with no `import.meta.env` mocking, exactly like `residencyArm.ts`.
  *
  * **`null` means "unset", not "medium".** `getResidencyTileSizeLevel()` returns `null` until a
  * caller's own `setResidencyTileSizeLevel` call succeeds -- this module deliberately does NOT default

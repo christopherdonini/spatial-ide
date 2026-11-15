@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
+import { readRow } from "../attributes/values";
+import type { AttributeRow } from "../attributes/values";
+import type { Filter } from "../skp/types";
 import type { ResidentBatch } from "./decodeBatch";
 import { extentOfBatch } from "./extent";
 import type { PickResult } from "./pick";
@@ -26,9 +29,11 @@ export interface ClickPickDeps {
   resolveCandidate: (candidate: { batch: ResidentBatch; gpuOrdinal: number }) => PickResult | null;
 }
 
-/** `bounds` is the authoritative f64 box over every part of the picked row (looked up, never unprojected). */
+/** `bounds` is the authoritative f64 box over every part of the picked row (looked up, never unprojected). `row` is that row's projected values (milestone 4 PR A, section 2.2 (e)): a copy
+ * read from the same decode pass as the id, `null` when the open projects no column, `"not-held"` when the batch passed the attribute ceiling. `filter` is the candidate batch's
+ * own (`ResidentBatch.filter`, milestone 4 PR C): the filter of the stream that delivered the picked row. */
 export type ClickPick =
-  | { kind: "feature"; pick: PickResult; bounds: AuthoritativeBbox }
+  | { kind: "feature"; pick: PickResult; bounds: AuthoritativeBbox; row: AttributeRow | "not-held" | null; filter: Filter | null }
   | { kind: "below-pick-resolution" }
   | { kind: "nothing" };
 
@@ -43,8 +48,9 @@ export function resolveClickPick(deps: ClickPickDeps, x: number, y: number): Cli
   if (deps.belowPickResolutionNow()) return { kind: "below-pick-resolution" };
   const pick = deps.resolveCandidate(candidate);
   if (pick === null) return { kind: "nothing" };
-  const bounds = boundsOfRow(candidate.batch, candidate.batch.partToRow[candidate.gpuOrdinal]);
-  return bounds === null ? { kind: "nothing" } : { kind: "feature", pick, bounds };
+  const row = candidate.batch.partToRow[candidate.gpuOrdinal];
+  const bounds = boundsOfRow(candidate.batch, row);
+  return bounds === null ? { kind: "nothing" } : { kind: "feature", pick, bounds, row: readRow(candidate.batch, row), filter: candidate.batch.filter };
 }
 
 /** What `Deck`'s `onClick` hands over as its second argument that this module reads: the tap's own native event (the `pointerup`), whose client

@@ -8,7 +8,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 
-export const LIVE_RULINGS = 'DECISIONS-PENDING.md';
+export const LIVE_RULINGS = 'governance/DECISIONS-PENDING.md';
 // The directive's glob taken literally: the folder itself, no subfolders.
 export const ARCHIVE_RULINGS_RE = /^state\/cut-archive\/DECISIONS-PENDING-[^/]*\.md$/;
 

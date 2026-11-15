@@ -38,9 +38,13 @@ interface FilterPanelProps {
  * edge fell below the viewport, at which point a hover target computed from a correct, live bounding
  * rect still lands on a physically off-screen point). The piece's own scope fence named this extra
  * "droppable"; dropping it is that explicit escape hatch, not a silent scope cut -- see this piece's
- * report/CUT-STATE for the measured before/after. No consumer of a per-dataset column list exists
- * elsewhere in this tree; a future piece reintroducing it should budget its vertical footprint (a
- * scrollable, height-capped list, or a collapsed-by-default disclosure) against this exact ceiling.
+ * report/CUT-STATE for the measured before/after. A per-dataset column list has since come back
+ * elsewhere, as the command bar's field completion: `command/CommandBar.tsx` lists the dataset's
+ * column names through `fieldOptions` (`command/fieldCompletion.ts`), from `describe.schema`. The
+ * 200px floor and the measured budget above belong to the stacked layout the Map Studio frame
+ * replaced (`styles.css`'s header comment calls them history); a future piece putting a column list
+ * in this panel should budget its vertical footprint (a scrollable, height-capped list, or a
+ * collapsed-by-default disclosure) against the current layout.
  * **Out of scope, by name** (NEXT-CUT.md's scope fence): visual builder, autocomplete, saved/named
  * filters, "filtered layer" naming, publish/style, any measurement claim.
  */

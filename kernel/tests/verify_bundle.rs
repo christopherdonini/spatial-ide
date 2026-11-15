@@ -16,6 +16,8 @@
 //! is derived rather than guessed, and if it is missing the test **fails loudly** rather than
 //! skipping: a vacuous pass here would be the exact failure the file exists to prevent.
 
+mod built_targets;
+
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
@@ -62,16 +64,8 @@ fn verifier() -> PathBuf {
 }
 
 fn build_verifier() -> PathBuf {
-    let me = std::env::current_exe().expect("the test binary knows where it is");
-    let profile_dir = me
-        .parent()
-        .and_then(|deps| deps.parent())
-        .expect("target/<profile>/deps/<test>");
-    let exe = if cfg!(windows) {
-        "verify-bundle.exe"
-    } else {
-        "verify-bundle"
-    };
+    let profile_dir = built_targets::profile_dir();
+    let exe = built_targets::exe_name("verify-bundle");
     let path = profile_dir.join("examples").join(exe);
     if path.exists() {
         return path;

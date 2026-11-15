@@ -53,7 +53,7 @@ git config core.hooksPath .githooks
 ```
 
 This exists because three headed-measurement-session commits reached an open PR unsigned before
-`dco.yml` caught them (viewport-residency cut, 2026-09-02) — see `DECISIONS-PENDING.md`'s resolved
+`dco.yml` caught them (viewport-residency cut, 2026-09-02) — see `governance/DECISIONS-PENDING.md`'s resolved
 entry 26. The hook is optional (`core.hooksPath` is a local, per-clone setting, never enforced from
 the repository itself) but recommended for anyone running headed measurement/campaign sessions,
 where a commit is more likely to come from a tester agent or a script than a hand-typed `git commit`.
@@ -115,12 +115,13 @@ editing the script.
 `<type>: <summary>` — **`feat`, `fix`, `chore`, `spike`, `docs`**, the five `CLAUDE.md` lists. (`ci`
 and `test` appear in the history; treat them as `chore` unless `CLAUDE.md` gains them.)
 
-Per `AI_DEVELOPMENT.md`, **agent-generated code is labeled in commits for later audit**. If you used
+Per `governance/AI_DEVELOPMENT.md`, **agent-generated code is labeled in commits for later audit**. If you used
 an AI agent, say so in the commit body.
 
 ## Before you open a pull request
 
 Toolchain floor: npm 11 or later; CI runs Node 24, whose npm is 11, and npm 10 fails `npm ci` in `frontends/shell` (wave 1's finding D-3, `state/cloud/wave1/D.md`).
+On Windows, `clang-cl` must be on `PATH`: `.cargo/config.toml` compiles the bundled DuckDB with it, and a build without it stops with a missing-tool error from the `cc` crate.
 
 ```sh
 cargo test --workspace                              # the Rust modules

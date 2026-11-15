@@ -273,6 +273,11 @@ fn plain_reason(kind: &str) -> String {
                 .to_string()
         }
         "CeilingExceeded" => "a declared ceiling was exceeded".to_string(),
+        "RedactionFinding" => {
+            "the redaction scan found a local filesystem path, user name, machine identifier or \
+             credential in the staged bundle"
+                .to_string()
+        }
         "StagingNotRemoved" => {
             "the operation failed and left a staging directory behind".to_string()
         }
@@ -405,6 +410,27 @@ mod tests {
             !line.contains("ApprovalRefused"),
             "the raw variant name must not leak: {line}"
         );
+    }
+
+    #[test]
+    fn a_redaction_refusal_reads_as_its_plain_reason() {
+        let text = [
+            r#"{"schema":"spatial-audit/1","attempt":"r1","phase":"intent","at":"2026-08-17T09:30:00Z","destination":"C:/dev/out/redacted"}"#,
+            r#"{"schema":"spatial-audit/1","attempt":"r1","phase":"outcome","at":"2026-08-17T09:30:01Z","outcome":"refused","error_kind":"RedactionFinding"}"#,
+        ]
+        .join("\n");
+        let lines = render_audit_log(&text);
+        assert_eq!(lines.len(), 1, "{lines:#?}");
+        assert!(lines[0].contains("REFUSED:"), "{}", lines[0]);
+        assert!(
+            lines[0].contains(
+                "the redaction scan found a local filesystem path, user name, machine identifier or \
+                 credential in the staged bundle"
+            ),
+            "{}",
+            lines[0]
+        );
+        assert!(!lines[0].contains("not one of the reasons"), "{}", lines[0]);
     }
 
     #[test]
