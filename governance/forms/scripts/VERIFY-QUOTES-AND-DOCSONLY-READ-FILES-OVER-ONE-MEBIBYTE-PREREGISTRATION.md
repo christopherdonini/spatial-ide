@@ -218,3 +218,17 @@ Assertions only. No measurement and no `docs/08` row.
 4. **E3.** `git diff --name-only` from 8faccf89 to 9c7a187b printed the seven paths that the advisor's ruling read, and exited 0. The docs-only tool printed its NOT-eligible line with a count of 1 and the PLAN.yaml line, with no other line (none was predicted), and exited 1. git printed nothing on stderr. As predicted.
 5. **The three fills at this form's commit**, for the record: the 31 pins filled by the custodian's script at 9c7a187b, none into the plan; E3's placeholder filled with none (ADV-2026-11-15-10 item 4 (a)); and the sentence of ADV-2026-11-15-11 item 2 (`state/directives/2026-11-15-advisor-ruling-adv-2026-11-15-11-item-2-b-of-adv-2026-11-15-10-replaced-the-sentence-on-the-two-test-names.md`), added in §4 after the line on snake case.
 6. **No result differs from its prediction**, so nothing goes to the advisor before dispatch under ADV-2026-11-15-10 item 4 (b). **Next:** one worker on a branch from main, at the budget of 60.
+
+## §10 Amendment 2 — both gates PASS at the head; E1 to E3 at the head as predicted; CI and the changed-paths list (class 1)
+
+*Written by the custodian after both gate reports were filed, before the PR leaves draft. References only.*
+
+1. **The head.** H is 536e664dfc5b6296148e951896025516b71648bb, two commits on the merge base 5ed2d5037d1c4ac37b17946405050e60b2822757: the fix with both tests, then their recorded mutations. Four files, 57 changed lines against the ceiling of 80 (§7).
+2. **The gates.** The architect: PASS, `state/consults/gates/2026-11-15-verify-quotes-and-docsonly-read-files-over-one-mebibyte-gate-architect.md`, gate-log row 760. The reviewer: PASS, `state/consults/gates/2026-11-15-verify-quotes-and-docsonly-read-files-over-one-mebibyte-gate-reviewer.md`, gate-log row 761. Each at H, from dispatch, with no finding to fix; both answer the packet's four flags.
+3. **The mutations.** M1 and M2 were observed by the reviewer at H, each failing its test at assertion (2) as §4 declares, and reverted. The two comments name the first commit, where the worker observed them (§8 item 6).
+4. **E1 to E3 at the head**, run by the worker and again by the reviewer, the outputs byte-identical. E1 and E2 printed the PASS line with 0 hash-reference errors and exited 0. E3 printed the tool's eligible line, its exit-0 output, and no offending line, and exited 0, as §5 predicts (the reviewer's O2).
+5. **Repository-wide verify-quotes** exited 0 at the merge base and at H, the two outputs byte-identical (the reviewer's check 7), as §5 predicts.
+6. **CI at H:** 8 checks pass in 6 runs (43695978644, 43695978676, 43697999405, 43697999420, 43697999440, 43697999499), each at H, read at 2026-11-15T10:09:43Z by the custodian; the reviewer read the same at 2026-11-15T09:34:24Z.
+7. **The changed-paths list** (ADV-2026-11-14-21 item 6): the PR's paths changed on main since the merge base, by script against main at 9c18c4aa85ce700837e7d14fd6f0c185cdf7d8e7: none. It was none before the gates were dispatched too.
+8. **For the advisor, not this piece:** the architect's O1 on the last words of ADV-2026-11-15-09 item 9, which §1's first May-not-claim bullet already keeps out of every record of this piece.
+9. **Next:** the PR out of draft, then the advisor's merge check.
