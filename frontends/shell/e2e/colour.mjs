@@ -10,7 +10,7 @@
 //   PB-E2  Export through the dev seam `publishPrepareWithDestination`, then the bundle. (i) the prompt's `published_columns` is the composer's attributes line; (ii) the open dialog's `.publish-dialog-columns`
 //          shows the prompt's value; (iii) the manifest schema's names after `id` and the geometry are `["zone"]`; (iv) `style.json` carries the match the page shows; (v) the viewer's own resolver
 //          (`renderer/style-ts`, bundled for node) draws each case in the legend's swatch colour and a NULL in the No value colour. The sub-checks run independently; the failure names the ones that failed.
-//   PB-E3  One colour: the style document returns to a literal fill, the legend is gone, and the frame's dominant colour is the default fill.
+//   PB-E3  One colour: the style document returns to a literal fill, the legend is gone, and, once a `[render-trace] layers` line has followed the click, the frame's dominant colour is the default fill.
 //   PB-E4  Last, because it ends the app: the session history, read after the process tree is stopped, holds a `style.set` of `fillColor` whose value is the match (column, cases, on_null, on_unmatched as
 //          the page showed them), its dependencies name `zone` with a type, and the One colour step after it is the literal fill.
 //
@@ -79,6 +79,21 @@ async function waitFor(what, read, predicate, timeoutMs, pollMs = 200) {
 async function settle(consoleHandle, what) {
   const outcome = await waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 2000, timeoutMs: 45_000 });
   expect(outcome.settled, `the render trace was not quiet for 2000ms within 45000ms (${what})`);
+}
+
+/** The `[render-trace] layers` lines so far: `WorkingCanvas` traces one on every render, coalesced or not (as `style.mjs` reads them). */
+const layerLineCount = (consoleHandle) => consoleHandle.renderTrace().filter((e) => e.text.includes("layers")).length;
+
+/** Waits for a `[render-trace] layers` line beyond `sinceCount`, in the shape of `style.mjs`'s `waitForFreshLayerUpdate`: bounded, and a harness bound, not a measurement. A timeout names both counts. */
+async function waitForFreshLayerUpdate(consoleHandle, sinceCount, timeoutMs = 10_000) {
+  const start = Date.now();
+  let last = layerLineCount(consoleHandle);
+  while (last <= sinceCount && Date.now() - start < timeoutMs) {
+    await sleep(50);
+    last = layerLineCount(consoleHandle);
+  }
+  expect(last > sinceCount, `no fresh [render-trace] layers line within ${timeoutMs}ms (had ${sinceCount} before the click, still ${last})`);
+  return last;
 }
 
 const readStyleDocument = (page) =>
@@ -274,6 +289,7 @@ async function stepExportBundle(page, consoleHandle, ctx) {
 
 async function stepOneColour(page, consoleHandle) {
   await showStyleControls(page);
+  const layersBefore = layerLineCount(consoleHandle);
   await page.click("button.style-one-colour");
   // RECORDED MUTATION PB-E3 is placed here.
   const doc = await waitFor("a style document whose fill_color is a literal", () => readStyleDocument(page), (d) => d?.layer?.fill_color?.literal !== undefined, 15_000);
@@ -283,9 +299,10 @@ async function stepOneColour(page, consoleHandle) {
   const disabled = await page.evaluate(() => document.querySelector("button.style-one-colour")?.disabled === true);
   expect(disabled, "the One colour button is still enabled");
   await settle(consoleHandle, "after One colour");
+  const layersAfter = await waitForFreshLayerUpdate(consoleHandle, layersBefore);
   const { dominant } = await dominantOf(page, "after One colour");
   expect(sameColour(dominant.rgba, hexToRgb(DEFAULT_FILL)), `the dominant colour is ${dominant.rgba}, expected ${DEFAULT_FILL} at opacity 1`);
-  return `fill_color is the literal ${DEFAULT_FILL}; no legend; the dominant colour is ${dominant.rgba}`;
+  return `fill_color is the literal ${DEFAULT_FILL}; no legend; the layers lines went from ${layersBefore} to ${layersAfter} after the click; the dominant colour is ${dominant.rgba}`;
 }
 
 // ------------------------------------------------------------------------------------------------
