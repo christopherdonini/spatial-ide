@@ -409,6 +409,7 @@ function writeHalt(projectRoot, text) {
   fs.writeFileSync(path.join(projectRoot, 'state', 'CUSTODIAN-HALT'), text);
 }
 
+// RECORDED MUTATION, observed at bcc20bba (applied, run, reverted): the step-6 send restored in stop-queue.mjs -> this test fails at assert.deepEqual(..., [], 'no send was made'): the actual list holds '[telegram dry-run] would send: Only human-blocked nodes remain.'.
 test('stop-queue: the human-blocked-only allow sends no Telegram message', async () => {
   const projectRoot = makeTempDir('stop-no-notify-');
   process.env.CUSTODIAN_PLAN_PATH = twoNodesHumanOnlyPlan;
@@ -428,6 +429,7 @@ test('stop-queue: the human-blocked-only allow sends no Telegram message', async
   }
 });
 
+// RECORDED MUTATION, observed at bcc20bba (applied, run, reverted): the halt send put back behind a waitingOnHuman.length guard, as at main -> this test fails at assert.deepEqual(calls, ...): [] where [[projectRoot, 'HALT: drill halt']] is expected.
 test('stop-queue: a halt sends the HALT line once when nothing waits on the human', async () => {
   const projectRoot = makeTempDir('stop-halt-send-');
   writeHalt(projectRoot, 'drill halt\n');
@@ -441,6 +443,7 @@ test('stop-queue: a halt sends the HALT line once when nothing waits on the huma
   assert.deepEqual(calls, [[projectRoot, 'HALT: drill halt']]);
 });
 
+// RECORDED MUTATION, observed at bcc20bba (applied, run, reverted): the waiting list appended to the halt text -> this test fails at the dry-run assert.deepEqual: 'HALT: drill halt\nWaiting on you (1 item(s), 10 min total)' where 'HALT: drill halt' is expected.
 test('stop-queue: a halt with human-blocked nodes sends the HALT line without the waiting list', async () => {
   const projectRoot = makeTempDir('stop-halt-waiting-');
   writeHalt(projectRoot, 'drill halt\n');
@@ -467,6 +470,7 @@ function runStopCli(projectRoot, input, plan) {
   return spawnSync(process.execPath, [path.join(here, 'stop-queue.mjs')], { input: JSON.stringify(input), encoding: 'utf8', env });
 }
 
+// RECORDED MUTATION, observed at bcc20bba (applied, run, reverted): the halt send removed from stop-queue.mjs -> this test fails at the dry-run assert.deepEqual: [] where ['[telegram dry-run] would send: HALT: drill halt'] is expected.
 test('stop-queue CLI: a halt sends one HALT message through the shipped entry', () => {
   const projectRoot = makeTempDir('stop-cli-halt-');
   writeHalt(projectRoot, 'drill halt\n');
@@ -478,6 +482,7 @@ test('stop-queue CLI: a halt sends one HALT message through the shipped entry', 
   assert.ok(lines.includes('HALT: drill halt'), result.stderr);
 });
 
+// RECORDED MUTATION, observed at bcc20bba (applied, run, reverted): the step-6 send restored through sendTelegramDeduped -> this test fails at the last assert.equal(result.stderr.includes(DRY), false, ...): the message is the stderr, which holds '[telegram dry-run] would send: Only human-blocked nodes remain.'.
 test('stop-queue CLI: the human-blocked-only allow sends nothing through the shipped entry', () => {
   const projectRoot = makeTempDir('stop-cli-human-only-');
   const input = baseStopInput();
@@ -1422,6 +1427,7 @@ test('notify-telegram: falls back to message alone when there is no title', () =
 const repoRoot = path.resolve(here, '..', '..');
 const readSettings = () => JSON.parse(fs.readFileSync(path.join(repoRoot, '.claude', 'settings.json'), 'utf8'));
 
+// RECORDED MUTATION, observed at bcc20bba (applied, run, reverted, each alone): idle_prompt restored in the matcher -> this test fails at the matcher assert.equal: 'idle_prompt|quota_auto_resume_stale|quota_auto_resume_disabled' where 'quota_auto_resume_stale|quota_auto_resume_disabled' is expected; the PreToolUse entry restored (the merge base's file) -> it fails at the keys assert.deepEqual: 'PreToolUse' is the extra first key.
 test('the_notification_hook_matches_only_the_two_quota_types', () => {
   const settings = readSettings();
   assert.deepEqual(Object.keys(settings.hooks), ['Stop', 'PreCompact', 'SessionStart', 'Notification']);
@@ -1434,6 +1440,7 @@ test('the_notification_hook_matches_only_the_two_quota_types', () => {
   assert.equal(JSON.stringify(settings).includes('questions-mirror.mjs'), false, 'no command names the mirror');
 });
 
+// RECORDED MUTATION, observed at bcc20bba (applied, run, reverted): the command's script path altered to notify-telegramx.mjs in the settings file -> this test fails at assert.equal(r.status, 0, r.stderr): the stderr reads 'Cannot find module' for scripts/hooks/notify-telegramx.mjs.
 test('the_notification_settings_command_forwards_a_quota_notification_once', (t) => {
   const command = readSettings().hooks.Notification[0].hooks[0].command;
   // A temporary project holds copies of the hook scripts, so nothing is written under the real .claude/state/.
