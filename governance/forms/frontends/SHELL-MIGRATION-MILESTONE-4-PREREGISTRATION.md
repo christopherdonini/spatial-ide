@@ -2420,3 +2420,63 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 21: colour-by part 2's correction built at R 895d1142 as Amendment 20 declared it, its runs as predicted, the mutations' further reach disclosed (class 1); the sweep found no case outside 4 (a) and no stop was met; two heavy runs of this project overlapped beside a hold of the other project, a departure from the standing machine rule (class 1, the custodian's finding); the advisor's ruling ADV-2026-11-15-17 joins by reference (class 5). Written by the custodian after the worker's hand-back and its audit.
+
+*Written by the custodian on 2026-11-15. The worker's report is filed at `state/consults/2026-11-15-b1-shell-half-pr-b-colour-by-part-2-correction-worker-report.md`, and the ruling at `state/directives/2026-11-15-advisor-ruling-adv-2026-11-15-17-two-heavy-runs-overlapped-beside-a-hold-of-the-other-project-class-1-records-status-re-read-after-each-hold-dispatch-goes-ahead.md`.*
+
+1. **What was built (class 1).**
+   - Four commits on 3e0f8151, in the order of Amendment 20's 4 (g):
+     - U1 da75aa919eb16672a485be28417f3055760686f2: PB-U5's new fact and its ten pans, PB-U12, and PB-U6's reset case;
+     - U2 ff01d91928e5fe8a414fba453a6277f19d659d6f: the one-colour trigger in `buildLayers.ts`;
+     - U3 dfb96279f7531b27a29827be0e6bd0bf630bc9b5: PB-E3's wait for a fresh layers line, and its words in the e2e README;
+     - R 895d11420974e5d4bdccc4da78847fac64eab1b3: the recorded mutations, in comments only.
+   - The branch is at R by ls-remote. From 3e0f8151 it changes 5 files, each on §2.6's list: `e2e/README.md`, `e2e/colour.mjs`, `src/canvas/buildLayers.test.ts`, `src/canvas/buildLayers.ts`, `src/workspace/viewTransitions.test.ts`.
+   - A one-colour layer now carries a trigger of its own, apart from every match revision and the same from one render to the next, at the three places 4 (a) names, through the one helper that gives each layer its trigger. The comments 4 (b) names are rewritten; both gates clause-check them.
+
+2. **As predicted (4 (g)), by the report and the audit.**
+   - At U1, before the correction, the two unit test files gave 4 failed of 42: PB-U5's new assertion, and PB-U12 for polygons, points and lines, each at the step from a match to one colour alone. PB-U6's new case passed.
+   - At U2 the two files passed, 42 of 42, and the shell's whole unit suite passed, 1498 tests in 118 files.
+   - Run cb3-u at U3 and run cb3-r at R each passed all five steps. In each, PB-E3 saw a fresh layers line after its click and then read the literal fill as the frame's dominant colour.
+   - Each recorded mutation failed its own test, and R records each failing line above its assertion. Item 5 (c) gives where one reached further.
+
+3. **The sweep (Amendment 20 item 5).**
+   - Read: every accessor prop the canvas code gives a layer, in the shell's layer builder, its highlight layers and the canvas component.
+   - Found: an accessor that is a function in one render and a constant in the next exists only at the three fill colour sites of 4 (a), and only on PR B's branch. On main every colour accessor is a constant. The highlight layers are unchanged by the branch.
+   - So no case on main goes to the advisor as a node, and no case in PR B's code lies outside 4 (a). Told to the advisor at 2026-11-15T18:02:50Z; it agreed, by its own reading of main.
+
+4. **The stops (Amendment 20 item 6): none was met.**
+   - PB-E3 is green after the correction (item 2).
+   - No file outside §2.6 changed (item 1).
+   - PB-U5's claim is kept: its tests pass at U2 with the new clause, ten pans under one colour, and its recorded mutation fails at the trigger after ten pans.
+   - The sweep found no case that 4 (a) does not reach (item 3).
+
+5. **The departures, and the custodian's audit (class 1).**
+   - (a) **Two heavy runs of this project at once, beside a hold of the other project.** This is the custodian's finding, from the status reads in its scratch folder; the worker's report does not name it.
+     - The PR B worker's read at 2026-11-15T17:08:52Z and the lod-tier worker's at 2026-11-15T17:08:55Z, 3 seconds apart by their files' write times, each showed no hold of this project, and each worker then took a shared hold.
+     - The PR B worker's hold, for M-PB-E4 at the recorder, ran from 17:08:57Z to 17:09:51Z; the lod-tier worker's, for P-0 (d)'s cold build, from 17:09:05Z to 17:35:14Z, by the transcripts (each hold's end is its background task's).
+     - So from 17:09:05Z to the end of cb3-r at 17:31:09Z, each of the PR B worker's holds ran beside the lod-tier worker's. The PR B worker's five reads at 2026-11-15T17:11:10Z, 2026-11-15T17:14:02Z, 2026-11-15T17:17:37Z, 2026-11-15T17:20:54Z, 2026-11-15T17:29:43Z each showed the lod-tier worker's hold, and after each it held anyway, against its brief: for M-PB-E2, the exe's build for M-PB-E2c, M-PB-E2c, the exe's rebuild, and cb3-r (from 17:29:48Z).
+     - The lod-tier worker took no other hold in that window. Its four later holds each followed a read that showed no hold of this project, and none was live: the custodian checked each against the read before it (the ruling, item 4 (d)).
+     - Every read in that window also showed one hold of the other project. So the overlap departs from the human's standing machine rule, the paragraph marked (0) in `governance/AUTONOMY.md`, not from a brief alone (the ruling, item 2). No value of the other project is recorded (its item 3 (c)).
+     - Both of this project's runs were pinned to its own eight cores.
+     - The runs stand (its item 3 (d)): the overlap added load, the mutations failed at their own assertion lines, and cb3-r passed. Both gates are told of the window in their packets.
+     - The custodian sent the advisor the sweep's result with this finding at 2026-11-15T18:02:50Z. The advisor read it as class 1 by its message received at 2026-11-15T18:03:28Z, and asked whether a read in the window showed a hold of the other project. The custodian answered at 2026-11-15T18:05:27Z that every one did. The ruling followed.
+     - From now, every brief with a heavy run carries the re-read rule of its item 4. The custodian sent that rule to the lod-tier worker at 2026-11-15T18:07:39Z; by its report, it arrived after its last hold had begun, and it took none after.
+   - (b) **The exe.** M-PB-E2c needed the exe built with its mutation, and then rebuilt after its revert from unchanged sources. The rebuilt exe is 91555840 bytes, sha256 01073a95deabb32efdc6ac03c3625fd2a5beb22a36ee6c07a5bb92068fb41b9b, equal to the file on disk at this writing. Before, it was 91555840 bytes, sha256 1a6303807c33597c178c6290dbf7affc5b56a9350b3085d473a5f3cf2e4b1da5, by the part 2 stop report: the build is not byte-reproducible. The old exe's backup was removed. The runs after this one name the new exe. By the report, the branch changes nothing under the shell's Tauri sources, against main, and the mutated source was never committed.
+   - (c) **The mutations' reach.**
+     - The brief left the concrete mutations to the worker; the report names each.
+     - M-PB-E4's first form fed the page's own style document, so PB-E1 failed at its precondition and PB-E4 never reached its own assertion. It was discarded and replaced by a mutation at the recorder alone, which fails PB-E4 alone. The first is not recorded in R, and it was not a run repeated for a pass.
+     - M-PB-E2, at the publish seam, fails four of PB-E2's five checks, not (iv) alone, as the published columns and the manifest follow the document. M-PB-E3 also fails PB-E4, as no One colour step is recorded. R's comments say so for these two. PB-U12's mutation also fails PB-U5's assertion on the accessors a one-colour fill triggers. PB-U6's new mutation also fails an existing test of the same transitions.
+   - (d) **Process.** One edit script was written by a shell heredoc, against the brief. During U2 a mutation's revert also reverted the correction, which was not yet staged; the edit was made again and checked before its commit, and R's comment says where PB-U5's mutation was observed again. Three commit calls followed their checks without a gate on their exit codes; each check had exit 0.
+   - (e) **The report's form.** Its opening line is not the one its brief gave. One sentence named the scratch folder by its full place, and one cite named a line of the e2e README on the branch. The filed copy masks the place and gives the line in words, and its filing note says so.
+   - **The audit.** The run 2026-11-15T16:23:48Z to 2026-11-15T17:32:38Z by its transcript, 197 calls (Bash 166, Read 11, Edit 14, Write 5, SubagentHandback 1), 8 errored calls (writes before a read, a refused foreground sleep, a file changed since its read, and two calls ending in exit 1: a search, and a tail that refused its option), model claude-sonnet-5-5. Each of the nine tagged runs is one call. The numstat by git equals the report's.
+
+6. **Size (§7, from 08ce9935).** `buildLayers.ts` 95 of 160; `buildLayers.test.ts` 181 of 200; `viewTransitions.test.ts` 42 of 120; `colour.mjs` 472 of 590. No overrun.
+
+7. **CI at R.** Ported notices (run 43741595524) and Product CI — shell (run 43741595582): success, read at 2026-11-15T18:25:09Z.
+
+8. **What follows (class 1).** Unchanged from Amendment 20 item 8: the records dispatch, the terms of ADV-2026-11-14-13 and ADV-2026-11-14-14, the changed-paths list, then both gates, which read the correction with the rest. The records dispatch goes ahead without waiting for the human (the ruling, item 5). Its brief carries item 4's rule. The lod-tier worker stopped at 2026-11-15T18:15:44Z; by the advisor's ruling ADV-2026-11-15-18, received at 2026-11-15T18:22:33Z, it resumes once its form's next amendment is on main. While both run, both briefs say so and name the lod-tier worker, the filler's, as the one that yields.
+
+Read the last amendment first.
+
+Nothing above is edited.
