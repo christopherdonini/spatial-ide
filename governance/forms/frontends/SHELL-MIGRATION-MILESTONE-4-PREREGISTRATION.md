@@ -2560,3 +2560,30 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 24: the format check failed unread on PR B's branch from 2026-11-14 (class 1, the custodian's finding); rustfmt applied to one Rust test file at 6f7e744c (class 1, a code change in a §2.6 file); both gates and the head series dispatched at that head, with one order of yielding (class 1); the changed-paths list. Written by the custodian after the format fix's hand-back and the dispatch, before any gate's result.
+
+*Written by the custodian on 2026-11-15. The format worker's report is filed at `state/consults/2026-11-15-b1-shell-half-pr-b-rustfmt-worker-report.md`. Where an item gives its content in other words, the words are the custodian's; the report and the runs are the record. Counts are by git, CI runs by `gh run list`, times by the transcripts.*
+
+1. **The finding (class 1, the custodian's).** PR #327's first CI read, at 2026-11-15T22:14:51Z at 0cf05452, showed `cargo fmt --check (workspace and src-tauri)` failing on `renderer/tests/style_agreement.rs`, a PR B file, at two places. The Rust fmt workflow's runs on the branch, oldest first:
+   - 6649a443, push, 2026-11-13T06:23:06Z: success; 5b309b78, push, 2026-11-14T08:30:29Z: success. Both are before the file's PR B lines (572bb917).
+   - 31cf0e22, push, 2026-11-14T15:05:35Z: failure; bfcb57e7, push, 2026-11-15T14:08:32Z: failure; 0cf05452, pull_request, 2026-11-15T22:05:48Z: failure.
+   - 6f7e744c, push, 2026-11-15T22:18:25Z, and pull_request, 2026-11-15T22:18:29Z: success.
+   - The commits after bfcb57e7 up to 0cf05452 change no Rust file and no `Cargo.toml`, by git, and the workflow runs only on such paths, so their pushes ran it at no head. So no head of the branch from 31cf0e22 up to 0cf05452 was green on that check. The three failures went unread until the PR's own read.
+
+2. **The fix (class 1, a code change in a §2.6 file).** The worker was dispatched at 2026-11-15T22:17:02Z and handed back at 2026-11-15T22:19:01Z: commit 6f7e744cf6a1c1337fdaf62bfdc113c1de531f1a, on 0cf05452, pushed, `renderer/tests/style_agreement.rs` alone, 20 lines added and 5 removed. By the custodian's check, with whitespace, braces and commas set aside, the file's text equals its parent's. By the report, both scopes' format check exit 0 at the head, and it ran no build or test. The custodian told the advisor at 2026-11-15T22:24:32Z. The advisor's message, received at 2026-11-15T22:25:01Z, needs no ruling. By the advisor's reading there, the pan-anchor runs at 0fa941c0 stand for 6f7e744c, as ADV-2026-11-15-20 item 3 has it for the commit before. The fix comes before the gates, so that they pass the head the merge check will name.
+
+3. **The dispatch (class 1).** At H = 6f7e744c, from the custodian's packet (7834 bytes, sha256 6fa1f609f6a504d6b113e539b22b0d5d487dd15845f5e6588baf3ed8f9d3d4db):
+   - the architect at 2026-11-15T22:24:07Z (brief 7412 bytes, sha256 4dcf500e2afbe091126d17d561d2e66c0079b905e8827429ef7205f7ad9a4152);
+   - the reviewer at 2026-11-15T22:24:10Z (brief 15573 bytes, sha256 6c4cd0d4c5eb6e8416bf7704cce1a656787f6efb79331fed7dacd3f6f8e22023), in its own new worktree `C:/dev/wt/m4b-g327r` with its cargo target on D:, both removed at the closing records;
+   - the tester at 2026-11-15T22:24:12Z (brief 17479 bytes, sha256 2e698aaf28bf17357af2b636a4f0ab0b8c7ed76feefc642e69200ed27d72f961), for the e2e series at the head: every suite, the colour suite, recentre-crossing on a new measure build, and the six recorded e2e mutations observed. This is as PR C's tester's series at its gate head was (Amendment 7).
+
+4. **The order of yielding (class 1; ADV-2026-11-15-17 item 4 (c)).** One order: PR B's gate reviewer first, then PR B's tester, then the lod-tier reviewer (PR 326's, the filler's gate). Each yields to every agent before it, and at a re-read after its grant that shows two holds of this project, each releases without running. The two PR B briefs name the order. The lod-tier reviewer's brief named PR B's reviewer, and the custodian's message at 2026-11-15T22:26:43Z added the tester to it.
+
+5. **The changed-paths list (ADV-2026-11-14-21 item 6).** From the merge base 2abf3ea0 to the head 6f7e744c, read against main at 6346c763: none of the PR's 54 paths has changed on main.
+
+6. **What follows.** The gates' reports and the series' report, filed with the closing amendment, which records the class 8 count at the head by §7's command. Then the drafts go to the advisor: items 51, 54, 56 and 66, item 65's sentence, AC5's words, and any words for F5 or G3.
+
+Read the last amendment first.
+
+Nothing above is edited.
