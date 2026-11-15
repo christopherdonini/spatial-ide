@@ -2508,3 +2508,55 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 23: PR B's records built at 0fa941c0 and corrected at 0cf05452 under the advisor's ruling ADV-2026-11-15-20, which joins by reference (class 5); both pan-anchor runs at 0fa941c0 as predicted; the worker's departures (class 1); its holds checked against the reads before them (class 1); the lod-tier gates beside PR B's (class 1); the changed-paths list. Written by the custodian after the worker's two hand-backs and the ruling, before PR B's draft PR and its gates.
+
+*Written by the custodian on 2026-11-15. The worker's reports are filed at `state/consults/2026-11-15-b1-shell-half-pr-b-records-worker-report.md` and `state/consults/2026-11-15-b1-shell-half-pr-b-records-adv-2026-11-15-20-correction-worker-report.md`; the ruling at `state/directives/2026-11-15-advisor-ruling-adv-2026-11-15-20-pr-b-records-items-54-and-56-to-the-gates-as-drafted-item-65-gains-a-sentence-one-correction-commit-f5-and-g3-read-by-the-gates.md`. It is the advisor's under the human's delegation of 2026-11-13, not the human's, and the human may overturn it. Where an item below gives its content in other words, the words are the custodian's; the ruling's file and the reports are the text. Counts are by git's numstat, times by the transcripts.*
+
+1. **The records commit (class 1; Amendment 22 item 3).**
+   - The records worker was dispatched at 2026-11-15T20:03:49Z and handed back at 2026-11-15T20:47:01Z. Its commit is 0fa941c079d66b7ea5731f07c69c6238a214674e, on R 895d1142, pushed.
+   - It changes two files: `KNOWN-LIMITATIONS.md` (19 added, 10 removed) and `frontends/shell/MANUAL-WALKTHROUGH.md` (16 added, 6 removed).
+   - What it holds, by the report: item 4's sentence, item 59 and item 65 (KL-3) placed by script, with the re-read of item 64 to item 65 (Amendment 22 item 2) the one change to their text; item 51's and item 66's drafts; the revised sentences of items 54 and 56 (class 9, as their comments say); Part AC's rows AC3 to AC5 and AC12, and Part F's location words.
+   - Its three checks each exited 0: the profile-path scan of the staged files, verify:cites and verify:test-claims.
+
+2. **The runs (class 1; ADV-2026-11-14-13 and ADV-2026-11-14-14).** Both at 0fa941c0, on the merged suite (blob 370fe149), on port 5400, by the report: the plain run rec-pa-1, 16 of 16 passing, exit 0; and rec-pa-l1, with a build beside the suite in the same hold, 16 of 16 passing, exit 0, the build alive at the suite's start and at its end. They stand for the correction (the ruling's item 3).
+
+3. **The ruling ADV-2026-11-15-20 (class 5).**
+   - (a) Items 54 and 56: the revised sentences go to the gates as the worker drafted them, as the advisor's draft wording under the delegation; the rest of each item stays the human's words. Both gates check them clause by clause, and the advisor rules their final words after the gates, with items 51 and 66 (its item 1).
+   - (b) Item 65: the worker's finding stands, by the advisor's read. One sentence, the advisor's draft wording, ends the paragraph, and the comment's passage on the finding gives way to the custodian's words on why and where the code does it (its item 2). Both gates check the sentence and the finding against the code; a gate that finds the finding wrong sends the sentence back to the advisor before the merge request (2 (d)). Item 51's sentence of the same content and this one stay consistent (2 (e)).
+   - (c) The walkthrough's rows F5 and G3 (its item 4): both gates read the two rows at the head, say whether each is untrue in its own steps, and draft words where it is. Drafts go to the advisor with item 51's, item 66's and AC5's words. A row changed outside Part AC and Part F's location words is a scope addition to PR B's records, recorded in this form by amendment before the edit.
+   - (d) Item 66 (its item 5): the gates check the comment's reading of how whitespace in a name is shown. The advisor rules the item's words after the gates.
+
+4. **The correction (class 1; the ruling's item 3).**
+   - One commit on 0fa941c0, 0cf05452ca1b57d597f49be422dbfae586658358, pushed: `KNOWN-LIMITATIONS.md` alone, 2 lines added and 2 removed, item 65's paragraph and its comment.
+   - The custodian's script applied it (3319 bytes, sha256 f1bfb5d7bd77a70419bc68f68161756df1b5e76d78aabbe04759cb6bc9a8ec93). It found each anchor once and printed `APPLIED lines 513,514`. The same three checks each exited 0.
+   - The worker resumed on the custodian's message of 2026-11-15T20:56:21Z and handed back at 2026-11-15T20:59:11Z, with no hold, build or run. The commit was told to the advisor at 2026-11-15T21:16:47Z.
+
+5. **The size (§7; Amendment 12 item 13).** From the merge base 2abf3ea0 to the head 0cf05452: `KNOWN-LIMITATIONS.md` 29 of 70; `frontends/shell/MANUAL-WALKTHROUGH.md` 22 of 160; `frontends/shell/e2e/README.md` 12 of 60. No class 8.
+
+6. **The worker's departures and disclosures (class 1),** by its reports:
+   - (a) Its report on the records is a short form, by its own words, shorter than its brief asked; the byte-copied material it names is in the custodian's scratch folder.
+   - (b) Beyond the places its brief names, it edited the comments of items 54 and 56, the AC10 sentence, and Part AC's opening, whose old form path it corrected (class 3, inside the file).
+   - (c) It names the e2e README as not in its list; that file's count is in item 5.
+   - (d) verify:quotes exits 1 with 21 misses, all in the walkthrough, the same 21 as main's copies at 0d13561d give. It added none. This is outside the three checks.
+   - (e) Seven errored calls: four writes before a read, one write after the file changed since its read, and two foreground sleeps refused.
+   - (f) Its records report gives the custodian's scratch folder by its full place in one sentence, and cites files and lines on PR B's branch. The filed copy masks the place and gives the cites in words, as its filing note says.
+
+7. **The holds (class 1; ADV-2026-11-15-17 item 4 (d)).**
+   - The worker took 2 holds, each in its own background call. Each followed a status read in a call of its own that showed no hold of this project, and each chain's read after the grant showed one, its own. The custodian checked each against the read before it. By the transcripts, each hold's start and end:
+     - rec-pa-1: 20:29:14Z to 20:33:53Z, after the read that ended at 20:29:04Z.
+     - rec-pa-l1: 20:35:37Z to 20:45:32Z, after the read that ended at 20:35:31Z.
+   - The lod-tier worker's last hold ended at 20:03:15Z (its form's Amendment 2 item 6). None overlapped. The correction took no hold.
+
+8. **The lod-tier gates beside PR B's (class 1; ADV-2026-11-15-17 item 4 (c)).** PR 326's reviewer and architect were dispatched at 2026-11-15T21:27:18Z, from the custodian's packet (6145 bytes, sha256 537a5f6e199a18f1f14e3b722b797025124ed4fbaf9d6100ab3ee477bf3798a0). PR B's gate reviewer may run beside the lod-tier reviewer. Each brief says so, and names the lod-tier reviewer, the filler's gate, as the one that yields.
+
+9. **The changed-paths list (ADV-2026-11-14-21 item 6).** From the merge base 2abf3ea0, read against main at 4327a2ee: none of the PR's 54 paths has changed on main. It is read again before the last gate.
+
+10. **What follows.**
+   - PR B's draft PR, opened by the custodian at the head 0cf05452 after this amendment's commit. Its body lists the re-read of item 64 to item 65, the items revised under class 9, and any words applied under AUTONOMY §31 (d).
+   - Then both gates from dispatch at that head. Their packets carry item 3's checks, item 51's draft, AC5, the window of Amendment 21 item 5 and item 8 here.
+   - After the gates, the drafts go to the advisor: items 51, 54, 56 and 66, item 65's sentence, AC5's words, and any words for F5 or G3.
+
+Read the last amendment first.
+
+Nothing above is edited.
