@@ -25,9 +25,10 @@ import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 
 const ALLOWLIST = new Map([
+  ["engine/src/app_dirs.rs", "application directories"],
   ["engine/src/watch.rs", "file watching"],
-  ["engine/src/lod.rs", "application directories and free space"],
-  ["kernel/src/permission/audit/log.rs", "application directories and filesystem case policy"],
+  ["engine/src/lod.rs", "free space"],
+  ["kernel/src/permission/audit/log.rs", "filesystem case policy"],
   ["kernel/src/permission/audit/normalize.rs", "filesystem case policy"],
   ["kernel/src/publish/error.rs", "OS error classification"],
 ]);
