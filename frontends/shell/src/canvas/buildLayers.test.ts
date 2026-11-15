@@ -3,8 +3,8 @@
 
 import { describe, expect, it } from "vitest";
 
-import { COORDINATE_SYSTEM } from "@deck.gl/core";
-import type { Position } from "@deck.gl/core";
+import { _ComponentState, COORDINATE_SYSTEM } from "@deck.gl/core";
+import type { Layer, Position } from "@deck.gl/core";
 import { PathLayer, ScatterplotLayer, SolidPolygonLayer } from "@deck.gl/layers";
 
 import {
@@ -671,6 +671,90 @@ describe("buildLayers -- a fill by category (milestone 4 PR B, section 2.3 (c))"
     expect(triggers[9], "the trigger after ten pans").toEqual({ getFillColor: [draw.match!.revision] });
     expect(new Set(triggers.map((t) => JSON.stringify(t))).size, "distinct triggers across the ten renders").toBe(1);
     expect(drawOf().match!.revision, "a style resolved again").not.toBe(draw.match!.revision);
-    expect(buildLayers(batches, f, FIXED_DRAW, "polygonal")[0].props.updateTriggers, "a one-colour fill").toEqual({});
+    const oneColourTriggers: unknown[] = [];
+    for (let pan = 0; pan < 10; pan++) {
+      f.maybeRecenter(2_600_000 + pan * 500, 1_200_000);
+      oneColourTriggers.push(buildLayers(batches, f, FIXED_DRAW, "polygonal")[0].props.updateTriggers);
+    }
+    const oneColour = oneColourTriggers[9] as { getFillColor?: unknown[] };
+    expect(Object.keys(oneColour), "the accessors a one-colour fill triggers").toEqual(["getFillColor"]);
+    expect(oneColour.getFillColor, "a one-colour fill's colour trigger").toHaveLength(1);
+    expect([draw.match!.revision, drawOf().match!.revision].map((revision) => oneColour.getFillColor?.[0] === revision), "the one-colour trigger against two match revisions").toEqual([false, false]);
+    expect(new Set(oneColourTriggers.map((t) => JSON.stringify(t))).size, "distinct triggers across ten pans under one colour").toBe(1);
+  });
+
+  const MATCH_B = { ...FILL_MATCH, cases: [{ when: "a", then: "#00aa00" }, { when: "b", then: "#0000bb" }] };
+  const OTHER_state: StyleState = { ...state, fillMatch: MATCH_B };
+  const ONE_COLOUR_STATE: StyleState = { ...state, fillMatch: null };
+  const OTHER_COLOUR_STATE: StyleState = { ...ONE_COLOUR_STATE, fillColor: "#123456" };
+  /** What the product draws for `s`: `WorkingCanvas.tsx`'s own conversion of the parsed style, a new match revision for each call. */
+  const drawFor = (s: StyleState): ResolvedDrawParams => {
+    const parsed = parseStyleState(s);
+    return toResolvedDrawParams(parsed.resolve(null), parsed);
+  };
+  /** The shape of deck.gl's own change flags (`lib/layer-state.d.ts`, `ChangeFlags`), for the two members read below. */
+  interface DeckChangeFlags {
+    propsChanged: string | false;
+    updateTriggersChanged: Record<string, true> | false;
+  }
+  /**
+   * Whether deck.gl, given `next` as the update of `previous`, sees a change of the colour accessor `name`. It runs deck.gl's own
+   * `_transferState` on the two real layer objects, which calls its `diffProps` (`compareProps` for the props, `diffUpdateTriggers` for
+   * the triggers), and reads the change flags that comparison sets: the accessor's update trigger as changed, or the prop as changed.
+   * `_ComponentState` is deck.gl's own; the layer is given no attribute manager, which needs a GPU device and which that comparison
+   * only calls to invalidate the attribute a trigger names.
+   */
+  function deckSees(previous: Layer, next: Layer, name: string): boolean {
+    const internal = new _ComponentState(previous);
+    internal.resetOldProps();
+    previous.internalState = Object.assign(internal, {
+      changeFlags: { dataChanged: false, propsChanged: false, updateTriggersChanged: false, viewportChanged: false, stateChanged: false, extensionsChanged: false, propsOrDataChanged: false, somethingChanged: false },
+    }) as never;
+    next._transferState(previous);
+    const flags = (next.internalState as unknown as { changeFlags: DeckChangeFlags }).changeFlags;
+    return (flags.updateTriggersChanged !== false && flags.updateTriggersChanged[name] === true) || (typeof flags.propsChanged === "string" && flags.propsChanged.startsWith(`props.${name} `));
+  }
+  const cycleOf = (base: ResidentBatch): Array<string | null> => Array.from({ length: base.ids.length }, (_, i) => ["a", "b", null, "zzz"][i % 4]);
+  const KINDS = [
+    { kind: "polygonal", accessor: "getFillColor", batches: () => [tagged(polygons(), ["a", null, "zzz", "b"])] },
+    {
+      kind: "point",
+      accessor: "getFillColor",
+      batches: () => {
+        const base = decodeBatch("sh_p", 0, loadBatchFixture("lv95-point-batch"), "geometry", ENCODING_POINT, null, null);
+        return [tagged(base, cycleOf(base))];
+      },
+    },
+    {
+      kind: "line",
+      accessor: "getColor",
+      batches: () => {
+        const base = decodeBatch("sh_l", 0, loadBatchFixture("lv95-linestring-batch"), "geometry", ENCODING_LINESTRING, null, null);
+        return [tagged(base, cycleOf(base))];
+      },
+    },
+  ] as const;
+
+  // RECORDED MUTATION for PB-U12, applied alone: in `triggersOf` (canvas/buildLayers.ts) a one-colour fill's trigger is dropped, so that a one-colour layer carries no `updateTriggers` key (return `{}` when the trigger is the one-colour trigger).
+  // Expected failure: the first step, a match to one colour, is not seen by deck.gl, for each of the three layer kinds; the other steps pass.
+  it.each(KINDS)("PB-U12: deck.gl's own comparison sees a change of the colour accessor from a match to one colour, one colour to a match, a match to another match and one colour to another colour, for $kind", ({ kind, accessor, batches }) => {
+    const f = frame();
+    const held = batches();
+    const layerOf = (draw: ResolvedDrawParams) => buildLayers(held, f, draw, kind)[0] as unknown as Layer;
+    const seen = (before: StyleState, after: StyleState) => deckSees(layerOf(drawFor(before)), layerOf(drawFor(after)), accessor);
+    const samePaint = (s: StyleState) => {
+      const draw = drawFor(s);
+      return deckSees(layerOf(draw), layerOf(draw), accessor);
+    };
+    expect(
+      {
+        matchToOneColour: seen(state, ONE_COLOUR_STATE),
+        oneColourToMatch: seen(ONE_COLOUR_STATE, state),
+        matchToOtherMatch: seen(state, OTHER_state),
+        oneColourToOtherColour: seen(ONE_COLOUR_STATE, OTHER_COLOUR_STATE),
+        samePaintAgain: samePaint(state) || samePaint(ONE_COLOUR_STATE),
+      },
+      `deck.gl's view of the ${accessor} change for ${kind}`
+    ).toEqual({ matchToOneColour: true, oneColourToMatch: true, matchToOtherMatch: true, oneColourToOtherColour: true, samePaintAgain: false });
   });
 });

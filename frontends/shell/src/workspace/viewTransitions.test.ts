@@ -124,6 +124,15 @@ describe("PB-U6: a fill by category is one style.set on fillColor, and a literal
     expect(styleTransitions(byZone, edited).map((t) => t.params.value), "the match ending at the same fillColor").toEqual(["#112233"]);
     expect(styleTransitions(edited, byZone).reduce(applyViewTransition, { ...view, style: edited }).style, "applying the edit").toEqual(byZone);
   });
+
+  // RECORDED MUTATION for PB-U6's reset case, applied alone: in `styleTransitions` (workspace/viewTransitions.ts) the literal branch drops its condition on a standing match (`prev.fillColor !== next.fillColor || prev.fillMatch !== null` becomes `prev.fillColor !== next.fillColor`).
+  // Expected failure: a match whose literal fill is the default's gives no transition toward the default style, so the state keeps its match.
+  it("PB-U6: the transitions toward the default style, from a match whose literal fill is the default's, leave fillMatch null", () => {
+    const matchedAtDefault: StyleState = { ...DEFAULT_STYLE_STATE, fillMatch: byZone.fillMatch };
+    const result = styleTransitions(matchedAtDefault, DEFAULT_STYLE_STATE).reduce(applyViewTransition, { ...view, style: matchedAtDefault });
+    expect(result.style.fillMatch, "the match after the transitions toward the default").toBeNull();
+    expect(result.style, "the style after the transitions toward the default").toEqual(DEFAULT_STYLE_STATE);
+  });
 });
 
 /** Tool, mode and inspection transitions (section 2.2, 2.4; Amendment 1 A5). Rows UB-TI1 and UB-TI2 are not in the form's
