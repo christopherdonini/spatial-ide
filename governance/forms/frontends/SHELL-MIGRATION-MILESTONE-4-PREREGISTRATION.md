@@ -2480,3 +2480,31 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 22: the advisor's ruling ADV-2026-11-15-19 joins by reference (class 5): the columns-line form's OPEN-2 is (c), so KNOWN-LIMITATIONS item 66 joins PR B's records; KL-3's number in OPEN-A's second sentence and OPEN-B's text is re-read to 65 (class 3); the records dispatch goes as shaped (class 1). Written by the custodian before the records dispatch.
+
+*Written by the custodian on 2026-11-15. The ruling is filed at `state/directives/2026-11-15-advisor-ruling-adv-2026-11-15-19-columns-line-open-2-c-item-66-joins-pr-b-records-kl-3-number-65-in-open-a-and-open-b-records-dispatch-as-shaped.md`. It is the advisor's under the human's delegation of 2026-11-13, not the human's, and the human may overturn it. Where an item below gives its content in other words, the words are the custodian's; the ruling's file is the text.*
+
+1. **The columns-line form's OPEN-2 is (c) (class 5; Amendment 14 item 3).**
+   - A column name stays as the approval's columns line shows it today, and no code changes. The ruling's item 1 gives why (b) is not taken.
+   - KNOWN-LIMITATIONS item 66 joins PR B's records. The records worker drafts it from the code, covering what the ruling's item 2 (b) lists, and says whether any other character in a name makes the line ambiguous.
+   - Both gates check it clause by clause. It then goes to the advisor, and its ruled words are the advisor's wording under the delegation. Until then the item is marked as draft wording.
+   - It is a record outside the count, held with the others to §7's KNOWN-LIMITATIONS.md 70 (Amendment 12 item 13).
+
+2. **The item number (class 3; Amendment 15 item 3 (b)).**
+   - In OPEN-A's second sentence and in OPEN-B's text, item 64 becomes item 65, once each, by script, with no other byte changed. This is the re-read that the human's third message of 2026-11-12, item 3 (b), orders at the records commit.
+   - Each item's source comment records it, and PR B's body lists it.
+   - A clause found untrue at the head goes to the advisor (the ruling's item 3 (d)).
+
+3. **The records dispatch (class 1).** As Amendment 21 item 8 gives it, in the shape the ruling's item 4 accepts:
+   - One worker, on PR B's branch at R 895d1142, makes the records commit.
+   - Then pan-anchor runs at that head on the merged suite, blob 370fe149, under ADV-2026-11-14-13 and ADV-2026-11-14-14: one plain run, and one in the shape of the pan-anchor fix's L1, with a build beside the suite in the same hold.
+   - Then the push.
+   - Item 51's and item 66's drafts go to the advisor after both gates' clause check. A changed word in item 54 or item 56 goes to the advisor before the gates.
+   - The brief carries ADV-2026-11-15-17 item 4, with the lod-tier worker as the one that yields.
+
+4. **The changed-paths list (ADV-2026-11-14-21 item 6).** From the merge base 2abf3ea0, read against main at b2ad9ee6, the list is empty: since the merge base, main has changed only paths under governance/, state/ and site/. It is read again before the last gate.
+
+Read the last amendment first.
+
+Nothing above is edited.
