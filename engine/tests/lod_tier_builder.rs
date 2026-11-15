@@ -1704,6 +1704,11 @@ fn own_bytes_source(name: &str, circles: u64, spacing: f64) -> PathBuf {
     path
 }
 
+// RECORDED MUTATION: in `engine/tests/common/mod.rs`, delete the line in `tier_run` that sets
+// `LOCALAPPDATA` to this process's own folder (the folder, its lock and the sweep are left as they
+// are, so the tiers go to the machine-wide root) → this test fails at its assertion (1) and
+// a_second_run_clearing_and_removing_its_own_tiers_leaves_this_runs_tiers_in_place fails at its
+// assertion (2). **Observed at commit 36c12ff285280f0549b792f0f98420a5bdae9aa6**, then reverted.
 /// A build through the real entry point puts its tiers below this process's own folder, and not
 /// below the machine-wide tier root this process inherited (`inherited_local_app_data`).
 #[test]
@@ -1736,6 +1741,11 @@ fn a_test_runs_tiers_are_built_in_its_own_folder_and_never_under_the_machine_wid
 const SECOND_RUN_SOURCE: &str = "LOD_TIER_SECOND_RUN_SOURCE";
 const SECOND_RUN_DIRECTORY: &str = "second run tier directory: ";
 
+// RECORDED MUTATION: in `engine/tests/common/mod.rs`, make `take_folder_and_sweep` remove a
+// sibling's folder whether or not the sibling's lock could be taken (the `let Ok(finished) = …
+// else { continue; }` becomes a plain `let finished = …`) → this test fails at its assertion (2),
+// the first process's tier files gone. **Observed at commit 36c12ff285280f0549b792f0f98420a5bdae9aa6**
+// (run on its own), then reverted.
 /// Another run of this binary clears its tier directory for the same source, builds over it and
 /// removes its set; this run's tiers stay on disk, and a second build here still reuses all three.
 /// The second run is a real second process, started and waited for here, so the order is the
