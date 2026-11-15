@@ -108,3 +108,68 @@ P-0 (b), as ruled by ADV-2026-11-15-18: after the edits, in the four suites that
    - Then the final count to the advisor, and both gates from dispatch, with item 2's question and the window in their packets.
 
 Nothing above is edited.
+
+### Amendment 2 — the closing before the gates: the build at f8f931e2; the size at the head by file (class 6, Scope not edited); the measured time; run 6 against its prediction (class 2); the holds after the resume checked (class 1). Written by the custodian after the worker's hand-back, before the gates
+
+*Written by the custodian on 2026-11-15. The worker's final report is filed at `state/consults/2026-11-15-lod-tier-tests-own-tier-folder-worker-report.md`. Counts are by git's numstat from d2008810, three-dot; times are by the transcripts.*
+
+1. **The build.**
+   - The worker resumed on the same branch by the custodian's message of 2026-11-15T19:18:08Z (ADV-2026-11-15-18, item 6) and handed back at 2026-11-15T20:35:01Z.
+   - Three commits on d2008810, pushed to `cut/lod-tier-tests-own-tier-folder`; origin equals the head:
+     - fb51f0ac4c34d68ad9d444daf3126e9fe104a2c9: the change (Amendment 1 item 1);
+     - 36c12ff285280f0549b792f0f98420a5bdae9aa6: T-A, T-B and T-B's second-process half;
+     - f8f931e2ce6c4ba04f4bbc54c6352ae6a8c0c2bb: the two recorded-mutation comments in `lod_tier_builder.rs` and the owner's-index entry in `engine/README.md` (OPEN-4 (A)).
+   - By git at the head: 7 files, each named in the Scope line; no line under `engine/src`, `kernel/src` or `protocol/`, and no Cargo manifest or lockfile. `engine/tests/lod_tier_root.rs` is unchanged.
+   - P-0 (b) passes at the head under the advisor's wording in Amendment 1 item 1, by the worker's report. Both gates check it at the head.
+   - The draft PR is #326, opened by the custodian at 2026-11-15T20:46:12Z, at the head.
+
+2. **The size (class 6; ADV-2026-11-15-14's term (a), as ADV-2026-11-15-18 item 3 applies it).**
+   - At the head: 423 lines (357 added, 66 removed) over 7 files, against the note of 260 and N6's about 240. At the second commit it was 409 (Amendment 1 item 2).
+   - The third commit adds 14: 10 in `lod_tier_builder.rs`, the two recorded-mutation comments, and 4 in `engine/README.md`, the preregistration list's new path and the Last-verified bullet.
+   - The piece keeps this form, the Scope line is not edited and nothing is trimmed. The final count was told to the advisor at 2026-11-15T20:40:58Z, before the gates.
+
+| File | N6 | At the second commit | At the head |
+|---|---|---|---|
+| `engine/README.md` | about 4 | 0 | 4 |
+| `common/mod.rs` | about 65 | 122 | 122 |
+| `lod_tier_builder.rs` | about 125 | 192 | 202 |
+| `lod_tier_cancellation.rs` | about 12 | 16 | 16 |
+| `lod_tier_measurements.rs` | about 14 | 31 | 31 |
+| `lod_tier_preflight.rs` | about 6 | 13 | 13 |
+| `kernel no_generation_in_persisted_artifacts.rs` | about 16 | 35 | 35 |
+
+   - Both gates are asked Amendment 1 item 2's question: is every changed line inside what the Scope line names for its file. A line that is not goes to the advisor.
+
+3. **The time (§D).** 150 minutes by the transcripts, against the node's 60: the first run, 2026-11-15T17:02:37Z to 2026-11-15T18:15:45Z (73), and the resumed run, 2026-11-15T19:18:14Z to 2026-11-15T20:35:02Z (77). The node's budget is not edited. The time was told to the advisor with the count.
+
+4. **The mutations and the runs, by the worker's report.**
+   - M1 and M2 were observed at 36c12ff2 by applying each, running the tests it names and reverting, as predicted: under M1, T-A failed at (1) and T-B at (2); under M2, T-B failed at (2). After M2's revert, `common/mod.rs` has the second commit's sha256. The recorded-mutation comments at the head name both.
+   - Run 4, the engine crate at the head: exit 0, with no failed result line; `lod_tier_builder` 19 passed and 3 ignored. Run 5, the kernel test: exit 0, 9 passed.
+   - The machine-wide tier folder's list was the same before run 4, after it and after run 5.
+   - The light checks pass: fmt, verify:plan, verify:cites, verify:quotes and verify:test-claims. verify:quotes' first run reached the worker's own time limit and gave no verdict; the re-run under a longer limit passed.
+   - CI on the branch's push at the head: 5 runs, all success, read at 2026-11-15T20:53:32Z. The pull request's own runs are read before the merge check. On Windows T-A and T-B pass and the second-process half is listed as ignored; on macOS and Linux T-A and T-B are ignored by their attribute, as the form intends.
+
+5. **Run 6 (class 2).**
+   - The draft's N7 run 6, clippy over the engine and kernel packages with every target and `-D warnings`, expected exit 0, the state the clippy node left. It exited 101, on two errors in the renderer's lib: `manual_range_contains` in `renderer/src/canonical.rs` and `doc_lazy_continuation` in `renderer/src/style.rs`.
+   - The reason: these are rows 44 and 45 of the clippy node's Windows read (`state/consults/2026-11-07-clippy-deny-warnings-workspace-windows-read-tester-report.md`), which the architect's draft places in 12d with rows 27 to 32 (`state/consults/2026-11-07-clippy-deny-warnings-workspace-form-architect-draft.md`, its table's 12d row). 12d has not run, so the clippy node had not left the workspace clean. The canonical.rs row now sits further down the file than the read's line, after 1c's edit, which that draft foresaw.
+   - Without `-D warnings` the same command exits 0. Its warnings are 12d's six kernel rows, the two renderer rows, and one in `engine/src/app_dirs.rs` (`enum_variant_names`, at `Os::MacOs`). None is in a file this piece changes.
+   - The app_dirs warning came with port-2, after the Windows read. Port-2's build report names it, and no lettered piece's rows hold it. The clippy node's summary records it from this amendment's commit, and the advisor is told.
+   - No stop rule names run 6, and the piece fixes none of them (Scope).
+
+6. **The holds after the resume (class 1; ADV-2026-11-15-17 item 4 (d)).**
+   - The worker took 6 holds, each in its own background call. Each followed a status read in a call of its own that showed no hold of this project, and each chain's read after the grant showed one, its own. The custodian checked each against the read before it. By the transcripts, each hold's start and end:
+     - M1: 19:20:15Z to 19:21:32Z, after the read that ended at 19:20:10Z.
+     - M2: 19:26:00Z to 19:27:17Z, after the read that ended at 19:25:56Z.
+     - run 4: 19:30:39Z to 19:54:15Z, after the read that ended at 19:30:34Z.
+     - run 5: 19:55:41Z to 19:56:53Z, after the read that ended at 19:55:37Z.
+     - run 6: 19:58:12Z to 20:00:06Z, after the read that ended at 19:58:07Z.
+     - run 6 without -D warnings: 20:01:35Z to 20:03:15Z, after the read that ended at 20:01:29Z.
+   - PR B's records worker's holds ran 20:29:14Z to 20:33:53Z and 20:35:37Z to 20:45:32Z, each after a read with no hold of this project. None overlapped the six.
+   - The report's note that the first hold is the one Amendment 1 item 4 records means the piece's first hold, from 17:09:05Z. The first row of its table, M1's hold, ran beside no hold of this project.
+
+7. **What follows.**
+   - Both gates from dispatch, the reviewer and the architect (§36), at the head: their packets carry P-0 (b) in the advisor's wording, §C's check, Amendment 1 item 2's question, Amendment 1 item 4's window, and item 5 here.
+   - ADV-2026-11-14-21 item 6 (a): the PR's paths changed on main since the merge base d2008810, read against 0d13561d: none. The list is read again before the last gate.
+   - Then out of draft, and the merge check to the advisor (the grant, item 5).
+
+Nothing above is edited.
