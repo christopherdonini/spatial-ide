@@ -47,11 +47,12 @@ let matchFillRevision = 0;
  * attribute" shape, passed straight through unchanged. A style with a match on its fill also carries
  * `match`: each layer then takes a colour accessor that reads the datum's group
  * (`canvas/matchGroups.ts`) and indexes `match.colours`, and `updateTriggers` names the style's revision.
+ * A layer drawn with one colour names `ONE_COLOUR_TRIGGER` in its `updateTriggers`, so that a change from a match to one colour is seen.
  */
 export interface ResolvedDrawParams {
   fillColor: [number, number, number, number];
   /** Present only while the style has a match on its fill; `fillColor` is then the No value colour, and the layers colour each datum by
-   * `match` instead. Absent for a one-colour fill, which every layer draws exactly as before. */
+   * `match` instead. Absent for a one-colour fill, which every layer draws with the constant `fillColor` and `ONE_COLOUR_TRIGGER`. */
   match?: MatchFill;
   /** RGBA, alpha always 255 -- style v0 (ADR-017 §5a) has no separate outline-opacity field, only
    * `fill_opacity`; an outline is drawn fully opaque or not at all (`outlineWidth === 0`). */
@@ -95,20 +96,30 @@ export function toResolvedDrawParams(draw: DrawParameters, style?: Style): Resol
   return resolved;
 }
 
-/** The fill props of one batch's layer: today's constant colour, or, under a match, a colour per datum (the datum's row through
- * `partToRow`, its group from `rowGroups`) with the style revision as the only trigger that re-evaluates it. */
+/**
+ * The update trigger of a layer drawn with one colour. It is a string and a match revision is a number, so it equals no revision, and it is
+ * the same value in every render while the fill stays one colour. It exists because deck.gl 9.3.9's `accessor` prop type (`prop-types.js`)
+ * reads two values as equal whenever the old one is a function, and its trigger check (`props.js`, `diffUpdateTriggers`) walks only the new
+ * props' triggers: a layer that drew a match (a function) and is then given a constant colour with no trigger is read as unchanged, and keeps
+ * its per-datum colours. A change from one colour to another needs no trigger, because the colour prop itself is then compared by value.
+ */
+const ONE_COLOUR_TRIGGER = "one-colour";
+
+/** The fill props of one batch's layer: today's constant colour with `ONE_COLOUR_TRIGGER`, or, under a match, a colour per datum (the
+ * datum's row through `partToRow`, its group from `rowGroups`) with the style revision as the only trigger that re-evaluates it. */
 function fillProps(batch: ResidentBatch, draw: ResolvedDrawParams) {
   const match = draw.match;
-  if (match === undefined) return { color: draw.fillColor, revision: undefined };
+  if (match === undefined) return { color: draw.fillColor, trigger: ONE_COLOUR_TRIGGER };
   const groups = rowGroups(batch, match.style);
   const toRow = batch.partToRow;
   const color = (_datum: unknown, info: { index: number }) => match.colours[groups[toRow[info.index]]];
-  return { color, revision: match.revision };
+  return { color, trigger: match.revision };
 }
 
-/** `updateTriggers` for the accessor `name`: the style revision under a match, and no key at all for a constant colour. */
-const triggersOf = (name: string, fill: { revision: number | undefined }): { updateTriggers?: Record<string, unknown[]> } =>
-  fill.revision === undefined ? {} : { updateTriggers: { [name]: [fill.revision] } };
+/** `updateTriggers` for the accessor `name`: the style revision under a match, `ONE_COLOUR_TRIGGER` for a constant colour. */
+const triggersOf = (name: string, fill: { trigger: number | string }): { updateTriggers: Record<string, unknown[]> } => ({
+  updateTriggers: { [name]: [fill.trigger] },
+});
 
 /**
  * Per-batch offset-relative geometry, cached by `ResidentBatch` object identity and the frame
@@ -395,6 +406,12 @@ export type LineLayer = PathLayer<Position[]>;
  * equal to any other function in `compareProps` (the `accessor` type's `equal`, above), so what makes deck.gl evaluate it again is
  * `updateTriggers`, which each such layer sets to `draw.match.revision`. That number changes when a style is resolved again and
  * never on a pan, a zoom or a recentre, so those evaluate no accessor.
+ *
+ * **Under one colour, the layer still names a trigger: `ONE_COLOUR_TRIGGER`, above.** The `accessor` type's `equal`
+ * returns true when the OLD value is a function, whatever the new one is, so without a trigger a match followed by one colour over the
+ * same `data` reads as no change, and the layer keeps the colours the match gave each datum. The trigger differs from every match
+ * revision, so that step is seen; it is the same in every render while the fill stays one colour, so a pan or a recentre changes
+ * nothing. This holds for the polygons' and the points' `getFillColor` and for the lines' `getColor`.
  */
 export function buildLayers(
   batches: readonly ResidentBatch[],
