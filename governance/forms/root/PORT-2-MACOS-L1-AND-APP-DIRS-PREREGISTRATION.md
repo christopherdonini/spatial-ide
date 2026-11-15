@@ -499,3 +499,15 @@ Nothing above is edited.
 3. **The PR:** #324, a draft from C, opened at 2026-11-15T08:33:42Z.
 
 Nothing above is edited.
+
+## §10 Amendment 9 — both gates PASS WITH NOTES at C, words only; the advisor's ruling ADV-2026-11-15-12 on item 43's first source comment joins by reference (class 5); the other words under AUTONOMY §31 (d) (class 1)
+
+*Written by the custodian after both gate reports were filed, before the correction commit. References only.*
+
+1. **The gates at C** (cf5e7c4c8f0fbc1badb0c0f67b2379d98aea92d5): the architect, PASS WITH NOTES, `state/consults/gates/2026-11-15-port-2-macos-l1-and-app-dirs-gate-architect.md`, gate-log row 759; the reviewer, PASS WITH NOTES, `state/consults/gates/2026-11-15-port-2-macos-l1-and-app-dirs-gate-reviewer.md`, gate-log row 762. Both words only, with no Correctness or Evidence finding open.
+2. **Item 43's first source comment:** the advisor's ruling ADV-2026-11-15-12 (`state/directives/2026-11-15-advisor-ruling-adv-2026-11-15-12-open-43c-d-item-43s-first-source-comment-gains-two-passages-on-the-reviewers-sentences-the-other-words-stand.md`) answers OPEN-43C (D). The comment gains the ruling's two passages, by script, and nothing else in it changes. Item 43's own line and its second comment stay as they are at C. The ruling departs from ADV-2026-11-13-20 item 5 (f) for that comment alone (its item 4).
+3. **The other words** are not the human's wording and are applied under AUTONOMY §31 (d), with no re-gate, the PR body listing them. Where the two gates give words for one sentence, the custodian took one, and the ruling's item 6 lets the choices stand. K1's comment takes the reviewer's D1. The module doc's count of three variables is the same in both. The docs of user_data_dir and data_dir take the architect's D3 and D4. The architect alone gives D5 (the form's W4 sentence in the Location row), D6, D7 and D8.
+4. **Records for the closing amendment:** the architect's D9 and D11 and the reviewer's D6 and D7; one line for D5, that §8 item 8 reads W4 as the gate's words.
+5. **Next:** one correction worker at C. Then E1 and E2 at the new head by run id, §7 recounted (class 8), and both gates re-read item 43 whole at the final head (the ruling's item 5 (c)). Then the closing amendment, the PR out of draft and the merge check.
+
+Nothing above is edited.
