@@ -70,7 +70,7 @@ function gitDiffNames(repoRoot, mergeBase, head) {
 
 function gitShow(repoRoot, ref, filePath) {
   try {
-    return execFileSync('git', ['show', `${ref}:${filePath}`], { cwd: repoRoot, encoding: 'utf8' });
+    return execFileSync('git', ['show', `${ref}:${filePath}`], { cwd: repoRoot, encoding: 'utf8', maxBuffer: 1 << 28 });
   } catch {
     return null; // does not exist at that ref (added, or deleted)
   }

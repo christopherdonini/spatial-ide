@@ -1220,3 +1220,14 @@ test('verify-quotes: a baseline entry keyed by an old path waives the same findi
   assert.equal(baselined[0].relPath, X_NEW);
   assert.deepEqual(unmatchedBaseline, []);
 });
+
+test('a_hash_checked_reference_into_a_file_over_one_mebibyte_verifies', (t) => {
+  const pinned = 'Line one of the target file.\nLine two of the target file.\n';
+  const dir = gitTree({ 'T.md': pinned + ('x'.repeat(78) + '\n').repeat(14000) });
+  removeAfter(t, dir);
+  assert.ok(fs.statSync(path.join(dir, 'T.md')).size > 1024 * 1024);
+  const rev = headOf(dir);
+  fs.writeFileSync(path.join(dir, 'A.md'), `A trusted figure: \`T.md:1-2\` @ ${rev} sha256:${sha256(pinned)}\n`);
+  const { hashFindings } = runVerifyQuotes({ repoRoot: dir, files: [path.join(dir, 'A.md')] });
+  assert.equal(hashFindings.length, 0, JSON.stringify(hashFindings));
+});
