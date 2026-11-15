@@ -1682,3 +1682,134 @@ fn build_tiers_refuses_a_linestring_feature_by_name_and_writes_no_tier() {
     assert!(written.is_empty(), "a tier was written: {written:?}");
     let _ = std::fs::remove_dir_all(&tiers);
 }
+
+// ---------------------------------------------------------------------------------------------
+// Each test run builds its tiers in its own folder (`LOD-TIER-TESTS-OWN-TIER-FOLDER-
+// PREREGISTRATION.md`): `common::tier_run_root` is that folder, and the tiers of two runs of this
+// binary never share a directory. Both tests use a source whose bytes no other test's has, so the
+// tier directory keyed by its content hash is theirs alone within a run.
+// ---------------------------------------------------------------------------------------------
+
+fn own_bytes_source(name: &str, circles: u64, spacing: f64) -> PathBuf {
+    let path = scratch_dir(name).join("source.parquet");
+    let rings: Vec<(u64, Vec<Vec<[f64; 2]>>)> = (0..circles)
+        .map(|i| {
+            (
+                i,
+                dense_circle(2_600_000.0 + i as f64 * spacing, 1_200_000.0, 22.0, 144),
+            )
+        })
+        .collect();
+    write_source(&path, &geo_key(&lv95_definition()), &rings);
+    path
+}
+
+/// A build through the real entry point puts its tiers below this process's own folder, and not
+/// below the machine-wide tier root this process inherited (`inherited_local_app_data`).
+#[test]
+#[cfg_attr(
+    not(windows),
+    ignore = "boundary: application directories and free space (engine/src/app_dirs.rs, engine/src/lod.rs); deferred by engine/LOD-PREREGISTRATION.md Amendment 8(a)"
+)]
+fn a_test_runs_tiers_are_built_in_its_own_folder_and_never_under_the_machine_wide_tier_root() {
+    let path = own_bytes_source("own-folder", 18, 55.0);
+    let source = Dataset::open(&path).expect("open");
+    let set =
+        build_tiers(&source, LOD_BUILD_WORKERS_ARM_S, &CancelToken::new(), None).expect("build");
+    let directory = set.directory().to_path_buf();
+    let hash = set.source_content_hash().to_string();
+    drop_tiers(&set);
+
+    let inherited = common::inherited_local_app_data().expect("LOCALAPPDATA was set at start");
+    assert!(
+        !directory.starts_with(Path::new(inherited).join(LOD_TIER_ROOT)),
+        "(1) the tiers were built under the machine-wide tier root: {directory:?}"
+    );
+    assert_eq!(
+        directory,
+        tier_run_root().join(LOD_TIER_ROOT).join(hash),
+        "(2) the tiers were not built in this run's own folder"
+    );
+}
+
+/// Names the source the second run tiers; set on the second process only.
+const SECOND_RUN_SOURCE: &str = "LOD_TIER_SECOND_RUN_SOURCE";
+const SECOND_RUN_DIRECTORY: &str = "second run tier directory: ";
+
+/// Another run of this binary clears its tier directory for the same source, builds over it and
+/// removes its set; this run's tiers stay on disk, and a second build here still reuses all three.
+/// The second run is a real second process, started and waited for here, so the order is the
+/// order of the calls and nothing is timed.
+#[test]
+#[cfg_attr(
+    not(windows),
+    ignore = "boundary: application directories and free space (engine/src/app_dirs.rs, engine/src/lod.rs); deferred by engine/LOD-PREREGISTRATION.md Amendment 8(a)"
+)]
+fn a_second_run_clearing_and_removing_its_own_tiers_leaves_this_runs_tiers_in_place() {
+    let path = own_bytes_source("second-run", 20, 65.0);
+    let source = Dataset::open(&path).expect("open");
+    let cancel = CancelToken::new();
+    let first = build_tiers(&source, LOD_BUILD_WORKERS_ARM_S, &cancel, None).expect("build");
+    let tier_files: Vec<PathBuf> = first
+        .tiers()
+        .iter()
+        .map(|t| t.record().path().to_path_buf())
+        .collect();
+    assert_eq!(tier_files.len(), LOD_TIER_COUNT);
+
+    let second = std::process::Command::new(std::env::current_exe().expect("this test binary"))
+        .args([
+            "--exact",
+            "the_second_run_half_of_the_two_runs_test",
+            "--ignored",
+            "--nocapture",
+        ])
+        .env(SECOND_RUN_SOURCE, &path)
+        .output()
+        .expect("run the second process");
+    let stdout = String::from_utf8_lossy(&second.stdout);
+    assert!(
+        second.status.success(),
+        "(1) the second run did not exit 0: {}\n{stdout}",
+        String::from_utf8_lossy(&second.stderr)
+    );
+    let second_directory = PathBuf::from(
+        stdout
+            .lines()
+            .find_map(|l| l.strip_prefix(SECOND_RUN_DIRECTORY))
+            .expect("the second run printed its tier directory"),
+    );
+
+    let gone: Vec<&PathBuf> = tier_files.iter().filter(|f| !f.is_file()).collect();
+    assert!(
+        gone.is_empty(),
+        "(2) the second run took this run's tiers away: {gone:?}"
+    );
+    let again = build_tiers(&source, LOD_BUILD_WORKERS_ARM_S, &cancel, None).expect("reuse");
+    assert!(
+        again.tiers().iter().all(|t| !t.was_rebuilt()),
+        "(3) this run's tiers were not all reused"
+    );
+    assert_ne!(
+        second_directory,
+        first.directory(),
+        "(4) the second run built in this run's tier directory"
+    );
+    drop_tiers(&first);
+}
+
+/// The second process of the test above. It returns at once without `SECOND_RUN_SOURCE`, so a
+/// plain `--ignored` run does nothing.
+#[test]
+#[ignore = "the second process of a_second_run_clearing_and_removing_its_own_tiers_leaves_this_runs_tiers_in_place; returns at once unless LOD_TIER_SECOND_RUN_SOURCE names a source"]
+fn the_second_run_half_of_the_two_runs_test() {
+    let Some(path) = std::env::var_os(SECOND_RUN_SOURCE) else {
+        return;
+    };
+    let source = Dataset::open(Path::new(&path)).expect("open the first run's source");
+    let cancel = CancelToken::new();
+    clear_tier_directory(&source, &cancel);
+    let set = build_tiers(&source, LOD_BUILD_WORKERS_ARM_S, &cancel, None).expect("build");
+    println!("{SECOND_RUN_DIRECTORY}{}", set.directory().display());
+    drop_tiers(&set);
+}
