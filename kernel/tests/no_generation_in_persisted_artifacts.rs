@@ -472,9 +472,10 @@ fn a_built_lod_tier_sets_manifest_and_tier_files_carry_no_generation_substring()
     .unwrap();
     let source = Dataset::open(&path).unwrap();
     // Built in this process's own folder, set before the build and put back after it, so the tier
-    // set is never written under the machine-wide tier root. Nothing else in this binary reads
-    // `LOCALAPPDATA`: the audit-log test sets `AUDIT_LOG_ENV`, and the history and project tests
-    // pass their own store roots.
+    // set is never written under the machine-wide tier root. Nothing else in this binary depends on
+    // `LOCALAPPDATA`: the audit-log test sets `AUDIT_LOG_ENV`, so its log path never reaches the
+    // data directory and the variable is read there only to normalize a path in an error's text;
+    // the history and project tests pass their own store roots.
     let _own_tier_root = OwnTierRoot::set();
     let set = build_tiers(&source, LOD_BUILD_WORKERS_ARM_S, &CancelToken::new(), None)
         .expect("build a small tier set");

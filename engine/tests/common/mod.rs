@@ -191,23 +191,26 @@ fn take_folder_and_sweep(runs: &Path, root: &Path, id: u32) -> std::fs::File {
 
 /// The folder this test process builds its LOD tiers under. On Windows the first call creates it,
 /// removes the folders of runs that have finished, and points `LOCALAPPDATA` at it for the rest of
-/// the process, once and before any build there, so a build made through [`build_tiers`] below
-/// lands in `<this folder>/spatial-ide/tiers/<content hash>`. Call it before reading
-/// `LOCALAPPDATA` for a tier path. Off Windows it creates nothing and sets nothing: no tier root is
-/// declared there.
+/// the process (a test that injects another value puts this one back, as `lod_tier_preflight.rs`
+/// does), once and before any build there, so a build made through [`build_tiers`] below lands in
+/// `<this folder>/spatial-ide/tiers/<content hash>`. Call it before reading `LOCALAPPDATA` for a
+/// tier path. Off Windows it creates nothing and sets nothing: no tier root is declared there.
 pub fn tier_run_root() -> &'static Path {
     &tier_run().root
 }
 
-/// `LOCALAPPDATA` as this process inherited it, before [`tier_run_root`] replaced it: the
-/// machine-wide root a test run must not build under.
+/// `LOCALAPPDATA` as this process inherited it, read before [`tier_run_root`] sets its own (on
+/// Windows only). For a run that cargo starts it is the machine-wide root a test run must not build
+/// under; in T-B's second process it is the first process's own folder.
 #[allow(dead_code)]
 pub fn inherited_local_app_data() -> Option<&'static OsString> {
     tier_run().inherited_local_app_data.as_ref()
 }
 
-/// The engine's `build_tiers`, after this process's tier folder exists and `LOCALAPPDATA` points at
-/// it. The suites build through this and not through `spatial_engine::lod::build_tiers` itself.
+/// The engine's `build_tiers`, called after [`tier_run_root`], so that on Windows this process's
+/// tier folder exists and `LOCALAPPDATA` points at it unless a test has set another value for an
+/// injection (`lod_tier_preflight.rs`). The four LOD suites build through this and not through
+/// `spatial_engine::lod::build_tiers` itself; `lod_tier_root.rs` keeps the engine's.
 pub fn build_tiers(
     source: &Dataset,
     workers: usize,

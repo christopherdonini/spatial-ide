@@ -1684,10 +1684,11 @@ fn build_tiers_refuses_a_linestring_feature_by_name_and_writes_no_tier() {
 }
 
 // ---------------------------------------------------------------------------------------------
-// Each test run builds its tiers in its own folder (`LOD-TIER-TESTS-OWN-TIER-FOLDER-
-// PREREGISTRATION.md`): `common::tier_run_root` is that folder, and the tiers of two runs of this
-// binary never share a directory. Both tests use a source whose bytes no other test's has, so the
-// tier directory keyed by its content hash is theirs alone within a run.
+// Each test run builds its tiers in its own folder
+// (`LOD-TIER-TESTS-OWN-TIER-FOLDER-PREREGISTRATION.md`): `common::tier_run_root` is that folder,
+// and the tiers of two runs of this binary never share a directory. Both tests use a source whose
+// bytes no other test's has, so the tier directory keyed by its content hash is theirs alone within
+// a run.
 // ---------------------------------------------------------------------------------------------
 
 fn own_bytes_source(name: &str, circles: u64, spacing: f64) -> PathBuf {
