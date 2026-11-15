@@ -164,7 +164,7 @@ export function leaseHeldBy(projectRoot, sessionId) {
   return { held: true };
 }
 
-// The halt alarm: the HALT headline alone, deduped on its own text. It adds no state.
+// The halt alarm: the HALT headline alone, deduped on its own text (one key in .claude/state/telegram-sent.json).
 async function notifyHalt(projectRoot, text) {
   try {
     await sendTelegramDeduped(`halt:${text}`, text, { projectRoot, windowMs: TELEGRAM_DEDUPE_WINDOW_MS });

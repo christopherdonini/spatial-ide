@@ -18,7 +18,7 @@
 // Sent via sendTelegramDeduped (telegram.mjs), not the bare send, keyed on notification_type + the
 // message's own head (not the full text, so near-duplicate re-notifications of the same
 // long-running wait collapse into one every ten minutes, per DEDUPE_WINDOW_MS). A failed send
-// never changes anything: this hook's exit code and stderr are ignored.
+// changes no decision, and its key is still recorded: a repeat within the window is not sent.
 
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
