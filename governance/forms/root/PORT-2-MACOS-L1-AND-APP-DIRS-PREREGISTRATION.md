@@ -531,3 +531,14 @@ Nothing above is edited.
 13. **Next:** the PR out of draft, then the advisor's merge check, where it compares item 43's first source comment at the head with its item 5 (b).
 
 Nothing above is edited.
+
+## §10 Amendment 11 — merged by the advisor at 70586ced on its verdict MERGE; main's CI green there, the macOS entry among it; the rustc version at the head; the reviewer's O1 a proposed node; the worktree swept (class 1)
+
+*Written by the custodian after the merge, in the node's done commit. References only.*
+
+1. **The merge.** PR #324 merged by the advisor by merge commit 70586cede1f9478293959a0d8cdc17097cb48f56 at 2026-11-15T12:28:04Z by GitHub, on its verdict MERGE at the head 45a945f80aef8a3193b75a4f41b94f9737f66516, filed as `state/consults/2026-11-15-port-2-macos-l1-and-app-dirs-merge-check-merge.md`.
+2. **Main's CI at the merge commit:** 7 runs (43713986579, 43713986587, 43713986588, 43713986615, 43713986618, 43713986632, 43713986675), each completed with success, read at 2026-11-15T12:51:51Z by the custodian. Among them product-ci-rust run 43713986579 on the push, its macOS job 132811441294 success: the first push to main after the merge is green, so item 1's macOS line stands, under its source comment.
+3. **The rustc version** (the verdict's item 5, for ADV-2026-11-13-10 item 2 (d)): at the head, product-ci-rust run 43708041575's three test jobs each log `rustc 1.100.0 (0ef1bc386 2026-11-09)`: macOS 132793314669, Ubuntu 132793314887, Windows 132793315023. That is the workflow's pin, `toolchain: "1.100.0"`. Read from the job logs by the custodian at 2026-11-15T12:51:51Z.
+4. **The reviewer's O1** (`state/consults/gates/2026-11-15-port-2-macos-l1-and-app-dirs-gate-reviewer.md`): the shell's end-to-end publish script still resolves the audit log off Windows by the rule this piece replaced. It is not this piece's file. It is proposed as the node `shell-e2e-publish-audit-log-follows-app-dirs`, unplaced, for the advisor to place (the verdict, its closing list).
+5. **The probe branches** `probe/port-2-case-policy-red` (Amendment 7 item 7) and `probe/port-2-macos-no-fail-fast` (Amendment 2 item 3) stay, never merged.
+6. **The worktree** `C:/dev/wt/p2` (687 MB on C:, by `du -sm`) and its local branch were removed before this commit, clean, pushed and merged; its target `D:/wt-targets/p2` (19546 MB on D:) was removed with it.
