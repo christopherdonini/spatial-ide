@@ -7,7 +7,8 @@
 //! **Its own test binary, because it sets `LOCALAPPDATA` for the process.** The tier root is read
 //! from that variable, so pointing it at a volume that does not exist is how "no free space" is
 //! injected without a second filesystem; a process-global env write cannot share a binary with
-//! tests that build real tiers. Cargo runs test binaries one after another.
+//! tests that build real tiers. The variable is first set by `common::tier_run_root`, to this
+//! process's own tier folder, and is put back to that folder after the injection.
 //!
 //! The preflight's *comparison* half is a unit test beside the code
 //! (`the_preflight_fails_closed_when_free_space_is_unknown`, `engine/src/lod.rs`); this file is the
@@ -26,9 +27,10 @@ use parquet::file::properties::WriterProperties;
 use spatial_engine::cancel::CancelToken;
 use spatial_engine::dataset::Dataset;
 use spatial_engine::error::EngineError;
-use spatial_engine::lod::{
-    build_tiers, set_hard_bound_bytes, LOD_BUILD_WORKERS_ARM_S, LOD_INSUFFICIENT_DISK,
-};
+use spatial_engine::lod::{set_hard_bound_bytes, LOD_BUILD_WORKERS_ARM_S, LOD_INSUFFICIENT_DISK};
+
+mod common;
+use common::{build_tiers, tier_run_root};
 
 /// A drive letter with no volume behind it, established at run time rather than assumed. The
 /// preflight's free-space reading fails on such a path, which is the "no free space" injection.
@@ -163,6 +165,9 @@ fn the_preflight_refuses_before_the_first_tier_is_written() {
     // The injection: a tier root on a volume that does not exist, so free space cannot be
     // established at all. Nothing else about the build changes.
     let absent = absent_volume();
+    // The run's own tier folder first, so that the value saved here is that folder and not the
+    // machine-wide root.
+    tier_run_root();
     let previous = std::env::var_os("LOCALAPPDATA");
     std::env::set_var("LOCALAPPDATA", &absent);
     let outcome = build_tiers(&source, LOD_BUILD_WORKERS_ARM_S, &CancelToken::new(), None);

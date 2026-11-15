@@ -39,9 +39,10 @@ use spatial_engine::dataset::Dataset;
 use spatial_engine::error::EngineError;
 use spatial_engine::fixture::{write_geoparquet, CoordinateDomain, CrsMode, FixtureSpec};
 use spatial_engine::lod::{
-    build_tiers, LodTierKey, TierBatch, TierBuildProgress, TierMiss, TierSet, LOD_BUILD_WORKERS,
+    LodTierKey, TierBatch, TierBuildProgress, TierMiss, TierSet, LOD_BUILD_WORKERS,
     LOD_BUILD_WORKERS_ARM_S, LOD_CRS_NOT_LINEAR, LOD_CRS_UNIT_UNDECLARED,
-    LOD_MIN_TRIANGLE_AREA_LADDER, LOD_TIER_COUNT, LOD_TIER_LARGER_THAN_SOURCE, LOD_TIER_STALE,
+    LOD_MIN_TRIANGLE_AREA_LADDER, LOD_TIER_COUNT, LOD_TIER_LARGER_THAN_SOURCE, LOD_TIER_ROOT,
+    LOD_TIER_STALE,
 };
 
 // ---------------------------------------------------------------------------------------------
@@ -55,7 +56,7 @@ use spatial_engine::lod::{
 // ---------------------------------------------------------------------------------------------
 
 mod common;
-use common::polygons_100k;
+use common::{build_tiers, polygons_100k, tier_run_root};
 
 /// §3's `parcels-5gb`, for the `#[ignore]`d rows only.
 const PARCELS_5GB: &str =
@@ -87,9 +88,7 @@ fn ladder() -> &'static Ladder {
 /// Remove whatever is in this source's tier directory, so a build is not silently a reuse.
 fn clear_tier_directory(source: &Dataset, cancel: &CancelToken) {
     let (hash, _ms) = spatial_engine::index::content_hash(source.path(), cancel).expect("hash");
-    let dir = PathBuf::from(std::env::var_os("LOCALAPPDATA").expect("LOCALAPPDATA"))
-        .join("spatial-ide/tiers")
-        .join(hash);
+    let dir = tier_run_root().join(LOD_TIER_ROOT).join(hash);
     if dir.exists() {
         std::fs::remove_dir_all(&dir).expect("clear the tier directory");
     }
@@ -474,8 +473,8 @@ fn scratch_dir(name: &str) -> PathBuf {
     d
 }
 
-/// Remove the tier directory a small-fixture test created, so a test run leaves the app-local cache
-/// as it found it.
+/// Remove the tier directory a small-fixture test created, so this run's tier folder holds only the
+/// sets still in use.
 fn drop_tiers(set: &TierSet) {
     let _ = std::fs::remove_dir_all(set.directory());
 }
@@ -979,9 +978,9 @@ fn a_stale_tier_batch_cannot_exist_without_the_stale_label() {
 }
 
 // T6 — `cancel_observed_within_the_declared_ceiling` — lives in its own test binary,
-// `engine/tests/lod_tier_cancellation.rs`. It cancels a build of the *same* fixture and so owns the
-// same tier directory this file's ladder does; cargo runs test binaries one after another, which is
-// what keeps the two from asserting over each other's files.
+// `engine/tests/lod_tier_cancellation.rs`. It cancels a build of the *same* fixture. Each binary
+// builds below its own process's tier folder (`common::tier_run_root`), so the two do not assert
+// over each other's files, in either order or at once.
 
 // ---------------------------------------------------------------------------------------------
 // T7 — O4, the row order §2d rules on.
@@ -1151,9 +1150,7 @@ fn tier_larger_than_its_source_is_refused() {
     // Nothing over the ceiling is kept on disk.
     let (hash, _ms) =
         spatial_engine::index::content_hash(&path, &CancelToken::new()).expect("hash");
-    let tier_dir = PathBuf::from(std::env::var_os("LOCALAPPDATA").expect("LOCALAPPDATA"))
-        .join("spatial-ide/tiers")
-        .join(hash);
+    let tier_dir = tier_run_root().join(LOD_TIER_ROOT).join(hash);
     let kept: Vec<PathBuf> = std::fs::read_dir(&tier_dir)
         .map(|rd| {
             rd.filter_map(|e| e.ok())
@@ -1367,9 +1364,16 @@ fn the_built_sets_size_is_disclosed_with_the_tiers() {
 /// (`engine/tests/import_layout_5gb_fixtures.rs:132`).
 const MIN_FREE_BYTES: u64 = 40 * 1024 * 1024 * 1024;
 
-fn free_bytes_on_c() -> Option<u64> {
+/// Free bytes on the volume this run's tier folder is on, which is where the 5 GB ladder is built
+/// and the volume I6's floor is about. `None` when that volume's letter cannot be read.
+fn free_bytes_on_run_volume() -> Option<u64> {
+    let drive = tier_run_root().to_str()?.chars().next()?;
     let out = std::process::Command::new("powershell")
-        .args(["-NoProfile", "-Command", "(Get-PSDrive C).Free"])
+        .args([
+            "-NoProfile",
+            "-Command",
+            &format!("(Get-PSDrive {drive}).Free"),
+        ])
         .output()
         .ok()?;
     String::from_utf8_lossy(&out.stdout).trim().parse().ok()
@@ -1402,7 +1406,7 @@ impl TierBuildProgress for DiskDiscipline {
             Ok(()) => println!(
                 "disk discipline: removed tier {previous} at {} before tier {tier} grew; free {} B",
                 path.display(),
-                free_bytes_on_c().unwrap_or(0)
+                free_bytes_on_run_volume().unwrap_or(0)
             ),
             Err(e) => println!("disk discipline: tier {previous} not removed ({e})"),
         }
@@ -1426,7 +1430,7 @@ fn the_5gb_ladder_under_disk_discipline() {
          something else, and never regenerates a fixture other cuts' records depend on",
         path.display()
     );
-    let free_before = free_bytes_on_c().unwrap_or(0);
+    let free_before = free_bytes_on_run_volume().unwrap_or(0);
     println!("free disk before: {free_before} B (floor {MIN_FREE_BYTES} B)");
     assert!(
         free_before >= MIN_FREE_BYTES,
@@ -1436,9 +1440,7 @@ fn the_5gb_ladder_under_disk_discipline() {
     let source = Dataset::open(&path).expect("open parcels-5gb");
     let cancel = CancelToken::new();
     let (hash, _ms) = spatial_engine::index::content_hash(&path, &cancel).expect("hash the source");
-    let directory = PathBuf::from(std::env::var_os("LOCALAPPDATA").expect("LOCALAPPDATA"))
-        .join("spatial-ide/tiers")
-        .join(&hash);
+    let directory = tier_run_root().join(LOD_TIER_ROOT).join(&hash);
     let _ = std::fs::remove_dir_all(&directory);
     let discipline = DiskDiscipline {
         directory: directory.clone(),
@@ -1483,7 +1485,10 @@ fn the_5gb_ladder_under_disk_discipline() {
         left.is_empty(),
         "the tier directory still holds a parquet file after deletion: {left:?}"
     );
-    println!("free disk after: {} B", free_bytes_on_c().unwrap_or(0));
+    println!(
+        "free disk after: {} B",
+        free_bytes_on_run_volume().unwrap_or(0)
+    );
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -1539,9 +1544,7 @@ fn build_tiers_refuses_a_multipolygon_feature_by_name_and_writes_no_tier() {
 
     // No tier was written: the source's tier directory holds no parquet file.
     let (hash, _) = spatial_engine::index::content_hash(source.path(), &cancel).expect("hash");
-    let tiers = PathBuf::from(std::env::var_os("LOCALAPPDATA").expect("LOCALAPPDATA"))
-        .join("spatial-ide/tiers")
-        .join(hash);
+    let tiers = tier_run_root().join(LOD_TIER_ROOT).join(hash);
     let written: Vec<PathBuf> = std::fs::read_dir(&tiers)
         .map(|rd| {
             rd.filter_map(|e| e.ok())
@@ -1604,9 +1607,7 @@ fn build_tiers_refuses_a_point_feature_by_name_and_writes_no_tier() {
 
     // No tier was written: the source's tier directory holds no parquet file.
     let (hash, _) = spatial_engine::index::content_hash(source.path(), &cancel).expect("hash");
-    let tiers = PathBuf::from(std::env::var_os("LOCALAPPDATA").expect("LOCALAPPDATA"))
-        .join("spatial-ide/tiers")
-        .join(hash);
+    let tiers = tier_run_root().join(LOD_TIER_ROOT).join(hash);
     let written: Vec<PathBuf> = std::fs::read_dir(&tiers)
         .map(|rd| {
             rd.filter_map(|e| e.ok())
@@ -1669,9 +1670,7 @@ fn build_tiers_refuses_a_linestring_feature_by_name_and_writes_no_tier() {
 
     // No tier was written: the source's tier directory holds no parquet file.
     let (hash, _) = spatial_engine::index::content_hash(source.path(), &cancel).expect("hash");
-    let tiers = PathBuf::from(std::env::var_os("LOCALAPPDATA").expect("LOCALAPPDATA"))
-        .join("spatial-ide/tiers")
-        .join(hash);
+    let tiers = tier_run_root().join(LOD_TIER_ROOT).join(hash);
     let written: Vec<PathBuf> = std::fs::read_dir(&tiers)
         .map(|rd| {
             rd.filter_map(|e| e.ok())

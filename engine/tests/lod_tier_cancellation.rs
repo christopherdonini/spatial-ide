@@ -5,10 +5,10 @@
 //! `#[ignore]`d 5 GB row.
 //!
 //! **Its own test binary, deliberately.** T6 cancels a build of the same fixture
-//! `engine/tests/lod_tier_builder.rs` builds its ladder from, so the two own the same tier directory
-//! (it is keyed by the source's content hash). Tests inside one binary run in parallel threads;
-//! cargo runs test *binaries* one after another, and that is what keeps these two from asserting
-//! over each other's files.
+//! `engine/tests/lod_tier_builder.rs` builds its ladder from. Tests inside one binary run in
+//! parallel threads, and a tier directory is keyed by the source's content hash; each binary builds
+//! below its own process's tier folder (`common::tier_run_root`), so the two do not assert over each
+//! other's files, in either order or at once.
 //!
 //! **Nothing here is a performance claim.** One sample asserted against a declared ceiling is not a
 //! p50/p95, and none is reported: `docs/08`'s budget is scored by the tester, on the producer's own
@@ -22,11 +22,11 @@ use spatial_engine::cancel::CancelToken;
 use spatial_engine::dataset::Dataset;
 use spatial_engine::error::EngineError;
 use spatial_engine::lod::{
-    build_tiers, TierBuildProgress, LOD_BUILD_WORKERS, LOD_CANCEL_OBSERVED_CEILING_MS,
+    TierBuildProgress, LOD_BUILD_WORKERS, LOD_CANCEL_OBSERVED_CEILING_MS, LOD_TIER_ROOT,
 };
 
 mod common;
-use common::polygons_100k;
+use common::{build_tiers, polygons_100k, tier_run_root};
 
 const PARCELS_5GB: &str =
     r"C:\dev\spatial-ide\target\slice-evidence\scale-pass\parcels-5gb.parquet";
@@ -34,9 +34,7 @@ const PARCELS_5GB: &str =
 fn tier_directory(source: &Dataset) -> PathBuf {
     let (hash, _ms) =
         spatial_engine::index::content_hash(source.path(), &CancelToken::new()).expect("hash");
-    PathBuf::from(std::env::var_os("LOCALAPPDATA").expect("LOCALAPPDATA"))
-        .join("spatial-ide/tiers")
-        .join(hash)
+    tier_run_root().join(LOD_TIER_ROOT).join(hash)
 }
 
 fn parquet_files(dir: &PathBuf) -> Vec<PathBuf> {

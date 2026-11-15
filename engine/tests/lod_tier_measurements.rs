@@ -32,12 +32,12 @@ use parquet::arrow::arrow_reader::ParquetRecordBatchReaderBuilder;
 use spatial_engine::cancel::CancelToken;
 use spatial_engine::dataset::Dataset;
 use spatial_engine::lod::{
-    build_tiers, TierBuildProgress, TierSet, LOD_BUILD_WORKERS, LOD_BUILD_WORKERS_ARM_S,
-    LOD_TIER_COUNT,
+    TierBuildProgress, TierSet, LOD_BUILD_WORKERS, LOD_BUILD_WORKERS_ARM_S, LOD_TIER_COUNT,
+    LOD_TIER_ROOT,
 };
 
 mod common;
-use common::polygons_100k;
+use common::{build_tiers, polygons_100k, tier_run_root};
 
 const PARCELS_5GB: &str =
     r"C:\dev\spatial-ide\target\slice-evidence\scale-pass\parcels-5gb.parquet";
@@ -55,9 +55,16 @@ const SAMPLES_100K: usize = 5;
 // Small helpers — none of them touches the code under measurement.
 // ---------------------------------------------------------------------------------------------
 
-fn free_bytes_on_c() -> Option<u64> {
+/// Free bytes on the volume this run's tier folder is on, which is where the 5 GB ladder is built
+/// and the volume the floor above is about. `None` when that volume's letter cannot be read.
+fn free_bytes_on_run_volume() -> Option<u64> {
+    let drive = tier_run_root().to_str()?.chars().next()?;
     let out = std::process::Command::new("powershell")
-        .args(["-NoProfile", "-Command", "(Get-PSDrive C).Free"])
+        .args([
+            "-NoProfile",
+            "-Command",
+            &format!("(Get-PSDrive {drive}).Free"),
+        ])
         .output()
         .ok()?;
     String::from_utf8_lossy(&out.stdout).trim().parse().ok()
@@ -66,9 +73,7 @@ fn free_bytes_on_c() -> Option<u64> {
 fn tier_directory(source: &Dataset) -> PathBuf {
     let (hash, _ms) =
         spatial_engine::index::content_hash(source.path(), &CancelToken::new()).expect("hash");
-    PathBuf::from(std::env::var_os("LOCALAPPDATA").expect("LOCALAPPDATA"))
-        .join("spatial-ide/tiers")
-        .join(hash)
+    tier_run_root().join(LOD_TIER_ROOT).join(hash)
 }
 
 /// A build is a build, never a reuse: a previous sample's ladder would be *admitted* by key, and a
@@ -264,7 +269,7 @@ fn wall_time_arm_s_and_arm_p_over_polygons_100k() {
         path.display(),
         std::fs::metadata(&path).expect("stat").len(),
         directory.display(),
-        free_bytes_on_c()
+        free_bytes_on_run_volume()
     );
 
     // Arms in a fixed order, both arms' samples interleaved in neither direction: arm S first, then
@@ -284,7 +289,7 @@ fn wall_time_arm_s_and_arm_p_over_polygons_100k() {
         }
     }
     clear_tier_directory(&directory);
-    println!("free after {:?}", free_bytes_on_c());
+    println!("free after {:?}", free_bytes_on_run_volume());
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -314,7 +319,7 @@ impl TierBuildProgress for DiskDiscipline {
         match std::fs::remove_file(&path) {
             Ok(()) => println!(
                 "disk discipline: removed tier {previous} before tier {tier} grew; free {:?} B",
-                free_bytes_on_c()
+                free_bytes_on_run_volume()
             ),
             Err(e) => println!("disk discipline: tier {previous} not removed ({e})"),
         }
@@ -498,7 +503,7 @@ fn five_gb_build(workers: usize, label: &str, verify: bool) {
          else, and never regenerates a fixture other cuts' records depend on",
         path.display()
     );
-    let free_before = free_bytes_on_c().unwrap_or(0);
+    let free_before = free_bytes_on_run_volume().unwrap_or(0);
     println!("{label}: free disk before {free_before} B (floor {MIN_FREE_BYTES} B)");
     assert!(
         free_before >= MIN_FREE_BYTES,
@@ -631,6 +636,6 @@ fn five_gb_build(workers: usize, label: &str, verify: bool) {
     );
     println!(
         "{label}: free disk after {:?} B; directory listed empty of parquet files",
-        free_bytes_on_c()
+        free_bytes_on_run_volume()
     );
 }
