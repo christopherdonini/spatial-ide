@@ -2319,3 +2319,31 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 19: main merged into PR B's branch at bfcb57e7 (class 1), with OPEN-1 (a)'s scripted re-read at 2abf3ea0 (class 3); the pan-anchor suite's blob at the merge; part 2 on the port-5400 harness. Written by the custodian at the merge, before part 2's code.
+
+*Written by the custodian on 2026-11-15. There is no architect draft: this amendment records a merge and a re-read, both read by git. The re-read's output is filed at `state/consults/2026-11-15-b1-shell-half-pr-b-re-read-at-2abf3ea0-custodian-run.md` (sha256 0b4baf8275e8debb2592a6049c6912215b741b2fe8558bfac3babdfe4fb6e006).*
+
+1. **The merge (class 1; Amendment 15 items 4 and 6; ADV-2026-11-14-14 item 3 (a)).**
+   - Main at 2abf3ea087cb53cf5cbb57b844f7c2ad6a92a89a is merged into PR B's branch by the merge commit bfcb57e7525dac86252ec6abc0bf5e55dd7baa6e, whose parents are 31cf0e22713e7e3264ed843425ef3686775d7e47 (part 1's head) and 2abf3ea0. It holds #317's merge 83e7b801. It is a named merge of main for §7's count.
+   - No path that the branch changes from 08ce9935 is among the paths main changes from 08ce9935. The merge's tree is the one `git merge-tree --write-tree` gives: no conflict, nothing resolved by hand.
+   - Rule (00), checked again at the merge (Amendment 14 item 4): no other piece is in progress or awaiting merge.
+   - It comes before part 2's code, so that part 2's runs and the gates have one head that holds main. Amendment 15 item 6's order otherwise stands.
+
+2. **The re-read (class 3, the tree authoritative; Amendment 15 item 7, OPEN-1 (a)).** It was made by script at main 2abf3ea0 and the branch head 31cf0e22, before the merge.
+   - (a) Of the 140 paths main changes from 08ce9935, none is a path the branch changes, and none is on §2.6's PR B list. Two are records that PR B edits at its records commit, `KNOWN-LIMITATIONS.md` and `frontends/shell/MANUAL-WALKTHROUGH.md`. Their numbers and rows are read at that commit.
+   - (b) For each of Amendment 14 item 1's 19 interface pins and pin 39, the hash equals its own commit's lines. At main, 18 are Same and 2 are Moved, their bytes unchanged:
+     - `frontends/shell/src/publish/PublishDialog.tsx` lines 261-264 @ 54ee3522 is at 262-265. #319's doc comment hunk adds one line above it.
+     - Pin 39, `protocol/skp/SKP-V0.md` lines 1272-1280 @ b7b721eb, is at 1280-1288, from #318's hunk, as Amendment 15 item 5 said.
+     - No invalidator and no I4.
+   - (c) Beyond OPEN-1 (a), the custodian's reading: of the form's pins at 08ce9935 on paths main changed, `KNOWN-LIMITATIONS.md` line 507 (item 63's heading) is Changed, because #318 withdrew item 63. Item 64's heading, line 511 at 08ce9935, is at 508. The three SKP-V0.md ranges are 8 lines lower. KL-3's number is read again at the records commit (Amendment 14 item 6).
+
+3. **The pan-anchor suite at the merge (ADV-2026-11-14-14 item 4; Amendment 15 item 4).** `frontends/shell/e2e/pan-anchor.mjs` at bfcb57e7 is blob 370fe1494cd4389f4c5679c46d1ccf390501110a. Main has not changed it again. Its runs at PR B's head (Amendment 14 item 5) are still owed before the gates.
+
+4. **The port (class 1).** Port 5180 failed its listen test at 2026-11-15T13:40:50Z: Windows has excluded the range 5120-5219, and a listen on 127.0.0.1 and on localhost returned EACCES. Under the human's ruling of 2026-11-09 on that port, part 2's runs stay on the port-5400 harness. The advisor was told, and tells the human.
+
+5. **Next (class 1).** Part 2's code at bfcb57e7: `colour.mjs` with PB-E1 to PB-E5, with Amendment 14 item 1's assertion and M-PB-E2c, plus its script line and its README entry. Then the records; then pan-anchor's runs at PR B's head; then the gates, with ADV-2026-11-14-21 item 6's list of changed paths.
+
+Read the last amendment first.
+
+Nothing above is edited.
