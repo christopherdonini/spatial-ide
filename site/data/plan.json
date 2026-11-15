@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-15T13:06:14.346Z",
-  "plan_hash": "e4f1e5e644c04380a6f12837369cb126b32081257de455411987ce968da344a0",
+  "generated_at": "2026-11-15T13:38:38.951Z",
+  "plan_hash": "ba5a8e437d1a678ef0d351a0d1c0622a69b9999d4c8503e91aaa225350276a6e",
   "priorities_approved": true,
   "lanes": [
     {
@@ -12003,11 +12003,11 @@
     },
     {
       "id": "shell-e2e-publish-audit-log-follows-app-dirs",
-      "title": "The shell end-to-end publish script resolves the audit log off Windows by the application-directory boundary rule (the reviewer O1 at port-2, proposed, unplaced)",
+      "title": "The shell end-to-end publish script resolves the audit log by the application-directory boundary table, every row, the Windows row included, a value counting only when non-empty and absolute (the reviewer O1 at port-2; filler entry 18)",
       "kind": "task",
       "lane": "shell",
       "phase": "prototype",
-      "status": "proposed",
+      "status": "ready",
       "order": null,
       "depends_on": [],
       "needs_human": {
@@ -12016,11 +12016,11 @@
       },
       "gate": "none",
       "evidence": null,
-      "budget_minutes": 0,
+      "budget_minutes": 30,
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "PROPOSED 2026-11-15 from the reviewer gate of port-2-macos-l1-and-app-dirs (state/consults/gates/2026-11-15-port-2-macos-l1-and-app-dirs-gate-reviewer.md), its observation O1: resolveAuditLogPath in frontends/shell/e2e/publish.mjs still takes XDG_DATA_HOME verbatim, else HOME/.local/share, off Windows. On macOS that names a different log from the product, which since PR 324 resolves the data folder through engine/src/app_dirs.rs under Library/Application Support; on Linux it accepts a relative XDG_DATA_HOME, which the boundary refuses. The e2e suite runs on Windows only today, so nothing fails now. Not the port-2 piece file; the advisor places it (its verdict, the closing list). Unplaced, budget 0.",
+      "summary": "PLACED S3 2026-11-15 as filler entry 18, after the current entries, by the advisor's ruling ADV-2026-11-15-13 (state/directives/2026-11-15-advisor-ruling-adv-2026-11-15-13-shell-e2e-publish-audit-log-follows-app-dirs-filler-18-s3-budget-30-the-whole-boundary-table-the-windows-row-included.md), budget 30, its lane kept, no dependency. It changes resolveAuditLogPath and its doc comment in frontends/shell/e2e/publish.mjs, nothing else: the function follows the boundary table in engine/src/app_dirs.rs, every row, LOCALAPPDATA on Windows, HOME under Library/Application Support on macOS, XDG_DATA_HOME then HOME under .local/share on other Unix, a value counting only when non-empty and absolute; that takes in the Windows row, which the first title left out (item 3 (b)). The override SPATIAL_IDE_AUDIT_LOG stays first and unchanged, and no row resolving stays an error naming no fallback path. Ordinary form and gating; the form says how the change is proved on Windows, an OPEN item on that to the advisor; it may not claim that the publish suite runs or passes off Windows. The first piece to run the publish suite off Windows gains this node in its depends_on. Skipped while PR B changes publish.mjs (rule (00)). From the reviewer gate of port-2, its O1.",
       "dates": {
         "opened": "2026-11-15",
         "done": null
