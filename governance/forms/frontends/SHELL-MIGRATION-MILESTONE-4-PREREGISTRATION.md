@@ -2347,3 +2347,76 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 20: colour-by part 2's first run cb2-t at T 3e0f8151, not as predicted (class 2), with its correction declared here before its code; the advisor's ruling ADV-2026-11-15-15 joins by reference (class 5); the custodian's reading and the worker's departures (class 1). Written by the custodian after the worker's stop was seen and the ruling was read, before any correction code.
+
+*Written by the custodian on 2026-11-15. The worker's report is filed at `state/consults/2026-11-15-b1-shell-half-pr-b-colour-by-part-2-stop-worker-report.md`, and the ruling at `state/directives/2026-11-15-advisor-ruling-adv-2026-11-15-15-pr-b-pb-e3-a-product-finding-the-one-colour-trigger-corrected-in-pr-b-class-2-four-additions.md`.*
+
+1. **The stop (class 2, §5).**
+   - T is 3e0f8151eaeccd7d6721b2d0317510f378674f2b: the suite, its script line and its README entry, 3 files and 455 insertions, on bfcb57e7.
+   - Run cb2-t at T exited 1. PB-E3 failed at its pixel read: the frame's dominant colour was civic's swatch, not the literal fill. Its earlier assertions held: the style document's literal, the empty legend and the disabled One colour control.
+   - PB-E1, PB-E2 with every one of its checks, PB-E4 and PB-E5 passed.
+   - It was not re-run. It stands, by reference, as the observation that without the correction the frame keeps the swatch (the ruling's item 3 (e)).
+
+2. **The reading (class 1, the custodian's).**
+   - The run's console ledger ends with two render-trace layers lines, each with the same layer count and position total. The first closes PB-E1's last filter, after its tile ingest. The second has no ingest before it. By the ledger's own clock, and the step times in the run's log, it comes a tenth of a second after PB-E3 began.
+   - So the canvas rendered after the One colour click, and PB-E3 read its frame after that render.
+   - The worker's report reads the second line as PB-E1's, and the times do not bear that out.
+   - The custodian's first message to the advisor, at 2026-11-15T15:11:19Z, took the worker's statement that no layers line followed the click, and read the stop as a missing wait for a fresh render. A first draft of this amendment stated that statement, in a records commit stopped before it committed.
+   - The custodian corrected it from the ledger's times, in its message of 2026-11-15T15:50:34Z, before any record on main carried it.
+   - By the source at T: under a match, each layer takes a colour function, with the style's revision as its only update trigger. Under one colour, it takes a constant colour with no trigger, and the layers' data is unchanged. deck.gl 9.3.9, as installed, compares an accessor as equal when its old value is a function, and diffs only the new props' triggers. So the change is not seen, and the per-datum colours stay.
+
+3. **The ruling (class 5).** ADV-2026-11-15-15 joins by reference.
+   - The finding stands by the advisor's read of the code; no run has isolated it yet.
+   - The defect is in the declared design: §2.3 (c), third bullet.
+   - It is not class 9: every file the correction changes is on PR B's list in §2.6.
+   - KNOWN-LIMITATIONS and the walkthrough say nothing of it, as the fill by category has never been on main. Item 51's draft and Part AC's words describe the piece as corrected.
+
+4. **The correction, declared before its code (the ruling's item 3).**
+   - (a) §2.3 (c)'s third bullet now reads: with `fillMatch` null, today's props and that one trigger.
+     - In `frontends/shell/src/canvas/buildLayers.ts`, a layer drawn with one colour carries an update trigger for its colour accessor. This holds at all three places: the polygons' fill colour, the points' fill colour and the lines' colour.
+     - The trigger's value differs from every match revision. It does not change from one render to the next while the fill stays one colour. The value itself is the worker's choice.
+   - (b) The comments in that file that say a constant colour has no trigger key are brought current. Both gates clause-check them.
+   - (c) PB-U5 keeps its claim (H3) and its mutation. Its last assertion becomes the new fact: a one-colour fill carries its trigger. It gains one clause: ten pans under one colour leave that trigger as it was.
+   - (d) **PB-U12**, new, in `frontends/shell/src/canvas/buildLayers.test.ts`.
+     - Over the same batches, for each of polygons, points and lines, deck.gl itself sees a change of the colour accessor in each of four steps: a match to one colour, one colour to a match, a match to another match, and one colour to another colour.
+     - It drives deck.gl's own comparison as installed, with real layer objects. A comparison of the trigger values alone does not meet it.
+     - Its mutation: the one-colour trigger removed; the first step fails.
+     - If deck.gl's comparison cannot be reached in the unit environment, the worker stops, and the custodian tells the advisor what was tried.
+   - (e) PB-E3 waits for a fresh layers line after its click, within a bound, and then reads its frame. A timeout stops the worker.
+   - (f) Reset to default: no test at T shows that it ends a match in the state.
+     - The custodian searched the shell's unit tests for the reset control and the default style. The recording suite's A4 resets an opacity edit, not a match.
+     - So PB-U6, in `frontends/shell/src/workspace/viewTransitions.test.ts`, gains one case. From a state with a match whose literal fill is the default's, the transitions `styleTransitions` gives toward the default style, once applied, leave `fillMatch` null.
+     - Its mutation: the literal branch of `styleTransitions` drops its condition on a standing match; the case fails.
+     - The draw is covered by PB-U12.
+   - (g) The order is PR B's: the tests first, then the correction.
+     - PB-U5's new assertion and PB-U12 are seen to fail at T for the declared reason.
+     - PB-U6's new case holds at T, and its mutation is observed.
+     - Then the runs cb3 and the mutations as part 2's brief gives them, PB-U12's and PB-U6's new mutations among them.
+
+5. **The sweep (the ruling's item 4).**
+   - The correction worker makes a read-only sweep of every accessor prop the canvas code gives a layer that can be a function in one render and a constant in the next, over the same data.
+   - The amendment after the correction lists what was read and what was found.
+   - A case on main today goes to the advisor as a proposed node. A case in PR B's own code is corrected with 4 (a) and told to the advisor.
+
+6. **The stops (the ruling's item 6).** The piece stops and goes to the advisor if:
+   - PB-E3 is still red after the correction;
+   - the correction needs a file outside §2.6;
+   - PB-U5's claim cannot be kept, so that a pan re-evaluates an accessor;
+   - or the sweep finds a case that 4 (a) does not reach.
+
+7. **The worker's departures (class 1).**
+   - The run used the harness's waiting shim, so that the session's stop ends the app before PB-E4 reads the history.
+   - T was committed before cb2-t; the brief put the run first.
+   - The steps after PB-E1 run independently, so that one step's failure does not hide another's.
+   - PB-E2's (ii) compares the dialog's text with the prompt's own value.
+   - The push the brief asked for after a stop was not made; the custodian pushed T.
+
+8. **Size and what follows (class 1).**
+   - `colour.mjs` is 442 lines at T by the worker's count, under B-E 590.
+   - §7's count is made at the end of the correction, and every new line counts against its file's ceiling. An overrun is class 8: it is reported, never trimmed.
+   - Unchanged (the ruling's item 7): the records dispatch, the terms of ADV-2026-11-14-13 and ADV-2026-11-14-14, the changed-paths list, then both gates. No gate has read the colour-by code yet, so both read the correction with the rest.
+
+Read the last amendment first.
+
+Nothing above is edited.
