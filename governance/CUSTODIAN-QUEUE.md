@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `7c6aa6aae79bb28c0d4081e7b2de55be954555229eb3f1f8b98f75e8f8f75ac7`) at `2026-11-15T04:49:18.336Z`.
+Generated from `PLAN.yaml` (sha256 `ec8ad128b4f558e15a5d7d8f66333479b8189e4474e69b960f867925736d65bd`) at `2026-11-15T05:45:59.313Z`.
 
 ## 1. Next
 
@@ -42,6 +42,7 @@ Generated from `PLAN.yaml` (sha256 `7c6aa6aae79bb28c0d4081e7b2de55be954555229eb3
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer — blocked by: signpath-application-draft
 - **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-2-0
 - **signpath-application-draft** — Entry 77 — the SignPath OSS application and disclosure text drafted for the human sight, once a release is CI-built — blocked by: release-v0-2-0
+- **docsonly-wording-licenses-no-merge** — The docs-only tool licenses no merge: the header and the two output lines of scripts/plan/docsOnly.mjs and its paragraph in scripts/plan/README.md reworded, since the advisor merges on the custodian merge check under the grant of 2026-11-13 (text only) — blocked by: advisor-session-merges-under-the-humans-rule
 - **governance-e1-rules-as-records** — Piece E1: rules as records, a rule catalogue under rules/, a selector scripts/plan/rules.mjs, a generated block in each agent definition and a governance-ci check — blocked by: governance-e-readings
 - **shell-owners-index** — An owner's index for the shell (frontends/shell), so that shell-owned KNOWN-LIMITATIONS items and pointers are indexed somewhere — blocked by: skp-line-cites-outside-close-races
 - **site-design-v1** — Landing page redesign — DRAFT-4 (status strip, milestone banner, waiting-on-you cards with unblocks counts, the swimlane board) — blocked by: governance-ci-built-site
@@ -132,7 +133,6 @@ Generated from `PLAN.yaml` (sha256 `7c6aa6aae79bb28c0d4081e7b2de55be954555229eb3
 - **comment-line-cites-kin-docs-audit-c** — Product and e2e comments whose line cites point at moved text: origin.rs on AI_DEVELOPMENT.md, engine/src/error.rs and the admission-remediation e2e script on crs.rs (the docs audits, Task C kin) (phase `prototype`) — never queued until placed
 - **advisor-silence-two-hour-alarm** — Telegram's third alarm: one message when the advisor has not answered the custodian for two hours (the human's item 3 of 2026-11-13, 06:57Z); split from advisor-questions-and-telegram-three-alarms by ADV-2026-11-14-23 item 3 (d) and ADV-2026-11-14-24 item 4 (phase `prototype`) — never queued until placed
 - **pan-anchor-drag-waits-for-its-own-lines** — e2e/pan-anchor.mjs: drag waits for the view-state lines its own gesture produces, not a wall-clock quiet period (test only) (phase `prototype`) — never queued until placed
-- **docsonly-wording-licenses-no-merge** — The docs-only tool licenses no merge: the header and the two output lines of scripts/plan/docsOnly.mjs and its paragraph in scripts/plan/README.md reworded, since the advisor merges on the custodian merge check under the grant of 2026-11-13 (text only) (phase `prototype`) — never queued until placed
 
 ### Unscheduled
 

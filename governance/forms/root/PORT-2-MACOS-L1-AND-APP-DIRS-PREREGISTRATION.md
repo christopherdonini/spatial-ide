@@ -463,3 +463,14 @@ Nothing above is edited.
 5. **Next:** the sort-window fix and 1c step 1 merge; main merged into this branch (I11); E1 to E3 at the merged head; the PR and both gates.
 
 Nothing above is edited.
+
+## §10 Amendment 6 — item 43 in turns: this piece goes second, takes main in, and re-applies on main's line only its data-folder clause (class 1); written before main is merged into this branch
+
+*Written by the custodian before main is merged into this branch; no result at a merged head has been seen. References only: the advisor's ruling ADV-2026-11-13-20 under the delegation of 2026-11-13, its item 5 (`state/directives/2026-11-13-advisor-ruling-adv-2026-11-13-20-second-open-5c-a-s5-a-skp-section-8-note-tests-renamed-item-43-in-turns.md`); Amendments 1, 4 and 5; I11.*
+
+1. **The turn.** The other piece, `second-open-history-before-1c-step-3`, held item 43 from its records commit carrying item 43's draft, and it merged as PR #318 (merge commit 6f4280e8759e338f0bec15295dc9d1b5805b4078). This piece had not reached its own point, the dispatch of its gates (item 5 (e)). So this piece goes second (item 5 (f)).
+2. **The two lines.** Item 43 is `KNOWN-LIMITATIONS.md:436 @ 45dffd8cae2adf6bb3d01445fd28942541d05e02 sha256:61015218bfb5f57e2853b4f9bf335d696840f25a864ee43d2940a9c7fa37dfdb` on main, and `KNOWN-LIMITATIONS.md:400 @ 83d2ecef8dba33017e47310d7fab8e2be5ee5123 sha256:63f26f402ee6b63759eaea1fc293bb1000dba73fba65c0e0d911a74d7561f4e7` on this branch. By the custodian's script, this branch's line differs from the merge base's (1f7d06b5ce4154a8b147a387d7482ece081eab9d) only in its data-folder clause, which is W3 (Amendment 1 item 3). Main's line keeps the merge base's clause and differs from it elsewhere, in the other piece's words. This branch leaves the source comment under the item as it is at the merge base, and main changes it and adds a second.
+3. **The merge.** The custodian merges main into this branch by one signed-off merge commit. Item 43's line is main's line with its data-folder clause replaced by this branch's, by script, and nothing else in the item changes: both source comments under it stay as they are on main. Item 1's two lines merge with no conflict (item 5 (i)), and no other file conflicts: the merge-tree of main at 45dffd8c with 83d2ecef names KNOWN-LIMITATIONS.md alone. At the merged head, the diff of KNOWN-LIMITATIONS.md against main shows item 1's lines and the one clause in item 43, and nothing else.
+4. **Then** (I11; Amendment 4 item 3; Amendment 5 item 5): E1 to E3 at the merged head; the PR; both gates, which read item 43 whole (item 5 (f)). Amendment 5 item 4 stands for the architect's gate: W3's words name a case not covered, for item 43's source comment.
+
+Nothing above is edited.
