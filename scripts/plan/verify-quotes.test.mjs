@@ -1221,6 +1221,7 @@ test('verify-quotes: a baseline entry keyed by an old path waives the same findi
   assert.deepEqual(unmatchedBaseline, []);
 });
 
+// RECORDED MUTATION at e46167d52fee, applied alone and reverted: `maxBuffer: 1 << 28` removed from the options of gitShowFile in scripts/plan/verify-quotes.mjs -> fails by name: `a_hash_checked_reference_into_a_file_over_one_mebibyte_verifies`.
 test('a_hash_checked_reference_into_a_file_over_one_mebibyte_verifies', (t) => {
   const pinned = 'Line one of the target file.\nLine two of the target file.\n';
   const dir = gitTree({ 'T.md': pinned + ('x'.repeat(78) + '\n').repeat(14000) });

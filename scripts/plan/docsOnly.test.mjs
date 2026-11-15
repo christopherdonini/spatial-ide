@@ -205,6 +205,7 @@ test('checkDocsOnly: a non-priority, non-felt-verdict PLAN.yaml edit is eligible
   assert.deepEqual(checkDocsOnly(dir, base, head), []);
 });
 
+// RECORDED MUTATION at e46167d52fee, applied alone and reverted: `maxBuffer: 1 << 28` removed from the options of gitShow in scripts/plan/docsOnly.mjs -> fails by name: `a_plan_yaml_over_one_mebibyte_is_classed_by_its_content`.
 test('a_plan_yaml_over_one_mebibyte_is_classed_by_its_content', (t) => {
   const dir = makeRepo();
   t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
