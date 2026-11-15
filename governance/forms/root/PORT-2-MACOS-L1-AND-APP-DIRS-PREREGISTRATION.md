@@ -474,3 +474,18 @@ Nothing above is edited.
 4. **Then** (I11; Amendment 4 item 3; Amendment 5 item 5): E1 to E3 at the merged head; the PR; both gates, which read item 43 whole (item 5 (f)). Amendment 5 item 4 stands for the architect's gate: W3's words name a case not covered, for item 43's source comment.
 
 Nothing above is edited.
+
+## §10 Amendment 7 — E1 to E3 at the head, as predicted; the M6 pre-check's second failing test; the section 7 count; the probe branch kept (class 1); written after their outcomes were seen
+
+*Written by the custodian after the outcomes of E1 to E3 were seen. References only: the worker's report (`state/consults/2026-11-15-port-2-macos-l1-and-app-dirs-e1-e3-worker-report.md`); Amendments 5 and 6.*
+
+1. **The head.** C is cf5e7c4c8f0fbc1badb0c0f67b2379d98aea92d5, one commit on the merged head 72cc7f0f: §2 item 6's one kernel test reason (OPEN-C (a)), pushed by the worker. Its local checks exited 0 (the report).
+2. **E1.** product-ci-rust run 43687946638 at C: success, all three entries.
+3. **E2.** governance-ci run 43687946684 at C: success. Its cfg boundary step printed `cfg-boundary: 19 sites in 7 files, 0 outside every boundary`, and its `node --test` step reported 0 failures. As predicted.
+4. **E3.** The probe 6c86c2c508cc31da5a4e237fd0a6a72a760c01c3 on `probe/port-2-case-policy-red`, cut from C: one plain-push commit applying M6 alone (OPEN-2 (a), so no M4 or M5), one line of `kernel/src/permission/grant.rs`. Its product-ci-rust run 43689426988: Windows red (job 132736713576) and macOS red (job 132736713381), each with K1 failing, alone in its binary, at its final equality in `kernel/tests/case_policy_volume.rs`, and each run stopping at that binary; Linux green (job 132736713646), where K1 is ignored. As predicted (P7). On macOS the left side of that equality is a path in the runner's temporary folder, not one under the profile token; on Windows it is the typed case under the profile token, as in the build report's observation.
+5. **The pre-check before E3**, seen before E3's outcome. On Windows, `cargo test -p spatial-kernel --locked --no-fail-fast` with M6 applied failed K1 and one test outside it: `a_directory_scoped_grant_covers_a_publish_into_that_directory` in `kernel/tests/publish_cli.rs`. §4 names no test but K1 for M6, and makes no claim about others. CI's `cargo test` stops at the first failing test binary, and `case_policy_volume`'s binary runs before `publish_cli`'s (the order in the pre-check's log), so E3 reads K1 on Windows and macOS. On Linux, where K1 is ignored, `publish_cli` ran under M6 and passed. Recorded; no prediction is changed.
+6. **§7's count** at C, by its command over origin/main...C: 941 changed lines (871 added, 70 deleted) over 16 files, against 850 over 16. The overrun is class 8, as Amendment 5 recorded it (939 over 15 there; C adds its one file and 2 lines).
+7. **The probe branch is kept.** §4 says it is deleted once its run ids are recorded. The Guardian refuses the deletion of a remote ref (G1), and a refusal is never routed around, so the branch stays. It is never merged.
+8. **Next:** the draft PR from C, then both gates, which read item 43 whole (Amendment 6 item 4). For them, by the advisor's ruling ADV-2026-11-15-09: the comment above item 43 says the item was approved as drafted by the human, so it must also say whose words the changed data-folder clause is; that wording goes to the advisor with item 43 after both gates' clause check.
+
+Nothing above is edited.

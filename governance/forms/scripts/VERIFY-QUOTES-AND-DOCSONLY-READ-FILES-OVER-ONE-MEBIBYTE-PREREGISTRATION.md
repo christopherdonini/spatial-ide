@@ -207,3 +207,14 @@ Assertions only. No measurement and no `docs/08` row.
 - **Operator:** none.
 
 ### §10. Amendments — opens empty, append-only
+
+## §10 Amendment 1 — E0 to E3 on main before dispatch, each as predicted; written after their outcomes were seen (class 1)
+
+*Written by the custodian after the outcomes of E0 to E3 were seen, before any code. The custodian ran them on main in the main checkout, with the tools at 27f4d167d13fb24edbc5cc780b6aec225243a1c4 (this form's commit; neither tool has changed since 9c7a187b), from 2026-11-15T07:57:18Z to 2026-11-15T07:57:20Z by date -u. The only files written were the two scratch files under C:/dev/wt/mib-evidence/. References only: the advisor's ruling ADV-2026-11-15-10, item 4 (`state/directives/2026-11-15-advisor-ruling-adv-2026-11-15-10-the-1-mib-read-forms-four-open-items-each-a-full-form-both-gates-snake-case-names-e0-to-e3-as-amendment-1.md`), under the delegation of 2026-11-13, not the human's words.*
+
+1. **E0.** `git cat-file -s` of `governance/PLAN.yaml`, exit 0 each: 1068690 bytes at 9c7a187b, 1063707 at 8faccf89 and 1045527 at a0bff480. The first two are over 1048576 and the third under it, as predicted.
+2. **E1.** H1 is 26d515e42a24012bebd739e398b7c63a36bf5bd3f6f9bc659b5b3f2be54168aa. The scratch file e1.md held the one line §3 names. verify-quotes printed the predicted summary line and the one predicted FAIL line, which names the scratch file by its path relative to the repository root, line 1, and gives the unresolvable rev with `git show failed`. It exited 1. As §3 says, its header line and its lists of baseline entries that matched nothing are recorded, not predicted: 30 quote entries and 2 hash entries.
+3. **E2.** At a0bff480, line 1 of the plan has the same hash, H1. verify-quotes printed the PASS line with 0 checked and 0 hash-reference errors (0 hash-baselined), and exited 0, with the same two lists (30 and 2). As predicted.
+4. **E3.** `git diff --name-only` from 8faccf89 to 9c7a187b printed the seven paths that the advisor's ruling read, and exited 0. The docs-only tool printed its NOT-eligible line with a count of 1 and the PLAN.yaml line, with no other line (none was predicted), and exited 1. git printed nothing on stderr. As predicted.
+5. **The three fills at this form's commit**, for the record: the 31 pins filled by the custodian's script at 9c7a187b, none into the plan; E3's placeholder filled with none (ADV-2026-11-15-10 item 4 (a)); and the sentence of ADV-2026-11-15-11 item 2 (`state/directives/2026-11-15-advisor-ruling-adv-2026-11-15-11-item-2-b-of-adv-2026-11-15-10-replaced-the-sentence-on-the-two-test-names.md`), added in §4 after the line on snake case.
+6. **No result differs from its prediction**, so nothing goes to the advisor before dispatch under ADV-2026-11-15-10 item 4 (b). **Next:** one worker on a branch from main, at the budget of 60.
