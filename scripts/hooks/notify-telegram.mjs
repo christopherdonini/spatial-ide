@@ -9,16 +9,16 @@
 // ignored" — so this hook always exits 0 and decides nothing; it exists purely for the side
 // effect of forwarding the notification to Telegram.
 //
-// Matcher (settings.json): the five types where Claude is blocked on the human (item 16a):
-// permission_prompt, idle_prompt, agent_needs_input, quota_auto_resume_stale,
-// quota_auto_resume_disabled.
+// Matcher (settings.json): the two quota types only, quota_auto_resume_stale and
+// quota_auto_resume_disabled (AUTONOMY.md §38 (iv)). This script has no type list of its own: it
+// forwards whatever notification the matcher lets through.
 //
 // Message text: "<notification type>: <title/message>" plus the cwd's basename.
 //
-// §16: "one message per blocking event" -- sent via sendTelegramDeduped (telegram.mjs), the same
-// primitive the Stop hook's own waiting-items notice uses, keyed on notification_type + the
+// Sent via sendTelegramDeduped (telegram.mjs), not the bare send, keyed on notification_type + the
 // message's own head (not the full text, so near-duplicate re-notifications of the same
-// long-running wait collapse into one every ten minutes, per DEDUPE_WINDOW_MS).
+// long-running wait collapse into one every ten minutes, per DEDUPE_WINDOW_MS). A failed send
+// changes no decision, and its key is still recorded: a repeat within the window is not sent.
 
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';

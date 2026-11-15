@@ -551,6 +551,130 @@ fn the_first_save_moves_the_record_under_the_project_identity() {
     assert_eq!(lines[3]["step"]["parent"], lines[1]["step"]["id"]);
 }
 
+/// **N1**: a save made before any step binds the open to the project. The save replies withheld
+/// (no step is recorded), and the open's first step after it creates the project's record
+/// directly: the store root holds the project's record and no `unsaved-` one. A second save, with
+/// the workspace that step reached, writes the mark. The record holds the header, the step and the
+/// mark, the header's `project` is the project's URI, and the step names the dataset identity the
+/// project file's dataset entry holds (N3 proves that identity in both orders).
+///
+/// RECORDED MUTATION: `adopt_project` binds the open only inside the branch that moves a record, so
+/// an open with no record stays unbound. Expected failure: the first step makes an `unsaved-`
+/// record, and this test fails at its assertion that the store root holds the project's record
+/// alone.
+///
+/// RECORDED MUTATION: `create` writes the `not-yet-saved` state as the header's `project` in every
+/// record and leaves the folder as it is. Expected failure: the header's `project` is that state
+/// and not the project's URI, and this test fails at that assertion.
+#[test]
+fn a_step_after_a_save_made_before_any_step_goes_to_the_projects_record_under_the_projects_dataset_identity(
+) {
+    let rig = rig("n1");
+    let (handle, ds) = rig.open_inside("data/parcels.parquet");
+    let first = rig
+        .projects
+        .save(
+            handle.as_str(),
+            &ds,
+            Some(&rig.folder),
+            workspace(&ds, None, -4.5),
+        )
+        .expect("saved before any step");
+    assert_eq!(
+        first.history_mark,
+        HistoryMark::Withheld(Withheld::NoStepRecorded)
+    );
+
+    rig.filter_step(&handle);
+    let hex = first.project.hex().to_string();
+    assert_eq!(
+        file_names(&rig.sessions),
+        std::slice::from_ref(&hex),
+        "only the project's record, and no unsaved- one"
+    );
+    let second = rig
+        .projects
+        .save(
+            handle.as_str(),
+            &ds,
+            None,
+            workspace(&ds, Some(FILTER), -4.5),
+        )
+        .expect("saved after the step");
+    assert_eq!(second.project, first.project);
+    assert_eq!(second.history_mark, HistoryMark::Written);
+
+    let uri = read_project(&rig.project_file())
+        .expect("the project file")
+        .dataset
+        .uri()
+        .as_str()
+        .to_string();
+    let record = rig.sessions.join(&hex);
+    drop(rig.projects);
+    drop(rig.recorder);
+    let lines = history(&record);
+    assert_eq!(lines.len(), 3, "the header, the step and the mark");
+    assert_eq!(lines[0]["project"], first.project.as_str());
+    assert!(lines[1].get("step").is_some() && lines[2].get("mark").is_some());
+    assert_eq!(lines[1]["step"]["data"]["dataset"], uri);
+}
+
+/// One open, a filter step before the first save or after it and then a second step, and the
+/// dataset URIs that result: the project file's dataset entry, and then the history's, the header's
+/// first and each step's `data.dataset`.
+fn dataset_uris_of_one_open(name: &str, step_first: bool) -> (String, Vec<String>) {
+    let rig = rig(name);
+    let (handle, ds) = rig.open_inside("data/parcels.parquet");
+    if step_first {
+        rig.filter_step(&handle);
+    }
+    let filter = step_first.then_some(FILTER);
+    let saved = rig
+        .projects
+        .save(
+            handle.as_str(),
+            &ds,
+            Some(&rig.folder),
+            workspace(&ds, filter, -4.5),
+        )
+        .expect("saved");
+    if !step_first {
+        rig.filter_step(&handle);
+    }
+    rig.opacity_step(&handle, 0.35);
+
+    let file = read_project(&rig.project_file()).expect("the project file");
+    let record = rig.sessions.join(saved.project.hex());
+    drop(rig.projects);
+    drop(rig.recorder);
+    let lines = history(&record);
+    let as_text = |v: &Value| v.as_str().expect("a URI").to_string();
+    let mut seen = vec![as_text(&lines[0]["datasets"][0]["resource"]["logical_uri"])];
+    for line in lines.iter().filter(|l| l.get("step").is_some()) {
+        seen.push(as_text(&line["step"]["data"]["dataset"]));
+    }
+    (file.dataset.uri().as_str().to_string(), seen)
+}
+
+/// **N3**: one open has one dataset identity. The project file's dataset entry carries the same URI
+/// that the history's header and every step carry, whether the first step comes before the first
+/// save or after it.
+///
+/// RECORDED MUTATION: `save` mints a fresh dataset URI for the project file instead of asking the
+/// recorder for the open's. Expected failure: the project file's URI differs from the header's, and
+/// this test fails at its first equality, in the step-first order.
+#[test]
+fn the_project_files_dataset_uri_is_the_histories_dataset_uri_whichever_comes_first() {
+    for (name, step_first) in [("n3-step-first", true), ("n3-save-first", false)] {
+        let (file, seen) = dataset_uris_of_one_open(name, step_first);
+        assert_eq!(seen.len(), 3, "the header and two steps: {name}");
+        assert_eq!(seen[0], file, "the header's URI: {name}");
+        assert_eq!(seen[1], file, "the first step's URI: {name}");
+        assert_eq!(seen[2], file, "the second step's URI: {name}");
+    }
+}
+
 /// Not named by the form. A workspace the steps do not reach is saved, and the result says why no
 /// mark was written: a style value that differs from the last step's, then a filter no step
 /// applied. The history holds no mark after either save.

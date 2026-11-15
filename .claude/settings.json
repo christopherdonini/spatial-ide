@@ -1,17 +1,5 @@
 {
   "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "AskUserQuestion",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR/scripts/hooks/questions-mirror.mjs\" --hook",
-            "timeout": 20
-          }
-        ]
-      }
-    ],
     "Stop": [
       {
         "hooks": [
@@ -89,7 +77,7 @@
     ],
     "Notification": [
       {
-        "matcher": "permission_prompt|idle_prompt|agent_needs_input|quota_auto_resume_stale|quota_auto_resume_disabled",
+        "matcher": "quota_auto_resume_stale|quota_auto_resume_disabled",
         "hooks": [
           {
             "type": "command",

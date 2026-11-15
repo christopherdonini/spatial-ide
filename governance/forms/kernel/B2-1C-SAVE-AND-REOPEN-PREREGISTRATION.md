@@ -1879,3 +1879,7 @@ Nothing above is edited.
 6. **Nothing else changes** in this form's steps, ceilings or gates.
 
 Nothing above is edited.
+
+## Amendment 29 — K-S15 renamed by second-open-history-before-1c-step-3 (class 1, a reference and its hash only)
+
+1. governance/forms/kernel/B2-1C-SAVE-AND-REOPEN-PREREGISTRATION.md:1668 @ 8c693657801fd4168b078a601724bdacd9f479b8 sha256:364f456d2854f45d61bb45f8d9f21dba65d41a8237dfefc83314c9fc78e5d262 is superseded: the test it names was renamed by second-open-history-before-1c-step-3 to `a_second_open_of_one_file_saved_to_another_folder_writes_its_own_mark_and_leaves_the_first_record_unchanged`, in kernel/tests/project_save_skp.rs.

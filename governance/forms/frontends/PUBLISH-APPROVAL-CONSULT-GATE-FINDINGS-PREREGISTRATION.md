@@ -139,3 +139,15 @@ All three are misses. The form rests on the tree at 9540e6cb alone, and it plans
 ### Amendments
 
 *(Opens empty; append-only.)*
+
+### Amendment 1 — the single reviewer gate at 9fb3aff1: PASS; the closing record (class 1, written after the results were seen)
+
+*Written by the custodian after the gate's report and the checks at the head were seen. References only. Nothing above is edited.*
+
+1. **The gate** (§E): the single reviewer at 9fb3aff1bba72dbf5349a12adf518f34a09e0020, PR #319: PASS, no finding, three observations with no action. The report: `state/consults/gates/2026-11-14-publish-approval-consult-gate-findings-gate-reviewer.md` (sha256 b970dd6263831431f96e21080115b1eba17b4bc68bc78bd06812ccc7d0e92fc1 on main); gate-log row 746. The custodian compared the runs it claims with its transcript: each has a call behind it, and each run's log on disk gives the counts and exits it reports.
+2. **The words.** §B's four lines are listed in the PR body, byte-copied by script from §B's fence (the writer's words under AUTONOMY §31(d)). §C's words are the advisor's ruling ADV-2026-11-14-06 (`state/directives/2026-11-14-advisor-ruling-adv-2026-11-14-06-findings-node-open-1-b-the-g3-style-hash-clause-the-judge-sentence-unchanged.md`), as §O records. The head is the gated head: nothing changed after it.
+3. **Size.** `git diff --numstat 54ee3522...9fb3aff1`: 5 insertions and 4 deletions in the two files of Scope, 9 changed lines against the budget of 12. No overrun.
+4. **Checks at the head 9fb3aff1.** `gh pr checks 319`, read at 2026-11-14T11:58:31Z: all 8 rows pass.
+5. **Out of draft.** The PR body was set and read back equal, and in the same chain the PR was marked ready, at 2026-11-14T11:58:53Z.
+6. **The time taken** (the PLAN node's 30 minutes, an estimate, not a measurement). The subagent runs by their transcripts, as their filed reports give them: the build worker, 2026-11-14 04:52:16Z to 05:12:08Z (`state/consults/2026-11-14-publish-approval-consult-gate-findings-worker-report.md`); the gate, 10:36:57Z to 11:00:31Z. That is 43 minutes and 26 seconds in all, over the estimate. The architect's draft of the form is not counted.
+- **Unchanged:** everything else.

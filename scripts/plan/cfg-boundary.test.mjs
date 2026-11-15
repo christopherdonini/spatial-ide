@@ -65,14 +65,16 @@ const NONE = "cfg-boundary: 0 sites in 0 files, 0 outside every boundary\n";
 test("the_boundary_check_passes_on_the_shipped_tree_and_lists_every_boundary_site", () => {
   // RECORDED MUTATION: the_boundary_check_passes_on_the_shipped_tree_and_lists_every_boundary_site
   // (M1, engine/src/lod.rs dropped from the allowlist): the first assertion, status 0, failed: actual 1 with the message cfg-boundary: engine/src/lod.rs:927 outside every boundary. Observed at 824d561.
+  // RECORDED MUTATION (PORT-2): the_boundary_check_passes_on_the_shipped_tree_and_lists_every_boundary_site
+  // (M7, engine/src/app_dirs.rs dropped from the allowlist): the first assertion, status 0, failed: actual 1 with the message cfg-boundary: engine/src/app_dirs.rs:45 outside every boundary. Observed on Windows at 6c21888e.
   const r = run(ROOT);
   assert.equal(r.status, 0, r.stdout + r.stderr);
   assert.equal(r.stderr, "");
   const lines = r.stdout.split("\n").filter((l) => l !== "");
   const siteLines = lines.slice(0, -1);
-  assert.equal(siteLines.length, 18);
+  assert.equal(siteLines.length, 19);
   for (const l of siteLines) assert.doesNotMatch(l, /outside every boundary/);
-  assert.equal(lines.at(-1), "cfg-boundary: 18 sites in 6 files, 0 outside every boundary");
+  assert.equal(lines.at(-1), "cfg-boundary: 19 sites in 7 files, 0 outside every boundary");
   const perFile = {};
   for (const l of siteLines) {
     const m = /^cfg-boundary: (\S+):\d+ /.exec(l);
@@ -80,10 +82,11 @@ test("the_boundary_check_passes_on_the_shipped_tree_and_lists_every_boundary_sit
     perFile[m[1]] = (perFile[m[1]] ?? 0) + 1;
   }
   assert.deepEqual(perFile, {
+    "engine/src/app_dirs.rs": 3,
     "engine/src/lod.rs": 2,
     "engine/src/watch.rs": 3,
     "frontends/shell/src-tauri/src/origin.rs": 2,
-    "kernel/src/permission/audit/log.rs": 3,
+    "kernel/src/permission/audit/log.rs": 1,
     "kernel/src/permission/audit/normalize.rs": 2,
     "kernel/src/publish/error.rs": 6,
   });
