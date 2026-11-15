@@ -60,9 +60,9 @@ and the background-tasks allow moved from step 1 to step 4):
 2. Lease check (AUTONOMY.md §24): reads `CUSTODIAN-LEASE` at the project root. Unless its first
    line is an active `lease: <id> ...` line whose `<id>` equals the stdin `session_id` → allow,
    stderr names which case applied (absent, relinquished, another session's lease, or no
-   `session_id`). This session's own held lease continues to the steps below unchanged; a session
-   that allows here never reaches step 6, so it sends no human-blocked Telegram notice (HALT's own
-   notice at step 1 still fires for every session, lease or not).
+   `session_id`). This session's own held lease continues to the steps below unchanged. HALT's own
+   alarm at step 1 fires for every session, lease or not: the headline alone (`HALT: <the file's
+   first line>`, or `HALT: stop-hook halted` when it is empty), not sent again within ten minutes.
 3. Continuity: the block is stale when the newest commit on `HEAD` that touches
    `state/CUT-STATE.md` leaves the block's `flushed_at` as its first parent had it. The hook reads
    git only, never the working tree: `git log -1 --format=%H%x09%cI HEAD -- state/CUT-STATE.md`
@@ -82,8 +82,7 @@ and the background-tasks allow moved from step 1 to step 4):
 4. `background_tasks` non-empty → allow.
 5. Derive the ready set live from `PLAN.yaml` (never the committed queue file).
 6. Ready set empty, or only human-blocked nodes remain → allow, stderr names the waiting-on-human
-   count; sends one Telegram message listing the waiting items (id, kind, minutes, total), deduped
-   on a hash of the waiting set (item 16b).
+   count. No Telegram message is sent here (AUTONOMY.md §38 (vii)).
 7. Continuation accounting, one routine for step 3's stale block and step 8's queue block:
    `.claude/state/stop-hook-<session_id>.json` and `.claude/state/stop-hook-daily-<YYYY-MM-DD>.json`
    (gitignored). Consecutive resets to 0 on progress (`HEAD` changed since the last block; on the
@@ -193,18 +192,17 @@ effect is the side effect of forwarding the notification to Telegram (`telegram.
 notifications... Notification hooks are intended for side effects such as forwarding the
 notification to an external service."`
 
-**Matcher** (`.claude/settings.json`): `permission_prompt|idle_prompt|agent_needs_input|
-quota_auto_resume_stale|quota_auto_resume_disabled` — the five notification types where Claude is
-blocked on the human (human's second directive, item 16a). All five names are letters/digits/`_`
+**Matcher** (`.claude/settings.json`): `quota_auto_resume_stale|quota_auto_resume_disabled` — the
+two quota notification types and no other (AUTONOMY.md §38 (iv)). Both names are letters/digits/`_`
 only, so this stays on the matcher spec's *exact-string-list* path (`|`-separated), not the
 regular-expression path — confirmed against the matcher-patterns table's own charset rule
-(letters, digits, `_`, `-`, spaces, `,`, `|` → exact-match list).
+(letters, digits, `_`, `-`, spaces, `,`, `|` → exact-match list). The script has no type list of
+its own: it forwards whatever notification the matcher lets through.
 
 **Message text:** `"<notification type>: <title/message> (<cwd basename>)"` — `buildMessage()` in
 `notify-telegram.mjs`. Sent via `sendTelegramDeduped` (not the bare `sendTelegram`), keyed on
 `notification_type` plus the message's own first 80 characters (`dedupeKey()`) — reviewer finding
-5: §16's "one message per blocking event" applies here exactly as it does to the Stop hook's own
-waiting-items notice below, on the same ten-minute window.
+5: a repeat with the same type and head is not sent again within the ten-minute window.
 
 ## `telegram.mjs` — the send primitive (human's second directive, item 16)
 
@@ -219,9 +217,9 @@ sending, for tests (`hooks.test.mjs` sets this for every test in the file, and a
 the token/chat-id env vars, so no test can ever perform real network I/O regardless of the
 developer's own environment).
 
-`sendTelegramDeduped(key, text, opts)`: "one message per blocking event" — suppresses a repeat send
-for the same `key` within a 10-minute window (declared `DEDUPE_WINDOW_MS`), recorded in
-`.claude/state/telegram-sent.json`.
+`sendTelegramDeduped(key, text, opts)`: suppresses a repeat send for the same `key` within a
+10-minute window (declared `DEDUPE_WINDOW_MS`), recorded in `.claude/state/telegram-sent.json`.
+A halt left in place sends again at a stop more than ten minutes after its last message.
 
 `sendDocument(filePath, caption)`: `POST https://api.telegram.org/bot<TOKEN>/sendDocument` as
 `multipart/form-data`, the body built by hand (`buildMultipartBody`, exported for testing) with the
@@ -231,8 +229,12 @@ would break copy-paste of the verbatim question text — the human's 2026-09-14 
 
 ## Question round mirror — `questions-mirror.mjs`
 
-**Obligation (the human, 2026-09-14, AUTONOMY.md Appendix A3):** every question round gets a
-Telegram mirror. **Before the first `AskUserQuestion` of a round**, the custodian writes the full
+**Retired by AUTONOMY.md §38.** The obligation below no longer governs: the custodian does not call
+`AskUserQuestion`, and no settings entry runs this script. The script, its test and its fixture stay
+in the tree; this section says what the code does when it is run.
+
+**Obligation as ruled then (the human, 2026-09-14, AUTONOMY.md Appendix A3):** every question round
+gets a Telegram mirror. **Before the first `AskUserQuestion` of a round**, the custodian writes the full
 round — every question set, verbatim: item number, red-line marker, the digest text, the numbered
 options with their descriptions — to `state/questions/round-<n>.md` (a **tracked** record; only the
 `.gitkeep` marker ships empty), then runs:
@@ -262,8 +264,9 @@ tests drive it with fakes and never touch the network.
 
 ### Hook mode — `questions-mirror.mjs --hook` (PLAN node `round-mirror-pretooluse-hook`)
 
-A `PreToolUse` entry in `.claude/settings.json` (matcher `AskUserQuestion`, timeout 20) runs the script in hook
-mode on every `AskUserQuestion` call. Under the lease (§24), outside a subagent and outside a cloud
+`.claude/settings.json` holds no `PreToolUse` entry since AUTONOMY.md §38; the entry it had (matcher
+`AskUserQuestion`, timeout 20) is gone. Run in hook mode, the script handles an `AskUserQuestion` event
+as follows. Under the lease (§24), outside a subagent and outside a cloud
 session, each call writes exactly one new `state/questions/round-<n>.md` (n is one more than the highest
 existing round number) holding that call's own questions and options, and sends it once through
 `mirrorRound`. The form is `ROUND-MIRROR-PRETOOLUSE-HOOK-PREREGISTRATION.md`.

@@ -388,29 +388,110 @@ test('stop-queue: block reason names the lane and budget', async () => {
   }
 });
 
-test('stop-queue: notifies on the human-blocked-only allow, deduped on the waiting set', async () => {
-  const projectRoot = makeTempDir('stop-notify-dedupe-');
+async function captureStderr(fn) {
+  const lines = [];
+  const original = console.error;
+  console.error = (...a) => {
+    lines.push(a.join(' '));
+  };
+  try {
+    await fn();
+  } finally {
+    console.error = original;
+  }
+  return lines;
+}
+
+const DRY = '[telegram dry-run]';
+
+function writeHalt(projectRoot, text) {
+  fs.mkdirSync(path.join(projectRoot, 'state'), { recursive: true });
+  fs.writeFileSync(path.join(projectRoot, 'state', 'CUSTODIAN-HALT'), text);
+}
+
+// RECORDED MUTATION, observed at bcc20bba (applied, run, reverted): the step-6 send restored in stop-queue.mjs -> this test fails at assert.deepEqual(..., [], 'no send was made'): the actual list holds '[telegram dry-run] would send: Only human-blocked nodes remain.'.
+test('stop-queue: the human-blocked-only allow sends no Telegram message', async () => {
+  const projectRoot = makeTempDir('stop-no-notify-');
   process.env.CUSTODIAN_PLAN_PATH = twoNodesHumanOnlyPlan;
   try {
     const input = baseStopInput();
     writeHeldLease(projectRoot, input.session_id);
-    await decide(input, { projectRoot });
-    const dedupePath = path.join(projectRoot, '.claude', 'state', 'telegram-sent.json');
-    assert.ok(fs.existsSync(dedupePath), 'expected a dedupe record to be written');
-    const before = JSON.parse(fs.readFileSync(dedupePath, 'utf8'));
-    assert.equal(Object.keys(before).length, 1);
-
-    // A second allow for the same waiting set, moments later, from a DIFFERENT session (its own
-    // held lease) -- the dedupe key is on the waiting set, not the session, so this must still
-    // not add a second key.
-    const secondInput = baseStopInput();
-    writeHeldLease(projectRoot, secondInput.session_id);
-    await decide(secondInput, { projectRoot });
-    const after = JSON.parse(fs.readFileSync(dedupePath, 'utf8'));
-    assert.deepEqual(before, after);
+    let result;
+    const lines = await captureStderr(async () => {
+      result = await decide(input, { projectRoot });
+    });
+    assert.equal(result.decision, 'allow');
+    assert.match(result.stderr, /waiting on human/);
+    assert.deepEqual(lines.filter((l) => l.startsWith(DRY)), [], 'no send was made');
+    assert.equal(fs.existsSync(path.join(projectRoot, '.claude', 'state', 'telegram-sent.json')), false, 'no dedupe record was written');
   } finally {
     delete process.env.CUSTODIAN_PLAN_PATH;
   }
+});
+
+// RECORDED MUTATION, observed at bcc20bba (applied, run, reverted): the halt send put back behind a waitingOnHuman.length guard, as at main -> this test fails at assert.deepEqual(calls, ...): [] where [[projectRoot, 'HALT: drill halt']] is expected.
+test('stop-queue: a halt sends the HALT line once when nothing waits on the human', async () => {
+  const projectRoot = makeTempDir('stop-halt-send-');
+  writeHalt(projectRoot, 'drill halt\n');
+  const calls = [];
+  const notify = async (...a) => {
+    calls.push(a);
+  };
+  const result = await decide(baseStopInput(), { projectRoot, notify }); // no plan exists under this root; none is read
+  assert.equal(result.decision, 'allow');
+  assert.equal(result.stderr, 'HALT: drill halt');
+  assert.deepEqual(calls, [[projectRoot, 'HALT: drill halt']]);
+});
+
+// RECORDED MUTATION, observed at bcc20bba (applied, run, reverted): the waiting list appended to the halt text -> this test fails at the dry-run assert.deepEqual: 'HALT: drill halt\nWaiting on you (1 item(s), 10 min total)' where 'HALT: drill halt' is expected.
+test('stop-queue: a halt with human-blocked nodes sends the HALT line without the waiting list', async () => {
+  const projectRoot = makeTempDir('stop-halt-waiting-');
+  writeHalt(projectRoot, 'drill halt\n');
+  process.env.CUSTODIAN_PLAN_PATH = twoNodesHumanOnlyPlan;
+  try {
+    let result;
+    const lines = await captureStderr(async () => {
+      result = await decide(baseStopInput(), { projectRoot });
+    });
+    assert.equal(result.decision, 'allow');
+    assert.deepEqual(lines.filter((l) => l.startsWith(DRY)), [`${DRY} would send: HALT: drill halt`]);
+    assert.equal(lines.some((l) => l.includes('Waiting on you')), false, 'no waiting list in the message');
+  } finally {
+    delete process.env.CUSTODIAN_PLAN_PATH;
+  }
+});
+
+// The shipped entry: stop-queue.mjs as a child process on stdin JSON, the real dry-run send inside it.
+function runStopCli(projectRoot, input, plan) {
+  const env = { ...process.env, CLAUDE_PROJECT_DIR: projectRoot, CUSTODIAN_TELEGRAM_DRY_RUN: '1' };
+  delete env.CUSTODIAN_STOP_HOOK;
+  delete env.CUSTODIAN_PLAN_PATH;
+  if (plan) env.CUSTODIAN_PLAN_PATH = plan;
+  return spawnSync(process.execPath, [path.join(here, 'stop-queue.mjs')], { input: JSON.stringify(input), encoding: 'utf8', env });
+}
+
+// RECORDED MUTATION, observed at bcc20bba (applied, run, reverted): the halt send removed from stop-queue.mjs -> this test fails at the dry-run assert.deepEqual: [] where ['[telegram dry-run] would send: HALT: drill halt'] is expected.
+test('stop-queue CLI: a halt sends one HALT message through the shipped entry', () => {
+  const projectRoot = makeTempDir('stop-cli-halt-');
+  writeHalt(projectRoot, 'drill halt\n');
+  const result = runStopCli(projectRoot, baseStopInput());
+  assert.equal(result.status, 0);
+  assert.equal(result.stdout, '');
+  const lines = result.stderr.split('\n').filter((l) => l !== '');
+  assert.deepEqual(lines.filter((l) => l.startsWith(DRY)), [`${DRY} would send: HALT: drill halt`]);
+  assert.ok(lines.includes('HALT: drill halt'), result.stderr);
+});
+
+// RECORDED MUTATION, observed at bcc20bba (applied, run, reverted): the step-6 send restored through sendTelegramDeduped -> this test fails at the last assert.equal(result.stderr.includes(DRY), false, ...): the message is the stderr, which holds '[telegram dry-run] would send: Only human-blocked nodes remain.'.
+test('stop-queue CLI: the human-blocked-only allow sends nothing through the shipped entry', () => {
+  const projectRoot = makeTempDir('stop-cli-human-only-');
+  const input = baseStopInput();
+  writeHeldLease(projectRoot, input.session_id);
+  const result = runStopCli(projectRoot, input, twoNodesHumanOnlyPlan);
+  assert.equal(result.status, 0);
+  assert.equal(result.stdout, '');
+  assert.match(result.stderr, /waiting on human/);
+  assert.equal(result.stderr.includes(DRY), false, result.stderr);
 });
 
 test('stop-queue CLI: piping stdin JSON blocks on the two-node fixture', () => {
@@ -1341,6 +1422,45 @@ test('notify-telegram: builds "<type>: <title/message> (<cwd basename>)"', () =>
 test('notify-telegram: falls back to message alone when there is no title', () => {
   const msg = buildMessage({ notification_type: 'idle_prompt', message: 'idle', cwd: '/tmp/spatial-ide' });
   assert.equal(msg, 'idle_prompt: idle (spatial-ide)');
+});
+
+const repoRoot = path.resolve(here, '..', '..');
+const readSettings = () => JSON.parse(fs.readFileSync(path.join(repoRoot, '.claude', 'settings.json'), 'utf8'));
+
+// RECORDED MUTATION, observed at bcc20bba (applied, run, reverted, each alone): idle_prompt restored in the matcher -> this test fails at the matcher assert.equal: 'idle_prompt|quota_auto_resume_stale|quota_auto_resume_disabled' where 'quota_auto_resume_stale|quota_auto_resume_disabled' is expected; the PreToolUse entry restored (the merge base's file) -> it fails at the keys assert.deepEqual: 'PreToolUse' is the extra first key.
+test('the_notification_hook_matches_only_the_two_quota_types', () => {
+  const settings = readSettings();
+  assert.deepEqual(Object.keys(settings.hooks), ['Stop', 'PreCompact', 'SessionStart', 'Notification']);
+  const entries = settings.hooks.Notification;
+  assert.equal(entries.length, 1);
+  assert.equal(entries[0].matcher, 'quota_auto_resume_stale|quota_auto_resume_disabled');
+  assert.deepEqual(entries[0].hooks, [
+    { type: 'command', command: 'node "$CLAUDE_PROJECT_DIR/scripts/hooks/notify-telegram.mjs"', timeout: 15 },
+  ]);
+  assert.equal(JSON.stringify(settings).includes('questions-mirror.mjs'), false, 'no command names the mirror');
+});
+
+// RECORDED MUTATION, observed at bcc20bba (applied, run, reverted): the command's script path altered to notify-telegramx.mjs in the settings file -> this test fails at assert.equal(r.status, 0, r.stderr): the stderr reads 'Cannot find module' for scripts/hooks/notify-telegramx.mjs.
+test('the_notification_settings_command_forwards_a_quota_notification_once', (t) => {
+  const command = readSettings().hooks.Notification[0].hooks[0].command;
+  // A temporary project holds copies of the hook scripts, so nothing is written under the real .claude/state/.
+  const dir = makeTempDir('notify-settings-command-');
+  t.after(() => fs.rmSync(dir, { recursive: true, force: true, maxRetries: 3 }));
+  fs.mkdirSync(path.join(dir, 'scripts', 'hooks'), { recursive: true });
+  for (const f of fs.readdirSync(here).filter((n) => n.endsWith('.mjs'))) fs.copyFileSync(path.join(here, f), path.join(dir, 'scripts', 'hooks', f));
+  const shell = process.platform === 'win32'
+    ? path.resolve(execFileSync('git', ['--exec-path'], { encoding: 'utf8' }).trim(), '..', '..', '..', 'bin', 'bash.exe')
+    : '/bin/sh';
+  const r = spawnSync(shell, ['-c', command], {
+    input: JSON.stringify({ notification_type: 'quota_auto_resume_stale', message: 'quota test text' }),
+    encoding: 'utf8',
+    cwd: dir,
+    env: { ...process.env, CLAUDE_PROJECT_DIR: dir, CUSTODIAN_TELEGRAM_DRY_RUN: '1' },
+  });
+  assert.equal(r.status, 0, r.stderr);
+  const sends = r.stderr.split('\n').filter((l) => l.startsWith(DRY));
+  assert.equal(sends.length, 1, r.stderr);
+  assert.match(sends[0], /^\[telegram dry-run\] would send: quota_auto_resume_stale: quota test text \(/);
 });
 
 test('telegram: dry run writes the message to stderr and never sends', async () => {

@@ -17,8 +17,8 @@
 //   Exit 0 on success; exit 1 (with a clear stderr line) on a missing file, missing env, or an API
 //   error.
 //
-// Hook mode: `node scripts/hooks/questions-mirror.mjs --hook` is the PreToolUse hook on AskUserQuestion
-// (ROUND-MIRROR-PRETOOLUSE-HOOK-PREREGISTRATION.md): one round file and one send per call.
+// Hook mode: `node scripts/hooks/questions-mirror.mjs --hook` was the PreToolUse hook on AskUserQuestion
+// (ROUND-MIRROR-PRETOOLUSE-HOOK-PREREGISTRATION.md): one round file and one send per call. Since AUTONOMY.md §38 no settings entry runs it.
 //
 // Node standard library only. Telegram is a read-and-copy mirror: this never reads Telegram for
 // answers, and never sends via markdown parse_mode (plain text, per the directive above).
