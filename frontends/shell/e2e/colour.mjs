@@ -180,7 +180,9 @@ async function stepColourByZone(page, consoleHandle, ctx) {
     await applyFilter(page, consoleHandle, entry.predicate);
     const { dominant } = await dominantOf(page, `under ${entry.predicate}`);
     const want = ctx.swatches[entry.index];
-    // RECORDED MUTATION PB-E1 is placed here.
+    // RECORDED MUTATION M-PB-E1, applied alone: in `rowGroups` (src/canvas/matchGroups.ts) a NULL value takes `style.unmatchedGroup()`, the Other group, in place of the No value group.
+    // Expected failure: under the NULL filter the dominant colour is the Other swatch's, not the No value swatch's.
+    // OBSERVED AT dfb96279f7531b27a29827be0e6bd0bf630bc9b5: FAILED -- "PB-E1: under zone IS NULL the dominant colour is 97,97,97,255, expected the No value swatch 158,158,158,255". Reverted after observing.
     expect(sameColour(dominant.rgba, want), `under ${entry.predicate} the dominant colour is ${dominant.rgba}, expected the ${entry.name === "NULL" ? "No value" : entry.name} swatch ${want.join(",")},255`);
     seen.push(`${entry.name} ${dominant.rgba}`);
   }
@@ -201,7 +203,9 @@ async function stepSaveProject(page, ctx) {
   const names = readdirSync(folder);
   expect(names.includes("project.spatial"), `the folder lists ${JSON.stringify(names)}, with no project.spatial`);
   const fill = JSON.parse(readFileSync(join(folder, "project.spatial"), "utf8")).workspace?.style?.layer?.fill_color;
-  // RECORDED MUTATION PB-E5 is placed here.
+  // RECORDED MUTATION M-PB-E5, applied alone: in `workspaceOf` (src/project/saveProject.ts) the saved style is `toStyleDocument({ ...input.style, fillMatch: null })`.
+  // Expected failure: the saved file's fill_color is a literal, not the match.
+  // OBSERVED AT dfb96279f7531b27a29827be0e6bd0bf630bc9b5: FAILED -- "PB-E5: the file's fill_color reads {"literal":"#4285f4"}, expected the match". Reverted after observing.
   expect(fill?.match !== undefined, `the file's fill_color reads ${JSON.stringify(fill)}, expected the match`);
   expect(JSON.stringify(fill.match) === JSON.stringify(ctx.match), `the file's match reads ${JSON.stringify(fill.match)}, expected the page's ${JSON.stringify(ctx.match)}`);
   return `the saved project.spatial holds the match on ${fill.match.column} with ${fill.match.cases.length} cases, equal to the page's style document`;
@@ -241,7 +245,9 @@ async function stepExportBundle(page, consoleHandle, ctx) {
       checks.push({ id, ok: false, detail: e.message });
     }
   };
-  // RECORDED MUTATION M-PB-E2c is placed above (i).
+  // RECORDED MUTATION M-PB-E2c, applied alone: in `prepare_with_query` (src-tauri/src/publish.rs) `published_columns` is composed from `&[]` in place of `&attributes`; the shell exe is rebuilt with it and rebuilt again after the revert.
+  // Expected failure: (i) alone: the prompt's line names the id and the geometry only; (ii) to (v) pass.
+  // OBSERVED AT dfb96279f7531b27a29827be0e6bd0bf630bc9b5: FAILED -- "PB-E2: (i) FAILED: published_columns is "Columns published: id and the geometry only.", expected "Columns published: id, the geometry, and zone." ; passed: (ii) (iii) (iv) (v)". Reverted after observing.
   await check("(i)", () => {
     expect(prompt.published_columns === COLUMNS_LINE, `published_columns is ${JSON.stringify(prompt.published_columns)}, expected ${JSON.stringify(COLUMNS_LINE)}`);
     return "the prompt names zone";
@@ -264,6 +270,9 @@ async function stepExportBundle(page, consoleHandle, ctx) {
     return "the manifest publishes zone";
   });
   const styleText = readFileSync(join(bundle, "style.json"), "utf8");
+  // RECORDED MUTATION M-PB-E2, applied alone: in `runPrepareWithDestination` (src/publish/PublishPanel.tsx) the style document sent to the prepare is `toStyleDocument({ ...style, fillMatch: null })`.
+  // Expected failure: (iv) fails: style.json holds the literal; the published columns follow the document, so (i), (iii) and (v) fail with it and (ii) passes.
+  // OBSERVED AT dfb96279f7531b27a29827be0e6bd0bf630bc9b5: FAILED -- "PB-E2: (i) FAILED: published_columns is "Columns published: id and the geometry only.", expected "Columns published: id, the geometry, and zone." | (iii) FAILED: manifest schema names after the first two read [], expected ["zone"] | (iv) FAILED: style.json fill_color reads {"literal":"#4285f4"}, expected the match | (v) FAILED: the viewer draws ["#4285f4","#4285f4","#4285f4","#4285f4","#4285f4"], the legend's swatches are ["#a6cee3","#1f78b4","#b2df8a","#33a02c","#9e9e9e"] ; passed: (ii)". Reverted after observing.
   await check("(iv)", () => {
     const match = JSON.parse(styleText).layer?.fill_color?.match;
     expect(match !== undefined, `style.json fill_color reads ${JSON.stringify(JSON.parse(styleText).layer?.fill_color)}, expected the match`);
@@ -291,7 +300,9 @@ async function stepOneColour(page, consoleHandle) {
   await showStyleControls(page);
   const layersBefore = layerLineCount(consoleHandle);
   await page.click("button.style-one-colour");
-  // RECORDED MUTATION PB-E3 is placed here.
+  // RECORDED MUTATION M-PB-E3, applied alone: in `handleOneColour` (src/style/StylePanel.tsx) the next style keeps its match (`{ ...style }` in place of `{ ...style, fillMatch: null }`).
+  // Expected failure: the style document keeps its match, so the wait for a literal fill_color times out.
+  // OBSERVED AT dfb96279f7531b27a29827be0e6bd0bf630bc9b5: FAILED -- "PB-E3: waited 15000ms for a style document whose fill_color is a literal; the last reading was {"style_version":1,"layer":{"geometry":"polygon","fill_color":{"match":{"column":"zone","cases":[{"when":"agricultural","then":"#a6cee3"},{"when":"civic","then":"#1f78b4"},{"when":"industrial","then":"#b2df8a"},{"when":"residential","then":"#33a02c"}],"on_null":"#9e9e9e","on_unmatched":"#616161"}},"fill_opacity":{"literal":1},"outline_color":{"literal":"#000000"},"outline_width":{"literal":0}}}". Reverted after observing. The same mutation also failed PB-E4 in that run: OBSERVED AT dfb96279f7531b27a29827be0e6bd0bf630bc9b5: FAILED -- "PB-E4: the history holds 1 fillColor steps, expected 2 (the colour by, then One colour): [{"action":"style.set","params":{"property":"fillColor","value":{"match":{"column":"zone","cases":[{"when":"agricultural","then":"#a6cee3"},{"when":"civic","then":"#1f78b4"},{"when":"industrial","then":"#b2df8a"" (the line cut at 300 bytes).
   const doc = await waitFor("a style document whose fill_color is a literal", () => readStyleDocument(page), (d) => d?.layer?.fill_color?.literal !== undefined, 15_000);
   expect(doc.layer.fill_color.literal === DEFAULT_FILL, `fill_color reads ${JSON.stringify(doc.layer.fill_color)}, expected the literal ${DEFAULT_FILL}`);
   const legend = await readLegend(page);
@@ -349,7 +360,9 @@ async function stepHistory(page, session, ctx) {
   expect(fills.length === 2, `the history holds ${fills.length} fillColor steps, expected 2 (the colour by, then One colour): ${JSON.stringify(fills.map((s) => s.intent))}`);
   const [colourBy, oneColour] = fills;
   const value = colourBy.intent.params.value;
-  // RECORDED MUTATION PB-E4 is placed here.
+  // RECORDED MUTATION M-PB-E4, applied alone: in `handleStyleCommit` (src/App.tsx) a `fillColor` transition is enqueued to the recorder with `next.fillColor` as its value, so the recorder is sent the literal.
+  // Expected failure: the colour by step's value is the literal, not the match.
+  // OBSERVED AT dfb96279f7531b27a29827be0e6bd0bf630bc9b5: FAILED -- "PB-E4: the colour by step's value reads "#4285f4", expected the match". Reverted after observing.
   expect(typeof value === "object" && value !== null && value.match !== undefined, `the colour by step's value reads ${JSON.stringify(value)}, expected the match`);
   expect(JSON.stringify(value.match) === JSON.stringify(ctx.match), `the recorded match reads ${JSON.stringify(value.match)}, expected the page's ${JSON.stringify(ctx.match)}`);
   const field = (colourBy.dependencies?.fields ?? []).find((f) => f.name === COLUMN);

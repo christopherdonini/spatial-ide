@@ -127,6 +127,8 @@ describe("PB-U6: a fill by category is one style.set on fillColor, and a literal
 
   // RECORDED MUTATION for PB-U6's reset case, applied alone: in `styleTransitions` (workspace/viewTransitions.ts) the literal branch drops its condition on a standing match (`prev.fillColor !== next.fillColor || prev.fillMatch !== null` becomes `prev.fillColor !== next.fillColor`).
   // Expected failure: a match whose literal fill is the default's gives no transition toward the default style, so the state keeps its match.
+  // OBSERVED AT dfb96279f7531b27a29827be0e6bd0bf630bc9b5: FAILED -- "PB-U6: the transitions toward the default style, from a match whose literal fill is the default's, leave fillMatch null": AssertionError: the match after the transitions toward the default: expected { column: 'zone', …(3) } to be null. Reverted after observing.
+  // The same mutation also failed, in this file: OBSERVED AT dfb96279f7531b27a29827be0e6bd0bf630bc9b5: FAILED -- "styleTransitions emits one match transition for a new match, a literal when the match ends, and nothing for equal states": AssertionError: the match ending at the same fillColor: expected [] to deeply equal [ '#112233' ]. Reverted after observing.
   it("PB-U6: the transitions toward the default style, from a match whose literal fill is the default's, leave fillMatch null", () => {
     const matchedAtDefault: StyleState = { ...DEFAULT_STYLE_STATE, fillMatch: byZone.fillMatch };
     const result = styleTransitions(matchedAtDefault, DEFAULT_STYLE_STATE).reduce(applyViewTransition, { ...view, style: matchedAtDefault });
