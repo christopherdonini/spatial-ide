@@ -70,7 +70,10 @@ fn on_a_case_insensitive_volume_a_destination_typed_in_another_case_is_recorded_
     // (M6, `resolve_destination` rejoins the typed parent instead of canonicalizing it): the first
     // failing assertion is the final equality, left `<user-home>/iNNER/bundle` and right
     // `<user-home>/Inner/bundle`; the precondition passes. Observed on Windows at
-    // 6c21888e. Not observed on macOS: that observation is E3's, and E3 has not run.
+    // 6c21888e. On macOS, E3 (product-ci-rust run 43689426988, at the probe commit
+    // 6c86c2c508cc31da5a4e237fd0a6a72a760c01c3, M6 alone) failed the same final equality, left the
+    // resolved path itself, in its typed case and not under the profile token, and right
+    // `<user-home>/Inner/bundle`.
     let n = NEXT.fetch_add(1, Ordering::SeqCst);
     let temp =
         std::fs::canonicalize(std::env::temp_dir()).expect("the temporary directory resolves");

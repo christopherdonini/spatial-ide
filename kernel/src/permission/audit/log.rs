@@ -369,9 +369,11 @@ pub fn resolve_log_path() -> Result<PathBuf, AuditError> {
 ///
 /// The platform rule lives in `spatial_engine::app_dirs` and nowhere here: `%LOCALAPPDATA%` on
 /// Windows, `$HOME/Library/Application Support` on macOS, and `$XDG_DATA_HOME` else
-/// `$HOME/.local/share` on other Unix, each used only when it is an absolute path. `None` when the
-/// platform's variable is unset, empty or relative, so a log never lands relative to the working
-/// directory. The session store reaches the same directory through this function.
+/// `$HOME/.local/share` on other Unix, each used only when it is an absolute path. `None` when none
+/// of the variables the platform's rule reads is a non-empty absolute path, so a log never lands
+/// relative to the working directory. The session store (`session_history::default_root`) and the
+/// project machine store (`project::store::projects_root`) reach the same directory through this
+/// function.
 pub(crate) fn data_dir() -> Option<PathBuf> {
     spatial_engine::app_dirs::user_data_dir()
 }

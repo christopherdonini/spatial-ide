@@ -23,7 +23,7 @@
 //! (`engine/LOD-PREREGISTRATION.md` Amendment 8 (a)); the typed refusal names that, and no
 //! fallback directory is chosen here.
 //!
-//! No `dirs` or `directories` crate: that would be a new dependency, and the rule is four variables.
+//! No `dirs` or `directories` crate: that would be a new dependency, and the rule is three variables.
 //!
 //! The pure core ([`data_dir_for`], [`tier_root_for`]) takes the platform and a variable lookup, so
 //! every row of the table is testable on any host. The shipped entries ([`user_data_dir`],
@@ -101,8 +101,10 @@ pub(crate) fn tier_root_for(
 /// The per-user data directory on this platform, from the process environment.
 ///
 /// `None` when the table resolves nothing: the caller refuses, and never substitutes a directory.
-/// Product callers: the kernel's audit-log location, which the session store and the shell's
-/// session recorder reach through it.
+/// Product callers: the kernel's `permission::audit::log::data_dir`, through which the audit log,
+/// the session store (`session_history::default_root`) and the project machine store
+/// (`project::store::projects_root`) reach it; the shell builds its session recorder and its
+/// `Projects` over the last two.
 pub fn user_data_dir() -> Option<PathBuf> {
     data_dir_for(CURRENT, &|name| std::env::var_os(name))
 }
@@ -253,7 +255,8 @@ mod tests {
         // RECORDED MUTATION: the_tier_root_resolves_on_windows_only_and_never_from_localappdata_elsewhere
         // (M3, `tier_root_for` reads `LOCALAPPDATA` on every `Os`): the first failing assertion is the
         // loop's one for macOS, message `MacOs must not take a tier root from LOCALAPPDATA`, left an `Ok`
-        // holding the temporary directory and right the undeclared-root `Err`. Observed on Windows at 6c21888e.
+        // holding the `p2-local` path below the temporary directory and right the undeclared-root
+        // `Err`. Observed on Windows at 6c21888e.
         let local = abs("p2-local");
         let env = env_of(vec![
             set("LOCALAPPDATA", &local),

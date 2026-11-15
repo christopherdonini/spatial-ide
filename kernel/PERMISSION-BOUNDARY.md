@@ -187,7 +187,7 @@ this cut**, which is why grants are not persisted rather than persisted badly.
 
 | | |
 |---|---|
-| **Location** | `%LOCALAPPDATA%\spatial-ide\audit\publish.jsonl` (Windows); `$HOME/Library/Application Support/spatial-ide/audit/publish.jsonl` (macOS); `$XDG_DATA_HOME/spatial-ide/audit/publish.jsonl` when `XDG_DATA_HOME` is an absolute path, else `$HOME/.local/share/spatial-ide/audit/publish.jsonl` (Linux and other Unix). A variable that is unset or not absolute resolves nothing, and the publish refuses before anything exists |
+| **Location** | `%LOCALAPPDATA%\spatial-ide\audit\publish.jsonl` (Windows); `$HOME/Library/Application Support/spatial-ide/audit/publish.jsonl` (macOS); `$XDG_DATA_HOME/spatial-ide/audit/publish.jsonl` when `XDG_DATA_HOME` is an absolute path, else `$HOME/.local/share/spatial-ide/audit/publish.jsonl` (Linux and other Unix). A variable counts only when it is a non-empty absolute path; when none of the platform's variables counts and `SPATIAL_IDE_AUDIT_LOG` is not set, the publish refuses before anything exists |
 | **Override** | `SPATIAL_IDE_AUDIT_LOG`, absolute path. **No value turns it off** |
 | **Format** | one canonical-JSON object per line (JSON Lines), fixed key sets, `schema: "spatial-audit/1"` |
 | **Append** | `OpenOptions::append`, one in-process mutex held across open → write → `sync_all` |

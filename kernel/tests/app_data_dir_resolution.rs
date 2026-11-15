@@ -14,7 +14,9 @@
 //! must still be empty afterwards: a relative or empty value is treated as unset, and nothing is
 //! ever resolved against where the process happened to start.
 //!
-//! Temporary directories only, removed on drop. No user-profile path is read or written.
+//! Temporary directories only, removed on drop. No real per-user data directory is resolved: each
+//! case sets every variable the table reads to a path in the scratch directory or to a relative or
+//! empty value, or removes it.
 
 use std::ffi::OsString;
 use std::path::{Path, PathBuf};
