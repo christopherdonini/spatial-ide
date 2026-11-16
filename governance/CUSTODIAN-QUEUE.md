@@ -1,13 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `5dec859499172c06cd61f1d6fd6930497933a34879c9406f23e51b0d8250afa4`) at `2026-11-16T01:01:25.835Z`.
+Generated from `PLAN.yaml` (sha256 `c08465d87a1bdc9af4a21f12ac81be4073d1230930962a227803d27ac2690c85`) at `2026-11-16T01:29:59.618Z`.
 
 ## 1. Next
 
-- **lod-tier-identity-binds-file-name** — The LOD tier builder takes the identity name DuckDB bound and looks it up among the file's own footer names, so a renamed identity column reaches a different column there (lane `kernel-protocol`)
+- **lod-tier-test-sweep-keeps-lock-until-folder-removed** — The test tier-folder sweep removes a finished run lock file only when that run folder is gone, so a folder it could not remove is tried again by a later sweep (the architect O2 at PR 326; filler entry 19) (lane `engine`)
 
 ## 2. Ready
 
+- **lod-tier-test-sweep-keeps-lock-until-folder-removed** — The test tier-folder sweep removes a finished run lock file only when that run folder is gone, so a folder it could not remove is tried again by a later sweep (the architect O2 at PR 326; filler entry 19) (lane `engine`, order null, budget 30 min)
 - **lod-tier-identity-binds-file-name** — The LOD tier builder takes the identity name DuckDB bound and looks it up among the file's own footer names, so a renamed identity column reaches a different column there (lane `kernel-protocol`, order null, budget 60 min)
 - **publish-approval-kernel-parity** — Kernel parity for the publish approval's column line: the kernel's approval prompt carries the column list and prints it, and the shell mirrors it, so the CLI and the shell show the same facts (option (E); S3, not for v0.2) (lane `kernel-protocol`, order null, budget 0 min)
 - **skp-line-cites-outside-close-races** — Stale line cites into kernel/src/skp.rs outside kernel-close-races-followups files -- shell streaming, App.tsx, pool_poll.rs, src-tauri lib.rs, the P4 corpus test and the persisted-artifacts test (lane `kernel-protocol`, order null, budget 0 min)
