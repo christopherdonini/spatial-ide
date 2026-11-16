@@ -41,13 +41,15 @@ export interface TableSnapshot {
   readonly phase: TablePhase;
   /** The filter this result was issued with: `null` for none, and before any issue. */
   readonly filter: Filter | null;
+  /** The request this result belongs to: a number each `start` changes, 0 before any (a wait compares it with the one its own `start` gave). */
+  readonly request: number;
   readonly count: number;
   readonly ids: ReadonlySet<bigint>;
   readonly refusal: FormattedRefusal | null;
   readonly rowAt: (index: number) => { readonly id: bigint; readonly row: AttributeRow | null };
 }
 
-export const EMPTY_TABLE: TableSnapshot = { phase: "idle", filter: null, count: 0, ids: new Set(), refusal: null, rowAt: () => { throw new Error("[P6 placeholder] the table holds no rows"); } };
+export const EMPTY_TABLE: TableSnapshot = { phase: "idle", filter: null, request: 0, count: 0, ids: new Set(), refusal: null, rowAt: () => { throw new Error("[P6 placeholder] the table holds no rows"); } };
 
 /** Whether the result lists every feature that passes its filter: it ended Completed below the limit (section 2.4 (b)). A cancelled, stopped, refused or limit-sized result is not complete. */
 export function resultIsComplete(snapshot: TableSnapshot): boolean {
@@ -101,6 +103,7 @@ export class TableSource {
   private handle: string | null = null;
   private readonly selfCancelled = new Set<string>();
   private run = 0;
+  private request = 0;
   private disposed = false;
   private ended = false;
 
@@ -116,6 +119,7 @@ export class TableSource {
   async start(filter: Filter | null): Promise<void> {
     if (this.disposed || this.ended) return;
     const mine = ++this.run;
+    this.request++;
     const previous = this.handle;
     this.handle = null;
     this.reset(filter);
@@ -274,6 +278,7 @@ export class TableSource {
     this.snapshot = {
       phase: this.phase,
       filter: this.filter,
+      request: this.request,
       count: this.count,
       ids: new Set(this.idSet),
       refusal: this.refusal,

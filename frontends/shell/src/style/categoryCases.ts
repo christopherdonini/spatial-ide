@@ -20,7 +20,7 @@ export type FirstScopeOutcome =
 
 export interface FirstScopeWait {
   readonly result: Promise<FirstScopeOutcome>;
-  /** Cancel: ends the stream when this wait issued it, and only then (OPEN-C (b)); on a stream it joined, only the wait is abandoned. */
+  /** Cancel: ends the stream when this wait issued it and the source still holds that request, and only then (OPEN-C (b)); on a stream it joined, or once a later `start` has superseded its own, only the wait is abandoned. */
   readonly abandon: () => void;
 }
 
@@ -60,12 +60,14 @@ export function waitForFirstScope(source: FirstScopeSource, filter: Filter | nul
   const joinable = sameFilter(before.filter, filter) && before.phase === "loading";
   const issuedHere = !reusable && !joinable;
   if (issuedHere) void source.start(filter);
+  // The request this wait's own `start` gave (its snapshot is emitted before `start` first awaits): Cancel compares the source's with it.
+  const own = issuedHere ? source.getSnapshot().request : null;
   if (!check()) unsubscribe = source.subscribe(check);
   return {
     result,
     abandon: () => {
       finish({ kind: "not-applied", reason: "abandoned" }); // first, so that the cancel below is not read as the source's own
-      if (issuedHere) source.cancel();
+      if (own !== null && source.getSnapshot().request === own) source.cancel();
     },
   };
 }
