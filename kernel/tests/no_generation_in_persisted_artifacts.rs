@@ -409,6 +409,36 @@ fn every_typed_string_a_session_log_line_can_carry_around_a_detected_change_has_
     );
 }
 
+/// `LOCALAPPDATA` pointed at a folder of this process's own, outside the engine suites'
+/// `lod-tier-runs/` so their sweep never reaches it; dropping it puts the variable back and removes
+/// the folder.
+struct OwnTierRoot {
+    previous: Option<std::ffi::OsString>,
+    folder: PathBuf,
+}
+
+impl OwnTierRoot {
+    fn set() -> Self {
+        let folder = Path::new(env!("CARGO_TARGET_TMPDIR"))
+            .join(format!("kernel-lod-tier-run-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&folder);
+        std::fs::create_dir_all(&folder).unwrap();
+        let previous = std::env::var_os("LOCALAPPDATA");
+        std::env::set_var("LOCALAPPDATA", &folder);
+        Self { previous, folder }
+    }
+}
+
+impl Drop for OwnTierRoot {
+    fn drop(&mut self) {
+        match self.previous.take() {
+            Some(v) => std::env::set_var("LOCALAPPDATA", v),
+            None => std::env::remove_var("LOCALAPPDATA"),
+        }
+        let _ = std::fs::remove_dir_all(&self.folder);
+    }
+}
+
 /// **The LOD tier-set half of G-A4** (gate-log record 85, finding B-1, family 3). `build_tiers` writes
 /// `tiers.json` (`engine/src/lod.rs:1203`) and, per tier, a GeoParquet file (`:1367`) to a real
 /// on-disk cache. Same real-product-path discipline as the bundle test above: a real `build_tiers`
@@ -441,6 +471,12 @@ fn a_built_lod_tier_sets_manifest_and_tier_files_carry_no_generation_substring()
     )
     .unwrap();
     let source = Dataset::open(&path).unwrap();
+    // Built in this process's own folder, set before the build and put back after it, so the tier
+    // set is never written under the machine-wide tier root. Nothing else in this binary depends on
+    // `LOCALAPPDATA`: the audit-log test sets `AUDIT_LOG_ENV`, so its log path never reaches the
+    // data directory and the variable is read there only to normalize a path in an error's text;
+    // the history and project tests pass their own store roots.
+    let _own_tier_root = OwnTierRoot::set();
     let set = build_tiers(&source, LOD_BUILD_WORKERS_ARM_S, &CancelToken::new(), None)
         .expect("build a small tier set");
 
