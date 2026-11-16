@@ -376,3 +376,19 @@ Builds, vitest and every e2e suite in §12 each run inside a shared hold. The ma
 The packet's OPEN-1 to OPEN-5 are settled by ADV-2026-11-16-13 (§0.1). The custodian records the settlement of OPEN-A here by amendment.
 
 ## §15 Amendments (opens empty; append-only)
+
+## Amendment 1: OPEN-A settled and the unit-test ceiling kept (ADV-2026-11-16-15); §8's check recorded; one records-step item; recorded by the custodian before any code
+
+*Written by the custodian on 2026-11-16. The ruling is filed at `state/directives/2026-11-16-advisor-ruling-adv-2026-11-16-15-the-s1-form-open-a-npm-run-verify-whole-stands-for-lint-the-unit-ceiling-of-1010-stands.md`.*
+
+1. **OPEN-A (§14): (A).** What ADV-2026-11-16-13 item 8 (c) called lint is `npm run verify` whole, once, at the final candidate: its type check, its four static checks, its build and its tests. No lint script is added. §12's series reads so.
+
+2. **§7's unit-test ceiling stands**: 1,010, with product 120 in three files and 1,130 in all (ADV-2026-11-16-15 item 2). An overrun is class 8.
+
+3. **§8's check, made by the custodian before S2.** No §7 file is named by `git diff --name-only 08ce9935...2f7047737f64d9ca8a7a06332672ab9b3d25c9bc` (195 paths), nor by PR B's own paths at its present head, `git diff --name-only 619a7cc94c6ac89768ca6d68d40ea9afff0c2a7b...6f95993e37255513bf7f5d78b519bc3a71562fb0` (57 paths). The worker starts.
+
+4. **One records-step item for §10** (the advisor's message of 2026-11-16, after the clause check of the v0.1.0 notes, `state/consults/2026-11-16-shell-tiled-arm-stream-refusal-shown-to-the-user-v0-1-0-notes-clause-check-reviewer.md`). The on-main paragraph of `KNOWN-LIMITATIONS.md` below the row-filter paragraph says that an area whose tile is refused after the retry is still reported as not loaded. The clause check and the test step's A1 and A2 show that untrue on main today. It stays untrue until this piece merges; the records step checks it against the built code then, and its words go to the advisor.
+
+Read the last amendment first.
+
+Nothing above is edited.
