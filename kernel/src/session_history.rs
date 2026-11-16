@@ -19,7 +19,7 @@
 //! `b2-piece-1c-save-and-reopen`'s recovery offer (the human's round 8 exemption).
 
 use std::fs::{File, OpenOptions};
-use std::io::{Read, Seek, SeekFrom, Write};
+use std::io::{ErrorKind, Read, Seek, SeekFrom, Write};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 
@@ -37,6 +37,7 @@ use crate::dataset_ref::{
     DatasetUri, RefParseError,
 };
 use crate::permission::audit::{log::data_dir, rfc3339_utc_now};
+use crate::project::file::Lineage;
 use crate::project::strict_json::{self, Layout, Limits, StrictError};
 use crate::project::ProjectUri;
 use crate::skp::{check_version, predicate_admit_error_of, require_live, SkpHost};
@@ -1055,6 +1056,43 @@ const MARK: S = S::Tagged(
         ("restored", &[("to", ID), ("at", S::At)]),
     ],
 );
+/// ADR-036 §6's header of a lineage file: `project` is a project URI only, and `lineage` holds
+/// §8's properties.
+const LINEAGE_HEADER: S = S::Obj(&[
+    ("format", S::Word(&["spatial-steps"])),
+    ("version", S::Int(1, 1)),
+    ("purpose", S::Word(&["lineage"])),
+    ("project", S::Hex("spatial://project/", 32)),
+    ("actions", S::Int(1, 1_000_000)),
+    ("datasets", S::List(&S::Entry, 8)),
+    (
+        "lineage",
+        S::Obj(&[("completeness", COMPLETENESS), ("starts", STARTS)]),
+    ),
+]);
+const COMPLETENESS: S = S::Tagged(
+    "state",
+    &[
+        ("complete", &[]),
+        (
+            "incomplete",
+            &[
+                ("withheld", S::Int(0, (1 << 53) - 1)),
+                ("kinds_not_recorded", S::List(&KINDS, 5)),
+            ],
+        ),
+    ],
+);
+const STARTS: S = S::Tagged(
+    "state",
+    &[("at-first-save", &[]), ("later", &[("basis", TEXT)])],
+);
+const KINDS: S = S::Word(&["data", "scope", "style", "snapshot", "export"]);
+/// ADR-036 §6's withheld line: it stands in for a step, keeping the chain and the count.
+const WITHHELD_LINE: S = S::Obj(&[(
+    "withheld",
+    S::Obj(&[("id", ID), ("parent", S::Or(&S::Null, &ID))]),
+)]);
 
 /// Check `v` against `shape`, naming the member's path on a failure.
 fn check(v: &Value, path: &str, shape: &S) -> Res<()> {
@@ -1234,21 +1272,7 @@ fn read_line(
     chain: &mut Chain,
     header: &mut Option<Header>,
 ) -> Res<String> {
-    let Some(body) = raw.strip_suffix(b"\n") else {
-        return Err(malformed("$", "the line does not end in LF: a torn write"));
-    };
-    let ceiling = if first {
-        MAX_HEADER_LINE_BYTES
-    } else {
-        MAX_STEP_LINE_BYTES
-    };
-    if body.len() > ceiling {
-        return Err(malformed("$", format!("the line passes {ceiling} bytes")));
-    } else if body.contains(&0) {
-        return Err(malformed("$", "the line holds a NUL"));
-    }
-    let text = std::str::from_utf8(body).map_err(|_| malformed("$", "the line is not UTF-8"))?;
-    let parsed = strict_json::parse(body, &LINE_LIMITS).map_err(|e| malformed(&e.path, e.rule))?;
+    let (text, parsed) = framed(raw, first)?;
     let v = strict_json::to_value(&parsed);
     let text_of = |v: &Value| v.as_str().map(str::to_string);
     let key = v
@@ -1303,6 +1327,50 @@ fn read_line(
     }
     in_writers_form(&parsed, text, first)?;
     Ok(text.to_string())
+}
+
+/// A line's framing (ADR-036 §9): it ends in LF, is within its ceiling (the header's for the first
+/// line, a step's for any other), holds no NUL, is UTF-8 and parses strictly. The session history's
+/// reader and the lineage reader both frame a line with this.
+fn framed(raw: &[u8], first: bool) -> Result<(&str, Json), Framing> {
+    let Some(body) = raw.strip_suffix(b"\n") else {
+        return Err(malformed("$", "the line does not end in LF: a torn write").into());
+    };
+    let ceiling = if first {
+        MAX_HEADER_LINE_BYTES
+    } else {
+        MAX_STEP_LINE_BYTES
+    };
+    if body.len() > ceiling {
+        return Err(Framing::Over(ceiling));
+    } else if body.contains(&0) {
+        return Err(malformed("$", "the line holds a NUL").into());
+    }
+    let text = std::str::from_utf8(body).map_err(|_| malformed("$", "the line is not UTF-8"))?;
+    let parsed = strict_json::parse(body, &LINE_LIMITS).map_err(|e| malformed(&e.path, e.rule))?;
+    Ok((text, parsed))
+}
+
+/// Why [`framed`] refused a line: over its ceiling, which the lineage reader names as a bound, or
+/// against any other rule.
+enum Framing {
+    Over(usize),
+    Bad(RefParseError),
+}
+
+impl From<RefParseError> for Framing {
+    fn from(e: RefParseError) -> Self {
+        Framing::Bad(e)
+    }
+}
+
+impl From<Framing> for RefParseError {
+    fn from(f: Framing) -> Self {
+        match f {
+            Framing::Over(ceiling) => malformed("$", format!("the line passes {ceiling} bytes")),
+            Framing::Bad(e) => e,
+        }
+    }
 }
 
 /// What a line must also be (ADR-036 §2), checked after its member rules: its members in the
@@ -1478,6 +1546,12 @@ fn opaque_params(line: &mut Json) -> Option<&mut Json> {
 /// before it writes one.
 fn check_header(v: &Value) -> Res<Vec<DatasetRef>> {
     check(v, "$", &HEADER)?;
+    dataset_entries(v)
+}
+
+/// A header's dataset entries, each as `DatasetRef::parse` reads it: the session history's header
+/// and a lineage header both read theirs with this.
+fn dataset_entries(v: &Value) -> Res<Vec<DatasetRef>> {
     let items = v["datasets"].as_array().filter(|a| !a.is_empty());
     let items = items.ok_or_else(|| malformed("$.datasets", "expected one to eight entries"))?;
     items.iter().map(DatasetRef::parse).collect()
@@ -1509,6 +1583,256 @@ fn check_intent(intent: &Value, kind: &str, actions: u64) -> Res<()> {
             format!("`{action}` is not registered, and `actions` {actions} is not greater than {ACTIONS}"),
         )),
     }
+}
+
+// ---------------------------------------------------------------------------------------------
+// The lineage reader
+// ---------------------------------------------------------------------------------------------
+
+/// A lineage file's bound (ADR-036 Amendment 1 item 6; the 1c form's Amendment 1 item 5, C1).
+const MAX_LINEAGE_FILE_BYTES: u64 = 33_554_432;
+
+/// What [`read_lineage`] found: a fact for each file, and the project's lineage (its lines as
+/// written, without their LF) when a file is the one the project file records. `previous_file`
+/// is `None` when the previous lineage file was not looked at.
+///
+/// A producer ahead of its consumer, pre-committed (ADV-2026-11-16-10 R2; the 1c form's
+/// Amendment 31 item 6): its consumer is P3a's `Projects::open_project`, step 6.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct LineageRead {
+    pub folder_file: FolderLineage,
+    pub previous_file: Option<PreviousLineage>,
+    pub lineage: Option<Vec<String>>,
+}
+
+/// The lineage file in the project folder. Consumer: P3a's `Projects::open_project`, step 6
+/// (the 1c form's Amendment 31 item 6).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum FolderLineage {
+    Absent,
+    /// The project file records no lineage; the file was not opened.
+    NotRead,
+    Recorded,
+    /// Its first lines are the recorded lineage, and valid lines follow them.
+    RecordedWithLinesAfter,
+    NotTheRecordedOne,
+    Refused(LineageRefused),
+}
+
+/// The previous lineage file kept on this machine. Consumer: P3a's `Projects::open_project`,
+/// step 6 (the 1c form's Amendment 31 item 6).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum PreviousLineage {
+    Absent,
+    Used,
+    NotTheRecordedOne,
+    Refused(LineageRefused),
+}
+
+/// Why a lineage file was refused whole: no line of it is used, and it is left as it was.
+/// Consumer: P3a's `Projects::open_project`, step 6 (the 1c form's Amendment 31 item 6).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum LineageRefused {
+    /// Over the file's bound when `line` is `None`, else over that line's ceiling.
+    OverBound { line: Option<usize>, limit: u64 },
+    /// Against another rule, at the 1-based `line`; 0 when the file could not be read.
+    Damaged { line: usize, rule: String },
+}
+
+impl std::fmt::Display for LineageRefused {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::OverBound { line: None, limit } => write!(f, "it passes {limit} bytes"),
+            Self::OverBound {
+                line: Some(n),
+                limit,
+            } => write!(f, "its line {n} passes {limit} bytes"),
+            Self::Damaged { line: 0, rule } => write!(f, "it could not be read: {rule}"),
+            Self::Damaged { line, rule } => write!(f, "its line {line} fails a rule: {rule}"),
+        }
+    }
+}
+
+impl std::fmt::Display for FolderLineage {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let fact = match self {
+            Self::Absent => "the project folder holds no lineage file",
+            Self::NotRead => "the folder's lineage file is from a different save, since the project file records no lineage; it was not read",
+            Self::Recorded => "the folder's lineage file is the one the project file records",
+            Self::RecordedWithLinesAfter => "the folder's lineage file holds lines after the save the project file records; they were not read as the project's",
+            Self::NotTheRecordedOne => "the folder's lineage file is not the one the project file records",
+            Self::Refused(why) => return write!(f, "the folder's lineage file is refused: {why}"),
+        };
+        f.write_str(fact)
+    }
+}
+
+impl std::fmt::Display for PreviousLineage {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let fact = match self {
+            Self::Absent => "no previous lineage file is kept for the project on this machine",
+            Self::Used => "the previous lineage file kept on this machine is the one the project file records",
+            Self::NotTheRecordedOne => "the previous lineage file kept on this machine is not the one the project file records",
+            Self::Refused(why) => return write!(f, "the previous lineage file kept on this machine is refused: {why}"),
+        };
+        f.write_str(fact)
+    }
+}
+
+/// The lineage that the project file's `member` records (ADR-036 Amendment 1 item 2): the
+/// folder's lineage file `folder_file` first, then `previous_file`, the previous lineage file
+/// kept on this machine. Each is checked whole before any of it is used ([`lineage_file`]). Each
+/// is opened read only and closed before this returns; no file is written, truncated, renamed or
+/// locked. For a `not-kept` member only the folder file's presence is asked; it is not opened.
+///
+/// A producer ahead of its consumer, pre-committed (ADV-2026-11-16-10 R2; the 1c form's
+/// Amendment 31 item 6): its consumer is P3a's `Projects::open_project`, step 6.
+pub fn read_lineage(folder_file: &Path, previous_file: &Path, member: &Lineage) -> LineageRead {
+    let read = |folder_file, previous_file, lineage| LineageRead {
+        folder_file,
+        previous_file,
+        lineage,
+    };
+    let Lineage::Kept { sha256, steps } = member else {
+        let absent = matches!(std::fs::symlink_metadata(folder_file), Err(e) if e.kind() == ErrorKind::NotFound);
+        let fact = if absent {
+            FolderLineage::Absent
+        } else {
+            FolderLineage::NotRead
+        };
+        return read(fact, None, None);
+    };
+    // The header and the member's `steps` step and withheld lines, each hashed with its LF.
+    let count = usize::try_from(*steps).ok().and_then(|n| n.checked_add(1));
+    let is_member = |lines: &[String]| {
+        let bytes: Vec<u8> = lines.iter().flat_map(|l| l.bytes().chain(*b"\n")).collect();
+        sha256_hex(&bytes) == *sha256
+    };
+    let folder = match lineage_file(folder_file) {
+        Ok(None) => FolderLineage::Absent,
+        Err(refused) => FolderLineage::Refused(refused),
+        Ok(Some(mut lines)) => match count.filter(|n| *n <= lines.len()) {
+            Some(n) if is_member(&lines[..n]) => {
+                let fact = if lines.len() > n {
+                    FolderLineage::RecordedWithLinesAfter
+                } else {
+                    FolderLineage::Recorded
+                };
+                lines.truncate(n);
+                return read(fact, None, Some(lines));
+            }
+            _ => FolderLineage::NotTheRecordedOne,
+        },
+    };
+    let previous = match lineage_file(previous_file) {
+        Ok(None) => PreviousLineage::Absent,
+        Err(refused) => PreviousLineage::Refused(refused),
+        Ok(Some(lines)) if Some(lines.len()) == count && is_member(&lines) => {
+            return read(folder, Some(PreviousLineage::Used), Some(lines));
+        }
+        Ok(Some(_)) => PreviousLineage::NotTheRecordedOne,
+    };
+    read(folder, Some(previous), None)
+}
+
+/// One lineage file checked whole (ADR-036 §8; Amendment 1 items 2 and 6): `None` when it is
+/// absent, else its lines. Its size is checked by metadata before the bounded read, and every
+/// line is framed and read in its shape and chain; the first failure refuses the whole file.
+fn lineage_file(path: &Path) -> Result<Option<Vec<String>>, LineageRefused> {
+    let unreadable = |e: std::io::Error| LineageRefused::Damaged {
+        line: 0,
+        rule: e.to_string(),
+    };
+    let file = match File::open(path) {
+        Err(e) if e.kind() == ErrorKind::NotFound => return Ok(None),
+        file => file.map_err(unreadable)?,
+    };
+    let over = |n: u64| n > MAX_LINEAGE_FILE_BYTES;
+    let whole = LineageRefused::OverBound {
+        line: None,
+        limit: MAX_LINEAGE_FILE_BYTES,
+    };
+    if over(file.metadata().map_err(unreadable)?.len()) {
+        return Err(whole);
+    }
+    let mut bytes = Vec::new();
+    let read = file
+        .take(MAX_LINEAGE_FILE_BYTES + 1)
+        .read_to_end(&mut bytes);
+    read.map_err(unreadable)?;
+    if over(bytes.len() as u64) {
+        return Err(whole);
+    }
+    let mut chain = Chain::default();
+    let mut lines = Vec::new();
+    for (i, raw) in bytes.split_inclusive(|b| *b == b'\n').enumerate() {
+        let damaged = |e: RefParseError| LineageRefused::Damaged {
+            line: i + 1,
+            rule: e.to_string(),
+        };
+        let line = match framed(raw, i == 0) {
+            Err(Framing::Over(limit)) => Err(LineageRefused::OverBound {
+                line: Some(i + 1),
+                limit: limit as u64,
+            }),
+            Err(Framing::Bad(e)) => Err(damaged(e)),
+            Ok((text, parsed)) => lineage_line(&parsed, text, i == 0, &mut chain)
+                .map(|()| text)
+                .map_err(damaged),
+        };
+        lines.push(line?.to_string());
+    }
+    if lines.is_empty() {
+        let rule = "the file holds no header line".to_string();
+        return Err(LineageRefused::Damaged { line: 1, rule });
+    }
+    Ok(Some(lines))
+}
+
+/// One line of a lineage file in its shape (ADR-036 §6) and in the writer's form: the first a
+/// lineage header; every later one a step or a withheld line whose `parent` is the id of the line
+/// before it, or `null` for the first. A mark line is refused: marks are in the session history
+/// only.
+fn lineage_line(parsed: &Json, text: &str, first: bool, chain: &mut Chain) -> Res<()> {
+    let v = strict_json::to_value(parsed);
+    let key = v.as_object().filter(|o| o.len() == 1);
+    let (line, path) = match (first, key.and_then(|o| o.keys().next()).map(String::as_str)) {
+        (true, _) => {
+            check(&v, "$", &LINEAGE_HEADER)?;
+            dataset_entries(&v)?;
+            chain.actions = v["actions"].as_u64().unwrap_or(0);
+            return in_order(parsed, "$", &LINEAGE_HEADER).and_then(|()| spelled(parsed, text));
+        }
+        (false, Some("step")) => {
+            check_step(&v["step"], chain.actions)?;
+            in_writers_form(parsed, text, false)?;
+            (&v["step"], "$.step.parent")
+        }
+        (false, Some("withheld")) => {
+            check(&v, "$", &WITHHELD_LINE)?;
+            in_order(parsed, "$", &WITHHELD_LINE).and_then(|()| spelled(parsed, text))?;
+            (&v["withheld"], "$.withheld.parent")
+        }
+        (false, Some("mark")) => {
+            return Err(malformed(
+                "$.mark",
+                "a mark line is in a session history only",
+            ))
+        }
+        _ => {
+            let rule = "a line holds exactly one of `step` or `withheld`";
+            return Err(malformed("$", rule));
+        }
+    };
+    let id = |v: &Value| v.as_str().map(str::to_string);
+    if id(&line["parent"]) != chain.parent {
+        return Err(malformed(
+            path,
+            "a line's parent is the id of the line before it",
+        ));
+    }
+    chain.parent = id(&line["id"]);
+    Ok(())
 }
 
 #[cfg(test)]
