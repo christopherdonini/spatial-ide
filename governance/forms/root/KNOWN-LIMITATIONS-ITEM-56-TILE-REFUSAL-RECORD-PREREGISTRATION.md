@@ -19,3 +19,15 @@ Together they can leave a request refused with the code engine.connections_exhau
 ### Amendments
 
 *(Opens empty; append-only.)*
+
+### Amendment 1 — the closing, written after the single gate's result was seen (class 1): C1 and D1 to D4 closed under §31 by the advisor's words, with no re-gate
+
+*Written by the custodian on 2026-11-16, after the gate's result was seen. References only: the advisor's ruling ADV-2026-11-16-09 under the human's delegation of 2026-11-13 (`state/directives/2026-11-16-advisor-ruling-adv-2026-11-16-09-known-limitations-item-56-words-after-the-reviewers-gate-c1-stands-four-pairs-the-partly-loaded-words-not-added.md`); the human's message of 2026-11-13 on a gate that ended FAIL on wording only and was closed under §31 with no re-gate (`state/directives/2026-11-13-adv-04-and-05-approved-settings-two-places-ci-toolchain-pinned-merge-check-wording-only-fail-closed-under-31.md`).*
+
+1. **The single gate** (`state/consults/gates/2026-11-16-known-limitations-item-56-tile-refusal-record-gate-reviewer.md`), attempt 1 at 6f98980e9a9fc77b28a577a61b0852544817c4bb, gate-log row 767, ended FAIL. Its findings to fix are C1, under its Correctness section, which is headed as the words only, and D1 to D4, under Documentation; all five are wording. Its Evidence section has no finding.
+2. **C1 and D1 to D4 are closed under AUTONOMY §31** by the four pairs of ADV-2026-11-16-09, item 2, applied by a worker in 0ef69cb19e01dfef8489f8011b0e16a59836984f (`state/consults/2026-11-16-known-limitations-item-56-tile-refusal-record-words-worker-report.md`). The reviewer's optional words on a partly loaded tile are not added (item 3).
+3. **After the gated head 6f98980e nothing changed** but those four pairs. `git diff --numstat 6f98980e 0ef69cb1` names `KNOWN-LIMITATIONS.md` alone, 2 lines in and 2 out. The file at 0ef69cb1 is 167615 bytes, with sha256 102daa62ab1acfecff3ce45b75865109fedcc682b19326dbd017c675b7357733, the result that ADV-2026-11-16-09 item 4 gives.
+4. **Against Scope:** from the merge base 2e99751dc20106d36f1fe151815f7ed6eb1b5029 the PR changes 2 lines of `KNOWN-LIMITATIONS.md`, within the declared budget of 2. The node's record is on main under the rule that records commit there. Main has not changed the PR's one path since the merge base.
+5. **Carried to the stream-refusal node** by ADV-2026-11-16-09 item 6: case C, run in that node's test step (`state/consults/2026-11-16-shell-tiled-arm-stream-refusal-shown-to-the-user-test-step-tester-report.md`), and the queue-full case of D4.
+
+Nothing above is edited.

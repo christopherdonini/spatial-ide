@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `c8de38f0e76b4cfd35b796370aa03fca088cafd90de3022ce862fa06c007ea47`) at `2026-11-16T04:23:46.725Z`.
+Generated from `PLAN.yaml` (sha256 `219344a97e792fd77433c0e63a402b4f092213279866370fcccb92e2a53ce2e0`) at `2026-11-16T04:56:30.490Z`.
 
 ## 1. Next
 
@@ -40,7 +40,6 @@ Generated from `PLAN.yaml` (sha256 `c8de38f0e76b4cfd35b796370aa03fca088cafd90de3
 - **module-docs-drift-sweep-area-d** — Kernel and engine module docs: the never-refuses and unreachable claims the Table, record_step and publish have overtaken, the withdrawn cancellation bound, and smaller statements (drift sweep area D, findings 1 to 6) — blocked by: b2-piece-1c-save-and-reopen
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
 - **colour-by-refill-keeps-the-view** — A Colour-by on a new column while attributes are not held refills the map without fitting the camera again (its form decides the shape and may edit residency/) — blocked by: b1-shell-half, open-first-look-fills-fit-view
-- **dictionary-column-described-as-its-value-type-for-the-chooser** — A column stored as a dictionary over text is described by its value type for the Colour by chooser, so that the chooser offers it (the architect read on the text types, note b) — blocked by: b1-shell-half
 - **open-first-look-fills-fit-view** — After an open the view is partial and nothing says so, on every file over 10,000 rows: the open plans the tiles of the view the fit shows, so the view fills without a pan and the status line speaks (S1, the human's grade) — blocked by: b1-shell-half
 - **session-end-lines-name-coverage-lost-as-source-change** — The hover readout and the Feature tab word every session end as a source change, coverage-lost included, although the engine says coverage-lost is never a source change (milestone 4 PR C gate 1, the architect's C1 note) — blocked by: b1-shell-half
 - **session-log-token-redaction-rests-on-page-code** — The session token never reaching the session log rests on page code: binding_log_session_event appends page-supplied text verbatim, the page holds the token, and the data plane's Session::redact has only a test caller — blocked by: b2-piece-1c-save-and-reopen
