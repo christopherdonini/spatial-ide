@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-16T00:30:46.572Z",
-  "plan_hash": "99f89be7f8899ecbec2e50db28a1a221b39e88f457456ebc8d18ee65611f5b61",
+  "generated_at": "2026-11-16T01:01:25.835Z",
+  "plan_hash": "5dec859499172c06cd61f1d6fd6930497933a34879c9406f23e51b0d8250afa4",
   "priorities_approved": true,
   "next": {
     "id": "lod-tier-identity-binds-file-name",
@@ -697,28 +697,6 @@
     }
   ],
   "in_progress": [
-    {
-      "id": "lod-tier-tests-own-tier-folder",
-      "title": "Each engine test run takes its own tier folder, the machine-wide tier folder kept for the product only: two suites sharing one machine cleared each other's tiers, failing lod_tier_builder in #284's gate 1 (the human's ruling of 2026-11-06, item 2)",
-      "lane": "engine",
-      "phase": "prototype",
-      "status": "in-progress",
-      "order": null,
-      "budget_minutes": 60,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": {
-        "branch": "cut/lod-tier-tests-own-tier-folder"
-      },
-      "dates": {
-        "opened": "2026-11-06",
-        "done": null
-      },
-      "summary": "BUILT 2026-11-15 at f8f931e2 by its worker, resumed after ADV-2026-11-15-18: three commits on d2008810, pushed; 423 lines in the seven Scope files against the note of 260, nothing trimmed (term (a)); the measured time in the form's Amendment 2, against the node's budget; M1 and M2 observed as predicted; run 6 not as predicted, on rows the clippy node's 12d holds; its report filed (state/consults/2026-11-15-lod-tier-tests-own-tier-folder-worker-report.md); the final count told to the advisor before the gates; DRAFT PR 326 OPENED by the custodian. NEXT: both gates from dispatch, the reviewer and the architect, at the head. Before: FORM COMMITTED 2026-11-15: the five-line form governance/forms/engine/LOD-TIER-TESTS-OWN-TIER-FOLDER-PREREGISTRATION.md, lead-data's five lines at 68857b9e with the PLAN pin filled (state/consults/2026-11-15-lod-tier-tests-own-tier-folder-five-line-form-lead-data-draft.md); OPEN-5 (A) the advisor's, one form with both gates from dispatch and a size note of 260 lines for this piece alone, with three terms (state/directives/2026-11-15-advisor-ruling-adv-2026-11-15-14-lod-tier-open-5-a-one-five-line-form-both-gates-from-dispatch-size-note-260-for-this-piece-three-terms.md); its check of the filed draft answered with no new ruling (state/directives/2026-11-15-advisor-ruling-adv-2026-11-15-16-item-8-of-adv-2026-11-15-15-replaced-adv-2026-11-15-14-check-answered-no-new-ruling-budget-unchanged.md); the other OPEN items take the draft's recommendations under item 4 of 2026-10-31, recorded 2026-11-15; the budget unchanged on an estimate, the measured time told to the advisor at the closing. NEXT: its worker in the filler slot, its own worktree and a cargo target on D:, P-0 first, the reviewer and the architect from dispatch. Before: PLACED 2026-11-06 by the human's ruling (state/directives/2026-11-06-u12-e2e-on-5400-u1-size-accepted-tier-folder-node-review-packet-decisions.md, item 2), S3, the filler queue after the current entries (entry 11): each test run takes its own tier folder, and the machine-wide one is kept for the product only. Found at #284's gate 1: the reviewer's shared-run lod_tier_builder failure (state/consults/gates/2026-11-06-literal-only-float-integer-arithmetic-refused-gate1-reviewer.md), the binary passing alone at the head (governance/forms/engine/LITERAL-ONLY-FLOAT-INTEGER-ARITHMETIC-REFUSED-PREREGISTRATION.md, Amendment 1); engine/tests/lod_tier_builder.rs clears the machine-wide tier folder in its clear_tier_directory. Rule (00) at dispatch: cut/port-2-macos-l1-and-app-dirs edits engine/src/app_dirs.rs, engine/src/lod.rs and four engine/tests/lod_tier files. NEXT: its form at its turn.",
-      "evidence_label": "branch `cut/lod-tier-tests-own-tier-folder`"
-    },
     {
       "id": "clippy-deny-warnings-workspace",
       "title": "The workspace clippy diagnostics fixed, so cargo clippy over every target with -D warnings exits 0 (the cloud Linux run lists 48 distinct)",

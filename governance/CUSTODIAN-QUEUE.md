@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `99f89be7f8899ecbec2e50db28a1a221b39e88f457456ebc8d18ee65611f5b61`) at `2026-11-16T00:30:46.572Z`.
+Generated from `PLAN.yaml` (sha256 `5dec859499172c06cd61f1d6fd6930497933a34879c9406f23e51b0d8250afa4`) at `2026-11-16T01:01:25.835Z`.
 
 ## 1. Next
 
@@ -51,7 +51,6 @@ Generated from `PLAN.yaml` (sha256 `99f89be7f8899ecbec2e50db28a1a221b39e88f45745
 
 ## 5. In progress
 
-- **lod-tier-tests-own-tier-folder** — Each engine test run takes its own tier folder, the machine-wide tier folder kept for the product only: two suites sharing one machine cleared each other's tiers, failing lod_tier_builder in #284's gate 1 (the human's ruling of 2026-11-06, item 2) — evidence: branch `cut/lod-tier-tests-own-tier-folder`
 - **clippy-deny-warnings-workspace** — The workspace clippy diagnostics fixed, so cargo clippy over every target with -D warnings exits 0 (the cloud Linux run lists 48 distinct) — evidence: branch `cut/clippy-deny-warnings-workspace-12c`
 - **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **record-step-style-match-widening** — record_step admits a style.set match value on fillColor, with the step's dependencies naming the match column and its type (milestone 4's OPEN-4 (A′)), carried in piece 1c's step 1 by class 9 (the 1c form's Amendment 7) — evidence: branch `cut/b2-piece-1c-save-and-reopen`
