@@ -103,6 +103,13 @@ export interface TileViewportStreamManagerOptions {
    * (`engine/ADMISSION-PREREGISTRATION.md:749-750`).
    */
   onSessionEnded?: (detail: string) => void;
+  /**
+   * **A tracked tile was dropped without a stream** (the stream-refusal piece S1, §2.1): its mint was
+   * refused and the bounded requeue declined, or its `dataPlaneAttach` failed. Called after the
+   * queue is re-drained, only while the tile's epoch still matches and the manager is not stopped.
+   * Its one product caller is `candidateArmSession.ts`, which settles its status and its scan.
+   */
+  onTileDropped?: (tileKey: string) => void;
 }
 
 export type TilePlanOutcome =
@@ -981,6 +988,7 @@ export class TileViewportStreamManager {
         const membership = this.latestMembership;
         if (
           !this.stopped &&
+          !this.overBudgetFlag && // S1 (OPEN-1 (a)): the held drain would never issue the retry
           isRetryableRefusal(err) &&
           !this.requeuedTiles.has(tileKey) &&
           (membership === null || membership.has(tileKey)) &&
@@ -995,6 +1003,7 @@ export class TileViewportStreamManager {
         this.requeuedTiles.delete(tileKey);
         this.tileState.delete(tileKey);
         this.drainQueueIfRoom();
+        if (!this.stopped) this.opts.onTileDropped?.(tileKey);
       }
       return;
     }
@@ -1023,6 +1032,7 @@ export class TileViewportStreamManager {
         this.requeuedTiles.delete(tileKey);
         this.tileState.delete(tileKey);
         this.drainQueueIfRoom();
+        if (!this.stopped) this.opts.onTileDropped?.(tileKey);
       }
       await skpCancel(ticket.stream).catch((cancelErr) =>
         logRejectedCancel("mintAndStart(dataPlaneAttach-failed)", ticket.stream, cancelErr)

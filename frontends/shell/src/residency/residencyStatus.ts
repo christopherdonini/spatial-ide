@@ -108,7 +108,10 @@ export type ResidencyStatus =
    * check reads `false` unconditionally the instant this status fires, and stays that way until a NEW
    * camera-change plan runs. A relinquished fill is therefore never "settled" by construction -- there
    * is no settled classification for this event to carry. */
-  | { kind: "candidate-relinquished"; residentFeatureCount: number; untiledStreamStillRunning?: true };
+  | { kind: "candidate-relinquished"; residentFeatureCount: number; untiledStreamStillRunning?: true }
+  /** The stream-refusal piece S1 (§2.3): the first look failed before any plan and without a row of
+   * its own. `frame` says whether a grid frame exists, so whether a pan can plan tiles. */
+  | { kind: "candidate-first-look-failed"; frame: boolean };
 
 /**
  * Every input this state machine accepts, arm-aware. `"ceiling-refusal"` is baseline-only (never
@@ -145,7 +148,10 @@ export type ResidencyStatusEvent =
    * never be confused with the ordinary within/over-budget machinery this state machine already runs.
    * M1: `untiledStreamStillRunning` mirrors the `ResidencyStatus` field of the same name above --
    * see that doc comment for the full account. */
-  | { kind: "candidate-relinquished"; residentFeatureCount: number; untiledStreamStillRunning?: true };
+  | { kind: "candidate-relinquished"; residentFeatureCount: number; untiledStreamStillRunning?: true }
+  /** The stream-refusal piece S1 (§2.2 (b) branch 3): emitted by `candidateArmSession.ts`'s untiled
+   * sink. Not under the sticky relinquished refusal below, which names only the two budget events. */
+  | { kind: "candidate-first-look-failed"; frame: boolean };
 
 /**
  * The status-indicator state machine itself -- pure, outside React state updates, for the same
@@ -198,6 +204,8 @@ export function nextResidencyStatus(event: ResidencyStatusEvent, current: Reside
         residentFeatureCount: event.residentFeatureCount,
         untiledStreamStillRunning: event.untiledStreamStillRunning,
       };
+    case "candidate-first-look-failed":
+      return { kind: "candidate-first-look-failed", frame: event.frame };
     case "delivery-complete":
     case "dataset-changed":
     case "query-issued":
@@ -435,6 +443,20 @@ const SETTLED_PARTIAL_WITHIN_BUDGET_TEXT =
   "Filling has finished for this view — some areas were not loaded; pan or zoom to load them.";
 /** Item A draft (24(b) sight), RULED 2026-09-05 (24(b) string sight, "not fetched" -> "not loaded",
  * rest verbatim): 32a's own rider -- never "complete", never silent. */
+/** W1, the stream-refusal piece S1 (the form's §9): the advisor's wording under the delegation
+ * (ADV-2026-11-16-13), copied from the form by script. Clause check (§9, in short): its first clause
+ * holds because `candidateArmSession.ts` emits `frame: false` only from a current, not self-cancelled,
+ * not session-ended, not `Completed` first-look terminal after `establishFrameFromExtent` left no
+ * frame, so nothing is drawn; its second holds because opening the file again stops the old session
+ * and starts a new first look. It does not say a pan retries, which is false without a frame.
+ * Not covered (AUTONOMY §31): no e2e reaches this sentence without a fault injector, a dev-only switch. */
+const FIRST_LOOK_FAILED_NO_FRAME_TEXT = "The data for the map failed to load. Open the file again to retry.";
+/** W2, the stream-refusal piece S1 (the form's §9), copied from the form by script. Clause check
+ * (§9, in short): its first clause holds for the same terminal with a frame and no row of this look
+ * (`untiledRowsSeen === 0`); its second holds because with a frame `onCameraChange` plans tiles. It
+ * does not stand through that fill: `handleViewportChange`'s fresh plan clears it.
+ * Not covered (AUTONOMY §31): no e2e reaches this sentence without a fault injector, a dev-only switch. */
+const FIRST_LOOK_FAILED_TEXT = "The data for this view failed to load. Pan or zoom to retry.";
 function relinquishedText(residentFeatureCount: number): string {
   return `Filling stopped — showing ${residentFeatureCount} features already loaded; the rest of this view was not loaded.`;
 }
@@ -477,5 +499,7 @@ export function residencyStatusText(status: ResidencyStatus): string {
       return status.untiledStreamStillRunning
         ? relinquishedUntiledStillRunningText(status.residentFeatureCount)
         : relinquishedText(status.residentFeatureCount);
+    case "candidate-first-look-failed":
+      return status.frame ? FIRST_LOOK_FAILED_TEXT : FIRST_LOOK_FAILED_NO_FRAME_TEXT;
   }
 }
