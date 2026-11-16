@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
 /**
- * SHELL-MIGRATION-MILESTONE-4-PREREGISTRATION.md section 4, PB-R2, PB-R4 and PB-U11 (Amendments 12 and 16): Colour by through the REAL `App`. The harness is `App.table.test.tsx`'s (the SKP transport, the baseline
+ * SHELL-MIGRATION-MILESTONE-4-PREREGISTRATION.md section 4, PB-R2, PB-R4 and PB-U11 (Amendments 12 and 16), and PB-R5 (Amendment 25): Colour by through the REAL `App`. The harness is `App.table.test.tsx`'s (the SKP transport, the baseline
  * stream manager, the WebGL canvas and the export panel are the stand-ins), with the client's `recordStep` logged and the manager's `requestViewport` recording the filter it was asked for, as `App.command.test.tsx` has it.
  * The Style tab, the table source, `decodeBatch`, `readRow` and `categoryCases` are the real ones (I5), and the batches are the helper's IPC.
  */
@@ -132,6 +132,10 @@ vi.mock("./canvas/WorkingCanvas", () => {
 });
 
 import App from "./App";
+import { buildLayers } from "./canvas/buildLayers";
+import type { ResolvedDrawParams } from "./canvas/buildLayers";
+import { decodeBatch, ENCODING_POLYGON } from "./canvas/decodeBatch";
+import { OffsetFrame } from "./canvas/offsetFrame";
 import { CATEGORY_NULL_COLOR, CATEGORY_OTHER_COLOR, CATEGORY_PALETTE } from "./style/styleConstants";
 import { __resetResidencyArmForTests, setResidencyArm } from "./residency/residencyArm";
 import { SKP_VERSION } from "./skp/types";
@@ -285,5 +289,46 @@ describe("App: Colour by (milestone 4 PR B), through the real App", () => {
     await flush();
     expect([mocks.requests.length - requestsBefore, mocks.queries.length], "re-issues and cases queries").toEqual([0, 1]);
     expect(mocks.canvas.props!.style.fillMatch?.column, "the style was applied").toBe("zone");
+  });
+
+  /** The fill the canvas draws for the style App hands it: the real `applyStyleChange` resolves it, and the real `buildLayers` builds a batch's layer from it. */
+  async function drawnFill(): Promise<unknown> {
+    const { applyStyleChange } = await vi.importActual<typeof import("./canvas/WorkingCanvas")>("./canvas/WorkingCanvas");
+    let draw: ResolvedDrawParams | null = null;
+    applyStyleChange(mocks.canvas.props!.style, { setDrawParams: (params) => (draw = params), render: () => {} });
+    const { ipc } = attributeBatchIpc([1n, 2n], [{ name: "zone", kind: "utf8", values: ["park", "civic"] }]);
+    const frame = new OffsetFrame(100);
+    frame.maybeRecenter(0, 0);
+    const [layer] = buildLayers([decodeBatch("st_drawn", 0, ipc, "geometry", ENCODING_POLYGON, ["zone"], null)], frame, draw!, "polygonal");
+    return (layer.props as { getFillColor: unknown }).getFillColor;
+  }
+
+  // RECORDED MUTATION for PB-R5, applied alone: in `handleAdmitted` (App.tsx) leave `lastCommittedStyle` holding the match at an admission.
+  // Expected failure: the next commit records the fill colour as well as what it changes.
+  it("PB-R5: with Colour by applied, opening another file draws every feature in the Fill colour, empties the legend, and the next commit records only what it changes", async () => {
+    await open("C:/data/a.parquet");
+    await colourBy("zone");
+    deliver("st_t1", ["park", "civic", null, "park"], true);
+    await flush();
+    await flush();
+    expect(typeof (await drawnFill()), "the drawn fill under the match, a colour per feature").toBe("function");
+    expect([...container.querySelectorAll(".style-legend-label")].length, "the legend under the match").toBe(4);
+    const before = mocks.recorded.length;
+    await open("C:/data/b.parquet");
+    await flush();
+    const second = mocks.canvas.props!.dataset;
+    expect(second, "the canvas draws the second file").not.toBe(mocks.recorded[0].dataset);
+    expect(await drawnFill(), "every feature in the Fill colour, the default's").toEqual([66, 133, 244, 180]);
+    expect([...container.querySelectorAll(".style-legend-label")].length, "the legend after the open").toBe(0);
+    expect(mocks.recorded.length, "no step recorded for the open").toBe(before);
+    click(q("#inspector-tab-style"));
+    click(q(".style-disclosure"));
+    const width = q<HTMLInputElement>(".style-outline-width")!;
+    act(() => {
+      width.value = "2";
+      width.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+    await flush();
+    expect(mocks.recorded.slice(before), "the next commit's steps").toEqual([{ dataset: second, intent: { action: "style.set", params: { property: "outlineWidth", value: { value: 2, unit: "px" } } } }]);
   });
 });

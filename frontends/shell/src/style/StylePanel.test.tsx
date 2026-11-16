@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
 /**
- * SHELL-MIGRATION-MILESTONE-4-PREREGISTRATION.md section 4, PB-R1 (the chooser), PB-U8 and PB-R3: the Colour by block of the REAL `StylePanel`, over a real `TableSource` whose transport is the stand-in
+ * SHELL-MIGRATION-MILESTONE-4-PREREGISTRATION.md section 4, PB-R1 (the chooser), PB-U8 and PB-R3, and Amendment 25's PB-U13 and PB-U15: the Colour by block of the REAL `StylePanel`, over a real `TableSource` whose transport is the stand-in
  * (`categoryCases.test.ts` has the same one). The legend is `Legend.test.tsx`'s.
  */
 
@@ -23,6 +23,7 @@ vi.mock("../streaming/adapterWs", () => ({ startStream: startStreamMock }));
 vi.mock("../diagnostics/log", () => ({ logSessionEvent: vi.fn() }));
 
 import { ENCODING_POLYGON } from "../canvas/decodeBatch";
+import { consoleRecorder, isGuiActionEntry } from "../console/recorder";
 import { FILTER_DIALECT_DUCKDB_EXPR_0 } from "../skp/types";
 import type { StreamSink } from "../streaming/transport";
 import { attributeBatchIpc } from "../testUtils/attributeBatchIpc";
@@ -141,5 +142,60 @@ describe("the Colour by block of the Style tab", () => {
     expect(line(), "the line after Cancel").toContain("Nothing was applied");
     expect(q(".style-colour-cancel"), "Cancel after Cancel").toBeNull();
     expect(q<HTMLButtonElement>(".style-colour-apply")!.disabled, "Apply after Cancel").toBe(false);
+  });
+
+  const panel = (style: StyleState, table: TableSource | null, columns = COLUMNS): void =>
+    act(() => {
+      root.render(<StylePanel style={style} onChange={onChange} onCommit={onCommit} columns={columns} source={table} filter={filter} exportHeld={false} />);
+    });
+  const rows = (action: string): number => consoleRecorder.entries().filter(isGuiActionEntry).filter((e) => e.action === action).length;
+  const MATCH = { column: "tag", cases: [{ when: "a", then: CATEGORY_PALETTE[0] }], onNull: CATEGORY_NULL_COLOR, onUnmatched: CATEGORY_OTHER_COLOR };
+
+  // RECORDED MUTATIONS for PB-U13, each applied alone: in `StylePanel` (style/StylePanel.tsx) remove (1) the `recordNamed` call in `applyColourBy`, (2) the one in `handleOneColour`.
+  // Expected failure: (1) no style.colourBy row at the apply; (2) no style.oneColour row before One colour's commit.
+  it("PB-U13: Colour by and One colour each record their class C row at the action, before the outcome, whatever the outcome", async () => {
+    const colourBy = rows("style.colourBy");
+    mount(source());
+    choose("tag");
+    act(() => q<HTMLButtonElement>(".style-colour-apply")!.click());
+    expect([rows("style.colourBy") - colourBy, onChange.mock.calls.length], "the Colour by row at the apply, before its outcome").toEqual([1, 0]);
+    await flush();
+    act(() => q<HTMLButtonElement>(".style-colour-cancel")!.click());
+    await flush();
+    expect([rows("style.colourBy") - colourBy, onCommit.mock.calls.length], "the row of an apply cancelled, nothing applied").toEqual([1, 0]);
+    act(() => q<HTMLButtonElement>(".style-colour-apply")!.click());
+    await flush();
+    deliver("sh_2", [null]);
+    await flush();
+    expect(line(), "the line of an apply that applies nothing").toContain("holds no value");
+    expect([rows("style.colourBy") - colourBy, onCommit.mock.calls.length], "the row of an apply that applies nothing").toEqual([2, 0]);
+
+    const oneColour = rows("style.oneColour");
+    let atCommit = -1;
+    onCommit.mockImplementation(() => {
+      atCommit = rows("style.oneColour") - oneColour;
+    });
+    panel({ ...DEFAULT_STYLE_STATE, fillMatch: MATCH }, null);
+    act(() => q<HTMLButtonElement>(".style-one-colour")!.click());
+    expect([atCommit, onCommit.mock.calls.length], "the One colour row before its commit, and the one commit").toEqual([1, 1]);
+  });
+
+  // RECORDED MUTATIONS for PB-U15, each applied alone: in `StylePanel` (style/StylePanel.tsx) (1) keep the line when the match ends other than by the panel; (2) keep a chosen column the candidates no longer list.
+  // Expected failure: (1) the Colour by line after the match ended; (2) Apply with the column no longer offered.
+  it("PB-U15: under the same panel, a match ended from outside clears the Colour by line, and a chosen column no longer offered is reset", async () => {
+    const table = source();
+    panel(DEFAULT_STYLE_STATE, table);
+    choose("tag");
+    act(() => q<HTMLButtonElement>(".style-colour-apply")!.click());
+    await flush();
+    deliver("sh_1", ["a", "b"]);
+    await flush();
+    const applied = onChange.mock.calls[0][0];
+    panel(applied, table);
+    expect(line(), "the line with the match applied").toContain("Coloured by tag");
+    panel({ ...applied, fillMatch: null }, table, COLUMNS.filter((c) => c.name !== "tag"));
+    expect(line(), "the Colour by line after the match ended from outside").toBe("");
+    expect(q<HTMLButtonElement>(".style-colour-apply")!.disabled, "Apply with the chosen column no longer offered").toBe(true);
+    expect(q<HTMLSelectElement>(".style-colour-column")!.value, "the chosen column").toBe("");
   });
 });

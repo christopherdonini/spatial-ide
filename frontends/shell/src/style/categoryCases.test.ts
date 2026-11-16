@@ -143,4 +143,19 @@ describe("the wait for the first scope (Amendment 12 item 4)", () => {
     expect(cancelMock, "cancel calls for a joined stream").not.toHaveBeenCalled();
     expect(joined.getSnapshot().phase, "the joined stream still running").toBe("loading");
   });
+
+  // RECORDED MUTATION for PB-U9 (vi), applied alone: in `abandon` (style/categoryCases.ts) cancel whenever the wait issued a request, as at 6f7e744cf6a1c1337fdaf62bfdc113c1de531f1a.
+  // Expected failure: Colour by's Cancel cancels the Table's request.
+  it("PB-U9 (vi): a Colour by's wait, then the Table's superseding request, then Colour by's Cancel: the Table's request is not cancelled and only the wait is abandoned", async () => {
+    const source = newSource();
+    const wait = waitForFirstScope(source, null);
+    await flush();
+    void source.start(null); // the Table's own request, which supersedes the wait's
+    await flush();
+    expect(cancelMock.mock.calls, "the wait's request, cancelled by the Table's start").toEqual([["sh_1"]]);
+    wait.abandon();
+    expect(await wait.result, "the abandoned wait").toEqual({ kind: "not-applied", reason: "abandoned" });
+    expect(cancelMock.mock.calls, "cancel calls after Colour by's Cancel, the Table's request among none of them").toEqual([["sh_1"]]);
+    expect(source.getSnapshot().phase, "the Table's request still loading").toBe("loading");
+  });
 });

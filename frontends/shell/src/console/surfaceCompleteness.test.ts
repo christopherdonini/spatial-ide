@@ -265,9 +265,11 @@ describe("console/surfaceRegistry completeness scan (NEXT-CUT.md P2)", () => {
     // surfaceRegistry.ts). Expected failure: the class-C set still names a style edit.
     // The one other `style.` row allowed is `style.resetToDefault` (Amendment 8, the architect's C-3): a Reset that changes
     // nothing records no step, so it is not an edit that is recorded; `App.recording.test.tsx` "A4" proves when its row is written.
+    // Milestone 4 PR B adds `style.colourBy` and `style.oneColour` (SHELL-MIGRATION-MILESTONE-4-PREREGISTRATION.md Amendment 25 item 3): each is
+    // recorded at the action whatever its outcome, so its row is not a style edit that is recorded; a change sends its step as the `record_step` row.
     it("style edits are class-A record_step rows", () => {
       const styleEdits = classCRows().filter((row) => /^style\./.test(row.action) && row.action !== "style.togglePanelExpanded");
-      expect(styleEdits.map((row) => row.action)).toEqual(["style.resetToDefault"]);
+      expect(styleEdits.map((row) => row.action)).toEqual(["style.colourBy", "style.oneColour", "style.resetToDefault"]);
       expect(classARows().map((row) => row.command)).toContain("record_step");
     });
   });
