@@ -173,3 +173,39 @@ Nothing above is edited.
    - Then out of draft, and the merge check to the advisor (the grant, item 5).
 
 Nothing above is edited.
+
+### Amendment 3 — the closing amendment: both gates PASS WITH NOTES at f8f931e2 (by reference); the lines outside the Scope line read inside the piece by the advisor (ADV-2026-11-15-22 and -23; the five lines not edited); the words at ed7e6465 under AUTONOMY section 31 (d) (class 1); D6; a record for the next measurement run; the changed-paths list; CI. Written by the custodian after both gates and the words, before the PR leaves draft
+
+*Written by the custodian on 2026-11-15. Counts are by git, times by the transcripts.*
+
+1. **The gates (by reference).** At f8f931e2, the two gates from dispatch:
+   - the architect, PASS WITH NOTES, received at 2026-11-15T21:38:11Z: `state/consults/gates/2026-11-15-lod-tier-tests-own-tier-folder-gate-architect.md`, gate-log row 764;
+   - the reviewer, PASS WITH NOTES, received at 2026-11-15T22:29:47Z: `state/consults/gates/2026-11-15-lod-tier-tests-own-tier-folder-gate-reviewer.md`, gate-log row 765.
+   Neither has a Correctness or an Evidence finding. Each report's runs and reads were checked against its transcript.
+
+2. **The lines outside the Scope line.** The advisor's reading of the Scope line, not an edit of it:
+   - the architect's four groups, by ADV-2026-11-15-22 item 1: the module doc and the `generations_performed` doc in `engine/tests/common/mod.rs`; the two `dead_code` allows there; the module doc of `engine/tests/lod_tier_preflight.rs`;
+   - the reviewer's two further groups, by ADV-2026-11-15-23 item 1: in `engine/tests/lod_tier_builder.rs`, the two disclosure prints that call the renamed free-space helper; in `engine/tests/lod_tier_measurements.rs`, the two free-space prints of the 100k measurement and the two disclosure prints.
+   The reviewer's report names no other line outside the Scope line.
+
+3. **The words (class 1, AUTONOMY section 31 (d)).** The architect's D1 to D5, placed by ADV-2026-11-15-22 item 5 and ADV-2026-11-15-23 item 2, are applied at ed7e646588c40b39b70a7d2c1fcfe10f90e7a943, on f8f931e2. The worker's report is at `state/consults/2026-11-15-lod-tier-tests-own-tier-folder-words-worker-report.md`.
+   - The commit has 3 files, with 20 lines added and 15 removed, and every changed line is a comment line.
+   - The five edits came from a spec the custodian built from the architect's report, so the worker typed none of them.
+   - The reviewer's D1 to D4 give other words for the same four sentences. They are recorded in its report and not applied.
+   - The PR body lists the five.
+
+4. **D6, the architect's reading of the Out-of-scope line's clause on T-A's (2).** Its words, byte for byte as its report writes them:
+
+   `The Out-of-scope line's "T-A's (2) now checks it end to end" is read as: T-A's (2) checks from` `` `build_tiers` `` `that on Windows a build's tier root is the process's` `` `LOCALAPPDATA` `` `(app_dirs.rs's Windows row); that no second place decides the root stays proven by` `` `engine/tests/lod_tier_root.rs` `` `'s M5 and app_dirs.rs's unit tests, which this piece leaves unchanged.`
+
+5. **A record for the next measurement run (ADV-2026-11-15-23 item 3).** The ignored measurement tests now build their tiers on the run's volume and call the wrapper inside the timed region. No figure is changed by this piece. The next run of those measurements names the volume and says the wrapper is inside the timed region.
+
+6. **Run 6.** With -D warnings, the reviewer's run failed at three rows, not the two Amendment 2 item 5 records: the app_dirs row joins the renderer's two. None is in a changed file. The app_dirs row is on the clippy node by ADV-2026-11-15-21.
+
+7. **The changed-paths list (ADV-2026-11-14-21 item 6).** These are the PR's paths changed on main from the merge base d2008810 to f53f64c5: none.
+
+8. **CI.** PR 326 at ed7e6465, read at 2026-11-15T23:38:14Z: 20 checks, each passing.
+
+9. **What follows.** The PR body names the words. Then the PR leaves draft and the merge check goes to the advisor (the grant, item 5).
+
+Nothing above is edited.
