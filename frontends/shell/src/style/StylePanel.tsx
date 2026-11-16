@@ -102,6 +102,21 @@ export default function StylePanel({ style, onChange, onCommit, columns, source,
   onChangeRef.current = onChange;
   // The wait ends with the panel (a dataset change keys a new one): it cancels a stream it issued and leaves a joined one running.
   useEffect(() => () => waitRef.current?.abandon(), []);
+  // A match ended other than by the panel clears the Colour by line: an open ends it (`resource.admitted`), and under the same dataset key App does
+  // not make the panel anew. The panel's own ends (the Fill colour, One colour, Reset) set `endedHereRef` first, so this effect leaves the line as their own code sets it.
+  const matchRef = useRef(style.fillMatch);
+  const endedHereRef = useRef(false);
+  useEffect(() => {
+    const ended = matchRef.current !== null && style.fillMatch === null;
+    matchRef.current = style.fillMatch;
+    if (ended && !endedHereRef.current) setLine(null);
+    endedHereRef.current = false;
+  }, [style.fillMatch]);
+  // A chosen column the candidates no longer list is reset to none.
+  const offered = column === "" || candidates.some((c) => c.name === column);
+  useEffect(() => {
+    if (!offered) setColumn("");
+  }, [offered]);
   const fillColorRef = useRef<HTMLInputElement>(null);
   const fillOpacityRef = useRef<HTMLInputElement>(null);
   const outlineColorRef = useRef<HTMLInputElement>(null);
@@ -158,6 +173,7 @@ export default function StylePanel({ style, onChange, onCommit, columns, source,
     // (never trust a boundary even when the spec already guarantees it); `toStyleDocument`
     // normalizes a second time regardless when the document is built, so this is
     // belt-and-suspenders, not the only guard against a malformed literal (binding note 5).
+    endedHereRef.current = true;
     onChange({ ...style, fillColor: e.target.value.toLowerCase(), fillMatch: null });
   }
 
@@ -210,6 +226,7 @@ export default function StylePanel({ style, onChange, onCommit, columns, source,
 
   function handleOneColour(): void {
     recordNamed("gui-action", "style.oneColour"); // at the action, before its commit
+    endedHereRef.current = true;
     const next = { ...style, fillMatch: null };
     onChange(next);
     onCommit(next);
@@ -218,6 +235,7 @@ export default function StylePanel({ style, onChange, onCommit, columns, source,
 
   function handleReset(): void {
     // "Reset to default" is a FRESH EDIT, never undo-flavoured (NEXT-CUT.md binding note 4). It is one commit.
+    endedHereRef.current = true;
     onChange(DEFAULT_STYLE_STATE);
     onCommit(DEFAULT_STYLE_STATE, "reset");
   }

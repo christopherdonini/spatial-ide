@@ -106,7 +106,8 @@ export interface WorkspaceState {
 
 export type WorkspaceAction =
   /** Mints the one view on the first admission and rebinds it on every later one: the view's filter is
-   * reset and its style kept, the view joins the new resource's consumers and leaves the old one's. */
+   * reset and Colour by ends (`fillMatch` becomes null), while the fill colour, the opacity, the outline colour and the outline width are kept;
+   * the view joins the new resource's consumers and leaves the old one's. */
   | { type: "resource.admitted"; admitted: Admitted }
   | { type: "resource.generationEnded"; resource: ResourceKey; reason: GenerationEndReason }
   /** Idempotent (Amendment 7 item 4): a consumer already present leaves the state unchanged. */
@@ -149,11 +150,12 @@ function admit(state: WorkspaceState, admitted: Admitted): WorkspaceState {
     : { ...target, consumers: [...target.consumers, viewId] };
   // A rebind ends the old generation: the selection and the inspected feature name nothing in the new one (section 2.3).
   const bound = view.resource === key ? view : endViewGeneration(view, "reopened");
-  // The filter resets and with it the clauses (milestone 3 section 2.5).
+  // The filter resets and with it the clauses (milestone 3 section 2.5); at the same point Colour by ends, and the rest of the style is kept.
   const { clauses: _clauses, ...rebound } = bound;
+  const style = rebound.style.fillMatch === null ? rebound.style : { ...rebound.style, fillMatch: null };
   return {
     ...state,
-    views: { ...state.views, [viewId]: { ...rebound, resource: key, filter: null } },
+    views: { ...state.views, [viewId]: { ...rebound, resource: key, filter: null, style } },
     resources,
   };
 }

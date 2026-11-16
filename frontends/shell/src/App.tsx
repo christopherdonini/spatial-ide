@@ -1164,6 +1164,9 @@ export default function App() {
       // The new canvas has reported no view box yet, and the last click named the old dataset.
       viewBox.set(null);
       setLastClick(null);
+      // The workspace's `resource.admitted` ends Colour by on every later open (`workspaceState.ts`'s `admit`); the baseline `handleStyleCommit`
+      // diffs from ends it too, so that the next commit records only what it changes. No step is recorded for the open.
+      if (lastCommittedStyle.current.fillMatch !== null) lastCommittedStyle.current = { ...lastCommittedStyle.current, fillMatch: null };
       admitAndResetStaleUiState(next, {
         setCanvasRefusal,
         setViewportRefusal,

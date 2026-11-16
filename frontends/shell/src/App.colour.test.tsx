@@ -11,7 +11,7 @@ import { readFileSync } from "node:fs";
 
 import { act, forwardRef, useImperativeHandle } from "react";
 import { createRoot, Root } from "react-dom/client";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ExportRunEnd, ExportRunReport, PublishPanelHandle, PublishPanelProps } from "./publish/PublishPanel";
 
 const mocks = vi.hoisted(() => ({
@@ -292,8 +292,11 @@ describe("App: Colour by (milestone 4 PR B), through the real App", () => {
   });
 
   /** The fill the canvas draws for the style App hands it: the real `applyStyleChange` resolves it, and the real `buildLayers` builds a batch's layer from it. */
-  async function drawnFill(): Promise<unknown> {
-    const { applyStyleChange } = await vi.importActual<typeof import("./canvas/WorkingCanvas")>("./canvas/WorkingCanvas");
+  let applyStyleChange: (typeof import("./canvas/WorkingCanvas"))["applyStyleChange"];
+  beforeAll(async () => {
+    ({ applyStyleChange } = await vi.importActual<typeof import("./canvas/WorkingCanvas")>("./canvas/WorkingCanvas"));
+  });
+  function drawnFill(): unknown {
     let draw: ResolvedDrawParams | null = null;
     applyStyleChange(mocks.canvas.props!.style, { setDrawParams: (params) => (draw = params), render: () => {} });
     const { ipc } = attributeBatchIpc([1n, 2n], [{ name: "zone", kind: "utf8", values: ["park", "civic"] }]);
@@ -311,14 +314,14 @@ describe("App: Colour by (milestone 4 PR B), through the real App", () => {
     deliver("st_t1", ["park", "civic", null, "park"], true);
     await flush();
     await flush();
-    expect(typeof (await drawnFill()), "the drawn fill under the match, a colour per feature").toBe("function");
+    expect(typeof drawnFill(), "the drawn fill under the match, a colour per feature").toBe("function");
     expect([...container.querySelectorAll(".style-legend-label")].length, "the legend under the match").toBe(4);
     const before = mocks.recorded.length;
     await open("C:/data/b.parquet");
     await flush();
     const second = mocks.canvas.props!.dataset;
     expect(second, "the canvas draws the second file").not.toBe(mocks.recorded[0].dataset);
-    expect(await drawnFill(), "every feature in the Fill colour, the default's").toEqual([66, 133, 244, 180]);
+    expect(drawnFill(), "every feature in the Fill colour, the default's").toEqual([66, 133, 244, 180]);
     expect([...container.querySelectorAll(".style-legend-label")].length, "the legend after the open").toBe(0);
     expect(mocks.recorded.length, "no step recorded for the open").toBe(before);
     click(q("#inspector-tab-style"));
