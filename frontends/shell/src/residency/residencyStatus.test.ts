@@ -578,3 +578,21 @@ describe("settledState (Item B, BS5: a pure function of hasPlanned/pendingViewpo
     }
   });
 });
+
+// The stream-refusal piece S1 (`governance/forms/frontends/SHELL-TILED-ARM-STREAM-REFUSAL-SHOWN-TO-THE-USER-PREREGISTRATION.md`
+// §2.3, §4 RS-F1): a first look that failed before any row. W1 and W2 are the advisor's wording under the delegation (§9),
+// copied byte for byte from the form by script.
+describe("RS-F1: candidate-first-look-failed", () => {
+  const W1 = "The data for the map failed to load. Open the file again to retry.";
+  const W2 = "The data for this view failed to load. Pan or zoom to retry.";
+
+  it("reduces to its status; reads W1 without a frame and W2 with one; query-issued and candidate-fill-progress each clear it", () => {
+    for (const frame of [false, true]) {
+      const status = nextResidencyStatus({ kind: "candidate-first-look-failed", frame });
+      expect(status).toEqual({ kind: "candidate-first-look-failed", frame });
+      expect(residencyStatusText(status!)).toBe(frame ? W2 : W1);
+      expect(nextResidencyStatus({ kind: "query-issued" }, status)).toBeNull();
+      expect(nextResidencyStatus({ kind: "candidate-fill-progress" }, status)).toBeNull();
+    }
+  });
+});
