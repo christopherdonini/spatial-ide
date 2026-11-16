@@ -31,3 +31,5 @@ Together they can leave a request refused with the code engine.connections_exhau
 5. **Carried to the stream-refusal node** by ADV-2026-11-16-09 item 6: case C, run in that node's test step (`state/consults/2026-11-16-shell-tiled-arm-stream-refusal-shown-to-the-user-test-step-tester-report.md`), and the queue-full case of D4.
 
 Nothing above is edited.
+
+*A later line on Amendment 1, written by the custodian on 2026-11-16 after the advisor's merge at 619a7cc94c6ac89768ca6d68d40ea9afff0c2a7b and the note in its verdict (`state/consults/merge-checks/PR-328-0ef69cb19e01.md`): Amendment 1 item 3 says the file's size and sha256 are the result that item 4 of ADV-2026-11-16-09 gives. The ruling does not hold those two values; the advisor's message that sent it does. The values are right by the advisor's own script. Nothing above is edited.*

@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `219344a97e792fd77433c0e63a402b4f092213279866370fcccb92e2a53ce2e0`) at `2026-11-16T04:56:30.490Z`.
+Generated from `PLAN.yaml` (sha256 `da13903b8ddedcd7a16f1d3a0326675128c79e1c158755b04b362273886f8d7c`) at `2026-11-16T05:31:02.707Z`.
 
 ## 1. Next
 
@@ -58,7 +58,6 @@ Generated from `PLAN.yaml` (sha256 `219344a97e792fd77433c0e63a402b4f092213279866
 - **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **record-step-style-match-widening** — record_step admits a style.set match value on fillColor, with the step's dependencies naming the match column and its type (milestone 4's OPEN-4 (A′)), carried in piece 1c's step 1 by class 9 (the 1c form's Amendment 7) — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **b1-shell-half** — Shell migration, milestone 4 -- B1 shell half: attributes of the inspected feature, colour by category with its legend, and the table — evidence: branch `cut/b1-shell-half-pr-c`
-- **known-limitations-item-56-tile-refusal-record** — KNOWN-LIMITATIONS item 56: the clause that a refused request is shown by name corrected for a tile of the map, which shows no code (one span and the item comment) — evidence: branch `cut/known-limitations-item-56-tile-refusal-record`
 
 ## 6. Proposed / unscheduled
 

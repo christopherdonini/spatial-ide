@@ -2689,3 +2689,20 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 27: PR B takes main in at 619a7cc9, the merge of PR 328, before its gates' second attempts (ADV-2026-11-16-05 item 3); recorded by the custodian after the merge commit
+
+*Written by the custodian on 2026-11-16. The ruling is filed at `state/directives/2026-11-16-advisor-ruling-adv-2026-11-16-05-known-limitations-item-56-tile-refusal-record-corrected-now-the-stream-refusal-node-s2-slot-2.md`; its item 3 has PR B take main in before its second gate attempts and re-apply its own clause on main's line by script, its amendment recording it, both gates reading item 56 whole.*
+
+1. **The merge.** 6f95993e37255513bf7f5d78b519bc3a71562fb0 on PR B's branch, parents 2f7047737f64d9ca8a7a06332672ab9b3d25c9bc (the correction's head) and 619a7cc94c6ac89768ca6d68d40ea9afff0c2a7b. The worker's report: `state/consults/2026-11-16-b1-shell-half-pr-b-takes-main-at-619a7cc9-worker-report.md`. The one conflict was in `KNOWN-LIMITATIONS.md`; no other path needed a resolution. Against the correction's head the merge brings main's own paths since the merge base 2abf3ea087cb53cf5cbb57b844f7c2ad6a92a89a and nothing else; against main it leaves PR B's own paths and nothing else (the worker's two path checks, and the custodian's own). No path under `frontends/` changes in the merge.
+
+2. **Item 56's line.** The two lines of item 56 at the head are main's, with PR B's own clause applied again as two old and new texts, each found once on main's line, by the custodian's script:
+   - pair 1, in the paragraph: old ` and again after an Apply or Clear`; new `, again after an Apply or Clear, and again after a Colour by on a different column while the status bar says that attributes were not held (item 51)`;
+   - pair 2, in the comment: PR B's sentence inserted before the comment's closing, 695 bytes, sha256 4fedeea68b4e9de87cd800963a95c5ec665498b54f63fa0c57de499f20fba284, the same bytes that PR B's head 2f704773 inserts at the merge base.
+   Nothing else in the item changes. The file at the head is 182635 bytes, sha256 ae6a62ddcc9ca23fbf38721a92d5037b285d20e35ca3e0e98fc347bcf7ebabc1.
+
+3. **The series and the gates.** PR B's one series (ADV-2026-11-16-06 item 8 (a)) runs at 6f95993e. Both gates' second attempts read that head and read item 56 whole.
+
+Read the last amendment first.
+
+Nothing above is edited.
