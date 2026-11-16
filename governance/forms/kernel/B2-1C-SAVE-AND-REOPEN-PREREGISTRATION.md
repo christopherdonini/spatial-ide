@@ -2204,3 +2204,13 @@ Nothing above is edited.
     - Nothing else is superseded.
 
 Nothing above is edited.
+
+## Amendment 32 — step 3, the recovery offer after a crash, placed in a node of its own by the human (ADV-2026-11-16-07 item 1 (b)); not in v0.2
+
+*Written by the custodian, 2026-11-16. References only. Nothing below is a quotation.*
+
+1. **Basis.** The human's typed message of 07:53Z approved the advisor's draft ADV-2026-11-16-07 (`state/directives/2026-11-16-the-humans-message-five-drafts-approved-v0-1-0-records-what-v0-2-waits-for-the-machine-queue-the-alarm-timer-the-limits-of-the-advisors-merges.md`). Its item 1 (b) puts this node's step 2, the reopen, in v0.2, and splits step 3 into a node of its own, outside v0.2.
+2. **The split.** Step 3 (§2.6 and the rows of §4 and §7 placed at step 3) is now the plan node `b2-piece-1c-step-3-recovery-offer`, gated by this same form. It depends on this node and on `second-open-history-before-1c-step-3`, as the step order in this form already sets. This node is done when step 2 is done.
+3. **Unchanged.** No section, ceiling, test or rule of step 3 changes. KNOWN-LIMITATIONS item 43 stays as it is, by the same item. Where Amendments 30 and 31 name a part of step 3, such as the record's own locations writer of Amendment 30 item 4 (a), it stays step 3's and now lives in that node.
+
+Nothing above is edited.

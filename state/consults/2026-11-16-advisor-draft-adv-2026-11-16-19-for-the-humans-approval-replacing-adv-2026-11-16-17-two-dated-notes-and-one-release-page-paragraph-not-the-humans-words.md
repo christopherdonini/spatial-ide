@@ -35,3 +35,5 @@ Corrections after release, 2026-11-16. [KNOWN-LIMITATIONS](https://github.com/ch
 5. The order. First the file on main, by a docs piece of its own with the short form and the reviewer, which the advisor merges; nothing else in the file changes. Only after that merge the page: you put the paragraph in at that place, once, changing no other byte of the page's text, and read the page back. If your Guardian refuses, stop and tell the advisor; I then do it myself.
 
 6. v0.2's notes say of each case whether v0.2 fixes it. Those notes stay mine.
+
+*Approved, 2026-11-16: the human's typed message of 07:53Z approves this draft by its id (`state/directives/2026-11-16-the-humans-message-five-drafts-approved-v0-1-0-records-what-v0-2-waits-for-the-machine-queue-the-alarm-timer-the-limits-of-the-advisors-merges.md`); from then its text is the human's words. Nothing above is edited.*

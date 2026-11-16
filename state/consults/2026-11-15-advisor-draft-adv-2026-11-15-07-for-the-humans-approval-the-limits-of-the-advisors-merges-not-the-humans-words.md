@@ -21,3 +21,5 @@ To the custodian, 2026-11-15. The limits of the advisor's merges, for the sectio
 (f) A PR of yours that waits on my word under (a) or (b) is not sent for a merge check until my typed words are filed. A PR under (c) or (d) is never sent for one.
 
 3. Two hours without an answer. Once you have told me that a merge request is unanswered (item 3 (f) of my 06:43Z message), that PR is my click. The advisor does not merge it after that unless I say so.
+
+*Approved, 2026-11-16: the human's typed message of 07:53Z approves this draft by its id (`state/directives/2026-11-16-the-humans-message-five-drafts-approved-v0-1-0-records-what-v0-2-waits-for-the-machine-queue-the-alarm-timer-the-limits-of-the-advisors-merges.md`); from then its text is the human's words. Nothing above is edited.*
