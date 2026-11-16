@@ -2670,3 +2670,22 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 26: `frontends/shell/src/console/surfaceCompleteness.test.ts` joins PR B's list for Amendment 25 item 3 alone (class 9, a scope addition, declared before its code); found by the custodian at the correction's dispatch
+
+*Written by the custodian on 2026-11-16, before the correction's code. The advisor's ruling ADV-2026-11-16-06, item 8 (a), allows an amendment between Amendment 25 and the closing when the scope changes; this one changes it by one test file. That ruling is filed at `state/directives/2026-11-16-advisor-ruling-adv-2026-11-16-06-the-humans-directive-of-2026-11-16-put-in-force-focus-record-classes-runs-pieces-models-the-two-drafts-the-held-dispatches-go.md`.*
+
+1. **Why.** The test "style edits are class-A record_step rows", in `frontends/shell/src/console/surfaceCompleteness.test.ts`, expects one class C row whose action starts with `style.`, `style.togglePanelExpanded` aside: `style.resetToDefault`. Its blob is the same at 6f7e744c and on main. Amendment 25 item 3 adds `style.colourBy` and `style.oneColour` to `CLASS_C_ROWS`, as §2.5 requires, so that test fails. The file is not on PR B's list. §7's B-T row does not name it, and neither gate report nor any ruling on PR B names it.
+
+2. **The change, in that test alone.**
+   - The expected list names three rows, `style.colourBy`, `style.oneColour` and `style.resetToDefault`, in the order `CLASS_C_ROWS` gives them.
+   - The comment above it gains one sentence for the two rows, in the shape of its sentence on Reset. The sentence says that each is recorded at the action whatever its outcome, so its row is not a style edit that is recorded, and that a change sends its step as the `record_step` row.
+   - Nothing else in the file changes. Its recorded mutation (re-add `style.setFillColor` to `CLASS_C_ROWS`) still adds a style edit to class C, so it still fails the test. The correction worker observes it again at its head.
+
+3. **Size.** The file has no ceiling of its own in B-T. Its lines count toward B-T's total, and any past it are class 8.
+
+4. **The gates.** Both gates' second attempts read this change with Amendment 25 item 3.
+
+Read the last amendment first.
+
+Nothing above is edited.
