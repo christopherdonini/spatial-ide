@@ -73,7 +73,7 @@ fn the_project_lock_is_refused_while_held_in_this_process_and_in_another_and_fre
     let (said, heard) = mpsc::channel();
     std::thread::spawn(move || {
         let mut lines = BufReader::new(stdout).lines().map_while(Result::ok);
-        drop(said.send(lines.any(|l| l.contains(HELD))));
+        let _ = said.send(lines.any(|l| l.contains(HELD)));
     });
     let reported = heard.recv_timeout(Duration::from_secs(60));
     if reported != Ok(true) {
