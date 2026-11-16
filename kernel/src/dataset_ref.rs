@@ -590,7 +590,7 @@ const RESERVED_DEVICE_NAMES: [&str; 32] = [
 /// Containment, that the resolved target lies inside the resolved project folder, is not
 /// checked here: piece 1c's resolver checks it. No path type is used, nothing is joined and no
 /// file is touched.
-fn in_canonical_form(at: &str, path: &str) -> Result<(), RefParseError> {
+pub(crate) fn in_canonical_form(at: &str, path: &str) -> Result<(), RefParseError> {
     let control = |c: char| matches!(c, '\0'..='\u{1f}' | '\u{7f}'..='\u{9f}');
     let device = |segment: &str| {
         let stem = segment
