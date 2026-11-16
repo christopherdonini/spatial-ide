@@ -441,8 +441,6 @@ const SETTLED_PARTIAL_FAILURE_TEXT = "Filling has finished for this view, but pa
  * `SETTLED_PARTIAL_SUFFIX`'s). */
 const SETTLED_PARTIAL_WITHIN_BUDGET_TEXT =
   "Filling has finished for this view — some areas were not loaded; pan or zoom to load them.";
-/** Item A draft (24(b) sight), RULED 2026-09-05 (24(b) string sight, "not fetched" -> "not loaded",
- * rest verbatim): 32a's own rider -- never "complete", never silent. */
 /** W1, the stream-refusal piece S1 (the form's §9): the advisor's wording under the delegation
  * (ADV-2026-11-16-13), copied from the form by script. Clause check (§9, in short): its first clause
  * holds because `candidateArmSession.ts` emits `frame: false` only from a current, not self-cancelled,
@@ -457,6 +455,8 @@ const FIRST_LOOK_FAILED_NO_FRAME_TEXT = "The data for the map failed to load. Op
  * does not stand through that fill: `handleViewportChange`'s fresh plan clears it.
  * Not covered (AUTONOMY §31): no e2e reaches this sentence without a fault injector, a dev-only switch. */
 const FIRST_LOOK_FAILED_TEXT = "The data for this view failed to load. Pan or zoom to retry.";
+/** Item A draft (24(b) sight), RULED 2026-09-05 (24(b) string sight, "not fetched" -> "not loaded",
+ * rest verbatim): 32a's own rider -- never "complete", never silent. */
 function relinquishedText(residentFeatureCount: number): string {
   return `Filling stopped — showing ${residentFeatureCount} features already loaded; the rest of this view was not loaded.`;
 }
