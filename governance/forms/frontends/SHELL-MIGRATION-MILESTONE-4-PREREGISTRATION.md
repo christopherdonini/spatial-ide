@@ -2587,3 +2587,86 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 25: PR B's gate 1 at 6f7e744c, the architect's FAIL (C1 to C3) and the reviewer's PASS WITH NOTES, by reference; the advisor's rulings ADV-2026-11-15-23 and ADV-2026-11-15-24 join by reference (class 5); C1 and C2 by their option (a), and the ending of Colour by at an open (class 9, a scope addition), declared before their code; the architect's O4 recorded as the advisor's reading. Written by the custodian before the correction's code
+
+*Written by the custodian on 2026-11-16. Where an item gives its content in other words, the words are the custodian's; the gate reports and the rulings are the record. Hashes are by git.*
+
+1. **The gates (by reference).** At 6f7e744cf6a1c1337fdaf62bfdc113c1de531f1a:
+   - the architect, gate 1, FAIL: `state/consults/gates/2026-11-15-b1-shell-half-pr-b-gate1-architect.md`, gate-log row 763. C1, C2 and C3 are its Correctness findings.
+   - the reviewer, gate 1, PASS WITH NOTES: `state/consults/gates/2026-11-15-b1-shell-half-pr-b-gate1-reviewer.md`, gate-log row 766. It has no Correctness or Evidence finding, and D1 to D6.
+
+   Row 763 stays FAIL. The architect's check of the corrected head is attempt 2 of its gate, with its own verdict and row (ADV-2026-11-15-23 item 9).
+
+2. **The rulings (class 5, by reference).** Both are the advisor's, under the human's delegation of 2026-11-13:
+   - ADV-2026-11-15-23: `state/directives/2026-11-15-advisor-ruling-adv-2026-11-15-23-pr-326-further-lines-inside-the-piece-to-its-merge-check-pr-327-c1-c2-take-a-the-rest-after-the-filed-architect-report.md`;
+   - ADV-2026-11-15-24: `state/directives/2026-11-15-advisor-ruling-adv-2026-11-15-24-pr-327-opening-a-file-ends-colour-by-a-third-correction-item-o4-confirmed-o3-to-a-node-the-words-after-the-corrected-head.md`;
+   - ADV-2026-11-16-01, the two statements of C1: `state/directives/2026-11-16-advisor-ruling-adv-2026-11-16-01-pr-327-the-two-p6-statements-one-colour-as-drafted-colour-by-one-clause-changed-the-node-added-not-placed-pr-326-lines-compared.md`.
+
+3. **C1, option (a).** §2.5's class C rows `style.colourBy` and `style.oneColour` are built as §2.5 requires.
+   - Each joins `CLASS_C_ROWS` in `frontends/shell/src/console/surfaceRegistry.ts`. Its statement is the advisor's wording, the fence of ADV-2026-11-16-01 for that row (items 1 and 2). Each text is applied by script, byte for byte, and both gates check each clause at the corrected head (item 3).
+   - Each is recorded by `recordNamed` at the action and before its outcome:
+     - in `applyColourBy` (`StylePanel.tsx`), only once the apply goes past its first return (a column chosen, no export held, no wait pending), and before the wait (ADV-2026-11-16-01 item 2 (b));
+     - in `handleOneColour`, before its commit.
+   - A Colour by that applies nothing keeps its row.
+   - **Test PB-U13**, in `frontends/shell/src/style/StylePanel.test.tsx`: "PB-U13: Colour by and One colour each record their class C row at the action, before the outcome, whatever the outcome". Its mutations remove each `recordNamed` call, one at a time. Each mutation fails the test.
+
+4. **C2, option (a).** `frontends/shell/src/table/tableSource.ts` is already on PR B's list, by Amendment 5 item 2 (class 9, 30 lines in B-P). So this item declares the guard and its test, not the file. Lines past those 30 are class 8.
+   - **The guard.** Colour by's Cancel cancels a request only while the source still holds the request its wait issued. The source's snapshot names the request it holds, a number each `start` changes. `abandon` compares that number with the one its own `start` gave.
+   - **Test PB-U9 (vi)**, in `frontends/shell/src/style/categoryCases.test.ts`. It runs on a real `tableSource`, with only the transport mocked: "PB-U9 (vi): a Colour by's wait, then the Table's superseding request, then Colour by's Cancel: the Table's request is not cancelled and only the wait is abandoned". Its mutation makes `abandon` cancel whenever the wait issued a request, as at 6f7e744c. The mutation fails the test.
+   - If the guard needs `tableSource.test.ts`, the worker stops. That file joins by class 9 before its code.
+
+5. **Opening a file ends Colour by (ADV-2026-11-15-24 item 1; class 9, a scope addition, declared before its code).**
+   - In `admit` (`frontends/shell/src/workspace/workspaceState.ts`), on every later admission, the filter is reset; at the same point the view's `fillMatch` becomes null.
+   - The fill colour, the opacity, the outline colour and the outline width are kept. The action's doc comment says so.
+   - Its files are already on PR B's list or in its diff: `workspaceState.ts`, `workspaceState.test.ts`, `App.tsx`, `App.colour.test.tsx`, `StylePanel.tsx` and `StylePanel.test.tsx`.
+
+   - (a) **Test PB-U14**, in `frontends/shell/src/workspace/workspaceState.test.ts`: "PB-U14: a later admission, under the same dataset key and under another, ends Colour by and keeps the four other style properties". Its mutation keeps the match. The mutation fails the test.
+   - (b) **The seams that mirror the committed style**, each with its test:
+     - **App's `lastCommittedStyle`**, the baseline `handleStyleCommit` compares against. An admission that ends the match ends it there too, and no step is recorded for the open. Its test is PB-R5's next commit. Its mutation leaves the baseline holding the match: the next commit then records a match step too, and PB-R5 fails.
+     - **The Legend.** It renders the view's style, so it empties with the match. Its test is PB-R5.
+     - **StylePanel's Colour by line and its chosen column.** App makes the panel anew when the dataset key changes, because its Style slot is keyed `style-${admitted.dataset}`. Under the same key, the panel is not made anew. So when the match ends other than by the panel, the line is cleared, and a chosen column the candidates no longer list is reset to none.
+       - **Test PB-U15**, in `frontends/shell/src/style/StylePanel.test.tsx`: "PB-U15: under the same panel, a match ended from outside clears the Colour by line, and a chosen column no longer offered is reset". It has two mutations, each failing the test: one keeps the line, the other keeps the column.
+   - (c) **Test PB-R5**, in `frontends/shell/src/App.colour.test.tsx`: "PB-R5: with Colour by applied, opening another file draws every feature in the Fill colour, empties the legend, and the next commit records only what it changes".
+     - It runs through the open path App uses, `handleAdmitted`'s dispatch of `resource.admitted`, not through the reducer alone.
+     - It sits at App's level, not as a `colour.mjs` step: App's level reads each outcome exactly, and the open path in the shell is the same code. The drawn fill comes from the layers App builds, the legend from the DOM, and the steps from the captured `record_step` requests; the e2e would read pixels.
+     - If App's test cannot read the drawn fill, the worker stops, and the step goes to `colour.mjs` by amendment.
+   - (d) **The architect's O2, settled.** At an open under a new dataset key, the panel is made anew by the keyed slot in (b). Under the same key, PB-U15's reset of the column covers it.
+   - **The records.** Drafts A and G fall away, and E and B (ii) change with them. Item 4's On-main paragraph is re-read and not changed; a clause that no longer holds goes to the advisor (ADV-2026-11-15-24 item 6 (b)).
+
+6. **The architect's O4, recorded as the advisor's reading (ADV-2026-11-15-24 item 4).**
+   - §8 item 10 watches for the Table issuing its stream on a pan, while hidden or while a consumer is held, and for a second stream.
+   - Colour by's one request while the Table is hidden is OPEN-16 (b)'s design, built as Amendment 12 item 4 gives it: one source and one stream. It is not a sighting of item 10.
+   - The clause on more than one table stream still binds Colour by.
+
+7. **The architect's O3.** It is not in this PR. A PLAN node is proposed to the advisor (ADV-2026-11-15-24 item 5).
+
+8. **The words.** None changes before the correction's code.
+   - The architect's D1 and D2 apply in its own words, with no re-gate (AUTONOMY section 31 (d)):
+     - D1 is the comment at App's colour-column effect. The correction worker applies it.
+     - D2 goes into the PR body.
+   - The reviewer's D4 and D5: the correction worker observes the two mutations again at its head and reports the failures. The comment lines are worded with the rest.
+   - The reviewer's D1 is recorded as class 8 in the closing amendment: `renderer/tests/style_agreement.rs`, at 49 lines against §7's 40.
+   - After the code, the records worker drafts, from the code (ADV-2026-11-15-24 item 6):
+     - item 65's last sentence;
+     - one sentence saying that opening a file ends Colour by, and where it sits;
+     - item 51's matching clause;
+     - AC12;
+     - a re-read of Part AC's rows after AC5.
+
+     The advisor rules every word once, at the corrected head.
+
+9. **The order (ADV-2026-11-15-24 item 7).**
+   1. This amendment.
+   2. One correction worker for C1, C2 and item 5, tests first. Each new test is observed failing before its code.
+   3. The records worker.
+   4. At the corrected head:
+      - the architect's attempt 2, whole, with the reads its first attempt left out;
+      - the reviewer's attempt 2, on the correction's diff, with its mutations re-applied;
+      - the tester's series, every suite.
+
+   The series that was running at 6f7e744c is finished and filed as it is. The changed-paths list is read again before the last gate.
+
+Read the last amendment first.
+
+Nothing above is edited.
