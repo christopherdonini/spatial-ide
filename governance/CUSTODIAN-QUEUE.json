@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-16T08:26:58.430Z",
-  "plan_hash": "b35b7df2f176707729b46a03ccad6103341ecfbf01d58f6bb96645e90ca22239",
+  "generated_at": "2026-11-16T08:43:41.773Z",
+  "plan_hash": "74785e71756cd40acd5981dfaa601110d96a80aeaad467fb0204a47a5b0f6fad",
   "priorities_approved": true,
   "next": {
     "id": "large-utf8-and-utf8-view-attribute-columns",
@@ -844,6 +844,28 @@
       },
       "summary": "ON V0.2'S LIST 2026-11-16 by the advisor's ruling ADV-2026-11-16-20 item 1 (state/directives/2026-11-16-advisor-ruling-adv-2026-11-16-20-the-humans-five-approvals-s1-joins-v0-2-entry-79-at-the-sitting-on-a-condition-what-follows-from-each.md): its test showed part of the map missing with nothing said. Before: IN PROGRESS 2026-11-16: OPEN-A ruled (A) and the unit ceiling kept by the advisor (state/directives/2026-11-16-advisor-ruling-adv-2026-11-16-15-the-s1-form-open-a-npm-run-verify-whole-stands-for-lint-the-unit-ceiling-of-1010-stands.md); the form's Amendment 1 on main; the worker-high goes at this commit, its own worktree, build folder and test-data folder. Before: PACKET RULED 2026-11-16 by the advisor (state/directives/2026-11-16-advisor-ruling-adv-2026-11-16-13-the-s1-stream-refusal-piece-packet-ruled-open-1-a-the-two-sentences-as-drafted.md): the cut stands with B2 and B3; OPEN-1 (a); W1 and W2 as drafted; B1 out and no naming; no line of App.tsx. FORM ON MAIN 2026-11-16, the architect's final text; its two sentences equal the ruling's fences by script. Its OPEN-A (the shell has no lint script) and its unit ceiling of 1,010 against the ruling's about 910, with APP-SR2 in, go to the advisor; the section 8 check made: PR B's diff names no section 7 file. The worker-high starts after the form's Amendment 1. Before: FORM DRAFTED 2026-11-16 by the architect (state/consults/2026-11-16-shell-tiled-arm-stream-refusal-shown-to-the-user-form-draft-architect.md) for the advisor's packet ruling: S2 parts; B2 here, before the first-look node; five OPEN items. TRACED at v0.1.0 (state/consults/2026-11-16-shell-tiled-arm-stream-refusal-shown-to-the-user-v0-1-0-trace-reviewer.md): B2 silent in the released app since fdb7c87a, PR 30, the default arm flip, an ancestor of the tag; A as defined since 4619d4b4, PR 55, after the tag; at the tag a refused tile was dropped at its first refusal, with no call back to the session. Before: S1 2026-11-16, by the advisor's ruling ADV-2026-11-16-12 (state/directives/2026-11-16-advisor-ruling-adv-2026-11-16-12-the-stream-refusal-node-s1-after-its-test-step-the-architect-drafts-its-form-now-cut-small.md), on its one test step's report (state/consults/2026-11-16-shell-tiled-arm-stream-refusal-shown-to-the-user-test-step-tester-report.md): case A, a tile refused twice when it is the last one tracked, and case B2, a first look whose stream fails after its ticket and before any batch, leave part or all of the view missing with nothing said (item 1). The architect drafts its form now, read only, full class and both gates; nothing else is dispatched before the advisor rules its packet (item 2). The S1 piece only ensures that no refusal and no failure leaves the view without a status and that the scan state ends; naming the code for a tile and the render budget given as the reason are a second piece, S2, unless the architect shows they cannot be parted (item 3). Its place: ahead of everything that is not PR B's correction or already in flight (item 6). Notes, by ADV-2026-11-16-09 item 6 (state/directives/2026-11-16-advisor-ruling-adv-2026-11-16-09-known-limitations-item-56-words-after-the-reviewers-gate-c1-stands-four-pairs-the-partly-loaded-words-not-added.md): case C ran in the same step; not covered by item 56's record: a tile refused just after a pan has filled the map's queue (MAX_QUEUED_TILES, in mintAndStart's requeue test) is not asked for again; that needs a camera change inside the refused request's round trip. Before: NOT IN SLOT 2 2026-11-16, by the advisor's ruling ADV-2026-11-16-06, item 1 (c) (state/directives/2026-11-16-advisor-ruling-adv-2026-11-16-06-the-humans-directive-of-2026-11-16-put-in-force-focus-record-classes-runs-pieces-models-the-two-drafts-the-held-dispatches-go.md), which replaces the placement of ADV-2026-11-16-05 item 4. One step runs when a tester is free: the test of ADV-2026-11-16-05 item 4 (c). A last tracked tile dropped after its second refusal, or a first look that fails at open with no batch, leaving the view with no status, is S1, told to the advisor at once; if neither shows, the node waits out the week. The first-look node's form says whether its fix reaches the second case. Before: PLACED S2 2026-11-16 in slot 2, now, by the advisor's ruling ADV-2026-11-16-05, item 4 (state/directives/2026-11-16-advisor-ruling-adv-2026-11-16-05-known-limitations-item-56-tile-refusal-record-corrected-now-the-stream-refusal-node-s2-slot-2.md); added by ADV-2026-11-16-04, item 1 (state/directives/2026-11-16-advisor-ruling-adv-2026-11-16-04-two-nodes-from-the-architects-read-the-stream-refusal-node-after-a-read-the-dictionary-node-s3-after-b1-shell-half.md), after the architect's read (state/consults/2026-11-16-shell-tiled-arm-stream-refusal-shown-to-the-user-read-architect.md). Full form and both gates. S2, because in the arm that ships the user is told at most that part of the view was not loaded and not why, and the record said otherwise (item 4 (a)). Its first step is a test that drives the shipped arm with the real session and reads what the status bar shows after a tile refused twice, after a tile stream that fails, and after a first look that fails at open; no test does that today (item 4 (c)). If a case leaves part of the view missing with no status, the node is S1, told to the advisor before the code's scope is fixed; the read names two candidates, a tile dropped after its second refusal when it was the last one tracked, and a first look that fails at open with no batch (item 4 (b)). The aim: a refused request and a failed stream shown by name, for a tile and for the first look, and no failure leaving the view without a status; the form's OPEN items to the advisor in one packet (item 4 (d)). Its records restore KNOWN-LIMITATIONS item 56's sentence to what the code then does (item 4 (e)). The budget is the custodian's estimate; the form declares its own.",
       "evidence_label": "branch `cut/shell-tiled-arm-stream-refusal-s1`"
+    },
+    {
+      "id": "known-limitations-v0-1-0-two-notes-2026-11-16",
+      "title": "KNOWN-LIMITATIONS: v0.1.0's two dated notes of 2026-11-16, the human's words (ADV-2026-11-16-19 item 2), each followed by its comment",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": null,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "branch": "cut/known-limitations-v0-1-0-two-notes"
+      },
+      "dates": {
+        "opened": "2026-11-16",
+        "done": null
+      },
+      "summary": "PLACED 2026-11-16 by the human's approval of ADV-2026-11-16-19, item 5: the file on main first, by a docs piece of its own with the short form and the reviewer, which the advisor merges; then the custodian puts the release page's paragraph in, once, and reads the page back. The reviewer confirms each note equals its filed fence byte for byte (ADV-2026-11-16-20 item 3). Not on v0.2's list.",
+      "evidence_label": "branch `cut/known-limitations-v0-1-0-two-notes`"
     }
   ],
   "proposed": [
