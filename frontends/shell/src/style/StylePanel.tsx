@@ -181,6 +181,7 @@ export default function StylePanel({ style, onChange, onCommit, columns, source,
   /** Colour by (section 2.3 (d)): waits for the first scope, builds the cases, and applies them as one edit and one commit. Anything but rows applies nothing. */
   async function applyColourBy(): Promise<void> {
     if (source === null || column === "" || exportHeld || waitRef.current !== null) return;
+    recordNamed("gui-action", "style.colourBy"); // at the action, before the wait and whatever its outcome (an apply that applies nothing keeps its row)
     const wait = waitForFirstScope(source, filter);
     waitRef.current = wait;
     setWaiting(true);
@@ -208,6 +209,7 @@ export default function StylePanel({ style, onChange, onCommit, columns, source,
   }
 
   function handleOneColour(): void {
+    recordNamed("gui-action", "style.oneColour"); // at the action, before its commit
     const next = { ...style, fillMatch: null };
     onChange(next);
     onCommit(next);
